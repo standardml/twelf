@@ -182,7 +182,6 @@ structure Twelf =
          structure Cover = Cover
          structure Total = Total
 
-	 structure Terminate = Terminate
 	 structure Reduces = Reduces
 
 	 structure Index = Index

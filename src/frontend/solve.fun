@@ -272,8 +272,10 @@ struct
       fun querytabled ((numSol, try, quy), Paths.Loc (fileName, r)) =
 	  let
 	    val _ = if !Global.chatter >= 3
+
 		      then print ("%querytabled " ^ boundToString numSol ^ " " ^
 				  boundToString try)
+
 		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
 	    val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))

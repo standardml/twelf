@@ -66,8 +66,6 @@ functor Twelf
    structure Total : TOTAL
      sharing Total.IntSyn = IntSyn'
 
-   structure Terminate : TERMINATE
-     sharing Terminate.IntSyn = IntSyn'
    structure Reduces : REDUCES
      sharing Reduces.IntSyn = IntSyn'
 
@@ -271,7 +269,6 @@ struct
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
 	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
 	      | Total.Error (msg) => abort (msg ^ "\n")	(* Total includes filename *)
-	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
 	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
@@ -966,7 +963,6 @@ struct
 		    Index.reset (); 
 		    IndexSkolem.reset ();
 		    Subordinate.reset ();
-		    Terminate.reset (); (* needed? -fp *)
 		    Total.reset ();	(* -fp *)
 		    WorldSyn.reset ();	(* -fp *)
 		    Reduces.reset ();	(* -bp *)
