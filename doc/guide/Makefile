@@ -41,7 +41,7 @@ twelf.pdf : twelf.dvi;
 	;; esac;
 	$(dvips) -P embed -f twelf.dvi | $(distill) > twelf.pdf;
 
-installx : ;
+install : ;
 	@echo "Copying info file"
 	cp -p twelf.info ../info/
 	@echo "Copying dvi file"
@@ -60,7 +60,7 @@ installx : ;
 	cp -p twelf_*.html ../html/
 	cp -p twelf_*.html /afs/cs/project/twelf/www/guide/
 
-cleanx : ;
+clean : ;
 	rm -f twelf.dvi;
 	rm -f twelf.ps;
 	rm -f twelf.ps.gz;
