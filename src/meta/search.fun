@@ -182,13 +182,42 @@ struct
     | rSolve (depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
 	(* is this EVar redundant? -fp *)
-	val X = I.newEVar (G, I.EClo(A, s))
+	val X = Whnf.lowerEVar (I.newEVar (G, I.EClo(A, s)))
       in
         rSolve (depth, ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => sc (I.App (M, S), acck'')), acck')), acck)
       end
     | rSolve (depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+      let
+					(* G |- g goal *)
+					(* G |- A : type *)
+					(* G, A |- r resgoal *)
+					(* G0, Gl  |- s : G *)
+	val G0 = pruneCtx (G, depth)	
+	val w = I.Shift (depth)		(* G0, Gl  |- w : G0 *)
+	val iw = Whnf.invert w
+					(* G0 |- iw : G0, Gl *)
+	val s' = I.comp (s, iw)
+					(* G0 |- w : G *)
+	val X = I.newEVar (G0, I.EClo(A, s'))
+	val Y = Whnf.lowerEVar X	(* has effect on X *)
+					(* G0 |- X : A[s'] *)
+	val X' = I.EClo (X, w)
+					(* G0, Gl |- X' : A[s'][w] = A[s] *)
+      in
+	rSolve (depth, ps', (r, I.Dot (I.Exp (X'), s)), dp,
+		(fn (S, acck') => 
+		   case Y
+		     of I.EVar (ref NONE, _, _, _) => 
+		          solve (0, (g, s'), dp,
+				 (fn (M, acck'') => sc (I.App (I.EClo (M, w), S), acck'')), acck')
+		      | I.EVar (ref (SOME _), _, _, _) => sc (I.App (X', S), acck')), acck)
+
+(*		       (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X', I.id), nil)),
+				      fn _ => (sc (I.App (X', S), acck'); ())))), acck)
+*)
+(*    | rSolve (depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
 	val Gpruned = pruneCtx (G, depth)
 	val w = I.Shift (depth)		(* G |- w : Gpruned *)
@@ -198,7 +227,7 @@ struct
 		(fn (S, acck' as (_, k')) => 
 		   (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X, I.id), nil)),
 				     fn _ => (sc (I.App (X, S), acck'); ())))), acck)
-
+*)
 (*		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => ((Unify.unify (G, (X, I.id), (M, I.id));
 							     (* why doesn't it always succeed?
@@ -209,14 +238,14 @@ struct
 *)      end
     | rSolve (depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
-	  val X = I.newEVar (G, I.EClo (A, s))
+	  val X = Whnf.lowerEVar (I.newEVar (G, I.EClo (A, s)))
 	in
 	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
 	end
     | rSolve (depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
-	  val X = I.newEVar (G, I.EClo (A, s))
+	  val X = Whnf.lowerEVar (I.newEVar (G, I.EClo (A, s)))
 	in
 	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (S, acck')), acck)
@@ -334,7 +363,7 @@ struct
        then acc' is a list containing the one result from executing the success continuation 
 	 All EVar's got instantiated with the smallest possible terms.
     *)    
-(*
+
     fun searchEx (it, depth) (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
 	 deepen depth searchEx' (selectEVar (GE), 
@@ -354,7 +383,7 @@ struct
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
-*)
+(*
 
     fun searchEx (it, depth) (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
@@ -362,7 +391,8 @@ struct
 				 fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
 					      sc max)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ())
-	  
+	
+*)  
     fun search (GE, sc) = searchEx (1, !MTPGlobal.maxFill) (GE, sc)
 
 (*    (* searchAll' (GE, acc, sc) = acc'
