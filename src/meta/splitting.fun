@@ -59,6 +59,11 @@ struct
 	      * int			(* Number of cases *)
 	      * int)			(* Position (left to right) *)
 	       
+  fun indexToString (Index (n, i, num, pos)) =
+      "(depth " ^ Int.toString n ^ ", "
+      ^ (case i of NONE => "N" | SOME(i) => "I[" ^ Int.toString i ^ "]") ^ ", "
+      ^ "cases " ^ Int.toString num ^ ", "
+      ^ "pos " ^ Int.toString pos ^ ")"
 
   datatype Operator = 
     Operator of (StateSyn.State * int) * StateSyn.State flag list
@@ -527,7 +532,6 @@ struct
       | occursInOrders (n, O :: Os, k, sc) = 
           occursInOrder (n, O, k, fn n' => occursInOrders (n', Os, k, sc))
 
-
     fun inductionInit O k = occursInOrder (0, O, k, fn n => NONE)
     fun inductionCont induction k = induction (k+1)
 
@@ -647,6 +651,7 @@ struct
        then k = |Sl| 
     *)
     fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
+    fun indexInfo (Operator (_, _, ind)) = ind
 
     fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
       (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
@@ -718,16 +723,18 @@ struct
 	    | inactive (InActive :: L, n) = inactive (L, n+1)
 	    | inactive ((Active _) :: L, n) = inactive (L, n)
 
+          (*
 	  fun indexToString 0 = "zero cases"
 	    | indexToString 1 = "1 case"
 	    | indexToString n = (Int.toString n) ^ " cases"
+          *)
 
 	  fun flagToString (_, 0) = ""
 	    | flagToString (n, m) = " [active: " ^(Int.toString n) ^ 
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
 	  "Splitting : " ^ Print.decToString (G, I.ctxDec (G, i)) ^
-	  " (" ^ (indexToString (index Op)) ^ 
+	  " (" ^ (indexToString (indexInfo Op)) ^ 
 	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ")"
 	end
 
