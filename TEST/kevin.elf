@@ -1,0 +1,36 @@
+exp	: type.
+s	: exp -> exp.
+
+q	: (exp -> exp) -> type.
+r	: exp -> (exp -> exp) -> type.
+q_rule	: q E <- ({x} ({L} r (L x) L) -> r (s x) E).
+
+q'	: (exp -> exp) -> type.
+r'	: exp -> exp -> (exp -> exp) -> type.
+q'_rule	: q' E <- ({x} ({X}{L} r' X (L X) L) -> r' x (s x) E).
+
+q''	: (exp -> exp) -> type.
+r''	: (exp -> exp) -> exp -> exp -> type.
+q''_rule : q'' E <- ({x} ({X}{L} r'' L X (L X)) -> r'' E x (s x)).
+
+%{
+?- q E.
+Solving...
+E = [X1:exp] s X1.
+More? y
+No more solutions
+?- q' E.
+Solving...
+E = [X1:exp] X2 X1.
+Constraints remain on X2.
+More? y
+No more solutions
+
+In the first query, the subterm (L x) is not in the pattern fragment,
+since L is introduced within the scope of x, but it works anyway since
+L is eventually unified with E, which is outside the scope of x.  In
+the second query, it seems like the same reasoning should hold, but it
+doesn't work.
+
+Kevin
+}%
