@@ -1703,8 +1703,9 @@ struct
 	( chatter 6 (fn () => "Splitting on " ^ Int.toString (k) ^ "\n");
 	  case splitVar (cg, k, w)
 	    of SOME(cases) => covers (cases, w, ccs, lab, missing)
-	     | NONE => (* splitting variable k generated constraints *)
-	         split (cg, SOME(ksn), w, ccs, lab,missing))
+	     | NONE => 
+	      ( chatter 6 (fn () => "Splitting failed due to generated constraints\n");
+	        split (cg, SOME(ksn), w, ccs, lab,missing)))
 
     and splitWeak (cg, nil, w, ccs, lab, missing) =
         ( chatter 6 (fn () => "No weak candidates---case " ^ labToString(lab) ^ " not covered\n");

@@ -728,7 +728,7 @@ struct
 		  (* Wed Aug 20 21:52:31 2003 -fp *)
                   let
                     (* found' is true iff D satisfies mS *)
-                    val found' = (groundAtom (D, M.Plus, S, mS, (1, occ)); true
+                    val found' = ((groundAtom (D, M.Plus, S, mS, (1, occ)); true) (* handler scope??? -fp *)
                                   handle ModeError _ => false)
                     (* compute all other mode contexts *)
                     val Ds' = checkList (found orelse found') mSs                                  
@@ -757,7 +757,7 @@ struct
 		  (* Wed Aug 20 21:52:31 2003 -fp *)
                   let
                     (* found' is true iff D satisfies mS *)
-                    val found' = (groundAtom (D, M.Plus, S, mS, (1, occ)); true
+                    val found' = ((groundAtom (D, M.Plus, S, mS, (1, occ)); true)
                                   handle ModeError _ => false)
                     (* compute all other mode contexts *)
                     val Ds' = checkList (found orelse found') mSs                                  

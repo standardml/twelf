@@ -3168,9 +3168,9 @@ call patterns.  If we analyze call patterns
 @end example
 
 @noindent
-then @code{ai} may call @code{aj} for @math{i < j} with equal
-termination arguments, but calls of @code{ai} from @code{aj}
-must decrease the termination order.
+then termination arguments must decrease when @code{ai} calls @code{aj}
+for @math{i < j}, but calls of @code{ai} from @code{aj} may keep the
+termination arguments equal.
 
 Mutual arguments are used, for example, in the proofs of soundness (file
 @*@file{examples/lp-horn/uni-sound.thm}) and completeness (file
