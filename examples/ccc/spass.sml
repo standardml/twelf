@@ -1,3 +1,27 @@
+(*
+  A simple traverser to generate input for the SPASS prover.
+  Author: Frank Pfenning
+
+Sample Session:
+
+% cd /afs/cs/project/twelf/research/twelf/
+% sml-cm
+- CM.make ();
+- use "examples/spass/spass.sml";
+
+This will print the SPASS representation for a bunch of axioms and theorems
+of cartesian closed categories.  The encoding maps any morphism f : A -> B
+(even compound ones) to the term mor(f,A,B) to guarantee type safety.
+
+See
+
+  spass.elf
+
+for the definitions and status of various declarations.  Information on
+the proofs can be found in pf.dvi (written by Andrzej Filinski) and
+the other .elf files.
+*)
+
 structure Spass : TRAVERSER =
 struct
 
