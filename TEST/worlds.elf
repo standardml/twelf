@@ -1,0 +1,13 @@
+% Testing subordination and worlds
+
+a : type.
+b : a -> type.
+
+c : a -> type.
+
+d : {x:a} b x -> c x -> type.
+
+% Next line leads to subordination error since  b not <| c
+
+%worlds (pi {x:a} {y:b x -> c x} {z:c x -> b x})
+(d _ _ _).
