@@ -14,6 +14,9 @@ functor Total
 
    structure ModeSyn : MODESYN
      sharing ModeSyn.IntSyn = IntSyn'
+   structure ModeCheck : MODECHECK
+     sharing ModeCheck.ModeSyn = ModeSyn
+     sharing ModeCheck.IntSyn = IntSyn'
 
    structure Index : INDEX
      sharing Index.IntSyn = IntSyn'
@@ -190,6 +193,7 @@ struct
 		    then print ("Output coverage checking family " ^ N.qidToString (N.constQid a)
 				^ "\n")
 		  else ()
+          val _ = ModeCheck.checkFreeOut (a, ms) (* all variables in output args must be free *)
           val cs = Index.lookup a
 	  val _ = ((Timers.time Timers.coverage checkOutCover) (cs);
 		   if !Global.chatter = 4

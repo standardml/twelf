@@ -602,10 +602,13 @@ struct
       | install1 (fileName, (Parser.TotalDec lterm, r)) =
         (* time activities separately in total.fun *)
 	let
+        (* Mon Dec  2 17:20:18 2002 -fp *)
+        (* coverage checker appears to be safe now *)
+	  (*
 	  val _ = if not (!Global.unsafe)
 		    then raise Total.Error (Paths.wrapLoc (Paths.Loc (fileName, r), "%total not safe: Toggle `unsafe' flag"))
 	          else ()
-
+          *)
 	  val (T, rrs as (r,rs)) = ReconThm.tdeclTotDecl lterm
 	  val La = Thm.installTotal (T, rrs)
 	  val _ = map Total.install La	(* pre-install for recursive checking *)

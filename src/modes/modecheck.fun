@@ -36,6 +36,9 @@ struct
       | Universal                       (*     | Universal             *)
 
 
+    (* hack: if true, check freeness of output arguments in subgoals *)
+    val checkFree = ref false
+
     (* Representation invariant:
 
        Groundness information:   
@@ -109,6 +112,13 @@ struct
     fun isTop (Existential (Top, _)) = true
       | isTop _ = false
 
+    (* isBot S = b
+       
+       Invariant:
+       b iff S = Ex (B x)
+    *)
+    fun isBot (Existential (Bot, _)) = true
+      | isBot _ = false
       
     exception Eta
 
@@ -165,6 +175,120 @@ struct
         (checkPattern (D, k, nil, S); true)
 	handle Eta => false
 
+    (* ------------------------------------------- strictness check *)
+    (* This repeats some code from ../typecheck/strict.fun *)
+    (* Interface here is somewhat different *)
+    
+    (* strictExpN (D, p, U) = B 
+       
+       Invariant:
+       If  D |- U : V
+       and U is in nf (normal form)
+       then B iff U is strict in p
+    *)
+    fun strictExpN (D, _, I.Uni _) = false
+      | strictExpN (D, p, I.Lam (_, U)) =
+          (* checking D in this case should be redundant -fp *)
+          (* strictDecN (D, p, D) orelse *)
+          strictExpN (I.Decl(D, Universal), p+1, U)
+      | strictExpN (D, p, I.Pi ((D', _), U)) =
+	  strictDecN (D, p, D') orelse strictExpN (I.Decl(D, Universal), p+1, U)
+      | strictExpN (D, p, I.Root (H, S)) =
+	  (case H
+	     of (I.BVar (k')) => 
+	        if (k' = p) then isPattern (D, k', S)
+		else if isUniversal (I.ctxLookup (D, k')) then strictSpineN (D, p, S)
+		     else false
+              | (I.Const (c)) => strictSpineN (D, p, S)
+	      | (I.Def (d))  => strictSpineN (D, p, S)
+              | (I.FgnConst (cs, conDec)) => strictSpineN (D, p, S))
+	      (* no other cases possible *)
+      | strictExpN (D, p, I.FgnExp (cs, ops)) = false
+          (* this is a hack - until we investigate this further   -rv *)                        
+    (* no other cases possible *)
+
+    (* strictSpineN (D, S) = B 
+       
+       Invariant:
+       If  D |- S : V > W
+       and S is in nf (normal form)
+       then B iff S is strict in k
+    *)
+    and strictSpineN (_, _, I.Nil) = false
+      | strictSpineN (D, p, I.App (U, S)) = 
+          strictExpN (D, p, U) orelse strictSpineN (D, p, S)
+
+    and strictDecN (D, p, I.Dec (_, V)) =
+          strictExpN (D, p, V)
+
+    fun strictAtom (D, p, mode, I.Nil, (V, s), M.Mnil) = false
+      | strictAtom (D, p, M.Minus, I.App (U, S), (I.Pi ((I.Dec (_, V1), _), V2), s),
+		     M.Mapp (M.Marg (M.Minus, _), mS)) =
+          strictExpN (D, p, Whnf.normalize (V1, s))
+	  orelse strictAtom (D, p, M.Minus, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS)
+      | strictAtom (D, p, mode, I.App (U, S), (I.Pi (_, V2), s), M.Mapp(_, mS)) =
+	  strictAtom (D, p, mode, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS)
+
+    (* ------------------------------------------- freeness check *)
+    (* freeExpN (D, mode, U, occ = ()
+    
+       If G |- U : V  (U in nf)
+       and G ~ D
+       then freeExpN terminates with () if D |- U free
+       else exception ModeError is raised
+
+       (occ and mode are used in error messages)
+    *)
+    fun freeExpN (D, d, mode, I.Root (I.BVar k, S), occ, strictFun) =
+          (freeVar (D, d, mode, k, P.head occ, strictFun);
+	   freeSpineN (D, d, mode, S, (1, occ), strictFun))
+      | freeExpN (D, d, mode, I.Root (I.Const _, S), occ, strictFun) =
+	  freeSpineN (D, d, mode, S, (1, occ), strictFun)
+      | freeExpN (D, d, mode, I.Root (I.Def _, S), occ, strictFun) =
+	  freeSpineN (D, d, mode, S, (1, occ), strictFun)
+      | freeExpN (D, d, mode, I.Root (I.FgnConst (cs, conDec), S), occ, strictFun) =
+	  freeSpineN (D, d, mode, S, (1, occ), strictFun)
+      | freeExpN (D, d, mode, I.Lam (_, U), occ, strictFun) =
+	  freeExpN (I.Decl (D, Universal), d+1, mode, U, P.body occ, strictFun)
+      | freeExpN (D, d, mode, I.FgnExp (cs, ops), occ, strictFun) =
+          freeExpN (D, d, mode, Whnf.normalize (#toInternal(ops)(), I.id), occ, strictFun)
+
+    (* freeSpineN (D, mode, S, occ, strictFun)  = () 
+
+       If   G |- S : V1  > V2   (S in nf)
+       and  G ~ D
+       then freeSpineN terminates with () if  D |- S free 
+       else exception ModeError is raised
+
+       (occ and mode are used in error messages)
+    *)
+    and freeSpineN (D, d, mode, I.Nil, _, strictFun) = ()
+      | freeSpineN (D, d, mode, I.App (U, S), (p, occ), strictFun) =
+          (freeExpN (D, d, mode, U, P.arg (p, occ), strictFun);
+	   freeSpineN (D, d, mode, S, (p+1, occ), strictFun))
+
+    (* freeVar (D, mode, k, occ, strictFun)  = () 
+
+       If   G |- k : V1  
+       and  G ~ D
+       then freeVar terminates with () if  D |- S free 
+       else exception ModeError is raised
+
+       (occ and mode are used in error messages)
+    *)
+
+    and freeVar (D, d, mode, k, occ, strictFun) =
+        let
+	  val status = I.ctxLookup (D, k) 
+	in 
+	  if isBot status orelse isUniversal status orelse strictFun (k-d)
+	    then ()
+	  else raise ModeError (occ, "Occurrence of variable " ^ (nameOf status) ^ 
+			        " in " ^ (M.modeToString mode) ^ " argument not free")
+	end
+
+
+
     (* ------------------------------------------- mode context update *)
 
     (* updateExpN (D, U) = D'
@@ -217,7 +341,7 @@ struct
 
     (* ----------------------- mode context update by argument modes *)
 
-    (* updateAtom (D, m, S, mS) = D'
+    (* updateAtom (D, m, S, mS, (p,occ)) = D'
       
        If   G |- S : V > V'   ( S = U1 ; .. ; Un)
        and  D ~ G 
@@ -225,14 +349,32 @@ struct
        and  m mode
        then D' >= D where 
             all Ui are updated if mi = m
+
+       (p,occ) is used in error message if freeness is to be checked
     *)
-    fun updateAtom (D, mode, I.Nil, M.Mnil) = D
-      | updateAtom (D, M.Plus, I.App (U, S), M.Mapp (M.Marg (M.Plus, _), mS)) =
-          updateAtom (updateExpN (D, U), M.Plus, S, mS) 
-      | updateAtom (D, M.Minus, I.App (U, S), M.Mapp (M.Marg (M.Minus, _), mS)) =
-          updateAtom (updateExpN (D, U), M.Minus, S, mS) 
-      | updateAtom (D, mode, I.App (U, S), M.Mapp (_, mS)) =
-          updateAtom (D, mode, S, mS) 
+    fun updateAtom' (D, mode, I.Nil, M.Mnil, _) = D
+      | updateAtom' (D, M.Plus, I.App (U, S), M.Mapp (M.Marg (M.Plus, _), mS), (p, occ)) =
+          updateAtom' (updateExpN (D, U), M.Plus, S, mS, (p+1, occ)) 
+      | updateAtom' (D, M.Minus, I.App (U, S), M.Mapp (M.Marg (M.Minus, _), mS), (p, occ)) =
+	  updateAtom' (updateExpN (D, U), M.Minus, S, mS, (p+1, occ)) 
+      | updateAtom' (D, mode, I.App (U, S), M.Mapp (_, mS), (p, occ)) =
+          updateAtom' (D, mode, S, mS, (p+1, occ)) 
+
+    fun freeAtom (D, mode, I.Nil, M.Mnil, _, strictFun) = ()
+      | freeAtom (D, M.Minus, I.App (U, S), M.Mapp (M.Marg (M.Minus, _), mS), (p, occ), strictFun) =
+          freeExpN (D, 0, M.Minus, U, P.arg(p, occ), strictFun)
+      | freeAtom (D, mode, I.App (U, S), M.Mapp (_, mS), (p, occ), strictFun) =
+	  freeAtom (D, mode, S, mS, (p+1, occ), strictFun)
+
+    fun updateAtom (D, mode, S, a, mS, (p, occ)) =
+        let
+	  val _ = if !checkFree
+		    then freeAtom (D, mode, S, mS, (p, occ),
+				   fn p => strictAtom (D, p, mode, S, (I.constType a, I.id), mS))
+		  else ()
+	in
+	  updateAtom' (D, mode, S, mS, (p, occ))
+	end
 
     (* ------------------------------------------- groundness check *)
 
@@ -296,7 +438,7 @@ struct
 
     (* ------------------------------------------- groundness check by polarity *)
 
-    (* groundAtom (D, m, S, mS, occ)  = () 
+    (* groundAtom (D, m, S, mS, (p,occ))  = () 
 
        If   G |- S : V > V'   ( S = U1 ; .. ; Un)
        and  D ~ G 
@@ -306,7 +448,7 @@ struct
 	    if all Ui are ground for all i, s.t. mi = m
        else exception ModeError is raised
 
-       (occ used in error messages)
+       ((p,occ) used in error messages)
     *)
     fun groundAtom (D, _, I.Nil, M.Mnil, _) = ()
       | groundAtom (D, M.Plus, I.App (U, S), M.Mapp (M.Marg (M.Plus, _), mS), (p, occ)) =
@@ -375,7 +517,7 @@ struct
                             checkAll mSs
                           )
                   in
-                    checkSome (k (updateAtom (D, M.Plus, S, mS)))
+                    checkSome (k (updateAtom (D, M.Plus, S, a, mS, (1, occ))))
                   end
           in
             checkAll (lookup (a, occ))
@@ -400,7 +542,7 @@ struct
                             checkAll mSs
                           )
                   in
-                    checkSome (k (updateAtom (D, M.Plus, S, mS)))
+                    checkSome (k (updateAtom (D, M.Plus, S, d, mS, (1, occ))))
                   end
           in
             checkAll (lookup (d, occ))
@@ -436,7 +578,7 @@ struct
                     if the check fails, we don't catch ModeError *) 
                   (
                     groundAtom (D, M.Plus, S, mS, (1, occ));
-                    k (updateAtom (D, M.Minus, S, mS))
+                    k (updateAtom (D, M.Minus, S, a, mS, (1, occ)))
                   )
               | checkList found (mS :: mSs) =
                   let
@@ -447,7 +589,7 @@ struct
                     val Ds' = checkList (found orelse found') mSs                                  
                   in
                     if(found')
-                    then k (updateAtom (D, M.Minus, S, mS)) @ Ds'
+                    then k (updateAtom (D, M.Minus, S, a, mS, (1, occ))) @ Ds'
                     else Ds'
                   end
           in
@@ -462,7 +604,7 @@ struct
                     if the check fails, we don't catch ModeError *) 
                   (
                     groundAtom (D, M.Plus, S, mS, (1, occ));
-                    k (updateAtom (D, M.Minus, S, mS))
+                    k (updateAtom (D, M.Minus, S, d, mS, (1, occ)))
                   )
               | checkList found (mS :: mSs) =
                   let
@@ -473,7 +615,7 @@ struct
                     val Ds' = checkList (found orelse found') mSs                                  
                   in
                     if(found')
-                    then k (updateAtom (D, M.Minus, S, mS)) @ Ds'
+                    then k (updateAtom (D, M.Minus, S, d, mS, (1, occ))) @ Ds'
                     else Ds'
                   end
           in
@@ -508,6 +650,7 @@ struct
     *)
     fun checkD (conDec, fileName, occOpt) =
         let 
+	  val _ = (checkFree := false)
 	  fun checkable (I.Root (Ha, _)) = 
 	      (case (M.mmodeLookup (cidFromHead Ha)) 
 		 of nil => false
@@ -541,6 +684,20 @@ struct
 		    then print ("Mode checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
+	  val _ = (checkFree := false)
+	  val _ = checkAll clist
+	  val _ = if !Global.chatter > 3 then print "\n" else ()
+	in
+	  ()
+	end
+
+    fun checkFreeOut (a, ms) =
+        let
+	  val _ = if !Global.chatter > 3
+		    then print ("Checking output freeness of " ^ Names.qidToString (Names.constQid a) ^ ":\n")
+		  else ()
+	  val clist = Index.lookup a
+	  val _ = (checkFree := true)
 	  val _ = checkAll clist
 	  val _ = if !Global.chatter > 3 then print "\n" else ()
 	in
@@ -550,6 +707,7 @@ struct
   in
     val checkD = checkD
     val checkMode = checkMode
+    val checkFreeOut = checkFreeOut
   end
 end;  (* functor ModeCheck *)
 

@@ -18,4 +18,7 @@ sig
   (* for prior declarations *)
   val checkMode : IntSyn.cid * ModeSyn.ModeSpine -> unit (* raises Error(msg) *)
 
+  (* for output coverage of prior declarations *)
+  val checkFreeOut : IntSyn.cid * ModeSyn.ModeSpine -> unit (* raises Error(msg) *)
+
 end;  (* signature MODECHECK *)

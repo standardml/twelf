@@ -22,6 +22,7 @@ structure Total =
 	 structure Whnf = Whnf
 	 structure Names = Names
          structure ModeSyn = ModeSyn
+         structure ModeCheck = ModeCheck
 	 structure Index = Index
 	 structure Order = Order
 	 structure Reduces = Reduces
