@@ -33,3 +33,13 @@ structure AbsMachine =
               structure Trail = Trail
               structure CPrint = CPrint
               structure Names = Names); 
+
+structure TMachine =
+  TMachine (structure IntSyn' = IntSyn
+	    structure CompSyn' = CompSyn
+	    structure Unify = UnifyTrail
+	    structure Index = Index
+	    structure Trail = Trail
+            structure Print = Print
+	    structure CPrint = CPrint
+	    structure Names = Names);
