@@ -1,4 +1,4 @@
-(* Front End Interface *)
+(* Front End Interface *) 
 (* Author: Frank Pfenning *)
 
 signature TWELF =
@@ -89,4 +89,39 @@ sig
   val make : string -> Status	      (* read and load configuration *)
 
   val version : string		      (* Twelf version *)
+
+
+  val printTable : unit -> unit
+
+
+  structure Tabled : 
+    sig
+      structure IntSyn : INTSYN
+      structure CompSyn : COMPSYN
+      structure Unify : UNIFY
+	
+      val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.Exp  -> unit)) * 
+			 Unify.unifTrail) list) ref 
+
+    end 
+
+  structure TableIndex : 
+    sig 
+      structure IntSyn : INTSYN
+
+      type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * 
+				  (IntSyn.dctx * IntSyn.Exp)) list,
+		     lookup: int}
+	
+      val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
+
+      datatype Strategy = Variant | Subsumption
+
+      (* global tabled search parameters *)
+      val strategy : Strategy ref
+      val termDepth : int option ref
+      val strengthen : bool ref
+
+    end 
+
 end;  (* signature TWELF *)

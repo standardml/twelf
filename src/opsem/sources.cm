@@ -5,12 +5,20 @@ Group is
   ../index/sources.cm
   ../typecheck/sources.cm
   ../solvers/sources.cm
+  ../subordinate/sources.cm
   compsyn.sig
   compsyn.fun
   compile.sig
   compile.fun
   cprint.sig
   cprint.fun
+  abstract.sig  
+  abstract.fun
+  index.sig
+  index.fun  
+  tabled.sig
+  tabled.fun     
+
   (*
   assign.sig
   assign.fun

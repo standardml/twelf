@@ -6,6 +6,12 @@ sig
 
   structure IntSyn : INTSYN
 
+  type unifTrail
+
+  (* suspending and resuming trailing *)
+  val suspend : unit -> unifTrail
+  val resume : unifTrail  -> unit
+
   (* trailing of variable instantiation *)
 
   val reset       : unit -> unit

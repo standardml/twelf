@@ -81,6 +81,11 @@ functor Twelf
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn'
+   structure Tabled : TABLED
+     sharing Tabled.IntSyn = IntSyn'
+     sharing Tabled.CompSyn = CompSyn'
+   structure TableIndex : TABLEINDEX
+     sharing TableIndex.IntSyn = IntSyn'
    structure Solve : SOLVE
      sharing Solve.IntSyn = IntSyn'
      sharing type Solve.ExtSyn.term = Parser.ExtSyn.term
@@ -448,6 +453,12 @@ struct
       | install1 (fileName, (Parser.Query(expected,try,query), r)) =
         (* Solve.query might raise Solve.AbortQuery (msg) *)
 	(Solve.query ((expected, try, query), Paths.Loc (fileName, r))
+	 handle Solve.AbortQuery (msg)
+	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
+      (* %queryTabled <expected> <try> A or %query <expected> <try> X : A *)
+      | install1 (fileName, (Parser.Querytabled(try,query), r)) =
+        (* Solve.query might raise Solve.AbortQuery (msg) *)
+	(Solve.querytabled ((try, query), Paths.Loc (fileName, r))
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
 
@@ -1162,5 +1173,44 @@ struct
     val make = make
 
     val version = "Twelf 1.3R1, Mar 19 2001 (with coverage and totality checking for closed worlds)"
+
+
+    val printTable = TableIndex.printTable      (* bp *)
+
+    structure Tabled : 
+      sig
+	structure IntSyn : INTSYN
+	structure CompSyn : COMPSYN
+	structure Unify : UNIFY
+	
+	  val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.Exp  -> unit)) * 
+			     Unify.unifTrail) 
+			    list) ref 
+
+(* 	val expToString : IntSyn.dctx * IntSyn.Exp -> string *)
+
+      end 
+    = Tabled
+
+
+    structure TableIndex : 
+      sig 
+	structure IntSyn : INTSYN
+	type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * 
+				    (IntSyn.dctx * IntSyn.Exp)) list,
+		       lookup: int}
+	  
+	val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
+	  
+	datatype Strategy = Variant | Subsumption
+	  
+      (* global tabled search parameters *)
+	val strategy : Strategy ref
+	val termDepth : int option ref
+	val strengthen : bool ref
+
+      end 
+    = TableIndex
+
   end  (* local *)
 end; (* functor Twelf *)

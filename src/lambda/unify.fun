@@ -20,9 +20,52 @@ struct
     | Add of cnstr list ref
     | Solve of cnstr * Cnstr
 
+    datatype CAction = 
+      BindCnstr of Cnstr ref * Cnstr
 
-    val globalTrail = Trail.trail () : Action Trail.trail
-    
+    datatype FAction = 
+      BindExp of Exp option ref * Exp option
+    | BindAdd of cnstr list ref * CAction list
+    | FSolve of Cnstr ref * Cnstr * Cnstr (* ? *)
+
+    type unifTrail = FAction Trail.trail
+
+    val globalTrail = Trail.trail () : Action Trail.trail 
+
+
+    fun copyCnstr [] = []
+      | copyCnstr (refC :: clist) = 
+          (BindCnstr (refC, !refC) :: copyCnstr clist)
+
+    fun copy (Instantiate refU) = 
+          (BindExp (refU , !refU))
+      | copy (Add (cnstrs as ref Cnstrs)) = 
+          (BindAdd (cnstrs , copyCnstr(!cnstrs)))
+      | copy (Solve (cnstr, Cnstr)) =  
+          (FSolve (cnstr, Cnstr, !cnstr)) 
+
+
+    fun resetCnstr [] = [] 
+      | resetCnstr (BindCnstr(refC, Cnstr)::L) = 
+          (refC := Cnstr;
+	   (refC::(resetCnstr L)))
+
+
+    fun reset (BindExp (refU, U)) =
+          (refU := U;
+	   Instantiate refU)
+      | reset (BindAdd (cnstrs , CActions)) =
+	  (cnstrs := resetCnstr CActions;
+	   Add cnstrs)
+      | reset (FSolve (refCnstr, Cnstr, Cnstr')) =
+	  (refCnstr := Cnstr';
+	   Solve (refCnstr, Cnstr))
+      
+
+    fun suspend () = Trail.suspend (globalTrail, copy)
+
+    fun resume trail = Trail.resume (trail, globalTrail, reset)
+ 
     fun undo (Instantiate refU) =
           (refU := NONE)
       | undo (Add (cnstrs as ref(cnstr :: cnstrL))) =
@@ -714,9 +757,14 @@ struct
     fun shape (Va1, Va2) = shapeExp (Va1, Va2)
 
   in
+    type unifTrail = unifTrail
+
     val reset = reset
     val mark = mark
     val unwind = unwind
+
+    val suspend = suspend
+    val resume = resume
 
     val delay = delayExp
 

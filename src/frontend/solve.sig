@@ -14,6 +14,10 @@ sig
 
   val query : (int option * int option * ExtSyn.query) * Paths.location -> unit
 					(* may raise AbortQuery(msg) *)
+
+  val querytabled : (int option * ExtSyn.query) * Paths.location -> unit
+					(* may raise AbortQuery(msg) *)
+
   val qLoop : unit -> bool		(* true means normal exit *)
 
 end;  (* signature SOLVE *)

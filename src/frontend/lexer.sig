@@ -30,6 +30,7 @@ sig
     | NAME				(* `%name' *)
     | SOLVE				(* `%solve' *)
     | QUERY				(* `%query' *)
+    | QUERYTABLED			(* `%querytabled' *)
     | MODE				(* `%mode' *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)

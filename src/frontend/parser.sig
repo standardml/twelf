@@ -27,6 +27,7 @@ sig
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSyn.query (* expected, try, A *)
+    | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
     | Solve of string * ExtSyn.term
     | AbbrevDec of ExtSyn.condec
     | SigDef of ModExtSyn.sigdef

@@ -56,6 +56,7 @@ struct
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSyn.query (* expected, try, A *)
+    | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
     | Solve of (string * ExtSyn.term)
     | AbbrevDec of ExtSyn.condec
     | SigDef of ModExtSyn.sigdef
@@ -166,6 +167,14 @@ struct
         in 
           Stream.Cons ((Query (expected, try, query), r), parseStream (stripDot f3, sc))
         end
+      | parseStream' (LS.Cons((L.QUERYTABLED, r0), s'), sc) =
+        let
+	  val (try, s2) = parseBound' (LS.expose s')
+          val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s2)
+	  val r = ExtSyn.Paths.join (r0, r')
+        in 
+          Stream.Cons ((Querytabled (try, query), r), parseStream (stripDot f3, sc))
+        end 
       | parseStream' (f as LS.Cons ((L.MODE, r), s'), sc) = parseMode' (f, sc)
       | parseStream' (f as LS.Cons ((L.COVERS, r), s'), sc) = parseCovers' (f, sc)
       | parseStream' (f as LS.Cons ((L.TOTAL, r), s'), sc) = parseTotal' (f, sc) (* -fp *)
@@ -244,7 +253,6 @@ struct
 	  Stream.Cons ((TerminatesDec ldec, r), parseStream (stripDot f', sc))
 	end
 
-        (* -bp *)
     and parseReduces' (f as LS.Cons ((_, r0), _), sc) = 
 	let
 	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseReduces' (f)

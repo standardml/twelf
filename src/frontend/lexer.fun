@@ -36,6 +36,7 @@ struct
     | NAME				(* `%name' *)
     | SOLVE				(* `%solve' *)
     | QUERY	  			(* `%query' *)
+    | QUERYTABLED  			(* `%querytabled *)
     | MODE				(* `%mode' *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
@@ -223,6 +224,7 @@ struct
       | lexPragmaKey (ID(_, "name"), r) = (NAME, r)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
+      | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
       | lexPragmaKey (ID(_, "sig"), r) = (SIG, r)
       | lexPragmaKey (ID(_, "struct"), r) = (STRUCT, r)
       | lexPragmaKey (ID(_, "where"), r) = (WHERE, r)
@@ -327,6 +329,7 @@ struct
     | toString' (NAME) = "%name"
     | toString' (SOLVE) = "%solve"
     | toString' (QUERY) = "%query"
+    | toString' (QUERYTABLED) = "%querytabled"
     | toString' (MODE) = "%mode"
     | toString' (COVERS) = "%covers"
     | toString' (TOTAL) = "%total"

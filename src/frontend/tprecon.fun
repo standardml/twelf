@@ -1072,7 +1072,7 @@ struct
   (* queryToQuery (q) = (V, XOpt, [(X1,"X1"),...,(Xn,"Xn")])
      where XOpt is the optional proof term variable
            X1,...,Xn are the free EVars in the terms with their names
-
+ 
      Free variables in q are interpreted existentially (as EVars).
 
      Only works properly when the Vars parameter structure

@@ -17,12 +17,7 @@ structure CPrint =
 	  structure Formatter = Formatter
 	  structure Names = Names);
 
-(*
-structure Assign =
-  Assign (structure IntSyn' = IntSyn
-	  structure Whnf = Whnf
-	  structure Unify = UnifyTrail);
-*)
+
 
 structure AbsMachine = 
   AbsMachine (structure IntSyn' = IntSyn
@@ -33,6 +28,48 @@ structure AbsMachine =
               structure CPrint = CPrint
               structure Names = Names
               structure CSManager = CSManager); 
+
+(*
+structure Assign =
+  Assign (structure IntSyn' = IntSyn
+	  structure Whnf = Whnf
+	  structure Unify = UnifyTrail);
+*)
+
+structure AbstractTabled =
+  AbstractTabled (structure IntSyn' = IntSyn
+		  structure Whnf = Whnf
+		  structure Constraints = Constraints
+		  structure Unify = UnifyTrail
+		  structure Subordinate = Subordinate);
+
+structure TableIndex = 
+  TableIndex (structure Global = Global
+	      structure Queue = Queue
+	      structure IntSyn' = IntSyn
+	      structure CompSyn' = CompSyn
+	      structure Conv = Conv
+	      structure Unify = UnifyTrail 
+	      structure AbstractTabled = AbstractTabled
+	      structure Whnf = Whnf
+	      structure Print = Print
+	      structure CPrint = CPrint
+	      structure TypeCheck = TypeCheck);
+
+structure Tabled = 
+  Tabled (structure IntSyn' = IntSyn
+	  structure CompSyn' = CompSyn
+	  structure Unify = UnifyTrail 
+	  structure Whnf = Whnf
+	  (* structure Assign = Assign *)
+	  structure Index = Index
+	  structure Queue = Queue
+	  structure TableIndex = TableIndex
+	  structure AbstractTabled = AbstractTabled
+	  structure CPrint = CPrint
+	  structure Print = Print
+	  structure Names = Names
+	  structure CSManager = CSManager); 
 
 structure Trace =
   Trace (structure IntSyn' = IntSyn
