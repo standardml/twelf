@@ -11,6 +11,8 @@ functor MTPRecursion (structure Global : GLOBAL
 			sharing StateSyn'.FunSyn = FunSyn
 		      structure Abstract : ABSTRACT
 			sharing Abstract.IntSyn = IntSyn
+		      structure FunTypeCheck : FUNTYPECHECK
+			sharing FunTypeCheck.FunSyn = FunSyn
 		      structure Whnf : WHNF
 		        sharing Whnf.IntSyn = IntSyn
 		      structure Unify : UNIFY
@@ -25,9 +27,10 @@ functor MTPRecursion (structure Global : GLOBAL
 		        sharing Subordinate.IntSyn = IntSyn
 		      structure Print : PRINT
 		        sharing Print.IntSyn = IntSyn
+		      structure Formatter : FORMATTER
 		      structure FunPrint :FUNPRINT
 			sharing FunPrint.FunSyn = FunSyn
-		      structure Formatter : FORMATTER)  : MTPRECURSION =
+			sharing FunPrint.Formatter = Formatter)  : MTPRECURSION =
 struct
 
   structure StateSyn = StateSyn'
@@ -45,7 +48,7 @@ struct
 
     datatype Dec =			(* Newly created *)
       Ass of int * S.Order * I.dctx	(* Induction hypothesis  *)
-    | Lemma of I.dctx			(* Residual Lemma *)
+    | Lemma of int * F.For		(* Residual Lemma *)
 
 (*    datatype Quantifier =                     (* Quantifier to mark parameters *)
       Universal                               (* Q ::= Uni                     *)
@@ -604,6 +607,84 @@ struct
 
 *)
 
+
+
+(*	
+    fun collectFor (G, (F.All (F.Prim D, F), s), K) = 
+          collectFor (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s), 
+		      Abstract.collectDec (G, (D, s), K))
+      | collectFor (G, (F.Ex (D, F), s), K) =
+          collectFor (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s), 
+		      Abstract.collectDec (G, (D, s), K))
+      | collectFor (G, (F.True, s), K) = K
+      | collectFor (G, (F.TClo (F, s'), s), K) = collectFor (G, (F, I.comp (s', s)), K)
+      | collectFor (G, (F.And (F1, F2), s), K) = 
+	  collectFor (G, (F2, s), collectFor (G, (F1, s), K))
+
+
+    fun abstractFor (K, depth, (F.All (F.Prim D, F), s)) =
+          F.All (F.Prim (Abstract.abstractDec (K, depth, (D, s))), 
+		    abstractFor (K, depth + 1, (F, I.dot1 s)))
+      | abstractFor (K, depth, (F.Ex (D, F), s)) = 
+          F.Ex (Abstract.abstractDec (K, depth, (D, s)), 
+		    abstractFor (K, depth + 1, (F, I.dot1 s)))
+      | abstractFor (K, depth, (F.True, s)) = F.True
+      | abstractFor (K, depth, (F.TClo (F, s'), s)) = 
+          abstractFor (K, depth, (F, I.comp (s', s))) 
+      | abstractFor (K, depth, (F.And (F1, F2), s)) =
+	  F.And (abstractFor (K, depth, (F1, s)),
+		 abstractFor (K, depth, (F2, s)))
+
+*)
+    (* residualLemma (s, F) = F'
+     
+       Invariant:
+       If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
+       and  Gx |- F1 == [[Gy]] true
+       then G |- {{Gx'}} F' formula
+       where Gx' < Gx
+       and   s uninstantiated on Gx'
+    *)
+
+    fun residualLemma GsF =
+      let 
+	(* collect (G, s, F) = (Gx', F')
+	 
+	   Invariant: 
+	   If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
+	   then G |- Gx' ctx
+	   and  Gx' < Gx  (where s uninstantiated on Gx')
+	   and  G, Gx' |- F' formula
+	   and  G, Gx' |- F' = [[Gy]] true
+	*)
+(* normalize the expressions!!!!!!!! -cs *)
+	fun collect (G, s as I.Shift k, F) = (I.Null, F.normalizeFor (F, s))
+	  | collect (G, s as I.Dot (I.Exp U, s'), F) =
+ 	    let
+	      val (Gx', F.All (F.Prim D, F')) = collect (G, s', F)
+	    in 
+	      if Abstract.closedExp (G, (U, I.id)) then
+		(Gx', F.normalizeFor (F', I.Dot (I.Exp (I.EClo (Whnf.normalize (U, I.id), 
+							 I.Shift (I.ctxLength Gx'))), I.id)))
+	      else 
+		(I.Decl (Gx', D), F')
+	    end
+	  
+
+ 	(* abstract (Gx, F) = F'
+
+	   Invariant: 
+	   F' = {{Gx}} F
+	*)
+	fun abstract (I.Null, F) = F
+	  | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
+	  
+      in
+	abstract (collect GsF)
+      end
+
+
+
     fun makeCtx (G, (F.True, s)) = G
       | makeCtx (G, (F.Ex (D, F), s)) =
           makeCtx (I.Decl (G, Whnf.normalizeDec (D, s)), (F, I.dot1 s))
@@ -611,7 +692,11 @@ struct
 	  makeCtx (G, (F, I.comp (s', s)))
       
 
-    fun check (n, s, O, H, Fs) Ds = 
+    (* Invariant: 
+       Fs = (F, s),  G |- 
+*)       
+
+    fun check (G, n, s, O, IH, H, R, Fs) Ds = 
 (* Check for duplicates,
    generate new assumption,
    residual goals *)
@@ -627,9 +712,14 @@ struct
       else 
 	(* Induction hypothesis only partially applied *)
 	let
-	  val _ = TextIO.print ("IH <R> found\n")
+	  val Frl = residualLemma (G, s, IH)
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
 	in 
-	  Ds
+	  if List.exists (fn (n', F') => n = n' andalso F.convFor ((F', I.id), (Frl, I.id))) R then
+	    Ds
+	  else
+	    (TextIO.print ("IH <R> found\n");
+	     Lemma (n, Frl) :: Ds)
 	end
 
 
@@ -642,6 +732,35 @@ struct
 	      I.Decl (B', T)), I.comp (s', I.shift))
 	  end
 
+    fun spine 0 = I.Nil 
+      | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
+
+
+    (* skolem (d, GB, w, (F, s), k) = (GB', s')
+
+       Invariant:
+       If   GB, D1 .. Dn |- w : GB
+       If   GB |- s : GB, G
+       and  GB, G |- F formula
+       and  d = |G|
+    *)
+    
+    fun skolem (d, GB, w, (F.True, s), k) = (GB, w)
+      | skolem (d, GB, w, (F.All (F.Prim D, F), s), k) =
+          skolem (d+1, GB, w, (F, I.dot1 s), 
+		  fn (V', w') => k (I.Pi ((I.decSub (D, I.comp (s, w)), I.Virtual), V'), w'))
+      | skolem (d, (G, B), w, (F.Ex (I.Dec (_, V), F), s), k) = 
+	  let 
+	    val V' = k (I.EClo (V, s), w)
+	    val D' = Names.decName (G, I.Dec (NONE, V'))
+	  in
+	    skolem (d, (I.Decl (G, D'), I.Decl (B, S.Lemma)), 
+		    I.comp (w, I.shift), (F, I.Dot (I.Exp (I.Root (I.BVar 1, spine d)), s)), k)
+	  end
+      | skolem (d, GB, w, (F.TClo (F, s'), s), k) = 
+          skolem (d, GB, w, (F, I.comp (s', s)), k)
+
+
     (* updateState (S, (Ds, s))
 
        Invariant:
@@ -651,22 +770,33 @@ struct
        G' |- s : G
     *)
     fun updateState (S, (nil, s)) = S
-      | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, F), (Ass (n', O', G') :: L, s)) =
+      | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Ass (n', O', G') :: L, s)) =
         let
 	  val ((G'', B''), s') = merge ((G, B), (G', s), S.Induction (!MTPGlobal.maxSplit)) 
         in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
 				(n', S.orderSub (O', s)) :: 
-				map (fn (n', O') => (n', S.orderSub (O', s'))) H, F.TClo (F, s')),
+				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
+				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
+		       (L, I.comp (s, s')))
+	end
+      | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Lemma (n', Frl') :: L, s)) =
+        let
+	  val ((G'', B''), s') = skolem (0, (G, B), I.id, (Frl', I.id), fn (V, w) => I.EClo (V, w)) 
+	in
+	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
+				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
+				(n', F.TClo (Frl', s)) :: 
+				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
 		       (L, I.comp (s, s')))
 	end
       
 
-    fun calc (n', G', (F', s'), (O', t'), S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
+    fun calc (n', G', (F', s'), (O', t'), S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
 	let
 	  val Ot' = S.orderSub (O', t')
-	  val Ds = if n < n' then ordle (G, Ot', O, check (n', t', Ot', H, (F', s')), nil)
-		   else ordlt (G, Ot', O, check (n', t', Ot', H, (F', s')), nil)
+	  val Ds = if n < n' then ordle (G, Ot', O, check (G, n', t', Ot', IH, H, R, (F', s')), nil)
+		   else ordlt (G, Ot', O, check (G, n', t', Ot', IH, H, R, (F', s')), nil)
 	in 
 	  updateState (S, (Ds, I.id))
 	end
@@ -698,7 +828,7 @@ struct
       | createEVars (n, G, (F, s), (O, t), S) = (n+1, calc (n, G, (F, s), (O, t), S))
 
 
-    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
+    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
       let 
 	val s = I.Shift (I.ctxLength G)
 	val (_, S') = createEVars (1, G, (IH, s), (OH, s), S)

@@ -439,7 +439,33 @@ struct
 
     fun checkRec (P, T) = 
       check (I.Null, I.Null, P, (T, I.id))
+
+
+      
+    fun isFor (G, F) =
+      let
+	fun isFor' (G, (F.All (F.Prim D, F), s)) =
+      	      ((TypeCheck.checkDec (G, (D, s));
+		isFor' (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s)))
+	       handle TypeCheck.Error msg => raise Error msg)
+	  | isFor' (G, (F.Ex (D, F), s)) = 
+	      ((TypeCheck.checkDec (G, (D, s));
+		isFor' (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s)))
+	       handle TypeCheck.Error msg => raise Error msg)
+	  | isFor' (G, (F.True, _)) = ()
+	  | isFor' (G, (F.TClo (F, s'), s)) = 
+	      isFor' (G, (F, I.comp (s', s)))
+	  | isFor' (G, (F.And (F1, F2), s)) =
+	      (isFor' (G, (F1, s));
+	       isFor' (G, (F2, s)))
+
+      in
+	isFor' (G, (F, I.id))
+      end
+
+
   in
+    val isFor = isFor
     val check = checkRec
   end
 end (* Signature FUNTYPECHECK *)       

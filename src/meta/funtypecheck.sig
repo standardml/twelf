@@ -7,6 +7,7 @@ sig
 
   exception Error of string
 
+  val isFor : FunSyn.IntSyn.dctx * FunSyn.For -> unit
   val check : FunSyn.Pro * FunSyn.For -> unit    
 end (* Signature FUNTYPECHECK *)       
 

@@ -27,7 +27,7 @@ struct
   | Assumption of int
   | Induction  of int
 
-  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
+  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, R, F> *)
     State of int			(* Part of theorem                   *)
 	   * (FunSyn.IntSyn.dctx		(* Context of Hypothesis             *)
            * SplitTag FunSyn.IntSyn.Ctx) (* Status information *)
@@ -35,6 +35,7 @@ struct
            * int			(* length of meta context            *)
            * Order			(* Current Order *)
            * (int * Order) list		(* History of Inductive calls (part of theorem, arguments) *)
+           * (int * FunSyn.For) list	(* History of residual lemmas *)
            * FunSyn.For			(* Formula *)
 
   local

@@ -1,5 +1,6 @@
 structure FunSyn = 
-  FunSyn (structure IntSyn' = IntSyn);
+  FunSyn (structure IntSyn' = IntSyn
+	  structure Conv = Conv);
 
 structure FunNames = 
   FunNames (structure Global = Global
@@ -127,6 +128,7 @@ structure MTPRecursion =
 		structure IntSyn = IntSyn
 		structure FunSyn = FunSyn
 		structure StateSyn' = StateSyn
+		structure FunTypeCheck = FunTypeCheck
 		structure Abstract = Abstract
 		structure Whnf = Whnf
 		structure Unify = UnifyTrail

@@ -48,7 +48,7 @@ struct
 	  | init' (GB, O, (F.TClo (F', s'), s), Ss) =
 	      init' (GB, O, (F', I.comp (s', s)), Ss)
 	  | init' (GB, O, Fs as (F.Ex (D, F'), s), Ss) = 
-	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, F.TClo Fs) :: Ss
+	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, nil, F.TClo Fs) :: Ss
       in
 	(N.varReset ();
 	 init' ((I.Null, I.Null), OF, (F, I.id), nil))

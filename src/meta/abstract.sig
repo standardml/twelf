@@ -10,4 +10,5 @@ sig
     
   val abstractSub : IntSyn.Sub * StateSyn.SplitTag IntSyn.Ctx 
         -> ((IntSyn.dctx * StateSyn.SplitTag IntSyn.Ctx) * IntSyn.Sub)
+
 end;  (* signature MTPABSTRACT *)

@@ -1,7 +1,9 @@
 (* Internal syntax for functional proof term calculus *)
 (* Author: Carsten Schuermann *)
 
-functor FunSyn (structure IntSyn' : INTSYN) : FUNSYN= 
+functor FunSyn (structure IntSyn' : INTSYN
+		structure Conv : CONV
+		  sharing Conv.IntSyn = IntSyn') : FUNSYN= 
 struct
   structure IntSyn = IntSyn'
 
@@ -172,6 +174,45 @@ struct
       | dot1n (I.Decl (G, _) , s) = I.dot1 (dot1n (G, s))
 
 
+    (* conv ((F1, s1), (F2, s2)) = B
+
+       Invariant:
+       If   G |- s1 : G1
+       and  G1 |- F1 : formula     
+       and  G |- s2 : G2
+       and  G2 |- F2 : formula
+       and  (F1, F2 do not contain abstraction over contextblocks )
+       then B holds iff G |- F1[s1] = F2[s2] formula
+    *)
+
+    fun convFor ((True, _), (True, _)) = true
+      | convFor ((All (Prim D1, F1), s1), 
+		 (All (Prim D2, F2), s2)) = 
+          Conv.convDec ((D1, s1), (D2, s2))
+	  andalso convFor ((F1, I.dot1 s1), (F2, I.dot1 s2))
+      | convFor ((Ex (D1, F1), s1), 
+		 (Ex (D2, F2), s2)) = 
+          Conv.convDec ((D1, s1), (D2, s2))
+	  andalso convFor ((F1, I.dot1 s1), (F2, I.dot1 s2))
+      | convFor ((TClo (F1, s1'), s1), Fs2) =
+	  convFor ((F1, I.comp (s1', s1)), Fs2)
+      | convFor (Fs1, (TClo (F2, s2'), s2)) =
+	  convFor (Fs1, (F2, I.comp (s2', s2)))
+      | convFor ((And (F1, F1'), s1), (And (F2, F2'), s2)) =
+	  convFor ((F1, s1), (F2, s2))
+	  andalso convFor ((F1', s1), (F2', s2))
+
+       
+    fun normalizeFor (All (Prim D, F), s) = 
+          All (Prim (I.decSub (D, s)), normalizeFor (F, I.dot1 s))
+      | normalizeFor (Ex (D, F), s) = 
+	  Ex (I.decSub (D, s), normalizeFor (F, I.dot1 s))
+      | normalizeFor (True, s) = True
+      | normalizeFor (TClo (F, s'), s) = 
+	  normalizeFor (F, I.comp (s', s))
+      | normalizeFor (And (F1, F2), s) =
+	  And (normalizeFor (F1, s), normalizeFor (F2, s))
+
   in 
     val labelLookup = labelLookup 
     val labelAdd = labelAdd
@@ -184,6 +225,8 @@ struct
     val lfctxLength = lfctxLength
     val lfctxLFDec = lfctxLFDec
     val dot1n = dot1n
+    val convFor = convFor
+    val normalizeFor = normalizeFor
   end
 end (* functor FunSyn *)
 

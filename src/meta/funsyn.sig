@@ -75,7 +75,12 @@ sig
   val lfctxLength : lfctx -> int
   val lfctxLFDec : (lfctx * int) -> (LFDec * IntSyn.Sub) 
 
+  val normalizeFor : (For * IntSyn.Sub) -> For
+
   val dot1n : (IntSyn.dctx * IntSyn.Sub) -> IntSyn.Sub
+
+  val convFor : (For * IntSyn.Sub) * 
+                (For * IntSyn.Sub) -> bool
 end (* Signature FUNSYN *)       
 
 

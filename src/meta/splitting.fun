@@ -408,10 +408,11 @@ struct
 	   MetaAbstract.abstract (M.State (name ^ name', M.Prefix (G', M', B'), I.EClo (V, s'))))
 *)
 
-    fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) ((G', B'), s') = 
+    fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
-		   map (fn (i, O) => (i, S.orderSub (O, s'))) H, F.TClo (F, s')))
+		   map (fn (i, O') => (i, S.orderSub (O', s'))) H, 
+		   map (fn (i, F') => (i, F.TClo (F', s'))) R, F.TClo (F, s')))
 
     fun abstractFinal (abstract) (B, s) =
           abstract (MTPAbstract.abstractSub (B, s))
@@ -467,7 +468,7 @@ struct
        and  G |- V : L
        then ops' is a list of all possiblie splitting operators
     *)
-    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
+    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
       let 
 	val (_, ops) =
 	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
@@ -501,7 +502,7 @@ struct
        and  G |- D : L
        then s' = string describing the operator
     *)
-    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, F), k), Sl)) = 
+    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, R, F), k), Sl)) = 
 	let 
 	  fun active (nil, n) = n
 	    | active (InActive :: L, n) = active (L, n)
