@@ -8,7 +8,7 @@
 %%%   Logical Frameworks
 %%%   Handbook of Automated Reasoning
 %%%   Alan Robinson and Andrei Voronkov, editors
-%%%   Chapter XXI
+%%%   Chapter 16
 %%%   Elsevier Science and MIT Press
 %%%   In preparation
 %%%
@@ -38,6 +38,11 @@ note    : nd (not A) -> {C:o} nd A -> nd C.
 foralli : ({a:i} nd (A a)) -> nd (forall A).
 foralle : nd (forall A) -> {T:i} nd (A T).
 
+%worlds ( some {A:o} pi {u:nd A}
+        | pi {p:o}
+        | pi {a:i} )
+(nd A).
+
 % Example
 
 _ : nd (A imp (B imp A))
@@ -60,15 +65,16 @@ f2 : hil ((forall [x:i] (B imp A x)) imp (B imp forall [x:i] A x)).
 mp : hil (A imp B) -> hil A -> hil B.
 ug : ({a:i} hil (A a)) -> hil (forall [x:i] A x).
 
+%worlds ( pi {a:i} )
+(hil A).
+
 % Local reductions
 
 ==>R : nd A -> nd A -> type.  %infix none 14 ==>R.
 %name ==>R R.
 
 redl_imp    : (impe (impi [u:nd A] D u) E) ==>R (D E).
-
 redl_not    : (note (noti [p:o] [u:nd A] D p u) C E) ==>R (D C E).
-
 redl_forall : (foralle (foralli [a:i] D a) T) ==>R (D T).
 
 % Local expansions
@@ -117,6 +123,12 @@ hnd_mp : hilnd (mp H1 H2) (impe D1 D2)
 hnd_ug : hilnd (ug H1) (foralli D1)
 	    <- ({a:i} hilnd (H1 a) (D1 a)).
 
+%mode hilnd +H -D.
+%worlds (pi {a:i}) (hilnd H D).
+%terminates H (hilnd H _).
+%covers hilnd +H -D.
+% %total H (hilnd H _)
+
 %solve id' : 
 hilnd (mp (mp s k) k) (D:nd (A imp A)).
 
@@ -135,7 +147,7 @@ _ : nd (A imp A)
 
 ded : (hil A -> hil B) -> hil (A imp B) -> type.
 
-ded_id : ded ([u:hil A] u) (mp (mp s k) k).
+ded_id : ded ([u:hil A] u) (mp (mp s k) (k : hil (A imp (A imp A)))).
 
 ded_k  : ded ([u:hil A] k) (mp k k).
 ded_s  : ded ([u:hil A] s) (mp k s).
@@ -152,6 +164,16 @@ ded_mp : ded ([u:hil A] mp (H1 u) (H2 u)) (mp (mp s H1') H2')
 
 ded_ug : ded ([u:hil A] ug (H1 u)) (mp f2 (ug H1'))
 	  <- ({a:i} ded ([u:hil A] H1 u a) (H1' a)).
+
+%mode ded +H -H'.
+%worlds ( pi {a:i}
+        | pi {p:o}
+        | some {A:o} pi {u:nd A} {v:hil A}
+	   {h:{C:o} ded ([w:hil C] v) (mp k v)} )
+  (ded H H').
+%terminates H (ded H _).
+% %covers ded +H -H'.
+% %total H (ded H _).
 
 %%% Mapping natural deductions to Hilbert derivations.
 
@@ -173,8 +195,8 @@ ndh_noti : ndhil (noti D1) (mp (mp n1 H1') H1'')
 		  ({C:o} ded ([w:hil C] v) (mp k v))
 		  -> ndhil u v
 		  -> ndhil (D1 p u) (H1 p v))
-	    <- ded (H1 (not A)) H1'
-	    <- ded (H1 A) H1''.
+	    <- ded (H1 (not A1)) H1'
+	    <- ded (H1 A1) H1''.
 
 ndh_note : ndhil (note D1 C D2) (mp (mp n2 H1) H2)
 	    <- ndhil D1 H1
@@ -185,3 +207,14 @@ ndh_foralli : ndhil (foralli D1) (ug H1)
 
 ndh_foralle : ndhil (foralle D1 T) (mp (f1 T) H1)
 	       <- ndhil D1 H1.
+
+%mode ndhil +D -H.
+%worlds ( pi {a:i}
+        | pi {p:o}
+        | some {A:o} pi {u:nd A} {v:hil A}
+	   {h:{C:o} ded ([w:hil C] v) (mp k v)}
+	   {nh:ndhil u v})
+  (ndhil D H).
+%terminates D (ndhil D _).
+%covers ndhil +D -H.
+% %total D (ndhil D _).
