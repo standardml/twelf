@@ -727,7 +727,7 @@ struct
 	  val La = Thm.installTotal (T, rrs)
 
 (* ******************************************* *)
-(*  Temporarily disabled -- cs Thu Oct 30 12:46:44 2003 *)
+(*  Temporarily disabled -- cs Thu Oct 30 12:46:44 2003 
 	  fun checkFreeOut nil = ()
 	    | checkFreeOut (a :: La) =
 	      let 
@@ -764,18 +764,19 @@ struct
 									    ^ msg1 ^ "\n[Relational] " ^ msg2))
 	    | covererror (NONE, msg2)      = raise Cover.Error (Paths.wrap (r, "Functional coverage succeeds, relationals fails:\n[Relational] " ^ msg2))
 
-(* ******************************************* *)
+7 ******************************************* *)
 
 	  val _ = map Total.install La	(* pre-install for recursive checking *)
 	  val _ = map Total.checkFam La
 	          handle Total.Error (msg) => raise Total.Error (msg) (* include region and file *)
-(*		       | Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))     -cs Mon Aug 25 11:01:03 2003 *)
-		       | Cover.Error (msg) => covererror (result1, msg)
+		       | Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))
+(*		       | Cover.Error (msg) => covererror (result1, msg)  disabled -cs Thu Jan 29 16:35:13 2004 *)
 		       | Reduces.Error (msg) => raise Reduces.Error (msg) (* includes filename *)
 		       | Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
-	  val _ = case (result1) 
+(*	  val _ = case (result1) 
 	            of NONE => ()
 		     | SOME msg => raise Cover.Error (Paths.wrap (r, "Relational coverage succeeds, funcational fails:\n This indicates a bug in the functional checker.\n[Functional] " ^ msg))
+*)
 	  val _ = if !Global.chatter >= 3
 		    then print ("%total " ^ ThmPrint.tDeclToString T ^ ".\n")
 		  else ()
