@@ -90,6 +90,8 @@ sig
   val sgnLookup: cid -> ConDec
   val sgnReset : unit -> unit
   val sgnSize  : unit -> int
+
+  val sgnApp   : (cid -> unit) -> unit
     
   val constType : cid -> Exp		(* type of c or d             *)
   val constDef  : cid -> Exp		(* definition of d            *)

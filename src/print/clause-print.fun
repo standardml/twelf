@@ -14,7 +14,8 @@ functor ClausePrint
    structure Formatter' : FORMATTER
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn'
-     sharing Print.Formatter = Formatter')
+     sharing Print.Formatter = Formatter'
+   structure Symbol : SYMBOL)
      : CLAUSEPRINT =
 struct
 
@@ -26,60 +27,81 @@ local
   structure I = IntSyn
   structure F = Formatter
   val Str = F.String
+  fun Str0 (s, n) = F.String0 n s
+  fun sym (s) = Str0 (Symbol.sym s)
 
-  (* parens for ({x:A} B) or (A -> B) only *)
-  (* arg must be in whnf *)
-  fun parens (G, Vs as (I.Pi _, s)) = F.Hbox [Str "(", Print.formatExp (G, I.EClo Vs), Str ")"]
-    | parens (G, Vs) = Print.formatExp (G, I.EClo Vs)
+  fun parens (fmt) = F.Hbox [sym "(", fmt, sym ")"]
 
-  (* assume NF? *)
-  fun fmtClause (G, (V,s), acc) = fmtClauseW (G, Whnf.whnf (V,s), acc)
-
-  and fmtClauseW (G, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), acc) =
-        fmtClause (I.Decl (G, D), (* I.decSub (D, s) *)
-		   (V2, I.dot1 s),
-		   F.Break
-		   :: Str "<-" :: F.Space :: parens (G, Whnf.whnf (V1,s))
-		   :: acc)
-    | fmtClauseW (G, (I.Pi ((D as I.Dec (_, V1), I.Maybe), V2), s), nil) =
+  (* assumes NF *)
+  fun fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
 	val D' = Names.decName (G, D)
       in
-	Str "{" :: Print.formatDec (G, D') :: Str "}" :: F.Break
-	:: fmtClause (I.Decl (G, D'),  (* I.decSub (D', s) *)
-		      (V2, I.dot1 s),
-		      nil)
+	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+	:: fmtDQuants (I.Decl (G, D'), V2)
       end
-    | fmtClauseW (G, (V, s), acc) =
-      Print.formatExp (G, I.EClo (V, s)) :: acc
-
-
-  (* theoremToString a = s'
-   
-     Invariant: 
-     If   Sigma (a) = V
-     then s' is a string of V (where implicit parameters are omitted)
-   *)
-
-  fun theoremToString a = 
-      let 
-        val V = I.constType a
-	val imp = I.constImp a
-
-	fun print' (G, V', 0) = Print.expToString (G, V')
-	  | print' (G, I.Pi ((D, _), V'), n) =
-	      print' (I.Decl (G, Names.decName (G, D)), V', n-1)
+    | fmtDQuants (G, V as I.Pi _) = (* P = I.No *)
+        [F.HOVbox (fmtDSubGoals (G, V, nil))]
+    | fmtDQuants (G, V) = (* V = Root _ *)
+	[Print.formatExp (G, V)]
+  and fmtDSubGoals (G, I.Pi ((D as I.Dec (_, V1), I.No), V2), acc) =
+        fmtDSubGoals (I.Decl (G, D), V2,
+		      F.Break :: sym "<-" :: F.Space :: fmtGparens (G, V1)
+		      :: acc)
+    | fmtDSubGoals (G, V as I.Pi _, acc) = (* acc <> nil *)
+        parens (F.HVbox (fmtDQuants (G, V))) :: acc
+    | fmtDSubGoals (G, V, acc) = (* V = Root _ *)
+        Print.formatExp (G, V) :: acc
+  and fmtDparens (G, V as I.Pi _) = parens (F.HVbox (fmtDQuants (G, V)))
+    | fmtDparens (G, V) = (* V = Root _ *)
+        Print.formatExp (G, V)
+  and fmtGparens (G, V as I.Pi _) = parens (F.HVbox (fmtGQuants (G, V)))
+    | fmtGparens (G, V) = (* V = Root _ *)
+        Print.formatExp (G, V)
+  and fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
+      let
+	val D' = Names.decName (G, D)
       in
-	print' (I.Null, V, imp)
+	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+	:: fmtGQuants (I.Decl (G, D'), V2)
       end
+    | fmtGQuants (G, V) = (* P = I.No or V = Root _ *)
+	[F.HOVbox (fmtGHyps (G, V))]
+  and fmtGHyps (G, I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
+        fmtDparens (G, V1) :: F.Break :: sym "->" :: F.Space :: fmtGHyps (I.Decl (G, D), V2)
+    | fmtGHyps (G, V as I.Pi _) = (* P = I.Maybe *)
+	[F.HVbox (fmtGQuants (G, V))]
+    | fmtGHyps (G, V) = (* V = Root _ *)
+        [Print.formatExp (G, V)]
 
+  fun fmtClause (G, V) = F.HVbox (fmtDQuants (G, V))
 
+  fun fmtClauseI (0, G, V) = fmtClause (G, V)
+    | fmtClauseI (i, G, I.Pi ((D, _), V)) =
+        fmtClauseI (i-1, I.Decl (G, Names.decName (G, D)), V)
+
+  fun fmtConDec (I.ConDec (id, i, V, I.Type)) =
+      let
+	val _ = Names.varReset ()
+	val Vfmt = fmtClauseI (i, I.Null, V)
+      in
+	F.HVbox [Str0 (Symbol.const (id)), F.Space, sym ":", F.Break,
+		 Vfmt, sym "."]
+      end
+    | fmtConDec (condec) =
+      (* type family declaration, definition, or Skolem constant *)
+      Print.formatConDec (condec)
+  
 in
 
-  fun formatClause (G, V) = F.Vbox (fmtClause (G, (V, I.id), nil))
-  fun clauseToString (G, V) = F.makestring_fmt (formatClause (G, V))
-  val theoremToString = theoremToString
+  fun formatClause (G, V) = fmtClause (G, V)
+  fun formatConDec (condec) = fmtConDec (condec)
 
+  fun clauseToString (G, V) = F.makestring_fmt (formatClause (G, V))
+  fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
+
+  fun printSgn () = 
+      IntSyn.sgnApp (fn (cid) => (print (conDecToString (IntSyn.sgnLookup cid)); print "\n"))
 end  (* local ... *)
 
 end  (* functor ClausePrint *)

@@ -1,0 +1,340 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{code}
+\usepackage{twelf}
+
+\begin{document}
+
+\begin{bigcode}
+\Const{i} : {\Type}.
+\Const{o} : {\Type}.
+\Const{p} : {\Type}.
+\Const{atom} : \Const{o} $\leftarrow$ \Const{p}.
+\Const{and} : \Const{o} $\leftarrow$ \Const{o} $\leftarrow$ \Const{o}.
+\Const{imp} : \Const{o} $\leftarrow$ \Const{o} $\leftarrow$ \Const{o}.
+\Const{true} : \Const{o}.
+\Const{forall} : \Const{o} $\leftarrow$ (\Const{i} $\rightarrow$ \Const{o}).
+\Const{pf} : \Const{o} $\rightarrow$ {\Type}.
+\Const{andi} : \Const{pf} (\BVar{A} \Const{and} \BVar{B}) $\leftarrow$ \Const{pf} \BVar{B} $\leftarrow$ \Const{pf} \BVar{A}.
+\Const{andel} : \Const{pf} \BVar{A} $\leftarrow$ \Const{pf} (\BVar{A} \Const{and} \BVar{B}).
+\Const{ander} : \Const{pf} \BVar{B} $\leftarrow$ \Const{pf} (\BVar{A} \Const{and} \BVar{B}).
+\Const{impi} : \Const{pf} (\BVar{A} \Const{imp} \BVar{B}) $\leftarrow$ (\Const{pf} \BVar{A} $\rightarrow$ \Const{pf} \BVar{B}).
+\Const{impe} : \Const{pf} \BVar{B} $\leftarrow$ \Const{pf} \BVar{A} $\leftarrow$ \Const{pf} (\BVar{A} \Const{imp} \BVar{B}).
+\Const{truei} : \Const{pf} \Const{true}.
+\Const{foralli} : \Const{pf} (\Const{forall} \BVar{A}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{pf} (\BVar{A} \BVar{a})).
+\Const{foralle} : ($\Pi$\BVar{T}:\Const{i}. \Const{pf} (\BVar{A} \BVar{T})) $\leftarrow$ \Const{pf} (\Const{forall} \BVar{A}).
+\Const{can} : $\Pi$\BVar{A}:\Const{o}. \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{atm} : $\Pi$\BVar{A}:\Const{o}. \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{can\_andi} : \Const{can} (\BVar{A} \Const{and} \BVar{B}) (\Const{andi} \BVar{D} \BVar{E}) $\leftarrow$ \Const{can} \BVar{A} \BVar{D} $\leftarrow$ \Const{can} \BVar{B} \BVar{E}.
+\Const{can\_impi} : \Const{can} (\BVar{A} \Const{imp} \BVar{B}) (\Const{impi} \BVar{D}) $\leftarrow$ ($\Pi$\BVar{u}:\Const{pf} \BVar{A}. \Const{atm} \BVar{u} $\rightarrow$ \Const{can} \BVar{B} (\BVar{D} \BVar{u})).
+\Const{can\_truei} : \Const{can} \Const{true} \Const{truei}.
+\Const{can\_foralli} : \Const{can} (\Const{forall} \BVar{A}) (\Const{foralli} \BVar{D}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{can} (\BVar{A} \BVar{a}) (\BVar{D} \BVar{a})).
+\Const{can\_atm} : \Const{can} (\Const{atom} \BVar{P}) \BVar{D} $\leftarrow$ \Const{atm} \BVar{D}.
+\Const{atm\_andel} : \Const{atm} (\Const{andel} \BVar{D}) $\leftarrow$ \Const{atm} \BVar{D}.
+\Const{atm\_ander} : \Const{atm} (\Const{ander} \BVar{D}) $\leftarrow$ \Const{atm} \BVar{D}.
+\Const{atm\_impe} : \Const{atm} (\Const{impe} \BVar{D} \BVar{E}) $\leftarrow$ \Const{atm} \BVar{D} $\leftarrow$ \Const{can} \BVar{B} \BVar{E}.
+\Const{atm\_foralle} : \Const{atm} (\Const{foralle} \BVar{D} \BVar{T}) $\leftarrow$ \Const{atm} \BVar{D}.
+\Const{whr} : $\Pi$\BVar{A}:\Const{o}. \Const{pf} \BVar{A} $\rightarrow$ \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{whr\_andl} : \Const{whr} (\Const{andel} (\Const{andi} \BVar{D} \BVar{E})) \BVar{D}.
+\Const{whr\_andr} : \Const{whr} (\Const{ander} (\Const{andi} \BVar{D} \BVar{E})) \BVar{E}.
+\Const{whr\_imp} : \Const{whr} (\Const{impe} (\Const{impi} \BVar{D}) \BVar{E}) (\BVar{D} \BVar{E}).
+\Const{whr\_forall} : \Const{whr} (\Const{foralle} (\Const{foralli} \BVar{D}) \BVar{T}) (\BVar{D} \BVar{T}).
+\Const{whr\_andel} : \Const{whr} (\Const{andel} \BVar{D}) (\Const{andel} \BVar{D$'$}) $\leftarrow$ \Const{whr} \BVar{D} \BVar{D$'$}.
+\Const{whr\_ander} : \Const{whr} (\Const{ander} \BVar{D}) (\Const{ander} \BVar{D$'$}) $\leftarrow$ \Const{whr} \BVar{D} \BVar{D$'$}.
+\Const{whr\_impe} : \Const{whr} (\Const{impe} \BVar{D} \BVar{E}) (\Const{impe} \BVar{D$'$} \BVar{E}) $\leftarrow$ \Const{whr} \BVar{D} \BVar{D$'$}.
+\Const{whr\_foralle} : \Const{whr} (\Const{foralle} \BVar{D} \BVar{T}) (\Const{foralle} \BVar{D$'$} \BVar{T}) $\leftarrow$ \Const{whr} \BVar{D} \BVar{D$'$}.
+\Const{tocan} : $\Pi$\BVar{A}:\Const{o}. \Const{pf} \BVar{A} $\rightarrow$ \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{toatm} : $\Pi$\BVar{A}:\Const{o}. \Const{pf} \BVar{A} $\rightarrow$ \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{tc\_and} :
+   \Const{tocan} (\BVar{A} \Const{and} \BVar{B}) \BVar{D} (\Const{andi} \BVar{D$_1$$'$} \BVar{D$_2$$'$})
+      $\leftarrow$ \Const{tocan} \BVar{A} (\Const{andel} \BVar{D}) \BVar{D$_1$$'$}
+      $\leftarrow$ \Const{tocan} \BVar{B} (\Const{ander} \BVar{D}) \BVar{D$_2$$'$}.
+\Const{tc\_imp} :
+   \Const{tocan} (\BVar{A} \Const{imp} \BVar{B}) \BVar{D} (\Const{impi} \BVar{D$'$})
+      $\leftarrow$ ($\Pi$\BVar{u}:\Const{pf} \BVar{A}. \Const{toatm} \BVar{u} \BVar{u} $\rightarrow$ \Const{tocan} \BVar{B} (\Const{impe} \BVar{D} \BVar{u}) (\BVar{D$'$} \BVar{u})).
+\Const{tc\_true} : \Const{tocan} \Const{true} \BVar{D} \Const{truei}.
+\Const{tc\_forall} :
+   \Const{tocan} (\Const{forall} \BVar{A}) \BVar{D} (\Const{foralli} \BVar{D$'$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{tocan} (\BVar{A} \BVar{a}) (\Const{foralle} \BVar{D} \BVar{a}) (\BVar{D$'$} \BVar{a})).
+\Const{tc\_whr} : \Const{tocan} (\Const{atom} \BVar{P}) \BVar{D} \BVar{D$'$} $\leftarrow$ \Const{whr} \BVar{D} \BVar{D$'$$'$} $\leftarrow$ \Const{tocan} (\Const{atom} \BVar{P}) \BVar{D$'$$'$} \BVar{D$'$}.
+\Const{tc\_atm} : \Const{tocan} (\Const{atom} \BVar{P}) \BVar{D} \BVar{D$'$} $\leftarrow$ \Const{toatm} \BVar{D} \BVar{D$'$}.
+\Const{ta\_impe} : \Const{toatm} (\Const{impe} \BVar{D} \BVar{E}) (\Const{impe} \BVar{D$'$} \BVar{E$'$}) $\leftarrow$ \Const{toatm} \BVar{D} \BVar{D$'$} $\leftarrow$ \Const{tocan} \BVar{A} \BVar{E} \BVar{E$'$}.
+\Const{ta\_andel} : \Const{toatm} (\Const{andel} \BVar{D}) (\Const{andel} \BVar{D$'$}) $\leftarrow$ \Const{toatm} \BVar{D} \BVar{D$'$}.
+\Const{ta\_ander} : \Const{toatm} (\Const{ander} \BVar{D}) (\Const{ander} \BVar{D$'$}) $\leftarrow$ \Const{toatm} \BVar{D} \BVar{D$'$}.
+\Const{ta\_foralle} : \Const{toatm} (\Const{foralle} \BVar{D} \BVar{T}) (\Const{foralle} \BVar{D$'$} \BVar{T}) $\leftarrow$ \Const{toatm} \BVar{D} \BVar{D$'$}.
+\Const{iscan} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{D}:\Const{pf} \BVar{A}. $\Pi$\BVar{D$'$}:\Const{pf} \BVar{A}. \Const{tocan} \BVar{A} \BVar{D} \BVar{D$'$} $\rightarrow$ \Const{can} \BVar{A} \BVar{D$'$} $\rightarrow$ {\Type}.
+\Const{isatm} : $\Pi$\BVar{A$_1$}:\Const{o}. $\Pi$\BVar{D}:\Const{pf} \BVar{A$_1$}. $\Pi$\BVar{D$'$}:\Const{pf} \BVar{A$_1$}. \Const{toatm} \BVar{D} \BVar{D$'$} $\rightarrow$ \Const{atm} \BVar{D$'$} $\rightarrow$ {\Type}.
+\Const{isc\_and} :
+   \Const{iscan} (\Const{tc\_and} \BVar{TC$_2$} \BVar{TC$_1$}) (\Const{can\_andi} \BVar{CN$_2$} \BVar{CN$_1$}) $\leftarrow$ \Const{iscan} \BVar{TC$_1$} \BVar{CN$_1$} $\leftarrow$ \Const{iscan} \BVar{TC$_2$} \BVar{CN$_2$}.
+\Const{isc\_imp} :
+   \Const{iscan} (\Const{tc\_imp} \BVar{TC$_1$}) (\Const{can\_impi} \BVar{CN$_1$})
+      $\leftarrow$ ($\Pi$\BVar{u}:\Const{pf} \BVar{A}. $\Pi$\BVar{ta}:\Const{toatm} \BVar{u} \BVar{u}. $\Pi$\BVar{at}:\Const{atm} \BVar{u}.
+            \Const{isatm} \BVar{ta} \BVar{at} $\rightarrow$ \Const{iscan} (\BVar{TC$_1$} \BVar{u} \BVar{ta}) (\BVar{CN$_1$} \BVar{u} \BVar{at})).
+\Const{isc\_true} : \Const{iscan} \Const{tc\_true} \Const{can\_truei}.
+\Const{isc\_forall} :
+   \Const{iscan} (\Const{tc\_forall} \BVar{TC$_1$}) (\Const{can\_foralli} \BVar{CN$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{iscan} (\BVar{TC$_1$} \BVar{a}) (\BVar{CN$_1$} \BVar{a})).
+\Const{isc\_whr} : \Const{iscan} (\Const{tc\_whr} \BVar{TC$_1$} \BVar{WHR}) \BVar{CN$_1$} $\leftarrow$ \Const{iscan} \BVar{TC$_1$} \BVar{CN$_1$}.
+\Const{isc\_atm} : \Const{iscan} (\Const{tc\_atm} \BVar{TA$_1$}) (\Const{can\_atm} \BVar{AT$_1$}) $\leftarrow$ \Const{isatm} \BVar{TA$_1$} \BVar{AT$_1$}.
+\Const{isa\_impe} :
+   \Const{isatm} (\Const{ta\_impe} \BVar{TC$_2$} \BVar{TA$_1$}) (\Const{atm\_impe} \BVar{CN$_2$} \BVar{AT$_1$}) $\leftarrow$ \Const{isatm} \BVar{TA$_1$} \BVar{AT$_1$} $\leftarrow$ \Const{iscan} \BVar{TC$_2$} \BVar{CN$_2$}.
+\Const{isa\_andel} : \Const{isatm} (\Const{ta\_andel} \BVar{TA$_1$}) (\Const{atm\_andel} \BVar{AT$_1$}) $\leftarrow$ \Const{isatm} \BVar{TA$_1$} \BVar{AT$_1$}.
+\Const{isa\_ander} : \Const{isatm} (\Const{ta\_ander} \BVar{TA$_1$}) (\Const{atm\_ander} \BVar{AT$_1$}) $\leftarrow$ \Const{isatm} \BVar{TA$_1$} \BVar{AT$_1$}.
+\Const{isa\_foralle} : \Const{isatm} (\Const{ta\_foralle} \BVar{TA$_1$}) (\Const{atm\_foralle} \BVar{AT$_1$}) $\leftarrow$ \Const{isatm} \BVar{TA$_1$} \BVar{AT$_1$}.
+\Const{solve} : \Const{o} $\rightarrow$ {\Type}.
+\Const{assume} : \Const{o} $\rightarrow$ {\Type}.
+\Const{$>$$>$} : \Const{o} $\rightarrow$ \Const{p} $\rightarrow$ {\Type}.
+\Const{s\_and} : \Const{solve} (\BVar{A$_1$} \Const{and} \BVar{A$_2$}) $\leftarrow$ \Const{solve} \BVar{A$_1$} $\leftarrow$ \Const{solve} \BVar{A$_2$}.
+\Const{s\_imp} : \Const{solve} (\BVar{A$_2$} \Const{imp} \BVar{A$_1$}) $\leftarrow$ (\Const{assume} \BVar{A$_2$} $\rightarrow$ \Const{solve} \BVar{A$_1$}).
+\Const{s\_true} : \Const{solve} \Const{true}.
+\Const{s\_forall} : \Const{solve} (\Const{forall} \BVar{A$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{solve} (\BVar{A$_1$} \BVar{a})).
+\Const{s\_atom} : \Const{solve} (\Const{atom} \BVar{P}) $\leftarrow$ \Const{assume} \BVar{A} $\leftarrow$ \BVar{A} \Const{$>$$>$} \BVar{P}.
+\Const{i\_andl} : \BVar{A$_1$} \Const{and} \BVar{A$_2$} \Const{$>$$>$} \BVar{P} $\leftarrow$ \BVar{A$_1$} \Const{$>$$>$} \BVar{P}.
+\Const{i\_andr} : \BVar{A$_1$} \Const{and} \BVar{A$_2$} \Const{$>$$>$} \BVar{P} $\leftarrow$ \BVar{A$_2$} \Const{$>$$>$} \BVar{P}.
+\Const{i\_imp} : \BVar{A$_2$} \Const{imp} \BVar{A$_1$} \Const{$>$$>$} \BVar{P} $\leftarrow$ \BVar{A$_1$} \Const{$>$$>$} \BVar{P} $\leftarrow$ \Const{solve} \BVar{A$_2$}.
+\Const{i\_forall} : $\Pi$\BVar{T}:\Const{i}. \Const{forall} \BVar{A$_1$} \Const{$>$$>$} \BVar{P} $\leftarrow$ \BVar{A$_1$} \BVar{T} \Const{$>$$>$} \BVar{P}.
+\Const{i\_atom} : \Const{atom} \BVar{P} \Const{$>$$>$} \BVar{P}.
+\Const{s\_sound} : $\Pi$\BVar{A}:\Const{o}. \Const{solve} \BVar{A} $\rightarrow$ \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{h\_sound} : $\Pi$\BVar{A}:\Const{o}. \Const{assume} \BVar{A} $\rightarrow$ \Const{pf} \BVar{A} $\rightarrow$ {\Type}.
+\Const{i\_sound} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{P}:\Const{p}. \BVar{A} \Const{$>$$>$} \BVar{P} $\rightarrow$ (\Const{pf} \BVar{A} $\rightarrow$ \Const{pf} (\Const{atom} \BVar{P})) $\rightarrow$ {\Type}.
+\Const{ss\_and} : \Const{s\_sound} (\Const{s\_and} \BVar{S$_2$} \BVar{S$_1$}) (\Const{andi} \BVar{D$_2$} \BVar{D$_1$}) $\leftarrow$ \Const{s\_sound} \BVar{S$_1$} \BVar{D$_1$} $\leftarrow$ \Const{s\_sound} \BVar{S$_2$} \BVar{D$_2$}.
+\Const{ss\_imp} :
+   \Const{s\_sound} (\Const{s\_imp} \BVar{S$_1$}) (\Const{impi} \BVar{D$_1$})
+      $\leftarrow$ ($\Pi$\BVar{d}:\Const{assume} \BVar{A}. $\Pi$\BVar{u}:\Const{pf} \BVar{A}. \Const{h\_sound} \BVar{d} \BVar{u} $\rightarrow$ \Const{s\_sound} (\BVar{S$_1$} \BVar{d}) (\BVar{D$_1$} \BVar{u})).
+\Const{ss\_true} : \Const{s\_sound} \Const{s\_true} \Const{truei}.
+\Const{ss\_forall} : \Const{s\_sound} (\Const{s\_forall} \BVar{S$_1$}) (\Const{foralli} \BVar{D$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{s\_sound} (\BVar{S$_1$} \BVar{a}) (\BVar{D$_1$} \BVar{a})).
+\Const{ss\_atom} : \Const{s\_sound} (\Const{s\_atom} \BVar{I$_2$} \BVar{H$_1$}) (\BVar{D$_2$} \BVar{D$_1$}) $\leftarrow$ \Const{h\_sound} \BVar{H$_1$} \BVar{D$_1$} $\leftarrow$ \Const{i\_sound} \BVar{I$_2$} \BVar{D$_2$}.
+\Const{is\_andl} : \Const{i\_sound} (\Const{i\_andl} \BVar{I$_1$}) ($\lambda$\BVar{u}:\Const{pf} (\BVar{A$_1$} \Const{and} \BVar{A$_2$}). \BVar{D$_1$} (\Const{andel} \BVar{u})) $\leftarrow$ \Const{i\_sound} \BVar{I$_1$} \BVar{D$_1$}.
+\Const{is\_andr} : \Const{i\_sound} (\Const{i\_andr} \BVar{I$_2$}) ($\lambda$\BVar{u}:\Const{pf} (\BVar{A$_1$} \Const{and} \BVar{A$_2$}). \BVar{D$_2$} (\Const{ander} \BVar{u})) $\leftarrow$ \Const{i\_sound} \BVar{I$_2$} \BVar{D$_2$}.
+\Const{is\_imp} :
+   \Const{i\_sound} (\Const{i\_imp} \BVar{S$_2$} \BVar{I$_1$}) ($\lambda$\BVar{u}:\Const{pf} (\BVar{A$_2$} \Const{imp} \BVar{A$_1$}). \BVar{D$_1$} (\Const{impe} \BVar{u} \BVar{D$_2$}))
+      $\leftarrow$ \Const{i\_sound} \BVar{I$_1$} \BVar{D$_1$}
+      $\leftarrow$ \Const{s\_sound} \BVar{S$_2$} \BVar{D$_2$}.
+\Const{is\_forall} :
+   \Const{i\_sound} (\Const{i\_forall} \BVar{T} \BVar{I$_1$}) ($\lambda$\BVar{u}:\Const{pf} (\Const{forall} \BVar{A$_1$}). \BVar{D$_1$} (\Const{foralle} \BVar{u} \BVar{T})) $\leftarrow$ \Const{i\_sound} \BVar{I$_1$} \BVar{D$_1$}.
+\Const{is\_atom} : \Const{i\_sound} \Const{i\_atom} ($\lambda$\BVar{u}:\Const{pf} (\Const{atom} \BVar{P}). \BVar{u}).
+\Const{ss\_can} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{S}:\Const{solve} \BVar{A}. $\Pi$\BVar{D}:\Const{pf} \BVar{A}. \Const{s\_sound} \BVar{S} \BVar{D} $\rightarrow$ \Const{can} \BVar{A} \BVar{D} $\rightarrow$ {\Type}.
+\Const{hs\_atm} : $\Pi$\BVar{A$_1$}:\Const{o}. $\Pi$\BVar{H}:\Const{assume} \BVar{A$_1$}. $\Pi$\BVar{D}:\Const{pf} \BVar{A$_1$}. \Const{h\_sound} \BVar{H} \BVar{D} $\rightarrow$ \Const{atm} \BVar{D} $\rightarrow$ {\Type}.
+\Const{is\_atm} :
+   $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{P$_1$}:\Const{p}. $\Pi$\BVar{I}:\BVar{A} \Const{$>$$>$} \BVar{P$_1$}. $\Pi$\BVar{D}:\Const{pf} \BVar{A} $\rightarrow$ \Const{pf} (\Const{atom} \BVar{P$_1$}).
+      \Const{i\_sound} \BVar{I} \BVar{D} $\rightarrow$ ($\Pi$\BVar{u}:\Const{pf} \BVar{A}. \Const{atm} \BVar{u} $\rightarrow$ \Const{atm} (\BVar{D} \BVar{u})) $\rightarrow$ {\Type}.
+\Const{ssc\_and} :
+   \Const{ss\_can} (\Const{ss\_and} \BVar{SS$_2$} \BVar{SS$_1$}) (\Const{can\_andi} \BVar{CN$_2$} \BVar{CN$_1$}) $\leftarrow$ \Const{ss\_can} \BVar{SS$_1$} \BVar{CN$_1$} $\leftarrow$ \Const{ss\_can} \BVar{SS$_2$} \BVar{CN$_2$}.
+\Const{ssc\_imp} :
+   \Const{ss\_can} (\Const{ss\_imp} \BVar{SS$_1$}) (\Const{can\_impi} \BVar{CN$_1$})
+      $\leftarrow$ ($\Pi$\BVar{d}:\Const{assume} \BVar{A}. $\Pi$\BVar{u}:\Const{pf} \BVar{A}. $\Pi$\BVar{hs}:\Const{h\_sound} \BVar{d} \BVar{u}. $\Pi$\BVar{at}:\Const{atm} \BVar{u}.
+            \Const{hs\_atm} \BVar{hs} \BVar{at} $\rightarrow$ \Const{ss\_can} (\BVar{SS$_1$} \BVar{d} \BVar{u} \BVar{hs}) (\BVar{CN$_1$} \BVar{u} \BVar{at})).
+\Const{ssc\_true} : \Const{ss\_can} \Const{ss\_true} \Const{can\_truei}.
+\Const{ssc\_forall} :
+   \Const{ss\_can} (\Const{ss\_forall} \BVar{SS$_1$}) (\Const{can\_foralli} \BVar{CN$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{ss\_can} (\BVar{SS$_1$} \BVar{a}) (\BVar{CN$_1$} \BVar{a})).
+\Const{ssc\_atom} :
+   \Const{ss\_can} (\Const{ss\_atom} \BVar{IS$_2$} \BVar{HS$_1$}) (\Const{can\_atm} (\BVar{AT$_2$} \BVar{D$_2$} \BVar{AT$_1$}))
+      $\leftarrow$ \Const{hs\_atm} \BVar{HS$_1$} \BVar{AT$_1$}
+      $\leftarrow$ \Const{is\_atm} \BVar{IS$_2$} \BVar{AT$_2$}.
+\Const{isc\_andl} :
+   \Const{is\_atm} (\Const{is\_andl} \BVar{IS$_1$})
+      ($\lambda$\BVar{u}:\Const{pf} (\BVar{A} \Const{and} \BVar{B}). $\lambda$\BVar{at}:\Const{atm} \BVar{u}. \BVar{AT$_1$} (\Const{andel} \BVar{u}) (\Const{atm\_andel} \BVar{at}))
+      $\leftarrow$ \Const{is\_atm} \BVar{IS$_1$} \BVar{AT$_1$}.
+\Const{isc\_andr} :
+   \Const{is\_atm} (\Const{is\_andr} \BVar{IS$_1$})
+      ($\lambda$\BVar{u}:\Const{pf} (\BVar{A} \Const{and} \BVar{B}). $\lambda$\BVar{at}:\Const{atm} \BVar{u}. \BVar{AT$_1$} (\Const{ander} \BVar{u}) (\Const{atm\_ander} \BVar{at}))
+      $\leftarrow$ \Const{is\_atm} \BVar{IS$_1$} \BVar{AT$_1$}.
+\Const{isc\_imp} :
+   \Const{is\_atm} (\Const{is\_imp} \BVar{SS$_2$} \BVar{IS$_1$})
+      ($\lambda$\BVar{u}:\Const{pf} (\BVar{A} \Const{imp} \BVar{B}). $\lambda$\BVar{at}:\Const{atm} \BVar{u}. \BVar{AT$_1$} (\Const{impe} \BVar{u} \BVar{D$_1$}) (\Const{atm\_impe} \BVar{CN$_2$} \BVar{at}))
+      $\leftarrow$ \Const{is\_atm} \BVar{IS$_1$} \BVar{AT$_1$}
+      $\leftarrow$ \Const{ss\_can} \BVar{SS$_2$} \BVar{CN$_2$}.
+\Const{isc\_forall} :
+   \Const{is\_atm} (\Const{is\_forall} \BVar{IS$_1$})
+      ($\lambda$\BVar{u}:\Const{pf} (\Const{forall} \BVar{A}). $\lambda$\BVar{at}:\Const{atm} \BVar{u}. \BVar{AT$_1$} (\Const{foralle} \BVar{u} \BVar{T$_1$}) (\Const{atm\_foralle} \BVar{at}))
+      $\leftarrow$ \Const{is\_atm} \BVar{IS$_1$} \BVar{AT$_1$}.
+\Const{isc\_atom} : \Const{is\_atm} \Const{is\_atom} ($\lambda$\BVar{u}:\Const{pf} (\Const{atom} \BVar{P}). $\lambda$\BVar{at}:\Const{atm} \BVar{u}. \BVar{at}).
+\Const{cmpcs} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{D}:\Const{pf} \BVar{A}. \Const{can} \BVar{A} \BVar{D} $\rightarrow$ \Const{solve} \BVar{A} $\rightarrow$ {\Type}.
+\Const{cmpai} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{D}:\Const{pf} \BVar{A}. \Const{atm} \BVar{D} $\rightarrow$ ($\Pi$\BVar{P}:\Const{p}. \BVar{A} \Const{$>$$>$} \BVar{P} $\rightarrow$ \Const{solve} (\Const{atom} \BVar{P})) $\rightarrow$ {\Type}.
+\Const{cmpcs\_andi} :
+   \Const{cmpcs} (\Const{can\_andi} \BVar{CN$_2$} \BVar{CN$_1$}) (\Const{s\_and} \BVar{S$_2$} \BVar{S$_1$}) $\leftarrow$ \Const{cmpcs} \BVar{CN$_1$} \BVar{S$_1$} $\leftarrow$ \Const{cmpcs} \BVar{CN$_2$} \BVar{S$_2$}.
+\Const{cmpcs\_impi} :
+   \Const{cmpcs} (\Const{can\_impi} \BVar{CN$_1$}) (\Const{s\_imp} \BVar{S$_1$})
+      $\leftarrow$ ($\Pi$\BVar{u}:\Const{pf} \BVar{A$_2$}. $\Pi$\BVar{a}:\Const{atm} \BVar{u}. $\Pi$\BVar{d}:\Const{assume} \BVar{A$_2$}.
+            \Const{cmpai} \BVar{u} \BVar{a} ($\lambda$\BVar{P}:\Const{p}. $\lambda$\BVar{i$_1$}:\BVar{A$_2$} \Const{$>$$>$} \BVar{P}. \Const{s\_atom} \BVar{i$_1$} \BVar{d}) $\rightarrow$ \Const{cmpcs} (\BVar{CN$_1$} \BVar{u} \BVar{a}) (\BVar{S$_1$} \BVar{d})).
+\Const{cmpcs\_truei} : \Const{cmpcs} \Const{can\_truei} \Const{s\_true}.
+\Const{cmpcs\_foralli} :
+   \Const{cmpcs} (\Const{can\_foralli} \BVar{CN$_1$}) (\Const{s\_forall} \BVar{S$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{cmpcs} (\BVar{CN$_1$} \BVar{a}) (\BVar{S$_1$} \BVar{a})).
+\Const{cmpcs\_atm} : \Const{cmpcs} (\Const{can\_atm} \BVar{AT$_1$}) (\BVar{I$_1$} \BVar{Q} \Const{i\_atom}) $\leftarrow$ \Const{cmpai} \BVar{D} \BVar{AT$_1$} \BVar{I$_1$}.
+\Const{cmpai\_andel} :
+   \Const{cmpai} (\Const{andel} \BVar{D$_1$}) (\Const{atm\_andel} \BVar{CN$_1$}) ($\lambda$\BVar{P}:\Const{p}. $\lambda$\BVar{i$_1$}:\BVar{A} \Const{$>$$>$} \BVar{P}. \BVar{I$_1$} \BVar{P} (\Const{i\_andl} \BVar{i$_1$}))
+      $\leftarrow$ \Const{cmpai} \BVar{D$_1$} \BVar{CN$_1$} \BVar{I$_1$}.
+\Const{cmpai\_ander} :
+   \Const{cmpai} (\Const{ander} \BVar{D$_1$}) (\Const{atm\_ander} \BVar{CN$_1$}) ($\lambda$\BVar{P}:\Const{p}. $\lambda$\BVar{i$_1$}:\BVar{A} \Const{$>$$>$} \BVar{P}. \BVar{I$_1$} \BVar{P} (\Const{i\_andr} \BVar{i$_1$}))
+      $\leftarrow$ \Const{cmpai} \BVar{D$_1$} \BVar{CN$_1$} \BVar{I$_1$}.
+\Const{cmpai\_impe} :
+   \Const{cmpai} (\Const{impe} \BVar{D$_1$} \BVar{D$_2$}) (\Const{atm\_impe} \BVar{CN$_2$} \BVar{AT$_1$}) ($\lambda$\BVar{P}:\Const{p}. $\lambda$\BVar{i$_1$}:\BVar{A} \Const{$>$$>$} \BVar{P}. \BVar{I$_1$} \BVar{P} (\Const{i\_imp} \BVar{S$_2$} \BVar{i$_1$}))
+      $\leftarrow$ \Const{cmpai} \BVar{D$_1$} \BVar{AT$_1$} \BVar{I$_1$}
+      $\leftarrow$ \Const{cmpcs} \BVar{CN$_2$} \BVar{S$_2$}.
+\Const{cmpai\_foralle} :
+   \Const{cmpai} (\Const{foralle} \BVar{D$_1$} \BVar{T}) (\Const{atm\_foralle} \BVar{AT$_1$})
+      ($\lambda$\BVar{P}:\Const{p}. $\lambda$\BVar{i$_1$}:\BVar{A$_1$} \BVar{T} \Const{$>$$>$} \BVar{P}. \BVar{I$_1$} \BVar{P} (\Const{i\_forall} \BVar{T} \BVar{i$_1$}))
+      $\leftarrow$ \Const{cmpai} \BVar{D$_1$} \BVar{AT$_1$} \BVar{I$_1$}.
+\Const{goal} : {\Type}.
+\Const{prog} : {\Type}.
+\Const{atom$'$} : \Const{goal} $\leftarrow$ \Const{p}.
+\Const{and$'$} : \Const{goal} $\leftarrow$ \Const{goal} $\leftarrow$ \Const{goal}.
+\Const{imp$'$} : \Const{goal} $\leftarrow$ \Const{goal} $\leftarrow$ \Const{prog}.
+\Const{true$'$} : \Const{goal}.
+\Const{forall$'$} : \Const{goal} $\leftarrow$ (\Const{i} $\rightarrow$ \Const{goal}).
+\Const{or$'$} : \Const{goal} $\leftarrow$ \Const{goal} $\leftarrow$ \Const{goal}.
+\Const{false$'$} : \Const{goal}.
+\Const{exists$'$} : \Const{goal} $\leftarrow$ (\Const{i} $\rightarrow$ \Const{goal}).
+\Const{==} : \Const{goal} $\leftarrow$ \Const{p} $\leftarrow$ \Const{p}.
+\Const{atom\^{\ }} : \Const{prog} $\leftarrow$ \Const{p}.
+\Const{and\^{\ }} : \Const{prog} $\leftarrow$ \Const{prog} $\leftarrow$ \Const{prog}.
+\Const{imp\^{\ }} : \Const{prog} $\leftarrow$ \Const{prog} $\leftarrow$ \Const{goal}.
+\Const{true\^{\ }} : \Const{prog}.
+\Const{forall\^{\ }} : \Const{prog} $\leftarrow$ (\Const{i} $\rightarrow$ \Const{prog}).
+\Const{gl} : \Const{o} $\rightarrow$ \Const{goal} $\rightarrow$ {\Type}.
+\Const{pg} : \Const{o} $\rightarrow$ \Const{prog} $\rightarrow$ {\Type}.
+\Const{gl\_atom} : \Const{gl} (\Const{atom} \BVar{P}) (\Const{atom$'$} \BVar{P}).
+\Const{gl\_and} : \Const{gl} (\BVar{A$_1$} \Const{and} \BVar{A$_2$}) (\BVar{G$_1$} \Const{and$'$} \BVar{G$_2$}) $\leftarrow$ \Const{gl} \BVar{A$_1$} \BVar{G$_1$} $\leftarrow$ \Const{gl} \BVar{A$_2$} \BVar{G$_2$}.
+\Const{gl\_imp} : \Const{gl} (\BVar{A$_2$} \Const{imp} \BVar{A$_1$}) (\BVar{D$_2$} \Const{imp$'$} \BVar{G$_1$}) $\leftarrow$ \Const{gl} \BVar{A$_1$} \BVar{G$_1$} $\leftarrow$ \Const{pg} \BVar{A$_2$} \BVar{D$_2$}.
+\Const{gl\_true} : \Const{gl} \Const{true} \Const{true$'$}.
+\Const{gl\_forall} : \Const{gl} (\Const{forall} \BVar{A$_1$}) (\Const{forall$'$} \BVar{G$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{gl} (\BVar{A$_1$} \BVar{a}) (\BVar{G$_1$} \BVar{a})).
+\Const{pg\_atom} : \Const{pg} (\Const{atom} \BVar{P}) (\Const{atom\^{\ }} \BVar{P}).
+\Const{pg\_and} : \Const{pg} (\BVar{A$_1$} \Const{and} \BVar{A$_2$}) (\BVar{G$_1$} \Const{and\^{\ }} \BVar{G$_2$}) $\leftarrow$ \Const{pg} \BVar{A$_1$} \BVar{G$_1$} $\leftarrow$ \Const{pg} \BVar{A$_2$} \BVar{G$_2$}.
+\Const{pg\_imp} : \Const{pg} (\BVar{A$_2$} \Const{imp} \BVar{A$_1$}) (\BVar{G$_2$} \Const{imp\^{\ }} \BVar{D$_1$}) $\leftarrow$ \Const{pg} \BVar{A$_1$} \BVar{D$_1$} $\leftarrow$ \Const{gl} \BVar{A$_2$} \BVar{G$_2$}.
+\Const{pg\_true} : \Const{pg} \Const{true} \Const{true\^{\ }}.
+\Const{pg\_forall} : \Const{pg} (\Const{forall} \BVar{A$_1$}) (\Const{forall\^{\ }} \BVar{D$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{pg} (\BVar{A$_1$} \BVar{a}) (\BVar{D$_1$} \BVar{a})).
+\Const{solve$'$} : \Const{goal} $\rightarrow$ {\Type}.
+\Const{assume$'$} : \Const{prog} $\rightarrow$ {\Type}.
+\Const{resolve} : \Const{prog} $\rightarrow$ \Const{p} $\rightarrow$ \Const{goal} $\rightarrow$ {\Type}.
+\Const{s$'$\_and} : \Const{solve$'$} (\BVar{G$_1$} \Const{and$'$} \BVar{G$_2$}) $\leftarrow$ \Const{solve$'$} \BVar{G$_1$} $\leftarrow$ \Const{solve$'$} \BVar{G$_2$}.
+\Const{s$'$\_imp} : \Const{solve$'$} (\BVar{D$_2$} \Const{imp$'$} \BVar{G$_1$}) $\leftarrow$ (\Const{assume$'$} \BVar{D$_2$} $\rightarrow$ \Const{solve$'$} \BVar{G$_1$}).
+\Const{s$'$\_true} : \Const{solve$'$} \Const{true$'$}.
+\Const{s$'$\_forall} : \Const{solve$'$} (\Const{forall$'$} \BVar{G$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{solve$'$} (\BVar{G$_1$} \BVar{a})).
+\Const{s$'$\_eqp} : \Const{solve$'$} (\BVar{P} \Const{==} \BVar{P}).
+\Const{s$'$\_orl} : \Const{solve$'$} (\BVar{G$_1$} \Const{or$'$} \BVar{G$_2$}) $\leftarrow$ \Const{solve$'$} \BVar{G$_1$}.
+\Const{s$'$\_orr} : \Const{solve$'$} (\BVar{G$_1$} \Const{or$'$} \BVar{G$_2$}) $\leftarrow$ \Const{solve$'$} \BVar{G$_2$}.
+\Const{s$'$\_exists} : $\Pi$\BVar{T}:\Const{i}. \Const{solve$'$} (\Const{exists$'$} \BVar{G$_1$}) $\leftarrow$ \Const{solve$'$} (\BVar{G$_1$} \BVar{T}).
+\Const{s$'$\_atom} : \Const{solve$'$} (\Const{atom$'$} \BVar{P}) $\leftarrow$ \Const{assume$'$} \BVar{D} $\leftarrow$ \Const{resolve} \BVar{D} \BVar{P} \BVar{G} $\leftarrow$ \Const{solve$'$} \BVar{G}.
+\Const{r\_and} : \Const{resolve} (\BVar{D$_1$} \Const{and\^{\ }} \BVar{D$_2$}) \BVar{P} (\BVar{G$_1$} \Const{or$'$} \BVar{G$_2$}) $\leftarrow$ \Const{resolve} \BVar{D$_1$} \BVar{P} \BVar{G$_1$} $\leftarrow$ \Const{resolve} \BVar{D$_2$} \BVar{P} \BVar{G$_2$}.
+\Const{r\_imp} : \Const{resolve} (\BVar{G$_2$} \Const{imp\^{\ }} \BVar{D$_1$}) \BVar{P} (\BVar{G$_1$} \Const{and$'$} \BVar{G$_2$}) $\leftarrow$ \Const{resolve} \BVar{D$_1$} \BVar{P} \BVar{G$_1$}.
+\Const{r\_true} : \Const{resolve} \Const{true\^{\ }} \BVar{P} \Const{false$'$}.
+\Const{r\_forall} :
+   \Const{resolve} (\Const{forall\^{\ }} \BVar{D$_1$}) \BVar{P} (\Const{exists$'$} \BVar{G$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{resolve} (\BVar{D$_1$} \BVar{a}) \BVar{P} (\BVar{G$_1$} \BVar{a})).
+\Const{r\_atom} : \Const{resolve} (\Const{atom\^{\ }} \BVar{Q}) \BVar{P} (\BVar{Q} \Const{==} \BVar{P}).
+\Const{s$'$\_sound} : $\Pi$\BVar{G}:\Const{goal}. $\Pi$\BVar{A}:\Const{o}. \Const{solve$'$} \BVar{G} $\rightarrow$ \Const{gl} \BVar{A} \BVar{G} $\rightarrow$ \Const{solve} \BVar{A} $\rightarrow$ {\Type}.
+\Const{h$'$\_sound} : $\Pi$\BVar{D}:\Const{prog}. $\Pi$\BVar{A}:\Const{o}. \Const{assume$'$} \BVar{D} $\rightarrow$ \Const{pg} \BVar{A} \BVar{D} $\rightarrow$ \Const{assume} \BVar{A} $\rightarrow$ {\Type}.
+\Const{r\_sound} :
+   $\Pi$\BVar{D}:\Const{prog}. $\Pi$\BVar{P}:\Const{p}. $\Pi$\BVar{G}:\Const{goal}. $\Pi$\BVar{A}:\Const{o}.
+      \Const{resolve} \BVar{D} \BVar{P} \BVar{G} $\rightarrow$ \Const{solve$'$} \BVar{G} $\rightarrow$ \Const{pg} \BVar{A} \BVar{D} $\rightarrow$ \BVar{A} \Const{$>$$>$} \BVar{P} $\rightarrow$ {\Type}.
+\Const{s$'$s\_and} :
+   \Const{s$'$\_sound} (\Const{s$'$\_and} \BVar{S$'$$_2$} \BVar{S$'$$_1$}) (\Const{gl\_and} \BVar{GL$_2$} \BVar{GL$_1$}) (\Const{s\_and} \BVar{S$_2$} \BVar{S$_1$})
+      $\leftarrow$ \Const{s$'$\_sound} \BVar{S$'$$_1$} \BVar{GL$_1$} \BVar{S$_1$}
+      $\leftarrow$ \Const{s$'$\_sound} \BVar{S$'$$_2$} \BVar{GL$_2$} \BVar{S$_2$}.
+\Const{s$'$s\_imp} :
+   \Const{s$'$\_sound} (\Const{s$'$\_imp} \BVar{S$'$$_1$}) (\Const{gl\_imp} \BVar{PG$_2$} \BVar{GL$_1$}) (\Const{s\_imp} \BVar{S$_1$})
+      $\leftarrow$ ($\Pi$\BVar{h$'$}:\Const{assume$'$} \BVar{D$_2$}. $\Pi$\BVar{h}:\Const{assume} \BVar{A$_2$}.
+            \Const{h$'$\_sound} \BVar{h$'$} \BVar{PG$_2$} \BVar{h} $\rightarrow$ \Const{s$'$\_sound} (\BVar{S$'$$_1$} \BVar{h$'$}) \BVar{GL$_1$} (\BVar{S$_1$} \BVar{h})).
+\Const{s$'$s\_true} : \Const{s$'$\_sound} \Const{s$'$\_true} \Const{gl\_true} \Const{s\_true}.
+\Const{s$'$s\_forall} :
+   \Const{s$'$\_sound} (\Const{s$'$\_forall} \BVar{S$'$$_1$}) (\Const{gl\_forall} \BVar{GL$_1$}) (\Const{s\_forall} \BVar{S$_1$})
+      $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{s$'$\_sound} (\BVar{S$'$$_1$} \BVar{a}) (\BVar{GL$_1$} \BVar{a}) (\BVar{S$_1$} \BVar{a})).
+\Const{s$'$s\_atom} :
+   \Const{s$'$\_sound} (\Const{s$'$\_atom} \BVar{S$'$$_3$} \BVar{R$_2$} \BVar{H$'$$_1$}) \Const{gl\_atom} (\Const{s\_atom} \BVar{I$_2$} \BVar{PR$_1$})
+      $\leftarrow$ \Const{h$'$\_sound} \BVar{H$'$$_1$} \BVar{PG$_1$} \BVar{PR$_1$}
+      $\leftarrow$ \Const{r\_sound} \BVar{R$_2$} \BVar{S$'$$_3$} \BVar{PG$_1$} \BVar{I$_2$}.
+\Const{rs$'$\_andl} :
+   \Const{r\_sound} (\Const{r\_and} \BVar{R$_2$} \BVar{R$_1$}) (\Const{s$'$\_orl} \BVar{S$'$$_1$}) (\Const{pg\_and} \BVar{PG$_2$} \BVar{PG$_1$}) (\Const{i\_andl} \BVar{I$_1$})
+      $\leftarrow$ \Const{r\_sound} \BVar{R$_1$} \BVar{S$'$$_1$} \BVar{PG$_1$} \BVar{I$_1$}.
+\Const{rs$'$\_andr} :
+   \Const{r\_sound} (\Const{r\_and} \BVar{R$_2$} \BVar{R$_1$}) (\Const{s$'$\_orr} \BVar{S$'$$_2$}) (\Const{pg\_and} \BVar{PG$_2$} \BVar{PG$_1$}) (\Const{i\_andr} \BVar{I$_2$})
+      $\leftarrow$ \Const{r\_sound} \BVar{R$_2$} \BVar{S$'$$_2$} \BVar{PG$_2$} \BVar{I$_2$}.
+\Const{rs$'$\_imp} :
+   \Const{r\_sound} (\Const{r\_imp} \BVar{R$_1$}) (\Const{s$'$\_and} \BVar{S$'$$_2$} \BVar{S$'$$_1$}) (\Const{pg\_imp} \BVar{GL$_2$} \BVar{PG$_1$}) (\Const{i\_imp} \BVar{S$_2$} \BVar{I$_1$})
+      $\leftarrow$ \Const{r\_sound} \BVar{R$_1$} \BVar{S$'$$_1$} \BVar{PG$_1$} \BVar{I$_1$}
+      $\leftarrow$ \Const{s$'$\_sound} \BVar{S$'$$_2$} \BVar{GL$_2$} \BVar{S$_2$}.
+\Const{rs$'$\_forall} :
+   \Const{r\_sound} (\Const{r\_forall} \BVar{R$_1$}) (\Const{s$'$\_exists} \BVar{T} \BVar{S$'$$_1$}) (\Const{pg\_forall} \BVar{PG$_1$}) (\Const{i\_forall} \BVar{T} \BVar{I$_1$})
+      $\leftarrow$ \Const{r\_sound} (\BVar{R$_1$} \BVar{T}) \BVar{S$'$$_1$} (\BVar{PG$_1$} \BVar{T}) \BVar{I$_1$}.
+\Const{rs$'$\_atom} : \Const{r\_sound} \Const{r\_atom} \Const{s$'$\_eqp} \Const{pg\_atom} \Const{i\_atom}.
+\Const{r\_total} : $\Pi$\BVar{P}:\Const{p}. $\Pi$\BVar{G}:\Const{goal}. $\Pi$\BVar{D}:\Const{prog}. \Const{resolve} \BVar{D} \BVar{P} \BVar{G} $\rightarrow$ {\Type}.
+\Const{rt\_and} : \Const{r\_total} (\BVar{D$_1$} \Const{and\^{\ }} \BVar{D$_2$}) (\Const{r\_and} \BVar{R$_2$} \BVar{R$_1$}) $\leftarrow$ \Const{r\_total} \BVar{D$_1$} \BVar{R$_1$} $\leftarrow$ \Const{r\_total} \BVar{D$_2$} \BVar{R$_2$}.
+\Const{rt\_imp} : \Const{r\_total} (\BVar{G$_2$} \Const{imp\^{\ }} \BVar{D$_1$}) (\Const{r\_imp} \BVar{R$_1$}) $\leftarrow$ \Const{r\_total} \BVar{D$_1$} \BVar{R$_1$}.
+\Const{rt\_true} : \Const{r\_total} \Const{true\^{\ }} \Const{r\_true}.
+\Const{rt\_forall} : \Const{r\_total} (\Const{forall\^{\ }} \BVar{D$_1$}) (\Const{r\_forall} \BVar{R$_1$}) $\leftarrow$ ($\Pi$\BVar{a}:\Const{i}. \Const{r\_total} (\BVar{D$_1$} \BVar{a}) (\BVar{R$_1$} \BVar{a})).
+\Const{rt\_atom} : \Const{r\_total} (\Const{atom\^{\ }} \BVar{Q}) \Const{r\_atom}.
+\Const{s$'$\_comp} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{G}:\Const{goal}. \Const{solve} \BVar{A} $\rightarrow$ \Const{gl} \BVar{A} \BVar{G} $\rightarrow$ \Const{solve$'$} \BVar{G} $\rightarrow$ {\Type}.
+\Const{h$'$\_comp} : $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{D}:\Const{prog}. \Const{assume} \BVar{A} $\rightarrow$ \Const{pg} \BVar{A} \BVar{D} $\rightarrow$ \Const{assume$'$} \BVar{D} $\rightarrow$ {\Type}.
+\Const{r\_comp} :
+   $\Pi$\BVar{A}:\Const{o}. $\Pi$\BVar{P}:\Const{p}. $\Pi$\BVar{D}:\Const{prog}. $\Pi$\BVar{G}:\Const{goal}.
+      \BVar{A} \Const{$>$$>$} \BVar{P} $\rightarrow$ \Const{pg} \BVar{A} \BVar{D} $\rightarrow$ \Const{resolve} \BVar{D} \BVar{P} \BVar{G} $\rightarrow$ \Const{solve$'$} \BVar{G} $\rightarrow$ {\Type}.
+\Const{s$'$s\_and} :
+   \Const{s$'$\_comp} (\Const{s\_and} \BVar{S$_2$} \BVar{S$_1$}) (\Const{gl\_and} \BVar{GL$_2$} \BVar{GL$_1$}) (\Const{s$'$\_and} \BVar{S$'$$_2$} \BVar{S$'$$_1$})
+      $\leftarrow$ \Const{s$'$\_comp} \BVar{S$_1$} \BVar{GL$_1$} \BVar{S$'$$_1$}
+      $\leftarrow$ \Const{s$'$\_comp} \BVar{S$_2$} \BVar{GL$_2$} \BVar{S$'$$_2$}.
+\Const{s$'$s\_imp} :
+   \Const{s$'$\_comp} (\Const{s\_imp} \BVar{S$_1$}) (\Const{gl\_imp} \BVar{PG$_2$} \BVar{GL$_1$}) (\Const{s$'$\_imp} \BVar{S$'$$_1$})
+      $\leftarrow$ ($\Pi$\BVar{h}:\Const{assume} \BVar{A$_2$}. $\Pi$\BVar{h$'$}:\Const{assume$'$} \BVar{D$_2$}.
+            \Const{h$'$\_comp} \BVar{h} \BVar{PG$_2$} \BVar{h$'$} $\rightarrow$ \Const{s$'$\_comp} (\BVar{S$_1$} \BVar{h}) \BVar{GL$_1$} (\BVar{S$'$$_1$} \BVar{h$'$})).
+\Const{s$'$s\_true} : \Const{s$'$\_comp} \Const{s\_true} \Const{gl\_true} \Const{s$'$\_true}.
+\Const{s$'$s\_atom} :
+   \Const{s$'$\_comp} (\Const{s\_atom} \BVar{I$_2$} \BVar{H$_1$}) \Const{gl\_atom} (\Const{s$'$\_atom} \BVar{S$'$$_3$} \BVar{R$_2$} \BVar{H$'$$_1$})
+      $\leftarrow$ \Const{h$'$\_comp} \BVar{H$_1$} \BVar{PG$_1$} \BVar{H$'$$_1$}
+      $\leftarrow$ \Const{r\_total} \BVar{D} \BVar{R$_2$}
+      $\leftarrow$ \Const{r\_comp} \BVar{I$_2$} \BVar{PG$_1$} \BVar{R$_2$} \BVar{S$'$$_3$}.
+\Const{rs$'$\_andl} :
+   \Const{r\_comp} (\Const{i\_andl} \BVar{I$_1$}) (\Const{pg\_and} \BVar{PG$_2$} \BVar{PG$_1$}) (\Const{r\_and} \BVar{R$_2$} \BVar{R$_1$}) (\Const{s$'$\_orl} \BVar{S$'$$_1$})
+      $\leftarrow$ \Const{r\_comp} \BVar{I$_1$} \BVar{PG$_1$} \BVar{R$_1$} \BVar{S$'$$_1$}.
+\Const{rs$'$\_andr} :
+   \Const{r\_comp} (\Const{i\_andr} \BVar{I$_2$}) (\Const{pg\_and} \BVar{PG$_2$} \BVar{PG$_1$}) (\Const{r\_and} \BVar{R$_2$} \BVar{R$_1$}) (\Const{s$'$\_orr} \BVar{S$'$$_2$})
+      $\leftarrow$ \Const{r\_comp} \BVar{I$_2$} \BVar{PG$_2$} \BVar{R$_2$} \BVar{S$'$$_2$}.
+\Const{rs$'$\_imp} :
+   \Const{r\_comp} (\Const{i\_imp} \BVar{S$_2$} \BVar{I$_1$}) (\Const{pg\_imp} \BVar{GL$_2$} \BVar{PG$_1$}) (\Const{r\_imp} \BVar{R$_1$}) (\Const{s$'$\_and} \BVar{S$'$$_2$} \BVar{S$'$$_1$})
+      $\leftarrow$ \Const{r\_comp} \BVar{I$_1$} \BVar{PG$_1$} \BVar{R$_1$} \BVar{S$'$$_1$}
+      $\leftarrow$ \Const{s$'$\_comp} \BVar{S$_2$} \BVar{GL$_2$} \BVar{S$'$$_2$}.
+\Const{rs$'$\_forall} :
+   \Const{r\_comp} (\Const{i\_forall} \BVar{T} \BVar{I$_1$}) (\Const{pg\_forall} \BVar{PG$_1$}) (\Const{r\_forall} \BVar{R$_1$}) (\Const{s$'$\_exists} \BVar{T} \BVar{S$'$$_1$})
+      $\leftarrow$ \Const{r\_comp} \BVar{I$_1$} (\BVar{PG$_1$} \BVar{T}) (\BVar{R$_1$} \BVar{T}) \BVar{S$'$$_1$}.
+\Const{rs$'$\_atom} : \Const{r\_comp} \Const{i\_atom} \Const{pg\_atom} \Const{r\_atom} \Const{s$'$\_eqp}.
+\Const{q$_0$} : \Const{p}.
+\Const{r$_0$} : \Const{p}.
+\Const{s$_0$} : \Const{p}.
+\Const{$_0$} : \Const{i}.
+\Const{s} : \Const{i} $\leftarrow$ \Const{i}.
+\Const{nat} : \Const{p} $\leftarrow$ \Const{i}.
+\Const{natz} : \Const{assume} (\Const{atom} (\Const{nat} \Const{$_0$})).
+\Const{nats} : \Const{assume} (\Const{forall} ($\lambda$\BVar{X}:\Const{i}. \Const{atom} (\Const{nat} \BVar{X}) \Const{imp} \Const{atom} (\Const{nat} (\Const{s} \BVar{X})))).
+\Const{plus} : \Const{p} $\leftarrow$ \Const{i} $\leftarrow$ \Const{i} $\leftarrow$ \Const{i}.
+\Const{plz} : \Const{assume} (\Const{forall} ($\lambda$\BVar{Y}:\Const{i}. \Const{atom} (\Const{plus} \Const{$_0$} \BVar{Y} \BVar{Y}))).
+\Const{pls} :
+   \Const{assume}
+      (\Const{forall}
+          ($\lambda$\BVar{X}:\Const{i}.
+              \Const{forall}
+                 ($\lambda$\BVar{Y}:\Const{i}.
+                     \Const{forall}
+                        ($\lambda$\BVar{Z}:\Const{i}. \Const{atom} (\Const{plus} \BVar{X} \BVar{Y} \BVar{Z}) \Const{imp} \Const{atom} (\Const{plus} (\Const{s} \BVar{X}) \BVar{Y} (\Const{s} \BVar{Z})))))).
+\Const{double} : \Const{p} $\leftarrow$ \Const{i} $\leftarrow$ \Const{i}.
+\Const{db} :
+   \Const{assume$'$}
+      (\Const{atom\^{\ }} (\Const{double} \Const{$_0$} \Const{$_0$})
+          \Const{and\^{\ }} \Const{forall\^{\ }}
+                  ($\lambda$\BVar{X}:\Const{i}.
+                      \Const{forall\^{\ }}
+                         ($\lambda$\BVar{Y}:\Const{i}.
+                             \Const{atom$'$} (\Const{double} \BVar{X} \BVar{Y})
+                                \Const{imp\^{\ }} \Const{atom\^{\ }} (\Const{double} (\Const{s} \BVar{X}) (\Const{s} (\Const{s} \BVar{Y})))))).
+\Const{csolve} : \Const{prog} $\rightarrow$ \Const{goal} $\rightarrow$ \Const{goal} $\rightarrow$ \Const{goal} $\rightarrow$ {\Type}.
+\Const{cs\_and} : \Const{csolve} \BVar{D} (\BVar{G$_1$} \Const{and$'$} \BVar{G$_2$}) \BVar{SC} \BVar{FC} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} (\BVar{G$_2$} \Const{and$'$} \BVar{SC}) \BVar{FC}.
+\Const{cs\_true} : \Const{csolve} \BVar{D} \Const{true$'$} (\BVar{G$_1$} \Const{and$'$} \BVar{SC$_2$}) \BVar{FC} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC$_2$} \BVar{FC}.
+\Const{cs\_true*} : \Const{csolve} \BVar{D} \Const{true$'$} \Const{true$'$} \BVar{FC}.
+\Const{cs\_true$'$} : \Const{csolve} \BVar{D} \Const{true$'$} \BVar{SC} (\BVar{G$_1$} \Const{or$'$} \BVar{FC$_2$}) $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC} \BVar{FC$_2$}.
+\Const{cs\_eqp} : \Const{csolve} \BVar{D} (\BVar{P} \Const{==} \BVar{P}) (\BVar{G$_1$} \Const{and$'$} \BVar{SC$_2$}) \BVar{FC} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC$_2$} \BVar{FC}.
+\Const{cs\_eqp*} : \Const{csolve} \BVar{D} (\BVar{P} \Const{==} \BVar{P}) \Const{true$'$} \BVar{FC}.
+\Const{cs\_eqp$'$} : \Const{csolve} \BVar{D} (\BVar{Q} \Const{==} \BVar{P}) \BVar{SC} (\BVar{G$_1$} \Const{or$'$} \BVar{FC$_2$}) $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC} \BVar{FC$_2$}.
+\Const{cs\_or} : \Const{csolve} \BVar{D} (\BVar{G$_1$} \Const{or$'$} \BVar{G$_2$}) \BVar{SC} \BVar{FC} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC} (\BVar{G$_2$} \Const{or$'$} \BVar{FC}).
+\Const{cs\_false} : \Const{csolve} \BVar{D} \Const{false$'$} \BVar{SC} (\BVar{G$_1$} \Const{or$'$} \BVar{FC$_2$}) $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G$_1$} \BVar{SC} \BVar{FC$_2$}.
+\Const{cs\_exists} : $\Pi$\BVar{T}:\Const{i}. \Const{csolve} \BVar{D} (\Const{exists$'$} \BVar{G$_1$}) \BVar{SC} \BVar{FC} $\leftarrow$ \Const{csolve} \BVar{D} (\BVar{G$_1$} \BVar{T}) \BVar{SC} \BVar{FC}.
+\Const{cs\_atom} : \Const{csolve} \BVar{D} (\Const{atom$'$} \BVar{P}) \BVar{SC} \BVar{FC} $\leftarrow$ \Const{resolve} \BVar{D} \BVar{P} \BVar{G} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G} \BVar{SC} \BVar{FC}.
+\Const{top\_solve} : \Const{prog} $\rightarrow$ \Const{goal} $\rightarrow$ {\Type}.
+\Const{ts} : \Const{top\_solve} \BVar{D} \BVar{G} $\leftarrow$ \Const{csolve} \BVar{D} \BVar{G} \Const{true$'$} \Const{false$'$}.
+\end{bigcode}
+
+\end{document}

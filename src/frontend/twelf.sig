@@ -10,6 +10,9 @@ sig
     val length : int option ref	      (* NONE, limit argument length *)
     val indent : int ref	      (* 3, indentation of subterms *)
     val width : int ref		      (* 80, line width *)
+
+    val sgn : unit -> unit	      (* print global signature in Ascii format *)
+    val tex : unit -> unit	      (* print global signature in TeX format *)
   end
 
   structure Timers :

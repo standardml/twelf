@@ -2,6 +2,8 @@ Group is
   ../lambda/sources.cm
   ../names/sources.cm
   ../formatter/sources.cm
+  symbol.sig
+  symbol.fun
   print.sig
   print.fun
   clause-print.sig

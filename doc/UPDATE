@@ -3,3 +3,5 @@
 - Add remark about "%assert" and "safe mode"
 - Add remark about "%establish" and "%proof"
 
+- Add Twelf.Print.sgn
+- Add Twelf.Print.tex

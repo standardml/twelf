@@ -7,7 +7,8 @@ functor Print (structure IntSyn' : INTSYN
 	         sharing Whnf.IntSyn = IntSyn'
 	       structure Names : NAMES
 		 sharing Names.IntSyn = IntSyn'
-	       structure Formatter' : FORMATTER)
+	       structure Formatter' : FORMATTER
+	       structure Symbol : SYMBOL)
   : PRINT =
 struct
 
@@ -26,13 +27,15 @@ local
   structure FX = Names.Fixity
   structure F = Formatter
   val Str = F.String
+  fun Str0 (s, n) = F.String0 n s
+  fun sym (s) = Str0 (Symbol.sym s)
 
   fun nameOf (SOME(id)) = id
     | nameOf (NONE) = "_"
 
   (* fmtEVar (G, X) = "X", the name of the EVar X *)
   (* Effect: Names.evarName will assign a name if X does not yet have one *)
-  fun fmtEVar (G, X) = Str (Names.evarName(G, X))
+  fun fmtEVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X)))
 
   (* isNil S = true iff S == Nil *)
   fun isNil (I.Nil) = true
@@ -137,7 +140,7 @@ local
   *)
   fun arrow (V1, V2) =
 	 OpArgs(FX.Infix(arrowPrec, FX.Right),
-		[F.Break, Str "->", F.Space],
+		[F.Break, sym "->", F.Space],
 		I.App (V1, I.App(V2, I.Nil)))
 
   (* Nonfix corresponds to application and therefore has precedence juxPrex (which is maximal) *)
@@ -165,11 +168,11 @@ local
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
-  fun fmtCon (G, I.BVar(n)) = Str (Names.bvarName(G, n))
-    | fmtCon (G, I.Const(cid)) = Str (Names.constName (cid))
-    | fmtCon (G, I.Skonst(cid)) = Str (Names.constName (cid))
-    | fmtCon (G, I.Def(cid)) = Str (Names.constName (cid))
-    | fmtCon (G, I.FVar (name, _, _)) = Str ("`" ^ name)
+  fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
+    | fmtCon (G, I.Const(cid)) = Str0 (Symbol.const (Names.constName (cid)))
+    | fmtCon (G, I.Skonst(cid)) = Str0 (Symbol.skonst (Names.constName (cid)))
+    | fmtCon (G, I.Def(cid)) = Str0 (Symbol.def (Names.constName (cid)))
+    | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
 
   (* for internal printing *)
   (* opargsImplicit (G, (C, S)) = oa
@@ -228,7 +231,7 @@ local
 		     of NONE => false
 		      | SOME(l') => (l > l')
 
-  val ldots = Str "..."
+  val ldots = sym "..."
 
   (* addots (l) = true  iff  l is equal to the optional printLength bound *)
   fun addots (l) = case !printLength
@@ -241,7 +244,7 @@ local
   *)
   fun parens ((fixity', fixity), fmt) =
       if FX.prec(fixity') >= FX.prec(fixity)
-	then F.Hbox [Str "(", fmt, Str ")"]
+	then F.Hbox [sym "(", fmt, sym ")"]
       else fmt
 
   (* eqFix (fixity, fixity') = true iff fixity and fixity' have the same precedence
@@ -276,8 +279,8 @@ local
   fun aa (Ctxt (fixity, accum, l), fmt) = addAccum (fmt, fixity, accum)
 
   (* fmtUni (L) = "L" *)
-  fun fmtUni (I.Type) = Str "type"
-    | fmtUni (I.Kind) = Str "kind"   (* impossible, included for robustness *)
+  fun fmtUni (I.Type) = sym "type"
+    | fmtUni (I.Kind) = sym "kind"   (* impossible, included for robustness *)
 
   (* fmtExpW (G, d, ctx, (U, s)) = fmt
      
@@ -353,7 +356,7 @@ local
   *)
   and fmtExp (G, d, ctx, (U, s)) =
 	 if exceeded(d,!printDepth)
-	    then Str "%%"
+	    then sym "%%"
 	    else fmtExpW (G, d, ctx, Whnf.whnf (U, s))
 
   (* fmtSpine (G, d, l, (S, s)) = fmts
@@ -495,7 +498,7 @@ local
   *)
   and braces (G, d, ((D,V), s)) =
 	 OpArgs(FX.Prefix(binderPrec),
-		[Str "{" , fmtDec (G, d, (D,s)), Str "}", F.Break],
+		[sym "{" , fmtDec (G, d, (D,s)), sym "}", F.Break],
 		IntSyn.App(V, IntSyn.Nil))
 
   (* brackets (G, d, ((D, U), s)) = oa
@@ -509,7 +512,7 @@ local
   *)
   and brackets (G, d, ((D,U), s)) =
 	 OpArgs(FX.Prefix(binderPrec),
-		[Str "[" , fmtDec (G, d, (D,s)), Str "]", F.Break],
+		[sym "[" , fmtDec (G, d, (D,s)), sym "]", F.Break],
 		IntSyn.App(U, IntSyn.Nil))
 
   (* fmtDec (G, d, (D, s)) = fmt
@@ -519,9 +522,11 @@ local
       G' |- D[s] decl
   *)
   and fmtDec (G, d, (I.Dec (x, V), s)) =
-      F.HVbox [Str (nameOf (x)), Str ":", fmtExp (G, d+1, noCtxt, (V,s))]
+      F.HVbox [Str0 (Symbol.bvar (nameOf (x))), sym ":", fmtExp (G, d+1, noCtxt, (V,s))]
       (* alternative with more whitespace *)
-      (* F.HVbox [Str (nameOf (x)), F.Space, Str ":", F.Break, fmtExp (G, d+1, noCtxt, (V,s))] *)
+      (* F.HVbox [Str0 (Symbol.bvar (nameOf (x))), F.Space, sym ":", F.Break,
+                  fmtExp (G, d+1, noCtxt, (V,s))]
+      *)
 
   (* fmtConDec (condec) = fmt
      formats a constant declaration (which must be closed)
@@ -534,14 +539,15 @@ local
 	val _ = Names.varReset ()
 	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [Str(name), F.Space, Str ":", F.Break, Vfmt, Str "."]
+	F.HVbox [Str0 (Symbol.const (name)), F.Space, sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (I.SkoDec (name, _, V, L)) =
       let
 	val _ = Names.varReset ()
 	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [Str "% ", Str(name), F.Space, Str ":", F.Break, Vfmt, Str "."]
+	F.HVbox [sym "%skolem", F.Break, Str0 (Symbol.skonst (name)), F.Space,
+		 sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (I.ConDef (name, _, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
@@ -551,10 +557,10 @@ local
 	val _ = Names.varReset ()
 	val Ufmt = fmtExp (I.Null, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [Str(name), F.Space, Str ":", F.Break,
+	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
 		 Vfmt, F.Break,
-		 Str "=", F.Space,
-		 Ufmt, Str "."]
+		 sym "=", F.Space,
+		 Ufmt, sym "."]
       end
 
 in
@@ -579,7 +585,7 @@ in
      for logic variables.
   *)
   fun fmtNamedEVar (U,name) =
-        F.HVbox [Str name, F.Space, Str "=", F.Break, formatExp (I.Null, U)]
+        F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break, formatExp (I.Null, U)]
 
   fun fmtEVarInst (nil) = [Str "Empty Substitution"]
     | fmtEVarInst ((U,name)::nil) = [fmtNamedEVar (U, name)]

@@ -46,30 +46,11 @@ struct
   
     fun prefixToString GM = F.makestring_fmt (fmtPrefix GM)
 
-    fun clauseToString (id, G, V) = 
-          F.makestring_fmt (F.HVbox [F.String id, ClausePrint.formatClause (G, V)]) 
-
-    (* conDecToString (condec) = "c:A" or "a:K",
-       where implicit quantifiers are omitted
-       Invariant: condec may not be a definition, but must be a constructor
-                  declaration.
-    *)
-    fun conDecToString (I.ConDec (id, k, V, _)) =
-	let 
-	  fun lower (GV, 0) = GV
-	    | lower ((G, I.Pi ((D, _), V)), k) = 
-	        lower ((I.Decl (G, D), V), k-1)
-	in 
-	  F.makestring_fmt (F.HVbox [F.String (id ^ ": "), F.Break, 
-				     ClausePrint.formatClause (lower ((I.Null, V), k)),
-				     F.String "."]) 
-	end
-
     fun stateToString (M.State (name, GM as M.Prefix (G, M, B), V)) =
           name ^ ":\n"
 	  ^ prefixToString GM ^ "\n--------------\n"
-	  ^ clauseToString ("", G, V) ^ "\n\n"
-      
+	  ^ ClausePrint.clauseToString (G, V) ^ "\n\n"
+
     fun sgnToString (M.SgnEmpty) = ""
       | sgnToString (M.ConDec (e, S)) =
 	(if !Global.chatter >= 4
@@ -78,15 +59,15 @@ struct
 	 else 
 	   if !Global.chatter >= 3
 	     (* use form without quantifiers, which is reparsable *)
-	     then (conDecToString e) ^ "\n"
+	     then ClausePrint.conDecToString e ^ "\n"
 	   else "")
-	^ (sgnToString S)
+	^ sgnToString S
   in
 
     val modeToString = modeToString
     val sgnToString = sgnToString
     val stateToString = stateToString
-    val conDecToString = conDecToString
+    val conDecToString = ClausePrint.conDecToString
 
   end (* local *)
 end; (* functor MetaPrint *)

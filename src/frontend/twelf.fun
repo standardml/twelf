@@ -103,7 +103,10 @@ functor Twelf
    structure Prover : PROVER
      sharing Prover.MetaSyn.IntSyn = IntSyn'
    structure ClausePrint : CLAUSEPRINT
-     sharing ClausePrint.IntSyn = IntSyn')
+     sharing ClausePrint.IntSyn = IntSyn'
+
+   structure PrintTeX : PRINT
+     sharing PrintTeX.IntSyn = IntSyn')
  :> TWELF =
 struct
 
@@ -161,6 +164,18 @@ struct
 	if !Global.chatter >= 3
 	  then Print.expToString GU
 	else ""
+
+    fun printSgnTeX' (cid) =
+        if cid >= IntSyn.sgnSize ()
+	  then ()
+	else (print (PrintTeX.conDecToString (IntSyn.sgnLookup (cid)));
+	      print ("\n");
+	      printSgnTeX' (cid+1))
+
+    fun printSgnTeX () =
+        (print "\\begin{bigcode}\n";
+	 ClausePrintTeX.printSgn ();
+         print "\\end{bigcode}\n")
 
     (* status ::= OK | ABORT  is the return status of various operations *)
     datatype Status = OK | ABORT
@@ -300,7 +315,7 @@ struct
 	  val La = Thm.install (T, rrs)
 	  val _ = map (Timers.time Timers.terminate Terminate.checkFam) La
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%terminates " ^ (ThmPrint.tDeclToString T) ^ ".\n")
+		    then print ("%terminates " ^ ThmPrint.tDeclToString T ^ ".\n")
 		  else ()
 	in
 	  ()
@@ -315,8 +330,7 @@ struct
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
 	  val _ = ModeSyn.installMode (cid, MS)
 	  val _ = if !Global.chatter >= 3
-		    then print ("%theorem " ^ name ^ " : " ^ 
-				       ClausePrint.theoremToString cid ^ ".\n")
+		    then print ("%theorem " ^ ClausePrint.conDecToString E ^ ".\n")
 		  else ()
 	in
 	  ()
@@ -324,8 +338,6 @@ struct
 
       (* Prove declaration *)
       | install1 (fileName, Parser.ProveDec lterm) =
-(*        ()
-      (* Fri Jan 15 16:48:09 1999 -fp *)*)
 	let 
 	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.proveToProve lterm 
 	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)
@@ -521,6 +533,8 @@ struct
 	val length : int option ref	(* NONE, limit argument length *)
 	val indent : int ref		(* 3, indentation of subterms *)
 	val width : int ref		(* 80, line width *)
+        val sgn : unit -> unit		(* print signature in Ascii format *)
+        val tex : unit -> unit		(* print signature in TeX format *)
       end
     =
     struct
@@ -529,13 +543,15 @@ struct
       val length = Print.printLength
       val indent = Print.Formatter.Indent
       val width = Print.Formatter.Pagewidth
+      fun sgn () = ClausePrint.printSgn ()
+      fun tex () = printSgnTeX ()
     end
 
     structure Timers :
       sig
 	val show : unit -> unit		(* show and reset timers *)
-	val reset : unit -> unit		(* reset timers *)
-	val check : unit -> unit		(* display, but not no reset *)
+	val reset : unit -> unit	(* reset timers *)
+	val check : unit -> unit	(* display, but not no reset *)
       end
     = Timers
 
@@ -597,6 +613,6 @@ struct
       end
     = Config
 
-    val version = "Twelf 1.2 R 1 (optimize)"
+    val version = "Twelf 1.2 R3 (optimize disabled)"
   end  (* local *)
 end; (* functor Twelf *)

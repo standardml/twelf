@@ -142,6 +142,15 @@ struct
 
     (* 0 <= cid < !nextCid *)
     fun sgnLookup (cid) = Array.sub (sgnArray, cid)
+
+    fun sgnApp (f) =
+        let
+	  fun sgnApp' (cid) = 
+	      if cid = !nextCid then () else (f cid; sgnApp' (cid+1)) 
+	in
+	  sgnApp' (0)
+	end
+
   end
 
   fun constDef (d) =
