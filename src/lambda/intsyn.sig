@@ -81,7 +81,8 @@ sig
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)
   | LVar of Block option ref * cid * Sub 
-                                        (*       L(l,s)               *)
+                                        (*     | L(l,s)               *)
+  | BClo of Block * Sub                 (*     | b[s]                 *)
 
   (* constraints *)
 
