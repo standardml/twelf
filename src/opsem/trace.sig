@@ -19,6 +19,7 @@ sig
 
   | SolveGoal of goalTag * IntSyn.Head * IntSyn.Exp
   | SucceedGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
+  | CommitGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
   | RetryGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
   | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 

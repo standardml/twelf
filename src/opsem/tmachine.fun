@@ -275,7 +275,8 @@ struct
               else (* shallow backtracking *)
                 ();
               matchSigDet sgn')
-	      handle SucceedOnce S => sc (I.Root(Hc, S))
+	      handle SucceedOnce S => (T.signal (G, T.CommitGoal (tag, (Hc, Ha), I.EClo ps'));
+				       sc (I.Root(Hc, S)))
 	    end
 
         (* matchDProg (dPool, k) = ()
@@ -295,21 +296,24 @@ struct
 		 then (* #succeeds = 1 *)
 		   ((if (CSManager.trail (* trail to undo EVar instantiations *)
 			(fn () => rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,(I.BVar(k), Ha),
-					  (fn S =>  raise SucceedOnce S))))
+					  (fn S => (T.signal (G, T.SucceedGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
+						    raise SucceedOnce S)))))
 		      then (* deep backtracking *)
 			(T.signal (G, T.RetryGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
 			 ())
 		    else (* shallow backtracking *)
 		      ();
 		      matchDProg (dPool', k+1))
-		    handle SucceedOnce S => sc (I.Root(I.BVar(k), S)))
+		    handle SucceedOnce S => (T.signal (G, T.CommitGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
+					     sc (I.Root(I.BVar(k), S))))
 		   
 	       else (* #succeeds >= 1 -- allows backtracking *)
 		 (if
 		    CSManager.trail (fn () =>
 				     rSolve (ps', (r, I.comp(s, I.Shift(k))),
 					     dp, (I.BVar(k), Ha),
-					     (fn S => sc (I.Root(I.BVar(k), S)))))
+					     (fn S => (T.SucceedGoal (tag, (I.BVar(k), Ha), I.EClo ps');
+						       sc (I.Root(I.BVar(k), S))))))
 		    then (* deep backtracking *)
 		      (T.signal (G, T.RetryGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
 		       ())
