@@ -194,7 +194,7 @@ struct
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract U) :: ops
 				    else ops)
-				      handle  MTPAbstract.  Error _ => InActive  :: ops))
+				      handle  MTPAbstract.Error _ => InActive  :: ops))
 	end
 
 
@@ -203,20 +203,29 @@ struct
 		      paramCases (G, (V, s'), k, abstract, nil))
 
 
-    fun metaCases d (c, G, k, (V, s'), abstract) =
+    fun metaCases d (c, G, k, Vs, abstract) =
       let
-	fun select 0  = nil
-	  | select d' = 
+	fun select (0, ops)  = ops
+	  | select (d', ops) = 
 	    let  
 	      val I.Dec (_, V) = I.ctxDec (G, d'+k)
-	      val _ = if I.targetFam V = c then 
-		        TextIO.print "Parameter context candidate found\n"
-		      else ()
+	      val ops' = if I.targetFam V = c then 
+		        let 
+			  val _ = TextIO.print "Parameter context candidate found\n"
+			  val (U, Vs') = createAtomBVar (G, d'+k)
+			in
+			  Trail.trail (fn () =>
+				       (if Unify.unifiable (G, Vs, Vs')
+					  then (TextIO.print "Success!\n"; nil) (* abstract state *)
+					else ops)
+					  handle MTPAbstract.Error _ => ops)
+			end
+		      else ops
 	    in 
-	      select (d'-1)
+	      select (d'-1, ops)
 	    end
       in
-	select d
+	select (d, nil)
       end
 
           
