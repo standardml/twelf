@@ -105,6 +105,16 @@ struct
   fun limitToString (NONE) = "*"
     | limitToString (SOME(i)) = Int.toString i
 
+  (* Tabling strategy *)
+  fun getTableStrategy ("Variant"::nil) = Twelf.Table.Variant
+    | getTableStrategy ("Subsumption"::nil) = Twelf.Table.Subsumption
+    | getTableStrategy (nil) = error "Missing tabling strategy"
+    | getTableStrategy (t::nil) = error (quote t ^ " is not a tabling strategy (must be Variant or Subsumption)")
+    | getTableStrategy (ts) = error "Extraneous arguments"
+
+  fun tableStrategyToString (Twelf.Table.Variant) = "Variant"
+    | tableStrategyToString (Twelf.Table.Subsumption) = "Subsumption"
+
   (* Setting Twelf parameters *)
   fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
     | setParm ("doubleCheck"::ts) = Twelf.doubleCheck := getBool ts
@@ -119,6 +129,8 @@ struct
     | setParm ("Prover.strategy"::ts) = Twelf.Prover.strategy := getStrategy ts
     | setParm ("Prover.maxSplit"::ts) = Twelf.Prover.maxSplit := getNat ts
     | setParm ("Prover.maxRecurse"::ts) = Twelf.Prover.maxRecurse := getNat ts
+    | setParm ("Table.strategy"::ts) = Twelf.Table.strategy := getTableStrategy ts
+    | setParm ("Table.strengthen"::ts) = Twelf.Table.strengthen := getBool ts
     | setParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | setParm (nil) = error ("Missing parameter")
 
@@ -136,6 +148,7 @@ struct
     | getParm ("Prover.strategy"::ts) = strategyToString (!Twelf.Prover.strategy)
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
     | getParm ("Prover.maxRecurse"::ts) = Int.toString (!Twelf.Prover.maxRecurse)
+    | getParm ("Table.strategy"::ts) = tableStrategyToString (!Twelf.Table.strategy)
     | getParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | getParm (nil) = error ("Missing parameter")
 
@@ -233,7 +246,6 @@ struct
 	serve (Twelf.Config.load (valOf (!globalConfig)))
       end
 
-
     | serve' ("reset", args) =
       (checkEmpty args; Twelf.reset (); serve (Twelf.OK))
     | serve' ("loadFile", args) =
@@ -246,6 +258,11 @@ struct
     | serve' ("top", args) =
       (checkEmpty args;
        Twelf.top ();
+       serve (Twelf.OK))
+
+    | serve' ("Table.top", args) =
+      (checkEmpty args;
+       Twelf.Table.top ();
        serve (Twelf.OK))
 
     | serve' (t, args) =

@@ -8,6 +8,8 @@
 ;;;
 ;;; C-c C-g      remove temporary highlight of range and focus.
 ;;;
+;;; This is long out of date
+;;; Thu Apr  4 22:03:10 2002
 
 (require 'hilit19)
 (require 'twelf)

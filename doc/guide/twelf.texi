@@ -3,8 +3,10 @@
 @setfilename twelf.info
 @settitle Twelf User's Guide 
 @setchapternewpage odd
-@set VERSION 1.3
-@set UPDATED September 13, 2000
+@set VERSION 1.4
+@set UPDATED April 4, 2002
+@c @set VERSION 1.3
+@c @set UPDATED September 13, 2000
 @c @set VERSION 1.2
 @c @set UPDATED August 27, 1998
 @syncodeindex fn cp
@@ -17,7 +19,7 @@
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1998 Frank Pfenning and Carsten Schuermann
+Copyright @copyright{} 1998, 2000, 2002 Frank Pfenning and Carsten Schuermann
 @end titlepage
 
 @node Top, Introduction, (dir), (dir)
@@ -44,6 +46,114 @@ Last updated @value{UPDATED}.
 * Examples::                    Guide to standard examples
 * History::                     Differences between Elf 1.5 and Twelf
 * Index::                       Index to this guide
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* New Features::                Differences from Twelf 1.2
+* Quick Start::                 Sample interaction with Twelf
+
+Lexical Conventions
+
+* Reserved Characters::         Characters separating identifiers
+* Identifiers::                 Interpretation of identifiers
+
+Syntax
+
+* Grammar::                     The grammar of Twelf
+* Constructor Declaration::     Introducing types and object constructors
+* Definitions::                 Notational definitions and abbreviations
+* Operator Declaration::        Infix, prefix and postfix operators
+* Name Preferences::            Assigning names to anonymous variables
+* Sample Signature::            Example of First-Order Logic
+
+Term Reconstruction
+
+* Implicit Quantifiers::        Free variables in declarations
+* Implicit Arguments::          Omitted arguments to constants
+* Strict Occurrences::          A sufficient condition for principal types
+* Strict Definitions::          Reconstruction on definitions
+* Type Ascription::             Disambiguating terms
+* Error Messages::              When things go wrong
+
+Logic Programming
+
+* Query Declaration::           Checking expected numbers of solutions
+* Solve Declaration::           Naming proof terms found by search
+* Interactive Queries::         Twelf's interactive top-level
+* Sample Trace::                An example how search works
+* Operational Semantics::       How queries are executed in some detail
+* Sample Program::              Type inference for a lambda-calculus
+* Tabled Logic Programming::    Executing queries with memo tables
+
+Constraint Domains
+
+* Installing an Extension::     making constraint domains available
+* Equalities of Rational Numbers::  rationals with equality
+* Inequalities over Rational Numbers::  rationals with equality and inequality
+* Integer Constraints::         integers with equality and inequality
+* Equalities over Strings::     strings and concatenation
+* Restrictions and Caveats::    alerts!
+
+Modes
+
+* Short Mode Declaration::      Common form for modes
+* Full Mode Declaration::       Fully explicit modes
+* Mode Checking::               Checking mode correctness
+
+Termination
+
+* Termination Declaration::     Checking termination
+* Reduction Declaration::       Checking outputs are smaller than inputs
+* Subterm Ordering::            Higher-order subterms
+* Lexicographic Orders::        Termination by nested induction
+* Simultaneous Orders::         Termination by simultaneous induction
+* Mutual Recursion::            Termination of mutually recursive predicates
+
+Theorem Prover
+
+* Theorem Declaration::         Declaring and proving theorems
+* Sample Theorems::             Two examples
+* Proof Steps::                 Basic operations of the prover
+* Search Strategies::           How Twelf searches
+* Proof Realizations::          Using automatically constructed proofs 
+
+ML Interface
+
+* Configurations::              Managing groups of Twelf files
+* Loading Files::               Loading individual files
+* Environment Parameters::      Controlling appearance and verbosity of Twelf
+* Signature Printing::          Printing of signatures
+* Tracing and Breakpoints::     Debugging tools
+* Timing Statistics::           Gathering statistics
+* Twelf Signature::             The top-level signature
+
+Twelf Server
+
+* Server Types::                Server command argument types
+* Server Commands::             List of Twelf server commands
+
+Emacs Interface
+
+* Twelf Mode::                  Major mode for editing Twelf sources
+* Editing Commands::            Automatic indentation
+* Type Checking Commands::      Checking declarations, files, configurations
+* Printing Command::            Printing signatures
+* Tracing Commands::            Debugging tools
+* Error Tracking::              Jumping to error locations
+* Server State::                Changing server parameters
+* Info File::                   Reading this documentation
+* Tags Files::                  Tagging Twelf sources
+* Twelf Timers::                Obtaining runtime statistics from server
+* Twelf-SML Mode::              Running Twelf under SML in Emacs
+* Emacs Variables::             Customizing Twelf mode
+* Syntax Highlighting::         Using multiple fonts for Twelf code
+* Emacs Initialization::        For the .emacs file
+* Command Summary::             Summary of Twelf mode commands
+
+@end detailmenu
 @end menu
 
 @node Introduction, Lexical Conventions, Top, Top
@@ -1063,6 +1173,8 @@ variables are interpreted universally.  In particular, free variables
 might be instantiated during type reconstruction and during execution of
 the query.
 
+
+
 @menu
 * Query Declaration::           Checking expected numbers of solutions
 * Solve Declaration::           Naming proof terms found by search
@@ -1070,6 +1182,7 @@ the query.
 * Sample Trace::                An example how search works
 * Operational Semantics::       How queries are executed in some detail
 * Sample Program::              Type inference for a lambda-calculus
+* Tabled Logic Programming::    Executing queries with memo tables
 @end menu
 
 @node Query Declaration, Solve Declaration, Logic Programming, Logic Programming
@@ -1298,6 +1411,7 @@ No more solutions
 @cindex assumptions
 @cindex local parameters
 @cindex parameters
+@findex Twelf.Compile.optimize
 
 The operational semantics of Twelf is a form of typed constraint logic
 programming.  We will use standard terminology from this area.  A type
@@ -1359,7 +1473,14 @@ they are not subject to instantiation during unification.  Local
 parameters will never be used as local assumptions during search.
 @end table
 
-@node Sample Program,  , Operational Semantics, Logic Programming
+When a signature is read, some minimal amount of syntactic translation
+may be applied to it in order to speed up execution.  We refer to this
+process as @emph{compilation}, in an abuse of the ordinary use of the term.
+Compilation will try to eliminate expensive appeals to unification
+with assignment where this optimization is sound.  This can be disabled
+by setting the parameter @code{Twelf.Compile.optimize} to @code{false}.
+
+@node Sample Program, Tabled Logic Programming, Operational Semantics, Logic Programming
 @section Sample Program
 
 @cindex lambda calculus example
@@ -1464,7 +1585,7 @@ At the point where the second subgoals fails we backtrack.  However, all
 other alternatives fail immediately, since the clause head does not
 unify with the goal and the overall query fails.
 
-@node
+@node Tabled Logic Programming,  , Sample Program, Logic Programming
 @section Tabled Logic Programming
 
 @cindex tabled logic programming
@@ -3356,6 +3477,12 @@ with @samp{...}.
  Controls the detail in information during tracing.
 See @ref{Tracing and Breakpoints}
 
+@item Twelf.Compile.optimize := true;
+@findex Twelf.Compile.optimize
+ Determines whether a minimal amount of optimization during
+translation from signature to program is carried out.  If set to
+@code{false}, unification can be traced in more detail.
+
 @item Twelf.Prover.strategy := Twelf.Prover.FRS;
 @findex Twelf.Prover.strategy
  Determines the strategy, where @code{F}=Filling, @code{R}=Recursion, and
@@ -3426,10 +3553,12 @@ above.
 @node Tracing and Breakpoints, Timing Statistics, Signature Printing, ML Interface
 @section Tracing and Breakpoints
 
-Twelf no incorporates some rudimentary tracing facilities for
-the logic programming interpreter of signatures.  This is best used
-within the Emacs server, but it is also available within the ML
-Interface.
+Twelf no incorporates some rudimentary tracing facilities for the logic
+programming interpreter of signatures.  This is best used within the
+Emacs server, but it is also available within the ML Interface.  It is
+not available with the tabled logic programming interpreter.  Also, when
+optimizations are enabled (@code{Twelf.Compile.optimize} is
+@code{true}), unification can not be traced.
 
 A tracing specification may be associated with constants in
 a signature.
@@ -3492,8 +3621,9 @@ variable @code{Trace.detail := @math{n};} to one of
  print details of unification
 @end table
 
-It is possible to examine and reset the state of the currently traced
-predicates with
+Note that if @code{Twelf.Compile.optimize} is @code{true}, then details
+of unification cannot be shown.  It is possible to examine and reset the
+state of the currently traced predicates with
 
 @table @code
 @item Twelf.Trace.show ();
@@ -3700,6 +3830,10 @@ The server commands employ arguments of the following types.
 @item strategy
 @findex strategy
  Either @code{FRS} or @code{RFS} (@pxref{Search Strategies})
+
+@item tablestrategy
+@findex tablestrategy
+ Either @code{Variant} or @code{Subsumption} (@pxref{Tabled Logic Programming})
 
 @item bool
 @findex bool

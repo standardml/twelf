@@ -314,7 +314,8 @@ This is used by the error message parser.")
   '((nat . twelf-read-nat)
     (bool . twelf-read-bool)
     (limit . twelf-read-limit)
-    (strategy . twelf-read-strategy))
+    (strategy . twelf-read-strategy)
+    (tablestrategy . twelf-read-tablestrategy))
   "Association between Twelf parameter types and their Emacs read functions.")
 
 (defconst *twelf-parm-table*
@@ -330,7 +331,9 @@ This is used by the error message parser.")
     ("Compile.optimize" . bool)
     ("Prover.strategy" . strategy)
     ("Prover.maxSplit" . nat)
-    ("Prover.maxRecurse" . nat))
+    ("Prover.maxRecurse" . nat)
+    ("Table.strategy" . tablestrategy)
+    ("Table.strengthen" . bool))
   "Association between Twelf parameters and their types.")
 
 (defvar twelf-chatter "3"
@@ -1902,6 +1905,12 @@ Starts a Twelf servers if necessary."
 		   '(("FRS" . "FRS") ("RFS" . "RFS"))
 		   nil t))
 
+(defun twelf-read-tablestrategy ()
+  "Read a tabling strategy in mini-buffer."
+  (completing-read "Tabling strategy: "
+		   '(("Variant" . "Variant") ("Subsumption" . "Subsumption"))
+		   nil t))
+
 (defun twelf-read-value (argtype)
   "Call the read function appropriate for ARGTYPE and return result."
   (funcall (cdr (assoc argtype *twelf-read-functions*))))
@@ -2729,6 +2738,9 @@ Mode map
        ["strategy" (twelf-set-parm "Prover.strategy") t]
        ["maxSplit" (twelf-set-parm "Prover.maxSplit") t]
        ["maxRecurse" (twelf-set-parm "Prover.maxRecurse") t])
+      ("Table."
+       ["strategy" (twelf-set-parm "Table.strategy") t]
+       ["strengthen" (twelf-set-parm "Table.strengthen") t])
       ["Reset Menubar" twelf-reset-menu t]))
   "Menu to change options in Twelf mode.")
 
