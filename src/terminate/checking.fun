@@ -34,8 +34,9 @@ struct
   structure Order = Order
 
     datatype Quantifier =        (* Quantifier to mark parameters *)
-      Universal                  (* Q ::= Uni                     *)
-    | Existential                (*     | Ex                      *)
+      All                        (* Q ::= All                     *)
+    | Exist                      (*     | Exist                   *)
+    | Exist'                     (*     | Exists^                 *)
 
 
     (* If Q marks all parameters in a context G we write   G : Q               *)
@@ -65,7 +66,7 @@ struct
  (* Reasoning about order relations *)
  (*
     Typing context        G  
-    mixed prefix context  Q  := . | Universal | Existental
+    mixed prefix context  Q  := . | All | Existental
 
     Orders                0  := U[s1] : V[s2] | Lex O1 ... On | Simul O1 ... On
     Order Relation        P  := O < O' | O <= O' | O = O'
@@ -145,7 +146,7 @@ struct
     fun shiftP (Less(O1, O2)) f = Less(shiftO O1 f, shiftO O2 f)
       | shiftP (Leq(O1, O2)) f = Leq(shiftO O1 f, shiftO O2 f)
       | shiftP (Eq(O1, O2)) f = Eq(shiftO O1 f, shiftO O2 f)
-      | shiftP (Pi(D, P)) f = Pi(D, shiftP (shiftP P (fn s => I.dot1 s)) f)       
+      | shiftP (Pi(D as I.Dec(X,V), P)) f = Pi(D, shiftP P f) 
 
     fun shiftRCtx I.Null f = I.Null
       | shiftRCtx (I.Decl(RG, P)) f =
@@ -189,9 +190,9 @@ struct
       | fmtPredicate' (G, Leq(O, O'))  = fmtComparison (G, O, "<=", O')
       | fmtPredicate' (G, Eq(O, O'))  = fmtComparison (G, O, "=", O')
       | fmtPredicate' (G, Pi(D, P))  =  (* F.String "Pi predicate"  *)
-          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), P)]  
+          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), P)]   
 
-    fun fmtPredicate (G, P) = fmtPredicate' (Names.ctxName G, P)
+    fun fmtPredicate (G, P) = fmtPredicate' (Names.ctxName G, P) 
 
     fun fmtRGCtx' (G, I.Null) = ""
       | fmtRGCtx' (G, I.Decl(I.Null, P)) = 
@@ -199,7 +200,7 @@ struct
       | fmtRGCtx' (G, I.Decl(RG, P)) = 
 	F.makestring_fmt(fmtPredicate' (G, P)) ^ " ," ^ fmtRGCtx' (G, RG)
 
-    fun fmtRGCtx (G, RG) = fmtRGCtx' (Names.ctxName G, RG)
+    fun fmtRGCtx (G, RG) = fmtRGCtx' (Names.ctxName G, RG) 
 
     (* printing atomic orders *)
     fun atomicPredToString (G, Less((Us, _), (Us', _))) = 
@@ -209,10 +210,6 @@ struct
       | atomicPredToString (G, Eq((Us, _), (Us', _))) = 
           Print.expToString(G, I.EClo(Us)) ^ " = " ^ Print.expToString(G, I.EClo(Us'))
 
-(*
-    fun atomicPredToString (G, P) = 
-      atomicPredToString' (Names.ctxName G, P)
-*)
     fun ctxToString (G, I.Null) = " "
       | ctxToString (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
 	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
@@ -224,7 +221,6 @@ struct
 	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
 	
-(*    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG) *)
    (*--------------------------------------------------------------------*)
 
     (* init () = true 
@@ -241,12 +237,13 @@ struct
 	Conv.conv (Us, Us') 
 
 
-    fun isUniversal (Universal) = true
-      | isUniversal (Existential) = false
+    fun isUniversal (All) = true
+      | isUniversal (Exist) = false
+      | isUniversal (Exist') = false
 
-    fun isExistential (Universal) = false
-      | isExistential (Existential) = true
-
+    fun isExistential (All) = false
+      | isExistential (Exist) = true
+      | isExistential (Exist') = true
 
     (* isParameter (Q, X) = B
 
@@ -980,7 +977,7 @@ struct
 	  val D' = shiftACtx D (fn s => I.comp(s, I.shift))
 	in 
 	  ltAtomicR ((I.Decl (G, N.decLUName (G, I.decSub (Dec, s2))), 
-		      I.Decl (Q, Universal)), D', UsVs, UsVs', sc, k)
+		      I.Decl (Q, All)), D', UsVs, UsVs', sc, k)
 	end 
 
 
@@ -1014,7 +1011,7 @@ struct
 	  val UsVs = ((U, I.dot1 s1), (V, I.dot1 s2))
 	in 
 	  leAtomicR ((I.Decl (G, N.decLUName (G, I.decSub (Dec, s2))), 
-		      I.Decl (Q, Universal)), D', UsVs, UsVs', sc, k)
+		      I.Decl (Q, All)), D', UsVs, UsVs', sc, k)
 	end 
 
 
@@ -1041,7 +1038,7 @@ struct
    and eqAtomicRW (GQ as (G, Q), D, ((I.Lam (_, U), s1), (I.Pi ((Dec, _), V), s2)),
 		   ((I.Lam (_, U'), s1'), (I.Pi ((Dec', _), V'), s2')), sc, k) = 
        (* Dec = Dec' *)
-         eqAtomicR ((I.Decl (G, N.decLUName (G, I.decSub (Dec, s2))), I.Decl (Q, Universal)), 
+         eqAtomicR ((I.Decl (G, N.decLUName (G, I.decSub (Dec, s2))), I.Decl (Q, All)), 
 		    shiftACtx D (fn s => I.comp(s, I.shift)), 
 		    ((U, I.dot1 s1'), (V, I.dot1 s2')),
 		    ((U', I.dot1 s1'),(V', I.dot1 s2')), sc, k)
@@ -1347,8 +1344,10 @@ struct
 
      | leftDecompose (GQ as (G, Q), I.Decl(D, P' as Pi(_, O)), D', P) = 
 	 (* drop assumption Pi D. P *)
-	 (print "\n Skipping quantified order ";
-	  print (F.makestring_fmt(fmtPredicate (G, P')));
+	 ((if (!Global.chatter) > 4
+		 then (print "\n Skipping quantified order ";
+ 		      print (F.makestring_fmt(fmtPredicate (G, P'))))
+	  else ());
 	 leftDecompose (GQ, D, D', P))
       
 
@@ -1443,7 +1442,7 @@ struct
 	  val UsVs' = ((U', I.dot1 s1'), (V', I.dot1 s2'))
 	  val P' = shiftP P (fn s => I.comp(s, I.shift))
 	in 
-	  ltAtomicL ((I.Decl (G, N.decLUName (G, I.decSub (Dec', s2'))), I.Decl (Q, Universal)), 
+	  ltAtomicL ((I.Decl (G, N.decLUName (G, I.decSub (Dec', s2'))), I.Decl (Q, All)), 
 		     D1, D1', UsVs, UsVs' ,  P')
 	end 
 
@@ -1462,7 +1461,7 @@ struct
 	  val UsVs' = ((U', I.dot1 s1'), (V', I.dot1 s2'))
 	  val P' = shiftP P (fn s => I.comp(s, I.shift))
 	in 
-	  leAtomicL ((I.Decl (G, N.decLUName (G, I.decSub (Dec', s2'))), I.Decl (Q, Universal)), 
+	  leAtomicL ((I.Decl (G, N.decLUName (G, I.decSub (Dec', s2'))), I.Decl (Q, All)), 
 		     D1, D1', UsVs, UsVs' , P')
 	end 
 
