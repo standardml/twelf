@@ -1,0 +1,37 @@
+%%% Representation of numbers in a generic base
+%%% Authors: Frank Pfenning, Roberto Virga
+
+%use inequality/integers.
+
+%% equality
+== : integer -> integer -> type.  %infix none 1000 ==.
+
+id : X == X.
+
+%% lists of numbers
+list : type.
+
+nil : list.
+
+,   : integer -> list -> list.  %infix right 100 ,.
+
+%% integer division
+divide : integer -> integer -> integer -> integer -> type.
+
+d0 : divide M N Q R
+       <- M == Q * N + R
+       <- R >= 0
+       <- (N - 1) >= R.
+
+%% split a nonnegative number into a digit plus a residual
+represent : integer -> integer -> list -> type.
+
+r0 : represent 0 B  nil.
+
+r1 : represent X B (R , L)
+       <- X >= 1
+       <- divide X B Q R
+       <- represent Q B L.
+
+%query 1 *
+represent 32767 8 L.
