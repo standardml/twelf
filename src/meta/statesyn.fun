@@ -29,7 +29,7 @@ struct
     Parameter of FunSyn.label option
   | Lemma of Info * FunSyn.For
   | None
-(*  | Assumption of int *)
+  | ResidualAssumption
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)

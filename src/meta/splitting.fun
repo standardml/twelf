@@ -376,6 +376,29 @@ struct
       (raise MTPAbstract.Error "Cannot split right of parameters")
 
 
+
+    (* rebuildResidualLemma ((G0, B0), s, (G1, B1)) = ((G', B'), s')
+
+       Invariant:
+       If   |- G0 ctx
+       and  G0 |- B0 tags
+       and  |- G1 ctx
+       and  G1 |- B1 tags
+       and  G1 = G1', V1 .. Vm
+       and  B1 = B1', RA .. RA   (m residual assumptions)
+       and  G0 = G0', W1 .. Wn
+       and  B0 = B0', RA .. RA   (n residual assumptions)
+       then 
+       
+
+    *)
+	 
+    fun rebuildResidualLemma ((G, B), I.Dot (_, s), (I.Decl (G1, _), I.Decl (B1, S.ResidualAssumption))) = 
+          rebuildResidualLemma ((G, B), s, (G1, B1))
+      | rebuildResidualLemma ((G, B), s, (G1, B1)) = 
+	  ((G, B), s)
+
+
     (* split (x:D, sc, B, abstract) = cases'
 
        Invariant :
@@ -411,6 +434,11 @@ struct
 					(* G' |- U' : V[s'] *)
 					(* G' |- U.s' : G, V *)
 		    val ((G'', B''), s'') = MTPAbstract.abstractSub' ((G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
+
+(*
+		    val _ = rebuildResidualGoal ((G'', B''), S)
+*)		  
+
 		    val _ = if !Global.doubleCheck then
 		              let 
 				val Psi'' = aux (G'',B'')
@@ -598,7 +626,7 @@ struct
     fun expand' (GB as (I.Null, I.Null), isIndex,
 		 abstract, makeAddress, induction) =
         (fn (Gp, Bp) => ((Gp, Bp), I.Shift (I.ctxLength Gp), GB, false), nil)
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.Ex _)))),
+      | expand' (GB as (I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.Ex _)))),
 		 isIndex, abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -614,7 +642,8 @@ struct
 	    in
 	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')        (* G' |- X.s' : G, D *)
 	    end
-	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
+	  val ops' = expandRes (GB, isIndex, abstract, makeAddress, induction) (sc, ops) 
+(*	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
 			 let 
 			   val a = I.targetFam V
@@ -624,10 +653,10 @@ struct
 			   :: ops
 			 end
 		     else ops
-	in
+*)	in
 	  (sc', ops')
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.All _)))), isIndex, 
 		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -667,7 +696,48 @@ struct
 	  (sc', ops)
 	end
     (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
- 
+
+
+    (* expandRes ((G, D), (B, T)) (sc, ops) = ops'
+     
+       Invariant:
+       If   |- G ctx
+       and  G |- D : type
+       and  G |- tags
+       and  G; B |- T tag
+       then 
+    *)
+    and expandRes ((I.Decl (G, D as I.Dec (xOpt, V)), I.Decl (B, T as (S.Lemma (K, F.Ex _)))), 
+		   isIndex, abstract, makeAddress, induction) (sc, ops) = 
+        if not (isIndex 1) andalso (S.splitDepth K) > 0
+	  then 
+	    let 
+	      val a = I.targetFam V
+	    in
+	      makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
+			    induction 1,  maxNumberCases (V, a), Subordinate.below (a, a))
+	      :: ops
+	    end
+	else ops
+      | expandRes ((I.Decl (G, I.Dec (xOpt, I.Pi ((D1 as I.Dec (yOpt, V1), _), V2))), 
+		    I.Decl (B, T as (S.Lemma (K, F.All (F.Prim D2, F))))), 
+		   isIndex, abstract, makeAddress, induction) (sc, ops) = 
+	(* by invariant : D1 == D2 *)
+	let
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val ((G', B'), s', (G0, B0), p') = sc (Gp, Bp)
+	      val X = I.newEVar (G', I.EClo (V1, s'))     (* G' |- X : V[s'] *)
+	    in
+	      ((G', B'), I.Dot (I.Exp (X), s'), 
+	       (I.Decl (G0, D1), 
+		I.Decl (B0, S.ResidualAssumption)), p')        (* G' |- X.s' : G, D *)
+	    end
+	in
+	  expandRes ((I.Decl (I.Decl (G, D1), I.Dec (yOpt, V2)), 
+		      I.Decl (I.Decl (B, S.ResidualAssumption), S.Lemma (K, F))), 
+		     isIndex, abstract, makeAddress, induction) (sc', ops)
+	end
 
 
     (* expand (S) = ops'

@@ -44,7 +44,7 @@ use "TEST-DED/a.sml";   (* abstraction theorem *)
 use "TEST-DED/b.sml";   (* Natural deduction -> Hilbert *)
 
 Open issues: 
--cs  In recursion, when we look for the subterm of a functional
+DONE -cs  In recursion, when we look for the subterm of a functional
 	assumptions, we apply it to EVars, and continue search.
 	Currently we reject any induction hypothesis where any
 	of these EVars is open.
@@ -52,6 +52,8 @@ Open issues:
      (see error mesage : 	
 	 * Ignored recursive call: Argument not instantiated during unification)
 
+-cs Splitting Residual lemmas
+-cs gneration of proof terms
 
 
 INVARIANT:
@@ -138,8 +140,7 @@ Parameter Cases
 
 	
 
-Splitting Residual lemmas
-   Unify lemmas and assumptions tags: Assumption 
+DONE -cs Unify lemmas and assumptions tags: Assumption 
 	<a2> X:eval E V
    could be reprsented as
 	<l2: [[X:eval E V]]> X:eval E V
@@ -165,4 +166,61 @@ General: Expressiveness of meta logic not powerfull enough.
 
 
 
+DONE -cs {
 Filling: Do not use iterative deepening, just use Twelf.maxFill.
+Not a good idea:
+
+For the version of Cut-Elimination including conjunction, disjunction, false, and true we only obtain
+with iterative deepening
+
+val it = OK : Twelf.Status
+- Timers.show ();
+Parsing       : Real =   0.035, Run =   0.030 (  0.030 usr,  0.000 gc)
+Reconstruction: Real =   0.006, Run =   0.000 (  0.000 usr,  0.000 gc)
+Abstraction   : Real =   0.002, Run =   0.000 (  0.000 usr,  0.000 gc)
+Checking      : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Modes         : Real =   0.001, Run =   0.000 (  0.000 usr,  0.000 gc)
+Subordination : Real =   0.002, Run =   0.000 (  0.000 usr,  0.000 gc)
+Termination   : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Printing      : Real =   0.011, Run =   0.020 (  0.020 usr,  0.000 gc)
+Compiling     : Real =   0.001, Run =   0.000 (  0.000 usr,  0.000 gc)
+Solving       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real = 541.856, Run = 490.110 (478.390 usr,  0.610 gc)
+Splitting     : Real =   3.947, Run =   3.640 (  3.510 usr,  1.330 gc)
+Recursion     : Real =   0.007, Run =   0.000 (  0.000 usr,  0.000 gc)
+Total         : Real = 545.869, Run = 493.800 (481.950 usr,  1.940 gc)
+Remember that the success continuation counts into Solving!
+val it = () : unit
+- 
+
+and without iterative deepening
+
+%skolem ce#1 : {C:o} conc* C -> conc C.
+[Closing file cs-examples/cut-elim/int-elim.elf]
+val it = OK : Twelf.Status
+- Timers.show ();
+Parsing       : Real =   0.050, Run =   0.030 (  0.030 usr,  0.000 gc)
+Reconstruction: Real =   0.016, Run =   0.000 (  0.000 usr,  0.000 gc)
+Abstraction   : Real =   0.004, Run =   0.000 (  0.000 usr,  0.000 gc)
+Checking      : Real =   0.004, Run =   0.000 (  0.000 usr,  0.000 gc)
+Modes         : Real =   0.001, Run =   0.000 (  0.000 usr,  0.000 gc)
+Subordination : Real =   0.004, Run =   0.000 (  0.000 usr,  0.000 gc)
+Termination   : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Printing      : Real =   0.019, Run =   0.020 (  0.020 usr,  0.000 gc)
+Compiling     : Real =   0.002, Run =   0.000 (  0.000 usr,  0.000 gc)
+Solving       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real = 1726.499, Run = 1519.090 (1482.160 usr,  0.660 gc)
+Splitting     : Real =   4.960, Run =   4.530 (  4.390 usr,  1.400 gc)
+Recursion     : Real =   0.010, Run =   0.000 (  0.000 usr,  0.000 gc)
+Total         : Real = 1731.567, Run = 1523.670 (1486.600 usr,  2.060 gc)
+Remember that the success continuation counts into Solving!
+
+}
+
+
+
+Search: Also use definitions
+
+
+Bug: Duplicate recognition fails even in the simplest version of the
+	copy example

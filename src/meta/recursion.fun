@@ -88,7 +88,7 @@ struct
        paramAbstract F = AF
     *)
 
-    fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract) =
+    fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract, convertible) =
 
       let
 	(* set_parameter (GB, X, k, sc, S) = S'
@@ -160,7 +160,7 @@ struct
 				  S.orderSub (O, s3),
 				  map (fn (n', F') => (n', F.forSub (F', s3))) H,
 				  F.forSub (F, s3))
-		val Ds' =  calc (n', (G0, F', O'), S3, paramAbstract')
+		val Ds' =  calc (n', (G0, F', O'), S3, paramAbstract', convertible)
 	      in 
 		Ds'
 	      end
@@ -604,26 +604,13 @@ struct
 	    val AF = paramAbstract (A.Head (G, Fs, I.ctxLength G0))
 	    val Frl = A.abstractApproxFor AF
 	  in
-	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
+	    if convertible (n, Frl) then
+(*	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then *)
 	      Ds
 	    else
 	      Lemma (n, Frl) :: Ds
 	  end
 
-(*	    
-(*	    val Frl = rlemma (I.Null, G0, s1, F.forSub Fs) *)
-	    val Frl = residualLemma (G0, Fs)
-	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
-	  in 
-	    case paramAbstract Frl
-	      of NONE => Ds
-	       | SOME Frl' =>
-  	         if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl', I.id)))) H then
-	           Ds
-		 else
-		   Lemma (n, Frl') :: Ds
-	  end
-*)    
 
 	(* createEVars' (G, G0) = s'
         
@@ -774,9 +761,11 @@ struct
 	in
 	  selectFormula (n, (G0, F2, O2), S')
 	end
-      | selectFormula (n, (G0, F, O), S) = 
+      | selectFormula (n, (G0, F, O), S as S.State (_, (_, _), (_, _), _, _, H, _)) = 
 	let
-	  val Ds = calc (n, (G0, F, O), S, fn AF => AF)
+	  val Ds = calc (n, (G0, F, O), S, fn AF => AF, 
+			 fn (n', F') => List.exists (fn (n'', F'') => n' = n'' andalso 
+					       F.convFor ((F', I.id), (F'', I.id))) H)
 	in
 	  (n+1, updateState (S, (Ds, I.id)))
 	end
@@ -788,16 +777,6 @@ struct
 	S'
       end
 
-
-
-    (* expandEager S = S'
-
-       Invariant: 
-       If   S State
-       then S' a list of operations which cause a recursive call
-         (all variables of recursive call are instantiated)
-    *)
-(*    fun expandEager S = removeDuplicates (fillOp"s" (expandLazy S)) *)
     
 
     fun apply S = S
