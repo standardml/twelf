@@ -9,8 +9,10 @@ sig
   type name = string
   type lemma = int 
 
+  type dlist = IntSyn.Dec list 
+
   datatype LabelDec =			(* ContextBody                *)
-    LabelDec of name * IntSyn.dctx * IntSyn.dctx
+    LabelDec of name * dlist * dlist
 					(* BB ::= l: SOME Theta. Phi  *)
 
   datatype CtxBlock =                   (* ContextBlocks              *)
@@ -81,6 +83,9 @@ sig
                 (For * IntSyn.Sub) -> bool
   val forSub : For * IntSyn.Sub -> For
   val normalizeFor : For * IntSyn.Sub -> For
+
+  val listToCtx : dlist -> IntSyn.dctx
+  val ctxToList : IntSyn.dctx -> dlist
 end (* Signature FUNSYN *)       
 
 

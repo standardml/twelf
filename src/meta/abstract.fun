@@ -421,6 +421,9 @@ struct
 
 
   in
+    val weaken = weaken
+    val raiseType = raiseType
+
     val abstractSub = abstractSubAll
   end
 

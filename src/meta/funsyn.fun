@@ -16,8 +16,10 @@ struct
   type name = string
   type lemma = int 
 
+  type dlist = IntSyn.Dec list
+
   datatype LabelDec =			(* ContextBody                *)
-    LabelDec of name * IntSyn.dctx * IntSyn.dctx
+    LabelDec of name * dlist * dlist
 					(* BB ::= l: SOME Theta. Phi  *)
 
   datatype CtxBlock =                   (* ContextBlocks              *)
@@ -73,7 +75,7 @@ struct
     val maxLemma = Global.maxCid
 
     val labelArray = Array.array (maxLabel+1, 
-				  LabelDec("", I.Null, I.Null)) 
+				  LabelDec("", nil, nil)) 
                    : LabelDec Array.array
     val nextLabel = ref 0
 
@@ -108,6 +110,24 @@ struct
 	end
     fun lemmaSize () = (!nextLemma)
 
+(* hack!!! improve !!!! *)
+    fun listToCtx (Gin) =
+      let
+	fun listToCtx' (G, nil) = G
+	  | listToCtx' (G, D :: Ds) = 
+	        listToCtx' (I.Decl (G, D), Ds)
+      in
+	listToCtx' (I.Null, Gin)
+      end
+    
+    fun ctxToList (Gin) = 
+      let
+	fun ctxToList' (I.Null, G ) = G
+	  | ctxToList' (I.Decl (G, D), G') =
+	  ctxToList' (G, D :: G')
+      in
+	ctxToList' (Gin, nil)
+      end
 
 
     (* union (G, G') = G''
@@ -190,6 +210,10 @@ struct
 		 (All (Prim D2, F2), s2)) = 
           Conv.convDec ((D1, s1), (D2, s2))
 	  andalso convFor ((F1, I.dot1 s1), (F2, I.dot1 s2))
+      | convFor ((All (Block (CtxBlock ((* SOME l1 *) _, G1)), F1), s1),
+		 (All (Block (CtxBlock ((* SOME l2 *) _, G2)), F2), s2)) =
+	 (* l1 = l2 andalso *) convForBlock ((ctxToList G1, F1, s1), (ctxToList G1, F2, s2))
+	 (* omission! check that the block numbers are the same!!!! *)
       | convFor ((Ex (D1, F1), s1), 
 		 (Ex (D2, F2), s2)) = 
           Conv.convDec ((D1, s1), (D2, s2))
@@ -197,6 +221,13 @@ struct
       | convFor ((And (F1, F1'), s1), (And (F2, F2'), s2)) =
 	  convFor ((F1, s1), (F2, s2))
 	  andalso convFor ((F1', s1), (F2', s2))
+      | convFor _ = false
+    and convForBlock ((nil, F1, s1), (nil, F2, s2)) = 
+          convFor ((F1, s1), (F2, s2)) 
+      | convForBlock ((D1 :: G1, F1, s1), (D2 :: G2, F2, s2)) =
+	  Conv.convDec ((D1, s1), (D2, s2)) 
+	  andalso convForBlock ((G1, F1, I.dot1 s1), (G2, F2, I.dot1 s2))
+      | convForBlock _ = false
 
 
     fun ctxSub (I.Null, s) = (I.Null, s)
@@ -232,6 +263,8 @@ struct
 	  And (normalizeFor (F1, s), normalizeFor (F2, s))
       | normalizeFor (True, _) = True
 
+    
+
   in 
     val labelLookup = labelLookup 
     val labelAdd = labelAdd
@@ -247,6 +280,9 @@ struct
     val convFor = convFor
     val forSub = forSub
     val normalizeFor = normalizeFor
+
+    val ctxToList = ctxToList
+    val listToCtx = listToCtx
   end
 end (* functor FunSyn *)
 

@@ -50,7 +50,7 @@ struct
        If   T is a tag
        then fmt' is a a format descibing the tag T
     *)
-    fun formatTag (G, S.Parameter) = [Fmt.String "<p>"]
+    fun formatTag (G, S.Parameter l) = [Fmt.String "<p>"]
       | formatTag (G, S.Lemma (k, F)) = [Fmt.String "<l",
 					 Fmt.String (Int.toString k), 
 					 Fmt.String ":",

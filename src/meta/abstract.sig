@@ -7,7 +7,11 @@ sig
   structure StateSyn : STATESYN
 
   exception Error of string
-    
+
+
+  val weaken : IntSyn.dctx * IntSyn.cid -> IntSyn.Sub
+  val raiseType : IntSyn.dctx * IntSyn.Exp -> IntSyn.Exp 
+      
   val abstractSub : IntSyn.Sub * StateSyn.Tag IntSyn.Ctx 
         -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 

@@ -432,6 +432,8 @@ struct
           ((TypeCheck.checkDec (G, (D, I.id));
 	    isFor (I.Decl (G, D), F))
 	   handle TypeCheck.Error msg => raise Error msg)
+      | isFor (G, F.All (F.Block (F.CtxBlock (_, G1)), F)) = 
+	  isForBlock (G, F.ctxToList G1, F)
       | isFor (G, F.Ex (D, F)) = 
 	  ((TypeCheck.checkDec (G, (D, I.id));
 	    isFor (I.Decl (G, D), F))
@@ -440,6 +442,8 @@ struct
       | isFor (G, F.And (F1, F2)) =
 	  (isFor (G, F1); isFor (G, F2))
 
+    and isForBlock (G, nil, F) = isFor (G, F)
+      | isForBlock (G, D :: G1, F) = isForBlock (I.Decl (G, D), G1, F)
 
   in
     val isFor = isFor

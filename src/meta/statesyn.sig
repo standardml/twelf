@@ -16,7 +16,7 @@ sig
     
 
   datatype Tag = 
-    Parameter
+    Parameter of FunSyn.label option
   | Lemma of int * FunSyn.For
   | Assumption of int
 
