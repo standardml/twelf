@@ -50,6 +50,7 @@ struct
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec list
+    | UniqueDec of ExtModes.modedec list (* -fp 8/17/03 *)
     | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl
     | TerminatesDec of ThmExtSyn.tdecl
@@ -168,6 +169,7 @@ struct
           Stream.Cons ((Querytabled (numSol, try, query), r), parseStream (stripDot f3, sc))
         end 
       | parseStream' (f as LS.Cons ((L.MODE, r), s'), sc) = parseMode' (f, sc)
+      | parseStream' (f as LS.Cons ((L.UNIQUE, r), s'), sc) = parseUnique' (f, sc)
       | parseStream' (f as LS.Cons ((L.COVERS, r), s'), sc) = parseCovers' (f, sc)
       | parseStream' (f as LS.Cons ((L.TOTAL, r), s'), sc) = parseTotal' (f, sc) (* -fp *)
       | parseStream' (f as LS.Cons ((L.TERMINATES, r), s'), sc) = parseTerminates' (f, sc)
@@ -240,6 +242,14 @@ struct
           val r = Paths.join (r0, r')
 	in
 	  Stream.Cons ((ModeDec mdecs, r), parseStream (stripDot f', sc))
+	end
+
+    and parseUnique' (f as LS.Cons ((_, r0), _), sc) =
+        let
+	  val (mdecs, f' as LS.Cons ((_,r'),_)) = ParseMode.parseMode' (f)
+          val r = Paths.join (r0, r')
+	in
+	  Stream.Cons ((UniqueDec mdecs, r), parseStream (stripDot f', sc))
 	end
 
     and parseCovers' (f as LS.Cons ((_, r0), _), sc) =

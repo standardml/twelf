@@ -32,6 +32,7 @@ is
   ../meta/sources.cm
   ../solvers/sources.cm
   ../worldcheck/sources.cm
+  ../unique/sources.cm
   ../cover/sources.cm
   mkabsolute.sig
 #if defined(NEW_CM)

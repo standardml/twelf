@@ -156,6 +156,7 @@ struct
        Invariant: exposed input stream starts with MODE
     *)
     fun parseMode' (LS.Cons ((L.MODE, r), s')) = parseMode1 (LS.expose s')
+      | parseMode' (LS.Cons ((L.UNIQUE, r), s')) = parseMode1 (LS.expose s')
       | parseMode' (LS.Cons ((L.COVERS, r), s')) = parseMode1 (LS.expose s')
   in
     val parseMode' = parseMode'

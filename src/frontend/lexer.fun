@@ -40,6 +40,7 @@ struct
     | QUERY	  			(* `%query' *)
     | QUERYTABLED  			(* `%querytabled *)
     | MODE				(* `%mode' *)
+    | UNIQUE				(* `%unique' *) (* -fp 8/17/03 *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
     | TERMINATES			(* `%terminates' *)
@@ -216,6 +217,7 @@ struct
       | lexPragmaKey (ID(_, "prefix"), r) = (PREFIX, r)
       | lexPragmaKey (ID(_, "postfix"), r) = (POSTFIX, r)
       | lexPragmaKey (ID(_, "mode"), r) = (MODE, r)
+      | lexPragmaKey (ID(_, "unique"), r) = (UNIQUE, r) (* -fp 8/17/03 *)
       | lexPragmaKey (ID(_, "terminates"), r) = (TERMINATES, r)
       | lexPragmaKey (ID(_, "block"), r) = (BLOCK, r) (* -cs 6/3/01 *)
       | lexPragmaKey (ID(_, "worlds"), r) = (WORLDS, r)
@@ -343,6 +345,7 @@ struct
     | toString' (QUERY) = "%query"
     | toString' (QUERYTABLED) = "%querytabled"
     | toString' (MODE) = "%mode"
+    | toString' (UNIQUE) = "%unique"
     | toString' (COVERS) = "%covers"
     | toString' (TOTAL) = "%total"
     | toString' (TERMINATES) = "%terminates"

@@ -59,6 +59,9 @@ functor Twelf
      sharing ModeDec.ModeSyn = ModeSyn
      (*! sharing ModeDec.Paths = Paths !*)
 
+   structure Unique : UNIQUE
+     sharing Unique.ModeSyn = ModeSyn
+
    structure Cover : COVER
    (*! sharing Cover.IntSyn = IntSyn' !*)
      sharing Cover.ModeSyn = ModeSyn
@@ -280,6 +283,7 @@ struct
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
+              | Unique.Error (msg) => abortFileMsg (fileName, msg)
               | Cover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Parsing.Error (msg) => abortFileMsg (fileName, msg)
 	      | Lexer.Error (msg) => abortFileMsg (fileName, msg)
@@ -580,6 +584,30 @@ struct
 	          mdecs
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%mode " ^ ModePrint.modesToString
+				           (List.map (fn (mdec, r) => mdec) mdecs)
+					 ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
+      (* Unique declaration *)
+      | install1 (fileName, (Parser.UniqueDec mterms, r)) =
+	let
+	  val mdecs = List.map ReconMode.modeToMode mterms
+	  val _ = ReconTerm.checkErrors (r)
+	  val _ = List.app (fn (mdec as (a, _), r) => 
+	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
+			       of IntSyn.Normal => ModeSyn.installMode mdec
+			        | _ => raise ModeSyn.Error "Cannot declare modes for foreign constants")
+			    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg)))
+	          mdecs
+          (* Timing added to coverage --- fix !!! -fp Sun Aug 17 12:17:51 2003 *)
+          val _ = List.app (fn (mdec, r) => (Timers.time Timers.coverage Unique.checkUnique) mdec
+                                handle Unique.Error (msg) => raise Unique.Error (Paths.wrap (r, msg)))
+	          mdecs
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%unique " ^ ModePrint.modesToString
 				           (List.map (fn (mdec, r) => mdec) mdecs)
 					 ^ ".\n")
 		  else ()

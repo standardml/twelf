@@ -2322,7 +2322,7 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
       (goto-char (point-max)))))
 
 (defvar twelf-decl-pattern-noident
-  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%freeze\\|%query\\|%querytabled\\|%tabled\\|%deterministic\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\|%where\\|%include\\|%open\\)\\>"
+  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%freeze\\|%query\\|%querytabled\\|%tabled\\|%deterministic\\|%mode\\|%unique\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\|%where\\|%include\\|%open\\)\\>"
   "Pattern used to match declarations which do not declare a new identifier.")
 
 (defvar twelf-decl-pattern-ident

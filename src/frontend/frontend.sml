@@ -187,6 +187,8 @@ structure Twelf =
 	 structure ReconMode = ReconMode
 	 structure ModePrint = ModePrint
 
+         structure Unique = Unique
+
          structure Cover = Cover
          structure Total = Total
 

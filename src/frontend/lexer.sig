@@ -33,6 +33,7 @@ sig
     | QUERY				(* `%query' *)
     | QUERYTABLED			(* `%querytabled' *)
     | MODE				(* `%mode' *)
+    | UNIQUE				(* `%unique' *) (* -fp 8/17/03 *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
     | TERMINATES       			(* `%terminates' *)

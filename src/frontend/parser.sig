@@ -19,6 +19,7 @@ sig
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec list
+    | UniqueDec of ExtModes.modedec list
     | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl
     | TerminatesDec of ThmExtSyn.tdecl
