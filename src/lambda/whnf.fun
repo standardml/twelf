@@ -1,4 +1,4 @@
-(* Weak Head-Normal Forms *)
+(* Weak Head-Normal Forms *)  
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
@@ -296,6 +296,7 @@ struct
        and   G |- (U @ S) [s] == U' [s'] : W'
        and   (U', s') in whnf
     *)
+
     and expandDef (Root (Def (d), S), s) =
           (* why the call to whnf?  isn't constDef (d) in nf? -kw *)
 	  whnfRedex (whnf (constDef (d), id), (S, s))
@@ -326,6 +327,7 @@ struct
                    
     fun spineToSub (Nil, s) = s
       | spineToSub (App (U, S), s) = spineToSub (S, dotEta (Exp (U), s))
+
 
     (* inferSpine ((S, s1), (V, s2)) = (V', s')
 
@@ -424,6 +426,10 @@ struct
       | normalizeExpW (Us as (EVar _, s)) = EClo Us
       | normalizeExpW (FgnExp csfe , s) =
           FgnExpStd.Map.apply csfe (fn U => normalizeExp (U, s))
+      | normalizeExpW (Us as (AVar(ref (SOME(U))) ,s)) = 
+	  normalizeExpW (U,s)
+      | normalizeExpW (Us as (AVar _  ,s)) = (print "Normalize  AVAR\n"; raise Error "")
+
 
     and normalizeSpine (Nil, s) = 
           Nil 

@@ -21,11 +21,14 @@ struct
   *)
   fun ctxPop (Decl (G, D)) = G
 
+  exception Error of string             (* raised if out of space     *) 
   (* ctxLookup (G, k) = D, kth declaration in G from right to left
      Invariant: 1 <= k <= |G|, where |G| is length of G
   *)
+
   fun ctxLookup (Decl (G', D), 1) = D
     | ctxLookup (Decl (G', _), k') = ctxLookup (G', k'-1)
+(*    | ctxLookup (Null, k') = (print ("Looking up k' = " ^ Int.toString k' ^ "\n"); raise Error "Out of Bounce\n")*)
     (* ctxLookup (Null, k')  should not occur by invariant *)
 
   (* ctxLength G = |G|, the number of declarations in G *)
@@ -69,7 +72,9 @@ struct
                                         (*     | X<I> : G|-V, Cnstr   *)
 
   | EClo  of Exp * Sub			(*     | U[s]                 *)
-  | AVar  of Exp option ref             (*     | A<I>                 *)
+  | AVar  of Exp option ref             (*     | A<I>                 *)   
+  | NVar  of int			(*     | n (linear, fully applied) *)
+                                        (* grafting variable *)
 
   | FgnExp of csid * FgnExp
                                         (*     | (foreign expression) *)
@@ -96,6 +101,7 @@ struct
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
   | Exp of Exp				(*     | U                    *)
+  | Axp of Exp				(*     | U (assignable)       *)
   | Block of Block			(*     | _x                   *)
   | Undef				(*     | _                    *)
 
@@ -172,7 +178,7 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
-  exception Error of string             (* raised if out of space     *)
+(*  exception Error of string             (* raised if out of space     *) *)
 
 
   structure FgnExpStd = struct
@@ -388,7 +394,6 @@ struct
      G |- ^-1 : G, V     ^-1 is patsub
   *)
   val invShift = Dot(Undef, id)
-
 
 
   (* comp (s1, s2) = s'

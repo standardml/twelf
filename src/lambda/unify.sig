@@ -21,6 +21,8 @@ sig
   val instantiateEVar : IntSyn.Exp option ref * IntSyn.Exp * IntSyn.cnstr list -> unit
   val instantiateLVar : IntSyn.Block option ref * IntSyn.Block -> unit
 
+  val resetAwakenCnstrs : unit -> unit
+  val nextCnstr : unit -> IntSyn.cnstr option
   val addConstraint : IntSyn.cnstr list ref * IntSyn.cnstr -> unit
   val solveConstraint : IntSyn.cnstr -> unit
 
@@ -34,9 +36,15 @@ sig
 
   val unify : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit	(* raises Unify *)
   val unifyW : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit (* raises Unify *)
+
   val unifyBlock : IntSyn.dctx * IntSyn.Block * IntSyn.Block -> unit (* raises Unify *)
 
+  val unifySub : IntSyn.dctx * IntSyn.Sub * IntSyn.Sub -> unit  (* raises Unify *)
+
+
   val invertible : IntSyn.dctx * IntSyn.eclo * IntSyn.Sub * IntSyn.Exp option ref -> bool
+  val invertSub : IntSyn.dctx * IntSyn.Sub * IntSyn.Sub * IntSyn.Exp option ref -> IntSyn.Sub
+
   (* unifiable (G, Us,Us') will instantiate EVars as an effect *)
   val unifiable : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> bool
 

@@ -1,4 +1,4 @@
-(* Internal Syntax *)
+(* Internal Syntax *)  
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
@@ -8,6 +8,7 @@ sig
   type cid = int			(* Constant identifier        *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
+
 
   type FgnExp = exn                     (* foreign expression representation *)
   exception UnexpectedFgnExp of FgnExp
@@ -49,7 +50,12 @@ sig
                                         (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
   | AVar  of Exp option ref             (*     | A<I>                 *)
+
   | FgnExp of csid * FgnExp             (*     | (foreign expression) *)
+
+  | NVar  of int			(*     | n (linear, 
+                                               fully applied variable
+                                               used in indexing       *)
 
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
@@ -73,6 +79,7 @@ sig
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
   | Exp of Exp				(*     | U                    *)
+  | Axp of Exp				(*     | U                    *)
   | Block of Block			(*     | _x                   *)
   | Undef				(*     | _                    *)
 
@@ -80,7 +87,7 @@ sig
     Dec of string option * Exp		(* D ::= x:V                  *)
   | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of string option * int	        (*     | v[^-d]               *)
-  | NDec 
+  | NDec  
 
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)

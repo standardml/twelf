@@ -13,7 +13,7 @@ sig
               
   datatype Exp =
       Uni of Uni
-    | Arrow of Exp * Exp
+    | Arrow of Exp * Exp 
     | Const of IntSyn.Head (* Const/Def/NSDef *)
     | CVar of Exp option ref
     | Undefined

@@ -28,7 +28,6 @@ struct
     | LV of I.Block                     (*     | L             if . |- L in W *) 
     | PV of T.Prg                       (*     | P                            *)
 
-
     (*
        We write {{K}} for the context of K, where EVars, FVars, LVars have
        been translated to declarations and their occurrences to BVars.
@@ -45,7 +44,6 @@ struct
        Collection and abstraction raise Error if there are unresolved
        constraints after simplification.
     *)
-
 
     (* collectConstraints K = cnstrs
        where cnstrs collects all constraints attached to EVars in K

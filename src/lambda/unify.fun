@@ -35,14 +35,6 @@ struct
 
     val globalTrail = Trail.trail () : Action Trail.trail 
 
- fun frontToString (Idx i) = "(idx " ^ Int.toString i ^ ")"
-      | frontToString (Exp E) = " exp _ "
-      | frontToString (Undef) = " undef "
-
-    fun subToString (Shift i) = "(shift " ^ Int.toString i ^ ")"
-      | subToString (Dot(ft, s)) = frontToString ft ^ ". " ^ subToString s
-
-
     fun copyCnstr [] = []
       | copyCnstr (refC :: clist) = 
           (BindCnstr (refC, !refC) :: copyCnstr clist)
@@ -345,6 +337,10 @@ struct
 
     (* prune (G, (U, s), ss, rOccur) = U[s][ss]
 
+       !!! looks wrong to me -kw
+       G |- U : V    G' |- s : G  (G' |- U[s] : V[s])
+       G'' |- ss : G'
+       !!! i would say
        G |- s : G'   G' |- U : V  (G  |- U[s] : V[s])
        G'' |- ss : G
 
@@ -404,8 +400,13 @@ struct
 		       Y
 		     end
                  )
+
       | pruneExpW (G, (FgnExp csfe, s), ss, rOccur) =
           FgnExpStd.Map.apply csfe (fn U => pruneExp (G, (U, s), ss, rOccur))
+      | pruneExpW (G, ((X as AVar _), s), ss, rOccur) =  
+	(* this case should never happen! *)  
+	  raise Unify "Left-over AVar"
+
 
       (* other cases impossible since (U,s1) whnf *)
     and pruneDec (G, (Dec (name, V), s), ss, rOccur) =
@@ -472,10 +473,12 @@ struct
 	in
           Decl (pruneCtx (t', G, rOccur), D')
 	end
+
       | pruneCtx (Dot (Undef, t), Decl (G, d), rOccur) = 
           pruneCtx (t, G, rOccur)
       | pruneCtx (Shift n, G, rOccur) = 
 	  pruneCtx (Dot (Idx (n+1), Shift (n+1)), G, rOccur)
+
 
     (* unifyExpW (G, (U1, s1), (U2, s2)) = ()
      
@@ -737,8 +740,8 @@ struct
       | unifySpine (G, (SClo (S1, s1'), s1), Ss) = unifySpine (G, (S1, comp (s1', s1)), Ss)
       | unifySpine (G, Ss, (SClo (S2, s2'), s2)) = unifySpine (G, Ss, (S2, comp (s2', s2)))
       | unifySpine (G, (App (U1, S1), s1), (App (U2, S2), s2)) = 
-          (unifyExp (G, (U1, s1), (U2, s2)) ; 
-	   unifySpine (G, (S1, s1), (S2, s2)))
+        (unifyExp (G, (U1, s1), (U2, s2)) ; 
+	 unifySpine (G, (S1, s1), (S2, s2)))
       (* Nil/App or App/Nil cannot occur by typing invariants *)
 
     and unifyDec (G, (Dec(_, V1), s1), (Dec (_, V2), s2)) =
@@ -868,6 +871,9 @@ struct
 
     val instantiateEVar = instantiateEVar
     val instantiateLVar = instantiateLVar
+
+    val resetAwakenCnstrs = resetAwakenCnstrs
+    val nextCnstr = nextCnstr
     val addConstraint = addConstraint
     val solveConstraint = solveConstraint
 
@@ -875,11 +881,14 @@ struct
 
     val unifyW = unifyW     
     val unify = unify
+    val unifySub = unifySub
     val unifyBlock = unifyBlock
 
     fun invertible (G, Us, ss, rOccur) =
           (invertExp (G, Us, ss, rOccur); true)
           handle NotInvertible => false
+
+    val invertSub = invertSub 
 
     fun unifiable (G, Us1, Us2) =
           (unify (G, Us1, Us2); 

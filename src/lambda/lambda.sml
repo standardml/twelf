@@ -38,6 +38,12 @@ structure UnifyTrail =
              (*! structure Tomega' = Tomega !*)
              structure Whnf = Whnf)
  *)
+
+structure Match = 
+  Match (structure Whnf = Whnf
+	 structure Unify = UnifyTrail
+	 structure Trail = Trail);
+
 structure Abstract =
   Abstract (structure Whnf = Whnf
 	    structure Constraints = Constraints
