@@ -3,6 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 th10-1 : vvalE Xi (cret (vlam E) T) -> vvalE Xi (E T) -> type.
+%mode th10-1 +VVE -VVE'.
 
 th10-2 : ({k:ccont}{vvk:vvalC dot k}
           vvalE Xi (capp (xlam [x:ctriv]klam (E x)) T (C k))) 
@@ -11,11 +12,18 @@ th10-2 : ({k:ccont}{vvk:vvalC dot k}
          -> ({k:ccont}{vvk:vvalC dot k}
              vvalE Xi (E T (C k)))
          -> type.
+%mode th10-2 +VVE +CE +CT -VVE'.
 
+% original from belmina
+% needs to be asserted where a new v is introduced, not here.
+%{
 th10-1_t : {v:ctriv}{vvv:{xi:stack}vvalT (xi , v) v xi}
            th10-1 (vval_cret (vval_vlam VVE) (vvv Xi))
                   (VVE v vvv).
+}%
 
+% original from belmina
+%{
 th10-1_c : th10-1 (vval_cret (vval_vlam VVE) (VVT Xi))
                   VVE'
            <- lemma9-1b ([v:ctriv]app_init) 
@@ -23,7 +31,15 @@ th10-1_c : th10-1 (vval_cret (vval_vlam VVE) (VVT Xi))
                          VVT
                          app_init
                          VVE'.
+}%
 
+th10-1_c : th10-1 (vval_cret (vval_vlam VVE) (vval_xlam VVR))
+                  VVE'
+           <- lemma9-1b ([v:ctriv]app_init) 
+                         VVE
+                         ([xi:stack] vval_xlam VVR)
+                         app_init
+                         VVE'.
 
 th10-2_proof : th10-2 ([k:ccont][vvk]
                         vval_capp (VVC k vvk) 
@@ -40,3 +56,6 @@ th10-2_proof : th10-2 ([k:ccont][vvk]
                              (VVC k vvk)
                              app_init
                              (VVE' k vvk).
+
+%terminates {} (th10-1 _ _).
+%terminates {} (th10-2 _ _ _ _).
