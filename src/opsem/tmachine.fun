@@ -13,11 +13,11 @@ functor TMachine (structure IntSyn' : INTSYN
                   structure CPrint : CPRINT 
                     sharing CPrint.IntSyn = IntSyn'
                     sharing CPrint.CompSyn = CompSyn'
-		  structure Print : PRINT
-		    sharing Print.IntSyn = IntSyn'
-		  structure Names : NAMES 
-                    sharing Names.IntSyn = IntSyn')
-  : TMACHINE =
+		  structure Names : NAMES
+		    sharing Names.IntSyn = IntSyn'
+		  structure Trace : TRACE
+		    sharing Trace.IntSyn = IntSyn')
+  : ABSMACHINE =
 struct
 
   structure IntSyn = IntSyn'
@@ -25,34 +25,13 @@ struct
 
   local
     structure I = IntSyn
+    structure T = Trace
     structure N = Names
-    structure P = Print
     open CompSyn
   in
 
-    val trace = ref false
-
-    fun headToString (G, I.Const (c)) = N.constName c
-      | headToString (G, I.BVar(k)) = N.bvarName (G, k)
-
     fun subgoalNum (I.Nil) = 1
       | subgoalNum (I.App (U, S)) = 1 + subgoalNum S
-
-    fun traceAction () =
-        (case String.sub (TextIO.inputLine (TextIO.stdIn), 0)
-	   of #"\n" => ()
-            | #"q" => (trace := false))
-
-    fun traceMsg s =
-        if !trace
-	  then TextIO.print (s ())
-	else ()
-
-    fun traceInfo s =
-        if !trace
-	  then (TextIO.print (s ()); TextIO.print " ? ";
-		traceAction (); ())
-	else ()
 
   (* We write
        G |- M : g
@@ -87,23 +66,19 @@ struct
     | solve ((Impl(r, A, a, g), s), (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decName (G, I.Dec(NONE, I.EClo(A,s)))
-	val _ = traceMsg (fn () => "Introducing hypothesis\n")
-	val _ = traceInfo (fn () => P.decToString (G, D'))
+	val _ = T.signal (T.IntroHyp (fn () => (G, D')))
       in
 	solve ((g, I.dot1 s), (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
-	       (fn M => (traceMsg (fn () => "Discharging hypothesis ");
-			 traceInfo (fn () => x);
+	       (fn M => (T.signal (T.DischargeHyp (fn () => (G, D')));
 			 sc (I.Lam (D', M)))))
       end
     | solve ((All(D, g), s), (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decName (G, I.decSub (D, s))
-	val _ = traceMsg (fn () => "Introducing parameter\n")
-	val _ = traceInfo (fn () => P.decToString (G, D'))
+	val _ = T.signal (T.IntroParm (fn () => (G, D')))
       in
 	solve ((g, I.dot1 s), (I.Decl(G, D'), I.Decl(dPool, NONE)),
-	       (fn M => (traceMsg (fn () => "Discharging parameter ");
-			 traceInfo (fn () => x);
+	       (fn M => (T.signal (T.DischargeParm (fn () => (G, D')));
 			 sc (I.Lam (D', M)))))
       end
 
@@ -127,9 +102,7 @@ struct
       traceInfo (fn () => P.expToString (G, I.EClo ps') ^ " == "
 		 ^ P.expToString (G, I.EClo (Q, s))); *)
       if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
-	then ((* traceMsg (fn () => "Succeeded\n"); *)
-	      traceMsg (fn () => "Resolved with clause ");
-	      traceInfo (fn () => H);
+	then (T.signal (T.Resolved (G, H));
 	      sc I.Nil;			(* call success continuation *)
 	      true)			(* deep backtracking *)
       else ((* traceMsg (fn () => "Failed\n"); *)
@@ -141,11 +114,8 @@ struct
 	val X = I.newEVar (G, I.EClo(A, s))
       in
         rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, H,
-		(fn S =>
-		 (traceMsg (fn () => "Solving subgoal "
-			    ^ Int.toString (subgoalNum S)
-			    ^ " of clause ");
-		  traceInfo (fn () => H);
+		(fn S => 
+		 (T.signal (T.Subgoal (G, H, fn () => subgoalNum S));
 		  solve ((g, s), dProg,
 			 (fn M => 
 			  (sc (I.App (M, S))))))))
@@ -174,17 +144,16 @@ struct
      This first tries the local assumptions in dProg then
      the static signature.
   *)
-  and matchAtom (ps' as (I.Root(I.Const(a),_),_), dProg as (G,dPool), sc) =
+  and matchAtom (ps' as (I.Root(H as I.Const(a),_),_), dProg as (G,dPool), sc) =
       let
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
            with c1.
         *)
-	val _ = traceMsg (fn () => "Solving goal\n")
-	val _ = traceInfo (fn () => P.expToString (G, I.EClo ps'))
+	val tag = T.tagGoal ()
+	val _ = T.signal (T.SolveGoal (tag, H, (fn () => (G, I.EClo ps'))))
 	fun matchSig nil =
-	    (traceMsg (fn () => "Failed goal\n");
-	     traceInfo (fn () => P.expToString (G, I.EClo ps'));
+	    (T.signal (T.FailGoal (tag, H, (fn () => (G, I.EClo ps'))));
 	     ())			(* return indicates failure *)
 	  | matchSig ((H as I.Const c)::sgn') =
 	    let
@@ -196,7 +165,7 @@ struct
 		(fn () =>
 		 ((* traceMsg (fn () => "Trying clause ");
 		   traceInfo (fn () => N.constName c); *)
-		  rSolve (ps', (r, I.id), dProg, headToString (G, H),
+		  rSolve (ps', (r, I.id), dProg, H,
 			  (fn S =>
 			   ((* traceMsg (fn () => "Succeeded clause ");
 			     traceInfo (fn () => N.constName c); *)
@@ -204,8 +173,7 @@ struct
 		(* traceMsg (fn () => "Failed clause ");
 		 traceInfo (fn () => N.constName c) *) ))
 		then (* deep backtracking *)
-		  (traceMsg (fn () => "Retrying goal\n");
-		   traceInfo (fn () => P.expToString (G, I.EClo ps')))
+		  T.signal (T.RetryGoal (tag, H, (fn () => (G, I.EClo ps'))))
 	      else (); (* shallow backtracking *)
 	      matchSig sgn'
 	    end
@@ -226,16 +194,14 @@ struct
 		   (fn () =>
 		    ((* traceMsg (fn () => "Trying hypothesis ");
 		      traceInfo (fn () => N.bvarName (G, k)); *)
-		     rSolve (ps', (r, I.comp(s, I.Shift(k))), dProg,
-			     headToString (G, I.BVar(k)),
+		     rSolve (ps', (r, I.comp(s, I.Shift(k))), dProg, I.BVar(k),
 			     (fn S => ((* traceMsg (fn () => "Succeeded hypothesis ");
 					traceInfo (fn () => N.bvarName (G, k)); *)
 				       sc (I.Root(I.BVar(k), S)))))
 		   (* traceMsg (fn () => "Failed hypothesis ");
 		    traceInfo (fn () => N.bvarName (G, k)); *)))
 		   then (* deep backtracking *)
-		     (traceMsg (fn () => "Retrying goal\n");
-		      traceInfo (fn () => P.expToString (G, I.EClo ps')))
+		     T.signal (T.RetryGoal (tag, H, (fn () => (G, I.EClo ps'))))
 		 else ();
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
@@ -246,8 +212,10 @@ struct
       end
 
 
+  val solve = fn (gs, dProg, sc) =>
+                 (T.init (); solve (gs, dProg, sc))
   val rSolve = fn (ps', rs, dProg, sc) =>
-                  (rSolve (ps', rs, dProg, "%", sc); ())
+                  (rSolve (ps', rs, dProg, I.BVar 0, sc); ())
   end (* local ... *)
 
 end; (* functor TMachine *)

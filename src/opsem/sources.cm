@@ -16,6 +16,7 @@ Group is
   *)
   absmachine.sig
   absmachine.fun
-  tmachine.sig
+  trace.sig
+  trace.fun
   tmachine.fun
   opsem.sml

@@ -34,12 +34,17 @@ structure AbsMachine =
               structure CPrint = CPrint
               structure Names = Names); 
 
+structure Trace =
+  Trace (structure IntSyn' = IntSyn
+	 structure Names = Names
+	 structure Print = Print);
+
 structure TMachine =
   TMachine (structure IntSyn' = IntSyn
 	    structure CompSyn' = CompSyn
 	    structure Unify = UnifyTrail
 	    structure Index = Index
 	    structure Trail = Trail
-            structure Print = Print
 	    structure CPrint = CPrint
-	    structure Names = Names);
+            structure Names = Names
+	    structure Trace = Trace);

@@ -130,7 +130,7 @@ structure Solve =
 	 structure CompSyn' = CompSyn
 	 structure Compile = Compile
 	 structure Trail = Trail
-	 structure AbsMachine = AbsMachine
+	 structure AbsMachine = TMachine
 	 structure Print = Print);
 
 structure Twelf =
@@ -166,7 +166,7 @@ structure Twelf =
 	 structure CompSyn' = CompSyn
 	 structure Compile = Compile
 	 structure Trail = Trail
-	 structure AbsMachine = AbsMachine
+	 structure AbsMachine = TMachine
 	 structure Solve = Solve
 
 	 structure ThmSyn = ThmSyn
