@@ -492,6 +492,7 @@ Optional argument LIMIT specifies limit of search for period."
         (forward-paragraph 1)
         (setq limit (point))))
   (while (and (not (looking-at "\\.\\W"))
+	      (not (looking-at "\\.\\'"))
 	      (< (point) limit))
     (skip-chars-forward "^.%" limit)
     (cond ((looking-at *twelf-comment-start*)
@@ -2188,11 +2189,11 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
       (goto-char (point-max)))))
 
 (defvar twelf-decl-pattern-noident
-  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%query\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\)\\>"
+  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%query\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\|%where\\|%include\\|%open\\)\\>"
   "Pattern used to match declarations which do not declare a new identifier.")
 
 (defvar twelf-decl-pattern-ident
-  "\\(%abbrev\\|%solve\\|%theorem\\|%sig\\|%struct\\)[ \t]\\(\\<\\w+\\>\\)"
+  "\\(%abbrev\\|%solve\\|%theorem\\|%block\\|%sig\\|%struct\\)[ \t]\\(\\<\\w+\\>\\)"
   "Pattern used to match declarations which declare a new identifer.
 (match-beginning 2) to (match-end 2) will be the declared identifer.")
 
