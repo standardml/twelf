@@ -76,3 +76,18 @@ reconstruction errors and filenames where they occur. If TpTrace is used
 for parsing %theorem declarations, the filname store it not properly reset. 
 The easiest fix is to use tprecon instead of tptrace.
 
+
+
+Mon May 22 16:26:36 EDT 2000  -kw,cs
+
+Bug:
+
+a: ([x] x) type.
+b: ([x] x) a.
+
+loads and typechecks.  Problem in frontend.fun?
+ 
+
+
+
+
