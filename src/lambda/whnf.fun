@@ -410,6 +410,29 @@ struct
 	recurse (1, s, init (index (0, s)))
       end
 
+
+
+    (* invert without copying -- cs *)
+    fun invert s =
+      let 
+	fun lookup (n, Shift _, p) = NONE
+	  | lookup (n, Dot (Undef, s'), p) = lookup (n+1, s', p)
+	  | lookup (n, Dot (Idx k, s'), p) = 
+	    if k = p then SOME n 
+	    else lookup (n+1, s', p)
+	
+	fun invert'' (0, si) = si
+	  | invert'' (p, si) = 
+	    (case (lookup (1, s, p))
+	       of SOME k => invert'' (p-1, Dot (Idx k, si))
+	        | NONE => invert'' (p-1, Dot (Undef, si)))
+	       
+	fun invert' (n, Shift p) = invert'' (p, Shift n)
+	  | invert' (n, Dot (_, s')) = invert' (n+1, s')
+      in
+	invert' (0, s)
+      end
+  
     
     (* strengthen (t, G) = G'
 
