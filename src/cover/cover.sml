@@ -6,7 +6,6 @@ structure Cover =
 	 structure Unify = UnifyTrail
 	 structure ModeSyn' = ModeSyn
 	 structure Index = Index
-	 structure CompSyn = CompSyn
          structure Names = Names
 	 structure Paths = Paths
 	 structure Print = Print

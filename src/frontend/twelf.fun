@@ -388,6 +388,7 @@ struct
 	let
 	  val (mdec, r) = ModeRecon.modeToMode mterm
 	  val _ = Cover.checkCovers mdec
+	          handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))
 	  val _ = if !Global.chatter >= 3
 		    then print ("%covers " ^ ModePrint.modeToString mdec ^ ".\n")
 		  else ()

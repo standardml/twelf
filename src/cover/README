@@ -2,6 +2,7 @@ Coverage Checker
 Author: Frank Pfenning with Carsten Schuermann
 
 Version 1 --- only closed queries and predicates
+          --- only input coverage
 
 Coverage checking is LOCAL.  Later we will
 use a declaration of the form
@@ -15,8 +16,9 @@ Syntax:
 where mdecl is a short or full mode declaration.
 
 + means input coverage
-- means output coverage
 * means no coverage checking
+[- means output coverage / currently prohibited]
+
 ----------------------------------------------------------------------
 From: "Carsten Schuermann" <carsten@cs.yale.edu>
 To: "Frank Pfenning" <fp@cs.cmu.edu>

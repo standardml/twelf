@@ -14,8 +14,6 @@ functor Cover
      sharing ModeSyn'.IntSyn = IntSyn'
    structure Index : INDEX
      sharing Index.IntSyn = IntSyn'
-   structure CompSyn : COMPSYN
-     sharing CompSyn.IntSyn = IntSyn'
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn'
    structure Paths : PATHS
@@ -37,83 +35,150 @@ struct
     structure P = Paths
     structure F = Print.Formatter
 
-    (* Coverage goal is represented using all BVars *)
+    (*
+       Coverage goals have the form {{G}} a @ S
+    *)
+
+    (******************************************)
+    (*** Creating the Initial Coverage Goal ***)
+    (******************************************)
+
+    (* buildSpine n = n; n-1; ...; 1; Nil *)
 
     fun buildSpine 0 = I.Nil
-      | buildSpine k = (* k > 0 *)
-        I.App (I.Root (I.BVar(k), I.Nil), buildSpine (k-1))
+      | buildSpine n = (* n > 0 *)
+        I.App (I.Root (I.BVar(n), I.Nil), buildSpine (n-1))
 
-    fun initGoal' (a, k, G, I.Pi ((D, P), V)) =
+    (* initCGoal' (a, k, G, V) = {x1:V1}...{xn:Vn} a x1...xn
+
+       Invariants (modulo some renaming):
+       |- a : {x1:V1}...{xn:Vn} type
+       G = {x1:V1}...{xk:Vk}
+       V = {xk+1:Vk+1}...{xn:Vn} type 
+       G |- V : type
+    *)
+    fun initCGoal' (a, k, G, I.Pi ((D, P), V)) =
         let
 	  val D' = Names.decEName (G, D)
 	in
-          I.Pi ((D', I.Maybe), initGoal' (a, k+1, I.Decl (G, D'), V))
+          I.Pi ((D', I.Maybe), initCGoal' (a, k+1, I.Decl (G, D'), V))
 	end
-      | initGoal' (a, k, G, I.Uni (I.Type)) =
+      | initCGoal' (a, k, G, I.Uni (I.Type)) =
           I.Root (a, buildSpine k)
 
-    fun initGoal (a) = initGoal' (I.Const (a), 0, I.Null, I.constType (a))
+    (* initCGoal (a) = {x1:V1}...{xn:Vn} a x1...xn
+       where a : {x1:V1}...{xn:Vn} type
+    *)
+    fun initCGoal (a) = initCGoal' (I.Const (a), 0, I.Null, I.constType (a))
 
+    (***********************************************)
+    (*** Matching Coverage Goals against Clauses ***)
+    (***********************************************)
+
+    (* Equation G |- (U1,s1) = (U2,s2)
+       Invariant: 
+       G |- U1[s1] : V
+       G |- U2[s2] : V  for some V
+
+       U1[s1] has no EVars (part of coverage goal)
+    *)
     datatype Equation = Eqn of I.dctx * I.eclo * I.eclo
 
+    (* Splitting candidates *)
+    (* Splitting candidates [k1,...,kl] are indices
+       into coverage goal {xn:Vn}...{x1:V1} a M1...Mm, counting right-to-left
+    *)
     datatype Candidates =
-        Eqns of Equation list		(* equations to be solved, matches so far *)
-      | Cands of int list		(* candidates for splitting, does not match *)
-      | Fail				(* more efficient: raise exception *)
+        Eqns of Equation list		(* equations to be solved, everything matches so far *)
+      | Cands of int list		(* candidates for splitting, matching fails *)
+      | Fail				(* coverage fails without candidates *)
 
-    (* Do not raise exception on failure so we may give better error message later *)
-
-    (* fail(cands) = cands'   without adding new candidates *)
+    (* fail () = Fail
+       indicate failure without splitting candidates
+     *)
     fun fail () = Fail
 
-    (* failAdd (k, cands) = cands'  add new splitting candidate k *)
-    fun failAdd (k, Eqns _) = Cands (k::nil) (* no longer matches! *)
+    (* failAdd (k, cands) = cands'
+       indicate failure, but add k as splitting candidate
+    *)
+    fun failAdd (k, Eqns _) = Cands (k::nil) (* no longer matches *)
       | failAdd (k, Cands (ks)) = Cands (k::ks) (* remove duplicates? *)
       | failAdd (k, Fail) = Fail
 
-    (* addEqn (e, cands) = cands'  add new equation if matches so far *)
-    fun addEqn (e, Eqns (es)) = Eqns (e::es) (* still matches *)
-      | addEqn (e, cands as Cands (ks)) = (* already failed---ignore new constraints *)
+    (* addEqn (e, cands) = cands'
+       indicate possible match if equation e can be solved
+    *)
+    fun addEqn (e, Eqns (es)) = Eqns (e::es) (* still may match: add equation *)
+      | addEqn (e, cands as Cands (ks)) = (* already failed: ignore new constraints *)
           cands
-      | addEqn (e, Fail) = Fail
+      | addEqn (e, Fail) = Fail		(* already failed without candidates *)
 
+    (* matchEqns (es) = true 
+       iff  all equations in es can be simultaneously unified
+
+       Effect: instantiate EVars right-hand sides of equations.
+    *)
     fun matchEqns (nil) = true
       | matchEqns (Eqn (G, Us1, Us2)::es) =
         if Unify.unifiable (G, Us1, Us2)
 	  then matchEqns (es)
 	else false
 
+    (* resolveCands (cands) = cands'
+       resolve to one of
+	 Eqns(nil) - match successful
+	 Fail      - no match, no candidates
+	 Cands(ks) - candidates ks
+       Effect: instantiate EVars in right-hand sides of equations.
+    *)
     fun resolveCands (Eqns (es)) =
         if matchEqns (es) then (Eqns (nil))
 	else Fail
       | resolveCands (Cands (ks)) = Cands (ks)
       | resolveCands (Fail) = Fail
 
+    (* Candidate Lists *)
+    (*
+       Candidate lists record constructors and candidates for each
+       constructors or indicate that the coverage goal is matched.
+    *)
     datatype CandList =
         Covered				(* covered---no candidates *)
-      | CandList of (I.Head * Candidates) list (* not covered: list of candidates for each clause *)
+      | CandList of (I.Head * Candidates) list
+					(* [(c1, cands1),...,(cn, candsn)] *)
 
+    (* addKs ((c,cands), klist) = klist'
+       add new constructor to candidate list
+    *)
     fun addKs (ccs as (c, Cands(ks)), CandList (klist)) = CandList (ccs::klist)
       | addKs (ces as (c, Eqns(nil)), CandList (klist)) = Covered
       | addKs (cfl as (c, Fail), CandList (klist)) = CandList (cfl::klist)
 
-    (* matchAtom (G, d, (P, s'), (Q, s), cands)
-       matches coverage goal P[s'] against head Q[s]
-       cands = splitting candidates, returns cands'
-       Eqns (es) = postponed matching problems.
-       Cands (cands) = failure, with candidates `cands'.
-       d is depth, k <= d means local variable, k > d means coverage variable.
-       Skip over `output' and `ignore' arguments (see matchTopExp, etc)
-       Postpone matching and accumlate splitting candidates.
+    (* matchExp (G, d, (U1, s1), (U2, s2), cands) = cands'
+       matches U1[s1] (part of coverage goal)
+       against U2[s2] (part of clause head)
+       adds new candidates to cands to return cands'
+         this could collapse to Fail,
+         postponed equations Eqns(es),
+         or candidates Cands(ks)
+       d is depth, k <= d means local variable, k > d means coverage variable
+
+       Invariants:
+       G |- U1[s1] : V
+       G |- U2[s2] : V  for some V
+       G = Gc, Gl where d = |Gl|
     *)
     fun matchExp (G, d, Us1, Us2, cands) =
         matchExpW (G, d, Whnf.whnf Us1, Whnf.whnf Us2, cands)
+
     and matchExpW (G, d, Us1 as (I.Root (H1, S1), s1), Us2 as (I.Root (H2, S2), s2), cands) =
         (case (H1, H2)
 	   (* No skolem constants, foreign constants, FVars *)
 	   of (I.BVar (k1), I.BVar(k2)) =>
-	      if (k1 = k2) then matchSpine (G, d, (S1, s1), (S2, s2), cands)
-	      else if k1 > d then failAdd (k1-d, cands) (* H1 is coverage variable *)
+	      if (k1 = k2)
+		then matchSpine (G, d, (S1, s1), (S2, s2), cands)
+	      else if k1 > d
+		     then failAdd (k1-d, cands) (* k1 is coverage variable, new candidate *)
 		   else fail ()		(* otherwise fail with no candidates *)
 	    | (I.Const(c1), I.Const(c2)) =>
 	      if (c1 = c2) then matchSpine (G, d, (S1, s1), (S2, s2), cands)
@@ -124,32 +189,31 @@ struct
 	      else matchExpW (G, d, Whnf.expandDef Us1, Whnf.expandDef Us2, cands)
 	    | (I.Def (d1), _) => matchExpW (G, d, Whnf.expandDef Us1, Us2, cands)
 	    | (_, I.Def (d2)) => matchExpW (G, d, Us1, Whnf.expandDef Us2, cands)
-	    | (I.BVar (k1), I.Const _) =>	(* fail and add H1 as splitting candidate *)
-		failAdd (k1-d, cands)
+	    | (I.BVar (k1), I.Const _) =>
+	      if k1 > d
+		then failAdd (k1-d, cands) (* k1 is coverage variable, new candidate *)
+	      else fail ()		(* otherwise fail with no candidates *)
 	    | (I.Const _, I.BVar _) => fail ()
             (* no other cases should be possible *)
 	    )
-     | matchExpW (G, d, (I.Lam (D1, U1), s1), (I.Lam (D2, U2), s2), cands) =
+      | matchExpW (G, d, (I.Lam (D1, U1), s1), (I.Lam (D2, U2), s2), cands) =
 	   matchExp (I.Decl (G, I.decSub (D1, s1)), d+1, (U1, I.dot1 s1), (U2, I.dot1 s2), cands)
-     | matchExpW (G, d, (I.Lam (D1, U1), s1), (U2, s2), cands) =
-	   (* eta-expand if necessary *)
+      | matchExpW (G, d, (I.Lam (D1, U1), s1), (U2, s2), cands) =
+	   (* eta-expand *)
 	   matchExp (I.Decl (G, I.decSub (D1, s1)), d+1,
 		     (U1, I.dot1 s1),
 		     (I.Redex (I.EClo (U2, I.shift),
 			       I.App (I.Root (I.BVar (1), I.Nil), I.Nil)),
 		      I.dot1 s2),
 		     cands)
-     | matchExpW (G, d, (U1, s1), (I.Lam (D2, U2), s2), cands) =
+      | matchExpW (G, d, (U1, s1), (I.Lam (D2, U2), s2), cands) =
+	   (* eta-expand *)
 	   matchExp (I.Decl (G, I.decSub (D2, s2)), d+1,
 		     (I.Redex (I.EClo (U1, I.shift),
 			       I.App (I.Root (I.BVar (1), I.Nil), I.Nil)),
 		      I.dot1 s1),
 		     (U2, I.dot1 s2),
 		     cands)
-      | matchExpW (G, d, Us1 as (I.EVar _, s1), Us2, cands) =
-	   (* should be irrelevant --- do not add! *)
-	   (* should arrange that this is impossible -fp *)
-	   cands
       | matchExpW (G, d, Us1, Us2 as (I.EVar _, s2), cands) =
 	   addEqn (Eqn (G, Us1, Us2), cands)
       (* nothing else should be possible, by invariants *)
@@ -167,6 +231,18 @@ struct
 	  matchSpine (G, d, (S1, s1), (S2, s2), cands')
 	end
 
+    (* matchTop (G, (a @ S1, s1), (a @ S2, s2), ms) = cands
+       matches S1[s1] (spine of coverage goal)
+       against S2[s2] (spine of clause head)
+       skipping over `ignore' ( * ) or `output' ( - ) argument in mode spine ms
+
+       Invariants:
+       G |- a @ S1[s1] : type
+       G |- a @ S2[s2] : type
+       G contains coverage variables,
+       S1[s1] contains no EVars
+       mode spine ms matches S1 and S2
+    *)
     fun matchTop (G, Us1, Us2, ms) =
           matchTopW (G, Whnf.whnf Us1, Whnf.whnf Us2, ms)
     and matchTopW (G, (I.Root (_, S1), s1), (I.Root (_, S2), s2), ms) =
@@ -187,53 +263,81 @@ struct
 	end
       | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
 		       M.Mapp (M.Marg (M.Star, _), ms'), cands) =
-	(* skip "ignore" arguments, later also "output" arguments *)
+	(* skip "ignore" arguments *)
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
       | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
 		       M.Mapp (M.Marg (M.Minus, _), ms'), cands) =
+        (* skip here when implemented *)
 	raise Error ("Output coverage not yet implemented")
 
-    fun matchClause (G, ps', (C.Eq Q, s), ms) =
-          resolveCands (matchTop (G, ps', (Q, s), ms))
-      | matchClause (G, ps', (C.And (r, A, g), s), ms) =
-	let
-	  val X = I.newEVar (G, I.EClo(A, s)) (* redundant? *)
+    (* matchClause (G, (a @ S1, s1), V, ms) = cands
+       as in matchTop, but r is compiled clause
+       NOTE: Simply use constant type for more robustness (see below)
+    *)
+    fun matchClause (G, ps', qs as (I.Root (_, _), s), ms) =
+          resolveCands (matchTop (G, ps', qs, ms))
+      | matchClause (G, ps', (I.Pi ((I.Dec(_, V1), _), V2), s), ms) =
+        let
+	  val X1 = I.newEVar (I.Null, I.EClo (V1, s))
 	in
-	  matchClause (G, ps', (r, I.Dot(I.Exp(X), s)), ms)
+	  matchClause (G, ps', (V2, I.Dot (I.Exp (X1), s)), ms)
 	end
-      | matchClause (G, ps', (C.Exists (I.Dec (_, A), r), s), ms) =
-	let
-	  val X = I.newEVar (G, I.EClo(A, s))
-	in
-	  matchClause (G, ps', (r, I.Dot (I.Exp (X), s)), ms)
-	end
-      (* C.Assign, C.In, and C.Exists' not supported *)
 
-    (* invariant klist <> Covered *)
+    (* matchSig (G, (a @ S, s), sgn, ms, klist) = klist'
+       match coverage goal {{G}} a @ S[s]
+       against each constructor in sgn, 
+       adding one new pair (c,cand) for each constant in klist to obtain klist'
+
+       Invariants:
+       G |- a @ S[s] : type
+       sgn consists of constructors with target type a @ S'
+       ms matches S
+       klist <> Covered
+    *)
     fun matchSig (G, ps', nil, ms, klist) = klist
       | matchSig (G, ps', I.Const(c)::sgn', ms, klist) =
         let
-	  val C.SClause(r) = C.sProgLookup c
+	  val V = I.constType (c)
 	  val cands = CSManager.trail
-	              (fn () => matchClause (G, ps', (r, I.id), ms))
+	              (fn () => matchClause (G, ps', (V, I.id), ms))
 	in
 	  matchSig' (G, ps', sgn', ms, addKs ((I.Const(c),cands), klist))
 	end
       | matchSig (G, ps', _::sgn', ms, klist) = matchSig (G, ps', sgn', ms, klist)
+      (* ignore Skolem constants *)
 
+    (* matchSig' (G, (a @ S, s), sgn, ms, klist) = klist'
+       as matchSig, but check if coverage goal {{G}} a @ S[s] is already matched
+    *)
     and matchSig' (G, ps', sgn, ms, Covered) = Covered (* already covered: return *)
       | matchSig' (G, ps', sgn, ms, CandList (klist)) = (* not yet covered: continue to search *)
           matchSig (G, ps', sgn, ms, CandList (klist))
 
-    (* match *)
-    (* no local assumptions *)
+    (* match (G, V, ms) = klist
+       matching coverage goal {{G}} V against signature yields klist
+       no local assumptions
+       Invariants:
+       V = {xk+1:Vk+1}...{xn:Vn} a @ S
+       G = {x1:V1}...{xk:Vk}
+       mode spine ms matches S
+       G |- V : type
+    *)
     fun match (G, V as I.Root (I.Const (a), S), ms) =
-        matchSig (G, (V, I.id), Index.lookup a, ms, CandList (nil))
+          matchSig (G, (V, I.id), Index.lookup a, ms, CandList (nil))
       | match (G, I.Pi ((D, _), V'), ms) =
-	match (I.Decl (G, D), V', ms)
+	  match (I.Decl (G, D), V', ms)
 
+    (************************************)
     (*** Selecting Splitting Variable ***)
+    (************************************)
 
+
+    (* selectCand (klist) = klist'
+       where klist' is an indication of coverage or a singleton
+
+       Simple heuristic: select last splitting candidate from last clause tried
+       This will never pick an index variable unless necessary.
+    *)
     fun selectCand (Covered) = Covered	(* success: case is covered! *)
       | selectCand (CandList (klist)) = selectCand' klist
     and selectCand' nil = CandList (nil) (* failure: case G,V is not covered! *)
@@ -244,14 +348,20 @@ struct
       | selectCand' ((c, Cands(k::ks))::klist) = (* found candidate: pick first one *)
 	  CandList ((c, Cands(k::nil))::nil)
 
+    (*****************)
     (*** Splitting ***)
+    (*****************)
 
     (*
-    fun buildPi (I.Null, V, n) = (V, n)
-      | buildPi (I.Decl (G, D), V, n) =
-          buildPi (G, I.Pi ((D, I.Maybe), V), n+1)
+       In a coverage goal {{G}} a @ S we instantiate each
+       declaration in G with a new EVar, then split one of these variables,
+       then abstract to obtain a new coverage goal {{G'}} a @ S'
     *)
 
+    (* instEVars ({xn:Vn}...{x1:Vn} a @ S) = (a @ S[s], [X1,...,Xn])
+       where . |- s : {xn:Vn}...{x1:V1}
+       and s = X1...Xn.id, all Xi are new EVars
+    *)       
     fun instEVars (Vs, XsRev) = instEVarsW (Whnf.whnf Vs, XsRev)
     and instEVarsW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), XsRev) =
         let
@@ -261,6 +371,10 @@ struct
 	end
       | instEVarsW (Vs as (I.Root _, s), XsRev) = (Vs, XsRev)
 
+    (* caseList is a list of possibilities for a variables
+       to be split.  Maintained as a mutable reference so it
+       can be updated in the success continuation.
+    *)
     local 
       val caseList : I.Exp list ref = ref nil
     in
@@ -297,7 +411,7 @@ struct
 
        Invariant: 
        If   S |- c : Pi {V1 .. Vn}. V 
-       then . |- U' = c @ (Xn; .. Xn; Nil)
+       then . |- U' = c @ (X1; .. Xn; Nil)
        and  . |- U' : V' [s']
     *)
     fun createAtomConst (G, H as I.Const (cid)) = 
@@ -371,7 +485,7 @@ struct
     (* end m2/splitting.fun *)
 
 
-    (* splitEVar X sc = ()  --- call sc on all possibilities for X *)
+    (* splitEVar X sc = ()  --- call sc on all cases for X *)
 
     fun splitEVar ((X as I.EVar (_, GX, V, _)), sc) = (* GX = I.Null *)
           lowerSplit (I.Null, (V, I.id),
@@ -379,7 +493,12 @@ struct
 				then sc ()
 			      else ())
 
-    (* abstract (V, s) = (G, V') *)
+    (* abstract (a @ S, s) = V'
+       where V' = {{G}} a @ S' and G abstracts over all EVars in a @ S[s]
+       in arbitrary order
+
+       Invariants: . |- a @ S[s] : type
+     *)
     fun abstract (V, s) = 
         let
 	  val (i, V') = Abstract.abstractDecImp (I.EClo (V, s))
@@ -387,6 +506,13 @@ struct
 	  V'
 	end
 
+    (* splitVar ({{G}} a @ S, k) = [{{G1}} a @ S1 ,..., {{Gn}} a @ Sn]
+       where {{Gi}} a @ Si are new coverage goals obtained by
+       splitting kth variable in G, counting right-to-left.
+
+       Invariants: G |- a @ S : type, k <= |G|
+       {{Gi}} a @ Si cover {{G}} a @ S
+    *)
     fun splitVar (V, k) =
         let
 	  val ((V1, s), XsRev) = instEVars ((V, I.id), nil)
@@ -398,25 +524,85 @@ struct
 	  getCases ()
 	end
 
-    (* fix formatGoal to pick existential and universal names appropriately according to mode *)
-    fun formatGoal (V) = Print.formatExp (I.Null, V)
-    fun formatGoals (V::nil) = [formatGoal (V)]
-      | formatGoals (V::Vs) =
-          Print.formatExp (I.Null, V) :: F.String "," :: F.Break :: formatGoals Vs
+    (*********************************)
+    (* Checking for Impossible Cases *)
+    (*********************************)
 
-    fun missingToString (Vs) =
-        F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (formatGoals Vs), F.String "."])
+    exception Possible
+
+    (* impossible1 X = true
+       iff there is no constructor for EVar X
+    *)
+    fun impossible1 (X) =
+        (* raised exception bypasses trail manager *)
+        (* trail here explicitly because of dependencies *)
+        CSManager.trail
+	(fn () => (splitEVar (X, fn () => raise Possible); true) (* impossible, if returns *)
+	          handle Possible => false)
+
+    (* impossibleCase (Xs) = true
+       iff there is no constructor for one of the variables among EVars Xs
+    *)
+    fun impossibleCase (nil) = false	(* no impossible coverage variable found *)
+      | impossibleCase (X::Xs) =
+          impossible1 X orelse impossibleCase Xs
+
+    (* impossible {{G}} a @ S = true
+       iff the coverage goal {{G}} a @ S is satisfied because one of
+       the coverage variables in G has no constructor
+       Invariants: G |- a @ S : type
+    *)
+    fun impossible (V) =
+        let
+	  val ((V1, s), XsRev) = instEVars ((V, I.id), nil)
+	in
+	  impossibleCase (XsRev)
+	end
+
+    (***************************)
+    (* Printing Coverage Goals *)
+    (***************************)
+
+    (* we pass in the mode spine specifying coverage, but currently ignore it *)
+    fun abbrevCSpine (S, ms) = S
+
+    fun abbrevCGoal (G, I.Pi((D, P), V), ms) =
+        let 
+	  val D' = Names.decEName (G, D)
+	in
+	  I.Pi ((D', P), abbrevCGoal (I.Decl (G, D'), V, ms))
+	end
+      | abbrevCGoal (G, I.Root (a, S), ms) =
+	I.Root (a, abbrevCSpine (S, ms))
+
+    fun formatCGoal (V, ms) =
+        let
+	  val _ = Names.varReset ()
+	in
+	  Print.formatExp (I.Null, abbrevCGoal (I.Null, V, ms))
+	end
+
+    fun formatCGoals (V::nil, ms) = [formatCGoal (V, ms)]
+      | formatCGoals (V::Vs, ms) =
+          formatCGoal (V, ms) :: F.String "," :: F.Break :: formatCGoals (Vs, ms)
+
+    fun missingToString (Vs, ms) =
+        F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (formatCGoals (Vs, ms)), F.String "."])
+
+    (*********************)
+    (* Coverage Checking *)
+    (*********************)
+
+    (* currently handles only input coverage *)
+    (* need to improve tracing with higher chatter levels *)
 
     fun cover (V, ms, missing) =
-        let 
-	  val _ = if !Global.chatter >= 5
-		    then print ("Goal : " ^ F.makestring_fmt (formatGoal V) ^ "\n")
-		  else ()
-	in
-	  split (V, selectCand (match (I.Null, V, ms)), ms, missing)
-	end
+          split (V, selectCand (match (I.Null, V, ms)), ms, missing)
     and split (V, Covered, ms, missing) = missing
-      | split (V, CandList (nil), ms, missing) = (V::missing)
+      | split (V, CandList (nil), ms, missing) =
+        if impossible(V)		(* no candidates: check if coverage goal is impossible *)
+	  then missing
+	else V::missing
       | split (V, CandList ((_, Cands (k::_))::_), ms, missing) =
           covers (splitVar (V, k), ms, missing)
     and covers (nil, ms, missing) = missing
@@ -426,15 +612,13 @@ struct
   in
     fun checkCovers (a, ms) =
         let
-	  (* val _ = print "Coverage checking not yet implemented!\n" *)
-	  val V0 = initGoal (a)
-	  (* val (G0, (V, s)) = CFormToCGoal (I.Null, (F0, I.id)) *)
+	  val V0 = initCGoal (a)
 	  val _ = CSManager.reset ()
 	  val missing = cover (V0, ms, nil)
 	  val _ = case missing
-	            of nil => print "Coverage satisfied!\n"
-		     | _ => print ("Coverage failed!  Missing cases:\n"
-				   ^ missingToString missing ^ "\n")
+	            of nil => ()	(* all cases covered *)
+		     | _::_ => raise Error ("Coverage error --- missing cases:\n"
+					    ^ missingToString (missing, ms) ^ "\n")
 	in
 	  ()
 	end
