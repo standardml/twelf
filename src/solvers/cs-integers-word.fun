@@ -21,16 +21,18 @@ struct
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
 
+    (* constraint solver ID of this module *)
     val myID = ref ~1 : csid ref
 
+    (* constant ID of the type family constant "wordXX" *)
     val wordID = ref ~1 : cid ref
 
     fun word () = Root (Const (!wordID), Nil)
 
-    val plusID  = ref ~1 : cid ref
-    val timesID = ref ~1 : cid ref
-    val gtID    = ref ~1 : cid ref
-    val quotID  = ref ~1 : cid ref
+    (* constant ID's of the operators defined by this module *)
+    val plusID  = ref ~1 : cid ref   (* + : wordXX -> wordXX -> wordXX -> type *)
+    val timesID = ref ~1 : cid ref   (* * : wordXX -> wordXX -> wordXX -> type *)
+    val quotID  = ref ~1 : cid ref   (* / : wordXX -> wordXX -> wordXX -> type *)
 
     fun plusExp (U, V, W) = Root (Const (!plusID),
                                   App (U, App (V, App (W , Nil))))
@@ -38,19 +40,17 @@ struct
     fun timesExp (U, V, W) = Root (Const (!timesID),
                                    App (U, App (V, App (W, Nil))))
 
-    fun gtExp (U, V) = Root (Const (!gtID), App (U, App (V, Nil)))
-
     fun quotExp (U, V, W) = Root (Const (!plusID),
                                   App (U, App (V, App (W , Nil))))
 
-    val provePlusID  = ref ~1 : cid ref
-    val proveTimesID = ref ~1 : cid ref
-    val proveGtID    = ref ~1 : cid ref
-    val proveQuotID  = ref ~1 : cid ref
-    val proofPlusID  = ref ~1 : cid ref
-    val proofTimesID = ref ~1 : cid ref
-    val proofGtID    = ref ~1 : cid ref
-    val proofQuotID  = ref ~1 : cid ref
+    (* constant ID's of the proof object generators and their proof objects *)
+    (* (these are used as workaround for the lack of sigma types in Twelf)  *)
+    val provePlusID  = ref ~1 : cid ref (* prove+ : {U}{V}{W} + U V W -> type *) 
+    val proveTimesID = ref ~1 : cid ref (* prove* : {U}{V}{W} * U V W -> type *)
+    val proveQuotID  = ref ~1 : cid ref (* prove/ : {U}{V}{W} / U V W -> type *)
+    val proofPlusID  = ref ~1 : cid ref (* proof* : {U}{V}{W}{P} prove+ U V W P *)
+    val proofTimesID = ref ~1 : cid ref (* proof* : {U}{V}{W}{P} prove* U V W P *)
+    val proofQuotID  = ref ~1 : cid ref (* proof/ : {U}{V}{W}{P} prove/ U V W P *)
 
     fun provePlusExp (U, V, W, P) = Root (Const (!provePlusID),
                                           App (U, App (V, App (W, App (P , Nil)))))
@@ -62,9 +62,6 @@ struct
     fun proveTimesExp (U, V, W, P) = Root (Const (!proveTimesID),
                                            App (U, App (V, App (W, App (P , Nil)))))
 
-    fun proveGtExp (U, V, P) = Root (Const (!proveGtID), App (U, App (V, App (P, Nil))))
-    fun proofGtExp (U, V, P) = Root (Const (!proofGtID), App (U, App (V, App (P, Nil))))
- 
     fun proveQuotExp (U, V, W, P) = Root (Const (!proveQuotID),
                                           App (U, App (V, App (W, App (P , Nil)))))
     fun proofQuotExp (U, V, W, P) = Root (Const (!proofQuotID),
@@ -74,6 +71,12 @@ struct
 
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
+    (* scanNumber (str) = numOpt
+
+       Invariant:
+         numOpt = SOME(n) if str is the decimal representation of the number n
+                = NONE otherwise
+    *)
     fun scanNumber (str) =
           let
             fun check (chars as (_ :: _)) =
@@ -125,26 +128,15 @@ struct
 
     fun timesPfExp ds = Root(FgnConst (!myID, timesPfConDec ds), Nil)
 
-    fun gtPfConDec (d1, d2) = ConDec(W.fmt StringCvt.DEC d1
-                                     ^ ">"
-                                     ^ W.fmt StringCvt.DEC d2,
-                                     NONE, 0, Normal,
-                                     gtExp (numberExp d1, numberExp d2),
-                                     Type)
-
-    fun gtPfExp ds = Root (FgnConst (!myID, gtPfConDec ds), Nil)
-
-    fun quotPfConDec (d1, d2, d3) =
+    fun quotPfConDec (d1, d2) =
           let
-            val d4 = W.+ (W.* (d1, d2), d3)
+            val d3 = W.div (d1, d2)
           in
             ConDec (W.fmt StringCvt.DEC d1 
-                    ^ "*"
-                    ^ W.fmt StringCvt.DEC d2
-                    ^ "+"
-                    ^ W.fmt StringCvt.DEC d3,
+                    ^ "/"
+                    ^ W.fmt StringCvt.DEC d2,
                     NONE, 0, Normal,
-                    quotExp (numberExp d4, numberExp d2, numberExp d1),
+                    quotExp (numberExp d1, numberExp d2, numberExp d3),
                     Type)
           end
 
@@ -163,27 +155,6 @@ struct
                | _ => NONE
           end
 
-    fun scanTernopPf oper1 oper2 string =
-          let
-            val args = String.tokens (fn c => c = oper1) string
-          in
-            case args
-              of [arg1, args2] =>
-          let
-            val args' = String.tokens (fn c => c = oper2) args2
-          in
-            case args'
-              of [arg2, arg3] =>
-           (case (StringCvt.scanString (W.scan StringCvt.DEC) arg1,
-                  StringCvt.scanString (W.scan StringCvt.DEC) arg2,
-                  StringCvt.scanString (W.scan StringCvt.DEC) arg3)
-                   of (SOME(d1), SOME(d2), SOME(d3)) => SOME(d1, d2, d3)
-               | _ => NONE)
-               | _ => NONE
-          end
-               | _ => NONE
-          end
-
     (* parseBinopPf operator string = SOME(conDec) or NONE 
 
        Invariant: 
@@ -194,27 +165,12 @@ struct
           case (oper, scanBinopPf oper string)
             of (#"+", SOME(ds)) => SOME(plusPfConDec ds)
              | (#"*", SOME(ds)) => SOME(timesPfConDec ds)
-             | (#">", SOME(ds as (d1, d2))) =>
-                  if (W.>(d1, d2)) then SOME(gtPfConDec ds)
-                                   else NONE
-             | _ => NONE
-
-    (* parseTernopPf operator string = SOME(conDec) or NONE 
-
-       Invariant: 
-       If string parses to the proof object of n1<operator>n2
-       then conDec is the (foreign) constant declaration of n1<operator>n2
-    *)
-    fun parseTernopPf oper1 oper2 string =
-          case (oper1, oper2, scanTernopPf oper1 oper2 string)
-            of (#"*", #"+", SOME(ds)) => SOME(quotPfConDec ds)
+             | (#"/", SOME(ds)) => SOME(timesPfConDec ds)
              | _ => NONE
 
     val parsePlusPf = parseBinopPf #"+"
     val parseTimesPf = parseBinopPf #"*"
-    val parseGtPf = parseBinopPf #">"
-
-    val parseQuotPf = parseTernopPf #"*" #"+"
+    val parseQuotPf = parseBinopPf #"/"
 
     fun parseAll string =
           (case (parseNumber (string))
@@ -225,17 +181,13 @@ struct
               | NONE => 
           (case (parseTimesPf (string))
              of SOME(conDec) => SOME(conDec)
-              | NONE =>
-          (case (parseGtPf (string))
-             of SOME(conDec) => SOME(conDec)
-              | NONE => parseQuotPf (string)))))
+              | NONE => parseQuotPf (string))))
 
     datatype FixTerm =                                      (* Term                       *)
       Num of W.word                                         (* Term ::= n                 *)
     | PlusPf of (W.word * W.word)                           (*        | n1+n2             *)
     | TimesPf of (W.word * W.word)                          (*        | n1*n2             *)
-    | GtPf of (W.word * W.word)                             (*        | n1>n2             *)
-    | QuotPf of (W.word * W.word * W.word)                  (*        | n1*n2+n3          *)
+    | QuotPf of (W.word * W.word)                           (*        | n1/n2             *)
     | Expr of (Exp * Sub)                                   (*        | <Expr>            *)
 
     (* fromExpW (U, s) = t
@@ -253,7 +205,7 @@ struct
               (case (scanNumber string)
                  of SOME(d) => Num d
                   | NONE =>
-              (case (scanTernopPf #"*" #"+" string)
+              (case (scanBinopPf #"/" string)
                  of SOME(ds) => QuotPf ds
                   | NONE =>
               (case (scanBinopPf #"+" string)
@@ -261,10 +213,7 @@ struct
                   | NONE =>
               (case (scanBinopPf #"*" string)
                  of SOME(ds) => TimesPf ds
-                  | NONE =>
-              (case (scanBinopPf #">" string)
-                 of SOME(ds) => GtPf ds
-                  | NONE => Expr Us)))))
+                  | NONE => Expr Us))))
             end
           else Expr Us
       | fromExpW Us = Expr Us
@@ -285,7 +234,6 @@ struct
     fun toExp (Num d) = numberExp d
       | toExp (PlusPf ds) = plusPfExp ds
       | toExp (TimesPf ds) = timesPfExp ds
-      | toExp (GtPf ds) = gtPfExp ds
       | toExp (QuotPf ds) = quotPfExp ds
       | toExp (Expr Us) = EClo Us
  
@@ -303,13 +251,14 @@ struct
     fun trd (App (_, S), s) = snd (S, s)
       | trd (SClo (S, s'), s) = trd (S, comp (s', s))
 
-    (* frth (S, s) = U1, the fourth argument in S[s] *)
-    fun frth (App (_, S), s) = trd (S, s)
-      | frth (SClo (S, s'), s) = frth (S, comp (s', s))
+    (* fth (S, s) = U1, the fourth argument in S[s] *)
+    fun fth (App (_, S), s) = trd (S, s)
+      | fth (SClo (S, s'), s) = fth (S, comp (s', s))
 
     val zero = W.fromInt 0
     val max = W.notb zero
 
+    (* plusCheck (d1, d2) = true iff d1 + d2 < max *)
     fun plusCheck (d1, d2) =
           let
             val d3 = W.+(d1, d2)
@@ -317,11 +266,13 @@ struct
             W.>= (d3, d1) andalso W.>= (d3, d2)
           end
 
+    (* timesCheck (d1, d2) = true iff d1 * d2 < max *)
     fun timesCheck (d1, d2) =
           if(d1 = zero orelse d2 = zero) then true
           else let val d3 = W.div (W.div (max, d1), d2)
                in W.> (d3, zero) end
 
+    (* quotCheck (d1, d2) = true iff d1 * d2 < max *)
     fun quotCheck (d1, d2) = W.> (d2, zero)
 
     fun toInternalPlus (G, U1, U2, U3) () =
@@ -342,7 +293,7 @@ struct
              })
 
     (* solvePlus (G, S, n) tries to find the n-th solution to
-          G |- '*' @ S : type
+          G |- '+' @ S : type
     *)
     and solvePlus (G, S, 0) =
           let
@@ -398,7 +349,7 @@ struct
              })
 
     (* solveTimes (G, S, n) tries to find the n-th solution to
-         G |- '+' @ S : type
+         G |- '*' @ S : type
     *)
     and solveTimes (G, S, 0) =
           let
@@ -450,48 +401,6 @@ struct
           end
       | solveTimes (G, S, n) = NONE
 
-    and toInternalGt (G, U1, U2) () =
-          [(G, gtExp(U1, U2))]
-
-    and awakeGt (G, proof, U1, U2) () =
-          case (solveGt (G, App(U1, App (U2, Nil)), 0))
-	    of SOME(proof') => Unify.unifiable(G, (proof, id), (proof', id))
-	     | NONE => false
-
-    (* constraint constructor *)
-    and makeCnstrGt (G, proof, U1, U2) =
-          FgnCnstr (!myID,
-             {
-               toInternal = toInternalGt (G, U1, U2),
-               awake = awakeGt (G, proof, U1, U2),
-               simplify = (fn () => false)
-             }
-            )
-
-    (* solveGt (G, S, n) tries to find the n-th solution to
-         G |- '>' @ S : type
-    *)
-    and solveGt (G, S, 0) =
-          let
-            val Us1 = fst (S, id)
-            val Us2 = snd (S, id)
-          in
-            (case (fromExp (Us1), fromExp (Us2))
-               of (Num d1, Num d2) =>
-                    if (W.>(d1, d2))
-                    then SOME(gtPfExp(d1, d2))
-                    else NONE
-                | _ => let
-		         val proof = newEVar (G, gtExp (EClo Us1, EClo Us2))
-                         val cnstr = makeCnstrGt (G, proof, EClo Us1, EClo Us2)
-			 val _ = List.app (fn Us => Unify.delay (Us, ref cnstr))
-                                          [Us1, Us2]
-                       in
-		         SOME(proof)
-                       end)
-          end
-      | solveGt (G, S, n) = NONE
-
     and toInternalQuot (G, U1, U2, U3) () =
           [(G, quotExp(U1, U2, U3))]
 
@@ -522,12 +431,12 @@ struct
             (case (fromExp Us1, fromExp Us2, fromExp Us3)
                of (Num d1, Num d2, Num d3) =>
                      if (quotCheck (d1, d2) andalso d3 = W.div(d1, d2))
-                     then SOME(quotPfExp (d2, W.div (d1, d2), W.mod (d1, d2)))
+                     then SOME(quotPfExp (d1, d2))
                      else NONE
                 | (Num d1, Num d2, Expr Us3) =>
 		     if (quotCheck (d1, d2)
                          andalso Unify.unifiable (G, Us3, (numberExp (W.div(d1, d2)), id)))
-                     then SOME(quotPfExp (d2, W.div (d1, d2), W.mod (d1, d2)))
+                     then SOME(quotPfExp (d1, d2))
 		     else NONE
                 | _ => let
 		         val proof = newEVar (G, quotExp (EClo Us1, EClo Us2, EClo Us3))
@@ -548,7 +457,7 @@ struct
             val Us1 = fst (S, id)
             val Us2 = snd (S, id)
             val Us3 = trd (S, id)
-            val Us4 = frth (S, id)
+            val Us4 = fth (S, id)
           in
             case (solvePlus (G, App (EClo Us1, App (EClo Us2, App (EClo Us3, Nil))), k))
               of SOME(U) =>
@@ -566,29 +475,12 @@ struct
             val Us1 = fst (S, id)
             val Us2 = snd (S, id)
             val Us3 = trd (S, id)
-            val Us4 = frth (S, id)
+            val Us4 = fth (S, id)
           in
             case (solveTimes (G, App (EClo Us1, App (EClo Us2, App (EClo Us3, Nil))), k))
               of SOME(U) =>
                    if Unify.unifiable(G, Us4, (U, id))
                    then SOME(proofTimesExp (EClo Us1, EClo Us2, EClo Us3, EClo Us4))
-                   else NONE
-               | NONE => NONE
-          end
-
-    (* solveProveGt (G, S, n) tries to find the n-th solution to
-         G |- prove> @ S : type
-    *)
-    fun solveProveGt (G, S, k) =
-          let
-            val Us1 = fst (S, id)
-            val Us2 = snd (S, id)
-            val Us3 = trd (S, id)
-          in
-            case (solveGt (G, App (EClo Us1, App (EClo Us2, Nil)), k))
-              of SOME(U) =>
-                   if Unify.unifiable(G, Us3, (U, id))
-                   then SOME(proofGtExp (EClo Us1, EClo Us2, EClo Us3))
                    else NONE
                | NONE => NONE
           end
@@ -601,7 +493,7 @@ struct
             val Us1 = fst (S, id)
             val Us2 = snd (S, id)
             val Us3 = trd (S, id)
-            val Us4 = frth (S, id)
+            val Us4 = fth (S, id)
           in
             case (solveQuot (G, App (EClo Us1, App (EClo Us2, App (EClo Us3, Nil))), k))
               of SOME(U) =>
@@ -627,7 +519,7 @@ struct
               installF (ConDec ("word" ^ Int.toString(W.wordSize), NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
-                        NONE, SOME(MS.Mnil));
+                        NONE : FX.fixity option, SOME(MS.Mnil));
 
             plusID :=
               installF (ConDec ("+", NONE, 0,
@@ -645,13 +537,6 @@ struct
                                     arrow (word (), Uni (Type)))), Kind),
                         NONE, NONE);
 
-            gtID := 
-              installF (ConDec (">", NONE, 0,
-                                Constraint (!myID, solveGt),
-                                arrow (word (),
-                                  arrow (word (), Uni (Type))), Kind),
-                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
-            
             quotID :=
               installF (ConDec ("/", NONE, 0,
                                 Constraint (!myID, solveQuot),
@@ -702,25 +587,6 @@ struct
                                 Type),
                         NONE, NONE);
             
-            proveGtID :=
-              installF (ConDec ("prove>", NONE, 0,
-                                Constraint (!myID, solveProveGt),
-                                pi ("X", word (),
-                                  pi ("Y", word (),
-                                    pi ("P", gtExp (bvar 2, bvar 1),
-                                          Uni (Type)))),
-                                Kind),
-                        NONE, NONE);
-
-            proofGtID := 
-              installF (ConDec ("proof>", NONE, 0, Normal,
-                                pi ("X", word (),
-                                  pi ("Y", word (),
-                                    pi ("P", gtExp (bvar 2, bvar 1),
-                                        proveGtExp (bvar 3, bvar 2, bvar 1)))),
-                                Type),
-                        NONE, NONE);
-
             proveQuotID :=
               installF (ConDec ("prove/", NONE, 0,
                                 Constraint (!myID, solveProveQuot),
