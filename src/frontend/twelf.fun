@@ -592,11 +592,23 @@ struct
       val suffix = ref "cfg"
 
       (* new recursive version  Sat 09/25/1999 -rv *)
+      (* uses always Unix path separation Sat 10/21/2000 -rv *)
       fun read (configFile) =
           withOpenIn (configFile)
           (fn instream =>
            let
 	     val {dir=configDir, file=_} = OS.Path.splitDirFile configFile
+             (* fromUnixPath path transforms path (assumed to be in Unix
+                form to the local OS conventions
+             *)
+             fun fromUnixPath path =
+                   let
+                     val vol = OS.Path.getVolume configFile
+                     val isAbs = String.isPrefix "/" path
+                     val arcs = String.tokens (fn c => c = #"/") path
+                   in
+                     OS.Path.toString {isAbs = isAbs, vol=vol, arcs=arcs}
+                   end
              (* append_uniq (list1, list2) appends list2 to list1, removing
                 all elements of list2 which are already in list1
              *)
@@ -625,8 +637,8 @@ struct
                    in
                      if (suffix_start < 0)
                        orelse (String.substring (item, suffix_start, suffix_size) <> ("." ^ !suffix))
-                     then append_uniq (sources, [mkRel(item)])
-                     else append_uniq (sources, (#2(read (mkRel(item)))))
+                     then append_uniq (sources, [mkRel(fromUnixPath item)])
+                     else append_uniq (sources, (#2(read (mkRel(fromUnixPath item)))))
                    end
 	     fun parseLine (sources, line) =
 		 if Substring.isEmpty line
@@ -788,6 +800,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3, Oct 20 2000"
+    val version = "Twelf 1.3, Oct 23 2000"
   end  (* local *)
 end; (* functor Twelf *)

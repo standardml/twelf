@@ -68,11 +68,11 @@ twelf/doc/info/twelf.info-3
 twelf/doc/info/twelf.info-4
 twelf/doc/pdf/twelf.pdf
 twelf/doc/ps/twelf.ps
-twelf/emacs/.twelf-init.el
 twelf/emacs/README
 twelf/emacs/auc-menu.el
 twelf/emacs/twelf-font.el
 twelf/emacs/twelf-hilit.el
+twelf/emacs/twelf-init.el
 twelf/emacs/twelf.el
 twelf/examples-clp/arith/eval.elf
 twelf/examples-clp/arith/parse.elf
