@@ -1,0 +1,14 @@
+Group is
+  ../lambda/sources.cm
+  ../global/sources.cm
+  ../table/sources.cm
+  ../formatter/sources.cm
+  ../print/sources.cm
+  ../subordinate/sources.cm
+  ../modes/sources.cm
+  ../typecheck/sources.cm
+  ../order/sources.cm
+  ../opsem/sources.cm
+  cover.sig
+  cover.fun
+  cover.sml

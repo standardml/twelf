@@ -1,0 +1,15 @@
+Coverage Checker
+Author: Frank Pfenning with Carsten Schuermann
+
+Version 1 --- only closed queries and predicates
+
+Syntax:
+
+%covers mdecl.
+
+where mdecl is a short or full mode declaration.
+
++ means input coverage
+- means output coverage
+* means no coverage checking
+
