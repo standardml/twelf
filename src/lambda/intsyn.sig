@@ -8,7 +8,16 @@ sig
   type cid = int			(* Constant identifier        *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
- 
+
+
+ (* pskeleton instead of proof term *)
+  datatype flatterm = 
+    pc of int | dc of int | csolver
+
+  type pskeleton = flatterm list  
+
+  val pskeletonToString: pskeleton -> string
+
   (* Contexts *)
 
   datatype 'a Ctx =			(* Contexts                   *)

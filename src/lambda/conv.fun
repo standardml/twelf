@@ -122,6 +122,7 @@ struct
 	  convSpine ((S1, comp (s1', s1)), Ss2)
       | convSpine (Ss1, (SClo (S2, s2'), s2)) = 
 	  convSpine (Ss1, (S2, comp (s2', s2)))
+      | convSpine (_ , _) = false (* bp*)
     (* no others are possible due to typing invariants *)
 
     (* convSub (s1, s2) = B

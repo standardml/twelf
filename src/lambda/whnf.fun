@@ -420,7 +420,8 @@ struct
       | normalizeSub (Dot (Exp (U, V), s)) =
 	  Dot (Exp (normalizeExp (U, id), normalizeExp (V, id)),
 		 normalizeSub s)
-    *)
+	  *)
+
 
     fun normalizeCtx Null = Null
       | normalizeCtx (Decl (G, D)) = 

@@ -10,6 +10,17 @@ struct
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
+  (* pskeleton instead of proof term *)
+  datatype flatterm = 
+    pc of int | dc of int  | csolver
+
+  type pskeleton = flatterm list  
+
+  fun pskeletonToString [] = " " 
+    | pskeletonToString ((pc i)::O) = ("(pc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+    | pskeletonToString ((dc i)::O) = ("(dc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+
+
   (* Contexts *)
   datatype 'a Ctx =			(* Contexts                   *)
     Null				(* G ::= .                    *)
