@@ -51,7 +51,8 @@ sig
   val getEVar : IntSyn.name -> IntSyn.Exp (* create, if undefined *)
   val getEVarOpt : IntSyn.name -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
-  val bvarName : IntSyn.dctx * int -> string
+  val bvarName : IntSyn.dctx * int -> string (* must be defined *)
+
   val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec
   val ctxName  : IntSyn.dctx -> IntSyn.dctx
 

@@ -1979,9 +1979,9 @@ The output appears in the Twelf server buffer."
 (defun twelf-read-constants ()
   "Reads a list of constants from the mini-buffer, separated by whitespace.
 Right now this does not do any consistency checking."
-  (let ((input (read-string "Constants: " "" twelf-trace-history)))
-    (setq twelf-trace-history (cons input twelf-trace-history))
-    input))
+  (read-string "Constants: "
+	       (if (null twelf-trace-history) nil (car twelf-trace-history))
+	       'twelf-trace-history))
 
 (defun twelf-trace-trace-all ()
   "Trace all clauses and families."
