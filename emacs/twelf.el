@@ -791,7 +791,8 @@ A new file is switched to Twelf mode if a file has extension `.elf',
 init.el).
 
 The files in the current configuration can be checked in sequence with
-\\[twelf-save-check-config], the current file with
+\\[twelf-save-check-config] or
+\\[twelf-save-append-config], the current file with
 \\[twelf-save-check-file], individual declarations with
 \\[twelf-check-declaration].  These, like many other commands, take an
 optional prefix arguments which means to display the Twelf server buffer
@@ -803,6 +804,7 @@ separate buffer.
 
 Summary of most common commands:
  M-x twelf-save-check-config \\[twelf-save-check-config]  save, check & load configuration
+ M-x twelf-save-append-config \\[twelf-save-append-config]  save, check & load configuration without resetting or reloading unmodified files
  M-x twelf-save-check-file   \\[twelf-save-check-file]  save, check & load current file
  M-x twelf-check-declaration \\[twelf-check-declaration]  type-check declaration at point
  M-x twelf-server-display    \\[twelf-server-display]  display Twelf server buffer
@@ -819,6 +821,12 @@ Configurations, Files and Declarations
 
   twelf-save-check-config                   \\[twelf-save-check-config]
    Save its modified buffers and then check the current Twelf configuration.
+   With prefix argument also displays Twelf server buffer.
+   If necessary, this will start up an Twelf server process.
+
+  twelf-save-append-config                  \\[twelf-save-append-config]
+   Save its modified buffers and then check the current Twelf configuration
+   without resetting or reloading files unmodified since the last check.
    With prefix argument also displays Twelf server buffer.
    If necessary, this will start up an Twelf server process.
 
@@ -1225,14 +1233,15 @@ Always save if the variable `twelf-save-silently' is non-nil."
 With prefix argument also displays Twelf server buffer.
 If necessary, this will start up an Twelf server process."
   (interactive "P")
-  (twelf-save-op-config 'twelf-check-config))
+  (twelf-save-op-config 'twelf-check-config displayp))
 
 (defun twelf-save-append-config (&optional displayp)
-  "Save its modified buffers and then append the current Twelf configuration.
+  "Save its modified buffers and then check the current Twelf configuration
+without resetting or reloading files unmodified since the last check.
 With prefix argument also displays Twelf server buffer.
 If necessary, this will start up an Twelf server process."
   (interactive "P")
-  (twelf-save-op-config 'twelf-append-config))
+  (twelf-save-op-config 'twelf-append-config displayp))
 
 (defun twelf-save-op-config (twelf-op-config &optional displayp)
   "Save its modified buffers and then "twelf-op-config" the current
@@ -1265,7 +1274,8 @@ If necessary, this will start up an Twelf server process."
   (twelf-server-wait displayp))
 
 (defun twelf-append-config (&optional displayp)
-  "Check the current Twelf configuration without reset.
+  "Check the current Twelf configuration without resetting
+or reloading files unmodified since the last check.
 With prefix argument also displays Twelf server buffer.
 If necessary, this will start up an Twelf server process."
   (interactive "P")
