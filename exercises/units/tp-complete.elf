@@ -1,0 +1,130 @@
+%%% Proof of completeness of tp-inf.elf with regard to tp-rules.elf
+%%% by Ralph Melton (based on Kennedy97)
+
+
+%{ Theorem: for any type derivation P :: of E T1, there
+   is a type derivation P' :: of E T',
+   and a proof of equality Q :: eqtypes T T'
+}%
+
+tp_complete: of E T -> of! E T' -> eqtypes T T' -> type.
+
+
+% This is expected to be the least straightforward case, but it's
+% still pretty straightforward.
+tpc_eq     : tp_complete (of_eq Q1 P)
+	      P'
+	      Q
+	      <- tp_complete P P' Q2
+              <- eqt_sym Q1 Q1'
+	      <- eqt_trans Q1' Q2 Q.
+
+
+% numbers.
+
+tpc_num    : tp_complete (of_num N) (of!_num N) (eqt_num equ_ref).
+
+
+% arithmetic
+
+tpc_+      : tp_complete (of_+ P2 P1)
+	      (of!_+ (equ_trans Q2 (equ_sym Q1)) P2' P1')
+	      (eqt_num Q1)
+	      <- tp_complete P1 P1' (eqt_num Q1)
+	      <- tp_complete P2 P2' (eqt_num Q2).
+
+tpc_-      : tp_complete (of_- P2 P1)
+	      (of!_- (equ_trans Q2 (equ_sym Q1)) P2' P1')
+	      (eqt_num Q1)
+	      <- tp_complete P1 P1' (eqt_num Q1)
+	      <- tp_complete P2 P2' (eqt_num Q2).
+
+
+tpc_*      : tp_complete (of_* P2 P1)
+	      (of!_* P2' P1')
+	      (eqt_num (equ_cong_* Q2 Q1))
+	      <- tp_complete P1 P1' (eqt_num Q1)
+	      <- tp_complete P2 P2' (eqt_num Q2).
+tpc_/      : tp_complete (of_/ P2 P1)
+	      (of!_/ P2' P1')
+	      (eqt_num (equ_cong_* (equ_cong_-1 Q2) Q1))
+	      <- tp_complete P1 P1' (eqt_num Q1)
+	      <- tp_complete P2 P2' (eqt_num Q2).
+
+tpc_<      : tp_complete (of_< P2 P1)
+	      (of!_< (equ_trans Q2 (equ_sym Q1)) P2' P1')
+	      (eqt_bool)
+	      <- tp_complete P1 P1' (eqt_num Q1)
+	      <- tp_complete P2 P2' (eqt_num Q2). 
+
+
+%% unit cast
+tpc_un     : tp_complete (of_un) (of!_un) Q
+	      <- eqt_ref Q.
+
+
+%% functions
+tpc_lam    : tp_complete (of_lam P)
+	      (of!_lam P')
+	      (eqt_=> Q2 Q1)
+	      <- ({x:exp} {p: of x A} {p': of! x A}
+		    tp_complete p p' Q1
+		    -> tp_complete (P x p) (P' x p') Q2)
+	      <- eqt_ref Q1.
+tpc_app    : tp_complete (of_app P2 P1)
+	      (of!_app Q P2' P1')
+	      Q1b
+	      <- tp_complete P1 P1' (eqt_=> Q1b Q1a)
+	      <- tp_complete P2 P2' Q2
+	      <- eqt_sym Q1a Q1a'
+	      <- eqt_trans Q1a' Q2 Q.
+
+
+%% conditionals
+tpc_false  : tp_complete (of_false) (of!_false) (eqt_bool).
+tpc_true   : tp_complete (of_true) (of!_true) (eqt_bool).
+tpc_if     : tp_complete (of_if P3 P2 P1)
+	      (of!_if Q' P3' P2' P1')
+	      Q2
+	      <- tp_complete P1 P1' (eqt_bool)
+	      <- tp_complete P2 P2' Q2
+	      <- tp_complete P3 P3' Q3
+	      <- eqt_sym Q2 Q2'
+	      <- eqt_trans Q2' Q3 Q'.
+
+
+%% recursion
+tpc_rec    : tp_complete (of_rec P)
+	      (of!_rec Q P')
+	      Qr
+	      <- ({x: exp} {p: of x A} {p': of! x A}
+		    tp_complete p p' Qr
+		    -> tp_complete (P x p) (P' x p') Q)
+	      <- eqt_ref Qr.
+
+
+%% units abstraction and application
+tpc_LAM    : tp_complete (of_LAM P)
+	      (of!_LAM P')
+	      (eqt_forall ([u:unit] Q))
+	      <- ({u: unit} tp_complete (P u) (P' u) Q).
+tpc_APP    : tp_complete (of_APP U P)
+	      (of!_APP U P')
+	      (Q U)
+	      <- tp_complete P P' (eqt_forall Q).
+
+
+%% lets
+tpc_letv   : tp_complete (of_letv P2 P1)
+	      (of!_letv P2' P1')
+	      Q2
+	      <- tp_complete P1 P1' Q1
+	      <- ({x: exp} {p: of x A} {p': of! x A}
+		    tp_complete p p' Qr
+		    -> tp_complete (P2 x p) (P2' x p') Q2)
+	      <- eqt_ref Qr.
+tpc_letn   : tp_complete (of_letn P2 P1)
+	      (of!_letn P2' P1')
+	      Q2
+	      <- tp_complete P1 P1' Q1
+	      <- tp_complete P2 P2' Q2.

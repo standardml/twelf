@@ -1,0 +1,56 @@
+		  Project Proposal: Units of Measure
+
+Type systems for programming languages with numeric types can be
+extended to support the checking of units of measure. Furthermore,
+expressions can be quantified over units, yeilding a new sort of
+parametric polymorphism.
+
+I've been intrigued by the idea of the units of measure, although I'm
+a bit blown away by the paper in places, and I've been thinking about
+what a suitable project based on that would be. Here's my notion of
+what a project would entail and what the hard parts would be:
+
+	Extend Mini-ML with real numbers, suitable for units.
+	Give rules of unit inference.
+	Provide a unit inference algorithm.
+	Implement all of the above in Elf.
+	Prove the units equivalent of the property that you don't need
+		types at runtime, i.e., evaluation without units produces
+		the same results.
+	Prove units preservation: if an expression e has units u, and it
+		evaluates to a value v, v has units u.
+	Implement those proofs in Elf.
+
+The tricky bits I see are these:
+
+1) The equivalence rules for units are different from those that we've
+been using with typing in Elf. This means that the beta-normal
+eta-long canonical forms don't work for units. However, there are
+canonical forms for units... this would probably have to be proved by
+using canonical forms the way we did for Elf. I'd also have to prove
+decidability, though I wouldn't think that the units would lead to any
+undecidable problems.
+
+2) In order to do anything interesting, I'd have to evaluate
+expressions in a context in which 0, +, and *, for example, were
+already defined to have polymorphic units. I'm not sure whether this
+would complicate the proof of type preservation or not, since it would
+mean that there were certain functions whose internals I'd just have
+to take for granted. I think that this would mean that I'd have to
+introduce unit schemas (akin to type schemas), and I think that this
+would complicate the unit inference algorithm, because if I recall
+correctly, the type judgments with type schemas did not provide an
+algorithm for type inference.
+
+If these things prove intractable in Elf, then my second candidate
+proposal would be to prove the equivalence of the continuation-based
+semantics for Mini-ML to the context-based semantics of Mini-ML. This
+seems to be a much smaller project; an auxiliary part of this project
+would be to argue the intractability of implementing the first project
+that I proposed.
+
+Reference:
+
+Kennedy, Andrew J., "Relational Parametricity and Units of Measure",
+Proceedings of POPL '97: The 24th ACM SIGPLAN-SIGACT Symposium on
+Principles of Programming Languages, 1997.

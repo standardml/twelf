@@ -1,0 +1,12 @@
+l4 = cons 1 (cons 2 (cons 3 (cons 4 nil))).
+l3 = cons 1 (cons 2 (cons 3 nil)).
+l2 = cons 1 (cons 2 nil).
+
+%query 24 * (sqnt rnil rnil rnil rnil (^ (perm l4 L))).
+%query 6 * (sqnt rnil rnil rnil rnil (^ (perm l3 L))).
+
+%query 1 * (sqnt rnil rnil rnil rnil (^ (rev l4 L))).
+
+%query 1 * (sqnt rnil rnil rnil rnil (^ (id l4 L))).
+
+%query 1 * (sqnt rnil rnil rnil rnil (^ (idl l4 L))).

@@ -1,0 +1,14 @@
+%%% units for language with units of measure
+%%% By Ralph Melton (based on Kennedy97)
+
+unit: type. %name unit U.
+
+%%% units syntax.
+% unit variables correspond to Elf variables.
+
+u1 : unit.
+
+u* : unit -> unit -> unit. %infix right 10 u*.
+
+u-1 : unit -> unit. %postfix 15 u-1.
+

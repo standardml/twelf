@@ -1,0 +1,78 @@
+%
+% a deterministic merge sort
+%
+
+rInt : sort.
+
+mergeSort : trm (list rInt) -> trm (list rInt) -> atm.
+msort : trm (list rInt) -> atm.
+srt: trm (list rInt) -> atm.
+merge : trm (list rInt) -> trm (list rInt) -> trm (list rInt) -> atm.
+gt : trm rInt -> trm rInt -> atm.
+lte : trm rInt -> trm rInt -> atm.
+
+zz : trm rInt.
+ss : trm rInt -> trm rInt. %prefix 10 ss.
+
+
+gt1 : prog( 
+^ gt (ss X) (ss Y) 
+     <= ^ gt X Y 
+).
+
+gt2 : prog( 
+^ gt (ss X) zz 
+).
+
+lte1 : prog( 
+^ lte (ss X) (ss Y) 
+      <= ^ lte X Y 
+).
+
+lte2 : prog( 
+^ lte zz X 
+).
+
+merge1 : prog(
+^ merge (cons H1 T1) (cons H2 T2) (cons H2 T3)
+	<= ^ gt H1 H2
+	<= ^ merge (cons H1 T1) T2 T3
+).
+
+merge2 : prog(
+^ merge (cons H1 T1) (cons H2 T2) (cons H1 T3)
+	<= ^ lte H1 H2
+	<= ^ merge T1 (cons H2 T2) T3
+).
+
+merge3 : prog( 
+^ merge L nil L 
+).
+
+merge4 : prog( 
+^ merge nil L L 
+).
+
+
+msort1: prog(
+^ mergeSort (cons H T) L
+        <<= (^ srt (cons H nil) =>> ^ mergeSort T L)
+). 
+
+msort2 : prog(
+^ mergeSort nil L 
+	<<= ^ msort L
+).
+
+msort3 : prog(
+^(msort L)
+	<<= ^ srt L1
+	<<= ^ srt L2 
+	<=  ^ merge L1 L2 L12
+	<=< (^ srt L12 =>> ^ msort L)
+).
+
+msort4 : prog(
+ ^ msort L 
+	<<= ^ srt L
+).

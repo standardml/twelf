@@ -1,0 +1,46 @@
+%%% The congruence relations for units expressions
+%%% For the language with units of measure
+%%% by Ralph Melton (based on Kennedy97)
+
+equnits : unit -> unit -> type. %name equnits Q.
+
+%%% Note: using this definition of equnits as a logic program is very
+%%% unlikely to terminate.
+%%% This is the abstract version, which equnits_algorithm implements
+%%% in a decidable way.
+
+% commutativity
+equ_commute : equnits (U1 u* U2) (U2 u* U1).
+
+% associativity
+equ_assoc   : equnits ((U1 u* U2) u* U3) (U1 u* (U2 u* U3)).
+
+% identity
+equ_ident   : equnits (U u* u1) U.
+
+% inverses
+equ_inverse : equnits (U u* U u-1) u1.
+
+% reflexivity
+equ_ref     : equnits U U.
+
+% symmetry
+equ_sym     : equnits U1 U2
+	       <- equnits U2 U1.
+
+% transitivity
+equ_trans   : equnits U1 U3
+	       <- equnits U1 U2
+	       <- equnits U2 U3.
+
+% subsitutivity
+equ_subst   : {C: unit -> unit} equnits (C U) (C U')
+	       <- equnits U U'.
+
+% congruence
+equ_cong_*  : equnits (U1 u* U2) (U1' u* U2')
+	       <- equnits U1 U1'
+	       <- equnits U2 U2'.
+
+equ_cong_-1 : equnits (U u-1) (U' u-1)
+	       <- equnits U U'.

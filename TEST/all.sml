@@ -8,6 +8,7 @@ fun test (file) =
       of Twelf.OK => Twelf.OK
        | Twelf.ABORT => raise Domain;
 
+(* Examples, part of the distribution *)
 test "examples/arith/test.cfg";
 test "examples/ccc/test.cfg";
 test "examples/church-rosser/test.cfg";
@@ -25,6 +26,8 @@ test "examples/cut-elim/test.cfg";
 test "examples/fol/test.cfg";
 (* guide not in test suite, ~.05 secs more *)
 test "examples/guide/test.cfg";
+(* incll not in original test suite, ~55secs more *)
+test "examples/incll/test.cfg";
 (* kolm not in original test suite *)
 test "examples/kolm/test.cfg";
 test "examples/lp/test.cfg";
@@ -32,4 +35,6 @@ test "examples/lp-horn/test.cfg";
 test "examples/mini-ml/test.cfg";
 test "examples/polylam/test.cfg";
 test "examples/prop-calc/test.cfg";
-test "examples/units/test.cfg";
+
+(* Exercises, not part of the distribution *)
+test "exercises/units/test.cfg";

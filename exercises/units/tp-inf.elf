@@ -1,0 +1,72 @@
+%%% type inference for explicitly typed language with units of measure.
+%%% by Ralph Melton (based on Kennedy97)
+
+of! : exp -> tp -> type. %name of! P.
+
+
+% Numbers
+of!_num     : of! E (num u1)
+	      <- number E.
+
+of!_+     : of! (E1 + E2) (num U1)
+	    <- of! E1 (num U1)
+	    <- of! E2 (num U2)
+	    <- equnits U1 U2.
+of!_-     : of! (E1 - E2) (num U1)
+	    <- of! E1 (num U1)
+	    <- of! E2 (num U2)
+	    <- equnits U1 U2.
+
+of!_*     : of! (E1 * E2) (num (U1 u* U2))
+	    <- of! E1 (num U1)
+	    <- of! E2 (num U2).
+of!_/     : of! (E1 / E2) (num (U1 u* U2 u-1))
+	    <- of! E1 (num U1)
+	    <- of! E2 (num U2).
+
+of!_<     : of! (E1 < E2) bool
+	    <- of! E1 (num U1)
+	    <- of! E2 (num U2)
+	    <- equnits U1 U2.
+
+%% unit cast
+of!_un    : of! (un U) (num U).
+
+%% functions
+of!_lam   : of! (lam T1 E) (T1 => T2)
+	    <- ({x:exp} of! x T1 -> of! (E x) T2).
+of!_app   : of! (app E1 E2) T1
+	    <- of! E1 (T2 => T1)
+	    <- of! E2 T2'
+	    <- eqtypes T2 T2'.
+
+
+%% conditionals
+of!_false : of! false bool.
+of!_true  : of! true bool.
+of!_if    : of! (if E1 E2 E3) T2
+	    <- of! E1 bool
+	    <- of! E2 T2
+	    <- of! E3 T3
+	    <- eqtypes T2 T3.
+
+
+%% recursion
+of!_rec   : of! (rec T E) T
+	    <- ({x: exp} of! x T -> of! (E x) T')
+	    <- eqtypes T T'.
+
+
+%% units abstraction and application
+of!_LAM   : of! (LAM E) (forall T)
+	    <- ({u: unit} of! (E u) (T u)).
+of!_APP   : {u: unit} of! (APP E u) (T u)
+	    <- of! E (forall T).
+
+%% lets
+of!_letv  : of! (letv E1 E2) T2
+	    <- of! E1 T1
+	    <- ({x:exp} of! x T1 -> of! (E2 x) T2).
+of!_letn  : of! (letn E1 E2) T2
+	    <- of! E1 T1
+	    <- of! (E2 E1) T2.

@@ -1,0 +1,22 @@
+%%% queries %%%
+
+edge1 = cons 2 (cons 3 nil).
+edge2 = cons 1 (cons 4 nil).
+edge3 = cons 1 (cons 4 nil).
+edge4 = cons 2 (cons 3 nil).
+
+g1 = cons (pair 1 edge1) (cons (pair 2 edge2) (cons (pair 3 edge3) (cons (pair 4 edge4) nil))).
+
+e1 = cons 2 (cons 3 nil).
+e2 = cons 1 (cons 3 nil).
+e3 = cons 1 (cons 2 nil).
+g2 = cons (pair 1 e1) (cons (pair 2 e2) (cons (pair 3 e3) nil)).
+
+% %query 1 * % slow
+%query 1 1 (sqnt rnil rnil rnil rnil (^ (bfs_main g2 1 R))).
+% %query 1 * % slow
+%query 1 1 (sqnt rnil rnil rnil rnil (^ (dfs_main g2 1 R))).
+
+%% next two queries take a while to confirm no more than 1 answer.
+%%query 1 * (sqnt rnil rnil rnil rnil (^ (bfs_main g1 1 R))).
+%%query 1 * (sqnt rnil rnil rnil rnil (^ (dfs_main g1 1 R))).

@@ -1,0 +1,51 @@
+%%% An explicitly typed polymorphic language with units of measure
+%%% by Ralph Melton (based on Kennedy97)
+
+exp : type. %name exp E.
+
+%%% expression syntax
+
+% variables in the language are represented by variables in Elf.
+
+%% Numbers and operations on them.
+
+% These operators are represented as functions in the Kennedy paper.
+0 : exp.
+1 : exp.
++ : exp -> exp -> exp. %infix left 5 +.
+- : exp -> exp -> exp. %infix left 5 -.
+* : exp -> exp -> exp. %infix left 7 *.
+/ : exp -> exp -> exp. %infix left 7 /.
+< : exp -> exp -> exp. %infix none 3 <.
+
+%% a way of casting a unit to an expression.
+% Should it really be legal to have, say, 'meter' all by its lonesome?
+% Well, for now it is.
+
+un : unit -> exp.
+
+%% functions
+lam : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%% conditionals
+if  : exp -> exp -> exp -> exp.
+false : exp.
+true : exp.
+
+%% recursion
+rec : tp -> (exp -> exp) -> exp.
+
+%% units abstraction and application
+LAM : (unit -> exp) -> exp. 
+APP : exp -> unit -> exp.
+
+% note: this language doesn't have pairs at the moment. I'm leaving them
+% out, because I feel that they could be added in a copletely orthogonal
+% way.
+
+% let name and let value could be left out, but they're convenient to leave
+% in.
+
+letv : exp -> (exp -> exp) -> exp.
+letn : exp -> (exp -> exp) -> exp.

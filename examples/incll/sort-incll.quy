@@ -1,0 +1,9 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+l1 = (cons (ss ss ss zz) (cons (ss zz) (cons (ss ss zz) nil))).
+l2 = (cons (ss ss ss zz) (cons (ss ss zz) (cons (ss zz) (cons (ss ss zz) nil)))).
+
+% %query 1 *  % slow
+%query 1 1 (sqnt rnil rnil rnil rnil (^ (mergeSort l1 L))).
+% %query 1 *  % slow
+%query 1 1 (sqnt rnil rnil rnil rnil (^ (mergeSort l2 L))).
