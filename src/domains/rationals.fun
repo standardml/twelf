@@ -1,7 +1,7 @@
 (* Rationals *)
 (* Author: Roberto Virga *)
 
-functor Rationals (Integer : INTEGER) : ORDERED_DOMAIN =
+functor Rationals (Integer : INTEGER) : ORDERED_FIELD =
 struct
 
   val name = "rational"

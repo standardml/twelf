@@ -1,4 +1,5 @@
 structure Rationals = Rationals(IntInf);
+structure Integers = Integers(IntInf);
 
-structure IntegersModulo7 = IntegersModulo(val p = 7);
+structure IntegersMod7 = IntegersMod(val p = 7);
 

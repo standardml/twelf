@@ -1,7 +1,7 @@
 (* Field *)
 (* Author: Roberto Virga *)
 
-signature DOMAIN =
+signature FIELD =
 sig
 
   (* Name of the set *)
@@ -29,5 +29,5 @@ sig
   val fromString : string -> number option
   val toString   : number -> string
 
-end;  (* signature DOMAIN *)
+end;  (* signature FIELD *)
 

@@ -1,7 +1,7 @@
 (* Integers Modulo a Prime Number *)
 (* Author: Roberto Virga *)
 
-functor IntegersModulo (val p : int) :> DOMAIN =
+functor IntegersMod (val p : int) :> FIELD =
 struct
 
   val name = "integer" ^ (Int.toString p)
@@ -51,4 +51,4 @@ struct
 
   val toString = Int.toString
 
-end;  (* functor IntegersModulo *)
+end;  (* functor IntegersMod *)

@@ -1,8 +1,9 @@
 Group is
   smlnj-lib.cm
-  domain.sig
-  ordered-domain.sig
-  void.sml
+  field.sig
+  ordered-field.sig
   rationals.fun
-  integers-modulo.fun
+  integers-mod.fun
+  integers.sig
+  integers.fun
   domains.sml
