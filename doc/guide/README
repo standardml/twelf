@@ -3,21 +3,21 @@ written in in Texinfo format in the file
 
   twelf.texi
 
-The scripts create the indicated version of the manual:
+The Makefile contains instructions to create and install various
+versions of the manual.
 
-  guide2all  (creates dvi, ps, html, info, BUT NOT pdf)
-  guide2dvi  (twelf.dvi, twelf.ps)
-  guide2html (twelf_toc.html, twelf_*.html)
-  guide2info (twelf.info, visit with C-u C-h twelf.info in Emacs)
+  make all  (creates dvi, ps, html, info, BUT NOT pdf ON LINUX)
 
-  guide2pdf  (twelf.pdf ***Warning: cannot be created under PC/Linux***)
+  make twelf.info (twelf.info, visit with C-u C-h twelf.info in Emacs)
+  make twelf.dvi  (twelf.dvi)
+  make twelf.ps   (twelf.ps)
+  make twelf_toc.html (twelf_toc.html, twelf_*.html)
+  make twelf.pdf  (twelf.pdf ***Warning: cannot be created under PC/Linux***)
 
 To copy the resulting documentation to the right locations, type
 
-  ./install
+  make install
 
 To clean this directory to sources only:
 
-  ./clean
-
-This whole directory should probably be rewritten as a Makefile...
+  make clean
