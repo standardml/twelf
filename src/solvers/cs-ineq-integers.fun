@@ -481,7 +481,7 @@ struct
                           let
                             val value = coeff (i, j)
                           in
-                            if (i <> row) andalso restricted (l)
+                            if (not (dead (l))) andalso (i <> row) andalso restricted (l)
                               andalso ((fromInt (sgn) * value) < zero)
                             then
                               let
@@ -1296,7 +1296,7 @@ struct
 
             init = init,
 
-            reset  = unwind,
+            reset  = reset,
             mark   = mark,
             unwind = unwind
           } : CSManager.solver
