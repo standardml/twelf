@@ -37,6 +37,7 @@ sig
   val exists : ctx * (Paths.region * theorem) -> theorem
   val forall : ctx * (Paths.region * theorem) -> theorem
   val forallStar : ctx * (Paths.region * theorem) -> theorem
+  val forallG : (ctx * ctx) list * (Paths.region * theorem) -> theorem
 
   val dec : (string * theorem) -> theoremdec
 

@@ -32,7 +32,8 @@ struct
 
   (* Theorem declaration *)
   datatype ThDecl =
-    ThDecl of ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.Mode ModeSyn.IntSyn.Ctx * int
+    ThDecl of (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list
+              * ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.Mode ModeSyn.IntSyn.Ctx * int
 
   (* Proof declaration *)
   datatype PDecl = 
@@ -51,7 +52,7 @@ struct
        then D' is a constant type declaration of this theorem
     *)
 
-    fun theoremDecToConDec ((name, ThDecl (G, MG, i)), r) = 
+    fun theoremDecToConDec ((name, ThDecl (GBs, G, MG, i)), r) = 
 	let 
 	  (* theoremToConDec' G V = V'
 
@@ -69,7 +70,7 @@ struct
 								I.Maybe), V))
 		else error (r, "Free variables in theorem declaration")
 	in
-	  I.ConDec (name, i, theoremToConDec' (G, I.Uni (I.Type)), I.Kind)
+	  (GBs, I.ConDec (name, i, theoremToConDec' (G, I.Uni (I.Type)), I.Kind))
 	end
    
 
@@ -82,7 +83,7 @@ struct
 	 quantifier information for the theorem
     *)
 
-    fun theoremDecToModeSpine ((name,  ThDecl (G, MG, i)), r) = 
+    fun theoremDecToModeSpine ((name,  ThDecl (GBs, G, MG, i)), r) = 
       let 
 	fun theoremToModeSpine' (I.Null, I.Null, mS) = mS
 	  | theoremToModeSpine' (I.Decl (G, I.Dec (x, _)), I.Decl (MG, m), mS) =

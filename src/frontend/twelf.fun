@@ -345,7 +345,11 @@ struct
       | install1 (fileName, Parser.TheoremDec tdec) =
 	let 
 	  val (Tdec, r) = ThmRecon.theoremDecToTheoremDec tdec
-	  val E as IntSyn.ConDec (name, k, V, L) = ThmSyn.theoremDecToConDec (Tdec, r)
+	  val (GBs, E as IntSyn.ConDec (name, k, V, L)) = ThmSyn.theoremDecToConDec (Tdec, r)
+	  val _ = FunSyn.labelReset ()
+	  val _ = List.foldr (fn ((G1, G2), k) => FunSyn.labelAdd 
+			    (FunSyn.LabelDec (Int.toString k, FunSyn.ctxToList G1, FunSyn.ctxToList G2))) 0 GBs
+								       
 	  val cid = installConDec (E, (fileName, NONE))
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
 	  val _ = ModeSyn.installMode (cid, MS)
