@@ -5050,6 +5050,14 @@ C-u} Emacs command.
  With prefix argument also displays Twelf server buffer.
  If necessary, this will start up an Twelf server process.
 
+@item C-c C-a
+@itemx M-x twelf-save-append-config
+@findex M-x twelf-save-append-config
+ Save its modified buffers and then check the current Twelf configuration
+ without resetting or reloading files unmodified since the last check.
+ With prefix argument also displays Twelf server buffer.
+ If necessary, this will start up an Twelf server process.
+
 @item C-c C-s
 @itemx M-x twelf-save-check-file
 @findex M-x twelf-save-check-file
@@ -5517,6 +5525,7 @@ M-C-q        twelf-indent-decl
 @group
 --- Type Checking ---
 C-c C-c      twelf-save-check-config
+C-c C-a      twelf-save-append-config
 C-c C-s      twelf-save-check-file
 C-c C-d      twelf-check-declaration
 C-c c        twelf-type-const
