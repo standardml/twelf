@@ -271,9 +271,13 @@ struct
 	  (* can there be uninstantiated variable left over? 
 	     I suspect no.  If yes, something is underspecified 
 	     Is this part of the invariant? --cs *)
-	  val k' = (fn (G', Vs') => if noConstraints (G, t)
-				 then k (G', Vs')
-			       else (Trace.constraintsRemain (); ()))
+	  val k' = (fn (G', Vs') => 
+		    ((* print ("OK block identified: " ^ I.conDecName (I.sgnLookup c) ^ "\n");
+		        --cs Sat Nov 15 09:20:36 2003 *)
+		      if noConstraints (G, t)
+		     then k (G', Vs')
+		     else (Trace.constraintsRemain (); ())))
+		       
 	in
 	  accR ((decUName (G, I.BDec (NONE, (c, t))), (V, I.comp (s, I.shift))), 
 		Seq (1, piDecs, I.comp (t, I.shift)), b, k')
