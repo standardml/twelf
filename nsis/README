@@ -1,2 +1,23 @@
-Nullsoft SuperPIMP Install System (NSIS) files
+NSIS installation files
 Author: Roberto Virga
+
+Contents:
+
+  INSTALL		- installation instructions
+  LICENSE		- license text to be displayed
+  Makefile		- Makefile to generate heap images of Twelf in Windows
+  README		- this file
+  README.txt		- a copy of ../README, reformatted to be read by NotePad and
+			  similar Windows editors
+  disabled.bmp		- bitmap for the disabled option icon
+  enabled.bmp		- bitmap for the enabled option icon
+  mkexec.bat		- batchfile to generate twelf-server.bat and twelf-sml.bat
+			  (this is obsolete, because superceded by mkexec.exe, but kept
+			   here for documentation purposes and possible future use)
+  mkexec.c		- ANSI C source files for mkexec.exe
+  mkexec.exe		- executable to generate twelf-server.bat and twelf-sml.bat
+  run.x86-win32.exe	- SMLNJ runtime
+  twelf-init.el		- NTEmacs initialization file (modified from emacs/twelf-init.el)
+  twelf.ico		- Windows icon file for Twelf (both installation and batch files)
+  twelf.nsi		- NSIS script to generate the self-extracting installation program
+  uninst.ico		- Windows icon file for the uninstallation program

@@ -1,6 +1,6 @@
 Name "Twelf 1.3"
 Icon twelf.ico
-OutFile ..\twelf.exe
+OutFile ..\twelf-1-3.exe
 CRCCheck on
 UninstallIcon uninst.ico
 UninstallExeName uninst.exe
@@ -20,22 +20,29 @@ DirText "Please select a location to install Twelf 1.3 (or use the default)."
 InstallDir $PROGRAMFILES\Twelf
 InstallDirRegKey HKEY_LOCAL_MACHINE SOFTWARE\Twelf ""
 
-Section "Twelf Binaries (required)"
+Section "Twelf Server (required)"
 SectionIn 1,2,3
 SetOutPath $INSTDIR
 File README.txt
 SetOutPath $INSTDIR\bin
-File mkexec.bat
+File mkexec.exe
 File run.x86-win32.exe
 File twelf.ico
 SetOutPath $INSTDIR\bin\.heap
 File ..\bin\.heap\twelf-server.x86-win32
-File ..\bin\.heap\twelf-sml.x86-win32
 SetOutPath $INSTDIR\emacs
 File ..\emacs\README
 File ..\emacs\*.el
 File twelf-init.el
+SetOutPath $STARTMENU\Programs\Twelf
+CreateShortCut "$STARTMENU\Programs\Twelf\Twelf Server.lnk" $INSTDIR\bin\twelf-server.bat "" $INSTDIR\bin\twelf.ico 0
 
+Section "Twelf SML"
+SectionIn 2
+SetOutPath $INSTDIR\bin\.heap
+File ..\bin\.heap\twelf-sml.x86-win32
+SetOutPath $STARTMENU\Programs\Twelf
+CreateShortCut "$STARTMENU\Programs\Twelf\Twelf SML.lnk" $INSTDIR\bin\twelf-sml.bat "" $INSTDIR\bin\twelf.ico 0
 Section "Documentation"
 SectionIn 1,2
 SetOutPath $INSTDIR\doc\dvi
@@ -48,6 +55,9 @@ SetOutPath $INSTDIR\doc\pdf
 File ..\doc\pdf\twelf.pdf
 SetOutPath $INSTDIR\doc\ps
 File ..\doc\ps\twelf.ps
+SetOutPath $STARTMENU\Programs\Twelf
+CreateShortCut "$STARTMENU\Programs\Twelf\Twelf User's Guide (HTML).lnk" $INSTDIR\doc\html\index.html "" "" 0
+CreateShortCut "$STARTMENU\Programs\Twelf\Twelf User's Guide (PDF).lnk" $INSTDIR\doc\pdf\twelf.pdf "" "" 0
 
 Section "Examples"
 SectionIn 1,2
@@ -81,6 +91,8 @@ SetOutPath $INSTDIR\examples\fol
 File ..\examples\fol\*.*
 SetOutPath $INSTDIR\examples\guide
 File ..\examples\guide\*.*
+SetOutPath $INSTDIR\examples\handbook
+File ..\examples\handbook\*.*
 SetOutPath $INSTDIR\examples\incll
 File ..\examples\incll\*.*
 SetOutPath $INSTDIR\examples\kolm
@@ -144,6 +156,8 @@ SetOutPath $INSTDIR\src\heuristic
 File ..\src\heuristic\*.*
 SetOutPath $INSTDIR\src\index
 File ..\src\index\*.*
+SetOutPath $INSTDIR\src\int-inf
+File ..\src\int-inf\*.*
 SetOutPath $INSTDIR\src\lambda
 File ..\src\lambda\*.*
 SetOutPath $INSTDIR\src\m2
@@ -187,13 +201,11 @@ Section -post
 WriteRegStr HKEY_LOCAL_MACHINE SOFTWARE\Twelf "" $INSTDIR
 WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\Twelf" "DisplayName" "Twelf 1.3"
 WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\Twelf" "UninstallString" '"$INSTDIR\uninst.exe"'
-
 SetOutPath $STARTMENU\Programs\Twelf
-CreateShortCut "$STARTMENU\Programs\Twelf\Twelf SML.lnk" $INSTDIR\bin\twelf-sml.bat "" $INSTDIR\bin\twelf.ico 0
-CreateShortCut $STARTMENU\Programs\Twelf\README.lnk $INSTDIR\Readme.txt "" "" 0
-CreateShortCut "$STARTMENU\Programs\Twelf\Uninstall Twelf 1.3.lnk" $INSTDIR\uninst.exe "" "" 0
-Exec '"$INSTDIR\bin\mkexec.bat" "$INSTDIR\bin" twelf-server'
-Exec '"$INSTDIR\bin\mkexec.bat" "$INSTDIR\bin" twelf-sml'
+CreateShortCut "$STARTMENU\Programs\Twelf\Twelf 1.3 README.lnk" $INSTDIR\Readme.txt "" "" 0
+CreateShortCut "$STARTMENU\Programs\Twelf\Uninstall Twelf.lnk" $INSTDIR\uninst.exe "" "" 0
+Exec '"$INSTDIR\bin\mkexec" "$INSTDIR\bin\run.x86-win32.exe" "$INSTDIR" twelf-server'
+Exec '"$INSTDIR\bin\mkexec" "$INSTDIR\bin\run.x86-win32.exe" "$INSTDIR" twelf-sml'
 MessageBox MB_OK "Twelf 1.3 was installed successfully. Please modify your _emacs file as described in the README file."
 Exec '"write" "$INSTDIR\README.txt"'
 Exec '"explorer" "$STARTMENU\Programs\Twelf"'
@@ -217,6 +229,8 @@ Delete $INSTDIR\src\heuristic\*.*
 RMDir $INSTDIR\src\heuristic
 Delete $INSTDIR\src\index\*.*
 RMDir $INSTDIR\src\index
+Delete $INSTDIR\src\int-inf\*.*
+RMDir $INSTDIR\src\int-inf
 Delete $INSTDIR\src\lambda\*.*
 RMDir $INSTDIR\src\lambda
 Delete $INSTDIR\src\m2\*.*
@@ -310,6 +324,8 @@ Delete $INSTDIR\examples\fol\*.*
 RMDir $INSTDIR\examples\fol
 Delete $INSTDIR\examples\guide\*.*
 RMDir $INSTDIR\examples\guide
+Delete $INSTDIR\examples\handbook\*.*
+RMDir $INSTDIR\examples\handbook
 Delete $INSTDIR\examples\incll\*.*
 RMDir $INSTDIR\examples\incll
 Delete $INSTDIR\examples\kolm\*.*

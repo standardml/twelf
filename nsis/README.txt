@@ -4,9 +4,9 @@ Copyright (C) 1997-2000, Frank Pfenning and Carsten Schuermann
 Authors: Frank Pfenning
 	 Carsten Schuermann
 With contributions by:
-	 Iliano Cervesato
-	 Jeff Polakow
+         Brigitte Pientka
 	 Roberto Virga
+         Kevin Watkins
 
 Twelf is an implementation of
 
@@ -241,6 +241,7 @@ Windows 9x/ME/NT/2000 Installation
 
   Standard Installation
   ---------------------
+
     For the Windows 9x/ME/NT/2000 family of operating systems, we
     recommend the precompiled version of the Twelf server which is
     available from the Twelf homepage at
