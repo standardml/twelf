@@ -105,6 +105,9 @@ functor Twelf
    structure ThmPrint : THMPRINT
      sharing ThmPrint.ThmSyn = ThmSyn
 
+   structure WorldSyn : WORLDSYN
+     sharing WorldSyn.IntSyn = IntSyn'
+
    structure MetaGlobal : METAGLOBAL
    structure FunSyn : FUNSYN
      sharing FunSyn.IntSyn = IntSyn'
@@ -250,6 +253,7 @@ struct
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
+	      | WorldSyn.Error (msg) => abortFileMsg (fileName, msg)
               | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
 
@@ -488,9 +492,17 @@ struct
 	end
       | install1 (fileName, Parser.WorldDec wdecl) =
 	let
-	  val (ThmSyn.WDecl (W, cp), rrs) = ThmRecon.wdeclTowDecl wdecl
+	  val (ThmSyn.WDecl (GBs, cp as ThmSyn.Callpats cpa), rrs) = ThmRecon.wdeclTowDecl wdecl
+	  fun hack nil = WorldSyn.Closed
+	    | hack ((some, pi) :: GBs) = 
+	        WorldSyn.Schema (hack GBs, WorldSyn.LabelDec
+				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
+	  val W = hack GBs
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%world " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
+		  else ()
 	in
-	  ()
+	  (map (fn (c, _) => WorldSyn.worldcheck W c) cpa ; ())
 	end
       | install1 (fileName, Parser.Use name) =
           CSManager.useSolver (name)

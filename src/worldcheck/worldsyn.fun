@@ -28,6 +28,19 @@ struct
   | Schema of World * LabelDec          (*     | W, l : LD            *)
 
   local
+    (* ctxToList G = L
+      
+       Invariant:
+       G = L  (G is left associative, L is right associative)
+    *)
+    fun ctxToList (Gin) = 
+      let
+	fun ctxToList' (I.Null, G ) = G
+	  | ctxToList' (I.Decl (G, D), G') =
+	  ctxToList' (G, D :: G')
+      in
+	ctxToList' (Gin, nil)
+      end
 
     (* createEVarSub G L = s
      
@@ -58,7 +71,7 @@ struct
     *)
     fun checkPos W (G, (I.Root (a, S), s)) = ()
       | checkPos Closed (G, (I.Pi ((I.Dec (_, V1), _), V2), s)) = 
-        raise Error "World does not match implementation"
+        raise Error "Incompatible worlds"
       | checkPos (Schema (W, LabelDec (_, L1, L2))) (Gus as (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s))) = 
         ((let
 	  val t = createEVarSub (G, L1)	(* G |- s' : L1 *)
@@ -95,17 +108,19 @@ struct
        worldcheck W a terminates with ()
        iff  . |-+ Ai
     *) 
-    fun worldcheck W c =  
+    fun worldcheck W a =  
       let
 	fun checkAll nil = ()
-	  | checkAll (I.Const c :: cs) =
-	      checkPos W (I.Null, (I.constType c, I.id))
+	  | checkAll (I.Const a :: alist) =
+	      (checkPos W (I.Null, (I.constType a, I.id));
+	       checkAll alist)
       in
-	checkAll (Index.lookup c)
+	checkAll (Index.lookup a)
       end
 
   in
     val worldcheck = worldcheck
+    val ctxToList = ctxToList
   end
 
 

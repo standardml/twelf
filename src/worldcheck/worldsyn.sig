@@ -6,6 +6,8 @@ signature WORLDSYN =
 sig
   structure IntSyn : INTSYN
 
+  exception Error of string 
+
   type label = int      
   type name = string
   type lemma = int 
@@ -20,5 +22,5 @@ sig
   | Schema of World * LabelDec          (*     | W, l : LD            *)
 
   val worldcheck : World -> IntSyn.cid -> unit
-
+  val ctxToList : IntSyn.Dec IntSyn.Ctx -> dlist
 end; (* signature WORLDSYN *)

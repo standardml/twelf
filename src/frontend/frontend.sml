@@ -184,6 +184,8 @@ structure Twelf =
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
 
+	 structure WorldSyn = WorldSyn
+
          structure Trace = Trace
 
 	 structure PrintTeX = PrintTeX

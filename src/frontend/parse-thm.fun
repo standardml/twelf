@@ -261,6 +261,7 @@ struct
 	in
 	  parseSome' ((E.null, g2)::gbs, f')
 	end
+      | parseSome (gbs, f as LS.Cons ((L.RPAREN, r), s')) = (gbs, f) 
       | parseSome (gbs, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected `some' or `pi', found " ^ L.toString t)
       
