@@ -77,11 +77,11 @@ struct
     *)
     fun createEVar (G, V) =
         let (* G |- V : L *)
-	  val w = weaken (G, I.targetFam V) (* G |- w : G' *)
-	  val iw = Whnf.invert w	(* G' |- iw : G *)
+	  val w = weaken (G, I.targetFam V)       (* G  |- w  : G'    *)
+	  val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)
 	  val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
-	  val X = I.EClo (X', w)	(* G |- X : V *)
+	  val X = I.EClo (X', w)	          (* G  |- X  : V     *)
 	in
 	  X
 	end
@@ -236,6 +236,7 @@ struct
     *)
     fun resolveCands (Eqns (es)) =
         (* reversed equations Fri Dec 28 09:39:55 2001 -fp !!! *)
+        (* why is this important? --cs !!! *)
         if matchEqns (List.rev es) then (Eqns (nil))
 	else Fail
       | resolveCands (Cands (ks)) = Cands (ks)
@@ -930,7 +931,8 @@ struct
        a finite number of instances
     *)
     fun recursive (X as I.EVar (ref(SOME(U)), GX, VX, _)) =
-        let (* GX = I.Null *)
+        let (* GX = I.Null*)
+	    (* is this always true? --cs!!!*)
 	  val a = I.targetFam VX
 	  val Ys = Abstract.collectEVars (GX, (X, I.id), nil)
 	  (* LVars are ignored here.  OK because never splittable? *)
