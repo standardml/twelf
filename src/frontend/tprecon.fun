@@ -520,15 +520,9 @@ struct
       in
         (IntSyn.Pi ((Da1, P), Va2), isType)
       end
+    | makeApproxW (IntSyn.Lam (_, V1)) = makeApprox V1
     | makeApproxW (IntSyn.Root (IntSyn.Def d, S)) =
-      let
-        val V = IntSyn.constDef d
-        fun removeAbs (IntSyn.Lam (_, V1)) = removeAbs V1
-          | removeAbs (V as IntSyn.Root _) = V
-      in
-        (* could say makeApproxW since V in nf? *)
-        makeApprox (removeAbs V)
-      end
+        makeApprox (IntSyn.constDef d)
     | makeApproxW (IntSyn.Root (H, S)) =
         (IntSyn.Root (H, IntSyn.Nil), false)
 
