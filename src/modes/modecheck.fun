@@ -26,9 +26,10 @@ struct
     structure M = ModeSyn
     structure P = Paths
       
-    datatype Info =                     (* Groundness information      *)
-        Bot				(* I ::= Bot  (unknown)        *)
-      | Top                             (*     | Top  (will be ground) *)
+    datatype Info =                     (* Groundedness information   *)
+        Free				(* I ::= Free                 *)
+      | Unknown				(*     | Unknown              *)
+      | Ground                          (*     | Ground               *)
 
     datatype Status =                   (* Variable status             *)
         Existential of			(* S ::= Existential (I, xOpt) *)
@@ -104,21 +105,21 @@ struct
     fun isUniversal Universal = true
       | isUniversal _ = false
 
-    (* isTop S = B
+    (* isGround S = B
        
        Invariant:
        B iff S = Ex (T x)
     *)
-    fun isTop (Existential (Top, _)) = true
-      | isTop _ = false
+    fun isGround (Existential (Ground, _)) = true
+      | isGround _ = false
 
-    (* isBot S = b
+    (* isFree S = b
        
        Invariant:
        b iff S = Ex (B x)
     *)
-    fun isBot (Existential (Bot, _)) = true
-      | isBot _ = false
+    fun isFree (Existential (Free, _)) = true
+      | isFree _ = false
       
     exception Eta
 
@@ -199,6 +200,7 @@ struct
 	        if (k' = p) then isPattern (D, k', S)
 		else if isUniversal (I.ctxLookup (D, k')) then strictSpineN (D, p, S)
 		     else false
+                     (* equivalently: isUniversal .. andalso strictSpineN .. *)
               | (I.Const (c)) => strictSpineN (D, p, S)
 	      | (I.Def (d))  => strictSpineN (D, p, S)
               | (I.FgnConst (cs, conDec)) => strictSpineN (D, p, S))
@@ -281,13 +283,58 @@ struct
         let
 	  val status = I.ctxLookup (D, k) 
 	in 
-	  if isBot status orelse isUniversal status orelse strictFun (k-d)
+	  if isFree status orelse isUniversal status orelse strictFun (k-d)
 	    then ()
 	  else raise ModeError (occ, "Occurrence of variable " ^ (nameOf status) ^ 
 			        " in " ^ (M.modeToString mode) ^ " argument not free")
 	end
 
 
+    (* -------------------------------- non-strict mode context update *)
+    (* nonStrictExpN (D, U) = D'
+     
+       If   G |- U : V     (U in nf)
+       and  D ~ G
+       then D' >= D where D'(k) Unknown for all existential variables k
+	    in U that are free in D
+    *)
+    fun nonStrictExpN (D, I.Root (I.BVar (k), S)) =
+          nonStrictSpineN (nonStrictVarD (D, k), S)
+      | nonStrictExpN (D, I.Root (I.Const c, S)) =
+	  nonStrictSpineN (D, S)
+      | nonStrictExpN (D, I.Root (I.Def d, S)) =
+	  nonStrictSpineN (D, S)
+      | nonStrictExpN (D, I.Root (I.FgnConst (cs, conDec), S)) =
+          nonStrictSpineN (D, S)
+      | nonStrictExpN (D, I.Lam (_, U)) =
+	  I.ctxPop (nonStrictExpN (I.Decl (D, Universal), U))
+      | nonStrictExpN (D, I.FgnExp _) =
+	  raise Error ("Foreign expressions not permitted when checking freeness")
+
+    (* nonStrictSpineN (D, S) = D'    
+     
+       If   G |- S : V1 > V2      (S in nf)
+       and  D ~ G
+       then D' >= D' where D'(k) Unkown for all existential variables k
+	    in S that are Free in D
+    *)
+    and nonStrictSpineN (D, I.Nil) = D
+      | nonStrictSpineN (D, I.App (U, S)) = 
+          nonStrictSpineN (nonStrictExpN (D, U), S)
+
+    (* nonStrictVarD (D, k) = D'
+
+       If   G |- k : V
+       and  D ~ G
+       and  k is an existential variable
+       then D' >= D where k is nonStrictd as described in  nonStrictExpN
+    *)
+    and nonStrictVarD (I.Decl (D, Existential (Free, name)), 1) =
+          I.Decl (D, Existential (Unknown, name))
+      | nonStrictVarD (D, 1) = (* Universal, or already Unknown or Ground - leave unchanged *)
+	  D
+      | nonStrictVarD (I.Decl (D, status), k) =
+	  I.Decl (nonStrictVarD (D, k-1), status)
 
     (* ------------------------------------------- mode context update *)
 
@@ -295,8 +342,11 @@ struct
      
        If   G |- U : V     (U in nf)
        and  D ~ G
-       then D' >= D' where D'(k) top for all existential variables k
+       then D' >= D where D'(k) Ground for all existential variables k
 	    with a strict occurrence in U
+            and D'(k) Unkown for all existential variable k
+	    with a non-strict occurrence, but no strict occurrence in U
+            (if !checkFree is true)
     *)
     fun updateExpN (D, I.Root (I.BVar (k), S)) =
           if isUniversal (I.ctxLookup (D, k)) 
@@ -304,7 +354,9 @@ struct
 	  else 
 	    if isPattern (D, k, S)
 	      then updateVarD (D, k)
-	    else D
+	    else if !checkFree
+		   then nonStrictSpineN (nonStrictVarD (D, k), S)
+		 else D
       | updateExpN (D, I.Root (I.Const c, S)) =
 	  updateSpineN (D, S)
       | updateExpN (D, I.Root (I.Def d, S)) =
@@ -320,7 +372,7 @@ struct
      
        If   G |- S : V1 > V2      (S in nf)
        and  D ~ G
-       then D' >= D' where D'(k) top for all existential variables k
+       then D' >= D' where D'(k) Ground for all existential variables k
 	    with a strict occurrence in S
     *)
     and updateSpineN (D, I.Nil) = D
@@ -335,7 +387,7 @@ struct
        then D' >= D where k is updated as described in  updateExpN
     *)
     and updateVarD (I.Decl (D, Existential (_, name)), 1) =
-          I.Decl (D, Existential (Top, name))
+          I.Decl (D, Existential (Ground, name))
       | updateVarD (I.Decl (D, status), k) =
 	  I.Decl (updateVarD (D, k-1), status)
 
@@ -357,6 +409,8 @@ struct
           updateAtom' (updateExpN (D, U), M.Plus, S, mS, (p+1, occ)) 
       | updateAtom' (D, M.Minus, I.App (U, S), M.Mapp (M.Marg (M.Minus, _), mS), (p, occ)) =
 	  updateAtom' (updateExpN (D, U), M.Minus, S, mS, (p+1, occ)) 
+      (* when checking freeness, all arguments must be input (+) or output (-) *)
+      (* therefore, no case for M.Mapp (M.Marg (M.Minus, _), mS) is provided here *)
       | updateAtom' (D, mode, I.App (U, S), M.Mapp (_, mS), (p, occ)) =
           updateAtom' (D, mode, S, mS, (p+1, occ)) 
 
@@ -430,7 +484,7 @@ struct
         let
 	  val status = I.ctxLookup (D, k) 
 	in 
-	  if isTop status orelse isUniversal status
+	  if isGround status orelse isUniversal status
 	    then ()
 	  else raise ModeError (occ, "Occurrence of variable " ^ (nameOf status) ^ 
 			        " in " ^ (M.modeToString mode) ^ " argument not necessarily ground")
@@ -492,10 +546,10 @@ struct
        (occ used in error messages)
     *)
     fun checkD1 (D, I.Pi ((I.Dec (name, _), I.Maybe), V), occ, k) =
-          checkD1 (I.Decl (D, Existential (Bot, name)), V, P.body occ,
+          checkD1 (I.Decl (D, Existential (Free, name)), V, P.body occ,
                    fn (I.Decl (D', m)) => ctxPush (m, k D'))
       | checkD1 (D, I.Pi ((I.Dec (name, V1), I.No), V2), occ, k) =
-          checkD1 (I.Decl (D, Existential (Bot, name)), V2, P.body occ,
+          checkD1 (I.Decl (D, Existential (Free, name)), V2, P.body occ,
                    fn (I.Decl (D', m)) => ctxPush (m, checkG1 (D', V1, P.label occ, k)))
       | checkD1 (D, I.Root (I.Const a, S), occ, k) =
           let
