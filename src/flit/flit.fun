@@ -51,7 +51,7 @@ struct
         val stream = TextIO.openIn filename
 
         val linecount = ref 0 : int ref;
-        fun get_line () = (linecount := !linecount + 1; TextIO.inputLine stream)
+        fun get_line () = (linecount := !linecount + 1; Compat.inputLine97 stream)
 
         fun error () = raise Error ("Error reading file '" ^ filename
 	                             ^ "', line " ^ (Int.toString (!linecount)))
