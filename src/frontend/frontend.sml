@@ -178,4 +178,5 @@ structure Twelf =
 	 structure Prover = Prover
 	 structure ClausePrint = ClausePrint
 
-	 structure PrintTeX = PrintTeX);
+	 structure PrintTeX = PrintTeX
+	 structure ClausePrintTeX = ClausePrintTeX);

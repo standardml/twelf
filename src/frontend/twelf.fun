@@ -106,7 +106,9 @@ functor Twelf
      sharing ClausePrint.IntSyn = IntSyn'
 
    structure PrintTeX : PRINT
-     sharing PrintTeX.IntSyn = IntSyn')
+     sharing PrintTeX.IntSyn = IntSyn'
+   structure ClausePrintTeX : CLAUSEPRINT
+     sharing ClausePrintTeX.IntSyn = IntSyn')
  :> TWELF =
 struct
 
@@ -165,16 +167,14 @@ struct
 	  then Print.expToString GU
 	else ""
 
-    fun printSgnTeX' (cid) =
-        if cid >= IntSyn.sgnSize ()
-	  then ()
-	else (print (PrintTeX.conDecToString (IntSyn.sgnLookup (cid)));
-	      print ("\n");
-	      printSgnTeX' (cid+1))
+    fun printProgTeX () =
+        (print "\\begin{bigcode}\n";
+	 ClausePrintTeX.printSgn ();
+	 print "\\end{bigcode}\n")
 
     fun printSgnTeX () =
         (print "\\begin{bigcode}\n";
-	 ClausePrintTeX.printSgn ();
+	 PrintTeX.printSgn ();
          print "\\end{bigcode}\n")
 
     (* status ::= OK | ABORT  is the return status of various operations *)
@@ -382,7 +382,8 @@ struct
       (* Establish declaration *)
       | install1 (fileName, Parser.AssertDec aterm) =
 	let 
-	  val _ = if !Global.safe then raise ThmSyn.Error "%assert not safe: Toggle `safe' flag"
+	  val _ = if not (!Global.unsafe)
+		    then raise ThmSyn.Error "%assert not safe: Toggle `unsafe' flag"
 	          else ()
 	  val (cp as ThmSyn.Callpats (L), rrs) = ThmRecon.assertToAssert aterm 
 	  val La = map (fn (c, P) => c) L  (* La is the list of type constants *)
@@ -533,8 +534,13 @@ struct
 	val length : int option ref	(* NONE, limit argument length *)
 	val indent : int ref		(* 3, indentation of subterms *)
 	val width : int ref		(* 80, line width *)
-        val sgn : unit -> unit		(* print signature in Ascii format *)
-        val tex : unit -> unit		(* print signature in TeX format *)
+        val sgn : unit -> unit		(* print signature *)
+        val prog : unit -> unit		(* print signature as program *)
+        structure TeX :			(* print in TeX format *)
+	sig
+	  val sgn : unit -> unit	(* print signature *)
+	  val prog : unit -> unit	(* print signature as program *)
+	end
       end
     =
     struct
@@ -543,8 +549,13 @@ struct
       val length = Print.printLength
       val indent = Print.Formatter.Indent
       val width = Print.Formatter.Pagewidth
-      fun sgn () = ClausePrint.printSgn ()
-      fun tex () = printSgnTeX ()
+      fun sgn () = Print.printSgn ()
+      fun prog () = ClausePrint.printSgn ()
+      structure TeX =
+      struct
+	fun sgn () = printSgnTeX ()
+	fun prog () = printProgTeX ()
+      end
     end
 
     structure Timers :
@@ -594,7 +605,7 @@ struct
 
     val chatter : int ref = Global.chatter
     val doubleCheck : bool ref = Global.doubleCheck
-    val safe : bool ref = Global.safe
+    val unsafe : bool ref = Global.unsafe
 
     datatype Status = datatype Status
     val reset = reset

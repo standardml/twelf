@@ -94,6 +94,7 @@ struct
   (* Setting Twelf parameters *)
   fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
     | setParm ("doubleCheck"::ts) = Twelf.doubleCheck := getBool ts
+    | setParm ("unsafe"::ts) = Twelf.unsafe := getBool ts
     | setParm ("Print.implicit"::ts) = Twelf.Print.implicit := getBool ts
     | setParm ("Print.depth"::ts) = Twelf.Print.depth := getLimit ts
     | setParm ("Print.length"::ts) = Twelf.Print.length := getLimit ts
@@ -109,6 +110,7 @@ struct
   (* Getting Twelf parameter values *)
   fun getParm ("chatter"::ts) = Int.toString (!Twelf.chatter)
     | getParm ("doubleCheck"::ts) = Bool.toString (!Twelf.doubleCheck)
+    | getParm ("unsafe"::ts) = Bool.toString (!Twelf.unsafe)
     | getParm ("Print.implicit"::ts) = Bool.toString (!Twelf.Print.implicit)
     | getParm ("Print.depth"::ts) = limitToString (!Twelf.Print.depth)
     | getParm ("Print.length"::ts) = limitToString (!Twelf.Print.length)
@@ -133,6 +135,14 @@ struct
     | serve' ("get"::ts) =
       (print (getParm ts ^ "\n"); serve (Twelf.OK))
 
+    | serve' ("Print.sgn"::ts) =
+      (checkEmpty ts; Twelf.Print.sgn (); serve (Twelf.OK))
+    | serve' ("Print.prog"::ts) =
+      (checkEmpty ts; Twelf.Print.prog (); serve (Twelf.OK))
+    | serve' ("Print.TeX.sgn"::ts) =
+      (checkEmpty ts; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
+    | serve' ("Print.TeX.prog"::ts) =
+      (checkEmpty ts; Twelf.Print.TeX.prog (); serve (Twelf.OK))
     (*
       serve' ("toc"::ts) = error "NYI"
     | serve' ("list-program"::ts) = error "NYI"

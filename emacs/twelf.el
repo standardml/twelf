@@ -314,6 +314,7 @@ This is used by the error message parser.")
 (defconst *twelf-parm-table*
   '(("chatter" . nat)
     ("doubleCheck" . bool)
+    ("unsafe" . bool)
     ("Print.implicit" . bool)
     ("Print.depth" . limit)
     ("Print.length" . limit)
@@ -336,6 +337,9 @@ Maintained to present reasonable menus.")
 (defvar twelf-double-check "false"
   "Current value of doubleCheck Twelf parameter.")
 
+(defvar twelf-unsafe "false"
+  "Current value of unsafe Twelf parameter.")
+
 (defvar twelf-print-implicit "false"
   "Current value of Print.implicit Twelf parameter.")
 
@@ -346,6 +350,7 @@ Maintained to present reasonable menus.")
   '(("chatter" . twelf-chatter)
     ;("trace" . twelf-trace)
     ("doubleCheck" . twelf-double-check)
+    ("unsafe" . twelf-unsafe)
     ("Print.implicit" . twelf-print-implicit)
     ("Compile.optimize" . twelf-compile-optimize))
   "Association between Twelf parameters and Emacs tracking variables.")
@@ -1589,6 +1594,7 @@ created if it doesn't exist."
   (setq twelf-chatter 3)
   ;;(setq twelf-trace 0)
   (setq twelf-double-check "false")
+  (setq twelf-unsafe "false")
   (setq twelf-print-implicit "false")
   (setq twelf-compile-optimize "true"))
 
@@ -1908,6 +1914,12 @@ Used in menus."
 		   "true" "false")))
     (twelf-set "doubleCheck" value)))
 
+(defun twelf-toggle-unsafe ()
+  "Toggles unsafe parameter of Twelf."
+  (let ((value (if (string-equal twelf-unsafe "false")
+		   "true" "false")))
+    (twelf-set "unsafe" value)))
+
 (defun twelf-toggle-print-implicit ()
   "Toggles Print.implicit parameter of Twelf."
   (let ((value (if (string-equal twelf-print-implicit "false")
@@ -1933,6 +1945,32 @@ When called interactively, promts for parameter, supporting completion."
       ;; We are now at the beginning of the output
       (end-of-line 1)
       (message (buffer-substring *twelf-server-last-process-mark* (point))))))
+
+(defun twelf-print-signature ()
+  "Prints the current signature in the Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.sgn")
+  (twelf-server-display t))
+
+(defun twelf-print-program ()
+  "Prints the current signature as a program in the Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.prog")
+  (twelf-server-display t))
+
+(defun twelf-print-tex-signature ()
+  "Prints the current signature in TeX style.
+The output appears in the  Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.TeX.sgn")
+  (twelf-server-display t))
+
+(defun twelf-print-tex-program ()
+  "Prints the current signature as a program in TeX style.
+The output appears in the Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.TeX.prog")
+  (twelf-server-display t))
 
 (defun twelf-timers-reset ()
   "Reset the Twelf timers."
@@ -2506,6 +2544,15 @@ Mode map
     )
   "Menu for commands applying at point.")
 
+(defconst twelf-print-menu
+  '("Print"
+    ["Signature" twelf-print-signature t]
+    ["Program" twelf-print-program t]
+    ("TeX"
+     ["Signature" twelf-print-tex-signature t]
+     ["Program" twelf-print-tex-program t]))
+  "Menu for printing commands.")
+
 (defconst twelf-server-state-menu
   '("Server State"
     ["Configure" twelf-server-configure t]
@@ -2549,6 +2596,8 @@ Mode map
        (, (radio "6" '(twelf-set "chatter" 6) '(= twelf-chatter 6))))
       (, (toggle "doubleCheck" '(twelf-toggle-double-check)
 		 '(string-equal twelf-double-check "true")))
+      (, (toggle "unsafe" '(twelf-toggle-unsafe)
+		 '(string-equal twelf-unsafe "true")))
       ("Print."
        (, (toggle "implicit" '(twelf-toggle-print-implicit)
 		  '(string-equal twelf-print-implicit "true")))
@@ -2609,6 +2658,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    twelf-options-menu
    twelf-syntax-menu
    twelf-tags-menu
+   twelf-print-menu
    twelf-timers-menu
    twelf-server-state-menu
    ["Info" twelf-info t]))
@@ -2645,6 +2695,8 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    twelf-error-menu
    twelf-options-menu
    twelf-tags-menu
+   twelf-print-menu
+   twelf-timers-menu
    twelf-server-state-menu
    ["Info" twelf-info t]))
 

@@ -539,34 +539,43 @@ local
                   fmtExp (G, d+1, noCtxt, (V,s))]
       *)
 
-  (* fmtConDec (condec) = fmt
-     formats a constant declaration (which must be closed)
+  fun skipI (0, G, V) = (G, V)
+    | skipI (i, G, I.Pi ((D, _), V)) = skipI (i-1, I.Decl (G, Names.decName (G, D)), V)
 
-     This function prints the quantifiers and abstractions, regardless of
-     the setting of the "implicit" flag.
+  fun skipI2 (0, G, V, U) = (G, V, U)
+    | skipI2 (i, G, I.Pi ((D, _), V), I.Lam (D', U)) =
+        skipI2 (i-1, I.Decl (G, Names.decName (G, D')), V, U)
+
+  (* fmtConDec (hide, condec) = fmt
+     formats a constant declaration (which must be closed and in normal form)
+
+     This function prints the quantifiers and abstractions only if hide = false.
   *)
-  fun fmtConDec (I.ConDec (name, _, V, L)) =
+  fun fmtConDec (hide, I.ConDec (name, imp, V, L)) =
       let
 	val _ = Names.varReset ()
-	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
+        val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
+	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
 	F.HVbox [Str0 (Symbol.const (name)), F.Space, sym ":", F.Break, Vfmt, sym "."]
       end
-    | fmtConDec (I.SkoDec (name, _, V, L)) =
+    | fmtConDec (hide, I.SkoDec (name, imp, V, L)) =
       let
 	val _ = Names.varReset ()
-	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
+	val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
+	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
 	F.HVbox [sym "%skolem", F.Break, Str0 (Symbol.skonst (name)), F.Space,
 		 sym ":", F.Break, Vfmt, sym "."]
       end
-    | fmtConDec (I.ConDef (name, _, U, V, L)) =
+    | fmtConDec (hide, I.ConDef (name, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
 	val _ = Names.varReset ()
-	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
-	val _ = Names.varReset ()
-	val Ufmt = fmtExp (I.Null, 0, noCtxt, (U, I.id))
+	val (G, V, U) = if hide then skipI2 (imp, I.Null, V, U) else (I.Null, V, U)
+	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
+	(* val _ = Names.varReset () *)
+	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
 	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
 		 Vfmt, F.Break,
@@ -584,7 +593,8 @@ in
   fun formatDec (G, D) = fmtDec (G, 0, (D, I.id))
   fun formatExp (G, U) = fmtExp (G, 0, noCtxt, (U, I.id))
   fun formatSpine (G, S) = fmtSpine (G, 0, 0, (S, I.id))
-  fun formatConDec (condec) = fmtConDec (condec)
+  fun formatConDec (condec) = fmtConDec (false, condec)
+  fun formatConDecI (condec) = fmtConDec (true, condec)
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
@@ -604,6 +614,10 @@ in
         fmtNamedEVar (U, name) :: Str ";" :: F.Break :: fmtEVarInst Xs
 
   fun evarInstToString Xs = F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (fmtEVarInst Xs), Str "."])
+
+  fun printSgn () =
+      IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDecI (IntSyn.sgnLookup cid)));
+				  print "\n"))
 
 end  (* local ... *)
 
