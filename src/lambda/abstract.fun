@@ -439,9 +439,17 @@ struct
 	of I.Null => true
          | _ => false
 
+    fun closedSub (G, I.Shift _) = true
+      | closedSub (G, I.Dot (I.Idx _, s)) = closedSub (G, s)
+      | closedSub (G, I.Dot (I.Exp U, s)) = 
+      (case collectExp (G, (U, I.id), I.Null)
+	 of I.Null => closedSub (G, s)
+          | _ => false)
+
   in
     val piDepend = piDepend
     val closedDec = closedDec
+    val closedSub = closedSub
 
     val abstractDec = abstractDec
     val abstractDef = abstractDef
