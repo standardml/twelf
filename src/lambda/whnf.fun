@@ -413,7 +413,7 @@ struct
        Invariant:
        If   G |- s : G'    (and s patsub)
        then G' |- s' : G
-       s.t. s' o s = id  
+       s.t. s o s' = id  
     *)
     fun invert s =
       let 
@@ -442,10 +442,10 @@ struct
        If   G'' |- t : G    (* and t strsub *)
        then G' |- t : G  and G' subcontext of G
     *)
-    fun strengthen (Shift n, Null) = Null
-      | strengthen (Dot (Idx k, t), Decl (G, D)) =
+    fun strengthen (Shift n (* = 0 *), Null) = Null
+      | strengthen (Dot (Idx k (* k = 1 *), t), Decl (G, D)) =
         let 
-	  val t' = comp (t, invShift)   (* bug fix -- cs *)
+	  val t' = comp (t, invShift)
 	in
           Decl (strengthen (t', G), decSub (D, t'))
 	end
