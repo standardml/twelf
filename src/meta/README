@@ -48,10 +48,13 @@ Parameter Cases
 
     DONE -cs    Pruning in substitution. 
     
+    DONE -cs    Add parameter introduction in the case that parameter and functional object
+	do not live on the same level
     Add functionality for SOME clauses
-    At the momenent, we only allow parameter intorduction if they live on
-                  the same subordination level as the argument to a functional
-		  call (is this ok?)
+    Assumption, all EVars for SOME are replaced by something closed 
+	(* not a sensible assumption. Must be generalized *)
+    How do we abstract over leftover EVars?
+
 
     NOTE: Skolemization does not have to include parameter blocks. There is
 	some code written which accomplish this (see recursion.fun.clean)

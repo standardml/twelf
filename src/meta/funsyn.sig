@@ -65,6 +65,7 @@ sig
   val labelLookup : label -> LabelDec
   val labelAdd : LabelDec -> label
   val labelSize : unit -> int
+  val labelReset : unit -> unit
 
   val lemmaLookup : lemma -> LemmaDec
   val lemmaAdd : LemmaDec -> lemma

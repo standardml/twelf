@@ -66,6 +66,56 @@ struct
       | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
 
 
+
+    (* residualLemma (s, F) = F'
+     
+       Invariant:
+       If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
+       and  Gx |- F1 == [[Gy]] true
+       then G |- {{Gx'}} F' formula
+       where Gx' < Gx
+       and   s uninstantiated on Gx'
+    *)
+
+    fun residualLemma (G, Gx, (Fx, s)) =
+        let 
+	  (* collect (G, s, F) = (Gx', F')
+	 
+	     Invariant: 
+	     If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
+	     then G |- Gx' ctx
+	     and  Gx' < Gx  (where s uninstantiated on Gx')
+	     and  G, Gx' |- F' formula
+             and  G, Gx' |- F' = [[Gy]] true
+	  *)
+	  
+	  fun collect (s as I.Shift k, I.Null) = (I.Null, s)
+	    | collect (s as I.Dot (I.Exp U, s'), I.Decl (G, D)) =
+	      let
+		val (Gx', s'') = collect (s', G)
+	      in 
+		if Abstract.closedExp (G, (U, I.id)) then
+		  (Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
+		else
+		  (I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
+	      end
+	    
+	  (* abstract (Gx, F) = F'
+
+	     Invariant: 
+	     F' = {{Gx}} F
+	  *)
+	  fun abstract (I.Null, F) = F
+	    | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
+	      
+	  val (Gx', s') = collect (s, Gx)
+	  val F' = abstract (Gx', F.forSub (Fx, s'))
+	in
+	  F'
+	end
+
+
+
 (* Notes: restriction!!!! only in the case that function and type are living on the
    same level parameter cases are being generated.
    Other case to follow, if necessary -cs *)
@@ -101,7 +151,13 @@ struct
 		end
 	      | set_parameter' ((I.Decl (G, D), I.Decl (B, _)), k, Ds) =
 		  set_parameter' ((G, B), k+1, Ds)
+	  in
+	    set_parameter' (GB, 1, Ds)
+	  end
 
+	
+	fun ctxBlock (GB as (G1, B1), V, k, sc, Ds) =
+	  let
 	    (* checkCtx (G2, (V, s)) = B'
 	   
                Invariant:
@@ -134,73 +190,109 @@ struct
 	       Invariant:
 	       Forall contexts G0: 
 	       If   |- G0, G ctx
-	       then G0, V, G |- G0, G
+	       then G0, V, G |- s' : G0, G
 	    *) 
 	   
 	    fun shift (I.Null) = I.shift
 	      | shift (I.Decl (G, _)) = I.dot1 (shift G)
 
 
-	    (* calcSpine (n, s, i, S) = S'
-	     
-	       Invariant: 
-	       If   |- G1, G2 ctx
-	       and  |G1, G2| = n
-	       and  |- Gw1, Gw2 ctx
-	       and  Gw1, Gw2 |- s : G1, G2     and s is strenghten sub
-	       and  Gw1 < G1,  Gw2 < G2
-	       and  G1, G2 |- S : {Gw2} V > V
-	       and  |G2| = i 
-	       then G1, G2 |- S : {Gw1, Gw2} V > V 
-	    *)
-
-	    fun calcSpine (n, I.Shift m, i, S) = 
-	        if i < n then calcSpine (n, I.Dot (I.Idx (m+1), I.Shift (m+1)), i, S)  
-		else S
-	      | calcSpine (n, I.Dot (I.Undef, s), i, S) = 
-		  calcSpine (n, s, i+1, S)
-	      | calcSpine (n, I.Dot (_, s), i, S) = 
-		  calcSpine (n, s, i+1, I.App (I.Root (I.BVar i, I.Nil), S))
 
 
-	    (* raiseFor (G, F, sc) = F'
+	    (* weaken (G, a, i, S) = w'
+
+	       Invariant:
+	       G |- w' : Gw
+	       Gw < G
+	       G |- S : {Gw} V > V
+	     *)
+	    fun weaken (I.Null, a, i) = (I.id, fn S => S) 
+	      | weaken (I.Decl (G', D as I.Dec (name, V)), a, i) = 
+  	        let 
+		  val (w', S') = weaken (G', a, i+1)
+		in
+		  if Subordinate.belowEq (I.targetFam V, a) then 
+		    (I.dot1 w', fn S => I.App (I.Root (I.BVar i, I.Nil), S))
+		  else (I.comp (w', I.shift), S')
+		end
+
+
+	    (* raiseFor (G, F, w, sc) = F'
 	   
 	       Invariant:
 	       If   G0 |- G ctx 
 	       and  G0, G, GF |- F for
-	       and  G0, {G} GF, G |- s : G0, G, GF
+	       and  G0, {G} GF [...] |- w : G0
+	       and  sc maps  (G0, GA |- w : G0, |GA|)  to   (G0, GA, G[..] |- s : G0, G, GF)
 	       then G0, {G} GF |- F' for
 	    *)
-	    fun raiseFor (G, F as F.True, s) = F 
-	      | raiseFor (G, F.Ex (I.Dec (name, V), F), s) = 
-	        let
+	    fun raiseFor (k, G,  F as F.True, w, sc) = F 
+	      | raiseFor (k, G, F.Ex (I.Dec (name, V), F), w, sc) =
+		let
 		  val g = I.ctxLength G
-		    
-		  val w = MTPAbstract.weaken (G, I.targetFam V)
-		  val iw = Whnf.invert w	      
-		  val G1 = Whnf.strengthen (iw, G)
-		    
-		  val V' = MTPAbstract.raiseType (G1, Whnf.normalize (V, I.comp (s, iw)))
-		  val S' = calcSpine (g, iw, 1, I.Nil)
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = I.EClo (V, s)
+					(* G0, {G}GF[..], G |- V' : type *)
+		  val (nw, S) = weaken (G, I.targetFam V, 1)
+					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
+					   Gw < G *)
 
-(*
-		val V' = MTPAbstract.raiseType (G, I.EClo (V, s))
-		val S' = spine g
-*)
-		  val s' = I.comp (shift G, s)
-					(* G0, {G}GF, {G}V, G |- s' : G0, G, GF *) 
-		  val s'' = I.Dot (I.Exp (I.Root (I.BVar (g+1), S')), s') 
-					(* G0, {G}GF, {G}V, G |- s'' : G0, G, GF, V *) 
-		  val F' = raiseFor (G, F, s'')
+		  val iw = Whnf.invert nw	  
+  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
+  		  val Gw = Whnf.strengthen (iw, G)
+					(* Generalize the invariant for Whnf.strengthen --cs *)
+		  val V'' = Whnf.normalize (V', iw)
+					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
+		  val V''' = MTPAbstract.raiseType (Gw, V'')
+					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
+		  val S''' = S I.Nil
+					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
+					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, G, F, I.comp (w, I.shift), sc')
 		in
-		  F.Ex (I.Dec (name, V'), F')
+		  F.Ex (I.Dec (name, V'''), F')
 		end
-	        (* the other case of F.All is not yet covered *)
+	
+	      | raiseFor (k, G, F.All (F.Prim (I.Dec (name, V)), F), w, sc) =
+		let
+		  val g = I.ctxLength G
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = MTPAbstract.raiseType (G, I.EClo (V, s))
+					(* G0, {G}GF[..] |- V' = {G}(V[s]) : type *)
+		  val S' = spine g
+					(* G0, {G}GF[..] |- S' > {G}(V[s]) > V[s] *)
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g + k'-k), S')), s')
+					(* G0, GA, G[..] |- g+k'-k. S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, G, F, I.comp (w, I.shift), sc')
+		in
+		  F.All (F.Prim (I.Dec (name, V')), F')
+		end
+	        (* the other case of F.All (F.Block _, _) is not yet covered *)
+	      
 
 
 	    fun abstract (_, nil) = nil
 	      | abstract (G, Lemma (n, F) :: Ls) =
-	          Lemma (n, raiseFor (G, F, I.id)) :: abstract (G, Ls)
+	          Lemma (n, raiseFor (0, G, F, I.id, fn (w, _) => F.dot1n (G, w))) :: abstract (G, Ls)
 
 
 	    fun kont (GB3, s3) = 
@@ -234,6 +326,41 @@ struct
 		end
 	      | introduceParameters (l, GB, nil, s, sc) = sc (GB, s)
 
+
+
+	    fun ctxSub (nil, s) = nil
+	      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
+	      
+
+	    (* someEVars (G, G1, s) = s'
+	       
+	       Invariant:
+	       If   |- G ctx
+	       and  G |- s : G
+	       then G |- s' : G, G1
+	    *)
+
+	    fun someEVars (G, nil, s) =  s
+	      | someEVars (G, I.Dec (_, V) :: L, s) = 
+	          someEVars(G, L, I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s))
+
+
+	    (* append (Ds1, Ds2) = Ds'
+	     
+	       Invariant:
+	       Ds1, Ds2 are a list of residual lemmas
+	       Ds' = Ds1 @ Ds2, where all duplicates are removed 
+	    *)
+	    fun append (nil, Ds) = Ds
+	      | append ((L as Lemma (n, F)) :: Ds1, Ds2) = 
+	        let
+		  val Ds' = append (Ds1, Ds2)
+		in
+		  if List.exists (fn (Lemma (n', F')) => (n = n') andalso F.convFor ((F, I.id), (F', I.id))) Ds2 
+		    then Ds' 
+		  else L :: Ds'
+		end
+
             (* checkLabels (n, ops) = ops'
      
                Invariant:
@@ -244,17 +371,19 @@ struct
 	      if n < 0 then Ds
 	      else
 		let 
-		  val F.LabelDec (name, nil, G2) = F.labelLookup n   
+		  val F.LabelDec (name, G1, G2) = F.labelLookup n   
 		(*	val Ds' = checkLabels (n-1, Ds)             (* not necessary!!! loop -cs *) *)
+		  val _ = TextIO.print ("*")
+		  val s = someEVars (G, G1, I.id)
+		  val G2' = ctxSub (G2, s)
 		in
-		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2, (V, I.id)) then
-		    Ds @ abstract (F.listToCtx (G2), introduceParameters (n, (G, B), G2, I.id, kont))
+		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
+		    append (abstract (F.listToCtx (G2'), introduceParameters (n, (G, B), G2', I.id, kont)), Ds)
 		  else (* Ds' *) checkLabels (n-1, Ds) 
 		end
 	      
-
 	  in
-	    checkLabels (F.labelSize ()-1, set_parameter' (GB, 1, Ds))
+	    checkLabels (F.labelSize ()-1, Ds)
 	  end
 	
 	(* ltinit (GB, k, ((U1, s1), (V2, s2)), ((U3, s3), (V4, s4)), sc, Ds) = Ds'
@@ -322,14 +451,17 @@ struct
 	  | ltW (GB, _, _, ((I.EVar _, _), _), _, Ds) = Ds
 	  | ltW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 						       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, Ds) =
+	    let
+	      val Ds' = Ds (* ctxBlock (GB, I.EClo (V1', s1'), k, sc, Ds) *)
+	    in
 	      if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 		let  (* enforce that X gets only bound to parameters *) 
 		  val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		  val sc' = fn Ds' => set_parameter (GB, X, k, sc, Ds')
+		  val sc' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
 		in
 		  lt (GB, k, ((U, s1), (V, s2)), 
 		      ((U', I.Dot (I.Exp (X), s1')), 
-		       (V', I.Dot (I.Exp (X), s2'))), sc', Ds)
+		       (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
 		end
 	      else
 		if Subordinate.below (I.targetFam V1', I.targetFam V) then
@@ -338,9 +470,10 @@ struct
 		  in
 		    lt (GB, k, ((U, s1), (V, s2)), 
 			((U', I.Dot (I.Exp (X), s1')), 
-			 (V', I.Dot (I.Exp (X), s2'))), sc, Ds)
+			 (V', I.Dot (I.Exp (X), s2'))), sc, Ds')
 		  end
-		else Ds
+		else Ds'
+	    end
 		  
 	and ltSpine (GB, k, (Us, Vs), (Ss', Vs'), sc, Ds) = 
               ltSpineW (GB, k, (Us, Vs), (Ss', Whnf.whnf Vs'), sc, Ds) 
@@ -405,27 +538,31 @@ struct
 
 	and leW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 						       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, Ds) =
-  	    if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
-	      let
-		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		val sc' = fn Ds' => set_parameter (GB, X, k, sc, Ds')
-	      (* enforces that X can only bound to parameter *)
-	      in                         
-		le (GB, k, ((U, s1), (V, s2)), 
-		    ((U', I.Dot (I.Exp (X), s1')), 
-		     (V', I.Dot (I.Exp (X), s2'))), sc', Ds)
-	      end
-	    else
-	      if Subordinate.below  (I.targetFam V1', I.targetFam V) then
-		let 
+	    let
+	      val Ds' = ctxBlock (GB, I.EClo (V1', s1'), k, sc, Ds)
+	    in
+	      if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+		let
 		  val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		in
+		  val sc' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
+		(* enforces that X can only bound to parameter *)
+		in                         
 		  le (GB, k, ((U, s1), (V, s2)), 
 		      ((U', I.Dot (I.Exp (X), s1')), 
-		       (V', I.Dot (I.Exp (X), s2'))), sc, Ds)
+		       (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
 		end
-	      else Ds
- 	  | leW (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) = lt (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) 
+	      else
+		if Subordinate.below  (I.targetFam V1', I.targetFam V) then
+		  let 
+		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+		  in
+		    le (GB, k, ((U, s1), (V, s2)), 
+			((U', I.Dot (I.Exp (X), s1')), 
+			 (V', I.Dot (I.Exp (X), s2'))), sc, Ds')
+		  end
+		else Ds'
+	    end
+	  | leW (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) = lt (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) 
 		
 	      
 	(* ordlt (GB, O1, O2, sc, Ds) = Ds'
@@ -547,53 +684,6 @@ struct
 	    in
 	      ordlt (GB, O, O', sc, Ds')
 	    end
-
-        (* residualLemma (s, F) = F'
-     
-           Invariant:
-           If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
-           and  Gx |- F1 == [[Gy]] true
-           then G |- {{Gx'}} F' formula
-           where Gx' < Gx
-           and   s uninstantiated on Gx'
-        *)
-
-	fun residualLemma (G, Gx, (Fx, s)) =
-	  let 
-	    (* collect (G, s, F) = (Gx', F')
-	 
-	       Invariant: 
-	       If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
-	       then G |- Gx' ctx
-	       and  Gx' < Gx  (where s uninstantiated on Gx')
-	       and  G, Gx' |- F' formula
-	       and  G, Gx' |- F' = [[Gy]] true
-	    *)
-	  
-	    fun collect (s as I.Shift k, I.Null) = (I.Null, s)
-	      | collect (s as I.Dot (I.Exp U, s'), I.Decl (G, D)) =
-	        let
-		  val (Gx', s'') = collect (s', G)
-		in 
-		  if Abstract.closedExp (G, (U, I.id)) then
-		    (Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
-		  else
-		    (I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
-		end
-	      
-	    (* abstract (Gx, F) = F'
-
-	       Invariant: 
-	       F' = {{Gx}} F
-	     *)
-	    fun abstract (I.Null, F) = F
-	      | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
-	      
-	    val (Gx', s') = collect (s, Gx)
-	    val F' = abstract (Gx', F.forSub (Fx, s'))
-	  in
-	    F'
-	  end
 
 
 

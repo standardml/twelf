@@ -183,8 +183,10 @@ struct
 	  val _ = reset ();
 	  val F = RelFun.convertFor cL
 	  val O = transformOrder (I.Null, F, map select cL)
+	  val Slist = MTPInit.init (F, O)
+	  val _ = if List.length Slist =0 then raise Domain else ()
 	in
-	  ((map (fn S => insert (MTPrint.nameState S)) (MTPInit.init (F, O));
+	  ((map (fn S => insert (MTPrint.nameState S)) Slist;
 	    menu ();
 	    printMenu ())
 	   handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)

@@ -95,6 +95,7 @@ struct
 		label)
 	end
     fun labelSize () = (!nextLabel)
+    fun labelReset () = (nextLabel := 0)
 
 
     fun lemmaLookup lemma = Array.sub (lemmaArray, lemma)
@@ -269,6 +270,7 @@ struct
     val labelLookup = labelLookup 
     val labelAdd = labelAdd
     val labelSize = labelSize
+    val labelReset = labelReset
     val lemmaLookup = lemmaLookup 
     val lemmaAdd = lemmaAdd
     val lemmaSize = lemmaSize
