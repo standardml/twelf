@@ -45,6 +45,11 @@ sig
   val sProgLookup: IntSyn.cid -> ConDec
   val sProgReset : unit -> unit
 
+  (* Deterministic flag *)
+  val detTableInsert : IntSyn.cid * bool -> unit
+  val detTableCheck : IntSyn.cid -> bool
+  val detTableReset : unit -> unit
+
   (* Explicit Substitutions *)
   val goalSub   : Goal * IntSyn.Sub -> Goal
   val resGoalSub: ResGoal * IntSyn.Sub -> ResGoal

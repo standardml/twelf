@@ -45,9 +45,16 @@ structure CSIneqZ = CSIneqIntegers (structure Integers = Integers
                                     structure CSManager = CSManager
                                     structure CSEqIntegers = CSEqZ);
 
+structure CSIntWord32 = CSIntWord (structure Word = Word32
+                                   structure IntSyn = IntSyn
+                                   structure Whnf = Whnf
+                                   structure Unify = UnifyTrail
+                                   structure CSManager = CSManager);
+
 CSManager.installSolver (CSEqQ.solver);
 CSManager.installSolver (CSIneqQ.solver);
 CSManager.installSolver (CSEqStrings.solver);
 CSManager.installSolver (CSEqBools.solver);
 CSManager.installSolver (CSEqZ.solver);
 CSManager.installSolver (CSIneqZ.solver);
+CSManager.installSolver (CSIntWord32.solver);

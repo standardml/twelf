@@ -1,7 +1,8 @@
 structure CompSyn =
   CompSyn (structure Global = Global
            structure IntSyn' = IntSyn
-	   structure Names = Names);
+	   structure Names = Names
+           structure Table = IntRedBlackTree);
 
 structure Compile =
   Compile (structure IntSyn' = IntSyn

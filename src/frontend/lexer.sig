@@ -45,6 +45,7 @@ sig
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
     | FREEZE                            (* `%freeze' *)
+    | DETERMINISTIC                     (* `%deterministic' *) (* -rv 11/27/01 *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
     | WHERE                             (* `%where' *)

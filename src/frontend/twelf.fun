@@ -489,7 +489,30 @@ struct
           handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg));
           if !Global.chatter >= 3
           then print ((if !Global.chatter >= 4 then "%" else "")
-                      ^ "freeze"
+                      ^ "%freeze"
+                      ^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
+          else ()
+        end
+
+      (* %deterministic <qid> ... *)
+      | install1 (fileName, (Parser.DeterministicDec (qids), r)) = 
+        let
+          fun toCid qid =
+              case Names.constLookup qid
+                of NONE =>
+                    raise Names.Error ("Undeclared identifier "
+                                       ^ Names.qidToString (valOf (Names.constUndef qid))
+                                       ^ " in deterministic declaration")
+                 | SOME cid => cid
+          fun insertCid cid = CompSyn.detTableInsert (cid, true)
+          val cids = List.map toCid qids
+                       handle Names.Error (msg) =>
+                         raise Names.Error (Paths.wrap (r, msg))
+        in
+          List.map insertCid cids;
+          if !Global.chatter >= 3
+          then print ((if !Global.chatter >= 4 then "%" else "")
+                      ^ "%deterministic"
                       ^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
           else ()
         end

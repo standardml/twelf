@@ -32,6 +32,7 @@ sig
     | Solve of  ExtDefine.define list * string option * ExtSyn.term
     | AbbrevDec of ExtSyn.condec
     | FreezeDec of Names.Qid list
+    | DeterministicDec of Names.Qid list  (* -rv *)
     | SigDef of ModExtSyn.sigdef
     | StructDec of ModExtSyn.structdec
     | Include of ModExtSyn.sigexp

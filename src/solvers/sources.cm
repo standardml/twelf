@@ -18,4 +18,5 @@ Group is
   cs-ineq-integers.fun
   cs-eq-strings.fun
   cs-eq-bools.fun
+  cs-integers-word.fun
   solvers.sml

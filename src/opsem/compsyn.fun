@@ -6,7 +6,9 @@
 functor CompSyn (structure Global : GLOBAL
                  structure IntSyn' : INTSYN
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn')
+		   sharing Names.IntSyn = IntSyn'
+                 structure Table : TABLE
+                   where type key = int)
   : COMPSYN =
 struct
 
@@ -87,6 +89,7 @@ struct
   local
     val maxCid = Global.maxCid
     val sProgArray = Array.array (maxCid+1, Void) : ConDec Array.array
+    val detTable : bool Table.Table = Table.new (32)
   in
     (* Invariants *)
     (* 0 <= cid < I.sgnSize () *)
@@ -94,6 +97,11 @@ struct
     fun sProgInstall (cid, conDec) = Array.update (sProgArray, cid, conDec)
     fun sProgLookup (cid) = Array.sub (sProgArray, cid)
     fun sProgReset () = Array.modify (fn _ => Void) sProgArray
+    val detTableInsert = Table.insert detTable;
+    fun detTableCheck (cid) = (case (Table.lookup detTable cid)
+                                 of SOME(deterministic) => deterministic
+                                  | NONE => false)
+    fun detTableReset () = Table.clear detTable;
   end
 
   (* goalSub (g, s) = g'
