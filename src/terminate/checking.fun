@@ -1280,7 +1280,7 @@ struct
 	   andalso
 	   eqSpineR (GQ, D, ((S, s1), (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))), 
 		     ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc, k)
-     | eqSpineRW (GQ, D, SsVs, SsVs', sc, k) = (print "\n??" ; false)
+     | eqSpineRW (GQ, D, SsVs, SsVs', sc, k) = false
       
    (*--------------------------------------------------------------*)  
    (* leftDecompose (G, Q, D, D', P) = B
