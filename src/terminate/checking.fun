@@ -185,38 +185,46 @@ struct
     fun fmtComparison (G, O, comp, O') =
         F.HOVbox0 1 0 1 [fmtOrder (G, O), F.Break, F.String comp, F.Break, fmtOrder (G, O')]
 
-    fun fmtPredicate (G, Less(O, O')) = fmtComparison (G, O, "<", O')
-      | fmtPredicate (G, Leq(O, O'))  = fmtComparison (G, O, "<=", O')
-      | fmtPredicate (G, Eq(O, O'))  = fmtComparison (G, O, "=", O')
-      | fmtPredicate (G, Pi(D, P))  =  (* F.String "Pi predicate"  *)
-          F.Hbox [F.String "Pi ", fmtPredicate (I.Decl(G, D), shiftP P (fn s => I.dot1 s))]
+    fun fmtPredicate' (G, Less(O, O')) = fmtComparison (G, O, "<", O')
+      | fmtPredicate' (G, Leq(O, O'))  = fmtComparison (G, O, "<=", O')
+      | fmtPredicate' (G, Eq(O, O'))  = fmtComparison (G, O, "=", O')
+      | fmtPredicate' (G, Pi(D, P))  =  (* F.String "Pi predicate"  *)
+          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), shiftP P (fn s => I.dot1 s))]
 
-    fun fmtRGCtx (G, I.Null) = ""
-      | fmtRGCtx (G, I.Decl(I.Null, P)) = 
+    fun fmtPredicate (G, P) = 
+      fmtPredicate' (Names.ctxName G, P)
+
+    fun fmtRGCtx' (G, I.Null) = ""
+      | fmtRGCtx' (G, I.Decl(I.Null, P)) = 
 	F.makestring_fmt(fmtPredicate (G, P) )
-      | fmtRGCtx (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ fmtRGCtx(G, RG)
+      | fmtRGCtx' (G, I.Decl(RG, P)) = 
+	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ fmtRGCtx' (G, RG)
+
+    fun fmtRGCtx (G, RG) = fmtRGCtx (Names.ctxName G, RG)
 
     (* printing atomic orders *)
-    fun atomicPredToString (G, Less((Us, _), (Us', _))) = 
-          Print.expToString(G, I.EClo(Us)) ^ " < " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString (G, Leq((Us, _), (Us', _))) = 
-          Print.expToString(G, I.EClo(Us)) ^ " <= " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString (G, Eq((Us, _), (Us', _))) = 
+    fun atomicPredToString' (G, Less((Us, _), (Us', _))) = 
+          Print.expToString (G, I.EClo(Us)) ^ " < " ^ Print.expToString(G, I.EClo(Us'))
+      | atomicPredToString' (G, Leq((Us, _), (Us', _))) = 
+          Print.expToString (G, I.EClo(Us)) ^ " <= " ^ Print.expToString(G, I.EClo(Us'))
+      | atomicPredToString' (G, Eq((Us, _), (Us', _))) = 
           Print.expToString(G, I.EClo(Us)) ^ " = " ^ Print.expToString(G, I.EClo(Us'))
 
+    fun atomicPredToString (G, P) = 
+      atomicPredToString' (Names.ctxName G, P)
 
-    fun ctxToString (G, I.Null) = " "
-      | ctxToString (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
+    fun ctxToString' (G, I.Null) = " "
+      | ctxToString' (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString' (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | ctxToString (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
+      | ctxToString' (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString' (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | ctxToString (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
+      | ctxToString' (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString' (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
 	
+    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG)
    (*--------------------------------------------------------------------*)
 
     (* init () = true 

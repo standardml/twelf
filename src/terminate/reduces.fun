@@ -79,18 +79,23 @@ struct
 			 F.Break, fmtOrder (G, O')]
 
 
-    fun fmtPredicate (G, C.Less(O, O')) = fmtComparison (G, O, "<", O')
-      | fmtPredicate (G, C.Leq(O, O'))  = fmtComparison (G, O, "<=", O')
-      | fmtPredicate (G, C.Eq(O, O'))  = fmtComparison (G, O, "=", O')
-      | fmtPredicate (G, C.Pi(D, P))  =  
+    fun fmtPredicate' (G, C.Less(O, O')) = fmtComparison (G, O, "<", O')
+      | fmtPredicate' (G, C.Leq(O, O'))  = fmtComparison (G, O, "<=", O')
+      | fmtPredicate' (G, C.Eq(O, O'))  = fmtComparison (G, O, "=", O')
+      | fmtPredicate' (G, C.Pi(D, P))  =  
           F.Hbox [F.String "Pi ", 
-		  fmtPredicate (I.Decl(G, D), C.shiftPred P (fn s => I.dot1 s))]
+		  fmtPredicate' (I.Decl(G, D), C.shiftPred P (fn s => I.dot1 s))]
 
-    fun ctxToString (G, I.Null) = ""
-      | ctxToString (G, I.Decl(I.Null, P)) = 
+    fun fmtPredicate (G, P) = 
+      fmtPredicate' (Names.ctxName G, P)
+
+    fun ctxToString' (G, I.Null) = ""
+      | ctxToString' (G, I.Decl(I.Null, P)) = 
 	F.makestring_fmt(fmtPredicate (G, P) )
-      | ctxToString (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ ctxToString(G, RG)
+      | ctxToString' (G, I.Decl(RG, P)) = 
+	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ ctxToString'(G, RG)
+
+    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG)
 
     fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (G, P))
 
