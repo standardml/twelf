@@ -362,6 +362,8 @@ struct
        then V' = {{K}} V
        and  . |- V' : L
        and  . ||- V'
+
+       BUG: non-local BVars must be correctly abstracted!!!! -cs 
     *)
     fun abstractCtx (I.Null) = (I.Null, I.Null)
       | abstractCtx (I.Decl (K', EV (_, V', T, _))) =
@@ -441,6 +443,8 @@ struct
 			     in
 			       collectExp (T, d', G0, (U, I.id), K'')
 			     end)
+	    | collectSub'' (G0, I.Dot (I.Idx _, s), I.Decl (B, T), collect) = 
+		collectSub'' (G0, s, B, collect)
 	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
 
 

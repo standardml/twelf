@@ -100,6 +100,8 @@ functor Twelf
      sharing ThmPrint.ThmSyn = ThmSyn
 
    structure MetaGlobal : METAGLOBAL
+   structure FunSyn : FUNSYN
+     sharing FunSyn.IntSyn = IntSyn'
    structure Skolem : SKOLEM
      sharing Skolem.IntSyn = IntSyn'
    structure Prover : PROVER
@@ -447,6 +449,7 @@ struct
     fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
 		    Index.reset (); 
 		    IndexSkolem.reset (); Subordinate.reset (); Terminate.reset ();
+		    FunSyn.labelReset ();
 		    CompSyn.sProgReset () (* necessary? -fp *)
 		    )
 

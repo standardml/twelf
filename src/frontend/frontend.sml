@@ -175,6 +175,7 @@ structure Twelf =
 	 structure ThmRecon = ThmRecon
 	 structure ThmPrint = ThmPrint
 	 structure MetaGlobal = MetaGlobal
+	 structure FunSyn = FunSyn
 	 structure Skolem = Skolem
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
