@@ -235,3 +235,7 @@ Installation:
   make (* requires version 110 of SML/NJ *)
 
 --------------------
+Notes:
+
+  - use lazy name assignment in contexts to permit printing without
+    early name commitment?
