@@ -24,7 +24,7 @@ struct
     structure C = CompSyn
   in
 
-    val optimize = ref true
+    val optimize = ref false
 
   (* compileGoalN A => g
      if A is a type interpreted as a subgoal in a clause and g is its
