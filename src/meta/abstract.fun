@@ -400,6 +400,16 @@ struct
 	   of I.Type => ()
 	    | _ => raise Error "Typing ambiguous -- free type variable")
 
+
+
+
+    fun deriveTag (V, F.Ex (_, F.True)) = F.Ex (I.Dec (NONE, V), F.True)
+      | deriveTag (I.Pi ((D, DP), V), F.Ex (_, F)) = 
+          F.Ex (D, deriveTag (V, F))
+      | deriveTag (I.Pi ((D, DP), V), F.All (F.Prim _, F)) = 
+	  F.All (F.Prim D, deriveTag (V, F))
+
+
     (* abstractCtx (K, V) = V'
        where V' = {{K}} V
 
@@ -414,7 +424,17 @@ struct
        BUG: non-local BVars must be correctly abstracted!!!! -cs 
     *)
     fun abstractCtx (I.Null) = (I.Null, I.Null)
-      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F.Ex (_, F.True)), _))) =
+      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F), _))) =
+        let
+	  val V'' = abstractExp (K', 0, (V', I.id))
+	  val _ = checkType V''
+	  val (G', B') = abstractCtx K'
+	  val D' = I.Dec (NONE, V'')
+	  val T' = S.Lemma (b, deriveTag (V'', F))
+	in
+	  (I.Decl (G', D'), I.Decl (B', T'))
+	end
+(*      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F.Ex (_, F.True)), _))) =
         let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
@@ -424,7 +444,7 @@ struct
 	in
 	  (I.Decl (G', D'), I.Decl (B', T'))
 	end
-      | abstractCtx (I.Decl (K', EV (_, V', T as S.None, _))) =
+*)      | abstractCtx (I.Decl (K', EV (_, V', T as S.None, _))) =
         let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
@@ -432,16 +452,6 @@ struct
 	  val D' = I.Dec (NONE, V'')
 	in
 	  (I.Decl (G', D'), I.Decl (B', S.None))
-	end
-      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F), _))) =
-        let
-	  val V'' = abstractExp (K', 0, (V', I.id))
-	  val _ = checkType V''
-	  val (G', B') = abstractCtx K'
-	  val D' = I.Dec (NONE, V'')
-	  val T' = S.Lemma (b, F)
-	in
-	  (I.Decl (G', D'), I.Decl (B', T'))
 	end
       | abstractCtx (I.Decl (K', BV (D, T))) =
         let
