@@ -60,47 +60,6 @@ struct
 	end
 
 
-    (* checkPos W (G, (V, s)) = ()
-
-       Invariant:
-       If   G is a context
-       and  G |- s : G'
-       and  G' |- V : K
-       then checkPos W (G, (V, s)) terminates with () iff G |-+ B[s]
-       (see regularworlds.tex for the rules)
-    *)
-    fun checkPos W (G, (I.Root (a, S), s)) = ()
-      | checkPos Closed (G, (I.Pi ((I.Dec (_, V1), _), V2), s)) = 
-        raise Error "Incompatible worlds"
-      | checkPos (Schema (W, LabelDec (_, L1, L2))) (Gus as (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s))) = 
-        ((let
-	  val t = createEVarSub (G, L1)	(* G |- s' : L1 *)
-	in
-	  (checkNeg W (G, (L2, t), (V1, s)) ;
-	   checkPos W (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
-	end) handle Unify.Unify _ => checkPos W Gus)
-    and checkPosW W (G, Us) = checkPos W (G, Whnf.whnf Us)
-
-    (* checkNeg W (G, (L, t), (V, s)) = () 
-
-       Invariant:
-       If   G is a context
-       and  G |- t : G1
-       and  G1 |- L  context
-       and  G |- s : G2
-       and  G |- V : K
-       then checkNeg W (G, (L, t), (V, s)) terminates with () iff  G |-- [t] L ~ V [s]
-       (see regularworlds.tex for the rules)
-    *)
-    and checkNeg W (G, (L, t), (I.Root (a, S), s)) = ()
-      | checkNeg W (G, (I.Dec (_, V) :: L, t), (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =
-        let 
-	  val _ = Unify.unify (G, (V, t), (V1, s))
-	in
-	  (checkNeg W (I.Decl (G, I.decSub (D, s)), (L, t), (V2, I.dot1 s)) ;
-	   checkPos W (G, (V1, s)))
-	end
-    
     (* worldcheck W a = ()
 
        Invariant:       
@@ -110,9 +69,56 @@ struct
     *) 
     fun worldcheck W a =  
       let
+
+	(* checkPos W (G, (V, s)) = ()
+
+  	   Invariant:
+	   If   G is a context
+           and  G |- s : G'
+           and  G' |- V : K
+           then checkPos W (G, (V, s)) terminates with () iff G |-+ B[s]
+	     (see regularworlds.tex for the rules)
+	*)
+	fun checkPos W' (G, (I.Root (a, S), s)) = ()
+	  | checkPos Closed (G, (I.Pi ((I.Dec (_, V1), _), V2), s)) = 
+	  raise Error "Incompatible worlds"
+	  | checkPos (Schema (W', LabelDec (_, L1, L2))) (Gus as (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s))) = 
+	    ((let
+		val t = createEVarSub (G, L1)	(* G |- s' : L1 *)
+	      in
+		(checkNeg W (G, (L2, t), (V1, s)) ;
+		 checkPos W' (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
+	      end) handle Unify.Unify _ => checkPos W' Gus)
+	and checkPosW W' (G, Us) = checkPos W' (G, Whnf.whnf Us)
+
+        (* checkNeg W (G, (L, t), (V, s)) = () 
+
+           Invariant:
+           If   G is a context
+           and  G |- t : G1
+           and  G1 |- L  context
+           and  G |- s : G2
+           and  G |- V : K
+           then checkNeg W (G, (L, t), (V, s)) terminates with () iff  G |-- [t] L ~ V [s]
+           (see regularworlds.tex for the rules)
+        *)
+        and checkNeg W' (G, (L, t), (I.Root (a, S), s)) = ()
+          | checkNeg W' (G, (I.Dec (_, V) :: L, t), (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =
+	  let 
+	    val _ = Unify.unify (G, (V, t), (V1, s))
+	  in
+	    (checkNeg W' (I.Decl (G, I.decSub (D, s)), (L, t), (V2, I.dot1 s)) ;
+	     checkPos W (G, (V1, s)))
+	  end
+	
+	fun checkTopLevel W' (G, (I.Root (a, S), s)) = ()
+	  | checkTopLevel W' (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =
+              (checkTopLevel W' (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)) ;
+	       checkPos W (G, (V1, s)))
+	
 	fun checkAll nil = ()
 	  | checkAll (I.Const a :: alist) =
-	      (checkPos W (I.Null, (I.constType a, I.id));
+	      (checkTopLevel W (I.Null, (I.constType a, I.id));
 	       checkAll alist)
       in
 	checkAll (Index.lookup a)
