@@ -579,8 +579,12 @@ struct
 	end
 
       (* Total declaration *)
-      | install1 (fileName, (Parser.TotalDec lterm, _)) =
+      | install1 (fileName, (Parser.TotalDec lterm, r)) =
 	let
+	  val _ = if not (!Global.unsafe)
+		    then raise Total.Error (Paths.wrapLoc (Paths.Loc (fileName, r), "%total not safe: Toggle `unsafe' flag"))
+	          else ()
+
 	  val (T, rrs as (r,rs)) = ReconThm.tdeclTotDecl lterm
 	  val La = Thm.installTotal (T, rrs)
 	  val _ = map Total.install La	(* pre-install for recursive checking *)
