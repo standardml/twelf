@@ -1042,6 +1042,10 @@ struct
 		    ((U', I.dot1 s1'),(V', I.dot1 s2')), sc, k)
      | eqAtomicRW (GQ, D, (Us, Vs as (I.Root _, s2)),(Us', Vs' as (I.Root _, s2')), sc, k) = 
 	 eqR (GQ, D, (Us, Vs),(Us', Vs'), sc, k)
+     | eqAtomicRW (GQ, D, (Us, Vs), (Us', Vs'),sc, k) =
+	 (* mismatch: not equal *)
+	 (* Fri Feb 25 21:26:39 2005 -fp !!! *)
+	 false
 
    (* ltR (GQ, D, UsVs, UsVs', sc, k) = B
 
