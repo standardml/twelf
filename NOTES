@@ -187,7 +187,7 @@ Editing under CVS:
 will create the directory twelf/ and all subdirectories with
 most recent Twelf sources.
 
-Edit, and then check in with
+Edit (possibly several days, even weeks), and then check in with
 
   % cvs commit -m "log message" twelf
 
