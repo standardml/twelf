@@ -101,7 +101,7 @@
    ;; single-line comments
    ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
+   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
     1 twelf-font-percent-key-face nil)
    ;; keywords, omit punctuations for now.
    ("\\(\\<<-\\>\\|\\<->\\>\\|\\<type\\>\\|\\<=\\>\\|\\<_\\>\\)"
