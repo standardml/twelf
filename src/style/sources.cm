@@ -1,0 +1,18 @@
+Library
+  signature STYLECHECK
+  structure StyleCheck
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../table/sources.cm
+  ../lambda/sources.cm
+  ../formatter/sources.cm
+  ../print/sources.cm
+  ../names/sources.cm	
+  ../paths/sources.cm
+  ../index/sources.cm
+  style.sig
+  style.fun
+  style.sml
