@@ -17,6 +17,7 @@ sig
   val expandDef : IntSyn.eclo -> IntSyn.eclo
   val etaExpandRoot : IntSyn.Exp -> IntSyn.Exp
   val whnfEta : (IntSyn.eclo * IntSyn.eclo) -> (IntSyn.eclo * IntSyn.eclo)
+  val lowerEVar : IntSyn.Exp -> IntSyn.Exp
 
   (* Full normalization *)
   val normalize: IntSyn.eclo -> IntSyn.Exp

@@ -165,33 +165,53 @@ struct
       | whnfRedex (Us as (EVar _, s1), (Nil, s2)) = Us
       | whnfRedex (Us as (X as EVar _, s1), Ss2) = 
 	  (* Ss2 must be App, since prior cases do not apply *)
-	  (* lower X results in redex, optimize by unfolding call to whnfRedex *)
-	  (lower X; whnfRedex (whnf Us, Ss2))
+	  (* lowerEVar X results in redex, optimize by unfolding call to whnfRedex *)
+	  (lowerEVar X; whnfRedex (whnf Us, Ss2))
       (* Uni and Pi can arise after instantiation of EVar X : K *)
       | whnfRedex (Us as (Uni _, s1), _) = Us	(* S2[s2] = Nil *)
       | whnfRedex (Us as (Pi _, s1), _) = Us	(* S2[s2] = Nil *)
       (* Other cases impossible since (U,s1) whnf *)
 
-    (* lower (X) = (), effect instantiates X
+    (* lowerEVar' (G, V[s]) = (X', U), see lowerEVar *)
+    and lowerEVar' (G, (Pi ((D',_), V'), s')) =
+        let
+	  val D'' = decSub (D', s')
+	  val (X', U) = lowerEVar' (Decl (G, D''), whnf (V', dot1 s'))
+	in
+	  (X', Lam (D'', U))
+	end
+      | lowerEVar' (G, Vs') =
+        let
+	  val X' = newEVar (G, EClo Vs')
+	in
+	  (X', X')
+	end
+    (* lowerEVar1 (X, V[s]), V[s] in whnf, see lowerEVar *)
+    and lowerEVar1 (EVar (r, G, _, _), Vs as (Pi _, _)) =
+        let 
+	  val (X', U) = lowerEVar' (G, Vs)
+	  val _ = r := SOME (U)
+	in
+	  X'
+	end
+      | lowerEVar1 (X, _) = X
+
+    (* lowerEVar (X) = X'
 
        Invariant:
-       If    G |- X : (Pi x:V''.V')
-       then  X := Lam x:V''. X'  where  G, x:V'' |- X' : V'
+       If   G |- X : {{G'}} P
+            X not subject to any constraints
+       then G, G' |- X' : P
 
-       Effects: X is instantiated
+       Effect: X is instantiated to [[G']] X' if G' is empty
+               otherwise X = X' and no effect occurs.
     *)
-    (* possible optimization: lower all the way to base type in one step *)
-    and lower (EVar (r, G, V, nil)) = lower' (r, G, whnf (V, id))
-      | lower (EVar _) =
+    and lowerEVar (X as EVar (r, G, V, nil)) = lowerEVar1 (X, whnf (V, id))
+      | lowerEVar (EVar _) =
         (* It is not clear if this case can happen *)
         (* pre-Twelf 1.2 code walk, Fri May  8 11:05:08 1998 *)
         raise Error "Typing ambiguous -- constraint of functional type cannot be simplified"
-    and lower' (r, G, (Pi ((D', _), V'), s')) = 
-        let val D'' = decSub (D', s')
-	in
-          (r := SOME (Lam (D'', newEVar (Decl (G, D''), EClo (V', dot1 s')))))
-	end
-        (* no other cases possible by well-typing invariant *)
+
 
     (* whnfRoot ((H, S), s) = (U', s')
 
@@ -244,7 +264,7 @@ struct
       | whnf (Us as (EVar (r, _, Uni _, _), s)) = Us 
       | whnf (Us as (X as EVar (r, _, V, _), s)) = 
           (case whnf (V, id)
-	     of (Pi _, _) => (lower X; whnf Us)
+	     of (Pi _, _) => (lowerEVar X; whnf Us) (* possible opt: call lowerEVar1 *)
 	      | _ => Us)
       | whnf (EClo (U, s'), s) = whnf (U, comp (s', s)) 
 
@@ -330,6 +350,7 @@ struct
           ((Lam (decSub (D, s2), 
 		 Redex (EClo (U, comp (s1, shift)), 
 			App (Root (BVar (1), Nil), Nil))), id), Vs2)
+
 
     (* Invariant:
      
@@ -474,6 +495,7 @@ struct
     val expandDef = expandDef
     val etaExpandRoot = etaExpandRoot
     val whnfEta = whnfEta
+    val lowerEVar = lowerEVar
 
     val normalize = normalizeExp
     val normalizeDec = normalizeDec

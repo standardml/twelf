@@ -70,6 +70,7 @@ struct
        and  G' |- M' mtx
        and  G' |- s' : G
        and  GE a list (G, X) of EVars and their contexts in s'
+       !!!-fp
     *)
     fun createEVars (M.Prefix (I.Null, I.Null, I.Null)) = 
           (M.Prefix (I.Null, I.Null, I.Null), I.id, nil)
@@ -83,9 +84,10 @@ struct
       | createEVars (M.Prefix (I.Decl (G, I.Dec (_, V)), I.Decl (M, M.Bot), I.Decl (B, _))) =
 	let 
 	  val (M.Prefix (G', M', B'), s', GE') = createEVars (M.Prefix (G, M, B))
-	  val X  = I.newEVar (G', I.EClo (V, s'))
+	  val X = I.newEVar (G', I.EClo (V, s'))
+	  val X' = Whnf.lowerEVar X
 	in
-	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X), s'), (G', X) :: GE')
+	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X), s'), X' :: GE')
 	end
 
 

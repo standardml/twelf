@@ -212,7 +212,7 @@ struct
         r does not occur in any type of EVars in GE
     *)
     fun nonIndex (_, nil) = true
-      | nonIndex (r, (G, I.EVar (_, _, V, _)) :: GE) = 
+      | nonIndex (r, I.EVar (_, _, V, _) :: GE) = 
           (not (occursInExp (r, (V, I.id)))) andalso nonIndex (r, GE)
 
     (* select (GE, (V, s), acc) = acc'
@@ -228,9 +228,9 @@ struct
     (* Efficiency: repeated whnf for every subterm in Vs!!! *)
 
     fun selectEVar (nil, _, acc) = acc
-      | selectEVar ((GX as (G, I.EVar (r, _, _, _))) :: GE, Vs, acc) = 
+      | selectEVar ((X as I.EVar (r, _, _, _)) :: GE, Vs, acc) = 
           if occursInExp (r, Vs) andalso nonIndex (r, acc) then
-	    selectEVar (GE, Vs, GX :: acc)
+	    selectEVar (GE, Vs, X :: acc)
 	  else selectEVar (GE, Vs, acc)
 
 
@@ -242,6 +242,7 @@ struct
        and   G' |- X' : a S
     *)
     (* Efficiency improvement: do not create intermediate EVars -fp *)
+    (*
     fun lowerEVar (GX as (G, X as I.EVar (r, _, V, C))) = 
           lowerEVar' (G, X, Whnf.whnf (V, I.id), C)
     and lowerEVar' (G, X, (V as I.Root _, s (* = id *)), C) = 
@@ -253,6 +254,7 @@ struct
 	in
 	  (r := SOME (I.Lam (D', X')); lowerEVar (I.Decl (G, D'), X'))
 	end
+    *)
 
     (* lower GE = GE'
 
@@ -262,9 +264,11 @@ struct
        then  G' = G, V1 .. Vn
        and   G' |- X' : a S
     *)
+    (*
     fun lower nil = nil
       | lower (GX :: GE) = (lowerEVar GX) :: (lower GE)
- 
+    *)
+
 
     exception Success of M.State
     (* searchEx' max (GE, sc) = acc'
@@ -280,7 +284,7 @@ struct
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
-      | searchEx' max ((G, I.EVar (r, _, V, _)) :: GE, sc) = 
+      | searchEx' max (I.EVar (r, G, V, _) :: GE, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
@@ -317,7 +321,7 @@ struct
     *)    
     fun searchEx (G, GE, Vs, sc) = 
         ((if !Global.chatter > 5 then print "[Search: " else ();  
-	    deepen searchEx' (selectEVar ((lower GE), Vs, nil), sc); 
+	    deepen searchEx' (selectEVar (GE, Vs, nil), sc); 
 	    if !Global.chatter > 5 then print "FAIL]\n" else ();
 	      raise Error "No object found")
 	    handle Success S => (if !Global.chatter > 5 then 
@@ -334,7 +338,7 @@ struct
     (* Shared contexts in GEVars may recompiled many times *)
 
     fun searchAll' (nil, acc, sc) = sc () :: acc
-      | searchAll' ((G, I.EVar (r, _, V, _)) :: GE, acc, sc) = 
+      | searchAll' (I.EVar (r, G, V, _) :: GE, acc, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
@@ -352,7 +356,7 @@ struct
        then acc' is a list of results from executing the success continuation 
     *)
     fun searchAll (G, GE, Vs, sc) =
-          searchAll' (selectEVar (lower GE, Vs, nil), nil, sc)
+          searchAll' (selectEVar (GE, Vs, nil), nil, sc)
 
 
   in 
