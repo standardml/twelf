@@ -124,7 +124,7 @@
 ;;; Current configuration --- A configuration is an ordered list of
 ;;; Twelf source files in dependency order.  It is usually initialized
 ;;; and maintained in a file sources.cfg.  The current configuration is
-;;; also the bases for the TAGS file created by twelf-tags.  This allows
+;;; also the bases for the TAGS file created by twelf-tag.  This allows
 ;;; quick jumping to declaration sites for constants, or to apply
 ;;; searches or replacements to all files in a configuration.
 ;;;
@@ -2050,10 +2050,12 @@ Optional argument TAGS-FILENAME specifies alternative filename."
     (save-excursion
       (set-buffer error-buffer)
       (goto-char (point-max))
-      (insert "Tagging configuration " config-filename " in file " tags-file "\n"))
+      (insert "Tagging configuration " config-filename " in file " tags-file "\n")
+      (setq *twelf-error-pos* (point-max)))
     (set-buffer *twelf-config-buffer*)
     (twelf-tag-files (rev-relativize *twelf-config-list* default-directory)
                    tags-file error-buffer)
+    ;; leaves us in error-buffer
     (if (get-buffer-process error-buffer)
         (set-marker (process-mark (get-buffer-process error-buffer))
                     (point-max)))))
@@ -2108,7 +2110,7 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
 		  (set-buffer error-buffer)
 		  (goto-char (point-max))
 		  (insert filename ":" (int-to-string error-line)
-			  " Warning: missing period\n"))))
+			  ".1 Warning: missing period\n"))))
 	  (save-excursion
 	    (set-buffer tags-buffer)
 	    (insert tag-string))))
@@ -2117,6 +2119,15 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
       (delete-char 1)
       (insert (int-to-string (- file-end file-start)))
       (goto-char (point-max)))))
+
+(defvar twelf-decl-pattern-noident
+  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%query\\|%mode\\|%terminates\\|%prove\\|%assert\\|%establish\\)\\>"
+  "Pattern used to match declarations which do not declare a new identifier.")
+
+(defvar twelf-decl-pattern-ident
+  "\\(%solve\\|%theorem\\)[ \t]\\(\\<\\w+\\>\\)"
+  "Pattern used to match declarations which declare a new identifer.
+(match-beginning 2) to (match-end 2) will be the declared identifer.")
 
 (defun twelf-next-decl (filename error-buffer)
   "Set point after the identifier of the next declaration.
@@ -2130,13 +2141,24 @@ FILENAME and ERROR-BUFFER are used if something appears wrong."
       (setq beg-of-id (point))
       (if (zerop (skip-chars-forward *twelf-id-chars*))
           ;; Not looking at id: skip ahead
-          (skip-ahead filename (current-line-absolute) "No identifier"
-                      error-buffer)
+	  (cond ((looking-at twelf-decl-pattern-noident)
+		 ;; valid decl: no warning
+		 (twelf-end-of-par))
+		((looking-at twelf-decl-pattern-ident)
+		 ;; decl of identifer
+		 (setq beg-of-id (match-beginning 2))
+		 (setq end-of-id (match-end 2))
+		 (goto-char end-of-id)
+		 (setq id (buffer-substring beg-of-id end-of-id)))
+		(t ;; unrecognized text
+		 (skip-ahead filename (current-line-absolute) "Unrecognized declaration format"
+			     error-buffer)))
         (setq end-of-id (point))
         (skip-twelf-comments-and-whitespace)
-        (if (not (looking-at ":"))
+        (if (not (looking-at "[:=]"))	; c : V or c = U or c : V = U
             ;; Not looking at valid decl: skip ahead
-            (skip-ahead filename (current-line-absolute end-of-id) "No colon"
+            (skip-ahead filename (current-line-absolute end-of-id)
+			"No colon or equal sign"
                         error-buffer)
           (goto-char end-of-id)
           (setq id (buffer-substring beg-of-id end-of-id))))
@@ -2151,8 +2173,8 @@ deposited in ERROR-BUFFER."
       (save-excursion
 	(set-buffer error-buffer)
 	(goto-char (point-max))
-	(insert filename ":" (int-to-string line) " Warning: " message "\n")
-	(setq *twelf-error-pos* (point))))
+	(insert filename ":" (int-to-string line) ".1 Warning: "
+		message "\n")))
   (twelf-end-of-par))
 
 (defun current-line-absolute (&optional char-pos)
