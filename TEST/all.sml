@@ -23,6 +23,8 @@ test "examples/cut-elim/test.cfg";
 test "examples/fol/test.cfg";
 (* guide not in test suite, ~.05 secs more *)
 test "examples/guide/test.cfg";
+(* kolm not in original test suite *)
+test "examples/kolm/test.cfg";
 test "examples/lp/test.cfg";
 test "examples/lp-horn/test.cfg";
 test "examples/mini-ml/test.cfg";
