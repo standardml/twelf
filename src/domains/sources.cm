@@ -18,7 +18,8 @@ is
 #elif defined(NEW_CM)
   $/smlnj-lib.cm
 #elif defined(SMLNJ_VERSION)
-  smlnj-lib.cm
+  (* smlnj-lib.cm *)
+  ../int-inf/sources.cm
 #else
   ../int-inf/sources.cm
 #endif

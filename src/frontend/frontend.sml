@@ -219,6 +219,8 @@ structure Twelf =
 	 structure Solve = Solve
 	 structure Fquery = Fquery
 
+	 structure StyleCheck = StyleCheck
+
 	 structure ThmSyn = ThmSyn
 	 structure Thm = Thm
 	 structure ReconThm = ReconThm

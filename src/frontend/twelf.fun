@@ -57,6 +57,8 @@ functor Twelf
    (*! sharing ModeDec.ModeSyn = ModeSyn !*)
      (*! sharing ModeDec.Paths = Paths !*)
 
+   structure StyleCheck : STYLECHECK
+
    structure Unique : UNIQUE
    (*! sharing Unique.ModeSyn = ModeSyn !*)
    structure UniqueTable : MODETABLE
@@ -1398,7 +1400,8 @@ struct
     (* make (configFile)
        read and then load configuration from configFile
     *)
-    fun make (fileName) = Config.load (Config.read fileName)
+    fun make (fileName) = 
+          Config.load (Config.read fileName)
   in
 
     (* re-exporting environment parameters and utilities defined elsewhere *)

@@ -10,7 +10,10 @@ Library
   signature INTSYN
   structure IntSyn
   structure PrintXML
+  structure PrintTwega
   signature FLIT
   structure Flit
+  signature STYLECHECK
+  structure StyleCheck
 is
   src/frontend/sources.cm

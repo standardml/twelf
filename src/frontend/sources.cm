@@ -29,6 +29,8 @@ Library
   structure Interactive
   signature FLIT
   structure Flit
+  signature STYLECHECK
+  structure StyleCheck
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -43,6 +45,7 @@ is
   ../paths/sources.cm
   ../print/sources.cm
   ../typecheck/sources.cm
+  ../style/sources.cm
   ../modes/sources.cm 
   ../tabling/sources.cm 
   ../terminate/sources.cm 

@@ -5,6 +5,7 @@ Library
   signature CLAUSEPRINT
   structure ClausePrint
   structure ClausePrintTeX
+  structure PrintTwega
   structure PrintXML
   structure PrintTwega
 is
