@@ -107,7 +107,17 @@ Parameter Cases
 
 	      otherwise abstraction doesn't work.
 	
-	BUG Tag information and actual declaration can get out of sync.
+	DONE - cs   BUG Tag information and actual declaration can get out of sync.
+
+	Experimentation report
+
+	- Cut Elimination works except in the essentatial case: 
+ 	    Suspect that a induction hypothesis is missing  (I guess that "open issues" from above is repsonsible for that)
+
+	- Church Rosser  interactive proof works. But
+	  TODO Filling in the first step immediately succeeds (constraints!!!)
+	  TODO splitting the first rewrite derivations yields a bad bad error
+	
 
 
 Splitting Residual lemmas

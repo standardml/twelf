@@ -224,7 +224,6 @@ struct
       | constCases (G, Vs, I.Const c::Sgn, abstract, ops) = 
 	let
 	  val (U, Vs') = createAtomConst (G, I.Const c)
-	  val _ = TextIO.print ("Trying Constant " ^ (I.conDecName (I.sgnLookup c)) ^ "\n")
 	in
 	  constCases (G, Vs, Sgn, abstract,
 		      Trail.trail (fn () => 
@@ -249,7 +248,6 @@ struct
       | paramCases (G, Vs, k, abstract, ops) = 
 	let 
 	  val (U, Vs') = createAtomBVar (G, k)
- val _ = TextIO.print ("Trying parameter " ^ (Int.toString k) ^ "\n")
 	in
 	  paramCases (G, Vs, k-1, abstract, 
 		      Trail.trail (fn () =>
@@ -276,14 +274,13 @@ struct
 	      val I.Dec (_, V) = I.ctxDec (G, n)
 	      val ops' = if I.targetFam V = c then 
 		        let 
-			  val _ = TextIO.print "Parameter context candidate found\n"
-			  val (U, Vs') = createAtomBVar (G, n)
-			  val _ = TextIO.print ("Unifying " ^ (Print.expToString (G, I.EClo Vs)) ^ " with " ^
-			    (Print.expToString (G, I.EClo Vs')) ^ "\n")
+ 			  val (U, Vs') = createAtomBVar (G, n)
+			 (* val _ = TextIO.print ("Unifying " ^ (Print.expToString (G, I.EClo Vs)) ^ " with " ^
+			    (Print.expToString (G, I.EClo Vs')) ^ "\n") *)
 			in
 			  Trail.trail (fn () =>
 				       (if Unify.unifiable (G, Vs, Vs')
-					  then (TextIO.print "Success!\n"; Active (abstract U) :: ops) (* abstract state *)
+					  then (Active (abstract U) :: ops) (* abstract state *)
 					else ops)
 					  handle MTPAbstract.Error _ => InActive :: ops)
 			end
@@ -296,12 +293,6 @@ struct
       end
 
           
-fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
-  | inspect (I.Dot (I.Idx n, s)) = (TextIO.print ("(" ^ (Int.toString n) ^ ")"); inspect s)
-  | inspect (I.Dot (I.Exp _, s)) = (TextIO.print ("X"); inspect s)
-  
-
-
     (* lowerSplitDest (G, k, (V, s'), abstract) = ops'
        
        Invariant: 
@@ -328,12 +319,10 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 
 
     fun abstractErrorLeft ((G, B), s) = 
-      (TextIO.print "Cannot split left of parameters";
-       raise MTPAbstract.Error "Cannot split left of parameters")
+      (raise MTPAbstract.Error "Cannot split left of parameters")
 
     fun abstractErrorRight ((G, B), s) = 
-      (TextIO.print "Cannot split right of parameters";
-       raise MTPAbstract.Error "Cannot split right of parameters")
+      (raise MTPAbstract.Error "Cannot split right of parameters")
 
 
     (* split (x:D, sc, B, abstract) = cases'
@@ -370,24 +359,17 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 		  let 
 					(* G' |- U' : V[s'] *)
 					(* G' |- U.s' : G, V *)
-		    val _ = TextIO.print ("[Abstraction in the base case: ...\n")
-		    val _ = TextIO.print "U'.s' = "
-		    val _ = inspect (I.Dot (I.Exp U', s'))
-		    val _ = TextIO.print "\n" 
-		    val _ = TextIO.print ("|G'| = " ^ (Int.toString (I.ctxLength G')) ^ "\n")
 		    val ((G'', B''), s'') = MTPAbstract.abstractSub' ((G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
-		    val _ = TextIO.print "s'' = "
-		    val _ = inspect s''
-		    val _ = TextIO.print "\n" 
-		    val Psi'' = aux (G'',B'')
-		    val _ = TypeCheck.typeCheckCtx (F.makectx Psi'')
-		    val _ = TextIO.print "\n|- Psi'' lfctx\n"
-
-		    val Psi = aux (I.Decl (G0, D), I.Decl (B0, T))
-		    val _ = TypeCheck.typeCheckCtx (F.makectx Psi)
-		    val _ = TextIO.print "|- Psi lfctx\n"
-		    val _ = FunTypeCheck.checkSub (Psi'', s'', Psi)
-		    val _ = TextIO.print ("]\n")
+		    val _ = if !Global.doubleCheck then
+		              let 
+				val Psi'' = aux (G'',B'')
+				val _ = TypeCheck.typeCheckCtx (F.makectx Psi'')
+				val Psi = aux (I.Decl (G0, D), I.Decl (B0, T))
+				val _ = TypeCheck.typeCheckCtx (F.makectx Psi)
+			      in
+				FunTypeCheck.checkSub (Psi'', s'', Psi)
+			      end 
+			    else ()
 		  in 
 		    abstract ((G'', B''), s'')
 		  end
@@ -420,19 +402,12 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 		   then |- S' state *)
 		fun abstract' U' = 
 					(* G' |- U' : V[s'] *)
-		  if p then (TextIO.print "Cannot split right of parameters";
-			     raise MTPAbstract.Error "Cannot split right of parameters")
+		  if p then (raise MTPAbstract.Error "Cannot split right of parameters")
 		  else 
 		    let 
 					(* G' |- U.s' : G, V *)
 					(* . |- t : G1 *)
 		      val ((G'', B''), s'') = MTPAbstract.abstractSub (t, B1, (G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
-
-(*HERE*)
-(*BUG: edit abstract so that it also collects EVars in the types of parameters
-  then change abstractSub to abstractSub' and remove t
-  -cs 
-*)
 					(* . |- G'' ctx *)
 					(* G'' |- B'' tags *)
 					(* G'' = G1'', G2', G2'' *)
@@ -601,7 +576,6 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 	  fun sc' (Gp, Bp) = 
 	    let 
 	      val ((G', B'), s', (G0, B0), _) = sc (Gp, Bp)
-	      val _ = TextIO.print "*"
 	    in
 	      ((I.Decl (G', Names.decName (G', I.decSub (D, s'))), I.Decl (B', T)), 
 	       I.dot1 s', (I.Decl (G0, D), I.Decl (B0, T)), true)

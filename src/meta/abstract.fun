@@ -403,11 +403,14 @@ struct
     fun abstractCtx (I.Null) = (I.Null, I.Null)
       | abstractCtx (I.Decl (K', EV (_, V', T, _))) =
         let
+	  val S.Lemma (b, F.Ex (_, F.True)) = T      
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	  val (G', B') = abstractCtx K'
+	  val D' = I.Dec (NONE, V'')
+	  val T' = S.Lemma (b, F.Ex (D', F.True))
 	in
-	  (I.Decl (G', I.Dec (NONE, V'')), I.Decl (B', T))
+	  (I.Decl (G', D'), I.Decl (B', T'))
 	end
       | abstractCtx (I.Decl (K', BV (D, T))) =
         let
@@ -452,7 +455,6 @@ struct
     fun collectGlobalSub (G0, I.Shift _, I.Null, collect) =  collect 
       | collectGlobalSub (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
         let
-	  val _ = TextIO.print "Collected Parameter\n"
 	  val F.LabelDec (name, _, G2) = F.labelLookup l
 	in
 	  skip (G0, List.length G2, s, B, collect)
@@ -467,10 +469,6 @@ struct
       | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
           skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
       
-    fun inspect (I.Null) = ""
-      | inspect (I.Decl (EBs, EV _)) = (inspect EBs) ^ "E"
-      | inspect (I.Decl (EBs, BV _)) = (inspect EBs) ^ "B"
-
 
     (* abstractNew ((G0, B0), s, B) = ((G', B'), s')
 
@@ -487,7 +485,6 @@ struct
         let
 	  val cf = collectGlobalSub (G0, s, B, fn (_, K') => K')
 	  val K = cf (0, I.Null)
-	  val _ = TextIO.print ("INSPECT K: " ^ (inspect K) ^ "\n")
 	in
 	  (abstractCtx K, abstractGlobalSub (K, s, B))
 	end 
@@ -510,28 +507,6 @@ struct
     *)
     fun abstractSubAll (t, B1, (G0, B0), s, B) =
         let
-
-	  fun collectSub' (G0, I.Shift _, _, collect) = (fn (d, K) => collect (d, K))
-	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
-	      let
-		val F.LabelDec (name, _, G2) = F.labelLookup l
-	      in
-		skip (G0, List.length G2, s, B, collect)
-	      end
-	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
-	        collectSub' (G0, s, B, fn (d, K) => 
-			       collect (d, collectExp (T, d, G0, (U, I.id), K)))
-	    | collectSub' (_, I.Dot (I.Idx _, _), I.Decl (B, S.Lemma _), _) = raise Domain 
-(*  shouldn't occur *)
-
-	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
-
-
-	  and skip (G0, 0, s, B, collect) = collectSub' (G0, s, B, collect)
-	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
-	        skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
-
-
 	  (* skip'' (K, (G, B)) = K'
 	   
 	     Invariant:
@@ -543,26 +518,17 @@ struct
 	  fun skip'' (K, (I.Null, I.Null)) = K
 	    | skip'' (K, (I.Decl (G0, D), I.Decl(B0, T))) = I.Decl (skip'' (K, (G0, B0)), BV (D, T))
 
-
-(* ------ *)
-
-          val collect2 = collectGlobalSub (G0, s, B, fn (_, K') => K')
-	  val collect0 = collectGlobalSub (I.Null, t, B1, fn (_, K') => K')     (*BUG collectSub' doesn't work *)
+	  val collect2 = collectGlobalSub (G0, s, B, fn (_, K') => K')
+	  val collect0 = collectGlobalSub (I.Null, t, B1, fn (_, K') => K')
 	  val K0 = collect0 (0, I.Null)
 	  val K1 = skip'' (K0, (G0, B0))
 	  val K = collect2 (I.ctxLength G0, K1)
-
-(*	  val (_, K) = collectSub' (*change later *) (G0, s, B, fn (_, K') => K')
-*)
 	in
 	  (abstractCtx K, abstractGlobalSub (K, s, B))
 	end 
 
 
-
-
 (*
-
     (* abstractSub (t, (G0, B0), s, B) = ((G', B'), s')
 
        Invariant: 
