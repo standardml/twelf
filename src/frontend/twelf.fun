@@ -925,19 +925,14 @@ struct
     (* Interactive Query Top Level *)
 
     fun sLoop () = if Solve.qLoop () then OK else ABORT
-    fun sLoopT () = if Solve.qLoopT () then OK else ABORT
 
     fun topLoop () = case (handleExceptions "stdIn" sLoop) () (* "stdIn" as fake fileName *)
 		       of ABORT => topLoop ()
 			| OK => ()
 
-    fun topLoopT () = case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
-		       of ABORT => topLoopT ()
-			| OK => ()
 
     (* top () = () starts interactive query loop *)
-    fun top () = topLoop ()
-    fun topTabled () = topLoopT ()
+    fun top () = topLoop ()    
 
     fun installCSMDec (conDec, optFixity, optMdec) = 
 	let
@@ -1161,6 +1156,14 @@ struct
 	fun sgn () = printSgnTeX ()
 	fun prog () = printProgTeX ()
       end
+
+(*      structure Table =
+	struct
+	  fun print () = TableIndex.printTable ()
+          fun printEntries () = TableIndex.printTableEntries()
+	end
+
+*)
     end
 
     structure Trace :
@@ -1235,7 +1238,6 @@ struct
     val decl = decl
 
     val top = top
-    val topTabled = topTabled
 
     structure Config :
       sig
@@ -1250,44 +1252,32 @@ struct
 
     val version = "Twelf 1.3R3, Dec 28 2001 (with world, coverage, and totality checking)"
 
-    val printTable = TableIndex.printTable                    (* bp *)
-    val printTableEntries = TableIndex.printTableEntries      (* bp *)
-
-    structure Tabled : 
-      sig
-	structure IntSyn : INTSYN
-	structure CompSyn : COMPSYN
-	structure Unify : UNIFY
-	  
-	val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.pskeleton  -> unit)) * 
-			     Unify.unifTrail * int ref) 
-			    list) ref 
-
-	val reset : unit -> unit
-
-      end 
-    = Tabled
-
-
-    structure TableIndex : 
+    structure Table : 
       sig 
-	structure IntSyn : INTSYN
-	type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
-		       lookup: int}
-	  
-	val table : ((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
-	  
-	datatype Strategy = Variant | Subsumption
-	  
-      (* global tabled search parameters *)
+	datatype Strategy = datatype TableIndex.Strategy
 	val strategy : Strategy ref
-	val termDepth : int option ref
-	val ctxDepth : int option ref
-	val ctxLength : int option ref 
 	val strengthen : bool ref
-
+	val top : unit -> unit
       end 
-    = TableIndex
+    = 
+  struct
+    datatype Strategy = datatype TableIndex.Strategy
+    val strategy = TableIndex.strategy
+    val strengthen = TableIndex.strengthen
+      	  
+    (* top () = () starts interactive query loop *)
+    fun top () = 
+      let 
+	fun sLoopT () = if Solve.qLoopT () then OK else ABORT
+      
+	fun topLoopT () = 
+	  case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
+	    of ABORT => topLoopT ()
+	  | OK => ()
+      in 
+	topLoopT ()
+      end 
+  end
 
   end  (* local *)
 end; (* functor Twelf *)

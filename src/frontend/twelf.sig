@@ -21,10 +21,12 @@ sig
       val prog : unit -> unit	      (* print signature as program *)
     end
 
-    structure Table :
+(*    structure Table :
     sig
       val print : unit -> unit
-    end
+      val printEntries : unit -> unit
+    end 
+*)
   end
 
   structure Trace :
