@@ -190,9 +190,15 @@
 ;;; Finished major revision (version 3.0)
 ;;; Fri Oct  2 11:06:15 1998
 ;;; Added NT Emacs bug workaround
+;;; Wed Dec 12 14:36:48 2001
+;;; Some emacs versions include easymenu already, and auc-menu can conflict.
+;;; Changed to not require auc-menu in this case.
 
 (require 'comint)
-(require 'auc-menu) 
+(condition-case nil
+    (require 'easymenu)
+  (file-error
+   (require 'auc-menu)))
 
 ;;;----------------------------------------------------------------------
 ;;; User visible variables
