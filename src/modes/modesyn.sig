@@ -14,8 +14,14 @@ sig
   and Marg = Marg of Mode * string option
 
   val reset : unit -> unit
+
+  (* single mode installation and lookup *)
   val installMode : (IntSyn.cid * ModeSpine) -> unit 
   val modeLookup : IntSyn.cid -> ModeSpine option
+
+  (* multiple mode installation and lookup *)
+  val installMmode : (IntSyn.cid * ModeSpine) -> unit 
+  val mmodeLookup : IntSyn.cid -> ModeSpine list
 
   val modeEqual : Mode * Mode -> bool
   val modeToString : Mode -> string

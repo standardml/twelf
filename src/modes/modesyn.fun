@@ -1,6 +1,6 @@
 (* Mode Syntax *)
 (* Author: Carsten Schuermann *)
-(* Modified: Frank Pfenning *)
+(* Modified: Frank Pfenning, Roberto Virga *)
 
 functor ModeSyn (structure IntSyn' : INTSYN
 		 structure Names : NAMES
@@ -20,7 +20,7 @@ struct
   local 
     structure I = IntSyn'
       
-    val modeSignature : ModeSpine Table.Table = Table.new(0);
+    val modeSignature : (ModeSpine list) Table.Table = Table.new(0);
 
     (* reset () = ()
 
@@ -29,27 +29,46 @@ struct
 
     fun reset () = Table.clear modeSignature
      
+    (* modeLookup a = mSOpt
+
+       Looks up the mode of a in the mode array (if they are multiple, returns the last one
+       inserted.
+    *)
+    fun modeLookup a =
+	  case (Table.lookup modeSignature a)
+	    of SOME (mS :: _) => SOME(mS)
+	     | NONE => NONE
+	
+
+    (* mmodeLookup a = mSs
+
+       Looks up the modes of a in the mode array.
+    *)
+    fun mmodeLookup a =
+	  case (Table.lookup modeSignature a)
+	    of SOME mSs => mSs
+	     | NONE => nil
+	
+
     (* installMode (a, mS) = ()
         
-       Effect: the ModeSpine mS is stored with the type family a
+       Effect: the ModeSpine mS is stored with the type family a; if there were previous
+               modes stored with a, they are replaced by mS
     *)
-    fun installMode (a, mS) = Table.insert modeSignature (a, mS)
+    fun installMode (a, mS) =
+          Table.insert modeSignature (a, [mS])
 
-    (* modified to post-hoc checking of modes *)
-    (* Sun Mar 25 19:16:43 2001 -fp *)
-    (*
-        case Index.lookup a
-	  of nil => Table.insert modeSignature (a, mS)
-           | _ => raise Error ("Mode for predicate " ^ Names.constName a
-			       ^ " declared after clauses defining it")
+    (* installMmode (a, mS) = ()
+        
+       Effect: the ModeSpine mS is stored with the type family a; if there were previous
+               models stored with a, the new mode mS is added to them.
     *)
-
-    (* modeLookup a = mS'
-
-       Looks the mode of a in the mode array up.
-    *)
-    fun modeLookup a = Table.lookup modeSignature a
-	
+    fun installMmode (a, mS) =
+          let
+	    val mSs = mmodeLookup a
+	  in
+            Table.insert modeSignature (a, mS :: mSs)
+	  end
 
     (* modeEqual (M1, M2) = true iff M1 = M2 *)
     fun modeEqual (Plus, Plus) = true
@@ -68,8 +87,13 @@ struct
 
   in
     val reset = reset
+
     val installMode = installMode
     val modeLookup = modeLookup
+
+    val installMmode = installMmode
+    val mmodeLookup = mmodeLookup
+
     val modeEqual = modeEqual
     val modeToString = modeToString
   end
