@@ -189,6 +189,9 @@ struct
     | skipImplicit (r, n, Label(path)) =
 	(* implicit argument: approximate as best possible *)
 	Here
+    | skipImplicit (r, n, Here) =
+	(* addressing body including implicit arguments: approximate by body *)
+	Here
     (* anything else should be impossible *)
 
   (* occToRegionDec d occ = r
