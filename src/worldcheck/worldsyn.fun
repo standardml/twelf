@@ -39,8 +39,7 @@ struct
       | Plus of Reg * Reg		(*     | R1 + R2              *)
       | One				(*     | 1                    *)
 
-
-    exception Success
+    exception Success			(* signals worldcheck success *)
 
     (* createEVarSub G L = s
      
@@ -59,28 +58,52 @@ struct
           I.Dot (I.Exp X, s)
 	end
 
+    
+    (* shift S = S'
 
+       Invariant:
+       If    S = ((t1, L1) .... (tn, Ln))
+       and   G |- ti : Gi
+       and   Gi |- Li ctx
+       then  S = ((t1', L1) .... (tn', Ln))
+       where   G, V |- ti' : Gi
+    *)
     fun shift S = map (fn (t', L') => (I.comp (t', I.shift), L')) S 
 
-
+    (* empty S = ()
+  
+       Invariant:
+       empty S terminates with () (failure) 
+       iff  (t,L) in S with L <> []
+       Side effect:  Exception Success is raised
+    *)
     fun empty nil = raise Success
       | empty ((_, nil) :: L) = empty L
       | empty _ = ()
 
+    (* init (G, V, S) = ()
+      
+       Invariant:  (Initial continuation)
+       Let  G |- V : K
+       init (G, V, S) terminates with () (failure) 
+       iff V is not atomic, or there exists (t,L) in S with L <> []
+       Side effect:  Exception Success is raised
+    *)
     fun init (_, I.Root _, S) = empty S
       | init _ = ()
 
 
-    (* accR (G, V, S) R k = B
+    (* accR (G, V, S) R k = ()
   
        Invariant:
        If   G |- V : K
-       and  G |- S : list of Declarations
-       and  R is a regular expression
-       and  k a continuation that expects ((V, s), (S, t)) as argument
-       then B holds iff V[s] matches S[t] and R.
+       and  G |- S : list of declarations under substitutions
+       and  R is a regular expression 
+       and  k a continuation that expects (G, V, S) as argument
+       accR (G, V, S) R k teriminate with () (failure)
+       iff V does not match S and R
+       Side effect:  Exception Success is raised
     *)
- 
     fun accR GVS One k =
           (k GVS; accR' GVS (fn GVS' => accR GVS' One k))
       | accR (GVS as (G, V as I.Pi ((D as I.Dec (_, V11), _), V12), S))
@@ -99,6 +122,22 @@ struct
       | accR GVS (r' as (Star r)) k =
 	  (k GVS; accR GVS r (fn GVS' => accR GVS' r' k))
 
+
+    (* accR' (G, V, S) k = ()
+  
+       Invariant:
+       If   G |- V : K
+       and  G |- S : list of declarations under substitutions
+       and  k a continuation that expects (G, V, S) as argument
+       accR' (G, V, S) k teriminate with () (failure)
+       iff V is atomic 
+           or V = {x:V1}V'  
+              and there is no block (t, V2 :: L) in S
+	          with  G |- t : G' and G' |- L ctx
+              s.t. V, and V2[t] are not unifable
+
+       Side effect:  Exception Success is raised
+    *)
     and accR' (_, _, nil) k = ()
       | accR' (_, I.Root _, _) k = ()
       | accR' (G, V as I.Pi ((D as I.Dec (_, V11), _), V12),
@@ -110,10 +149,6 @@ struct
               k (G', V', (I.comp (t, I.shift), L2) :: S')))
       | accR' (G, V, ((_,[]) :: S1)) k = accR' (G, V, S1) k
 	    
-
-    (* -------------------------------------------------------------- *)
-
-    
 
     (* ctxtolist G = L
       
@@ -130,51 +165,12 @@ struct
       end
 
 
-    (* checkBlock (G, (t, L), (V, s)) = () 
-     
+    (* worldToReg W = R
+  
        Invariant:
-       If   G is a context
-       and  G |- t : G1
-       and  G1 |- L  context
-       and  G |- s : G2
-       and  G2 |- V : K  (in normal form)
-       then checkBlock (G, (t, L), (V, s)) terminates with () iff  G |-- [t] L ~ V [s]
-       (see regularworlds.tex for the rules)
+       W = R, except that R is a regular expression 
+       with non-empty contextblocks as leaves
     *)
-    fun checkBlock (G, (t, nil), I.Root (a, S)) = ()
-      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
-        let 
-	  val _ = Unify.unify (G, (V, t), (V1, I.id))
-	in
-	  checkBlock (I.Decl (G, D), (I.dot1 t, L), V2)
-	end
-      | checkBlock (G, (t, L), I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
-	  checkBlock (I.Decl (G, D), (I.comp (t, I.shift),  L), V2)
-      | checkBlock _ = raise Error "World violation"
-
-(*  (* checkBlocks W (G, (V, s)) = ()
-
-       Invariant:
-       If   G is a context
-       and  G |- s : G'
-       and  G' |- V : K
-       then checkPos W (G, (V, s)) terminates with () 
-	 iff there exists (SOME L1. BLOCK L2 \in W)
-	 s.t. there exists a substituion   G |- t : L1
-	 and G |- [t] L1 ~ V[s] 
-	 (see regularworlds.tex for the rules)
-    *)
-    fun checkBlocks _ (G, I.Root _) = ()
-      | checkBlocks Closed (G, V) = raise Error "World violation"
-      | checkBlocks (Schema (W', LabelDec (_, L1, L2))) (GV as (G, V)) =
-        ((let
-	    val t = createEVarSub (G, L1)	(* G |- t : L1 *)
-	  in
-	    checkBlock (G, (t, L2), V)
-	  end) handle Unify.Unify _ => checkBlocks W' GV)
-*)
-
-
     fun worldToReg W = 
       let
 	fun worldToReg' (Closed) = One
@@ -184,8 +180,18 @@ struct
 	Star (worldToReg' W)
       end
 
+    (* worldToReg W (G, V) = ()
+  
+       Invariant:
+       If   G |- V : K
+       and  W world
+       then worldReg W (G, V) terminates with ()  (success)
+	    iff all leading abstractions G, can be completely
+	    covered by blocks declared in W
+    *)
     fun checkBlocks W (G, V) = 
-      (accR (G, V, []) (worldToReg W) init; raise Error "World violation") handle Success => ()
+      (accR (G, V, []) (worldToReg W) init;
+       raise Error "World violation") handle Success => ()
 
 
     (* worldcheck W a = ()
