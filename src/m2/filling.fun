@@ -22,6 +22,8 @@ struct
     structure M = MetaSyn
     structure I = MetaSyn.IntSyn
 
+    exception Success of M.State
+
     fun delay (search, Params) () = 
       (search Params
        handle Search.Error s => raise Error s)
@@ -44,20 +46,21 @@ struct
         and OL' is a list containing one operator which instantiates all - non-index variables
 	  in V' with the smallest possible terms.
     *)
-    fun operators (G, GE, Vs, abstract, makeAddress) =
-          operatorsW (G, GE, Whnf.whnf Vs, abstract, makeAddress)
-    and operatorsW (G, GE, Vs as (I.Root (C, S), _), abstract, makeAddress) =
+    fun operators (G, GE, Vs, abstractAll, abstractEx,  makeAddress) =
+          operatorsW (G, GE, Whnf.whnf Vs, abstractAll, abstractEx,  makeAddress)
+    and operatorsW (G, GE, Vs as (I.Root (C, S), _), abstractAll, abstractEx,  makeAddress) =
           (nil, 
-	   (makeAddress 0, delay (Search.searchEx, (G, GE, Vs, abstract))))
+	   (makeAddress 0, delay (fn Params => (Search.searchEx Params handle Success S => [S]), 
+				  (G, GE, Vs, abstractEx))))
       | operatorsW (G, GE, (I.Pi ((D as I.Dec (_, V1), P), V2), s), 
-		    abstract, makeAddress) = 
+		    abstractAll, abstractEx,  makeAddress) = 
 	let 
 	  val (GO', O) = operators (I.Decl (G, I.decSub (D, s)), GE, (V2, I.dot1 s), 
-				    abstract, 
+				    abstractAll, abstractEx,  
 				    makeAddressCont makeAddress)
 	in
 	  ((makeAddress 0, delay (Search.searchAll, 
-				  (G, GE, (V1, s), abstract))) :: GO', O)
+				  (G, GE, (V1, s), abstractAll))) :: GO', O)
 	end
 
 
@@ -108,11 +111,15 @@ struct
     fun expand (S as M.State (name, M.Prefix (G, M, B), V)) = 
 	let 
 	  val (M.Prefix (G', M', B'), s', GE') = createEVars (M.Prefix (G, M, B))
-	  fun abstract () = (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
-							     I.EClo (V, s')))
-			     handle MetaAbstract.Error s => raise Error s)
+	  fun abstractAll () = (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
+								I.EClo (V, s')))
+				handle MetaAbstract.Error s => raise Error s)
+	  fun abstractEx () = (raise Success (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
+							       I.EClo (V, s')))))
+			       handle MetaAbstract.Error s => ()
+
 	in
-	  operators (G', GE', (V, s'), abstract, makeAddressInit S) 
+	  operators (G', GE', (V, s'), abstractAll, abstractEx, makeAddressInit S)
 	end
     
 

@@ -105,7 +105,11 @@ struct
       in
 	rSolve (ps', (r, I.Dot (I.Exp (X), s)), DProg,
 		(fn (S, acck') => solve ((g, s), DProg,
-					 (fn (M, acck'') => sc (I.App (M, S), acck'')), 
+					 (fn (M, acck'') => ((Unify.unify (G, (X, I.id), (M, I.id));
+							     (* why doesn't it always succeed?
+							        --cs *)
+							     sc (I.App (M, S), acck''))
+							     handle Unify.Unify _ => [])), 
 					 acck')), acck)
       end
     | rSolve (ps', (C.Exists (I.Dec (_, A), r), s), DProg as (G, dPool), sc, acck) =
@@ -241,7 +245,6 @@ struct
 
 
 
-    exception Success of M.State
     (* searchEx' max (GE, sc) = acc'
 
        Invariant: 
@@ -251,7 +254,7 @@ struct
             otherwise searchEx' terminates with []
     *)
     (* contexts of EVars are recompiled for each search depth *)
-    fun searchEx' max (nil, sc) = raise Success (sc ())   
+    fun searchEx' max (nil, sc) = [sc ()] 
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
@@ -291,12 +294,13 @@ struct
 	 All EVar's got instantiated with the smallest possible terms.
     *)    
     fun searchEx (G, GE, Vs, sc) = 
-        ((if !Global.chatter > 5 then print "[Search: " else ();  
-	    deepen searchEx' (selectEVar (GE, Vs, nil), sc); 
-	    if !Global.chatter > 5 then print "FAIL]\n" else ();
-	      raise Error "No object found")
-	    handle Success S => (if !Global.chatter > 5 then 
-				   print "OK]\n" else (); [S]))
+      (if !Global.chatter > 5 then print "[Search: " else ();  
+	 deepen searchEx' (selectEVar (GE, Vs, nil), 
+			   fn Params => (if !Global.chatter > 5 then 
+					    print "OK]\n" else (); 
+					  sc Params)); 
+	 if !Global.chatter > 5 then print "FAIL]\n" else ();
+	   raise Error "No object found")
 	  
     (* searchAll' (GE, acc, sc) = acc'
 

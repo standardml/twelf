@@ -144,6 +144,7 @@ struct
     and occursInCon (k, I.BVar (k')) = (k = k')
       | occursInCon (k, I.Const _) = false
       | occursInCon (k, I.Def _) = false
+      | occursInCon (k, I.Skonst _) = false
       (* no case for FVar *)
 
     and occursInSpine (_, I.Nil) = false

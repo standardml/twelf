@@ -10,7 +10,7 @@ sig
   val searchEx : 
       MetaSyn.IntSyn.dctx * MetaSyn.IntSyn.Exp list
       * (MetaSyn.IntSyn.Exp * MetaSyn.IntSyn.Sub)
-      * (unit -> MetaSyn.State)
+      * (unit -> unit)
       -> MetaSyn.State list
     
   val searchAll : 
