@@ -2,6 +2,30 @@ Preparation for Twelf 1.4
 
 Externally visible changes:
 
+- Tabled abstract machine 
+  
+  %querytabled n A.
+
+  will try to solve A in n stages. 
+  Evaluation will stop after n stages, even if 
+  evaluation is not complete. If the evaluation is completed after k stages,
+  and k less than n, then evaluations stops after k stages.
+
+  global search parameters:
+  * Twelf.TableIndex.strategy  : default variant checking
+ 
+     Twelf.TableIndex.strategy := Twelf.TableIndex.Subsumption
+     Twelf.TableIndex.strategy := Twelf.TableIndex.Variant
+
+  * Twelf.TableIndex.strengthen : default true 
+     apply strengthening during abstraction on term
+     (strengthening on hypothesis is not yet implemented)
+
+  * term depth : (very experimental)) 
+    forces the abstract machine to suspend a goal, if the termdepth is exceeded.
+    default : termdepth = NONE
+    (not used in default mode)  
+
 - mode checking can now be done post-hoc
 - %mode and %covers allows mutual declarations (using paren syntax)
 - %covers mdec.  (where mdec is mode declaration)
