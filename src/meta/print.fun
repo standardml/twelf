@@ -67,17 +67,11 @@ struct
        then fmt' is a a format descibing the tag T
     *)
     fun formatTag (G, S.Parameter l) = [Fmt.String "<p>"]
-      | formatTag (G, S.Lemma (S.Splits k, F)) = [Fmt.String "<i",
+      | formatTag (G, S.Lemma (S.Splits k)) = [Fmt.String "<i",
 						 Fmt.String (Int.toString k), 
-						 Fmt.String ":",
-						 FunPrint.formatForBare (G, F),
 						 Fmt.String ">"]
-      | formatTag (G, S.Lemma (S.RL, F)) = [Fmt.String "<i :",
-						 FunPrint.formatForBare (G, F),
-						 Fmt.String ">"]
-      | formatTag (G, S.Lemma (S.RLdone, F)) = [Fmt.String "<i*:",
-						 FunPrint.formatForBare (G, F),
-						 Fmt.String ">"]
+      | formatTag (G, S.Lemma (S.RL)) = [Fmt.String "<i >"]
+      | formatTag (G, S.Lemma (S.RLdone)) = [Fmt.String "<i*>"]
 (*      | formatTag (G, S.Assumption k) = [Fmt.String "<a",
 					 Fmt.String (Int.toString k),
 					 Fmt.String ">"] *)

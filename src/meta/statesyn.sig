@@ -22,7 +22,7 @@ sig
     
   datatype Tag = 
     Parameter of FunSyn.label option
-  | Lemma of Info * FunSyn.For
+  | Lemma of Info
   | None
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)

@@ -51,16 +51,15 @@ struct
        and  G0 |- F' = F1 for
        and  G0 |- V' = V1 : type
     *)
-    fun createEVars (G, FVs as (F.True, _, s)) = (nil, FVs)
-      | createEVars (G, (F.All (F.Prim (I.Dec (_, V)), F), I.Pi (_, V'), s)) = 
+    fun createEVars (G, (I.Pi ((I.Dec (_, V), I.Meta), V'), s)) = 
 	let 
 	  val X = I.newEVar (G, I.EClo (V, s))
 	  val X' = Whnf.lowerEVar X
-	  val (Xs, FVs') = createEVars (G, (F, V', I.Dot (I.Exp X, s)))
+	  val (Xs, FVs') = createEVars (G, (V', I.Dot (I.Exp X, s)))
 	in
 	  (X' :: Xs, FVs')
 	end
-      | createEVars (VG, FVs as (F.Ex _, _, s)) = (nil, FVs)
+      | createEVars (G, FVs as (_, s)) = (nil, FVs)
 
 
 
@@ -75,21 +74,19 @@ struct
        and  G; . |- F' : formula
 
     *)
-    fun forward (G, B, (V, F as F.All _)) =
+    fun forward (G, B, V as I.Pi ((_, I.Meta), _)) =
         let 
 	  val _ = if !Global.doubleCheck 
-		    then (TypeCheck.typeCheck (G, (V, I.Uni I.Type));
-			  FunTypeCheck.isFor (G, F))
+		    then TypeCheck.typeCheck (G, (V, I.Uni I.Type))
 		    else ()
-	  val (Xs, (F', V', s')) = createEVars (G, (F, V, I.id))
+	  val (Xs, (V', s')) = createEVars (G, (V, I.id))
 	in
-	  (case  UniqueSearch.searchEx (2, Xs, fn nil => [(Whnf.normalize (V', s'),
-							   F.normalizeFor (F', s'))])
+	  (case  UniqueSearch.searchEx (2, Xs, fn nil => [(Whnf.normalize (V', s'))])
 	     of [VF''] => SOME VF''
 	          
 	      | [] => NONE) handle UniqueSearch.Error _ => NONE
 	end
-      | forward (G, B, VF) = NONE
+      | forward (G, B, V) = NONE
 
 
 
@@ -114,28 +111,25 @@ struct
 
     fun expand' ((G0, B0), (I.Null, I.Null), n) =
         ((I.Null, I.Null), fn ((G', B'), w') => ((G', B'), w'))
-      | expand' ((G0, B0), (I.Decl (G, D as I.Dec (_, V)), I.Decl (B, T as S.Lemma (S.RL, F))), n) = 
+      | expand' ((G0, B0), (I.Decl (G, D as I.Dec (_, V)), I.Decl (B, T as S.Lemma (S.RL))), n) = 
 	let 
 	  val ((G0', B0'), sc') = expand' ((G0, B0), (G, B), n+1)
 	  val s = I.Shift (n+1)
 	  val Vs = Whnf.normalize (V, s)
-	  val Fs = F.normalizeFor (F, s)
 	in
-	  case (forward (G0, B0, (Vs, Fs)))
+	  case (forward (G0, B0, (Vs)))
 	    of NONE => ((I.Decl (G0', D), I.Decl (B0', T)), sc')
-	     | SOME (V', F') => 
-	         ((I.Decl (G0', D), I.Decl (B0', S.Lemma (S.RLdone, F))),
+	     | SOME (V') => 
+	         ((I.Decl (G0', D), I.Decl (B0', S.Lemma (S.RLdone))),
 		  fn ((G', B'), w') => 
 		  let 
 		    
 		   
 		    val V'' = Whnf.normalize (V', w')
 					(* G' |- V'' : type *)
-		    val F'' = F.normalizeFor (F', w')
-					(* G'; . |- F'' for  *)
 		  in		
 		    sc' ((I.Decl (G', I.Dec (NONE, V'')), 
-			  I.Decl (B', S.Lemma (S.Splits (!MTPGlobal.maxSplit), F''))), I.comp (w', I.shift))
+			  I.Decl (B', S.Lemma (S.Splits (!MTPGlobal.maxSplit)))), I.comp (w', I.shift))
 		  end)
 	end
       | expand' (GB0, (I.Decl (G, D), I.Decl (B, T)), n) =

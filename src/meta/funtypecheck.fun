@@ -461,7 +461,7 @@ struct
       | checkTags (I.Decl (G, I.Dec (_, V)), I.Decl (B, T)) = 
         (checkTags (G, B);
 	 case T
-	   of S.Lemma (_, F) =>  (checkTags' (V, F); isFor (G, F))
+	   of S.Lemma (_) =>  ()
   	    | _ => ())
 
 

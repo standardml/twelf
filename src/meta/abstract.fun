@@ -411,7 +411,7 @@ struct
       | checkTags (I.Decl (G, I.Dec (_, V)), I.Decl (B, T)) = 
         (checkTags (G, B);
 	 case T
-	   of S.Lemma (_, F) =>  (checkTags' (V, F); FunTypeCheck.isFor (G, F))
+	   of S.Lemma (_) =>  ()
   	    | _ => ())
 
 
@@ -438,15 +438,14 @@ struct
        BUG: non-local BVars must be correctly abstracted!!!! -cs 
     *)
     fun abstractCtx (I.Null) = (I.Null, I.Null)
-      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F), _))) =
+      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b), _))) =
         let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	  val (G', B') = abstractCtx K'
 	  val D' = I.Dec (NONE, V'')
-	  val T' = S.Lemma (b, deriveTag (V'', F))
 	in
-	  (I.Decl (G', D'), I.Decl (B', T'))
+	  (I.Decl (G', D'), I.Decl (B', T))
 	end
 (*      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F.Ex (_, F.True)), _))) =
         let

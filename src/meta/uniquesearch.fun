@@ -45,7 +45,7 @@ struct
 
   exception Error of string
 
-  type acctype = IntSyn.Exp * FunSyn.For
+  type acctype = IntSyn.Exp
 
   local
     structure I = IntSyn

@@ -254,7 +254,7 @@ struct
 
     fun createLemmaTags (I.Null) = I.Null
       | createLemmaTags (I.Decl (G, D)) = 
-           I.Decl (createLemmaTags G,  S.Lemma (S.Splits (!MTPGlobal.maxSplit), F.Ex (D, F.True)))
+           I.Decl (createLemmaTags G,  S.Lemma (S.Splits (!MTPGlobal.maxSplit)))
 
     (* constCases (G, (V, s), I, abstract, ops) = ops'
      
@@ -623,7 +623,7 @@ struct
     fun expand' (GB as (I.Null, I.Null), isIndex,
 		 abstract, makeAddress, induction) =
         (fn (Gp, Bp) => ((Gp, Bp), I.Shift (I.ctxLength Gp), GB, false), nil)
-      | expand' (GB as (I.Decl (G, D), I.Decl (B, T as (S.Lemma (K as S.Splits _, _)))),
+      | expand' (GB as (I.Decl (G, D), I.Decl (B, T as (S.Lemma (K as S.Splits _)))),
 		 isIndex, abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -653,7 +653,7 @@ struct
 	in
 	  (sc', ops')
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RL, _)))), isIndex, 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RL)))), isIndex, 
 		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -672,7 +672,7 @@ struct
 	in
 	  (sc', ops)
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RLdone, _)))), isIndex, 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RLdone)))), isIndex, 
 		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =

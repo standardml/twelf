@@ -9,7 +9,7 @@ sig
 
   exception Error of string
 
-  type acctype = IntSyn.Exp * FunSyn.For
+  type acctype = IntSyn.Exp
 
   val searchEx : int * StateSyn.FunSyn.IntSyn.Exp list
       * (acctype list -> acctype list) -> acctype list
