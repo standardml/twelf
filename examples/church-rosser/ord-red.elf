@@ -22,10 +22,7 @@ apr1  :              M2 --> M2'
 
 id1   :    M -->* M.
 
-step1 :    M -->* M''
-      <-   M --> M'
-      <-   M' -->* M''.
-
+step1 :    M' --> M'' ->  M  -->* M' -> M  -->* M''.
 
 % Conversion
 
