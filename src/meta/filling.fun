@@ -2,10 +2,10 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPFilling (structure IntSyn : INTSYN
-                    structure FunSyn : FUNSYN
-		      sharing FunSyn.IntSyn = IntSyn
+                    structure FunSyn' : FUNSYN
+		      sharing FunSyn'.IntSyn = IntSyn
                     structure StateSyn' : STATESYN
-		      sharing StateSyn'.FunSyn = FunSyn
+		      sharing StateSyn'.FunSyn = FunSyn'
 		    structure Abstract : ABSTRACT
 		      sharing Abstract.IntSyn = IntSyn
 		    structure Search   : MTPSEARCH
@@ -14,11 +14,12 @@ functor MTPFilling (structure IntSyn : INTSYN
 		      sharing Whnf.IntSyn = IntSyn)
   : MTPFILLING =
 struct
+  structure FunSyn = FunSyn'
   structure StateSyn = StateSyn'
 
   exception Error of string
 
-  type operator = (unit -> bool)
+  type operator = (unit -> FunSyn'.Pro)
 
   local
     structure S = StateSyn
@@ -65,8 +66,8 @@ struct
 	let 
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in
-	  fn () => ((Search.searchEx (G, Xs, fn () => raise Success); false)
-	            handle Success => true)
+	  fn () => ((Search.searchEx (G, Xs, fn () => raise Success); raise Error "Filling unsuccessful")
+	            handle Success => P)
 	end
     
 

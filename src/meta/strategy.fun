@@ -105,14 +105,13 @@ struct
       | fill (S :: givenStates, os as (openStates, solvedStates)) =
         case (Timers.time Timers.recursion MTPFilling.expand) S
 	  of fillingOp =>
-	     let
+	     (let
 	       val _ = printFilling ()
-	       val qed = (Timers.time Timers.filling MTPFilling.apply) fillingOp
+	       val P = (Timers.time Timers.filling MTPFilling.apply) fillingOp
 	       val _ = printCloseBracket ()
-	     in
-	       if qed then  fill (givenStates, os)
-	       else split (S :: givenStates, os)
-	     end
+	      in
+		fill (givenStates, os)
+	      end) handle MTPFilling.Error _ => split (S :: givenStates, os)
 
     (* run givenStates = (openStates', solvedStates')
 

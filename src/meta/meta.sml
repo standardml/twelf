@@ -108,7 +108,7 @@ structure MTPSearch =
 
 structure MTPFilling =
   MTPFilling (structure IntSyn = IntSyn
-	      structure FunSyn = FunSyn
+	      structure FunSyn' = FunSyn
 	      structure StateSyn' = StateSyn
 	      structure Whnf = Whnf
 	      structure Abstract = Abstract
@@ -186,6 +186,8 @@ structure MTPi =
 	structure StateSyn' = StateSyn
 	structure FunTypeCheck = FunTypeCheck
 	structure RelFun = RelFun
+	structure Formatter = Formatter
+	structure Print = Print
 	structure MTPrint = MTPrint
 	structure MTPInit = MTPInit
 	structure MTPFilling = MTPFilling

@@ -3,6 +3,7 @@
 
 signature MTPFILLING = 
 sig
+  structure FunSyn : FUNSYN
   structure StateSyn : STATESYN
 
   exception Error of string
@@ -10,7 +11,7 @@ sig
   type operator
 
   val expand : StateSyn.State -> operator 
-  val apply : operator -> bool
+  val apply : operator -> FunSyn.Pro
   val menu : operator -> string
 end; (* signature MTPFILLING *)
 

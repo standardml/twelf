@@ -10,6 +10,10 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 		sharing StateSyn'.FunSyn = FunSyn'
 	      structure RelFun : RELFUN
 	        sharing RelFun.FunSyn = FunSyn'
+	      structure Formatter : FORMATTER
+	      structure Print : PRINT
+		sharing Print.IntSyn = IntSyn
+		sharing Print.Formatter = Formatter
 	      structure FunTypeCheck : FUNTYPECHECK
 		sharing FunTypeCheck.FunSyn = FunSyn'
 		sharing FunTypeCheck.StateSyn = StateSyn'
@@ -17,6 +21,7 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 	        sharing MTPInit.FunSyn = FunSyn'
 		sharing MTPInit.StateSyn = StateSyn'
   	      structure MTPFilling : MTPFILLING
+		sharing MTPFilling.FunSyn = FunSyn'
 	        sharing MTPFilling.StateSyn = StateSyn'
 	      structure MTPSplitting : MTPSPLITTING
 		sharing MTPSplitting.StateSyn = StateSyn'
@@ -43,6 +48,7 @@ struct
     structure I = IntSyn
     structure F = FunSyn
     structure S = StateSyn
+    structure Fmt = Formatter
 
     datatype MenuItem =
       Filling of MTPFilling.operator
@@ -94,6 +100,28 @@ struct
 	  (I.conDecName (I.sgnLookup c))
       | cLToString (c :: L) = 
 	  (I.conDecName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
+
+
+    fun printFillResult P = 
+      let 
+	fun formatTuple (G, P) =
+	  let 
+	    fun formatTuple' (F.Unit) = nil 
+	      | formatTuple' (F.Inx (M, F.Unit)) = 
+	      [Print.formatExp (G, M)]
+	      | formatTuple' (F.Inx (M, P')) = 
+              (Print.formatExp (G, M) :: 
+	       Fmt.String "," :: Fmt.Break :: formatTuple' P')
+	  in
+	    case P 
+	      of (F.Inx (_, F.Unit)) => Fmt.Hbox (formatTuple' P)
+	      | _ => Fmt.HVbox0 1 1 1 
+		(Fmt.String "(" :: (formatTuple' P @ [Fmt.String ")"]))
+	  end
+	val S.State (n, (G, B), (IH, OH), d, O, H, F) = current ()
+      in
+	TextIO.print ("Filling successful with proof term: " ^ (Formatter.makestring_fmt (formatTuple (G, P))) ^ "\n")
+      end
 
     fun SplittingToMenu (nil, A) = A
       | SplittingToMenu (O :: L, A) = SplittingToMenu (L, Splitting O :: A)
@@ -222,12 +250,12 @@ struct
 		end
 	    | select' (1, Filling O :: _) =
 		let 
-		  val _ = 
-		    case (Timers.time Timers.filling MTPFilling.apply) O of
-		      false => abort ("Filling unsuccessful: no object found")
-		    | true => (delete ();
-			       print "\n[Subgoal finished]\n";
-			       print "\n")
+		  val P = (Timers.time Timers.filling MTPFilling.apply) O
+		    handle MTPFilling.Error _ =>  abort ("Filling unsuccessful: no object found")
+		  val _ = printFillResult P
+		  val _ = delete ()
+		  val _ = print "\n[Subgoal finished]\n"
+		  val _ = print "\n"
 		in
 		  (menu (); printMenu ())
 		end
