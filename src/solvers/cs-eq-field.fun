@@ -48,7 +48,7 @@ struct
 
     fun number () = Root (Const (!numberID), Nil)
 
-    (* constant ID's of the object constant defined by this module *)
+    (* constant ID's of the object constants defined by this module *)
     val unaryMinusID  = ref ~1 : cid ref  (* ~ : number -> number           *)
     val plusID        = ref ~1 : cid ref  (* + : number -> number -> number *)
     val minusID       = ref ~1 : cid ref  (* - : number -> number -> number *)
