@@ -17,6 +17,7 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 	      structure FunTypeCheck : FUNTYPECHECK
 		sharing FunTypeCheck.FunSyn = FunSyn'
 		sharing FunTypeCheck.StateSyn = StateSyn'
+	      structure MTPData : MTPDATA
 	      structure MTPInit : MTPINIT
 	        sharing MTPInit.FunSyn = FunSyn'
 		sharing MTPInit.StateSyn = StateSyn'
@@ -102,7 +103,7 @@ struct
 	  (I.conDecName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
 
 
-    fun printFillResult P = 
+    fun printFillResult (_, P) = 
       let 
 	fun formatTuple (G, P) =
 	  let 
@@ -199,7 +200,9 @@ struct
 
 
     fun printMenu () = 
-	if empty () then (print "[QED]\n")
+	if empty () then (print "[QED]\n";
+			  print ("Statistics: required Twelf.Prover.maxFill := "
+				 ^ (Int.toString (!MTPData.maxFill)) ^ "\n"))
 	else 
 	  let 
 	    val S = current ()

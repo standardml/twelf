@@ -57,6 +57,9 @@ structure RelFun =
 
 (* Functor instantiation for the Prover *)
 
+structure MTPData = 
+  MTPData (structure MTPGlobal = MTPGlobal)
+
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
 	       structure FunSyn' = FunSyn
@@ -76,6 +79,7 @@ structure MTPInit =
 	   structure Names = Names
 	   structure FunSyn' = FunSyn
 	   structure StateSyn' = StateSyn
+	   structure MTPData = MTPData
 	   structure Formatter = Formatter
 	   structure Whnf = Whnf
 	   structure Print = Print
@@ -115,6 +119,7 @@ structure MTPFilling =
   MTPFilling (structure IntSyn = IntSyn
 	      structure FunSyn' = FunSyn
 	      structure StateSyn' = StateSyn
+	      structure MTPData = MTPData
 	      structure Whnf = Whnf
 	      structure Abstract = Abstract
 	      structure TypeCheck = TypeCheck
@@ -163,6 +168,7 @@ structure MTPStrategy =
   MTPStrategy (structure MTPGlobal = MTPGlobal
 	       structure StateSyn' = StateSyn
 	       structure MTPrint = MTPrint
+	       structure MTPData = MTPData
 	       structure MTPFilling = MTPFilling
 	       structure MTPSplitting = MTPSplitting
 	       structure MTPRecursion = MTPRecursion
@@ -198,6 +204,7 @@ structure MTPi =
 	structure MTPrint = MTPrint
 	structure MTPInit = MTPInit
 	structure MTPFilling = MTPFilling
+	structure MTPData = MTPData
 	structure MTPSplitting = MTPSplitting
 	structure MTPRecursion = MTPRecursion
 	structure MTPStrategy = MTPStrategy

@@ -5,6 +5,7 @@ functor MTPStrategy (structure MTPGlobal : MTPGLOBAL
 		     structure StateSyn' : STATESYN
 		     structure MTPFilling : MTPFILLING
 		       sharing MTPFilling.StateSyn = StateSyn'
+		     structure MTPData : MTPDATA
 		     structure MTPSplitting : MTPSPLITTING
 	  	       sharing MTPSplitting.StateSyn = StateSyn'
 		     structure MTPRecursion : MTPRECURSION
@@ -46,8 +47,11 @@ struct
 	else ()
 
     fun printQed () = 
-        if !Global.chatter > 3 then print ("[QED]\n")
-	else ()
+        (if !Global.chatter > 3 then print ("[QED]\n")
+	 else ();
+	 if !Global.chatter > 4 then print ("Statistics: required Twelf.Prover.maxFill := "
+					    ^ (Int.toString (!MTPData.maxFill)) ^ "\n") 
+	 else ())
 
     (* findMin L = Sopt
 
@@ -107,7 +111,7 @@ struct
 	  of fillingOp =>
 	     (let
 	       val _ = printFilling ()
-	       val P = (Timers.time Timers.filling MTPFilling.apply) fillingOp
+	       val (max, P) = (Timers.time Timers.filling MTPFilling.apply) fillingOp
 	       val _ = printCloseBracket ()
 	      in
 		fill (givenStates, os)

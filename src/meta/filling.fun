@@ -10,6 +10,7 @@ functor MTPFilling (structure IntSyn : INTSYN
 		      sharing Abstract.IntSyn = IntSyn
 		    structure TypeCheck : TYPECHECK
 		      sharing TypeCheck.IntSyn = IntSyn
+		    structure MTPData : MTPDATA
 		    structure Search   : MTPSEARCH
   		      sharing Search.StateSyn = StateSyn'
 		    structure Whnf : WHNF
@@ -21,14 +22,14 @@ struct
 
   exception Error of string
 
-  type operator = (unit -> FunSyn'.Pro)
+  type operator = (unit -> int * FunSyn'.Pro)
 
   local
     structure S = StateSyn
     structure F = FunSyn
     structure I = IntSyn
 
-    exception Success
+    exception Success of int
 
     (* Checking for constraints: Used to be in abstract, now must be done explicitly! --cs*)
 
@@ -72,9 +73,10 @@ struct
 	  fn () => ((Search.searchEx (Xs, fn max => (if (!Global.doubleCheck) then 
 						       map (fn (X as I.EVar (_, G', V, _)) => 
 							    TypeCheck.typeCheck (G', (X, V))) Xs
-						     else []; raise Success));
+						     else []; raise Success max));
 		     raise Error "Filling unsuccessful")
-	            handle Success => P)
+	            handle Success max => (MTPData.maxFill := Int.max (!MTPData.maxFill, max);
+					   (max, P)))
 	end
     
 

@@ -150,22 +150,22 @@ struct
 	    used in the universal case for max search depth)
        if  G |- M :: g[s] then G |- sc :: g[s] => Answer, Answer closed
   *)
-  fun solve (max, depth, (C.Atom p, s), dp, sc, acck) = matchAtom (max, depth, (p,s), dp, sc, acck)
-    | solve (max, depth, (C.Impl (r, A, cid, g), s), C.DProg (G, dPool), sc, acck) =
+  fun solve (max, depth, (C.Atom p, s), dp, sc) = matchAtom (max, depth, (p,s), dp, sc)
+    | solve (max, depth, (C.Impl (r, A, cid, g), s), C.DProg (G, dPool), sc) =
        let
 	 val D' = I.Dec (NONE, I.EClo (A, s))
        in
 	 solve (max, depth+1, (g, I.dot1 s), 
 		C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, cid))),
-		(fn (M, acck') => sc (I.Lam (D', M), acck')), acck)
+		(fn M => sc (I.Lam (D', M))))
        end
-    | solve (max, depth, (C.All (D, g), s), C.DProg (G, dPool), sc, acck) =
+    | solve (max, depth, (C.All (D, g), s), C.DProg (G, dPool), sc) =
        let
 	 val D' = I.decSub (D, s)
        in
 	 solve (max, depth+1, (g, I.dot1 s), 
 		C.DProg (I.Decl (G, D'), I.Decl (dPool, NONE)),
-		(fn (M, acck') => sc (I.Lam (D', M), acck')), acck)
+		(fn M => sc (I.Lam (D', M))))
        end
 
   (* rsolve (max, depth, (p,s'), (r,s), (G,dPool), sc, (acc, k)) = ()
@@ -181,30 +181,23 @@ struct
 	    used in the universal case for max search depth)
        if G |- S :: r[s] then G |- sc : (r >> p[s']) => Answer
   *)
-  and rSolve (max, depth, ps', (C.Eq Q, s), C.DProg (G, dPool), sc, acck as (acc, k)) =
+  and rSolve (max, depth, ps', (C.Eq Q, s), C.DProg (G, dPool), sc) =
       if Unify.unifiable (G, ps', (Q, s))
-	then sc (I.Nil, acck)
-      else acc
+	then sc I.Nil
+      else ()
       (* replaced below by above.  -fp Mon Aug 17 10:41:09 1998
         ((Unify.unify (ps', (Q, s)); sc (I.Nil, acck)) handle Unify.Unify _ => acc) *)
-    (*
-    | rSolve (max, ps', (C.Assign (Q, ag), s), Dp, sc, acck as (acc, k)) =
-        ((Assign.assign (ps', (Q, s));
-	  aSolve ((ag, s), Dp, (fn () => sc (I.Nil, acck)) , acc))
-	  handle Unify.Unify _ => acc
-	       | Assign.Assign _ => acc)
-    *)
-    | rSolve (max, depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (max, depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
 	val X = I.newEVar (G, I.EClo(A, s))
       in
         rSolve (max, depth, ps', (r, I.Dot(I.Exp(X), s)), dp,
-		(fn (S, acck') => solve (max, depth, (g, s), dp,
-					 (fn (M, acck'') => sc (I.App (M, S), acck'')), acck')), acck)
+		(fn S => solve (max, depth, (g, s), dp,
+				(fn M => sc (I.App (M, S))))))
 
       end
-    | rSolve (max, depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (max, depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 					(* G |- g goal *)
 					(* G |- A : type *)
@@ -223,38 +216,27 @@ struct
 					(* G0, Gl |- X' : A[s'][w] = A[s] *)
       in
 	rSolve (max, depth, ps', (r, I.Dot (I.Exp (X'), s)), dp,
-		(fn (S, acck') => 
-		   if isInstantiated X then sc (I.App (X', S), acck')
-		   else  solve (max, 0, (g, s'), C.DProg (G0, dPool0),
-				(fn (M, acck'' as (acc'', _)) => 
-				 ((Unify.unify (G0, (X, I.id), (M, I.id)); 
-				  sc (I.App (I.EClo (M, w), S), acck'')) 
-				 handle Unify.Unify _ => acc'')), acck')), acck)
-
+		(fn S => 
+		 if isInstantiated X then sc (I.App (X', S))
+		 else  solve (max, 0, (g, s'), C.DProg (G0, dPool0),
+			      (fn M => 
+			       ((Unify.unify (G0, (X, I.id), (M, I.id)); 
+				 sc (I.App (I.EClo (M, w), S))) 
+				handle Unify.Unify _ => ())))))
       end
-    | rSolve (max, depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (max, depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
 	in
 	  rSolve (max, depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
-		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
+		  (fn S => sc (I.App (X, S))))
 	end
-    | rSolve (max, depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (max, depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
 	in
-	  rSolve (max, depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
-		  (fn (S, acck') => sc (S, acck')), acck)
+	  rSolve (max, depth, ps', (r, I.Dot (I.Exp (X), s)), dp, sc)
 	end
-
-  (* aSolve ... *)
-  and aSolve ((C.Trivial, s), dp, sc, acc) = sc ()
-    (* Fri Jan 15 16:04:39 1999 -fp,cs
-    | aSolve ((C.Unify(I.Eqn(e1, e2), ag), s), dp, sc, acc) =
-      ((Unify.unify ((e1, s), (e2, s));
-        aSolve ((ag, s), dp, sc, acc))
-       handle Unify.Unify _ => acc)
-     *)
 
   (* matchatom ((p, s), (G, dPool), sc, (acc, k)) => ()
      G |- s : G'
@@ -266,49 +248,42 @@ struct
           used in the universal case for max search depth)
      if G |- M :: p[s] then G |- sc :: p[s] => Answer
   *)
-  and matchAtom (0, _, _, _, _, (acc, k)) = acc
+  and matchAtom (0, _, _, _, _) = ()
     | matchAtom (max, depth, 
 		 ps' as (I.Root (I.Const cid, _), _), 
-		 dp as C.DProg (G, dPool), sc, (acc, k)) =
+		 dp as C.DProg (G, dPool), sc) =
       let
-	fun matchSig acc' =
+	fun matchSig' nil = ()
+	  | matchSig' (H ::sgn') =
 	    let
-	      fun matchSig' (nil, acc'') = acc''
-		| matchSig' (H ::sgn', acc'') =
-		  let
-		    val cid' = (case H 
-				  of I.Const cid => cid
-				   | I.Skonst cid => cid)
+	      val cid' = (case H  
+			    of I.Const cid => cid
+			     | I.Skonst cid => cid)
 				  
-		    val C.SClause(r) = C.sProgLookup cid'
-		    val acc''' = Trail.trail
-		                 (fn () =>
-				    rSolve (max-1, depth, ps', (r, I.id), dp,
-					    (fn (S, acck') => sc (I.Root (H, S),
-								  acck')), (acc'', k-1)))
-		  in
-		    matchSig' (sgn', acc''')
-		  end
+	      val C.SClause(r) = C.sProgLookup cid'
+	      val _ = Trail.trail
+		      (fn () =>
+		       rSolve (max-1, depth, ps', (r, I.id), dp,
+			       (fn S => sc (I.Root (H, S)))))
 	    in
-	      matchSig' (Index.lookup cid, acc')
+	      matchSig' sgn'
 	    end
 
-	fun matchDProg (I.Null, _, acc') = matchSig acc'
-	  | matchDProg (I.Decl (dPool', SOME (r, s, cid')), n, acc') =
+	fun matchDProg (I.Null, _) = matchSig' (Index.lookup cid) 
+	  | matchDProg (I.Decl (dPool', SOME (r, s, cid')), n) =
 	    if cid = cid' then
 	      let
-		val acc'' = Trail.trail (fn () =>
+		val _ = Trail.trail (fn () =>
 			    rSolve (max-1,depth, ps', (r, I.comp (s, I.Shift n)), dp,
-				    (fn (S, acck') => sc (I.Root (I.BVar n, S),
-							  acck')), (acc', k-1)))
+				    (fn S => sc (I.Root (I.BVar n, S)))))
 	      in
-		matchDProg (dPool', n+1, acc'')
+		matchDProg (dPool', n+1)
 	      end
-	    else matchDProg (dPool', n+1, acc')
-	  | matchDProg (I.Decl (dPool', NONE), n, acc') =
-	      matchDProg (dPool', n+1, acc')
+	    else matchDProg (dPool', n+1)
+	  | matchDProg (I.Decl (dPool', NONE), n) =
+	      matchDProg (dPool', n+1)
       in
-	(* if k < 0 then acc else *) matchDProg (dPool, 1, acc)
+	matchDProg (dPool, 1)
       end
 
 
@@ -321,16 +296,15 @@ struct
             otherwise searchEx' terminates with []
     *)
     (* contexts of EVars are recompiled for each search depth *)
-    and searchEx' max (nil, sc) = [sc max]
+    and searchEx' max (nil, sc) = sc max
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
       | searchEx' max ((X as I.EVar (r, G, V, _)) :: GE, sc) = 
 	  solve (max, 0, (Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
-		 (fn (U', (acc', _)) => (Unify.unify (G, (X, I.id), (U', I.id));
-					 searchEx' max (GE, sc)) handle Unify.Unify _ => acc'),
-		 (nil, max))
+		 (fn U' => (Unify.unify (G, (X, I.id), (U', I.id));
+					 searchEx' max (GE, sc)) handle Unify.Unify _ => ()))
 
     (* deepen (f, P) = R'
 
@@ -342,12 +316,13 @@ struct
     *)
     fun deepen depth f P =
 	let 
-	  fun deepen' (level, acc) = 
-	    if level > depth then acc
+	  fun deepen' level = 
+	    if level > depth then ()
 	    else (if !Global.chatter > 5 then print "#" else (); 
-		    deepen' (level+1, f level P))
+		    (f level P;
+		     deepen' (level+1)))
 	in
-	  deepen' (1, nil)
+	  deepen' 1
 	end
 
     (* searchEx (G, GE, (V, s), sc) = acc'
@@ -379,49 +354,18 @@ struct
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
-(*
 
-    fun searchEx (it, depth) (GE, sc) = 
-      (if !Global.chatter > 5 then print "[Search: " else ();  
-	 deepen depth searchEx' (selectEVar (GE), 
-				 fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
-					      sc max)); 
-	 if !Global.chatter > 5 then print "FAIL]\n" else ())
-	
-*)  
-    fun search (GE, sc) = searchEx (1, !MTPGlobal.maxFill) (GE, sc)
+    (* search (GE, sc) = ()
 
-(*    (* searchAll' (GE, acc, sc) = acc'
-
-       Invariant: 
-       If   GE is a list of EVars to be instantiated
-       and  acc is list of already collected results of the success continuation
-       then acc' is an extension of acc', containing the results of sc
-	 after trying all combinations of instantiations of EVars in GE
+       Invariant:
+       GE is a list of uninstantiated EVars
+       and sc is a success continuation : int -> unit
+     
+       Side effect:
+       success continuation will raise exception 
     *)
     (* Shared contexts of EVars in GE may recompiled many times *)
-
-    fun searchAll' (nil, acc, sc) = sc (acc)
-      | searchAll' (I.EVar (r, G, V, _) :: GE, acc, sc) = 
-	  solve ((Compile.compileGoal (G, V), I.id), 
-		 Compile.compileCtx false G, 
-		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
-					 searchAll' (GE, acc', sc))),
-		 (acc, !MTPGlobal.maxFill))
-
-    (* searchAll (G, GE, (V, s), sc) = acc'
-     
-       Invariant:
-       If   G |- s : G'   G' |- V : level
-       and  GE is a list of EVars contained in V[s]
-	 where G |- X : VX
-       and  sc is a function to be executed after all non-index variables have
-	 been instantiated
-       then acc' is a list of results from executing the success continuation 
-    *)
-    fun searchAll (G, GE, Vs, sc) =
-          searchAll' (selectEVar (GE, Vs, nil), nil, sc)
-*)
+    fun search (GE, sc) = searchEx (1, !MTPGlobal.maxFill) (GE, sc)
 
   in 
     val searchEx = search

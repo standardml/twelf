@@ -38,6 +38,8 @@ Group is
   filling.fun
   global.sig 
   global.fun
+  data.sig
+  data.fun
   mpi.sig
   mpi.fun
   recursion.sig

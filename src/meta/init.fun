@@ -2,6 +2,7 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPInit (structure MTPGlobal : MTPGLOBAL
+		 structure MTPData : MTPDATA
 		 structure IntSyn : INTSYN
 		 structure Names : NAMES
 		   sharing Names.IntSyn = IntSyn
@@ -60,6 +61,7 @@ struct
 	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, F') :: Ss
       in
 	(Names.varReset ();
+	 MTPData.maxFill := 0;
 	 init' ((I.Null, I.Null), OF, F, nil))
       end
 
