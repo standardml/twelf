@@ -206,6 +206,10 @@ struct
            I.Decl (createTags (n-1, l),  S.Parameter (SOME l))
 
 
+    fun createLemmaTags (I.Null) = I.Null
+      | createLemmaTags (I.Decl (G, D)) = 
+           I.Decl (createLemmaTags G,  S.Lemma (!MTPGlobal.maxSplit, F.Ex (D, F.True)))
+
     (* constCases (G, (V, s), I, abstract, ops) = ops'
      
        Invariant:
@@ -397,6 +401,7 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 		val F.LabelDec (name, G1, G2) = F.labelLookup n
 		val t = someEVars (I.Null, G1, I.id)
 					(* . |- t : G1 *)
+		val B1 = createLemmaTags (F.listToCtx G1)
 		val G2t = ctxSub (G2, t)
 					(* . |- G2 [t] ctx *)
 		val length = List.length G2
@@ -421,7 +426,7 @@ fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
 		    let 
 					(* G' |- U.s' : G, V *)
 					(* . |- t : G1 *)
-		      val ((G'', B''), s'') = MTPAbstract.abstractSub (t, (G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
+		      val ((G'', B''), s'') = MTPAbstract.abstractSub (t, B1, (G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
 
 (*HERE*)
 (*BUG: edit abstract so that it also collects EVars in the types of parameters

@@ -495,6 +495,74 @@ struct
 
 
 
+    (* abstractSub (t, B1, (G0, B0), s, B) = ((G', B'), s')
+
+       Invariant: 
+       If   . |- t : G1
+       and  G1 |- B1 tags
+
+       and  G0 |- B0 tags
+       and  G0 |- s : G
+       and  G |- B tags
+       then . |- G' = G1, G0, G2
+       and  B' |- G' tags
+       and  G' |- s' : G
+    *)
+    fun abstractSubAll (t, B1, (G0, B0), s, B) =
+        let
+
+	  fun collectSub' (G0, I.Shift _, _, collect) = (fn (d, K) => collect (d, K))
+	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
+	      let
+		val F.LabelDec (name, _, G2) = F.labelLookup l
+	      in
+		skip (G0, List.length G2, s, B, collect)
+	      end
+	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	        collectSub' (G0, s, B, fn (d, K) => 
+			       collect (d, collectExp (T, d, G0, (U, I.id), K)))
+	    | collectSub' (_, I.Dot (I.Idx _, _), I.Decl (B, S.Lemma _), _) = raise Domain 
+(*  shouldn't occur *)
+
+	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+
+
+	  and skip (G0, 0, s, B, collect) = collectSub' (G0, s, B, collect)
+	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
+	        skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
+
+
+	  (* skip'' (K, (G, B)) = K'
+	   
+	     Invariant:
+	     If   G = x1:V1 .. xn:Vn 
+	     and  G |- B = <param> ... <param> tags
+	     then  K' = K, BV (x1) .. BV (xn)
+	  *)
+
+	  fun skip'' (K, (I.Null, I.Null)) = K
+	    | skip'' (K, (I.Decl (G0, D), I.Decl(B0, T))) = I.Decl (skip'' (K, (G0, B0)), BV (D, T))
+
+
+(* ------ *)
+
+          val collect2 = collectGlobalSub (G0, s, B, fn (_, K') => K')
+	  val collect0 = collectGlobalSub (I.Null, t, B1, fn (_, K') => K')     (*BUG collectSub' doesn't work *)
+	  val K0 = collect0 (0, I.Null)
+	  val K1 = skip'' (K0, (G0, B0))
+	  val K = collect2 (I.ctxLength G0, K1)
+
+(*	  val (_, K) = collectSub' (*change later *) (G0, s, B, fn (_, K') => K')
+*)
+	in
+	  (abstractCtx K, abstractGlobalSub (K, s, B))
+	end 
+
+
+
+
+(*
+
     (* abstractSub (t, (G0, B0), s, B) = ((G', B'), s')
 
        Invariant: 
@@ -618,7 +686,7 @@ struct
 	in
 	  (abstractCtx K, abstractGlobalSub (K, s, B))
 	end 
-
+*)
 (*
 
 

@@ -92,7 +92,9 @@ Parameter Cases
 	TODO: Second parameter splitting to the right of a parameter block not yet detected.
 	TODO: Collect all parameter in paramCases, not just the local ones.
    
-	BUG:  A context which contains already a parameter block must be prepared the	
+	DONE - cs
+	   BUG:  A context which contains already a parameter
+	    block must be prepared the	
 	      right way.   G1, l: G, G2
 
 	      must yield two substitutions:
@@ -104,8 +106,9 @@ Parameter Cases
 	        G1 |- s : G2
 
 	      otherwise abstraction doesn't work.
+	
+	BUG Tag information and actual declaration can get out of sync.
 
- 	      No: abstraction must be changed: Collect variables also in the types of parameters!!!!
 
 Splitting Residual lemmas
    Unify lemmas and assumptions tags: Assumption 
