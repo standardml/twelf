@@ -72,5 +72,6 @@ sig
   val occToRegionDec : occConDec -> occ -> region (* into v for c : V *)
   val occToRegionDef1 : occConDec -> occ -> region (* into u for c : V = U *)
   val occToRegionDef2 : occConDec -> occ -> region (* into v for c : V = U *)
+  val occToRegionClause : occConDec -> occ -> region (* into v for c : V ... *)
 
 end;  (* signature PATHS *)

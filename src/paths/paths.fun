@@ -245,6 +245,13 @@ struct
   fun occToRegionDef2 (def (n, u, SOME(v))) occ =
       pathToRegion (v, skipImplicit (n, occToPath (occ, Here)))
 
+  (* occToRegionClause d occ = r
+     where r is the closest region in V including occ for declaration
+     c : V or c : V = U.
+  *)
+  fun occToRegionClause (d as dec _) occ = occToRegionDec d occ
+    | occToRegionClause (d as def (_, _, SOME(_))) occ = occToRegionDef2 d occ
+
 end;  (* functor Paths *)
 
 structure Paths = Paths ();
