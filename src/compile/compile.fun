@@ -150,6 +150,8 @@ struct
     | shiftHead ((h as I.Def k), depth, total) = h
     | shiftHead ((h as I.NSDef k), depth, total) = h
     | shiftHead ((h as I.FgnConst k), depth, total) = h
+    | shiftHead ((h as I.Skonst k) , depth, total) = h
+
 
   fun shiftExp (I.Root(h, S), depth, total) = 
 	I.Root(shiftHead(h, depth, total), shiftSpine(S, depth, total))
@@ -201,6 +203,9 @@ struct
 	 (left, Vars, h, false)
      *)
      | linearHead(G, (h as I.FgnConst(k, ConDec)), S, left, Vars, depth, total) = 
+	 (left, Vars, h, false)
+
+     | linearHead(G, (h as I.Skonst k) , S, left, Vars, depth, total) = 
 	 (left, Vars, h, false)
 
   (* linearExp (Gl, U, left, Vars, depth, total, eqns) = (left', Vars', N, Eqn)
