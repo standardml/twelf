@@ -1,20 +1,20 @@
-Name "Twelf 1.3R4"
+Name "Twelf 1.4"
 Icon twelf.ico
-OutFile ..\twelf-1-3R4.exe
+OutFile ..\twelf-1-4.exe
 CRCCheck on
 UninstallIcon uninst.ico
 
 LicenseText "Information:"
 LicenseData LICENSE
 
-ComponentText "This will install Twelf 1.3R4 on your computer."
+ComponentText "This will install Twelf 1.4 on your computer."
 InstType Standard
 InstType Full
 InstType Minimal
 EnabledBitmap enabled.bmp
 DisabledBitmap disabled.bmp
 
-DirText "Please select a location to install Twelf 1.3R4 (or use the default)."
+DirText "Please select a location to install Twelf 1.4 (or use the default)."
 
 InstallDir $PROGRAMFILES\Twelf
 InstallDirRegKey HKEY_LOCAL_MACHINE SOFTWARE\Twelf ""
@@ -172,6 +172,12 @@ Section "Source Code"
   File ..\*.sml
   File ..\*.cm
   File Makefile
+  SetOutPath $INSTDIR\mlton
+  File ..\mlton\*.*
+  SetOutPath $INSTDIR\polyml
+  File ..\polyml\*.*
+  SetOutPath $INSTDIR\smlnj
+  File ..\smlnj\*.*
   SetOutPath $INSTDIR\src\compile
   File ..\src\compile\*.*
   SetOutPath $INSTDIR\src\cover
@@ -238,12 +244,12 @@ SectionEnd
 
 Section -post
   WriteRegStr HKEY_LOCAL_MACHINE SOFTWARE\Twelf "" $INSTDIR
-  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\Twelf" "DisplayName" "Twelf 1.3R4"
+  WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\Twelf" "DisplayName" "Twelf 1.4"
   WriteRegStr HKEY_LOCAL_MACHINE "Software\Microsoft\Windows\CurrentVersion\Uninstall\Twelf" "UninstallString" '"$INSTDIR\uninst.exe"'
   Delete $INSTDIR\uninst.exe 
   WriteUninstaller $INSTDIR\uninst.exe
   SetOutPath $STARTMENU\Programs\Twelf
-  CreateShortCut "$STARTMENU\Programs\Twelf\Twelf 1.3R4 README.lnk" $INSTDIR\Readme.txt "" "" 0
+  CreateShortCut "$STARTMENU\Programs\Twelf\Twelf 1.4 README.lnk" $INSTDIR\Readme.txt "" "" 0
   CreateShortCut "$STARTMENU\Programs\Twelf\Uninstall Twelf.lnk" $INSTDIR\uninst.exe "" "" 0
   Exec '"$INSTDIR\bin\mkexec" "$INSTDIR\bin\run.x86-win32.exe" "$INSTDIR" twelf-server'
   Exec '"$INSTDIR\bin\mkexec" "$INSTDIR\bin\run.x86-win32.exe" "$INSTDIR" twelf-sml'
@@ -259,6 +265,12 @@ Section Uninstall
   Delete $STARTMENU\Programs\Twelf\*.*
   RMDir $STARTMENU\Programs\Twelf
   # remove sources
+  Delete $INSTDIR\mlton\*.*
+  RMDir $INSTDIR\mlton
+  Delete $INSTDIR\polyml\*.*
+  RMDir $INSTDIR\polyml
+  Delete $INSTDIR\smlnj\*.*
+  RMDir $INSTDIR\smlnj
   Delete $INSTDIR\src\compile\*.*
   RMDir $INSTDIR\src\compile
   Delete $INSTDIR\src\cover\*.*
