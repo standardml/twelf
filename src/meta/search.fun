@@ -297,9 +297,9 @@ struct
 					   val GE' = foldr (fn (X as I.EVar (_, G, _, _), L) => 
 							    Abstract.collectEVars (G, (X, I.id), L)) nil GE
 					   val gE' = List.length GE'
-					   val _ = TextIO.print (Int.toString gE' ^ " remaining EVars\n")
+					   val _ = if !Global.chatter > 4 then TextIO.print (Int.toString gE' ^ " remaining EVars\n") else ()
 					 in
-					   if gE' > 0 then (TextIO.print ("Retry\n"); searchEx (depth-max) (GE', sc)) else  sc ()
+					   if gE' > 0 then  searchEx (depth-max) (GE', sc) else  sc ()
 					   (* warning: iterative deepening depth is not propably updated. 
 					      possible that it runs into an endless loop ? *)
 					 end)); 
