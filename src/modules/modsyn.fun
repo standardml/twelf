@@ -88,9 +88,9 @@ struct
 
   and mapConDecConsts f (IntSyn.ConDec (name, parent, i, status, V, L)) =
         IntSyn.ConDec (name, parent, i, status, mapExpConsts f V, L)
-    | mapConDecConsts f (IntSyn.ConDef (name, parent, i, U, V, L)) =
+    | mapConDecConsts f (IntSyn.ConDef (name, parent, i, U, V, L, Anc)) =
         IntSyn.ConDef (name, parent, i, mapExpConsts f U,
-                       mapExpConsts f V, L)
+                       mapExpConsts f V, L, Anc) (* reconstruct Anc?? -fp *)
     | mapConDecConsts f (IntSyn.AbbrevDef (name, parent, i, U, V, L)) =
         IntSyn.AbbrevDef (name, parent, i, mapExpConsts f U,
                           mapExpConsts f V, L)
@@ -102,8 +102,8 @@ struct
 
   fun mapConDecParent f (IntSyn.ConDec (name, parent, i, status, V, L)) =
         IntSyn.ConDec (name, f parent, i, status, V, L)
-    | mapConDecParent f (IntSyn.ConDef (name, parent, i, U, V, L)) =
-        IntSyn.ConDef (name, f parent, i, U, V, L)
+    | mapConDecParent f (IntSyn.ConDef (name, parent, i, U, V, L, Anc)) =
+        IntSyn.ConDef (name, f parent, i, U, V, L, Anc) (* reconstruct Anc?? -fp *)
     | mapConDecParent f (IntSyn.AbbrevDef (name, parent, i, U, V, L)) =
         IntSyn.AbbrevDef (name, f parent, i, U, V, L)
     | mapConDecParent f (IntSyn.SkoDec (name, parent, i, V, L)) =
@@ -111,7 +111,7 @@ struct
 
   fun strictify (condec as IntSyn.AbbrevDef (name, parent, i, U, V, IntSyn.Type)) =
       ((Strict.check ((U, V), NONE);
-        IntSyn.ConDef (name, parent, i, U, V, IntSyn.Type))
+        IntSyn.ConDef (name, parent, i, U, V, IntSyn.Type, IntSyn.ancestor(U)))
        handle Strict.Error _ => condec)
     | strictify (condec as IntSyn.AbbrevDef _) = condec
 
@@ -129,7 +129,8 @@ struct
             in
               I.AbbrevDef (name, parent, i, U, V, L)
             end
-          | I.ConDef data => I.AbbrevDef data
+          | I.ConDef (name, parent, i, U, V, L, Anc) =>
+	      I.AbbrevDef (name, parent, i, U, V, L)
           | I.AbbrevDef data => I.AbbrevDef data)
 
   (* In order to install a module, we walk through the mids in preorder,

@@ -238,7 +238,7 @@ struct
        Effect: if c is a type-level definition,
                update definition graph.
     *)
-    fun installConDec (b, I.ConDef (_, _, _, A, K, I.Kind)) =
+    fun installConDec (b, I.ConDef (_, _, _, A, K, I.Kind, _)) =
           (* I.targetFam must be defined, but expands definitions! *)
           insertNewDef (b, I.targetFam A) 
       | installConDec _ = ()
@@ -396,6 +396,51 @@ struct
 	end
 
 
+    (* showDef () = ()
+       Effect: print some statistics about constant definitions
+    *)
+    local
+      val declared = ref 0
+      val defined = ref 0
+      val abbrev = ref 0
+      val other = ref 0
+      val heightArray = Array.array (32, 0)
+      val maxHeight = ref 0
+
+      fun inc (r) = (r := !r+1)
+      fun incArray (h) = (Array.update (heightArray, h, Array.sub (heightArray, h)+1))
+      (* ignore blocks and skolem constants *)
+      fun max (h) = (maxHeight := Int.max (h, !maxHeight))
+      fun reset () = (declared := 0; defined := 0; abbrev := 0; other := 0;
+		      Array.modify (fn i => 0) heightArray;
+	              maxHeight := 0)
+    in
+      fun analyzeAnc (I.Anc (NONE, _, _)) = ( incArray 0 )
+	| analyzeAnc (I.Anc (_, h, _)) = ( incArray h ; max h )
+      fun analyze (I.ConDec (_, _, _, _, _, L)) =
+	  ( inc declared ) 
+        | analyze (I.ConDef (_, _, _, _, _, L, ancestors)) =
+	  ( inc defined ; analyzeAnc ancestors )
+        | analyze (I.AbbrevDef (_, _, _, _, _, L)) =
+	  ( inc abbrev )
+	| analyze _ = ( inc other )
+      fun showDef () =
+	  let
+	    val _ = reset ()
+	    val _ = I.sgnApp (fn c => analyze (I.sgnLookup c))
+	    val _ = print ("Declared: " ^ Int.toString (!declared) ^ "\n")
+	    val _ = print ("Defined : " ^ Int.toString (!defined) ^ "\n")
+	    val _ = print ("Abbrevs : " ^ Int.toString (!abbrev) ^ "\n")
+	    val _ = print ("Other   : " ^ Int.toString (!other) ^ "\n")
+	    val _ = print ("Max definition height: " ^ Int.toString (!maxHeight) ^ "\n")
+	    val _ = Array.appi
+	              (fn (h, i) => print (" Height " ^ Int.toString h ^ ": "
+					   ^ Int.toString i ^ " definitions\n"))
+		      (heightArray, 0, SOME(!maxHeight+1))
+	  in
+	    ()
+	  end
+    end
   in
     val reset = reset
      
@@ -413,7 +458,9 @@ struct
     val respectsN = respectsN
 
     val weaken = weaken
+
     val show = show
+    val showDef = showDef
 
   end (* local *)
 end; (* functor Subordinate *)

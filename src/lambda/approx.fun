@@ -215,7 +215,7 @@ struct
      if |- d = V : type *)
   fun constDefApx d =
       (case I.sgnLookup d
-         of I.ConDef (_, _, _, U, _, _) =>
+         of I.ConDef (_, _, _, U, _, _, _) =>
             let
               val (V', _ (* Uni Type *)) = expToApx U
             in

@@ -236,7 +236,7 @@ struct
       let 
 	fun calcImplicit' (I.ConDec (_, _, k, _, V, _))  =
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
-	  | calcImplicit' (I.ConDef (_, _, k, _, V, _)) =
+	  | calcImplicit' (I.ConDef (_, _, k, _, V, _, _)) =
 	    (* ignore definition for defined type family since they are opaque *)
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
       in 
@@ -260,7 +260,7 @@ struct
               (* defined type families treated as separate types for
                  purposes of mode checking (as the operational
                  semantics doesn't expand type definitions) *)
-            | I.ConDef (_, _, _, _, V, _) =>
+            | I.ConDef (_, _, _, _, V, _, _) =>
                (inferMode ((I.Null, V), mS); ()))
 	handle Error (msg) => error (r, msg)  (* re-raise error with location *)
 

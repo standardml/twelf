@@ -144,6 +144,7 @@ struct
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
+              * Ancestor                (* Ancestor info for d or a   *)
   | AbbrevDef of string * mid option * int
                                         (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
@@ -151,6 +152,10 @@ struct
               * Dec Ctx * Dec list
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+
+  and Ancestor =			(* Ancestor of d or a         *)
+    Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
+                                        (* NONE means expands to {x:A}B *)
 
   datatype StrDec =                     (* Structure declaration      *)
       StrDec of string * mid option
@@ -212,13 +217,13 @@ struct
   end
 
   fun conDecName (ConDec (name, _, _, _, _, _)) = name
-    | conDecName (ConDef (name, _, _, _, _, _)) = name
+    | conDecName (ConDef (name, _, _, _, _, _, _)) = name
     | conDecName (AbbrevDef (name, _, _, _, _, _)) = name
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
 
   fun conDecParent (ConDec (_, parent, _, _, _, _)) = parent
-    | conDecParent (ConDef (_, parent, _, _, _, _)) = parent
+    | conDecParent (ConDef (_, parent, _, _, _, _, _)) = parent
     | conDecParent (AbbrevDef (_, parent, _, _, _, _)) = parent
     | conDecParent (SkoDec (_, parent, _, _, _)) = parent
     | conDecParent (BlockDec (_, parent, _, _)) = parent
@@ -231,7 +236,7 @@ struct
      then k stands for the number of implicit elements.
   *)
   fun conDecImp (ConDec (_, _, i, _, _, _)) = i
-    | conDecImp (ConDef (_, _, i, _, _, _)) = i
+    | conDecImp (ConDef (_, _, i, _, _, _, _)) = i
     | conDecImp (AbbrevDef (_, _, i, _, _, _)) = i
     | conDecImp (SkoDec (_, _, i, _, _)) = i
     | conDecImp (BlockDec (_, _,  _, _)) = 0   (* watch out -- carsten *)
@@ -247,7 +252,7 @@ struct
      then V is the respective type
   *)
   fun conDecType (ConDec (_, _, _, _, V, _)) = V
-    | conDecType (ConDef (_, _, _, _, V, _)) = V
+    | conDecType (ConDef (_, _, _, _, V, _, _)) = V
     | conDecType (AbbrevDef (_, _, _, _, V, _)) = V
     | conDecType (SkoDec (_, _, _, V, _)) = V
 
@@ -269,7 +274,7 @@ struct
      then L is the respective universe
   *)
   fun conDecUni (ConDec (_, _, _, _, _, L)) = L
-    | conDecUni (ConDef (_, _, _, _, _, L)) = L
+    | conDecUni (ConDef (_, _, _, _, _, L, _)) = L
     | conDecUni (AbbrevDef (_, _, _, _, _, L)) = L
     | conDecUni (SkoDec (_, _, _, _, L)) = L
 
@@ -348,7 +353,7 @@ struct
 
   fun constDef (d) =
       (case sgnLookup (d)
-	 of ConDef(_, _, _, U,_, _) => U
+	 of ConDef(_, _, _, U,_, _, _) => U
 	  | AbbrevDef (_, _, _, U,_, _) => U)
 
   fun constType (c) = conDecType (sgnLookup c)
@@ -565,6 +570,28 @@ struct
 
   (* newLVar (l, s) = (l[s]) *)
   fun newLVar (sk, (cid, t)) = LVar (ref NONE, sk, (cid, t))
+
+  (* Definition related functions *)
+  (* headOpt (U) = SOME(H) or NONE, U should be strict, normal *)
+  fun headOpt (Root (H, _)) = SOME(H)
+    | headOpt (Lam (_, U)) = headOpt U
+    | headOpt _ = NONE
+
+  fun ancestor' (NONE) = Anc(NONE, 0, NONE)
+    | ancestor' (SOME(Const(c))) = Anc(SOME(c), 1, SOME(c))
+    | ancestor' (SOME(Def(d))) =
+      (case sgnLookup(d)
+	 of ConDef(_, _, _, _, _, _, Anc(_, height, cOpt))
+            => Anc(SOME(d), height+1, cOpt))
+    | ancestor' (SOME _) = (* FgnConst possible, BVar impossible by strictness *)
+      Anc(NONE, 0, NONE)
+  (* ancestor(U) = ancestor info for d = U *)
+  fun ancestor (U) = ancestor' (headOpt U)
+
+  (* defAncestor(d) = ancestor of d, d must be defined *)
+  fun defAncestor (d) =
+      (case sgnLookup(d)
+	 of ConDef(_, _, _, _, _, _, anc) => anc)
 
   (* Type related functions *)
 

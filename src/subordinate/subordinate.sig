@@ -25,4 +25,6 @@ sig
   val weaken : IntSyn.dctx * IntSyn.cid -> IntSyn.Sub
 
   val show : unit -> unit
+  val showDef : unit -> unit
+
 end;  (* signature SUBORDINATE *)

@@ -101,7 +101,7 @@ struct
 	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.SkoDec (name, _, i, V, L), n) =
 	checkAtomic (name, V, i+n)
-    | checkArgNumber (IntSyn.ConDef (name, _, i, _, V, L), n) =
+    | checkArgNumber (IntSyn.ConDef (name, _, i, _, V, L, _), n) =
 	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.AbbrevDef (name, _, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
@@ -908,11 +908,11 @@ struct
 
     fun nameConDec' (IntSyn.ConDec (name, parent, imp, status, V, L)) =
           IntSyn.ConDec (name, parent, imp, status, pisEName (imp, V), L)
-      | nameConDec' (IntSyn.ConDef (name, parent, imp, U, V, L)) =
+      | nameConDec' (IntSyn.ConDef (name, parent, imp, U, V, L, Anc)) =
 	let 
 	  val (U', V') = defEName (imp, (U, V))
 	in
-	  IntSyn.ConDef (name, parent, imp, U', V', L)
+	  IntSyn.ConDef (name, parent, imp, U', V', L, Anc)
 	end
       | nameConDec' (IntSyn.AbbrevDef (name, parent, imp, U, V, L)) =
 	let 

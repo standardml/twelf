@@ -115,7 +115,7 @@ local
       end
     | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
       Str ("%% Skipping Skolem constant " ^ name ^ " %%")
-    | fmtConDec (I.ConDef (name, parent, imp, U, V, L)) =
+    | fmtConDec (I.ConDef (name, parent, imp, U, V, L, _)) =
       let
 	val _ = Names.varReset IntSyn.Null
       in

@@ -73,15 +73,15 @@ struct
                if (cs1 = cs2) andalso (n1 = n2) then cnstr
                else raise Assignment "Foreign Constant clash"
 
-	  | (FgnConst (cs1, ConDef (n1, _, _, W1, _, _)), 
-		  FgnConst (cs2, ConDef (n2, _, _, V, W2, _))) =>	       
+	  | (FgnConst (cs1, ConDef (n1, _, _, W1, _, _, _)), 
+		  FgnConst (cs2, ConDef (n2, _, _, V, W2, _, _))) =>	       
                (if (cs1 = cs2) andalso (n1 = n2) then cnstr
                else assignExp (G, (W1, s1), (W2, s2), cnstr))
 
-           | (FgnConst (_, ConDef (_, _, _, W1, _, _)), _) =>
+           | (FgnConst (_, ConDef (_, _, _, W1, _, _, _)), _) =>
                assignExp (G, (W1, s1), Us2, cnstr)
 
-           | (_, FgnConst (_, ConDef (_, _, _, W2, _, _))) =>
+           | (_, FgnConst (_, ConDef (_, _, _, W2, _, _, _))) =>
                assignExp (G, Us1, (W2, s2), cnstr)               
 
 	  | _ => (raise Assignment ("Head mismatch ")))

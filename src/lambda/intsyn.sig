@@ -129,6 +129,7 @@ sig
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
+              * Ancestor                (* Ancestor info for d or a   *)
   | AbbrevDef of string * mid option * int
                                         (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
@@ -136,6 +137,10 @@ sig
               * Dec Ctx * Dec list
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+
+  and Ancestor =			(* Ancestor of d or a         *)
+    Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
+                                        (* NONE means expands to {x:A}B *)
 
   datatype StrDec =                     (* Structure declaration      *)
       StrDec of string * mid option
@@ -250,6 +255,11 @@ sig
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
   val newLVar    : Sub * (cid * Sub) -> Block	
 					(* creates B:(l[^k],t)        *) 
+
+  (* Definition related functions *)
+  val headOpt : Exp -> Head option
+  val ancestor : Exp -> Ancestor
+  val defAncestor : cid -> Ancestor
 
   (* Type related functions *)
 

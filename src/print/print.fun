@@ -738,7 +738,7 @@ local
 	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, qid), F.Space,
 		 sym ":", F.Break] @ (fmtBlock (Gsome, Lblock))  @ [sym "."])
       end
-    | fmtConDec (hide, condec as I.ConDef (_, _, imp, U, V, L)) =
+    | fmtConDec (hide, condec as I.ConDef (_, _, imp, U, V, L, _)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
         val qid = Names.conDecQid condec

@@ -1408,6 +1408,7 @@ struct
         val sgn : unit -> unit		(* print signature *)
         val prog : unit -> unit		(* print signature as program *)
 	val subord : unit -> unit       (* print subordination relation *)
+	val def : unit -> unit          (* print information about definitions *)
         val domains : unit -> unit	(* print available constraint domains *)
         structure TeX :			(* print in TeX format *)
 	sig
@@ -1425,6 +1426,7 @@ struct
       fun sgn () = Print.printSgn ()
       fun prog () = ClausePrint.printSgn ()
       fun subord () = Subordinate.show ()
+      fun def () = Subordinate.showDef ()
       fun domains () = print (CSInstaller.version)
       structure TeX =
       struct

@@ -47,7 +47,7 @@ struct
     fun install fromCS (H as I.Const c) =
         (case (fromCS, I.sgnLookup (c))
            of (_, I.ConDec (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
-	    | (I.Clause, I.ConDef (_, _, _, _, A, I.Type)) => (update (cidFromHead (I.targetHead A), I.Def(c)))
+	    | (I.Clause, I.ConDef (_, _, _, _, A, I.Type, _)) => (update (cidFromHead (I.targetHead A), I.Def(c)))
             | _ => ())
 
     fun remove (a, cid) =
@@ -60,7 +60,7 @@ struct
     fun uninstall cid =
         (case I.sgnLookup cid
            of I.ConDec (_, _, _, _, A, I.Type) => remove (cidFromHead (I.targetHead A), cid)
-	    | I.ConDef (_, _, _, _, A, I.Type) => remove (cidFromHead (I.targetHead A), cid)
+	    | I.ConDef (_, _, _, _, A, I.Type, _) => remove (cidFromHead (I.targetHead A), cid)
             | _ => ())
 
     fun resetFrom mark =

@@ -551,19 +551,20 @@ struct
 	   | (Def (d1), Def (d2)) =>
 	       if (d1 = d2) then (* because of strict *) 
 		 unifySpine (G, (S1, s1), (S2, s2))
-	       else unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2))
+	       else (*  unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
+		 unifyDefDefW (G, Us1, Us2)
 	   | (Def (d1), _) => unifyExpW (G, Whnf.expandDef Us1, Us2)
 	   | (_, Def(d2)) => unifyExpW (G, Us1, Whnf.expandDef Us2)
            | (FgnConst (cs1, ConDec (n1, _, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _, _))) =>
                (* we require unique string representation of external constants *)
                if (cs1 = cs2) andalso (n1 = n2) then ()
                else raise Unify "Foreign Constant clash"
-           | (FgnConst (cs1, ConDef (n1, _, _, W1, _, _)), FgnConst (cs2, ConDef (n2, _, _, V, W2, _))) =>
+           | (FgnConst (cs1, ConDef (n1, _, _, W1, _, _, _)), FgnConst (cs2, ConDef (n2, _, _, V, W2, _, _))) =>
                if (cs1 = cs2) andalso (n1 = n2) then ()
                else unifyExp (G, (W1, s1), (W2, s2))
-           | (FgnConst (_, ConDef (_, _, _, W1, _, _)), _) =>
+           | (FgnConst (_, ConDef (_, _, _, W1, _, _, _)), _) =>
                unifyExp (G, (W1, s1), Us2)
-           | (_, FgnConst (_, ConDef (_, _, _, W2, _, _))) =>
+           | (_, FgnConst (_, ConDef (_, _, _, W2, _, _, _))) =>
                unifyExp (G, Us1, (W2, s2))              
 	   | _ => raise Unify "Head mismatch")
 
@@ -681,6 +682,30 @@ struct
     *)
     and unifyExp (G, Us1 as (E1,s1), Us2 as (E2,s2)) = 
           unifyExpW (G, Whnf.whnf Us1, Whnf.whnf Us2)
+
+    and unifyDefDefW (G, Us1 as (Root (Def (d1), S1), s1), Us2 as (Root (Def (d2), S2), s2)) =
+        (* unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
+        let
+	  val Anc (_, h1, c1Opt) = defAncestor d1
+	  val Anc (_, h2, c2Opt) = defAncestor d2
+	  (* the peek-ahead failure below slows does the Princeton suite from
+	     59s to 80s.  how could this be?
+	     With unifyExpW above it is 64s
+	     Sat Oct 18 19:48:18 2003 -fp *)
+	  (*
+	  val _ = case (c1Opt,c2Opt)
+	            of (SOME(c1), SOME(c2)) =>
+		       if c1 <> c2
+			 then raise Unify ("Irreconcilable defined constant clash")
+		       else ()
+		     | _ => () (* NONE/SOME? *)
+          *)
+	in
+	  case Int.compare (h1, h2)
+	    of EQUAL => unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2))
+             | LESS => unifyExpW (G, Us1, Whnf.expandDef (Us2))
+	     | GREATER => unifyExpW (G, Whnf.expandDef (Us1), Us2)
+	end
 
     (* unifySpine (G, (S1, s1), (S2, s2)) = ()
      

@@ -14,6 +14,7 @@ sig
     val sgn : unit -> unit	       (* print signature *)
     val prog : unit -> unit	       (* print signature as program *)
     val subord : unit -> unit	       (* print subordination relation *)
+    val def : unit -> unit	       (* print information about definitions *)
     val domains : unit -> unit         (* print available constraint domains *)
 
     structure TeX :		       (* print in TeX format *)

@@ -88,7 +88,7 @@ struct
           error (r, "Illegal foreign constant " ^ a ^ " in call pattern")
       | checkCallPat (I.ConDec (a, _, _, _, _, I.Type), P, r) =
 	  error (r, "Constant " ^ a ^ " in call pattern not a type family")
-      | checkCallPat (I.ConDef (a, _, _, _, _, _), P, r) =
+      | checkCallPat (I.ConDef (a, _, _, _, _, _, _), P, r) =
           error (r, "Illegal defined constant " ^ a ^ " in call pattern")
       | checkCallPat (I.AbbrevDef (a, _, _, _, _, _), P, r) =
 	  error (r, "Illegal abbreviation " ^ a ^ " in call pattern")

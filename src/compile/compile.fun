@@ -509,7 +509,7 @@ struct
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
     | compileConDec fromCS (a, I.SkoDec(_, _, _, A, I.Type)) =
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
-    | compileConDec I.Clause (a, I.ConDef(_, _, _, _, A, I.Type)) =
+    | compileConDec I.Clause (a, I.ConDef(_, _, _, _, A, I.Type, _)) =
 	C.sProgInstall (a, C.SClause (compileClauseN I.Clause true (I.Null, A)))
     | compileConDec _ _ = ()
 
