@@ -73,7 +73,7 @@ struct
        G' |- g  goal
        if  G |- M : g[s]
        then  sc M  is evaluated
-     Note: backtracking is allowed iff !bt = true
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
@@ -102,7 +102,7 @@ struct
        G'' |- p : H @ S' (mod whnf)
        if G |- S : r[s]
        then sc S is evaluated
-     Note: backtracking is allowed iff !bt = true
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in p[s'], r[s], and dp
               any effect  sc S  might have
   *)
@@ -145,7 +145,7 @@ struct
        G |- s : G'
        if G |- ag[s] auxgoal
        then sc () is evaluated
-     Note: backtracking is allowed iff !bt = true
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in ag[s], dp and sc () *)
 
   and aSolve ((C.Trivial, s), dp, cnstr, sc, bt) = 
@@ -167,7 +167,7 @@ struct
        G' |- p : type, p = H @ S mod whnf
        if G |- M :: p[s]
        then sc M is evaluated
-     Note: backtracking is allowed iff !bt = true
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in p[s] and dp
               any effect  sc M  might have
 
@@ -185,16 +185,17 @@ struct
 	  | matchSig (Hc::sgn') =
 	    let
 	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
-              val bt' = ref true : bool ref
+              val btRef = ref true : bool ref
+              fun bt' () = !btRef andalso bt()
 	      val _ =
 	        (* trail to undo EVar instantiations *)
 	        CSManager.trail
                   (fn () =>
                      rSolve (ps', (r, I.id), dp,
-                             (fn S => (bt' := (not deterministic);
+                             (fn S => (btRef := (not deterministic);
                                        sc (I.Root(Hc, S)))), bt'))
             in
-	      if(!bt andalso !bt')
+	      if(bt' ())
               then matchSig sgn'
               else ()
 	    end
@@ -211,14 +212,15 @@ struct
 	    if eqHead (Ha, Ha')
 	    then
               let
-                val bt' = ref true : bool ref
+                val btRef = ref true : bool ref
+                fun bt' () = !btRef andalso bt()
                 val _ =
                   CSManager.trail (* trail to undo EVar instantiations *)
                     (fn () => rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
-                                      (fn S => (bt' := (not deterministic);
+                                      (fn S => (btRef := (not deterministic);
                                                 sc (I.Root(I.BVar(k), S)))), bt'))
               in
-                if(!bt andalso !bt')
+                if(bt' ())
                 then matchDProg (dPool', k+1)
                 else ()
               end
@@ -236,7 +238,7 @@ struct
               in
                 case resOpt
                   of SOME _ =>
-                       (if (not deterministic)
+                       (if (not deterministic andalso bt ())
                         then matchConstraint (solve, try+1)
                         else ())
                    | NONE => ()
@@ -247,7 +249,7 @@ struct
            | _ => matchDProg (dPool, 1)
       end
   in
-    fun solve (gs, dp, sc) = solve'(gs, dp, (fn (U) => sc (U)), ref true)
+    fun solve (gs, dp, sc) = solve'(gs, dp, (fn (U) => sc (U)), (fn () => true))
   end (* local ... *)
 
 end; (* functor AbsMachine *)

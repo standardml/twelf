@@ -89,7 +89,7 @@ struct
        then  sc M  is evaluated to res'
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
-     Note: !bt = true iff backtracking is allowed
+     Note: backtracking is allowed iff bt () = true
   *)
   fun solve' ((C.Atom(p), s), dp as C.DProg (G, dPool), sc, bt) =
       matchAtom ((p,s), dp, sc, bt)
@@ -128,6 +128,7 @@ struct
        Ha is the target family of p and r (which must be equal)
      Effects: instantiation of EVars in p[s'], r[s], and dp
               any effect  sc S  might have
+     Note: backtracking is allowed iff bt () = true
   *)
   and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), HcHa, sc, bt) =
       (T.signal (G, T.Unify (HcHa, I.EClo (Q, s), I.EClo ps'));
@@ -179,6 +180,7 @@ struct
        G |- s : G'
        if G |- ag[s] auxgoal
        then sc () is evaluated
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in ag[s], dp and sc () *)
 
 
@@ -208,6 +210,7 @@ struct
        if G |- M :: p[s]
        then sc M is evaluated with return value res
        else res = False
+     Note: backtracking is allowed iff bt () = true
      Effects: instantiation of EVars in p[s] and dp
               any effect  sc M  might have
 
@@ -229,21 +232,21 @@ struct
 	  | matchSig (Hc::sgn') =
 	    let
 	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
-              val bt' = ref true : bool ref
+              val btRef = ref true : bool ref
+              fun bt' () = !btRef andalso bt ()
               val deep =
                 CSManager.trail (* trail to undo EVar instantiations *)
                   (fn () =>
                      rSolve (ps', (r, I.id), dp, (Hc, Ha),
                              (fn S =>
                                (T.signal (G, T.SucceedGoal (tag, (Hc, Ha), I.EClo ps'));
-                                bt' := (not deterministic); sc (I.Root(Hc, S)))),
-                             bt'))
+                                btRef := (not deterministic); sc (I.Root(Hc, S)))), bt'))
             in
               (if deep
                then (* deep backtracking *)
                T.signal (G, T.RetryGoal (tag, (Hc, Ha), I.EClo ps'))
                else ()); (* shallow backtracking *)
-               if((!bt) andalso (!bt'))
+               if(bt'())
                then matchSig sgn'
                else ()
             end
@@ -260,13 +263,14 @@ struct
 	    if eqHead (Ha, Ha')
             then
               let
-                val bt' = ref true : bool ref
+                val btRef = ref true : bool ref
+                fun bt' () = !btRef andalso bt ()
                 val deep =
                   CSManager.trail   (* trail to undo EVar instantiations *)
                     (fn () =>
                        rSolve (ps', (r, I.comp(s, I.Shift(k))),
                                dp, (I.BVar(k), Ha),
-                               (fn S => (bt' := (not deterministic);
+                               (fn S => (btRef := (not deterministic);
                                          sc (I.Root(I.BVar(k), S)))),
                                bt'))
               in
@@ -274,7 +278,7 @@ struct
                  then (* deep backtracking *)
                    T.signal (G, T.RetryGoal (tag, (I.BVar(k), Ha), I.EClo ps'))
                  else ()); (* shallow backtracking *)
-                 if(!bt andalso !bt')
+                 if(bt'())
                  then matchDProg (dPool', k+1)
                  else ()
               end
@@ -292,7 +296,7 @@ struct
               in
                 case resOpt
                   of SOME _ =>
-                       (if (not deterministic)
+                       (if (bt() andalso not deterministic)
                         then matchConstraint (solve, try+1)
                         else ())
                    | NONE => ()
@@ -304,7 +308,7 @@ struct
       end
 
   in
-    fun solve (gs, dp, sc) = (T.init(); solve'(gs, dp, (fn (U) => sc (U)), ref true))
+    fun solve (gs, dp, sc) = (T.init(); solve'(gs, dp, (fn (U) => sc (U)), (fn () => true)))
   end (* local ... *)
 
 end; (* functor TMachine *)
