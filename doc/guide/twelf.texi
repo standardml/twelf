@@ -65,7 +65,13 @@ implementation.
 
 For current information including download instructions, publications,
 and mailing list, see the Twelf home page at
-@t{http://www.cs.cmu.edu/~twelf/}.
+@t{http://www.cs.cmu.edu/~twelf/}.  This User's Guide is published as
+@display
+ Frank Pfenning and Carsten Schuermann
+ @emph{Twelf User's Guide}
+ Technical Report CMU-CS-98-173, Department of Computer Science, 
+ Carnegie Mellon University, November 1998.
+@end display
 
 @ifhtml
 <UL>
