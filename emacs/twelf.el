@@ -1836,10 +1836,18 @@ Starts a Twelf servers if necessary."
 ;    (setq *twelf-config-list* (cons filename *twelf-config-list*))
 ;    (setq *twelf-config-time* temp-time)))
 
+(defun natp (x)
+  "Checks if X is an integer greater or equal to 0."
+  (and (integerp x) (>= x 0)))
+
 (defun twelf-read-nat ()
-  "Read a natural number in mini-buffer."
-  (let ((n (read-number "Number: " t)))
-    (if (>= n 0) n (error "Number must be non-negative"))))
+  "Reads a natural number from the minibuffer."
+  (let ((num nil))
+    (while (not (natp num))
+      (setq num (read-from-minibuffer "Number: " (if num (prin1-to-string num))
+				      nil t t))
+      (if (not (natp num)) (beep)))
+    num))
 
 (defun twelf-read-bool ()
   "Read a boolean in mini-buffer."
