@@ -615,11 +615,11 @@ struct
 	in
 	  IntSyn.ConDef (name, imp, U', V', L)
 	end
-      | nameConDec' (IntSyn.NSConDef (name, imp, U, V, L)) =
+      | nameConDec' (IntSyn.AbbrevDef (name, imp, U, V, L)) =
 	let 
 	  val (U', V') = defEName (U, V)
 	in
-	  IntSyn.NSConDef (name, imp, U', V', L)
+	  IntSyn.AbbrevDef (name, imp, U', V', L)
 	end
       | nameConDec' (skodec) = skodec (* fix ??? *)
 

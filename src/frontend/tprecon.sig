@@ -77,7 +77,8 @@ sig
 		     (* where A is query type, X the optional proof term variable name *)
 		     (* Yi the EVars in the query and "Yi" their names *)
 
-  val condecToConDec : condec * Paths.location -> IntSyn.ConDec option * Paths.occConDec option
+  val condecToConDec : condec * Paths.location * bool -> IntSyn.ConDec option * Paths.occConDec option
                      (* optional ConDec is absent for anonymous definitions *)
-
+                     (* bool = true means that condec is an abbreviation *)
+				   
 end;  (* signature TP_RECON *)

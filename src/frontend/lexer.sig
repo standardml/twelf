@@ -35,6 +35,7 @@ sig
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
+    | ABBREV				(* `%abbrev' *)
 
   exception Error of string
 

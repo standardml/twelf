@@ -221,7 +221,7 @@ struct
           | SOME(cid) => (case IntSyn.sgnLookup(cid)
 			    of IntSyn.ConDec (_, i, V, _) => SOME(IntSyn.Const(cid), i, V)
 			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)
-			     | IntSyn.NSConDef  (_, i, _, V, _) => SOME(IntSyn.NSDef(cid), i, V)))
+			     | IntSyn.AbbrevDef  (_, i, _, V, _) => SOME(IntSyn.NSDef(cid), i, V)))
 
 
   (* Translating identifiers once they have been classified *)
@@ -572,7 +572,7 @@ struct
   *)
   (* should printing of result be moved to frontend? *)
   (* Wed May 20 08:08:50 1998 -fp *)
-  fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r)) =
+  fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
@@ -593,7 +593,7 @@ struct
       in
 	(SOME(cd), SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, SOME(tm2)), Paths.Loc (fileName, r)) =
+    | condecToConDec (condef(optName, tm1, SOME(tm2)), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
@@ -611,10 +611,10 @@ struct
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val ocd = Paths.def (r, i, oc1, SOME(oc2))
-        val cd = if Strict.check ((U'', V''), SOME(ocd)) then 
-	           Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
-		 else 
-	           Names.nameConDec (IntSyn.NSConDef (name, i, U'', V'', level))
+        val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, i, U'', V'', level))
+		 else (Strict.check ((U'', V''), SOME(ocd));
+		       Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level)))
+		    
        val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()
@@ -627,7 +627,7 @@ struct
       in
 	(optConDec, SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, NONE), Paths.Loc (fileName, r)) =
+    | condecToConDec (condef(optName, tm1, NONE), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
@@ -642,10 +642,10 @@ struct
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val ocd = Paths.def (r, i, oc1, NONE)
-        val cd = if Strict.check ((U'', V''), SOME(ocd)) then
-	           Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
-		 else 
-	           Names.nameConDec (IntSyn.NSConDef (name, i, U'', V'', level))	
+        val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, i, U'', V'', level))
+		 else (Strict.check ((U'', V''), SOME(ocd));
+		       Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level)))
+	           
         val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()

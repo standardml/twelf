@@ -173,10 +173,10 @@ struct
 	 raise AbortQuery ("No solution to %solve found"))
 	handle Solution (i,(U,V)) =>
 	  let
-	    val conDec = if Strict.check ((U, V), NONE) then 
-	                   IntSyn.ConDef (name, i, U, V, IntSyn.Type)
-			 else
-	                   IntSyn.NSConDef (name, i, U, V, IntSyn.Type)
+	    val conDec = ((Strict.check ((U, V), NONE); 
+	                   IntSyn.ConDef (name, i, U, V, IntSyn.Type)) 
+			  handle Strict.Error _ => 
+			    IntSyn.AbbrevDef (name, i, U, V, IntSyn.Type))
 	  in
 	    conDec
 	  end  (* solve _ handle Solution => _ *)

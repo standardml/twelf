@@ -232,7 +232,7 @@ struct
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((NSDef (d), S), s) =
 	 let
-	   val NSConDef (_, _, U, _, _) = sgnLookup d
+	   val AbbrevDef (_, _, U, _, _) = sgnLookup d
 	 in
 	   whnfRedex (whnf (U, id), (S, s))  
 	 end

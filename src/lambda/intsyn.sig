@@ -78,7 +78,7 @@ sig
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | NSConDef of string * int		(* a = A : K : kind  or       *)
+  | AbbrevDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | SkoDec of string * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)

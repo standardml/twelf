@@ -582,14 +582,19 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
+	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+			 Vfmt, F.Break,
+			 sym "=", F.Space,
+			 Ufmt, sym "."]
+(* removed, when abbreviations where introduced. -- cs Mon Jun  7 16:03:30 EDT 1999
 	F.Vbox0 0 1 [F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."],
 		F.Break,
 		F.HVbox [sym "%strict ", Str0 (Symbol.def (name)), sym "."]]
-      end
-    | fmtConDec (hide, I.NSConDef (name, imp, U, V, L)) =
+*)      end
+    | fmtConDec (hide, I.AbbrevDef (name, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
 	val _ = Names.varReset ()
@@ -598,13 +603,18 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
+	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+			 Vfmt, F.Break,
+			 sym "=", F.Space,
+			 Ufmt, sym "."]
+(* removed, when abbreviations where introduced. -- cs Mon Jun  7 16:03:30 EDT 1999
 	F.Vbox0 0 1 [F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."],
 		F.Break,
 		F.HVbox [sym "%nonstrict ", Str0 (Symbol.def (name)), sym "."]]
-      end
+*)      end
 
   (* fmtEqn assumes that G is a valid printing context *)
   fun fmtEqn (I.Eqn (G, U1, U2)) =

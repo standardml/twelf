@@ -8,5 +8,6 @@ sig
   structure ExtSyn : EXTSYN
 
   val parseConDec' : ExtSyn.condec Parsing.parser
+  val parseAbbrev'  : ExtSyn.condec Parsing.parser
 
 end;  (* signature PARSE_CONDEC *)

@@ -40,6 +40,7 @@ struct
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
+    | ABBREV				(* `%abbrev' *)
 
   exception Error of string
 
@@ -197,6 +198,7 @@ struct
       | lexPragmaKey (ID(_, "prove"), r) = (PROVE, r)
       | lexPragmaKey (ID(_, "establish"), r) = (ESTABLISH, r)
       | lexPragmaKey (ID(_, "assert"), r) = (ASSERT, r)
+      | lexPragmaKey (ID(_, "abbrev"), r) = (ABBREV, r)
       | lexPragmaKey (ID(_, "name"), r) = (NAME, r)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
@@ -280,6 +282,7 @@ struct
     | toString' (PROVE) = "%prove"
     | toString' (ESTABLISH) = "%establish"
     | toString' (ASSERT) = "%assert"
+    | toString' (ABBREV) = "%abbrev"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"

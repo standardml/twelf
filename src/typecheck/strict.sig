@@ -8,5 +8,5 @@ sig
 
   exception Error of string
   
-  val check : (IntSyn.Exp * IntSyn.Exp) * Paths.occConDec option -> bool 
+  val check : (IntSyn.Exp * IntSyn.Exp) * Paths.occConDec option -> unit
 end;  (* signature STRICT *)

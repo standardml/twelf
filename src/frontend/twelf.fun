@@ -25,6 +25,9 @@ functor Twelf
      sharing Parser.ExtSyn.Paths = Paths
      sharing Parser.ExtSynQ.Paths = Paths
    structure TypeCheck : TYPECHECK
+   structure Strict : STRICT
+     sharing Strict.IntSyn = IntSyn'
+     sharing Strict.Paths = Paths
    structure Constraints : CONSTRAINTS
      sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
@@ -236,6 +239,7 @@ struct
 	      | Solve.AbortQuery (msg) => abortFileMsg (fileName, msg)
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
+	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
 
     (* installConDec (conDec, ocOpt)
@@ -263,7 +267,30 @@ struct
     fun install1 (fileName, Parser.ConDec(condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
-	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r))
+	   val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), false)
+	   fun icd (SOME(conDec)) =
+	     let
+	       (* names are assigned in TpRecon *)
+	       (* val conDec' = nameConDec (conDec) *)
+	       (* should print here, not in TpRecon *)
+	       val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
+	       (* allocate new cid after checking modes! *)
+	       val cid = installConDec (conDec, (fileName, ocOpt))
+	     in
+	       ()
+	     end
+	     | icd (NONE) = (* anonymous definition for type-checking *)
+	     ()
+	 in
+	   icd optConDec
+	 end
+	   handle Constraints.Error (eqns) =>
+	     raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	   
+      | install1 (fileName, Parser.AbbrevDec(condec, r)) =
+        (* Constant declarations c : V, c : V = U plus variations *)
+        (let
+	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), true)
 	  fun icd (SOME(conDec)) =
 	      let
 		  (* names are assigned in TpRecon *)

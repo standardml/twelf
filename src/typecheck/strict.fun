@@ -113,9 +113,9 @@ struct
 	        if strictArgParm (1, U')
 		  then strictArgParms (U', V', Paths.body occ)
 		else raise Error (occToString (ocdOpt, occ)
-				  ^ "No strict occurrence of " ^ decToVarName D)
+				  ^ "No strict occurrence of " ^ decToVarName D ^ ", use %abbrev")
 	in
-	  (strictArgParms (U, V, Paths.top); true) handle Error _ => false
+	  strictArgParms (U, V, Paths.top)
 	end
 
 

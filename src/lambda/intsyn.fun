@@ -94,19 +94,19 @@ struct
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of name * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | NSConDef of string * int		(* a = A : K : kind  or       *)
+  | AbbrevDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | SkoDec of name * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
   fun conDecName (ConDec (name, _, _, _)) = name
     | conDecName (ConDef (name, _, _, _, _)) = name
-    | conDecName (NSConDef (name, _, _, _, _)) = name
+    | conDecName (AbbrevDef (name, _, _, _, _)) = name
     | conDecName (SkoDec (name, _, _, _)) = name
 
   fun conDecType (ConDec (_, _, V, _)) = V
     | conDecType (ConDef (_, _, _, V, _)) = V
-    | conDecType (NSConDef (_, _, _, V, _)) = V
+    | conDecType (AbbrevDef (_, _, _, V, _)) = V
     | conDecType (SkoDec (_, _, V, _)) = V
 
   local
@@ -153,7 +153,7 @@ struct
   fun constDef (d) =
       (case sgnLookup (d)
 	 of ConDef(_, _, U,_, _) => U
-	  | NSConDef (_, _, U,_, _) => U)
+	  | AbbrevDef (_, _, U,_, _) => U)
 
   fun constType (c) = conDecType (sgnLookup (c))
 
@@ -161,14 +161,14 @@ struct
       (case sgnLookup(c)
 	 of ConDec (_,i,_,_) => i
           | ConDef (_,i,_,_,_) => i
-          | NSConDef (_,i,_,_,_) => i
+          | AbbrevDef (_,i,_,_,_) => i
 	  | SkoDec (_,i,_,_) => i)
 
   fun constUni (c) =
       (case sgnLookup(c)
 	 of ConDec (_,_,_,L) => L
           | ConDef (_,_,_,_,L) => L
-          | NSConDef (_,_,_,_,L) => L
+          | AbbrevDef (_,_,_,_,L) => L
 	  | SkoDec (_,_,_,L) => L)
 
   (* Declaration Contexts *)

@@ -24,6 +24,7 @@ sig
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSynQ.query * ExtSyn.Paths.region (* expected, try, A *)
     | Solve of (string * ExtSynQ.term) * ExtSyn.Paths.region
+    | AbbrevDec of ExtSyn.condec * ExtSyn.Paths.region
     (* Further declarations to be added here *)
 
   val parseStream: TextIO.instream -> fileParseResult Stream.stream

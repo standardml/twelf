@@ -124,7 +124,7 @@ local
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
-    | fmtConDec (I.NSConDef (name, imp, U, V, L)) =
+    | fmtConDec (I.AbbrevDef (name, imp, U, V, L)) =
       let
 	val _ = Names.varReset ()
       in
