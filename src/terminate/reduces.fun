@@ -5,7 +5,7 @@
    tech report CMU-CS-01-115
  *)
 
-functor Reduces    (structure Global : GLOBAL
+functor Reduces   (structure Global : GLOBAL
 		   structure IntSyn': INTSYN
 		   structure Whnf : WHNF
 		     sharing Whnf.IntSyn = IntSyn'
@@ -21,10 +21,11 @@ functor Reduces    (structure Global : GLOBAL
 		     sharing Print.Formatter = Formatter
 		   structure Order : ORDER
 		     sharing Order.IntSyn = IntSyn'
+		   structure Paths  : PATHS
 		   structure Checking : CHECKING
 		      sharing Checking.Order = Order
 		      sharing Checking.IntSyn = IntSyn'
-		   structure Paths  : PATHS
+		      sharing Checking.Paths = Paths
 		   structure Origins : ORIGINS
 		     sharing Origins.Paths = Paths
 		     sharing Origins.IntSyn = IntSyn'
@@ -215,7 +216,7 @@ struct
       | getROrderW (G, Q, (I.Pi ((D, I.Maybe), V), s), occ) = 
 	  let 
 	    val O = getROrder (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
-			        I.Decl (Q, C.All), (V, I.dot1 s), occ)
+			        I.Decl (Q, C.All), (V, I.dot1 s), P.body occ)
  	  in 
 	    case O 
 	      of NONE => NONE
@@ -223,7 +224,7 @@ struct
 	  end 
       | getROrderW (G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
 	  let
-	    val O = getROrder (G, Q, (V2, I.comp(I.invShift, s)), occ)
+	    val O = getROrder (G, Q, (V2, I.comp(I.invShift, s)), P.body occ)
 	  in 
 	    case O 
 	      of NONE => NONE 
@@ -253,13 +254,13 @@ struct
     fun checkGoal (G0, Q0, Rl, Vs, Vs', occ) = 
           checkGoalW (G0, Q0, Rl, Whnf.whnf Vs, Vs', occ)
     and checkGoalW (G0, Q0, Rl, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), Vs', occ) = 
-      (checkClause ((G0, Q0, Rl), I.Null, I.Null, (V1, s), occ);
-       checkGoal (G0, Q0, Rl, (V2, I.comp(I.invShift, s)), Vs', occ))
+        (checkClause ((G0, Q0, Rl), I.Null, I.Null, (V1, s), P.label occ);
+         checkGoal (G0, Q0, Rl, (V2, I.comp(I.invShift, s)), Vs', P.body occ))
       | checkGoalW (G0, Q0, Rl, (I.Pi ((D, I.Maybe), V), s), (V', s'), occ) = 
 	  checkGoal (I.Decl (G0, N.decLUName (G0, I.decSub (D, s))),
 		     I.Decl (Q0, C.All), 
 		     C.shiftRCtx Rl (fn s => I.comp(s, I.shift)), 
-		     (V, I.dot1 s), (V', I.comp(s', I.shift)), occ)
+		     (V, I.dot1 s), (V', I.comp(s', I.shift)), P.body occ)
       | checkGoalW (G0, Q0, Rl, Vs as (I.Root (I.Const a, S), s), 
 		    Vs' as (I.Root (I.Const a', S'), s'), occ) = 
 	let
@@ -274,22 +275,20 @@ struct
 	in
 	  (case lookup (a's, fn x' => x' = a') 
 	     of R.Empty => ()
-	      | R.LE _ => (if (!Global.chatter) > 5 
-			     then (print ("\n check termination order: ");
-			          print (rlistToString (G0, Rl));
-				  print( " ---> " ^ orderToString (G0, C.Leq(P, P')) ^ "\n"))
+	      | R.LE _ => (if (!Global.chatter) > 4
+			     then (print ("Verifying termination order:\n");
+				   print (rlistToString (G0, Rl));
+				   print( " ---> " ^ orderToString (G0, C.Leq(P, P')) ^ "\n"))
 			   else ();
 			   if C.deduce (G0, Q0, Rl, C.Leq(P, P')) 
 			     then ()
 			   else raise Error' (occ, "Termination violation:\n" ^ 
-					      rlistToString (G0, Rl) ^ 
-					      " ---> " ^ 
+					      rlistToString (G0, Rl) ^ " ---> " ^ 
 					      orderToString (G0, C.Leq(P, P'))))
-	     | R.LT _ =>  (if (!Global.chatter) > 5 
-			    then  (print "\n check termination order ";
+	     | R.LT _ =>  (if (!Global.chatter) > 4 
+			    then  (print "Verifying termination order:\n";
 				   print (rlistToString (G0, Rl) ^ " ---> ");
-				   print(orderToString (G0, C.Less(P,P')) ^ 
-					 "\n"))
+				   print(orderToString (G0, C.Less(P, P')) ^ "\n"))
 			   else ();
 			   if C.deduce (G0, Q0, Rl, C.Less(P, P')) 
 			     then ()
@@ -315,7 +314,7 @@ struct
 
      *)
 
-    and checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D as I.Dec(_,V')), I.Decl(Q, C.Exist')), occ) = 
+    and checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D as I.Dec(_,V')), I.Decl(Q, C.And(occ)))) = 
           let
 	    val _ = checkGoal (G0, Q0, Rl, (V', I.Shift (n+1)), Vs, occ)
 	    val RO = getROrder (G0, Q0, (V', I.Shift (n+1)), occ)
@@ -323,15 +322,15 @@ struct
 	                of NONE => Rl
 			  | SOME(O) => O :: Rl
 	  in 
-	    checkSubgoals (G0, Q0, Rl', Vs, n+1, (G, Q), occ)
+	    checkSubgoals (G0, Q0, Rl', Vs, n+1, (G, Q))
 	  end 
-      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D), I.Decl(Q, C.Exist)), occ) = 
-	  checkSubgoals (G0, Q0, Rl, Vs, n+1, (G, Q), occ)
+      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D), I.Decl(Q, C.Exist))) = 
+	  checkSubgoals (G0, Q0, Rl, Vs, n+1, (G, Q))
 
-      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D), I.Decl(Q, C.All)), occ) = 
-	  checkSubgoals (G0, Q0, Rl, Vs, n+1, (G, Q), occ)
+      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Decl(G, D), I.Decl(Q, C.All))) = 
+	  checkSubgoals (G0, Q0, Rl, Vs, n+1, (G, Q))
          
-      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Null, I.Null), occ) = ()
+      | checkSubgoals (G0, Q0, Rl, Vs, n, (I.Null, I.Null)) = ()
           
 
     (* checkClause (GQR as (G0, Q0, Rl), G, Q, Vs, occ) 
@@ -353,7 +352,7 @@ struct
 			I.Decl (Q, C.Exist), (V, I.dot1 s), P.body occ)
 
       | checkClauseW (GQR, G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
-	   checkClause (GQR, I.Decl (G, I.decSub (D, s)), I.Decl (Q, C.Exist'), 
+	   checkClause (GQR, I.Decl (G, I.decSub (D, s)), I.Decl (Q, C.And (P.label occ)), 
 			(V2, I.dot1 s), P.body occ) 
 
       | checkClauseW (GQR as (G0, Q0, Rl), G, Q, Vs as (I.Root (I.Const a, S), s), occ) = 
@@ -361,9 +360,9 @@ struct
 	    val n = I.ctxLength G
 	    val Rl' = C.shiftRCtx Rl (fn s => I.comp(s, I.Shift n))
 	  in 
-	    checkSubgoals (concat(G0, G), concat(Q0, Q), Rl', Vs, 0, (G, Q), occ)
+	    checkSubgoals (concat(G0, G), concat(Q0, Q), Rl', Vs, 0, (G, Q))
 	  end 
-	   
+
       | checkClauseW (GQR, G, Q, (I.Root (I.Def a, S), s), occ) =
 	raise Error' (occ, "Termination checking for defined type families not yet available:\n"
 		      ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
@@ -479,13 +478,7 @@ struct
 		         | SOME(O) => O :: Rl'
 	 in 
  	  checkRClause (G', Q', Rl'', (V2, I.dot1 s), P.body occ); 
-	  print "\n checking Clause done :";
-	  print (rlistToString(G', Rl'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
-	  print "\n check Imp :";
-	  print (rlistToString(G', Rl'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
-
 	  checkRImp (G', Q', Rl'', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ) 
-
 	end
 
       | checkRClauseW (G, Q, Rl, Vs as (I.Root (I.Const a, S), s), occ) =
@@ -494,8 +487,8 @@ struct
 	             of NONE => raise Error' (occ, "No reduction order assigned for " ^ 
 					      N.qidToString (N.constQid a) ^ ".")
 		      | SOME(O) => O
-	  val _ = if (!Global.chatter) > 5
-		    then print ("\n check reduction predicate\n " ^
+	  val _ = if !Global.chatter > 4
+		    then print ("Verifying reduction property:\n" ^
 				rlistToString (G, Rl) ^ " ---> " ^  
 				orderToString (G, RO) ^ " \n")
 		  else ()
@@ -521,27 +514,28 @@ struct
     *)
     fun checkFamReduction a =
 	let 
-	  fun checkFam' [] = ()
+	  fun checkFam' [] =
+	      (if !Global.chatter > 3
+		 then print "\n"
+	       else () ; ())
 	    | checkFam' (I.Const b::bs) = 
-		(if (!Global.chatter) > 4 then 
-		   print ("[" ^ N.qidToString (N.constQid b) ^ ":")
+		(if (!Global.chatter) > 3 then 
+		   print (N.qidToString (N.constQid b) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
+		 if (!Global.chatter) > 4
+		   then (N.varReset IntSyn.Null; print "\n")
+		 else ();
 		 (( checkRClause (I.Null, I.Null, nil, (I.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
-		 if (!Global.chatter) > 4
-		   then print ("]\n")
-		 else ();
-		 checkFam' bs)
-	  val _ = if (!Global.chatter) > 4
-		    then print "[Reduces: "
+		   checkFam' bs)
+	  val _ = if (!Global.chatter) > 3
+		    then print ("Reduction checking family " ^ N.qidToString (N.constQid a)
+				^ ":\n")
 		  else ()
 	in
-	  (checkFam' (Index.lookup a);
-	   if (!Global.chatter) > 4 then 
-	     print "]\n" else ())
+	  checkFam' (Index.lookup a)
 	end
 
     (* checkFam a = ()
@@ -557,27 +551,28 @@ struct
 
     fun checkFam a =
 	let 
-	  fun checkFam' [] = ()
+	  fun checkFam' [] =
+	      (if !Global.chatter > 3
+		 then print "\n"
+	       else () ; ())
 	    | checkFam' (I.Const b::bs) = 
-		(if (!Global.chatter) > 4 then 
-		   print ("[" ^ N.qidToString (N.constQid b) ^ ":")
+		(if (!Global.chatter) > 3 then 
+		   print (N.qidToString (N.constQid b) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
+		 if (!Global.chatter) > 4
+		   then (N.varReset IntSyn.Null; print "\n")
+		 else ();
 	        (checkClause' ((I.constType (b), I.id), P.top)
 		 handle Error' (occ, msg) => error (b, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));
-		 if (!Global.chatter) > 4
-		   then print ("]\n")
-		 else ();
 		 checkFam' bs)
-	  val _ = if (!Global.chatter) > 4
-		    then print "[Terminates: "
+	  val _ = if (!Global.chatter) > 3
+		    then print ("Termination checking family " ^ N.qidToString (N.constQid a)
+				^ ":\n")
 		  else ()
 	in
-	  (checkFam' (Index.lookup a);
-	   if (!Global.chatter) > 4 then 
-	     print "]\n" else ())
+	  checkFam' (Index.lookup a)
 	end
 
     fun reset () = (R.reset(); R.resetROrder())

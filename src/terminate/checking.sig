@@ -5,13 +5,14 @@ signature CHECKING =
 sig
   structure IntSyn : INTSYN
   structure Order : ORDER
+  structure Paths : PATHS
     
   (* If Q marks all parameters in a context G we write   G : Q  *)
 
   datatype Quantifier =        (* Quantifier to mark parameters *)
-    All                  (* Q ::= A;;                     *)
-  | Exist                (*     | Ex                      *)
-  | Exist'               (*     | Ex'                     *)
+    All                  (* Q ::= All                     *)
+  | Exist                (*     | Exist                     *)
+  | And of Paths.occ     (*     | And                     *)
 
 
   datatype 'a Predicate = 

@@ -32,11 +32,12 @@ functor Checking  (structure Global : GLOBAL
 struct
   structure IntSyn = IntSyn'
   structure Order = Order
+  structure Paths = Paths
 
     datatype Quantifier =        (* Quantifier to mark parameters *)
       All                        (* Q ::= All                     *)
     | Exist                      (*     | Exist                   *)
-    | Exist'                     (*     | Exists^                 *)
+    | And of Paths.occ	         (*     | And                     *)
 
 
     (* If Q marks all parameters in a context G we write   G : Q               *)
@@ -111,17 +112,10 @@ struct
           Print.expToString(G, I.EClo(Us)) ^ " = " ^ 
 	  Print.expToString(G, I.EClo(Us'))
 
-
     fun atomicRCtxToString (G, nil) = " "
-      | atomicRCtxToString (G, (Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
-	  atomicRCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
-	  ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | atomicRCtxToString (G, (Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
-	   atomicRCtxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
-	   ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | atomicRCtxToString (G, (Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
-	   atomicRCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
-	   ^ Print.expToString(G, I.EClo(Us')) ^ " "
+      | atomicRCtxToString (G, O::nil) = atomicPredToString (G, O)
+      | atomicRCtxToString (G, O::D') = 
+          atomicRCtxToString (G, D') ^ ", " ^ atomicPredToString (G, O)
 
    (*--------------------------------------------------------------------*)
    (* shifting substitutions *)
@@ -192,26 +186,8 @@ struct
 
     fun fmtRGCtx (G, Rl) = fmtRGCtx' (Names.ctxName G, Rl) 
 
-    (* printing atomic orders *)
-    fun atomicPredToString (G, Less((Us, _), (Us', _))) = 
-          Print.expToString (G, I.EClo(Us)) ^ " < " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString (G, Leq((Us, _), (Us', _))) = 
-          Print.expToString (G, I.EClo(Us)) ^ " <= " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString (G, Eq((Us, _), (Us', _))) = 
-          Print.expToString(G, I.EClo(Us)) ^ " = " ^ Print.expToString(G, I.EClo(Us'))
-
-    fun ctxToString (G, []) = " "
-      | ctxToString (G, (Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
-	ctxToString (G, Rl) ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
-		     ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | ctxToString (G, (Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
-	ctxToString (G, Rl) ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
-		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | ctxToString (G, (Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
-	ctxToString (G, Rl) ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
-		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
 	
-   (*--------------------------------------------------------------------*)
+    (*--------------------------------------------------------------------*)
 
     (* init () = true 
 
@@ -543,8 +519,8 @@ struct
     and leftInstantiate (GQ as (G, Q), nil, D', P, sc) =  
           if atomic(GQ, D', nil, P, sc) 
 	    then  
-	      (if (!Global.chatter) > 4
-		 then print ("\n Proved " ^ ctxToString (G, D') ^ 
+	      (if !Global.chatter > 4
+		 then print (" Proved: " ^ atomicRCtxToString (G, D') ^ 
 			     " ---> " ^ atomicPredToString (G, P) 
 			     ^ "\n")
 	       else (); true)
@@ -728,9 +704,9 @@ struct
 	   then eqSpineIL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
 			 ((S', s'), (I.constType c', I.id)), P', sc)
 	 else 
-	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, (Eq(UsVs, UsVs') :: D))
-			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^ atomicRCtxToString (G, (Eq(UsVs, UsVs') :: D))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
 	    true)
@@ -740,9 +716,9 @@ struct
          if isAtomic (GQ, Us') 	  
 	   then leftInstantiate (GQ, D, (Eq((Us', Vs'),(Us, Vs)) :: D'), P', sc)
 	 else 
-	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D))
-			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^  atomicRCtxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
 	   true)
@@ -752,9 +728,9 @@ struct
          if isAtomic (GQ, Us) 	  
 	   then leftInstantiate (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P', sc)
 	 else 
-	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D'))
-			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^  atomicRCtxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D'))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
 	   true)
@@ -782,9 +758,9 @@ struct
 	(* (Us, Vs as (I.Pi _ , _)) and (Us', Vs' as (I.Root _, _)) 
 	   or the other way 
 	 *)
-       (if (!Global.chatter) > 4
-	  then print ("\n Proved " ^  ctxToString (G, (Eq((UsVs), (UsVs')) :: D))
-		      ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+       (if !Global.chatter > 4
+	  then print (" Proved: " ^  atomicRCtxToString (G, (Eq((UsVs), (UsVs')) :: D))
+		      ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 		      ^ "\n")
 	else ();
 	  true)
@@ -1227,8 +1203,8 @@ struct
      | eqR' (GQ as (G, Q), D, UsVs as ((I.Root (I.BVar n, I.Nil), s), Vs), 
 	    UsVs' as ((I.Root (I.BVar n', I.Nil), s'), Vs'), sc, k) = 
 	 if (n = n')
-	   then (if (!Global.chatter) > 4
-		 then print ("\n Proved " ^ ctxToString (G, D) ^ 
+	   then (if !Global.chatter > 4
+		 then print (" Proved: " ^ atomicRCtxToString (G, D) ^ 
 			     " ---> " ^ atomicPredToString (G, Eq(UsVs, UsVs')) 
 			     ^ "\n")
 	       else (); true)
@@ -1334,8 +1310,8 @@ struct
 
      | leftDecompose (GQ as (G, Q), (Pi(Dec, O) :: D), D', P) = 
 	 (* drop assumption Pi D. P *)
-	 ((if (!Global.chatter) > 4
-		 then (print "\n Skipping quantified order ";
+	 ((if !Global.chatter > 3
+		 then (print " Ignoring quantified order ";
  		      print (F.makestring_fmt(fmtPredicate (G, Pi(Dec, O)))))
 	  else ());
 	 leftDecompose (GQ, D, D', P))
