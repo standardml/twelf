@@ -1,0 +1,19 @@
+Library
+  structure Sgn
+  structure Syntax
+  signature COMPRESS
+  functor Compress
+  structure Rep
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../lambda/sources.cm
+  syntax.sml
+  strict.sml
+  sgn.sml
+  reductio.sml
+  compress.sig
+  compress.fun
+  rep.sml
