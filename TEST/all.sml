@@ -1,7 +1,7 @@
 (* Twelf.chatter := 0; *)
 (* Twelf.chatter := 1; *)
 (* Twelf.chatter := 2; *)
-Twelf.chatter := 5;
+(* Twelf.chatter := 5; *)
 Twelf.doubleCheck := true;
 
 fun test (file) =

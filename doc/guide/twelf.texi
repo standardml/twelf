@@ -3,8 +3,10 @@
 @setfilename twelf.info
 @settitle Twelf User's Guide 
 @setchapternewpage odd
-@set VERSION 1.2
-@set UPDATED August 27, 1998
+@set VERSION 1.3
+@set UPDATED September 13, 2000
+@c @set VERSION 1.2
+@c @set UPDATED August 27, 1998
 @syncodeindex fn cp
 @c %**end of header
 
@@ -31,14 +33,16 @@ Last updated @value{UPDATED}.
 * Syntax::                      Grammar of signatures
 * Term Reconstruction::         Checking and inferring types 
 * Logic Programming::           How to interpret signatures as programs
+* Constraint Domains::          Using rationals and integers
 * Modes::                       Input/output behavior of relations
 * Termination::                 Verifying termination of programs
 * Theorem Prover::              Proving theorems and meta-theorems
 * ML Interface::                Running Twelf from ML
 * Twelf Server::                A stand-alone Twelf command interpreter
 * Emacs Interface::             Editing Twelf files
-* Installation::                
+* Installation::                How to install Twelf
 * Examples::                    Guide to standard examples
+* History::                     Differences between Elf 1.5 and Twelf
 * Index::                       Index to this guide
 @end menu
 
@@ -105,79 +109,49 @@ directory of the Twelf installation.  For example
 into the @file{/usr/local/} directory.
 
 @menu
-* New Features::                Differences from Elf 1.5
+* New Features::                Differences from Twelf 1.2
 * Quick Start::                 Sample interaction with Twelf
 @end menu
 
 @node New Features, Quick Start, Introduction, Introduction
 @section New Features
 
-While the underlying type theory has not changed, the Twelf
-implementation differs from older Elf implementation in a few ways.
-Mostly, these are simplifications and improvements.  The main feature
-which has not yet been ported is the Elf server interface to Emacs.
-Also, while the type checker is more efficient now, the operational
-semantics does not yet incorporate some of the optimizations of the
-older Elf implementations and is therefore slower.
+The current version @value{VERSION} from @value{UPDATED} incorporates
+the following major changes from Twelf 1.2 from August 27, 1998.
 
 @table @asis
+@item Constraints (@pxref{Constraint Domains}).
+ Type reconstruction and the logic programming engine (but not yet
+the theorem prover) allow various constraint domains in the style
+of constraint logic programming languages.  The main ones are
+equalities and inequalities over rationals and integers.
 
-@item Syntax (@pxref{Syntax})
-  The quote @samp{'} character is no longer a special character in the
-lexer, and @samp{=} (equality) is now a reserved identifier.  The syntax
-of @code{%name} declarations has changed by allowing only one preferred
-name to be specified.  Also, @code{%name}, @code{%infix}, @code{%prefix}
-and @code{%postfix} declarations must be terminated by a period @samp{.}
-which previously was optional.  Further, single lines comments now must
-start with @samp{%@var{whitespace}} or @samp{%%} in order to avoid
-misspelled keywords of the form @samp{%@var{keyword}} to be ignored.
+@item Tracing and Breakpoints (@pxref{Tracing and Breakpoints})
+ The logic programming engine now support tracing and setting
+of breakpoints for illustration and debugging purposes.
 
-@item Type theory
-  Elf 1.5 had two experimental features which are not available in
-Twelf: polymorphism and the classification of @math{type} as a type.
+@item Theorem Prover (@pxref{Theorem Prover})
+ The theorem prover now allows quantification over regular context.  The
+theorem prover will also use previously proved theorems with
+@code{%prove}) and ignore those with @code{%establish}, which is
+otherwise equivalent.  In unsafe mode, @code{%assert} can be used to
+claim theorems.  However, at present no longer generates proof terms.
 
-@item Definitions (@pxref{Definitions})
-  Twelf offers definitions which were not available in Elf.
+@item Reduction Checking (@pxref{Reduction Declaration})
+ The termination checker has been extended to verify if output
+arguments to a predicate are smaller than some inputs with
+the @code{%reduces} declaration.
 
-@item Searching for definitions (@pxref{Solve Declaration})
-  Elf had a special top-level query form @code{sigma [x:A] B} which
-searched for a solution @code{M : A} and then solved the result of
-subsituting @code{M} for @code{x} in @code{B}.  In Twelf this
-mechanism has been replaced by a declaration @code{%solve c : A} which
-searches for a solution @code{M : A} and then defines @code{c = M : A},
-where the remaining free variables are implicitly universally
-quantified.
+@item Signature Printing (@pxref{Signature Printing})
+ Signatures can now be printed, also in TeX format.
 
-@item Query declarations (@pxref{Query Declaration})
-  Twelf allows queries in ordinary Elf files as @samp{%query}
-declarations.  Queries are specified with an expected number of
-solutions, and the number of solutions to search for, which can be used
-to test implementations.
+@item Abbreviations (@pxref{Definitions})
+ Added abbreviations (@code{%abbrev}) which, unlike definition, do not
+need to be strict.
 
-@item Operational semantics (@pxref{Operational Semantics})
-  Twelf eliminates the distinction between static and dynamic
-signatures.  Instead, dependent function types @code{@{x:A@} B}
-where @code{x} occurs in the normal form of @code{B} are treated
-statically, while non-dependent function type @code{A -> B} or
-@code{B <- A} or @code{@{x:A@} B} where @code{x} does not occur
-in @code{B} are treated dynamically.
-
-@item Modes (@pxref{Modes})
-  Twelf offers a mode checker which was only partially supported in Elf.
-
-@item Termination (@pxref{Termination})
-  Twelf offers a termination checker which can verify that certain
-programs represent decision procedures.
-
-@item Theorem prover (@pxref{Theorem Prover})
-  Although very limited at present, an experimental prover for theorems
-and meta-theorems (that is, properties of signatures) is now available.
-It does not yet support lemmas or meta-hypothetical reasoning, which
-are currently under development.
-
-@item Emacs interface (@pxref{Emacs Interface})
-  The Elf mode has remained basically unchanged, but the Elf server
-interface has not yet been ported.
+@item Name Preferences (@pxref{Name Preferences})
+ Name preference declarations (@code{%name}) now allow an optional
+second argument for naming of parameters.
 @end table
 
 @node Quick Start,  , New Features, Introduction
@@ -195,7 +169,7 @@ file @file{Makefile} to give the proper location for @code{sml-cm}.
 % @kbd{cd twelf}
 % @kbd{make}
 % @kbd{bin/twelf-server}
-Twelf 1.2, Aug 27 1998
+Twelf 1.3, Sep 13 2000
 %% OK %%
 @end group
 @end example
@@ -371,7 +345,7 @@ We also use @math{U} and @math{V} to stand for arbitrary terms.
 @menu
 * Grammar::                     The grammar of Twelf
 * Constructor Declaration::     Introducing types and object constructors
-* Definitions::                 Defining abbreviations
+* Definitions::                 Notational definitions and abbreviations
 * Operator Declaration::        Infix, prefix and postfix operators
 * Name Preferences::            Assigning names to anonymous variables
 * Sample Signature::            Example of First-Order Logic
@@ -406,16 +380,21 @@ decl ::= id : term.         % @r{@math{a : K}  or  @math{c : A}}
        | id = term.         % @r{@math{d = M}}
        | _ : term = term.   % @r{anonymous definition, for type-checking}
        | _ = term.          % @r{anonymous definition, for type-checking}
+       | %abbrev adecl.     % @r{abbreviation}
        | %infix ixdecl.     % @r{operator declaration}
        | %prefix pxdecl.    % @r{operator declaration}
        | %postfix pxdecl.   % @r{operator declaration}
-       | %name id id.       % @r{name preference declaration}
+       | %name namepref.    % @r{name preference declaration}
        | %query qdecl.      % @r{query declaration}
        | %solve id : term.  % @r{solve declaration}
        | %mode mdecl.       % @r{mode declaration}
        | %terminates tdecl. % @r{termination declaration}
+       | %reduces rdecl.    % @r{reduction declaration}
        | %theorem thdecl.   % @r{theorem declaration}
        | %prove pdecl.      % @r{prove declaration}
+       | %establish pdecl.  % @r{prove declaration, do not use as lemma later}
+       | %assert callpats.  % @r{assert theorem (requires @code{Twelf.unsafe})}
+       | %use domain.       % @r{installs constraint domain}
 @end group
 
 @group
@@ -503,33 +482,44 @@ type is inferred from their occurrences (@pxref{Term Reconstruction}).
 @section Definitions
 
 @cindex definitions
+@cindex abbreviations
+@findex %abbrev
 
-Twelf supports notational definitions, currently employing a restriction
-to allow a simple and efficient internal treatment.  Semantically,
-definitions are completely transparent, that is, both for type checking
-and the operational semantics definitions may be expanded.
+Twelf supports notational definitions and abbreviations.  Semantically,
+both are completely transparent, that is, both for type checking
+and the operational semantics, definitions may be expanded.
 
 @example
 @group
-defn ::= id : term = term.   % @r{@math{d : A = M}}
-       | id = term.          % @r{@math{d = M}}
+adecl ::= id : term = term         % @r{@math{d : A = M}}
+        | id = term                % @r{@math{d = M}}
+
+defn ::= adecl.                    % @r{definition}
+       | %abbrev adecl.            % @r{abbreviation}
 @end group
 @end example
 
 @noindent
-where the second is equivalent to @code{id : _ = term}.  Definitions
-can only be made on the level of objects, not at the level of type
-families because the interaction of such definitions with logic
-programming search has not been fully investigated.
+where the second form of declaration is equivalent to @code{id : _ =
+term}.  Definitions or abbreviations can only be made on the level of
+objects, not at the level of type families because the interaction of
+such definitions with logic programming search has not been fully
+investigated.
 
-In order to avoid always expanding definitions, Twelf currently only
-permits strict definitions (@pxref{Strict Definitions}).  A definition
-of a constant @code{c} is strict if all arguments to @code{c} (implicit
-or explicit) have at least one strict occurrence (@pxref{Strict
-Occurrences}) in the right-hand side of the definition, and the
-right-hand side contains at least one constant.  In practice, most
-notational definitions are strict.  For some examples, see @ref{Sample
-Signature} and @ref{Strict Definitions}.
+In order to avoid the expansion of defined constants as much as
+possible, declarations @code{id : term = term.} must be strict
+(@pxref{Strict Definitions}).  A definition of a constant @code{c} is
+strict if all arguments to @code{c} (implicit or explicit) have at least
+one strict occurrence (@pxref{Strict Occurrences}) in the right-hand
+side of the definition, and the right-hand side contains at least one
+constant.  In practice, most notational definitions are strict.  For
+some examples, see @ref{Sample Signature} and @ref{Strict Definitions}.
+Twelf tries to preserve strict definitions as much as possible, instead
+of expanding them.
+
+The @code{%abbrev} declaration defines an @emph{abbreviation}
+which need not be strict.  However, it will be expanded immediately
+upon parsing and will not be used in output.
 
 The power of definitions in Twelf, however, is severely limited by the
 lack of recursion.  It should only be thought of as notational
@@ -601,8 +591,11 @@ parsing.
 
 @example
 @group
+namepref ::= id        % @r{existential variables}
+           | id id     % @r{existential variables, parameters}
+
 decl ::= @dots{}
-       | %name id id.
+       | %name id namepref.
 @end group
 @end example
 
@@ -613,6 +606,10 @@ for variables of type @var{a}.  The second identifier must be uppercase,
 that is, start with a letter from @samp{A} through @samp{Z} or an
 underscore @samp{_}.  Anonymous variables will then be named
 @code{@var{id}@math{1}}, @code{@var{id}@math{2}}, etc.
+
+In the second form, we can give a separate name preference
+for free (existential) variables and parameters.  The second one
+will typicall be lowercase, as in @code{%name exp E x}.
 
 @node Sample Signature,  , Name Preferences, Syntax
 @section Sample Signature
@@ -1023,7 +1020,7 @@ Twelf's best guess as to the source of the error.  Due to the
 propagation of non-trivial constraints the source of a type
 reconstruction failure can sometimes not be pinpointed very precisely.
 
-@node Logic Programming, Modes, Term Reconstruction, Top
+@node Logic Programming, Constraint Domains, Term Reconstruction, Top
 @chapter Logic Programming
 
 @cindex logic programming
@@ -1463,8 +1460,476 @@ At the point where the second subgoals fails we backtrack.  However, all
 other alternatives fail immediately, since the clause head does not
 unify with the goal and the overall query fails.
 
+@node Constraint Domains, Modes, Logic Programming, Top
+@chapter Constraint Domains
 
-@node Modes, Termination, Logic Programming, Top
+@cindex constraints
+@cindex constraint domains
+@cindex numbers
+
+Constraints-based extensions are highly experimental and under active
+development.  Use of extensions other than the ones pertaining rational
+arithmetic is strongly discouraged.  We refer to extension by constraint
+domains as Twelf(X), where X refers different domains.
+
+Twelf(X) extensions allow Twelf to deal more efficiently with some
+specific domains (e.g. numbers). They do so by
+
+@enumerate
+@item modifying type reconstruction to accommodate other equivalences beyond
+those entailed by traditional beta-eta-conversion;
+
+@item defining special types, on which proof search is performed using ad-hoc
+decision procedures rather than traditional depth-first strategy;
+
+@item adding countably many new symbols to the language, signifying all the
+elements of the domain.
+@end enumerate
+
+@menu
+* Installing an Extension::     making constraint domains available
+* Equalities of Rational Numbers::  rationals with equality
+* Inequalities over Rational Numbers::  rationals with equality and inequality
+* Integer Constraints::         integers with equality and inequality
+* Equalities over Strings::     strings and concatenation
+* Restrictions and Caveats::    alerts!
+@end menu
+
+@node Installing an Extension, Equalities of Rational Numbers, Constraint Domains, Constraint Domains
+@section Installing an Extension
+
+@findex %use
+
+Extensions are installed using the declaration
+
+@example
+%use @emph{extension name}
+@end example
+
+For example,
+
+@example
+%use equality/rationals.
+@end example
+
+@noindent
+loads the extension dealing with equality over the rationals. Typically,
+an extension introduces new symbols in the signature. For example,
+@code{equality/rationals} adds a type for rational numbers:
+
+@example
+rational : type.
+@end example
+
+In addition to these symbols, a countably infinite set of ``special'' ones may be also accepted by the system as the result of loading one extension. In our example, after loading @code{equality/rationals} the symbols
+
+@example
+135  5/13  ~1/4
+@end example
+
+@noindent
+become valid constants of type @code{rational}.
+
+Finally, it is possible for an extension to be built on top of others, and therefore to depend on them. Hence, loading an extension usually causes all the others it depends upon to be loaded as well, if they have not been already. For example, the extension @code{inequality/rationals} requires @code{equality/rationals}, and hence the declaration
+
+@example
+%use inequality/rationals.
+@end example
+
+@noindent
+subsumes
+
+@example
+%use equality/rationals.
+@end example
+
+Extensions must be installed prior to their use. For this reason, it is
+a safe practice to put all the @code{%use} declarations at the
+beginning of the program.
+
+
+@node Equalities of Rational Numbers, Inequalities over Rational Numbers, Installing an Extension, Constraint Domains
+@section Equalities over Rational Numbers
+
+As mentioned before, the extension presiding equality over the rational
+numbers is called @code{equality/rationals}, and it is therefore installed
+by the declaration
+
+@example
+%use equality/rationals.
+@end example
+
+This causes the declarations
+
+@example
+@group
+rational : type.
+
+~ : rational -> rational.              %prefix ~ 9999.
++ : rational -> rational -> rational.  %infix + left 9997.
+- : rational -> rational -> rational.  %infix - left 9997.
+* : rational -> rational -> rational.  %infix * left 9998.
+@end group
+@end example
+
+@noindent
+to be included in the current global signature. 
+
+Note that We do not add an equality predicate for rationals. This is
+unnecessary, since the extension modifies standard type checking so that
+arithmetic identities are taken into account. However, one can always
+define an equality predicate by declaring
+
+@example
+     == : rational -> rational -> type.  %infix none 100 ==.
+     id : X == X.
+@end example
+
+This extension is also responsible for defining special constants for
+all the rational numbers. These follow the syntax
+
+@example
+@group
+<rational> ::= ~<unsigned> | <unsigned>
+<unsigned> ::= <digits> | <digits>/<digits>
+<digits>   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+             | <digits> <digits>
+@end group
+@end example
+
+It is important to notice the difference between @code{~ 10} and
+@code{~10}. The former is the object obtained applying the unary minus
+operator to the positive number @math{10}; the second stands for the number
+@math{-10}.  The difference is, however, just syntactical, since the former
+is automatically evaluated into the latter by Twelf(X). In general, one
+should keep in mind that Twelf(X) extensions do not modify the behavior
+of the lexer; hence, for example, multiplication of a variable @code{X}
+by two still needs to be written as @code{X * 2} (note the spaces
+preceding and following the multiplication symbol), while @code{X*2}
+will be interpreted by the system as a single variable named
+``@code{X*2}''.
+
+Unification of arithmetic expressions is done by Gaussian
+elimination. Thus, unification problems that can be reduced to linear
+equations over existentially quantified variables are immediately
+solved; other problems not falling in this class are likely to be
+delayed as unificational constraints.
+
+@node Inequalities over Rational Numbers, Integer Constraints, Equalities of Rational Numbers, Constraint Domains
+@section Inequalities over Rational Numbers
+
+Arithmetical inequalities are handled by the extension
+@code{inequality/rationals}. This relies on @code{equality/rationals}
+for the definition of rational number, so a declaration of
+
+@example
+%use inequality/rationals.
+@end example
+
+@noindent
+implicitly entails one of
+
+@example
+%use equality/rationals.
+@end example
+
+This extension adds the following to the signature:
+
+@example
+@group
+>  : rational -> rational -> type.  %infix none 0 >.
+>= : rational -> rational -> type.  %infix none 0 >=.
+
++>  : @{Z:rational@} X > Y -> (X + Z) > (Y + Z).
++>= : @{Z:rational@} X >= Y -> (X + Z) >= (Y + Z).
+
+>>=  : X > Y -> X >= Y.
+0>=0 : 0 >= 0.
+@end group
+@end example
+
+It also adds countably many proof objects such as
+
+@example
+45>0 : 45 > 0.
+@end example
+
+@noindent
+witnessing that positive numbers are greater than zero.
+
+Goals of the form
+
+@example
+M > N  @r{or}  M >= N
+@end example
+
+@noindent
+are evaluated using a modified version of the simplex algorithm, rather
+than the usual proof-search mechanism. This will incrementally collect
+inequalities, assigning them incomplete (i.e. partially instantiated)
+proof objects, until either an inconsistency is discovered (generating
+failure) or they can be shown to be satisfied a unique solution (causing
+the proof objects to be finally completed).
+
+@node Integer Constraints, Equalities over Strings, Inequalities over Rational Numbers, Constraint Domains
+@section Integer Constraints
+
+The extensions @code{equality/integers} and @code{inequality/integers}
+deal with equalities and inequalities over the ring of integer numbers,
+respectively. Since these two modules are very similar to their
+rationals counterparts, we will limit ourselves to outlining the
+differences.
+
+The signature introduced by @code{equality/integers} is roughly the same
+as @code{equality/rationals}. The only difference lies in the name of
+the main type:
+
+@example
+@group
+integer : type.
+
+~ : integer -> integer.             %prefix ~ 9999.
++ : integer -> integer -> integer.  %infix + left 9997.
+- : integer -> integer -> integer.  %infix - left 9997.
+* : integer -> integer -> integer.  %infix * left 9998.
+@end group
+@end example
+
+Like before, countably many special constants are added to the signature. They follow the syntax
+
+@example
+<integer> ::= ~<digits> | <digits>
+@end example
+
+The extension @code{equality/integers} takes advantage of the fact that (unlike the rationals) the integers are not a dense ordering to considerably shorten the set of symbols needed:
+
+@example
+@group
+>= : integer -> integer -> type.  %infix none 0 >=.
+
++>= : @{Z:integer@} X >= Y -> (X + Z) >= (Y + Z).
+@end group
+@end example
+
+It also declares countably many proof objects such as
+
+@example
+37>=0 : 37 >= 0.
+@end example
+
+@noindent
+for all non-negative integers.
+
+Notice that strict inequality @code{>} can be easily defined in this case:
+
+@example
+> : integer -> integer -> type.  %infix none 0 >.
+
+>=> : X >= (Y + 1) -> X > Y.
+@end example
+
+For solving linear inequalities over the integers, we again use the
+simplex method, but we add special routines that implement
+branch-and-bound search. Specifically, inequalities are internally
+interpreted over rationals, and a check is performed regularly (whenever
+a new inequality is added) to ensure the rational solution space
+contains integral points.
+
+Note that all known methods for solving systems of integral linear
+inequations are notoriously inefficient. In the branch-and-bound method
+we adopted, the number of branches to consider is potentially
+exponential with respect to the size of the problem. We recommend using
+the @code{inequality/rationals} module instead, whenever the situation
+allows the two to be used interchangeably.
+
+@node Equalities over Strings, Restrictions and Caveats, Integer Constraints, Constraint Domains
+@section Equalities over String
+
+A third domain currently supported by the Twelf(X) extensions are
+strings of (printable) characters. The only operator provided is string
+concatenation. Installing
+
+@example
+%use equality/strings.
+@end example
+
+@noindent
+causes the following signature to be loaded:
+
+@example
+string : type.
+
+++ : string -> string -> string.   %infix right ++ 9999.
+@end example
+
+String constants are sequences of printable characters enclosed by double quotes:
+
+@example
+"foobar" : string
+@end example
+
+Under these conventions, strings cannot therefore contain the double
+quote character @code{"}. Escape sequences, such as @code{"\n"} have no
+special meaning; moreover, we do not currently provide input/output
+primitives.
+
+Finally, it is required that string constants occupy a single line. The declaration
+
+@example
+mystring : string = "foo
+                     bar".
+@end example
+
+@noindent
+is not considered syntactically correct.
+
+@section Sample Constraint Programs
+
+Using Twelf(X), we can write a modified version of @code{append} that
+takes into account the size of the list involved:
+
+@example
+@group
+%use equality/rationals.
+
+item : type.
+list : rational -> type.
+
+a : type.
+b : type.
+...
+
+nil  : list 0.
+cons : item -> list N -> list (N + 1).
+
+append : list M -> list N -> list (M + N).
+
+append_nil  : append nil L L.
+append_cons : append (cons X L1) L2 (cons X L3)
+                <- append L1 L2 L3.
+@end group
+@end example
+
+Type checking the definition of @code{append} requires some algebraic manipulation. For example, validity of @code{append_nil} depends on the identity
+@math{0+M=M}.
+
+Most classic Constraint Logic Programming (CLP) examples found in the
+literature can be easily translated to Twelf(X). We present here a
+simple mortgage calculator:
+
+@example
+%use inequality/rationals.
+
+%% equality
+== : rational -> rational -> type.  %infix none 1000 ==.
+id : X == X.
+
+%% mortgage payments
+mortgage : rational -> rational -> rational
+                    -> rational -> rational -> type.
+
+m0 : mortgage P T I MP B
+       <- T > 0
+       <- 1 >= T
+       <- Interest == T * P * I * 1/1200
+       <- B == P + Interest - (T * MP).
+m1 : mortgage P T I MP B
+       <- T > 1
+       <- MI == P * I * 1/1200
+       <- mortgage (P + MI - MP) (T - 1) I MP B.
+@end example
+
+This CLP program takes four parameters: the principal @code{P}, the life
+of the mortgage in months @code{T}, the annual interest rate (%)
+@code{I}, the monthly payment @code{MP}, and the outstanding balance
+@code{B}.
+
+Finally, we use the string extensions to write a simple parser. Consider
+the following syntax for simple arithmetic expressions:
+
+@example
+@group
+<expr> ::= <number> | <expr>+<expr>
+                    | <expr>-<expr>
+                    | <expr>*<expr>
+                    | (<expr>)
+<number>     ::= <digit> | <digit><number>
+<digit>      ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+@end group
+@end example
+
+This can be translated quite directly into Twelf by constructing parsing
+predicates @code{digit}, @code{number}, @code{expression} as follows:
+
+@example
+digit : string -> type.
+
+d0 : digit "0".
+d1 : digit "1".
+d2 : digit "2".
+d3 : digit "3".
+d4 : digit "4".
+d5 : digit "5".
+d6 : digit "6".
+d7 : digit "7".
+d8 : digit "8".
+d9 : digit "9".
+
+number : string -> type.
+
+nd  : number X
+        <- digit X.
+n++ : number (X ++ Y)
+        <- digit X
+        <- number Y.
+
+expression : string -> type.
+
+en : expression X
+       <- number X.
+e* : expression (X ++ "*" ++ Y)
+       <- expression X
+       <- expression Y.
+e+ : expression (X ++ "+" ++ Y)
+       <- expression X
+       <- expression Y.
+e- : expression (X ++ "-" ++ Y)
+       <- expression X
+       <- expression Y.
+ep : expression ("(" ++ X ++ ")")
+       <- expression X.
+@end example
+
+@node Restrictions and Caveats,  , Equalities over Strings, Constraint Domains
+@section Restrictions and Caveats
+
+To ensure the consistency of the calculus, use of types defined by
+Twelf(X) extensions is restricted. Specifically, we do not allow them to
+be used as dynamic assumptions. This rules out meaningless (under the
+current operating semantics) goals like
+
+@example
+?- 0 > 1 -> foo. 
+@end example
+
+@noindent
+as well as meaningful, but intractable ones, such as
+
+@example
+?- @{X : rational@} X * X >= 0
+@end example
+
+One important thing to keep in mind when using arithmetic is that this
+currently is defined over the rationals, rather than the integers or the
+set of natural numbers.  While in many applications this is of no
+consequence, it might generate in some cases surprising results. While
+it is certainly possible to define the characteristic function of the
+integer subset (see the content of @code{clp-examples/integers/} in the
+distribution) and use this to enforce all computations to take place in
+the intended domains, this introduces a big performance penalty and
+should in general be avoided.
+
+@node Modes, Termination, Constraint Domains, Top
 @chapter Modes
 
 @cindex modes
@@ -1709,13 +2174,14 @@ procedures can be verified.
 
 @menu
 * Termination Declaration::     Checking termination
+* Reduction Declaration::       Checking outputs are smaller than inputs
 * Subterm Ordering::            Higher-order subterms
 * Lexicographic Orders::        Termination by nested induction
 * Simultaneous Orders::         Termination by simultaneous induction
 * Mutual Recursion::            Termination of mutually recursive predicates
 @end menu
 
-@node Termination Declaration, Subterm Ordering, Termination, Termination
+@node Termination Declaration, Reduction Declaration, Termination, Termination
 @section Termination Declaration
 
 @cindex termination declarations
@@ -1761,7 +2227,7 @@ order ::= marg         % @r{subterm order}
         | @{ orders @}   % @r{lexicographic order}
         | [ orders ]   % @r{simultaneous order}
 
-tdecl ::= order callpats    % @r{termination declaration}
+tdecl ::= order callpats    % @r{termination order}
 
 decl ::= @dots{}
        | %terminates tdecl. % @r{termination declaration}
@@ -1840,7 +2306,105 @@ indicating that in a recursive call the term @code{E1' V2} could not be
 shown to be smaller than @code{app E1 E2}.  In our example, of course,
 evaluation need not terminate for precisely this reason.
 
-@node Subterm Ordering, Lexicographic Orders, Termination Declaration, Termination
+Termination checking plays a crucial role in checking meta-programs. The
+meta-program represents a proof that some relation about programs
+holds. The recursive calls in the meta-program correspond to
+applications of the induction hypothesis in the proof. Termination
+checking of meta-programs corresponds to checking that the application
+of the induction hypothesis is valid, i.e. we apply the induction
+hypothesis to a smaller argument.
+
+@node Reduction Declaration, Subterm Ordering, Termination Declaration, Termination
+@section Reduction Declaration
+
+@cindex reduction declarations
+@cindex declarations, reduction
+@cindex reduction predicate
+@findex %reduces
+
+A reduction predicate specifies a relation between input and output
+arguments of a program.  The reduction checker is rather restrictive and
+allows only relations based on subterm ordering.  For example, we cannot
+reason about the length of a list or term.  Moreover, reduction checking
+presupposes that the right side of the reduction predicate corresponds
+to the input arguments and the left side of the predicate corresponds to
+the output arguments.  The declaration @code{%reduces} checks if the specified
+reduction predicate holds for a given program.  Moreover, it checks that
+the program is terminating, i.e. the input arguments are decreasing
+according to the specified order.  The syntax for @code{order} can
+be found in @ref{Termination}.
+
+@example
+@group
+pdecl ::= order < order     % @r{strictly smaller than}
+        | order <= order    % @r{smaller or equal than}
+        | order = order     % @r{equal}
+
+rdecl ::= pdecl callpats    % @r{reduction predicate}
+
+decl ::= @dots{}
+       | %reduces rdecl.    % @r{reduction declaration}
+@end group
+@end example
+
+
+For example,
+
+@example
+%reduces Z <= X (minus X Y Z).
+@end example
+
+@noindent
+expects @code{X} to be the input and @code{Z} to be the output of the goal
+@code{(minus X Y Z)}. The declaration checks whether the output argument @code{Z} is
+smaller than the input argument @code{X}, and if the program terminates in @code{X}.
+
+As a simple example of reduction checking we consider the greatest
+common divisor.  This is an exceprt from the signature for unary arithmetic
+in the file @file{example/guide/arith.elf}.
+
+@example
+@group
+gcd: nat -> nat -> nat -> type.          %name gcd G. 
+%mode gcd +X +Y -Z. 
+
+gcd_z1: gcd z Y Y. 
+gcd_z2: gcd X z X. 
+
+gcd_s1: gcd (s X) (s Y) Z 
+  <- less (s X) (s Y) true 
+  <- rminus (s Y) (s X) Y' 
+  <- gcd (s X) Y' Z. 
+
+gcd_s1: gcd (s X) (s Y) Z 
+  <- less  (s X)(s Y) false 
+  <- rminus (s X) (s Y) X' 
+  <- gcd X' (s Y)  Z. 
+
+rminus: nat -> nat -> nat -> type.        %name rminus M. 
+%mode rminus +X +Y -Z. 
+rmin : rminus (s X) (s Y) Z 
+ <- sub X Y Z. 
+
+%reduces Z < X (rminus X Y Z). 
+%terminates [X Y] (gcd X Y _). 
+@end group
+@end example
+
+In order to verify that the definition of gcd terminates, we need to
+show that the arguments in the recursive call are decreasing, i.e. we
+need to show @code{Y' < (s Y)} and @code{X' < (s X)}. To check that
+these properties hold, we need the fact that the output argument
+@code{Y'} of @code{rminus (s Y) (s X) Y'} is always smaller than the
+input argument @code{(s Y)} (i.e.  @code{rminus (s Y) (s X) Y'} always
+satisfies the reduction predicate @code{Y' < (s Y)}). We verify that
+@code{rminus (s Y) (s X) Y'} always reduces its output argument by
+checking the declaration @code{%reduces Z < X (rminus X Y Z)}. While
+checking termination of @code{gcd} we use this information and prove
+@code{Y' < (s Y)} (termination condition of @code{gcd}) under the
+assumption @code{Y' < (s Y)} (reduction predicate of @code{rminus}).
+
+@node Subterm Ordering, Lexicographic Orders, Reduction Declaration, Termination
 @section Subterm Ordering
 
 @cindex subterm order
@@ -1919,6 +2483,7 @@ quantifiers and logical connectives is smaller on the left, since
 This kind of precise analysis is important, for example, in the proof
 of cut elimination or the termination of polymorphic type
 reconstruction.
+
 
 @node Lexicographic Orders, Simultaneous Orders, Subterm Ordering, Termination
 @section Lexicographic Orders
@@ -2083,18 +2648,31 @@ type preservation under evaluation in a simple functional language
 @cindex existential quantifier
 @cindex quantifier, universal
 @cindex quantifier, existential
+@cindex regular context
+@cindex context, regular
 @findex %theorem
 @findex %prove
+@findex %establish
+@findex %assert
+@findex Twelf.unsafe
 
-There are two forms of declarations related to the proving of theorems
+The theorem proving component of Twelf is in an experimental stage and
+currently under active development.  This documentation describes the
+present intermediate state.
+
+There are three forms of declarations related to the proving of theorems
 and meta-theorems.  The first, @code{%theorem}, states a theorem as a
 meta-formula (@code{mform}) in the meta-logic M2 defined below.  The
 second, @code{%prove}, gives a resource bound, a theorem, and an
-induction ordering and asks Twelf to search for a proof.
+induction ordering and asks Twelf to search for a proof.  After a
+@code{%prove} declaration succeeds, the theorem will be made available
+as a lemma to subsequent proofs.  In order to avoid that, Twelf offers
+the form @code{%establish} which is like @code{%prove}, but the
+established theorem will never be used in subsequent proofs.
 
 Note that a well-typed @code{%theorem} declaration always succeeds,
-while the @code{%prove} declaration only succeeds if Twelf can find a
-proof.
+while the @code{%prove} and @code{%establish} declarations only succeed
+if Twelf can find a proof.
 
 @example
 @group
@@ -2104,7 +2682,11 @@ dec ::= @{id:term@}         % @r{@math{x:A}}
 decs ::= dec
        | dec decs
 
-mform ::= forall* decs mform % @r{implicit universal}
+ctx ::= some decs pi decs
+      | some decs pi decs | ctx
+
+mform ::= forallG ctx mform  % @r{regular contexts}
+        | forall* decs mform % @r{implicit universal}
         | forall decs mform  % @r{universal}
         | exists decs mform  % @r{existential}
         | true               % @r{truth}
@@ -2116,13 +2698,16 @@ pdecl ::= nat order callpats % @r{bound, induction order, theorems}
 decl ::= @dots{}
        | %theorem thdecl.  % @r{theorem declaration}
        | %prove pdecl.     % @r{prove declaration}
+       | %establish pdecl.  % @r{prove declaration, do not use as lemma later}
+       | %assert callpats.  % @r{assert theorem (requires @code{Twelf.unsafe})}
 @end group
 @end example
 
 The prover only accepts quantifier alternations of the form
 @code{forall* @var{decs} forall @var{decs} exists @var{decs} true}.
 Note that the implicit quantifiers (which will be suppressed when
-printing the proof terms) must all be collected in front.
+printing the proof terms) must all be collected in front, but
+after the specification of the regular contexts.
 
 The syntax and meaning of @code{order} and @code{callpats} are explained
 in @ref{Termination}, since they are also critical notions in the
@@ -2154,17 +2739,16 @@ with the default setting of @code{3} for @code{Twelf.chatter} we see
 @group
 %theorem trivI : (@{A:o@} nd (A imp A)) -> type.
 %prove 2 @{@} (trivI D).
-%mode -@{D:@{A:o@} nd (A imp A)@} trivI D.
-% ------------------
-/trivI/:  trivI ([A:o] impi ([D1:nd A] D1)).
-% ------------------
+%QED
+%skolem trivI#2 : @{A:o@} nd (A imp A).
 @end group
 @end example
 
 The line starting with @code{%theorem} shows the way the theorem will be
-realized as a logic program predicate, the line starting with
-@code{/trivI/} gives the implementation, which, in this case, consists
-of just one line.
+realized as a logic program predicate.  In earlier versions this
+was such a logic program was actually constructed; at present this feature
+has been disabled while the implementation has been improved to allow
+regular contexts.
 
 The second example is the type preservation theorem for evaluation in
 the lambda-calculus.  This is a continuation of the example in Section
@@ -2195,7 +2779,81 @@ term size is somewhat arbitrary).
 
 Twelf finds and displays the proof easily.  The resulting program is
 installed in the global signature and can then be used to apply type
-preservation (@pxref{Proof Realizations}).
+preservation in subsequent proofs (@pxref{Proof Realizations}).
+
+The third example illustrates the use of regular contexts.
+We use the theorem prover to establish a simple
+theorem: If we have to different but structurally identical
+formulations of the lambda-calculus (@code{exp}, @code{exp'}), and
+a relation that shows how we can copy from one to the other, than this
+relation is total. In words, this theorem reads as: If @code{E} is
+an expression then there exists an expression @code{E'}, s.t. 
+@code{E'} is a structurally identical copy to @code{E}.
+
+@example
+@group
+exp : type.
+
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+exp' : type.
+
+app' : exp' -> exp' -> exp'.
+lam' : (exp' -> exp') -> exp'.
+
+cp : exp -> exp' -> type.
+cp_app : cp (app D1 D2) (app' E1 E2) 
+         <- cp D1 E1
+         <- cp D2 E2.
+cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
+         <- (@{x:exp@} @{y:exp'@} cp x y -> cp (D x) (E y)). 
+
+
+%theorem cpt :  forallG (pi @{x:exp@} @{y:exp'@} @{u:cp x y@})
+                forall @{E:exp@}
+                exists @{E':exp'@} @{D: cp E E'@} 
+                true.
+%prove 5 @{E@} (cpt E _ _).
+@end group
+@end example
+
+It is easy to see, that the @code{E} and the @code{E'} cannot be assumed
+to be closed, because otherwise the induction hypothesis cannot be
+applied.  In this situation, the induction hypothesis must be applied to
+an object under some additional assumptions, which are @code{x:exp,
+y:exp', u:cp x y}, and which we call a context block.  Clearly, one
+context block is not enough; in general @code{E} can occur in any
+context regularly built out of these blocks.  The @code{forallG} allows
+an inductive definition of a @emph{regular context}, abstractly
+describing the form of actual contexts.  Each context block consists of a
+@code{some} part which declares additional variables which are
+instantiated with some well-typed object in a real instance of a
+context, and a @code{pi} part which describes the parameters.
+
+The termination ordering @code{@{E@}} instructs Twelf to do induction
+over @code{E} to prove the theorem.  The @code{%prove} command executes
+the proof search.  In addition, if a proof has been found, the lemma is
+made accessible to the proof search evoked by subsequent theorems and
+lemmas, and which might slow it down accordingly. If a lemma is not used
+in subsequent proofs, the user can use @code{%establish} instead of
+@code{%prove} and it will not be made available.
+
+For certain theorems, the theorem prover will not be able to find a
+proof, even that it should.  This behavior could be caused by an
+incompleteness in the implementation (which still exist, but which
+should be removed in the next release of Twelf), or a enormously huge
+search space, which disallows the underlying LF theorem to construct a
+proof term.  In these situations, one can still try to prove
+subsequent theorem and lemmas by asserting the correctness of the
+lemma in question.  This is done by the @code{%assert} command.
+For the theorem above, one could
+
+@example
+%assert (cpt _ _ _).
+@end example
+
+after the @code{Twelf.unsafe} mode has been activated.
 
 @node Proof Steps, Search Strategies, Sample Theorems, Theorem Prover
 @section Proof Steps
@@ -2268,11 +2926,16 @@ where the default strategy succeeds.
 @cindex proof realizations
 @cindex executing proofs
 
-Proofs of meta-theorems are realized as logic programs.  Such a logic
-program is a relational representation of the constructive proof and can
-be executed to generate witness terms for the existentials from given
-instances of the universal quantifiers.  As an example, we consider
-once more type preservation (@pxref{Sample Theorems}).
+Proofs of meta-theorems can be realized as logic programs.  This is
+presently disabled.  We still describe the possibility below in
+anticipation of future versions.  On the other hand, theorems that
+have been proved will be skolemized and used in proof of subsequent
+theorems.  However, they will not be used for search.
+
+A logic program is a relational representation of the constructive proof
+and can be executed to generate witness terms for the existentials from
+given instances of the universal quantifiers.  As an example, we
+consider once more type preservation (@pxref{Sample Theorems}).
 
 After the declarations,
 
@@ -2353,8 +3016,10 @@ ML call @code{Twelf.OS.exit ();}.
 * Configurations::              Managing groups of Twelf files
 * Loading Files::               Loading individual files
 * Environment Parameters::      Controlling appearance and verbosity of Twelf
-* Timing Statistics::           Obtaining information on running times
-* Twelf Signature::             ML signature of main Twelf structure
+* Signature Printing::          Printing of signatures
+* Tracing and Breakpoints::     Debugging tools
+* Timing Statistics::           Gathering statistics
+* Twelf Signature::             The top-level signature
 @end menu
 
 @node Configurations, Loading Files, ML Interface, ML Interface
@@ -2368,6 +3033,7 @@ ML call @code{Twelf.OS.exit ();}.
 @findex Twelf.Config.load
 @findex Twelf.OK
 @findex Twelf.ABORT
+@findex Twelf.make
 
 Groups of Twelf files are managed in @emph{configurations}.  A
 configuration is defined by a file, by convention called
@@ -2409,21 +3075,17 @@ Twelf.
 
 @example
 @group
-val mini_ml = Twelf.Config.read "examples/mini-ml/sources.cfg";
-Twelf.Config.load mini_ml;
+Twelf.make "examples/mini-ml/sources.cfg";
 @end group
 @end example
 
-Note that the identifier bound to the configuration (@code{mini_ml} in
-this example), must be a legal ML identifier, usually consisting only of
-alphanumeric characters and underscores.  The call to
-@code{Twelf.Config.load} returns either @code{Twelf.OK} or
+The call to @code{Twelf.make} returns either @code{Twelf.OK} or
 @code{Twelf.ABORT}.  It reads each file in turn, starting from an empty
 signature, printing the results of type reconstruction and search based
 on the value of the @code{Twelf.chatter} variable (@pxref{Environment
 Parameters}).  If another configuration or file has previously been
 read, all the declarations will first be deleted so that
-@code{Twelf.Config.load} always starts from the same state.
+@code{Twelf.make} always starts from the same state.
 
 Loading a configuration will stop at the first error encountered, issue
 an appropriate message and return @code{Twelf.ABORT}.  If there is an
@@ -2476,7 +3138,7 @@ for a solution to a query or in theorem proving, leading to unexpected
 behavior.  When in doubt, use configurations (@pxref{Configurations}) or
 call @code{Twelf.reset ()}.
 
-@node Environment Parameters, Timing Statistics, Loading Files, ML Interface
+@node Environment Parameters, Signature Printing, Loading Files, ML Interface
 @section Environment Parameters
 
 @cindex parameters, environment
@@ -2513,6 +3175,11 @@ after type reconstruction.  This is expensive and useful only for your
 peace of mind, since type checking is significantly simpler than
 type reconstruction.
 
+@item Twelf.unsafe := false;
+@findex Twelf.unsafe
+ If @code{true} it will allow the @code{%assert} declaration to assert
+theorems without proof.
+
 @item Twelf.Print.implicit := false;
 @findex Twelf.Print.implicit
  If @code{true}, implicit arguments (normally elided) are printed.
@@ -2536,6 +3203,11 @@ with @samp{...}.
 @findex Twelf.Print.width
  The value used to decide when to break lines during printing of terms.
 
+@item Twelf.Trace.detail := 1;
+@findex Twelf.Trace.detail
+ Controls the detail in information during tracing.
+See @ref{Tracing and Breakpoints}
+
 @item Twelf.Prover.strategy := Twelf.Prover.FRS;
 @findex Twelf.Prover.strategy
  Determines the strategy, where @code{F}=Filling, @code{R}=Recursion, and
@@ -2552,7 +3224,126 @@ by splitting.  Setting is to @code{0} will prohibit proof by cases.
 case during a proof.
 @end table
 
-@node Timing Statistics, Twelf Signature, Environment Parameters, ML Interface
+@node Signature Printing, Tracing and Breakpoints, Environment Parameters, ML Interface
+@section Signature Printing
+
+@cindex signature printing
+@cindex printing, signature
+@cindex TeX output
+@findex Twelf.Print.sgn
+@findex Twelf.Print.prog
+@findex Twelf.Print.TeX.sgn
+@findex Twelf.Print.TeX.prog
+
+Twelf provides two ways to print the current global signature.
+
+@example
+@group
+Twelf.Print.sgn ();
+Twelf.Print.prog ();
+@end group
+@end example
+
+The first prints the signature, using only forward arrows @code{->}, the
+second will print the signature interpreted as a logic programming using
+backward arrows @code{<-}.  Depending on your goals, one or the other
+might be easier to use.
+
+Output can also be generated in TeX format.  The necessary library
+files can be found in the @file{tex/} subdirectory of the distribution.
+To print the current signature using TeX format, use
+
+@example
+@group
+Twelf.Print.TeX.sgn ();
+Twelf.Print.TeX.prog ();
+@end group
+@end example
+
+@noindent
+with the same interpretation as the plain text printing commands
+above.
+
+@node Tracing and Breakpoints, Timing Statistics, Signature Printing, ML Interface
+@section Tracing and Breakpoints
+
+Twelf no incorporates some rudimentary tracing facilities for
+the logic programming interpreter of signatures.  This is best used
+within the Emacs server, but it is also available within the ML
+Interface.
+
+A tracing specification may be associated with constants in
+a signature.
+
+@table @code
+@item Twelf.Trace.None
+@findex Twelf.Trace.None
+ Do not trace.
+@item Twelf.Trace.Some ["@math{c1}",...,"@math{cn}"]
+@findex Twelf.Trace.Some
+ Trace clauses (object-level constants) or predicates (type families)
+named @math{c1} through @math{cn}.
+@item Twelf.Trace.All
+@findex Twelf.Trace.All
+ Trace all clauses and predicates.
+@end table
+
+One can either suspend the execution when a specified clause or
+predicate is invoked, or simply trace goals
+
+@table @code
+@item Twelf.Trace.trace @math{spec}
+@findex Twelf.Trace.trace
+@item Twelf.Trace.break @math{spec}
+@findex Twelf.Trace.break
+@end table
+
+When a breakpoint is set, execution will halt and ask for an action from
+the user.  This consists of a (possible empty) line of input followed by
+@key{RET}.  Current, the following actions are available.
+
+@example
+@group
+<newline> - continue --- execute with current settings
+n - next --- take a single step
+r - run --- remove all breakpoints and continue
+s - skip --- skip until current subgoals succeeds, is retried, or fails
+s n - skip to n --- skip until goal (n) is considered
+t - trace --- trace all events
+u - untrace --- trace no events
+d n - detail --- set trace detail to n (0, 1, or 2)
+h - hypotheses --- show current hypotheses
+g - goal --- show current goal
+i - instantiation --- show instantiation of variables in current goal
+v X1 ... Xn - variables --- show instantiation of X1 ... Xn
+? for help 
+@end group
+@end example
+
+The detail of the trace information can be set with the
+variable @code{Trace.detail := @math{n};} to one of
+@findex Trace.detail
+
+@table @code
+@item 0
+ print no information
+@item 1
+ print standard information
+@item 2
+ print details of unification
+@end table
+
+It is possible to examine and reset the state of the currently traced
+predicates with
+
+@table @code
+@item Twelf.Trace.show ();
+@findex Twelf.Trace.show
+@item Twelf.Trace.reset ();
+@findex Twelf.Trace.reset
+@end table
+
+@node Timing Statistics, Twelf Signature, Tracing and Breakpoints, ML Interface
 @section Timing Statistics
 
 @cindex running time
@@ -2604,6 +3395,32 @@ sig
     val length : int option ref       (* NONE, limit argument length *)
     val indent : int ref              (* 3, indentation of subterms *)
     val width : int ref               (* 80, line width *)
+
+    val sgn : unit -> unit            (* print signature *)
+    val prog : unit -> unit           (* print signature as program *)
+
+    structure TeX :                   (* print in TeX format *)
+    sig
+      val sgn : unit -> unit          (* print signature *)
+      val prog : unit -> unit         (* print signature as program *)
+    end
+  end
+@end group
+
+@group
+  structure Trace :
+  sig 
+    datatype 'a Spec =                  (* trace and breakpoint spec *)
+      None                              (* no tracing, default *)
+    | Some of 'a list                   (* list of clauses and families *)
+    | All                               (* trace all clauses and families *)
+
+    val trace : string Spec -> unit     (* trace clauses and families *)
+    val break : string Spec -> unit     (* break at clauses and families *)
+    val detail : int ref                (* 0 = none, 1 = default, 2 = unify *)
+
+    val show : unit -> unit             (* show trace, break, and detail *)
+    val reset : unit -> unit            (* reset trace, break, and detail *)
   end
 @end group
 
@@ -2638,6 +3455,7 @@ sig
 @group
   val chatter : int ref               (* 3, chatter level *)
   val doubleCheck : bool ref          (* false, check after reconstruction *)
+  val unsafe : bool ref               (* false, allow %assert without proof *)
 @end group
 
 @group
@@ -2655,10 +3473,13 @@ sig
   structure Config :
   sig
     type config                       (* configuration *)
+    val suffix : string ref           (* suffix of configuration files *)
     val read : string -> config       (* read config file *)
     val load : config -> Status       (* reset and load configuration *)
     val define : string list -> config (* explicitly define configuration *)
   end
+
+  val make : string -> Status         (* read and load configuration *)
 
   val version : string                (* Twelf version *)
 end;  (* signature TWELF *)
@@ -2753,6 +3574,8 @@ on of the following (explained in @ref{Environment Parameters}).
 @c @findex chatter
 @item doubleCheck @var{bool}
 @c @findex doubleCheck
+@item Twelf.unsafe @var{bool}
+@c @findex Twelf.unsafe
 @item Print.implicit @var{bool}
 @c @findex Print.implicit
 @item Print.depth @var{limit}
@@ -2763,6 +3586,8 @@ on of the following (explained in @ref{Environment Parameters}).
 @c @findex Print.indent
 @item Print.width @var{nat}
 @c @findex Print.width
+@item Trace.detail @var{nat}
+@c @findex Trace.detail
 @item Prover.strategy @var{strategy}
 @c @findex Prover.strategy
 @item Prover.maxSplit @var{nat}
@@ -2774,6 +3599,46 @@ on of the following (explained in @ref{Environment Parameters}).
 @item get @var{parameter}
 @findex get
  Print the current value of @var{parameter} (see table above).
+
+@item Trace.trace @var{id1} ... @var{idn}
+@findex Trace.trace
+ Trace given constants
+@item Trace.traceAll
+@findex Trace.traceAll
+ Trace all constants
+@item Trace.untrace
+@findex Trace.untrace
+ Untrace all constants
+
+@item Trace.break @var{id1} ... @var{idn}
+@findex Trace.break
+ Set breakpoint for given constants
+@item Trace.breakAll
+@findex Trace.breakAll
+ Break on all constants
+@item Trace.unbreak
+@findex Trace.unbreak
+ Remove all breakpoints
+
+@item Trace.show
+@findex Trace.show
+ Show current trace and breakpoints
+@item Trace.reset
+@findex Trace.reset
+ Reset all tracing and breaking
+
+@item Print.sgn
+@findex Print.sgn
+ Print current signature
+@item Print.prog
+@findex Print.prog
+ Print current signature as program
+@item Print.TeX.sgn
+@findex Print.sgn
+ Print current signature in TeX format
+@item Print.TeX.prog
+@findex Print.prog
+ Print current signature in TeX format as program
 
 @item Timers.show
 @findex Timers.show
@@ -2804,6 +3669,10 @@ on of the following (explained in @ref{Environment Parameters}).
 @item Config.load
 @findex Config.load
  Load current configuration
+
+@item make @var{file}
+@findex make
+ Read and load current configuration from @var{file}.
 
 @item reset
 @findex reset
@@ -2845,9 +3714,11 @@ directory.
 * Twelf Mode::                  Major mode for editing Twelf sources
 * Editing Commands::            Automatic indentation
 * Type Checking Commands::      Checking declarations, files, configurations
+* Printing Command::            Printing signatures
+* Tracing Commands::            Debugging tools
 * Error Tracking::              Jumping to error locations
 * Server State::                Changing server parameters
-* Info File::                   
+* Info File::                   Reading this documentation
 * Tags Files::                  Tagging Twelf sources
 * Twelf Timers::                Obtaining runtime statistics from server
 * Twelf-SML Mode::              Running Twelf under SML in Emacs
@@ -2919,7 +3790,7 @@ This recognizes comments, matching delimiters, and standard infix operators.
  Indent each line of the region as Twelf code.
 @end table
 
-@node Type Checking Commands, Error Tracking, Editing Commands, Emacs Interface
+@node Type Checking Commands, Printing Command, Editing Commands, Emacs Interface
 @section Type Checking Commands 
 
 @cindex type checking, from Emacs
@@ -2969,7 +3840,73 @@ C-u} Emacs command.
  With prefix argument also selects the Twelf server buffer.
 @end table
 
-@node Error Tracking, Server State, Type Checking Commands, Emacs Interface
+@node Printing Command, Tracing Commands, Type Checking Commands, Emacs Interface
+@section Printing Commands
+
+@cindex printing, from Emacs
+
+@table @kbd
+@item M-x twelf-print-signature
+@findex M-x twelf-print-signature
+ Prints the current signature in the Twelf server buffer.
+
+@item M-x twelf-print-program
+@findex M-x twelf-print-program
+ Prints the current signature as a program in the Twelf server buffer.
+
+@item M-x twelf-print-tex-signature
+@findex M-x twelf-print-tex-signature
+ Prints the current signature in TeX style.
+ The output appears in the  Twelf server buffer.
+
+@item M-x twelf-print-tex-program
+@findex M-x twelf-print-tex-program
+ Prints the current signature as a program in TeX style.
+ The output appears in the Twelf server buffer.
+@end table
+
+@node Tracing Commands, Error Tracking, Printing Command, Emacs Interface
+@section Tracing Commands
+
+@cindex tracing, from Emacs
+@cindex breakpoints, from Emacs
+
+The Twelf Emacs mode provides a simple interface to the tracer.
+While tracing or breakpoints are on, you should be in the
+Emacs server buffer to type your input directly to the server
+as described in @ref{Tracing and Breakpoints}.
+
+@table @kbd
+@item M-x twelf-trace-trace
+@findex M-x twelf-trace-trace
+ Read list of constants and trace them.
+
+@item M-x twelf-trace-trace-all
+@findex M-x twelf-trace-trace-all
+Trace all clauses and families.
+
+@item M-x twelf-trace-untrace
+@findex M-x twelf-trace-untrace
+Untrace all clauses and families.
+
+@item M-x twelf-trace-break
+@findex M-x twelf-trace-break
+Read list of constants and set breakpoints.
+
+@item M-x twelf-trace-break-all
+@findex M-x twelf-trace-break-all
+Set breakpoints on all clauses and families.
+
+@item M-x twelf-trace-unbreak
+@findex M-x twelf-trace-unbreak
+Remove all breakpoints.
+
+@item M-x twelf-trace-show
+@findex M-x twelf-trace-show
+Show tracing and breakpoint information.
+@end table
+
+@node Error Tracking, Server State, Tracing Commands, Emacs Interface
 @section Error Tracking
 
 @cindex error tracking
@@ -3497,7 +4434,7 @@ use "load.sml";  @r{compile and load Twelf}
 @end example
 @end table
 
-@node Examples, Index, Installation, Top
+@node Examples, History, Installation, Top
 @chapter Examples
 
 We give here only a brief reference to the examples in the
@@ -3527,6 +4464,12 @@ in a separate subdirectory whose name is listed below.
 @item guide
 @cindex examples, from user's guide
   Examples from Users' Guide.
+@item incll
+@cindex ordered logic
+  Logic programming in ordered logic.
+@item kolm
+@cindex Kolmogorov translation
+  Double-negation interpretation of classical in intuitionistic logic.
 @item lp
 @cindex logic programming, theory
   Logic programming, uniform derivations.
@@ -3553,7 +4496,77 @@ The @file{test.cfg} which also defines an extended configuration with
 some test queries and theorems.  Most examples also have a @file{README}
 file with a brief explanation and pointer to the literature.
 
-@node Index,  , Examples, Top
+@node History, Index, Examples, Top
+@chapter History
+
+While the underlying type theory has not changed, the Twelf
+implementation differs from older Elf implementation in a few ways.
+Mostly, these are simplifications and improvements.  The main feature
+which has not yet been ported is the Elf server interface to Emacs.
+Also, while the type checker is more efficient now, the operational
+semantics does not yet incorporate some of the optimizations of the
+older Elf implementations and is therefore slower.
+
+@table @asis
+@item Syntax (@pxref{Syntax})
+  The quote @samp{'} character is no longer a special character in the
+lexer, and @samp{=} (equality) is now a reserved identifier.  The syntax
+of @code{%name} declarations has changed by allowing only one preferred
+name to be specified.  Also, @code{%name}, @code{%infix}, @code{%prefix}
+and @code{%postfix} declarations must be terminated by a period @samp{.}
+which previously was optional.  Further, single lines comments now must
+start with @samp{%@var{whitespace}} or @samp{%%} in order to avoid
+misspelled keywords of the form @samp{%@var{keyword}} to be ignored.
+
+@item Type theory
+  Elf 1.5 had two experimental features which are not available in
+Twelf: polymorphism and the classification of @math{type} as a type.
+
+@item Definitions (@pxref{Definitions})
+  Twelf offers definitions which were not available in Elf.
+
+@item Searching for definitions (@pxref{Solve Declaration})
+  Elf had a special top-level query form @code{sigma [x:A] B} which
+searched for a solution @code{M : A} and then solved the result of
+subsituting @code{M} for @code{x} in @code{B}.  In Twelf this
+mechanism has been replaced by a declaration @code{%solve c : A} which
+searches for a solution @code{M : A} and then defines @code{c = M : A},
+where the remaining free variables are implicitly universally
+quantified.
+
+@item Query declarations (@pxref{Query Declaration})
+  Twelf allows queries in ordinary Elf files as @samp{%query}
+declarations.  Queries are specified with an expected number of
+solutions, and the number of solutions to search for, which can be used
+to test implementations.
+
+@item Operational semantics (@pxref{Operational Semantics})
+  Twelf eliminates the distinction between static and dynamic
+signatures.  Instead, dependent function types @code{@{x:A@} B}
+where @code{x} occurs in the normal form of @code{B} are treated
+statically, while non-dependent function type @code{A -> B} or
+@code{B <- A} or @code{@{x:A@} B} where @code{x} does not occur
+in @code{B} are treated dynamically.
+
+@item Modes (@pxref{Modes})
+  Twelf offers a mode checker which was only partially supported in Elf.
+
+@item Termination (@pxref{Termination})
+  Twelf offers a termination checker which can verify that certain
+programs represent decision procedures.
+
+@item Theorem prover (@pxref{Theorem Prover})
+  Although very limited at present, an experimental prover for theorems
+and meta-theorems (that is, properties of signatures) is now available.
+It does not yet support lemmas or meta-hypothetical reasoning, which
+are currently under development.
+
+@item Emacs interface (@pxref{Emacs Interface})
+  The Elf mode has remained basically unchanged, but the Elf server
+interface has not yet been ported.
+@end table
+
+@node Index,  , History, Top
 @unnumbered Index
 
 @printindex cp

@@ -209,6 +209,14 @@ struct
           | _ => ();
        serve (Twelf.Config.load (valOf (!globalConfig))))
 
+    | serve' ("make"::ts) =
+      let
+	val fileName = getFile (ts, "sources.cfg")
+      in
+	globalConfig := SOME (Twelf.Config.read fileName);
+	serve (Twelf.Config.load (valOf (!globalConfig)))
+      end
+
     | serve' ("reset"::ts) =
       (checkEmpty ts; Twelf.reset (); serve (Twelf.OK))
     | serve' ("loadFile"::ts) =

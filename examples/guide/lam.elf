@@ -63,3 +63,24 @@ e0 = (app (lam [x] x) (lam [y] y)).
 % the following line is commented out because tps does not 
 % have a proof term any more.
 % %solve tps0 : tps d0 p0 Q.      
+
+% Example of regular contexts
+
+exp' : type.
+
+app' : exp' -> exp' -> exp'.
+lam' : (exp' -> exp') -> exp'.
+
+cp : exp -> exp' -> type.
+cp_app : cp (app D1 D2) (app' E1 E2) 
+         <- cp D1 E1
+         <- cp D2 E2.
+cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
+         <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
+
+
+%theorem cpt :  forallG (pi {x:exp}{y:exp'}{u:cp x y})
+		forall {E:exp}
+		exists {E':exp'}{D: cp E E'} 
+		true.
+%prove 5 {E} (cpt E _ _).
