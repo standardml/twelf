@@ -363,8 +363,11 @@ variable using the variable OCC-FACE."
 	    (search-forward-regexp (concat "\\<" (regexp-quote word) "\\>")
 				   scope-end 'limit)
 	  ;; Check overlap here!!! --- current bug if in comment
-	  (font-lock-set-face (match-beginning 0) (match-end 0)
-			      occ-face))
+	  (if (font-lock-any-faces-p (match-beginning 0) (match-end 0))
+	      ;; no overlap --- ignore comments which are fontified already
+	      nil
+	    (font-lock-set-face (match-beginning 0) (match-end 0)
+				occ-face)))
 	(goto-char end)
 	(cons start end)))
   ;;)

@@ -45,7 +45,7 @@ struct
 	^ lineColToString (posToLineCol j)
 
   (* wrap (r, msg) = msg' which contains region *)
-  fun wrap (r, msg) = (toString r ^ " " ^ "Error:\n" ^ msg)
+  fun wrap (r, msg) = (toString r ^ " " ^ "Error: \n" ^ msg)
 
   (* wrapLoc ((filename, r), msg) = msg' which contains region and filename
      This should be used for locations retrieved from origins, where
@@ -53,7 +53,7 @@ struct
   *)
   fun wrapLoc (Loc (filename, Reg (i,j)), msg) =
         filename ^ ":" ^ Int.toString (i+1) ^ "-" ^ Int.toString (j+1)
-	^ " " ^ "Error:\n" ^ msg
+	^ " " ^ "Error: \n" ^ msg
 
   (* Paths, occurrences and occurrence trees only work well for normal forms *)
   (* In the general case, regions only approximate true source location *)

@@ -64,7 +64,7 @@ struct
   val errorCount = ref 0
   val errorFileName = ref "no file"
 
-  val errorThreshold : int option ref = ref NONE
+  val errorThreshold : int option ref = ref (SOME (0))
   fun exceeds (i, NONE) = false
     | exceeds (i, SOME(j)) = i > j
 

@@ -84,7 +84,7 @@ structure ModeRecon =
 	     structure Whnf = Whnf
 	     structure Paths' = Paths
 	     structure ModePrint = ModePrint
-	     structure TpRecon' = TpRecon);
+	     structure TpRecon' = TpTrace);
 
 structure ThmRecon =
   ThmRecon (structure Global = Global
@@ -92,27 +92,27 @@ structure ThmRecon =
 	    structure ModeSyn = ModeSyn
 	    structure ThmSyn' = ThmSyn
 	    structure Names = Names
-	    structure TpRecon' = TpRecon
+	    structure TpRecon' = TpTrace
 	    structure Paths' = Paths);
 
 structure ParseTerm =
   ParseTerm (structure Parsing' = Parsing
-	     structure ExtSyn' = TpRecon
+	     structure ExtSyn' = TpTrace
 	     structure Names = Names);
 
 structure ParseTermQ =
   ParseTerm (structure Parsing' = Parsing
-	     structure ExtSyn' = TpReconQ
+	     structure ExtSyn' = TpTraceQ
 	     structure Names = Names);
 
 structure ParseConDec =
   ParseConDec (structure Parsing' = Parsing
-	      structure ExtSyn' = TpRecon
+	      structure ExtSyn' = TpTrace
 	      structure ParseTerm = ParseTerm);
 
 structure ParseQuery =
   ParseQuery (structure Parsing' = Parsing
-	      structure ExtSyn' = TpReconQ
+	      structure ExtSyn' = TpTraceQ
 	      structure ParseTerm = ParseTermQ);
 
 structure ParseFixity =
@@ -134,8 +134,8 @@ structure ParseThm =
 structure Parser =
   Parser (structure Parsing' = Parsing
 	  structure Stream' = Stream
-	  structure ExtSyn' = TpRecon
-	  structure ExtSynQ' = TpReconQ
+	  structure ExtSyn' = TpTrace
+	  structure ExtSynQ' = TpTraceQ
 	  structure Names' = Names
 	  structure ExtModes' = ModeRecon
 	  structure ThmExtSyn' = ThmRecon
@@ -153,7 +153,7 @@ structure Solve =
 	 structure Parser = Parser
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
-	 structure TpReconQ = TpReconQ
+	 structure TpReconQ = TpTraceQ
 	 structure Timers = Timers
 	 structure CompSyn = CompSyn
 	 structure Compile = Compile
@@ -178,8 +178,8 @@ structure Twelf =
 	 structure Strict = Strict
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
-	 structure TpReconQ = TpReconQ
-	 structure TpRecon = TpRecon 
+	 structure TpReconQ = TpTraceQ
+	 structure TpRecon = TpTrace 
 
 	 structure ModeSyn = ModeSyn
 	 structure ModeCheck = ModeCheck
