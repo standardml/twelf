@@ -808,7 +808,7 @@ struct
 
 	  | traversePos (c'', Psi, I.Null, (V, v), SOME (w1, d, (P, Q)), L) = 
 	    let (* Lemma calls (no context block) *)
-	      val (I.Root (I.Const a', S), _ (* = id *)) = Whnf.whnf (Weaken.strengthenExp (V, v), I.id)
+	      val I.Root (I.Const a', S) = Whnf.normalize (Weaken.strengthenExp (V, v), I.id)
 	      val (Psi', w2) = strengthen (Psi, (a', S), w1, M.Minus)
 
 	      val _ = if !Global.doubleCheck 
