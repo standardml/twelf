@@ -40,6 +40,7 @@ struct
   local
     structure I = IntSyn
     structure P = Paths
+    structure M = ModeSyn
 
     (* totalTable (a) = SOME() iff a is total, otherwise NONE *)
     val totalTable : unit Table.Table = Table.new(0)
@@ -88,8 +89,6 @@ struct
            for clause V[s] or goal V[s], respectively.
        Effect: raises Error' (occ, msg) if coverage is not satisfied at occ.
 
-       Currently does not allow parametric or hypothetical subgoals.
-
        Invariants: G |- V[s] : type
     *)
     fun checkClause (G, Vs, occ) = checkClauseW (G, Whnf.whnf Vs, occ)
@@ -110,6 +109,7 @@ struct
       | checkClauseW (G, (I.Root _, s), occ) =
 	(* clause head *)
 	()
+
     and checkGoal (G, Vs, occ) = checkGoalW (G, Whnf.whnf Vs, occ)
     and checkGoalW (G, (V, s), occ) =
 	let
@@ -120,19 +120,26 @@ struct
 		  else ()
 	  val _ = checkDynOrderW (G, (V, s), 2, occ)
 	         (* can raise Cover.Error for third-order clauses *)
-	  (* need to implement recursive output coverage checking here *)
-	  (* Tue Dec 18 20:44:48 2001 -fp !!! *)
-          (*
-	  val _ = case V
-	            of I.Pi _ => print ("Warning: " ^ Names.qidToString (Names.constQid a)
-					^ " not checked recursively.\n")
-		     | _ => ()
-          *)
 	in
 	  Cover.checkOut (G, (V, s))
 	  handle Cover.Error (msg)
 	  => raise Error' (occ, "Totality: Output of subgoal not covered\n" ^ msg)
 	end
+
+    (* checkDefinite (a, ms) = ()
+       iff every mode in mode spine ms is either input or output
+       Effect: raises Error (msg) otherwise
+    *)
+    fun checkDefinite (a, M.Mnil) = ()
+      | checkDefinite (a, M.Mapp (M.Marg (M.Plus, _), ms')) = checkDefinite (a, ms')
+      | checkDefinite (a, M.Mapp (M.Marg (M.Minus, _), ms')) = checkDefinite (a, ms')
+      | checkDefinite (a, M.Mapp (M.Marg (M.Star, xOpt), ms')) =
+        (* Note: filename and location are missing in this error message *)
+        (* Fri Apr  5 19:25:54 2002 -fp *)
+        raise Error ("Error: Totality checking " ^ Names.qidToString (Names.constQid a) ^ ":\n"
+		     ^ "All argument modes must be input (+) or output (-)"
+		     ^ (case xOpt of NONE => ""
+			  | SOME(x) => " but argument " ^ x ^ " is indefinite (*)"  ))
 
     (* checkOutCover [c1,...,cn] = ()
        iff local output coverage for every subgoal in ci:Vi is satisfied.
@@ -151,7 +158,7 @@ struct
        iff family a is total in its input arguments.
        This requires termination, input coverage, and local output coverage.
        Currently, there is no global output coverage.
-       Effect:raises Error (msg) otherwise, where msg has filename and location.
+       Effect: raises Error (msg) otherwise, where msg has filename and location.
     *)
     fun checkFam (a) =
         let
@@ -164,7 +171,8 @@ struct
 
           (* Checking input coverage *)
 	  (* by termination invariant, there must be consistent mode for a *)
-	  val SOME(ms) = ModeSyn.modeLookup a	(* must be defined and well-moded *)
+	  val SOME(ms) = M.modeLookup a	(* must be defined and well-moded *)
+	  val _ = checkDefinite (a, ms) (* all arguments must be either input or output *)
 	  val _ = (Cover.checkCovers (a, ms) ;
 		   if !Global.chatter >= 4
 		     then print ("Covers (+): " ^ Names.qidToString (Names.constQid a) ^ "\n")
