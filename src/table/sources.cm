@@ -11,6 +11,7 @@ Library
   structure SparseArray
   signature SPARSE_ARRAY2
   structure SparseArray2
+  functor HashTable
 is
 #if defined(NEW_CM)
   $/basis.cm

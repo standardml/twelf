@@ -11,6 +11,7 @@ functor Subordinate
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn'
    structure Table : TABLE where type key = int
+   structure MemoTable : TABLE where type key = int * int
    structure IntSet : INTSET
      )
   : SUBORDINATE =
@@ -32,11 +33,18 @@ struct
     *)
     val soGraph : (IntSet.intset) Table.Table = Table.new (32)
     val insert = Table.insert soGraph
-    val lookup = Table.lookup
     fun adjNodes a = valOf (Table.lookup soGraph a)  (* must be defined! *)
     fun insertNewFam a =
            Table.insert soGraph (a, IntSet.empty)
     val updateFam = Table.insert soGraph
+
+    (* memotable to avoid repeated graph traversal *)
+    (* think of hash-table model *)
+    val memoTable : (bool * int) MemoTable.Table = MemoTable.new (2048)
+    val memoInsert = MemoTable.insert memoTable
+    val memoLookup = MemoTable.lookup memoTable
+    val memoClear = fn () => MemoTable.clear memoTable
+    val memoCounter = ref 0
 
     (* Apply f to every node reachable from b *)
     fun appReachable f b =
@@ -68,7 +76,9 @@ struct
 
     (* b must be new *)
     fun addNewEdge (b, a) =
-          updateFam (b, IntSet.insert(a,adjNodes(b)))
+        ( memoCounter := !memoCounter+1 ;
+	  memoInsert ((b,a), (true, !memoCounter)) ;
+	  updateFam (b, IntSet.insert(a,adjNodes(b))) )
 
     val fTable : bool Table.Table = Table.new (32)
     val fLookup = Table.lookup fTable
@@ -79,7 +89,8 @@ struct
        Effect: Empties soGraph, fTable
     *)
     fun reset () = (Table.clear soGraph;
-                    Table.clear fTable)
+                    Table.clear fTable;
+		    MemoTable.clear memoTable)
 
     fun fGet (a) =
         (case fLookup a
@@ -155,9 +166,16 @@ struct
 
        Invariant: a, b families
     *)
+    fun computeBelow (a, b) =
+        (reachable (b, a); memoInsert ((b,a), (false,!memoCounter)); false)
+	handle Reachable => (memoInsert ((b,a), (true, !memoCounter)); true)
+
     fun below (a, b) =
-        (reachable (b, a); false)
-	handle Reachable => true
+        case memoLookup (b, a)
+	  of NONE => computeBelow (a, b)
+           | SOME(true,c) => true	(* true entries remain valid *)
+           | SOME(false,c) => if c = !memoCounter then false
+			      else computeBelow (a, b) (* false entries are invalidated *)
 
     (* a <* b = true iff a is transitively and reflexively subordinate to b
 
