@@ -35,8 +35,8 @@ struct
 	else if !Global.chatter> 4 then print ("R")
 	     else ()
 
-    fun printSplitting () = 
-        if !Global.chatter > 5 then print ("[Splitting ...")
+    fun printSplitting splitOp = 
+        if !Global.chatter > 5 then print ("[" ^ MTPSplitting.menu splitOp)
 	else if !Global.chatter> 4 then print ("S")
 	     else ()
 
@@ -64,14 +64,13 @@ struct
 	        if MTPSplitting.applicable O' then 
 		   findMin' (L', SOME O')
 		else findMin' (L', NONE)
-	      | findMin' (O' :: L', Oopt as SOME O) =
-		let 
-		  val k' = MTPSplitting.index O' 
-		in
-		  if MTPSplitting.applicable O' andalso 
-		    MTPSplitting.lt (O', O) then findMin' (L', SOME O')
-		  else findMin' (L', Oopt)
-		end
+	      | findMin' (O' :: L', SOME O) =
+	        if MTPSplitting.applicable O' then
+		  case MTPSplitting.compare (O', O)
+		    of LESS =>  findMin' (L', SOME O')
+		     | _ => findMin' (L', SOME O)
+		else findMin' (L', SOME O)
+
 	  in
 	    findMin' (L, NONE)
 	  end
@@ -93,7 +92,7 @@ struct
 	  NONE => fill (givenStates, (S :: openStates, solvedStates))
 	| SOME splitOp =>
 	    let 
-	      val _ = printSplitting ()
+	      val _ = printSplitting splitOp
 	      val SL = (Timers.time Timers.splitting MTPSplitting.apply) splitOp
 	      val _ = printCloseBracket ()
 	      val SL' = map (fn S => (Timers.time Timers.recursion MTPRecursion.apply) (MTPRecursion.expand S)) SL

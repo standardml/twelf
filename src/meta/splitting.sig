@@ -14,7 +14,5 @@ sig
   val apply : operator -> StateSyn.State list
   val menu : operator -> string
   val index : operator -> int
-  val lt : operator * operator -> bool
-  val eq : operator * operator -> bool
-  val le : operator * operator -> bool
+  val compare : operator * operator -> order
 end;  (* signature MTPSPLITTING *)

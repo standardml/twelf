@@ -649,6 +649,7 @@ struct
     *)
     fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
 
+(*
     fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
       (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
 
@@ -666,8 +667,38 @@ struct
           indexLt (I1, I2)
     fun eq (Operator (_, _, I1), Operator (_, _, I2)) = 
           indexEq (I1, I2)
-      
     fun le op12 = lt op12 orelse eq op12
+
+*)
+
+    fun compare' (Index (k1, NONE, c1, p1), Index (k2, NONE, c2, p2)) =
+        (case (Int.compare (k1, k2), Int.compare (c1, c2), Int.compare (p1, p2)) 
+	   of (EQUAL, EQUAL, EQUAL) => EQUAL
+	    | (EQUAL, EQUAL, result) => result
+	    | (EQUAL, result, _) => result
+	    | (GREATER, _, _) => LESS
+	    | (LESS, _, _) => GREATER)
+      | compare' (Index (k1, NONE, c1, p1), Index (k2, SOME i2, c2, p2)) =
+	(case (Int.compare (k1, k2)) 
+	   of LESS => GREATER
+	    | EQUAL => GREATER
+	    | GREATER => LESS)
+      | compare' (Index (k1, SOME i1, c1, p1), Index (k2, NONE, c2, p2)) =
+	(case (Int.compare (k1, k2)) 
+	   of LESS => GREATER
+	    | EQUAL => LESS
+	    | GREATER => LESS)
+      | compare' (Index (k1, SOME i1, c1, p1), Index (k2, SOME i2, c2, p2)) =
+        (case (Int.compare (k1, k2), Int.compare (i1, i2), Int.compare (c1, c2), Int.compare (p1, p2)) 
+	   of (EQUAL, EQUAL, EQUAL, EQUAL) => EQUAL
+	    | (EQUAL, EQUAL, EQUAL, result) => result
+	    | (EQUAL, EQUAL, result, _) => result
+	    | (EQUAL, result, _, _) => result
+	    | (GREATER, _, _, _) => LESS
+	    | (LESS, _, _, _) => GREATER)
+
+    fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
+          compare' (I1, I2) 
 
     (* isInActive (F) = B
        
@@ -748,8 +779,6 @@ struct
     val applicable = applicable
     val apply = apply
     val index = index
-    val le = le
-    val lt = lt
-    val eq = eq
+    val compare = compare
   end (* local *)
 end;  (* functor Splitting *)
