@@ -3,5 +3,6 @@ fun test (file) =
       of Twelf.OK => Twelf.OK
        | Twelf.ABORT => raise Domain;
 
-Global.safe := false;
+Twelf.unsafe := true;
 test "examples/church-rosser/test-unsafe.cfg";
+Twelf.unsafe := false;

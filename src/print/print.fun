@@ -307,7 +307,7 @@ local
 			 val D' = Names.decName (G, D)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
-				   d, ctx, (bracesVirt (G, d, ((D',V2), s)),
+				   d, ctx, (braces (G, d, ((D',V2), s)),
 					    I.dot1 s))
 		       end
 	  | I.No => fmtLevel (I.Decl (G, D), (* I.decSub (D, s) *)
@@ -506,10 +506,6 @@ local
   and braces (G, d, ((D,V), s)) =
 	 OpArgs(FX.Prefix(binderPrec),
 		[sym "{" , fmtDec (G, d, (D,s)), sym "}", F.Break],
-		IntSyn.App(V, IntSyn.Nil))
-  and bracesVirt (G, d, ((D,V), s)) =
-	 OpArgs(FX.Prefix(binderPrec),
-		[sym "<" , fmtDec (G, d, (D,s)), sym ">", F.Break],
 		IntSyn.App(V, IntSyn.Nil))
 
   (* brackets (G, d, ((D, U), s)) = oa

@@ -3,7 +3,7 @@
 (* Twelf.chatter := 2; *)
 (* Twelf.chatter := 3; *)
 
-Twelf.safe := false;
+Twelf.unsafe := true;
 fun test (file) =
     case Twelf.Config.load (Twelf.Config.read file)
       of Twelf.OK => Twelf.OK
@@ -34,3 +34,4 @@ test "examples/mini-ml/test.cfg";
 test "examples/polylam/test.cfg";
 test "examples/prop-calc/test.cfg";
 test "examples/units/test.cfg";
+Twelf.unsafe := false;
