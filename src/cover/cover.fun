@@ -918,6 +918,67 @@ struct
        Splitting such variables can never lead to non-termination.
     *)
 
+    (* Stolen from abstract.fun *)
+
+    fun occursInExp (k, I.Uni _) = false
+      | occursInExp (k, I.Pi (DP, V)) = occursInDecP (k, DP) orelse occursInExp (k+1, V)
+      | occursInExp (k, I.Root (H, S)) = occursInHead (k, H) orelse occursInSpine (k, S)
+      | occursInExp (k, I.Lam (D, V)) = occursInDec (k, D) orelse occursInExp (k+1, V)
+      | occursInExp (k, I.FgnExp (cs, ops)) = false
+        (* foreign expression probably should not occur *)
+        (* but if they do, variable occurrences don't count *)
+        (* occursInExp (k, Whnf.normalize (#toInternal(ops) (), I.id)) *)
+      (* no case for Redex, EVar, EClo *)
+
+    and occursInHead (k, I.BVar (k')) = (k = k')
+      | occursInHead (k, _) = false
+
+    and occursInSpine (_, I.Nil) = false
+      | occursInSpine (k, I.App (U, S)) = occursInExp (k, U) orelse occursInSpine (k, S)
+      (* no case for SClo *)
+
+    and occursInDec (k, I.Dec (_, V)) = occursInExp (k, V)
+    and occursInDecP (k, (D, _)) = occursInDec (k, D)
+
+    (* occursInMatchPos (k, U, ci) = true
+       if k occur in U in a matchable position according to the coverage
+       instructions ci
+    *)
+    fun occursInMatchPos (k, I.Pi (DP, V), ci) =
+          occursInMatchPos (k+1, V, ci)
+      | occursInMatchPos (k, I.Root (H, S), ci) =
+	  occursInMatchPosSpine (k, S, ci)
+    and occursInMatchPosSpine (k, I.Nil, Cnil) = false
+      | occursInMatchPosSpine (k, I.App(U, S), Match(ci)) =
+          occursInExp (k, U) orelse occursInMatchPosSpine (k, S, ci)
+      | occursInMatchPosSpine (k, I.App(U, S), Skip(ci)) =
+          occursInMatchPosSpine (k, S, ci)
+
+    (* instEVarsSkip ({x1:V1}...{xp:Vp} V, p, nil, ci) = (V[s], [X1,...,Xn])
+       where . |- s : {x1:V1}...{xp:Vp}
+       and s = Xp...X1.id, all Xi are new EVars that actually occur in a "Match" argument
+       and ci are the coverage instructions (Match or Skip) for the target type of V
+    *)
+    fun instEVarsSkip (Vs, p, XsRev, ci) = InstEVarsSkipW (Whnf.whnf Vs, p, XsRev, ci)
+    and InstEVarsSkipW (Vs, 0, XsRev, ci) = (Vs, XsRev)
+      | InstEVarsSkipW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), p, XsRev, ci) =
+        let (* p > 0 *)
+	  val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
+	  val EVarOpt = if occursInMatchPos (1, V2, ci)
+			  then SOME(X1)
+			else NONE
+	in
+	  instEVarsSkip ((V2, I.Dot (I.Exp (X1), s)), p-1, EVarOpt::XsRev, ci)
+	end
+      | InstEVarsSkipW ((I.Pi ((I.BDec (_, (l, t)), _), V2), s), p, XsRev, ci) =
+        (* G0 |- t : Gsome *)
+	(* . |- s : G0 *)
+	let (* p > 0 *)
+	  val L1 = I.newLVar (l, I.comp(t, s))
+	in
+	  instEVarsSkip ((V2, I.Dot (I.Block (L1), s)), p-1, NONE::XsRev, ci)
+	end
+
     fun targetBelowEq (a, I.EVar (ref(NONE), GY, VY, ref nil)) =
           Subordinate.belowEq (a, I.targetFam VY)
       | targetBelowEq (a, I.EVar (ref(NONE), GY, VY, ref (_::_))) =
@@ -990,10 +1051,11 @@ struct
     (* finitary ({{G}} V, p, W) = [(k1,n1),...,(km,nm)]
        where ki are indices of splittable variables in G with ni possibilities
        and |G| = p
+       and ci are the coverage instructions for the target type of V
     *)
-    fun finitary (V, p, W) =
+    fun finitary (V, p, W, ci) =
         let
-	  val ((V1, s), XsRev) = instEVars ((V, I.id), p, nil)
+	  val ((V1, s), XsRev) = instEVarsSkip ((V, I.id), p, nil, ci)
 	in
 	  finitarySplits (XsRev, 1, W, nil)
 	end
@@ -1090,7 +1152,7 @@ struct
 	( if !Global.chatter >= 6
 	    then print ("No strong candidates---calculating weak candidates:\n")
 	  else ();
-	  splitWeak (V, p, finitary (V, p, W), wci, ccs, missing)
+	  splitWeak (V, p, finitary (V, p, W, ci), wci, ccs, missing)
          )
       | split (V, p, SOME((k,_)::ksn), wci as (W, ci), ccs, missing) =
 	(* some candidates: split first candidate, ignoring multiplicities *)
