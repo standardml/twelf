@@ -73,7 +73,8 @@ struct
           [Fmt.HVbox (formatTag (I.Null, T) @ [Fmt.Break, Print.formatDec (I.Null, D)])]
       | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
 	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break] @ 
-	  [Fmt.HVbox (formatTag (G, T) @ [Fmt.Break, Print.formatDec (G, D)])]
+	  [Fmt.HVbox (formatTag (G, T) @ [Fmt.Break, Print.formatDec (G, D)])] 
+
 
     (* formatState S = fmt'
      

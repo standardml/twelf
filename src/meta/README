@@ -116,7 +116,9 @@ Parameter Cases
 
 	- Church Rosser  interactive proof works. But
 	  TODO Filling in the first step immediately succeeds (constraints!!!)
-	  TODO splitting the first rewrite derivations yields a bad bad error
+	  DONE -cs 
+		Reason: Formula information in tag was not maintained correctly
+ 		TODO splitting the first rewrite derivations yields a bad bad error
 	
 
 

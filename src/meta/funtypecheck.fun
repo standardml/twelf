@@ -2,6 +2,8 @@
 (* Author: Carsten Schuermann *)
 
 functor FunTypeCheck (structure FunSyn' : FUNSYN
+		      structure StateSyn' : STATESYN
+			sharing StateSyn'.FunSyn = FunSyn'
 		      structure Abstract : ABSTRACT
 			sharing Abstract.IntSyn = FunSyn'.IntSyn
 		      structure TypeCheck : TYPECHECK
@@ -20,13 +22,14 @@ functor FunTypeCheck (structure FunSyn' : FUNSYN
 			sharing FunPrint.FunSyn = FunSyn') : FUNTYPECHECK= 
 struct
   structure FunSyn = FunSyn'
+  structure StateSyn = StateSyn'
 
   exception Error of string 
   
   local 
-    structure F = FunSyn
     structure I = FunSyn.IntSyn 
-
+    structure F = FunSyn
+    structure S = StateSyn
 
     (* conv ((G, s), (G', s')) = B
  
@@ -445,9 +448,26 @@ struct
     and isForBlock (G, nil, F) = isFor (G, F)
       | isForBlock (G, D :: G1, F) = isForBlock (I.Decl (G, D), G1, F)
 
+
+    (* isState (S) = ()
+
+       Invariant:
+       
+       Side effect:
+       If it doesn't hold that |- S state, then exception Error is raised
+
+       Remark: Function is only partially implemented 
+    *)
+    fun isState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
+        (TypeCheck.typeCheckCtx G;
+	 isFor (G, F))
+
+
+
   in
     val isFor = isFor
     val check = checkRec
     val checkSub = checkSub
+    val isState = isState
   end
 end (* Signature FUNTYPECHECK *)       

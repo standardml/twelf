@@ -33,4 +33,6 @@ sig
   val decrease : Tag -> Tag
   val normalizeOrder : Order -> Order
   val convOrder : Order * Order -> bool
+
+  val normalizeTag : Tag * FunSyn.IntSyn.Sub -> Tag
 end; (* signature STATESYN *)

@@ -3,6 +3,13 @@ structure FunSyn =
 	  structure Whnf = Whnf
 	  structure Conv = Conv);
 
+
+structure StateSyn = 
+  StateSyn (structure FunSyn' = FunSyn
+	    structure IntSyn' = IntSyn
+	    structure Whnf = Whnf
+	    structure Conv = Conv)
+
 structure FunNames = 
   FunNames (structure Global = Global
 	    structure FunSyn' = FunSyn
@@ -24,6 +31,7 @@ structure FunWeaken =
 
 structure FunTypeCheck = 
   FunTypeCheck (structure FunSyn' = FunSyn
+		structure StateSyn' = StateSyn
 	        structure Abstract = Abstract
 	        structure TypeCheck = TypeCheck
 	        structure Conv = Conv
@@ -48,11 +56,6 @@ structure RelFun =
 	  structure FunNames = FunNames);
 
 (* Functor instantiation for the Prover *)
-structure StateSyn = 
-  StateSyn (structure FunSyn' = FunSyn
-	    structure IntSyn' = IntSyn
-	    structure Whnf = Whnf
-	    structure Conv = Conv)
 
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
@@ -179,6 +182,7 @@ structure MTPi =
 	structure IntSyn = IntSyn
 	structure FunSyn' = FunSyn
 	structure StateSyn' = StateSyn
+	structure FunTypeCheck = FunTypeCheck
 	structure RelFun = RelFun
 	structure MTPrint = MTPrint
 	structure MTPInit = MTPInit

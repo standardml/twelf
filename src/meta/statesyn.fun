@@ -93,10 +93,23 @@ struct
     fun (* decrease (Assumption k) = Assumption (k-1)
       | *) decrease (Lemma (k, F)) = Lemma (k-1, F)
 
+
+    (* normalizeTag (T, s) = T'
+      
+       Invariant:
+       If   G |- T : tag
+            G' |- s : G
+       then G' |- T' = T[s] tag
+    *)
+
+    fun normalizeTag (T as Parameter _, _) = T
+      | normalizeTag (Lemma (n, F), s) = Lemma (n, F.normalizeFor (F, s))
+
   in
     val orderSub = orderSub
     val decrease = decrease
     val normalizeOrder = normalizeOrder
     val convOrder = convOrder
+    val normalizeTag = normalizeTag
   end (* local *)
 end; (* signature STATESYN *)

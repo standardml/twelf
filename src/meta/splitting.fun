@@ -305,9 +305,6 @@ struct
     *)
     fun lowerSplitDest (G, k, (V as I.Root (I.Const c, _), s'), abstract, cases) =
           cases (c, G, I.ctxLength G , (V, s'), abstract)
-(* k must change. It should consider all parameters in the context, and not just the local ones --cs *) 
-(*          constCases (G, (V, s'), Index.lookup c, abstract, 
-		      paramCases (G, (V, s'), I.ctxLength G, abstract, nil)) *)
       | lowerSplitDest (G, k, (I.Pi ((D, P), V), s'), abstract, cases) =
           let 
 	    val D' = I.decSub (D, s')
@@ -412,6 +409,16 @@ struct
 					(* G'' |- B'' tags *)
 					(* G'' = G1'', G2', G2'' *)
 					(* where G1'' |- G2' ctx, G2' is the abstracted parameter block *)
+		      val _ = if !Global.doubleCheck then
+			        let 
+				  val Psi'' = aux (G'',B'')
+				  val _ = TypeCheck.typeCheckCtx (F.makectx Psi'')
+				  val Psi = aux (I.Decl (G0, D), I.Decl (B0, T))
+				  val _ = TypeCheck.typeCheckCtx (F.makectx Psi)
+				in
+				  FunTypeCheck.checkSub (Psi'', s'', Psi)
+				end 
+			      else ()
 		    in 
 		      abstract ((G'', B''), s'')
 		    end
@@ -467,6 +474,7 @@ struct
     *)
     fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
+	   if !Global.doubleCheck then FunTypeCheck.isFor (G', F.forSub (F, s')) else ();
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
 		   map (fn (i, F') => (i, F.forSub (F', s'))) H, F.forSub (F, s')))
 
@@ -486,7 +494,7 @@ struct
     *)
     fun abstractCont ((D, T), abstract) ((G, B), s) =  
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
-		     I.Decl (B, T)), I.dot1 s)
+		     I.Decl (B, S.normalizeTag (T, s))), I.dot1 s)
 
 
     fun makeAddressInit S k = (S, k)

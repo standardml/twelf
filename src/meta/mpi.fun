@@ -10,6 +10,9 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 		sharing StateSyn'.FunSyn = FunSyn'
 	      structure RelFun : RELFUN
 	        sharing RelFun.FunSyn = FunSyn'
+	      structure FunTypeCheck : FUNTYPECHECK
+		sharing FunTypeCheck.FunSyn = FunSyn'
+		sharing FunTypeCheck.StateSyn = StateSyn'
 	      structure MTPInit : MTPINIT
 	        sharing MTPInit.FunSyn = FunSyn'
 		sharing MTPInit.StateSyn = StateSyn'
@@ -139,6 +142,7 @@ struct
 	else 
 	  let 
 	    val S = current ()
+	    val _ = if !Global.doubleCheck then FunTypeCheck.isState S else ()
 	  in 
 	    (print "\n";
 	     print (MTPrint.stateToString S);
