@@ -72,7 +72,11 @@ is
   word8-array-slice.sml
 #endif
   time-limit.sig
-#if defined(SMLNJ_VERSION)
+(* This is slightly tricky. Cmcat, used to generate the MLton version of
+   this file, defines both SMLNJ_VERSION and MLton. *)
+#if defined(MLton)
+  time-limit.sml
+#elif defined(SMLNJ_VERSION)
   time-limit-smlnj.sml
 #else
   time-limit.sml
