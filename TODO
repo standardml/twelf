@@ -32,3 +32,35 @@ abstract doesn't depend on unify
 Fri May 14 14:24:48 EDT 1999 -cs
 Extend type checker to type check also proof terms including Skolem constants
 and Skolem assumption. 
+
+
+Tue Aug 31 22:16:15 EDT 1999 -cs
+Bug with has to do with free variables in context scheme description. Should
+be caught. Raises currently an uncaught match exception.
+
+%theorem ts' : forallG (pi {p} {m} {e: extract p m})
+                forall* {A:o} {P: |- A} {M: term} {T: tp}
+                forall {D: extract P M} {E: extract_tp A T}
+                exists {F: of M T} true.
+
+%prove 6 D (ts' D _ _).  
+
+(The extraction clause for imp intro:
+ex_impliesi : extract (impliesi P) (lam M)
+               <- {x:|- A} {v:term} extract x v -> extract (P x) (M v).
+)
+
+
+and got 
+%theorem ts' :
+   {A:o} {P:|- A} {M:term} {T:tp}
+      extract P M -> extract_tp A T -> of M T -> type.
+%prove 6 D (ts' D _ _).
+%mode +{A:o} +{P:|- A} +{M:term} +{T:tp} +{D:extract P M}
++{E:extract_tp A T}
+   -{F:of M T} ts' D E F.
+[Closing file
+/home/penny/share/research/twelf/sub-extraction/pap/extract.thm]
+Unrecognized exception
+Uncaught exception: nonexhaustive match failure
+%% ABORT %%
