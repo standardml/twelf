@@ -401,7 +401,7 @@ struct
 	    | _ => raise Error "Typing ambiguous -- free type variable")
 
 
-
+(*
     fun checkTags' (V, F.Ex _) = ()
       | checkTags' (I.Pi (_, V), F.All (_, F)) =
           checkTags' (V, F)
@@ -422,6 +422,8 @@ struct
       | deriveTag (I.Pi ((D, DP), V), F.All (F.Prim _, F)) = 
 	  F.All (F.Prim D, deriveTag (V, F))
       | deriveTag (I.Root _, F.All _) = raise Domain
+
+*)
 
 
     (* abstractCtx (K, V) = V'
@@ -871,7 +873,7 @@ struct
 	  val k' = I.ctxLength K'
 	  val (GK, BK) = abstractCtx K'
 	  val _ = if !Global.doubleCheck then TypeCheck.typeCheckCtx (GK) else ()
-	  val _ = if !Global.doubleCheck then checkTags (GK, BK) else ()
+(*	  val _ = if !Global.doubleCheck then checkTags (GK, BK) else () *)
           val w' = I.comp (w, I.Shift (k'-k))
 	  val FK = abstractFor (K', 0, (F, s))
 	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK, FK) else ()
