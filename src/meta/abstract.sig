@@ -12,7 +12,7 @@ sig
   val weaken : IntSyn.dctx * IntSyn.cid -> IntSyn.Sub
   val raiseType : IntSyn.dctx * IntSyn.Exp -> IntSyn.Exp 
       
-  val abstractSub : IntSyn.Sub * StateSyn.Tag IntSyn.Ctx 
+  val abstractSub : IntSyn.dctx * IntSyn.Sub * StateSyn.Tag IntSyn.Ctx
         -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 
 end;  (* signature MTPABSTRACT *)

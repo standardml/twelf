@@ -2,7 +2,10 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
 functor MTPAbstract (structure IntSyn' : INTSYN
+		     structure FunSyn : FUNSYN
+		       sharing FunSyn.IntSyn = IntSyn'
 		     structure StateSyn' : STATESYN
+		       sharing StateSyn'.FunSyn = FunSyn
 		     structure Whnf    : WHNF
 		       sharing Whnf.IntSyn = IntSyn'
 		     structure Constraints : CONSTRAINTS
@@ -22,18 +25,21 @@ struct
   local
 
     structure I = IntSyn
+    structure F = FunSyn
     structure S = StateSyn
     structure C = Constraints
       
     (* Intermediate Data Structure *)
 
-    datatype EFVar =
-      EV of I.Exp option ref * I.Exp * S.Tag
-					(* y ::= (X , {G} V)  if G |- X : V *)
-    | FV of I.name * I.Exp		(*     | (F , {G} V)  if G |- F : V *)
+    datatype EBVar =
+      EV of I.Exp option ref * I.Exp * S.Tag * int
+					(* y ::= (X , {G2} V)  if {G1, G2 |- X : V 
+					  |G1| = d *)
+    | BV of I.Dec * S.Tag
+
 
     (*
-       We write {{K}} for the context of K, where EVars and FVars have
+       We write {{K}} for the context of K, where EVars and BVars have
        been translated to declarations and their occurrences to BVars.
        We write {{U}}_K, {{S}}_K for the corresponding translation of an
        expression or spine.
@@ -41,8 +47,8 @@ struct
        Just like contexts G, any K is implicitly assumed to be
        well-formed and in dependency order.
 
-       We write  K ||- U  if all EVars and FVars in U are collected in K.
-       In particular, . ||- U means U contains no EVars or FVars.  Similarly,
+       We write  K ||- U  if all EVars and BVars in U are collected in K.
+       In particular, . ||- U means U contains no EVars or BVars.  Similarly,
        for spines K ||- S and other syntactic categories.
 
        Collection and abstraction raise Error if there are unresolved
@@ -62,14 +68,9 @@ struct
     (* eqEVar X Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2,  _, _)) = (r1 = r2)
+    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2, _, _, _)) = (r1 = r2)
       | eqEVar _ _ = false
 
-    (* eqFVar F Y = B
-       where B iff X and Y represent same variable
-    *)
-    fun eqFVar (I.FVar (n1, _, _)) (FV (n2,  _)) = (n1 = n2)
-      | eqFVar _ _ = false
 
     (* exists P K = B
        where B iff K = K1, Y, K2  s.t. P Y  holds
@@ -152,32 +153,31 @@ struct
     fun raiseType (I.Null, V) = V
       | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
 
-    (* collectExpW (G, (U, s), K) = K'
+    fun restore (0, _) = I.Null
+      | restore (n, I.Decl (G, D)) = I.Decl (restore (n - 1, G), D)
+
+    (* collectExpW (T, d, G, (U, s), K) = K'
 
        Invariant: 
        If    G |- s : G1     G1 |- U : V      (U,s) in whnf
        No circularities in U
-             (enforced by extended occurs-check for FVars in Unify)
+             (enforced by extended occurs-check for BVars in Unify)
        and   K' = K, K''
-	     where K'' contains all EVars and FVars in (U,s)
+	     where K'' contains all EVars and BVars in (U,s)
     *)
     (* Possible optimization: Calculate also the normal form of the term *)
-    fun collectExpW (T, G, (I.Uni L, s), K) = K
-      | collectExpW (T, G, (I.Pi ((D, _), V), s), K) =
-          collectExp (T, I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (T, G, (D, s), K))
-      | collectExpW (T, G, (I.Root (F as I.FVar (name, V, s'), S), s), K) =
-	if exists (eqFVar F) K
-	  then collectSpine (T, G, (S, s), K)
-	else (* s' = ^|G| *)
-	  collectSpine (T, G, (S, s), I.Decl (collectExp (T, I.Null, (V, I.id), K), FV (name, V)))
-      | collectExpW (T, G, (I.Root (_ , S), s), K) =
-	  collectSpine (S.decrease T, G, (S, s), K)
-      | collectExpW (T, G, (I.Lam (D, U), s), K) =
-	  collectExp (T, I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (T, G, (D, s), K))
-      | collectExpW (T, G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
+    fun collectExpW (T, d, G, (I.Uni L, s), K) = K
+      | collectExpW (T, d, G, (I.Pi ((D, _), V), s), K) =
+          collectExp (T, d, I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (T, d, G, (D, s), K))
+      | collectExpW (T, d, G, (I.Root (_ , S), s), K) =
+	  collectSpine (S.decrease T, d, G, (S, s), K)
+      | collectExpW (T, d, G, (I.Lam (D, U), s), K) =
+	  collectExp (T, d, I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (T, d, G, (D, s), K))
+      | collectExpW (T, d, G, (X as I.EVar (r, GdX, V, Cnstr), s), K) =
 	  if exists (eqEVar X) K
-	    then collectSub (T, G, s, K)
+	    then collectSub (T, d, G, s, K)
 	  else let
+	         val GX = restore (I.ctxLength GdX - d, GdX)   (* optimization possible for d = 0 *)
 	         val _ = checkEmpty Cnstr
 		 val w = weaken (GX, I.targetFam V)
 		 val iw = Whnf.invert w
@@ -186,50 +186,50 @@ struct
 		 val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw))
 		 val _ = Trail.instantiateEVar (r, I.EClo (X', w))
 	       in
-		 collectSub (T, G, s, I.Decl (collectExp (T, I.Null, (V', I.id), K), EV(r', V', T)))
+		 collectSub (T, d, G, s, I.Decl (collectExp (T, d, I.Null, (V', I.id), K), EV (r', V', T, d)))
 	       end
       (* No other cases can occur due to whnf invariant *)
 
-    (* collectExp (T, G, (U, s), K) = K' 
+    (* collectExp (T, d, G, (U, s), K) = K' 
        
        same as collectExpW  but  (U,s) need not to be in whnf 
     *) 
-    and collectExp (T, G, Us, K) = collectExpW (T, G, Whnf.whnf Us, K)
+    and collectExp (T, d, G, Us, K) = collectExpW (T, d, G, Whnf.whnf Us, K)
 
-    (* collectSpine (T, G, (S, s), K) = K' 
+    (* collectSpine (T, d, G, (S, s), K) = K' 
 
        Invariant: 
        If    G |- s : G1     G1 |- S : V > P
        then  K' = K, K''
-       where K'' contains all EVars and FVars in (S, s)
+       where K'' contains all EVars and BVars in (S, s)
      *)
-    and collectSpine (T, G, (I.Nil, _), K) = K
-      | collectSpine (T, G, (I.SClo(S, s'), s), K) = 
-          collectSpine (T, G, (S, I.comp (s', s)), K)
-      | collectSpine (T, G, (I.App (U, S), s), K) =
-	  collectSpine (T, G, (S, s), collectExp (T, G, (U, s), K))
+    and collectSpine (T, d, G, (I.Nil, _), K) = K
+      | collectSpine (T, d, G, (I.SClo(S, s'), s), K) = 
+          collectSpine (T, d, G, (S, I.comp (s', s)), K)
+      | collectSpine (T, d, G, (I.App (U, S), s), K) =
+	  collectSpine (T, d, G, (S, s), collectExp (T, d, G, (U, s), K))
 
-    (* collectDec (T, G, (x:V, s), K) = K'
+    (* collectDec (T, d, G, (x:V, s), K) = K'
 
        Invariant: 
        If    G |- s : G1     G1 |- V : L
        then  K' = K, K''
-       where K'' contains all EVars and FVars in (V, s)
+       where K'' contains all EVars and BVars in (V, s)
     *)
-    and collectDec (T, G, (I.Dec (_, V), s), K) =
-          collectExp (T, G, (V, s), K)
+    and collectDec (T, d, G, (I.Dec (_, V), s), K) =
+          collectExp (T, d, G, (V, s), K)
 
-    (* collectSub (T, G, s, K) = K' 
+    (* collectSub (T, d, G, s, K) = K' 
 
        Invariant: 
        If    G |- s : G1    
        then  K' = K, K''
-       where K'' contains all EVars and FVars in s
+       where K'' contains all EVars and BVars in s
     *)
-    and collectSub (T, G, I.Shift _, K) = K
-      | collectSub (T, G, I.Dot (I.Idx _, s), K) = collectSub (T, G, s, K)
-      | collectSub (T, G, I.Dot (I.Exp (U), s), K) =
-	  collectSub (T, G, s, collectExp (T, G, (U, I.id), K))
+    and collectSub (T, d, G, I.Shift _, K) = K
+      | collectSub (T, d, G, I.Dot (I.Idx _, s), K) = collectSub (T, d, G, s, K)
+      | collectSub (T, d, G, I.Dot (I.Exp (U), s), K) =
+	  collectSub (T, d, G, s, collectExp (T, d, G, (U, I.id), K))
 
     (* abstractEVar (K, depth, X) = C'
      
@@ -240,26 +240,12 @@ struct
        then C' = BVar (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractEVar (I.Decl (K', EV (r', _, _)), depth, X as I.EVar (r, _, _, _)) =
-        if r = r' then I.BVar (depth+1)
+    fun abstractEVar (I.Decl (K', EV (r', _, _, d)), depth, X as I.EVar (r, _, _, _)) =
+        if r = r' then (I.BVar (depth+1), d)
 	else abstractEVar (K', depth+1, X)
-      | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
+      | abstractEVar (I.Decl (K', BV _), depth, X) = 
 	  abstractEVar (K', depth+1, X)
 
-    (* abstractFVar (K, depth, F) = C'
-     
-       Invariant:
-       If   G |- F : V
-       and  |G| = depth
-       and  F occurs in K  at kth position (starting at 1)
-       then C' = BVar (depth + k)
-       and  {{K}}, G |- C' : V
-    *)
-    fun abstractFVar (I.Decl(K', EV _), depth, F) =
-  	  abstractFVar (K', depth+1, F)
-      | abstractFVar (I.Decl(K', FV (n', _)), depth, F as I.FVar (n, _, _)) = 
-	  if n = n' then I.BVar (depth+1)
-	  else abstractFVar (K', depth+1, F)
  
     (* abstractExpW (K, depth, (U, s)) = U'
        U' = {{U[s]}}_K
@@ -277,17 +263,17 @@ struct
       | abstractExpW (K, depth, (I.Pi ((D, P), V), s)) =
           piDepend ((abstractDec (K, depth, (D, s)), P), 
 		    abstractExp (K, depth + 1, (V, I.dot1 s)))
-      | abstractExpW (K, depth, (I.Root (F as I.FVar _, S), s)) =
-	  I.Root (abstractFVar (K, depth, F), 
-		  abstractSpine (K, depth, (S, s)))
       | abstractExpW (K, depth, (I.Root (H, S) ,s)) =
 	  I.Root (H, abstractSpine (K, depth, (S, s)))   
       | abstractExpW (K, depth, (I.Lam (D, U), s)) =
           I.Lam (abstractDec (K, depth, (D, s)),
 		 abstractExp (K, depth + 1, (U, I.dot1 s)))
       | abstractExpW (K, depth, (X as I.EVar _, s)) =
- 	  I.Root (abstractEVar (K, depth, X), 
-		  abstractSub (K, depth, s, I.Nil))
+	  let 
+	    val (H, d) = abstractEVar (K, depth, X)
+	  in
+	    I.Root (H, abstractSub (K, depth, s, I.Nil))
+	  end
 
     (* abstractExp (K, depth, (U, s)) = U'
      
@@ -378,7 +364,7 @@ struct
        and  . ||- V'
     *)
     fun abstractCtx (I.Null) = (I.Null, I.Null)
-      | abstractCtx (I.Decl (K', EV (_, V', T))) =
+      | abstractCtx (I.Decl (K', EV (_, V', T, _))) =
         let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
@@ -386,22 +372,20 @@ struct
 	in
 	  (I.Decl (G', I.Dec (NONE, V'')), I.Decl (B', T))
 	end
-(*      | abstractCtx (I.Decl(K', FV (name,V'))) =
-	let
-	  val V'' = abstractExp (K', 0, (V', I.id))
-	  val _ = checkType V''
+      | abstractCtx (I.Decl (K', BV (D, T))) =
+        let
+	  val D' = abstractDec (K', 0, (D, I.id))
 	  val (G', B') = abstractCtx K'
 	in
-	  I.Decl (G', I.Dec(SOME(name), V'')),
-	  I.Decl (B', S.Assumption n, v
-	end *)
+	  (I.Decl (G', D'), I.Decl (B', T))
+	end
 
 
     (* abstractSub
 
        Invariant: 
     *)
-    fun abstractSubAll (s, B) =
+    fun abstractSubAll (G0, s, B) =
         let
 	  fun abstractSubAll' (K, s' as (I.Shift _)) = s'
 	    | abstractSubAll' (K, I.Dot (F as I.Idx _, s')) =
@@ -409,12 +393,43 @@ struct
 	    | abstractSubAll' (K, I.Dot (I.Exp U, s')) =
 		I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractSubAll' (K, s'))
 
-	  fun collectSub' ((I.Shift _, _), K) = K
-	    | collectSub' ((I.Dot (I.Idx _, s), I.Decl (B, T)), K) = collectSub' ((s, B), K)
-	    | collectSub' ((I.Dot (I.Exp (U), s), I.Decl (B, T)), K) =
-  	        collectSub' ((s, B), collectExp (T, I.Null, (U, I.id), K))
+	  (* collectSub (s, B) = (d', K')
+	   
+	     Invariant:
+	     G1, G2 |- s : G 
+  	     |- G1 : ctx (only context blocks)
+	     |- G2 : ctx (only context blocks)
+	     G |- B tags
+	     then d' = |G1|
+	     and  K' is a auxiliary EVar context
+	    *)
+	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
+	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
+	      let
+		val F.LabelDec (name, _, G2) = F.labelLookup l
+		val (d, K) = skip (G0, List.length G2, s, B)
+	      in
+		(d, collect (d, K))
+	      end
+	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	        collectSub' (G0, s, B, fn (d', K') => 
+			     let 
+			       val K'' = collect (d', K')
+			     in
+			       collectExp (T, d', G0, (U, I.id), K'')
+			     end)
+	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
 
-	  val K = collectSub' ((s, B), I.Null) 
+
+	  and skip (G0, 0, s, B) = collectSub' (G0, s, B, fn (_, K') => K')
+	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _)) =
+	      let 
+		val (d, K) = skip (G0, n-1, I.invDot1 s, B)
+	      in
+	        (d + 1, I.Decl (K, BV (D, T)))
+	      end
+
+	  val (_, K) = collectSub' (G0, s, B, fn (_, K') => K')
 	in
 	  (abstractCtx K, abstractSubAll' (K, s))
 	end 
