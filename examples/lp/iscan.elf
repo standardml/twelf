@@ -6,6 +6,7 @@ isatm : toatm D D' -> atm D' -> type.
 %mode iscan +TC -CN.
 %mode isatm +TA -AT.
 
+
 isc_and : iscan (tc_and TC2 TC1) (can_andi CN2 CN1)
 	   <- iscan TC1 CN1
 	   <- iscan TC2 CN2.
@@ -38,9 +39,10 @@ isa_ander : isatm (ta_ander TA1) (atm_ander AT1)
 isa_foralle : isatm (ta_foralle TA1) (atm_foralle AT1)
 	       <- isatm TA1 AT1.
 
+
 %block l_isatm :
   some {A:o} block {u:pf A} {ta:toatm u u} {at:atm u} {is:isatm ta at}.
 %block l_i : block {a:i}.
 
-%worlds (l_isatm | l_i) (isatm _ _) (iscan _ _).
+%worlds (l_i | l_isatm ) (isatm _ _) (iscan _ _).
 %total (TA TC) (isatm TA CA) (iscan TC CN).

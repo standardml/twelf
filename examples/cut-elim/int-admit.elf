@@ -153,6 +153,10 @@ car_existsl : ca A D ([h:hyp A] existsl (E1 h) H) (existsl E1' H)
 	       <- ({a:i} {h1:hyp (B1 a)}
 		     ca A D ([h:hyp A] E1 h a h1) (E1' a h1)).
 
+
+
+
+
 %block l1 : some {A:o} block {h:hyp A}.
 %block l2 : block {a:i}.
 %block l3 : block {p:o}.

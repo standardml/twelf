@@ -50,6 +50,8 @@ peq_fix : peq (csd_fix SD1) (ccp_fix CP1)
 peq_vl : peq (csd_vl) (ccp_vl).
 
 
+%worlds () (peq _ _).
+
 %%% For complete evaluations
 
 proof_equiv : ceval_sound CE D -> ceval_complete D CE -> type.

@@ -7,6 +7,8 @@ Library
   structure Whnf
   signature CONV
   structure Conv
+  signature TOMEGA
+  structure Tomega
   signature CONSTRAINTS
   structure Constraints
   signature UNIFY
@@ -24,12 +26,16 @@ is
   ../trail/sources.cm
   fgnopn.sig
   fgnopntable.fun
+  ../table/sources.cm
   intsyn.sig
   intsyn.fun
+  tomega.sig
+  tomega.fun
   whnf.sig
   whnf.fun
   conv.sig
   conv.fun 
+  tomega.sml
   constraints.sig
   constraints.fun
   unify.sig
@@ -38,4 +44,6 @@ is
   abstract.fun
   approx.sig
   approx.fun
+ (* normalize.sig
+  normalize.fun *)
   lambda.sml

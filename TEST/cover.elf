@@ -1,0 +1,73 @@
+% Testing coverage checking
+% mostly negative examples
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+pz : plus z Y Y.
+ps : plus (s X) Y (s Z)
+      <- plus X Y Z.
+
+%mode plus +X +Y -Z.
+%worlds () (plus X Y Z).
+%covers plus +X +Y -Z.
+%total X (plus X Y _).
+
+plus' : nat -> nat -> nat -> type.
+pz' : plus' z Y Y.
+ps' : plus' (s X) Y (s Z)
+       <- plus' X Y Z
+       <- plus' X (s Y) Z.
+
+%mode plus' +X +Y -Z.
+%worlds () (plus' X Y Z).
+%covers plus' +X +Y -Z.
+% next line must fail---see next example
+% %total X (plus' X Y _).
+
+% %query 1 * plus' (s z) z X.
+
+% Second-order example
+
+exp : type.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+copy : exp -> exp -> type.
+cp_lam : copy (lam [x] E x) (lam [x] F x)
+	  <- {x:exp} copy x x -> copy (E x) (F x).
+cp_app : copy (app E1 E2) (app F1 F2)
+	  <- copy E1 F1
+	  <- copy E2 F2.
+
+%block lx : block {x:exp} {u:copy x x}.
+%worlds (lx) (copy E F).
+%mode copy +E -F.
+%total E (copy E _).
+
+% Third-order example
+exp : type.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+callcc : ((exp -> exp) -> exp) -> exp.
+
+copy : exp -> exp -> type.
+cp_lam : copy (lam [x] E x) (lam [x] F x)
+	  <- {x:exp} copy x x -> copy (E x) (F x).
+cp_app : copy (app E1 E2) (app F1 F2)
+	  <- copy E1 F1
+	  <- copy E2 F2.
+cp_callcc : copy (callcc [f] E ([x] f x)) (callcc [f] F ([x] f x))
+	     <- ({f:exp -> exp} ({Y:exp} {Z:exp} copy (f Y) (f Z) <- copy Y Z)
+		   -> copy (E ([x] f x)) (F ([x] f x))).
+
+%block l : block {x:exp}.
+%block c : block {f:exp -> exp}.
+%block lx : block {x:exp} {u:copy x x}.
+%block lf : block {f:exp -> exp} {d:{Y:exp} {Z:exp} copy (f Y) (f Z) <- copy Y Z}.
+%worlds (l | c) (exp).
+%worlds (lx | lf) (copy E F).
+%mode copy +E -F.
+%total E (copy E _).

@@ -791,7 +791,10 @@ struct
         (case IntSyn.ctxLookup (G, k)
 	   of IntSyn.Dec(SOME(name), _) => name
 	    | IntSyn.ADec(SOME(name), _) =>  name
-	    | _ => raise Unprintable)
+	    | IntSyn.NDec => "<_>" (* should be impossible *)
+	    | _ => "?" (* should be impossible *)
+	    (* | _ => raise Unprintable *)
+	     )
               (* NONE should not happen *)
 
     (* decName' role (G, D) = G,D'
@@ -835,6 +838,7 @@ struct
 	  orelse ctxDefined (G, name)
 	  then IntSyn.ADec (SOME (tryNextName (G, baseOf name)), d)
 	else D
+      | decName' role (G, D as IntSyn.NDec) = D
 
     val decName = decName' Exist
     val decEName = decName' Exist

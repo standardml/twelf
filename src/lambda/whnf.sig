@@ -7,6 +7,7 @@ sig
 
   (* Patterns *)
   val isPatSub : IntSyn.Sub -> bool
+  val makePatSub : IntSyn.Sub -> IntSyn.Sub option
   val dotEta   : IntSyn.Front * IntSyn.Sub -> IntSyn.Sub
 
   exception Eta

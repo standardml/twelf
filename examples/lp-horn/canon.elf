@@ -5,6 +5,7 @@ can : {A:o} pf A -> type.  % Canonical deductions
 atm : pf A -> type.        % Atomic deductions
 %name can CN.
 %name atm AT.
+%mode (can +A +P) (atm +P).
 
 can_andi : can (A and B) (andi D E)
 	    <- can A D
@@ -35,3 +36,5 @@ atm_impe : atm (impe D (E : pf B))
 
 atm_foralle : atm (foralle D T)
 	       <- atm D.
+
+%worlds () (can _ _) (atm _).

@@ -1,0 +1,44 @@
+tp  : type.				%name tp T.
+arr : tp -> tp -> tp.
+nat : tp.
+
+exp : type.				%name exp E.
+z : exp.
+s : exp -> exp.
+case : exp -> exp -> (exp -> exp) -> exp. 
+app : exp -> exp -> exp.
+fn : tp -> (exp -> exp) -> exp.
+fix : (exp -> exp) -> exp.
+
+
+eval : exp -> exp -> type.		%name eval D.
+eval_z   : eval z z.
+eval_s   : eval E V -> eval (s E) (s V).
+eval_fn : eval (fn T E) (fn T E).
+eval_app : eval E1 (fn T E1') 
+	    -> eval E2 V2
+	    -> eval (E1' V2) V
+	    -> eval (app E1 E2) V .
+eval_fix : eval (E (fix E)) V
+	    -> eval (fix E) V.
+
+of : exp -> tp -> type.			%name of P.
+of_z   : of z nat.
+of_s   : of E nat -> of (s E) nat.
+of_case: of E nat 
+	  -> of E1 T 
+	  -> ({x:exp} of x T -> of (E2 x) T)
+	  -> of (case E E1 E2) T. 
+of_fn : ({x:exp} of x T1 -> of (E x) T2) -> of (fn T1 E) (arr T1 T2).
+of_app : of E1 (arr T2 T1) 
+	  -> of E2 T2 
+	  -> of (app E1 E2) T1.
+of_fix : ({x:exp} of x T -> of (E x) T)
+	  -> of (fix E) T.
+
+
+tps : {e:exp}{v:exp} {t:tp} eval e v -> of e t -> of v t -> type.
+tps_app : tps (app E1 E2) V T (eval_app D1 D2 D3) (of_app P1 P2) _.
+
+
+%block L : some {T:tp} block {X:exp} {U:of X T}.

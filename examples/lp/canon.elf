@@ -33,3 +33,7 @@ atm_impe : atm (impe D (E : pf B))
 
 atm_foralle : atm (foralle D T)
 	       <- atm D.
+
+%block l1 : some {A:o} block {u:pf A} {at:atm u}.
+%block l2 : block {a:i}.
+%worlds (l1 | l2) (can _ _) (atm _).

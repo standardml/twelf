@@ -31,6 +31,8 @@ sig
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtQuery.query (* expected, try, A *)
+    | FQuery of ExtQuery.query (* A *)
+    | Compile of Names.Qid list (* -ABP 4/4/03 *)
     | Querytabled of int option * int option * ExtQuery.query        (* expected, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec

@@ -120,15 +120,16 @@ struct
     (* dProgToString (G, dProg) = printed representation of dynamic program *)
     fun dProgToString (DProg (IntSyn.Null, IntSyn.Null)) = ""
       | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),
-		       IntSyn.Decl(dPool,SOME(r,_,_)))) =
+		       IntSyn.Decl(dPool, CompSyn.Dec (r,_,_)))) =
           dProgToString (DProg (G,dPool))
 	  ^ "\nClause    " ^ x ^ ":\n"
 	  ^ clauseToString "\t" (G, r)
       | dProgToString (DProg (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
-		       IntSyn.Decl(dPool, NONE))) =
+		       IntSyn.Decl(dPool, CompSyn.Parameter))) =
 	 dProgToString (DProg (G, dPool))
 	 ^ "\nParameter " ^ x ^ ":\t"
 	 ^ Print.expToString (G, A)
+     (* case for CompSyn.BDec is still missing *)
 
   end  (* local open ... *)
 

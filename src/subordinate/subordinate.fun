@@ -395,6 +395,7 @@ struct
 	  else I.comp (w', I.shift)
 	end
 
+
   in
     val reset = reset
      

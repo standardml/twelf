@@ -246,6 +246,20 @@ struct
           Parsing.error (r, "Expected identifier, found token "
                             ^ L.toString t)
 
+    (* ABP 4/4/03 *)
+    fun parseCompile' (f as LS.Cons ((L.ID _, _), _), qids) =
+        let
+          val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+        in
+          parseCompile' (f', (ids, name)::qids)
+        end
+      | parseCompile' (f as LS.Cons ((L.DOT, _), _), qids) =
+          (List.rev qids, f)
+      | parseCompile' (LS.Cons ((t, r), s'), qids) = 
+          Parsing.error (r, "Expected identifier, found token "
+                            ^ L.toString t)
+
+
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
     fun parseExp (s, p) = parseExp' (LS.expose s, p)
@@ -406,6 +420,7 @@ struct
     val parseQualIds' = parseQualIds'
     val parseFreeze' = (fn f => parseFreeze' (f, nil))
     val parseDeterministic' = (fn f => parseDeterministic' (f, nil))
+    val parseCompile' = (fn f => parseCompile' (f, nil)) (* -ABP 4/4/03 *)
     val parseTerm' = (fn f => parseExp' (f, nil))
     val parseDec' = parseDec'
     val parseCtx' = (fn f => (parseCtx (true, nil, f)))

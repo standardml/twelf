@@ -1,0 +1,19 @@
+%%% Intuitionistic propositional calculus
+%%% Positive fragment with implies, and, true.
+%%% Two formulations here: natural deduction and Hilbert-style system.
+%%% Author: Frank Pfenning
+
+% Type of propositions.
+o : type.
+nd : o -> type.  
+%name o A.
+%name nd D.
+
+% Syntax: implication, plus a few constants.
+%block syntax : block
+  {imp : o -> o -> o}
+  {impI : {A:o}{B:o}(nd A -> nd B) -> nd (imp A B)}
+  {impE : {A:o}{B:o} nd (imp A B) -> nd A -> nd B}.
+
+%block hyp : some {A:o} block
+  {u : nd A}.

@@ -1,0 +1,40 @@
+%%% Intuitionistic propositional calculus
+%%% Positive fragment with implies, and, true.
+%%% Two formulations here: natural deduction and Hilbert-style system.
+%%% Author: Frank Pfenning
+
+% Type of propositions.
+o : type.
+hil : o -> type. 
+nd : o -> type.  
+nd^ : o -> type.
+ndv : o -> type.
+%name hil P.
+%name o A.
+%name nd D.
+
+% Syntax: implication, plus a few constants.
+%block syntax : block
+  {imp : o -> o -> o}
+  {and : o -> o -> o}
+  {true : o}
+  {k : {A:o}{B:o} hil (imp A (imp B A))}
+  {s :{A:o}{B:o}{C:o} hil (imp (imp A (imp B C)) (imp (imp A B) (imp A C)))}
+  {one : hil true}
+  {pair : {A:o}{B:o} hil (imp A (imp B  (and A B)))}
+  {left : {A:o}{B:o} hil (imp (and A B) A)}
+  {right : {A:o}{B:o} hil (imp (and A B) B)}
+  {mp : {A:o}{B:o} hil (imp A B) -> hil A -> hil B}
+  {trueI : nd true}
+  {andI  : {A:o}{B:o} nd A -> nd B -> nd (and A B)}
+  {andEL : {A:o}{B:o} nd (and A B) -> nd A}
+  {andER : {A:o}{B:o} nd (and A B) -> nd B}
+  {impliesI : {A:o}{B:o}(nd A -> nd B) -> nd (imp A B)}
+  {impliesE : {A:o}{B:o} nd (imp A B) -> nd A -> nd B}
+  {trueI^ : nd^ true}
+  {andI^ : {A:o}{B:o}nd^ A -> nd^ B -> nd^ (and A B)}
+  {andEvL : {A:o}{B:o}ndv (and A B) -> ndv A}
+  {andEvR : {A:o}{B:o}ndv (and A B) -> ndv B}
+  {impI^ : {A:o}{B:o}(ndv A -> nd^ B) -> nd^ (imp A  B)}
+  {impEv : {A:o}{B:o}ndv (imp A B) -> nd^ A -> ndv B}
+  {close : {A:o}ndv A -> nd^ A}.

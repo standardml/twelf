@@ -1,7 +1,7 @@
 (* Basic search engine *)
 (* Author: Carsten Schuermann *)
 
-signature SEARCH = 
+signature OLDSEARCH = 
 sig
   structure MetaSyn : METASYN
 

@@ -41,3 +41,5 @@ ev_letn : eval (letn E1 E2) V
 % Recursion
 ev_fix  : eval (fix E) V
 	   <- eval (E (fix E)) V.
+
+%worlds () (eval D V).

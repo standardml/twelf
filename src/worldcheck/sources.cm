@@ -1,6 +1,8 @@
 Library
   signature WORLDSYN
   structure WorldSyn
+  signature WORLDIFY
+  structure Worldify
   signature WORLDPRINT
   structure WorldPrint
 is
@@ -14,10 +16,12 @@ is
   ../print/sources.cm
   ../index/sources.cm
   ../subordinate/sources.cm
-  ../meta/sources.cm
+  ../meta/sources.cm 
   ../solvers/sources.cm
   worldsyn.sig
   worldsyn.fun
   worldprint.sig
   worldprint.fun
+  worldify.sig
+  worldify.fun
   worldcheck.sml

@@ -88,15 +88,25 @@ struct
   *)
 
 
-  (* The dynamic clause pool --- compiled version of the context *)
-  (* Dynamic programs: context with synchronous clause pool *)
-
-  datatype DProg = DProg of IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.Head) option IntSyn.Ctx
 
   (* Static programs --- compiled version of the signature *)
   datatype ConDec =			(* Compiled constant declaration *)
     SClause of ResGoal	                (* c : A                      *)
   | Void 		                (* Other declarations are ignored  *)
+
+  (* Compiled Declarations *)
+  (* added Thu Jun 13 13:41:32 EDT 2002 -cs *)
+  datatype ComDec
+  = Parameter
+  | Dec of ResGoal * IntSyn.Sub * IntSyn.Head
+  | BDec of (ResGoal * IntSyn.Sub *IntSyn.Head) list
+  | PDec
+
+  (* The dynamic clause pool --- compiled version of the context *)
+  (* Dynamic programs: context with synchronous clause pool *)
+
+  datatype DProg = DProg of IntSyn.dctx * ComDec IntSyn.Ctx
+
 
   local
     val maxCid = Global.maxCid

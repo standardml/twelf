@@ -1,0 +1,81 @@
+
+Psi |- A : type.     Psi, x: A |- P in F
+----------------------------------------
+Psi |- new x:A. P in F
+
+A can contain sigma types.
+Can A also contain pi types?  I don't know what this would mean.
+
+
+
+Some comments on the parser.  
+
+We want to reconstruct this pattern
+
+
+
+fun prove ((a:l1).i) = ...
+
+The idea:  external term syntax.
+find all "selects" of the form (a:l1 A).imp
+
+
+Just using blocks is a neat idea, we have to however extend type reconstruction for this fragment!
+
+
+Term reconstruction.  Replace all occurrecnces of a.x by x, collect in  a list L_a
+Do term reconstruction.
+All x's become FVars. 
+Perform abstraction
+G |- U : V
+Construct a substitution from H |- s : G
+in such a way over G.
+
+Case G = .:
+	. |- id : .
+
+Case G = G', x:A.
+
+	If x is declared in L and there is no other occurrence of x in G' do the
+	following
+	1. Compute  H' |- s: G'
+	2. Weaken by a new blockvariable
+	    	    H', a:block |- s o ^ : G'
+	   Memorize that L_a and a stand in connection
+ 	3. replace x by a.x
+
+		    H', a:block |- a.x. s o ^ : G', x:A
+
+
+	If it is not the first occurrence, locate L_a which contains x
+	1. Compute H' |- s: G'
+	2. Return H' |- a.x . s : G',x:A
+	
+	If x is not found in any L, then
+
+	1. Compute  H' |- s: G'
+	2. Weaken and return
+
+		    H', x:A[s] |- 1. s o ^ : G', x:A
+
+
+	Whereever I wrote a.x, a.x must be translated into Proj (I.Bidx k, ..) into the appropriate
+	de Bruijn index for a.
+	
+
+
+How do we parse 
+
+	((a:block A1 ... An).u)
+
+	Phase 1:  Find all some variables, and do type reconstruction on them.
+	  => Contexts of some variables.
+
+        Phase 2: Compute and declare all PROJ#a#u. 
+
+	Phase 3: Perform type reconstruction on the pattern.
+	
+	The problem:  What do we do with underinstantiated some variables?  
+	Answer:  Do not allow them. The user is responsible for making them most specific.
+	
+	

@@ -103,11 +103,14 @@ struct
     Dec of name option * Exp		(* D ::= x:V                  *)
   | BDec of name option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of name option * int   	(*     | v[^-d]               *)
+  | NDec
 
   and Block =				(* Blocks:                    *)
     Bidx of int 			(* b ::= v                    *)
-  | LVar of Block option ref * (cid * Sub) 
-                                        (*     | L(l,s)               *)
+  | LVar of Block option ref * Sub * (cid * Sub)
+                                        (*     | L(l[^k],t)           *)
+  | Inst of Exp list			(*     | u1, ..., Un          *)
+
 
   (* Constraints *)
 
@@ -231,6 +234,7 @@ struct
     | conDecImp (ConDef (_, _, i, _, _, _)) = i
     | conDecImp (AbbrevDef (_, _, i, _, _, _)) = i
     | conDecImp (SkoDec (_, _, i, _, _)) = i
+    | conDecImp (BlockDec (_, _,  _, _)) = 0   (* watch out -- carsten *)
 
   fun conDecStatus (ConDec (_, _, _, status, _, _)) = status
     | conDecStatus _ = Normal
@@ -428,12 +432,18 @@ struct
       (case bvarSub (k, s)
 	 of Idx k' => Bidx k'
           | Block B => B)
-    | blockSub (LVar (ref (SOME B), _), s) =
-        blockSub (B, s)
+    | blockSub (LVar (ref (SOME B), sk, _), s) =
+        blockSub (B, comp (sk, s))
+    (* -fp Sun Dec  1 21:18:30 2002 *)
+    (* --cs Sun Dec  1 11:25:41 2002 *)
     (* Since always . |- t : Gsome, discard s *)
     (* where is this needed? *)
     (* Thu Dec  6 20:30:26 2001 -fp !!! *)
-    | blockSub (L as LVar (ref NONE, (l, t)), s) = L
+    | blockSub (LVar (r as ref NONE, sk, (l, t)), s) = 
+	LVar (r, comp(sk, s), (l, comp (t, s)))
+	(* comp(^k, s) = ^k' for some k' by invariant *)
+    | blockSub (L as Inst ULs, s') = Inst (map (fn U => EClo (U, s')) ULs)
+    (* this should be right but somebody should verify *) 
 
   (* frontSub (Ft, s) = Ft'
 
@@ -527,7 +537,7 @@ struct
 
   fun blockDec (G, v as (Bidx k), i) =
     let 
-      val BDec (_, (l, s)) = ctxDec (G, k)   
+      val BDec (_, (l, s)) = ctxDec (G, k)  
       (* G |- s : Gsome *)
       val (Gsome, Lblock) = conDecBlock (sgnLookup l)
       fun blockDec' (t, D :: L, 1, j) = decSub (D, t)
@@ -554,7 +564,7 @@ struct
   fun newTypeVar (G) = EVar(ref NONE, G, Uni(Type), ref nil)
 
   (* newLVar (l, s) = (l[s]) *)
-  fun newLVar (cid, s) = LVar (ref NONE, (cid, s))
+  fun newLVar (sk, (cid, t)) = LVar (ref NONE, sk, (cid, t))
 
   (* Type related functions *)
 

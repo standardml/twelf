@@ -14,5 +14,6 @@ sig
     val infer' : IntSyn.dctx * IntSyn.Exp -> IntSyn.Exp
     val typeCheck : IntSyn.dctx * (IntSyn.Exp * IntSyn.Exp) -> unit
     val typeCheckCtx : IntSyn.dctx -> unit
+    (* val typeCheckSpine : IntSyn.dctx * IntSyn.Spine -> unit *)
     val typeCheckSub : IntSyn.dctx * IntSyn.Sub * IntSyn.dctx -> unit
 end;  (* signature TYPECHECK *)

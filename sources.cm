@@ -3,5 +3,11 @@ Library
   structure Timing
   signature TWELF
   structure Twelf
+  signature MTPI
+  structure MTPi
+  signature CONVERTER
+  structure Converter
+  signature INTSYN
+  structure IntSyn
 is
   src/frontend/sources.cm

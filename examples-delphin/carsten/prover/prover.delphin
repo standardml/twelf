@@ -1,0 +1,32 @@
+(* Search for proofs in natural deduction calculus *)
+(* Author: Carsten Schuermann *)
+
+prove  :: world (syntax hyp)
+	   all {A:o} exists {D:nd A} true
+prove' :: world (syntax hyp)
+	   all {A:o} all {P: n} all {D : nd A}  
+	   exists {D : nd (atm P)} true
+
+fun prove (((A:syntax).imp) F G) = 
+    let 
+      val <D, <>> = new (b:hyp F)
+                    in 
+                      prove G
+                    end
+    in 
+      <(A.impI) F G D, <>>
+    end
+  | prove (((A.syntax).atm) P) = 
+    choose (b:hyp F)
+    in 
+      prove' F P (b.u)
+    end
+
+fun prove' (((A:sytnax).imp) F G) P D =
+    let 
+      val <D1, <>> = prove F
+    in
+      prove' G P ((a.impE) D1 D)
+    end
+  | prove' (((A:syntax).atm) F P) P D = <D, <>>
+

@@ -4,12 +4,6 @@
 
 signature MODECHECK =
 sig
-
-  (*! structure IntSyn : INTSYN !*)
-  (*! structure ModeSyn : MODESYN !*)
-  (*! sharing ModeTable.IntSyn = IntSyn !*)
-  (*! structure Paths : PATHS !*)
-
   exception Error of string
 
   (* for new declarations *)

@@ -865,3 +865,4 @@ struct
     val checkFreeOut = checkFreeOut
   end
 end;  (* functor ModeCheck *)
+

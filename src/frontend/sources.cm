@@ -5,6 +5,25 @@ Library
   structure Lexer
   signature TWELF
   structure Twelf
+  signature PARSING
+  structure Parsing
+  signature PARSER
+  structure Parser
+  signature EXTSYN
+  signature TOMEGA
+  structure Tomega
+  structure ParseTerm
+  structure ReconTerm
+  signature MTPI
+  structure MTPi
+  signature TYPECHECK
+  structure TypeCheck
+  signature CONVERTER
+  structure Converter
+  signature INTSYN
+  structure IntSyn
+  signature GLOBAL 
+  structure Global
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -29,11 +48,13 @@ is
   ../opsem/sources.cm
   ../subordinate/sources.cm
   ../modules/sources.cm
-  ../meta/sources.cm
+  ../meta/sources.cm 
   ../solvers/sources.cm
   ../worldcheck/sources.cm
   ../unique/sources.cm
   ../cover/sources.cm
+  ../tomega/sources.cm 
+  ../prover/sources.cm
   mkabsolute.sig
 #if defined(NEW_CM)
   mkabsolute.sml
@@ -79,6 +100,8 @@ is
   parser.fun
   solve.sig
   solve.fun
+  fquery.sig
+  fquery.fun
   twelf.sig
   twelf.fun
   frontend.sml

@@ -62,6 +62,8 @@ struct
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtQuery.query (* expected, try, A *)
+    | FQuery of ExtQuery.query (* expected, try, A *)
+    | Compile of Names.Qid list (* -ABP 4/4/03 *)
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
@@ -159,6 +161,14 @@ struct
         in 
           Stream.Cons ((Query (expected, try, query), r), parseStream (stripDot f3, sc))
         end
+      | parseStream' (LS.Cons((L.FQUERY, r0), s'), sc) =
+        let
+          val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s')
+	  val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((FQuery query, r), parseStream (stripDot f3, sc))
+        end
+
       | parseStream' (LS.Cons((L.QUERYTABLED, r0), s'), sc) =
         let
 	  val (numSol, s1) = parseBound' (LS.expose s')
@@ -184,6 +194,7 @@ struct
       | parseStream' (f as LS.Cons ((L.ASSERT, r), s'), sc) = parseAssert' (f, sc)
       | parseStream' (f as LS.Cons ((L.FREEZE, r), s'), sc) = parseFreeze' (f, sc)
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
+      | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
       | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigDef' (f, sc)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStructDec' (f, sc)
@@ -349,6 +360,17 @@ struct
         in
           Stream.Cons ((DeterministicDec qids, r), parseStream (stripDot f', sc))
         end
+
+    (* ABP 4/4/03 *)
+    and parseCompile' (f as LS.Cons ((_, r0), s), sc) =
+        let
+          val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseCompile' (LS.expose s)
+          val r = Paths.join (r0, r')
+          val qids = map Names.Qid qids
+        in
+          Stream.Cons ((Compile qids, r), parseStream (stripDot f', sc))
+        end
+
 
     and parseSigDef' (f as LS.Cons ((_, r1), _), sc) =
         let

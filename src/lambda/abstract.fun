@@ -8,18 +8,16 @@ functor Abstract ((*! structure IntSyn' : INTSYN !*)
 		  structure Unify   : UNIFY
 		  (*! sharing Unify.IntSyn = IntSyn' !*)
 		  structure Constraints : CONSTRAINTS
-		  (*! sharing Constraints.IntSyn = IntSyn' !*)
 		    )
   : ABSTRACT =
 struct
-
-  (*! structure IntSyn = IntSyn' !*)
     
   exception Error of string
     
   local
 
     structure I = IntSyn
+    structure T = Tomega
     structure C = Constraints
       
     (* Intermediate Data Structure *)
@@ -28,6 +26,7 @@ struct
       EV of I.Exp			(* Y ::= X         for  GX |- X : VX *)
     | FV of string * I.Exp		(*     | (F, V)        if . |- F : V *)
     | LV of I.Block                     (*     | L             if . |- L in W *) 
+    | PV of T.Prg                       (*     | P                            *)
 
 
     (*
@@ -97,7 +96,7 @@ struct
     (* eqLVar L Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqLVar (I.LVar (r1, _)) (LV (I.LVar (r2, _))) = (r1 = r2)
+    fun eqLVar (I.LVar ((r1, _, _))) (LV (I.LVar ((r2, _, _)))) = (r1 = r2)
       | eqLVar _ _ = false
 
 
@@ -213,14 +212,15 @@ struct
 	  then collectSpine (G, (S, s), K)
 	else (* s' = ^|G| *)
 	  collectSpine (G, (S, s), I.Decl (collectExp (I.Null, (V, I.id), K), FV (name, V)))
-      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, (l, t)), i), S), s), K) =
+      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, _, (l, t)), i), S), s), K) =
 	if exists (eqLVar L) K
 	  (* note: don't collect t again below *)
 	  (* was: collectSpine (G, (S, s), collectSub (I.Null, t, K)) *)
 	  (* Sun Dec 16 10:54:52 2001 -fp !!! *)
 	  then collectSpine (G, (S, s), K)
 	else 
-	  collectSpine (G, (S, s), I.Decl (collectSub (I.Null, t, K), LV L))
+	  (* -fp Sun Dec  1 21:12:12 2002 *)
+	  collectSpine (G, (S, s), I.Decl (collectSub (G, I.comp(t,s), K), LV L))
       | collectExpW (G, (I.Root (_ , S), s), K) =
 	  collectSpine (G, (S, s), K)
       | collectExpW (G, (I.Lam (D, U), s), K) =
@@ -284,20 +284,22 @@ struct
       | collectSub (G, I.Dot (I.Exp (U), s), K) =
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
       | collectSub (G, I.Dot (I.Block B, s), K) =
-	  collectSub (G, s, collectBlock (B, K))
+	  collectSub (G, s, collectBlock (G, B, K))
     (* next case should be impossible *)
     (*
       | collectSub (G, I.Dot (I.Undef, s), K) =
           collectSub (G, s, K)
     *)
 
-    (* collectBlock (B, K) where . |- B block *)
-    and collectBlock (I.LVar (ref (SOME B), _), K) =
-          collectBlock (B, K)
-      | collectBlock (L as I.LVar (_, (l, t)), K) = 
+    (* collectBlock (G, B, K) where G |- B block *)
+    and collectBlock (G, I.LVar (ref (SOME B), sk , _), K) =
+          collectBlock (G, I.blockSub (B, sk), K)
+          (* collectBlock (B, K) *)
+          (* correct?? -fp Sun Dec  1 21:15:33 2002 *)
+      | collectBlock (G, L as I.LVar (_, sk, (l, t)), K) = 
         if exists (eqLVar L) K
-	  then collectSub (I.Null, t, K)
-	else I.Decl (collectSub (I.Null, t, K), LV L)
+	  then collectSub (G, t, K)
+	else I.Decl (collectSub (G, t, K), LV L)
     (* | collectBlock (G, I.Bidx _, K) = K *)
     (* should be impossible: Fronts of substitutions are never Bidx *)
     (* Sat Dec  8 13:30:43 2001 -fp *)
@@ -372,7 +374,7 @@ struct
        then C' = Bidx (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractLVar (I.Decl(K', LV (I.LVar (r', _))), depth, L as I.LVar (r, _)) = 
+    fun abstractLVar (I.Decl(K', LV (I.LVar (r', _, _))), depth, L as I.LVar (r, _, _)) = 
 	  if r = r' then I.Bidx (depth+1)
 	  else abstractLVar (K', depth+1, L)
       | abstractLVar (I.Decl(K', _), depth, L) =
@@ -479,9 +481,13 @@ struct
 
        Update: modified for globality invariant of . |- t : Gsome
        Sat Dec  8 13:35:55 2001 -fp
+       Above is now incorrect
+       Sun Dec  1 22:36:50 2002 -fp
     *)
     fun abstractSOME (K, I.Shift 0) = (* n = 0 by invariant, check for now *)
           I.Shift (I.ctxLength(K))
+      | abstractSOME (K, I.Shift (n)) = (* n > 0 *)
+	  I.Shift (I.ctxLength(K))
       | abstractSOME (K, I.Dot (I.Idx k, s)) = 
           I.Dot (I.Idx k, abstractSOME (K, s))
       | abstractSOME (K, I.Dot (I.Exp U, s)) =
@@ -580,7 +586,7 @@ struct
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(SOME(name), V''), I.Maybe), V))
 	end
-      | abstractKPi (I.Decl (K', LV (I.LVar (r, (l, t)))), V) =
+      | abstractKPi (I.Decl (K', LV (I.LVar (r, _, (l, t)))), V) =
 	let
 	  val t' = abstractSOME (K', t)	  
 	in
@@ -609,6 +615,7 @@ struct
       | abstractKLam (I.Decl (K', FV (name,V')), U) =
  	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
 
+
     fun abstractKCtx (I.Null) = I.Null
       | abstractKCtx (I.Decl (K', EV (I.EVar (_, GX, VX, _)))) =
         let
@@ -627,6 +634,13 @@ struct
 	in
 	  I.Decl (abstractKCtx K', I.Dec (SOME(name), V''))
 	end
+      | abstractKCtx (I.Decl (K', LV (I.LVar (r, _, (l, t))))) =
+	let
+	  val t' = abstractSOME (K', t)	  
+	in
+	  I.Decl (abstractKCtx K', I.BDec (NONE, (l, t')))
+	end
+
 
     (* abstractDecImp V = (k', V')   (* rename --cs  (see above) *)
 
@@ -673,6 +687,17 @@ struct
 			   abstractKPi  (K, abstractExp (K, 0, (V, I.id)))))
 	end 
 
+
+    fun abstractSpineExt (S, s) =
+        let
+	  val K = collectSpine (I.Null, (S, s), I.Null)
+	  val _ = checkConstraints (K)
+	  val G = abstractKCtx (K)
+	  val S = abstractSpine (K, 0, (S, s))
+	in
+	  (G, S)
+	end
+	      
     (* abstractCtxs [G1,...,Gn] = G0, [G1',...,Gn']
        Invariants:
        If . |- G1,...,Gn ctx
@@ -726,8 +751,134 @@ struct
     fun collectEVars (G, Us, Xs) =
           KToEVars (collectExp (G, Us, evarsToK (Xs)))
 
-  in
+    fun collectEVarsSpine (G, (S, s), Xs) =
+          KToEVars (collectSpine (G, (S, s), evarsToK (Xs)))
 
+
+    (* for the theorem prover: 
+       collect and abstract in subsitutions  including residual lemmas       
+       pending approval of Frank.
+    *)
+    fun collectPrg (_, P as T.EVar (Psi, r, F), K) =
+          I.Decl (K, PV P)
+      | collectPrg (Psi, T.Unit, K) = K
+      | collectPrg (Psi, T.PairExp (U, P), K) = 
+	  collectPrg (Psi, P, collectExp (T.coerceCtx Psi, (U, I.id), K))
+
+
+    (* abstractPVar (K, depth, L) = C'
+     
+       Invariant:
+       If   G |- L : V
+       and  |G| = depth
+       and  L occurs in K  at kth position (starting at 1)
+       then C' = Bidx (depth + k)
+       and  {{K}}, G |- C' : V
+    *)
+    fun abstractPVar (I.Decl(K', PV (T.EVar (_, r', _))), depth, P as T.EVar (_, r, _)) = 
+	  if r = r' then T.Var (depth+1)
+	  else abstractPVar (K', depth+1, P)
+      | abstractPVar (I.Decl(K', _), depth, P) =
+  	  abstractPVar (K', depth+1, P)
+
+    fun abstractPrg (K, depth, X as T.EVar _) =
+ 	  abstractPVar (K, depth, X)
+      | abstractPrg (K, depth, T.Unit) = T.Unit
+      | abstractPrg (K, depth, T.PairExp (U, P)) = 
+           T.PairExp (abstractExp (K, depth, (U, I.id)), abstractPrg (K, depth, P))
+
+    fun collectTomegaSub (T.Shift 0) = I.Null
+      | collectTomegaSub (T.Dot (T.Exp U, t)) =
+          collectExp (I.Null, (U, I.id), collectTomegaSub t)
+      | collectTomegaSub (T.Dot (T.Block B, t)) =
+          collectBlock (I.Null, B, collectTomegaSub t)
+      | collectTomegaSub (T.Dot (T.Prg P, t)) = 
+	  collectPrg (I.Null, P, collectTomegaSub t)
+
+       
+    fun abstractMetaDec (K, depth, T.UDec D) = T.UDec (abstractDec (K, depth, (D, I.id)))
+      | abstractMetaDec (K, depth, T.PDec (xx, F)) = T.PDec (xx, abstractFor (K, depth, F))
+
+    (* Argument must be in normal form *)
+    and abstractFor (K, depth, T.True) = T.True
+      | abstractFor (K, depth, T.All ((MD, Q), F)) = 
+          T.All ((abstractMetaDec (K, depth, MD), Q), abstractFor (K, depth, F))
+      | abstractFor (K, depth, T.Ex ((D, Q), F)) = 
+	  T.Ex ((abstractDec (K, depth, (D, I.id)), Q), abstractFor (K, depth, F))
+      | abstractFor (K, depth, T.And (F1, F2)) = 
+	  T.And (abstractFor (K, depth, F1), abstractFor (K, depth, F2))
+      | abstractFor (K, depth, T.World (W, F)) =
+	  T.World (W, abstractFor (K, depth, F))
+
+    fun abstractPsi (I.Null) = I.Null
+      | abstractPsi (I.Decl (K', EV (I.EVar (_, GX, VX, _)))) =
+        let
+	  val V' = raiseType (GX, VX)
+	  val V'' = abstractExp (K', 0, (V', I.id))
+          (* enforced by reconstruction -kw
+	  val _ = checkType V''	*)
+	in
+	  I.Decl (abstractPsi K', T.UDec (I.Dec (NONE, V'')))
+	end
+      | abstractPsi (I.Decl (K', FV (name, V'))) =
+	let
+	  val V'' = abstractExp (K', 0, (V', I.id))
+          (* enforced by reconstruction -kw
+	  val _ = checkType V'' *)
+	in
+	  I.Decl (abstractPsi K', T.UDec (I.Dec (SOME(name), V'')))
+	end
+      | abstractPsi (I.Decl (K', LV (I.LVar (r, _, (l, t))))) =
+	let
+	  val t' = abstractSOME (K', t)	  
+	in
+	  I.Decl (abstractPsi K', T.UDec (I.BDec (NONE, (l, t'))))
+	end
+      | abstractPsi (I.Decl (K', PV (T.EVar (GX, _, FX)))) =
+	(* What's happening with GX? *)
+        let
+	  val F' = abstractFor (K', 0, T.forSub (FX, T.id))
+	in
+	  I.Decl (abstractPsi K', T.PDec (NONE, F'))
+	end
+      
+    fun abstractTomegaSub t =
+      let 
+	val K = collectTomegaSub t
+	val t' = abstractTomegaSub' (K, 0, t)
+	val Psi = abstractPsi K
+      in
+	(Psi, t')
+      end
+      
+    and abstractTomegaSub' (K, depth, T.Shift 0) = T.Shift depth
+      | abstractTomegaSub' (K, depth, T.Dot (T.Exp U, t)) =
+          (T.Dot (T.Exp (abstractExp (K, depth, (U, I.id))),
+		  abstractTomegaSub' (K, depth, t)))
+      | abstractTomegaSub' (K, depth, T.Dot (T.Block B, t)) =
+          (T.Dot (T.Block (abstractLVar (K, depth, B)),
+		  abstractTomegaSub' (K, depth, t)))
+      | abstractTomegaSub' (K, depth, T.Dot (T.Prg P, t)) =
+	  (T.Dot (T.Prg (abstractPrg (K, depth, P)),
+		  abstractTomegaSub' (K, depth, t)))
+
+    fun abstractTomegaPrg P = 
+      let 
+	val K = collectPrg (I.Null, P, I.Null)
+	val P' = abstractPrg (K, 0, P)
+	val Psi = abstractPsi K
+      in
+	(Psi, P')
+      end
+
+
+    (* just added to abstract over residual lemmas  -cs *)
+    (* Tomorrow: Make collection in program values a priority *)
+    (* Then just traverse the Tomega by abstraction to get to the types of those 
+       variables. *)
+
+				
+  in
     val raiseType = raiseType
     val raiseTerm = raiseTerm
 
@@ -739,8 +890,12 @@ struct
     val abstractDecImp = abstractDecImp
     val abstractDef = abstractDef
     val abstractCtxs = abstractCtxs
+    val abstractTomegaSub = abstractTomegaSub
+    val abstractTomegaPrg = abstractTomegaPrg
+    val abstractSpine = abstractSpineExt
 
     val collectEVars = collectEVars
+    val collectEVarsSpine = collectEVarsSpine
 
     val closedCtx = closedCtx
   end

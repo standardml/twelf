@@ -1,0 +1,32 @@
+(* Search for proofs in natural deduction calculus *)
+(* Author: Carsten Schuermann *)
+
+prove  :: world {l1 l2 l3*}
+	   all {A:o} exists {D:nd A} true.
+prove' :: world {l1 l2 l3*}
+	   all {A:o} all {P: n} all {D : nd A}  
+	   exists {D : nd (atm P)} true.
+
+fun prove ((A:l1).imp F G) = 
+    let 
+      val <D, <>> = new (b:l3 F)
+                    in 
+                      prove G
+                    end
+    in 
+      <A.impI D, <>>
+    end
+  | prove ((a:l1).atm P) = 
+    choose (b:l3 A)
+    in 
+      prove' A P b.u
+    end
+
+and prove' ((a:l1).imp A B) P D =
+    let 
+      val <D1, <>> = prove A
+    in
+      prove' B P (a.impE D1 D)
+    end
+  | prove' ((a:l1).atm P) P D = <D, <>>
+

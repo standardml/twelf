@@ -1,0 +1,27 @@
+Library
+  signature INTERACTIVE
+  structure Interactive
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../tomega/sources.cm
+  ../lambda/sources.cm
+  state.sig       (* central data structure for states *)
+  state.fun       
+  search.sig
+  search.fun	
+  fill.sig        (* Filling existentials *)
+  fill.fun
+  split.sig       (* Splitting assumptions *)
+  split.fun
+  fixedpoint.sig  (* Fixed point rule *)
+  fixedpoint.fun 
+  recurse.sig     (* Computing induction hypotheses *)
+  introduce.sig   (* Introduce assumptions in the context *)
+  introduce.fun
+  stateprint.sig  (* State printer *) 
+  stateprint.fun
+  interactive.sig
+  interactive.fun
+  prover.sml

@@ -1,0 +1,38 @@
+(* Structural identity.  
+   Author: Carsten Schuermann
+*)
+
+id :: world (base param) all {N:exp} exists {K:exp} true
+
+fun id (A.x) = <A.x, <>>
+  | id (A.z) = <A.z, <>>
+  | id ((A.s) X) = 
+    let 
+	val <Y, <>> = id X
+    in	
+	<(A.s) Y, <>>
+    end
+  | id ((A.app) E1 E2) =
+    let
+	val <F1, <>> = id E1
+	val <F2, <>> = id E2
+    in
+        <(A.app) F1 F2, <>>
+    end
+  | id ((A.fn) T1 E1) =
+    let
+	val <F1, <>> = new 
+			 (h:param T1) 
+		       in
+ 			 id (E1 (h.x))
+		       end
+    in
+        <(A.fn) T1 F1, <>>
+    end
+
+new (b:base)
+
+val <X1, <>> = id ((b.s) ((b.s) ((b.s) ((b.s) ((b.s) ((b.s) (b.z)))))))
+val <X2, <>> = id (b.z)
+val <X3, <>> = id ((b.app) (b.z) (b.z))
+val <X4, <>> = id ((b.fn) (b.nat) ([x:exp] x))

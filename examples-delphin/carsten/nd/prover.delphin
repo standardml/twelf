@@ -1,0 +1,48 @@
+% Carsten Schuermann
+% The first mature Delphin program
+
+n : type.
+o : type.
+nd: o -> type.
+l1: (imp : o -> o -> o)
+    (atm : n -> o)
+    (impi : (nd A -> nd B) -> nd (A imp B))
+    (impe : nd (A imp B) -> (nd A -> nd B)).
+l2: (p: n).
+l3: [A:o] (u : nd A).
+
+prove  :: world {l1 l2 l3*}
+	   all {A:o} exists {D:nd A} true.
+prove' :: world {l1 l2 l3*}
+	   all {A:o} all {P: n} all {D : nd A}  
+	   exists {D : nd (atm P)} true.
+
+fun prove ((A:l1).imp F G) = 
+    let 
+      val <D, <>> = new (b:l3 F)
+                    in 
+                      prove G
+                    end
+    in 
+      <A.impI D, <>>
+    end
+  | prove ((a:l1).atm P) = 
+    choose (b:l3 A)
+    in 
+      prove' A P b.u
+    end
+
+and prove' ((a:l1).imp A B) P D =
+    let 
+      val <D1, <>> = prove A
+    in
+      prove' B P (a.impE D1 D)
+    end
+  | prove' ((a:l1).atm P) P D = <D, <>>
+
+
+
+
+Delphin 1.0
+> fn a:l1  => fn n:l2 => prove (a.imp (a.atm n.p) (a.atm n.p))
+val it = fn a:l1 => fn n:l2 => <a.impI ([u:nd (atm n.p)] u), <>>

@@ -1,0 +1,20 @@
+Library
+  signature DELPHIN
+  structure Delphin
+  signature TIMING
+  structure Timing
+  signature CONVERTER
+  structure Converter
+  signature TWELF
+  structure Twelf
+  signature INTSYN
+  structure IntSyn
+  signature TOMEGA
+  structure Tomega
+  signature OPSEM
+  structure Opsem
+  signature TOMEGAPRINT
+  structure TomegaPrint
+is
+  src/frontend/sources.cm
+  src/delphin/sources.cm

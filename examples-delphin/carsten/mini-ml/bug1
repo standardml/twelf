@@ -1,0 +1,4 @@
+ Root (Var 2,AppExp (Root (Proj (Bidx 1,3),Nil),Nil))
+
+ Root (Var 3,AppExp (Root (Proj (Bidx 2,4),App (Root (Const -,App (Root (BVar 2,Nil),Nil)),
+                                    Nil)),Nil)),

@@ -368,3 +368,96 @@ In the end I couldn't see any other solution.
 
 Hope this makes sense...
   - Frank
+----------------------------------------------------------------------
+Fri Nov 22 22:38:45 2002 -fp
+function coverageCheckCases
+
+Recall:
+
+G |- U : V   G' |- s : G
+------------------------
+G' |- U[s] : V[s]
+
+
+---------------------------
+G,x1:A1,...,xn:An |- ^n : G
+
+G' |- s : G   G' |- U : A[s]   (since G |- A : type, G' |- A[s] : type)
+----------------------------
+G' |- U.s : G,x:A
+
+Non-dependent example:
+
+coverageCheckCases (Cs, G) where
+G  = x : nat
+Cs =     . |- (z/x) : (x:nat)   [1]
+     y:nat |- (sy/x) : (x:nat)  [2]
+
+To check: for every . |- r : G
+          there exists k and  . |- t : Gk such that  r = sk o t 
+
+Approach: Build  H0 |- r0 : G  for H0 = G
+          Determine if there is Gk |- sk : G
+          such that r0 = sk o t for some H0 |- t : Gk
+
+Determine candidates in r0 (H0)
+Split candidate to construct a set of r1s and H1's and for each:
+          H1 |- r1 : H0  and  H1 |- r0 o r1 : G
+          Determine if there is Gk |- sk : G
+          such that r1 = sk o t for some H1 |- t : Gk
+
+Etc.
+------------------------------
+Back to example:
+G = x:nat
+H0 = x':nat  [contains splittable variables]
+r0 = x'/x      
+with x:nat |- (x/x) : x:nat
+
+Match    H0 |- (z/x) >= (x'/x) : G
+         Clash z <> x' [constant / splittable var], splitting candidate x'
+
+Match    H0 |- (sY/x) >= (x'/x) : G
+         Clash s <> x' [constant / splittable var], splitting candidate x'
+
+Split x':nat.  Two subgoals
+
+[a] r1 = z/x', H1 = . where . |- (z/x') : (x':nat)
+    r0 o r1 = z/x  where   . |- (z/x) : G
+
+Match  H1 |- (z/x) >= (z/x) : G
+       Success.
+
+[b] r1 = sx''/x', H1 = x'':nat  where x'':nat |- (sx''/x') : (x':nat)
+    r0 o r1 = sx''/x  where   x'':nat |- (sx''/x) : G
+
+Match  H1 |- (z/x) >= (sx''/x) : G
+       Fails [constant / constant clash], no splitting candidates
+
+Match  H1 |- (sY/x) >= (sx''/x) : G
+where  H1 |- Y : nat
+       Success.
+
+Coverage satisfied.
+------------------------------
+Functions:
+init (G) = (H0, r0)  such that  H0 |- r0 : G
+[eta-expanded identity]
+
+-- with spines:  H0 |- R0 : {{G}} a >> a with H0 = G0
+
+evarInst (Hi, Gk) = (X1/x1,...,Xn/xn) = tk,  ((Hi)) |- tk : Gk
+where Hi |- Xi : Ai[..]  if Gk = x1:A1,...,xn:An
+
+-- with spines: 
+   each clause is translated from  Gk |- sk : G
+   to  Gk |- Sk : {{G}} a >> a
+
+match (Hi, sk[tk], ri) = success or splitting candidates (indices into Hi)
+
+-- with spines:
+   match (Hi, Sk[tk], Ri)
+
+split (Hi, k) = [(Hi+1/1 |- ri+1/1),...,(Hi+1/1 |- ri+1/m)]
+
+-- with spines: identical

@@ -28,7 +28,6 @@ functor Total
    (*! sharing Reduces.IntSyn = IntSyn' !*)
 
    structure Cover : COVER
-   (*! sharing Cover.IntSyn = IntSyn' !*)
 
      (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
@@ -76,7 +75,13 @@ struct
 
     (* G is unused here *)
     fun checkDynOrder (G, Vs, 0, occ) =
-        raise Error' (occ, "Output coverage for clauses of order >= 3 not yet implemented")
+        (* raise Error' (occ, "Output coverage for clauses of order >= 3 not yet implemented") *)
+        (* Functional calculus now checks this *)
+        (* Sun Jan  5 12:17:06 2003 -fp *)
+        (if !Global.chatter >= 5
+	   then print ("Output coverage: skipping redundant checking of third-order clause\n")
+	 else ();
+	 ())
       | checkDynOrder (G, Vs, n, occ) = (* n > 0 *)
 	  checkDynOrderW (G, Whnf.whnf Vs, n, occ)
     and checkDynOrderW (G, (I.Root _, s), n, occ) = ()

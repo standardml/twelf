@@ -160,6 +160,13 @@ structure Solve =
 	 structure TableIndex = TableIndex
 	 structure Print = Print);
 
+structure Fquery =
+  Fquery (structure Global = Global
+	  structure Names = Names
+	  structure ReconQuery = ReconQuery
+	  structure Timers = Timers
+	  structure Print = Print);
+
 structure Twelf =
   Twelf (structure Global = Global
 	 structure Timers = Timers
@@ -191,6 +198,10 @@ structure Twelf =
          structure UniqueTable = UniqueTable
 
          structure Cover = Cover
+	 structure Converter = Converter
+	 structure TomegaPrint = TomegaPrint
+	 structure TomegaCoverage = TomegaCoverage
+	 structure TomegaTypeCheck = TomegaTypeCheck
          structure Total = Total
 
 	 structure Reduces = Reduces
@@ -206,6 +217,7 @@ structure Twelf =
 	 structure Tabled = Tabled
 	 structure TableIndex = TableIndex
 	 structure Solve = Solve
+	 structure Fquery = Fquery
 
 	 structure ThmSyn = ThmSyn
 	 structure Thm = Thm

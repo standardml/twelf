@@ -4,10 +4,6 @@
 
 signature MODEDEC =
 sig
-
-  (*! structure ModeSyn : MODESYN !*)
-  (*! structure Paths : PATHS !*)
-
   exception  Error of string
 
   val shortToFull : IntSyn.cid * ModeSyn.ModeSpine * Paths.region -> ModeSyn.ModeSpine

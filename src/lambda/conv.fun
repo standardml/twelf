@@ -91,6 +91,8 @@ struct
       | convExpW ((EVar (r1, _, _, _), s1), (EVar(r2, _, _, _), s2)) = 
 	  (r1 = r2) andalso convSub (s1, s2)
 
+      (* ABP -- 2/18/03 Added missing case*)
+      (* Note that under Head, why is NSDef never used?? *)
       | convExpW _ = false
         (* Possible are:
            L <> Pi D. V   Pi D. V <> L
@@ -143,6 +145,7 @@ struct
 	  (case (Ft1, Ft2) of
 	     (Idx (n1), Idx (n2)) => (n1 = n2)
            | (Exp (U1), Exp (U2)) => convExp ((U1, id), (U2, id))
+	   | (Block (Bidx k1), Block (Bidx k2)) => (k1 = k2) (* other block cases don't matter -cs 2/18/03 *)
 	   | (Exp (U1), Idx (n2)) => convExp ((U1, id), (Root (BVar (n2), Nil), id))
            | (Idx (n1), Exp (U2)) => convExp ((Root (BVar (n1), Nil), id), (U2, id))
 	   | (Undef, Undef) => true
@@ -158,6 +161,8 @@ struct
        Effects: EVars may be lowered
     *)
     and convDec ((Dec (_, V1), s1), (Dec (_, V2), s2)) =  convExp ((V1, s1), (V2, s2))
+      | convDec ((BDec(_, (c1, s1)), t1), (BDec (_, (c2, s2)), t2)) =
+          c1 = c2 andalso convSub (comp (s1, t1), comp (s2, t2))
 
     (* convDecP see convDec *)
     and convDecP (((D1, P1), s1), ((D2, P2), s2)) =  convDec ((D1, s1), (D2, s2))

@@ -8,6 +8,8 @@ closed : exp -> type.  %name closed U u.
 clo_z     : closed z.
 clo_s     : closed (s E)
 	     <- closed E.
+
+
 clo_case  : closed (case E1 E2 E3)
 	     <- closed E1
 	     <- closed E2

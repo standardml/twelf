@@ -53,6 +53,33 @@ struct
     (* quotCheck (d1, d2) = true iff  d2 != zero *)
     fun quotCheck (d1, d2) = W.> (d2, zero)
 
+    val wordSize' = Int.min (wordSize, W.wordSize);
+
+    val zero = W.fromInt 0
+    val max = W.>> (W.notb zero, Word.fromInt (W.wordSize - wordSize'))
+
+    (* numCheck (d) = true iff d <= max *)
+    fun numCheck (d) = W.<= (d, max)
+
+    (* plusCheck (d1, d2) = true iff d1 + d2 <= max *)
+    fun plusCheck (d1, d2) =
+          let
+            val d3 = W.+ (d1, d2)
+          in
+            W.>= (d3, d1)
+            andalso W.>= (d3, d2)
+            andalso W.<= (d3, max)
+          end
+
+    (* timesCheck (d1, d2) = true iff d1 * d2 <= max *)
+    fun timesCheck (d1, d2) =
+          if(d1 = zero orelse d2 = zero) then true
+          else let val d3 = W.div (W.div (max, d1), d2)
+               in W.> (d3, zero) end
+
+    (* quotCheck (d1, d2) = true iff  d2 != zero *)
+    fun quotCheck (d1, d2) = W.> (d2, zero)
+
     (* constraint solver ID of this module *)
     val myID = ref ~1 : csid ref
 

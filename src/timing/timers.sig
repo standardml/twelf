@@ -25,6 +25,7 @@ sig
   val splitting   : Timing.center		(* splitting in m2 *)
   val inference   : Timing.center		(* inference in m2 *)
   val terminate   : Timing.center		(* checking termination *)
+  val delphin     : Timing.center               (* Operational Semantics of Delphin *)
 
   (* Warning: time for printing of the answer substitution to a
      query is counted twice here.

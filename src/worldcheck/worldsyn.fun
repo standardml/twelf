@@ -4,7 +4,6 @@
 
 functor WorldSyn
   (structure Global : GLOBAL
-   (*! structure IntSyn : INTSYN !*)
    structure Whnf : WHNF
    (*! sharing Whnf.IntSyn = IntSyn !*)
    structure Index : INDEX
@@ -33,8 +32,8 @@ functor WorldSyn
    structure Timers : TIMERS)
    : WORLDSYN = 
 struct
-  (*! structure IntSyn = IntSyn !*)
   structure I = IntSyn
+  structure T = Tomega
   structure P = Paths
   structure F = Print.Formatter
 
@@ -53,20 +52,10 @@ struct
 
   type dlist = IntSyn.Dec list
 
-  (*
-  datatype LabelDec =			(* ContextBody                 *)
-    LabelDec of string * dlist * dlist	(* B ::= l : SOME L1. BLOCK L2 *)
-
-  datatype World =			(* Worlds                      *)
-    Closed				(* W ::= .                     *)
-  | Schema of World * LabelDec          (*     | W, B                  *)
-  *)
-
-  datatype Worlds = Worlds of IntSyn.cid list
 
   local
    
-    val worldsTable : Worlds Table.Table = Table.new (0)
+    val worldsTable : T.Worlds Table.Table = Table.new (0)
     fun reset () = Table.clear worldsTable
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
     fun getWorlds (b) =
@@ -256,8 +245,8 @@ struct
        W = R, except that R is a regular expression 
        with non-empty contextblocks as leaves
     *)
-    fun worldsToReg (Worlds nil) = One
-      | worldsToReg (Worlds cids) = Star (worldsToReg' cids)
+    fun worldsToReg (T.Worlds nil) = One
+      | worldsToReg (T.Worlds cids) = Star (worldsToReg' cids)
     and worldsToReg' (cid::nil) = Block (I.constBlock cid)
       | worldsToReg' (cid::cids) =
           Plus (Block (I.constBlock cid), worldsToReg' cids)
@@ -349,7 +338,7 @@ struct
   
        Invariants: G |- V : type, V nf
     *)
-    fun checkBlocks (Worlds cids) (G, V, occ) = 
+    fun checkBlocks (T.Worlds cids) (G, V, occ) = 
         let
 	  val b = I.targetFam V
 	  val Wb = getWorlds b handle Error (msg) => raise Error' (occ, msg)
@@ -490,7 +479,7 @@ struct
 
        Effect: raises Error if W does not respect subordination
     *)
-    fun install (a, W as Worlds(cids)) =
+    fun install (a, W as T.Worlds(cids)) =
         ( checkSubordWorlds cids
 	    handle Subordinate.Error (msg) => raise Error (msg) ;
 	  insert (a, W) )
@@ -512,12 +501,33 @@ struct
 	  ctxToList' (Gin, nil)
 	end
 
+
+
+    (* isSubsumed (W, b) = ()
+       holds if the worlds associated with b are subsumed by W
+       Effect: raises Error'(occ, msg) otherwise
+  
+       Invariants: G |- V : type, V nf
+    *)
+    fun isSubsumed (T.Worlds cids) b = 
+        let
+	  val Wb = getWorlds b
+	  val Rb = worldsToReg Wb
+	in
+	  if subsumedLookup b
+	    then ()
+	  else ( checkSubsumedWorlds (cids, Rb, b) ;
+		subsumedInsert (b) )
+	end
+
   in
     val reset = reset
     val install = install
     val lookup = lookup
     val worldcheck = worldcheck
     val ctxToList = ctxToList
+    val isSubsumed = isSubsumed
+    val getWorlds = getWorlds
   end
 
 end;  (* functor WorldSyn *)

@@ -1,7 +1,12 @@
 Library
   signature FUNSYN
   structure FunSyn
+  signature PROVER
   structure CombiProver
+  signature WEAKEN
+  structure Weaken
+  signature MTPI
+  structure MTPi
 is
 #if defined(NEW_CM)
   $/basis.cm

@@ -1,0 +1,21 @@
+bool  : type.				%name bool B.
+true  : bool.
+false : bool.
+
+nat   : type.				%name nat N.
+z     : nat.
+s     : nat -> nat.
+
+even  : nat -> bool -> type.		%name even E.
+odd   : nat -> bool -> type.		%name odd O.
+
+evz   : even z true.
+evsz  : even (s z) false.
+evss  : even (s (s N)) B <- odd (s N) B.
+
+odz   : odd z false.
+odsz  : odd (s z) true.
+odss  : odd (s (s N)) B <- even (s N) B.
+
+%mode (even +N -B) (odd +N -B).
+%worlds () (odd _ _) (even _ _).

@@ -80,11 +80,21 @@ sig
     Dec of string option * Exp		(* D ::= x:V                  *)
   | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of string option * int	        (*     | v[^-d]               *)
+  | NDec 
 
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)
-  | LVar of Block option ref * (cid * Sub) 
-                                        (*     | L(l,s)               *)
+  | LVar of Block option ref * Sub * (cid * Sub)
+                                        (*     | L(l[^k],t)           *)
+  | Inst of Exp list                    (*     | U1, ..., Un          *)
+  (* It would be better to consider having projections count
+     like substitutions, then we could have Inst of Sub here, 
+     which would simplify a lot of things.  
+
+     I suggest however to wait until the next big overhaul 
+     of the system -- cs *)
+
+
 (*  | BClo of Block * Sub                 (*     | b[s]                 *) *)
 
   (* constraints *)
@@ -238,7 +248,8 @@ sig
   val newEVar    : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
   val newAVar    : unit ->  Exp	        (* creates A (bare)           *) 
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
-  val newLVar    : cid * Sub -> Block	(* creates B:(l,s)            *) 
+  val newLVar    : Sub * (cid * Sub) -> Block	
+					(* creates B:(l[^k],t)        *) 
 
   (* Type related functions *)
 

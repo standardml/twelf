@@ -65,6 +65,7 @@ sig
   val jterm : term -> job
   val jclass : term -> job
   val jof : term * term -> job
+  val jof' : term * IntSyn.Exp -> job
 
   datatype Job =
       JNothing
@@ -76,6 +77,8 @@ sig
 
   val recon : job -> Job
   val reconQuery : job -> Job
+  val reconWithCtx : IntSyn.dctx * job -> Job
+  val reconQueryWithCtx : IntSyn.dctx * job -> Job
 
   val termRegion : term -> Paths.region
   val decRegion : dec -> Paths.region

@@ -1,0 +1,15 @@
+(* Equivalence between Hilbert and natural deduction calculus *)
+(* Author: Carsten Schuermann *)
+
+new (m:syntax)
+
+abs :: world (syntax) all^ {A:o} all^ {B:o} 
+	all {D: hil A -> hil B} 
+	exists {P : hil ((m.imp) A B)} true
+
+fun abs ([x:hil A] x) = 
+      <(m.mp) ((m.imp) A ((m.imp) A A)) 
+	((m.imp) A A) ((m.mp) ((m.imp) A ((m.imp) ((m.imp) A A) A)) 
+	((m.imp) ((m.imp) A ((m.imp) A A)) ((m.imp) A A)) 
+	((m.s) A ((m.imp) A A) A) 
+	((m.k) A ((m.imp) A A))) ((m.k) A A), <>>

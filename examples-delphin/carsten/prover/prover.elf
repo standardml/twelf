@@ -1,0 +1,13 @@
+% Carsten Schuermann
+% The first mature Delphin program
+
+n : type.
+o : type.
+nd: o -> type.
+l1: (imp : o -> o -> o)
+    (atm : n -> o)
+    (impi : (nd A -> nd B) -> nd (A imp B))
+    (impe : nd (A imp B) -> (nd A -> nd B)).
+l2: (p: n).
+l3: [A:o] (u : nd A).
+

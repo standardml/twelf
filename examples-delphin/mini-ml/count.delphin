@@ -1,0 +1,68 @@
+count :: world (L) all {e:exp} all {t:tp} all {P : of e t} exists {N : exp} true
+
+(*
+fun count #L_X #L_T #L_U = <s z, <>>
+  | count z nat of_z = z
+  | count (s E) nat (of_s P) = count E nat P 
+  | count (case E E1 E2) T (of_case P P1 P2) =  
+    let 
+      val <N, <>> = count E nat P
+      val <N1,<>> = count E1 T P1
+      val <N2,<>> = 
+	new 
+          {X:exp}{U:of X nat} 
+        in
+	  count (E2 X) T (P2 X U)
+        end
+      val <N3, <>> = add N N1	
+    in
+      add N3 N2
+    end
+  | count (fn T1 E) (arr T1 T2) (of_fn P)= 
+    new 
+      {X:exp} {U:of x T1}
+    in
+      count (E x) T2 (P X U)
+    end
+  | count (app E1 E2) T2 (of_app D1 D2) = 
+    let 
+      val <N1, <>> = count E1 _ D1 
+      val <N2, <>> = count E2 _ D2
+    in
+      add N1 N2
+    end
+  | count (fix T E) = 
+    new 
+      {X:exp} {U:of x T1}
+    in
+      count (E x) T2 (P X U)
+    end
+
+
+val <app E1 E2, <T, <D, <>>>>
+    :: exists {e : exp} exists {t: tp} exists {P : of e t} true
+     = <z, <nat, <of_z, <>>>>
+
+
+val <s E', <nat, <of_s D', <>>>>
+    :: exists {e : exp} exists {t: tp} exists {P : of e t} true
+     = <s z, <nat, <of_s of_z, <>>>>
+
+
+
+fun tps z V T1 (eval_z) (of_z) = <of_z, <>>
+  | tps _ _ _ (eval_s D) (of_s P) = 
+    let 
+      val <Q, <>> = tps (_:exp) (_:exp) nat D P
+    in
+      <of_s Q, <>>
+    end  
+  |tps (fix E) V T (eval_fix D) (of_fix P) =
+      let
+        val <of_fn Q1, <>> = tps (E (fix E)) V T D (P _ (of_fix P))
+      in
+        <of_fix Q, <>>
+      end
+
+*)
+

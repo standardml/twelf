@@ -88,6 +88,9 @@ ccp_fix : ccp (ev_fix D1) C' (C1 << st_fix)
 ccp_vl : ccp (ev_vl) C' (C' << st_vl).
 
 
+%worlds () (ccp _ _ _).
+
+
 %{ Completeness Theorem:
    If   D :: eval E V
    then CE :: ceval E V.

@@ -22,12 +22,15 @@ twelfdir = `pwd`
 twelfserver = twelf-server
 # Name of twelf-sml program
 twelfsml = twelf-sml
+# Name of delphin program
+delphin = delphin
 
 # ---------------------------------------------------------------
 # Do not edit the following lines
 # ---------------------------------------------------------------
 
-version = "1.4"
+version = "1.5"
+delphinversion = "0.1"
 
 default : twelf-server twelf-emacs
 
@@ -46,6 +49,13 @@ twelf-sml: ;
 	@echo "*************************************************"	 
 	$(sml) < twelf-sml.sml ;
 	bin/.mkexec "$(sml)" "$(twelfdir)" twelf-sml "$(twelfsml)" ;
+
+delphin: ; 
+	@echo "*************************************************"
+	@echo "Delphin $(delphinversion): SML"
+	@echo "*************************************************"	 
+	$(sml) < delphin.sml ;
+	bin/.mkexec "$(sml)" "$(twelfdir)" delphin "$(delphin)" ;
 
 twelf-emacs: ; 
 	@echo "*************************************************"

@@ -88,7 +88,7 @@ struct
       let
 	val D' = I.Dec(NONE, I.EClo(A,s))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec(r, s, Ha))),
 	        (fn M => sc (I.Lam (D', M))))
       end
     | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
@@ -96,7 +96,7 @@ struct
 	val D' = Names.decLUName (G, I.decSub (D, s)) 
 (*	val D' = I.decSub (D, s) *)
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, C.Parameter)),
 	        (fn M => sc (I.Lam (D', M))))
       end
 
@@ -232,8 +232,7 @@ struct
 	  if deterministic
 	    then matchSigDet (Index.lookup (cidFromHead Ha))
 	  else matchSig (Index.lookup (cidFromHead Ha)) 
-
-	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), k) =
+	  | matchDProg (I.Decl (dPool', C.Dec(r, s, Ha')), k) =
 	    if eqHead (Ha, Ha')
 	    then
 	      if deterministic 
@@ -250,7 +249,7 @@ struct
 				   (fn S => sc (I.Root(I.BVar(k), S)))));
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
-	  | matchDProg (I.Decl (dPool', NONE), k) =
+	  | matchDProg (I.Decl (dPool', C.Parameter), k) =
 	      matchDProg (dPool', k+1)
         fun matchConstraint (cnstrSolve, try) =
               let

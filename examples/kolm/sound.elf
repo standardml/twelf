@@ -201,7 +201,7 @@ sound_dnotr    : sound (nk_dnotr NK1) KA
 	     block {u:nk A} {v:nj A*} {h:sound u KA v}.
 
 %block l4 : some  {A:o} {A*:o} {K: kolm A A*}
-	     block {p : o} {u:nk A} {v:nj A*} {kp:kolm p (n p)} 
+	     block {p : o} {u:nk A} {v:nj A*} {kp:kolm p (n p)}
 	     {h1 : existskolm p (n p) kp}
 	     {h2 : sound u K v}.
 

@@ -38,6 +38,8 @@ struct
     | DEFINE				(* `%define' *) (* -rv 8/27/01 *)
     | SOLVE				(* `%solve' *)
     | QUERY	  			(* `%query' *)
+    | FQUERY	  			(* `%fquery' *)
+    | COMPILE                           (* '%compile' *) (* -ABP 4/4/03 *)
     | QUERYTABLED  			(* `%querytabled *)
     | MODE				(* `%mode' *)
     | UNIQUE				(* `%unique' *) (* -fp 8/17/03 *)
@@ -234,6 +236,8 @@ struct
       | lexPragmaKey (ID(_, "define"), r) = (DEFINE, r) (* -rv 8/27/01 *)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
+      | lexPragmaKey (ID(_, "fquery"), r) = (FQUERY, r)
+      | lexPragmaKey (ID(_, "compile"), r) = (COMPILE, r) (* -ABP 4/4/03 *)
       | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
       | lexPragmaKey (ID(_, "freeze"), r) = (FREEZE, r)
       | lexPragmaKey (ID(_, "deterministic"), r) = (DETERMINISTIC, r) (* -rv 11/27/01 *)
@@ -343,6 +347,8 @@ struct
     | toString' (DEFINE) = "%define"    (* -rv 8/27/01 *)
     | toString' (SOLVE) = "%solve"
     | toString' (QUERY) = "%query"
+    | toString' (FQUERY) = "%fquery"
+    | toString' (COMPILE) = "%compile"  (* -ABP 4/4/03 *)
     | toString' (QUERYTABLED) = "%querytabled"
     | toString' (MODE) = "%mode"
     | toString' (UNIQUE) = "%unique"

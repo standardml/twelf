@@ -37,8 +37,8 @@ twelf-server: twelf-sml;
 	@echo "*************************************************"
 	@echo "Twelf $(version): Server"
 	@echo "*************************************************"	 
-	$(sml) -r $(twelfdir)/bin/.dbase/twelf-sml < polyml/twelf-server-dbase.sml ;
-	$(sml) $(twelfdir)/bin/.dbase/twelf-server < polyml/twelf-server.sml ;
+	$(sml) -r bin/.dbase/twelf-sml < polyml/twelf-server-dbase.sml ;
+	$(sml) bin/.dbase/twelf-server < polyml/twelf-server.sml ;
 	polyml/.mkexec "$(sml)" "$(twelfdir)" twelf-server "$(twelfserver)";
 
 twelf-sml: ; 
@@ -46,7 +46,7 @@ twelf-sml: ;
 	@echo "Twelf $(version): SML"
 	@echo "*************************************************"	 
 	$(sml) < polyml/twelf-sml-dbase.sml ;
-	$(sml) $(twelfdir)/bin/.dbase/twelf-sml < polyml/twelf-sml.sml ;
+	$(sml) bin/.dbase/twelf-sml < polyml/twelf-sml.sml ;
 	polyml/.mkexec "$(sml)" "$(twelfdir)" twelf-sml "$(twelfsml)";
 
 twelf-emacs: ; 

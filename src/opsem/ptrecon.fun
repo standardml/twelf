@@ -83,14 +83,14 @@ struct
       let
 	val D' = I.Dec(NONE, I.EClo(A,s))
       in
-	solve (O, (g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
+	solve (O, (g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec (r, s, a))),
 	       (fn (O,M) => sc (O, (I.Lam (D', M)))))
       end
     | solve (O, (C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' = I.decSub (D, s)
       in
-	solve (O, (g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
+	solve (O, (g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, C.Parameter)),
 	       (fn (O,M) => sc (O, (I.Lam (D', M)))))
       end
 
@@ -226,7 +226,7 @@ struct
 	fun matchDProg (I.Null, i, k) =
 	    (* dynamic program exhausted -- shouldn't happen *)
 	    raise Error ("\n selected dynamic clause number does not exist in current dynamic clause pool! -- SHOULD NOT HAPPEN \n")
-	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), 1, k) =
+	  | matchDProg (I.Decl (dPool', C.Dec (r, s, Ha')), 1, k) =
 	    if eqHead (Ha, Ha')
 	      then (* trail to undo EVar instantiations *)
 		    (CSManager.trail (fn () =>

@@ -1,0 +1,18 @@
+(* Addition.  
+   Author: Carsten Schuermann
+*)
+
+add :: world (base) all {N:exp} all {M:exp} exists {K:exp} true
+
+fun add (A.z) M = <M, <>>
+  | add ((A.s) N) M = 
+    let 
+	val <K, <>> = add N M
+    in	
+	<(A.s) K, <>>
+    end
+
+new (b:base)
+val <Z, <>> = add ((b.s) ((b.s) ((b.s) (b.z)))) ((b.s) ((b.s) ((b.s) (b.z))))
+val <X, <>> = add (b.z) ((b.s) ((b.s) ((b.s) (b.z))))
+val <Y, <>> = add ((b.s) (b.z)) X

@@ -11,6 +11,9 @@ red_letv : letv E1 E2 ==> E2 E1.
 red_letn : letn E1 E2 ==> E2 E1.
 red_fix : fix E ==> E (fix E).
 
+%worlds () (==> D P).
+
+
 % The weakly congruent, reflexive, transitive closure of ==>*
 ==>* : exp -> exp -> type.		%name ==>* R*.
 %infix none 10 ==>*.
@@ -48,3 +51,5 @@ red*_refl : E ==>* E.
 red*_trans : E ==>* E''
 	      <- E ==>* E'
 	      <- E' ==>* E''.
+
+%worlds () (==>* D P).

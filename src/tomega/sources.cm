@@ -1,0 +1,50 @@
+Library
+  signature CONVERTER
+  structure Converter
+  signature TOMEGAPRINT
+  structure TomegaPrint
+  signature TOMEGACOVERAGE
+  structure TomegaCoverage
+  signature TOMEGATYPECHECK
+  structure TomegaTypeCheck
+  signature TOMEGAABSTRACT
+  structure TomegaAbstract
+
+  signature REDUNDANT	
+  structure Redundant
+
+  signature OPSEM
+  structure Opsem
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../lambda/sources.cm
+  ../worldcheck/sources.cm
+  ../cover/sources.cm
+  ../formatter/sources.cm
+  ../names/sources.cm
+  ../print/sources.cm
+  ../typecheck/sources.cm
+  ../subordinate/sources.cm
+  ../meta/sources.cm
+  ../modes/sources.cm
+  ../trail/sources.cm
+  opsem.sig
+  opsem.fun 
+  converter.sig
+  converter.fun 
+  typecheck.sig
+  typecheck.fun
+  tomegaprint.sig
+  tomegaprint.fun 
+  unify.sig
+  unify.fun
+  coverage.sig
+  coverage.fun
+  redundant.sig
+  redundant.fun
+  abstract.sig
+  abstract.fun
+  tomega.sml 

@@ -290,14 +290,14 @@ bp Wed Feb 20 11:06:51 2002 *)
       let
 	val D' = I.Dec(NONE, I.EClo(A,s))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec (r, s, Ha))),
 	       (fn O => sc O)) 
       end
     | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' = I.decSub (D, s)
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, C.Parameter)),
 	       (fn O => sc O))
       end
 
@@ -423,7 +423,7 @@ bp Wed Feb 20 11:06:51 2002 *)
 	fun matchDProg (I.Null, _) =
 	    (* dynamic program exhausted, try signature *)
 	    matchSig (Index.lookup (cidFromHead Ha))
-	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), k) =
+	  | matchDProg (I.Decl (dPool', C.Dec (r, s, Ha')), k) =
 	    if eqHead (Ha, Ha')
 	      then (* trail to undo EVar instantiations *)
 		(CSManager.trail (fn () =>
@@ -431,7 +431,7 @@ bp Wed Feb 20 11:06:51 2002 *)
 				              (fn S => sc ((C.Dc k)::S)))); 
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
-	  | matchDProg (I.Decl (dPool', NONE), k) =
+	  | matchDProg (I.Decl (dPool', C.Parameter), k) =
 	      matchDProg (dPool', k+1)
 
 

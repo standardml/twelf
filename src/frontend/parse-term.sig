@@ -11,6 +11,7 @@ sig
   val parseQualIds' : ((string list * string) list) Parsing.parser 
   val parseFreeze' : ((string list * string) list) Parsing.parser
   val parseDeterministic' : ((string list * string) list) Parsing.parser
+  val parseCompile' : ((string list * string) list) Parsing.parser (* -ABP 4/4/03 *)
   val parseTerm' : ExtSyn.term Parsing.parser
   val parseDec' : (string option * ExtSyn.term option) Parsing.parser
   val parseCtx' : (ExtSyn.dec list) Parsing.parser

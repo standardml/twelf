@@ -59,6 +59,7 @@ cdMP    : combdefn (MP P Q) (impliesE P' Q')
 	     <- combdefn P P'
 	     <- combdefn Q Q'.
 
+%worlds () (combdefn D F).
 
 %%% Decidability proof for theorem  HD -> ND
 %terminates D (combdefn D _).

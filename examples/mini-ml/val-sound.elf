@@ -5,9 +5,12 @@ vs : eval E V -> value V -> type.
 %mode vs +D -P.
 
 % Natural Numbers
+
+
 vs_z      : vs (ev_z) (val_z).
 vs_s      : vs (ev_s D1) (val_s P1)
 	     <- vs D1 P1.
+
 
 vs_case_z : vs (ev_case_z D2 D1) P2
 	     <- vs D2 P2.
@@ -25,6 +28,7 @@ vs_snd  : vs (ev_snd D') P2
 
 % Functions
 vs_lam  : vs (ev_lam) (val_lam).
+
 vs_app  : vs (ev_app D3 D2 D1) P3
 	   <- vs D3 P3.
 

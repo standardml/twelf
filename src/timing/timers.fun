@@ -25,11 +25,12 @@ struct
   val splitting   = Timing.newCenter ("Splitting     ")
   val recursion   = Timing.newCenter ("Recursion     ")
   val inference   = Timing.newCenter ("Inference     ")
+  val delphin     = Timing.newCenter ("Delphin       ")
 
   val centers = [parsing, recon, abstract, checking, modes, subordinate,
 		 terminate, printing, compiling, solving, coverage, worlds,
                  ptrecon, filling, filltabled,
-                 splitting, recursion, inference]
+                 splitting, recursion, inference, delphin]
 
   val total    = Timing.sumCenter ("Total         ", centers)
 

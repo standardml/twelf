@@ -238,6 +238,7 @@ struct
     | jterm of term
     | jclass of term
     | jof of term * term
+    | jof' of term * IntSyn.Exp
 
   fun termRegion (internal (U, V, r)) = r
     | termRegion (constant (H, r)) = r
@@ -278,7 +279,7 @@ struct
   local
     open Apx
     datatype Ctx = datatype IntSyn.Ctx
-    datatype Dec = Dec of string option * Exp
+    datatype Dec = Dec of string option * Exp | NDec
   in
   
     (* Phase 1:
@@ -342,6 +343,8 @@ struct
     fun findBVar' (Null, name, k) = NONE
       | findBVar' (Decl (G, Dec (NONE, _)), name, k) =
           findBVar' (G, name, k+1)
+      | findBVar' (Decl (G, NDec), name, k) =
+          findBVar' (G, name, k+1)
       | findBVar' (Decl (G, Dec (SOME(name'), _)), name, k) =
           if name = name' then SOME (k)
           else findBVar' (G, name, k+1)
@@ -385,7 +388,8 @@ struct
     fun findLCID x = findBVar (findConst (findCSConst findOmitted)) x
     fun findUCID x = findBVar (findConst (findCSConst (findEFVar findOmitted))) x
     fun findQUID x = findConst (findCSConst findOmitted) x
-          
+
+
     fun inferApx (G, tm as internal (U, V, r)) =
         let
           val (U', V', L') = exactToApx (U, V)
@@ -580,6 +584,32 @@ struct
         in
           jof (tm1', tm2')
         end
+      | inferApxJob (G, jof' (tm1, V)) =
+        let
+          val _ = clearDelayed ()
+          val L = newLVar ()
+	  val (V2, _) = Apx.classToApx V
+          val (tm1', U1) = checkApx (G, tm1, V2, L,
+                                     "Ascription in declaration did not hold")
+          val _ = filterLevel (tm1', L, 2,
+                               "The term in this position must be an object or a type family")
+          val _ = runDelayed ()
+        in
+          jof' (tm1', V)
+        end
+
+    fun ctxToApx IntSyn.Null = IntSyn.Null
+      | ctxToApx (IntSyn.Decl (G, IntSyn.NDec)) =
+          IntSyn.Decl (ctxToApx G, NDec)
+      | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (name, V))) = 
+          let 
+	    val (V', _) = Apx.classToApx V
+	  in
+	    IntSyn.Decl (ctxToApx G, Dec (name, V'))
+	  end
+
+    fun inferApxJob' (G, t) =
+        inferApxJob (ctxToApx G, t)
           
   end (* open Apx *)
 
@@ -1253,6 +1283,21 @@ struct
           JOf ((U1, oc1), (V2, oc2), L2)
         end
 
+      | inferExactJob (G, jof' (tm1, V2)) =
+        let
+(*          val (tm2', B2, L2) = inferExact (G, tm2)
+          val V2 = toIntro (B2, (L2, id)) *)
+          val (tm1', B1) = checkExact (G, tm1, (V2, id),
+                                       "Ascription in declaration did not hold\n"
+                                       ^ "(Index object(s) did not match)")
+          val U1 = toIntro (B1, (V2, id))
+(*          val (oc2, r2) = occIntro tm2' *)
+          val (oc1, r1) = occIntro tm1'
+(*          val (Uni L2, _) = Whnf.whnf (L2, id) *)
+        in
+          JOf ((U1, oc1), (V2, oc1), Type)
+        end
+
     fun recon' (j) =
         let
           (* we leave it to the context to call Names.varReset
@@ -1275,6 +1320,29 @@ struct
 
     fun recon (j) = (queryMode := false; recon' j)
     fun reconQuery (j) = (queryMode := true; recon' j)
+
+    (* Invariant, G must be named! *)
+    fun reconWithCtx' (G, j) =
+        let
+          (* we leave it to the context to call Names.varReset
+             reason: this code allows reconstructing terms containing
+             existing EVars, and future developments might use that *)
+          (* context must already have called resetErrors *)
+          val _ = Apx.varReset ()
+          val _ = varReset ()
+          val j' = inferApxJob' (G, j)
+          val _ = clearDelayed ()
+          val j'' = inferExactJob (G, j')
+          val _ = runDelayed ()
+          (* we leave it to the context to call checkErrors
+             reason: the caller may want to do further processing on
+             the "best effort" result returned, even if there were
+             errors *)
+        in
+          j''
+        end
+    fun reconWithCtx (G, j) = (queryMode := false; reconWithCtx' (G, j))
+    fun reconQueryWithCtx (G, j) = (queryMode := true; reconWithCtx' (G, j))
 
   fun internalInst x = raise Match
   fun externalInst x = raise Match

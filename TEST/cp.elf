@@ -6,16 +6,16 @@ exp : type.
 app : exp -> exp -> exp.
 lam : (exp -> exp) -> exp.
 
-callcc : ((exp -> exp) -> exp) -> exp.
-reset  : (((exp -> exp) -> exp) -> exp) -> exp.
+% callcc : ((exp -> exp) -> exp) -> exp.
+% reset  : (((exp -> exp) -> exp) -> exp) -> exp.
 
 exp' : type.
 
 
 app' : exp' -> exp' -> exp'.
 lam' : (exp' -> exp') -> exp'.
-callcc' : ((exp' -> exp') -> exp') -> exp'.
-reset'  : (((exp' -> exp') -> exp') -> exp') -> exp'.
+% callcc' : ((exp' -> exp') -> exp') -> exp'.
+% reset'  : (((exp' -> exp') -> exp') -> exp') -> exp'.
 
 cp : exp -> exp' -> type.
 %mode cp +E -E'.
@@ -28,18 +28,18 @@ cp_app : cp (app D1 D2) (app' E1 E2)
 cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
          <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
 
-cp_callcc: ({c:exp -> exp} {d:exp' -> exp'}
-             ({x:exp} {y:exp'} cp x y -> cp (c x) (d y)) 
-             -> cp (E c) (F d))
-             -> cp (callcc [c:exp -> exp] E c) (callcc' [d:exp' -> exp'] F d).
+% cp_callcc: ({c:exp -> exp} {d:exp' -> exp'}
+%             ({x:exp} {y:exp'} cp x y -> cp (c x) (d y)) 
+%             -> cp (E c) (F d))
+%             -> cp (callcc [c:exp -> exp] E c) (callcc' [d:exp' -> exp'] F d).
 
-cp_reset: ({c: (exp -> exp) -> exp} {d: (exp' -> exp') -> exp'}
-            ({f: exp -> exp} {g: exp' -> exp'} 
-              ({x: exp} {y:exp'} cp x y -> cp (f x) (g y))
-              -> cp (c f) (d g))
-            -> cp (E c) (F d))
-          -> cp (reset [c: (exp -> exp) -> exp] E c) 
-                (reset' [d: (exp' -> exp') -> exp'] F d).
+% cp_reset: ({c: (exp -> exp) -> exp} {d: (exp' -> exp') -> exp'}
+%            ({f: exp -> exp} {g: exp' -> exp'} 
+%              ({x: exp} {y:exp'} cp x y -> cp (f x) (g y))
+%              -> cp (c f) (d g))
+%            -> cp (E c) (F d))
+%          -> cp (reset [c: (exp -> exp) -> exp] E c) 
+%                (reset' [d: (exp' -> exp') -> exp'] F d).
 
 cpt : {E:exp}{E':exp'}{D : cp E E'} type.
 %mode cpt +E -E' -D.
@@ -51,5 +51,22 @@ cpt_app : cpt (app E1 E2) (app' E1' E2') (cp_app D2 D1)
 cpt_lam : cpt (lam E) (lam' E') (cp_lam D)
 	   <- ({x:exp}{x':exp'}{u:cp x x'} cpt x x' u -> cpt (E x) (E' x') (D x x' u)).
 
+%block l : block {x:exp}{x':exp'}{u:cp x x'}{hyp: cpt x x' u}.
+%worlds (l) (cpt _ _ _).
 %terminates (E) (cpt E _ _).
+
+
+new : {E:exp}{E':exp'}{D : cp E E'} {F:exp}type.
+%mode new +E -E' -D -F.
+
+new_app : new (app E1 E2) (app' E1' E2') (cp_app D2 D1) (app F1 F2)
+	   <- new E1 E1' D1 F1
+	   <- new E2 E2' D2 F2.
+						 
+new_lam : new (lam E) (lam' E') (cp_lam D) (lam [x] x)
+	   <- ({x:exp}{x':exp'}{u:cp x x'} new x x' u x -> new (E x) (E' x') (D x x' u) (lam [x] x)).
+
+%block l : block {x:exp}{x':exp'}{u:cp x x'}{hyp: new x x' u x}.
+%worlds (l) (new _ _ _ _).
+%terminates (E) (new E _ _ _).
 

@@ -1,6 +1,5 @@
 structure WorldSyn = 
   WorldSyn (structure Global = Global
-	    (*! structure IntSyn = IntSyn !*)
 	    structure Whnf = Whnf
 	    structure Names = Names
 	    structure Unify = UnifyTrail
@@ -15,10 +14,30 @@ structure WorldSyn =
 	    structure Origins = Origins
             structure Timers = Timers);
 
-structure WorldPrint =
-  WorldPrint (structure Global = Global
-	      (*! structure IntSyn = IntSyn !*)
-	      structure WorldSyn' = WorldSyn
-	      structure Names = Names
-	      structure Formatter' = Formatter
-	      structure Print = Print);
+structure Worldify = Worldify 
+  (structure Global = Global
+   (*! structure IntSyn = IntSyn !*)
+   structure WorldSyn = WorldSyn
+   (*! structure Tomega = Tomega !*)
+   structure Whnf = Whnf
+   structure Names = Names
+   structure Unify = UnifyTrail
+   structure Abstract = Abstract
+   structure Constraints = Constraints
+   structure Index = Index
+   structure CSManager = CSManager
+   structure Subordinate = Subordinate
+   structure Print = Print
+   structure Table = IntRedBlackTree
+   (*! structure Paths = Paths !*)
+   structure Origins = Origins);
+
+structure WorldPrint = WorldPrint 
+  (structure Global = Global
+   (*! structure IntSyn = IntSyn !*)
+   (*! structure Tomega' = Tomega !*)
+   structure WorldSyn' = WorldSyn
+   structure Names = Names
+   structure Formatter' = Formatter
+   structure Print = Print);
+

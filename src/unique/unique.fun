@@ -29,6 +29,7 @@ struct
     structure P = Paths
     structure F = Print.Formatter
     structure N = Names
+    structure T = Tomega
 
     fun chatter chlev f =
         if !Global.chatter >= chlev
@@ -335,7 +336,7 @@ struct
 
 
           val cs = Index.lookup a	(* lookup constants defining a *)
-	  val W.Worlds (bs) = W.lookup a (* worlds declarations for a *)
+	  val T.Worlds (bs) = W.lookup a (* worlds declarations for a *)
 	                      handle W.Error (msg)
 			      => raise Error ("Uniqueness checking " ^ cName a
 					      ^ ":\nMissing world declaration for "

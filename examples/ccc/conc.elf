@@ -3,7 +3,7 @@
 
 conc 	: mor A B -> (term A -> term B) -> type.
 %mode conc +D -E.
-
+%worlds () (conc _ _).
 cid 	: conc id ([x] x).
 
 ccomp 	: conc (F @ G) ([x] (M (N x)))

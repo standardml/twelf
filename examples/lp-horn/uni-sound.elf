@@ -9,6 +9,10 @@ i_sound : A >> P -> (pf A -> pf (atom P)) -> type.
 %name s_sound SS.
 %name h_sound HS.
 %name i_sound IS.
+%mode s_sound +S -D.
+%mode h_sound +H -D.
+%mode i_sound +I -D.
+
 
 ss_and  : s_sound (s_and S2 S1) (andi D2 D1)
 	   <- s_sound S1 D1
@@ -46,3 +50,4 @@ is_forall : i_sound (i_forall T I1) ([u:pf (forall A1)] D1 (foralle u T))
 
 is_atom : i_sound (i_atom) ([u:pf (atom P)] u).
 
+%worlds () (s_sound _ _) (h_sound _ _) (i_sound _ _).

@@ -3,6 +3,8 @@
 
 cmpcs : can A D -> solve A -> type.
 cmpai : {D:pf A} atm D -> ({P:p} A >> P -> solve (atom P)) -> type.
+%mode cmpcs +CN -S.
+%mode cmpai +D +AT -S.
 
 cmpcs_andi : cmpcs (can_andi CN2 CN1) (s_and S2 S1)
 	     <- cmpcs CN1 S1
@@ -41,3 +43,5 @@ cmpai_impe : cmpai (impe D1 D2) (atm_impe CN2 AT1)
 cmpai_foralle : cmpai (foralle D1 T) (atm_foralle AT1)
 		([P:p] [i] I1 P (i_forall T i))
 		<- cmpai D1 AT1 I1.
+
+%worlds () (cmpcs _ _) (cmpai _ _ _).

@@ -57,8 +57,7 @@ eq2_apr1  : eq2 (apr1 R2) (ap I1 S2)
           <- eq2 R2 S2
           <- identity M1 I1.
 
-%block leq2 : block {x:term} {eqx:x => x} {i:identity x eqx}.
-%worlds (leq2) (eq2 R S).
+%worlds (lid) (eq2 R S).
 %covers eq2 +R -S.
 %terminates R (eq2 R _).
 %total R (eq2 R _).

@@ -1,0 +1,76 @@
+tp  : type.				%name tp T.
+exp : type.				%name exp E.
+eval : exp -> exp -> type.		%name eval D.
+of : exp -> tp -> type.			%name of P.
+
+%block base : block
+  {arr : tp -> tp -> tp}
+  {nat : tp}
+  {z   : exp}
+  {s : exp -> exp}
+  {app : exp -> exp -> exp}
+  {fn : tp -> (exp -> exp) -> exp}
+  {fix : (exp -> exp) -> exp}
+  {eval_z   : eval z z}
+  {eval_s   : {E:exp}{V:exp} eval E V -> eval (s E) (s V)}
+  {eval_fn  : {T:tp}{E:exp -> exp}
+                eval (fn T E) (fn T E)}
+  {eval_app : {E1:exp}{T:tp}{E1':exp -> exp}{E2:exp}{V2:exp}{V:exp}
+	       eval E1 (fn T E1') 
+	      -> eval E2 V2
+	      -> eval (E1' V2) V
+	      -> eval (app E1 E2) V }
+  {eval_fix : {E:exp -> exp}{V:exp} eval (E (fix E)) V
+	      -> eval (fix E) V}
+  {of_z   : of z nat}
+  {of_s   : {E:exp} of E nat -> of (s E) nat}
+  {of_fn : {T1:tp}{T2:tp} {E:exp -> exp} ({x:exp} of x T1 -> of (E x) T2) -> of (fn T1 E) (arr T1 T2)}
+  {of_app : {E1:exp} {E2:exp}{T1:tp}{T2:tp} 
+	     of E1 (arr T2 T1) 
+  	    -> of E2 T2 
+	    -> of (app E1 E2) T1}
+  {of_fix : {T:tp}{E:exp -> exp}({x:exp} of x T -> of (E x) T)
+	    -> of (fix E) T}.
+
+%block param : some {T:tp} block {x:exp} {u:of x T}.
+
+%{
+
+param': tp -> type.
+o_x   : param' T -> exp.
+o_u   : {B:param' T} of (o_x B) T.
+
+base' : type.
+o_arr : base' -> tp -> tp -> tp.
+o_nat : base' -> tp.
+o_z   : base' -> exp.
+o_s   : base' -> (exp -> exp).
+o_app : base' -> exp -> exp -> exp.
+o_fn  : base' -> tp -> (exp -> exp) -> exp.
+o_fix : base' -> (exp -> exp) -> exp.
+o_eval_z   : {B:base'} eval (o_z B) (o_z B).
+o_eval_s   : {B:base'} eval E V -> eval ((o_s B) E) ((o_s B) V).
+o_eval_fn  : {B:base'} eval ((o_fn B) T E) ((o_fn B) T E).
+o_eval_app : {B:base'}
+	       eval E1 ((o_fn B) T E1') 
+	      -> eval E2 V2
+	      -> eval (E1' V2) V
+	      -> eval ((o_app B) E1 E2) V.
+o_eval_fix : {B:base'} eval (E ((o_fix B) E)) V
+	      -> eval ((o_fix B) E) V.
+
+o_of_z   : {B:base'} of (o_z B) (o_nat B).
+o_of_s   : {B:base'} of E (o_nat B) -> of ((o_s B) E) (o_nat B).
+o_of_fn  : {B:base'}({x:exp} of x T1 -> of (E x) T2) -> of ((o_fn B) T1 E) ((o_arr B) T1 T2).
+o_of_app : {B:base'} 
+	     of E1 ((o_arr B) T2 T1) 
+  	    -> of E2 T2 
+	    -> of ((o_app B) E1 E2) T1.
+o_of_fix : {B:base'} ({x:exp} of x T -> of (E x) T)
+	    -> of ((o_fix B) E) T.
+
+
+b: base'.
+d = o_eval_s b (o_eval_z b).
+
+}%

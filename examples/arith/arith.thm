@@ -20,15 +20,15 @@
 
 
 %theorem comm : forall* {X:nat} {Y:nat} {Z:nat}
-	        forall {P:nt X} {P':nt Y} {P'': nt Z} {P0:plus X Y Z}
+	        forall {N:nt X} {M:nt Y} {P'': nt Z} {P0:plus X Y Z}
 		exists {Q:plus Y X Z}
 		true.
 %theorem comm' : forall* {X:nat} {Y:nat} {Z:nat}
-	        forall {P:nt X} {P':nt Y} {P'': nt Z} {P0:plus X Y Z}
+	        forall {M':nt X} {N':nt Y} {P'': nt Z} {P0:plus X Y Z}
 		exists {Q:plus Y X Z}
 		true.
 
-%prove 3 [(N N') (M M')]
+%prove 6 [(N N') (M M')]
   (comm N M _ _ _)
   (comm' M' N' _ _ _).
 
