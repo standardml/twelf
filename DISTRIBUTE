@@ -3,7 +3,7 @@ For release:
   Edit Twelf.version in frontend/twelf.fun
   Edit version in doc/guide/twelf.texi
   Edit version in README
-  Edit instructions in INSTALL
+  Edit instructions in INSTALL [no longer exists Sun May 23 12:51:24 1999]
 
   Rebuild document in doc/guide/:
   cd doc/guide

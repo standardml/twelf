@@ -680,6 +680,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.2 R3 (with tracing)"
+    val version = "Twelf 1.2 R5 (with tracing)"
   end  (* local *)
 end; (* functor Twelf *)

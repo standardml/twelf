@@ -4,7 +4,7 @@ Copyright (C) 1997, 1998, Frank Pfenning and Carsten Schuermann
 Authors: Frank Pfenning
 	 Carsten Schuermann
 With contributions by:
-	 Iliano Cervasato
+	 Iliano Cervesato
 	 Jeff Polakow
 
 Twelf is an implementation of
@@ -14,7 +14,7 @@ Twelf is an implementation of
  - a meta-theorem prover for LF (very preliminary)
  - an Emacs interface
 
-This README file applies to version Twelf 1.2.
+This README file applies to version Twelf 1.2, internal revision R5.
 For current information regarding Twelf, see the Twelf home page at
 
   http://www.cs.cmu.edu/~twelf
@@ -42,7 +42,7 @@ Files
  server.cm    --- enables make of Twelf server
  sources.cm   --- enables make of Twelf-SML
  src/         --- the SML sources for Twelf
-
+ tex/         --- TeX macros and style files
 
 Installation Instructions
 =========================
