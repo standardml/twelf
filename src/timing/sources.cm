@@ -3,6 +3,7 @@ Library
   structure Timers
   signature TIMING
   structure Timing
+  structure TimeLimit
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -12,3 +13,4 @@ is
   timers.fun
   timers.sml
   timing.sml
+  time-limit.sml
