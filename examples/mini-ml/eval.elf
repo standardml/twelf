@@ -6,6 +6,7 @@ eval : exp -> exp -> type.  %name eval D.
 %mode +{E:exp} -{V:exp} eval E V.
 
 % Natural Numbers
+
 ev_z       : eval z z.
 ev_s       : eval (s E) (s V)
 	      <- eval E V.

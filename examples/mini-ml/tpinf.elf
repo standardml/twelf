@@ -41,3 +41,4 @@ tp_letn : of (letn E1 E2) T2
 % Recursion
 tp_fix : of (fix E) T
 	  <- ({x:exp} of x T -> of (E x) T).
+

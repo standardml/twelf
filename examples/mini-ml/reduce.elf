@@ -18,6 +18,7 @@ red_fix : fix E ==> E (fix E).
 
 % Congruences
 % no red*_z
+
 red*_s : s E ==>* s E'
 	  <- E ==>* E'.
 red*_case : case E1 E2 E3 ==>* case E1' E2 E3

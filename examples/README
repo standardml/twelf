@@ -5,6 +5,7 @@ compile		Various compilers starting from Mini-ML
 cut-elim	Cut elimination for intuitionistic and classical logic
 fol             Simple theorems in first-order logic
 guide           Examples from Users' Guide
+kolm		Kolmogorov translation from classical to intuitionistic logic
 lp		Logic programming, uniform derivations
 lp-horn		Horn fragment of logic program
 mini-ml		Mini-ml, type preservation and related theorems
