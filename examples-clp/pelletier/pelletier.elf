@@ -1,5 +1,5 @@
-%%% A few theorems in classical propositional logic
-%%% (taken from F. J. Pelletier, "75 Problems for Testing ATP")
+%%% A straightforward way to prove propositional logic theorems
+%%% by using uniqueness of canonical form of polynomial in Z(2).
 %%% Author: Roberto Virga
 
 %use equality/booleans.
@@ -8,91 +8,3 @@
 theorem : bool -> type.
 
 tt : theorem true.
-
-%% Problems 1-17 follow
-
-%query 1 *
-theorem ((P => Q) <=> (! Q => ! P)).
-
-%query 1 *
-theorem (! ! P <=> P).
-
-%query 1 * 
-theorem ((! (P => Q)) => (Q => P)).
-
-%query 1 *
-theorem ((! P => Q) => (! Q => P)).
-
-%query 1 *
-theorem (((P | Q) => (P | R)) => (P | (Q => R))).
-
-%query 1 *
-theorem (P | ! P).
-
-%query 1 *
-theorem (P | ! ! ! P).
-
-%query 1 *
-theorem (((P => Q) => P) => P).
-
-%query 1 *
-theorem (((P | Q) & (! P | Q) &
-            (P | ! Q)) => ! (! P | ! Q)).
-
-%query 1 *
-theorem ((Q => R) &
-         (R => (P & Q)) &
-         (P => (Q | R)) => (P <=> Q)).
-
-%query 1 *
-theorem (P <=> P).
-
-%query 1 *
-theorem (((P <=> Q) <=> R) <=> (P <=> (Q <=> R))). 
-
-%query 1 *
-theorem ((P | (Q & R)) <=> ((P | Q) &
-           (P | R))).
-
-%query 1 *
-theorem ((P <=> Q) <=> ((Q | ! P) &
-           (! Q | P))).
-
-%query 1 *
-theorem ((P => Q) <=> (! P | Q)).
-
-%query 1 *
-theorem ((P => Q) | (Q => P)).
-
-%query 1 *
-theorem (((P & (Q => R)) => S) <=>
-            ((! P | Q | S) &
-             (! P | ! R | S))).
-@
-
-
-1.2
-log
-@no message
-@
-text
-@@
-
-
-1.1
-log
-@Initial revision
-@
-text
-@d51 1
-a51 1
-theorem (((P <=> Q) <=> R) <=> (P <=> (Q <=> R))).
-@
-
-
-1.1.1.1
-log
-@no message
-@
-text
-@@

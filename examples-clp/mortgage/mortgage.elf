@@ -13,6 +13,10 @@ id : X == X.
 %% mortgage payments
 mortgage : rational -> rational -> rational -> rational -> rational -> type.
 
+%% P = principal, T = no. of months
+%% I = annual interest rate,
+%% MP = monthly payments, B = balance
+
 m0 : mortgage P T I MP B
        <- T > 0
        <- 1 >= T

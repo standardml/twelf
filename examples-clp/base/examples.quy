@@ -1,0 +1,6 @@
+%%% A sample query.
+%%% Author: Roberto Virga.
+
+%query 1 *
+
+represent 32767 8 L.

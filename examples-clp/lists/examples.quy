@@ -1,0 +1,5 @@
+%%% A sample query.
+%%% Author: Roberto Virga.
+
+%query 10 10
+Z : list 3.

@@ -65,6 +65,3 @@ solve : list -> type.
 s0 : solve (S , E , N , D , M , O , R , Y , nil)
        <- constraints (S , E , N , D , M , O , R , Y , nil)
        <- generate (D , R , O , E , N , M , Y , S , nil).
-
-%query 1 *
-solve (S , E , N , D , M , O , R , Y , nil).

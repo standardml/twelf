@@ -1,0 +1,61 @@
+%%% A few theorems in classical propositional logic
+%%% (taken from F. J. Pelletier, "75 Problems for Testing ATP")
+%%% Author: Roberto Virga
+
+%query 1 *
+theorem ((P => Q) <=> (! Q => ! P)).
+
+%query 1 *
+theorem (! ! P <=> P).
+
+%query 1 * 
+theorem ((! (P => Q)) => (Q => P)).
+
+%query 1 *
+theorem ((! P => Q) => (! Q => P)).
+
+%query 1 *
+theorem (((P | Q) => (P | R)) => (P | (Q => R))).
+
+%query 1 *
+theorem (P | ! P).
+
+%query 1 *
+theorem (P | ! ! ! P).
+
+%query 1 *
+theorem (((P => Q) => P) => P).
+
+%query 1 *
+theorem (((P | Q) & (! P | Q) &
+            (P | ! Q)) => ! (! P | ! Q)).
+
+%query 1 *
+theorem ((Q => R) &
+         (R => (P & Q)) &
+         (P => (Q | R)) => (P <=> Q)).
+
+%query 1 *
+theorem (P <=> P).
+
+%query 1 *
+theorem (((P <=> Q) <=> R) <=> (P <=> (Q <=> R))). 
+
+%query 1 *
+theorem ((P | (Q & R)) <=> ((P | Q) &
+           (P | R))).
+
+%query 1 *
+theorem ((P <=> Q) <=> ((Q | ! P) &
+           (! Q | P))).
+
+%query 1 *
+theorem ((P => Q) <=> (! P | Q)).
+
+%query 1 *
+theorem ((P => Q) | (Q => P)).
+
+%query 1 *
+theorem (((P & (Q => R)) => S) <=>
+            ((! P | Q | S) &
+             (! P | ! R | S))).

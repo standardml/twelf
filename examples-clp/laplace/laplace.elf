@@ -36,13 +36,3 @@ l0 : laplace (_ ; _ ; lnil).
 l1 : laplace (H1 ; H2 ; H3 ; T)
        <- av H1 H2 H3
        <- laplace (H2 ; H3 ; T).
-
-%query 1 *
-P : laplace (
-      (  0 ,   0 ,   0 ,   0 ,   0 , nil) ;
-      (100 ,   R ,   S ,   T , 100 , nil) ;
-      (100 ,   U ,   V ,   W , 100 , nil) ;
-      (100 ,   X ,   Y ,   Z , 100 , nil) ;
-      (100 , 100 , 100 , 100 , 100 , nil) ;
-      lnil
-    ).

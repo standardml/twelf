@@ -32,6 +32,3 @@ r1 : represent X B (R , L)
        <- X >= 1
        <- divide X B Q R
        <- represent Q B L.
-
-%query 1 *
-represent 32767 8 L.
