@@ -45,6 +45,16 @@ struct
     structure I = IntSyn
     structure C = CompSyn
 
+    (* pruneCtx (G, n) = G'
+
+       Invariant:
+       If   |- G ctx
+       and  G = G0, G1
+       and  |G1| = n
+       then |- G' = G0 ctx
+    *)
+    fun pruneCtx (G, 0) = G
+      | pruneCtx (I.Decl (G, _), n) = pruneCtx (G, n-1)
 
   (* solve ((g,s), (G,dPool), sc, (acc, k)) => ()
      Invariants:
@@ -57,25 +67,25 @@ struct
 	    used in the universal case for max search depth)
        if  G |- M :: g[s] then G |- sc :: g[s] => Answer, Answer closed
   *)
-  fun solve ((C.Atom p, s), dp, sc, acck) = matchAtom ((p,s), dp, sc, acck)
-    | solve ((C.Impl (r, A, cid, g), s), C.DProg (G, dPool), sc, acck) =
+  fun solve (depth, (C.Atom p, s), dp, sc, acck) = matchAtom (depth, (p,s), dp, sc, acck)
+    | solve (depth, (C.Impl (r, A, cid, g), s), C.DProg (G, dPool), sc, acck) =
        let
 	 val D' = I.Dec (NONE, I.EClo (A, s))
        in
-	 solve ((g, I.dot1 s), 
+	 solve (depth+1, (g, I.dot1 s), 
 		C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, cid))),
 		(fn (M, acck') => sc (I.Lam (D', M), acck')), acck)
        end
-    | solve ((C.All (D, g), s), C.DProg (G, dPool), sc, acck) =
+    | solve (depth, (C.All (D, g), s), C.DProg (G, dPool), sc, acck) =
        let
 	 val D' = I.decSub (D, s)
        in
-	 solve ((g, I.dot1 s), 
+	 solve (depth+1, (g, I.dot1 s), 
 		C.DProg (I.Decl (G, D'), I.Decl (dPool, NONE)),
 		(fn (M, acck') => sc (I.Lam (D', M), acck')), acck)
        end
 
-  (* rsolve ((p,s'), (r,s), (G,dPool), sc, (acc, k)) = ()
+  (* rsolve (depth, (p,s'), (r,s), (G,dPool), sc, (acc, k)) = ()
      Invariants:
        G |- s : G'
        G' |- r :: resgoal
@@ -88,7 +98,7 @@ struct
 	    used in the universal case for max search depth)
        if G |- S :: r[s] then G |- sc : (r >> p[s']) => Answer
   *)
-  and rSolve (ps', (C.Eq Q, s), C.DProg (G, dPool), sc, acck as (acc, k)) =
+  and rSolve (depth, ps', (C.Eq Q, s), C.DProg (G, dPool), sc, acck as (acc, k)) =
       if Unify.unifiable (G, ps', (Q, s))
 	then sc (I.Nil, acck)
       else acc
@@ -101,12 +111,23 @@ struct
 	  handle Unify.Unify _ => acc
 	       | Assign.Assign _ => acc)
     *)
-    | rSolve (ps', (C.And (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
+	(* is this EVar redundant? -fp *)
 	val X = I.newEVar (G, I.EClo(A, s))
       in
-	rSolve (ps', (r, I.Dot (I.Exp (X), s)), dp,
-		(fn (S, acck') => solve ((g, s), dp,
+        rSolve (depth, ps', (r, I.Dot(I.Exp(X), s)), dp,
+		(fn (S, acck') => solve (depth, (g, s), dp,
+					 (fn (M, acck'') => sc (I.App (M, S), acck'')), acck')), acck)
+      end
+    | rSolve (depth, ps', (C.Meta (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+      let
+	val Gpruned = pruneCtx (G, depth)
+	val w = I.Shift (depth)		(* G |- w : Gpruned *)
+	val X = I.EClo (I.newEVar (Gpruned, I.EClo(A, s)), w)
+      in
+	rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
+		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => ((Unify.unify (G, (X, I.id), (M, I.id));
 							     (* why doesn't it always succeed?
 							        --cs *)
@@ -114,18 +135,18 @@ struct
 							     handle Unify.Unify _ => [])), 
 					 acck')), acck)
       end
-    | rSolve (ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
 	in
-	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), dp,
+	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
 	end
-    | rSolve (ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
 	in
-	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), dp,
+	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (S, acck')), acck)
 	end
 
@@ -148,7 +169,8 @@ struct
           used in the universal case for max search depth)
      if G |- M :: p[s] then G |- sc :: p[s] => Answer
   *)
-  and matchAtom (ps' as (I.Root (I.Const cid, _), _), 
+  and matchAtom (depth, 
+		 ps' as (I.Root (I.Const cid, _), _), 
 		 dp as C.DProg (G, dPool), sc, (acc, k)) =
       let
 	fun matchSig acc' =
@@ -163,7 +185,7 @@ struct
 		    val C.SClause(r) = C.sProgLookup cid'
 		    val acc''' = Trail.trail
 		                 (fn () =>
-				    rSolve (ps', (r, I.id), dp,
+				    rSolve (depth, ps', (r, I.id), dp,
 					    (fn (S, acck') => sc (I.Root (H, S),
 								  acck')), (acc'', k-1)))
 		  in
@@ -178,7 +200,7 @@ struct
 	    if cid = cid' then
 	      let
 		val acc'' = Trail.trail (fn () =>
-			    rSolve (ps', (r, I.comp (s, I.Shift n)), dp,
+			    rSolve (depth, ps', (r, I.comp (s, I.Shift n)), dp,
 				    (fn (S, acck') => sc (I.Root (I.BVar n, S),
 							  acck')), (acc', k-1))) 
 	      in
@@ -262,7 +284,7 @@ struct
 	   Check if there are still variables left over
 	*)
       | searchEx' max ((X as I.EVar (r, G, V, _)) :: GE, sc) = 
-	  solve ((Compile.compileGoal (G, V), I.id), 
+	  solve (0, (Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Unify.unify (G, (X, I.id), (U', I.id)); 
 					 searchEx' max (GE, sc))),

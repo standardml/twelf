@@ -20,6 +20,8 @@ sig
                                         (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
+  | Meta   of ResGoal			(*     | r && (A,g)    x      *)
+              * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
   | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)
 

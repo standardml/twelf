@@ -25,6 +25,8 @@ struct
                                         (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
+  | Meta   of ResGoal                   (*     | r && (A,g)           *)
+              * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
   | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)
 
@@ -117,6 +119,8 @@ struct
   and resGoalSub (Eq(q), s) = Eq (IntSyn.EClo (q,s))
     | resGoalSub (And(r, A, g), s) =
        And (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
+    | resGoalSub (Meta(r, A, g), s) =
+       Meta (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
     | resGoalSub (Exists(D, r), s) =
        Exists (IntSyn.decSub(D, s), resGoalSub (r, IntSyn.dot1 s))
 
