@@ -9,9 +9,9 @@
 tex = tex
 dvips = dvips
 texi2html = /afs/cs/project/twelf/misc/texi2html/texi2html
-makeinfo = makeinfo
+makeinfo = /afs/cs/project/twelf/misc/texinfo/bin/makeinfo
 distill = distill
-texindex = texindex
+texindex = /afs/cs/project/twelf/misc/texinfo/bin/texindex
 
 # ---------------------------------------------------------------
 # Do not edit the following lines

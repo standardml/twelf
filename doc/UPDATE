@@ -21,6 +21,11 @@
 - Remove strictness remarks / %abbrev
 - fixity operators can now take additional arguments
 
+- add %_unprintable_% and appropriate action to type reconstruction.
+
+- add Twelf prover doc /afs/cs/project/twelf/www/alpha/twelf-prover.html
+- add reduction doc /afs/cs/user/bp/www/twelf/twelf-reduction.html
+
 ----------------------------------------------------------------------
 README for Twelf 1.2R4
 
@@ -42,3 +47,972 @@ Externally visible changes:
    has not been written yet.
  - Theorem prover has been generalized, but is not yet stable or
    documented.  Old %theorem commands should (mostly) still work.
+----------------------------------------------------------------------
+FROM ROBERTO VIRGA for Twelf 1.3
+
+\documentclass{book}
+
+\begin{document}
+\chapter{Twelf(X) Extensions}
+
+{\bf Disclaimer}
+Twelf(X) constraints-based extensions are highly experimental and under active development. Use of extensions other than the ones pertaining rational arithmetic is strongly discouraged.
+
+
+Twelf(X) extensions allow Twelf to deal more efficiently with some specific domains (e.g. numbers). They do so by
+\begin{itemize}
+\item
+modifying type reconstruction to accommodate other equivalences beyond those entailed by traditional \(\beta\eta\)-conversion;
+\item
+defining special types, on which proof search is performed using ad-hoc decision procedures rather than traditional depth-first strategy;
+\item
+adding countably many new symbols to the language, signifying all the elements of the domain.
+\end{itemize}
+
+\section{Invoking an Extension}
+Extensions are loaded using the declaration
+\begin{verbatim}
+     %use <extension name>.
+\end{verbatim}
+For example,
+\begin{verbatim}
+     %use equality/rationals.
+\end{verbatim}
+loads the extension dealing with equality over the rationals. Typically, an extension introduces new symbols in the signature. For example, \verb|equality/rationals| adds a type for rational numbers:
+\begin{verbatim}
+     rational : type.
+\end{verbatim}
+
+In addition to these symbols, a countably infinite set of ``special'' ones may be also accepted by the system as the result of loading one extension. In our example, after loading \verb|equality/rationals| the symbols
+\[
+\begin{array}{ccccc}
+\verb|134| & & \verb|5/13| & & \verb|~1/4|
+\end{array}
+\]
+become valid constants of type \verb|rational|.
+
+Finally, it is possible for an extension to be built on top of others, and therefore to depend on them. Hence, loading an extension usually causes all the others it depends upon to be loaded as well, if they have not been already. For example, the extension \verb|inequality/rationals| requires \verb|equality/rationals|, and hence the declaration
+\begin{verbatim}
+     %use inequality/rationals.
+\end{verbatim}
+subsumes
+\begin{verbatim}
+     %use equality/rationals.
+\end{verbatim}
+
+
+Extensions must be invoked prior to their use. For this reason, it is a safe practice to put all the ``\verb|%use|'' declarations at the beginning of the program.
+
+\section{Equalities over Rational Numbers}
+As mentioned before, the extension presiding equality over the rational numbers is called \verb|equality/rationals|, and it is therefore invoked by the declaration
+\begin{verbatim}
+     %use equality/rationals.
+\end{verbatim}
+This causes the declarations
+\begin{verbatim}
+     rational : type.
+
+     ~ : rational -> rational.              %prefix ~ 9999.
+     + : rational -> rational -> rational.  %infix + left 9997.
+     - : rational -> rational -> rational.  %infix - left 9997.
+     * : rational -> rational -> rational.  %infix * left 9998.
+\end{verbatim}
+to be included in the current global signature. 
+
+{\bf Note}
+We do not add an equality predicate for rationals. This is unnecessary, since the extension modifies standard type checking so that arithmetic identities are taken into account. However, one can always define an equality predicate by declaring
+\begin{verbatim}
+     == : rational -> rational -> type.  %infix none 100 ==.
+     id : X == X.
+\end{verbatim}
+
+
+This extension is also responsible for defining special constants for all the rational numbers. These follow the syntax
+\begin{verbatim}
+     <rational> ::= ~<unsigned> | <unsigned>
+     <unsigned> ::= <digits> | <digits>/<digits>
+     <digits>   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+                  | <digits> <digits>
+\end{verbatim}
+
+
+It is important to notice the difference between \verb|~ 10| and \verb|~10|. The former is the object obtained applying the unary minus operator to the positive number \(10\); the second stands for the number \(-10\). The difference is, however, just syntactical, since the former is automatically evaluated into the latter by Twelf(X). In general, one should keep in mind that Twelf(X) extensions do not modify the behavior of the lexer; hence, for example, multiplication of a variable \verb|X| by two still needs to be written as \verb|X * 2| (note the spaces preceding and following the multiplication symbol), while \verb|X*2| will be interpreted by the system as a single variable named ``\verb|X*2|''.
+
+
+Unification of arithmetic expressions is done by gaussian elimination. Thus, unification problems that can be reduced to linear equations over existentially quantified variables are immediately solved; other problems not falling in this class are likely to be delayed as unificational constraints.
+
+\section{Inequalities over Rational Numbers}
+Arithmetical inequalities are handled by the extension \verb|inequality/rationals|. This relies on \verb|equality/rationals| for the definition of rational number, so a declaration of
+\begin{verbatim}
+     %use inequality/rationals.
+\end{verbatim}
+implicitly entails one of
+\begin{verbatim}
+     %use equality/rationals.
+\end{verbatim}
+
+This extension adds the following to the signature:
+\begin{verbatim}
+     >  : rational -> rational -> type.  %infix none 0 >.
+     >= : rational -> rational -> type.  %infix none 0 >=.
+
+     +>  : {Z:rational} X > Y -> (X + Z) > (Y + Z).
+     +>= : {Z:rational} X >= Y -> (X + Z) >= (Y + Z).
+
+     >>=  : X > Y -> X >= Y.
+     0>=0 : 0 >= 0.
+\end{verbatim}
+It also adds countably many proof objects such as
+\begin{verbatim}
+     45>0 : 45 > 0.
+\end{verbatim}
+witnessing that positive numbers are greater than zero.
+
+Goals of the form
+\[
+\begin{array}{ccc}
+M \: \verb|>| \: N & \mbox{ or } & M \: \verb|>=| \: N
+\end{array}
+\]
+are evaluated using a modified version of the simplex algorithm, rather than the usual proof-search mechanism. This will incrementally collect inequalities, assigning them incomplete (i.e. partially instantiated) proof objects, until either an inconsistency is discovered (generating failure) or they can be shown to be satisfied a unique solution (causing the proof objects to be finally completed).
+
+\section{Equalities and Inequalities over the Integers}
+The extensions \verb|equality/integers| and \verb|inequality/integers| deal with equalities and inequalities over the ring of integer numbers, respectively. Since these two modules are very similar to their rationals counterparts, we will limit ourselves to outlining the differences.
+
+The signature introduced by \verb|equality/integers| is roughly the same as  \verb|equality/rationals|. The only difference lies in the name of the main type:
+\begin{verbatim}
+     integer : type.
+
+     ~ : integer -> integer.             %prefix ~ 9999.
+     + : integer -> integer -> integer.  %infix + left 9997.
+     - : integer -> integer -> integer.  %infix - left 9997.
+     * : integer -> integer -> integer.  %infix * left 9998.
+\end{verbatim}
+Like before, countably many special constants are added to the signature. They follow the syntax
+\begin{verbatim}
+     <integer> ::= ~<digits> | <digits>
+\end{verbatim}
+
+The extension \verb|equality/integers| takes advantage of the fact that (unlike the rationals) the integers are not a dense ordering to considerably shorten the set of symbols needed:
+\begin{verbatim}
+     >= : integer -> integer -> type.  %infix none 0 >=.
+
+     +>= : {Z:integer} X >= Y -> (X + Z) >= (Y + Z).
+\end{verbatim}
+It also declares countably many proof objects such as
+\begin{verbatim}
+     37>=0 : 37 >= 0.
+\end{verbatim}
+for all non-negative integers.
+
+Notice that strict inequality \verb|>| can be easily defined in this case:
+\begin{verbatim}
+     > : integer -> integer -> type.  %infix none 0 >.
+
+     >=> : X >= (Y + 1) -> X > Y.
+\end{verbatim}
+
+For solving linear inequalities over the integers, we again use the simplex method, but we add special routines that implement branch-and-bound search. Specifically, inequalities are internally interpreted over rationals, and a check is performed regularly (whenever a new inequality is added) to ensure the rational solution space contains integral points.
+
+{\bf Note}
+All known methods for solving systems of integral linear inequations are notoriously inefficient. In the branch-and-bound method we adopted, the number of branches to consider is potentially exponential with respect to the size of the problem. We recommend using the \verb|inequality/rationals| module instead, whenever the situation allows the two to be used interchangeably. 
+
+\section{Equalities over Strings}
+A third domain currently supported by the Twelf(X) extensions are strings of (printable) characters. The only operator provided is string concatenation. Invoking
+\begin{verbatim}
+     %use equality/strings.
+\end{verbatim}
+causes the following signature to be loaded:
+\begin{verbatim}
+     string : type.
+
+     ++ : string -> string -> string.   %infix right ++ 9999.
+\end{verbatim}
+String constants are sequences of printable characters enclosed by double quotes:
+\begin{verbatim}
+"foobar" : string
+\end{verbatim}
+Under these conventions, strings cannot therefore contain the double quote character \verb|"|. Escape sequences, such as \verb|\"\n"| have no special meaning; moreover, we do not currently provide input/output primitives.
+
+Finally, it is required that string constants occupy a single line. The declaration
+\begin{verbatim}
+mystring : string = "foo
+                     bar".
+\end{verbatim}
+is not considered syntactically correct.
+
+\section{Sample Programs}
+Using Twelf(X), we can write a modified version of \verb|append/3| that takes into account the size of the list involved:
+\begin{verbatim}
+     %use equality/rationals.
+
+     item : type.
+     list : rational -> type.
+
+     a : type.
+     b : type.
+     ...
+
+     nil  : list 0.
+     cons : item -> list N -> list (N + 1).
+
+     append : list M -> list N -> list (M + N).
+
+     append_nil  : append nil L L.
+     append_cons : append (cons X L1) L2 (cons X L3)
+                     <- append L1 L2 L3.
+\end{verbatim}
+
+Type checking the definition of \verb|append| requires some algebraic manipulation. For example, validity of \verb|append_nil| depends on the identity
+\[
+0 + M = M
+\]
+
+Most classic Constraint Logic Programming (CLP) examples found in the literature can be easily translated to Twelf(X). We present here a simple mortgage calculator:
+\begin{verbatim}
+     %use inequality/rationals.
+
+     %% equality
+     == : rational -> rational -> type.  %infix none 1000 ==.
+     id : X == X.
+
+     %% mortgage payments
+     mortgage : rational -> rational -> rational
+                         -> rational -> rational -> type.
+
+     m0 : mortgage P T I MP B
+            <- T > 0
+            <- 1 >= T
+            <- Interest == T * P * I * 1/1200
+            <- B == P + Interest - (T * MP).
+     m1 : mortgage P T I MP B
+            <- T > 1
+            <- MI == P * I * 1/1200
+            <- mortgage (P + MI - MP) (T - 1) I MP B.
+\end{verbatim}
+This CLP program takes four parameters: the principal \verb|P|, the life of the mortgage in months \verb|T|, the annual interest rate (%) \verb|I|, the monthly payment \verb|MP|, and the outstanding balance \verb|B|.
+
+Finally, we use the string extensions to write a simple parser. Consider the following syntax for simple arithmetic expressions:
+\begin{verbatim}
+     <expr> ::= <number> | <expr>+<expr>
+                         | <expr>-<expr>
+                         | <expr>*<expr>
+                         | (<expr>)
+     <number>     ::= <digit> | <digit><number>
+     <digit>      ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+\end{verbatim}
+This can be translated quite directly into Twelf by constructing parsing predicates \verb|digit|, \verb|number|, \verb|expression| as follows:
+\begin{verbatim}
+digit : string -> type.
+
+d0 : digit "0".
+d1 : digit "1".
+d2 : digit "2".
+d3 : digit "3".
+d4 : digit "4".
+d5 : digit "5".
+d6 : digit "6".
+d7 : digit "7".
+d8 : digit "8".
+d9 : digit "9".
+
+number : string -> type.
+
+nd  : number X
+        <- digit X.
+n++ : number (X ++ Y)
+        <- digit X
+        <- number Y.
+
+expression : string -> type.
+
+en : expression X
+       <- number X.
+e* : expression (X ++ "*" ++ Y)
+       <- expression X
+       <- expression Y.
+e+ : expression (X ++ "+" ++ Y)
+       <- expression X
+       <- expression Y.
+e- : expression (X ++ "-" ++ Y)
+       <- expression X
+       <- expression Y.
+ep : expression ("(" ++ X ++ ")")
+       <- expression X.
+\end{verbatim}
+
+\section{Restrictions and Notices}
+To ensure the consistency of the calculus, use of types defined by Twelf(X) extensions is restricted. Specifically, we do not allow them to be used as dynamic assumptions. This rules out meaningless (under the current operating semantics) goals like
+\begin{verbatim}
+     ?- 0 > 1 -> foo. 
+\end{verbatim}
+as well as meaningful, but intractable ones, such as
+\begin{verbatim}
+     ?- {X : rational} X * X >= 0
+\end{verbatim}
+
+
+One important thing to keep in mind when using arithmetic is that this currently is defined over the rationals, rather than the integers or the set of natural numbers. While in many applications this is of no consequence, it might generate in some cases surprising results. While it is certainly possible to define the characteristic function of the integer subset (see the content of \verb|clp-examples/integers/| in the distribution) and use this to enforce all computations to take place in the intended domains, this introduces a big performance penalty and should in general be avoided.
+\end{document}
+
+
+
+----------------------------------------------------------------------
+From Carsten Schuermann for Twelf 1.3
+
+<HTML>
+<HEAD>
+<TITLE>The Twelf Meta-Theorem Prover</TITLE>
+</HEAD>
+
+  <BODY BGCOLOR="#ffffff">
+    <TABLE CELLSPACING = "9" WIDTH="100%">
+      <TR>
+	<TD WIDTH="20%"><IMG SRC="logosmall.gif" ALT="Twelf"></TD>
+	<TD VALIGN=bottom><H1>The Twelf Meta-Theorem Prover </H1></TD>
+	<TD WIDTH="20%"><IMG SRC="logosmall.gif" ALT="Twelf"></TD>
+      </TR>
+    </TABLE>
+ 
+    
+<HR>
+
+<STRONG>Disclaimer:</STRONG> The theorem proving component of Twelf is in an
+experimental stage and currently under active development.
+
+<P>
+Nonetheless, it can prove a number of interesting examples automatically
+which illustrate our approach the meta-theorem proving which is
+described in <CITE>Schuermann and Pfenning 1998, CADE</CITE>.  These examples
+include the Church-Rosser theorem for the untyped lambda-calculus, 
+cut-elimination for full first-order intutionistic logic, and the equivalence
+of the Hilbert calculus and the natural deduction calculus.
+These and other examples
+can be found <A HREF="dist/cs-examples.tgz">here</A>.
+</P>
+
+<P>
+A <EM>theorem</EM> in Twelf is, properly speaking, a meta-theorem: it
+expresses a property of objects constructed over a fixed LF signature.
+Theorems are stated in the meta-logic M2 (the name might change) whose
+quantifiers range over LF objects.  In the simplest case, we may just
+be asserting the existence of an LF object of a given type.  This only
+requires direct search for a proof term, using methods inspired by
+logic programming.  More generally, we may claim and prove
+forall/exists statements which allow us to express meta-theorems which
+require structural induction, such as the Church-Rosser theorem.
+</P>
+
+
+
+<H2>Theorem Declaration</H2>
+
+<P>
+<A NAME="IDX98"></A>
+<A NAME="IDX99"></A>
+<A NAME="IDX100"></A>
+<A NAME="IDX101"></A>
+<A NAME="IDX102"></A>
+<A NAME="IDX103"></A>
+<A NAME="IDX104"></A>
+<A NAME="IDX105"></A>
+
+</P>
+<P>
+There are two forms of declarations related to the proving of theorems
+and meta-theorems.  The first, <CODE>%theorem</CODE>, states a theorem as a
+meta-formula (<CODE>mform</CODE>) in the meta-logic M2 defined below.  The
+second, <CODE>%prove</CODE>, gives a resource bound, a theorem, and an
+induction ordering and asks Twelf to search for a proof.
+
+</P>
+<P>
+Note that a well-typed <CODE>%theorem</CODE> declaration always succeeds,
+while the <CODE>%prove</CODE> declaration only succeeds if Twelf can find a
+proof.
+
+</P>
+
+<PRE>
+dec ::= {id:term}         % <EM>x:A</EM>
+      | {id}              % <EM>x</EM>
+
+decs ::= dec
+       | dec decs
+
+ctx ::= some decs pi decs 
+      | some decs pi decs "|" ctx  
+
+mform ::= forallG ctx mform      % Quantification over regular contexts
+        | forall* decs mform     % implicit universal
+        | forall decs mform      % universal
+        | exists decs mform      % existential
+        | true                   % truth
+
+thdecl ::= id : mform        % theorem name <EM>a</EM>, spec
+
+pdecl ::= nat order callpats % bound, induction order, theorems
+
+decl ::= ...
+       | %theorem thdecl.  % theorem declaration
+       | %prove pdecl.     % prove declaration, make as lemma available
+       | %establish pdecl. % prove declaration, don't make as lemma available
+       | %assert callpats  % assert theorems (Twelf.Options.unsafe required)
+</PRE>
+
+<P>
+The prover only accepts quantifier alternations of the form
+<CODE>forallG <VAR>ctx</VAR> forall* <VAR>decs</VAR> forall
+<VAR>decs</VAR> exists <VAR>decs</VAR> true</CODE>.  Note that the
+implicit quantifiers (which will be suppressed when printing the proof
+terms) must all be collected in front, but behind the quantifier
+for the regular contexts.
+
+</P>
+<P>
+The syntax and meaning of <CODE>order</CODE> and <CODE>callpats</CODE>
+are explained in Section 7 Termination of the Twelf User's guide,
+since they are also critical notions in the simpler termination
+checker.
+
+</P>
+
+
+<H2>Sample Theorems</H2>
+
+<P>
+As a first example, we use the theorem prover to establish a simple
+theorem: If we have to different but structurally identical
+formulations of the lambda-calculus (<code>exp, exp'</code>), and
+a relation that shows how we can copy from one to the other, than this
+relation is total. In words, this theorem reads as: If <em>E</em> is
+an expression then there exists an expression <em>E'</em>, s.t. 
+<em>E'</em> is a structurally identical copy to <em>E</em>.
+</P>
+
+<PRE>
+exp : type.
+
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+exp' : type.
+
+app' : exp' -> exp' -> exp'.
+lam' : (exp' -> exp') -> exp'.
+
+cp : exp -> exp' -> type.
+cp_app : cp (app D1 D2) (app' E1 E2) 
+         <- cp D1 E1
+         <- cp D2 E2.
+cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
+         <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
+
+
+%theorem cpt :  forallG (pi {x:exp}{y:exp'}{u:cp x y})
+		forall {E:exp}
+		exists {E':exp'}{D: cp E E'} 
+		true.
+%prove 5 {E} (cpt E _ _).
+</PRE>
+
+<P>
+It is easy to see, that the <em>E</em> and the <em>E'</em> cannot be
+assumed to be closed, because otherwise the induction hypothesis
+cannot be applied.  In this situation, the induction hypothesis must
+be applied to an object under some additional assumptions, which are
+<code>x:exp, y:exp', u:cp x y</code>, and which we call a context
+block.  Clearly, one context block is not enough; in general
+<em>E</em> can occur in any context regularly built out of these
+blocks.  The <em>forallG</em> allows an inductive definition of a <em>
+context scheme</em>, abstractly describing the form of real contexts.
+Each context block consists of a <code>some</code> part which declares
+additional variables which are instantiated with some well-typed
+object in a real instance of a context, and a <code>pi</code> part
+which describes the parameters.
+
+</P>
+<P>
+The termination ordering <CODE>{E}</CODE> instructs Twelf to do
+induction over <CODE>E</CODE> to prove the theorem.  The
+<code>%prove</code> command executes the proof search. In addition, if
+a proof has been found, the lemma is made accessible to the proof
+search evoked by subsequent theorems and lemmas,  and which might slow 
+it down accordingly. If a lemma is not used in subsequent proofs, 
+the user can use <code>%establish</code> instead of <code>%prove</code>
+and it will not be made available. 
+</P>
+
+<P>
+For certain theorems, the theorem prover will not be able to find a
+proof, even that it should.  This behavior could be caused by an
+incompleteness in the implementation (which still exist, but which
+should be removed in the next release of Twelf), or a enormously huge
+search space, which disallows the underlying LF theorem to construct a
+proof term.  In these situations, one can still try to prove
+subsequent theorem and lemmas by asserting the correctness of the
+lemma in question.  This is done by the <code>%assert</code> command.
+For the theorem above, one could
+<PRE>
+%assert (cpt _ _ _).
+</PRE>
+after the Twelf.unsafe mode has been activated, by checking Twelf
+-> Options -> unsafe box fromt the Emacs drop down menu.
+</P>
+
+<P>
+Different from the previous version,  this meta-theorem prover does
+currently <em>not</em> construct any proof terms, but we are planning
+on adding them in near future.
+</P> 
+
+
+
+<H2>Proof Steps</H2>
+
+<P>
+<A NAME="IDX106"></A>
+<A NAME="IDX107"></A>
+<A NAME="IDX108"></A>
+<A NAME="IDX109"></A>
+<A NAME="IDX110"></A>
+
+</P>
+<P>
+We expect the proof search component of Twelf to undergo major changes
+in the near future, so we only briefly review the current state.
+
+</P>
+<P>
+Proving proceeds using three main kinds of steps:
+
+</P>
+<DL COMPACT>
+
+<DT>Filling
+<DD>
+ Using iterative deepening, Twelf searches directly for objects to fill
+the existential quantifiers, given all the constants in the signature
+and the universally quantified variables in the theorem.  The number of
+constructors in the answer substitution for each existential quantifier
+is bounded by the size which is given as part of the <CODE>%prove</CODE>
+declaration, thus guaranteeing termination (in principle).
+
+<DT>Recursion
+<DD>
+ Based on the termination ordering, Twelf appeals to the induction
+hypothesis on smaller arguments.  If there are several ways to use the
+induction hypothesis, Twelf non-deterministically picks one which has
+not yet been used.  Since there may be infinitely many different ways to
+apply the induction hypothesis, the parameter
+<CODE>Twelf.Prover.maxRecurse</CODE> bounds the number of recursion steps in
+each case of the proof.
+
+<DT>Splitting
+<DD>
+ Based on the types of the universally quantified variables, Twelf
+distinguishes all possible cases by considering all constructors in
+the signatures.  It nevers splits a variable which appears as an
+index in an input argument, and if there are several possibilities
+it picks the one with fewest resulting cases.  Splitting can go on
+indefinitely, so the paramater <CODE>Twelf.Prover.maxSplit</CODE> bounds
+the number of times a variable may be split.
+</DL>
+
+
+
+<H2>Search Strategies</H2>
+
+<P>
+<A NAME="IDX111"></A>
+<A NAME="IDX112"></A>
+<A NAME="IDX113"></A>
+<A NAME="IDX114"></A>
+
+</P>
+<P>
+The basic proof steps of filling, recursion, and splitting are
+sequentialized in a simple strategy which never backtracks.  First we
+attempt to fill all existential variables simultaneously.  If that fails
+we recurse by trying to find new ways to appeal to the induction
+hypothesis.  If this is not possible, we pick a variable to distinguish
+cases and then prove each subgoal in turn.  If none of the steps
+are possible we fail.
+
+</P>
+
+
+<HR>
+<SMALL>
+<A HREF="http://www.cs.cmu.edu/~fp/">Frank Pfenning</A>,
+<A HREF="http://www.cs.cmu.edu/~carsten/">Carsten Schürmann</A>
+<ADDRESS>
+<A HREF="mailto:fp@cs.cmu.edu">fp@cs.cmu.edu</A>,
+<A HREF="mailto:carsten@cs.cmu.edu">carsten@cs.cmu.edu</A>
+</ADDRESS>
+</SMALL>
+</P>
+
+
+</BODY>
+</HTML>
+----------------------------------------------------------------------
+From Brigitte Pientka for Twelf 1.3
+
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <title>Termination and Reduction Checking </title>
+</head>
+<body bgcolor="#FFFFFF">
+&nbsp;
+<table CELLSPACING=9 WIDTH="100%" >
+<tr>
+<td><!-- <TD WIDTH="20%"><IMG SRC="logosmall.gif" ALT="Twelf" ></TD> --></td>
+
+<td VALIGN=BOTTOM>
+<h1>
+Termination and Reduction Checking&nbsp;</h1>
+</td>
+
+<td><!-- <TD WIDTH="20%"><IMG SRC="logosmall.gif" ALT="Twelf" ></TD> --></td>
+</tr>
+</table>
+
+<hr><!-- <B>Disclaimer:</B> Reduction checking is in an experimental stage. -->
+<p>Twelf offers the possibility to declare and check termination properties.&nbsp;
+In order to verify that a given program terminates Twelf verifies that
+the arguments in the recursive call are smaller according to subterm ordering.
+<br>Reduction checking extends termination checking in Twelf.&nbsp; While
+termination checking only considers the relationship between input arguments,
+checking reduction takes into account the relationship between input and
+output arguments.&nbsp; Termination checking uses this additional information
+and reason about it.
+<br>&nbsp;
+<h2>
+Termination and Reduction Declaration:</h2>
+<a NAME="IDX98"></a><a NAME="IDX99"></a><a NAME="IDX100"></a><a NAME="IDX101"></a><a NAME="IDX102"></a><a NAME="IDX103"></a><a NAME="IDX104"></a><a NAME="IDX105"></a>
+<p>The termination declaration gives an order and a call pattern describing
+the definition to be checked. The reduction declaration states a reduction
+predicate and a call pattern. The reduction predicate relates arguments
+of the call pattern to each other.
+<br>&nbsp;
+<pre>args ::=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | id args&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % named argument
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | _ args&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % anonymous argument
+
+callpat ::= id args&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % a x1 ... xn
+
+callpats ::=&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |(callpat) callpats&nbsp;&nbsp;&nbsp; % mutual call patterns
+ids ::=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | id ids&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % argument name</pre>
+
+<pre>marg ::= id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % single argument
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | ( ids )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % mutual arguments</pre>
+
+<pre>orders ::=&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | order orders</pre>
+
+<pre>order ::= marg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % subterm ordering
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | [ orders ]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % simultaneous ordering
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | { orders }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % lexicographic ordering</pre>
+
+<pre>pdecl ::= order &lt; order'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % the right side of the reduction predicate
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | order &lt;= order'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % must be a input, the left side must be&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | order = order'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % output of the call pattern</pre>
+
+<pre>tdecl ::=&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | order callpats&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %termination order, definition</pre>
+
+<pre>rdecl ::=&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | pdecl callpats&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % reduction predicate, definition
+
+decl ::= ...
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | %terminates tdecl.&nbsp;&nbsp;&nbsp; % termination declaration
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | %reduces rdecl.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; % reduction declaration</pre>
+
+<p><br>The syntax and meaning of <tt>order</tt> and <tt>callpats</tt> are
+explained in more detail in Section 7 Termination of the Twelf User's guide.
+A reduction predicate specifies a relation between input and output arguments
+of a program.&nbsp; The reduction checker is rather restrictive and allows
+only relations based on subterm ordering.&nbsp; For example, we cannot
+reason about the length of a list or term. Moreover, reduction checking
+presupposes that the right side of the reduction predicate corresponds
+to the input arguments and the left side of the predicate corresponds to
+the output arguments.
+<br>The declaration <tt>%reduces </tt>checks if&nbsp; the specified reduction
+predicate holds for a given program. Moreover, it checks that the program
+is terminating, i.e. the input arguments are decreasing according to the
+specified order. For example, <tt>%reduces Z &lt;= X (minus X Y Z).&nbsp;</tt>
+expects <tt>X</tt> to be the input and <tt>Z</tt> to be the output of the
+goal <tt>(minus X Y Z)</tt> . The declaration checks whether the output
+argument <tt>Z</tt> is smaller than the input argument <tt>X</tt>, and
+if the program terminates in <tt>X.</tt>
+<p>&nbsp;The declaration <tt>%terminates
+</tt>checks whether the definitions
+corresponding to the call pattern terminate by checking if the input arguments
+are decreasing according to the specified order. Termination checking uses
+reduction information and reasons about it to verify termination.
+<p>Mutual recursive predicates can be defined in termination and reduction
+checking. A small example, which illustrates its use can be found <a href="/afs/cs/user/bp/www/twelf/arith/arith.elf">here&nbsp;</a>
+.
+<h2>
+Examples</h2>
+In this section we give two examples illustrating the extended termination
+and reduction checker.
+<p>&nbsp;<b>Example 1:&nbsp; Termination of Programs</b>
+<br>Consider the following definition of <tt>gcd
+</tt>(greatest common
+divider).
+<tt>less</tt> defines the obvious less relation, and <tt>sub
+</tt>defines
+subtraction. The complete Twelf program can be found <a href="/afs/cs/user/bp/www/twelf/arith/arith.elf">here</a>
+.
+<p><tt>gcd: nat -> nat -> nat -> type.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+%name gcd G.</tt>
+<br><tt>%mode gcd +X +Y -Z.</tt>
+<p><tt>gcd_z1: gcd z Y Y.</tt>
+<br><tt>gcd_z2: gcd X z X.</tt>
+<p><tt>gcd_s1: gcd (s X) (s Y) Z</tt>
+<br><tt>&nbsp; &lt;- less (s X) (s Y) true</tt>
+<br><tt>&nbsp; &lt;- rminus (s Y) (s X) Y'</tt>
+<br><tt>&nbsp; &lt;- gcd (s X) Y' Z.</tt>
+<p><tt>gcd_s1: gcd (s X) (s Y) Z</tt>
+<br><tt>&nbsp; &lt;- less&nbsp; (s X)(s Y) false</tt>
+<br><tt>&nbsp; &lt;- rminus (s X) (s Y) X'</tt>
+<br><tt>&nbsp; &lt;- gcd X' (s Y)&nbsp; Z.</tt>
+<p><tt>rminus: nat -> nat -> nat -> type.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+%name rminus M.</tt>
+<br><tt>%mode rminus +X +Y -Z.</tt>
+<br><tt>rmin : rminus (s X) (s Y) Z</tt>
+<br><tt>&nbsp;&lt;- sub X Y Z.</tt>
+<p><tt>%reduces Z &lt; X (rminus X Y Z).</tt>
+<br><tt>%terminates [X Y] (gcd X Y _).</tt>
+<p>In order to verify that the definition of <tt>gcd
+</tt>terminates, we
+need to show that the arguments in the recursive call are decreasing, i.e.
+we need to show <tt>Y' &lt; (s Y) </tt>and
+<tt>X' &lt; (s X). </tt>To check
+that these properties hold, we need the fact that the output argument
+<tt>Y'</tt>
+of
+<tt>rminus (s Y) (s X) Y'</tt> is always smaller than the input argument
+<tt>(s
+Y)
+</tt>(i.e. <tt>rminus (s Y) (s X) Y'</tt>&nbsp; always satisfies&nbsp;
+the reduction predicate&nbsp; <tt>Y' &lt; (s Y)</tt>). We verify that <tt>rminus
+(s Y) (s X) Y'</tt>&nbsp; always reduces its output argument by checking
+the declaration
+<tt>%reduces Z &lt; X (rminus X Y Z). </tt>While checking
+termination of <tt>gcd
+</tt>we use this information and prove <tt>Y' &lt;
+(s Y) </tt>(termination condition of <tt>gcd</tt>) under the assumption
+<tt>Y'
+&lt; (s Y)</tt> (reduction predicate of <tt>rminus</tt>).
+<p>Termination checking also plays a crucial role in checking meta-programs.
+The meta-program represents a proof that some relation <i>about </i>programs
+holds. The recursive calls in the meta-program correspond to applications
+of the induction hypothesis in the proof. Termination checking of meta-programs
+corresponds to checking that the application of the induction hypothesis
+is valid, i.e. we apply the induction hypothesis to a smaller argument.
+<p><b>Example 2</b>:<b> Termination of Meta-Programs</b>
+<br>In this example we consider the step semantic of an abstract machine
+based on continuations.&nbsp; In each single step we transition from one
+state of the abstract machine to another.&nbsp; The state of the abstract
+machine is characterized by a continuation <i>K</i> and an expression
+<i>E</i>.&nbsp;
+The expression <i>E</i> is the program to be executed. The continuation
+<tt>K
+</tt>represents
+the computation which should be done on an expression
+<tt>E
+</tt>and can
+be viewed as an environment. <tt>K #(ev E) </tt>means "evaluate <i>E
+</i>in
+environment <i>K </i>".&nbsp; If we evaluate 0 (<tt>ev z</tt>) then we
+already reached a value and we return the value 0 (<tt>return z*</tt>).&nbsp;
+The environment <i>K</i>does not change. If we want to evaluate the successor
+of some expression
+<i>E </i>(<tt>ev (s E)</tt>) then we need to save the
+computation done by the successor function&nbsp; (
+<tt>K ; [x:val] return
+(s* x)</tt>) and evaluate <i>E</i> in the next step ( <tt>ev E</tt>).&nbsp;
+If we evaluate an application <tt>app E1 E2</tt> and <tt>E1
+</tt>is not
+a value then we first evaluate expression <tt>E1</tt> in the extended environment
+<tt>(K
+; [x1:val] app1 x1 E2).</tt> This is represented in
+<tt>st_app</tt>. The
+other two transitions <tt>st_app1 </tt>and
+<tt>st_app2
+</tt>describe the
+evaluation of an application if <tt>E1</tt> is a value and <tt>E2</tt>
+is not, and if both <tt>E1</tt> and <tt>E2</tt> are values.&nbsp; Once
+we reached a value (<tt>return V</tt>)&nbsp; we execute the "saved" computation
+by applying the value V to C.&nbsp; The defined semantic is a single step
+semantic. i.e. we perform one evaluation in each step.
+<br>For the complete example see <a href="cpm">here</a> .
+<p><tt>%%% Single Step Transitions</tt>
+<br><tt>=> : state -> state -> type.&nbsp; %name => St.</tt>
+<p><tt>% Natural Numbers</tt>
+<br><tt>st_z : K # (ev z) => K # (return z*).</tt>
+<br><tt>st_s : K # (ev (s E)) => (K ; [x:val] return (s* x)) # (ev E).</tt>
+<p><tt>% Functions</tt>
+<br><tt>st_lam : K # (ev (lam E)) => K # (return (lam* E)).</tt>
+<br><tt>st_app : K # (ev (app E1 E2)) => (K ; [x1:val] app1 x1 E2) # (ev
+E1).</tt>
+<br><tt>st_app1 : K # (app1 V1 E2) => (K ; [x2:val] app2 V1 x2) # (ev E2).</tt>
+<br><tt>st_app2 : K # (app2 (lam* E1') V2) => K # (ev (E1' V2)).</tt>
+<p><tt>% Return Instructions</tt>
+<br><tt>st_return : (K ; C) # (return V) => K # (C V).</tt>
+<br><tt>st_init : (init) # (return V) => (answer V).</tt>
+<p><tt>%%% Multi-Step Computation</tt>
+<br><tt>=>* : state -> state -> type.&nbsp; %name =>* C.</tt>
+<br><tt>%infix none 5 =>*.</tt>
+<p><tt>stop : S =>* S.</tt>
+<br><tt>&lt;&lt; : S =>* S''</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;- S => S'</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;- S' =>* S''.</tt>
+<br><tt>%infix left 5 &lt;&lt;.</tt>
+<p>The soundness property of this semantic states that&nbsp; if an expression
+<i>E
+</i>in
+an environment <i>K</i> evaluates in multiple steps to some answer
+<i>W
+</i>then
+the value <i>V </i>of expression
+<i>E </i>evaluates to the answer
+<i>W</i>
+in environment <i>K </i>in fewer steps.&nbsp; More formally this property
+can be stated as follows:
+<p>If&nbsp;&nbsp; C :: K # (ev E) =>* (answer W)&nbsp; then
+<br>for some V.&nbsp; D :: eval E V&nbsp;&nbsp; and&nbsp; C' :: K # (return
+V) =>* (answer W)&nbsp; where C' is a subderivation of C.
+<p>The crucial property in this proof is "C' is a subderivation of C",
+i.e.
+<i>V</i> evaluates to answer <i>W</i> in environment <i>K</i> in fewer
+steps.&nbsp; The soundness property can be stated in Twelf as follows:
+<p><tt>csd : K # (ev E) =>* (answer W)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> eval E V</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> K # (return V) =>* (answer
+W)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> type.</tt>
+<br>&nbsp;
+<p>The proof follows by induction on derivation C, i.e. recursion on the
+first argument. Note that we do not explicitly represent the condition
+"C' is a subderivation of C, i.e. <i>V</i> evaluates to answer <i>W</i>
+in environment <i>K</i> in fewer steps, but we will still keep track of
+it during the proof. We only show the case for application.&nbsp; By inversion
+on
+<tt>&lt;&lt; </tt>we get two derivations:
+<p><tt>C1 =&nbsp; K # (ev (app E1 E2)) => (K ; [x1:val] app1 x1 E2) # (ev
+E1)</tt>
+<p><tt>C2 = (K ; [x1:val] app1 x1 E2) # (ev E1) =>* (answer W)</tt>
+<p>By <u>induction hypothesis on <tt>C1</tt></u>we have:
+<p><tt>D':: eval E1 W1</tt> and
+<br><tt>C'::K ; [x1:val] app1 x1 E2) # (return W1) =>* (answer W)</tt>.
+and
+<br><tt>C' &lt; C1</tt>.
+<p>By inversion on C' we get again two derivations:
+<pre><tt>st_return:: </tt>K ; [x1:val] app1 x1 E2) # (return W1) => K # (([x1:val] app1 x1 E2) W1).&nbsp;&nbsp;
+C2'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :: K # (app1 W1 E2) =>* (answer W).</pre>
+By inversion on <tt>C2' </tt>we have:
+<p><tt>st_app1:: K # (app1 W1 E2) => K ; [x2:val] app2 W1 x2) # (ev E2).&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)</tt>
+<br><tt>C4'&nbsp;&nbsp;&nbsp; :: K ; [x2:val] app2 W1 x2) # (ev E2) =>*
+(answer W).</tt>
+<p>By <u>induction hypothesis on <tt>C4'</tt></u>we have:
+<p><tt>D'':: eval E2 W2</tt>
+<br><tt>C'':: K ; [x2:val] app2 W1 x2) # (return W2) =>* (answer W)</tt>
+<br><tt>C'' &lt; C4'</tt>
+<p>By inversion on <tt>C'' </tt>we get two derivations:
+<p><tt>st_return:: K ; [x2:val] app2 W1 x2) # (return W2) => K ; app2 W1
+W2</tt>
+<br><tt>C6'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :: K # app2 W1 W2 =>* (answer
+W).</tt>
+<p>By inversion on <tt>C6'</tt>,<tt> W1 </tt>is instantiated to <tt>(lam*
+E1')</tt>:
+<p><tt>st_app2:: K # app2(lam* E1') W2) => K # (ev (E1' V2))</tt>
+<br><tt>C8'&nbsp;&nbsp;&nbsp; :: K # (ev (E1' V2)) =>* (answer W)</tt>
+<p>By i<u>nduction hypothesis on <tt>C8'</tt></u> :
+<p><tt>D''':: eval (E1' V2) V</tt>
+<br><tt>C''':: K # (return V) =>* (answer W)</tt>
+<br><tt>C''' &lt; C8'</tt>
+<p>Recall, we need to show the following two facts:
+<p><tt>D&nbsp;&nbsp; :: eval (app E1 E2) V</tt>
+<br><tt>C''':: K # (return V) =>* (answer W)</tt>
+<p>We have already shown that there exists a derivation <tt>C'''</tt>.
+By <tt>D'''</tt>, <tt>D''
+</tt>and
+<tt>D'
+</tt>and by rule <tt>ev_app&nbsp;</tt>
+we can derive
+<tt>D.</tt>
+<p>In this case of the proof we applied the induction hypothesis three
+times, the last two times we applied the induction hypothesis to a derivation
+resulting from the application of the previous induction hypothesis. The
+application of the induction hypothesis in these cases is valid, because
+of the following reasoning:
+<p>&nbsp;1) application of the induction hypothesis on <tt>C4'</tt>:
+<br>&nbsp;&nbsp;&nbsp;&nbsp; to show: <tt>C4' &lt; C</tt>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; we know&nbsp; <tt>C'&nbsp;&nbsp;
+&lt;&nbsp; C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</tt>and <tt>C'&nbsp; ::= C2' &lt;&lt; st_return</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C2'&nbsp;
+&lt;&nbsp; C'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+</tt>and <tt>C2' ::= C4' &lt;&lt; st_app1</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;</tt> therefore :&nbsp; <tt>C4' &lt; (st_app1
+&lt;&lt; C4') &lt; ((C4' &lt;&lt; st_app1) &lt;&lt; st_return)) &lt; C</tt>
+<p>&nbsp;2) application of the induction hypothesis on <tt>C8'</tt>:
+<br>&nbsp;&nbsp;&nbsp;&nbsp; to show: <tt>C8' &lt; C</tt>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; we know: <tt>C4' &lt;
+C&nbsp;&nbsp;</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(from previous ind. hyp)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tt>C'' &lt; C4&nbsp;&nbsp;&nbsp;</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+and <tt>C'' ::= C6' &lt;&lt; st_return</tt>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+and
+<tt>C6' ::= C8' &lt;&lt; st_app2</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; </tt>therefore:&nbsp;<tt> C8' &lt; ((C8' &lt;&lt;
+st_app2) &lt;&lt; st_return) &lt; C4' &lt; C</tt>
+<p>The meta-program implementing this case of the soundness proof looks
+as follows.
+<p><tt>csd_app : csd (C1 &lt;&lt; st_app) (ev_app D3 D2 D1) C'''</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; &lt;- csd C1&nbsp; D1 (C4' &lt;&lt; st_app1
+&lt;&lt; st_return)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; &lt;- csd C4' D2 (C8' &lt;&lt; st_app2 &lt;&lt;
+st_return)</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; &lt;- csd C8' D3 C'''.</tt>
+<p>To check that this clause terminates, we need to check that the arguments
+of the recursive calls (=application of the induction hyp.)&nbsp; are smaller
+than the argument we started with (induction conclusion). This can be done
+by checking if the reduction predicate <tt>%reduces C' &lt; C (csd C D
+C'). </tt>holds.
+<p>The extended termination / reduction checker takes into account if a
+result returned by a predicate is smaller than an input argument and reasons
+about this information. Using this mechanism we can check a wider range
+of programs and verify proofs by course-of-value induction (or complete
+induction).
+<p>For some more examples see <a href="">here</a>.
+<br>&nbsp;
+<h1>
+&nbsp;Warning:</h1>
+&nbsp;The reduction checker will issue a warning while checking if the
+input / output arguments of a parametric predicate are strictly less or
+less - equal according to some lexicographic (or simultaneous) ordering.
+This is a possible source of incompleteness in the reduction checker. The
+reduction checker will (probably) fail to verify the specified reduction
+predicate.
+<p>
+<hr><font size=-1><a href="../">Brigitte Pientka</a></font>
+<address>
+<font size=-1><a href="mailto:bp@cs.cmu.edu">bp@cs.cmu.edu</a></font></address>
+
+</body>
+</html>
