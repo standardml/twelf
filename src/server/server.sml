@@ -156,6 +156,8 @@ struct
       (checkEmpty args; Twelf.Print.sgn (); serve (Twelf.OK))
     | serve' ("Print.prog", args) =
       (checkEmpty args; Twelf.Print.prog (); serve (Twelf.OK))
+    | serve' ("Print.subord", args) =
+      (checkEmpty args; Twelf.Print.subord (); serve (Twelf.OK))
     | serve' ("Print.TeX.sgn", args) =
       (checkEmpty args; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
     | serve' ("Print.TeX.prog", args) =

@@ -1,5 +1,7 @@
 Group is
+  ../table/sources.cm
   ../lambda/sources.cm
+  ../names/sources.cm
   subordinate.sig
   subordinate.fun
   subordinate.sml

@@ -1,13 +1,19 @@
 (* Subordination a la Virga [Technical Report 96] *)
 (* Author: Carsten Schuermann *)
 
-functor Subordinate (structure Global : GLOBAL
-		     structure IntSyn': INTSYN
-		     structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn')
+functor Subordinate
+  (structure Global : GLOBAL
+   structure IntSyn': INTSYN
+   structure Whnf : WHNF
+     sharing Whnf.IntSyn = IntSyn'
+   structure Names : NAMES
+     sharing Names.IntSyn = IntSyn'
+   structure Table : TABLE where type key = int)
   : SUBORDINATE =
 struct
   structure IntSyn = IntSyn'
+
+  exception Error of string
  
   local
     structure I = IntSyn
@@ -27,45 +33,53 @@ struct
 	   where subordination is transitive but not necessarily
 	   reflexive
     *)
-    (* possible improvement: use table instead of array
-       since type families are sparse in the space of constants
-       possible improvement: keep lists ordered
-    *)
-    val soArray : (IntSyn.cid list * IntSyn.cid list) Array.array    
-        = Array.array (Global.maxCid + 1, (nil, nil)) 
+    val soTable : (I.cid list * I.cid list) Table.Table = Table.new (32)
+    val lookup = Table.lookup soTable
+    val insert = Table.insert soTable
 
     (* reset () = ()
 
        Effect: Empties soArray
     *)
-    fun reset () = Array.modify (fn _ => (nil, nil)) soArray
+    fun reset () = Table.clear soTable
 
-    (* a < b = B'
+    (* get (a) = (AL, AR)
+       where AL <| a <| AR
 
-       Invariant:
-       If   Sigma (a) = K1 and  Sigma (b) = K2
-       then B' = true :iff a is transitively subordinated by b
+       Invariant: a must be defined
+    *)
+    fun get (a) =
+        (case lookup a
+	   of SOME ALAR => ALAR
+	    (* not sure why next line is needed *)
+            (* Wed Mar 28 19:39:20 2001 -fp *)
+	    | NONE => (nil, nil))
+
+    (* set (a, (AL, AR)) = ()
+       Effect: set AL <| a <| AR
+    *)
+    fun set (a, ALAR) = insert (a, ALAR)
+
+    (* a <| b = true iff a is (transitively) subordinate to b
+
+       Invariant: a, b families
     *)
     fun below (a, b) =
 	let 
-	  val (BL, BR) = Array.sub (soArray, b)
+	  val (BL, BR) = get (b)
 	in
 	  List.exists (fn x => x = a) BL
 	end
 
-    (* a <* b = B'
+    (* a <* b = true iff a is transitively and reflexively subordinate to b
 
-       Invariant:
-       If   Sigma (a) = K1 and  Sigma (b) = K2
-       then B' = true :iff a is transitively and reflexively subordinated by b
+       Invariant: a, b families
     *)
     fun belowEq (a, b) = (a = b) orelse below (a, b)
 
-    (* a == b = B'
+    (* a == b = true iff a and b subordinate each other
 
-       Invariant:
-       If   Sigma (a) = K1 and  Sigma (b) = K2
-       then B' = true :iff a <* b and b <* a
+       Invariant: a, b families
     *)
     fun equiv (a, b) = belowEq (a, b) andalso belowEq (b, a)
 
@@ -94,9 +108,9 @@ struct
     *)
     fun mergeLeft (a, R, seen) = 
         let 
-	  val (AL, AR) = Array.sub (soArray, a) 
+	  val (AL, AR) = get a
 	in
-	  (Array.update (soArray, a, (AL, merge (AR, R)));
+	  (set (a, (AL, merge (AR, R)));
 	   mergeLeftList (AL, R, a::seen))
 	end
 
@@ -118,9 +132,9 @@ struct
     *)
     fun mergeRight (L, b, seen) = 
       let 
-	val (BL, BR) = Array.sub (soArray, b) 
+	val (BL, BR) = get b 
       in
-	(Array.update (soArray, b, (merge (L, BL), BR));
+	(set (b, (merge (L, BL), BR));
 	 mergeRightList (L, BR, b::seen))
       end
 
@@ -141,8 +155,8 @@ struct
 	if below (a, b) then ()
 	else 
 	  let 
-	    val (AL, AR) = Array.sub (soArray, a) 
-	    val (BL, BR) = Array.sub (soArray, b)
+	    val (AL, AR) = get a
+	    val (BL, BR) = get b
 	  in
 	    (mergeLeft (a, b :: BR, nil); mergeRight (a :: AL, b, nil); ())
 	  end
@@ -156,17 +170,18 @@ struct
        then soArray is updated according to all dependencies in V
        and  soArray is valid
     *)
-    fun installKind (I.Uni(L), a) = ()
+    fun installKind (I.Uni(L), a) =
+        ( set (a, (nil, nil)) ; () )
       | installKind (I.Pi ((I.Dec (_, V1), P), V2), a) =
-          (transClosure (I.targetFam V1, a);
-	   installKind (V2, a))
+        ( transClosure (I.targetFam V1, a) ;
+	  installKind (V2, a) )
 
     (* Passing around substitutions and calling whnf below is
        redundant, since the terms starts in normal form and
        we only refer to the target families.
     *)
 
-    (* inferExp (G, (U1, s1), (V2, s2)) = ()
+    (* installExp (G, (U1, s1), (V2, s2)) = ()
 
        Invariant: 
        If   G  |- s1 : G1, and G1 |- U1 : V1
@@ -196,7 +211,7 @@ struct
       | installExpW (G, (I.FgnExp (cs, ops), s), Vs) =
           installExpW (G, (#toInternal(ops) (), s), Vs)
     *)
-    (* inferSpine (G, (S, s1), (V2, s2)) = ()
+    (* installSpine (G, (S, s1), (V2, s2)) = ()
 
        Invariant: 
        If   G  |- s1 : G1, and G1 |- S : V1 > V1'
@@ -285,15 +300,76 @@ struct
        and  soArray is valid
     *)
     fun install c = 
-      let 
-	val V = I.constType c
-      in
-	case I.targetFamOpt V
-	  of NONE => installKind (V, c)
-	   | SOME a => (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
-	               (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
-	               installExp (I.Null, V, I.Uni(I.Type))
-      end
+	let 
+	  val V = I.constType c
+	in
+	  case I.targetFamOpt V
+	    of NONE => installKind (V, c)
+	     | SOME a => (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
+			 (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
+			 installExp (I.Null, V, I.Uni(I.Type))
+	end
+
+    (* Respecting subordination *)
+
+
+    (* checkBelow (a, b) = () iff a <| b
+       Effect: raise Error(msg) otherwise
+    *)
+    fun checkBelow (a, b) =
+        if not (below (a, b))
+	  then raise Error ("Subordination violation: "
+			    ^ Names.constName (a) ^ " not <| " ^ Names.constName (b))
+	else ()
+
+    (* respectsExp (G, U, V) = () iff U respects current subordination
+       where G |- U ~:~ V  (U has shape V)
+       G nf, U nf, V nf (approx)
+       Effect: raise Error (msg)
+    *)
+    fun respectsExp (G, I.Uni (L), _) = ()
+      | respectsExp (G, I.Pi ((D as I.Dec (_, V1), _), V2), I.Uni(I.Type)) = 
+          (checkBelow (I.targetFam V1, I.targetFam V2);
+	   respectsExp (G, V1, I.Uni(I.Type));
+	   respectsExp (I.Decl (G, D), V2, I.Uni(I.Type)))
+      | respectsExp (G, I.Root (C, S), _) =
+	  respectsSpine (G, S, inferConApprox (G, C))
+      | respectsExp (G, I.Lam (D1 as I.Dec (_, V1), U), I.Pi (_, V2)) =
+	  (checkBelow (I.targetFam V1, I.targetFam V2);
+	   respectsExp (G, V1, I.Uni(I.Type));
+	   respectsExp (I.Decl (G, D1), U, V2))
+      | respectsExp (G, I.FgnExp (cs, ops), V) =
+          respectsExp (G, Whnf.normalize (#toInternal(ops) (), I.id), V)
+
+    (* respectsSpine (G, S, V) = () iff S respects current subordination
+       where G |- S ~:~ V => V'  (S has shape V => V' for some V')
+       G nf, S nf, V nf
+       Effect: raise Error (msg)
+     *)
+    and respectsSpine (G, I.Nil, V) = ()
+      | respectsSpine (G, I.App (U, S), I.Pi ((I.Dec (_, V1), _), V2)) =
+	  (respectsExp (G, U, V1);
+	   respectsSpine (G, S, V2))
+	  (* accurate would be instead of V2: *)
+	  (* Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2)) *)
+
+    fun respects (G, (V, s)) = respectsN (G, Whnf.normalize (V, s))
+
+    and respectsN (G, V) = respectsExp (G, V, I.Uni(I.Type))
+
+    (* Printing *)
+
+    (* Right now, AL is in always reverse order *)
+    (* Reverse again --- do not sort *)
+    (* Right now, Table.app will pick int order -- do not sort *)
+    fun famsToString (nil, msg) = msg
+      | famsToString (a::AL, msg) = famsToString (AL, Names.constName a ^ " " ^ msg)
+
+    fun showFam (a, (AL, AR)) =
+        (print (Names.constName a ^ " |> "
+		^ famsToString (AL, "\n")))
+
+    fun show () = Table.app showFam soTable;
 
     (* weaken (G, a) = (w')
     *)
@@ -306,8 +382,6 @@ struct
 	  else I.comp (w', I.shift)
 	end
 
-
-
   in
     val reset = reset
      
@@ -317,7 +391,11 @@ struct
     val belowEq = belowEq
     val equiv = equiv
 
+    val respects = respects
+    val respectsN = respectsN
+
     val weaken = weaken
+    val show = show
 
   end (* local *)
 end; (* functor Subordinate *)

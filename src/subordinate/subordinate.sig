@@ -1,10 +1,13 @@
 (* Subordination *)
 (* Author: Carsten Schuermann *)
+(* Modified: Frank Pfenning *)
 
 signature SUBORDINATE =
 sig
   structure IntSyn : INTSYN
-    
+
+  exception Error of string
+
   val reset : unit -> unit
   val install : IntSyn.cid -> unit
 
@@ -12,5 +15,10 @@ sig
   val belowEq : IntSyn.cid * IntSyn.cid -> bool	(* refl. transitive closure *)
   val equiv : IntSyn.cid * IntSyn.cid -> bool (* mutual dependency *)
 
+  val respects : IntSyn.dctx * IntSyn.eclo -> unit (* respects current subordination? *)
+  val respectsN : IntSyn.dctx * IntSyn.Exp -> unit (* respectsN(G, V), V in nf *)
+
   val weaken : IntSyn.dctx * IntSyn.cid -> IntSyn.Sub
+
+  val show : unit -> unit
 end;  (* signature SUBORDINATE *)

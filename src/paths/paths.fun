@@ -55,7 +55,7 @@ struct
      This should be used for locations retrieved from origins, where
      the region is given in character positions, rather than lines and columns
   *)
-  fun wrapLoc (Loc (filename, Reg (i,j)), msg) =
+  fun wrapLoc0 (Loc (filename, Reg (i,j)), msg) =
          filename ^ ":" ^ Int.toString (i+1) ^ "-" ^ Int.toString (j+1)
 	 ^ " " ^ "Error: \n" ^ msg
 
@@ -71,7 +71,10 @@ struct
       in
 	filename ^ ":" ^ regString ^ " " ^ "Error: \n" ^ msg
       end
-    | wrapLoc' (loc, NONE, msg) = wrapLoc (loc, msg)
+    | wrapLoc' (loc, NONE, msg) = wrapLoc0 (loc, msg)
+
+  fun wrapLoc (loc, msg) =
+         wrapLoc' (loc, SOME (getLinesInfo()), msg)
 
   (* Paths, occurrences and occurrence trees only work well for normal forms *)
   (* In the general case, regions only approximate true source location *)

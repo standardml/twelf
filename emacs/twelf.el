@@ -1974,6 +1974,12 @@ When called interactively, promts for parameter, supporting completion."
   (twelf-server-send-command "Print.prog")
   (twelf-server-display t))
 
+(defun twelf-print-subordination ()
+  "Prints the curret subordination relation in the Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.subord")
+  (twelf-server-display t))
+
 (defun twelf-print-tex-signature ()
   "Prints the current signature in TeX style.
 The output appears in the  Twelf server buffer."

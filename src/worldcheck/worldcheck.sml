@@ -8,6 +8,7 @@ structure WorldSyn =
 	    structure Constraints = Constraints
 	    structure Index = Index
 	    structure CSManager = CSManager
+	    structure Subordinate = Subordinate
 	    structure Print = Print
 	    structure Table = IntRedBlackTree
 	    structure Paths = Paths

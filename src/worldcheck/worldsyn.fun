@@ -19,6 +19,8 @@ functor WorldSyn
      sharing Constraints.IntSyn = IntSyn
    structure CSManager : CS_MANAGER
      sharing CSManager.IntSyn = IntSyn
+   structure Subordinate : SUBORDINATE
+     sharing Subordinate.IntSyn = IntSyn
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn
 
@@ -50,21 +52,19 @@ struct
 
   type dlist = IntSyn.Dec list
 
-  datatype LabelDec =			(* ContextBody                *)
-    LabelDec of string * dlist * dlist	(* LD = l : SOME L1. BLOCK L2 *)
+  datatype LabelDec =			(* ContextBody                 *)
+    LabelDec of string * dlist * dlist	(* B ::= l : SOME L1. BLOCK L2 *)
 
-  datatype World =			(* Worlds                     *)
-    Closed				(* W ::= .                    *)
-  | Schema of World * LabelDec          (*     | W, LD                *)
+  datatype World =			(* Worlds                      *)
+    Closed				(* W ::= .                     *)
+  | Schema of World * LabelDec          (*     | W, B                  *)
 
   local
-    
    
     val worldsTable : World Table.Table = Table.new (0)
     fun reset () = Table.clear worldsTable
-    fun install (cid, W) = Table.insert worldsTable (cid, W)
+    fun insert (cid, W) = Table.insert worldsTable (cid, W)
     fun lookup (cid) = Table.lookup worldsTable (cid)
-
     
     (* Regular world expressions R
        Invariants:
@@ -362,6 +362,30 @@ struct
       in
 	()
       end
+
+    (* Checking that worlds declaration respects the subordination that is present *)
+
+    fun checkSubordBlock (G, D::L, L') =
+          checkSubordBlock (I.Decl (G, D), L, L')
+      | checkSubordBlock (G, nil, (D as I.Dec(_,V))::L') =
+	  ( Subordinate.respectsN (G, V); (* is V nf?  Assume here: yes -fp *)
+	    checkSubordBlock (I.Decl (G, D), nil, L') )
+      | checkSubordBlock (G, nil, nil) = ()
+
+    fun checkSubordWorlds (Closed) = ()
+      | checkSubordWorlds (Schema (W, LabelDec (_, someDecs, piDecs))) =
+          ( checkSubordWorlds W ;
+	    checkSubordBlock (I.Null, someDecs, piDecs) )
+
+    (* install (a, W) = ()
+       install worlds declaration W for family a
+
+       Effect: raises Error if W would change subordination
+    *)
+    fun install (a, W) =
+        ( checkSubordWorlds W
+	    handle Subordinate.Error (msg) => raise Error (msg) ;
+	  insert (a, W) )
 
   in
     val reset = reset

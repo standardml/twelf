@@ -2,9 +2,9 @@ Group is
   ../lambda/sources.cm
   ../global/sources.cm
   ../timing/sources.cm
+  ../subordinate/sources.cm
   ../meta/sources.cm
   ../solvers/sources.cm
-
   worldsyn.sig
   worldsyn.fun
   worldprint.sig

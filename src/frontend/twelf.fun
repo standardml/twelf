@@ -227,7 +227,7 @@ struct
       | joinregion (r, r' :: rs) = 
           joinregion (Paths.join (r, r'), rs)
 
-
+    fun joinregions (r::rs) = joinregion (r, rs)
 
     fun constraintsMsg (cnstrL) =
         "Typing ambiguous -- unresolved constraints\n" ^ Print.cnstrsToString cnstrL
@@ -265,6 +265,7 @@ struct
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
+              | Subordinate.Error (msg) => abortFileMsg (fileName, msg)
 	      | WorldSyn.Error (msg) => abort (msg ^ "\n") (* includes filename *)
               | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
@@ -539,13 +540,17 @@ struct
 	end
       | install1 (fileName, Parser.WorldDec wdecl) =
 	let
-	  val (ThmSyn.WDecl (GBs, cp as ThmSyn.Callpats cpa), rrs) = ThmRecon.wdeclTowDecl wdecl
+	  val (ThmSyn.WDecl (GBs, cp as ThmSyn.Callpats cpa), rs) =
+	         ThmRecon.wdeclTowDecl wdecl
 	  fun hack nil = WorldSyn.Closed
 	    | hack ((some, pi) :: GBs) = 
 	        WorldSyn.Schema (hack GBs, WorldSyn.LabelDec
 				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
 	  val W = hack GBs
 	  val _ = List.app (fn (a, _) => WorldSyn.install (a, W)) cpa
+	          handle WorldSyn.Error (msg)
+		         (* error location inaccurate here *)
+		         => raise WorldSyn.Error (Paths.wrapLoc (Paths.Loc (fileName, joinregions rs), msg))
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%worlds " ^ WorldPrint.worldToString W ^ " "
 				^ ThmPrint.callpatsToString cp ^ ".\n")
@@ -771,6 +776,7 @@ struct
 	val width : int ref		(* 80, line width *)
         val sgn : unit -> unit		(* print signature *)
         val prog : unit -> unit		(* print signature as program *)
+	val subord : unit -> unit       (* print subordination relation *)
         structure TeX :			(* print in TeX format *)
 	sig
 	  val sgn : unit -> unit	(* print signature *)
@@ -786,6 +792,7 @@ struct
       val width = Print.Formatter.Pagewidth
       fun sgn () = Print.printSgn ()
       fun prog () = ClausePrint.printSgn ()
+      fun subord () = Subordinate.show ()
       structure TeX =
       struct
 	fun sgn () = printSgnTeX ()

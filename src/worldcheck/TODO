@@ -7,3 +7,116 @@ Carsten Schuermann, Yale University
 4. Improve the %world printout.  thmprint should offer a function
 	that returns a Formatter.format.
 5. Add occurrence information to the world checker.
+
+----------------------------------------------------------------------
+From: "Carsten Schuermann" <carsten@cs.yale.edu>
+To: "Frank Pfenning" <fp@cs.cmu.edu>
+Subject: Re: World Checking Summary and One Question
+Date: Wed, 28 Mar 2001 02:45:17 -0500
+
+
+Hi Frank:
+
+It looks good.  A agree with your last point. A call from p to q
+
+    {x1:A1}...{xn:An} q x1 ... xn
+
+is world correct only if all assumptions can be organized as context blocks
+B1 ... Bn *and* each of this context blocks satisfies  W(q) >= Bi.  If the
+second condition is not satisfied, the world checker has to try a different
+combination of blocks.  I agree, that the order in which we traverse binders
+and context blocks should be the same.
+
+To #1: If we go with (a), we might have to add a decl that the user allow to
+extend the subordination himself.
+
+-- Carsten
+
+
+
+----- Original Message -----
+From: "Frank Pfenning" <fp@cs.cmu.edu>
+To: <carsten@cs.cmu.edu>
+Sent: Wednesday, March 28, 2001 11:18 AM
+Subject: World Checking Summary and One Question
+
+
+> Hi Carsten,
+>
+>   I am sending a summary of our phone conversation.  Please let me know
+> if you see anything wrong.  I hope to do the implementation this afternoon
+> starting about 2pm.
+>
+>   I would particularly value a sanity check on the very last point
+> I mention.
+>
+>   - Frank
+>
+> 1. Subordination and worlds.  The problem is that world declarations
+> may influence the subordination relation.  There are 3 options:
+>   a. worlds are checked against the current subordination relation
+>   b. subordination is locally extended to account for worlds
+>   c. subordination is globally extended to account for worlds
+> Plan: Implement option (a).  We may also want to do this for queries
+> and later for theorems.  Go to (b) or (c) if and when necessary.
+
+> 2. Context block labels.  We didn't discuss this, but I assume we
+> proceed without explicit labels for now.  The problem with explicit
+> labels is that an LF signature has no natural place for it.
+>
+> 3. Regular world subsumption.
+>
+>    a. For mutually recursive families, the world definitions must
+>       be identical.  They are always declared together as for
+>       termination, for example.
+>
+>    b. Assume family p calls family q, and p > q (q is strictly subordinate
+>       to p).  We write W(p) and W(q) for the worlds of p and q,
+respectively.
+>       We need to check:
+>
+> For every block bp in W(p)
+> there exists a block bq in W(q)
+>          such that bq >= bp  (bq subsumes bp).
+>
+>       This directly allows for additional blocks in W(q).
+>
+>    c. To verify that bq >= bp  (bq subsumes bp) we check:
+>
+>          For every hypothesis {x:A} in bp
+> either
+>      (i) q >= A  (A is subordinate or equal to q).
+>          Then there must be a declaration {x':A'} in bq
+>          such that \theta A' = A  (A' is more general than A).
+>          The SOME variables of bq are the domain of \theta.
+>          The SOME variables of bp may appear in the result (as BVars).
+>             (ii) not q >= A (A is not subordinate or equal to q).
+>                  Then no term of type A can occur in a term of type q @ S,
+>          so nothing needs to be verified.
+>
+>       I think we should require the hypotheses in bp to be matched
+>       in order by corresponding hypotheses in bq.  I believe the
+>       subordination invariants guarantee that there cannot be any dangling
+>       variables in bp.
+>
+> 4. Regular world checking.
+>
+>    In addition to regular world subsumption, we need to check
+>    verify the world structure for each clause of each family
+>    as follows.
+>
+>    Assume we check p.
+>    For every call
+>     {x1:A1}...{xn:An} q x1...xn
+>     we check that
+>       W(q) >= {x1:A1}...{xn:An}
+>       that is, {x1:A1}...{xn:An} is a concatenation of instances
+>       of blocks in W(q).
+>
+> This last point suggest generalizing part 3(c) of the subsumption
+> algorithm to also allow concatenations of context blocks in W(q)
+> to subsume bp.  Clearly, this would still be sound and also easier
+> to implement, since W(q) >= bp is already coded.  On the other hand,
+> error messages may be less comprehensible.
+>
+

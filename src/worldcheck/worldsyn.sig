@@ -10,12 +10,12 @@ sig
 
   type dlist = IntSyn.Dec list
 
-  datatype LabelDec =			(* ContextBody                *)
-    LabelDec of string * dlist * dlist	(* LD = l : SOME L1. BLOCK L2 *)
+  datatype LabelDec =			(* ContextBody                 *)
+    LabelDec of string * dlist * dlist	(* B ::= l : SOME L1. BLOCK L2 *)
 					
-  datatype World =			(* Worlds                     *)
-    Closed				(* W ::= .                    *)
-  | Schema of World * LabelDec          (*     | W, LD                *)
+  datatype World =			(* Worlds                      *)
+    Closed				(* W ::= .                     *)
+  | Schema of World * LabelDec          (*     | W, B                  *)
 
   val reset : unit -> unit
   val install : IntSyn.cid * World -> unit

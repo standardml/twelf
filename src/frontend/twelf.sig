@@ -13,6 +13,7 @@ sig
 
     val sgn : unit -> unit	      (* print signature *)
     val prog : unit -> unit	      (* print signature as program *)
+    val subord : unit -> unit	      (* print subordination relation *)
 
     structure TeX :		      (* print in TeX format *)
     sig

@@ -421,7 +421,7 @@ struct
 	 val (GBs, f1) = parseGBs f
 	 val (callpats,f2) = parseCallPats f1
        in
-         (E. wdecl (GBs, E.callpats callpats), f2)
+         (E.wdecl (GBs, E.callpats callpats), f2)
        end
 
    fun parseWorlds' (LS.Cons ((L.WORLDS, r), s')) = 
