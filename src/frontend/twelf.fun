@@ -552,6 +552,11 @@ struct
       fun define (sources) = (OS.FileSys.getDir (), sources)
 
     end  (* structure Config *)
+
+    (* make (configFile)
+       read and then load configuration from configFile
+    *)
+    fun make (fileName) = Config.load (Config.read fileName)
   in
 
     (* re-exporting environment parameters and utilities defined elsewhere *)
@@ -667,6 +672,7 @@ struct
 	val define : string list -> config  (* explicitly define configuration *)
       end
     = Config
+    val make = make
 
     val version = "Twelf 1.2 R3 (with tracing)"
   end  (* local *)

@@ -84,5 +84,7 @@ sig
     val define : string list -> config (* explicitly define configuration *)
   end
 
+  val make : string -> Status	      (* read and load configuration *)
+
   val version : string		      (* Twelf version *)
 end;  (* signature TWELF *)
