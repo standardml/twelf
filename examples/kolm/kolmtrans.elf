@@ -38,7 +38,6 @@ kolm_forall : kolm (forall A) (n (forall A*))
 kolm_exists : kolm (exists A) (n (exists A*))
     <- ({a:i} kolm (A a) (A* a)).
 
-%terminates A (kolm A A*).
 
 % A lemma saying explicitly that kolm terminates.
 % I need this for soundness of elimination rules.
@@ -96,8 +95,3 @@ existskolm_forall : existskolm (forall A) (n (forall A*))
 existskolm_exists : existskolm (exists A) (n (exists A*))
                                (kolm_exists KA)
      <- ({a:i} existskolm (A a) (A* a) (KA a)).
-
-%terminates A (existskolm A A* K).
-
-
-

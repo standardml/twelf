@@ -19,7 +19,7 @@
 
 % Prover error: A proof could not be found
 %theorem sound_auto : forall* {A:o} {A*:o} forall {NK:nk A} {K:kolm A A*} 
-                      exists {NJ:nj A*} true.
+                       exists {NJ:nj A*} true.
 % %prove 8 NK (sound_auto NK K NJ).
 
 sound : nk A -> kolm A A* -> nj A* -> type.
@@ -193,5 +193,29 @@ sound_dnotr    : sound (nk_dnotr NK1) KA
                              (nj_triple_neg_red NJ1)))
     <- sound NK1 (kolm_not (kolm_not KA)) NJ1.
 
-%terminates NK (sound NK K NJ).
 
+
+%block l1 : block {a:i}.
+%block l2 : some {A:o}{A*:o} block {NK': nk A}{K':kolm A A*}{NJ':nj A*}.
+%block l3 : some {A:o}{A*:o}{KA:kolm A A*}
+	     block {u:nk A} {v:nj A*} {h:sound u KA v}.
+
+%block l4 : some  {A:o} {A*:o} {K: kolm A A*}
+	     block {p : o} {u:nk A} {v:nj A*} {kp:kolm p (n p)} 
+	     {h1 : existskolm p (n p) kp}
+	     {h2 : sound u K v}.
+
+
+%mode (kolm +A -A*).
+%terminates A (kolm A A*).
+%worlds (l1 | l2 | l3 | l4) (kolm _ _).
+%covers (kolm +A -A*).
+
+%terminates A (existskolm A A* K).
+%worlds (l1 | l2 | l3 | l4) (existskolm _ _ _).
+%covers (existskolm +A -A* -K).
+
+%terminates NK (sound NK K NJ).
+%mode (sound +NK +K -NJ).
+%worlds (l1 | l3 | l4) (sound _ _ _).
+% %covers (sound +NK +K -NJ).    % it really doesn't seem to cover check! --cs

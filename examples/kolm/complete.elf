@@ -62,7 +62,12 @@ nj_nk_existse : nj_nk (nj_existse NJ1 NJ2) (nk_existse NK1 NK2)
     <- nj_nk NJ1 NK1
     <- ({a} {u} {v} nj_nk u v -> nj_nk (NJ2 a u) (NK2 a v)).
 
+%block l5 : some {A:o} block {u:nj A}{v:nk A}{h:nj_nk u v}.
+%block l6 : block {p:o}.
 %terminates NJ (nj_nk NJ NK).
+%worlds (l1 | l5 | l6) (nj_nk _ _).
+%mode (nj_nk +NJ -NK).
+%covers (nj_nk +NJ -NK).
 
 % Lemma (equiv):  Given any K::kolm A A*, there are
 %    NK' : nk A -> nk A* and NK : nk A* -> nk A.
@@ -154,6 +159,10 @@ equiv_exists : equiv (kolm_exists K)
    <- ({a} equiv (K a) (NK* a) (NK a)).
 
 %terminates K (equiv K NK* NK).
+%worlds (l1) (equiv _ _ _).
+%mode (equiv +K -NK* -NK).
+%covers (equiv +K -NK* -NK).
+
 
 % (Completeness)
 % Given:  NJ::nj (n A*)
@@ -163,9 +172,12 @@ equiv_exists : equiv (kolm_exists K)
 %         NK::nk A.
 
 complete : kolm A A* -> nj A* -> nk A -> type.
-%mode complete +K +NJ -NK.
 
 % Completeness reduces to nj_nk and equiv.
 complete1   : complete K NJ (NK2 NK1*)
          <- nj_nk NJ NK1*
          <- equiv K NK2* NK2.
+
+%mode complete +K +NJ -NK.
+%worlds () (complete _ _ _).
+%covers  (complete +K +NJ -NK).
