@@ -128,7 +128,9 @@ struct
           case (!out)
             of SOME(stream) =>
                  (tuples := !tuples + 1;
-                  BinIO.output (stream, Word8Array.extract (array, 0, NONE)))
+                  BinIO.output (stream, Word8ArraySlice.vector
+					    (Word8ArraySlice.slice
+						 (array, 0, NONE))))
              | NONE => ()
           
     fun tuple (code, flags as (cld, prd, cls), arg1, arg2) =
