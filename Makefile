@@ -8,9 +8,6 @@
 # What is SML/NJ called?
 sml = sml-cm
 
-# Twelf root directory
-twelfdir = $(PWD)
-
 # ---------------------------------------------------------------
 # Do not edit the following lines
 # ---------------------------------------------------------------
@@ -26,7 +23,7 @@ twelf-server: ;
 	@echo "Twelf $(version): Server"
 	@echo "*************************************************"	 
 	$(sml) < twelf-server.sml ;
-	sed -e "s#%TWELFDIR#$(twelfdir)#g" \
+	sed -e "s#%TWELFDIR#"`pwd`"#g" \
 	    -e "s#%SML#$(sml)#g" bin/.twelf-server \
 	> bin/twelf-server ;
 	chmod a+x bin/twelf-server ;
@@ -36,7 +33,7 @@ twelf-sml: ;
 	@echo "Twelf $(version): SML"
 	@echo "*************************************************"	 
 	$(sml) < twelf-sml.sml ;
-	sed -e "s#%TWELFDIR#$(twelfdir)#g" \
+	sed -e "s#%TWELFDIR#"`pwd`"#g" \
 	    -e "s#%SML#$(sml)#g" bin/.twelf-sml \
 	> bin/twelf-sml ;
 	chmod a+x bin/twelf-sml ;
@@ -45,16 +42,16 @@ twelf-emacs: ;
 	@echo "*************************************************"
 	@echo "Twelf $(version): Emacs"
 	@echo "*************************************************"	 
-	sed -e "s#%TWELFDIR#$(twelfdir)#g" emacs/.twelf-init.el \
+	sed -e "s#%TWELFDIR#"`pwd`"#g" emacs/.twelf-init.el \
 	> emacs/twelf-init.el ;
 	@echo "*************************************************"
 	@echo "Add"
 	@echo ""
-	@echo "(load \"$(twelfdir)/emacs/twelf-init.el\")"
+	@echo "(load \""`pwd`"/emacs/twelf-init.el\")"
 	@echo ""
 	@echo "to your .emacs file"
 	@echo "*************************************************"	
 
 
 clean: ;
-	rm -rf $(twelfdir)/src/*/CM ;
+	rm -rf src/*/CM ;
