@@ -7,9 +7,11 @@ struct
 	val _ =
 	   MLton.Cont.callcc
 	   (fn k =>
-	    MLton.Signal.handleWith'
-	    (MLton.Signal.int, fn _ =>
-	     MLton.Thread.new (fn () => MLton.Cont.throw (k, ()))))
+	    MLton.Signal.setHandler
+	    (Posix.Signal.int,
+	     MLton.Signal.Handler.handler
+		 (fn _ =>
+		     MLton.Thread.new (fn () => MLton.Cont.throw (k, ())))))
      in
 	loop ()
      end
