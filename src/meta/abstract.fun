@@ -246,6 +246,32 @@ struct
       | abstractEVar (I.Decl (K', BV _), depth, X) = 
 	  abstractEVar (K', depth+1, X)
 
+
+
+    (* lookupBV (A, i) = k'
+
+       Invariant:
+
+       If   A ||- V
+       and  G |- V type
+       and  G [x] A |- i : V'
+       then ex a substititution  G x A |- s : G [x] A
+       and  G x A |- k' : V''
+       and  G x A |- V' [s] = V'' : type
+    *)
+    fun lookupBV (K, i) =
+      let 
+	fun lookupBV' (I.Decl (K, EV (r, V, _, _)), i, k) = 
+	      lookupBV' (K, i, k+1)
+	  | lookupBV' (I.Decl (K, BV _), 1, k) = k
+	  | lookupBV' (I.Decl (K, BV _), i, k) =
+	      lookupBV' (K, i-1, k+1)
+	(* lookupBV' I.Null cannot occur by invariant *)
+      in
+	lookupBV' (K, i, 1)
+      end
+
+
  
     (* abstractExpW (K, depth, (U, s)) = U'
        U' = {{U[s]}}_K
@@ -263,6 +289,15 @@ struct
       | abstractExpW (K, depth, (I.Pi ((D, P), V), s)) =
           piDepend ((abstractDec (K, depth, (D, s)), P), 
 		    abstractExp (K, depth + 1, (V, I.dot1 s)))
+      | abstractExpW (K, depth, (I.Root (H as I.BVar k, S), s)) = (* s = id *)
+	  if k > depth then 
+	    let 
+	      val k' = lookupBV (K, k-depth)
+	    in
+	      I.Root (I.BVar (k'+depth), abstractSpine (K, depth, (S, s)))
+	    end
+	  else 
+	  I.Root (H, abstractSpine (K, depth, (S, s)))   
       | abstractExpW (K, depth, (I.Root (H, S) ,s)) =
 	  I.Root (H, abstractSpine (K, depth, (S, s)))   
       | abstractExpW (K, depth, (I.Lam (D, U), s)) =
