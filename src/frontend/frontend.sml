@@ -64,11 +64,14 @@ structure ModeRecon =
 structure ThmRecon =
   ThmRecon (structure Global = Global
 	    structure IntSyn = IntSyn
+	    structure Abstract = Abstract
+	    structure Constraints = Constraints
 	    structure ModeSyn = ModeSyn
 	    structure ThmSyn' = ThmSyn
 	    structure Names = Names
 	    structure TpRecon' = TpRecon
-	    structure Paths' = Paths);
+	    structure Paths' = Paths
+	    structure Print = Print);
 
 structure ParseTerm =
   ParseTerm (structure Parsing' = Parsing

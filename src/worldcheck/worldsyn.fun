@@ -434,7 +434,7 @@ struct
     fun checkSubordBlock (G, D::L, L') =
           checkSubordBlock (I.Decl (G, D), L, L')
       | checkSubordBlock (G, nil, (D as I.Dec(_,V))::L') =
-	  ( Subordinate.respects (G, (V, I.id)); (* is V nf?  Assume here: no *)
+	  ( Subordinate.respectsN (G, V); (* is V nf?  Assume here: yes! *)
 	    checkSubordBlock (I.Decl (G, D), nil, L') )
       | checkSubordBlock (G, nil, nil) = ()
 
@@ -457,8 +457,8 @@ struct
 	    handle Subordinate.Error (msg) => raise Error (msg) ;
 	  insert (a, W) )
 
-    (* ctxtolist G = L
-      
+    (* ctxToList G = L
+
        Invariant:
        G = L  (G is left associative, L is right associative)
     *)

@@ -172,7 +172,7 @@ ded_ug : ded ([u:hil A] ug (H1 u)) (mp f2 (ug H1'))
 	   {h:{C:o} ded ([w:hil C] v) (mp k v)} )
   (ded H H').
 %terminates H (ded H _).
-% %covers ded +H -H'.
+%covers ded +H -H'.
 % %total H (ded H _).
 
 %%% Mapping natural deductions to Hilbert derivations.

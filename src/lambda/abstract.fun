@@ -55,6 +55,19 @@ struct
       | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref cnstrL)))) =
         (C.simplify cnstrL) @ collectConstraints G
 
+    (* checkConstraints (K) = ()
+       Effect: raises Constraints.Error(C) if K contains unresolved constraints
+    *)
+    fun checkConstraints (K) =
+        let
+	  val constraints = collectConstraints K
+	  val _ = case constraints
+	            of nil => ()
+		     | _ => raise C.Error (constraints)
+	in
+	  ()
+	end
+
     (* checkEmpty Cnstr = ()
        raises Error exception if constraints Cnstr cannot be simplified
        to the empty constraint
@@ -88,14 +101,11 @@ struct
 	  exists' K
 	end
 
-
-
     fun or (I.Maybe, _) = I.Maybe
       | or (_, I.Maybe) = I.Maybe
       | or (I.Meta, _) = I.Meta
       | or (_, I.Meta) = I.Meta
       | or (I.No, I.No) = I.No
-
       
     (* occursInExp (k, U) = DP, 
 
@@ -174,14 +184,14 @@ struct
       | collectExpW (G, (I.Lam (D, U), s), K) =
 	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
       | collectExpW (G, (X as I.EVar (r, GX, V, cnstrs), s), K) =
-	  if exists (eqEVar X) K
-	    then collectSub(G, s, K)
-	  else let
-	         (* val _ = checkEmpty !cnstrs *)
-		 val V' = raiseType (GX, V) (* inefficient! *)
-	       in
-		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
-	       end
+	if exists (eqEVar X) K
+	  then collectSub(G, s, K)
+	else let
+	       (* val _ = checkEmpty !cnstrs *)
+	       val V' = raiseType (GX, V) (* inefficient *)
+	     in
+	       collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
+	     end
       | collectExpW (G, (I.FgnExp (cs, ops), s), K) =
           collectExp (G, (#toInternal(ops) (), s), K)
       (* No other cases can occur due to whnf invariant *)
@@ -226,6 +236,33 @@ struct
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
       | collectSub (G, I.Dot (I.Exp (U), s), K) =
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
+
+    (* collectCtx (G0, G, K) = (G0', K')
+       Invariant:
+       If G0 |- G ctx,
+       then G0' = G0,G
+       and K' = K, K'' where K'' contains all EVars and FVars in G
+    *)
+    fun collectCtx (G0, I.Null, K) = (G0, K)
+      | collectCtx (G0, I.Decl (G, D), K) =
+        let
+	  val (G0', K') = collectCtx (G0, G, K)
+	  val K'' = collectDec (G0', (D, I.id), K')
+	in
+	  (I.Decl (G0, D), K'')
+	end
+
+    (* collectCtxs (G0, Gs, K) = K'
+       Invariant: G0 |- G1,...,Gn ctx where Gs = [G1,...,Gn]
+       and K' = K, K'' where K'' contains all EVars and FVars in G1,...,Gn
+    *)
+    fun collectCtxs (G0, nil, K) = K
+      | collectCtxs (G0, G::Gs, K) =
+        let
+	  val (G0', K') = collectCtx (G0, G, K)
+	in
+          collectCtxs (G0', Gs, K')
+	end
 
     (* abstractEVar (K, depth, X) = C'
      
@@ -344,6 +381,45 @@ struct
     and abstractDec (K, depth, (I.Dec (x, V), s)) =
 	  I.Dec (x, abstractExp (K, depth, (V, s)))
 
+    (* abstractCtx (K, depth, G) = (G', depth')
+       where G' = {{G}}_K
+
+       Invariants:
+       If G0 |- G ctx
+       and K ||- G
+       and |G0| = depth
+       then {{K}}, G0 |- G' ctx
+       and . ||- G'
+       and |G0,G| = depth'
+    *)
+    fun abstractCtx (K, depth, I.Null) = (I.Null, depth)
+      | abstractCtx (K, depth, I.Decl (G, D)) =
+        let
+	  val (G', depth') = abstractCtx (K, depth, G)
+	  val D' = abstractDec (K, depth', (D, I.id))
+	in
+	  (I.Decl (G', D'), depth'+1)
+	end
+
+    (* abstractCtxlist (K, depth, [G1,...,Gn]) = [G1',...,Gn']
+       where Gi' = {{Gi}}_K
+
+       Invariants:
+       if G0 |- G1,...,Gn ctx 
+       and K ||- G1,...,Gn
+       and |G0| = depth
+       then {{K}}, G0 |- G1',...,Gn' ctx
+       and . ||- G1',...,Gn'
+    *)
+    fun abstractCtxlist (K, depth, nil) = nil
+      | abstractCtxlist (K, depth, G::Gs) =
+        let
+	  val (G', depth') = abstractCtx (K, depth, G)
+	  val Gs' = abstractCtxlist (K, depth', Gs)
+	in
+	  G'::Gs'
+	end
+
     (* getlevel (V) = L if G |- V : L
 
        Invariant: G |- V : L' for some L'
@@ -359,6 +435,8 @@ struct
 
        Invariant: G |- V : L' for some L'
     *)
+    (* this may no longer be possible because of two-phase reconstruction *)
+    (* Sun Apr  1 10:39:49 2001 -fp *)
     fun checkType V = 
         (case getLevel V
 	   of I.Type => ()
@@ -414,6 +492,21 @@ struct
       | abstractKLam (I.Decl (K', FV (name,V')), U) =
  	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
 
+    fun abstractKCtx (I.Null) = I.Null
+      | abstractKCtx (I.Decl (K', EV (I.EVar (_, GX, VX, _)))) =
+        let
+	  val V' = raiseType (GX, VX)
+	  val V'' = abstractExp (K', 0, (V', I.id))
+	in
+	  I.Decl (abstractKCtx K', I.Dec (NONE, V''))
+	end
+      | abstractKCtx (I.Decl (K', FV (name, V'))) =
+	let
+	  val V'' = abstractExp (K', 0, (V', I.id))
+	in
+	  I.Decl (abstractKCtx K', I.Dec (SOME(name), V''))
+	end
+
     (* abstractDecImp V = (k', V')   (* rename --cs  (see above) *)
 
        Invariant: 
@@ -428,10 +521,7 @@ struct
     fun abstractDecImp V =
         let
 	  val K = collectExp (I.Null, (V, I.id), I.Null)
-	  val constraints = collectConstraints K
-          val _ = case constraints
-	            of nil => ()
-		     | _ => raise C.Error constraints
+	  val _ = checkConstraints (K)
 	in
 	  (I.ctxLength K, abstractKPi (K, abstractExp (K, 0, (V, I.id))))
 	end 
@@ -456,14 +546,27 @@ struct
     fun abstractDef (U, V) =
         let
 	  val K = collectExp (I.Null, (U, I.id), collectExp (I.Null, (V, I.id), I.Null))
-	  val constraints = collectConstraints K
-	  val _ = case constraints
-	            of nil => ()
-		     | _ => raise C.Error (constraints)
+	  val _ = checkConstraints K
 	in
 	  (I.ctxLength K, (abstractKLam (K, abstractExp (K, 0, (U, I.id))), 
 			   abstractKPi  (K, abstractExp (K, 0, (V, I.id)))))
 	end 
+
+    (* abstractCtxs [G1,...,Gn] = G0, [G1',...,Gn']
+       Invariants:
+       If . |- G1,...,Gn ctx
+          K ||- G1,...,Gn for some K
+       then G0 |- G1',...,Gn' ctx for G0 = {{K}}
+       and G1',...,Gn' nf
+       and . ||- G1',...,Gn' ctx
+    *)
+    fun abstractCtxs (Gs) =
+        let
+	  val K = collectCtxs (I.Null, Gs, I.Null)
+	  val _ = checkConstraints K
+	in
+	  (abstractKCtx (K), abstractCtxlist (K, 0, Gs))
+	end
 
     (* closedDec (G, D) = true iff D contains no EVar or FVar *)
     fun closedDec (G, (I.Dec (_, V), s)) = 
@@ -474,9 +577,9 @@ struct
     fun closedSub (G, I.Shift _) = true
       | closedSub (G, I.Dot (I.Idx _, s)) = closedSub (G, s)
       | closedSub (G, I.Dot (I.Exp U, s)) = 
-      (case collectExp (G, (U, I.id), I.Null)
-	 of I.Null => closedSub (G, s)
-          | _ => false)
+        (case collectExp (G, (U, I.id), I.Null)
+	   of I.Null => closedSub (G, s)
+            | _ => false)
 
     fun closedExp (G, (U, s)) = 
       case collectExp (G, (U, I.id), I.Null)
@@ -511,6 +614,7 @@ struct
 
     val abstractDecImp = abstractDecImp
     val abstractDef = abstractDef
+    val abstractCtxs = abstractCtxs
 
     val collectEVars = collectEVars
 

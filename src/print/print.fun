@@ -681,6 +681,19 @@ local
     | fmtCnstrL (ref Cnstr :: cnstrL) =
         (fmtCnstr Cnstr) @ [Str ";", F.Break] @ (fmtCnstrL cnstrL)
 
+  fun ctxToDecList (I.Null, L) = L
+    | ctxToDecList (I.Decl (G, D), L) = ctxToDecList (G, D::L)
+
+  fun fmtDecList (G0, nil) = nil
+    | fmtDecList (G0, D::nil) = 
+        sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::nil
+    | fmtDecList (G0, D::L) =
+	sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::F.Break
+	::fmtDecList (I.Decl (G0, D), L)
+
+  (* Assume unique names are already assigned in G0 and G! *)
+  fun fmtCtx (G0, G) = fmtDecList (G0, ctxToDecList (G, nil))
+
   (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
      instantiations of EVars occurring in queries.  To that end, a list of
      EVars paired with their is passed, thereby representing a substitution
@@ -742,12 +755,14 @@ in
   fun formatConDecI (condec) = fmtConDec (true, condec)
   fun formatCnstr (Cnstr) = F.Vbox0 0 1 (fmtCnstr Cnstr)
   fun formatCnstrs (cnstrL) = F.Vbox0 0 1 (fmtCnstrL cnstrL)
+  fun formatCtx (G0, G) = F.HVbox (fmtCtx (G0, G))	(* assumes G0 and G are named *)
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)
+  fun ctxToString (G0, G) = F.makestring_fmt (formatCtx (G0, G))
 
   fun evarInstToString Xnames =
         F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (fmtEVarInst Xnames), Str "."])

@@ -14,8 +14,10 @@ sig
   val closedCtx : IntSyn.Dec IntSyn.Ctx -> bool
 
   val abstractDecImp : IntSyn.Exp  -> (int * IntSyn.Exp)
-  val abstractDef : (IntSyn.Exp * IntSyn.Exp) -> 
-                       (int * (IntSyn.Exp * IntSyn.Exp))
+  val abstractDef : (IntSyn.Exp * IntSyn.Exp)
+                     -> (int * (IntSyn.Exp * IntSyn.Exp))
+  val abstractCtxs : (IntSyn.Dec IntSyn.Ctx) list
+                     -> (IntSyn.Dec IntSyn.Ctx) * (IntSyn.Dec IntSyn.Ctx) list
 
   val collectEVars : IntSyn.dctx * IntSyn.eclo * IntSyn.Exp list -> IntSyn.Exp list
 

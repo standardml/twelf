@@ -3,16 +3,24 @@
 (* Modified: Brigitte Pientka *)
 
 functor ThmRecon (structure Global : GLOBAL
+		  structure IntSyn : INTSYN
+                  structure Abstract : ABSTRACT
+		    sharing Abstract.IntSyn = IntSyn
+		  structure Constraints : CONSTRAINTS
+		    sharing Constraints.IntSyn = IntSyn
 		  structure ModeSyn : MODESYN
+		    sharing ModeSyn.IntSyn = IntSyn
 		  structure ThmSyn': THMSYN
-		  sharing ThmSyn'.ModeSyn = ModeSyn
-		  sharing ThmSyn'.ModeSyn = ModeSyn
+		    sharing ThmSyn'.ModeSyn = ModeSyn
+		    sharing ThmSyn'.ModeSyn = ModeSyn
 		  structure Paths' : PATHS
 		  structure TpRecon': TP_RECON
-		  sharing TpRecon'.Paths = Paths' 
-		  sharing TpRecon'.IntSyn = ModeSyn.IntSyn
+		    sharing TpRecon'.IntSyn = IntSyn
+		    sharing TpRecon'.Paths = Paths' 
 		  structure Names : NAMES
-		  sharing Names.IntSyn = ModeSyn.IntSyn)
+		    sharing Names.IntSyn = IntSyn
+		  structure Print : PRINT
+		    sharing Print.IntSyn = IntSyn)
   : THM_RECON =
 struct
   structure ThmSyn = ThmSyn'
@@ -71,6 +79,7 @@ struct
 	      let 
 		val (cps, rs) =  (callpats' L)
 	      in
+		(* check whether they are families here? *)
 		case Names.nameLookup name
 		  of NONE => error (r, "Type family " ^ name ^ " not defined")
 		   | SOME cid => ((cid, P) :: cps, (r :: rs))
@@ -126,11 +135,42 @@ struct
     type theorem2 = thm -> thm
     type theorem = T.approxCtx * int -> T.approxCtx * int * Paths.region * theorem2
     type theoremdec = string * theorem
-
     (* implicit arguments, Type, Modevector *)
 
+    fun join (NONE, r) = SOME(r)
+      | join (SOME(r1), r2) = SOME(P.join (r1, r2))
 
-    (* abstract (GBs, G1, M, G2, k, mode) = (GBs, G', M', k')
+    fun ctxRegion (I.Null) = NONE
+      | ctxRegion (I.Decl (g, (d, r))) = join (ctxRegion g, r)
+
+    fun ctxAppend (G, I.Null) = G
+      | ctxAppend (G, I.Decl (G', D)) = I.Decl (ctxAppend (G, G'), D)
+
+    fun ctxBlockToString (G0, (G1, G2)) =
+        let
+	  val _ = Names.varReset ()
+	  val G0' = Names.ctxName G0
+	  val G1' = Names.ctxLUName G1
+	  val G2' = Names.ctxLUName G2
+	in
+	  Print.ctxToString (I.Null, G0') ^ "\n"
+	  ^ (case G1' of I.Null => "" | _ => "some " ^ Print.ctxToString (G0', G1') ^ "\n")
+	  ^ "pi " ^ Print.ctxToString (ctxAppend (G0', G1'), G2')
+	end
+
+    fun checkFreevars (I.Null, (G1, G2), r) = ()
+      | checkFreevars (G0, (G1, G2), r) =
+        let
+	  val _ = Names.varReset ()
+	  val G0' = Names.ctxName G0
+	  val G1' = Names.ctxLUName G1
+	  val G2' = Names.ctxLUName G2
+	in
+	  error (r, "Free variables in context block after term reconstruction:\n"
+		 ^ ctxBlockToString (G0', (G1', G2')))
+	end
+
+    (* recon (GBs, G1, M, G2, k, mode) = (GBs, G', M', k')
      
        Invariant:  
        If   G1 |- M   (where the k-prefix of G1 are implicit parameters)
@@ -140,75 +180,93 @@ struct
        and  M' = M, mode ... mode   (|G2| times)
        
     *)
-    fun abstract (GBs, G, Ga, M, I.Null, _) = (GBs, G, Ga, M)
-      | abstract (GBs, G, Ga, M, I.Decl (ctx, (Da, r)), mode) =
+    fun recon (GBs, G, Ga, M, I.Null, _) = (GBs, G, Ga, M)
+      | recon (GBs, G, Ga, M, I.Decl (ctx, (Da, r)), mode) =
 	let 
-	  val (GBs', G', Ga', M') = abstract (GBs, G, Ga, M, ctx, mode)
+	  val (GBs', G', Ga', M') = recon (GBs, G, Ga, M, ctx, mode)
 	  val D = T.approxDecToDec (G', Ga', Da, r)
 	in
 	  (GBs', I.Decl (G', D), I.Decl (Ga', Da), I.Decl (M', mode))
 	end
 
-    fun abstractCtx (G, I.Null) = (G, I.Null)
-      | abstractCtx (G, I.Decl (ctx, (d, r))) =
+    fun reconCtx (G, I.Null) = (G, I.Null)
+      | reconCtx (G, I.Decl (ctx, (d, r))) =
         let
-	  val (G', G'') = abstractCtx (G, ctx)
+	  val (G', G'') = reconCtx (G, ctx)
 	  val D = T.decToApproxDec (G', d)
 	in
           (I.Decl (G', D), I.Decl (G'', (D, r)))
 	end
 
-    fun abstractCtx2 ((G1, Ga1), I.Null) = ((G1, Ga1), (I.Null, I.Null))
-      | abstractCtx2 ((G1, Ga1), I.Decl (ctx, (Da, r))) =
+    fun reconCtx2 ((G1, Ga1), I.Null) = ((G1, Ga1), (I.Null, I.Null))
+      | reconCtx2 ((G1, Ga1), I.Decl (ctx, (Da, r))) =
         let
-          val ((G', Ga'), (G'', Ga'')) = abstractCtx2 ((G1, Ga1), ctx)
+          val ((G', Ga'), (G'', Ga'')) = reconCtx2 ((G1, Ga1), ctx)
           val D = T.approxDecToDec (G', Ga', Da, r)
         in
           ((I.Decl (G', D), I.Decl (Ga', Da)),
            (I.Decl (G'', D), I.Decl (Ga'', Da)))
         end
 
-    fun abstractCtxPair (ctxSome, ctxPi) =
+    fun reconCtxPair (ctxSome, ctxPi) =
         let
-	  val (Ga1, Ga2) = abstractCtx (I.Null, ctxSome)
-	  val (_, Ga3) = abstractCtx (Ga1, ctxPi)
+	  val (Ga1, Ga2) = reconCtx (I.Null, ctxSome)
+	  val (_, Ga3) = reconCtx (Ga1, ctxPi)
 	in
 	  (Ga2, Ga3)
 	end
 
-    fun abstractCtxPair2 (ctxSome, ctxPi) =
+    fun reconCtxPair2 (ctxSome, ctxPi) =
         let
-          val (_, (G1, Ga1)) = abstractCtx2 ((I.Null, I.Null), ctxSome)
-          val (_, (G2, Ga2)) = abstractCtx2 ((G1, Ga1), ctxPi)
+          val (_, (G1, Ga1)) = reconCtx2 ((I.Null, I.Null), ctxSome)
+          val (_, (G2, Ga2)) = reconCtx2 ((G1, Ga1), ctxPi)
         in
           (G1, G2)
         end
 
+    fun abstractCtxPair2 (G1, G2) =	(* (G1,G2) already approx checked *)
+        let
+	  val r1Opt = ctxRegion G1
+	  val SOME(r2) = ctxRegion G2	(* G2 cannot be empty *)
+	  val SOME(r) = join (r1Opt, r2)
+	  (* val (G1', G2') = reconCtxPair (G1, G2) *) (* approx *)
+	  val (G1', G2') = reconCtxPair2 (G1, G2) (* accurate *)
+	  val (G0, [G1'', G2'']) =	(* closed nf *)
+	      Abstract.abstractCtxs [G1', G2'] 
+	      handle Constraints.Error (C)
+	      => error (r, "Constraints remain in context block after term reconstruction:\n"
+			^ ctxBlockToString (I.Null, (G1', G2')) ^ "\n"
+			^ Print.cnstrsToString C)
+	  val _ = checkFreevars (G0, (G1'', G2''), r)
+	in
+	  (G1'', G2'')
+	end 
+
     fun top2 (GBs, G, Ga, M) = (GBs, G, Ga, M)
     fun top r (Ga, k) = (Ga, k, r, top2)
     fun exists2 (ga, t) (GBs, G, Ga, M) =
-          t (abstract (GBs, G, Ga, M, ga, M.Minus))
+          t (recon (GBs, G, Ga, M, ga, M.Minus))
     fun exists (g, (r, t)) (Ga, k) =
         let
-          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga1, Ga2) = reconCtx (Ga, g)
           val (Ga', k', r', t') = t (Ga1, k)
         in
           (Ga', k', P.join (r, r'), exists2 (Ga2, t'))
         end
     fun forall2 (ga, t) (GBs, G, Ga, M) =
-          t (abstract (GBs, G, Ga, M, ga, M.Plus))
+          t (recon (GBs, G, Ga, M, ga, M.Plus))
     fun forall (g, (r, t)) (Ga, k) =
         let
-          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga1, Ga2) = reconCtx (Ga, g)
           val (Ga', k', r', t') = t (Ga1, k)
         in
           (Ga', k', P.join (r, r'), forall2 (Ga2, t'))
         end
     fun forallStar2 (ga, t) (GBs, G, Ga, M) =
-          t (abstract (GBs, G, Ga, M, ga, M.Plus))
+          t (recon (GBs, G, Ga, M, ga, M.Plus))
     fun forallStar (g, (r, t)) (Ga, k) =
         let
-          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga1, Ga2) = reconCtx (Ga, g)
           val (Ga', k', r', t') = t (Ga1, I.ctxLength g)
         in
           (Ga', k', P.join (r, r'), forallStar2 (Ga2, t'))
@@ -221,7 +279,7 @@ struct
         end
     fun forallG (gbs, (r, t)) (Ga, k) =
         let
-          val GBas = List.map abstractCtxPair gbs
+          val GBas = List.map reconCtxPair gbs
           val (Ga', k', r', t') = t (Ga, k)
         in
           (Ga', k', P.join (r, r'), forallG2 (GBas, t'))
@@ -245,12 +303,18 @@ struct
           ((name, td'), r')
 	end
 
-
     (* World checker *)
 
+    fun abstractWDecl W =
+        let
+	  val W' = List.map reconCtxPair W
+	  val W'' = List.map abstractCtxPair2 W'
+	in
+	  W''
+	end
 
     type wdecl =  ThmSyn.WDecl * Paths.region list
-    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (List.map abstractCtxPair2 (List.map abstractCtxPair W), cp), rs)
+    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (abstractWDecl W, cp), rs)
     fun wdeclTowDecl T = T
 
   in

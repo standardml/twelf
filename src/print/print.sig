@@ -17,12 +17,14 @@ sig
   val formatConDec : IntSyn.ConDec -> Formatter.format
   val formatConDecI : IntSyn.ConDec -> Formatter.format
   val formatCnstr : IntSyn.Cnstr -> Formatter.format
+  val formatCtx : IntSyn.dctx * IntSyn.dctx -> Formatter.format
 
   val decToString : IntSyn.dctx * IntSyn.Dec -> string
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
   val conDecToString : IntSyn.ConDec -> string
   val cnstrToString : IntSyn.Cnstr -> string
   val cnstrsToString : IntSyn.cnstr list -> string (* assigns names in contexts *)
+  val ctxToString : IntSyn.dctx * IntSyn.dctx -> string
 
   val evarInstToString : (IntSyn.Exp * string) list -> string
   val evarCnstrsToStringOpt : (IntSyn.Exp * string) list -> string option
