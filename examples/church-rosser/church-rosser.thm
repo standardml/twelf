@@ -30,7 +30,8 @@
 		forall  {D1: M => M'} {D2: M =>* M''} 
 	        exists  {N:term} {E1: M' =>* N} {E2: M'' => N}
 		true.
-% %prove 6  [D2 D1] (m-strip D1 D2 _ _ _).
+% %prove 7  [D2] (m-strip _ D2 _ _ _).
+
 % doesn't work because we need residual lemmas
 %assert (m-strip _ _ _ _ _).
 
@@ -38,10 +39,11 @@
 	          forall {R*':M =>* M'} {R*'':M =>* M''}
                   exists {N:term} {S*':M' =>* N} {S*'':M'' =>* N}
 		  true.
+% %prove 4 D1 (m-conf D1 _ _ _ _).
 %assert (m-conf _ _ _ _ _).
 
 %theorem m-cr : forall* {M:term} {M':term} 
 		forall  {C:M <=> M'}
 		exists  {N:term} {S*:M =>* N} {S*':M' =>* N}
 		true.
-%prove 35 D (m-cr D _ _ _).
+%prove 4 D (m-cr D _ _ _).
