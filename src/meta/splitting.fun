@@ -74,8 +74,8 @@ struct
 
 
 
-    fun makeOperator ((S, k), L, S.Splits n, g, I, a) = 
-      Operator ((S, k), L, Index (n, I, List.length L, List.length (Index.lookup a), g+1))
+    fun makeOperator ((S, k), L, S.Splits n, g, I, m) = 
+      Operator ((S, k), L, Index (n, I, List.length L, m, g+1))
 
     (* aux (G, B) = L' 
        
@@ -202,6 +202,32 @@ struct
           someEVars(G, L, I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s))
 
 
+    fun maxNumberParams a =
+      let
+	fun maxNumberParams' (n) = 
+	  if n < 0 then 0
+	  else
+	    let
+	      val F.LabelDec (name, G1, G2) = F.labelLookup n
+	      val m' = foldr (fn (I.Dec (_, V), m) => 
+			      if I.targetFam V = a then m + 1 else m) 0 G2
+	    in
+	      maxNumberParams' (n-1) + m'
+	    end
+      in
+	maxNumberParams' (F.labelSize () - 1)
+      end
+
+
+    fun maxNumberCases (I.Pi ((I.Dec (_, V1), _), V2), a) =
+        let
+	  val m = maxNumberCases (V2, a)
+	in
+	  if I.targetFam V1 = a then m+1
+	  else m
+	end 
+      | maxNumberCases (I.Root _, a) = 
+	  List.length (Index.lookup a) + maxNumberParams a
 
 
     (* ctxSub (G, s) = G'
@@ -579,7 +605,7 @@ struct
 	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
 			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
-				       induction 1, I.targetFam V)
+				       induction 1,  maxNumberCases (V, I.targetFam V))
 			 :: ops
 		     else ops
 	in
@@ -652,25 +678,26 @@ struct
 
     fun ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
 
+    (* c1/m1 < c2/m2 iff c1 m2 < c2 m1 *)
     fun compare' (Index (k1, NONE, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
-        (case (Real.compare (ratio (c1, m1), ratio (c2, m2)), Int.compare (k1, k2), Int.compare (p1, p2)) 
+        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (p1, p2))
 	   of (EQUAL, EQUAL, EQUAL) => EQUAL
 	    | (EQUAL, EQUAL, result) => result
 	    | (EQUAL, result, _) => result
-	    | (GREATER, _, _) => LESS
-	    | (LESS, _, _) => GREATER)
+	    | (result, _, _) => result)
       | compare' (Index (k1, NONE, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
-	(case (Real.compare (ratio (c1, m1), ratio (c2, m2))) 
+	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => LESS
 	    | GREATER => GREATER)
       | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
-	(case (Real.compare (ratio (c1, m1), ratio (c2, m2))) 
+	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => GREATER
 	    | GREATER => GREATER)
       | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
-        (case (Real.compare (ratio (c1, m1), ratio (c2, m2)), Int.compare (i1, i2), Int.compare (k1, k2), Int.compare (p1, p2))
+        (case (Int.compare (c1*m2, c2*m1), Int.compare (i1, i2), 
+	       Int.compare (k2, k1), Int.compare (p1, p2))
 	   of (EQUAL, EQUAL, EQUAL, EQUAL) => EQUAL
 	    | (EQUAL, EQUAL, EQUAL, result) => result
 	    | (EQUAL, EQUAL, result, _) => result
@@ -742,13 +769,18 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
-	  fun indexToString (Index (k, NONE, c, m, p)) = "NI (c/m=" ^ 
-	        (Real.toString (ratio (c, m))) ^ ", i=. , sd=" ^ (Int.toString k) ^ ", p=" ^
-		(Int.toString p) ^ ")"
-	    | indexToString (Index (k, SOME idx , c, m, p)) = 
-		"I (c/m=" ^ 
-	        (Real.toString (ratio (c, m))) ^ ", i=" ^ (Int.toString idx) ^ ", sd=" ^ (Int.toString c) ^ ", p=" ^
-		(Int.toString p) ^ ")"
+	  fun indexToString (Index (sd, NONE, c, m, p)) = 
+	        "NI (c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
+		(Real.toString (ratio (c, m))) ^ 
+		", i=. , sd=" ^ (Int.toString sd) ^ 
+		", p=" ^ (Int.toString p) ^ ")"
+
+	    | indexToString (Index (sd, SOME idx , c, m, p)) = 
+		"I (c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
+		(Real.toString (ratio (c, m))) ^ 
+		", i=" ^ (Int.toString idx) ^ 
+		", sd=" ^ (Int.toString sd) ^ 
+		", p=" ^ (Int.toString p) ^ ")"
 		
 
 	  fun flagToString (_, 0) = ""
