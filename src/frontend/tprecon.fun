@@ -496,6 +496,7 @@ struct
          of (IntSyn.Uni (IntSyn.Kind)) => (error (r, msg); IntSyn.Kind)
           | (IntSyn.Uni (IntSyn.Type)) => IntSyn.Kind
           | (IntSyn.Pi (_, Va')) => inferUni (Va', r, msg)
+          | (IntSyn.Lam (_, Ua')) => inferUni (Ua', r, msg)
           | _ => IntSyn.Type)
 
   fun decl (G, D) = IntSyn.Decl (G, Names.decLUName (G, D))
@@ -554,11 +555,8 @@ struct
       let
         val Da1 = approxReconDec (Ga, d1)
         val (Ua2Opt, Va2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), t2)
-        val _ = case Ua2Opt
-                  of NONE => ()
-                   | SOME _ => error (r2, "Abstraction body cannot be a type family or kind")
       in
-        (NONE, IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe), Va2),
+        (Ua2Opt, IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe), Va2),
          Paths.join (r, r2))
       end
     | approxRecon (Ga, TermSyn.Arrow (t1, t2)) =
@@ -1142,7 +1140,7 @@ struct
 	val ocd = Paths.def (i, oc1, SOME(oc2))
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, NONE, i, U'', V'', level))
 		 else (case level
-			 of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+			 of IntSyn.Kind => error (r, "Type definitions must use %abbrev")
 		          | _ => ();
 		       Strict.check ((U'', V''), SOME(ocd));
 		       Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', level)))
@@ -1173,7 +1171,7 @@ struct
 	val ocd = Paths.def (i, oc1, NONE)
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, NONE, i, U'', V'', level))
 		 else (case level
-			 of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+			 of IntSyn.Kind => error (r, "Type definitions must use %abbrev")
 		          | _ => ();
 		       Strict.check ((U'', V''), SOME(ocd));
 		       Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', level)))
