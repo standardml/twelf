@@ -6,6 +6,7 @@ b:node.
 
 r: node -> type.
 s: node -> type.
+%tabled s.
 
 r2: r a 
      <- s b.

@@ -20,6 +20,8 @@ apr1  :              M2 --> M2'
 -->* : term -> term -> type.  %infix none 10 -->*.
 			      %name -->* R*.
 
+%tabled -->*.
+
 id1   :    M -->* M.
 
 step1 :    M -->* M''
@@ -31,6 +33,8 @@ step1 :    M -->* M''
 
 <-> : term -> term -> type.  %infix none 10 <->.
 			     %name <-> C.
+
+%tabled <->.
 
 refl :    M  <-> M.
 

@@ -41,7 +41,7 @@ h:mor A4 A1.
 
 == : mor A B -> mor A B -> type.  %name == ME.
  %infix none 5 ==.
-
+%tabled ==.
 
 % equations
 % reordered equations for tabling purposes

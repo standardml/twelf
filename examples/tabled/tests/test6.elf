@@ -10,6 +10,7 @@ suc: nat -> nat.
 pts: nat -> type.
 qts: nat -> type.
 rts: type.
+%tabled qts.
 
 c1: pts X
      <- qts X

@@ -13,6 +13,7 @@ e_ba: edge b a.
 e_bd: edge b d.
 
 reach: node -> node -> type.
+%tabled reach.
 
 r_refl: reach X X.
 

@@ -19,6 +19,7 @@ p3: p b
 q: node -> type.
 r: node -> type.
 s: node -> type.
+%tabled q.
 
 qr2: q a 
      <- (r a -> r b -> q a).

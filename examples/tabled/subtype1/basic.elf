@@ -7,12 +7,16 @@ tp : type.  %name tp T.
 nat   : tp.				% Natural Numbers
 pos   : tp.				% Positive Numbers
 zero  : tp.				% Singleton Zero
+int   : tp.
+neg   : tp.
+
 
 %%% Subtyping
 %%% Specification, not executable
 
 sub : tp -> tp -> type.  %name sub C.
 %mode sub *T *T'.
+%tabled sub.
 
 sub_refl : sub T T.
 sub_trans :  sub S R
@@ -22,6 +26,8 @@ sub_trans :  sub S R
 % sub_trans : sub S T -> sub T R -> sub S R.
 sub_pn : sub pos nat.
 sub_zn : sub zero nat.
+sub_nan : sub nat int.
+sub_nen : sub neg int.
 
 
 %
@@ -29,7 +35,7 @@ sub_zn : sub zero nat.
 %%% Specification, not executable
 
 of : exp -> tp -> type.  %name of P u.
-
+%tabled of.
 % Subtyping
 
 tp_sub : of E T

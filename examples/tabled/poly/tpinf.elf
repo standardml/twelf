@@ -6,7 +6,7 @@
 
 of : exp -> tp -> type.  %name of P u.
 %mode of +E *T.
-
+%tabled of.
 
 % Natural Numbers
 tp_z     : of z nat.

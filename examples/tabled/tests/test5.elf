@@ -10,7 +10,7 @@ d: node.
 pt: node -> node -> type.
 et: node -> node -> type.
 qt: node -> type.
-
+%tabled pt.
 
 p2: pt X Z
      <- et X Z

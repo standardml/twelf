@@ -20,6 +20,8 @@ lm   : ({x:term} x => x -> M x => M' x)
 =>* : term -> term -> type.  %infix none 10 =>*.
                              %name =>* R*.
 
+%tabled =>*.
+
 id   :          M  =>* M.
 
 ;    :          M  =>* M''  
@@ -32,6 +34,7 @@ id   :          M  =>* M.
 <=> : term -> term -> type.  %infix none 10 <=>.
                              %name <=> C.
 
+%tabled <=>.
 reduce :  M  =>* M'
        -> M  <=> M'.
 

@@ -18,6 +18,7 @@ arrow : tp -> tp -> tp.			% Functions
 
 sub : tp -> tp -> type.  %name sub C.
 %mode sub *T *T'.
+%tabled sub.
 
 sub_pn : sub pos nat. 
 sub_zn : sub zero nat. 
@@ -49,7 +50,7 @@ sub_* : sub T1 S1
 %%% Specification, not executable
 
 of : exp -> tp -> type.  %name of P u.
-
+%tabled of.
 % Subtyping
 
 tp_sub : of E T
