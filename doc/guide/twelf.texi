@@ -739,7 +739,7 @@ underscore @samp{_}.  Anonymous variables will then be named
 
 In the second form, we can give a separate name preference
 for free (existential) variables and parameters.  The second one
-will typicall be lowercase, as in @code{%name exp E x}.
+will typically be lowercase, as in @code{%name exp E x}.
 
 @node Sample Signature,  , Name Preferences, Syntax
 @section Sample Signature
@@ -893,7 +893,7 @@ were implicit.  The corresponding arguments to @code{andi} are also
 implicit.  In fact, since the order of the reconstructed quantifiers is
 arbitrary, we cannot know in which order to supply the arguments, so
 they must always be omitted.  Thus a constant with @math{n} implicit
-quantifiers is supplied with @math{n} implicit arguments whereever it is
+quantifiers is supplied with @math{n} implicit arguments wherever it is
 seen.  These implicit arguments are existential variables whose value
 may be determined from context by unification.
 
@@ -978,7 +978,7 @@ undecidable if a set of equations in the LF type theory has a solution.
 Worse yet, even if it has solutions, it may not have a most general
 solution.  Therefore, Twelf postpones difficult equations as constraints
 and solves only those within the pattern fragment (see @cite{Miller
-1991, Journal of Logic and Compuation} and @cite{Pfenning 1991, Logical
+1991, Journal of Logic and Computation} and @cite{Pfenning 1991, Logical
 Frameworks}).  In this fragment, principal solutions always exist and
 can be computed efficiently.  If constraints remain after term
 reconstruction, the constant declaration is rejected as ambiguous which
@@ -1177,7 +1177,7 @@ bound ::= nat                   % @r{number of solutions}
 
 qdecl ::= bound bound query     % @r{expected solutions, try limit, query}
 
-qtdecl ::= bound query          % @r{number of stages, query}
+qtdecl ::= bound bound query    % @r{number of stages, query}
 
 sdecl ::= %define binding sdecl % @r{term binding}
         | %solve id : term      % @r{solve with proof term}
@@ -1580,7 +1580,7 @@ of hypotheses which are introduced during search by indentation.
 ?- @{x:exp@} of x T1 -> of x T2.
 % @r{introduce parameter @code{e}}
 ?- of e T1 -> of e T2.
-% @r{introduce hypothesis labelled @code{p}}
+% @r{introduce hypothesis labeled @code{p}}
 p:of e T1
  ?- of e T2.
  % @r{succeed by hypothesis @code{p} with @code{T1 = T2}}
@@ -1635,7 +1635,7 @@ unify with the goal and the overall query fails.
 @section Deterministic Type Families
 In general, a solvable goal may admit several (and possibly countably
 infinite) solutions. Through backtracking, Twelf will generate all of
-them. There are circumnstances, however, where only the only one of
+them. There are circumstances, however, where only the only one of
 them is correct, or interesting. Consider, for example, list membership:
 
 @example
@@ -1694,7 +1694,7 @@ No more solutions
 In other logic programming languages like Prolog, pruning of unwanted
 solutions is usually accomplished by using the extra-logical operator
 cut. In general, @code{%deterministic} is less powerful than cut: in
-a language with cut, a deterministic predicate can be modelled by
+a language with cut, a deterministic predicate can be modeled by
 adding a cut at the end of all of its clauses. However, in most
 practical uses the two are equivalent, and the semantics of
 @code{%deterministic} families is cleaner and better understood.
@@ -1725,7 +1725,7 @@ check whether @code{G} is in the table.  If it is not in the table, then
 it will be added.  If it is in the table and there are solutions
 available, then we can re-use them.  If it is in the table and no
 solutions are available, then we suspend the computation.  This basic
-idea is combined with globals stages.  In each stage, a depth-first
+idea is combined with global stages.  In each stage, a depth-first
 search strategy is used to derive answers from the program.  If no more
 answers can be derived, computation terminates.  It is important to note
 that for each answer only one proof is generated, although multiple
@@ -1743,11 +1743,14 @@ for every type family @code{a} that is to be tabled.  In addition,
 at present tabling must be explicitly enabled by invoking
 
 @example
-%querytabled @var{stages} A.
+%querytabled @var{expected} @var{stages} A.
 @end example
 
-where @var{stages} bounds the number of stages to use before terminating
-while searching for a proof of @code{A}.  If @var{stages} is @code{*},
+where @var{expected} is the expected number of answers and 
+@var{stages} bounds the number of stages to use before terminating
+while searching for a proof of @code{A}. If @var{expected} is @code{*},
+it will find all distinct solutions. If there are finitely many solutions,
+search will terminate, after enumerating all of them. If @var{stages} is @code{*},
 then arbitrarily many stages may be explored, which can lead to
 non-termination over infinite domains.
 
@@ -1787,7 +1790,7 @@ r_cl  : reach X Y
          <- edge X Z
          <- reach Z Y.
 
-%querytabled * (reach a X).
+%querytabled 4 * (reach a X).
 @end group
 @end example
 
@@ -1805,7 +1808,7 @@ In the example above we can also give an explicit bound on the
 number of stages during tabled evaluation with
 
 @example
-%querytabled 3 (reach a X).
+%querytabled 4 3 (reach a X).
 @end example
 
 Additional examples using tabling can be found in
@@ -2240,7 +2243,7 @@ More? n
 @end group
 @end example
 
-It is important to stress that the domain modelled here is not the ring
+It is important to stress that the domain modeled here is not the ring
 of integers modulo 32 but rather the restriction of the integer ring to the
 interval @math{0}...@math{4294967295}, so that for example the query:
 
@@ -2831,7 +2834,7 @@ expects @code{X} to be the input and @code{Z} to be the output of the goal
 smaller than the input argument @code{X}, and if the program terminates in @code{X}.
 
 As a simple example of reduction checking we consider the greatest
-common divisor.  This is an exceprt from the signature for unary arithmetic
+common divisor.  This is an excerpt from the signature for unary arithmetic
 in the file @file{example/guide/arith.elf}.
 
 @example
@@ -3266,7 +3269,7 @@ new parameters or hypotheses.
 @cindex input coverage
 @findex %covers
 
-Once a set of regular worlds has been decared for a type family, Twelf
+Once a set of regular worlds has been declared for a type family, Twelf
 can determine if all the possible cases for a given collection of input
 arguments are covered.
 
@@ -3859,10 +3862,10 @@ each case of the proof.
 @item Splitting
  Based on the types of the universally quantified variables, Twelf
 distinguishes all possible cases by considering all constructors in
-the signatures.  It nevers splits a variable which appears as an
+the signatures.  It never splits a variable which appears as an
 index in an input argument, and if there are several possibilities
 it picks the one with fewest resulting cases.  Splitting can go on
-indefinitely, so the paramater @code{Twelf.Prover.maxSplit} bounds
+indefinitely, so the parameter @code{Twelf.Prover.maxSplit} bounds
 the number of times a variable may be split.
 @end table
 
@@ -4641,7 +4644,7 @@ on of the following (explained in @ref{Environment Parameters}).
  Reset timers.
 @item Timers.check
 @findex Timers.check
- Print, but do not reset timrs.
+ Print, but do not reset timers.
 
 @item OS.chDir @var{file}
 @findex OS.chDir
@@ -4956,7 +4959,7 @@ configuration buffer, but it can also be set explicitly.
 @itemx M-x twelf-get
 @findex M-x twelf-get
  Prints the value of the Twelf parameter PARM.
- When called interactively, promts for parameter, supporting completion.
+ When called interactively, prompts for parameter, supporting completion.
 
 @item C-c C-i
 @itemx M-x twelf-server-interrupt
@@ -5506,7 +5509,7 @@ older Elf implementations and is therefore slower.
 lexer, and @samp{=} (equality) is now a reserved identifier.  The syntax
 of @code{%name} declarations has changed by allowing only one preferred
 name to be specified.  Also, @code{%name}, @code{%infix}, @code{%prefix}
-and @code{%posftix} declarations must be terminated by a period @samp{.}
+and @code{%postfix} declarations must be terminated by a period @samp{.}
 which previously was optional.  Further, single lines comments now must
 start with @samp{%@var{whitespace}} or @samp{%%} in order to avoid
 misspelled keywords of the form @samp{%@var{keyword}} to be ignored.
@@ -5521,7 +5524,7 @@ Twelf: polymorphism and the classification of @math{type} as a type.
 @item Searching for definitions (@pxref{Solve Declaration})
   Elf had a special top-level query form @code{sigma [x:A] B} which
 searched for a solution @code{M : A} and then solved the result of
-subsituting @code{M} for @code{x} in @code{B}.  In Twelf this
+substituting @code{M} for @code{x} in @code{B}.  In Twelf this
 mechanism has been replaced by a declaration @code{%solve c : A} which
 searches for a solution @code{M : A} and then defines @code{c = M : A},
 where the remaining free variables are implicitly universally
