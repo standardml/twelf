@@ -118,8 +118,8 @@ struct
     | Lam of Dec * Term * Paths.region
     | Arrow of Term * Term
     | Pi of Dec * Term * Paths.region
-      (* always a type *)
     | Omitobj of IntSyn.Exp * Paths.region
+    | Implicit of IntSyn.Exp * Paths.region
     | Hastype of Term * Term * IntSyn.Exp
     | Root of Head * Spine
     | Redex of Term * Spine
@@ -207,15 +207,12 @@ struct
   (* Translating identifiers once they have been classified *)
   (* as constant, bound variable, or free variable *)
 
-  val dummyRegion = Paths.Reg (0, 0)
-
   (* Constant *)
   fun const ((H, conDec), r) =
       let
         fun supplyImplicit (0) = TermSyn.Nil
           | supplyImplicit (i) =
-              TermSyn.App (TermSyn.Omitobj (IntSyn.newTypeVar (IntSyn.Null),
-                                            dummyRegion),
+              TermSyn.App (TermSyn.Implicit (IntSyn.newTypeVar (IntSyn.Null), r),
                            supplyImplicit (i-1))
       in
         TermSyn.Root (TermSyn.Const (H, conDec, r),
@@ -331,7 +328,7 @@ struct
   (* ------------------------------------------------------------------------ *)
   (* Begin tracing code *)
 
-  val trace = ref false
+  val trace = ref true
 
   fun evarsToString (Xnames) =
       let
@@ -453,23 +450,23 @@ struct
       end
 
   (* Checking universe level restrictions *)
-  fun checkUni (La, r) =
+  fun checkUni (La, r, msg) =
       (case whnfApprox (La)
          of (IntSyn.Uni (_)) => ()
-          | _ => error (r, "Classifier is not a type or kind"))
+          | _ => error (r, msg))
 
-  fun checkType (La, r) =
+  fun checkType (La, r, msg) =
       (case whnfApprox (La)
          of (IntSyn.Uni (IntSyn.Type)) => ()
-          | _ => error (r, "Classifier is not a type"))
+          | _ => error (r, msg))
 
-  fun getUni (La, r) =
+  fun getUni (La, r, msg) =
       (case whnfApprox (La)
 	 of (IntSyn.Uni (level)) => level
-          | _ => (error (r, "Classifier is not a type or kind"); IntSyn.Type))
+          | _ => (error (r, msg); IntSyn.Type))
 
-  fun checkClassTerm (TermSyn.Term, r) = ()
-    | checkClassTerm (_, r) = error (r, "Object is not at term level")
+  fun checkClassTerm (TermSyn.Term, r, msg) = ()
+    | checkClassTerm (_, r, msg) = error (r, msg)
 
   fun getClassClassifier (C, Va') =
       let
@@ -538,7 +535,7 @@ struct
       let
         val r1Opt = approxReconDec (Ga, Da1)
         val (Va2, C2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), Ua2)
-        val _ = checkClassTerm (C2, r2)
+        val _ = checkClassTerm (C2, r2, "Body of abstraction is not at term level")
       in
         (IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe), Va2), TermSyn.Term,
          Paths.join (r, r2))
@@ -546,9 +543,9 @@ struct
     | approxRecon (Ga, TermSyn.Arrow (Ua1, Ua2)) =
       let
         val (La1, C1, r1) = approxReconShow (Ga, Ua1)
-        val _ = checkType (La1, r1)
+        val _ = checkType (La1, r1, "Domain of function is not a type")
         val (La2, C2, r2) = approxReconShow (Ga, Ua2)
-        val _ = checkUni (La2, r2)
+        val _ = checkUni (La2, r2, "Range of function is not a type or kind")
         val C = case (C1, C2)
                   of (TermSyn.Type Va1, TermSyn.Type Va2) =>
                      TermSyn.Type (IntSyn.Pi ((IntSyn.Dec (NONE, Va1),
@@ -563,7 +560,7 @@ struct
       let
         val _ = approxReconDec (Ga, Da1)
         val (La2, C2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), Ua2)
-        val _ = checkUni (La2, r2)
+        val _ = checkUni (La2, r2, "Range of function is not a type or kind")
         val C = case (C2)
                   of TermSyn.Type Va2 =>
                      TermSyn.Type (IntSyn.Pi ((IntSyn.Dec (x, Va1),
@@ -576,14 +573,16 @@ struct
       end
     | approxRecon (Ga, TermSyn.Omitobj (Va, r)) =
         (Va, TermSyn.Term, r)
+    | approxRecon (Ga, TermSyn.Implicit (Va, r)) =
+        (Va, TermSyn.Term, r)
     | approxRecon (Ga, TermSyn.Hastype (Ua1, Ua2, Va2_cache)) =
       let
         val (Va1, C1, r1) = approxReconShow (Ga, Ua1)
         val (La2, C2, r2) = approxReconShow (Ga, Ua2)
-        val _ = case (C1, getUni (La2, r2))
+        val _ = case (C1, getUni (La2, r2, "Classifier in ascription is not a type or kind"))
                   of (TermSyn.Term, IntSyn.Type) => ()
                    | (TermSyn.Type _, IntSyn.Kind) => ()
-                   | _ => error (r1, "Ascription applied to term at invalid level")
+                   | _ => error (r1, "Ascription applied to object at invalid level")
         val Va2 = getClassClassifier (C2, Va2_cache)
       in
         shape (Va1, Va2)
@@ -631,7 +630,7 @@ struct
     | approxReconSpine (Ga, Va, r, TermSyn.App (Ua, sp)) =
       let
         val (Va1, C1, r1) = approxReconShow (Ga, Ua)
-        val _ = checkClassTerm (C1, r1)
+        val _ = checkClassTerm (C1, r1, "Argument to function is not at term level")
         val (Va1', Va2') = ensurePiApprox (Va)
       in
         shape (Va1, Va1')
@@ -644,7 +643,7 @@ struct
          of SOME (Ua) =>
             let
               val (La, C, r) = approxReconShow (Ga, Ua)
-              val _ = checkType (La, r)
+              val _ = checkType (La, r, "Classifier in declaration is not a type")
               val _ = getClassClassifier (C, Va)
             in
               SOME (r)
@@ -784,6 +783,13 @@ struct
       in
         (X, V, Va, Paths.leaf (r))
       end
+    | recon (G, Ga, TermSyn.Implicit (Va, r)) =
+      let
+        val V = approxToTypeVar (G, Va, r, "Ambiguous type for implicit argument\n")
+        val X = newLoweredEVar (G, (V, IntSyn.id))
+      in
+        (X, V, Va, Paths.leaf (r))
+      end
     | recon (G, Ga, TermSyn.Hastype (Ua1, Ua2, Va2)) =
       let
         val (U1, V1, Va1, oc1) = reconShow (G, Ga, Ua1)
@@ -885,7 +891,7 @@ struct
       let
         val Ua = tm (Ga)
         val (La, C, r) = approxReconShow (Ga, Ua)
-        val _ = checkType (La, r)
+        val _ = checkType (La, r, "Classifier in declaration is not a type")
       in
         Ua
       end
@@ -958,7 +964,7 @@ struct
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
 	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) tm
-	val _ = checkType (L, Paths.toRegion oc)
+	val _ = checkType (L, Paths.toRegion oc, "Query is not a type")
 	val Xs = Names.namedEVars ()
 	val _ = if freeVar (optName, Xs)
 		  then error (Paths.toRegion oc,
@@ -987,7 +993,7 @@ struct
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
 	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
-	val level = getUni (L, Paths.toRegion oc)
+	val level = getUni (L, Paths.toRegion oc, "Classifier in declaration is not a type or kind")
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
@@ -1008,7 +1014,7 @@ struct
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName, r)
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
-	val level = getUni (L, Paths.toRegion oc2)
+	val level = getUni (L, Paths.toRegion oc2, "Classifier in definition is not a type or kind")
 	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) tm1
 	val _ = (Timers.time Timers.recon unify) (IntSyn.Null, (V', IntSyn.id), (V, IntSyn.id))
 	        handle Unify.Unify (msg) => hasTypeError (IntSyn.Null, (V', oc1), (V, oc2), msg)
