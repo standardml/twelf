@@ -26,6 +26,7 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 			sharing Subordinate.IntSyn = IntSyn
 		      structure FunTypeCheck :FUNTYPECHECK
 			sharing FunTypeCheck.FunSyn = FunSyn
+			sharing FunTypeCheck.StateSyn = StateSyn'
 		      structure Index : INDEX
 		        sharing Index.IntSyn = IntSyn
 		      structure Print : PRINT
@@ -827,7 +828,10 @@ struct
        Side effect: If Sl contains inactive states, an exception is raised
     *)
     fun apply (Operator (_, Sl, I)) = 
-      map (fn (Active S) => S
+      map (fn (Active S) => 
+	       (if (!Global.doubleCheck) then FunTypeCheck.isState S else ();
+		S)
+		
 	    | InActive => raise Error "Not applicable: leftover constraints")
       Sl
       

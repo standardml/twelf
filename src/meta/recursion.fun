@@ -17,6 +17,7 @@ functor MTPRecursion (structure Global : GLOBAL
 			sharing MTPAbstract.StateSyn = StateSyn'
 		      structure FunTypeCheck : FUNTYPECHECK
 			sharing FunTypeCheck.FunSyn = FunSyn
+			sharing FunTypeCheck.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 			sharing MTPrint.StateSyn = StateSyn'
 		      structure Whnf : WHNF
@@ -57,6 +58,12 @@ struct
 
     datatype Dec =			(* Newly created *)
       Lemma of int * F.For		(* Residual Lemma *)
+
+
+    fun closedCtx (I.Null) = ()
+      | closedCtx (I.Decl (G, D)) = 
+        if Abstract.closedDec (G, (D, I.id)) then raise Domain
+	else closedCtx G
 
 
     (*  spine n = S'
@@ -141,7 +148,7 @@ struct
 					  (* G' |- s'' : G0 *)
 	  val (GB'', s'', af'') = createCtx ((G', B'), ll, s') 
 	in
-	  (GB'', s'', fn AF => af'' (A.Block ((G, t, List.length G1, G2'), AF)))
+	  (GB'', s'', fn AF => A.Block ((G, t, List.length G1, G2'), af'' AF))
 	end
 
 
@@ -194,7 +201,7 @@ struct
        It is not yet clear what should happen if there are inductive calls where more
        then one contextblocks are introduced --cs 
     *)
-    fun checkLabels ((G', B'), (V, s), ll as nil, l) =
+    fun checkLabels ((G', B'), (V, s), ll (* as nil *), l) =
         if l < 0 then NONE
 	else
 	  let 
@@ -210,7 +217,7 @@ struct
 	    if not (List.exists (fn l' => l = l') ll) andalso checkCtx (G', G2', (V, s)) then SOME l
 	    else checkLabels ((G', B'), (V, s), ll, l-1)
 	  end
-      | checkLabels _ = NONE  (* more than one context block is introduced *)
+(*      | checkLabels _ = NONE  (* more than one context block is introduced *) *)
 
 
     (* appendRL (Ds1, Ds2) = Ds'
@@ -756,6 +763,7 @@ struct
 	end
       | selectFormula (nih, (Gall, Fex, Oex), S as S.State (ncurrent, (G0, B0), (_, _), _, Ocurrent, H, F)) =
 	let
+
 	  val Ds = recursion ((nih, Gall, Fex, Oex), (ncurrent, (G0, B0), nil, Ocurrent, H, F))
 	in
 	  (nih+1, updateState (S, (Ds, I.id)))
@@ -763,6 +771,8 @@ struct
 
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
       let 
+	val _ = if (!Global.doubleCheck) then FunTypeCheck.isState S else ();
+
 	val (_, S') = selectFormula (1, (I.Null, IH, OH), S)
       in
 	S'
@@ -770,7 +780,9 @@ struct
 
     
 
-    fun apply S = S
+    fun apply S = 
+      (if (!Global.doubleCheck) then FunTypeCheck.isState S else ();
+       S)
 
     fun menu _ = "Recursion (calculates ALL new assumptions & residual lemmas)" 
 

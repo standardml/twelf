@@ -473,6 +473,10 @@ struct
 	of I.Null => true
          | _ => false
 
+    fun closedCtx I.Null = true
+      | closedCtx (I.Decl (G, D)) =
+          closedCtx G andalso closedDec (G, (D, I.id))
+
     fun evarsToK (nil) = I.Null
       | evarsToK (X::Xs) = I.Decl (evarsToK (Xs), EV(X))
 
@@ -500,5 +504,6 @@ struct
 
     val collectEVars = collectEVars
 
+    val closedCtx = closedCtx
   end
 end;  (* functor Abstract *)

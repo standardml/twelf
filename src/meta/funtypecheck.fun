@@ -460,6 +460,7 @@ struct
     *)
     fun isState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
         (TypeCheck.typeCheckCtx G;
+	 if (not (Abstract.closedCtx G)) then raise Error "State context not closed!" else ();
 	 map (fn (n', F') => (isFor (G, F') 
 (* ;	      TextIO.print ("Checked: " ^ (FunPrint.Formatter.makestring_fmt (FunPrint.formatForBare (G, F'))) ^ "\n") *) )) H;    
 	 (* n' is not checked for consistency   --cs *)
