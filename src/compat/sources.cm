@@ -5,8 +5,14 @@ Library
   signature COMPAT_TIMER
   signature COMPAT
   structure Compat
-#if defined(MLton)
+#if defined(BASIS_2002)
   (* Empty *)
+#elif defined(MLton)
+  (* MLton < 20030716 *)
+  signature ARRAY_SLICE
+  structure ArraySlice
+  signature VECTOR_SLICE
+  structure VectorSlice
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
   signature ARRAY_SLICE
   structure ArraySlice
@@ -23,7 +29,7 @@ is
   timer.sig
   compat.sig
   compat.fun
-#if defined(MLton)
+#if defined(BASIS_2002)
   compat.sml
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
   timer-97.sml
@@ -40,8 +46,14 @@ is
   path-97.sml
   compat-97.sml    
 #endif
-#if defined(MLton)
+#if defined(BASIS_2002)
   (* Empty *)
+#elif defined(MLton)
+  (* MLton < 20030716 *)
+  array-slice.sig
+  array-slice.sml
+  vector-slice.sig
+  vector-slice.sml
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
   array-slice.sig
   array-slice.sml

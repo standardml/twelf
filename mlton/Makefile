@@ -36,7 +36,13 @@ twelf-server: ;
 	@echo "*************************************************"
 	@echo "Twelf $(version): Server"
 	@echo "*************************************************"
-	$(sml) -output bin/$(twelfserver) mlton/twelf-server.cm ;
+	if [ `$(sml) | awk '{ print $$2 }'` -ge 20030716 ]; then	\
+		$(sml) mlton/twelf-server.cm ;				\
+		mv mlton/twelf-server bin/$(twelfserver) ;		\
+	else								\
+		$(sml) mlton/twelf-server-97.cm ;			\
+		mv mlton/twelf-server-97 bin/$(twelfserver) ;		\
+	fi
 
 twelf-sml: ; 
 	@echo "*************************************************"

@@ -1,6 +1,5 @@
 (* MLton version *)
-(* For use with MLton >= 20030716 *)
-(* If using cmcat to generate this file, please invoke with "-D BASIS_2002" *)
+(* For use with MLton < 20030716 *)
 Group is
 ../src/compat/array.sig
 ../src/compat/vector.sig
@@ -8,7 +7,10 @@ Group is
 ../src/compat/timer.sig
 ../src/compat/compat.sig
 ../src/compat/compat.fun
-../src/compat/compat.sml
+../src/compat/array-97.sml
+../src/compat/vector-97.sml
+../src/compat/timer-97.sml
+../src/compat/compat-smlnj98.sml
 ../src/timing/timing.sml
 ../src/timing/timers.sig
 ../src/timing/timers.fun
@@ -26,6 +28,8 @@ Group is
 ../src/table/string-hash.sig
 ../src/table/string-hash.sml
 ../src/table/red-black-tree.fun
+../src/compat/vector-slice.sig
+../src/compat/vector-slice.sml
 ../src/table/sparse-array.sig
 ../src/table/sparse-array.fun
 ../src/table/sparse-array2.sig
@@ -97,6 +101,8 @@ Group is
 ../src/tabling/tabledsyn.fun
 ../src/tabling/tabled.sml
 ../src/subordinate/intset.sml
+../src/compat/array-slice.sig
+../src/compat/array-slice.sml
 ../src/subordinate/subordinate.sig
 ../src/subordinate/subordinate.fun
 ../src/subordinate/subordinate.sml
