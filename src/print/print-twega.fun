@@ -40,8 +40,8 @@ local
     (* I.Skonst, I.FVar cases should be impossible *)
 
   (* fmtUni (L) = "L" *)
-  fun fmtUni (I.Type) = Str "tw~type"
-    | fmtUni (I.Kind) = Str "tw~kind"
+  fun fmtUni (I.Type) = Str "tw*type"
+    | fmtUni (I.Kind) = Str "tw*kind"
 
   (* fmtExpW (G, (U, s)) = fmt
      
@@ -61,13 +61,13 @@ local
 			 val G' = I.Decl (G, D')
 		       in
 			 sexp [Str "tw~pi", F.Break, fmtDec (G, (D', s)),
-			       F.Break, Str "tw*no", F.Break, fmtExp (G', (V2, I.dot1 s))]
+			       F.Break, Str "tw*maybe", F.Break, fmtExp (G', (V2, I.dot1 s))]
 		       end
 	  | I.No => let
 		       val G' = I.Decl (G, D)
 		    in
 		      sexp [Str "tw~pi", F.Break, fmtDec (G, (D, s)),
-			    F.Break, Str "tw*maybe", F.Break, fmtExp (G', (V2, I.dot1 s))]
+			    F.Break, Str "tw*no", F.Break, fmtExp (G', (V2, I.dot1 s))]
 		    end)
     | fmtExpW (G, (I.Root (H, S), s)) =
 	 sexp [Str "tw~root", F.Break, fmtCon (G, H),
@@ -96,9 +96,9 @@ local
 	       F.Break, fmtSpine (G, (S, s))]
 
   and fmtDec (G, (I.Dec (NONE, V), s)) =
-        sexp [Str "tw~dec", F.Break, Str "nil", F.Break, fmtExp (G, (V, s))]
+        sexp [Str "tw~decl", F.Break, Str "nil", F.Break, fmtExp (G, (V, s))]
     | fmtDec (G, (I.Dec (SOME(x), V), s)) =
-	sexp [Str "tw~dec", F.Break, Name x, F.Break, fmtExp (G, (V, s))]
+	sexp [Str "tw~decl", F.Break, Name x, F.Break, fmtExp (G, (V, s))]
 
   (* fmtConDec (condec) = fmt
      formats a constant declaration (which must be closed and in normal form)
@@ -109,7 +109,7 @@ local
       let
 	val _ = Names.varReset ()
       in
-	sexp [Str "tw*condec", F.Space, Name (name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
@@ -119,7 +119,7 @@ local
       let
 	val _ = Names.varReset ()
       in
-	sexp [Str "tw*condef", F.Space, Name (name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtUni (L)]
