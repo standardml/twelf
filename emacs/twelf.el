@@ -272,6 +272,11 @@ This is unsupported in some versions of Emacs.")
 (defvar twelf-config-mode nil
   "Non-NIL means the Twelf Config minor mode is in effect.")
 
+(defvar twelf-check-config-clears-server-buffer nil
+  "If non-NIL, twelf-check-config clears the server buffer before any
+new output is written.  This improves memory usage when repeatedly
+checking large systems of files.")
+
 ;;;----------------------------------------------------------------------
 ;;; Internal variables
 ;;;----------------------------------------------------------------------
@@ -1239,6 +1244,8 @@ If necessary, this will start up an Twelf server process."
       (call-interactively 'twelf-server-configure))
   (twelf-server-sync-config)
   (twelf-focus nil nil)
+  (if twelf-check-config-clears-server-buffer
+      (twelf-clear-server-buffer))
   (twelf-server-send-command "Config.load")
   (twelf-server-wait displayp))
 
@@ -1666,11 +1673,18 @@ created if it doesn't exist."
                (get-buffer-create *twelf-server-buffer-name*)))
           (save-window-excursion
             (set-buffer twelf-server-buffer)
-            (buffer-disable-undo)
+	    (buffer-disable-undo)
             (twelf-server-mode)
             (setq *twelf-server-buffer* twelf-server-buffer))
           twelf-server-buffer)
       (error "No Twelf server buffer"))))
+
+(defun twelf-clear-server-buffer ()
+  "Clear the server buffer."
+  (let ((twelf-server-buffer (twelf-get-server-buffer)))
+    (save-window-excursion
+      (set-buffer twelf-server-buffer)
+      (erase-buffer))))
 
 (defun twelf-init-variables ()
   "Initialize variables that track Twelf server state."
