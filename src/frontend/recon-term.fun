@@ -91,13 +91,6 @@ struct
     open IntSyn
   in
   
-  fun cidToHead c =
-      (case IntSyn.sgnLookup c
-         of ConDec _ => Const c
-          | SkoDec _ => Skonst c
-          | ConDef _ => Def c
-          | AbbrevDef _ => NSDef c)
-
   fun headConDec (Const c) = sgnLookup c
     | headConDec (Skonst c) = sgnLookup c
     | headConDec (Def d) = sgnLookup d
@@ -341,6 +334,11 @@ struct
           else ()
         end
   
+    fun findOmitted (G, qid, r) =
+          (error (r, "Undeclared identifier "
+                     ^ Names.qidToString (valOf (Names.constUndef qid)));
+           omitted (r))
+
     fun findBVar' (Null, name, k) = NONE
       | findBVar' (Decl (G, Dec (NONE, _)), name, k) =
           findBVar' (G, name, k+1)
@@ -359,7 +357,16 @@ struct
     fun findConst fc (G, qid, r) =
         (case Names.constLookup qid
            of NONE => fc (G, qid, r)
-            | SOME cid => constant (cidToHead cid, r))
+            | SOME cid =>
+	      (case IntSyn.sgnLookup cid
+		 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
+	          | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
+		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
+		  | _ => 
+		    (error (r, "Invalid identifier\n"
+			    ^ "Identifier `" ^ Names.qidToString qid
+			    ^ "' is not a constant, definition or abbreviation");
+		     omitted (r))))
 
     fun findCSConst fc (G, qid, r) =
         (case Names.unqualified qid
@@ -374,11 +381,6 @@ struct
         (case Names.unqualified qid
            of NONE => fc (G, qid, r)
             | SOME name => (if !queryMode then evar else fvar) (name, r))
-
-    fun findOmitted (G, qid, r) =
-          (error (r, "Undeclared identifier "
-                     ^ Names.qidToString (valOf (Names.constUndef qid)));
-           omitted (r))
 
     fun findLCID x = findBVar (findConst (findCSConst findOmitted)) x
     fun findUCID x = findBVar (findConst (findCSConst (findEFVar findOmitted))) x
@@ -1047,6 +1049,7 @@ struct
              (mismatch (tm', tm'', location_msg, problem_msg), B'')
            end)
         end
+
         else
         let
           val (tm', B', V') = inferExact (G, tm)

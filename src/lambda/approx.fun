@@ -204,7 +204,7 @@ struct
           of Level 1 (* Type *) => (Undefined, V', L')
            | _ (* Kind/Hyperkind *) =>
              let
-               val (U', _) = expToApx (U)
+               val (U', _ (* V' *)) = expToApx (U)
              in
                (U', V', L')
              end

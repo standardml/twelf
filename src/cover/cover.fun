@@ -861,7 +861,7 @@ struct
     *)
     fun blockCases (G, Vs, cid, (Gsome, piDecs), sc) =
         let
-	  val t = createEVarSub Gsome	(* accounts for subordination *)
+	  val t = createEVarSub Gsome
 	  (* . |- t : Gsome *)
 	  val lvar = I.newLVar (cid, t)
 	  val t' = I.comp (t, I.Shift (I.ctxLength (G)))
