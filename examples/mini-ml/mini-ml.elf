@@ -15,4 +15,4 @@ lam  : (exp -> exp) -> exp.
 app  : exp -> exp -> exp.
 letv : exp -> (exp -> exp) -> exp.
 letn : exp -> (exp -> exp) -> exp.
-% fix  : (exp -> exp) -> exp.
+fix  : (exp -> exp) -> exp.

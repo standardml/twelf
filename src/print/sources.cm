@@ -9,6 +9,9 @@ Library
   structure PrintXML
   structure PrintTwega
   structure PrintOMDoc
+  signature SYMBOL
+  structure SymbolAscii
+  structure SymbolTeX
 is
 #if defined(NEW_CM)
   $/basis.cm
