@@ -615,6 +615,12 @@ struct
 	in
 	  IntSyn.ConDef (name, imp, U', V', L)
 	end
+      | nameConDec' (IntSyn.NSConDef (name, imp, U, V, L)) =
+	let 
+	  val (U', V') = defEName (U, V)
+	in
+	  IntSyn.NSConDef (name, imp, U', V', L)
+	end
       | nameConDec' (skodec) = skodec (* fix ??? *)
 
     (* Assigns names to variables in a constant declaration *)

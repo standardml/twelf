@@ -230,6 +230,12 @@ struct
 	    (* Undef should be impossible *)
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
+      | whnfRoot ((NSDef (d), S), s) =
+	 let
+	   val NSConDef (_, _, U, _, _) = sgnLookup d
+	 in
+	   whnfRedex (whnf (U, id), (S, s))  
+	 end
       | whnfRoot ((H, S), s) =
 	 (Root (H, SClo (S, s)), id)
 

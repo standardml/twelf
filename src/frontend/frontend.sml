@@ -159,6 +159,7 @@ structure Solve =
 	 structure Compile = Compile
 	 structure Trail = Trail
 	 structure AbsMachine = TMachine
+	 structure Strict = Strict
 	 structure Print = Print);
 
 structure Twelf =
@@ -175,7 +176,6 @@ structure Twelf =
 	 structure Parsing = Parsing
 	 structure Parser = Parser
 	 structure TypeCheck = TypeCheck
-	 structure Strict = Strict
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
 	 structure TpReconQ = TpTraceQ

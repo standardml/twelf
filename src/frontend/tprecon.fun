@@ -195,7 +195,8 @@ struct
 	 of NONE => NONE
           | SOME(cid) => (case IntSyn.sgnLookup(cid)
 			    of IntSyn.ConDec (_, i, V, _) => SOME(IntSyn.Const(cid), i, V)
-			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)))
+			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)
+			     | IntSyn.NSConDef  (_, i, _, V, _) => SOME(IntSyn.NSDef(cid), i, V)))
 
 
   (* Translating identifiers once they have been classified *)
@@ -545,9 +546,11 @@ struct
 	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
-	val cd = Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
 	val ocd = Paths.def (r, i, oc1, SOME(oc2))
-        val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
+        val cd = if Strict.check ((U'', V''), SOME(ocd)) then
+	           Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
+		 else
+		   Names.nameConDec (IntSyn.NSConDef (name, i, U'', V'', level))
         val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()
@@ -572,9 +575,11 @@ struct
 	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
-	val cd = Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
 	val ocd = Paths.def (r, i, oc1, NONE)
-        val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
+        val cd = if Strict.check ((U'', V''), SOME(ocd)) then
+	           Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
+		 else
+	           Names.nameConDec (IntSyn.NSConDef (name, i, U'', V'', level))
         val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()

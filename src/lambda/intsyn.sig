@@ -41,7 +41,8 @@ sig
     BVar  of int			(* H ::= k                    *)
   | Const of cid			(*     | c                    *)
   | Skonst of cid			(*     | c#                   *)
-  | Def   of cid			(*     | d                    *)
+  | Def   of cid			(*     | d (strict)           *)
+  | NSDef of cid			(*     | d (non strict)       *)
   | FVar  of string * Exp * Sub		(*     | F[s]                 *)
 
   and Spine =				(* Spines:                    *)
@@ -76,6 +77,8 @@ sig
     ConDec of string * int		(* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of string * int		(* a = A : K : kind  or       *)
+              * Exp * Exp * Uni		(* d = M : A : type           *)
+  | NSConDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | SkoDec of string * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)

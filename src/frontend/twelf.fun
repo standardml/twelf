@@ -25,8 +25,6 @@ functor Twelf
      sharing Parser.ExtSyn.Paths = Paths
      sharing Parser.ExtSynQ.Paths = Paths
    structure TypeCheck : TYPECHECK
-   structure Strict : STRICT
-     sharing Strict.IntSyn = IntSyn'
    structure Constraints : CONSTRAINTS
      sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
@@ -215,7 +213,6 @@ struct
 	      | ThmRecon.Error (msg) => abortFileMsg (fileName, msg)
 	      | TypeCheck.Error (msg) => abort ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
-	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
 	      (* | Constraints.Error (eqns) => abortFileMsg (fileName, constraintsMsg eqns) *)
 	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
@@ -283,7 +280,6 @@ struct
 	(let
 	  val conDec = Solve.solve ((name, tm), Paths.Loc (fileName, r))
 	  val conDec' = Names.nameConDec (conDec)
-	  val _ = Strict.check (conDec', NONE)
 	  (* allocate cid after strictness has been checked! *)
 	  val cid = installConDec (conDec', (fileName, NONE))
 	  val _ = if !Global.chatter >= 3

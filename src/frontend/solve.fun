@@ -29,6 +29,9 @@ functor Solve
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn
+   structure Strict : STRICT
+     sharing Strict.IntSyn = IntSyn'
+     sharing Strict.Paths = TpReconQ.Paths
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn')
  : SOLVE =
@@ -170,7 +173,10 @@ struct
 	 raise AbortQuery ("No solution to %solve found"))
 	handle Solution (i,(U,V)) =>
 	  let
-	    val conDec = IntSyn.ConDef (name, i, U, V, IntSyn.Type)
+	    val conDec = if Strict.check ((U, V), NONE) then 
+	                   IntSyn.ConDef (name, i, U, V, IntSyn.Type)
+			 else
+	                   IntSyn.NSConDef (name, i, U, V, IntSyn.Type)
 	  in
 	    conDec
 	  end  (* solve _ handle Solution => _ *)

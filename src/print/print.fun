@@ -584,6 +584,20 @@ local
 		 sym "=", F.Space,
 		 Ufmt, sym "."]
       end
+    | fmtConDec (hide, I.NSConDef (name, imp, U, V, L)) =
+      (* reset variable names in between to align names of type V and definition U *)
+      let
+	val _ = Names.varReset ()
+	val (G, V, U) = if hide then skipI2 (imp, I.Null, V, U) else (I.Null, V, U)
+	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
+	(* val _ = Names.varReset () *)
+	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
+      in
+	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+		 Vfmt, F.Break,
+		 sym "=", F.Space,
+		 Ufmt, sym "."]
+      end
 
   (* fmtEqn assumes that G is a valid printing context *)
   fun fmtEqn (I.Eqn (G, U1, U2)) =

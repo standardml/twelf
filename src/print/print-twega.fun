@@ -124,6 +124,15 @@ local
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
+    | fmtConDec (I.NSConDef (name, imp, U, V, L)) =
+      let
+	val _ = Names.varReset ()
+      in
+	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
+	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
+	      F.Break, fmtExp (I.Null, (V, I.id)),
+	      F.Break, fmtUni (L)]
+      end
 
   (* fmtEqn assumes that G is a valid printing context *)
   fun fmtEqn (I.Eqn (G, U1, U2)) = (* print context?? *)
