@@ -89,6 +89,55 @@ struct
 
   fun joinRegions (oc1, oc2) = Paths.join (Paths.toRegion oc1, Paths.toRegion oc2)
 
+  (* ------------------------------------------------------------------------ *)
+  (* Begin tracing code *)
+
+  val trace = ref false
+
+  fun evarsToString (Xnames) =
+      let
+	val inst = Print.evarInstToString (Xnames)
+	val constrOpt = Print.evarConstrToStringOpt (Xnames)
+      in
+	case constrOpt
+	  of NONE => inst
+	   | SOME(constr) => inst ^ "\nConstraints:\n" ^ constr
+      end
+
+  fun unify (G, (V1, s1), (V2, s2)) =
+      if not (!trace) then Unify.unify (G, (V1, s1), (V2, s2))
+      else 
+      let 
+	val Xs = Abstract.collectEVars (G, (V2, s2), Abstract.collectEVars (G, (V1, s1), nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+	val eqnsFmt = F.HVbox [F.String "|?", F.Space,
+			       Print.formatEqn (IntSyn.Eqn (G, IntSyn.EClo (V1, s1), 
+							    IntSyn.EClo (V2, s2)))]
+	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
+	val _ = Unify.unify (G, (V1, s1), (V2, s2))
+	val _ = print (evarsToString (Xnames) ^ "\n")
+      in
+	()
+      end
+
+  fun showInferred (G, ((U, V), oc)) =
+      if not (!trace) then ()
+      else 
+      let
+	val Xs = Abstract.collectEVars (G, (U, IntSyn.id),
+					Abstract.collectEVars (G, (V, IntSyn.id), nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
+	val jFmt = F.HVbox [F.String "|-", F.Space, Print.formatExp (G, U), F.Break,
+			    F.String ":", F.Space, Print.formatExp (G, V)]
+	val _ = print (F.makestring_fmt jFmt ^ "\n")
+      in
+	()
+      end
+      
+
+  (* End tracing code *)
+  (* ------------------------------------------------------------------------ *)
+
   fun mismatchError (G, (V1', s), ((U2, V2), oc2), msg) =
       let
 	val r = Paths.toRegion oc2
@@ -252,13 +301,18 @@ struct
 
   and app2 (tm2) (G, SS) (V1) =
          (* convert tm2 early to obtain error location *)
-         app2' (tm2 (G, nilSS)) (G, SS) (V1)
+      let
+	val ((U2, V2), oc2) = tm2 (G, nilSS)
+	val _ = showInferred (G, ((U2, V2), oc2))
+      in
+         app2' ((U2, V2), oc2) (G, SS) (V1)
+      end
 
   and app2' (UV2 as ((U2, V2), oc2)) (G, SS) (V1) =
       (case Whnf.whnf (V1, IntSyn.id)
 	 of (IntSyn.Pi ((IntSyn.Dec (x, V1'), P), V1''), s) =>
 	    let
-	      val _ = Unify.unify (G, (V1', s), (V2, IntSyn.id))
+	      val _ = unify (G, (V1', s), (V2, IntSyn.id))
 		      handle Unify.Unify(msg) => mismatchError (G, (V1', s), UV2, msg)
 	      (* ignore mismatch error and continue *)
 	      val ((S, V), os) = SS (IntSyn.EClo (V1'', Whnf.dotEta (IntSyn.Exp(U2), s)))
@@ -275,7 +329,7 @@ struct
 	      (* the other case (V1 = Pi x:A. K) applies *)
 	      val V = IntSyn.Pi ((D', IntSyn.Maybe), V1'')
 	    in
-	      Unify.unify (G, (V1, s), (V, IntSyn.id))
+	      unify (G, (V1, s), (V, IntSyn.id))
 	      handle Unify.Unify (msg) => extraneousError (G, (V1, s), (U2, oc2));
 	      (* ignore error and continue *)
 	      (* now, first case must apply *)
@@ -286,9 +340,11 @@ struct
   fun arrow (tm1, tm2) (G, SS) =
       let
 	val ((V1, L1), oc1) = tm1 (G, nilSS)
+	val _ = showInferred (G, ((V1, L1), oc1))
 	val _ = checkType (L1, Paths.toRegion oc1)
 	val D1 = IntSyn.Dec (NONE, V1)
 	val ((V2, L2), oc2) = tm2 (G, nilSS)
+	val _ = showInferred (G, ((V2, L2), oc2))
 	val _ = checkUni (L2, Paths.toRegion oc2)
 	val r = joinRegions (oc1, oc2)
       in
@@ -312,9 +368,11 @@ struct
   fun hastype (tm1, tm2) (G, SS) =
       let
 	val ((U1, V1), oc1) = tm1 (G, nilSS)
+	val _ = showInferred (G, ((U1, V1), oc1))
 	val ((V2, L2), oc2) = tm2 (G, nilSS)
+	val _ = showInferred (G, ((V2, L2), oc2))
 	val _ = checkUni (L2, Paths.toRegion oc2)
-	val _ = Unify.unify (G, (V1, IntSyn.id), (V2, IntSyn.id))
+	val _ = unify (G, (V1, IntSyn.id), (V2, IntSyn.id))
 	        handle Unify.Unify(msg) => hasTypeError (G, (V1, oc1), (V2, oc2), msg)
       (* regions apply only to normal forms: errors in type ascriptions are hard *)
       (* to trace -- V2 and oc2 are ignored below. -fp *)
@@ -353,6 +411,7 @@ struct
       let
 	val (D1 as IntSyn.Dec (x, V1), oc1Opt) = dec G
 	val ((V2, L2), oc2) = tm (IntSyn.Decl (G, D1), nilSS)
+	val _ = showInferred (IntSyn.Decl (G, D1), ((V2, L2), oc2))
 	val _ = checkUni (L2, Paths.toRegion oc2)
 	val r = Paths.join (r1, Paths.toRegion oc2)
       in
@@ -373,6 +432,7 @@ struct
       let
 	val (D1 as IntSyn.Dec (x, V1), oc1Opt) = dec G
 	val ((U2, V2), oc2) = tm (IntSyn.Decl (G, D1), nilSS)
+	val _ = showInferred (IntSyn.Decl (G, D1), ((U2, V2), oc2))
 	val ((S, V), os) = SS (IntSyn.Pi ((D1, IntSyn.Maybe), V2))
 	val r = Paths.join (r1, Paths.toRegion oc2)
       in
@@ -401,6 +461,7 @@ struct
   fun dec (x, tm) (G) =
       let
 	val ((V, L), oc) = tm (G, nilSS)
+	val _ = showInferred (G, ((V, L), oc))
 	val _ = checkType (L, Paths.toRegion (oc))
       in
 	(IntSyn.Dec (x, V), SOME(oc))
@@ -446,7 +507,13 @@ struct
   (* termToExp0 (tm) = ((U,V), oc) 
      where . |- U : V
   *)
-  fun termToExp0 (tm) = tm (IntSyn.Null, nilSS)
+  fun termToExp0 (tm) =
+      let
+	val ((U, V), oc) = tm (IntSyn.Null, nilSS)
+	val _ = showInferred (IntSyn.Null, ((U, V), oc))
+      in
+	((U, V), oc)
+      end
 
   (* freeVar (XOpt, [(X1,"X1"),...,(Xn,"Xn")]) = true
      iff XOpt = SOME("Xi"), false otherwise
