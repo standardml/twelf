@@ -215,10 +215,11 @@ struct
     | apxToExactW (G, U, Vs as (I.Root (I.FVar (name, _, _), _), s), allowed) =
       let
         val (V, L, _ (* Next L *)) = findByReplacementName (name)
+        val Uni L = whnf L
       in
-        case whnf L
-          of Uni (Level 1) => I.newEVar (G, I.EClo Vs)
-           | Uni (Level 2) =>
+        case whnfUni L
+          of Level 1 => I.newEVar (G, I.EClo Vs)
+           | Level 2 =>
              (* U must be a CVar *)
              let
                val name' = getReplacementName (whnf U, V, Level 2, allowed)
