@@ -1,0 +1,31 @@
+#!/bin/bash
+
+export SML="sml-cm"
+export TWELF_VERSION="1-3R4"
+
+###################### do not edit after this ###############################
+
+# build the documentation
+cd doc/guide
+make
+make install
+cd ../..
+
+# update load.sml
+echo 'CM.mkusefile "load.sml";' | $SML
+
+# cleanup
+bin/clean
+make clean
+
+# build FILES
+cd ..
+find twelf -type f -print | sort > twelf/DISTRIBUTE.files
+cd twelf
+sed -f DISTRIBUTE.sed DISTRIBUTE.files > FILES
+cd ..
+
+# create the tarball
+tar cvf "twelf-$TWELF_VERSION.tar" `cat twelf/FILES`
+gzip -9 "twelf-$TWELF_VERSION.tar"
+
