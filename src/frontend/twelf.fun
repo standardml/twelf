@@ -386,6 +386,7 @@ struct
 	          mdecs
 	  val _ = List.app (fn (mdec, r) => ModeCheck.checkMode mdec (* exception comes with location *)
 			    handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg))
+	          mdecs
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%mode " ^ ModePrint.modesToString
 				           (List.map (fn (mdec, r) => mdec) mdecs)
@@ -401,6 +402,7 @@ struct
 	  val mdecs = List.map ModeRecon.modeToMode mterms
 	  val _ = List.app (fn (mdec, r) => Cover.checkCovers mdec
 			    handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg)))
+	          mdecs
 	  val _ = if !Global.chatter >= 3
 		    then print ("%covers " ^ ModePrint.modesToString
 				             (List.map (fn (mdec, r) => mdec) mdecs)
