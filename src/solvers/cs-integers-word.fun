@@ -580,8 +580,12 @@ struct
                                       pi ("P", plusExp (bvar 3, bvar 2, bvar 1),
                                           Uni (Type))))),
                                 Kind),
-                        NONE, nil);
-
+                        NONE,
+                        [MS.Mapp(MS.Marg(MS.Star, SOME "X"),
+                                 MS.Mapp(MS.Marg(MS.Star, SOME "Y"),
+                                         MS.Mapp(MS.Marg(MS.Star, SOME "Z"),
+                                                 MS.Mapp(MS.Marg(MS.Star, SOME "P"),
+                                                         MS.Mnil))))]);
             proofPlusID := 
               installF (ConDec ("proof+", NONE, 0, Normal,
                                 pi ("X", word (),
@@ -601,7 +605,12 @@ struct
                                       pi ("P", timesExp (bvar 3, bvar 2, bvar 1),
                                           Uni (Type))))),
                                 Kind),
-                        NONE, nil);
+                        NONE,
+                        [MS.Mapp(MS.Marg(MS.Star, SOME "X"),
+                                 MS.Mapp(MS.Marg(MS.Star, SOME "Y"),
+                                         MS.Mapp(MS.Marg(MS.Star, SOME "Z"),
+                                                 MS.Mapp(MS.Marg(MS.Star, SOME "P"),
+                                                         MS.Mnil))))]);
  
             proofTimesID := 
               installF (ConDec ("proof*", NONE, 0, Normal,
@@ -622,7 +631,12 @@ struct
                                       pi ("P", quotExp (bvar 3, bvar 2, bvar 1),
                                           Uni (Type))))),
                                 Kind),
-                        NONE, nil);
+                        NONE,
+                        [MS.Mapp(MS.Marg(MS.Star, SOME "X"),
+                                 MS.Mapp(MS.Marg(MS.Star, SOME "Y"),
+                                         MS.Mapp(MS.Marg(MS.Star, SOME "Z"),
+                                                 MS.Mapp(MS.Marg(MS.Star, SOME "P"),
+                                                         MS.Mnil))))]);
 
             proofQuotID := 
               installF (ConDec ("proof/", NONE, 0, Normal,
