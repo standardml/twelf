@@ -1,0 +1,5 @@
+Optimized evaluation based on a distinction between
+values and expression, plus the correctness with
+respect to the formulation in the notes.
+
+Author: David Swasey, March 1999

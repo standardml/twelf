@@ -1,0 +1,77 @@
+%%% Equivalence of evaluation (completeness direction)
+%%% Author: David Swasey
+
+eq  : eval* E* V* -> rep E* E -> repv V* V -> eval E V -> type.
+%mode eq +D* +R -RV -D.
+
+%% We need the following lemma so that we can express the (ev_v*) case
+%% of equivalence in a way that the termination checker enjoys.
+%%
+%% vev is the familiar property that Mini-ML values evaluate to
+%% themselves stated in a way which we can use directly.  Ie, consider
+%% the two lemmas:
+%%
+%% val2 : repv V* V -> value V -> type. %mode val2 +RV -VD.
+%% val1 : value V -> eval V V -> type.  %mode val1 +VD -D.
+%%
+%% Then vev follows from the rule:
+%%
+%% vev_all : vev RV D <- val2 RV VD <- val1 VD D.
+
+vev : repv V* V -> eval V V -> type.
+%mode vev +RV -D.
+
+vev_z	 : vev (rv_z) (ev_z).
+vev_s    : vev (rv_s RV) (ev_s D)
+	    <- vev RV D.
+vev_pair : vev (rv_pair RV2 RV1) (ev_pair D2 D1)
+	    <- vev RV1 D1
+	    <- vev RV2 D2.
+vev_lam  : vev (rv_lam _) (ev_lam).
+
+%terminates RV (vev RV _).
+
+% Values
+eq_val       : eq (ev_v*) (r_val R) R D
+		<- vev R D.
+
+% Natural Numbers
+eq_z         : eq (ev_z*) (r_z) (rv_z) (ev_z).
+eq_s         : eq (ev_s* D*) (r_s R) (rv_s RV) (ev_s D)
+		<- eq D* R RV D.
+eq_case_z    : eq (ev_case_z* D*2 D*1) (r_case _ R2 R1) RV (ev_case_z D2 D1)
+		<- eq D*1 R1 (rv_z) D1
+		<- eq D*2 R2 RV D2.
+eq_case_s    : eq (ev_case_s* D*3 D*1) (r_case R3 _ R1) RV (ev_case_s D3 D1)
+		<- eq D*1 R1 (rv_s RV1) D1
+		<- eq D*3 (R3 V*1 V1 RV1) RV D3.
+
+% Pairs
+eq_pair      : eq (ev_pair* D*2 D*1) (r_pair R2 R1) (rv_pair RV2 RV1)
+		(ev_pair D2 D1)
+		<- eq D*1 R1 RV1 D1
+		<- eq D*2 R2 RV2 D2.
+eq_fst       : eq (ev_fst* D*) (r_fst R) RV (ev_fst D)
+		<- eq D* R (rv_pair _ RV) D.
+eq_snd       : eq (ev_snd* D*) (r_snd R) RV (ev_snd D)
+		<- eq D* R (rv_pair RV _) D.
+
+% Functions
+eq_lam       : eq (ev_lam*) (r_lam R) (rv_lam R) (ev_lam).
+eq_app       : eq (ev_app* D*3 D*2 D*1) (r_app R2 R1) RV (ev_app D3 D2 D1)
+		<- eq D*1 R1 (rv_lam RV1) D1
+		<- eq D*2 R2 RV2 D2
+		<- eq D*3 (RV1 V*2 V2 RV2) RV D3.
+
+% Definitions
+eq_letv      : eq (ev_letv* D*2 D*1) (r_letv R2 R1) RV (ev_letv D2 D1)
+		<- eq D*1 R1 RV1 D1
+		<- eq D*2 (R2 V1* V1 RV1) RV D2.
+eq_letn      : eq (ev_letn* D*) (r_letn R2 R1) RV (ev_letn D)
+		<- eq D* (R2 E1* E1 R1) RV D.
+
+% Recursion
+eq_fix       : eq (ev_fix* D*) (r_fix R) RV (ev_fix D)
+		<- eq D* (R (fix' E*) (fix E) (r_fix R)) RV D.
+
+%terminates D (eq D _ _ _).

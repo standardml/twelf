@@ -1,0 +1,97 @@
+%%% Equivalence of evaluation (soundness direction)
+%%% Author: David Swasey
+
+eq* : eval E V -> rep* E E* -> repv* V V* -> eval* E* V* -> type.
+%mode eq* +D +R* -RV* -D*.
+
+% Natural Numbers
+eq*_z        : eq* (ev_z) (r*_z) (rv*_z) (ev_z*).
+eq*_s        : eq* (ev_s D) (r*_s R*) (rv*_s RV*) (ev_s* D*)
+		<- eq* D R* RV* D*.
+eq*_case_z   : eq* (ev_case_z D2 D1) (r*_case _ R*2 R*1) RV*
+			(ev_case_z* D*2 D*1)
+		<- eq* D1 R*1 (rv*_z) D*1
+		<- eq* D2 R*2 RV* D*2.
+eq*_case_s   : eq*
+		(ev_case_s D3 D1)
+		(r*_case R*3 _ R*1)
+		RV*
+		(ev_case_s* D*3 D*1)
+		<- eq* D1 R*1 (rv*_s RV*1) D*1
+		<- eq* D3 (R*3 V1 V*1 RV*1) RV* D*3.
+
+% Pairs
+eq*_pair     : eq* (ev_pair D2 D1) (r*_pair R2 R1) (rv*_pair RV*2 RV*1)
+			(ev_pair* D*2 D*1)
+		<- eq* D1 R1 RV*1 D*1
+		<- eq* D2 R2 RV*2 D*2.
+eq*_fst      : eq* (ev_fst D) (r*_fst R) RV*1 (ev_fst* D*)
+		<- eq* D R (rv*_pair _ RV*1) D*.
+eq*_snd      : eq* (ev_snd D) (r*_snd R) RV*2 (ev_snd* D*)
+		<- eq* D R (rv*_pair RV*2 _) D*.
+
+% Functions
+eq*_lam      : eq* (ev_lam) (r*_lam R*) (rv*_lam R*) (ev_lam*).
+eq*_app      : eq*
+		(ev_app D3 D2 D1)
+		(r*_app R*2 R*1)
+		RV*
+		(ev_app* D*3 D*2 D*1)
+		<- eq* D1 R*1 (rv*_lam RV*1) D*1
+		<- eq* D2 R*2 RV*2 D*2
+		<- eq* D3 (RV*1 V2 V*2 RV*2) RV* D*3.
+
+% Definitions
+eq*_letv     : eq*
+		(ev_letv D2 D1)
+		(r*_letv R*2 R*1)
+		RV*
+		(ev_letv* D*2 D*1)
+		<- eq* D1 R*1 RV*1 D*1
+		<- eq* D2 (R*2 V1 V*1 RV*1) RV* D*2.
+eq*_letn     : eq*
+		(ev_letn D)
+		(r*_letn R*2 R*1)
+		RV*
+		(ev_letn* D*)
+		<- eq* D (R*2 E1 E*1 R*1) RV* D*.
+
+% Recursion
+eq*_fix      : eq*
+		(ev_fix D)
+		(r*_fix R1*)
+		RV*
+		(ev_fix* D*)  
+		<- eq* D (R1* (fix E) (fix' E*) (r*_fix R1*)) RV* D*.
+
+% Values.  We need a lemma:
+
+vlem : eval E V -> repv* E V* -> repv* V V* -> type.
+%mode vlem +D +RE* -RV*.
+
+vlem_z      : vlem (ev_z) (rv*_z) (rv*_z).
+vlem_s      : vlem (ev_s D) (rv*_s RE*) (rv*_s RV*)
+	       <- vlem D RE* RV*.
+vlem_pair   : vlem (ev_pair D2 D1) (rv*_pair RE*2 RE*1) (rv*_pair RV*2 RV*1)
+	       <- vlem D1 RE*1 RV*1
+	       <- vlem D2 RE*2 RV*2.
+vlem_lam    : vlem (ev_lam) (rv*_lam RE*) (rv*_lam RE*).
+
+%terminates RE* (vlem _ RE* _).
+
+eq*_val      : eq* D (r*_val RE*) RV* (ev_v*)
+		<- vlem D RE* RV*.
+
+%{
+Note, the following can be proved by induction on RE*.
+
+Claim: If we have D : eval E V and RE* : repv* E V*
+then E = V, so that RE* : repv* V V*.
+
+So we could replace the eq*_val above by
+eq*_val : eq* D (r*_val RV*) RV* (ev_v*).
+
+We use the more explicit code given above for stylistic reasons.
+}%
+
+%terminates D (eq* D R* RV* D*).

@@ -1,0 +1,60 @@
+%%% Representation of Mini-ML* expressions in Mini-ML
+%%% Author: David Swasey
+
+rep : exp* -> exp -> type. %name rep R.
+%mode rep +E* -E.
+
+repv : val* -> exp -> type. %name repv RV.
+%mode repv +V* -V.
+
+% Coercion
+r_val    : rep (val V') E <- repv V' E.
+
+% Natural Numbers
+r_z      : rep z' z.
+r_s      : rep (s' E1') (s E1)
+	    <- rep E1' E1.
+r_case   : rep (case' E1' E2' E3') (case E1 E2 E3)
+	    <- rep E1' E1
+	    <- rep E2' E2
+	    <- ({x':val*} {x:exp} repv x' x -> rep (E3' x') (E3 x)).
+
+% Pairs
+r_pair   : rep (pair' E1' E2') (pair E1 E2)
+	    <- rep E1' E1
+	    <- rep E2' E2.
+r_fst    : rep (fst' E') (fst E)
+	    <- rep E' E.
+r_snd    : rep (snd' E') (snd E)
+	    <- rep E' E.
+
+% Functions
+r_lam    : rep (lam' E') (lam E)
+	    <- ({x':val*} {x:exp} repv x' x -> rep (E' x') (E x)).
+r_app    : rep (app' E1' E2') (app E1 E2)
+	    <- rep E1' E1
+	    <- rep E2' E2.
+
+% Definitions
+r_letv   : rep (letv' E1' E2') (letv E1 E2)
+	    <- rep E1' E1
+	    <- ({x':val*} {x:exp} repv x' x -> rep (E2' x') (E2 x)).
+r_letn   : rep (letn' E1' E2') (letn E1 E2)
+	    <- rep E1' E1
+	    <- ({x':exp*} {x:exp} rep x' x -> rep (E2' x') (E2 x)).
+
+% Recursion
+r_fix    : rep (fix' E') (fix E)
+	    <- ({x':exp*} {x:exp} rep x' x -> rep (E' x') (E x)).
+
+% Values
+rv_z     : repv z* z.
+rv_s     : repv (s* V*) (s V)
+	    <- repv V* V.
+rv_pair  : repv (pair* V*1 V*2) (pair V1 V2)
+	    <- repv V*1 V1
+	    <- repv V*2 V2.
+rv_lam   : repv (lam* E*) (lam E)
+	    <- ({x:val*} {x':exp} repv x x' -> rep (E* x) (E x')).
+
+%terminates (E' V') (rep E' _) (repv V' _).

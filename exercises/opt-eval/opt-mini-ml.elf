@@ -1,0 +1,23 @@
+%%% The Mini-ML* Language
+%%% Author:  David Swasey, based on the twelf mini-ml example
+
+exp* : type.  %name exp* E*.
+val* : type.  %name val* V*.
+
+z'     : exp*.
+s'     : exp* -> exp*.
+case'  : exp* -> exp* -> (val* -> exp*) -> exp*.
+pair'  : exp* -> exp* -> exp*.
+fst'   : exp* -> exp*.
+snd'   : exp* -> exp*.
+lam'   : (val* -> exp*) -> exp*.
+app'   : exp* -> exp* -> exp*.
+letv'  : exp* -> (val* -> exp*) -> exp*.
+letn'  : exp* -> (exp* -> exp*) -> exp*.
+fix'   : (exp* -> exp*) -> exp*.
+val    : val* -> exp*.
+
+z*     : val*.
+s*     : val* -> val*.
+pair*  : val* -> val* -> val*.
+lam*   : (val* -> exp*) -> val*.

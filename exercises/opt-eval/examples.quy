@@ -1,0 +1,33 @@
+%%% Soundness direction
+
+% First example.  Fails because rep* x is undefined.
+
+e1 : exp = (app (lam [x] fst x) (pair z (s z))).
+%solve d1 : eval e1 V1.
+%solve r1* : rep* e1 E1*.
+%query 1 *
+eq* d1 r1* RV1* D1*.
+
+% Second example.  Fails because of argument order in eq*_fst.
+
+e2 : exp = fst (pair z (s z)).
+%solve d2 : eval e2 V2.
+%solve r2* : rep* e2 E2*.
+
+%query 1 *
+eq* d2 r2* RV2* D2*.
+
+% Third example.  Fails because of parameter in eq*_fst.
+e3 : exp = fst (pair z z).
+%solve d3 : eval e3 V3.
+%solve r3* : rep* e3 E3*.
+
+%query 1 *
+eq* d3 r3* RV3* D3*.
+
+%%% Completeness direction
+e1* : exp* = (app' (lam' [x'] fst' (val x')) (pair' (val z*) (s' z'))).
+%solve d1* : eval* e1* V1*.
+%solve r1 : rep e1* E1.
+%query 1 *
+eq d1* r1 RV1 D.

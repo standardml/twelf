@@ -1,0 +1,15 @@
+%theorem vlem :
+  forall* {E}{E*}{V}{V*}
+  forall {D:eval E V} {RE*:repv* E E*}
+  exists {RV*:repv* V V*}
+  true.
+
+%prove 3 RE* (vlem _ RE* _).
+
+%theorem eq* :
+  forall* {E}{V}{E*}{V*}
+  forall {D:eval E V} {R*:rep* E E*}
+  exists {RV*:repv* V V*} {D*:eval* E* V*}
+  true.
+
+%prove 3 D (eq* D R* RV* D*).
