@@ -528,7 +528,7 @@ struct
             myID := cs;
 
             wordID := 
-              installF (ConDec ("word" ^ Int.toString(W.wordSize), NONE, 0,
+              installF (ConDec ("word" ^ Int.toString(wordSize'), NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE : FX.fixity option, [MS.Mnil]);
