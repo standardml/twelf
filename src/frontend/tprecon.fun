@@ -516,7 +516,7 @@ struct
 	val _ = Names.varReset ()
 	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
 	val level = getUni (L, Paths.toRegion oc)
-        val (i, V') = (Timers.time Timers.abstract Abstract.abstractDec) V
+        val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
 	val cd = IntSyn.ConDec (name, i, V', level)
