@@ -599,8 +599,8 @@ local
       fmtEqn (I.Eqn (Names.ctxLUName G, U1, U2))
 
   fun fmtEqns (nil) = [Str "Empty Constraint"]
-    | fmtEqns (E::nil) = fmtEqn E :: Str "." :: nil
-    | fmtEqns (E::Es) = fmtEqn E :: Str ";" :: F.Break :: fmtEqns Es
+    | fmtEqns (E::nil) = fmtEqnName E :: Str "." :: nil
+    | fmtEqns (E::Es) = fmtEqnName E :: Str ";" :: F.Break :: fmtEqns Es
 
   (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
      instantiations of EVars occurring in queries.  To that end, a list of
