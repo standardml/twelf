@@ -1,4 +1,6 @@
 Library
+  signature TIMING
+  structure Timing
   signature LEXER
   structure Lexer
   signature TWELF
