@@ -7,21 +7,24 @@ functor TMachine (structure IntSyn' : INTSYN
 		    sharing CompSyn'.IntSyn = IntSyn'
 		  structure Unify : UNIFY
 		    sharing Unify.IntSyn = IntSyn'
-		  structure Index : INDEX
-		    sharing Index.IntSyn = IntSyn'
 
                   structure Assign : ASSIGN
 		    sharing Assign.IntSyn = IntSyn'
 
+		  structure Index : INDEX
+		    sharing Index.IntSyn = IntSyn'
+
                   structure CPrint : CPRINT 
                     sharing CPrint.IntSyn = IntSyn'
                     sharing CPrint.CompSyn = CompSyn'
+
 		  structure Names : NAMES
 		    sharing Names.IntSyn = IntSyn'
-		  structure Trace : TRACE
-		    sharing Trace.IntSyn = IntSyn'
 		  structure CSManager : CS_MANAGER
-		    sharing CSManager.IntSyn = IntSyn')
+		    sharing CSManager.IntSyn = IntSyn'
+
+		  structure Trace : TRACE
+		    sharing Trace.IntSyn = IntSyn')
   : ABSMACHINE =
 struct
 
@@ -30,25 +33,10 @@ struct
 
   local
     structure I = IntSyn
-    structure T = Trace
-    structure N = Names
     structure C = CompSyn
 
-    (* Wed Mar 13 10:27:00 2002 -bp  *)
-    (* should probably go to intsyn.fun *)
-    fun compose(IntSyn.Null, G) = G
-    | compose(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose(G, G'), D)
-    
-    fun subgoalNum (I.Nil) = 1
-      | subgoalNum (I.App (U, S)) = 1 + subgoalNum S
-
-    (* currently unused *)
-    fun goalToType (C.All (D, g), s) =
-          I.Pi ((I.decSub (D,s), I.Maybe), goalToType (g, I.dot1 s))
-      | goalToType (C.Impl (_, A, _, g), s) =
-	  I.Pi ((I.Dec (NONE, I.EClo (A, s)), I.No), goalToType (g, I.dot1 s))
-      | goalToType (C.Atom(p), s) =
-	  I.EClo (p, s)
+    structure T = Trace
+    structure N = Names
 
   (* We write
        G |- M : g
@@ -66,32 +54,47 @@ struct
      return to indicate backtracking.
   *)
 
-  fun cidFromHead (I.Const a) = a
-    | cidFromHead (I.Def a) = a
-                              
-  fun eqHead (I.Const a, I.Const a') = a = a'
-    | eqHead (I.Def a, I.Def a') = a = a'
-    | eqHead _ = false
-         
-  (* should probably go to intsyn.fun Mon Mar 25 16:04:47 2002 -bp *)
-  fun compose'(IntSyn.Null, G) = G
-    | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+    fun raiseType (I.Null, U) = U
+      | raiseType (I.Decl(G, D), U) = I.Lam(D, raiseType (G, U))
 
-  fun shift (IntSyn.Null, s) = s
-    | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
-                     
+    fun cidFromHead (I.Const a) = a
+      | cidFromHead (I.Def a) = a
+
+    fun eqHead (I.Const a, I.Const a') = a = a'
+      | eqHead (I.Def a, I.Def a') = a = a'
+      | eqHead _ = false
+
+    (* Wed Mar 13 10:27:00 2002 -bp  *)
+    (* should probably go to intsyn.fun *)
+    fun compose(IntSyn.Null, G) = G
+    | compose(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose(G, G'), D)
+    
+    fun shiftSub (IntSyn.Null, s) = s
+      | shiftSub (IntSyn.Decl(G, D), s) = I.dot1 (shiftSub (G, s))
+                              
+    fun subgoalNum (I.Nil) = 1
+      | subgoalNum (I.App (U, S)) = 1 + subgoalNum S
+
+    (* currently unused *)
+    fun goalToType (C.All (D, g), s) =
+          I.Pi ((I.decSub (D,s), I.Maybe), goalToType (g, I.dot1 s))
+      | goalToType (C.Impl (_, A, _, g), s) =
+	  I.Pi ((I.Dec (NONE, I.EClo (A, s)), I.No), goalToType (g, I.dot1 s))
+      | goalToType (C.Atom(p), s) =
+	  I.EClo (p, s)
+
   (* solve' ((g, s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
        G |- s : G'
        G' |- g  goal
        if  G |- M : g[s]
-       then  sc M  is evaluated to res'
+       then  sc M  is evaluated to
+
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
-  fun solve' ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
-      matchAtom ((p,s), dp, sc)
+  fun solve' ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) = matchAtom ((p,s), dp, sc)
     | solve' ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decUName (G, I.Dec(NONE, I.EClo(A,s)))
@@ -188,8 +191,8 @@ struct
 	   false)
     | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), HcHa, cnstr, sc) =
       let
-	val G'' = compose'(G', G)
-	val s' = shift (G', s)
+	val G'' = compose (G', G)
+	val s' = shiftSub (G', s)
       in 
 	if Assign.unifiable (G'', (N, s'), (e1, s'))
 	   then aSolve ((eqns, s), dp, HcHa, cnstr, sc)
@@ -271,7 +274,7 @@ struct
                    ())
               else (* shallow backtracking *)
                 ();
-              matchSig sgn')
+              matchSigDet sgn')
 	      handle SucceedOnce S =>  sc (I.Root(Hc, S))
 	    end
 
@@ -314,25 +317,22 @@ struct
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =
 	      matchDProg (dPool', k+1)
-        fun matchConstraint (solve, try) =
+        fun matchConstraint (cnstrSolve, try) =
               let
-                val resOpt =
-                  CSManager.trail   (* trail to undo EVar instantiations *)
+                val succeeded =
+                  CSManager.trail
                     (fn () =>
-                       case (solve (G, I.SClo (S, s), try))
-                         of SOME(U) => SOME(sc (U))
-                          | NONE => NONE)
+                       case (cnstrSolve (G, I.SClo (S, s), try))
+                         of SOME(U) => (sc U; true)
+                          | NONE => false)
               in
-                case resOpt
-                  of SOME _ =>
-                       (if (not deterministic)
-                        then matchConstraint (solve, try+1)
-                        else ())
-                   | NONE => ()
+                if succeeded
+                then matchConstraint (cnstrSolve, try+1)
+                else ()      
               end
       in
         case I.constStatus(cidFromHead Ha)
-          of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
+          of (I.Constraint (cs, cnstrSolve)) => matchConstraint (cnstrSolve, 0)
            | _ => matchDProg (dPool, 1)
       end
 
