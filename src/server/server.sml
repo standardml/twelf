@@ -115,6 +115,15 @@ struct
   fun tableStrategyToString (Twelf.Table.Variant) = "Variant"
     | tableStrategyToString (Twelf.Table.Subsumption) = "Subsumption"
 
+  fun getReconTraceMode ("Progressive"::nil) = Twelf.Recon.Progressive
+    | getReconTraceMode ("Omniscient"::nil) = Twelf.Recon.Omniscient
+    | getReconTraceMode (nil) = error "Missing tracing reconstruction mode"
+    | getReconTraceMode (t::nil) = error (quote t ^ " is not a tracing reconstruction mode\n(must be Progressive or Omniscient)")
+    | getReconTraceMode (ts) = error "Extraneous arguments"
+
+  fun reconTraceModeToString (Twelf.Recon.Progressive) = "Progressive"
+    | reconTraceModeToString (Twelf.Recon.Omniscient) = "Omniscient"
+                                                        
   (* Setting Twelf parameters *)
   fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
     | setParm ("doubleCheck"::ts) = Twelf.doubleCheck := getBool ts
@@ -126,6 +135,8 @@ struct
     | setParm ("Print.width"::ts) = Twelf.Print.width := getNat ts
     | setParm ("Trace.detail"::ts) = Twelf.Trace.detail := getNat ts
     | setParm ("Compile.optimize"::ts) = Twelf.Compile.optimize := getBool ts
+    | setParm ("Recon.trace"::ts) = Twelf.Recon.trace := getBool ts
+    | setParm ("Recon.traceMode"::ts) = Twelf.Recon.traceMode := getReconTraceMode ts
     | setParm ("Prover.strategy"::ts) = Twelf.Prover.strategy := getStrategy ts
     | setParm ("Prover.maxSplit"::ts) = Twelf.Prover.maxSplit := getNat ts
     | setParm ("Prover.maxRecurse"::ts) = Twelf.Prover.maxRecurse := getNat ts
@@ -145,6 +156,8 @@ struct
     | getParm ("Print.width"::ts) = Int.toString (!Twelf.Print.width)
     | getParm ("Trace.detail"::ts) = Int.toString (!Twelf.Trace.detail)
     | getParm ("Compile.optimize"::ts) = Bool.toString (!Twelf.Compile.optimize)
+    | getParm ("Recon.trace"::ts) = Bool.toString (!Twelf.Recon.trace)
+    | getParm ("Recon.traceMode"::ts) = reconTraceModeToString (!Twelf.Recon.traceMode)
     | getParm ("Prover.strategy"::ts) = strategyToString (!Twelf.Prover.strategy)
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
     | getParm ("Prover.maxRecurse"::ts) = Int.toString (!Twelf.Prover.maxRecurse)

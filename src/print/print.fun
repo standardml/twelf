@@ -40,7 +40,8 @@ local
   (* fmtEVar (G, X) = "X", the name of the EVar X *)
   (* Effect: Names.evarName will assign a name if X does not yet have one *)
   fun fmtEVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X)))
-  fun fmtAVar (G, X) = Str0 (Symbol.evar (Names.evarName'(G, X) ^ "_"))
+  (* should probably be a new Symbol constructor for AVars -kw *)
+  fun fmtAVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X) ^ "_"))
 
   (* isNil S = true iff S == Nil *)
   fun isNil (I.Nil) = true
@@ -65,6 +66,7 @@ local
 		then sTS (I.Dot (I.Idx (k+1), I.Shift(k+1)), S)
 	      else (* k >= depth *) S
 	    | sTS (I.Dot(I.Idx(k), s), S) =
+                (* Eta violation, but probably inconsequential -kw *)
 		sTS (s, I.App(I.Root(I.BVar(k), I.Nil), S))
 	    | sTS (I.Dot(I.Exp(U), s), S) =
 		sTS (s, I.App(U, S))

@@ -271,7 +271,7 @@ struct
 		      parseExp' (f', P.resolve (r, postfixOp (prec, tm), p))
 	end
       | parseExp' (LS.Cons((L.UNDERSCORE,r), s), p) =
-          parseExp (s, P.shiftAtom (ExtSyn.omitobj r, p))
+          parseExp (s, P.shiftAtom (ExtSyn.omitted r, p))
       | parseExp' (LS.Cons((L.TYPE,r), s), p) =
 	  parseExp (s, P.shiftAtom (ExtSyn.typ r, p))
       | parseExp' (LS.Cons((L.COLON,r), s), p) =
@@ -298,6 +298,11 @@ struct
 	  (P.reduceAll (r, p), f)
       | parseExp' (f as LS.Cons((L.EOF,r), s), p) =
 	  (P.reduceAll (r, p), f)
+        (* for some reason, there's no dot after %define decls -kw *)
+      | parseExp' (f as LS.Cons((L.SOLVE,r), s), p) =
+          (P.reduceAll (r, p), f)
+      | parseExp' (f as LS.Cons((L.DEFINE,r), s), p) =
+          (P.reduceAll (r, p), f)
       | parseExp' (LS.Cons((L.STRING(str),r), s), p) =
           parseExp (s, P.shiftAtom (ExtSyn.scon (str,r), p))
       | parseExp' (LS.Cons((t,r), s), p) =

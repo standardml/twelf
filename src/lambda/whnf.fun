@@ -319,6 +319,29 @@ struct
     fun expandDef (Root (Def (d), S), s) = 
 	  whnfRedex (whnf (constDef (d), id), (S, s))
 
+    fun newLoweredEVarW (G, (Pi ((D, _), V), s)) =
+        let
+          val D' = decSub (D, s)
+        in
+          Lam (D', newLoweredEVar (Decl (G, D'), (V, dot1 s)))
+        end
+      | newLoweredEVarW (G, Vs) = newEVar (G, EClo Vs)
+
+    and newLoweredEVar (G, Vs) = newLoweredEVarW (G, whnf Vs)
+
+    fun newSpineVarW (G, (Pi ((Dec (_, Va), _), Vr), s)) =
+        let
+          val X = newLoweredEVar (G, (Va, s))
+        in
+          App (X, newSpineVar (G, (Vr, dotEta (Exp (X), s))))
+        end
+      | newSpineVarW (G, _) = Nil
+                   
+    and newSpineVar (G, Vs) = newSpineVarW (G, whnf Vs)
+                   
+    fun spineToSub (Nil, s) = s
+      | spineToSub (App (U, S), s) = spineToSub (S, dotEta (Exp (U), s))
+
     (* inferSpine ((S, s1), (V, s2)) = (V', s')
 
        Invariant:
@@ -538,6 +561,10 @@ struct
     val etaExpandRoot = etaExpandRoot
     val whnfEta = whnfEta
     val lowerEVar = lowerEVar
+
+    val newLoweredEVar = newLoweredEVar
+    val newSpineVar = newSpineVar
+    val spineToSub = spineToSub
 
     val normalize = normalizeExp
     val normalizeDec = normalizeDec

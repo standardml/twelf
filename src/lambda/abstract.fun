@@ -527,16 +527,16 @@ struct
       | getLevel (I.Lam (_, U)) = getLevel U
       | getLevel (I.EClo (U,_)) = getLevel U
 
+    (* dead code under new reconstruction -kw
     (* checkType (V) = () if G |- V : type
 
        Invariant: G |- V : L' for some L'
     *)
-    (* this may no longer be possible because of two-phase reconstruction *)
-    (* Sun Apr  1 10:39:49 2001 -fp *)
     fun checkType V = 
         (case getLevel V
 	   of I.Type => ()
 	    | _ => raise Error "Typing ambiguous -- free type variable")
+    *)
 
     (* abstractKPi (K, V) = V'
        where V' = {{K}} V
@@ -554,14 +554,16 @@ struct
         let
           val V' = raiseType (GX, VX) 
 	  val V'' = abstractExp (K', 0, (V', I.id))
-	  val _ = checkType V''	
+          (* enforced by reconstruction -kw
+	  val _ = checkType V''	*)
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(NONE, V''), I.Maybe), V))
 	end
       | abstractKPi (I.Decl (K', FV (name,V')), V) =
 	let
 	  val V'' = abstractExp (K', 0, (V', I.id))
-	  val _ = checkType V''
+          (* enforced by reconstruction -kw
+	  val _ = checkType V'' *)
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(SOME(name), V''), I.Maybe), V))
 	end
@@ -599,12 +601,16 @@ struct
         let
 	  val V' = raiseType (GX, VX)
 	  val V'' = abstractExp (K', 0, (V', I.id))
+          (* enforced by reconstruction -kw
+	  val _ = checkType V''	*)
 	in
 	  I.Decl (abstractKCtx K', I.Dec (NONE, V''))
 	end
       | abstractKCtx (I.Decl (K', FV (name, V'))) =
 	let
 	  val V'' = abstractExp (K', 0, (V', I.id))
+          (* enforced by reconstruction -kw
+	  val _ = checkType V'' *)
 	in
 	  I.Decl (abstractKCtx K', I.Dec (SOME(name), V''))
 	end

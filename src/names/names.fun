@@ -542,6 +542,9 @@ struct
       | namePrefOf' (Univ _, NONE) = "x"
       | namePrefOf' (role, SOME(IntSyn.Const cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
       | namePrefOf' (role, SOME(IntSyn.Def cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
+        (* the following only needed because reconstruction replaces
+           undetermined types with FVars *)
+      | namePrefOf' (role, SOME(IntSyn.FVar _)) = namePrefOf'' (role, NONE)
 
     (* namePrefOf (role, V) = name
        where name is the preferred base name for a variable with type V
@@ -581,6 +584,11 @@ struct
   (*
      There are three data structures:
      1. varTable mapping names (strings) to EVars and FVar types
+          -- Actually, FVar types now handled entirely in recon-term.fun
+          -- where there needs to be more info for approximate types.
+          -- I don't see why EVar/BVar names should be generated apart from
+          -- FVar names anyway, since the latter are printed with "`".
+          -- -kw
      2. evarList mapping EVars to names (string)
      3. indexTable mapping base names B to integer suffixes to generate
         new names B1, B2, ...
@@ -589,11 +597,8 @@ struct
      EVars and FVars are local.
   *)
   local
-    datatype varEntry =
-        FVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* V, Va, set *)
-      | EVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* X, Va, set *)
-      | EVAR' of IntSyn.Exp * bool ref              (* X, set *) 
-      (* Fri Mar 15 16:33:04 2002 -bp  need this ? *)
+    datatype varEntry = EVAR of IntSyn.Exp (* X *)
+      (* remove this datatype? -kw *)
 
     (* varTable mapping identifiers (strings) to EVars and FVars *)
     (* A hashtable is too inefficient, since it is cleared too often; *)
@@ -603,6 +608,7 @@ struct
     val varLookup = StringTree.lookup varTable
     fun varClear () = StringTree.clear varTable
 
+    (* what is this for?  -kw *)
     val varContext : IntSyn.dctx ref = ref IntSyn.Null
 
     (* evarList mapping EVars to names *)
@@ -665,52 +671,17 @@ struct
     fun varReset G = (varClear (); evarReset (); indexClear ();
                       varContext := G)
 
-    (* getFVarType (name) = V
-       where V is the type ascribed to free variable `name'.
-       Returns a new type variable, if `name' has not been seen yet
-       Used in parsing declarations.
-       Effect: if `name' is new, enter the new type variable into the varTable.
-    *)
-    fun getFVarType (name) =
-        (case varLookup name
-	   of NONE => let
-			val V = IntSyn.newTypeVar (IntSyn.Null)	(* FVars typed in empty Ctx *)
-                        val Va = IntSyn.newTypeVar (IntSyn.Null)
-                        val set = ref false
-			val _ = varInsert (name, FVAR (V, Va, set));
-		      in 
-			 (V, Va, set)
-		      end
-            | SOME(FVAR(V)) => V)
-	    (* other cases should be impossible *)
-
-    (* getEVar (name) = X
-       where X is the EVar with name `name'.
-       If no EVar with this name exists, a new one will be
-       created in the empty context with variable type.
-       Used in parsing a query.
-       Effect: if `name' is new, enter the type EVar into the varTable and evarList.
-    *)
-    fun getEVar (name) =
-        (case varLookup name
-	   of NONE => let
-			val V = IntSyn.newTypeVar (!varContext)
-                        val Va = IntSyn.newTypeVar (IntSyn.Null)
-			val (X as (IntSyn.EVar(r,_,_,_))) = IntSyn.newEVar (!varContext, V)
-                        val set = ref false
-			val _ = varInsert (name, EVAR (X, Va, set))
-			val _ = evarInsert (X, name)
-		      in 
-			(X, Va, set)
-		      end
-            | SOME(EVAR(X)) => X)
-	    (* other cases should be impossible *)
+    (* addEVar (X, name) = ()
+       effect: adds (X, name) to varTable and evarList
+       assumes name not already used *)
+    fun addEVar (X, name) =
+        (evarInsert (X, name);
+         varInsert (name, EVAR(X)))
 
     fun getEVarOpt (name) =
         (case varLookup name
 	  of NONE => NONE
-           | SOME(EVAR(X, _, _)) => SOME(X)
-           | SOME(FVAR(_)) => NONE)
+           | SOME(EVAR(X)) => SOME(X))
 
     (* varDefined (name) = true iff `name' refers to a free variable, *)
     (* which could be an EVar for constant declarations or FVar for queries *)
@@ -783,6 +754,14 @@ struct
 	  (evarInsert (X, name);
 	   name)
 	end
+      | newEVarName (G, X as IntSyn.AVar(r)) =
+        let
+	  (* use name preferences below *)
+	  val name = tryNextName (G, namePrefOf' (Exist, NONE))
+	in
+	  (evarInsert (X, name);
+	   name)
+	end          
 
     (* evarName (G, X) = name
        where `name' is the print name X.
@@ -793,42 +772,8 @@ struct
         (case evarLookup X
 	   of NONE => let
 			val name = newEVarName (G, X)
-                        (* is it really necessary to put this in the
-                           varTable? -kw *)
-                        val Va = IntSyn.newTypeVar (IntSyn.Null)
 		      in
-			(varInsert (name, EVAR(X, Va, ref false));
-			 name)
-		      end
-            | SOME (name) => name)
-
-
-
-    (* newEvarName' (G, X) = name
-       where name is the next unused name appropriate for X,
-    *)
-    fun newEVarName' (G, X as IntSyn.AVar(r)) =
-        let
-	  (* use name preferences below *)
-	  val name = tryNextName (G, namePrefOf' (Exist, NONE))
-	in
-	  (evarInsert (X, name);
-	   name)
-	end
-
-    (* evarName' (G, X) = name
-       where `name' is the print name X.
-       If no name has been assigned yet, assign a new one.
-       Effect: if a name is assigned, update varTable
-    *)
-    fun evarName' (G, X) =
-        (case evarLookup X
-	   of NONE => let
-			val name = newEVarName' (G, X)
-                        (* is it really necessary to put this in the
-                           varTable? -kw *)
-		      in
-			(varInsert (name, EVAR'(X, ref false));
+			(varInsert (name, EVAR(X));
 			 name)
 		      end
             | SOME (name) => name)

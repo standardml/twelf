@@ -26,10 +26,20 @@ Group is
   lexer.fun
   parsing.sig
   parsing.fun
-  tprecon.sig
-  tprecon.fun
-  definerecon.sig
-  definerecon.fun
+  recon-term.sig
+  recon-term.fun
+  recon-condec.sig
+  recon-condec.fun
+  recon-query.sig
+  recon-query.fun
+(*
+  recon-mode.sig
+  recon-mode.fun
+  recon-thm.sig
+  recon-thm.fun
+  recon-module.sig
+  recon-module.fun
+*)
   moderecon.sig
   moderecon.fun
   thmrecon.sig
@@ -40,8 +50,6 @@ Group is
   parse-term.fun
   parse-condec.sig
   parse-condec.fun
-  parse-define.sig
-  parse-define.fun
   parse-query.sig
   parse-query.fun
   parse-fixity.sig
@@ -50,6 +58,10 @@ Group is
   parse-mode.fun 
   parse-thm.sig
   parse-thm.fun
+(*
+  parse-module.sig
+  parse-module.fun
+*)
   parse-modules.sig
   parse-modules.fun
   parser.sig

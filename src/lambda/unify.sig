@@ -33,7 +33,6 @@ sig
   val unify : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit	(* raises Unify *)
   val unifyW : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit (* raises Unify *)
   val unifyBlock : IntSyn.Block * IntSyn.Block -> unit (* raises Unify *)
-  val shape : IntSyn.Exp * IntSyn.Exp -> unit (* raises Unify *)
 
   val invertible : IntSyn.dctx * IntSyn.eclo * IntSyn.Sub * IntSyn.Exp option ref -> bool
   (* unifiable (G, Us,Us') will instantiate EVars as an effect *)

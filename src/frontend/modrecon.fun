@@ -1,23 +1,23 @@
 (* Elaboration for module expressions *)
 (* Author: Kevin Watkins *)
 
-functor ModRecon
+functor ReconModule
   (structure Global : GLOBAL
    structure IntSyn : INTSYN
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn
    structure Paths' : PATHS
-   structure TpRecon' : TP_RECON
-     sharing TpRecon'.IntSyn = IntSyn
-     sharing TpRecon'.Paths = Paths'
+   structure ReconTerm' : RECON_TERM
+     sharing ReconTerm'.IntSyn = IntSyn
+     sharing ReconTerm'.Paths = Paths'
    structure ModSyn' : MODSYN
      sharing ModSyn'.IntSyn = IntSyn
      sharing ModSyn'.Names = Names
    structure IntTree : TABLE where type key = int)
-  : MOD_RECON =
+  : RECON_MODULE =
 struct
 
-  structure ExtSyn = TpRecon'
+  structure ExtSyn = ReconTerm'
   structure Paths = Paths'
   structure ModSyn = ModSyn'
 
@@ -54,7 +54,7 @@ struct
         case Names.constLookupIn (ns, qid)
           of NONE => error (r1, "Undeclared identifier "
                             ^ Names.qidToString (valOf (Names.constUndefIn (ns, qid))))
-           | SOME cid => (cid, External tm, r2)::eqns
+           | SOME cid => (cid, External tm (* this is wrong because constants in the sig being instantiated might incorrectly appear in tm -kw *), r2)::eqns
       end
 
   fun addStructEqn (rEqns, r1, r2, ids, mid1, mid2) =

@@ -60,7 +60,7 @@ sig
 end;  (* signature THMEXTSYN *)
 
 
-signature THM_RECON =
+signature RECON_THM =
 sig
   structure ThmSyn : THMSYN
   include THMEXTSYN
@@ -78,4 +78,4 @@ sig
   val establishToEstablish : establish -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
   val assertToAssert : assert -> (ThmSyn.Callpats * Paths.region list)
   val wdeclTowDecl : wdecl -> (ThmSyn.WDecl * Paths.region list)
-end;  (* signature THM_RECON *)
+end;  (* signature RECON_THM *)

@@ -39,11 +39,11 @@ sig
 end;  (* signature EXTMODES *)
 
 
-signature MODE_RECON =
+signature RECON_MODE =
 sig
   structure ModeSyn : MODESYN
   include EXTMODES
 
   exception Error of string
   val modeToMode : modedec -> (ModeSyn.IntSyn.cid * ModeSyn.ModeSpine) * Paths.region
-end;  (* signature MODE_RECON *)
+end;  (* signature RECON_MODE *)

@@ -1,7 +1,7 @@
 (* Reconstructing Mode Declarations *)
 (* Author: Carsten Schuermann *)
 
-functor ModeRecon (structure Global : GLOBAL
+functor ReconMode (structure Global : GLOBAL
 		   structure ModeSyn' : MODESYN
 		   structure Whnf : WHNF
 		     sharing Whnf.IntSyn = ModeSyn'.IntSyn
@@ -13,13 +13,13 @@ functor ModeRecon (structure Global : GLOBAL
 		   structure ModeDec : MODEDEC
 		     sharing ModeDec.ModeSyn = ModeSyn'
 		     sharing ModeDec.Paths = Paths'
-		   structure TpRecon' : TP_RECON
-		     sharing TpRecon'.IntSyn = ModeSyn'.IntSyn
-                     sharing TpRecon'.Paths = Paths')
-  : MODE_RECON =
+		   structure ReconTerm' : RECON_TERM
+		     sharing ReconTerm'.IntSyn = ModeSyn'.IntSyn
+                     sharing ReconTerm'.Paths = Paths')
+  : RECON_MODE =
 struct
   structure ModeSyn = ModeSyn'
-  structure ExtSyn = TpRecon'
+  structure ExtSyn = ReconTerm'
   structure Paths = Paths'
 
   exception Error of string
@@ -71,7 +71,8 @@ struct
 
       fun mroot (tm, r) (g, D) =
 	  let
-            val (G, U, V, oc) = T.termToExp (g, tm)
+            val T.JWithCtx (G, T.JClass ((V, _), _)) =
+                  T.recon (T.jwithctx (g, T.jclass tm))
 
             (* convert term spine to mode spine *)
 	    (* Each argument must be contractible to variable *)
@@ -81,7 +82,7 @@ struct
 		  val k = Whnf.etaContract U
 		          handle Whnf.Eta => 
 			    error (r, "Argument not a variable")  (* print U? -fp *)
-		  val (I.Dec (name, _), _, _) = I.ctxLookup (G, k)
+		  val I.Dec (name, _) = I.ctxLookup (G, k)
 		  val mode = I.ctxLookup (D, k)
 		in
 		  M.Mapp (M.Marg (mode, name), convertSpine S)
@@ -93,12 +94,12 @@ struct
 	      | convertExp (I.Root (I.Def (d), S))  = 
 		  (* error is signalled later in ModeDec.checkFull *)
 		  (d, convertSpine S)
-	      | convertExp (I.Root (I.NSDef (d), S))  = 
-		  (* error is signalled later in ModeDec.checkFull *)
-		  (d, convertSpine S)
+              (* !!! FIX this could be any sort of garbage; need checks *)
 	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
 
-	    val (a, mS) = convertExp (U)
+            (* !!! FIX unfortunately, term reconstruction is liable to insert
+               an EClo *)
+	    val (a, mS) = convertExp (V)
 	  in
 	    (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
 	  end
@@ -128,4 +129,4 @@ struct
 
     val modeToMode = modeToMode
   end   (* local ... *)
-end;  (* functor ModeRecon *)
+end;  (* functor ReconMode *)

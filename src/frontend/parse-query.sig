@@ -5,8 +5,9 @@ signature PARSE_QUERY =
 sig
 
   structure Parsing : PARSING
-  structure ExtSyn : EXTSYN
+  structure ExtQuery : EXTQUERY
 
-  val parseQuery' : ExtSyn.query Parsing.parser
+  val parseQuery' : ExtQuery.query Parsing.parser
+  val parseSolve' : (ExtQuery.define list * ExtQuery.solve) Parsing.parser
 
 end;  (* signature PARSE_QUERY *)

@@ -1,7 +1,7 @@
 (* Parsing modules *)
 (* Author: Kevin Watkins *)
 
-functor ParseModules
+functor ParseModule
   (structure Paths : PATHS
    structure Parsing' : PARSING
      sharing Parsing'.Lexer.Paths = Paths
@@ -10,7 +10,7 @@ functor ParseModules
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ModExtSyn'.ExtSyn)
-  : PARSE_MODULES =
+  : PARSE_MODULE =
 struct
 
   structure Parsing = Parsing'

@@ -54,11 +54,9 @@ sig
 
   val leaf : region -> occExp		(* could be _ or identifier *)
   val bind : region * occExp option * occExp -> occExp
-  val root : region * occExp * int * occSpine -> occExp
+  val root : region * occExp * int * int * occSpine -> occExp
   val app : occExp * occSpine -> occSpine
   val nils : occSpine
-
-  val removeImplicit : int * occSpine -> occSpine
 
   type occConDec			(* occurrence tree for constant declarations *)
   val dec : int * occExp -> occConDec   (* (#implicit, v) in c : V *)

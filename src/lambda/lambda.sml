@@ -27,3 +27,7 @@ structure Abstract =
 	    structure Whnf = Whnf
 	    structure Constraints = Constraints
 	    structure Unify = UnifyNoTrail);
+
+structure Approx =
+  Approx (structure IntSyn' = IntSyn
+          structure Whnf = Whnf);

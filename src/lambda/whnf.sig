@@ -19,6 +19,10 @@ sig
   val whnfEta : (IntSyn.eclo * IntSyn.eclo) -> (IntSyn.eclo * IntSyn.eclo)
   val lowerEVar : IntSyn.Exp -> IntSyn.Exp
 
+  val newLoweredEVar : IntSyn.dctx * IntSyn.eclo -> IntSyn.Exp
+  val newSpineVar : IntSyn.dctx * IntSyn.eclo -> IntSyn.Spine
+  val spineToSub : IntSyn.Spine * IntSyn.Sub -> IntSyn.Sub
+
   (* Full normalization *)
   val normalize: IntSyn.eclo -> IntSyn.Exp
   val normalizeDec: IntSyn.Dec * IntSyn.Sub -> IntSyn.Dec

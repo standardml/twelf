@@ -13,4 +13,6 @@ Group is
   unify.fun 
   abstract.sig	
   abstract.fun
+  approx.sig
+  approx.fun
   lambda.sml

@@ -5,9 +5,9 @@ signature PARSE_CONDEC =
 sig
 
   structure Parsing : PARSING
-  structure ExtSyn : EXTSYN
+  structure ExtConDec : EXTCONDEC
 
-  val parseConDec' : ExtSyn.condec Parsing.parser
-  val parseAbbrev'  : ExtSyn.condec Parsing.parser
+  val parseConDec' : ExtConDec.condec Parsing.parser
+  val parseAbbrev'  : ExtConDec.condec Parsing.parser
 
 end;  (* signature PARSE_CONDEC *)

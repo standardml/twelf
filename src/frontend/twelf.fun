@@ -32,14 +32,16 @@ functor Twelf
      sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
      sharing Abstract.IntSyn = IntSyn'
-   structure TpRecon : TP_RECON
-     sharing TpRecon.IntSyn = IntSyn'
-     sharing TpRecon.Paths = Paths
-     sharing type TpRecon.condec = Parser.ExtSyn.condec
-     sharing type TpRecon.term = Parser.ExtSyn.term
-     (* sharing type TpRecon.Paths.occConDec = Origins.Paths.occConDec *)
-
-   structure DefineRecon : DEFINE_RECON
+   structure ReconTerm : RECON_TERM
+     sharing ReconTerm.IntSyn = IntSyn'
+     sharing ReconTerm.Paths = Paths
+     sharing type ReconTerm.term = Parser.ExtSyn.term
+     (* sharing type ReconTerm.Paths.occConDec = Origins.Paths.occConDec *)
+   structure ReconConDec : RECON_CONDEC
+     sharing ReconConDec.IntSyn = IntSyn'
+     sharing ReconConDec.Paths = Paths
+     sharing type ReconConDec.condec = Parser.ExtConDec.condec
+   structure ReconQuery : RECON_QUERY
 
    structure ModeSyn : MODESYN
      sharing ModeSyn.IntSyn = IntSyn'
@@ -47,10 +49,10 @@ functor Twelf
      sharing ModeCheck.IntSyn = IntSyn'
      sharing ModeCheck.ModeSyn = ModeSyn
      sharing ModeCheck.Paths = Paths
-   structure ModeRecon : MODE_RECON
-     sharing ModeRecon.ModeSyn = ModeSyn
-     sharing ModeRecon.Paths = Paths
-     sharing type ModeRecon.modedec = Parser.ExtModes.modedec
+   structure ReconMode : RECON_MODE
+     sharing ReconMode.ModeSyn = ModeSyn
+     sharing ReconMode.Paths = Paths
+     sharing type ReconMode.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
      sharing ModePrint.ModeSyn = ModeSyn
    structure ModeDec : MODEDEC
@@ -91,29 +93,30 @@ functor Twelf
      sharing TableIndex.IntSyn = IntSyn'
    structure Solve : SOLVE
      sharing Solve.IntSyn = IntSyn'
-     sharing type Solve.ExtSyn.term = Parser.ExtSyn.term
-     sharing type Solve.ExtSyn.query = Parser.ExtSyn.query
-     sharing type Solve.ExtDefine.define = Parser.ExtDefine.define
+     sharing type Solve.ExtQuery.query = Parser.ExtQuery.query
+     sharing type Solve.ExtQuery.define = Parser.ExtQuery.define
+     sharing type Solve.ExtQuery.solve = Parser.ExtQuery.solve
      sharing Solve.Paths = Paths
+
    structure ThmSyn : THMSYN
      sharing ThmSyn.Paths = Paths
      sharing ThmSyn.Names = Names
    structure Thm : THM
      sharing Thm.ThmSyn = ThmSyn
      sharing Thm.Paths = Paths
-   structure ThmRecon : THM_RECON
-     sharing ThmRecon.ThmSyn = ThmSyn
-     sharing ThmRecon.Paths = Paths
-     sharing ThmRecon.ThmSyn.ModeSyn = ModeSyn
-     sharing type ThmRecon.tdecl = Parser.ThmExtSyn.tdecl
-     sharing type ThmRecon.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
-     sharing type ThmRecon.tableddecl = Parser.ThmExtSyn.tableddecl (* -bp *)
-     sharing type ThmRecon.wdecl = Parser.ThmExtSyn.wdecl 
-     sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
-     sharing type ThmRecon.theoremdec = Parser.ThmExtSyn.theoremdec 
-     sharing type ThmRecon.prove = Parser.ThmExtSyn.prove
-     sharing type ThmRecon.establish = Parser.ThmExtSyn.establish
-     sharing type ThmRecon.assert = Parser.ThmExtSyn.assert
+   structure ReconThm : RECON_THM
+     sharing ReconThm.ThmSyn = ThmSyn
+     sharing ReconThm.Paths = Paths
+     sharing ReconThm.ThmSyn.ModeSyn = ModeSyn
+     sharing type ReconThm.tdecl = Parser.ThmExtSyn.tdecl
+     sharing type ReconThm.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
+     sharing type ReconThm.tableddecl = Parser.ThmExtSyn.tableddecl (* -bp *)
+     sharing type ReconThm.wdecl = Parser.ThmExtSyn.wdecl 
+     sharing type ReconThm.theorem = Parser.ThmExtSyn.theorem
+     sharing type ReconThm.theoremdec = Parser.ThmExtSyn.theoremdec 
+     sharing type ReconThm.prove = Parser.ThmExtSyn.prove
+     sharing type ReconThm.establish = Parser.ThmExtSyn.establish
+     sharing type ReconThm.assert = Parser.ThmExtSyn.assert
    structure ThmPrint : THMPRINT
      sharing ThmPrint.ThmSyn = ThmSyn
 
@@ -129,12 +132,12 @@ functor Twelf
      sharing ModSyn.IntSyn = IntSyn'
      sharing ModSyn.Names = Names
      sharing ModSyn.Paths = Paths
-   structure ModRecon : MOD_RECON
-     sharing ModRecon.ModSyn = ModSyn
-     sharing type ModRecon.sigdef = Parser.ModExtSyn.sigdef
-     sharing type ModRecon.structdec = Parser.ModExtSyn.structdec
-     sharing type ModRecon.sigexp = Parser.ModExtSyn.sigexp
-     sharing type ModRecon.strexp = Parser.ModExtSyn.strexp
+   structure ReconModule : RECON_MODULE
+     sharing ReconModule.ModSyn = ModSyn
+     sharing type ReconModule.sigdef = Parser.ModExtSyn.sigdef
+     sharing type ReconModule.structdec = Parser.ModExtSyn.structdec
+     sharing type ReconModule.sigexp = Parser.ModExtSyn.sigexp
+     sharing type ReconModule.strexp = Parser.ModExtSyn.strexp
 
    structure MetaGlobal : METAGLOBAL
    structure FunSyn : FUNSYN
@@ -257,10 +260,12 @@ struct
     *)
     fun handleExceptions fileName (f:'a -> Status) (x:'a) =
 	(f x
-	 handle TpRecon.Error (msg) => abortFileMsg (fileName, msg)
-	      | ModeRecon.Error (msg) => abortFileMsg (fileName, msg)
-	      | ThmRecon.Error (msg) => abortFileMsg (fileName, msg)
-              | ModRecon.Error (msg) => abortFileMsg (fileName, msg)
+	 handle ReconTerm.Error (msg) => abortFileMsg (fileName, msg)
+	      | ReconConDec.Error (msg) => abortFileMsg (fileName, msg)
+	      | ReconQuery.Error (msg) => abortFileMsg (fileName, msg)
+	      | ReconMode.Error (msg) => abortFileMsg (fileName, msg)
+	      | ReconThm.Error (msg) => abortFileMsg (fileName, msg)
+              | ReconModule.Error (msg) => abortFileMsg (fileName, msg)
 	      | TypeCheck.Error (msg) => abort ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
@@ -270,7 +275,6 @@ struct
 	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
-              | DefineRecon.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
@@ -388,7 +392,7 @@ struct
     fun install1 (fileName, (Parser.ConDec condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
-	   val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), false)
+	   val (optConDec, ocOpt) = ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), false)
 	   fun icd (SOME (conDec as IntSyn.BlockDec _)) = 
 	       let
 		 (* allocate new cid. *)
@@ -398,9 +402,9 @@ struct
 	       end
 	     | icd (SOME (conDec)) =
 	       let
-		 (* names are assigned in TpRecon *)
+		 (* names are assigned in ReconConDec *)
 		 (* val conDec' = nameConDec (conDec) *)
-		 (* should print here, not in TpRecon *)
+		 (* should print here, not in ReconConDec *)
 		 (* allocate new cid after checking modes! *)
 		 val cid = installConDec false (conDec, (fileName, ocOpt), r)
 	       in
@@ -412,18 +416,17 @@ struct
 	   icd optConDec
 	 end
 	 handle Constraints.Error (eqns) =>
-	        raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
-	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), true)
+	  val (optConDec, ocOpt) = ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), true)
 	  fun icd (SOME(conDec)) =
 	      let
-		  (* names are assigned in TpRecon *)
+		  (* names are assigned in ReconConDec *)
 		  (* val conDec' = nameConDec (conDec) *)
-		  (* should print here, not in TpRecon *)
-		  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
+		  (* should print here, not in ReconConDec *)
 		  (* allocate new cid after checking modes! *)
 		  val cid = installConDec false (conDec, (fileName, ocOpt), r)
 	      in
@@ -435,27 +438,20 @@ struct
 	  icd optConDec
 	end
         handle Constraints.Error (eqns) =>
-	       raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	       raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* Solve declarations %solve c : A *)
-      | install1 (fileName, (Parser.Solve (defineL,name,tm), r)) =
+      | install1 (fileName, (Parser.Solve (defines, solve), r)) =
 	(let
-	  val conDecL = Solve.solve ((defineL, name, tm), Paths.Loc (fileName, r))
+	  val conDecL = Solve.solve (defines, solve, Paths.Loc (fileName, r))
 	                handle Solve.AbortQuery (msg) =>
 			 raise Solve.AbortQuery (Paths.wrap (r, msg))
-          fun icd conDec =
+          fun icd (conDec, ocOpt) =
           (let
-	     val conDec' = Names.nameConDec (conDec)
+	     (* should print here, not in ReconQuery *)
+	     (* allocate new cid after checking modes! *)
 	     (* allocate cid after strictness has been checked! *)
-	     val cid = (installConDec false (conDec, (fileName, NONE), r)
-                        handle DefineRecon.Error (msg) =>
-                         raise DefineRecon.Error (Paths.wrap (r, msg)))
-	     val _ = if !Global.chatter >= 3
-		     then print ((Timers.time Timers.printing Print.conDecToString)
-			         conDec' ^ "\n")
-		     else if !Global.chatter >= 2
-			  then print (" OK\n")
-		          else ();
+	     val cid = installConDec false (conDec, (fileName, ocOpt), r)
 	   in
 	     ()
 	   end)
@@ -463,7 +459,7 @@ struct
            List.app icd conDecL
          end
          handle Constraints.Error (eqns) =>
-	        raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* %query <expected> <try> A or %query <expected> <try> X : A *)
       | install1 (fileName, (Parser.Query(expected,try,query), r)) =
@@ -546,9 +542,10 @@ struct
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
       (* Mode declaration *)
-      | install1 (fileName, (Parser.ModeDec mterms, _)) =
+      | install1 (fileName, (Parser.ModeDec mterms, r)) =
 	let 
-	  val mdecs = List.map ModeRecon.modeToMode mterms
+	  val mdecs = List.map ReconMode.modeToMode mterms
+          val _ = ReconTerm.checkErrors (r)
 	  val _ = List.app (fn (mdec as (a, _), r) => 
 	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
 			       of IntSyn.Normal => ModeSyn.installMode mdec
@@ -568,9 +565,10 @@ struct
 	end
 
       (* Coverage declaration *)
-      | install1 (fileName, (Parser.CoversDec mterms, _)) =
+      | install1 (fileName, (Parser.CoversDec mterms, r)) =
 	let
-	  val mdecs = List.map ModeRecon.modeToMode mterms
+	  val mdecs = List.map ReconMode.modeToMode mterms
+          val _ = ReconTerm.checkErrors (r)
 	  val _ = List.app (fn (mdec, r) => Cover.checkCovers mdec
 			    handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg)))
 	          mdecs
@@ -586,7 +584,7 @@ struct
       (* Total declaration *)
       | install1 (fileName, (Parser.TotalDec lterm, _)) =
 	let
-	  val (T, rrs as (r,rs)) = ThmRecon.tdeclTotDecl lterm
+	  val (T, rrs as (r,rs)) = ReconThm.tdeclTotDecl lterm
 	  val La = Thm.installTotal (T, rrs)
 	  val _ = map Total.install La	(* pre-install for recursive checking *)
 	  val _ = map Total.checkFam La
@@ -603,7 +601,7 @@ struct
       (* Termination declaration *)
       | install1 (fileName, (Parser.TerminatesDec lterm, _)) =
 	let
-	  val (T, rrs) = ThmRecon.tdeclTotDecl lterm 
+	  val (T, rrs) = ReconThm.tdeclTotDecl lterm 
 	  val La = Thm.installTerminates (T, rrs)
   	  val _ = map (Timers.time Timers.terminate Reduces.checkFam) La   
 	  val _ = if !Global.chatter >= 3 
@@ -617,7 +615,7 @@ struct
 	(* Reduces declaration *)
       | install1 (fileName, (Parser.ReducesDec lterm, _)) =
 	let
-	  val (R, rrs) = ThmRecon.rdeclTorDecl lterm 
+	  val (R, rrs) = ReconThm.rdeclTorDecl lterm 
 	  val La = Thm.installReduces (R, rrs)
 	  (*  -bp6/12/99.   *)
 	  val _ = map (Timers.time Timers.terminate Reduces.checkFamReduction) La
@@ -631,7 +629,7 @@ struct
 	(* Tabled declaration *)
       | install1 (fileName, (Parser.TabledDec tdecl, _)) =
 	let
-	  val (T,r) = ThmRecon.tableddeclTotabledDecl tdecl 
+	  val (T,r) = ReconThm.tableddeclTotabledDecl tdecl 
 	  val La = Thm.installTabled T
 	  (*  -bp6/12/99.   *)
 	  val _ = if !Global.chatter >= 3 
@@ -645,7 +643,8 @@ struct
       (* Theorem declaration *)
       | install1 (fileName, (Parser.TheoremDec tdec, r)) =
 	let 
-	  val Tdec = ThmRecon.theoremDecToTheoremDec tdec
+	  val Tdec = ReconThm.theoremDecToTheoremDec tdec
+          val _ = ReconTerm.checkErrors (r)
 	  val (GBs, E as IntSyn.ConDec (name, _, k, _, V, L)) = ThmSyn.theoremDecToConDec (Tdec, r)
 	  val _ = FunSyn.labelReset ()
 	  val _ = List.foldr (fn ((G1, G2), k) => FunSyn.labelAdd 
@@ -664,7 +663,7 @@ struct
       (* Prove declaration *)
       | install1 (fileName, (Parser.ProveDec lterm, r)) =
 	let
-	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.proveToProve lterm 
+	  val (ThmSyn.PDecl (depth, T), rrs) = ReconThm.proveToProve lterm 
 	  val La = Thm.installTerminates (T, rrs)  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%prove " ^ (Int.toString depth) ^ " " ^
@@ -692,7 +691,7 @@ struct
       (* Establish declaration *)
       | install1 (fileName, (Parser.EstablishDec lterm, r)) =
         let 
-	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.establishToEstablish lterm 
+	  val (ThmSyn.PDecl (depth, T), rrs) = ReconThm.establishToEstablish lterm 
 	  val La = Thm.installTerminates (T, rrs)  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%prove " ^ (Int.toString depth) ^ " " ^
@@ -717,7 +716,7 @@ struct
 	  val _ = if not (!Global.unsafe)
 		    then raise ThmSyn.Error "%assert not safe: Toggle `unsafe' flag"
 	          else ()
-	  val (cp as ThmSyn.Callpats (L), rrs) = ThmRecon.assertToAssert aterm 
+	  val (cp as ThmSyn.Callpats (L), rrs) = ReconThm.assertToAssert aterm 
 	  val La = map (fn (c, P) => c) L  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%assert " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
@@ -733,7 +732,7 @@ struct
       | install1 (fileName, (Parser.WorldDec wdecl, _)) =
 	let
 	  val (ThmSyn.WDecl (qids, cp as ThmSyn.Callpats cpa), rs) =
-	         ThmRecon.wdeclTowDecl wdecl
+	         ReconThm.wdeclTowDecl wdecl
 	  val W = WorldSyn.Worlds
 	      (List.map (fn qid => case Names.constLookup qid
 			            of NONE => raise Names.Error ("Undeclared label "
@@ -770,8 +769,8 @@ struct
         let
           (* FIX: should probably time this -kw *)
           val (idOpt, module, wherecls) =
-                ModRecon.sigdefToSigdef (sigdef, moduleOpt)
-          val module' = foldl (fn (inst, module) => ModRecon.moduleWhere (module, inst)) module wherecls
+                ReconModule.sigdefToSigdef (sigdef, moduleOpt)
+          val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
           val name = (case idOpt
                         of SOME id => (ModSyn.installSigDef (id, module');
                                        id)
@@ -785,10 +784,10 @@ struct
         end
       | install1WithSig (fileName, moduleOpt, (Parser.StructDec structdec, r)) =
         (* Structure declaration *)
-        (case ModRecon.structdecToStructDec (structdec, moduleOpt)
-           of ModRecon.StructDec (idOpt, module, wherecls) =>
+        (case ReconModule.structdecToStructDec (structdec, moduleOpt)
+           of ReconModule.StructDec (idOpt, module, wherecls) =>
               let
-                val module' = foldl (fn (inst, module) => ModRecon.moduleWhere (module, inst)) module wherecls
+                val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
                 val name = (case idOpt
                               of SOME id =>
                                    (installStrDec (IntSyn.StrDec (id, NONE), module', r, false);
@@ -800,7 +799,7 @@ struct
               in
                 ()
               end
-            | ModRecon.StructDef (idOpt, mid) =>
+            | ReconModule.StructDef (idOpt, mid) =>
               let
                 val ns = Names.getComponents mid
                 val module = ModSyn.abstractModule (ns, SOME mid)
@@ -819,8 +818,8 @@ struct
       | install1WithSig (fileName, moduleOpt, (Parser.Include sigexp, r)) =
         (* Include declaration *)
         let
-          val (module, wherecls) = ModRecon.sigexpToSigexp (sigexp, moduleOpt)
-          val module' = foldl (fn (inst, module) => ModRecon.moduleWhere (module, inst)) module wherecls
+          val (module, wherecls) = ReconModule.sigexpToSigexp (sigexp, moduleOpt)
+          val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
           val _ = includeSig (module', r, false)
           val _ = if !Global.chatter = 3
                     then print ("%include { ... }.\n")
@@ -832,7 +831,7 @@ struct
       | install1WithSig (fileName, NONE, (Parser.Open strexp, r)) =
         (* Open declaration *)
         let
-          val mid = ModRecon.strexpToStrexp strexp
+          val mid = ReconModule.strexpToStrexp strexp
           val ns = Names.getComponents mid
           val module = ModSyn.abstractModule (ns, SOME mid)
           val _ = includeSig (module, r, true)
@@ -909,7 +908,7 @@ struct
 	handleExceptions fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
-            val _ = TpRecon.resetErrors fileName
+            val _ = ReconTerm.resetErrors fileName
 	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	    and install' (S.Empty) = OK
 	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
@@ -983,7 +982,7 @@ struct
     fun readDecl () =
         handleExceptions "stdIn"
 	(fn () =>
-	 let val _ = TpRecon.resetErrors "stdIn"
+	 let val _ = ReconTerm.resetErrors "stdIn"
              fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	     and install' (S.Empty) = ABORT
                | install' (S.Cons((Parser.BeginSubsig, _), s')) =
@@ -1211,6 +1210,19 @@ struct
     =
     struct
       val optimize = Compile.optimize
+    end
+
+    structure Recon :
+    sig
+      datatype TraceMode = datatype ReconTerm.TraceMode
+      val trace : bool ref
+      val traceMode : TraceMode ref
+    end
+    =
+    struct
+      datatype TraceMode = datatype ReconTerm.TraceMode
+      val trace = ReconTerm.trace
+      val traceMode = ReconTerm.traceMode
     end
 
     structure Prover :

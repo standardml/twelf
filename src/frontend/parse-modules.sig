@@ -1,7 +1,7 @@
 (* Parsing modules *)
 (* Author: Kevin Watkins *)
 
-signature PARSE_MODULES =
+signature PARSE_MODULE =
 sig
 
   structure Parsing : PARSING

@@ -146,6 +146,7 @@ struct
 
     fun buildSpine 0 = I.Nil
       | buildSpine n = (* n > 0 *)
+        (* Eta-long invariant violation -kw *)
         I.App (I.Root (I.BVar(n), I.Nil), buildSpine (n-1))
 
     (* initCGoal' (a, 0, ., V) = ({x1:V1}...{xn:Vn} a x1...xn, n)

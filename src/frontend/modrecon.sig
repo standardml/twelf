@@ -30,7 +30,7 @@ sig
 
 end;
 
-signature MOD_RECON =
+signature RECON_MODULE =
 sig
 
   include MODEXTSYN

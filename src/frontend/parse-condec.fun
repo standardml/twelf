@@ -3,15 +3,15 @@
 
 functor ParseConDec
   (structure Parsing' : PARSING
-   structure ExtSyn' : EXTSYN
+   structure ExtConDec' : EXTCONDEC
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
-     sharing ParseTerm.ExtSyn = ExtSyn')
+     sharing ParseTerm.ExtSyn = ExtConDec'.ExtSyn)
      : PARSE_CONDEC =
 struct
 
   structure Parsing = Parsing'
-  structure ExtSyn = ExtSyn'
+  structure ExtConDec = ExtConDec'
 
   local
     structure L = Parsing.Lexer
@@ -22,14 +22,14 @@ struct
         let
 	  val (tm', f') = ParseTerm.parseTerm' (LS.expose s)
 	in
-	  (ExtSyn.condef (optName, tm', optTm), f')
+	  (ExtConDec.condef (optName, tm', optTm), f')
 	end
 
     (* parseConDec2  "= U" | "" *)
     fun parseConDec2 (optName, (tm, LS.Cons((L.EQUAL, r), s'))) =
           parseConDec3 (optName, SOME(tm), s')
       | parseConDec2 (SOME(name), (tm, f)) =
-	  (ExtSyn.condec (name, tm), f)
+	  (ExtConDec.condec (name, tm), f)
       | parseConDec2 (NONE, (tm, LS.Cons((t,r),s'))) =
 	  Parsing.error (r, "Illegal anonymous declared constant")
 
@@ -55,13 +55,13 @@ struct
 	  val (g1, f') = ParseTerm.parseCtx' (LS.expose s')
 	  val (g2, f'') = parseBlock f'
 	in
-	  (ExtSyn.blockdec (name, g1, g2), f'') 
+	  (ExtConDec.blockdec (name, g1, g2), f'') 
 	end
       | parseSome (name, f as LS.Cons ((L.ID (_, "block"), r), s')) =
 	let
 	  val (g2, f') = parseBlock f
 	in
-	  (ExtSyn.blockdec (name, nil, g2), f')  
+	  (ExtConDec.blockdec (name, nil, g2), f')  
 	end
       | parseSome (name, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected `some' or `block', found " ^ L.toString t)
@@ -76,7 +76,7 @@ struct
       | parseBlockDec' (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Label identifier expected, found token " ^ L.toString t)
 
-    (* parseConDec' : lexResult front -> ExtSyn.ConDec * lexResult front
+    (* parseConDec' : lexResult front -> ExtConDec.ConDec * lexResult front
        Invariant: first token in exposed input stream is an identifier or underscore
     *)
     fun parseConDec' (LS.Cons ((L.ID (idCase,name), r), s')) =

@@ -5,27 +5,16 @@
 functor Solve
   (structure Global : GLOBAL
    structure IntSyn' : INTSYN
-   structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn'
    structure Parser : PARSER
      sharing Parser.Names = Names
-   structure Constraints : CONSTRAINTS		
-     sharing Constraints.IntSyn = IntSyn'
-   structure Abstract : ABSTRACT
-     sharing Abstract.IntSyn = IntSyn'
-   structure Unify : UNIFY
-     sharing Unify.IntSyn = IntSyn' 
-   structure TpRecon : TP_RECON
-     sharing TpRecon.IntSyn = IntSyn'
-     sharing type TpRecon.term = Parser.ExtSyn.term
-     sharing type TpRecon.query = Parser.ExtSyn.query
-     (* sharing type TpRecon.Paths.occConDec = Origins.Paths.occConDec *)
-   structure DefineRecon : DEFINE_RECON
-     sharing DefineRecon.ExtSyn = Parser.ExtSyn
-     sharing DefineRecon.Paths = TpRecon.Paths
-     sharing DefineRecon.IntSyn = IntSyn'
+   structure ReconQuery : RECON_QUERY
+     sharing ReconQuery.IntSyn = IntSyn'
+     sharing type ReconQuery.query = Parser.ExtQuery.query
+     sharing type ReconQuery.solve = Parser.ExtQuery.solve
+     sharing type ReconQuery.define = Parser.ExtQuery.define
+     (* sharing type ReconQuery.Paths.occConDec = Origins.Paths.occConDec *)
    structure Timers : TIMERS
    structure CompSyn : COMPSYN
      sharing CompSyn.IntSyn = IntSyn'
@@ -48,18 +37,14 @@ functor Solve
      sharing Tabled.CompSyn = CompSyn
    structure TableIndex : TABLEINDEX
      sharing TableIndex.IntSyn = IntSyn'
-   structure Strict : STRICT
-     sharing Strict.IntSyn = IntSyn'
-     sharing Strict.Paths = TpRecon.Paths
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn')
  : SOLVE =
 struct
 
   structure IntSyn = IntSyn'
-  structure ExtSyn = TpRecon
-  structure ExtDefine = DefineRecon
-  structure Paths = TpRecon.Paths
+  structure ExtQuery = ReconQuery
+  structure Paths = ReconQuery.Paths
   structure S = Parser.Stream
 
   (* evarInstToString Xs = msg
@@ -157,73 +142,18 @@ struct
      is raised when M : A is the generalized form of a solution to the
      query A', where imp is the number of implicitly quantified arguments.
   *)
-  exception Solution of int * (IntSyn.Exp * IntSyn.Exp)
-
-  (* parseDefines defines = Drs
-     where
-       Drs is the list of parsed defines, expressed as pairs (Def, r).
-     Effects: a new EVar with the name and type ascription (if any) specified by the define
-     is introduced.
-  *)
-  fun parseDefines (define :: defines) =
-    let
-      val (Def as (ExtDefine.Define (_, optV, var)), r) = ExtDefine.defineToDefine define
-      val (U as IntSyn.EVar(_, _, V, _), _, _) = Names.getEVar (var)
-      val Drs = parseDefines defines
-    in
-      (case optV of
-         SOME(V') =>
-         (Unify.unify (IntSyn.Null, (V, IntSyn.id), (V', IntSyn.id))
-          handle Unify.Unify msg =>
-            DefineRecon.error (r, "Type ascription does not match reconstructed type"))
-       | NONE => ());
-      (Def, r) :: Drs
-    end
-    | parseDefines nil = nil
- 
-  (* collectDefines Drs = defs
-     where
-       Drs is a list of pairs (define, region)
-       defs is a list of constant definitions and/or abbreviations
-     Side effect: generates constant declaration for all the defined, bound EVars.
-  *)
-  fun collectDefines ((ExtDefine.Define (name, _, var), r) :: Drs) =
-    let
-      val (U as IntSyn.EVar(_, _, V, _), _, ref set) = Names.getEVar(var)
-      val defs = collectDefines Drs
-    in
-      if set then
-        let
-          val (i, (U', V')) = ((Timers.time Timers.abstract Abstract.abstractDef)
-                               (Whnf.normalize (U, IntSyn.id),
-                                Whnf.normalize (V, IntSyn.id))
-                              handle Abstract.Error (msg) =>
-                                raise Abstract.Error (Paths.wrap (r, msg)))
-        in
-          (Strict.check ((U', V'), NONE);
-           IntSyn.ConDef (name, NONE, i, U', V', IntSyn.Type) :: defs)
-          handle Strict.Error _ =>
-                   IntSyn.AbbrevDef (name, NONE, i, U', V', IntSyn.Type) :: defs
-        end
-      else
-       defs
-    end
-    | collectDefines nil = nil
+  exception Solution of IntSyn.Exp
 
   (* readfile (fileName) = status
      reads and processes declarations from fileName in order, issuing
      error messages and finally returning the status (either OK or
      ABORT).
   *)
-  fun solve ((defines, nameOpt, solve), Paths.Loc (fileName, r)) =
+  fun solve (defines, solve, Paths.Loc (fileName, r)) =
       let
-        (* Define all the EVars in the define list, with the appropriate types *)
-        val Drs = parseDefines defines
-	(* use region information! *)
-	val (A, NONE, Xs) =
-	      TpRecon.queryToQuery (TpRecon.query(NONE, solve),
-                                    Paths.Loc (fileName, r))
-					(* times itself *)
+        val (A, finish) = (* self timing *)
+              ReconQuery.solveToSolve (defines, solve, Paths.Loc (fileName, r))
+
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 3
 		  then print ("%solve ")
@@ -237,15 +167,6 @@ struct
 
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)
-
-	(* 
-	   the initial success continuation builds the abstractions to we can
-	   define c = M' : A', where A' is a solution for A and M' the proof term.
-	*)
-	fun scInit M =
-	    raise Solution (((Timers.time Timers.abstract Abstract.abstractDef) (M, A))
-			    handle Abstract.Error (msg)
-			    => raise Abstract.Error (Paths.wrap (r, msg)))
       in
 	CSManager.reset ();
 	((* Call to solve raises Solution _ if there is a solution,
@@ -253,38 +174,19 @@ struct
 	  *)
 	 (Timers.time Timers.solving AbsMachine.solve)
 	 ((g, IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
-	  scInit);		
+	  fn M => raise Solution M);		
 	 raise AbortQuery ("No solution to %solve found"))
-	handle Solution (i,(U,V)) =>
-	  (case nameOpt
-             of SOME(name) =>
-               let
-	         val conDef = ((Strict.check ((U, V), NONE); 
-	                        IntSyn.ConDef (name, NONE, i, U, V, IntSyn.Type)) 
-			       handle Strict.Error _ => 
-			         IntSyn.AbbrevDef (name, NONE, i, U, V, IntSyn.Type))
-	       in
-	         (collectDefines Drs) @ [conDef]
-	       end  (* solve _ handle Solution => _ *)
-             | NONE => collectDefines Drs)
-	  (* for frontend.fun:
-	    val _ = Strict.check (conDec, NONE)
-	    (* allocate cid after strictness has been checked! *)
-	    val cid = installConDec (conDec, NONE)
-	    val _ = if !Global.chatter >= 3
-		      then print ((Timers.time Timers.printing Print.conDecToString)
-					 conDec ^ "\n")
-		    else if !Global.chatter >= 2
-			   then print (" OK\n")
-			 else ();
-	  *)
+	handle Solution M => (if !Global.chatter >= 2
+                              then print (" OK\n")
+                              else ();
+                              finish M)
       end
 
 	    (* %query <expected> <try> A or %query <expected> <try> X : A *)
       fun query ((expected, try, quy), Paths.Loc (fileName, r)) =
 	  let
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
+	    val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
 	    val _ = if !Global.chatter >= 3
 		      then print ("%query " ^ boundToString expected
@@ -374,7 +276,7 @@ struct
 				  boundToString try)
 		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
+	    val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
 	    val _ = if !Global.chatter >= 4
 		      then print (" ")
@@ -555,7 +457,7 @@ struct
   and qLoops' (S.Empty) = true		(* normal exit *)
     | qLoops' (S.Cons (query, s')) =
       let
-	val (A, optName, Xs) = TpRecon.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
+	val (A, optName, Xs) = ReconQuery.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
 					(* times itself *)
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)
@@ -598,7 +500,7 @@ struct
     | qLoopsT' (S.Cons (query, s')) =
       let
 	val solExists = ref false 
-	val (A, optName, Xs) = TpRecon.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
+	val (A, optName, Xs) = ReconQuery.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
 					(* times itself *)
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)

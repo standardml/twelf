@@ -63,6 +63,13 @@ sig
     val optimize : bool ref
   end
 
+  structure Recon :
+  sig
+    datatype TraceMode = Progressive | Omniscient
+    val trace : bool ref
+    val traceMode : TraceMode ref
+  end
+
   structure Prover :
   sig
     datatype Strategy = RFS | FRS     (* F=Filling, R=Recursion, S=Splitting *)

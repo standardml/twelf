@@ -2,7 +2,7 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Brigitte Pientka *)
 
-functor ThmRecon (structure Global : GLOBAL
+functor ReconThm (structure Global : GLOBAL
 		  structure IntSyn : INTSYN
                   structure Abstract : ABSTRACT
 		    sharing Abstract.IntSyn = IntSyn
@@ -17,16 +17,16 @@ functor ThmRecon (structure Global : GLOBAL
 		    sharing ThmSyn'.ModeSyn = ModeSyn
 		    sharing ThmSyn'.Paths = Paths'
 		    sharing ThmSyn'.Names = Names
-		  structure TpRecon': TP_RECON
-		    sharing TpRecon'.IntSyn = IntSyn
-		    sharing TpRecon'.Paths = Paths' 
+		  structure ReconTerm': RECON_TERM
+		    sharing ReconTerm'.IntSyn = IntSyn
+		    sharing ReconTerm'.Paths = Paths' 
 		  structure Print : PRINT
 		    sharing Print.IntSyn = IntSyn)
-  : THM_RECON =
+  : RECON_THM =
 struct
   structure ThmSyn = ThmSyn'
   structure Paths = Paths'
-  structure ExtSyn = TpRecon'
+  structure ExtSyn = ReconTerm'
 
   exception Error of string
 
@@ -35,7 +35,7 @@ struct
     structure I = ModeSyn.IntSyn
     structure L = ThmSyn
     structure P = Paths
-    structure T = TpRecon'
+    structure T = ReconTerm'
 
     fun error (r, msg) = raise Error (P.wrap (r, msg))
 
@@ -192,17 +192,6 @@ struct
     fun ctxMap f (I.Null) = I.Null
       | ctxMap f (I.Decl (G, D)) = I.Decl (ctxMap f G, f D)
 
-    fun join (NONE, r) = SOME(r)
-      | join (SOME(r1), r2) = SOME(P.join (r1, r2))
-
-    fun ctxRegion (I.Null) = (I.Null, NONE)
-      | ctxRegion (I.Decl (G, (D, ocOpt, r))) =
-        let
-          val (G', rOpt) = ctxRegion G
-        in
-          (I.Decl (G', D), join (rOpt, r))
-        end
-
     fun ctxBlockToString (G0, (G1, G2)) =
         let
 	  val _ = Names.varReset I.Null
@@ -229,19 +218,21 @@ struct
 
     fun abstractCtxPair (g1, g2) =
         let
-          val [G1, G2] = T.ctxsToCtxs [g1, g2]
-	  val (G1', r1Opt) = ctxRegion G1
-	  val (G2', SOME(r2)) = ctxRegion G2	(* G2 cannot be empty *)
-	  val SOME(r) = join (r1Opt, r2)
-	  val (G0, [G1'', G2'']) =	(* closed nf *)
-	      Abstract.abstractCtxs [G1', G2'] 
+          (* each block reconstructed independent of others *)
+          val r = (case (T.ctxRegion g1, T.ctxRegion g2)
+                     of (SOME r1, SOME r2) => Paths.join (r1, r2)
+                      | (_, SOME r2) => r2)
+          val T.JWithCtx (G1, T.JWithCtx (G2, _)) =
+                T.recon (T.jwithctx (g1, T.jwithctx (g2, T.jnothing)))
+	  val (G0, [G1', G2']) =	(* closed nf *)
+	      Abstract.abstractCtxs [G1, G2] 
 	      handle Constraints.Error (C)
 	      => error (r, "Constraints remain in context block after term reconstruction:\n"
-			^ ctxBlockToString (I.Null, (G1', G2')) ^ "\n"
+			^ ctxBlockToString (I.Null, (G1, G2)) ^ "\n"
 			^ Print.cnstrsToString C)
-	  val _ = checkFreevars (G0, (G1'', G2''), r)
+	  val _ = checkFreevars (G0, (G1', G2'), r)
 	in
-	  (G1'', G2'')
+	  (G1', G2')
 	end 
 
     fun top (GBs, g, M, k) = (GBs, g, M, k)
@@ -264,11 +255,11 @@ struct
     fun theoremToTheorem t =
         let
           val (gbs, g, M, k) = t (nil, I.Null, I.Null, 0)
+          val _ = Names.varReset IntSyn.Null
           val GBs = List.map abstractCtxPair gbs
-          val G = T.ctxToCtx g
-          val (G', _) = ctxRegion G
+          val T.JWithCtx (G, _) = T.recon (T.jwithctx (g, T.jnothing))
 	in
-	  L.ThDecl (GBs, G', M, k)
+	  L.ThDecl (GBs, G, M, k)
 	end
 
     fun theoremDecToTheoremDec (name, t) =
@@ -346,4 +337,4 @@ struct
     val wdeclTowDecl = wdeclTowDecl
     val wdecl = wdecl
   end (* local *)
-end (* functor ThmRecon *)
+end (* functor ReconThm *)

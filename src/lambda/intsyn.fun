@@ -535,6 +535,7 @@ struct
      NONE if V is a kind or object or have variable type.
      Does not expand type definitions.
   *)
+  (* should there possibly be a FgnConst case? also targetFamOpt -kw *)
   fun targetHeadOpt (Root (H, _)) = SOME(H)
     | targetHeadOpt (Pi(_, V)) = targetHeadOpt V
     | targetHeadOpt (Redex (V, S)) = targetHeadOpt V
@@ -574,8 +575,3 @@ struct
   fun targetFam (A) = valOf (targetFamOpt A)
                       
 end;  (* functor IntSyn *)
-
-
-
-
-

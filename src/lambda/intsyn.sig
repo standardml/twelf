@@ -151,7 +151,8 @@ sig
   val conDecImp    : ConDec -> int
   val conDecStatus : ConDec -> Status
   val conDecType   : ConDec -> Exp
-  val conDecBlock  : ConDec -> dctx * Dec list   
+  val conDecBlock  : ConDec -> dctx * Dec list
+  val conDecUni    : ConDec -> Uni
 
   val strDecName   : StrDec -> string
   val strDecParent : StrDec -> mid option

@@ -107,10 +107,10 @@ struct
         end
 
     fun expandFamilyAbbrevs a =
-        (case I.targetFamOpt (I.constType a)
-           of SOME _ => raise Error ("Constant " ^ Names.qidToString (Names.constQid a)
+        (case I.constUni a
+           of I.Type => raise Error ("Constant " ^ Names.qidToString (Names.constQid a)
                                      ^ " must be a type family to be frozen")
-            | NONE => 
+            | I.Kind =>
         (case IntSyn.sgnLookup a
            of IntSyn.ConDec _ => a
             | IntSyn.ConDef _ =>
@@ -316,7 +316,8 @@ struct
        Invariant: G nf, G |- C ~:~ V for some V.
     *)
     fun inferConApprox (G, I.BVar (k')) = 
-	let 
+	let
+          (* why not I.ctxLookup? -kw *)
 	  (* ignore shift: type is approximate, only shape is important *)
 	  val I.Dec (_, V) = I.ctxDec (G, k')
 	  (* in case result of ctxDec is shifted *)
