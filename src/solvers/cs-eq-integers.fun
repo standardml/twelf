@@ -286,7 +286,7 @@ struct
        and  G |- s2 : G2    G2 |- U2 : V2
        then T only if U1[s1] = U2[s2] (as expressions)
     *)
-    and sameExp (Us1, Us2) = sameExp (Whnf.whnf Us1, Whnf.whnf Us2)
+    and sameExp (Us1, Us2) = sameExpW (Whnf.whnf Us1, Whnf.whnf Us2)
 
     (* sameSpine (S1, S2) = T
 
