@@ -402,11 +402,16 @@ struct
 
 
 
+    fun checkTags' (V, F.Ex _) = ()
+      | checkTags' (I.Pi (_, V), F.All (_, F)) =
+          checkTags' (V, F)
+      | checkTags' _ = raise Domain
+
     fun checkTags (I.Null, I.Null) = ()
-      | checkTags (I.Decl (G, _), I.Decl (B, T)) = 
+      | checkTags (I.Decl (G, I.Dec (_, V)), I.Decl (B, T)) = 
         (checkTags (G, B);
 	 case T
-	   of S.Lemma (_, F) =>  FunTypeCheck.isFor (G, F)
+	   of S.Lemma (_, F) =>  (checkTags' (V, F); FunTypeCheck.isFor (G, F))
   	    | _ => ())
 
 
@@ -416,6 +421,7 @@ struct
           F.Ex (D, deriveTag (V, F))
       | deriveTag (I.Pi ((D, DP), V), F.All (F.Prim _, F)) = 
 	  F.All (F.Prim D, deriveTag (V, F))
+      | deriveTag (I.Root _, F.All _) = raise Domain
 
 
     (* abstractCtx (K, V) = V'

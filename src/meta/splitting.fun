@@ -623,7 +623,7 @@ struct
     fun expand' (GB as (I.Null, I.Null), isIndex,
 		 abstract, makeAddress, induction) =
         (fn (Gp, Bp) => ((Gp, Bp), I.Shift (I.ctxLength Gp), GB, false), nil)
-      | expand' (GB as (I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.Ex _)))),
+      | expand' (GB as (I.Decl (G, D), I.Decl (B, T as (S.Lemma (K as S.Splits _, _)))),
 		 isIndex, abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -653,7 +653,26 @@ struct
 	in
 	  (sc', ops')
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.All _)))), isIndex, 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RL, _)))), isIndex, 
+		 abstract, makeAddress, induction) = 
+	let 
+	  val (sc, ops) =
+	    expand' ((G, B), isIndexSucc (D, isIndex),
+		     abstractCont ((D, T), abstract),
+		     makeAddressCont makeAddress,
+		     inductionCont induction)
+	  val I.Dec (xOpt, V) = D
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val ((G', B'), s', (G0, B0), p') = sc (Gp, Bp)
+	      val X = I.newEVar (G', I.EClo (V, s'))
+	    in
+	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')
+	    end
+	in
+	  (sc', ops)
+	end
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (S.RLdone, _)))), isIndex, 
 		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
@@ -746,6 +765,8 @@ struct
     *)
     fun expand (S0 as S.State (n, (G0, B0), _, _, O, _, _)) =
       let 
+	val _ = if !Global.doubleCheck then FunTypeCheck.isState S0 else ()
+
 	val (_, ops) =
 	  expand' ((G0, B0), isIndexInit, abstractInit S0, makeAddressInit S0,  inductionInit O)
       in
