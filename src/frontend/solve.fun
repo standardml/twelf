@@ -132,17 +132,13 @@ struct
   *)
   fun solve ((name, solve), Paths.Loc (fileName, r)) =
       let
-	val _ = if !Global.chatter >= 2
-		  then print ("%solve")
-		else ()
 	(* use region information! *)
 	val (A, NONE, Xs) =
 	       TpReconQ.queryToQuery(TpReconQ.query(NONE,solve), Paths.Loc (fileName, r))
 					(* times itself *)
-
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 2
-		  then print (" ")
+		  then print ("%solve ")
 		else ()
 	val _ = if !Global.chatter >= 3
 		  then print ("\n"
@@ -196,13 +192,13 @@ struct
 	    (* %query <expected> <try> A or %query <expected> <try> X : A *)
       fun query ((expected, try, quy), Paths.Loc (fileName, r)) =
 	  let
-	    val _ = if !Global.chatter >= 2
-		      then print ("%query " ^ boundToString expected
-					 ^ " " ^ boundToString try)
-		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
 	    val (A, optName, Xs) = TpReconQ.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
+	    val _ = if !Global.chatter >= 2
+		      then print ("%query " ^ boundToString expected
+					 ^ " " ^ boundToString try ^ "\n")
+		    else ()
 	    val _ = if !Global.chatter >= 2
 		      then print (" ")
 		    else ()

@@ -235,6 +235,10 @@ struct
 	  select' (R.selLookup c)
 	end
 
+    fun selectOcc (c, (S, s), occ) =
+        select (c, (S, s))
+	handle R.Error (msg) =>
+	  raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName c)
 
     (* selectROrder (c, (S, s)) = P
        
@@ -273,6 +277,10 @@ struct
 	  selectP (R.selLookupROrder c) 
 	end
 
+    fun selectROrderOcc (c, (S, s), occ) =
+        selectROrder (c, (S, s))
+	handle R.Error (msg) =>
+	  raise Error' (occ, "Reduction violation: no order assigned for " ^ N.constName c)
 
     fun conv ((Us, Vs), (Us', Vs')) =
         Conv.conv (Vs, Vs') andalso  
@@ -1361,10 +1369,11 @@ struct
 		if (f a) then a's else lookup (a's', f)
 	    | lookup (a's as R.LT (a, a's'), f) =
 		if (f a) then a's else lookup (a's', f)
-	  val P = select (a, (S, s))
-	  val P' = select (a', (S', s'))
-	  val a's = R.mutLookup a
-	  val _ = R.selLookup a'   (* check if a' terminates *)	 
+	  val P = selectOcc (a, (S, s), occ)
+	  val P' = selectOcc (a', (S', s'), occ) (* established invariant below *)
+	  val a's = R.mutLookup a	(* should alway succeed *)
+	  (* val _ = R.selLookup a' *)
+	  (* check if a' terminates *)	  (* should always be true -fp *)
 	  (* -bp reduction predicate *)
 	  val RG' = ((if (!Global.chatter) > 5 then  
 			 print ("\n reduction predicate " ^ 
@@ -1548,17 +1557,12 @@ struct
 	end
       | checkReductionW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) =
 	let 
-	  val RO = selectROrder(a, (S, s))
-	  val _ = ((if (!Global.chatter) > 5 then 
-			 (print ("\n check reduction predicate ");
+	  val RO = selectROrderOcc (a, (S, s), occ) 
+	  val _ = if (!Global.chatter) > 5
+		    then (print ("\n check reduction predicate ");
 			  print (fmtRGCtx(G, RG) ^ " |- " ^  
 				 (F.makestring_fmt (fmtPredicate(G, RO))) ^ " \n"))
-			 else ())
-	             handle R.Error(s) => 
-			(if (!Global.chatter) > 5 then 
-			  print ("\n no reduction predicate defined for " ^ I.conDecName (I.sgnLookup a))
-			 else
-	                    ()))    
+		  else ()
 	(* add mutual look up! - bp *)
 	(* not needed; done automatically ...  -bp1/31/00.*)
 	(* val RG' = I.Decl(RG, selectROrder (a, (S, s))) *)

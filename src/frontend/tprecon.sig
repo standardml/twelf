@@ -67,6 +67,7 @@ sig
   include EXTSYN
 
   exception Error of string
+  val resetErrors : string -> unit	(* filename -fp *)
 
   type approxDec
   type approxExp
@@ -77,6 +78,10 @@ sig
 
   val termToApproxExp : approxCtx * term -> approxExp
   val approxExpToExp : IntSyn.dctx * approxCtx * approxExp -> IntSyn.Exp
+
+  val termToApproxExp' : approxCtx * term -> approxExp * IntSyn.Exp
+  val approxExpToExp' : IntSyn.dctx * approxCtx * approxExp
+                        -> IntSyn.Exp * IntSyn.Exp
 
   val queryToQuery : query * Paths.location
                      -> IntSyn.Exp * string option * (IntSyn.Exp * string) list

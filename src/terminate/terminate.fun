@@ -74,18 +74,19 @@ struct
     fun fmtComparison (G, P, comp, P') =
         F.HOVbox0 1 0 1 [fmtOrder (G, P), F.Break, F.String comp, F.Break, fmtOrder (G, P')]
 
-    (* select (c, (S, s)) = P
+    (* select (a, (S, s)) = P
        
        Invariant:
-       If   . |- c : V   G |- s : G'    G' |- S : V > type
+       If   . |- a : V   G |- s : G'    G' |- S : V > type
        and  V = {x1:V1} ... {xn:Vn} type.
-       then P = U1[s1] .. Un[sn] is parameter select of S[s] accoring to sel (c)
+       then P = U1[s1] .. Un[sn] is parameter select of S[s] accoring to sel (a)
        and  G |- si : Gi  Gi |- Ui : Vi 
        and  G |- Vi[s]  == V[si] : type   forall 1<=i<=n
     *)
-    fun select (c, (S, s)) =
+    fun select (a, (S, s)) =
         let 
-	  val Vid = (I.constType c, I.id)
+	  val P = Order.selLookup a
+	  val Vid = (I.constType a, I.id)
 	  fun select'' (n, (Ss', Vs'')) =
 	        select''W (n, (Ss', Whnf.whnf Vs''))
 	  and select''W (1, ((I.App (U', S'), s'), 
@@ -101,7 +102,7 @@ struct
 	    | select' (Order.Lex L) = Order.Lex (map select' L)
 	    | select' (Order.Simul L) = Order.Simul (map select' L)
 	in
-	  select' (Order.selLookup c)
+	  select' P
 	end
 
     fun conv ((Us, Vs), (Us', Vs')) =
@@ -417,10 +418,18 @@ struct
 		if (f a) then a's else lookup (a's', f)
 	    | lookup (a's as Order.LT (a, a's'), f) =
 		if (f a) then a's else lookup (a's', f)
-	  val P = select (a, (S, s))
-	  val P' = select (a', (S', s')) 
-	  val a's = Order.mutLookup a
-	  val _ = Order.selLookup a'   (* check if a' terminates *)
+	  val P = select (a, (S, s))	(* only if a terminates? *)
+	    handle Order.Error (msg)
+	    => raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName a)
+	  val P' = select (a', (S', s')) (* only if a' terminates? *)
+	    handle Order.Error (msg)
+	    => raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName a')
+	  val a's = Order.mutLookup a	(* always succeeds? -fp *)
+	    handle Order.Error (msg)
+	    => raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName a)
+	  val _ = Order.selLookup a'	(* check if a' terminates --- should always succeed? -fp *)
+	    handle Order.Error (msg)
+	    => raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName a)
 	in
 	  case lookup (a's, fn x' => x' = a')
 	    of Order.Empty => ()
@@ -506,7 +515,7 @@ struct
 		 if (!Global.chatter) >= 5 then N.varReset () else ();
 		 (checkClause (I.Null, I.Null, (I.constType (b), I.id), P.top)
 		   handle Error' (occ, msg) => error (b, occ, msg)
-			| Order.Error (msg) => raise Error (msg));
+			| Order.Error (msg) => (print "!!!\n"; raise Error (msg)));
 		 if (!Global.chatter) >= 4
 		   then print ("]\n")
 		 else ();

@@ -94,7 +94,7 @@ Update (Mon Jan 22 17:36:24 EST 2001):
 
 Mon Jan 22 17:37:10 EST 2001  -kw
 
-Bug:
+Bug: *** fixed (see below) ***
 
 > From: Andreas Abel <abel+@cs.cmu.edu>
 > Subject: Minor twelf bug
@@ -121,3 +121,14 @@ reconstruction in moderecon.fun, adding a filename parameter to
 e.g. the theoremToTheorem function of thmrecon.fun, and possibly
 revisiting the way error messages are reported in mode and theorem
 declaration processing.
+
+
+Sat Mar  3 13:11:04 2001 -fp
+
+Fixed filename bug by globally calling TpRecon.errorReset (fileName)
+when loading a new file.
+
+Also fixed bug with incorrect error message when parsing call patterns:
+- uncaught match exception if head is object-level constant
+- no error location if called family has not been declared
+

@@ -518,6 +518,7 @@ struct
 	handleExceptions fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
+	    val _ = TpRecon.resetErrors fileName
 	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	    and install' (S.Empty) = OK
 	      | install' (S.Cons(decl, s')) =
@@ -571,7 +572,8 @@ struct
     fun readDecl () =
         handleExceptions "stdIn"
 	(fn () =>
-	 let fun install s = install' ((Timers.time Timers.parsing S.expose) s)
+	 let val _ = TpRecon.resetErrors "stdIn"
+	     fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	     and install' (S.Empty) = ABORT
 	       | install' (S.Cons (decl, s')) =
 	         (install1 ("stdIn", decl); OK)

@@ -56,9 +56,11 @@ struct
 	      unique' (V, P, x :: A))
 	  | unique' (I.Uni _, _, _) = error (r, "Too many arguments supplied to type family " 
 					        ^ Names.constName a)
-	  | unique' (_, nil, _) = error (r, "Too few arguments supplied to type family " 
-					    ^ Names.constName a)
-		    
+	  | unique' (I.Pi (_, V), nil, _) = error (r, "Too few arguments supplied to type family " 
+						   ^ Names.constName a)
+          | unique' (I.Root _, _, _) = error (r, "Constant " ^ Names.constName a ^
+					      " is an object, not a type family")
+
   	fun skip (0, V, P, A) = unique' (V, P, A)
 	  | skip (k, I.Pi (_, V), P, A) = skip (k-1, V, P, A)
 

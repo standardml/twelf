@@ -155,7 +155,7 @@ struct
   fun exceeds (i, NONE) = false
     | exceeds (i, SOME(j)) = i > j
 
-  fun resetErrors (fileName, r) =
+  fun resetErrors (fileName) =
       (errorCount := 0;
        errorFileName := fileName)
 
@@ -903,6 +903,29 @@ struct
         U
       end
 
+  (** added by danwang **)
+  fun checkObject (La, r, msg) =
+      (case whnfApprox (La)
+	 of (IntSyn.Uni (IntSyn.Type)) => error (r, msg)
+          | (IntSyn.Uni (IntSyn.Kind)) => error (r, msg)
+	  | _ => ())
+ 
+  fun termToApproxExp' (Ga, tm) =
+      let
+	val Ua = tm (Ga)
+	val (La, C, r) = approxReconShow (Ga, Ua)
+	val _ = checkObject (La, r, "Classifier in declaration is not an object")
+      in
+	(Ua,La)
+      end
+ 
+  fun approxExpToExp' (G, Ga, Ua) =
+      let
+	val (U, V, Va, oc) = reconShow (G, Ga, Ua)
+      in
+	(U,V)
+      end
+
   (* Converting a declaration to an expression in a context *)
   (* Throws away the associated occurrence tree *)
   fun decToApproxDec (Ga, dec) =
@@ -962,7 +985,7 @@ struct
   fun queryToQuery (query (optName, tm), Paths.Loc (fileName, r)) = 
       let
 	val _ = Names.varReset ()
-	val _ = resetErrors (fileName, r)
+	val _ = resetErrors (fileName)
 	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) tm
 	val _ = checkType (L, Paths.toRegion oc, "Query is not a type")
 	val Xs = Names.namedEVars ()
@@ -991,7 +1014,7 @@ struct
   fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
-	val _ = resetErrors (fileName, r)
+	val _ = resetErrors (fileName)
 	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
 	val level = getUni (L, Paths.toRegion oc, "Classifier in declaration is not a type or kind")
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
@@ -1012,7 +1035,7 @@ struct
     | condecToConDec (condef(optName, tm1, SOME(tm2)), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
-	val _ = resetErrors (fileName, r)
+	val _ = resetErrors (fileName)
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
 	val level = getUni (L, Paths.toRegion oc2, "Classifier in definition is not a type or kind")
 	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) tm1
@@ -1046,7 +1069,7 @@ struct
     | condecToConDec (condef(optName, tm1, NONE), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset ()
-	val _ = resetErrors (fileName, r)
+	val _ = resetErrors (fileName)
 	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) tm1
 	val (i, (U'', V'')) =
 	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)
