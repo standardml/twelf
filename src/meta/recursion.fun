@@ -644,7 +644,8 @@ struct
 					(* possible incompleteness. 
 					   X will be free in some cases and must be universally quantified.
 					   -- cs *)
-		                          else Ds''
+		                          else (TextIO.print "* Ignored recursive call: Argument not instantiated during unification\n";
+						Ds'') 
 		    val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
 				    ((U', I.Dot (I.Exp (X), s1')), 
 				     (V', I.Dot (I.Exp (X), s2'))), sc', Ds')

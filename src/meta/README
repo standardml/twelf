@@ -35,6 +35,16 @@ DONE -cs  3) mutual recursion
 TODO list of meta theorem prover
 --------------------------------
 
+Open issues: 
+-cs  In recursion, when we look for the subterm of a functional
+	assumptions, we apply it to EVars, and continue search.
+	Currently we reject any induction hypothesis where any
+	of these EVars is open.
+     Improvement: univerally abstract over these EVars 
+     (see error mesage : 	
+	 * Ignored recursive call: Argument not instantiated during unification)
+
+
 Code Walk (Invariants, Mutual recursion)
 DONE -cs Anchor into Twelf
 
@@ -50,15 +60,10 @@ Parameter Cases
     
     DONE -cs    Add parameter introduction in the case that parameter and functional object
 	do not live on the same level
-    Add functionality for SOME clauses
+    DONE -cs Add functionality for SOME clauses
     Assumption, all EVars for SOME are replaced by something closed 
 	(* not a sensible assumption. Must be generalized *)
-    How do we abstract over leftover EVars?
-
-
-    NOTE: Skolemization does not have to include parameter blocks. There is
-	some code written which accomplish this (see recursion.fun.clean)
-
+	
   base cases
 Splittin Residual lemmas
 Index variables
