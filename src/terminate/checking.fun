@@ -245,10 +245,10 @@ struct
 
     and isAtomicW (GQ, (X as I.Root (I.Const c, S), s)) = 
           isAtomicS (GQ, (S, s))
-      | isAtomicW (GQ, (X as I.Root (I.Def c, I.Nil), s)) = 
-	  false (* added Sun Jun  3 2001 -fp *)
+      | isAtomicW (GQ, (X as I.Root (I.Def c, S), s)) = 
+	  isAtomicS (GQ, (S, s)) 
       | isAtomicW (GQ as (G, Q), (X as I.Root (I.BVar n, S), s)) = 
-	   isExistential(I.ctxLookup (Q, n)) orelse isAtomicS (GQ, (S, s))
+	   isExistential(I.ctxLookup (Q, n)) orelse isAtomicS (GQ, (S, s)) (* should disallow orelse ? *)
 (*      | isAtomicW (GQ, (X as (I.EClo _))) = true   (* existential var *) *)	  
       | isAtomicW (GQ, _) = false 
 
@@ -711,6 +711,19 @@ struct
 	    else ();
 	    true)
 
+     | eqIL (GQ as (G, Q), D, D', UsVs as ((I.Root (I.Def c, S), s), Vs), 
+	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), P', sc) = 
+         if eqCid(c, c') 
+	   then eqSpineIL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
+			 ((S', s'), (I.constType c', I.id)), P', sc)
+	 else 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^ atomicRCtxToString (G, (Eq(UsVs, UsVs') :: D))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+			  ^ "\n")
+	    else ();
+	    true)
+
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.Const c, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P', sc) = 
          if isAtomic (GQ, Us') 	  
@@ -722,6 +735,31 @@ struct
 			  ^ "\n")
 	    else ();
 	   true)
+
+     | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.Def c, S), s), Vs), 
+	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P', sc) = 
+         if isAtomic (GQ, Us') 	  
+	   then leftInstantiate (GQ, D, (Eq((Us', Vs'),(Us, Vs)) :: D'), P', sc)
+	 else 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^  atomicRCtxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+			  ^ "\n")
+	    else ();
+	   true)
+
+     | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
+	    (Us' as (I.Root (I.Def c, S'), s'), Vs'), P', sc) = 
+         if isAtomic (GQ, Us) 	  
+	   then leftInstantiate (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P', sc)
+	 else 
+	   (if !Global.chatter > 4
+	      then print (" Proved: " ^  atomicRCtxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D'))
+			  ^ atomicRCtxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
+			  ^ "\n")
+	    else ();
+	   true)
+
 
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.Const c, S'), s'), Vs'), P', sc) = 
@@ -735,14 +773,6 @@ struct
 	    else ();
 	   true)
 
-     | eqIL (GQ, D, D', UsVs as ((I.Root (I.BVar n, I.Nil), s), Vs), 
-	    UsVs' as ((I.Root (I.BVar n', I.Nil), s'), Vs'), P', sc) = 
-	 if (n = n')
-	   then leftInstantiate (GQ, D, D', P', sc)
-	 else 
-	   leftInstantiate (GQ, D, (Eq(UsVs, UsVs') :: D'), P', sc) 
-
-
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n', S'), s'), Vs'), P', sc) = 
 	     if (n = n')
@@ -754,6 +784,7 @@ struct
 		 end 
 	     else 
 	       leftInstantiate (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P', sc)
+
      | eqIL (GQ as (G, Q), D, D', UsVs, UsVs', P', sc) = 
 	(* (Us, Vs as (I.Pi _ , _)) and (Us', Vs' as (I.Root _, _)) 
 	   or the other way 
@@ -1040,6 +1071,13 @@ struct
 	else 
 	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, k)
 
+    | ltRW (GQ, D, (Us, Vs), (Us' as (I.Root (I.Def c, S'), s'), Vs'), sc, k) = 
+	if isAtomic (GQ, Us')
+	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
+               (* either leftInstantiate D or  atomic reasoning *)
+	else 
+	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, k)
+
     | ltRW (GQ as (G, Q), D, (Us, Vs), (Us' as (I.Root (I.BVar n, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us') 
 	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
@@ -1200,17 +1238,30 @@ struct
 	 else 
 	   false
 
-     | eqR' (GQ as (G, Q), D, UsVs as ((I.Root (I.BVar n, I.Nil), s), Vs), 
-	    UsVs' as ((I.Root (I.BVar n', I.Nil), s'), Vs'), sc, k) = 
-	 if (n = n')
-	   then (if !Global.chatter > 4
-		 then print (" Proved: " ^ atomicRCtxToString (G, D) ^ 
-			     " ---> " ^ atomicPredToString (G, Eq(UsVs, UsVs')) 
-			     ^ "\n")
-	       else (); true)
+     | eqR' (GQ, D, UsVs as ((I.Root (I.Def c, S), s), Vs), 
+	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), sc, k) = 
+         if eqCid(c, c') 
+	   then eqSpineR (GQ, D, ((S, s), (I.constType c, I.id)), 
+			 ((S', s'), (I.constType c', I.id)), sc, k)
 	 else 
-	   k (GQ, D, nil,  Eq(UsVs, UsVs'), sc)
-           (* either leftInstantiate D or atomic reasoning *)	   	   
+	   false
+
+     | eqR' (GQ, D, (Us as (I.Root (I.Def c, S), s), Vs), 
+	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), sc, k) = 
+         if isAtomic (GQ, Us') 	  
+	   then k (GQ, D, nil, Eq((Us', Vs'),(Us, Vs)), sc)
+	        (* either leftInstantiate D or atomic reasoning *)
+
+	 else 
+	   false
+
+     | eqR' (GQ, D, (Us as (I.Root (I.BVar n, S), s), Vs), 
+	    (Us' as (I.Root (I.Def c, S'), s'), Vs'), sc, k) = 
+         if isAtomic (GQ, Us) 	  
+	   then k (GQ, D, nil, Eq((Us, Vs),(Us', Vs')), sc)
+	        (* either leftInstantiate D or atomic reasoning *)
+	 else 
+	   false
 
      | eqR' (GQ as (G, Q), D, (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n', S'), s'), Vs'), sc, k) = 
@@ -1472,6 +1523,9 @@ struct
       | ltLW (GQ, D, D', UsVs, ((I.Root (I.Const c, S'), s'), Vs'), P) =  
          ltSpineL (GQ, D, D', UsVs, ((S', s'), (I.constType c, I.id)), P) 
 
+      | ltLW (GQ, D, D', UsVs, ((I.Root (I.Def c, S'), s'), Vs'), P) =  
+         ltSpineL (GQ, D, D', UsVs, ((S', s'), (I.constType c, I.id)), P) 
+
     and ltSpineL (GQ, D, D', UsVs, (Ss', Vs'), P) = 
           ltSpineLW (GQ, D, D', UsVs, (Ss', Whnf.whnf Vs'), P) 
 
@@ -1544,6 +1598,29 @@ struct
 	 else 
 	   true
 
+    | eqLW (GQ, D, D', UsVs as ((I.Root (I.Def c, S), s), Vs), 
+	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), P) = 
+         if eqCid(c, c') 
+	   then eqSpineL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
+			 ((S', s'), (I.constType c', I.id)), P)
+	 else 
+	   true
+
+     | eqLW (GQ, D, D', (Us as (I.Root (I.Def c, S), s), Vs), 
+	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P) = 
+         if isAtomic (GQ, Us') 	  
+	   then leftDecompose (GQ, D, (Eq((Us', Vs'),(Us, Vs)) :: D'), P)
+	 else 
+	   true
+
+     | eqLW (GQ, D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
+	    (Us' as (I.Root (I.Def c, S'), s'), Vs'), P) = 
+         if isAtomic (GQ, Us) 	  
+	   then leftDecompose (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P)
+	 else 
+	   true
+
+(*
      | eqLW (GQ, D, D', UsVs as ((I.Root (I.BVar n, I.Nil), s), Vs), 
 	    UsVs' as ((I.Root (I.BVar n', I.Nil), s'), Vs'), P) = 
 	 if (n = n')
@@ -1551,7 +1628,7 @@ struct
 	 else 
 	   leftDecompose (GQ, D, (Eq(UsVs, UsVs') :: D'), P) 
 
-
+*)
      | eqLW (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n', S'), s'), Vs'), P) = 
 	 if (n = n')
