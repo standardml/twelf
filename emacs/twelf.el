@@ -63,9 +63,9 @@
 ;;;
 ;;; --- Type Checking ---
 ;;; C-c C-c      twelf-save-check-config
+;;; C-c C-a      twelf-save-append-config
 ;;; C-c C-s      twelf-save-check-file
 ;;; C-c C-d      twelf-check-declaration
-;;; C-c C-a      twelf-append-config
 ;;; C-c c        twelf-type-const
 ;;; C-c C-u      twelf-server-display
 ;;;
@@ -428,7 +428,7 @@ Maintained to present reasonable menus.")
   (define-key map "\C-c\C-d" 'twelf-check-declaration)
   (define-key map "\C-c\C-s" 'twelf-save-check-file)
   (define-key map "\C-c\C-c" 'twelf-save-check-config)
-  (define-key map "\C-c\C-a" 'twelf-append-config)
+  (define-key map "\C-c\C-a" 'twelf-save-append-config)
   )
 
 (defvar twelf-mode-map nil
@@ -1225,6 +1225,19 @@ Always save if the variable `twelf-save-silently' is non-nil."
 With prefix argument also displays Twelf server buffer.
 If necessary, this will start up an Twelf server process."
   (interactive "P")
+  (twelf-save-op-config 'twelf-check-config))
+
+(defun twelf-save-append-config (&optional displayp)
+  "Save its modified buffers and then append the current Twelf configuration.
+With prefix argument also displays Twelf server buffer.
+If necessary, this will start up an Twelf server process."
+  (interactive "P")
+  (twelf-save-op-config 'twelf-append-config))
+
+(defun twelf-save-op-config (twelf-op-config &optional displayp)
+  "Save its modified buffers and then "twelf-op-config" the current
+Twelf configuration.  With prefix argument also displays Twelf server
+buffer.  If necessary, this will start up an Twelf server process."
   (let ((current-file-name (buffer-file-name)))
     (cond ((and current-file-name
 		(not buffer-read-only)
@@ -1233,7 +1246,7 @@ If necessary, this will start up an Twelf server process."
 	   (save-buffer)))
     (save-excursion
       (twelf-config-save-some-buffers))
-    (twelf-check-config displayp)))
+    (funcall twelf-op-config displayp)))
 
 (defun twelf-check-config (&optional displayp)
   "Check the current Twelf configuration.
@@ -1242,12 +1255,12 @@ If necessary, this will start up an Twelf server process."
   (interactive "P")
   (if (not *twelf-config-buffer*)
       (call-interactively 'twelf-server-configure))
-  (twelf-server-sync-config)
-  (twelf-focus nil nil)
   (when twelf-check-config-clears-server-buffer
     (twelf-clear-server-buffer)
     (twelf-server-send-command "version")
     (twelf-server-wait nil ""))
+  (twelf-server-sync-config)
+  (twelf-focus nil nil)
   (twelf-server-send-command "Config.load")
   (twelf-server-wait displayp))
 
