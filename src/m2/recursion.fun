@@ -559,7 +559,10 @@ struct
 	  Conv.conv ((V1, t1), (V2, t2)) andalso	  
           inputConvSpine (mS, 
 			  ((S1, s1), (W1, I.Dot (I.Exp (I.EClo (U1, s1), V1), t1))),
-			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U2, s2), V2), t2))))
+			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U1, s1), V2), t2))))
+          (* BUG: use the same variable (U1, s1) to continue comparing! --cs
+                  in ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U2, s2), V2), t2))))
+	     FIXED: --cs Mon Nov  9 19:38:55 EST 1998 *)
       | inputConvSpine (ModeSyn.Mapp (ModeSyn.Marg (ModeSyn.Plus, _), mS),
 			((I.App (U1, S1), s1), (I.Pi ((I.Dec (_, V1), _), W1), t1)),
 			((I.App (U2, S2), s2), (I.Pi ((I.Dec (_, V2), _), W2), t2))) =
