@@ -308,19 +308,6 @@ struct
 
 	  val r = convertKRes(C.Assign(R', Eqs), List.rev K, left)
 	in 
-	  (* 
-	     this sometimes fails because G does not assign names
-	     to all declaratons.
-	     Fri May  3 19:49:45 2002 -fp
-	  *)
-	  
-	  (if (!Global.chatter) >= 6 then
-	     (print ("\nClause Eqn" );
-	      print (CPrint.clauseToString "\t" (G, r));	 
-	      print "\n";
-	      print ("Clause orig \t" ^ Print.expToString(G, R) ^ "\n"))
-	   else 
-	     ());	  
 	     r
 	end
 
