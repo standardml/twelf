@@ -98,8 +98,6 @@ struct
 	end
       | formatFor' (G, (F.True, s)) = 
 	[Fmt.String "True"]
-      | formatFor' (G, (F.TClo (F, s), s')) = 
-	formatFor' (G, (F, I.comp (s, s')))
 	
 
     (* formatFor (Psi, F) names = fmt'

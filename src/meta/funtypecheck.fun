@@ -198,19 +198,6 @@ struct
           psub (k-1, G, I.Dot (I.Idx k, s))
 
 
-    (* normalizeMDec (xx:F, s) = (xx::F', s')
-       
-       Invariant:
-       If   Psi |- s : Psi'   
-       and  Psi' |- F formula
-       then Psi |- s' : Psi''
-       and  Psi'' | F' formula
-       and  Psi |- F[s] == F'[s'] formula
-    *)
-    fun normalizeMDec (F.MDec (name, F.TClo (F, s)), s') = 
-          normalizeMDec (F.MDec (name, F), I. comp (s, s'))
-      | normalizeMDec DDs = DDs
-
     fun deltaSub (I.Null, s) = I.Null
       | deltaSub (I.Decl (Delta, DD), s) =
           I.Decl (deltaSub (Delta, s), F.mdecSub (DD, s))
@@ -273,7 +260,7 @@ struct
 	end 
       | check _ = raise Error "Typecheck Error: Term not well-typed"
 
-    and infer (Delta, kk) = normalizeMDec (I.ctxLookup (Delta, kk), I.id)
+    and infer (Delta, kk) = (I.ctxLookup (Delta, kk), I.id)
 
     (* assume (Psi, Delta, Ds) = (Psi', Delta', s') 
 
@@ -292,7 +279,7 @@ struct
           (F.MDec (name, F.Ex (D, F)), s) =>
 	    let 
 	      val LD = F.Prim (I.decSub (D, s))
-	      val DD = F.MDec (name, F.TClo (F, I.dot1 s))
+	      val DD = F.MDec (name, F.forSub (F, I.dot1 s))
 	      val (Psi', Delta', s') = assume (I.Decl (Psi, LD), 
 					       I.Decl (shift Delta, DD), Ds)
 	    in
@@ -321,7 +308,7 @@ struct
 						   TypeCheck.infer' (F.makectx Psi, U)) ^
 				" expected " ^ 
 				Print.expToString (F.makectx Psi, I.EClo (V, s)))
-	       val DD = F.MDec (name, F.TClo (F, I.Dot (I.Exp (U), s)))
+	       val DD = F.MDec (name, F.forSub (F, I.Dot (I.Exp (U), s)))
 	       val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	     in
 	       (Psi', F.mdecSub (DD, s') :: Delta', s')
@@ -334,7 +321,7 @@ struct
 	   (F.MDec (name, F.All (F.Block (F.CtxBlock (l, G)), F)), s) =>
 	     let 
 	       val _ = validBlock (Psi, k, (l, G))
-	       val DD = F.MDec (name, F.TClo (F, psub(k, G, s)))
+	       val DD = F.MDec (name, F.forSub (F, psub(k, G, s)))
 	       val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	     in
 	       (Psi', F.mdecSub (DD, s') :: Delta', s')
@@ -344,7 +331,7 @@ struct
 	(case infer (Delta, kk) of
 	   (F.MDec (name, F.And (F1, F2)), s) =>
 	     let
-	       val DD = F.MDec (name, F.TClo (F1, s))
+	       val DD = F.MDec (name, F.forSub (F1, s))
 	       val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	     in
 	       (Psi', F.mdecSub (DD, s') :: Delta', s')
@@ -354,7 +341,7 @@ struct
 	(case infer (Delta, kk) of
 	   (F.MDec (name, F.And (F1, F2)), s) =>
 	     let
-	       val DD = F.MDec (name, F.TClo (F2, s))
+	       val DD = F.MDec (name, F.forSub (F2, s))
 	       val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	     in
 	       (Psi', F.mdecSub (DD, s') :: Delta', s')
@@ -441,27 +428,17 @@ struct
       check (I.Null, I.Null, P, (T, I.id))
 
 
-      
-    fun isFor (G, F) =
-      let
-	fun isFor' (G, (F.All (F.Prim D, F), s)) =
-      	      ((TypeCheck.checkDec (G, (D, s));
-		isFor' (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s)))
-	       handle TypeCheck.Error msg => raise Error msg)
-	  | isFor' (G, (F.Ex (D, F), s)) = 
-	      ((TypeCheck.checkDec (G, (D, s));
-		isFor' (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s)))
-	       handle TypeCheck.Error msg => raise Error msg)
-	  | isFor' (G, (F.True, _)) = ()
-	  | isFor' (G, (F.TClo (F, s'), s)) = 
-	      isFor' (G, (F, I.comp (s', s)))
-	  | isFor' (G, (F.And (F1, F2), s)) =
-	      (isFor' (G, (F1, s));
-	       isFor' (G, (F2, s)))
-
-      in
-	isFor' (G, (F, I.id))
-      end
+    fun isFor (G, F.All (F.Prim D, F)) =
+          ((TypeCheck.checkDec (G, (D, I.id));
+	    isFor (I.Decl (G, D), F))
+	   handle TypeCheck.Error msg => raise Error msg)
+      | isFor (G, F.Ex (D, F)) = 
+	  ((TypeCheck.checkDec (G, (D, I.id));
+	    isFor (I.Decl (G, D), F))
+	   handle TypeCheck.Error msg => raise Error msg)
+      | isFor (G, F.True) = ()
+      | isFor (G, F.And (F1, F2)) =
+	  (isFor (G, F1); isFor (G, F2))
 
 
   in

@@ -420,21 +420,6 @@ struct
 	end 
 
 
-
-(*    fun collectFor (T, G, (F.All (I.Prim D, F), s), K) = 
-      
-          collectExp (T, I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (T, G, (D, s), K))
-          collec
-      | collectFor ((F.Ex (D, F), s), K) =
-      | collectFor ((F.True, s), K) = 
-      | collectFor ((F.TClo (F, s'), s), K) = collectFor ((F, I.comp (s', s)), K)
-      | collectFor ((F.And (F1, F2), s), K) = 
-
-
-    fun abstractFor F =
-      let 
-	K = collectFor F
-*)
   in
     val abstractSub = abstractSubAll
   end

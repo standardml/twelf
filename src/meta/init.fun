@@ -34,24 +34,23 @@ struct
       
     fun init (F, OF) = 
       let 
-	fun init' ((G, B), S.All (_, O), (F.All (F.Prim D, F'), s), Ss) = 
-              init' ((I.Decl (G, N.decName (G, Whnf.normalizeDec (D, s))), 
+	fun init' ((G, B), S.All (_, O), F.All (F.Prim D, F'), Ss) = 
+(* check--cs *)
+              init' ((I.Decl (G, N.decName (G, Whnf.normalizeDec (D, I.id))), 
 		     I.Decl (B, S.Assumption (!MTPGlobal.maxSplit))), 
-		     O, (F', I.dot1 s), Ss)
+		     O, F', Ss)
 	      (* it is possible to calculuate 
 	         index/induction variable information here 
 		 define occursOrder in StateSyn.fun  --cs *)
    (*      | init' (G, B, O, (F.All (F.Block _, F), s)) =
 	   no such case yet  --cs *)
-	  | init' (GB, O, (F.And (F1', F2'), s), Ss) = 
-	      init' (GB, O, (F1', s), init' (GB, O, (F2', s), Ss))
-	  | init' (GB, O, (F.TClo (F', s'), s), Ss) =
-	      init' (GB, O, (F', I.comp (s', s)), Ss)
-	  | init' (GB, O, Fs as (F.Ex (D, F'), s), Ss) = 
-	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, nil, F.TClo Fs) :: Ss
+	  | init' (GB, O, F.And (F1', F2'), Ss) = 
+	      init' (GB, O, F1', init' (GB, O, F2', Ss))
+	  | init' (GB, O, F' as F.Ex _, Ss) = 
+	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, nil, F') :: Ss
       in
 	(N.varReset ();
-	 init' ((I.Null, I.Null), OF, (F, I.id), nil))
+	 init' ((I.Null, I.Null), OF, F, nil))
       end
 
   in

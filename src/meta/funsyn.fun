@@ -32,7 +32,6 @@ struct
     All of LFDec * For			(* F ::= All LD. F            *)
   | Ex  of IntSyn.Dec * For		(*     | Ex  D. F             *)
   | True				(*     | T                    *)
-  | TClo of (For * IntSyn.Sub)		(*     | F [s]                *)
   | And of For * For                    (*     | F1 ^ F2              *)
 
   datatype Pro =			(* Programs                   *)
@@ -108,7 +107,6 @@ struct
     fun lemmaSize () = (!nextLemma)
 
 
-    fun mdecSub (MDec (name, F), s) = MDec (name, TClo (F, s))
 
     (* union (G, G') = G''
 
@@ -194,24 +192,34 @@ struct
 		 (Ex (D2, F2), s2)) = 
           Conv.convDec ((D1, s1), (D2, s2))
 	  andalso convFor ((F1, I.dot1 s1), (F2, I.dot1 s2))
-      | convFor ((TClo (F1, s1'), s1), Fs2) =
-	  convFor ((F1, I.comp (s1', s1)), Fs2)
-      | convFor (Fs1, (TClo (F2, s2'), s2)) =
-	  convFor (Fs1, (F2, I.comp (s2', s2)))
       | convFor ((And (F1, F1'), s1), (And (F2, F2'), s2)) =
 	  convFor ((F1, s1), (F2, s2))
 	  andalso convFor ((F1', s1), (F2', s2))
 
-       
-    fun normalizeFor (All (Prim D, F), s) = 
-          All (Prim (I.decSub (D, s)), normalizeFor (F, I.dot1 s))
-      | normalizeFor (Ex (D, F), s) = 
-	  Ex (I.decSub (D, s), normalizeFor (F, I.dot1 s))
-      | normalizeFor (True, s) = True
-      | normalizeFor (TClo (F, s'), s) = 
-	  normalizeFor (F, I.comp (s', s))
-      | normalizeFor (And (F1, F2), s) =
-	  And (normalizeFor (F1, s), normalizeFor (F2, s))
+
+    fun ctxSub (I.Null, s) = (I.Null, s)
+      | ctxSub (I.Decl (G, D), s) = 
+        let
+	  val (G', s') = ctxSub (G, s)
+	in
+	  (I.Decl (G', I.decSub (D, s')), I.dot1 s)
+	end
+
+    fun forSub (All (Prim D, F), s) = 
+          All (Prim (I.decSub (D, s)), forSub (F, I.dot1 s))
+      | forSub (All (Block (CtxBlock (name, G)), F), s) = 
+	  let
+	    val (G', s') = ctxSub (G, s)
+	  in
+	    All (Block (CtxBlock (name, G')), forSub (F, s'))
+	  end			     
+      | forSub (Ex (D, F), s) = 
+	  Ex (I.decSub (D, s), forSub (F, I.dot1 s))
+      | forSub (True, s) = True
+      | forSub (And (F1, F2), s) =
+	  And (forSub (F1, s), forSub (F2, s))
+
+    fun mdecSub (MDec (name, F), s) = MDec (name, forSub (F, s))
 
   in 
     val labelLookup = labelLookup 
@@ -226,7 +234,7 @@ struct
     val lfctxLFDec = lfctxLFDec
     val dot1n = dot1n
     val convFor = convFor
-    val normalizeFor = normalizeFor
+    val forSub = forSub
   end
 end (* functor FunSyn *)
 

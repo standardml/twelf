@@ -27,7 +27,6 @@ sig
     All of LFDec * For			(* F ::= All LD. F            *)
   | Ex  of IntSyn.Dec * For		(*     | Ex  D. F             *)
   | True				(*     | T                    *)
-  | TClo of (For * IntSyn.Sub)		(*     | F [s]                *)
   | And of For * For                    (*     | F1 ^ F2              *)
 
   datatype Pro =			(* Programs                   *)
@@ -75,7 +74,7 @@ sig
   val lfctxLength : lfctx -> int
   val lfctxLFDec : (lfctx * int) -> (LFDec * IntSyn.Sub) 
 
-  val normalizeFor : (For * IntSyn.Sub) -> For
+  val forSub : For * IntSyn.Sub -> For
 
   val dot1n : (IntSyn.dctx * IntSyn.Sub) -> IntSyn.Sub
 

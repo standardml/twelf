@@ -617,7 +617,7 @@ struct
           collectFor (I.Decl (G, I.decSub (D, s)), (F, I.dot1 s), 
 		      Abstract.collectDec (G, (D, s), K))
       | collectFor (G, (F.True, s), K) = K
-      | collectFor (G, (F.TClo (F, s'), s), K) = collectFor (G, (F, I.comp (s', s)), K)
+      | collectFor (G, (F.forSub (F, s'), s), K) = collectFor (G, (F, I.comp (s', s)), K)
       | collectFor (G, (F.And (F1, F2), s), K) = 
 	  collectFor (G, (F2, s), collectFor (G, (F1, s), K))
 
@@ -629,7 +629,7 @@ struct
           F.Ex (Abstract.abstractDec (K, depth, (D, s)), 
 		    abstractFor (K, depth + 1, (F, I.dot1 s)))
       | abstractFor (K, depth, (F.True, s)) = F.True
-      | abstractFor (K, depth, (F.TClo (F, s'), s)) = 
+      | abstractFor (K, depth, (F.forSub (F, s'), s)) = 
           abstractFor (K, depth, (F, I.comp (s', s))) 
       | abstractFor (K, depth, (F.And (F1, F2), s)) =
 	  F.And (abstractFor (K, depth, (F1, s)),
@@ -683,7 +683,7 @@ struct
 	  
 	val (Gx, Fx) = universalCtx (I.Null, F) 
 	val (Gx', s') = collect (s, Gx)
-	val F' = abstract (Gx', F.normalizeFor (Fx, s'))
+	val F' = abstract (Gx', F.forSub (Fx, s'))
       in
 	F'
       end
@@ -693,8 +693,6 @@ struct
     fun makeCtx (G, (F.True, s)) = G
       | makeCtx (G, (F.Ex (D, F), s)) =
           makeCtx (I.Decl (G, Whnf.normalizeDec (D, s)), (F, I.dot1 s))
-      | makeCtx (G, (F.TClo (F, s'), s)) =
-	  makeCtx (G, (F, I.comp (s', s)))
       
 
     fun nameCtx I.Null = I.Null
@@ -769,8 +767,6 @@ struct
 	    skolem (d, (I.Decl (G, D'), I.Decl (B, S.Lemma)), 
 		    I.comp (w, I.shift), (F, I.Dot (I.Exp (I.Root (I.BVar 1, spine d)), s)), k)
 	  end
-      | skolem (d, GB, w, (F.TClo (F, s'), s), k) = 
-          skolem (d, GB, w, (F, I.comp (s', s)), k)
 
 
     (* updateState (S, (Ds, s))
@@ -789,7 +785,7 @@ struct
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
 				(n', S.orderSub (O', s')) :: 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
-				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
+				map (fn (n', F') => (n', F.forSub (F', s'))) R, F.forSub (F, s')),
 		       (L, I.comp (s, s')))
 	end
       | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Lemma (n', Frl') :: L, s)) =
@@ -798,8 +794,8 @@ struct
 	in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
-				(n', F.TClo (Frl', s')) :: 
-				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
+				(n', F.forSub (Frl', s')) :: 
+				map (fn (n', F') => (n', F.forSub (F', s'))) R, F.forSub (F, s')),
 		       (L, I.comp (s, s')))
 	end
       
@@ -835,8 +831,6 @@ struct
 	in
 	  createEVars (n, G, (F2, s), (O2, t), S')
 	end
-      | createEVars (n, G, (F.TClo (F, s'), s), (O, t), S) =
-	  createEVars (n, G, (F, I.comp (s', s)), (O, t), S)
       | createEVars (n, G, (F, s), (O, t), S) = (n+1, calc (n, G, (F, s), (O, t), S))
 
 

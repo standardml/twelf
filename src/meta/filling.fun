@@ -32,8 +32,6 @@ struct
 
     *)
     fun createEVars (G, (F.True, s)) = (nil, F.Unit)
-      | createEVars (G, (F.TClo (F, s'), s)) = 
-          createEVars (G, (F, I.comp (s', s)))
       | createEVars (G, (F.Ex (I.Dec (_, V), F), s)) = 
 	let 
 	  val X = I.newEVar (G, I.EClo (V, s))

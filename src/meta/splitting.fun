@@ -412,7 +412,7 @@ struct
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
 		   map (fn (i, O') => (i, S.orderSub (O', s'))) H, 
-		   map (fn (i, F') => (i, F.TClo (F', s'))) R, F.TClo (F, s')))
+		   map (fn (i, F') => (i, F.forSub (F', s'))) R, F.forSub (F, s')))
 
     fun abstractFinal (abstract) (B, s) =
           abstract (MTPAbstract.abstractSub (B, s))
