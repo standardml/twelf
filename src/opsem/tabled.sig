@@ -6,21 +6,23 @@ sig
 
   (*! structure IntSyn : INTSYN !*)
   (*! structure CompSyn : COMPSYN !*)
-  structure Unify : UNIFY 
-
-
-  val SuspGoals : ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (CompSyn.pskeleton -> unit)) * 
-		    Unify.unifTrail * int ref) list) ref 
 
   val solve     : (CompSyn.Goal * IntSyn.Sub) * CompSyn.DProg
                   * (CompSyn.pskeleton -> unit) -> unit
+
+  val updateGlobalTable : (CompSyn.Goal * bool) -> unit
+
+  val keepTable : IntSyn.cid -> bool
+
+  val fillTable : unit -> unit
 
   val nextStage : unit -> bool
 
   val reset : unit -> unit
 
-  val solExists : (IntSyn.Exp * IntSyn.Sub) -> bool
+  val tableSize : unit -> int
 
+  val suspGoalNo : unit -> int
 
 end;  (* signature TABLED *)
 

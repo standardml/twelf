@@ -1,13 +1,16 @@
 Library
   signature ABSTRACTTABLED
   structure AbstractTabled
-  signature TABLEINDEX
-  structure TableIndex
   signature TABLED
   structure Tabled
-
+  signature TABLEPARAM
+  structure TableParam
   signature ABSMACHINE
   structure AbsMachine
+  signature ABSMACHINESBT
+  structure AbsMachineSbt
+  signature MEMOTABLE
+  structure MemoTable
   signature PTRECON
   structure PtRecon
   signature TRACE
@@ -31,19 +34,34 @@ is
   ../subordinate/sources.cm
   ../tabling/sources.cm
   ../compile/sources.cm
-  abstract.sig  
-  abstract.fun
-  index.sig
-  index.fun
-  tabled.sig
-  tabled.fun
 
+
+  table-param.sig
+  table-param.fun
+
+  abstract.sig  
+  abstract.fun 
+
+  subtree.fun 
+  subtree-inst.fun  
+
+  sw-subtree.fun
+  sw-subtree.sig
+
+  tabled.sig
+  tabled.fun     
+ 
   absmachine.sig
   absmachine.fun
+
+  absmachine-sbt.sig
+  absmachine-sbt.fun
+
   ptrecon.sig
   ptrecon.fun
+
   trace.sig
   trace.fun
   tmachine.fun
-  swmachine.fun
+  swmachine.fun 
   opsem.sml

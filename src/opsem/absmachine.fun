@@ -52,8 +52,6 @@ struct
      return to indicate backtracking.
   *)
 
-  fun raiseType (I.Null, U) = U
-    | raiseType (I.Decl(G, D), U) = I.Lam(D, raiseType (G, U))
 
   fun cidFromHead (I.Const a) = a
     | cidFromHead (I.Def a) = a
@@ -70,8 +68,10 @@ struct
   fun shiftSub (IntSyn.Null, s) = s
     | shiftSub (IntSyn.Decl(G, D), s) = I.dot1 (shiftSub (G, s))
                               
+  fun raiseType (I.Null, V) = V
+    | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
 
-  (* solve' ((g, s), dp, sc) = ()
+  (* solve ((g, s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
        G |- s : G'
@@ -82,7 +82,8 @@ struct
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
-  fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) = matchAtom ((p,s), dp, sc)
+  fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) = 
+      matchAtom ((p,s), dp, sc)
 
     | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
@@ -113,10 +114,9 @@ struct
               any effect  sc S  might have
   *)
   and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =     
-      (* argument order in call to unifiable??? *)
-       (if Unify.unifiable (G, (Q, s), ps') (* effect: instantiate EVars *)
-	 then sc I.Nil			(* call success continuation *)
-       else ())				(* fail *)
+       if Unify.unifiable (G, (Q, s), ps') (* effect: instantiate EVars *)
+	 then sc I.Nil			   (* call success continuation *)
+       else ()		   	           (* fail *)
 
     | rSolve (ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), sc) = 
 	(case Assign.assignable (G, ps', (Q, s))
@@ -136,7 +136,7 @@ struct
 
     | rSolve (ps', (C.Exists(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
       let
-	val X = I.newEVar (G, I.EClo (A,s))
+	val X  = I.newEVar (G, I.EClo (A,s))
       in
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, (fn S => sc (I.App(X,S))))
       end
@@ -157,7 +157,9 @@ struct
      Effects: instantiation of EVars in ag[s], dp and sc () *)
 
   and aSolve ((C.Trivial, s), dp, cnstr, sc) = 
-      (if Assign.solveCnstr cnstr then sc () else ())
+      if Assign.solveCnstr cnstr then 
+	sc () 
+      else ()
     | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc) =
       let
 	val G'' = compose (G, G')
