@@ -2,6 +2,7 @@ For release:
 
   Edit Twelf.version in frontend/twelf.fun
   Edit version in doc/guide/twelf.texi
+    NOTE: search for 1.2 and 1-2 ! (or appropriate versions)
   Edit version in README
   Edit instructions in INSTALL [no longer exists Sun May 23 12:51:24 1999]
 
@@ -24,6 +25,9 @@ For release:
 
   Edit twelf/FILES by deleting:
 
+        twelf/CVS
+        twelf/*/CVS
+	twelf/*/.cvsignore
 	twelf/DISTRIBUTE
 	twelf/FILES
 	twelf/HISTORY
@@ -56,6 +60,8 @@ For release:
 	twelf/src/*/WALK
 	twelf/src/WALK
 	twelf/work/*
+
+
 
    tar -cvf twelf-1-2.tar `cat twelf/FILES`
    gzip twelf-1-2.tar

@@ -87,7 +87,7 @@ Instead of compiling Twelf for the Windows 95/98/NT family of
 operating systems, we recommend instead to use the precompiled version
 which is available from the Twelf homepage at
 
-  http://www.cs.cmu.edu/~twelf/dist/twelf-1-2.exe
+  http://www.cs.cmu.edu/~twelf/dist/twelf-1-3.exe
 
 
 Unix Installation
@@ -97,8 +97,8 @@ Unix Installation
   Summary
   -------
 
-      % gunzip twelf-1-2.tar.gz
-      % tar -xf twelf-1-2.tar
+      % gunzip twelf-1-3.tar.gz
+      % tar -xf twelf-1-3.tar
       % cd twelf
 
     You may need to edit the file Makefile to give the proper location
@@ -152,8 +152,8 @@ Unix Installation
     Unpack the distribution in this directory: 	
     ( % is assumed to be the shell prompt.) 
 
-	  % gunzip twelf-1-2.tar.gz
-	  % tar -xf twelf-1-2.tar
+	  % gunzip twelf-1-3.tar.gz
+	  % tar -xf twelf-1-3.tar
 	  % cd twelf
 
 
@@ -244,7 +244,7 @@ Windows 95/98/NT Installation:
   precompiled version of the Twelf server which is available from the
   Twelf homepage at
 
-        http://www.cs.cmu.edu/~twelf/dist/twelf-1-2.exe
+        http://www.cs.cmu.edu/~twelf/dist/twelf-1-3.exe
 
   which is a self-installing EXE file.
 

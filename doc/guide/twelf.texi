@@ -164,8 +164,8 @@ file @file{Makefile} to give the proper location for @code{sml-cm}.
 
 @example
 @group
-% @kbd{gunzip twelf-1-2.tar.gz}
-% @kbd{tar -xf twelf-1-2.tar}
+% @kbd{gunzip twelf-1-3.tar.gz}
+% @kbd{tar -xf twelf-1-3.tar}
 % @kbd{cd twelf}
 % @kbd{make}
 % @kbd{bin/twelf-server}
@@ -4365,8 +4365,8 @@ On a Unix system you unpack the sources with
 
 @example
 @group
-gunzip twelf-1-2.tar.gz
-tar -xf twelf-1-2.tar
+gunzip twelf-1-3.tar.gz
+tar -xf twelf-1-3.tar
 cd twelf
 make
 @end group
