@@ -30,4 +30,4 @@
 		forall  {D1: M => M'} {D2: M =>* M''} 
 	        exists  {N:term} {E1: M' =>* N} {E2: M'' => N}
 		true.
-%prove 4 [D1 D2] (Mstrip D1 D2 _ _ _).
+%prove 6 [D1 D2] (Mstrip D1 D2 _ _ _).
