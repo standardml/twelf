@@ -432,18 +432,21 @@ struct
        current subordination relation in order to guarantee
        soundness.
     *)
+    fun ctxAppend (G, I.Null) = G
+      | ctxAppend (G, I.Decl(G',D)) =
+          I.Decl (ctxAppend (G, G'), D)
 
     (* checkSubordBlock (G, G', L') = ()
        Effect: raises Error(msg) if subordination is not respected
                in context block SOME G'. PI L'
        Invariants: G |- SOME G'. PI L' block
     *)
-    fun checkSubordBlock (G, I.Decl(G', D), L') =
-          checkSubordBlock (I.Decl (G, D), G', L')
-      | checkSubordBlock (G, I.Null, (D as I.Dec(_,V))::L') =
+    fun checkSubordBlock (G, G', L) =
+          checkSubordBlock' (ctxAppend (G, G'), L)
+    and checkSubordBlock' (G, (D as I.Dec(_,V))::L') =
 	  ( Subordinate.respectsN (G, V); (* is V nf?  Assume here: yes! *)
-	    checkSubordBlock (I.Decl (G, D), I.Null, L') )
-      | checkSubordBlock (G, I.Null, nil) = ()
+	    checkSubordBlock' (I.Decl (G, D), L') )
+      | checkSubordBlock' (G, nil) = ()
 
     (* conDecBlock (condec) = (Gsome, Lpi)
        if condec is a block declaration
