@@ -65,6 +65,8 @@ Parameter Cases
 	(* not a sensible assumption. Must be generalized *)
 	
   base cases
+    RECURSION: calculating twice induction hypothesis does not remove duplicates, check!!!
+
 Splittin Residual lemmas
 Index variables
 Proof terms

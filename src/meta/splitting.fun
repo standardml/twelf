@@ -198,12 +198,12 @@ struct
 	end
 
 
-    fun constAndParamCases (c, G, k, (V, s'), abstract)  = 
+    fun constAndParamCases ops0 (c, G, k, (V, s'), abstract)  = 
           constCases (G, (V, s'), Index.lookup c, abstract, 
-		      paramCases (G, (V, s'), k, abstract, nil))
+		      paramCases (G, (V, s'), k, abstract, ops0))
 
 
-    fun metaCases d (c, G, k, Vs, abstract) =
+    fun metaCases (d, ops0) (c, G, k, Vs, abstract) =
       let
 	fun select (0, ops)  = ops
 	  | select (d', ops) = 
@@ -216,16 +216,16 @@ struct
 			in
 			  Trail.trail (fn () =>
 				       (if Unify.unifiable (G, Vs, Vs')
-					  then (TextIO.print "Success!\n"; nil) (* abstract state *)
+					  then (TextIO.print "Success!\n"; ops) (* abstract state *)
 					else ops)
 					  handle MTPAbstract.Error _ => ops)
 			end
 		      else ops
 	    in 
-	      select (d'-1, ops)
+	      select (d'-1, ops')
 	    end
       in
-	select (d, nil)
+	select (d, ops0)
       end
 
           
@@ -264,23 +264,23 @@ struct
     *)
     fun split ((G', B'), D as I.Dec (_, V), s, B, abstract) = 
         let
-	  fun split' n = 
+	  fun split' (n, ops) = 
 	    if n < 0 then lowerSplitDest (I.Null, 0, (V, s),  
 					  fn U' => abstract (I.Dot (I.Exp (U'), s), B),
-					  constAndParamCases)
+					  constAndParamCases ops)
 	    else
 	      let
 		val F.LabelDec (name, G1, G2) = F.labelLookup n
 		val t = someEVars (G', G1, I.Shift (I.ctxLength G'))
 		val (G'', B'') = extend ((G', B'), n, ctxSub (G2, t))
-		val _ = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift (List.length G2))),
+		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift (List.length G2))),
 					fn U' => U',
-					metaCases (List.length G2))
+					metaCases (List.length G2, ops))
 	      in
-		split' (n - 1)
+		split' (n - 1, ops')
 	      end
 	in
-	  split' (F.labelSize () - 1)
+	  split' (F.labelSize () - 1, nil)
 	end
       
 
