@@ -286,11 +286,15 @@ struct
 	used for error messages)
     *)
     fun installTerminates (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
-		
+
+    fun uninstallTerminates cid = O.uninstall cid
+
     (* installTotal (T, (r, rs)) = L'
        Invariant as in installTerminates
     *)
     fun installTotal (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
+
+    fun uninstallTotal cid = O.uninstall cid
 
     (* -bp *)
 
@@ -338,7 +342,9 @@ struct
 	  val O2' = argROrder (O2, P, I.constImp a)
 	  val pr  = argPredicate (Pred, O1', O2')
 	  (* install termination order *)
-	  val S'  = O.install (a, O.TDec (O2', M')) 
+	  (* bug: %reduces should not entail %terminates *)
+	  (* fixed: Sun Mar 13 09:41:18 2005 -fp *)
+	  (* val S'  = O.install (a, O.TDec (O2', M')) *)
 	  (* install reduction order   *)  
 	  val S'' = O.installROrder (a, O.RDec (pr, M'))  
 	in
@@ -439,15 +445,19 @@ struct
 	used for error messages)
     *)
     fun installReduces (L.RDecl (R, C), rrs) = (wfred ((R, C), rrs); installRDecl (R, C))
-		 
+    fun uninstallReduces cid = O.uninstallROrder cid
+
     fun installTabled (L.TabledDecl cid) = TabledSyn.installTabled cid
 
     fun installKeepTable (L.KeepTableDecl cid) = TabledSyn.installKeepTable cid
 
   in
     val installTotal = installTotal
+    val uninstallTotal = uninstallTotal
     val installTerminates = installTerminates
+    val uninstallTerminates = uninstallTerminates
     val installReduces = installReduces
+    val uninstallReduces = uninstallReduces
     val installTabled = installTabled 
     val installKeepTable = installKeepTable
   end (* local *)

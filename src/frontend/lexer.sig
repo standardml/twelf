@@ -50,6 +50,7 @@ sig
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
     | FREEZE                            (* `%freeze' *)
+    | THAW				(* `%thaw' *)
     | DETERMINISTIC                     (* `%deterministic' *) (* -rv 11/27/01 *)
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)

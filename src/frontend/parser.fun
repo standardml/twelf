@@ -69,6 +69,7 @@ struct
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
     | FreezeDec of Names.Qid list
+    | ThawDec of Names.Qid list
     | DeterministicDec of Names.Qid list  (* -rv *)
     | ClauseDec of ExtConDec.condec (* -fp *)
     | SigDef of ModExtSyn.sigdef
@@ -194,6 +195,7 @@ struct
       | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s'), sc) = parseEstablish' (f, sc)
       | parseStream' (f as LS.Cons ((L.ASSERT, r), s'), sc) = parseAssert' (f, sc)
       | parseStream' (f as LS.Cons ((L.FREEZE, r), s'), sc) = parseFreeze' (f, sc)
+      | parseStream' (f as LS.Cons ((L.THAW, r), s'), sc) = parseThaw' (f, sc)
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
       | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
@@ -360,6 +362,15 @@ struct
         in
           Stream.Cons ((FreezeDec qids, r), parseStream (stripDot f', sc))
         end
+
+    and parseThaw' (f as LS.Cons ((_, r0), s), sc) =
+        let
+	  val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseThaw' (LS.expose s)
+	  val r = Paths.join (r0, r')
+	  val qids = map Names.Qid qids
+	in
+	  Stream.Cons ((ThawDec qids, r), parseStream (stripDot f', sc))
+	end
 
     and parseDeterministic' (f as LS.Cons ((_, r0), s), sc) =
         let

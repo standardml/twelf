@@ -1,1 +1,16 @@
-%terminates D (eval D _).
+nat : type.
+z : nat.
+s : nat -> nat.
+pred : nat -> nat -> type.
+%mode pred +X -Y.
+ps : pred (s X) X.
+%reduces Y < X (pred X Y).
+% %terminates X (pred X Y).
+
+even : nat -> type.
+%mode even +X.
+ez : even z.
+ess : even X <- pred X Y <- pred Y Z <- even Z.
+%terminates X (even X).
+
+% this last %terminates should fail!

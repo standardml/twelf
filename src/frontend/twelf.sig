@@ -50,8 +50,6 @@ sig
   val top : unit -> unit    (* top-level for interactive tabled queries *)
   end
 
-
-
   structure Timers :
   sig
     val show : unit -> unit	       (* show and reset timers *)
@@ -77,7 +75,6 @@ sig
     datatype TraceMode = Progressive | Omniscient
     val trace : bool ref
     val traceMode : TraceMode ref
-
   end
 
   structure Prover :
@@ -91,6 +88,7 @@ sig
   val chatter : int ref		             (* 3, chatter level *)
   val doubleCheck : bool ref	             (* false, check after reconstruction *)
   val unsafe : bool ref		             (* false, allows %assert *)
+  val autoFreeze : bool ref		(* false, freezes families in meta-theorems *)
   val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
 
   datatype Status = OK | ABORT	       (* return status *)

@@ -75,6 +75,8 @@ mp_fix : map_eval (ev_fix D1) (tr_fix C1)
 % problem here---fixed in 2001 version
 % %covers map_eval +D +C -D' -U.
 
+%thaw map_eval.
+
 %mode map_eval -D +C +D' -U.
 %worlds () (map_eval D C D' U).
 %covers map_eval -D +C +D' -U.

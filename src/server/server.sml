@@ -148,6 +148,7 @@ struct
   fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
     | setParm ("doubleCheck"::ts) = Twelf.doubleCheck := getBool ts
     | setParm ("unsafe"::ts) = Twelf.unsafe := getBool ts
+    | setParm ("autoFreeze"::ts) = Twelf.autoFreeze := getBool ts
     | setParm ("Print.implicit"::ts) = Twelf.Print.implicit := getBool ts
     | setParm ("Print.depth"::ts) = Twelf.Print.depth := getLimit ts
     | setParm ("Print.length"::ts) = Twelf.Print.length := getLimit ts
@@ -169,6 +170,7 @@ struct
   fun getParm ("chatter"::ts) = Int.toString (!Twelf.chatter)
     | getParm ("doubleCheck"::ts) = Bool.toString (!Twelf.doubleCheck)
     | getParm ("unsafe"::ts) = Bool.toString (!Twelf.unsafe)
+    | getParm ("autoFreeze"::ts) = Bool.toString (!Twelf.autoFreeze)
     | getParm ("Print.implicit"::ts) = Bool.toString (!Twelf.Print.implicit)
     | getParm ("Print.depth"::ts) = limitToString (!Twelf.Print.depth)
     | getParm ("Print.length"::ts) = limitToString (!Twelf.Print.length)
@@ -227,6 +229,7 @@ struct
 \  chatter <nat>               - Level of verbosity (0 = none, 3 = default)\n\
 \  doubleCheck <bool>          - Perform additional internal type-checking\n\
 \  unsafe <bool>               - Allow unsafe operations (%assert)\n\
+\  autoFreeze <bool>           - Freeze families involved in meta-theorems\n\
 \  Print.implicit <bool>       - Print implicit arguments\n\
 \  Print.depth <limit>         - Cut off printing at depth <limit>\n\
 \  Print.length <limit>        - Cut off printing at length <limit>\n\

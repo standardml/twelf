@@ -329,6 +329,7 @@ This is used by the error message parser.")
   '(("chatter" . nat)
     ("doubleCheck" . bool)
     ("unsafe" . bool)
+    ("autoFreeze" . bool)
     ("Print.implicit" . bool)
     ("Print.depth" . limit)
     ("Print.length" . limit)
@@ -362,6 +363,9 @@ e.g. \\[twelf-check-declaration].")
 (defvar twelf-unsafe "false"
   "Current value of unsafe Twelf parameter.")
 
+(defvar twelf-auto-freeze "true"
+  "Current value of autoFreeze Twelf parameter.")
+
 (defvar twelf-print-implicit "false"
   "Current value of Print.implicit Twelf parameter.")
 
@@ -385,6 +389,7 @@ Maintained to present reasonable menus.")
   '(("chatter" . twelf-chatter)
     ("doubleCheck" . twelf-double-check)
     ("unsafe" . twelf-unsafe)
+    ("autoFreeze" . twelf-auto-freeze)
     ("Print.implicit" . twelf-print-implicit)
     ("Recon.trace" . twelf-recon-trace)
     ("Recon.traceMode" . twelf-recon-tracemode)
@@ -1739,6 +1744,7 @@ created if it doesn't exist."
   (setq twelf-chatter "3")
   (setq twelf-double-check "false")
   (setq twelf-unsafe "false")
+  (setq twelf-auto-freeze "true")
   (setq twelf-print-implicit "false")
   (setq twelf-trace-detail "1")
   (setq twelf-compile-optimize "true"))
@@ -2086,6 +2092,12 @@ Used in menus."
   (let ((value (if (string-equal twelf-unsafe "false")
 		   "true" "false")))
     (twelf-set "unsafe" value)))
+
+(defun twelf-toggle-auto-freeze ()
+  "Toggles autoFreeze parameter of Twelf."
+  (let ((value (if (string-equal twelf-unsafe "false")
+		   "true" "false")))
+    (twelf-set "autoFreeze" value)))
 
 (defun twelf-toggle-print-implicit ()
   "Toggles Print.implicit parameter of Twelf."
@@ -2887,6 +2899,8 @@ Mode map
 		 '(string-equal twelf-double-check "true")))
       (, (toggle "unsafe" '(twelf-toggle-unsafe)
 		 '(string-equal twelf-unsafe "true")))
+      (, (toggle "autoFreeze" '(twelf-toggle-auto-freeze)
+		 '(string-equal twelf-auto-freeze "true")))
       ("Print."
        (, (toggle "implicit" '(twelf-toggle-print-implicit)
 		  '(string-equal twelf-print-implicit "true")))

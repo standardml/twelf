@@ -1,3 +1,7 @@
+% Needed to allow extension of p, i, o
+% as of Twelf 1.5R2 (March 2005)
+%thaw p i o.
+
 q0 : p.
 r0 : p.
 s0 : p.

@@ -11,12 +11,15 @@ sig
 
   val installTotal : ThmSyn.TDecl * (Paths.region * Paths.region list)
                      -> IntSyn.cid list
+  val uninstallTotal : IntSyn.cid -> bool
 
   val installTerminates : ThmSyn.TDecl * (Paths.region * Paths.region list) 
                           -> IntSyn.cid list
-  (* -bp *)
+  val uninstallTerminates : IntSyn.cid -> bool (* true: was declared, false not *)
+
   val installReduces : ThmSyn.RDecl * (Paths.region * Paths.region list) 
                        -> IntSyn.cid list 
+  val uninstallReduces : IntSyn.cid -> bool
 
   val installTabled : ThmSyn.TabledDecl -> unit
   val installKeepTable : ThmSyn.KeepTableDecl -> unit

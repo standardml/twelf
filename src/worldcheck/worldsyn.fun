@@ -484,6 +484,11 @@ struct
 	    handle Subordinate.Error (msg) => raise Error (msg) ;
 	  insert (a, W) )
 
+    fun uninstall a =
+        case Table.lookup worldsTable a
+          of NONE => false
+           | SOME _ => (Table.delete worldsTable a; true)
+
     (* lookup (a) = SOME W if worlds declared for a, NONE otherwise *)
     fun lookup a = getWorlds a
 
@@ -524,6 +529,7 @@ struct
     val reset = reset
     val install = install
     val lookup = lookup
+    val uninstall = uninstall
     val worldcheck = worldcheck
     val ctxToList = ctxToList
     val isSubsumed = isSubsumed

@@ -6,7 +6,8 @@ stack : type.
 
 dot : stack.
 ,   : stack -> ctriv -> stack.             %infix left 10 , .
-
+% moved from lemma9.elf Thu Mar 10 20:45:28 2005 -fp
+& : stack -> stack -> stack. %infix left 10 & .
 
 vvalR : croot -> type.                     %name vvalR VVR.
 vvalE : stack -> cexp -> type.             

@@ -53,9 +53,14 @@ struct
     fun reset () = Table.clear totalTable
     fun install (cid) = Table.insert totalTable (cid, ())
     fun lookup (cid) = Table.lookup totalTable (cid)
+    fun uninstall (cid) = Table.delete totalTable (cid)
   in
     val reset = reset
     val install = install
+    val uninstall = (fn cid =>
+        case lookup cid
+          of NONE => false
+           | SOME _ => (uninstall cid ; true))
 
     fun total (cid) = (* call only on constants *)
         case lookup cid

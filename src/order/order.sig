@@ -33,7 +33,9 @@ sig
   val resetROrder : unit -> unit
 
   val install : IntSyn.cid * TDec -> unit 
+  val uninstall : IntSyn.cid -> bool
   val installROrder : IntSyn.cid * RDec -> unit 
+  val uninstallROrder : IntSyn.cid -> bool
 
   val selLookup : IntSyn.cid -> int Order
   val selLookupROrder : IntSyn.cid -> Predicate

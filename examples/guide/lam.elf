@@ -41,12 +41,12 @@ ev_app  : eval (app E1 E2) V		% E1 E2 ==> V
 	    <- eval E2 V2		% and E2 ==> V2
 	    <- eval (E1' V2) V.		% and [V2/x]E1' ==> V.
 
-% Type inference terminates
-%terminates E (of E T).
-
 % Regular world for type-checking
 %block tp_var : some {T:tp} block {x:exp} {u:of x T}.
 %worlds (tp_var) (of E T).
+
+% Type inference terminates
+%terminates E (of E T).
 
 % There is at least one typing rule for every expression
 %covers of +E *T.

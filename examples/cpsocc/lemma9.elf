@@ -2,7 +2,8 @@
 %%%%% Lemma 9 : Preservation of Var-validity under substitution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-& : stack -> stack -> stack. %infix left 10 & .
+% moved to def3+6+fig5.elf Thu Mar 10 20:45:31 2005 -fp
+% & : stack -> stack -> stack. %infix left 10 & .
 
 app : stack -> stack -> type.
 %mode app +Xi -Xi'.

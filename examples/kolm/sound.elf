@@ -213,7 +213,9 @@ sound_dnotr    : sound (nk_dnotr NK1) KA
 %worlds (l1 | l2 | l3 | l4) (existskolm _ _ _).
 %total A (existskolm A A* K).
 
-%terminates NK (sound NK K NJ).
+%{
 %mode (sound +NK +K -NJ).
+%terminates NK (sound NK K NJ).
 %worlds (l1 | l3 | l4) (sound _ _ _).
 % %covers (sound +NK +K -NJ).    % it really doesn't seem to cover check! --cs
+}%

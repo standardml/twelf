@@ -57,6 +57,7 @@ struct
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
     | FREEZE                            (* `%freeze' *)
+    | THAW				(* `%thaw' *)
     | DETERMINISTIC                     (* `%deterministic' *) (* -rv 11/27/01 *)
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)
@@ -249,6 +250,7 @@ struct
       | lexPragmaKey (ID(_, "compile"), r) = (COMPILE, r) (* -ABP 4/4/03 *)
       | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
       | lexPragmaKey (ID(_, "freeze"), r) = (FREEZE, r)
+      | lexPragmaKey (ID(_, "thaw"), r) = (THAW, r)
       | lexPragmaKey (ID(_, "deterministic"), r) = (DETERMINISTIC, r) (* -rv 11/27/01 *)
       | lexPragmaKey (ID(_, "clause"), r) = (CLAUSE, r) (* -fp 08/09/02 *)
       | lexPragmaKey (ID(_, "sig"), r) = (SIG, r)
@@ -375,6 +377,7 @@ struct
     | toString' (ASSERT) = "%assert"
     | toString' (ABBREV) = "%abbrev"
     | toString' (FREEZE) = "%freeze"
+    | toString' (THAW) = "%thaw"
     | toString' (DETERMINISTIC) = "%deterministic"  (* -rv 11/27/01. *)
     | toString' (CLAUSE) = "%clause" (* -fp 08/09/02 *)
     | toString' (SIG) = "%sig"

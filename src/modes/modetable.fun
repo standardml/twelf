@@ -56,6 +56,14 @@ struct
     fun installMode (a, mS) =
           Table.insert modeSignature (a, [mS])
 
+    (* uninstallMode a = true iff a was declared in mode table
+       Effect: the mode stored with a is removed
+    *)
+    fun uninstallMode a =
+        case modeLookup a
+	  of NONE => false
+           | SOME _ => (Table.delete modeSignature a; true)
+
     (* installMmode (a, mS) = ()
         
        Effect: the ModeSpine mS is stored with the type family a; if there were previous
@@ -73,6 +81,7 @@ struct
 
     val installMode = installMode
     val modeLookup = modeLookup
+    val uninstallMode = uninstallMode
 
     val installMmode = installMmode
     val mmodeLookup = mmodeLookup

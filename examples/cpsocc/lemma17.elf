@@ -497,18 +497,21 @@ double_v : {v:ctriv}
            doubleT (vvv XXi) (vvalMS_v (CV:vvalMS XXi Xi)) (dsv Xi v) 
                    (v-part_v (VP:v-part CV XXi')) CV VP (dsv XXi' v).
                   
+% Some bug in this clause
+% Thu Mar 10 20:58:12 2005 -fp
+%{
 double_v' : {v:ctriv}
             {vvv:{xi:stack}vvalT (xi , v) v xi}
             {dsv:{xi:stack}{t:ctriv}dstack_substT v (xi , t) t xi}
             doubleT (vvv XXi) (vvalMS_t (CV:vvalMS XXi Xi) VVT) 
                     (dsv Xi T) 
                     (v-part_t (VP:v-part CV XXi')) CV VP DST.
+}%
 
 double_t : {t:ctriv}
            {vvt:{xi:stack}vvalT xi t xi}
            {dst:{xi:stack}dstack_substT t xi t xi}
            doubleT (vvt XXi) VVMS (dst Xi) VP CV VP (dst Xi).
-             
 
 
 double_cret : doubleE (vval_cret VVC VVT)
