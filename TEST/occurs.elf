@@ -1,0 +1,40 @@
+exp : type.  %name exp T.
+
+all : (exp -> exp) -> exp.
+
+inst : exp -> exp -> type.		%name inst P.
+
+i1 : {x:exp} inst (all E) T
+	    <- inst (E x) T.
+
+i2 : inst (all E) F
+	    <- {t:exp} inst (E t) F.
+
+eq : inst E F -> inst E F -> type.
+
+eq_all1 : eq (i2 P) (i1 F Q) <- eq (P F) Q.
+
+eq_all2 : {t:exp} eq (i2 P) (i1 t Q) <- eq (P t) Q.
+
+%% second type of possible non-termination
+nat : type.
+z : nat.
+s : nat -> nat.
+
+cp : nat -> nat -> type.
+cpz : cp z z.
+cps : cp (s X) (s Y)
+       <- cp X Y.
+
+unify : nat -> nat -> type.
+
+eq : unify E E.
+
+bad : nat -> type.
+
+b : bad X
+     <- unify X (s (F X))
+     <- ({a:nat} unify a (F a)).
+
+%query 1 * (unify X (s (F X))).
+%query 0 * bad X.

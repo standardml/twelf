@@ -15,8 +15,6 @@ struct
   local
     open IntSyn
 
-    exception NonInvertible
-
     (* intersection (s1, s2) = s'
        s' = s1 /\ s2 (see JICSLP'96)
        
@@ -59,6 +57,26 @@ struct
 	   comp (weakenSub (G, s', ss), shift)
 
 
+    local
+      val constrList = ref (nil:(Eqn list) list) (* all Eqn lists are non-empty *)
+    in
+     fun resetConstr () = constrList := nil
+     fun addConstr (nil) = ()
+       | addConstr eqns = (constrList := eqns::(!constrList))
+     fun nextConstr () = case !constrList
+                           of nil => NONE
+			    | (eqn::nil)::constr => (constrList := constr; SOME(eqn))
+			    | (eqn::eqns)::constr => ((constrList := eqns::constr; SOME(eqn)))
+    end
+
+    (* Instantiating EVars *)
+    (* Awaken constraints associated with X identified by r *)
+    fun instantiateEVarC (r, U, nil) = 
+          Trail.instantiateEVar (r, U)
+      | instantiateEVarC (r, U, Cnstr) =
+        (Trail.instantiateEVar(r, U);
+	 addConstr (Cnstr))
+
     (* prune (G, (U, s), ss, rOccur) = U[s][ss]
 
        G |- U : V    G' |- s : G  (G' |- U[s] : V[s])
@@ -89,10 +107,13 @@ struct
 		 else if prunable then
 		   let
 		     val wi = Whnf.invert w
-		     (* val _ = prune ((V, id), wi, rOccur) *)
-		     (* Never has effect by invariant on GX and V[s] *)
+                     (* val V' = EClo (V, wi) *)
+		     val V' = pruneExp (GX, (V, id), wi, rOccur, prunable)
+                     (* val GY = Whnf.strengthen (wi, GX) *)
+		     val GY = pruneCtx (wi, GX, rOccur, prunable)
+		     (* shortcut on GY possible by invariant on GX and V[s]? -fp *)
 		     (* could optimize by checking for identity subst *)
-		     val Y = newEVar (Whnf.strengthen (wi, GX), EClo (V, wi))
+		     val Y = newEVar (GY, V')
 		     val Yw = EClo (Y, w)
 		     val _ = instantiateEVarC (r, Yw, Cnstr)
 		   in
@@ -105,8 +126,12 @@ struct
 		 handle Unify (msg) => 
 		   if prunable then
 		     let 
-		       val GY = Whnf.strengthen (ss, G)
-		       val Y = newEVar (GY, EClo (V, comp (s, ss)))
+		       (* val GY = Whnf.strengthen (ss, G) *)
+                       (* shortcuts possible by invariants on G? *)
+                       val GY = pruneCtx (ss, G, rOccur, prunable)
+                       (* val V' = EClo (V, comp (s, ss)) *)
+		       val V' = pruneExp (G, (V, s), ss, rOccur, prunable)
+		       val Y = newEVar (GY, V')
 		       val _ = Trail.instantiateEVar
 			       (r, newEVarCnstr (GX, V, (Eqn (G, EClo (X, s),
 							      EClo (Y, Whnf.invert ss))) :: Cnstr))
@@ -151,6 +176,18 @@ struct
       (* pruneSub (G, Dot (Undef, s), ss, rOccur) is impossible *)
       (* By invariant, all EVars X[s] are such that s is defined everywhere *)
       (* Pruning establishes and maintains this invariant *)
+    and pruneCtx (Shift n, Null, rOccur, prunable) = Null
+      | pruneCtx (Dot (Idx k, t), Decl (G, D), rOccur, prunable) =
+        let 
+	  val t' = comp (t, invShift)
+	  val D' = pruneDec (G, (D, id), t', rOccur, prunable)
+	in
+          Decl (pruneCtx (t', G, rOccur, prunable), D')
+	end
+      | pruneCtx (Dot (Undef, t), Decl (G, d), rOccur, prunable) = 
+          pruneCtx (t, G, rOccur, prunable)
+      | pruneCtx (Shift n, G, rOccur, prunable) = 
+	  pruneCtx (Dot (Idx (n+1), Shift (n+1)), G, rOccur, prunable)
 
     (* unifyExpW (G, (U1, s1), (U2, s2)) = ()
      
@@ -165,7 +202,7 @@ struct
        Other effects: EVars may be lowered
                       constraints may be added for non-patterns
     *)
-    and unifyExpW (G, (Uni (L1), _), (Uni(L2), _)) =
+    fun unifyExpW (G, (Uni (L1), _), (Uni(L2), _)) =
           (* L1 = L2 = type, by invariant *)
           (* unifyUni (L1, L2) - removed Mon Aug 24 12:18:24 1998 -fp *)
           ()
@@ -238,7 +275,7 @@ struct
 	    if Whnf.isPatSub(s1) then 
 	      let
 		val ss1 = Whnf.invert s1
-		val U2' = pruneExp (G, Us2, ss1, ref NONE, true)   (* prunable set to true -cs*)
+		val U2' = pruneExp (G, Us2, ss1, r1, true)   (* prunable set to true -cs *)
 	      in
 		(* instantiateEVarC (r1, EClo (U2, comp(s2, ss1)), Cnstr1) *)
 		(* invertExpW (Us2, s1, ref NONE) *)
@@ -247,7 +284,7 @@ struct
 	    else if Whnf.isPatSub(s2) then 
 	      let
 		val ss2 = Whnf.invert s2
-		val U1' = pruneExp (G, Us1, ss2, ref NONE, true)
+		val U1' = pruneExp (G, Us1, ss2, r2, true)
 	      in
 		(* instantiateEVarC (r2, EClo (U1, comp(s1, ss2)), Cnstr2) *)
 	        (* invertExpW (Us1, s2, ref NONE) *)
@@ -319,24 +356,21 @@ struct
           unifyExp (G, (V1, s1), (V2, s2))
 
 
-    (* Instantiating EVars *)
-    (* Awaken constraints associated with X identified by r *)
-    and instantiateEVarC (r, U, Cnstr) = 
-        let
-	  fun awaken nil = ()
-	    | awaken (Eqn (G, EClo Us1, EClo Us2)::Cnstr) =
-	      (unifyExp (G, Us1, Us2) ; awaken Cnstr)
-	in
-	  Trail.instantiateEVar(r,U);
-	  awaken Cnstr
-	end
 
+    fun unify1 GUs1Us2 =
+        (unifyExp GUs1Us2;
+	 awaken (nextConstr ()))
+    and awaken (NONE) = ()
+      | awaken (SOME(Eqn (G, U1, U2))) = unify1 (G, (U1, id), (U2, id))
+
+    fun unify GUs1Us2 = (resetConstr (); unify1 GUs1Us2)
+    fun unifyW GUs1Us2 = (resetConstr (); unify1 GUs1Us2)
 
   in
-    val unifyW = unifyExpW
-    val unify = unifyExp
-    fun unifiable (G, Us1, Us2) = (unifyExp (G, Us1, Us2); true) handle Unify _ => false
+    val unifyW = unifyW
+    val unify = unify
+    fun unifiable (G, Us1, Us2) = (unify (G, Us1, Us2); true) handle Unify _ => false
 
-    fun unifiable' (g, Us1, Us2) = (unifyExp (g, Us1, Us2); NONE) handle Unify(msg) => SOME(msg)
+    fun unifiable' (G, Us1, Us2) = (unify (G, Us1, Us2); NONE) handle Unify(msg) => SOME(msg)
   end
 end;  (* functor Unify *)
