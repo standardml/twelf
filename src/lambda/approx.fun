@@ -298,6 +298,14 @@ struct
             | (I.NSDef(d1), _) => match (constDefApx d1, V2)
             | (_, I.NSDef(d2)) => match (V1, constDefApx d2)
               (* others cannot occur by invariant *))
+      | matchW (Const(I.Def(d1)), V2) =
+          match (constDefApx d1, V2)
+      | matchW (V1, Const(I.Def(d2))) =
+          match (V1, constDefApx d2)
+      | matchW (Const(I.NSDef(d1)), V2) =
+          match (constDefApx d1, V2)
+      | matchW (V1, Const(I.NSDef(d2))) =
+          match (V1, constDefApx d2)
       | matchW (CVar r1, U2 as CVar r2) =
           if r1 = r2 then ()
           else r1 := SOME U2
