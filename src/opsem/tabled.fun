@@ -183,7 +183,6 @@ bp Wed Feb 20 11:06:51 2002 *)
 	  val asw' = List.take(rev(TableIndex.solutions(answ)), 
 			       TableIndex.lookup(answ))
 	  val answ' = List.drop(asw', !k) 
-
 	in 
 	k := lkp;
         retrieve' (0, G, Vs, (G', D', U), answ', sc)
@@ -546,22 +545,25 @@ bp Wed Feb 20 11:06:51 2002 *)
 
  fun reset () = (SuspGoals := []; TableIndex.reset())
 
-  fun solveQuery ((g as C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
-    (* only work when query is atomic *)
+ fun solveQuery ((g, s), dp as C.DProg (G, dPool), sc) =
      case (!TableIndex.strategy) of
        TableIndex.Variant =>  solve((g, s), dp, sc)
      |  TableIndex.Subsumption => 
-	 if TabledSyn.tabledLookup (I.targetFam p) then 
-	   let 
-	     val (G', D', U', s') = A.abstractEVarCtx (G, p, s)
-	     fun scinit O = ()
-	   in 
-	     (TableIndex.query := SOME(G', D', U', s', sc); 
-	      solve((g, s), dp, scinit))
-	   end
-	 else 
-	   solve((g, s), dp, sc)	   
-    
+	 (case g 
+	   of C.Atom(p) => 
+	     if TabledSyn.tabledLookup (I.targetFam p) then 
+	       let 
+		 val (G', D', U', s') = A.abstractEVarCtx (G, p, s)
+		 fun scinit O = ()
+	       in 
+		 (TableIndex.query := SOME(G', D', U', s', sc); 
+		  solve((g, s), dp, scinit))
+	       end
+	     else 
+	       solve((g, s), dp, sc)
+	     | _ => (print "Warning: search using subsumption may be incomplete -- using variant checking instead.\n";
+	            TableIndex.strategy := TableIndex.Variant;
+		     solve((g, s), dp, sc)))
 
   end (* local ... *)
 
