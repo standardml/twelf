@@ -8,6 +8,8 @@ functor MTPFilling (structure IntSyn : INTSYN
 		      sharing StateSyn'.FunSyn = FunSyn'
 		    structure Abstract : ABSTRACT
 		      sharing Abstract.IntSyn = IntSyn
+		    structure TypeCheck : TYPECHECK
+		      sharing TypeCheck.IntSyn = IntSyn
 		    structure Search   : MTPSEARCH
   		      sharing Search.StateSyn = StateSyn'
 		    structure Whnf : WHNF
@@ -64,9 +66,14 @@ struct
     *)
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
 	let 
+	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (G) else ()
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in
-	  fn () => ((Search.searchEx (Xs, fn max => raise Success); raise Error "Filling unsuccessful")
+	  fn () => ((Search.searchEx (Xs, fn max => (if (!Global.doubleCheck) then 
+						       map (fn (X as I.EVar (_, G', V, _)) => 
+							    TypeCheck.typeCheck (G', (X, V))) Xs
+						     else []; raise Success));
+		     raise Error "Filling unsuccessful")
 	            handle Success => P)
 	end
     

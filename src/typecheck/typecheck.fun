@@ -114,6 +114,9 @@ struct
 	end
       | inferCon (G, I.Const(c)) = I.constType (c)
       | inferCon (G, I.Def(d))  = I.constType (d)
+      | inferCon (G, I.Skonst(c)) = I.constType (c) (* this is just a hack. --cs 
+						       must be extended to handle arbitrary 
+						       Skolem constants in the right way *)
       (* no case for FVar *)
 
     (* checkDec (G, (x:V, s)) = B

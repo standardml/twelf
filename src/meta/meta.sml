@@ -117,6 +117,7 @@ structure MTPFilling =
 	      structure StateSyn' = StateSyn
 	      structure Whnf = Whnf
 	      structure Abstract = Abstract
+	      structure TypeCheck = TypeCheck
 	      structure Search = MTPSearch
 	      structure Whnf = Whnf)
 
