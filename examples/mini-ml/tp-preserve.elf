@@ -48,5 +48,5 @@ tps_fix : tps (ev_fix D1) (tp_fix P1) Q1
 	    <- tps D1 (P1 _ (tp_fix P1)) Q1.
 
 
-%%% Decidablity proof for type preservation theorem
+%%% Termination of type preservation judgment
 %terminates D (tps D _ _).

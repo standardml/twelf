@@ -1,7 +1,8 @@
 %%% Closed Mini-ML Expressions
 %%% Author: Frank Pfenning
 
-closed : exp -> type.  %name closed U.
+closed : exp -> type.  %name closed U u.
+%mode closed +E.
 
 % Natural Numbers
 clo_z     : closed z.
@@ -40,10 +41,13 @@ clo_letn : closed (letn E1 E2)
 clo_fix : closed (fix E)
 	     <- ({x:exp} closed x -> closed (E x)).
 
+%terminates E (closed E).
+
 %%% Open Mini-ML Expressions.
 %%% Warning: one needs to assume that parameters are open!
 
 open : exp -> type.  %name open V.
+%mode open +E.
 
 % Natural Numbers
 open_s     : open (s E) <- open E.
@@ -70,3 +74,5 @@ open_letn2 : open (letn E1 E2) <- ({x:exp} open (E2 x)).
 
 % Recursion
 open_fix : open (fix E) <- ({x:exp} open (E x)).
+
+%terminates E (open E).

@@ -3,6 +3,6 @@
 
 tp : type.  %name tp T.
 
-nat   : tp.
-cross : tp -> tp -> tp.
-arrow : tp -> tp -> tp.
+nat   : tp.				% Natural Numbers
+cross : tp -> tp -> tp.			% Pairs
+arrow : tp -> tp -> tp.			% Functions
