@@ -26,6 +26,7 @@ struct
       EV of I.Exp option ref * I.Exp	(* Y ::= (X , {G} V)  if G |- X : V *)
     | FV of I.name * I.Exp		(*     | (F , {G} V)  if G |- F : V *)
 
+
     (*
        We write {{K}} for the context of K, where EVars and FVars have
        been translated to declarations and their occurrences to BVars.
@@ -390,7 +391,7 @@ struct
       | abstractKLam (I.Decl (K', FV (name,V')), U) =
  	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
 
-    (* abstractDec V = (k', V')
+    (* abstractDecImp V = (k', V')   (* rename --cs  (see above) *)
 
        Invariant: 
        If    . |- V : L
@@ -401,7 +402,7 @@ struct
        and   . ||- V'
        and   k' = |K|
     *)
-    fun abstractDec V =
+    fun abstractDecImp V =
         let
 	  val K = collectExp (I.Null, (V, I.id), I.Null)
 	in
@@ -446,12 +447,20 @@ struct
 	 of I.Null => closedSub (G, s)
           | _ => false)
 
+    fun closedExp (G, (U, s)) = 
+      case collectExp (G, (U, I.id), I.Null)
+	of I.Null => true
+         | _ => false
+
   in
+
     val piDepend = piDepend
     val closedDec = closedDec
     val closedSub = closedSub
+    val closedExp = closedExp 
 
-    val abstractDec = abstractDec
+    val abstractDecImp = abstractDecImp
     val abstractDef = abstractDef
+
   end
 end;  (* functor Abstract *)
