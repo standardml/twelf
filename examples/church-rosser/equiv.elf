@@ -38,8 +38,10 @@ eq2_beta1 : eq2 (beta1) (beta I1 I2)
                 identity x eqx -> identity (M1 x) (I1 x eqx))
           <- identity M2 I2.
 
-eq2_lm1   : eq2 (lm1 R1) (lm ([x:term] [eqx : x => x] S1 x))
-          <- {x:term} eq2 (R1 x) (S1 x).
+% bug here in previous version
+eq2_lm1   : eq2 (lm1 R1) (lm S1)
+          <- ({x:term} {eqx : x => x}
+		identity x eqx -> eq2 (R1 x) (S1 x eqx)).
 
 eq2_apl1  : eq2 (apl1 R1) (ap S1 I2)
           <- eq2 R1 S1
