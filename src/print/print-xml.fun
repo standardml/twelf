@@ -27,7 +27,7 @@ local
   val Str = F.String
   fun Str0 (s, n) = F.String0 n s
   fun Name (x) = F.String ("\"" ^ x ^ "\"")
-  fun Integer (n) = F.String (Int.toString n)
+  fun Integer (n) = F.String ("\"" ^ Int.toString n ^ "\"")
 
   fun sexp (fmts) = F.Hbox [F.HVbox fmts]
 
@@ -35,14 +35,19 @@ local
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
-  fun fmtCon (G, I.BVar(n)) = sexp [Str "<Bvar>", F.Break, Integer n, Str "</Bvar>"]
-    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const>", Str (I.conDecName (I.sgnLookup cid)), Str "</Const>"]
+  fun fmtCon (G, I.BVar(n)) = 
+      let
+	val I.Dec (SOME n, _) = I.ctxDec (G, n)
+      in 
+	sexp [Str ("<Var name = \"" ^ n ^ "\"/>")]
+      end
+    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const name=\"", Str (I.conDecName (I.sgnLookup cid)), Str "\"/>"]
     | fmtCon (G, I.Def(cid)) = sexp [Str "<Def>", F.Break, Integer cid, Str "</Def>"]
     (* I.Skonst, I.FVar cases should be impossible *)
 
   (* fmtUni (L) = "L" *)
-  fun fmtUni (I.Type) = Str "<Type>"
-    | fmtUni (I.Kind) = Str "<Kind>"
+  fun fmtUni (I.Type) = Str "<Type/>"
+    | fmtUni (I.Kind) = Str "<Kind/>"
 
   (* fmtExpW (G, (U, s)) = fmt
      
@@ -68,13 +73,15 @@ local
 	  | I.No => let
 		       val G' = I.Decl (G, D)
 		    in
-		      sexp [Str "<Arrow>", F.Break, fmtDec (G, (D, s)),
+		      sexp [Str "<Arrow>", F.Break, fmtDec' (G, (D, s)),
 			    F.Break, (* Str "tw*no", F.Break,*) fmtExp (G', (V2, I.dot1 s)),
 			    Str "</Arrow>"]
 		    end)
     | fmtExpW (G, (I.Root (H, S), s)) =
-	 sexp [fmtCon (G, H),
-	       F.Break, fmtSpine (G, (S, s))]
+      (case (fmtSpine (G, (S, s)))
+	 of NONE =>  fmtCon (G, H)
+          | SOME fmts =>  F.HVbox [Str "<App>", fmtCon (G, H),
+	       F.Break, sexp (fmts), Str "</App>"])
     | fmtExpW (G, (I.Lam(D, U), s)) = 
       let
 	val D' = Names.decLUName (G, D)
@@ -91,17 +98,25 @@ local
      format spine S[s] at printing depth d, printing length l, in printing
      context G which approximates G', where G' |- S[s] is valid
   *)
-  and fmtSpine (G, (I.Nil, _)) = Str "<Nil>"
+  and fmtSpine (G, (I.Nil, _)) = NONE 
     | fmtSpine (G, (I.SClo (S, s'), s)) =
          fmtSpine (G, (S, I.comp(s',s)))
     | fmtSpine (G, (I.App(U, S), s)) =
-	 sexp [Str "<App>", F.Break, fmtExp (G, (U, s)),
-	       F.Break, fmtSpine (G, (S, s)), Str "</App>"]
+      (case (fmtSpine (G, (S, s))) 
+	 of NONE => SOME [fmtExp (G, (U, s))]
+  	  | SOME fmts => SOME ([fmtExp (G, (U, s)), F.Break] @ fmts))
 
   and fmtDec (G, (I.Dec (NONE, V), s)) =
         sexp [Str "<Dec>", F.Break, fmtExp (G, (V, s)), Str "</Dec>"]
     | fmtDec (G, (I.Dec (SOME(x), V), s)) =
 	sexp [Str "<Dec name =", Name x,  Str ">", F.Break, fmtExp (G, (V, s)), Str "</Dec>"]
+
+
+  and fmtDec' (G, (I.Dec (NONE, V), s)) =
+        sexp [fmtExp (G, (V, s))]
+    | fmtDec' (G, (I.Dec (SOME(x), V), s)) =
+	sexp [fmtExp (G, (V, s))]
+
 
   (* fmtConDec (condec) = fmt
      formats a constant declaration (which must be closed and in normal form)
@@ -160,7 +175,7 @@ in
   *)
   fun formatDec (G, D) = fmtDec (G, (D, I.id))
   fun formatExp (G, U) = fmtExp (G, (U, I.id))
-  fun formatSpine (G, S) = fmtSpine (G, (S, I.id))
+(*  fun formatSpine (G, S) = sexp (fmtSpine (G, (S, I.id))) *)
   fun formatConDec (condec) = fmtConDec (condec)
   fun formatEqn (E) = fmtEqn E
 
@@ -172,6 +187,21 @@ in
   fun printSgn () =
       IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
 				  print "\n"))
+
+  fun printSgnToFile filename =
+      let 
+	val file = TextIO.openOut filename
+	val _ = TextIO.output (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- nsgmls ex.xml -->\n<!DOCTYPE Signature SYSTEM \"lf.dtd\">\n<Signature>")
+
+	val _ = IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+				  TextIO.output (file, "\n")))
+	val _ = TextIO.output (file, "</Signature>")
+	val _ = TextIO.closeOut file
+
+      in
+	()
+      end
+
 
 end  (* local ... *)
 
