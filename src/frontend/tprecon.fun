@@ -120,7 +120,7 @@ struct
     | Pi of Dec * Term * Paths.region
     | Omitobj of IntSyn.Exp * Paths.region
     | Implicit of IntSyn.Exp * Paths.region
-    | Hastype of Term * Term * IntSyn.Exp
+    | Hastype of Term * Term
     | Root of Head * Spine
     | Redex of Term * Spine
 
@@ -291,7 +291,7 @@ struct
   fun backarrow (tm2, tm1) (Ga) = arrow (tm1, tm2) (Ga)
 
   (* Explicit type ascription "tm1 : tm2" *)
-  fun hastype (tm1, tm2) (Ga) = TermSyn.Hastype (tm1 (Ga), tm2 (Ga), IntSyn.newTypeVar (IntSyn.Null))
+  fun hastype (tm1, tm2) (Ga) = TermSyn.Hastype (tm1 (Ga), tm2 (Ga))
 
   (* Omitted objects (from underscore) "_" *)
   fun omitobj (r) (Ga) = TermSyn.Omitobj (IntSyn.newTypeVar (IntSyn.Null), r)
@@ -465,24 +465,6 @@ struct
 	 of (IntSyn.Uni (level)) => level
           | _ => (error (r, msg); IntSyn.Type))
 
-  fun checkClassTerm (TermSyn.Term, r, msg) = ()
-    | checkClassTerm (_, r, msg) = error (r, msg)
-
-  fun getClassClassifier (C, Va') =
-      let
-        val Va = case C
-                   of TermSyn.Type Va => Va
-                    | TermSyn.Kind Va => Va
-                    (* this case occurs only if we have ignored a
-                       previous error *)
-                    | _ => Va'
-      in
-        (* simple means of caching the classifier *)
-        shape (Va, Va')
-        handle Unify.Unify msg => raise Match;
-        Va
-      end
-
   fun decl (G, D) = IntSyn.Decl (G, Names.decLUName (G, D))
 
   (* precondition: . |- V : L *)
@@ -530,107 +512,99 @@ struct
   fun approxReconShow (Ga, Ua) = approxRecon (Ga, Ua)
 
   and approxRecon (Ga, TermSyn.Typ (r)) =
-        (IntSyn.Uni IntSyn.Kind, TermSyn.Kind (IntSyn.Uni IntSyn.Type), r)
-    | approxRecon (Ga, TermSyn.Lam (Da1 as TermSyn.Dec (x, _, Va1), Ua2, r)) =
+        (SOME (IntSyn.Uni IntSyn.Type), IntSyn.Uni IntSyn.Kind, r)
+    | approxRecon (Ga, TermSyn.Lam (Da1 as TermSyn.Dec (x, _, Va1), t2, r)) =
       let
         val r1Opt = approxReconDec (Ga, Da1)
-        val (Va2, C2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), Ua2)
-        val _ = checkClassTerm (C2, r2, "Body of abstraction is not at term level")
+        val (Ua2, Va2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), t2)
+        val _ = case Ua2
+                  of NONE => ()
+                   | SOME _ => error (r2, "Body of abstraction is not at term level")
       in
-        (IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe), Va2), TermSyn.Term,
+        (NONE, IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe), Va2),
          Paths.join (r, r2))
       end
-    | approxRecon (Ga, TermSyn.Arrow (Ua1, Ua2)) =
+    | approxRecon (Ga, TermSyn.Arrow (t1, t2)) =
       let
-        val (La1, C1, r1) = approxReconShow (Ga, Ua1)
+        val (Va1, La1, r1) = approxReconShow (Ga, t1)
         val _ = checkType (La1, r1, "Domain of function is not a type")
-        val (La2, C2, r2) = approxReconShow (Ga, Ua2)
+        val (Va2, La2, r2) = approxReconShow (Ga, t2)
         val _ = checkUni (La2, r2, "Range of function is not a type or kind")
-        val C = case (C1, C2)
-                  of (TermSyn.Type Va1, TermSyn.Type Va2) =>
-                     TermSyn.Type (IntSyn.Pi ((IntSyn.Dec (NONE, Va1),
-                                               IntSyn.No), Va2))
-                   | (TermSyn.Type Va1, TermSyn.Kind Va2) => 
-                     TermSyn.Kind (IntSyn.Pi ((IntSyn.Dec (NONE, Va1),
-                                               IntSyn.No), Va2))
       in
-        (La2, C, Paths.join (r1, r2))
+        (SOME (IntSyn.Pi ((IntSyn.Dec (NONE, Option.valOf Va1), IntSyn.No),
+                          Option.valOf Va2)), La2, Paths.join (r1, r2))
       end
-    | approxRecon (Ga, TermSyn.Pi (Da1 as TermSyn.Dec (x, _, Va1), Ua2, r)) =
+    | approxRecon (Ga, TermSyn.Pi (Da1 as TermSyn.Dec (x, _, Va1), t2, r)) =
       let
         val _ = approxReconDec (Ga, Da1)
-        val (La2, C2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), Ua2)
+        val (Va2, La2, r2) = approxReconShow (IntSyn.Decl (Ga, Da1), t2)
         val _ = checkUni (La2, r2, "Range of function is not a type or kind")
-        val C = case (C2)
-                  of TermSyn.Type Va2 =>
-                     TermSyn.Type (IntSyn.Pi ((IntSyn.Dec (x, Va1),
-                                               IntSyn.Maybe), Va2))
-                   | TermSyn.Kind Va2 => 
-                     TermSyn.Kind (IntSyn.Pi ((IntSyn.Dec (x, Va1),
-                                               IntSyn.Maybe), Va2))
       in
-        (La2, C, Paths.join (r, r2))
+        (SOME (IntSyn.Pi ((IntSyn.Dec (x, Va1), IntSyn.Maybe),
+                          Option.valOf Va2)), La2, Paths.join (r, r2))
       end
     | approxRecon (Ga, TermSyn.Omitobj (Va, r)) =
-        (Va, TermSyn.Term, r)
+        (NONE, Va, r)
     | approxRecon (Ga, TermSyn.Implicit (Va, r)) =
-        (Va, TermSyn.Term, r)
-    | approxRecon (Ga, TermSyn.Hastype (Ua1, Ua2, Va2_cache)) =
+        (NONE, Va, r)
+    | approxRecon (Ga, TermSyn.Hastype (t1, t2)) =
       let
-        val (Va1, C1, r1) = approxReconShow (Ga, Ua1)
-        val (La2, C2, r2) = approxReconShow (Ga, Ua2)
-        val _ = case (C1, getUni (La2, r2, "Classifier in ascription is not a type or kind"))
-                  of (TermSyn.Term, IntSyn.Type) => ()
-                   | (TermSyn.Type _, IntSyn.Kind) => ()
+        val (Ua1, Va1, r1) = approxReconShow (Ga, t1)
+        val (Va2, La2, r2) = approxReconShow (Ga, t2)
+        val uni = getUni (La2, r2, "Classifier in ascription is not a type or kind")
+        val _ = case (Ua1, uni)
+                  of (NONE, IntSyn.Type) => ()
+                   | (SOME _, IntSyn.Kind) =>
+                       checkType (Va1, r1, "Ascription applied to object at invalid level")
                    | _ => error (r1, "Ascription applied to object at invalid level")
-        val Va2 = getClassClassifier (C2, Va2_cache)
       in
-        shape (Va1, Va2)
+        shape (Va1, Option.valOf Va2)
         handle Unify.Unify msg => ();
-        (Va2, C1, r1)
+        (* use ascribed type if unification failed *)
+        (Ua1, Option.valOf Va2, r1)
       end
     | approxRecon (Ga, TermSyn.Root (hd, sp)) =
       let
-        val (Va, C, r) = approxReconHead (Ga, hd)
+        val (Ua, Va, r) = approxReconHead (Ga, hd)
         val (Va', r') = approxReconSpine (Ga, Va, r, sp)
       in
-        (Va', C, r')
+        (Ua, Va', r')
       end
     | approxRecon (Ga, TermSyn.Redex (Ua, sp)) =
       let
-        val (Va, C, r) = approxReconShow (Ga, Ua)
+        val (Ua, Va, r) = approxReconShow (Ga, Ua)
         val (Va', r') = approxReconSpine (Ga, Va, r, sp)
       in
-        (Va', C, r')
+        (Ua, Va', r')
       end
 
   and approxReconHead (Ga, TermSyn.Var (name, r)) =
       let
         val (V, Va, set, H) = Vars.var (name, IntSyn.ctxLength (Ga))
       in
-        (Va, TermSyn.Term, r)
+        (NONE, Va, r)
       end
     | approxReconHead (Ga, TermSyn.BVar (n, r)) =
       let
         val (TermSyn.Dec (_, _, Va)) = IntSyn.ctxLookup (Ga, n)
       in
-        (Va, TermSyn.Term, r)
+        (NONE, Va, r)
       end
     | approxReconHead (Ga, TermSyn.Const (H, condec, r)) =
       let
         val (Va, isType) = makeApprox (IntSyn.conDecType (condec))
-        val C = if isType
-                  then TermSyn.Type (IntSyn.Root (H, IntSyn.Nil))
-                else TermSyn.Term
       in
-        (Va, C, r)
+        (if isType then SOME (IntSyn.Root (H, IntSyn.Nil))
+         else NONE, Va, r)
       end
 
   and approxReconSpine (Ga, Va, r, TermSyn.Nil) = (Va, r)
-    | approxReconSpine (Ga, Va, r, TermSyn.App (Ua, sp)) =
+    | approxReconSpine (Ga, Va, r, TermSyn.App (t, sp)) =
       let
-        val (Va1, C1, r1) = approxReconShow (Ga, Ua)
-        val _ = checkClassTerm (C1, r1, "Argument to function is not at term level")
+        val (Ua1, Va1, r1) = approxReconShow (Ga, t)
+        val _ = case Ua1
+                  of NONE => ()
+                   | _ => error (r1, "Argument to function is not at term level")
         val (Va1', Va2') = ensurePiApprox (Va)
       in
         shape (Va1, Va1')
@@ -638,14 +612,16 @@ struct
         approxReconSpine (Ga, Va2', Paths.join (r, r1), sp)
       end
 
-  and approxReconDec (Ga, TermSyn.Dec (name, UaOpt, Va)) =
-      (case UaOpt
-         of SOME (Ua) =>
+  and approxReconDec (Ga, TermSyn.Dec (name, tOpt, Va1)) =
+      (case tOpt
+         of SOME t =>
             let
-              val (La, C, r) = approxReconShow (Ga, Ua)
+              val (Va, La, r) = approxReconShow (Ga, t)
               val _ = checkType (La, r, "Classifier in declaration is not a type")
-              val _ = getClassClassifier (C, Va)
             in
+              (* should never fail *)
+              shape (Option.valOf Va, Va1)
+              handle Unify.Unify msg => ();
               SOME (r)
             end
           | NONE => NONE)
@@ -678,6 +654,7 @@ struct
     | newSpineVarW (G, (IntSyn.Pi ((IntSyn.Dec (_, V1), _), V2), s)) =
       let
         val U1 = newLoweredEVar (G, (V1, s))
+        (* IntSyn.Dot instead of Whnf.dotEta? -kw *)
         val S2 = newSpineVar (G, (V2, Whnf.dotEta (IntSyn.Exp U1, s)))
       in
         IntSyn.App (U1, S2)
@@ -735,102 +712,99 @@ struct
   (* Given that a term is approximately well-typed, convert it
      to an eta-long, internalized expression (and occurence exp) *)
 
-  fun reconShow (G, Ga, Ua) =
+  fun reconShow (G, Ua) =
       let
-        val res as (U, V, Va, oc) = recon (G, Ga, Ua)
+        val res as (U, V, oc) = recon (G, Ua)
       in
         showInferred (G, ((U, V), oc));
         res
       end
 
-  and recon (G, Ga, TermSyn.Typ (r)) =
+  and recon (G, TermSyn.Typ (r)) =
         (IntSyn.Uni (IntSyn.Type),
-         IntSyn.Uni (IntSyn.Kind), IntSyn.Uni (IntSyn.Kind),
+         IntSyn.Uni (IntSyn.Kind),
          Paths.leaf (r))
-    | recon (G, Ga, TermSyn.Lam (Da1 as TermSyn.Dec (x, _, Va), Ua2, r)) =
+    | recon (G, TermSyn.Lam (Da1 as TermSyn.Dec (x, _, Va), Ua2, r)) =
       let
-        val (D1, oc1Opt) = reconDec (G, Ga, Da1, r)
-        val (U2, V2, Va2, oc2) = reconShow (decl (G, D1), IntSyn.Decl (Ga, Da1), Ua2)
+        val (D1, oc1Opt) = reconDec (G, Da1, r)
+        val (U2, V2, oc2) = reconShow (decl (G, D1), Ua2)
         val r' = Paths.join (r, Paths.toRegion oc2)
       in
         (IntSyn.Lam (D1, U2),
          IntSyn.Pi ((D1, IntSyn.Maybe), V2),
-         IntSyn.Pi ((IntSyn.Dec (x, Va), IntSyn.Maybe), Va2),
          Paths.bind (r', oc1Opt, oc2))
       end
-    | recon (G, Ga, TermSyn.Arrow (Ua1, Ua2)) =
+    | recon (G, TermSyn.Arrow (Ua1, Ua2)) =
       let
-        val (V1, L1, La1, oc1) = reconShow (G, Ga, Ua1)
+        val (V1, L1, oc1) = reconShow (G, Ua1)
         val D1 = IntSyn.Dec (NONE, V1)
-        val (V2, L2, La2, oc2) = reconShow (G, Ga, Ua2)
+        val (V2, L2, oc2) = reconShow (G, Ua2)
         val r' = joinRegions (oc1, oc2)
       in
         (IntSyn.Pi ((D1, IntSyn.No), IntSyn.EClo (V2, IntSyn.shift)),
-         L2, La2, Paths.bind (r', SOME (oc1), oc2))
+         L2, Paths.bind (r', SOME (oc1), oc2))
       end
-    | recon (G, Ga, TermSyn.Pi (Da1, Ua2, r)) =
+    | recon (G, TermSyn.Pi (Da1, Ua2, r)) =
       let
-        val (D1, oc1Opt) = reconDec (G, Ga, Da1, r)
-        val (V2, L2, La2, oc2) = reconShow (decl (G, D1), IntSyn.Decl (Ga, Da1), Ua2)
+        val (D1, oc1Opt) = reconDec (G, Da1, r)
+        val (V2, L2, oc2) = reconShow (decl (G, D1), Ua2)
         val r' = Paths.join (r, Paths.toRegion oc2)
       in
-        (IntSyn.Pi ((D1, IntSyn.Maybe), V2), L2, La2, Paths.bind (r', oc1Opt, oc2))
+        (IntSyn.Pi ((D1, IntSyn.Maybe), V2), L2, Paths.bind (r', oc1Opt, oc2))
       end
-    | recon (G, Ga, TermSyn.Omitobj (Va, r)) =
+    | recon (G, TermSyn.Omitobj (Va, r)) =
       let
         val V = approxToTypeVar (G, Va, r, "Ambiguous type for omitted term\n")
         val X = newLoweredEVar (G, (V, IntSyn.id))
       in
-        (X, V, Va, Paths.leaf (r))
+        (X, V, Paths.leaf (r))
       end
-    | recon (G, Ga, TermSyn.Implicit (Va, r)) =
+    | recon (G, TermSyn.Implicit (Va, r)) =
       let
         val V = approxToTypeVar (G, Va, r, "Ambiguous type for implicit argument\n")
         val X = newLoweredEVar (G, (V, IntSyn.id))
       in
-        (X, V, Va, Paths.leaf (r))
+        (X, V, Paths.leaf (r))
       end
-    | recon (G, Ga, TermSyn.Hastype (Ua1, Ua2, Va2)) =
+    | recon (G, TermSyn.Hastype (Ua1, Ua2)) =
       let
-        val (U1, V1, Va1, oc1) = reconShow (G, Ga, Ua1)
-        val (V2, L2, La2, oc2) = reconShow (G, Ga, Ua2)
+        val (U1, V1, oc1) = reconShow (G, Ua1)
+        val (V2, L2, oc2) = reconShow (G, Ua2)
       in
         unify (G, (V1, IntSyn.id), (V2, IntSyn.id))
         handle Unify.Unify msg => hasTypeError (G, (V1, oc1), (V2, oc2), msg);
-        (* return Va2 rather than Va1 for better performance under errors *)
-        (U1, V2, Va2, oc1)
+        (U1, V2, oc1)
       end
-    | recon (G, Ga, TermSyn.Root (hd, sp)) =
+    | recon (G, TermSyn.Root (hd, sp)) =
       let
-        val (H, V, Va, i, r) = reconHead (G, Ga, hd)
-        val (S, V', Va', os) = reconSpine (G, Ga, (V, IntSyn.id), Va, sp)
+        val (H, V, i, r) = reconHead (G, hd)
+        val (S, V', os) = reconSpine (G, (V, IntSyn.id), sp)
         val os' = Paths.removeImplicit (i, os)
       in
-        (H S, V', Va',
+        (H S, V',
          Paths.root (Paths.toRegionSpine (os', r), Paths.leaf r, i, os'))
       end
-    | recon (G, Ga, TermSyn.Redex (Ua, sp)) =
+    | recon (G, TermSyn.Redex (Ua, sp)) =
       let
-        val (U, V, Va, oc) = reconShow (G, Ga, Ua)
-        val (S, V', Va', os) = reconSpine (G, Ga, (V, IntSyn.id), Va, sp)
+        val (U, V, oc) = reconShow (G, Ua)
+        val (S, V', os) = reconSpine (G, (V, IntSyn.id), sp)
       in
-        (IntSyn.Redex (U, S), V', Va',
+        (IntSyn.Redex (U, S), V',
          (* mismatch here *)
          Paths.root (Paths.toRegionSpine (os, Paths.toRegion (oc)), oc, 0, os))
       end
 
-  and reconHead (G, Ga, TermSyn.Const (H, conDec, r)) =
+  and reconHead (G, TermSyn.Const (H, conDec, r)) =
       let
         val i = IntSyn.conDecImp (conDec)
         val V = IntSyn.conDecType (conDec)
-        val (Va, isType) = makeApprox (V)
       in
         (case IntSyn.conDecStatus (conDec)
            of IntSyn.Foreign (cs, toForeign) => toForeign
             | _ => fn S => IntSyn.Root (H, S),
-         V, Va, i, r)
+         V, i, r)
       end
-    | reconHead (G, Ga, TermSyn.Var (name, r)) =
+    | reconHead (G, TermSyn.Var (name, r)) =
       let
         val depth = IntSyn.ctxLength (G)
         val (V, Va, set, H) = Vars.var (name, depth)
@@ -841,35 +815,33 @@ struct
                (unify (G, (V, IntSyn.id), (V', IntSyn.Shift depth));
                 set := true)
            | _ => ();
-        (H, V, Va, 0, r)
+        (H, V, 0, r)
       end
-    | reconHead (G, Ga, TermSyn.BVar (k, r)) =
+    | reconHead (G, TermSyn.BVar (k, r)) =
       let
         val (IntSyn.Dec (x, V)) = IntSyn.ctxDec (G, k)
-        val (TermSyn.Dec (x, _, Va)) = IntSyn.ctxLookup (Ga, k)
       in
-        (fn S => IntSyn.Root (IntSyn.BVar (k), S), V, Va, 0, r)
+        (fn S => IntSyn.Root (IntSyn.BVar (k), S), V, 0, r)
       end
 
-  and reconSpine (G, Ga, (V, s), Va, TermSyn.Nil) =
-        (IntSyn.Nil, IntSyn.EClo (V, s), Va, Paths.nils)
-    | reconSpine (G, Ga, (V, s), Va, TermSyn.App (Ua, sp)) =
+  and reconSpine (G, (V, s), TermSyn.Nil) =
+        (IntSyn.Nil, IntSyn.EClo (V, s), Paths.nils)
+    | reconSpine (G, (V, s), TermSyn.App (Ua, sp)) =
       let
-        val (U1, V1, Va1, oc1) = reconShow (G, Ga, Ua)
-        val (Va1', Va2') = ensurePiApprox (Va)
+        val (U1, V1, oc1) = reconShow (G, Ua)
         val (V1', V2', s') = ensurePi (G, (V, s), (U1, oc1))
         val _ = unify (G, (V1, IntSyn.id), (V1', s'))
             handle Unify.Unify msg => mismatchError (G, (V1', s'), ((U1, V1), oc1), msg)
-        val (S, V', Va', os) = reconSpine (G, Ga, (V2', Whnf.dotEta (IntSyn.Exp (U1), s')), Va2', sp)
+        val (S, V', os) = reconSpine (G, (V2', Whnf.dotEta (IntSyn.Exp (U1), s')), sp)
       in
-        (IntSyn.App (U1, S), V', Va', Paths.app (oc1, os))
+        (IntSyn.App (U1, S), V', Paths.app (oc1, os))
       end
 
-  and reconDec (G, Ga, TermSyn.Dec (x, UaOpt, Va), r) =
+  and reconDec (G, TermSyn.Dec (x, UaOpt, Va), r) =
       (case UaOpt
          of SOME (Ua) =>
             let
-              val (V, L, La, oc) = reconShow (G, Ga, Ua)
+              val (V, L, oc) = reconShow (G, Ua)
             in
               (IntSyn.Dec (x, V), SOME(oc))
             end
@@ -889,41 +861,39 @@ struct
   (* Throws away the associated occurrence tree *)
   fun termToApproxExp (Ga, tm) =
       let
-        val Ua = tm (Ga)
-        val (La, C, r) = approxReconShow (Ga, Ua)
-        val _ = checkType (La, r, "Classifier in declaration is not a type")
+        val t = tm (Ga)
+        val (Ua, Va, r) = approxReconShow (Ga, t)
+        (* must check separately -kw *)
+        (* val _ = checkType (La, r, "Classifier in declaration is not a type") *)
       in
-        Ua
+        t
       end
 
-  fun approxExpToExp (G, Ga, Ua) =
+  fun approxExpToExp (G, t) =
       let
-        val (U, V, Va, oc) = reconShow (G, Ga, Ua)
+        val (U, V, oc) = reconShow (G, t)
       in
-        U
+        (U, V)
       end
 
-  (** added by danwang **)
-  fun checkObject (La, r, msg) =
-      (case whnfApprox (La)
-	 of (IntSyn.Uni (IntSyn.Type)) => error (r, msg)
-          | (IntSyn.Uni (IntSyn.Kind)) => error (r, msg)
-	  | _ => ())
- 
+  (* we should get rid of these in favor of a separate check that the
+     resulting expression is at object level -kw *)
   fun termToApproxExp' (Ga, tm) =
       let
-	val Ua = tm (Ga)
-	val (La, C, r) = approxReconShow (Ga, Ua)
-	val _ = checkObject (La, r, "Classifier in declaration is not an object")
+	val t = tm (Ga)
+	val (Ua, Va, r) = approxReconShow (Ga, t)
+        val _ = case Ua
+                  of NONE => ()
+                   | _ => error (r, "Classifier in declaration is not an object")
       in
-	(Ua,La)
+	t
       end
  
-  fun approxExpToExp' (G, Ga, Ua) =
+  fun approxExpToExp' (G, t) =
       let
-	val (U, V, Va, oc) = reconShow (G, Ga, Ua)
+	val (U, V, oc) = reconShow (G, t)
       in
-	(U,V)
+	(U, V)
       end
 
   (* Converting a declaration to an expression in a context *)
@@ -936,9 +906,9 @@ struct
         Da
       end
 
-  fun approxDecToDec (G, Ga, Da, r) =
+  fun approxDecToDec (G, Da, r) =
       let
-        val (D, ocOpt) = reconDec (G, Ga, Da, r)
+        val (D, ocOpt) = reconDec (G, Da, r)
       in
         D
       end
@@ -948,11 +918,39 @@ struct
   *)
   fun termToExp0 (tm) =
       let
-        val tm = tm (IntSyn.Null)
-        val (Va, L, r) = approxReconShow (IntSyn.Null, tm)
-        val (U, V, Va, oc) = reconShow (IntSyn.Null, IntSyn.Null, tm)
+        val t = tm (IntSyn.Null)
+        val (Ua, Va, r) = approxReconShow (IntSyn.Null, t)
+        val (U, V, oc) = reconShow (IntSyn.Null, t)
       in
 	((U, V), oc)
+      end
+
+  fun termToExp (g, tm) =
+      let
+        val _ = Names.varReset ()
+
+        fun reconCtx1 (IntSyn.Null) = IntSyn.Null
+          | reconCtx1 (IntSyn.Decl (g, (d, r))) =
+            let
+              val Ga = reconCtx1 (g)
+            in
+              IntSyn.Decl (Ga, decToApproxDec (Ga, d))
+            end
+
+        fun reconCtx2 (IntSyn.Null, IntSyn.Null) = IntSyn.Null
+          | reconCtx2 (IntSyn.Decl (g, (_, r)), IntSyn.Decl (Ga, Da)) =
+            let
+              val G = reconCtx2 (g, Ga)
+            in
+              IntSyn.Decl (G, approxDecToDec (G, Da, r))
+            end
+
+        val Ga = reconCtx1 (g)
+        val t = termToApproxExp (Ga, tm)
+        val G = reconCtx2 (g, Ga)
+        val (U, V) = approxExpToExp (G, t)
+      in
+        (G, U, V)
       end
 
   (* freeVar (XOpt, [(X1,"X1"),...,(Xn,"Xn")]) = true

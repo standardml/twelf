@@ -158,7 +158,7 @@ struct
     val decl = I.Decl
 
     type labeldec = I.dctx * I.dctx
-    type thm = labeldec list * I.dctx * T.approxCtx * ModeSyn.Mode I.Ctx
+    type thm = labeldec list * I.dctx * ModeSyn.Mode I.Ctx
 
     type theorem2 = thm -> thm
     type theorem = T.approxCtx * int -> T.approxCtx * int * Paths.region * theorem2
@@ -208,13 +208,13 @@ struct
        and  M' = M, mode ... mode   (|G2| times)
        
     *)
-    fun recon (GBs, G, Ga, M, I.Null, _) = (GBs, G, Ga, M)
-      | recon (GBs, G, Ga, M, I.Decl (ctx, (Da, r)), mode) =
+    fun recon (GBs, G, M, I.Null, _) = (GBs, G, M)
+      | recon (GBs, G, M, I.Decl (ctx, (Da, r)), mode) =
 	let 
-	  val (GBs', G', Ga', M') = recon (GBs, G, Ga, M, ctx, mode)
-	  val D = T.approxDecToDec (G', Ga', Da, r)
+	  val (GBs', G', M') = recon (GBs, G, M, ctx, mode)
+	  val D = T.approxDecToDec (G', Da, r)
 	in
-	  (GBs', I.Decl (G', D), I.Decl (Ga', Da), I.Decl (M', mode))
+	  (GBs', I.Decl (G', D), I.Decl (M', mode))
 	end
 
     fun reconCtx (G, I.Null) = (G, I.Null)
@@ -226,14 +226,13 @@ struct
           (I.Decl (G', D), I.Decl (G'', (D, r)))
 	end
 
-    fun reconCtx2 ((G1, Ga1), I.Null) = ((G1, Ga1), (I.Null, I.Null))
-      | reconCtx2 ((G1, Ga1), I.Decl (ctx, (Da, r))) =
+    fun reconCtx2 (G1, I.Null) = (G1, I.Null)
+      | reconCtx2 (G1, I.Decl (ctx, (Da, r))) =
         let
-          val ((G', Ga'), (G'', Ga'')) = reconCtx2 ((G1, Ga1), ctx)
-          val D = T.approxDecToDec (G', Ga', Da, r)
+          val (G', G'') = reconCtx2 (G1, ctx)
+          val D = T.approxDecToDec (G', Da, r)
         in
-          ((I.Decl (G', D), I.Decl (Ga', Da)),
-           (I.Decl (G'', D), I.Decl (Ga'', Da)))
+          (I.Decl (G', D), I.Decl (G'', D))
         end
 
     fun reconCtxPair (ctxSome, ctxPi) =
@@ -246,19 +245,19 @@ struct
 
     fun reconCtxPair2 (ctxSome, ctxPi) =
         let
-          val (_, (G1, Ga1)) = reconCtx2 ((I.Null, I.Null), ctxSome)
-          val (_, (G2, Ga2)) = reconCtx2 ((G1, Ga1), ctxPi)
+          val (_, G1) = reconCtx2 (I.Null, ctxSome)
+          val (_, G2) = reconCtx2 (G1, ctxPi)
         in
           (G1, G2)
         end
 
-    fun abstractCtxPair2 (G1, G2) =	(* (G1,G2) already approx checked *)
+    fun abstractCtxPair2 (Ga1, Ga2) =	(* (Ga1,Ga2) already approx checked *)
         let
-	  val r1Opt = ctxRegion G1
-	  val SOME(r2) = ctxRegion G2	(* G2 cannot be empty *)
+	  val r1Opt = ctxRegion Ga1
+	  val SOME(r2) = ctxRegion Ga2	(* Ga2 cannot be empty *)
 	  val SOME(r) = join (r1Opt, r2)
-	  (* val (G1', G2') = reconCtxPair (G1, G2) *) (* approx *)
-	  val (G1', G2') = reconCtxPair2 (G1, G2) (* accurate *)
+	  (* val (G1', G2') = reconCtxPair (Ga1, Ga2) *) (* approx *)
+	  val (G1', G2') = reconCtxPair2 (Ga1, Ga2) (* accurate *)
 	  val (G0, [G1'', G2'']) =	(* closed nf *)
 	      Abstract.abstractCtxs [G1', G2'] 
 	      handle Constraints.Error (C)
@@ -270,10 +269,10 @@ struct
 	  (G1'', G2'')
 	end 
 
-    fun top2 (GBs, G, Ga, M) = (GBs, G, Ga, M)
+    fun top2 (GBs, G, M) = (GBs, G, M)
     fun top r (Ga, k) = (Ga, k, r, top2)
-    fun exists2 (ga, t) (GBs, G, Ga, M) =
-          t (recon (GBs, G, Ga, M, ga, M.Minus))
+    fun exists2 (Ga, t) (GBs, G, M) =
+          t (recon (GBs, G, M, Ga, M.Minus))
     fun exists (g, (r, t)) (Ga, k) =
         let
           val (Ga1, Ga2) = reconCtx (Ga, g)
@@ -281,8 +280,8 @@ struct
         in
           (Ga', k', P.join (r, r'), exists2 (Ga2, t'))
         end
-    fun forall2 (ga, t) (GBs, G, Ga, M) =
-          t (recon (GBs, G, Ga, M, ga, M.Plus))
+    fun forall2 (ga, t) (GBs, G, M) =
+          t (recon (GBs, G, M, ga, M.Plus))
     fun forall (g, (r, t)) (Ga, k) =
         let
           val (Ga1, Ga2) = reconCtx (Ga, g)
@@ -290,8 +289,8 @@ struct
         in
           (Ga', k', P.join (r, r'), forall2 (Ga2, t'))
         end
-    fun forallStar2 (ga, t) (GBs, G, Ga, M) =
-          t (recon (GBs, G, Ga, M, ga, M.Plus))
+    fun forallStar2 (ga, t) (GBs, G, M) =
+          t (recon (GBs, G, M, ga, M.Plus))
     fun forallStar (g, (r, t)) (Ga, k) =
         let
           val (Ga1, Ga2) = reconCtx (Ga, g)
@@ -299,11 +298,11 @@ struct
         in
           (Ga', k', P.join (r, r'), forallStar2 (Ga2, t'))
         end
-    fun forallG2 (GBas, t) (_, G, Ga, M) =
+    fun forallG2 (GBas, t) (_, G, M) =
         let
           val GBs = List.map abstractCtxPair2 GBas
         in
-          t (GBs, G, Ga, M)
+          t (GBs, G, M)
         end
     fun forallG (gbs, (r, t)) (Ga, k) =
         let
@@ -319,7 +318,7 @@ struct
         let
 	  val _ = Names.varReset ()
           val (_, k, r', t') = t (I.Null, 0)
-	  val (GBs, G, _, M) = t' (nil, I.Null, I.Null, I.Null)
+	  val (GBs, G, M) = t' (nil, I.Null, I.Null)
 	in
 	  (L.ThDecl (GBs, G, M, k), r')
 	end

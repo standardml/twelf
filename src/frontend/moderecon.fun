@@ -59,23 +59,16 @@ struct
 
     structure Full =
     struct
-      type mterm2 = I.dctx * T.approxCtx * M.Mode I.Ctx -> (I.cid * M.ModeSpine) * P.region
-      type mterm = T.approxCtx -> mterm2
+      type mterm = (T.dec * P.region) I.Ctx * M.Mode I.Ctx
+                     -> (I.cid * M.ModeSpine) * P.region
 
-      fun mpi2 (m, Da, t, r) (G, Ga, D) =
-	  t (I.Decl (G, T.approxDecToDec (G, Ga, Da, r)), I.Decl (Ga, Da),
-             I.Decl (D, m))
+      fun mpi ((m, _), d, r, t) (g, D) =
+            t (I.Decl (g, (d, r)), I.Decl (D, m))
 
-      fun mpi ((m, _), d, r, t) (Ga) =
-          let
-            val Da = T.decToApproxDec (Ga, d)
-            val t' = t (I.Decl (Ga, Da))
-          in
-            mpi2 (m, Da, t', r)
-          end
-
-      fun mroot2 (Ua, r) (G, Ga, D) = 
+      fun mroot (tm, r) (g, D) =
 	  let
+            val (G, U, V) = T.termToExp (g, tm)
+
             (* convert term spine to mode spine *)
 	    (* Each argument must be contractible to variable *)
 	    fun convertSpine (I.Nil) = M.Mnil
@@ -100,27 +93,18 @@ struct
 		  (* error is signalled later in ModeDec.checkFull *)
 		  (d, convertSpine S)
 	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
-		  
 
-	    val (a, mS) = convertExp (T.approxExpToExp (G, Ga, Ua))
+	    val (a, mS) = convertExp (U)
 	  in
 	    (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
 	  end
 
-      fun mroot (tm, r) (Ga) =
-          let
-            val Ua = T.termToApproxExp (Ga, tm)
-          in
-            mroot2 (Ua, r)
-          end
-
       fun toModedec t =
           let
             val _ = Names.varReset ()
-            val t' = t (I.Null)
-            val t'' = t' (I.Null, I.Null, I.Null)
+            val t' = t (I.Null, I.Null)
           in
-            t''
+            t'
           end
 
     end  (* structure Full *)

@@ -74,14 +74,18 @@ sig
   type approxCtx = approxDec IntSyn.Ctx
 
   val decToApproxDec : approxCtx * dec -> approxDec
-  val approxDecToDec : IntSyn.dctx * approxCtx * approxDec * Paths.region -> IntSyn.Dec
+  val approxDecToDec : IntSyn.dctx * approxDec * Paths.region -> IntSyn.Dec
 
   val termToApproxExp : approxCtx * term -> approxExp
-  val approxExpToExp : IntSyn.dctx * approxCtx * approxExp -> IntSyn.Exp
+  val approxExpToExp : IntSyn.dctx * approxExp -> IntSyn.Exp * IntSyn.Exp
 
-  val termToApproxExp' : approxCtx * term -> approxExp * IntSyn.Exp
-  val approxExpToExp' : IntSyn.dctx * approxCtx * approxExp
-                        -> IntSyn.Exp * IntSyn.Exp
+  val termToApproxExp' : approxCtx * term -> approxExp
+  val approxExpToExp' : IntSyn.dctx * approxExp -> IntSyn.Exp * IntSyn.Exp
+
+  (* val ctxToCtx : (dec * Paths.region) IntSyn.Ctx -> IntSyn.dctx *)
+
+  val termToExp : (dec * Paths.region) IntSyn.Ctx * term
+                   -> IntSyn.dctx * IntSyn.Exp * IntSyn.Exp
 
   val queryToQuery : query * Paths.location
                      -> IntSyn.Exp * string option * (IntSyn.Exp * string) list
