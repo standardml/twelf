@@ -223,7 +223,7 @@ struct
         let
 	  val _ = checkClause (G, Q, RG, (V1, s), P.label occ)
 	in
-	    checkGoal (I.Decl (G, N.decLUName(G, I.decSub (D, s))), 
+	    checkGoal (I.Decl (G, I.decSub (D, s)),
 		       I.Decl (Q, C.Universal), RG,   
 		       (V2, I.dot1 s), 
 		       (V', I.comp (s', I.shift)), P.body occ)
@@ -247,22 +247,31 @@ struct
 	    handle Order.Error (msg)
 	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
 			     N.qidToString (N.constQid a))
-	  val P' = select (a', (S', s')) (* only if a' terminates? *)
+	  val P' = select (a', (S', s')) (* always succeeds? -fp *)
+	  (*
 	    handle Order.Error (msg)
 	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
 			     N.qidToString (N.constQid a'))
+          *)
 	  val a's = Order.mutLookup a	(* always succeeds? -fp *)
+	  (*
 	    handle Order.Error (msg)
 	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
 			     N.qidToString (N.constQid a))
-	  val _ = Order.selLookup a'	(* check if a' terminates --- should always succeed? -fp *)
+	  *)
+	  (* 
+	  val _ = Order.selLookup a'
+	  *)
+	  (* check if a' terminates --- should always succeed? -fp *)
+	  (*
 	    handle Order.Error (msg)
 	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
 			     N.qidToString (N.constQid a))
+          *)
 	  val RG' = (case selectROrder (a, (S, s)) 
 	               of NONE => (if (!Global.chatter) > 5 
 				     then  print ("\n no reduction predicate defined for "^
-						  I.conDecName (I.sgnLookup a) ^ "\n")
+						  N.qidToString (N.constQid a) ^ "\n")
 				   else ();
 				     RG)
 		       | SOME(O) => (if (!Global.chatter) > 5 
@@ -279,7 +288,7 @@ struct
 					" ---> " ^ orderToString (G, C.Leq(P, P')) ^ "\n")
 			  else ();
 			    if C.deduce (G, Q, RG, C.Leq(P, P')) 
-			      then  RG'
+			      then RG'
 			    else raise Error' (occ, "Termination violation:\n" ^ 
 					       ctxToString (G, RG) ^ 
 					       " ---> " ^ 
@@ -306,6 +315,7 @@ struct
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
        and RG is a context for derived reduction order assumptions 
+       and  G |- RG
 
        then RG' if V1[s1]  is "smaller" then  V2[s2]
     *)
@@ -313,7 +323,7 @@ struct
          checkImpW (G, Q, RG, Vs, Whnf.whnf Vs', occ)
 
     and checkImpW (G, Q, RG, (V, s), (I.Pi ((D', I.No), V'), s'), occ) =
-          checkImp (I.Decl (G, N.decEName (G, I.decSub (D', s'))),
+          checkImp (I.Decl (G, I.decSub (D', s')),
 		    I.Decl (Q, C.Existential), RG, 
 		    (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
       | checkImpW (G, Q, RG, (V, s), (I.Pi ((D', I.Maybe), V'), s'), occ) =
@@ -322,6 +332,10 @@ struct
 		    (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
       | checkImpW (G, Q, RG, Vs, Vs' as (I.Root (I.Const a, S), s), occ) = 
 	  checkGoal (G, Q, RG, Vs, Vs', occ)
+      | checkImpW (G, Q, RG, Vs, (I.Root (I.Def a, S), s), occ) =
+	  raise Error' (occ, "Termination checking for defined type families not yet available:\n"
+			^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
+
 
     (* checkClause (G, Q, RG, (V, s)) = RG''
      
@@ -344,15 +358,18 @@ struct
 		       (V, I.dot1 s), P.body occ)
       | checkClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
         let 
-	  val RG' = checkClause (I.Decl (G, N.decEName (G, I.decSub (D, s))),
+	  val RG' = checkClause (I.Decl (G, I.decSub (D, s)),
 				 I.Decl (Q, C.Existential), RG, 
 				 (V2, I.dot1 s), P.body occ)
 	in 
-          checkImp (I.Decl (G, N.decEName (G, I.decSub (D, s))),
+          checkImp (I.Decl (G, I.decSub (D, s)),
 		    I.Decl (Q, C.Existential), RG', (V1, I.comp (s, I.shift)), 
 		    (V2, I.dot1 s), P.label occ)
 	end
       | checkClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = RG
+      | checkClauseW (G, Q, RG, (I.Root (I.Def a, S), s), occ) =
+	raise Error' (occ, "Termination checking for defined type families not yet available:\n"
+		      ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
 
 
@@ -373,12 +390,12 @@ struct
 	   val _ = case O 
 	            of NONE => if (!Global.chatter) > 5 
 				 then print ("\n no reduction predicate defined for " ^ 
-					     I.conDecName (I.sgnLookup a))
+					     N.qidToString (N.constQid a))
 			       else
 				 ()
 	             | SOME(O) => if (!Global.chatter) > 5 
 				       then print ("\n reduction predicate for " ^ 
-						   I.conDecName (I.sgnLookup a) ^ 
+						   N.qidToString (N.constQid a) ^ 
 						   " added : " ^ 
 						   orderToString (G, O))
 				      else ()
@@ -392,17 +409,22 @@ struct
  	  in 
 	    case O 
 	      of NONE => NONE
-		| SOME(O') => SOME(C.Pi(D, O'))
+	       | SOME(O') => SOME(C.Pi(D, O'))
 	  end 
       | getROrderW (G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s)) = 
 	  let
-	    val O = getROrder (I.Decl (G, N.decEName (G, I.decSub (D, s))),
+	    val O = getROrder (I.Decl (G, I.decSub (D, s)),
 			       I.Decl (Q, C.Existential), (V2, I.dot1 s))
 	  in 
 	    case O 
 	      of NONE => NONE 
-	      | SOME(O') => SOME(C.shiftPred O' (fn s => I.comp(s, I.Shift ~1)))
+	       | SOME(O') => SOME(C.shiftPred O' (fn s => I.comp(s, I.invShift)))
 	  end 
+      | getROrderW (G, Q, Vs as (I.Root (I.Def a, S), s)) = 
+	  raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+			^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
+
+
 
     (* checkRGoal (G, Q, RG, (V1, s1), occ) = RG''
        
@@ -439,6 +461,9 @@ struct
 			C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
 			(V2, I.dot1 s), P.body occ))
 
+       | checkRGoalW (G, Q, RG, (I.Root (I.Def a, S), s), occ) =
+	   raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+			 ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
 
     (* checkRImp (G, Q, RG, (V1, s1), (V2, s2), occ) = ()
@@ -466,7 +491,7 @@ struct
 		     (V', I.dot1 s'), (V, I.comp (s, I.shift)), occ)
       | checkRImpW (G, Q, RG, (I.Pi ((D' as I.Dec (_, V1), I.No), V2), s'), (V, s), occ) =
 	  let
-	    val G' = I.Decl (G, N.decEName (G, I.decSub (D', s')))
+	    val G' = I.Decl (G, I.decSub (D', s'))
 	    val Q' = I.Decl (Q, C.Existential)
 	    val RG' = C.shiftRCtx RG (fn s => I.comp(s, I.shift))
 	    val RG'' = case getROrder (G', Q', (V1, I.comp(s', I.shift)))
@@ -478,6 +503,10 @@ struct
 	  end 
       | checkRImpW (G, Q, RG, Vs' as (I.Root (I.Const a, S), s),  Vs, occ) = 
 	  checkRGoal (G, Q, RG, Vs, occ)
+      | checkRImpW (G, Q, RG, Vs' as (I.Root (I.Def a, S), s), Vs, occ) =
+	  raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+			^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
+
 
     (* checkRClause (G, Q, RG, (V, s)) = ()
 
@@ -500,22 +529,21 @@ struct
 
       | checkRClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
 	 let
-	   val G' = I.Decl (G, N.decEName (G, I.decSub (D, s)))
-	   val Q' = I.Decl (Q, C.Existential)
+	   val G' = I.Decl (G, I.decSub (D, s))  (* N.decEName (G, I.decSub (D, s)) *)
+	   val Q' = I.Decl (Q, C.Existential) (* will not be used *)
 	   val RG' = C.shiftRCtx RG (fn s => I.comp(s, I.shift))
 	   val RG'' = case getROrder (G', Q', (V1, I.comp (s, I.shift)))
-	              of NONE => RG'
-		      | SOME(O) => I.Decl(RG', O)
-
+	                of NONE => RG'
+		         | SOME(O) => I.Decl(RG', O)
 	 in 
  	  checkRClause (G', Q', RG'', (V2, I.dot1 s), P.body occ); 
-	  checkRImp (G', Q', RG', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ)
+	  checkRImp (G', Q', RG'', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ)
 	end
       | checkRClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) =
 	let 
 	  val RO = case selectROrder (a, (S, s))
 	             of NONE => raise Error' (occ, "No reduction order assigned for " ^ 
-					      I.conDecName (I.sgnLookup a) ^ ".")
+					      N.qidToString (N.constQid a) ^ ".")
 		      | SOME(O) => O
 	  val _ = if (!Global.chatter) > 5
 		    then print ("\n check reduction predicate\n " ^
@@ -529,6 +557,9 @@ struct
 			     ctxToString (G, RG) ^ " ---> " ^  (* rename ctx ??? *)
 			     orderToString (G, RO))
 	end
+      | checkRClauseW (G, Q, RG, VS as (I.Root (I.Def a, S), s), occ) =
+	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+		      ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
     (* checkFamReduction a = ()
        
@@ -608,5 +639,3 @@ struct
     val checkFam = checkFam  
   end (* local *)
 end; (* functor Reduces  *)
-
-
