@@ -3,6 +3,8 @@ functor Trace (structure IntSyn' : INTSYN
 		 sharing Names.IntSyn = IntSyn'
 	       structure Whnf : WHNF
 		 sharing Whnf.IntSyn = IntSyn'
+	       structure Abstract : ABSTRACT
+		 sharing Abstract.IntSyn = IntSyn'
 	       structure Print : PRINT
 		 sharing Print.IntSyn = IntSyn')
   : TRACE =
@@ -16,75 +18,6 @@ struct
     structure N = Names
 
   in
-
-    (* Collecting EVars *)
-    (* copied and edited from abstract.fun *)
-    (* K is a list of pairs (X, "X") *)
-
-    fun eqEVar (I.EVar(r,_,_,_)) (I.EVar(r',_,_,_), _) = (r = r')
-
-    (* collectExpW (G, (U, s), K) = K'
-
-       Invariant: 
-       If    G |- s : G1     G1 |- U : V      (U,s) in whnf
-       No circularities in U
-       and   K' = K, K''
-	     where K'' contains all EVars and FVars in (U,s)
-    *)
-    fun collectExpW (G, (I.Uni L, s), K) = K
-      | collectExpW (G, (I.Pi ((D, _), V), s), K) =
-          collectExp (I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (I.Root (_ , S), s), K) =
-	  collectSpine (G, (S, s), K)
-      | collectExpW (G, (I.Lam (D, U), s), K) =
-	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
-	  if List.exists (eqEVar X) K
-	    then collectSub(G, s, K)
-	  else  (* N.evarName will assign name if none exists *)
-	    collectSub(G, s, (X, N.evarName (G, X))::collectExp (GX, (V, I.id), K))
-      (* No other cases can occur due to whnf invariant *)
-
-    (* collectExp (G, (U, s), K) = K' 
-       
-       same as collectExpW  but  (U,s) need not to be in whnf 
-    *) 
-    and collectExp (G, Us, K) = collectExpW (G, Whnf.whnf Us, K)
-
-    (* collectSpine (G, (S, s), K) = K' 
-
-       Invariant: 
-       If    G |- s : G1     G1 |- S : V > P
-       then  K' = K, K''
-       where K'' contains all EVars and FVars in (S, s)
-     *)
-    and collectSpine (G, (I.Nil, _), K) = K
-      | collectSpine (G, (I.SClo(S, s'), s), K) = 
-          collectSpine (G, (S, I.comp (s', s)), K)
-      | collectSpine (G, (I.App (U, S), s), K) =
-	  collectSpine (G, (S, s), collectExp (G, (U, s), K))
-
-    (* collectDec (G, (x:V, s), K) = K'
-
-       Invariant: 
-       If    G |- s : G1     G1 |- V : L
-       then  K' = K, K''
-       where K'' contains all EVars and FVars in (V, s)
-    *)
-    and collectDec (G, (I.Dec (_, V), s), K) =
-          collectExp (G, (V, s), K)
-
-    (* collectSub (G, s, K) = K' 
-
-       Invariant: 
-       If    G |- s : G1    
-       then  K' = K, K''
-       where K'' contains all EVars and FVars in s
-    *)
-    and collectSub (G, I.Shift _, K) = K
-      | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
-      | collectSub (G, I.Dot (I.Exp (U), s), K) =
-	  collectSub (G, s, collectExp (G, (U, I.id), K))
 
     (* Printing Utilities *)
 
@@ -108,11 +41,11 @@ struct
     fun evarsToString (Xnames) =
         let
 	  val inst = P.evarInstToString (Xnames)
-	  val constrOpt = P.evarConstrToStringOpt (N.evarCnstr ()) (* expensive! *)
+	  val constrOpt = P.evarConstrToStringOpt (Xnames)
 	in
 	  case constrOpt
 	    of NONE => inst
-	     | SOME(constr) => inst ^ "\nRemaining constraints:\n" ^ constr
+	     | SOME(constr) => inst ^ "\nConstraints:\n" ^ constr
 	end
 
     fun varsToEVarInst (nil) = nil
@@ -185,6 +118,9 @@ struct
 
     val currentGoal = ref (I.Uni (I.Type)) (* dummy initialization *)
     val currentEVarInst : (I.Exp * I.name) list ref = ref nil
+
+    fun setEVarInst (Xs) =
+        currentEVarInst := List.map (fn X => (X, N.evarName (I.Null, X))) Xs
 
     fun breakAction (G) =
         let
@@ -285,7 +221,7 @@ struct
 
     fun setGoal (G, V) = 
         (currentGoal := V;
-	 currentEVarInst := collectExp (G, (V, I.id), nil))
+	 setEVarInst (Abstract.collectEVars (G, (V, I.id), nil)))
 
     fun monitorHead (cids, I.Const(c)) = List.exists (fn c' => c = c') cids
       | monitorHead (cids, I.BVar(k)) = false
@@ -331,7 +267,8 @@ struct
       | maintain (G, FailGoal (_, _, V)) = setGoal (G, V)
       | maintain (G, Unify (_, Q, P)) =
         (* show substitution for variables in clause head if tracing unification *)
-        (currentEVarInst := collectExp (G, (P, I.id), collectExp (G, (Q, I.id), nil)))
+        setEVarInst (Abstract.collectEVars (G, (P, I.id),
+					    Abstract.collectEVars (G, (Q, I.id), nil)))
       | maintain _ = ()
 
     fun monitorBreak (None, G, e) = false

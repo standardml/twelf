@@ -38,6 +38,7 @@ structure Trace =
   Trace (structure IntSyn' = IntSyn
 	 structure Names = Names
 	 structure Whnf = Whnf
+	 structure Abstract = Abstract
 	 structure Print = Print);
 
 structure TMachine =

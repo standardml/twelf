@@ -5,6 +5,8 @@
 functor Print (structure IntSyn' : INTSYN
 	       structure Whnf : WHNF
 	         sharing Whnf.IntSyn = IntSyn'
+               structure Abstract : ABSTRACT
+		 sharing Abstract.IntSyn = IntSyn'
                structure Constraints : CONSTRAINTS
 		 sharing Constraints.IntSyn = IntSyn'
 	       structure Names : NAMES
@@ -581,26 +583,60 @@ local
 		 Ufmt, sym "."]
       end
 
+  (* fmtEqn assumes that G is a valid printing context *)
   fun fmtEqn (I.Eqn (G, U1, U2)) =
       F.HVbox [fmtExp (G, 0, noCtxt, (U1, I.id)),
 	       F.Break, sym "=", F.Space,
 	       fmtExp (G, 0, noCtxt, (U2, I.id))]
 
+  (* fmtEqnName and fmtEqns do not assume that G is a valid printing
+     context and will name or rename variables to make it so.
+     fmtEqns should only be used for printing constraints.
+  *)
   fun fmtEqnName (I.Eqn (G, U1, U2)) =
       fmtEqn (I.Eqn (Names.ctxLUName G, U1, U2))
+
   fun fmtEqns (nil) = [Str "Empty Constraint"]
     | fmtEqns (E::nil) = fmtEqn E :: Str "." :: nil
     | fmtEqns (E::Es) = fmtEqn E :: Str ";" :: F.Break :: fmtEqns Es
 
-  (* collectConstraints Xnames = Es
-     collects all constraints from Xnames
+  (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
+     instantiations of EVars occurring in queries.  To that end, a list of
+     EVars paired with their is passed, thereby representing a substitution
+     for logic variables.
+
+     We always raise EVar's to the empty context.
   *)
+  fun abstractLam (I.Null, U) = U
+    | abstractLam (I.Decl (G, D), U) = abstractLam (G, I.Lam (D, U))
+
+  fun fmtNamedEVar (U as I.EVar(_,G,_,_), name) =
+      let
+	val U' = abstractLam (G, U)
+      in
+        F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
+		 fmtExp (I.Null, 0, noCtxt, (U', I.id))]
+      end
+    | fmtNamedEVar (U, name) = (* used for proof term variables in queries *)
+      F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
+	       fmtExp (I.Null, 0, noCtxt, (U, I.id))]
+
+  fun fmtEVarInst (nil) = [Str "Empty Substitution"]
+    | fmtEVarInst ((U,name)::nil) = [fmtNamedEVar (U, name)]
+    | fmtEVarInst ((U,name)::Xs) =
+        fmtNamedEVar (U, name) :: Str ";" :: F.Break :: fmtEVarInst Xs
+
+  (* collectEVars and collectConstraints are used to print constraints
+     associated with EVars in a instantiation of variables occurring in queries.
+  *)
+  fun collectEVars (nil, Xs) = Xs
+    | collectEVars ((U,_)::Xnames, Xs) =
+	collectEVars (Xnames, Abstract.collectEVars (I.Null, (U, I.id), Xs))
+
   fun collectConstraints (nil) = nil
-    | collectConstraints ((I.EVar (ref(NONE), _, _, Cnstr as (_::_)),_)::Xnames) =
-      Constraints.simplify Cnstr @ collectConstraints Xnames
-    | collectConstraints (Xn::Xnames) =
-      (* variable is either instantiated or has no constraints *)
-      collectConstraints Xnames
+    | collectConstraints (I.EVar(ref(NONE),_,_,Cnstr as (_::_)) :: Xs) =
+	Constraints.simplify Cnstr @ collectConstraints Xs
+    | collectConstraints (_ :: Xs) = collectConstraints (Xs)
 
 in
 
@@ -623,40 +659,13 @@ in
   fun eqnToString (E) = F.makestring_fmt (formatEqn E)
   fun eqnsToString (Es) = F.makestring_fmt (formatEqns Es)
 
-
-
-  (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
-     instantiations of EVars occurring in queries.  To that end, a list of
-     EVars paired with their is passed, thereby representing a substitution
-     for logic variables.
-
-     We always raise EVar's to the empty context.
-  *)
-  fun abstractLam (I.Null, U) = U
-    | abstractLam (I.Decl (G, D), U) = abstractLam (G, I.Lam (D, U))
-
-  fun fmtNamedEVar (U as I.EVar(_,G,_,_), name) =
-      let
-	val U' = abstractLam (G, U)
-      in
-        F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
-		 formatExp (I.Null, U')]
-      end
-    | fmtNamedEVar (U, name) = (* used for proof term variables in queries *)
-      F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
-	       formatExp (I.Null, U)]
-
-  fun fmtEVarInst (nil) = [Str "Empty Substitution"]
-    | fmtEVarInst ((U,name)::nil) = [fmtNamedEVar (U, name)]
-    | fmtEVarInst ((U,name)::Xs) =
-        fmtNamedEVar (U, name) :: Str ";" :: F.Break :: fmtEVarInst Xs
-
   fun evarInstToString Xnames =
         F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (fmtEVarInst Xnames), Str "."])
 
   fun evarConstrToStringOpt Xnames =
       let
-	val constraints = collectConstraints Xnames
+	val Ys = collectEVars (Xnames, nil)	(* collect EVars in instantiations *)
+	val constraints = collectConstraints Ys
       in
 	case constraints
 	  of nil => NONE

@@ -198,10 +198,8 @@ struct
 		      then print (" ")
 		    else ()
 	    val _ = if !Global.chatter >= 3
-		      then print ("\n"
-					 ^ (Timers.time Timers.printing expToString)
-					 (IntSyn.Null, A)
-					 ^ ".\n")
+		      then print ("\n" ^ (Timers.time Timers.printing expToString)
+				  (IntSyn.Null, A) ^ ".\n")
 		    else ()
 	    (* Problem: we cannot give an answer substitution for the variables
 	       in the printed query, since the new variables in this query
@@ -239,10 +237,12 @@ struct
 					     [(M, name)] ^ "\n")
 			else ();
 		   if !Global.chatter >= 3
-		     then case Print.evarConstrToStringOpt (Names.evarCnstr ())
+		     (* Question: should we collect constraints in M? *)
+		     then case (Timers.time Timers.printing Print.evarConstrToStringOpt) Xs
 		            of NONE => ()
 			     | SOME(str) =>
-			       print ("Remaining constraints:\n" ^ str ^ "\n")
+			       print ("Remaining constraints:\n"
+				      ^ str ^ "\n")
 		   else ();
 		   if exceeds (SOME(!solutions),try)
 		     then raise Done
@@ -289,10 +289,12 @@ struct
 				       [(M, name)] ^ "\n")
 		  else ();
 	     if !Global.chatter >= 3
-	       then case Print.evarConstrToStringOpt (Names.evarCnstr ())
+	       (* Question: should we collect constraints from M? *)
+	       then case (Timers.time Timers.printing Print.evarConstrToStringOpt) Xs
 		      of NONE => ()
 		       | SOME(str) =>
-			 print ("Remaining constraints:\n" ^ str ^ "\n")
+			 print ("Remaining constraints:\n"
+				^ str ^ "\n")
 	     else ();
 	     if moreSolutions () then () else raise Done)
 	val _ = if !Global.chatter >= 3

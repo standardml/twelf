@@ -15,4 +15,7 @@ sig
   val abstractDecImp : IntSyn.Exp  -> (IntSyn.imp * IntSyn.Exp)
   val abstractDef : (IntSyn.Exp * IntSyn.Exp) -> 
                        (IntSyn.imp * (IntSyn.Exp * IntSyn.Exp))
+
+  val collectEVars : IntSyn.dctx * IntSyn.eclo * IntSyn.Exp list -> IntSyn.Exp list
+
 end;  (* signature ABSTRACT *)

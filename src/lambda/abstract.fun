@@ -23,7 +23,7 @@ struct
     (* Intermediate Data Structure *)
 
     datatype EFVar =
-      EV of I.Exp			(* Y ::= (X , {G} V)  if G |- X : V *)
+      EV of I.Exp			(* Y ::= X         for  GX |- X : VX *)
     | FV of I.name * I.Exp		(*     | (F , V)      if . |- F : V *)
 
 
@@ -473,6 +473,21 @@ struct
 	of I.Null => true
          | _ => false
 
+    fun evarsToK (nil) = I.Null
+      | evarsToK (X::Xs) = I.Decl (evarsToK (Xs), EV(X))
+
+    fun KToEVars (I.Null) = nil
+      | KToEVars (I.Decl (K, EV(X))) = X::KToEVars (K)
+      | KToEVars (I.Decl (K, _)) = KToEVars (K)
+
+    (* collectEVars (G, U[s], Xs) = Xs'
+       Invariants:
+         G |- U[s] : V
+         Xs' extends Xs by new EVars in U[s]
+    *)
+    fun collectEVars (G, Us, Xs) =
+          KToEVars (collectExp (G, Us, evarsToK (Xs)))
+
   in
 
     val piDepend = piDepend
@@ -482,6 +497,8 @@ struct
 
     val abstractDecImp = abstractDecImp
     val abstractDef = abstractDef
+
+    val collectEVars = collectEVars
 
   end
 end;  (* functor Abstract *)
