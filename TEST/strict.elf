@@ -1,1 +1,20 @@
 % Testing strictness errors
+exp : type.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+% bad : exp -> exp = [E:exp] E.
+% good : exp -> exp = [E:exp] lam ([x] app E x).
+% bad : (exp -> exp) -> exp -> exp = [E1:exp -> exp] [E2:exp] app E2 (E1 E2).
+
+% With implicit arguments
+
+eq : exp -> exp -> type.
+
+refl : eq E E.
+sym : eq E E' -> eq E' E.
+
+% bad : {E:exp} eq E E -> eq E E = [E:exp] [D:eq E E] D.
+% bad : eq E E -> eq E E = [D:eq E E] D.
+
+bad? : eq E E -> eq E E = [D:eq E E] sym D.

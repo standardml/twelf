@@ -120,8 +120,8 @@ local
 	val _ = Names.varReset ()
       in
 	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
-	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
-	      F.Break, fmtExp (I.Null, (U, I.id)),
+	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
+	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
 

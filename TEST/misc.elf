@@ -1,5 +1,5 @@
 %{ a line of comment }%
-%another line
+% another line
 
 %%prefix 9 >  % error: > is undeclared
 exp : type.				%%infix none 10 exp  % error: exp does not take 2 args
