@@ -384,7 +384,16 @@ struct
             else stringUnify = MultDelay [U1, ..., Un] cnstr
                    where U1, ..., Un are expression to be delayed on cnstr
     *)
-    fun unifyString (G, Concat AL, str, cnstr) =
+    fun unifyString (G, Concat (String prefix :: AL), str, cnstr) =
+          if (String.isPrefix prefix str)
+          then
+            let
+              val suffix = String.extract (str, String.size prefix, NONE)
+            in
+              unifyString (G, Concat AL, suffix, cnstr)
+            end
+          else Failure
+      | unifyString (G, Concat AL, str, cnstr) =
           let
             fun unifyString' (AL, nil) =
                   (Failure, nil)
