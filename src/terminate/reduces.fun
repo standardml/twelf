@@ -339,7 +339,7 @@ struct
          checkClauseW (G, Q, RG, Whnf.whnf Vs, occ)
 
     and checkClauseW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) =
-	  checkClause (I.Decl (G, N.decEName (G, I.decSub (D, s))), 
+	  checkClause (I.Decl(G, N.decEName (G, I.decSub (D, s))), 
 		       I.Decl (Q, C.Existential), RG, 
 		       (V, I.dot1 s), P.body occ)
       | checkClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
@@ -352,14 +352,59 @@ struct
 		    I.Decl (Q, C.Existential), RG', (V1, I.comp (s, I.shift)), 
 		    (V2, I.dot1 s), P.label occ)
 	end
-      |      checkClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = RG
+      | checkClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = RG
 
 
 
     (*-------------------------------------------------------------------*)
     (* Reduction Checker *) 
 
-    (* checkRImp (G, Q, RG, RG', (V1, s1), occ) = RG''
+    (* getROrder (G, Q, (V, s)) = O
+       If G: Q  
+       and  G |- s : G1    and   G1 |- V : L
+       then O is the reduction order associated to V[s]
+       and  G |- O
+
+     *)
+    fun getROrder (G, Q, Vs) = getROrderW (G, Q, Whnf.whnf Vs)
+    and getROrderW (G, Q, Vs as (I.Root (I.Const a, S), s)) = 
+         let
+	   val O = selectROrder (a, (S, s))
+	   val _ = case O 
+	            of NONE => if (!Global.chatter) > 5 
+				 then print ("\n no reduction predicate defined for " ^ 
+					     I.conDecName (I.sgnLookup a))
+			       else
+				 ()
+	             | SOME(O) => if (!Global.chatter) > 5 
+				       then print ("\n reduction predicate for " ^ 
+						   I.conDecName (I.sgnLookup a) ^ 
+						   " added : " ^ 
+						   orderToString (G, O))
+				      else ()
+	 in 
+	   O
+	 end 
+      | getROrderW (G, Q, (I.Pi ((D, I.Maybe), V), s)) = 
+	  let 
+	    val O = getROrder (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
+			       I.Decl (Q, C.Universal), (V, I.dot1 s))
+ 	  in 
+	    case O 
+	      of NONE => NONE
+		| SOME(O') => SOME(C.Pi(D, O'))
+	  end 
+      | getROrderW (G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s)) = 
+	  let
+	    val O = getROrder (I.Decl (G, N.decEName (G, I.decSub (D, s))),
+			       I.Decl (Q, C.Existential), (V2, I.dot1 s))
+	  in 
+	    case O 
+	      of NONE => NONE 
+	      | SOME(O') => SOME(C.shiftPred O' (fn s => I.comp(s, I.Shift ~1)))
+	  end 
+
+    (* checkRGoal (G, Q, RG, (V1, s1), occ) = RG''
        
        Invariant
        If   G : Q
@@ -368,57 +413,71 @@ struct
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
        and RG is a context of reduction predicates 
-       and  G' |- RG  where G' is a subset of G
-       and  G  |- RG'
-       and  RG' accumulates "local" reduction predicates
-       and RG, RG' --> redOrder(V1[s1])
+       and  G |- RG 
+       and RG implies that V1[s1] satisfies its associated reduction order
 
-       then RG'' is a context for "local" reducation predicates
-            s.t. RG, RG'' --> redOrder(V1[s1])
      *)
 
-     fun checkRImp (G, Q, RG, RG', Vs, occ) = 
-           checkRImpW (G, Q, RG, RG', Whnf.whnf Vs, occ)
+     fun checkRGoal (G, Q, RG, Vs, occ) = 
+           checkRGoalW (G, Q, RG, Whnf.whnf Vs, occ)
 
-     and checkRImpW (G, Q, RG, RG', Vs as (I.Root (I.Const a, S), s), occ) =
-         (case selectROrder (a, (S, s)) 
-	    of NONE => (if (!Global.chatter) > 5 
-			 then print ("\n no reduction predicate defined for " ^ 
-				     I.conDecName (I.sgnLookup a))
-		       else
-			 ();
-			 RG')
-            | SOME(O) => (if (!Global.chatter) > 5 
-			    then print ("\n reduction predicate for " ^ 
-					I.conDecName (I.sgnLookup a) ^ " added : " ^ 
-					orderToString (G, O)) 
-			  else ();
-			    I.Decl(RG', O)))
-	    
-       | checkRImpW (G, Q, RG, RG', (I.Pi ((D, I.Maybe), V), s), occ) = 
-	    let 
-	      val RG1' = checkRImp (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
-				    I.Decl (Q, C.Universal), RG, RG', (V, I.dot1 s),
-				    P.body occ)
-	    in 
-	     abstractRedCtx (G, RG1', D) (* scope violation ??? *)
-	    end 
+     and checkRGoalW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = () (* trivial *)
+            
+       | checkRGoalW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) = 
+           checkRGoal (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
+		      I.Decl (Q, C.Universal), 
+		      C.shiftRCtx RG (fn s => I.comp(s, I.dot1 s)),
+		      (V, I.dot1 s), P.body occ)
 
-       | checkRImpW (G, Q, RG, RG', (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
-	    let
-	      val RG1 = C.shiftRCtx (append(RG, RG')) (fn us => I.comp(us, I.shift))
-	      val _ = checkRClause (I.Decl(G,N.decLUName (G, I.decSub (D, s))), 
-				    I.Decl(Q, C.Universal), RG1,	
-				    (V1, I.comp(s, I.shift)), P.label occ)
-	      val RG1' = checkRImp (I.Decl (G, N.decLUName (G, I.decSub (D, s))),
-				    I.Decl (Q, C.Universal), RG, RG', 
-				    (V2, I.dot1 s), P.body occ) 
-		(* G, D |- RG1' *)
-	     in
-               (* abstract over D is not strictly necessary *)	       
-               (* strengthening of RG1' would be enough *)
-	       abstractRedCtx (G, RG1', D)  
-	     end
+       | checkRGoalW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
+	   (checkRClause (I.Decl (G, N.decLUName (G, I.decSub (D, s))),  
+			  I.Decl (Q, C.Universal), 
+			  C.shiftRCtx RG (fn s => I.comp(s, I.shift)),
+			  (V1, I.comp(s, I.shift)), P.label occ);
+	    checkRGoal (I.Decl (G, N.decLUName (G, I.decSub (D, s))),
+			I.Decl (Q, C.Universal), 
+			C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+			(V2, I.dot1 s), P.body occ))
+
+
+
+    (* checkRImp (G, Q, RG, (V1, s1), (V2, s2), occ) = ()
+       
+       Invariant
+       If   G : Q
+       and  G |- s1 : G1   and   G1 |- V1 : type
+       and  V1[s1], V2[s2] does not contain Skolem constants
+       and  G |- s2 : G2   and   G2 |- V2 : type
+       and occ locates V1 in declaration
+       and RG is a context for derived reduction order assumptions 
+       and G |- RG
+
+       then RG implies that  V2[s2] satisfies its associated reduction order
+            with respect to V1[s1]
+    *)
+
+    and checkRImp (G, Q, RG, Vs, Vs', occ) = 
+         checkRImpW (G, Q, RG, Whnf.whnf Vs, Vs', occ)
+
+    and checkRImpW (G, Q, RG, (I.Pi ((D', I.Maybe), V'), s'), (V, s), occ) =
+          checkRImp (I.Decl (G, N.decEName (G, I.decSub (D', s'))),
+		     I.Decl (Q, C.Existential), 
+		     C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+		     (V', I.dot1 s'), (V, I.comp (s, I.shift)), occ)
+      | checkRImpW (G, Q, RG, (I.Pi ((D' as I.Dec (_, V1), I.No), V2), s'), (V, s), occ) =
+	  let
+	    val G' = I.Decl (G, N.decEName (G, I.decSub (D', s')))
+	    val Q' = I.Decl (Q, C.Existential)
+	    val RG' = C.shiftRCtx RG (fn s => I.comp(s, I.shift))
+	    val RG'' = case getROrder (G', Q', (V1, I.comp(s', I.shift)))
+	                 of NONE => RG'
+		       | SOME(O) => I.Decl(RG', O)
+	  in 
+	    checkRImp (G', Q', RG'', 
+		    (V2, I.dot1 s'), (V, I.comp (s, I.shift)), occ)
+	  end 
+      | checkRImpW (G, Q, RG, Vs' as (I.Root (I.Const a, S), s),  Vs, occ) = 
+	  checkRGoal (G, Q, RG, Vs, occ)
 
     (* checkRClause (G, Q, RG, (V, s)) = ()
 
@@ -427,23 +486,30 @@ struct
        and  G |- s : G1    and   G1 |- V : L
        and  V[s] does not contain any Skolem constants
        and  RG is a context of reduction predicates
-       then V[s] satifies the reduction order
+       and  G |- RG
+       then RG implies that V[s] satifies the reduction order
     *)
 
     and checkRClause (G, Q, RG, Vs, occ) = checkRClauseW (G, Q, RG, Whnf.whnf Vs, occ)
 
     and checkRClauseW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) = 
-	   checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))), 
-			 I.Decl (Q, C.Existential), RG, (V, I.dot1 s), P.body occ)
+	  checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))), 
+			I.Decl (Q, C.Existential),
+			C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+			(V, I.dot1 s), P.body occ)
 
       | checkRClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
-	let 
-	  val RG1 = checkRImp (G, Q, RG, I.Null, (V1,s), P.label occ)  
-	  val RG2 = C.shiftRCtx (append(RG, RG1)) (fn us => I.comp(us, I.shift))
-	in 
-	  checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))),  (* name ??? *)
-			I.Decl (Q, C.Existential), RG2,  
-			(V2, I.dot1 s), P.body occ)  
+	 let
+	   val G' = I.Decl (G, N.decEName (G, I.decSub (D, s)))
+	   val Q' = I.Decl (Q, C.Existential)
+	   val RG' = C.shiftRCtx RG (fn s => I.comp(s, I.shift))
+	   val RG'' = case getROrder (G', Q', (V1, I.comp (s, I.shift)))
+	              of NONE => RG'
+		      | SOME(O) => I.Decl(RG', O)
+
+	 in 
+ 	  checkRClause (G', Q', RG'', (V2, I.dot1 s), P.body occ); 
+	  checkRImp (G', Q', RG', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ)
 	end
       | checkRClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) =
 	let 
