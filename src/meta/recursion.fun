@@ -500,7 +500,7 @@ struct
 			in
 			  F'
 			end
-		      else NONE
+		      else (TextIO.print "* Incompleteness: SOME variables free\n"; NONE)
 		in
 		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
 		    let 
