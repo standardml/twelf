@@ -490,22 +490,34 @@ Maintained to present reasonable menus.")
 	   (end-of-line 1)))
     (skip-chars-forward *whitespace*)))
 
-(defun twelf-end-of-par (&optional limit)
+(defun twelf-end-of-par-x (%define-ends-decl &optional limit)
   "Skip to presumed end of current Twelf declaration.
 Moves to next period or blank line (whichever comes first)
 and returns t if period is found, nil otherwise.
+If %define-ends-decl, consider %define and %solve as equivalent
+to period for the purposes of identifier fontification.
 Skips over comments (single-line or balanced delimited).
 Optional argument LIMIT specifies limit of search for period."
   (if (not limit)
       (save-excursion
         (forward-paragraph 1)
         (setq limit (point))))
+  (if (and %define-ends-decl
+	   (looking-at "%define"))
+      (forward-char 1))
   (while (and (not (looking-at "\\.\\W"))
 	      (not (looking-at "\\.\\'"))
+	      (not (and %define-ends-decl
+			(or (looking-at "%define")
+			    (looking-at "%solve"))))
 	      (< (point) limit))
     (skip-chars-forward "^.%" limit)
     (cond ((looking-at *twelf-comment-start*)
 	   (skip-twelf-comments-and-whitespace))
+	  ((and %define-ends-decl
+		(or (looking-at "%define")
+		    (looking-at "%solve")))
+	   t)
 	  ((looking-at "%")
 	   (forward-char 1))
 	  ((looking-at "\\.\\w")
@@ -513,8 +525,29 @@ Optional argument LIMIT specifies limit of search for period."
   (cond ((looking-at "\\.")
          (forward-char 1)
          t)
+	((and %define-ends-decl
+	      (looking-at "%define"))
+	 t)
         (t ;; stopped at limit
          nil)))
+
+(defun twelf-end-of-par (&optional limit)
+  "Skip to presumed end of current Twelf declaration.
+Moves to next period or blank line (whichever comes first)
+and returns t if period is found, nil otherwise.
+Skips over comments (single-line or balanced delimited).
+Optional argument LIMIT specifies limit of search for period."
+  (twelf-end-of-par-x nil limit))
+
+(defun twelf-font-end-of-par (&optional limit)
+  "Skip to presumed end of current Twelf declaration.
+Moves to next period or blank line (whichever comes first)
+and returns t if period is found, nil otherwise.
+Considers %define and %solve as equivalent
+to period for the purposes of identifier fontification.
+Skips over comments (single-line or balanced delimited).
+Optional argument LIMIT specifies limit of search for period."
+  (twelf-end-of-par-x t limit))
 
 (defun twelf-current-decl ()
   "Returns list (START END COMPLETE) for current Twelf declaration.
@@ -2205,18 +2238,20 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
       (goto-char (point-max)))))
 
 (defvar twelf-decl-pattern-noident
-  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%query\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\|%where\\|%include\\|%open\\)\\>"
+  "\\(%infix\\|%prefix\\|%postfix\\|%name\\|%query\\|%querytabled\\|%tabled\\|%deterministic\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%prove\\|%assert\\|%establish\\|%use\\|%where\\|%include\\|%open\\)\\>"
   "Pattern used to match declarations which do not declare a new identifier.")
 
 (defvar twelf-decl-pattern-ident
-  "\\(%abbrev\\|%solve\\|%theorem\\|%block\\|%sig\\|%struct\\)[ \t]\\(\\<\\w+\\>\\)"
+  "\\(%abbrev\\|%clause\\|%define\\|%solve\\|%theorem\\|%block\\|%sig\\|%struct\\)[ \t]*\\([ \t]\\|\n\\)[ \t]*\\(\\<\\w+\\>\\)"
   "Pattern used to match declarations which declare a new identifer.
-(match-beginning 2) to (match-end 2) will be the declared identifer.")
+(match-beginning 3) to (match-end 3) will be the declared identifer.")
 
-(defun twelf-next-decl (filename error-buffer)
+(defun twelf-next-decl-x (%define-ends-decl filename error-buffer)
   "Set point after the identifier of the next declaration.
 Return the declared identifier or `nil' if none was found.
-FILENAME and ERROR-BUFFER are used if something appears wrong."
+FILENAME and ERROR-BUFFER are used if something appears wrong.
+If %define-ends-decl, interpret %define as a declaration terminator
+for the purpose of identifier fontification."
   (let ((id nil)
         end-of-id
 	beg-of-id)
@@ -2227,11 +2262,11 @@ FILENAME and ERROR-BUFFER are used if something appears wrong."
           ;; Not looking at id: skip ahead
 	  (cond ((looking-at twelf-decl-pattern-noident)
 		 ;; valid decl: no warning
-		 (twelf-end-of-par))
+		 (twelf-end-of-par-x %define-ends-decl))
 		((looking-at twelf-decl-pattern-ident)
 		 ;; decl of identifer
-		 (setq beg-of-id (match-beginning 2))
-		 (setq end-of-id (match-end 2))
+		 (setq beg-of-id (match-beginning 3))
+		 (setq end-of-id (match-end 3))
 		 (goto-char end-of-id)
 		 (setq id (buffer-substring beg-of-id end-of-id)))
 		(t ;; unrecognized text
@@ -2248,6 +2283,20 @@ FILENAME and ERROR-BUFFER are used if something appears wrong."
           (setq id (buffer-substring beg-of-id end-of-id))))
       (skip-twelf-comments-and-whitespace))
     id))
+
+(defun twelf-next-decl (filename error-buffer)
+  "Set point after the identifier of the next declaration.
+Return the declared identifier or `nil' if none was found.
+FILENAME and ERROR-BUFFER are used if something appears wrong."
+  (twelf-next-decl-x nil filename error-buffer))
+
+(defun twelf-font-next-decl (filename error-buffer)
+  "Set point after the identifier of the next declaration.
+Return the declared identifier or `nil' if none was found.
+FILENAME and ERROR-BUFFER are used if something appears wrong.
+Interprets %define as a declaration terminator for the purpose
+of identifier fontification."
+  (twelf-next-decl-x t filename error-buffer))
 
 (defun skip-ahead (filename line message error-buffer)
   "Skip ahead when syntactic error was found.

@@ -103,7 +103,7 @@
    ;; single-line comments
    ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%abbrev\\|%solve\\|%query\\|%querytabled\\|%tabled\\|%mode\\|%block\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\|%sig\\|%struct\\|%where\\|%include\\|%open\\|%use\\).*$"
+   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%abbrev\\|%clause\\|%define\\|%solve\\|%query\\|%querytabled\\|%tabled\\|%deterministic\\|%mode\\|%block\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\|%sig\\|%struct\\|%where\\|%include\\|%open\\|%use\\).*$"
     1 twelf-font-percent-key-face nil)
    ;; keywords, omit punctuations for now.
    ("\\(\\<<-\\>\\|\\<->\\>\\|\\<type\\>\\|\\<=\\>\\|\\<_\\>\\)"
@@ -301,7 +301,7 @@ If already highlighted and ALLOW-OVERLAP-P is nil, don't highlight."
   (let (start
 	end
 	;; Turn off error messages
-	(id (twelf-next-decl nil nil)))
+	(id (twelf-font-next-decl nil nil)))
     ;; ignore limit for now because of global buffer restriction
     (if (null id) ; (or (null id) (> (point) limit))
 	nil
@@ -310,7 +310,7 @@ If already highlighted and ALLOW-OVERLAP-P is nil, don't highlight."
       ;;(beginning-of-line 1)
       (backward-char (length id))
       (setq start (point))
-      (twelf-end-of-par)
+      (twelf-font-end-of-par)
       (cons start end))))
 
 (defun twelf-font-find-binder (var-pattern limit occ-face)
