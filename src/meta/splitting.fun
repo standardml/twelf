@@ -368,7 +368,7 @@ struct
       (raise MTPAbstract.Error "Cannot split right of parameters")
 
 
-
+(* CLEANUP later -- cs 
     (* rebuildResidualLemma ((G0, B0), s, (G1, B1)) = ((G', B'), s')
 
        Invariant:
@@ -390,7 +390,7 @@ struct
       | rebuildResidualLemma ((G, B), s, (G1, B1)) = 
 	  ((G, B), s)
 
-
+*)
     (* split (x:D, sc, B, abstract) = cases'
 
        Invariant :
@@ -639,8 +639,8 @@ struct
 	    in
 	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')        (* G' |- X.s' : G, D *)
 	    end
-	  val ops' = expandRes (GB, isIndex, abstract, makeAddress, induction) (sc, ops) 
-(*	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
+(*	  val ops' = expandRes (GB, isIndex, abstract, makeAddress, induction) (sc, ops)  CLEANUP later --cs *)
+	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
 			 let 
 			   val a = I.targetFam V
@@ -650,7 +650,7 @@ struct
 			   :: ops
 			 end
 		     else ops
-*)	in
+	in
 	  (sc', ops')
 	end
       | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.All _)))), isIndex, 
@@ -694,7 +694,7 @@ struct
 	end
     (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
 
-
+(* CLEAN UP later,  --cs 
     (* expandRes ((G, D), (B, T)) (sc, ops) = ops'
        Splitting of Residual lemmas: currently only the first case can be executed
 
@@ -736,7 +736,7 @@ struct
 		      I.Decl (I.Decl (B, S.ResidualAssumption), S.Lemma (K, F))), 
 		     isIndex, abstract, makeAddress, induction) (sc', ops)
 	end
-
+*)
 
     (* expand (S) = ops'
 
