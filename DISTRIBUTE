@@ -68,3 +68,13 @@ For release:
     www/guide/index.html
 
 
+  Patching a previous version:
+
+   Create patch, using instructions in      twelf/admin/cvs-policy.txt
+   Get previous release out of the archive  twelf/archive/twelf-1-2pl?.tar.gz
+   Unpack the distribution into fresh directory
+   Apply patch     (patch < patch-1-2pl(?+1))
+
+   tar cvf twelf-1-2pl(?+1).tar twelf
+   gzip twelf-1-2pl(?+1).tar
+   cp twelf-1-2pl(?+1).tar.gz /afs/cs.cmu.edu/project/twelf/archive
