@@ -1,9 +1,9 @@
 %%% Evaluating arithmetic expressions
 %%% Author: Roberto Virga
 
-%use equality/rationals.
+%use equality/integers.
 
-eval_digit : digit X -> rational -> type.
+eval_digit : digit X -> integer -> type.
 
 ev_d0 : eval_digit d0 0.
 ev_d1 : eval_digit d1 1.
@@ -16,7 +16,7 @@ ev_d7 : eval_digit d7 7.
 ev_d8 : eval_digit d8 8.
 ev_d9 : eval_digit d9 9.
 
-eval_number : number X -> rational -> type.
+eval_number : number X -> integer -> type.
 
 ev_nd  : eval_number (nd D) Q
            <- eval_digit D Q.
@@ -25,7 +25,7 @@ ev_n++ : eval_number (n++ N D) (10 * Q1 + Q2)
            <- eval_digit D Q1
            <- eval_number N Q2.
 
-eval : expression X -> rational -> type.
+eval : expression X -> integer -> type.
 
 ev_en : eval (en N) Q
           <- eval_number N Q.
@@ -49,8 +49,23 @@ ev_e/ : eval (e/ E2 E1) Q
           <- eval E2 Q2
           <- eval E1 (Q * Q2).
 
+%abbrev >< : expression "10*9+35"
+   = e* (e+ (en (n++ (nd d5) d3)) (en (nd d9))) (en (n++ (nd d0) d1)).
+
 %solve
 exp : expression "10*9+35".
 
 %query 1 *
 eval exp Q.
+
+
+
+
+
+
+
+
+
+
+
+

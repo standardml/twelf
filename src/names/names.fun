@@ -96,6 +96,8 @@ struct
 	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.ConDef (name, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
+    | checkArgNumber (IntSyn.AbbrevDef (name, i, _, V, L), n) =
+	checkAtomic (name, V, i+n)
 
   (* checkFixity (name, cidOpt, n) = ()
      if n = 0 (no requirement on arguments)

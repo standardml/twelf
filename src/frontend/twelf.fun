@@ -567,6 +567,58 @@ struct
       *)
       type config = string * string list
 
+      val suffix = ref ".cfg"
+
+      (* new recursive version  Sat 09/25/1999 -rv *)
+      fun read' (configFile) =
+          withOpenIn (configFile)
+          (fn instream =>
+           let
+	     val {dir=configDir, file=_} = OS.Path.splitDirFile configFile
+	     (* mkRel interpretes a path p in the config file relative to
+	        configDir, the directory of the config file.
+             *)
+	     fun mkRel (p) = if OS.Path.isAbsolute p
+			       then p
+			     else OS.Path.concat (configDir, p)
+             fun parseItem (item, sources) =
+                 let
+                   val size = String.size item
+                   val suffixSize = String.size (!suffix)
+                 in
+                   if (String.substring (item, (size-suffixSize), suffixSize) = !suffix)
+                   then (#2(read' (mkRel(item)))) @ sources
+                   else (mkRel(item)) :: sources
+                 end
+	     fun parseLine (sources, line) =
+		 if Substring.isEmpty line
+		   then sources (* end of file *)
+		 else parseLine' (sources, Substring.dropl Char.isSpace line)
+	     and parseLine' (sources, line') =
+		 if Substring.isEmpty line' orelse Substring.sub (line', 0) = #"%"
+		   then parseStream sources	(* ignore empty or comment line *)
+		 else parseStream (parseItem (Substring.string (Substring.takel (not o Char.isSpace) line'),
+				              sources))
+	     and parseStream (sources) =
+	           parseLine (sources, Substring.all (TextIO.inputLine instream))
+
+	     val pwdir = OS.FileSys.getDir ()
+	   in
+	     (pwdir, parseStream nil)
+	   end)
+	  (*
+	  handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
+	  *)
+
+      and read (configFile) =
+            let
+              val (pwdir, sources) = read' (configFile)
+            in
+              (pwdir, rev sources)
+            end
+
+      (* old non-recursive version  Sat 09/25/1999 -rv *)
+      (*
       fun read (configFile) =
 	  withOpenIn (configFile)
 	  (fn instream =>
@@ -584,9 +636,9 @@ struct
 	           parseLine (sources, Substring.all (TextIO.inputLine instream))
 
 	     val {dir=configDir, file=_} = OS.Path.splitDirFile configFile
-	     (* mkRel interpretes a path p in the config file relative to
+	     ( * mkRel interpretes a path p in the config file relative to
 	        configDir, the directory of the config file.
-             *)
+             * )
 	     fun mkRel (p) = if OS.Path.isAbsolute p
 			       then p
 			     else OS.Path.concat (configDir, p)
@@ -595,9 +647,10 @@ struct
 	   in
 	     (pwdir, relSources (parseStream nil))
 	   end)
-	  (*
+	  ( *
 	  handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
-	  *)
+	  * )
+      *)
 
       fun loadAbort (filename, OK) = loadFile (filename)
 	| loadAbort (_, ABORT) = ABORT
@@ -738,6 +791,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.2 R7 (with tracing, arithmetic)"
+    val version = "Twelf 1.2 R8pl1 (with tracing, arithmetic)"
   end  (* local *)
 end; (* functor Twelf *)
