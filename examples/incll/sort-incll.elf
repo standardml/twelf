@@ -64,13 +64,17 @@ msort2 : prog(
 	<<= ^ msort L
 ).
 
+% replacing >=> by =>> in msort3 yields
+% an insertion sort instead of a merge sort.
+
 msort3 : prog(
 ^(msort L)
 	<<= ^ srt L1
 	<<= ^ srt L2 
 	<=  ^ merge L1 L2 L12
-	<=< (^ srt L12 =>> ^ msort L)
+	<=< (^ srt L12 >=> ^ msort L)
 ).
+
 
 msort4 : prog(
  ^ msort L 

@@ -43,13 +43,10 @@ forall_R : sqnt Di Do Oi Oo (forall Srt Frm)
 forall2_R : sqnt Di Do Oi Oo (forall2 Srt1 Srt2 Frm)
 	<- {x : trm Srt1 -> trm Srt2} sqnt Di Do Oi Oo (Frm x).
 
-
-choice_G : sqnt Di Do Oi Oo (^ P)
-%%%	<- choose G _ A _
-        <- prog A 
-	<- ie_sqnt2 Di Do Oi Ol Om Or A P
-	<- appr Ol Om Oo'
-	<- appr Oo' Or Oo.
+choice_O : sqnt Di Do Oi Oo (^ P)
+	<- choose Oi OiL A OiR
+	<- ie_sqnt1 Di Do OiL OoL OiR OoR A P
+	<- appr (OoL ,r del) OoR Oo.
 
 choice_D : sqnt Di Do Oi Oo (^ P)
 	<- choose Di DiL A DiR
@@ -60,11 +57,12 @@ choice_D : sqnt Di Do Oi Oo (^ P)
 	<- appr Ol Om Oo'
 	<- appr Oo' Or Oo.
 
-choice_O : sqnt Di Do Oi Oo (^ P)
-	<- choose Oi OiL A OiR
-	<- ie_sqnt1 Di Do OiL OoL OiR OoR A P
-	<- appr (OoL ,r del) OoR Oo.
-
+choice_G : sqnt Di Do Oi Oo (^ P)
+%%%	<- choose G _ A _
+        <- prog A 
+	<- ie_sqnt2 Di Do Oi Ol Om Or A P
+	<- appr Ol Om Oo'
+	<- appr Oo' Or Oo.
 
 forall_L1 : {t : trm Srt} ie_sqnt1 Di Do OiL OoL OiR OoR (forall Srt Frm) P
 	<- ie_sqnt1 Di Do OiL OoL OiR OoR (Frm t) P.
