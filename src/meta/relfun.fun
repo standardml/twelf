@@ -134,9 +134,7 @@ struct
       | occursInExpN (k, I.Pi (DP, V)) = occursInDecP (k, DP) orelse occursInExpN (k+1, V)
       | occursInExpN (k, I.Root (H, S)) = occursInHead (k, H) orelse occursInSpine (k, S)
       | occursInExpN (k, I.Lam (D, V)) = occursInDec (k, D) orelse occursInExpN (k+1, V)
-      | occursInExpN (k, I.FgnExp (cs, ops)) =
-          occursInExp (k, #toInternal(ops)())
-          (* hack - should consult cs    -rv *)
+      | occursInExpN (k, I.FgnExp (cs, ops)) = occursInExpN (k, Whnf.normalize (#toInternal(ops) (), I.id))
     (* no case for Redex, EVar, EClo *)
 
 

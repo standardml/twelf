@@ -141,6 +141,7 @@ struct
       | occursInExp (k, I.Pi (DP, V)) = occursInDecP (k, DP) orelse occursInExp (k+1, V)
       | occursInExp (k, I.Root (C, S)) = occursInCon (k, C) orelse occursInSpine (k, S)
       | occursInExp (k, I.Lam (D,V)) = occursInDec (k, D) orelse occursInExp (k+1, V)
+      | occursInExp (k, I.FgnExp (cs, ops)) = occursInExp (k, Whnf.normalize (#toInternal(ops) (), I.id))
       (* no case for Redex, EVar, EClo *)
 
     and occursInCon (k, I.BVar (k')) = (k = k')

@@ -109,7 +109,7 @@ struct
       | occursInExp (k, I.Pi (DP, V)) = or (occursInDecP (k, DP), occursInExp (k+1, V))
       | occursInExp (k, I.Root (H, S)) = occursInHead (k, H, occursInSpine (k, S))
       | occursInExp (k, I.Lam (D, V)) = or (occursInDec (k, D), occursInExp (k+1, V))
-      | occursInExp (k, I.FgnExp (cs, ops)) = occursInExp (k, #toInternal(ops) ())
+      | occursInExp (k, I.FgnExp (cs, ops)) = occursInExp (k, Whnf.normalize (#toInternal(ops) (), I.id))
       (* no case for Redex, EVar, EClo *)
 
     and occursInHead (k, I.BVar (k'), DP) = 
