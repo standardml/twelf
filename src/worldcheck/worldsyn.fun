@@ -120,7 +120,11 @@ struct
       | accR GVS (Plus (r1, r2)) k = 
 	  (accR GVS r1 k; accR GVS r2 k)
       | accR GVS (r' as (Star r)) k =
-	  (k GVS; accR GVS r (fn GVS' => accR GVS' r' k))
+	  (k GVS; accR GVS r (fn GVS' => accR GVS' r' k))   
+					(* terminates because the regular 
+					   expression that denotes the 
+					   regular word does not contain
+					   the empty word    --cs *)
 
 
     (* accR' (G, V, S) k = ()
