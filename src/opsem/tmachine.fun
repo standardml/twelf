@@ -233,7 +233,9 @@ struct
 	    let
 	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
               val btRef = ref true : bool ref
-              fun bt' () = !btRef andalso bt ()
+              val bt' = if deterministic
+                        then (fn () => !btRef andalso bt ())
+                        else bt
               val deep =
                 CSManager.trail (* trail to undo EVar instantiations *)
                   (fn () =>
@@ -264,7 +266,9 @@ struct
             then
               let
                 val btRef = ref true : bool ref
-                fun bt' () = !btRef andalso bt ()
+                val bt' = if deterministic
+                          then (fn () => !btRef andalso bt ())
+                          else bt
                 val deep =
                   CSManager.trail   (* trail to undo EVar instantiations *)
                     (fn () =>
