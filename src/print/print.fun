@@ -71,29 +71,41 @@ local
 	sTS (s, I.Nil)
       end 
 
-  fun sclo' (NONE, s) = NONE
-    | sclo' (SOME(S), s) = SOME(I.SClo(S,s))
+  (* ArgStatus classifies the number of arguments to an operator *)
+  datatype ArgStatus =
+      TooFew
+    | Exact of I.Spine
+    | TooMany of I.Spine * I.Spine
 
-  (* dropImp (i, S, n)
-     = SOME(S')
-       where we drop i arguments from S to obtain S', and
-       S' has at least n arguments remaining
-     = NONE if no such S' exists
+  fun sclo' (TooFew, s) = TooFew
+    | sclo' (Exact(S), s) = Exact (I.SClo(S,s))
+    | sclo' (TooMany (S, S'), s) = TooMany (I.SClo (S, s), I.SClo (S', s))
+
+  fun sclo'' (TooFew, s) = TooFew
+    | sclo'' (Exact(S), s) = Exact (S)
+    | sclo'' (TooMany (S, S'), s) = TooMany (S, I.SClo (S', s))
+
+  (* dropImp (i, S, n) for n >= 1
+     = TooFew            if |S| < i+n
+     = Exact(S')         if n >= 1, |S| = i+n, S = _ @ S' and |S'| = n
+                         if n = 0, |S| = _ @ S', |_| = i
+     = TooMany(S', S'')  if n >=1, |S| > i+n, S = _ @ S' and |S'| > n,
+                                              S' = S0 @ S'' and |S0| = n
   *)
-  fun dropImp (0, S, n) =
-      let fun checkArgNumber (S', 0) = SOME(S)
-	    | checkArgNumber (I.Nil, n) = NONE
-	    | checkArgNumber (I.App(U,S'), n) =
-		checkArgNumber (S', n-1)
-	    | checkArgNumber (I.SClo(S', s), n) =
-		checkArgNumber (S', n)
+  fun dropImp (0, S, 0) = Exact(S)
+    | dropImp (0, S, n) = (* n >= 1 *)
+      let fun checkArgNumber (I.Nil, 0) = Exact(S)
+            | checkArgNumber (I.Nil, k) = TooFew
+            | checkArgNumber (S' as I.App _, 0) = TooMany (S, S')
+            | checkArgNumber (I.App(U,S'), k) = checkArgNumber (S', k-1)
+            | checkArgNumber (I.SClo(S', s), k) = sclo'' (checkArgNumber (S', k), s)
       in
 	checkArgNumber (S, n)
       end
     | dropImp (i, I.App(U,S), n) = dropImp (i-1, S, n)
     | dropImp (i, I.SClo(S,s), n) = 
 	sclo' (dropImp (i, S, n), s)
-    | dropImp (i, I.Nil, n) = NONE
+    | dropImp (i, I.Nil, n) = TooFew
 
   (* exceeded (n:int, b:bound) = true if n exceeds bound b *)
   fun exceeded (_,NONE) = false
@@ -120,8 +132,9 @@ local
      represents the printed form of a root expression H @ S:
       fixity is the fixity of H (possibly FX.Nonfix),
       formats is a list of formats for printing H (including surrounding breaks
-         and whitespace,
+         and whitespace),
       S is the spine of arguments.
+      There may be additional argument in S which are ignored.
      
      EtaLong (U)
      represents an expression U' which had to be eta-expanded to U
@@ -193,43 +206,7 @@ local
                  Str0 (Symbol.const name)
         end
 
-  (* for internal printing *)
-  (* opargsImplicit (G, (C, S)) = oa
-     converts C @ S into operator/arguments form, showing all implicit
-     arguments.  In this form, infix, prefix, and postfix declarations
-     are ignored.
-  *)
-  fun opargsImplicit (G, (C,S)) = OpArgs (FX.Nonfix, [fmtCon(G,C)], S)
-
-  (* for external printing *)
-  (* opargsExplicit (G, (C, S)) = oa
-     converts C @ S into operator/arguments form, eliding implicit
-     arguments and taking operator fixity declarations into account.
-  *)
-  fun opargsExplicit (G, R as (C,S)) =
-      let
-	val opFmt = fmtCon (G, C)
-	val fixity = fixityCon C
-	fun oe (SOME(S')) =
-	    (case fixity
-	       of FX.Nonfix => OpArgs (FX.Nonfix, [opFmt], S')
-	        | FX.Prefix _ => OpArgs (fixity, [opFmt, F.Break], S')
-		| FX.Postfix _ => OpArgs (fixity, [F.Break, opFmt], S')
-		| FX.Infix _ => OpArgs (fixity, [F.Break, opFmt, F.Space], S'))
-	  | oe NONE = EtaLong (Whnf.etaExpandRoot (I.Root R))
-      in
-	oe (dropImp (impCon C, S, argNumber fixity))
-      end
-
-  (* opargs (G, (C, S)) = oa
-     converts C @ S to operator/arguments form, depending on the
-     value of !implicit
-  *)
-  fun opargs (G,R) =
-      if !implicit then opargsImplicit (G,R)
-      else opargsExplicit (G,R)
-
-  (* evarArgs (G, d, X, s)
+    (* evarArgs (G, d, X, s)
      formats X[s] by printing X @ S, where S is the substitution s in spine form.
      This is an implicit form of raising.
   *)
@@ -331,8 +308,8 @@ local
 		       end
 	  | I.No => fmtLevel (I.Decl (G, D), (* I.decSub (D, s) *)
 			      d, ctx, (arrow(I.EClo(V1,I.shift), V2), I.dot1 s)))
-    | fmtExpW (G, d, ctx, (U as I.Root R, s)) =
-	 fmtOpArgs (G, d, ctx, opargs (G, R), s)
+    | fmtExpW (G, d, ctx, (U as I.Root R, s)) = (* s = id *)
+	 fmtOpArgs (G, d, ctx, opargs (G, d, R), s)
     (* I.Redex not possible *)
     | fmtExpW (G, d, ctx, (I.Lam(D, U), s)) = 
       let
@@ -348,6 +325,57 @@ local
     | fmtExpW (G, d, ctx, (U as I.FgnExp (_, ops), s)) =
       fmtExp (G, d, ctx, (#toInternal(ops) (), s))
     (* I.EClo not possible for Whnf *)
+
+  (* for internal printing *)
+  (* opargsImplicit (G, (C, S)) = oa
+     converts C @ S into operator/arguments form, showing all implicit
+     arguments.  In this form, infix, prefix, and postfix declarations
+     are ignored.
+  *)
+  and opargsImplicit (G, d, (C,S)) = OpArgs (FX.Nonfix, [fmtCon(G,C)], S)
+
+  (* for external printing *)
+  (* opargsExplicit (G, (C, S)) = oa
+     converts C @ S into operator/arguments form, eliding implicit
+     arguments and taking operator fixity declarations into account.
+     G |- C @ S (no substitution involved)
+  *)
+  and opargsExplicit (G, d, R as (C,S)) =
+      let
+	val opFmt = fmtCon (G, C)
+	val fixity = fixityCon C
+	fun oe (Exact(S')) =
+	    (case fixity
+	       of FX.Nonfix => OpArgs (FX.Nonfix, [opFmt], S')
+	        | FX.Prefix _ => OpArgs (fixity, [opFmt, F.Break], S')
+		| FX.Postfix _ => OpArgs (fixity, [F.Break, opFmt], S')
+		| FX.Infix _ => OpArgs (fixity, [F.Break, opFmt, F.Space], S'))
+	  | oe (TooFew) = EtaLong (Whnf.etaExpandRoot (I.Root R))
+	  | oe (TooMany (S', S'')) =
+	    (* extra arguments to infix operator *)
+	    (* S' - all non-implicit arguments *)
+	    (* S'' - extra arguments *)
+	    let
+	      val opFmt' = fmtOpArgs (G, d, noCtxt, oe (Exact (S')), I.id)
+	    in
+	      (* parens because juxtaposition has highest precedence *)
+	      (*
+	         could be redundant for prefix or postfix operators, but
+                 include anyway to avoid misreading output
+              *)
+	      OpArgs (FX.Nonfix, [F.Hbox [sym "(", opFmt', sym ")"]], S'')
+	    end
+      in
+	oe (dropImp (impCon C, S, argNumber fixity))
+      end
+
+  (* opargs (G, d, (C, S)) = oa
+     converts C @ S to operator/arguments form, depending on the
+     value of !implicit
+  *)
+  and opargs (G, d, R) =
+      if !implicit then opargsImplicit (G, d, R)
+      else opargsExplicit (G, d, R)
 
   (* fmtOpArgs (G, d, ctx, oa, s) = fmt
      format the operator/arguments form oa at printing depth d and add it

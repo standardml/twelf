@@ -66,7 +66,7 @@ struct
 
   end  (* structure Fixity *)
 
-  (* argNumber (fix) = # of explicit arguments required *)
+  (* argNumber (fix) = minimum # of explicit arguments required *)
   (* for operator with fixity fix (0 if there are no requirements) *)
   fun argNumber (Fixity.Nonfix) = 0
     | argNumber (Fixity.Infix _) = 2
@@ -77,8 +77,9 @@ struct
      if V expects exactly n arguments,
      raises Error(msg) otherwise
   *)
-  fun checkAtomic (name, IntSyn.Pi (D, V), 0) =
-      raise Error ("Constant " ^ name ^ " takes too many explicit arguments for given fixity")
+  fun checkAtomic (name, IntSyn.Pi (D, V), 0) = ()
+      (* allow extraneous arguments, Sat Oct 23 14:18:27 1999 -fp *)
+      (* raise Error ("Constant " ^ name ^ " takes too many explicit arguments for given fixity") *)
     | checkAtomic (name, IntSyn.Pi (D, V), n) =
 	checkAtomic (name, V, n-1)
     | checkAtomic (_, IntSyn.Uni _, 0) = ()
