@@ -42,9 +42,16 @@ DONE -cs Unify induction hypothesis result/residual lemmas to one construct.
 DONE -cs Keep residual lemmas explicit
 
 Make ctxblock adequate for formulas (left to right, instead  right to left)
+
 Parameter Cases
+  inductive cases:
+
+    Pruning in substitution. 
+	recursion.fun.clean is version without dynamic calculation of spine
+	recursion.fun is the version with dynamic calculuation of the spine
+    DONE -cs
+
   base cases
-  inductive cases
 Residual lemmas
 Index variables
 Proof terms

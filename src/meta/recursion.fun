@@ -68,6 +68,8 @@ struct
 	  fun ctxSub (nil, s) = nil
 	    | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
 
+    fun spine 0 = I.Nil 
+      | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
 
 (*
 	  fun paramPi ((G, s), V) =
@@ -153,10 +155,77 @@ let
 
 
 
+	  (* map G0, {G} GF, G |- G0, G, GF
+	     to  G0, {G} GF, {G} V, G |- G0, G, GF, V
+	  *)
 
+
+	  (* shift G = s'
+	     
+	     Invariant:
+	     Forall contexts G0: 
+	     If   |- G0, G ctx
+	     then G0, V, G |- G0, G
+	  *) 
+	   
+	  fun shift (I.Null) = I.shift
+	    | shift (I.Decl (G, _)) = I.dot1 (shift G)
+
+
+	  fun calcSpine (n, I.Shift m, i, S) = 
+	      if i < n then calcSpine (n, I.Dot (I.Idx (m+1), I.Shift (m+1)), i, S)  
+	      else S
+	    | calcSpine (n, I.Dot (I.Undef, s), i, S) = 
+		calcSpine (n, s, i+1, S)
+	    | calcSpine (n, I.Dot (_, s), i, S) = 
+	        calcSpine (n, s, i+1,I.App (I.Root (I.BVar i, I.Nil), S))
+
+
+	  (* raiseFor (G, F, sc) = F'
+	   
+	     Invariant:
+	     If   G0 |- G ctx 
+	     and  G0, G, GF |- F for
+	     and  G0, {G} GF, G |- s : G0, G, GF
+	     then G0, {G} GF |- F' for
+	  *)
+	  fun raiseFor (G, F as F.True, s) = F 
+	    | raiseFor (G, F.Ex (I.Dec (name, V), F), s) = 
+	      let
+		val g = I.ctxLength G
+
+		val w = MTPAbstract.weaken (G, I.targetFam V)
+		val iw = Whnf.invert w	      
+		val G1 = Whnf.strengthen (iw, G)
+
+		val V' = MTPAbstract.raiseType (G1, I.EClo (V, I.comp (s, iw)))
+		val S' = calcSpine (g, iw, 1, I.Nil)
+
+(*
+		val V' = MTPAbstract.raiseType (G, I.EClo (V, s))
+		val S' = spine g
+*)
+		val s' = I.comp (shift G, s)
+					(* G0, {G}GF, {G}V, G |- s' : G0, G, GF *) 
+		val s'' = I.Dot (I.Exp (I.Root (I.BVar (g+1), S')), s') 
+					(* G0, {G}GF, {G}V, G |- s'' : G0, G, GF, V *) 
+		val F' = raiseFor (G, F, s'')
+	      in
+		F.Ex (I.Dec (name, V'), F')
+	      end
+	    (* the other case of F.All is not yet covered *)
+
+
+
+(* PREVIOUS version
 	  fun abstract (_, nil) = nil
 	    | abstract (G, Lemma (n, F) :: Ls) =
 	       Lemma (n, F.All (F.Block (F.CtxBlock (NONE, G)), F)) :: abstract (G, Ls)
+*)
+	  fun abstract (_, nil) = nil
+	    | abstract (G, Lemma (n, F) :: Ls) =
+	       Lemma (n, raiseFor (G, F, I.id)) :: abstract (G, Ls)
+
 
 	  fun kont (GB3, s3) = 
 	    let 
@@ -615,8 +684,6 @@ end
       
 
 
-    fun spine 0 = I.Nil 
-      | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
 
 
     (* skolem (n, (du, de), GB, w, F, sc) = (GB', s')
@@ -629,7 +696,7 @@ end
        and  sc is a continuation which
 	    for all GB, Ds |- s' : GB
 	    returns s''  of type  GB, Ds, G'[...] |- w'' : GB, G
-	    and     V''  mapping (GB, Ds, G'[...] |- V) to (GB, Ds |- {G'[...]} V type)
+	    and     V''  mapping (GB, Ds, G'[...] |- V  type)  to (GB, Ds |- {G'[...]} V type)
 	    and     F''  mapping (GB, Ds, G'[...] |- F) to (GB, Ds |- {{G'[...]}} F formula)
        then GB' = GB, Ds'    
        and  |Ds'| = de

@@ -49,6 +49,13 @@ struct
        and  fmts is a format list of G1[s1]
     *)
     fun formatCtxBlock (G, (I.Null, s)) = (G, s, nil)
+      | formatCtxBlock (G, (I.Decl (I.Null, D), s)) = 
+        let 
+	  val D' = I.decSub (D, s)
+	  val fmt = P.formatDec (G, D')
+	in
+	  (I.Decl (G, D'), I.dot1 s, [fmt])
+	end
       | formatCtxBlock (G, (I.Decl (G', D), s)) =
         let 
 	  val (G'', s'', fmts) = formatCtxBlock (G, (G', s))
