@@ -259,7 +259,9 @@ struct
       (* simple optimization (C@S)[id] = C@S[id] *)
       (* applied in Twelf 1.1 *)
       (* Sat Feb 14 20:53:08 1998 -fp *)
-      | whnf (Us as (Root _, Shift (0))) = Us
+(*      | whnf (Us as (Root _, Shift (0))) = Us*)
+      (* commented out, because non-strict definitions slip
+	 Mon May 24 09:50:22 EDT 1999 -cs  *)
       | whnf (Root R, s) = whnfRoot (R, s)
       | whnf (Redex (U, S), s) = whnfRedex (whnf (U, s), (S, s))
       | whnf (Us as (Lam _, s)) = Us

@@ -156,12 +156,14 @@ local
   fun fixityCon (I.Const(cid)) = Names.getFixity (cid)
     | fixityCon (I.Skonst(cid)) = FX.Nonfix
     | fixityCon (I.Def(cid)) = Names.getFixity (cid)
+    | fixityCon (I.NSDef(cid)) = Names.getFixity (cid)
     | fixityCon _ = FX.Nonfix (* BVar, FVar *)
 
   (* impCon (c) = number of implicit arguments to c *)
   fun impCon (I.Const(cid)) = I.constImp (cid)
     | impCon (I.Skonst(cid)) = I.constImp (cid)
     | impCon (I.Def(cid)) = I.constImp (cid)
+    | impCon (I.NSDef(cid)) = I.constImp (cid)
     | impCon _ = 0			(* BVar, FVar *)
 
   (* argNumber (fixity) = number of required arguments to head with fixity *)
@@ -178,6 +180,7 @@ local
     | fmtCon (G, I.Const(cid)) = Str0 (Symbol.const (Names.constName (cid)))
     | fmtCon (G, I.Skonst(cid)) = Str0 (Symbol.skonst (Names.constName (cid)))
     | fmtCon (G, I.Def(cid)) = Str0 (Symbol.def (Names.constName (cid)))
+    | fmtCon (G, I.NSDef (cid)) = Str0 (Symbol.def (Names.constName (cid)))
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
 
   (* for internal printing *)
@@ -579,10 +582,12 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
-		 Vfmt, F.Break,
-		 sym "=", F.Space,
-		 Ufmt, sym "."]
+	F.Vbox0 0 1 [F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+			 Vfmt, F.Break,
+			 sym "=", F.Space,
+			 Ufmt, sym "."],
+		F.Break,
+		F.HVbox [sym "%strict ", Str0 (Symbol.def (name)), sym "."]]
       end
     | fmtConDec (hide, I.NSConDef (name, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
@@ -593,10 +598,12 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
-		 Vfmt, F.Break,
-		 sym "=", F.Space,
-		 Ufmt, sym "."]
+	F.Vbox0 0 1 [F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+			 Vfmt, F.Break,
+			 sym "=", F.Space,
+			 Ufmt, sym "."],
+		F.Break,
+		F.HVbox [sym "%nonstrict ", Str0 (Symbol.def (name)), sym "."]]
       end
 
   (* fmtEqn assumes that G is a valid printing context *)
