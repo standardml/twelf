@@ -423,7 +423,7 @@ struct
 	        let
 		  val Ds' = append (Ds1, Ds2)
 		in
-		  if List.exists (fn (Lemma (n', F')) => (n = n') andalso F.convFor ((F, I.id), (F', I.id))) Ds2 
+		  if List.exists (fn (Lemma (n', F')) => (n = n') andalso F.convFor ((F, I.id), (F', I.id))) Ds'
 		    then Ds' 
 		  else L :: Ds'
 		end
@@ -431,8 +431,7 @@ struct
 
 	    fun closedSub (G, I.Shift _) = true
 	      | closedSub (G, I.Dot (I.Exp U, s)) =
-	          (TextIO.print (Print.expToString (G, U) ^ "\n");
-	          Abstract.closedExp (G, (U, I.id)) andalso closedSub (G, s)) 
+	          Abstract.closedExp (G, (U, I.id)) andalso closedSub (G, s) 
 	      
 
             (* checkLabels (n, ops) = ops'
@@ -455,7 +454,7 @@ struct
 			in
 			  F'
 			end
-		      else (TextIO.print ("FREE EVars found!\n");NONE)
+		      else NONE
 		in
 		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
 		    let 
@@ -553,7 +552,6 @@ struct
 		if Subordinate.below (I.targetFam V1', I.targetFam V) then
 		  let 
 		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		    val _ = TextIO.print "EVar can escape \n"
 		  in
 		    lt (GB, k, ((U, s1), (V, s2)), 
 			((U', I.Dot (I.Exp (X), s1')), 
