@@ -11,14 +11,16 @@ fun defSize x = (case x of
 fun cidSize cid = (case I.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => S.size_tp (S.typeOf (Sgn.classifier cid))
  | I.ConDec(_,_,_,_,_,I.Kind) => S.size_knd (S.kindOf (Sgn.classifier cid))
- | I.ConDef(_,_,_,_,_,_) => defSize(Sgn.def cid)
- | I.AbbrevDef(_,_,_,_,_,_) => defSize(Sgn.def cid))
+ | I.ConDef(_,_,_,_,_,_,_) => defSize(Sgn.def cid)
+ | I.AbbrevDef(_,_,_,_,_,_) => defSize(Sgn.def cid)
+ | _ => 0)
 
 fun o_cidSize cid = (case I.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => S.size_tp (S.typeOf (Sgn.o_classifier cid))
  | I.ConDec(_,_,_,_,_,I.Kind) => S.size_knd (S.kindOf (Sgn.o_classifier cid))
- | I.ConDef(_,_,_,_,_,_) => defSize(Sgn.o_def cid)
- | I.AbbrevDef(_,_,_,_,_,_) => defSize(Sgn.o_def cid))
+ | I.ConDef(_,_,_,_,_,_,_) => defSize(Sgn.o_def cid)
+ | I.AbbrevDef(_,_,_,_,_,_) => defSize(Sgn.o_def cid)
+ | _ => 0)
 
 
 open SMLofNJ.Cont
@@ -27,16 +29,17 @@ open SMLofNJ.Cont
 val k : Reductio.eq_c option ref = ref NONE
 
 
-fun sanityCheck cid = (case I.sgnLookup cid of 
+exception Crap
+fun sanityCheck cid = ((case I.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => (Reductio.check_plusconst_type (Sgn.typeOf (Sgn.classifier cid)))
  | I.ConDec(_,_,_,_,_,I.Kind) => (Reductio.check_kind ([], Sgn.kindOf (Sgn.classifier cid)))
- | I.ConDef(_,_,_,_,_,I.Type) => let val Sgn.DEF_TERM y = Sgn.def cid
+ | I.ConDef(_,_,_,_,_,I.Type,_) => let val Sgn.DEF_TERM y = Sgn.def cid
 				     val Syntax.tclass z = Sgn.classifier cid 
 				 in
 (*				     l := (y,z):: !l; *)
 				     Reductio.check ([], y, z) 
 				 end
- | I.ConDef(_,_,_,_,_,I.Kind) => let val Sgn.DEF_TYPE y = Sgn.def cid
+ | I.ConDef(_,_,_,_,_,I.Kind,_) => let val Sgn.DEF_TYPE y = Sgn.def cid
 				     val Syntax.kclass z = Sgn.classifier cid 
 				 in
 				     Reductio.check_type  Reductio.CON_LF (Syntax.explodeKind z, y) 
@@ -51,16 +54,18 @@ fun sanityCheck cid = (case I.sgnLookup cid of
 				     val Syntax.kclass z = Sgn.classifier cid 
 				 in
 				     Reductio.check_type Reductio.CON_LF (Syntax.explodeKind z, y) 
-				 end)
+				 end
+ | _ => true (* we're not checking block declarations or anything else like that *))
+handle Syntax.Syntax _ => (print ("--> " ^ Int.toString cid); raise Match))
 
-exception Crap
+
 
 fun gen_graph n autoCompress =
     let
-	val _ = autoCompress n
+	val _ = autoCompress n 
 	fun sanity n = if n < 0 then true else 
 		       (sanity (n-1) andalso (if sanityCheck n then true else (print ("insane: <" ^ (Int.toString n) ^ ">\n"); raise Crap)) )
-	val _ = sanity n
+	val _ = sanity n 
 	val pairs = List.tabulate (n+1, (fn x => ( o_cidSize x, cidSize x) ))
 	val s = foldl op^ "" 
 		      (map (fn (x,y) => 

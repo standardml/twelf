@@ -47,6 +47,91 @@ struct
   fun xlate_kind (I.Pi ((I.Dec(_, e1), _), e2)) = S.KPi(S.MINUS, xlate_type e1, xlate_kind e2)
     | xlate_kind (I.Uni(I.Type)) = S.Type
 
+  local open Syntax in
+  (* simple skeletal form of types
+     omits all dependencies, type constants *)
+  datatype simple_tp = Base | Arrow of simple_tp * simple_tp
+				       
+  fun simplify_tp (TPi (_, t1, t2)) = Arrow(simplify_tp t1, simplify_tp t2)
+    | simplify_tp (TRoot _) = Base
+  fun simplify_knd (KPi (_, t1, k2)) = Arrow(simplify_tp t1, simplify_knd k2)
+    | simplify_knd (Type) = Base
+			   
+  (* hereditarily perform some eta-expansions on
+     a (term, type, spine, etc.) in a context
+    (and if not synthesizing) at a simple type. 
+
+    The only type of eta-expansion performed is when we
+    encounter
+    x . (M_1, M_2, ... M_n)
+    for a variable x, and M_1, ..., M_n have fewer lambda abstractions
+    than their (skeletal) type would suggest. 
+
+    The complication with doing full eta-expansion is that if
+    we were to wrap lambda abstractions around terms that occur
+    in a synthesizing position, we would need to add ascriptions,
+    and thus carry full types around everywhere. 
+
+    Fortunately, this weakened form of eta-expansion is all
+    we need to reconcile the discrepancy between what twelf
+    maintains as an invariant, and full eta-longness. *)
+  fun eta_expand_term G (NTerm t) T = NTerm(eta_expand_nterm G t T)
+    | eta_expand_term G (ATerm t) T = ATerm(eta_expand_aterm G t)
+  and eta_expand_nterm G (Lam t) (Arrow(t1, t2)) = Lam(eta_expand_term (t1::G) t t2)
+    | eta_expand_nterm G (NRoot (h,s)) T = NRoot(h, eta_expand_spine G s T)
+    | eta_expand_nterm G (Lam t) Base = raise Syntax "Lambda occurred where term of base type expected"
+  and eta_expand_aterm G (ARoot (Const n, s)) = 
+      let 
+	  val stp = simplify_tp(typeOf (Sgn.o_classifier n))
+      in
+	  ARoot(Const n, eta_expand_spine G s stp)
+      end 
+    | eta_expand_aterm G (ARoot (Var n, s)) =
+      let 
+	  val stp = List.nth(G, n)
+      in
+	  ARoot(Var n, eta_expand_var_spine G s stp)
+      end
+    | eta_expand_aterm G (ERoot _) = raise Syntax "invariant violated in eta_expand_aterm"
+  and eta_expand_tp G (TRoot(n, s)) =
+      let 
+	  val stp = simplify_knd(kindOf (Sgn.o_classifier n))
+      in
+	  TRoot(n, eta_expand_spine G s stp)
+      end 
+    | eta_expand_tp G (TPi(m,a,b)) = TPi(m,eta_expand_tp G a, eta_expand_tp (simplify_tp a::G) b)
+  and eta_expand_knd G (Type) = Type
+    | eta_expand_knd G (KPi(m,a,b)) = KPi(m,eta_expand_tp G a, eta_expand_knd (simplify_tp a::G) b)
+  and eta_expand_spine G [] Base = [] (* this seems risky, but okay as long as the only eta-shortness we find is in variable-headed pattern spines *)
+    | eta_expand_spine G ((Elt m)::tl) (Arrow(t1, t2)) = 
+      Elt(eta_expand_term G m t1) :: eta_expand_spine G tl t2
+    | eta_expand_spine G ((AElt m)::tl) (Arrow(t1, t2)) = 
+      AElt(eta_expand_aterm G m) :: eta_expand_spine G tl t2
+    | eta_expand_spine G ((Ascribe(m,a))::tl) (Arrow(t1, t2)) = 
+      Ascribe(eta_expand_nterm G m t1, eta_expand_tp G a) :: eta_expand_spine G tl t2
+    | eta_expand_spine G (Omit::tl) (Arrow(t1,t2)) =
+      Omit :: eta_expand_spine G tl t2
+    | eta_expand_spine _ _ _ = raise Syntax "Can't figure out how to eta expand spine"
+  (* the behavior here is that we are eta-expanding all of the elements of the spine, not the head of *this* spine *)
+  and eta_expand_var_spine G [] _ = [] (* in fact this spine may not be eta-long yet *)
+    | eta_expand_var_spine G ((Elt m)::tl) (Arrow(t1, t2)) = 
+      Elt(eta_expand_immediate (eta_expand_term G m t1, t1)) :: eta_expand_spine G tl t2
+    | eta_expand_var_spine _ _ _ = raise Syntax "Can't figure out how to eta expand var-headed spine"
+  (* here's where the actual expansion takes place *)
+  and eta_expand_immediate (m, Base) = m
+    | eta_expand_immediate (NTerm(Lam m), Arrow(t1, t2)) = 
+      NTerm(Lam(eta_expand_immediate(m, t2)))
+    | eta_expand_immediate (m, Arrow(t1, t2)) =
+      let 
+	  val variable = eta_expand_immediate(ATerm(ARoot(Var 0, [])), t1)
+      in  
+	  NTerm(Lam(eta_expand_immediate(apply_to(shift m, variable), t2)))
+      end
+  and apply_to (ATerm(ARoot(h, s)), m) = ATerm(ARoot(h, s @ [Elt m]))
+    | apply_to (NTerm(NRoot(h, s)), m) = NTerm(NRoot(h, s @ [Elt m]))
+    | apply_to _ = raise Syntax "Invariant violated in apply_to"
+  end
+
   val typeOf = S.typeOf
   val kindOf = S.kindOf
 
@@ -124,6 +209,7 @@ struct
   fun compress (cid, IntSyn.ConDec (name, NONE, _, IntSyn.Normal, a, IntSyn.Type)) =
       let 
 	  val x = xlate_type a
+	  val x = eta_expand_tp [] x 
 	  val modes = Sgn.get_modes cid
       in 
 	  Sgn.condec(name, compress_type [] (modes, x), x) 
@@ -135,7 +221,7 @@ struct
       in 
 	  Sgn.tycondec(name, compress_kind [] (modes, x), x) 
       end
-    | compress (cid, IntSyn.ConDef (name, NONE, _, m, a, IntSyn.Type)) = 
+    | compress (cid, IntSyn.ConDef (name, NONE, _, m, a, IntSyn.Type, _)) = 
       let
 	  val m = xlate_term m
 	  val a = xlate_type a
@@ -144,7 +230,7 @@ struct
       in 
 	  Sgn.defn(name, astar, a, mstar, m) 
       end
-    | compress (cid, IntSyn.ConDef (name, NONE, _, a, k, IntSyn.Kind)) = 
+    | compress (cid, IntSyn.ConDef (name, NONE, _, a, k, IntSyn.Kind, _)) = 
       let
 	  val a = xlate_type a
 	  val k = xlate_kind k
@@ -209,7 +295,7 @@ struct
 	  val (ak, omitted_args, uni) = 
 	      case I.sgnLookup cid of
 		  I.ConDec(name, package, o_a, status, ak, uni) => (ak, o_a, uni)
-		| I.ConDef(name, package, o_a, ak, def, uni) => (ak, o_a, uni)
+		| I.ConDef(name, package, o_a, ak, def, uni, _) => (ak, o_a, uni)
 		| I.AbbrevDef(name, package, o_a, ak, def, uni) => (ak, o_a, uni)
 		| _ => raise NoModes
 	  fun count_args (I.Pi(_, ak')) = 1 + count_args ak'
@@ -251,7 +337,7 @@ struct
 	  val (ak, omitted_args) = 
 	      case I.sgnLookup cid of
 		  I.ConDec(name, package, o_a, status, ak, uni) => (ak, o_a)
-		| I.ConDef(name, package, o_a, ak, def, uni) => (ak, o_a)
+		| I.ConDef(name, package, o_a, ak, def, uni, _) => (ak, o_a)
 		| I.AbbrevDef(name, package, o_a, ak, def, uni) => (ak, o_a)
 		| _ => raise Match
 	  fun count_args (I.Pi(_, ak')) = 1 + count_args ak'
@@ -285,7 +371,7 @@ struct
                     (* if not, compress it *)
 		    | NONE => 
 		      let 
-			  val modes = f n0
+			  val modes = f n0 
 		      in 
 			  (Sgn.set_modes(n0, modes); 
 			   Sgn.update (n0, compress (n0, IntSyn.sgnLookup n0));
@@ -297,4 +383,15 @@ struct
   fun sgnAutoCompressUpTo n f = sgnAutoCompressUpTo' 0 n f
 
   val check = Reductio.check
+
 end
+
+(*
+c : ((o -> o) -> o -> o) -> o
+
+a : o -> o
+
+c ([x] a)
+
+eta_expand_immediate ( a) ( o -> o)
+*)

@@ -161,11 +161,11 @@ struct
 		    SOME n => (n :: vs, shift)
 		  | NONE => raise Error "??? I'm not sure this is really wrong"
 	    end
-	  | pp_normalize' (Compose sl) = prepattern sl
+	  | pp_normalize' (Compose sl) = prepattern (substs_comp sl)
 
-	(* prepattern: convert a subst list into a ppsubst *)
-        (* raises Domain if the composition is not a prepattern *)
-	and prepattern sl = pp_normalize (substs_comp sl)
+	(* prepattern: convert a subst into a ppsubst *)
+        (* raises Domain if it is not a prepattern *)
+	and prepattern (s : subst) = pp_normalize s
 
 	(* pp_ispat: is this ppsubst a pattern substitution? *)
 	fun pp_ispat ([],shift) = true
@@ -198,7 +198,7 @@ struct
 	    end 
 
         (* Here begins all the matching code.
-           flex_left takes an uninstantiated evar, a substitution list, and a right-hand-side of an equation.
+           flex_left takes an uninstantiated evar, a substitution, and a right-hand-side of an equation.
            The equation is
            E[sl] = RHS
            If it can successfully instantiate E with RHS[sl^-1], then it does so
@@ -206,9 +206,9 @@ struct
 
            If sl is not pattern it raises NonPattern.
            If RHS is not in the range of sl, then MissingVar is raised by substitution *)
-	fun flex_left ((r as ref NONE,a), sl, rhs) = 
+	fun flex_left ((r as ref NONE,a), s : subst, rhs) = 
 	    let
-		val pps = prepattern sl handle Domain => raise NonPattern
+		val pps = prepattern s handle Domain => raise NonPattern
 		val _ = if pp_ispat pps then () else raise NonPattern
 		val ppsi = pp_invert pps
 		val rhs' = subst_term ppsi (termof rhs)
@@ -250,7 +250,7 @@ struct
 	  | match_one' (TypeC(TRoot(n,s), TRoot(n',s'))) = match_type_const_head (n, n', s, s', "type family mismatch")
 	  | match_one' (SpineC([],[])) = []
 	  | match_one' (SpineC(h::s,h'::s')) = match_two (EltC(h, h'))  (SpineC(s, s'))
-	  | match_one' (EltC(Elt(ATerm(ERoot(ev,sl))), elt)) = (flex_left (ev, sl, elt); [])
+	  | match_one' (EltC(Elt(ATerm(ERoot(ev,s : subst))), elt)) = (flex_left (ev, s, elt); [])
 	  | match_one' x = raise Matching "doesn't match"
 
 	(* PERF: this second elt_eroot_elim on elt' seems like it ought to be unnecessary if
