@@ -13,6 +13,7 @@ functor MTPRecursion (structure Global : GLOBAL
 			sharing Abstract.IntSyn = IntSyn
 		      structure MTPAbstract : MTPABSTRACT
 			sharing MTPAbstract.IntSyn = IntSyn
+			sharing MTPAbstract.FunSyn = FunSyn
 			sharing MTPAbstract.StateSyn = StateSyn'
 		      structure FunTypeCheck : FUNTYPECHECK
 			sharing FunTypeCheck.FunSyn = FunSyn
@@ -52,6 +53,7 @@ struct
     structure S = StateSyn
     structure N = Names
     structure Fmt = Formatter
+    structure A = MTPAbstract
 
     datatype Dec =			(* Newly created *)
       Lemma of int * F.For		(* Residual Lemma *)
@@ -66,181 +68,6 @@ struct
       | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
 
 
-
-    (* residualLemma (Gx, (F1, s)) = F'
-     
-       Invariant:
-       If    G |- s : Gx    and  . |- Fx = {{Gx}} F1 formula
-       where s can contain free EVars
-       and   Gx |- F1 true
-       then  G |- F' == {{Gx'}} F1[s] formula
-       where Gx' < Gx
-       and   F' doesn't contain any free EVars
-    *)
-
-    fun residualLemma (Gx, (Fx, s)) =
-        let 
-	  (* collect (s, Gx) = (Gx', s')
-
-	     Invariant: 
-	     If   G |- s : Gx   
-	     then . |- Gx' ctx
-	     and  Gx' < Gx  (where s uninstantiated on Gx')
-	     and  G, Gx' |- s' : Gx
-	  *)
-	  
-	  fun collect (s as I.Shift k, I.Null) = (I.Null, s)
-	    | collect (s as I.Dot (I.Exp U, s'), I.Decl (G, D)) =
-	      let
-		val (Gx', s'') = collect (s', G)
-	      in 
-		if Abstract.closedExp (G, (Whnf.normalize (U, I.id), I.id)) then
-		  (Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
-		else
-		  (I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
-	      end
-	    
-	  (* abstract (Gx, F) = F'
-
-	     Invariant: 
-	     If   G, Gx |- F formula
-	     then G |- F' = {{Gx}} F formula
-	  *)
-	  fun abstract (I.Null, F) = F
-	    | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
-	      
-	  val (Gx', s') = collect (s, Gx)
-	  val F' = abstract (Gx', F.forSub (Fx, s'))
-	in
-	  F'
-	end
-
-
-(*
-    (* rlemma (G, G1, s, F) = F'
-     
-       Invariant:
-       If   G |- s : G1
-       and  s may contain EVars
-       and  G |- F : formula
-       and  F may contain EVars also introduced in s
-       then G, G1' |- F' : formula
-       and  G1' < G1
-       and  G, |- G1' ctx
-       and  F' does not contain any EVars 
-
-    *)
-    fun rlemma (G, G1, s, F) = 
-      let
-	(* rlemma (s, G1, sc) = F'
-
-           Invariant: 
-           If   G |- s : G1   
-	   and  sc success continuation which maps
-	        (G, G1') and 
-	        (G, G1' |- w1 : G1) and  
-		(G, G1' |- w2 : G) to (G |- {G1'} F' for)  
-           then G |- G1' ctx used to capture of EVars in G1
-	   
-	   Invariant: Instantiates free EVars in F
-	*)
-	
-	fun rlemma' (s as I.Shift k, I.Null, sc) = sc (G, s, I.id)
-	  | rlemma' (s as I.Dot (I.Exp U, s'), I.Decl (G1, D), sc) =
-	    let
-	      fun sc' (G', w1, w2) = 
-					(* G' = G, G1' *)
-					(* G, G1' |- w1 : G1 *)
-					(* G, G1' |- w2 : G *)
-		if Abstract.closedExp (G, (U, I.id)) then sc (G', I.Dot (I.Exp (I.EClo (U, w2)), w1), w2)
-		else 
-		  let
-		    val D' = Whnf.normalizeDec  (D, w1)
-					(* G, G1' |- D' : type *)
-		    val G'' = I.Decl (G', D')
-					(* G'' = G, G1', D [w1] *)
-		    val w2' = I.comp (w2, I.shift)
-					(* G, G1', D[w1] |- w2' : G *)
-		  in 
-		    Trail.trail (fn () => (Unify.unify (G'', (I.Root (I.BVar 1, I.Nil), I.id),
-							(U, w2')); (* must succeed *)
-					   F.All (F.Prim D', sc' (G'', I.dot1 w1, w2'))))
-		  end
-            in
-	      rlemma' (s', G1, sc')
-	    end
-
-	  val _ = TextIO.print ("<rlemma>")
-      in
-	rlemma' (s, G1, fn (G', w1, w2) => F.normalizeFor (F, w2))
-      end
-	  
-*)
-
-    fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract) =
-
-      let
-	(* set_parameter (GB, X, k, sc, S) = S'
-
-	   Invariant:
-	   appends a list of recursion operators to S after
-	   instantiating X with all possible local parameters (between 1 and k)
-	   *)
-	fun set_parameter (GB as (G1, B1), X as I.EVar (r, _, V, _), k, sc, Ds) =
-	  let 
-	    (* set_parameter' ((G, B), k, Ds) = Ds'
-	   
-	       Invariant:
-	       If    G1, D < G
-	    *)
-	    fun set_parameter' ((I.Null, I.Null), _, Ds) =  Ds
-	      | set_parameter' ((I.Decl (G, D), I.Decl (B, S.Parameter _)), k, Ds) = 
-		let 
-		  val D' as I.Dec (_, V') = I.decSub (D, I.Shift (k))
-		  val Ds' = 
-		    Trail.trail (fn () => 
-				 if Unify.unifiable (G1, (V, I.id), (V', I.id))
-				   andalso Unify.unifiable (G1, (X, I.id), (I.Root (I.BVar k, I.Nil), I.id))
-				   then sc Ds
-				 else Ds)
-		in 
-		  set_parameter' ((G, B), k+1, Ds')
-		end
-	      | set_parameter' ((I.Decl (G, D), I.Decl (B, _)), k, Ds) =
-		  set_parameter' ((G, B), k+1, Ds)
-	  in
-	    set_parameter' (GB, 1, Ds)
-	  end
-
-	
-	fun ctxBlock (GB as (G1, B1), V, k, sc, Ds) =
-	  let
-	    (* checkCtx (G2, (V, s)) = B'
-	   
-               Invariant:
-	       if   G, G1 |- G2 ctx
-               and  G, G1 |- s : G3  G3 |- V : L
-               then B holds iff 
-	       G1 = V1 .. Vn and G, G1, V1 .. Vi-1 |- Vi unifies with V [s o ^i] : L
-	    *)
-	    fun checkCtx (nil, (V2, s)) = false
-	      | checkCtx (I.Dec (_, V1) :: G2, (V2, s)) = 
-	        let 
-		  val B' = Trail.trail (fn () => Unify.unifiable (G, (V1, I.id), (V2, s)))
-		in
-		  B' orelse checkCtx (G2, (V2, I.comp (s, I.shift)))
-		end
-
-	    fun alreadyIntroduced (I.Null, l) = false
-	      | alreadyIntroduced (I.Decl (B, S.Parameter (SOME l')), l) = 
-	        if l' = l then true else alreadyIntroduced (B, l)
-	      | alreadyIntroduced (I.Decl (B, S.Parameter NONE), l) = 
-		  alreadyIntroduced (B, l)
-(*	      | alreadyIntroduced (I.Decl (B, S.Assumption _), l) = 
-		  alreadyIntroduced (B, l)
-*)	      | alreadyIntroduced (I.Decl (B, S.Lemma _), l) = 
-		  alreadyIntroduced (B, l)
-		  
 
   	    (* shift G = s'
 	     
@@ -405,10 +232,74 @@ struct
 	        (* the other case of F.All (F.Block _, _) is not yet covered *)
 	      
 
+    (*
+       paramAbstract F = AF
+    *)
 
-	    fun abstract (_, nil) = nil
-	      | abstract (G, Lemma (n, F) :: Ls) =
-	          Lemma (n, raiseFor (0, G, F, I.id, fn (w, _) => F.dot1n (G, w))) :: abstract (G, Ls)
+    fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract) =
+
+      let
+	(* set_parameter (GB, X, k, sc, S) = S'
+
+	   Invariant:
+	   appends a list of recursion operators to S after
+	   instantiating X with all possible local parameters (between 1 and k)
+	   *)
+	fun set_parameter (GB as (G1, B1), X as I.EVar (r, _, V, _), k, sc, Ds) =
+	  let 
+	    (* set_parameter' ((G, B), k, Ds) = Ds'
+	   
+	       Invariant:
+	       If    G1, D < G
+	    *)
+	    fun set_parameter' ((I.Null, I.Null), _, Ds) =  Ds
+	      | set_parameter' ((I.Decl (G, D), I.Decl (B, S.Parameter _)), k, Ds) = 
+		let 
+		  val D' as I.Dec (_, V') = I.decSub (D, I.Shift (k))
+		  val Ds' = 
+		    Trail.trail (fn () => 
+				 if Unify.unifiable (G1, (V, I.id), (V', I.id))
+				   andalso Unify.unifiable (G1, (X, I.id), (I.Root (I.BVar k, I.Nil), I.id))
+				   then sc Ds
+				 else Ds)
+		in 
+		  set_parameter' ((G, B), k+1, Ds')
+		end
+	      | set_parameter' ((I.Decl (G, D), I.Decl (B, _)), k, Ds) =
+		  set_parameter' ((G, B), k+1, Ds)
+	  in
+	    set_parameter' (GB, 1, Ds)
+	  end
+
+	
+	fun ctxBlock (GB as (G1, B1), V, k, sc, Ds) =
+	  let
+	    (* checkCtx (G2, (V, s)) = B'
+	   
+               Invariant:
+	       if   G, G1 |- G2 ctx
+               and  G, G1 |- s : G3  G3 |- V : L
+               then B holds iff 
+	       G1 = V1 .. Vn and G, G1, V1 .. Vi-1 |- Vi unifies with V [s o ^i] : L
+	    *)
+	    fun checkCtx (nil, (V2, s)) = false
+	      | checkCtx (I.Dec (_, V1) :: G2, (V2, s)) = 
+	        let 
+		  val B' = Trail.trail (fn () => Unify.unifiable (G, (V1, I.id), (V2, s)))
+		in
+		  B' orelse checkCtx (G2, (V2, I.comp (s, I.shift)))
+		end
+
+	    fun alreadyIntroduced (I.Null, l) = false
+	      | alreadyIntroduced (I.Decl (B, S.Parameter (SOME l')), l) = 
+	        if l' = l then true else alreadyIntroduced (B, l)
+	      | alreadyIntroduced (I.Decl (B, S.Parameter NONE), l) = 
+		  alreadyIntroduced (B, l)
+(*	      | alreadyIntroduced (I.Decl (B, S.Assumption _), l) = 
+		  alreadyIntroduced (B, l)
+*)	      | alreadyIntroduced (I.Decl (B, S.Lemma _), l) = 
+		  alreadyIntroduced (B, l)
+		  
 
 
 	    fun kont paramAbstract' (GB3, s3) = 
@@ -493,14 +384,18 @@ struct
 		  val F.LabelDec (name, G1, G2) = F.labelLookup n   
 		  val s = someEVars (G, G1, I.id)
 		  val G2' = ctxSub (G2, s)
-		  fun paramAbstract' F = 
-		      if closedSub (G, s) then 
+
+		  fun paramAbstract' AF = 
+		    paramAbstract (A.Block ((s, F.listToCtx (G2')), AF))
+ 
+(*		      if closedSub (G, s) then 
 			let 
 			  val F' = paramAbstract (raiseFor (0, F.listToCtx (G2'), F, I.id, fn (w, _) => F.dot1n (F.listToCtx (G2'), w)))
 			in
 			  F'
 			end
 		      else (TextIO.print "* Incompleteness: SOME variables free\n"; NONE)
+*)
 		in
 		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
 		    let 
@@ -853,6 +748,19 @@ struct
 
 	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
 	  let
+	    val AF = paramAbstract (A.Head Fs)
+	    val Frl = A.abstractApproxFor (G, I.ctxLength G0, AF)
+	    val _ = TextIO.print "["
+	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
+	    val _ = TextIO.print "]"
+	  in
+	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
+	      Ds
+	    else
+	      Lemma (n, Frl) :: Ds
+	  end
+
+(*	    
 (*	    val Frl = rlemma (I.Null, G0, s1, F.forSub Fs) *)
 	    val Frl = residualLemma (G0, Fs)
 	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
@@ -865,7 +773,7 @@ struct
 		 else
 		   Lemma (n, Frl') :: Ds
 	  end
-      
+*)    
 
 	(* createEVars' (G, G0) = s'
         
@@ -1018,7 +926,7 @@ struct
 	end
       | selectFormula (n, (G0, F, O), S) = 
 	let
-	  val Ds = calc (n, (G0, F, O), S, fn Frl => SOME Frl)
+	  val Ds = calc (n, (G0, F, O), S, fn AF => AF)
 	in
 	  (n+1, updateState (S, (Ds, I.id)))
 	end

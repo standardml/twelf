@@ -2,26 +2,39 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
 functor MTPAbstract (structure IntSyn' : INTSYN
-		     structure FunSyn : FUNSYN
-		       sharing FunSyn.IntSyn = IntSyn'
+		     structure FunSyn' : FUNSYN
+		       sharing FunSyn'.IntSyn = IntSyn'
 		     structure StateSyn' : STATESYN
-		       sharing StateSyn'.FunSyn = FunSyn
+		       sharing StateSyn'.FunSyn = FunSyn'
 		     structure Whnf    : WHNF
 		       sharing Whnf.IntSyn = IntSyn'
 		     structure Constraints : CONSTRAINTS
 		       sharing Constraints.IntSyn = IntSyn'
 		     structure Subordinate : SUBORDINATE
 		       sharing Subordinate.IntSyn = IntSyn'
+		     structure TypeCheck : TYPECHECK
+		       sharing TypeCheck.IntSyn = IntSyn'
+		     structure FunTypeCheck : FUNTYPECHECK
+		       sharing FunTypeCheck.FunSyn = FunSyn'
+		       sharing FunTypeCheck.StateSyn = StateSyn'
+		     structure Abstract : ABSTRACT
+		       sharing Abstract.IntSyn = IntSyn'
 		     structure Trail : TRAIL
 		       sharing Trail.IntSyn = IntSyn')
   : MTPABSTRACT =
 struct
 
   structure IntSyn = IntSyn'
+  structure FunSyn = FunSyn'
   structure StateSyn = StateSyn'
     
   exception Error of string
-    
+  
+  datatype ApproxFor =			(* Approximat formula *)
+    Head of FunSyn.For * IntSyn.Sub	(* AF ::= F [s] *)
+  | Block of (IntSyn.Sub * IntSyn.dctx) * ApproxFor
+					(*      | (t, G2), AF *)
+
   local
 
     structure I = IntSyn
@@ -529,201 +542,124 @@ struct
 
 
 (*
-    (* abstractSub (t, (G0, B0), s, B) = ((G', B'), s')
 
-       Invariant: 
-       If   . |- t : G0
-       and  G0 |- B0 tags
-       and  G0 |- s : G
-       and  G |- B tags
-       then . |- G' = G1, G0, G2
-       and  B' |- G' tags
-       and  G' |- s' : G
+
+
+    (* residualLemma (Gx, (F1, s)) = F'
+     
+       Invariant:
+       If    G |- s : Gx    and  . |- Fx = {{Gx}} F1 formula
+       where s can contain free EVars
+       and   Gx |- F1 true
+       then  G |- F' == {{Gx'}} F1[s] formula
+       where Gx' < Gx
+       and   F' doesn't contain any free EVars
     *)
-    fun abstractSubAll (t, (G0, B0), s, B) =
-        let
 
-	  (* collectSub (s, B) = (d', K')
-	   
-	     Invariant:
-	     G1, G2 |- s : G 
-  	     |- G1 : ctx (only context blocks)
-	     |- G2 : ctx (only context blocks)
-	     G |- B tags
-	     then d' = |G1|
-	     and  K' is a auxiliary EVar context
-	    *)
-(*	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
-	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
-	      let
-		val F.LabelDec (name, _, G2) = F.labelLookup l
-		val (d, K) = skip (G0, List.length G2, s, B)
-	      in
-		(d, collect (d, K))
-	      end
-	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
-	        collectSub' (G0, s, B, fn (d', K') => 
-			     let 
-			       val K'' = collect (d', K')
-			     in
-			       collectExp (T, d', G0, (U, I.id), K'')
-			     end)
-	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+    fun residualLemma (Gx, (Fx, s)) =
+        let 
+	  (* collect (s, Gx) = (Gx', s')
 
-
-
-
-	  and skip (G0, 0, s, B) = collectSub' (G0, s, B, fn (_, K') => K')
-	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _)) =
-	      let 
-		val (d, K) = skip (G0, n-1, I.invDot1 s, B)
-	      in
-	        (d + 1, I.Decl (K, BV (D, T)))
-	      end
-*)
-
-	  fun collectSub' (G0, I.Shift _, _, collect) = (fn (d, K) => collect (d, K))
-	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
-	      let
-		val F.LabelDec (name, _, G2) = F.labelLookup l
-	      in
-		skip (G0, List.length G2, s, B, collect)
-	      end
-	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
-	        collectSub' (G0, s, B, fn (d, K) => 
-			       collect (d, collectExp (T, d, G0, (U, I.id), K)))
-	    | collectSub' (_, I.Dot (I.Idx _, _), I.Decl (B, S.Lemma _), _) = raise Domain 
-(*  shouldn't occur *)
-
-	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
-
-
-	  and skip (G0, 0, s, B, collect) = collectSub' (G0, s, B, collect)
-	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
-	        skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
-
-(* ----- *)
-
-          (* collectSub'' (G0, s, B, collect) = collect'
-	     
 	     Invariant: 
-	     If   G0 |- s : G
-	     and  G |- B tags
-	     and  collect extends a given K by EVars/BVars
-	     then collect' extends a given K according to K
-	            and adds the ones in s
+	     If   G |- s : Gx   
+	     then . |- Gx' ctx
+	     and  Gx' < Gx  (where s uninstantiated on Gx')
+	     and  G, Gx' |- s' : Gx
 	  *)
 
-	  fun collectSub'' (G0, I.Shift _, _, collect) = collect
-	    | collectSub'' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
-	        collectSub'' (G0, s, B, fn (d', K') => 
-			     let 
-			       val K'' = collect (d', K')
-			     in
-			       collectExp (T, d', G0, (U, I.id), K'')
-			     end)
-(*	    | collectSub'' (G0, I.Dot (I.Idx _, s), I.Decl (B, T), collect) = 
-		collectSub'' (G0, s, B, collect) *)
-	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
-
-
-	  (* skip'' (K, (G, B)) = K'
-	   
-	     Invariant:
-	     If   G = x1:V1 .. xn:Vn 
-	     and  G |- B = <param> ... <param> tags
-	     then  K' = K, BV (x1) .. BV (xn)
-	  *)
-
-	  fun skip'' (K, (I.Null, I.Null)) = K
-	    | skip'' (K, (I.Decl (G0, D), I.Decl(B0, T))) = I.Decl (skip'' (K, (G0, B0)), BV (D, T))
-
-
-(* ------ *)
-
-          val collect2 = collectGlobalSub (G0, s, B, fn (_, K') => K')
-	  val collect0 = collectSub' (I.Null, t, B0, fn (_, K') => K')     (*BUG collectSub' doesn't work *)
-	  val K0 = collect0 (0, I.Null)
-	  val K1 = skip'' (K0, (G0, B0))
-	  val K = collect2 (I.ctxLength G0, K1)
-
-(*	  val (_, K) = collectSub' (*change later *) (G0, s, B, fn (_, K') => K')
-*)
+	  
+	  fun collect (s as I.Shift k, I.Null) = (I.Null, s)
+	    | collect (s as I.Dot (I.Exp U, s'), I.Decl (G, D)) =
+	      let
+		val (Gx', s'') = collect (s', G)
+	      in 
+		if Abstract.closedExp (G, (Whnf.normalize (U, I.id), I.id)) then
+		  (Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
+		else
+		  (I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
+	      end
+	    
+	      
+	  val (Gx', s') = collect (s, Gx)
+	  val F' = abstract (Gx', F.forSub (Fx, s'))
 	in
-	  (abstractCtx K, abstractGlobalSub (K, s, B))
-	end 
-*)
-(*
+	  F'
+	end
+ *)
 
 
-    (* abstractNew ((G0, B0), s, B) = ((G', B'), s')
+    (* abstractFor (K, depth, (F, s)) = F'
+       F' = {{F[s]}}_K
+
+       Invariant:
+       If    G |- s : G1     G1 |- U : V    (U,s) is in whnf
+       and   K is internal context in dependency order
+       and   |G| = depth
+       and   K ||- U and K ||- V
+       then  {{K}}, G |- U' : V'
+       and   . ||- U' and . ||- V'
+       and   U' is in nf 
+    *)
+
+    fun abstractFor (K, depth, (F.All (F.Prim D, F), s)) = 
+          F.All (F.Prim (abstractDec (K, depth, (D, s))), 
+		 abstractFor (K, depth+1, (F, I.dot1 s)))
+      | abstractFor (K, depth, (F.Ex (D, F), s)) =
+          F.Ex (abstractDec (K, depth, (D, s)), 
+		abstractFor (K, depth+1, (F, I.dot1 s)))
+      | abstractFor (K, depth, (F.True, s)) = F.True
+      | abstractFor (K, depth, (F.And (F1, F2), s)) = 
+	  F.And (abstractFor (K, depth, (F1, s)),
+		 abstractFor (K, depth, (F2, s)))
+
+    (* abstract (Gx, F) = F'
 
        Invariant: 
-       If   . |- G0 ctx
-       and  G0 |- B0 tags
-       and  G0 |- s : G
-       and  G |- B tags
-       then . |- G' = G1, Gp, G2
-       and  G' |- B' tags
-       and  G' |- s' : G
+       If   G, Gx |- F formula
+       then G |- F' = {{Gx}} F formula
     *)
-    fun abstractNew ((G0, B0), s, B) =
-        let
+    fun allClo (I.Null, F) = F
+      | allClo (I.Decl (Gx, D), F) = allClo (Gx, F.All (F.Prim D, F))
 
 
 
-(*
-
-	  (* collectSub (s, B) = (d', K')
-	   
-	     Invariant:
-	     G1, G2 |- s : G 
-  	     |- G1 : ctx (only context blocks)
-	     |- G2 : ctx (only context blocks)
-	     G |- B tags
-	     then d' = |G1|
-	     and  K' is a auxiliary EVar context
-	    *)
-	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
-            | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
-	      let
-		val F.LabelDec (name, _, G2) = F.labelLookup l
-		val (d, K) = skip (G0, List.length G2, s, B)
-	      in
-		(d, collect (d, K))
-	      end
-	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
-	        collectSub' (G0, s, B, fn (d', K') => 
-			     let 
-			       val K'' = collect (d', K')
-			     in
-			       collectExp (T, d', G0, (U, I.id), K'')
-			     end)
-	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+    fun convert (I.Null) = I.Null
+      | convert (I.Decl (G, D)) = I.Decl (convert G, BV (D, S.Parameter NONE))
 
 
+    fun createEmptyB 0 = I.Null
+      | createEmptyB (n) = I.Decl (createEmptyB (n-1), S.None)
 
 
-	  and skip (G0, 0, s, B) = collectSub' (G0, s, B, fn (_, K') => K')
-	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _)) =
-	      let 
-		val (d, K) = skip (G0, n-1, I.invDot1 s, B)
-	      in
-	        (d + 1, I.Decl (K, BV (D, T)))
-	      end
+    fun lower (_, 0) = I.Null
+      | lower (I.Decl (G, D), n) = I.Decl (lower (G, n-1), D)
 
-	  val (_, K) = collectSub' (G0, s, B, fn (_, K') => K')
- 
-	  val _ = TextIO.print ("OK: " ^ (Int.toString (I.ctxLength K)) ^ "\n")
- ------ *)
+    (* makeFor (G, d, AF) = F'
+     
+       Invariant :
+       CASE 1:
+       AF = F [s] 
+       G |- s : G0
+       |G0| = d
+       F' = {{all free EVars in s}} F
+    *)
 
-
-	  val cf = collectGlobalSub (G0, s, B, fn (_, K') => K')
-	  val K = cf (0, I.Null)
+    fun makeFor (G, d, Head (F, s)) = 
+        let 
+	  val g = I.ctxLength G
+	  val cf = collectGlobalSub (G, s, createEmptyB d, fn (_, K') => K')
+	  val K = cf (g, convert G)
+	  val k = I.ctxLength K
+	  val (GK, _) = abstractCtx K
+	  val _ = if !Global.doubleCheck then TypeCheck.typeCheckCtx (GK) else ()
+	  val GK' = lower (GK, k-g)
+	  val FK = abstractFor (K, 0, (F, I.comp (s, I.Shift (k-g))))
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, FK) else ()
 	in
-	  (abstractCtx K, abstractGlobalSub (K, s))
-	end 
-*)
+	  allClo (GK', FK)
+	end
+      | makeFor (G, _, Block _) = raise Error "Serious incompleteness"
+
 
   in
     val weaken = weaken
@@ -731,6 +667,8 @@ struct
 
     val abstractSub = abstractSubAll
     val abstractSub' = abstractNew
+
+    val abstractApproxFor = makeFor
   end
 
 end;  (* functor MTPAbstract *)

@@ -9,6 +9,7 @@ functor MTPrint (structure Global : GLOBAL
 		   sharing Names.IntSyn = IntSyn
 		 structure StateSyn' : STATESYN
 		   sharing StateSyn'.FunSyn = FunSyn
+		   sharing StateSyn'.IntSyn = IntSyn
 		 structure Formatter' : FORMATTER
 		 structure Print : PRINT
 		   sharing Print.Formatter = Formatter'
@@ -45,6 +46,20 @@ struct
 	  S.State (n, (G', B), (IH, OH), d, O, H, F)
 	end
 
+
+    fun formatOrder (G, S.Arg (Us, Vs)) =
+          [Print.formatExp (G, I.EClo Us), Fmt.String ":", 
+	   Print.formatExp (G, I.EClo Vs)]
+      | formatOrder (G, S.Lex Os) = 
+	  [Fmt.String "{", Fmt.HVbox0 1 0 1 (formatOrders (G, Os)), Fmt.String "}"]
+      | formatOrder (G, S.Simul Os) = 
+	  [Fmt.String "[", Fmt.HVbox0 1 0 1 (formatOrders (G, Os)), Fmt.String "]"]
+
+    and formatOrders (G, nil) = nil
+      | formatOrders (G, O :: nil) = formatOrder (G, O)
+      | formatOrders (G, O :: Os) = formatOrder (G, O) @ 
+          [Fmt.String ",", Fmt.Break]  @ formatOrders (G, Os)
+
     (* format T = fmt'
 
        Invariant:
@@ -77,7 +92,7 @@ struct
           [Print.formatDec (I.Null, D)]
       | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
         if !Global.chatter >= 4 then
-	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break] @ 
+	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Break, Fmt.Break] @ 
 	  [Fmt.HVbox (formatTag (G, T) @ [Fmt.Break, Print.formatDec (G, D)])] 
 	else
 	  formatCtx (G, B) @ [Fmt.String ",",  Fmt.Break] @ 
@@ -92,7 +107,9 @@ struct
     *)
     fun formatState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
           Fmt.Vbox0 0 1 
-	  [Fmt.HVbox0 1 0 1 (formatCtx (G, B)), Fmt.Break,
+	  [Fmt.HVbox0 1 0 1 (formatOrder (G, O)), Fmt.Break,
+	   Fmt.String "========================", Fmt.Break,
+	   Fmt.HVbox0 1 0 1 (formatCtx (G, B)), Fmt.Break,
 	   Fmt.String "------------------------", Fmt.Break,
 	   FunPrint.formatForBare (G, F)]
 

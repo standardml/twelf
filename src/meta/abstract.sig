@@ -4,9 +4,15 @@
 signature MTPABSTRACT =
 sig
   structure IntSyn : INTSYN
+  structure FunSyn : FUNSYN
   structure StateSyn : STATESYN
 
   exception Error of string
+
+  datatype ApproxFor =			(* Approximat formula *)
+    Head of FunSyn.For * IntSyn.Sub	(* AF ::= F [s] *)
+  | Block of (IntSyn.Sub * IntSyn.dctx) * ApproxFor
+					(*  | (t, G2), AF *)
 
 
   val weaken : IntSyn.dctx * IntSyn.cid -> IntSyn.Sub
@@ -17,4 +23,6 @@ sig
   val abstractSub' : (IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub * StateSyn.Tag IntSyn.Ctx
         -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 
+
+  val abstractApproxFor : (IntSyn.dctx * int * ApproxFor) -> FunSyn.For
 end;  (* signature MTPABSTRACT *)

@@ -59,11 +59,14 @@ structure RelFun =
 
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
-	       structure FunSyn = FunSyn
+	       structure FunSyn' = FunSyn
 	       structure StateSyn' = StateSyn
 	       structure Whnf = Whnf
 	       structure Constraints = Constraints
 	       structure Subordinate = Subordinate
+	       structure TypeCheck = TypeCheck
+	       structure FunTypeCheck = FunTypeCheck
+	       structure Abstract = Abstract
 	       structure Trail = Trail);
 
 

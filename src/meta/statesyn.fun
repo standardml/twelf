@@ -28,6 +28,7 @@ struct
   datatype Tag = 
     Parameter of FunSyn.label option
   | Lemma of Info * FunSyn.For
+  | None
 (*  | Assumption of int *)
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
@@ -98,6 +99,7 @@ struct
      
     fun (* decrease (Assumption k) = Assumption (k-1)
       | *) decrease (Lemma (Sp, F)) = Lemma (decreaseSplits Sp, F)
+      | decrease None = None
 
 
     fun splitDepth (Splits k) = k

@@ -21,6 +21,7 @@ sig
   datatype Tag = 
     Parameter of FunSyn.label option
   | Lemma of Info * FunSyn.For
+  | None
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)
