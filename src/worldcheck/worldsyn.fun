@@ -30,6 +30,9 @@ struct
   | Schema of World * LabelDec          (*     | W, l : LD            *)
 
   local
+
+    exception Failure
+
     (* ctxToList G = L
       
        Invariant:
@@ -74,15 +77,13 @@ struct
        (see regularworlds.tex for the rules)
     *)
     fun checkBlock (G, (t, nil), I.Root (a, S)) = ()
-      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
+      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), _), V2)) =
         let 
-	  val _ = Unify.unify (G, (V, t), (V1, I.id))
+	  val _ = (Unify.unify (G, (V, t), (V1, I.id)) handle Unify.Unify _ => raise Failure)
 	in
 	  checkBlock (I.Decl (G, D), (I.dot1 t, L), V2)
 	end
-      | checkBlock (G, (t, L), I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
-	  checkBlock (I.Decl (G, D), (I.comp (t, I.shift),  L), V2)
-      | checkBlock _ = raise Error "World violation"
+      | checkBlock _ = raise Failure
 
     (* checkBlocks W (G, (V, s)) = ()
 
@@ -97,13 +98,13 @@ struct
 	 (see regularworlds.tex for the rules)
     *)
     fun checkBlocks _ (G, I.Root _) = ()
-      | checkBlocks Closed (G, V) = raise Error "World violation"
+      | checkBlocks Closed (G, V) = raise Error "World violation 2"
       | checkBlocks (Schema (W', LabelDec (_, L1, L2))) (GV as (G, V)) =
         ((let
 	    val t = createEVarSub (G, L1)	(* G |- t : L1 *)
 	  in
 	    checkBlock (G, (t, L2), V)
-	  end) handle Unify.Unify _ => checkBlocks W' GV)
+	  end) handle Failure => checkBlocks W' GV)
 
     (* worldcheck W a = ()
 
@@ -123,12 +124,12 @@ struct
 	     (see regularworlds.tex for the rules)
 	*)
 	fun checkPos (G, I.Root (a, S)) = ()
-	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) = 
-	    (checkPos (I.Decl (G, D), V2);
-	     checkNeg (G, V1))
 	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.No), V2)) = 
 	    (checkBlocks W (G, V1);
 	     checkPos (I.Decl (G, D), V2);
+	     checkNeg (G, V1))
+	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) = 
+	    (checkPos (I.Decl (G, D), V2);
 	     checkNeg (G, V1))
 
         (* checkNeg (G, V) = () 
