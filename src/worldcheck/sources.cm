@@ -1,0 +1,9 @@
+Group is 
+  ../lambda/sources.cm
+  ../global/sources.cm
+  ../timing/sources.cm
+  ../meta/sources.cm
+
+  worldsyn.sig
+  worldsyn.fun
+  
