@@ -6,6 +6,14 @@ list : type.
 nil  : list.
 cons : o -> list -> list.
 
+hd: list -> o -> type.
+tail: list -> list -> type.
+
+hdCons: hd (cons A L) A.
+
+tailNil: tail nil nil.
+tailCons: tail (cons A L) L. 
+
 append  : list -> list -> list -> type.
 
 appNil  : append nil K K.
@@ -17,3 +25,7 @@ append (cons true nil) (cons false nil) L.
 
 %query 1 1
 append (cons true (cons false nil)) (cons true nil) L.
+
+%query 1 1
+hd (cons true nil) L.
+

@@ -48,6 +48,7 @@ combdefn : |- A -> ! A -> type.
 cdK     : combdefn K (impliesI [p] impliesI [q] p).
 cdS	: combdefn S (impliesI [p] impliesI [q] impliesI [r]
 		         (impliesE (impliesE p r) (impliesE q r))).
+% cdS-case takes nearly 2 hours to come up with a filling result 
 cdONE   : combdefn ONE trueI.
 cdPAIR  : combdefn PAIR (impliesI [p] impliesI [q] andI p q).
 cdLEFT  : combdefn LEFT (impliesI [p] andEL p).
@@ -59,3 +60,4 @@ cdMP    : combdefn (MP P Q) (impliesE P' Q')
 
 %%% Decidability proof for theorem  HD -> ND
 %terminates D (combdefn D _).
+ 

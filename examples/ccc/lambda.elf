@@ -4,7 +4,12 @@
 %% Lambda-calc language
 
 % types are objects
-% obj : type (from ccc.elf)
+
+% obj : type.  (from ccc.elf)
+%  1 : obj.
+% * : obj -> obj -> obj. %infix none 10 *.
+% => : obj -> obj -> obj. %infix right 7 =>.
+
 
 % simply-typed terms
 term : obj -> type. %name term _E.
@@ -44,6 +49,8 @@ c_unit  : conv lunit E.
 c_prl	: conv (lfst (lpair E1 E2)) E1.
 c_prr	: conv (lsnd (lpair E1 E2)) E2.
 c_surj  : conv (lpair (lfst E) (lsnd E)) E.
+
+c_test  : conv (llam [x] (E1 x)) (llam E1).
 
 c_beta	: conv (lapp (llam E1) E2) (E1 E2).
 c_eta 	: conv (llam [x] (lapp E x)) E.

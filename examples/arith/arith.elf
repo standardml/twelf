@@ -2,6 +2,10 @@ nat : type.				%name nat X.
 z : nat.
 s : nat -> nat.
 
+bool: type.                             %name bool B.
+true: bool.
+false: bool.
+
 nt : nat -> type.			%name nt N.
 nt_z : nt z.
 nt_s : nt (s X) <- nt X.
@@ -11,6 +15,61 @@ p_z : plus z Y Y.
 p_s : plus (s X) Y (s Z)
        <- plus X Y Z.
 
+minus: nat -> nat -> nat -> type.       %name minus M.
+m_z1 : minus X z X.
+m_z2 : minus z Y z.
+m_ss : minus (s X) (s Y) Z
+	<- minus X Y Z.
+ 
+less: nat -> nat -> bool -> type.       %name less L.
+l_z1 : less z (s X) true.
+l_z2 : less X z false.
+l_ss : less (s X) (s Y) B
+	<- less X Y B.
+
+gcd: nat -> nat -> nat -> type.          %name gcd G.
+
+gcd_z1: gcd z Y Y.
+gcd_z2: gcd X z X.
+
+gcd_s1: gcd (s X) (s Y) Z
+	 <- less (s X) (s Y) true
+	 <- minus (s Y) (s X) Y'
+	 <- gcd (s X) Y' Z.
+
+gcd_s1: gcd (s X) (s Y) Z
+	 <- less  (s X)(s Y) false
+	 <- minus (s X) (s Y) X'
+	 <- gcd X' (s Y)  Z.
+
+%query 1 1
+minus (s (s (s (s z)))) (s (s z)) Z.
+
+%query 1 1
+less (s (s (s (s z)))) (s (s z)) B.
+
+%query 1 1
+less (s (s z)) (s (s (s (s z)))) B.
+
+%query 1 1
+gcd z (s (s (s (s z)))) Z.
+
+%query 1 1
+gcd (s (s z)) (s (s (s (s z)))) Z.
+
+%query 1 1
+gcd (s (s z)) (s (s (s (s (s (s z)))))) Z.
+
+%query 1 1
+gcd (s z) (s (s (s (s (s (s z)))))) Z.
+
+%query 1 1
+gcd (s (s z)) (s (s (s (s (s z))))) Z.
+
+%query 1 1
+gcd (s (s (s z))) (s (s (s (s (s (s z)))))) Z.
+
+%{
 acker : nat -> nat -> nat -> type.
 %mode acker +X +Y -Z.
 
@@ -21,4 +80,4 @@ a_3   : acker (s X) (s Y) Z
 	 <- acker (s X) Y Z'
 	 <- acker X Z' Z.
 
-
+}%

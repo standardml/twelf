@@ -2,6 +2,14 @@
 %%% Author: Frank Pfenning
 
   %%% Values correspond to value expressions.
+
+% -bp
+%theorem vtransVal: forall* {W:val}{E:exp}
+		     forall {U:vtrans W E}
+		     exists {V: value E} true.
+
+%prove 2 U (vtransVal U _).
+
   vtrans_val : vtrans W E -> value E -> type.
 
   vtrv_z     : vtrans_val (vtr_z) (val_z).
@@ -15,6 +23,12 @@
   vtrv_lam   : vtrans_val (vtr_lam U1) (val_lam).
 
   %%% Values evaluate only to themselves.
+% -bp
+%theorem valEval: forall* {E:exp}
+		   forall {U:value E}
+		     exists {V: eval E E} true.
+%prove 2 U (valEval U _).
+
   val_eval  : value E -> eval E E -> type.
 
   vev_z     : val_eval (val_z) (ev_z).
