@@ -231,35 +231,7 @@ struct
 				  sc (I.App (I.EClo (M, w), S), acck'')) 
 				 handle Unify.Unify _ => acc'')), acck')), acck)
 
-(*
-		   case Y
-		     of I.EVar (ref NONE, _, _, _) => 
-		          solve (0, (g, s'), dp,
-				 (fn (M, acck'') => sc (I.App (I.EClo (M, w), S), acck'')), acck')
-		      | I.EVar (ref (SOME _), _, _, _) => sc (I.App (X', S), acck')), acck)
-*)
-(*		       (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X', I.id), nil)),
-				      fn _ => (sc (I.App (X', S), acck'); ())))), acck)
-*)
-(*    | rSolve (depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
-      let
-	val Gpruned = pruneCtx (G, depth)
-	val w = I.Shift (depth)		(* G |- w : Gpruned *)
-	val X = I.EClo (I.newEVar (Gpruned, I.EClo(A, s)), w)
-      in
-	rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
-		(fn (S, acck' as (_, k')) => 
-		   (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X, I.id), nil)),
-				     fn _ => (sc (I.App (X, S), acck'); ())))), acck)
-*)
-(*		(fn (S, acck') => solve (depth, (g, s), dp,
-					 (fn (M, acck'') => ((Unify.unify (G, (X, I.id), (M, I.id));
-							     (* why doesn't it always succeed?
-							        --cs *)
-							     sc (I.App (M, S), acck''))
-							     handle Unify.Unify _ => [])), 
-					 acck')), acck)
-*)      end
+      end
     | rSolve (max, depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
@@ -392,19 +364,18 @@ struct
     fun searchEx (it, depth) (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
 	 deepen depth searchEx' (selectEVar (GE), 
-			   fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
-					 let
-					   val GE' = foldr (fn (X as I.EVar (_, G, _, _), L) => 
-							    Abstract.collectEVars (G, (X, I.id), L)) nil GE
-					   val gE' = List.length GE'
-(*					   val _ = if !Global.chatter > 4 then TextIO.print (Int.toString gE' ^ " remaining EVars\n") else ()  *)
-					 in
-					   if gE' > 0 then  
-					     if it > 0 then searchEx (it-1, 1) (GE', sc) 
-					     else ()
-					   else sc max
-					   (* warning: iterative deepening depth is not propably updated. 
-					      possible that it runs into an endless loop ? *)
+				 fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
+					    let
+					      val GE' = foldr (fn (X as I.EVar (_, G, _, _), L) => 
+							       Abstract.collectEVars (G, (X, I.id), L)) nil GE
+					      val gE' = List.length GE'
+					    in
+					      if gE' > 0 then  
+						if it > 0 then searchEx (it-1, 1) (GE', sc) 
+						else ()
+					      else sc max
+					    (* warning: iterative deepening depth is not propably updated. 
+					     possible that it runs into an endless loop ? *)
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
