@@ -228,6 +228,8 @@ struct
             fun sameConcat' (nil, nil) = true
               | sameConcat' ((String str1) :: AL1, (String str2) :: AL2) =
                   (str1 = str2) andalso sameConcat' (AL1, AL2)
+              | sameConcat' ((Exp Us1) :: AL1, (Exp Us2) :: AL2) =
+                  sameExp(Us1, Us2) andalso sameConcat' (AL1, AL2)
               | sameConcat' _ = false
           in
             sameConcat' (AL1, AL2)
@@ -259,7 +261,7 @@ struct
        and  G |- s2 : G2    G2 |- U2 : V2
        then T only if U1[s1] = U2[s2] (as expressions)
     *)
-    and sameExp (Us1, Us2) = sameExp (Whnf.whnf Us1, Whnf.whnf Us2)
+    and sameExp (Us1, Us2) = sameExpW (Whnf.whnf Us1, Whnf.whnf Us2)
 
     (* sameSpine (S1, S2) = T
 
