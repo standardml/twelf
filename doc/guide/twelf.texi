@@ -4615,29 +4615,6 @@ sig
 end
 @end group
 
-  val show : unit -> unit           (* show trace, break, and detail *)
-  val reset : unit -> unit          (* reset trace, break, and detail *)
-end
-@end group
-
-@group
-structure Timers :
-sig
-  val show : unit -> unit           (* show and reset timers *)
-  val reset : unit -> unit          (* reset timers *)
-  val check : unit -> unit          (* display, but not no reset *)
-end
-@end group
-
-@group
-structure OS :
-sig
-  val chDir : string -> unit        (* change working directory *)
-  val getDir : unit -> string       (* get working directory *)
-  val exit : unit -> unit           (* exit Twelf and ML *)
-end
-@end group
-
 @group
 structure Compile :
 sig
