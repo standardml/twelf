@@ -11,6 +11,8 @@ functor AbstractTabled (structure IntSyn' : INTSYN
 		    sharing Constraints.IntSyn = IntSyn'
 		  structure Subordinate : SUBORDINATE
 		    sharing Subordinate.IntSyn = IntSyn'
+(*		  structure Abstract : ABSTRACT
+		    sharing Abstract.IntSyn = IntSyn' *)
 		  structure Print : PRINT 
 		    sharing Print.IntSyn = IntSyn'
 		      )
@@ -23,23 +25,18 @@ struct
 
   (* apply strenghening during abstraction *)
   val strengthen = ref false;
-
-
-
-    
+ 
   local
 
     structure I = IntSyn
     structure C = Constraints
-
 
     datatype EFVar =
       EV of I.Exp			(* Y ::= X         for  GX |- X : VX *)
     | FV of string * I.Exp		(*     | (F , V)      if . |- F : V *)
 
 
-    (* weaken (depth,  G, a) = (w')
-     *)
+    (* weaken (depth,  G, a) = (w') *)
     fun weaken (I.Null, a) = I.id 
       | weaken (I.Decl (G', D as I.Dec (name, V)), a) = 
         let 
@@ -49,11 +46,12 @@ struct
 	  else I.comp (w', I.shift)
 	end
 
-
     fun concat (I.Null, G') = G'
       | concat (I.Decl(G, D), G') = I.Decl(concat(G,G'), D)
 
-
+    (* this is essentially a copy of lambda/abstract.fun 
+       but it allows weakening during abstraction of expressions
+     *)
     (*
        We write {{K}} for the context of K, where EVars and FVars have
        been translated to declarations and their occurrences to BVars.
@@ -77,7 +75,8 @@ struct
     *)
     fun collectConstraints (I.Null) = nil
       | collectConstraints (I.Decl (G, FV _)) = collectConstraints G
-      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref nil)))) = collectConstraints G
+      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref nil)))) = 
+         collectConstraints G
       | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref cnstrL)))) =
         (C.simplify cnstrL) @ collectConstraints G
 
@@ -113,8 +112,6 @@ struct
 	in
 	  exists' K
 	end
-
-
 
     fun or (I.Maybe, _) = I.Maybe
       | or (_, I.Maybe) = I.Maybe
@@ -289,8 +286,11 @@ struct
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
       | collectSub (G, I.Dot (I.Exp (U), s), K) =      
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
-    | collectSub (G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *)  
+    (* should be impossible 
+    | collectSub (G, I.Dot(Undef, s), K) = collectSub(G, s, K)  *)
+    (* bp Fri Sep 28 17:55:00 2001 ? *)  
 
+    (* same as collectSub Mon May  6 20:13:34 2002 -bp *)
     and collectSub' (G, I.Shift _, K) = K
       | collectSub' (G, I.Dot (I.Idx _, s), K) = collectSub' (G, s, K)
       | collectSub' (G, I.Dot (I.Exp (U), s), K) =
@@ -299,7 +299,9 @@ struct
 	in 
 	  collectSub' (G, s, K')
 	end 
-      | collectSub'(G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *) 
+      | collectSub'(G, I.Dot(Undef, s), K) = 
+	   collectSub(G, s, K) 
+        (* bp Fri Sep 28 17:55:00 2001 ? *) 
 
     (* collectCtx (G0, G, K) = (G0', K')
        Invariant:
@@ -722,7 +724,6 @@ struct
 	  val V' = raiseType (GX, VX) (* redundant ? *)
 	  val (G', s') = abstractKSubEVar (G, K', s)
 	  val X = lowerEVar1 (E, I.EVar(I, I.Null, V', cnstr), Whnf.whnf(V', I.id)) 
-(*	  val X = lowerEVar (E, I.EVar(I, I.Null, V', cnstr)) *)
 	in
 	  (G', I.Dot(I.Exp(X), s'))      
 	end
@@ -767,36 +768,25 @@ struct
 	      abstractSub' (K, d, s)) 
 
 
-    fun deconstructPi (G, I.Pi((D,_), U)) = 
-          deconstructPi (I.Decl(G, D), U)
-      | deconstructPi (G, U) = (G, U)
-   
-  in
+    (* abstractAnswSub' (G, depth, s) = (G',s')      (implicit raising) 
 
-    (* abstractECloCtx (G, U) = (D', G', U', Pi G'. U')
+        Invariant:  
+        If   G |- s : G1    
+       and  |G| = depth 
+       then G', G |- s' : G1  *) 
+
+
+    fun abstractAnswSub' (G, d, s) = 
+      let
+	val K = collectSub' (G, s, I.Null) 
+	val s' = abstractSub' (K, d, s) 
+	val (G1,_) = abstractKSub' (I.Null, K, I.id)  
+      in 
+	 (G1, s')
+      end
       
-       if G |- U 
 
-       then 
-          
-          {{K}} |-  Pi G.U where K contains all free vars from G and U
-          D' |- Pi G'. U' 
-          D', G' |- U'
-
-       *) 
-
-    val abstractECloCtx = (fn (G, U) => 
-			   let
-			     val V = raiseType (G, U)
-			     val K = collectExp(I.Null, (V, I.id), I.Null) 
-			     val (Gs',_) = abstractKSub' (I.Null, K, I.id)  
-			     val V' = abstractExp (K, 0, (V,I.id)) 
-			     val Vpi = abstractKPi (K, V') 
-			     val (Gdp', U') = deconstructPi (I.Null, V')   
-			   in 
-			     (Gs', Gdp', U', Vpi) 
-			   end)
-
+  in
   (* abstractEVarCtx (G, p, s) = (G', D', U', s')
 
      if G |- p[s]
@@ -883,41 +873,24 @@ struct
     free variables from s
 
    *)
-    val abstractAnswSub = 
-      (fn s => 
-       let
-	 val K = collectSub(I.Null, s, I.Null) 
-	 val s' = abstractSub' (K, 0, s) 
-	 val (G1,_) = abstractKSub' (I.Null, K, I.id)  
-       in 
-	 (G1, s')
-       end)
 
-    val abstractAnswSub' = 
-      (fn (G, d, s) => 
-       let
-	 val K = collectSub' (G, s, I.Null) 
-	 val s' = abstractSub' (K, d, s) 
-	 val (G1,_) = abstractKSub' (I.Null, K, I.id)  
-       in 
-	 (G1, s')
-       end)
+    val abstractAnswSub = (fn s => abstractAnswSub'(I.Null, 0, s))
 
 
-(* abstractAnsw (D, s) = (Delta, s')
+    (* abstractAnsw (D, s) = (Delta, s')
     
-   if D, G |- s : Delta', G 
-      s may contain free variables
-    
+     if D, G |- s : Delta', G 
+       s may contain free variables
+       
    then 
-  
-    Delta, D, G |- s' : Delta', G
-    where Delta contains all the 
-    free variables from s
-
-   *)
-(* bp Tue Feb 19 23:35:30 2002 ??? don't understand this function *)
-   val abstractAnsw = 
+     
+     Delta, D, G |- s' : Delta', G
+     where Delta contains all the 
+     free variables from s
+     
+     *)
+    (* bp Tue Feb 19 23:35:30 2002 ???  *)
+    val abstractAnsw = 
       (fn (D, s) => 
        let
 	 (* val d = I.ctxLength(D) *)
@@ -958,10 +931,8 @@ struct
      *)
 
     val raiseType = (fn (G, U) => 
-		       raiseType (G, U)
-			   )
+		       raiseType (G, U))
 
-    val collectEVars = collectEVars
   end
 end;  (* functor AbstractTabled *)
 

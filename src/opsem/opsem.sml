@@ -42,6 +42,7 @@ structure TableIndex =
 	      structure Whnf = Whnf
 	      structure Print = Print
 	      structure CPrint = CPrint
+	      structure Names = Names
 	      structure TypeCheck = TypeCheck);
 
 structure Tabled = 

@@ -549,6 +549,7 @@ bp Wed Feb 20 11:06:51 2002 *)
      case (!TableIndex.strategy) of
        TableIndex.Variant =>  solve((g, s), dp, sc)
      |  TableIndex.Subsumption => 
+	 (* better way would be to decompose g until it is atomic *)
 	 (case g 
 	   of C.Atom(p) => 
 	     if TabledSyn.tabledLookup (I.targetFam p) then 
@@ -561,7 +562,8 @@ bp Wed Feb 20 11:06:51 2002 *)
 	       end
 	     else 
 	       solve((g, s), dp, sc)
-	     | _ => (print "Warning: search using subsumption may be incomplete -- using variant checking instead.\n";
+	     | _ => (print ("Warning: search using subsumption may be incomplete " ^ 
+			    "-- using variant checking instead.\n");
 	            TableIndex.strategy := TableIndex.Variant;
 		     solve((g, s), dp, sc)))
 
