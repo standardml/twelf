@@ -1,8 +1,8 @@
 %%% Sample queries.
 %%% Author: Roberto Virga.
 
-%query 1 1
+%query 1 *
 sieve 500 L.
 
-%query 1 1
+%query 1 *
 sieve 500 L.

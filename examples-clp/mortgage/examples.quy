@@ -1,8 +1,8 @@
 %%% Sample queries.
 %%% Author: Roberto Virga.
 
-%query 1 1
+%query 1 *
 mortgage 80000 36 19/2 MP 0.
 
-%query 1 1
+%query 1 *
 mortgage P 36 15 MP 0.
