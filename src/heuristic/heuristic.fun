@@ -50,18 +50,23 @@ struct
       
     fun ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
 
-    fun indexToString {sd, ind=NONE, c, m, r, p} = 
-          "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
-	  (realFmt (ratio (c, m))) ^ 
-	  ", ind=., sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^
-	  ", p=" ^ (Int.toString p) ^ ")"
+    fun sum {sd=k1, ind=NONE, c=c1, m=m1, r=r1, p=p1} =
+	realFmt ((Real.fromInt k1) + ratio(m1,c1) + (Real.fromInt r1))
+	| sum {sd=k1, ind=SOME (i1), c=c1, m=m1, r=r1, p=p1} = 
+	realFmt ((Real.fromInt k1) + ratio(1,i1) + ratio(m1,c1) + (Real.fromInt r1))
+
+    fun indexToString {sd = s1, ind=NONE, c=c1, m=m1, r=r1, p=p1} = 
+          "(c/m=" ^ (Int.toString c1) ^ "/" ^ (Int.toString m1) ^ "=" ^
+	  (realFmt (ratio (c1, m1))) ^ 
+	  ", ind=., sd=" ^ (Int.toString s1) ^ ", " ^ (recToString r1) ^
+	  ", p=" ^ (Int.toString p1) ^ "sum = " ^ (sum {sd=s1, ind=NONE, c=c1, m=m1, r=r1, p=p1}) ^ " )"
 	  
-      | indexToString {sd, ind=SOME (idx) , c, m, r, p} = 
-	  "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
-	  (realFmt (ratio (c, m))) ^ 
+      | indexToString {sd=s1, ind=SOME (idx) , c=c1, m=m1, r=r1, p=p1} = 
+	  "(c/m=" ^ (Int.toString c1) ^ "/" ^ (Int.toString m1) ^ "=" ^ 
+	  (realFmt (ratio (c1, m1))) ^ 
 	  ", ind=" ^ (Int.toString idx) ^
-	  ", sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^ 
-	  ", p=" ^ (Int.toString p) ^ ")"
+	  ", sd=" ^ (Int.toString s1) ^ ", " ^ (recToString r1) ^ 
+	  ", p=" ^ (Int.toString p1) ^ " sum = " ^ (sum {sd=s1, ind=SOME (idx) , c=c1, m=m1, r=r1, p=p1}) ^ ")"
 	  
 
   in

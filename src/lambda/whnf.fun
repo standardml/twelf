@@ -231,7 +231,7 @@ struct
         (case bvarSub (k, s)
 	   of Idx (k) => (Root (BVar (k), SClo (S, s)), id)
 	    | Exp (U) => whnfRedex (whnf (U, id), (S, s)))
-	    (* Undef should be impossible *)
+      (* Undef should be impossible *)
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((NSDef (d), S), s) =

@@ -1,5 +1,6 @@
 (* Reconstruct Termination Information *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka *)
 
 functor ThmRecon (structure Global : GLOBAL
 		  structure ModeSyn : MODESYN
@@ -82,6 +83,24 @@ struct
     type tdecl = ThmSyn.TDecl * (Paths.region * Paths.region list) 
     fun tdecl ((O, r), (C, rs)) = (ThmSyn.TDecl (O, C), (r, rs))
     fun tdeclTotDecl T  = T
+
+    (* -bp *)
+    (* predicate *)
+    type predicate = ThmSyn.Predicate * Paths.region
+    fun predicate ("LESS", r) = (ThmSyn.Less, r)
+      | predicate ("LEQ", r) =  (ThmSyn.Leq, r)
+      | predicate ("EQUAL", r) = (ThmSyn.Eq, r)
+
+    (* reduces declaration *)
+    type rdecl = ThmSyn.RDecl * (Paths.region * Paths.region list) 	
+    fun rdecl ((P, r0), (O1,r1), (O2, r2), (C, rs)) = 
+	let 
+	    val r = Paths.join (r1, r2)
+	in
+	    (ThmSyn.RDecl (ThmSyn.RedOrder(P ,O1, O2), C), (Paths.join (r0, r), rs))
+	end
+
+    fun rdeclTorDecl T  = T
 
     (* Theorem and prove declarations *)
 
@@ -202,7 +221,15 @@ struct
 
     type tdecl = tdecl
     val tdecl = tdecl
-      
+
+    (* -bp *)
+    type predicate = predicate
+    val predicate = predicate
+
+    (* -bp *)
+    type rdecl = rdecl
+    val rdecl = rdecl
+
     type prove = prove
     val prove = prove
 
@@ -213,6 +240,7 @@ struct
     val assert = assert
 
     val tdeclTotDecl = tdeclTotDecl
+    val rdeclTorDecl = rdeclTorDecl
     val proveToProve = proveToProve
     val establishToEstablish = establishToEstablish
     val assertToAssert = assertToAssert

@@ -21,14 +21,18 @@ struct
       | ratio (c, 0) = 1.1
       | ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
 
+
+    fun sqr (x:real) = x * x;
+
     (* sum of the parameters k1 + m1/c1 + 1/ind + r1 *)
-    (* the higher the sum the more preferred it is;  *)   
+    (* the higher the sum the more preferred it is;  *)  
+    (* - bp Sep 21 1999 - weight splitting depth higher *)
     fun sum {sd=k1, ind=NONE, c=c1, m=m1, r=r1, p=p1} =
-	(Real.fromInt k1) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
+	(sqr(Real.fromInt k1) ) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
 	| sum {sd=k1, ind=SOME (0), c=c1, m=m1, r=r1, p=p1} = 
-	(Real.fromInt k1) + ratio(3,2) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
+	(sqr(Real.fromInt k1)) + ratio(3,2) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
 	| sum {sd=k1, ind=SOME (i1), c=c1, m=m1, r=r1, p=p1} = 
-	(Real.fromInt k1) + ratio(1,i1) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
+	(sqr(Real.fromInt k1)) + ratio(1,i1) + (1.0 - ratio(c1,m1)) + (Real.fromInt r1)
 
     (* associate a higher value to non-rec than to rec  *)
     fun conv{sd=k1, ind=i, c=c1, m=m1, r=1, p=p1} =

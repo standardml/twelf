@@ -1,5 +1,6 @@
 (* Theorem and Related Declarations *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka *)
 
 functor Thm (structure Global : GLOBAL
 	     structure ThmSyn': THMSYN
@@ -13,6 +14,9 @@ functor Thm (structure Global : GLOBAL
 struct
   structure ThmSyn = ThmSyn'
   structure Paths = Paths'
+ 
+  (* -bp *)
+  datatype Order = Varg | Lex of Order list | Simul of Order list 
 
   exception Error of string
 
@@ -22,7 +26,6 @@ struct
     structure I = M.IntSyn
     structure P = ThmPrint
     structure O = Order
-      
     fun error (r, msg) = raise Error (Paths.wrap (r, msg))
 
     (* To check validity of a termination declaration  O C
@@ -274,9 +277,171 @@ struct
 	used for error messages)
     *)
     fun install (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
+		
+
+   (* -bp *)
+
+    (* argROrder (O, P, n) = O'
+
+       Invariant: 
+       If   O is an order
+       and  P is the argument spine of a call pattern
+       and  n is the number of implicit arguments of the
+	         call pattern
+       then O' is an order where all virtual arguments are
+	          replaced by positions
+
+    *)
+    fun argROrder (L.Varg L, P, n) = O.Arg (locate (L, P, n))
+      | argROrder (L.Simul L, P, n) = O.Simul (argROrderL (L, P, n))
+      | argROrder (L.Lex L, P, n) = O.Lex (argROrderL (L, P, n))
+
+    and argROrderL (nil, P, n) = nil
+      | argROrderL (O :: L, P, n) = argROrder (O, P, n) :: argROrderL (L, P, n)
+
+    fun argPredicate (L.Less, O, O') = O.Less (O, O')
+      | argPredicate (L.Leq, O, O') = O.Leq (O, O')
+      | argPredicate (L.Eq, O, O') = O.Eq (O, O')
+
+    (* installPredicate (name, R, LE, LT) = ()
+
+       Invariant:
+       If   R is a reduction order,
+       and  LE is a list of callpatterns where ind. argument must LT decrease
+       and  LT is a list of callpatterns where ind. argument must LE decrease
+       then installorder terminates with ()
+
+       Effect: updates table associating argument reduction order with 
+               type families.
+
+    *)
+    fun installPredicate ( _, nil, _) = ()
+      | installPredicate (L.RedOrder(Pred,O1, O2), (aP as (a, P)) :: thmsLE, thmsLT) =
+	let
+	  val M' = argOrderMutual (thmsLE, fn ((a, _), L) => O.LE (a, L),
+				   argOrderMutual (aP :: thmsLT, 
+						   fn ((a, _), L) => O.LT (a, L), O.Empty))
+	  val O1' = argROrder (O1, P, I.constImp a)
+	  val O2' = argROrder (O2, P, I.constImp a)
+	  val pr  = argPredicate (Pred, O1', O2')
+	  (* install termination order *)
+	  val S'  = O.install (a, O.TDec (O2', M')) 
+	  (* install reduction order   *)  
+	  val S'' = O.installROrder (a, O.RDec (pr, M'))  
+	in
+	  installPredicate (L.RedOrder(Pred,O1, O2), thmsLE, aP :: thmsLT)
+	end
+
+    (* installRDecl (R, C) = L'
+     
+       Invariant:
+       If   R is a reduction order 
+       and  C is a call pattern
+       then L' is a list of all type families mentioned in C
+
+       Effect: reduction order is stored 
+    *)
+    fun installRDecl (R, L.Callpats L) =
+        (installPredicate (R, L, nil);
+	 map (fn (a, _) => a) L)
+
+    (* wfRCallpats
+       well-formed call pattern in a reduction declaration 
+     *)
+    fun wfRCallpats (L0, C0, r, mode) =
+	let
+	  fun makestring nil = ""
+	    | makestring (s :: nil) = s
+	    | makestring (s :: L) = s ^ " " ^ (makestring L)
+
+	  fun exists' (x, nil, _, Mo) = false
+	    | exists' (x, NONE :: L, M.Mapp (_, mS), Mo) = 
+		exists' (x, L, mS, Mo)
+	    | exists' (x, SOME y :: L, M.Mapp (M.Marg (mode, _), mS), Mo) =
+	      if x = y then 
+		  (if mode = Mo then
+		       true
+		   else 
+		       error (r, "Expected " ^ x ^ " to have " ^ M.modeToString Mo
+			      ^ " mode"))
+	      else exists' (x, L, mS, Mo)
+
+	  (* skip (i, x, P, mS, Mode)  ignores first i argument in modeSpine mS,
+	     then returns true iff x occurs in argument list P
+	     Effect: raises Error if position of x is not input (+).
+          *)
+	  fun skip (0, x, P, mS, mode) = exists' (x, P, mS, mode)
+	    | skip (k, x, P, M.Mapp (_, mS), mode) = skip (k-1, x, P, mS, mode)
+
+	  fun delete (x, (aP as (a, P)) :: C, mode) = 
+	      (case M.modeLookup a 
+		 of NONE => error (r, "Expected " ^ Names.constName a
+				      ^ " to be moded")
+	          | SOME mS => if skip (I.constImp a, x, P, mS, mode)
+				 then C
+			       else aP :: delete (x, C, mode))
+	    | delete (x, nil, mode) = error (r, "Variable " ^ x ^ " does not occur as argument")
+
+	  fun wfCallpats' (nil, nil, mode) = ()
+	    | wfCallpats' (x :: L, C, mode) = 
+		wfCallpats' (L, delete (x, C, mode), mode)
+	    | wfCallpats' _ = 
+		error (r, "Mutual argument (" ^ makestring L0
+		          ^ ") does not cover all call patterns")
+	in
+	  wfCallpats' (L0, C0, mode)
+	end
+
+
+ (* wfred ((Red(Pred,O.O'), C), (r, rs)) = ()
+
+       Invariant:
+       If   O,O' is an order and Pred is some predicate
+       and  C is a call pattern
+       then wfred terminates with () 
+	    if C contains pairwise different variable names
+	    and each virtual argument in O covers all call patterns.          
+       else exception Error is raised
+       (r, rs  region information, needed for error messages)
+    *)
+    fun wfred ((L.RedOrder(Pred,O,O'), L.Callpats C), (r, rs)) =
+	let
+	  fun wfOrder (L.Varg L ,mode) = (wfRCallpats (L, C, r, mode) ; Varg)  
+	    | wfOrder (L.Lex L, mode) = Lex(wfOrders (L, mode))
+	    | wfOrder (L.Simul L, mode) = Simul(wfOrders (L, mode))
+
+	  and wfOrders (nil, mode) = nil
+	    | wfOrders (O :: L, mode) = (wfOrder (O, mode)) :: (wfOrders (L, mode))
+	in 
+	  (uniqueCallpats (C, rs); 
+	  if  wfOrder (O, M.Minus) = wfOrder (O', M.Plus) then 
+	      ()
+	  else 
+	      error (r, "Reduction Order (" ^ P.ROrderToString (L.RedOrder(Pred,O,O')) ^
+		           ") requires both orders to be of the same type.")
+	      )
+	end
+
+
+    (* installRedOrder (R, (r,rs)) = L'
+      
+       Invariant: 
+       If   R is a reduction declaration of (pred(O,O'), C)
+       and  O,O' is an order
+       and pred is a predicate
+       and  C is a call pattern
+       then L' is a list of all type families mentioned in C
+	    if (pred(O,O'), C) is well-formed
+	    else exception Error is raised
+       (r is region information of O
+        rs is a list of regions of C
+	used for error messages)
+    *)
+    fun installReduces (L.RDecl (R, C), rrs) = (wfred ((R, C), rrs); installRDecl (R, C))
 		 
   in
     val install = install
+    val installReduces = installReduces
   end (* local *)
 
 end; (* functor Thm *)

@@ -12,6 +12,7 @@ structure ThmPrint =
 structure Thm =
   Thm (structure Global = Global
        structure ThmSyn' = ThmSyn
+(*       structure RedOrder = RedOrder *) (* -bp *)
        structure Order = Order
        structure ModeSyn' = ModeSyn
        structure ThmPrint = ThmPrint

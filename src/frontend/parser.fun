@@ -47,6 +47,7 @@ struct
     | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec
     | TerminatesDec of ThmExtSyn.tdecl
+    | ReducesDec of ThmExtSyn.rdecl  (* -bp *)
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
@@ -135,6 +136,7 @@ struct
         end
       | parseStream' (f as LS.Cons ((L.MODE, r), s')) = parseMode' f
       | parseStream' (f as LS.Cons ((L.TERMINATES, r), s')) = parseTerminates' f
+      | parseStream' (f as LS.Cons ((L.REDUCES, r), s')) = parseReduces' f (* -bp *)
       | parseStream' (f as LS.Cons ((L.THEOREM, r), s')) = parseTheorem' f
       | parseStream' (f as LS.Cons ((L.PROVE, r), s')) = parseProve' f
       | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s')) = parseEstablish' f
@@ -179,6 +181,14 @@ struct
 	  val (ldec, f') = ParseThm.parseTerminates' (f)
 	in
 	  Stream.Cons (TerminatesDec ldec, parseStream (stripDot f'))
+	end
+
+        (* -bp *)
+    and parseReduces' (f) = 
+	let
+	  val (ldec, f') = ParseThm.parseReduces' (f)
+	in
+	  Stream.Cons (ReducesDec ldec, parseStream (stripDot f'))
 	end
 
     and parseTheorem' (f) =

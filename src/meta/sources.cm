@@ -57,6 +57,7 @@ Group is
   statesyn.sig
   statesyn.fun
   strategy.sig
+  strategyTrace.fun 
   strategy.fun 
   print.sig
   print.fun

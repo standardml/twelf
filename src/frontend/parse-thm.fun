@@ -1,5 +1,6 @@
 (* Parsing Thm Declarations *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka *)
 
 functor ParseThm
   (structure Paths : PATHS
@@ -378,6 +379,31 @@ struct
     fun parseTheoremDec' (LS.Cons ((L.THEOREM, r), s')) = 
           parseThDec (LS.expose s') 
 
+    (*  -bp6/5/99. *)
+
+    (* parsePredicate f = (pred, f')               *)
+    (* parses the reduction predicate, <, <=, =   *)
+    fun parsePredicate  (LS.Cons ((L.LESS, r), s')) = (E.predicate ("LESS", r), (LS.expose s'))
+      | parsePredicate  (LS.Cons ((L.LEQ, r), s')) = (E.predicate ("LEQ", r), (LS.expose s'))
+      | parsePredicate  (LS.Cons ((L.EQUAL, r), s')) = (E.predicate ("EQUAL", r), (LS.expose s'))
+
+
+    (* parseRDecl "order callPats." *)
+    (* parses Reducer Declaration, followed by `.' *)
+    fun parseRDecl f =
+	let
+	  val (oOut, f1) = parseOrder f
+	  val (p, f2) = parsePredicate f1
+	  val (oIn, f3) = parseOrder f2
+	  val (callpats, f4) = parseCallPats f3
+	in
+ 	    (E.rdecl (p, oOut, oIn, E.callpats callpats), f4) 
+	end
+
+   (* parseReduces' "%reduces thedec. " *)
+   fun parseReduces' (LS.Cons ((L.REDUCES, r), s')) = 
+	parseRDecl (LS.expose s')
+
   in
     val parseTerminates' = parseTerminates'
     val parseTheorem' = parseForallStar
@@ -385,6 +411,7 @@ struct
     val parseProve' = parseProve'
     val parseEstablish' = parseEstablish'
     val parseAssert' = parseAssert'
+    val parseReduces' = parseReduces'		(*  -bp6/5/99.*)		 
   end  (* local ... in *)
 
 end;  (* functor Parser *)

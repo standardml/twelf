@@ -1,5 +1,6 @@
 (* Lexer *)
 (* Author: Frank Pfenning *)
+(* Modified: Brigitte Pientka *)
 
 functor Lexer (structure Stream' : STREAM
                structure Paths' : PATHS)
@@ -28,6 +29,8 @@ struct
     | BACKARROW | ARROW			(* `<-' `->' *)
     | TYPE				(* `type' *)
     | EQUAL				(* `=' *)
+    | LESS                              (* `<' *)  (*  -bp6/5/99. *)
+    | LEQ 				(* `<=' *) (*  -bp6/5/99. *)
     | ID of IdCase * string		(* identifer *)
     | UNDERSCORE			(* `_' *)
     | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)
@@ -36,6 +39,7 @@ struct
     | QUERY	  			(* `%query' *)
     | MODE				(* `%mode' *)
     | TERMINATES			(* `%terminates' *)
+    | REDUCES                           (* `%reduces' *)(*  -bp6/5/99. *)
     | THEOREM                           (* `%theorem' *)
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)
@@ -68,6 +72,8 @@ struct
     | stringToToken (Lower, "->", r) = (ARROW, r)
     | stringToToken (Upper, "_", r) = (UNDERSCORE, r)
     | stringToToken (Lower, "=", r) = (EQUAL, r)
+    | stringToToken (Lower, "<", r) = (LESS, r)  (*  -bp6/5/99. *)
+    | stringToToken (Lower, "<=", r) = (LEQ, r)  (*  -bp6/5/99. *)
     | stringToToken (Lower, "type", r) = (TYPE, r)
     | stringToToken (idCase, s, r) = (ID(idCase,s), r)
 
@@ -197,6 +203,7 @@ struct
       | lexPragmaKey (ID(_, "postfix"), r) = (POSTFIX, r)
       | lexPragmaKey (ID(_, "mode"), r) = (MODE, r)
       | lexPragmaKey (ID(_, "terminates"), r) = (TERMINATES, r)
+      | lexPragmaKey (ID(_, "reduces"), r) = (REDUCES, r) (* -bp6/5/99. *)
       | lexPragmaKey (ID(_, "theorem"), r) = (THEOREM, r)
       | lexPragmaKey (ID(_, "prove"), r) = (PROVE, r)
       | lexPragmaKey (ID(_, "establish"), r) = (ESTABLISH, r)
@@ -284,6 +291,8 @@ struct
     | toString' (ARROW) = "->"
     | toString' (TYPE) = "type"
     | toString' (EQUAL) = "="
+    | toString' (LESS) = "<"                       (*  -bp6/5/99. *)
+    | toString' (LEQ) = "<="                       (*  -bp6/5/99. *)
     | toString' (UNDERSCORE) = "_"
     | toString' (INFIX) = "%infix"
     | toString' (PREFIX) = "%prefix"
@@ -293,6 +302,7 @@ struct
     | toString' (QUERY) = "%query"
     | toString' (MODE) = "%mode"
     | toString' (TERMINATES) = "%terminates"
+    | toString' (REDUCES) = "%reduces"              (*  -bp6/5/99. *)
     | toString' (THEOREM) = "%theorem"
     | toString' (PROVE) = "%prove"
     | toString' (ESTABLISH) = "%establish"

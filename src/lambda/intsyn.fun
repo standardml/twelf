@@ -48,7 +48,7 @@ struct
 
   datatype Exp =			(* Expressions:               *)
     Uni   of Uni			(* U ::= L                    *)
-  | Pi    of (Dec * Depend) * Exp       (*     | Pi (D, P). V         *)
+  | Pi    of (Dec * Depend) * Exp       (*     | bPi (D, P). V         *)
   | Root  of Head * Spine		(*     | C @ S                *)
   | Redex of Exp * Spine		(*     | U @ S                *)
   | Lam   of Dec * Exp			(*     | lam D. U             *)
@@ -267,7 +267,7 @@ struct
 
   (* bvarSub (n, s) = Ft'
    
-     Invariant: 
+      Invariant: 
      If    G |- s : G'    G' |- n : V
      then  Ft' = Ftn         if  s = Ft1 .. Ftn .. ^k
        or  Ft' = ^(n+k)     if  s = Ft1 .. Ftm ^k   and m<n

@@ -10,4 +10,7 @@ sig
 
   val install : ThmSyn.TDecl * (Paths.region * Paths.region list) 
                 -> ThmSyn.ModeSyn.IntSyn.cid list
+  (* -bp *)
+  val installReduces : ThmSyn.RDecl * (Paths.region * Paths.region list) 
+                -> ThmSyn.ModeSyn.IntSyn.cid list 
 end;  (* signature THM *)

@@ -418,7 +418,7 @@ struct
 	    | lookup (a's as Order.LT (a, a's'), f) =
 		if (f a) then a's else lookup (a's', f)
 	  val P = select (a, (S, s))
-	  val P' = select (a', (S', s'))
+	  val P' = select (a', (S', s')) 
 	  val a's = Order.mutLookup a
 	  val _ = Order.selLookup a'   (* check if a' terminates *)
 	in

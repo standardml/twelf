@@ -1,5 +1,6 @@
 (* Theorems *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka *)
 
 functor ThmSyn (structure ModeSyn' : MODESYN
 		structure Abstract : ABSTRACT
@@ -23,12 +24,23 @@ struct
   | Lex of Order list
   | Simul of Order list
 
+  (* -bp *)
+  datatype Predicate = Less | Leq | Eq
+
+  datatype RedOrder = 
+      RedOrder of Predicate * Order * Order
+
   datatype Callpats =
     Callpats of (ModeSyn.IntSyn.cid * Param list) list 
 
   (* Termination declaration *)
   datatype TDecl = 
     TDecl of (Order * Callpats)
+
+  (* -bp *)
+  (* Reduction declaration *)
+  datatype RDecl = 
+    RDecl of (RedOrder * Callpats)
 
   (* Theorem declaration *)
   datatype ThDecl =

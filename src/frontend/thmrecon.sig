@@ -17,6 +17,14 @@ sig
   type tdecl
   val tdecl : order * callpats -> tdecl
 
+  (* -bp *)
+  type predicate 
+  val predicate : (string * Paths.region) -> predicate
+
+  (* -bp *)
+  type rdecl
+  val rdecl : predicate * order * order * callpats -> rdecl
+
   type prove
   val prove : int * tdecl -> prove
 
@@ -51,6 +59,7 @@ sig
 
   exception Error of string
   val tdeclTotDecl : tdecl -> (ThmSyn.TDecl * (Paths.region * Paths.region list))
+  val rdeclTorDecl : rdecl -> (ThmSyn.RDecl * (Paths.region * Paths.region list))
   val theoremToTheorem : theorem -> (ThmSyn.ThDecl * Paths.region)
   val theoremDecToTheoremDec : theoremdec -> (string * ThmSyn.ThDecl) * Paths.region
   val proveToProve : prove -> (ThmSyn.PDecl * (Paths.region * Paths.region list))

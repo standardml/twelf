@@ -1,5 +1,6 @@
 (* Printer for Meta Theorems *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka *)
 
 functor ThmPrint (structure ThmSyn' : THMSYN
 		    structure Formatter : FORMATTER)
@@ -46,9 +47,25 @@ struct
     fun tDeclToString (L.TDecl (O, L.Callpats L)) = F.makestring_fmt (F.HVbox (fmtOrder O @ 
 							   (F.String " " :: fmtCallpats L)))
     fun callpatsToString (L.Callpats L) = F.makestring_fmt (F.HVbox (fmtCallpats L))
+
+   (* -bp *)
+    fun fmtROrder (L.RedOrder(P,O,O'))=
+	case P of
+	    L.Less => (fmtOrder O) @ (F.String " < " :: fmtOrder O')
+	  | L.Leq => (fmtOrder O) @ (F.String " <= " :: fmtOrder O')
+	  | L.Eq => (fmtOrder O) @ (F.String " = " :: fmtOrder O')
+		
+    fun ROrderToString R = 
+	F.makestring_fmt (F.HVbox (fmtROrder R))
+	
+    fun rDeclToString (L.RDecl (R,L.Callpats L)) = 
+	F.makestring_fmt (F.HVbox ((fmtROrder R @ (F.String " " :: fmtCallpats L))))
+	
   in
     val tDeclToString = tDeclToString
     val callpatsToString = callpatsToString
+    val ROrderToString = ROrderToString            (* -bp *)
+    val rDeclToString = rDeclToString	           (* -bp *)
   end (* local *)
 
 end; (* functor ThmPrint *)

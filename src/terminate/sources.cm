@@ -10,4 +10,6 @@ Group is
   ../solvers/sources.cm
   terminate.sig
   terminate.fun 
+  reduces.sig
+  reduces.fun 
   terminate.sml

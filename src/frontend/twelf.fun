@@ -1,6 +1,7 @@
 (* Front End Interface *)
 (* Author: Frank Pfenning *)
 (* Modified: Carsten Schuermann, Jeff Polakow *)
+(* Modified: Brigitte Pientka *)
 
 functor Twelf
   (structure Global : GLOBAL
@@ -56,12 +57,14 @@ functor Twelf
      sharing type ModeRecon.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
      sharing ModePrint.ModeSyn = ModeSyn
-   structure ModeDec : MODEDEC
+    structure ModeDec : MODEDEC
      sharing ModeDec.ModeSyn = ModeSyn
      sharing ModeDec.Paths = Paths
 
    structure Terminate : TERMINATE
      sharing Terminate.IntSyn = IntSyn'
+   structure Reduces : REDUCES
+     sharing Reduces.IntSyn = IntSyn'
 
    structure Index : INDEX
      sharing Index.IntSyn = IntSyn'
@@ -92,6 +95,7 @@ functor Twelf
      sharing ThmRecon.Paths = Paths
      sharing ThmRecon.ThmSyn.ModeSyn = ModeSyn
      sharing type ThmRecon.tdecl = Parser.ThmExtSyn.tdecl
+     sharing type ThmRecon.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
      sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
      sharing type ThmRecon.theoremdec = Parser.ThmExtSyn.theoremdec 
      sharing type ThmRecon.prove = Parser.ThmExtSyn.prove
@@ -230,6 +234,7 @@ struct
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
 	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
 	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
+	      | Reduces.Error (msg) => abort (msg ^ "\n")   (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
@@ -371,9 +376,24 @@ struct
 	let
 	  val (T, rrs) = ThmRecon.tdeclTotDecl lterm 
 	  val La = Thm.install (T, rrs)
-	  val _ = map (Timers.time Timers.terminate Terminate.checkFam) La
+  	  val _ = map (Timers.time Timers.terminate Reduces.checkFam) La  
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%terminates " ^ ThmPrint.tDeclToString T ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
+        (* -bp *)
+	(* Reduces declaration *)
+      | install1 (fileName, Parser.ReducesDec lterm) =
+	let
+	  val (R, rrs) = ThmRecon.rdeclTorDecl lterm 
+	  val La = Thm.installReduces (R, rrs)
+	  (*  -bp6/12/99.   *)
+	  val _ = map (Timers.time Timers.terminate Reduces.checkFamReduction) La
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%reduces " ^ ThmPrint.rDeclToString R ^ ".\n")
 		  else ()
 	in
 	  ()
@@ -521,6 +541,7 @@ struct
     fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
 		    Index.reset (); 
 		    IndexSkolem.reset (); Subordinate.reset (); Terminate.reset ();
+		    Reduces.reset (); (* -bp *)
 		    FunSyn.labelReset ();
 		    CompSyn.sProgReset (); (* necessary? -fp *)
                     CSManager.resetSolvers ()
@@ -639,7 +660,8 @@ struct
 	   if pwdir = OS.FileSys.getDir () (* allow shorter messages if safe *)
 	     then List.foldl loadAbort OK sources
 	   else List.foldl loadAbort OK
-	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources))
+	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources)) 
+(*	   (List.map (fn p => OS.Path.mkAbsolute {path = p, relativeTo = pwdir}) sources)) -bp sml110.9*)
 
       fun define (sources) = (OS.FileSys.getDir (), sources)
 
