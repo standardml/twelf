@@ -16,7 +16,7 @@ struct
     structure I = ModeSyn.IntSyn
     structure P = Paths
       
-    datatype Arg = Implicit | Explicit
+    datatype Arg = Implicit | Explicit | Local
 
     (* Representation invariant:
      
@@ -87,6 +87,37 @@ struct
       | empty (k, ms, I.Pi (_, V)) =
           empty (k-1, I.Decl (ms, (M.Marg (M.Star, NONE), Implicit)), V)
 
+    (* inferVar (ms, m, k) = ms'
+
+       Invariant:
+       If  ms is a mode list, 
+       and k a variable pointing into ms    (call it mode mk)
+       and m is a mode
+       then ms' is the same as ms            (call the value of k in ms'  mk')   
+       where mk' = m o mk
+    
+        m o mk  + * -
+        -------------
+	+       + + +
+        *       + * -
+	-       + - -   
+    *)
+    fun inferVar (I.Decl (ms, (M.Marg (M.Star, nameOpt), Implicit)), mode, 1) = 
+          I.Decl (ms, (M.Marg (mode, nameOpt), Implicit))
+      | inferVar (I.Decl (ms, (M.Marg (_, nameOpt), Implicit)), M.Plus, 1) = 
+          I.Decl (ms, (M.Marg (M.Plus, nameOpt), Implicit))
+      | inferVar (ms as I.Decl (_, (_, Implicit)), _, 1) = 
+	  ms
+      | inferVar (ms as I.Decl (_, (_, Local)), _, 1) =
+          ms
+      | inferVar (ms as I.Decl (_, (M.Marg (mode', SOME name), Explicit)), mode, 1) =  
+	if modeConsistent (mode', mode)
+	  then ms 
+	else raise Error ("Mode declaration for " ^ name ^ " expected to be "
+			  ^ M.modeToString mode)
+      | inferVar (I.Decl (ms, (marg as M.Marg (mode', _), arg)), mode, k) = 
+	  I.Decl (inferVar (ms, mode, k-1), (marg, arg))
+
     (* inferExp (ms, m, U) = ms'
 
        Invariant:
@@ -105,10 +136,10 @@ struct
 	  inferSpine (ms, mode, S)
       | inferExp (ms, mode, I.Lam (D as I.Dec (nameOpt, _), U)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
-				      (M.Marg (mode, nameOpt), Explicit)), mode, U))
+				      (M.Marg (mode, nameOpt), Local)), mode, U))
       | inferExp (ms, mode, I.Pi ((D as I.Dec (nameOpt, _), _), V)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
-				      (M.Marg (mode, nameOpt), Explicit)), mode, V)) (* cannot make any assumptions on what is inside a foreign object *)
+				      (M.Marg (mode, nameOpt), Local)), mode, V)) (* cannot make any assumptions on what is inside a foreign object *)
       | inferExp (ms, mode, I.FgnExp _) = ms
 
     (* inferSpine (ms, m, S) = ms'
@@ -123,34 +154,6 @@ struct
       | inferSpine (ms, mode, I.App (U, S)) = 
           inferSpine (inferExp (ms, mode, U), mode, S)
 	  
-    (* inferVar (ms, m, k) = ms'
-
-       Invariant:
-       If  ms is a mode list, 
-       and k a variable pointing into ms    (call it mode mk)
-       and m is a mode
-       then ms' is the same as ms            (call the value of k in ms'  mk')   
-       where mk' = m o mk
-    
-        m o mk  + * -
-        -------------
-	+       + + +
-        *       + * -
-	-       + - -   
-    *)
-    and inferVar (I.Decl (ms, (M.Marg (M.Star, nameOpt), Implicit)), mode, 1) = 
-          I.Decl (ms, (M.Marg (mode, nameOpt), Implicit))
-      | inferVar (I.Decl (ms, (M.Marg (_, nameOpt), Implicit)), M.Plus, 1) = 
-          I.Decl (ms, (M.Marg (M.Plus, nameOpt), Implicit))
-      | inferVar (ms as I.Decl (_, (_, Implicit)), _, 1) = 
-	  ms
-      | inferVar (ms as I.Decl (_, (M.Marg (mode', SOME name), Explicit)), mode, 1) =  
-	if modeConsistent (mode', mode)
-	  then ms 
-	else raise Error ("Mode declaration for " ^ name ^ " expected to be "
-			  ^ M.modeToString mode)
-      | inferVar (I.Decl (ms, (marg as M.Marg (mode', _), arg)), mode, k) = 
-	  I.Decl (inferVar (ms, mode, (k -1)), (marg, arg))
 
     (* inferDec (ms, m, x:V) = ms'
 
