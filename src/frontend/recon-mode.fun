@@ -71,8 +71,9 @@ struct
 
       fun mroot (tm, r) (g, D) =
 	  let
-            val T.JWithCtx (G, T.JClass ((V, _), _)) =
-                  T.recon (T.jwithctx (g, T.jclass tm))
+            val T.JWithCtx (G, T.JOf ((V, _), _, _)) =
+                  T.recon (T.jwithctx (g, T.jof (tm, T.typ (r))))
+	    val _ = T.checkErrors (r)
 
             (* convert term spine to mode spine *)
 	    (* Each argument must be contractible to variable *)
@@ -94,12 +95,11 @@ struct
 	      | convertExp (I.Root (I.Def (d), S))  = 
 		  (* error is signalled later in ModeDec.checkFull *)
 		  (d, convertSpine S)
-              (* !!! FIX this could be any sort of garbage; need checks *)
+	      | convertExp _ =
+		  error (r, "Call pattern not an atomic type")
 	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
 
-            (* !!! FIX unfortunately, term reconstruction is liable to insert
-               an EClo *)
-	    val (a, mS) = convertExp (V)
+	    val (a, mS) = convertExp (Whnf.normalize (V, I.id))
 	  in
 	    (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
 	  end
