@@ -74,7 +74,6 @@ twelf/examples/church-rosser/par-lemmas.elf
 twelf/examples/church-rosser/par-red.elf
 twelf/examples/church-rosser/sources.cfg
 twelf/examples/church-rosser/test.cfg
-twelf/examples/church-rosser/test.tag
 twelf/examples/compile/README
 twelf/examples/compile/cls/cls-complete.elf
 twelf/examples/compile/cls/cls-sound.elf
