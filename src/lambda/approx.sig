@@ -16,6 +16,7 @@ sig
     | Arrow of Exp * Exp
     | Const of IntSyn.Head (* Const/Def/NSDef *)
     | CVar of Exp option ref
+    | AdamVar of IntSyn.Exp option ref * IntSyn.Dec IntSyn.Ctx
     | Undefined
 
   val Type : Uni

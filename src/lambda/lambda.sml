@@ -45,4 +45,5 @@ structure Abstract =
 
 structure Approx =
   Approx ((*! structure IntSyn' = IntSyn !*)
-          structure Whnf = Whnf);
+          structure Whnf = Whnf
+	  structure Unify = UnifyNoTrail);

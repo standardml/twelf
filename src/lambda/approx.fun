@@ -3,6 +3,7 @@
 
 functor Approx ((*! structure IntSyn' : INTSYN !*)
                 structure Whnf : WHNF
+		structure Unify : UNIFY
 		(*! sharing Whnf.IntSyn = IntSyn' !*)
 		  )
   : APPROX =
@@ -70,6 +71,7 @@ struct
       | Arrow of Exp * Exp
       | Const of I.Head (* Const/Def/NSDef *)
       | CVar of Exp option ref
+      | AdamVar of IntSyn.Exp option ref * IntSyn.Dec IntSyn.Ctx
       | Undefined
 
   (* Because approximate type reconstruction uses the pattern G |- U
@@ -184,12 +186,15 @@ struct
     | expToApx (I.Lam (_, U)) = expToApx U
     | expToApx (I.EClo (U, _)) = expToApx U
 
+    | expToApx (I.EVar (X as ref NONE, G, I.Uni(I.Type), _)) = (AdamVar (X,G), Uni Type)
+(*    | expToApx (X as I.EVar _) = expToApx (Whnf.normalize(X, I.id)) *) (* -- changed to just normalize first *)
+
   (* classToApx (V) = (V-, L-)
      if G |- V : L
      or G |- V ":" L = "hyperkind" *)
   fun classToApx (V) =
       let
-        val (V', L') = expToApx (V)
+        val (V', L') = expToApx (Whnf.normalize(V, I.id))
         val Uni L'' = whnf L'
       in
         (V', L'')
@@ -265,7 +270,13 @@ struct
       end
     | apxToClassW (G, Const H, L (* Type *), allowed) =
         I.Root (H, Whnf.newSpineVar (G, (I.conDecType (headConDec H), I.id)))
+
+    | apxToClassW (G, AdamVar (X,G'), L (* Type *), allowed) = 
+	I.EVar(X, G', I.Uni(I.Type), ref nil)
+
+
       (* Undefined case impossible *)
+
   and apxToClass (G, V, L, allowed) = apxToClassW (G, whnf V, L, allowed)
 
   (* apxToExact (G, u, (V, s), allowed) = U
@@ -357,7 +368,63 @@ struct
        iff u1<I> = u2<I> : v for some most general instantiation I
        effect: applies I
        otherwise raises Unify *)
-    fun matchW (Uni L1, Uni L2) = matchUni (L1, L2)
+
+    fun matchW (AdamVar (X1 as ref NONE, G1), AdamVar (X2 as ref NONE, G2)) = 
+	   if (X1 = X2) then () else X1 := SOME(I.EVar(X2, G2, I.Uni(I.Type), ref nil))
+	     (* Carsten:  do we need to check that G1 = G2??? *)
+      | matchW (AdamVar (X1 as ref NONE, G1), AdamVar (X2 as ref (SOME F), G2)) = 
+	   X1 := SOME(I.EVar(X2, G2, I.Uni(I.Type), ref nil))
+	     (* Carsten:  do we need to check that G1 = G2??? *)
+      | matchW (AdamVar (X1 as ref (SOME F), G1), AdamVar (X2 as ref (SOME F2), G2)) = 
+	   (Unify.unify(G1, (F, I.id), (F2, I.id))
+	    handle Unify.Unify s => raise Unify s)
+	    
+
+
+      | matchW (AdamVar (X as ref NONE,G), Const H) =  
+           (X := SOME(I.Root (H, Whnf.newSpineVar (G, (I.conDecType (headConDec H), I.id)))))
+
+      | matchW (AdamVar X, CVar (r as ref NONE)) = (r := SOME(AdamVar X))
+
+      | matchW (AdamVar (X as ref NONE, G), Arrow (V1, V2)) = 
+	   let
+	     val L = Type
+	     val allowed = true (* What is this? *)
+	     val V1' = apxToClass(G, V1, Type, allowed)
+	     val D = I.Dec(NONE, V1')
+	     val V2' = apxToClass (I.Decl (G, D), V2, L, allowed)
+	   in
+	     (X := SOME(I.Pi ((D, I.Maybe), V2')))
+	   end
+
+      | matchW (AdamVar (X as ref (SOME U), G), Const H) =
+	   let
+	     val U2 = I.Root (H, Whnf.newSpineVar (G, (I.conDecType (headConDec H), I.id)))
+	   in
+	     (Unify.unify(G, (U, I.id), (U2, I.id))
+	      handle Unify.Unify s => raise Unify s)
+	   end
+
+      | matchW (AdamVar (X as ref (SOME U), G), Arrow (V1, V2)) = 
+	   let
+	     val L = Type
+	     val allowed = true (* What is this? *)
+	     val V1' = apxToClass(G, V1, Type, allowed)
+	     val D = I.Dec(NONE, V1')
+	     val V2' = apxToClass (I.Decl (G, D), V2, L, allowed)
+	     val U2 = I.Pi ((D, I.Maybe), V2')
+	   in
+	     (Unify.unify(G, (U, I.id), (U2, I.id))
+	      handle Unify.Unify s => raise Unify s)
+	   end
+
+
+
+      | matchW (X, Y as AdamVar _) = matchW(Y, X)
+
+      | matchW (AdamVar _, _) = raise Domain (* Missing a case *)
+
+      | matchW (Uni L1, Uni L2) = matchUni (L1, L2)
       | matchW (V1 as Const H1, V2 as Const H2) =
         (case (H1, H2)
            of (I.Const(c1), I.Const(c2)) =>

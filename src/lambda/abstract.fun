@@ -272,8 +272,10 @@ struct
 	  (* Sat Dec  8 13:28:15 2001 -fp *)
 	  collectSub (I.Null, t, K)
 
-    (* collectSub (G, s, K) = K' 
+      (* ABP -- added NDec *)
+      | collectDec (G, (I.NDec, s), K) = K
 
+    (*
        Invariant: 
        If    G |- s : G1    
        then  K' = K, K''

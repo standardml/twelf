@@ -484,6 +484,8 @@ struct
   *)
   fun decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
     | decSub (BDec (n, (l, t)), s) = BDec (n, (l, comp (t, s)))
+    (* ABP -- added case for NDec *)
+    | decSub (NDec, _) = NDec
 
   (* dot1 (s) = s'
 

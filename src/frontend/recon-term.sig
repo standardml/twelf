@@ -35,6 +35,10 @@ sig
   (* region for "{dec}" "[dec]" etc. *)
   val dec : string option * term * Paths.region -> dec (* id : tm | _ : tm *)
   val dec0 : string option * Paths.region -> dec (* id | _  (type omitted) *)
+  val refdec : string option * term * Paths.region -> dec
+  val refdec0 : string option * Paths.region ->  dec
+   
+  val ndec : Paths.region -> dec
 
 end;  (* signature EXTSYN *)
 
