@@ -38,3 +38,4 @@ test "examples/prop-calc/test.cfg";
 
 (* Exercises, not part of the distribution *)
 test "exercises/units/test.cfg";
+test "exercises/opt-eval/test.cfg";
