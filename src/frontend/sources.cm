@@ -24,7 +24,9 @@ Library
   structure IntSyn
   signature GLOBAL 
   structure Global
+  structure PrintTwega
   structure PrintXML
+  structure Interactive
   signature FLIT
   structure Flit
 is

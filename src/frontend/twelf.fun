@@ -725,7 +725,7 @@ struct
 	  val La = Thm.installTotal (T, rrs)
 
 (* ******************************************* *)
-(*  Temporarily disabled -- cs Thu Oct 30 12:46:44 2003
+(*  Temporarily disabled -- cs Thu Oct 30 12:46:44 2003 *)
 	  fun checkFreeOut nil = ()
 	    | checkFreeOut (a :: La) =
 	      let 
@@ -755,8 +755,8 @@ struct
 	  val result1 = (TomegaCoverage.coverageCheckPrg (WorldSyn.lookup (hd La), IntSyn.Null, P); NONE) 
 	                handle TomegaCoverage.Error msg => SOME msg
 
-*)
-	val result1 = NONE
+
+(*	val result1 = NONE *)
 
  	  fun covererror (SOME msg1, msg2) = raise Cover.Error (Paths.wrap (r, "Functional and relational coverage checker report coverage error:\n[Functional] " 
 									    ^ msg1 ^ "\n[Relational] " ^ msg2))
