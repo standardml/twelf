@@ -1,3 +1,32 @@
+Preparation for Twelf 1.5
+
+Externally visible changes:
+
+- twelf-mode: twelf-batch-chatter
+
+  The variable twelf-batch-chatter causes Twelf to temporarily change
+  chatter levels while checking/appending a config or loading a file.
+  Reducing twelf-batch-chatter relative to twelf-chatter (to "2", for
+  example) speeds the loading of large configs while keeping Twelf
+  verbose enough during interactive use.
+
+- Config.append skips reloads of up-to-date files
+
+  Config.append now reloads only those files (1) that have been modified
+  since the last Config.load or Config.append, or (2) that depend on
+  any such modified files.  (This may cause unexpected behavior in the
+  presence of constructs that modify global state, such as pragmas
+  and clauses used in operational semantics.)
+
+- twelf-mode: C-c C-a runs twelf-save-append-config
+
+- twelf-mode: twelf-check-config-clears-server-buffer
+
+  If non-nil, twelf-check-config-clears-server-buffer causes
+  twelf-check-config to clear the server buffer before any new output
+  is written.  Prevents long-running *twelf-server* buffers from
+  consuming too much memory.
+
 Preparation for Twelf 1.4
 
 Externally visible changes:
