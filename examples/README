@@ -2,6 +2,7 @@ arith           Associativity and commutative of unary addition
 ccc             Cartesian-closed categories [incomplete]
 church-rosser   The Church-Rosser theorem for untyped lambda-calculus
 compile		Various compilers starting from Mini-ML
+cpsocc          CPS conversion and stack-based machines [in progress]
 cut-elim	Cut elimination for intuitionistic and classical logic
 fol             Simple theorems in first-order logic
 guide           Examples from Users' Guide
