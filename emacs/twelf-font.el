@@ -174,7 +174,8 @@ regular expressions."
 (defun twelf-font-fontify-decl  ()
   "Fontifies the current Twelf declaration."
   (interactive)
-  (let* ((region (twelf-current-decl))
+  (let* ((inhibit-read-only t)		; for FSF Emacs
+	 (region (twelf-current-decl))
 	 (start (nth 0 region))
 	 (end (nth 1 region)))
     (save-excursion
@@ -184,10 +185,11 @@ regular expressions."
 (defun twelf-font-fontify-buffer ()
   "Fontitifies the current buffer as Twelf code."
   (interactive)
-  (if (not twelf-config-mode)
-      (save-excursion
-	(font-lock-unfontify-region (point-min) (point-max)) ; t optional in XEmacs
-	(twelf-font-fontify-region (point-min) (point-max)))))
+  (let ((inhibit-read-only t))		; for FSF Emacs
+    (if (not twelf-config-mode)
+	(save-excursion
+	  (font-lock-unfontify-region (point-min) (point-max)) ; t optional in XEmacs
+	  (twelf-font-fontify-region (point-min) (point-max))))))
 
 (defun twelf-font-unfontify ()
   "Removes fontification from current buffer."
