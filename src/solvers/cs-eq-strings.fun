@@ -581,14 +581,14 @@ struct
             stringID := 
               installF (ConDec ("string", NONE, 0, Constraint (!myID, solveString),
                                 Uni (Type), Kind),
-                        NONE, SOME(MS.Mnil));
+                        NONE, [MS.Mnil]);
 
             concatID :=
               installF (ConDec ("++", NONE, 0,
                                 Foreign (!myID, makeFgnBinary catConcat),
                                 arrow (string (), arrow (string (), string ())),
                                 Type),
-                        SOME(FX.Infix (FX.maxPrec, FX.Right)), NONE);
+                        SOME(FX.Infix (FX.maxPrec, FX.Right)), nil);
             ()
           )
   in

@@ -1225,14 +1225,19 @@ struct
             gtID := 
               installF (ConDec (">", NONE, 0,
                                 Constraint (!myID, solveGt),
-                                arrow (number (), arrow (number (), Uni (Type))), Kind),
-                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
+                                arrow (number (),
+                                       arrow (number (), Uni (Type))), Kind),
+                        SOME(FX.Infix(FX.minPrec, FX.None)),
+                        [MS.Mapp(MS.Marg(MS.Star, NONE),
+                                MS.Mapp(MS.Marg(MS.Star, NONE), MS.Mnil))]);
 
             geqID := 
               installF (ConDec (">=", NONE, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
-                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
+                        SOME(FX.Infix(FX.minPrec, FX.None)),
+                        [MS.Mapp(MS.Marg(MS.Star, NONE),
+                                MS.Mapp(MS.Marg(MS.Star, NONE), MS.Mnil))]);
 
             gtAddID :=
               installF (ConDec ("+>", NONE, 2, Normal,
@@ -1246,7 +1251,7 @@ struct
                                                        plus (Root (BVar 3, Nil),
                                                              Root (BVar 2, Nil))))))),
                                 Type),
-                        NONE, NONE);
+                        NONE, nil);
 
             geqAddID :=
               installF (ConDec ("+>=", NONE, 2, Normal,
@@ -1260,7 +1265,7 @@ struct
                                                         plus (Root (BVar 3, Nil),
                                                               Root (BVar 2, Nil))))))),
                                 Type),
-                        NONE, NONE);
+                        NONE, nil);
 
             gtGeqID :=
               installF (ConDec (">>=", NONE, 2, Normal,
@@ -1271,13 +1276,13 @@ struct
                                                geq (Root (BVar 3, Nil),
                                                     Root (BVar 2, Nil))))),
                                 Type),
-                        NONE, NONE);
+                        NONE, nil);
 
             geq00ID :=
               installF (ConDec ("0>=0", NONE, 0, Normal,
                                 geq0 (constant (zero)),
                                 Type),
-                        NONE, NONE);
+                        NONE, nil);
             ()
           )
   in

@@ -653,7 +653,7 @@ struct
               installF (ConDec ("integer", NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
-                        NONE, SOME(MS.Mnil));
+                        NONE, [MS.Mnil]);
 
             unaryMinusID :=
               installF (ConDec ("~", NONE, 0,
@@ -661,7 +661,7 @@ struct
                                 arrow (number (), number ()),
                                 Type),
                         SOME(FX.Prefix (FX.maxPrec)),
-                        NONE);
+                        nil);
 
             plusID :=
               installF (ConDec ("+", NONE, 0,
@@ -669,7 +669,7 @@ struct
                                 arrow (number (), arrow (number (), number ())),
                                 Type),
                         SOME(FX.Infix (FX.dec (FX.dec FX.maxPrec), FX.Left)),
-                        NONE);
+                        nil);
 
             minusID :=
               installF (ConDec ("-", NONE, 0,
@@ -677,7 +677,7 @@ struct
                                   arrow (number (), arrow (number (), number ())),
                                   Type),
                         SOME(FX.Infix (FX.dec (FX.dec FX.maxPrec), FX.Left)),
-                        NONE);
+                        nil);
 
             timesID :=
               installF (ConDec ("*", NONE, 0,
@@ -685,7 +685,7 @@ struct
                                   arrow (number (), arrow (number (), number ())),
                                   Type),
                         SOME(FX.Infix (FX.dec FX.maxPrec, FX.Left)),
-                        NONE);
+                        nil);
             ()
           )
   in

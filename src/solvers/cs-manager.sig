@@ -9,7 +9,7 @@ sig
 
   type sigEntry = (* global signature entry *)
     (* constant declaration plus optional precedence and mode information *)
-    IntSyn.ConDec * Fixity.fixity option * ModeSyn.ModeSpine option
+    IntSyn.ConDec * Fixity.fixity option * ModeSyn.ModeSpine list
 
   type fgnConDec = (* foreign constant declaration *)
     {
