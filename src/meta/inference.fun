@@ -81,7 +81,8 @@ struct
 		    else ()
 	  val (Xs, (V', s')) = createEVars (G, (V, I.id))
 	in
-	  (case  UniqueSearch.searchEx (2, Xs, fn nil => [(Whnf.normalize (V', s'))])
+	  (case  UniqueSearch.searchEx (2, Xs, fn nil => [(Whnf.normalize (V', s'))]
+					        | _ => raise UniqueSearch.Error "Too many solutions")
 	     of [VF''] => SOME VF''
 	          
 	      | [] => NONE) handle UniqueSearch.Error _ => NONE
@@ -150,6 +151,7 @@ struct
 	let 
 	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (G) else ()
 	  val ((Gnew, Bnew), sc) = expand' ((G, B), (G, B), 0)
+	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (Gnew) else ()
 	  val ((G', B'), w') = sc ((Gnew, Bnew), I.id)
 	  val _ = TypeCheck.typeCheckCtx G'
 

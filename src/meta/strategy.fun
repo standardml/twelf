@@ -38,6 +38,11 @@ struct
 	else if !Global.chatter> 4 then print ("R")
 	     else ()
 
+    fun printInference () = 
+        if !Global.chatter > 5 then print ("[Inference ...")
+	else if !Global.chatter> 4 then print ("I")
+	     else ()
+
     fun printSplitting splitOp = 
         (*if !Global.chatter > 5 then print ("[" ^ MTPSplitting.menu splitOp) *)
         if !Global.chatter > 5 then print ("[Splitting ...")
@@ -102,7 +107,9 @@ struct
 	      val _ = printSplitting splitOp
 	      val SL = (Timers.time Timers.splitting MTPSplitting.apply) splitOp
 	      val _ = printCloseBracket ()
+	      val _ = printRecursion ()
 	      val SL' = map (fn S => (Timers.time Timers.recursion MTPRecursion.apply) (MTPRecursion.expand S)) SL
+	      val _ = printInference ()
 	      val SL'' = map (fn S => (Timers.time Timers.inference Inference.apply) (Inference.expand S)) SL'
 	    in
 	      fill (SL'' @ givenStates, os)
