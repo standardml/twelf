@@ -13,6 +13,8 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 		        sharing MTPAbstract.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 		        sharing MTPrint.StateSyn = StateSyn'
+		      structure Conv :CONV
+			sharing Conv.IntSyn = IntSyn
 		      structure Whnf : WHNF
   		        sharing Whnf.IntSyn = IntSyn
 		      structure TypeCheck : TYPECHECK
@@ -53,6 +55,33 @@ struct
     structure I = IntSyn
     structure F = FunSyn
     structure S = StateSyn
+
+
+
+    (* conv ((G, s), (G', s')) = B
+ 
+       Invariant:
+       B iff G [s]  == G' [s']
+       Might migrate in to conv module  --cs
+    *)
+    fun conv (Gs, Gs') =
+      let
+	exception Conv
+	fun conv ((I.Null, s), (I.Null, s')) = (s, s') 
+	  | conv ((I.Decl (G, I.Dec (_, V)), s),
+		  (I.Decl (G', I.Dec (_, V')), s')) =
+            let 
+	      val (s1, s1') = conv ((G, s), (G', s'))
+	      val ps as (s2, s2') = (I.dot1 s1, I.dot1 s1')
+	    in 
+	      if Conv.conv ((V, s1), (V', s1')) then ps
+	      else raise Conv
+	    end
+	  | conv _ = raise Conv
+      in
+	(conv (Gs, Gs'); true) handle Conv => false
+      end
+
 
 
     (* createEVarSpineW (G, (V, s)) = ((V', s') , S')
@@ -249,6 +278,17 @@ struct
 			    fn U => abstract (I.Lam (D', U)), cases)
   	  end
 
+
+
+    fun abstractErrorLeft ((G, B), s) = 
+      (TextIO.print "Cannot split left of parameters";
+       raise MTPAbstract.Error "Cannot split left of parameters")
+
+    fun abstractErrorRight ((G, B), s) = 
+      (TextIO.print "Cannot split right of parameters";
+       raise MTPAbstract.Error "Cannot split right of parameters")
+
+
     (* split (x:D, s, B, abstract) = ops'
 
        Invariant :
@@ -269,7 +309,7 @@ struct
 		val (_, _, s) = sc (I.Null, I.Null)
 	      in
 		lowerSplitDest (I.Null, 0, (V, s),  
-				fn U' => abstract (MTPAbstract.abstractSub (I.Null, I.Dot (I.Exp (U'), s), B)),
+				fn U' => abstract (MTPAbstract.abstractSub (I.id, I.Null, I.Dot (I.Exp (U'), s), B)),
 				constAndParamCases ops)
 	      end
 	    else
@@ -279,8 +319,11 @@ struct
 		val G2t = ctxSub (G2, t)
 		val length = List.length G2
 		val B2 = createTags (length , n)
-		val (G'', _, s) = sc (F.listToCtx G2t, B2)
+		val (G'', _, s) = sc (F.listToCtx G2t, B2)   
+		val abstact = if conv ((G'', I.id), (F.listToCtx G2t, I.id)) then abstract
+			      else abstractErrorRight (* G'' = G2t, otherwise incomplete *)
 		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)),
+		(* fn U' => abstract (MTPAbstract.abstractSub (t, G'', I.Dot (I.Exp (U'), s), B)), *)
 					fn U' => U',
 					metaCases (length, ops))
 	      in
@@ -331,9 +374,6 @@ struct
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
 		     I.Decl (B, T)), I.dot1 s)
 
-    fun abstractError ((G, B), s) = 
-      (TextIO.print "Cannot split left of parameters";
-       raise MTPAbstract.Error "Cannot split left of parameters")
 
     fun makeAddressInit S k = (S, k)
     fun makeAddressCont makeAddress k = makeAddress (k+1)
@@ -423,7 +463,7 @@ struct
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
-		     abstractError,
+		     abstractErrorLeft,
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 

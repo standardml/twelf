@@ -385,7 +385,7 @@ struct
 
        Invariant: 
     *)
-    fun abstractSubAll (G0, s, B) =
+    fun abstractSubAll (t, G0, s, B) =
         let
 	  fun abstractSubAll' (K, s' as (I.Shift _)) = s'
 	    | abstractSubAll' (K, I.Dot (F as I.Idx _, s')) =

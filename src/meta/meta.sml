@@ -119,6 +119,7 @@ structure MTPSplitting =
 		structure StateSyn' = StateSyn
 		structure MTPrint = MTPrint
 		structure MTPAbstract = MTPAbstract
+		structure Conv = Conv
 		structure Whnf = Whnf
 		structure TypeCheck = TypeCheck
 		structure Index = Index
