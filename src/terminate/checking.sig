@@ -9,8 +9,9 @@ sig
   (* If Q marks all parameters in a context G we write   G : Q  *)
 
   datatype Quantifier =        (* Quantifier to mark parameters *)
-    Universal                  (* Q ::= Uni                     *)
-  | Existential                (*     | Ex                      *)
+    All                  (* Q ::= A;;                     *)
+  | Exist                (*     | Ex                      *)
+  | Exist'               (*     | Ex'                     *)
 
 
   datatype 'a Predicate = 
@@ -20,10 +21,11 @@ sig
   | Pi of IntSyn.Dec * 'a Predicate        
     
 
-  type order = ((IntSyn.Exp * IntSyn.Sub) * (IntSyn.Exp * IntSyn.Sub)) Order.Order 
+  type order = (IntSyn.eclo * IntSyn.eclo) Order.Order 
 
-  (* reduction predicate context *)
-  type rctx = order Predicate IntSyn.Ctx
+  (* reduction predicate context (unordered) *)
+  type rctx = order Predicate list
+
 
   (* mixed-prefix context *)
   type qctx = Quantifier IntSyn.Ctx

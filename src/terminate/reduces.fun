@@ -87,17 +87,16 @@ struct
           F.Hbox [F.String "Pi ", 
 		  fmtPredicate (I.Decl(G, D), P)]  
 
-    fun ctxToString' (G, I.Null) = ""
-      | ctxToString' (G, I.Decl(I.Null, P)) = 
+    fun rlistToString' (G, nil) = ""
+      | rlistToString' (G, [P]) = 
 	F.makestring_fmt(fmtPredicate (G, P) )
-      | ctxToString' (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ ctxToString' (G, RG)
+      | rlistToString' (G, (P::Rl)) = 
+	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ rlistToString' (G, Rl)
     
-    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG) 
-(*    fun ctxToString (G, RG) = ctxToString' (G, RG)  *)
+    fun rlistToString (G, Rl) = rlistToString' (Names.ctxName G, Rl) 
 
     fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (Names.ctxName G, P)) 
-(*    fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (G, P))  *)
+
 
    (*--------------------------------------------------------------------*)
    (* select (c, (S, s)) = P
@@ -237,7 +236,19 @@ struct
     (*--------------------------------------------------------------------*)
 
     (* Termination Checker *)
-
+    (* checkGoal (G0, Q0, Rl, (V, s), (V', s'), occ) = ()
+     
+       Invariant: 
+       If   G0 : Q0
+       and  G0 |- s : G1     and   G1 |- V : L     (V, s) in whnf
+       and  V[s], V'[s'] does not contain Skolem constants
+       and  G0 |- s' : G2    and   G2 |- V' : L'   (V', s') in whnf
+       and  V' = a' @ S'
+       and  G |- L = L'
+       and  V[s] < V'[s']  (< termination ordering)
+	 then ()
+       else Error is raised.
+    *)
 
     fun checkGoal (G0, Q0, Rl, Vs, Vs', occ) = 
           checkGoalW (G0, Q0, Rl, Whnf.whnf Vs, Vs', occ)
@@ -245,8 +256,8 @@ struct
       (checkClause ((G0, Q0, Rl), I.Null, I.Null, (V1, s), occ);
        checkGoal (G0, Q0, Rl, (V2, I.comp(I.invShift, s)), Vs', occ))
       | checkGoalW (G0, Q0, Rl, (I.Pi ((D, I.Maybe), V), s), (V', s'), occ) = 
-	  checkGoal (I.Decl(G0, N.decLUName (G0, I.decSub (D, s))),
-		     I.Decl(Q0, C.All), 
+	  checkGoal (I.Decl (G0, N.decLUName (G0, I.decSub (D, s))),
+		     I.Decl (Q0, C.All), 
 		     C.shiftRCtx Rl (fn s => I.comp(s, I.shift)), 
 		     (V, I.dot1 s), (V', I.comp(s', I.shift)), occ)
       | checkGoalW (G0, Q0, Rl, Vs as (I.Root (I.Const a, S), s), 
@@ -265,25 +276,25 @@ struct
 	     of R.Empty => ()
 	      | R.LE _ => (if (!Global.chatter) > 5 
 			     then (print ("\n check termination order: ");
-			          print (ctxToString (G0, Rl));
+			          print (rlistToString (G0, Rl));
 				  print( " ---> " ^ orderToString (G0, C.Leq(P, P')) ^ "\n"))
 			   else ();
 			   if C.deduce (G0, Q0, Rl, C.Leq(P, P')) 
 			     then ()
 			   else raise Error' (occ, "Termination violation:\n" ^ 
-					      ctxToString (G0, Rl) ^ 
+					      rlistToString (G0, Rl) ^ 
 					      " ---> " ^ 
 					      orderToString (G0, C.Leq(P, P'))))
 	     | R.LT _ =>  (if (!Global.chatter) > 5 
 			    then  (print "\n check termination order ";
-				   print (ctxToString (G0, Rl) ^ " ---> ");
+				   print (rlistToString (G0, Rl) ^ " ---> ");
 				   print(orderToString (G0, C.Less(P,P')) ^ 
 					 "\n"))
 			   else ();
 			   if C.deduce (G0, Q0, Rl, C.Less(P, P')) 
 			     then ()
 			   else raise Error' (occ, "Termination violation:\n" ^ 
-					       ctxToString (G0, Rl) ^ " ---> " ^
+					       rlistToString (G0, Rl) ^ " ---> " ^
 					       orderToString (G0, C.Less(P, P')))))
 	end 
 
@@ -295,7 +306,8 @@ struct
        and  Rl is a list of reduction propositions
        and  G0 |- Rl
        and  G0 |- V[s]
-       and  n = |G0| - |G|
+       and  G0 = G0', G' where G' <= G
+       and  n = |G'| - |G|
        and  G0 |- G[^n]
        and  G |- Q
      and 
@@ -309,7 +321,7 @@ struct
 	    val RO = getROrder (G0, Q0, (V', I.Shift (n+1)), occ)
 	    val Rl' = case RO 
 	                of NONE => Rl
-			  | SOME(O) => I.Decl(Rl, O)
+			  | SOME(O) => O :: Rl
 	  in 
 	    checkSubgoals (G0, Q0, Rl', Vs, n+1, (G, Q), occ)
 	  end 
@@ -358,12 +370,12 @@ struct
 
 
     fun checkClause' (Vs, occ) = 
-      checkClause ((I.Null, I.Null, I.Null), I.Null, I.Null, Vs, occ)
+      checkClause ((I.Null, I.Null, nil), I.Null, I.Null, Vs, occ)
 
     (*-------------------------------------------------------------------*)
     (* Reduction Checker *) 
 
-    (* checkRGoal (G, Q, RG, (V1, s1), occ) = RG''
+    (* checkRGoal (G, Q, Rl, (V1, s1), occ) = Rl''
        
        Invariant
        If   G : Q
@@ -371,34 +383,34 @@ struct
        and  V1[s1], V2[s2] does not contain Skolem constants
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
-       and RG is a context of reduction predicates 
-       and  G |- RG 
-       and RG implies that V1[s1] satisfies its associated reduction order
+       and Rl is a context of reduction predicates 
+       and  G |- Rl 
+       and Rl implies that V1[s1] satisfies its associated reduction order
 
      *)
 
-     fun checkRGoal (G, Q, RG, Vs, occ) = 
-           checkRGoalW (G, Q, RG, Whnf.whnf Vs, occ)
+     fun checkRGoal (G, Q, Rl, Vs, occ) = 
+           checkRGoalW (G, Q, Rl, Whnf.whnf Vs, occ)
 
-     and checkRGoalW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = () (* trivial *)
+     and checkRGoalW (G, Q, Rl, Vs as (I.Root (I.Const a, S), s), occ) = () (* trivial *)
             
-       | checkRGoalW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) = 
+       | checkRGoalW (G, Q, Rl, (I.Pi ((D, I.Maybe), V), s), occ) = 
            checkRGoal (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
 		      I.Decl (Q, C.All), 
-		      C.shiftRCtx RG (fn s => I.comp(s, I.shift)),
+		      C.shiftRCtx Rl (fn s => I.comp(s, I.shift)),
 		      (V, I.dot1 s), P.body occ)
 
-       | checkRGoalW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
- 	   (checkRClause (G, Q, RG, (V1, s), P.label occ);
-	    checkRGoal (G, Q, RG, (V2, I.comp(I.invShift, s)), P.body occ))
+       | checkRGoalW (G, Q, Rl, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
+ 	   (checkRClause (G, Q, Rl, (V1, s), P.label occ);
+	    checkRGoal (G, Q, Rl, (V2, I.comp(I.invShift, s)), P.body occ))
 
 
-       | checkRGoalW (G, Q, RG, (I.Root (I.Def a, S), s), occ) =
+       | checkRGoalW (G, Q, Rl, (I.Root (I.Def a, S), s), occ) =
 	   raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
 			 ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
 
-    (* checkRImp (G, Q, RG, (V1, s1), (V2, s2), occ) = ()
+    (* checkRImp (G, Q, Rl, (V1, s1), (V2, s2), occ) = ()
        
        Invariant
        If   G : Q
@@ -406,77 +418,77 @@ struct
        and  V1[s1], V2[s2] does not contain Skolem constants
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
-       and RG is a context for derived reduction order assumptions 
-       and G |- RG
+       and Rl is a context for derived reduction order assumptions 
+       and G |- Rl
 
-       then RG implies that  V2[s2] satisfies its associated reduction order
+       then Rl implies that  V2[s2] satisfies its associated reduction order
             with respect to V1[s1]
     *)
 
-    and checkRImp (G, Q, RG, Vs, Vs', occ) = 
-         checkRImpW (G, Q, RG, Whnf.whnf Vs, Vs', occ)
+    and checkRImp (G, Q, Rl, Vs, Vs', occ) = 
+         checkRImpW (G, Q, Rl, Whnf.whnf Vs, Vs', occ)
 
-    and checkRImpW (G, Q, RG, (I.Pi ((D', I.Maybe), V'), s'), (V, s), occ) =
+    and checkRImpW (G, Q, Rl, (I.Pi ((D', I.Maybe), V'), s'), (V, s), occ) =
           checkRImp (I.Decl (G, N.decEName (G, I.decSub (D', s'))),
 		     I.Decl (Q, C.Exist), 
-		     C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+		     C.shiftRCtx Rl (fn s => I.comp(s, I.shift)), 
 		     (V', I.dot1 s'), (V, I.comp (s, I.shift)), occ)
-      | checkRImpW (G, Q, RG, (I.Pi ((D' as I.Dec (_, V1), I.No), V2), s'), (V, s), occ) =
+      | checkRImpW (G, Q, Rl, (I.Pi ((D' as I.Dec (_, V1), I.No), V2), s'), (V, s), occ) =
 	  let
-	    val RG' = case getROrder (G, Q, (V1, s'), occ)
-	                 of NONE => RG
-		       | SOME(O) => I.Decl(RG, O)
+	    val Rl' = case getROrder (G, Q, (V1, s'), occ)
+	                 of NONE => Rl
+		       | SOME(O) => O :: Rl
 	  in 
-	    checkRImp (G, Q, RG', 
+	    checkRImp (G, Q, Rl', 
 		    (V2, I.comp(I.invShift, s')), (V, s), occ)
 	  end
 
-      | checkRImpW (G, Q, RG, Vs' as (I.Root (I.Const a, S), s),  Vs, occ) = 
-	  checkRGoal (G, Q, RG, Vs, occ)
-      | checkRImpW (G, Q, RG, Vs' as (I.Root (I.Def a, S), s), Vs, occ) =
+      | checkRImpW (G, Q, Rl, Vs' as (I.Root (I.Const a, S), s),  Vs, occ) = 
+	  checkRGoal (G, Q, Rl, Vs, occ)
+      | checkRImpW (G, Q, Rl, Vs' as (I.Root (I.Def a, S), s), Vs, occ) =
 	  raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
 			^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
 
-    (* checkRClause (G, Q, RG, (V, s)) = ()
+    (* checkRClause (G, Q, Rl, (V, s)) = ()
 
        Invariant:
        If G: Q  
        and  G |- s : G1    and   G1 |- V : L
        and  V[s] does not contain any Skolem constants
-       and  RG is a context of reduction predicates
-       and  G |- RG
-       then RG implies that V[s] satifies the reduction order
+       and  Rl is a context of reduction predicates
+       and  G |- Rl
+       then Rl implies that V[s] satifies the reduction order
     *)
 
-    and checkRClause (G, Q, RG, Vs, occ) = checkRClauseW (G, Q, RG, Whnf.whnf Vs, occ)
+    and checkRClause (G, Q, Rl, Vs, occ) = checkRClauseW (G, Q, Rl, Whnf.whnf Vs, occ)
 
-    and checkRClauseW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) = 
+    and checkRClauseW (G, Q, Rl, (I.Pi ((D, I.Maybe), V), s), occ) = 
 	  checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))), 
 			I.Decl (Q, C.Exist),
-			C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+			C.shiftRCtx Rl (fn s => I.comp(s, I.shift)), 
 			(V, I.dot1 s), P.body occ)
 
-      | checkRClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
+      | checkRClauseW (G, Q, Rl, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
 	 let
 	   val G' = I.Decl (G, I.decSub (D, s))  (* N.decEName (G, I.decSub (D, s)) *)
 	   val Q' = I.Decl (Q, C.Exist) (* will not be used *)
-	   val RG' = C.shiftRCtx RG (fn s => I.comp(s, I.shift))
-	   val RG'' = case getROrder (G', Q', (V1, I.comp (s, I.shift)), occ)
-	                of NONE => RG'
-		         | SOME(O) => I.Decl(RG', O)
+	   val Rl' = C.shiftRCtx Rl (fn s => I.comp(s, I.shift))
+	   val Rl'' = case getROrder (G', Q', (V1, I.comp (s, I.shift)), occ)
+	                of NONE => Rl'
+		         | SOME(O) => O :: Rl'
 	 in 
- 	  checkRClause (G', Q', RG'', (V2, I.dot1 s), P.body occ); 
+ 	  checkRClause (G', Q', Rl'', (V2, I.dot1 s), P.body occ); 
 	  print "\n checking Clause done :";
-	  print (ctxToString(G', RG'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
+	  print (rlistToString(G', Rl'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
 	  print "\n check Imp :";
-	  print (ctxToString(G', RG'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
+	  print (rlistToString(G', Rl'')); print (" --> " ); print (Print.expToString(G', I.EClo(V2, I.dot1 s)));
 
-	  checkRImp (G', Q', RG'', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ) 
+	  checkRImp (G', Q', Rl'', (V2, I.dot1 s), (V1, I.comp(s, I.shift)), P.label occ) 
 
 	end
 
-      | checkRClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) =
+      | checkRClauseW (G, Q, Rl, Vs as (I.Root (I.Const a, S), s), occ) =
 	let 
 	  val RO = case selectROrder (a, (S, s))
 	             of NONE => raise Error' (occ, "No reduction order assigned for " ^ 
@@ -484,17 +496,17 @@ struct
 		      | SOME(O) => O
 	  val _ = if (!Global.chatter) > 5
 		    then print ("\n check reduction predicate\n " ^
-				ctxToString (G, RG) ^ " ---> " ^  
+				rlistToString (G, Rl) ^ " ---> " ^  
 				orderToString (G, RO) ^ " \n")
 		  else ()
 	in
-	  if C.deduce(G, Q, RG, RO)
+	  if C.deduce(G, Q, Rl, RO)
 	    then ()
 	  else raise Error' (occ, "Reduction violation:\n" ^ 
-			     ctxToString (G, RG) ^ " ---> " ^  (* rename ctx ??? *)
+			     rlistToString (G, Rl) ^ " ---> " ^  (* rename ctx ??? *)
 			     orderToString (G, RO))
 	end
-      | checkRClauseW (G, Q, RG, VS as (I.Root (I.Def a, S), s), occ) =
+      | checkRClauseW (G, Q, Rl, VS as (I.Root (I.Def a, S), s), occ) =
 	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
 		      ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
 
@@ -516,7 +528,7 @@ struct
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
-		 (( checkRClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top))
+		 (( checkRClause (I.Null, I.Null, nil, (I.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
 		 if (!Global.chatter) > 4

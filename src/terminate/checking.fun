@@ -48,12 +48,13 @@ struct
     | Pi of IntSyn.Dec * 'a Predicate        
 
    (* Abbreviation *)
-  type order = ((IntSyn.Exp * IntSyn.Sub) * (IntSyn.Exp * IntSyn.Sub)) Order.Order 
-  (* reduction order context *)
-  type rctx = order Predicate IntSyn.Ctx
+    type order = (IntSyn.eclo * IntSyn.eclo) Order.Order  
 
-  (* mixed prefix order contex *)
-  type qctx = Quantifier IntSyn.Ctx
+    (* reduction order assumptions (unordered) *)
+    type rctx = order Predicate list
+
+    (* mixed prefix order contex *)
+    type qctx = Quantifier IntSyn.Ctx
 
   local
     structure I = IntSyn
@@ -111,24 +112,18 @@ struct
 	  Print.expToString(G, I.EClo(Us'))
 
 
-    fun aCtxToString (G, I.Null) = " "
-      | aCtxToString (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	  aCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
+    fun atomicRCtxToString (G, nil) = " "
+      | atomicRCtxToString (G, (Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
+	  atomicRCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
 	  ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | aCtxToString (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	   aCtxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
+      | atomicRCtxToString (G, (Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
+	   atomicRCtxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
 	   ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | aCtxToString (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	   aCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
+      | atomicRCtxToString (G, (Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: D')) = 
+	   atomicRCtxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
 	   ^ Print.expToString(G, I.EClo(Us')) ^ " "
 
    (*--------------------------------------------------------------------*)
-
-   fun append (I.Null, G) = G
-     | append (G, I.Null) = G
-     | append (G, I.Decl(G', P)) = 
-         append (I.Decl(G, P), G')
-
    (* shifting substitutions *)
 
    (* shiftO O f = O'
@@ -148,10 +143,7 @@ struct
       | shiftP (Eq(O1, O2)) f = Eq(shiftO O1 f, shiftO O2 f)
       | shiftP (Pi(D as I.Dec(X,V), P)) f = Pi(D, shiftP P f) 
 
-    fun shiftRCtx I.Null f = I.Null
-      | shiftRCtx (I.Decl(RG, P)) f =
-	  I.Decl(shiftRCtx RG f, shiftP P f)
-
+    fun shiftRCtx Rl f = map (fn p => shiftP p f) Rl
 
     fun shiftArg (Less (((U1, s1), (V1, s1')), ((U2, s2), (V2, s2')))) f = 
           Less (((U1, (f s1)), (V1, (f s1'))), (((U2, (f s2)), (V2, (f s2')))))
@@ -160,10 +152,8 @@ struct
       | shiftArg (Eq (((U1, s1), (V1, s1')), ((U2, s2), (V2, s2')))) f = 
           Eq (((U1, (f s1)), (V1, (f s1'))), (((U2, (f s2)), (V2, (f s2')))))
 
-    fun shiftACtx I.Null f = I.Null
-      | shiftACtx (I.Decl(D, P)) f =
-	  I.Decl(shiftACtx D f, shiftArg P f)
-	
+    fun shiftACtx Rl f = map (fn p => shiftArg p f) Rl
+
    (*--------------------------------------------------------------------*)
    (* Printing *)
 
@@ -190,17 +180,17 @@ struct
       | fmtPredicate' (G, Leq(O, O'))  = fmtComparison (G, O, "<=", O')
       | fmtPredicate' (G, Eq(O, O'))  = fmtComparison (G, O, "=", O')
       | fmtPredicate' (G, Pi(D, P))  =  (* F.String "Pi predicate"  *)
-          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), P)]   
+          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl (G, D), P)]   
 
     fun fmtPredicate (G, P) = fmtPredicate' (Names.ctxName G, P) 
 
-    fun fmtRGCtx' (G, I.Null) = ""
-      | fmtRGCtx' (G, I.Decl(I.Null, P)) = 
+    fun fmtRGCtx' (G, nil) = ""
+      | fmtRGCtx' (G, [P]) = 
 	F.makestring_fmt(fmtPredicate' (G, P) )
-      | fmtRGCtx' (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate' (G, P)) ^ " ," ^ fmtRGCtx' (G, RG)
+      | fmtRGCtx' (G, (P :: Rl)) = 
+	F.makestring_fmt(fmtPredicate' (G, P)) ^ " ," ^ fmtRGCtx' (G, Rl)
 
-    fun fmtRGCtx (G, RG) = fmtRGCtx' (Names.ctxName G, RG) 
+    fun fmtRGCtx (G, Rl) = fmtRGCtx' (Names.ctxName G, Rl) 
 
     (* printing atomic orders *)
     fun atomicPredToString (G, Less((Us, _), (Us', _))) = 
@@ -210,15 +200,15 @@ struct
       | atomicPredToString (G, Eq((Us, _), (Us', _))) = 
           Print.expToString(G, I.EClo(Us)) ^ " = " ^ Print.expToString(G, I.EClo(Us'))
 
-    fun ctxToString (G, I.Null) = " "
-      | ctxToString (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
+    fun ctxToString (G, []) = " "
+      | ctxToString (G, (Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
+	ctxToString (G, Rl) ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | ctxToString (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
+      | ctxToString (G, (Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
+	ctxToString (G, Rl) ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | ctxToString (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
+      | ctxToString (G, (Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')) :: Rl)) = 
+	ctxToString (G, Rl) ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
 	
    (*--------------------------------------------------------------------*)
@@ -337,10 +327,10 @@ struct
 
 
     *)
-    fun lookupEq (GQ, I.Null, UsVs, UsVs', sc) = false
-      | lookupEq (GQ, I.Decl(D, Less(_, _)), UsVs, UsVs', sc) = 
+    fun lookupEq (GQ, nil, UsVs, UsVs', sc) = false
+      | lookupEq (GQ, (Less(_, _) :: D), UsVs, UsVs', sc) = 
           lookupEq (GQ, D, UsVs, UsVs', sc)
-      | lookupEq (GQ as (G,Q), I.Decl(D, Eq(UsVs1, UsVs1')), UsVs, UsVs', sc) = 
+      | lookupEq (GQ as (G,Q), (Eq(UsVs1, UsVs1') :: D), UsVs, UsVs', sc) = 
 	  CSManager.trail (fn () =>
 			   eq (G, UsVs1, UsVs) andalso eq (G, UsVs1', UsVs') andalso sc ())
 	  orelse 
@@ -369,10 +359,10 @@ struct
              all restrictions in sc are satisfied
     *)
 
-    fun lookupLt (GQ, I.Null, UsVs, UsVs', sc) = false
-      | lookupLt (GQ, I.Decl(D, Eq(_, _)), UsVs, UsVs', sc) = 
+    fun lookupLt (GQ, nil, UsVs, UsVs', sc) = false
+      | lookupLt (GQ, (Eq(_, _) :: D), UsVs, UsVs', sc) = 
           lookupLt (GQ, D, UsVs, UsVs', sc)
-      | lookupLt (GQ as (G,Q), I.Decl(D, Less(UsVs1, UsVs1')), UsVs, UsVs', sc) = 
+      | lookupLt (GQ as (G,Q), (Less(UsVs1, UsVs1') :: D), UsVs, UsVs', sc) = 
 	  CSManager.trail (fn () =>
 			   eq (G, UsVs1, UsVs) andalso eq (G, UsVs1', UsVs') andalso sc ())
 	  orelse 
@@ -387,7 +377,7 @@ struct
         or  D, D' ---> UsVs = UsVs' by transitivity 
 
      *)
-    fun eqAtomic (GQ as (G, Q), I.Null, D', UsVs, UsVs', sc) = 
+    fun eqAtomic (GQ as (G, Q), nil, D', UsVs, UsVs', sc) = 
          CSManager.trail (fn () => eq (G, UsVs, UsVs') andalso sc ())
 	 orelse 
          lookupEq (GQ, D', UsVs, UsVs', sc)
@@ -417,18 +407,18 @@ struct
        if D, UsVs1 = UsVs'; D' ---> UsVs = UsVs'
          then D; UsVs1 = UsVs' D' ---> UsVs = UsVs'
    *)
-   and transEq (GQ as (G,Q), I.Null, D, UsVs, UsVs', sc) = false
-     | transEq (GQ as (G,Q), I.Decl(D, Eq(UsVs1, UsVs1')), D', UsVs, UsVs', sc) =         
+   and transEq (GQ as (G,Q), nil, D, UsVs, UsVs', sc) = false
+     | transEq (GQ as (G,Q), (Eq(UsVs1, UsVs1') :: D), D', UsVs, UsVs', sc) =         
          CSManager.trail (fn () =>
 			  eq (G, UsVs1', UsVs') andalso sc ()
-			  andalso eqAtomicR (GQ, append(D, D'), UsVs, UsVs1, sc, atomic))
+			  andalso eqAtomicR (GQ, (D @ D'), UsVs, UsVs1, sc, atomic))
 	 orelse 
 	 CSManager.trail (fn () =>
 			  eq (G, UsVs1, UsVs') andalso sc ()
-			  andalso eqAtomicR (GQ, append(D, D'), UsVs, UsVs1', sc, atomic))
+			  andalso eqAtomicR (GQ, (D @ D'), UsVs, UsVs1', sc, atomic))
 	 orelse 
-	 transEq (GQ, D, I.Decl(D', Eq(UsVs1, UsVs1')), UsVs, UsVs', sc)
-     | transEq (GQ as (G,Q), I.Decl(D, Less(UsVs1, UsVs1')), D', UsVs, UsVs', sc) =         
+	 transEq (GQ, D, (Eq(UsVs1, UsVs1') :: D'), UsVs, UsVs', sc)
+     | transEq (GQ as (G,Q), (Less(UsVs1, UsVs1') :: D), D', UsVs, UsVs', sc) =         
 	 transEq (GQ, D, D', UsVs, UsVs', sc)
 
   (* ltAtomic (GQ, D, D', UsVs, UsVs', sc) = B
@@ -448,7 +438,7 @@ struct
    *)
 
 
-    and ltAtomic (GQ as (G, Q), I.Null, D', UsVs, UsVs', sc) = 
+    and ltAtomic (GQ as (G, Q), nil, D', UsVs, UsVs', sc) = 
          lookupLt (GQ, D', UsVs, UsVs', sc) 
 
       | ltAtomic (GQ as (G, Q), D, D', UsVs, UsVs', sc) = 
@@ -476,28 +466,28 @@ struct
          then D; UsVs1 = UsVs' D' ---> UsVs = UsVs'
    *)
 
-   and transLt (GQ as (G,Q), I.Null, D, UsVs, UsVs', sc) = false
-     | transLt (GQ as (G,Q), I.Decl(D, Eq(UsVs1, UsVs1')), D', UsVs, UsVs', sc) =         
+   and transLt (GQ as (G,Q), nil, D, UsVs, UsVs', sc) = false
+     | transLt (GQ as (G,Q), (Eq(UsVs1, UsVs1') :: D), D', UsVs, UsVs', sc) =         
          CSManager.trail (fn () =>
 			  eq (G, UsVs1', UsVs') andalso sc ()
-			  andalso ltAtomicR (GQ, append(D, D'), UsVs, UsVs1, sc, atomic))
+			  andalso ltAtomicR (GQ, (D @ D'), UsVs, UsVs1, sc, atomic))
 	 orelse 
 	 CSManager.trail (fn () =>
 			  eq (G, UsVs1, UsVs') andalso sc ()
-			  andalso ltAtomicR (GQ, append(D, D'), UsVs, UsVs1', sc, atomic))
+			  andalso ltAtomicR (GQ, (D @ D'), UsVs, UsVs1', sc, atomic))
 	 orelse 
-	 transLt (GQ, D, I.Decl(D', Eq(UsVs1, UsVs1')), UsVs, UsVs', sc)
-     | transLt (GQ as (G,Q), I.Decl(D, Less(UsVs1, UsVs1')), D', UsVs, UsVs', sc) =         
+	 transLt (GQ, D, (Eq(UsVs1, UsVs1') :: D'), UsVs, UsVs', sc)
+     | transLt (GQ as (G,Q), (Less(UsVs1, UsVs1') :: D), D', UsVs, UsVs', sc) =         
          CSManager.trail (fn () =>
 			  eq (G, UsVs1', UsVs') andalso sc ()
-			   andalso eqAtomicR (GQ, append(D, D'), UsVs, UsVs1, sc, atomic))
+			   andalso eqAtomicR (GQ, (D @ D'), UsVs, UsVs1, sc, atomic))
          orelse 
 	 CSManager.trail (fn () =>
 			  eq (G, UsVs1', UsVs') andalso sc () 
 			  andalso 
-			  ltAtomicR (GQ, append(D, D'), UsVs, UsVs1, sc, atomic))
+			  ltAtomicR (GQ, (D @ D'), UsVs, UsVs1, sc, atomic))
 	 orelse 
-	 transLt (GQ, D, I.Decl(D', Less(UsVs1, UsVs1')), UsVs, UsVs', sc)
+	 transLt (GQ, D, (Less(UsVs1, UsVs1') :: D'), UsVs, UsVs', sc)
  
 
     (* atomic (GQ, D, P) = B 
@@ -550,8 +540,8 @@ struct
 
     D' accumulates all orders
     *)
-    and leftInstantiate (GQ as (G, Q), I.Null, D', P, sc) =  
-          if atomic(GQ, D', I.Null, P, sc) 
+    and leftInstantiate (GQ as (G, Q), nil, D', P, sc) =  
+          if atomic(GQ, D', nil, P, sc) 
 	    then  
 	      (if (!Global.chatter) > 4
 		 then print ("\n Proved " ^ ctxToString (G, D') ^ 
@@ -562,11 +552,11 @@ struct
 	    (* should never happen by invariant *)
 	     false
 
-      | leftInstantiate (GQ, I.Decl(D, Less(UsVs, UsVs')), D', P, sc) = 
+      | leftInstantiate (GQ, (Less(UsVs, UsVs') :: D), D', P, sc) = 
 	  ltInstL (GQ, D, D', UsVs, UsVs', P, sc)
-      | leftInstantiate (GQ, I.Decl(D, Leq(UsVs, UsVs')), D', P, sc) = 
+      | leftInstantiate (GQ, (Leq(UsVs, UsVs') :: D), D', P, sc) = 
 	  leInstL (GQ, D, D', UsVs, UsVs', P, sc)
-      | leftInstantiate (GQ, I.Decl(D, Eq(UsVs, UsVs')), D', P, sc) = 
+      | leftInstantiate (GQ, (Eq(UsVs, UsVs') :: D), D', P, sc) = 
 	  eqInstL (GQ, D, D', UsVs, UsVs', P, sc)
 
     (* ltInstL ((G, Q), D, D', UsVs, UsVs', P, sc) = B
@@ -617,7 +607,7 @@ struct
 	      end
 	  else false (* impossible, if additional invariant assumed (see ltW) *)
       | ltInstLW (GQ, D, D', UsVs, UsVs', P', sc) = 
-	    leftInstantiate (GQ, D, I.Decl(D', Less(UsVs, UsVs')), P', sc)
+	    leftInstantiate (GQ, D, (Less(UsVs, UsVs') :: D'), P', sc)
 
 
     (* leInstL ((G, Q), D, D', UsVs, UsVs', P', sc) = B
@@ -670,7 +660,7 @@ struct
 	      end
 	  else false (* impossible, if additional invariant assumed (see ltW) *)
       | leInstLW (GQ, D, D', UsVs, UsVs', P, sc) = 
-	    leftInstantiate (GQ, D, I.Decl(D', Less(UsVs, UsVs')), P, sc)
+	    leftInstantiate (GQ, D, (Less(UsVs, UsVs') :: D'), P, sc)
 
 
 
@@ -739,7 +729,7 @@ struct
 			 ((S', s'), (I.constType c', I.id)), P', sc)
 	 else 
 	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, I.Decl(D, Eq(UsVs, UsVs')))
+	      then print ("\n Proved " ^  ctxToString (G, (Eq(UsVs, UsVs') :: D))
 			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
@@ -748,10 +738,10 @@ struct
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.Const c, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P', sc) = 
          if isAtomic (GQ, Us') 	  
-	   then leftInstantiate (GQ, D, I.Decl(D', Eq((Us', Vs'),(Us, Vs))), P', sc)
+	   then leftInstantiate (GQ, D, (Eq((Us', Vs'),(Us, Vs)) :: D'), P', sc)
 	 else 
 	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, I.Decl(D, Eq((Us, Vs), (Us', Vs'))))
+	      then print ("\n Proved " ^  ctxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D))
 			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
@@ -760,10 +750,10 @@ struct
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.Const c, S'), s'), Vs'), P', sc) = 
          if isAtomic (GQ, Us) 	  
-	   then leftInstantiate (GQ, D, I.Decl(D', Eq((Us, Vs), (Us', Vs'))), P', sc)
+	   then leftInstantiate (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P', sc)
 	 else 
 	   (if (!Global.chatter) > 4
-	      then print ("\n Proved " ^  ctxToString (G, I.Decl(D, Eq((Us, Vs), (Us', Vs'))))
+	      then print ("\n Proved " ^  ctxToString (G, (Eq((Us, Vs), (Us', Vs')) :: D'))
 			  ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 			  ^ "\n")
 	    else ();
@@ -774,7 +764,7 @@ struct
 	 if (n = n')
 	   then leftInstantiate (GQ, D, D', P', sc)
 	 else 
-	   leftInstantiate (GQ, D, I.Decl(D', Eq(UsVs, UsVs')), P', sc) 
+	   leftInstantiate (GQ, D, (Eq(UsVs, UsVs') :: D'), P', sc) 
 
 
      | eqIL (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
@@ -787,13 +777,13 @@ struct
 		   eqSpineIL (GQ, D, D', ((S, s), (V', I.id)), ((S', s'), (V', I.id)), P', sc)
 		 end 
 	     else 
-	       leftInstantiate (GQ, D, I.Decl(D', Eq((Us, Vs), (Us', Vs'))), P', sc)
+	       leftInstantiate (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P', sc)
      | eqIL (GQ as (G, Q), D, D', UsVs, UsVs', P', sc) = 
 	(* (Us, Vs as (I.Pi _ , _)) and (Us', Vs' as (I.Root _, _)) 
 	   or the other way 
 	 *)
        (if (!Global.chatter) > 4
-	  then print ("\n Proved " ^  ctxToString (G, I.Decl(D, Eq((UsVs), (UsVs'))))
+	  then print ("\n Proved " ^  ctxToString (G, (Eq((UsVs), (UsVs')) :: D))
 		      ^ ctxToString (G, D') ^ " ---> " ^ atomicPredToString (G, P') 
 		      ^ "\n")
 	else ();
@@ -811,7 +801,7 @@ struct
      | eqSpineILW (GQ, D, D', ((I.App (U, S), s1), (I.Pi ((I.Dec (_, V1), _), V2), s2)),
 		 ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), P', sc) = 
 	 let
-	   val D1 = I.Decl(D, Eq(((U,s1), (V1, s2)), ((U',s1'), (V1', s2'))))
+	   val D1 = (Eq(((U,s1), (V1, s2)), ((U',s1'), (V1', s2'))) :: D)
 	 in 
 	   eqSpineIL (GQ, D1, D', ((S, s1), (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))), 
 		     ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), P', sc)
@@ -1069,14 +1059,14 @@ struct
 
   and ltRW (GQ, D, (Us, Vs), (Us' as (I.Root (I.Const c, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us')
-	  then k (GQ, D, I.Null, Less((Us,Vs), (Us', Vs')), sc)
+	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
                (* either leftInstantiate D or  atomic reasoning *)
 	else 
 	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, k)
 
     | ltRW (GQ as (G, Q), D, (Us, Vs), (Us' as (I.Root (I.BVar n, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us') 
-	  then k (GQ, D, I.Null, Less((Us,Vs), (Us', Vs')), sc)
+	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
                (* either leftInstantiate D or  atomic reasoning *)
 	else 
 	  let 
@@ -1220,7 +1210,7 @@ struct
      | eqR' (GQ, D, (Us as (I.Root (I.Const c, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), sc, k) = 
          if isAtomic (GQ, Us') 	  
-	   then k (GQ, D, I.Null, Eq((Us', Vs'),(Us, Vs)), sc)
+	   then k (GQ, D, nil, Eq((Us', Vs'),(Us, Vs)), sc)
 	        (* either leftInstantiate D or atomic reasoning *)
 
 	 else 
@@ -1229,7 +1219,7 @@ struct
      | eqR' (GQ, D, (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.Const c, S'), s'), Vs'), sc, k) = 
          if isAtomic (GQ, Us) 	  
-	   then k (GQ, D, I.Null, Eq((Us, Vs),(Us', Vs')), sc)
+	   then k (GQ, D, nil, Eq((Us, Vs),(Us', Vs')), sc)
 	        (* either leftInstantiate D or atomic reasoning *)
 	 else 
 	   false
@@ -1243,7 +1233,7 @@ struct
 			     ^ "\n")
 	       else (); true)
 	 else 
-	   k (GQ, D, I.Null, Eq(UsVs, UsVs'), sc)
+	   k (GQ, D, nil,  Eq(UsVs, UsVs'), sc)
            (* either leftInstantiate D or atomic reasoning *)	   	   
 
      | eqR' (GQ as (G, Q), D, (Us as (I.Root (I.BVar n, S), s), Vs), 
@@ -1256,12 +1246,12 @@ struct
 	       eqSpineR (GQ, D, ((S, s), (V', I.id)), ((S', s'), (V', I.id)), sc, k)
 	     end 
 	 else 
-	   k (GQ, D, I.Null, Eq((Us, Vs), (Us', Vs')), sc)
+	   k (GQ, D, nil, Eq((Us, Vs), (Us', Vs')), sc)
            (* either leftInstantiate D or atomic reasoning *)	   	   
 
      (* UsVs = Lam *)
      | eqR' (GQ, D, UsVs, UsVs', sc, k) = 
-	   k (GQ, D, I.Null, Eq(UsVs, UsVs'), sc)
+	   k (GQ, D, nil, Eq(UsVs, UsVs'), sc)
            (* either leftInstantiate D or atomic reasoning *)	   	   
 
 	     
@@ -1310,43 +1300,43 @@ struct
       
     *) 
 
-   fun leftDecompose (GQ as (G, Q), I.Null, D', P) =     
+   fun leftDecompose (GQ as (G, Q), nil, D', P) =     
          rightDecompose (GQ, D', P)
      (* less *)
-     | leftDecompose (GQ, I.Decl(D, P' as Less(R.Arg UsVs, R.Arg UsVs')), D', P) =
+     | leftDecompose (GQ, (Less(R.Arg UsVs, R.Arg UsVs') :: D), D', P) =
 	  ltAtomicL (GQ, D, D', UsVs, UsVs', P)
 
-     | leftDecompose (GQ, I.Decl(D, Less(R.Lex O, R.Lex O')), D', P) =
+     | leftDecompose (GQ, (Less(R.Lex O, R.Lex O') :: D), D', P) =
 	 ltLexL (GQ, D, D', O, O', P)
 
-     | leftDecompose (GQ, I.Decl(D, Less(R.Simul O, R.Simul O')), D', P) =
+     | leftDecompose (GQ, (Less(R.Simul O, R.Simul O') :: D), D', P) =
 	 ltSimulL (GQ, D, D', O, O', P)
      (* le *)
-     | leftDecompose (GQ, I.Decl(D, Leq(R.Arg UsVs, R.Arg UsVs')), D', P) =
+     | leftDecompose (GQ, (Leq(R.Arg UsVs, R.Arg UsVs') :: D), D', P) =
 	 leAtomicL (GQ, D, D', UsVs, UsVs', P)
 
-     | leftDecompose (GQ, I.Decl(D, Leq(R.Lex O, R.Lex O')), D', P) =
-	 leftDecompose (GQ, I.Decl(D, Less(R.Lex O, R.Lex O')), D', P)
+     | leftDecompose (GQ, (Leq(R.Lex O, R.Lex O') :: D), D', P) =
+	 leftDecompose (GQ, (Less(R.Lex O, R.Lex O') :: D), D', P)
 	 andalso
-	 leftDecompose (GQ, I.Decl(D, Eq(R.Lex O, R.Lex O')), D', P)
+	 leftDecompose (GQ, (Eq(R.Lex O, R.Lex O') :: D), D', P)
 
-     | leftDecompose (GQ, I.Decl(D, Leq(R.Simul O, R.Simul O')), D', P) =
+     | leftDecompose (GQ, (Leq(R.Simul O, R.Simul O') :: D), D', P) =
 	 leSimulL (GQ, D, D', O, O', P)
      (* eq *)		
-     | leftDecompose (GQ, I.Decl(D, Eq(R.Arg UsVs, R.Arg UsVs')), D', P) =
+     | leftDecompose (GQ, (Eq(R.Arg UsVs, R.Arg UsVs') :: D), D', P) =
 	 eqAtomicL (GQ, D, D', UsVs,  UsVs', P)
 
-     | leftDecompose (GQ, I.Decl(D, Eq(R.Lex O, R.Lex O')), D', P) =
+     | leftDecompose (GQ, (Eq(R.Lex O, R.Lex O') :: D), D', P) =
 	 eqsL (GQ, D, D', O, O', P)
 
-     | leftDecompose (GQ, I.Decl(D, Eq(R.Simul O, R.Simul O')), D', P) =
+     | leftDecompose (GQ, (Eq(R.Simul O, R.Simul O') :: D), D', P) =
 	 eqsL (GQ, D, D', O, O', P)
 
-     | leftDecompose (GQ as (G, Q), I.Decl(D, P' as Pi(_, O)), D', P) = 
+     | leftDecompose (GQ as (G, Q), (Pi(Dec, O) :: D), D', P) = 
 	 (* drop assumption Pi D. P *)
 	 ((if (!Global.chatter) > 4
 		 then (print "\n Skipping quantified order ";
- 		      print (F.makestring_fmt(fmtPredicate (G, P'))))
+ 		      print (F.makestring_fmt(fmtPredicate (G, Pi(Dec, O)))))
 	  else ());
 	 leftDecompose (GQ, D, D', P))
       
@@ -1365,9 +1355,9 @@ struct
     *)         
    and ltLexL (GQ, D, D', nil, nil, P) = true
      | ltLexL (GQ, D, D', O :: L, O' :: L', P) =
-         leftDecompose(GQ, I.Decl(D, Less(O, O')), D', P)
+         leftDecompose(GQ, (Less(O, O') :: D), D', P)
 	 andalso
-	 ltLexL(GQ, I.Decl(D, Eq(O, O')), D', L, L', P)
+	 ltLexL(GQ, (Eq(O, O') :: D), D', L, L', P)
 
 
    (* If D, D', Lex O1, ....On = Lex O'1, ....O'n --> P
@@ -1381,7 +1371,7 @@ struct
     *)
    and eqsL (GQ, D, D', nil, nil, P) = true
      | eqsL (GQ, D, D', O :: L, O' :: L', P) =
-         leftDecompose(GQ, I.Decl(D, Eq(O, O')), D', P)
+         leftDecompose(GQ, (Eq(O, O') :: D), D', P)
 	 andalso
 	 eqsL(GQ, D, D', L, L', P)
 
@@ -1389,14 +1379,14 @@ struct
    and ltSimulL (GQ, D, D', nil, nil, P) = 
          leftDecompose (GQ, D, D', P)
      | ltSimulL (GQ, D, D', O :: L, O' ::L', P) = 
-         leSimulL (GQ, I.Decl(D, Less(O, O')), D', L, L', P)
+         leSimulL (GQ, (Less(O, O') :: D), D', L, L', P)
 	 orelse 
-	 ltSimulL(GQ, I.Decl(D, Eq(O, O')), D', L, L', P)
+	 ltSimulL(GQ, (Eq(O, O') :: D), D', L, L', P)
 
    and leSimulL (GQ, D, D', nil, nil, P) =  
          leftDecompose (GQ, D, D', P)
      | leSimulL (GQ, D, D', O :: L, O' :: L', P) = 
-	 leSimulL (GQ, I.Decl(D, Leq(O, O')), D', L, L', P)
+	 leSimulL (GQ, (Leq(O, O') :: D), D', L, L', P)
 
    (*--------------------------------------------------------------*)
    (* Atomic Orders (left) *)
@@ -1475,7 +1465,7 @@ struct
      | eqAtomicLW (GQ, D, D', (Us, Vs as (I.Root _, s)), (Us', Vs' as (I.Pi _, s')), P) = true
      | eqAtomicLW (GQ, D, D', (Us, Vs as (I.Pi _, s)), (Us', Vs' as (I.Root _, s')), P) = true
      | eqAtomicLW (GQ, D, D', (Us, Vs as (I.Pi _, s)), (Us', Vs' as (I.Pi _, s')), P) = 
-	leftDecompose(GQ, D, I.Decl(D', Eq((Us,Vs), (Us', Vs'))), P)
+	leftDecompose(GQ, D, (Eq((Us,Vs), (Us', Vs')) :: D'), P)
 
 
    (*--------------------------------------------------------------*)
@@ -1496,7 +1486,7 @@ struct
 
    and  ltLW (GQ as (G, Q), D, D', UsVs, (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P) =  
          if isAtomic(GQ, Us') 
-	    then leftDecompose (GQ, D, I.Decl(D', Less(UsVs, (Us',Vs'))), P)
+	    then leftDecompose (GQ, D, (Less(UsVs, (Us',Vs')) :: D'), P)
 	  else 
 	    let  
 	      val I.Dec (_, V') = I.ctxDec (G, n) 
@@ -1548,7 +1538,7 @@ struct
 
   and eqLW (GQ, D, D',(Us, Vs as (I.Pi ((I.Dec (_, V2'), _), V'), s2')),
 	    (Us', Vs' as (I.Pi ((I.Dec (_, V2''), _), V''), s2'')), P) = 
-        leftDecompose (GQ, D, I.Decl(D', Eq((Us,Vs), (Us', Vs'))), P)
+        leftDecompose (GQ, D, (Eq((Us,Vs), (Us', Vs')) :: D'), P)
 
     | eqLW (GQ, D, D',(Us, Vs as (I.Pi ((I.Dec (_, V2'), _), V'), s2')),
 	    (Us', Vs' as (I.Root _, s2'')), P) = 
@@ -1567,14 +1557,14 @@ struct
      | eqLW (GQ, D, D', (Us as (I.Root (I.Const c, S), s), Vs), 
 	    (Us' as (I.Root (I.BVar n, S'), s'), Vs'), P) = 
          if isAtomic (GQ, Us') 	  
-	   then leftDecompose (GQ, D, I.Decl(D', Eq((Us', Vs'),(Us, Vs))), P)
+	   then leftDecompose (GQ, D, (Eq((Us', Vs'),(Us, Vs)) :: D'), P)
 	 else 
 	   true
 
      | eqLW (GQ, D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
 	    (Us' as (I.Root (I.Const c, S'), s'), Vs'), P) = 
          if isAtomic (GQ, Us) 	  
-	   then leftDecompose (GQ, D, I.Decl(D', Eq((Us, Vs), (Us', Vs'))), P)
+	   then leftDecompose (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P)
 	 else 
 	   true
 
@@ -1583,7 +1573,7 @@ struct
 	 if (n = n')
 	   then leftDecompose (GQ, D, D', P)
 	 else 
-	   leftDecompose (GQ, D, I.Decl(D', Eq(UsVs, UsVs')), P) 
+	   leftDecompose (GQ, D, (Eq(UsVs, UsVs') :: D'), P) 
 
 
      | eqLW (GQ as (G, Q), D, D', (Us as (I.Root (I.BVar n, S), s), Vs), 
@@ -1596,10 +1586,10 @@ struct
 	       eqSpineL (GQ, D, D', ((S, s), (V', I.id)), ((S', s'), (V', I.id)), P)
 	     end 
 	 else 
-	   leftDecompose (GQ, D, I.Decl(D', Eq((Us, Vs), (Us', Vs'))), P)
+	   leftDecompose (GQ, D, (Eq((Us, Vs), (Us', Vs')) :: D'), P)
      (* UsVs = Lam *)
      | eqLW (GQ, D, D', UsVs, UsVs', P) = 
-	 leftDecompose (GQ, D, I.Decl(D', Eq(UsVs, UsVs')), P)
+	 leftDecompose (GQ, D, (Eq(UsVs, UsVs') :: D'), P)
 	     
     and eqSpineL (GQ, D, D', (Ss, Vs), (Ss', Vs'), P) = 
          eqSpineLW (GQ, D, D', (Ss, Whnf.whnf Vs), (Ss', Whnf.whnf Vs'), P)
@@ -1613,7 +1603,7 @@ struct
      | eqSpineLW (GQ, D, D', ((I.App (U, S), s1), (I.Pi ((I.Dec (_, V1), _), V2), s2)),
 		 ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), P) = 
 	 let
-	   val D1 = I.Decl(D, Eq(R.Arg ((U,s1), (V1, s2)), R.Arg ((U',s1'), (V1', s2'))))
+	   val D1 = (Eq(R.Arg ((U,s1), (V1, s2)), R.Arg ((U',s1'), (V1', s2'))) :: D)
 	 in 
 	   eqSpineL (GQ, D1, D', ((S, s1), (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))), 
 		     ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), P)
@@ -1630,7 +1620,7 @@ struct
      and G |- P
      and D implies P
     *)    
-    fun deduce (G, Q, D, P) = leftDecompose((G, Q), D, I.Null, P)
+    fun deduce (G, Q, D, P) = leftDecompose((G, Q), D, nil, P)
   in
     val deduce = deduce 
     val shiftRCtx = shiftRCtx

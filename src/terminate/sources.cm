@@ -11,5 +11,5 @@ Group is
   checking.sig
   checking.fun
   reduces.sig
-  reduces.fun
+  reduces.fun 
   terminate.sml
