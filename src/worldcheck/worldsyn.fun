@@ -1,15 +1,17 @@
 (* Internal syntax for functional proof term calculus *)
 (* Author: Carsten Schuermann *)
 
-functor WorldSyn (structure IntSyn' : INTSYN
+functor WorldSyn (structure IntSyn : INTSYN
 		  structure Whnf : WHNF
-		    sharing Whnf.IntSyn = IntSyn'
+		    sharing Whnf.IntSyn = IntSyn
 	          structure Index : INDEX
-		    sharing Index.IntSyn = IntSyn'
+		    sharing Index.IntSyn = IntSyn
+		  structure Names : NAMES
+		    sharing Names.IntSyn = IntSyn
 		  structure Unify : UNIFY
-		    sharing Unify.IntSyn = IntSyn') : WORLDSYN= 
+		    sharing Unify.IntSyn = IntSyn) : WORLDSYN= 
 struct
-  structure IntSyn = IntSyn'
+  structure IntSyn = IntSyn
   structure I = IntSyn
 
   exception Error of string 
@@ -60,6 +62,49 @@ struct
 	end
 
 
+    (* checkBlock (G, (t, L), (V, s)) = () 
+     
+       Invariant:
+       If   G is a context
+       and  G |- t : G1
+       and  G1 |- L  context
+       and  G |- s : G2
+       and  G2 |- V : K  (in normal form)
+       then checkBlock (G, (t, L), (V, s)) terminates with () iff  G |-- [t] L ~ V [s]
+       (see regularworlds.tex for the rules)
+    *)
+    fun checkBlock (G, (t, nil), I.Root (a, S)) = ()
+      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
+        let 
+	  val _ = Unify.unify (G, (V, t), (V1, I.id))
+	in
+	  checkBlock (I.Decl (G, D), (I.dot1 t, L), V2)
+	end
+      | checkBlock (G, (t, L), I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
+	  checkBlock (I.Decl (G, D), (I.comp (t, I.shift),  L), V2)
+      | checkBlock _ = raise Error "World violation"
+
+    (* checkBlocks W (G, (V, s)) = ()
+
+       Invariant:
+       If   G is a context
+       and  G |- s : G'
+       and  G' |- V : K
+       then checkPos W (G, (V, s)) terminates with () 
+	 iff there exists (SOME L1. BLOCK L2 \in W)
+	 s.t. there exists a substituion   G |- t : L1
+	 and G |- [t] L1 ~ V[s] 
+	 (see regularworlds.tex for the rules)
+    *)
+    fun checkBlocks _ (G, I.Root _) = ()
+      | checkBlocks Closed (G, V) = raise Error "World violation"
+      | checkBlocks (Schema (W', LabelDec (_, L1, L2))) (GV as (G, V)) =
+        ((let
+	    val t = createEVarSub (G, L1)	(* G |- t : L1 *)
+	  in
+	    checkBlock (G, (t, L2), V)
+	  end) handle Unify.Unify _ => checkBlocks W' GV)
+
     (* worldcheck W a = ()
 
        Invariant:       
@@ -70,55 +115,55 @@ struct
     fun worldcheck W a =  
       let
 
-	(* checkPos W (G, (V, s)) = ()
+	(* checkValidity (G, V) = ()
+
+	   Invariant:
+	   If   G is a context
+           and  G |- V : K       (V is in normal form)
+	   then checkValidity (G, V) = () iff
+	        V extends the world in a valid way
+	*)
+	fun checkValidity (G, I.Root _) = ()
+	  | checkValidity GV = (checkBlocks W GV)
+	
+	(* checkPos (G, V) = ()
 
   	   Invariant:
 	   If   G is a context
-           and  G |- s : G'
-           and  G' |- V : K
-           then checkPos W (G, (V, s)) terminates with () iff G |-+ B[s]
+           and  G |- V : K       (V is in normal form)
+           then checkPos (G, V) terminates with () iff G |-(+) V
 	     (see regularworlds.tex for the rules)
 	*)
-	fun checkPos W' (G, (I.Root (a, S), s)) = ()
-	  | checkPos Closed (G, (I.Pi ((I.Dec (_, V1), _), V2), s)) = 
-	  raise Error "Incompatible worlds"
-	  | checkPos (Schema (W', LabelDec (_, L1, L2))) (Gus as (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s))) = 
-	    ((let
-		val t = createEVarSub (G, L1)	(* G |- s' : L1 *)
-	      in
-		(checkNeg W (G, (L2, t), (V1, s)) ;
-		 checkPos W' (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
-	      end) handle Unify.Unify _ => checkPos W' Gus)
-	and checkPosW W' (G, Us) = checkPos W' (G, Whnf.whnf Us)
+	fun checkPos (G, I.Root (a, S)) = ()
+	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) = 
+	    (checkPos (I.Decl (G, D), V2);
+	     checkNeg (G, V1))
+	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.No), V2)) = 
+	    (checkBlocks W (G, V1);
+	     checkPos (I.Decl (G, D), V2);
+	     checkNeg (G, V1))
 
-        (* checkNeg W (G, (L, t), (V, s)) = () 
+        (* checkNeg (G, V) = () 
 
            Invariant:
            If   G is a context
-           and  G |- t : G1
-           and  G1 |- L  context
-           and  G |- s : G2
            and  G |- V : K
-           then checkNeg W (G, (L, t), (V, s)) terminates with () iff  G |-- [t] L ~ V [s]
+           then checkNeg (G, V) terminates with () iff  G |-(-) V
            (see regularworlds.tex for the rules)
         *)
-        and checkNeg W' (G, (L, t), (I.Root (a, S), s)) = ()
-          | checkNeg W' (G, (I.Dec (_, V) :: L, t), (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =
-	  let 
-	    val _ = Unify.unify (G, (V, t), (V1, s))
-	  in
-	    (checkNeg W' (I.Decl (G, I.decSub (D, s)), (L, t), (V2, I.dot1 s)) ;
-	     checkPos W (G, (V1, s)))
-	  end
 	
-	fun checkTopLevel W' (G, (I.Root (a, S), s)) = ()
-	  | checkTopLevel W' (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =
-              (checkTopLevel W' (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)) ;
-	       checkPos W (G, (V1, s)))
+	and checkNeg (G, I.Root (a, S)) = ()
+	  | checkNeg (G, I.Pi ((D as I.Dec (_, V1), _), V2)) =
+              (checkNeg (I.Decl (G, D), V2) ;
+	       checkPos (G, V1))
 	
 	fun checkAll nil = ()
 	  | checkAll (I.Const a :: alist) =
-	      (checkTopLevel W (I.Null, (I.constType a, I.id));
+	      (if (!Global.chatter) > 4 then 
+		 TextIO.print ("[" ^ Names.constName a) else ();
+	       checkPos (I.Null, I.constType a);
+	       if (!Global.chatter) > 4 then 
+		   TextIO.print ("]\n") else ();
 	       checkAll alist)
       in
 	checkAll (Index.lookup a)

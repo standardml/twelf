@@ -107,6 +107,8 @@ functor Twelf
 
    structure WorldSyn : WORLDSYN
      sharing WorldSyn.IntSyn = IntSyn'
+   structure WorldPrint : WORLDPRINT
+     sharing WorldPrint.WorldSyn = WorldSyn
 
    structure MetaGlobal : METAGLOBAL
    structure FunSyn : FUNSYN
@@ -499,7 +501,7 @@ struct
 				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
 	  val W = hack GBs
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%world " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
+		    then print ("%world " ^ WorldPrint.worldToString W ^ " " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
 		  else ()
 	in
 	  (map (fn (c, _) => WorldSyn.worldcheck W c) cpa ; ())

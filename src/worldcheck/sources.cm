@@ -6,4 +6,6 @@ Group is
 
   worldsyn.sig
   worldsyn.fun
+  worldprint.sig
+  worldprint.fun
   worldcheck.sml

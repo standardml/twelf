@@ -1,5 +1,14 @@
 structure WorldSyn = 
-  WorldSyn (structure IntSyn' = IntSyn
+  WorldSyn (structure IntSyn = IntSyn
 	    structure Unify = Unify
 	    structure Whnf = Whnf
+	    structure Names = Names
 	    structure Index = Index)
+
+structure WorldPrint =
+  WorldPrint (structure Global = Global
+	      structure IntSyn = IntSyn
+	      structure WorldSyn' = WorldSyn
+	      structure Names = Names
+	      structure Formatter' = Formatter
+	      structure Print = Print)

@@ -185,6 +185,7 @@ structure Twelf =
 	 structure ClausePrint = ClausePrint
 
 	 structure WorldSyn = WorldSyn
+	 structure WorldPrint = WorldPrint
 
          structure Trace = Trace
 
