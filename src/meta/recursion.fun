@@ -702,7 +702,9 @@ struct
 
 	    val D2 = I.Dec (NONE, V2)
 					(* D2  : GB, Ds |- D2 : type *)
-	    val T2 = S.Lemma (S.Splits (!MTPGlobal.maxSplit), F2)
+	    val T2 = (case F2
+			of F.All _ => S.Lemma (S.RL, F2)
+			 | _ => S.Lemma (S.Splits (!MTPGlobal.maxSplit), F2))
 	                                (* T2  : GB, Ds |- T2 : tag *)
 	  in
 	    skolem ((du, de+1), (I.Decl (G, D2), I.Decl (B, T2)), I.comp (w, I.shift), F,

@@ -24,6 +24,8 @@ struct
 
   datatype Info =
     Splits of int
+  | RL 
+  | RLdone
 
   datatype Tag = 
     Parameter of FunSyn.label option
@@ -94,10 +96,12 @@ struct
        T is either an Assumption or Induction tag
        T' = T - 1
     *)
-    fun decreaseSplits (Splits k) = Splits (k-1)
+    fun decreaseInfo (Splits k) = Splits (k-1)
+      | decreaseInfo RL = RL
+      | decreaseInfo RLdone = RLdone
      
     fun (* decrease (Assumption k) = Assumption (k-1)
-      | *) decrease (Lemma (Sp, F)) = Lemma (decreaseSplits Sp, F)
+      | *) decrease (Lemma (Sp, F)) = Lemma (decreaseInfo Sp, F)
       | decrease None = None
 
 

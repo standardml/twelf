@@ -110,32 +110,37 @@ struct
     *)
 
     fun expand' ((G0, B0), (I.Null, I.Null), n) =
-        (fn ((G', B'), w') => ((G', B'), w'))
-      | expand' ((G0, B0), (I.Decl (G, D as I.Dec (_, V)), I.Decl (B, T as S.Lemma (_, F as F.All _))), n) = 
+        ((I.Null, I.Null), fn ((G', B'), w') => ((G', B'), w'))
+      | expand' ((G0, B0), (I.Decl (G, D as I.Dec (_, V)), I.Decl (B, T as S.Lemma (S.RL, F))), n) = 
 	let 
-	  val sc' = expand' ((G0, B0), (G, B), n+1)
+	  val ((G0', B0'), sc') = expand' ((G0, B0), (G, B), n+1)
 	  val s = I.Shift (n+1)
 	  val Vs = Whnf.normalize (V, s)
 	  val Fs = F.normalizeFor (F, s)
 	in
 	  case (forward (G0, B0, (Vs, Fs)))
-	    of NONE => sc'
+	    of NONE => ((I.Decl (G0', D), I.Decl (B0', T)), sc')
 	     | SOME (V', F') => 
-	         fn ((G', B'), w') => 
-		 let 
-
+	         ((I.Decl (G0', D), I.Decl (B0', S.Lemma (S.RLdone, F))),
+		  fn ((G', B'), w') => 
+		  let 
+		    
 		   
-		   val V'' = Whnf.normalize (V', w')
+		    val V'' = Whnf.normalize (V', w')
 					(* G' |- V'' : type *)
-		   val F'' = F.normalizeFor (F', w')
+		    val F'' = F.normalizeFor (F', w')
 					(* G'; . |- F'' for  *)
-		 in		
-		   sc' ((I.Decl (G', I.Dec (NONE, V'')), 
-			 I.Decl (B', S.Lemma (S.Splits (!MTPGlobal.maxSplit), F''))), I.comp (w', I.shift))
-		 end
+		  in		
+		    sc' ((I.Decl (G', I.Dec (NONE, V'')), 
+			  I.Decl (B', S.Lemma (S.Splits (!MTPGlobal.maxSplit), F''))), I.comp (w', I.shift))
+		  end)
 	end
       | expand' (GB0, (I.Decl (G, D), I.Decl (B, T)), n) =
-	 expand' (GB0, (G, B), n+1)
+	let
+	  val ((G0', B0'), sc') = expand' (GB0, (G, B), n+1)
+	in
+	  ((I.Decl (G0', D), I.Decl (B0', T)), sc')
+	end
 
 
     (* expand' S = op'
@@ -147,8 +152,8 @@ struct
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
 	let 
 	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (G) else ()
-	  val sc = expand' ((G, B), (G, B), 0)
-	  val ((G', B'), w') = sc ((G, B), I.id)
+	  val ((Gnew, Bnew), sc) = expand' ((G, B), (G, B), 0)
+	  val ((G', B'), w') = sc ((Gnew, Bnew), I.id)
 	  val _ = TypeCheck.typeCheckCtx G'
 
 	  val S' = S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, w'), 

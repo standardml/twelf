@@ -72,6 +72,12 @@ struct
 						 Fmt.String ":",
 						 FunPrint.formatForBare (G, F),
 						 Fmt.String ">"]
+      | formatTag (G, S.Lemma (S.RL, F)) = [Fmt.String "<i :",
+						 FunPrint.formatForBare (G, F),
+						 Fmt.String ">"]
+      | formatTag (G, S.Lemma (S.RLdone, F)) = [Fmt.String "<i*:",
+						 FunPrint.formatForBare (G, F),
+						 Fmt.String ">"]
 (*      | formatTag (G, S.Assumption k) = [Fmt.String "<a",
 					 Fmt.String (Int.toString k),
 					 Fmt.String ">"] *)

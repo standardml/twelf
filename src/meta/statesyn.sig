@@ -17,6 +17,8 @@ sig
 
   datatype Info =
     Splits of int
+  | RL 
+  | RLdone
     
   datatype Tag = 
     Parameter of FunSyn.label option
