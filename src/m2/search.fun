@@ -11,6 +11,8 @@ functor Search (structure IntSyn' : INTSYN
 		sharing Whnf.IntSyn = IntSyn'
 		structure Unify : UNIFY
 		sharing Unify.IntSyn = IntSyn'
+		structure Assign : ASSIGN
+		sharing Assign.IntSyn = IntSyn'
 		structure Compile : COMPILE
 		sharing Compile.IntSyn = IntSyn'
 		sharing Compile.CompSyn = CompSyn'
@@ -85,8 +87,12 @@ struct
 	then sc (I.Nil, acck)
       else acc
       (* replaced below by above.  -fp Mon Aug 17 10:41:09 1998
-        ((Unify.unify (ps', (Q, s)); sc (I.Nil, acck)) handle Unify.Unify _ => acc)
-      *)
+        ((Unify.unify (ps', (Q, s)); sc (I.Nil, acck)) handle Unify.Unify _ => acc) *)
+    | rSolve (ps', (C.Assign (Q, ag), s), DProg, sc, acck as (acc, k)) =
+        ((Assign.assign (ps', (Q, s));
+	  aSolve ((ag, s), DProg, (fn () => sc (I.Nil, acck)) , acc))
+	  handle Unify.Unify _ => acc
+	       | Assign.Assign _ => acc)
     | rSolve (ps', (C.And (r, A, g), s), DProg, sc, acck) =
       let
 	val X = I.newEVar (I.EClo(A, s))
@@ -97,12 +103,26 @@ struct
 					 acck')), acck)
       end
     | rSolve (ps', (C.Exists (I.Dec (_, A), r), s), DProg, sc, acck) =
-      let
-	val X = I.newEVar (I.EClo (A, s))
-      in
-	rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
-		(fn (S, acck') => sc (I.App (X, S), acck')), acck)
-      end
+        let
+	  val X = I.newEVar (I.EClo (A, s))
+	in
+	  rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
+		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
+	end
+    | rSolve (ps', (C.Exists' (I.Dec (_, A), r), s), DProg, sc, acck) =
+        let
+	  val X = I.newEVar (I.EClo (A, s))
+	in
+	  rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
+		  (fn (S, acck') => sc (S, acck')), acck)
+	end
+
+  (* aSolve ... *)
+  and aSolve ((C.Trivial, s), DProg, sc, acc) = sc ()
+    | aSolve ((C.Unify(I.Eqn(e1, e2), ag), s), DProg, sc, acc) =
+      ((Unify.unify ((e1, s), (e2, s));
+        aSolve ((ag, s), DProg, sc, acc))
+       handle Unify.Unify _ => acc)
 
   (* matchatom ((p, s), (G, dPool), sc, (acc, k)) => ()
      G |- s : G'
@@ -255,8 +275,8 @@ struct
 	   Check if there are still variables left over
 	*)
       | searchEx' max ((G, I.EVar (r, V, _)) :: GE, sc) = 
-	  solve ((Compile.compileGoal V, I.id), 
-		 Compile.compileCtx G, 
+	  solve ((Compile.compileGoal (G, V), I.id), 
+		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
 					 searchEx' max (GE, sc))),
 		 (nil, max))
@@ -309,8 +329,8 @@ struct
 
     fun searchAll' (nil, acc, sc) = sc () :: acc
       | searchAll' ((G, I.EVar (r, V, _)) :: GE, acc, sc) = 
-	  solve ((Compile.compileGoal V, I.id), 
-		 Compile.compileCtx G, 
+	  solve ((Compile.compileGoal (G, V), I.id), 
+		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
 					 searchAll' (GE, acc', sc))),
 		 (acc, !MetaGlobal.maxFill))

@@ -21,33 +21,52 @@ struct
   in
 
     (* goalToString (G, g) where G |- g  goal *)
-    fun goalToString (G, Atom(p)) =
-	 "\tSOLVE  " ^ Print.expToString (G, p) ^ "\n"
-      | goalToString (G, Impl (_,A,_,g)) =
-	 "\tASSUME " ^ Print.expToString (G, A) ^ "\n" ^
-	 goalToString (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), g) ^ "\n"
-      | goalToString (G, All(D,g)) =
+    fun goalToString t (G, Atom(p)) =
+	 t ^ "SOLVE   " ^ Print.expToString (G, p) ^ "\n"
+      | goalToString t (G, Impl (p,A,_,g)) =
+	 t ^ "ASSUME  " ^ Print.expToString (G, A) ^ "\n" ^
+	 (clauseToString (t ^ "\t") (G, p)) ^
+	 goalToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), g) ^ "\n"
+      | goalToString t (G, All(D,g)) =
 	 let
 	   val D' = Names.decName (G, D)
 	 in
-	   "\tALL    " ^
+	   t ^ "ALL     " ^
 	   Formatter.makestring_fmt (Print.formatDec (G, D')) ^ "\n" ^
-	   goalToString (IntSyn.Decl (G, D'), g) ^ "\n"
+	   goalToString t (IntSyn.Decl (G, D'), g) ^ "\n"
 	 end
 
+    (* auxToString (G, r) where G |- r auxgoal *)
+    and auxToString t (G, Trivial) = ""
+      | auxToString t (G, Unify(IntSyn.Eqn(p1, p2), ga)) =
+         t ^ "UNIFY   " ^ Print.expToString (G, p1) ^ " = " ^
+                       Print.expToString (G, p2) ^ "\n" ^
+         auxToString t (G, ga)
+
     (* clauseToString (G, r) where G |- r  resgoal *)
-    fun clauseToString (G, Eq(p)) =
-	 "\tUNIFY  " ^ Print.expToString (G, p) ^ "\n"
-      | clauseToString (G, And(r, A, g)) =
-	 clauseToString (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), r) ^
-	 goalToString (G, g)
-      | clauseToString (G, Exists(D, r)) =
+    and clauseToString t (G, Eq(p)) =
+	 t ^ "UNIFY   " ^ Print.expToString (G, p) ^ "\n"
+      | clauseToString t (G, Assign(p, ga)) =
+	 t ^ "ASSIGN  " ^ (Print.expToString (G, p)  handle _ => "<exc>")
+	 ^ "\n" ^ (auxToString t (G, ga))
+      | clauseToString t (G, And(r, A, g)) =
+	 clauseToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), r) ^
+	 goalToString t (G, g)
+      | clauseToString t (G, Exists(D, r)) =
 	 let
 	   val D' = Names.decName (G, D)
 	 in
-	   "\tEXISTS " ^
-	   Print.decToString (G, D') ^ "\n" ^
-	   clauseToString (IntSyn.Decl(G, D'), r)
+	   t ^ "EXISTS  " ^
+	   (Print.decToString (G, D') handle _ => "<exc>") ^ "\n" ^
+	   clauseToString t (IntSyn.Decl(G, D'), r)
+	 end
+      | clauseToString t (G, Exists'(D, r)) =
+	 let
+	   val D' = Names.decName (G, D)
+	 in
+	   t ^ "EXISTS' " ^
+	   (Print.decToString (G, D') handle _ => "<exc>") ^ "\n" ^
+	   clauseToString t (IntSyn.Decl(G, D'), r)
 	 end
 
     (* conDecToString (c, clause) printed representation of static clause *)
@@ -58,7 +77,7 @@ struct
 	  val l = String.size name
 	in
 	  name ^ (if l > 6 then ":\n" else ":") ^
-	  clauseToString (IntSyn.Null, r) ^ "\n"
+	  (clauseToString "\t" (IntSyn.Null, r) ^ "\n")
 	end
       | conDecToString (c, Void) =
 	  Print.conDecToString (IntSyn.sgnLookup c) ^ "\n\n"
@@ -80,7 +99,7 @@ struct
 		       IntSyn.Decl(dPool,SOME(r,_,_))) =
           dProgToString (G,dPool)
 	  ^ "\nClause    " ^ x ^ ":\t"
-	  ^ clauseToString (G, r)
+	  ^ clauseToString "\t" (G, r)
       | dProgToString (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
 		       IntSyn.Decl(dPool, NONE)) =
 	 dProgToString (G, dPool)

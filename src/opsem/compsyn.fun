@@ -20,9 +20,17 @@ struct
 
   and ResGoal =                         (* Residual Goals             *)
     Eq     of IntSyn.Exp                (* r ::= p = ?                *)
+  | Assign of IntSyn.Exp * AuxGoal      (* r ::= p = ?, where p has   *)
+					(* only new vars,             *)  
+                                        (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
+  | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)
+
+  and AuxGoal =
+    Trivial				(* *)
+  | Unify of IntSyn.Eqn * AuxGoal	(* call unify of IntSyn.eqn *)
 
   (* Representation invariants for compiled syntax:
      Judgments:
@@ -55,6 +63,10 @@ struct
         G, _:A |- r  resgoal
 
      G |- exists x:A. r  resgoal
+     if  G |- A : type
+         G, x:A |- r  resgoal
+
+     G |- exists' x:A. r  resgoal     but exists' doesn't effect the proof-term
      if  G |- A : type
          G, x:A |- r  resgoal
   *)

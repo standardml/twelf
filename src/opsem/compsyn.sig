@@ -15,9 +15,17 @@ sig
 
   and ResGoal =                         (* Residual Goals             *)
     Eq     of IntSyn.Exp                (* r ::= p = ?                *)
+  | Assign of IntSyn.Exp * AuxGoal      (* r ::= p = ?, where p has   *)
+					(* only new vars,             *)  
+                                        (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
+  | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)
+
+  and AuxGoal =
+    Trivial				(* trivially done *)
+  | Unify of IntSyn.Eqn * AuxGoal	(* call unify on IntSyn.eqn *)
 
   (* The dynamic clause pool --- compiled version of the context *)
   type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx

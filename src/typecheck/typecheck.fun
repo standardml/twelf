@@ -127,6 +127,7 @@ struct
 
     fun check (U, V) = checkExp (I.Null, (U, I.id), (V, I.id))
     fun infer U = I.EClo (inferExp (I.Null, (U, I.id)))
+    fun infer' (G, U) = I.EClo (inferExp (G, (U, I.id)))
 
     fun checkCtx (I.Null) =  ()
       | checkCtx (I.Decl (G, D)) = 
@@ -135,6 +136,7 @@ struct
   in
       val check = check
       val infer = infer
+      val infer' = infer'
       val typeCheck = fn (G, (U, V)) => 
 	                   (checkCtx G; checkExp (G, (U, I.id), (V, I.id)))
   end  (* local ... *)

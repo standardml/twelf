@@ -2,12 +2,15 @@
 (* Author: Iliano Cervesato *)
 (* Modified: Jeff Polakow *)
 (* Modified: Frank Pfenning *)
+(* Modified: Larry Greenfield *)
 
 functor AbsMachine (structure IntSyn' : INTSYN
 		    structure CompSyn' : COMPSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
 		    structure Unify : UNIFY
 		      sharing Unify.IntSyn = IntSyn'
+		    structure Assign : ASSIGN
+		      sharing Assign.IntSyn = IntSyn'
 		    structure Trail : TRAIL
 		      sharing Trail.IntSyn = IntSyn'
 		    (* CPrint currently unused *)
@@ -26,6 +29,12 @@ struct
     structure I = IntSyn
     open CompSyn
   in
+
+    fun showTrace s = 
+      if (!Global.chatter) >= 5 then
+	TextIO.print (s ())
+      else
+	()
 
   (* We write
        G |- M : g
@@ -82,9 +91,16 @@ struct
               any effect  sc S  might have
   *)
   and rSolve (ps', (Eq(Q), s), dProg, sc) =
+     (showTrace (fn () => "unifying...\n");
       if Unify.unifiable (ps', (Q, s))	(* effect: instantiate EVars *)
 	then sc I.Nil			(* call success continuation *)
       else ()				(* fail *)
+	)
+    | rSolve (ps', (Assign(Q, ag), s), dProg, sc) = 
+     (showTrace (fn () => "assigning...\n");
+      if Assign.assignable (ps', (Q, s)) then
+	aSolve ((ag, s), dProg, (fn () => sc I.Nil))
+      else ())
     | rSolve (ps', (And(r, A, g), s), dProg, sc) =
       let
 	(* is this EVar redundant? -fp *)
@@ -97,10 +113,34 @@ struct
     | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg, sc) =
       let
 	val X = I.newEVar (I.EClo (A,s))
+
+	val _ = showTrace (fn () => "introducing existential variable...\n")
       in
 	rSolve (ps', (r, I.Dot(I.Exp(X,A), s)), dProg,
 		(fn S => sc (I.App(X,S))))
       end
+    | rSolve (ps', (Exists'(I.Dec(_,A), r), s), dProg, sc) =
+      let
+	val X = I.newEVar (I.EClo (A,s))
+
+	val _ = showTrace (fn () => "introducing existential' variable...\n")
+      in
+	rSolve (ps', (r, I.Dot(I.Exp(X,A), s)), dProg, sc)
+   	          (* we don't increase the proof term here! *)
+      end
+
+  (* aSolve ((ag, s), dProg, sc) = ()
+     Invariants:
+       dProg = (G, dPool) where G ~ dPool
+       G |- s : G'
+       if G |- ag[s] auxgoal then
+       sc () is evaluated
+     Effects: instantiation of EVars in ag[s], dProg and sc () *)
+  and aSolve ((Trivial, s), dProg, sc) = sc ()
+    | aSolve ((Unify(I.Eqn(e1, e2), ag), s), dProg, sc) =
+    (showTrace (fn () => "unifying...\n");
+     if Unify.unifiable ((e1, s), (e2, s)) then aSolve ((ag, s), dProg, sc)
+     else ())
 
   (* matchatom ((p, s), dProg, sc) => ()
      Invariants:
@@ -117,6 +157,9 @@ struct
   *)
   and matchAtom (ps' as (I.Root(I.Const(a),_),_), dProg as (G,dPool), sc) =
       let
+	val _ = showTrace 
+	          (fn () => "matching...\n")
+
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
            with c1.
@@ -130,6 +173,7 @@ struct
 	      Trail.trail (fn () =>
 			   rSolve (ps', (r, I.id), dProg,
 				   (fn S => sc (I.Root(I.Const(c), S))))) ;
+	      showTrace (fn () => "signature backtracking...\n");
 	      matchSig sgn'
 	    end
 
@@ -145,8 +189,9 @@ struct
 	    if a = a'
 	      then (* trail to undo EVar instantiations *)
 		    (Trail.trail (fn () =>
-		                  rSolve (ps', (r, I.comp(s, I.Shift(k))), dProg,
-					  (fn S => sc (I.Root(I.BVar(k), S))))) ;
+		                rSolve (ps', (r, I.comp(s, I.Shift(k))), dProg,
+				  (fn S => sc (I.Root(I.BVar(k), S))))) ;
+		     showTrace (fn () => "dprog backtracking...\n");
 		     matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =

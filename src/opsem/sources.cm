@@ -3,12 +3,15 @@ Group is
   ../print/sources.cm
   ../formatter/sources.cm  
   ../index/sources.cm
+  ../typecheck/sources.cm
   compsyn.sig
   compsyn.fun
   compile.sig
   compile.fun
   cprint.sig
   cprint.fun
+  assign.sig
+  assign.fun
   absmachine.sig
   absmachine.fun
   opsem.sml
