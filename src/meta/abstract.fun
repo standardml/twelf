@@ -402,6 +402,13 @@ struct
 
 
 
+    fun checkTags (I.Null, I.Null) = ()
+      | checkTags (I.Decl (G, _), I.Decl (B, T)) = 
+        (checkTags (G, B);
+	 case T
+	   of S.Lemma (_, F) =>  FunTypeCheck. isFor (G, F)
+  	    | _ => ())
+
 
     fun deriveTag (V, F.Ex (_, F.True)) = F.Ex (I.Dec (NONE, V), F.True)
       | deriveTag (I.Pi ((D, DP), V), F.Ex (_, F)) = 
@@ -856,8 +863,9 @@ struct
 	  val k = I.ctxLength K
 	  val K' = cf (I.ctxLength G, K)
 	  val k' = I.ctxLength K'
-	  val (GK, _) = abstractCtx K'
+	  val (GK, BK) = abstractCtx K'
 	  val _ = if !Global.doubleCheck then TypeCheck.typeCheckCtx (GK) else ()
+	  val _ = if !Global.doubleCheck then checkTags (GK, BK) else ()
           val w' = I.comp (w, I.Shift (k'-k))
 	  val FK = abstractFor (K', 0, (F, s))
 	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK, FK) else ()
