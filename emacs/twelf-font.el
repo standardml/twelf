@@ -101,7 +101,7 @@
    ;; single-line comments
    ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
+   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%abbrev\\|%solve\\|%query\\|%mode\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
     1 twelf-font-percent-key-face nil)
    ;; keywords, omit punctuations for now.
    ("\\(\\<<-\\>\\|\\<->\\>\\|\\<type\\>\\|\\<=\\>\\|\\<_\\>\\)"
@@ -303,7 +303,8 @@ If already highlighted and ALLOW-OVERLAP-P is nil, don't highlight."
 	nil
       (skip-chars-backward *whitespace*)
       (setq end (point))
-      (beginning-of-line 1)
+      ;;(beginning-of-line 1)
+      (backward-char (length id))
       (setq start (point))
       (twelf-end-of-par)
       (cons start end))))
