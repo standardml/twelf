@@ -12,6 +12,7 @@ Main Future Issues
  - redundant creation of EVar. - fp
  - reevaluation which goals, resgoals should allow closures. -fp
  - rename dPool???? -fp,cs
+ - merge absmachine.fun and tmachine.fun into a single file? -rv
 
 CM/
 README
