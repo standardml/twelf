@@ -193,6 +193,11 @@ sig
 
   (* Type related functions *)
 
+  (* Not expanding type definitions *)
+  val targetHeadOpt : Exp -> Head option (* target type family or NONE *)
+  val targetHead : Exp -> Head           (* target type family         *)
+
+  (* Expanding type definitions *)
   val targetFamOpt : Exp -> cid option  (* target type family or NONE *)
   val targetFam : Exp -> cid            (* target type family         *)
 

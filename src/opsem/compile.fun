@@ -65,10 +65,10 @@ struct
     | compileGoalN fromCS (G, I.Pi((I.Dec(_,A1), I.No), A2)) =
       (* A = A1 -> A2 *)
       let
-	val a1 = I.targetFam A1
+	val Ha1 = I.targetHead A1
       in
-	(* A1 is used to build the proof term, a1 for indexing *)
-	C.Impl (compileClauseN fromCS false (G, A1), A1, a1, 
+	(* A1 is used to build the proof term, Ha1 for indexing *)
+	C.Impl (compileClauseN fromCS false (G, A1), A1, Ha1, 
 		compileGoalN fromCS (I.Decl(G, I.Dec(NONE, A1)), A2))
       end
     | compileGoalN fromCS (G, I.Pi((D as I.Dec (_, A1), I.Maybe), A2)) =
@@ -266,9 +266,9 @@ struct
 	fun compileCtx' (I.Null) = I.Null
 	  | compileCtx' (I.Decl (G, D as I.Dec (_, A))) =
 	    let 
-	      val a = I.targetFam A
+	      val Ha = I.targetHead A
 	    in
-	      I.Decl (compileCtx' (G), SOME (compileClause opt (G, A), I.id, a))
+	      I.Decl (compileCtx' (G), SOME (compileClause opt (G, A), I.id, Ha))
 	    end
       in
 	C.DProg (G, compileCtx' (G))
@@ -287,9 +287,9 @@ struct
 	  | compileCtx'' (I.Decl (G, D as I.Dec (_, A)),
 			 I.Decl (B, T)) =
 	    let 
-	      val a = I.targetFam A
+	      val Ha = I.targetHead A
 	    in
-	      I.Decl (compileCtx'' (G, B), SOME (compileClause opt (G, A), I.id, a))
+	      I.Decl (compileCtx'' (G, B), SOME (compileClause opt (G, A), I.id, Ha))
 	    end
       in
 	C.DProg (G, compileCtx'' (G, B))

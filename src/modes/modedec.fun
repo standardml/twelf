@@ -228,8 +228,12 @@ struct
         (checkName mS; 
 	 case I.sgnLookup a 
 	   of I.ConDec (_, _, _, _, V, _)  =>
-	       (inferMode ((I.Null, V), mS); ()))
-              (* only possibility: no defined type families *)
+	       (inferMode ((I.Null, V), mS); ())
+              (* defined type families treated as separate types for
+                 purposes of mode checking (as the operational
+                 semantics doesn't expand type definitions) *)
+            | I.ConDef (_, _, _, _, V, _) =>
+               (inferMode ((I.Null, V), mS); ()))
 	handle Error (msg) => error (r, msg)  (* re-raise error with location *)
 
   in

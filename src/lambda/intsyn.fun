@@ -467,13 +467,35 @@ struct
 
   (* Type related functions *)
 
+  (* targetHeadOpt (V) = SOME(H) or NONE
+     where H is the head of the atomic target type of V,
+     NONE if V is a kind or object or have variable type.
+     Does not expand type definitions.
+  *)
+  fun targetHeadOpt (Root (H, _)) = SOME(H)
+    | targetHeadOpt (Pi(_, V)) = targetHeadOpt V
+    | targetHeadOpt (Redex (V, S)) = targetHeadOpt V
+    | targetHeadOpt (Lam (_, V)) = targetHeadOpt V
+    | targetHeadOpt (EVar (ref (SOME(V)),_,_,_)) = targetHeadOpt V
+    | targetHeadOpt (EClo (V, s)) = targetHeadOpt V
+    | targetHeadOpt _ = NONE
+      (* Root(Bvar _, _), Root(FVar _, _), Root(FgnConst _, _),
+         EVar(ref NONE,..), Uni, FgnExp _
+      *)
+      (* Root(Skonst _, _) can't occur *)
+  (* targetHead (A) = a
+     as in targetHeadOpt, except V must be a valid type
+  *)
+  fun targetHead (A) = valOf (targetHeadOpt A)
+                      
   (* targetFamOpt (V) = SOME(cid) or NONE
      where cid is the type family of the atomic target type of V,
      NONE if V is a kind or object or have variable type.
+     Does expand type definitions.
   *)
   fun targetFamOpt (Root (Const(cid), _)) = SOME(cid)
     | targetFamOpt (Pi(_, V)) = targetFamOpt V
-    | targetFamOpt (Root (Def(cid), _)) = SOME(cid)
+    | targetFamOpt (Root (Def(cid), _)) = targetFamOpt (constDef cid)
     | targetFamOpt (Redex (V, S)) = targetFamOpt V
     | targetFamOpt (Lam (_, V)) = targetFamOpt V
     | targetFamOpt (EVar (ref (SOME(V)),_,_,_)) = targetFamOpt V
@@ -487,5 +509,5 @@ struct
      as in targetFamOpt, except V must be a valid type
   *)
   fun targetFam (A) = valOf (targetFamOpt A)
-
+                      
 end;  (* functor IntSyn *)

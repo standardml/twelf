@@ -10,7 +10,7 @@ sig
   datatype Goal =                       (* Goals                      *)
     Atom of IntSyn.Exp                  (* g ::= p                    *)
   | Impl of ResGoal * IntSyn.Exp        (*     | (r,A,a) => g         *)
-            * IntSyn.cid * Goal		
+            * IntSyn.Head * Goal		
   | All  of IntSyn.Dec * Goal           (*     | all x:A. g           *)
 
   and ResGoal =                         (* Residual Goals             *)
@@ -34,7 +34,7 @@ sig
   (* type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx *)
 
   (* Dynamic programs: context with synchronous clause pool *)
-  datatype DProg = DProg of (IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx)
+  datatype DProg = DProg of (IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.Head) option IntSyn.Ctx)
 
   (* Static programs --- compiled version of the signature *)
   datatype ConDec =			(* Compiled constant declaration *)

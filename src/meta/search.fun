@@ -142,6 +142,15 @@ struct
     fun pruneCtx (G, 0) = G
       | pruneCtx (I.Decl (G, _), n) = pruneCtx (G, n-1)
 
+  fun cidFromHead (I.Const a) = a
+    | cidFromHead (I.Def a) = a
+    | cidFromHead (I.Skonst a) = a
+
+  (* only used for type families of compiled clauses *)
+  fun eqHead (I.Const a, I.Const a') = a = a'
+    | eqHead (I.Def a, I.Def a') = a = a'
+    | eqHead _ = false
+                              
   (* solve ((g,s), (G,dPool), sc, (acc, k)) => ()
      Invariants:
        G |- s : G'
@@ -154,12 +163,12 @@ struct
        if  G |- M :: g[s] then G |- sc :: g[s] => Answer, Answer closed
   *)
   fun solve (max, depth, (C.Atom p, s), dp, sc) = matchAtom (max, depth, (p,s), dp, sc)
-    | solve (max, depth, (C.Impl (r, A, cid, g), s), C.DProg (G, dPool), sc) =
+    | solve (max, depth, (C.Impl (r, A, Ha, g), s), C.DProg (G, dPool), sc) =
        let
 	 val D' = I.Dec (NONE, I.EClo (A, s))
        in
 	 solve (max, depth+1, (g, I.dot1 s), 
-		C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, cid))),
+		C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
 		(fn M => sc (I.Lam (D', M))))
        end
     | solve (max, depth, (C.All (D, g), s), C.DProg (G, dPool), sc) =
@@ -253,28 +262,24 @@ struct
   *)
   and matchAtom (0, _, _, _, _) = ()
     | matchAtom (max, depth, 
-		 ps' as (I.Root (I.Const cid, _), _), 
+		 ps' as (I.Root (Ha, _), _), 
 		 dp as C.DProg (G, dPool), sc) =
       let
 	fun matchSig' nil = ()
-	  | matchSig' (H ::sgn') =
+	  | matchSig' (Hc ::sgn') =
 	    let
-	      val cid' = (case H  
-			    of I.Const cid => cid
-			     | I.Skonst cid => cid)
-				  
-	      val C.SClause(r) = C.sProgLookup cid'
+	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
 	      val _ = CSManager.trail
 		      (fn () =>
 		       rSolve (max-1, depth, ps', (r, I.id), dp,
-			       (fn S => sc (I.Root (H, S)))))
+			       (fn S => sc (I.Root (Hc, S)))))
 	    in
 	      matchSig' sgn'
 	    end
 
-	fun matchDProg (I.Null, _) = matchSig' (Index.lookup cid) 
-	  | matchDProg (I.Decl (dPool', SOME (r, s, cid')), n) =
-	    if cid = cid' then
+	fun matchDProg (I.Null, _) = matchSig' (Index.lookup (cidFromHead Ha)) 
+	  | matchDProg (I.Decl (dPool', SOME (r, s, Ha')), n) =
+	    if eqHead (Ha, Ha') then
 	      let
 		val _ = CSManager.trail (fn () =>
 			    rSolve (max-1,depth, ps', (r, I.comp (s, I.Shift n)), dp,

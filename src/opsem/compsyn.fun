@@ -15,7 +15,7 @@ struct
   datatype Goal =                       (* Goals                      *)
     Atom of IntSyn.Exp                  (* g ::= p                    *)
   | Impl of ResGoal * IntSyn.Exp        (*     | (r,A,a) => g         *)
-            * IntSyn.cid * Goal		
+            * IntSyn.Head * Goal		
   | All  of IntSyn.Dec * Goal           (*     | all x:A. g           *)
 
   and ResGoal =                         (* Residual Goals             *)
@@ -77,7 +77,7 @@ struct
   (* The dynamic clause pool --- compiled version of the context *)
   (* Dynamic programs: context with synchronous clause pool *)
 
-  datatype DProg = DProg of IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx
+  datatype DProg = DProg of IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.Head) option IntSyn.Ctx
 
   (* Static programs --- compiled version of the signature *)
   datatype ConDec =			(* Compiled constant declaration *)
@@ -104,8 +104,8 @@ struct
      and  G  |- g' : A
   *)
   fun goalSub (Atom(p), s) = Atom(IntSyn.EClo(p,s))
-    | goalSub (Impl(d, A, a, g), s) =
-       Impl (resGoalSub (d, s), IntSyn.EClo(A, s), a,
+    | goalSub (Impl(d, A, Ha, g), s) =
+       Impl (resGoalSub (d, s), IntSyn.EClo(A, s), Ha,
 	     goalSub (g, IntSyn.dot1 s))
     | goalSub (All(D, g), s) =
        All (IntSyn.decSub(D,s), goalSub (g, IntSyn.dot1 s))

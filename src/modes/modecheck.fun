@@ -383,6 +383,9 @@ struct
     (* --------------------------------------------------------- mode checking *)
 
 
+    fun cidFromHead (I.Const a) = a
+      | cidFromHead (I.Def a) = a
+          
     (* checkD (ConDec, ocOpt)  = () 
 
        checkD terminates with () if ConDec is mode correct
@@ -392,8 +395,8 @@ struct
     *)
     fun checkD (conDec, fileName, ocOpt) =
         let 
-	  fun checkable (I.Root (I.Const (a), _)) = 
-	      (case (M.modeLookup a) 
+	  fun checkable (I.Root (Ha, _)) = 
+	      (case (M.modeLookup (cidFromHead Ha)) 
 		 of NONE => false
 	          | SOME _ => true)
 	    | checkable (I.Uni _) = false

@@ -540,14 +540,15 @@ struct
 
     fun namePrefOf' (Exist, NONE) = "X"
       | namePrefOf' (Univ _, NONE) = "x"
-      | namePrefOf' (role, SOME(cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
+      | namePrefOf' (role, SOME(IntSyn.Const cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
+      | namePrefOf' (role, SOME(IntSyn.Def cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
 
     (* namePrefOf (role, V) = name
        where name is the preferred base name for a variable with type V
 
        V should be a type, but the code is robust, returning the default "X" or "x"
     *)
-    fun namePrefOf (role, V) = namePrefOf' (role, IntSyn.targetFamOpt V)
+    fun namePrefOf (role, V) = namePrefOf' (role, IntSyn.targetHeadOpt V)
 
   end  (* local ... *)
 

@@ -57,6 +57,13 @@ struct
      return to indicate backtracking.
   *)
 
+  fun cidFromHead (I.Const a) = a
+    | cidFromHead (I.Def a) = a
+                              
+  fun eqHead (I.Const a, I.Const a') = a = a'
+    | eqHead (I.Def a, I.Def a') = a = a'
+    | eqHead _ = false
+                              
   (* solve ((g, s), dp, sc) => ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
@@ -69,23 +76,23 @@ struct
   *)
   fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
       matchAtom ((p,s), dp, sc)
-    | solve ((C.Impl(r, A, a, g), s), C.DProg (G, dPool), sc) =
+    | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decUName (G, I.Dec(NONE, I.EClo(A,s)))
-	val _ = T.signal (G, T.IntroHyp (I.Const(a), D'))
+	val _ = T.signal (G, T.IntroHyp (Ha, D'))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
-	       (fn M => (T.signal (G, T.DischargeHyp (I.Const(a), D'));
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
+	       (fn M => (T.signal (G, T.DischargeHyp (Ha, D'));
 			 sc (I.Lam (D', M)))))
       end
     | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),V) = N.decUName (G, I.decSub (D, s))
-	val a = I.targetFam V
-	val _ = T.signal (G, T.IntroParm (I.Const(a), D'))
+	val Ha = I.targetHead V
+	val _ = T.signal (G, T.IntroParm (Ha, D'))
       in
 	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
-	       (fn M => (T.signal (G, T.DischargeParm (I.Const(a),  D'));
+	       (fn M => (T.signal (G, T.DischargeParm (Ha,  D'));
 			 sc (I.Lam (D', M)))))
       end
 
@@ -145,7 +152,7 @@ struct
      This first tries the local assumptions in dp then
      the static signature.
   *)
-  and matchAtom (ps' as (I.Root(Ha as I.Const(a),S),s), dp as C.DProg (G,dPool), sc) =
+  and matchAtom (ps' as (I.Root(Ha,S),s), dp as C.DProg (G,dPool), sc) =
       let
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
@@ -156,9 +163,9 @@ struct
 	fun matchSig nil =
 	    (T.signal (G, T.FailGoal (tag, Ha, I.EClo ps'));
 	     ())			(* return indicates failure *)
-	  | matchSig ((Hc as I.Const c)::sgn') =
+	  | matchSig (Hc::sgn') =
 	    let
-	      val C.SClause(r) = C.sProgLookup c
+	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
 	    in
 	      (* trail to undo EVar instantiations *)
 	      if
@@ -181,9 +188,9 @@ struct
         *)
 	fun matchDProg (I.Null, _) =
 	    (* dynamic program exhausted, try signature *)
-	    matchSig (Index.lookup a) 
-	  | matchDProg (I.Decl (dPool', SOME(r, s, a')), k) =
-	    if a = a'
+	    matchSig (Index.lookup (cidFromHead Ha)) 
+	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), k) =
+	    if eqHead (Ha, Ha')
 	      then (* trail to undo EVar instantiations *)
 		(if
 		   CSManager.trail (fn () =>
@@ -213,7 +220,7 @@ struct
                 else ()
               end      
       in
-        case I.constStatus(a)
+        case I.constStatus(cidFromHead Ha)
           of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
            | _ => matchDProg (dPool, 1)
       end

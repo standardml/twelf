@@ -379,8 +379,7 @@ struct
                             of IntSyn.ConDec _ => checkFreeze (c, a)
                              | IntSyn.SkoDec _ => checkFreeze (c, a)
                                (* FIX: skolem types should probably be created frozen -kw *)
-                               (* ConDef impossible; type defs not allowed *)
-                               (* AbbrevDef impossible; V is nf *);
+                             | _ => ();
                           (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
 			  (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
 			  installExp (I.Null, V, I.Uni(I.Type)))

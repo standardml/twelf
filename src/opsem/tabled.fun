@@ -246,6 +246,13 @@ struct
 
   (* ---------------------------------------------------------------------- *)
 
+  fun cidFromHead (I.Const a) = a
+    | cidFromHead (I.Def a) = a
+
+  fun eqHead (I.Const a, I.Const a') = a = a'
+    | eqHead (I.Def a, I.Def a') = a = a'
+    | eqHead _ = false
+                              
   (* solve ((g, s), dp, sc) => ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
@@ -407,11 +414,11 @@ struct
 	       retrieve (Gdp, ((N', U) ,s), L, (G, sc))
       end 
     
-    | solve ((C.Impl(r, A, a, g), s), C.DProg (G, dPool), sc) =
+    | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' = I.Dec(NONE, I.EClo(A,s))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
+	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
 	       (fn M => sc (I.Lam (D', M))))
       end
     | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
@@ -499,21 +506,21 @@ struct
      This first tries the local assumptions in dp then
      the static signature.
   *)
-  and matchAtom (ps' as (I.Root(I.Const(a),S),s), dp as C.DProg (G,dPool), sc) =
+  and matchAtom (ps' as (I.Root(Ha,S),s), dp as C.DProg (G,dPool), sc) =
       let
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
            with c1.
         *)
 	fun matchSig nil = ()	(* return indicates failure *)
-	  | matchSig ((H as I.Const c)::sgn') =
+	  | matchSig (Hc::sgn') =
 	    let
-	      val C.SClause(r) = C.sProgLookup c
+	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
 	    in
 	      (* trail to undo EVar instantiations *)
 	      CSManager.trail (fn () =>
 			       (rSolve (ps', (r, I.id), dp,
-					(fn S => sc (I.Root(H, S)))))) ;
+					(fn S => sc (I.Root(Hc, S)))))) ;
 	      matchSig sgn'
 	    end
 
@@ -524,9 +531,9 @@ struct
         *)
 	fun matchDProg (I.Null, _) =
 	    (* dynamic program exhausted, try signature *)
-	    matchSig (Index.lookup a)
-	  | matchDProg (I.Decl (dPool', SOME(r, s, a')), k) =
-	    if a = a'
+	    matchSig (Index.lookup (cidFromHead Ha))
+	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), k) =
+	    if eqHead (Ha, Ha')
 	      then (* trail to undo EVar instantiations *)
 		(CSManager.trail (fn () =>
 		                      rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
@@ -551,7 +558,7 @@ struct
       in
 	(* assume all predicates are tabled *)
 	 
-        case I.constStatus(a)
+        case I.constStatus(cidFromHead Ha)
           of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
            | _ => matchDProg (dPool, 1)
       end
