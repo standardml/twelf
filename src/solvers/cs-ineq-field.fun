@@ -2,21 +2,22 @@
 (* Author: Roberto Virga *)
 
 functor CSIneqField (structure OrderedField : ORDERED_FIELD
-                     structure IntSyn : INTSYN
+                     (*! structure IntSyn : INTSYN !*)
                      structure Trail : TRAIL
                      structure Unify : UNIFY
-                       sharing Unify.IntSyn = IntSyn
+		     (*! sharing Unify.IntSyn = IntSyn !*)
                      structure SparseArray  : SPARSE_ARRAY
                      structure SparseArray2 : SPARSE_ARRAY2
-                     structure CSManager : CS_MANAGER
-                       sharing CSManager.IntSyn = IntSyn
+                     (*! structure CSManager : CS_MANAGER !*)
+		     (*! sharing CSManager.IntSyn = IntSyn !*)
                      structure CSEqField : CS_EQ_FIELD
                        sharing CSEqField.Field = OrderedField
-                       sharing CSEqField.IntSyn = IntSyn
-                       sharing CSEqField.CSManager = CSManager)
+                       (*! sharing CSEqField.IntSyn = IntSyn !*)
+                       (*! sharing CSEqField.CSManager = CSManager !*)
+			 )
  : CS =
 struct
-  structure CSManager = CSManager
+  (*! structure CSManager = CSManager !*)
 
   local
     open IntSyn

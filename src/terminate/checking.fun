@@ -3,36 +3,37 @@
 (* for reasoning about orders see [Pientka IJCAR'01] *)
  
 functor Checking  (structure Global : GLOBAL
-		   structure IntSyn': INTSYN
+		   (*! structure IntSyn' : INTSYN !*)
 		   structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn'
+		   (*! sharing Whnf.IntSyn = IntSyn' !*)
 	           structure Conv : CONV
-		     sharing Conv.IntSyn = IntSyn'
+		   (*! sharing Conv.IntSyn = IntSyn' !*)
 	           structure Unify : UNIFY
-		     sharing Unify.IntSyn = IntSyn'
+		   (*! sharing Unify.IntSyn = IntSyn' !*)
 	           structure Names : NAMES
-		     sharing Names.IntSyn = IntSyn'
+		   (*! sharing Names.IntSyn = IntSyn' !*)
 	           structure Index : INDEX
-		     sharing Index.IntSyn = IntSyn'
+		   (*! sharing Index.IntSyn = IntSyn' !*)
 	           structure Subordinate : SUBORDINATE
-		     sharing Subordinate.IntSyn = IntSyn'
+		   (*! sharing Subordinate.IntSyn = IntSyn' !*)
      		   structure Formatter : FORMATTER
 	           structure Print : PRINT
-		     sharing Print.IntSyn = IntSyn'
+		   (*! sharing Print.IntSyn = IntSyn' !*)
 		     sharing Print.Formatter = Formatter
 		   structure Order : ORDER
-		     sharing Order.IntSyn = IntSyn'
-		   structure Paths  : PATHS
+		   (*! sharing Order.IntSyn = IntSyn' !*)
+		   (*! structure Paths  : PATHS !*)
 		   structure Origins : ORIGINS
-		     sharing Origins.Paths = Paths
-		     sharing Origins.IntSyn = IntSyn'
-	           structure CSManager : CS_MANAGER
-		     sharing CSManager.IntSyn = IntSyn')
+		   (*! sharing Origins.Paths = Paths !*)
+		     (*! sharing Origins.IntSyn = IntSyn' !*)
+		   (*! structure CSManager : CS_MANAGER !*)
+		   (*! sharing CSManager.IntSyn = IntSyn' !*)
+		       )
   :  CHECKING =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure Order = Order
-  structure Paths = Paths
+  (*! structure Paths = Paths !*)
 
     datatype Quantifier =        (* Quantifier to mark parameters *)
       All                        (* Q ::= All                     *)

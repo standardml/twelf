@@ -4,7 +4,7 @@
 
 signature PRINT =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure Formatter : FORMATTER
 
   val implicit : bool ref

@@ -5,7 +5,7 @@ signature MODEXTSYN =
 sig
 
   structure ExtSyn : EXTSYN
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   type strexp
   val strexp : string list * string * Paths.region -> strexp

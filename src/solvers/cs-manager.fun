@@ -2,9 +2,9 @@
 (* Author: Roberto Virga *)
 
 functor CSManager (structure Global : GLOBAL
-                   structure IntSyn : INTSYN
+                   (*! structure IntSyn : INTSYN !*)
                    structure Unify : UNIFY
-                     sharing Unify.IntSyn = IntSyn
+		   (*! sharing Unify.IntSyn = IntSyn !*)
                    structure Fixity : FIXITY
                    structure ModeSyn : MODESYN)
   : CS_MANAGER =
@@ -94,6 +94,7 @@ struct
     (* install the specified solver *)
     fun installSolver (solver) =
           let
+	    (* val _ = print ("Installing constraint domain " ^ #name solver ^ "\n") *)
             val cs = !nextCS
             val _ = if !nextCS > maxCS
                     then raise Error "too many constraint solvers" 
@@ -234,3 +235,9 @@ struct
     val trail = trail
   end
 end  (* functor CSManager *)
+
+structure CSManager = CSManager (structure Global = Global
+                                 (*! structure IntSyn = IntSyn !*)
+                                 structure Unify = UnifyTrail
+                                 structure Fixity = Names.Fixity
+                                 structure ModeSyn = ModeSyn);

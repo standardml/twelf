@@ -4,7 +4,7 @@
 signature CLAUSEPRINT =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure Formatter : FORMATTER
 
   val formatClause : IntSyn.dctx * IntSyn.Exp -> Formatter.format

@@ -4,8 +4,8 @@
 signature ORIGINS =
 sig
 
-  structure IntSyn : INTSYN
-  structure Paths : PATHS
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure Paths : PATHS !*)
 
   val reset : unit -> unit
   val installLinesInfo : string * Paths.linesInfo -> unit

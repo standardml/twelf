@@ -18,18 +18,18 @@ functor Prover (structure MetaGlobal : METAGLOBAL
 		structure MetaPrint : METAPRINT
 		  sharing MetaPrint.MetaSyn = MetaSyn'
 		structure Names : NAMES
-		  sharing Names.IntSyn = MetaSyn'.IntSyn
+		(*! sharing Names.IntSyn = MetaSyn'.IntSyn !*)
 		structure Timers : TIMERS) 
   : PROVER =
 struct
-  structure IntSyn = MetaSyn'.IntSyn
+  (*! structure IntSyn = MetaSyn'.IntSyn !*)
 
   exception Error of string
 
   local 
     structure MetaSyn = MetaSyn'
     structure M = MetaSyn
-    structure I = MetaSyn.IntSyn
+    structure I = IntSyn
 
     (* List of open states *)
     val openStates : MetaSyn.State list ref = ref nil

@@ -2,21 +2,21 @@
 (* Author: Frank Pfenning *)
 
 functor ParseTerm
-  (structure Parsing' : PARSING
+  ((*! structure Parsing' : PARSING !*)
    structure ExtSyn' : EXTSYN
-      sharing Parsing'.Lexer.Paths = ExtSyn'.Paths
+   (*! sharing Parsing'.Lexer.Paths = ExtSyn'.Paths !*)
    structure Names : NAMES)
   : PARSE_TERM =
 struct
 
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure ExtSyn = ExtSyn'
 
   local
     (* some shorthands *)
-    structure L = Parsing.Lexer
-    structure LS = Parsing.Lexer.Stream  
-    structure Paths = Parsing.Lexer.Paths
+    structure L = Lexer
+    structure LS = Lexer.Stream  
+    (*! structure Paths = Lexer.Paths !*)
     structure FX = Names.Fixity
 
     (* Operators and atoms for operator precedence parsing *)

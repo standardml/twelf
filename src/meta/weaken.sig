@@ -3,7 +3,7 @@
 
 signature WEAKEN = 
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   val strengthenExp : (IntSyn.Exp * IntSyn.Sub) -> IntSyn.Exp
   val strengthenSpine: (IntSyn.Spine * IntSyn.Sub) -> IntSyn.Spine

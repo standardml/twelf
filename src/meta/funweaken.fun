@@ -1,15 +1,16 @@
 (* Weakening substitutions for meta substitutions *)
 (* Author: Carsten Schuermann *)
 
-functor FunWeaken (structure FunSyn' : FUNSYN
+functor FunWeaken ((*! structure FunSyn' : FUNSYN !*)
 		   structure Weaken : WEAKEN
-		     sharing Weaken.IntSyn = FunSyn'.IntSyn) : FUNWEAKEN = 
+		   (*! sharing Weaken.IntSyn = FunSyn'.IntSyn !*)
+		     ) : FUNWEAKEN =
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
 
   local
     structure F = FunSyn
-    structure I = FunSyn.IntSyn
+    structure I = IntSyn
 
     (* strengthenPsi (Psi, s) = (Psi', s')
      

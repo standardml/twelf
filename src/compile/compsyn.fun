@@ -5,15 +5,15 @@
 (* Modified: Brigitte Pientka *)
 
 functor CompSyn (structure Global : GLOBAL
-                 structure IntSyn' : INTSYN
+                 (*! structure IntSyn' : INTSYN !*)
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn'
+		 (*! sharing Names.IntSyn = IntSyn' !*)
                  structure Table : TABLE
                    where type key = int)
   : COMPSYN =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   datatype Goal =                       (* Goals                      *)
     Atom of IntSyn.Exp                  (* g ::= p                    *)
@@ -152,3 +152,9 @@ struct
     | pskeletonToString (Csolver::O) = ("Cs " ^ (pskeletonToString O))
 
 end;  (* functor CompSyn *)
+
+structure CompSyn =
+  CompSyn (structure Global = Global
+           (*! structure IntSyn' = IntSyn !*)
+	   structure Names = Names
+           structure Table = IntRedBlackTree);

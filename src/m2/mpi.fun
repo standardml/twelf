@@ -20,7 +20,7 @@ functor Mpi (structure MetaGlobal : METAGLOBAL
 	     structure MetaPrint : METAPRINT
 	     sharing MetaPrint.MetaSyn = MetaSyn'
 	     structure Names : NAMES
-	     sharing Names.IntSyn = MetaSyn'.IntSyn
+	     (*! sharing Names.IntSyn = MetaSyn'.IntSyn !*)
 	     structure Timers : TIMERS
 	     structure Ring : RING) 
   : MPI =
@@ -31,7 +31,7 @@ struct
 
   local 
     structure M = MetaSyn
-    structure I = MetaSyn.IntSyn
+    structure I = IntSyn
 
     datatype MenuItem =
       Filling of Filling.operator

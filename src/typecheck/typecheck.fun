@@ -1,18 +1,19 @@
 (* Type Checking *)
 (* Author: Carsten Schuermann *)
 
-functor TypeCheck (structure IntSyn' : INTSYN
+functor TypeCheck ((*! structure IntSyn' : INTSYN !*)
 		   structure Conv : CONV
-		     sharing Conv.IntSyn = IntSyn'
+		   (*! sharing Conv.IntSyn = IntSyn' !*)
 		   structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn' 
+		   (*! sharing Whnf.IntSyn = IntSyn'  !*)
                    structure Names : NAMES
-		     sharing Names.IntSyn = IntSyn'
+		   (*! sharing Names.IntSyn = IntSyn' !*)
 		   structure Print : PRINT
-		     sharing Print.IntSyn = IntSyn')
+		   (*! sharing Print.IntSyn = IntSyn' !*)
+		       )
   : TYPECHECK =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   exception Error of string
 
   local 

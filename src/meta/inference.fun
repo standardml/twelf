@@ -2,29 +2,30 @@
 (* Author: Carsten Schuermann *)
 
 functor Inference (structure MTPGlobal : MTPGLOBAL
-		   structure IntSyn : INTSYN
-		   structure FunSyn' : FUNSYN
-		     sharing FunSyn'.IntSyn = IntSyn
+		   (*! structure IntSyn : INTSYN !*)
+		   (*! structure FunSyn' : FUNSYN !*)
+		   (*! sharing FunSyn'.IntSyn = IntSyn !*)
 		   structure StateSyn' : STATESYN
-		     sharing StateSyn'.FunSyn = FunSyn'
+		   (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 		   structure Abstract : ABSTRACT
-		     sharing Abstract.IntSyn = IntSyn
+		   (*! sharing Abstract.IntSyn = IntSyn !*)
 		   structure TypeCheck : TYPECHECK
-		     sharing TypeCheck.IntSyn = IntSyn
+		   (*! sharing TypeCheck.IntSyn = IntSyn !*)
 	           structure FunTypeCheck : FUNTYPECHECK
-		     sharing FunTypeCheck.FunSyn = FunSyn'
+		   (*! sharing FunTypeCheck.FunSyn = FunSyn' !*)
 		     sharing FunTypeCheck.StateSyn = StateSyn'
 	           structure UniqueSearch  : UNIQUESEARCH
-		     sharing UniqueSearch.IntSyn = IntSyn
-		     sharing UniqueSearch.FunSyn = FunSyn'
+		   (*! sharing UniqueSearch.IntSyn = IntSyn !*)
+		   (*! sharing UniqueSearch.FunSyn = FunSyn' !*)
   	             sharing UniqueSearch.StateSyn = StateSyn'
 		   structure Print : PRINT
-		     sharing Print.IntSyn = IntSyn
+		   (*! sharing Print.IntSyn = IntSyn !*)
 		   structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn)
+		   (*! sharing Whnf.IntSyn = IntSyn !*)
+		     )
   : INFERENCE =
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
 
   exception Error of string

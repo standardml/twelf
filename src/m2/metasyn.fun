@@ -1,12 +1,13 @@
 (* Meta syntax *)
 (* Author: Carsten Schuermann *)
 
-functor MetaSyn (structure IntSyn' : INTSYN
+functor MetaSyn ((*! structure IntSyn' : INTSYN !*)
 		 structure Whnf : WHNF
-		 sharing Whnf.IntSyn = IntSyn')
+		 (*! sharing Whnf.IntSyn = IntSyn' !*)
+		   )
   : METASYN =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 

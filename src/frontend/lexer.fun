@@ -3,12 +3,13 @@
 (* Modified: Brigitte Pientka *)
 
 functor Lexer (structure Stream' : STREAM
-               structure Paths' : PATHS)
+               (*! structure Paths' : PATHS !*)
+		 )
   : LEXER =
 struct
 
   structure Stream = Stream'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
 
   local
     structure P = Paths
@@ -405,3 +406,8 @@ struct
   end  (* local ... *)
 
 end;  (* functor Lexer *)
+
+structure Lexer =
+  Lexer (structure Stream' = Stream
+	 (*! structure Paths' = Paths !*)
+	   );

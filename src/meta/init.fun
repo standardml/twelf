@@ -3,25 +3,25 @@
 
 functor MTPInit (structure MTPGlobal : MTPGLOBAL
 		 structure MTPData : MTPDATA
-		 structure IntSyn : INTSYN
+		 (*! structure IntSyn : INTSYN !*)
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn
-		 structure FunSyn' : FUNSYN
-		   sharing FunSyn'.IntSyn = IntSyn
+		 (*! sharing Names.IntSyn = IntSyn !*)
+		 (*! structure FunSyn' : FUNSYN !*)
+		 (*! sharing FunSyn'.IntSyn = IntSyn !*)
 		 structure StateSyn' : STATESYN
-		   sharing StateSyn'.FunSyn = FunSyn'
+		 (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 		 structure Formatter : FORMATTER
 		 structure Whnf : WHNF
-		   sharing Whnf.IntSyn = IntSyn
+		 (*! sharing Whnf.IntSyn = IntSyn !*)
 	         structure Print : PRINT
 		   sharing Print.Formatter = Formatter
-		   sharing Print.IntSyn = IntSyn
+		   (*! sharing Print.IntSyn = IntSyn !*)
 		 structure FunPrint : FUNPRINT
-		   sharing FunPrint.FunSyn = FunSyn'
+		 (*! sharing FunPrint.FunSyn = FunSyn' !*)
 		   sharing FunPrint.Formatter = Formatter)
   : MTPINIT =
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
 
   exception Error of string

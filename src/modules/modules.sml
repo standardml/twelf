@@ -1,8 +1,8 @@
 structure ModSyn =
   ModSyn (structure Global = Global
-          structure IntSyn' = IntSyn
+          (*! structure IntSyn' = IntSyn !*)
           structure Names' = Names
-          structure Paths' = Paths
+          (*! structure Paths' = Paths !*)
           structure Origins = Origins
           structure Whnf = Whnf
           structure Strict = Strict

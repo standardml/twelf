@@ -1,17 +1,17 @@
 (* Solver for machine integers *)
 (* Author: Roberto Virga *)
 
-functor CSIntWord (structure IntSyn : INTSYN
+functor CSIntWord ((*! structure IntSyn : INTSYN !*)
                    structure Whnf : WHNF
-                     sharing Whnf.IntSyn = IntSyn
+		   (*! sharing Whnf.IntSyn = IntSyn !*)
                    structure Unify : UNIFY
-                     sharing Unify.IntSyn = IntSyn
-                   structure CSManager : CS_MANAGER
-                     sharing CSManager.IntSyn = IntSyn
+                   (*! sharing Unify.IntSyn = IntSyn !*)
+		   (*! structure CSManager : CS_MANAGER !*)
+                   (*! sharing CSManager.IntSyn = IntSyn !*)
                    val wordSize : int)
  : CS =
 struct
-  structure CSManager = CSManager
+  (*! structure CSManager = CSManager !*)
 
   local
     open IntSyn

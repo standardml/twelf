@@ -2,28 +2,29 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPFilling (structure MTPGlobal : MTPGLOBAL
-                    structure IntSyn : INTSYN
-                    structure FunSyn' : FUNSYN
-		      sharing FunSyn'.IntSyn = IntSyn
+                    (*! structure IntSyn : INTSYN !*)
+                    (*! structure FunSyn' : FUNSYN !*)
+		    (*! sharing FunSyn'.IntSyn = IntSyn !*)
                     structure StateSyn' : STATESYN
-		      sharing StateSyn'.FunSyn = FunSyn'
+		    (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 		    structure Abstract : ABSTRACT
-		      sharing Abstract.IntSyn = IntSyn
+		    (*! sharing Abstract.IntSyn = IntSyn !*)
 		    structure TypeCheck : TYPECHECK
-		      sharing TypeCheck.IntSyn = IntSyn
+		    (*! sharing TypeCheck.IntSyn = IntSyn !*)
 		    structure MTPData : MTPDATA
 		    structure Search   : MTPSEARCH
   		      sharing Search.StateSyn = StateSyn'
 		    structure Whnf : WHNF
-		      sharing Whnf.IntSyn = IntSyn)
+		    (*! sharing Whnf.IntSyn = IntSyn !*)
+		      )
   : MTPFILLING =
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
 
   exception Error of string
 
-  type operator = (unit -> int * FunSyn'.Pro)
+  type operator = (unit -> int * FunSyn.Pro)
 
   local
     structure S = StateSyn

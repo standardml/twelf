@@ -5,7 +5,7 @@
 signature COMPSYN =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   datatype Goal =                       (* Goals                      *)
     Atom of IntSyn.Exp                  (* g ::= p                    *)

@@ -1,4 +1,3 @@
 #!/bin/sh
-rm -rf /usr/doc/twelf
 rm -rf /usr/share/twelf
 rm -f /usr/bin/twelf-server

@@ -33,6 +33,14 @@ is
   ../solvers/sources.cm
   ../worldcheck/sources.cm
   ../cover/sources.cm
+  mkabsolute.sig
+#if defined(NEW_CM)
+  mkabsolute.sml
+#elif (SMLNJ_MINOR_VERSION >= 9)
+  mkabsolute.sml
+#else
+  mkabsolute-97.sml
+#endif
   lexer.sig
   lexer.fun
   parsing.sig

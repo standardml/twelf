@@ -4,7 +4,7 @@
 
 signature ASSIGN =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   (* exception Assignment of string *)
   (* raises Assignment, instantiates EVars as effect *)

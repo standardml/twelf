@@ -2,19 +2,20 @@
 (* Author: Roberto Virga *)
 
 functor CSEqIntegers (structure Integers : INTEGERS
-                      structure IntSyn : INTSYN
+                      (*! structure IntSyn : INTSYN !*)
                       structure Whnf : WHNF
-                        sharing Whnf.IntSyn = IntSyn
+		      (*! sharing Whnf.IntSyn = IntSyn !*)
                       structure Unify : UNIFY
-                        sharing Unify.IntSyn = IntSyn
-                      structure CSManager : CS_MANAGER
-                        sharing CSManager.IntSyn = IntSyn)
+		      (*! sharing Unify.IntSyn = IntSyn !*)
+                      (*! structure CSManager : CS_MANAGER !*)
+		      (*! sharing CSManager.IntSyn = IntSyn !*)
+			)
  : CS_EQ_INTEGERS =
 struct
-  structure CSManager = CSManager
+  (*! structure CSManager = CSManager !*)
 
   structure Integers = Integers
-  structure IntSyn = IntSyn
+  (*! structure IntSyn = IntSyn !*)
 
   type 'a mset = 'a list                 (* MultiSet                   *)
 

@@ -1,14 +1,15 @@
 (* Tabled Syntax *)
 (* Author: Brigitte Pientka *)
 
-functor TabledSyn (structure IntSyn' : INTSYN
+functor TabledSyn ((*! structure IntSyn' : INTSYN !*)
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn'
+		 (*! sharing Names.IntSyn = IntSyn' !*)
 		 structure Table : TABLE where type key = int
 		 structure Index : INDEX
-		 sharing Index.IntSyn = IntSyn') : TABLEDSYN =
+		 (*! sharing Index.IntSyn = IntSyn' !*)
+		     ) : TABLEDSYN =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 
@@ -18,7 +19,7 @@ struct
   and  Marg = Marg of Mode * string option
   *) 
   local 
-    structure I = IntSyn'
+    structure I = IntSyn
       
     val tabledSignature : bool Table.Table = Table.new(0);
 

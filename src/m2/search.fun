@@ -1,41 +1,41 @@
 (* Search (based on abstract machine ) *)
 (* Author: Carsten Schuermann *)
 
-functor Search (structure IntSyn' : INTSYN
+functor Search ((*! structure IntSyn' : INTSYN !*)
 		structure MetaGlobal : METAGLOBAL
 		structure MetaSyn' : METASYN
-		sharing MetaSyn'.IntSyn = IntSyn'
-		structure CompSyn' : COMPSYN
-		sharing CompSyn'.IntSyn = IntSyn'
+		(*! sharing MetaSyn'.IntSyn = IntSyn' !*)
+		(*! structure CompSyn' : COMPSYN !*)
+		(*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		structure Whnf : WHNF
-		sharing Whnf.IntSyn = IntSyn'
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
 		structure Unify : UNIFY
-		sharing Unify.IntSyn = IntSyn'
+		(*! sharing Unify.IntSyn = IntSyn' !*)
 		(*
 		structure Assign : ASSIGN
 		sharing Assign.IntSyn = IntSyn'
 		*)
 		structure Index : INDEX
-		sharing Index.IntSyn = IntSyn'
+		(*! sharing Index.IntSyn = IntSyn' !*)
 		structure Compile : COMPILE
-		sharing Compile.IntSyn = IntSyn'
-		sharing Compile.CompSyn = CompSyn'
+		(*! sharing Compile.IntSyn = IntSyn' !*)
+		(*! sharing Compile.CompSyn = CompSyn' !*)
 		structure CPrint : CPRINT
-		sharing CPrint.IntSyn = IntSyn'
-		sharing CPrint.CompSyn = CompSyn'
+		(*! sharing CPrint.IntSyn = IntSyn' !*)
+		(*! sharing CPrint.CompSyn = CompSyn' !*)
 		structure Print : PRINT
-		sharing Print.IntSyn = IntSyn'
+		(*! sharing Print.IntSyn = IntSyn' !*)
 		structure Names : NAMES 
-		sharing Names.IntSyn = IntSyn'
-		structure CSManager : CS_MANAGER
-		sharing CSManager.IntSyn = IntSyn'
+		(*! sharing Names.IntSyn = IntSyn' !*)
+		(*! structure CSManager : CS_MANAGER !*)
+		(*! sharing CSManager.IntSyn = IntSyn' !*)
 )
   : SEARCH =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure MetaSyn = MetaSyn'
-  structure CompSyn = CompSyn'
+  (*! structure CompSyn = CompSyn' !*)
 
   exception Error of string
 

@@ -4,7 +4,7 @@
 signature PARSE_THM =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ThmExtSyn: THMEXTSYN
 
   val parseTotal' : ThmExtSyn.tdecl Parsing.parser (* -fp *)

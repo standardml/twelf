@@ -4,47 +4,48 @@
 
 functor Solve
   (structure Global : GLOBAL
-   structure IntSyn' : INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
+   (*! sharing Names.IntSyn = IntSyn' !*)
    structure Parser : PARSER
      sharing Parser.Names = Names
    structure ReconQuery : RECON_QUERY
-     sharing ReconQuery.IntSyn = IntSyn'
+   (*! sharing ReconQuery.IntSyn = IntSyn' !*)
      sharing type ReconQuery.query = Parser.ExtQuery.query
      sharing type ReconQuery.solve = Parser.ExtQuery.solve
      sharing type ReconQuery.define = Parser.ExtQuery.define
      (* sharing type ReconQuery.Paths.occConDec = Origins.Paths.occConDec *)
    structure Timers : TIMERS
-   structure CompSyn : COMPSYN
-     sharing CompSyn.IntSyn = IntSyn'
+   (*! structure CompSyn : COMPSYN !*)
+   (*! sharing CompSyn.IntSyn = IntSyn' !*)
    structure Compile : COMPILE
-     sharing Compile.IntSyn = IntSyn'
-     sharing Compile.CompSyn = CompSyn
+   (*! sharing Compile.IntSyn = IntSyn' !*)
+   (*! sharing Compile.CompSyn = CompSyn !*)
    structure CPrint : CPRINT
-     sharing CPrint.IntSyn = IntSyn'
-     sharing CPrint.CompSyn = CompSyn
-   structure CSManager : CS_MANAGER
-     sharing CSManager.IntSyn = IntSyn'
+   (*! sharing CPrint.IntSyn = IntSyn' !*)
+   (*! sharing CPrint.CompSyn = CompSyn !*)
+   (*! structure CSManager : CS_MANAGER !*)
+   (*! sharing CSManager.IntSyn = IntSyn' !*)
    structure AbsMachine : ABSMACHINE
-     sharing AbsMachine.IntSyn = IntSyn'
-     sharing AbsMachine.CompSyn = CompSyn
+   (*! sharing AbsMachine.IntSyn = IntSyn' !*)
+   (*! sharing AbsMachine.CompSyn = CompSyn !*)
    structure PtRecon : PTRECON
-     sharing PtRecon.IntSyn = IntSyn'
-     sharing PtRecon.CompSyn = CompSyn
+   (*! sharing PtRecon.IntSyn = IntSyn' !*)
+   (*! sharing PtRecon.CompSyn = CompSyn !*)
    structure Tabled : TABLED
-     sharing Tabled.IntSyn = IntSyn'
-     sharing Tabled.CompSyn = CompSyn
+   (*! sharing Tabled.IntSyn = IntSyn' !*)
+   (*! sharing Tabled.CompSyn = CompSyn !*)
    structure TableIndex : TABLEINDEX
-     sharing TableIndex.IntSyn = IntSyn'
+   (*! sharing TableIndex.IntSyn = IntSyn' !*)
    structure Print : PRINT
-     sharing Print.IntSyn = IntSyn')
+   (*! sharing Print.IntSyn = IntSyn' !*)
+     )
  : SOLVE =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure ExtQuery = ReconQuery
-  structure Paths = ReconQuery.Paths
+  (*! structure Paths = ReconQuery.Paths !*)
   structure S = Parser.Stream
 
   (* evarInstToString Xs = msg
@@ -176,7 +177,7 @@ struct
 	 ((g, IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
 	  fn M => raise Solution M);		
 	 raise AbortQuery ("No solution to %solve found"))
-	handle Solution M => (if !Global.chatter >= 2
+	handle Solution M => (if !Global.chatter >= 3
                               then print (" OK\n")
                               else ();
                               finish M)
@@ -444,7 +445,7 @@ struct
 			       Int.toString(length(!Tabled.SuspGoals)) ^ "\n");
 
 		     print "\n____________________________________________\n\n")
-		else if !Global.chatter >= 2
+		else if !Global.chatter >= 3
 		       then print (" OK\n")
 		     else ()
               end

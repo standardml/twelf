@@ -5,21 +5,21 @@
 functor Recursion (structure Global : GLOBAL
 		   structure MetaSyn' : METASYN
 		   structure Whnf : WHNF
-		   sharing Whnf.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Whnf.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Unify : UNIFY
-		   sharing Unify.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Unify.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Conv : CONV
-		   sharing Conv.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Conv.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Names : NAMES
-		   sharing Names.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Names.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Subordinate : SUBORDINATE
-		   sharing Subordinate.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Subordinate.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Print : PRINT
-		   sharing Print.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Print.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Order : ORDER
-		   sharing Order.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Order.IntSyn = MetaSyn'.IntSyn !*)
 		   structure ModeSyn : MODESYN
-		   sharing ModeSyn.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Lemma : LEMMA
 		   sharing Lemma.MetaSyn = MetaSyn'
 		   structure Filling : FILLING
@@ -29,8 +29,8 @@ functor Recursion (structure Global : GLOBAL
 		   structure MetaAbstract : METAABSTRACT
 		   sharing MetaAbstract.MetaSyn = MetaSyn'
 		   structure Formatter : FORMATTER
-		   structure CSManager : CS_MANAGER
-		   sharing CSManager.IntSyn = MetaSyn'.IntSyn
+		   (*! structure CSManager : CS_MANAGER !*)
+		   (*! sharing CSManager.IntSyn = MetaSyn'.IntSyn !*)
 )  : RECURSION =
 struct
 
@@ -42,7 +42,7 @@ struct
 
   local
     structure M = MetaSyn
-    structure I = M.IntSyn
+    structure I = IntSyn
     structure O = Order
     structure N = Names
     structure F = Formatter

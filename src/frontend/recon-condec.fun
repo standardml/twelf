@@ -3,29 +3,30 @@
 (* Modified: Roberto Virga, Jeff Polakow *)
 
 functor ReconConDec (structure Global : GLOBAL
-                     structure IntSyn' : INTSYN
+                     (*! structure IntSyn' : INTSYN !*)
 		     structure Names : NAMES
-		       sharing Names.IntSyn = IntSyn'
+		     (*! sharing Names.IntSyn = IntSyn' !*)
                      structure Abstract : ABSTRACT
-                       sharing Abstract.IntSyn = IntSyn'
-                     structure Paths' : PATHS
+		     (*! sharing Abstract.IntSyn = IntSyn' !*)
+                     (*! structure Paths' : PATHS !*)
                      structure ReconTerm' : RECON_TERM
-                       sharing ReconTerm'.IntSyn = IntSyn'
-                       sharing ReconTerm'.Paths = Paths'
+		     (*! sharing ReconTerm'.IntSyn = IntSyn' !*)
+		     (*! sharing ReconTerm'.Paths = Paths' !*)
 		     structure Constraints : CONSTRAINTS
-		       sharing Constraints.IntSyn = IntSyn'
+		     (*! sharing Constraints.IntSyn = IntSyn' !*)
 		     structure Strict : STRICT
-		       sharing Strict.IntSyn = IntSyn'
-		       sharing Strict.Paths = Paths'
+		     (*! sharing Strict.IntSyn = IntSyn' !*)
+		     (*! sharing Strict.Paths = Paths' !*)
 		     structure TypeCheck : TYPECHECK
-		       sharing TypeCheck.IntSyn = IntSyn'
+		     (*! sharing TypeCheck.IntSyn = IntSyn' !*)
 		     structure Timers : TIMERS
                      structure Print : PRINT
-                       sharing Print.IntSyn = IntSyn')
+		     (*! sharing Print.IntSyn = IntSyn' !*)
+		       )
   : RECON_CONDEC =
 struct
-  structure IntSyn = IntSyn'
-  structure Paths = Paths'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure Paths = Paths' !*)
   structure ExtSyn = ReconTerm'
 
   exception Error of string

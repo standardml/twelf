@@ -2,24 +2,22 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga, Brigitte Pientka *)
 
-functor AbstractTabled (structure IntSyn' : INTSYN
+functor AbstractTabled ((*! structure IntSyn' : INTSYN !*)
 		  structure Whnf    : WHNF
-		    sharing Whnf.IntSyn = IntSyn'
+		  (*! sharing Whnf.IntSyn = IntSyn' !*)
 		  structure Unify   : UNIFY
-		    sharing Unify.IntSyn = IntSyn'
+		  (*! sharing Unify.IntSyn = IntSyn' !*)
 		  structure Constraints : CONSTRAINTS
-		    sharing Constraints.IntSyn = IntSyn'
+		  (*! sharing Constraints.IntSyn = IntSyn' !*)
 		  structure Subordinate : SUBORDINATE
-		    sharing Subordinate.IntSyn = IntSyn'
-(*		  structure Abstract : ABSTRACT
-		    sharing Abstract.IntSyn = IntSyn' *)
+		  (*! sharing Subordinate.IntSyn = IntSyn' !*)
 		  structure Print : PRINT 
-		    sharing Print.IntSyn = IntSyn'
+		  (*! sharing Print.IntSyn = IntSyn' !*)
 		      )
   : ABSTRACTTABLED =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
     
   exception Error of string
 

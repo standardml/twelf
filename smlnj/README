@@ -1,0 +1,12 @@
+Directory with installation files for
+
+SML/NJ, Version 110.20 or greater
+
+In Twelf root directory, do
+
+% make -f smlnj/Makefile
+
+or
+
+% smlnj/install.sh
+

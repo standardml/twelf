@@ -315,7 +315,8 @@ This is used by the error message parser.")
     (bool . twelf-read-bool)
     (limit . twelf-read-limit)
     (strategy . twelf-read-strategy)
-    (tablestrategy . twelf-read-tablestrategy))
+    (tablestrategy . twelf-read-tablestrategy)
+    (tracemode . twelf-read-tracemode))
   "Association between Twelf parameter types and their Emacs read functions.")
 
 (defconst *twelf-parm-table*
@@ -328,6 +329,8 @@ This is used by the error message parser.")
     ("Print.indent" . nat)
     ("Print.width" . nat)
     ("Trace.detail" . nat)
+    ("Recon.trace" . bool)
+    ("Recon.traceMode" . tracemode)
     ("Compile.optimize" . bool)
     ("Prover.strategy" . strategy)
     ("Prover.maxSplit" . nat)
@@ -359,11 +362,19 @@ Maintained to present reasonable menus.")
 (defvar twelf-compile-optimize "true"
   "Current value of Compile.optimize Twelf parameter.")
 
+(defvar twelf-recon-trace "false"
+  "Current value of Recon.trace parameter.")
+
+(defvar twelf-recon-tracemode ()
+  "Current value of Recon.traceMode parameter.")
+
 (defconst *twelf-track-parms*
   '(("chatter" . twelf-chatter)
     ("doubleCheck" . twelf-double-check)
     ("unsafe" . twelf-unsafe)
     ("Print.implicit" . twelf-print-implicit)
+    ("Recon.trace" . twelf-recon-trace)
+    ("Recon.traceMode" . twelf-recon-tracemode)
     ("Trace.detail" . twelf-trace-detail)
     ("Compile.optimize" . twelf-compile-optimize))
   "Association between Twelf parameters and Emacs tracking variables.")
@@ -1229,6 +1240,18 @@ If necessary, this will start up an Twelf server process."
   (twelf-server-send-command "Config.load")
   (twelf-server-wait displayp))
 
+(defun twelf-append-config (&optional displayp)
+  "Check the current Twelf configuration without reset.
+With prefix argument also displays Twelf server buffer.
+If necessary, this will start up an Twelf server process."
+  (interactive "P")
+  (if (not *twelf-config-buffer*)
+      (call-interactively 'twelf-server-configure))
+  (twelf-server-sync-config)
+  (twelf-focus nil nil)
+  (twelf-server-send-command "Config.append")
+  (twelf-server-wait displayp))
+
 (defun twelf-save-check-file (&optional displayp)
   "Save buffer and then check it by giving a command to the Twelf server.
 In Twelf Config minor mode, it reconfigures the server.
@@ -1944,6 +1967,13 @@ Starts a Twelf servers if necessary."
 		   '(("Variant" . "Variant") ("Subsumption" . "Subsumption"))
 		   nil t))
 
+(defun twelf-read-tracemode ()
+  "Read a tracing mode for term reconstruction in mini-buffer."
+  (completing-read "Trace mode: "
+		   '(("Omniscient" . "Omniscient")
+		     ("Progressive" . "Progressive"))
+		   nil t))
+
 (defun twelf-read-value (argtype)
   "Call the read function appropriate for ARGTYPE and return result."
   (funcall (cdr (assoc argtype *twelf-read-functions*))))
@@ -1999,6 +2029,12 @@ Used in menus."
 		   "true" "false")))
     (twelf-set "Compile.optimize" value)))
 
+(defun twelf-toggle-recon-trace ()
+  "Toggles Recon.trace parameter of Twelf."
+  (let ((value (if (string-equal twelf-recon-trace "false")
+		   "true" "false")))
+    (twelf-set "twelf-recon-trace" value)))
+
 (defun twelf-get (parm)
   "Prints the value of the Twelf parameter PARM.
 When called interactively, promts for parameter, supporting completion."
@@ -2026,9 +2062,15 @@ When called interactively, promts for parameter, supporting completion."
   (twelf-server-display t))
 
 (defun twelf-print-subordination ()
-  "Prints the curret subordination relation in the Twelf server buffer."
+  "Prints the current subordination relation in the Twelf server buffer."
   (interactive)
   (twelf-server-send-command "Print.subord")
+  (twelf-server-display t))
+
+(defun twelf-print-domains ()
+  "Prints the availalbe constraint domains in the Twelf server buffer."
+  (interactive)
+  (twelf-server-send-command "Print.domains")
   (twelf-server-display t))
 
 (defun twelf-print-tex-signature ()
@@ -2708,6 +2750,12 @@ Mode map
      ["Program" twelf-print-tex-program t]))
   "Menu for printing commands.")
 
+(defconst twelf-recon-menu
+  (` ("Reconstruction"
+      (, (toggle "trace" '(twelf-toggle-recon-trace)
+		 '(string-equal twelf-recon-trace "true")))
+      ["traceMode" (twelf-set-parm "Recon.traceMode") t])))
+
 (defconst twelf-trace-menu
   (` ("Trace"
       ("trace"
@@ -2828,6 +2876,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    twelf-error-menu
    twelf-options-menu
    twelf-syntax-menu
+   twelf-recon-menu
    twelf-trace-menu
    twelf-tags-menu
    twelf-print-menu

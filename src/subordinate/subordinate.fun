@@ -5,18 +5,18 @@
 
 functor Subordinate
   (structure Global : GLOBAL
-   structure IntSyn': INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
+   (*! sharing Names.IntSyn = IntSyn' !*)
    structure Table : TABLE where type key = int
    structure MemoTable : TABLE where type key = int * int
    structure IntSet : INTSET
      )
   : SUBORDINATE =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
  
@@ -84,14 +84,12 @@ struct
     val fLookup = Table.lookup fTable
     val fInsert = Table.insert fTable
 
-    (* reset () = ()
+    (*
+       Freezing type families
 
-       Effect: Empties soGraph, fTable
-    *)
-    fun reset () = (Table.clear soGraph;
-                    Table.clear fTable;
-		    MemoTable.clear memoTable)
-
+       Frozen type families cannot be extended later with additional
+       constructors.
+     *)
     fun fGet (a) =
         (case fLookup a
            of SOME frozen => frozen
@@ -193,6 +191,88 @@ struct
         if below (a, b) then ()
 	else addNewEdge (b, a)
 
+    (*
+       Definition graph
+       The definitions graph keeps track of chains of
+       definitions for type families (not object-level definitions)
+
+       We say b <# a if b = [x1:A1]...[xn:An] {y1:B1}...{y1:Bm} a @ S
+
+       The definition graph should be interpreted transitively.
+       It can never be reflexive.
+
+       The #> relation is stored in order to prevent totality
+       checking on type families involved in definitions, because
+       in the present implementation this would yield unsound
+       results.
+
+       NOTE: presently, the head "a" is always expanded until it is
+       no longer a definition.  So if a #> b then a is always declared,
+       never defined and b is always defined, never declared.
+
+       Fri Dec 27 08:37:42 2002 -fp (just before 1.4 alpha)
+    *)
+    val defGraph : (IntSet.intset) Table.Table = Table.new (32)
+
+    (* occursInDef a = true
+       iff there is a b such that a #> b
+    *)
+    fun occursInDef a =
+        (case Table.lookup defGraph a
+	   of NONE => false
+            | SOME _ => true)
+
+    (* insertNewDef (b, a) = ()
+       Effect: update definition graph.
+
+       Call this upon seeing a type-level definition
+           b = [x1:A1]...[xn:An] {y1:B1}...{y1:Bm} a @ S : K
+       to record a #> b.
+    *)
+    fun insertNewDef (b, a) =
+        (case Table.lookup defGraph a
+	   of NONE => Table.insert defGraph (a, IntSet.insert (b, IntSet.empty))
+            | SOME(bs) => Table.insert defGraph (a, IntSet.insert (b, bs)))
+
+    (* installDef (c) = ()
+       Effect: if c is a type-level definition,
+               update definition graph.
+    *)
+    fun installConDec (b, I.ConDef (_, _, _, A, K, I.Kind)) =
+          (* I.targetFam must be defined, but expands definitions! *)
+          insertNewDef (b, I.targetFam A) 
+      | installConDec _ = ()
+
+    fun installDef c = installConDec (c, I.sgnLookup c)
+
+    (* checkNoDef a = ()
+       Effect: raises Error(msg) if there exists a b such that b <# a
+               or b <# a' for some a' < a.
+    *)
+    fun checkNoDef a =
+        if occursInDef a
+	  then raise Error ("Definition violation: family "
+			    ^ Names.qidToString (Names.constQid a)
+			    ^ "\noccurs as right-hand side of type-level definition")
+	else appReachable (fn a' =>
+	     if occursInDef a'
+	       then raise Error ("Definition violation: family "
+				 ^ Names.qidToString (Names.constQid a)
+				 ^ " |> "
+				 ^ Names.qidToString (Names.constQid a')
+				 ^ ",\nwhich occurs as right-hand side of a type-level definition")
+	     else ())
+	     a
+
+    (* reset () = ()
+
+       Effect: Empties soGraph, fTable, defGraph
+    *)
+    fun reset () = (Table.clear soGraph;
+                    Table.clear fTable;
+		    MemoTable.clear memoTable;
+		    Table.clear defGraph)
+
     (* 
        Subordination checking no longer traverses spines,
        so approximate types are no longer necessary.
@@ -281,7 +361,7 @@ struct
 	in
 	  respectsTypeN' (V', a)
 	end
-      | respectsTypeN' (I. Root _, _) = ()
+      | respectsTypeN' (I.Root _, _) = ()
     and respectsTypeN (V) = respectsTypeN' (V, I.targetFam V)
 
     fun respects (G, (V, s)) = respectsTypeN (Whnf.normalize (V, s))
@@ -319,11 +399,14 @@ struct
     val reset = reset
      
     val install = install
+    val installDef = installDef
     val installFrozen = installFrozen
 
     val below = below
     val belowEq = belowEq
     val equiv = equiv
+
+    val checkNoDef = checkNoDef
 
     val respects = respects
     val respectsN = respectsN

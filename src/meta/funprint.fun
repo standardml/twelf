@@ -1,21 +1,22 @@
 (* Printing of functional proof terms *)
 (* Author: Carsten Schuermann *)
 
-functor FunPrint (structure FunSyn' : FUNSYN
+functor FunPrint ((*! structure FunSyn' : FUNSYN !*)
 		  structure Formatter : FORMATTER
 		  structure Names : NAMES
-		    sharing Names.IntSyn = FunSyn'.IntSyn
+		  (*! sharing Names.IntSyn = FunSyn'.IntSyn !*)
 		  structure Print : PRINT
 		    sharing Print.Formatter = Formatter
-		    sharing Print.IntSyn = FunSyn'.IntSyn) 
+		    (*! sharing Print.IntSyn = FunSyn'.IntSyn !*)
+		      )
   : FUNPRINT =
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure Formatter = Formatter
 
   local
     structure F = FunSyn
-    structure I = FunSyn.IntSyn
+    structure I = IntSyn
     structure Fmt = Formatter
     structure P = Print
 

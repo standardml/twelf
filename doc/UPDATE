@@ -2,6 +2,12 @@ Preparation for Twelf 1.4
 
 Externally visible changes:
 
+- %clause definitions
+  %clause d : A = M. behaves like d : A. for proof search
+- %freeze a1 ... an.
+  will freeze families a1 ... an
+- Twelf.Recon structure to trace type reconstruction
+- family-level definitions are now allowed, opaque to proof search
 - Tabled abstract machine 
   
   %querytabled n A.
@@ -31,6 +37,11 @@ Externally visible changes:
 - %covers mdec.  (where mdec is mode declaration)
 - %total tdec.   (where tdec is termination declaration)
 - %worlds wdec callpats.  (where wdec is worlds declarations)
+
+Internal changes:
+
+- made SML'97 compliant and ported to MLton, PolyML, and SML/NJ >= 110.20
+  this was achieved by partial de-functorization.
 
 README for Twelf 1.3
 

@@ -4,7 +4,7 @@
 signature THMEXTSYN =
 sig
   structure ExtSyn : EXTSYN
-  structure Paths : PATHS 
+  (*! structure Paths : PATHS  !*)
 
   type order
   val varg : (Paths.region * string list) -> order

@@ -3,39 +3,40 @@
 
 functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 		      structure Global : GLOBAL
-		      structure IntSyn : INTSYN
-		      structure FunSyn : FUNSYN
-			sharing FunSyn.IntSyn = IntSyn
+		      (*! structure IntSyn : INTSYN !*)
+		      (*! structure FunSyn : FUNSYN !*)
+		      (*! sharing FunSyn.IntSyn = IntSyn !*)
 		      structure StateSyn' : STATESYN
-			sharing StateSyn'.FunSyn = FunSyn
-			sharing StateSyn'.IntSyn = IntSyn
+		      (*! sharing StateSyn'.FunSyn = FunSyn !*)
+			(*! sharing StateSyn'.IntSyn = IntSyn !*)
 		      structure Heuristic : HEURISTIC
 		      structure MTPAbstract : MTPABSTRACT
-			sharing MTPAbstract.IntSyn = IntSyn
+		      (*! sharing MTPAbstract.IntSyn = IntSyn !*)
 		        sharing MTPAbstract.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 		        sharing MTPrint.StateSyn = StateSyn'
 		      structure Names : NAMES            (* too be removed  -cs *)
-			sharing Names.IntSyn = IntSyn    (* too be removed  -cs *)
+		      (*! sharing Names.IntSyn = IntSyn !*)    (* too be removed  -cs *)
 		      structure Conv :CONV
-			sharing Conv.IntSyn = IntSyn
+		      (*! sharing Conv.IntSyn = IntSyn !*)
 		      structure Whnf : WHNF
-  		        sharing Whnf.IntSyn = IntSyn
+		      (*! sharing Whnf.IntSyn = IntSyn !*)
 		      structure TypeCheck : TYPECHECK
-			sharing TypeCheck.IntSyn = IntSyn
+		      (*! sharing TypeCheck.IntSyn = IntSyn !*)
 		      structure Subordinate : SUBORDINATE
-			sharing Subordinate.IntSyn = IntSyn
+		      (*! sharing Subordinate.IntSyn = IntSyn !*)
 		      structure FunTypeCheck :FUNTYPECHECK
-			sharing FunTypeCheck.FunSyn = FunSyn
+		      (*! sharing FunTypeCheck.FunSyn = FunSyn !*)
 			sharing FunTypeCheck.StateSyn = StateSyn'
 		      structure Index : INDEX
-		        sharing Index.IntSyn = IntSyn
+		      (*! sharing Index.IntSyn = IntSyn !*)
 		      structure Print : PRINT
-		        sharing Print.IntSyn = IntSyn
+		      (*! sharing Print.IntSyn = IntSyn !*)
 		      structure Unify : UNIFY
-		        sharing Unify.IntSyn = IntSyn
-                      structure CSManager : CS_MANAGER
-                        sharing CSManager.IntSyn = IntSyn) 
+		      (*! sharing Unify.IntSyn = IntSyn !*)
+                      (*! structure CSManager : CS_MANAGER !*)
+		      (*! sharing CSManager.IntSyn = IntSyn  !*)
+			)
   : MTPSPLITTING =
 struct
   structure StateSyn = StateSyn'

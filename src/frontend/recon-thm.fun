@@ -3,36 +3,37 @@
 (* Modified: Brigitte Pientka *)
 
 functor ReconThm (structure Global : GLOBAL
-		  structure IntSyn : INTSYN
+		  (* structure IntSyn : INTSYN *)
                   structure Abstract : ABSTRACT
-		    sharing Abstract.IntSyn = IntSyn
+		  (*! sharing Abstract.IntSyn = IntSyn !*)
 		  structure Constraints : CONSTRAINTS
-		    sharing Constraints.IntSyn = IntSyn
+		  (*! sharing Constraints.IntSyn = IntSyn !*)
 		  structure ModeSyn : MODESYN
-		    sharing ModeSyn.IntSyn = IntSyn
+		  (*! sharing ModeSyn.IntSyn = IntSyn !*)
 		  structure Names : NAMES
-		    sharing Names.IntSyn = IntSyn
-		  structure Paths' : PATHS
+		  (*! sharing Names.IntSyn = IntSyn !*)
+		  (*! structure Paths' : PATHS !*)
 		  structure ThmSyn': THMSYN
 		    sharing ThmSyn'.ModeSyn = ModeSyn
-		    sharing ThmSyn'.Paths = Paths'
+		    (*! sharing ThmSyn'.Paths = Paths' !*)
 		    sharing ThmSyn'.Names = Names
 		  structure ReconTerm': RECON_TERM
-		    sharing ReconTerm'.IntSyn = IntSyn
-		    sharing ReconTerm'.Paths = Paths' 
+		  (*! sharing ReconTerm'.IntSyn = IntSyn !*)
+		  (*! sharing ReconTerm'.Paths = Paths'  !*)
 		  structure Print : PRINT
-		    sharing Print.IntSyn = IntSyn)
+		  (*! sharing Print.IntSyn = IntSyn !*)
+		    )
   : RECON_THM =
 struct
   structure ThmSyn = ThmSyn'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
   structure ExtSyn = ReconTerm'
 
   exception Error of string
 
   local
     structure M = ModeSyn
-    structure I = ModeSyn.IntSyn
+    structure I = IntSyn
     structure L = ThmSyn
     structure P = Paths
     structure T = ReconTerm'

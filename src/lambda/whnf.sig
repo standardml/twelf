@@ -3,7 +3,7 @@
 
 signature WHNF =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   (* Patterns *)
   val isPatSub : IntSyn.Sub -> bool

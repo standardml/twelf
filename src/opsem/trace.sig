@@ -2,7 +2,7 @@ signature TRACE =
 sig
 
   (* Program interface *)
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   type goalTag
   val tagGoal : unit -> goalTag

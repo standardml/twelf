@@ -1,5 +1,5 @@
 structure ThmSyn = 
-  ThmSyn (structure IntSyn = IntSyn
+  ThmSyn ((*! structure IntSyn = IntSyn !*)
 	  structure ModeSyn' = ModeSyn
 	  structure Abstract = Abstract
 	  structure Whnf = Whnf

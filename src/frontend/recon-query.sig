@@ -5,7 +5,7 @@ signature EXTQUERY =
 sig
 
   structure ExtSyn : EXTSYN
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   type query				(* query *)
   val query : string option * ExtSyn.term -> query (* ucid : tm | tm *)
@@ -21,7 +21,7 @@ end (* signature EXTQUERY *)
 signature RECON_QUERY =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   include EXTQUERY
 
   exception Error of string

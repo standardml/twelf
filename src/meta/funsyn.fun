@@ -1,13 +1,14 @@
 (* Internal syntax for functional proof term calculus *)
 (* Author: Carsten Schuermann *)
 
-functor FunSyn (structure IntSyn' : INTSYN
+functor FunSyn ((*! structure IntSyn' : INTSYN !*)
 		structure Whnf : WHNF
-		  sharing Whnf.IntSyn = IntSyn'
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
 		structure Conv : CONV
-		  sharing Conv.IntSyn = IntSyn') : FUNSYN= 
+		(*! sharing Conv.IntSyn = IntSyn' !*)
+		  ) : FUNSYN =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string 
 
@@ -286,10 +287,9 @@ struct
     val ctxToList = ctxToList
     val listToCtx = listToCtx
   end
-end (* functor FunSyn *)
+end;  (* functor FunSyn *)
 
-
-
-
-
-
+structure FunSyn = 
+  FunSyn ((*! structure IntSyn' = IntSyn !*)
+	  structure Whnf = Whnf
+	  structure Conv = Conv);

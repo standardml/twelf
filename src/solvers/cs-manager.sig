@@ -3,7 +3,7 @@
 
 signature CS_MANAGER =
 sig
-  structure IntSyn  : INTSYN
+  (* structure IntSyn : INTSYN *)
   structure Fixity  : FIXITY
   structure ModeSyn : MODESYN
 

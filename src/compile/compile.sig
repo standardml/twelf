@@ -7,8 +7,8 @@
 signature COMPILE =
 sig
 
-  structure IntSyn: INTSYN
-  structure CompSyn: COMPSYN
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure CompSyn : COMPSYN !*)
 
   exception Error of string
 

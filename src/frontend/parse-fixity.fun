@@ -2,18 +2,18 @@
 (* Author: Frank Pfenning *)
 
 functor ParseFixity
-  (structure Parsing' : PARSING
+  ((*! structure Parsing' : PARSING !*)
    structure Names' : NAMES)
      : PARSE_FIXITY =
 struct
 
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure Names = Names'
 
   local
     (* some shorthands *)
-    structure L = Parsing.Lexer
-    structure LS = Parsing.Lexer.Stream  
+    structure L = Lexer
+    structure LS = Lexer.Stream  
     structure FX = Names.Fixity
 
     fun fixToString (FX.Strength(p)) = Int.toString p

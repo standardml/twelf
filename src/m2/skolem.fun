@@ -2,32 +2,33 @@
 (* Author: Carsten Schuermann *)
 
 functor Skolem (structure Global : GLOBAL
-                structure IntSyn' : INTSYN
+                (*! structure IntSyn' : INTSYN !*)
 		structure Whnf : WHNF
-		  sharing Whnf.IntSyn = IntSyn'
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
 		structure Abstract : ABSTRACT
-		  sharing Abstract.IntSyn = IntSyn'
+		(*! sharing Abstract.IntSyn = IntSyn' !*)
 		structure IndexSkolem : INDEX
-		  sharing IndexSkolem.IntSyn = IntSyn'
+		(*! sharing IndexSkolem.IntSyn = IntSyn' !*)
 		structure ModeSyn : MODESYN
-		  sharing ModeSyn.IntSyn = IntSyn'
+		(*! sharing ModeSyn.IntSyn = IntSyn' !*)
 		structure Print : PRINT
-		  sharing Print.IntSyn = IntSyn'
+		(*! sharing Print.IntSyn = IntSyn' !*)
 		structure Compile : COMPILE
-		  sharing Compile.IntSyn = IntSyn'
+		(*! sharing Compile.IntSyn = IntSyn' !*)
 		structure Timers : TIMERS
 		structure Names : NAMES
-		  sharing Names.IntSyn = IntSyn')
+		(*! sharing Names.IntSyn = IntSyn' !*)
+		  )
   : SKOLEM =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 
   local 
     structure I = IntSyn
     structure M = ModeSyn
-    structure CompSyn = Compile.CompSyn
+    (*! structure CompSyn = Compile.CompSyn !*)
 
     (* installSkolem (name, k, (V, mS), L) = 
        

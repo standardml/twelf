@@ -5,7 +5,7 @@
 signature INDEX =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
     
   val reset : unit -> unit
   val resetFrom : IntSyn.cid -> unit

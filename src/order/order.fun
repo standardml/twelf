@@ -2,11 +2,11 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Brigitte Pientka *)
 
-functor Order (structure IntSyn' : INTSYN
+functor Order ((*! structure IntSyn' : INTSYN !*)
 	       structure Table : TABLE where type key = int)
   : ORDER =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 

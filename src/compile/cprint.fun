@@ -1,20 +1,21 @@
 (* Printer for Compiled Syntax *)
 (* Author: Iliano Cervesato *)
 
-functor CPrint (structure IntSyn' : INTSYN
-		structure CompSyn' : COMPSYN
-		  sharing CompSyn'.IntSyn = IntSyn'
+functor CPrint ((*! structure IntSyn' : INTSYN !*)
+                (*! structure CompSyn' : COMPSYN !*)
+		(*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		structure Print: PRINT
-		  sharing Print.IntSyn = IntSyn'
+		(*! sharing Print.IntSyn = IntSyn' !*)
 		structure Formatter : FORMATTER
 		  sharing Print.Formatter = Formatter
 		structure Names: NAMES
-		  sharing Names.IntSyn = IntSyn')
+		(*! sharing Names.IntSyn = IntSyn' !*)
+		  )
   : CPRINT =
 struct
 
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
 
   local
     open CompSyn

@@ -4,10 +4,12 @@
 signature PARSING =
 sig
   structure Stream : STREAM
+  (*
   structure Lexer : LEXER
     sharing Lexer.Stream = Stream
+  *)
 
-  type lexResult = Lexer.Token * Lexer.Paths.region
+  type lexResult = Lexer.Token * Paths.region
 
   type 'a parser = lexResult Stream.front -> 'a * lexResult Stream.front
 
@@ -23,5 +25,5 @@ sig
   val recwith : 'a recparser * ('a -> 'b) -> 'b recparser
 
   exception Error of string
-  val error : Lexer.Paths.region * string -> 'a	(* always raises Error *)
+  val error : Paths.region * string -> 'a	(* always raises Error *)
 end;  (* signature PARSING *)

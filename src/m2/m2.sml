@@ -1,5 +1,5 @@
 structure MetaSyn = 
-  MetaSyn (structure IntSyn' = IntSyn
+  MetaSyn ((*! structure IntSyn' = IntSyn !*)
 	   structure Whnf = Whnf);
 
 structure MetaAbstract = 
@@ -15,7 +15,8 @@ structure MetaAbstract =
 		structure Names = Names
 		structure TypeCheck = TypeCheck
 		structure Subordinate = Subordinate
-                structure CSManager = CSManager);
+                (*! structure CSManager = CSManager !*)
+		  );
 
 structure MetaPrint = 
   MetaPrint (structure Global = Global
@@ -30,10 +31,10 @@ structure Init =
 
 structure Search = 
   Search (structure MetaGlobal = MetaGlobal
-	  structure IntSyn' = IntSyn
+	  (*! structure IntSyn' = IntSyn !*)
 	  structure Conv = Conv
 	  structure MetaSyn' = MetaSyn
-	  structure CompSyn' = CompSyn
+	  (*! structure CompSyn' = CompSyn !*)
 	  structure Compile = Compile
 	  structure Whnf = Whnf
 	  structure Unify = UnifyTrail
@@ -42,7 +43,8 @@ structure Search =
 	  structure CPrint = CPrint
 	  structure Print = Print
 	  structure Names = Names
-          structure CSManager = CSManager); 
+          (*! structure CSManager = CSManager !*)
+	    );
 
 structure Lemma =
   Lemma (structure MetaSyn' = MetaSyn
@@ -58,7 +60,8 @@ structure Splitting =
 	     structure Index = Index
 	     structure Print = Print
 	     structure Unify = UnifyTrail
-             structure CSManager = CSManager);
+             (*! structure CSManager = CSManager !*)
+	       );
 
 structure Filling =
   Filling (structure Global = Global
@@ -84,7 +87,8 @@ structure Recursion =
 	     structure Lemma = Lemma
 	     structure Filling = Filling
 	     structure Formatter = Formatter
-             structure CSManager = CSManager);
+             (*! structure CSManager = CSManager !*)
+	       );
 
 structure Qed = 
   Qed (structure Global = Global
@@ -152,7 +156,7 @@ structure Mpi =
 
 structure Skolem = 
   Skolem (structure Global = Global
-          structure IntSyn' = IntSyn
+          (*! structure IntSyn' = IntSyn !*)
 	  structure Whnf = Whnf
 	  structure Abstract = Abstract
 	  structure IndexSkolem = IndexSkolem

@@ -5,7 +5,7 @@ signature EXTCONDEC =
 sig
 
   structure ExtSyn : EXTSYN
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   type condec				(* constant declaration *)
   val condec : string * ExtSyn.term -> condec	(* id : tm *)
@@ -18,7 +18,7 @@ end (* signature EXTCONDEC *)
 signature RECON_CONDEC =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   include EXTCONDEC
 
   exception Error of string

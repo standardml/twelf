@@ -2,17 +2,18 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
-functor Abstract (structure IntSyn' : INTSYN
+functor Abstract ((*! structure IntSyn' : INTSYN !*)
 		  structure Whnf    : WHNF
-		    sharing Whnf.IntSyn = IntSyn'
+		  (*! sharing Whnf.IntSyn = IntSyn' !*)
 		  structure Unify   : UNIFY
-		    sharing Unify.IntSyn = IntSyn'
+		  (*! sharing Unify.IntSyn = IntSyn' !*)
 		  structure Constraints : CONSTRAINTS
-		    sharing Constraints.IntSyn = IntSyn')
+		  (*! sharing Constraints.IntSyn = IntSyn' !*)
+		    )
   : ABSTRACT =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
     
   exception Error of string
     

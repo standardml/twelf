@@ -2,20 +2,20 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPrint (structure Global : GLOBAL
-		 structure IntSyn : INTSYN
-		 structure FunSyn : FUNSYN
-		   sharing FunSyn.IntSyn = IntSyn
+		 (*! structure IntSyn : INTSYN !*)
+		 (*! structure FunSyn : FUNSYN !*)
+		 (*! sharing FunSyn.IntSyn = IntSyn !*)
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn
+		 (*! sharing Names.IntSyn = IntSyn !*)
 		 structure StateSyn' : STATESYN
-		   sharing StateSyn'.FunSyn = FunSyn
-		   sharing StateSyn'.IntSyn = IntSyn
+		 (*! sharing StateSyn'.FunSyn = FunSyn !*)
+		   (*! sharing StateSyn'.IntSyn = IntSyn !*)
 		 structure Formatter' : FORMATTER
 		 structure Print : PRINT
 		   sharing Print.Formatter = Formatter'
-		   sharing Print.IntSyn = IntSyn
+		   (*! sharing Print.IntSyn = IntSyn !*)
 		 structure FunPrint : FUNPRINT
-		   sharing FunPrint.FunSyn = FunSyn
+		 (*! sharing FunPrint.FunSyn = FunSyn !*)
 		   sharing FunPrint.Formatter = Formatter')
   : MTPRINT =
 struct

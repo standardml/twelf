@@ -1,16 +1,17 @@
-functor Trace (structure IntSyn' : INTSYN
+functor Trace ((*! structure IntSyn' : INTSYN !*)
 	       structure Names : NAMES
-		 sharing Names.IntSyn = IntSyn'
+	       (*! sharing Names.IntSyn = IntSyn' !*)
 	       structure Whnf : WHNF
-		 sharing Whnf.IntSyn = IntSyn'
+	       (*! sharing Whnf.IntSyn = IntSyn' !*)
 	       structure Abstract : ABSTRACT
-		 sharing Abstract.IntSyn = IntSyn'
+	       (*! sharing Abstract.IntSyn = IntSyn' !*)
 	       structure Print : PRINT
-		 sharing Print.IntSyn = IntSyn')
+	       (*! sharing Print.IntSyn = IntSyn' !*)
+		 )
   : TRACE =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   local
     structure I = IntSyn

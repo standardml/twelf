@@ -4,7 +4,7 @@
 signature EXTMODES =
 sig
   structure ExtSyn : EXTSYN 
-  structure Paths : PATHS 
+  (*! structure Paths : PATHS  !*)
 
   type mode
 
@@ -45,5 +45,5 @@ sig
   include EXTMODES
 
   exception Error of string
-  val modeToMode : modedec -> (ModeSyn.IntSyn.cid * ModeSyn.ModeSpine) * Paths.region
+  val modeToMode : modedec -> (IntSyn.cid * ModeSyn.ModeSpine) * Paths.region
 end;  (* signature RECON_MODE *)

@@ -20,7 +20,11 @@ struct
   *)
   fun readLine () =
       let
-        val line = TextIO.inputLine (TextIO.stdIn)
+        (* val line = TextIO.inputLine (TextIO.stdIn) *)
+	(* Fix for MLton, Fri Dec 20 21:50:22 2002 -sweeks (fp) *)
+	fun getLine () = TextIO.inputLine (TextIO.stdIn)
+	                 handle OS.SysErr (_, SOME _) => getLine ()
+	val line = getLine ()
         fun triml ss = Substring.dropl Char.isSpace ss
         fun trimr ss = Substring.dropr Char.isSpace ss
         val line' = triml (trimr (Substring.all line))
@@ -117,6 +121,7 @@ struct
   fun tableStrategyToString (Twelf.Table.Variant) = "Variant"
     | tableStrategyToString (Twelf.Table.Subsumption) = "Subsumption"
 
+  (* Tracing mode for term reconstruction *)
   fun getReconTraceMode ("Progressive"::nil) = Twelf.Recon.Progressive
     | getReconTraceMode ("Omniscient"::nil) = Twelf.Recon.Omniscient
     | getReconTraceMode (nil) = error "Missing tracing reconstruction mode"
@@ -125,7 +130,7 @@ struct
 
   fun reconTraceModeToString (Twelf.Recon.Progressive) = "Progressive"
     | reconTraceModeToString (Twelf.Recon.Omniscient) = "Omniscient"
-                                                        
+
   (* Setting Twelf parameters *)
   fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
     | setParm ("doubleCheck"::ts) = Twelf.doubleCheck := getBool ts
@@ -167,6 +172,75 @@ struct
     | getParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | getParm (nil) = error ("Missing parameter")
 
+  (* extracted from doc/guide/twelf.texi *)
+  val helpString =
+"Commands:\n\
+\  set <parameter> <value>     - Set <parameter> to <value>\n\
+\  get <parameter>             - Print the current value of <parameter>\n\
+\  Trace.trace <id1> ... <idn> - Trace given constants\n\
+\  Trace.traceAll              - Trace all constants\n\
+\  Trace.untrace               - Untrace all constants\n\
+\  Trace.break <id1> ... <idn> - Set breakpoint for given constants\n\
+\  Trace.breakAll              - Break on all constants\n\
+\  Trace.unbreak               - Remove all breakpoints\n\
+\  Trace.show                  - Show current trace and breakpoints\n\
+\  Trace.reset                 - Reset all tracing and breaking\n\
+\  Print.sgn                   - Print current signature\n\
+\  Print.prog                  - Print current signature as program\n\
+\  Print.subord                - Print current subordination relation\n\
+\  Print.domains               - Print registered constraint domains\n\
+\  Print.TeX.sgn               - Print signature in TeX format\n\
+\  Print.TeX.prog              - Print signature in TeX format as program\n\
+\  Timers.show                 - Print and reset timers\n\
+\  Timers.reset                - Reset timers\n\
+\  Timers.check                - Print, but do not reset timers.\n\
+\  OS.chDir <file>             - Change working directory to <file>\n\
+\  OS.getDir                   - Print current working directory\n\
+\  OS.exit                     - Exit Twelf server\n\
+\  quit                        - Quit Twelf server (same as exit)\n\
+\  Config.read <file>          - Read current configuration from <file>\n\
+\  Config.load                 - Load current configuration\n\
+\  Config.append               - Load current configuration without prior reset\n\
+\  make <file>                 - Read and load configuration from <file>\n\
+\  reset                       - Reset global signature.\n\
+\  loadFile <file>             - Load Twelf file <file>\n\
+\  decl <id>                   - Show constant declaration for <id>\n\
+\  top                         - Enter interactive query loop\n\
+\  Table.top                   - Enter interactive loop for tables queries\n\
+\  help                        - Print this help message\n\
+\\n\
+\Parameters:\n\
+\  chatter <nat>               - Level of verbosity (0 = none, 3 = default)\n\
+\  doubleCheck <bool>          - Perform additional internal type-checking\n\
+\  unsafe <bool>               - Allow unsafe operations (%assert)\n\
+\  Print.implicit <bool>       - Print implicit arguments\n\
+\  Print.depth <limit>         - Cut off printing at depth <limit>\n\
+\  Print.length <limit>        - Cut off printing at length <limit>\n\
+\  Print.indent <nat>          - Indent by <nat> spaces\n\
+\  Print.width <nat>           - Line width for formatting\n\
+\  Trace.detail <nat>          - Detail of tracing\n\
+\  Compile.optimize <bool>     - Optimize during translation to clauses\n\
+\  Recon.trace <bool>          - Trace term reconstruction\n\
+\  Recon.traceMode <reconTraceMode> - Term reconstruction tracing mode\n\
+\  Prover.strategy <strategy>  - Prover strategy\n\
+\  Prover.maxSplit <nat>       - Prover splitting depth bound\n\
+\  Prover.maxRecurse <nat>     - Prover recursion depth bound\n\
+\  Table.strategy <tableStrategy>   - Tabling strategy\n\
+\\n\
+\Server types:\n\
+\  file                        - File name, relative to working directory\n\
+\  id                          - A Twelf identifier\n\
+\  bool                        - Either `true' or `false'\n\
+\  nat                         - A natural number (starting at `0')\n\
+\  limit                       - Either `*' (no limit) or a natural number\n\
+\  reconTraceMode              - Either `Progressive' or `Omniscient'\n\
+\  strategy                    - Either `FRS' or `RFS'\n\
+\  tableStrategy               - Either `Variant' or `Subsumption'\n\
+\\n\
+\See http://www.cs.cmu.edu/~twelf/guide-1-4/ for more information,\n\
+\or type M-x twelf-info (C-c C-h) in Emacs.\n\
+\"
+
   (* serve' (command, args) = ()
      executes the server commands represented by `tokens', 
      issues success or failure and then reads another command line.
@@ -186,6 +260,8 @@ struct
       (checkEmpty args; Twelf.Print.prog (); serve (Twelf.OK))
     | serve' ("Print.subord", args) =
       (checkEmpty args; Twelf.Print.subord (); serve (Twelf.OK))
+    | serve' ("Print.domains", args) =
+      (checkEmpty args; Twelf.Print.domains (); serve (Twelf.OK))
     | serve' ("Print.TeX.sgn", args) =
       (checkEmpty args; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
     | serve' ("Print.TeX.prog", args) =
@@ -253,6 +329,11 @@ struct
 	 of NONE => (globalConfig := SOME (Twelf.Config.read "sources.cfg"))
           | _ => ();
        serve (Twelf.Config.load (valOf (!globalConfig))))
+    | serve' ("Config.append", args) =
+      (case !globalConfig
+	 of NONE => (globalConfig := SOME (Twelf.Config.read "sources.cfg"))
+          | _ => ();
+       serve (Twelf.Config.append (valOf (!globalConfig))))
     | serve' ("make", args) =
       let
 	val fileName = getFile (args, "sources.cfg")
@@ -278,6 +359,10 @@ struct
     | serve' ("Table.top", args) =
       (checkEmpty args;
        Twelf.Table.top ();
+       serve (Twelf.OK))
+
+    | serve' ("help", args) =
+      (print (helpString);
        serve (Twelf.OK))
 
     | serve' (t, args) =

@@ -3,32 +3,33 @@
 (* Author: Carsten Schuermann *)
 
 functor RelFun (structure Global : GLOBAL
-                structure FunSyn' : FUNSYN
+                (*! structure FunSyn' : FUNSYN !*)
 		structure ModeSyn : MODESYN
-		  sharing ModeSyn.IntSyn = FunSyn'.IntSyn
+		(*! sharing ModeSyn.IntSyn = FunSyn'.IntSyn !*)
 		structure Names : NAMES
-		  sharing Names.IntSyn = FunSyn'.IntSyn
+		(*! sharing Names.IntSyn = FunSyn'.IntSyn !*)
 		structure Unify : UNIFY
-		  sharing Unify.IntSyn = FunSyn'.IntSyn
+		(*! sharing Unify.IntSyn = FunSyn'.IntSyn !*)
 	        structure Whnf : WHNF
-		  sharing Whnf.IntSyn = FunSyn'.IntSyn
+		(*! sharing Whnf.IntSyn = FunSyn'.IntSyn !*)
 		structure Weaken : WEAKEN
-		  sharing Weaken.IntSyn = FunSyn'.IntSyn
+		(*! sharing Weaken.IntSyn = FunSyn'.IntSyn !*)
 		structure TypeCheck : TYPECHECK
-		  sharing TypeCheck.IntSyn = FunSyn'.IntSyn
+		(*! sharing TypeCheck.IntSyn = FunSyn'.IntSyn !*)
 		structure FunWeaken : FUNWEAKEN
-		  sharing FunWeaken.FunSyn = FunSyn'
+		(*! sharing FunWeaken.FunSyn = FunSyn' !*)
 		structure FunNames : FUNNAMES 
-		  sharing FunNames.FunSyn = FunSyn')
+		(*! sharing FunNames.FunSyn = FunSyn' !*)
+		    )
   : RELFUN = 
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
 
   exception Error of string 
 
   local
     structure F = FunSyn
-    structure I = FunSyn.IntSyn 
+    structure I = IntSyn 
     structure M = ModeSyn
 
     (* ctxSub (G, s) = (G', s')
@@ -171,8 +172,11 @@ struct
     *)
     fun shiftinv (w) = Weaken.strengthenSub (w, I.shift)
 
+    fun eqIdx (I.Idx(n), I.Idx(k)) = (n = k)
+      | eqIdx _ = false
+
     fun peel w = 
-      if (I.bvarSub (1, w) = I.Idx 1) then dot1inv w else shiftinv w
+      if eqIdx(I.bvarSub (1, w), I.Idx 1) then dot1inv w else shiftinv w
 
     fun peeln (0, w) = w
       | peeln (n, w) = peeln (n-1, peel w)
@@ -266,7 +270,7 @@ struct
 	 *)
 	fun inBlock (I.Null, (bw, w1)) = (bw, w1)
 	  | inBlock (I.Decl (G, D), (bw, w1)) = 
-	    if I.bvarSub (1, w1) = I.Idx 1 then
+	    if eqIdx(I.bvarSub (1, w1), I.Idx 1) then
 	      inBlock (G, (true, dot1inv w1))
 	    else inBlock (G, (bw, Weaken.strengthenSub (w1, I.shift)))
 	  
@@ -299,7 +303,7 @@ struct
       	fun strengthen' (I.Null, Psi2, L, w1 (* =  I.id *)) = (I.Null, I.id)    
 	  | strengthen' (I.Decl (Psi1, LD as F.Prim (I.Dec (name, V))), Psi2, L, w1) =
 	    let 
-	      val (bw, w1') = if (I.bvarSub (1, w1) = I.Idx 1) then (true, dot1inv w1)
+	      val (bw, w1') = if eqIdx(I.bvarSub (1, w1), I.Idx 1) then (true, dot1inv w1)
 			      else (false, Weaken.strengthenSub (w1, I.shift))
 	    in
 	      if bw orelse occursInPsi (1, (Psi2, L)) then

@@ -1,31 +1,32 @@
 (* Meta Theorem Prover abstraction : Version 1.3 *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
-functor MTPAbstract (structure IntSyn' : INTSYN
-		     structure FunSyn' : FUNSYN
-		       sharing FunSyn'.IntSyn = IntSyn'
+functor MTPAbstract ((*! structure IntSyn' : INTSYN !*)
+                     (*! structure FunSyn' : FUNSYN !*)
+		     (*! sharing FunSyn'.IntSyn = IntSyn' !*)
 		     structure StateSyn' : STATESYN
-		       sharing StateSyn'.FunSyn = FunSyn'
+		     (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 		     structure Whnf    : WHNF
-		       sharing Whnf.IntSyn = IntSyn'
+		     (*! sharing Whnf.IntSyn = IntSyn' !*)
 		     structure Constraints : CONSTRAINTS
-		       sharing Constraints.IntSyn = IntSyn'
+		     (*! sharing Constraints.IntSyn = IntSyn' !*)
                      structure Unify : UNIFY
-                       sharing Unify.IntSyn = IntSyn'
+		     (*! sharing Unify.IntSyn = IntSyn' !*)
 		     structure Subordinate : SUBORDINATE
-		       sharing Subordinate.IntSyn = IntSyn'
+		     (*! sharing Subordinate.IntSyn = IntSyn' !*)
 		     structure TypeCheck : TYPECHECK
-		       sharing TypeCheck.IntSyn = IntSyn'
+		     (*! sharing TypeCheck.IntSyn = IntSyn' !*)
 		     structure FunTypeCheck : FUNTYPECHECK
-		       sharing FunTypeCheck.FunSyn = FunSyn'
+		     (*! sharing FunTypeCheck.FunSyn = FunSyn' !*)
 		       sharing FunTypeCheck.StateSyn = StateSyn'
 		     structure Abstract : ABSTRACT
-		       sharing Abstract.IntSyn = IntSyn')
+		     (*! sharing Abstract.IntSyn = IntSyn' !*)
+		       )
   : MTPABSTRACT =
 struct
 
-  structure IntSyn = IntSyn'
-  structure FunSyn = FunSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
     
   exception Error of string

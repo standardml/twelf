@@ -1,11 +1,12 @@
 (* Weakening substitutions *)
 (* Author: Carsten Schuermann *)
 
-functor Weaken (structure IntSyn' : INTSYN
+functor Weaken ((*! structure IntSyn' : INTSYN !*)
 		structure Whnf : WHNF
-		  sharing Whnf.IntSyn = IntSyn') : WEAKEN = 
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
+		  ) : WEAKEN =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   local
     structure I = IntSyn

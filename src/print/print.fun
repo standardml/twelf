@@ -2,21 +2,21 @@
 (* Author: Frank Pfenning *)
 (* Modified: Jeff Polakow, Roberto Virga *)
 
-functor Print (structure IntSyn' : INTSYN
+functor Print ((*! structure IntSyn' : INTSYN !*)
 	       structure Whnf : WHNF
-	         sharing Whnf.IntSyn = IntSyn'
+	       (*! sharing Whnf.IntSyn = IntSyn' !*)
                structure Abstract : ABSTRACT
-		 sharing Abstract.IntSyn = IntSyn'
+	       (*! sharing Abstract.IntSyn = IntSyn' !*)
                structure Constraints : CONSTRAINTS
-		 sharing Constraints.IntSyn = IntSyn'
+	       (*! sharing Constraints.IntSyn = IntSyn' !*)
 	       structure Names : NAMES
-		 sharing Names.IntSyn = IntSyn'
+	       (*! sharing Names.IntSyn = IntSyn' !*)
 	       structure Formatter' : FORMATTER
 	       structure Symbol : SYMBOL)
   : PRINT =
 struct
 
-structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 structure Formatter = Formatter'
 
 (* Externally visible parameters *)

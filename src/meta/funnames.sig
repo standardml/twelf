@@ -4,7 +4,7 @@
 signature FUNNAMES =
 sig
 
-  structure FunSyn : FUNSYN
+  (*! structure FunSyn : FUNSYN !*)
 
   exception Error of string
 

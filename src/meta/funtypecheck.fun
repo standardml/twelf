@@ -1,33 +1,34 @@
  (* Type checking for functional proof term calculus *)
 (* Author: Carsten Schuermann *)
 
-functor FunTypeCheck (structure FunSyn' : FUNSYN
+functor FunTypeCheck ((*! structure FunSyn' : FUNSYN !*)
 		      structure StateSyn' : STATESYN
-			sharing StateSyn'.FunSyn = FunSyn'
+		      (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 		      structure Abstract : ABSTRACT
-			sharing Abstract.IntSyn = FunSyn'.IntSyn
+		      (*! sharing Abstract.IntSyn = FunSyn'.IntSyn !*)
 		      structure TypeCheck : TYPECHECK
-			sharing TypeCheck.IntSyn = FunSyn'.IntSyn
+		      (*! sharing TypeCheck.IntSyn = FunSyn'.IntSyn !*)
 		      structure Conv : CONV
-			sharing Conv.IntSyn = FunSyn'.IntSyn
+		      (*! sharing Conv.IntSyn = FunSyn'.IntSyn !*)
 	              structure Whnf : WHNF
-			sharing Whnf.IntSyn = FunSyn'.IntSyn
+		      (*! sharing Whnf.IntSyn = FunSyn'.IntSyn !*)
 		      structure Print : PRINT
-			sharing Print.IntSyn = FunSyn'.IntSyn
+		      (*! sharing Print.IntSyn = FunSyn'.IntSyn !*)
 		      structure Subordinate : SUBORDINATE
-			sharing Subordinate.IntSyn = FunSyn'.IntSyn
+		      (*! sharing Subordinate.IntSyn = FunSyn'.IntSyn !*)
 		      structure Weaken : WEAKEN
-			sharing Weaken.IntSyn = FunSyn'.IntSyn  
+		      (*! sharing Weaken.IntSyn = FunSyn'.IntSyn   !*)
 		      structure FunPrint : FUNPRINT
-			sharing FunPrint.FunSyn = FunSyn') : FUNTYPECHECK= 
+		      (*! sharing FunPrint.FunSyn = FunSyn' !*)
+			  ) : FUNTYPECHECK= 
 struct
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
 
   exception Error of string 
   
   local 
-    structure I = FunSyn.IntSyn 
+    structure I = IntSyn 
     structure F = FunSyn
     structure S = StateSyn
 

@@ -4,7 +4,7 @@
 signature UNIFY =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   type unifTrail
 

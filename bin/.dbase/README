@@ -1,0 +1,5 @@
+This directory will contain the databases loaded into
+the Poly/ML runtime system.
+
+Do not delete this file, so that this directory will be created
+when the distribution is unpacked.

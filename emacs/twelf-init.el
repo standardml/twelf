@@ -8,6 +8,7 @@
 (autoload 'twelf-mode "twelf" "Major mode for editing Twelf source." t)
 (autoload 'twelf-server "twelf" "Run an inferior Twelf server." t)
 (autoload 'twelf-sml "twelf" "Run an inferior Twelf-SML process." t)
+(autoload 'twelf-info "twelf" "Browse Twelf User's Guide." t)
 
 ;; Switch buffers to Twelf mode based on filename extension,
 ;; which is one of .elf, .quy, .thm, or .cfg.

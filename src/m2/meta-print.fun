@@ -5,10 +5,10 @@ functor MetaPrint (structure Global : GLOBAL
                    structure MetaSyn' : METASYN
 		   structure Formatter : FORMATTER	
 		   structure Print : PRINT
- 		     sharing Print.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Print.IntSyn = MetaSyn'.IntSyn !*)
 		     sharing Print.Formatter = Formatter
 		   structure ClausePrint : CLAUSEPRINT
-		     sharing ClausePrint.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing ClausePrint.IntSyn = MetaSyn'.IntSyn !*)
 		     sharing ClausePrint.Formatter = Formatter) 
   
   : METAPRINT =
@@ -17,7 +17,7 @@ struct
 
   local   
     structure M = MetaSyn
-    structure I = M.IntSyn
+    structure I = IntSyn
     structure F = Formatter
 
     fun modeToString M.Top = "+"

@@ -5,23 +5,24 @@ functor MetaAbstract (structure Global : GLOBAL
                       structure MetaSyn' : METASYN
 		      structure MetaGlobal : METAGLOBAL
 		      structure Abstract : ABSTRACT
-			sharing Abstract.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Abstract.IntSyn = MetaSyn'.IntSyn !*)
 		      structure ModeSyn : MODESYN
-		        sharing ModeSyn.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Whnf : WHNF
-		        sharing Whnf.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Whnf.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Print : PRINT
-			sharing Print.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Print.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Constraints : CONSTRAINTS
-			sharing Constraints.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Constraints.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Unify : UNIFY
-		        sharing Unify.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Unify.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Names : NAMES
-		        sharing Names.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing Names.IntSyn = MetaSyn'.IntSyn !*)
 		      structure TypeCheck : TYPECHECK
-			sharing TypeCheck.IntSyn = MetaSyn'.IntSyn
+		      (*! sharing TypeCheck.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Subordinate : SUBORDINATE
-			sharing Subordinate.IntSyn = MetaSyn'.IntSyn) 
+		      (*! sharing Subordinate.IntSyn = MetaSyn'.IntSyn  !*)
+			)
   : METAABSTRACT =
 struct
   structure MetaSyn = MetaSyn'
@@ -29,7 +30,7 @@ struct
   exception Error of string
 
   local
-    structure I = MetaSyn.IntSyn
+    structure I = IntSyn
     structure S = Stream
     structure M = MetaSyn      
     structure C = Constraints

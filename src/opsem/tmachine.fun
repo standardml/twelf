@@ -2,34 +2,35 @@
 (* Author: Frank Pfenning *)
 (* Modified: Jeff Polakow, Frank Pfenning, Larry Greenfield, Roberto Virga *)
 
-functor TMachine (structure IntSyn' : INTSYN
-		  structure CompSyn' : COMPSYN
-		    sharing CompSyn'.IntSyn = IntSyn'
+functor TMachine ((*! structure IntSyn' : INTSYN !*)
+                  (*! structure CompSyn' : COMPSYN !*)
+		  (*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		  structure Unify : UNIFY
-		    sharing Unify.IntSyn = IntSyn'
+		  (*! sharing Unify.IntSyn = IntSyn' !*)
 
                   structure Assign : ASSIGN
-		    sharing Assign.IntSyn = IntSyn'
+		  (*! sharing Assign.IntSyn = IntSyn' !*)
 
 		  structure Index : INDEX
-		    sharing Index.IntSyn = IntSyn'
+		  (*! sharing Index.IntSyn = IntSyn' !*)
 
                   structure CPrint : CPRINT 
-                    sharing CPrint.IntSyn = IntSyn'
-                    sharing CPrint.CompSyn = CompSyn'
+		  (*! sharing CPrint.IntSyn = IntSyn' !*)
+		  (*! sharing CPrint.CompSyn = CompSyn' !*)
 
 		  structure Names : NAMES
-		    sharing Names.IntSyn = IntSyn'
-		  structure CSManager : CS_MANAGER
-		    sharing CSManager.IntSyn = IntSyn'
+		  (*! sharing Names.IntSyn = IntSyn' !*)
+		  (*! structure CSManager : CS_MANAGER !*)
+		  (*! sharing CSManager.IntSyn = IntSyn' !*)
 
 		  structure Trace : TRACE
-		    sharing Trace.IntSyn = IntSyn')
+		  (*! sharing Trace.IntSyn = IntSyn' !*)
+		      )
   : ABSMACHINE =
 struct
 
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
 
   local
     structure I = IntSyn

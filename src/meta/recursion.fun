@@ -4,43 +4,43 @@
 
 functor MTPRecursion (structure MTPGlobal : MTPGLOBAL
                       structure Global : GLOBAL
-		      structure IntSyn : INTSYN
-		      structure FunSyn : FUNSYN
-			sharing FunSyn.IntSyn = IntSyn
+		      (*! structure IntSyn : INTSYN !*)
+		      (*! structure FunSyn : FUNSYN !*)
+		      (*! sharing FunSyn.IntSyn = IntSyn !*)
 		      structure StateSyn' : STATESYN
-			sharing StateSyn'.IntSyn = IntSyn
-			sharing StateSyn'.FunSyn = FunSyn
+		      (*! sharing StateSyn'.IntSyn = IntSyn !*)
+		      (*! sharing StateSyn'.FunSyn = FunSyn !*)
 		      structure Abstract : ABSTRACT
-			sharing Abstract.IntSyn = IntSyn
+		      (*! sharing Abstract.IntSyn = IntSyn !*)
 		      structure MTPAbstract : MTPABSTRACT
-			sharing MTPAbstract.IntSyn = IntSyn
-			sharing MTPAbstract.FunSyn = FunSyn
+		      (*! sharing MTPAbstract.IntSyn = IntSyn !*)
+		      (*! sharing MTPAbstract.FunSyn = FunSyn !*)
 			sharing MTPAbstract.StateSyn = StateSyn'
 		      structure FunTypeCheck : FUNTYPECHECK
-			sharing FunTypeCheck.FunSyn = FunSyn
+		      (*! sharing FunTypeCheck.FunSyn = FunSyn !*)
 			sharing FunTypeCheck.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 			sharing MTPrint.StateSyn = StateSyn'
 		      structure Whnf : WHNF
-		        sharing Whnf.IntSyn = IntSyn
+		      (*! sharing Whnf.IntSyn = IntSyn !*)
 		      structure Unify : UNIFY
-		        sharing Unify.IntSyn = IntSyn
+		      (*! sharing Unify.IntSyn = IntSyn !*)
 		      structure Conv : CONV
-		        sharing Conv.IntSyn = IntSyn
+		      (*! sharing Conv.IntSyn = IntSyn !*)
 		      structure Names : NAMES
-		        sharing Names.IntSyn = IntSyn
+		      (*! sharing Names.IntSyn = IntSyn !*)
 		      structure Subordinate : SUBORDINATE
-		        sharing Subordinate.IntSyn = IntSyn
+		      (*! sharing Subordinate.IntSyn = IntSyn !*)
 		      structure Print : PRINT
-		        sharing Print.IntSyn = IntSyn
+		      (*! sharing Print.IntSyn = IntSyn !*)
 		      structure TypeCheck : TYPECHECK
-			sharing TypeCheck.IntSyn = IntSyn
+		      (*! sharing TypeCheck.IntSyn = IntSyn !*)
 		      structure Formatter : FORMATTER
 		      structure FunPrint :FUNPRINT
-			sharing FunPrint.FunSyn = FunSyn
+		      (*! sharing FunPrint.FunSyn = FunSyn !*)
 			sharing FunPrint.Formatter = Formatter
-                      structure CSManager : CS_MANAGER
-                        sharing CSManager.IntSyn = IntSyn
+			(*! structure CSManager : CS_MANAGER !*)
+		      (*! sharing CSManager.IntSyn = IntSyn !*)
 
 )  : MTPRECURSION =
 struct

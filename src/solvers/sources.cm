@@ -1,6 +1,8 @@
 Library
   signature CS_MANAGER
   structure CSManager
+  signature CS_INSTALLER
+  structure CSInstaller
 is
 #if defined(NEW_CM)
   $/basis.cm

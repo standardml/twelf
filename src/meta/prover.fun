@@ -2,24 +2,25 @@
 (* Author: Carsten Schuermann *)
 
 functor MTProver (structure MTPGlobal : MTPGLOBAL
-                  structure IntSyn' : INTSYN
-                  structure FunSyn : FUNSYN
-		    sharing FunSyn.IntSyn = IntSyn'
+                  (*! structure IntSyn' : INTSYN !*)
+                  (*! structure FunSyn : FUNSYN !*)
+		  (*! sharing FunSyn.IntSyn = IntSyn' !*)
 		  structure StateSyn : STATESYN
-		    sharing StateSyn.IntSyn = IntSyn'
-		    sharing StateSyn.FunSyn = FunSyn
+		  (*! sharing IntSyn = IntSyn' !*)
+		  (*! sharing StateSyn.FunSyn = FunSyn !*)
 		  structure Order : ORDER
-		    sharing Order.IntSyn = IntSyn'
+		  (*! sharing Order.IntSyn = IntSyn' !*)
 		  structure MTPInit : MTPINIT
-		    sharing MTPInit.FunSyn = FunSyn
+		  (*! sharing MTPInit.FunSyn = FunSyn !*)
 		    sharing MTPInit.StateSyn = StateSyn
 		  structure MTPStrategy : MTPSTRATEGY
 		    sharing MTPStrategy.StateSyn = StateSyn
 		  structure RelFun : RELFUN
-		    sharing RelFun.FunSyn = FunSyn)
+		  (*! sharing RelFun.FunSyn = FunSyn !*)
+		      )
   : PROVER =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string 
 
@@ -170,14 +171,15 @@ end (* functor MTProver *)
 
 
 functor CombiProver (structure MTPGlobal : MTPGLOBAL
-		     structure IntSyn' : INTSYN
+		     (*! structure IntSyn' : INTSYN !*)
 		     structure ProverOld : PROVER
-		       sharing ProverOld.IntSyn = IntSyn'
+		     (*! sharing ProverOld.IntSyn = IntSyn' !*)
 		     structure ProverNew : PROVER
-		       sharing ProverNew.IntSyn = IntSyn')
+		     (*! sharing ProverNew.IntSyn = IntSyn' !*)
+		       )
   : PROVER =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string 
 

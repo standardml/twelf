@@ -3,15 +3,15 @@
 (* Modified: Jeff Polakow *)
 
 functor Names (structure Global : GLOBAL
-	       structure IntSyn' : INTSYN
+	       (*! structure IntSyn' : INTSYN !*)
                structure Constraints : CONSTRAINTS
-                 sharing Constraints.IntSyn = IntSyn'
+	       (*! sharing Constraints.IntSyn = IntSyn' !*)
 	       structure HashTable : TABLE where type key = string
                structure StringTree : TABLE where type key = string)
   : NAMES =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 

@@ -3,8 +3,8 @@
 
 signature MTPABSTRACT =
 sig
-  structure IntSyn : INTSYN
-  structure FunSyn : FUNSYN
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure FunSyn : FUNSYN !*)
   structure StateSyn : STATESYN
 
   exception Error of string

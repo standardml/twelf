@@ -12,7 +12,7 @@ struct
 
   local
     structure M = MetaSyn
-    structure I = MetaSyn.IntSyn
+    structure I = IntSyn
       
     (* init c = S'
      

@@ -1,5 +1,6 @@
 Linux RPM installation files
 Author: Roberto Virga
+Modified: Frank Pfenning
 
 Contents:
 
@@ -11,3 +12,8 @@ Contents:
 			  spec file
   twelf-install		- script to install Twelf (requires root privileges).
   twelf-uninstall	- script to uninstall Twelf (requires root privileges)
+
+Modifications for Twelf 1.4
+
+  moved to MLton (with stand-alone executables)
+  moved documentation from /usr/doc/twelf to /usr/share/twelf/doc/

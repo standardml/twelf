@@ -3,13 +3,14 @@
 (* Modified: Roberto Virga *)
 
 functor Constraints
-    (structure IntSyn' : INTSYN
+    ((*! structure IntSyn' : INTSYN !*)
      structure Conv : CONV
-       sharing Conv.IntSyn = IntSyn')
+     (*! sharing Conv.IntSyn = IntSyn' !*)
+       )
        : CONSTRAINTS =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of IntSyn.cnstr list
 

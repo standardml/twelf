@@ -4,13 +4,14 @@
 functor Origins
   (structure Global : GLOBAL
    structure Table : TABLE where type key = string
-   structure IntSyn' : INTSYN
-   structure Paths' : PATHS)
+   (*! structure IntSyn' : INTSYN !*)
+   (*! structure Paths' : PATHS !*)
+     )
   : ORIGINS =
 struct
 
-  structure IntSyn = IntSyn'
-  structure Paths = Paths'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure Paths = Paths' !*)
 
   local
     val linesInfoTable : Paths.linesInfo Table.Table = Table.new (31)

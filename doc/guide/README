@@ -3,19 +3,21 @@ written in in Texinfo format in the file
 
   twelf.texi
 
-The Makefile contains instructions to create and install various
-versions of the manual.
+Note that after editing this source file you may need to call
+M-x texinfo-every-node-update C-c C-u C-e
+M-x texinfo-all-menus-update  C-c C-u C-a
+and the scan @menu for missing explanations
 
-  make all  (creates dvi, ps, html, info, BUT NOT pdf ON LINUX)
+The Makefile contains instructions to create and install various
+versions of the manual.  
+
+  make all  (creates dvi, ps, html, info, pdf)
 
   make twelf.info (twelf.info, visit with C-u C-h twelf.info in Emacs)
   make twelf.dvi  (twelf.dvi)
   make twelf.ps   (twelf.ps)
   make twelf_toc.html (twelf_toc.html, twelf_*.html)
   make twelf.pdf  (twelf.pdf)
-
-Note that twelf.pdf should be created after twelf.dvi in order
-to make sure that indexing and cross-reference work correctly.
 
 To copy the resulting documentation to the right locations, type
 
@@ -28,3 +30,5 @@ To copy the resulting documentation to the ~twelf/www type
 To clean this directory to sources only:
 
   make clean
+
+Note: config.embed is now obsolete

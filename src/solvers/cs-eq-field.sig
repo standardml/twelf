@@ -6,7 +6,7 @@ sig
   include CS
 
   structure Field : FIELD
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   (* Foreign expressions *)
 

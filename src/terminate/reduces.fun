@@ -6,34 +6,35 @@
  *)
 
 functor Reduces   (structure Global : GLOBAL
-		   structure IntSyn': INTSYN
+		   (*! structure IntSyn' : INTSYN !*)
 		   structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn'
+		   (*! sharing Whnf.IntSyn = IntSyn' !*)
 	           structure Names : NAMES
-		     sharing Names.IntSyn = IntSyn'
+		   (*! sharing Names.IntSyn = IntSyn' !*)
 	           structure Index : INDEX
-		     sharing Index.IntSyn = IntSyn'
+		   (*! sharing Index.IntSyn = IntSyn' !*)
 	           structure Subordinate : SUBORDINATE
-		     sharing Subordinate.IntSyn = IntSyn'
+		   (*! sharing Subordinate.IntSyn = IntSyn' !*)
      		   structure Formatter : FORMATTER
 	           structure Print : PRINT
-		     sharing Print.IntSyn = IntSyn'
+		   (*! sharing Print.IntSyn = IntSyn' !*)
 		     sharing Print.Formatter = Formatter
 		   structure Order : ORDER
-		     sharing Order.IntSyn = IntSyn'
-		   structure Paths  : PATHS
+		   (*! sharing Order.IntSyn = IntSyn' !*)
+		   (*! structure Paths  : PATHS !*)
 		   structure Checking : CHECKING
 		      sharing Checking.Order = Order
-		      sharing Checking.IntSyn = IntSyn'
-		      sharing Checking.Paths = Paths
+		      (*! sharing Checking.IntSyn = IntSyn' !*)
+		      (*! sharing Checking.Paths = Paths !*)
 		   structure Origins : ORIGINS
-		     sharing Origins.Paths = Paths
-		     sharing Origins.IntSyn = IntSyn'
-	           structure CSManager : CS_MANAGER
-		     sharing CSManager.IntSyn = IntSyn')
+		   (*! sharing Origins.Paths = Paths !*)
+		     (*! sharing Origins.IntSyn = IntSyn' !*)
+		   (*! structure CSManager : CS_MANAGER !*)
+		   (*! sharing CSManager.IntSyn = IntSyn' !*)
+		       )
   :  REDUCES =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 
@@ -521,7 +522,7 @@ struct
 	      (if !Global.chatter > 3
 		 then print "\n"
 	       else () ; ())
-	    | checkFam' (I.Const b::bs) = 
+	    | checkFam' (I.Const(b)::bs) = 
 		(if (!Global.chatter) > 3 then 
 		   print (N.qidToString (N.constQid b) ^ " ")
 		 else ();
@@ -531,6 +532,18 @@ struct
 		 else ();
 		 (( checkRClause (I.Null, I.Null, nil, (I.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
+			 | R.Error (msg) => raise Error (msg));
+		   checkFam' bs)
+	    | checkFam' (I.Def(d)::bs) = 
+		(if (!Global.chatter) > 3 then 
+		   print (N.qidToString (N.constQid d) ^ " ")
+		 else ();
+		 (* reuse variable names when tracing *)
+		 if (!Global.chatter) > 4
+		   then (N.varReset IntSyn.Null; print "\n")
+		 else ();
+		 (( checkRClause (I.Null, I.Null, nil, (I.constType (d), I.id), P.top))
+		    handle Error' (occ, msg) => error (d, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
 		   checkFam' bs)
 	  val _ = if (!Global.chatter) > 3
@@ -568,6 +581,18 @@ struct
 		 else ();
 	        (checkClause' ((I.constType (b), I.id), P.top)
 		 handle Error' (occ, msg) => error (b, occ, msg)
+		      | Order.Error (msg) => raise Error (msg));
+		 checkFam' bs)
+	    | checkFam' (I.Def(d)::bs) = 
+		(if (!Global.chatter) > 3 then 
+		   print (N.qidToString (N.constQid d) ^ " ")
+		 else ();
+		 (* reuse variable names when tracing *)
+		 if (!Global.chatter) > 4
+		   then (N.varReset IntSyn.Null; print "\n")
+		 else ();
+	        (checkClause' ((I.constType (d), I.id), P.top)
+		 handle Error' (occ, msg) => error (d, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));
 		 checkFam' bs)
 	  val _ = if (!Global.chatter) > 3

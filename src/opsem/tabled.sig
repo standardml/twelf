@@ -4,8 +4,8 @@
 signature TABLED =
 sig
 
-  structure IntSyn  : INTSYN
-  structure CompSyn : COMPSYN
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure CompSyn : COMPSYN !*)
   structure Unify : UNIFY 
 
 

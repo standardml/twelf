@@ -1,17 +1,17 @@
 (* Assignment *)
 (* Author: Brigitte Pientka *)
 
-functor Assign (structure IntSyn' : INTSYN
+functor Assign ((*! structure IntSyn' : INTSYN !*)
 		structure Whnf : WHNF
-		  sharing Whnf.IntSyn = IntSyn'
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
 		structure Unify : UNIFY
-		  sharing Unify.IntSyn = IntSyn'
+		(*! sharing Unify.IntSyn = IntSyn' !*)
 		structure Print : PRINT
-		  sharing Print.IntSyn = IntSyn'
+		(*! sharing Print.IntSyn = IntSyn' !*)
 		      )
   : ASSIGN =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
     
   exception Assignment of string
 

@@ -6,20 +6,20 @@
 *)
 
 functor ClausePrint
-  (structure IntSyn' : INTSYN
+  ((*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
+   (*! sharing Names.IntSyn = IntSyn' !*)
    structure Formatter' : FORMATTER
    structure Print : PRINT
-     sharing Print.IntSyn = IntSyn'
+   (*! sharing Print.IntSyn = IntSyn' !*)
      sharing Print.Formatter = Formatter'
    structure Symbol : SYMBOL)
      : CLAUSEPRINT =
 struct
 
-structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 structure Formatter = Formatter'
 
 local

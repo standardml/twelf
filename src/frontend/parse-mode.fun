@@ -2,23 +2,23 @@
 (* Author: Carsten Schuermann *)
 
 functor ParseMode
-  (structure Paths : PATHS
-   structure Parsing' : PARSING
-     sharing Parsing'.Lexer.Paths = Paths
+   ((*! structure Paths : PATHS !*)
+   (*! structure Parsing' : PARSING !*)
+   (*! sharing Parsing'.Lexer.Paths = Paths !*)
    structure ExtModes' : EXTMODES
-     sharing ExtModes'.Paths = Paths
-     sharing ExtModes'.ExtSyn.Paths = Paths
+   (*! sharing ExtModes'.Paths = Paths !*)
+   (*! sharing ExtModes'.ExtSyn.Paths = Paths !*)
    structure ParseTerm : PARSE_TERM
-     sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
+   (*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
      sharing ParseTerm.ExtSyn = ExtModes'.ExtSyn)
      : PARSE_MODE =
 struct
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure ExtModes = ExtModes'
 
   local
-    structure L = Parsing.Lexer
-    structure LS = Parsing.Lexer.Stream  
+    structure L = Lexer
+    structure LS = Lexer.Stream  
     structure E = ExtModes
     structure P = Paths
 

@@ -2,30 +2,30 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPi (structure MTPGlobal : MTPGLOBAL
-	      structure IntSyn : INTSYN
-	      structure FunSyn' : FUNSYN
-		sharing FunSyn'.IntSyn = IntSyn
+	      (*! structure IntSyn : INTSYN !*)
+	      (*! structure FunSyn' : FUNSYN !*)
+	      (*! sharing FunSyn'.IntSyn = IntSyn !*)
 	      structure StateSyn' : STATESYN
-		sharing StateSyn'.IntSyn = IntSyn
-		sharing StateSyn'.FunSyn = FunSyn'
+	      (*! sharing StateSyn'.IntSyn = IntSyn !*)
+	      (*! sharing StateSyn'.FunSyn = FunSyn' !*)
 	      structure RelFun : RELFUN
-	        sharing RelFun.FunSyn = FunSyn'
+	      (*! sharing RelFun.FunSyn = FunSyn' !*)
 	      structure Formatter : FORMATTER
 	      structure Print : PRINT
-		sharing Print.IntSyn = IntSyn
+	      (*! sharing Print.IntSyn = IntSyn !*)
 		sharing Print.Formatter = Formatter
 	      structure FunTypeCheck : FUNTYPECHECK
-		sharing FunTypeCheck.FunSyn = FunSyn'
+	      (*! sharing FunTypeCheck.FunSyn = FunSyn' !*)
 		sharing FunTypeCheck.StateSyn = StateSyn'
 	      structure MTPData : MTPDATA
 	      structure MTPInit : MTPINIT
-	        sharing MTPInit.FunSyn = FunSyn'
+	      (*! sharing MTPInit.FunSyn = FunSyn' !*)
 		sharing MTPInit.StateSyn = StateSyn'
   	      structure MTPFilling : MTPFILLING
-		sharing MTPFilling.FunSyn = FunSyn'
+	      (*! sharing MTPFilling.FunSyn = FunSyn' !*)
 	        sharing MTPFilling.StateSyn = StateSyn'
 	      structure Inference : INFERENCE
-		sharing Inference.FunSyn = FunSyn'
+	      (*! sharing Inference.FunSyn = FunSyn' !*)
 		sharing Inference.StateSyn = StateSyn'
 	      structure MTPSplitting : MTPSPLITTING
 		sharing MTPSplitting.StateSyn = StateSyn'
@@ -36,16 +36,16 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 	      structure MTPrint : MTPRINT
 		sharing MTPrint.StateSyn = StateSyn'
 	      structure Order : ORDER
-		sharing Order.IntSyn = IntSyn
+	      (*! sharing Order.IntSyn = IntSyn !*)
 	      structure Names : NAMES
-	        sharing Names.IntSyn = IntSyn
+	      (*! sharing Names.IntSyn = IntSyn !*)
 	      structure Timers : TIMERS
 	      structure Ring : RING) 
   : MTPI =
 struct
   exception Error of string
 
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
   structure StateSyn = StateSyn'
 
   local 

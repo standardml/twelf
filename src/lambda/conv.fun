@@ -2,12 +2,13 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
 functor Conv
-  (structure IntSyn' : INTSYN
+  ((*! structure IntSyn' : INTSYN !*)
    structure Whnf   : WHNF
-   sharing Whnf.IntSyn = IntSyn')
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
+     )
      : CONV =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   local
     open IntSyn

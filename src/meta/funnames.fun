@@ -2,12 +2,12 @@
 (* Author: Carsten Schuermann *)
 
 functor FunNames (structure Global : GLOBAL
-		  structure FunSyn' : FUNSYN
+		  (*! structure FunSyn' : FUNSYN !*)
 		  structure HashTable : TABLE where type key = string)
   : FUNNAMES =
 struct
 
-  structure FunSyn = FunSyn'
+  (*! structure FunSyn = FunSyn' !*)
 
   exception Error of string
 

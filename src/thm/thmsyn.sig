@@ -4,15 +4,15 @@
 
 signature THMSYN =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure ModeSyn : MODESYN
-    sharing ModeSyn.IntSyn = IntSyn
-  structure Paths : PATHS
+  (*! sharing ModeSyn.IntSyn = IntSyn !*)
+  (*! structure Paths : PATHS !*)
   structure Names : NAMES
 
   exception Error of string
 
-  type Param = string option
+  (*! type Param = string option !*)
 
   datatype Order =
     Varg of string list
@@ -26,7 +26,7 @@ sig
       RedOrder of Predicate * Order * Order
   
   datatype Callpats =
-    Callpats of (IntSyn.cid * Param list) list 
+    Callpats of (IntSyn.cid * (string option) list) list 
 
   (* Termination declaration *)
   datatype TDecl = 

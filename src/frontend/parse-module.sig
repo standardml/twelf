@@ -4,7 +4,7 @@
 signature PARSE_MODULE =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ModExtSyn : MODEXTSYN
 
   (* val parseSigExp' : ModExtSyn.sigexp Parsing.recparser *)

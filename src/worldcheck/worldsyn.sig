@@ -4,11 +4,11 @@
 
 signature WORLDSYN = 
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   exception Error of string 
 
-  type dlist = IntSyn.Dec list
+  (*! type dlist = IntSyn.Dec list !*)
 
   (*
   datatype LabelDec =			(* ContextBody                 *)
@@ -26,6 +26,6 @@ sig
   val lookup : IntSyn.cid -> Worlds      (* raises Error if undeclared *)
 
   val worldcheck : Worlds -> IntSyn.cid -> unit
-  val ctxToList : IntSyn.Dec IntSyn.Ctx -> dlist
+  val ctxToList : IntSyn.Dec IntSyn.Ctx -> IntSyn.Dec list
 
 end; (* signature WORLDSYN *)

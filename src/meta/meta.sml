@@ -1,39 +1,41 @@
 structure MTPGlobal = 
   MTPGlobal (structure MetaGlobal = MetaGlobal)
 
+(* Now in funsyn.fun *)
+(*
 structure FunSyn = 
-  FunSyn (structure IntSyn' = IntSyn
+  FunSyn ((*! structure IntSyn' = IntSyn !*)
 	  structure Whnf = Whnf
 	  structure Conv = Conv);
-
+*)
 
 structure StateSyn = 
-  StateSyn (structure FunSyn' = FunSyn
-	    structure IntSyn' = IntSyn
+  StateSyn ((*! structure FunSyn' = FunSyn !*)
+	    (*! structure IntSyn' = IntSyn !*)
 	    structure Whnf = Whnf
 	    structure Conv = Conv)
 
 structure FunNames = 
   FunNames (structure Global = Global
-	    structure FunSyn' = FunSyn
+	    (*! structure FunSyn' = FunSyn !*)
 	    structure HashTable = StringHashTable);
 
 structure FunPrint = 
-  FunPrint (structure FunSyn' = FunSyn
+  FunPrint ((*! structure FunSyn' = FunSyn !*)
 	    structure Formatter = Formatter
 	    structure Print = Print
 	    structure Names = Names);
 (* moves eventually into the Twelf core *)
 structure Weaken =
-  Weaken (structure IntSyn' = IntSyn
+  Weaken ((*! structure IntSyn' = IntSyn !*)
 	  structure Whnf = Whnf)
 
 structure FunWeaken =
-  FunWeaken (structure FunSyn' = FunSyn
+  FunWeaken ((*! structure FunSyn' = FunSyn !*)
 	     structure Weaken = Weaken)
 
 structure FunTypeCheck = 
-  FunTypeCheck (structure FunSyn' = FunSyn
+  FunTypeCheck ((*! structure FunSyn' = FunSyn !*)
 		structure StateSyn' = StateSyn
 	        structure Abstract = Abstract
 	        structure TypeCheck = TypeCheck
@@ -46,7 +48,7 @@ structure FunTypeCheck =
 
 structure RelFun = 
   RelFun (structure Global = Global
-          structure FunSyn' = FunSyn
+          (*! structure FunSyn' = FunSyn !*)
 	  structure ModeSyn = ModeSyn
 	  structure Names = Names
 	  structure TypeCheck = TypeCheck
@@ -64,8 +66,8 @@ structure MTPData =
   MTPData (structure MTPGlobal = MTPGlobal)
 
 structure MTPAbstract =
-  MTPAbstract (structure IntSyn' = IntSyn
-	       structure FunSyn' = FunSyn
+  MTPAbstract ((*! structure IntSyn' = IntSyn !*)
+               (*! structure FunSyn' = FunSyn !*)
 	       structure StateSyn' = StateSyn
 	       structure Whnf = Whnf
 	       structure Constraints = Constraints
@@ -78,9 +80,9 @@ structure MTPAbstract =
 
 structure MTPInit = 
   MTPInit (structure MTPGlobal = MTPGlobal
-	   structure IntSyn = IntSyn
+	   (*! structure IntSyn = IntSyn !*)
 	   structure Names = Names
-	   structure FunSyn' = FunSyn
+	   (*! structure FunSyn' = FunSyn !*)
 	   structure StateSyn' = StateSyn
 	   structure MTPData = MTPData
 	   structure Formatter = Formatter
@@ -90,8 +92,8 @@ structure MTPInit =
 
 structure MTPrint = 
   MTPrint (structure Global = Global
-	   structure IntSyn = IntSyn
-	   structure FunSyn = FunSyn
+	   (*! structure IntSyn = IntSyn !*)
+	   (*! structure FunSyn = FunSyn !*)
 	   structure Names = Names
 	   structure StateSyn' = StateSyn
 	   structure Formatter' = Formatter
@@ -103,11 +105,11 @@ structure MTPrint =
 structure MTPSearch = 
   MTPSearch (structure Global = Global
              structure MTPGlobal = MTPGlobal
-	     structure IntSyn' = IntSyn
+	     (*! structure IntSyn' = IntSyn !*)
 	     structure Abstract = Abstract
 	     structure Conv = Conv
 	     structure StateSyn' = StateSyn
-	     structure CompSyn' = CompSyn
+	     (*! structure CompSyn' = CompSyn !*)
 	     structure Compile = Compile
 	     structure Whnf = Whnf
 	     structure Unify = UnifyTrail
@@ -116,12 +118,13 @@ structure MTPSearch =
 	     structure CPrint = CPrint
 	     structure Print = Print
 	     structure Names = Names
-             structure CSManager = CSManager); 
+             (*! structure CSManager = CSManager  !*)
+	       );
 
 structure MTPFilling =
   MTPFilling (structure MTPGlobal = MTPGlobal
-              structure IntSyn = IntSyn
-	      structure FunSyn' = FunSyn
+              (*! structure IntSyn = IntSyn !*)
+	      (*! structure FunSyn' = FunSyn !*)
 	      structure StateSyn' = StateSyn
 	      structure MTPData = MTPData
 	      structure Whnf = Whnf
@@ -133,8 +136,8 @@ structure MTPFilling =
 structure MTPSplitting = 
   MTPSplitting (structure MTPGlobal = MTPGlobal
 		structure Global = Global
-		structure IntSyn = IntSyn
-		structure FunSyn = FunSyn
+		(*! structure IntSyn = IntSyn !*)
+		(*! structure FunSyn = FunSyn !*)
 		structure StateSyn' = StateSyn
 		structure Heuristic = Heuristic
 		structure MTPrint = MTPrint
@@ -148,16 +151,17 @@ structure MTPSplitting =
 		structure Index = Index
 		structure Print = Print
 		structure Unify = UnifyTrail
-                structure CSManager = CSManager); 
+                (*! structure CSManager = CSManager !*)
+		  ); 
 
 structure UniqueSearch =
   UniqueSearch (structure Global = Global
-		structure IntSyn' = IntSyn
-		structure FunSyn' = FunSyn
+		(*! structure IntSyn' = IntSyn !*)
+		(*! structure FunSyn' = FunSyn !*)
 		structure StateSyn' = StateSyn
 		structure Abstract = Abstract
 		structure MTPGlobal = MTPGlobal
-		structure CompSyn' = CompSyn
+		(*! structure CompSyn' = CompSyn !*)
 		structure Whnf = Whnf
 		structure Unify = UnifyTrail
 		structure Assign = Assign		
@@ -166,12 +170,13 @@ structure UniqueSearch =
 		structure CPrint = CPrint
 		structure Print = Print
 		structure Names = Names
-                structure CSManager = CSManager); 
+                (*! structure CSManager = CSManager !*)
+		  ); 
 
 structure Inference = 
   Inference (structure MTPGlobal = MTPGlobal
-	     structure IntSyn = IntSyn
-	     structure FunSyn' = FunSyn
+	     (*! structure IntSyn = IntSyn !*)
+	     (*! structure FunSyn' = FunSyn !*)
 	     structure StateSyn' = StateSyn
 	     structure Abstract = Abstract
 	     structure TypeCheck = TypeCheck
@@ -184,8 +189,8 @@ structure Inference =
 structure MTPRecursion = 
   MTPRecursion (structure MTPGlobal = MTPGlobal
                 structure Global =  Global
-		structure IntSyn = IntSyn
-		structure FunSyn = FunSyn
+		(*! structure IntSyn = IntSyn !*)
+		(*! structure FunSyn = FunSyn !*)
 		structure StateSyn' = StateSyn
 		structure FunTypeCheck = FunTypeCheck
 		structure MTPSearch = MTPSearch
@@ -201,7 +206,8 @@ structure MTPRecursion =
 		structure TypeCheck = TypeCheck
 		structure FunPrint = FunPrint
 		structure Formatter = Formatter
-                structure CSManager = CSManager); 
+                (*! structure CSManager = CSManager !*)
+		  ); 
 
 
 
@@ -218,8 +224,8 @@ structure MTPStrategy =
 
 structure MTProver =
   MTProver (structure MTPGlobal = MTPGlobal
-            structure IntSyn' = IntSyn
-            structure FunSyn = FunSyn
+            (*! structure IntSyn' = IntSyn !*)
+            (*! structure FunSyn = FunSyn !*)
 	    structure StateSyn = StateSyn
 	    structure Order = Order
 	    structure MTPrint = MTPrint
@@ -229,15 +235,15 @@ structure MTProver =
 
 structure CombiProver = 
   CombiProver (structure MTPGlobal = MTPGlobal
-	       structure IntSyn' = IntSyn
+	       (*! structure IntSyn' = IntSyn !*)
 	       structure ProverNew = MTProver
 	       structure ProverOld = Prover)
 
 
 structure MTPi = 
   MTPi (structure MTPGlobal = MTPGlobal
-	structure IntSyn = IntSyn
-	structure FunSyn' = FunSyn
+	(*! structure IntSyn = IntSyn !*)
+	(*! structure FunSyn' = FunSyn !*)
 	structure StateSyn' = StateSyn
 	structure FunTypeCheck = FunTypeCheck
 	structure RelFun = RelFun

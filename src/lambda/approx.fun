@@ -1,13 +1,14 @@
 (* Approximate language for term reconstruction *)
 (* Author: Kevin Watkins *)
 
-functor Approx (structure IntSyn' : INTSYN
+functor Approx ((*! structure IntSyn' : INTSYN !*)
                 structure Whnf : WHNF
-                  sharing Whnf.IntSyn = IntSyn')
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
+		  )
   : APPROX =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure I = IntSyn
 
   fun headConDec (I.Const c) = I.sgnLookup c

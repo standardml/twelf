@@ -2,15 +2,16 @@
 (* Author: Carsten Schuermann *)
 
 functor WorldPrint (structure Global : GLOBAL
-		    structure IntSyn : INTSYN
+		    (*! structure IntSyn : INTSYN !*)
 		    structure WorldSyn' : WORLDSYN
-		      sharing WorldSyn'.IntSyn = IntSyn
+		    (*! sharing WorldSyn'.IntSyn = IntSyn !*)
 		    structure Names : NAMES
-		      sharing Names.IntSyn = IntSyn
+		    (*! sharing Names.IntSyn = IntSyn !*)
 		    structure Formatter' : FORMATTER
 		    structure Print : PRINT
 		      sharing Print.Formatter = Formatter'
-		      sharing Print.IntSyn = IntSyn)
+		      (*! sharing Print.IntSyn = IntSyn !*)
+			)
   : WORLDPRINT =
 
 struct

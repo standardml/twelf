@@ -2,49 +2,50 @@
 (* Author: Brigitte Pientka *)
 (* Based on abstract machine in absmachine.fun *)
 
-functor Tabled (structure IntSyn' : INTSYN
-		    structure CompSyn' : COMPSYN
-		      sharing CompSyn'.IntSyn = IntSyn'
+functor Tabled ((*! structure IntSyn' : INTSYN !*)
+                (*! structure CompSyn' : COMPSYN !*)
+		    (*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		    structure Unify : UNIFY
-		      sharing Unify.IntSyn = IntSyn'
+		    (*! sharing Unify.IntSyn = IntSyn' !*)
 		    structure TabledSyn : TABLEDSYN
-		      sharing TabledSyn.IntSyn = IntSyn'
+		    (*! sharing TabledSyn.IntSyn = IntSyn' !*)
 
                     structure Assign : ASSIGN
-		      sharing Assign.IntSyn = IntSyn'
+		    (*! sharing Assign.IntSyn = IntSyn' !*)
 
 		  structure Subordinate : SUBORDINATE
-		    sharing Subordinate.IntSyn = IntSyn'
+		  (*! sharing Subordinate.IntSyn = IntSyn' !*)
 
 		    structure Index : INDEX
-		      sharing Index.IntSyn = IntSyn'
+		    (*! sharing Index.IntSyn = IntSyn' !*)
 		    structure Queue : QUEUE
 		    structure TableIndex : TABLEINDEX
-		      sharing TableIndex.IntSyn = IntSyn'
-		      sharing TableIndex.CompSyn = CompSyn'
+		    (*! sharing TableIndex.IntSyn = IntSyn' !*)
+		    (*! sharing TableIndex.CompSyn = CompSyn' !*)
 		    structure AbstractTabled : ABSTRACTTABLED
-		      sharing AbstractTabled.IntSyn = IntSyn'
+		    (*! sharing AbstractTabled.IntSyn = IntSyn' !*)
 		    structure Whnf : WHNF
-		      sharing Whnf.IntSyn = IntSyn'
+		    (*! sharing Whnf.IntSyn = IntSyn' !*)
  
 
 		    (* CPrint currently unused *)
 		    structure CPrint : CPRINT 
-                      sharing CPrint.IntSyn = IntSyn'
-                      sharing CPrint.CompSyn = CompSyn'
+		    (*! sharing CPrint.IntSyn = IntSyn' !*)
+		    (*! sharing CPrint.CompSyn = CompSyn' !*)
 					    (* CPrint currently unused *)
 		    structure Print : PRINT 
-                      sharing Print.IntSyn = IntSyn'
+		    (*! sharing Print.IntSyn = IntSyn' !*)
 
 		    structure Names : NAMES 
-                      sharing Names.IntSyn = IntSyn'
-		    structure CSManager : CS_MANAGER
-		      sharing CSManager.IntSyn = IntSyn')
+		    (*! sharing Names.IntSyn = IntSyn' !*)
+		    (*! structure CSManager : CS_MANAGER !*)
+		    (*! sharing CSManager.IntSyn = IntSyn' !*)
+			)
   : TABLED =
 struct
 
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
   structure Unify = Unify
   structure TabledSyn = TabledSyn
 
@@ -401,6 +402,16 @@ bp Wed Feb 20 11:06:51 2002 *)
 	      CSManager.trail (fn () =>
 			       (rSolve (ps', (r, I.id), dp,
 					(fn S => sc ((C.Pc c)::S)))));
+	      matchSig sgn'
+	    end
+	  | matchSig ((Hc as I.Def(d))::sgn') =
+	    let
+	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
+	    in
+	      (* trail to undo EVar instantiations *)
+	      CSManager.trail (fn () =>
+			       (rSolve (ps', (r, I.id), dp,
+					(fn S => sc ((C.Pc d)::S)))));
 	      matchSig sgn'
 	    end
 

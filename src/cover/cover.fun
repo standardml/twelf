@@ -3,34 +3,37 @@
 
 functor Cover
   (structure Global : GLOBAL
-   structure IntSyn' : INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Abstract : ABSTRACT
-     sharing Abstract.IntSyn = IntSyn'
+   (*! sharing Abstract.IntSyn = IntSyn' !*)
    structure Unify : UNIFY		(* must be trailing! *)
-     sharing Unify.IntSyn = IntSyn'
+   (*! sharing Unify.IntSyn = IntSyn' !*)
    structure Constraints : CONSTRAINTS
-     sharing Constraints.IntSyn = IntSyn'
+   (*! sharing Constraints.IntSyn = IntSyn' !*)
    structure ModeSyn' : MODESYN
-     sharing ModeSyn'.IntSyn = IntSyn'
+   (*! sharing ModeSyn'.IntSyn = IntSyn' !*)
    structure Index : INDEX
-     sharing Index.IntSyn = IntSyn'
+   (*! sharing Index.IntSyn = IntSyn' !*)
+   structure Subordinate : SUBORDINATE
+   (*! sharing Subordinate.IntSyn = IntSyn' !*)
+
    structure WorldSyn : WORLDSYN
-     sharing WorldSyn.IntSyn = IntSyn'
+   (*! sharing WorldSyn.IntSyn = IntSyn' !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
-   structure Paths : PATHS
+   (*! sharing Names.IntSyn = IntSyn' !*)
+   (*! structure Paths : PATHS !*)
    structure Print : PRINT
-     sharing Print.IntSyn = IntSyn'
+   (*! sharing Print.IntSyn = IntSyn' !*)
    structure TypeCheck : TYPECHECK
-     sharing TypeCheck.IntSyn = IntSyn'
-   structure CSManager : CS_MANAGER
-     sharing CSManager.IntSyn = IntSyn'
+   (*! sharing TypeCheck.IntSyn = IntSyn' !*)
+   (*! structure CSManager : CS_MANAGER !*)
+   (*! sharing CSManager.IntSyn = IntSyn' !*)
    structure Timers : TIMERS)
   : COVER =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure ModeSyn = ModeSyn'
 
   exception Error of string
@@ -1198,6 +1201,7 @@ struct
     *)
     fun constsToTypes (nil) = nil
       | constsToTypes (I.Const(c)::cs') = I.constType(c)::constsToTypes(cs')
+      | constsToTypes (I.Def(d)::cs') = I.constType(d)::constsToTypes(cs')
 
     (*******************)
     (* Output Coverage *)
@@ -1264,8 +1268,13 @@ struct
       | createCoverSpine (G, (I.SClo (S, s'), s), Vs, ms) =
 	  createCoverSpine (G, (S, I.comp (s', s)), Vs, ms)
 
-
   in
+    fun checkNoDef (a) =
+        (case I.sgnLookup a
+           of I.ConDef _ =>
+	        raise Error ("Coverage checking " ^ N.qidToString (N.constQid a)
+			     ^ ":\ntype family must not be defined.")
+            | _ => ())
 
     (* checkCovers (a, ms) = ()
        checks coverage for type family a with respect to mode spine ms
@@ -1275,6 +1284,11 @@ struct
         let
 	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ N.qidToString (N.constQid a)
 			     ^ "\n")
+	  val _ = checkNoDef (a)
+	  val _ = Subordinate.checkNoDef (a)
+	          handle Subordinate.Error (msg) =>
+		    raise Error ("Coverage checking " ^ N.qidToString (N.constQid a) ^ ":\n"
+				 ^ msg)
 	  val (V0, p) = initCGoal (a)
 	  val _ = if !Global.doubleCheck
 		    then TypeCheck.typeCheck (I.Null, (V0, I.Uni (I.Type)))

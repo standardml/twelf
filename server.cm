@@ -1,1 +1,4 @@
-Alias src/server/sources.cm
+Library
+  structure Server
+is
+  src/server/sources.cm

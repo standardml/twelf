@@ -43,7 +43,7 @@ end;  (* signature TRAVERSER *)
 signature TRAVERSE =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure Traverser : TRAVERSER
 
   exception Error of string

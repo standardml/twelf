@@ -103,7 +103,7 @@
    ;; single-line comments
    ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%freeze\\|%abbrev\\|%clause\\|%define\\|%solve\\|%query\\|%querytabled\\|%tabled\\|%deterministic\\|%mode\\|%block\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\|%sig\\|%struct\\|%where\\|%include\\|%open\\|%use\\).*$"
+   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%freeze\\|%abbrev\\|%clause\\|%define\\|%solve\\|%querytabled\\|%query\\|%tabled\\|%deterministic\\|%mode\\|%block\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\|%sig\\|%struct\\|%where\\|%include\\|%open\\|%use\\).*$"
     1 twelf-font-percent-key-face nil)
    ;; keywords, omit punctuations for now.
    ("\\(\\<<-\\>\\|\\<->\\>\\|\\<type\\>\\|\\<=\\>\\|\\<_\\>\\)"

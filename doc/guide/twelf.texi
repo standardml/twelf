@@ -4,7 +4,7 @@
 @settitle Twelf User's Guide 
 @setchapternewpage odd
 @set VERSION 1.4
-@set UPDATED April 30, 2002
+@set UPDATED December 27, 2002
 @c @set VERSION 1.3
 @c @set UPDATED September 13, 2000
 @c @set VERSION 1.2
@@ -78,6 +78,7 @@ Term Reconstruction
 * Strict Definitions::          Reconstruction on definitions
 * Type Ascription::             Disambiguating terms
 * Error Messages::              When things go wrong
+* Tracing Reconstruction::      Seeing what happens during reconstruction
 
 Logic Programming
 
@@ -87,7 +88,8 @@ Logic Programming
 * Sample Trace::                An example how search works
 * Operational Semantics::       How queries are executed in some detail
 * Sample Program::              Type inference for a lambda-calculus
-* Deterministic Type Families::               How to prune unwanted solutions 
+* Clause Definitions::          How to use definitions for search
+* Deterministic Type Families::  How to prune unwanted solutions 
 * Tabled Logic Programming::    Executing queries with memo tables
 
 Constraint Domains
@@ -98,6 +100,7 @@ Constraint Domains
 * Integer Constraints::         Integers with equality and inequality
 * Equalities over Strings::     Strings and concatenation
 * 32-bit Integers::             Integers representable as string of 32 bits
+* Sample Constraint Programs::  Some examples of use
 * Restrictions and Caveats::    Alerts!
 
 Modes
@@ -120,6 +123,7 @@ Coverage
 * Regular Worlds::              Characterizing parameters and hypotheses
 * Input Coverage::              Checking if all cases have been covered
 * Totality::                    Verifying if a family is total in its input
+* Subordination::               How constants depend on each other
 
 Theorem Prover
 
@@ -236,62 +240,81 @@ into the @file{/usr/local/} directory.
 @section New Features
 
 The current version @value{VERSION} from @value{UPDATED} incorporates
-the following major changes from Twelf 1.2 from August 27, 1998.
+the following major changes from Twelf 1.3 from September 13, 2000.
 
 @table @asis
-@item Constraints (@pxref{Constraint Domains}).
- Type reconstruction and the logic programming engine (but not yet
-the theorem prover) allow various constraint domains in the style
-of constraint logic programming languages.  The main ones are
-equalities and inequalities over rationals and integers.
+@item World Checking (@pxref{Regular Worlds}).
+ World checking verifies regularity of the parameters and hypothesis
+that can be introduced by terms in a signature.  The new declarations
+are @code{%block} and @code{%worlds}.  This formally checks part of the
+adequacy theorem that is usually left implicit in the encoding and is is
+used centrally by the coverage checker.
 
-@item Tracing and Breakpoints (@pxref{Tracing and Breakpoints})
- The logic programming engine now support tracing and setting
-of breakpoints for illustration and debugging purposes.
+@item Coverage and Totality Checking (@pxref{Coverage}, @pxref{Totality}).
+ Proofs of meta-theorems given in relational form can now be verified if
+they are of order 2 or less.  The new relevant declarations are
+@code{%covers} and @code{%total}.  The former can also be used to check
+that sets of patterns in the arguments of a type family are exhaustive.
 
-@item Theorem Prover (@pxref{Theorem Prover})
- The theorem prover now allows quantification over regular context.  The
-theorem prover will also use previously proved theorems with
-@code{%prove}) and ignore those with @code{%establish}, which is
-otherwise equivalent.  In unsafe mode, @code{%assert} can be used to
-claim theorems.  However, at present no longer generates proof terms.
+@item Mode Checking (@pxref{Modes})
+ Mode checking has been extended so that multiple modes can be checked
+for the same predicate, even though not simultaneously.  This allows
+certain relations to serve as proofs for biconditional meta-theorems.
+Also, some predicates in constraint domains can have multiple modes
+simultaneously in effect.
 
-@item Reduction Checking (@pxref{Reduction Declaration})
- The termination checker has been extended to verify if output
-arguments to a predicate are smaller than some inputs with
-the @code{%reduces} declaration.
+@item Tabled Search (@pxref{Tabled Logic Programming})
+ An experimental logic programming engine for tabled logic programming
+is available in this release.  The corresponding declarations
+are @code{%tabled @var{a}} (to declare a type family to be tabled)
+and @code{%querytabled} to start tabled search.
 
-@item Signature Printing (@pxref{Signature Printing})
- Signatures can now be printed, also in TeX format.
+@item Deterministic Search (@pxref{Deterministic Type Families})
+ Type families can be declared deterministic for search, which means
+that after the first solution has been found, backtracking will
+not find any further solutions.  The relevant declaration is
+@code{%deterministic @var{a}}.
 
-@item Abbreviations (@pxref{Definitions})
- Added abbreviations (@code{%abbrev}) which, unlike definition, do not
-need to be strict.
+@item Family-Level Definitions (@pxref{Clause Definitions})
+ Twelf now permits family-level definitions that are opaque to logic
+programming execution.  However, not all aspects of the present release
+handle them properly, so they should be considered an experimental
+feature.  Furthermore, defined constants will now be used for
+logic programming search when prefixed with @code{%clause}.
 
-@item Name Preferences (@pxref{Name Preferences})
- Name preference declarations (@code{%name}) now allow an optional
-second argument for naming of parameters.
+@item Tracing Term Reconstruction (@pxref{Tracing Reconstruction})
+ Term reconstruction can print each typing judgment it establishes
+in order to help diagnose subtle type errors or ambiguities.
+
+@item Portability (@pxref{Installation})
+ Twelf has been ported to be compliant with the Definition of Standard
+ML in its 1997 revision.  As a result, it now supports Poly/ML
+and MLton in addition to Standard ML of New Jersey (SML/NJ).
 @end table
 
 @node Quick Start,  , New Features, Introduction
 @section Quick Start
 
-Assuming you are running on a Unix system with SML of New Jersey already
-installed (@pxref{Installation}) you can build Twelf as follows.  Here
+Assuming you are running on a Unix system with SML of New Jersey 110.0.3
+already installed (@pxref{Installation}) you can build Twelf as follows.  Here
 @samp{%} is assumed to be the shell prompt.  You may need to edit the
-file @file{Makefile} to give the proper location for @code{sml-cm}.
+file @file{Makefile} to give the proper location for @code{sml}.
 
 @example
 @group
-% @kbd{gunzip twelf-1-3.tar.gz}
-% @kbd{tar -xf twelf-1-3.tar}
+% @kbd{gunzip twelf-1-4.tar.gz}
+% @kbd{tar -xf twelf-1-4.tar}
 % @kbd{cd twelf}
 % @kbd{make}
 % @kbd{bin/twelf-server}
-Twelf 1.3, Sep 13 2000
+Twelf 1.4, Dec 27 2002
 %% OK %%
 @end group
 @end example
+
+For SML/NJ version 110.20 or greater, use @kbd{make -f smlnj/Makefile}.
+For Poly/ML use @kbd{make -f polyml/Makefile}.  For MLton use
+@kbd{make -f mlton/Makefile}.
 
 You can now load the examples used in this guide and pose an example
 query as shown below.  The prompt from the Twelf top-level is @samp{?-}.
@@ -301,8 +324,7 @@ To drop from the Twelf top-level to the ML top-level, type @kbd{C-c}
 
 @example
 @group
-@kbd{Config.read examples/guide/sources.cfg}
-@kbd{Config.load}
+@kbd{make examples/guide/sources.cfg}
 @kbd{top}
 ?- @kbd{of (lam [x] x) T.}
 Solving...
@@ -496,16 +518,14 @@ sig  ::=                       % @r{Empty signature}
        | decl sig              % @r{Constant declaration}
 
 decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
-       | id : term = term.     % @r{@math{d : A = M}}
-       | id = term.            % @r{@math{d = M}}
-       | _ : term = term.      % @r{anonymous definition, for type-checking}
-       | _ = term.             % @r{anonymous definition, for type-checking}
+       | defn.                 % @r{definition, usually @math{d : A = M}}
        | %abbrev adecl.        % @r{abbreviation}
        | %infix ixdecl.        % @r{operator declaration}
        | %prefix pxdecl.       % @r{operator declaration}
        | %postfix pxdecl.      % @r{operator declaration}
        | %name namepref.       % @r{name preference declaration}
        | %query qdecl.         % @r{query declaration}
+       | %clause defn.         % @r{clause definition}
        | sdecl.                % @r{solve declaration}
        | %tabled id.           % @r{table declaration}
        | %querytabled qtdecl   % @r{tabled query declaration}
@@ -516,15 +536,24 @@ decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
        | %block id : bdecl.    % @r{block declaration}
        | %worlds wdecl.        % @r{worlds declaration}
        | %total tdecl.         % @r{totality declaration}
+       | %freeze ids.          % @r{freeze declaration}
        | %theorem thdecl.      % @r{theorem declaration}
        | %prove pdecl.         % @r{prove declaration}
        | %establish pdecl.     % @r{prove declaration, do not use as lemma later}
        | %assert callpats.     % @r{assert theorem (requires @code{Twelf.unsafe})}
        | %use domain.          % @r{installs constraint domain}
 
+defn ::= id : term = term      % @r{@math{d : A = M} or @math{d : K = A}}
+       | id = term             % @r{@math{d = M} or @math{d = A}}
+       | _ : term = term       % @r{anonymous definition, for type-checking}
+       | _ = term              % @r{anonymous definition, for type-checking}
+
 sdecl ::= %define binding sdecl % @r{term binding}
         | %solve id : term      % @r{solve with proof term}
         | %solve _ : term       % @r{solve without proof term}
+
+ids   ::=                      % @r{empty sequence}
+        | id ids               % @r{identifier follwed by more}
 @end group
 
 @group
@@ -631,10 +660,9 @@ defn ::= adecl.                    % @r{definition}
 
 @noindent
 where the second form of declaration is equivalent to @code{id : _ =
-term}.  Definitions or abbreviations can only be made on the level of
-objects, not at the level of type families because the interaction of
-such definitions with logic programming search has not been fully
-investigated.
+term}.  Definitions or abbreviations at the level of type
+families are permitted, but are somewhat experimental in the
+present release.
 
 In order to avoid the expansion of defined constants as much as
 possible, declarations @code{id : term = term.} must be strict
@@ -838,6 +866,7 @@ definitive categories.
 * Strict Definitions::          Reconstruction on definitions
 * Type Ascription::             Disambiguating terms
 * Error Messages::              When things go wrong
+* Tracing Reconstruction::      Seeing what happens during reconstruction
 @end menu
 
 @node Implicit Quantifiers, Implicit Arguments, Term Reconstruction, Term Reconstruction
@@ -1111,7 +1140,7 @@ is particularly hard to discern: we can ascribe an expected type to a
 subterm, thus verifying our intuition about constituent terms in a
 declaration.
 
-@node Error Messages,  , Type Ascription, Term Reconstruction
+@node Error Messages, Tracing Reconstruction, Type Ascription, Term Reconstruction
 @section Error Messages
 
 @cindex error messages
@@ -1149,6 +1178,48 @@ The @var{location} has the form
 Twelf's best guess as to the source of the error.  Due to the
 propagation of non-trivial constraints the source of a type
 reconstruction failure can sometimes not be pinpointed very precisely.
+
+@node Tracing Reconstruction,  , Error Messages, Term Reconstruction
+@section Tracing Reconstruction
+
+@cindex tracing reconstruction
+@findex Twelf.Print.implicit
+@findex Twelf.Recon.trace
+@findex Twelf.Recon.traceMode
+@findex Twelf.Recon.TraceMode
+@findex Twelf.Recon.Progressive
+@findex Twelf.Recon.Omiscient
+
+Sometimes it is quite difficult to determine the real source of a type
+error.  On such occasion there are three standard techniques that
+sometimes help.  The first is to enable the printing of implicit
+arguments with @code{Twelf.Print.implicit := true} and try again.  The
+second is to insert explicit type annotations to limit the flexibility
+of reconstruction.  The third is to trace type reconstruction.
+
+Tracing of term reconstruction is enabled with
+
+@example
+Twelf.Recon.trace := true;
+@end example
+
+It then prints, during reconstruction, the typing and kinding judgments
+it infers in the form @code{|- M : A} or @code{|- A : K}.
+
+There are two modes for tracing reconstruction that can be set
+with
+
+@example
+Twelf.Recon.traceMode := Twelf.Recon.Omniscient;
+Twelf.Recon.traceMode := Twelf.Recon.Progressive;
+@end example
+
+where @code{Twelf.Recon.Omnisicient} is the default.  In omnisicent
+mode, it first solves all typing constraints, and then prints the typing
+judgments.  In progressive mode, it prints the typing judgments as they
+are encountered.  Both have their uses, depending on the form of
+the problem with reconstruction.
+
 
 @node Logic Programming, Constraint Domains, Term Reconstruction, Top
 @chapter Logic Programming
@@ -1209,7 +1280,8 @@ the query.
 * Sample Trace::                An example how search works
 * Operational Semantics::       How queries are executed in some detail
 * Sample Program::              Type inference for a lambda-calculus
-* Deterministic Type Families::               How to prune unwanted solutions 
+* Clause Definitions::          How to use definitions for search
+* Deterministic Type Families::  How to prune unwanted solutions 
 * Tabled Logic Programming::    Executing queries with memo tables
 @end menu
 
@@ -1526,7 +1598,7 @@ Compilation will try to eliminate expensive appeals to unification
 with assignment where this optimization is sound.  This can be disabled
 by setting the parameter @code{Twelf.Compile.optimize} to @code{false}.
 
-@node Sample Program, Deterministic Type Families, Operational Semantics, Logic Programming
+@node Sample Program, Clause Definitions, Operational Semantics, Logic Programming
 @section Sample Program
 
 @cindex lambda calculus example
@@ -1631,7 +1703,41 @@ At the point where the second subgoals fails we backtrack.  However, all
 other alternatives fail immediately, since the clause head does not
 unify with the goal and the overall query fails.
 
-@node Deterministic Type Families, Tabled Logic Programming, Sample Program, Logic Programming
+@node Clause Definitions, Deterministic Type Families, Sample Program, Logic Programming
+@section Clause Definitions
+
+@cindex family-level definitions
+@cindex definitions, family-level
+@cindex type-level definitions
+@cindex definitions, type-level
+@cindex definitions, in proof search
+@findex %clause
+
+Definitions interact with the logic programming interpretation
+of signatures in two ways.
+
+At present family-level definitions are transparent for type-checking, but
+opaque for proof search.  This means, if @code{@var{a} : type = @var{b}},
+the constants defining @var{a} and @var{b} are not mixed.
+
+@strong{Disclaimer:} This is use type-level definitions is still under
+consideration and is discouraged because it might change in future
+releases.  Moreover, type-level definitions at present do not interact
+correctly with coverage checking and can lead to unsoundness.
+
+The second interaction is that defined object-level constants are
+generally not used for the logic programming interpretation.  However,
+they can be forced to be used with a declaration
+
+@example
+%clause @var{d} : @var{A} = @var{M}.
+@end example
+
+For search, it will be treated exactly as if it were @code{@var{d} :
+@var{A}.}  except that the resulting proof term will contain a defined
+constant instead of a declared constant.
+
+@node Deterministic Type Families, Tabled Logic Programming, Clause Definitions, Logic Programming
 @section Deterministic Type Families
 In general, a solvable goal may admit several (and possibly countably
 infinite) solutions. Through backtracking, Twelf will generate all of
@@ -2075,8 +2181,8 @@ respectively. Since these two extensions are very similar to their
 rationals counterparts, we will limit ourselves to outlining the
 differences.
 
-The signature introduced by @code{equality/integers} is roughly the same
-as @code{equality/rationals}. The only difference lies in the name of
+The signature introduced by @code{equality/integers} resembles
+@code{equality/rationals}.  The only difference lies in the name of
 the main type:
 
 @example
@@ -3122,6 +3228,7 @@ meta-theoretic proof.
 * Regular Worlds::              Characterizing parameters and hypotheses
 * Input Coverage::              Checking if all cases have been covered
 * Totality::                    Verifying if a family is total in its input
+* Subordination::               How constants depend on each other
 @end menu
 
 @node Regular Worlds, Input Coverage, Coverage, Coverage
@@ -3358,7 +3465,7 @@ situation the error is often reflected in implicit arguments which may
 not be easy to discern.  An example of this form is given below in
 the next section.
 
-@node Totality,  , Input Coverage, Coverage
+@node Totality, Subordination, Input Coverage, Coverage
 @section Totality
 
 @cindex output coverage
@@ -3487,8 +3594,9 @@ fails with the message
 
 @example
 Coverage error --- missing cases:
-@{E1:exp@} @{E2:exp@} @{E3:exp@} @{T1:tp@} @{E4:exp -> exp@} @{E5:exp@} @{D1:eval (E4 E5) E3@}
-   @{D2:eval E2 E5@} @{D3:eval E1 (lam ([e:exp] E4 e))@} @{T2:tp@} @{P1:of E2 T2@}
+@{E1:exp@} @{E2:exp@} @{E3:exp@} @{T1:tp@} @{E4:exp -> exp@} @{E5:exp@}
+   @{D1:eval (E4 E5) E3@} @{D2:eval E2 E5@}
+   @{D3:eval E1 (lam ([e:exp] E4 e))@} @{T2:tp@} @{P1:of E2 T2@}
    @{P2:of E1 (arrow T2 T1)@} @{P3:of E3 T1@}
    |- tps (ev_app D1 D2 D3) (tp_app P1 P2) P3.
 @end example
@@ -3602,6 +3710,52 @@ cp_lam : cp (lam [x] E x) (lam [x] F x)
 @end group
 @end example
 
+@node Subordination,  , Totality, Coverage
+@section Subordination
+
+@cindex subordination
+@cindex freezing families
+@findex Twelf.Print.subord
+@findex %freeze
+
+An important component for termination checking and coverage
+checking is @emph{subordination} @cite{Virga 99, Ph.D. Thesis}.
+We say that type family @var{b} subordinates type family
+@var{a} (written @code{@var{b} |> @var{a}}) if a term of typ
+@code{@var{b} @dots{}}
+might occur as a subterm of a term of type @code{@var{a} @dots{}}.
+From the point of view of the application in Twelf, it is
+the contrapositive that is important: if @var{b} does not
+subordinate @var{a}, then no subterm of type @code{@var{a} @dots{}}
+can occur in a subterm of type @code{@var{b} @dots{}}.  The notion
+of occurrence here refers to terms in canonical form.
+
+As Twelf performs type reconstruction, it incrementally
+keeps track of the subordination relation.  It can be viewed
+at any time with the
+
+@example
+Twelf.Print.subord ();
+@end example
+
+command.  For each type family it shows the families that it
+subordinates.
+
+Subordination information is used in @ref{Termination} and
+@ref{Coverage}.
+
+Sometimes it is necessary to ensure that a given type
+family is not extended with additional constructors that might
+invalidate meta-theorems or add new (unwanted) axioms to a theory
+represented in LF.  In order to prohibit further extensions to
+some type families, issue
+
+@example
+%freeze @var{a1} @dots{} @var{an}.
+@end example
+
+to prevent further declarations of type @var{a1} through @var{an}
+or any other type family subordinated by one of the @var{a}'s.
 
 @node Theorem Prover, ML Interface, Coverage, Top
 @chapter Theorem Prover
@@ -4001,8 +4155,11 @@ ML call @code{Twelf.OS.exit ();}.
 @cindex files, configuration
 @findex Twelf.OS.getDir
 @findex Twelf.OS.chDir
+@findex Twelf.Config.suffix
 @findex Twelf.Config.read
 @findex Twelf.Config.load
+@findex Twelf.Config.append
+@findex Twelf.Config.define
 @findex Twelf.OK
 @findex Twelf.ABORT
 @findex Twelf.make
@@ -4059,6 +4216,11 @@ Parameters}).  If another configuration or file has previously been
 read, all the declarations will first be deleted so that
 @code{Twelf.make} always starts from the same state.
 
+To load a configuration, use @code{Twelf.Config.load @var{config}}.
+This is will first reset the state and then load @var{config}.
+In order to avoid resetting the state, use
+@code{Twelf.Config.append @var{config}} instead.
+
 Loading a configuration will stop at the first error encountered, issue
 an appropriate message and return @code{Twelf.ABORT}.  If there is an
 unexpected internal error (which indicates a bug in the Twelf
@@ -4075,6 +4237,21 @@ Twelf.top ();
 @noindent
 which is explained in @ref{Interactive Queries}.
 
+The default suffix for configuration files is @file{cfg}; it can
+be changed with
+
+@example
+Twelf.Config.suffix := "@var{suffix}";
+@end example
+
+although this may confuse the Twelf server.
+
+Twelf configurations can also be defined explicitly from a list of
+file names with
+
+@example
+Twelf.Config.define ["@var{file1}, @dots{}, @var{filen}"];
+@end example
 
 @node Loading Files, Environment Parameters, Configurations, ML Interface
 @section Loading Files
@@ -4138,6 +4315,8 @@ are read.
  Debug information.
 @item 5
  More debug information.
+@item 6
+ Even more debug information.
 @end table
 
 @item Twelf.doubleCheck := false;
@@ -4380,100 +4559,131 @@ and executing Twelf programs.
 @group
 signature TWELF =
 sig
-  structure Print :
+structure Print :
+sig
+  val implicit : bool ref           (* false, print implicit args *)
+  val depth : int option ref        (* NONE, limit print depth *)
+  val length : int option ref       (* NONE, limit argument length *)
+  val indent : int ref              (* 3, indentation of subterms *)
+  val width : int ref               (* 80, line width *)
+
+  val sgn : unit -> unit            (* print signature *)
+  val prog : unit -> unit           (* print signature as program *)
+  val subord : unit -> unit         (* print subordination relation *)
+  val domains : unit -> unit        (* list constraint domains *)
+
+  structure TeX :                   (* print in TeX format *)
   sig
-    val implicit : bool ref           (* false, print implicit args *)
-    val depth : int option ref        (* NONE, limit print depth *)
-    val length : int option ref       (* NONE, limit argument length *)
-    val indent : int ref              (* 3, indentation of subterms *)
-    val width : int ref               (* 80, line width *)
-
-    val sgn : unit -> unit            (* print signature *)
-    val prog : unit -> unit           (* print signature as program *)
-
-    structure TeX :                   (* print in TeX format *)
-    sig
-      val sgn : unit -> unit          (* print signature *)
-      val prog : unit -> unit         (* print signature as program *)
-    end
+    val sgn : unit -> unit          (* print signature *)
+    val prog : unit -> unit         (* print signature as program *)
   end
+end
 @end group
 
 @group
-  structure Trace :
-  sig 
-    datatype 'a Spec =                  (* trace and breakpoint spec *)
-      None                              (* no tracing, default *)
-    | Some of 'a list                   (* list of clauses and families *)
-    | All                               (* trace all clauses and families *)
+structure Trace :
+sig 
+  datatype 'a Spec =                (* trace and breakpoint spec *)
+    None                            (* no tracing, default *)
+  | Some of 'a list                 (* list of clauses and families *)
+  | All                             (* trace all clauses and families *)
 
-    val trace : string Spec -> unit     (* trace clauses and families *)
-    val break : string Spec -> unit     (* break at clauses and families *)
-    val detail : int ref                (* 0 = none, 1 = default, 2 = unify *)
+  val trace : string Spec -> unit   (* trace clauses and families *)
+  val break : string Spec -> unit   (* break at clauses and families *)
+  val detail : int ref              (* 0=none, 1=default, 2=unify *)
 
-    val show : unit -> unit             (* show trace, break, and detail *)
-    val reset : unit -> unit            (* reset trace, break, and detail *)
-  end
+  val show : unit -> unit           (* show trace, break, and detail *)
+  val reset : unit -> unit          (* reset trace, break, and detail *)
+end
 @end group
 
 @group
-  structure Timers :
-  sig
-    val show : unit -> unit           (* show and reset timers *)
-    val reset : unit -> unit          (* reset timers *)
-    val check : unit -> unit          (* display, but not no reset *)
-  end
+structure Timers :
+sig
+  val show : unit -> unit           (* show and reset timers *)
+  val reset : unit -> unit          (* reset timers *)
+  val check : unit -> unit          (* display, but not no reset *)
+end
 @end group
 
 @group
-  structure OS :
-  sig
-    val chDir : string -> unit        (* change working directory *)
-    val getDir : unit -> string       (* get working directory *)
-    val exit : unit -> unit           (* exit Twelf and ML *)
-  end
+structure OS :
+sig
+  val chDir : string -> unit        (* change working directory *)
+  val getDir : unit -> string       (* get working directory *)
+  val exit : unit -> unit           (* exit Twelf and ML *)
+end
 @end group
 
 @group
-  structure Prover :
-  sig
-    datatype Strategy = RFS | FRS     (* F=Fill, R=Recurse, S=Split *)
-    val strategy : Strategy ref       (* FRS, strategy used for %prove *)
-    val maxSplit : int ref            (* 2, bound on splitting  *)
-    val maxRecurse : int ref          (* 10, bound on recursion *)
-  end
+structure Compile :
+sig
+  val optimize : bool ref          (* true, optimize clauses *)
+end
 @end group
 
 @group
-  val chatter : int ref               (* 3, chatter level *)
-  val doubleCheck : bool ref          (* false, check after reconstruction *)
-  val unsafe : bool ref               (* false, allow %assert without proof *)
+structure Table : 
+sig 
+  datatype Strategy = Variant | Subsumption
+
+  val strategy : Strategy ref      (* Variant, tabling strategy *)
+  val strengthen : bool ref        (* false, tabling optimization *)
+
+  val top : unit -> unit           (* top-level for tabled queries *)
+end 
 @end group
 
 @group
-  datatype Status = OK | ABORT        (* return status *)
-
-  val reset : unit -> unit            (* reset global signature *)
-  val loadFile : string -> Status     (* load file *)
-  val readDecl : unit -> Status       (* read declaration interactively *)
-  val decl : string -> Status         (* print declaration of constant *)
-
-  val top : unit -> unit              (* top-level for interactive queries *)
+structure Recon :
+sig
+  datatype TraceMode = Progressive | Omniscient
+  val trace : bool ref		   (* false, trace term reconstruction *)
+  val traceMode : TraceMode ref	   (* Omniscient, trace mode *)
+end
 @end group
 
 @group
-  structure Config :
-  sig
-    type config                       (* configuration *)
-    val suffix : string ref           (* suffix of configuration files *)
-    val read : string -> config       (* read config file *)
-    val load : config -> Status       (* reset and load configuration *)
-    val define : string list -> config (* explicitly define configuration *)
-  end
+structure Prover :
+sig
+  datatype Strategy = RFS | FRS    (* F=Fill, R=Recurse, S=Split *)
+  val strategy : Strategy ref      (* FRS, strategy used for %prove *)
+  val maxSplit : int ref           (* 2, bound on splitting  *)
+  val maxRecurse : int ref         (* 10, bound on recursion *)
+end
+@end group
 
-  val make : string -> Status         (* read and load configuration *)
+@group
+val chatter : int ref               (* 3, chatter level *)
+val doubleCheck : bool ref          (* false, check internal types *)
+val unsafe : bool ref               (* false, allow %assert w/o proof *)
+@end group
 
-  val version : string                (* Twelf version *)
+@group
+datatype Status = OK | ABORT        (* return status *)
+
+val reset : unit -> unit            (* reset global signature *)
+val loadFile : string -> Status     (* load file *)
+val readDecl : unit -> Status       (* read declaration interactively *)
+val decl : string -> Status         (* print declaration of constant *)
+
+val top : unit -> unit              (* top-level for queries *)
+@end group
+
+@group
+structure Config :
+sig
+  type config                       (* configuration *)
+  val suffix : string ref           (* suffix of configuration files *)
+  val read : string -> config       (* read config file *)
+  val load : config -> Status       (* reset and load configuration *)
+  val append : config -> Status     (* load configuration (w/o reset) *)
+  val define : string list -> config (* define configuration *)
+end
+
+val make : string -> Status         (* read and load configuration *)
+
+val version : string                (* Twelf version *)
 end;  (* signature TWELF *)
 @end group
 @end example
@@ -4524,18 +4734,22 @@ The server commands employ arguments of the following types.
 @table @code
 @item file
 @findex file
- The name of a file, relative to the current working directory.
+ The name of a file, relative to the current working directory
 
 @item id
 @findex id
  A Twelf identifier
 
+@item reconTraceMode
+@findex reconTraceMode
+ Either @code{Progressive} or @code{Omniscient} (@pxref{Tracing Reconstruction})
+
 @item strategy
 @findex strategy
  Either @code{FRS} or @code{RFS} (@pxref{Search Strategies})
 
-@item tablestrategy
-@findex tablestrategy
+@item tableStrategy
+@findex tableStrategy
  Either @code{Variant} or @code{Subsumption} (@pxref{Tabled Logic Programming})
 
 @item bool
@@ -4563,14 +4777,14 @@ The Twelf server recognized the following commands.
 @item set @var{parameter} @var{value}
 @findex set
  Set @var{parameter} to @var{value}, where @var{parameter} is
-on of the following (explained in @ref{Environment Parameters}).
+one of the following (explained in @ref{Environment Parameters}).
 
 @table @code
 @item chatter @var{nat}
 @c @findex chatter
 @item doubleCheck @var{bool}
 @c @findex doubleCheck
-@item Twelf.unsafe @var{bool}
+@item unsafe @var{bool}
 @c @findex Twelf.unsafe
 @item Print.implicit @var{bool}
 @c @findex Print.implicit
@@ -4584,12 +4798,19 @@ on of the following (explained in @ref{Environment Parameters}).
 @c @findex Print.width
 @item Trace.detail @var{nat}
 @c @findex Trace.detail
+@item Compile.optimize @var{bool}
+@c @findex Compile.optimize
+@item Recon.trace @var{bool}
+@c @findex Recon.trace
+@item Recon.traceMode @var{reconTraceMode}
+@c @findex Recon.traceMode
 @item Prover.strategy @var{strategy}
 @c @findex Prover.strategy
 @item Prover.maxSplit @var{nat}
 @c @findex Prover.maxSplit
 @item Prover.maxRecurse @var{nat}
 @c @findex Prover.maxRecurse
+@item Table.strategy @var{tableStrategy}
 @end table
 
 @item get @var{parameter}
@@ -4598,43 +4819,49 @@ on of the following (explained in @ref{Environment Parameters}).
 
 @item Trace.trace @var{id1} ... @var{idn}
 @findex Trace.trace
- Trace given constants
+ Trace given constants.
 @item Trace.traceAll
 @findex Trace.traceAll
- Trace all constants
+ Trace all constants.
 @item Trace.untrace
 @findex Trace.untrace
- Untrace all constants
+ Untrace all constants.
 
 @item Trace.break @var{id1} ... @var{idn}
 @findex Trace.break
- Set breakpoint for given constants
+ Set breakpoint for given constants.
 @item Trace.breakAll
 @findex Trace.breakAll
- Break on all constants
+ Break on all constants.
 @item Trace.unbreak
 @findex Trace.unbreak
- Remove all breakpoints
+ Remove all breakpoints.
 
 @item Trace.show
 @findex Trace.show
- Show current trace and breakpoints
+ Show current trace and breakpoints.
 @item Trace.reset
 @findex Trace.reset
- Reset all tracing and breaking
+ Reset all tracing and breaking.
 
 @item Print.sgn
 @findex Print.sgn
- Print current signature
+ Print current signature.
 @item Print.prog
 @findex Print.prog
- Print current signature as program
+ Print current signature as program.
+@item Print.subord
+@findex Print.subord
+ Print current subordination relation.
+@item Print.domains
+@findex Print.domains
+ Print registered constraint domains.
 @item Print.TeX.sgn
 @findex Print.sgn
- Print current signature in TeX format
+ Print current signature in TeX format.
 @item Print.TeX.prog
 @findex Print.prog
- Print current signature in TeX format as program
+ Print current signature in TeX format as program.
 
 @item Timers.show
 @findex Timers.show
@@ -4664,7 +4891,10 @@ on of the following (explained in @ref{Environment Parameters}).
  Read current configuration from @var{file}.
 @item Config.load
 @findex Config.load
- Load current configuration
+ Load current configuration.
+@item Config.append
+@findex Config.append
+ Load current configuration without prior reset.
 
 @item make @var{file}
 @findex make
@@ -4682,7 +4912,14 @@ on of the following (explained in @ref{Environment Parameters}).
 
 @item top
 @findex top
- Enter interactive query loop (@pxref{Interactive Queries})
+ Enter interactive query loop (@pxref{Interactive Queries}).
+@item Table.top
+@findex Table.top
+ Enter interactive loop for tables queries (@pxref{Tabled Logic Programming}).
+
+@item help
+@findex help
+ Show available server commands, parameters, and server types.
 @end table
 
 @node Emacs Interface, Installation, Twelf Server, Top
@@ -4849,6 +5086,10 @@ C-u} Emacs command.
 @item M-x twelf-print-program
 @findex M-x twelf-print-program
  Prints the current signature as a program in the Twelf server buffer.
+
+@item M-x twelf-print-subord
+@findex M-x twelf-print-subord
+ Prints the current subordination relation in the Twelf server buffer.
 
 @item M-x twelf-print-tex-signature
 @findex M-x twelf-print-tex-signature
@@ -5347,31 +5588,34 @@ twelf-indent
 
 @cindex installation
 @cindex Standard ML of New Jersey
-@cindex MLWorks
+@cindex Poly/ML
+@cindex MLton
 @cindex ML implementations
 
 At present, Twelf has been tested in SML of New Jersey (version 110 or
-higher) and MLWorks, both of which implement Standard ML (revised 1997)
-and the Standard ML Basis Library.  The instructions below apply to
-a Unix system.  For instructions for other architectures or updates
-please check the file @file{INSTALL} at the Twelf home page and in
-the Twelf root directory after unpacking the distribution.
+higher), Poly/ML and MLton, all of which implement Standard ML
+(revised 1997) and the Standard ML Basis Library.  The instructions
+below apply to a Unix system.  For instructions for other architectures
+or updates please check the file @file{INSTALL} at the Twelf home page
+and in the Twelf root directory after unpacking the distribution.
 
 On a Unix system you unpack the sources with
 
 @example
 @group
-gunzip twelf-1-3.tar.gz
-tar -xf twelf-1-3.tar
+gunzip twelf-1-4.tar.gz
+tar -xf twelf-1-4.tar
 cd twelf
 make
 @end group
 @end example
 
 This builds the Twelf server (@pxref{Twelf Server}) for your current
-architecture and makes it accessible as @file{bin/twelf-server}.  It
-also installs the Twelf Emacs interface (@pxref{Emacs Interface}), but
-you must add a line
+architecture and makes it accessible as @file{bin/twelf-server}.  The
+@code{make} command is different for SML/NJ versions 110.20 or higher,
+for PolyML, and for MLton; see the list below.  The @code{make} also
+installs the Twelf Emacs interface (@pxref{Emacs Interface}), but you
+must add a line
 
 @example
 (load "@var{directory}/emacs/twelf-init.el")
@@ -5381,9 +5625,6 @@ to your @file{.emacs} file, where @var{directory} is the root directory
 into which you installed Twelf.  Note that the Twelf installation cannot
 be moved after it has been compiled with @code{make}, since absolute
 pathnames are built into the executable scripts.
-
-Note that the Twelf server presently only works with Standard ML of New
-Jersey, since interrupt handling is implementation specific.
 
 If you would like to use Twelf as a structure in SML, you can then call
 
@@ -5399,35 +5640,53 @@ temporary files created by the SML compiler, but not the
 executable file.
 
 @table @asis
-@item SML of New Jersey (free, version 110 or higher)
- See @t{http://cm.bell-labs.com/cm/cs/what/smlnj/index.html}
+@item SML of New Jersey
+ See @t{http://www.smlnj.org/}
 
 @ifhtml
 <UL>
- <LI> <A HREF="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">SML
-of New Jersey Home Page</A> </LI>
+ <LI> <A HREF="http://www.smlnj.org/">SML of New Jersey Home Page</A> </LI>
 </UL>
 @end ifhtml
 
-@item MLWorks (commercial)
- See @t{http://www.harlequin.com/products/ads/ml/ml.html}
-
-@ifhtml
-<UL>
- <LI> <A HREF="http://www.harlequin.com/products/ads/ml/ml.html">MLWorks
-Home Page</A> </LI>
-</UL>
-@end ifhtml
-
-In MLWorks, you can presently only directly load the Twelf sources,
-using the file @file{load.sml}.
+Because of minor incompatibilites between the officially released
+version 110.0.3 and newer versions (110.20 or higher) you have to
+compile Twelf for newer version of SML/NJ with with
 
 @example
-@group
-mlworks-basis  @r{start MLWorks with basis library in Twelf root directory}
-use "load.sml";  @r{compile and load Twelf}
-@end group
+make -f smlnj/Makefile
 @end example
+
+@item Poly/ML
+ See @t{http://www.polyml.org/}
+
+@ifhtml
+<UL>
+ <LI> <A HREF="http://www.polyml.org/">Poly/ML Home Page</A> </LI>
+</UL>
+@end ifhtml
+
+For Poly/ML you have to compile Twelf with
+
+@example
+make -f polyml/Makefile
+@end example
+
+@item MLton
+ See @t{http://www.mlton.org/}
+
+@ifhtml
+<UL>
+ <LI> <A HREF="http://www.mlton.org/">MLton Home Page</A> </LI>
+</UL>
+@end ifhtml
+
+For MLton, you have to compile Twelf with
+
+@example
+make -f mlton/Makefile
+@end example
+
 @end table
 
 @node Examples, History, Installation, Top
@@ -5501,7 +5760,10 @@ Mostly, these are simplifications and improvements.  The main feature
 which has not yet been ported is the Elf server interface to Emacs.
 Also, while the type checker is more efficient now, the operational
 semantics does not yet incorporate some of the optimizations of the
-older Elf implementations and is therefore slower.
+older Elf implementations and is therefore slower.  The principal
+differences of Twelf 1.2 and the obsolete Elf 1.5 are given
+below, followed by the new features of Twelf 1.3.  New features
+in Twelf 1.4 are given in @ref{New Features}.
 
 @table @asis
 @item Syntax (@pxref{Syntax})
@@ -5560,6 +5822,44 @@ are currently under development.
 @item Emacs interface (@pxref{Emacs Interface})
   The Elf mode has remained basically unchanged, but the Elf server
 interface has not yet been ported.
+@end table
+
+The version 1.3 from September 13, 2000 incorporated
+the following major changes from Twelf 1.2 from August 27, 1998.
+
+@table @asis
+@item Constraints (@pxref{Constraint Domains}).
+ Type reconstruction and the logic programming engine (but not yet
+the theorem prover) allow various constraint domains in the style
+of constraint logic programming languages.  The main ones are
+equalities and inequalities over rationals and integers.
+
+@item Tracing and Breakpoints (@pxref{Tracing and Breakpoints})
+ The logic programming engine now support tracing and setting
+of breakpoints for illustration and debugging purposes.
+
+@item Theorem Prover (@pxref{Theorem Prover})
+ The theorem prover now allows quantification over regular context.  The
+theorem prover will also use previously proved theorems with
+@code{%prove}) and ignore those with @code{%establish}, which is
+otherwise equivalent.  In unsafe mode, @code{%assert} can be used to
+claim theorems.  However, at present no longer generates proof terms.
+
+@item Reduction Checking (@pxref{Reduction Declaration})
+ The termination checker has been extended to verify if output
+arguments to a predicate are smaller than some inputs with
+the @code{%reduces} declaration.
+
+@item Signature Printing (@pxref{Signature Printing})
+ Signatures can now be printed, also in TeX format.
+
+@item Abbreviations (@pxref{Definitions})
+ Added abbreviations (@code{%abbrev}) which, unlike definition, do not
+need to be strict.
+
+@item Name Preferences (@pxref{Name Preferences})
+ Name preference declarations (@code{%name}) now allow an optional
+second argument for naming of parameters.
 @end table
 
 @node Index,  , History, Top

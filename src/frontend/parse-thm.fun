@@ -3,23 +3,23 @@
 (* Modified: Brigitte Pientka *)
 
 functor ParseThm
-  (structure Paths : PATHS
-   structure Parsing' : PARSING
-     sharing Parsing'.Lexer.Paths = Paths
+  ((*! structure Paths : PATHS *)
+   (*! structure Parsing' : PARSING !*)
+   (*! sharing Parsing'.Lexer.Paths = Paths !*)
    structure ThmExtSyn' : THMEXTSYN
-     sharing ThmExtSyn'.Paths = Paths
-     sharing ThmExtSyn'.ExtSyn.Paths = Paths
+   (*! sharing ThmExtSyn'.Paths = Paths !*)
+   (*! sharing ThmExtSyn'.ExtSyn.Paths = Paths !*)
    structure ParseTerm : PARSE_TERM
-     sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
+   (*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
      sharing ParseTerm.ExtSyn = ThmExtSyn'.ExtSyn)
      : PARSE_THM =
 struct
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure ThmExtSyn = ThmExtSyn'
 
   local
-    structure L = Parsing.Lexer
-    structure LS = Parsing.Lexer.Stream  
+    structure L = Lexer
+    structure LS = Lexer.Stream  
     structure E = ThmExtSyn
     structure P = Paths
 

@@ -3,8 +3,8 @@
 
 signature STRICT =
 sig
-  structure IntSyn : INTSYN
-  structure Paths : PATHS
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure Paths : PATHS !*)
 
   exception Error of string
   

@@ -4,29 +4,30 @@
 
 (* Proof term reconstruction from proof skeleton *)
 
-functor PtRecon (structure IntSyn' : INTSYN
-		    structure CompSyn' : COMPSYN
-		      sharing CompSyn'.IntSyn = IntSyn'
+functor PtRecon ((*! structure IntSyn' : INTSYN !*)
+                 (*! structure CompSyn' : COMPSYN !*)
+		    (*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		    structure Unify : UNIFY
-		      sharing Unify.IntSyn = IntSyn'
+		    (*! sharing Unify.IntSyn = IntSyn' !*)
                     structure Assign : ASSIGN
-		      sharing Assign.IntSyn = IntSyn'
+		    (*! sharing Assign.IntSyn = IntSyn' !*)
 
 		    structure Index : INDEX
-		      sharing Index.IntSyn = IntSyn'
+		    (*! sharing Index.IntSyn = IntSyn' !*)
 		    (* CPrint currently unused *)
 		    structure CPrint : CPRINT 
-                      sharing CPrint.IntSyn = IntSyn'
-                      sharing CPrint.CompSyn = CompSyn'
+		    (*! sharing CPrint.IntSyn = IntSyn' !*)
+		    (*! sharing CPrint.CompSyn = CompSyn' !*)
 		    structure Names : NAMES 
-                      sharing Names.IntSyn = IntSyn'
-		    structure CSManager : CS_MANAGER
-		      sharing CSManager.IntSyn = IntSyn')
+		    (*! sharing Names.IntSyn = IntSyn' !*)
+		    (*! structure CSManager : CS_MANAGER !*)
+		    (*! sharing CSManager.IntSyn = IntSyn' !*)
+			)
   : PTRECON =
 struct
 
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
 
   local
     structure I = IntSyn
@@ -194,6 +195,18 @@ struct
 	     (* should not happen *)
 	  | matchSig (((Hc as (I.Const c))::sgn'), k) =
 	    if c = k then 
+	      let
+		val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
+	      in
+		(* trail to undo EVar instantiations *)
+		CSManager.trail (fn () =>
+				 rSolve (O, ps', (r, I.id), dp,
+					 (fn (O,S) => sc (O, (I.Root(Hc, S))))))
+	      end
+	    else 
+	      matchSig (sgn', k)
+	  | matchSig (((Hc as (I.Def d))::sgn'), k) =
+	    if d = k then 
 	      let
 		val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
 	      in

@@ -3,17 +3,18 @@
 (* Modified: Frank Pfenning *)
 
 functor ModeDec (structure ModeSyn' : MODESYN
-		 structure Paths' : PATHS)
+		 (*! structure Paths' : PATHS !*)
+		   )
   : MODEDEC =
 struct
   structure ModeSyn = ModeSyn'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
 
   exception Error of string
 
   local 
     structure M = ModeSyn
-    structure I = ModeSyn.IntSyn
+    structure I = IntSyn
     structure P = Paths
       
     datatype Arg = Implicit | Explicit | Local

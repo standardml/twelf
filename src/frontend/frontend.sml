@@ -4,32 +4,38 @@
 (* Presently, we do not memoize the token stream returned *)
 (* by the lexer.  Use Stream = MStream below if memoization becomes *)
 (* necessary. *)
+(* Now in lexer.fun *)
+(*
 structure Lexer =
   Lexer (structure Stream' = Stream
 	 structure Paths' = Paths);
+*)
 
+(* Now in parsing.fun *)
+(*
 structure Parsing =
   Parsing (structure Stream' = Stream
 	   structure Lexer' = Lexer);
+*)
 
 structure ReconTerm =
-  ReconTerm (structure IntSyn' = IntSyn
+  ReconTerm ((*! structure IntSyn' = IntSyn !*)
 	     structure Names = Names
-	     structure Paths' = Paths
+	     (*! structure Paths' = Paths !*)
              structure Approx = Approx
  	     structure Whnf = Whnf
 	     structure Unify = UnifyTrail
              structure Abstract = Abstract
 	     structure Print = Print
-             structure CSManager = CSManager
+             (*! structure CSManager = CSManager !*)
              structure StringTree = StringRedBlackTree);
 
 structure ReconConDec =
   ReconConDec (structure Global = Global
-               structure IntSyn' = IntSyn
+               (*! structure IntSyn' = IntSyn !*)
                structure Names = Names
                structure Abstract = Abstract
-               structure Paths' = Paths
+               (*! structure Paths' = Paths !*)
                structure ReconTerm' = ReconTerm
                structure Constraints = Constraints
                structure Strict = Strict
@@ -39,10 +45,10 @@ structure ReconConDec =
                                                         
 structure ReconQuery =
   ReconQuery (structure Global = Global
-              structure IntSyn' = IntSyn
+              (*! structure IntSyn' = IntSyn !*)
               structure Names = Names
               structure Abstract = Abstract
-              structure Paths' = Paths
+              (*! structure Paths' = Paths !*)
               structure ReconTerm' = ReconTerm
               structure TypeCheck = TypeCheck
               structure Strict = Strict
@@ -53,7 +59,7 @@ structure ReconMode =
   ReconMode (structure Global = Global
 	     structure ModeSyn' = ModeSyn
 	     structure Whnf = Whnf
-	     structure Paths' = Paths
+	     (*! structure Paths' = Paths !*)
              structure Names = Names
 	     structure ModePrint = ModePrint
 	     structure ModeDec = ModeDec
@@ -66,7 +72,7 @@ structure ReconThm =
 	    structure Constraints = Constraints
 	    structure ModeSyn = ModeSyn
 	    structure Names = Names
-	    structure Paths' = Paths
+	    (*! structure Paths' = Paths !*)
 	    structure ThmSyn' = ThmSyn
 	    structure ReconTerm' = ReconTerm
 	    structure Print = Print);
@@ -75,50 +81,52 @@ structure ReconModule =
   ReconModule (structure Global = Global
                structure IntSyn = IntSyn
                structure Names = Names
-               structure Paths' = Paths
+               (*! structure Paths' = Paths !*)
                structure ReconTerm' = ReconTerm
                structure ModSyn' = ModSyn
                structure IntTree = IntRedBlackTree);
 
 structure ParseTerm =
-  ParseTerm (structure Parsing' = Parsing
+  ParseTerm ((*! structure Parsing' = Parsing !*)
 	     structure ExtSyn' = ReconTerm
 	     structure Names = Names);
 
 structure ParseConDec =
-  ParseConDec (structure Parsing' = Parsing
+  ParseConDec ((*! structure Parsing' = Parsing !*)
 	       structure ExtConDec' = ReconConDec
 	       structure ParseTerm = ParseTerm);
 
 structure ParseQuery =
-  ParseQuery (structure Parsing' = Parsing
+  ParseQuery ((*! structure Parsing' = Parsing !*)
 	      structure ExtQuery' = ReconQuery
 	      structure ParseTerm = ParseTerm);
 
 structure ParseFixity =
-  ParseFixity (structure Parsing' = Parsing
+  ParseFixity ((*! structure Parsing' = Parsing !*)
 	       structure Names' = Names);
 
 structure ParseMode =
-  ParseMode (structure Parsing' = Parsing
+  ParseMode ((*! structure Parsing' = Parsing !*)
 	     structure ExtModes' = ReconMode
-	     structure Paths = Paths
+	     (*! structure Paths = Paths !*)
 	     structure ParseTerm = ParseTerm);
 
 structure ParseThm =
-  ParseThm (structure Parsing' = Parsing
+  ParseThm ((*! structure Parsing' = Parsing !*)
 	    structure ThmExtSyn' = ReconThm
 	    structure ParseTerm = ParseTerm
-	    structure Paths = Paths);
+	    (*! structure Paths = Paths !*)
+	      );
 
 structure ParseModule =
-  ParseModule (structure Parsing' = Parsing
+  ParseModule ((*! structure Parsing' = Parsing !*)
                structure ModExtSyn' = ReconModule
                structure ParseTerm = ParseTerm
-               structure Paths = Paths);
+               (*! structure Paths = Paths !*)
+		 );
 
 structure Parser =
-  Parser (structure Parsing' = Parsing
+  Parser ((*! structure Parsing' = Parsing !*)
 	  structure Stream' = Stream
 	  structure ExtSyn' = ReconTerm
 	  structure Names' = Names
@@ -137,15 +145,15 @@ structure Parser =
 
 structure Solve =
   Solve (structure Global = Global
-	 structure IntSyn' = IntSyn
+	 (*! structure IntSyn' = IntSyn !*)
 	 structure Names = Names
 	 structure Parser = Parser
 	 structure ReconQuery = ReconQuery
 	 structure Timers = Timers
-	 structure CompSyn = CompSyn
+	 (*! structure CompSyn = CompSyn !*)
 	 structure Compile = Compile
 	 structure CPrint = CPrint
-         structure CSManager = CSManager
+         (*! structure CSManager = CSManager !*)
 	 structure AbsMachine = SwMachine
 	 structure PtRecon = PtRecon
 	 structure Tabled = Tabled
@@ -155,15 +163,15 @@ structure Solve =
 structure Twelf =
   Twelf (structure Global = Global
 	 structure Timers = Timers
-	 structure IntSyn' = IntSyn
+	 (*! structure IntSyn' = IntSyn !*)
 	 structure Whnf = Whnf
 	 structure Print = Print
 
 	 structure Names = Names
-	 structure Paths = Paths
+	 (*! structure Paths = Paths !*)
 	 structure Origins = Origins
 	 structure Lexer = Lexer
-	 structure Parsing = Parsing
+	 (*! structure Parsing = Parsing !*)
 	 structure Parser = Parser
 	 structure TypeCheck = TypeCheck
 	 structure Strict = Strict
@@ -187,7 +195,7 @@ structure Twelf =
 	 structure Index = Index
 	 structure IndexSkolem = IndexSkolem
 	 structure Subordinate = Subordinate
-	 structure CompSyn' = CompSyn
+	 (*! structure CompSyn' = CompSyn !*)
 	 structure Compile = Compile
 	 structure CPrint = CPrint
 	 structure AbsMachine = SwMachine
@@ -210,7 +218,7 @@ structure Twelf =
          structure ReconModule = ReconModule
 
 	 structure MetaGlobal = MetaGlobal
-	 structure FunSyn = FunSyn
+	 (*! structure FunSyn = FunSyn !*)
 	 structure Skolem = Skolem
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
@@ -220,4 +228,8 @@ structure Twelf =
 	 structure PrintTeX = PrintTeX
 	 structure ClausePrintTeX = ClausePrintTeX
 
-         structure CSManager = CSManager);
+         structure CSManager = CSManager
+         structure CSInstaller = CSInstaller (* unused -- creates necessary CM dependency *)
+
+         structure MkAbsolute = MkAbsolute
+	   );

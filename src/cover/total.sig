@@ -4,7 +4,7 @@
 signature TOTAL =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   exception Error of string
 

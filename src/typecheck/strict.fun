@@ -1,14 +1,15 @@
 (* Checking Definitions for Strict *)
 (* Author: Carsten Schuermann *)
 
-functor Strict (structure IntSyn' : INTSYN
+functor Strict ((*! structure IntSyn' : INTSYN !*)
 		structure Whnf : WHNF
-		  sharing Whnf.IntSyn = IntSyn'
-		structure Paths' : PATHS)
+		(*! sharing Whnf.IntSyn = IntSyn' !*)
+		(*! structure Paths' : PATHS !*)
+		  )
   : STRICT = 
 struct
-  structure IntSyn = IntSyn'
-  structure Paths = Paths'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure Paths = Paths' !*)
 
   exception Error of string
 

@@ -1,13 +1,9 @@
 #!/bin/sh
 cd ..
 # build 
-make
-make clean
+make -f mlton/Makefile
+make -f mlton/Makefile clean
 # install
-rm -rf /usr/doc/twelf
-mkdir -p /usr/doc/twelf
-cp -f README /usr/doc/twelf
-cp -rf doc/* /usr/doc/twelf
 rm -rf /usr/share/twelf
 mkdir -p /usr/share/twelf
 cp -rf bin /usr/share/twelf
@@ -15,5 +11,5 @@ cp -rf emacs /usr/share/twelf
 cp -rf examples /usr/share/twelf
 cp -rf examples-clp /usr/share/twelf
 cp -rf tex /usr/share/twelf
-/usr/share/twelf/bin/.mkexec /usr/bin/sml /usr/share/twelf twelf-server
+cp -rf doc /usr/share/twelf
 ln -sf /usr/share/twelf/bin/twelf-server /usr/bin/twelf-server

@@ -4,7 +4,7 @@
 signature PARSE_TERM =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ExtSyn : EXTSYN
 
   val parseQualId' : (string list * Parsing.lexResult) Parsing.parser

@@ -8,17 +8,18 @@ functor Splitting (structure Global : GLOBAL
 		   sharing MetaPrint.MetaSyn = MetaSyn'
 		   sharing MetaAbstract.MetaSyn = MetaSyn'
 		   structure ModeSyn : MODESYN
-		   sharing ModeSyn.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
                    structure Whnf : WHNF
-		   sharing Whnf.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Whnf.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Index : INDEX
-		   sharing Index.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Index.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Print : PRINT
-		   sharing Print.IntSyn = MetaSyn'.IntSyn
+		   (*! sharing Print.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Unify : UNIFY
-		   sharing Unify.IntSyn = MetaSyn'.IntSyn
-                   structure CSManager : CS_MANAGER
-                   sharing CSManager.IntSyn = MetaSyn'.IntSyn)
+		   (*! sharing Unify.IntSyn = MetaSyn'.IntSyn !*)
+                   (*! structure CSManager : CS_MANAGER !*)
+                   (*! sharing CSManager.IntSyn = MetaSyn'.IntSyn !*)
+		     )
   : SPLITTING =
 struct
   structure MetaSyn = MetaSyn'
@@ -46,7 +47,7 @@ struct
 
   local
     structure M = MetaSyn
-    structure I = MetaSyn.IntSyn
+    structure I = IntSyn
 
 
     (* constCases (G, (V, s), I, abstract, C) = C'

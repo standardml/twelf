@@ -3,6 +3,7 @@ For release:
   Edit Twelf.version in frontend/twelf.fun
   Edit version in doc/guide/twelf.texi
     NOTE: search for 1.2 and 1-2 ! (or appropriate versions)
+    NOTE: check the list of server commands and server types
   Edit version in README
   Edit instructions in INSTALL [no longer exists Sun May 23 12:51:24 1999]
 
@@ -12,6 +13,7 @@ For release:
   make twelf.pdf (on a Sparc, eg. alonzo)
   make install
   make install-www  (if everything is ready, install new doc on website)
+  make install-www4  (for specific versions)
 
   create updated file load.sml
   CM.mkusefile "load.sml";

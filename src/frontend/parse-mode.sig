@@ -4,7 +4,7 @@
 signature PARSE_MODE =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ExtModes: EXTMODES
 
   val parseMode' : (ExtModes.modedec list) Parsing.parser

@@ -5,10 +5,10 @@
 signature MODECHECK =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure ModeSyn : MODESYN
-    sharing ModeSyn.IntSyn = IntSyn
-  structure Paths : PATHS
+  (*! sharing ModeSyn.IntSyn = IntSyn !*)
+  (*! structure Paths : PATHS !*)
 
   exception Error of string
 

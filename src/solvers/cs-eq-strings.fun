@@ -1,16 +1,17 @@
 (* String Equation Solver *)
 (* Author: Roberto Virga *)
 
-functor CSEqStrings (structure IntSyn : INTSYN
+functor CSEqStrings ((*! structure IntSyn : INTSYN !*)
                      structure Whnf : WHNF
-                       sharing Whnf.IntSyn = IntSyn
+		     (*! sharing Whnf.IntSyn = IntSyn !*)
                      structure Unify : UNIFY
-                       sharing Unify.IntSyn = IntSyn
-                     structure CSManager : CS_MANAGER
-                       sharing CSManager.IntSyn = IntSyn)
+		     (*! sharing Unify.IntSyn = IntSyn !*)
+                     (*! structure CSManager : CS_MANAGER !*)
+		     (*! sharing CSManager.IntSyn = IntSyn !*)
+		       )
  : CS =
 struct
-  structure CSManager = CSManager
+  (*! structure CSManager = CSManager !*)
 
   local
     open IntSyn

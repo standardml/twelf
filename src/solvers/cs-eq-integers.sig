@@ -6,7 +6,7 @@ sig
   include CS
 
   structure Integers : INTEGERS
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   (* Foreign expressions *)
 

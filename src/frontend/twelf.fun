@@ -6,105 +6,105 @@
 functor Twelf
   (structure Global : GLOBAL
    structure Timers : TIMERS
-   structure IntSyn' : INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Print : PRINT
-     sharing Print.IntSyn = IntSyn'
+   (*! sharing Print.IntSyn = IntSyn' !*)
 
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
-   structure Paths : PATHS
+   (*! sharing Names.IntSyn = IntSyn' !*)
+   (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
-     sharing Origins.Paths = Paths
+   (*! sharing Origins.Paths = Paths !*)
    structure Lexer : LEXER
-     sharing Lexer.Paths = Paths
-   structure Parsing : PARSING
-     sharing Parsing.Lexer = Lexer
+   (*! sharing Lexer.Paths = Paths !*)
+     (*! structure Parsing : PARSING !*)
+     (*! sharing Lexer = Lexer !*)
    structure Parser : PARSER
      sharing Parser.Names = Names
-     sharing Parser.ExtSyn.Paths = Paths
+     (*! sharing Parser.ExtSyn.Paths = Paths !*)
    structure TypeCheck : TYPECHECK
    structure Strict : STRICT
-     sharing Strict.IntSyn = IntSyn'
-     sharing Strict.Paths = Paths
+   (*! sharing Strict.IntSyn = IntSyn' !*)
+   (*! sharing Strict.Paths = Paths !*)
    structure Constraints : CONSTRAINTS
-     sharing Constraints.IntSyn = IntSyn'
+   (*! sharing Constraints.IntSyn = IntSyn' !*)
    structure Abstract : ABSTRACT
-     sharing Abstract.IntSyn = IntSyn'
+   (*! sharing Abstract.IntSyn = IntSyn' !*)
    structure ReconTerm : RECON_TERM
-     sharing ReconTerm.IntSyn = IntSyn'
-     sharing ReconTerm.Paths = Paths
+   (*! sharing ReconTerm.IntSyn = IntSyn' !*)
+   (*! sharing ReconTerm.Paths = Paths !*)
      sharing type ReconTerm.term = Parser.ExtSyn.term
      (* sharing type ReconTerm.Paths.occConDec = Origins.Paths.occConDec *)
    structure ReconConDec : RECON_CONDEC
-     sharing ReconConDec.IntSyn = IntSyn'
-     sharing ReconConDec.Paths = Paths
+   (*! sharing ReconConDec.IntSyn = IntSyn' !*)
+   (*! sharing ReconConDec.Paths = Paths !*)
      sharing type ReconConDec.condec = Parser.ExtConDec.condec
    structure ReconQuery : RECON_QUERY
 
    structure ModeSyn : MODESYN
-     sharing ModeSyn.IntSyn = IntSyn'
+   (*! sharing ModeSyn.IntSyn = IntSyn' !*)
    structure ModeCheck : MODECHECK
-     sharing ModeCheck.IntSyn = IntSyn'
+   (*! sharing ModeCheck.IntSyn = IntSyn' !*)
      sharing ModeCheck.ModeSyn = ModeSyn
-     sharing ModeCheck.Paths = Paths
+     (*! sharing ModeCheck.Paths = Paths !*)
    structure ReconMode : RECON_MODE
      sharing ReconMode.ModeSyn = ModeSyn
-     sharing ReconMode.Paths = Paths
+     (*! sharing ReconMode.Paths = Paths !*)
      sharing type ReconMode.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
      sharing ModePrint.ModeSyn = ModeSyn
    structure ModeDec : MODEDEC
      sharing ModeDec.ModeSyn = ModeSyn
-     sharing ModeDec.Paths = Paths
+     (*! sharing ModeDec.Paths = Paths !*)
 
    structure Cover : COVER
-     sharing Cover.IntSyn = IntSyn'
+   (*! sharing Cover.IntSyn = IntSyn' !*)
      sharing Cover.ModeSyn = ModeSyn
 
    structure Total : TOTAL
-     sharing Total.IntSyn = IntSyn'
+   (*! sharing Total.IntSyn = IntSyn' !*)
 
    structure Reduces : REDUCES
-     sharing Reduces.IntSyn = IntSyn'
+   (*! sharing Reduces.IntSyn = IntSyn' !*)
 
    structure Index : INDEX
-     sharing Index.IntSyn = IntSyn'
+   (*! sharing Index.IntSyn = IntSyn' !*)
    structure IndexSkolem : INDEX
-     sharing IndexSkolem.IntSyn = IntSyn'
+   (*! sharing IndexSkolem.IntSyn = IntSyn' !*)
    structure Subordinate : SUBORDINATE
-     sharing Subordinate.IntSyn = IntSyn'
-   structure CompSyn' : COMPSYN
-     sharing CompSyn'.IntSyn = IntSyn'
+   (*! sharing Subordinate.IntSyn = IntSyn' !*)
+   (*! structure CompSyn' : COMPSYN !*)
+   (*! sharing CompSyn'.IntSyn = IntSyn' !*)
    structure Compile : COMPILE
-     sharing Compile.IntSyn = IntSyn'
-     sharing Compile.CompSyn = CompSyn'
+   (*! sharing Compile.IntSyn = IntSyn' !*)
+   (*! sharing Compile.CompSyn = CompSyn' !*)
    structure AbsMachine : ABSMACHINE
-     sharing AbsMachine.IntSyn = IntSyn'
-     sharing AbsMachine.CompSyn = CompSyn'
+   (*! sharing AbsMachine.IntSyn = IntSyn' !*)
+   (*! sharing AbsMachine.CompSyn = CompSyn' !*)
 
    structure Tabled : TABLED
-     sharing Tabled.IntSyn = IntSyn'
-     sharing Tabled.CompSyn = CompSyn'
+   (*! sharing Tabled.IntSyn = IntSyn' !*)
+   (*! sharing Tabled.CompSyn = CompSyn' !*)
    structure TableIndex : TABLEINDEX
-     sharing TableIndex.IntSyn = IntSyn'
+   (*! sharing TableIndex.IntSyn = IntSyn' !*)
    structure Solve : SOLVE
-     sharing Solve.IntSyn = IntSyn'
+   (*! sharing Solve.IntSyn = IntSyn' !*)
      sharing type Solve.ExtQuery.query = Parser.ExtQuery.query
      sharing type Solve.ExtQuery.define = Parser.ExtQuery.define
      sharing type Solve.ExtQuery.solve = Parser.ExtQuery.solve
-     sharing Solve.Paths = Paths
+	     (*! sharing Solve.Paths = Paths !*)
 
    structure ThmSyn : THMSYN
-     sharing ThmSyn.Paths = Paths
+   (*! sharing ThmSyn.Paths = Paths !*)
      sharing ThmSyn.Names = Names
    structure Thm : THM
      sharing Thm.ThmSyn = ThmSyn
-     sharing Thm.Paths = Paths
+     (*! sharing Thm.Paths = Paths !*)
    structure ReconThm : RECON_THM
      sharing ReconThm.ThmSyn = ThmSyn
-     sharing ReconThm.Paths = Paths
+     (*! sharing ReconThm.Paths = Paths !*)
      sharing ReconThm.ThmSyn.ModeSyn = ModeSyn
      sharing type ReconThm.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ReconThm.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
@@ -119,17 +119,17 @@ functor Twelf
      sharing ThmPrint.ThmSyn = ThmSyn
 
    structure TabledSyn : TABLEDSYN
-     sharing TabledSyn.IntSyn = IntSyn'
+   (*! sharing TabledSyn.IntSyn = IntSyn' !*)
 
    structure WorldSyn : WORLDSYN
-     sharing WorldSyn.IntSyn = IntSyn'
+   (*! sharing WorldSyn.IntSyn = IntSyn' !*)
    structure WorldPrint : WORLDPRINT
      sharing WorldPrint.WorldSyn = WorldSyn
 
    structure ModSyn : MODSYN
-     sharing ModSyn.IntSyn = IntSyn'
+   (*! sharing ModSyn.IntSyn = IntSyn' !*)
      sharing ModSyn.Names = Names
-     sharing ModSyn.Paths = Paths
+     (*! sharing ModSyn.Paths = Paths !*)
    structure ReconModule : RECON_MODULE
      sharing ReconModule.ModSyn = ModSyn
      sharing type ReconModule.sigdef = Parser.ModExtSyn.sigdef
@@ -138,31 +138,35 @@ functor Twelf
      sharing type ReconModule.strexp = Parser.ModExtSyn.strexp
 
    structure MetaGlobal : METAGLOBAL
-   structure FunSyn : FUNSYN
-     sharing FunSyn.IntSyn = IntSyn'
+   (*! structure FunSyn : FUNSYN !*)
+   (*! sharing FunSyn.IntSyn = IntSyn' !*)
    structure Skolem : SKOLEM
-     sharing Skolem.IntSyn = IntSyn'
+   (*! sharing Skolem.IntSyn = IntSyn' !*)
    structure Prover : PROVER
-     sharing Prover.IntSyn = IntSyn'
+   (*! sharing Prover.IntSyn = IntSyn' !*)
    structure ClausePrint : CLAUSEPRINT
-     sharing ClausePrint.IntSyn = IntSyn'
+   (*! sharing ClausePrint.IntSyn = IntSyn' !*)
 
    structure Trace : TRACE
 
    structure PrintTeX : PRINT
-     sharing PrintTeX.IntSyn = IntSyn'
+   (*! sharing PrintTeX.IntSyn = IntSyn' !*)
    structure ClausePrintTeX : CLAUSEPRINT
-     sharing ClausePrintTeX.IntSyn = IntSyn'
+   (*! sharing ClausePrintTeX.IntSyn = IntSyn' !*)
 
    structure CSManager : CS_MANAGER
-     sharing CSManager.IntSyn = IntSyn'
+   (*! sharing CSManager.IntSyn = IntSyn' !*)
      sharing CSManager.Fixity = Names.Fixity
-     sharing CSManager.ModeSyn = ModeSyn)
+     sharing CSManager.ModeSyn = ModeSyn
+    
+   structure CSInstaller : CS_INSTALLER
+   structure MkAbsolute : MK_ABSOLUTE
+     )
  :> TWELF =
 struct
 
   local
-    structure IntSyn = IntSyn'
+    (*! structure IntSyn = IntSyn' !*)
     structure S = Parser.Stream
 
     fun fileOpenMsg (fileName) =
@@ -305,6 +309,7 @@ struct
           val _ = IndexSkolem.install fromCS (IntSyn.Const cid)
           val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
           val _ = (Timers.time Timers.subordinate Subordinate.install) cid
+          val _ = (Timers.time Timers.subordinate Subordinate.installDef) cid
         in
           ()
         end
@@ -438,7 +443,7 @@ struct
 	       raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       | install1 (fileName, (Parser.ClauseDec condec, r)) =
-	(* Clauses %clause c = u or %clause c : V = U or %clause c : V *)
+	(* Clauses %clause c = U or %clause c : V = U or %clause c : V *)
 	(* these are like definitions, but entered into the program table *)
 	(let
 	   (* val _ = print "%clause " *)
@@ -616,6 +621,7 @@ struct
 	          handle Total.Error (msg) => raise Total.Error (msg) (* include region and file *)
 		       | Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))
 		       | Reduces.Error (msg) => raise Reduces.Error (msg) (* includes filename *)
+		       | Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
 	  val _ = if !Global.chatter >= 3
 		    then print ("%total " ^ ThmPrint.tDeclToString T ^ ".\n")
 		  else ()
@@ -1170,7 +1176,7 @@ struct
 	  (if pwdir = OS.FileSys.getDir () (* allow shorter messages if safe *)
 	     then List.foldl loadAbort OK sources
 	   else List.foldl loadAbort OK
-	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources))
+	        (List.map (fn p => MkAbsolute.mkAbsolute {path=p, relativeTo=pwdir}) sources))
 
       fun define (sources) = (OS.FileSys.getDir (), sources)
 
@@ -1193,6 +1199,7 @@ struct
         val sgn : unit -> unit		(* print signature *)
         val prog : unit -> unit		(* print signature as program *)
 	val subord : unit -> unit       (* print subordination relation *)
+        val domains : unit -> unit	(* print available constraint domains *)
         structure TeX :			(* print in TeX format *)
 	sig
 	  val sgn : unit -> unit	(* print signature *)
@@ -1209,6 +1216,7 @@ struct
       fun sgn () = Print.printSgn ()
       fun prog () = ClausePrint.printSgn ()
       fun subord () = Subordinate.show ()
+      fun domains () = print (CSInstaller.version)
       structure TeX =
       struct
 	fun sgn () = printSgnTeX ()
@@ -1270,6 +1278,33 @@ struct
       val optimize = Compile.optimize
     end
 
+    structure Table : 
+      sig 
+	datatype Strategy = datatype TableIndex.Strategy
+	val strategy : Strategy ref
+	val strengthen : bool ref
+	val top : unit -> unit
+      end 
+    = 
+    struct
+      datatype Strategy = datatype TableIndex.Strategy
+      val strategy = TableIndex.strategy
+      val strengthen = TableIndex.strengthen
+      	  
+      (* top () = () starts interactive query loop *)
+      fun top () = 
+	  let 
+	    fun sLoopT () = if Solve.qLoopT () then OK else ABORT
+      
+	    fun topLoopT () = 
+	        case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
+		  of ABORT => topLoopT ()
+		   | OK => ()
+	  in 
+	    topLoopT ()
+	  end 
+    end
+
     structure Recon :
     sig
       datatype TraceMode = datatype ReconTerm.TraceMode
@@ -1322,34 +1357,7 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3R4, June 20, 2002 (with world, coverage, and totality checking)"
-
-    structure Table : 
-      sig 
-	datatype Strategy = datatype TableIndex.Strategy
-	val strategy : Strategy ref
-	val strengthen : bool ref
-	val top : unit -> unit
-      end 
-    = 
-  struct
-    datatype Strategy = datatype TableIndex.Strategy
-    val strategy = TableIndex.strategy
-    val strengthen = TableIndex.strengthen
-      	  
-    (* top () = () starts interactive query loop *)
-    fun top () = 
-      let 
-	fun sLoopT () = if Solve.qLoopT () then OK else ABORT
-      
-	fun topLoopT () = 
-	  case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
-	    of ABORT => topLoopT ()
-	  | OK => ()
-      in 
-	topLoopT ()
-      end 
-  end
+    val version = "Twelf 1.4, Dec 27 2002"
 
   end  (* local *)
 end; (* functor Twelf *)

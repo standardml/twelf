@@ -9,7 +9,7 @@
 signature EXTSYN =
 sig
 
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   type term				(* term *)
   type dec				(* variable declaration *)
@@ -45,7 +45,7 @@ end;  (* signature EXTSYN *)
 signature RECON_TERM =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   include EXTSYN
 
   exception Error of string

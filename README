@@ -1,5 +1,5 @@
 Twelf
-Copyright (C) 1997-2000, Frank Pfenning and Carsten Schuermann
+Copyright (C) 1997-2002, Frank Pfenning and Carsten Schuermann
 
 Authors: Frank Pfenning
 	 Carsten Schuermann
@@ -16,7 +16,7 @@ Twelf is an implementation of
  - a set of expansion modules to deal natively with numbers and strings
  - an Emacs interface
 
-This README file applies to version Twelf 1.3 alpha.
+This README file applies to version Twelf 1.4 alpha, Dec 27 2002.
 For current information regarding Twelf, see the Twelf home page at
 
   http://www.cs.cmu.edu/~twelf
@@ -24,7 +24,7 @@ For current information regarding Twelf, see the Twelf home page at
 Twelf can be compiled and installed under Unix, either as a separate
 "Twelf Server" intended primarily as an inferior process to Emacs, or as
 a structure Twelf embedded in Standard ML.
-There is also self-extracting EXE file for Windows 9x/NT/ME/2000.
+There may also be a self-extracting EXE file for Windows 9x/NT/ME/2000.
 
 Files
 =====
@@ -43,6 +43,9 @@ Files
  sources.cm        --- enables make of Twelf-SML
  src/              --- the SML sources for Twelf
  tex/              --- TeX macros and style files
+ smlnj/            --- build files for SML/NJ 110.20 or higher
+ polyml/           --- build files for Poly/ML (tested with 4.1.3)
+ mlton/            --- build files for MLton (tested with 20020923)
 
 Installation Instructions
 =========================
@@ -51,25 +54,29 @@ These instructions apply to Unix or Windows 9x/ME/NT/2000 when compiling the
 sources directly.  For Windows 9x/ME/NT/2000 there is also a self-extracting
 EXE file with a much simpler installation procedure.
 
-Installation requires Standard ML, Revision of 1997.
-The Twelf Server requires SML of New Jersey.
-
-If it is not installed already, please check
+Installation requires Standard ML, Revision of 1997, plus
+an implementation of the Standard Basis Library.
+It currently supports
 
  SML of New Jersey [free]
-    http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
-    (version 110 or higher)
+    http://www.smlnj.org/
+    (version 110.0.3 or higher)
 
- MLWorks [commercial]
-    http://www.harlequin.com/products/ads/ml/ml.html
+ Poly/ML
+    http://www.polyml.org/
+    (tested with version 4.1.3)
+
+ MLton
+    http://www.mlton.org/
+    (tested with version 20020923)
 
 
 Platforms
 =========
 
 Twelf can be installed on different platforms, such as
-Unix or Windows 9x/ME/NT/2000.  Note that these instructions 
-are for SML of New Jersey, version 110 or higher.
+Unix, Windows 9x/ME/NT/2000, or MacOS X.  Supported implementations
+of ML are SML/NJ, Poly/ML and MLton.
 
 Twelf can be installed as 
 
@@ -82,29 +89,31 @@ and
 
 Instead of compiling Twelf for the Windows 9x/ME/NT/2000 family of
 operating systems, we recommend instead to use the precompiled version
-which is available from the Twelf homepage at
+which may be available from the Twelf homepage at
 
-  http://www.cs.cmu.edu/~twelf/dist/twelf-1-3.exe
+  http://www.cs.cmu.edu/~twelf/dist/twelf-1-4.exe
+
+If it is not available for the current version, you will have to
+install SML and compile Twelf.
 
 
 Unix Installation
 =================
 
-
   Summary
   -------
 
-      % gunzip twelf-1-3.tar.gz
-      % tar -xf twelf-1-3.tar
+      % gunzip twelf-1-4.tar.gz
+      % tar -xf twelf-1-4.tar
       % cd twelf
 
     You may need to edit the file Makefile to give the proper location
-    for sml-cm.  These instructions are for SML of New Jersey, version
-    110 or higher.
+    for sml or sml-cm.  These instructions are for SML of New Jersey, version
+    110.0.3.  See note below on SML/NJ versions 110.20 and higher.
 
       % make
       % bin/twelf-server
-      Twelf 1.3, Oct 15 2000
+      Twelf 1.4, Dec 27 2002
       %% OK %%
 
     You can now load the examples from the User's Guide and pose an
@@ -113,8 +122,7 @@ Unix Installation
     C-c (CTRL c).  To exit the Twelf server you may issue the quit
     command or type C-d (CTRL d).
 
-      Config.read examples/guide/sources.cfg
-      Config.load
+      make examples/guide/sources.cfg
       top
       ?- of (lam [x] x) T.
       Solving...
@@ -149,8 +157,8 @@ Unix Installation
     Unpack the distribution in this directory: 	
     ( % is assumed to be the shell prompt.) 
 
-	  % gunzip twelf-1-3.tar.gz
-	  % tar -xf twelf-1-3.tar
+	  % gunzip twelf-1-4.tar.gz
+	  % tar -xf twelf-1-4.tar
 	  % cd twelf
 
 
@@ -192,8 +200,8 @@ Unix Installation
 	  % make twelf-sml
 
 	in the root directory into which you installed Twelf.  This
-	creates bin/twelf-sml which is a rather large heap image (e.g.,
-	11MB under Linux) since it include the SML/NJ compiler.
+	creates bin/twelf-sml which is a rather large heap image
+        since it includes the SML/NJ compiler.
 
     Full installation:
 
@@ -243,10 +251,10 @@ Windows 9x/ME/NT/2000 Installation
   ---------------------
 
     For the Windows 9x/ME/NT/2000 family of operating systems, we
-    recommend the precompiled version of the Twelf server which is
-    available from the Twelf homepage at
+    recommend the precompiled version of the Twelf server which may
+    be available from the Twelf homepage at
 
-          http://www.cs.cmu.edu/~twelf/dist/twelf-1-3.exe
+          http://www.cs.cmu.edu/~twelf/dist/twelf-1-4.exe
 
     which is a self-installing EXE file.
 
@@ -302,7 +310,7 @@ Windows 9x/ME/NT/2000 Installation
         (version 1.1 or higher)
 
       - Standard ML of New Jersey, available from:
-        http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+        http://www.smlnj.org/
         (version 110 or higher)
 
     Be sure sml-cm.bat is in your Path, or otherwise edit the Makefile
@@ -353,4 +361,93 @@ Windows 9x/ME/NT/2000 Installation
 	successful installation with
 
 	  bash-2.03$ make clean
+
+Poly/ML Installation
+====================
+
+   To install with Poly/ML, follow essentially the same steps as above.
+   The main difference is the call to make.
+
+      % gunzip twelf-1-4.tar.gz
+      % tar -xf twelf-1-4.tar
+      % cd twelf
+
+    You may need to edit the file polyml/Makefile to give the proper location
+    for the Poly/ML executable called poly, or name the target files
+    for compilation.
+
+      % make -f polyml/Makefile
+    or
+      % polyml/install.sh
+
+    Quick test
+
+      % bin/twelf-server
+      ...
+      Poly/ML 4.1.3 Release
+      Twelf 1.4, Dec 27 2002
+      Upon interrupt at prompt => type
+      f to return to top-level of Twelf server
+      c to continue Twelf execution
+      q to quit the Twelf server
+      %% OK %%
+      make examples/guide/sources.cfg
+      ...
+      %% OK %%
+
+
+SML/NJ Installation for Version 110.20 or higher
+================================================
+
+   To install with SML/NJ version 110.20 or higher follow essentially
+   the same steps as above.  The main difference is the call to make.
+
+      % gunzip twelf-1-4.tar.gz
+      % tar -xf twelf-1-4.tar
+      % cd twelf
+
+   You may need to edit the file smlnj/Makefile to give the proper location
+   for the SML/NJ executable called sml, or name the target files
+   for compilation.
+
+      % make -f smlnj/Makefile
+   or
+      % smlnj/install.sh
+
+   Quick test
+
+      % bin/twelf-server
+      Twelf 1.4, Dec 27 2002
+      %% OK %%
+      make examples/guide/sources.cfg
+      ...
+      %% OK %%
+
+MLton Installation
+==================
+
+   Under MLton, only the stand-alone Twelf server is available.
+   Installation is otherwise similar to above, with the call to
+   make the main difference
+
+      % gunzip twelf-1-4.tar.gz
+      % tar -xf twelf-1-4.tar
+      % cd twelf
+
+   You may need to edit the file mlton/Makefile to give the proper location
+   for the MLton executable called mlton, or name the target files
+   for compilation.
+
+      % make -f mlton/Makefile
+   or
+      % mlton/install.sh
+
+   Quick test
+
+      % bin/twelf-server
+      Twelf 1.4, Dec 27 2002
+      %% OK %%
+      make examples/guide/sources.cfg
+      ...
+      %% OK %%
 

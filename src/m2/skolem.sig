@@ -3,7 +3,7 @@
 
 signature SKOLEM =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   val install: IntSyn.cid list -> unit
 end;  (* signature SKOLEM *)

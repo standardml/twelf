@@ -3,9 +3,9 @@
 
 signature CHECKING =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure Order : ORDER
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
     
   (* If Q marks all parameters in a context G we write   G : Q  *)
 

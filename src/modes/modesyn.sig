@@ -5,7 +5,7 @@
 signature MODESYN =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   exception Error of string
 

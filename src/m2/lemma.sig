@@ -7,5 +7,5 @@ sig
     
   exception Error of string
 
-  val apply : MetaSyn.State * MetaSyn.IntSyn.cid -> MetaSyn.State 
+  val apply : MetaSyn.State * IntSyn.cid -> MetaSyn.State 
 end;  (* signature LEMMA *)

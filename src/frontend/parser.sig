@@ -4,7 +4,7 @@
 signature PARSER =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure Stream : STREAM
   structure ExtSyn : EXTSYN
   structure Names : NAMES
@@ -16,8 +16,8 @@ sig
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
-    | FixDec of (Names.Qid * ExtSyn.Paths.region) * Names.Fixity.fixity
-    | NamePref of (Names.Qid * ExtSyn.Paths.region) * (string * string option)
+    | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
+    | NamePref of (Names.Qid * Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec list
     | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl
@@ -44,7 +44,7 @@ sig
     | Use of string
     (* Further declarations to be added here *)
 
-  val parseStream: TextIO.instream -> (fileParseResult * ExtSyn.Paths.region) Stream.stream
+  val parseStream: TextIO.instream -> (fileParseResult * Paths.region) Stream.stream
   val parseTerminalQ : string * string -> ExtQuery.query Stream.stream (* reads from std input *)
 
 end;  (* signature PARSER *)

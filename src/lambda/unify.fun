@@ -2,13 +2,13 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
-functor Unify (structure IntSyn' : INTSYN
+functor Unify ((*! structure IntSyn' : INTSYN !*)
 	       structure Whnf    : WHNF
-	         sharing Whnf.IntSyn = IntSyn'
+	       (*! sharing Whnf.IntSyn = IntSyn' !*)
 	       structure Trail   : TRAIL)
   : UNIFY =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
     
   exception Unify of string
   

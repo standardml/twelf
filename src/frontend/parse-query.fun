@@ -2,22 +2,22 @@
 (* Author: Frank Pfenning *)
 
 functor ParseQuery
-  (structure Parsing' : PARSING
+  ((*! structure Parsing' : PARSING !*)
    structure ExtQuery' : EXTQUERY
-     sharing ExtQuery'.Paths = Parsing'.Lexer.Paths
+   (*! sharing ExtQuery'.Paths = Parsing'.Lexer.Paths !*)
    structure ParseTerm : PARSE_TERM
-     sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
+   (*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
      sharing ParseTerm.ExtSyn = ExtQuery'.ExtSyn)
   : PARSE_QUERY =
 struct
 
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure ExtQuery = ExtQuery'
 
   local
-    structure L = Parsing.Lexer
-    structure LS = Parsing.Lexer.Stream
-    structure P = Parsing.Lexer.Paths
+    structure L = Lexer
+    structure LS = Lexer.Stream
+    structure P = Paths
 
     fun returnQuery (optName, (tm, f)) = (ExtQuery.query (optName, tm), f)
 

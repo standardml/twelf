@@ -8,6 +8,6 @@ sig
   val stateToString  : MetaSyn.State -> string
   val sgnToString    : MetaSyn.Sgn -> string
   val modeToString   : MetaSyn.Mode -> string
-  val conDecToString  : MetaSyn.IntSyn.ConDec -> string
+  val conDecToString  : IntSyn.ConDec -> string
 
 end; (* signature METAPRINT *)

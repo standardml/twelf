@@ -7,28 +7,28 @@
 (* Type Reconstruction *)
 (* ------------------- *)
 
-functor ReconTerm (structure IntSyn' : INTSYN
+functor ReconTerm ((*! structure IntSyn' : INTSYN !*)
 		   structure Names : NAMES
-		     sharing Names.IntSyn = IntSyn'
-		   structure Paths' : PATHS
+		   (*! sharing Names.IntSyn = IntSyn' !*)
+		   (*! structure Paths' : PATHS !*)
                    structure Approx : APPROX
-                     sharing Approx.IntSyn = IntSyn'
+		   (*! sharing Approx.IntSyn = IntSyn' !*)
 		   structure Whnf : WHNF
-		     sharing Whnf.IntSyn = IntSyn'
+		   (*! sharing Whnf.IntSyn = IntSyn' !*)
 		   structure Unify : UNIFY
-		     sharing Unify.IntSyn = IntSyn'
+		   (*! sharing Unify.IntSyn = IntSyn' !*)
                    structure Abstract : ABSTRACT
-                     sharing Abstract.IntSyn = IntSyn'
+		   (*! sharing Abstract.IntSyn = IntSyn' !*)
 		   structure Print : PRINT
-		     sharing Print.IntSyn = IntSyn'
-                   structure CSManager : CS_MANAGER
-                     sharing CSManager.IntSyn = IntSyn'
+		   (*! sharing Print.IntSyn = IntSyn' !*)
+                   (*! structure CSManager : CS_MANAGER !*)
+		   (*! sharing CSManager.IntSyn = IntSyn' !*)
                    structure StringTree : TABLE where type key = string)
   : RECON_TERM =
 struct
 
-  structure IntSyn = IntSyn'
-  structure Paths = Paths'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure Paths = Paths' !*)
   structure F = Print.Formatter
   structure Apx = Approx
 

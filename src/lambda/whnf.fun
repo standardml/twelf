@@ -2,10 +2,11 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
-functor Whnf (structure IntSyn' : INTSYN)
+functor Whnf ((*! structure IntSyn' : INTSYN !*)
+	       )
   : WHNF =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   (*
      Weak Head-Normal Form (whnf)

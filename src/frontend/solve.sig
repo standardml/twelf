@@ -4,8 +4,8 @@
 signature SOLVE =
 sig
 
-  structure IntSyn : INTSYN
-  structure Paths : PATHS
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure Paths : PATHS !*)
   structure ExtQuery : EXTQUERY
 
   exception AbortQuery of string

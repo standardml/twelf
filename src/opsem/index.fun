@@ -3,33 +3,33 @@
 
 functor TableIndex (structure Global : GLOBAL
 		    structure Queue : QUEUE
-		    structure IntSyn': INTSYN
-		    structure CompSyn': COMPSYN
-		      sharing CompSyn'.IntSyn = IntSyn'
+		    (*! structure IntSyn' : INTSYN !*)
+		    (*! structure CompSyn': COMPSYN !*)
+		    (*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		    structure Subordinate : SUBORDINATE
-		      sharing Subordinate.IntSyn = IntSyn'		      
+		    (*! sharing Subordinate.IntSyn = IntSyn'		       !*)
 		    structure Conv: CONV
-		      sharing Conv.IntSyn = IntSyn'
+		    (*! sharing Conv.IntSyn = IntSyn' !*)
 		    structure Unify : UNIFY
-		      sharing Unify.IntSyn = IntSyn'
+		    (*! sharing Unify.IntSyn = IntSyn' !*)
 		    structure AbstractTabled : ABSTRACTTABLED
-		      sharing AbstractTabled.IntSyn = IntSyn'
+		    (*! sharing AbstractTabled.IntSyn = IntSyn' !*)
 		    structure Whnf : WHNF
-		      sharing Whnf.IntSyn = IntSyn'
+		    (*! sharing Whnf.IntSyn = IntSyn' !*)
 		    structure Print : PRINT 
- 		      sharing Print.IntSyn = IntSyn'
+		    (*! sharing Print.IntSyn = IntSyn' !*)
 		    structure CPrint : CPRINT 
-                      sharing CPrint.IntSyn = IntSyn'
-                      sharing CPrint.CompSyn = CompSyn'
+		    (*! sharing CPrint.IntSyn = IntSyn' !*)
+		    (*! sharing CPrint.CompSyn = CompSyn' !*)
 		    structure Names : NAMES 
-                      sharing Names.IntSyn = IntSyn'
+		    (*! sharing Names.IntSyn = IntSyn' !*)
 		    structure TypeCheck : TYPECHECK
-		      sharing TypeCheck.IntSyn = IntSyn'
+		    (*! sharing TypeCheck.IntSyn = IntSyn' !*)
 		 )
   : TABLEINDEX =
 struct
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
   structure Conv = Conv
 
 

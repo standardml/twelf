@@ -4,36 +4,36 @@
 
 functor WorldSyn
   (structure Global : GLOBAL
-   structure IntSyn : INTSYN
+   (*! structure IntSyn : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn
+   (*! sharing Whnf.IntSyn = IntSyn !*)
    structure Index : INDEX
-     sharing Index.IntSyn = IntSyn
+   (*! sharing Index.IntSyn = IntSyn !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn
+   (*! sharing Names.IntSyn = IntSyn !*)
    structure Unify : UNIFY
-     sharing Unify.IntSyn = IntSyn
+   (*! sharing Unify.IntSyn = IntSyn !*)
    structure Abstract : ABSTRACT
-     sharing Abstract.IntSyn = IntSyn
+   (*! sharing Abstract.IntSyn = IntSyn !*)
    structure Constraints : CONSTRAINTS
-     sharing Constraints.IntSyn = IntSyn
-   structure CSManager : CS_MANAGER
-     sharing CSManager.IntSyn = IntSyn
+   (*! sharing Constraints.IntSyn = IntSyn !*)
+   (*! structure CSManager : CS_MANAGER !*)
+   (*! sharing CSManager.IntSyn = IntSyn !*)
    structure Subordinate : SUBORDINATE
-     sharing Subordinate.IntSyn = IntSyn
+   (*! sharing Subordinate.IntSyn = IntSyn !*)
    structure Print : PRINT
-     sharing Print.IntSyn = IntSyn
+   (*! sharing Print.IntSyn = IntSyn !*)
 
    structure Table : TABLE where type key = int
 
-   structure Paths : PATHS
+   (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
-     sharing Origins.Paths = Paths
-     sharing Origins.IntSyn = IntSyn
+   (*! sharing Origins.Paths = Paths !*)
+     (*! sharing Origins.IntSyn = IntSyn !*)
    structure Timers : TIMERS)
    : WORLDSYN = 
 struct
-  structure IntSyn = IntSyn
+  (*! structure IntSyn = IntSyn !*)
   structure I = IntSyn
   structure P = Paths
   structure F = Print.Formatter
@@ -410,13 +410,21 @@ struct
 		  else ()
 	  val _ = subsumedReset ()	(* initialize table of subsumed families *)
 	  fun checkAll nil = ()
-	    | checkAll (I.Const c :: clist) =
+	    | checkAll (I.Const(c) :: clist) =
 	      (if !Global.chatter = 4
 		 then print (Names.qidToString (Names.constQid c) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause c else ();
 	       checkClause (I.Null, I.constType c, W, P.top)
 		 handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
+               checkAll clist)
+	    | checkAll (I.Def(d) :: clist) =
+	      (if !Global.chatter = 4
+		 then print (Names.qidToString (Names.constQid d) ^ " ")
+	       else ();
+	       if !Global.chatter > 4 then Trace.clause d else ();
+	       checkClause (I.Null, I.constType d, W, P.top)
+		 handle Error' (occ, msg) => raise Error (wrapMsg (d, occ, msg));
                checkAll clist)
 	  val _ = checkAll (Index.lookup a)
 	  val _ = if !Global.chatter = 4 then print "\n" else ()

@@ -4,8 +4,8 @@
 signature TABLEINDEX =
 sig
 
-  structure IntSyn : INTSYN
-  structure CompSyn : COMPSYN
+  (*! structure IntSyn : INTSYN !*)
+  (*! structure CompSyn : COMPSYN !*)
     
   type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * CompSyn.pskeleton) list,
 		 lookup: int}

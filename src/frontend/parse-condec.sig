@@ -4,7 +4,7 @@
 signature PARSE_CONDEC =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ExtConDec : EXTCONDEC
 
   val parseConDec' : ExtConDec.condec Parsing.parser

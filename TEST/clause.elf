@@ -19,3 +19,75 @@ foo1 : foo x = nat0.
 foo2 : foo x.
 %clause foo3 : foo x.
 %query 3 * W : foo X.
+
+% Testing %mode, %terminates, etc.
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+p_z : plus z Y Y.
+p_s : plus (s X) Y (s Z)
+       <- plus X Y Z.
+%clause
+p_ss = ([D] p_s (p_s D))
+     : plus (s (s X)) Y (s (s Z))
+        <- plus X Y Z.
+
+%mode plus +X +Y -Z.
+%terminates X (plus X Y _).
+%worlds () (plus X Y X).
+%covers plus +X +Y -Z.
+%total X (plus X Y _).
+
+% Testing type-level definitions
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus' : nat -> nat -> nat -> type.
+plus = plus' : nat -> nat -> nat -> type.
+p_z : plus z Y Y.
+p_s : plus (s X) Y (s Z)
+       <- plus X Y Z.
+%clause
+p_ss = ([D] p_s (p_s D))
+     : plus (s (s X)) Y (s (s Z))
+        <- plus X Y Z.
+
+%query 3 *
+D : plus (s (s (s z))) (s z) Z.
+%mode plus +X +Y -Z.
+
+q : plus X Y Z <- plus X Y Z.
+
+%querytabled 3 *
+D : plus (s (s (s z))) (s z) Z.
+
+% termination, worlds, coverage, totality
+% not yet supported for family-level definitions
+% %terminates X (plus X Y _). % error!
+% %worlds () (plus X Y Z).    % error!
+% %covers plus +X +Y -Z.      % error!
+% %total X (plus X Y _).      % error!
+
+nat : type.
+z : nat.
+
+nat' = nat : type.
+s : nat' -> nat'.
+
+plus : nat -> nat -> nat -> type.
+p_z : plus z Y Y.
+
+%mode plus +X +Y -Z.
+%worlds () (plus X Y Z).
+% next line should yield error
+% %covers plus +X +Y -Z.
+
+%query 0 *
+plus (s z) z Y.
+% next line should yield error
+% %total X (plus X Y _).

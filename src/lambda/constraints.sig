@@ -5,7 +5,7 @@
 signature CONSTRAINTS =
 sig
 
-   structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
    exception Error of IntSyn.cnstr list
 

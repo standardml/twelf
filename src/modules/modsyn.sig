@@ -4,9 +4,9 @@
 signature MODSYN =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure Names : NAMES
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   exception Error of string
 
@@ -15,13 +15,21 @@ sig
 
   type module
 
+  (*
   type action = IntSyn.cid * (string * Paths.occConDec option) -> unit
   type transform = IntSyn.cid * IntSyn.ConDec -> IntSyn.ConDec
+  *)
 
   val installStruct : IntSyn.StrDec * module * Names.namespace option
-                        * action * bool -> unit
-  val installSig : module * Names.namespace option * action * bool -> unit
-  val instantiateModule : module * (Names.namespace -> transform) -> module
+                        * (IntSyn.cid * (string * Paths.occConDec option) -> unit) (* action *)
+                        * bool -> unit
+  val installSig : module * Names.namespace option
+                   * (IntSyn.cid * (string * Paths.occConDec option) -> unit) (* action *)
+                   * bool -> unit
+  val instantiateModule : module *
+                          (Names.namespace -> (IntSyn.cid * IntSyn.ConDec -> IntSyn.ConDec))
+			  (* Names.namespace -> transform *)
+			  -> module
 
   (* Extract some entries of the current global signature table in order
      to create a self-contained module.

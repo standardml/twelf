@@ -3,24 +3,24 @@
 
 functor ModSyn
   (structure Global : GLOBAL
-   structure IntSyn' : INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Names' : NAMES
-     sharing Names'.IntSyn = IntSyn'
-   structure Paths' : PATHS
+   (*! sharing Names'.IntSyn = IntSyn' !*)
+   (*! structure Paths' : PATHS !*)
    structure Origins : ORIGINS
-     sharing Origins.Paths = Paths'
+   (*! sharing Origins.Paths = Paths' !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Strict : STRICT
-     sharing Strict.IntSyn = IntSyn'
+   (*! sharing Strict.IntSyn = IntSyn' !*)
    structure IntTree : TABLE where type key = int
    structure HashTable : TABLE where type key = string)
   : MODSYN =
 struct
 
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
   structure Names = Names'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
 
   structure I = IntSyn
 

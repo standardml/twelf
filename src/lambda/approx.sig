@@ -4,7 +4,7 @@
 signature APPROX =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   datatype Uni =
       Level of int (* 1 = type, 2 = kind, 3 = hyperkind, etc. *)

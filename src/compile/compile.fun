@@ -3,30 +3,31 @@
 (* Modified: Jeff Polakow, Carsten Schuermann, Larry Greenfield, 
              Roberto Virga, Brigitte Pientka *)
 
-functor Compile (structure IntSyn' : INTSYN
-		 structure CompSyn' : COMPSYN
-		   sharing CompSyn'.IntSyn = IntSyn'
+functor Compile ((*! structure IntSyn' : INTSYN !*)
+                 (*! structure CompSyn' : COMPSYN !*)
+		 (*! sharing CompSyn'.IntSyn = IntSyn' !*)
 		 structure Whnf : WHNF
-		   sharing Whnf.IntSyn = IntSyn'
+		 (*! sharing Whnf.IntSyn = IntSyn' !*)
  		 structure TypeCheck : TYPECHECK
-		   sharing TypeCheck.IntSyn = IntSyn'
+		 (*! sharing TypeCheck.IntSyn = IntSyn' !*)
 
 		    (* CPrint currently unused *)
 		 structure CPrint : CPRINT 
-		   sharing CPrint.IntSyn = IntSyn'
-		   sharing CPrint.CompSyn = CompSyn'
+		 (*! sharing CPrint.IntSyn = IntSyn' !*)
+		 (*! sharing CPrint.CompSyn = CompSyn' !*)
 
 		   (* CPrint currently unused *)
 		 structure Print : PRINT 
-		   sharing Print.IntSyn = IntSyn'
+		 (*! sharing Print.IntSyn = IntSyn' !*)
 
 		 structure Names : NAMES
-		   sharing Names.IntSyn = IntSyn')
+		 (*! sharing Names.IntSyn = IntSyn' !*)
+		   )
   : COMPILE =
 struct
 
-  structure IntSyn = IntSyn'
-  structure CompSyn = CompSyn'
+  (*! structure IntSyn = IntSyn' !*)
+  (*! structure CompSyn = CompSyn' !*)
 
   (* FIX: need to associate errors with occurrences -kw *)
   exception Error of string

@@ -2,22 +2,22 @@
 (* Author: Kevin Watkins *)
 
 functor ParseModule
-  (structure Paths : PATHS
-   structure Parsing' : PARSING
-     sharing Parsing'.Lexer.Paths = Paths
+  ((*! structure Paths : PATHS !*)
+   (*! structure Parsing' : PARSING !*)
+   (*! sharing Parsing'.Lexer.Paths = Paths !*)
    structure ModExtSyn' : MODEXTSYN
-     sharing ModExtSyn'.Paths = Paths
+   (*! sharing ModExtSyn'.Paths = Paths !*)
    structure ParseTerm : PARSE_TERM
-     sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
+   (*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
      sharing ParseTerm.ExtSyn = ModExtSyn'.ExtSyn)
   : PARSE_MODULE =
 struct
 
-  structure Parsing = Parsing'
+  (*! structure Parsing = Parsing' !*)
   structure ModExtSyn = ModExtSyn'
 
-  structure L = Parsing.Lexer
-  structure LS = Parsing.Lexer.Stream  
+  structure L = Lexer
+  structure LS = Lexer.Stream  
   structure E = ModExtSyn
 
   fun parseStructExp' (f as LS.Cons ((L.ID _, r0), _)) =

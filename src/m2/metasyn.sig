@@ -3,7 +3,7 @@
 
 signature METASYN =
 sig
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
 
   datatype Mode =			(* Mode                       *)
     Bot					(* M ::= Bot                  *)

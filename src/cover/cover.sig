@@ -4,11 +4,13 @@
 signature COVER =
 sig
 
-  structure IntSyn : INTSYN
+  (*! structure IntSyn : INTSYN !*)
   structure ModeSyn : MODESYN
-    sharing ModeSyn.IntSyn = IntSyn
+  (*! sharing ModeSyn.IntSyn = IntSyn !*)
 
   exception Error of string
+
+  val checkNoDef : IntSyn.cid -> unit	(* raises Error(msg) *)
 
   val checkOut : (IntSyn.dctx * IntSyn.eclo) -> unit
 

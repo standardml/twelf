@@ -3,7 +3,7 @@
 
 signature MTPFILLING = 
 sig
-  structure FunSyn : FUNSYN
+  (*! structure FunSyn : FUNSYN !*)
   structure StateSyn : STATESYN
 
   exception Error of string

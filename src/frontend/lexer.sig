@@ -6,7 +6,7 @@ sig
 
   (* Stream is not memoizing for efficiency *)
   structure Stream : STREAM
-  structure Paths : PATHS
+  (*! structure Paths : PATHS !*)
 
   datatype IdCase =
       Upper				(* [A-Z]<id> or _<id> *)

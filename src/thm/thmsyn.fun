@@ -2,21 +2,22 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Brigitte Pientka *)
 
-functor ThmSyn (structure IntSyn : INTSYN
+functor ThmSyn ((*! structure IntSyn : INTSYN !*)
 		structure ModeSyn' : MODESYN
-		  sharing ModeSyn'.IntSyn = IntSyn
+		(*! sharing ModeSyn'.IntSyn = IntSyn !*)
 		structure Abstract : ABSTRACT
-		sharing Abstract.IntSyn = IntSyn
+		(*! sharing Abstract.IntSyn = IntSyn !*)
 		structure Whnf : WHNF
-		sharing Whnf.IntSyn = IntSyn
-		structure Paths' : PATHS
+		(*! sharing Whnf.IntSyn = IntSyn !*)
+		(*! structure Paths' : PATHS !*)
 		structure Names' : NAMES
-	        sharing Names'.IntSyn = IntSyn)
+	        (*! sharing Names'.IntSyn = IntSyn !*)
+		  )
   : THMSYN =
 struct
-  structure IntSyn = IntSyn
+  (*! structure IntSyn = IntSyn !*)
   structure ModeSyn = ModeSyn'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
   structure Names = Names'
 
   exception Error of string

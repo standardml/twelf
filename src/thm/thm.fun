@@ -6,14 +6,15 @@ functor Thm (structure Global : GLOBAL
 	     structure ThmSyn': THMSYN
              structure TabledSyn : TABLEDSYN
       	     structure Order : ORDER
-	       sharing Order.IntSyn = ThmSyn'.ModeSyn.IntSyn
+	     (*! sharing Order.IntSyn = ThmSyn'.ModeSyn.IntSyn !*)
 	     structure ThmPrint : THMPRINT
 	       sharing ThmPrint.ThmSyn = ThmSyn'
-	     structure Paths' : PATHS)
+	       (*! structure Paths' : PATHS !*)
+	       )
   : THM =
 struct
   structure ThmSyn = ThmSyn'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
   structure TabledSyn = TabledSyn
  
   (* -bp *)
@@ -24,7 +25,7 @@ struct
   local
     structure L = ThmSyn
     structure M = L.ModeSyn
-    structure I = M.IntSyn
+    structure I = IntSyn
     structure P = ThmPrint
     structure O = Order
     fun error (r, msg) = raise Error (Paths.wrap (r, msg))

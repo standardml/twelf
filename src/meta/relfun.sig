@@ -4,12 +4,12 @@
 
 signature RELFUN = 
 sig
-  structure FunSyn : FUNSYN
+  (*! structure FunSyn : FUNSYN !*)
 
   exception Error of string
 
-  val convertFor : FunSyn.IntSyn.cid list -> FunSyn.For
-  val convertPro : FunSyn.IntSyn.cid list -> FunSyn.Pro
+  val convertFor : IntSyn.cid list -> FunSyn.For
+  val convertPro : IntSyn.cid list -> FunSyn.Pro
 end (* Signature RELFUN *)       
 
 

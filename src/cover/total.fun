@@ -5,40 +5,43 @@ functor Total
   (structure Global : GLOBAL
    structure Table : TABLE where type key = int
 
-   structure IntSyn' : INTSYN
+   (*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
-     sharing Whnf.IntSyn = IntSyn'
+   (*! sharing Whnf.IntSyn = IntSyn' !*)
 
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn'
+   (*! sharing Names.IntSyn = IntSyn' !*)
 
    structure ModeSyn : MODESYN
-     sharing ModeSyn.IntSyn = IntSyn'
+   (*! sharing ModeSyn.IntSyn = IntSyn' !*)
    structure ModeCheck : MODECHECK
      sharing ModeCheck.ModeSyn = ModeSyn
-     sharing ModeCheck.IntSyn = IntSyn'
+     (*! sharing ModeCheck.IntSyn = IntSyn' !*)
 
    structure Index : INDEX
-     sharing Index.IntSyn = IntSyn'
+   (*! sharing Index.IntSyn = IntSyn' !*)
+
+   structure Subordinate : SUBORDINATE
+   (*! sharing Subordinate.IntSyn = IntSyn' !*)
 
    structure Order : ORDER
-     sharing Order.IntSyn = IntSyn'
+   (*! sharing Order.IntSyn = IntSyn' !*)
    structure Reduces : REDUCES
-     sharing Reduces.IntSyn = IntSyn'
+   (*! sharing Reduces.IntSyn = IntSyn' !*)
 
    structure Cover : COVER
-     sharing Cover.IntSyn = IntSyn'
+   (*! sharing Cover.IntSyn = IntSyn' !*)
      sharing Cover.ModeSyn = ModeSyn
 
-   structure Paths : PATHS
+     (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
-     sharing Origins.Paths = Paths
-     sharing Origins.IntSyn = IntSyn'
+   (*! sharing Origins.Paths = Paths !*)
+     (*! sharing Origins.IntSyn = IntSyn' !*)
 
    structure Timers : TIMERS)
    : TOTAL =
 struct
-  structure IntSyn = IntSyn'
+  (*! structure IntSyn = IntSyn' !*)
 
   exception Error of string
 
@@ -142,10 +145,11 @@ struct
       | checkDefinite (a, M.Mapp (M.Marg (M.Star, xOpt), ms')) =
         (* Note: filename and location are missing in this error message *)
         (* Fri Apr  5 19:25:54 2002 -fp *)
-        raise Error ("Error: Totality checking " ^ N.qidToString (N.constQid a) ^ ":\n"
-		     ^ "All argument modes must be input (+) or output (-)"
-		     ^ (case xOpt of NONE => ""
-			  | SOME(x) => " but argument " ^ x ^ " is indefinite (*)"  ))
+        error (a, P.top,
+	       "Error: Totality checking " ^ N.qidToString (N.constQid a) ^ ":\n"
+	       ^ "All argument modes must be input (+) or output (-)"
+	       ^ (case xOpt of NONE => ""
+	             | SOME(x) => " but argument " ^ x ^ " is indefinite (*)"  ))
 
     (* checkOutCover [c1,...,cn] = ()
        iff local output coverage for every subgoal in ci:Vi is satisfied.
@@ -162,6 +166,16 @@ struct
 	  checkClause (I.Null, (I.constType (c), I.id), P.top)
 	     handle Error' (occ, msg) => error (c, occ, msg) ;
           checkOutCover cs )
+      | checkOutCover (I.Def(d)::cs) =
+        ( if !Global.chatter >= 4
+	    then print (N.qidToString (N.constQid d) ^ " ")
+	  else () ;
+	  if !Global.chatter >= 6
+	    then print ("\n")
+	  else () ;
+	  checkClause (I.Null, (I.constType (d), I.id), P.top)
+	     handle Error' (occ, msg) => error (d, occ, msg) ;
+          checkOutCover cs )
 
     (* checkFam (a) = ()
        iff family a is total in its input arguments.
@@ -171,6 +185,13 @@ struct
     *)
     fun checkFam (a) =
         let
+          (* Ensuring that there is no bad interaction with type-level definitions *)
+	  val _ = Cover.checkNoDef (a)	(* a cannot be a type-level definition *)
+	  val _ = Subordinate.checkNoDef (a) (* a cannot depend on type-level definitions *)
+	          handle Subordinate.Error (msg) =>
+		            raise Subordinate.Error ("Totality checking " ^
+						     N.qidToString (N.constQid a)
+						     ^ ":\n" ^ msg)
           (* Checking termination *)
 	  val _ = ((Timers.time Timers.terminate Reduces.checkFam) a;
 		   if !Global.chatter >= 4

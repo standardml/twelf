@@ -3,22 +3,22 @@
 
 functor ReconModule
   (structure Global : GLOBAL
-   structure IntSyn : INTSYN
+   (*! structure IntSyn : INTSYN !*)
    structure Names : NAMES
-     sharing Names.IntSyn = IntSyn
-   structure Paths' : PATHS
+   (*! sharing Names.IntSyn = IntSyn !*)
+   (*! structure Paths' : PATHS !*)
    structure ReconTerm' : RECON_TERM
-     sharing ReconTerm'.IntSyn = IntSyn
-     sharing ReconTerm'.Paths = Paths'
+   (*! sharing ReconTerm'.IntSyn = IntSyn !*)
+   (*! sharing ReconTerm'.Paths = Paths' !*)
    structure ModSyn' : MODSYN
-     sharing ModSyn'.IntSyn = IntSyn
+   (*! sharing ModSyn'.IntSyn = IntSyn !*)
      sharing ModSyn'.Names = Names
    structure IntTree : TABLE where type key = int)
   : RECON_MODULE =
 struct
 
   structure ExtSyn = ReconTerm'
-  structure Paths = Paths'
+  (*! structure Paths = Paths' !*)
   structure ModSyn = ModSyn'
 
   exception Error of string

@@ -4,7 +4,7 @@
 signature PARSE_QUERY =
 sig
 
-  structure Parsing : PARSING
+  (*! structure Parsing : PARSING !*)
   structure ExtQuery : EXTQUERY
 
   val parseQuery' : ExtQuery.query Parsing.parser
