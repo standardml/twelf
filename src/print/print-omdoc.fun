@@ -152,7 +152,7 @@ local
 	      F.Break, Str "<type system=\"LF\">",
 	      F.Break, fmtExpTop (I.Null, (V, I.id)),
 	      Str "</type></symbol>", F.Break,
-	      Str "<definition id=",  Name (name), Str ".def", F.Break, 
+	      Str "<definition id=",  Name (name ^ ".def"), F.Break, 
 	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id)),
 	      Str "</definition>"]
       end
@@ -164,7 +164,7 @@ local
 	      F.Break, Str "<type system=\"LF\">",
 	      F.Break, fmtExpTop (I.Null, (V, I.id)),
 	      Str "</type></symbol>", F.Break,
-	      Str "<definition id=",  Name (name), Str ".def", F.Break, 
+	      Str "<definition id=",  Name (name ^ ".def"), F.Break, 
 	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id)),
 	      Str "</definition>"]
       end
