@@ -322,3 +322,49 @@ and also (?)
 	|- {C:tp} exp A1.
 
 except exp A1 is never a subgoal and has no mode.
+----------------------------------------------------------------------
+Fri, 04 Jan 2002 16:13:28 -fp
+
+> > 1. I convinced myself that the violation of the unification invariant
+> > in output coverage is OK, primarily because it is OK to call
+> > unification with two objects of only approximately equal type.
+> > The other reason is that the type of each coverage goal is always
+> > an instance of the type of the coverage clause in output
+> > coverage.
+> 
+> Is the problem here that on type may contain EVars and the other
+> doesn't?   Hopefully you are right.  As we now, these things can be come
+> very tricky.
+
+For input coverage, we have the invariant that no input argument
+ever depends on an output argument.  So when we match input arguments
+to determine if a case is covered, the two terms have the same type,
+even if we ignore (as we do) all output arguments.
+
+For output coverage, we would like to ignore the input arguments
+and just match the output arguments to see if a case is covered.
+However, the output arguments DO depend on the input arguments.
+
+So at first I simply also matched the input arguments.  In principle,
+this should never fail, because originally the cover goal is a
+generalization of the cover clause by replacing the output arguments
+with a free variable, leaving all input arguments the same.  When we
+split in the cover goal, the variables in the cover goal are only
+instantiated, and thereby should remain an instance of the cover clause.
+
+Unfortunately, because of constraints, unification sometimes fails to
+realize that this is the case.  So coverage checking failed because even
+matching of non-patterns is incomplete.
+
+So I simply removed the matching on input arguments.  This means we will
+sometimes unify two output arguments whose types have not previously
+been unified, although we always know that one is an instance of the
+other.  Kevin and I convinced ourselves that in the case of matching,
+this should remain sound: if matching succeeds, then by using the
+existing (although not computing) match in the index arguments, the two
+terms must always be identical.
+
+In the end I couldn't see any other solution.
+
+Hope this makes sense...
+  - Frank
