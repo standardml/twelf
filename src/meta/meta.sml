@@ -94,6 +94,7 @@ structure MTPSearch =
   MTPSearch (structure Global = Global
              structure MTPGlobal = MTPGlobal
 	     structure IntSyn' = IntSyn
+	     structure Abstract = Abstract
 	     structure Conv = Conv
 	     structure StateSyn' = StateSyn
 	     structure CompSyn' = CompSyn

@@ -3,6 +3,8 @@
 
 functor MTPSearch (structure Global : GLOBAL
 		   structure IntSyn' : INTSYN
+		   structure Abstract : ABSTRACT
+		     sharing Abstract.IntSyn = IntSyn'
 		   structure MTPGlobal : MTPGLOBAL
 		   structure StateSyn' : STATESYN
 		   sharing StateSyn'.FunSyn.IntSyn = IntSyn'
@@ -252,10 +254,10 @@ struct
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
-      | searchEx' max (I.EVar (r, G, V, _) :: GE, sc) = 
+      | searchEx' max ((X as I.EVar (r, G, V, _)) :: GE, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
-		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
+		 (fn (U', (acc', _)) => (Unify.unify (G, (X, I.id), (U', I.id)); 
 					 searchEx' max (GE, sc))),
 		 (nil, max))
 
@@ -290,9 +292,17 @@ struct
     fun searchEx (G, GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
 	 deepen searchEx' (selectEVar (GE), 
-			   fn Params => (if !Global.chatter > 5 then 
-					    print "OK]\n" else (); 
-					  sc Params)); 
+			   fn Params => (if !Global.chatter > 5 then print "OK]\n" else ();
+					 let
+					   val GE' = foldr (fn (X, L) => 
+							    Abstract.collectEVars (G, (X, I.id), L)) nil GE
+					   val gE' = List.length GE'
+					   val _ = TextIO.print (Int.toString gE' ^ " remaining EVars\n")
+					 in
+					   if gE' > 0 then (TextIO.print ("Retry\n"); searchEx (G, GE', sc)) else  sc Params
+					   (* warning: iterative deepening depth is not propably updated. 
+					      possible that it runs into an endless loop ? *)
+					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
 	  

@@ -134,6 +134,9 @@ Parameter Cases
 
 	BUG: Church Rosser: first case, filling, leaves open EVars in proof term
 
+	BUG: Filling in Kolmogroff example, leftover EVars
+
+	
 
 Splitting Residual lemmas
    Unify lemmas and assumptions tags: Assumption 
@@ -148,3 +151,15 @@ Proof terms
 
 
 Problems: Leftover constraints in TEST-CR/a.sml when proving m-subst
+General: Expressiveness of meta logic not powerfull enough.
+	 You cannot express properties about dependency:
+	   
+	  Example : Assume  M u ==> M' u
+	 	    also Assume M doesn't dependent on u
+		    then we want to conclude that M' cannot depend on u either
+
+		    This is a property of the definition of ==> and must
+		    be proven explicitly. 
+
+		    It's not expressible as Pi2 formula, maybe if we had equality.
+
