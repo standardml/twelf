@@ -216,6 +216,8 @@ struct
                   | NONE => Expr Us))))
             end
           else Expr Us
+      | fromExpW (Us as (Root (Def(d), _), _)) =
+          fromExpW (Whnf.expandDef (Us))
       | fromExpW Us = Expr Us
 
     (* fromExp (U, s) = t
