@@ -1,8 +1,8 @@
-tp : type.				%name tp T
+tp : type.				%name tp T.
 => : tp -> tp -> tp.
-%infix right 10 =>
+%infix right 10 =>.
 
-exp : tp -> type.			%name exp E
+exp : tp -> type.			%name exp E.
 lam : (exp A -> exp B) -> exp (A => B).
 app : exp (A => B) -> exp A -> exp B.
 
@@ -17,5 +17,5 @@ ev_app : eval (app E1 E2) V
 % %query 0 *
 %query 1 *
 eval (lam [x] x) V.
-
-%solve ev_id : eval (lam [x] x) V.
+fst : exp A -> exp A.
+%solve ev_id : eval (fst (lam [x] x)) V.

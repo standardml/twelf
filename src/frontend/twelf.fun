@@ -337,6 +337,8 @@ struct
       | install1 (fileName, Parser.Solve((name,tm), r)) =
 	(let
 	  val conDec = Solve.solve ((name, tm), Paths.Loc (fileName, r))
+	               handle Solve.AbortQuery (msg) =>
+			raise Solve.AbortQuery (Paths.wrap (r, msg))
 	  val conDec' = Names.nameConDec (conDec)
 	  (* allocate cid after strictness has been checked! *)
 	  val cid = installConDec false (conDec', (fileName, NONE))
