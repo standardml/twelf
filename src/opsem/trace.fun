@@ -105,6 +105,16 @@ struct
 	   print (decToString (G, D));
 	   newline ())
 
+    fun evarsToString (Xnames) =
+        let
+	  val inst = P.evarInstToString (Xnames)
+	  val constrOpt = P.evarConstrToStringOpt (N.evarCnstr ()) (* expensive! *)
+	in
+	  case constrOpt
+	    of NONE => inst
+	     | SOME(constr) => inst ^ "\nRemaining constraints:\n" ^ constr
+	end
+
     fun varsToEVarInst (nil) = nil
       | varsToEVarInst (name::names) =
         case N.getEVarOpt name
@@ -112,7 +122,7 @@ struct
 		      varsToEVarInst (names))
            | SOME(X) => (X,name)::varsToEVarInst (names)
 
-    fun printVars (names) = print (P.evarInstToString (varsToEVarInst names))
+    fun printVars (names) = print (evarsToString (varsToEVarInst names))
 
     fun printVarstring (line) =
           printVars (List.tl (String.tokens Char.isSpace line))
@@ -197,7 +207,7 @@ struct
 	     | #"h" => (printCtx G; breakAction (G))
 	     | #"g" => (print (expToString (G, !currentGoal));
 			breakAction (G))
-	     | #"i" => (print (P.evarInstToString (List.rev (!currentEVarInst)));
+	     | #"i" => (print (evarsToString (List.rev (!currentEVarInst)));
 			breakAction (G))
 	     | #"v" => (printVarstring (line); breakAction (G))
 	     | #"?" => (printHelp (); breakAction (G))
@@ -251,7 +261,7 @@ struct
 
       | eventToString (G, Resolved (Hc, Ha)) =
         "% Resolved with clause " ^ headToString (G, Hc) ^ "\n"
-	^ P.evarInstToString (List.rev (!currentEVarInst))
+	^ evarsToString (List.rev (!currentEVarInst))
       | eventToString (G, Subgoal ((Hc, Ha), msg)) =
         "% Solving subgoal (" ^ Int.toString (msg ()) ^ ") of clause "
 	^ headToString (G, Hc)

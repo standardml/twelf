@@ -25,6 +25,7 @@ sig
   val eqnsToString : IntSyn.Eqn list -> string (* assigns names in contexts *)
 
   val evarInstToString : (IntSyn.Exp * IntSyn.name) list -> string
+  val evarConstrToStringOpt : (IntSyn.Exp * IntSyn.name) list -> string option
 
   val printSgn : unit -> unit
 

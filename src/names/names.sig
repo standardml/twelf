@@ -69,5 +69,5 @@ sig
   (* Named EVars, used for queries *)
   val namedEVars : unit -> (IntSyn.Exp * IntSyn.name) list
   (* Uninstantiated named EVars with constraints *)
-  val evarCnstr : unit -> string list
+  val evarCnstr : unit -> (IntSyn.Exp * IntSyn.name) list
 end;  (* signature NAMES *)

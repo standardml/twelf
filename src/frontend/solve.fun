@@ -239,7 +239,10 @@ struct
 					     [(M, name)] ^ "\n")
 			else ();
 		   if !Global.chatter >= 3
-		     then Constraints.warnConstraints (Names.evarCnstr ())
+		     then case Print.evarConstrToStringOpt (Names.evarCnstr ())
+		            of NONE => ()
+			     | SOME(str) =>
+			       print ("Remaining constraints:\n" ^ str ^ "\n")
 		   else ();
 		   if exceeds (SOME(!solutions),try)
 		     then raise Done
@@ -285,7 +288,12 @@ struct
 		    then print ((Timers.time Timers.printing evarInstToString)
 				       [(M, name)] ^ "\n")
 		  else ();
-	     Constraints.warnConstraints (Names.evarCnstr ());
+	     if !Global.chatter >= 3
+	       then case Print.evarConstrToStringOpt (Names.evarCnstr ())
+		      of NONE => ()
+		       | SOME(str) =>
+			 print ("Remaining constraints:\n" ^ str ^ "\n")
+	     else ();
 	     if moreSolutions () then () else raise Done)
 	val _ = if !Global.chatter >= 3
 		  then print "Solving...\n"

@@ -350,8 +350,8 @@ struct
     (* return a list of names of EVars that have constraints on them *)
     (* Note that EVars which don't have names, will not be considered! *)
     fun evarCnstr' (nil, acc) = acc
-      | evarCnstr' ((IntSyn.EVar(ref(NONE), _, _, Constr as (_::_)), name)::l, acc) =
-          evarCnstr' (l, name::acc)
+      | evarCnstr' ((Xn as (IntSyn.EVar(ref(NONE), _, _, Constr as (_::_)), name))::l, acc) =
+          evarCnstr' (l, Xn::acc)
       | evarCnstr' (_::l, acc) = evarCnstr' (l, acc)
     fun evarCnstr () = evarCnstr' (!evarList, nil)
 
