@@ -1,10 +1,10 @@
 Flit DAG dumper for Twelf 1.4
 Copyright (C) 2002 Roberto Virga. All rights reserved.
 
-To install:
-  1) cd to the base directory of your Twelf 1.4 installation
-  2) type "tar zxvf flit-twelf.tar.gz"
-  3) type "make twelf-sml"
+N.B.  The following instructions assume the availability of the flit
+binary program and related tools, as maintained in the Foundational
+Proof-Carrying Code project at Princeton. (For further information, see
+<http://www.cs.princeton.edu/sip/projects/pcc/>.)
 
 To use:
   The DAG dumper functions only inside twelf-sml, and it is not
