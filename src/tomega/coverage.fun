@@ -166,7 +166,8 @@ struct
           should not occur by invariant  *)
 
       
-    and coverageCheckCases (W, Psi, nil, Cs) = 
+    and coverageCheckCases (W, Psi, nil, nil) = ()   
+      | coverageCheckCases (W, Psi, nil, Cs) = 
         let 
 	  val _ = chatter 5 (fn  () => Int.toString (List.length Cs) ^ " cases to be checked\n")
 	  val (Cs' as (_, _, Psi') :: _) = map purify Cs
