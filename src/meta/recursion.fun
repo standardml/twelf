@@ -116,7 +116,7 @@ struct
 	end
 
 
-
+(*
     (* rlemma (G, G1, s, F) = F'
      
        Invariant:
@@ -175,7 +175,7 @@ struct
 	rlemma' (s, G1, fn (G', w1, w2) => F.normalizeFor (F, w2))
       end
 	  
-
+*)
 
     fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract) =
 

@@ -291,8 +291,8 @@ struct
   fun dot1 (s as Shift (0)) = s
     | dot1 s = Dot (Idx(1), comp(s, shift))
 
-  (* invDot (s) = s'
-     invDot (1. s' o ^) = s'
+  (* invDot1 (s) = s'
+     invDot1 (1. s' o ^) = s'
 
      Invariant:
      s = 1 . s' o ^
