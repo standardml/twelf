@@ -309,7 +309,7 @@ local
 				   d, ctx, (braces (G, d, ((D',V2), s)),
 					    I.dot1 s))
 		       end
-	  | I.Virtual => let
+	  | I.Meta => let
 			 val D' = Names.decLUName (G, D)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)

@@ -98,8 +98,8 @@ struct
 
     fun or (I.Maybe, _) = I.Maybe
       | or (_, I.Maybe) = I.Maybe
-      | or (I.Virtual, _) = I.Virtual
-      | or (_, I.Virtual) = I.Virtual
+      | or (I.Meta, _) = I.Meta
+      | or (_, I.Meta) = I.Meta
       | or (I.No, I.No) = I.No
 
       
@@ -109,7 +109,7 @@ struct
        If    U in nf 
        then  DP = No      iff k does not occur in U
 	     DP = Maybe   iff k occurs in U some place not as an argument to a Skonst
-	     DP = Virtual iff k occurs in U and only as arguments to Skonsts
+	     DP = Meta    iff k occurs in U and only as arguments to Skonsts
     *)
     fun occursInExp (k, I.Uni _) = I.No
       | occursInExp (k, I.Pi (DP, V)) = or (occursInDecP (k, DP), occursInExp (k+1, V))
@@ -123,8 +123,8 @@ struct
       | occursInHead (k, I.Const _, DP) = DP
       | occursInHead (k, I.Def _, DP) = DP
       | occursInHead (k, I.Skonst _, I.No) = I.No
-      | occursInHead (k, I.Skonst _, I.Virtual) = I.Virtual
-      | occursInHead (k, I.Skonst _, I.Maybe) = I.Virtual
+      | occursInHead (k, I.Skonst _, I.Meta) = I.Meta
+      | occursInHead (k, I.Skonst _, I.Maybe) = I.Meta
       (* no case for FVar *)
 
     and occursInSpine (_, I.Nil) = I.No
@@ -140,7 +140,7 @@ struct
     (* optimize to have fewer traversals? -cs *)
     (* pre-Twelf 1.2 code walk Fri May  8 11:17:10 1998 *)
     fun piDepend (DPV as ((D, I.No), V)) = I.Pi DPV
-      | piDepend (DPV as ((D, I.Virtual), V)) = I.Pi DPV
+      | piDepend (DPV as ((D, I.Meta), V)) = I.Pi DPV
       | piDepend ((D, I.Maybe), V) = 
 	  I.Pi ((D, occursInExp (1, V)), V)
 	

@@ -20,12 +20,12 @@ struct
 
   and ResGoal =                         (* Residual Goals             *)
     Eq     of IntSyn.Exp                (* r ::= p = ?                *)
-  | Assign of IntSyn.Exp * AuxGoal      (* r ::= p = ?, where p has   *)
+  | Assign of IntSyn.Exp * AuxGoal      (*     | p = ?, where p has   *)
 					(* only new vars,             *)  
                                         (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
-  | Meta   of ResGoal                   (*     | r && (A,g)           *)
+  | In     of ResGoal                   (*     | r && (A,g)           *)
               * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
   | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)
@@ -118,10 +118,10 @@ struct
   *)
   and resGoalSub (Eq(q), s) = Eq (IntSyn.EClo (q,s))
     | resGoalSub (And(r, A, g), s) =
-       And (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
-    | resGoalSub (Meta(r, A, g), s) =
-       Meta (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
+        And (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
+    | resGoalSub (In(r, A, g), s) =
+        In (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
     | resGoalSub (Exists(D, r), s) =
-       Exists (IntSyn.decSub(D, s), resGoalSub (r, IntSyn.dot1 s))
+        Exists (IntSyn.decSub(D, s), resGoalSub (r, IntSyn.dot1 s))
 
 end;  (* functor CompSyn *)

@@ -15,12 +15,12 @@ sig
 
   and ResGoal =                         (* Residual Goals             *)
     Eq     of IntSyn.Exp                (* r ::= p = ?                *)
-  | Assign of IntSyn.Exp * AuxGoal      (* r ::= p = ?, where p has   *)
+  | Assign of IntSyn.Exp * AuxGoal      (*     | p = ?, where p has   *)
 					(* only new vars,             *)  
                                         (* then unify all the vars    *)
   | And    of ResGoal                   (*     | r & (A,g)            *)
               * IntSyn.Exp * Goal       
-  | Meta   of ResGoal			(*     | r && (A,g)    x      *)
+  | In   of ResGoal			(*     | r virt& (A,g)        *)
               * IntSyn.Exp * Goal       
   | Exists of IntSyn.Dec * ResGoal      (*     | exists x:A. r        *)
   | Exists' of IntSyn.Dec * ResGoal	(*     | exists x:A. r        *)

@@ -36,7 +36,7 @@ struct
   datatype Depend =                     (* Dependency information     *)
     No                                  (* P ::= No                   *)
   | Maybe                               (*     | Maybe                *)
-  | Virtual                             (*     | Virtual              *)
+  | Meta				(*     | Meta                 *)
 
   (* Expressions *)
 

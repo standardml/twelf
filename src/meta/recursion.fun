@@ -668,7 +668,7 @@ struct
 		     in
 		       (I.dot1 s', 
 					(* _   : GB, Ds, G'[...], D[?] |- _ : GB, G, D *)
- 			fn V => V' (Abstract.piDepend ((Whnf.normalizeDec (D, s'), I.Maybe), Whnf.normalize (V, I.id))),  
+ 			fn V => V' (Abstract.piDepend ((Whnf.normalizeDec (D, s'), I.Meta), Whnf.normalize (V, I.id))),  
 					(* _   : maps (GB, Ds, G'[....], D[?] |- V : type) to  (GB, Ds, |- {G[....], D[?]} V : type) *)
 			fn F => F' (F.All (F.Prim (I.decSub (D, s')), F))
 					(* _   : maps (GB, Ds, G'[....], D[?] |- F : for) to  (GB, Ds, |- {{G[....], D[?]}} F : for) *)

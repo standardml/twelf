@@ -45,6 +45,74 @@ struct
     structure I = IntSyn
     structure C = CompSyn
 
+    (* exists P K = B
+       where B iff K = K1, Y, K2  s.t. P Y  holds
+    *)
+    fun exists P K =
+        let fun exists' (I.Null) = false
+	      | exists' (I.Decl(K',Y)) = P(Y) orelse exists' (K')
+	in
+	  exists' K
+	end
+
+
+    (* occursInExp (r, (U, s)) = B, 
+
+       Invariant:
+       If    G |- s : G1   G1 |- U : V 
+       then  B holds iff r occurs in (the normal form of) U
+    *)
+    fun occursInExp (r, Vs) = occursInExpW (r, Whnf.whnf Vs)
+
+    and occursInExpW (r, (I.Uni _, _)) = false
+      | occursInExpW (r, (I.Pi ((D, _), V), s)) = 
+          occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
+      | occursInExpW (r, (I.Root (_, S), s)) = occursInSpine (r, (S, s))
+      | occursInExpW (r, (I.Lam (D, V), s)) = 
+	  occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
+      | occursInExpW (r, (I.EVar (r' , _, V', _), s)) = 
+          (r = r') orelse occursInExp (r, (V', s))
+
+    and occursInSpine (_, (I.Nil, _)) = false
+      | occursInSpine (r, (I.SClo (S, s'), s)) = 
+          occursInSpine (r, (S, I.comp (s', s)))
+      | occursInSpine (r, (I.App (U, S), s)) = 
+	  occursInExp (r, (U, s)) orelse occursInSpine (r, (S, s))
+
+    and occursInDec (r, (I.Dec (_, V), s)) = occursInExp (r, (V, s))
+
+    (* nonIndex (r, GE) = B
+     
+       Invariant: 
+       B hold iff
+        r does not occur in any type of EVars in GE
+    *)
+    fun nonIndex (_, nil) = true
+      | nonIndex (r, I.EVar (_, _, V, _) :: GE) = 
+          (not (occursInExp (r, (V, I.id)))) andalso nonIndex (r, GE)
+
+    (* select (GE, (V, s), acc) = acc'
+
+       Invariant:
+    *)
+    (* Efficiency: repeated whnf for every subterm in Vs!!! *)
+    fun selectEVar (nil) = nil
+      | selectEVar ((X as I.EVar (r, _, _, nil)) :: GE) = 
+        let 
+	  val Xs = selectEVar (GE)
+	in
+	  if nonIndex (r, Xs) then Xs @ [X]
+	  else Xs
+	end
+      | selectEVar ((X as I.EVar (r, _, _, Constr)) :: GE) =  (* Constraint case *)
+        let 
+	  val Xs = selectEVar (GE)
+	in
+	  if nonIndex (r, Xs) then X :: Xs
+	  else Xs
+	end
+
+
     (* pruneCtx (G, n) = G'
 
        Invariant:
@@ -120,21 +188,25 @@ struct
 		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => sc (I.App (M, S), acck'')), acck')), acck)
       end
-    | rSolve (depth, ps', (C.Meta (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
+    | rSolve (depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
 	val Gpruned = pruneCtx (G, depth)
 	val w = I.Shift (depth)		(* G |- w : Gpruned *)
 	val X = I.EClo (I.newEVar (Gpruned, I.EClo(A, s)), w)
       in
 	rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
-		(fn (S, acck') => solve (depth, (g, s), dp,
+		(fn (S, acck' as (_, k')) => 
+		   (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X, I.id), nil)),
+				     fn _ => (sc (I.App (X, S), acck'); ())))), acck)
+
+(*		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => ((Unify.unify (G, (X, I.id), (M, I.id));
 							     (* why doesn't it always succeed?
 							        --cs *)
 							     sc (I.App (M, S), acck''))
 							     handle Unify.Unify _ => [])), 
 					 acck')), acck)
-      end
+*)      end
     | rSolve (depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
@@ -202,7 +274,7 @@ struct
 		val acc'' = Trail.trail (fn () =>
 			    rSolve (depth, ps', (r, I.comp (s, I.Shift n)), dp,
 				    (fn (S, acck') => sc (I.Root (I.BVar n, S),
-							  acck')), (acc', k-1))) 
+							  acck')), (acc', k-1)))
 	      in
 		matchDProg (dPool', n+1, acc'')
 	      end
@@ -214,62 +286,6 @@ struct
       end
 
 
-    (* occursInExp (r, (U, s)) = B, 
-
-       Invariant:
-       If    G |- s : G1   G1 |- U : V 
-       then  B holds iff r occurs in (the normal form of) U
-    *)
-    fun occursInExp (r, Vs) = occursInExpW (r, Whnf.whnf Vs)
-
-    and occursInExpW (r, (I.Uni _, _)) = false
-      | occursInExpW (r, (I.Pi ((D, _), V), s)) = 
-          occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
-      | occursInExpW (r, (I.Root (_, S), s)) = occursInSpine (r, (S, s))
-      | occursInExpW (r, (I.Lam (D, V), s)) = 
-	  occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
-      | occursInExpW (r, (I.EVar (r' , _, V', _), s)) = 
-          (r = r') orelse occursInExp (r, (V', s))
-
-    and occursInSpine (_, (I.Nil, _)) = false
-      | occursInSpine (r, (I.SClo (S, s'), s)) = 
-          occursInSpine (r, (S, I.comp (s', s)))
-      | occursInSpine (r, (I.App (U, S), s)) = 
-	  occursInExp (r, (U, s)) orelse occursInSpine (r, (S, s))
-
-    and occursInDec (r, (I.Dec (_, V), s)) = occursInExp (r, (V, s))
-
-    (* nonIndex (r, GE) = B
-     
-       Invariant: 
-       B hold iff
-        r does not occur in any type of EVars in GE
-    *)
-    fun nonIndex (_, nil) = true
-      | nonIndex (r, I.EVar (_, _, V, _) :: GE) = 
-          (not (occursInExp (r, (V, I.id)))) andalso nonIndex (r, GE)
-
-    (* select (GE, (V, s), acc) = acc'
-
-       Invariant:
-    *)
-    (* Efficiency: repeated whnf for every subterm in Vs!!! *)
-    fun selectEVar (nil) = nil
-      | selectEVar ((X as I.EVar (r, _, _, nil)) :: GE) = 
-        let 
-	  val Xs = selectEVar (GE)
-	in
-	  if nonIndex (r, Xs) then Xs @ [X]
-	  else Xs
-	end
-      | selectEVar ((X as I.EVar (r, _, _, Constr)) :: GE) =  (* Constraint case *)
-        let 
-	  val Xs = selectEVar (GE)
-	in
-	  if nonIndex (r, Xs) then X :: Xs
-	  else Xs
-	end
-
     (* searchEx' max (GE, sc) = acc'
 
        Invariant: 
@@ -279,7 +295,7 @@ struct
             otherwise searchEx' terminates with []
     *)
     (* contexts of EVars are recompiled for each search depth *)
-    fun searchEx' max (nil, sc) = [sc max] 
+    and searchEx' max (nil, sc) = [sc max]
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
@@ -318,6 +334,7 @@ struct
        then acc' is a list containing the one result from executing the success continuation 
 	 All EVar's got instantiated with the smallest possible terms.
     *)    
+(*
     fun searchEx (it, depth) (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
 	 deepen depth searchEx' (selectEVar (GE), 
@@ -337,6 +354,14 @@ struct
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
+*)
+
+    fun searchEx (it, depth) (GE, sc) = 
+      (if !Global.chatter > 5 then print "[Search: " else ();  
+	 deepen depth searchEx' (selectEVar (GE), 
+				 fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
+					      sc max)); 
+	 if !Global.chatter > 5 then print "FAIL]\n" else ())
 	  
     fun search (GE, sc) = searchEx (1, !MTPGlobal.maxFill) (GE, sc)
 

@@ -65,7 +65,7 @@ struct
 	    (case mS 
 	       of M.Mapp (M.Marg (M.Plus, _), mS') => 
 		    installSkolem' (d+1, (V, mS'), I.dot1 s, 
-				    fn V => k (Abstract.piDepend ((Whnf.normalizeDec (D, s), I.Maybe), V))) 
+				    fn V => k (Abstract.piDepend ((Whnf.normalizeDec (D, s), I.Meta), V))) 
 (*				    fn V => k (I.Pi ((Whnf.normalizeDec (D, s), DP), V))) *) 
 		| M.Mapp (M.Marg (M.Minus, _), mS') => 
 		  let 
