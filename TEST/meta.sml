@@ -95,5 +95,12 @@ in
   val _ = test ["ce"]
   val _ = test ["ca'"]
   val _ = test ["ce'"]
+
+  val _ = load "examples/kolm/sources.cfg"
+  val _ = test ["kolm"]
+  val _ = test ["existskolm"]
+  val _ = test ["nj_nk"]
+  val _ = test ["equiv"]
+  val _ = test ["complete"]
 end
 
