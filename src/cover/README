@@ -17,4 +17,78 @@ where mdecl is a short or full mode declaration.
 + means input coverage
 - means output coverage
 * means no coverage checking
+----------------------------------------------------------------------
+From: "Carsten Schuermann" <carsten@cs.yale.edu>
+To: "Frank Pfenning" <fp@cs.cmu.edu>
+Subject: Re: Progress
+Date: Fri, 9 Mar 2001 18:14:18 -0500
 
+Hi Frank:
+
+Sorry for answering only now.  I just got back and it is pretty busy here.
+Just to make sure that the table is correctly implemented, I send you the
+version we came up with ... Just to compare.
+
+    SBVar E    Const/BVar/PVar:  Add E to candidate set
+    Const    Const/BVar/PVar:    Empty local candidate set, fail
+    LVar     Const/BVar/PVar:    Empty local candidate set, fail
+    ...    EVAR:    Generate local constraints
+    EVAR    ...:    Skip
+    Param x    Const/BVar:    Empty local candidate set, fail
+    Param x    PVar:    (what did we agree on here?)
+
+Sketch of the algorithm:
+
+    1) Unify with every clause -> return cand. set
+    2) Q approximates Union(h_i)   the h_i's are local cand sets.
+    3) Heuristically: Choose candidate
+    4) Split cases:
+
+
+For your second question, I think we agreed on that we postpone the decision
+in form of constraints.
+
+Keep track of multiplicity
+    q : eq (lam _) (app _ _)
+    h : eq X X   (rewriting it to   h: eq X Y   with    X = Y)
+
+Another example was:
+    q :  eq (app E1 E2) E3
+    h : eq X X
+
+Does this still make sense?
+
+
+> I figured out the table, and the question I asked last time.
+>
+> The collection of candidates is now (almost) correct.  It will be correct
+when
+> I properly implement abstraction after splitting.
+
+We could reuse some splitting code, with metaabstract.  However the latest
+meta-abstract has parameter blocks.  Maybe the old splitting operation from
+the m2 directory?  It is reasonably clean.
+
+> There are two ways to do that: one is by using mode dependency order, the
+> other just do it from left-to-right.  If I do it left-to-right, than I
+need to
+> take special care that "ignore" arguments are indeed not matched during
+the
+> actual coverage checking.  If I do it in mode dependency order, I believe
+this
+> is redundant.
+
+What about output coverage? What are the "ignore" arguments?  Those that do
+not
+occur in a + position in the head?
+
+> Right now I am leaning towards just left-to-right.  The mode dependency
+> order seems to be a bigger pain than ensuring that at top-level,
+> the "ignore" arguments are never matched.
+
+I am not sure, how much effort that is to ensure that "ignore" arguments are
+never matched.  Programming in mode dependency order seems to be cleaner.
+However, in meta-abstract, I also just do the left-to-right traversal.  It
+worked there, so it should be fine.
+
+-- Carsten

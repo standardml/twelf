@@ -177,45 +177,69 @@ struct
 	  matchSpine (G, d, (S1, s1), (S2, s2), cands')
 	end
 
-    fun matchClause (G, ps', (C.Eq Q, s)) =
-          resolveCands (matchExp (G, 0, ps', (Q, s), Eqns (nil)))
-      | matchClause (G, ps', (C.And (r, A, g), s)) =
+    fun matchTop (G, Us1, Us2, ms) =
+          matchTopW (G, Whnf.whnf Us1, Whnf.whnf Us2, ms)
+    and matchTopW (G, (I.Root (_, S1), s1), (I.Root (_, S2), s2), ms) =
+        (* heads must be equal by invariant *)
+        (* unify spines, skipping output and ignore arguments in modeSpine *)
+          matchTopSpine (G, (S1, s1), (S2, s2), ms, Eqns (nil))
+    and matchTopSpine (G, (I.Nil, _), (I.Nil, _), M.Mnil, cands) = cands
+      | matchTopSpine (G, (I.SClo (S1, s1'), s1), Ss2, ms, cands) =
+          matchTopSpine (G, (S1, I.comp (s1', s1)), Ss2, ms, cands)
+      | matchTopSpine (G, Ss1, (I.SClo (S2, s2'), s2), ms, cands) =
+          matchTopSpine (G, Ss1, (S2, I.comp (s2', s2)), ms, cands)
+      | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
+		       M.Mapp (M.Marg (M.Plus, _), ms'), cands) =
+        let
+	  val cands' = matchExp (G, 0, (U1, s1), (U2, s2), cands)
+	in
+	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands')
+	end
+      | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
+		       M.Mapp (_, ms'), cands) = (* Skip Output or Ignore argument *)
+	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
+
+    fun matchClause (G, ps', (C.Eq Q, s), ms) =
+          resolveCands (matchTop (G, ps', (Q, s), ms))
+      | matchClause (G, ps', (C.And (r, A, g), s), ms) =
 	let
 	  val X = I.newEVar (G, I.EClo(A, s)) (* redundant? *)
 	in
-	  matchClause (G, ps', (r, I.Dot(I.Exp(X), s)))
+	  matchClause (G, ps', (r, I.Dot(I.Exp(X), s)), ms)
 	end
-      | matchClause (G, ps', (C.Exists (I.Dec (_, A), r), s)) =
+      | matchClause (G, ps', (C.Exists (I.Dec (_, A), r), s), ms) =
 	let
 	  val X = I.newEVar (G, I.EClo(A, s))
 	in
-	  matchClause (G, ps', (r, I.Dot (I.Exp (X), s)))
+	  matchClause (G, ps', (r, I.Dot (I.Exp (X), s)), ms)
 	end
       (* C.Assign, C.In, and C.Exists' not supported *)
 
     (* invariant klist <> Covered *)
-    fun matchSig (G, ps', nil, klist) = klist
-      | matchSig (G, ps', I.Const(c)::sgn', klist) =
+    fun matchSig (G, ps', nil, ms, klist) = klist
+      | matchSig (G, ps', I.Const(c)::sgn', ms, klist) =
         let
+	  (*
 	  val _ = if !Global.chatter > 4
 		    then print (Names.constName (c) ^ " ")
 		  else ()
+          *)
 	  val C.SClause(r) = C.sProgLookup c
 	  val cands = CSManager.trail
-	              (fn () => matchClause (G, ps', (r, I.id)))
+	              (fn () => matchClause (G, ps', (r, I.id), ms))
 	in
-	  matchSig' (G, ps', sgn', addKs ((I.Const(c),cands), klist))
+	  matchSig' (G, ps', sgn', ms, addKs ((I.Const(c),cands), klist))
 	end
-      | matchSig (G, ps', _::sgn', klist) = matchSig (G, ps', sgn', klist)
+      | matchSig (G, ps', _::sgn', ms, klist) = matchSig (G, ps', sgn', ms, klist)
 
-    and matchSig' (G, ps', sgn, Covered) = Covered (* already covered: return *)
-      | matchSig' (G, ps', sgn, CandList (klist)) = (* not yet covered: continue to search *)
-          matchSig (G, ps', sgn, CandList (klist))
+    and matchSig' (G, ps', sgn, ms, Covered) = Covered (* already covered: return *)
+      | matchSig' (G, ps', sgn, ms, CandList (klist)) = (* not yet covered: continue to search *)
+          matchSig (G, ps', sgn, ms, CandList (klist))
 
     (* match *)
     (* no local assumptions *)
-    fun match (G, ps' as (I.Root (I.Const (a), S), s)) =
-        matchSig (G, ps', Index.lookup a, CandList (nil))
+    fun match (G, ps' as (I.Root (I.Const (a), S), s), ms) =
+        matchSig (G, ps', Index.lookup a, ms, CandList (nil))
 
   in
     fun checkCovers (a, ms) =
@@ -223,10 +247,12 @@ struct
 	  val _ = print "Coverage checking not yet implemented!\n"
 	  val F0 = modeToCForm (a, ms)
 	  val (G0, (V, s)) = CFormToCGoal (I.Null, (F0, I.id))
+          (*
 	  val _ = if !Global.chatter > 4
 		    then print "Coverage [ "
 		  else ()
-	  val klist = match (G0, (V, s))
+	  *)
+	  val klist = match (G0, (V, s), ms)
 	  val _ = if !Global.chatter > 4
 		    then print "]\n"
 		  else ()
