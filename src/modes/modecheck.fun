@@ -63,9 +63,9 @@ struct
         (case Origins.originLookup c
 	   of (fileName, NONE) => (fileName ^ ":" ^ msg)
             | (fileName, SOME occDec) => 
-		  (P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
-                              Origins.linesInfoLookup (fileName),
-                              "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
+	        (P.wrapLoc' (P.Loc (fileName, P.occToRegionClause occDec occ),
+                             Origins.linesInfoLookup (fileName),
+                             "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
 
     fun wrapMsg' (fileName, r, msg) =
           P.wrapLoc (P.Loc (fileName, r), msg)
@@ -724,7 +724,7 @@ struct
 		   (case occOpt 
 		      of NONE => raise Error (msg)
 		       | SOME occTree =>
-			   raise Error (wrapMsg' (fileName, P.occToRegionDec occTree occ, msg)))
+			   raise Error (wrapMsg' (fileName, P.occToRegionClause occTree occ, msg)))
 	  else ()
 	end
 
