@@ -1,10 +1,6 @@
-%%% A most naive version of translation from natural deductions
 %%% into a proof in the Hilbert-style system and vice versa.
 %%% Expresses the equivalence of the two systems.
 %%% Author: Frank Pfenning
-
-% abs implements bracket abstraction which amounts to
-% the computational content of the deduction theorem.
 
 abs : (|- A -> |- B) -> |- A => B -> type.
 
@@ -14,6 +10,3 @@ aS	  : abs ([x] S) (MP K S).
 aMP	  : abs ([x] MP (P x) (Q x)) (MP (MP S P') Q')
 	      <- abs P P' <- abs Q Q'.
 
-% mode abs +D -F.
-% worlds () (abs D F).
-% covers abs +D -F.

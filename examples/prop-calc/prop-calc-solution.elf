@@ -9,6 +9,8 @@ o : type.
 
 % Syntax: implication, plus a few constants.
 => : o -> o -> o.			%infix right 10 =>.
+&  : o -> o -> o.			%infix right 11 &.
+true : o.
 
 % Provability.
 |- : o -> type.                         %prefix 9 |-.
@@ -17,6 +19,10 @@ o : type.
 % Axioms.
 K : |- A => B => A.
 S : |- (A => B => C) => (A => B) => A => C.
+ONE : |- true.
+PAIR : |- A => B => A & B.
+LEFT : |- A & B => A.
+RIGHT : |- A & B => B.
 
 % Inference Rule.
 MP : |- A => B -> |- A -> |- B. 
@@ -27,6 +33,8 @@ MP : |- A => B -> |- A -> |- B.
 ==>   : |- A -> |- A -> type.		%infix right 9 ==>.
 stepK : MP (MP K X) Y ==> X. 
 stepS : MP (MP (MP S X) Y) Z ==> MP (MP X Z) (MP Y Z).
+stepL : MP LEFT (MP (MP PAIR X) Y) ==> X.
+stepR : MP RIGHT (MP (MP PAIR X) Y) ==> Y.
 
 % Congruence rules
 
@@ -45,15 +53,13 @@ step : P1 ==> P2
 
 p1 = (MP (MP K S) S).
 
-p2 = MP (MP S K) K.
+p2 = MP (MP S (MP (MP S (MP K PAIR))
+		  (MP (MP S (MP K RIGHT)) 
+		     (MP (MP S K) K))))
+	(MP (MP S (MP K LEFT)) (MP (MP S K) K)).
 
-p3 = MP (MP (MP S K) K) (MP (MP S K) K).
+q1 = MP (MP S K) K.
 
-p4 = MP (MP (MP S K) K) (MP (MP K S) S).
+q2 = MP (MP (MP S K) K) (MP (MP S K) K).
 
-%query 1 1  p1 ==> P.
-%query 0 0  p2 ==> P.
-%query 1 2  p3 ==> P.
-%query 3 3  p3 ==>* P.
-%query 4 4  p4 ==>* P.
-
+%solve r : q2 ==> Q.
