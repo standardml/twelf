@@ -6,57 +6,64 @@ sig
 
   structure IntSyn : INTSYN
     
-  type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
+  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
 		 lookup: int}
 
   datatype Strategy = Variant | Subsumption
 
   val strategy  : Strategy ref 
 
-  val termDepth : int option ref
+  val termDepth  : int option ref
+  val ctxDepth   : int option ref
+  val ctxLength  : int option ref
   val strengthen : bool ref
+
+  val query : (IntSyn.dctx * IntSyn.dctx  * IntSyn.Exp * IntSyn.Sub * (IntSyn.pskeleton -> unit)) option ref
 
   datatype answState = new | repeated
 
   (* table: G, Gdprog |- goal , 
             (answ list (ith stage) , answ list (1 to i-1 th stage))
    *) 
-  val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list ref 
+  val table : ((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
 
-  val noAnswers : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list -> bool
+  val noAnswers : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list -> bool
 
   (* call check/insert *)
 
-  (* callCheck (Gdp, G, M, U)
+  (* callCheck (G, D, U)
    *
-   * if Gdp, G |= _ : U     in table  
+   * if D, G |- U     in table  
    *    then SOME(entries)
-   * if Gdp, G |= U not in table 
+   * if D, G |- U not in table 
    *    then NONE  
-   *          SIDE EFFECT: Gdp, G |= M : U added to table
+   *          SIDE EFFECT: D, G |- U added to table
    *)
 
-  val callCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp ->  
-                  (((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list) option
+  val callCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.Exp ->  
+                  (((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list) option
   
 
   (* answer check/insert *)
-  (* answerCheck (Gdp, G, (U,s), M)
+  (* answerCheck (G, D, (U,s))
    * 
-   * Assumption: Gdp, G |= U is in table
-   *             and S represents the corresponding solutions
+   * Assumption: D, G |- U is in table
+   *             and A represents the corresponding solutions
+   * 
+   * G |- s : D, G
+   * Dk, G |- sk : D, G
    *
-   * If  s in S then repeated
+   * If  (Dk, sk) in A then repeated
    *  else new
    *)
 
-  val answerCheck : IntSyn.dctx * IntSyn.dctx * 
-                    (IntSyn.Exp * IntSyn.Exp) * IntSyn.Sub  -> answState
+  val answerCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Sub * IntSyn.pskeleton -> answState
 
   (* reset table *)
   val reset: unit -> unit
   
   val printTable : unit -> unit
+  val printTableEntries : unit -> unit
 
   (* updateTable 
    *
@@ -71,7 +78,7 @@ sig
    
   val updateTable : unit -> bool
 
-  val solutions : answer -> (IntSyn.dctx * IntSyn.Sub) list
+  val solutions : answer -> ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list
   val lookup : answer -> int
 
 end;  (* signature TABLEINDEX *)

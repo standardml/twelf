@@ -48,6 +48,7 @@ struct
      return to indicate backtracking.
   *)
 
+  (* for deterministic execution *)
   datatype Result = Succeed | Fail
 
   fun cidFromHead (I.Const a) = a

@@ -6,6 +6,8 @@ functor TableIndex (structure Global : GLOBAL
 		    structure IntSyn': INTSYN
 		    structure CompSyn': COMPSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
+		    structure Subordinate : SUBORDINATE
+		      sharing Subordinate.IntSyn = IntSyn'		      
 		    structure Conv: CONV
 		      sharing Conv.IntSyn = IntSyn'
 		    structure Unify : UNIFY
@@ -31,28 +33,28 @@ struct
 
   (* TABLE 
 
-   table entry : Gsm, Gdp  |- m : u 
-
+   table entry : D, G  |- u 
 
    Answer substitution: 
 
-                 Gas, Gdp  |- as : Gsm, Gdp
+                 Dk, G  |- sk : D, G
 
    Answer : 
-                 Gas, Gdp |- m[as] : u[as]
+                 Dk, G |- u[sk]
    *)
  
-  (* solution: (Gas, as) 
+  (* solution: (Dk, sk) 
 
    * lookup  : pointer to the i-th element in solution list
    *)
 
   (* proof term skeleton could be stored with tabled call ? *)
-  type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
+  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
 		 lookup: int}
 
-
-  type entry = ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer)
+  (* entry = (((i, G, D, U), A)) where i is the access counter     
+   *)
+  type entry = (((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer))
 
   type entries = entry list 
 
@@ -70,13 +72,20 @@ struct
   val strategy  = ref Variant (* Subsumption *) (* Variant *)
 
   (* term abstraction after term depth is greater than 5 *) 
-  val globalTermDepth = ref NONE : int option ref;
+  val termDepth = ref NONE : int option ref;
+  val ctxDepth = ref NONE : int option ref;
+  val ctxLength = ref NONE : int option ref;
 
-  val termDepth = ref (!globalTermDepth);
+(*   val termDepth = ref (!globalTermDepth); *)
+(*   val ctxDepth = ref (!globalCtxDepth); *)
+(*   val ctxLength = ref (!globalCtxLength); *)
 
   (* apply strengthening during abstraction *)
   val strengthen = AbstractTabled.strengthen ;
 
+  (* original query *)
+  val query : (IntSyn.dctx * IntSyn.dctx  * IntSyn.Exp * IntSyn.Sub * (IntSyn.pskeleton -> unit))
+                option ref = ref NONE
 
   (* ---------------------------------------------------------------------- *)
 
@@ -101,46 +110,61 @@ struct
       | concat (I.Decl(G, D), G') = I.Decl(concat(G,G'), D)
 
 
+
+   fun reverse (I.Null, G') = G'
+     | reverse (I.Decl(G, D), G') = 
+         reverse (G, I.Decl(G', D))
+
     (* ---------------------------------------------------------------------- *)
 
     (* printTable () = () *)
 
     fun printTable () = 
       let 
-        fun proofTerms (Gdp, Gs, M, U, []) = print ""
-	  | proofTerms (Gdp, Gs, M, U, ((Gs', s')::S)) = 
-          ((print (Print.expToString (I.Null, 
-		     A.raiseType(Gs',
-			I.EClo(A.raiseType(Gdp, U), s'))))
+        fun proofTerms (G, D, U, []) = print ""
+	  | proofTerms (G, D, U, (((D', s'), _)::S)) = 
+          ((print (Print.expToString (I.Null, A.raiseType(concat(G,D'), I.EClo(U, s'))))
+(*           (print (Print.expToString (I.Null, A.raiseType(D',
+			I.EClo(A.raiseType(G, U), s')))) *)
 	    handle _ => print "EXCEPTION" );	    
-	  print " : ";
-	   (* printing proof terms *)
-	   (print (Print.expToString (I.Null, 
-				      A.raiseType(Gs',
-						  I.EClo(A.raiseType(Gdp, M), s'))))
-	    handle _ => print "EXCEPTION" );	    
-
+	   (* do not print pskeletons *)
 	   print ", \n\t";
-	   proofTerms (Gdp, Gs, M, U, S))
+	   proofTerms (G, D, U, S))
 
 	fun printT [] = ()
-	  | printT (((Gdp, Gs, M, U),
-		     {solutions =  S, lookup = i})::T) = 
+	  | printT (((k, G, D, U), {solutions =  S, lookup = i})::T) = 
 	    case S
 	      of [] => (printT T ; 
 			print (Print.expToString (I.Null, 
-						  A.raiseType(concat(Gdp, Gs), U))
+						  A.raiseType(concat(G, D), U))
 			       ^ ", NONE\n"))
 	      | (a::answ) => (printT T; 
 			      print (Print.expToString (I.Null, 
-							A.raiseType(concat(Gdp, Gs), U)) ^
+							A.raiseType(concat(G, D), U)) ^
 				     ", [\n\t");
-			      proofTerms (Gdp, Gs, M, U, (rev S));
+			      proofTerms (G, D, U, (rev S));
 			      print (" ] -- lookup : " ^ Int.toString i ^ "\n\n")) 
       in
 	print ("Table: \n");
 	printT (!table);
 	print ("End Table \n");
+	print ("Number of table entries   : " ^ Int.toString(length(!table)) ^ "\n")
+      end 			       	    
+
+
+    (* printTableEntries () = () *)
+
+    fun printTableEntries () = 
+      let 
+	fun printT [] = ()
+	  | printT (((k, G, D, U), {solutions =  S, lookup = i})::T) = 
+	  (printT T ; 
+	   print (Print.expToString (I.Null, 
+				     A.raiseType(concat(G, D), U)) ^ "\n Access Counter : " ^ (Int.toString (!k)) ^ " \n"))
+      in
+	print ("TableEntries: \n");
+	printT (!table);
+	print ("End TableEntries \n");
 	print ("Number of table entries   : " ^ Int.toString(length(!table)) ^ "\n")
       end 			       	    
 
@@ -152,87 +176,195 @@ struct
     fun lengthSpine (I.Nil) = 0
       | lengthSpine (I.SClo(S, s')) = 1 + lengthSpine(S)
 
-    fun exceedsLength (i) = 
+
+    fun exceedsTermDepth (i) = 
       case (!termDepth) of 
 	NONE => false
-      | SOME(n) => (n <= (i +1))
+      | SOME(n) => (i > n)
+
+    fun exceedsCtxDepth (i) = 
+      case (!ctxDepth) of 
+	NONE => false
+      | SOME(n) => (print ("\n exceedsCtxDepth " ^Int.toString i ^ " > " ^ Int.toString n ^ " ? ") ;(i > n))
+
+    fun exceedsCtxLength (i) = 
+      case (!ctxLength) of 
+	NONE => false
+      | SOME(n) => (i > n)
       
-    fun exceedsTermDepth U = 
-      let
-	fun exceeds (0, _ ) = true
-	  | exceeds (depth, (U as I.Uni (L))) = false
-	  | exceeds (depth, I.Pi ((D, _), V)) =
- 	     exceedsDec(depth-1 , D) orelse exceeds(depth-1, V)
-	  | exceeds (depth, I.Root (F, S)) =
-	     exceedsSpine ((depth-1), S)
-	  | exceeds (depth, I.Redex (U, S)) =
-	     exceedsLength(lengthSpine(S)) 
-	     orelse
-	     exceeds(depth, U) 
-	     orelse 
-	     exceedsSpine' ((depth-1), S)	     
-	  | exceeds (depth, I.Lam (D, U)) =
-	     exceeds (depth, U)
-	  | exceeds (depth, (X as I.EVar _)) = 
-	     (* shouldn't happen *)
-	     true
-	  | exceeds (depth, I.EClo(E, s)) = 
-	     exceeds (depth, E)
-	  | exceeds (depth, (F as I.FgnExp (cs, ops))) = 
-	     (* shouldn't happen *)
-	     true
-(*	  | exceeds (depth, _) = (print "\nexceeds anything else ??? \n"; true) *)
-	  
-	and exceedsSpine (depth, I.Nil)  = (depth = 0) 
-	  | exceedsSpine (depth, I.SClo (S, s')) = 
-	     (* ? *)
-	      exceedsSpine (depth, S)
-	  | exceedsSpine (depth, I.App (U, S)) =
-	      (exceeds (depth, U) orelse
-	       exceedsSpine (depth-1, S))
+    fun max (x,y) = 
+      if x > y then x
+      else y
 
-	and exceedsSpine' (depth, I.Nil)  = (depth = 0) 
-	  | exceedsSpine' (depth, I.SClo (S, s')) = 
-	     (* ? *)
-	      exceedsSpine' (depth, S)
-	  | exceedsSpine' (depth, I.App (U, S)) =
-	      (exceeds (depth, U) orelse
-	       exceedsSpine' (depth, S))
+    fun oroption (NONE, NONE, NONE) = false
+      | oroption (SOME(k), _ , _) = true
+      | oroption (_ , SOME(n), _) = true
+      | oroption (_ , _, SOME(n)) = true
 
+    fun abstractionSet () = 
+      oroption(!termDepth, !ctxDepth, !ctxLength)
 
-	and exceedsDec (depth, I.Dec(_, U)) = 
-	  exceeds (depth, U)
-      in 
-	case (!termDepth) of
-	  NONE => false
-	  | SOME(k) => 	exceeds(k, U)
-      end 
+    (* countDepth U = 
+         ctr = (ctrTerm, ctrDecl, ctrLength)
+         ctrTerm : max term depth
+         ctrDecl : max type depth in decl
+         ctrLength : length of decl
+       
+    *)
+	      
+    fun exceeds (U) = countDecl(0,0, U)
 
-   (* ---------------------------------------------------------------------- *)
-   (* reinstantiate term ! *)
-   fun reinstantiate (Gdp, I.Null, (U, s')) = 
-         (U, s')
-     | reinstantiate (Gdp, I.Decl(G, I.Dec(_,A)), (U, s')) = 
+    and countDecl (ctrType, ctrLength, I.Pi((D, _), V)) = 
+         let 
+	   val ctrType' = countDec(0, D)
+(*	   val _ = print ("\n ctrType' = " ^ Int.toString ctrType')  *)
+	 in 	   
+	   if ctrType' > ctrType then
+	     countDecl (ctrType', ctrLength + 1, V)
+	   else 
+	     countDecl (ctrType, ctrLength + 1, V)
+	 end 
+      | countDecl(ctrType, ctrLength, U) = 
 	 let
-	   val X = I.newEVar (I.Null, I.EClo (A,s'))
-	 in
-	   reinstantiate (Gdp, G, (U, I.Dot(I.Exp(X), s')))
+	   val ctrTerm = count (0, U)
+(*	   val _ = print ("\n 1 ctrTerm = " ^ Int.toString ctrTerm)
+	   val _ = print ("\n 1 ctxLength = " ^ Int.toString ctrLength)
+	   val _ = print ("\n 1 ctxDepth = " ^ Int.toString ctrType)
+*)
+	 in 
+	   exceedsCtxDepth(ctrType) orelse
+	   exceedsCtxLength(ctrLength) orelse
+	   exceedsTermDepth(count(0,U))
 	 end 
 
-   (* reinstSub (Gdp, G, s) = s' 
+    and countDec (ctr, I.Dec(_, U)) = count(ctr, U)
+      | countDec (ctr, I.BDec(_,s)) = 0
+    
+    and count (ctr, (U as I.Uni (L))) = ctr
+      | count (ctr, I.Pi((D, _), V)) = 
+          let
+	    val ctrTerm = count (ctr, V)
+	    val ctrType = countDec (ctr, D)
+(*	   val _ = print ("\n ctrTerm = " ^ Int.toString ctrTerm)
+	   val _ = print ("\n ctrType = " ^ Int.toString ctrType)
+*)
+
+	  in 
+          max(ctrType,ctrTerm) (* to revise ?*)
+	  end 
+      | count (ctr, I.Root (F, S)) =
+         let
+	   val ctrDepth = countSpine (1, S)
+(*	   val _ = print ("\n spineDepth = " ^ Int.toString ctrDepth)
+	   val _ = print ("\n RootF = " ^ Int.toString(ctrDepth + ctr))
+*)
+	 in 
+	   (ctrDepth + 1 + ctr)
+(*	   (ctrLength + ctr) *)
+	 end 
+      | count (ctr, I.Redex (U, S)) =
+         let 
+	   val ctrDepth = count (0, U)
+	   val ctrDepth' =  countSpine (ctrDepth, S)
+(*	   val _ = print ("\n SpindeDepth = " ^ Int.toString ctrDepth)
+	   val _ = print ("\n Redex = " ^ Int.toString(max(ctrDepth',ctrDepth) + ctr))*)
+
+	 in
+	   (max(ctrDepth',ctrDepth) + ctr)
+	 end 
+      | count (ctr, I.Lam (D, U)) =
+	 count (ctr+1, U)
+      | count (ctr, (X as I.EVar _)) = 
+	 (* shouldn't happen *)
+	 ctr
+      | count (ctr, I.EClo(E, s)) = 
+	 count (ctr, E)
+      | count (ctr, (F as I.FgnExp (cs, ops))) = 
+	 (* shouldn't happen *)
+	 (ctr)
+	 
+ (* count max depth of term in S + length of S *) 	  
+    and countSpine (ctrDepth, I.Nil)  = ctrDepth
+      | countSpine (ctr, I.SClo (S, s')) = 
+         (* ? *)
+         countSpine (ctr, S)
+      | countSpine (ctrDepth, I.App (U, S)) =
+	 let
+	   val ctrDepth' = count (0, U)
+	 in 
+	   countSpine (max(ctrDepth', ctrDepth), S)
+      end 
+    
+
+(*     fun exceedsLength (i) =  *)
+(*       case (!termDepth) of  *)
+(* 	NONE => false *)
+(*       | SOME(n) => (n <= (i +1)) *)
+      
+(*     fun exceedsTermDepth U =  *)
+(*       let *)
+(* 	fun exceeds (0, _ ) = true *)
+(* 	  | exceeds (depth, (U as I.Uni (L))) = false *)
+(* 	  | exceeds (depth, I.Pi ((D, _), V)) = *)
+(*  	     exceedsDec(depth-1 , D) orelse exceeds(depth-1, V) *)
+(* 	  | exceeds (depth, I.Root (F, S)) = *)
+(* 	     exceedsSpine ((depth-1), S) *)
+(* 	  | exceeds (depth, I.Redex (U, S)) = *)
+(* 	     exceedsLength(lengthSpine(S))  *)
+(* 	     orelse *)
+(* 	     exceeds(depth, U)  *)
+(* 	     orelse  *)
+(* 	     exceedsSpine' ((depth-1), S)	      *)
+(* 	  | exceeds (depth, I.Lam (D, U)) = *)
+(* 	     exceeds (depth, U) *)
+(* 	  | exceeds (depth, (X as I.EVar _)) =  *)
+(* 	     (* shouldn't happen *) *)
+(* 	     true *)
+(* 	  | exceeds (depth, I.EClo(E, s)) =  *)
+(* 	     exceeds (depth, E) *)
+(* 	  | exceeds (depth, (F as I.FgnExp (cs, ops))) =  *)
+(* 	     (* shouldn't happen *) *)
+(* 	     true *)
+(* (*	  | exceeds (depth, _) = (print "\nexceeds anything else ??? \n"; true) *) *)
+	  
+(* 	and exceedsSpine (depth, I.Nil)  = (depth = 0)  *)
+(* 	  | exceedsSpine (depth, I.SClo (S, s')) =  *)
+(* 	     (* ? *) *)
+(* 	      exceedsSpine (depth, S) *)
+(* 	  | exceedsSpine (depth, I.App (U, S)) = *)
+(* 	      (exceeds (depth, U) orelse *)
+(* 	       exceedsSpine (depth-1, S)) *)
+
+(* 	and exceedsSpine' (depth, I.Nil)  = (depth = 0)  *)
+(* 	  | exceedsSpine' (depth, I.SClo (S, s')) =  *)
+(* 	     (* ? *) *)
+(* 	      exceedsSpine' (depth, S) *)
+(* 	  | exceedsSpine' (depth, I.App (U, S)) = *)
+(* 	      (exceeds (depth, U) orelse *)
+(* 	       exceedsSpine' (depth, S)) *)
+
+
+(* 	and exceedsDec (depth, I.Dec(_, U)) =  *)
+(* 	  exceeds (depth, U) *)
+(*       in  *)
+(* 	case (!termDepth) of *)
+(* 	  NONE => false *)
+(* 	  | SOME(k) => 	exceeds(k, U) *)
+(*       end  *)
+
+   (* ---------------------------------------------------------------------- *)
+   (* reinstSub (G, D, s) = s' 
     *
-    * If Gdp, G |= s
-    * then Gdp |= s'
+    * If D', G |- s : D, G
+    * then  G |- s' : D, G
     *)
 
-   fun reinstSub (Gdp, I.Null, s) = s
-      | reinstSub (Gdp, I.Decl(G,I.Dec(_,A)), s) = 
+   fun reinstSub (G, I.Null, s) = s
+      | reinstSub (G, I.Decl(D, I.Dec(_,A)), s) = 
       let
-(*	val X = I.newEVar (Gdp, I.EClo (A,s')) *)
 	val X = I.newEVar (I.Null, A)
-(*	val X = I.newEVar (I.Null, I.EClo (A,s))   (* ???? *) *)
       in
-	I.Dot(I.Exp(X), reinstSub (Gdp, G, s))
+	I.Dot(I.Exp(X), reinstSub (G, D, s))
 
       end 
 
@@ -242,25 +374,25 @@ struct
       
     fun variant (Us, Us') = Conv.conv (Us, Us') 
 
-    (* subsumes ((G, Gs, U), (G', Gs', U')) = bool
+    (* subsumes ((G, D, U), (G', D', U')) = bool
      * 
      * if
-     *    Gs, G   |- U 
-     *    Gs', G' |- U'
+     *    D, G   |- U 
+     *    D', G' |- U'
      * then  
-     *      G' |- s' : Gs', G'
-     *    return true if Gs, G |- U is an instance of G' |- U'[s'] 
+     *      G' |- s' : D', G'
+     *    return true if D, G |- U is an instance of G' |- U'[s'] 
      *    otherwise false
      *
      *)
-    fun subsumes ((Gdp, Gs, U), (Gdp', Gs', U')) = 
+    fun subsumes ((G, D, U), (G', D', U')) = 
       let 
-	val Upi = A.raiseType (Gdp, U)
-	val Upi' = A.raiseType (Gdp', U')
-	val s' = reinstSub (Gdp', Gs', I.id)
+	val Upi = A.raiseType (G, U)
+	val Upi' = A.raiseType (G', U')
+	val s' = reinstSub (G', D', I.id)
       in 
-	CSManager.trail (fn () =>
-			 Unify.unifiable (Gs, (Upi', s'), (Upi, I.id)))
+	CSManager.trail (fn () => 
+			 Unify.unifiable (D, (Upi', s'), (Upi, I.id)))
       end 
 
 
@@ -277,214 +409,220 @@ struct
     fun equalSub1 (I.Dot(ms, s), I.Dot(ms', s')) = 
           equalSub (s, s')
 
+
+    fun equalCtx (I.Null, I.Null) = true
+      | equalCtx (I.Decl(Dk, I.Dec(_, A)), I.Decl(D1, I.Dec(_, A1))) = 
+        Conv.conv ((A, I.id), (A1, I.id)) andalso equalCtx(Dk, D1)
+
     (* ---------------------------------------------------------------------- *)
     (* Call check and insert *)
 
-    (* callCheck (Gdp, Gs, U) = callState
+    (* callCheck (G, D, U) = callState
      
-       check whether Gs, Gdp |- U is in the table
+       check whether D, G |- U is in the table
  
      returns NONE, 
-        if Gs, Gdp |- U is not already in the table
-	  Sideeffect: add Gs, Gdp |- U to table
+        if D, G |- U is not already in the table
+	  Sideeffect: add D, G |- U to table
      
      returns SOME(A) 
-        if Gs, Gdp |- U is in table and 
-	  A is the list of active answers to the index
+        if D, G |- U is in table and 
+	  A is an entry in the table together with its answer list
 
+    Variant: 
+    if it succeeds there is exactly one table entry which is a variant to U
+    Subsumption:
+    if it succeeds it will return the most general table entry of which U is
+    an instance of (by invariant now, the most general table entry will be found first,
+    any entry found later, will be an instance of this entry)
     *)
 
-    fun callCheckVariant (Gdp, Gs, M, U) = 
+    fun callCheckVariant (G, D, U) = 
       let
-	val Upi = A.raiseType(concat(Gdp, Gs), U)
-	fun lookup (Gdp, Gs, M, U) [] (NONE) = 
-	     (table := ((Gdp, Gs, M, U), {solutions = [],lookup = 0})::(!table); 
-	      (if (!Global.chatter) >= 4 then 
-		 (print ("\n \n Added " );
-		  print (Print.expToString (I.Null, Upi) ^ "\n to Table \n"))
-	       else 
-		 ());
-	       added := true;
+	val Upi = A.raiseType(concat(G, D), U)
+	fun lookup ((G, D, U), []) = 
+	  (table := ((ref 1, G, D, U), {solutions = [],lookup = 0})::(!table); 
+	   (if (!Global.chatter) >= 4 then 
+	      (print ("\n \n Added " );
+	       print (Print.expToString (I.Null, Upi) ^ "\n to Table \n"))
+	    else 
+	      ());
+	      added := true;
 	      (* if termdepth(U) > n then force the tabled engine to suspend
 	       * and treat it like it is already in the table, but no answ available *)
-	       case (!globalTermDepth) of 
-		    NONE => NONE
-		 | SOME(_) => 
-		      (if exceedsTermDepth Upi then 
-			 ((if (!Global.chatter) >= 5 then 
-			     print ("\n term " ^ Print.expToString (I.Null, Upi) ^ 
-				    " exceeds termdepth \n")
-			   else 
-			     ());
-			     SOME([]))
-		       else 
-			 NONE))
-	  | lookup (Gdp, Gs, M, U) [] (SOME(L)) = 
-	     SOME(L)
-	  | lookup (Gdp, Gs, M, U) ((H as ((Gdp', Gs', M', U'), answ))::T) opt =
-	     if variant ((Upi, I.id), (A.raiseType(concat(Gdp',Gs'), U'), I.id)) then
-	       let
-		 val opt' = case opt of 
-		               NONE => SOME([H]) 
-			     | SOME(L) => SOME(H::L) 
-	       in  
-		 (if (!Global.chatter) >= 5 then
-		    print ("call " ^ Print.expToString (I.Null, Upi) ^ " found in table \n ")
-		  else 
-		    ());
-		  lookup (Gdp, Gs, M, U) T opt' 
-	       end 
-	     else  
-	       lookup (Gdp, Gs, M, U) T opt
+	      if abstractionSet() then 
+		((* print ("\n term " ^ Print.expToString (I.Null, Upi) ^ 
+		  " exceeds depth or length ? \n"); *)
+		 
+		 if exceeds (A.raiseType(G, U)) then 
+		   ((if (!Global.chatter) >= 4 then 
+		       print ("\n term " ^ Print.expToString (I.Null, Upi) ^ 
+			      " exceeds depth or length \n")
+		     else 
+		       ());
+		       SOME([]))
+		 else 
+		   NONE)
+	      else 
+		NONE)
+	  | lookup ((G, D, U), ((H as ((k, G', D', U'), answ))::T)) =
+	    if variant ((Upi, I.id), (A.raiseType(concat(G',D'), U'), I.id)) then
+	      (k := !k+1;
+	       (if (!Global.chatter) >= 5 then
+		  print ("call " ^ Print.expToString (I.Null, Upi) ^ " found in table \n ")
+		else 
+		  ());
+		  SOME[((G', D', U'), answ)])
+	    else  
+	      lookup ((G, D, U), T)
       in 
-	lookup (Gdp, Gs, M, U) (!table) NONE
+	lookup ((G, D, U), (!table))
       end
 
 
+    (* Subsumption:
 
-    fun callCheckSubsumes (Gdp, Gs, M, U) = 
+       Assumes: Table is in order [tn, ...., t1]
+       i.e. tn is added to the table later than t1
+            this implies that tn is more general than ti (i < n)
+         
+       if we find a tn s.t M is an instance of it, then return tn
+       and do not search further
+
+    *)
+
+
+    fun callCheckSubsumes (G, D, U) = 
       let 		
-	val Upi = A.raiseType(concat(Gdp, Gs), U)
-	fun lookup ((Gdp, Gs, M, U), [], NONE) = 
-	    (table := ((Gdp, Gs, M, U), {solutions = [],lookup = 0})::(!table); 
+	fun lookup ((G, D, U), []) = 
+	    (table := ((ref 1, G, D, U), {solutions = [],lookup = 0})::(!table); 
 	     (if (!Global.chatter) >= 5 then
-		print ("Added " ^  Print.expToString (I.Null, Upi) ^ " to Table \n")
+		print ("Added " ^  Print.expToString (I.Null,A.raiseType(concat(G, D), U)) ^ " to Table \n")
 	      else 
 		());
 	     added := true;
-	     if exceedsTermDepth Upi then 
-		((if (!Global.chatter) >= 5 then 
-		    print ("\n term " ^ Print.expToString (I.Null, Upi) ^ 
-			   " exceeds termdepth  \n")
+	     if exceeds (A.raiseType(G, U)) then 
+		((if (!Global.chatter) >= 4 then 
+		    print ("\n term " ^ Print.expToString (I.Null, A.raiseType(concat(G, D), U)) ^ 
+			   " exceeds depth or length \n")
 		  else 
 		    ());
 		SOME([]))
 	      else 
 		NONE)
-	  | lookup ((Gdp, Gs, M, U), [], SOME(L)) = 
-	     SOME(L)
-	  | lookup ((Gdp, Gs, M, U), (((Gdp', Gs', M', U'), answ)::T), opt) =
-	    if (subsumes ((Gdp, Gs, U), (Gdp', Gs', U'))) then	       
-	      let
-		 val opt' = case opt of 
-		               NONE => SOME([((Gdp', Gs', M', U'), answ)]) 
-			     | SOME(L) => SOME(((Gdp', Gs', M', U'), answ)::L) 
-	       in 
-		 (if (!Global.chatter) >= 5 then
-		    print ("call " ^ Print.expToString (I.Null, Upi) ^ "found in table \n ")
-		  else 
-		    ());
-		  lookup ((Gdp, Gs, M, U), T, opt') 
-	      end
+	  | lookup ((G, D, U), (((k, G', D', U'), answ)::T)) =
+	    if (subsumes ((G, D, U), (G', D', U'))) then	       
+	      ((if (!Global.chatter) >= 5 then
+		 print ("call " ^ Print.expToString (I.Null, A.raiseType(concat(G, D), U)) ^ "found in table \n ")
+	       else 
+		 ());
+		  k := !k+1;
+		 SOME([((G', D', U'), answ)]))
 	    else 
-	      lookup ((Gdp, Gs, M, U), T, opt)
+	      lookup ((G, D, U), T) 
       in 
-	lookup ((Gdp, Gs, M, U), (!table), NONE)
+	lookup ((G, D, U), (!table))
       end
 
     (* ---------------------------------------------------------------------- *)
     (* answer check and insert 
       
-      if     Gdp |- M[s] : U[s]
-         Gs, Gdp |- M : U
-	     Gdp |- s : Gs, Gdp 
+      if     G |- U[s]
+          D, G |- U
+	     G |- s : D, G 
       
-      answerCheck (Gdp, Gs, (U,s), _) = repeated
+      answerCheck (G, D, (U,s)) = repeated
          if s already occurs in answer list for U
-      answerCheck (Gdp, Gs, (U,s), _) = new
+      answerCheck (G, D, (U,s)) = new
          if s did not occur in answer list for U
          Sideeffect: update answer list for U
        
-        Gas, Gdp |- s : Gs, Gdp
-	Gas, Gdp |- M[as] : U[as]
+        Dk, G |- sk : D, G
+	Dk, G |- U[sk]
 
-        as is the abstraction of s 
+        sk is the abstraction of s and Dk contains all "free" vars
       
      *) 
-    fun answCheckVariant (Gdp, Gs, (M, U),s) =  
+    fun answCheckVariant (G, D, U, s, O) =  
       let 
-	val Upi = A.raiseType(concat(Gdp, Gs), I.EClo(U, I.id))
+	val Upi = A.raiseType(concat(G, D), U)
 
 	val _ = if (!Global.chatter) >= 5 then 
 	          (print "\n AnswCheckInsert: ";
 		   print (Print.expToString(I.Null, 
-					    I.EClo(A.raiseType(Gdp, U),s)) ^ "\n");
+					    I.EClo(A.raiseType(G, U),s)) ^ "\n");
 		   print "\n Table Index : " ;
 		   print (Print.expToString (I.Null,  Upi) ^ "\n"))
 		else 
 		  ()
 
-	fun member ((Gus, us), []) = false
-	  | member ((Gus, us), ((Gs1, s1)::S)) = 
+	fun member ((Dk, sk), []) = false
+	  | member ((Dk, sk), (((D1, s1),_)::S)) = 
 
-	  (* for variance checking we only need to compare abstract substitutions 
-	   * should we compare Gus and Gs1 ?
-	   * bp Fri Sep 21 13:33:38 2001 : do not take into account "proof term sub"
-	   * the first element of the substitution is the substitution for the proof term
-	   * when comparing substitutions we only care about answer, and not the proof term
-	   *)
-	  if equalSub1 (us,s1) then   
-(*	  if equalSub (us,s1) then   *)
+	  (* do we really need to compare Gus and Gs1 ?  *)
+	  if equalSub (sk,s1) andalso equalCtx (Dk, D1) then   
 	    true
 	  else 
-	    member ((Gus, us), S)
+	    member ((Dk, sk), S)
 	
-	fun lookup  (Gdp, Gs, (M, U),s) [] T = 
+	fun lookup  (G, D, U, s) [] T = 
 	  (* cannot happen ! *) 
-	  (print (Print.expToString(I.Null, I.EClo(A.raiseType(Gdp,U),s))  
+	  (print (Print.expToString(I.Null, I.EClo(A.raiseType(G,U),s))  
 		  ^ " call should always be already in the table !\n") ; 
 	   repeated)
-	  | lookup (Gdp, Gs, (M, U),s) ((H as ((Gdp', Gs', M', U'), 
-					    {solutions = S, lookup = i}))::T) T' = 
+	  | lookup (G, D, U, s) ((H as ((k, G', D',U'), {solutions = S, lookup = i}))::T) T' = 
 	  if variant ((Upi, I.id),
-		      (A.raiseType(concat(Gdp', Gs'), 
-					    I.EClo(U', I.id)),I.id))
+		      (A.raiseType(concat(G', D'), U'), I.id))
 	    then 
 	      let 
-		val (Gus, us) = A.abstractAnswSub s
+		val (Dk, sk) = A.abstractAnswSub s
 	      in 	       	       
 		(* answer check *)
-		if member ((Gus, us), S) then  
+		if member ((Dk, sk), S) then  
 		  repeated
 		else 
-		  (table := (rev T')@(((Gdp', Gs', M', U'),
-				       {solutions = ((Gus, us)::S), 
+		  (table := (rev T')@(((k, G', D', U'),
+				       {solutions = (((Dk, sk), O)::S), 
 					lookup = i})::T); 
 		   
 		   (if (!Global.chatter) >= 5 then 
 		      (print ("\n solution added  -- " ); 
-		       print (Print.expToString(I.Null, 
-						A.raiseType(Gus,
-							    I.EClo(A.raiseType(Gdp',U'), us))));
-		       print ("\n proof term : "); 
-		       print (Print.expToString(I.Null, A.raiseType(Gus, 
-								    I.EClo(A.raiseType(Gdp',M'), us)))
-			      ^ "\n")
-		       )
+		       print (Print.expToString(I.Null, A.raiseType(Dk, I.EClo(A.raiseType(G', U'), sk)))))
 		    else 
 		      ());
 		   new)
 	      end
 	   else 
-	      lookup (Gdp, Gs, (M, U),s) T (H::T')
+	      lookup (G, D, U, s) T (H::T')
       in 
-	lookup (Gdp, Gs, (M, U),s) (!table) []
+	lookup (G, D, U, s) (!table) []
       end 
 
-   fun reverse (I.Null, G') = G'
-     | reverse (I.Decl(G, D), G') = 
-         reverse (G, I.Decl(G', D))
+  (* memberSubsumes ((G, Dk, U, sk), (G', U', A)) = bool
+ 
+   If Dk, G |- U[sk] 
 
-    fun memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', [])) = false
-      | memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', ((Gs1, s1)::S))) = 
+      A = ((Dn, sn), On), ....., ((D1, s1), O1)
+
+      for all i in [1, ..., n]
+          Di, G' |- U'[si]
+              G' |- si' : Di, G'         
+   then  
+     exists an i in [1,...,n]  s.t. 
+         Dk, G |- U[sk] is an instance of G' |- U'[si'] 
+   *)
+
+    fun memberSubsumes ((G, D, U, s), (G', U', [])) = false
+      | memberSubsumes ((G, D, U, s), (G', U', (((D1, s1), _)::A))) = 
         let
-	  val Upi = A.raiseType(Gdp, U)
-	  val Upi' = A.raiseType(Gdp',U')
-	  val Gs1' = reverse(Gs1, I.Null)
-	  val Vpis = reinstantiate (Gdp', Gs1', (I.EClo(Upi', s1), I.id))
+	  val Upi = A.raiseType(G, U)
+	  val Upi' = A.raiseType(G',U')
+	  val s1' = reinstSub (G', D1, I.id) 
+	  val Vpis = (I.EClo(Upi', s1), s1')
+
 	  (* assume G' and G are the same for now *)
 	  val b = CSManager.trail (fn () => 
-				   Unify.unifiable (Gs, (Upi, s), (Vpis)))
+				   Unify.unifiable (D, (Upi, s), (Vpis)))
 	in 
 	  if b then
 	    ((if (!Global.chatter) >= 5 then 
@@ -493,96 +631,135 @@ struct
 		());
 	     true)
 	  else 
-	    memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', S)) 
+	    memberSubsumes ((G, D, U, s), (G', U', A)) 
 	end 
+
+  fun shift (0, s) = s
+    | shift (n, s) = shift(n-1, I.dot1 s)
+
 	
-   fun answCheckSubsumes (Gdp, Gs, (M, U),s) = 
+   fun answCheckSubsumes (G, D, U, s, O) = 
       let
-	val Upi = A.raiseType(Gdp, U)
+	val Upi = A.raiseType(G, U)
 	val _ = if (!Global.chatter) >= 4 then 
 	            (print ("\n AnswCheckInsert (subsumes): " );
 		     print(Print.expToString(I.Null, I.EClo(Upi, s))
 		       ^ "\n"))
 		else ()
-	fun lookup ((Gdp, Gs, (M, U),s), [], T) = 
+
+	fun lookup ((G, D, U , s), [], T) = 
 	  (* cannot happen ! *) 
-	  (print (Print.expToString(concat(Gdp, Gs), I.EClo(U,s)) 
+	  (print (Print.expToString(concat(G, D), I.EClo(U,s)) 
 		  ^ " call should always be already in the table !\n") ; 
 	   repeated)
-	  | lookup ((Gdp, Gs, (M, U),s), (((Gdp', Gs', M', U'), {solutions = S, lookup = i})::T), T') = 
-	  if (subsumes ((Gdp, Gs, U), (Gdp', Gs', U'))) then
-	     let 
-	      val (Gus, us) = A.abstractAnswSub s
+	  | lookup ((G, D, U, s), (((k, G', D', U'), {solutions = A, lookup = i})::T), T') = 
+	  if (subsumes ((G, D, U), (G', D', U'))) then
+	    let 
+	      val (Dk, sk) = A.abstractAnswSub s
 	     in 
-	       if memberSubsumes ((Gdp, Gus, U, us), (Gdp', U', S)) then
+	       if memberSubsumes ((G, Dk, U, sk), (G', U', A)) then
 		 repeated
 	       else 
 		 let
-		   val s' = reinstSub (Gdp', Gs', I.id)
+		   val s' = reinstSub (G', D', I.id)
 		   val _ = if (!Global.chatter) >= 4 then 
 		            (print "\n new answer to be added to Index \n";
 			     print (Print.expToString(I.Null, 
-						    A.raiseType(concat(Gdp', Gs'), U')) ^"\n");
+						    A.raiseType(concat(G', D'), U')) ^"\n");
 			     print "\n reinstantiated Table index\n";
 			     print (Print.expToString(I.Null,
-						    I.EClo(A.raiseType(Gdp', U'), s'))
+						    I.EClo(A.raiseType(G', U'), s'))
 				    ^ "\n");
 			     print "\n answer to be added \n";
-			     print (Print.expToString(I.Null,
-			                A.raiseType(Gus, I.EClo(A.raiseType(Gdp, U), us))) ^ "\n"))
+			     print (Print.expToString(I.Null, A.raiseType(Dk, 
+			                I.EClo(A.raiseType(G, U), sk))) ^ "\n"))
 			   else 
 			     ()
 		   (*  higher-order matching *)
-		   val _ = if (Unify.unifiable (Gus, (A.raiseType(Gdp, U), us),  
-					       (A.raiseType(Gdp', U'), s'))
-			       andalso Unify.unifiable (Gus, (A.raiseType(Gdp, M), us),
-							(A.raiseType(Gdp', M'), s')))
+		   val _ = if (Unify.unifiable (Dk, (A.raiseType(G, U), sk),  
+					       (A.raiseType(G', U'), s')))
 			     then (if (!Global.chatter) >= 4 then 
 				     (print "\n1 unification successful !\n";
-				      print (Print.expToString(I.Null,
-			                       A.raiseType(Gus, I.EClo(A.raiseType(Gdp', U'), s')))
+				      print (Print.expToString(I.Null, A.raiseType(Dk, 
+			                      I.EClo(A.raiseType(G', U'), s')))
 					     ^ "\n"))
 				   else 
 				     ())
 			   else print "\n1 unification failed! -- should never happen ?"
-		   val (Gus', us') = A.abstractAnsw (Gus, s')
-		 (*			  val Gus'' = reverse(Gus', I.Null) *)
-		in 			   
-		  table := ((rev T')@(((Gdp', Gs', M', U'),
-				       {solutions = ((Gus', us')::S), 
+		   val (Dk', sk') = A.abstractAnsw (Dk, s')
+		   val rs = reinstSub (G', Dk', I.id) (* reinstantiate us' *) 
+		in 			
+		  (case !query of
+		    NONE => () (* nothing to do *)
+		    | SOME(G1, D1, U1, s1, sc1) => 		      
+		      ((if (!Global.chatter) >= 4 then 
+		              (print ("Generate answers for: " );
+			       print (Print.expToString(I.Null, I.EClo(A.raiseType(G1, U1), s1)) ^ " \n");
+			       print ("Answer in table: " );
+			       print (Print.expToString(I.Null, A.raiseType(Dk, I.EClo(A.raiseType(G', U'), s')))
+				      ^ " : \n" );
+			       print (Print.expToString(I.Null, I.EClo(A.raiseType(Dk, I.EClo(A.raiseType(G', U'), sk')), rs)) ^ " : \n" ))
+			   else ());
+		       (if (subsumes ((G1, D1, U1), (G', D', U'))) then 
+			 (* original query is an instance of the entry we are adding answ to *)
+			 CSManager.trail (fn () =>  
+                             (if Unify.unifiable (D1, (A.raiseType(G1, U1), s1), 
+						  (I.EClo(A.raiseType(G', U'), sk'), rs))
+				then 	   
+				  let 
+				    val w = if (!strengthen) 
+					      then
+						Subordinate.weaken (I.Null, IntSyn.targetFam(I.EClo(U1, s1)))
+					    else 
+					      I.id
+				  in 
+						 (* (I.EClo(N1, I.comp(shift(I.ctxLength(Gdp1),s1), w))) *)
+						 sc1 O
+					       end
+					   else ()
+					     ))
+		       else 
+			 ())));
+
+		  table := ((rev T')@(((k, G', D', U'),
+				       {solutions = (((Dk', sk'), O)::A), 
 					lookup = i})::T));
 		  (if (!Global.chatter) >= 5 then 
 		     (print ("\n \n solution (original) was: \n");
-		      print(Print.expToString(I.Null, I.EClo(A.raiseType(Gdp, U), s)) 
+		      print(Print.expToString(I.Null, I.EClo(A.raiseType(G, U), s)) 
 			    ^ "\n");
 		      print ("\n \n solution (deref) was: \n");
-		      print(Print.expToString(I.Null, A.raiseType(Gus, I.EClo(A.raiseType(Gdp, U), us)))
+		      print(Print.expToString(I.Null, A.raiseType(Dk, I.EClo(A.raiseType(G, U), sk)))
+(*		      print(Print.expToString(I.Null, I.EClo(A.raiseType(concat(G, Dk), U), sk)) *)
 			    ^ "\n"); 		  
 		      print ("\n solution added  --- ");
-		      print (Print.expToString(I.Null,
-					       A.raiseType(Gus, I.EClo(A.raiseType(Gdp',U'), s')))
+		      print (Print.expToString(I.Null, A.raiseType(Dk', I.EClo(A.raiseType(G', U'), s')))
 			     ^ "\n"); 		  
 		      print ("\n solution added (dereferenced) --- "); 		  
-		      print (Print.expToString(I.Null,
-					       A.raiseType(Gus',
-							   I.EClo(A.raiseType(Gdp',U'), us')))
+		      print (Print.expToString(I.Null, A.raiseType(Dk',
+					       I.EClo(A.raiseType(G', U'), sk')))
 			     ^ "\n"))
+
+(*		      print (Print.expToString(I.Null,
+					       A.raiseType(Dk',
+							   I.EClo(A.raiseType(G',U'), sk')))
+			     ^ "\n"))
+*)
 		  else 
 		    ());
 		  new 
 		end
 	     end 
 	  else 
-	    lookup ((Gdp, Gs, (M, U), s), T, (((Gdp', Gs', M', U'), 
-					   {solutions = S, lookup = i})::T')) 	   
+	    lookup ((G, D, U, s), T, (((k, G', D', U'), {solutions = A, lookup = i})::T'))
       in 
-	lookup ((Gdp, Gs, (M, U),s), (!table), [])
+	lookup ((G, D, U, s), (!table), [])
       end 
 
    (* ---------------------------------------------------------------------- *)
    (* TOP LEVEL *)
 
-    fun reset () = (table := []; termDepth := (!globalTermDepth))
+    fun reset () = (table := [])
 
 
     fun solutions {solutions = S, lookup = i} = S
@@ -590,37 +767,37 @@ struct
 
 
     fun noAnswers [] = true
-      | noAnswers ((H as ((Gdp', G', M', U'), answ))::T) = 
+      | noAnswers ((H as ((G', D', U'), answ))::L') = 
           case (List.take (solutions(answ), lookup(answ))) 
-	    of [] => noAnswers T
+	    of [] => noAnswers L'
 	  | L  => false
 
 
-    fun callCheck (Gdp, Gs, M, U) = 
+    fun callCheck (G, D, U) = 
           case (!strategy) of 
-	    Variant => callCheckVariant (Gdp, Gs, M, U)
-	  | Subsumption => callCheckSubsumes (Gdp, Gs, M, U)
+	    Variant => callCheckVariant (G, D, U)
+	  | Subsumption => callCheckSubsumes (G, D, U)
 
-    fun answCheck (Gdp, Gs, (M, U), s) = 
+    fun answCheck (G, D, U, s, O) = 
       case (!strategy) of
-	Variant => answCheckVariant (Gdp, Gs, (M, U), s)
-      | Subsumption => answCheckSubsumes (Gdp, Gs, (M, U), s)
+	Variant => answCheckVariant (G, D, U, s, O)
+      | Subsumption => answCheckSubsumes (G, D, U, s, O)
 	      
 
     (* needs to take into account previous size of table *)
     fun updateTable () = 
           let 
 	    fun update [] T Flag = (Flag, T)
-	      | update (((dp, G, M, U), {solutions = S, lookup = i})::T) T' Flag =
+	      | update (((k, G, D, U), {solutions = S, lookup = i})::T) T' Flag =
 	      let 
 		val l = length(S) 
 	      in 
 		if (l = i) then 
 		  (* no new solutions were added in the previous stage *) 	      
-		  update T (((dp, G, M, U), {solutions = S, lookup = List.length(S)})::T') Flag
+		  update T (((k, G, D, U), {solutions = S, lookup = List.length(S)})::T') Flag
 		else 
 		  (* new solutions were added *)
-		  update T (((dp, G, M, U), {solutions = S, lookup = List.length(S)})::T') true
+		  update T (((k, G, D, U), {solutions = S, lookup = List.length(S)})::T') true
 	      end 
 	    val (Flag, T) = update (!table) [] false
 	    val r = Flag orelse (!added)
@@ -634,7 +811,10 @@ struct
 
   in
 
-    val termDepth = globalTermDepth
+(*    val termDepth = termDepth
+    val ctxDepth = ctxDepth
+    val ctxLength = ctxLength
+*)
     val table = table
     val solutions = solutions
     val lookup = lookup
@@ -643,6 +823,7 @@ struct
     val reset = reset
 
     val printTable = printTable
+    val printTableEntries = printTableEntries
 
     val callCheck = callCheck
     val answerCheck = answCheck

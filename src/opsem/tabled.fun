@@ -7,6 +7,9 @@ functor Tabled (structure IntSyn' : INTSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
 		    structure Unify : UNIFY
 		      sharing Unify.IntSyn = IntSyn'
+		    structure TabledSyn : TABLEDSYN
+		      sharing TabledSyn.IntSyn = IntSyn'
+
 		    (*
                     structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
@@ -43,16 +46,24 @@ struct
   structure IntSyn = IntSyn'
   structure CompSyn = CompSyn'
   structure Unify = Unify
+  structure TabledSyn = TabledSyn
 
   local
     structure I = IntSyn
     structure C = CompSyn
     structure A = AbstractTabled
+    structure TI = TableIndex
   in
     
     (* ---------------------------------------------------------------------- *)
-    val SuspGoals : ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.Exp  -> unit)) * 
-		      Unify.unifTrail)  list) ref  = ref []
+    (* bp Wed Feb 13 16:16:33 2002 *)
+    (* added pointer: what answers have been reused already, hence do not have to
+       be re-used again for this goal
+     *)
+
+    val SuspGoals : ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.pskeleton -> unit)) * 
+		      Unify.unifTrail * int ref)  list) ref  = ref []
+
 
     (* ---------------------------------------------------------------------- *)
 
@@ -123,23 +134,24 @@ struct
 
     (* ---------------------------------------------------------------------- *)
 
-    (* reinstSub (Gdp, Gs, s) = s'
+    (* reinstSub (G, D, s) = s'
      
-       if Gdp |- s : Gs, Gdp (closed) 
-	 then Gdp |- s' : Gdp (evars)
+       if D, G |- s : D', G  (closed) 
+	 then G |- s' : D', G (evars)
     *) 
 
     fun reinstSub (Gdp, I.Null, s) = s
       | reinstSub (Gdp, I.Decl(G,I.Dec(_,A)), s) = 
       let
-	val X = I.newEVar (I.Null, I.EClo (A,s))   (* ???? *)
+(*	val X = I.newEVar (I.Null, I.EClo (A,s))   (* ???? *) bp Wed Feb 20 11:06:51 2002 *)
+	val X = I.newEVar (I.Null, A)
       in
 	I.Dot(I.Exp(X), reinstSub (Gdp, G, s))
       end 
 
    (* ---------------------------------------------------------------------- *)
 
-   (* retrieve' (G, ((M, V), s), answ_i, sc) = ()
+   (* retrieve' (n, G, ((M, V), s), answ_i, sc) = ()
    
      G |- s : G'
      G' |- M : V atomic goal 
@@ -155,93 +167,82 @@ struct
 
      Effects: instantiation of EVars in V, s, and dp
               any effect  sc M  might have
+
+    n is just a counter which answer substitution
+    we are currently considering -- only for debugging 
      
    *)
 
-   fun retrieve' (n, Gdp, MVs, (Gdp', Gs', N, U), [], (G, sc), L)  = 
-         retrieve (Gdp, MVs, L, (G, sc))
-     | retrieve' (n, Gdp, MVs as ((M, V),s), (Gdp', Gs', N, U), ((Gs1, s1)::A),  (G, sc), L) =  
+   fun retrieve' (n, G, Vs, (G', D', U'), [], sc)  = ()
+     | retrieve' (n, G, Vs as (V,s), (G', D', U'), (((D1, s1), O1)::A),  sc) =  
      let 
-       val Vpi = A.raiseType(Gdp, V)
-       val Upi = A.raiseType(Gdp', U)
+       val Vpi = A.raiseType(G, V)
+       val Upi = A.raiseType(G', U')
 
-       val Mpi = A.raiseType(Gdp, M)
-       val Npi = A.raiseType(Gdp', N)
+       val s1' = reinstSub (G', D1, I.id)  
 
-       val s1' = reinstSub (Gdp', Gs1, I.id)  
-
-       val _ = if (!Global.chatter) >= 5 then 
+       val _ = if (!Global.chatter) >= 4 then 
 	        (print (Int.toString n ^ " retrieve' answers for: " );
 		 print (Print.expToString(I.Null, I.EClo(Vpi, s)) ^ " \n");
 		 print ("Answer in table: " );
-		 print (Print.expToString(I.Null, A.raiseType(Gs1, I.EClo(Upi, s1)))
-		      ^ " : \n" );
-		 print ("\n retrieved and reinstantiated : ");
-		 print (Print.expToString(I.Null, I.EClo(I.EClo(Upi,s1), s1')) ^ "\n"))
+		 print (Print.expToString(I.Null, A.raiseType(D1, I.EClo(Upi, s1))) 
+		      ^ " : \n" ))
+		else ()
+
+       val _ = if (!Global.chatter) >= 5 then 
+	        (print ("\n retrieved and reinstantiated : ");
+		 print (Print.expToString(I.Null, I.EClo(I.EClo(Upi, s1), s1')) ^ "\n"))
 	       else 
 		 ()		 
-       fun shift (0, s) = s
-	 | shift (n, s) = shift(n-1, I.dot1 s)
      in
        CSManager.trail  
        (fn () =>  
-	(if Unify.unifiable (I.Null, (Vpi, s), (I.EClo(Upi, s1),s1')) 
-	   andalso Unify.unifiable(I.Null, (Mpi, s), (I.EClo(Npi, s1), s1')) then 
+	(if Unify.unifiable (I.Null, (Vpi, s), (I.EClo(Upi, s1), s1')) then 
 	   
 	   (* sideeffect: (V,s) is now instantiated with answer *)
 	   ((if (!Global.chatter) >= 5 then
 	       (print ("            After Unification : ");
-		print (Print.expToString(IntSyn.Null, I.EClo(Vpi, s)) ^ "\n");
-		print ("           Proof Term : ");
-		print (Print.expToString(IntSyn.Null, I.EClo(Mpi, s)) ^ "\n");
-		print "1 "; 
-		print (Print.expToString(IntSyn.Null, A.raiseType(Gdp, I.EClo(M, shift (IntSyn.ctxLength(Gdp),s)))) ^ "\n"))
+		print (Print.expToString(IntSyn.Null, I.EClo(Vpi, s)) ^ "\n"))
 	     else 
 	       ());
-(*	       sc (I.EClo(I.EClo(M, s1), s1')) *)
-	       (* problem: M is possibly strengthened! but should not be, when passed into sc 
-		* solution 1: strengthen every new evar so everything is max. strengthened
-		* solution 2: pass in strengthened and non-strengthened ? 
-		* apply weakening to it!!!!!!! bp Fri Sep 28 18:08:07 2001 
-		*)
-
-	       let 
-		 val w = if (!TableIndex.strengthen) then
-		            Subordinate.weaken (G, IntSyn.targetFam(I.EClo(V, s)))
-			 else 
-			   I.id
-(* 		 val _ =  print "2 " *)
-(* 		 val _  = print (Print.expToString(I.Null, A.raiseType(G,I.EClo(M, I.comp(shift(I.ctxLength(G),s), w)))) ^ "\n") *)
-	       in 
-	       sc (I.EClo(M, I.comp(shift(I.ctxLength(Gdp),s), w)))
-	       end)
+	    sc O1)
 	 else 
 	   ()));
-       retrieve' (n+1, Gdp, MVs, (Gdp', Gs', N, U), A, (G, sc), L)
+       retrieve' (n+1, G, Vs, (G', D', U'), A, sc)
      end 
    
 
 
-   (* retrieve (G, (V,s), T, sc) = ()
+   (* retrieve (G, (V, s), ((G', D', U'), A), sc) = ()
     
-     G |- s : G'
-     G' |- V atomic goal 
-     T  sub-table s.t. (H_1, answ_1) ... (Hn, answ_n)
-     H_i = (dp', G', (V',s')
-     and (G', (V',s')) ~ (G, (V,s))
-     and answ_i = s_1 .... s_n
+     G |- s : D, G    (s contains free vars)
+     D, G |- V
+        G |- V[s]
 
-     if G |- M : V[s_k]
-     then sc M is evaluated
+     D', G' |- U'
+     for each i where i in [0...k] and  ((Di, si), Oi) in A 
+       return match G |- V[si] against Di, G' |- U'[si] 
+              and execute (sc Oi)
 
-     Effects: instantiation of EVars in V, s, and dp
+     Effects: instantiation of EVars in s, and dp
               any effect  sc M  might have
      
    *)
-    and retrieve (Gdp, ((M, V), s), [], (G, sc)) = ()
-      | retrieve (Gdp, MVs as ((M, V), s), ((H as ((Gdp', Gs', N, U), answ))::L), (G, sc)) =
-        retrieve' (0, Gdp, MVs, (Gdp', Gs', N, U), TableIndex.solutions(answ), (G, sc), L)
-(*	 retrieve (Gdp, Vs, L, sc)) *)
+    and retrieve (k, G, Vs as (V, s), (H as ((G', D', U), answ)), sc) =
+        let
+	  val lkp  = TableIndex.lookup(answ) 
+	  val asw' = List.take(rev(TableIndex.solutions(answ)), TableIndex.lookup(answ))
+	  val answ' = List.drop(asw', !k) 
+	  val _ = (if (!Global.chatter) >= 4 then		     
+ 			 print ("use answers from " ^ Int.toString(!k) ^ " to " ^ Int.toString(lkp) ^
+				"\n")
+ 		       else  
+ 			 ())
+	in 
+	k := lkp;
+        retrieve' (0, G, Vs, (G', D', U), answ', sc)
+	end
+
 
 
   (* ---------------------------------------------------------------------- *)
@@ -263,110 +264,73 @@ struct
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
-  fun solve ((C.Atom(p), s'), dp as C.DProg (G, dPool), sc) =     
+  fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =     
       let
-	val N = I.newEVar(G, I.EClo(p, s'))
-(*	val (Gdp1, Gex, U1, sex) = A.abstractEVarECloCtx (G, I.EClo(p,s')) *)
-(*	val (abstract, Gdp1, Gex, U1, sex) = A.abstractEVarCtx (G, (p, s')) *) 
-	val (Gdp, Gs, N', U, s) = A.abstractEVarCtx (G, (N, p), s')
-(*	val (abstract', Gdp', Gs', M, s'') = A.abstractEVarCtx (G, (M, I.id)) 
-         -- extend abstraction: abstractEVarCtx(G, (p,s'), M) 
-            return Gdp, Gs, U, M', s 
-	    where  Gsm, Gdp |- M : U
-                   Gdp |- s : Gsm, Gdp
+	(* -- extend abstraction: abstractEVarCtx(G, (p,s)) 
+            return G', D', U', s' 
+	    where  D', G' |- U
+                   G' |- s' : D', G'
 		   
-
             after this goal is solved: 
-	           Gex, Gdp |- s : Gsm, Gdp  (closed)
-		   Gex, Gdp |- M[s]:U[s]     (closed answer)
-
+	                G' |- s' : D', G'    (open answer subsitution)
+	           Dk', G' |- sk' : D', G'   (closed answer substitution)
+		   Dk', G' |- U'[sk']         (closed answer)
 		   *)
-
-	val _ = if (!Global.chatter) >= 5 then 
+	
+	val _ = if (!Global.chatter) >= 4 then 
 	         (print "\n solve : " ;
 		  print (Print.expToString(I.Null,
-					   A.raiseType(G, IntSyn.EClo(p,s')))
-			 ^ "\n");
-
-		  print "\n abstracted \n ";
-		  print ("    " ^ Print.expToString(I.Null, A.raiseType(concat(Gdp, Gs), U)) ^ "\n") ;
-
-		  print ("     \t" ^ Print.expToString(I.Null, I.EClo(A.raiseType(Gdp, U), s)) ^ "\n"))
+					   A.raiseType(G, IntSyn.EClo(p,s))) ^ "\n"))
 		else 
 		  ()
 
       in 
-	case TableIndex.callCheck (Gdp, Gs, N', U) 
-	  of NONE => 
-	    (* dp |= (p,s) was not in table 
-	     * SIDE EFFECT: dp |= (p,s): added to table
-	     * 
-	     * new subcomputation with own 
-	     * success continutation is started 
-	     *)
-            (matchAtom ((p,s'), dp,   
- 		       (fn M => 
-			(* M' = abstract M in ctx dp! 
-			 pass M' into callAnswerCheck ! *)
+	if TabledSyn.tabledLookup (I.targetFam p) then 
+	  let 
+	    val (G', D', U', s') = A.abstractEVarCtx (G, p, s)
+	  in
+	    (case TableIndex.callCheck (G', D', U') 
+	       of NONE => 
+	       (* D', G' |- U'  was not in table 
+		* SIDE EFFECT: D', G' |- U' added to table
+		* 
+		* new subcomputation with own 
+		* success continutation is started 
+		*)
+	       (matchAtom ((p,s), dp,   
+ 		       (fn pskeleton => 
+			(* when the success continuation is executed:
+			 * 
+			 * Table entry   :D', G' |- U'
+			 * Answer(table) :    G' |- U'[s']
+			 * 
+			 *)
 			let
+			  val (Dk, sk) = A.abstractAnswSub' (G', I.ctxLength(G'), s')
+			  val (G1, D1, U1, _) = A.abstractEVarCtx (G', U', s')
 			  val _ = if (!Global.chatter) >= 5 then 
 			           (print ("\n ANSWER : ");
 				    print (Print.expToString(I.Null, 
-							     A.raiseType(G, I.EClo(p, s'))) 
+							     A.raiseType(G, I.EClo(p, s))) 
 					   ^ "\n");
-
-				    print "\n Proof term: ";
-				    (print (Print.expToString (I.Null, 
-							      A.raiseType(G,  M)) ^ "\n") 
-				     handle _ => ()); 
+				    print ("\n TABLE ENTRY ANSWER : ");
+				    print (Print.expToString(I.Null, 
+							     A.raiseType(G', I.EClo(U', s'))) 
+					   ^ "\n");
+				    print ("\n TABLE ENTRY ANSWER (closed): ");
+				    print (Print.expToString(I.Null,
+			                A.raiseType(concat(G', Dk), I.EClo(U', sk))) ^ "\n");
 
 				    print ("\n insert answer for ");
 				    print (Print.expToString (I.Null, 
-							      A.raiseType(concat(Gdp, Gs), 
-									  I.EClo(U, I.id)))))
+							      A.raiseType(concat(G', D'), 
+									  I.EClo(U', I.id)))))
 				  else 
 				    ()
-			  val w = if (!TableIndex.strengthen) then
-			            Subordinate.weaken (G, IntSyn.targetFam(I.EClo(U, s)))
-				   else 
-				     I.id
-			    
-			  val _ = Unify.unifiable (I.Null, (A.raiseType(G, M), I.id),
-						   (A.raiseType(Gdp, N'), I.comp(s, w)))
-                          (* side effect: s contains the instantiation of 
-			   all ex. vars and the proof term instantiation
-  			   Trail ???
-			   *)
-
-			  val _ = if (!Global.chatter) >= 5 then 
-			             (print "\n Proof term: ";
-				      (print (Print.expToString (I.Null, 
-					A.raiseType(G,  I.EClo(N, I.comp(s, w)))) ^ "\n ok \n")
-				     handle _ => 
-				       (print "\n             \n";
-					print (Print.expToString (I.Null, 
-					A.raiseType(G, M)) ^ "\n")
-				       )))
-				  else 
-				    ()
-
-
-(*			  val _ = if (!Global.chatter) >= 5 then 
-				    (print "\n Proof term (abstract) 1 : ";
-				      print (Print.expToString (I.Null, 
-							       A.raiseType(G,  N)) ^ "\n") 
-
-(*				     print "\n Proof term (abstract) 2  : ";
-				     print (Print.expToString (I.Null,
-							       A.raiseType(concat(Gdp, Gs), I.EClo(N', s))) ^ "\n")*)
-				     )
-				  else 
-				    ()
-*)
 			in
-			  case TableIndex.answerCheck (Gdp, Gs, (N', U), s)
+			  case TableIndex.answerCheck (G', D', U', s', pskeleton)
 			    of TableIndex.repeated => ()
-			     | TableIndex.new      => sc M (* should we fail here ? *)
+			     | TableIndex.new      => sc pskeleton
 			end )))
 	    
 	    
@@ -374,9 +338,7 @@ struct
 	    if TableIndex.noAnswers L then 	    
 	      (* loop detected
 	       * no answers available from previous stages 
-	       * (could generate recursive proof term -- not done)
-	       * suspend current goal 
-	       * fail
+	       * suspend current goal and fail
 	       *
 	       * NOTE: we might suspend goals more than once.
 	       *     case: answer list for goal (p,s) is saturated
@@ -387,31 +349,37 @@ struct
 	      in 
 		(if (!Global.chatter) >= 4 then		   
 		   print ("Suspend " ^ 
-			  Print.expToString(IntSyn.Null, A.raiseType(G, IntSyn.EClo(p,s'))) 
+			  Print.expToString(IntSyn.Null, A.raiseType(G, IntSyn.EClo(p,s))) 
 			  ^"\n")
 		 else 
 		   ());
-		SuspGoals :=  (((p,s'), dp, sc), t)::(!SuspGoals); ()
+		SuspGoals :=  (((p,s), dp, sc), t, ref 0)::(!SuspGoals); ()
 	      end
 	    else 
 	      (* loop detected
 	       * new answers available from previous stages
 	       * resolve current goal with all possible answers
 	       * 
-	       * note: as we do not keep track which answers where
-	       *       already used in previous stages we generate
-	       *       answers more than once. (to be improved)
-	       * 
-	       * note : we do not need to suspend goal as it is already
-	       *        suspended; as we are not allowed to use answers 
-	       *        from the current stage, we can only enter this
-	       *        case if we are in stage 2 or greater. 
-	       *    
 	       *)	
-	      (*  (Gdp |- n'[s]:u[s].... but
-                    G |- N     G |- sc (n'[s])
+	      (*  (G' |- U'[s'].... but
                    if we apply strengthening then  we switch ctx !???) *)
-	       retrieve (Gdp, ((N', U) ,s), L, (G, sc))
+	       (let 
+		  val t = Unify.suspend()		  
+		  val [(entry,answ)] = L 
+		  val le = TableIndex.lookup(answ)
+		in 
+		(if (!Global.chatter) >= 4 then		   
+		   print ("Suspend (solve because retrieving answers) " ^ 
+			  Print.expToString(IntSyn.Null, A.raiseType(G, IntSyn.EClo(p,s))) 
+			  ^"\n")
+		 else 
+		   ());
+		  SuspGoals := (((p,s), dp, sc), t, ref le)::(!SuspGoals);
+		  retrieve (ref 0, G', (U' , s'), (entry, answ), sc)
+		end))
+	  end
+	else 
+	  matchAtom ((p, s), dp, sc)
       end 
     
     | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
@@ -419,14 +387,14 @@ struct
 	val D' = I.Dec(NONE, I.EClo(A,s))
       in
 	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
-	       (fn M => sc (I.Lam (D', M))))
+	       (fn O => sc O)) 
       end
     | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' = I.decSub (D, s)
       in
 	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
-	       (fn M => sc (I.Lam (D', M))))
+	       (fn O => sc O))
       end
 
   (* rsolve ((p,s'), (r,s), dp, sc) = ()
@@ -444,40 +412,25 @@ struct
   and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =    
     (if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
 	then 
-	  sc I.Nil		  (* call success continuation *)
+  	  sc [] 		          (* call success continuation *) 
       else ()				  (* fail *)
-	)
-    (* Fri Jan 15 14:29:28 1999 -fp,cs
-    | rSolve (ps', (Assign(Q, ag), s), dp, sc) = 
-     (if Assign.assignable (ps', (Q, s)) then
-	aSolve ((ag, s), dp, (fn () => sc I.Nil))
-      else ())
-    *)
+	)    
     | rSolve (ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
 	val X = I.newEVar(G, I.EClo(A, s)) 
       in
         rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp,
-		(fn S => solve ((g, s), dp,
-				(fn M => sc (I.App (M, S))))))
+		(fn S1 => solve ((g, s), dp, (fn S2 => sc (S1@S2)))))
       end
     | rSolve (ps', (C.Exists(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
       let
 	val X = I.newEVar(G, I.EClo(A, s)) 
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp,
-		(fn S => sc (I.App(X,S))))
+	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, (fn S => sc S))
+    (* (fn S => sc I.App(X,S)) *)
       end
-    (*
-    | rSolve (ps', (C.Exists'(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
-      let
-	val X = I.newEVar (G, I.EClo (A,s))
-      in
-	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, sc)
-   	          (* we don't increase the proof term here! *)
-      end
-     *)
+    
 
   (* aSolve ((ag, s), dp, sc) = ()
      Invariants:
@@ -513,14 +466,14 @@ struct
            with c1.
         *)
 	fun matchSig nil = ()	(* return indicates failure *)
-	  | matchSig (Hc::sgn') =
+	  | matchSig ((Hc as I.Const c)::sgn') =
 	    let
 	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
 	    in
 	      (* trail to undo EVar instantiations *)
 	      CSManager.trail (fn () =>
 			       (rSolve (ps', (r, I.id), dp,
-					(fn S => sc (I.Root(Hc, S)))))) ;
+					(fn S => sc ((I.pc c)::S)))));
 	      matchSig sgn'
 	    end
 
@@ -537,41 +490,43 @@ struct
 	      then (* trail to undo EVar instantiations *)
 		(CSManager.trail (fn () =>
 		                      rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
-				              (fn S => sc (I.Root(I.BVar(k), S))))) ;
+				              (fn S => sc ((I.dc k)::S)))); 
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =
 	      matchDProg (dPool', k+1)
-        fun matchConstraint (solve, try) =
+
+
+          fun matchConstraint (solve, try) =
               let
                 val succeeded =
                   CSManager.trail
                     (fn () =>
                        case (solve (G, I.SClo (S, s), try))
-                         of SOME(U) => (sc U ; true)
+                         of SOME(U) => (sc [I.csolver]; true)
                           | NONE => false)
               in
                 if succeeded
                 then matchConstraint (solve, try+1)
                 else ()
               end      
+
       in
-	(* assume all predicates are tabled *)
-	 
         case I.constStatus(cidFromHead Ha)
           of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
            | _ => matchDProg (dPool, 1)
+
+(*	matchDProg (dPool, 1) *)
       end
 
 
-
-  fun retrieval ((p,s'), dp as C.DProg(G, dPool), sc, t) =    
+  (* bp Wed Feb 13 16:18:56 2002 *)
+  (* add when loop detected only use answers k - n *)
+  fun retrieval ((p,s), dp as C.DProg(G, dPool), sc, t, n) =    
     let
-	val N = I.newEVar(G, I.EClo(p, s')) 
-
-      val (Gdp, Gs, N', U, s) =   A.abstractEVarCtx (G, (N, p), s')
+      val (G', D', U', s') =   A.abstractEVarCtx (G, p, s)
     in 
-      case TableIndex.callCheck (Gdp, Gs, N', U) 
+      case TableIndex.callCheck (G', D', U') 
 	of NONE => print ("\n should not happen! \n")	    	    
       | SOME(L) => 
 	  if TableIndex.noAnswers L then 	    
@@ -583,9 +538,9 @@ struct
 	     * NOTE: do not add the susp goal to suspGoal list
 	     *       because it is already in the suspGoal list
 	     *)
-	    ((if (!Global.chatter) >= 5 then		   
-		print ("Suspend " ^ 
-		       Print.expToString(IntSyn.Null, A.raiseType(G, IntSyn.EClo(p,s'))) 
+	    ((if (!Global.chatter) >= 4 then		   
+		print ("Suspend (resumed + susp)" ^ 
+		       Print.expToString(IntSyn.Null, A.raiseType(G, IntSyn.EClo(p,s))) 
 		       ^"\n")
 	      else 
 		());
@@ -593,12 +548,30 @@ struct
 	  else 
 	    (* loop detected
 	     * new answers available from previous stages
-	     * resolve current goal with all possible answers
+	     * resolve current goal with all "new" possible answers
 	     *    
-	     *)		      
-	    retrieve (Gdp, ((N', U), s), L, (G, sc))
+	     *)
+	    let 
+	      val [(entry,answ)] = L 
+	    in 
+		retrieve (n, G', (U', s'),(entry, answ), sc)
+	    end 
     end 
   
+    fun updateAbsParam () = 
+      (case (!TableIndex.termDepth) of
+ 	   NONE => ()
+	 | SOME(n) => TableIndex.termDepth := SOME(n+1);
+       case (!TableIndex.ctxDepth) of
+ 	   NONE => ()
+	 | SOME(n) => TableIndex.ctxDepth := SOME(n+1);
+
+       case (!TableIndex.ctxLength) of
+ 	   NONE => ()
+	 | SOME(n) => TableIndex.ctxLength := SOME(n+1)
+	     )
+
+
   (* fun nextStage () = bool 
    
    if updateTable then 
@@ -615,18 +588,16 @@ struct
  fun nextStage () = 
    let   
      fun resume ([],n) = ()
-       | resume (((((p,s), dp as C.DProg (G, _), sc), trail)::Goals), n) =
+       | resume (((((p,s), dp as C.DProg (G, _), sc), trail, k)::Goals),n) =
        (CSManager.trail	(fn () => (Unify.resume trail; 	 
 				   (if (!Global.chatter) >= 4 then
 				      print ("\n " ^ Int.toString n ^ " RESUME " ^ 
 					     Print.expToString(I.Null, A.raiseType(G, I.EClo(p,s)))^ "\n")
 				    else   
 				      ());  
-				      retrieval ((p,s), dp, sc, trail)));
+				      retrieval ((p,s), dp, sc, trail, k)));
 	resume (Goals, n-1))   
-       (* less efficient version *)
-       (* CSManager.trail(fn () => solve ((C.Atom(p),s), dp, sc)))); *)
-     val SG = rev(!SuspGoals) 
+      val SG = rev(!SuspGoals) 
 (*    val SG = !SuspGoals *)
      val l = length(SG)
    in    
@@ -637,7 +608,8 @@ struct
        ();
      if TableIndex.updateTable () then 
        (* table changed during previous stage *)
-	(resume (SG, l);
+	(updateAbsParam (); 
+	 resume (SG, l);
 	true)
      else 
        (* table did not change during previous stage *)
@@ -645,9 +617,38 @@ struct
    end 
 
 
+ fun solExists (p,s) = 
+   let
+     val (G', D', U', s') = A.abstractEVarCtx (I.Null, p, s)       
+   in 
+     case TableIndex.callCheck (G', D', U') of
+       NONE => false
+     | SOME(L) => true
+   end 
+
+
  fun reset () = (SuspGoals := []; TableIndex.reset())
 
+  fun solveQuery ((g as C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
+    (* only work when query is atomic *)
+     case (!TableIndex.strategy) of
+       TableIndex.Variant =>  solve((g, s), dp, sc)
+     |  TableIndex.Subsumption => 
+	 if TabledSyn.tabledLookup (I.targetFam p) then 
+	   let 
+	     val (G', D', U', s') = A.abstractEVarCtx (G, p, s)
+	     fun scinit O = ()
+	   in 
+	     (TableIndex.query := SOME(G', D', U', s', sc); 
+	      solve((g, s), dp, scinit))
+	   end
+	 else 
+	   solve((g, s), dp, sc)	   
+    
+
   end (* local ... *)
+
+ val solve = solveQuery
 
 end; (* functor Tabled *)
 

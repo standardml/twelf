@@ -6,6 +6,7 @@ Group is
   ../typecheck/sources.cm
   ../solvers/sources.cm
   ../subordinate/sources.cm
+  ../tabling/sources.cm
   compsyn.sig
   compsyn.fun
   compile.sig
@@ -25,6 +26,8 @@ Group is
   *)
   absmachine.sig
   absmachine.fun
+  ptrecon.sig
+  ptrecon.fun
   trace.sig
   trace.fun
   tmachine.fun

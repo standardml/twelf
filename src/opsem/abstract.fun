@@ -286,17 +286,19 @@ struct
     *)
     and collectSub (G, I.Shift _, K) = K
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
-      | collectSub (G, I.Dot (I.Exp (U), s), K) =
+      | collectSub (G, I.Dot (I.Exp (U), s), K) =      
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
-      | collectSub (G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *)
+    | collectSub (G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *)  
 
-
-    (* bp Tue Aug  7 14:58:30 2001 *)
-(*
-    fun collectCtx (I.Null, K) = K
-      | collectCtx (I.Decl(G, D), K) = 
-          collectCtx(G, collectDec(G, (D, I.id), K))
-*)
+    and collectSub' (G, I.Shift _, K) = K
+      | collectSub' (G, I.Dot (I.Idx _, s), K) = collectSub' (G, s, K)
+      | collectSub' (G, I.Dot (I.Exp (U), s), K) =
+        let	  
+	  val K' = collectExp (G, (U, I.id), K)
+	in 
+	  collectSub' (G, s, K')
+	end 
+      | collectSub'(G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *) 
 
     (* collectCtx (G0, G, K) = (G0', K')
        Invariant:
@@ -666,21 +668,6 @@ struct
 (* 	  abstractKSub(G', K', I.dot1 s) *)
 	end 
 
-(*
-   (* reinstSub (Gdp, G, s) = s' 
-    *
-    * If Gdp, G |= s
-    * then Gdp |= s'
-    *)
-   fun reinstSub (Gdp, I.Null, s) = s
-      | reinstSub (Gdp, I.Decl(G,I.Dec(_,A)), s) = 
-      let
-(*	val X = I.newEVar (Gdp, I.EClo (A,s')) *)
-	val X = I.newEVar (I.Null, I.EClo (A,s))   (* ???? *)
-      in
-	I.Dot(I.Exp(X), reinstSub (Gdp, G, s))
-      end 
-*)
 
        (* lowerEVar' (G, V[s]) = (X', U), see lowerEVar *)
     fun lowerEVar' (X, G, (I.Pi ((D',_), V'), s')) =
@@ -757,8 +744,7 @@ struct
 	end 
 
 
-(* abstractSub' (K, depth, s) = s'      (implicit raising) 
-
+    (* abstractSub' (K, depth, s) = s'      (implicit raising) 
 
         Invariant:  
         If   G |- s : G1    
@@ -771,7 +757,8 @@ struct
 
    (* maybe add depth ? increase depth when going down the substitution ? *)
     fun abstractSub' (K, d, I.Shift (k)) =  
-        I.Shift (k)
+      (* print "\n Shift - implicit raising \n"; ? *)
+        if k < d then (I.Dot(I.Idx(k+1), I.Shift (k+1))) else I.Shift(k)
       | abstractSub' (K, d, I.Dot (I.Idx (k), s)) =
 	I.Dot(I.Idx(k),abstractSub' (K, d, s))
       | abstractSub' (K, d, I.Dot (I.Exp (U), s)) =
@@ -782,35 +769,19 @@ struct
     fun deconstructPi (G, I.Pi((D,_), U)) = 
           deconstructPi (I.Decl(G, D), U)
       | deconstructPi (G, U) = (G, U)
-
-
-
-	  (* that's not right yet .... *)
-    fun abstractAnswSubPterm (Gdp, K, d, G) (M, s) =
-      let
-	(* K contains all existential variables (inst. or uninst) of G *)
-	val K1 = collectExp(G, (M, I.id), K)
-	(* K1 contains all existential vars in M *)
-	val K2 = collectSub(Gdp, s, K1) 
-	(* K2 and K'' contains all existential vars in s *)
-	val K3 = concat(K2, K) 
-	val s' = abstractSub' (K3, 0, s)
-	val M' = abstractExp (K3, d, (M, I.id))
-	(*	 val K', K = K3 *)
-	(* to do it right rewrite abstractKSub' ??? to only abstract over
-	  the uninstantiated EVARs *)
-	val (Gex,_) = abstractKSub' (I.Null, K3, I.id)  
-      in 
-	(Gex, M', s') 			     
-      end
-
-
    
   in
 
-    (* G |- U 
+    (* abstractECloCtx (G, U) = (D', G', U', Pi G'. U')
+      
+       if G |- U 
 
-       store (G' ,M') s.t. G, G' |- U'
+       then 
+          
+          {{K}} |-  Pi G.U where K contains all free vars from G and U
+          D' |- Pi G'. U' 
+          D', G' |- U'
+
        *) 
 
     val abstractECloCtx = (fn (G, U) => 
@@ -825,85 +796,138 @@ struct
 			     (Gs', Gdp', U', Vpi) 
 			   end)
 
+  (* abstractEVarCtx (G, p, s) = (G', D', U', s')
+
+     if G |- p[s]
+        and s contains free variables X_n .... X_1
+     then 
+        
+       D', G' |- U'  
+       where D' is the abstraction over 
+       the free vars X_n .... X_1
+ 
+       and s' is a substitution the free variables
+            X_n .... X_1, s.t. 
+
+       G' |- s' : D', G'        
+
+       G' |- U'[s']  is equivalent to G |- p[s]
+
+       Note: G' and U' are possibly strengthened
+   *)
 
     val abstractEVarCtx = 
-      (fn (G, (m, p),s) => 
+      (fn (G, p, s) => 
        let
-	 (* Kdp contains all EVars in G
-	  * G0' = G
-	  * abstract over m too! first or last ?
-	  *)
-	 val (G0', Kdp) = collectCtx (I.Null, G, I.Null)  	 
+	 (* Kdp contains all EVars in G,  G0' = G  *)	
+	 val (G0', Kdp) = collectCtx (I.Null, G, I.Null)          	 
 	 (* K contains all EVars in (p,s) *)
-	 val Km = collectExp(I.Null, (m, I.id), Kdp)
-	 val K = collectExp(G, (p, s), Km)	
-
+	 val K = collectExp(G, (p, s), Kdp)
 	 (* d = length(G) *)
-	 val (Gdp, d) = abstractCtx(K, 0, G)
-	 val U = abstractExp(K, d, (p,s))
-	 val N = abstractExp(K, d, (m,I.id))
+	 val (G', d) = abstractCtx(K, 0, G)
+	 val U' = abstractExp(K, d, (p,s))
+	 (* could be done nicer -bp *)
+	 val (D',I.Shift(0)) = abstractKSub' (I.Null, K, I.id)  
+	 val (_,s') = abstractKSubEVar (I.Null, K, I.id)
 
-	 val (Gx,I.Shift(0)) = abstractKSub' (I.Null, K, I.id)  
-	 val (_,sx) = abstractKSubEVar (I.Null, K, I.id)   
-	   (* 
-	      Gx, Gdp |- sx : Gs, Gdp
-	      Gx, Gdp | n[sx] : u[sx]
-	    *)
+	 val _ = if (!Global.chatter) >= 6 then 
+	       (print ("\nStrengthen Ctx\n ORIGINAL : \n ");
+		print (Print.expToString(I.Null, 
+					 raiseType(concat(G', D'), U')) 
+		       ^ "\n"))
+	       else 
+		 ()
+	 val (G', ss, s') =  if (!strengthen) then 
+ 	                       let
+				 val w' = weaken (G', I.targetFam U')
+				 val iw = Whnf.invert w' 
+				 val G' = Whnf.strengthen (iw, G')
+			       in		
+				 (G', iw, s')
+			       end
+			      else 
+				(G', I.id, s')
+
+	 val _ = if (!Global.chatter) >= 6 then 
+	       (print ("\nStrengthed \n ");
+		print (Print.expToString(I.Null, 
+					 raiseType(concat(G',D'), I.EClo(U', ss)))
+		       ^ "\n");
+		print ("\n EVar str. goal \n ");
+		print (Print.expToString(I.Null, 
+					 I.EClo(raiseType(G', I.EClo(U', ss)), s'))
+		       ^ "\n"))
+	       else 
+		 ()
        in 		
-	 (* Gx, Gdp |- U
-	  * Gdp |- sx : Gx, Gdp
-	  * Gdp |- n[sx]: u[sx]
-	  *)
-	 (Gdp, Gx, N, U, sx)
+	 (G', D', I.EClo(U', ss), s')
        end)
 
 
-(*
-    val abstractEVarECloCtx = 
-      (fn (G, U) => 
-       let
-	 val V = raiseType (G, U)
-	 val K = collectExp(I.Null, (V, I.id), I.Null)
-	 val (Gs',I.Shift(0)) = abstractKSub' (I.Null, K, I.id)  
-	 val V' = abstractExp (K, 0, (V, I.id))
-	 val (_,s'') = abstractKSubEVar (I.Null, K, I.id)   
-	 val (Gdp, V'') = deconstructPi (I.Null, V')
-	 val Vpi = abstractKPi (K, V') 
-       in 		
-	 (* Gdp |- s'' : Gs', Gdp
-	  * Gs', Gdp |- V''
-	  * Gdp |- V''[s'']
-	  *)
-	 (Gdp, Gs', V'', s'')
-       end)
-*)
+(* redundancy in the way we abstractAnswSub
+    bp Thu Feb 21 11:17:07 2002
 
+ *)
+
+
+  (* abstractAnswSub s = (Delta, s')
+    
+   if G |- s : Delta', G 
+      s may contain free variables
+    
+   then 
+  
+    Delta, G |- s' : Delta', G
+    where Delta contains all the 
+    free variables from s
+
+   *)
     val abstractAnswSub = 
       (fn s => 
        let
-	 (* Gdp |- s : Gex, Gdp *)
 	 val K = collectSub(I.Null, s, I.Null) 
-	 val s' = abstractSub' (K, 0, s)
+	 val s' = abstractSub' (K, 0, s) 
 	 val (G1,_) = abstractKSub' (I.Null, K, I.id)  
        in 
-	 (*  G1, Gdp |- s' : Gex, Gdp
-	  *)
 	 (G1, s')
        end)
 
-   val abstractAnsw = 
-      (fn (Gus, s) => 
+    val abstractAnswSub' = 
+      (fn (G, d, s) => 
        let
-	 (* Gus |- s : Gex *)
-(*	 val d = I.ctxLength(Gus) *)
-	 val (G0', Kus) = collectCtx (I.Null, Gus, I.Null)
-	 val K = collectSub(Gus, s, Kus) 
-	 val (Gus', d) = abstractCtx(K, 0, Gus)
-	 val s' = abstractSub' (K, d , s)
+	 val K = collectSub' (G, s, I.Null) 
+	 val s' = abstractSub' (K, d, s) 
 	 val (G1,_) = abstractKSub' (I.Null, K, I.id)  
        in 
-	 (*  G1', Gus |- s' : Gex  where G1', Gus = G1*)
-	 (concat(Gus',G1), s')
+	 (G1, s')
+       end)
+
+
+(* abstractAnsw (D, s) = (Delta, s')
+    
+   if D, G |- s : Delta', G 
+      s may contain free variables
+    
+   then 
+  
+    Delta, D, G |- s' : Delta', G
+    where Delta contains all the 
+    free variables from s
+
+   *)
+(* bp Tue Feb 19 23:35:30 2002 ??? don't understand this function *)
+   val abstractAnsw = 
+      (fn (D, s) => 
+       let
+	 (* val d = I.ctxLength(D) *)
+	 val (G0', Kus) = collectCtx (I.Null, D, I.Null)
+	 val K = collectSub(D, s, Kus) 
+	 val (Gus', d) = abstractCtx(K, 0, D)
+	 val s' = abstractSub' (K, d , s)
+	 val (D1,_) = abstractKSub' (I.Null, K, I.id)  
+       in 
+	 (*  D1', D |- s' : D', G  *)
+	 (concat(Gus',D1), s')
        end)
 
 
@@ -916,17 +940,19 @@ struct
 
         K is partially instantiated
 
-	s and M may contain existential vars 
+	s is a substitution only containing free vars 
+           X_n . ... . X_2 . X_1
 
-            Gdp |- s : Gs, Gdp
-	Gs, Gdp |- u
-            Gdp |- u[s]	
+            G' |- s : D', G'
+	D', G' |- u
+            G' |- u[s]	
 
       then 
         
-	Gex, Gdp |- sex : Gs, Gdp
-	Gex, Gdp | u[sex]
-        Gex, Gdp |- M'
+        after computation: 
+
+	D1, G' |- s1 : D', G'
+	D1, G' | u[s1]
 
      *)
 
@@ -934,6 +960,7 @@ struct
 		       raiseType (G, U)
 			   )
 
+    val collectEVars = collectEVars
   end
 end;  (* functor AbstractTabled *)
 
