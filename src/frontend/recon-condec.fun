@@ -96,7 +96,7 @@ struct
 	val ocd = Paths.def (i, oc1, oc2Opt)
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, NONE, i, U'', V'', L))
 		 else (Strict.check ((U'', V''), SOME(ocd));
-		       Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', L)))
+		       (Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', L))))
 	           
         val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")

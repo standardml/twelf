@@ -865,48 +865,53 @@ struct
 	  IntSyn.Decl (G', decLUName (G', D))
 	end
 
-    (* pisEName' (G, V) = V'
-       Assigns names to dependent Pi prefix of V.
+    (* pisEName' (G, i, V) = V'
+       Assigns names to dependent Pi prefix of V with i implicit abstractions
        Used for implicit EVar in constant declarations after abstraction.
     *)
-    fun pisEName' (G, IntSyn.Pi ((D, IntSyn.Maybe), V)) =
+    fun pisEName' (G, 0, V) = V
+      | pisEName' (G, i, IntSyn.Pi ((D, IntSyn.Maybe), V)) =
+        (* i > 0 *)
         let
 	  val D' = decEName (G, D)
 	in
 	  IntSyn.Pi ((D', IntSyn.Maybe),
-		     pisEName' (IntSyn.Decl (G, D'), V))
+		     pisEName' (IntSyn.Decl (G, D'), i-1, V))
 	end
-      | pisEName' (G, V) = V
+      (* | pisEName' (G, i, V) = V *)
 
-    fun pisEName (V) = pisEName' (IntSyn.Null, V)
+    fun pisEName (i, V) = pisEName' (IntSyn.Null, i, V)
 
-    (* defEName' (G, (U,V)) = (U',V')
+    (* defEName' (G, i, (U,V)) = (U',V')
        Invariant: G |- U : V  and G |- U' : V' since U == U' and V == V'.
-       Assigns name to dependent Pi prefix of V and corresponding lam prefix of U.
+       Assigns name to dependent Pi prefix of V and corresponding lam prefix of U
+       with i implicit abstractions
        Used for implicit EVar in constant definitions after abstraction.
     *)
-    fun defEName' (G, (IntSyn.Lam (D, U), IntSyn.Pi ((_, P), V))) =
+    fun defEName' (G, 0, UV) = UV
+      | defEName' (G, i, (IntSyn.Lam (D, U), IntSyn.Pi ((_ (* = D *), P), V))) =
+        (* i > 0 *)
         let
 	  val D' = decEName (G, D)
-	  val (U', V') = defEName' (IntSyn.Decl (G, D'), (U, V))
+	  val (U', V') = defEName' (IntSyn.Decl (G, D'), i-1, (U, V))
 	in
 	  (IntSyn.Lam (D', U'), IntSyn.Pi ((D', P), V'))
 	end
-      | defEName' (G, (U, V)) = (U, V)
+      (* | defEName' (G, i, (U, V)) = (U, V) *)
 
-    fun defEName UV = defEName' (IntSyn.Null, UV)
+    fun defEName (imp, UV) = defEName' (IntSyn.Null, imp, UV)
 
     fun nameConDec' (IntSyn.ConDec (name, parent, imp, status, V, L)) =
-          IntSyn.ConDec (name, parent, imp, status, pisEName V, L)
+          IntSyn.ConDec (name, parent, imp, status, pisEName (imp, V), L)
       | nameConDec' (IntSyn.ConDef (name, parent, imp, U, V, L)) =
 	let 
-	  val (U', V') = defEName (U, V)
+	  val (U', V') = defEName (imp, (U, V))
 	in
 	  IntSyn.ConDef (name, parent, imp, U', V', L)
 	end
       | nameConDec' (IntSyn.AbbrevDef (name, parent, imp, U, V, L)) =
 	let 
-	  val (U', V') = defEName (U, V)
+	  val (U', V') = defEName (imp, (U, V))
 	in
 	  IntSyn.AbbrevDef (name, parent, imp, U', V', L)
 	end
