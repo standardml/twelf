@@ -66,9 +66,9 @@ struct
 
     (* Wed Mar 13 10:27:00 2002 -bp  *)
     (* should probably go to intsyn.fun *)
-    fun compose(IntSyn.Null, G) = G
-    | compose(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose(G, G'), D)
-    
+    fun compose (G, IntSyn.Null) = G
+      | compose (G, IntSyn.Decl(G', D)) = IntSyn.Decl(compose(G, G'), D)
+
     fun shiftSub (IntSyn.Null, s) = s
       | shiftSub (IntSyn.Decl(G, D), s) = I.dot1 (shiftSub (G, s))
                               
@@ -164,11 +164,11 @@ struct
       in
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, HcHa, (fn S => sc (I.App(X,S))))
       end
-    | rSolve (ps', (C.Axists(I.ADec(_), r), s), dp as C.DProg (G, dPool), HcHa, sc) =
+    | rSolve (ps', (C.Axists(I.ADec(_, d), r), s), dp as C.DProg (G, dPool), HcHa, sc) =
       let
 	val X = I.newAVar ()
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, HcHa, sc)
+	rSolve (ps', (r, I.Dot(I.Exp(I.EClo(X, I.Shift(~d))), s)), dp, HcHa, sc)
    	(* we don't increase the proof term here! *)
       end
 
@@ -191,7 +191,7 @@ struct
 	   false)
     | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), HcHa, cnstr, sc) =
       let
-	val G'' = compose (G', G)
+	val G'' = compose (G, G')
 	val s' = shiftSub (G', s)
       in 
 	if Assign.unifiable (G'', (N, s'), (e1, s'))
@@ -268,14 +268,14 @@ struct
                 CSManager.trail (fn () =>
                                  rSolve (ps', (r, I.id), dp, (Hc, Ha),
                                          (fn S => (T.signal (G, T.SucceedGoal (tag, (Hc, Ha), I.EClo ps'));
-                                                   sc (I.Root(Hc, S))))))
+						   raise SucceedOnce S))))
                 then (* deep backtracking *)
                   (T.signal (G, T.RetryGoal (tag, (Hc, Ha), I.EClo ps'));
                    ())
               else (* shallow backtracking *)
                 ();
               matchSigDet sgn')
-	      handle SucceedOnce S =>  sc (I.Root(Hc, S))
+	      handle SucceedOnce S => sc (I.Root(Hc, S))
 	    end
 
         (* matchDProg (dPool, k) = ()
@@ -285,7 +285,9 @@ struct
         *)
 	fun matchDProg (I.Null, _) =
 	    (* dynamic program exhausted, try signature *)
-	    matchSig (Index.lookup (cidFromHead Ha)) 
+	    if deterministic
+	      then matchSigDet (Index.lookup (cidFromHead Ha))
+	    else matchSig (Index.lookup (cidFromHead Ha)) 
 	  | matchDProg (I.Decl (dPool', SOME(r, s, Ha')), k) =
 	    if eqHead (Ha, Ha')
             then

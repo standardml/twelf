@@ -112,7 +112,8 @@ struct
               any effect  sc S  might have
   *)
   and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =     
-      (if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
+      (* argument order in call to unifiable??? *)
+       (if Unify.unifiable (G, (Q, s), ps') (* effect: instantiate EVars *)
 	 then sc I.Nil			(* call success continuation *)
        else ())				(* fail *)
 
