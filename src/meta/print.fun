@@ -28,27 +28,33 @@ struct
     structure S = StateSyn 
     structure Fmt = Formatter
 
-    fun formatCtx (I.Null) = (I.Null, [])
-      | formatCtx (I.Decl (I.Null, D)) = 
+
+    fun formatSplitTag (S.Parameter) = Fmt.String "<p>"
+      | formatSplitTag (S.Lemma) = Fmt.String "<l>"
+      | formatSplitTag (S.Assumption k) = Fmt.String("<a" ^ Int.toString k ^ ">")
+      | formatSplitTag (S.Induction k) = Fmt.String ("<i" ^ Int.toString k ^ ">")
+
+    fun formatCtx (I.Null, B) = (I.Null, [])
+      | formatCtx (I.Decl (I.Null, D), I.Decl (I.Null, T)) = 
         let 
 	  val D' = Names.decName (I.Null, D)
 	in
           (I.Decl (I.Null, D'), 
-	   [Print.formatDec (I.Null, D')])
+	   [formatSplitTag T, Print.formatDec (I.Null, D')])
 	end
-      | formatCtx (I.Decl (G, D)) =
+      | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
 	  let 
-	    val (G', fmt) = formatCtx G
+	    val (G', fmt) = formatCtx (G, B)
 	    val D' = Names.decName (G', D)
 	  in
 	    (I.Decl (G', D'), 
-	      fmt @ [Fmt.String ",", Fmt.Space, Fmt.Break,
+	      fmt @ [Fmt.String ",", Fmt.Space, Fmt.Break, formatSplitTag T, 
 			   Print.formatDec (G', D')])
 	  end
 
     fun formatState (S.State ((G, B), (IH, OH), d, O, H, F)) = 
         let 
-	  val (G', fmt) = formatCtx G
+	  val (G', fmt) = formatCtx (G, B)
 	in
           Fmt.Vbox0 0 1 
 	  [Fmt.HVbox0 1 0 1 fmt, Fmt.Break,

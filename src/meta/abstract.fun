@@ -2,28 +2,34 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
 functor MTPAbstract (structure IntSyn' : INTSYN
+		     structure StateSyn' : STATESYN
 		     structure Whnf    : WHNF
 		       sharing Whnf.IntSyn = IntSyn'
 		     structure Unify   : UNIFY
 		       sharing Unify.IntSyn = IntSyn'
 		     structure Constraints : CONSTRAINTS
-		       sharing Constraints.IntSyn = IntSyn')
+		       sharing Constraints.IntSyn = IntSyn'
+		     structure Subordinate : SUBORDINATE
+		       sharing Subordinate.IntSyn = IntSyn')
   : MTPABSTRACT =
 struct
 
   structure IntSyn = IntSyn'
+  structure StateSyn = StateSyn'
     
   exception Error of string
     
   local
 
     structure I = IntSyn
+    structure S = StateSyn
     structure C = Constraints
       
     (* Intermediate Data Structure *)
 
     datatype EFVar =
-      EV of I.Exp option ref * I.Exp	(* Y ::= (X , {G} V)  if G |- X : V *)
+      EV of I.Exp option ref * I.Exp * S.SplitTag
+					(* y ::= (X , {G} V)  if G |- X : V *)
     | FV of I.name * I.Exp		(*     | (F , {G} V)  if G |- F : V *)
 
     (*
@@ -56,7 +62,7 @@ struct
     (* eqEVar X Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2,  _)) = (r1 = r2)
+    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2,  _, _)) = (r1 = r2)
       | eqEVar _ _ = false
 
     (* eqFVar F Y = B
@@ -74,7 +80,6 @@ struct
 	in
 	  exists' K
 	end
-
 
 
     fun or (I.Maybe, _) = I.Maybe
@@ -125,6 +130,17 @@ struct
       | piDepend ((D, I.Maybe), V) = 
 	  I.Pi ((D, occursInExp (1, V)), V)
 	
+    (* weaken (depth,  G, a) = (w')
+    *)
+    fun weaken (I.Null, a) = I.id 
+      | weaken (I.Decl (G', D as I.Dec (name, V)), a) = 
+        let 
+	  val w' = weaken (G', a)
+	in
+	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  else I.comp (w', I.shift)
+	end
+
     (* raiseType (G, V) = {{G}} V
 
        Invariant:
@@ -146,69 +162,72 @@ struct
 	     where K'' contains all EVars and FVars in (U,s)
     *)
     (* Possible optimization: Calculate also the normal form of the term *)
-    fun collectExpW (G, (I.Uni L, s), K) = K
-      | collectExpW (G, (I.Pi ((D, _), V), s), K) =
-          collectExp (I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (I.Root (F as I.FVar (name, V, s'), S), s), K) =
+    fun collectExpW (T, G, (I.Uni L, s), K) = K
+      | collectExpW (T, G, (I.Pi ((D, _), V), s), K) =
+          collectExp (T, I.Decl (G, I.decSub (D, s)), (V, I.dot1 s), collectDec (T, G, (D, s), K))
+      | collectExpW (T, G, (I.Root (F as I.FVar (name, V, s'), S), s), K) =
 	if exists (eqFVar F) K
-	  then collectSpine (G, (S, s), K)
+	  then collectSpine (T, G, (S, s), K)
 	else (* s' = ^|G| *)
-	  collectSpine (G, (S, s), I.Decl (collectExp (I.Null, (V, I.id), K), FV (name, V)))
-      | collectExpW (G, (I.Root (_ , S), s), K) =
-	  collectSpine (G, (S, s), K)
-      | collectExpW (G, (I.Lam (D, U), s), K) =
-	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
+	  collectSpine (T, G, (S, s), I.Decl (collectExp (T, I.Null, (V, I.id), K), FV (name, V)))
+      | collectExpW (T, G, (I.Root (_ , S), s), K) =
+	  collectSpine (S.decrease T, G, (S, s), K)
+      | collectExpW (T, G, (I.Lam (D, U), s), K) =
+	  collectExp (T, I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (T, G, (D, s), K))
+      | collectExpW (T, G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
 	  if exists (eqEVar X) K
-	    then collectSub(G, s, K)
+	    then collectSub (T, G, s, K)
 	  else let
 	         val _ = checkEmpty Cnstr
-		 val V' = raiseType (GX, V)
+		 val w = weaken (GX, I.targetFam V)
+		 val iw = Whnf.invert w
+		 val GX' = Whnf.strengthen (iw, GX)
+		 val V' = raiseType (GX', I.EClo (V, iw))
 	       in
-		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV(r, V')))
+		 collectSub (T, G, s, I.Decl (collectExp (T, I.Null, (V', I.id), K), EV(r, V', T)))
 	       end
       (* No other cases can occur due to whnf invariant *)
 
-    (* collectExp (G, (U, s), K) = K' 
+    (* collectExp (T, G, (U, s), K) = K' 
        
        same as collectExpW  but  (U,s) need not to be in whnf 
     *) 
-    and collectExp (G, Us, K) = collectExpW (G, Whnf.whnf Us, K)
+    and collectExp (T, G, Us, K) = collectExpW (T, G, Whnf.whnf Us, K)
 
-    (* collectSpine (G, (S, s), K) = K' 
+    (* collectSpine (T, G, (S, s), K) = K' 
 
        Invariant: 
        If    G |- s : G1     G1 |- S : V > P
        then  K' = K, K''
        where K'' contains all EVars and FVars in (S, s)
      *)
-    and collectSpine (G, (I.Nil, _), K) = K
-      | collectSpine (G, (I.SClo(S, s'), s), K) = 
-          collectSpine (G, (S, I.comp (s', s)), K)
-      | collectSpine (G, (I.App (U, S), s), K) =
-	  collectSpine (G, (S, s), collectExp (G, (U, s), K))
+    and collectSpine (T, G, (I.Nil, _), K) = K
+      | collectSpine (T, G, (I.SClo(S, s'), s), K) = 
+          collectSpine (T, G, (S, I.comp (s', s)), K)
+      | collectSpine (T, G, (I.App (U, S), s), K) =
+	  collectSpine (T, G, (S, s), collectExp (T, G, (U, s), K))
 
-    (* collectDec (G, (x:V, s), K) = K'
+    (* collectDec (T, G, (x:V, s), K) = K'
 
        Invariant: 
        If    G |- s : G1     G1 |- V : L
        then  K' = K, K''
        where K'' contains all EVars and FVars in (V, s)
     *)
-    and collectDec (G, (I.Dec (_, V), s), K) =
-          collectExp (G, (V, s), K)
+    and collectDec (T, G, (I.Dec (_, V), s), K) =
+          collectExp (T, G, (V, s), K)
 
-    (* collectSub (G, s, K) = K' 
+    (* collectSub (T, G, s, K) = K' 
 
        Invariant: 
        If    G |- s : G1    
        then  K' = K, K''
        where K'' contains all EVars and FVars in s
     *)
-    and collectSub (G, I.Shift _, K) = K
-      | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
-      | collectSub (G, I.Dot (I.Exp (U), s), K) =
-	  collectSub (G, s, collectExp (G, (U, I.id), K))
+    and collectSub (T, G, I.Shift _, K) = K
+      | collectSub (T, G, I.Dot (I.Idx _, s), K) = collectSub (T, G, s, K)
+      | collectSub (T, G, I.Dot (I.Exp (U), s), K) =
+	  collectSub (T, G, s, collectExp (T, G, (U, I.id), K))
 
     (* abstractEVar (K, depth, X) = C'
      
@@ -219,7 +238,7 @@ struct
        then C' = BVar (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractEVar (I.Decl (K', EV (r', _)), depth, X as I.EVar (r, _, _, _)) =
+    fun abstractEVar (I.Decl (K', EV (r', _, _)), depth, X as I.EVar (r, _, _, _)) =
         if r = r' then I.BVar (depth+1)
 	else abstractEVar (K', depth+1, X)
       | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
@@ -356,45 +375,31 @@ struct
        and  . |- V' : L
        and  . ||- V'
     *)
-    fun abstractCtx (I.Null) = I.Null
-      | abstractCtx (I.Decl (K', EV (_, V'))) =
+    fun abstractCtx (I.Null) = (I.Null, I.Null)
+      | abstractCtx (I.Decl (K', EV (_, V', T))) =
         let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
+	  val (G', B') = abstractCtx K'
 	in
-	  I.Decl (abstractCtx K', I.Dec (NONE, V''))
+	  (I.Decl (G', I.Dec (NONE, V'')), I.Decl (B', T))
 	end
-      | abstractCtx (I.Decl(K', FV (name,V'))) =
+(*      | abstractCtx (I.Decl(K', FV (name,V'))) =
 	let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
+	  val (G', B') = abstractCtx K'
 	in
-	  I.Decl (abstractCtx K', I.Dec(SOME(name), V''))
-	end
+	  I.Decl (G', I.Dec(SOME(name), V'')),
+	  I.Decl (B', S.Assumption n, v
+	end *)
 
-    (* abstractKLam (K, U) = U'
-       where U' = [[K]] U
-
-       Invariant: 
-       If   {{K}} |- U : V 
-       and  . ||- U
-       and  . ||- V
-
-       then U' = [[K]] U
-       and  . |- U' : {{K}} V
-       and  . ||- U'
-    *)
-    fun abstractKLam (I.Null, U) = U
-      | abstractKLam (I.Decl (K', EV (_,V')), U) =
-          abstractKLam (K', I.Lam (I.Dec(NONE, abstractExp (K', 0, (V', I.id))), U))
-      | abstractKLam (I.Decl (K', FV (name,V')), U) =
- 	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
 
     (* abstractSub
 
        Invariant: 
     *)
-    fun abstractSubAll s =
+    fun abstractSubAll (s, B) =
         let
 	  fun abstractSubAll' (K, s' as (I.Shift _)) = s'
 	    | abstractSubAll' (K, I.Dot (F as I.Idx _, s')) =
@@ -402,12 +407,12 @@ struct
 	    | abstractSubAll' (K, I.Dot (I.Exp U, s')) =
 		I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractSubAll' (K, s'))
 
-	  fun collectSub' (I.Shift _, K) = K
-	    | collectSub' (I.Dot (I.Idx _, s), K) = collectSub' (s, K)
-	    | collectSub' (I.Dot (I.Exp (U), s), K) =
-  	        collectSub' (s, collectExp (I.Null, (U, I.id), K))
+	  fun collectSub' ((I.Shift _, _), K) = K
+	    | collectSub' ((I.Dot (I.Idx _, s), I.Decl (B, T)), K) = collectSub' ((s, B), K)
+	    | collectSub' ((I.Dot (I.Exp (U), s), I.Decl (B, T)), K) =
+  	        collectSub' ((s, B), collectExp (T, I.Null, (U, I.id), K))
 
-	  val K = collectSub' (s, I.Null) 
+	  val K = collectSub' ((s, B), I.Null) 
 	in
 	  (abstractCtx K, abstractSubAll' (K, s))
 	end 

@@ -46,16 +46,19 @@ structure RelFun =
 	  structure FunNames = FunNames);
 
 (* Functor instantiation for the Prover *)
-structure MTPAbstract =
-  MTPAbstract (structure IntSyn' = IntSyn
-	       structure Whnf = Whnf
-	       structure Constraints = Constraints
-	       structure Unify = Unify);
-
 structure StateSyn = 
   StateSyn (structure FunSyn' = FunSyn
 	    structure IntSyn = IntSyn
 	    structure Order' = Order)
+
+structure MTPAbstract =
+  MTPAbstract (structure IntSyn' = IntSyn
+	       structure StateSyn' = StateSyn
+	       structure Whnf = Whnf
+	       structure Constraints = Constraints
+	       structure Unify = Unify
+	       structure Subordinate = Subordinate);
+
 
 structure MTPInit = 
   MTPInit (structure MTPGlobal = MTPGlobal

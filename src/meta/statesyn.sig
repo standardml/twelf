@@ -29,4 +29,5 @@ sig
            * FunSyn.For			(* Formula *)
 
   val orderSub : Order * FunSyn.IntSyn.Sub -> Order  
+  val decrease : SplitTag -> SplitTag
 end; (* signature STATESYN *)

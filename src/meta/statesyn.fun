@@ -39,7 +39,18 @@ struct
       | orderSub (Simul Os, s) = Simul (map (fn O => orderSub (O, s)) Os)
       (* by invariant: no case for All and And *)
 
+
+    (* decrease T = T'
+
+       Invariant:
+       T is either an Assumption or Induction tag
+       T' = T - 1
+    *)
+    fun decrease (Assumption k) = Assumption (k-1)
+      | decrease (Induction k) = Induction k
+
   in
     val orderSub = orderSub
+    val decrease = decrease
   end (* local *)
 end; (* signature STATESYN *)

@@ -4,8 +4,10 @@
 signature MTPABSTRACT =
 sig
   structure IntSyn : INTSYN
+  structure StateSyn : STATESYN
 
   exception Error of string
     
-  val abstractSub : IntSyn.Sub  -> (IntSyn.dctx * IntSyn.Sub)
+  val abstractSub : IntSyn.Sub * StateSyn.SplitTag IntSyn.Ctx 
+        -> ((IntSyn.dctx * StateSyn.SplitTag IntSyn.Ctx) * IntSyn.Sub)
 end;  (* signature MTPABSTRACT *)

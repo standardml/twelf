@@ -10,6 +10,7 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 			sharing StateSyn'.FunSyn = FunSyn
 		      structure MTPAbstract : MTPABSTRACT
 			sharing MTPAbstract.IntSyn = IntSyn
+		        sharing MTPAbstract.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 		        sharing MTPrint.StateSyn = StateSyn'
 		      structure Whnf : WHNF
@@ -183,9 +184,8 @@ struct
        and  abstract abstraction function
        then C' = (C1, ... Cn) are resulting cases from splitting D[s]
     *)
-    fun split ((G, B), (D as I.Dec (_, V), s), abstract) = 
-           lowerSplitDest (I.Null, (V, s), 
-			   fn U' => abstract (I.Dot (I.Exp (U'), s)))
+    fun split (D as I.Dec (_, V), s, B, abstract) = 
+           lowerSplitDest (I.Null, (V, s), fn U' => abstract (I.Dot (I.Exp (U'), s), B))
       
     (* rename to add N prefix? *)
     (* occursIn (k, U) = B, 
@@ -408,16 +408,17 @@ struct
 	   MetaAbstract.abstract (M.State (name ^ name', M.Prefix (G', M', B'), I.EClo (V, s'))))
 *)
 
-    fun abstractInit (S as S.State ((G, B), (IH, OH), d, O, H, F)) (G', s') = 
+    fun abstractInit (S as S.State ((G, B), (IH, OH), d, O, H, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
-	  S.State ((G', B(*'*)), (IH, OH), d, S.orderSub (O, s'), 
+	  S.State ((G', B'), (IH, OH), d, S.orderSub (O, s'), 
 		   map (fn (i, O) => (i, S.orderSub (O, s'))) H, F.TClo (F, s')))
 
-    fun abstractFinal (abstract) s =
-          abstract (MTPAbstract.abstractSub s)
+    fun abstractFinal (abstract) (B, s) =
+          abstract (MTPAbstract.abstractSub (B, s))
 
-    fun abstractCont ((D, T), abstract) (G, s) =  
-          abstract (I.Decl (G, I.decSub (D, s)), I.dot1 s)
+    fun abstractCont ((D, T), abstract) ((G, B), s) =  
+          abstract ((I.Decl (G, I.decSub (D, s)),
+		     I.Decl (B, T)), I.dot1 s)
 
     fun makeAddressInit S k = (S, k)
     fun makeAddressCont makeAddress k = makeAddress (k+1)
@@ -428,48 +429,47 @@ struct
        DOES NOT TREAT PARAMETERS YET!!!!!  -cs
     *)
     fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) = 
-          ((I.Null, I.Null), I.id, nil)
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Assumption b))),
+          (I.id, nil)
+      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
 		 isIndex, abstract, makeAddress) = 
 	  let 
-	    val ((G', B'), s', ops) =
+	    val (s', ops) =
 		expand' ((G, B), isIndexSucc (D, isIndex), 
 			 abstractCont ((D, T), abstract),
 			 makeAddressCont makeAddress)
 	    val I.Dec (xOpt, V) = D
-	    val X = I.newEVar (G', I.EClo (V, s'))
+	    val X = I.newEVar (I.Null, I.EClo (V, s'))
 	    val ops' = if not (isIndex 1) 
 			   then 
-			       (makeAddress 1, split ((G', B'), (D, s'), abstractFinal abstract))
+			       (makeAddress 1, split (D, s', B', abstractFinal abstract))
 			       :: ops
 		       else ops
 	  in
-	    ((G', B'), I.Dot (I.Exp (X), s'), ops')
+	    (I.Dot (I.Exp (X), s'), ops')
 	  end
       | expand' ((I.Decl (G, D), I.Decl (B, T)), isIndex, abstract, makeAddress) = 
 	  let 
-	    val ((G', M'), s', ops) =
-		expand' ((G, B), isIndexSucc (D, isIndex), (* -###- *)
+	    val (s', ops) =
+		expand' ((G, B), isIndexSucc (D, isIndex),
 			 abstractCont ((D, T), abstract),
 			 makeAddressCont makeAddress)
 	    val I.Dec (xOpt, V) = D
-	    val X = I.newEVar (G', I.EClo (V, s'))
+	    val X = I.newEVar (I.Null, I.EClo (V, s'))
 	  in
-	    ((I.Decl (G', I.decSub (D, s')), I.Decl (B, T)), 
-	     I.Dot (I.Exp (X), s'), ops)
+	    (I.Dot (I.Exp (X), s'), ops)
 	  end
 
-    (* expand ((G, M), V) = ops'
+    (* expand ((G, B), V) = ops'
 
        Invariant:
        If   |- G ctx
-       and  G |- M mtx
+       and  G |- B
        and  G |- V : L
        then ops' is a list of all possiblie splitting operators
     *)
     fun expand (S as S.State ((G, B), (IH, OH), d, O, H, F)) =
       let 
-	val (_, _, ops) =
+	val (_, ops) =
 	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
       in
 	ops
