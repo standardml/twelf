@@ -36,7 +36,10 @@ TODO list of meta theorem prover
 --------------------------------
 
 Code Walk (Invariants, Mutual recursion)
-Residual lemmas
+Anchor into Twelf
 Parameter Cases
+  base cases
+  inductive cases
+Residual lemmas
 Index variables
 Proof terms

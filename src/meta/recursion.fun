@@ -755,18 +755,22 @@ struct
        and  d = |G|
     *)
     
-    fun skolem (d, GB, w, (F.True, s), k) = (GB, w)
-      | skolem (d, GB, w, (F.All (F.Prim D, F), s), k) =
-          skolem (d+1, GB, w, (F, I.dot1 s), 
+    fun skolem (n, d, GB, w, (F.True, s), k) = (GB, w)
+      | skolem (n, d, GB, w, (F.All (F.Prim D, F), s), k) =
+          skolem (n, d+1, GB, w, (F, I.dot1 s), 
 		  fn (V', w') => k (I.Pi ((I.decSub (D, I.comp (s, w)), I.Virtual), V'), w'))
-      | skolem (d, (G, B), w, (F.Ex (I.Dec (_, V), F), s), k) = 
+      | skolem (n, d, (G, B), w, (F.Ex (I.Dec (_, V), F), s), k) = 
 	  let 
 	    val V' = Whnf.normalize (k (I.EClo (V, s), w), I.id)
 	    val D' = Names.decName (G, I.Dec (NONE, V'))
 	  in
-	    skolem (d, (I.Decl (G, D'), I.Decl (B, S.Lemma)), 
+	    skolem (n, d, (I.Decl (G, D'), I.Decl (B, S.Lemma)), 
 		    I.comp (w, I.shift), (F, I.Dot (I.Exp (I.Root (I.BVar 1, spine d)), s)), k)
 	  end
+      | skolem (1, d, (G, B), w, (F.And (F1, F2), s), k) =
+	  skolem (1, d, (G, B), w, (F1, s), k)
+      | skolem (n, d, (G, B), w, (F.And (F1, F2), s), k) = 
+	  skolem (n-1, d, (G, B), w, (F2, s), k)
 
 
     (* updateState (S, (Ds, s))
@@ -781,30 +785,33 @@ struct
       | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Ass (n', O', G') :: L, s)) =
         let
 	  val ((G'', B''), s') = merge ((G, B), (G', s), S.Induction (!MTPGlobal.maxSplit)) 
+	  val s'' = I.comp (s, s')
         in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
-				(n', S.orderSub (O', s')) :: 
+				(n', S.orderSub (O', s'')) :: 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
 				map (fn (n', F') => (n', F.forSub (F', s'))) R, F.forSub (F, s')),
-		       (L, I.comp (s, s')))
+		       (L, s''))
 	end
       | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Lemma (n', Frl') :: L, s)) =
         let
-	  val ((G'', B''), s') = skolem (0, (G, B), I.id, (Frl', s), fn (V, w) => I.EClo (V, w)) 
+	  val ((G'', B''), s') = skolem (n', 0, (G, B), I.id, (Frl', s), fn (V, w) => I.EClo (V, w)) 
+	  val s'' = I.comp (s, s')
 	in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
-				(n', F.forSub (Frl', s')) :: 
+				(n', F.forSub (Frl', s'')) :: 
 				map (fn (n', F') => (n', F.forSub (F', s'))) R, F.forSub (F, s')),
-		       (L, I.comp (s, s')))
+		       (L, s''))
 	end
       
 
-    fun calc (n', G', (F', s'), (O', t'), S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
+    fun calc (n', G', (F', O', s'), S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
 	let
-	  val Ot' = S.orderSub (O', t')
-	  val Ds = if n < n' then ordle (G, Ot', O, check (G, n', t', Ot', IH, H, R, (F', s')), nil)
-		   else ordlt (G, Ot', O, check (G, n', t', Ot', IH, H, R, (F', s')), nil)
+	  val Os' = S.orderSub (O', s')
+	  val check' = check (G, n', s', Os', IH, H, R, (F', s'))
+	  val Ds = if n < n' then ordle (G, Os', O, check', nil)
+		   else ordlt (G, Os', O, check', nil)
 	in 
 	  updateState (S, (Ds, I.id))
 	end
@@ -819,25 +826,25 @@ struct
        sc returns with all addition assumptions/residual lemmas for a certain
        branch of the theorem.
     *)
-    fun createEVars (n, G, (F.All (F.Prim (D as I.Dec (_, V)), F), s), (S.All (_, O), t), S) =
+    fun createEVars (n, G, (F.All (F.Prim (D as I.Dec (_, V)), F), S.All (_, O), s), S) =
         let 
 	  val X = I.newEVar (G, I.EClo (V, s))
 	in
-	  createEVars (n, G, (F, I.Dot (I.Exp X, s)), (O, I.Dot (I.Exp X, t)), S)
+	  createEVars (n, G, (F, O, I.Dot (I.Exp X, s)), S)
 	end
-      | createEVars (n, G, (F.And (F1, F2), s), (S.And (O1, O2), t), S) =
+      | createEVars (n, G, (F.And (F1, F2), S.And (O1, O2), s) , S) =
 	let
-	  val (n', S') = createEVars (n, G, (F1, s), (O1, t), S)
+	  val (n', S') = createEVars (n, G, (F1, O1, s), S)
 	in
-	  createEVars (n, G, (F2, s), (O2, t), S')
+	  createEVars (n, G, (F2, O2, s), S')
 	end
-      | createEVars (n, G, (F, s), (O, t), S) = (n+1, calc (n, G, (F, s), (O, t), S))
+      | createEVars (n, G, (F, O, s), S) = (n+1, calc (n, G, (F, O, s), S))
 
 
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
       let 
 	val s = I.Shift (I.ctxLength G)
-	val (_, S') = createEVars (1, G, (IH, s), (OH, s), S)
+	val (_, S') = createEVars (1, G, (IH, OH, s), S)
       in
 	S'
       end

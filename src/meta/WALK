@@ -63,6 +63,7 @@ prover.sig
 recursion.fun
 
 recursion.sig
+  DONE -cs
 
 relfun.fun
 
