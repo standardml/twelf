@@ -470,9 +470,13 @@ Maintained to present reasonable menus.")
   (skip-chars-forward *whitespace*)
   (while (looking-at *twelf-comment-start*)
     (cond ((looking-at "%{")		; delimited comment
-           (condition-case nil (forward-sexp 1)
-	     (error (goto-char (point-max))))
-           (or (eobp) (forward-char 1)))
+	   (forward-char 2)
+	   (let ((comment-level 1))
+	     (while (and (> comment-level 0)
+			 (re-search-forward "\\(%{\\)\\|\\(}%\\)" nil 'limit))
+	       (cond
+		((match-beginning 1) (setq comment-level (1+ comment-level)))
+		((match-beginning 2) (setq comment-level (1- comment-level)))))))
 	  (t				; single-line comment
 	   (end-of-line 1)))
     (skip-chars-forward *whitespace*)))
