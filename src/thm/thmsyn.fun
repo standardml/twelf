@@ -2,14 +2,17 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Brigitte Pientka *)
 
-functor ThmSyn (structure ModeSyn' : MODESYN
+functor ThmSyn (structure IntSyn : INTSYN
+		structure ModeSyn' : MODESYN
+		  sharing ModeSyn'.IntSyn = IntSyn
 		structure Abstract : ABSTRACT
-		sharing Abstract.IntSyn = ModeSyn'.IntSyn
+		sharing Abstract.IntSyn = IntSyn
 		structure Whnf : WHNF
-		sharing Whnf.IntSyn = ModeSyn'.IntSyn
+		sharing Whnf.IntSyn = IntSyn
 		structure Paths' : PATHS)
   : THMSYN =
 struct
+  structure IntSyn = IntSyn
   structure ModeSyn = ModeSyn'
   structure Paths = Paths'
 
@@ -31,7 +34,7 @@ struct
       RedOrder of Predicate * Order * Order
 
   datatype Callpats =
-    Callpats of (ModeSyn.IntSyn.cid * Param list) list 
+    Callpats of (IntSyn.cid * Param list) list 
 
   (* Termination declaration *)
   datatype TDecl = 
@@ -44,8 +47,8 @@ struct
 
   (* Theorem declaration *)
   datatype ThDecl =
-    ThDecl of (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list
-              * ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.Mode ModeSyn.IntSyn.Ctx * int
+    ThDecl of (IntSyn.Dec IntSyn.Ctx * IntSyn.Dec IntSyn.Ctx) list
+              * IntSyn.Dec IntSyn.Ctx * ModeSyn.Mode IntSyn.Ctx * int
 
   (* Proof declaration *)
   datatype PDecl = 
@@ -53,12 +56,12 @@ struct
 
   (* World declaration *)
   datatype WDecl = 
-    WDecl of (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * 
-	      ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list * Callpats
+    WDecl of (IntSyn.Dec IntSyn.Ctx * 
+	      IntSyn.Dec IntSyn.Ctx) list * Callpats
 
   local
 
-    structure I = ModeSyn.IntSyn
+    structure I = IntSyn
     structure M = ModeSyn
 
     (* theoremDecToConDec (name, T) = D' 

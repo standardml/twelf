@@ -545,11 +545,13 @@ struct
 	        WorldSyn.Schema (hack GBs, WorldSyn.LabelDec
 				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
 	  val W = hack GBs
+	  val _ = List.app (fn (a, _) => WorldSyn.install (a, W)) cpa
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%worlds " ^ WorldPrint.worldToString W ^ " " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
+		    then print ("%worlds " ^ WorldPrint.worldToString W ^ " "
+				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in
-	  (map (fn (c, _) => WorldSyn.worldcheck W c) cpa ; ())
+	  (map (fn (a, _) => WorldSyn.worldcheck W a) cpa ; ())
 	end
       | install1 (fileName, Parser.Use name) =
           CSManager.useSolver (name)
@@ -614,6 +616,7 @@ struct
 		    Subordinate.reset ();
 		    Terminate.reset (); (* needed? -fp *)
 		    Total.reset ();	(* -fp *)
+		    WorldSyn.reset ();	(* -fp *)
 		    Reduces.reset ();	(* -bp *)
 		    FunSyn.labelReset ();
 		    CompSyn.sProgReset (); (* necessary? -fp *)

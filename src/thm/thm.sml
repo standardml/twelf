@@ -1,7 +1,7 @@
 structure ThmSyn = 
-  ThmSyn (structure IntSyn' = IntSyn
-	  structure Abstract = Abstract
+  ThmSyn (structure IntSyn = IntSyn
 	  structure ModeSyn' = ModeSyn
+	  structure Abstract = Abstract
 	  structure Whnf = Whnf
 	  structure Paths' = Paths);
 

@@ -1,5 +1,6 @@
 structure WorldSyn = 
-  WorldSyn (structure IntSyn = IntSyn
+  WorldSyn (structure Global = Global
+	    structure IntSyn = IntSyn
 	    structure Whnf = Whnf
 	    structure Names = Names
 	    structure Unify = UnifyTrail
@@ -8,6 +9,7 @@ structure WorldSyn =
 	    structure Index = Index
 	    structure CSManager = CSManager
 	    structure Print = Print
+	    structure Table = IntRedBlackTree
 	    structure Paths = Paths
 	    structure Origins = Origins);
 

@@ -3,7 +3,8 @@
 (* Modified: Frank Pfenning *)
 
 functor WorldSyn
-  (structure IntSyn : INTSYN
+  (structure Global : GLOBAL
+   structure IntSyn : INTSYN
    structure Whnf : WHNF
      sharing Whnf.IntSyn = IntSyn
    structure Index : INDEX
@@ -20,6 +21,8 @@ functor WorldSyn
      sharing CSManager.IntSyn = IntSyn
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn
+
+   structure Table : TABLE where type key = int
 
    structure Paths : PATHS
    structure Origins : ORIGINS
@@ -45,20 +48,24 @@ struct
 			     Origins.linesInfoLookup (fileName),
 			     "Constant " ^ Names.constName c ^ "\n" ^ msg)))
 
-  type label = int      
-  type name = string
-  type lemma = int 
-
   type dlist = IntSyn.Dec list
 
   datatype LabelDec =			(* ContextBody                *)
-    LabelDec of name * dlist * dlist    (* LD = SOME G1. BLOCK G2     *)
+    LabelDec of string * dlist * dlist	(* LD = l : SOME L1. BLOCK L2 *)
 
   datatype World =			(* Worlds                     *)
     Closed				(* W ::= .                    *)
-  | Schema of World * LabelDec          (*     | W, l : LD            *)
+  | Schema of World * LabelDec          (*     | W, LD                *)
 
   local
+    
+   
+    val worldsTable : World Table.Table = Table.new (0)
+    fun reset () = Table.clear worldsTable
+    fun install (cid, W) = Table.insert worldsTable (cid, W)
+    fun lookup (cid) = Table.lookup worldsTable (cid)
+
+    
     (* Regular world expressions R
        Invariants:
        If R = (D1,...,Dn)[s] then G |- s : G' and G' |- D1,...,Dn ctx
@@ -357,6 +364,8 @@ struct
       end
 
   in
+    val reset = reset
+    val install = install
     val worldcheck = worldcheck
     val ctxToList = ctxToList
   end

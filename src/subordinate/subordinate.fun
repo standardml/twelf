@@ -27,7 +27,10 @@ struct
 	   where subordination is transitive but not necessarily
 	   reflexive
     *)
-
+    (* possible improvement: use table instead of array
+       since type families are sparse in the space of constants
+       possible improvement: keep lists ordered
+    *)
     val soArray : (IntSyn.cid list * IntSyn.cid list) Array.array    
         = Array.array (Global.maxCid + 1, (nil, nil)) 
 
@@ -153,7 +156,7 @@ struct
        then soArray is updated according to all dependencies in V
        and  soArray is valid
     *)
-    fun installKind (I.Uni L, a) = ()
+    fun installKind (I.Uni(L), a) = ()
       | installKind (I.Pi ((I.Dec (_, V1), P), V2), a) =
           (transClosure (I.targetFam V1, a);
 	   installKind (V2, a))
@@ -170,9 +173,10 @@ struct
        and  G  |- s2 : G2, and G2 |- V2 : L
        and  G  |- V1[s1] = V2[s2] : L
        and  soArray valid	 
-       then soArray is updated accorindg to all dependencies in U1[s1]
+       then soArray is updated according to all dependencies in U1[s1]
        and  soArray is valid
     *)
+    (*
     fun installExp (G, Us, Vs) = installExpW (G, Whnf.whnf Us, Whnf.whnf Vs)
     and installExpW (G, (I.Uni (L), _), _) = ()
       | installExpW (G, (I.Pi ((D as I.Dec (_, V1), _) , V2), s), 
@@ -191,7 +195,7 @@ struct
 			(V2, I.dot1 t)))
       | installExpW (G, (I.FgnExp (cs, ops), s), Vs) =
           installExpW (G, (#toInternal(ops) (), s), Vs)
-
+    *)
     (* inferSpine (G, (S, s1), (V2, s2)) = ()
 
        Invariant: 
@@ -202,6 +206,7 @@ struct
        then soArray is updated accorindg to all dependencies in U1[s1]
        and  soArray is valid
      *)
+    (*
     and installSpine (G, (I.Nil, _), Vs) = ()
       | installSpine (G, (I.SClo (S, s'), s), Vs) = 
 	  installSpine (G, (S, I.comp (s', s)), Vs)
@@ -210,23 +215,66 @@ struct
 	  (installExp (G, (U, s1), (V1, s2));
 	   installSpine (G, (S, s1), 
 			 Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))))
-
-    (* inferCon (G, C) = V'
-
-       Invariant: 
-       If    G |- C : V  
-       then  G |- V : L 
     *)
-    and inferCon (G, I.BVar (k')) = 
+
+    (* Changed the functions above to use only approximate types
+       and take advantage of normal form invariant.
+       Tue Mar 27 21:27:59 2001 -fp
+    *)
+
+    (* inferConApprox (G, C) = V'
+       where V' is an approximate type of C
+       V' ~nf
+
+       Invariant: G nf, G |- C ~:~ V for some V.
+    *)
+    fun inferConApprox (G, I.BVar (k')) = 
 	let 
-	  val I.Dec (_,V) = I.ctxDec (G, k')
+	  (* ignore shift: type is approximate, only shape is important *)
+	  val I.Dec (_, V) = I.ctxDec (G, k')
+	  (* in case result of ctxDec is shifted *)
+	  fun approx (I.EClo (V, _)) = V
+            | approx V = V		(* not shifted: must be NF *)
 	in
-	  V
+	  (* accurate, but not NF would be: V *)
+	  approx V
 	end
-      | inferCon (G, I.Const(c)) = I.constType (c)
-      | inferCon (G, I.Def(d))  = I.constType (d)
-      | inferCon (G, I.Skonst(c)) = I.constType (c)
-      | inferCon (G, I.FgnConst(cs, conDec)) = I.conDecType (conDec)
+      | inferConApprox (G, I.Const(c)) = I.constType (c)
+      | inferConApprox (G, I.Def(d))  = I.constType (d)
+      | inferConApprox (G, I.Skonst(c)) = I.constType (c)
+      | inferConApprox (G, I.FgnConst(cs, conDec)) = I.conDecType (conDec)
+
+    (* installExp (G, U, V) = ()
+       where G |- U ~:~ V  (U has shape V)
+       G nf, U nf, V nf (approx)
+       Effect: add subordination info from U into table
+    *)
+    fun installExp (G, I.Uni (L), _) = ()
+      | installExp (G, I.Pi ((D as I.Dec (_, V1), _), V2), I.Uni(I.Type)) = 
+          (transClosure (I.targetFam V1, I.targetFam V2);
+	   installExp (G, V1, I.Uni(I.Type));
+	   installExp (I.Decl (G, D), V2, I.Uni(I.Type)))
+      | installExp (G, I.Root (C, S), _) =
+	  installSpine (G, S, inferConApprox (G, C))
+      | installExp (G, I.Lam (D1 as I.Dec (_, V1), U), I.Pi (_, V2)) =
+	  (transClosure (I.targetFam V1, I.targetFam V2);
+	   installExp (G, V1, I.Uni(I.Type));
+	   installExp (I.Decl (G, D1), U, V2))
+      | installExp (G, I.FgnExp (cs, ops), V) =
+          installExp (G, Whnf.normalize (#toInternal(ops) (), I.id), V)
+
+    (* installSpine (G, S, V) = ()
+       where G |- S ~:~ V => V'  (S has shape V => V' for some V')
+       G nf, S nf, V nf
+       Effect: add subordination info from S into table
+     *)
+    and installSpine (G, I.Nil, V) = ()
+      | installSpine (G, I.App (U, S), I.Pi ((I.Dec (_, V1), _), V2)) =
+	  (installExp (G, U, V1);
+	   installSpine (G, S, V2))
+	  (* accurate would be instead of V2: *)
+	  (* Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2)) *)
+
 
     (* install c = ()
 
@@ -242,7 +290,9 @@ struct
       in
 	case I.targetFamOpt V
 	  of NONE => installKind (V, c)
-	   | SOME a => installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id))
+	   | SOME a => (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
+	               (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
+	               installExp (I.Null, V, I.Uni(I.Type))
       end
 
     (* weaken (G, a) = (w')
