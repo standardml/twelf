@@ -12,6 +12,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+  ../compat/sources.cm
   ../timing/sources.cm
   ../stream/sources.cm
   ../global/sources.cm

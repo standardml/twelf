@@ -14,17 +14,17 @@ functor Tabled ((*! structure IntSyn' : INTSYN !*)
 		structure Index : INDEX
 		(*!  sharing Index.IntSyn = IntSyn' !*)
 		structure Queue : QUEUE
-		structure TableParam : TABLEPARAM
+		(*! structure TableParam : TABLEPARAM !*)
 		(*!  sharing TableParam.IntSyn = IntSyn' !*)
 		(*!  sharing TableParam.CompSyn = CompSyn' !*)
 
 		structure AbstractTabled : ABSTRACTTABLED
 		(*!  sharing AbstractTabled.IntSyn = IntSyn' !*)
-		  sharing AbstractTabled.TableParam = TableParam 
+		(*! sharing AbstractTabled.TableParam = TableParam !*)
 		structure MemoTable : MEMOTABLE		
 		(*!  sharing MemoTable.IntSyn = IntSyn' !*)
 		(*!  sharing MemoTable.CompSyn = CompSyn'  !*)
-		  sharing MemoTable.TableParam = TableParam 
+		(*! sharing MemoTable.TableParam = TableParam  !*)
 		(* CPrint currently unused *)
 		structure CPrint : CPRINT 
 		(*!  sharing CPrint.IntSyn = IntSyn' !*)
@@ -44,7 +44,7 @@ struct
   (*! structure CompSyn = CompSyn' !*)
   structure Unify = Unify
   structure TabledSyn = TabledSyn
-  structure TableParam = TableParam
+  (*! structure TableParam = TableParam !*)
 (*  structure Match = Match*)
 
   local

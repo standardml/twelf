@@ -10,13 +10,6 @@ structure AbsMachine =
               (*! structure CSManager = CSManager !*)
 		); 
 
-structure TableParam =
- TableParam (structure Global = Global
-             (*! structure IntSyn' = IntSyn !*)
-	     (*! structure CompSyn' = CompSyn !*)
-	     (*! structure RBSet = RBSet !*))
-
-
 structure AbstractTabled =
   AbstractTabled ((*! structure IntSyn' = IntSyn !*)
 		  structure Print = Print
@@ -24,7 +17,7 @@ structure AbstractTabled =
 		  structure Unify = UnifyTrail
 		  structure Constraints = Constraints
 		  structure Subordinate = Subordinate
-		  structure TableParam = TableParam
+		  (*! structure TableParam = TableParam !*)
 		  structure Conv = Conv
 		  structure Print = Print);
 
@@ -34,7 +27,7 @@ structure MemoTable =
 	    structure Conv = Conv
 	    structure Whnf = Whnf
 	    structure Print = Print
-	    structure TableParam = TableParam
+	    (*! structure TableParam = TableParam !*)
 	    structure AbstractTabled = AbstractTabled
 	    structure Table = IntRedBlackTree
 	    (*! structure RBSet = RBSet!*))
@@ -48,14 +41,14 @@ structure MemoTableInst =
 		structure Match = Match
 		structure Assign = Assign
 		structure Print = Print
-		structure TableParam = TableParam
+		(*! structure TableParam = TableParam !*)
 		structure AbstractTabled = AbstractTabled
 		structure Table = IntRedBlackTree
 		(*! structure RBSet = RBSet!*))
 
 
 structure SwMemoTable =
- SwMemoTable (structure TableParam = TableParam
+ SwMemoTable ((*! structure TableParam = TableParam !*)
 	      structure MemoTable = MemoTable
 	      structure MemoTableInst = MemoTableInst)
 
@@ -68,7 +61,7 @@ structure Tabled =
 	  structure Assign = Assign 
 	  structure Index = Index
 	  structure Queue = Queue
-	  structure TableParam = TableParam
+	  (*! structure TableParam = TableParam !*)
 (*	  structure MemoTable = MemoTable    *)
 	  structure MemoTable = SwMemoTable    
 	  structure AbstractTabled = AbstractTabled
@@ -83,7 +76,7 @@ structure PtRecon =
   PtRecon ((*! structure IntSyn' = IntSyn !*)
            (*! structure CompSyn' = CompSyn !*)
 	  structure Unify = UnifyTrail
-	  structure TableParam = TableParam
+	  (*! structure TableParam = TableParam !*)
 	  structure MemoTable = SwMemoTable    
 	  structure Assign = Assign 
 	  structure Index = Index

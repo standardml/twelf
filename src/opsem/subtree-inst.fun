@@ -14,7 +14,7 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
 		       (*! sharing Whnf.IntSyn = IntSyn' !*)
 		       (*! structure RBSet : RBSET !*)
 		       structure Assign : ASSIGN
-		       structure TableParam : TABLEPARAM
+		       (*! structure TableParam : TABLEPARAM !*)
 		       (*! sharing TableParam.IntSyn = IntSyn' !*)
 		       (*! sharing TableParam.CompSyn = CompSyn' !*)
 		       (*! sharing TableParam.RBSet = RBSet !*)
@@ -27,7 +27,7 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
   (*! structure IntSyn = IntSyn' !*)
   (*! structure CompSyn = CompSyn' !*)
   structure AbstractTabled = AbstractTabled
-  structure TableParam = TableParam
+  (*! structure TableParam = TableParam !*)
     
   (* ---------------------------------------------------------------------- *)
 

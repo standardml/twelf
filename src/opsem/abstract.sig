@@ -6,7 +6,7 @@ sig
 
   (*! structure IntSyn : INTSYN !*)
 
-  structure TableParam : TABLEPARAM
+  (*! structure TableParam : TABLEPARAM !*)
     
   exception Error of string
 

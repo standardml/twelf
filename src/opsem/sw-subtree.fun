@@ -1,15 +1,15 @@
-functor SwMemoTable (structure TableParam : TABLEPARAM
+functor SwMemoTable ((* structure TableParam : TABLEPARAM *)
 		     structure MemoTable : MEMOTABLE
 		     structure MemoTableInst : MEMOTABLE
 		     (*! sharing MemoTableInst.IntSyn = MemoTable.IntSyn !*)
 		     (*! sharing MemoTableInst.CompSyn = MemoTable.CompSyn !*)
-		     sharing MemoTableInst.TableParam = MemoTable.TableParam
+		     (*! sharing MemoTableInst.TableParam = MemoTable.TableParam !*)
 		       ) : MEMOTABLE =
 struct
 
   (*! structure IntSyn = MemoTable.IntSyn !*)
   (*! structure CompSyn = MemoTable.CompSyn !*)
-  structure TableParam = MemoTable.TableParam
+  (*! structure TableParam = MemoTable.TableParam !*)
 
 
   fun callCheck args =

@@ -6,7 +6,7 @@ sig
 
   (*! structure IntSyn : INTSYN !*)
   (*! structure CompSyn : COMPSYN !*)
-  structure TableParam : TABLEPARAM
+  (*! structure TableParam : TABLEPARAM !*)
 
     
   (* call check/insert *)

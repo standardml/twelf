@@ -11,6 +11,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+  ../compat/sources.cm
   ../global/sources.cm
   ../trail/sources.cm
   ../table/sources.cm

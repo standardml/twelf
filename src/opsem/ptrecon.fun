@@ -11,9 +11,9 @@ functor PtRecon ((*! structure IntSyn' : INTSYN !*)
 		    (*! sharing Unify.IntSyn = IntSyn' !*)
                     structure Assign : ASSIGN
 		    (*! sharing Assign.IntSyn = IntSyn' !*)
-		    structure TableParam : TABLEPARAM
+		    (*! structure TableParam : TABLEPARAM !*)
 		    structure MemoTable : MEMOTABLE		
-		       sharing MemoTable.TableParam = TableParam 
+		    (*! sharing MemoTable.TableParam = TableParam !*)
 		    structure Index : INDEX
 		    (*! sharing Index.IntSyn = IntSyn' !*)
 		    (* CPrint currently unused *)
@@ -30,7 +30,7 @@ struct
 
   (*! structure IntSyn = IntSyn' !*)
   (*! structure CompSyn = CompSyn' !*)
-  structure TableParam = TableParam
+  (*! structure TableParam = TableParam !*)
 
   local
     structure I = IntSyn

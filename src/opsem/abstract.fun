@@ -15,14 +15,14 @@ functor AbstractTabled ((*! structure IntSyn' : INTSYN !*)
 		  (*! sharing Print.IntSyn = IntSyn' !*)
 		  structure Conv    : CONV
 		  (*! sharing Conv.IntSyn = IntSyn' !*)
-		  structure TableParam : TABLEPARAM
+		  (*! structure TableParam : TABLEPARAM !*)
 		  (*! sharing TableParam.IntSyn = IntSyn' !*)
 		      )
   : ABSTRACTTABLED =
 struct
 
   (*! structure IntSyn = IntSyn' !*)
-   structure TableParam = TableParam 
+  (*! structure TableParam = TableParam !*)
     
   exception Error of string
 

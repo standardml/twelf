@@ -7,6 +7,8 @@ Library
   signature COMPAT_TIMER
   signature COMPAT
   structure Compat
+  signature TIME_LIMIT
+  structure TimeLimit
 #if defined(MLton_20030716)
   (* Empty *)
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
@@ -68,4 +70,10 @@ is
   vector-slice.sml
   mono-array-slice.sig
   word8-array-slice.sml
+#endif
+  time-limit.sig
+#if defined(SMLNJ_VERSION)
+  time-limit-smlnj.sml
+#else
+  time-limit.sml
 #endif

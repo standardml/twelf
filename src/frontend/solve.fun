@@ -35,7 +35,7 @@ functor Solve
    structure PtRecon : PTRECON
    (*! sharing PtRecon.IntSyn = IntSyn' !*)
    (*! sharing PtRecon.CompSyn = CompSyn !*)
-   structure TableParam : TABLEPARAM
+   (*! structure TableParam : TABLEPARAM !*)
    structure Tabled : TABLED
    (*! sharing Tabled.IntSyn = IntSyn' !*)
    (*! sharing Tabled.CompSyn = CompSyn !*)

@@ -100,7 +100,7 @@ functor Twelf
    structure AbsMachine : ABSMACHINE
    (*! sharing AbsMachine.IntSyn = IntSyn' !*)
    (*! sharing AbsMachine.CompSyn = CompSyn' !*)
-   structure TableParam : TABLEPARAM
+   (*! structure TableParam : TABLEPARAM !*)
    structure Tabled : TABLED
    (*! sharing Tabled.IntSyn = IntSyn' !*)
    (*! sharing Tabled.CompSyn = CompSyn' !*)
@@ -1572,7 +1572,7 @@ struct
     val make = make
 
 
-    val version = "Twelf 1.5, Aug 2003 (Tomega, Cover, Unique)"
+    val version = "Twelf 1.5R1, Mar 8, 2005 (tabling)"
 
     structure Table : 
       sig 
