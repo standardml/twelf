@@ -1,0 +1,33 @@
+%theorem Mappend : forall* {M:term}{M':term}{M'':term}
+		   forall  {D1: M =>* M'} {D2: M' =>* M''} 
+                   exists  {E: M =>* M''} 
+                   true.
+%prove 4 [D1 D2] (Mappend D1 D2 _).
+
+%theorem Midentity : forall {M:term}
+		     exists {D: M => M}
+		     true.
+%assert (Midentity _ _).
+
+
+
+%theorem Msubst : forall* {M: term -> term}{M': term -> term}
+		          {N: term}{N':term}
+		  forall  {D1: {x:term} x => x -> M x => M' x}
+		          {D2: N => N'}
+		  exists  {E:  M N => M' N'}
+        	  true.
+%assert (Msubst _ _ _).
+
+
+%theorem Mdia : forall* {M:term}{M':term}{M'':term}
+		forall  {D1: M => M'} {D2: M => M''}
+		exists  {N:term}{E1: M' => N}{E2 : M'' => N}
+		true.
+%assert (Mdia _ _ _ _ _).
+
+%theorem Mstrip : forall* {M:term}{M':term}{M'':term}
+		forall  {D1: M => M'} {D2: M =>* M''} 
+	        exists  {N:term} {E1: M' =>* N} {E2: M'' => N}
+		true.
+%prove 4 [D1 D2] (Mstrip D1 D2 _ _ _).
