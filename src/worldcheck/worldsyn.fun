@@ -9,7 +9,9 @@ functor WorldSyn (structure IntSyn : INTSYN
 		  structure Names : NAMES
 		    sharing Names.IntSyn = IntSyn
 		  structure Unify : UNIFY
-		    sharing Unify.IntSyn = IntSyn) : WORLDSYN= 
+		    sharing Unify.IntSyn = IntSyn
+		  structure CSManager : CS_MANAGER
+		    sharing CSManager.IntSyn = IntSyn) : WORLDSYN= 
 struct
   structure IntSyn = IntSyn
   structure I = IntSyn
@@ -31,21 +33,14 @@ struct
 
   local
 
-    exception Failure
+    datatype Reg			(* Regular world expressions  *)
+      = Block of LabelDec		(* R ::= LD                   *)
+      | Star of Reg			(*     | R*                   *)
+      | Plus of Reg * Reg		(*     | R1 + R2              *)
+      | One				(*     | 1                    *)
 
-    (* ctxToList G = L
-      
-       Invariant:
-       G = L  (G is left associative, L is right associative)
-    *)
-    fun ctxToList (Gin) = 
-      let
-	fun ctxToList' (I.Null, G ) = G
-	  | ctxToList' (I.Decl (G, D), G') =
-	  ctxToList' (G, D :: G')
-      in
-	ctxToList' (Gin, nil)
-      end
+
+    exception Success
 
     (* createEVarSub G L = s
      
@@ -65,6 +60,76 @@ struct
 	end
 
 
+    fun shift S = map (fn (t', L') => (I.comp (t', I.shift), L')) S 
+
+
+    fun empty nil = raise Success
+      | empty ((_, nil) :: L) = empty L
+      | empty _ = ()
+
+    fun init (_, I.Root _, S) = empty S
+      | init _ = ()
+
+
+    (* accR (G, V, S) R k = B
+  
+       Invariant:
+       If   G |- V : K
+       and  G |- S : list of Declarations
+       and  R is a regular expression
+       and  k a continuation that expects ((V, s), (S, t)) as argument
+       then B holds iff V[s] matches S[t] and R.
+    *)
+ 
+    fun accR GVS One k =
+          (k GVS; accR' GVS (fn GVS' => accR GVS' One k))
+      | accR (GVS as (G, V as I.Pi ((D as I.Dec (_, V11), _), V12), S))
+	  (Block (LabelDec (_, L1, I.Dec (_, V2) :: L2))) k =
+	  let 
+	    val t = createEVarSub (G, L1)	(* G |- t : L1 *)
+	  in
+	    (CSManager.trail (fn () => (Unify.unify (G, (V11, I.id), (V2, t)); 
+	     accR (I.Decl (G, D), V12, (I.dot1 t, L2) :: shift S) One k)
+	    handle Unify.Unify _ => ());
+	     accR' GVS (fn GVS' => accR GVS' One k))
+	  end
+      | accR (G, I.Root _, S) (Block _) k = ()
+      | accR GVS (Plus (r1, r2)) k = 
+	  (accR GVS r1 k; accR GVS r2 k)
+      | accR GVS (r' as (Star r)) k =
+	  (k GVS; accR GVS r (fn GVS' => accR GVS' r' k))
+
+    and accR' (_, _, nil) k = ()
+      | accR' (_, I.Root _, _) k = ()
+      | accR' (G, V as I.Pi ((D as I.Dec (_, V11), _), V12),
+		((t, L2 as I.Dec (_, V2) :: L2') :: S1)) k =
+          (CSManager.trail (fn () => (Unify.unify (G, (V11, I.id), (V2, t)); 
+	    k (I.Decl (G, D), V12, (I.dot1 t, L2') :: shift S1))
+	   handle Unify.Unify _ => ());
+	   accR' (G, V, S1) (fn (G', V', S') => 
+              k (G', V', (I.comp (t, I.shift), L2) :: S')))
+      | accR' (G, V, ((_,[]) :: S1)) k = accR' (G, V, S1) k
+	    
+
+    (* -------------------------------------------------------------- *)
+
+    
+
+    (* ctxtolist G = L
+      
+       Invariant:
+       G = L  (G is left associative, L is right associative)
+    *)
+    fun ctxToList (Gin) = 
+      let
+	fun ctxToList' (I.Null, G ) = G
+	  | ctxToList' (I.Decl (G, D), G') =
+	  ctxToList' (G, D :: G')
+      in
+	ctxToList' (Gin, nil)
+      end
+
+
     (* checkBlock (G, (t, L), (V, s)) = () 
      
        Invariant:
@@ -77,15 +142,17 @@ struct
        (see regularworlds.tex for the rules)
     *)
     fun checkBlock (G, (t, nil), I.Root (a, S)) = ()
-      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), _), V2)) =
+      | checkBlock (G, (t, I.Dec (_, V) :: L), I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
         let 
-	  val _ = (Unify.unify (G, (V, t), (V1, I.id)) handle Unify.Unify _ => raise Failure)
+	  val _ = Unify.unify (G, (V, t), (V1, I.id))
 	in
 	  checkBlock (I.Decl (G, D), (I.dot1 t, L), V2)
 	end
-      | checkBlock _ = raise Failure
+      | checkBlock (G, (t, L), I.Pi ((D as I.Dec (_, V1), I.No), V2)) =
+	  checkBlock (I.Decl (G, D), (I.comp (t, I.shift),  L), V2)
+      | checkBlock _ = raise Error "World violation"
 
-    (* checkBlocks W (G, (V, s)) = ()
+(*  (* checkBlocks W (G, (V, s)) = ()
 
        Invariant:
        If   G is a context
@@ -98,13 +165,28 @@ struct
 	 (see regularworlds.tex for the rules)
     *)
     fun checkBlocks _ (G, I.Root _) = ()
-      | checkBlocks Closed (G, V) = raise Error "World violation 2"
+      | checkBlocks Closed (G, V) = raise Error "World violation"
       | checkBlocks (Schema (W', LabelDec (_, L1, L2))) (GV as (G, V)) =
         ((let
 	    val t = createEVarSub (G, L1)	(* G |- t : L1 *)
 	  in
 	    checkBlock (G, (t, L2), V)
-	  end) handle Failure => checkBlocks W' GV)
+	  end) handle Unify.Unify _ => checkBlocks W' GV)
+*)
+
+
+    fun worldToReg W = 
+      let
+	fun worldToReg' (Closed) = One
+	  | worldToReg' (Schema (Closed, L)) = Block L
+	  | worldToReg' (Schema (W, L)) = Plus (worldToReg' W, Block L)
+      in
+	Star (worldToReg' W)
+      end
+
+    fun checkBlocks W (G, V) = 
+      (accR (G, V, []) (worldToReg W) init; raise Error "World violation") handle Success => ()
+
 
     (* worldcheck W a = ()
 
@@ -124,12 +206,12 @@ struct
 	     (see regularworlds.tex for the rules)
 	*)
 	fun checkPos (G, I.Root (a, S)) = ()
+	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) = 
+	    (checkPos (I.Decl (G, D), V2);
+	     checkNeg (G, V1))
 	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.No), V2)) = 
 	    (checkBlocks W (G, V1);
 	     checkPos (I.Decl (G, D), V2);
-	     checkNeg (G, V1))
-	  | checkPos (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) = 
-	    (checkPos (I.Decl (G, D), V2);
 	     checkNeg (G, V1))
 
         (* checkNeg (G, V) = () 

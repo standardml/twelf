@@ -3,7 +3,8 @@ structure WorldSyn =
 	    structure Unify = Unify
 	    structure Whnf = Whnf
 	    structure Names = Names
-	    structure Index = Index)
+	    structure Index = Index
+	    structure CSManager = CSManager)
 
 structure WorldPrint =
   WorldPrint (structure Global = Global

@@ -3,6 +3,7 @@ Group is
   ../global/sources.cm
   ../timing/sources.cm
   ../meta/sources.cm
+  ../solvers/sources.cm
 
   worldsyn.sig
   worldsyn.fun
