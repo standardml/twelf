@@ -11,9 +11,14 @@ fun test (file) =
       of Twelf.OK => Twelf.OK
        | Twelf.ABORT => raise Domain;
 
-test "examples/tabled/tests/tab.cfg";
-test "examples/tabled/church-rosser/tab.cfg";
-test "examples/tabled/subtype1/tab.cfg";
-test "examples/tabled/subtype/tab.cfg";
 
+test "tests/tab.cfg";
+test "cr/tab.cfg"; 
+test "subtype1/tab.cfg";
+test "subtype/tab.cfg";
+test "refine/tab.cfg";
+test "parsing/foll.cfg";
+test "parsing/arithml.cfg";
+test "parsing/tab.cfg";
+test "mini-ml/tab.cfg";
 
