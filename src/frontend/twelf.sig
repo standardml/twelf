@@ -79,6 +79,7 @@ sig
   structure Config :
   sig
     type config			      (* configuration *)
+    val suffix : string ref           (* suffix of configuration files *)
     val read : string -> config	      (* read config file *)
     val load : config -> Status	      (* reset and load configuration *)
     val define : string list -> config (* explicitly define configuration *)

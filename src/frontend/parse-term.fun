@@ -232,6 +232,8 @@ struct
 	  (P.reduceAll (r, p), f)
       | parseExp' (f as LS.Cons((L.EOF,r), s), p) =
 	  (P.reduceAll (r, p), f)
+      | parseExp' (LS.Cons((L.STRING(str),r), s), p) =
+          parseExp (s, P.shiftAtom (ExtSyn.scon (str,r), p))
       | parseExp' (LS.Cons((t,r), s), p) =
 	  (* possible error recovery: insert DOT *)
 	  Parsing.error (r, "Unexpected token " ^ L.toString t

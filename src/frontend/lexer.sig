@@ -37,6 +37,7 @@ sig
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
     | USE                               (* `%use'    *)
+    | STRING of string                  (* string constants *)
 
   exception Error of string
 

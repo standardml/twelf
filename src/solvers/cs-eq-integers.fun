@@ -266,7 +266,7 @@ struct
           in
             rem (m, gcd_list coeffL) = zero
           end
-            
+
     fun findMon f (G, Sum(m, monL)) =
           let
             fun findMon' (nil, monL2) = NONE
@@ -276,6 +276,18 @@ struct
                       | NONE => findMon' (monL1, mon :: monL2))
           in
             findMon' (monL, nil)
+          end
+
+    fun divideSum (Sum(m, monL), k) =
+          let
+            exception Err
+            fun divide n = 
+                  if rem(n, k) = zero then quot(n, k)
+                  else raise Err
+            fun divideMon (Mon(n, UsL)) = Mon (divide n, UsL)
+          in
+            (SOME(Sum(divide m, List.map divideMon monL)))
+              handle Err => NONE
           end
 
     fun delaySum (G, sum) =
@@ -327,7 +339,10 @@ struct
                                                                      Sum (zero, [Mon (one, [(Z, ss)])])))), ss2) ::
                              solveSum (G, plusSum (Sum(zero, [Mon(g, [(Z, ss)])]), sum2))
                            end
-                       | NONE => [delaySum (G, sum)])
+                       | NONE => 
+                           (case divideSum (sum1, n1)
+                              of SOME(sum1') => [Assign (G, X1, toFgn(unaryMinusSum (sum1')), ss1)]
+                               | NONE => [delaySum (G, sum)]))
                | NONE => [delaySum (G, sum)]
            end
 

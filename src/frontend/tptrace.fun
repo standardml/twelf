@@ -302,6 +302,14 @@ struct
 		     var (name, r, IntSyn.ctxLength G, SS))
 	  | SOME info => const (info, r, (G, SS)))
 
+  (* scon -- string constants *)
+  fun scon (name,r) (G, SS) =
+      (case findConst (name)
+         of NONE => (error (r, "Strings unsupported in current signature");
+		     (* translate to FVar or EVar *)
+		     var (name, r, IntSyn.ctxLength G, SS))
+          | SOME info => const (info, r, (G, SS)))
+
   (* Application "tm1 tm2" *)
   fun app (tm1, tm2) (G, SS) =
         (* argument first or function first? Here: function first *)

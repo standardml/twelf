@@ -49,5 +49,8 @@ e/ : expression (X ++ "/" ++ Y)
        <- expression X
        <- expression Y.
 
+ep : expression ("(" ++ X ++ ")")
+       <- expression X.
+
 %query 2 *
 P : expression "10*9+35".

@@ -280,7 +280,8 @@ struct
 
   (* Interactive Query Top Level *)
 
-  fun qLoop () = qLoops (Parser.parseTerminalQ ("?- ", "   ")) (* primary, secondary prompt *)
+  fun qLoop () = qLoops (CSManager.reset ();
+                         Parser.parseTerminalQ ("?- ", "   ")) (* primary, secondary prompt *)
   and qLoops (s) = qLoops' ((Timers.time Timers.parsing S.expose) s)
   and qLoops' (S.Empty) = true		(* normal exit *)
     | qLoops' (S.Cons (query, s')) =

@@ -17,6 +17,7 @@ sig
   val lcid : string * Paths.region -> term (* lower case id *)
   val ucid : string * Paths.region -> term (* upper case id *)
   val quid : string * Paths.region -> term (* quoted id, currently not parsed *)
+  val scon : string * Paths.region -> term (* string constant *)
 
   val app : term * term -> term		(* tm tm *)
   val arrow : term * term -> term	(* tm -> tm *)

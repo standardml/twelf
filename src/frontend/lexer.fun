@@ -42,6 +42,7 @@ struct
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
     | USE                               (* `%use' *)
+    | STRING of string                  (* string constants *)
 
   exception Error of string
 
@@ -50,7 +51,7 @@ struct
   (* isSym (c) = B iff c is a legal symbolic identifier constituent *)
   (* excludes quote character and digits, which are treated specially *)
   (* Char.contains stages its computation *)
-  val isSym : char -> bool = Char.contains "_!&$^+/<=>?@~|#*`;,-\\\""
+  val isSym : char -> bool = Char.contains "_!&$^+/<=>?@~|#*`;,-\\"
 
   (* isQuote (c) = B iff c is the quote character *)
   fun isQuote (c) = (c = #"'")
@@ -156,6 +157,7 @@ struct
       | lexInitial (#"_", i) = lexID (Upper, P.Reg (i-1,i))
       | lexInitial (#"'", i) = lexID (Lower, P.Reg (i-1,i)) (* lexQUID (i-1,i) *)
       | lexInitial (#"\^D", i) = (EOF, P.Reg (i-1,i-1))
+      | lexInitial (#"\"", i) = lexString (P.Reg(i-1, i+1))
       | lexInitial (c, i) =
 	if Char.isSpace (c) then lexInitial (char (i),i+1)
 	else if Char.isUpper(c) then lexID (Upper, P.Reg (i-1,i))
@@ -242,6 +244,17 @@ struct
       | lexDCommentRBrace (#"%", l, i) = lexDComment (char(i), l-1, i+1)
       | lexDCommentRBrace (c, l, i) = lexDComment (c, l, i)
 
+    and lexString (P.Reg(i, j)) =
+          (case char(j)
+             of (#"\"") => (STRING (string (i, j+1)), P.Reg(i, j+1))
+              | (#"\n") =>
+                  error (P.Reg (i-1, i-1), "Unclosed string constant at end of line")
+	          (* recover: (EOL, (i-1,i-1)) *)
+              | (#"\^D") =>
+                  error (P.Reg (i-1, i-1), "Unclosed string constant at end of file")
+                  (* recover: (EOF, (i-1,i-1)) *)
+              | _ => lexString (P.Reg(i, j+1)))
+
     fun lexContinue (j) = Stream.delay (fn () => lexContinue' (j))
     and lexContinue' (j) = lexContinue'' (lexInitial (char(j), j+1))
 
@@ -289,6 +302,7 @@ struct
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"
+   | toString (STRING(s)) = "constant string " ^ s
    | toString (token) = "`" ^ toString' token ^ "'"
 
  exception NotDigit of char

@@ -286,6 +286,70 @@ struct
     fun ownerSum (Var (G, mon)) = Sum(zero, [mon])
       | ownerSum (Exp (G, sum)) = sum
 
+    (* debugging code - REMOVE *)
+    fun displayPos (Row(row)) = 
+          print ("row " ^ Int.toString(row) ^ "\n")
+      | displayPos (Col(col)) =
+          print ("column " ^ Int.toString(col) ^ "\n")
+
+    (* debugging code - REMOVE *)
+    fun displaySum (Sum(m, Mon(n, _) :: monL)) =
+          (
+            print (OrderedField.toString n);
+            print " ? + ";
+            displaySum (Sum(m, monL))
+          )
+      | displaySum (Sum(m, nil)) =
+          (
+            print (OrderedField.toString m);
+            print " >= 0\n"
+          )
+
+    (* debugging code - REMOVE *)
+    fun display () =
+          let
+            fun printLabel (col, l : label) =
+                  (
+                    print "\t";
+                    (case (#owner(l)) of Var _ => print "V" | Exp _ => print "E");
+                    if restricted (l) then print ">" else print "*";
+                    if dead (l) then print "#" else print ""
+                  )
+            fun printRow (row, l : label) =
+                  let
+                    fun printCol (col, d : number) =
+                          (
+                            print "\t";
+                            print (toString d)
+                          )
+                    val vec = Array2.row (#coeffs(tableau), row, (0, nCols()))
+                  in
+                    (
+                      (case (#owner(l)) of Var _ => print "V" | Exp _ => print "E");
+                      if restricted (l) then print ">" else print "*";
+                      if dead (l) then print "#" else print "";
+                      print "\t";
+                      Vector.mapi printCol (vec, 0, NONE);
+                      print "\t";
+                      print (toString (const (row)));
+                      print "\n"
+                    )
+                  end
+          in
+            (
+              print "\t";
+              Array.app printLabel (#clabels(tableau), 0, nCols());
+              print "\n";
+              Array.app printRow (#rlabels(tableau), 0, nRows());
+              print "Columns:\n";
+              Array.app (fn (_, l : label) => displaySum (ownerSum (#owner (l))))
+                        (#clabels(tableau), 0, nCols());
+              print "Rows:\n";
+              Array.app (fn (_, l : label) => displaySum (ownerSum (#owner (l))))
+                        (#rlabels(tableau), 0, nRows())
+            )
+          end
+
     (* find the given monomial in the tableau *)
     fun findMon (mon) =
           let
@@ -903,42 +967,65 @@ struct
             )
           end
 
-    (* insert the proof term used to restrict l (if any) at the beginning of UL *)
-    and insertRestrExp (l, UL) =
-          (case restriction (l)
-             of NONE => UL
-              | SOME(Restr(_, _, strict)) =>
+    (* returns the list of unsolved constraints associated with the given position *)
+    and restrictions (pos) =
+          let
+            val _ = display()
+            fun member (x, l) = List.exists (fn y => x = y) l
+            fun test (l) = restricted(l) andalso not (dead(l))
+            fun reachable ((pos as Row(row)) :: candidates, closure) =
+                  if member (pos, closure)
+                  then reachable (candidates, closure)
+                  else
+                    let
+                      val _ = displayPos (pos)
+                      val new_candidates = 
+                            Array.foldl
+                              (fn (col, _, candidates) => 
+                                    if (coeff(row, col) <> zero)
+                                    then (Col(col)) :: candidates
+                                    else candidates)
+                              nil
+                              (#clabels(tableau), 0, nCols())
+                      val closure' = if test (label(pos)) then (pos :: closure)
+                                     else closure
+                    in
+                      reachable (new_candidates @ candidates, closure')
+                    end
+              | reachable ((pos as Col(col)) :: candidates, closure) =
+                  if member (pos, closure)
+                  then reachable (candidates, closure)
+                  else
+                    let
+                      val _ = displayPos (pos)
+                      val candidates' = 
+                            Array.foldl
+                              (fn (row, _, candidates) => 
+                                    if (coeff(row, col) <> zero)
+                                    then (Row(row)) :: candidates
+                                    else candidates)
+                              nil
+                              (#rlabels(tableau), 0, nRows())
+                      val closure' = if test (label(pos)) then (pos :: closure)
+                                     else closure
+                    in
+                      reachable (candidates' @ candidates, closure')
+                    end
+              | reachable (nil, closure) = closure
+            fun restrExp (pos) =
                   let
+                    val l = label(pos)
                     val owner = #owner(l)
                     val G = ownerContext (owner)
                     val U = toExp (ownerSum (owner))
                   in
-                    if strict then (G, gt0 (U)) :: UL
-                    else (G, geq0 (U)) :: UL
-                  end)
-
-    (* returns the list of unsolved constraints associated with the given position *)
-    and restrictions (pos as Col(col)) =
-          let
-            val l = Array.sub (#clabels(tableau), col)
-            fun select (i, l : label, UL) =
-                  if dead (l) orelse (coeff(i, col) = zero) then UL
-                  else insertRestrExp (l, UL)
+                    (case restriction (label(pos))
+                       of SOME(Restr(_, _, true)) => (G, gt0 (U))
+                        | _ => (G, geq0 (U)))
+                  end
+                  
           in
-            if dead (l) then nil
-            else insertRestrExp (l, Array.foldr select nil
-                                                (#rlabels(tableau), 0, nRows ()))
-          end
-      | restrictions (pos as Row(row)) =
-          let
-            val l = Array.sub (#rlabels(tableau), row)
-            fun select (j, l : label, UL) =
-                  if dead (l) orelse (coeff(row, j) = zero) then UL
-                  else insertRestrExp (l, UL)
-          in
-            if dead (l) then nil
-            else insertRestrExp (l, Array.foldr select nil
-                                                (#clabels(tableau), 0, nCols ()))
+            List.map restrExp (reachable ([pos], nil))
           end
                 
     (* returns the list of unsolved constraints associated with the given tag *)
@@ -978,7 +1065,7 @@ struct
                       simplify = simplify (tag)
                     }
                    )
-  
+
     (* undo function for trailing tableau operations *)
     fun undo (Insert(Row(row))) =
           (
