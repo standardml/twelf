@@ -407,7 +407,8 @@ count as lowercase identifiers and are not interpreted specially.  Free
 variables in a declaration must be uppercase, bound variables and
 constants may be either uppercase or lowercase identifiers.
 
-There are also four reserved identifiers with a predefined meaning which
+There are also a small number of
+reserved identifiers with a predefined meaning which
 cannot be changed.  Keep in mind that these can be constituents of other
 identifers which are not interpreted specially.
 
