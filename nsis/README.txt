@@ -241,7 +241,6 @@ Windows 9x/ME/NT/2000 Installation
 
   Standard Installation
   ---------------------
-
     For the Windows 9x/ME/NT/2000 family of operating systems, we
     recommend the precompiled version of the Twelf server which is
     available from the Twelf homepage at

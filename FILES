@@ -1,13 +1,27 @@
 twelf/Makefile
-twelf/Makefile.NT
+# twelf/Makefile.NT
 twelf/README
-twelf/README-1.2
-twelf/README.NT
+# twelf/README-1.2
+# twelf/README.NT
+twelf/bin/.mkexec
 twelf/bin/.heap/README
-twelf/bin/.twelf-server
-twelf/bin/.twelf-server.bat
-twelf/bin/.twelf-sml
-twelf/bin/.twelf-sml.bat
+# twelf/bin/.twelf-server
+# twelf/bin/.twelf-server.bat
+# twelf/bin/.twelf-sml
+# twelf/bin/.twelf-sml.bat
+twelf/nsis/INSTALL
+twelf/nsis/LICENSE
+twelf/nsis/Makefile
+twelf/nsis/README
+twelf/nsis/README.txt
+twelf/nsis/disabled.bmp
+twelf/nsis/enabled.bmp
+twelf/nsis/mkexec.bat*
+twelf/nsis/run.x86-win32.exe*
+twelf/nsis/twelf-init.el
+twelf/nsis/twelf.ico
+twelf/nsis/twelf.nsi
+twelf/nsis/uninst.ico
 twelf/doc/dvi/twelf.dvi
 twelf/doc/html/index.html
 twelf/doc/html/twelf_1.html

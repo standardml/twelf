@@ -661,7 +661,6 @@ struct
 	     then List.foldl loadAbort OK sources
 	   else List.foldl loadAbort OK
 	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources)) 
-(*	   (List.map (fn p => OS.Path.mkAbsolute {path = p, relativeTo = pwdir}) sources)) -bp sml110.9*)
 
       fun define (sources) = (OS.FileSys.getDir (), sources)
 
@@ -789,6 +788,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3, Sep 13 2000"
+    val version = "Twelf 1.3, Oct 16 2000"
   end  (* local *)
 end; (* functor Twelf *)

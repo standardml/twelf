@@ -15,19 +15,32 @@ struct
 
   val globalConfig : Twelf.Config.config option ref = ref NONE
 
-  (* readLine () = [token1,...,tokenn]
-     reads a non-empty list of tokens from standard input.
-     Tokens are separated by whitespace.
+  (* readLine () = (command, args)
+     reads a command and and its arguments from the command line.
   *)
   fun readLine () =
       let
-	val line = TextIO.inputLine (TextIO.stdIn)
-	val tokens = String.tokens Char.isSpace line
+        val line = TextIO.inputLine (TextIO.stdIn)
+        fun triml ss = Substring.dropl Char.isSpace ss
+        fun trimr ss = Substring.dropr Char.isSpace ss
+        val line' = triml (trimr (Substring.all line))
       in
-	case tokens
-	  of nil => readLine ()
-	   | _ => tokens
+	if Substring.size (line') = 0
+        then readLine ()
+        else
+          let
+            val (command', args') = Substring.position " " line'
+          in
+            (Substring.string command',
+             Substring.string (triml args'))
+	  end
       end
+  
+  (* tokenize (args) = [token1, token2, ..., tokenn]
+     splits the arguments string into a list of space-separated
+     tokens
+  *)
+  fun tokenize (args) = String.tokens Char.isSpace args
 
   (* exception Error for server errors *)
   exception Error of string
@@ -40,19 +53,17 @@ struct
     | issue (Twelf.ABORT) = print ("%% ABORT %%\n")
 
   (* Checking if there are no extraneous arguments *)
-  fun checkEmpty (nil) = ()
-    | checkEmpty (t::ts) = error "Extraneous arguments"
+  fun checkEmpty ("") = ()
+    | checkEmpty (args) = error "Extraneous arguments"
 
   (* Command argument types *)
   (* File names, given a default *)
-  fun getFile (fileName::nil, default) = fileName
-    | getFile (nil, default) = default
-    | getFile (ts, default) = error "Extraneous arguments"
+  fun getFile ("", default) = default
+    | getFile (fileName, default) = fileName
 
   (* File names, not defaults *)
-  fun getFile' (fileName::nil) = fileName
-    | getFile' (nil) = error "Missing filename"
-    | getFile' (ts) = error "Extraneous arguments"
+  fun getFile' ("") = error "Missing filename"
+    | getFile' (fileName) = fileName
 
   (* Identifiers, used as a constant *)
   fun getId (id::nil) = id
@@ -128,110 +139,114 @@ struct
     | getParm (t::ts) = error ("Unknown parameter " ^ quote t)
     | getParm (nil) = error ("Missing parameter")
 
-  (* serve' (tokens) = ()
+  (* serve' (command, args) = ()
      executes the server commands represented by `tokens', 
      issues success or failure and then reads another command line.
      Invariant: tokens must be non-empty.
 
      All input for one command must be on the same line.
   *)
-  fun serve' ("set"::ts) =
-      (setParm ts; serve (Twelf.OK))
-    | serve' ("get"::ts) =
-      (print (getParm ts ^ "\n"); serve (Twelf.OK))
+  fun serve' ("set", args) =
+      (setParm (tokenize args); serve (Twelf.OK))
+    | serve' ("get", args) =
+      (print (getParm (tokenize args) ^ "\n");
+       serve (Twelf.OK))
 
-    | serve' ("Print.sgn"::ts) =
-      (checkEmpty ts; Twelf.Print.sgn (); serve (Twelf.OK))
-    | serve' ("Print.prog"::ts) =
-      (checkEmpty ts; Twelf.Print.prog (); serve (Twelf.OK))
-    | serve' ("Print.TeX.sgn"::ts) =
-      (checkEmpty ts; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
-    | serve' ("Print.TeX.prog"::ts) =
-      (checkEmpty ts; Twelf.Print.TeX.prog (); serve (Twelf.OK))
+    | serve' ("Print.sgn", args) =
+      (checkEmpty args; Twelf.Print.sgn (); serve (Twelf.OK))
+    | serve' ("Print.prog", args) =
+      (checkEmpty args; Twelf.Print.prog (); serve (Twelf.OK))
+    | serve' ("Print.TeX.sgn", args) =
+      (checkEmpty args; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
+    | serve' ("Print.TeX.prog", args) =
+      (checkEmpty args; Twelf.Print.TeX.prog (); serve (Twelf.OK))
     (*
-      serve' ("toc"::ts) = error "NYI"
-    | serve' ("list-program"::ts) = error "NYI"
-    | serve' ("list-signature"::ts) = error "NYI"
+      serve' ("toc", args) = error "NYI"
+    | serve' ("list-program", args) = error "NYI"
+    | serve' ("list-signature", args) = error "NYI"
     *)
-    (* | serve' ("type-at"::ts) = error "NYI" *)
-    (* | serve' ("complete-at"::ts) = error "NYI" *)
+    (* | serve' ("type-at", args) = error "NYI" *)
+    (* | serve' ("complete-at", args) = error "NYI" *)
 
-    | serve' ("Trace.trace"::ts) =
-      (Twelf.Trace.trace (Twelf.Trace.Some (getIds ts));
+    | serve' ("Trace.trace", args) =
+      (Twelf.Trace.trace (Twelf.Trace.Some (getIds (tokenize args)));
        serve (Twelf.OK))
-    | serve' ("Trace.traceAll"::ts) =
-      (checkEmpty ts; Twelf.Trace.trace (Twelf.Trace.All);
+    | serve' ("Trace.traceAll", args) =
+      (checkEmpty args; Twelf.Trace.trace (Twelf.Trace.All);
        serve (Twelf.OK))
-    | serve' ("Trace.untrace"::ts) =
-      (checkEmpty ts; Twelf.Trace.trace (Twelf.Trace.None);
-       serve (Twelf.OK))
-
-    | serve' ("Trace.break"::ts) =
-      (Twelf.Trace.break (Twelf.Trace.Some (getIds ts));
-       serve (Twelf.OK))
-    | serve' ("Trace.breakAll"::ts) =
-      (checkEmpty ts; Twelf.Trace.break (Twelf.Trace.All);
-       serve (Twelf.OK))
-    | serve' ("Trace.unbreak"::ts) =
-      (checkEmpty ts; Twelf.Trace.break (Twelf.Trace.None);
+    | serve' ("Trace.untrace", args) =
+      (checkEmpty args; Twelf.Trace.trace (Twelf.Trace.None);
        serve (Twelf.OK))
 
-    | serve' ("Trace.show"::ts) =
-      (checkEmpty ts; Twelf.Trace.show ();
+    | serve' ("Trace.break", args) =
+      (Twelf.Trace.break (Twelf.Trace.Some (getIds (tokenize args)));
        serve (Twelf.OK))
-    | serve' ("Trace.reset"::ts) =
-      (checkEmpty ts; Twelf.Trace.reset ();
+    | serve' ("Trace.breakAll", args) =
+      (checkEmpty args; Twelf.Trace.break (Twelf.Trace.All);
+       serve (Twelf.OK))
+    | serve' ("Trace.unbreak", args) =
+      (checkEmpty args; Twelf.Trace.break (Twelf.Trace.None);
        serve (Twelf.OK))
 
-    | serve' ("Timers.show"::ts) = (checkEmpty ts; Timers.show (); serve (Twelf.OK))
-    | serve' ("Timers.reset"::ts) = (checkEmpty ts; Timers.reset (); serve (Twelf.OK))
-    | serve' ("Timers.check"::ts) = (checkEmpty ts; Timers.reset (); serve (Twelf.OK))
+    | serve' ("Trace.show", args) =
+      (checkEmpty args; Twelf.Trace.show ();
+       serve (Twelf.OK))
+    | serve' ("Trace.reset", args) =
+      (checkEmpty args; Twelf.Trace.reset ();
+       serve (Twelf.OK))
 
-    | serve' ("OS.chDir"::ts) =
-      (Twelf.OS.chDir (getFile' ts); serve (Twelf.OK))
-    | serve' ("OS.getDir"::ts) =
-      (checkEmpty ts; print (Twelf.OS.getDir () ^ "\n"); serve (Twelf.OK))
-    | serve' ("OS.exit"::ts) =
-      (checkEmpty ts; ())
+    | serve' ("Timers.show", args) =
+      (checkEmpty args; Timers.show (); serve (Twelf.OK))
+    | serve' ("Timers.reset", args) =
+      (checkEmpty args; Timers.reset (); serve (Twelf.OK))
+    | serve' ("Timers.check", args) =
+      (checkEmpty args; Timers.reset (); serve (Twelf.OK))
 
-    | serve' ("quit"::ts) = ()		(* quit, as a concession *)
+    | serve' ("OS.chDir", args) =
+      (Twelf.OS.chDir (getFile' args); serve (Twelf.OK))
+    | serve' ("OS.getDir", args) =
+      (checkEmpty args; print (Twelf.OS.getDir () ^ "\n"); serve (Twelf.OK))
+    | serve' ("OS.exit", args) =
+      (checkEmpty args; ())
 
-    | serve' ("Config.read"::ts) =
+    | serve' ("quit", args) = ()		(* quit, as a concession *)
+
+    | serve' ("Config.read", args) =
       let
-	val fileName = getFile (ts, "sources.cfg")
+	val fileName = getFile (args, "sources.cfg")
       in
 	globalConfig := SOME (Twelf.Config.read fileName);
 	serve (Twelf.OK)
       end
-    | serve' ("Config.load"::ts) =
+    | serve' ("Config.load", args) =
       (case !globalConfig
 	 of NONE => (globalConfig := SOME (Twelf.Config.read "sources.cfg"))
           | _ => ();
        serve (Twelf.Config.load (valOf (!globalConfig))))
-
-    | serve' ("make"::ts) =
+    | serve' ("make", args) =
       let
-	val fileName = getFile (ts, "sources.cfg")
+	val fileName = getFile (args, "sources.cfg")
       in
 	globalConfig := SOME (Twelf.Config.read fileName);
 	serve (Twelf.Config.load (valOf (!globalConfig)))
       end
 
-    | serve' ("reset"::ts) =
-      (checkEmpty ts; Twelf.reset (); serve (Twelf.OK))
-    | serve' ("loadFile"::ts) =
-        serve (Twelf.loadFile (getFile' ts))
-    | serve' ("readDecl"::ts) =
-      (checkEmpty ts; serve (Twelf.readDecl ()))
-    | serve' ("decl"::ts) =
-        serve (Twelf.decl (getId ts))
 
-    | serve' ("top"::ts) =
-      (checkEmpty ts;
+    | serve' ("reset", args) =
+      (checkEmpty args; Twelf.reset (); serve (Twelf.OK))
+    | serve' ("loadFile", args) =
+        serve (Twelf.loadFile (getFile' args))
+    | serve' ("readDecl", args) =
+      (checkEmpty args; serve (Twelf.readDecl ()))
+    | serve' ("decl", args) =
+        serve (Twelf.decl (getId (tokenize args)))
+
+    | serve' ("top", args) =
+      (checkEmpty args;
        Twelf.top ();
        serve (Twelf.OK))
 
-    | serve' (t::ts) =
+    | serve' (t, args) =
          error ("Unrecognized command " ^ quote t)
 
   and serveLine () = serve' (readLine ())

@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# Twelf Batch File Creator
+#
+# Arguments:
+# $1 = SMLNJ runtime
+# $2 = Twelf root directory
+# $3 = Type of executable (e.g. twelf-server, twelf-sml)
+echo "\"$1\" @SMLload=\"$2/bin/.heap/$3\" \\" > "$2/bin/$3"
+echo "   @SMLdebug=/dev/null" >> "$2/bin/$3"
+chmod a+x "$2/bin/$3"

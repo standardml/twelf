@@ -1,0 +1,15 @@
+Instructions to create an installation executable for Windows.
+
+  1. Download and install NSIS. It is available for free, and with sources,
+     from:
+       http://www.nullsoft.com/free/nsis/
+
+  2. Make sure that the heap images for both twelf-server and twelf-sml
+     are inside bin/.heap. If they are not, you can create them by opening
+     a command prompt in the Twelf root directory and typing
+        sml-cm < twelf-server.sml
+        sml-cm < twelf-sml.sml
+
+  3. Right click on the twelf.nsi file and select "Compile NSI".
+     This will create an executable file named "twelf-1-3.exe" in the
+     Twelf root directory.
