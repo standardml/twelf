@@ -11,11 +11,6 @@ tp : type.				%name tp A.
 % bp Tue Feb 26 20:36:02 2002
 bool: tp.
 
-% natural numbers-- integer
-int: tp.
-even: tp.
-odd:tp.
-
 zero : tp.  % bp Wed Feb 27 11:51:24 2002
 bit : tp.
 nat : tp.
@@ -34,8 +29,6 @@ trans : A <= B
 	 -> B <= C
 	 -> A <= C.
 
-e<=i : even <= int.
-o<=i : odd <= int.
 
 z<=n : zero <= nat.
 p<=n : pos <= nat.
@@ -57,10 +50,6 @@ ord : tp -> type.
 %mode ord +A.
 
 ord_bo: ord bool.
-
-ord_i: ord int.
-ord_e: ord even.
-ord_o: ord odd.
 
 ord_b : ord bit.
 ord_n : ord nat.
@@ -90,12 +79,6 @@ conjr : conj (A & B) Bo
 
 bo<|bo: bool <| bool.
 
-i<|i: int <| int.
-e<|e: even <| even.
-o<|o: odd <| odd.
-e<|i: even <| int.
-o<|i: odd <| int.
-
 b<|b : bit <| bit.
 n<|n : nat <| nat.
 p<|p : pos <| pos.
@@ -121,15 +104,6 @@ p<|b : pos <| bit.
 =><|=> : A1 |> B1
 	-> A2 <| B2
 	-> A1 => A2 <| B1 => B2.
-
-bo<|bo: bool |> bool.
-
-
-i|>i: int |> int.
-e|>e: even |> even.
-o|>o: odd |> odd.
-e|>i: even |> int.
-o|>i: pos |> int.
 
 b|>b : bit |> bit.
 n|>n : nat |> nat.
@@ -284,32 +258,6 @@ of_case_z : of M zero
 	     -> of Me A
 	     -> of (case M Me ([x] M0 x) ([y] M1 y)) A.
 
-% integers 
-tp_ze : of z even. 
-tp_s_eo : of (s E) even
-	    <- of E odd.
-
-tp_s_eo : of (s E) odd
-	    <- of E even.
-
-tp_s_i: of (s E) int
-	 <- of E int.
-
-tp_case_i : of (casen E1 E2 E3) T
-	       <- of E1 int
-	       <- of E2 T
-	       <- ({x:term} of x int -> of (E3 x) T).
-
-tp_case_o : of (casen E1 E2 E3) T
-		<- of E1 odd
-		<- ({x:term} of x even -> of (E3 x) T).
-
-tp_case_e : of (casen E1 E2 E3) T
-	       <- of E1 even
-	       <- of E2 T
-	       <- ({x:term} of x odd -> of (E3 x) T).
-
-
 of_fix : of (fix M) A
 	  <- ({x:term} of x A -> of (M x) A).
 
@@ -418,31 +366,6 @@ c_case_z : check (case I Ce ([x] C0 x) ([y] C1 y)) A
 	     <- synth I B'
 	     <- conj B' zero
 	     <- check Ce A.
-
-% integers
-c_z_e : check z even.
-c_z_i : check z int.
-c_s_e : check E even -> check (s E) odd.
-c_s_o : check E odd -> check (s E) even.
-c_s_i : check E int -> check (s E) int.
-
-c_case_i : check (casen I Cz ([x] Cs x)) A
-	     <- synth I B'
-	     <- conj B' int
-	     <- check Cz A
-	     <- ({x} value x -> synth x int -> check (Cs x) A).
-
-c_case_e : check (casen I Cz ([x] Cs x)) A
-	     <- synth I B'
-	     <- conj B' even
-	     <- check Cz A		
-	     <- ({x} value x -> synth x odd -> check (Cs x) A).
-
-c_case_o : check (casen I Cz ([x] Cs x)) A
-	     <- synth I B'
-	     <- conj B' odd
-	     <- check Cz t		% to be pedantic
-	     <- ({x} value x -> synth x even -> check (Cs x) A).
 
 % Definitions
 c_let : check (let I C) A
