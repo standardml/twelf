@@ -205,7 +205,7 @@ struct
     val fixityArray : Fixity.fixity Array.array =
           Array.array (maxCid+1, Fixity.Nonfix)
     fun fixityClear () = Array.modify (fn _ => Fixity.Nonfix) fixityArray
-    val namePrefArray : (string * string) option Array.array =
+    val namePrefArray : (string list * string list) option Array.array =
           Array.array (maxCid+1, NONE)
     fun namePrefClear () = Array.modify (fn _ => NONE) namePrefArray
 
@@ -511,11 +511,11 @@ struct
        Effect: install name preference for type family cid
        raise Error if cid does not refer to a type family
     *)
-    fun installNamePref (cid, (ePref, SOME(uPref))) =
+    fun installNamePref (cid, (ePref, nil)) =
+          installNamePref' (cid, (ePref, [String.map Char.toLower (hd ePref)]))
+      | installNamePref (cid, (ePref, uPref)) =
           installNamePref' (cid, (ePref, uPref))
-      | installNamePref (cid, (ePref, NONE)) =
-	  installNamePref' (cid, (ePref, String.map Char.toLower ePref))
-
+      
     fun getNamePref cid = Array.sub (namePrefArray, cid)
 
     fun installComponents (mid, namespace) =
@@ -535,8 +535,8 @@ struct
 
     fun namePrefOf'' (Exist, NONE) = "X"
       | namePrefOf'' (Univ _, NONE) = "x"
-      | namePrefOf'' (Exist, SOME(ePref, uPref)) = ePref
-      | namePrefOf'' (Univ _, SOME(ePref, uPref)) = uPref
+      | namePrefOf'' (Exist, SOME(ePref, uPref)) = hd ePref
+      | namePrefOf'' (Univ _, SOME(ePref, uPref)) = hd uPref
 
     fun namePrefOf' (Exist, NONE) = "X"
       | namePrefOf' (Univ _, NONE) = "x"

@@ -88,8 +88,8 @@ sig
   val fixityLookup : Qid -> Fixity.fixity (* Nonfix if undefined *)
 
   (* Name preferences for anonymous variables: a, EPref, UPref *)
-  val installNamePref : IntSyn.cid * (string * string option) -> unit
-  val getNamePref : IntSyn.cid -> (string * string) option
+  val installNamePref : IntSyn.cid * (string list * string list) -> unit
+  val getNamePref : IntSyn.cid -> (string list * string list) option
 
   val installComponents : IntSyn.mid * namespace -> unit
   val getComponents : IntSyn.mid -> namespace

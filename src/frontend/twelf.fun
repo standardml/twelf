@@ -360,6 +360,7 @@ struct
 	  val _ = Names.installConstName cid
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
+	  val _ = StyleCheck.checkConDec cid
 	in 
 	  cid
 	end

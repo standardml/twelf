@@ -81,18 +81,43 @@ struct
     (* Parsing name preferences %name ... *)
     (*------------------------------------*)
 
+    (* parseName5 "string ... )" or ")" *)
+    fun parseName5 (name, r0, prefENames, prefUNames, LS.Cons ((L.ID (_, prefUName), r), s')) =
+        (* prefUName should be lower case---not enforced *)
+        parseName5 (name, r0, prefENames, prefUNames @ [prefUName] , LS.expose s')	
+      | parseName5 (name, r0, prefENames, prefUNames, LS.Cons ((L.RPAREN, r), s')) = 
+	(((Names.Qid (nil, name), r0), (prefENames, prefUNames)), LS.expose s')
+      | parseName5 (name, r0, prefENames, prefUNames, LS.Cons ((t, r), s')) =
+	  Parsing.error (r, "Expected name preference or ')', found " ^ L.toString t)
+
     (* parseName3 "string" or "" *)
     fun parseName3 (name, r0, prefEName, LS.Cons ((L.ID (_, prefUName), r), s')) =
         (* prefUName should be lower case---not enforced *)
-        (((Names.Qid (nil, name), r0), (prefEName, SOME(prefUName))), LS.expose s')
+        (((Names.Qid (nil, name), r0), (prefEName, [prefUName])), LS.expose s')
+      | parseName3 (name, r0, prefEName, LS.Cons ((L.LPAREN, r), s')) = 
+	parseName5 (name, r0, prefEName, nil, LS.expose s')
       | parseName3 (name, r0, prefEName, f) =
-	(((Names.Qid (nil, name), r0), (prefEName, NONE)), f)
+	(((Names.Qid (nil, name), r0), (prefEName, nil)), f)
 
-    (* parseName2 "string" or "string string" *)
+    (* parseName4 "string ... )" or ")" *)
+    fun parseName4 (name, r0, prefENames, LS.Cons ((L.ID (_, prefEName), r), s')) =
+        if L.isUpper prefEName
+	  then parseName4 (name, r0,  prefENames @ [prefEName] , LS.expose s')
+	else Parsing.error (r, "Expected uppercase identifer, found " ^ prefEName)
+      | parseName4 (name, r0, prefENames, LS.Cons ((L.RPAREN, r), s')) = 
+          parseName3 (name, r0, prefENames, LS.expose s')
+      | parseName4 (name, r0, prefENames, LS.Cons ((t, r), s')) =
+	  Parsing.error (r, "Expected name preference or ')', found " ^ L.toString t)
+
+    (* parseName2 "string" or "string string" 
+              or "(string ... ) string"  or " string (string ...)" 
+              or "(string ... ) (string ...)" *)
     fun parseName2 (name, r0, LS.Cons ((L.ID (_, prefEName), r), s')) =
         if L.isUpper prefEName
-	  then parseName3 (name, r0, prefEName, LS.expose s')
+	  then parseName3 (name, r0, [prefEName], LS.expose s')
 	else Parsing.error (r, "Expected uppercase identifer, found " ^ prefEName)
+      | parseName2 (name, r0, LS.Cons ((L.LPAREN, r), s')) = 
+	parseName4 (name, r0, nil, LS.expose s')
       | parseName2 (name, r0, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected name preference, found " ^ L.toString t)
 

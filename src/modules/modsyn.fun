@@ -27,7 +27,7 @@ struct
   exception Error of string
 
   datatype ConstInfo =
-      ConstInfo of IntSyn.ConDec * Names.Fixity.fixity * (string * string) option * (string * Paths.occConDec option)
+      ConstInfo of IntSyn.ConDec * Names.Fixity.fixity * (string list * string list) option * (string * Paths.occConDec option)
 
   datatype StructInfo =
       StructInfo of IntSyn.StrDec
@@ -212,7 +212,7 @@ struct
               val _ = (case namePrefOpt
                          of NONE => ()
                           | SOME (n1, n2) => 
-                              Names.installNamePref (cid', (n1, SOME n2)))
+                              Names.installNamePref (cid', (n1, n2)))
             in
               IntTree.insert constMap (cid, cid')
             end
