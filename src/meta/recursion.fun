@@ -640,13 +640,18 @@ struct
 		if Subordinate.below  (I.targetFam V1', I.targetFam V) then
 		  let 
 		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+		    val sc' =  fn Ds'' => if Abstract.closedExp (G, (X, I.id)) then sc Ds''
+					(* possible incompleteness. 
+					   X will be free in some cases and must be universally quantified.
+					   -- cs *)
+		                          else Ds''
 		    val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
 				    ((U', I.Dot (I.Exp (X), s1')), 
-				     (V', I.Dot (I.Exp (X), s2'))), sc, Ds')
-		    val sc' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
+				     (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
+		    val sc'' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
 		    val Ds''' =  le (GB, k, ((U, s1), (V, s2)), 
 				    ((U', I.Dot (I.Exp (X), s1')), 
-				     (V', I.Dot (I.Exp (X), s2'))), sc', Ds'')
+				     (V', I.Dot (I.Exp (X), s2'))), sc'', Ds'')
 		  in
 		    Ds'''
 		  end
