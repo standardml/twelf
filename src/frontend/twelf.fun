@@ -1263,7 +1263,7 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3R3, Dec 28 2001 (with world, coverage, and totality checking)"
+    val version = "Twelf 1.3R4, June 20, 2002 (with world, coverage, and totality checking)"
 
     structure Table : 
       sig 
