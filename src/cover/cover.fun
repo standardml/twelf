@@ -10,6 +10,8 @@ functor Cover
      sharing Abstract.IntSyn = IntSyn'
    structure Unify : UNIFY		(* must be trailing! *)
      sharing Unify.IntSyn = IntSyn'
+   structure Constraints : CONSTRAINTS
+     sharing Constraints.IntSyn = IntSyn'
    structure ModeSyn' : MODESYN
      sharing ModeSyn'.IntSyn = IntSyn'
    structure Index : INDEX
@@ -120,9 +122,8 @@ struct
     *)
     fun matchEqns (nil) = true
       | matchEqns (Eqn (G, Us1, Us2)::es) =
-        if Unify.unifiable (G, Us1, Us2)
-	  then matchEqns (es)
-	else false
+        Unify.unifiable (G, Us1, Us2)
+	andalso matchEqns (es)
 
     (* resolveCands (cands) = cands'
        resolve to one of
@@ -136,6 +137,38 @@ struct
 	else Fail
       | resolveCands (Cands (ks)) = Cands (ks)
       | resolveCands (Fail) = Fail
+
+    (* collectConstrins (Xs) = constrs
+       collect all the constraints that may be attached to EVars Xs
+
+       try simplifying away the constraints in case they are "hard"
+       disabled for now to get a truer approximation to operational semantics
+    *)
+    fun collectConstraints (nil) = nil
+      | collectConstraints (I.EVar (_, _, _, ref nil)::Xs) =
+          collectConstraints Xs
+      | collectConstraints (I.EVar (_, _, _, ref constrs)::Xs) =
+	  (* constrs <> nil *)
+          (* Constraints.simplify constrs @ *) (* at present, do not simplify -fp *)
+	  constrs @ collectConstraints Xs
+
+    (* checkConstraints (cands, (Q, s)) = cands'
+       failure if constraints remain in Q[s] which indicates only partial match
+       Q[s] is the clause head after matching the coverage goal.
+
+       Invariants: if cands = Eqns (es) then es = nil.
+    *)
+    fun checkConstraints (G, Qs, Cands (ks)) = Cands (ks)
+      | checkConstraints (G, Qs, Fail) = Fail
+      | checkConstraints (G, Qs, Eqns _) = (* _ = nil *)
+        let
+	  val Xs = Abstract.collectEVars (G, Qs, nil)
+	  val constrs = collectConstraints Xs
+	in
+	  case constrs
+	    of nil => Eqns (nil)
+	     | _ => Fail		(* constraints remained: Fail without candidates *)
+	end
 
     (* Candidate Lists *)
     (*
@@ -275,7 +308,7 @@ struct
        NOTE: Simply use constant type for more robustness (see below)
     *)
     fun matchClause (G, ps', qs as (I.Root (_, _), s), ms) =
-          resolveCands (matchTop (G, ps', qs, ms))
+          checkConstraints (G, qs, resolveCands (matchTop (G, ps', qs, ms)))
       | matchClause (G, ps', (I.Pi ((I.Dec(_, V1), _), V2), s), ms) =
         let
 	  val X1 = I.newEVar (I.Null, I.EClo (V1, s))
@@ -331,22 +364,39 @@ struct
     (*** Selecting Splitting Variable ***)
     (************************************)
 
+    (* insert (k, ksn) = ksn'
+       ksn is ordered list of ks (smallest index first) with multiplicities
+    *)
+    fun insert (k, nil) = ((k, 1)::nil)
+      | insert (k, ksn as (k', n')::ksn') =
+        (case Int.compare (k, k')
+	   of LESS => (k, 1)::ksn
+	    | EQUAL => (k', n'+1)::ksn'
+	    | GREATER => (k', n')::insert (k, ksn'))
 
-    (* selectCand (klist) = klist'
-       where klist' is an indication of coverage or a singleton
+    (* join (ks, ksn) = ksn'
+       ksn is as in function insert
+    *)
+    fun join (nil, ksn) = ksn
+      | join (k::ks, ksn) = join (ks, insert (k, ksn))
+
+    (* selectCand (klist) = ksnOpt
+       where ksOpt is an indication of coverage (NONE)
+       or a list of candidates with multiplicities
 
        Simple heuristic: select last splitting candidate from last clause tried
        This will never pick an index variable unless necessary.
     *)
-    fun selectCand (Covered) = Covered	(* success: case is covered! *)
-      | selectCand (CandList (klist)) = selectCand' klist
-    and selectCand' nil = CandList (nil) (* failure: case G,V is not covered! *)
-      | selectCand' ((c, Fail)::klist) = (* local failure (clash) and no candidates *)
-          selectCand' klist
-      | selectCand' ((c, Cands(nil))::klist) = (* local failure (dependency) but no candidates *)
-	  selectCand' klist
-      | selectCand' ((c, Cands(k::ks))::klist) = (* found candidate: pick first one *)
-	  CandList ((c, Cands(k::nil))::nil)
+    fun selectCand (Covered) = NONE	(* success: case is covered! *)
+      | selectCand (CandList (klist)) = selectCand' (klist, nil)
+
+    and selectCand' (nil, ksn) = SOME(ksn) (* failure: case G,V is not covered! *)
+      | selectCand' ((c, Fail)::klist, ksn) = (* local failure (clash) and no candidates *)
+          selectCand' (klist, ksn)
+      | selectCand' ((c, Cands(nil))::klist, ksn) = (* local failure but no candidates *)
+	  selectCand' (klist, ksn)
+      | selectCand' ((c, Cands(ks))::klist, ksn) = (* found candidates ks <> nil *)
+	  selectCand' (klist, join (ks, ksn))
 
     (*****************)
     (*** Splitting ***)
@@ -498,6 +548,7 @@ struct
        in arbitrary order
 
        Invariants: . |- a @ S[s] : type
+       Effect: may raise Constraints.Error (constrs)
      *)
     fun abstract (V, s) = 
         let
@@ -506,9 +557,11 @@ struct
 	  V'
 	end
 
-    (* splitVar ({{G}} a @ S, k) = [{{G1}} a @ S1 ,..., {{Gn}} a @ Sn]
+    (* splitVar ({{G}} a @ S, k) = SOME [{{G1}} a @ S1 ,..., {{Gn}} a @ Sn]
+       or NONE
        where {{Gi}} a @ Si are new coverage goals obtained by
        splitting kth variable in G, counting right-to-left.
+       returns NONE if splitting variable k fails because of constraints
 
        Invariants: G |- a @ S : type, k <= |G|
        {{Gi}} a @ Si cover {{G}} a @ S
@@ -521,8 +574,10 @@ struct
 	  val _ = resetCases ()
 	  val _ = splitEVar (X, fn () => addCase (abstract (V1, s)))
 	in
-	  getCases ()
+	  SOME (getCases ())
 	end
+        (* Constraints.Error could be raise by abstract *)
+        handle Constraints.Error (constrs) => NONE
 
     (*********************************)
     (* Checking for Impossible Cases *)
@@ -598,13 +653,18 @@ struct
 
     fun cover (V, ms, missing) =
           split (V, selectCand (match (I.Null, V, ms)), ms, missing)
-    and split (V, Covered, ms, missing) = missing
-      | split (V, CandList (nil), ms, missing) =
+
+    and split (V, NONE, ms, missing) = missing
+      | split (V, SOME(nil), ms, missing) =
         if impossible(V)		(* no candidates: check if coverage goal is impossible *)
 	  then missing
 	else V::missing
-      | split (V, CandList ((_, Cands (k::_))::_), ms, missing) =
-          covers (splitVar (V, k), ms, missing)
+      | split (V, SOME((k,_)::ksn), ms, missing) = (* ignore multiplicities *)
+	(case splitVar (V, k)
+	   of SOME(cases) => covers (cases, ms, missing)
+	    | NONE =>			(* splitting variable k generated constraints *)
+	      split (V, SOME (ksn), ms, missing)) (* try other candidates *)
+
     and covers (nil, ms, missing) = missing
       | covers (V::cases', ms, missing) =
           covers (cases', ms, cover (V, ms, missing))
