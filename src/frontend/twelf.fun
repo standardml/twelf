@@ -954,7 +954,7 @@ struct
     (* top () = () starts interactive query loop *)
     fun top () = topLoop ()    
 
-    fun installCSMDec (conDec, optFixity, optMdec) = 
+    fun installCSMDec (conDec, optFixity, mdecL) = 
 	let
 	  val _ = ModeCheck.checkD (conDec, "%use", NONE)
           (* put a more reasonable region here? -kw *)
@@ -971,10 +971,7 @@ struct
                                          ^ Names.qidToString (Names.constQid cid) ^ ".\n")
                            else ())
 		      | NONE => ())
-	  val _ = (case optMdec
-		     of SOME(mdec) =>
-			  ModeSyn.installMode (cid, mdec)
-		      | NONE => ())
+	  val _ = List.app (fn mdec => ModeSyn.installMmode (cid, mdec)) mdecL
 	in
 	  cid
 	end
