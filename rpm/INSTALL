@@ -1,4 +1,4 @@
-Instructions to create an installation executable for Windows.
+Instructions to create an RPM for Linux.
 
   1. Create the distribution for Unix, unpack it on a Linux RedHat 7.0
      machine (may work for other versions too, but it has been tested
