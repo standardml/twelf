@@ -40,7 +40,8 @@ struct
      NB: cases where unification fails are not considered
 
      Consequence: Only those splitting operators can be
-     applied which do not generate inactive cases.
+     applied which do not generate inactive cases (this
+     can be checked for a given operator by applicable)
   *)
   datatype 'a flag = 
     Active of 'a | InActive
@@ -108,15 +109,15 @@ struct
 	(I.Root (I.BVar (k), S), Vs)
       end
 
-    (* constCases (G, (V, s), I, abstract, C) = C'
+    (* constCases (G, (V, s), I, abstract, ops) = ops'
      
        Invariant:
        If   G |- s : G'  G' |- V : type
        and  I a list of of constant declarations
        and  abstract an abstraction function
-       and  C a list of possible cases
-       then C' is a list extending C, containing all possible
-	 cases from I
+       and  ops a list of possible splitting operators
+       then ops' is a list extending ops, containing all possible
+	 operators from I
     *)
     fun constCases (G, Vs, nil, abstract, ops) = ops
       | constCases (G, Vs, I.Const c::Sgn, abstract, ops) = 
@@ -132,15 +133,15 @@ struct
 				   handle  MTPAbstract.Error _ => InActive :: ops))
 	end
 
-    (* paramCases (G, (V, s), k, abstract, C) = C'
+    (* paramCases (G, (V, s), k, abstract, ops) = ops'
      
        Invariant:
        If   G |- s : G'  G' |- V : type
        and  k a variable
        and  abstract an abstraction function
-       and  C a list of possible cases
-       then C' is a list extending C, containing all possible
-	 cases introduced by parameters <= k in G
+       and  ops a list of possible splitting operators
+       then ops' is a list extending ops, containing all possible
+	 operators introduced by parameters <= k in G
     *)
     fun paramCases (G, Vs, 0, abstract, ops) = ops
       | paramCases (G, Vs, k, abstract, ops) = 
@@ -155,13 +156,13 @@ struct
 				      handle  MTPAbstract.  Error _ => InActive  :: ops))
 	end
 
-    (* lowerSplitDest (G, (V, s'), abstract) = C'
+    (* lowerSplitDest (G, (V, s'), abstract) = ops'
        
        Invariant: 
        If   G0, G |- s' : G1  G1 |- V: type
        and  G is the context of local parameters
        and  abstract abstraction function
-       then C' is a list of all cases unifying with V[s']
+       then ops' is a list of all operators unifying with V[s']
 	    (it contains constant and parameter cases)
     *)
     fun lowerSplitDest (G, (V as I.Root (I.Const c, _), s'), abstract) =
@@ -175,19 +176,19 @@ struct
 			    fn U => abstract (I.Lam (D', U)))
   	  end
 
-    (* split ((G, M), (x:D, s), abstract) = C'
+    (* split (x:D, s, B, abstract) = ops'
 
        Invariant :
        If   |- G ctx
-       and  G |- M mtx
-       and  G |- s : G1   and  G1 |- D : L
+       and  |- B : G tags
+       and  . |- s : G   and  G |- D : L
        and  abstract abstraction function
-       then C' = (C1, ... Cn) are resulting cases from splitting D[s]
+       then ops' = (op1, ... opn) are resulting operators from splitting D[s]
     *)
     fun split (D as I.Dec (_, V), s, B, abstract) = 
            lowerSplitDest (I.Null, (V, s), fn U' => abstract (I.Dot (I.Exp (U'), s), B))
       
-    (* rename to add N prefix? *)
+
     (* occursIn (k, U) = B, 
 
        Invariant:
@@ -217,196 +218,6 @@ struct
     fun isIndexSucc (D, isIndex) k = occursInDec (k, D) orelse isIndex (k+1)  
     fun isIndexFail (D, isIndex) k = isIndex (k+1)
 
-(*
-    (* copied from meta-abstract *)
-    (* modeEq (marg, st) = B'
-
-       Invariant:
-       If   (marg = + and st = top) or (marg = - and st = bot) 
-       then B' = true
-       else B' = false
-    *)
-    fun modeEq (ModeSyn.Marg (ModeSyn.Plus, _), M.Top) = true
-      | modeEq (ModeSyn.Marg (ModeSyn.Minus, _), M.Bot) = true
-      | modeEq _ = false
-
-    (* 
-       The inherit functions below copy the splitting depth attribute
-       between successive states, using a simultaneous traversal
-       in mode dependency order.
-
-       Invariant: 
-       (G,M,B) |- V type
-       G = G0, G1, G2
-       |G2| = k       (length of local context)
-       d = |G1, G2|   (last BVar seen)
-       let n < |G|
-       if   n>d then n is an index of a variable already seen in mdo
-       if   n=d then n is an index of a variable now seen for the first 
-	             time
-       if   n<=k then n is a local parameter
-       it is impossible for     k < n < d
-    *)
-    (* invariants on inheritXXX functions? -fp *)
-    fun inheritBelow (b', k', I.Lam (D', U'), Bdd') =
-          inheritBelow (b', k'+1, U',
-			inheritBelowDec (b', k', D', Bdd'))
-      | inheritBelow (b', k', I.Pi ((D',_), V'), Bdd') =
-	  inheritBelow (b', k'+1, V',
-			inheritBelowDec (b', k', D', Bdd'))
-      | inheritBelow (b', k', I.Root (I.BVar(n'), S'), (B', d, d')) =
-	if n' = k'+d' andalso n' > k' (* necessary for d' = 0 *)
-	  then inheritBelowSpine (b', k', S', (I.Decl (B', b'), d, d'-1))
-	else inheritBelowSpine (b', k', S', (B', d, d'))
-      | inheritBelow (b', k', I.Root (C, S'), Bdd') =
-	  inheritBelowSpine (b', k', S', Bdd')
-    and inheritBelowSpine (b', k', I.Nil, Bdd') = Bdd'
-      | inheritBelowSpine (b', k', I.App (U', S'), Bdd') =
-          inheritBelowSpine (b', k', S', inheritBelow (b', k', U', Bdd'))
-    and inheritBelowDec (b', k', I.Dec(x, V'), Bdd') =
-          inheritBelow (b', k', V', Bdd')
-
-    (* skip *)
-    fun skip (k, I.Lam (D, U), Bdd') =
-          skip (k+1, U, skipDec (k, D, Bdd'))
-      | skip (k, I.Pi ((D,_), V), Bdd') =
-	  skip (k+1, V, skipDec (k, D, Bdd'))
-      | skip (k, I.Root (I.BVar(n), S), (B', d, d')) =
-	if n = k+d andalso n > k (* necessary for d = 0 *)
-	  then skipSpine (k, S, (B', d-1, d'))
-	else skipSpine (k, S, (B', d, d'))
-      | skip (k, I.Root (C, S), Bdd') =
-	  skipSpine (k, S, Bdd')
-    and skipSpine (k, I.Nil, Bdd') = Bdd'
-      | skipSpine (k, I.App (U, S), Bdd') =
-          skipSpine (k, S, skip (k, U, Bdd'))
-    and skipDec (k, I.Dec(x, V), Bdd') =
-          skip (k, V, Bdd')
-
-    (* Uni impossible *)
-    fun inheritExp (B, k, I.Lam (D, U), k', I.Lam (D', U'), Bdd') =
-           inheritExp (B, k+1, U, k'+1, U',
-		       inheritDec (B, k, D, k', D', Bdd'))
-      | inheritExp (B, k, I.Pi ((D, _), V), k', I.Pi ((D', _), V'), Bdd') =
-	   inheritExp (B, k+1, V, k'+1, V',
-		       inheritDec (B, k, D, k', D', Bdd'))
-      | inheritExp (B, k, V as I.Root (I.BVar (n), S), k', V', (B', d, d')) =
-	if n = k+d andalso n > k (* new original variable *)
-	  then (* inheritBelow (I.ctxLookup (B, n-k) - 1, k', V', (B', d-1, d')) *)
-	    skipSpine (k, S, inheritNewRoot (B, I.ctxLookup (B, n-k), k, V, k', V', (B', d, d')))
-	else if n > k+d (* already seen original variable *)
-	       (* then (B', d, d') *)
-	       (* previous line avoids redundancy,
-                  but may violate invariant outside pattern fragment *)
-	       then skipSpine (k, S, inheritBelow (I.ctxLookup (B, n-k)-1, k', V', (B', d, d')))
-	     else (* must correspond *)
-	       let
-		 val I.Root (C', S') = V' (* C' = BVar (n) *)
-	       in
-		 inheritSpine (B, k, S, k', S', (B', d, d'))
-	       end
-      | inheritExp (B, k, I.Root (C, S), k', I.Root (C', S'), Bdd') =
-          (* C ~ C' *)
-	  inheritSpine (B, k, S, k', S', Bdd')
-
-    and inheritNewRoot (B, b, k, I.Root (I.BVar (n), S),
-			k', V' as I.Root (I.BVar (n'), S'), (B', d, d')) =
-        (* n = k+d *)
-        if n' = k'+d' andalso n' > k'
-	  (* n' also new --- same variable: do not decrease *)
-	  then inheritBelow (b, k', V', (B', d-1, d'))
-	else inheritBelow (b-1, k', V', (B', d-1, d'))
-      | inheritNewRoot (B, b, k, V, k', V', (B', d, d')) =
-	  (* n' not new --- decrease the splitting depth of all variables in V' *)
-	  inheritBelow (b-1, k', V', (B', d-1, d'))
-
-    and inheritSpine (B, k, I.Nil, k', I.Nil, Bdd') = Bdd'
-      | inheritSpine (B, k, I.App (U, S), k', I.App (U', S'), Bdd') =
-          inheritSpine (B, k, S, k', S', inheritExp (B, k, U, k', U', Bdd'))
-
-    and inheritDec (B, k, I.Dec(_, V), k', I.Dec(_, V'), Bdd') =
-          inheritExp (B, k, V, k', V', Bdd')
-
-    fun inheritDTop (B, k, I.Pi ((I.Dec (_, V1), I.No), V2),
-		     k', I.Pi ((I.Dec (_, V1'), I.No), V2'),
-		     Bdd') =
-	  inheritG (B, k, V1, k', V1',
-		    inheritDTop (B, k+1, V2, k'+1, V2', Bdd'))
-      | inheritDTop (B, k, V as I.Root (I.Const(cid), S),
-		     k', V' as I.Root (I.Const(cid'), S'), Bdd') =
-	(* cid = cid' *)
-	let
-	  val mS = valOf (ModeSyn.modeLookup (cid))
-	in
-	  inheritSpineMode (M.Top, mS, B, k, S, k', S', Bdd')
-	end
-
-    and inheritDBot (B, k, I.Pi ((I.Dec (_, V1), I.No), V2),
-		     k', I.Pi ((I.Dec (_, V1'), I.No), V2'),
-		     Bdd') =
-          inheritDBot (B, k+1, V2, k'+1, V2', Bdd')
-      | inheritDBot (B, k, I.Root (I.Const(cid), S),
-		     k', I.Root (I.Const (cid'), S'), Bdd') =
-	  (* cid = cid' *)
-	  let
-	    val mS = valOf (ModeSyn.modeLookup (cid))
-	  in
-	    inheritSpineMode (M.Bot, mS, B, k, S, k', S', Bdd')
-	  end
-
-    and inheritG (B, k, I.Root (I.Const (cid), S),
-		  k', V' as I.Root (I.Const (cid'), S'), Bdd') =
-        let
-	  val mS = valOf (ModeSyn.modeLookup (cid))
-	in
-	  (* mode dependency in Goal: first M.Top, then M.Bot *)
-	  inheritSpineMode (M.Bot, mS, B, k, S, k', S', 
-			   inheritSpineMode (M.Top, mS, B, k, S, k', S', Bdd'))
-	end
-
-    and inheritSpineMode (mode, ModeSyn.Mnil, B, k, I.Nil, k', I.Nil, Bdd') = Bdd'
-      | inheritSpineMode (mode, ModeSyn.Mapp (m, mS), B, k, I.App (U, S),
-			  k', I.App (U', S'), Bdd') =
-          if modeEq (m, mode)
-	    then inheritSpineMode (mode, mS, B, k, S, k', S',
-				   inheritExp (B, k, U, k', U', Bdd'))
-	  else inheritSpineMode (mode, mS, B, k, S, k', S', Bdd')
-
-    fun inheritSplitDepth (S as M.State (_, M.Prefix (G, M, B), V),
-			   S' as M.State (name', M.Prefix (G', M', B'), V')) =
-        (* S' *)
-        let
-	  val d = I.ctxLength G		(* current first occurrence depth in V *)
-	  val d' = I.ctxLength G'	(* current first occurrence depth in V' *)
-	  (* mode dependency in Clause: first M.Top then M.Bot *)
-	  (* check proper traversal *)
-	  val V = Whnf.normalize (V, I.id)
-	  val V' = Whnf.normalize (V', I.id)
-	  val (B'', 0, 0) = inheritDBot (B, 0, V, 0, V',
-					    inheritDTop (B, 0, V, 0, V', (I.Null, d, d')))
-	in
-	  M.State (name', M.Prefix (G', M', B''), V')
-	end
-
-*)
-
-    (* abstractInit (M.State (name, M.Prefix (G, M, B), V)) = F'
-      
-       State is the state before splitting, to inherit splitting depths.
-       Invariant:
-       If   G |- V : L
-       then forall |- G' ctx
-	    and    G' |- M' ctx
-	    and    G' |- s' : G
-	    and    names name'
-	    then   following holds: S' = F' (name', G', M', s') 
-	                            S' is a new state 
-    *)
-(*    fun abstractInit (M.State (name, GM, V)) (name', M.Prefix (G', M', B'), s') = 
-          inheritSplitDepth
-	  (M.State (name, GM, V),
-	   MetaAbstract.abstract (M.State (name ^ name', M.Prefix (G', M', B'), I.EClo (V, s'))))
-*)
 
     fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
@@ -424,9 +235,18 @@ struct
     fun makeAddressInit S k = (S, k)
     fun makeAddressCont makeAddress k = makeAddress (k+1)
 
-    (* expand' (M.Prefix (G, M), isIndex, abstract, makeAddress) = (M.Prefix (G', M'), s', ops')
+    (* expand' ((G, B), isIndex, abstract, makeAddress) = (s', ops')
 
        Invariant:
+       If   |- G ctx
+       and  |- B : G tags
+       and  isIndex (k) = B function s.t. B holds iff k index
+       and  abstract, dynamic abstraction function
+       and  makeAddress, a function which calculates the index of the variable
+	    to be split
+       then . |- s' : G,  and s' = Xn ... X1 . ^0
+       and  ops' is a list of splitting operators
+ 
        DOES NOT TREAT PARAMETERS YET!!!!!  -cs
     *)
     fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) = 
@@ -477,12 +297,12 @@ struct
 	    (I.Dot (I.Exp (X), s'), ops)
 	  end
 
-    (* expand ((G, B), V) = ops'
+
+
+    (* expand (S) = ops'
 
        Invariant:
-       If   |- G ctx
-       and  G |- B
-       and  G |- V : L
+       If   |- S state
        then ops' is a list of all possiblie splitting operators
     *)
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
@@ -496,15 +316,37 @@ struct
     (* index (Op) = k
        
        Invariant:
-       If   Op = (_, S) then k = |S| 
+       If   Op = (_, Sl) 
+       then k = |Sl| 
     *)
     fun index (_, Sl) = List.length Sl
+
+
+    (* isInActive (F) = B
+       
+       Invariant:
+       B holds iff F is inactive
+    *)
+    fun isInActive (Active _) = false
+      | isInActive (InActive) = true
+
+
+    (* applicable (Op) = B'
+
+       Invariant: 
+       If   Op = (_, Sl) 
+       then B' holds iff Sl does not contain inactive states
+    *)
+    fun applicable (_, Sl) = not (List.exists isInActive Sl)
 
 
     (* apply (Op) = Sl'
        
        Invariant:
-       If   Op = (_, Sl) then Sl' = Sl
+       If   Op = (_, Sl) 
+       then Sl' = Sl
+       
+       Side effect: If Sl contains inactive states, an exception is raised
     *)
     fun apply (_, Sl) = 
       map (fn (Active S) => S
@@ -515,9 +357,11 @@ struct
     (* menu (Op) = s'
        
        Invariant:
-       If   Op = ((G, D), Sl) 
-       and  G |- D : L
-       then s' = string describing the operator
+       If   Op = ((S, i), Sl)  and  S is named
+       then s' is a string describing the operation in plain text
+
+       (menu should hence be only called on operators which have 
+        been calculated from a named state)
     *)
     fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, R, F), i), Sl)) = 
 	let 
@@ -537,19 +381,16 @@ struct
 	    | flagToString (n, m) = " [active: " ^(Int.toString n) ^ 
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
-	  "Splitting : " ^  (* Print.decToString (G, I.ctxDec (G, i)) ^ *)
+	  "Splitting : " ^ Print.decToString (G, I.ctxDec (G, i)) ^
 	  " (" ^ (indexToString (index Op)) ^ 
 	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ")"
 	end
 
-(*    fun var ((_, i), _) = i
-*)
   in
     val expand = expand
     val menu = menu
+    val applicable = applicable
     val apply = apply
-
-(*  val var = var *)
     val index = index
 
   end (* local *)

@@ -1,0 +1,99 @@
+Current Issues:
+
+  - Treatment of Constraints for Filling -cs 
+
+README
+WALK
+abstract.fun
+
+abstract.sig
+
+filling.fun
+  Q: Constraint handling? -cs
+
+filling.sig
+  DONE -cs	
+
+funnames.fun
+
+funnames.sig
+
+funprint.fun
+
+funprint.sig
+
+funsyn.fun
+
+funsyn.sig
+
+funtypecheck.fun
+
+funtypecheck.sig
+
+funweaken.fun
+
+funweaken.sig
+
+global.fun
+
+global.sig
+
+init.fun
+
+init.sig
+
+interpret.sig
+
+meta.sml
+
+mpi.fun
+
+mpi.sig
+
+print.fun
+  DONE --cs
+
+print.sig
+  DONE --cs
+
+prover.fun
+
+prover.sig
+
+recursion.fun
+
+recursion.sig
+
+relfun.fun
+
+relfun.sig
+
+search.fun
+
+search.sig
+
+sources.cm
+
+splitting.fun
+  DONE -cs
+
+splitting.sig
+  DONE -cs
+
+statesyn.fun
+  Q: Assumption context G unnamed. 
+  DONE: Invariant on states: in general unnamed
+	MTPrint.nameState assigns names. Only then a state is printable
+	(and only then, the menu to an operation is pritnable )
+
+statesyn.sig
+  DONE -cs
+
+strategy.fun
+
+strategy.sig
+
+weaken.fun
+
+weaken.sig
+

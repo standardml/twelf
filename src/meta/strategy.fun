@@ -64,7 +64,8 @@ struct
 		  let 
 		    val k' = MTPSplitting.index O' 
 		  in
-		    if MTPSplitting.index O' < k then findMin' (L', k', SOME O')
+		    if MTPSplitting.applicable O' andalso 
+		      MTPSplitting.index O' < k then findMin' (L', k', SOME O')
 		    else findMin' (L', k, result)
 		  end
 	  in

@@ -8,7 +8,7 @@ sig
 
   exception Error of string
     
-  val abstractSub : IntSyn.Sub * StateSyn.SplitTag IntSyn.Ctx 
-        -> ((IntSyn.dctx * StateSyn.SplitTag IntSyn.Ctx) * IntSyn.Sub)
+  val abstractSub : IntSyn.Sub * StateSyn.Tag IntSyn.Ctx 
+        -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 
 end;  (* signature MTPABSTRACT *)

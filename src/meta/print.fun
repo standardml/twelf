@@ -29,45 +29,72 @@ struct
     structure Fmt = Formatter
 
 
-    fun formatSplitTag (S.Parameter) = Fmt.String "<p>"
-      | formatSplitTag (S.Lemma) = Fmt.String "<l>"
-      | formatSplitTag (S.Assumption k) = Fmt.String("<a" ^ Int.toString k ^ ">")
-      | formatSplitTag (S.Induction k) = Fmt.String ("<i" ^ Int.toString k ^ ">")
+    (* nameState S = S'
+     
+       Invariant:
+       If   |- S state     and S unnamed
+       then |- S' State    and S' named
+       and  |- S = S' state   
+    *)
+    fun nameState (S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
+        let 
+	  val _ = Names.varReset ()
+	  val G' = Names.ctxName G
+	in
+	  S.State (n, (G', B), (IH, OH), d, O, H, R, F)
+	end
 
-    fun formatCtx (I.Null, B) = (I.Null, [])
+    (* format T = s'
+
+       Invariant:
+       If   T is a tag
+       then s' is a string describing this tag in plain text 
+    *)
+    fun formatTag (S.Parameter) = Fmt.String "<p>"
+      | formatTag (S.Lemma) = Fmt.String "<l>"
+      | formatTag (S.Assumption k) = Fmt.String("<a" ^ Int.toString k ^ ">")
+      | formatTag (S.Induction k) = Fmt.String ("<i" ^ Int.toString k ^ ">")
+
+
+    (* formatCtx (G, B) = fmt'
+     
+       Invariant:
+       If   |- G ctx       and G is already named
+       and  |- B : G tags
+       then fmt' is a format describing the context (G, B)
+    *)
+    fun formatCtx (I.Null, B) = []
       | formatCtx (I.Decl (I.Null, D), I.Decl (I.Null, T)) = 
-        let 
-	  val D' = Names.decName (I.Null, D)
-	in
-          (I.Decl (I.Null, D'), 
-	   [formatSplitTag T, Print.formatDec (I.Null, D')])
-	end
+          [formatTag T, Print.formatDec (I.Null, D)]
       | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
-	  let 
-	    val (G', fmt) = formatCtx (G, B)
-	    val D' = Names.decName (G', D)
-	  in
-	    (I.Decl (G', D'), 
-	      fmt @ [Fmt.String ",", Fmt.Space, Fmt.Break, formatSplitTag T, 
-			   Print.formatDec (G', D')])
-	  end
+	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break, formatTag T, 
+			      Print.formatDec (G, D)]
 
+    (* formatState S = fmt'
+     
+       Invariant:
+       If   |- S state      and  S named
+       then fmt' is a format describing the state S
+    *)
     fun formatState (S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
-        let 
-	  val (G', fmt) = formatCtx (G, B)
-	in
           Fmt.Vbox0 0 1 
-	  [Fmt.HVbox0 1 0 1 fmt, Fmt.Break,
+	  [Fmt.HVbox0 1 0 1 (formatCtx (G, B)), Fmt.Break,
 	   Fmt.String "------------------------", Fmt.Break,
-	   FunPrint.formatForBare (G', F)]
-	end
+	   FunPrint.formatForBare (G, F)]
 
-    fun stateToString  (S) = 
-      (Names.varReset ();
-       Fmt.makestring_fmt (formatState S))
+
+    (* formatState S = S'
+     
+       Invariant:
+       If   |- S state      and  S named
+       then S' is a string descring state S in plain text
+    *)
+    fun stateToString S = 
+      (Fmt.makestring_fmt (formatState S))
 
 
   in
+    val nameState = nameState
     val formatState = formatState
     val stateToString = stateToString
   end (* local *)

@@ -28,3 +28,15 @@ DONE -cs  1) lemmas
 DONE -cs  2) parameter cases
 DONE -cs  3) mutual recursion
 4) label store
+
+
+
+
+TODO list of meta theorem prover
+--------------------------------
+
+Code Walk (Invariants, Mutual recursion)
+Residual lemmas
+Parameter Cases
+Index variables
+Proof terms

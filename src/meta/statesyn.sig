@@ -8,14 +8,14 @@ sig
 
   datatype Order =	       	        (* Orders                     *)
     Arg of (IntSyn.Exp * IntSyn.Sub) * 
-           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]        *)
+           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]          *)
   | Lex of Order list			(*     | (O1 .. On)           *)
   | Simul of Order list			(*     | {O1 .. On}           *)
   | All of FunSyn.IntSyn.Dec * Order  	(*     | {{D}} O              *)
   | And of Order * Order		(*     | O1 ^ O2              *)
     
 
-  datatype SplitTag = 
+  datatype Tag = 
     Parameter
   | Lemma 
   | Assumption of int
@@ -23,8 +23,8 @@ sig
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, R, F> *)
     State of int			(* Part of theorem                   *)
-	   * (FunSyn.IntSyn.dctx	(* Context of Hypothesis             *)
-           * SplitTag FunSyn.IntSyn.Ctx) (* Status information *)
+	   * (FunSyn.IntSyn.dctx	(* Context of Hypothesis, in general not named *)
+           * Tag FunSyn.IntSyn.Ctx) (* Status information *)
            * (FunSyn.For * Order)	(* Induction hypothesis, order       *)
            * int			(* length of meta context            *)
            * Order			(* Current order *)
@@ -33,8 +33,7 @@ sig
            * FunSyn.For			(* Formula *)
 
   val orderSub : Order * FunSyn.IntSyn.Sub -> Order  
-  val decrease : SplitTag -> SplitTag
+  val decrease : Tag -> Tag
   val normalizeOrder : Order -> Order
   val convOrder : Order * Order -> bool
-  
 end; (* signature STATESYN *)

@@ -28,7 +28,7 @@ struct
     (* Intermediate Data Structure *)
 
     datatype EFVar =
-      EV of I.Exp option ref * I.Exp * S.SplitTag
+      EV of I.Exp option ref * I.Exp * S.Tag
 					(* y ::= (X , {G} V)  if G |- X : V *)
     | FV of I.name * I.Exp		(*     | (F , {G} V)  if G |- F : V *)
 

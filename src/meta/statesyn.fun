@@ -15,13 +15,13 @@ struct
     
   datatype Order =	       	        (* Orders                     *)
     Arg of (IntSyn.Exp * IntSyn.Sub) * 
-           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]        *)
+           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]          *)
   | Lex of Order list			(*     | (O1 .. On)           *)
   | Simul of Order list			(*     | {O1 .. On}           *)
   | All of IntSyn.Dec * Order		(*     | {{D}} O              *)
   | And of Order * Order		(*     | O1 ^ O2              *)
     
-  datatype SplitTag = 
+  datatype Tag = 
     Parameter
   | Lemma 
   | Assumption of int
@@ -29,8 +29,8 @@ struct
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, R, F> *)
     State of int			(* Part of theorem                   *)
-	   * (FunSyn.IntSyn.dctx		(* Context of Hypothesis             *)
-           * SplitTag FunSyn.IntSyn.Ctx) (* Status information *)
+	   * (FunSyn.IntSyn.dctx	(* Context of Hypothesis in general not named *)
+           * Tag FunSyn.IntSyn.Ctx) (* Status information *)
            * (FunSyn.For * Order)	(* Induction hypothesis, order       *)
            * int			(* length of meta context            *)
            * Order			(* Current Order *)
@@ -41,19 +41,43 @@ struct
   local
     structure F = FunSyn
     structure I = IntSyn  
+
+    (* orderSub (O, s) = O'
      
-    fun orderSub (Arg ((U, s1), (V, s2)), s) = Arg ((U,  I.comp (s1, s)), (V, I.comp (s2, s)))
+       Invariant:
+       If   G' |- O order    and    G |- s : G'
+       then G |- O' order
+       and  G |- O' == O[s] order
+    *)     
+    fun orderSub (Arg ((U, s1), (V, s2)), s) = 
+          Arg ((U,  I.comp (s1, s)), (V, I.comp (s2, s)))
       | orderSub (Lex Os, s) = Lex (map (fn O => orderSub (O, s)) Os)
       | orderSub (Simul Os, s) = Simul (map (fn O => orderSub (O, s)) Os)
       (* by invariant: no case for All and And *)
 
 
-    fun normalizeOrder (Arg (Us, Vs)) = Arg ((Whnf.normalize Us, I.id), 
-					     (Whnf.normalize Vs, I.id))
+    (* normalizeOrder (O) = O'
+     
+       Invariant:
+       If   G |- O order
+       then G |- O' order
+       and  G |- O = O' order
+       and  each sub term of O' is in normal form.
+    *)
+    fun normalizeOrder (Arg (Us, Vs)) = 
+          Arg ((Whnf.normalize Us, I.id), (Whnf.normalize Vs, I.id))
       | normalizeOrder (Lex Os) = Lex (map normalizeOrder Os)
       | normalizeOrder (Simul Os) = Simul (map normalizeOrder Os)
       (* by invariant: no case for All and And *)
 
+
+    (* convOrder (O1, O2) = B'
+
+       Invariant:
+       If   G |- O1 order
+       and  G |- O2 order
+       then B' holds iff G |- O1 == O2 order
+    *)
     fun convOrder (Arg (Us1, _), Arg (Us2, _ )) = Conv.conv (Us1, Us2)
       | convOrder (Lex Os1, Lex Os2) = convOrders (Os1, Os2)
       | convOrder (Simul Os1, Simul Os2) = convOrders (Os1, Os2)

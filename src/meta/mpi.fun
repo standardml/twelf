@@ -129,25 +129,6 @@ struct
 	end
 
 
-(*    fun makeConDec (M.State (name, M.Prefix (G, M, B), V)) = 
-	let 
-	 s fun makeConDec' (I.Null, V, k) = I.ConDec (name, k, V, I.Type)
-	    | makeConDec' (I.Decl (G, D), V, k) = 
-	      makeConDec' (G, I.Pi ((D, I.Maybe), V), k+1)
-	in
-	  (makeConDec' (G, V, 0))
-	end
-
-    fun makeSignature (nil) = M.SgnEmpty
-      | makeSignature (S :: SL) = 
-	  M.ConDec (makeConDec S,
-		      makeSignature SL)
-
-*)
-(*    fun extract () = 
-	if empty () then makeSignature (collectSolved ())
-	else (print "[Error: Proof not completed yet]\n"; M.SgnEmpty)
-*)
     fun printMenu () = 
 	if empty () then (print "[QED]\n")
 	else 
@@ -174,7 +155,7 @@ struct
 	  val _ = MTPGlobal.maxFill := k
 	  val _ = reset ();
 	in
-	  ((map (fn S => insert S) (MTPInit.init FO);
+	  ((map (fn S => insert (MTPrint.nameState S)) (MTPInit.init FO);
 	    menu ();
 	    printMenu ())
 	   handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
@@ -191,7 +172,7 @@ struct
 		  val S' = (Timers.time Timers.splitting MTPSplitting.apply) O  
 		  val _ = pushHistory ()
 		  val _ = delete ()
-		  val _ = map insert S'
+		  val _ = map (fn S => insert (MTPrint.nameState S)) S'
 		in
 		  (menu (); printMenu ())
 		end
@@ -200,7 +181,7 @@ struct
 		  val S' = (Timers.time Timers.recursion MTPRecursion.apply) O  
 		  val _ = pushHistory ()
 		  val _ = delete ()
-		  val _ = insert S'
+		  val _ = insert (MTPrint.nameState S')
 		in
 		  (menu (); printMenu ())
 		end

@@ -10,8 +10,8 @@ sig
   type operator
     
   val expand : StateSyn.State -> operator list 
-  val menu : operator -> string
+  val applicable : operator -> bool
   val apply : operator -> StateSyn.State list
+  val menu : operator -> string
   val index : operator -> int
-
 end;  (* signature MTPSPLITTING *)

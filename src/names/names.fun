@@ -505,6 +505,22 @@ struct
 	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
 	else D
 
+
+    (* ctxName G = G'
+       
+        Invariant:
+	|- G == G' ctx
+	where some Declaration in G' have been named/renamed
+    *)
+    fun ctxName (IntSyn.Null) = IntSyn.Null
+      | ctxName (IntSyn.Decl (G, D)) = 
+        let
+	  val G' = ctxName G
+	in
+	  IntSyn.Decl (G', decName (G', D))
+	end
+
+
     fun skonstName (name) =
       tryNextName (IntSyn.Null, name)
 

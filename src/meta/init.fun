@@ -2,22 +2,22 @@
 (* Author: Carsten Schuermann *)
 
 functor MTPInit (structure MTPGlobal : MTPGLOBAL
-		  structure IntSyn : INTSYN
-		  structure Names : NAMES
-		    sharing Names.IntSyn = IntSyn
-                  structure FunSyn' : FUNSYN
-		    sharing FunSyn'.IntSyn = IntSyn
-		  structure StateSyn' : STATESYN
-		    sharing StateSyn'.FunSyn = FunSyn'
-		  structure Formatter : FORMATTER
-		  structure Whnf : WHNF
-		    sharing Whnf.IntSyn = IntSyn
-		  structure Print : PRINT
-		    sharing Print.Formatter = Formatter
-		    sharing Print.IntSyn = IntSyn
-		  structure FunPrint : FUNPRINT
-		    sharing FunPrint.FunSyn = FunSyn'
-		    sharing FunPrint.Formatter = Formatter)
+		 structure IntSyn : INTSYN
+		 structure Names : NAMES
+		   sharing Names.IntSyn = IntSyn
+		 structure FunSyn' : FUNSYN
+		   sharing FunSyn'.IntSyn = IntSyn
+		 structure StateSyn' : STATESYN
+		   sharing StateSyn'.FunSyn = FunSyn'
+		 structure Formatter : FORMATTER
+		 structure Whnf : WHNF
+		   sharing Whnf.IntSyn = IntSyn
+	         structure Print : PRINT
+		   sharing Print.Formatter = Formatter
+		   sharing Print.IntSyn = IntSyn
+		 structure FunPrint : FUNPRINT
+		   sharing FunPrint.FunSyn = FunSyn'
+		   sharing FunPrint.Formatter = Formatter)
   : MTPINIT =
 struct
   structure FunSyn = FunSyn'
@@ -27,16 +27,22 @@ struct
 
   local
     structure I = IntSyn
-    structure N = Names
     structure F = FunSyn
     structure S = StateSyn 
     structure Fmt = Formatter
+
+    (* init (F, OF) = Ss'
+     
+       Invariant:
+       If   . |- F formula    and   F in nf
+       and  . |- OF order
+       then Ss' is a list of initial states for the theorem prover 
+    *)
       
     fun init (F, OF) = 
       let 
 	fun init' ((G, B), S.All (_, O), F.All (F.Prim D, F'), Ss) = 
-(* check--cs *)
-              init' ((I.Decl (G, N.decName (G, Whnf.normalizeDec (D, I.id))), 
+              init' ((I.Decl (G, Names.decName (G, D)), 
 		     I.Decl (B, S.Assumption (!MTPGlobal.maxSplit))), 
 		     O, F', Ss)
 	      (* it is possible to calculuate 
@@ -49,7 +55,7 @@ struct
 	  | init' (GB, O, F' as F.Ex _, Ss) = 
 	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, nil, F') :: Ss
       in
-	(N.varReset ();
+	(Names.varReset ();
 	 init' ((I.Null, I.Null), OF, F, nil))
       end
 

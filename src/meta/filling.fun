@@ -25,11 +25,16 @@ struct
 
     exception Success
 
+    (* Checking for constraints: Used to be in abstract, now must be done explicitly! --cs*)
 
-    (* createEVars (G, M) = ((G', M'), s', GE')
+    (* createEVars (G, F) = (Xs', P')
       
        Invariant:
-
+       If   |- G ctx
+       and  G |- F = [[x1:A1]] .. [[xn::An]] formula
+       then Xs' = (X1', .., Xn') a list of EVars
+       and  G |- Xi' : A1 [X1'/x1..X(i-1)'/x(i-1)]          for all i <= n
+       and  G; D |- P' = <X1', <.... <Xn', <>> ..> in F     for some D
     *)
     fun createEVars (G, (F.True, s)) = (nil, F.Unit)
       | createEVars (G, (F.Ex (I.Dec (_, V), F), s)) = 
@@ -42,9 +47,11 @@ struct
 	end
 
 
-    (* expand' ((G, M), V) = (OE', OL')
+    (* expand' S = op'
 
        Invariant:
+       If   |- S state
+       then op' is an operator which performs the filling operation
     *)
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
 	let 
@@ -55,12 +62,21 @@ struct
 	end
     
 
-    (* apply f = B'
+    (* apply op = B' 
 
+       Invariant:
+       If op is a filling operator
+       then B' holds iff the filling operation was successful
     *)
     fun apply f = f ()
 
-    fun menu _ =  "Filling   (closes this subgoal)" 
+    (* menu op = s'
+       
+       Invariant: 
+       If op is a filling operator
+       then s' is a string describing the operation in plain text
+    *)
+    fun menu _ =  "Filling   (tries to close this subgoal)" 
       
   in
     val expand = expand

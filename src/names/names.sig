@@ -52,6 +52,7 @@ sig
   val evarName : IntSyn.dctx * IntSyn.Exp -> string
   val bvarName : IntSyn.dctx * int -> string
   val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec
+  val ctxName  : IntSyn.dctx -> IntSyn.dctx
 
   (* Skolem constants *)
   val skonstName : IntSyn.name -> IntSyn.name
