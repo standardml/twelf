@@ -654,17 +654,34 @@ struct
   (* Report mismatches after the entire process finishes -- yields better
      error messages *)
                                   
+  fun reportConstraints (Xnames) =
+      (case Print.evarCnstrsToStringOpt (Xnames)
+         of NONE => ()
+          | SOME(constr) => print ("Constraints:\n" ^ constr ^ "\n"))
+      handle Names.Unprintable => print "%_constraints unprintable_%\n"
+                                                  
+  fun reportInst (Xnames) =
+      (print (Print.evarInstToString (Xnames) ^ "\n"))
+      handle Names.Unprintable => print "%_unifier unprintable_%\n"
+
   fun delayMismatch (G, V1, V2, r2, location_msg, problem_msg) =
       addDelayed (fn () =>
       let
+	val Xs = Abstract.collectEVars (G, (V2, id),
+                 Abstract.collectEVars (G, (V1, id), nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val V1fmt = formatExp (G, V1)
         val V2fmt = formatExp (G, V2)
         val diff = F.Vbox0 0 1
                    [F.String "Expected:", F.Space, V2fmt, F.Break,
                     F.String "Inferred:", F.Space, V1fmt]
+        val diff = (case Print.evarCnstrsToStringOpt (Xnames)
+                      of NONE => F.makestring_fmt diff
+                       | SOME(cnstrs) => F.makestring_fmt diff ^
+                                         "\nConstraints:\n" ^ cnstrs)
       in
         error (r2, "Type mismatch\n"
-                   ^ F.makestring_fmt diff ^ "\n"
+                   ^ diff ^ "\n"
                    ^ problem_msg ^ "\n"
                    ^ location_msg)
       end)
@@ -680,6 +697,29 @@ struct
                   ^ msg)
       end)
 
+  fun unifyIdem x =
+      let
+        (* this reset should be unnecessary -- for safety only *)
+        val _ = Unify.reset ()
+        val _ = Unify.unify x
+                handle e as Unify.Unify _ =>
+                       (Unify.unwind ();
+                        raise e)
+        val _ = Unify.reset ()
+      in
+        ()
+      end
+        
+  fun unifiableIdem x =
+      let
+        (* this reset should be unnecessary -- for safety only *)
+        val _ = Unify.reset ()
+        val ok = Unify.unifiable x
+        val _ = if ok then Unify.reset () else Unify.unwind ()
+      in
+        ok
+      end
+
   (* tracing code *)
 
   datatype TraceMode = Progressive | Omniscient
@@ -688,24 +728,17 @@ struct
 
   fun report f = case !traceMode of Progressive => f ()
                                   | Omniscient => addDelayed f
-                   
-  fun evarsToString (Xnames) =
-      let
-	val inst = Print.evarInstToString (Xnames)
-	val constrOpt = Print.evarCnstrsToStringOpt (Xnames)
-      in
-	case constrOpt
-	  of NONE => inst
-	   | SOME(constr) => inst ^ "\nConstraints:\n" ^ constr
-      end
-      handle Names.Unprintable => "%_unifier unprintable_%"
 
   fun reportMismatch (G, Vs1, Vs2, problem_msg) =
       report (fn () =>
       let
+	val Xs = Abstract.collectEVars (G, Vs2,
+                 Abstract.collectEVars (G, Vs1, nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
 	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
 			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
 	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
+        val _ = reportConstraints Xnames
         val _ = print ("Failed: " ^ problem_msg ^ "\n"
                        ^ "Continuing with subterm replaced by _\n")
       in
@@ -720,12 +753,13 @@ struct
 	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
 			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
 	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
-        val _ = Unify.unify (G, Vs1, Vs2)
+        val _ = unifyIdem (G, Vs1, Vs2)
                 handle e as Unify.Unify msg =>
                        (print ("Failed: " ^ msg ^ "\n"
                                ^ "Continuing with subterm replaced by _\n");
                         raise e)
-        val _ = print (evarsToString (Xnames) ^ "\n")
+        val _ = reportInst Xnames
+        val _ = reportConstraints Xnames
       in
 	()
       end
@@ -734,17 +768,21 @@ struct
         (case !traceMode
            of Progressive => reportUnify' (G, Vs1, Vs2)
             | Omniscient =>
-                (Unify.unify (G, Vs1, Vs2)
+                (unifyIdem (G, Vs1, Vs2)
                  handle e as Unify.Unify msg =>
                    (reportMismatch (G, Vs1, Vs2, msg);
                     raise e)))
 
   fun reportInfer' (G, omitexact (_, _, r), U, V) =
       let
+	val Xs = Abstract.collectEVars (G, (U, id),
+                 Abstract.collectEVars (G, (V, id), nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val omit = F.HVbox [F.String "|-", F.Space, F.String "_", F.Space,
                             F.String "==>", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
         val _ = print (F.makestring_fmt omit ^ "\n")
+        val _ = reportConstraints Xnames
       in
         ()
       end
@@ -753,15 +791,18 @@ struct
     | reportInfer' (G, hastype _, U, V) = ()
     | reportInfer' (G, tm, U, V) = 
       let
+	val Xs = Abstract.collectEVars (G, (U, id),
+                 Abstract.collectEVars (G, (V, id), nil))
+	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val judg = F.HVbox [F.String "|-", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
         val _ = print (F.makestring_fmt judg ^ "\n")
+        val _ = reportConstraints Xnames
       in
         ()
       end
 
   fun reportInfer x = report (fn () => reportInfer' x)
-
 
 
     (* inferExact (G, tm) = (tm', U, V)
@@ -972,7 +1013,7 @@ struct
         let
           val (tm', B', V') = inferExact (G, tm)
         in
-          ((tm', B', V'), Unify.unifiable (G, Vhs, (V', id)))
+          ((tm', B', V'), unifiableIdem (G, Vhs, (V', id)))
         end
 
     and checkExact1 (G, tm, Vhs) = checkExact1W (G, tm, Whnf.whnf Vhs)
@@ -984,7 +1025,8 @@ struct
         in
           if ok then (tm', B')
           else
-          ((Unify.unify (G, (V', id), Vs); raise Match (* can't happen *))
+          ((unifyIdem (G, (V', id), Vs);
+            raise Match (* can't happen *))
            handle Unify.Unify problem_msg =>
            let
              val r = termRegion tm
@@ -1024,7 +1066,7 @@ struct
           val V2 = toIntro (B2, (L, id))
         in
           ((arrow (tm1', tm2'), Intro (Pi ((D, No), EClo (V2, shift))), L),
-           ok1 andalso Unify.unifiable (Decl (G, D), (Vr, dot1 s), (V2, shift)))
+           ok1 andalso unifiableIdem (Decl (G, D), (Vr, dot1 s), (V2, shift)))
         end
         (* other arrow cases impossible *)
       | unifyExactW (G, pi (dec (name, tm1, r), tm2), (Pi ((Dec (_, Va), _), Vr), s)) =
@@ -1070,7 +1112,7 @@ struct
           val (tm', B', L') = inferExact (G, tm)
           val V' = toIntro (B', (L', id))
         in
-          ((tm', B', L'), Unify.unifiable (G, Vhs, (V', id)))
+          ((tm', B', L'), unifiableIdem (G, Vhs, (V', id)))
         end
 
     and unifyExact (G, tm, Vs) = unifyExactW (G, tm, Whnf.whnf Vs)
