@@ -385,7 +385,7 @@ struct
 
        Invariant: 
     *)
-    fun abstractSubAll (t, G0, s, B) =
+    fun abstractSubAll (t, (G0, B0), s, B) =
         let
 	  fun abstractSubAll' (K, s' as (I.Shift _)) = s'
 	    | abstractSubAll' (K, I.Dot (F as I.Idx _, s')) =
@@ -421,6 +421,8 @@ struct
 	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
 
 
+
+
 	  and skip (G0, 0, s, B) = collectSub' (G0, s, B, fn (_, K') => K')
 	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _)) =
 	      let 
@@ -429,7 +431,34 @@ struct
 	        (d + 1, I.Decl (K, BV (D, T)))
 	      end
 
-	  val (_, K) = collectSub' (G0, s, B, fn (_, K') => K')
+(* ----- *)
+
+	  fun collectSub'' (G0, I.Shift _, _, collect) = collect
+	    | collectSub'' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	        collectSub'' (G0, s, B, fn (d', K') => 
+			     let 
+			       val K'' = collect (d', K')
+			     in
+			       collectExp (T, d', G0, (U, I.id), K'')
+			     end)
+	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+
+
+
+	  fun skip'' (K, (I.Null, I.Null)) = K
+	    | skip'' (K, (I.Decl (G0, D), I.Decl(B0, T))) = I.Decl (skip'' (K, (G0, B0)), BV (D, T))
+
+
+(* ------ *)
+
+          val collect2 = collectSub'' (G0, s, B, fn (_, K') => K')
+	  val collect0 = collectSub'' (I.Null, t, B0, fn (_, K') => K')
+	  val K0 = collect0 (0, I.Null)
+	  val K1 = skip'' (K0, (G0, B0))
+	  val K = collect2 (I.ctxLength G0, K1)
+
+(*	  val (_, K) = collectSub' (*change later *) (G0, s, B, fn (_, K') => K')
+*)
 	in
 	  (abstractCtx K, abstractSubAll' (K, s))
 	end 

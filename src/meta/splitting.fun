@@ -240,9 +240,9 @@ struct
 			in
 			  Trail.trail (fn () =>
 				       (if Unify.unifiable (G, Vs, Vs')
-					  then (TextIO.print "Success!\n"; ops) (* abstract state *)
+					  then (TextIO.print "Success!\n"; Active (abstract U) :: ops) (* abstract state *)
 					else ops)
-					  handle MTPAbstract.Error _ => ops)
+					  handle MTPAbstract.Error _ => InActive :: ops)
 			end
 		      else ops
 	    in 
@@ -309,7 +309,7 @@ struct
 		val (_, _, s) = sc (I.Null, I.Null)
 	      in
 		lowerSplitDest (I.Null, 0, (V, s),  
-				fn U' => abstract (MTPAbstract.abstractSub (I.id, I.Null, I.Dot (I.Exp (U'), s), B)),
+				fn U' => abstract (MTPAbstract.abstractSub (I.id, (I.Null, I.Null), I.Dot (I.Exp (U'), s), B)),
 				constAndParamCases ops)
 	      end
 	    else
@@ -319,12 +319,12 @@ struct
 		val G2t = ctxSub (G2, t)
 		val length = List.length G2
 		val B2 = createTags (length , n)
-		val (G'', _, s) = sc (F.listToCtx G2t, B2)   
+		val (G'', B'', s) = sc (F.listToCtx G2t, B2)   
 		val abstact = if conv ((G'', I.id), (F.listToCtx G2t, I.id)) then abstract
 			      else abstractErrorRight (* G'' = G2t, otherwise incomplete *)
 		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)),
-		(* fn U' => abstract (MTPAbstract.abstractSub (t, G'', I.Dot (I.Exp (U'), s), B)), *)
-					fn U' => U',
+		 fn U' => abstract (MTPAbstract.abstractSub (t, (G'', B''), I.Dot (I.Exp (U'), s), B)),
+(*					fn U' => U', *)
 					metaCases (length, ops))
 	      in
 		split' (n - 1, ops')
@@ -405,7 +405,7 @@ struct
 	  fun sc' (Gp, Bp) = 
 	    let 
 	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	      val X = I.newEVar (G', I.EClo (V, s))
 	    in
 	      (G', B', I.Dot (I.Exp (X), s))
 	    end
@@ -429,7 +429,7 @@ struct
 	  fun sc' (Gp, Bp) = 
 	    let 
 	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	      val X = I.newEVar (G', I.EClo (V, s))
 	    in
 	      (G', B', I.Dot (I.Exp (X), s))
 	    end
@@ -452,7 +452,7 @@ struct
 	  fun sc' (Gp, Bp) = 
 	    let 
 	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	      val X = I.newEVar (G', I.EClo (V, s))
 	    in
 	      (G', B', I.Dot (I.Exp (X), s))
 	    end
