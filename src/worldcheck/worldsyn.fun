@@ -441,6 +441,21 @@ struct
 	    checkSubordBlock (I.Decl (G, D), I.Null, L') )
       | checkSubordBlock (G, I.Null, nil) = ()
 
+    (* conDecBlock (condec) = (Gsome, Lpi)
+       if condec is a block declaration
+       raise Error (msg) otherwise
+    *)
+    fun conDecBlock (I.BlockDec (_, _, Gsome, Lpi)) = (Gsome, Lpi)
+      | conDecBlock condec =
+        raise Error ("Identifier " ^ I.conDecName condec
+		     ^ " is not a block label")
+
+    (* constBlock cid = (someDecs, piDecs)
+       if cid is defined as a context block
+       Effect: raise Error (msg) otherwise
+    *)
+    fun constBlock (cid) = conDecBlock (I.sgnLookup cid)
+
     (* checkSubordWorlds (W) = ()
        Effect: raises Error(msg) if subordination is not respected
                in some context block in W
@@ -448,7 +463,7 @@ struct
     fun checkSubordWorlds (nil) = ()
       | checkSubordWorlds (cid::cids) =
         let
-	  val (someDecs, piDecs) = I.constBlock cid
+	  val (someDecs, piDecs) = constBlock cid
 	in
           checkSubordBlock (I.Null, someDecs, piDecs) ;
 	  checkSubordWorlds cids
