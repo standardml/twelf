@@ -123,7 +123,7 @@ struct
   *)
   fun moreSolutions () =
       (print ("More? ");
-       case String.sub (TextIO.inputLine (TextIO.stdIn), 0)
+       case String.sub (Compat.inputLine97 (TextIO.stdIn), 0)
 	 of #"y" => true
           | #"Y" => true
 	  | #";" => true

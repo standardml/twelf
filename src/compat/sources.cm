@@ -3,20 +3,15 @@ Library
   signature COMPAT_VECTOR
   signature COMPAT_PATH
   signature COMPAT_SUBSTRING
+  signature COMPAT_TEXT_IO
   signature COMPAT_TIMER
   signature COMPAT
   structure Compat
-#if defined(BASIS_2002)
+#if defined(MLton_20030716)
   (* Empty *)
-#elif defined(MLton)
-  (* MLton < 20030716 *)
-  signature ARRAY_SLICE
-  structure ArraySlice
-  signature VECTOR_SLICE
-  structure VectorSlice
-  signature MONO_ARRAY_SLICE
-  structure Word8ArraySlice
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
+  (* Empty *)
+#else
   signature ARRAY_SLICE
   structure ArraySlice
   signature VECTOR_SLICE
@@ -32,10 +27,16 @@ is
   vector.sig  
   path.sig
   substring.sig
+  text-io.sig
   timer.sig
   compat.sig
   compat.fun
-#if defined(BASIS_2002)
+#if defined(MLton_20040227)
+  compat.sml
+#elif defined(MLton_20030716)
+  text-io-97.sml
+  compat-mlton-20030716.sml
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110048)
   compat.sml
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
   timer-97.sml
@@ -45,6 +46,7 @@ is
   array-97.sml
   vector-97.sml
   substring-97.sml
+  text-io-97.sml
   compat-smlnj98.sml
 #else
   timer-97.sml
@@ -52,19 +54,14 @@ is
   vector-97.sml
   path-97.sml
   substring-97.sml
+  text-io-97.sml
   compat-97.sml    
 #endif
-#if defined(BASIS_2002)
+#if defined(MLton_20030716)
   (* Empty *)
-#elif defined(MLton)
-  (* MLton < 20030716 *)
-  array-slice.sig
-  array-slice.sml
-  vector-slice.sig
-  vector-slice.sml
-  mono-array-slice.sig
-  word8-array-slice.sml
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
+  (* Empty *)
+#else
   array-slice.sig
   array-slice.sml
   vector-slice.sig

@@ -6,4 +6,5 @@ structure Compat :> COMPAT =
           structure Vector = CompatVector97
           structure Path = CompatPath97
 	  structure Substring = CompatSubstring97
+	  structure TextIO = CompatTextIO97
 	  structure Timer = CompatTimer97);

@@ -22,7 +22,7 @@ struct
       let
         (* val line = TextIO.inputLine (TextIO.stdIn) *)
 	(* Fix for MLton, Fri Dec 20 21:50:22 2002 -sweeks (fp) *)
-	fun getLine () = TextIO.inputLine (TextIO.stdIn)
+	fun getLine () = Compat.inputLine97 (TextIO.stdIn)
 	                 handle OS.SysErr (_, SOME _) => getLine ()
 	val line = getLine ()
         fun triml ss = Substring.dropl Char.isSpace ss
