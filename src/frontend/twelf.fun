@@ -1195,7 +1195,7 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3R2, Dec 28 2001 (with world, coverage, and totality checking)"
+    val version = "Twelf 1.3R3, Dec 28 2001 (with world, coverage, and totality checking)"
 
     val printTable = TableIndex.printTable      (* bp *)
 
