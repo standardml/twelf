@@ -94,8 +94,6 @@ struct
     fun decToString (GD) = P.decToString (GD) ^ ". "
     fun eqnToString (E) = P.eqnToString (E) ^ ". "
 
-    fun printExp (GU) = print (P.expToString GU)
-
     fun newline () = print "\n"
 
     fun printCtx (I.Null) = print "No hypotheses or parameters\n"
@@ -135,13 +133,13 @@ struct
       | break (Some (names)) = breakSpec := Some (names)
       | break (All) = breakSpec := All
 
-    val level = ref 1
+    val detail = ref 1
 
-    fun setLevel (NONE) = print ("Trace warning: level is not a valid integer\n")
-      | setLevel (SOME(n)) =
+    fun setDetail (NONE) = print ("Trace warning: detail is not a valid integer\n")
+      | setDetail (SOME(n)) =
         if 0 <= n (* andalso n <= 2 *)
-	  then level := n
-	else print ("Trace warning: level must be positive\n")
+	  then detail := n
+	else print ("Trace warning: detail must be positive\n")
 
     val traceTSpec : I.cid Spec ref = ref None
     val breakTSpec : I.cid Spec ref = ref None
@@ -168,7 +166,7 @@ struct
 \r - run --- remove all breakpoints and continue\n\
 \t - trace --- trace all events\n\
 \u - untrace --- trace no events\n\
-\l n - level --- set trace level to n (0, 1, or 2)\n\
+\d n - detail --- set trace detail to n (0, 1, or 2)\n\
 \h - hypotheses --- show current hypotheses\n\
 \g - goal --- show current goal\n\
 \i - instantiation --- show instantiation of variables in current goal\n\
@@ -193,11 +191,12 @@ struct
 	     | #"u" => (traceTSpec := None;
 			print "% Now tracing none";
 			breakAction (G))
-	     | #"l" => (setLevel (Int.fromString (String.extract (line, 1, NONE)));
-			print ("% Trace level now " ^ Int.toString (!level));
+	     | #"d" => (setDetail (Int.fromString (String.extract (line, 1, NONE)));
+			print ("% Trace detail now " ^ Int.toString (!detail));
 			breakAction (G))
 	     | #"h" => (printCtx G; breakAction (G))
-	     | #"g" => (printExp (G, !currentGoal); breakAction (G))
+	     | #"g" => (print (expToString (G, !currentGoal));
+			breakAction (G))
 	     | #"i" => (print (P.evarInstToString (List.rev (!currentEVarInst)));
 			breakAction (G))
 	     | #"v" => (printVarstring (line); breakAction (G))
@@ -309,9 +308,9 @@ struct
       | monitorEvent (cids, FailUnify (Hc, Ha)) =
 	  monitorHeads (cids, (Hc, Ha))
 
-    fun monitorLevel (Unify _) = !level >= 2
-      | monitorLevel (FailUnify _) = !level >= 2
-      | monitorLevel _ = !level >= 1
+    fun monitorDetail (Unify _) = !detail >= 2
+      | monitorDetail (FailUnify _) = !detail >= 2
+      | monitorDetail _ = !detail >= 1
 
     (* expensive if tracing Unify! *)
     (* but: maintain only if break or trace is on *)
@@ -341,7 +340,7 @@ struct
 	  (maintain (G, e); traceEvent (G, e); newline (); true)
 
     fun signal (G, e) =
-        if monitorLevel (e)
+        if monitorDetail (e)
 	  then if monitorBreak (!breakTSpec, G, e) (* stops, continues after input *)
 		 then ()
 	       else (monitorTrace (!traceTSpec, G, e); ()) (* prints trace, continues *)
@@ -354,12 +353,12 @@ struct
 	 print "]\n")
       | showSpec (msg, All) = print (msg ^ " = All\n")
 
-    fun status () =
-        (print ("level = " ^ Int.toString (!level) ^ "\n");
-	 showSpec ("trace", !traceSpec);
-	 showSpec ("break", !breakSpec))
+    fun show () =
+        (showSpec ("trace", !traceSpec);
+	 showSpec ("break", !breakSpec);
+	 print ("detail = " ^ Int.toString (!detail) ^ "\n"))
 
-    fun reset () = (level := 1; trace (None); break (None))
+    fun reset () = (trace (None); break (None); detail := 1)
   end
 
 end;  (* functor Trace *)

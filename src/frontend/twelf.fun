@@ -569,10 +569,10 @@ struct
 
       val trace : string Spec -> unit	(* clauses and families *)
       val break : string Spec -> unit	(* clauses and families *)
-      val level : int ref			(* 0 = no tracing, 1 = default, 2 = unification *)
+      val detail : int ref		(* 0 = none, 1 = default, 2 = unify *)
 
-      val status : unit -> unit
-      val reset : unit -> unit		(* remove all tracing and breakpoints, set level to 1 *)
+      val show : unit -> unit		(* show trace, break, and detail *)
+      val reset : unit -> unit		(* reset trace, break, and detail *)
     end
     = Trace
 

@@ -224,8 +224,10 @@ struct
                 to search for further solutions
               *)
 	      fun scInit M =
-		  (if !Global.chatter >= 3
-		     then print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n")
+		  (solutions := !solutions+1;
+		   if !Global.chatter >= 3
+		     then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
+			   print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
 		   else if !Global.chatter >= 2
 			  then print "."
 			else ();
@@ -239,7 +241,6 @@ struct
 		   if !Global.chatter >= 3
 		     then Constraints.warnConstraints (Names.evarCnstr ())
 		   else ();
-		   solutions := !solutions+1;
 		   if exceeds (SOME(!solutions),try)
 		     then raise Done
 		   else ())

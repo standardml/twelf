@@ -320,6 +320,7 @@ This is used by the error message parser.")
     ("Print.length" . limit)
     ("Print.indent" . nat)
     ("Print.width" . nat)
+    ("Trace.detail" . nat)
     ("Compile.optimize" . bool)
     ("Prover.strategy" . strategy)
     ("Prover.maxSplit" . nat)
@@ -330,10 +331,6 @@ This is used by the error message parser.")
   "Chatter level in current Twelf server.
 Maintained to present reasonable menus.")
 
-;(defvar twelf-trace 0
-;  "Trace level in current Twelf server.
-;Maintained to present reasonable menus.")
-
 (defvar twelf-double-check "false"
   "Current value of doubleCheck Twelf parameter.")
 
@@ -343,15 +340,22 @@ Maintained to present reasonable menus.")
 (defvar twelf-print-implicit "false"
   "Current value of Print.implicit Twelf parameter.")
 
+(defvar twelf-trace-detail 1
+  "Trace detail in current Twelf server.")
+
+(defvar twelf-trace-history ()
+  "History list of inputs to trace and break commands.
+Maintained to present reasonable menus.")
+
 (defvar twelf-compile-optimize "true"
   "Current value of Compile.optimize Twelf parameter.")
 
 (defconst *twelf-track-parms*
   '(("chatter" . twelf-chatter)
-    ;("trace" . twelf-trace)
     ("doubleCheck" . twelf-double-check)
     ("unsafe" . twelf-unsafe)
     ("Print.implicit" . twelf-print-implicit)
+    ("Trace.detail" . twelf-trace-detail)
     ("Compile.optimize" . twelf-compile-optimize))
   "Association between Twelf parameters and Emacs tracking variables.")
 
@@ -1469,8 +1473,8 @@ server buffer."
            (pwd)))
 	((string-match "^set\\s +chatter\\s +\\([0-9]\\)+" input)
 	 (setq twelf-chatter (string-to-int (looked-at-string input 1))))
-	;;((string-match "^set\\s +trace\\s +\\([0-9]\\)+" input)
-	;; (setq twelf-trace (string-to-int (looked-at-string input 1))))
+	((string-match "^set\\s +Trace\\.detail\\s +\\([0-9]\\)+" input)
+	 (setq twelf-trace-detail (string-to-int (looked-at-string input 1))))
 	((string-match "^set\\s-+\\(\\S-+\\)\\s-+\\(\\w+\\)" input)
 	 (if (assoc (looked-at-string input 1) *twelf-track-parms*)
 	     (set (cdr (assoc (looked-at-string input 1) *twelf-track-parms*))
@@ -1592,10 +1596,10 @@ created if it doesn't exist."
 (defun twelf-init-variables ()
   "Initialize variables that track Twelf server state."
   (setq twelf-chatter 3)
-  ;;(setq twelf-trace 0)
   (setq twelf-double-check "false")
   (setq twelf-unsafe "false")
   (setq twelf-print-implicit "false")
+  (setq twelf-trace-detail 1)
   (setq twelf-compile-optimize "true"))
 
 (defun twelf-server (&optional program)
@@ -1971,6 +1975,49 @@ The output appears in the Twelf server buffer."
   (interactive)
   (twelf-server-send-command "Print.TeX.prog")
   (twelf-server-display t))
+
+(defun twelf-read-constants ()
+  "Reads a list of constants from the mini-buffer, separated by whitespace.
+Right now this does not do any consistency checking."
+  (let ((input (read-string "Constants: " "" twelf-trace-history)))
+    (setq twelf-trace-history (cons input twelf-trace-history))
+    input))
+
+(defun twelf-trace-trace-all ()
+  "Trace all clauses and families."
+  (interactive)
+  (twelf-server-send-command "Trace.traceAll"))
+
+(defun twelf-trace-trace ()
+  "Read list of constants and trace them."
+  (interactive)
+  (twelf-server-send-command (concat "Trace.trace " (twelf-read-constants))))
+
+(defun twelf-trace-untrace ()
+  "Untrace all clauses and families."
+  (interactive)
+  (twelf-server-send-command "Trace.untrace"))
+
+(defun twelf-trace-break-all ()
+  "Set breakpoints on all clauses and families."
+  (interactive)
+  (twelf-server-send-command "Trace.breakAll"))
+
+(defun twelf-trace-break ()
+  "Read list of constants and set breakpoints."
+  (interactive)
+  (twelf-server-send-command (concat "Trace.break " (twelf-read-constants))))
+
+(defun twelf-trace-unbreak ()
+  "Remove all breakpoints."
+  (interactive)
+  (twelf-server-send-command "Trace.unbreak"))
+
+(defun twelf-trace-show ()
+  "Show tracing and breakpoint information."
+  (interactive)
+  (twelf-server-send-command "Trace.show")
+  (twelf-server-wait t))
 
 (defun twelf-timers-reset ()
   "Reset the Twelf timers."
@@ -2575,6 +2622,22 @@ Mode map
      ["Program" twelf-print-tex-program t]))
   "Menu for printing commands.")
 
+(defconst twelf-trace-menu
+  (` ("Trace"
+      ("trace"
+       ["All" twelf-trace-trace-all t]
+       ["None" twelf-trace-untrace t]
+       ["Some" twelf-trace-trace t])
+      ("break"
+       ["All" twelf-trace-break-all t]
+       ["None" twelf-trace-unbreak t]
+       ["Some" twelf-trace-break t])
+      ["show" twelf-trace-show t]
+      ("Trace.detail"
+       (, (radio "0" '(twelf-set "Trace.detail" 0) '(= twelf-trace-detail 0)))
+       (, (radio "1*" '(twelf-set "Trace.detail" 1) '(= twelf-trace-detail 1)))
+       (, (radio "2" '(twelf-set "Trace.detail" 2) '(= twelf-trace-detail 2)))))))
+
 (defconst twelf-server-state-menu
   '("Server State"
     ["Configure" twelf-server-configure t]
@@ -2627,6 +2690,10 @@ Mode map
        ["length" (twelf-set-parm "Print.length") t]
        ["indent" (twelf-set-parm "Print.indent") t]
        ["width" (twelf-set-parm "Print.width") t])
+      ("Trace.detail"
+       (, (radio "0" '(twelf-set "Trace.detail" 0) '(= twelf-trace-detail 0)))
+       (, (radio "1*" '(twelf-set "Trace.detail" 1) '(= twelf-trace-detail 1)))
+       (, (radio "2" '(twelf-set "Trace.detail" 2) '(= twelf-trace-detail 2))))
       ("Compile."
        (, (toggle "optimize" '(twelf-toggle-compile-optimize)
 		  '(string-equal twelf-compile-optimize "true"))))
@@ -2679,6 +2746,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    twelf-error-menu
    twelf-options-menu
    twelf-syntax-menu
+   twelf-trace-menu
    twelf-tags-menu
    twelf-print-menu
    twelf-timers-menu
@@ -2695,6 +2763,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
 
 (defun twelf-reset-menu ()
   "Reset Twelf menu."
+  (interactive)
   (twelf-remove-menu)
   (twelf-add-menu))
 
@@ -2716,6 +2785,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    ;; ["At Point" () nil]
    twelf-error-menu
    twelf-options-menu
+   twelf-trace-menu
    twelf-tags-menu
    twelf-print-menu
    twelf-timers-menu
@@ -2732,6 +2802,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
 
 (defun twelf-server-reset-menu ()
   "Reset Twelf menu."
+  (interactive)
   (twelf-server-remove-menu)
   (twelf-server-add-menu))
 

@@ -620,6 +620,9 @@ in
         F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
 		 formatExp (I.Null, U')]
       end
+    | fmtNamedEVar (U, name) = (* used for proof term variables in queries *)
+      F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
+	       formatExp (I.Null, U)]
 
   fun fmtEVarInst (nil) = [Str "Empty Substitution"]
     | fmtEVarInst ((U,name)::nil) = [fmtNamedEVar (U, name)]

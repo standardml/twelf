@@ -35,9 +35,9 @@ sig
 
   val trace : string Spec -> unit
   val break : string Spec -> unit
-  val level : int ref			(* 0 = no tracing, 1 = default, 2 = failure info *)
+  val detail : int ref			(* 0 = none, 1 = default, 2 = unify *)
 
-  val status : unit -> unit
-  val reset : unit -> unit		(* remove all tracing and breakpoints *)
+  val show : unit -> unit		(* show trace, break, detail *)
+  val reset : unit -> unit		(* reset trace, break, detail *)
 
 end;  (* signature TRACE *)

@@ -59,6 +59,9 @@ struct
     | getId (nil) = error "Missing identifier"
     | getId (ts) = error "Extraneous arguments"
 
+  (* Identifiers, used as a trace specification *)
+  fun getIds (ids) = ids
+
   (* Strategies for %prove, %establish *)
   fun getStrategy ("FRS"::nil) = Twelf.Prover.FRS
     | getStrategy ("RFS"::nil) = Twelf.Prover.RFS
@@ -100,6 +103,7 @@ struct
     | setParm ("Print.length"::ts) = Twelf.Print.length := getLimit ts
     | setParm ("Print.indent"::ts) = Twelf.Print.indent := getNat ts
     | setParm ("Print.width"::ts) = Twelf.Print.width := getNat ts
+    | setParm ("Trace.detail"::ts) = Twelf.Trace.detail := getNat ts
     | setParm ("Compile.optimize"::ts) = Twelf.Compile.optimize := getBool ts
     | setParm ("Prover.strategy"::ts) = Twelf.Prover.strategy := getStrategy ts
     | setParm ("Prover.maxSplit"::ts) = Twelf.Prover.maxSplit := getNat ts
@@ -116,6 +120,7 @@ struct
     | getParm ("Print.length"::ts) = limitToString (!Twelf.Print.length)
     | getParm ("Print.indent"::ts) = Int.toString (!Twelf.Print.indent)
     | getParm ("Print.width"::ts) = Int.toString (!Twelf.Print.width)
+    | getParm ("Trace.detail"::ts) = Int.toString (!Twelf.Trace.detail)
     | getParm ("Compile.optimize"::ts) = Bool.toString (!Twelf.Compile.optimize)
     | getParm ("Prover.strategy"::ts) = strategyToString (!Twelf.Prover.strategy)
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
@@ -150,6 +155,33 @@ struct
     *)
     (* | serve' ("type-at"::ts) = error "NYI" *)
     (* | serve' ("complete-at"::ts) = error "NYI" *)
+
+    | serve' ("Trace.trace"::ts) =
+      (Twelf.Trace.trace (Twelf.Trace.Some (getIds ts));
+       serve (Twelf.OK))
+    | serve' ("Trace.traceAll"::ts) =
+      (checkEmpty ts; Twelf.Trace.trace (Twelf.Trace.All);
+       serve (Twelf.OK))
+    | serve' ("Trace.untrace"::ts) =
+      (checkEmpty ts; Twelf.Trace.trace (Twelf.Trace.None);
+       serve (Twelf.OK))
+
+    | serve' ("Trace.break"::ts) =
+      (Twelf.Trace.break (Twelf.Trace.Some (getIds ts));
+       serve (Twelf.OK))
+    | serve' ("Trace.breakAll"::ts) =
+      (checkEmpty ts; Twelf.Trace.break (Twelf.Trace.All);
+       serve (Twelf.OK))
+    | serve' ("Trace.unbreak"::ts) =
+      (checkEmpty ts; Twelf.Trace.break (Twelf.Trace.None);
+       serve (Twelf.OK))
+
+    | serve' ("Trace.show"::ts) =
+      (checkEmpty ts; Twelf.Trace.show ();
+       serve (Twelf.OK))
+    | serve' ("Trace.reset"::ts) =
+      (checkEmpty ts; Twelf.Trace.reset ();
+       serve (Twelf.OK))
 
     | serve' ("Timers.show"::ts) = (checkEmpty ts; Timers.show (); serve (Twelf.OK))
     | serve' ("Timers.reset"::ts) = (checkEmpty ts; Timers.reset (); serve (Twelf.OK))
