@@ -1,0 +1,54 @@
+% Test for copy theorem
+% Author: Carsten Schuermann
+
+exp : type.
+
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+callcc : ((exp -> exp) -> exp) -> exp.
+reset  : (((exp -> exp) -> exp) -> exp) -> exp.
+
+
+exp' : type.
+
+
+app' : exp' -> exp' -> exp'.
+lam' : (exp' -> exp') -> exp'.
+callcc' : ((exp' -> exp') -> exp') -> exp'.
+reset'  : (((exp' -> exp') -> exp') -> exp') -> exp'.
+
+
+cp : exp -> exp' -> type.
+%mode cp +E -E'.
+
+cp_app : cp (app D1 D2) (app' E1 E2) 
+         <- cp D1 E1
+         <- cp D2 E2.
+
+cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
+         <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
+
+cp_callcc: ({c:exp -> exp} {d:exp' -> exp'}
+             ({x:exp} {y:exp'} cp x y -> cp (c x) (d y)) 
+             -> cp (E c) (F d))
+             -> cp (callcc [c:exp -> exp] E c) (callcc' [d:exp' -> exp'] F d).
+
+cp_reset: ({c: (exp -> exp) -> exp} {d: (exp' -> exp') -> exp'}
+            ({f: exp -> exp} {g: exp' -> exp'} 
+              ({x: exp} {y:exp'} cp x y -> cp (f x) (g y))
+              -> cp (c f) (d g))
+            -> cp (E c) (F d))
+          -> cp (reset [c: (exp -> exp) -> exp] E c) 
+                (reset' [d: (exp' -> exp') -> exp'] F d).
+
+
+cpt : {E:exp}{E':exp'}{D : cp E E'} type.
+%mode cpt +E -E' -D.
+
+cpt_app : cpt (app E1 E2) (app' E1' E2') (cp_app D2 D1)
+	   <- cpt E1 E1' D1
+	   <- cpt E2 E2' D2.
+						 
+cpt_lam : cpt (lam E) (lam' E') (cp_lam D)
+	   <- ({x:exp}{x':exp'}{u:cp x x'} cpt x x' u -> cpt (E x) (E' x') (D x x' u)).
