@@ -64,3 +64,15 @@ and got
 Unrecognized exception
 Uncaught exception: nonexhaustive match failure
 %% ABORT %%
+
+
+Tue Sep  7 10:34:22 EDT 1999 -cs
+
+Problem with Error messages.  Sometimes, Twelf prints the wrong file names
+in the error messages, when parsing %theorem declarations, and type 
+reconstruction fails.  The problem is that there is a new type reconstruction
+module for tracing (TpTrace), which takes over the managment of type
+reconstruction errors and filenames where they occur. If TpTrace is used
+for parsing %theorem declarations, the filname store it not properly reset. 
+The easiest fix is to use tprecon instead of tptrace.
+
