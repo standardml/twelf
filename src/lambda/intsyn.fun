@@ -17,19 +17,12 @@ struct
   *)
   fun ctxPop (Decl (G, D)) = G
 
-  (* ctxLookup (G, k) = D, k counting 
+  (* ctxLookup (G, k) = D, kth declaration in G from right to left
      Invariant: 1 <= k <= |G|, where |G| is length of G
   *)
-  fun ctxLookup (G, k) =
-      let (* ctxLookup' (G'', k') = D
-	     where 1 <= k' <= |G''|
-           *)
-	fun ctxLookup' (Decl (G', D), 1) = D
-	  | ctxLookup' (Decl (G', _), k') = ctxLookup' (G', k'-1)
-	 (* ctxLookup' (Null, k')  should not occur by invariant *)
-      in
-	ctxLookup' (G, k)
-      end
+  fun ctxLookup (Decl (G', D), 1) = D
+    | ctxLookup (Decl (G', _), k') = ctxLookup (G', k'-1)
+    (* ctxLookup (Null, k')  should not occur by invariant *)
 
   (* ctxLength G = |G|, the number of declarations in G *)
   fun ctxLength G =
