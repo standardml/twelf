@@ -387,32 +387,6 @@ struct
        then G' |- s' : G
        s.t. s' o s = id  
     *)
-    fun invert (s) = 
-      let
-        (* index (0, a1...ap.^n) = (n,p) *)
-	fun index (k, Dot (_, s')) = index (k+1, s')
-	  | index (k, Shift (n)) = (n, k)
-	  
-	fun init (0, p) = Shift p
-	  | init (n, p) = 
-              Dot (Undef, init (n-1, p))
-
-	fun update (Dot (Undef, s'), 1, ft) = Dot (ft, s') 
-	  | update (Dot (ft', s'), k, ft) = 
-              Dot (ft', update (s', k-1, ft))
-	  
-	fun recurse (k, Dot (Undef, s1), s2) = 
-              recurse (k+1, s1, s2)
-	  | recurse (k, Dot (Idx k1, s1), s2) =
-	      recurse (k+1, s1, update (s2, k1, Idx k))
-	  | recurse (k, Shift n, s2) = s2
-      in
-	recurse (1, s, init (index (0, s)))
-      end
-
-
-
-    (* invert without copying -- cs *)
     fun invert s =
       let 
 	fun lookup (n, Shift _, p) = NONE
