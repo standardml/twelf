@@ -92,6 +92,8 @@ struct
           error (r, "Illegal defined constant " ^ a ^ " in call pattern")
       | checkCallPat (I.AbbrevDef (a, _, _, _, _, _), P, r) =
 	  error (r, "Illegal abbreviation " ^ a ^ " in call pattern")
+      | checkCallPat (I.BlockDec (a, _, _, _), P, r) =
+	  error (r, "Illegal block identifier " ^ a ^ " in call pattern")
       | checkCallPat (I.SkoDec (a, _, _, _, _), P, r) =
 	  error (r, "Illegal Skolem constant " ^ a ^ " in call pattern")
 
