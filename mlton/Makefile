@@ -13,7 +13,7 @@
 # ---------------------------------------------------------------
 
 # What is MLton called?
-sml = mlton
+sml = mlton -basis 1997
 
 # Twelf root directory
 twelfdir = `pwd`
@@ -35,8 +35,7 @@ twelf-server: ;
 	@echo "*************************************************"
 	@echo "Twelf $(version): Server"
 	@echo "*************************************************"
-	$(sml) mlton/twelf-server.cm ;
-	mv mlton/twelf-server bin/$(twelfserver) ;
+	$(sml) -output bin/$(twelfserver) mlton/twelf-server.cm ;
 
 twelf-sml: ; 
 	@echo "*************************************************"
