@@ -179,6 +179,25 @@ In SMLofNJ:
   OS.FileSys.getDir ();
   OS.Process.exit (OS.Process.success);
 --------------------
+Editing under CVS:
+
+  % setenv CVSROOT /afs/cs/project/twelf/CVS
+  % cvs checkout twelf
+
+will create the directory twelf/ and all subdirectories with
+most recent Twelf sources.
+
+Edit, and then check in with
+
+  % cvs commit -m "log message" twelf
+
+    (or relevant filenames only, works recursively)
+    (might require merging)
+
+To update your copy of the source:
+
+  % cvs update twelf     (might require merging)
+--------------------
 Profiling (under MLWorks):
 
 In each examples directory there is a file config.sml, defining a
