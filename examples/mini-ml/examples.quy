@@ -38,7 +38,7 @@ value (lam [x] (fst x)).
 %query 1 *
 vs (ev_case_z (ev_s ev_z) ev_z) P.
 
-%solve d0 : eval (case z (s z) ([x:exp] z) (s z)).
+%solve d0 : eval (case z (s z) ([x:exp] z)) V.
 %query 1 *
 vs d0 P.
 
