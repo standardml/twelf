@@ -1,3 +1,132 @@
+Mon Feb  9 10:35:12 EST 1998
+
+Observation: Splitting over index variables is necessary in the
+proof of schema checking over value soundness derivations. Assume
+we try to prove
+
+	forallI {E: exp }{V : exp}
+	forall  {D : eval E V}
+	exists  {P : val V} {Q : vs D P} true.
+
+First we split over D. in the case D = ev_fst D1 we need to
+invert P : val (pair V1 V2), to obtain a proof P1 : value V1.
+But note, that P is an argument to the type of Q, and hence, 
+the current formulation of the system does not allow this inverison
+step. Instead, it only allows inversion over Q, and there it is obvious,
+that there are many cases to consider, because many derivations D evaluate
+to something with a pair: We MUST allow splitting of index variables, 
+but HOW?
+
+Fri Mar  6 17:26:50 EST 1998
+
+Meeting of chatter levels
+
+chatter = 6 : [Search: ### ...] [Splitting ...] [Recursion ...]
+	      [Finished: const]
+chatter = 5 : FSSSR   : F = filling
+			S = splitting
+			R = recursion
+			[const]  = finished
+chatter = 4 : [const]  finished ....
+
+
+Thu Feb 26 10:07:29 EST 1998
+
+Currently, recursion does not instantiate free index variables in the
+recursive calls. I suspect that this must be fixed.
+
+Fri Mar  6 12:36:18 EST 1998
+Printing Levels:
+  Make sure that printing is consistent with printing levels.
+
+Sat Feb 28 13:48:19 1998
+TODO BEFORE Twelf 1.2
+  DONE - cs - remove all opaque signature comments 
+  DONE - cs - normalize.fun vs normalizeX.fun       
+  DONE - fp - error messages (and occurrence trees for queries)
+  DONE - cs - MetaGlobal.doubleCheck default to false, timing it?
+  - fp - cleanup frontend.fun
+  DONE - cs - why is %terminates different from %mode?  should
+            be done incrementally?  I guess some cases rely
+            on subordination...probably right the way it is
+  - cs - define syntax and semantics of %mode, %terminates, etc.
+         start a user's manual??
+  - cs - Subordination checking in proofs
+
+LATER
+  - incremental compilation.  this is actually easy, only
+    the index is non-trivial, because it contains the clauses
+    in reverse order.  use a simple functional queue?
+  - mode-checking queries?
+
+Sat Feb 28 12:50:06 1998
+
+- Fixed bug in s1 o s2-1.
+- Added query forms X : A and %solve c : A.  The later
+  will expand into a definition, c = M : A, where M is the
+  proof term.
+- Implemented three simple optimizations:
+  s o id = s
+  dot1 id = id
+  whnf((C @ S)[id]) = C @ S
+
+--------------------
+
+abstract.fun:
+make piDepend more robust? argument must currently be in nf.
+
+AFTERMATH
+
+?document inversion bug?
+
+moved trail files into lambda to remove strange cyclic dependency
+renamed <directory>/<directory>.cm files to sources.cm
+renamed Printer and PRINTER (in all combinations) to Print and PRINT
+renamed Compiler and COMPILER to Compile and COMPILE to avoid
+  shadowing SMLofNJ top-level structures.
+
+fixed bug for handling certain type ascriptions
+fixed bug in parsing EVars under abstractions in evars.fun and frontend.fun
+fixed space leak in trail.
+
+integrate "targetType"? DONE => targetFamOpt and targetFam
+
+compilation is not done incrementally (but: compileConfig, compile, top)
+timing for queries/success continuation printing and waiting counts into solving!
+
+CPrint is currently not used => correct?
+
+please stick to naming conventions in the datatype definitions
+(changed in opsem)
+
+please do not curry functions without good reason
+uncurried solver and printer.
+
+Thu Apr 30 20:54:15 1998 -fp
+  DONE - fp - Strictness checker uses open and raises wrong exception!
+
+  DONE - fp - Occurrences are not maintained for strictness check.  The
+  problem is that because only one strict occurrence is required, an
+  error can only be raised once the whole declaration has been
+  traversed.  So error messages cannot be very precise (but clearly
+  better than at present).
+
+Wed Mar 11 11:05:24 EST 1998 cs
+Termination of the meta proving:
+  After potential recursive call it is now checked if new 
+  information can be gained from the call. We used to discard
+  recursive calls if the +variables are identical to the ones
+  of an earlier inductive call. In the new version we discard
+  a recursive call, if it does not provide any new information,
+  that is the types of the minus arguments are convertible to
+  the output types of an earlier recursive call.
+
+  Potential efficiency problem: The current implementation 
+  generates all possible calls, (and meta abstracts), and
+  later discards possible a huge percentage of these generated
+  proof states. Avoid unnecessary generation (postponed future 
+  work).
+  
 Fri Mar 20 10:23:00 EST 1998 -cs 
   Incremental subordination.
 
@@ -36,3 +165,295 @@ Fri May  1 23:26:39 1998
 
 Sat May  2 10:22:22 1998
   fixed problem with abstraction error messages
+
+CODE REVIEW, DECEMBER 1997 -fp
+
+The constraint invariant was violated and does not seem fixable.
+So...updated the invariant and the code throughout.  Constraints
+can not be printed except in terms of the variable involved.  This
+might be fixed later, when constraints are recorded in their
+proper context.
+
+printing of EVar's needs some consideration.
+printing constraints for queries??
+
+The variable tables are potential space leaks.  For now, added the
+context information to the list of EVar's with names, so that
+constraints can be printed reliably.  If we only had EVars with their
+context!  New scheme: go through the list of all named evars, and
+collect constraints on the uninstantiated ones.  These can then be
+printed.
+
+Todo here: fix top-level printer, including constraints.
+
+In future, Tools should be a global structure and not passed
+into functors.
+
+TARGETFAM in names, index, and elsewhere---consolidate into IntSyn.
+index/index.fun  FIX TARGETTYPE TO AVOID WHNF?
+
+Is there a termination checker? -NO
+
+Move strictness into frontend directory.  fix bug...
+
+ctxLookup has changed!  Now call ctxDec...
+
+IntSyn.Ctx => IntSyn.Dcl IntSyn.Ctx (= IntSyn.DCtx except for MLWorks bug)
+
+fix and/or document CQ
+
+typecheck/typecheck.fun error message needs to be fixed
+
+expressions should be U (terms from any level), not E
+evars should be X
+
+constraints.fun is buggy, missing invariants, "substitution"?
+
+Are Abstract.collectExp and Abstract.printColl still used? -NO
+======================================================================
+Tue Sep  9 12:10:06 EDT 1997
+
+Just extend the notion of EVAR by a constraint store of equtations.
+
+Tue Sep  9 11:42:31 EDT 1997
+Search which allows intermediate constraints:
+Implement SVAR's (see note in folder)
+This makes it possible to also search for inductive hypothesis,
+containing intermediate constraints.
+
+Tue Sep  9 11:42:31 EDT 1997
+Solve the problem that a proof by hand cannot
+be done because of constraints, but the solver
+can find a solution. Somehow the user should
+be provided with an object construction set.
+
+
+Move piDepend from Abstract to intsyn
+
+
+
+Thu Jun  5 15:46:10 1997 -fp fron intsyn.fun
+"optimized" version of headSub (now called frontSub)
+
+  and headSub (Idx (n), s) = bvarSub (n, s)
+(*
+    | headSub (Exp (U, V), Shift (0)) = Exp (U, V)                         (* optimization --cs *)
+    | headSub (Exp (EClo (U, s'), V), s) = Exp (EClo (U, comp (s', s)),V)  (* optimization --cs *) 
+    | headSub (Exp (Root (C, Nil), _), s) = conSub (C, s)                  (* optimization --cs *)
+      (* is it better to treat this case in whnfRedex (Lam, App)? --cs*)
+*)
+    | headSub (Exp (U, V), s) = Exp(EClo (U, s),V)
+----------------------------------------------------------------------
+Mon Jun 16 15:34:17 1997 -cs
+
+
+Timers for whnf (lazy version) 3 runs of the compile example
+- Timers.show ();
+Parsing       : Real = 5.469, Run = 3.338 (2.187 usr + 0.212 sys + 0.938 gc)
+Reconstruction: Real = 5.278, Run = 2.836 (2.476 usr + 0.074 sys + 0.285 gc)
+Abstraction   : Real = 4.864, Run = 2.514 (1.949 usr + 0.092 sys + 0.472 gc)
+Checking      : Real = 0.000, Run = 0.000 (0.000 usr + 0.000 sys + 0.000 gc)
+Modes         : Real = 0.476, Run = 0.172 (0.147 usr + 0.025 sys + 0.000 gc)
+Printing      : Real = 7.077, Run = 4.175 (3.395 usr + 0.157 sys + 0.622 gc)
+Total         : Real = 23.166, Run = 13.037 (10.155 usr + 0.562 sys + 2.319 gc)
+
+Timers for whnf (eager versions)
+- Timers.show ();
+Parsing       : Real = 3.412, Run = 1.993 (1.601 usr + 0.092 sys + 0.299 gc)
+Reconstruction: Real = 6.038, Run = 2.669 (2.443 usr + 0.039 sys + 0.186 gc)
+Abstraction   : Real = 3.831, Run = 1.748 (1.581 usr + 0.041 sys + 0.124 gc)
+Checking      : Real = 0.000, Run = 0.000 (0.000 usr + 0.000 sys + 0.000 gc)
+Modes         : Real = 0.845, Run = 0.162 (0.137 usr + 0.025 sys + 0.000 gc)
+Printing      : Real = 6.098, Run = 3.412 (3.041 usr + 0.079 sys + 0.291 gc)
+Total         : Real = 20.226, Run = 9.986 (8.805 usr + 0.278 sys + 0.902 gc)
+val it = () : unit
+
+Conclusion: Either the new code has a bug or its faster
+
+Wed Jun 11 10:54:20 1997 -fp
+
+Check frontend/timers and timing/
+
+Tue Jun 10 09:01:28 1997 -fp
+
+Improved error messages for fixity and name preferences
+with locations.
+
+Need to unify "IntSyn.name" vs "string" as types.  PENDING
+
+Are anonymous modes supported?  NO---OK
+
+Went through various parsing modules, improved and unified
+error messages.
+
+Mon Jun  9 14:52:33 1997 -fp
+
+Went through parsing modules.
+Introduced global/ directory and module Global : GLOBAL
+with chatter : int ref and maxCid.  DONE
+Removed TpRecon.chatter.  DONE
+Renamed EXTINT to TP_RECON and EXTMODESINT to MODE_RECON.  DONE
+Parsing error should quote offending token.  PENDING
+
+
+Mon Jun  9 09:34:31 1997 -fp
+
+Went through lexer, adding comments and invariants. DONE
+Error recovery PENDING
+Converting tokens to strings PENDING
+
+NOTES Fri Jun  6 14:40:31 1997 -fp
+
+Move getLevel from abstract.fun?
+
+abstract.fun should use occurrences to give error messages.
+
+
+NOTES Fri Jun  6 10:17:51 1997 -fp
+
+Added comments to constraints, cleaned up invariants in
+lambda, up to and including unify.fun.
+
+NOTES Thu Jun  5 16:15:30 1997 -fp
+
+Should establish a global structure for system parameters:
+ - chatter level
+ - size of constant table
+
+Went through intsyn and whnf.  Changed exception IntSyn.Sgn to
+IntSyn.Error for consistency.  DONE
+
+NOTES Thu Jun  5 10:22:29 1997 -fp
+
+Changed representation of Head to be either Exp or Idx (index) and
+no longer an arbitrary constructor.  Eliminated the dead code (which
+can still be found in version 3.3).  DONE
+
+Renamed IntSyn.Abs to IntSyn.Lam for consistency. DONE
+
+NOTES Mon Jun  2 12:05:39 1997
+
+Need to add region support for definition,  DONE
+filenames to origin information.  PENDING
+
+NOTES Mon May  5 15:53:25 1997
+
+Changed it so that quoted identifiers are simply quoted identifiers
+but do not override infix status.  This change is in the lexer only,
+which now no longer produces "quoted" identifiers, except inside
+pragmas.  DONE
+
+How to format EVars and FVars?  Move into Names : NAMES?  DONE
+
+NOTES Fri Apr 25 20:50:26 1997
+
+There is a bug in the formatter: if a fmtList end with Break, items will
+be lost without warning (at least in an argument to HVbox).  PENDING
+
+Move the constant name hashtable from intsyn.fun to names.fun.  DONE.
+
+Must check that in/pre/postfix operator do no have too many or too few
+explicit arguments for external printing.  DONE.
+
+Similarly, %named constants should be families, not objects.  PENDING
+
+Shadowing constants must also shadow fixity!  DONE.
+
+Global reset must reset fixity table, too, and name preferences.  DONE
+
+Quoted keywords (<-, ->, _, =, type) will print incorrectly.
+So will items containing unprintable characters.  Eliminate quoting?
+DONE.
+
+In printer.fun, uncurry functions for efficiency and stylistic
+similarity to the rest of the code?  PENDING
+
+In Unify, we should try to resolve remaining constraints before
+returning.  This might be expensive, but necessary to get the right
+operational behavior, I believe.  Optimize by using flag to see if
+constraints have been introduced/manipulated?  PENDING
+
+Identifiers starting with number, but not being numbers.  DONE
+
+Replaced P in invariants by W, since the result types of
+spines are NOT guaranteed to be atomic.  DONE
+
+Rename relevance to strictness?  DONE
+
+Replaced C.S by C@S in invariants, since "." was too overloaded.  DONE
+
+intsyn:
+
+Perhaps a Head should either be a BVar(n) or an expression.
+Constants, definitions, and FVars complicate code, but do
+not arise, as far as I can tell.  DONE  -fp Thu Jun  5 10:22:06 1997
+
+General optimizations:
+ s = id
+ Compose substitutions eagerly instead of building closures
+
+Introduced type Root = Con * Spine (not yet used).  DONE
+Similarly: type Closure = Exp * Sub (used in lambda)  DONE
+
+conv:
+
+introduce function
+      expandShift (n) = Dot (Con (BVar(n+1), Shift(n+1)))
+in IntSyn?  PENDING
+
+constraints: add invariants?  DONE
+
+======================================================================
+COMMENTS:
+
+2/27/97
+In the previous implementation of MLF, constants were defined
+as de Bruijn indices. This implementation had several problems
+
+	1) no direct head comparison possible, because	
+		substitutions must be calculated first.
+
+	2) not suitable for an operational interpretation of the
+	    	system: For every constant lookup, a long
+		list must be traversed to find the type of a
+		constant.
+
+Hence we decided to go with another idea of representing constants:
+
+	- A constant is an identifier which can be easily 
+		tested for equality.
+
+	- An LF signature is just an array, the constant identifier can be
+		used to access information 
+
+	- A hash function allows to determine a the constant
+		identifier from the constant string.
+
+	- This idea is consistent with the module idea.
+		+ signature doesn't change after parsing
+		+ Every module possess a own signature
+
+Sun Mar 23 22:01:52 1997
+
+Should we either (a) annotate pis on whether there is a dependency or
+(b) have a separate constructor for non-dependent function type?  The
+operational semantics will need this distinction.  Natural typing for
+arrow:
+
+ G |- A : type  G |- V : L
+---------------------------
+  G |- A -> V : L
+
+  G, A |- U : V[^]
+ -----------------------
+  G |- [x:A] U : A -> V
+
+If we introduce it, how and where do we annotate terms, and how do
+we manipulate this annotation?
+
+2/27/97: Optimize the representation of constants: constants c . nil should
+	 be represented as just c.
+
+03/08/97,fp: clean up and export exceptions.
+
+
