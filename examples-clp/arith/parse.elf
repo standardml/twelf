@@ -1,0 +1,53 @@
+%%% Parsing arithmetic expressions
+%%% Author: Roberto Virga
+
+%use equality/strings.
+
+digit : string -> type.
+
+d0 : digit "0".
+d1 : digit "1".
+d2 : digit "2".
+d3 : digit "3".
+d4 : digit "4".
+d5 : digit "5".
+d6 : digit "6".
+d7 : digit "7".
+d8 : digit "8".
+d9 : digit "9".
+
+number : string -> type.
+
+nd  : number X
+        <- digit X.
+
+n++ : number (X ++ Y)
+        <- digit X
+        <- number Y.
+
+expression : string -> type.
+
+en : expression X
+       <- number X.
+
+e~ : expression ("~" ++ X)
+       <- expression X.
+
+e* : expression (X ++ "*" ++ Y)
+       <- expression X
+       <- expression Y.
+
+e+ : expression (X ++ "+" ++ Y)
+       <- expression X
+       <- expression Y.
+
+e- : expression (X ++ "-" ++ Y)
+       <- expression X
+       <- expression Y.
+
+e/ : expression (X ++ "/" ++ Y)
+       <- expression X
+       <- expression Y.
+
+%query 2 *
+P : expression "10*9+35".

@@ -1,0 +1,21 @@
+%%% Lists of a given size
+%%% Authors: Frank Pfenning, Roberto Virga
+
+%% load the constraint solvers
+%use equality/rationals.
+
+%% lists
+list : rational -> type.
+
+nil : list 0.
+
+,   : rational -> list N -> list (N + 1). %infix right 100 ,.
+
+%% append
+append : list M -> list N -> list (M + N) -> type.
+
+app_nil  : append nil L2 L2.
+app_cons : append (X , L1) L2 (X , L3) <- append L1 L2 L3.
+
+%query 10 10
+Z : list 3.

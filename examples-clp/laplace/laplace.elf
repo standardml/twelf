@@ -1,0 +1,48 @@
+%%% Laplace's equation in two dimensions 
+%%% (taken from S. Michaylov's Ph.D. dissertation)
+%%% Author: Roberto Virga
+
+%use equality/rationals.
+
+%% equality
+== : rational -> rational -> type.  %infix none 1000 ==.
+
+id : X == X.
+
+%% lists
+list : type.
+
+nil : list.
+
+,   : rational -> list -> list.  %infix right 100 ,.
+
+av : list -> list -> list -> type.
+
+av0 : av (_ , _ , nil) (_ , _ , nil) (_ , _ , nil).
+av1 : av (TL , T , TR , T1) (ML , M , MR , T2) (BL , B ,  BR , T3)
+        <- B + T + ML + MR - 4 * M == 0
+        <- av (T , TR , T1) (M , MR , T2) (B , BR , T3).
+
+%% lists of lists
+llist : type.
+
+lnil : llist.
+;    : list -> llist -> llist.  %infix right 50 ;.
+
+%% solve Laplace equation
+laplace : llist -> type.
+
+l0 : laplace (_ ; _ ; lnil).
+l1 : laplace (H1 ; H2 ; H3 ; T)
+       <- av H1 H2 H3
+       <- laplace (H2 ; H3 ; T).
+
+%query 1 *
+P : laplace (
+      (  0 ,   0 ,   0 ,   0 ,   0 , nil) ;
+      (100 ,   R ,   S ,   T , 100 , nil) ;
+      (100 ,   U ,   V ,   W , 100 , nil) ;
+      (100 ,   X ,   Y ,   Z , 100 , nil) ;
+      (100 , 100 , 100 , 100 , 100 , nil) ;
+      lnil
+    ).

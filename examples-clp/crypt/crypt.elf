@@ -1,0 +1,69 @@
+%%% SEND+MORE=MONEY cryptarithmetic puzzle
+%%% (taken from S. Michaylov's Ph.D. dissertation)
+%%% Author: Roberto Virga
+
+%use inequality/rationals.
+
+%% equality
+== : rational -> rational -> type.  %infix none 10 ==.
+
+id0 : X == X.
+
+%% lists
+list : type.
+
+nil : list.
+,   : rational -> list -> list.  %infix right 100 ,.
+
+%% bit
+bit : rational -> type.
+
+b0 : bit 0.
+b1 : bit 1.
+
+%% constraints of the solution space
+constraints : list -> type.
+
+c0 : constraints (S , E , N , D , M , O , R , Y , nil)
+       <- S >= 0 <- E >= 0 <- N >= 0 <- D >= 0 <- M >= 0 <- O >= 0 <- R >= 0 <- Y >= 0
+       <- 9 >= S <- 9 >= E <- 9 >= N <- 9 >= D <- 9 >= M <- 9 >= O <- 9 >= R <- 9 >= Y
+       <- S >= 1 <- M >= 1
+       <- C1 >= 0 <- C2 >= 0 <- C3 >= 0 <- C4 >= 0
+       <- 1 >= C1 <- 1 >= C2 <- 1 >= C3 <- 1 >= C4
+       <- C1         == M
+       <- C2 + S + M == O + C1 * 10
+       <- C3 + E + O == N + C2 * 10
+       <- C4 + N + R == E + C3 * 10
+       <-      D + E == Y + C4 * 10
+       <- bit C1 <- bit C2 <- bit C3 <- bit C4.
+
+%% select an element from a list
+select : rational -> list -> list -> type.
+
+sl0 : select H (H , T) T.
+sl1 : select H (H2 , T) (H2 , T2)
+        <- select H T T2.
+
+%% generate distinct digits
+gen_diff_digits : list -> list -> type.
+
+gdd0 : gen_diff_digits nil _.
+gdd1 : gen_diff_digits (H , T) L
+         <- select H L L2
+         <- gen_diff_digits T L2.
+
+%% generate solutions
+generate : list -> type.
+
+g0 : generate L
+       <- gen_diff_digits L (0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , nil).
+
+%% solve SEND+MORE=MONEY
+solve : list -> type.
+
+s0 : solve (S , E , N , D , M , O , R , Y , nil)
+       <- constraints (S , E , N , D , M , O , R , Y , nil)
+       <- generate (D , R , O , E , N , M , Y , S , nil).
+
+%query 1 *
+solve (S , E , N , D , M , O , R , Y , nil).

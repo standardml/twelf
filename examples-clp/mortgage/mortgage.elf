@@ -1,0 +1,24 @@
+%%% Computing mortgage payments
+%%% (taken from S. Michaylov's Ph.D. dissertation)
+%%% Author: Roberto Virga
+
+%% load the constraint solvers
+%use inequality/rationals.
+
+%% equality
+== : rational -> rational -> type.  %infix none 1000 ==.
+
+id : X == X.
+
+%% mortgage payments
+mortgage : rational -> rational -> rational -> rational -> rational -> type.
+
+m0 : mortgage P T I MP B
+       <- T > 0
+       <- 1 >= T
+       <- MI == T * P * I * 1/1200
+       <- B == P + MI - (T * MP).
+m1 : mortgage P T I MP B
+       <- T > 1
+       <- MI == P * I * 1/1200
+       <- mortgage (P + MI - MP) (T - 1) I MP B.

@@ -1,0 +1,77 @@
+%%% Integers, floor and ceiling
+%%% Authors: Frank Pfenning, Roberto Virga
+
+%% integer membership
+integer : rational -> type.
+
+i0 : integer N
+       <- N >= 0
+       <- split N 10 _ 0.
+
+i1 : integer N
+       <- 0 > N
+       <- split (~ N) 10 _ 0.
+
+%query 1 *
+integer ~34.
+
+%query 0 *
+integer 34/7.
+
+%% floor for residuals of splits
+floor_residual : rational -> rational -> type.
+
+flr0 : floor_residual X 0
+         <- X >= 0
+         <- 1 > X.
+
+%% ceiling for residuals of splits
+ceiling_residual : rational -> rational -> type.
+
+clr0 : ceiling_residual 0 0.
+
+clr1 : ceiling_residual X 1
+         <- X > 0
+         <- 1 > X.
+
+%% floor
+floor : rational -> rational -> type.
+
+fl0 : floor X (N + R)
+        <- X >= 0
+        <- split X 10 L R'
+        <- split N 10 L 0
+        <- floor_residual R' R.
+
+fl1 : floor X (~ (N + R))
+        <- 0 > X
+        <- split (~ X) 10 L R'
+        <- split N 10 L 0
+        <- ceiling_residual R' R.
+
+%% ceiling
+ceiling : rational -> rational -> type.
+
+cl0 : ceiling X (N + R)
+        <- X >= 0
+        <- split X 10 L R'
+        <- split N 10 L 0
+        <- ceiling_residual R' R.
+
+cl1 : ceiling X (~ (N + R))
+        <- 0 > X
+        <- split (~ X) 10 L R'
+        <- split N 10 L 0
+        <- floor_residual R' R.
+
+%query 1 *
+floor ~15/4 N.
+
+%query 1 *
+floor 15/4 N.
+
+%query 1 *
+ceiling ~15/4 N.
+
+%query 1 *
+ceiling 15/4 N.

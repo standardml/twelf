@@ -1,0 +1,41 @@
+%%% Continued fractions
+%%% Author: Roberto Virga
+
+%% continued fractions representation
+continued_fraction : rational -> list -> type.
+
+cont0 : continued_fraction Q (Q , nil)
+          <- floor Q Q.
+
+cont1 : continued_fraction Q (A , L)
+          <- floor Q A
+          <- Q > A
+          <- 1 == R * (Q - A)
+          <- continued_fraction R L.
+
+%query 1 *
+continued_fraction 3/1999 L.
+
+%% numerators and denominators of convergents
+numerators   : list -> list -> type.
+denominators : list -> list -> type.
+num_den_iterator : list -> rational -> rational -> list -> type.
+
+ndit0 : num_den_iterator nil I2 I1 nil.
+
+ndit1 : num_den_iterator (A , L) I2 I1 (I3 , PL)
+          <- I3 == A * I2 + I1
+          <- num_den_iterator L I3 I2 PL.
+          
+num0 : numerators L PL
+         <- num_den_iterator L 1 0 PL.
+
+den0 : denominators L QL
+         <- num_den_iterator L 0 1 QL.
+
+%query 1 *
+numerators (0 , 666 , 3 , nil) NL.
+
+%query 1 *
+denominators (0 , 666 , 3 , nil) DL.
+

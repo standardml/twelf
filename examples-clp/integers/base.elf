@@ -1,0 +1,63 @@
+%%% Representation of numbers in a generic base
+%%% Authors: Frank Pfenning, Roberto Virga
+
+%use inequality/rationals.
+
+%% equality
+== : rational -> rational -> type.  %infix none 1000 ==.
+
+id : X == X.
+
+%% digits in a given base B
+digit : rational -> rational -> type.
+
+d0 : digit 0 B.
+
+d1 : digit N B
+       <- N > 0
+       <- B > N
+       <- digit (N - 1) B.
+
+%query 16 *
+digit N 16.
+
+%% lists of numbers
+list : type.
+
+nil : list.
+
+,   : rational -> list -> list.  %infix right 100 ,.
+
+%% split a nonnegative number into a digit plus a residual
+split_digit : rational -> rational -> rational -> rational -> type.
+
+sd0 : split_digit X B N (X - N)
+        <- digit N B
+        <- X >= N
+        <- (N + 1) > X.
+
+%% split a nonnegative number into a list of digits plus a residual
+split : rational -> rational -> list -> rational -> type.
+
+s0 : split X B nil X
+       <- X >= 0
+       <- 1 > X.
+
+s1 : split X B (N , nil) R
+       <- X >= 1
+       <- B > X
+       <- split_digit X B N R.
+
+s2 : split (B * Q) B (N , L) R
+       <- Q >= 1
+       <- split Q B L R0
+       <- split_digit (B * R0) B N R.
+
+%% represent a nonnegative number as a list of digits in base B
+represent : rational -> rational -> list -> type.
+
+r0 : represent N B L
+       <- split N B L 0.
+
+%query 1 *
+represent 32767 8 L.

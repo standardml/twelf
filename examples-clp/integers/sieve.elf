@@ -1,0 +1,45 @@
+%%% Sieve of Eratosthenes
+%%% Author: Roberto Virga
+
+%use inequality/rationals.
+
+%% multiple of some (previously discovered) prime
+divisible : rational -> type.
+
+%% exclude all the multiples of the given prime
+exclude : rational -> rational -> rational -> list -> type.
+
+%% find the next prime
+select : rational -> rational -> list -> type.
+
+excl0 : exclude P K N LP
+          <- N >= (P * K)
+          <- (divisible (P * K) -> exclude P (K + 2) N LP).
+
+excl1 : exclude P K N LP
+          <- (P * K) > N
+          <- select (P + 2) N LP.
+
+sel0 : select M N LP
+         <- divisible M
+         <- select (M + 2) N LP.
+
+sel1 : select P N (P , LP)
+         <- N >= P
+         <- exclude P P N LP.
+
+sel2 : select M N nil
+         <- M > N.
+
+%% sieve of Eratosthenes
+sieve : rational -> list -> type.
+
+sieve0 : sieve N nil
+           <- 2 > N.
+
+sieve1 : sieve N (2 , PL)
+           <- N >= 2
+           <- select 3 N PL.
+
+%query 1 1
+sieve 500 L.

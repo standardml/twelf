@@ -1,0 +1,48 @@
+%%% Meta-theorems about defined predicates
+%%% Author: Roberto Virga
+
+%% (partial) correctness of split_digit/4
+split_digit_correct : split_digit X B N R -> digit N B
+                        -> R == (X - N) -> R >= 0 -> 1 > R -> type.
+
+sdc0 : split_digit_correct (sd0 N+1>X X>=N DigitN) DigitN 
+                           id (+>= (~ N) X>=N) (+> (~ N) N+1>X).
+
+%% property of being a lists of digits
+digit_list : list -> rational -> type.
+
+dl0 : digit_list nil B.
+
+dl1 : digit_list (N , L) B
+        <- digit N B
+        <- digit_list L B.
+
+%% property of being the representation of a number N
+power_list : list -> rational -> rational -> type.
+
+pl0 : power_list nil B 0.
+
+pl1 : power_list (M , L) B N
+        <- N == M + B * N'
+        <- power_list L B N'.
+
+%% (partial) correctness of split/4
+split_correct : split X B L R  -> digit_list L B -> power_list L B N
+                  -> R == (X - N) -> R >= 0 -> 1 > R -> type.
+
+sc0 : split_correct (s0 X<1 X>=0) dl0 pl0 id X>=0 X<1.
+
+sc1 : split_correct (s1 SplitDigitX _ _) (dl1 dl0 DigitN) (pl1 pl0 id) id R>=0 R<1
+        <- split_digit_correct SplitDigitX DigitN id R>=0 R<1.
+
+sc2 : split_correct (s2 SplitDigitR0 SplitQ _) (dl1 DigitListL DigitN)
+                    (pl1 PowerListL id) id R>=0 R<1
+        <- split_digit_correct SplitDigitR0 DigitN id R>=0 R<1
+        <- split_correct SplitQ DigitListL PowerListL id _ _.
+
+%% integer N implies floor N N
+integer_floor : integer N -> floor N N -> type.
+
+if0 : integer_floor (i0 SplitN N>=0) (fl0 (flr0 1>0 0>=0) SplitN SplitN N>=0).
+
+if1 : integer_floor (i1 Split~N N<0) (fl1 clr0 Split~N Split~N N<0).
