@@ -87,7 +87,37 @@ b: ([x] x) a.
 
 loads and typechecks.  Problem in frontend.fun?
  
+Update (Mon Jan 22 17:36:24 EST 2001):
+  fixed in new implementation of type reconstruction  -kw
 
 
 
+Mon Jan 22 17:37:10 EST 2001  -kw
 
+Bug:
+
+> From: Andreas Abel <abel+@cs.cmu.edu>
+> Subject: Minor twelf bug
+> To: Frank Pfenning <fp@cs.cmu.edu>
+> Date: Tue, 16 Jan 2001 15:28:59 -0500
+> 
+> Twelf output a wrong filename for the error location:
+> 
+> [Opening file /usr0/abel/afs/twelf/lambdamu/lambdamu.thm]
+> ...
+> %theorem ==>-->' : {T:ty} {M:tm T} {M':tm T} M --> M' -> M ==> M' ->
+> type.
+> /usr0/abel/afs/twelf/lambdamu/lambdamu.quy:30.17-30.22 Error: 
+> Type mismatch
+> ...
+> [Closing file /usr0/abel/afs/twelf/lambdamu/lambdamu.thm]
+> /usr0/abel/afs/twelf/lambdamu/lambdamu.thm: 1 error found
+> %% ABORT %%
+> 
+> (wrong filename is in line 4)
+
+The fix will require revising the staging of parsing vs. type
+reconstruction in moderecon.fun, adding a filename parameter to
+e.g. the theoremToTheorem function of thmrecon.fun, and possibly
+revisiting the way error messages are reported in mode and theorem
+declaration processing.
