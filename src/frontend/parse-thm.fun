@@ -406,6 +406,19 @@ struct
    fun parseReduces' (LS.Cons ((L.REDUCES, r), s')) = 
 	parseRDecl (LS.expose s')
 
+
+   fun parseWDecl f = 
+       let
+	 val (GBs, f1) = parseGBs f
+	 val (callpats,f2) = parseCallPats f1
+       in
+         (E. wdecl (GBs, E.callpats callpats), f2)
+       end
+
+   fun parseWorld' (LS.Cons ((L.WORLD, r), s')) = 
+        parseWDecl (LS.expose s')
+
+
   in
     val parseTerminates' = parseTerminates'
     val parseTheorem' = parseForallStar
@@ -414,6 +427,7 @@ struct
     val parseEstablish' = parseEstablish'
     val parseAssert' = parseAssert'
     val parseReduces' = parseReduces'		(*  -bp6/5/99.*)		 
+    val parseWorld' = parseWorld'
   end  (* local ... in *)
 
 end;  (* functor Parser *)

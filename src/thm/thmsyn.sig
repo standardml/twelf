@@ -43,6 +43,12 @@ sig
   datatype PDecl = 
     PDecl of int * TDecl
 
+  (* World declaration *)
+  datatype WDecl = 
+    WDecl of (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * 
+	      ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list * Callpats
+
+
   val theoremDecToConDec : ((string * ThDecl) * Paths.region) -> 
                            (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list * ModeSyn.IntSyn.ConDec
   val theoremDecToModeSpine : ((string * ThDecl) * Paths.region) -> ModeSyn.ModeSpine

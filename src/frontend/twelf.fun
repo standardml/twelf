@@ -96,6 +96,7 @@ functor Twelf
      sharing ThmRecon.ThmSyn.ModeSyn = ModeSyn
      sharing type ThmRecon.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ThmRecon.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
+     sharing type ThmRecon.wdecl = Parser.ThmExtSyn.wdecl 
      sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
      sharing type ThmRecon.theoremdec = Parser.ThmExtSyn.theoremdec 
      sharing type ThmRecon.prove = Parser.ThmExtSyn.prove
@@ -484,6 +485,12 @@ struct
 		  else [()]
 	in
 	  Skolem.install La
+	end
+      | install1 (fileName, Parser.WorldDec wdecl) =
+	let
+	  val (ThmSyn.WDecl (W, cp), rrs) = ThmRecon.wdeclTowDecl wdecl
+	in
+	  ()
 	end
       | install1 (fileName, Parser.Use name) =
           CSManager.useSolver (name)

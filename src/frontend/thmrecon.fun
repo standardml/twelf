@@ -245,6 +245,14 @@ struct
           ((name, td'), r')
 	end
 
+
+    (* World checker *)
+
+
+    type wdecl =  ThmSyn.WDecl * Paths.region list
+    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (List.map abstractCtxPair2 (List.map abstractCtxPair W), cp), rs)
+    fun wdeclTowDecl T = T
+
   in
     (* avoid this re-copying? -fp *)
     type order = order
@@ -296,5 +304,9 @@ struct
     type theoremdec = theoremdec
     val dec = dec
     val theoremDecToTheoremDec = theoremDecToTheoremDec 
+
+    type wdecl = wdecl
+    val wdeclTowDecl = wdeclTowDecl
+    val wdecl = wdecl
   end (* local *)
 end (* functor ThmRecon *)

@@ -18,6 +18,7 @@ sig
     | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec (* * ExtSyn.Paths.region *)
     | TerminatesDec of ThmExtSyn.tdecl
+    | WorldDec of ThmExtSyn.wdecl
     | ReducesDec of ThmExtSyn.rdecl   (* -bp *)
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove

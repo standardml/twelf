@@ -49,6 +49,10 @@ sig
 
   val dec : (string * theorem) -> theoremdec
 
+  (* world checker *)
+  type wdecl
+  val wdecl : (decs * decs) list * callpats -> wdecl
+
 end;  (* signature THMEXTSYN *)
 
 
@@ -65,4 +69,5 @@ sig
   val proveToProve : prove -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
   val establishToEstablish : establish -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
   val assertToAssert : assert -> (ThmSyn.Callpats * Paths.region list)
+  val wdeclTowDecl : wdecl -> (ThmSyn.WDecl * Paths.region list)
 end;  (* signature THM_RECON *)

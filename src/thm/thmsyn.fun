@@ -51,6 +51,11 @@ struct
   datatype PDecl = 
     PDecl of int * TDecl
 
+  (* World declaration *)
+  datatype WDecl = 
+    WDecl of (ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx * 
+	      ModeSyn.IntSyn.Dec ModeSyn.IntSyn.Ctx) list * Callpats
+
   local
 
     structure I = ModeSyn.IntSyn

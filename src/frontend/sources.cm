@@ -17,6 +17,7 @@ Group is
   ../subordinate/sources.cm
   ../meta/sources.cm
   ../solvers/sources.cm
+  ../worldcheck/sources.cm
   lexer.sig
   lexer.fun
   parsing.sig
