@@ -330,7 +330,7 @@ struct
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
 	  val _ = ModeSyn.installMode (cid, MS)
 	  val _ = if !Global.chatter >= 3
-		    then print ("%theorem " ^ ClausePrint.conDecToString E ^ "\n")
+		    then print ("%theorem " ^ Print.conDecToString E ^ "\n")
 		  else ()
 	in
 	  ()
