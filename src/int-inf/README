@@ -1,0 +1,8 @@
+Copied from the Standard ML of New Jersey Library
+Version 110.0.3
+
+This was copied in order to make the implementation completely
+portable, and independent of SML/NJ.
+
+Perpetrator: Frank Pfenning
+Sun Sep 24 2000

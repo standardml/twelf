@@ -1,5 +1,5 @@
 Group is
-  smlnj-lib.cm
+  ../int-inf/sources.cm
   field.sig
   ordered-field.sig
   integers.sig
