@@ -1,15 +1,17 @@
 (* State for Proof Search *)
 (* Author: Carsten Schuermann *)
 
-functor StateSyn (structure IntSyn : INTSYN
+functor StateSyn (structure IntSyn' : INTSYN
 		  structure FunSyn' : FUNSYN
-		    sharing FunSyn'.IntSyn = IntSyn)
+		    sharing FunSyn'.IntSyn = IntSyn')
   : STATESYN =
 struct
+  structure IntSyn = IntSyn'
   structure FunSyn = FunSyn'
     
   datatype Order =	       	        (* Orders                     *)
-    Arg of IntSyn.Exp		       	(* O ::= x                    *)
+    Arg of (IntSyn.Exp * IntSyn.Sub) * 
+           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]        *)
   | Lex of Order list			(*     | (O1 .. On)           *)
   | Simul of Order list			(*     | {O1 .. On}           *)
   | All of IntSyn.Dec * Order		(*     | {{D}} O              *)
@@ -21,8 +23,9 @@ struct
   | Assumption of int
   | Induction  of int
 
-  datatype State =			(* S = <(G, B), (IH, OH), d, O, H, F> *)
-    State of (FunSyn.IntSyn.dctx	(* Context of Hypothesis             *)
+  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
+    State of int			(* Part of theorem                   *)
+	   * (FunSyn.IntSyn.dctx		(* Context of Hypothesis             *)
            * SplitTag FunSyn.IntSyn.Ctx) (* Status information *)
            * (FunSyn.For * Order)	(* Induction hypothesis, order       *)
            * int			(* length of meta context            *)
@@ -34,7 +37,7 @@ struct
     structure F = FunSyn
     structure I = IntSyn  
      
-    fun orderSub (Arg U, s) = Arg (I.EClo (U, s))
+    fun orderSub (Arg ((U, s1), (V, s2)), s) = Arg ((U,  I.comp (s1, s)), (V, I.comp (s2, s)))
       | orderSub (Lex Os, s) = Lex (map (fn O => orderSub (O, s)) Os)
       | orderSub (Simul Os, s) = Simul (map (fn O => orderSub (O, s)) Os)
       (* by invariant: no case for All and And *)

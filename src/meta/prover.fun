@@ -11,6 +11,8 @@ functor MTProver (structure FunSyn' : FUNSYN
 		    sharing MTPFilling.StateSyn = StateSyn'
 		  structure MTPSplitting : MTPSPLITTING
 		    sharing MTPSplitting.StateSyn = StateSyn'
+		  structure MTPRecursion : MTPRECURSION
+		    sharing MTPRecursion.StateSyn = StateSyn'
 		  structure MTPrint : MTPRINT
 		    sharing MTPrint.StateSyn = StateSyn')
   : MTPROVER =
@@ -25,10 +27,18 @@ struct
     structure S = StateSyn 
 
 
+    fun recursion S = 
+      let 
+	val operator = MTPRecursion.expand S
+      in
+	MTPRecursion.apply operator
+      end
+
+
     fun app operator =
       let 
 	val Ss = MTPSplitting.apply operator
-	val _ = map (fn S => (TextIO.print (MTPrint.stateToString S ^ "\n\n\n"))) Ss
+	val _ = map (fn S => (TextIO.print (MTPrint.stateToString S ^ "\n\n\n"); recursion S)) Ss
       in
 	TextIO.print ("=================\n")
       end

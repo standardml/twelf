@@ -48,7 +48,7 @@ struct
 
        Invariant:
     *)
-    fun expand (S as S.State ((G, B), (IH, OH), d, O, H, F)) = 
+    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
 	let 
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in

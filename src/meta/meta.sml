@@ -48,8 +48,7 @@ structure RelFun =
 (* Functor instantiation for the Prover *)
 structure StateSyn = 
   StateSyn (structure FunSyn' = FunSyn
-	    structure IntSyn = IntSyn
-	    structure Order' = Order)
+	    structure IntSyn' = IntSyn)
 
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
@@ -120,8 +119,21 @@ structure MTPSplitting =
 		structure Index = Index
 		structure Print = Print
 		structure Unify = UnifyTrail)
-  
 
+structure MTPRecursion = 
+  MTPRecursion (structure Global =  Global
+		structure IntSyn = IntSyn
+		structure FunSyn = FunSyn
+		structure StateSyn' = StateSyn
+		structure Whnf = Whnf
+		structure Unify = UnifyTrail
+		structure Conv = Conv
+		structure Trail = Trail
+		structure Names = Names
+		structure Subordinate = Subordinate
+		structure Print = Print
+		structure FunPrint = FunPrint
+		structure Formatter = Formatter)
 
 structure MTProver =
   MTProver (structure FunSyn' = FunSyn
@@ -129,5 +141,6 @@ structure MTProver =
 	    structure MTPrint = MTPrint
 	    structure MTPInit = MTPInit
 	    structure MTPFilling = MTPFilling
-	    structure MTPSplitting = MTPSplitting)
+	    structure MTPSplitting = MTPSplitting
+	    structure MTPRecursion = MTPRecursion)
 

@@ -3,10 +3,12 @@
 
 signature STATESYN =
 sig
+  structure IntSyn : INTSYN
   structure FunSyn : FUNSYN
 
   datatype Order =	       	        (* Orders                     *)
-    Arg of FunSyn.IntSyn.Exp	        (* O ::= x                    *)
+    Arg of (IntSyn.Exp * IntSyn.Sub) * 
+           (IntSyn.Exp * IntSyn.Sub)	(* O ::= U[s] : V[s]        *)
   | Lex of Order list			(*     | (O1 .. On)           *)
   | Simul of Order list			(*     | {O1 .. On}           *)
   | All of FunSyn.IntSyn.Dec * Order  	(*     | {{D}} O              *)
@@ -19,8 +21,9 @@ sig
   | Assumption of int
   | Induction  of int
 
-  datatype State =			(* S = <(G, B), (IH, OH), d, O, H, F> *)
-    State of (FunSyn.IntSyn.dctx	(* Context of Hypothesis             *)
+  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
+    State of int			(* Part of theorem                   *)
+	   * (FunSyn.IntSyn.dctx	(* Context of Hypothesis             *)
            * SplitTag FunSyn.IntSyn.Ctx) (* Status information *)
            * (FunSyn.For * Order)	(* Induction hypothesis, order       *)
            * int			(* length of meta context            *)
@@ -30,4 +33,5 @@ sig
 
   val orderSub : Order * FunSyn.IntSyn.Sub -> Order  
   val decrease : SplitTag -> SplitTag
+  
 end; (* signature STATESYN *)

@@ -52,7 +52,7 @@ struct
 			   Print.formatDec (G', D')])
 	  end
 
-    fun formatState (S.State ((G, B), (IH, OH), d, O, H, F)) = 
+    fun formatState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
         let 
 	  val (G', fmt) = formatCtx (G, B)
 	in
