@@ -20,5 +20,12 @@ test "refine/tab.cfg";
 test "parsing/foll.cfg";
 test "parsing/arithml.cfg";
 test "parsing/tab.cfg";
-test "mini-ml/tab.cfg";
+test "mini-ml/tab.cfg"; 
 
+Twelf.Table.strengthen := true;
+
+test "seqCalc/tab-at.cfg"; 
+test "seqCalc/tab-fol.cfg"; 
+test "seqCalc/foc.cfg"; 
+
+Twelf.OS.chDir "../..";
