@@ -5,6 +5,7 @@ structure Global :> GLOBAL =
 struct
 
   val chatter = ref 3
+  val style = ref 0
   val maxCid = 19999
   val maxMid = 999
   val maxCSid = 49

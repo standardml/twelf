@@ -4,6 +4,7 @@
 signature GLOBAL =
 sig
   val chatter : int ref
+  val style : int ref
   val maxCid : int
   val maxMid : int
   val maxCSid : int
