@@ -171,6 +171,7 @@ struct
 	then (* addressing implicit argument returns region of head *)
 	     toRegion h
       else pathToRegionSpine (s, n-imp, path)
+    | pathToRegion (leaf (r), _) = r	(* possible if leaf was _ (underscore) *)
     (* other combinations should be impossible *)
   and pathToRegionSpine (app (u, s), 1, path) =
         pathToRegion (u, path)

@@ -1,0 +1,4 @@
+exp: type.
+bug:  exp -> type.
+%mode bug -E.
+oops: bug  _ <- bug E.
