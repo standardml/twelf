@@ -145,7 +145,7 @@ struct
     fun shiftP (Less(O1, O2)) f = Less(shiftO O1 f, shiftO O2 f)
       | shiftP (Leq(O1, O2)) f = Leq(shiftO O1 f, shiftO O2 f)
       | shiftP (Eq(O1, O2)) f = Eq(shiftO O1 f, shiftO O2 f)
-      | shiftP (Pi(D, P)) f = Pi(D, shiftP P f)       
+      | shiftP (Pi(D, P)) f = Pi(D, shiftP (shiftP P (fn s => I.dot1 s)) f)       
 
     fun shiftRCtx I.Null f = I.Null
       | shiftRCtx (I.Decl(RG, P)) f =
@@ -189,42 +189,42 @@ struct
       | fmtPredicate' (G, Leq(O, O'))  = fmtComparison (G, O, "<=", O')
       | fmtPredicate' (G, Eq(O, O'))  = fmtComparison (G, O, "=", O')
       | fmtPredicate' (G, Pi(D, P))  =  (* F.String "Pi predicate"  *)
-          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), shiftP P (fn s => I.dot1 s))]
+          F.Hbox [F.String "Pi ", fmtPredicate' (I.Decl(G, D), P)]  
 
-    fun fmtPredicate (G, P) = 
-      fmtPredicate' (Names.ctxName G, P)
+    fun fmtPredicate (G, P) = fmtPredicate' (Names.ctxName G, P)
 
     fun fmtRGCtx' (G, I.Null) = ""
       | fmtRGCtx' (G, I.Decl(I.Null, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P) )
+	F.makestring_fmt(fmtPredicate' (G, P) )
       | fmtRGCtx' (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ fmtRGCtx' (G, RG)
+	F.makestring_fmt(fmtPredicate' (G, P)) ^ " ," ^ fmtRGCtx' (G, RG)
 
-    fun fmtRGCtx (G, RG) = fmtRGCtx (Names.ctxName G, RG)
+    fun fmtRGCtx (G, RG) = fmtRGCtx' (Names.ctxName G, RG)
 
     (* printing atomic orders *)
-    fun atomicPredToString' (G, Less((Us, _), (Us', _))) = 
+    fun atomicPredToString (G, Less((Us, _), (Us', _))) = 
           Print.expToString (G, I.EClo(Us)) ^ " < " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString' (G, Leq((Us, _), (Us', _))) = 
+      | atomicPredToString (G, Leq((Us, _), (Us', _))) = 
           Print.expToString (G, I.EClo(Us)) ^ " <= " ^ Print.expToString(G, I.EClo(Us'))
-      | atomicPredToString' (G, Eq((Us, _), (Us', _))) = 
+      | atomicPredToString (G, Eq((Us, _), (Us', _))) = 
           Print.expToString(G, I.EClo(Us)) ^ " = " ^ Print.expToString(G, I.EClo(Us'))
 
+(*
     fun atomicPredToString (G, P) = 
       atomicPredToString' (Names.ctxName G, P)
-
-    fun ctxToString' (G, I.Null) = " "
-      | ctxToString' (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString' (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
+*)
+    fun ctxToString (G, I.Null) = " "
+      | ctxToString (G, I.Decl(D', Less(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " < " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " " 
-      | ctxToString' (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString' (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
+      | ctxToString (G, I.Decl(D', Leq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString (G, D') ^  " , " ^ Print.expToString(G, I.EClo(Us)) ^ " <= " 
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
-      | ctxToString' (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
-	ctxToString' (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
+      | ctxToString (G, I.Decl(D', Eq(UsVs as (Us, Vs), UsVs' as (Us', Vs')))) = 
+	ctxToString (G, D') ^ ", " ^ Print.expToString(G, I.EClo(Us)) ^ " = "
 		     ^ Print.expToString(G, I.EClo(Us')) ^ " "
 	
-    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG)
+(*    fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG) *)
    (*--------------------------------------------------------------------*)
 
     (* init () = true 
@@ -1625,15 +1625,13 @@ struct
 
     (* deduce (G, Q, D, P) = B
 
-      B iff  G :  Q  and D --> P is true
+      B iff  
+         G :  Q  
+     and G |- D
+     and G |- P
+     and D implies P
     *)    
-    fun deduce (G, Q, D, P) = 
-      ((if (!Global.chatter) > 5 then  
-	    print ("\n To show " ^ fmtRGCtx(G, D) ^ 
-		   " -->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
-	  else 
-	    ());
-	 leftDecompose((G, Q), D, I.Null, P))
+    fun deduce (G, Q, D, P) = leftDecompose((G, Q), D, I.Null, P)
   in
     val deduce = deduce 
     val shiftRCtx = shiftRCtx

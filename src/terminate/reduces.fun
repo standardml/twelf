@@ -79,25 +79,22 @@ struct
 			 F.Break, fmtOrder (G, O')]
 
 
-    fun fmtPredicate' (G, C.Less(O, O')) = fmtComparison (G, O, "<", O')
-      | fmtPredicate' (G, C.Leq(O, O'))  = fmtComparison (G, O, "<=", O')
-      | fmtPredicate' (G, C.Eq(O, O'))  = fmtComparison (G, O, "=", O')
-      | fmtPredicate' (G, C.Pi(D, P))  =  
+    fun fmtPredicate (G, C.Less(O, O')) = fmtComparison (G, O, "<", O')
+      | fmtPredicate (G, C.Leq(O, O'))  = fmtComparison (G, O, "<=", O')
+      | fmtPredicate (G, C.Eq(O, O'))  = fmtComparison (G, O, "=", O')
+      | fmtPredicate (G, C.Pi(D, P))  =  
           F.Hbox [F.String "Pi ", 
-		  fmtPredicate' (I.Decl(G, D), C.shiftPred P (fn s => I.dot1 s))]
-
-    fun fmtPredicate (G, P) = 
-      fmtPredicate' (Names.ctxName G, P)
+		  fmtPredicate (I.Decl(G, D), P)]  
 
     fun ctxToString' (G, I.Null) = ""
       | ctxToString' (G, I.Decl(I.Null, P)) = 
 	F.makestring_fmt(fmtPredicate (G, P) )
       | ctxToString' (G, I.Decl(RG, P)) = 
-	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ ctxToString'(G, RG)
-
+	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ ctxToString' (G, RG)
+    
     fun ctxToString (G, RG) = ctxToString' (Names.ctxName G, RG)
 
-    fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (G, P))
+    fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (Names.ctxName G, P))
 
    (*--------------------------------------------------------------------*)
    (* select (c, (S, s)) = P
@@ -185,11 +182,7 @@ struct
         
     *)
 
-    fun abstractRO (G, D, O) = 
-      (print "\n WARNING: Quantified order: ";
-       print (orderToString (G, C.Pi(D, O)));
-       print "\n The termination checker may be incomplete! \n ";
-       C.Pi(D, O))
+    fun abstractRO (G, D, O) = C.Pi(D, O)
 
   
     (*--------------------------------------------------------------------*)
@@ -204,7 +197,8 @@ struct
        and  G |- s' : G2    and   G2 |- V' : L'   (V', s') in whnf
        and  V' = a' @ S'
        and  G |- L = L'
-       and  V[s] < V'[s']  (< termination ordering)
+       and  G |- RG
+       and  RG implies V[s] < V'[s']  (< termination ordering)
        then return O' where O' is the reduction order corresponding to V
             and    G |- O'            	 
             otherwise return NONE
@@ -238,7 +232,7 @@ struct
 	in 
 	  case RO
 	    of NONE => NONE
-	      | SOME(O) => SOME(C.shiftPred O (fn s => I.comp(s, I.invShift)))
+	      | SOME(O) => SOME(abstractRO (G, I.decSub(D, s), O))
 	end 
 
       | checkGoalW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), 
@@ -251,27 +245,8 @@ struct
 		if (f a) then a's else lookup (a's', f)
 	  val P = selectOcc (a, (S, s), occ)	(* only if a terminates? *)
 	  val P' = select (a', (S', s')) (* always succeeds? -fp *)
-	  (*
-	    handle Order.Error (msg)
-	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
-			     N.qidToString (N.constQid a'))
-          *)
 	  val a's = Order.mutLookup a	(* always succeeds? -fp *)
-	  (*
-	    handle Order.Error (msg)
-	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
-			     N.qidToString (N.constQid a))
-	  *)
-	  (* 
-	  val _ = Order.selLookup a'
-	  *)
-	  (* check if a' terminates --- should always succeed? -fp *)
-	  (*
-	    handle Order.Error (msg)
-	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
-			     N.qidToString (N.constQid a))
-          *)
-	  val RO = selectROrder (a, (S, s))
+	  val RO  = selectROrder (a, (S, s))
 	  val _ = case RO 
 	           of NONE => (if (!Global.chatter) > 5 
 				 then  print ("\n no reduction predicate defined for "^
@@ -319,8 +294,8 @@ struct
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
        and RG is a context for derived reduction order assumptions 
-       and  G |- RG
-       and  G |- O
+       and  G, G' |- RG
+       and  G, G' |- O
        and RG implies V1[s1]  is "smaller" then  V2[s2]
        then return valid reduction order O corresponding to V1[s1]
        otherewise return NONE
@@ -329,27 +304,13 @@ struct
          checkImpW (G, Q, RG, Vs, Whnf.whnf Vs', occ)
 
     and checkImpW (G, Q, RG, (V, s), (I.Pi ((D', I.No), V'), s'), occ) =
-          let
-	    val RO = checkImp (I.Decl (G, I.decSub (D', s')),
-			       I.Decl (Q, C.Existential), 
-			       C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
-			       (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
-	  in 
-	    case RO
-	      of NONE => NONE
-		| SOME(O) => SOME(C.shiftPred O (fn s => I.comp (s, I.invShift)))
-	  end 
+          checkImp (I.Decl (G, I.decSub (D', s')),
+		    I.Decl (Q, C.Existential), RG, 
+		    (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
       | checkImpW (G, Q, RG, (V, s), (I.Pi ((D', I.Maybe), V'), s'), occ) =
-         let
-	   val RO = checkImp (I.Decl (G, N.decEName (G, I.decSub (D', s'))),
-			      I.Decl (Q, C.Existential), 
-			      C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
-			      (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
-	 in 
-	   case RO
-	     of NONE => NONE
-	      | SOME(O) =>  SOME(abstractRO(G, D', O))
-	 end 
+	  checkImp (I.Decl (G, N.decEName (G, I.decSub (D', s'))),
+		    I.Decl (Q, C.Existential), RG, 
+		    (V, I.comp (s, I.shift)), (V', I.dot1 s'), occ)
       | checkImpW (G, Q, RG, Vs, Vs' as (I.Root (I.Const a, S), s), occ) = 
 	  checkGoal (G, Q, RG, Vs, Vs', occ)
       | checkImpW (G, Q, RG, Vs, (I.Root (I.Def a, S), s), occ) =
@@ -365,8 +326,8 @@ struct
        and  V[s] does not contain any skolem constants
        and  RG, RG' is a context of reduction propositions
        and  G |- RG
-       and  G |- RG'
-       and RG imlies the termination condition associated to V[s]
+       and  G, G' |- RG'
+       and RG implies the termination condition associated to V[s]
        then  
            RG' is RG extended with valid reduction orders
        else exception Error is raised
@@ -375,27 +336,23 @@ struct
          checkClauseW (G, Q, RG, Whnf.whnf Vs, occ)
 
     and checkClauseW (G, Q, RG, (I.Pi ((D, I.Maybe), V), s), occ) =
-	  let 
-	    val RG' = checkClause (I.Decl(G, N.decEName (G, I.decSub (D, s))), 
-				   I.Decl (Q, C.Existential), 
-				   C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
-				   (V, I.dot1 s), P.body occ)
-	  in 
-	    C.shiftRCtx RG' (fn s => I.comp(s, I.invShift))	    
-	  end 
+           checkClause (I.Decl(G, N.decEName (G, I.decSub (D, s))), 
+			I.Decl (Q, C.Existential), 
+			C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+			(V, I.dot1 s), P.body occ)
       | checkClauseW (G, Q, RG, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) =
         let 
 	  val RG' = checkClause (I.Decl (G, I.decSub (D, s)),
 				 I.Decl (Q, C.Existential), 
-				 C.shiftRCtx RG (fn s => I.comp(s, I.shift)), 
+				 C.shiftRCtx RG (fn s => I.comp(s, I.shift)) , 
 				 (V2, I.dot1 s), P.body occ)
 	  val RO = checkImp (I.Decl (G, I.decSub (D, s)),
 			     I.Decl (Q, C.Existential), RG', (V1, I.comp (s, I.shift)), 
 			     (V2, I.dot1 s), P.label occ)
 	in 
 	  case RO 
-	    of NONE => C.shiftRCtx RG' (fn s => I.comp(s, I.invShift))
-             | SOME(O) => C.shiftRCtx (I.Decl(RG', O)) (fn s => I.comp(s, I.invShift))
+	    of NONE => RG'
+             | SOME(O) => I.Decl(RG', O)
 	end
       | checkClauseW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) = RG
       | checkClauseW (G, Q, RG, (I.Root (I.Def a, S), s), occ) =
@@ -440,7 +397,7 @@ struct
  	  in 
 	    case O 
 	      of NONE => NONE
-	       | SOME(O') => SOME(abstractRO(G, D, O'))
+	       | SOME(O') => SOME(abstractRO(G, I.decSub(D, s), O'))
 	  end 
       | getROrderW (G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
 	  let
