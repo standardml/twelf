@@ -7,7 +7,7 @@ Sample Session:
 % cd /afs/cs/project/twelf/research/twelf/
 % sml-cm
 - CM.make ();
-- use "examples/spass/spass.sml";
+- use "examples/ccc/spass.sml";
 
 This will print the SPASS representation for a bunch of axioms and theorems
 of cartesian closed categories.  The encoding maps any morphism f : A -> B
