@@ -3,7 +3,11 @@
 
 functor StateSyn (structure IntSyn' : INTSYN
 		  structure FunSyn' : FUNSYN
-		    sharing FunSyn'.IntSyn = IntSyn')
+		    sharing FunSyn'.IntSyn = IntSyn'
+		  structure Whnf : WHNF
+		    sharing Whnf.IntSyn = IntSyn'
+		  structure Conv : CONV
+		    sharing Conv.IntSyn = IntSyn')
   : STATESYN =
 struct
   structure IntSyn = IntSyn'
@@ -43,6 +47,20 @@ struct
       (* by invariant: no case for All and And *)
 
 
+    fun normalizeOrder (Arg (Us, Vs)) = Arg ((Whnf.normalize Us, I.id), 
+					     (Whnf.normalize Vs, I.id))
+      | normalizeOrder (Lex Os) = Lex (map normalizeOrder Os)
+      | normalizeOrder (Simul Os) = Simul (map normalizeOrder Os)
+      (* by invariant: no case for All and And *)
+
+    fun convOrder (Arg (Us1, _), Arg (Us2, _ )) = Conv.conv (Us1, Us2)
+      | convOrder (Lex Os1, Lex Os2) = convOrders (Os1, Os2)
+      | convOrder (Simul Os1, Simul Os2) = convOrders (Os1, Os2)
+    and convOrders (nil, nil) = true
+      | convOrders (O1 :: L1, O2 :: L2) = 
+          convOrder (O1, O2) andalso convOrders (L1, L2)
+      (* by invariant: no case for All and And *)
+      
     (* decrease T = T'
 
        Invariant:
@@ -55,5 +73,7 @@ struct
   in
     val orderSub = orderSub
     val decrease = decrease
+    val normalizeOrder = normalizeOrder
+    val convOrder = convOrder
   end (* local *)
 end; (* signature STATESYN *)

@@ -31,7 +31,7 @@ struct
       let 
 	val operator = MTPRecursion.expand S
       in
-	MTPRecursion.apply operator
+	(TextIO.print ("\n++++++\n" ^ MTPrint.stateToString (MTPRecursion.apply operator) ^ "\n++++++\n\n" ))
       end
 
 

@@ -33,5 +33,7 @@ sig
 
   val orderSub : Order * FunSyn.IntSyn.Sub -> Order  
   val decrease : SplitTag -> SplitTag
+  val normalizeOrder : Order -> Order
+  val convOrder : Order * Order -> bool
   
 end; (* signature STATESYN *)

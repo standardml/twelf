@@ -48,7 +48,9 @@ structure RelFun =
 (* Functor instantiation for the Prover *)
 structure StateSyn = 
   StateSyn (structure FunSyn' = FunSyn
-	    structure IntSyn' = IntSyn)
+	    structure IntSyn' = IntSyn
+	    structure Whnf = Whnf
+	    structure Conv = Conv)
 
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
