@@ -204,6 +204,34 @@ pres_lam :  preserv' (cp_lam C) (of_lam D) (cp_arrow CT1 CT2) (of'_lam D')
 % The following fails since "same" not seen to be total
 % %total (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
 
+% Input coverage "%covers preserv +C +D +CT *D'." fails
+% since, in pres_lam, T1' in the hypothesis is not known to be
+% uniquely determined by the input CT1:tcp T1 T1'.
+% Hopefully the uniqueness of the type copy derivation is itself not required.
+
+preserv : cp E E' -> of E T -> tcp T T' -> of' E' T' -> type.
+%mode preserv +C +D +CT -D'.
+
+pres_0 : preserv cp_0 of_0 cp_nat of'_0.
+pres_s : preserv (cp_s C) (of_s D) cp_nat (of'_s D') <- preserv C D cp_nat D'.
+pres_app : preserv (cp_app C1 C) (of_app D1 D) CT2 (of'_app D1' D')
+	    <- tcpt T1 T1' CT1
+	    <- preserv C1 D1 CT1 D1' <- preserv C D (cp_arrow CT1 CT2) D'.
+pres_lam : preserv (cp_lam C) (of_lam D) (cp_arrow CT1 CT2) (of'_lam D')
+	    <- ({x:exp} {x':exp'} {c: cp x x'} {d: of x T1} {d': of' x' T1'}
+		  ({ct: tcp T1 T1'} preserv c d ct d')
+		  -> preserv (C x x' c) (D x d) CT2  (D' x' d')).
+
+%block pres_hyp: some {T1:tp} {T1':tp'} 
+		  block {x:exp} {x':exp'} {c: cp x x'}
+		  {d: of x T1} {d': of' x' T1'}
+		  {p: {ct: tcp T1 T1'} preserv c d ct d'}.
+%worlds (pres_hyp) (preserv C D CT D').
+%covers preserv +C +D +CT *D'.
+% 
+%total C (preserv C D CT D').
+
+
 % An artificial example where coverage fails because of missing 
 % uniqueness information.  No context blocks are involved.
 % This example requires uniqueness of proof terms.
