@@ -9,3 +9,5 @@ Group is
   clause-print.sig
   clause-print.fun
   print.sml
+  traverse.sig
+  traverse.fun
