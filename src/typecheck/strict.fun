@@ -89,6 +89,7 @@ struct
 	          which starts with argument parameters
     *)
     fun strictArgParm (p, U as I.Root _) = strictExp (0, p, U)
+      | strictArgParm (p, U as I.Pi _) = strictExp (0, p, U)
       | strictArgParm (p, U as I.FgnExp _) = strictExp (0, p, U)
       | strictArgParm (p, I.Lam (D, U)) = strictArgParm (p+1, U)
 
