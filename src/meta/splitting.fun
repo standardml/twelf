@@ -650,10 +650,18 @@ struct
 
     fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
       (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
-      
 
-
-    fun lt (op1, op2) = index (op1) < index (op2)
+    fun indexLt (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) =
+      (k1 > k2) orelse
+      (case (iopt1, iopt2) 
+	 of (NONE, NONE) => (c1 < c2) orelse (p1 < p2)
+          | (SOME _, NONE) => true
+	  | (NONE, SOME _) => false
+          | (SOME k1, SOME k2) => (k1 < k2) orelse (p1 < p2) orelse (c1 < c2))
+	
+(*    fun lt (op1, op2) = index (op1) < index (op2) *)
+    fun lt (Operator (_, _, I1), Operator (_, _, I2)) = 
+          indexLt (I1, I2)
     fun eq (Operator (_, _, I1), Operator (_, _, I2)) = 
           indexEq (I1, I2) 
       
