@@ -9,6 +9,7 @@ Group is
   ../typecheck/sources.cm
   ../order/sources.cm
   ../opsem/sources.cm
+  ../heuristic/sources.cm
   ../timing/sources.cm
   ../m2/sources.cm    (* just for integetrating the new prover into
 			 Twelf *)
@@ -46,8 +47,6 @@ Group is
   recursion.fun
   search.sig
   search.fun 
-  heuristic.sig
-  heuristic.fun
   splitting.sig
   splitting.fun
   statesyn.sig

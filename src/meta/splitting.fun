@@ -59,7 +59,7 @@ struct
 
   datatype Operator = 
     Operator of (StateSyn.State * int) * StateSyn.State flag list
-		   * Heuristic.Index 
+		   * Heuristic.index 
 
   type operator = Operator
 
@@ -71,9 +71,9 @@ struct
 
 
     fun makeOperator ((S, k), L, S.Splits n, g, I, m, true) =    (* recursive case *)
-          Operator ((S, k), L, H.Index (n, I, List.length L, m, 1, g+1))
+          Operator ((S, k), L, {sd=n, ind=I, c=List.length L, m=m, r=1, p=g+1})
       | makeOperator ((S, k), L, S.Splits n, g, I, m, false) =   (* non-recursive case *)
-	  Operator ((S, k), L, H.Index (n, I, List.length L, m, 0, g+1))
+	  Operator ((S, k), L, {sd=n, ind=I, c=List.length L, m=m, r=0, p=g+1})
 
     (* aux (G, B) = L' 
        
@@ -766,7 +766,7 @@ struct
        If   Op = (_, Sl) 
        then k = |Sl| 
     *)
-    fun index (Operator ((S, index), Sl, H.Index (_, _, k, _, _, _))) = k
+    fun index (Operator ((S, index), Sl, {c=k, ...})) = k
 
 
     fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
