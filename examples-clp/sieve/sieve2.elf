@@ -3,6 +3,17 @@
 
 %use inequality/rationals.
 
+%% equality
+== : rational -> rational -> type.  %infix none 1000 ==.
+
+id : X == X.
+
+%% lists of numbers
+list : type.
+
+nil : list.
+, : rational -> list -> list. %infix right 100 ,.
+
 %% generate candidates
 generate : rational -> rational -> list -> type.
 
