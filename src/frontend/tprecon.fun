@@ -427,7 +427,7 @@ struct
   (* Constant declarations *)
   datatype condec =
       condec of name * term
-    | condef of name option * term * term
+    | condef of name option * term * term option
 
   (* Queries, with optional proof term variable *)
   datatype query =
@@ -464,6 +464,15 @@ struct
   fun freeVar (SOME(name), Xs) =
         List.exists (fn (_, name') => name = name') Xs
     | freeVar _ = false
+
+  (* inferLevel (V) = L
+     Invariant: . |- V : L, V nf
+     (V must be a valid classifier, that is, a type or kind)
+  *)
+  fun inferLevel (IntSyn.Pi (_, V')) = inferLevel V'
+    | inferLevel (IntSyn.Root _) = IntSyn.Type
+    | inferLevel (IntSyn.Uni _) = (* V = type *) IntSyn.Kind
+    (* no other cases by invariant *)
 
   (* queryToQuery (q) = (V, XOpt, [(X1,"X1"),...,(Xn,"Xn")])
      where XOpt is the optional proof term variable
@@ -522,15 +531,11 @@ struct
       in
 	(SOME(cd), SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, tm2), r) =
+    | condecToConDec (condef(optName, tm1, SOME(tm2)), r) =
       let
 	val _ = Names.varReset ()
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
 	val level = getUni (L, Paths.toRegion oc2)
-	val _ = case level
-	          of IntSyn.Kind => error (Paths.toRegion oc2,
-					   "Type families cannot be defined, only objects")
-		   | _ => ()
 	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) tm1
 	val _ = (Timers.time Timers.recon Unify.unify) ((V', IntSyn.id), (V, IntSyn.id))
 	        handle Unify.Unify (msg) => hasTypeError (IntSyn.Null, (V', oc1), (V, oc2), msg)
@@ -538,9 +543,39 @@ struct
 	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)
 		handle Abstract.Error (msg)
 		          => raise Abstract.Error (Paths.wrap (r, msg))
+	val _ = case level
+	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val cd = IntSyn.ConDef (name, i, U'', V'', level)
 	val ocd = Paths.def (r, i, oc1, SOME(oc2))
+        val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
+        val _ = if !Global.chatter >= 3
+		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
+		else ()
+	val _ = if !Global.doubleCheck
+		  then ((Timers.time Timers.checking TypeCheck.check) (V'', IntSyn.Uni (level));
+			(Timers.time Timers.checking TypeCheck.check) (U'', V''))
+		else ()
+	val optConDec = case optName of NONE => NONE | SOME _ => SOME (cd)
+      in
+	(optConDec, SOME(ocd))
+      end
+    | condecToConDec (condef(optName, tm1, NONE), r) =
+      let
+	val _ = Names.varReset ()
+	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) tm1
+	val (i, (U'', V'')) =
+	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)
+		handle Abstract.Error (msg)
+		          => raise Abstract.Error (Paths.wrap (r, msg))
+	val level = inferLevel V''
+	val _ = case level
+	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+		   | _ => ()
+	val name = case optName of NONE => "_" | SOME(name) => name
+	val cd = IntSyn.ConDef (name, i, U'', V'', level)
+	val ocd = Paths.def (r, i, oc1, NONE)
         val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
         val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")

@@ -34,7 +34,8 @@ sig
 
   type condec				(* constant declaration *)
   val condec : name * term -> condec	(* id : tm *)
-  val condef : name option * term * term -> condec (* id : tm = tm | _ : tm = tm *)
+  val condef : name option * term * term option -> condec
+					(* id : tm = tm | _ : tm = tm *)
 
   type query				(* query *)
   val query : name option * term -> query (* ucid : tm | tm *)

@@ -29,3 +29,9 @@ eval : exp -> exp -> type.
 
 % unresolved constraints
 % ev_s : eval (s (F X)) z.
+
+% no definitions for types
+% exp' = exp.
+
+% ascription error in definition
+% zero : type = z.
