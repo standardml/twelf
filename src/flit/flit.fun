@@ -294,8 +294,8 @@ struct
           in
             compileSpine generate (G, idx, S, flags)
           end
-      | compileExpN generate (G, I.FgnExp (cs, ops), flags) =
-          compileExp generate (G, #toInternal(ops) (), flags)
+      | compileExpN generate (G, I.FgnExp csfe, flags) =
+          compileExp generate (G, I.FgnExpStd.ToInternal.apply csfe (), flags)
 
     and compileSpine generate (G, idx, I.Nil, flags) = idx
       | compileSpine generate (G, idx, I.App (U1, I.Nil), flags as (cld, _, _)) =
@@ -344,7 +344,7 @@ struct
           const true (compileExpN true (I.Null, V, (true, true, cls)))
       | compileConDec (condec as I.ConDec (_, _, _, _, _, _), (pred, cls)) =
           raise Error ("attempt to shadow constant " ^ (I.conDecName condec))
-      | compileConDec (condec as I.ConDef (_, _, _, U, V, _), (pred, cls)) =
+      | compileConDec (condec as I.ConDef (_, _, _, U, V, _, _), (pred, cls)) =
           let
             val exp = compileExpN true (I.Null, V, (true, false, false))
             val arg = compileExpN true (I.Null, U, (true, pred, cls))
