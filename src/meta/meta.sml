@@ -56,8 +56,8 @@ structure MTPAbstract =
 	       structure StateSyn' = StateSyn
 	       structure Whnf = Whnf
 	       structure Constraints = Constraints
-	       structure Unify = Unify
-	       structure Subordinate = Subordinate);
+	       structure Subordinate = Subordinate
+	       structure Trail = Trail);
 
 
 structure MTPInit = 

@@ -5,12 +5,12 @@ functor MTPAbstract (structure IntSyn' : INTSYN
 		     structure StateSyn' : STATESYN
 		     structure Whnf    : WHNF
 		       sharing Whnf.IntSyn = IntSyn'
-		     structure Unify   : UNIFY
-		       sharing Unify.IntSyn = IntSyn'
 		     structure Constraints : CONSTRAINTS
 		       sharing Constraints.IntSyn = IntSyn'
 		     structure Subordinate : SUBORDINATE
-		       sharing Subordinate.IntSyn = IntSyn')
+		       sharing Subordinate.IntSyn = IntSyn'
+		     structure Trail : TRAIL
+		       sharing Trail.IntSyn = IntSyn')
   : MTPABSTRACT =
 struct
 
@@ -183,8 +183,10 @@ struct
 		 val iw = Whnf.invert w
 		 val GX' = Whnf.strengthen (iw, GX)
 		 val V' = raiseType (GX', I.EClo (V, iw))
+		 val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw))
+		 val _ = Trail.instantiateEVar (r, I.EClo (X', w))
 	       in
-		 collectSub (T, G, s, I.Decl (collectExp (T, I.Null, (V', I.id), K), EV(r, V', T)))
+		 collectSub (T, G, s, I.Decl (collectExp (T, I.Null, (V', I.id), K), EV(r', V', T)))
 	       end
       (* No other cases can occur due to whnf invariant *)
 
