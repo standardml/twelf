@@ -106,6 +106,8 @@ struct
 "<newline> - continue --- execute with current settings\n\
 \n - next --- take a single step\n\
 \r - run --- remove all breakpoints and continue\n\
+\s - skip --- skip until current subgoals succeeds, is retried, or fails\n\
+\s n - skip to n --- skip until goal (n) is considered\n\
 \t - trace --- trace all events\n\
 \u - untrace --- trace no events\n\
 \d n - detail --- set trace detail to n (0, 1, or 2)\n\
@@ -117,11 +119,35 @@ struct
 
     val currentGoal : (I.dctx * I.Exp) ref =
           ref (I.Null, I.Uni (I.Type)) (* dummy initialization *)
+
     val currentEVarInst : (I.Exp * I.name) list ref =
           ref nil
 
     fun setEVarInst (Xs) =
         currentEVarInst := List.map (fn X => (X, N.evarName (I.Null, X))) Xs
+
+    fun setGoal (G, V) = 
+        (currentGoal := (G, V);
+	 setEVarInst (Abstract.collectEVars (G, (V, I.id), nil)))
+
+    type goalTag = int option
+
+    val tag : goalTag ref = ref NONE
+    fun tagGoal () =
+        case !tag
+	  of NONE => NONE
+	   | SOME(n) => (tag := SOME(n+1); !tag)
+
+    val watchForTag : goalTag ref = ref NONE
+
+    fun initTag () =
+        (watchForTag := NONE;
+	 case (!traceTSpec,!breakTSpec)
+	   of (None, None) => tag := NONE
+            | _ => tag := SOME(0))
+
+    fun setWatchForTag (NONE) = (watchForTag := !tag)
+      | setWatchForTag (SOME(n)) = (watchForTag := SOME(n))
 
     fun breakAction (G) =
         let
@@ -132,6 +158,7 @@ struct
 	    of #"\n" => ()
 	     | #"n" => (breakTSpec := All)
 	     | #"r" => (breakTSpec := None)
+	     | #"s" => (setWatchForTag (Int.fromString (String.extract (line, 1, NONE))))
 	     | #"t" => (traceTSpec := All;
 			print "% Now tracing all";
 			breakAction (G))
@@ -152,19 +179,6 @@ struct
 		     breakAction (G))
 	end
 
-    type goalTag = int option
-
-    val tag : goalTag ref = ref NONE
-    fun tagGoal () =
-        case !tag
-	  of NONE => NONE
-	   | SOME(n) => (tag := SOME(n+1); !tag)
-
-    fun initTag () =
-        case (!traceTSpec,!breakTSpec)
-	  of (None, None) => tag := NONE
-           | _ => tag := SOME(0)
-
     fun init () =
         (initTrace (!traceSpec);
 	 initBreak (!breakSpec);
@@ -181,6 +195,7 @@ struct
     | Subgoal of (IntSyn.Head * IntSyn.Head) * (unit -> int) (* clause c, fam a, nth subgoal *)
 
     | SolveGoal of goalTag * IntSyn.Head * IntSyn.Exp
+    | SucceedGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
     | RetryGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp (* clause c failed, fam a *)
     | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 
@@ -205,6 +220,8 @@ struct
 
       | eventToString (G, SolveGoal (SOME(tag), _, V)) =
 	"% Goal " ^ Int.toString tag ^ ":\n" ^ expToString (G, V)
+      | eventToString (G, SucceedGoal (SOME(tag), _, V)) =
+	"% Goal " ^ Int.toString tag ^ " succeeded"
       | eventToString (G, RetryGoal (SOME(tag), (Hc, Ha), V)) =
 	"% Backtracking from clause " ^ headToString (G, Hc) ^ "\n"
 	^ "% Retrying goal " ^ Int.toString tag ^ ":\n" ^ expToString (G, V)
@@ -219,10 +236,6 @@ struct
 	^ msg
 
     fun traceEvent (G, e) = print (eventToString (G, e))
-
-    fun setGoal (G, V) = 
-        (currentGoal := (G, V);
-	 setEVarInst (Abstract.collectEVars (G, (V, I.id), nil)))
 
     fun monitorHead (cids, I.Const(c)) = List.exists (fn c' => c = c') cids
       | monitorHead (cids, I.BVar(k)) = false
@@ -241,6 +254,8 @@ struct
 
       | monitorEvent (cids, SolveGoal (_, H, V)) =
           monitorHead (cids, H)
+      | monitorEvent (cids, SucceedGoal (_, (Hc, Ha), _)) =
+	  monitorHeads (cids, (Hc, Ha))
       | monitorEvent (cids, RetryGoal (_, (Hc, Ha), _)) =
 	  monitorHeads (cids, (Hc, Ha))
       | monitorEvent (cids, FailGoal (_, H, _)) =
@@ -288,11 +303,30 @@ struct
       | monitorTrace (All, G, e) =
 	  (maintain (G, e); traceEvent (G, e); newline (); true)
 
+    fun watchFor (e) =
+        case !watchForTag
+	  of NONE => false
+           | SOME(t) => (case e
+	                   of SolveGoal (SOME(t'), _, _) => (t' = t)
+			    | SucceedGoal (SOME(t'), _, _) => (t' = t)
+			    | RetryGoal (SOME(t'), _, _) => (t' = t)
+			    | FailGoal (SOME(t'), _, _) => (t' = t)
+			    | _ => false)
+
+    fun skipping () =
+        case !watchForTag
+          of NONE => false
+           | SOME _ => true
+
     fun signal (G, e) =
         if monitorDetail (e)
-	  then if monitorBreak (!breakTSpec, G, e) (* stops, continues after input *)
-		 then ()
-	       else (monitorTrace (!traceTSpec, G, e); ()) (* prints trace, continues *)
+	  then if skipping ()
+		 then if watchFor (e)
+			then (watchForTag := NONE; signal (G, e))
+		      else (monitorTrace (!traceTSpec, G, e); ())
+	       else if monitorBreak (!breakTSpec, G, e) (* stops, continues after input *)
+		      then ()
+		    else (monitorTrace (!traceTSpec, G, e); ()) (* prints trace, continues *)
 	else ()
 
     fun showSpec (msg, None) = print (msg ^ " = None\n")

@@ -18,6 +18,7 @@ sig
   | Subgoal of (IntSyn.Head * IntSyn.Head) * (unit -> int) (* clause c, fam a, nth subgoal *)
 
   | SolveGoal of goalTag * IntSyn.Head * IntSyn.Exp
+  | SucceedGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
   | RetryGoal of goalTag * (IntSyn.Head * IntSyn.Head) * IntSyn.Exp
   | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 

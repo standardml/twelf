@@ -164,7 +164,8 @@ struct
 	      if
 		Trail.trail (fn () =>
 			     rSolve (ps', (r, I.id), dProg, (Hc, Ha),
-				     (fn S => sc (I.Root(Hc, S)))))
+				     (fn S => (T.signal (G, T.SucceedGoal (tag, (Hc, Ha), I.EClo ps'));
+					       sc (I.Root(Hc, S))))))
 		then (* deep backtracking *)
 		  (T.signal (G, T.RetryGoal (tag, (Hc, Ha), I.EClo ps'));
 		   ())
