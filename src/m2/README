@@ -1,0 +1,162 @@
+Twelf --- Meta theorem prover
+Author: Carsten Schuermann
+
+
+DISCLAIMER: The interactive prover is only an alpha release. It has
+not been propertly embedded into the Twelf Server mode, because in
+near future the automatic part of the prover will be extended by
+additional functionality such as lemma application...  Another
+limitation of the interactive prover is that it does not offer any
+means to save successfully completed interactive proofs. It should
+hence be merely understood as a debugger of specifications.
+
+
+How to run proofs interactively:
+
+Interactive proofs are organized in two phases.
+
+1) Declare theorem and termination order
+
+ The first phase requires the specification of the theorem and a
+termination order.  This is done in the usual way: Use the
+	
+	%theorem <thm> : <formula>.
+
+for the theorem specification, and the 
+
+	%terminates <order> <callpattern>.
+
+for the termination order. (Note, you cannot use %prove because this
+triggers the automatic prover, so %terminates attaches a termination
+declaration to the type family representing the proof of the theorem,
+without executing the prover.)
+
+After both declaration are stored in a file <theorem.thm>, proceed
+with the second step.
+
+Example: [Type preservation for Mini ML] Create a file  tp_preserve.thm
+with the theorem and the termination order specification.
+
+%theorem 
+tpp : forall* {E: exp} {V: exp} {T: tp}
+       forall {D: eval E V} {P: of E T} 
+       exists {Q: of V T} true.
+
+%terminates D (tpp D _ _).
+
+
+2) Start Twelf interactive prover from ML toplevel.
+
+To prove a theorem interactively, the user MUST use the Twelf-SML
+version, and *NOT* the Twelf-server. After starting twelfsml, 
+load the configuration file with
+
+	val config = Twelf.Config.read <config.cfg>;
+	Twelf.Config.load config;
+	Twelf.loadFile <theorem.thm>;
+
+
+
+Example: [Type preservation for Mini ML]  
+
+	val config = Twelf.Config.read "sources.cfg";
+	Twelf.Config.load config;
+	Twelf.loadFile "tp_preserve.thm";
+
+
+Start the interactive prover with
+
+	Mpi.init (<depth>, [<thm_1> ... <thm_n>]);
+
+to simultaneously prove the n theorems, with a maxFill level of up to
+<depth>. See the Twelf manual (http://www.cs.cmu.edu/~twelf) for
+further explanation of the maxFill parameter.
+
+The interactive prover shows the user the current prove state (or
+subgoal).  First it prints the name of the current subgoal, then a
+list of assumptions, where the maximal splitting depth of each
+assumption is indicated by a number, and the mode by a + or a - (+
+means universal, - menas existential), and finally -- below a line --,
+a relational representation of the current case of the primitive
+recursive proof function which is being constructed.  In our example,
+the proof state has the form:
+
+/tps/:
+2+E1:exp,  2+E2:exp,  2+T1:tp,  2+D1:eval E1 E2,  2+P1:of E1 T1,  -P2:of E2 T1
+--------------
+tps D1 P1 P2
+
+The interactive prover also provides the user with a menu of choices,
+prompting for some input. In our example this menu has the form
+
+Select from the following menu:
+
+3.  Splitting : P1:of E1 T1 (11 cases)
+2.  Splitting : D1:eval E1 E2 (12 cases)
+1.  Filling   : tps D1 P1 P2
+val it = () : unit
+
+Because of the very primitive user interface, the user must issue the
+command
+
+	Mpi.select <number>;
+
+to select one of the choices.  There are only three possibile
+categories of operations which are offerd to the user in this
+way. They include splitting, filling and recursion operations.
+But there are also different operations, which let the user
+navigate through the open subgoal space: 
+
+	Mpi.next ();
+
+makes another subgoal the current goal. (Due to the preliminary
+character of the interactive prover, we have not implemented
+a previous function). To undo the previous step type
+
+	Mpi.undo ();
+
+The current subgoal can also be explicitly printed using the command
+
+	Mpi.print ();
+
+The interactive theorem prover offers two commands to automate
+parts of the proof search. It calls the automated prover.
+	
+	Mpi.auto ();
+
+for example tries to prove all remaining open subgoals. But in many
+situation, especially when debugging signatures, the automated prover
+does not expose problems in a signature directly, but makes a more a
+sophistcated analysis of the signature necessary.  In these
+cases trivial subgoals should be automatically solved, something which
+can be done by issuing the command 
+
+	Mpi.solve (); 
+
+which tries to prove the current subgoal and all its potential
+children subgoals. Lemmas can be applied by
+
+	Mpi.lemma <thm>;
+
+
+The interactive prover can be reset to its initial state
+using the command
+	
+	Mpi.reset ();
+	
+After a theorem has been succesfully proven, the relational form of
+the prove can either be exported as a signature in internal format
+using
+
+	Mpi.extract ();
+
+or it can be printed on the screen, using
+
+	Mpi.show ();
+
+
+
+
+
+
+

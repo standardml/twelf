@@ -1,0 +1,8 @@
+%%% Testing the lexer error messages.
+
+exp : type.
+z : exp.
+s : exp -> exp.
+
+value : exp -> type.
+val_z : value s.

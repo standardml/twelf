@@ -1,0 +1,106 @@
+%%% Proof of type preservation for language with units of measure.
+
+tps: eval E V -> of! E T1 -> of! V T2 -> eqtypes T1 T2 -> type.
+
+
+
+% Numbers
+
+tps_num    : tps (ev_num N) (of!_num N)
+	      (of!_* (of!_un) (of!_num N))
+	      (eqt_num (equ_sym equ_ident)).
+
+tps_+      : tps (ev_+ D2 D1) (of!_+ Q P2 P1)
+	      (of!_* (of!_un) (of!_num (number_+ N1 N2)))
+	      (eqt_num Q1')
+	      <- tps D1 P1 (of!_* of!_un (of!_num N1)) (eqt_num Q1')
+	      <- tps D2 P2 (of!_* of!_un (of!_num N2)) (eqt_num Q2').
+
+tps_-      : tps (ev_- D2 D1) (of!_- Q P2 P1)
+	      (of!_* (of!_un) (of!_num (number_- N1 N2)))
+	      (eqt_num Q1')
+	      <- tps D1 P1 (of!_* of!_un (of!_num N1)) (eqt_num Q1')
+	      <- tps D2 P2 (of!_* of!_un (of!_num N2)) (eqt_num Q2').
+
+tps_*      : tps (ev_* D2 D1) (of!_* P2 P1)
+	      (of!_* (of!_un) (of!_num (number_* N1 N2)))
+	      (eqt_num
+		 (equ_trans
+		    equ_assoc
+		    (equ_cong_*
+		       (equ_trans 
+			  (equ_trans
+			     equ_ident
+			     equ_commute)
+			  Q2)
+		       Q1)))
+	      <- tps D1 P1 (of!_* of!_un (of!_num N1)) (eqt_num Q1)
+	      <- tps D2 P2 (of!_* of!_un (of!_num N2)) (eqt_num Q2).
+tps_/      : tps (ev_/ D2 D1) (of!_/ P2 P1)
+	      (of!_* (of!_un) (of!_num (number_/ N1 N2)))
+	      (eqt_num
+		 (equ_trans
+		    equ_assoc
+		    (equ_cong_*
+		       (equ_cong_-1
+			  (equ_trans 
+			     (equ_trans
+				equ_ident
+				equ_commute)
+			     Q2))
+		       Q1)))
+	      <- tps D1 P1 (of!_* of!_un (of!_num N1)) (eqt_num Q1)
+	      <- tps D2 P2 (of!_* of!_un (of!_num N2)) (eqt_num Q2).
+
+tps_<_f    : tps (ev_<_f D2 D1) (of!_< Q P2 P1)
+	      (of!_false)
+	      (eqt_bool).
+tps_<_t    : tps (ev_<_t D2 D1) (of!_< Q P2 P1)
+	      (of!_true)
+	      (eqt_bool).
+
+
+%% Casts.
+
+tps_un     : tps (ev_un) (of!_un)
+	      (of!_* of!_un (of!_num number_1))
+	      (eqt_num (equ_sym equ_ident)).
+
+
+%% Functions.
+
+tps_lam    : tps (ev_lam) (of!_lam P)
+	      (of!_lam P)
+	      Q
+	      <- eqt_ref Q.
+
+%{
+tps_app    : tps ((ev_app D3 D2 D1):(eval (app E1 E2) V))
+	      ((of!_app Q P2 P1):(of! (app E1 E2) T1))
+	      P3
+	      Q'
+	      <- tps 
+		 (D1 : eval E1 (lam T2 E))
+		 P1 
+		 (of!_lam P1')
+		 (eqt_=> Q1b Q1a)
+	      <- tps 
+		 (D2 : eval E2 V2) 
+		 (P2 : of! E2 T2)
+		 (P2' : of! V2 T2')
+		 (Q2 : eqtypes T2 T2')
+	      <- tp_sound P2' P2''
+	      <- tp_sound (of!_lam P1') (of_lam P1'')
+	      <- tp_complete ((P1'' V2) (of_eq Q P2'')) P Q''
+	      <- tps D3 P P3 Q3.
+}%
+
+tps_app    : tps (ev_app D3 D2 D1) (of!_app Q P2 P1)
+	      P3
+	      Q'
+	      <- tps D1 P1 (of!_lam P1') (eqt_=> Q1b Q1a)
+	      <- tps D2 P2 P2' Q2
+	      <- tp_sound P2' P2''
+	      <- tp_sound (of!_lam P1') (of_lam P1'')
+	      <- tp_complete (P1'' _ (of_eq Q P2'')) P Q''
+	      <- tps D3 P P3 Q3.

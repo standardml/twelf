@@ -1,0 +1,248 @@
+This directory contains an Emacs Lisp package to support
+
+ - editing Twelf source files with reasonable indentation
+ - highlighting and fonts appropriate for Twelf source
+ - managing configurations of Twelf source files, including TAGS tables
+ - communication with an inferior Twelf server
+ - interaction with an inferior Twelf-SML process
+ - pop-up and pull-down menus for common operations
+
+This is Twelf mode version 3.0, updated from earlier Elf modes.  It has
+been tested in XEmacs 19.16 and FSF Emacs 19.34.
+
+For documentation, the the Twelf User's Guide.
+
+WARNING: if the file twelf-font.el is compiled in either XEmacs or FSF
+Emacs, the resulting twelf-font.elc file will only work for that
+version.  This is because certain non-portable functions in font-lock.el
+will be inlined during compilation.
+
+Table of Contents
+
+README         - this file
+auc-menu.el    - support package to define menus
+init.el        - sample code for your .emacs file
+twelf-font.el  - font-lock mode for Twelf
+twelf-hilit.el - FSF Emacs alternative to twelf-font
+twelf.el       - Twelf and related modes
+
+======================================================================
+The documentation below was generated with C-h m while in Twelf mode
+======================================================================
+Twelf mode:
+Major mode for editing Twelf code.
+Tab indents for Twelf code.
+Delete converts tabs to spaces as it moves back.
+M-C-q indents all lines in current Twelf declaration.
+
+Twelf mode also provides commands to maintain groups of Twelf source
+files (configurations) and communicate with an Twelf server which
+processes declarations.  It also supports quick jumps to the (presumed)
+source of error message that may arise during parsing or type-checking.
+
+Customisation: Entry to this mode runs the hooks on twelf-mode-hook.
+See also the hints for the .emacs file given below.
+
+Mode map
+========
+
+button3		twelf-menu
+delete		backward-delete-char-untabify
+tab		twelf-indent-line
+C-c		<< Prefix Command >>
+C-i		twelf-indent-line
+M-C-q		twelf-indent-decl
+
+C-c <		twelf-set
+C-c =		twelf-goto-error
+C-c >		twelf-get
+C-c `		twelf-next-error
+C-c c		twelf-type-const
+C-c l		twelf-font-fontify-buffer
+C-c q		tags-query-replace
+C-c s		tags-search
+C-c tab		twelf-server-interrupt
+C-c C-c		twelf-save-check-config
+C-c C-d		twelf-check-declaration
+C-c C-i		twelf-server-interrupt
+C-c C-l		twelf-font-fontify-decl
+C-c C-s		twelf-save-check-file
+C-c C-u		twelf-server-display
+
+
+Overview
+========
+
+The basic architecture is that Emacs sends commands to an Twelf server
+which runs as an inferior process, usually in the buffer *twelf-server*.
+Emacs in turn interprets or displays the replies from the Twelf server.
+Since a typical Twelf application comprises several files, Emacs
+maintains a configuration in a file, usally called sources.cfg.  This
+file contains a list of files, each on a separate line, in dependency
+order.  The `%' character starts a comment line.  A configuration is
+established with the command M-x twelf-server-configure.
+
+A new file is switched to Twelf mode if a file has extension `.elf',
+`.quy', `.thm' or `.cfg' and the `auto-mode-alist' is set correctly (see
+init.el).
+
+The files in the current configuration can be checked in sequence with
+C-c C-c, the current file with
+C-c C-s, individual declarations with
+C-c C-d.  These, like many other commands, take an
+optional prefix arguments which means to display the Twelf server buffer
+after the processing of the configuration, file, or declaration.  If an
+error should arise during these or related operations a message is
+issued both in the server buffer and Emacs, and the command
+C-c ` visits the presumed source of the type error in a
+separate buffer.
+
+Summary of most common commands:
+ M-x twelf-save-check-config C-c C-c  save, check & load configuration
+ M-x twelf-save-check-file   C-c C-s  save, check & load current file
+ M-x twelf-check-declaration C-c C-d  type-check declaration at point
+ M-x twelf-server-display    C-c C-u  display Twelf server buffer
+
+It is important to remember that the commands to save and check
+a file or check a declaration may change the state of the global
+signature maintained in Twelf.  After a number of changes it is usually
+a good idea to return to a clean slate with C-c C-c.
+
+Individual Commands
+===================
+
+Configurations, Files and Declarations
+
+  twelf-save-check-config                   C-c C-c
+   Save its modified buffers and then check the current Twelf configuration.
+   With prefix argument also displays Twelf server buffer.
+   If necessary, this will start up an Twelf server process.
+
+  twelf-save-check-file                     C-c C-s
+   Save buffer and then check it by giving a command to the Twelf server.
+   With prefix argument also displays Twelf server buffer.
+
+  twelf-check-declaration                   C-c C-d
+   Send the current declaration to the Twelf server process for checking.
+   With prefix argument, subsequently display Twelf server buffer.
+
+Subterm at Point
+
+  twelf-type-const                          C-c c
+   Display the type of the constant before point.
+   Note that the type of the constant will be `absolute' rather than the
+   type of the particular instance of the constant.
+
+Error Tracking
+
+  twelf-next-error                          C-c `
+   Find the next error by parsing the Twelf server or Twelf-SML buffer.
+
+  twelf-goto-error                          C-c =
+   Go to the error reported on the current line or below.
+
+Server State
+
+  twelf-set PARM VALUE                      C-c <
+   Sets the Twelf server parameter PARM to VALUE.
+   Prompts for PARM when called interactively, using completion for legal
+   parameters.
+
+  twelf-get PARM                            C-c >
+   Print the current value the Twelf server parameter PARM.
+
+  twelf-server-interrupt                    C-c tab
+   Interrupt the Twelf server-process.
+
+  twelf-server                              M-x twelf-server
+   Start a Twelf server process in a buffer named *twelf-server*.
+
+  twelf-server-configure                    M-x twelf-server-configure
+   Set the current configuration of the Twelf server.
+
+  twelf-reset                               M-x twelf-reset
+   Reset the global signature in the Twelf server process.
+
+  twelf-server-quit                         M-x twelf-server-quit
+   Kill the Twelf server process.
+
+  twelf-server-restart                      M-x twelf-server-restart
+   Restarts server and re-initializes configuration.
+   This is primarily useful during debugging of the Twelf server code or
+   if the Twelf server is hopelessly wedged.
+
+  twelf-server-send-command                 M-x twelf-server-send-command
+   Send arbitrary string to Twelf server.
+
+Tags (for other, M-x apropos tags or see `etags' documentation)
+
+  twelf-tag                                 M-x twelf-tag
+   Create tags file TAGS for current configuration.
+   If current configuration is names CONFIGx, tags file will be named TAGx.
+   Errors are displayed in the Twelf server buffer.
+
+Timers
+
+  twelf-timers-reset			    M-x twelf-timers-reset
+   Reset Twelf timers.
+
+  twelf-timers-show                         M-x twelf-timers-show
+   Show and reset Twelf timers.
+
+  twelf-timers-check                        M-x twelf-timers-check
+   Show, but do not reset Twelf timers.
+
+Editing
+
+  twelf-indent-decl                         M-C-q
+   Indent each line in current declaration as Twelf code.
+
+  twelf-indent-region                       M-x twelf-indent-region
+   Indent each line of the region as Twelf code.
+
+Minor Modes
+===========
+
+An associated minor modes is 2Twelf-SML (toggled with
+twelf-to-twelf-sml-mode).  This means that we assume communication
+is an inferior Twelf-SML process and not a Twelf server.
+
+Related Major Modes
+===================
+
+Related major modes are Twelf Server (for the Twelf server buffer) and
+Twelf-SML (for an inferior Twelf-SML process).  Both modes are based on
+the standard Emacs comint package and inherit keybindings for retrieving
+preceding input.
+
+Customization
+=============
+
+The following variables may be of general utility.
+
+ twelf-indent          amount of indentation for nested Twelf expressions
+ twelf-mode-hook       hook to run when entering Twelf mode
+ twelf-server-program  full pathname of Twelf server program
+ twelf-server-mode-hook  hook to run when entering Twelf server mode
+
+The following is a typical section of a .emacs initialization file
+which can be found in the file init.el.
+
+(setq load-path (cons "/afs/cs/project/twelf/research/twelf/emacs" load-path))
+
+(autoload 'twelf-mode "twelf" "Major mode for editing Twelf source." t)
+(autoload 'twelf-server "twelf" "Run an inferior Twelf server." t)
+(autoload 'twelf-sml "twelf" "Run an inferior Twelf-SML process." t)
+
+(setq auto-mode-alist
+      (cons '("\.elf$" . twelf-mode)
+	    (cons '("\.quy$" . twelf-mode)
+		  (cons '("\.thm$" . twelf-mode)
+			(cons '("\.cfg$" . twelf-mode)
+			      auto-mode-alist)))))
+
+(setq twelf-server-program
+      "/afs/cs/project/twelf/research/twelf/bin/twelf-server")
+
+(setq twelf-sml-program
+      "/afs/cs/project/twelf/misc/smlnj/bin/sml-cm")

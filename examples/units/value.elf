@@ -1,0 +1,20 @@
+%%% Judgment of whether an expression in the units language constituutes
+%%% a value.
+
+% I don't intend to provide a proof of value soundness, though I don't
+% think that it would be at all hard to do so. I'm writing down this
+% judgment in the hope that writing down the judgment I intend will
+% make it easier for me to write an evaluation judgment that upholds
+% and exploits value soundness.
+
+value : exp -> type.
+
+val_num : value (N * un U)
+	     <- number N.
+
+val_false : value false.
+val_true : value true.
+
+val_lam : value (lam T E).
+
+val_LAM : value (LAM E).

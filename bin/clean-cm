@@ -1,0 +1,3 @@
+#! /bin/csh -f
+#
+find . -name CM -exec rm -rf '{}' \;

@@ -1,0 +1,6 @@
+Group is
+  ../table/sources.cm
+  ../lambda/sources.cm
+  order.sig
+  order.fun
+  order.sml

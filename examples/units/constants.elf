@@ -1,0 +1,13 @@
+%%% constants--mostly numbers and units.
+%%% by Ralph Melton
+
+0 : exp.
+number_0 : number 0.
+
+1 : exp.
+number_1 : number 1.
+
+%
+m : unit.
+kg : unit.
+s : unit.

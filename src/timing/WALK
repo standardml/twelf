@@ -1,0 +1,25 @@
+Main current issue:
+  Tied timing-count in to provide Counter in addition to Timer
+  structure, satisfying the same signature. -fp
+  Deleted unused file timing-count.sml -fp
+
+Main future issues:
+  Double-counting for overlapping counters? -fp
+
+CM/
+README  OK -fp
+	OK -cs
+WALK
+sources.cm OK -fp
+	   OK -cs
+timers.fun OK -fp
+	   Q: overlapping timers
+	   OK -cs 
+timers.sig OK -fp
+	   OK -cs
+timers.sml OK -fp
+	   OK -cs
+timing.sml OK -fp
+	   OK -cs
+	   Q: Where is counting used?
+

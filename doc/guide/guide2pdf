@@ -1,0 +1,4 @@
+#!/bin/csh -f
+# Warning: only on Sun, and only if embedded Type 1 fonts are defined
+# Check with fp
+dvips -P embed -f twelf.dvi | distill > twelf.pdf

@@ -1,0 +1,22 @@
+%%% Whether an expression in the units language constitutes a unit-less
+%%% number.
+
+%%% Note: because we don't actually do any arithmetic, expressions like
+%%% (1 +(4*3)) will be considered numbers.
+
+%%% Base cases like 'number 1' will be provided in constants.elf.
+
+number: exp -> type.
+
+number_+ : number (X + Y)
+	    <- number X
+	    <- number Y.
+number_- : number (X - Y)
+	    <- number X
+	    <- number Y.
+number_* : number (X * Y)
+	    <- number X
+	    <- number Y.
+number_/ : number (X / Y)
+	    <- number X
+	    <- number Y.

@@ -1,0 +1,14 @@
+Main current issues
+
+Main future issues
+
+CM/
+README OK -fp
+WALK
+global.sig OK -fp
+           Q: add SEPARATE flag for external vs internal printing?   A: DONE (see Print.implicit)
+	   OK -cs
+global.sml OK -fp
+	   OK -cs
+sources.cm OK -fp
+	   OK -cs

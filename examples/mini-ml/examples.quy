@@ -1,0 +1,129 @@
+%%% Evaluation
+%query 1 *
+eval (case z (s z) ([x:exp] z)) V.
+
+%query 1 *
+eval (app (lam [x:exp] x) z) V.
+
+% Next fails
+
+%query 0 *
+eval (fst z) V.
+
+% Next does not terminate.
+% eval (fix [x:exp] x) V.
+
+% Next doubles 1 to yield 2.
+%query 1 *
+eval (app
+	(fix [f:exp] lam [x:exp]
+	   (case x z ([x':exp] s (s (app f x')))))
+	(s z))
+V.
+
+%%% Values
+%query 1 *
+value (pair z (s z)).
+
+%query 0 *
+value (fst (pair z (s z))).
+
+%query 1 *
+value (lam [x] (fst x)).
+
+%%% Value Soundness
+%query 1 *
+vs (ev_case_z (ev_s ev_z) ev_z) P.
+
+% the following leads to type constraints in the
+% implicit arguments
+%query 1 *
+vs (ev_app
+      (ev_case_s
+          (ev_s (ev_s (ev_app (ev_case_z ev_z ev_z) ev_z (ev_fix ev_lam))))
+          (ev_s ev_z))
+      (ev_s ev_z) (ev_fix ev_lam)) P.
+
+%{
+sigma [D: eval (app (fix [f] lam [x]
+          (case x z ([x':exp] s (s (app f x'))))) (s z)) V]
+ vs D P.
+}%
+
+%{
+%%% Closed Expressions
+
+{f:exp} closed f -> closed (app f (app f z)).
+
+Q : {x:exp} closed (pair x x).
+
+Q : closed (pair X X).
+}%
+
+%%% Type Inference
+
+%query 1 *
+of (lam [x] pair x (s x)) T.
+
+%query 1 *
+of (lam [x] x) T.
+
+%query 1 *
+{T1:tp} of (lam ([x:exp] x)) (arrow T1 T1).
+
+% Next query leaves constraints.
+%query 1 *
+of (lam [x] x) (F nat).
+
+% Next test type ascription
+%query 1 *
+of (lam [x] x) ((F:tp -> tp) nat).
+
+%query 1 *
+of (letn (lam [y] y) ([f] pair (app f z) (app f (pair z z)))) T.
+
+%%% Proof of Type Preservation
+
+%query 1 *
+of (letn (lam [x] x) ([f] letn (app f f) ([g] app g g))) T.
+
+%query 1 *
+eval (letn (lam [x] x) ([f] letn (app f f) ([g] app g g))) V.
+
+  e1 : exp = letn (lam [x] x) ([f] letn (app f f) ([g] app g g)).
+%solve
+  p1 : of e1 T.
+%solve
+  d1 : eval e1 V.
+%query 1 *
+  tps d1 p1 Q.
+
+_ = (ev_letn
+      (ev_letn
+          (ev_app ev_lam (ev_app ev_lam ev_lam ev_lam)
+              (ev_app ev_lam ev_lam ev_lam)))) : eval e1 (lam [x] x).
+
+%{
+%{
+sigma [P:of (letn (lam [x] x) ([f] letn (app f f) ([g] app g g))) T]
+ sigma [D:eval (letn (lam [x] x) ([f] letn (app f f) ([g] app g g))) V]
+  tps D P Q.
+}%
+%query 1 *
+tps (ev_letn
+      (ev_letn
+          (ev_app ev_lam (ev_app ev_lam ev_lam ev_lam)
+              (ev_app ev_lam ev_lam ev_lam))))
+   (tp_letn
+      (tp_letn
+          (tp_app
+              (tp_app (tp_lam ([x:exp] [P1:of x T1] P1))
+                  (tp_lam ([x:exp] [P2:of x (arrow T1 T1)] P2)))
+              (tp_app (tp_lam ([x:exp] [P3:of x (arrow T1 T1)] P3))
+                  (tp_lam
+                      ([x:exp] [P4:of x (arrow (arrow T1 T1) (arrow T1 T1))] P4))))
+          (tp_app (tp_lam ([x:exp] [P5:of x T2] P5))
+              (tp_lam ([x:exp] [P6:of x (arrow T2 T2)] P6))))
+      (tp_lam ([x:exp] [P7:of x T3] P7)))
+  Q.
+}%

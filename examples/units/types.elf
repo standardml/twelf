@@ -1,0 +1,14 @@
+%%% types for language with units of measure
+%%% By Ralph Melton (based on Kennedy97)
+
+tp: type. %name tp T.
+
+%%% type syntax.
+
+bool : tp.
+
+num : unit -> tp.
+
+=> : tp -> tp -> tp. %infix left 8 =>.
+
+forall : (unit -> tp) -> tp.

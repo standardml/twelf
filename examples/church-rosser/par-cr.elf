@@ -1,0 +1,115 @@
+%%% The Church-Rosser theorem for parallel reduction
+%%% Author: Frank Pfenning
+
+% Substitution lemma for parallel reduction
+
+subst : ({x:term} x => x -> M x => M' x)
+      -> N => N'
+      -> M N => M' N'
+      -> type.
+%mode subst +R +S -S'.
+
+subst_idx : subst ([x:term] [idx: x => x] idx) S S.
+
+subst_beta : subst ([x:term] [idx: x => x] beta (R1 x idx) (R2 x idx))
+                   S (beta R1' R2')
+           <- ({y:term} {idy: y => y}
+                 subst ([x:term] [idx: x => x] idy) S idy
+                 -> subst ([x:term] [idx: x => x] R1 x idx y idy)
+                          S (R1' y idy))
+           <- subst R2 S R2'.
+
+subst_ap  : subst ([x:term] [idx: x => x] ap (R1 x idx) (R2 x idx))
+                  S (ap R1' R2')
+          <- subst R1 S R1'
+          <- subst R2 S R2'.
+
+subst_lm  : subst ([x:term] [idx: x => x] lm (R1 x idx))
+                  S (lm R1')
+          <- ({y:term} {idy: y => y}
+                subst ([x:term] [idx: x => x] idy) S idy
+                -> subst ([x:term] [idx: x => x] R1 x idx y idy)
+                         S (R1' y idy)).
+
+% Diamond property for parallel reduction
+
+dia : M => M'  ->  M => M''  ->  M' => N  ->  M'' => N  -> type.
+%mode +{M} +{M'} +{M''} +{R':M => M'} +{R'':M => M''}
+      -{N} -{S':M' => N} -{S'':M'' => N} dia R' R'' S' S''.
+
+% Proof by induction on the structure of the first two derivations.
+% We consider the various possible cases.
+% b = beta, a = ap, l = lm,
+
+dia_bb : dia (beta R1' R2') (beta R1'' R2'') S' S''
+      <- ({x:term} {idx: x => x}
+            dia idx idx idx idx
+            -> dia (R1' x idx) (R1'' x idx)
+                   (S1' x idx) (S1'' x idx))
+      <- dia R2' R2'' S2' S2''
+      <- subst S1' S2' S'
+      <- subst S1'' S2'' S''.
+
+dia_bal : dia (beta R1' R2') (ap (lm R1'') R2'')
+             S' (beta S1'' S2'')
+       <- ({x:term} {idx: x => x}
+             dia idx idx idx idx
+             -> dia (R1' x idx) (R1'' x idx)
+                    (S1' x idx) (S1'' x idx))
+       <- dia R2' R2'' S2' S2''
+       <- subst S1' S2' S'.
+
+dia_alb : dia (ap (lm R1') R2') (beta R1'' R2'')
+             (beta S1' S2') S''
+       <- ({x:term} {idx: x => x}
+             dia idx idx idx idx
+             -> dia (R1' x idx) (R1'' x idx)
+                    (S1' x idx) (S1'' x idx))
+       <- dia R2' R2'' S2' S2''
+       <- subst S1'' S2'' S''.
+
+dia_aa  : dia (ap R1' R2') (ap R1'' R2'') (ap S1' S2') (ap S1'' S2'')
+       <- dia R1' R1'' S1' S1''
+       <- dia R2' R2'' S2' S2''.
+
+dia_ll  : dia (lm R1') (lm R1'') (lm S1') (lm S1'')
+       <- ({x:term} {idx: x => x}
+             dia idx idx idx idx
+             -> dia (R1' x idx) (R1'' x idx) (S1' x idx) (S1'' x idx)).
+
+% The strip lemma for parallel reduction.
+
+strip : M => M'  ->  M =>* M''  ->  M' =>* N  ->  M'' => N -> type.
+%mode +{M} +{M'} +{M''} +{R':M => M'} +{R'':M =>* M''}
+      -{N} -{S*':M' =>* N} -{S'':M'' => N} strip R' R'' S*' S''.
+
+strip_id   : strip R' id id R'.
+strip_step : strip R' (R1'' ; R2*'') (S1' ; S2*') S''
+          <- dia R' R1'' S1' S1''
+          <- strip S1'' R2*'' S2*' S''.
+
+% Confluence for parallel multi-step reduction.
+
+conf :  M =>* M'  ->  M =>* M''  ->  M' =>* N  ->  M'' =>* N -> type.
+%mode +{M} +{M'} +{M''} +{R*':M =>* M'} +{R*'':M =>* M''}
+      -{N} -{S*':M' =>* N} -{S*'':M'' =>* N} conf R*' R*'' S*' S*''.
+
+conf_id   : conf id R*'' R*'' id.
+conf_step : conf (R1' ; R2*') R*'' S*' (S1'' ; S2*'')
+         <- strip R1' R*'' S1*' S1''
+         <- conf R2*' S1*' S*' S2*''.
+
+% Church-Rosser Theorem for parallel reduction
+
+cr :  M <=> M'  ->  M =>* N  ->  M' =>* N  -> type.
+%mode +{M} +{M'} +{C:M <=> M'}
+      -{N} -{S*:M =>* N} -{S*':M' =>* N} cr C S* S*'.
+
+cr_reduce  : cr (reduce R*) R* id.
+cr_expand  : cr (expand R*) id R*.
+cr_compose : cr (C1 ;; C2) S* S*'
+          <- cr C1 S1* R1*
+          <- cr C2 R2* S2*
+          <- conf R1* R2* T1* T2*
+          <- append S1* T1* S*
+          <- append S2* T2* S*'.

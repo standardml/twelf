@@ -1,0 +1,8 @@
+%%% Mini-ML types.
+%%% Author: Frank Pfenning, based on [Michaylov & Pfenning 92]
+
+tp : type.  %name tp T.
+
+nat   : tp.
+cross : tp -> tp -> tp.
+arrow : tp -> tp -> tp.

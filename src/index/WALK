@@ -1,0 +1,15 @@
+Future Issues:
+
+  - replace array by tree based on type family, but
+    frequent access may require it too be fast?
+
+CM/
+NOTES  DELETED -fp
+README OK -fp
+WALK
+index.fun  OK -fp
+	   OK -cs
+index.sig  OK -fp
+	   OK -cs
+index.sml  OK -fp
+sources.cm OK -fp

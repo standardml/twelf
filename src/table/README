@@ -1,0 +1,9 @@
+Hash tables and red/black trees.
+Author: Frank Pfenning
+
+Red/black trees is based on an early version of code by Chris Okasaki.
+This should be updated some time (see version 15-212, Fall 1997 and
+Chris Okasaki's JFP paper on red/black trees).
+
+Updated the hash-table implementation to fix a bug in HashTable.app,
+Dec 23 1997. -fp

@@ -1,0 +1,13 @@
+arith           Associativity and commutative of unary addition
+ccc             Cartesian-closed categories [incomplete]
+church-rosser   The Church-Rosser theorem for untyped lambda-calculus
+compile		Various compilers starting from Mini-ML
+cut-elim	Cut elimination for intuitionistic and classical logic
+fol             Simple theorems in first-order logic
+guide           Examples from Users' Guide
+lp		Logic programming, uniform derivations
+lp-horn		Horn fragment of logic program
+mini-ml		Mini-ml, type preservation and related theorems
+polylam		Polymorphic lambda-calculus
+prop-calc       Natural deduction and Hilbert propositional calculus
+units		Mini-ML extended with units [incomplete]

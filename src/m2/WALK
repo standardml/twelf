@@ -1,0 +1,132 @@
+Current Issues:
+
+ - combine some tiny modules? -fp DONE
+ - update README file for interactive prover? DONE
+ - chatter level for prover (by the way chatter level = 6 not supported 
+   by twelf mode) DONE
+
+Future Issues:
+ - document mode dependency order. -fp
+ - context carried unnecessarily in some functions in filling.fun, search.fun -cs
+
+NOTES - check README -fp
+	remove or conserve -cs
+
+README - OUT OF DATE -fp
+WALK
+filling.fun Q: some invariants are incorrect DONE
+	    OK -fp
+	    OK -cs
+
+filling.sig OK -fp
+	    OK -cs
+
+init.fun OK -fp
+	 OK -cs
+
+init.sig Q: is this signature and functor really necessary?  (granularity mismatch)
+	 A: tried to fix it, but didn't know where to put init. --cs OK
+	 OK -fp
+	 OK -cs
+	    
+lemma.fun OK -fp
+	  OK -cs
+
+lemma.sig Q: is this signature and functor really necessary? (granularity mismatch)
+ 	 A: tried to fix it, but didn't know where to put init. --cs OK
+         OK -fp
+	 OK -cs
+
+m2.sml OK -fp
+       OK -cs
+
+meta-abstract.fun OK -fp
+		  OK -cs 
+
+meta-abstract.sig OK -fp
+		  OK -cs
+
+meta-global.sig  Q: rename maxLevel to maxFill? -fp
+		 A: DONE -cs
+		 OK -fp
+		 OK -cs
+
+meta-global.sml  OK -fp
+		 Q: Asymmetric treatment of maxFill OK
+		 OK -cs
+
+meta-print.fun OK -fp
+	       OK -cs
+
+meta-print.sig OK -fp
+	       OK -cs
+
+metasyn.fun OK -fp
+	    OK -cs
+
+metasyn.sig OK -fp
+	    OK -cs
+
+mpi.fun OK -fp
+	OK -cs
+
+mpi.sig OK -fp
+	OK -cs
+
+prover.fun OK -fp
+	   OK -cs
+
+prover.sig OK -fp
+	   OK -cs
+	
+qed.fun OK -fp
+	Q: Invariant for subgoal OK
+	OK -cs
+	
+qed.sig Q: is this signature and functor really necessary? (granularity mismatch)
+        OK -fp
+	OK -cs
+
+recursion.fun Q: code duplication? -fp
+	      A: no. -cs
+	      Q: remove code that is commented out -fp
+	      A: DONE -cs
+	      OK -fp
+	      OK -cs
+
+recursion.sig OK -fp
+	      OK -cs
+
+search.fun OK -fp
+	   R: updated some invariants -cs
+	   OK -cs
+	   
+search.sig OK -fp
+	   Q: First argument (the dctx) unnecessary? OK
+	   OK -cs
+
+sources.cm OK -fp
+	   OK -cs
+
+splitting.fun Q: some invariants -fp
+	      A: DONE -cs
+	      Q: rename some functions? -fp LATER
+	      OK -fp
+	      OK -cs
+
+splitting.sig OK -fp
+	      OK -cs
+
+strategy.fun OK -fp
+	     Q: combine the three strategy files?
+	     A: Done -cs
+             OK -cs
+	     R: redundant code elimination. oh well. LATER
+
+strategy.sig OK -fp
+	     OK -cs
+
+strategyFRS.fun OK -fp
+		REMOVED -cs
+strategyRFS.fun OK -fp
+		REMOVED -cs

@@ -1,0 +1,2 @@
+#!/bin/csh -f
+makeinfo --fill-column=72 --no-split --verbose twelf.texi

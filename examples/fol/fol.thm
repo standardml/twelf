@@ -1,0 +1,21 @@
+% A simple direct proof
+% Induction is ruled out by specifying no induction variable.
+
+%theorem identity : forall* {P:atm} exists {D: !^ (` P => ` P)} true.
+%prove 5 {} (identity _).
+
+%theorem curry : forall* {P:atm} {Q:atm} {R:atm}
+	         exists {D: !^ ((` P & ` Q => ` R) => (` P => (` Q => ` R)))} true.
+%prove 12 {} (curry _).   % OK
+
+%theorem uncurry : forall* {P:atm} {Q:atm} {R:atm}
+	           exists {D: !^ ((` P => (` Q => ` R)) => (` P & ` Q => ` R))} true.
+% %prove 12 {} (uncurry _). % 12 terminates?
+
+%theorem split : forall* {P:atm}  {Q:atm} {R:atm}
+		 exists {D: !^ ((` P => ` Q & ` R) => (` P => ` Q) & (` P => ` R))} true.
+%prove 12 {} (split _).  % OK
+
+%theorem join : forall* {P:atm}  {Q:atm} {R:atm}
+		 exists {D: !^ ((` P => ` Q) & (` P => ` R) => (` P => ` Q & ` R))} true.
+%prove 12 {} (join _). % OK

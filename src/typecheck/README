@@ -1,0 +1,10 @@
+Type and Strictness Checking
+Author: Carsten Schuermann
+
+Type-checking is separate from type reconstruction performed during
+parsing.  It verifies internal invariants an is enabled by the
+variable Global.doubleCheck, which means that it will be called
+after type reconstruction and after every step in the theorem
+prover.  Very expensive!
+
+It is used as a fail-safe run-time check on internal data structures.

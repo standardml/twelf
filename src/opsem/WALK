@@ -1,0 +1,49 @@
+Main Current Issues
+
+ - changed call to unify to use Unify.unifiable and avoid handler with
+   large scope. -fp DONE
+ - Add representation invariants to compsyn. -fp DONE
+
+Main Future Issues
+
+ - closures for goals and residuals goals? -fp
+ - improve on-the-fly compilation by avoiding full normalization. -fp
+ - associativity of "&" for residual goals. -fp
+ - redundant creation of EVar. - fp
+ - reevaluation which goals, resgoals should allow closures. -fp
+ - rename dPool???? -fp,cs
+
+CM/
+README
+WALK
+absmachine.fun Q: changed scope of handler by exporting boolean interface to unify? DONE -fp
+	       OK -fp
+	       Q: redundant creation of EVar? LATER
+	       OK -cs
+
+absmachine.sig OK -fp
+	       OK -cs
+
+compile.fun OK -fp
+	    OK -cs
+
+compile.sig OK -fp
+	    OK -cs
+
+compsyn.fun OK -fp
+	    OK -cs
+
+compsyn.sig OK -fp
+	    OK -cs
+
+cprint.fun OK -fp
+	   OK -cs
+
+cprint.sig OK -fp
+	   OK -cs
+
+opsem.sml OK -fp
+	  OK -cs
+
+sources.cm OK -fp
+           OK -cs

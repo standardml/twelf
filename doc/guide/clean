@@ -1,0 +1,10 @@
+#!/bin/csh -f
+echo "Cleaning directory"
+rm -f twelf.dvi
+rm -f twelf.ps
+rm -f twelf.ps.gz
+rm -f twelf.pdf
+rm -f twelf_*.html
+rm -f twelf.info*
+rm -f twelf.{aux,log}
+rm -f twelf.{cp,cps,fn,fns,ky,pg,toc,tp,vr}

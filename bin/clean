@@ -1,0 +1,5 @@
+#! /bin/csh -f
+#
+find . \( -name '*~' -o -name '.*~' \) -print -exec rm '{}' \;
+find . -name '#*' -print -exec rm '{}' \;
+find . -name '.i.*' -print -exec rm '{}' \;

@@ -1,0 +1,97 @@
+%%% Evaluation of a language with units of measure.
+%%% Ralph Melton (based on Kennedy97)
+
+eval : exp -> exp -> type. %name eval D.
+
+
+%% numbers must be handled somehow. Not sure how.
+% Hmm. How do I handle the arbitrary type of the zero case?
+% for right now, I'm going to avoid that arbitrary type for zero.
+
+% New decision: zero (and all numbers) are going to be a constant with units 1.
+
+ev_num   : eval E (E * un u1)
+	    <- number E.
+
+ev_+     : eval (E1 + E2) ((N1 + N2) * un U1)
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+ev_-     : eval (E1 - E2) ((N1 - N2) * un U1)
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+ev_*     : eval (E1 * E2) ((N1 * N2) * un (U1 u* U2))
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+ev_/     : eval (E1 / E2) ((N1 / N2) * un (U1 u* U2 u-1 ))
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+
+%% I really don't want to implement arithmetic. Therefore, since the major
+%% focus of this work is to implement type preservation, we let < be
+%% non-deterministic and return either false or true as the whim takes it.
+%% Any correct evaluation is still derivable, so anything that can be proved
+%% of all evaluations in this non-deterministic formulation is still true
+%% of all correct evaluations.
+ev_<_f   : eval (E1 < E2) false
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+ev_<_t   : eval (E1 < E2) true
+	    <- eval E1 (N1 * un U1)
+	    <- eval E2 (N2 * un U2).
+
+
+%% Casts.
+% Oh, oops--if I write 'eval (un U) (1 * (un U))', that means that
+% something dubious happens if you do 'm + m'. (Though I guess having
+% that be equivalent to '2m' isn't too bogus.) I wonder if this is
+% a big problem for orthogonality. I wonder if there's a better way
+% to do this.
+
+ev_un    : eval (un U) (1 * (un U)).
+
+
+%% Functions
+ev_lam   : eval (lam T E) (lam T E).
+
+ev_app   : eval (app E1 E2) V
+	    <- eval E1 (lam T E1')
+	    <- eval E2 V2
+	    <- eval (E1' V2) V.
+
+
+%% conditionals
+ev_false : eval false false.
+ev_true  : eval true true.
+ev_if_t  : eval (if E1 E2 E3) V
+	    <- eval E1 true
+	    <- eval E2 V.
+ev_if_f  : eval (if E1 E2 E3) V
+	    <- eval E1 false
+	    <- eval E3 V.
+
+
+%% recursion
+% Again, what happened to T?
+eval_rec : eval (rec T E) V
+	    <- eval (E (rec T E)) V.
+
+
+%% units abstraction and application
+% not sure about this.
+ev_LAM   : eval (LAM E) (LAM E).
+ev_APP   : eval (APP E U) V
+	    <- eval E (LAM E1)
+	    <- eval (E1 U) V.
+ 
+
+%% lets.
+ev_letv  : eval (letv E1 E2) V
+	    <- eval E1 V1
+	    <- eval (E2 V1) V.
+ev_letn  : eval (letn E1 E2) V
+	    <- eval (E2 E1) V.

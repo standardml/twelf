@@ -1,0 +1,29 @@
+Current Issues
+
+Main Future Issues
+
+ - tying in to advanced Emacs mode
+
+CM/
+README
+WALK
+origins.fun A: added referred to Global.maxCid instead of 9999
+            OK -fp
+	    OK -cs 
+origins.sig OK -fp
+	    OK -cs
+	    Q: why no reset?
+paths.fun OK -fp
+	  OK -cs
+	  Q: why is there a question mark behind Redex(?)
+	  A: Fixed little bug in example
+	  Q: Fix all the other little questions
+	  R: We have occ that the user does not have to carry around accmulator for path?
+paths.sig OK -fp
+	  OK -cs
+          Q: rename occurrence trees? -fp
+	  Q: FFR: a small example to explain occ/path/occTree?
+paths.sml OK -fp
+  	  OK -cs
+sources.cm OK -fp
+	   OK -cs

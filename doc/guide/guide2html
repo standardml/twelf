@@ -1,0 +1,3 @@
+#!/bin/csh -f
+texi2html -menu -number -split_chapter twelf.texi
+texi2html -check *.html

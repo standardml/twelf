@@ -1,0 +1,16 @@
+Current issues
+ Renamed TermDec to TDec or TDecl?  -fp  DONE -cs
+
+Future issues
+
+CM/
+README
+WALK
+order.fun OK -fp
+	  OK -cs
+order.sig OK -cs
+	  OK -fp
+order.sml OK -fp
+	  OK -cs 
+sources.cm OK -fp
+	  OK -cs

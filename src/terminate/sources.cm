@@ -1,0 +1,12 @@
+Group is
+  ../lambda/sources.cm
+  ../names/sources.cm
+  ../print/sources.cm
+  ../formatter/sources.cm
+  ../index/sources.cm
+  ../order/sources.cm
+  ../subordinate/sources.cm
+  ../paths/sources.cm
+  terminate.sig
+  terminate.fun 
+  terminate.sml

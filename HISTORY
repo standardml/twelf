@@ -1,0 +1,38 @@
+Fri Mar 20 10:23:00 EST 1998 -cs 
+  Incremental subordination.
+
+Sat Mar 21 17:23:41 1998 -fp
+  Incremental indexing implemented.
+  Added Queue structure.
+
+Sat Mar 21 22:11:46 1998 -fp
+  Incorporated incremental compilation except
+  for new constants declared by the theorem prover.
+
+Sun Mar 22 00:15:14 1998 -fp,cs
+  %terminates is not %decidable
+  fixed constants added into theorem prover
+  fixed bug in mode checking
+
+Sun Mar 22 10:21:55 1998 -fp
+  renamed various "terminates" to "decides"
+  change %proofByInduction to %proof
+
+Sat Apr 18 11:08:18 1998 -fp
+  eliminated quoted identifiers '<id>'
+
+Thu Apr 30 14:14:22 1998
+  reenabled dot1 optimization
+  renamed:  [sgn]entry => condec
+            decl => dec (except for contexts)
+            defn => def
+            head => front (H => Ft)
+            con => head (C => H)
+
+Fri May  1 23:26:39 1998
+  fixed problem with strictness error messages
+  renamed: strictness => strict
+           parse-entry.{sig,fun} => parse-condec.{sig,fun}
+
+Sat May  2 10:22:22 1998
+  fixed problem with abstraction error messages

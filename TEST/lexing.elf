@@ -1,0 +1,18 @@
+%%% Testing the lexer error messages.
+
+% Illegal character.
+% c : ".
+
+% Whitespace in quoted identifier.
+% 'exp ' : type.
+'exp
+' : type.
+
+% Unclosed delimited comment at end of file token (replace DOT by .)
+% %{ %DOT
+
+exp : type.
+z : exp.
+
+% Unclosed delimited comment at end of file
+% %{

@@ -1,0 +1,28 @@
+Current Issues
+
+ - merge clist directory with table -cs
+ - clist implementation changd to a 2-list version -cs
+ - renamed clist signature and structure to ring signature and structure -cs
+ - incorporated signatures and structures -fp
+ - renamed Ring.fold to Ring.foldR for consistency -fp
+
+Main Future Issues
+
+CM/
+README
+WALK
+hash.sml     OK -fp
+	     Q: could use more invariants
+	     Q: follow standard scheme and split functor def and
+		functor instantiation -cs
+redblack.sml OK -fp -cs
+	     Q: convert to use re-balancing from Okasaki's JFP paper
+	     Q: same as above -cs
+sources.cm   OK -fp
+	     OK -cs
+table.sig    OK -fp
+	     OK -cs
+ring.sml     OK -fp
+	     OK -cs
+queue.sml    OK -fp
+	     OK -cs

@@ -1,0 +1,106 @@
+File for major comments in the May'98 code walk
+prior to freezing Twelf 1.2
+
+Main current issues
+
+- export main functions and flags from Twelf structure?
+  DONE -fp
+
+- error (r, msg) = ... into Paths.
+  DONE -fp
+
+- Make naming convention explicit:
+    <function>  - general
+    <function>W - expects weak head-normal form
+    <function>N - expects normal form
+  May require some renaming, but could be very useful -fp
+  DONE -fp
+
+  Collect definitions of whnf, nf, enf -fp
+  Use enf consistently
+  DONE -fp
+
+- global/
+  DONE add separate parameter for internal vs external printing? -fp
+       Print.implicit (default false)
+
+- Make terminal period in name preference and fixity declarations required?
+  DONE -fp
+
+- TextIO.print => print
+  DONE -fp
+
+- Add copyright information to the headers
+
+- print/print.fun: No invariants? -fp
+
+- Quoted identifiers and 'A printing in error messages. -fp
+  DOCUMENTED -fp
+
+Main future issues
+
+- Admit non strict definitions? -cs
+- Determine the max. size of terms needed to prove a theorem. - cs
+- Representation of theorems, possibly proofs? -fp
+- modes/modecheck.fun: why not descend into lambda-labels? -fp
+
+Individual files and directories
+
+TAGS          - automatically generated
+WALK          - this file
+decide/       - renamed to terminate
+formatter/    - library
+frontend/     OK -fp
+              OK -cs
+              DONE
+global/       OK -fp
+	      OK -cs
+	      DONE
+index/	      OK -fp
+              OK -cs
+	      DONE
+lambda/       OK -fp
+              OK -cs
+	      DONE
+m2/	      OK -fp
+              OK -cs
+	      DONE
+modes/        OK -fp
+	      OK -cs
+	      DONE
+names/        OK -fp
+              OK -cs
+	      DONE
+opsem/        OK -fp
+	      OK -cs
+	      DONE
+order/        OK -fp
+	      OK -cs
+	      DONE
+paths/        OK -fp
+	      OK -cs
+	      DONE
+print/	      OK -fp
+	      OK -cs
+	      DONE
+stream/       OK -fp
+ 	      OK -cs
+	      DONE
+subordinate/  OK -fp
+              OK -cs
+	      DONE
+table/        OK -fp
+	      OK -cs
+	      DONE
+terminate/    OK -fp
+              OK -cs
+	      DONE
+thm/          OK -fp
+	      OK -cs
+              DONE
+timing/       OK -fp
+	      OK -cs
+	      DONE
+typecheck/    OK -fp
+              OK -cs
+	      DONE

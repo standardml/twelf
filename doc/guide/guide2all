@@ -1,0 +1,8 @@
+#!/bin/csh -f
+echo "Making twelf.info"
+./guide2info
+echo "Making twelf.dvi and twelf.ps"
+./guide2dvi
+dvips -o twelf.ps twelf
+echo "Making twelf_*.html"
+./guide2html

@@ -1,0 +1,20 @@
+% Author: Carsten Schuermann
+
+% Value soundness
+
+%theorem vs' : forall* {E : exp} {V : exp} 
+               forall {D : eval E V} 
+               exists {P : value V} {Q : vs D P} true.
+%prove 3 D (vs' D _ _).
+
+%{
+% Type preservation
+
+%theorem tps : forall* {E: exp}{V: exp}{T: tp}
+               forall {D: eval E V} {P: of E T} 
+               exists {Q: of V T} true.
+%prove 6 D (tps D _ _).
+
+
+%terminates D (tps D _ _).
+}%

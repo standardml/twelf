@@ -1,0 +1,21 @@
+Main future issue:
+ - allow free EVars so queries can be checked after reconstruction
+ - will not always raise Error gracefully on ill-typed terms
+ - does not check consistent EVar assignment
+
+CM/
+README
+WALK
+sources.cm    OK -fp
+	      OK -cs
+strict.fun    OK -fp
+	      OK -cs
+strict.sig    OK -fp
+      	      OK -cs
+typecheck.fun OK -fp
+	      Q: only closed term type checkable? LATER
+	      OK -cs
+typecheck.sig OK -fp
+	      OK -cs
+typecheck.sml OK -fp
+	      OK -cs

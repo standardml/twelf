@@ -1,0 +1,105 @@
+%%% Example queries for units language.
+%%% Ralph Melton.
+%%% Updated: Frank Pfenning
+
+% m u* s: T.
+
+% m u* s u-1: T.
+
+%query 8 *
+standardize (m u* s u-1) U.
+
+%query 4 *
+standardize (s u-1) U.
+
+%query 34 *
+standardize (((m u* s) u* s) u* (m u* s) u-1) U.
+
+%query 3 *
+standardize s U.
+
+%query 1 *
+subset (s u* u1) (s u* u1).
+
+%query 1 *
+subset u1 u1.
+
+% ?? does not terminate ??
+% equnits (((m u* s) u* s) u* (m u* s) u-1) s.
+
+%query * 20
+of 0 T.
+
+% succeeds
+%query * 20
+of (0 * un m + 1 * un m) T.
+
+% fails
+% does not terminate?
+% of (0 * un m + 1 * un s) T.
+
+%query 1 *
+eval (0 * un m + 1 * un m) V.
+
+%query 1 *
+eval 0 V.
+
+%query 1 *
+eval (un m) V.
+
+%query 1 *
+number 0.
+
+% does not terminat?
+% of (LAM ([u:unit] (lam (num u) ([x: exp] x + 1 * un u)))) T.
+
+%query 1 *
+eval (LAM ([u:unit] (lam (num u) ([x: exp] x + 1 * un u)))) V.
+
+%query * 10
+of (LAM ([u1:unit] (LAM [u2: unit] (lam (num u1) ([x: exp] (lam (num u2) ([y:exp] x * y))))))) T.
+
+%{
+% lemma: to prove (U1 u* u2) u-1 = (U1 u-1 u* U2 u-1):
+                          (equ_trans 
+			     equ_ident
+			     (equ_trans
+				(equ_cong_* equ_inverse equ_ref)
+				   (equ_trans
+				      equ_assoc
+				      (equ_trans
+					 (equ_cong_*
+					    equ_ref
+					    (equ_trans
+					       (equ_cong_* equ_commute equ_ref)
+					       (equ_trans
+						  equ_commute
+						  (equ_trans
+						     (equ_sym equ_assoc)
+						     (equ_trans
+							(equ_cong_* equ_assoc equ_ref)
+							(equ_trans
+							   (equ_cong_*
+							      (equ_cong_*
+								 equ_ref
+								 (equ_sym
+								    equ_inverse))
+							      equ_ref)
+							   (equ_trans
+							      (equ_cong_* equ_commute equ_ref)
+							      (equ_trans
+								 equ_assoc
+								 (equ_trans
+								    (equ_sym equ_ident)
+								    (equ_sym equ_inverse))))))))))
+					 (equ_trans
+					    equ_commute
+					    (equ_sym equ_ident))))))
+: equnits ((U u* U1) u-1) (U u-1 u* U1 u-1).
+}%
+
+%query 1 *
+eqtypes bool bool.
+
+%query * 10
+eqtypes (forall ([u1: unit] num u1)) (forall ([u2: unit] num u2)).

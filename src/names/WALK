@@ -1,0 +1,21 @@
+Current Issues
+  - DONE annotating names.fun with explanations and invariants -fp
+
+Main Future Issues
+  - decName --- general problem for printing, tracing, etc? -fp
+
+CM/
+README
+WALK
+names.fun OK -fp
+          - rename indexTable to suffixTable?
+	  - separate fixity from variable and constant naming?
+names.sig OK -fp
+	  OK -cs
+	  - decName maps to IntSyn.Dec?
+	  - nofix declarations supported?
+	  - varEntry and EFVar (in abstract.fun) could have the same constructor
+	  - evalList comment: why time stamps an alternative?
+names.sml OK -fp
+	  OK -cs
+sources.cm

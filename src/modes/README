@@ -1,0 +1,127 @@
+Mode Declarations
+Author: Carsten Schuermann
+Modified: Frank Pfenning
+
+TODO:
+
+- generate good names for implicit parameters (modes.fun)
+
+DIARY:
+
+Fri May 16 11:52:10 1997 -fp
+
+Uncaught Match exception in inferExp when trying
+lp/uni-sound.elf.  Problem: case for Pi was missing and needed
+to be added.  Treated it like "Abs".  DONE
+
+Fri May 16 11:56:35 1997 -fp
+
+examples/lp mode-checks up to uni-sound.elf after change above.
+
+Realized that ++ and -- are problematic because of parameter
+dependencies.  They don't express quite as much as I thought at first
+(e.g. output coverage wrt parameters will still need to be checked).
+
+Fri May 16 12:09:23 1997 -fp
+
+Uncaught match exception in function unique.  Changed order
+of calls to make sure all arguments are variables before checking
+uniqueness.  DONE
+
+Fri May 16 12:13:33 1997 -fp
+
+Problem: mode table is not reset properly when %mode annotations
+are commented out.  DONE.
+
+r_total in lp/res-complete may be an example where mode inference
+gives an incorrect result.
+
+Fri May 16 15:36:07 1997 -fp
+
+Black Friday is over.
+
+lp now mode-checks completely.
+
+Error messages definitely must be improved.  PENDING
+
+Fri May 16 15:47:59 1997
+
+trying examples/compile/cls.
+Resetting problem recurs.  DONE
+Need to abort when reading multiple files. DONE
+
+Fri May 16 16:09:01 1997
+
+Need to echo mode declarations just as other declarations.  PENDING
+
+Fri May 16 16:16:16 1997
+
+subcomp in compile/cls/cls-complete.elf provides another example
+of incorrect mode inference for implicit arguments.
+
+examples/compile/cls now mode-checks.
+
+Fri May 16 16:42:51 1997
+
+handle non-existent file error messages.  DONE
+added Status return value to Twelf for readFile and readConfig.  DONE
+
+Is resetting on re-loading now handled correctly even if Reset is
+not called, but old definitions are shadowed??  DONE---is correct now.
+
+Fri May 16 23:29:22 1997
+
+Implement new cost center.  DONE
+
+Checking modes seems to take negligable time.  For example, lp is pervasively
+moded, and we have
+
+- Twelf.readConfig lp;
+- Timers.show ();
+Parsing       : Real = 1.670, Run = 1.120 (0.870 usr + 0.150 sys + 0.100 gc)
+Reconstruction: Real = 1.609, Run = 1.140 (1.000 usr + 0.060 sys + 0.080 gc)
+Abstraction   : Real = 0.963, Run = 0.510 (0.490 usr + 0.020 sys + 0.000 gc)
+Checking      : Real = 2.647, Run = 1.770 (1.620 usr + 0.080 sys + 0.070 gc)
+Modes         : Real = 0.171, Run = 0.110 (0.090 usr + 0.020 sys + 0.000 gc)
+Printing      : Real = 2.150, Run = 1.560 (1.510 usr + 0.050 sys + 0.000 gc)
+Total         : Real = 9.213, Run = 6.210 (5.580 usr + 0.380 sys + 0.250 gc)
+
+- TpRecon.doubleCheck := false;
+- TpRecon.chatter := 1;
+- Twelf.readConfig compile_cls;
+- Timers.show ();
+Parsing       : Real = 1.045, Run = 0.880 (0.740 usr + 0.050 sys + 0.090 gc)
+Reconstruction: Real = 2.056, Run = 2.060 (1.900 usr + 0.060 sys + 0.100 gc)
+Abstraction   : Real = 1.348, Run = 1.410 (1.290 usr + 0.050 sys + 0.070 gc)
+Checking      : Real = 0.000, Run = 0.000 (0.000 usr + 0.000 sys + 0.000 gc)
+Modes         : Real = 0.256, Run = 0.220 (0.180 usr + 0.040 sys + 0.000 gc)
+Printing      : Real = 0.000, Run = 0.000 (0.000 usr + 0.000 sys + 0.000 gc)
+Total         : Real = 4.708, Run = 4.570 (4.110 usr + 0.200 sys + 0.260 gc)
+
+Mon May 19 11:16:42 1997
+
+Grading homework from Comp & Ded Class.
+
+Discovered one bug in andrewb/project/tyck.elf (T3 instead of L3).
+
+Discovered limitation in soundness proof for mu-calculus in
+berez/sound.elf.
+
+Discovered "wrong" subgoal ordering in doane/project/final/arith1/compile.elf.
+
+In doane/project/final/sumprod2.elf there are dynamic dependent subgoals
+to J1 and J2 which fill in jumps at the end of the computation.  This
+violates the new (and old) modes, and will be slightly painful to
+rewrite, I think.
+
+In jpolakow/project/good/eval_trans.elf, discovered 6 mistyped variable
+names and 2 Questions (which look like a conceptual oversight, straightforward
+to fix).
+
+In leg/project/launchbury style, there were no problems.
+
+
+5/21 CS
+
+Definitions are now mode checkable. 
+Bug in the mode parser: Variable names must be given.

@@ -1,0 +1,87 @@
+ForML Version 0.6 
+25 January 1993 
+(updated to SML'96 by fp@cs.cmu.edu, 8 March 1997)
+
+What is ForML
+-------------
+
+ForML = "Formatter for ML" is a prettyprinting module written in SML that
+can help you produce neatly formatted output from data structures like
+the abstract syntax trees of some language.
+
+  The formatting primitives are straightforward and easy to use. This version
+of ForML supports monospaced ASCII text only. Contact the author at 
+er@cs.cmu.edu if you desire supoort of proportionally spaced output such as
+TeX or PostScript.
+
+  ForML does NOT provide for the automatic generation of unparsers from
+grammars or datatype declarations.
+
+
+How to get ForML
+----------------
+
+ * You should have received ForML as part of the SML/NJ distribution.
+
+Otherwise:
+
+ * ftp a.cs.cmu.edu
+ * Name: anonymous
+ * Password: your_name@your_node
+ * cd /afs/cs/user/er/pub      (Note: no intermediate pathnames are permitted!)
+ * binary
+ * get ForML06.tar.Z           (size ca. 65k) 
+ * bye
+ Now cd to where you want to use ForML, and issue the commands:
+    uncompress ForML0.6.tar.Z
+    tar -vxf ForML0.6.tar
+ The latter will create a directory ForML0.6 and put ForML's files there.
+ 
+
+Getting Started
+---------------
+
+  Manual:  ./Doc/pretty.tex (LaTeX source)
+           ./Doc/pretty.dvi (Dvi file)
+
+  Incorporating ForML into SML programs:
+    see load.sml, which contains the following commands:
+        use "formatter.sig";         (* defines signature FORMATTER *)
+        use "formatter.fun";         (* defines functor Formatter : FORMATTER *)
+        structure Formatter : FORMATTER = Formatter ();
+
+  Examples:
+    The examples from the manual can be found in
+        ./Doc/pretty.sml
+    You can juse ``use'' this file after you have loaded the formatter.
+
+  If you are familiar with CAML:
+    The formatting primitives are similar to the boxes used in CAML
+    (chapter 11 in the CAML manual).
+
+Source Code:
+------------
+
+   The ForML source is self documenting.
+   A Dvi-version of the source is in
+       ./Doc/program.dvi
+
+   Or run the following to turn the source code in . into LaTeX input:
+     -- change to ./Doc
+     -- run       program2tex
+     -- now run   latex program
+
+   The following conventions are used in the source files:
+     -- lines consisting only of '(*' or '*)' start and terminate LaTeX text,
+        i.e. this text is fed straight into LaTeX
+     -- the first line in every source file contains only '(*'
+     -- the last line in the source file is not '*)'
+     -- everything that is not LaTeX text is processed in the verbatim
+        environment
+
+Contact
+-------
+
+Please direct all questions, comments, suggestions, or criticism to:
+
+      er@cs.cmu.edu     (Ekkehard Rohwedder)

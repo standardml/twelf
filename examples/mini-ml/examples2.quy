@@ -1,0 +1,9 @@
+ev_case_z (ev_z) (ev_s (ev_z))
+  : eval (case z (s z) ([x:exp] z)) (s z).
+
+ev_case_z (ev_z) (ev_s (ev_z)) : A.
+
+ev_case_z (ev_z) (ev_s (ev_z) : A) : B.
+
+D : eval (case z (s z) ([x:exp] z)) V.
+

@@ -1,0 +1,28 @@
+exp : type.
++ : exp -> exp -> exp.  %infix left 10 +
+- : exp -> exp -> exp.  %infix left 10 -
+* : exp -> exp -> exp.  %infix left 11 *
+/ : exp -> exp -> exp.  %infix left 11 /
+^ : exp -> exp -> exp.  %infix right 12 ^
+# : exp -> exp -> exp.  %infix right 10 #
+! : exp -> exp.         %postfix 13 !
+$ : exp -> exp.         %prefix 13 $
+
+% %infix none 13 $
+% %prefix 14 **
+% %postfix 14 +
+
+% %name exxp E
+% %name + A.
+%name exp E
+
+test : exp -> type.
+%name test T.
+
+% test0 : test (N +).
+% test1 : test (N + + M).
+% test2 : test (N + M # P).
+% test3 : test ().
+% test4 : test ($ N !).
+% test5 : test (N.
+% test6 test.

@@ -1,0 +1,19 @@
+Current Issues
+
+Main Future Issues
+
+ - adding invariants? -fp
+
+CM/
+README  OK -fp
+	   A: renamed READE to README
+	OK -cs
+WALK
+sources.cm OK -fp
+	   OK -cs
+stream.sml OK -fp
+	   Q: there are no invariants, but the corresponding list functions
+	      are documented in the ML Standard Library. -fp
+	   Q: Split file in signature and functor? -cs
+	   Q: Do we need filter, exists in STREAM? -cs 
+	   Q: Remove comments at the end of file? -cs

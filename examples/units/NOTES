@@ -1,0 +1,25 @@
+1. I don't want to implement arithmetic. So instead, my 'numbers'
+that are the results of evaluation are going to be expressions like
+'1 + 3 * 4'
+
+2. Well, I'm going to have to implement <. I still don't want to
+implement arithmetic. So, since the main proof I want to make is type
+preservation, I will make < non-deterministic, to return true or false
+as its evil little heart desires.
+
+This will make it harder to write terminating programs in this
+language, but it is still the case that any correct evaluation could
+be an evaluation in this scheme, so any proof (i.e., type
+preservation) about all evaluations will still be true of all correct
+evaluations.
+
+3. 4/22/97: There's some non-determinism in my judgments that implement 
+unit equivalence. Does this matter?
+
+4. 4/22/97: Hmm. My unit equality algorithm is terminating (I think.)
+But the equational axioms of associativity, commutativity, identity,
+and inverses are easier to use for type preservation. Would it be
+possible to define equality by those algorithms, and then to use my
+algorithm as a search procedure to construct a judgment of equality
+using those axioms, instead of just a 'yes or no' answer of whether
+they're equal?

@@ -1,0 +1,21 @@
+Current issues:
+  - removed debugging artefacts. -fp
+  - renamed <, <*, == to below, belowEq, equiv -fp
+  - removed exporting transClosure and get?
+Future issues:
+
+  - simplify calculation of relation using NF assumption. -fp
+    in particular, since LF is not polymorphic, substitutions do not
+    need to be carried around.
+
+CM/
+WALK
+sources.cm      OK -fp
+	        OK -cs
+subordinate.fun Q: why are we passing an composing substitutions? -fp LATER
+		OK -fp
+	        OK -cs
+subordinate.sig OK -fp
+		OK -cs
+subordinate.sml OK -fp
+	 	OK -cs

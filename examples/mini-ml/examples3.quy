@@ -1,0 +1,12 @@
+% In CONFIG1, tp.elf is loaded staticall.
+% T = arrow T1 T1
+% is most general (and only) solution
+
+% In CONFIG2, tp.elf is loaded dynamically.
+% Consequently, the solutions for T will be
+% enumerated in this example.
+
+% In CONFIG3, tpinf.elf is loaded staticall
+% Consequently, no Mini-ML type-checking is performed.
+
+Q : of (lam [x] x) T.

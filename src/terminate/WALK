@@ -1,0 +1,16 @@
+Current issues
+
+Future issues:
+ terminology: Order??
+ introduce a datatype for comparisons (EQUAL, LESS, NOTLE)?
+ more complex termination orders -fp
+ "complete" induction -fp
+
+CM/
+README
+WALK
+sources.cm Q: move order into terminate? -fp
+terminate.fun OK -fp
+terminate.sig Q: check used? removed -fp
+	      OK -fp
+terminate.sml OK -fp

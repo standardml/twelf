@@ -1,0 +1,7 @@
+Stream Library
+Author: Frank Pfenning
+
+Streams are potentially infinite lists generate on demand.
+There are memoizing and non-memoizing versions.
+
+Used for lexing and parsing.

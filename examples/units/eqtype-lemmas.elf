@@ -1,0 +1,54 @@
+%%% Useful lemmas for eqtypes.
+%%% By Ralph Melton
+
+
+%{ Reflexivity Lemma
+   eqtypes T T for any T.
+   Proof: by induction on the structure of T.
+}%
+
+eqt_ref : eqtypes T T -> type.
+
+eqt_ref_bool   : eqt_ref eqt_bool.
+eqt_ref_num    : eqt_ref (eqt_num equ_ref).
+eqt_ref_=>     : eqt_ref (eqt_=> D2 D1)
+		  <- eqt_ref D1
+		  <- eqt_ref D2.
+eqt_ref_forall : eqt_ref (eqt_forall ([u:unit] D))
+		  <-  eqt_ref D.
+
+
+%{ Transitivity Lemma
+   if eqtypes T1 T2 and eqtypes T2 T3, then eqtypes T1 T3
+   Proof: by induction.
+}%
+
+eqt_trans : eqtypes T1 T2 -> eqtypes T2 T3 -> eqtypes T1 T3 -> type.
+
+eqt_trans_bool   : eqt_trans eqt_bool eqt_bool eqt_bool.
+eqt_trans_num    : eqt_trans (eqt_num U12) (eqt_num U23) 
+		    (eqt_num (equ_trans U23 U12)).
+eqt_trans_=>     : eqt_trans (eqt_=> D12 D11) (eqt_=> D22 D21)
+		    (eqt_=> D2 D1)
+		    <- eqt_trans D11 D21 D1
+		    <- eqt_trans D12 D22 D2.
+eqt_trans_forall : eqt_trans 
+		    (eqt_forall ([u:unit] D12))
+		    (eqt_forall ([u:unit] D23))
+		    (eqt_forall ([u:unit] D13))
+		    <- eqt_trans D12 D23 D13.
+
+%{ Symmetry Lemma
+   If eqtypes T1 T2, then eqtypes T2 T1.
+   Proof: Straightforward induction.
+}%
+
+eqt_sym : eqtypes T1 T2 -> eqtypes T2 T1 -> type.
+
+eqt_sym_bool   : eqt_sym (eqt_bool) (eqt_bool).
+eqt_sym_num    : eqt_sym (eqt_num U) (eqt_num (equ_sym U)).
+eqt_sym_=>     : eqt_sym (eqt_=> D2 D1) (eqt_=> D2' D1')
+		  <- eqt_sym D1 D1'
+		  <- eqt_sym D2 D2'.
+eqt_sym_forall : eqt_sym (eqt_forall ([u:unit] D)) (eqt_forall ([u:unit] D'))
+		  <- eqt_sym D D'.

@@ -1,0 +1,134 @@
+%%% Algorithm for deciding equality of unit expressions
+%%% Ralph MeltonMelton (Based on Kennedy97)
+
+equnits_algorithm: unit -> unit -> type.
+
+%% Prototypes for the judgments that equnits depends upon:
+
+% standardize U U' converts U into a standard form U'.
+% The standard form is that U' is of the form (U-p * U-n u-1),
+% where U-p and U-n are right-linear units trees that do not use u-1,
+% and no ground unit occurs in both U-p and U-n.
+standardize : unit -> unit -> type. %name standardize S.
+
+
+% subset U1 U2 is true if U1 and U2 are right-linear u-1-free trees,
+% and U1 is a subset of U2 (in the multiset sense of subset).
+subset : unit -> unit -> type.
+
+%%% U2 is a permutation of U1; both are right-linear u-1-free u1-terminated
+%%% expressions.
+permutation : unit -> unit -> type. %name permutation P.
+
+equnits_alg: equnits_algorithm U1 U2
+	      <- standardize U1 (U1-p u* U1-n u-1)
+	      <- standardize U2 (U2-p u* U2-n u-1)
+	      <- permutation U1-p U2-p
+	      <- permutation U1-n U2-n.
+
+
+%%%% Grotty implementation details.
+
+% standardize: unit -> unit -> type.
+
+% flatten-p and flatten-n each take three arguments. They each 
+% grovel over the types in the units structure in the first argument,
+% and add what they find to the standard-form units structure in the
+% second argument, yielding the third argument.
+%
+% The only difference is that flatten-p assumes that the first argument
+% is within an even number of instances of u-1, and flatten-n assumes
+% that the first argument is within an odd number of instances of u-1.
+
+flatten-p : unit -> unit -> unit -> type. %name flatten-p F.
+flatten-n : unit -> unit -> unit -> type. %name flatten-n F.
+
+fp_1  : flatten-p u1 U U.
+fp_*  : flatten-p (U1 u* U2) U_old U_new
+	 <- flatten-p U1 U_old U_mid
+	 <- flatten-p U2 U_mid U_new.
+fp_-1 : flatten-p (U1 u-1) U_old U_new
+	 <- flatten-n U1 U_old U_new.
+
+% ick. Somehow I need to say 'the following only works for basic units.'
+% dunno how to do that just yet. This doesn't express the condition that
+% U1 be atomic.
+fp_gd : flatten-p U1 (U-p u* U-n u-1) ((U1 u* U-p) u* U-n u-1).
+
+
+fn_1  : flatten-n u1 U U.
+fn_*  : flatten-n (U1 u* U2) U_old U_new
+	 <- flatten-n U1 U_old U_mid
+	 <- flatten-n U2 U_mid U_new.
+fn_-1 : flatten-n (U1 u-1) U_old U_new
+	 <- flatten-p U1 U_old U_new.
+
+% ick. Somehow I need to say 'the following only works for basic units.'
+% dunno how to do that just yet. This doesn't express the condition that
+% U1 be atomic.
+fn_gd : flatten-n U1 (U-p u* U-n u-1) (U-p u* (U1 u* U-n) u-1).
+
+
+%%% flatten, then, is just a wrapper around flatten-p.
+flatten : unit -> unit -> type.
+
+flatten_do : flatten U U'
+	      <- flatten-p U (u1 u* u1 u-1) U'.
+
+
+% member Elt List Rest is true iff List is a right-linear, u-1 free
+% unit expression, Elt occurs in List, and Rest is the list with one
+% occurrence of Elt deleted.
+% This is used for subset and remove-common-factors.
+
+member: unit -> unit -> unit -> type. %name member M.
+
+mem_found  : member Elt (Elt u* Rest) Rest.
+mem_search : member Elt (E u* L1) (E u* R1)
+	      <- member Elt L1 R1.
+
+
+% remove-common-factors U U' takes a unit expression that could have been
+% returned by flatten-p, and returns an expression with common factors removed.
+
+remove-common-factors : unit -> unit -> type. %name remove-common-factors R.
+
+rcf_done_p : remove-common-factors (u1 u* U-n u-1) (u1 u* U-n u-1).
+rcf_done_n : remove-common-factors (U-p u* u1 u-1) (U-p u* u1 u-1).
+
+rcf_remove : remove-common-factors ((U u* U-p) u* U-n u-1) U'
+	      <- member U U-n U-n'
+	      <- remove-common-factors (U-p u* U-n' u-1) U'.
+
+% again, I don't know how to express the side condition that U must not occur
+% in U-n.
+rcf_keep   : remove-common-factors
+	      ((U u* U-p) u* U-n u-1)
+	      ((U u* U-p') u* U-n' u-1)
+	      <- remove-common-factors (U-p u* U-n u-1) (U-p' u* U-n' u-1).
+
+
+standardize_do : standardize U U'
+		  <- flatten U U''
+		  <- remove-common-factors U'' U'.
+
+
+
+%%% implementation of subset.
+
+subset_done : subset u1 U.
+subset_cont : subset (U1 u* U1') U2
+	       <- member U1 U2 U2'
+	       <- subset U1' U2'.
+
+
+
+%%% implementation of permutation:
+
+perm_done : permutation u1 u1.
+perm_cont : permutation (U1 u* U1') U2
+	     <- member U1 U2 U2'
+	     <- permutation U1' U2'.
+
+
+beautify : unit -> unit -> type.

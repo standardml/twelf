@@ -1,0 +1,9 @@
+positive parameter introduction
+  - make recusive call possible!
+  - also for non-inductive arguments!
+  - Don't separate name spaces for + and - variables.
+	(
+? Are non-inductive arguments treated as negative parameter introduction
+? Seperate name spaces for + and - variables
+negative parameter introduction.
+

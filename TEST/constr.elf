@@ -1,0 +1,20 @@
+tree : type.				%name tree T
+
+leaf : tree.
+node : tree -> tree -> tree.
+
+any : tree -> type.			%name any A
+all_leaf : any leaf.
+all_node : any T1 -> any T2 -> any (node T1 T2).
+all_impl : any ((F:tree -> tree) X).
+
+eq : any T -> any T -> type.		%name eq E
+
+test1 : eq (all_leaf) (all_leaf).
+% test2 : eq (all_leaf) (all_node A1 A2).
+test3 : eq A (all_node A1 A2).
+% test4 : eq (F X) (all_leaf).
+% test5 : eq (all_impl) (all_leaf).
+% test6 : eq (F _) (all_leaf) -> eq (F _ _) (all_leaf).
+% test7 : eq (G (_ _)) (all_leaf) -> eq (G _ _) (all_leaf).
+% test8 : eq (F _) X -> eq (F _ _) Y.

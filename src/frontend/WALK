@@ -1,0 +1,107 @@
+Current Issues
+
+ - Broke out solve.fun from twelf.fun, improved query error messages.
+   Need to check that all functor parameters are still needed in twelf.fun
+   Also: verify sharing constraints.
+
+ - moved signatures and structures from VARS and EVars, FVars into tprecon.fun
+ - renamed extsyn.sig to tprecon.sig
+
+ - changed twelf.sig and twelf.fun to export substructures for uniform interface
+
+ - changed Pattern.etaContract
+
+Main Future Issues
+
+ - consistent use of "name", "identifier", "symbol", "token", "string" ...?
+ - quoted identifiers? (currently disabled)
+ - echoing queries/deal with variable remaining
+
+CM/
+WALK
+extmodes.fun DELETED -fp
+extmodes.sig Q: Rename to moderecon.sig
+twelf.fun Q: move location and region wrapping to different module? DONE
+          Q: modularize various printing functions? -fp LATER
+          OK -fp
+	  in reset: Order.reset ()? -cs (Terminate.reset) DONE
+	  OK -cs
+twelf.sig OK -fp
+frontend.sml OK -fp
+	     Q: removed one structure parameter -cs DONE
+	     OK -cs
+lexer.fun OK -fp
+	  OK -cs
+	  Q: quoted IDs? -cs OK
+lexer.sig OK -fp
+	  OK -cs 
+	  Q: Add stringToMode +/-/* (++/--) as Utility? -cs
+	  Q: Arguments to lexTerminal (Invariant missing in .fun!) -cs
+moderecon.sig OK -fp
+	      OK -cs
+moderecon.fun OK -fp
+	      Q: should printing be moved to twelf.fun
+	      OK -cs
+parse-condec.fun OK -fp
+		 OK -cs
+parse-condec.sig OK -fp
+	 	 OK -cs
+parse-fixity.fun OK -fp
+		 OK -cs
+parse-fixity.sig OK -fp
+		 OK -cs
+parse-mode.fun OK -fp
+	       OK -cs
+parse-mode.sig OK -fp
+	       OK -cs
+parse-query.fun OK -fp
+		OK -cs
+parse-query.sig OK -fp
+		OK -cs
+parse-term.fun OK -fp
+	       OK -cs
+parse-term.sig OK -fp
+	       OK -cs
+parse-thm.fun Q: rename forallI to forallStar, rename one to true or top? -fp DONE
+	         TODO
+              OK -fp
+	      OK -cs
+parse-thm.sig OK -fp
+	      OK -cs
+parser.fun Q: more region information---start from specialized parsers DONE
+	   OK -fp
+	   OK -cs
+parser.sig OK -fp
+	   Q: rename parseFile into parseStream DONE
+	      rename parseQuery into parseTerminal? DONE
+	   OK -cs
+	   Q: Why only export parseFile parseQuery? OK
+parsing.fun OK -fp
+	    OK -cs
+parsing.sig OK -fp
+	    OK -cs
+solve.sig  Q: pass in query to solve, not term? OK
+	   OK -fp
+	   OK -cs
+	   Q: qLoop : unit -> unit   (raises an exception if something goes wrong)? -cs OK
+solve.fun  Q: echoing %query and answer substitution problem. LATER
+	   OK -fp
+	   OK -cs
+sources.cm OK -fp
+	   OK -cs
+thmrecon.fun Q: fix invariants -fp
+	     R: fixed  -cs
+	     OK -fp
+	     OK -cs
+ 	     Q: add more invariants? -cs
+thmsynext.sig - renamed to thmrecon.sig 
+thmrecon.sig OK -fp
+ 	     OK -cs
+tprecon.sig OK -fp
+	    OK -cs
+tprecon.fun OK -fp
+	    Q: call TypeCheck with !doubleCheck = true on queries?
+	       need to widen TypeCheck interface LATER, when TypeCheck is extended
+            Q: should printing valid decs be moved to twelf.fun? LATER
+	    OK -cs
+	    Q: Invariant for EVars/FVars? OK

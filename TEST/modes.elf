@@ -1,0 +1,13 @@
+% Test mode redefinition.
+
+exp : type.
+z : exp.
+s : exp -> exp.
+
+eval : exp -> exp -> type.
+%mode eval +E -V.
+
+eval_z : eval (s E) (s E)
+	  <- eval (s E) (s E)
+	  <- eval (s E) (s E).
+

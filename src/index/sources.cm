@@ -1,0 +1,7 @@
+Group is
+  ../lambda/sources.cm
+  ../table/sources.cm
+  ../global/sources.cm
+  index.sig	
+  index.fun
+  index.sml

@@ -1,0 +1,52 @@
+Main Current Issues
+
+ - ConDef impossible for type families---moved code to NOTES.
+ - removed modeCheckG
+ - allow only +/*/- as modes. This is sufficient for Twelf 1.2
+   under open world assumption -cs
+ - improved error message in modesyn.fun by adding region information 
+   twelf.fun --cs
+
+Main Future Issues
+
+ - prove operational soundness, especially concerning
+   the omission of checking/propagating lambda-labels.
+
+ - add ++ and -- modes (important: eta-expansion, permuation of arguments)
+   (closed world vs open world assumption, subordination)
+   Example: 
+	({x} cp x x -> cp (E x) (F y)) -> cp (lam E) (lam F).
+	%mode cp +E --F 
+
+CM/
+NOTES
+README
+WALK
+modeprint.fun
+        OK -fp
+	OK -cs
+modeprint.sig
+	OK -fp
+	OK -cs
+modesyn.sig
+	OK -cs
+	OK -fp
+modesyn.fun
+	OK -cs
+        OK -fp
+modedec.sig
+	OK -cs
+	OK -fp
+modedec.fun
+	OK -cs
+modecheck.fun
+	OK -cs
+        Q: why not descend into lambda-labels?  TODO
+        OK -fp
+modecheck.sig
+	OK -cs
+	OK -fp
+modes.sml
+        OK -fp
+sources.cm
+        OK -fp

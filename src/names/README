@@ -1,0 +1,8 @@
+Naming of constants, parameters, and variables
+Author: Frank Pfenning
+Modified: Jeff Polakow
+
+This maintains mappings in two directions: from variable to
+name and from names to variables.  It is a critical invariant
+that these mapping remains consistent.
+

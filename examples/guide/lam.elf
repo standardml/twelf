@@ -1,0 +1,62 @@
+%%% Lambda-Calculus Fragment of Mini-ML.
+%%% Author: Frank Pfenning
+
+% Simple types
+tp : type.				%name tp T.
+
+arrow : tp -> tp -> tp.			% T1 => T2
+
+% Expressions
+exp : type.				%name exp E.
+
+lam : (exp -> exp) -> exp.		% lam x. E
+app : exp -> exp -> exp.		% (E1 E2)
+
+% Type inference 
+% |- E : T  (expression E has type T)
+
+of : exp -> tp -> type.			%name of P.
+%mode of +E *T.
+% %mode of +E +T.  % incorrect at tp_app
+% %mode of +E -T.  % incorrect at tp_lam
+
+tp_lam : of (lam E) (arrow T1 T2)	% |- lam x. E : T1 => T2
+	  <- ({x:exp}			% if  x:T1 |- E : T2.
+		of x T1 -> of (E x) T2).
+
+tp_app : of (app E1 E2) T1		% |- E1 E2 : T1
+	  <- of E1 (arrow T2 T1)	% if  |- E1 : T2 => T1
+	  <- of E2 T2.			% and |- E2 : T2.
+
+% Evaluation (call-by-value) 
+% E ==> V  (expression E evaluates to value V)
+
+eval : exp -> exp -> type.		%name eval D.
+%mode eval +E -V.
+
+ev_lam  : eval (lam E) (lam E).		% lam x.E ==> lam x.E.
+
+ev_app  : eval (app E1 E2) V		% E1 E2 ==> V
+	    <- eval E1 (lam E1')	% if  E1 ==> lam x. E1'
+	    <- eval E2 V2		% and E2 ==> V2
+	    <- eval (E1' V2) V.		% and [V2/x]E1' ==> V.
+
+% Type inference terminates
+%terminates E (of E T).
+
+% %terminates E (eval E V).   % fails for ev_app
+
+% Type preservation
+%theorem
+tps : forall* {E:exp} {V:exp} {T:tp}
+       forall {D:eval E V} {P:of E T}
+       exists {Q:of V T}
+       true.
+
+%prove 5 D (tps D P Q).
+
+% Applying type preservation
+e0 = (app (lam [x] x) (lam [y] y)).
+%solve p0 : of e0 T.
+%solve d0 : eval e0 V.
+%solve tps0 : tps d0 p0 Q.

@@ -1,0 +1,92 @@
+Current Issues
+ - renamed H:Front to Ft:Front (H got too confusing) -fp
+ - renamed H:EFVar ctx to K -fp-cs
+ - moved normalize into whnf, deleted normalize.{sig,fun}
+ - Pattern.etaContract --- either return optional index, or export exception
+ - removed tools.fun, tools.sig
+ - exported Unify.unifiable -fp
+ - removed call to unifyUni in unifyExpW by invariant -fp
+
+Main Future Issues
+ - allow non-strict definitions
+ - change Trail.trail to type ('a -> 'b) -> ('a -> 'b)
+ - collect various forms of eta-expansion (look for "Redex" or "BVar(1)")
+ - add context information to EVars and constraint equations -fp
+ - optimizations -fp
+ - experiment with size counting of trail vs references -fp
+ - prevent unnecessary trailing (variables created since last choice point?) -fp
+
+CM/
+README
+WALK
+abstract.fun OK -fp
+	     Q: unjustified invariant in collectSub? A: DONE
+	     Q: renaming of temporary context H? A: DONE
+	     OK -cs
+	     Q: piDepend optimization? A: REMARK
+	     Q: move piDepend into another module? A: NO
+	     Q: better name for Cnstr? A: NO
+	     Q: Invariant for closedDec? A: ADDED
+abstract.sig OK -fp
+	     OK -cs
+constraints.fun OK -fp
+ 		OK -cs
+constraints.sig OK -fp 
+		OK -cs 
+conv.fun  OK -fp
+	  OK -cs
+	  Q: convExpW eta expands. Why not using whnf.etaexpand? A: POSTPONE
+conv.sig  OK -fp
+	  OK -cs
+intsyn.fun  OK -fp
+            OK -cs
+intsyn.sig  OK -fp
+	    Q: rename constXXX to conXXX? A: LEAVE
+	    OK -cs
+	    decSub : always builds closure: Introduce DClo, like EClo? A: NO
+lambda.sml
+normalize.fun  OK -fp
+	       Q: there seem to be several notions of normal form,
+	          with and without EVars and FVars.  This doesn't
+                  seem to be documented. A: DONE
+	       Q: incorporate normalize and whnf? A: DONE
+	       OK -cs
+	       R: nf never called with FVars. A: DONE
+	       R: Good idea. Local definition of Invariants ..W, ..N. A: DONE
+
+normalize.sig  OK -fp
+	       OK -cs
+notrail.fun  Q: is this really the way to go about non-trailing unification? A: YES
+	     OK -fp
+	     OK -cs
+pattern.fun OK -fp
+	    OK -cs
+pattern.sig OK -fp
+	    OK -cs
+	    Q: etaContract and Patterns.. rename module? A: NO
+sources.cm
+tools.fun refuse to walk -fp A: MOVED to TEST
+tools.sig refuse to walk -fp A: MOVED to TEST
+trail.fun OK -fp
+	  OK -cs
+trail.sig OK -fp
+	  Q: It would make more sense to have
+	     trail : ('a -> 'b) -> ('a -> 'b) A: POSTPONE
+	  OK -cs
+unify.fun A: did some variable renaming for heads
+	  OK -fp
+	  OK -cs
+	  Q: Split module into invert and unify? A: NAH
+	  Q: non-strict definitions? A: POSTPONE
+	  Q: call eta expansion in unifyExp? A: POSTPONE
+unify.sig OK -fp
+	  OK -cs
+whnf.fun  OK -fp
+	  Q: Specification satisfied by whnfEta?  -fp  A: DONE
+	  Q: Verify invariant that variables of functional type never carry a constraint!  -fp
+	     A: POSTPONED (inserted error message)
+	  OK -cs
+	  Q: Do not open IntSyn? A: NONE
+whnf.sig  OK -fp
+	  OK -cs
+	

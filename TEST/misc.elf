@@ -1,0 +1,28 @@
+%{ a line of comment }%
+%another line
+
+%%prefix 9 >  % error: > is undeclared
+exp : type.				%%infix none 10 exp  % error: exp does not take 2 args
+s : exp -> exp.
+z : exp.
+%prefix 9 s.  % dot is optional
+val : exp -> type.
+val5 : val s s s s s z.
+lin : (exp -> exp) -> type.
+% no longer supported: quoted fixity ids
+% lin_s : lin 's'.			% this will eta-expand 's' for printing
+
+s : exp -> exp.
+% val? : val s s z.  % this would now be an error: s no longer infix
+
+ckval : val E -> type.
+ckval5 : ckval val5.			% with chatter = 4 this illustrates shadowing.
+
+% disallow quoted keywords?  disallow quotation?
+'->' : exp -> exp -> type.		%infix none 10 '->'
+% '->' cannot be used as infix.
+% will be printed as infix in chatter = 3, prefix for >= 4.
+beta : z '->' z.
+
+'::' : exp -> exp -> type.		%infix none 10 '::'
+red  : z '::' z.

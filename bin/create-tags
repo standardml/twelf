@@ -1,0 +1,7 @@
+#! /bin/csh -f
+#
+if (-e TAGS) rm -i TAGS
+foreach f ($*)
+ echo "" >> TAGS
+ echo "$f,0" >> TAGS
+ end

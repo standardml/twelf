@@ -1,0 +1,3555 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename twelf.info
+@settitle Twelf User's Guide 
+@setchapternewpage odd
+@set VERSION 1.2
+@set UPDATED August 27, 1998
+@syncodeindex fn cp
+@c %**end of header
+
+@titlepage
+@title Twelf User's Guide
+@subtitle Version @value{VERSION}
+@author Frank Pfenning and Carsten Schuermann
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1998 Frank Pfenning and Carsten Schuermann
+@end titlepage
+
+@node Top, Introduction, (dir), (dir)
+
+@ifinfo
+This document describes the Twelf User's Guide, Version @value{VERSION},
+Last updated @value{UPDATED}.
+@end ifinfo
+
+@menu
+* Introduction::                Getting started
+* Lexical Conventions::         Reserved characters and identifiers
+* Syntax::                      Grammar of signatures
+* Term Reconstruction::         Checking and inferring types 
+* Logic Programming::           How to interpret signatures as programs
+* Modes::                       Input/output behavior of relations
+* Termination::                 Verifying termination of programs
+* Theorem Prover::              Proving theorems and meta-theorems
+* ML Interface::                Running Twelf from ML
+* Twelf Server::                A stand-alone Twelf command interpreter
+* Emacs Interface::             Editing Twelf files
+* Installation::                
+* Examples::                    Guide to standard examples
+* Index::                       Index to this guide
+@end menu
+
+@node Introduction, Lexical Conventions, Top, Top
+@chapter Introduction
+
+@cindex logical framework
+@cindex LF
+@cindex Twelf home page
+@cindex typographical conventions
+@cindex file names
+
+Twelf is current version of a succession of implementations of
+the logical framework LF.  Previous systems include Elf (which
+provided type reconstruction and the operational semantics reimplemented
+in Twelf) and MLF (which implemented module-level constructs loosely
+based on the signatures and functors of ML still missing from Twelf).
+
+Twelf should be understood as research software. This means comments,
+suggestions, and bug reports are extremely welcome, but there are no
+guarantees regarding response times.  The same remark applies to these
+notes which constitute the only documentation on the present Twelf
+implementation.
+
+For current information including download instructions, publications,
+and mailing list, see the Twelf home page at
+@t{http://www.cs.cmu.edu/~twelf/}.
+
+@ifhtml
+<UL>
+ <LI> <A HREF="http://www.cs.cmu.edu/~twelf/">Twelf Home Page</A> </LI>
+</UL>
+@end ifhtml
+
+Below we state the typographic conventions in this manual.
+
+@table @asis
+@item @code{code}
+  for Twelf or ML code
+@item @samp{samp}
+  for characters and small code fragments
+@item @var{metavar}
+  for placeholders in code
+@item @kbd{keyboard}
+  for input in verbatim examples
+@item @key{key}
+  for keystrokes
+@item @math{math}
+  for mathematical expressions
+@item @emph{emph}
+  for emphasized phrases
+@end table
+
+File names for examples given in this guide are relative to the main
+directory of the Twelf installation.  For example
+@file{examples/guide/nd.elf} may be found in
+@*@file{/usr/local/twelf/examples/guide/nd.elf} if Twelf was installed
+into the @file{/usr/local/} directory.
+
+@menu
+* New Features::                Differences from Elf 1.5
+* Quick Start::                 Sample interaction with Twelf
+@end menu
+
+@node New Features, Quick Start, Introduction, Introduction
+@section New Features
+
+While the underlying type theory has not changed, the Twelf
+implementation differs from older Elf implementation in a few ways.
+Mostly, these are simplifications and improvements.  The main feature
+which has not yet been ported is the Elf server interface to Emacs.
+Also, while the type checker is more efficient now, the operational
+semantics does not yet incorporate some of the optimizations of the
+older Elf implementations and is therefore slower.
+
+@table @asis
+
+@item Syntax (@pxref{Syntax})
+  The quote @samp{'} character is no longer a special character in the
+lexer, and @samp{=} (equality) is now a reserved identifier.  The syntax
+of @code{%name} declarations has changed by allowing only one preferred
+name to be specified.  Also, @code{%name}, @code{%infix}, @code{%prefix}
+and @code{%postfix} declarations must be terminated by a period @samp{.}
+which previously was optional.  Further, single lines comments now must
+start with @samp{%@var{whitespace}} or @samp{%%} in order to avoid
+misspelled keywords of the form @samp{%@var{keyword}} to be ignored.
+
+@item Type theory
+  Elf 1.5 had two experimental features which are not available in
+Twelf: polymorphism and the classification of @math{type} as a type.
+
+@item Definitions (@pxref{Definitions})
+  Twelf offers definitions which were not available in Elf.
+
+@item Searching for definitions (@pxref{Solve Declaration})
+  Elf had a special top-level query form @code{sigma [x:A] B} which
+searched for a solution @code{M : A} and then solved the result of
+subsituting @code{M} for @code{x} in @code{B}.  In Twelf this
+mechanism has been replaced by a declaration @code{%solve c : A} which
+searches for a solution @code{M : A} and then defines @code{c = M : A},
+where the remaining free variables are implicitly universally
+quantified.
+
+@item Query declarations (@pxref{Query Declaration})
+  Twelf allows queries in ordinary Elf files as @samp{%query}
+declarations.  Queries are specified with an expected number of
+solutions, and the number of solutions to search for, which can be used
+to test implementations.
+
+@item Operational semantics (@pxref{Operational Semantics})
+  Twelf eliminates the distinction between static and dynamic
+signatures.  Instead, dependent function types @code{@{x:A@} B}
+where @code{x} occurs in the normal form of @code{B} are treated
+statically, while non-dependent function type @code{A -> B} or
+@code{B <- A} or @code{@{x:A@} B} where @code{x} does not occur
+in @code{B} are treated dynamically.
+
+@item Modes (@pxref{Modes})
+  Twelf offers a mode checker which was only partially supported in Elf.
+
+@item Termination (@pxref{Termination})
+  Twelf offers a termination checker which can verify that certain
+programs represent decision procedures.
+
+@item Theorem prover (@pxref{Theorem Prover})
+  Although very limited at present, an experimental prover for theorems
+and meta-theorems (that is, properties of signatures) is now available.
+It does not yet support lemmas or meta-hypothetical reasoning, which
+are currently under development.
+
+@item Emacs interface (@pxref{Emacs Interface})
+  The Elf mode has remained basically unchanged, but the Elf server
+interface has not yet been ported.
+@end table
+
+@node Quick Start,  , New Features, Introduction
+@section Quick Start
+
+Assuming you are running on a Unix system with SML of New Jersey already
+installed (@pxref{Installation}) you can build Twelf as follows.  Here
+@samp{%} is assumed to be the shell prompt.  You may need to edit the
+file @file{Makefile} to give the proper location for @code{sml-cm}.
+
+@example
+@group
+% @kbd{gunzip twelf-1-2.tar.gz}
+% @kbd{tar -xf twelf-1-2.tar}
+% @kbd{cd twelf}
+% @kbd{make}
+% @kbd{bin/twelf-server}
+Twelf 1.2, Aug 27 1998
+%% OK %%
+@end group
+@end example
+
+You can now load the examples used in this guide and pose an example
+query as shown below.  The prompt from the Twelf top-level is @samp{?-}.
+To drop from the Twelf top-level to the ML top-level, type @kbd{C-c}
+(@key{CTRL} @kbd{c}).  To exit the Twelf server you may issue the
+@code{quit} command or type @kbd{C-d} (@key{CTRL} @kbd{c}).
+
+@example
+@group
+@kbd{Config.read examples/guide/sources.cfg}
+@kbd{Config.load}
+@kbd{top}
+?- @kbd{of (lam [x] x) T.}
+Solving...
+T = arrow T1 T1.
+More? @kbd{y}
+No more solutions
+?- @kbd{C-c}
+interrupt
+%% OK %%
+@kbd{quit}
+%
+@end group
+@end example
+
+@node Lexical Conventions, Syntax, Introduction, Top
+@chapter Lexical Conventions
+
+Lexical analysis of Twelf has purposely been kept simple, with few
+reserved characters and identifiers.  As a result one may need to use
+more whitespace to separate identifiers than in other languages.  For
+example, @samp{A->B} or @samp{A+B} are single identifiers, while @samp{A
+-> B} and @samp{A + B} both consist of 3 identifiers.
+
+During parsing, identifiers are resolved as reserved identifiers,
+constants, bound variables, or free variables, following the usual rules
+of static scoping in lambda-calculi.
+
+@menu
+* Reserved Characters::         Characters separating identifiers
+* Identifiers::                 Interpretation of identifiers
+@end menu
+
+@node Reserved Characters, Identifiers, Lexical Conventions, Lexical Conventions
+@section Reserved Characters
+
+@cindex reserved characters
+@cindex characters, reserved
+
+The following table lists the reserved characters in Twelf.
+
+@table @asis
+@item @samp{:}
+    colon, constant declaration or ascription
+
+@item @samp{.}
+    period, terminates declarations
+
+@item @samp{(} @samp{)}
+    parentheses, for grouping terms
+
+@item @samp{[} @samp{]}
+    brackets, for lambda abstraction
+
+@item @samp{@{} @samp{@}}
+    braces, for quantification (dependent function types)
+
+@item @var{whitespace}
+    separates identifiers; one of space, newline, tab, carriage return,
+    vertical tab or formfeed
+
+@item @samp{%}
+    introduces comments or special keyword declarations
+
+@table @asis
+@item @samp{%@var{whitespace}} @samp{%%}
+      comment terminated by the end of the line, may contain any characters
+
+@item @samp{%@{} @samp{@}%}
+      delimited comment, nested @samp{%@{} and @samp{@}%} must match
+
+@item @samp{%@var{keyword}}
+      various declarations
+
+@item @samp{%.}
+      end of input stream
+@end table
+
+@item @samp{"}
+    doublequote, disallowed
+
+@item other printing characters
+    identifier constituents
+@end table
+
+@node Identifiers,  , Reserved Characters, Lexical Conventions
+@section Identifiers
+
+@cindex reserved identifiers
+@cindex identifiers, reserved
+@cindex case, upper and lower
+@cindex backquote, before variables
+
+All printing characters that are not reserved can be included in
+identifiers, which are separated by whitespace or reserved characters.
+In particular, @code{A->B} is an identifier, whereas @code{A -> B}
+stands for the type of functions from @code{A} to @code{B}.
+
+An uppercase identifier is one which begins with an underscore @samp{_} or
+a letter in the range @samp{A} through @samp{Z}.  A lowercase identifier
+begins with any other character except a reserved one.  Numbers also
+count as lowercase identifiers and are not interpreted specially.  Free
+variables in a declaration must be uppercase, bound variables and
+constants may be either uppercase or lowercase identifiers.
+
+There are also four reserved identifiers with a predefined meaning which
+cannot be changed.  Keep in mind that these can be constituents of other
+identifers which are not interpreted specially.
+
+@table @samp
+@item ->
+          function type
+@item <-
+          reverse function type
+@item _
+          hole, to be filled by term reconstruction
+@item =
+          definition
+@item type
+          the kind @math{type}
+@end table
+
+Constants have static scope, which means that they can be shadowed by
+subsequent declarations.  A shadowed identifier (which can no longer be
+referred to in input) is printed as @code{%@var{id}%}.  The printer for
+terms renames bound variables so they do not shadow constants.
+
+Free uppercase identifiers in declarations represent schematic
+variables.  In order to distinguish them from other kinds of variables
+and constants they are printed as @samp{'@var{id}} (backquote, followed
+by the identifer name) in error messages.
+
+@node Syntax, Term Reconstruction, Lexical Conventions, Top
+@chapter Syntax
+
+@cindex objects
+@cindex types
+@cindex kinds
+@cindex type families
+
+In LF, deductive systems are represented by signatures consisting of
+constant declarations.  Twelf implements declarations in a
+straightforward way and generalizes signatures by also allowing
+definitions, which are semantically transparent.  Twelf currently
+does not have module-level constructs so that, for example, signatures
+cannot be named.  Instead, multiple signatures can be manipulated in the
+programming environment using configurations (@pxref{Configurations}).
+
+The LF type theory which underlies LF is stratified into three levels:
+objects @math{M} and @math{N}, types @math{A} and @math{B}, and kinds
+@math{K}@.  Twelf does not syntactically distinguish these levels and
+simply uses one syntactic category of term.  Similarly, object-level
+constants @math{c} and type-level constants @math{a} as well as
+variables share one name space of identifiers.
+
+In explanations and examples we will use letters following the
+mathematical conventions above to clarify the roles of various terms.
+We also use @math{U} and @math{V} to stand for arbitrary terms.
+
+@menu
+* Grammar::                     The grammar of Twelf
+* Constructor Declaration::     Introducing types and object constructors
+* Definitions::                 Defining abbreviations
+* Operator Declaration::        Infix, prefix and postfix operators
+* Name Preferences::            Assigning names to anonymous variables
+* Sample Signature::            Example of First-Order Logic
+@end menu
+
+@node Grammar, Constructor Declaration, Syntax, Syntax
+@section Grammar
+
+@cindex declarations
+
+The grammar below defines the non-terminals @code{sig}, @code{decl},
+@code{term} and uses the terminal @code{id} which stands for identifers
+(@pxref{Identifiers}).  The comments show the meaning in LF@.  There are
+various special declarations @code{%@var{keyword}} such as @code{%infix}
+or @code{%theorem} which are omitted here and detailed in the
+appropriate sections.
+
+@cindex signature
+@cindex declaration
+@cindex term
+
+@comment Because of a bug in the texinfo to dvi translation
+@comment the operators below are not given as references.
+
+@example
+@group
+sig  ::=                    % @r{Empty signature}
+       | decl sig           % @r{Constant declaration}
+
+decl ::= id : term.         % @r{@math{a : K}  or  @math{c : A}}
+       | id : term = term.  % @r{@math{d : A = M}}
+       | id = term.         % @r{@math{d = M}}
+       | _ : term = term.   % @r{anonymous definition, for type-checking}
+       | _ = term.          % @r{anonymous definition, for type-checking}
+       | %infix ixdecl.     % @r{operator declaration}
+       | %prefix pxdecl.    % @r{operator declaration}
+       | %postfix pxdecl.   % @r{operator declaration}
+       | %name id id.       % @r{name preference declaration}
+       | %query qdecl.      % @r{query declaration}
+       | %solve id : term.  % @r{solve declaration}
+       | %mode mdecl.       % @r{mode declaration}
+       | %terminates tdecl. % @r{termination declaration}
+       | %theorem thdecl.   % @r{theorem declaration}
+       | %prove pdecl.      % @r{prove declaration}
+@end group
+
+@group
+term ::= type               % @math{type}
+       | id                 % @r{variable @math{x} or constant @math{a} or @math{c}}
+       | term -> term       % @math{A} @t{->} @math{B}
+       | term <- term       % @r{@math{A} @t{<-} @math{B}, same as @math{B} @t{->} @math{A}}
+       | @{id : term@} term   % @r{@math{Pi x:A. K}  or  @math{Pi x:A. B}}
+       | [id : term] term   % @r{@math{lambda x:A. B}  or  @math{lambda x:A. M}}
+       | term term          % @r{@math{A M}  or  @math{M N}}
+       | term : term        % @r{explicit type ascription}
+       | _                  % @r{hole, to be filled by term reconstruction}
+       | @{id@} term          % @r{same as @code{@{id:_@}} term}
+       | [id] term          % @r{same as @code{[id:_]} term}
+@end group
+@end example
+
+The constructs @code{@{x:U@} V} and @code{[x:U] V} bind the identifier
+@code{x} in @code{V}, which may shadow other constants or bound
+variables.  As usual in type theory, @code{U -> V} is treated as an
+abbreviation for @code{@{x:U@} V} where @code{x} does not appear
+in @code{V}.  However, there is a subtlety in that the latter allows
+an implicit argument (@pxref{Implicit Arguments}) to depend on
+@code{x} while the former does not.
+
+In the order of precedence, we disambiguate the syntax as follows:
+
+@enumerate
+@item Juxtaposition (application) is left associative and has highest precedence.
+
+@item User declared infix, prefix, or postfix operators (see below).
+
+@item @samp{->} is right and @samp{<-} left associative with equal precedence.
+
+@item @samp{:}  is left associative.
+
+@item @samp{@{@}} and @samp{[]} are weak prefix operators.
+@end enumerate
+
+For example, the following are parsed identically:
+
+@example
+@group
+   d : a <- b <- @{x@} c x -> p x.
+   d : (@{x@} c x -> p x) -> b -> a.
+   d : ((a <- b) <- (@{x:_@} ((c x) -> (p x)))).
+@end group
+@end example
+
+@node Constructor Declaration, Definitions, Grammar, Syntax
+@section Constructor Declaration
+
+@cindex variable scope
+@cindex free variables
+@cindex bound variables
+@cindex variables, free
+@cindex variables, bound
+
+New type families or object constructors can be introduced with
+
+@example
+condec ::= id : term.    % @r{@math{a : K} or @math{c : A}}
+@end example
+
+Here @code{a} stands for a type family and @code{K} for its kind,
+whereas @code{c} is an objects constructor and @code{A} its type.
+Identifiers are resolved as follows:
+
+@enumerate
+@item Any identifier @code{x} may be bound by the innermost enclosing binder
+for @code{x} of the form @code{@{x:A@}} or @code{[x:A]}.
+
+@item Any identifer which is not explicitly bound may be a declared or
+defined constant.
+
+@item Any uppercase identifier, that is, identifier
+starting with @samp{_} (underscore) or an upper case letter, may be
+a free variable.  Free variables are interpreted universally and their
+type is inferred from their occurrences (@pxref{Term Reconstruction}).
+
+@item Any other undeclared identifier is flagged as an error.
+@end enumerate
+
+@node Definitions, Operator Declaration, Constructor Declaration, Syntax
+@section Definitions
+
+@cindex definitions
+
+Twelf supports notational definitions, currently employing a restriction
+to allow a simple and efficient internal treatment.  Semantically,
+definitions are completely transparent, that is, both for type checking
+and the operational semantics definitions may be expanded.
+
+@example
+@group
+defn ::= id : term = term.   % @r{@math{d : A = M}}
+       | id = term.          % @r{@math{d = M}}
+@end group
+@end example
+
+@noindent
+where the second is equivalent to @code{id : _ = term}.  Definitions
+can only be made on the level of objects, not at the level of type
+families because the interaction of such definitions with logic
+programming search has not been fully investigated.
+
+In order to avoid always expanding definitions, Twelf currently only
+permits strict definitions (@pxref{Strict Definitions}).  A definition
+of a constant @code{c} is strict if all arguments to @code{c} (implicit
+or explicit) have at least one strict occurrence (@pxref{Strict
+Occurrences}) in the right-hand side of the definition, and the
+right-hand side contains at least one constant.  In practice, most
+notational definitions are strict.  For some examples, see @ref{Sample
+Signature} and @ref{Strict Definitions}.
+
+The power of definitions in Twelf, however, is severely limited by the
+lack of recursion.  It should only be thought of as notational
+definition, not as a computational mechanism.  Complex operations need
+to be defined as logic programs, taking advantage of the operational
+semantics assigned to signatures (@pxref{Logic Programming}).
+
+@node Operator Declaration, Name Preferences, Definitions, Syntax
+@section Operator Declaration
+
+@cindex declarations, operator
+@cindex operator declarations
+@cindex precedence
+
+@findex %infix
+@findex %prefix
+@findex %postfix
+@findex none
+@findex left
+@findex right
+
+The user may declare constants to be infix, prefix, or postfix
+operators.  Operator precedence properties are associated with
+constants, which must therefore already have been declared with a type
+or kind and a possible definition.  It is illegal to shadow an infix,
+prefix, or postfix operator with a bound variable.  We use
+@code{nat} for the terminal natural numbers.
+
+@example
+@group
+assoc ::= none   % @r{not associative}
+        | left   % @r{left associative}
+        | right  % @r{right associative}
+
+prec ::= nat     % @r{0 @t{<=} @t{prec} @t{<} 10000}
+@end group
+
+@group
+ixdecl ::= assoc prec id
+
+pxdecl ::= prec id
+
+decl ::= @dots{}
+       | %infix ixdecl.
+       | %prefix pxdecl.
+       | %postfix pxdecl.
+@end group
+@end example
+
+During parsing, ambiguous successive operators of identical precedence
+such as @code{a <- b -> c} are flagged as errors.  Note that it is not
+possible to declare an operator with equal or higher precedence than
+juxtaposition or equal or lower precedence than @samp{->} and @samp{<-}.
+
+@node Name Preferences, Sample Signature, Operator Declaration, Syntax
+@section Name Preferences
+
+@cindex name preferences
+@cindex declarations, name preference
+@cindex variable naming
+
+During printing, Twelf frequently has to assign names to anonymous
+variables.  In order to improve readability, the user can declare a name
+preference for anonymous variables based on their type.  Thus name
+preferences are declared for type family constants.  Note that name
+preferences are not used to disambiguate the types of identifiers during
+parsing.
+
+@example
+@group
+decl ::= @dots{}
+       | %name id id.
+@end group
+@end example
+
+Following our same conventions, a name preference declaration has the
+form @code{%name @var{a} @var{id}}, that is, the first identifier must
+be a type family already declared and the second is the name preference
+for variables of type @var{a}.  The second identifier must be uppercase,
+that is, start with a letter from @samp{A} through @samp{Z} or an
+underscore @samp{_}.  Anonymous variables will then be named
+@code{@var{id}@math{1}}, @code{@var{id}@math{2}}, etc.
+
+@node Sample Signature,  , Name Preferences, Syntax
+@section Sample Signature
+
+@cindex natural deduction
+
+Below is a signature for intuitionistic first-order logic over an
+unspecified domain of individuals and atomic propositions.  It
+illustrates constant declarations and definitions and the use of
+operator precedence and name preference declarations.  It may be found
+in the file @file{examples/guide/nd.elf}.
+
+@example
+@group
+%%% Individuals
+i : type.                   %name i T
+
+%%% Propositions
+o : type.                   %name o A
+
+imp    : o -> o -> o.       %infix right 10 imp
+and    : o -> o -> o.       %infix right 11 and
+true   : o.
+or     : o -> o -> o.       %infix right 11 or
+false  : o.
+forall : (i -> o) -> o.
+exists : (i -> o) -> o.
+
+not : o -> o = [A:o] A imp false.
+
+%%% Natural Deductions
+
+nd : o -> type.             %name nd D
+
+impi    : (nd A -> nd B) -> nd (A imp B).
+impe    : nd (A imp B) -> nd A -> nd B.
+andi    : nd A -> nd B -> nd (A and B).
+ande1   : nd (A and B) -> nd A.
+ande2   : nd (A and B) -> nd B.
+truei   : nd (true).
+% no truee
+ori1    : nd A -> nd (A or B).
+ori2    : nd B -> nd (A or B).
+ore     : nd (A or B) -> (nd A -> nd C) -> (nd B -> nd C) -> nd C.
+% no falsei
+falsee  : nd false -> nd C.
+foralli : (@{x:i@} nd (A x)) -> nd (forall A).
+foralle : nd (forall A) -> @{T:i@} nd (A T).
+existsi : @{T:i@} nd (A T) -> nd (exists A).
+existse : nd (exists A) -> (@{x:i@} nd (A x) -> nd C) -> nd C.
+
+noti : (nd A -> nd false) -> nd (not A)
+     = [D:nd A -> nd false] impi D.
+note : nd (not A) -> nd A -> nd false
+     = [D:nd (not A)] [E:nd A] impe D E.
+@end group
+@end example
+
+@node Term Reconstruction, Logic Programming, Syntax, Top
+@chapter Term Reconstruction
+
+@cindex term reconstruction
+@cindex type reconstruction
+
+Representations of deductions in LF typically contain a lot of redundant
+information.  In order to make LF practical, Twelf gives the user the
+opportunity to omit redundant information in declarations and
+reconstructs it from context.  Unlike for functional languages, this
+requires recovering objects as well as types, so we refer to this phase
+as term reconstruction.
+
+There are criteria which guarantee that the term reconstruction problem
+is decidable, but unfortunately these criteria are either very
+complicated or still force much redundant information to be supplied.
+Therefore, the Twelf implementation employs a reconstruction algorithm
+which always terminates and gives one of three answers:
+
+@enumerate
+@item yes, and here is the most general reconstruction;
+
+@item no, and here is the problem; or
+
+@item maybe.
+@end enumerate
+
+The last characterizes the situations where there is insufficient
+information to guarantee a most general solution to the term reconstruction
+problem.  Because of the decidable nature of type-checking in LF, the user
+can always annotate the term further until it falls into one of the
+definitive categories.
+
+@menu
+* Implicit Quantifiers::        Free variables in declarations
+* Implicit Arguments::          Omitted arguments to constants
+* Strict Occurrences::          A sufficient condition for principal types
+* Strict Definitions::          Reconstruction on definitions
+* Type Ascription::             Disambiguating terms
+* Error Messages::              When things go wrong
+@end menu
+
+@node Implicit Quantifiers, Implicit Arguments, Term Reconstruction, Term Reconstruction
+@section Implicit Quantifiers
+
+@cindex implicit quantifiers
+@cindex quantifiers, implicit
+
+The model of term reconstruction employed by Twelf is
+straightforward, although it employs a relatively complex algorithm.
+The basic principle is a duality between quantifiers omitted in a
+constant declaration and implicit arguments where the constant is used.
+Recall some definitions in the signature defining natural deductions
+(@pxref{Sample Signature}).
+
+@example
+o : type.
+and : o -> o -> o.   %infix right 10 and
+nd : o -> type.
+andi : nd A -> nd B -> nd (A and B).
+@end example
+
+The last declaration contains @code{A} and @code{B} as free variables.
+Type reconstruction infers most general types for the free variables in
+a constant declaration and adds implicit quantifiers.  In the example
+above, @code{A} and @code{B} must both be of type @code{o}.  The
+internal form of the constant thus has one of the following two forms.
+
+@example
+@group
+andi : @{A:o@} @{B:o@} nd A -> nd B -> nd (A and B).
+andi : @{B:o@} @{A:o@} nd A -> nd B -> nd (A and B).
+@end group
+@end example
+
+These forms are printed during type reconstruction, so the user can
+examine if the result of reconstruction matches his expectations.
+
+@node Implicit Arguments, Strict Occurrences, Implicit Quantifiers, Term Reconstruction
+@section Implicit Arguments
+
+@cindex implicit arguments
+@cindex arguments, implicit
+
+The quantifiers on @code{A} and @code{B} in the declaration
+
+@example
+andi : nd A -> nd B -> nd (A and B).
+@end example
+
+@noindent
+were implicit.  The corresponding arguments to @code{andi} are also
+implicit.  In fact, since the order of the reconstructed quantifiers is
+arbitrary, we cannot know in which order to supply the arguments, so
+they must always be omitted.  Thus a constant with @math{n} implicit
+quantifiers is supplied with @math{n} implicit arguments whereever it is
+seen.  These implicit arguments are existential variables whose value
+may be determined from context by unification.
+
+For example, using also
+
+@example
+true : o.
+truei: nd (true).
+@end example
+
+@noindent
+we have
+
+@example
+(andi truei truei) : nd (true and true).
+@end example
+
+During parsing, the expression @code{(andi truei truei)} is interpreted
+as
+
+@example
+(andi _ _ truei truei)
+@end example
+
+@noindent
+where the two underscores stand for the implicit @code{A} and @code{B}
+arguments to @code{andi}.  They are replaced by existential variables whose
+value will be determined during type reconstruction.  We call them
+@code{A1} and @code{A2} and reason as follows.
+
+@example
+@group
+|- andi : @{A:o@} @{B:o@} nd A -> nd B -> nd (A and B)
+|- andi A1 : @{B:o@} nd A1 -> nd B -> nd (A1 and B)
+|- andi A1 A2 : nd A1 -> nd A2 -> nd (A1 and A2)
+@end group
+@end example
+
+At this point, we need a to infer the type of the application
+@code{(andi A1 A2) truei}.  This equates the actual type of the argument
+with the expected type of the argument.
+
+@example
+@group
+|- andi A1 A2 : nd A1 -> nd A2 -> nd (A1 and A2)
+|- truei : nd true
+------------------------------------------------
+|- andi A1 A2 truei : nd A2 -> nd (A1 and A2)
+   @r{where} nd true = nd A1
+@end group
+@end example
+
+The equation can be solved by instantiating @code{A1} to @code{true} and
+we continue:
+
+@example
+@group
+|- andi true A2 truei : nd A2 -> nd (true and A2)
+|- truei : nd true
+------------------------------------------------
+|- andi true A2 truei truei : nd (true and A2)
+   @r{where} nd true = nd A2
+|- andi true true truei truei : nd (true and true)
+@end group
+@end example
+
+The last line is the expected result.  In this way, term reconstruction
+can always be reduced to solving equations such that every solution to
+the set of equations leads to a valid typing and vice versa.
+
+@node Strict Occurrences, Strict Definitions, Implicit Arguments, Term Reconstruction
+@section Strict Occurrences
+
+@cindex strict occurrences
+@cindex rigid occurrences
+@cindex occurrences, strict
+@cindex occurrences, rigid
+
+Both for type reconstruction and the operational semantics, Twelf must
+solve equations between objects and types.  Unfortunately, it is
+undecidable if a set of equations in the LF type theory has a solution.
+Worse yet, even if it has solutions, it may not have a most general
+solution.  Therefore, Twelf postpones difficult equations as constraints
+and solves only those within the pattern fragment (see @cite{Miller
+1991, Journal of Logic and Compuation} and @cite{Pfenning 1991, Logical
+Frameworks}).  In this fragment, principal solutions always exist and
+can be computed efficiently.  If constraints remain after term
+reconstruction, the constant declaration is rejected as ambiguous which
+indicates that the user must supply more type information.  We
+illustrate this phenomenon and a typical solution in our natural
+deduction example.
+
+A central concept useful for understanding the finer details of type
+reconstruction is the notion of a @emph{strict occurrence} of a free
+variable.  We call a position in a term @emph{rigid} if it is not in the
+argument of a free variable.  We then call an occurrence of a free
+variable @emph{strict} if the occurrence is in a rigid position and all
+its arguments (possibly none) are distinct bound variables.
+
+If all free variable occurrences in all declarations in a signature are
+strict, then term reconstruction will always either fail or succeed with
+a principal solution, provided no further terms are omitted (that is,
+replaced by an underscore).
+
+If a free variable in a declaration of a constant @code{c} has no strict
+occurrence at all, then its type can almost never be inferred and most uses of
+@code{c} will lead to a constraint.
+
+If a free variable has strict and non-strict occurrences then in most
+cases term reconstruction will provide a definitive answer, but there is
+no guarantee.  Mostly this is because most general answers simply do not
+exist, but sometimes because the algorithm generates, but cannot solve
+constraints with unique solutions.
+
+We use some advanced examples from the natural deduction signature to
+illustrate these concepts and ideas.  In the declarations
+
+@example
+foralli : (@{x:i@} nd (A x)) -> nd (forall A).
+foralle : nd (forall A) -> @{T:i@} nd (A T).
+@end example
+
+@noindent
+all free variables have a strict occurrence.  However, if we had
+decided to leave @code{T} as an implicit argument,
+
+@example
+foralle : nd (forall A) -> nd (A T).
+@end example
+
+@noindent
+then @code{T} has no strict occurrence.  While this declaration is
+accepted as unambiguous (with @code{A:i -> o} and @code{T:i}), any
+future use of @code{foralle} most likely leads to constraints on
+@code{T} which cannot be solved.
+
+@node Strict Definitions, Type Ascription, Strict Occurrences, Term Reconstruction
+@section Strict Definitions
+
+@cindex definitions, strict
+@cindex strict definitions
+
+Definitions are currently restricted so that each argument to the
+defined constant, may it be implicit or explicit, must have at least one
+strict occurrence in the right-hand side.  For example, the definition
+of @code{not} in the signature for natural deduction (@pxref{Sample
+Signature})
+
+@example
+not : o -> o = [A:o] A imp false.
+@end example
+
+@noindent
+is strict since the only argument @code{A} has a strict occurrence in
+@code{A imp false}.  On the other hand, the definition
+
+@example
+@group
+noti : (@{p:o@} nd A -> nd p) -> nd (not A)
+     = [D] impi ([u:nd A] D false u).
+@end group
+@end example
+
+@noindent
+which gives a possible derived introduction rule for negation is not
+strict: the argument @code{D} has only one occurrence, and this occurrence
+is not strict since the argument @code{false} is not a variable bound in
+the body, but a constant.
+
+However, the definitions
+@example
+@group
+noti : (nd A -> nd false) -> nd (not A)
+     = [D:nd A -> nd false] impi D.
+note : nd (not A) -> nd A -> nd false
+     = [D:nd (not A)] [E:nd A] impe D E.
+@end group
+@end example
+
+@noindent
+are both strict since arguments @code{D} and @code{E} both have strict
+occurrences.  Type-checking these definitions requires that the definition
+of @code{not A} is expanded to @code{A imp false}.
+
+Note that free variables in the type and the right-hand side of a
+definition are shared.  In the above example, @code{A} occurs both in
+the types and the right hand side and it should be thought of as the
+same @code{A}.  With the implicit quantifiers and abstractions restored,
+the definitions above have the following form.
+
+@example
+@group
+noti : @{A:o@} (nd A -> nd false) -> nd (not A)
+   = [A:o] [D:nd A -> nd false] impi D.
+note : @{A:o@} nd (not A) -> nd A -> nd false
+   = [A:o] [D:nd (not A)] [E:nd A] impe D E.
+@end group
+@end example
+
+
+@node Type Ascription, Error Messages, Strict Definitions, Term Reconstruction
+@section Type Ascription
+
+@cindex ambiguity
+@cindex type ascription
+
+In some circumstances it is useful to directly ascribe a type in order
+to disambiguate declarations.  For example, the term @code{ori1 truei}
+has principal type @code{nd (true or B)} for a free variable @code{B}.
+If we want to constrain this to a derivation of @code{nd (true or false)}
+we can write @code{ori1 truei : nd (true or false)}.
+
+Explicit type ascription sometimes helps when the source of a type error
+is particularly hard to discern: we can ascribe an expected type to a
+subterm, thus verifying our intuition about constituent terms in a
+declaration.
+
+@node Error Messages,  , Type Ascription, Term Reconstruction
+@section Error Messages
+
+@cindex error messages
+
+When term reconstruction fails, Twelf issues an error message with the
+location of the declaration in which the problem occurred and the
+disagreement encountered.  A typical message is
+
+@example
+@group
+examples/nd/nd.elf:37.35-37.41 Error: Type mismatch
+Expected: o
+Found:    (i -> o) -> o
+Expression clash
+@end group
+@end example
+
+@noindent
+which points to an error in the file @file{examples/nd/nd.elf}, line 37,
+characters 35 through 41 where an argument to a function was expected to
+have type @code{o}, but was found to have type @code{(i -> o) -> o}.
+
+If constraints remain, the error location is the whole declaration
+with the message
+
+@example
+@var{filename}:@var{location} Error: Typing ambiguous -- unresolved constraints
+@end example
+
+The @var{filename} and @var{location} information can be used by Emacs
+(@pxref{Emacs Interface}) to jump to the specified location in the given
+file for editing of the incorrect declaration for the constant @code{c}.
+The @var{location} has the form
+@code{@var{line1}.@var{column1}-@var{line2}.@var{column2}} and represent
+Twelf's best guess as to the source of the error.  Due to the
+propagation of non-trivial constraints the source of a type
+reconstruction failure can sometimes not be pinpointed very precisely.
+
+@node Logic Programming, Modes, Term Reconstruction, Top
+@chapter Logic Programming
+
+@cindex logic programming
+
+Twelf gives an operational interpretation to signatures under the
+computation-as-proof-search paradigm.  The fundamental idea is to fix a
+simple search strategy and then search for a derivation of a query
+according to this strategy.  The result may be a substitution for the
+free variables in a query and a derivation, or explicit failure.  It is
+also possible that the computation does not terminate.
+
+A query can be posed in three different ways: as a @code{%query}
+declaration, as a @code{%solve} declaration, or interactively, using a
+top-level invoked from ML with @code{Twelf.top} which prompts with
+@samp{?-} (@pxref{Interactive Queries}).
+
+@example
+@group
+query ::= id : term   % @r{@math{X : A}, @math{X} a free variable}
+        | term        % @r{@math{A}}
+
+bound ::= nat         % @r{number of solutions}
+        | *           % @r{unbounded number}
+
+qdecl ::= bound bound query % @r{expected solutions, try limit, query}
+
+decl ::= @dots{}
+       | %query qdecl.      % @r{execute query}
+       | %solve id : term.  % @r{solve and name proof term}
+@end group
+@end example
+
+In all of these cases, the free variables in a query are interpreted
+existentially, which is in contrast to constant declarations where free
+variables are interpreted universally.  In particular, free variables
+might be instantiated during type reconstruction and during execution of
+the query.
+
+@menu
+* Query Declaration::           Checking expected numbers of solutions
+* Solve Declaration::           Naming proof terms found by search
+* Interactive Queries::         Twelf's interactive top-level
+* Sample Trace::                An example how search works
+* Operational Semantics::       How queries are executed in some detail
+* Sample Program::              Type inference for a lambda-calculus
+@end menu
+
+@node Query Declaration, Solve Declaration, Logic Programming, Logic Programming
+@section Query Declaration
+
+@cindex queries
+@findex %query
+
+The query form
+
+@example
+%query @var{expected} @var{try} A.
+@end example
+
+@noindent
+will try to solve the query @code{A} and verify that it gives the
+@var{expected} number of solutions, but it will never try to find more
+than indicated by @var{try}.  It succeeds and prints a message, whose
+precise form depends on the value of @code{Twelf.chatter} if @code{A}
+has the expected number of solutions; otherwise it either fails with an
+error message or does not terminate.  @samp{%query} has no other effect
+on the state of Twelf.  Here are some examples.
+
+@example
+%query 1 * A.      % @r{check that @code{A} has exactly one solution}
+%query 1 1 A.      % @r{check that @code{A} has at least one solution}
+%query * 3 A.      % @r{@code{A} has infinitely many solutions, check 3}
+%query * * A.      % @r{fails if @code{A} has finitely many solutions}
+%query 1 0 A.      % @r{skip this query}
+@end example
+
+@node Solve Declaration, Interactive Queries, Query Declaration, Logic Programming
+@section Solve Declaration
+
+@cindex solving queries
+@findex %solve
+
+The query form
+
+@example
+%solve c : A.
+@end example
+
+@noindent
+will search for the first solution @code{M} of @code{A} and then define
+
+@example
+c : A = M.
+@end example
+
+If there are any free variables remaining in @code{M} or @code{A} after
+search, they will be implicitly quantified in the new definition.  This
+form of definition is particularly useful to compute and name inputs to
+future queries.  An example of this feature from the file
+@file{examples/nd/lam.elf} can be found in @ref{Proof Realizations}.
+
+@node Interactive Queries, Sample Trace, Solve Declaration, Logic Programming
+@section Interactive Queries
+
+@cindex queries, interactive
+@cindex top-level, query
+
+An interactive top-level can be invoked using the SML expression
+@code{Twelf.top ();}.  The top-level prompts with @samp{?- } and
+awaits the input of a query, terminated by a period @samp{.} and
+a @key{RET}.
+
+After the query has been parsed, Twelf reconstructs implicit type
+information, issuing a warning if constraints remain.  The result is
+executed as a query.  At any point during the processing of a
+query the user may interrupt with @kbd{C-c} (that is, @key{CTRL} and
+@kbd{c}) to drop back into ML's interactive top-level.
+
+When Twelf has found a solution, it prints the @emph{answer
+substitution} for all free variables in the query, including the proof
+term variable if one was given.  It also notes if there are remaining
+equational constraints, but currently does not print them.
+
+The top-level then waits for input, which is interpreted as
+follows
+
+@table @asis
+@item @kbd{y}, @kbd{Y}, or @kbd{;}
+      backtrack and search for another solution
+
+@item @kbd{q} or @kbd{Q}
+      quit Twelf's top-level and return to ML
+
+@item @kbd{n}, @kbd{N}, or anything else
+      return to prompt for another query
+@end table
+
+@node Sample Trace, Operational Semantics, Interactive Queries, Logic Programming
+@section Sample Trace
+
+As an example we consider lists of propositions and some simple
+operations on them, as they might be used when programming a theorem
+prover.
+
+@example
+@group
+list : type.
+nil  : list.
+cons : o -> list -> list.
+@end group
+@end example
+
+First, we want to write a program to append two lists to obtain
+their concatenation.  This is expressed as a relation between
+the three lists, which in turn is implemented as a type family
+
+@example
+@group
+append  : list -> list -> list -> type.
+
+appNil  : append nil K K.
+appCons : append (cons X L) K (cons X M)
+           <- append L K M.
+@end group
+@end example
+
+Here, we use the synonym @code{A <- B} for @code{B -> A} to improve
+readability.  We say @emph{@code{A} if @code{B}}.
+
+The first sample query concatenates the singleton lists containing
+@code{true} and @code{false}.  We proceed as if we had loaded the appropriate
+files and started a top-level with @code{Twelf.top ();}.
+
+@example
+?- append (cons true nil) (cons false nil) L.
+@end example
+
+Here, @code{L} is a free existential variable.  We search for an object
+@code{M : append (cons true nil) (cons false nil) L}, even though
+this object will not be shown in this form or query.  Each
+constant declaration in the signature is tried in turn, unifying
+the head with the goal above.  In this manner, we obtain the
+following sequence of goals and actions.  Note that the intermediate
+forms and comments are not printed when this is run.  They are added
+here to illustrate the behavior.
+
+@example
+@group
+% @r{original goal after parsing and type reconstruction}
+?- append (cons true nil) (cons false nil) L.
+[try appNil:
+     append nil K1 K1
+   = append (cons true nil) (cons false nil) L
+ unification fails with constant clash: nil <> cons
+]
+[try appCons:
+     append (cons X1 L1) K2 (cons X1 M1)
+   = append (cons true nil) (cons false nil) L
+ unification succeeds with
+ X1 = true, L1 = nil, K2 = cons false nil, L = cons true M1
+]
+@end group
+@group
+% @r{subgoal}
+?- append nil (cons false nil) M1.
+[try appNil:
+     append nil K3 K3
+   = append nil (cons false nil) M1
+ unification and subgoal succeeds with
+ K3 = cons false nil, M1 = cons false nil
+]
+@end group
+@end example
+
+At this point the overall goal succeeds and we read off the
+answer substitution for the only free variable in the query,
+namely @code{L}.  It was first determined to be @code{cons true M1}
+and then @code{M1} was instantiated to @code{cons false nil},
+leading to the instantiation
+
+@example
+L = cons true (cons false nil).
+@end example
+
+If instead we pose the query
+
+@example
+?- X : append (cons true nil) (cons false nil) L.
+@end example
+
+@noindent
+we also obtain the proof term
+
+@example
+@group
+L = cons true (cons false nil);
+X = appCons appNil.
+@end group
+@end example
+
+As another example we consider a query with several solutions which are
+enumerated when we ask for further results.  This time we do not trace
+the steps of the execution, but show the interaction verbatim.
+
+@example
+@group
+?- append L K (cons true (cons false nil)).
+Solving...
+K = cons true (cons false nil);
+L = nil.
+More? @kbd{y}
+K = cons false nil;
+L = cons true nil.
+More? @kbd{y}
+K = nil;
+L = cons true (cons false nil).
+More? @kbd{y}
+No more solutions
+@end group
+@end example
+
+@node Operational Semantics, Sample Program, Sample Trace, Logic Programming
+@section Operational Semantics
+
+@cindex operational semantics
+@cindex semantics, operational
+@cindex clause selection
+@cindex subgoal selection
+@cindex unification
+@cindex local assumptions
+@cindex assumptions
+@cindex local parameters
+@cindex parameters
+
+The operational semantics of Twelf is a form of typed constraint logic
+programming.  We will use standard terminology from this area.  A type
+family which is used in a program or goal is called a @emph{predicate}.
+A constant declaration in a signature which is available during search
+is called a @emph{clause}.  A clause typically has the form @code{c : a
+M1 @dots{} Mm <- A1 <- @dots{} <- An}, where @code{a M1 @dots{} Mm} is
+the @emph{head of the clause} and @code{A1} through @code{An} are the
+@emph{subgoals}.  A clause is used to reduce a goal to subgoals by a
+process called @emph{backchaining}.  Backchaining unifies the head of
+the clause with the current goal to generate @emph{subgoals}.  Next, we
+@emph{select} one of the subgoals as a current goal and continue the
+search process.  Actually, instead of unification (which is undecidable
+in LF), Twelf employs @emph{constraint simplification} and carries along
+equational constraints in a normal form.
+
+A hypothesis which is introduced during search is a @emph{local
+assumption}; a parameter is a @emph{local parameter}.  Parameters act
+like constants in unification, except that their occurrences might be
+restricted due to @emph{parameter dependency}.
+
+Without going into a formal description, here are the central ideas of
+the operational semantics.
+
+@table @asis
+@item Clause selection.
+ The clauses are tried in the following order: from most recent to least
+recent local assumption, then from first to last clause in the global
+signature.
+
+@item Subgoal selection.
+ Subgoals are solved from the inside out.  For example, when a clause
+@code{c : A <- B <- C.}  is applied to solve the goal @code{?- A.} then the
+first subgoal is @code{B} and the second subgoal @code{C}.  Truly
+dependent variables will only be subject to unification and never
+give rise to a subgoal.  For example @code{c : @{X:b@} a X <- a c} is
+a clause with head @code{a X}, subgoal @code{a c}, and existential variable
+@code{X}.
+
+@item Unification.
+ An atomic goal is unified with the clause head using higher-order
+pattern unification.  All equations outside this fragment are postponed
+and carried along as constraints.
+
+@item Local assumptions.
+ A goal of the form @code{?- A -> B.} introduces a local assumption @code{A}
+and then solves @code{B} under this assumption.  To solve atomic goals,
+local assumptions are tried before global clauses, using the most
+recently made assumption first.  Note that this is different from
+Prolog @code{assert} in that @code{A} is available only for solving
+@code{B}.
+
+@item Local parameters.
+ Parameters are introduced into proof search by goals of the form
+@code{?- @{x:A@} B.} which generates a @emph{new} parameter @code{a} and
+then solves the result of substituting @code{a} for @code{x} in
+@code{B}.  Parameters are also called @emph{universal variables} since
+they are not subject to instantiation during unification.  Local
+parameters will never be used as local assumptions during search.
+@end table
+
+@node Sample Program,  , Operational Semantics, Logic Programming
+@section Sample Program
+
+@cindex lambda calculus example
+@cindex type inference example
+
+As an example, we consider simple type inference for the pure
+lambda-calculus.  An extension of this example to Mini-ML is given in
+the course notes @cite{Pfenning 1992, Computation and Deduction}.  The
+code below can be found in the file @file{examples/guide/lam.elf}.
+
+@example
+@group
+% Simple types
+tp : type.                              %name tp T.
+
+arrow : tp -> tp -> tp.                 % T1 => T2
+
+% Expressions
+exp : type.                             %name exp E.
+
+lam   : (exp -> exp) -> exp.            % lam x. E
+app   : exp -> exp -> exp.              % (E1 E2)
+
+% Type inference 
+% |- E : T  (expression E has type T)
+
+of : exp -> tp -> type.                 %name of P.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 => T2
+          <- (@{x:exp@}                   % if  x:T1 |- E : T2.
+                of x T1 -> of (E x) T2).
+
+tp_app : of (app E1 E2) T1              % |- E1 E2 : T1
+          <- of E1 (arrow T2 T1)        % if  |- E1 : T2 => T1
+          <- of E2 T2.                  % and |- E2 : T2.
+@end group
+@end example
+
+Again, we have used the notation @code{A <- B} to emphasize
+the interpretation of constant declarations as clauses.  We now
+trace the query which infers the most general type of the identity
+function, represented as @code{lam [x:exp] x}.  We indicate the scope
+of hypotheses which are introduced during search by indentation.
+
+@example
+@group
+% @r{original query, @code{T} free}
+?- of (lam [x:exp] x) T.
+% @r{use @code{tp_lam} with @code{E = ([x:exp] x)} and @code{T = arrow T1 T2}}
+% @r{subgoal}
+?- @{x:exp@} of x T1 -> of x T2.
+% @r{introduce parameter @code{e}}
+?- of e T1 -> of e T2.
+% @r{introduce hypothesis labelled @code{p}}
+p:of e T1
+ ?- of e T2.
+ % @r{succeed by hypothesis @code{p} with @code{T1 = T2}}
+@end group
+@end example
+
+At this point the query succeeds and prints the answer substitution.
+
+@example
+@group
+T = arrow T1 T1.
+More? @kbd{y}
+No more solutions
+@end group
+@end example
+
+We requested more solution by typing @kbd{y}, but there are no further
+possibilities.  The free variable @code{T1} in the answer substitution
+means that every instance of @code{arrow T1 T1} provides a solution to
+the original query.  In other words, @code{lam [x:exp] x} has type
+@code{arrow T1 T1} for all types @code{T1}.
+
+As a second example we verify that self-application is not well-typed in
+the simply-typed lambda-calculus.
+
+@example
+@group
+?- of (lam [x:exp] app x x) T.
+% @r{use @code{tp_lam} with @code{T = arrow T1 T2}}
+% @r{subgoal}
+?- @{x:exp@} of x T1 -> of (app x x) T2.
+% @r{introduce parameter @code{e}}
+?- of e T1 -> of (app e e) T2.
+% @r{introduce hypothesis @code{p:of a T1}}
+p:of e T1
+ ?- of (app e e) T2.
+ % @r{use @code{tp_app}}
+ % @r{first subgoal}
+ ?- of e (arrow T3 T2).
+ % @r{succeed by hypothesis @code{p} with @code{T1 = arrow T3 T2}}
+ % @r{second subgoal}
+ ?- of e T3.
+ % @r{fail, since @code{T3 = arrow T3 T2} has no solution}
+@end group
+@end example
+
+At the point where the second subgoals fails we backtrack.  However, all
+other alternatives fail immediately, since the clause head does not
+unify with the goal and the overall query fails.
+
+
+@node Modes, Termination, Logic Programming, Top
+@chapter Modes
+
+@cindex modes
+@cindex input mode
+@cindex output mode
+
+In most cases, the correctness of the algorithmic interpretation of a
+signature as a logic program depends on a restriction to queries of a
+certain form.  Often, this is a restriction of some arguments to
+@emph{inputs} which must be given as @emph{ground} objects, that is,
+objects not containing any existential variables.  In return, one often
+obtains @emph{outputs} which will also be ground.  In the logic
+programming terminology, the information about which arguments to a
+predicate should be considered input and output is
+called @emph{mode information}.
+
+Twelf supports a simple system of modes.  It checks explicit mode
+declarations by the programmer against the signature and signals errors
+if the prescribed information flow is violated.  Currently, queries are
+not checked against the mode declaration.
+
+Mode checking is useful to uncover certain types of errors which
+elude the type-checker.  It can also be used to generate more efficient
+code, although the compiler currently does not take advantage
+of mode information.
+
+There are two forms of mode declarations: a short form which is adequate
+and appropriate most of the time, and a long form which is sometimes
+necessary to ascribe the right modes to implicit arguments
+
+@example
+@group
+mdecl ::= smdecl    % @r{short mode declaration}
+        | fmdecl    % @r{full mode declaration}
+
+decl ::= @dots{}
+       | %mode mdecl.
+@end group
+@end example
+
+@menu
+* Short Mode Declaration::      Common form for modes
+* Full Mode Declaration::       Fully explicit modes
+* Mode Checking::               Checking mode correctness
+@end menu
+
+@node Short Mode Declaration, Full Mode Declaration, Modes, Modes
+@section Short Mode Declaration
+
+@cindex declarations, mode
+@cindex mode declarations, short form
+@findex %mode
+
+There are two forms of mode declarations: a short and a full form.
+The short form is an abbreviation which is expanded into the full
+form when it is unambiguous.
+
+@example
+@group
+mode ::= +       % @r{input}
+       | *       % @r{unrestricted}
+       | -       % @r{output}
+
+mid ::= mode id  % @r{named mode identifier, one token}
+
+smdecl ::= id          % @r{type family @math{a}}
+         | smdecl mid  % @r{argument mode}
+@end group
+@end example
+
+Mode declarations for a predicate @code{a} must come before any clauses
+defining @code{a}.  Note that the mode followed with the identifier must
+be one token, such as @samp{+L} and not @samp{+ L}.  The short form is
+most convenient in typical situations.  For example, we can declare that
+the @code{append} program (@pxref{Sample Trace}) takes the first two
+arguments as input and produces the the third as output.
+
+@example
+@group
+append  : list -> list -> list -> type.
+%mode append +L +K -M.
+@end group
+@end example
+
+If we wanted to use @code{append} to split a list into two
+sublists, we would instead declare
+
+@example
+@group
+append : list -> list -> list -> type.
+%mode append -L -K +M.
+@end group
+@end example
+
+@noindent
+where the clauses @code{appNil} and @code{appCons} remain
+unchanged.
+
+In the lambda-calculus type checker (@pxref{Sample Program}), the type
+must be an unrestricted argument.
+
+@example
+@group
+of : exp -> tp -> type.
+%mode of +E *T.
+@end group
+@end example
+
+If we declare it as an input argument, @code{%mode of +E +T},
+we obtain an error pointing to the first occurrence of @code{T2}
+in the clause @code{tp_app} reproduced below.
+
+@example
+@group
+examples/nd/lam.elf:27.20-27.22 Error: 
+Occurrence of variable T2 in input (+) argument not necessarily ground
+
+tp_app : of (app E1 E2) T1
+          <- of E1 (arrow T2 T1)
+          <- of E2 T2.
+@end group
+@end example
+
+If we declare it as an output argument, @code{%mode of +E -T},
+we obtain an error pointing to the second occurrence of @code{T1}
+in the clause @code{tp_lam} reproduced below.
+
+@example
+@group
+examples/nd/lam.elf:25.8-25.10 Error: 
+Occurrence of variable T1 in output (-) argument not necessarily ground
+
+tp_lam : of (lam E) (arrow T1 T2)
+          <- (@{x:exp@}
+                of x T1 -> of (E x) T2).
+@end group
+@end example
+
+In general, for a mode declaration in short form the arguments are
+specified exactly as they would look in the program.  This means one
+cannot specify the modes of implicit arguments which are filled in by
+term reconstruction.  These modes are reconstructed as follows: each
+implicit argument which appears in the type of an input argument is
+considered input @samp{+}, those among the remaining which appear in an
+output argument are considered output @samp{-}, the rest are
+unrestricted.  The mode declaration is echoed in full form, so the user
+can verify the correctness of the modes assigned to implicit arguments.
+If the inferred full mode declaration is incorrect, or if one wants to
+be explicit about modes, one should use full mode declarations
+(@pxref{Full Mode Declaration}).
+
+@node Full Mode Declaration, Mode Checking, Short Mode Declaration, Modes
+@section Full Mode Declaration
+
+@cindex mode declaration, full form
+@findex %mode
+
+To specify modes for implicit arguments one must use the full form of
+mode declaration.  A @code{mode} can be one of @samp{+},
+@samp{*}, or @samp{-} (@pxref{Short Mode Declaration}).
+
+@example
+@group
+fmdecl ::= mode @{id : term@} fmdecl
+         | mode @{id@} fmdecl
+         | term
+@end group
+@end example
+
+The term following the mode prefix in a full mode declaration must
+always have the form @code{@math{a} @math{x1} @dots{} @math{xn}} where
+@math{x1} through @math{xn} are variables declared in the mode prefix.
+As an example, we give an alternative specification of the @code{append}
+predicate.
+
+@example
+@group
+append : list -> list -> list -> type.
+%mode +@{L:list@} +@{K:list@} -@{M:list@} append L K M.
+@end group
+@end example
+
+@node Mode Checking,  , Full Mode Declaration, Modes
+@section Mode Checking
+
+@cindex mode checking
+
+Mode checking for input, output, and unrestricted arguments examines
+each clause as it is encountered.  The algorithm performs a kind of
+abstract interpretation of the clause, keeping track of a list of the
+existential variables for which it knows that they will be ground.
+
+@enumerate
+@item We assume each existential variable with a strict occurrence
+(@pxref{Strict Occurrences}) in an input argument to the clause head to
+be ground.
+
+@item We traverse the subgoals in evaluation order (@pxref{Operational
+Semantics}).  For each subgoal we first verify that all input arguments
+will be ground, using the information about the existential variables
+collected so far.  If this check succeeds we add all variables which
+have a strict occurrence in an output argument of the subgoal to the
+list of variables with known ground instantiations.
+
+@item After the last subgoal has been examined, we verify that the
+output arguments in the clause head are now also ground.
+@end enumerate
+
+Arguments whose mode is unrestricted are ignored: they do no need to be
+checked, and they do not contribute any information about the
+instantiations of existential variables.
+
+@node Termination, Theorem Prover, Modes, Top
+@chapter Termination
+
+@cindex termination checking
+
+Besides checking types and modes, Twelf can also verify if a given type
+family, when interpreted as a logic program, always terminates on
+well-moded goals.  In many cases this means that the program implements
+a decision procedure.  Of course, in general termination is undecidable,
+so we only check a simple sufficient condition.
+
+Checking termination presupposes that the program is well-typed and
+guarantees termination only when the arguments involved in the
+termination order are ground.  This will always be true for well-moded
+goals, since mode and termination declarations must be consistent.
+
+Termination is different from checking types and modes in that it is not
+checked incrementally as the signature is read.  Instead, termination of
+a predicate is a global property of the program once it has been read.
+Thus termination declarations came after the predicate has been fully
+defined; further extensions of the predicate are not checked and may
+invalidate termination.
+
+The termination checker is rather rudimentary in that it only allows
+lexicographic and simultaneous extensions of the subterm ordering.
+Moreover, it does not take into account if a result returned by a
+predicate is smaller than an input argument.  Nonetheless, for the style
+of programs written in Twelf, the termination of many decision
+procedures can be verified.
+
+@menu
+* Termination Declaration::     Checking termination
+* Subterm Ordering::            Higher-order subterms
+* Lexicographic Orders::        Termination by nested induction
+* Simultaneous Orders::         Termination by simultaneous induction
+* Mutual Recursion::            Termination of mutually recursive predicates
+@end menu
+
+@node Termination Declaration, Subterm Ordering, Termination, Termination
+@section Termination Declaration
+
+@cindex termination declarations
+@cindex declarations, termination
+@cindex call patterns
+@cindex termination order
+@cindex order
+@findex %terminates
+
+The termination orders we construct are lexicographic or simultaneous
+extensions of the subterm ordering explained in @ref{Subterm Ordering}.
+The termination declaration associates the termination order with
+argument positions of predicates via call patterns.
+
+The case of mutually recursive predicates is particularly complex
+and requires mutual call patterns and mutual arguments.
+Their syntax is given below; they are explained in @ref{Mutual Recursion}.
+
+@example
+@group
+args ::=
+       | id args       % @r{named argument}
+       | _ args        % @r{anonymous argument}
+
+callpat ::= id args    % @r{@math{a} @math{x1} @dots{} @math{xn}}
+
+callpats ::= 
+           | (callpat) callpats
+                       % @r{mutual call patterns}
+@end group
+
+@group
+ids ::=
+      | id ids         % @r{argument name}
+
+marg ::= id            % @r{single argument}
+       | ( ids )       % @r{mutual arguments}
+
+orders ::=
+         | order orders % @r{component order}
+
+order ::= marg         % @r{subterm order}
+        | @{ orders @}   % @r{lexicographic order}
+        | [ orders ]   % @r{simultaneous order}
+
+tdecl ::= order callpats    % @r{termination declaration}
+
+decl ::= @dots{}
+       | %terminates tdecl. % @r{termination declaration}
+@end group
+@end example
+
+All identifiers in the order specification of a termination declaration
+must be upper case, must occur in the call patterns, and no variable may
+be repeated.  Furthermore, all arguments participating in the
+termination order must occur in the call patterns in input positions.
+
+The most frequent form of termination declaration is
+
+@example
+%terminates Xi (a X1 @dots{} Xn).
+@end example
+
+@noindent
+which expresses that predicate @code{a} terminates because recursive
+calls decrease the input argument @code{Xi} according to the subterm
+ordering (@pxref{Subterm Ordering}).
+
+As an example, we consider a proof that simple type inference
+(@pxref{Sample Program}) terminates.  Recall the relevant program
+fragment (see @file{examples/guide/lam.elf}).
+
+@example
+@group
+of : exp -> tp -> type.                 %name of P.
+%mode of +E *T.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 => T2
+          <- (@{x:exp@}                   % if  x:T1 |- E : T2.
+                of x T1 -> of (E x) T2).
+
+tp_app : of (app E1 E2) T1              % |- E1 E2 : T1
+          <- of E1 (arrow T2 T1)        % if  |- E1 : T2 => T1
+          <- of E2 T2.                  % and |- E2 : T2.
+@end group
+@end example
+
+The typability of an expression is always reduced to the typability of
+its subexpressions.  Therefore any call to the @code{of} predicate with
+a ground expression should terminate.  In general, termination can only
+be checked for input arguments, and all calls must be well-moded
+(@pxref{Mode Checking}).  Twelf verifies termination with the
+declaration
+
+@example
+%terminates E (of E T).
+@end example
+
+Here, @code{E} specifies the decreasing argument, namely the first
+argument of the typing judgment as expressed in the call pattern
+@code{(of E T)}.
+
+A corresponding attempt to show that evaluation always terminates,
+
+@example
+%terminates E (eval E V).
+@end example
+
+@noindent
+fails for the clause @code{ev_app} with the message
+
+@example
+@group
+examples/guide/lam.elf:1053-1068 Error:
+Termination violation:
+(E1' V2) < (app E1 E2)
+@end group
+@end example
+
+@noindent
+indicating that in a recursive call the term @code{E1' V2} could not be
+shown to be smaller than @code{app E1 E2}.  In our example, of course,
+evaluation need not terminate for precisely this reason.
+
+@node Subterm Ordering, Lexicographic Orders, Termination Declaration, Termination
+@section Subterm Ordering
+
+@cindex subterm order
+@cindex order, subterm
+
+On first-order terms, that is, terms not containing lambda-abstraction,
+the subterm ordering is familiar: @math{M < N} if @math{M} is a strict
+subterm of @math{N}, that is, @math{M} is a subterm @math{N} and
+@math{M} is different from @math{N}.
+
+On higher-order terms, the relation is slightly more complicated because
+we must allow the substitution of parameters for bound variables without
+destroying the subterm relation.  Consider, for example, the case of the
+typing rule
+
+@example
+@group
+of : exp -> tp -> type.                 %name of P.
+%mode of +E *T.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 => T2
+          <- (@{x:exp@}                   % if  x:T1 |- E : T2.
+                of x T1 -> of (E x) T2).
+@end group
+@end example
+
+@noindent
+from the signature for type inference (@pxref{Sample Program}) in the
+file @file{example/guide/lam.elf}.  We must recognize that
+
+@example
+(E x) < (lam E)
+@end example
+
+@noindent
+according to the subterm ordering.  This is because @code{E} stands for
+a term @code{[y:exp] E'} and so @code{E x} has the same structure as
+@code{E'} except that @code{y} (a bound variable) has been replaced by
+@code{x} (a parameter).  This kind of pattern arises frequently in
+Twelf programs.
+
+On the other hand, the restriction to parameter arguments of functions
+is critical.  For example, the lax rule
+
+@example
+@group
+tp_applam : of (app (lam E1) E2) T2
+             <- of (E1 E2) T2.
+@end group
+@end example
+
+@noindent
+which applies @code{E1} to @code{E2} which is not a parameter, is indeed
+not terminating.  This can be seen from the query
+
+@example
+?- of (app (lam [x:exp] app x x) (lam [y:exp] app y y)) T.
+@end example
+
+The restriction of the arguments to parameters can be lifted when the
+type of the argument is not mutually recursive with the result type of
+the function.  For example, the signature for natural deduction
+(@pxref{Sample Signature}, contains no constructor which allows
+propositions to occur inside individual terms.  Therefore
+
+@example
+(A T) < (forall A)
+@end example
+
+@noindent
+where @code{A : i -> o} and @code{T : i} is an arbitrary term (not just
+a parameter).  Intuitively, this is correct because the number of
+quantifiers and logical connectives is smaller on the left, since
+@code{T} cannot contain such quantifiers or connectives.
+
+This kind of precise analysis is important, for example, in the proof
+of cut elimination or the termination of polymorphic type
+reconstruction.
+
+@node Lexicographic Orders, Simultaneous Orders, Subterm Ordering, Termination
+@section Lexicographic Orders
+
+@cindex order, lexicographic
+
+Lexicographic orders are specified as
+
+@example
+@{@var{O1} @dots{} @var{On}@}
+@end example
+
+Using @math{vi} and @math{wi} for corresponding argument structures
+whose order is already defined, we compare them lexicographically as
+follows:
+
+@table @asis
+@item @math{@{v1} @dots{} @math{vn@}} @math{<} @math{@{w1} @dots{} @math{wn@}}, if
+@table @asis
+@item @math{v1 < w1}, or
+@item @math{v1 = w1} and @math{v2 < w2}, or
+@item @dots{}
+@item @math{v1 = w1}, @math{v2 = w2}, @dots{}, and @math{vn < wn}.
+@end table
+@end table
+
+A lexicographic order is needed, for example, to show termination of
+Ackermann's function, defined in @file{examples/arith/arith.elf} with
+the termination declaration in @*@file{examples/arith/arith.thm}.
+
+@node Simultaneous Orders, Mutual Recursion, Lexicographic Orders, Termination
+@section Simultaneous Orders
+
+@cindex order, simultaneous
+
+Simultaneous orders require that one of its elements decreases while all
+others remain the same.  This is strictly weaker than a lexicographic
+ordering built from the same components.  Technically speaking it is
+therefore is redundant for termination checking, since the corresponding
+lexicographic ordering could be used instead.  However, for inductive
+theorem proving it is quite useful, since the search space for
+simultaneous induction is much smaller than for lexicographic induction.
+
+Simultaneous orders are specified as
+
+@example
+[@var{O1} @dots{} @var{On}]
+@end example
+
+Using @math{vi} and @math{wi} for corresponding argument structures
+whose order is already defined, we compare them simultaneously as
+follows:
+
+@table @asis
+@item @math{[v1} @dots{} @math{vn]} @math{<} @math{[w1} @dots{} @math{wn]}, if
+@table @asis
+@item @math{v1 < w1}, @math{v2 <= w2}, @dots{}, and @math{vn <= wn}, or
+@item @math{v1 <= w1}, @math{v2 < w2}, @dots{}, and @math{vn <= wn}, or
+@item @dots{}
+@item @math{v1 <= w1}, @math{v2 <= w2}, @dots{}, and @math{vn < wn}.
+@end table
+@end table
+
+A combination of simultaneous and lexicographic order is used, for
+example, in the admissibility of cut found in
+@file{examples/cut-elim/int.thm}, where either the cut formula @math{A}
+gets smaller, or if @math{A} stays the same, either the derivation of
+the left or right premise get smaller while the other stays the same.
+
+@node Mutual Recursion,  , Simultaneous Orders, Termination
+@section Mutual Recursion
+
+@cindex mutual recursion
+@cindex mutual arguments
+@cindex arguments, mutual
+
+Mutually recursive predicates present a challenge to termination
+checking, since decreasing arguments might appear in different
+positions.  Moreover, mutually recursive predicates @code{a} and
+@code{a'} might be prioritized so that when @code{a} calls @code{a'} all
+termination arguments remain the same, but when @code{a'} calls @code{a}
+the arguments are smaller according to the termination order.
+
+To handle the association of related argument in mutually recursive
+predicates, so-called @emph{mutual arguments} can be specified
+in a termination order.  They are given as
+
+@example
+(X1 @dots{} Xn)
+@end example
+
+The priority between predicates is indicated by the order of the
+call patterns.  If we analyze call patterns
+
+@example
+@group
+(a1 args1)
+(a2 args2)
+@dots{}
+(an argsn)
+@end group
+@end example
+
+@noindent
+then @code{ai} may call @code{aj} for @math{i < j} with equal
+termination arguments, but calls of @code{ai} from @code{aj}
+must decrease the termination order.
+
+Mutual arguments are used, for example, in the proofs of soundness (file
+@*@file{examples/lp-horn/uni-sound.thm}) and completeness (file
+@*@file{examples/lp-horn/uni-complete.thm}) of uniform derivations for
+Horn logic.
+
+@node Theorem Prover, ML Interface, Termination, Top
+@chapter Theorem Prover
+
+@cindex theorem prover
+@cindex meta-logic
+
+@noindent
+@strong{Disclaimer:} The theorem proving component of Twelf is in an
+even more experimental stage and currently under active development.
+There are two main restrictions which limit its utility:
+(1) it only support reasoning about closed objects, and (2)
+it cannot apply lemmas automatically.
+
+Nonetheless, it can prove a number of interesting examples automatically
+which illustrate our approach the meta-theorem proving which is
+described in @cite{Schuermann and Pfenning 1998, CADE}.  These examples
+include type preservation for Mini-ML, one direction of compiler
+correctness for different abstract machines, soundness and completeness
+for logic programming interpreters, and the deduction theorem for
+Hilbert's formulation of propositional logic.  These and other examples
+can be found in the example directories of the Twelf distribution
+(@pxref{Examples}).
+
+A @emph{theorem} in Twelf is, properly speaking, a meta-theorem: it
+expresses a property of objects constructed over a fixed LF signature.
+Theorems are stated in the meta-logic M2 whose quantifiers range over LF
+objects.  In the simplest case, we may just be asserting the existence
+of an LF object of a given type.  This only requires direct search for a
+proof term, using methods inspired by logic programming.  More
+generally, we may claim and prove forall/exists statements which allow
+us to express meta-theorems which require structural induction, such as
+type preservation under evaluation in a simple functional language
+(@pxref{Sample Program}).
+
+@menu
+* Theorem Declaration::         Declaring and proving theorems
+* Sample Theorems::             Two examples
+* Proof Steps::                 Basic operations of the prover
+* Search Strategies::           How Twelf searches
+* Proof Realizations::          Using automatically constructed proofs 
+@end menu
+
+@node Theorem Declaration, Sample Theorems, Theorem Prover, Theorem Prover
+@section Theorem Declaration
+
+@cindex theorem declarations
+@cindex declarations, theorem
+@cindex universal quantifier
+@cindex existential quantifier
+@cindex quantifier, universal
+@cindex quantifier, existential
+@findex %theorem
+@findex %prove
+
+There are two forms of declarations related to the proving of theorems
+and meta-theorems.  The first, @code{%theorem}, states a theorem as a
+meta-formula (@code{mform}) in the meta-logic M2 defined below.  The
+second, @code{%prove}, gives a resource bound, a theorem, and an
+induction ordering and asks Twelf to search for a proof.
+
+Note that a well-typed @code{%theorem} declaration always succeeds,
+while the @code{%prove} declaration only succeeds if Twelf can find a
+proof.
+
+@example
+@group
+dec ::= @{id:term@}         % @r{@math{x:A}}
+      | @{id@}              % @r{@math{x}}
+
+decs ::= dec
+       | dec decs
+
+mform ::= forall* decs mform % @r{implicit universal}
+        | forall decs mform  % @r{universal}
+        | exists decs mform  % @r{existential}
+        | true               % @r{truth}
+
+thdecl ::= id : mform        % @r{theorem name @math{a}, spec}
+
+pdecl ::= nat order callpats % @r{bound, induction order, theorems}
+
+decl ::= @dots{}
+       | %theorem thdecl.  % @r{theorem declaration}
+       | %prove pdecl.     % @r{prove declaration}
+@end group
+@end example
+
+The prover only accepts quantifier alternations of the form
+@code{forall* @var{decs} forall @var{decs} exists @var{decs} true}.
+Note that the implicit quantifiers (which will be suppressed when
+printing the proof terms) must all be collected in front.
+
+The syntax and meaning of @code{order} and @code{callpats} are explained
+in @ref{Termination}, since they are also critical notions in the
+simpler termination checker.
+
+@node Sample Theorems, Proof Steps, Theorem Declaration, Theorem Prover
+@section Sample Theorems
+
+As a first example, we use the theorem prover to establish a simple
+theorem in first-order logic (namely that @math{A} implies @math{A} for
+any proposition @math{A}), using the signature for natural deduction
+(@pxref{Sample Signature}).
+
+@example
+@group
+%theorem
+trivI : exists @{D:@{A:o@} nd (A imp A)@}
+        true.
+
+%prove 2 @{@} (trivI D).
+@end group
+@end example
+
+The empty termination ordering @code{@{@}} instructs Twelf not to use
+induction to prove the theorem.  The declarations above succeed, and
+with the default setting of @code{3} for @code{Twelf.chatter} we see
+
+@example
+@group
+%theorem trivI : (@{A:o@} nd (A imp A)) -> type.
+%prove 2 @{@} (trivI D).
+%mode -@{D:@{A:o@} nd (A imp A)@} trivI D.
+% ------------------
+/trivI/:  trivI ([A:o] impi ([D1:nd A] D1)).
+% ------------------
+@end group
+@end example
+
+The line starting with @code{%theorem} shows the way the theorem will be
+realized as a logic program predicate, the line starting with
+@code{/trivI/} gives the implementation, which, in this case, consists
+of just one line.
+
+The second example is the type preservation theorem for evaluation in
+the lambda-calculus.  This is a continuation of the example in Section
+@ref{Sample Program} in the file @file{examples/guide/lam.elf}.
+Type preservation states that if and expression @code{E} has type
+@code{T} and @code{E} evaluates to @code{V}, the @code{V} also has
+type @code{T}.  This is expressed as the following @code{%theorem}
+declaration.
+
+@example
+@group
+%theorem
+tps : forall* @{E:exp@} @{V:exp@} @{T:tp@}
+       forall @{D:eval E V@} @{P:of E T@}
+       exists @{Q:of V T@}
+       true.
+@end group
+@end example
+
+The proof proceeds by structural induction on @code{D}, the evaluation
+from @code{E} to @code{V}.  Therefore we can search for the proof with
+the following declaration (where the size bound of @code{5} on proof
+term size is somewhat arbitrary).
+
+@example
+%prove 5 D (tps D P Q).
+@end example
+
+Twelf finds and displays the proof easily.  The resulting program is
+installed in the global signature and can then be used to apply type
+preservation (@pxref{Proof Realizations}).
+
+@node Proof Steps, Search Strategies, Sample Theorems, Theorem Prover
+@section Proof Steps
+
+@cindex filling
+@cindex recursion
+@cindex splitting
+@findex Twelf.Prover.maxRecurse
+@findex Twelf.Prover.maxSplit
+
+We expect the proof search component of Twelf to undergo major changes
+in the near future, so we only briefly review the current state.
+
+Proving proceeds using three main kinds of steps:
+
+@table @asis
+@item Filling
+ Using iterative deepening, Twelf searches directly for objects to fill
+the existential quantifiers, given all the constants in the signature
+and the universally quantified variables in the theorem.  The number of
+constructors in the answer substitution for each existential quantifier
+is bounded by the size which is given as part of the @code{%prove}
+declaration, thus guaranteeing termination (in principle).
+
+@item Recursion
+ Based on the termination ordering, Twelf appeals to the induction
+hypothesis on smaller arguments.  If there are several ways to use the
+induction hypothesis, Twelf non-deterministically picks one which has
+not yet been used.  Since there may be infinitely many different ways to
+apply the induction hypothesis, the parameter
+@code{Twelf.Prover.maxRecurse} bounds the number of recursion steps in
+each case of the proof.
+
+@item Splitting
+ Based on the types of the universally quantified variables, Twelf
+distinguishes all possible cases by considering all constructors in
+the signatures.  It nevers splits a variable which appears as an
+index in an input argument, and if there are several possibilities
+it picks the one with fewest resulting cases.  Splitting can go on
+indefinitely, so the paramater @code{Twelf.Prover.maxSplit} bounds
+the number of times a variable may be split.
+@end table
+
+@node Search Strategies, Proof Realizations, Proof Steps, Theorem Prover
+@section Search Strategies
+
+@cindex search strategy
+@findex Twelf.Prover.strategy
+@findex Twelf.Prover.FRS
+@findex Twelf.Prover.RFS
+
+The basic proof steps of filling, recursion, and splitting are
+sequentialized in a simple strategy which never backtracks.  First we
+attempt to fill all existential variables simultaneously.  If that fails
+we recurse by trying to find new ways to appeal to the induction
+hypothesis.  If this is not possible, we pick a variable to distinguish
+cases and then prove each subgoal in turn.  If none of the steps
+are possible we fail.
+
+This behavior can be changed with the parameter
+@code{Twelf.Prover.strategy} which defaults to @code{Twelf.Prover.FRS}
+(which means Filling-Recursion-Splitting).  When set to
+@code{Twelf.Prover.RFS} Twelf will first try recursion, then filling,
+followed by splitting.  This is often faster, but fails in some cases
+where the default strategy succeeds.
+
+@node Proof Realizations,  , Search Strategies, Theorem Prover
+@section Proof Realizations
+
+@cindex proof realizations
+@cindex executing proofs
+
+Proofs of meta-theorems are realized as logic programs.  Such a logic
+program is a relational representation of the constructive proof and can
+be executed to generate witness terms for the existentials from given
+instances of the universal quantifiers.  As an example, we consider
+once more type preservation (@pxref{Sample Theorems}).
+
+After the declarations,
+
+@example
+@group
+%theorem
+tps : forall* @{E:exp@} @{V:exp@} @{T:tp@}
+       forall @{D:eval E V@} @{P:of E T@}
+       exists @{Q:of V T@}
+       true.
+
+%prove 5 D (tps D P Q).
+@end group
+@end example
+
+@noindent
+Twelf answers
+
+@example
+@group
+/tps/tp_lam/ev_lam/: 
+   tps ev_lam (tp_lam ([x:exp] [P2:of x T1] P1 x P2))
+      (tp_lam ([x:exp] [P3:of x T1] P1 x P3)).
+
+/tps/tp_app/ev_app/tp_lam/: 
+   tps (ev_app D1 D2 D3) (tp_app P1 P2) P6
+      <- tps D3 P2 (tp_lam ([x:exp] [P4:of x T2] P3 x P4))
+      <- tps D2 P1 P5
+      <- tps D1 (P3 E5 P5) P6.
+@end group
+@end example
+
+@noindent
+which is the proof of type preservation expressed as a logic program
+with two clauses: one for evaluation of a lambda-abstraction, and one
+for application.  Using the @code{%solve} declaration (@pxref{Solve
+Declaration}) we can, for example, evaluate and type-check the identity
+applied to itself and then use type preservation to obtain a typing
+derivation for the resulting value.
+
+@example
+@group
+e0 = (app (lam [x] x) (lam [y] y)).
+%solve p0 : of e0 T.
+%solve d0 : eval e0 V.
+%solve tps0 : tps d0 p0 Q.
+@end group
+@end example
+
+Recall that @code{%solve c : V} executes the query @code{V} and defines
+the constant @code{c} to abbreviate the resulting proof term.
+
+@node ML Interface, Twelf Server, Theorem Prover, Top
+@chapter ML Interface
+
+@cindex ML interface
+@findex open
+
+The Twelf implementation defines a number of ML functions embedded in
+structures which can be called to load files, execute queries, and set
+environment parameters such as the verbosity level of the interaction.
+These functions and parameters are available in the @code{Twelf}
+structure.  If you open the @code{Twelf} structure with
+
+@example
+open Twelf
+@end example
+
+@noindent
+after compiling and loading Twelf, you do not have to type the
+@samp{Twelf.} to the functions shown below.
+
+Previous implementations of Elf offered a stand-alone command
+interpreter but this has not yet been ported.  To exit Twelf and
+ML call @code{Twelf.OS.exit ();}.
+
+@menu
+* Configurations::              Managing groups of Twelf files
+* Loading Files::               Loading individual files
+* Environment Parameters::      Controlling appearance and verbosity of Twelf
+* Timing Statistics::           Obtaining information on running times
+* Twelf Signature::             ML signature of main Twelf structure
+@end menu
+
+@node Configurations, Loading Files, ML Interface, ML Interface
+@section Configurations
+
+@cindex Configurations
+@cindex files, configuration
+@findex Twelf.OS.getDir
+@findex Twelf.OS.chDir
+@findex Twelf.Config.read
+@findex Twelf.Config.load
+@findex Twelf.OK
+@findex Twelf.ABORT
+
+Groups of Twelf files are managed in @emph{configurations}.  A
+configuration is defined by a file, by convention called
+@file{sources.cfg}, which resides in the same directory as the Twelf
+source files.  The configuration file must contain at most one
+Twelf source file per line, and the files must be listed in
+dependency order.  A configuration @var{config} can then be
+defined from the file by the ML declaration
+
+@example
+val @var{config} = Twelf.Config.read "sources.cfg";
+@end example
+
+By convention, the filenames end in the extensions
+@table @samp
+@item .elf
+ for constant declarations and definitions or mixed files,
+@item .quy
+ for files which contain query declarations,
+@item .thm
+ for files which contain @code{%theorem} and @code{%proof} declarations.
+@end table
+
+File names may not contain whitespace.  They are interpreted relative to
+the current working directory of ML, but resolved into absolute path
+names when the configuration file is read.  To change the current
+working directory call
+
+@example
+@group
+Twelf.OS.getDir ();               (* get working directory *)
+Twelf.OS.chDir "@var{directory}"; (* change working directory *)
+@end group
+@end example
+
+As an example, we show how the Mini-ML configuration is defined and
+loaded, assuming your current working directory is the root directory of
+Twelf.
+
+@example
+@group
+val mini_ml = Twelf.Config.read "examples/mini-ml/sources.cfg";
+Twelf.Config.load mini_ml;
+@end group
+@end example
+
+Note that the identifier bound to the configuration (@code{mini_ml} in
+this example), must be a legal ML identifier, usually consisting only of
+alphanumeric characters and underscores.  The call to
+@code{Twelf.Config.load} returns either @code{Twelf.OK} or
+@code{Twelf.ABORT}.  It reads each file in turn, starting from an empty
+signature, printing the results of type reconstruction and search based
+on the value of the @code{Twelf.chatter} variable (@pxref{Environment
+Parameters}).  If another configuration or file has previously been
+read, all the declarations will first be deleted so that
+@code{Twelf.Config.load} always starts from the same state.
+
+Loading a configuration will stop at the first error encountered, issue
+an appropriate message and return @code{Twelf.ABORT}.  If there is an
+unexpected internal error (which indicates a bug in the Twelf
+implementation), it raises an uncaught exception instead and returns
+to the ML top-level.
+
+To explore the behavior of programs interactively, you may call the
+Twelf top-level with
+
+@example
+Twelf.top ();
+@end example
+
+@noindent
+which is explained in @ref{Interactive Queries}.
+
+
+@node Loading Files, Environment Parameters, Configurations, ML Interface
+@section Loading Files
+
+@cindex loading files
+@cindex files, loading
+@findex Twelf.reset
+@findex Twelf.loadFile
+
+Twelf also allows direct management of the signature by loading
+individual files.  This is generally not recommended because successive
+declarations simply accumulate in the global signature which may lead to
+unexpected behavior.  The relevant function calls are
+
+@example
+@group
+Twelf.reset ();
+Twelf.loadFile "@var{file}";
+@end group
+@end example
+
+@noindent
+where @code{Twelf.reset ()} resets the current global signature to
+be empty and @code{Twelf.readFile "@var{file}"} loads the given
+@var{file} whose name is interpreted relative to the current working
+directory.
+
+@strong{Caution:} Reading a file twice will not replace the declarations
+of the first pass by the second, but simply add them to the current
+signature.  If names are reused, old declarations will be shadowed, but
+they are still in the global signature and might be used in the search
+for a solution to a query or in theorem proving, leading to unexpected
+behavior.  When in doubt, use configurations (@pxref{Configurations}) or
+call @code{Twelf.reset ()}.
+
+@node Environment Parameters, Timing Statistics, Loading Files, ML Interface
+@section Environment Parameters
+
+@cindex parameters, environment
+@cindex environment parameters
+
+Various flags and parameters can be used to modify the behavior of Twelf
+and the messages it issues.  They are given below with the assignment
+of the default value.
+
+@table @code
+@item Twelf.chatter := 3;
+@findex Twelf.chatter
+  Controls the detail of the information which is printed when signatures
+are read.
+@table @code
+@item 0
+ Nothing.
+@item 1
+ Just file names.
+@item 2
+ File names and number of query solutions.
+@item 3
+ Each declarations after type reconstruction.
+@item 4
+ Debug information.
+@item 5
+ More debug information.
+@end table
+
+@item Twelf.doubleCheck := false;
+@findex Twelf.doubleCheck
+ If @code{true}, each declaration is checked again for type correctness
+after type reconstruction.  This is expensive and useful only for your
+peace of mind, since type checking is significantly simpler than
+type reconstruction.
+
+@item Twelf.Print.implicit := false;
+@findex Twelf.Print.implicit
+ If @code{true}, implicit arguments (normally elided) are printed.
+Sometimes this is useful to track particularly baffling errors.
+
+@item Twelf.Print.depth := NONE;
+@findex Twelf.Print.depth
+ If @code{SOME(d)} then terms deeper than level @code{d} are printed
+as @samp{%%}.
+
+@item Twelf.Print.length := NONE;
+@findex Twelf.Print.length
+ If @code{SOME(l)} then argument lists longer than @code{l} are truncated
+with @samp{...}.
+
+@item Twelf.Print.indent := 3;
+@findex Twelf.Print.indent
+ Controls the amount of indentation for printing nested terms.
+
+@item Twelf.Print.width := 80;
+@findex Twelf.Print.width
+ The value used to decide when to break lines during printing of terms.
+
+@item Twelf.Prover.strategy := Twelf.Prover.FRS;
+@findex Twelf.Prover.strategy
+ Determines the strategy, where @code{F}=Filling, @code{R}=Recursion, and
+@code{S}=Splitting.  Can also be @code{Twelf.Prover.RFS}.
+
+@item Twelf.Prover.maxSplit := 2;
+@findex Twelf.Prover.maxSplit
+ The maximal number of generations of a variable introduced
+by splitting.  Setting is to @code{0} will prohibit proof by cases.
+
+@item Twelf.Prover.maxRecurse := 10;
+@findex Twelf.Prover.maxRecurse
+ The maximal number of appeals to the induction hypothesis in any
+case during a proof.
+@end table
+
+@node Timing Statistics, Twelf Signature, Environment Parameters, ML Interface
+@section Timing Statistics
+
+@cindex running time
+@cindex timing statistics
+@cindex statistics
+
+Twelf has a few utilities to collect run-time statistics which are
+useful mainly for the developers.  They are collected in the
+structure @code{Timers}.  Timing information is cumulative
+in an ML session.
+
+@table @code
+@item Twelf.Timers.show ();
+@findex Twelf.Timers.show
+ Show the value of timers and reset them to zero.
+@item Twelf.Timers.reset ();
+@findex Twelf.Timers.reset
+ Simply reset all timers to zero.
+@item Twelf.Timers.check ();
+@findex Twelf.Timers.check
+ Display the value of timers, but do not reset them.
+@end table
+
+@noindent
+@strong{Caution:} Normally, the various times are exclusive, except that
+the runtime includes the garbage collection time which is shown
+separately.  However, there is a problem the time for printing the
+answer substitution to a query is charged both to @code{Printing} and
+@code{Solving}.
+
+@node Twelf Signature,  , Timing Statistics, ML Interface
+@section Twelf Signature
+
+@findex signature TWELF
+@findex structure Twelf
+
+For reference, here is the ML signature @code{TWELF} of the @code{Twelf}
+structure which defines most functions and flags relevant to loading
+and executing Twelf programs.
+
+@example
+@group
+signature TWELF =
+sig
+  structure Print :
+  sig
+    val implicit : bool ref           (* false, print implicit args *)
+    val depth : int option ref        (* NONE, limit print depth *)
+    val length : int option ref       (* NONE, limit argument length *)
+    val indent : int ref              (* 3, indentation of subterms *)
+    val width : int ref               (* 80, line width *)
+  end
+@end group
+
+@group
+  structure Timers :
+  sig
+    val show : unit -> unit           (* show and reset timers *)
+    val reset : unit -> unit          (* reset timers *)
+    val check : unit -> unit          (* display, but not no reset *)
+  end
+@end group
+
+@group
+  structure OS :
+  sig
+    val chDir : string -> unit        (* change working directory *)
+    val getDir : unit -> string       (* get working directory *)
+    val exit : unit -> unit           (* exit Twelf and ML *)
+  end
+@end group
+
+@group
+  structure Prover :
+  sig
+    datatype Strategy = RFS | FRS     (* F=Fill, R=Recurse, S=Split *)
+    val strategy : Strategy ref       (* FRS, strategy used for %prove *)
+    val maxSplit : int ref            (* 2, bound on splitting  *)
+    val maxRecurse : int ref          (* 10, bound on recursion *)
+  end
+@end group
+
+@group
+  val chatter : int ref               (* 3, chatter level *)
+  val doubleCheck : bool ref          (* false, check after reconstruction *)
+@end group
+
+@group
+  datatype Status = OK | ABORT        (* return status *)
+
+  val reset : unit -> unit            (* reset global signature *)
+  val loadFile : string -> Status     (* load file *)
+  val readDecl : unit -> Status       (* read declaration interactively *)
+  val decl : string -> Status         (* print declaration of constant *)
+
+  val top : unit -> unit              (* top-level for interactive queries *)
+@end group
+
+@group
+  structure Config :
+  sig
+    type config                       (* configuration *)
+    val read : string -> config       (* read config file *)
+    val load : config -> Status       (* reset and load configuration *)
+    val define : string list -> config (* explicitly define configuration *)
+  end
+
+  val version : string                (* Twelf version *)
+end;  (* signature TWELF *)
+@end group
+@end example
+
+@node Twelf Server, Emacs Interface, ML Interface, Top
+@chapter Twelf Server
+
+@cindex server
+@cindex Twelf server
+
+The Twelf server is a stand-alone command interpreter which provides the
+functionality of the @code{Twelf} structure in ML (@pxref{ML
+Interface}), but allows no ML definitions.  It is significantly smaller
+than Standard ML and is the recommended way to interact with Twelf
+except for developers.  Its behavior regarding configurations is
+slightly different in that the server maintains a current configuration,
+rather than allowing the binding of names to configurations.
+Configuration are defined with the @code{Config.read} command which
+takes a configuration filename as argument.
+
+In Emacs, the Twelf server typically runs in a process buffer
+called @code{*twelf-server*}.  The user can select this buffer
+and directly type commands to the Twelf server.  This style
+of interaction is inherited from the comint package for Emacs,
+but typically one works through advanced commands in Twelf
+mode (@pxref{Twelf Mode}).
+
+The Twelf server prompts with @code{%% OK %%} or @code{%% ABORT %%}
+depending on the success of failure of the previous operation.  It
+accepts commands and their arguments on one line, except that additional
+Twelf declarations which may be required are read separately, following
+the command line.  Reading declarations can be forcibly terminated
+with the end-of-file token @samp{%.}.
+
+@menu
+* Server Types::                Server command argument types
+* Server Commands::             List of Twelf server commands
+@end menu
+
+@node Server Types, Server Commands, Twelf Server, Twelf Server
+@section Server Types
+
+@cindex server types
+@cindex types, server
+
+The server commands employ arguments of the following types.
+
+@table @code
+@item file
+@findex file
+ The name of a file, relative to the current working directory.
+
+@item id
+@findex id
+ A Twelf identifier
+
+@item strategy
+@findex strategy
+ Either @code{FRS} or @code{RFS} (@pxref{Search Strategies})
+
+@item bool
+@findex bool
+ Either @code{true} or @code{false}
+
+@item nat
+@findex nat
+ A natural number (starting at @code{0})
+
+@item limit
+@findex limit
+ Either @code{*} (to indicate no limit) or a natural number
+@end table
+
+@node Server Commands,  , Server Types, Twelf Server
+@section Server Commands
+
+@cindex server commands
+@cindex commands, server
+
+The Twelf server recognized the following commands.
+
+@table @code
+@item set @var{parameter} @var{value}
+@findex set
+ Set @var{parameter} to @var{value}, where @var{parameter} is
+on of the following (explained in @ref{Environment Parameters}).
+
+@table @code
+@item chatter @var{nat}
+@c @findex chatter
+@item doubleCheck @var{bool}
+@c @findex doubleCheck
+@item Print.implicit @var{bool}
+@c @findex Print.implicit
+@item Print.depth @var{limit}
+@c @findex Print.depth
+@item Print.length @var{limit}
+@c @findex Print.length
+@item Print.indent @var{nat}
+@c @findex Print.indent
+@item Print.width @var{nat}
+@c @findex Print.width
+@item Prover.strategy @var{strategy}
+@c @findex Prover.strategy
+@item Prover.maxSplit @var{nat}
+@c @findex Prover.maxSplit
+@item Prover.maxRecurse @var{nat}
+@c @findex Prover.maxRecurse
+@end table
+
+@item get @var{parameter}
+@findex get
+ Print the current value of @var{parameter} (see table above).
+
+@item Timers.show
+@findex Timers.show
+ Print and reset timers.
+@item Timers.reset
+@findex Timers.reset
+ Reset timers.
+@item Timers.check
+@findex Timers.check
+ Print, but do not reset timrs.
+
+@item OS.chDir @var{file}
+@findex OS.chDir
+ Change working directory to @var{file}.
+@item OS.getDir
+@findex OS.getDir
+ Print current working directory.
+@item OS.exit
+@findex OS.exit
+ Exit Twelf server.
+@item quit
+@findex quit
+ Quit Twelf server (same as exit).
+
+@item Config.read @var{file}
+@findex Config.read
+ Read current configuration from @var{file}.
+@item Config.load
+@findex Config.load
+ Load current configuration
+
+@item reset
+@findex reset
+ Reset global signature.
+@item loadFile @var{file} 
+@findex loadFile
+ Load Twelf file @var{file}.
+@item decl @var{id}
+@findex decl
+ Show constant declaration for @var{id}.
+
+@item top
+@findex top
+ Enter interactive query loop (@pxref{Interactive Queries})
+@end table
+
+@node Emacs Interface, Installation, Twelf Server, Top
+@chapter Emacs Interface
+
+The Twelf mode for Emacs provides some functions and utilities for
+editing Twelf source and for interacting with an inferior Twelf server
+process which can load configurations, files, and individual
+declarations and track the source location of errors.  It also provides
+an interface to the tags package which allows simple editing of groups
+of files, constant name completion, and locating of constant
+declarations within the files of a configuration.
+
+Note that in order to use the Emacs interface you need to include the
+line
+
+@example
+(load "@var{directory}/emacs/twelf-init.el")
+@end example
+
+in your @file{.emacs} file, where @var{directory} is the Twelf root
+directory.
+
+@menu
+* Twelf Mode::                  Major mode for editing Twelf sources
+* Editing Commands::            Automatic indentation
+* Type Checking Commands::      Checking declarations, files, configurations
+* Error Tracking::              Jumping to error locations
+* Server State::                Changing server parameters
+* Info File::                   
+* Tags Files::                  Tagging Twelf sources
+* Twelf Timers::                Obtaining runtime statistics from server
+* Twelf-SML Mode::              Running Twelf under SML in Emacs
+* Emacs Variables::             Customizing Twelf mode
+* Syntax Highlighting::         Using multiple fonts for Twelf code
+* Emacs Initialization::        For the .emacs file
+* Command Summary::             Summary of Twelf mode commands
+@end menu
+
+@node Twelf Mode, Editing Commands, Emacs Interface, Emacs Interface
+@section Twelf Mode
+
+@cindex Twelf mode in Emacs
+@cindex declaration, currnt
+@cindex current declaration
+
+The Twelf mode in Emacs provides support for editing and indentation,
+syntax highlighting (including colors) (@pxref{Syntax Highlighting}),
+and communication commands for interacting with a Twelf server running
+as an inferior process to Emacs.  It defines a menu which is added to
+the menu bar, usually at the top of each Emacs frame.
+
+Many commands apply to the current declaration, which is the declaration
+in which we find the Emacs cursor (not the cursor of the window system).
+If the cursor is between declarations, the declaration after point is
+considered current.  From the point of view of Emacs, single
+declarations never include consecutive blank lines, which provides some
+insulation against missing closing delimiters.
+
+Normally, Twelf mode is entered automatically when a Twelf source file
+is edited (@pxref{Emacs Initialization}), but it can also be switched on or
+off directly with @kbd{M-x twelf-mode}.
+
+@table @kbd
+@item M-x twelf-mode
+@findex M-x twelf-mode
+ Toggle Twelf mode, the major mode for editing Twelf code.
+@end table
+
+@node Editing Commands, Type Checking Commands, Twelf Mode, Emacs Interface
+@section Editing Commands
+
+The editing commands in Twelf mode partially analyse the structure
+of the text at the cursor position as Twelf code and try to indent
+accordingly.  This is not always perfect.
+
+@cindex editing
+@cindex indentation
+
+@table @kbd
+@item @key{TAB}
+@itemx M-x twelf-indent-line
+@findex M-x twelf-indent-line
+  Indent current line as Twelf code.
+This recognizes comments, matching delimiters, and standard infix operators.
+
+@item @key{DEL}
+@itemx M-x backward-delete-char-untabify
+@findex M-x backward-delete-char-untabify
+ Delete character backward, changing tabs into spaces.
+
+@item M-C-q
+@itemx M-x twelf-indent-decl
+@findex M-x twelf-indent-decl
+ Indent each line of the current declaration.
+
+@item M-x twelf-indent-region
+@findex M-x twelf-indent-region
+ Indent each line of the region as Twelf code.
+@end table
+
+@node Type Checking Commands, Error Tracking, Editing Commands, Emacs Interface
+@section Type Checking Commands 
+
+@cindex type checking, from Emacs
+@cindex server buffer
+@cindex display, of server buffer
+
+The Twelf mode provides simple commands which cause the server to load
+or reload the current configuration, the file edited in the current
+buffer, or just the declaration at point.  Each of these command can be
+preceded by a prefix argument (for example, @kbd{C-u C-c C-c}) which
+will select the Twelf server buffer after completion of the command.
+The Twelf server buffer can also be forced to be shown with the @kbd{C-c
+C-u} Emacs command.
+
+@table @kbd
+@item C-c C-c
+@itemx M-x twelf-save-check-config
+@findex M-x twelf-save-check-config
+ Save its modified buffers and then check the current Twelf configuration.
+ With prefix argument also displays Twelf server buffer.
+ If necessary, this will start up an Twelf server process.
+
+@item C-c C-s
+@itemx M-x twelf-save-check-file
+@findex M-x twelf-save-check-file
+ Save buffer and then check it by giving a command to the Twelf server.
+ In Twelf Config minor mode, it reconfigures the server.
+ With prefix argument also displays Twelf server buffer.
+
+@item C-c C-d
+@itemx M-x twelf-check-declaration
+@findex M-x twelf-check-declaration
+ Send the current declaration to the Twelf server process for checking.
+ With prefix argument also displays Twelf server buffer.
+
+@item C-c c
+@itemx M-x twelf-type-const
+@findex M-x twelf-type-const
+ Display the type of the constant before point.
+ Note that the type of the constant will be `absolute' rather than the
+ type of the particular instance of the constant.
+
+@item C-c C-u
+@itemx M-x twelf-server-display
+@findex M-x twelf-server-display 
+ Display Twelf server buffer, moving to the end of output.
+ With prefix argument also selects the Twelf server buffer.
+@end table
+
+@node Error Tracking, Server State, Type Checking Commands, Emacs Interface
+@section Error Tracking
+
+@cindex error tracking
+@cindex tracking errors
+
+Error messages by the Twelf server are flagged with the filename and an
+educated guess as to the source of the error (@pxref{Error Messages}).
+These can be interpreted by Emacs to jump directly to the suspected
+site.
+
+Sometimes, the server buffer and the the server itself believe to have
+different working directories.  In that case, error tracking may not be
+able to find the file, and an explicit call to @code{OS.chDir}
+or @code{M-x cd} in the server buffer may be required.
+
+@table @kbd
+@item C-c `
+@itemx M-x twelf-next-error
+@findex M-x twelf-next-error
+ Find the next error by parsing the Twelf server or Twelf-SML buffer.
+ Move the error message on the top line of the window;
+ put the cursor at the beginning of the error source. If the
+ error message specifies a range, the mark is placed at the end.
+
+@item C-c =
+@itemx M-x twelf-goto-error
+@findex M-x twelf-goto-error
+ Go to the error reported on the current line or below.
+ Also updates the error cursor to the current line.
+@end table
+
+@node Server State, Info File, Error Tracking, Emacs Interface
+@section Server State
+
+@cindex server state
+@cindex setting server parameters
+@cindex server parameters, setting
+@cindex interrupt
+
+The server state consists of the current configuration and a number of
+parameters described in @ref{Twelf Server}.  The current configuration
+is often set implicitly, with the @kbd{C-c C-c} command in a
+configuration buffer, but it can also be set explicitly.
+
+@table @kbd
+@item C-c <
+@itemx M-x twelf-set
+@findex M-x twelf-set
+ Sets the Twelf parameter PARM to VALUE.
+ When called interactively, prompts for parameter and value, supporting
+ completion.
+
+@item C-c >
+@itemx M-x twelf-get
+@findex M-x twelf-get
+ Prints the value of the Twelf parameter PARM.
+ When called interactively, promts for parameter, supporting completion.
+
+@item C-c C-i
+@itemx M-x twelf-server-interrupt
+@findex M-x twelf-server-interrupt
+ Interrupt the Twelf server process.
+
+@item M-x twelf-server
+@findex M-x twelf-server
+ Start an Twelf server process in a buffer named *twelf-server*.
+ Any previously existing process is deleted after confirmation.
+ Optional argument PROGRAM defaults to the value of the variable
+ twelf-server-program.
+ This locally re-binds `twelf-server-timeout' to 15 secs.
+
+@item M-x twelf-server-configure
+@findex M-x twelf-server-configure
+ Initializes the Twelf server configuration from CONFIG-FILE.
+ A configuration file is a list of relative file names in
+ dependency order.  Lines starting with % are treated as comments.
+ Starts a Twelf servers if necessary.
+
+@item M-x twelf-reset
+@findex M-x twelf-reset
+ Reset the global signature of Twelf maintained by the server.
+
+@item M-x twelf-server-quit
+@findex M-x twelf-server-quit
+ Kill the Twelf server process.
+
+@item M-x twelf-server-restart
+@findex M-x twelf-server-restart
+ Restarts server and re-initializes configuration.
+ This is primarily useful during debugging of the Twelf server code or
+ if the Twelf server is hopelessly wedged.
+
+@item M-x twelf-server-send-command
+@findex M-x twelf-server-send-command
+ Restarts server and re-initializes configuration.
+ This is primarily useful during debugging of the Twelf server code or
+ if the Twelf server is hopelessly wedged.
+@end table
+
+@node Info File, Tags Files, Server State, Emacs Interface
+@section Info File
+
+The content of this file in Info format can be visited directly
+and does not need to be tied into the Info tree.
+See the documentation for the Emacs info package for
+more info
+
+@cindex info file
+@cindex documentation
+
+@table @kbd
+@item C-c C-h
+@itemx M-x twelf-info
+@findex M-x twelf-info
+ Visit the Twelf User's Guide in info format in Emacs.
+ With a prefix argument it prompts for the info file name, which
+ defaults to the value of the @code{twelf-info-file} variable.
+@end table
+
+@node Tags Files, Twelf Timers, Info File, Emacs Interface
+@section Tags Files
+
+Tags files provide a convenient way to group files, such as
+Twelf configurations.  See the documentation for the Emacs etags
+package for more information.
+
+@cindex tags file
+@cindex tagging configurations
+
+@table @kbd
+@item M-x twelf-tag
+@findex M-x twelf-tag
+ Create tags file for current configuration.
+ If the current configuration is sources.cfg, the tags file is TAGS.
+ If current configuration is named FILE.cfg, tags file will be named FILE.tag
+ Errors are displayed in the Twelf server buffer.
+
+@item M-.
+@itemx M-x find-tag TAG
+@findex M-x find-tag
+ Selects the buffer that the tag is contained in and puts point at
+ its definition.
+
+@item C-x 4 .
+@itemx M-x find-tag-other-window TAG
+@findex M-x find-tag-other-window
+ Selects the buffer that TAG is contained in in another window
+and puts point at its definition.
+
+@item C-c q
+@itemx M-x tags-query-replace FROM TO
+@findex M-x tags-query-replace 
+ Query-replace-regexp FROM with TO through all files listed in tags table.
+
+@item C-c s
+@itemx M-x tags-search REGEXP
+@findex M-x tags-search
+ Search through all files listed in tags table for match for REGEXP.
+
+@item M-,
+@itemx M-x tags-loop-continue
+@findex M-x tags-loop-continue
+ Continue last C-c s or C-c q command.
+@end table
+
+@node Twelf Timers, Twelf-SML Mode, Tags Files, Emacs Interface
+@section Twelf Timers
+
+The following commands obtain the runtime statistics of the
+the Twelf server.
+
+@cindex server timers
+
+@table @kbd
+@item M-x twelf-timers-reset
+@findex M-x twelf-timers-reset
+ Reset the Twelf timers.
+
+@item M-x twelf-timers-show 
+@findex M-x twelf-timers-show
+ Show and reset the Twelf timers.
+
+@item M-x twelf-timers-check
+@findex M-x twelf-timers-check
+ Show the Twelf timers without resetting them.
+
+@end table
+
+@node Twelf-SML Mode, Emacs Variables, Twelf Timers, Emacs Interface
+@section Twelf-SML Mode
+
+@cindex Twelf-SML mode
+
+There is some support for interacting with Twelf, even when it is
+run within ML, rather than as a stand-alone server.  You can start
+an SML in which you intend to run Twelf with @code{M-x twelf-sml};
+the buffer will then be in Twelf-SML mode.
+
+If you intend to send command to a buffer running Twelf in SML (rather
+than the Twelf server), you can switch to a minor mode 2Twelf-SML with
+@code{M-x twelf-to-twelf-sml}.
+
+@table @kbd
+@item M-x twelf-sml
+@findex M-x twelf-sml
+ Run an inferior Twelf-SML process in a buffer *twelf-sml*.
+ If there is a process already running in *twelf-sml*, just
+ switch to that buffer.  With argument, allows you to change the program
+ which defaults to the value of twelf-sml-program.  Runs the hooks from
+ twelf-sml-mode-hook (after the comint-mode-hook is run).
+
+@item M-x twelf-to-twelf-sml-mode
+@findex M-x twelf-to-twelf-sml-mode
+ Toggles minor mode for sending queries to Twelf-SML instead of Twelf server.
+
+@item C-c C-e
+@itemx M-x twelf-sml-send-query
+@findex M-x twelf-sml-send-query
+ Send the current declaration to the inferior Twelf-SML process as a query.
+ Prefix argument means switch-to-twelf-sml afterwards.
+
+@item C-c C-r
+@itemx M-x twelf-sml-send-region 
+@findex M-x twelf-sml-send-region
+ Send the current region to the inferior Twelf-SML process.
+ Prefix argument means switch-to-twelf-sml afterwards.
+
+@item C-c @key{RETURN}
+@itemx M-x twelf-sml-send-newline
+@findex M-x twelf-sml-send-newline
+ Send a newline to the inferior Twelf-SML process.
+ If a prefix argument is given, switches to Twelf-SML buffer afterwards.
+
+@item C-c ;
+@itemx M-x twelf-sml-send-semicolon
+@findex M-x twelf-sml-send-semicolon
+ Send a semi-colon to the inferior Twelf-SML process.
+ If a prefix argument is given, switched to Twelf-SML buffer afterwards.
+
+@item C-c d
+@itemx M-x twelf-sml-cd DIR
+@findex M-x twelf-sml-cd
+ Make DIR become the Twelf-SML process' buffer's default directory and
+ furthermore issue an appropriate command to the inferior Twelf-SML process.
+
+@item M-x twelf-sml-quit
+@findex M-x twelf-sml-quit
+ Kill the Twelf-SML process.
+@end table
+
+@node Emacs Variables, Syntax Highlighting, Twelf-SML Mode, Emacs Interface
+@section Emacs Variables
+
+@cindex Emacs variables
+@cindex variables, Emacs
+
+A number of Emacs variables can be changed to customize the behavior of
+Twelf mode.  The list below is not complete; please refer to the Emacs
+Lisp sources in @code{emacs/twelf.el} for additional information.
+
+@table @code
+@item twelf-indent 
+@findex twelf-indent
+ Indent for Twelf expressions.
+
+@item twelf-server-program
+@findex twelf-server-program
+ Default Twelf server program.
+
+@item twelf-info-file
+@findex twelf-info-file
+ Default Twelf info file.
+
+@item twelf-mode-hook
+@findex twelf-mode-hook
+ List of hook functions to run when switching to Twelf mode.
+
+@item twelf-server-mode-hook
+@findex twelf-server-mode-hook
+ List of hook functions to run when switching to Twelf Server mode.
+
+@item twelf-sml-program
+@findex twelf-sml-program
+ Default Twelf-SML program.
+
+@item twelf-sml-mode-hook
+@findex twelf-sml-mode-hook
+ List of hook functions for Twelf-SML mode.
+@end table
+
+@node Syntax Highlighting, Emacs Initialization, Emacs Variables, Emacs Interface
+@section Syntax Highlighting
+
+@cindex syntax highlighting
+@cindex colors
+@cindex faces
+
+Twelf also provides syntax highlighting, which helps make Elf code more
+readable.  This highlighting can use different colors and faces.
+Unfortunately, the necessary libraries are at present not standardized
+between XEmacs and FSF Emacs, which means that highlighting support is
+less general and less portable than the plain Twelf mode.
+
+At present, highlighting has not been extensively tested in various
+versions of Emacs, but the font-lock mode provided in
+@file{emacs/twelf-font.el} seems to work at least in XEmacs version
+19.16 and FSF Emacs version 19.34.  The alternative highlight mode
+provided in @file{emacs/twelf-hilit} appears to work in FSF Emacs 19.34.
+
+Unlike other font-lock modes, Twelf's fontification is not `electric' in
+that it does not fontify as one types.  One has to explicitly issue a
+command to fontify the current Twelf declaration or current buffer,
+since single-line highlighting is too error-prone and multi-line
+immediate highlighting is not well supported in current versions of font
+lock mode.
+
+@table @kbd
+@item C-c C-l
+@itemx M-x twelf-font-fontify-decl
+@findex M-x twelf-font-fontify-decl
+ Fontifies the current Twelf declaration.
+
+@item C-c l
+@itemx M-x twelf-font-fontify-buffer
+@findex M-x twelf-font-fontify-buffer
+ Fontitifies the current buffer as Twelf code
+
+@item M-x twelf-font-unfontify
+@findex M-x twelf-font-unfontify
+ Removes fontification from current buffer.
+@end table
+
+@node Emacs Initialization, Command Summary, Syntax Highlighting, Emacs Interface
+@section Emacs Initialization
+
+@cindex initializing Twelf mode
+@findex load-path
+@findex autoload
+@findex auto-mode-alist
+@findex add-hook
+
+If Twelf has been properly installed, you can use the Twelf's Emacs
+interface with the default settings simply by adding the line
+
+@example
+(load "@var{directory}/emacs/twelf-init.el")
+@end example
+
+to your @file{.emacs} file, where @var{directory} is the Twelf root
+directory.  In order to customize the behavior, you might copy
+the file @file{emacs/twelf-init.el} or its contents and change
+it as appropriate.
+
+@node Command Summary,  , Emacs Initialization, Emacs Interface
+@section Command Summary
+
+@cindex commands, Emacs
+
+@example
+@group
+--- Editing Commands ---
+TAB          twelf-indent-line
+DEL          backward-delete-char-untabify
+M-C-q        twelf-indent-decl
+@end group
+
+@group
+--- Type Checking ---
+C-c C-c      twelf-save-check-config
+C-c C-s      twelf-save-check-file
+C-c C-d      twelf-check-declaration
+C-c c        twelf-type-const
+C-c C-u      twelf-server-display
+@end group
+
+@group
+--- Error Tracking ---
+C-c `        twelf-next-error
+C-c =        twelf-goto-error
+@end group
+
+@group
+--- Syntax Highlighting ---
+C-c C-l      twelf-font-fontify-decl
+C-c l        twelf-font-fontify-buffer
+@end group
+
+@group
+--- Server State ---
+C-c <        twelf-set
+C-c >        twelf-get
+C-c C-i      twelf-server-interrupt
+M-x twelf-server
+M-x twelf-server-configure
+M-x twelf-server-quit
+M-x twelf-server-restart
+M-x twelf-server-send-command
+@end group
+
+@group
+--- Info ---
+C-c C-h      twelf-info
+@end group
+
+@group
+--- Timers ---
+M-x twelf-timers-reset
+M-x twelf-timers-show
+M-x twelf-timers-check
+@end group
+
+@group
+--- Tags (standard Emacs etags package) ---
+M-x twelf-tag
+M-.          find-tag (standard binding)
+C-x 4 .      find-tag-other-window (standard binding)
+C-c q        tags-query-replace (Twelf mode binding)
+C-c s        tags-search (Twelf mode binding)
+M-,          tags-loop-continue (standard binding)
+             visit-tags-table, list-tags, tags-apropos
+@end group
+
+@group
+--- Communication with inferior Twelf-SML process (not Twelf Server) ---
+M-x twelf-sml
+C-c C-e      twelf-sml-send-query
+C-c C-r      twelf-sml-send-region
+C-c RET      twelf-sml-send-newline
+C-c ;        twelf-sml-send-semicolon
+C-c d        twelf-sml-cd
+M-x twelf-sml-quit
+@end group
+
+@group
+--- Variables ---
+twelf-indent
+@end group
+@end example
+
+@node Installation, Examples, Emacs Interface, Top
+@chapter Installation
+
+@cindex installation
+@cindex Standard ML of New Jersey
+@cindex MLWorks
+@cindex ML implementations
+
+At present, Twelf has been tested in SML of New Jersey (version 110 or
+higher) and MLWorks, both of which implement Standard ML (revised 1997)
+and the Standard ML Basis Library.  The instructions below apply to
+a Unix system.  For instructions for other architectures or updates
+please check the file @file{INSTALL} at the Twelf home page and in
+the Twelf root directory after unpacking the distribution.
+
+On a Unix system you unpack the sources with
+
+@example
+@group
+gunzip twelf-1-2.tar.gz
+tar -xf twelf-1-2.tar
+cd twelf
+make
+@end group
+@end example
+
+This builds the Twelf server (@pxref{Twelf Server}) for your current
+architecture and makes it accessible as @file{bin/twelf-server}.  It
+also installs the Twelf Emacs interface (@pxref{Emacs Interface}), but
+you must add a line
+
+@example
+(load "@var{directory}/emacs/twelf-init.el")
+@end example
+
+to your @file{.emacs} file, where @var{directory} is the root directory
+into which you installed Twelf.  Note that the Twelf installation cannot
+be moved after it has been compiled with @code{make}, since absolute
+pathnames are built into the executable scripts.
+
+Note that the Twelf server presently only works with Standard ML of New
+Jersey, since interrupt handling is implementation specific.
+
+If you would like to use Twelf as a structure in SML, you can then call
+
+@example
+@group
+make twelf-sml
+@end group
+@end example
+
+which creates @file{bin/twelf-sml} for the Twelf-SML mode
+(@pxref{Twelf-SML Mode}).  Calling @code{make clean} will remove
+temporary files created by the SML compiler, but not the
+executable file.
+
+@table @asis
+@item SML of New Jersey (free, version 110 or higher)
+ See @t{http://cm.bell-labs.com/cm/cs/what/smlnj/index.html}
+
+@ifhtml
+<UL>
+ <LI> <A HREF="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">SML
+of New Jersey Home Page</A> </LI>
+</UL>
+@end ifhtml
+
+@item MLWorks (commercial)
+ See @t{http://www.harlequin.com/products/ads/ml/ml.html}
+
+@ifhtml
+<UL>
+ <LI> <A HREF="http://www.harlequin.com/products/ads/ml/ml.html">MLWorks
+Home Page</A> </LI>
+</UL>
+@end ifhtml
+
+In MLWorks, you can presently only directly load the Twelf sources,
+using the file @file{load.sml}.
+
+@example
+@group
+mlworks-basis  @r{start MLWorks with basis library in Twelf root directory}
+use "load.sml";  @r{compile and load Twelf}
+@end group
+@end example
+@end table
+
+@node Examples, Index, Installation, Top
+@chapter Examples
+
+We give here only a brief reference to the examples in the
+@file{examples/} subdirectory of the distribution.  Each example comes
+in a separate subdirectory whose name is listed below.
+
+@table @file
+@item arith
+@cindex arithmetic
+  Associativity and commutative of unary addition.
+@item ccc
+@cindex Cartesian-closed categories
+  Cartesian-closed categories (currently incomplete).
+@item church-rosser
+@cindex Church-Rosser theorem
+@cindex lambda-calculus, untyped
+  The Church-Rosser theorem for untyped lambda-calculus.
+@item compile
+@cindex Mini-ML, compilation
+  Various compilers starting from Mini-ML.
+@item cut-elim
+@cindex cut elimination
+  Cut elimination for intuitionistic and classical logic.
+@item fol
+@cindex first-order logic
+  Simple theorems in first-order logic.
+@item guide
+@cindex examples, from user's guide
+  Examples from Users' Guide.
+@item lp
+@cindex logic programming, theory
+  Logic programming, uniform derivations.
+@item lp-horn
+@cindex Horn logic, theory
+  Horn fragment of logic programming.
+@item mini-ml
+@cindex Mini-ML, theory
+  Mini-ML, type preservation and related theorems.
+@item polylam
+@cindex lambda-calculus, polymorphic
+  Polymorphic lambda-calculus.
+@item prop-calc
+@cindex Hilbert calculus
+  Natural deduction and Hilbert propositional calculus
+@item units
+@cindex Mini-ML, with units
+  Mini-ML extended with units (currently incomplete).
+@end table
+
+In each directory or subdirectory you can find a file @file{sources.cfg}
+which defines the standard configuration, usually just the basic theory.
+The @file{test.cfg} which also defines an extended configuration with
+some test queries and theorems.  Most examples also have a @file{README}
+file with a brief explanation and pointer to the literature.
+
+@node Index,  , Examples, Top
+@unnumbered Index
+
+@printindex cp
+
+@contents
+@bye

@@ -1,0 +1,3 @@
+#! /bin/csh -f
+#
+../bin/create-tags {*,*/*}.{cm,sig,fun,sml}

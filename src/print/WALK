@@ -1,0 +1,33 @@
+Current issues
+  - invariants in print.fun.  Added some -fp DONE
+
+Future issues:
+
+  - have true clause printing, including variable case.
+    what is there works on prover output, but not in general.
+
+CM/
+README
+WALK
+clause-print.fun Q: printing of clausal form is not recursive? -fp OK
+		 Q: upper vs lower case variables? -fp OK
+		 OK -fp
+		 Q: make clause printing part of the regular printer?	
+		    (could reuse code) LATER
+	 	 OK -cs
+clause-print.sig OK -fp
+		 OK -cs
+		 
+print.fun Q: Invariants?? Added some -fp
+	  OK -fp
+	  Q: evarInstToString? Operational semantics specific, move to operational
+		semantics? (possibly LATER) -fp
+	  Q: printDepth tested? YES -fp
+	  Q: fmtLevel? DONE -fp
+	  OK -cs
+print.sig OK -fp
+	  OK -cs
+print.sml OK -fp
+	  OK -cs
+sources.cm OK -fp
+	   OK -cs

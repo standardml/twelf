@@ -1,0 +1,268 @@
+%%% Proof of soundness of equinits_algorithm wrt equnits.
+%%% (A proof of completeness would probably be much harder.)
+%%% by Ralph Melton (based on Kennedy97)
+
+
+equnits_sound : (equnits_algorithm U1 U2) -> (equnits U1 U2) -> type.
+
+
+%%% A handy lemma: equnits ((U1 u* U2) u-1 ) (U1 u-1 u* U2 u-1).
+%%% I don't really know how to represent this; for now, I'm going
+%%% to represent it with another inference rule for equnits, together
+%%% with a proof of admissibility.
+
+equ_dist : equnits ((U1 u* U2) u-1 ) (U1 u-1 u* U2 u-1) -> type.
+
+equ_dist_admissible : equnits ((U1 u* U2) u-1 ) (U1 u-1 u* U2 u-1) -> type.
+
+equ_dist_proof : equ_dist
+		  (equ_trans 
+		     equ_ident
+		     (equ_trans
+			(equ_cong_* equ_inverse equ_ref)
+			(equ_trans
+			   equ_assoc
+			   (equ_trans
+			      (equ_cong_*
+				 equ_ref
+				 (equ_trans
+				    (equ_cong_* equ_commute equ_ref)
+				    (equ_trans
+				       equ_commute
+				       (equ_trans
+					  (equ_sym equ_assoc)
+					  (equ_trans
+					     (equ_cong_* equ_assoc equ_ref)
+					     (equ_trans
+						(equ_cong_*
+						   (equ_cong_*
+						      equ_ref
+						      (equ_sym
+							 equ_inverse))
+						   equ_ref)
+						(equ_trans
+						   (equ_cong_* equ_commute equ_ref)
+						   (equ_trans
+						      equ_assoc
+						      (equ_trans
+							 (equ_sym equ_ident)
+							 (equ_sym equ_inverse))))))))))
+			      (equ_trans
+				 equ_commute
+				 (equ_sym equ_ident)))))).
+
+
+%%% The soundness criterion for member is that (member Elt List Rest)
+%%% implies equnits List (Elt u* Rest).
+
+member_sound : (member Elt List Rest) -> (equnits List (Elt u* Rest)) -> type.
+
+ms_found : member_sound (mem_found) equ_ref.
+
+ms_search : member_sound (mem_search M)
+	     (equ_trans
+		(equ_trans 
+		   equ_assoc
+		   (equ_trans
+		      (equ_cong_* equ_ref equ_commute)
+		      (equ_sym equ_assoc)))
+		(equ_cong_* Q equ_ref))
+	     <- member_sound M Q.
+
+
+%%% The soundness criterion for permutation is that (permutation U U')
+%%% implies (equnits U U')
+
+permutation_sound : permutation U U' -> equnits U U' -> type.
+
+ps_done : permutation_sound (perm_done) (equ_ref).
+ps_cont : permutation_sound (perm_cont P M)
+	   (equ_sym
+	      (equ_trans
+		 Qm
+		 (equ_sym
+		    (equ_cong_* equ_ref Qp))))
+	   <- member_sound M Qm
+	   <- permutation_sound P Qp.
+
+
+
+%%% The soundness criteria for flatten-p is that (flatten-p U U_old U_new)
+%%% implies that equnits (U * U_old) U_new.
+%%% The soundness criterion for flatten-p is that (flatten-n U U_old U_new)
+%%% implies that equnits (U u-1 * U_old) U_new.
+%%% These proofs are mutually recursive, just as the functions are.
+
+flatten-p_sound : (flatten-p U U_old U_new) 
+		   -> (equnits (U u* U_old) U_new)
+		   -> type.
+flatten-n_sound : (flatten-n U U_old U_new) 
+		   -> equnits (U u-1 u* U_old) U_new
+		   -> type.
+
+
+fps_1   : flatten-p_sound (fp_1) (equ_trans equ_ident equ_commute).
+fps_*   : flatten-p_sound (fp_* F2 F1)
+	   (equ_trans 
+	      Q2
+	      (equ_trans
+		 (equ_trans
+		    (equ_cong_* Q1 equ_ref)
+		    equ_assoc)
+		 (equ_cong_* equ_ref equ_commute)))
+	   <- flatten-p_sound F1 Q1
+	   <- flatten-p_sound F2 Q2.
+fps_-1  : flatten-p_sound (fp_-1 F) Q
+	   <- flatten-n_sound F Q.
+fps_gd  : flatten-p_sound (fp_gd) (equ_sym equ_assoc).
+
+fns_1   : flatten-n_sound (fn_1)
+	   (equ_trans
+	      equ_ident
+	      (equ_trans
+		 equ_commute
+		 (equ_trans
+		    (equ_cong_* equ_ref equ_inverse)
+		    (equ_trans
+		       (equ_sym equ_assoc)
+		       (equ_trans
+			  equ_commute
+			  (equ_sym equ_ident)))))).
+fns_*   : flatten-n_sound (fn_* F2 F1)
+	   (equ_trans
+	      Q2
+	      (equ_trans
+		 (equ_cong_* Q1 equ_ref)
+		 (equ_trans
+		    equ_assoc
+		    (equ_trans
+		       (equ_cong_* equ_ref equ_commute)
+		       (equ_cong_* 
+			  equ_ref
+			  Qd)))))
+	   <- flatten-n_sound F1 Q1
+	   <- flatten-n_sound F2 Q2
+	   <- equ_dist Qd.
+
+fns_-1   : flatten-n_sound (fn_-1 F)
+	    (equ_trans
+	       Q
+	       (equ_cong_*
+		  equ_ref
+		  (equ_trans
+		     equ_ident
+		     (equ_trans
+			(equ_cong_* equ_inverse equ_ref)
+			(equ_trans
+			   equ_assoc
+			   (equ_trans
+			      (equ_cong_*
+				 equ_ref
+				 (equ_sym equ_inverse))
+			      (equ_trans
+				 equ_commute
+				 (equ_sym equ_ident))))))))
+	    <- flatten-p_sound F Q.
+
+fns_gd   : flatten-n_sound (fn_gd)
+	    (equ_trans
+	       (equ_cong_* 
+		  (equ_sym Qd)
+		  equ_ref)
+	       (equ_trans
+		  equ_assoc
+		  (equ_trans
+		     (equ_cong_* equ_ref equ_commute)
+		     (equ_sym equ_assoc))))
+	    <- equ_dist Qd.
+
+
+
+
+%%% The soundness criterion for flatten: flatten U U' imples that
+%%% equnits U U'
+flatten_sound : (flatten U U') -> (equnits U U') -> type.
+
+fs : flatten_sound (flatten_do F)
+      (equ_trans
+	 Q
+	 (equ_trans
+	    (equ_cong_*
+	       (equ_sym equ_inverse)
+	       equ_ref)
+	    (equ_sym equ_ident)))
+      <- flatten-p_sound F Q.
+
+
+
+%%% The soundness criterion for remove-common-factors:
+%%% remove-common-factors U U' implies that equnits U U'.
+
+remove-common-factors_sound : (remove-common-factors U U') 
+			       -> (equnits U U') 
+			       -> type.
+
+rcfs_done_p : remove-common-factors_sound (rcf_done_p) (equ_ref).
+rcfs_done_p : remove-common-factors_sound (rcf_done_n) (equ_ref).
+
+rcfs_remove : remove-common-factors_sound (rcf_remove R M)
+	       (equ_trans
+		  (equ_trans
+		     (equ_trans
+			(equ_trans
+			   (equ_trans
+			      (equ_trans
+				 (equ_trans
+				    (equ_trans
+				       (equ_trans
+					  (equ_trans
+					     Qr
+					     equ_ident)
+					  equ_commute)
+				       (equ_cong_* equ_ref equ_inverse))
+				    (equ_sym equ_assoc))
+				 (equ_cong_* equ_assoc equ_ref))
+			      (equ_cong_* 
+				 (equ_cong_* equ_ref equ_commute) 
+				 equ_ref))
+			   (equ_cong_* (equ_sym equ_assoc) equ_ref))
+			equ_assoc)
+		     (equ_cong_* Qd equ_ref))
+		  (equ_cong_*
+		     (equ_cong_-1 Qm)
+		     equ_ref))
+	       <- remove-common-factors_sound R Qr
+	       <- member_sound M Qm
+	       <- equ_dist Qd.
+
+rcfs_keep   : remove-common-factors_sound (rcf_keep R)
+	       (equ_trans
+		  (equ_trans
+		     (equ_sym equ_assoc)
+		     (equ_cong_* Q equ_ref))
+		  equ_assoc)
+	       <- remove-common-factors_sound R Q.
+
+
+%%% The soundness criterion for standardize is
+%%% standardize U U' implies equnits U U'.
+standardize_sound : (standardize U U') -> (equnits U U') -> type.
+
+standardize_sound_do : standardize_sound (standardize_do R F)
+			(equ_trans Qf Qr)
+			<- remove-common-factors_sound R Qr
+			<- flatten_sound F Qf.
+
+
+equnits_sound_proof : equnits_sound (equnits_alg Pn Pp S2 S1)
+		       (equ_trans
+			  (equ_sym Qs2)
+			  (equ_trans
+			     (equ_cong_*
+				(equ_cong_-1 Qpn)
+				Qpp)
+			     Qs1))
+		       <- standardize_sound S1 Qs1
+		       <- standardize_sound S2 Qs2
+		       <- permutation_sound Pp Qpp
+		       <- permutation_sound Pn Qpn.

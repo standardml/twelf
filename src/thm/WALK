@@ -1,0 +1,28 @@
+Future Issues:
+
+  - relax conditions on mutual recursion?
+  - Reorganize printing for thm and orders!
+
+CM/
+README
+WALK
+sources.cm
+thm.fun      OK -fp
+	     OK -cs
+thm.sig      OK -fp
+	     OK -cs
+thm.sml      OK -fp
+thmprint.fun Q: comments, improve? LATER
+	     Q: duplication of order printing? LATER
+	     OK -fp
+	     OK -cs
+thmprint.sig OK -fp
+	     OK -cs
+thmsyn.fun   Q: error location?
+	     A: DONE -cs
+	     OK -fp
+   	     OK -cs
+thmsyn.sig   Q: use thdec, use theorem instead of Theorem, or make it datatype -fp
+	     A: DONE -cs
+	     OK -fp
+	     OK -cs

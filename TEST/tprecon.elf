@@ -1,0 +1,31 @@
+% Testing type reconstruction errors
+
+exp : type.
+z : exp.
+s : exp -> exp.
+
+eval : exp -> exp -> type.
+
+% undeclared constant
+% ev_z : eval z z'.
+
+% type applied to arg
+% eval' : ((exp -> exp) exp) -> type.
+
+% type applied to type
+% eval' : type type.
+
+% classifier not a type
+% poly : {A} A -> A -> type.
+
+% mismatch
+% ev_s : eval z s.
+
+% extraneous arguments
+% ev_s : eval (z z) s.
+
+% type ascription error
+% ev_s : eval (z : exp -> exp) z.
+
+% unresolved constraints
+% ev_s : eval (s (F X)) z.

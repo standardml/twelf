@@ -1,0 +1,7 @@
+%%% Proof of soundness of tp-inf.elf with regard to tp-rules.elf
+%%% by Ralph Melton
+
+
+%%% I expect this to be straightforward and easy, so I'll leave it to later.
+
+tp_sound: of! E T -> of E T -> type.

@@ -1,0 +1,14 @@
+Group is
+  ../lambda/sources.cm
+  ../print/sources.cm
+  ../formatter/sources.cm  
+  ../index/sources.cm
+  compsyn.sig
+  compsyn.fun
+  compile.sig
+  compile.fun
+  cprint.sig
+  cprint.fun
+  absmachine.sig
+  absmachine.fun
+  opsem.sml

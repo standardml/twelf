@@ -1,0 +1,18 @@
+%%% equality of type expressions
+%%% Ralph melton (based on Kennedy97)
+
+eqtypes : tp -> tp -> type.
+
+%% This is an easy and straightforward definition.
+
+eqt_bool : eqtypes bool bool.
+
+eqt_num  : eqtypes (num U1) (num U2)
+	    <- equnits U1 U2.
+
+eqt_=>   : eqtypes (T1 => T2) (T1' => T2')
+	    <- eqtypes T1 T1'
+	    <- eqtypes T2 T2'.
+
+eqt_forall : eqtypes (forall T) (forall T')
+	      <- ({u: unit} eqtypes (T u) (T' u)).

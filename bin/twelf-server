@@ -1,0 +1,3 @@
+#!/bin/csh
+sml-cm @SMLload=/usr/carsten/twelf/work/bin/.heap/twelf-server \
+     @SMLdebug=/dev/null
