@@ -78,12 +78,12 @@ struct
 	  then closure (a1s, a2s)
 	else closure (mutual a @ a1s, a :: a2s)
 
+
   in
     val reset = reset
     val install = install
     val selLookup = selLookup
     val mutLookup = mutLookup
     val closure = fn a => closure ([a], nil)
-
   end (* local *)
 end; (* functor Order *)
