@@ -51,7 +51,7 @@ Last updated @value{UPDATED}.
 @cindex typographical conventions
 @cindex file names
 
-Twelf is current version of a succession of implementations of
+Twelf is the current version of a succession of implementations of
 the logical framework LF.  Previous systems include Elf (which
 provided type reconstruction and the operational semantics reimplemented
 in Twelf) and MLF (which implemented module-level constructs loosely
