@@ -1,0 +1,8 @@
+Fri Sep  3 13:28:29 EDT 1999 -cs
+
+There is a problem with Skolem constants.  They cannot be applied to
+local parameters, otherwise the LF/meta level distinction is violated.
+In filling.fun I am lowering EVars (in createEVars), and there it is 
+possible that local parameters get into the context G, which can
+be used  (in search.fun) as arguments via unfications.  This is a bug.
+
