@@ -211,40 +211,16 @@ For the last expression, hit the "Profile" button in the interactive
 system.  Also, don't forget to set Preferences>Compilers> so that
 profiling is enabled BEFORE using "load.sml";
 --------------------
-For "release":
+Release:
 
-  Edit Twelf.version in frontend/twelf.fun
-  Edit version in doc/guide/twelf.texi
-  Edit version in README
+  *** Note: the CVS protocol has not yet been established ***
 
-  Rebuild document in doc/guide/?
+  For file-oriented operations, see file DISTRIBUTE
 
-  mv ../../misc/twelf/ ../../misc/twelf-1-2-beta (* or remove *)
-  cd ..
-  cp -rp twelf ../misc/twelf (* this could take a while *)
-  cd ../misc/twelf
-
-  bin/clean
-  bin/clean-cm
-  rm HISTORY IDEAS NOTES src/*/NOTES
-  rm -rf PROFILE TEST TIMING work
-  rm -rf doc/{.log,guide,modes,old,terminate}
-  rm src/{WALK,TAGS,*/WALK}
-  rm examples/TAGS
-  rm bin/{clean,clean-cm,create-tags,tag-examples,tag-twelf}
-  rm bin/.heap/*
-  rm -rf emacs/{19.16,at-point}
-  rm emacs/twelf-font.elc
-
-  cd ..
-  tar -cvf twelf-1-2.tar twelf
-  gzip twelf-1-2.tar
-  mv twelf-1-2.tar.gz /afs/cs/project/twelf/www/dist/
-  cp -rp twelf ../research/twelf-1-2
-
-  Edit instructions and links in www/index.html
 --------------------
 Installation:
+
+  *** For accurate up-to-date information see file README ***
 
   gunzip twelf.tar.gz
   tar -xvf twelf.tar
@@ -252,7 +228,7 @@ Installation:
   sml-cm  (* requires version 110! *)
   CM.make ();
 
-
+--------------------
 Thu Apr 30 20:54:15 1998 -fp
   DONE - fp - Strictness checker uses open and raises wrong exception!
 
