@@ -10,12 +10,12 @@
 
 %theorem uncurry : forall* {P:atm} {Q:atm} {R:atm}
 	           exists {D: !^ ((` P => (` Q => ` R)) => (` P & ` Q => ` R))} true.
-% %prove 12 {} (uncurry _). % 12 terminates?
+% %establish 12 {} (uncurry _). % 12 terminates?
 
 %theorem split : forall* {P:atm}  {Q:atm} {R:atm}
 		 exists {D: !^ ((` P => ` Q & ` R) => (` P => ` Q) & (` P => ` R))} true.
-%establish 12 {} (split _).  % OK
+% %establish 15 {} (split _).  % OK
 
 %theorem join : forall* {P:atm}  {Q:atm} {R:atm}
 		 exists {D: !^ ((` P => ` Q) & (` P => ` R) => (` P => ` Q & ` R))} true.
-%establish 12 {} (join _). % OK
+% %establish 12 {} (join _). % OK

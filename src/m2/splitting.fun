@@ -438,7 +438,7 @@ struct
 		 isIndex, abstract, makeAddress) = 
 	  let 
 	    val (M.Prefix (G', M', B'), s', ops) =
-		expand' (M.Prefix (G, M, B), isIndexFail (D, isIndex),
+		expand' (M.Prefix (G, M, B), isIndexSucc (D, isIndex), (* -###- *)
 			 abstractCont ((D, mode, b), abstract),
 			 makeAddressCont makeAddress)
 	  in
