@@ -12,7 +12,7 @@ functor Search
    structure Abstract : ABSTRACT
    (*! sharing Abstract.IntSyn = IntSyn' !*)
    (*! sharing Abstract.Tomega = Tomega' !*)
-   structure MTPGlobal : MTPGLOBAL
+   structure Data : DATA
    structure CompSyn' : COMPSYN
    (*! sharing CompSyn'.IntSyn = IntSyn' !*)
    structure Whnf : WHNF
@@ -98,8 +98,8 @@ struct
 	  occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
       | occursInExpW (r, (I.EVar (r' , _, V', _), s)) = 
           (r = r') orelse occursInExp (r, (V', s))
-      | occursInExpW (r, (I.FgnExp (cs, ops), s)) =
-          occursInExp (r, (#toInternal(ops)(), s))
+(*      | occursInExpW (r, (I.FgnExp (cs, ops), s)) =
+          occursInExp (r, (#toInternal(ops)(), s)) *)
           (* hack - should consult cs  -rv *)
 
     and occursInSpine (_, (I.Nil, _)) = false

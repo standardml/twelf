@@ -9,8 +9,6 @@ functor Split
    structure State' : STATE
    (*! sharing State'.IntSyn = IntSyn' !*)
    (*! sharing State'.Tomega = Tomega' !*)
-   structure Normalize : NORMALIZE
-   (*! sharing Normalize.Tomega = Tomega' !*)
    structure Whnf : WHNF
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Unify : UNIFY
@@ -250,7 +248,7 @@ struct
 	  (* . |- t : Gsome *)
 	  val sk = I.Shift (I.ctxLength(G))
 	  val t' = I.comp (t, sk)
-	  val lvar = I.newLVar (sk, (cid, t))  (* --cs Sun Dec  1 06:33:41 2002 *)
+	  val lvar = I.newLVar (sk, (cid, t'))  (* --cs Sun Dec  1 06:33:41 2002 *)
 	  (* G |- t' : Gsome *)
 	in
 	  blockCases' (G, Vs, (lvar, 1), (t', piDecs), sc)

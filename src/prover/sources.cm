@@ -7,10 +7,26 @@ is
 #endif
   ../tomega/sources.cm
   ../lambda/sources.cm
+  ../global/sources.cm
+  ../names/sources.cm
+  ../print/sources.cm
+  ../index/sources.cm
+  ../modes/sources.cm
+  ../typecheck/sources.cm
+  ../table/sources.cm
+  ../subordinate/sources.cm
+  ../solvers/sources.cm
+  ../opsem/sources.cm
+  ../compile/sources.cm
+  ../worldcheck/sources.cm
+  ../formatter/sources.cm
+  ../timing/sources.cm
   state.sig       (* central data structure for states *)
   state.fun       
   search.sig
   search.fun	
+  data.sig
+  data.fun
   fill.sig        (* Filling existentials *)
   fill.fun
   split.sig       (* Splitting assumptions *)
@@ -24,4 +40,6 @@ is
   stateprint.fun
   interactive.sig
   interactive.fun
+  weaken.sig
+  weaken.fun
   prover.sml

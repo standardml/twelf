@@ -56,6 +56,7 @@ struct
     *)
     fun nameState (S.State ((Psi, F), W)) =
         let 
+	  val _ = Names.varReset I.Null
 	  val Psi' = nameCtx Psi
 	    (* all this stuff should move into names.  
 	       Ask Frank  --cs *)

@@ -8,9 +8,6 @@ functor FixedPoint
    structure State' : STATE
    (*! sharing State'.IntSyn = IntSyn' !*)
    (*! sharing State'.Tomega = Tomega' !*)
-   structure Normalize : NORMALIZE
-   (*! sharing Normalize.IntSyn = IntSyn' !*)
-   (*! sharing Normalize.Tomega = Tomega' !*)
        ) : FIXEDPOINT  =
 struct
   (*! structure IntSyn = IntSyn' !*)

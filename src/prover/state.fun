@@ -2,30 +2,27 @@
 (* Author: Carsten Schuermann *)
 
 functor State 
-  ((*! structure IntSyn' : INTSYN !*)
-   (*! structure Tomega' : TOMEGA !*)
-   (*! sharing Tomega'.IntSyn = IntSyn' !*)
-   structure Normalize : NORMALIZE
-   (*! sharing Normalize.Tomega = Tomega' !*)
-     ) : STATE =
+  (structure Formatter : FORMATTER) : STATE =
 struct
   (*! structure IntSyn = IntSyn' !*)
   (*! structure Tomega = Tomega' !*)
+  structure Formatter = Formatter
 
   datatype State
     = State of (Tomega.Dec IntSyn.Ctx * Tomega.For) * Tomega.Worlds
 
-  datatype SideCondition  (* we need some work here *)
+(*  datatype SideCondition  (* we need some work here *)
     = None
     | All   of SideCondition
     | And   of SideCondition * SideCondition
     | Order of Order.Predicate
+*)
 
   exception Error of string
 
   local 
-    structure T = Tomega'
-    structure I = IntSyn'
+    structure T = Tomega
+    structure I = IntSyn
     (* init F = S
 
        Invariant:
@@ -52,7 +49,7 @@ struct
 	    fc
       | construct (State ((Psi, T.True), W)) sc fc =
 	  sc (T.Unit)
-      | construct (State ((Psi, T.All (D, F)), W)) sc fc =
+      | construct (State ((Psi, T.All ((D, _), F)), W)) sc fc =
 	  construct (State ((I.Decl (Psi, D), F), W)) sc fc
 	  
       

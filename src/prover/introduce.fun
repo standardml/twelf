@@ -32,7 +32,7 @@ struct
        and  F' = F1 
     *)
 
-    fun introduce (Psi, T.All (D, F)) = introduce (I.Decl (Psi, D), F)
+    fun introduce (Psi, T.All ((D, _), F)) = introduce (I.Decl (Psi, D), F)
       | introduce PsiF = PsiF
 
     (* expand S = S'

@@ -15,7 +15,7 @@ functor Interactive
    (*! sharing Names.IntSyn = IntSyn' !*)
    structure Weaken : WEAKEN
    (*! sharing Weaken.IntSyn = IntSyn' !*)
-   structure ModeSyn : MODESYN
+   (* structure ModeSyn : MODESYN *)
    (*! sharing ModeSyn.IntSyn = IntSyn' !*)
    structure WorldSyn : WORLDSYN
    (*! sharing WorldSyn.IntSyn = IntSyn' !*)
@@ -65,7 +65,7 @@ struct
 	val V  = case I.sgnLookup cid 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
-	val mS = case M.modeLookup cid
+	val mS = case ModeTable.modeLookup cid
 	           of NONE => raise Error "Mode declaration expected"
 	            | SOME mS => mS
 
@@ -86,13 +86,13 @@ struct
             let
 	      val (F', F'') = convertFor' (V, mS, I.dot1 w1, I.Dot (I.Idx n, w2), n-1)
 	    in
-	      (fn F => T.All (T.UDec (Weaken.strengthenDec (D, w1)), F' F), F'')
+	      (fn F => T.All ((T.UDec (Weaken.strengthenDec (D, w1)), T.Explicit), F' F), F'')
 	    end
 	  | convertFor' (I.Pi ((D, _), V), M.Mapp (M.Marg (M.Minus, _), mS), w1, w2, n) =
             let
 	      val (F', F'') = convertFor' (V, mS, I.comp (w1, I.shift), I.dot1 w2, n+1)
 	    in
-	      (F', T.Ex (I.decSub (D, w2), F''))
+	      (F', T.Ex ((I.decSub (D, w2), T.Explicit), F''))
 	    end
 	  | convertFor' (I.Uni I.Type, M.Mnil, _, _, _) = 
               (fn F => F, T.True)
@@ -371,7 +371,6 @@ struct
     fun next () = (nextOpen (); menu (); printMenu ())
 
     fun undo () = (popHistory (); menu (); printMenu ())
-
 
     fun init names = 
 	let 

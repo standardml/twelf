@@ -3,9 +3,6 @@
 
 signature STATE =
 sig
-  (*! structure IntSyn : INTSYN !*)
-  (*! structure Tomega : TOMEGA !*)
-
   exception Error of string
 
   datatype State =

@@ -2,7 +2,7 @@ structure State = State
   ((*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
    structure WorldSyn' = WorldSyn
-   structure Normalize = Normalize)
+   structure Formatter = Formatter)
      
 structure StatePrint = StatePrint 
   (structure Global = Global
@@ -22,15 +22,13 @@ structure Introduce = Introduce
 structure FixedPoint = FixedPoint 
   ((*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
-   structure State' = State
-   structure Normalize = Normalize)
+   structure State' = State)
 
 structure Split = Split
   (structure Global = Global
    (*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
    structure State' = State
-   structure Normalize = Normalize
    structure Whnf = Whnf
    structure Abstract = Abstract
    structure Unify = UnifyTrail
@@ -44,7 +42,7 @@ structure Split = Split
 
 structure Search = Search 
   (structure Global = Global
-   structure MTPGlobal = MTPGlobal
+   structure Data = Data
    (*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
    structure State' = State
@@ -62,12 +60,10 @@ structure Search = Search
    structure CSManager = CSManager); 
 
 structure Fill = Fill
-  (structure MTPGlobal = MTPGlobal
-   structure MTPData = MTPData
+  (structure Data = Data
    (*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
    structure State' = State
-   structure Normalize = Normalize
    structure Whnf = Whnf
    structure Abstract = Abstract
    structure Unify = UnifyTrail
@@ -75,6 +71,10 @@ structure Fill = Fill
    structure Index = Index
    structure Search = Search
    structure TypeCheck = TypeCheck)
+
+structure Weaken =
+  Weaken ((*! structure IntSyn' = IntSyn !*)
+	  structure Whnf = Whnf)
 
 structure Interactive = Interactive
   (structure Global = Global
