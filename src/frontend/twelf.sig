@@ -20,6 +20,11 @@ sig
       val sgn : unit -> unit	      (* print signature *)
       val prog : unit -> unit	      (* print signature as program *)
     end
+
+    structure Table :
+    sig
+      val print : unit -> unit
+    end
   end
 
   structure Trace :
@@ -76,7 +81,6 @@ sig
   val decl : string -> Status	      (* print declaration of constant *)
 
   val top : unit -> unit	      (* top-level for interactive queries *)
-  val topTabled : unit -> unit	      (* top-level for interactive tabled queries *)
 
   structure Config :
   sig
@@ -91,40 +95,14 @@ sig
 
   val version : string		      (* Twelf version *)
 
+  structure Table : 
+  sig 
+    datatype Strategy = Variant | Subsumption
 
-  val printTable        : unit -> unit
-  val printTableEntries : unit -> unit
+    val strategy : Strategy ref
+    val strengthen : bool ref
 
-
-  structure Tabled : 
-    sig
-      structure IntSyn : INTSYN
-      structure CompSyn : COMPSYN
-      structure Unify : UNIFY
-	
-      val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.pskeleton  -> unit)) * 
-			 Unify.unifTrail * int ref) list) ref 
-      val reset : unit -> unit
-    end 
-
-  structure TableIndex : 
-    sig 
-      structure IntSyn : INTSYN
-
-      type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
-		     lookup: int}
-	
-      val table : ((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
-
-      datatype Strategy = Variant | Subsumption
-
-      (* global tabled search parameters *)
-      val strategy : Strategy ref
-      val termDepth : int option ref
-      val ctxDepth : int option ref
-      val ctxLength : int option ref
-      val strengthen : bool ref
-
-    end 
+    val top : unit -> unit
+  end 
 
 end;  (* signature TWELF *)
