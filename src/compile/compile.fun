@@ -125,9 +125,10 @@ struct
      (* h is either const, skonst or def *)
      | collectExp (I.Root(h, S), K, Vars, depth) =   
          collectSpine (S, K, Vars, depth)
-
-     | collectExp (I.Uni(L), K, Vars, depth) = (K, Vars)
+     (* should be impossible, Mon Apr 15 14:55:15 2002 -fp *)
+     (* | collectExp (I.Uni(L), K, Vars, depth) = (K, Vars) *)
      | collectExp (I.Lam(D, U), K, Vars, depth) = 
+	 (* don't collect D, since it is ignored in unification *)
 	 collectExp (U, K, Vars, depth+1)
      | collectExp (I.FgnExp (cs, ops), K, Vars, depth) = 
 	 ((depth, FGN)::K, Vars)
@@ -157,7 +158,9 @@ struct
 	I.Root(shiftHead(h, depth, total), shiftSpine(S, depth, total))
     | shiftExp (I.Uni(L), _, _) = I.Uni(L)
     | shiftExp (I.Lam(D, U), depth, total) = 
-	I.Lam(D, shiftExp(U, depth+1, total))
+	I.Lam(shiftDec(D, depth, total), shiftExp(U, depth+1, total))
+    | shiftExp (I.Pi((D, P), U), depth, total) =
+	I.Pi((shiftDec(D, depth, total), P), shiftExp (U, depth+1, total))
     | shiftExp (I.FgnExp(cs, ops), depth, total) = 
 	(* calling normalize here because U may not be normal *)
 	(* this is overkill and could be very expensive for deeply nested foreign exps *)
@@ -166,7 +169,8 @@ struct
   and shiftSpine (I.Nil, _, _) = I.Nil
     | shiftSpine (I.App(U, S), depth, total) = 
         I.App(shiftExp(U, depth, total), shiftSpine(S, depth, total))
-	   
+  and shiftDec (I.Dec(x, V), depth, total) =
+        I.Dec(x, shiftExp (V, depth, total))
 
   (* linearHead (Gl, h, S, left, Vars, depth, total, eqns) = (left', Vars', N, Eqn)
 
@@ -238,15 +242,19 @@ struct
 	     (left'',  Vars'', I.Root(h', S'), eqns')
 	   end 
        end 
+     (* should be impossible  Mon Apr 15 14:54:42 2002 -fp *)
+     (*
      | linearExp (Gl, U as I.Uni(L), left, Vars, depth, total, eqns) = 
          (left, Vars, I.Uni(L), eqns)
+     *)
 
      | linearExp (Gl, I.Lam(D, U), left, Vars, depth, total, eqns) = 
        let
-	 val (left', Vars', U', eqns') = linearExp (I.Decl(Gl, D), U, left, Vars, 
+	 val D' = shiftDec(D, depth, total)
+	 val (left', Vars', U', eqns') = linearExp (I.Decl(Gl, D'), U, left, Vars, 
 						    depth+1, total, eqns)
        in 
-	 (left', Vars', I.Lam(D, U'), eqns')
+	 (left', Vars', I.Lam(D', U'), eqns')
        end
    | linearExp (Gl, U as I.FgnExp (cs, ops), left, Vars, depth, total, eqns) = 
        let
