@@ -5,8 +5,6 @@ functor Parser (structure Parsing' : PARSING
 		structure Stream' : STREAM (* result stream *)
 		structure ExtSyn' : EXTSYN
 		  sharing ExtSyn'.Paths = Parsing'.Lexer.Paths
-		structure ExtSynQ' : EXTSYN
-		  sharing ExtSynQ'.Paths = Parsing'.Lexer.Paths
 		structure Names' : NAMES
 		structure ExtModes' : EXTMODES
 		structure ThmExtSyn' : THMEXTSYN
@@ -15,8 +13,7 @@ functor Parser (structure Parsing' : PARSING
 		  sharing ParseConDec.ExtSyn = ExtSyn'
 		structure ParseQuery : PARSE_QUERY
 		  sharing ParseQuery.Parsing.Lexer = Parsing'.Lexer
-		  sharing type ParseQuery.ExtSyn.term = ExtSynQ'.term
-		  sharing type ParseQuery.ExtSyn.query = ExtSynQ'.query
+                  sharing ParseQuery.ExtSyn = ExtSyn'
 		structure ParseFixity : PARSE_FIXITY
 		  sharing ParseFixity.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseFixity.Names = Names' 
@@ -26,17 +23,15 @@ functor Parser (structure Parsing' : PARSING
 	        structure ParseThm : PARSE_THM
 		  sharing ParseThm.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseThm.ThmExtSyn = ThmExtSyn'
-                structure ParseTermQ : PARSE_TERM 
-                  sharing ParseTermQ.Parsing.Lexer = Parsing'.Lexer
-                  sharing type ParseTermQ.ExtSyn.term = ExtSynQ'.term
-		  sharing type ParseTermQ.ExtSyn.query = ExtSynQ'.query)
+                structure ParseTerm : PARSE_TERM 
+                  sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
+                  sharing ParseTerm.ExtSyn = ExtSyn')
   : PARSER =
 struct
 
   structure Parsing = Parsing'
   structure Stream = Stream'
   structure ExtSyn = ExtSyn'
-  structure ExtSynQ = ExtSynQ'
   structure Names = Names'
   structure ExtModes = ExtModes'
   structure ThmExtSyn = ThmExtSyn'
@@ -55,8 +50,8 @@ struct
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
-    | Query of int option * int option * ExtSynQ.query * ExtSyn.Paths.region (* expected, try, A *)
-    | Solve of (string * ExtSynQ.term) * ExtSyn.Paths.region
+    | Query of int option * int option * ExtSyn.query * ExtSyn.Paths.region (* expected, try, A *)
+    | Solve of (string * ExtSyn.term) * ExtSyn.Paths.region
     | AbbrevDec of ExtSyn.condec * ExtSyn.Paths.region
     | Use of string
     (* Further pragmas to be added later here *)
@@ -123,7 +118,7 @@ struct
 	let
 	  val (name, s1) = parseID' (LS.expose s')
 	  val s2 = parseColon (LS.expose s1)
-	  val (solve, f3 as LS.Cons((_,r'),_)) = ParseTermQ.parseTerm' (LS.expose s2)
+	  val (solve, f3 as LS.Cons((_,r'),_)) = ParseTerm.parseTerm' (LS.expose s2)
 	  val r = ExtSyn.Paths.join (r0, r')
 	in
 	  Stream.Cons (Solve ((name, solve), r), parseStream (stripDot f3))

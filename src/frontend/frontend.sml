@@ -12,14 +12,6 @@ structure Parsing =
   Parsing (structure Stream' = Stream
 	   structure Lexer' = Lexer);
 
-structure FVars =
-  FVars (structure IntSyn' = IntSyn
-         structure Names = Names);
-
-structure EVars =
-  EVars (structure IntSyn' = IntSyn
-         structure Names = Names);
-
 structure TpRecon =
   TpRecon (structure Global = Global
 	   structure IntSyn' = IntSyn
@@ -32,22 +24,6 @@ structure TpRecon =
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
-           structure Vars = FVars
-           structure CSManager = CSManager);
-
-structure TpReconQ =
-  TpRecon (structure Global = Global
-	   structure IntSyn' = IntSyn
-	   structure Names = Names
-	   structure Paths' = Paths
- 	   structure Whnf = Whnf
-	   structure Unify = UnifyNoTrail
-	   structure Abstract = Abstract
-	   structure TypeCheck = TypeCheck
-	   structure Strict = Strict
-	   structure Print = Print
-	   structure Timers = Timers
-           structure Vars = EVars
            structure CSManager = CSManager);
 
 structure ModeRecon =
@@ -78,11 +54,6 @@ structure ParseTerm =
 	     structure ExtSyn' = TpRecon
 	     structure Names = Names);
 
-structure ParseTermQ =
-  ParseTerm (structure Parsing' = Parsing
-	     structure ExtSyn' = TpReconQ
-	     structure Names = Names);
-
 structure ParseConDec =
   ParseConDec (structure Parsing' = Parsing
 	      structure ExtSyn' = TpRecon
@@ -90,8 +61,8 @@ structure ParseConDec =
 
 structure ParseQuery =
   ParseQuery (structure Parsing' = Parsing
-	      structure ExtSyn' = TpReconQ
-	      structure ParseTerm = ParseTermQ);
+	      structure ExtSyn' = TpRecon
+	      structure ParseTerm = ParseTerm);
 
 structure ParseFixity =
   ParseFixity (structure Parsing' = Parsing
@@ -113,7 +84,6 @@ structure Parser =
   Parser (structure Parsing' = Parsing
 	  structure Stream' = Stream
 	  structure ExtSyn' = TpRecon
-	  structure ExtSynQ' = TpReconQ
 	  structure Names' = Names
 	  structure ExtModes' = ModeRecon
 	  structure ThmExtSyn' = ThmRecon
@@ -122,7 +92,7 @@ structure Parser =
 	  structure ParseFixity = ParseFixity
 	  structure ParseMode = ParseMode
 	  structure ParseThm = ParseThm
-          structure ParseTermQ = ParseTermQ);
+          structure ParseTerm = ParseTerm);
 
 structure Solve =
   Solve (structure Global = Global
@@ -131,7 +101,7 @@ structure Solve =
 	 structure Parser = Parser
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
-	 structure TpReconQ = TpReconQ
+	 structure TpRecon = TpRecon
 	 structure Timers = Timers
 	 structure CompSyn = CompSyn
 	 structure Compile = Compile
@@ -157,7 +127,6 @@ structure Twelf =
 	 structure Strict = Strict
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
-	 structure TpReconQ = TpReconQ
 	 structure TpRecon = TpRecon 
 
 	 structure ModeSyn = ModeSyn

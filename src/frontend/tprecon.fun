@@ -2,50 +2,6 @@
 (* Author: Frank Pfenning *)
 (* Modified: Jeff Polakow, Roberto Virga, Kevin Watkins *)
 
-(* ------------------------------------- *)
-(* Translating Free Identifiers to EVars *)
-(* ------------------------------------- *)
-
-functor EVars (structure IntSyn' : INTSYN
-               structure Names : NAMES
-                 sharing Names.IntSyn = IntSyn')
-  : VARS =
-struct
-
-  structure IntSyn = IntSyn'
-
-  fun var (name, depth) =
-      let
-	val (X as IntSyn.EVar(_,_,V,_), Va, set) = Names.getEVar name
-	val s = IntSyn.Shift depth
-      in
-	(IntSyn.EClo (V, s), Va, set,
-	 fn S => IntSyn.Redex (IntSyn.EClo (X, s), S))
-      end
-end;  (* functor EVars *)
-
-(* ------------------------------------- *)
-(* Translating Free Identifiers to FVars *)
-(* ------------------------------------- *)
-
-functor FVars (structure IntSyn' : INTSYN
-               structure Names : NAMES
-                 sharing Names.IntSyn = IntSyn')
-  : VARS =
-struct
-
-  structure IntSyn = IntSyn'
-
-  fun var (name, depth) =
-      let
-	val (V, Va, set) = Names.getFVarType (name)
-	val s = IntSyn.Shift (depth)
-      in
-        (IntSyn.EClo (V, s), Va, set,
-	 fn S => IntSyn.Root (IntSyn.FVar (name, V, s), S))
-      end
-end;  (* functor FVars *)
-
 (* ------------------- *)
 (* Type Reconstruction *)
 (* ------------------- *)
@@ -69,8 +25,6 @@ functor TpRecon (structure Global : GLOBAL
 		 structure Print : PRINT
 		   sharing Print.IntSyn = IntSyn'
 		 structure Timers : TIMERS
-                 structure Vars : VARS 
-                   sharing Vars.IntSyn = IntSyn'
                  structure CSManager : CS_MANAGER
                    sharing CSManager.IntSyn = IntSyn')
   : TP_RECON =
@@ -125,7 +79,8 @@ struct
     | Redex of Term * Spine
 
     and Head =
-      Var of string * Paths.region
+      EVar of string * Paths.region
+    | FVar of string * Paths.region
     | BVar of int * Paths.region
     | Const of IntSyn.Head * IntSyn.ConDec * Paths.region
 
@@ -141,8 +96,8 @@ struct
   type approxExp = TermSyn.Term
   type approxCtx = approxDec IntSyn.Ctx
 
-  type term = approxCtx -> TermSyn.Term
-  type dec = approxCtx -> TermSyn.Dec
+  type term = approxCtx * bool -> TermSyn.Term
+  type dec = approxCtx * bool -> TermSyn.Dec
 
   (* Various error-related functions *)
 
@@ -224,50 +179,57 @@ struct
 
   (* Free variable *)
   (* Translated to FVar in declarations, to EVar in queries *)
-  fun var (name, r) =
+  fun var (name, r, true) =
       let
-        val _ = Vars.var (name, 0)  (* get the variable into the Names
-                                       table before we do any printing *)
+        val _ = Names.getEVar name (* get the variable into the Names
+                                      table before we do any printing *)
       in
-        TermSyn.Root (TermSyn.Var (name, r), TermSyn.Nil)
+        TermSyn.Root (TermSyn.EVar (name, r), TermSyn.Nil)
+      end
+    | var (name, r, false) =
+      let
+        val _ = Names.getFVarType name (* get the variable into the Names
+                                          table before we do any printing *)
+      in
+        TermSyn.Root (TermSyn.FVar (name, r), TermSyn.Nil)
       end
 
   (* The remaining functions appear in the interface *)
 
   (* Resolving lower-case, upper-case or quoted identifiers *)
   (* lcid -- lower case identifier *)
-  fun lcid (name, r) (Ga) =
+  fun lcid (name, r) (Ga, qf) =
       (case findBVar (name, Ga)
 	 of NONE => (case findConst (name)
 		       of NONE => (error (r, "Undeclared constant " ^ name);
 				   (* translate to FVar or EVar *)
-				   var (name, r))
+				   var (name, r, qf))
 			| SOME info => (const (info, r)))
           | SOME n => bvar (n, r))
 
   (* ucid -- upper case identifier *)
-  fun ucid (name, r) (Ga) =
+  fun ucid (name, r) (Ga, qf) =
       (case findBVar (name, Ga)
 	 of NONE => (case findConst (name)
-		       of NONE => var (name, r)
+		       of NONE => var (name, r, qf)
 			| SOME info => const (info, r))
 	  | SOME n => bvar (n, r))
 
   (* quid -- quoted identifier *)
   (* currently not used *)
-  fun quid (name, r) (Ga) =
+  fun quid (name, r) (Ga, qf) =
       (case findConst (name)
 	 of NONE => (error (r, "Undeclared quoted constant " ^ name);
 		     (* translate to FVar or EVar *)
-		     var (name, r))
+		     var (name, r, qf))
 	  | SOME info => const (info, r))
 
   (* scon -- string constants *)
-  fun scon (name,r) (Ga) =
+  fun scon (name,r) (Ga, qf) =
       (case findConst (name)
          of NONE => (error (r, "Strings unsupported in current signature");
 		     (* translate to FVar or EVar *)
-		     var (name, r))
+		     var (name, r, qf))
           | SOME info => const (info, r))
 
   fun spineAppend (TermSyn.Nil, Ua) =
@@ -276,51 +238,51 @@ struct
         TermSyn.App (Ua1, spineAppend (Ua2, Ua3))
 
   (* Application "tm1 tm2" *)
-  fun app (tm1, tm2) (Ga) =
-      (case tm1 (Ga)
+  fun app (tm1, tm2) (Ga, qf) =
+      (case tm1 (Ga, qf)
          of TermSyn.Root (hd, sp) =>
-              TermSyn.Root (hd, spineAppend (sp, tm2 (Ga)))
+              TermSyn.Root (hd, spineAppend (sp, tm2 (Ga, qf)))
           | TermSyn.Redex (tm, sp) =>
-              TermSyn.Redex (tm, spineAppend (sp, tm2 (Ga)))
-          | tm1 => TermSyn.Redex (tm1, TermSyn.App (tm2 (Ga), TermSyn.Nil)))
+              TermSyn.Redex (tm, spineAppend (sp, tm2 (Ga, qf)))
+          | tm1 => TermSyn.Redex (tm1, TermSyn.App (tm2 (Ga, qf), TermSyn.Nil)))
 
   (* Non-dependent function type "tm1 -> tm2" *)
-  fun arrow (tm1, tm2) (Ga) = TermSyn.Arrow (tm1 (Ga), tm2 (Ga))
+  fun arrow (tm1, tm2) (Ga, qf) = TermSyn.Arrow (tm1 (Ga, qf), tm2 (Ga, qf))
 
   (* Non-dependent function type "tm2 <- tm1" *)
-  fun backarrow (tm2, tm1) (Ga) = arrow (tm1, tm2) (Ga)
+  fun backarrow (tm2, tm1) (Ga, qf) = arrow (tm1, tm2) (Ga, qf)
 
   (* Explicit type ascription "tm1 : tm2" *)
-  fun hastype (tm1, tm2) (Ga) = TermSyn.Hastype (tm1 (Ga), tm2 (Ga))
+  fun hastype (tm1, tm2) (Ga, qf) = TermSyn.Hastype (tm1 (Ga, qf), tm2 (Ga, qf))
 
   (* Omitted objects (from underscore) "_" *)
-  fun omitobj (r) (Ga) = TermSyn.Omitobj (IntSyn.newTypeVar (IntSyn.Null), r)
+  fun omitobj (r) (Ga, qf) = TermSyn.Omitobj (IntSyn.newTypeVar (IntSyn.Null), r)
 
   (* Dependent function type "{id:tm} tm" where dec = "id:tm" *)
-  fun pi (dec, tm, r) (Ga) =
+  fun pi (dec, tm, r) (Ga, qf) =
       let
-        val Da = dec (Ga)
+        val Da = dec (Ga, qf)
       in
-        TermSyn.Pi (Da, tm (IntSyn.Decl (Ga, Da)), r)
+        TermSyn.Pi (Da, tm (IntSyn.Decl (Ga, Da), qf), r)
       end
 
   (* Lambda abstraction "[id:tm] tm" where dec = "id:tm" *)
-  fun lam (dec, tm, r) (Ga) =
+  fun lam (dec, tm, r) (Ga, qf) =
       let
-        val Da = dec (Ga)
+        val Da = dec (Ga, qf)
       in
-        TermSyn.Lam (Da, tm (IntSyn.Decl (Ga, Da)), r)
+        TermSyn.Lam (Da, tm (IntSyn.Decl (Ga, Da), qf), r)
       end
 
   (* Type "type" *)
-  fun typ (r) (Ga) = TermSyn.Typ (r)
+  fun typ (r) (Ga, qf) = TermSyn.Typ (r)
 
   (* Declarations "id:tm" *)
-  fun dec (x, tm) (Ga) =
-        TermSyn.Dec (x, SOME (tm (Ga)), IntSyn.newTypeVar (IntSyn.Null))
+  fun dec (x, tm) (Ga, qf) =
+        TermSyn.Dec (x, SOME (tm (Ga, qf)), IntSyn.newTypeVar (IntSyn.Null))
 
   (* Declarations with implicit type "id" *)
-  fun dec0 (x) (Ga) =
+  fun dec0 (x) (Ga, qf) =
         TermSyn.Dec (x, NONE, IntSyn.newTypeVar (IntSyn.Null))
 
   fun joinRegions (oc1, oc2) = Paths.join (Paths.toRegion oc1, Paths.toRegion oc2)
@@ -578,9 +540,15 @@ struct
         (Ua, Va', r')
       end
 
-  and approxReconHead (Ga, TermSyn.Var (name, r)) =
+  and approxReconHead (Ga, TermSyn.EVar (name, r)) =
       let
-        val (V, Va, set, H) = Vars.var (name, IntSyn.ctxLength (Ga))
+        val (U, Va, set) = Names.getEVar (name)
+      in
+        (NONE, Va, r)
+      end
+    | approxReconHead (Ga, TermSyn.FVar (name, r)) =
+      let
+        val (V, Va, set) = Names.getFVarType (name)
       in
         (NONE, Va, r)
       end
@@ -804,18 +772,33 @@ struct
             | _ => fn S => IntSyn.Root (H, S),
          V, i, r)
       end
-    | reconHead (G, TermSyn.Var (name, r)) =
+    | reconHead (G, TermSyn.EVar (name, r)) =
       let
-        val depth = IntSyn.ctxLength (G)
-        val (V, Va, set, H) = Vars.var (name, depth)
+        val s = IntSyn.Shift (IntSyn.ctxLength (G))
+        val (U as IntSyn.EVar(_,_,V,_), Va, set) = Names.getEVar name 
         val V' = approxToTypeVar (IntSyn.Null, Va, r, "Ambiguous type for free variable\n")
       in
         case set
           of ref false =>
-               (unify (G, (V, IntSyn.id), (V', IntSyn.Shift depth));
+               (unify (IntSyn.Null, (V, IntSyn.id), (V', IntSyn.id));
                 set := true)
            | _ => ();
-        (H, V, 0, r)
+        (fn S => IntSyn.Redex (IntSyn.EClo (U, s), S),
+         IntSyn.EClo (V, s), 0, r)
+      end
+    | reconHead (G, TermSyn.FVar (name, r)) =
+      let
+        val s = IntSyn.Shift (IntSyn.ctxLength (G))
+        val (V, Va, set) = Names.getFVarType (name)
+        val V' = approxToTypeVar (IntSyn.Null, Va, r, "Ambiguous type for free variable\n")
+      in
+        case set
+          of ref false =>
+               (unify (IntSyn.Null, (V, IntSyn.id), (V', IntSyn.id));
+                set := true)
+           | _ => ();
+        (fn S => IntSyn.Root (IntSyn.FVar (name, V, s), S),
+         IntSyn.EClo (V, s), 0, r)
       end
     | reconHead (G, TermSyn.BVar (k, r)) =
       let
@@ -861,7 +844,7 @@ struct
   (* Throws away the associated occurrence tree *)
   fun termToApproxExp (Ga, tm) =
       let
-        val t = tm (Ga)
+        val t = tm (Ga, false)
         val (Ua, Va, r) = approxReconShow (Ga, t)
         (* must check separately -kw *)
         (* val _ = checkType (La, r, "Classifier in declaration is not a type") *)
@@ -880,7 +863,7 @@ struct
      resulting expression is at object level -kw *)
   fun termToApproxExp' (Ga, tm) =
       let
-	val t = tm (Ga)
+	val t = tm (Ga, false)
 	val (Ua, Va, r) = approxReconShow (Ga, t)
         val _ = case Ua
                   of NONE => ()
@@ -900,7 +883,7 @@ struct
   (* Throws away the associated occurrence tree *)
   fun decToApproxDec (Ga, dec) =
       let
-        val Da = dec (Ga)
+        val Da = dec (Ga, false)
         val rOpt = approxReconDec (Ga, Da)
       in
         Da
@@ -916,9 +899,9 @@ struct
   (* termToExp0 (tm) = ((U,V), oc) 
      where . |- U : V
   *)
-  fun termToExp0 (tm) =
+  fun termToExp0 (tm, qf) =
       let
-        val t = tm (IntSyn.Null)
+        val t = tm (IntSyn.Null, qf)
         val (Ua, Va, r) = approxReconShow (IntSyn.Null, t)
         val (U, V, oc) = reconShow (IntSyn.Null, t)
       in
@@ -984,7 +967,7 @@ struct
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName)
-	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) tm
+	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) (tm, true)
 	val _ = checkType (L, Paths.toRegion oc, "Query is not a type")
 	val Xs = Names.namedEVars ()
 	val _ = if freeVar (optName, Xs)
@@ -1013,7 +996,7 @@ struct
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName)
-	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
+	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) (tm, false)
 	val level = getUni (L, Paths.toRegion oc, "Classifier in declaration is not a type or kind")
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
@@ -1034,9 +1017,9 @@ struct
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName)
-	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
+	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) (tm2, false)
 	val level = getUni (L, Paths.toRegion oc2, "Classifier in definition is not a type or kind")
-	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) tm1
+	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) (tm1, false)
 	val _ = (Timers.time Timers.recon unify) (IntSyn.Null, (V', IntSyn.id), (V, IntSyn.id))
 	        handle Unify.Unify (msg) => hasTypeError (IntSyn.Null, (V', oc1), (V, oc2), msg)
 	val (i, (U'', V'')) =
@@ -1068,7 +1051,7 @@ struct
       let
 	val _ = Names.varReset ()
 	val _ = resetErrors (fileName)
-	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) tm1
+	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) (tm1, false)
 	val (i, (U'', V'')) =
 	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)
 		handle Abstract.Error (msg)

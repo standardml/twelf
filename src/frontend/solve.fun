@@ -13,11 +13,11 @@ functor Solve
      sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
      sharing Abstract.IntSyn = IntSyn'
-   structure TpReconQ : TP_RECON
-     sharing TpReconQ.IntSyn = IntSyn'
-     sharing type TpReconQ.term = Parser.ExtSynQ.term
-     sharing type TpReconQ.query = Parser.ExtSynQ.query
-     (* sharing type TpReconQ.Paths.occConDec = Origins.Paths.occConDec *)
+   structure TpRecon : TP_RECON
+     sharing TpRecon.IntSyn = IntSyn'
+     sharing type TpRecon.term = Parser.ExtSyn.term
+     sharing type TpRecon.query = Parser.ExtSyn.query
+     (* sharing type TpRecon.Paths.occConDec = Origins.Paths.occConDec *)
    structure Timers : TIMERS
    structure CompSyn : COMPSYN
      sharing CompSyn.IntSyn = IntSyn'
@@ -31,15 +31,15 @@ functor Solve
      sharing AbsMachine.CompSyn = CompSyn
    structure Strict : STRICT
      sharing Strict.IntSyn = IntSyn'
-     sharing Strict.Paths = TpReconQ.Paths
+     sharing Strict.Paths = TpRecon.Paths
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn')
  : SOLVE =
 struct
 
   structure IntSyn = IntSyn'
-  structure ExtSynQ = TpReconQ
-  structure Paths = TpReconQ.Paths
+  structure ExtSyn = TpRecon
+  structure Paths = TpRecon.Paths
   structure S = Parser.Stream
 
   (* evarInstToString Xs = msg
@@ -134,7 +134,8 @@ struct
       let
 	(* use region information! *)
 	val (A, NONE, Xs) =
-	       TpReconQ.queryToQuery(TpReconQ.query(NONE,solve), Paths.Loc (fileName, r))
+	      TpRecon.queryToQuery (TpRecon.query(NONE, solve),
+                                    Paths.Loc (fileName, r))
 					(* times itself *)
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 2
@@ -193,7 +194,7 @@ struct
       fun query ((expected, try, quy), Paths.Loc (fileName, r)) =
 	  let
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = TpReconQ.queryToQuery(quy, Paths.Loc (fileName, r))
+	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
 	    val _ = if !Global.chatter >= 2
 		      then print ("%query " ^ boundToString expected
@@ -282,7 +283,7 @@ struct
   and qLoops' (S.Empty) = true		(* normal exit *)
     | qLoops' (S.Cons (query, s')) =
       let
-	val (A, optName, Xs) = TpReconQ.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
+	val (A, optName, Xs) = TpRecon.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
 					(* times itself *)
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)

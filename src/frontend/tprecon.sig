@@ -41,18 +41,6 @@ sig
 
 end;  (* signature EXTSYN *)
 
-(* signature VARS
-   provides the function which translates free variables either
-   universally (in declarations) or existentially (in queries)
-*)
-
-signature VARS =
-sig
-  structure IntSyn : INTSYN
-
-  val var : string * int -> (IntSyn.Exp * IntSyn.Exp * bool ref * (IntSyn.Spine -> IntSyn.Exp)) 
-end;  (* signature VARS *)
-
 (* signature TP_RECON
    provides the interface to type reconstruction seen by Twelf 
 

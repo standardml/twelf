@@ -24,7 +24,6 @@ functor Twelf
    structure Parser : PARSER
      sharing Parser.Names = Names
      sharing Parser.ExtSyn.Paths = Paths
-     sharing Parser.ExtSynQ.Paths = Paths
    structure TypeCheck : TYPECHECK
    structure Strict : STRICT
      sharing Strict.IntSyn = IntSyn'
@@ -33,12 +32,6 @@ functor Twelf
      sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
      sharing Abstract.IntSyn = IntSyn'
-   structure TpReconQ : TP_RECON
-     sharing TpReconQ.IntSyn = IntSyn'
-     sharing TpReconQ.Paths = Paths
-     sharing type TpReconQ.term = Parser.ExtSynQ.term
-     sharing type TpReconQ.query = Parser.ExtSynQ.query
-     (* sharing type TpReconQ.Paths.occConDec = Origins.Paths.occConDec *)
    structure TpRecon : TP_RECON
      sharing TpRecon.IntSyn = IntSyn'
      sharing TpRecon.Paths = Paths
@@ -90,8 +83,8 @@ functor Twelf
      sharing AbsMachine.CompSyn = CompSyn'
    structure Solve : SOLVE
      sharing Solve.IntSyn = IntSyn'
-     sharing type Solve.ExtSynQ.term = Parser.ExtSynQ.term
-     sharing type Solve.ExtSynQ.query = Parser.ExtSynQ.query
+     sharing type Solve.ExtSyn.term = Parser.ExtSyn.term
+     sharing type Solve.ExtSyn.query = Parser.ExtSyn.query
      sharing Solve.Paths = Paths
    structure ThmSyn : THMSYN
      sharing ThmSyn.Paths = Paths
@@ -240,7 +233,6 @@ struct
     fun handleExceptions fileName (f:'a -> Status) (x:'a) =
 	(f x
 	 handle TpRecon.Error (msg) => abortFileMsg (fileName, msg)
-	      | TpReconQ.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeRecon.Error (msg) => abortFileMsg (fileName, msg)
 	      | ThmRecon.Error (msg) => abortFileMsg (fileName, msg)
 	      | TypeCheck.Error (msg) => abort ("Double-checking types fails: " ^ msg ^ "\n"

@@ -5,14 +5,14 @@ signature SOLVE =
 sig
 
   structure IntSyn : INTSYN
-  structure ExtSynQ : EXTSYN
+  structure ExtSyn : EXTSYN
   structure Paths : PATHS
 
   exception AbortQuery of string
 
-  val solve : (string * ExtSynQ.term) * Paths.location -> IntSyn.ConDec
+  val solve : (string * ExtSyn.term) * Paths.location -> IntSyn.ConDec
 
-  val query : (int option * int option * ExtSynQ.query) * Paths.location -> unit
+  val query : (int option * int option * ExtSyn.query) * Paths.location -> unit
 					(* may raise AbortQuery(msg) *)
   val qLoop : unit -> bool		(* true means normal exit *)
 
