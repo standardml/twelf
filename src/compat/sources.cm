@@ -13,11 +13,15 @@ Library
   structure ArraySlice
   signature VECTOR_SLICE
   structure VectorSlice
+  signature MONO_ARRAY_SLICE
+  structure Word8ArraySlice
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
   signature ARRAY_SLICE
   structure ArraySlice
   signature VECTOR_SLICE
   structure VectorSlice
+  signature MONO_ARRAY_SLICE
+  structure Word8ArraySlice
 #endif
 is
 #if defined(NEW_CM)
@@ -54,9 +58,13 @@ is
   array-slice.sml
   vector-slice.sig
   vector-slice.sml
+  mono-array-slice.sig
+  word8-array-slice.sml
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
   array-slice.sig
   array-slice.sml
   vector-slice.sig
   vector-slice.sml
+  mono-array-slice.sig
+  word8-array-slice.sml
 #endif
