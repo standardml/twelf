@@ -1,0 +1,34 @@
+Flit DAG dumper for Twelf 1.4
+Copyright (C) 2002 Roberto Virga. All rights reserved.
+
+To install:
+  1) cd to the base directory of your Twelf 1.4 installation
+  2) type "tar zxvf flit-twelf.tar.gz"
+  3) type "make twelf-sml"
+
+To use:
+  The DAG dumper functions only inside twelf-sml, and it is not
+  currently accessible from twelf-server.
+  First you need to initialize the dumper, by typing:
+  Flit.init <path to tcb.tbl>;
+  where <path to tcb.tbl> is the path (either absolute, or
+  relative to the current working directory) to the TCB symbol
+  table file generated using the files in logic/pcc/flit/untrusted.
+  After you have initialized the dumper by providing the symbol
+  table of the TCB as outlined above, there are two ways you
+  can use the dumper:
+  a) to dump a single symbol (together with all the other non-TCB
+     symbols it might depend):
+       Flit.dump <symbol name> <DAG file name>;
+  b) to dump all symbols used in a logic program:
+       Flit.setFlag ();
+       Twelf.Config.append (Twelf.Config.read <config file>);
+       Flit.dumpFlagged <DAG file name>;
+     will dump all symbols loaded since Flit.setFlag () was
+     issued, and in particular, all symbols introduced by
+     loading the Twelf configuration file <config file>.
+     All such symbols will have the "clause" bit set to 1
+     (the clause bit is the 10th bit of the first field of
+     a node, and can be retrieved by doing a logical and with
+     mask 512).
+
