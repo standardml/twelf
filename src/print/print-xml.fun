@@ -29,14 +29,14 @@ local
   fun Name (x) = F.String ("\"" ^ x ^ "\"")
   fun Integer (n) = F.String (Int.toString n)
 
-  fun sexp (fmts) = F.Hbox [Str "(", F.HVbox fmts, Str ")"]
+  fun sexp (fmts) = F.Hbox [F.HVbox fmts]
 
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
   fun fmtCon (G, I.BVar(n)) = sexp [Str "<Bvar>", F.Break, Integer n, Str "</Bvar>"]
-    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const>", F.Break, Integer cid, Str "</Const>"]
+    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const>", Str (I.conDecName (I.sgnLookup cid)), Str "</Const>"]
     | fmtCon (G, I.Def(cid)) = sexp [Str "<Def>", F.Break, Integer cid, Str "</Def>"]
     (* I.Skonst, I.FVar cases should be impossible *)
 
@@ -91,7 +91,7 @@ local
      format spine S[s] at printing depth d, printing length l, in printing
      context G which approximates G', where G' |- S[s] is valid
   *)
-  and fmtSpine (G, (I.Nil, _)) = Str "<Empty>"
+  and fmtSpine (G, (I.Nil, _)) = Str "<Nil>"
     | fmtSpine (G, (I.SClo (S, s'), s)) =
          fmtSpine (G, (S, I.comp(s',s)))
     | fmtSpine (G, (I.App(U, S), s)) =
@@ -112,12 +112,12 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<Condec name=",  Name (name), Str ">", F.Break,
-	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
+	sexp [Str "<Condec name=",  Name (name), F.Break, Str "implicit=", 
+	      Integer (imp), Str ">", F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L), Str "</Condec>"]
       end
     | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
-      Str ("%% Skipping Skolem constant " ^ name ^ " %%")
+      Str ("<! Skipping Skolem constant " ^ name ^ ">")
     | fmtConDec (I.ConDef (name, parent, imp, U, V, L, _)) =
       let
 	val _ = Names.varReset IntSyn.Null
@@ -136,6 +136,8 @@ local
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L), Str "</Abbrevdef>"]
       end
+    | fmtConDec (I.BlockDec (name, _, _, _)) =
+      Str ("<! Skipping Skolem constant " ^ name ^ ">")
 
   (* fmtEqn assumes that G is a valid printing context *)
   fun fmtEqn (I.Eqn (G, U1, U2)) = (* print context?? *)
