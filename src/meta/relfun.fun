@@ -136,6 +136,7 @@ struct
       | occursInExpN (k, I.Lam (D, V)) = occursInDec (k, D) orelse occursInExpN (k+1, V)
       | occursInExpN (k, I.FgnExp (cs, ops)) =
           occursInExp (k, #toInternal(ops)())
+          (* hack - should consult cs    -rv *)
     (* no case for Redex, EVar, EClo *)
 
 

@@ -61,6 +61,8 @@ struct
 	   (I.Pi ((I.decSub (D, s), I.Maybe),
 		  I.EClo (inferExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s)))), I.id))
       (* no cases for Redex, EVars and EClo's *)
+      | inferExpW (G, (I.FgnExp (cs, ops), s)) =
+          inferExp (G, (#toInternal(ops)(), s))
 
     (* inferExp (G, Us) = (V', s')
 
@@ -119,6 +121,7 @@ struct
 						       must be extended to handle arbitrary 
 						       Skolem constants in the right way *)
       (* no case for FVar *)
+      | inferCon (G, I.FgnConst(cs, conDec)) = I.conDecType(conDec)
 
     (* checkDec (G, (x:V, s)) = B
 

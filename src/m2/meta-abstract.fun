@@ -233,6 +233,9 @@ struct
 	      in
 		collectSub (lG0, G, lGp', s, mode, Adepth)
 	      end)
+       | collectExpW (lGO, G, (I.FgnExp (cs, ops), s), mode, Adepth) =
+           collectExp (lGO, G, (#toInternal(ops)(), s), mode, Adepth)
+           (* hack - should discuss with cs    -rv *)
       
 	  
     (* collectSub (lG0, G, lG'', s, mode, (A, depth)) = (A', depth') 
@@ -571,6 +574,9 @@ struct
 		    abstractSub (A, G, depth, (Vraised, I.id), 
 				 s, I.targetFam V, I.Nil))
 	  end
+      | abstractExpW (A, G, depth, (I.FgnExp (cs, ops), s)) =
+          #map(ops)(fn U => abstractExp (A, G, depth, (U, s)))
+        (* hack - should discuss with cs     -rv *)
 
     (* abstractExp, same as abstractExpW, but (V, s) need not be in whnf *)
     and abstractExp (A, G, depth, Us) = 
