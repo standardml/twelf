@@ -1666,6 +1666,7 @@ created if it doesn't exist."
                (get-buffer-create *twelf-server-buffer-name*)))
           (save-window-excursion
             (set-buffer twelf-server-buffer)
+            (buffer-disable-undo)
             (twelf-server-mode)
             (setq *twelf-server-buffer* twelf-server-buffer))
           twelf-server-buffer)
