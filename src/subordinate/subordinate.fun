@@ -223,6 +223,7 @@ struct
 	end
       | inferCon (G, I.Const(c)) = I.constType (c)
       | inferCon (G, I.Def(d))  = I.constType (d)
+      | inferCon (G, I.Skonst(c)) = I.constType (c)
 
     (* install c = ()
 

@@ -59,7 +59,7 @@ struct
     | getId (nil) = error "Missing identifier"
     | getId (ts) = error "Extraneous arguments"
 
-  (* Strategies for %prove *)
+  (* Strategies for %prove, %establish *)
   fun getStrategy ("FRS"::nil) = Twelf.Prover.FRS
     | getStrategy ("RFS"::nil) = Twelf.Prover.RFS
     | getStrategy (nil) = error "Missing strategy"

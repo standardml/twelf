@@ -15,6 +15,8 @@ functor Search (structure IntSyn' : INTSYN
 		structure Assign : ASSIGN
 		sharing Assign.IntSyn = IntSyn'
 		*)
+		structure Index : INDEX
+		sharing Index.IntSyn = IntSyn'
 		structure Compile : COMPILE
 		sharing Compile.IntSyn = IntSyn'
 		sharing Compile.CompSyn = CompSyn'
@@ -146,13 +148,17 @@ struct
 	fun matchSig acc' =
 	    let
 	      fun matchSig' (nil, acc'') = acc''
-		| matchSig' (cid'::sgn', acc'') =
+		| matchSig' (H ::sgn', acc'') =
 		  let
+		    val cid' = (case H 
+				  of I.Const cid => cid
+				   | I.Skonst cid => cid)
+				  
 		    val C.SClause(r) = C.sProgLookup cid'
 		    val acc''' = Trail.trail
 		                 (fn () =>
 				    rSolve (ps', (r, I.id), dProg,
-					    (fn (S, acck') => sc (I.Root (I.Const cid', S),
+					    (fn (S, acck') => sc (I.Root (H, S),
 								  acck')), (acc'', k-1)))
 		  in
 		    matchSig' (sgn', acc''')

@@ -60,6 +60,8 @@ functor Twelf
 
    structure Index : INDEX
      sharing Index.IntSyn = IntSyn'
+   structure IndexSkolem : INDEX
+     sharing IndexSkolem.IntSyn = IntSyn'
    structure Subordinate : SUBORDINATE
      sharing Subordinate.IntSyn = IntSyn'
    structure CompSyn' : COMPSYN
@@ -90,10 +92,14 @@ functor Twelf
      sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
      sharing type ThmRecon.theoremdec = Parser.ThmExtSyn.theoremdec 
      sharing type ThmRecon.prove = Parser.ThmExtSyn.prove
+     sharing type ThmRecon.establish = Parser.ThmExtSyn.establish
+     sharing type ThmRecon.assert = Parser.ThmExtSyn.assert
    structure ThmPrint : THMPRINT
      sharing ThmPrint.ThmSyn = ThmSyn
 
    structure MetaGlobal : METAGLOBAL
+   structure Skolem : SKOLEM
+     sharing Skolem.IntSyn = IntSyn'
    structure Prover : PROVER
      sharing Prover.MetaSyn.IntSyn = IntSyn'
    structure ClausePrint : CLAUSEPRINT
@@ -209,7 +215,8 @@ struct
 	    val cid = IntSyn.sgnAdd conDec
 	    val _ = Names.installName (IntSyn.conDecName conDec, cid)
 	    val _ = Origins.installOrigin (cid, fileNameocOpt)
-	    val _ = Index.install cid
+	    val _ = Index.install (IntSyn.Const cid)
+	    val _ = IndexSkolem.install (IntSyn.Const cid)
 	    val _ = (Timers.time Timers.compiling Compile.install) cid
 	    val _ = (Timers.time Timers.subordinate Subordinate.install) cid
 	in 
@@ -335,9 +342,49 @@ struct
 
 	  val _ = Prover.auto () (* times itself *)
 	in
+	  (Prover.install (fn E => installConDec (E, (fileName, NONE)));
+	   Skolem.install La)
+	end
+
+      (* Establish declaration *)
+      | install1 (fileName, Parser.EstablishDec lterm) =
+	let 
+	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.establishToEstablish lterm 
+	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%prove " ^ (Int.toString depth) ^ " " ^
+				       (ThmPrint.tDeclToString T) ^ ".\n")
+		  else ()
+	  val _ = Prover.init (depth, La)
+	  val _ = if !Global.chatter >= 3 
+		    then map (fn a => print ("%mode " ^ 
+					     (ModePrint.modeToString (a, valOf (ModeSyn.modeLookup a)))
+					     ^ ".\n")) La   (* mode must be declared!*)
+		  else [()]
+
+	  val _ = Prover.auto () (* times itself *)
+	in
 	  Prover.install (fn E => installConDec (E, (fileName, NONE)))
 	end
 
+      (* Establish declaration *)
+      | install1 (fileName, Parser.AssertDec aterm) =
+	let 
+	  val _ = if !Global.safe then raise ThmSyn.Error "%assert not safe: Toggle `safe' flag"
+	          else ()
+	  val (cp as ThmSyn.Callpats (L), rrs) = ThmRecon.assertToAssert aterm 
+	  val La = map (fn (c, P) => c) L  (* La is the list of type constants *)
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%assert " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
+		  else ()
+	  val _ = if !Global.chatter >= 3 
+		    then map (fn a => print ("%mode " ^ 
+					     (ModePrint.modeToString (a, valOf (ModeSyn.modeLookup a)))
+					     ^ ".\n")) La   (* mode must be declared!*)
+		  else [()]
+	in
+	  Skolem.install La
+	end
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
@@ -369,7 +416,8 @@ struct
 
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
-		    Index.reset (); Subordinate.reset (); Terminate.reset ();
+		    Index.reset (); 
+		    IndexSkolem.reset (); Subordinate.reset (); Terminate.reset ();
 		    CompSyn.sProgReset () (* necessary? -fp *)
 		    )
 
@@ -530,6 +578,7 @@ struct
 
     val chatter : int ref = Global.chatter
     val doubleCheck : bool ref = Global.doubleCheck
+    val safe : bool ref = Global.safe
 
     datatype Status = datatype Status
     val reset = reset

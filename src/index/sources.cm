@@ -4,4 +4,5 @@ Group is
   ../global/sources.cm
   index.sig	
   index.fun
+  index-skolem.fun
   index.sml

@@ -91,6 +91,7 @@ struct
       | occursInHead (k, I.Const _) = false
       | occursInHead (k, I.Def _) = false
       (* no case for FVar *)
+      (* no case for Skonst *)
 
     and occursInSpine (_, I.Nil) = false
       | occursInSpine (k, I.App (U, S)) = occursInExp (k, U) orelse occursInSpine (k, S)

@@ -20,6 +20,12 @@ sig
   type prove
   val prove : int * tdecl -> prove
 
+  type establish
+  val establish  : int * tdecl -> establish
+
+  type assert
+  val assert : callpats -> assert
+
   type ctx
   type theorem
   type theoremdec
@@ -47,4 +53,6 @@ sig
   val theoremToTheorem : theorem -> (ThmSyn.ThDecl * Paths.region)
   val theoremDecToTheoremDec : theoremdec -> (string * ThmSyn.ThDecl) * Paths.region
   val proveToProve : prove -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
+  val establishToEstablish : establish -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
+  val assertToAssert : assert -> (ThmSyn.Callpats * Paths.region list)
 end;  (* signature THM_RECON *)

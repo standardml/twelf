@@ -13,6 +13,9 @@ functor AbsMachine (structure IntSyn' : INTSYN
                     structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
 		    *)
+
+		    structure Index : INDEX
+		      sharing Index.IntSyn = IntSyn'
 		    structure Trail : TRAIL
 		      sharing Trail.IntSyn = IntSyn'
 		    (* CPrint currently unused *)
@@ -171,14 +174,14 @@ struct
            with c1.
         *)
 	fun matchSig nil = ()	(* return indicates failure *)
-	  | matchSig (c::sgn') =
+	  | matchSig ((H as I.Const c)::sgn') =
 	    let
 	      val SClause(r) = sProgLookup c
 	    in
 	      (* trail to undo EVar instantiations *)
 	      Trail.trail (fn () =>
 			   rSolve (ps', (r, I.id), dProg,
-				   (fn S => sc (I.Root(I.Const(c), S))))) ;
+				   (fn S => sc (I.Root(H, S))))) ;
 	      showTrace (fn () => "signature backtracking...\n");
 	      matchSig sgn'
 	    end

@@ -40,6 +40,7 @@ sig
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
   | Const of cid			(*     | c                    *)
+  | Skonst of cid			(*     | c#                   *)
   | Def   of cid			(*     | d                    *)
   | FVar  of name * Exp * Sub		(*     | F[s]                 *)
 
@@ -79,6 +80,8 @@ sig
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of name * imp		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
+  | SkoDec of name * imp		(* sa: K : kind  or           *)
+              * Exp * Uni	        (* sc: A : type               *)
 
   val conDecName : ConDec -> name
   val conDecType : ConDec -> Exp

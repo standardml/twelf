@@ -9,6 +9,10 @@ functor Splitting (structure Global : GLOBAL
 		   sharing MetaAbstract.MetaSyn = MetaSyn'
 		   structure ModeSyn : MODESYN
 		   sharing ModeSyn.IntSyn = MetaSyn'.IntSyn
+                   structure Whnf : WHNF
+		   sharing Whnf.IntSyn = MetaSyn'.IntSyn
+		   structure Index : INDEX
+		   sharing Index.IntSyn = MetaSyn'.IntSyn
 		   structure Print : PRINT
 		   sharing Print.IntSyn = MetaSyn'.IntSyn
 		   structure Unify : UNIFY
@@ -54,9 +58,9 @@ struct
 	 cases from I
     *)
     fun constCases (G, Vs, nil, abstract, ops) = ops
-      | constCases (G, Vs, c::Sgn, abstract, ops) = 
+      | constCases (G, Vs, I.Const c::Sgn, abstract, ops) = 
 	let
-	  val (U, Vs') = M.createAtomConst (G, c)
+	  val (U, Vs') = M.createAtomConst (G, I.Const c)
 	in
 	  constCases (G, Vs, Sgn, abstract,
 		      Trail.trail (fn () => 
@@ -313,6 +317,8 @@ struct
 	  val d' = I.ctxLength G'	(* current first occurrence depth in V' *)
 	  (* mode dependency in Clause: first M.Top then M.Bot *)
 	  (* check proper traversal *)
+	  val V = Whnf.normalize (V, I.id)
+	  val V' = Whnf.normalize (V', I.id)
 	  val (B'', 0, 0) = inheritDBot (B, 0, V, 0, V',
 					    inheritDTop (B, 0, V, 0, V', (I.Null, d, d')))
 	in

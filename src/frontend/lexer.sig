@@ -33,6 +33,8 @@ sig
     | TERMINATES       			(* `%terminates' *)
     | THEOREM                           (* `%theorem' *)
     | PROVE                             (* `%prove' *)
+    | ESTABLISH				(* `%establish' *)
+    | ASSERT				(* `%assert' *)
 
   exception Error of string
 

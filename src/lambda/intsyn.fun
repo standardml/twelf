@@ -63,6 +63,7 @@ struct
   and Head =				(* Heads:                     *)
     BVar  of int			(* H ::= k                    *)
   | Const of cid			(*     | c                    *)
+  | Skonst of cid			(*     | c#                   *)
   | Def   of cid			(*     | d                    *)
   | FVar  of name * Exp * Sub		(*     | F[s]                 *)
     
@@ -100,12 +101,16 @@ struct
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of name * imp		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
+  | SkoDec of name * imp		(* sa: K : kind  or           *)
+              * Exp * Uni	        (* sc: A : type               *)
 
   fun conDecName (ConDec (name, _, _, _)) = name
     | conDecName (ConDef (name, _, _, _, _)) = name
+    | conDecName (SkoDec (name, _, _, _)) = name
 
   fun conDecType (ConDec (_, _, V, _)) = V
     | conDecType (ConDef (_, _, _, V, _)) = V
+    | conDecType (SkoDec (_, _, V, _)) = V
 
   local
     val maxCid = Global.maxCid
@@ -148,12 +153,14 @@ struct
   fun constImp (c) =
       (case sgnLookup(c)
 	 of ConDec (_,i,_,_) => i
-          | ConDef (_,i,_,_,_) => i)
+          | ConDef (_,i,_,_,_) => i
+	  | SkoDec (_,i,_,_) => i)
 
   fun constUni (c) =
       (case sgnLookup(c)
 	 of ConDec (_,_,_,L) => L
-          | ConDef (_,_,_,_,L) => L)
+          | ConDef (_,_,_,_,L) => L
+	  | SkoDec (_,_,_,L) => L)
 
   (* Declaration Contexts *)
 
@@ -319,8 +326,8 @@ struct
     | targetFamOpt (EVar (ref (SOME(V)),_,_,_)) = targetFamOpt V
     | targetFamOpt (EClo (V, s)) = targetFamOpt V
     | targetFamOpt _ = NONE
-      (* Root(Bvar _, _), Root(FVar _, _), EVar(ref NONE,..), Uni *)
-
+      (* Root(Bvar _, _), Root(FVar _, _),  EVar(ref NONE,..), Uni *)
+      (* Root(Skonst _, _) can't occur *)
   (* targetFam (A) = a
      as in targetFamOpt, except V must be a valid type
   *)

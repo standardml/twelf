@@ -495,7 +495,7 @@ struct
     fun checkFam a =
 	let 
 	  fun checkFam' nil = ()
-	    | checkFam' (b::bs) = 
+	    | checkFam' (I.Const b::bs) = 
 		(if (!Global.chatter) >= 4 then 
 		   print ("[" ^ N.constName b ^ ":")
 		 else ();

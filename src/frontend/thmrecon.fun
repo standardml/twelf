@@ -89,6 +89,14 @@ struct
     fun prove (n, (td, rrs)) = (ThmSyn.PDecl (n, td), rrs)
     fun proveToProve P = P 
 
+    type establish = ThmSyn.PDecl * (Paths.region * Paths.region list)
+    fun establish (n, (td, rrs)) = (ThmSyn.PDecl (n, td), rrs)
+    fun establishToEstablish P = P 
+      
+    type assert = ThmSyn.Callpats * Paths.region list
+    fun assert (cp, rs) = (cp, rs)
+    fun assertToAssert P = P 
+
     type ctx = T.dec I.Ctx
     val null = I.Null
     val decl = I.Decl
@@ -172,9 +180,16 @@ struct
     type prove = prove
     val prove = prove
 
+    type establish = establish
+    val establish = establish
+
+    type assert = assert
+    val assert = assert
 
     val tdeclTotDecl = tdeclTotDecl
     val proveToProve = proveToProve
+    val establishToEstablish = establishToEstablish
+    val assertToAssert = assertToAssert
       
     type ctx = ctx
     val null = null

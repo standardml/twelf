@@ -83,6 +83,8 @@ struct
 	      | convertExp (I.Root (I.Def (d), S))  = 
 		  (* error is signalled later in ModeDec.checkFull *)
 		  (d, convertSpine S)
+	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
+		  
 
 	    val (a, mS) = convertExp (T.termToExp (G, t))
 	  in

@@ -47,6 +47,8 @@ struct
     | TerminatesDec of ThmExtSyn.tdecl
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove
+    | EstablishDec of ThmExtSyn.establish
+    | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSynQ.query * ExtSyn.Paths.region (* expected, try, A *)
     | Solve of (ExtSyn.name * ExtSynQ.term) * ExtSyn.Paths.region
     (* Further pragmas to be added later here *)
@@ -130,6 +132,8 @@ struct
       | parseStream' (f as LS.Cons ((L.TERMINATES, r), s')) = parseTerminates' f
       | parseStream' (f as LS.Cons ((L.THEOREM, r), s')) = parseTheorem' f
       | parseStream' (f as LS.Cons ((L.PROVE, r), s')) = parseProve' f
+      | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s')) = parseEstablish' f
+      | parseStream' (f as LS.Cons ((L.ASSERT, r), s')) = parseAssert' f
       | parseStream' (LS.Cons ((L.EOF, r), s')) = Stream.Empty
       | parseStream' (LS.Cons ((t,r), s')) =
 	  Parsing.error (r, "Expected constant name or pragma keyword, found "
@@ -176,6 +180,20 @@ struct
 	  val (ldec, f') = ParseThm.parseProve' (f)
 	in
 	  Stream.Cons (ProveDec ldec, parseStream (stripDot f'))
+	end
+
+    and parseEstablish' (f) =
+        let
+	  val (ldec, f') = ParseThm.parseEstablish' (f)
+	in
+	  Stream.Cons (EstablishDec ldec, parseStream (stripDot f'))
+	end
+
+    and parseAssert' (f) =
+        let
+	  val (ldec, f') = ParseThm.parseAssert' (f)
+	in
+	  Stream.Cons (AssertDec ldec, parseStream (stripDot f'))
 	end
 
     fun parseQ (s) = Stream.delay (fn () => parseQ' (LS.expose s))

@@ -29,6 +29,7 @@ structure AbsMachine =
               structure CompSyn' = CompSyn
               structure Unify = UnifyTrail
 	      (* structure Assign = Assign *)
+	      structure Index = Index
               structure Trail = Trail
               structure CPrint = CPrint
               structure Names = Names); 

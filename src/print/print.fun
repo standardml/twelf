@@ -145,11 +145,13 @@ local
 
   (* fixityCon (c) = fixity of c *)
   fun fixityCon (I.Const(cid)) = Names.getFixity (cid)
+    | fixityCon (I.Skonst(cid)) = FX.Nonfix
     | fixityCon (I.Def(cid)) = Names.getFixity (cid)
     | fixityCon _ = FX.Nonfix (* BVar, FVar *)
 
   (* impCon (c) = number of implicit arguments to c *)
   fun impCon (I.Const(cid)) = I.constImp (cid)
+    | impCon (I.Skonst(cid)) = I.constImp (cid)
     | impCon (I.Def(cid)) = I.constImp (cid)
     | impCon _ = 0			(* BVar, FVar *)
 
@@ -165,6 +167,7 @@ local
   *)
   fun fmtCon (G, I.BVar(n)) = Str (Names.bvarName(G, n))
     | fmtCon (G, I.Const(cid)) = Str (Names.constName (cid))
+    | fmtCon (G, I.Skonst(cid)) = Str (Names.constName (cid))
     | fmtCon (G, I.Def(cid)) = Str (Names.constName (cid))
     | fmtCon (G, I.FVar (name, _, _)) = Str ("`" ^ name)
 
@@ -532,6 +535,13 @@ local
 	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
       in
 	F.HVbox [Str(name), F.Space, Str ":", F.Break, Vfmt, Str "."]
+      end
+    | fmtConDec (I.SkoDec (name, _, V, L)) =
+      let
+	val _ = Names.varReset ()
+	val Vfmt = fmtExp (I.Null, 0, noCtxt, (V, I.id))
+      in
+	F.HVbox [Str "% ", Str(name), F.Space, Str ":", F.Break, Vfmt, Str "."]
       end
     | fmtConDec (I.ConDef (name, _, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)

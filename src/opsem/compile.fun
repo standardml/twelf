@@ -250,6 +250,8 @@ struct
   (* Defined constants are currently not compiled *)
   fun compileConDec (a, I.ConDec(_, _, A, I.Type)) =
         C.sProgInstall (a, C.SClause (compileClauseN true (I.Null, A)))
+    | compileConDec (a, I.SkoDec(_, _, A, I.Type)) =
+        C.sProgInstall (a, C.SClause (compileClauseN true (I.Null, A)))
     | compileConDec _ = ()
 
   fun install (cid) = compileConDec (cid, I.sgnLookup cid)

@@ -9,11 +9,11 @@ sig
     
   val reset : unit -> unit
 
-  val install : IntSyn.cid -> unit
+  val install : IntSyn.Head -> unit
 
   (* lookup a = [c1,...,cn] *)
   (* c1,...,cn are all constants with target family a *)
   (* in order of declaration, defined constants are omitted *)
-  val lookup : IntSyn.cid -> IntSyn.cid list
+  val lookup : IntSyn.cid -> IntSyn.Head list
 
 end;  (* signature INDEX *)

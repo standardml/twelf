@@ -41,6 +41,7 @@ sig
 
   val chatter : int ref		      (* 3, chatter level *)
   val doubleCheck : bool ref	      (* false, check after reconstruction *)
+  val safe : bool ref		      (* true, disallows %assert *)
 
   datatype Status = OK | ABORT	      (* return status *)
 

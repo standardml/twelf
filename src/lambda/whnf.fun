@@ -296,8 +296,9 @@ struct
       | inferSpine ((App (U, S), s1), (Pi (_, V2), s2)) =
 	  inferSpine ((S, s1), whnf (V2, Dot (Exp (EClo (U, s1)), s2)))
 
-    (* inferCon (C) = V  if C = c or C = d and |- C : V *)
+    (* inferCon (C) = V  if C = c or C = d or C = sk and |- C : V *)
     fun inferCon (Const (cid)) = constType (cid)
+      | inferCon (Skonst (cid)) = constType (cid) 
       | inferCon (Def (cid)) = constType (cid)
 
     (* etaExpand' (U, (V,s)) = U'

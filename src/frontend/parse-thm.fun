@@ -172,6 +172,38 @@ struct
     fun parseProve' (LS.Cons ((L.PROVE, r), s')) = 
           parsePDecl (LS.expose s')
 
+
+    (* ----------------------- *)
+    (* %establish declarations *)
+    (* ----------------------- *)
+
+    (* parseEDecl "id nat order callpats." *)
+    fun parseEDecl (LS.Cons ((L.ID (_, id), r), s')) =
+        let
+	  val depth = idToNat (r, id)
+	  val (t', f') = parseTDecl (LS.expose s')
+	in
+	  (E.establish (depth, t'), f')
+	end
+      | parseEDecl (LS.Cons ((t, r), s')) =
+	Parsing.error (r, "Expected theorem identifier, found " ^ L.toString t)
+
+    (* parseEstablish' "%establish pdecl." *)
+    fun parseEstablish' (LS.Cons ((L.ESTABLISH, r), s')) = 
+          parseEDecl (LS.expose s')
+
+    (* -------------------- *)
+    (* %assert declarations *)
+    (* -------------------- *)
+
+    (* parseAssert' "%assert cp" *)
+    fun parseAssert' (LS.Cons ((L.ASSERT, r), s')) = 
+        let
+	  val (callpats, f'') = parseCallPats (LS.expose s')
+        in 
+	  (E.assert (E.callpats callpats), f'')
+	end
+
     (* --------------------- *)
     (* %theorem declarations *)
     (* --------------------- *)
@@ -295,6 +327,8 @@ struct
     val parseTheorem' = parseForallStar
     val parseTheoremDec' = parseTheoremDec'
     val parseProve' = parseProve'
+    val parseEstablish' = parseEstablish'
+    val parseAssert' = parseAssert'
   end  (* local ... in *)
 
 end;  (* functor Parser *)

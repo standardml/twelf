@@ -128,6 +128,7 @@ struct
 	   of Undef => raise Unify "Parameter dependency"
 	    | Idx k' => BVar k')
       | pruneHead (G, H as Const _, ss, rOccur, prunable) = H
+      | pruneHead (G, H as Skonst _, ss, rOccur, prunable) = H
       | pruneHead (G, H as Def _, ss, rOccur, prunable) = H
       | pruneHead (G, FVar (x, V, s'), ss, rOccur, prunable) =
 	  (* V does not to be pruned, since . |- V : type and s' = ^k *)
@@ -179,6 +180,9 @@ struct
 	   | (Const(c1), Const(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Constant clash"
+	   | (Skonst(c1), Skonst(c2)) => 	  
+	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
+	       else raise Unify "Skolem constant clash"
 	   | (FVar (n1,_,_), FVar (n2,_,_)) =>
 	       if (n1 = n2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Free variable clash"

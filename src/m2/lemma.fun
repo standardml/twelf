@@ -56,7 +56,7 @@ struct
     fun apply (M.State (name, GM, V), a) =  
 	let 
 	  val (GM' as M.Prefix (G', M', B'), s') = createEVars GM
-	  val (U', Vs') = M.createAtomConst (G', a)  (* Vs' = type *) 
+	  val (U', Vs') = M.createAtomConst (G', I.Const a)  (* Vs' = type *) 
 	in
 	  A.abstract (M.State (name, GM', I.Pi ((I.Dec (NONE, U'), I.No), 
 						I.EClo (V, I.comp (s',I.shift)))))

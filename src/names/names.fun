@@ -83,6 +83,8 @@ struct
   *)
   fun checkArgNumber (IntSyn.ConDec (name, i, V, L), n) =
 	checkAtomic (name, V, i+n)
+    | checkArgNumber (IntSyn.SkoDec (name, i, V, L), n) =
+	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.ConDef (name, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
 
@@ -502,6 +504,10 @@ struct
 	  orelse ctxDefined (G, name)
 	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
 	else D
+
+    fun skonstName (name) =
+      tryNextName (IntSyn.Null, name)
+
 
     val namedEVars = namedEVars
     val evarCnstr = evarCnstr

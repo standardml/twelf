@@ -20,6 +20,8 @@ sig
     | TerminatesDec of ThmExtSyn.tdecl
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove
+    | EstablishDec of ThmExtSyn.establish
+    | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSynQ.query * ExtSyn.Paths.region (* expected, try, A *)
     | Solve of (ExtSyn.name * ExtSynQ.term) * ExtSyn.Paths.region
     (* Further declarations to be added here *)

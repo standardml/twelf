@@ -21,3 +21,5 @@ append : M =>* M'  ->  M' =>* M''  ->  M =>* M''  -> type.
 append_id   : append id S* S*.
 append_step : append (R1 ; R2*) S* (R1 ; S2*')
            <- append R2* S* S2*'.
+
+

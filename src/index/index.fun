@@ -20,7 +20,7 @@ struct
        where c1,...,cn is a queue consisting of all constants with
        target family a
     *)
-    val indexArray : (IntSyn.cid Queue.queue) Array.array =
+    val indexArray : (IntSyn.Head Queue.queue) Array.array =
         Array.array (Global.maxCid + 1, Queue.empty)
 
     (* reset () = ()
@@ -40,9 +40,9 @@ struct
        installs c into the correct index queue
        presently ignores definitions
     *)
-    fun install (c) =
+    fun install (H as I.Const c) =
         case I.sgnLookup (c)
-	  of I.ConDec (_, _, A, I.Type) => update (I.targetFam A, c)
+	  of I.ConDec (_, _, A, I.Type) => update (I.targetFam A, H)
 	   | _ => ()
 
     (* lookup a = [c1,...,cn] *)

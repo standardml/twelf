@@ -161,6 +161,7 @@ structure Twelf =
 	 structure Terminate = Terminate
 
 	 structure Index = Index
+	 structure IndexSkolem = IndexSkolem
 	 structure Subordinate = Subordinate
 	 structure CompSyn' = CompSyn
 	 structure Compile = Compile
@@ -173,5 +174,6 @@ structure Twelf =
 	 structure ThmRecon = ThmRecon
 	 structure ThmPrint = ThmPrint
 	 structure MetaGlobal = MetaGlobal
+	 structure Skolem = Skolem
 	 structure Prover = Prover
 	 structure ClausePrint = ClausePrint);

@@ -61,12 +61,15 @@ struct
        then . |- U' = c @ (Xn; .. Xn; Nil)
        and  . |- U' : V' [s']
     *)
-    fun createAtomConst (G, cid) = 
+    fun createAtomConst (G, H) = 
       let
+	val cid = (case H 
+	             of (I.Const cid) => cid
+		      | (I.Skonst cid) => cid)
 	val V = I.constType cid
 	val (S, Vs) = createEVarSpine (G, (V, I.id))
       in
-	(I.Root (I.Const (cid), S), Vs)
+	(I.Root (H, S), Vs)
       end
 
     (* createAtomBVar (G, k) = (U', (V', s'))
