@@ -32,20 +32,12 @@ Group is
   recon-condec.fun
   recon-query.sig
   recon-query.fun
-(*
   recon-mode.sig
   recon-mode.fun
   recon-thm.sig
   recon-thm.fun
   recon-module.sig
   recon-module.fun
-*)
-  moderecon.sig
-  moderecon.fun
-  thmrecon.sig
-  thmrecon.fun
-  modrecon.sig
-  modrecon.fun
   parse-term.sig
   parse-term.fun
   parse-condec.sig
@@ -58,12 +50,8 @@ Group is
   parse-mode.fun 
   parse-thm.sig
   parse-thm.fun
-(*
   parse-module.sig
   parse-module.fun
-*)
-  parse-modules.sig
-  parse-modules.fun
   parser.sig
   parser.fun
   solve.sig
