@@ -46,12 +46,20 @@ Make ctxblock adequate for formulas (left to right, instead  right to left)
 Parameter Cases
   inductive cases:
 
-    Pruning in substitution. 
-	recursion.fun.clean is version without dynamic calculation of spine
-	recursion.fun is the version with dynamic calculuation of the spine
-    DONE -cs
+    DONE -cs    Pruning in substitution. 
+    
+    Add functionality for SOME clauses
+    At the momenent, we only allow parameter intorduction if they live on
+                  the same subordination level as the argument to a functional
+		  call (is this ok?)
+
+    NOTE: Skolemization does not have to include parameter blocks. There is
+	some code written which accomplish this (see recursion.fun.clean)
 
   base cases
-Residual lemmas
+Splittin Residual lemmas
 Index variables
 Proof terms
+
+
+Problems: Leftover constraints in TEST-CR/a.sml when proving m-subst
