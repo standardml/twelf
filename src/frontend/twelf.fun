@@ -1051,74 +1051,106 @@ struct
       (* suffix of configuration files: "cfg" by default *)
       val suffix = ref "cfg"
 
-      (* new recursive version  Sat 09/25/1999 -rv *)
-      (* uses always Unix path separation Sat 10/21/2000 -rv *)
-      fun read (configFile) =
-          withOpenIn (configFile)
-          (fn instream =>
-           let
-	     val {dir=configDir, file=_} = OS.Path.splitDirFile configFile
-             (* fromUnixPath path transforms path (assumed to be in Unix
-                form to the local OS conventions
-             *)
-             fun fromUnixPath path =
-                   let
-                     val vol = OS.Path.getVolume configFile
-                     val isAbs = String.isPrefix "/" path
-                     val arcs = String.tokens (fn c => c = #"/") path
-                   in
-                     OS.Path.toString {isAbs = isAbs, vol=vol, arcs=arcs}
-                   end
-             (* append_uniq (list1, list2) appends list2 to list1, removing
-                all elements of list2 which are already in list1
-             *)
-             fun append_uniq (l1, l2) =
-                   let
-                     fun append_uniq' (x :: l2) =
-                           if List.exists (fn y => x = y) l1
-                           then append_uniq' (l2)
-                           else x :: append_uniq' (l2)
-                       | append_uniq' (nil) = List.rev l1
-                   in
-                     List.rev (append_uniq' (List.rev l2))
-                   end
-	     (* mkRel interpretes a path p in the config file relative to
-	        configDir, the directory of the config file.
-             *)
-	     fun mkRel (p) =
-                  OS.Path.mkCanonical
-                    (if OS.Path.isAbsolute p
-                     then p
-                     else OS.Path.concat (configDir, p))
-             fun parseItem (item, sources) =
-                   let
-                     val suffix_size = (String.size (!suffix)) + 1
-                     val suffix_start = (String.size item) - suffix_size
-                   in
-                     if (suffix_start < 0)
-                       orelse (String.substring (item, suffix_start, suffix_size) <> ("." ^ !suffix))
-                     then append_uniq (sources, [mkRel(fromUnixPath item)])
-                     else append_uniq (sources, (#2(read (mkRel(fromUnixPath item)))))
-                   end
-	     fun parseLine (sources, line) =
-		 if Substring.isEmpty line
-		   then sources (* end of file *)
-		 else parseLine' (sources, Substring.dropl Char.isSpace line)
-	     and parseLine' (sources, line') =
-		 if Substring.isEmpty line' orelse Substring.sub (line', 0) = #"%"
-		   then parseStream sources	(* ignore empty or comment line *)
-		 else parseStream (parseItem (Substring.string (Substring.takel (not o Char.isSpace) line'),
-				              sources))
-	     and parseStream (sources) =
-	           parseLine (sources, Substring.all (TextIO.inputLine instream))
-
-	     val pwdir = OS.FileSys.getDir ()
-	   in
-	     (pwdir, parseStream nil)
-	   end)
-	  (*
-	  handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
-	  *)
+      (* more efficient recursive version  Sat 08/26/2002 -rv *)
+      fun read config =
+          let
+            (* appendUniq (list1, list2) appends list2 to list1, removing all
+               elements of list2 which are already in list1.
+            *)
+            fun appendUniq (l1, l2) =
+                  let
+                    fun appendUniq' (x :: l2) =
+                          if List.exists (fn y => x = y) l1
+                          then appendUniq' l2
+                          else x :: appendUniq' (l2)
+                      | appendUniq' nil = List.rev l1
+                  in
+                    List.rev (appendUniq' (List.rev l2))
+                  end
+            (* isConfig (item) is true iff item has the suffix of a
+               configuration file.
+            *)
+            fun isConfig item =
+                let
+                  val suffix_size = (String.size (!suffix)) + 1
+                  val suffix_start = (String.size item) - suffix_size
+                in
+                  (suffix_start >= 0)
+                  andalso
+                  (String.substring (item, suffix_start, suffix_size) = ("." ^ !suffix))
+                end
+            (* fromUnixPath path transforms path (assumed to be in Unix form)
+               to the local OS conventions.
+            *)
+            fun fromUnixPath path =
+                let
+                  val vol = OS.Path.getVolume config
+                  val isAbs = String.isPrefix "/" path
+                  val arcs = String.tokens (fn c => c = #"/") path
+                in
+                  OS.Path.toString {isAbs = isAbs, vol=vol, arcs=arcs}
+                end
+	    (* mkRel transforms a relative path into an absolute one
+               by adding the specified prefix. If the path is already
+               absolute, no prefix is added to it.
+            *)
+	    fun mkRel (prefix, path) =
+                OS.Path.mkCanonical
+                  (if OS.Path.isAbsolute path
+                   then path
+                   else OS.Path.concat (prefix, path))
+            fun read' (sources, configs) config =
+                withOpenIn config
+                  (fn instream =>
+                      let
+                        val {dir=configDir, file=_} = OS.Path.splitDirFile config
+                        fun parseItem (sources, configs) item =
+                            if isConfig item
+                            then
+                              if List.exists (fn config' => item = config') configs
+                              then (sources, configs) (* we have already read this one *)
+                              else read' (sources, item :: configs) item
+                            else
+                              if List.exists (fn source' => item = source') sources
+                              then (sources, configs) (* we have already collected this one *)
+                              else (sources @ [item], configs)
+                        fun parseLine (sources, configs) line =
+                            if Substring.isEmpty line (* end of file *)
+                            then (sources, configs)
+                            else
+                              let
+                                val line' = Substring.dropl Char.isSpace line
+                            in
+                              parseLine' (sources, configs) line'
+                            end
+	                and parseLine' (sources, configs) line =
+                            if Substring.isEmpty line (* empty line *)
+                            orelse Substring.sub (line, 0) = #"%" (* comment *)
+                            then parseStream (sources, configs)
+                            else
+                              let
+                                val line' = Substring.string
+                                              (Substring.takel (not o Char.isSpace) line)
+                                val item = mkRel (configDir, fromUnixPath line')
+                              in
+                                parseStream (parseItem (sources, configs) item)
+                              end
+                        and parseStream (sources, configs) =
+                            let
+                              val line = Substring.all (TextIO.inputLine instream)
+                            in
+	                      parseLine (sources, configs) line
+                            end
+                      in
+                        parseStream (sources, configs)
+                      end)
+            val pwdir = OS.FileSys.getDir ()
+          in
+            (pwdir, #1(read' (nil, [config]) config))
+          (*
+            handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
+          *)
+          end
 
       fun loadAbort (filename, OK) = loadFile (filename)
 	| loadAbort (_, ABORT) = ABORT
