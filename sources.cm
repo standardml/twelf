@@ -9,5 +9,6 @@ Library
   structure Converter
   signature INTSYN
   structure IntSyn
+  structure PrintXML
 is
   src/frontend/sources.cm

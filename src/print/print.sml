@@ -44,3 +44,11 @@ structure PrintTwega =
 	      structure Constraints = Constraints
 	      structure Names = Names
 	      structure Formatter' = Formatter);
+
+structure PrintXML =
+  PrintXML ((*! structure IntSyn' = IntSyn !*)
+	      structure Whnf = Whnf
+	      structure Abstract = Abstract
+	      structure Constraints = Constraints
+	      structure Names = Names
+	      structure Formatter' = Formatter);

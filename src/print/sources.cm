@@ -5,6 +5,7 @@ Library
   signature CLAUSEPRINT
   structure ClausePrint
   structure ClausePrintTeX
+  structure PrintXML
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -23,3 +24,5 @@ is
   traverse.fun
   print-twega.sig
   print-twega.fun
+  print-xml.sig
+  print-xml.fun

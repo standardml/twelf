@@ -24,6 +24,7 @@ Library
   structure IntSyn
   signature GLOBAL 
   structure Global
+  structure PrintXML
 is
 #if defined(NEW_CM)
   $/basis.cm
