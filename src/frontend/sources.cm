@@ -28,6 +28,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+  ../compat/sources.cm
   ../timing/sources.cm 
   ../stream/sources.cm
   ../global/sources.cm
@@ -55,14 +56,6 @@ is
   ../cover/sources.cm
   ../tomega/sources.cm 
   ../prover/sources.cm
-  mkabsolute.sig
-#if defined(NEW_CM)
-  mkabsolute.sml
-#elif (SMLNJ_MINOR_VERSION >= 9)
-  mkabsolute.sml
-#else
-  mkabsolute-97.sml
-#endif
   unknownexn.sig
   unknownexn.fun
   unknownexn-smlnj.sml

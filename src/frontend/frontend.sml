@@ -246,6 +246,6 @@ structure Twelf =
          structure CSManager = CSManager
          structure CSInstaller = CSInstaller (* unused -- creates necessary CM dependency *)
 
-         structure MkAbsolute = MkAbsolute
+         structure Compat = Compat
 	 structure UnknownExn = UnknownExn
 	   );

@@ -72,12 +72,20 @@ struct
        Warning: if the execution of f uses its own centers,
        the time for those will be counted twice!
     *)
+    fun checkCPUAndGCTimer timer =
+	let
+	    val {usr = usr, sys = sys} = Compat.Timer.checkCPUTimer timer
+	    val gc = Compat.Timer.checkGCTime timer
+	in
+          {usr = Time.-(usr, gc), sys = sys, gc = gc}
+	end
+
     fun time (_, counters) (f:'a -> 'b) (x:'a) =
         let
 	    val realTimer = Timer.startRealTimer ()
 	    val CPUTimer = Timer.startCPUTimer ()
 	    val result = Value (f x) handle exn => Exception (exn)
-	    val evalCPUTime = Timer.checkCPUTimer (CPUTimer)
+	    val evalCPUTime = checkCPUAndGCTimer (CPUTimer)
 	    val evalRealTime = Timer.checkRealTimer (realTimer)
 	    val (CPUTime, realTime) = !counters
 	    val _ = counters := (plus (CPUTime, evalCPUTime),

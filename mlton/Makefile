@@ -13,7 +13,7 @@
 # ---------------------------------------------------------------
 
 # What is MLton called?
-sml = mlton -basis 1997
+sml = mlton
 
 # Twelf root directory
 twelfdir = `pwd`

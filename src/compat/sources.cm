@@ -1,0 +1,50 @@
+Library
+  signature COMPAT_ARRAY
+  signature COMPAT_VECTOR
+  signature COMPAT_PATH
+  signature COMPAT_TIMER
+  signature COMPAT
+  structure Compat
+#if defined(MLton)
+  (* Empty *)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
+  signature ARRAY_SLICE
+  structure ArraySlice
+  signature VECTOR_SLICE
+  structure VectorSlice
+#endif
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  array.sig
+  vector.sig  
+  path.sig
+  timer.sig
+  compat.sig
+  compat.fun
+#if defined(MLton)
+  compat.sml
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
+  timer-97.sml
+  compat-smlnj03.sml
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110009)
+  timer-97.sml
+  array-97.sml
+  vector-97.sml
+  compat-smlnj98.sml
+#else
+  timer-97.sml
+  array-97.sml
+  vector-97.sml
+  path-97.sml
+  compat-97.sml    
+#endif
+#if defined(MLton)
+  (* Empty *)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION < 110043)
+  array-slice.sig
+  array-slice.sml
+  vector-slice.sig
+  vector-slice.sml
+#endif

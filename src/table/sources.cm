@@ -16,6 +16,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+  ../compat/sources.cm
   table.sig
   hash-table.sml
   string-hash.sig

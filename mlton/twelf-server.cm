@@ -1,5 +1,12 @@
 (* MLton version *)
 Group is
+../src/compat/array.sig
+../src/compat/vector.sig
+../src/compat/path.sig
+../src/compat/timer.sig
+../src/compat/compat.sig
+../src/compat/compat.fun
+../src/compat/compat.sml
 ../src/timing/timing.sml
 ../src/timing/timers.sig
 ../src/timing/timers.fun
@@ -93,11 +100,6 @@ Group is
 ../src/subordinate/subordinate.sml
 ../src/solvers/cs-manager.sig
 ../src/solvers/cs-manager.fun
-(* Standard Library in MLton *)
-(*
-../src/int-inf/int-inf-sig.sml
-../src/int-inf/int-inf.sml
-*)
 ../src/domains/integers.sig
 ../src/domains/integers.fun
 ../src/domains/field.sig
@@ -302,10 +304,8 @@ Group is
 ../src/frontend/solve.fun
 ../src/frontend/fquery.sig
 ../src/frontend/fquery.fun
-../src/frontend/mkabsolute.sig
 ../src/frontend/unknownexn.sig
 ../src/frontend/twelf.fun
-../src/frontend/mkabsolute.sml
 ../src/frontend/unknownexn.fun
 ../src/frontend/unknownexn-smlnj.sml
 ../src/frontend/frontend.sml

@@ -180,7 +180,7 @@ functor Twelf
    (*! sharing CSManager.ModeSyn = ModeSyn !*)
     
    structure CSInstaller : CS_INSTALLER
-   structure MkAbsolute : MK_ABSOLUTE
+   structure Compat : COMPAT
    structure UnknownExn : UNKNOWN_EXN
      )
  :> TWELF =
@@ -1373,7 +1373,7 @@ struct
                   else fromFirstModified xs
 
             fun mkAbsolute p =
-                MkAbsolute.mkAbsolute {path=p, relativeTo=pwdir}
+                Compat.OS.Path.mkAbsolute {path=p, relativeTo=pwdir}
 
             val sources' = 
                 (* allow shorter messages if safe *)

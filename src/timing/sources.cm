@@ -7,6 +7,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+  ../compat/sources.cm
   timers.sig
   timers.fun
   timers.sml

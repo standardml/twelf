@@ -433,10 +433,10 @@ struct
 	    val _ = print ("Abbrevs : " ^ Int.toString (!abbrev) ^ "\n")
 	    val _ = print ("Other   : " ^ Int.toString (!other) ^ "\n")
 	    val _ = print ("Max definition height: " ^ Int.toString (!maxHeight) ^ "\n")
-	    val _ = Array.appi
+	    val _ = ArraySlice.appi
 	              (fn (h, i) => print (" Height " ^ Int.toString h ^ ": "
 					   ^ Int.toString i ^ " definitions\n"))
-		      (heightArray, 0, SOME(!maxHeight+1))
+		      (ArraySlice.slice (heightArray, 0, SOME(!maxHeight+1)))
 	  in
 	    ()
 	  end
