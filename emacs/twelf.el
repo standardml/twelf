@@ -65,6 +65,7 @@
 ;;; C-c C-c      twelf-save-check-config
 ;;; C-c C-s      twelf-save-check-file
 ;;; C-c C-d      twelf-check-declaration
+;;; C-c C-a      twelf-append-config
 ;;; C-c c        twelf-type-const
 ;;; C-c C-u      twelf-server-display
 ;;;
@@ -422,6 +423,7 @@ Maintained to present reasonable menus.")
   (define-key map "\C-c\C-d" 'twelf-check-declaration)
   (define-key map "\C-c\C-s" 'twelf-save-check-file)
   (define-key map "\C-c\C-c" 'twelf-save-check-config)
+  (define-key map "\C-c\C-a" 'twelf-append-config)
   )
 
 (defvar twelf-mode-map nil
