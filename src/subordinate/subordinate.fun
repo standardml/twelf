@@ -102,20 +102,22 @@ struct
               else frozenSubError (a, b)
           val (BL, BR) = get (b)
         in
-          case I.targetFamOpt (I.constType b)
-            of NONE => ()
-             | SOME _ => raise Error ("Constant " ^ Names.qidToString (Names.constQid b)
-                                      ^ " must be a type family to be frozen");
           if fGet b then ()
           else List.app check BL
         end
 
     fun expandFamilyAbbrevs a =
+        (case I.targetFamOpt (I.constType a)
+           of SOME _ => raise Error ("Constant " ^ Names.qidToString (Names.constQid a)
+                                     ^ " must be a type family to be frozen")
+            | NONE => 
         (case IntSyn.sgnLookup a
            of IntSyn.ConDec _ => a
+            | IntSyn.ConDef _ =>
+                IntSyn.targetFam (IntSyn.constDef a)
             | IntSyn.SkoDec _ => a
             | IntSyn.AbbrevDef _ =>
-                expandFamilyAbbrevs (IntSyn.targetFam (IntSyn.constDef a)))
+                IntSyn.targetFam (IntSyn.constDef a)))
 
     fun installFrozen (L) =
         let
@@ -243,8 +245,8 @@ struct
     fun installKind (I.Uni(L), a) =
         ( set (a, (nil, nil)) ; () )
       | installKind (I.Pi ((I.Dec (_, V1), P), V2), a) =
-        ( transClosure (I.targetFam V1, a) ;
-	  installKind (V2, a) )
+	( installKind (V2, a);
+          transClosure (I.targetFam V1, a) )
 
     (* Passing around substitutions and calling whnf below is
        redundant, since the terms starts in normal form and
