@@ -1,7 +1,8 @@
 (* Filling  Version 1.3*)
 (* Author: Carsten Schuermann *)
 
-functor MTPFilling (structure IntSyn : INTSYN
+functor MTPFilling (structure MTPGlobal : MTPGLOBAL
+                    structure IntSyn : INTSYN
                     structure FunSyn' : FUNSYN
 		      sharing FunSyn'.IntSyn = IntSyn
                     structure StateSyn' : STATESYN

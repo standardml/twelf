@@ -2,7 +2,8 @@
 (* Author: Carsten Schuermann *)
 (* See [Rohwedder,Pfenning ESOP'96] *)
 
-functor MTPRecursion (structure Global : GLOBAL
+functor MTPRecursion (structure MTPGlobal : MTPGLOBAL
+                      structure Global : GLOBAL
 		      structure IntSyn : INTSYN
 		      structure FunSyn : FUNSYN
 			sharing FunSyn.IntSyn = IntSyn

@@ -1,3 +1,6 @@
+structure MTPGlobal = 
+  MTPGlobal (structure MetaGlobal = MetaGlobal)
+
 structure FunSyn = 
   FunSyn (structure IntSyn' = IntSyn
 	  structure Whnf = Whnf
@@ -116,7 +119,8 @@ structure MTPSearch =
              structure CSManager = CSManager); 
 
 structure MTPFilling =
-  MTPFilling (structure IntSyn = IntSyn
+  MTPFilling (structure MTPGlobal = MTPGlobal
+              structure IntSyn = IntSyn
 	      structure FunSyn' = FunSyn
 	      structure StateSyn' = StateSyn
 	      structure MTPData = MTPData
@@ -182,7 +186,8 @@ structure Inference =
 
 		  
 structure MTPRecursion = 
-  MTPRecursion (structure Global =  Global
+  MTPRecursion (structure MTPGlobal = MTPGlobal
+                structure Global =  Global
 		structure IntSyn = IntSyn
 		structure FunSyn = FunSyn
 		structure StateSyn' = StateSyn
@@ -216,7 +221,8 @@ structure MTPStrategy =
 	       structure Timers = Timers)
 
 structure MTProver =
-  MTProver (structure IntSyn' = IntSyn
+  MTProver (structure MTPGlobal = MTPGlobal
+            structure IntSyn' = IntSyn
             structure FunSyn = FunSyn
 	    structure StateSyn = StateSyn
 	    structure Order = Order

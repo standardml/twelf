@@ -1,7 +1,8 @@
 (* Meta Theorem Prover Version 1.3 *)
 (* Author: Carsten Schuermann *)
 
-functor MTProver (structure IntSyn' : INTSYN
+functor MTProver (structure MTPGlobal : MTPGLOBAL
+                  structure IntSyn' : INTSYN
                   structure FunSyn : FUNSYN
 		    sharing FunSyn.IntSyn = IntSyn'
 		  structure StateSyn : STATESYN
