@@ -9,15 +9,15 @@ For release:
   Rebuild document in doc/guide/:
   cd doc/guide
   make
-  ./guide2pdf (on a Sparc, eg. alonzo)
-  ./install
+  make twelf.pdf (on a Sparc, eg. alonzo)
+  make install
+  make install-www  (if everything is ready, install new doc on website)
 
   create updated file load.sml
   CM.mkusefile "load.sml";
 
   bin/clean
   bin/clean-cm  (ignore warning messages)
-
 
   cd ..
   find twelf -type f -print > twelf/FILES
