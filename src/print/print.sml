@@ -36,3 +36,11 @@ structure ClausePrintTeX =
 	      structure Formatter' = Formatter
 	      structure Print = PrintTeX
 	      structure Symbol = SymbolTeX);
+
+structure PrintTwega =
+  PrintTwega (structure IntSyn' = IntSyn
+	      structure Whnf = Whnf
+	      structure Abstract = Abstract
+	      structure Constraints = Constraints
+	      structure Names = Names
+	      structure Formatter' = Formatter);
