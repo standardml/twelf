@@ -2861,7 +2861,7 @@ directory.
 @section Twelf Mode
 
 @cindex Twelf mode in Emacs
-@cindex declaration, currnt
+@cindex declaration, current
 @cindex current declaration
 
 The Twelf mode in Emacs provides support for editing and indentation,
