@@ -30,7 +30,9 @@ functor Total
    structure Paths : PATHS
    structure Origins : ORIGINS
      sharing Origins.Paths = Paths
-     sharing Origins.IntSyn = IntSyn')
+     sharing Origins.IntSyn = IntSyn'
+
+   structure Timers : TIMERS)
    : TOTAL =
 struct
   structure IntSyn = IntSyn'
@@ -167,7 +169,7 @@ struct
     fun checkFam (a) =
         let
           (* Checking termination *)
-	  val _ = (Reduces.checkFam a;
+	  val _ = ((Timers.time Timers.terminate Reduces.checkFam) a;
 		   if !Global.chatter >= 4
 		     then print ("Terminates: " ^ N.qidToString (N.constQid a) ^ "\n")
 		   else ())
@@ -177,7 +179,7 @@ struct
 	  (* by termination invariant, there must be consistent mode for a *)
 	  val SOME(ms) = M.modeLookup a	(* must be defined and well-moded *)
 	  val _ = checkDefinite (a, ms) (* all arguments must be either input or output *)
-	  val _ = (Cover.checkCovers (a, ms) ;
+	  val _ = ((Timers.time Timers.coverage Cover.checkCovers) (a, ms) ;
 		   if !Global.chatter >= 4
 		     then print ("Covers (input): " ^ N.qidToString (N.constQid a) ^ "\n")
 		   else ())
@@ -189,7 +191,7 @@ struct
 				^ "\n")
 		  else ()
           val cs = Index.lookup a
-	  val _ = (checkOutCover (cs);
+	  val _ = ((Timers.time Timers.coverage checkOutCover) (cs);
 		   if !Global.chatter = 4
 		     then print ("\n")
 		   else ();

@@ -29,7 +29,8 @@ functor WorldSyn
    structure Paths : PATHS
    structure Origins : ORIGINS
      sharing Origins.Paths = Paths
-     sharing Origins.IntSyn = IntSyn)
+     sharing Origins.IntSyn = IntSyn
+   structure Timers : TIMERS)
    : WORLDSYN = 
 struct
   structure IntSyn = IntSyn

@@ -16,6 +16,8 @@ sig
   val printing    : Timing.center		(* printing *)
   val compiling   : Timing.center		(* compilation *)
   val solving     : Timing.center		(* solving queries *)
+  val coverage    : Timing.center               (* coverage checking *)
+  val worlds      : Timing.center	        (* world checking *)
   val ptrecon      : Timing.center		(* solving queries using ptskeleon *)
   val filling     : Timing.center		(* filling in m2 *)
   val filltabled  : Timing.center		(* filling in m2 *)

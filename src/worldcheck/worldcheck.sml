@@ -12,7 +12,8 @@ structure WorldSyn =
 	    structure Print = Print
 	    structure Table = IntRedBlackTree
 	    structure Paths = Paths
-	    structure Origins = Origins);
+	    structure Origins = Origins
+            structure Timers = Timers);
 
 structure WorldPrint =
   WorldPrint (structure Global = Global

@@ -586,7 +586,7 @@ struct
 	let
 	  val mdecs = List.map ReconMode.modeToMode mterms
           val _ = ReconTerm.checkErrors (r)
-	  val _ = List.app (fn (mdec, r) => Cover.checkCovers mdec
+	  val _ = List.app (fn (mdec, r) => (Timers.time Timers.coverage Cover.checkCovers) mdec
 			    handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg)))
 	          mdecs
 	  val _ = if !Global.chatter >= 3
@@ -600,6 +600,7 @@ struct
 
       (* Total declaration *)
       | install1 (fileName, (Parser.TotalDec lterm, r)) =
+        (* time activities separately in total.fun *)
 	let
 	  val _ = if not (!Global.unsafe)
 		    then raise Total.Error (Paths.wrapLoc (Paths.Loc (fileName, r), "%total not safe: Toggle `unsafe' flag"))
@@ -731,7 +732,7 @@ struct
 	  Prover.install (fn E => installConDec IntSyn.Ordinary (E, (fileName, NONE), r))
 	end 
 
-      (* Establish declaration *)
+      (* Assert declaration *)
       | install1 (fileName, (Parser.AssertDec aterm, _)) =
 	let 
 	  val _ = if not (!Global.unsafe)
@@ -750,6 +751,7 @@ struct
 	in
 	  Skolem.install La
 	end
+
       | install1 (fileName, (Parser.WorldDec wdecl, _)) =
 	let
 	  val (ThmSyn.WDecl (qids, cp as ThmSyn.Callpats cpa), rs) =
@@ -770,7 +772,7 @@ struct
 				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in
-	  (map (fn (a, _) => WorldSyn.worldcheck W a) cpa ; ())
+	  (Timers.time Timers.worlds (map (fn (a, _) => WorldSyn.worldcheck W a)) cpa ; ())
 	end
       | install1 (fileName, declr as (Parser.SigDef _, _)) =
           install1WithSig (fileName, NONE, declr)

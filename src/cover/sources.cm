@@ -24,6 +24,7 @@ is
   ../solvers/sources.cm
   ../worldcheck/sources.cm
   ../typecheck/sources.cm
+  ../timing/sources.cm
   cover.sig
   cover.fun
   total.sig

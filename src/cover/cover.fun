@@ -26,7 +26,8 @@ functor Cover
    structure TypeCheck : TYPECHECK
      sharing TypeCheck.IntSyn = IntSyn'
    structure CSManager : CS_MANAGER
-     sharing CSManager.IntSyn = IntSyn')
+     sharing CSManager.IntSyn = IntSyn'
+   structure Timers : TIMERS)
   : COVER =
 struct
   structure IntSyn = IntSyn'

@@ -12,7 +12,8 @@ structure Cover =
 	 structure Paths = Paths
 	 structure Print = Print
          structure TypeCheck = TypeCheck
-	 structure CSManager = CSManager);
+	 structure CSManager = CSManager
+         structure Timers = Timers);
 
 structure Total =
   Total (structure Global = Global
@@ -26,4 +27,5 @@ structure Total =
 	 structure Reduces = Reduces
 	 structure Cover = Cover
 	 structure Paths = Paths
-	 structure Origins = Origins);
+	 structure Origins = Origins
+         structure Timers = Timers);
