@@ -349,6 +349,13 @@ struct
 	   installExp (I.Decl (G, D1), U, V2))
       | installExp (G, I.FgnExp (cs, ops), V) =
           installExp (G, Whnf.normalize (#toInternal(ops) (), I.id), V)
+      | installExp (G, U, V as I.Root (I.Def _, _)) =
+	(* bugfix -rv 2/27/02 *)
+          let
+            val V' = Whnf.normalize (Whnf.expandDef(V, I.id))
+          in
+            installExp (G, U, V')
+          end
 
     (* installSpine (G, S, V) = ()
        where G |- S ~:~ V => V'  (S has shape V => V' for some V')
@@ -361,10 +368,16 @@ struct
 	   installSpine (G, S, V2))
 	  (* accurate would be instead of V2: *)
 	  (* Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2)) *)
-      | installSpine (G, S as I.App _, I.Root (I.Def (d), S')) =
+      | installSpine (G, S as I.App _, V as (I.Root (I.Def (d), S'))) =
 	  (* ignore S' because we only use approximate type *)
 	  (* correct??? -fp Tue Feb 19 14:26:31 2002 *)
-	  installSpine (G, S, I.constDef(d))
+	  (* installSpine (G, S, I.constDef(d))*)
+	  (* bugfix -rv 2/27/02 *)
+          let
+            val V' = Whnf.normalize (Whnf.expandDef(V, I.id))
+          in
+            installSpine (G, S, V')
+           end
 
     (* install c = ()
 
