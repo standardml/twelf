@@ -484,7 +484,7 @@ struct
   *)
   (* call TypeCheck... if !doubleCheck = true? *)
   (* Wed May 20 08:00:28 1998 -fp *)
-  fun queryToQuery (query (optName, tm)) = 
+  fun queryToQuery (query (optName, tm), (fileName, r)) = 
       let
 	val _ = Names.varReset ()
 	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) tm
@@ -511,7 +511,7 @@ struct
   *)
   (* should printing of result be moved to frontend? *)
   (* Wed May 20 08:08:50 1998 -fp *)
-  fun condecToConDec (condec(name, tm), r) =
+  fun condecToConDec (condec(name, tm), (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
@@ -530,7 +530,7 @@ struct
       in
 	(SOME(cd), SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, SOME(tm2)), r) =
+    | condecToConDec (condef(optName, tm1, SOME(tm2)), (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
@@ -560,7 +560,7 @@ struct
       in
 	(optConDec, SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, NONE), r) =
+    | condecToConDec (condef(optName, tm1, NONE), (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) tm1

@@ -256,7 +256,7 @@ struct
     fun install1 (fileName, Parser.ConDec(condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
-	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, r)
+	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, (fileName,r))
 	  fun icd (SOME(conDec)) =
 	      let
 		  (* names are assigned in TpRecon *)
@@ -279,7 +279,7 @@ struct
       (* Solve declarations %solve c : A *)
       | install1 (fileName, Parser.Solve((name,tm), r)) =
 	(let
-	  val conDec = Solve.solve ((name, tm), r)
+	  val conDec = Solve.solve ((name, tm), (fileName, r))
 	  val conDec' = Names.nameConDec (conDec)
 	  val _ = Strict.check (conDec', NONE)
 	  (* allocate cid after strictness has been checked! *)
@@ -299,7 +299,7 @@ struct
       (* %query <expected> <try> A or %query <expected> <try> X : A *)
       | install1 (fileName, Parser.Query(expected,try,query, r)) =
         (* Solve.query might raise Solve.AbortQuery (msg) *)
-	(Solve.query (expected, try, query)
+	(Solve.query ((expected, try, query), (fileName, r))
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
 

@@ -72,13 +72,13 @@ sig
   val decToDec : IntSyn.dctx * dec -> IntSyn.Dec (* reconstructs D such that G |- D dec *)
   val termToExp : IntSyn.dctx * term -> IntSyn.Exp (* reconstructs V such that G |- V : type *)
 
-  val queryToQuery : query
+  val queryToQuery : query * Paths.location
                      -> IntSyn.Exp * IntSyn.name option * (IntSyn.Exp * IntSyn.name) list
                      (* (A, SOME("X"), [(Y1, "Y1"),...] *)
 		     (* where A is query type, X the optional proof term variable name *)
 		     (* Yi the EVars in the query and "Yi" their names *)
 
-  val condecToConDec : condec * Paths.region -> IntSyn.ConDec option * Paths.occConDec option
+  val condecToConDec : condec * Paths.location -> IntSyn.ConDec option * Paths.occConDec option
                      (* optional ConDec is absent for anonymous definitions *)
 
 end;  (* signature TP_RECON *)

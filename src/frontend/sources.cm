@@ -22,6 +22,7 @@ Group is
   parsing.fun
   tprecon.sig
   tprecon.fun
+  tptrace.fun
   moderecon.sig
   moderecon.fun
   thmrecon.sig

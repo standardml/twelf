@@ -127,13 +127,14 @@ struct
      error messages and finally returning the status (either OK or
      ABORT).
   *)
-  fun solve ((name, solve), r) =
+  fun solve ((name, solve), (fileName, r)) =
       let
 	val _ = if !Global.chatter >= 2
 		  then print ("%solve")
 		else ()
 	(* use region information! *)
-	val (A, NONE, Xs) = TpReconQ.queryToQuery(TpReconQ.query(NONE,solve))  (* times itself *)
+	val (A, NONE, Xs) =
+	       TpReconQ.queryToQuery(TpReconQ.query(NONE,solve), (fileName, r))  (* times itself *)
 
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 2
@@ -186,14 +187,14 @@ struct
       end
 
 	    (* %query <expected> <try> A or %query <expected> <try> X : A *)
-      fun query (expected, try, quy) =
+      fun query ((expected, try, quy), (fileName, r)) =
 	  let
 	    val _ = if !Global.chatter >= 2
 		      then print ("%query " ^ boundToString expected
 					 ^ " " ^ boundToString try)
 		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = TpReconQ.queryToQuery(quy)  (* times itself *)
+	    val (A, optName, Xs) = TpReconQ.queryToQuery(quy, (fileName, r))  (* times itself *)
 	    val _ = if !Global.chatter >= 2
 		      then print (" ")
 		    else ()
@@ -276,7 +277,7 @@ struct
   and qLoops' (S.Empty) = true		(* normal exit *)
     | qLoops' (S.Cons (query, s')) =
       let
-	val (A, optName, Xs) = TpReconQ.queryToQuery(query) (* times itself *)
+	val (A, optName, Xs) = TpReconQ.queryToQuery(query, ("stdIn", (0,0))) (* times itself *)
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)
 	fun scInit M =
