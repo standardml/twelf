@@ -34,7 +34,7 @@ twelf/doc/ps/twelf.ps
 twelf/emacs/auc-menu.el
 twelf/emacs/twelf-font.el
 twelf/emacs/twelf-hilit.el
-twelf/emacs/twelf-init.el
+twelf/emacs/.twelf-init.el
 twelf/emacs/twelf.el
 twelf/examples/README
 twelf/examples/arith/README
@@ -366,7 +366,6 @@ twelf/src/frontend/thmrecon.sig
 twelf/src/frontend/tprecon.fun
 twelf/src/frontend/tprecon.sig
 twelf/src/frontend/tptrace.fun
-twelf/src/frontend/tptrace1.fun
 twelf/src/frontend/twelf.fun
 twelf/src/frontend/twelf.sig
 twelf/src/global/README
