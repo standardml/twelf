@@ -591,6 +591,7 @@ struct
  
   	   Invariant: 
 	   If   Psi, G0 |- S : V > type
+	   and  S doesn't contain Skolem constants
 	   and  d = |Delta|
 	   and  x1:A1...x(j-1):A(j-1) |- V = mj{xj:Aj} .. mn{xn:An} type : kind
 	   and  x1:A1...x(j-1):A(j-1) |- w : +x1:A1... +x(j-1):A(j-1)
@@ -737,6 +738,7 @@ struct
 	   Invariant:
 	   If   Psi0 |- V : type
 	   and  Psi0 |- v : Psi
+	   and  V[v^-1] does not contain Skolem constants
 	   and  c'' is the name of the object constant currently considered
 	   and  L is a list of cases
 	   then L' list of cases and CL' extends CL
@@ -778,6 +780,7 @@ struct
 	   Invariant:
 	   If   Psi, G |- V : type
 	   and  Psi, G |- v : Psi'       (s.t.  Psi' |- V[v^-1] : type exists)
+	   and V[v^-1] does not contain Skolem constants 
 	   [ and Psi', G |- w' : Psi''
 	     and |Delta'| = d'    for a Delta'
 	     and PQ' can generate the proof term so far in Delta'; Psi''

@@ -40,6 +40,13 @@ local
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtDQuants (I.Decl (G, D'), V2)
       end
+    | fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Virtual), V2)) =
+      let
+	val D' = Names.decName (G, D)
+      in
+	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+	:: fmtDQuants (I.Decl (G, D'), V2)
+      end
     | fmtDQuants (G, V as I.Pi _) = (* P = I.No *)
         [F.HOVbox (fmtDSubGoals (G, V, nil))]
     | fmtDQuants (G, V) = (* V = Root _ *)
@@ -59,6 +66,13 @@ local
     | fmtGparens (G, V) = (* V = Root _ *)
         Print.formatExp (G, V)
   and fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
+      let
+	val D' = Names.decName (G, D)
+      in
+	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
+	:: fmtGQuants (I.Decl (G, D'), V2)
+      end
+    | fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Virtual), V2)) =
       let
 	val D' = Names.decName (G, D)
       in

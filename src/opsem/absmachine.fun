@@ -115,7 +115,7 @@ struct
       in
         rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg,
 		(fn S => solve ((g, s), dProg,
-				(fn M => sc (I.App (M, S))))))
+				(fn M => sc (I.App (X, S))))))
       end
     | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg as (G, dPool), sc) =
       let

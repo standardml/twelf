@@ -48,6 +48,15 @@ struct
 	C.Impl (compileClauseN false (G, A1), A1, a1, 
 		compileGoalN (I.Decl(G, I.Dec(NONE, A1)), A2))
       end
+    | compileGoalN (G, I.Pi((I.Dec(_,A1), I.Virtual), A2)) =
+      (* A = A1 -> A2 *)
+      let
+	val a1 = I.targetFam A1
+      in
+	(* A1 is used to build the proof term, a1 for indexing *)
+	C.Impl (compileClauseN false (G, A1), A1, a1, 
+		compileGoalN (I.Decl(G, I.Dec(NONE, A1)), A2))
+      end
     | compileGoalN (G, I.Pi((D, I.Maybe), A2)) =
       (* A = {x:A1} A2 *)
        C.All (D, compileGoalN (I.Decl(G, D), A2))
@@ -212,6 +221,10 @@ struct
 	C.Eq(R)
     | compileClauseN opt (G, I.Pi((D as (I.Dec(_,A1)),I.No), A2)) =
       (* A = A1 -> A2 *)
+	C.And (compileClauseN opt (I.Decl(G, D), A2), A1, 
+	       compileGoalN (G, A1))
+    | compileClauseN opt (G, I.Pi((D as (I.Dec(_,A1)),I.Virtual), A2)) =
+      (* A = {x: A1} A2, x virtually occurring in A2 *)
 	C.And (compileClauseN opt (I.Decl(G, D), A2), A1, 
 	       compileGoalN (G, A1))
     | compileClauseN opt (G, I.Pi((D,I.Maybe), A2)) =

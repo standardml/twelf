@@ -20,8 +20,9 @@ sig
   datatype Depend =                     (* Dependency information     *)
     No                                  (* P ::= No                   *)
   | Maybe                               (*     | Maybe                *)
+  | Virtual                             (*     | Virtual              *)
 
-  (* Expressions *)
+  (* expressions *)
 
   datatype Uni =			(* Universes:                 *)
     Kind				(* L ::= Kind                 *)

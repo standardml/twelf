@@ -44,4 +44,4 @@
 		forall  {C:M <=> M'}
 		exists  {N:term} {S*:M =>* N} {S*':M' =>* N}
 		true.
-% %prove 6 D (m-cr D _ _ _).
+%prove 35 D (m-cr D _ _ _).

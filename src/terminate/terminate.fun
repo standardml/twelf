@@ -389,6 +389,7 @@ struct
        Invariant: 
        If   G : Q
        and  G |- s : G1     and   G1 |- V : L     (V, s) in whnf
+       and  V[s], V'[s'] does not contain Skolem constants
        and  G |- s' : G2    and   G2 |- V' : L'   (V', s') in whnf
        and  V' = a' @ S'
        and  G |- L = L'
@@ -444,6 +445,7 @@ struct
        Invariant
        If   G : Q
        and  G |- s1 : G1   and   G1 |- V1 : type
+       and  V1[s1], V2[s2] does not contain Skolem constants
        and  G |- s2 : G2   and   G2 |- V2 : type
        and occ locates V1 in declaration
 
@@ -467,6 +469,7 @@ struct
        Invariant: 
        If   G : Q
        and  G |- s : G1    and   G1 |- V : L
+       and  V[s] does not contain any Skolem constants
        then if (V, s) satifies the termination condition in G then  ()
 	 else exception Error is raised
     *)
