@@ -140,14 +140,9 @@ struct
 
 
 
-    (* extend (GB, l, G1) = GB'
-
-       Invariant: 
-       GB' = GB, l: G1
-    *)
-    fun extend (GB, l, nil) = GB
-      | extend ((G, B), l, D :: L) = 
-          extend ((I.Decl (G, D), I.Decl (B, S.Parameter (SOME l))), l, L)
+    fun createTags (0, l) = I.Null
+      | createTags (n, l) = 
+           I.Decl (createTags (n-1, l),  S.Parameter (SOME l))
 
 
     (* constCases (G, (V, s), I, abstract, ops) = ops'
@@ -262,20 +257,28 @@ struct
        and  abstract abstraction function
        then ops' = (op1, ... opn) are resulting operators from splitting D[s]
     *)
-    fun split ((G', B'), D as I.Dec (_, V), s, B, abstract) = 
+    fun split (D as I.Dec (_, V), sc, B, abstract) = 
         let
 	  fun split' (n, ops) = 
-	    if n < 0 then lowerSplitDest (I.Null, 0, (V, s),  
-					  fn U' => abstract (I.Dot (I.Exp (U'), s), B),
-					  constAndParamCases ops)
+	    if n < 0 then 
+	      let 
+		val (_, _, s) = sc (I.Null, I.Null)
+	      in
+		lowerSplitDest (I.Null, 0, (V, s),  
+				fn U' => abstract (I.Dot (I.Exp (U'), s), B),
+				constAndParamCases ops)
+	      end
 	    else
 	      let
 		val F.LabelDec (name, G1, G2) = F.labelLookup n
-		val t = someEVars (G', G1, I.Shift (I.ctxLength G'))
-		val (G'', B'') = extend ((G', B'), n, ctxSub (G2, t))
-		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift (List.length G2))),
+		val t = someEVars (I.Null, G1, I.id)
+		val G2t = ctxSub (G2, t)
+		val length = List.length G2
+		val B2 = createTags (length , n)
+		val (G'', _, s) = sc (F.listToCtx G2t, B2)
+		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)),
 					fn U' => U',
-					metaCases (List.length G2, ops))
+					metaCases (length, ops))
 	      in
 		split' (n - 1, ops')
 	      end
@@ -338,65 +341,94 @@ struct
        and  abstract, dynamic abstraction function
        and  makeAddress, a function which calculates the index of the variable
 	    to be split
-       then G' |- s' : G,   where G' < G, and G' contains only parameter declarations.
+       then sc is a function, mapping D to  D, G' |- s' : G,   where G' < G
+       and  tc is a function, mapping D to  D, G |- t' G,
        and  ops' is a list of splitting operators
     *)
     fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) =
-          ((I.Null, I.Null), I.id, nil)
+          (fn (Gp, Bp) => (Gp, Bp, I.Shift (I.ctxLength Gp)), nil)
       | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
 		 isIndex, abstract, makeAddress) =
 	let 
-	  val (GB0 as (G0, B0), s', ops) =
+	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex), 
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
-	  val X = I.newEVar (I.Null, I.EClo (V, s'))
+	  (*	  val X = I.newEVar (I.Null, I.EClo (V, s)) *)
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val (G', B', s) = sc (Gp, Bp)
+	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	    in
+	      (G', B', I.Dot (I.Exp (X), s))
+	    end
 	  val ops' = if not (isIndex 1) andalso b > 0
 			   then 
-			     (makeAddress 1, split ((G, B), D, s', B', abstractFinal abstract))
+			     (makeAddress 1, split (D, sc, B', abstractFinal abstract))
 			     :: ops
 		     else ops
 	in
-	  (GB0, I.Dot (I.Exp (X), s'), ops')
+	  (sc', ops')
 	end
       | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
 		 isIndex, abstract, makeAddress) = 
 	let 
-	  val (GB0 as (G0, B0), s', ops) =
+	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex), 
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
-	  val X = I.newEVar (I.Null, I.EClo (V, s'))
+	  (*	  val X = I.newEVar (I.Null, I.EClo (V, s)) *)
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val (G', B', s) = sc (Gp, Bp)
+	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	    in
+	      (G', B', I.Dot (I.Exp (X), s))
+	    end
 	  val ops' = if not (isIndex 1) andalso b > 0
 		       then 
-			 (makeAddress 1, split ((G, B), D, s', B', abstractFinal abstract))
+			 (makeAddress 1, split (D, sc, B', abstractFinal abstract))
 			 :: ops
 		     else ops
 	in
-	    (GB0, I.Dot (I.Exp (X), s'), ops')
+	    (sc', ops')
 	end
       | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, abstract, makeAddress) = 
-	  let 
-	    val (GB0 as (G0, B0), s', ops) =
-		expand' ((G, B), isIndexSucc (D, isIndex),
-			 abstractCont ((D, T), abstract),
-			 makeAddressCont makeAddress)
-	    val I.Dec (xOpt, V) = D
-	    val X = I.newEVar (I.Null, I.EClo (V, s'))
-	  in
-	    (GB0, I.Dot (I.Exp (X), s'), ops)
-	  end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, abstract, makeAddress) = 
-	let 
-	  val ((G0, B0), s', ops) =
+        let 
+	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
+	  (* val X = I.newEVar (I.Null, I.EClo (V, sc)) *)
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val (G', B', s) = sc (Gp, Bp)
+	      val X = I.newEVar (I.Null, I.EClo (V, s))
+	    in
+	      (G', B', I.Dot (I.Exp (X), s))
+	    end
+	  in
+	    (sc', ops)
+	  end
+      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, abstract, makeAddress) = 
+	let 
+	  val (sc, ops) =
+	    expand' ((G, B), isIndexSucc (D, isIndex),
+		     abstractCont ((D, T), abstract),
+		     makeAddressCont makeAddress)
+	  val I.Dec (xOpt, V) = D
+	  fun sc' (Gp, Bp) = 
+	    let 
+	      val (G', B', s) = sc (Gp, Bp)
+	    in
+	      (I.Decl (G', I.decSub (D, s)), I.Decl (B', T), I.dot1 s)
+	    end
+
 	in
-	  ((I.Decl (G0, I.decSub (D, s')), I.Decl (B0, T)), I.dot1 s', ops)
+	  (sc', ops)
 	end
       (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
 
@@ -411,7 +443,7 @@ struct
     *)
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
       let 
-	val (_, _, ops) =
+	val (_, ops) =
 	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
       in
 	ops
