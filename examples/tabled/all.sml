@@ -3,7 +3,7 @@
 (* Twelf.chatter := 2; *)
 
 Twelf.chatter := 3; 
-
+Twelf.OS.chDir "examples/tabled";
 Twelf.doubleCheck := true;
 
 fun test (file) =

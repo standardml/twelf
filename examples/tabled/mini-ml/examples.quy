@@ -1,24 +1,24 @@
 
-%querytabled *
+%querytabled * *
 (app (app mult z) (s (s z))) ==>* V.
 
-%querytabled *
+%querytabled * *
 eval (app (app plus (s (s (z)))) (s (s z))) V.
 
-%querytabled *
+%querytabled * *
 eval (app (app mult (s (z))) (s (s z))) V.
 
 
 %{
 % sml process killed!
-%querytabled *
+%querytabled * *
 eval (app (app mult (s (s (z)))) (s (s z))) V.
 
-%querytabled *
+%querytabled * *
 eval (app (app mult (s (s (z)))) (s (s z))) (s(s(s(s z)))).
 
 }%
 %{
-%querytabled *
+%querytabled * *
 (app (app mult (s (s (z)))) (s (s z))) ==>* V.
 }%

@@ -9,13 +9,13 @@ Identifiers id
   followed by letters A-Z or a-z or digits 0-9
 
 Terms
-  t ::= id          % constant or variable
+  t ::= id        % constant or variable
       | id(id)    % function with arguments
 
 Atomic Propositions
 
   P ::= id          % propositional constant
-      | id(t)    % predicate with arguments
+      | id(t)       % predicate with arguments
 
 Propositions
   A ::= atom P
@@ -37,9 +37,9 @@ Propositions
 
 }%
 
-id  : type.
+id  : type.  %name id I.
 ids : type.  % sequence
-prop: type.
+prop: type.  %name prop P.
 
 % identifiers (just define some)
 % identifiers for bound vars or propositions
@@ -71,7 +71,7 @@ false  : prop.
 % Define token stream
 %
 
-tok:type.
+tok:type.  %name tok T.
 
 % tokens reserved for predicates
 'p': tok.
@@ -98,7 +98,7 @@ tok:type.
 'false'  : tok.
 
 % list of tokens
-tokens : type.
+tokens : type. %name tokens S.
 nil: tokens.
 ; : tok -> tokens -> tokens.  %infix right 10 ;.
 
@@ -108,10 +108,10 @@ predconv: tok -> (id -> id) -> type.
 
 % explicit context for bvars 
 % to only retrieve the first instance 
-ctx: type.
-hyp: type.
+ctx: type.   
+hyp: type.   
 bvar: tok -> id -> hyp.
-# : hyp -> ctx -> ctx. %infix right 10 #.
+# : hyp -> ctx -> ctx.   %infix right 10 #.
 e : ctx.
 
 %  
@@ -126,6 +126,9 @@ nyz: neq 'y' 'z'.
 nsym: neq T T'
        <- neq T' T.
 
+% returns the first occurrence of (bvar T I) 
+% in the context, i.e. later shadows earlier occurrences
+% of bound variables
 lookup: tok -> ctx -> id -> type.
 
 ls: lookup T ((bvar T I) # C) I.
@@ -160,7 +163,6 @@ fatom: ctx -> tokens -> tokens -> prop -> type.
 pform: parse F P
 	<- fq e F nil P.
 
-% doesn't take into account scope of bound vars...
 fall: fq C ('forall' ; I ; F) F' (forall P)
        <- ({x:id} fq ((bvar I x) # C) F F' (P x)).
 

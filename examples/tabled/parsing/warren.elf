@@ -112,23 +112,23 @@ pg2: parseG a ('a' ; L) L.
 
 % some simple queries 
 
-%querytabled *
+%querytabled * *
  recogG ('a' ; 'a' ; 'a' ; nil) L.
 
-%querytabled *
+%querytabled * *
  recogS ('a' ; 'a' ; 'a' ; 'c' ; nil) nil.
 
-%querytabled *
+%querytabled * *
  recogS ('a' ; 'a' ; 'a' ; 'b' ; nil) nil.
 
-%querytabled *
+%querytabled * *
  D : recogS ('a' ; 'a' ; 'a' ; 'c' ; nil) nil.
 
-%querytabled *
+%querytabled * *
  D : recogS ('a' ; 'a' ; 'a' ; 'b' ; nil) nil.
 
-%querytabled *
+%querytabled * *
 parseS P ('a' ; 'a' ; 'a' ; 'd' ; nil) nil.
 
-%querytabled *
+%querytabled * *
 parseS P ('a' ; 'a' ; 'a' ; 'b' ; nil) nil.

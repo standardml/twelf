@@ -13,7 +13,7 @@ p2: p a
 p3: p b
      <- p c.
 
-%querytabled 5 A:(p a).
+%querytabled * 5 A:(p a).
 
 
 q: node -> type.
@@ -45,7 +45,7 @@ r1: r c
 s1: s a.
 s2: s b.
 
-% querytabled 5 A:(q a).
+% querytabled * 5 A:(q a).
 
 
 

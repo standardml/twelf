@@ -15,4 +15,4 @@ s3: s b
 
 q1: s a.
 
-%querytabled 2 A:(r a).
+%querytabled * 2 A:(r a).

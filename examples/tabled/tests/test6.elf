@@ -23,4 +23,4 @@ c3: qts 0.
 
 c4: rts.
 
-%querytabled 10 (pts X).
+%querytabled * 10 (pts X).

@@ -19,6 +19,7 @@ pos : tp.
 &   : tp -> tp -> tp.			%infix right 9 &.
 t   : tp.
 
+%{
 % Declarative Subtyping
 <= : tp -> tp -> type.			%infix none 8 <=.
 					%name <= S.
@@ -44,7 +45,7 @@ n<=b : nat <= bit.
 <==> : B1 <= A1
 	-> A2 <= B2
 	-> A1 => A2 <= B1 => B2.
-
+}%
 % Ordinary Types
 ord : tp -> type.
 %mode ord +A.
@@ -204,7 +205,7 @@ nv_if  : nonvalue (if M M1 M2).
 %terminates M (nonvalue M).
 
 % Typing Rules; Values
-
+%{
 of : term -> tp -> type.		%name of D.
 %mode of +M *A.
 
@@ -264,7 +265,7 @@ of_fix : of (fix M) A
 of_let : of (let M N) A
 	  <- of M B
 	  <- ({x:term} of x B -> of (N x) A).
-
+}%
 % Bi-Directional Type Checking
 synth : term -> tp -> type.		%name synth S s.
 check : term -> tp -> type.		%name check C c.
@@ -272,13 +273,8 @@ check : term -> tp -> type.		%name check C c.
 %mode check +C +A.
 
 % there is a bug -- if -- bp Mon Feb 18 13:54:00 2002 fixed
-% tabled ord.
-% tabled nonvalue.
 % tabled synth.
 %tabled check.
-% tabled <|.
-% tabled value.
-% tabled conj. 
 
 % Coercions
 s_# : synth (C # A) A
@@ -307,6 +303,7 @@ c_& : check CV (A & B)
 c_t : check CV t
        <- value CV.
        % checkable CV?
+
 
 % Functions
 s_app : synth (app I C) B
@@ -375,6 +372,8 @@ c_let : check (let I C) A
 % Recursion
 c_fix : check (fix C) A
 	 <- ({x:term} nonvalue x -> synth x A -> check (C x) A).
+
+
 
 % Note to Carsten: cannot termination check this!!
 

@@ -1,16 +1,16 @@
 % The typing rules are no longer operational,
 % so we have to give derivations for type-checking.
 
-%querytabled 3  D:of z T.
+%querytabled * 3  D:of z T.
 
-% querytabled 2 of (lam [x] x) (all [b] (all [a] a) => b).
-% querytabled 2 of (lam [x] x) T.
-% querytabled 2 of (lam [x] x) (all [a] a => a).
+% querytabled * 2 of (lam [x] x) (all [b] (all [a] a) => b).
+% querytabled * 2 of (lam [x] x) T.
+% querytabled * 2 of (lam [x] x) (all [a] a => a).
 
-% querytabled 1 of (lam [f] (app (app f (lam [y] y)) (app f z))) T.
-% querytabled 1 of (lam [f] (app (app f (lam [y] y)) (app f z))) ((all [a] a => a) => nat).
+% querytabled * 1 of (lam [f] (app (app f (lam [y] y)) (app f z))) T.
+% querytabled * 1 of (lam [f] (app (app f (lam [y] y)) (app f z))) ((all [a] a => a) => nat).
 
-% querytabled 2 of (app (lam [f] (app (app f (lam [y] y)) (app f z))) (lam [y] y)) nat.
+% querytabled * 2 of (app (lam [f] (app (app f (lam [y] y)) (app f z))) (lam [y] y)) nat.
 
 %  = tp_alli [a:tp] tp_lam [x:exp] [u:of x a] u.
 

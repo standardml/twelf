@@ -22,4 +22,4 @@ r_cl'  : reach' X Y
 r_refl': reach' X X.
 
 
-%querytabled 5 (reach' a X).
+%querytabled * 5 (reach' a X).

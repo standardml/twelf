@@ -28,5 +28,5 @@ q1: qt a.
 q2: qt b.
 q3: qt c.
 
-%querytabled 6 (pt a X).
+%querytabled * 6 (pt a X).
 
