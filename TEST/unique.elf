@@ -48,3 +48,193 @@ capp : copy (app E1 E2) (app F1 F2)
 % %unique eq +E -F.
 %unique eq +E -1F.
 %unique copy +E -1F.
+
+% Based on Carsten Schuermann's test for copy theorem
+% Tests for uniqueness declarations, coverage failures -- Penny
+
+exp : type.
+
+0 : exp.
+s : exp -> exp.
+app : exp -> exp -> exp.
+lam : (exp -> exp) -> exp.
+
+
+exp' : type.
+
+0' : exp'.
+s' : exp' -> exp'.
+app' : exp' -> exp' -> exp'.
+lam' : (exp' -> exp') -> exp'.
+
+cp : exp -> exp' -> type.
+%mode cp +D -E.
+cp_0 : cp 0 0'.
+cp_s : cp (s N1) (s' N2) <- cp N1 N2.
+cp_app : cp (app D1 D2) (app' E1 E2) 
+         <- cp D1 E1
+         <- cp D2 E2.
+cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
+         <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
+
+%block cp_hyp: block {x:exp} {y:exp'} {d:cp x y}.
+%worlds (cp_hyp) (cp D E).
+% unique cp +D -1E.
+%total D (cp D E).
+
+tp : type.
+
+nat : tp.
+arrow : tp -> tp -> tp.
+
+of : exp -> tp -> type.
+%mode of +E *T.
+
+of_0 : of 0 nat.
+of_s : of (s E) nat <- of E nat.
+of_app : of (app E E1) T2 <- of E (arrow T1 T2) <- of E1 T1.
+of_lam : of (lam E) (arrow T1 T2) 
+	  <- ({x:exp} of x T1 -> of (E x) T2).
+%block of_hyp: some {T1:tp} block {x:exp} {d:of x T1}.
+%worlds (of_hyp) (of E T).
+% % unique of +E -1T. fails, as it should.
+
+tp' : type.
+
+nat' : tp'.
+arrow' : tp' -> tp' -> tp'.
+
+of' : exp' -> tp' -> type.
+%mode of' +E *T.
+
+of'_0 : of' 0' nat'.
+of'_s : of' (s' E) nat' <- of' E nat'.
+of'_app : of' (app' E E1) T2 <- of' E (arrow' T1 T2) <- of' E1 T1.
+of'_lam : of' (lam' E) (arrow' T1 T2) 
+	  <- ({x:exp'} of' x T1 -> of' (E x) T2).
+%block of'_hyp: some {T1:tp'} block {x:exp'} {d:of' x T1}.
+
+tcp : tp -> tp' -> type.
+%mode tcp +T1 -T2.
+cp_nat : tcp nat nat'.
+cp_arrow : tcp (arrow T1 T2) (arrow' T1' T2')
+	    <- tcp T2 T2' <- tcp T1 T1'.
+%worlds () (tcp T1 T2).
+%unique tcp +T -T'.
+%total T1 (tcp T1 T2).
+
+% tcp is total
+tcpt : {T:tp} {T':tp'} tcp T T' -> type.
+%mode tcpt +T -T' -D.
+tcpt_nat : tcpt nat nat' cp_nat.
+tcpt_arrow : tcpt (arrow T1 T2) (arrow' T1' T2') (cp_arrow D1 D2)
+	      <- tcpt T2 T2' D2 <- tcpt T1 T1' D1.
+%worlds () (tcpt T T' D).
+%unique tcpt +T -T' -D.
+%total T (tcpt T T' D).
+
+% The output coverage failure example reformulated as input coverage failure.
+
+% Uniqueness has been isolated to the family "same".
+
+% The idea is to "tuple" the two recursive calls needed for the app case
+% into one call to an auxiliary type family that returns matching type
+% copies and typing derivations.
+
+% All input coverage declarations succeed except for family "same".
+% All termination declarations succeed.
+
+% Input and output coverage and termination checking for preserv_aux
+% succeed, but totality fails since "same" cannot be seen
+% to be total without uniqueness information.
+
+same : tcp T1 T1' -> tcp T1 T1'' 
+       -> of' E' (arrow' T1'' T2') -> of' E' (arrow' T1' T2') -> type.
+%mode same +CT +CT' +D -D'.
+
+same_clause: {CT:tcp T1 T1'} {CT':tcp T1 T1'} same CT CT' D D.
+
+%worlds () (same CT CT' D D').
+% %covers same +CT +CT' +D -D'. fails, as it should in the absence of uniqueness knowledge
+%terminates (CT) (same CT _ _ _). 
+% %total (CT) (same CT _ _ _).  totality fails since coverage does
+
+preserv' : cp E E' -> of E T -> tcp T T' -> of' E' T' -> type.
+%mode preserv' +C +D -CT -D'.
+%block pres_hyp: some {T1:tp} {T1':tp'} {CT:tcp T1 T1'}
+		  block {x:exp} {x':exp'} {c: cp x x'}
+		  {d:of x T1} {d':of' x' T1'}
+		  {p:preserv' c d CT d'}.
+%worlds (pres_hyp) (preserv' C D CT D').
+
+pres_0 : preserv' cp_0 of_0 cp_nat of'_0.
+pres_s : preserv' (cp_s C) (of_s D) cp_nat (of'_s D') <- preserv' C D _ D'.
+
+% type of first input is designed for easy termination checking
+preserv_aux : cp (app E E1) (app' E' E1')
+              -> of E (arrow T1 T2) -> of E1 T1 
+              -> tcp T2 T2'
+              -> tcp T1 T1' -> of' E' (arrow' T1' T2') -> of' E1' T1' -> type.
+%mode preserv_aux +C +D +D1 -CT2 -CT1 -D' -D1'.
+
+aux: preserv_aux (cp_app C1 C) D D1 CT2 CT1 D'' D1'
+	    <- preserv' C1 D1 CT1 D1'
+	    <- preserv' C D (cp_arrow CT1' CT2) D'
+	    <- same CT1 CT1' D' D''.
+%worlds () (preserv_aux _ _ _ _ _ _ _).
+
+pres_app : preserv' (cp_app C1 C) (of_app D1 D) CT2 (of'_app D1' D')
+	    <- preserv_aux (cp_app C1 C) D D1 CT2 CT1 D' D1'.
+% The auxiliary predicate replaces the following, which causes
+% failure of output freeness:
+%	    <- preserv' C1 D1 CT1 D1'
+%	    <- preserv' C D (cp_arrow CT1 CT2) D'.
+
+pres_lam :  preserv' (cp_lam C) (of_lam D) (cp_arrow CT1 CT2) (of'_lam D')
+	    <- tcpt T1 T1' CT1
+	    <- ({x:exp} {x':exp'} {c: cp x x'} {d:of x T1}
+		  {d':of' x' T1'}
+		  {p:preserv' c d CT1 d'}
+		  preserv' (C x x' c) (D x d) CT2  (D' x' d')).
+
+%covers preserv_aux +C +D +D1 -CT -CT1 -D' -D1'.
+%covers preserv' +C +D *CT *D'.
+% 
+%terminates (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
+% The following fails since "same" not seen to be total
+% %total (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
+
+% An artificial example where coverage fails because of missing 
+% uniqueness information.  No context blocks are involved.
+% This example requires uniqueness of proof terms.
+
+nat: type.
+0: nat.
+s: nat -> nat.
+
+eq: nat -> nat -> type.
+%mode eq +N1 -N2.
+eq0: eq 0 0.
+eqs: eq N1 N2 -> eq (s N1) (s N2).
+%worlds () (eq N1 N2).
+%total N1 (eq N1 N2).
+%unique eq *N1 +N2.
+%unique eq +N1 +N2.
+%unique eq +N1 -N2.
+
+b: nat -> type.
+%mode b +A.
+b0: b 0.
+b1: b (s N1) <- eq N1 N2 <- b N1.
+%worlds () (b N1).
+%total N1 (b N1).
+
+t: b N1 -> eq N1 N2 -> type.
+%mode t +B +U.
+
+t0: t b0 eq0.
+t1:  t (b1 B U) (eqs U).
+% t1:  t (b1 B U) (eqs U').
+
+%worlds () (t B U).
+%covers t +B +U.
