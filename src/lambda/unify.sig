@@ -20,6 +20,8 @@ sig
 
   (* unification *)
 
+  val intersection : IntSyn.Sub * IntSyn.Sub -> IntSyn.Sub
+
   exception Unify of string
 
   val unify : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit	(* raises Unify *)

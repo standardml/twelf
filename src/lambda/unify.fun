@@ -296,43 +296,34 @@ struct
     *)
     and unifyExpW (G, Us1 as (FgnExp (_, ops), _), Us2) =
           (case (#unifyWith(ops) (G, EClo Us2))
-             of (Succeed resL) =>
+             of (Succeed residualL) =>
                   let
-                    fun unify (G, EVar(r, _, _, cnstrs), ss, W) =
+                    fun execResidual (Assign (G, EVar(r, _, _, cnstrs), W, ss)) =
                           let
                             val W' = pruneExp (G, (W, id), ss, r, true)
                           in
                             instantiateEVar (r, W', !cnstrs)
                           end
+                      | execResidual (Delay (U, cnstr)) =
+                          delayExp ((U, id), cnstr)
                   in
-                    List.app unify resL
-                  end
-              | Delay (UL, cnstr) =>
-                  let
-                    fun delay U = delayExp ((U, id), cnstr)
-                  in
-                    List.app delay UL
+                    List.app execResidual residualL
                   end
               | Fail => raise Unify "Foreign Expression Mismatch")
 
       | unifyExpW (G, Us1, Us2 as (FgnExp (_, ops), _)) =
           (case (#unifyWith(ops) (G, EClo Us1))
-             of (Succeed resL) =>
+             of (Succeed opL) =>
                   let
-                    fun unify (G, EVar(r, _, _, cnstrs), ss, W) =
+                    fun execOp (Assign (G, EVar(r, _, _, cnstrs), W, ss)) =
                           let
                             val W' = pruneExp (G, (W, id), ss, r, true)
                           in
                             instantiateEVar (r, W', !cnstrs)
                           end
+                      | execOp (Delay (U, cnstr)) = delayExp ((U, id), cnstr)
                   in
-                    List.app unify resL
-                  end
-              | Delay (UL, cnstr) =>
-                  let
-                    fun delay U = delayExp ((U, id), cnstr)
-                  in
-                    List.app delay UL
+                    List.app execOp opL
                   end
               | Fail => raise Unify "Foreign Expression Mismatch")
 
@@ -526,6 +517,9 @@ struct
     val instantiateEVar = instantiateEVar
     val addConstraint = addConstraint
     val solveConstraint = solveConstraint
+
+    val intersection = intersection
+
     val unifyW = unifyW     
     val unify = unify
 

@@ -111,12 +111,15 @@ struct
   | Foreign of csid * (Spine -> Exp)    (*   is converted to foreign  *)
 
   and FgnUnify =                        (* Result of foreign unify    *)
-    (* succeed with a list of (solvable) equations G |- X = U [ss] *)
-    Succeed of (Dec Ctx * Exp * Sub * Exp) list
-    (* delay a constraint on a list of variables *)
-  | Delay of Exp list * Cnstr ref
-    (* fail *)
+    Succeed of FgnUnifyResidual list
+    (* succeed with a list of residual operations *)
   | Fail
+
+  and FgnUnifyResidual =                (* Residual of foreign unify  *)
+    Assign of Dec Ctx * Exp * Exp * Sub
+    (* perform the assignment G |- X = U [ss] *)
+  | Delay of Exp * Cnstr ref
+    (* delay cnstr, associating it with all the rigid EVars in U  *)
 
   (* Global signature *)
 
