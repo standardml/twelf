@@ -1060,12 +1060,7 @@ struct
 
     *)
   and ltR (GQ as (G, Q), D, UsVs, UsVs', sc, k) = 
-      (if (!Global.chatter) > 5 
-	 then  print ("\n ltR " ^ aCtxToString (G, D) ^ 
-		   " -->" ^  atomicPredToString (G, Less(UsVs, UsVs')) ^"\n")
-	  else 
-	    ();
-        ltRW (GQ, D, UsVs, Whnf.whnfEta UsVs', sc, k))
+        ltRW (GQ, D, UsVs, Whnf.whnfEta UsVs', sc, k)
 
   and ltRW (GQ, D, (Us, Vs), (Us' as (I.Root (I.Const c, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us')
