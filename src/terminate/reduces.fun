@@ -253,7 +253,7 @@ struct
         (checkClause ((G0, Q0, Rl), I.Null, I.Null, (V1, s), P.label occ);
          checkGoal (G0, Q0, Rl, (V2, I.comp(I.invShift, s)), Vs', P.body occ))
       | checkGoalW (G0, Q0, Rl, (I.Pi ((D, I.Maybe), V), s), (V', s'), occ) = 
-	  checkGoal (I.Decl (G0, N.decLUName (G0, I.decSub (D, s))),
+	checkGoal (I.Decl (G0, N.decLUName (G0, I.decSub (D, s))),
 		     I.Decl (Q0, C.All), 
 		     C.shiftRCtx Rl (fn s => I.comp(s, I.shift)), 
 		     (V, I.dot1 s), (V', I.comp(s', I.shift)), P.body occ)
@@ -292,6 +292,13 @@ struct
 					       rlistToString (G0, Rl) ^ " ---> " ^
 					       orderToString (G0, C.Less(P, P')))))
 	end 
+      | checkGoalW (G0, Q0, Rl, Vs as (I.Root (I.Def a, S), s), Vs', occ) = 
+	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+		      ^ "Illegal use of " ^ N.qidToString (N.constQid a) ^ ".")
+
+      | checkGoalW (G0, Q0, Rl, Vs, Vs' as (I.Root (I.Def a', S'), s'), occ) = 
+	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
+			^ "Illegal use of " ^ N.qidToString (N.constQid a') ^ ".")
 
     (* checkSubgoals (G0, Q0, Rl, Vs, n, (G, Q), Vs, occ) 
 
