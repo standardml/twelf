@@ -31,8 +31,8 @@ struct
   exception Error of string
   
   datatype ApproxFor =			(* Approximat formula *)
-    Head of FunSyn.For * IntSyn.Sub	(* AF ::= F [s] *)
-  | Block of (IntSyn.Sub * IntSyn.dctx) * ApproxFor
+    Head of IntSyn.dctx * (FunSyn.For * IntSyn.Sub) * int	(* AF ::= F [s] *)
+  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.dctx) * ApproxFor
 					(*      | (t, G2), AF *)
 
   local
@@ -634,6 +634,173 @@ struct
     fun lower (_, 0) = I.Null
       | lower (I.Decl (G, D), n) = I.Decl (lower (G, n-1), D)
 
+
+
+
+
+
+  	    (* shift G = s'
+	     
+	       Invariant:
+	       Forall contexts G0: 
+	       If   |- G0, G ctx
+	       then G0, V, G |- s' : G0, G
+	    *) 
+	   
+	    fun shift (I.Null) = I.shift
+	      | shift (I.Decl (G, _)) = I.dot1 (shift G)
+
+
+
+	    (* ctxSub (G, s) = G'
+	     
+	       Invariant:
+	       If   G2 |- s : G1
+	       and  G1 |- G ctx
+	       then G2 |- G' = G[s] ctx
+	    *)
+
+	    fun ctxSub (nil, s) = nil
+	      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
+
+
+	    (* weaken2 (G, a, i, S) = w'
+
+	       Invariant:
+	       G |- w' : Gw
+	       Gw < G
+	       G |- S : {Gw} V > V
+	     *)
+	    fun weaken2 (I.Null, a, i) = (I.id, fn S => S) 
+	      | weaken2 (I.Decl (G', D as I.Dec (name, V)), a, i) = 
+  	        let 
+		  val (w', S') = weaken2 (G', a, i+1)
+		in
+		  if Subordinate.belowEq (I.targetFam V, a) then 
+		    (I.dot1 w', fn S => I.App (I.Root (I.BVar i, I.Nil), S))
+		  else (I.comp (w', I.shift), S')
+		end
+
+
+	    (* raiseType (G, V) = {{G}} V
+
+	     Invariant:
+	     If G |- V : L
+             then  . |- {{G}} V : L
+
+	       All abstractions are potentially dependent.
+	       *)
+	    fun raiseType (I.Null, V) = V
+	      | raiseType (I.Decl (G, D), V) = raiseType (G, Abstract.piDepend ((Whnf.normalizeDec (D, I.id), I.Maybe), V))
+
+	    (* raiseFor (G, F, w, sc) = F'
+	   
+	       Invariant:
+	       If   G0 |- G ctx 
+	       and  G0, G, GF |- F for
+	       and  G0, {G} GF [...] |- w : G0
+	       and  sc maps  (G0, GA |- w : G0, |GA|)  to   (G0, GA, G[..] |- s : G0, G, GF)
+	       then G0, {G} GF |- F' for
+	    *)
+	    fun raiseFor (k, Gorig,  F as F.True, w, sc) = F 
+	      | raiseFor (k, Gorig, F.Ex (I.Dec (name, V), F), w, sc) =
+		let
+		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
+		  val g = I.ctxLength G
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = I.EClo (V, s)
+					(* G0, {G}GF[..], G |- V' : type *)
+		  val (nw, S) = weaken2 (G, I.targetFam V, 1)
+					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
+					   Gw < G *)
+
+		  val iw = Whnf.invert nw	  
+  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
+  		  val Gw = Whnf.strengthen (iw, G)
+					(* Generalize the invariant for Whnf.strengthen --cs *)
+		  val V'' = Whnf.normalize (V', iw)
+					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
+		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
+					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
+		  val S''' = S I.Nil
+					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
+					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
+		in
+		  F.Ex (I.Dec (name, V'''), F')
+		end
+	
+	      | raiseFor (k, Gorig, F.All (F.Prim (I.Dec (name, V)), F), w, sc) =
+		let
+(*		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
+		  val g = I.ctxLength G
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = Whnf.normalize (raiseType (G, Whnf.normalize (V, s)), I.id)
+					(* G0, {G}GF[..] |- V' = {G}(V[s]) : type *)
+		  val S' = spine g
+					(* G0, {G}GF[..] |- S' > {G}(V[s]) > V[s] *)
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g + k'-k), S')), s')
+					(* G0, GA, G[..] |- g+k'-k. S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
+		in
+		  F.All (F.Prim (I.Dec (name, V')), F')
+*)
+		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
+		  val g = I.ctxLength G
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = I.EClo (V, s)
+					(* G0, {G}GF[..], G |- V' : type *)
+		  val (nw, S) = weaken2 (G, I.targetFam V, 1)
+					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
+					   Gw < G *)
+
+		  val iw = Whnf.invert nw	  
+  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
+  		  val Gw = Whnf.strengthen (iw, G)
+					(* Generalize the invariant for Whnf.strengthen --cs *)
+		  val V'' = Whnf.normalize (V', iw)
+					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
+		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
+					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
+		  val S''' = S I.Nil
+					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
+					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
+		in
+		  F.All(F.Prim (I.Dec (name, V''')), F')
+		end
+	        (* the other case of F.All (F.Block _, _) is not yet covered *)
+
     (* makeFor (G, d, AF) = F'
      
        Invariant :
@@ -644,7 +811,7 @@ struct
        F' = {{all free EVars in s}} F
     *)
 
-    fun makeFor (G, d, Head (F, s)) = 
+    fun makeFor (Head (G, (F, s), d)) = 
         let 
 	  val g = I.ctxLength G
 	  val cf = collectGlobalSub (G, s, createEmptyB d, fn (_, K') => K')
@@ -658,7 +825,10 @@ struct
 	in
 	  allClo (GK', FK)
 	end
-      | makeFor (G, _, Block _) = raise Error "Serious incompleteness"
+      | makeFor (Block ((G0, t, d, G2), AF)) = 
+					(* |- G ctx 
+					   *)
+		 raise Error "Serious incompleteness, I am working on it"
 
 
   in

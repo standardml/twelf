@@ -69,167 +69,19 @@ struct
 
 
 
-  	    (* shift G = s'
-	     
-	       Invariant:
-	       Forall contexts G0: 
-	       If   |- G0, G ctx
-	       then G0, V, G |- s' : G0, G
-	    *) 
-	   
-	    fun shift (I.Null) = I.shift
-	      | shift (I.Decl (G, _)) = I.dot1 (shift G)
-
-
-
 	    (* ctxSub (G, s) = G'
 	     
 	       Invariant:
 	       If   G2 |- s : G1
 	       and  G1 |- G ctx
 	       then G2 |- G' = G[s] ctx
+
+	       NOTE, should go into a different module. Code duplication!
 	    *)
 
 	    fun ctxSub (nil, s) = nil
 	      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
 
-
-	    (* weaken (G, a, i, S) = w'
-
-	       Invariant:
-	       G |- w' : Gw
-	       Gw < G
-	       G |- S : {Gw} V > V
-	     *)
-	    fun weaken (I.Null, a, i) = (I.id, fn S => S) 
-	      | weaken (I.Decl (G', D as I.Dec (name, V)), a, i) = 
-  	        let 
-		  val (w', S') = weaken (G', a, i+1)
-		in
-		  if Subordinate.belowEq (I.targetFam V, a) then 
-		    (I.dot1 w', fn S => I.App (I.Root (I.BVar i, I.Nil), S))
-		  else (I.comp (w', I.shift), S')
-		end
-
-
-	    (* raiseType (G, V) = {{G}} V
-
-	     Invariant:
-	     If G |- V : L
-             then  . |- {{G}} V : L
-
-	       All abstractions are potentially dependent.
-	       *)
-	    fun raiseType (I.Null, V) = V
-	      | raiseType (I.Decl (G, D), V) = raiseType (G, Abstract.piDepend ((Whnf.normalizeDec (D, I.id), I.Maybe), V))
-
-	    (* raiseFor (G, F, w, sc) = F'
-	   
-	       Invariant:
-	       If   G0 |- G ctx 
-	       and  G0, G, GF |- F for
-	       and  G0, {G} GF [...] |- w : G0
-	       and  sc maps  (G0, GA |- w : G0, |GA|)  to   (G0, GA, G[..] |- s : G0, G, GF)
-	       then G0, {G} GF |- F' for
-	    *)
-	    fun raiseFor (k, Gorig,  F as F.True, w, sc) = F 
-	      | raiseFor (k, Gorig, F.Ex (I.Dec (name, V), F), w, sc) =
-		let
-		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
-		  val g = I.ctxLength G
-		  val s = sc (w, k)                    
-					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-		  val V' = I.EClo (V, s)
-					(* G0, {G}GF[..], G |- V' : type *)
-		  val (nw, S) = weaken (G, I.targetFam V, 1)
-					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
-					   Gw < G *)
-
-		  val iw = Whnf.invert nw	  
-  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
-  		  val Gw = Whnf.strengthen (iw, G)
-					(* Generalize the invariant for Whnf.strengthen --cs *)
-		  val V'' = Whnf.normalize (V', iw)
-					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
-		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
-					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
-		  val S''' = S I.Nil
-					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
-					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-
-		  val sc' = fn (w', k') => 
-		              let
-					(* G0, GA |- w' : G0 *)
-				val s' = sc (w', k')
-				        (* G0, GA, G[..] |- s' : G0, G, GF *)
-			      in
-				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
-					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
-			      end
-		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
-		in
-		  F.Ex (I.Dec (name, V'''), F')
-		end
-	
-	      | raiseFor (k, Gorig, F.All (F.Prim (I.Dec (name, V)), F), w, sc) =
-		let
-(*		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
-		  val g = I.ctxLength G
-		  val s = sc (w, k)                    
-					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-		  val V' = Whnf.normalize (raiseType (G, Whnf.normalize (V, s)), I.id)
-					(* G0, {G}GF[..] |- V' = {G}(V[s]) : type *)
-		  val S' = spine g
-					(* G0, {G}GF[..] |- S' > {G}(V[s]) > V[s] *)
-		  val sc' = fn (w', k') => 
-		              let
-					(* G0, GA |- w' : G0 *)
-				val s' = sc (w', k')
-				        (* G0, GA, G[..] |- s' : G0, G, GF *)
-			      in
-				I.Dot (I.Exp (I.Root (I.BVar (g + k'-k), S')), s')
-					(* G0, GA, G[..] |- g+k'-k. S', s' : G0, G, GF, V *)
-			      end
-		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
-		in
-		  F.All (F.Prim (I.Dec (name, V')), F')
-*)
-		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
-		  val g = I.ctxLength G
-		  val s = sc (w, k)                    
-					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-		  val V' = I.EClo (V, s)
-					(* G0, {G}GF[..], G |- V' : type *)
-		  val (nw, S) = weaken (G, I.targetFam V, 1)
-					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
-					   Gw < G *)
-
-		  val iw = Whnf.invert nw	  
-  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
-  		  val Gw = Whnf.strengthen (iw, G)
-					(* Generalize the invariant for Whnf.strengthen --cs *)
-		  val V'' = Whnf.normalize (V', iw)
-					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
-		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
-					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
-		  val S''' = S I.Nil
-					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
-					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-
-		  val sc' = fn (w', k') => 
-		              let
-					(* G0, GA |- w' : G0 *)
-				val s' = sc (w', k')
-				        (* G0, GA, G[..] |- s' : G0, G, GF *)
-			      in
-				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
-					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
-			      end
-		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
-		in
-		  F.All(F.Prim (I.Dec (name, V''')), F')
-		end
-	        (* the other case of F.All (F.Block _, _) is not yet covered *)
 	      
 
     (*
@@ -386,7 +238,7 @@ struct
 		  val G2' = ctxSub (G2, s)
 
 		  fun paramAbstract' AF = 
-		    paramAbstract (A.Block ((s, F.listToCtx (G2')), AF))
+		    paramAbstract (A.Block ((G, s, List.length G1, F.listToCtx (G2')), AF))
  
 (*		      if closedSub (G, s) then 
 			let 
@@ -748,8 +600,8 @@ struct
 
 	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
 	  let
-	    val AF = paramAbstract (A.Head Fs)
-	    val Frl = A.abstractApproxFor (G, I.ctxLength G0, AF)
+	    val AF = paramAbstract (A.Head (G, Fs, I.ctxLength G0))
+	    val Frl = A.abstractApproxFor AF
 	    val _ = TextIO.print "["
 	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
 	    val _ = TextIO.print "]"

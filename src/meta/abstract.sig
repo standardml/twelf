@@ -10,8 +10,8 @@ sig
   exception Error of string
 
   datatype ApproxFor =			(* Approximat formula *)
-    Head of FunSyn.For * IntSyn.Sub	(* AF ::= F [s] *)
-  | Block of (IntSyn.Sub * IntSyn.dctx) * ApproxFor
+    Head of IntSyn.dctx * (FunSyn.For * IntSyn.Sub) * int	(* AF ::= F [s] *)
+  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.dctx) * ApproxFor
 					(*  | (t, G2), AF *)
 
 
@@ -24,5 +24,5 @@ sig
         -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 
 
-  val abstractApproxFor : (IntSyn.dctx * int * ApproxFor) -> FunSyn.For
+  val abstractApproxFor : ApproxFor -> FunSyn.For
 end;  (* signature MTPABSTRACT *)
