@@ -429,7 +429,9 @@ struct
         let
 	  val K = collectExp (I.Null, (V, I.id), I.Null)
 	  val constraints = collectConstraints K
-          val _ = if (constraints = nil) then () else raise C.Error constraints
+          val _ = case constraints
+	            of nil => ()
+		     | _ => raise C.Error constraints
 	in
 	  (I.ctxLength K, abstractKPi (K, abstractExp (K, 0, (V, I.id))))
 	end 
@@ -454,6 +456,10 @@ struct
     fun abstractDef (U, V) =
         let
 	  val K = collectExp (I.Null, (U, I.id), collectExp (I.Null, (V, I.id), I.Null))
+	  val constraints = collectConstraints K
+	  val _ = case constraints
+	            of nil => ()
+		     | _ => raise C.Error (constraints)
 	in
 	  (I.ctxLength K, (abstractKLam (K, abstractExp (K, 0, (U, I.id))), 
 			   abstractKPi  (K, abstractExp (K, 0, (V, I.id)))))
