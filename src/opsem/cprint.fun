@@ -29,7 +29,7 @@ struct
 	 goalToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), g) ^ "\n"
       | goalToString t (G, All(D,g)) =
 	 let
-	   val D' = Names.decName (G, D)
+	   val D' = Names.decUName (G, D)
 	 in
 	   t ^ "ALL     " ^
 	   Formatter.makestring_fmt (Print.formatDec (G, D')) ^ "\n" ^
@@ -54,7 +54,7 @@ struct
 	 goalToString t (G, g)
       | clauseToString t (G, Exists(D, r)) =
 	 let
-	   val D' = Names.decName (G, D)
+	   val D' = Names.decEName (G, D)
 	 in
 	   t ^ "EXISTS  " ^
 	   (Print.decToString (G, D') handle _ => "<exc>") ^ "\n" ^
@@ -62,7 +62,7 @@ struct
 	 end
       | clauseToString t (G, Exists'(D, r)) =
 	 let
-	   val D' = Names.decName (G, D)
+	   val D' = Names.decEName (G, D)
 	 in
 	   t ^ "EXISTS' " ^
 	   (Print.decToString (G, D') handle _ => "<exc>") ^ "\n" ^

@@ -519,7 +519,7 @@ struct
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
-	val cd = IntSyn.ConDec (name, i, V', level)
+	val cd = Names.nameConDec (IntSyn.ConDec (name, i, V', level))
 	val ocd = Paths.dec (r, i, oc)
 	val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
@@ -546,7 +546,7 @@ struct
 	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
-	val cd = IntSyn.ConDef (name, i, U'', V'', level)
+	val cd = Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
 	val ocd = Paths.def (r, i, oc1, SOME(oc2))
         val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
         val _ = if !Global.chatter >= 3
@@ -573,7 +573,7 @@ struct
 	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
 		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
-	val cd = IntSyn.ConDef (name, i, U'', V'', level)
+	val cd = Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level))
 	val ocd = Paths.def (r, i, oc1, NONE)
         val _ = Strict.check (cd, SOME(ocd)) (* may raise Strict.Error (msg) *)
         val _ = if !Global.chatter >= 3

@@ -44,7 +44,7 @@ struct
 	    | fmtModeDec' (G, I.Pi ((D, _), V'), M.Mapp (marg, S)) =
 		let 
 		  val D' = nameDec (D, marg)
-		  val D'' = Names.decName (G, D')
+		  val D'' = Names.decEName (G, D')
 		in
 		  [F.String (argToString marg), F.String "{", P.formatDec (G, D''), 
 		   F.String "}", F.Break] @ (fmtModeDec' (I.Decl (G, D''), V', S))

@@ -251,6 +251,9 @@ struct
 	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, r)
 	  fun icd (SOME(conDec)) =
 	      let
+		  (* names are assigned in TpRecon *)
+		  (* val conDec' = nameConDec (conDec) *)
+		  (* should print here, not in TpRecon *)
 		  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
 		  (* allocate new cid after checking modes! *)
 		  val cid = installConDec (conDec, (fileName, ocOpt))
@@ -267,12 +270,13 @@ struct
       | install1 (fileName, Parser.Solve((name,tm), r)) =
 	let
 	  val conDec = Solve.solve ((name, tm), r)
-	  val _ = Strict.check (conDec, NONE)
+	  val conDec' = Names.nameConDec (conDec)
+	  val _ = Strict.check (conDec', NONE)
 	  (* allocate cid after strictness has been checked! *)
-	  val cid = installConDec (conDec, (fileName, NONE))
+	  val cid = installConDec (conDec', (fileName, NONE))
 	  val _ = if !Global.chatter >= 3
 		    then print ((Timers.time Timers.printing Print.conDecToString)
-				       conDec ^ "\n")
+				       conDec' ^ "\n")
 		  else if !Global.chatter >= 2
 			 then print (" OK\n")
 		       else ();
@@ -294,7 +298,7 @@ struct
 
       (* Name preference declaration for printing *)
       | install1 (fileName, Parser.NamePref ((name,r), namePref)) =
-	(Names.installNamePref (name, namePref)
+	(Names.installNamePref (name, namePref, NONE)
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
       (* Mode declaration *)

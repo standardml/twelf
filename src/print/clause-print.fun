@@ -35,14 +35,14 @@ local
   (* assumes NF *)
   fun fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decEName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtDQuants (I.Decl (G, D'), V2)
       end
     | fmtDQuants (G, I.Pi ((D as I.Dec (_, V1), I.Virtual), V2)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decEName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtDQuants (I.Decl (G, D'), V2)
@@ -67,14 +67,14 @@ local
         Print.formatExp (G, V)
   and fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decUName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtGQuants (I.Decl (G, D'), V2)
       end
     | fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Virtual), V2)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decUName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtGQuants (I.Decl (G, D'), V2)
@@ -92,7 +92,7 @@ local
 
   fun fmtClauseI (0, G, V) = fmtClause (G, V)
     | fmtClauseI (i, G, I.Pi ((D, _), V)) =
-        fmtClauseI (i-1, I.Decl (G, Names.decName (G, D)), V)
+        fmtClauseI (i-1, I.Decl (G, Names.decEName (G, D)), V)
 
   fun fmtConDec (I.ConDec (id, i, V, I.Type)) =
       let

@@ -141,7 +141,7 @@ struct
     fun hashClear () = HashTable.clear sgnHashTable
 
     (* namePrefTable maps constants (cids) to name preferences (strings) *)
-    val namePrefTable : IntSyn.name IntTree.Table = IntTree.new (0)
+    val namePrefTable : (IntSyn.name * IntSyn.name) IntTree.Table = IntTree.new (0)
     val namePrefInsert = IntTree.insert namePrefTable
     val namePrefLookup = IntTree.lookup namePrefTable
     fun namePrefClear () = IntTree.clear namePrefTable
@@ -224,11 +224,13 @@ struct
             | NONE => Fixity.Nonfix)
 
     (* Name Preferences *)
+    (* ePref is the name preference for existential variables of given type *)
+    (* uPref is the name preference for universal variables of given type *)
 
-    (* installNamePref' (name, cidOpt, namePref) see installNamePref *)
-    fun installNamePref' (name, NONE, namePref) =
+    (* installNamePref' (name, cidOpt, ePref, uPref) see installNamePref *)
+    fun installNamePref' (name, NONE, ePref, uPref) =
         raise Error ("Undeclared identifier " ^ name ^ " cannot be given name preference")
-      | installNamePref' (name, SOME(cid), namePref) =
+      | installNamePref' (name, SOME(cid), ePref, uPref) =
 	let
 	  val L = IntSyn.constUni (cid)
 	  val _ = case L
@@ -237,29 +239,35 @@ struct
 				    ^ "Name preferences can only be established for type families")
 		     | IntSyn.Kind => ()
 	in
-	  namePrefInsert (cid, namePref)
+	  namePrefInsert (cid, (ePref, uPref))
 	end
 
-    (* installNamePref (name, namePref) = ()
+    (* installNamePref (name, ePref, uPrefOpt) = ()
        Effect: install name preference for type family named by 'name'
        raise Error if name is undeclared or name does not refer to a type family
     *)
-    fun installNamePref (name, namePref) =
-          installNamePref' (name, nameLookup name, namePref)
+    fun installNamePref (name, ePref, SOME(uPref)) =
+          installNamePref' (name, nameLookup name, ePref, uPref)
+      | installNamePref (name, ePref, NONE) =
+	  installNamePref' (name, nameLookup name, ePref, String.map Char.toLower ePref)
 
+    datatype Role = Exist | Univ
 
-    fun namePrefOf'' (NONE) = "X"
-      | namePrefOf'' (SOME(namePref)) = namePref
+    fun namePrefOf'' (Exist, NONE) = "X"
+      | namePrefOf'' (Univ, NONE) = "x"
+      | namePrefOf'' (Exist, SOME(ePref, uPref)) = ePref
+      | namePrefOf'' (Univ, SOME(ePref, uPref)) = uPref
 
-    fun namePrefOf' (NONE) = "X"
-      | namePrefOf' (SOME(cid)) = namePrefOf'' (namePrefLookup (cid))
+    fun namePrefOf' (Exist, NONE) = "X"
+      | namePrefOf' (Univ, NONE) = "x"
+      | namePrefOf' (role, SOME(cid)) = namePrefOf'' (role, namePrefLookup (cid))
 
-    (* namePrefOf V = name
+    (* namePrefOf (role, V) = name
        where name is the preferred base name for a variable with type V
 
-       V should be a type, but the code is robust, returning the default "X"
+       V should be a type, but the code is robust, returning the default "X" or "x"
     *)
-    fun namePrefOf (V) = namePrefOf' (IntSyn.targetFamOpt V)
+    fun namePrefOf (role, V) = namePrefOf' (role, IntSyn.targetFamOpt V)
 
   end  (* local ... *)
 
@@ -460,7 +468,7 @@ struct
     fun newEVarName (G, X as IntSyn.EVar(r, _, V, Cnstr)) =
         let
 	  (* use name preferences below *)
-	  val name = tryNextName (G, namePrefOf V)
+	  val name = tryNextName (G, namePrefOf (Exist, V))
 	in
 	  (evarInsert (X, name);
 	   name)
@@ -493,24 +501,27 @@ struct
 	   of IntSyn.Dec(SOME(name), _) => name)
               (* NONE should not happen *)
 
-    (* decName (G, D) = G,D'
+    (* decName' role (G, D) = G,D'
        where D' is a possible renaming of the declaration D
        in order to avoid shadowing other variables or constants
        If D does not assign a name, this picks, based on the name
        preference declaration.
     *)
-    fun decName (G, IntSyn.Dec (NONE, V)) =
+    fun decName' role (G, IntSyn.Dec (NONE, V)) =
         let
-	  val name = tryNextName (G, namePrefOf V)
+	  val name = tryNextName (G, namePrefOf (role, V))
 	in
 	  IntSyn.Dec (SOME(name), V)
 	end
-      | decName (G, D as IntSyn.Dec (SOME(name), V)) =
+      | decName' role (G, D as IntSyn.Dec (SOME(name), V)) =
 	if varDefined name orelse conDefined name
 	  orelse ctxDefined (G, name)
 	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
 	else D
 
+    val decName = decName' Exist
+    val decEName = decName' Exist
+    val decUName = decName' Univ
 
     (* ctxName G = G'
        
@@ -523,9 +534,49 @@ struct
         let
 	  val G' = ctxName G
 	in
-	  IntSyn.Decl (G', decName (G', D))
+	  IntSyn.Decl (G', decUName (G', D))
 	end
 
+    (* pisEName' (G, V) = V'
+       Assigns name to dependent Pi prefix of V.
+       Used for implicit EVar in constant declarations after abstraction.
+    *)
+    fun pisEName' (G, IntSyn.Pi ((D, IntSyn.Maybe), V)) =
+        let
+	  val D' = decEName (G, D)
+	in
+	  IntSyn.Pi ((D', IntSyn.Maybe),
+		     pisEName' (IntSyn.Decl (G, D'), V))
+	end
+      | pisEName' (G, V) = V
+
+    fun pisEName (V) = pisEName' (IntSyn.Null, V)
+
+    (* defEName' (G, (U,V)) = (U',V')
+       Invariant: G |- U : V  and G |- U' : V' since U == U' and V == V'.
+       Assigns name to dependent Pi prefix of V and corresponding lam prefix of U.
+       Used for implicit EVar in constant definitions after abstraction.
+    *)
+    fun defEName' (G, (IntSyn.Lam (D, U), IntSyn.Pi ((_, P), V))) =
+        let
+	  val D' = decEName (G, D)
+	  val (U', V') = defEName' (IntSyn.Decl (G, D'), (U, V))
+	in
+	  (IntSyn.Lam (D', U'), IntSyn.Pi ((D', P), V'))
+	end
+      | defEName' (G, (U, V)) = (U, V)
+
+    fun defEName UV = defEName' (IntSyn.Null, UV)
+
+    fun nameConDec (IntSyn.ConDec (name, imp, V, L)) =
+          IntSyn.ConDec (name, imp, pisEName V, L)
+      | nameConDec (IntSyn.ConDef (name, imp, U, V, L)) =
+	let 
+	  val (U', V') = defEName (U, V)
+	in
+	  IntSyn.ConDef (name, imp, U', V', L)
+	end
+      | nameConDec (skodec) = skodec (* fix ??? *)
 
     fun skonstName (name) =
       tryNextName (IntSyn.Null, name)

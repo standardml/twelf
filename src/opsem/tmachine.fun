@@ -63,7 +63,7 @@ struct
       matchAtom ((p,s), dProg, sc)
     | solve ((Impl(r, A, a, g), s), (G, dPool), sc) =
       let
-	val D' as I.Dec(SOME(x),_) = N.decName (G, I.Dec(NONE, I.EClo(A,s)))
+	val D' as I.Dec(SOME(x),_) = N.decUName (G, I.Dec(NONE, I.EClo(A,s)))
 	val _ = T.signal (G, T.IntroHyp (I.Const(a), D'))
       in
 	solve ((g, I.dot1 s), (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
@@ -72,7 +72,7 @@ struct
       end
     | solve ((All(D, g), s), (G, dPool), sc) =
       let
-	val D' as I.Dec(SOME(x),V) = N.decName (G, I.decSub (D, s))
+	val D' as I.Dec(SOME(x),V) = N.decUName (G, I.decSub (D, s))
 	val a = I.targetFam V
 	val _ = T.signal (G, T.IntroParm (I.Const(a), D'))
       in

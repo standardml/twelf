@@ -297,14 +297,14 @@ local
     | fmtExpW (G, d, ctx, (I.Pi((D as I.Dec(_,V1),P),V2), s)) =
       (case P (* if Pi is dependent but anonymous, invent name here *)
 	 of I.Maybe => let
-			 val D' = Names.decName (G, D)
+			 val D' = Names.decUName (G, D)	(* could sometimes be EName *)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 				   d, ctx, (braces (G, d, ((D',V2), s)),
 					    I.dot1 s))
 		       end
 	  | I.Virtual => let
-			 val D' = Names.decName (G, D)
+			 val D' = Names.decUName (G, D)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 				   d, ctx, (braces (G, d, ((D',V2), s)),
@@ -317,7 +317,7 @@ local
     (* I.Redex not possible *)
     | fmtExpW (G, d, ctx, (I.Lam(D, U), s)) = 
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decUName (G, D)
       in
 	fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 		  d, ctx, (brackets (G, d, ((D', U), s)), I.dot1 s))
@@ -536,11 +536,11 @@ local
       *)
 
   fun skipI (0, G, V) = (G, V)
-    | skipI (i, G, I.Pi ((D, _), V)) = skipI (i-1, I.Decl (G, Names.decName (G, D)), V)
+    | skipI (i, G, I.Pi ((D, _), V)) = skipI (i-1, I.Decl (G, Names.decEName (G, D)), V)
 
   fun skipI2 (0, G, V, U) = (G, V, U)
     | skipI2 (i, G, I.Pi ((D, _), V), I.Lam (D', U)) =
-        skipI2 (i-1, I.Decl (G, Names.decName (G, D')), V, U)
+        skipI2 (i-1, I.Decl (G, Names.decEName (G, D')), V, U)
 
   (* fmtConDec (hide, condec) = fmt
      formats a constant declaration (which must be closed and in normal form)

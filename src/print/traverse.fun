@@ -70,7 +70,7 @@ local
 		 fromTp (I.Decl (G, I.decSub (D, s)), (V2, I.dot1 s)))
     | fromTpW (G, (I.Pi ((D, I.Maybe), V2), s)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decUName (G, D)
       in
 	T.pi (fromDec (G, (D', s)),
 	      fromTp (I.Decl (G, I.decSub (D', s)), (V2, I.dot1 s)))
@@ -85,7 +85,7 @@ local
 		fromTp (G, (V, t)))
     | fromObjW (G, (I.Lam (D, U), s), (I.Pi (_, V), t)) =
       let
-	val D' = Names.decName (G, D)
+	val D' = Names.decUName (G, D)
       in
 	T.lam (fromDec (G, (D', s)),
 	       fromObj (I.Decl (G, I.decSub (D', s)),
