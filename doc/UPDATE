@@ -16,3 +16,5 @@
 - %name takes optional second argument
 - Prefix argument to a few command now selects the server buffer
   (this simplified tracing and breaking)
+
+- Add Twelf.make
