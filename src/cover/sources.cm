@@ -25,6 +25,7 @@ is
   ../worldcheck/sources.cm
   ../typecheck/sources.cm
   ../timing/sources.cm
+  ../unique/sources.cm
   cover.sig
   cover.fun
   total.sig

@@ -1159,6 +1159,7 @@ struct
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); Origins.reset ();
 		    ModeTable.reset ();
+		    UniqueTable.reset (); (* -fp Wed Mar  9 20:24:45 2005 *)
 		    Index.reset (); 
 		    IndexSkolem.reset ();
 		    Subordinate.reset ();

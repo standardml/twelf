@@ -4,6 +4,7 @@
 functor Cover
   (structure Global : GLOBAL
    structure Whnf : WHNF
+   structure Conv : CONV
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Abstract : ABSTRACT
    (*! sharing Abstract.IntSyn = IntSyn' !*)
@@ -12,7 +13,7 @@ functor Cover
    structure Constraints : CONSTRAINTS
    (*! sharing Constraints.IntSyn = IntSyn' !*)
    structure ModeTable : MODETABLE
-   (*! sharing ModeSyn'.IntSyn = IntSyn' !*)
+   structure UniqueTable : MODETABLE
    structure Index : INDEX
    (*! sharing Index.IntSyn = IntSyn' !*)
    structure Subordinate : SUBORDINATE
@@ -1236,6 +1237,216 @@ struct
 	  finitarySplits (XsRev, 1, W, nil)
 	end
 
+
+    (***********************************)
+    (* Contraction based on uniqueness *)
+    (***********************************)
+
+    (* eqExp (U[s], U'[s']) = true iff G |- U[s] == U'[s'] : V
+       Invariants:
+         G |- U[s] : V
+         G |- U'[s'] : V
+         U[s], U'[s'] contain no EVars
+       Note that the typing invariant is satisfied because
+       input arguments can only depend on other input arguments,
+       but not undetermined or output arguments.
+       Similar remarks apply to functions below
+    *)
+    fun eqExp (Us, Us') = Conv.conv (Us, Us')
+
+    (* eqInpSpine (ms, S1[s1], S2[s2]) = true
+       iff U1[s1] == U2[s2] for all input (+) arguments in S1, S2
+       according to uniqueness mode spine ms
+       Invariants: typing as in eqExp, ms ~ S1, ms ~ S2
+    *)
+    fun eqInpSpine (ms, (I.SClo(S1,s1'),s1), Ss2) =
+          eqInpSpine (ms, (S1, I.comp(s1',s1)), Ss2)
+      | eqInpSpine (ms, Ss1, (I.SClo(S2,s2'),s2)) =
+          eqInpSpine (ms, Ss1, (S2, I.comp(s2',s2)))
+      | eqInpSpine (M.Mnil, (I.Nil,s), (I.Nil,s')) = true
+      | eqInpSpine (M.Mapp(M.Marg(M.Plus,_), ms'),
+		  (I.App(U,S),s), (I.App(U',S'),s')) =
+          eqExp ((U,s), (U',s'))
+	  andalso eqInpSpine (ms', (S,s), (S',s'))
+      | eqInpSpine (M.Mapp(_, ms'), (I.App(U,S),s), (I.App(U',S'),s')) =
+	  (* ignore Star, Minus, Minus1 *)
+	  eqInpSpine (ms', (S,s), (S',s'))
+      (* other cases should be impossible since spines must match *)
+
+    (* eqInp (G, k, a, S[s], ms) = [k1+k,...,kn+k]
+       where k1,...,kn are the deBruijn indices of those declarations
+       ki:a @ Si in such that G0 |- Si[^ki+k] == S[s] on all input arguments
+       according to mode spine ms.
+       Here G = ...kn:a @ Sn, ..., k1:a @ S1, ...
+    *)
+    fun eqInp (I.Null, k, a, Ss, ms) = nil
+      | eqInp (I.Decl(G', I.Dec(_, I.Root (I.Const(a'), S'))), k, a, Ss, ms) =
+        (* defined type families disallowed here *)
+        if a = a' andalso eqInpSpine (ms, (S', I.Shift(k)), Ss)
+	  then k::eqInp (G', k+1, a, Ss, ms)
+	else eqInp (G', k+1, a, Ss, ms)
+      | eqInp (I.Decl(G', I.Dec(_, I.Pi _)), k, a, Ss, ms) =
+          eqInp (G', k+1, a, Ss, ms)
+      | eqInp (I.Decl(G', I.NDec), k, a, Ss, ms) =
+	  eqInp (G', k+1, a, Ss, ms)
+      | eqInp (I.Decl(G', I.BDec(_, (b, t))), k, a, Ss, ms) =
+	  eqInp (G', k+1, a, Ss, ms)
+      (* other cases should be impossible *)
+
+    (* contractionCands (G, k) = [[k11,...,k1{n1}],...,[km1,...,km{nm}]]
+       where each [kj1,...,kj{nj}] are deBruijn indices in G (counting from right)
+       such that kji:aj @ Sji ... kj{nj}:aj @ Sj{nj} and
+       Sji...Sj{nj} agree on their input arguments according to the 
+       uniqueness mode spine for aj
+    *)
+    fun contractionCands (I.Null, k) = nil
+      | contractionCands (I.Decl(G', I.Dec(_, I.Root (I.Const(a), S))), k) =
+        (* defined type families disallowed here *)
+        (* using only one uniqueness declaration per type family *)
+        (case UniqueTable.modeLookup a
+	   of NONE => contractionCands (G', k+1)
+            | SOME(ms) => 
+	      case eqInp (G', k+1, a, (S, I.Shift(k)), ms)
+		of nil => contractionCands (G', k+1)
+		 | ns => (k::ns)::contractionCands (G', k+1))
+      | contractionCands (I.Decl(G', I.Dec(_, I.Pi _)), k) =
+          (* ignore Pi --- contraction cands unclear *)
+          contractionCands (G', k+1)
+      | contractionCands (I.Decl(G', I.NDec), k) =
+          contractionCands (G', k+1)
+      | contractionCands (I.Decl(G', I.BDec(_, (b, t))), k) =
+          (* ignore blocks --- contraction cands unclear *)
+	  contractionCands (G', k+1)
+
+    (* isolateSplittable ((G0, {{G1}}V, p) = ((G0@G1), V) where |G1| = p
+       This isolates the splittable variable G1@G1 from an old-style
+       coverage goal ({{G}}V, p)
+    *)
+    fun isolateSplittable (G, V, 0) = (G, V)
+      | isolateSplittable (G, I.Pi((D,_), V'), p) =
+          isolateSplittable (I.Decl(G, D), V', p-1)
+
+    (* unifyUOutSpine (ms, S1[s1], S2[s2]) = true
+       iff U1[s1] == U2[s2] for all unique output (-1) arguments in S1, S2
+       according to uniqueness mode spine ms
+       Invariants: the input arguments in S1[s1] and S2[s2] must be known
+          to be equal, ms ~ S1, ms ~ S2
+       Effect: EVars in S1[s1], S2[s2] are instantianted, both upon
+          failure and success
+    *)
+    fun unifyUOutSpine (ms, (I.SClo(S1,s1'),s1), Ss2) =
+          unifyUOutSpine (ms, (S1, I.comp(s1', s1)), Ss2)
+      | unifyUOutSpine (ms, Ss1, (I.SClo(S2,s2'),s2)) =
+	  unifyUOutSpine (ms, Ss1, (S2, I.comp(s2',s2)))
+      | unifyUOutSpine (M.Mnil, (I.Nil,s1), (I.Nil,s2)) = true
+      | unifyUOutSpine (M.Mapp(M.Marg(M.Minus1,_),ms'), (I.App(U1,S1),s1), (I.App(U2,S2),s2)) =
+          Unify.unifiable (I.Null, (U1,s1), (U2,s2)) (* will have effect! *)
+	  andalso unifyUOutSpine (ms', (S1,s1), (S2,s2))
+      | unifyUOutSpine (M.Mapp(_,ms'), (I.App(U1,S1),s1), (I.App(U2,S2), s2)) =
+	  (* if mode = + already equal by invariant; otherwise ignore *)
+          unifyUOutSpine (ms', (S1,s1), (S2,s2))
+      (* Nil/App or App/Nil cannot occur by invariants *)
+
+    (* unifyUOuttype (a @ S1, a @ S2) = true
+       iff S1 and S2 unify on all unique output (-1) arguments in S1, S2
+       according to uniqueness mode declaration for a (both args must have same a)
+       Invariants: the input args in S1, S2 must be known to be equal
+          and a must have a uniqueness mode
+       Effect: Evars may be instantiated by unification
+    *)
+    fun unifyUOutType (V1, V2) = 
+          unifyUOutTypeW (Whnf.whnf (V1, I.id), Whnf.whnf(V2, I.id))
+    and unifyUOutTypeW ((I.Root(I.Const(a1),S1),s1), (I.Root(I.Const(a2),S2),s2)) =
+        (* a1 = a2 by invariant *)
+        let
+	  val SOME(ms) = UniqueTable.modeLookup a1 (* must succeed by invariant *)
+	in
+	  unifyUOutSpine (ms, (S1,s1), (S2,s2))
+	end
+	(* must be constant-headed roots by invariant *)
+
+    (* unifyUOutEvars (X1, X2) = true
+       iff . |- X1 : a @ S1, . |- X2 : a @ S2 and the unique output arguments
+       in V1 and V2 unify
+       Invariants: the input args in S1, S2, must be known to be equal
+         Both types start with the same a, a must have a uniqueness mode
+       Effect: Evars may be instantiated by unification
+    *)
+    fun unifyUOutEVars (SOME(I.EVar(_, G1, V1, _)), SOME(I.EVar(_, G2, V2, _))) =
+	  (* G1 = G2 = Null *)
+          unifyUOutType (V1, V2)
+
+    (* unifyUOut2 ([X1,...,Xp], k1, k2) = (see unifyOutEvars (X{k1}, X{k2})) *)
+    fun unifyUOut2 (XsRev, k1, k2) =
+          unifyUOutEVars (List.nth (XsRev, k1-1), List.nth (XsRev, k2-1))
+
+    (* unifyOut1 ([X1,...,Xp], [k1, k2, ..., kn] = true
+       if X{k1} "==" X{k2} "==" ... "==" X{kn} according to unifyOutEvars
+    *)
+    fun unifyUOut1 (XsRev, nil) = true
+      | unifyUOut1 (XsRev, k1::nil) = true
+      | unifyUOut1 (XsRev, k1::k2::ks) =
+          unifyUOut2 (XsRev, k1, k2)
+	  andalso unifyUOut1 (XsRev, k2::ks)
+
+    (* unifyOut ([X1,...,Xp], [[k11,...,k1{n1}],...,[km1,...,km{nm}]]) = true
+       if unifyOut1 ([X1,...,Xp], [kj1,...,kj{nj}]) for each j
+    *)
+    fun unifyUOut (XsRev, nil) = true
+      | unifyUOut (XsRev, ks::kss) =
+          unifyUOut1 (XsRev, ks)
+	  andalso unifyUOut (XsRev, kss)
+
+    (* contractAll ({{G}}V, p, ucands) = SOME(V',p')
+       iff (V',p') is the result of contracting unique output arguments
+           according to contraction candidates ucands
+           of variables in G where all input arguments agree
+       returns NONE if unique output arguments are non-unifiable
+       may be the identity if output arguments are already identity
+          or unsolvable constraints during contraction
+       Invariants: p = |G| (G contains the splittable variables)
+    *)
+    fun contractAll (V, p, ucands) =
+        let
+	  val ((V1, s), XsRev) = instEVars ((V, I.id), p, nil) (* as in splitVar *)
+	in
+	  if unifyUOut (XsRev, ucands)
+	    then SOME (abstract (V1, s)) (* as in splitVar, may raise Constraints.Error *)
+	  else NONE			(* unique outputs not simultaneously unifiable *)
+	end
+
+    (* contract ({{G}}V0, p, ci, lab) = SOME(V',p')
+       iff (V',p') is the result of contracting unique output arguments
+           of variables in G where all input arguments agree
+       returns NONE if unique output arguments are non-unifiable
+       may be the identity if output arguments are already identity
+          or unsolvable constraints during contraction
+       ci and lab are used for printing
+       Invariants: p = |G| (G contains the splittable variables)
+    *)
+    fun contract (V, p, ci, lab) =
+        let
+	  val (G, _) = isolateSplittable (I.Null, V, p)	(* ignore body of coverage goal *)
+	  val ucands = contractionCands (G, 1)
+	  val n = List.length ucands
+	  val _ = if n > 0
+		    then chatter 6 (fn () => "Found " ^ Int.toString n ^ " contraction "
+				    ^ pluralize (n, "candidate") ^ "\n")
+		  else ()
+	  val VpOpt' = if n > 0
+			 then (contractAll (V, p, ucands)
+			       handle Constraints.Error _ =>
+				      ( chatter 6 (fn () => "Contraction failed due to constraints\n");
+				        SOME(V, p) ))
+					(* no progress if constraints remain *)
+		       else SOME(V, p)	(* no candidates, no progress *)
+	  val _ = case VpOpt'
+	            of NONE => chatter 6 (fn () => "Case impossible: conflicting unique outputs\n")
+		     | SOME(V',p') => chatter 6 (fn () => showPendingGoal (V', p', ci, lab) ^ "\n")
+	in
+	  VpOpt'
+	end
+
     (*********************)
     (* Coverage Checking *)
     (*********************)
@@ -1270,10 +1481,14 @@ struct
     *)
     fun cover (V, p, wci as (W, ci), ccs, lab, missing) =
         ( chatter 6 (fn () => showPendingGoal (V, p, ci, lab) ^ "\n");
-	  cover' (V, p, wci, ccs, lab, missing) )
+	  cover' (contract(V, p, ci, lab), wci, ccs, lab, missing) )
 
-    and cover' (V, p, wci as (W, ci), ccs, lab, missing) =
+    and cover' (SOME(V, p), wci as (W, ci), ccs, lab, missing) =
           split (V, p, selectCand (match (I.Null, V, p, ci, ccs)), wci, ccs, lab, missing) 
+      | cover' (NONE, wci, ccs, lab, missing) =
+	(* V is covered by unique output inconsistency *)
+	( chatter 6 (fn () => "Covered\n");
+	  missing )
 
     and split (V, p, NONE, wci, ccs, lab, missing) = 
         (* V is covered: return missing patterns from other cases *)
@@ -1668,6 +1883,42 @@ struct
 	  finitarySplits (XsRev, 1, w, nil)
 	end
 
+    (***************)
+    (* Contraction *)
+    (***************)
+    (* for explanation, see contract and contractAll above *)
+
+    fun contractAll (CGoal(G,S), ucands) =
+        let
+	  val s = newEVarSubst (I.Null, G) (* for unif, EVars are always global *)
+	  val XsRev = subToXsRev (s)
+	in
+	  if unifyUOut (XsRev, ucands)
+	    then SOME (abstractSpine (S, s)) (* as in splitVar, may raise Constraints.Error *)
+	  else NONE
+	end
+
+    fun contract (cg as CGoal (G, S), lab) =
+        let
+	  val ucands = contractionCands (G, 1)
+	  val n = List.length ucands
+	  val _ = if n > 0
+		    then chatter 6 (fn () => "Found " ^ Int.toString n ^ " contraction "
+				    ^ pluralize (n, "candidate") ^ "\n")
+		  else ()
+	  val cgOpt' = if n > 0
+			 then (contractAll (cg, ucands)
+			       handle Constraints.Error _ =>
+				 ( chatter 6 (fn () => "Contraction failed due to constraints\n");
+				  SOME(cg) )) (* no progress if constraints remain *)
+		       else SOME(cg)	(* no candidates, no progress *)
+	  val _ = case cgOpt'
+	            of NONE => chatter 6 (fn () => "Case impossible: conflicting unique outputs\n")
+		     | SOME(cg') => chatter 6 (fn () => showPendingCGoal (cg', lab) ^ "\n")
+	in
+	  cgOpt'
+	end
+
     (* cover (cg, w, ccs, lab, missing) = missing'
        covers ([cg1,...,cgn], w, ccs, missing) = missing'
 
@@ -1683,11 +1934,15 @@ struct
     *)
     fun cover (cg, w, ccs,  lab, missing) =
         ( chatter 6 (fn () => showPendingCGoal (cg, lab) ^ "\n");
-	  cover' (cg, w, ccs, lab, missing) )
-    and cover' (cg, w, ccs, lab, missing) =
+	  cover' (contract(cg, lab), w, ccs, lab, missing) )
+    and cover' (SOME(cg), w, ccs, lab, missing) =
         let val cands = match (cg, ccs)	(* determine splitting candidates *)
 	    val cand = selectCand cands	(* select one candidate *)
 	in split (cg, cand, w, ccs, lab, missing) end
+      | cover' (NONE, w, ccs, lab, missing) =
+	(* cg is covered by unique output inconsistency *)
+	( chatter 6 (fn () => "Covered\n");
+	  missing )
     and split (cg, NONE, w, ccs, lab, missing) =
         (* cg is covered: return missing patterns from other cases *)
         ( chatter 6 (fn () => "Covered\n");
@@ -1705,7 +1960,7 @@ struct
 	    of SOME(cases) => covers (cases, w, ccs, lab, missing)
 	     | NONE => 
 	      ( chatter 6 (fn () => "Splitting failed due to generated constraints\n");
-	        split (cg, SOME(ksn), w, ccs, lab,missing)))
+	        split (cg, SOME(ksn), w, ccs, lab, missing)))
 
     and splitWeak (cg, nil, w, ccs, lab, missing) =
         ( chatter 6 (fn () => "No weak candidates---case " ^ labToString(lab) ^ " not covered\n");

@@ -1,10 +1,12 @@
 structure Cover =
   Cover (structure Global = Global
 	 structure Whnf = Whnf
+	 structure Conv = Conv
 	 structure Abstract = Abstract
 	 structure Unify = UnifyTrail
 	 structure Constraints = Constraints
 	 structure ModeTable = ModeTable
+         structure UniqueTable = UniqueTable
 	 structure Index = Index
          structure Subordinate = Subordinate
          structure WorldSyn = WorldSyn

@@ -14,6 +14,21 @@ ps : plus (s X) Y (s Z)
 %worlds () (plus X Y Z).
 %unique plus +X +Y -1Z.
 
+le : nat -> nat -> type.
+le_refl : le X X.
+le_s : le X (s Y) <- le X Y.
+%mode le +X -Y.
+%worlds () (le X Y).
+
+pres : plus X1 X3 Y -> plus X2 X3 Y' -> le X1 X2 -> le Y Y' -> type.
+pres_refl : pres S1 S2 le_refl le_refl.
+pres_s : pres S1 (ps S2) (le_s L) (le_s L')
+	  <- pres S1 S2 L L' .
+
+%mode pres +S1 +S2 +L -L'.
+%worlds () (pres S1 S2 L L').
+%total L (pres S1 S2 L L').
+
 exp : type.
 lam : (exp -> exp) -> exp.
 app : exp -> exp -> exp.
@@ -120,7 +135,7 @@ cp_nat : tcp nat nat'.
 cp_arrow : tcp (arrow T1 T2) (arrow' T1' T2')
 	    <- tcp T2 T2' <- tcp T1 T1'.
 %worlds () (tcp T1 T2).
-%unique tcp +T -T'.
+%unique tcp +T -1T'.
 %total T1 (tcp T1 T2).
 
 % tcp is total
@@ -130,7 +145,7 @@ tcpt_nat : tcpt nat nat' cp_nat.
 tcpt_arrow : tcpt (arrow T1 T2) (arrow' T1' T2') (cp_arrow D1 D2)
 	      <- tcpt T2 T2' D2 <- tcpt T1 T1' D1.
 %worlds () (tcpt T T' D).
-%unique tcpt +T -T' -D.
+%unique tcpt +T -1T' -1D.
 %total T (tcpt T T' D).
 
 % The output coverage failure example reformulated as input coverage failure.
@@ -155,9 +170,9 @@ same : tcp T1 T1' -> tcp T1 T1''
 same_clause: {CT:tcp T1 T1'} {CT':tcp T1 T1'} same CT CT' D D.
 
 %worlds () (same CT CT' D D').
-% %covers same +CT +CT' +D -D'. fails, as it should in the absence of uniqueness knowledge
+%covers same +CT +CT' +D -D'. % fails in the absence of uniqueness knowledge
 %terminates (CT) (same CT _ _ _). 
-% %total (CT) (same CT _ _ _).  totality fails since coverage does
+%total (CT) (same CT _ _ _).  % totality succeeds only because of uniqueness
 
 preserv' : cp E E' -> of E T -> tcp T T' -> of' E' T' -> type.
 %mode preserv' +C +D -CT -D'.
@@ -199,11 +214,12 @@ pres_lam :  preserv' (cp_lam C) (of_lam D) (cp_arrow CT1 CT2) (of'_lam D')
 
 %covers preserv_aux +C +D +D1 -CT -CT1 -D' -D1'.
 %covers preserv' +C +D *CT *D'.
-% 
 %terminates (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
 % The following fails since "same" not seen to be total
-% %total (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
+% Succeeds with uniqueness contraction
+%total (C' C) (preserv_aux C _ _ _ _ _ _) (preserv' C' _ _ _).
 
+%{
 % Input coverage "%covers preserv +C +D +CT *D'." fails
 % since, in pres_lam, T1' in the hypothesis is not known to be
 % uniquely determined by the input CT1:tcp T1 T1'.
@@ -227,9 +243,9 @@ pres_lam : preserv (cp_lam C) (of_lam D) (cp_arrow CT1 CT2) (of'_lam D')
 		  {d: of x T1} {d': of' x' T1'}
 		  {p: {ct: tcp T1 T1'} preserv c d ct d'}.
 %worlds (pres_hyp) (preserv C D CT D').
-%covers preserv +C +D +CT *D'.
+% %covers preserv +C +D +CT *D'. % current fails because we do not descend into blocks
 % 
-%total C (preserv C D CT D').
+% %total C (preserv C D CT D').
 
 
 % An artificial example where coverage fails because of missing 
@@ -248,7 +264,7 @@ eqs: eq N1 N2 -> eq (s N1) (s N2).
 %total N1 (eq N1 N2).
 %unique eq *N1 +N2.
 %unique eq +N1 +N2.
-%unique eq +N1 -N2.
+%unique eq +N1 -1N2.
 
 b: nat -> type.
 %mode b +A.
@@ -265,4 +281,5 @@ t1:  t (b1 B U) (eqs U).
 % t1:  t (b1 B U) (eqs U').
 
 %worlds () (t B U).
-%covers t +B +U.
+% %covers t +B +U.  % currently fails because we do not have uniqueness of proof terms
+}%
