@@ -354,50 +354,49 @@ struct
     (* wfRCallpats
        well-formed call pattern in a reduction declaration 
      *)
-    fun wfRCallpats (L0, C0, r, mode) =
+    fun wfRCallpats (L0, C0, r) =
 	let
 	  fun makestring nil = ""
 	    | makestring (s :: nil) = s
 	    | makestring (s :: L) = s ^ " " ^ (makestring L)
 
-	  fun exists' (x, nil, _, Mo) = false
-	    | exists' (x, NONE :: L, M.Mapp (_, mS), Mo) = 
-		exists' (x, L, mS, Mo)
-	    | exists' (x, SOME y :: L, M.Mapp (M.Marg (mode, _), mS), Mo) =
-	      if x = y then 
-		  (if mode = Mo then
+	  fun exists' (x, nil, _) = false
+	    | exists' (x, NONE :: L, M.Mapp (_, mS)) = 
+		exists' (x, L, mS)
+	    | exists' (x, SOME y :: L, M.Mapp (M.Marg (mode, _), mS)) =
+	      if x = y then 		 
+		((* if mode = Mo then *)
+		 if (mode = M.Plus) orelse (M.Minus = mode) then
 		       true
 		   else 
-		       error (r, "Expected " ^ x ^ " to have " ^ M.modeToString Mo
-			      ^ " mode"))
-	      else exists' (x, L, mS, Mo)
+		       error (r, "Expected " ^ x ^ " to have " ^ " mode + or mode -"))
+	      else exists' (x, L, mS)
 
 	  (* skip (i, x, P, mS, Mode)  ignores first i argument in modeSpine mS,
 	     then returns true iff x occurs in argument list P
 	     Effect: raises Error if position of x is not input (+).
           *)
-	  fun skip (0, x, P, mS, mode) = exists' (x, P, mS, mode)
-	    | skip (k, x, P, M.Mapp (_, mS), mode) = skip (k-1, x, P, mS, mode)
+	  fun skip (0, x, P, mS) = exists' (x, P, mS)
+	    | skip (k, x, P, M.Mapp (_, mS)) = skip (k-1, x, P, mS)
 
-	  fun delete (x, (aP as (a, P)) :: C, mode) = 
+	  fun delete (x, (aP as (a, P)) :: C) = 
 	      (case M.modeLookup a 
 		 of NONE => error (r, "Expected " ^ Names.constName a
 				      ^ " to be moded")
-	          | SOME mS => if skip (I.constImp a, x, P, mS, mode)
+	          | SOME mS => if skip (I.constImp a, x, P, mS)
 				 then C
-			       else aP :: delete (x, C, mode))
-	    | delete (x, nil, mode) = error (r, "Variable " ^ x ^ " does not occur as argument")
+			       else aP :: delete (x, C))
+	    | delete (x, nil) = error (r, "Variable " ^ x ^ " does not occur as argument")
 
-	  fun wfCallpats' (nil, nil, mode) = ()
-	    | wfCallpats' (x :: L, C, mode) = 
-		wfCallpats' (L, delete (x, C, mode), mode)
+	  fun wfCallpats' (nil, nil) = ()
+	    | wfCallpats' (x :: L, C) = 
+		wfCallpats' (L, delete (x, C))
 	    | wfCallpats' _ = 
 		error (r, "Mutual argument (" ^ makestring L0
 		          ^ ") does not cover all call patterns")
 	in
-	  wfCallpats' (L0, C0, mode)
+	  wfCallpats' (L0, C0)
 	end
-
 
  (* wfred ((Red(Pred,O.O'), C), (r, rs)) = ()
 
@@ -412,15 +411,15 @@ struct
     *)
     fun wfred ((L.RedOrder(Pred,O,O'), L.Callpats C), (r, rs)) =
 	let
-	  fun wfOrder (L.Varg L ,mode) = (wfRCallpats (L, C, r, mode) ; Varg)  
-	    | wfOrder (L.Lex L, mode) = Lex(wfOrders (L, mode))
-	    | wfOrder (L.Simul L, mode) = Simul(wfOrders (L, mode))
+	  fun wfOrder (L.Varg L) = (wfRCallpats (L, C, r) ; Varg)  
+	    | wfOrder (L.Lex L) = Lex(wfOrders L)
+	    | wfOrder (L.Simul L) = Simul(wfOrders L)
 
-	  and wfOrders (nil, mode) = nil
-	    | wfOrders (O :: L, mode) = (wfOrder (O, mode)) :: (wfOrders (L, mode))
+	  and wfOrders nil = nil
+	    | wfOrders (O :: L) = (wfOrder O) :: (wfOrders L)
 	in 
 	  (uniqueCallpats (C, rs); 
-	  if  wfOrder (O, M.Minus) = wfOrder (O', M.Plus) then 
+	  if  wfOrder O = wfOrder O' then 
 	      ()
 	  else 
 	      error (r, "Reduction Order (" ^ P.ROrderToString (L.RedOrder(Pred,O,O')) ^
