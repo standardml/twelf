@@ -544,7 +544,10 @@ struct
       | install1 (fileName, (Parser.ModeDec mterms, _)) =
 	let 
 	  val mdecs = List.map ModeRecon.modeToMode mterms
-	  val _ = List.app (fn (mdec, r) => ModeSyn.installMode mdec
+	  val _ = List.app (fn (mdec as (a, _), r) => 
+	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
+			       of IntSyn.Normal => ModeSyn.installMode mdec
+			        | _ => raise ModeSyn.Error "Cannot declare modes for foreign constants")
 			    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg)))
 	          mdecs
 	  val _ = List.app (fn (mdec, r) => ModeCheck.checkMode mdec (* exception comes with location *)
