@@ -188,6 +188,8 @@
 ;;; Q: Improve tagging for %keyword declarations?
 ;;; Thu Jun 25 08:52:41 1998
 ;;; Finished major revision (version 3.0)
+;;; Fri Oct  2 11:06:15 1998
+;;; Added NT Emacs bug workaround
 
 (require 'comint)
 (require 'auc-menu) 
@@ -1087,6 +1089,18 @@ Also updates the error cursor to the current line."
   (twelf-next-error))
 
 ;;;----------------------------------------------------------------------
+;;; NT Emacs bug workaround
+;;;----------------------------------------------------------------------
+
+(defun twelf-convert-standard-filename (filename)
+  "Convert FILENAME to form appropriate for Twelf Server of current OS."
+  (cond ((eq system-type 'windows-nt)
+	 (while (string-match "/" filename)
+	   (setq filename (replace-match "\\" t t filename)))
+	 filename)
+	(t (convert-standard-filename filename))))
+
+;;;----------------------------------------------------------------------
 ;;; Communication with Twelf server
 ;;;----------------------------------------------------------------------
 
@@ -1162,10 +1176,11 @@ With prefix argument also displays Twelf server buffer."
   (if twelf-config-mode
       (twelf-server-configure (buffer-file-name) "Server OK: Reconfigured")
     (let* ((save-file (buffer-file-name))
-	   (check-file (file-relative-name save-file (twelf-config-directory))))
+	   (check-file (file-relative-name save-file (twelf-config-directory)))
+	   (check-file-os (twelf-convert-standard-filename check-file)))
       (twelf-server-sync-config)
       (twelf-focus nil nil)
-      (twelf-server-send-command (concat "loadFile " check-file))
+      (twelf-server-send-command (concat "loadFile " check-file-os))
       (twelf-server-wait displayp))))
 
 (defun twelf-buffer-substring (start end)
@@ -1764,7 +1779,9 @@ Starts a Twelf servers if necessary."
   (let* ((config-file (if (file-directory-p config-file)
                           (concat config-file "sources.cfg")
                         config-file))
+	 (config-file-os (twelf-convert-standard-filename config-file))
          (config-dir (file-name-directory config-file))
+	 (config-dir-os (twelf-convert-standard-filename config-dir))
          (config-buffer (set-buffer (or (get-file-buffer config-file)
                                         (find-file-noselect config-file))))
          config-list)
@@ -1779,14 +1796,14 @@ Starts a Twelf servers if necessary."
             (if (equal default-directory config-dir)
                 nil
               (setq default-directory config-dir)
-              (concat "OS.chDir " config-dir)))
+              (concat "OS.chDir " config-dir-os)))
            (_ (set-buffer config-buffer)))
       (cond ((not (null cd-command))
 	     (twelf-server-send-command cd-command)
 	     (twelf-server-wait nil ""
 				"Server ABORT: Could not change directory")))
       (twelf-server-send-command
-       (concat "Config.read " config-file))
+       (concat "Config.read " config-file-os))
       (twelf-server-wait nil (or ok-message "Server OK")
                        "Server ABORT: Could not be configured")
       ;; *twelf-config-buffer* should still be current buffer here
