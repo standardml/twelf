@@ -316,8 +316,13 @@ struct
        and   G |- (U @ S) [s] == U' [s'] : W'
        and   (U', s') in whnf
     *)
-    fun expandDef (Root (Def (d), S), s) = 
+    fun expandDef (Root (Def (d), S), s) =
+          (* why the call to whnf?  isn't constDef (d) in nf? -kw *)
 	  whnfRedex (whnf (constDef (d), id), (S, s))
+
+    fun whnfExpandDefW (Us as (Root (Def _, _), _)) = whnfExpandDefW (expandDef Us)
+      | whnfExpandDefW Us = Us
+    and whnfExpandDef Us = whnfExpandDefW (whnf Us)
 
     fun newLoweredEVarW (G, (Pi ((D, _), V), s)) =
         let
@@ -327,7 +332,7 @@ struct
         end
       | newLoweredEVarW (G, Vs) = newEVar (G, EClo Vs)
 
-    and newLoweredEVar (G, Vs) = newLoweredEVarW (G, whnf Vs)
+    and newLoweredEVar (G, Vs) = newLoweredEVarW (G, whnfExpandDef Vs)
 
     fun newSpineVarW (G, (Pi ((Dec (_, Va), _), Vr), s)) =
         let
@@ -337,7 +342,7 @@ struct
         end
       | newSpineVarW (G, _) = Nil
                    
-    and newSpineVar (G, Vs) = newSpineVarW (G, whnf Vs)
+    and newSpineVar (G, Vs) = newSpineVarW (G, whnfExpandDef Vs)
                    
     fun spineToSub (Nil, s) = s
       | spineToSub (App (U, S), s) = spineToSub (S, dotEta (Exp (U), s))
@@ -350,13 +355,15 @@ struct
        and G |- S[s1] : V[s2] > W  (so V1[s1] == V[s2] and V1[s1] == W)
        then G |- V'[s'] = W
     *)
+    (* FIX: this is almost certainly mis-design -kw *)
     fun inferSpine ((Nil, _), Vs) = Vs
       | inferSpine ((SClo (S, s'), s), Vs) = 
           inferSpine ((S, comp (s', s)), Vs)
       | inferSpine ((App (U, S), s1), (Pi (_, V2), s2)) =
-	  inferSpine ((S, s1), whnf (V2, Dot (Exp (EClo (U, s1)), s2)))
+	  inferSpine ((S, s1), whnfExpandDef (V2, Dot (Exp (EClo (U, s1)), s2)))
 
     (* inferCon (C) = V  if C = c or C = d or C = sk and |- C : V *)
+    (* FIX: this is almost certainly mis-design -kw *)
     fun inferCon (Const (cid)) = constType (cid)
       | inferCon (Skonst (cid)) = constType (cid) 
       | inferCon (Def (cid)) = constType (cid)
@@ -370,11 +377,12 @@ struct
        and   (U', id) in whnf and U' in head-eta-long form
     *)
     (* quite inefficient -cs *)
+    (* FIX: this is almost certainly mis-design -kw *)
     fun etaExpand' (U, (Root _, s)) = U
       | etaExpand' (U, (Pi ((D, _), V), s)) =
           Lam (decSub (D, s), 
 	       etaExpand' (Redex (EClo (U, shift), 
-				  App (Root (BVar (1), Nil), Nil)), whnf (V, dot1 s)))
+				  App (Root (BVar (1), Nil), Nil)), whnfExpandDef (V, dot1 s)))
 
     (* etaExpandRoot (Root(H, S)) = U' where H = c or H = d
 
@@ -384,6 +392,7 @@ struct
        and  G |- H @ S == U'
        and (U',id) in whnf and U' in head-eta-long form
     *)
+    (* FIX: this is almost certainly mis-design -kw *)
     fun etaExpandRoot (U as Root(H, S)) =
           etaExpand' (U, inferSpine ((S, id), (inferCon(H), id)))
 
@@ -403,6 +412,7 @@ struct
 
        Similar to etaExpand', but without recursive expansion
     *)
+    (* FIX: this is almost certainly mis-design -kw *)
     fun whnfEta (Us, Vs) = whnfEtaW (whnf Us, whnf Vs)
 
     and whnfEtaW (UsVs as (_, (Root _, _))) = UsVs
@@ -558,6 +568,7 @@ struct
     val whnf = whnf
 
     val expandDef = expandDef
+    val whnfExpandDef = whnfExpandDef
     val etaExpandRoot = etaExpandRoot
     val whnfEta = whnfEta
     val lowerEVar = lowerEVar

@@ -15,6 +15,7 @@ sig
   (* Weak head normalization *)
   val whnf : IntSyn.eclo -> IntSyn.eclo
   val expandDef : IntSyn.eclo -> IntSyn.eclo
+  val whnfExpandDef : IntSyn.eclo -> IntSyn.eclo
   val etaExpandRoot : IntSyn.Exp -> IntSyn.Exp
   val whnfEta : (IntSyn.eclo * IntSyn.eclo) -> (IntSyn.eclo * IntSyn.eclo)
   val lowerEVar : IntSyn.Exp -> IntSyn.Exp

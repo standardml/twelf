@@ -145,7 +145,7 @@ struct
   datatype Qid = Qid of string list * string
     
   fun qidToString (Qid (ids, name)) =
-        foldr (fn (id, s) => id ^ "." ^ s) name ids
+        List.foldr (fn (id, s) => id ^ "." ^ s) name ids
 
   fun validateQualName nil = NONE
     | validateQualName (l as id::ids) =

@@ -516,6 +516,7 @@ struct
 	  G'::Gs'
 	end
 
+    (* dead code under new reconstruction -kw
     (* getlevel (V) = L if G |- V : L
 
        Invariant: G |- V : L' for some L'
@@ -527,7 +528,6 @@ struct
       | getLevel (I.Lam (_, U)) = getLevel U
       | getLevel (I.EClo (U,_)) = getLevel U
 
-    (* dead code under new reconstruction -kw
     (* checkType (V) = () if G |- V : type
 
        Invariant: G |- V : L' for some L'

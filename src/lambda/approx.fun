@@ -17,15 +17,46 @@ struct
     | headConDec (I.FgnConst (_, cd)) = cd
       (* others impossible by invariant *)
 
-  (* Because approximate type reconstruction uses the pattern G |- U
-     ~:~ V ~:~ L and universe unification on L, if U is to be an
-     arbitrary input expression, there must be an internal universe
-     Hyperkind such that |- Type ~:~ Kind ~:~ Hyperkind.  The
-     Hyperkind universe is used only during the approximate phase of
-     reconstruction.  The invariants established by
-     ReconTerm.filterLevels ensure that Hyperkind will never appear
-     elsewhere. *)
+  (* The approximate language is based on the idea of erasure.  The
+     erasure of a term is defined as follows:
 
+       c- = c
+       d- = d
+       type- = type
+       kind- = kind
+       ({x:A} B)- = A- -> B-
+       ([x:A] M)- = M-    
+       (M N)- = M-
+
+       x- undefined
+       X- undefined
+
+     Note that erasure is always defined on well-typed terms at type
+     family or kind level.  Also, if G |- U1 = U2 : V and U1,U2 are at
+     type family or kind level, then U1- and U2- are defined and
+     equal.  We can define the approximate typing judgment
+             
+       G |- U ~:~ V
+                  
+     by replacing appeals to equality in the usual presentation of the
+     LF type theory with appeals to
+
+       G |- U1 = U2 ~:~ V,
+
+     which is defined to mean
+           G |- U1 ~:~ V  and  G |- U2 ~:~ V  and  U1- = U2-
+                                                         
+     This is a mutual recursion between the two judgments, just as for
+     the standard LF type theory.
+
+     There is also a typing judgment on approximate terms
+
+       |- u : v
+
+     defined in the obvious way.  If |- u : v : l then for any
+     well-formed G there are most general U, V such that G |- U : V
+     and U- = u and V- = v.  *)
+                                        
   (* The approximate language *)
 
     datatype Uni =
@@ -40,6 +71,15 @@ struct
       | CVar of Exp option ref
       | Undefined
 
+  (* Because approximate type reconstruction uses the pattern G |- U
+     ~:~ V ~:~ L and universe unification on L, if U is to be an
+     arbitrary input expression, there must be an internal universe
+     Hyperkind such that |- Type ~:~ Kind ~:~ Hyperkind.  The
+     Hyperkind universe is used only during the approximate phase of
+     reconstruction.  The invariants established by
+     ReconTerm.filterLevel ensure that Hyperkind will never appear
+     elsewhere. *)
+
     val Type = Level 1
     val Kind = Level 2
     val Hyperkind = Level 3
@@ -47,6 +87,8 @@ struct
     fun newLVar () = LVar (ref NONE)
     fun newCVar () = CVar (ref NONE)
 
+    (* whnfUni (l) = l'
+       where l = l' and l' is in whnf *)
     fun whnfUni (Next L) =
         (case whnfUni L
            of Level i => Level (i+1)
@@ -54,6 +96,8 @@ struct
       | whnfUni (LVar (ref (SOME L))) = whnfUni L
       | whnfUni L = L
 
+    (* whnf (u) = u'
+       where u = u' and u' is in whnf *)
     fun whnf (CVar (ref (SOME V))) = whnf V
       | whnf V = V
                  
@@ -68,7 +112,10 @@ struct
       fun varInsert ((U, V, L), name) = (varList := ((U, V, L), name)::(!varList))
 
       exception Ambiguous
-                   
+
+      (* getReplacementName (u, v, l, allowed) = name
+         if u : v : l
+         and u is a CVar at type family or kind level *)
       fun getReplacementName (U as CVar r, V, L, allowed) =
           (case varLookupRef r
              of SOME (_, name) => name
@@ -90,6 +137,10 @@ struct
                 in
                   try 1
                 end)
+
+      (* findByReplacementName (name) = (u, v, l)
+         if getReplacementName (u, v, l, allowed) = name was already called
+         then u : v : l *)
       fun findByReplacementName name =
           (case varLookupName name
              of SOME (UVL, _) => UVL
@@ -98,9 +149,13 @@ struct
 
   (* converting exact terms to approximate terms *)
 
+  (* uniToApx (L) = L- *)
   fun uniToApx (I.Type) = Type
     | uniToApx (I.Kind) = Kind
 
+  (* expToApx (U) = (U-, V-)
+     if G |- U : V
+     or G |- U ":" V = "hyperkind" *)
   fun expToApx (I.Uni L) =
       let
         val L' = uniToApx L
@@ -128,6 +183,9 @@ struct
     | expToApx (I.Lam (_, U)) = expToApx U
     | expToApx (I.EClo (U, _)) = expToApx U
 
+  (* classToApx (V) = (V-, L-)
+     if G |- V : L
+     or G |- V ":" L = "hyperkind" *)
   fun classToApx (V) =
       let
         val (V', L') = expToApx (V)
@@ -136,6 +194,8 @@ struct
         (V', L'')
       end
 
+  (* exactToApx (U, V) = (U-, V-)
+     if G |- U : V *)
   fun exactToApx (U, V) =
       let
         val (V', L') = classToApx (V)
@@ -150,6 +210,8 @@ struct
              end
       end
 
+  (* constDefApx (d) = V-
+     if |- d = V : type *)
   fun constDefApx d =
       (case I.sgnLookup d
          of I.ConDef (_, _, _, U, _, _) =>
@@ -167,16 +229,18 @@ struct
 
   (* converting approximate terms to exact terms *)
 
+  (* apxToUni (L-) = L *)
   fun apxToUniW (Level 1) = I.Type
     | apxToUniW (Level 2) = I.Kind
       (* others impossible by invariant *)
-
   fun apxToUni L = apxToUniW (whnfUni L)
 
-  (* apxToClass (G, V, L) = V'
+  (* apxToClass (G, v, L-, allowed) = V
      pre: L is ground and <= Hyperkind,
           and if L is Hyperkind then the target classifier
-          of V is ground *)
+          of v is ground
+          v : L-
+     post: V is most general such that V- = v and G |- V : L *)
   fun apxToClassW (G, Uni L, _ (* Next L *), allowed) =
         I.Uni (apxToUni L)
     | apxToClassW (G, Arrow (V1, V2), L, allowed) =
@@ -201,9 +265,12 @@ struct
     | apxToClassW (G, Const H, L (* Type *), allowed) =
         I.Root (H, Whnf.newSpineVar (G, (I.conDecType (headConDec H), I.id)))
       (* Undefined case impossible *)
-
   and apxToClass (G, V, L, allowed) = apxToClassW (G, whnf V, L, allowed)
 
+  (* apxToExact (G, u, (V, s), allowed) = U
+     if u : V-
+     and G' |- V : L and G |- s : G'
+     then U- = u and G |- U : V[s] and U is the most general such *)
   fun apxToExactW (G, U, (I.Pi ((D, _), V), s), allowed) =
       let
         val D' = I.decSub (D, s)
@@ -223,29 +290,37 @@ struct
              (* U must be a CVar *)
              let
                val name' = getReplacementName (whnf U, V, Level 2, allowed)
+               (* NOTE: V' differs from Vs by a Shift *)
+               (* probably could avoid the following call by removing the
+                  substitutions in Vs instead *)
                val V' = apxToClass (I.Null, V, Level 2, allowed)
                val s' = I.Shift (I.ctxLength (G))
              in
                I.Root (I.FVar (name', V', s'), I.Nil)
              end
       end
-    | apxToExactW (G, U, Vs (* an atomic type *), allowed) =
+    | apxToExactW (G, U, Vs (* an atomic type, not Def *), allowed) =
         I.newEVar (G, I.EClo Vs)
-                               
-  and apxToExact (G, U, Vs, allowed) = apxToExactW (G, U, Whnf.whnf Vs, allowed)
+  and apxToExact (G, U, Vs, allowed) = apxToExactW (G, U, Whnf.whnfExpandDef Vs, allowed)
 
   (* matching for the approximate language *)
 
   exception Unify of string
-                              
+
+    (* occurUni (r, l) = ()
+       iff r does not occur in l,
+       otherwise raises Unify *)
     fun occurUniW (r, Next L) = occurUniW (r, L)
       | occurUniW (r, LVar r') =
           if r = r' then raise Unify "Level circularity"
           else ()
       | occurUniW (r, _) = ()
-
     fun occurUni (r, L) = occurUniW (r, whnfUni L)
-          
+
+    (* matchUni (l1, l2) = ()
+       iff l1<I> = l2<I> for some most general instantiation I
+       effect: applies I
+       otherwise raises Unify *)
     fun matchUniW (Level i1, Level i2) =
           if i1 = i2 then () else raise Unify "Level clash"
       | matchUniW (Level i1, Next L2) =
@@ -265,22 +340,23 @@ struct
       | matchUniW (L1, LVar r2) =
           (occurUniW (r2, L1);
            r2 := SOME L1)
-
     fun matchUni (L1, L2) = matchUniW (whnfUni L1, whnfUni L2)
 
+    (* occur (r, u) = ()
+       iff r does not occur in u,
+       otherwise raises Unify *)
     fun occurW (r, Arrow (V1, V2)) = (occur (r, V1); occur (r, V2))
       | occurW (r, CVar r') =
           if r = r' then raise Unify "Type/kind variable occurrence"
           else ()
       | occurW (r, _) = ()
-
     and occur (r, U) = occurW (r, whnf U)
-                              
+
+    (* match (u1, u2) = ()
+       iff u1<I> = u2<I> : v for some most general instantiation I
+       effect: applies I
+       otherwise raises Unify *)
     fun matchW (Uni L1, Uni L2) = matchUni (L1, L2)
-      | matchW (Arrow (V1, V2), Arrow (V3, V4)) =
-          (match (V1, V3)
-           handle e => (match (V2, V4); raise e);
-           match (V2, V4))
       | matchW (V1 as Const H1, V2 as Const H2) =
         (case (H1, H2)
            of (I.Const(c1), I.Const(c2)) =>
@@ -298,14 +374,18 @@ struct
             | (I.NSDef(d1), _) => match (constDefApx d1, V2)
             | (_, I.NSDef(d2)) => match (V1, constDefApx d2)
               (* others cannot occur by invariant *))
-      | matchW (Const(I.Def(d1)), V2) =
-          match (constDefApx d1, V2)
-      | matchW (V1, Const(I.Def(d2))) =
+      | matchW (Arrow (V1, V2), Arrow (V3, V4)) =
+          (match (V1, V3)
+           handle e => (match (V2, V4); raise e);
+           match (V2, V4))
+      | matchW (V1 as Arrow _, Const(I.Def(d2))) =
           match (V1, constDefApx d2)
-      | matchW (Const(I.NSDef(d1)), V2) =
+      | matchW (Const(I.Def(d1)), V2 as Arrow _) =
           match (constDefApx d1, V2)
-      | matchW (V1, Const(I.NSDef(d2))) =
+      | matchW (V1 as Arrow _, Const(I.NSDef(d2))) =
           match (V1, constDefApx d2)
+      | matchW (Const(I.NSDef(d1)), V2 as Arrow _) =
+          match (constDefApx d1, V2)
       | matchW (CVar r1, U2 as CVar r2) =
           if r1 = r2 then ()
           else r1 := SOME U2
@@ -316,7 +396,6 @@ struct
           (occurW (r2, U1);
            r2 := SOME U1)
       | matchW _ = raise Unify "Type/kind expression clash"
-
     and match (U1, U2) = matchW (whnf U1, whnf U2)
 
     fun matchable (U1, U2) = (match (U1, U2); true)

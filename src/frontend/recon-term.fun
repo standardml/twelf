@@ -105,6 +105,10 @@ struct
     | headConDec (FgnConst (_, cd)) = cd
       (* others impossible by invariant *)
 
+  (* lowerType (G, (V, s)) = (G', a)
+     if   G0 |- V : type and G |- s : G0
+     and  G |- V[s] = {{G1}} a : type
+     then G' = G, G1 *)
   fun lowerTypeW (G, (Pi ((D, _), V), s)) =
       let
         val D' = decSub (D, s)
@@ -112,8 +116,9 @@ struct
         lowerType (Decl (G, D'), (V, dot1 s))
       end
     | lowerTypeW (G, Vs) = (G, EClo Vs)
-  and lowerType (G, Vs) = lowerTypeW (G, Whnf.whnf Vs)
+  and lowerType (G, Vs) = lowerTypeW (G, Whnf.whnfExpandDef Vs)
 
+  (* raiseType (G, V) = {{G}} V *)
   fun raiseType (Null, V) = V
     | raiseType (Decl (G, D), V) = raiseType (G, Pi ((D, Maybe), V))
 
@@ -632,7 +637,7 @@ struct
         Lam (D', etaExpand (elimApp (elimSub (E, shift), U1), (Vr, dot1 s)))
       end
     | etaExpandW (E, _) = E (id, Nil)
-  and etaExpand (E, Vs) = etaExpandW (E, Whnf.whnf Vs)
+  and etaExpand (E, Vs) = etaExpandW (E, Whnf.whnfExpandDef Vs)
 
   (* preserves redices *)
   fun toElim (Elim E) = E
@@ -641,14 +646,16 @@ struct
   fun toIntro (Elim E, Vs) = etaExpand (E, Vs)
     | toIntro (Intro U, Vs) = U
 
-  fun addImplicitW (G, E, Vs, 0) = (E, EClo Vs)
-    | addImplicitW (G, E, (Pi ((Dec (_, Va), _), Vr), s), i) =
+  fun addImplicit1W (G, E, (Pi ((Dec (_, Va), _), Vr), s), i (* >= 1 *)) =
       let
         val X = Whnf.newLoweredEVar (G, (Va, s))
       in
         addImplicit (G, elimApp (E, X), (Vr, Whnf.dotEta (Exp (X), s)), i-1)
       end
-  and addImplicit (G, E, Vs, i) = addImplicitW (G, E, Whnf.whnf Vs, i)
+
+      (* if no implicit arguments, do not expand Vs!!! *)
+  and addImplicit (G, E, Vs, 0) = (E, EClo Vs)
+    | addImplicit (G, E, Vs, i) = addImplicit1W (G, E, Whnf.whnfExpandDef Vs, i)
 
                                   
   (* Report mismatches after the entire process finishes -- yields better
@@ -889,7 +896,7 @@ struct
         let
           val (tm1', B1, V1) = inferExact (G, tm1)
           val E1 = toElim (B1)
-          val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnf (V1, id)
+          val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef (V1, id)
           val (tm2', B2) = checkExact (G, tm2, (Va, s),
                                        "Argument type did not match function domain type\n(Index object(s) did not match)")
           val U2 = toIntro (B2, (Va, s))
@@ -925,6 +932,9 @@ struct
                        (case Apx.whnfUni L
                           of Apx.Level 1 => "type"
                            | Apx.Level 2 => "kind"
+                             (* yes, this can happen in pathological cases, e.g.
+                                  a : type. b = a : _ _. *)
+                             (* FIX: this violates an invariant in printing *)
                            | Apx.Level 3 => "hyperkind"));
                      V'
                    end
@@ -962,8 +972,9 @@ struct
           (dec (name, tm', r), D)
         end
 
-    and checkExact1W (G, lam (dec (name, tm1, r), tm2), (Pi ((Dec (_, Va), _), Vr), s)) =
+    and checkExact1 (G, lam (dec (name, tm1, r), tm2), Vhs) =
         let
+          val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
           val D = Dec (name, V1)
@@ -974,8 +985,7 @@ struct
         in
           ((lam (dec (name, tm1', r), tm2'), Intro (Lam (D, U2)), Pi ((D, Maybe), V2)), ok2)
         end
-        (* other lam cases impossible by invariant *)
-      | checkExact1W (G, hastype (tm1, tm2), Vhs) =
+      | checkExact1 (G, hastype (tm1, tm2), Vhs) =
         let
           val ((tm2', B2, L), ok2) = unifyExact (G, tm2, Vhs)
           val V = toIntro (B2, (L, id))
@@ -984,7 +994,7 @@ struct
         in
           ((hastype (tm1', tm2'), B1, V), ok2)
         end
-      | checkExact1W (G, mismatch (tm1, tm2, location_msg, problem_msg), Vhs) =
+      | checkExact1 (G, mismatch (tm1, tm2, location_msg, problem_msg), Vhs) =
         let
           val (tm1', _, V1) = inferExact (G, tm1)
           val ((tm2', B, V), ok2) = checkExact1 (G, tm2, Vhs)
@@ -992,7 +1002,7 @@ struct
         in
           ((mismatch (tm1', tm2', location_msg, problem_msg), B, V), ok2)
         end
-      | checkExact1W (G, omitapx (U, V (* = Vhs *), L, r), Vhs) =
+      | checkExact1 (G, omitapx (U, V (* = Vhs *), L, r), Vhs) =
         let
           val V' = EClo Vhs
           val U' = Apx.apxToExact (G, U, Vhs, false)
@@ -1009,14 +1019,12 @@ struct
         in
           ((omitexact (U', V', r), Intro U', V'), true)
         end
-      | checkExact1W (G, tm, Vhs) =
+      | checkExact1 (G, tm, Vhs) =
         let
           val (tm', B', V') = inferExact (G, tm)
         in
           ((tm', B', V'), unifiableIdem (G, Vhs, (V', id)))
         end
-
-    and checkExact1 (G, tm, Vhs) = checkExact1W (G, tm, Whnf.whnf Vhs)
 
     and checkExact (G, tm, Vs, location_msg) =
         if not (!trace) then
@@ -1057,8 +1065,9 @@ struct
           end
         end
 
-    and unifyExactW (G, arrow (tm1, tm2), (Pi ((Dec (_, Va), _), Vr), s)) =
+    and unifyExact (G, arrow (tm1, tm2), Vhs) =
         let
+          val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
           val D = Dec (NONE, V1)
@@ -1068,9 +1077,9 @@ struct
           ((arrow (tm1', tm2'), Intro (Pi ((D, No), EClo (V2, shift))), L),
            ok1 andalso unifiableIdem (Decl (G, D), (Vr, dot1 s), (V2, shift)))
         end
-        (* other arrow cases impossible *)
-      | unifyExactW (G, pi (dec (name, tm1, r), tm2), (Pi ((Dec (_, Va), _), Vr), s)) =
+      | unifyExact (G, pi (dec (name, tm1, r), tm2), Vhs) =
         let
+          val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
           val D = Dec (name, V1)
@@ -1081,9 +1090,8 @@ struct
         in
           ((pi (dec (name, tm1', r), tm2'), Intro (Pi ((D, Maybe), V2)), L), ok2)
         end
-        (* other pi cases impossible *)
         (* lam impossible *)
-      | unifyExactW (G, hastype (tm1, tm2), Vhs) =
+      | unifyExact (G, hastype (tm1, tm2), Vhs) =
         let
           (* Vh : L by invariant *)
           val (tm2', _ (* Uni L *), _ (* Uni (Next L) *)) = inferExact (G, tm2)
@@ -1091,7 +1099,7 @@ struct
         in
           ((hastype (tm1', tm2'), B, L), ok1)
         end
-      | unifyExactW (G, mismatch (tm1, tm2, location_msg, problem_msg), Vhs) =
+      | unifyExact (G, mismatch (tm1, tm2, location_msg, problem_msg), Vhs) =
         let
           val (tm1', _, L1) = inferExact (G, tm1)
           val ((tm2', B, L), ok2) = unifyExact (G, tm2, Vhs)
@@ -1099,7 +1107,7 @@ struct
         in
           ((mismatch (tm1', tm2', location_msg, problem_msg), B, L), ok2)
         end
-      | unifyExactW (G, omitapx (V (* = Vhs *), L, nL (* Next L *), r), Vhs) =
+      | unifyExact (G, omitapx (V (* = Vhs *), L, nL (* Next L *), r), Vhs) =
         let
           (* cannot raise Ambiguous *)
           val L' = Apx.apxToClass (G, L, nL, false)
@@ -1107,15 +1115,13 @@ struct
         in
           ((omitexact (V', L', r), Intro V', L'), true)
         end
-      | unifyExactW (G, tm, Vhs) = 
+      | unifyExact (G, tm, Vhs) = 
         let
           val (tm', B', L') = inferExact (G, tm)
           val V' = toIntro (B', (L', id))
         in
           ((tm', B', L'), unifiableIdem (G, Vhs, (V', id)))
         end
-
-    and unifyExact (G, tm, Vs) = unifyExactW (G, tm, Whnf.whnf Vs)
 
     fun occElim (constant (H, r), os, rs, i) =
         let
