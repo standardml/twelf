@@ -115,7 +115,7 @@ struct
             Array.appi (fn (cs, Solver (solver, active)) =>
                              if !active then
                                (
-                                 active := false;
+                                 active := false;				 
                                   #reset(solver) ()
                                 )
                               else ())
@@ -179,33 +179,45 @@ struct
           ) handle Parsed info => SOME(info)
         end
 
+
+  val markCount = ref 0 : int ref
+
   (* reset the internal status of all the active solvers *)
   fun reset () =
         Array.appi (fn (_, Solver (solver, active)) =>
-                          if !active then #reset(solver) ()
+                          if !active then (markCount := 0; #reset(solver) ())
                           else ())
                    (csArray, 0, SOME(!nextCS));
           
 
   (* mark all active solvers *)
   fun mark () =
-        Array.appi (fn (_, Solver (solver, active)) =>
+        (markCount := !markCount + 1;
+	  Array.appi (fn (_, Solver (solver, active)) =>
                       if !active then #mark(solver) () else ())
-                   (csArray, 0, SOME(!nextCS))
+			(csArray, 0, SOME(!nextCS)))
 
   (* unwind all active solvers *)
-  fun unwind () =
-        Array.appi (fn (_, Solver (solver, active)) =>
-                      if !active then #unwind(solver) () else ())
-                   (csArray, 0, SOME(!nextCS))
+  fun unwind targetCount =
+    let
+      fun unwind' 0 = (markCount := targetCount)
+	| unwind' k = 
+          (Array.appi (fn (_, Solver (solver, active)) =>
+		       if !active then #unwind(solver) () else ())
+	   (csArray, 0, SOME(!nextCS));	  
+	   unwind' (k-1))
+    in 
+      unwind' (!markCount - targetCount)
+    end
 
 
   (* trail the give function *)
   fun trail f =
         let
+	  val current = !markCount
           val _ = mark ()
           val r = f()
-          val _ = unwind ()
+          val _ = unwind current
         in
           r
         end
