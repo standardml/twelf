@@ -105,6 +105,37 @@ struct
     fun isTop (Existential (Top, _)) = true
       | isTop _ = false
 
+    exception Eta
+
+    (* etaContract (U, n) = k
+
+       if lam V1... lam Vn. U =eta*=> k
+       otherwise raise exception Eta
+
+       Invariant: G, V1,..., Vn |- U : V for some G, Vi, V.
+                  U in NF
+    *)
+    fun etaContract (I.Root (I.BVar(k), S),  n) =
+        if k > n
+	  then ( etaSpine (S, n) ; k-n )
+	else raise Eta
+      | etaContract (I.Lam (D, U), n) =
+	  etaContract (U, n+1)
+      | etaContract _ = raise Eta
+
+    (* etaSpine (S, n) = ()
+       if S =eta*=> n ; n-1 ; ... ; 1 ; Nil
+       otherwise raise exception Eta
+
+       Invariant: G |- S : V1 >> V2 for some G, V1, V2
+                  S in NF
+    *)
+    and etaSpine (I.Nil, 0) = ()
+      | etaSpine (I.App (U, S), n) =
+        if etaContract (U, 0) = n
+	  then etaSpine (S, n-1)
+	else raise Eta
+      (* S[s] should be impossible *)
       
     (* isPattern (D, k, mS) = B
      
