@@ -21,6 +21,21 @@ sig
     end
   end
 
+  structure Trace :
+  sig 
+    datatype 'a Spec =			(* trace and breakpoint specification *)
+      None				(* no tracing *)
+    | Some of 'a list			(* explicit list of clauses and families *)
+    | All				(* trace all clauses and families *)
+
+    val trace : string Spec -> unit	(* trace clauses and families *)
+    val break : string Spec -> unit	(* break at clauses and families *)
+    val level : int ref			(* 0 = no tracing, 1 = default, 2 = unification *)
+
+    val status : unit -> unit		(* trace, break, and level info *)
+    val reset : unit -> unit		(* remove all tracing and breakpoints, set level to 1 *)
+  end
+
   structure Timers :
   sig
     val show : unit -> unit	      (* show and reset timers *)

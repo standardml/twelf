@@ -16,10 +16,12 @@ sig
   val formatSpine : IntSyn.dctx * IntSyn.Spine -> Formatter.format list
   val formatConDec : IntSyn.ConDec -> Formatter.format
   val formatConDecI : IntSyn.ConDec -> Formatter.format
+  val formatEqn : IntSyn.Eqn -> Formatter.format
 
   val decToString : IntSyn.dctx * IntSyn.Dec -> string
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
   val conDecToString : IntSyn.ConDec -> string
+  val eqnToString : IntSyn.Eqn -> string
 
   val evarInstToString : (IntSyn.Exp * IntSyn.name) list -> string
 

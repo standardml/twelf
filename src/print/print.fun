@@ -579,6 +579,11 @@ local
 		 Ufmt, sym "."]
       end
 
+  fun fmtEqn (I.Eqn (G, U1, U2)) =
+      F.HVbox [fmtExp (G, 0, noCtxt, (U1, I.id)),
+	       F.Break, sym "=", F.Space,
+	       fmtExp (G, 0, noCtxt, (U2, I.id))]
+
 in
 
   (* In the functions below, G must be a "printing context", that is,
@@ -591,18 +596,30 @@ in
   fun formatSpine (G, S) = fmtSpine (G, 0, 0, (S, I.id))
   fun formatConDec (condec) = fmtConDec (false, condec)
   fun formatConDecI (condec) = fmtConDec (true, condec)
+  fun formatEqn (E) = fmtEqn E
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
+  fun eqnToString (E) = F.makestring_fmt (formatEqn E)
 
   (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
      instantiations of EVars occurring in queries.  To that end, a list of
      EVars paired with their is passed, thereby representing a substitution
      for logic variables.
+
+     We always raise EVar's to the empty context.
   *)
-  fun fmtNamedEVar (U,name) =
-        F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break, formatExp (I.Null, U)]
+  fun abstractLam (I.Null, U) = U
+    | abstractLam (I.Decl (G, D), U) = abstractLam (G, I.Lam (D, U))
+
+  fun fmtNamedEVar (U as I.EVar(_,G,_,_), name) =
+      let
+	val U' = abstractLam (G, U)
+      in
+        F.HVbox [Str0 (Symbol.evar (name)), F.Space, sym "=", F.Break,
+		 formatExp (I.Null, U')]
+      end
 
   fun fmtEVarInst (nil) = [Str "Empty Substitution"]
     | fmtEVarInst ((U,name)::nil) = [fmtNamedEVar (U, name)]

@@ -96,15 +96,13 @@ struct
               any effect  sc S  might have
   *)
   and rSolve (ps', (Eq(Q), s), (G, dPool), HcHa, sc) =
-     ((* 
-       T.signal (G, T.TryClause (H));
-       T.signal (G, T.Unify (I.EClo ps', I.EClo (Q, s)));
-       *)
-      if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
-	then (T.signal (G, T.Resolved HcHa);
-	      sc I.Nil;			(* call success continuation *)
-	      true)			(* deep backtracking *)
-      else false			(* shallow backtracking *)
+      (T.signal (G, T.Unify (HcHa, I.EClo (Q, s), I.EClo ps'));
+       if Unify.unifiable (G, (Q, s), ps') (* effect: instantiate EVars *)
+	 then (T.signal (G, T.Resolved HcHa);
+	       sc I.Nil;			(* call success continuation *)
+	       true)			(* deep backtracking *)
+       else (T.signal (G, T.FailUnify HcHa);
+	     false)			(* shallow backtracking *)
       )
     | rSolve (ps', (And(r, A, g), s), dProg as (G, dPool), HcHa, sc) =
       let
@@ -121,7 +119,6 @@ struct
     | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg as (G, dPool), HcHa, sc) =
       let
 	val X = I.newEVar (G, I.EClo (A,s))
-	(* T.signal (G, T.IntroEVar (X)) *)
       in
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, HcHa,
 		(fn S => sc (I.App(X,S))))
@@ -154,7 +151,6 @@ struct
 	  | matchSig ((Hc as I.Const c)::sgn') =
 	    let
 	      val SClause(r) = sProgLookup c
-	      (* val _ = T.signal (G, T.TryClause (Hc)); *)
 	    in
 	      (* trail to undo EVar instantiations *)
 	      if
@@ -162,10 +158,10 @@ struct
 			     rSolve (ps', (r, I.id), dProg, (Hc, Ha),
 				     (fn S => sc (I.Root(Hc, S)))))
 		then (* deep backtracking *)
-		  (* T.signal (G, T.FailClauseDeep (Hc)); *)
-		  T.signal (G, T.RetryGoal (tag, Ha, I.EClo ps'))
-	      else (* T.signal (G, T.FailClauseShallow (Hc)); *)
-		  (); (* shallow backtracking *)
+		  (T.signal (G, T.RetryGoal (tag, (Hc, Ha), I.EClo ps'));
+		   ())
+	      else (* shallow backtracking *)
+		();
 	      matchSig sgn'
 	    end
 
@@ -180,17 +176,16 @@ struct
 	  | matchDProg (I.Decl (dPool', SOME(r, s, a')), k) =
 	    if a = a'
 	      then (* trail to undo EVar instantiations *)
-		((* T.signal (G, T.TryClause (I.BVar(k))); *)
-		 if
+		(if
 		   Trail.trail (fn () =>
 				rSolve (ps', (r, I.comp(s, I.Shift(k))),
 					dProg, (I.BVar(k), Ha),
 					(fn S => sc (I.Root(I.BVar(k), S)))))
 		   then (* deep backtracking *)
-		     (* T.signal (G, T.FailClauseDeep (I.BVar(k))) *)
-		     T.signal (G, T.RetryGoal (tag, Ha, I.EClo ps'))
-		 else (* T.signal (G, T.FailClauseShallow (Hc)); *)
-		   (); (* shallow backtracking *)
+		     (T.signal (G, T.RetryGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
+		      ())
+		 else (* shallow backtracking *)
+		   ();
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =

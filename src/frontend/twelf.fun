@@ -105,6 +105,8 @@ functor Twelf
    structure ClausePrint : CLAUSEPRINT
      sharing ClausePrint.IntSyn = IntSyn'
 
+   structure Trace : TRACE
+
    structure PrintTeX : PRINT
      sharing PrintTeX.IntSyn = IntSyn'
    structure ClausePrintTeX : CLAUSEPRINT
@@ -558,6 +560,22 @@ struct
       end
     end
 
+    structure Trace :
+    sig 
+      datatype 'a Spec =			(* trace specification *)
+	None				(* no tracing *)
+      | Some of 'a list			(* list of clauses and families *)
+      | All				(* trace all clauses and families *)
+
+      val trace : string Spec -> unit	(* clauses and families *)
+      val break : string Spec -> unit	(* clauses and families *)
+      val level : int ref			(* 0 = no tracing, 1 = default, 2 = unification *)
+
+      val status : unit -> unit
+      val reset : unit -> unit		(* remove all tracing and breakpoints, set level to 1 *)
+    end
+    = Trace
+
     structure Timers :
       sig
 	val show : unit -> unit		(* show and reset timers *)
@@ -624,6 +642,6 @@ struct
       end
     = Config
 
-    val version = "Twelf 1.2 R3 (optimize disabled)"
+    val version = "Twelf 1.2 R3 (with tracing)"
   end  (* local *)
 end; (* functor Twelf *)

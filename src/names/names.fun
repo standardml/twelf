@@ -403,6 +403,12 @@ struct
             | SOME(EVAR(X)) => X)
 	    (* other cases should be impossible *)
 
+    fun getEVarOpt (name) =
+        (case varLookup name
+	  of NONE => NONE
+           | SOME(EVAR(X)) => SOME(X)
+           | SOME(FVAR(X)) => NONE)
+
     (* varDefined (name) = true iff `name' refers to a free variable, *)
     (* which could be an EVar for constant declarations or FVar for queries *)
     fun varDefined (name) =

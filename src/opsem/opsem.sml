@@ -37,6 +37,7 @@ structure AbsMachine =
 structure Trace =
   Trace (structure IntSyn' = IntSyn
 	 structure Names = Names
+	 structure Whnf = Whnf
 	 structure Print = Print);
 
 structure TMachine =

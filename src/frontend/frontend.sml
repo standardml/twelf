@@ -178,5 +178,7 @@ structure Twelf =
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
 
+         structure Trace = Trace
+
 	 structure PrintTeX = PrintTeX
 	 structure ClausePrintTeX = ClausePrintTeX);
