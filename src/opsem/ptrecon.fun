@@ -244,9 +244,9 @@ struct
           of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
            | _ => *)
 	    (case Ho of 
-	            (I.pc i) => matchSig (Index.lookup (cidFromHead Ha), i)
-		  | (I.dc i) => matchDProg (dPool, i, i)
-	          | I.csolver => (case I.constStatus(cidFromHead Ha)
+	            (C.Pc i) => matchSig (Index.lookup (cidFromHead Ha), i)
+		  | (C.Dc i) => matchDProg (dPool, i, i)
+	          | C.Csolver => (case I.constStatus(cidFromHead Ha)
 			       of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
 				 | _ => raise Error (" \noracle #csc but no constraint solver defined \n")))
       end

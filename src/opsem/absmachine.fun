@@ -204,8 +204,10 @@ struct
                      rSolve (ps', (r, I.id), dp,
                              (fn S => (sc (I.Root(Hc, S)); Succeed))))
             in
-              (if (res = Succeed) then resRef := res else ());
-              if(res = Fail orelse not deterministic)
+              if (res = Succeed) 
+		then 	resRef := res
+	      else  ();
+	      if(res = Fail orelse not deterministic)
               then matchSig sgn'
               else res
 	    end

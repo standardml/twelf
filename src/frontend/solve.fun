@@ -367,10 +367,11 @@ struct
 
 
      (* bp *)
-      fun querytabled ((try, quy), Paths.Loc (fileName, r)) =
+      fun querytabled ((numSol, try, quy), Paths.Loc (fileName, r)) =
 	  let
 	    val _ = if !Global.chatter >= 3
-		      then print ("%querytabled " ^ boundToString try)
+		      then print ("%querytabled " ^ boundToString numSol 
+				  ^ boundToString try)
 		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
 	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
@@ -419,28 +420,31 @@ struct
 		   else if !Global.chatter >= 1
 			  then print "."
 			else ();
-		   case optName
-		     of NONE => ()
-		      | SOME(name) => (print ("\n reconstruct proof term from pskeleton \n");
-				       print ((IntSyn.pskeletonToString O) ^ "\n");
-		         (Timers.time Timers.ptrecon PtRecon.solve) 
-			 (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
-			  (fn (O, M) => 
-			     if !Global.chatter >= 3
-			       then print ((Timers.time Timers.printing evarInstToString)
-					   [(M, name)] ^ "\n")
-			     else ())));
-(* 		        if !Global.chatter >= 3 *)
-(* 			  then print ("Reconstruct proof term : NOT DONE YET -- SORRY\n") *)
-(* 			else (); *)
-		   if !Global.chatter >= 3
-		     (* Question: should we collect constraints in M? *)
-		     then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
-		            of NONE => ()
-			     | SOME(str) =>
-			       print ("Remaining constraints:\n"
-				      ^ str ^ "\n")
-		   else ())
+		   (case optName
+		      of NONE => ()
+		    | SOME(name) => (Timers.time Timers.ptrecon PtRecon.solve) 
+				      (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
+				       (fn (O, M) => 
+					if !Global.chatter >= 3
+					  then print ((Timers.time Timers.printing evarInstToString)
+						      [(M, name)] ^ "\n")
+					else ())));
+		      (if !Global.chatter >= 3
+			 (* Question: should we collect constraints in M? *)
+			 then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
+			   of NONE => ()
+			 | SOME(str) =>
+			     print ("Remaining constraints:\n"
+				    ^ str ^ "\n")
+		       else ());
+
+		   case numSol of 
+		     NONE => ()
+		   | SOME n => (if (!solutions = n) then 
+				  raise Done
+				else 
+				  ())
+		       )
               (* loops -- scinit will raise exception Done *)
 	      fun loop () =  (if exceeds (SOME(!stages-1),try)
 				then (print ("\n ================= " ^

@@ -472,9 +472,9 @@ struct
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
       (* %queryTabled <expected> <try> A or %query <expected> <try> X : A *)
-      | install1 (fileName, (Parser.Querytabled(try,query), r)) =
+      | install1 (fileName, (Parser.Querytabled(numSol, try,query), r)) =
         (* Solve.query might raise Solve.AbortQuery (msg) *)
-	(Solve.querytabled ((try, query), Paths.Loc (fileName, r))
+	(Solve.querytabled ((numSol, try, query), Paths.Loc (fileName, r))
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
 
@@ -973,7 +973,8 @@ struct
 		    Reduces.reset ();	(* -bp *)
 		    TabledSyn.reset ();	(* -bp *)
 		    FunSyn.labelReset ();
-		    CompSyn.sProgReset (); (* necessary? -fp *)
+		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
+		    CompSyn.detTableReset (); (*  -bp *)
                     ModSyn.reset ();
                     CSManager.resetSolvers ();
                     context := NONE

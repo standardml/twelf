@@ -42,6 +42,12 @@ struct
   | UnifyEq of IntSyn.dctx * IntSyn.Exp   (* call unify *)
              * IntSyn.Exp * AuxGoal
 
+  (* proof skeleton *)
+  datatype Flatterm = 
+    Pc of int | Dc of int  | Csolver
+
+  type pskeleton = Flatterm list  
+
   (* Representation invariants for compiled syntax:
      Judgments:
        G |- g goal   g is a valid goal in G
@@ -80,6 +86,7 @@ struct
      if  G |- A : type
          G, x:A |- r  resgoal
   *)
+
 
   (* The dynamic clause pool --- compiled version of the context *)
   (* Dynamic programs: context with synchronous clause pool *)
@@ -137,5 +144,11 @@ struct
         In (resGoalSub (r, IntSyn.dot1 s), IntSyn.EClo(A,s), goalSub (g, s))
     | resGoalSub (Exists(D, r), s) =
         Exists (IntSyn.decSub(D, s), resGoalSub (r, IntSyn.dot1 s))
+
+
+  fun pskeletonToString [] = " " 
+    | pskeletonToString ((Pc i)::O) = ("(Pc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+    | pskeletonToString ((Dc i)::O) = ("(Dc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+    | pskeletonToString (Csolver::O) = ("Cs " ^ (pskeletonToString O))
 
 end;  (* functor CompSyn *)

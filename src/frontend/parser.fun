@@ -62,7 +62,7 @@ struct
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSyn.query (* expected, try, A *)
-    | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
+    | Querytabled of int option * int option * ExtSyn.query        (* numSol, try, A *)
     | Solve of (ExtDefine.define list * string option * ExtSyn.term)
     | AbbrevDec of ExtSyn.condec
     | FreezeDec of Names.Qid list
@@ -172,11 +172,12 @@ struct
         end
       | parseStream' (LS.Cons((L.QUERYTABLED, r0), s'), sc) =
         let
-	  val (try, s2) = parseBound' (LS.expose s')
+	  val (numSol, s1) = parseBound' (LS.expose s')
+	  val (try, s2) = parseBound' (LS.expose s1)
           val (query, f3 as LS.Cons((_,r'),_)) = ParseQuery.parseQuery' (LS.expose s2)
 	  val r = ExtSyn.Paths.join (r0, r')
         in 
-          Stream.Cons ((Querytabled (try, query), r), parseStream (stripDot f3, sc))
+          Stream.Cons ((Querytabled (numSol, try, query), r), parseStream (stripDot f3, sc))
         end 
       | parseStream' (f as LS.Cons ((L.MODE, r), s'), sc) = parseMode' (f, sc)
       | parseStream' (f as LS.Cons ((L.COVERS, r), s'), sc) = parseCovers' (f, sc)

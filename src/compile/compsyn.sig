@@ -30,6 +30,12 @@ sig
   | UnifyEq of IntSyn.dctx * IntSyn.Exp   (* call unify *)
              * IntSyn.Exp * AuxGoal
 
+
+  datatype Flatterm = 
+    Pc of int | Dc of int  | Csolver
+
+  type pskeleton = Flatterm list  
+
   (* The dynamic clause pool --- compiled version of the context *)
   (* type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx *)
 

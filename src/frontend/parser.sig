@@ -29,7 +29,7 @@ sig
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSyn.query (* expected, try, A *)
-    | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
+    | Querytabled of int option * int option * ExtSyn.query        (* expected, try, A *)
     | Solve of  ExtDefine.define list * string option * ExtSyn.term
     | AbbrevDec of ExtSyn.condec
     | FreezeDec of Names.Qid list

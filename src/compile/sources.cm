@@ -6,11 +6,14 @@ Group is
   ../typecheck/sources.cm
   compsyn.sig
   compsyn.fun
+
   compile.sig
-  compile.fun
+  compile.fun 
+
   cprint.sig
   cprint.fun
 
   assign.sig
   assign.fun
+
   compile.sml

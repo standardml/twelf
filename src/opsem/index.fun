@@ -48,7 +48,7 @@ struct
    * lookup  : pointer to the i-th element in solution list
    *)
 
-  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
+  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * CompSyn.pskeleton) list,
 		 lookup: int}
 
   (* entry = (((i, G, D, U), A)) where i is the access counter     
@@ -59,7 +59,7 @@ struct
 
   type index = entry list
 
-  datatype answState = new | repeated
+  datatype answState = New | Repeated
 
   datatype Strategy = Variant | Subsumption
 
@@ -83,13 +83,14 @@ struct
   val strengthen = AbstractTabled.strengthen ;
 
   (* original query *)
-  val query : (IntSyn.dctx * IntSyn.dctx  * IntSyn.Exp * IntSyn.Sub * (IntSyn.pskeleton -> unit))
+  val query : (IntSyn.dctx * IntSyn.dctx  * IntSyn.Exp * IntSyn.Sub * (CompSyn.pskeleton -> unit))
                 option ref = ref NONE
 
   (* ---------------------------------------------------------------------- *)
 
   local
     structure I = IntSyn
+    structure C = CompSyn
     structure A = AbstractTabled
 
     (* Global Table *)
@@ -513,7 +514,7 @@ struct
 	  (* cannot happen ! *) 
 	  (print (Print.expToString(I.Null, I.EClo(A.raiseType(G,U),s))  
 		  ^ " call should always be already in the table !\n") ; 
-	   repeated)
+	   Repeated)
 	  | lookup (G, D, U, s) ((H as ((k, G', D',U'), {solutions = S, lookup = i}))::T) T' = 
 	  if variant ((Upi, I.id),
 		      (A.raiseType(concat(G', D'), U'), I.id))
@@ -523,7 +524,7 @@ struct
 	      in 	       	       
 		(* answer check *)
 		if member ((Dk, sk), S) then  
-		  repeated
+		  Repeated
 		else 
 		  (table := (rev T')@(((k, G', D', U'),
 				       {solutions = (((Dk, sk), O)::S), 
@@ -534,7 +535,7 @@ struct
 		       print (Print.expToString(I.Null, A.raiseType(Dk, I.EClo(A.raiseType(G', U'), sk)))))
 		    else 
 		      ());
-		   new)
+		   New)
 	      end
 	   else 
 	      lookup (G, D, U, s) T (H::T')
@@ -595,14 +596,14 @@ struct
 	  (* cannot happen ! *) 
 	  (print (Print.expToString(concat(G, D), I.EClo(U,s)) 
 		  ^ " call should always be already in the table !\n") ; 
-	   repeated)
+	   Repeated)
 	  | lookup ((G, D, U, s), (((k, G', D', U'), {solutions = A, lookup = i})::T), T') = 
 	  if (subsumes ((G, D, U), (G', D', U'))) then
 	    let 
 	      val (Dk, sk) = A.abstractAnswSub s
 	     in 
 	       if memberSubsumes ((G, Dk, U, sk), (G', U', A)) then
-		 repeated
+		 Repeated
 	       else 
 		 let
 		   val s' = reinstSub (G', D', I.id)
@@ -681,7 +682,7 @@ struct
 			     ^ "\n"))
 		  else 
 		    ());
-		  new 
+		  New 
 		end
 	     end 
 	  else 

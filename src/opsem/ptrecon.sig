@@ -12,7 +12,7 @@ sig
   structure CompSyn : COMPSYN
 
   exception Error of string
-  val solve     : IntSyn.pskeleton * (CompSyn.Goal * IntSyn.Sub) * CompSyn.DProg
-                  * (IntSyn.pskeleton * IntSyn.Exp -> unit) -> unit
+  val solve     : CompSyn.pskeleton * (CompSyn.Goal * IntSyn.Sub) * CompSyn.DProg
+                  * (CompSyn.pskeleton * IntSyn.Exp -> unit) -> unit
 
 end;  (* signature PTRECON *)
