@@ -14,7 +14,7 @@ sig
 
   val optimize : bool ref
 
-  val install : bool -> IntSyn.cid -> unit
+  val install : IntSyn.ConDecForm -> IntSyn.cid -> unit
 
   val compileClause: bool -> (IntSyn.Dec IntSyn.Ctx * IntSyn.Exp)
                           -> CompSyn.ResGoal

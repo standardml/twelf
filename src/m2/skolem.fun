@@ -75,9 +75,9 @@ struct
 		    val SD = I.SkoDec (name', NONE, imp, V'', L)
 		    val sk = I.sgnAdd SD
 		    val H = I.Skonst sk
-		    val _ = IndexSkolem.install H
+		    val _ = IndexSkolem.install I.Ordinary H
 		    val _ = Names.installConstName sk
-		    val _ = (Timers.time Timers.compiling Compile.install) false sk
+		    val _ = (Timers.time Timers.compiling Compile.install) I.Ordinary sk
 (*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d
 		    val _ = if !Global.chatter >= 3 

@@ -36,6 +36,8 @@ struct
     structure C = CompSyn
   in
 
+    fun notCS (I.FromCS) = false
+      | notCS _ = true
 
     datatype Duplicates = BVAR of int | FGN | DEF of int
 
@@ -337,7 +339,7 @@ struct
       end
     | compileGoalN fromCS (G, I.Pi((D as I.Dec (_, A1), I.Maybe), A2)) =
       (* A = {x:A1} A2 *)
-       if not fromCS andalso isConstraint (head (A1))
+       if notCS fromCS andalso isConstraint (head (A1))
        then raise Error "Constraint appears in dynamic clause position"
        else C.All (D, compileGoalN fromCS (I.Decl(G, D), A2))
   (*  compileGoalN _ should not arise by invariants *)
@@ -359,7 +361,7 @@ struct
       if opt andalso !optimize then
 	compileHead(G, R) (* C.Eq(R) *)
       else    
-        if not fromCS andalso isConstraint (h)
+        if notCS fromCS andalso isConstraint (h)
         then raise Error "Constraint appears in dynamic clause position"
         else C.Eq(R)
     | compileClauseN fromCS opt (G, I.Pi((D as (I.Dec(_,A1)),I.No), A2)) =
@@ -376,8 +378,8 @@ struct
     (*  compileClauseN _ should not arise by invariants *)
 
   fun compileClause opt (G, A) = 
-        compileClauseN false opt (G, Whnf.normalize (A, I.id))
-  fun compileGoal (G, A) = compileGoalN false (G, Whnf.normalize (A, I.id))
+        compileClauseN I.Ordinary opt (G, Whnf.normalize (A, I.id))
+  fun compileGoal (G, A) = compileGoalN I.Ordinary (G, Whnf.normalize (A, I.id))
 
   (* compileCtx G = (G, dPool)
 
@@ -429,6 +431,8 @@ struct
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
     | compileConDec fromCS (a, I.SkoDec(_, _, _, A, I.Type)) =
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
+    | compileConDec I.Clause (a, I.ConDef(_, _, _, _, A, I.Type)) =
+	C.sProgInstall (a, C.SClause (compileClauseN I.Clause true (I.Null, A)))
     | compileConDec _ _ = ()
 
   fun install fromCS (cid) = compileConDec fromCS (cid, I.sgnLookup cid)

@@ -10,7 +10,7 @@ sig
   val reset : unit -> unit
   val resetFrom : IntSyn.cid -> unit
 
-  val install : IntSyn.Head -> unit
+  val install : IntSyn.ConDecForm -> IntSyn.Head -> unit
 
   (* lookup a = [c1,...,cn] *)
   (* c1,...,cn are all constants with target family a *)

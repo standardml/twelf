@@ -1,0 +1,21 @@
+o    : type.
+pf   : o -> type.
+
+n    : type.
+nat  : n -> o.
+
+0    : n.
+nat0 : pf (nat 0).
+
+bar  : type        = n.
+x    : bar         = 0.
+foo  : bar -> type = [n] pf (nat n).
+
+% In the following, note that the query finds foo2 as the proof
+% witness even though foo1 precedes it.
+
+%clause foo0 : foo x = nat0.
+foo1 : foo x = nat0.
+foo2 : foo x.
+%clause foo3 : foo x.
+%query 3 * W : foo X.

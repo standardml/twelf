@@ -10,4 +10,6 @@ struct
   val maxCSid = 49
   val doubleCheck = ref true
   val unsafe = ref false
+
+  fun chPrint n s = if !chatter >= n then print (s ()) else ()
 end;  (* structure Global *)

@@ -43,11 +43,12 @@ struct
        installs c into the correct index queue
        presently ignores definitions
     *)
-    fun install (H as I.Const c) =
-        (case I.sgnLookup (c)
-	  of I.ConDec (_, _, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
+    fun install fromCS (H as I.Const c) =
+        (case (fromCS, I.sgnLookup (c))
+	  of (_, I.ConDec (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
+           | (I.Clause, I.ConDef (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
 	   | _ => ())
-      | install (H as I.Skonst c) =
+      | install fromCS (H as I.Skonst c) =
         (case I.sgnLookup (c)
 	   of I.SkoDec (_, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
 	    | _ => ())

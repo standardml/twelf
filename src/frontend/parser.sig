@@ -35,6 +35,7 @@ sig
     | AbbrevDec of ExtConDec.condec
     | FreezeDec of Names.Qid list
     | DeterministicDec of Names.Qid list  (* -rv *)
+    | ClauseDec of ExtConDec.condec (* -fp *)
     | SigDef of ModExtSyn.sigdef
     | StructDec of ModExtSyn.structdec
     | Include of ModExtSyn.sigexp

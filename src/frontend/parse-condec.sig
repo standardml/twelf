@@ -9,5 +9,6 @@ sig
 
   val parseConDec' : ExtConDec.condec Parsing.parser
   val parseAbbrev'  : ExtConDec.condec Parsing.parser
+  val parseClause' : ExtConDec.condec Parsing.parser
 
 end;  (* signature PARSE_CONDEC *)

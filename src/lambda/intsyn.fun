@@ -154,6 +154,12 @@ struct
   datatype StrDec =                     (* Structure declaration      *)
       StrDec of string * mid option
 
+  (* Form of constant declaration *)
+  datatype ConDecForm =
+    FromCS				(* from constraint domain *)
+  | Ordinary				(* ordinary declaration *)
+  | Clause				(* %clause declaration *)
+
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
   type eclo = Exp * Sub   		(* Us = U[s]                  *)

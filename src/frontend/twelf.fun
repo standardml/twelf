@@ -301,8 +301,8 @@ struct
     fun installConst fromCS (cid, fileNameocOpt) =
         let
           val _ = Origins.installOrigin (cid, fileNameocOpt)
-          val _ = Index.install (IntSyn.Const cid)
-          val _ = IndexSkolem.install (IntSyn.Const cid)
+          val _ = Index.install fromCS (IntSyn.Const cid)
+          val _ = IndexSkolem.install fromCS (IntSyn.Const cid)
           val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
           val _ = (Timers.time Timers.subordinate Subordinate.install) cid
         in
@@ -312,7 +312,7 @@ struct
     (* installConDec fromCS (conDec, ocOpt)
        installs the constant declaration conDec which originates at ocOpt
        in various global tables, including the global signature.
-       Note: if fromCS = true then the declaration comes from a Constraint
+       Note: if fromCS = FromCS then the declaration comes from a Constraint
        Solver and some limitations on the types are lifted.
     *)
     fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
@@ -320,9 +320,9 @@ struct
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = IntSyn.sgnAdd conDec
 	  val _ = (case (fromCS, !context)
-		     of (false, SOME namespace) =>
-		       Names.insertConst (namespace, cid)
-		   | _ => ())
+		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
+		      | (IntSyn.Clause, SOME namespace) => Names.insertConst (namespace, cid)
+		      | _ => ())
 	          handle Names.Error msg =>
 		    raise Names.Error (Paths.wrap (r, msg))
 	  val _ = Names.installConstName cid
@@ -336,9 +336,9 @@ struct
 	let
 	  val cid = IntSyn.sgnAdd conDec
 	  val _ = (case (fromCS, !context)
-		     of (false, SOME namespace) =>
-		       Names.insertConst (namespace, cid)
-		   | _ => ())
+		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
+		        (* (Clause, _) should be impossible *)
+		      | _ => ())
 	           handle Names.Error msg =>
 		     raise Names.Error (Paths.wrap (r, msg))
 	  val _ = Names.installConstName cid
@@ -351,7 +351,7 @@ struct
     fun installStrDec (strdec, module, r, isDef) =
         let
           fun installAction (data as (cid, _)) =
-              (installConst false data;
+              (installConst IntSyn.Ordinary data;
 	       if !Global.chatter >= 4
                  then print (Print.conDecToString (IntSyn.sgnLookup cid) ^ "\n")
                else ())
@@ -368,7 +368,7 @@ struct
     fun includeSig (module, r, isDef) =
         let
           fun installAction (data as (cid, _)) =
-              (installConst false data;
+              (installConst IntSyn.Ordinary data;
 	       if !Global.chatter >= 4
                  then print (Print.conDecToString (IntSyn.sgnLookup cid) ^ "\n")
                else ())
@@ -393,7 +393,7 @@ struct
 	   fun icd (SOME (conDec as IntSyn.BlockDec _)) = 
 	       let
 		 (* allocate new cid. *)
-		 val cid = installBlockDec false (conDec, (fileName, ocOpt), r)
+		 val cid = installBlockDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	       in
 		 ()
 	       end
@@ -403,7 +403,7 @@ struct
 		 (* val conDec' = nameConDec (conDec) *)
 		 (* should print here, not in ReconConDec *)
 		 (* allocate new cid after checking modes! *)
-		 val cid = installConDec false (conDec, (fileName, ocOpt), r)
+		 val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	       in
 		 ()
 	       end
@@ -425,7 +425,7 @@ struct
 		  (* val conDec' = nameConDec (conDec) *)
 		  (* should print here, not in ReconConDec *)
 		  (* allocate new cid after checking modes! *)
-		  val cid = installConDec false (conDec, (fileName, ocOpt), r)
+		  val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	      in
 		()
 	      end
@@ -437,6 +437,26 @@ struct
         handle Constraints.Error (eqns) =>
 	       raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
 
+      | install1 (fileName, (Parser.ClauseDec condec, r)) =
+	(* Clauses %clause c = u or %clause c : V = U or %clause c : V *)
+	(* these are like definitions, but entered into the program table *)
+	(let
+	   (* val _ = print "%clause " *)
+	   val (optConDec, ocOpt) = ReconConDec.condecToConDec (condec, Paths.Loc (fileName, r), false)
+	   fun icd (SOME (conDec)) =
+	       let
+		 val cid = installConDec IntSyn.Clause (conDec, (fileName, ocOpt), r)
+	       in
+		 ()
+	       end
+	     | icd NONE = (* anonymous definition for type-checking: ignore %clause *)
+	       ()
+	 in
+	   icd optConDec
+	 end
+	 handle Constraints.Error (eqns) =>
+	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
+	   
       (* Solve declarations %solve c : A *)
       | install1 (fileName, (Parser.Solve (defines, solve), r)) =
 	(let
@@ -448,7 +468,7 @@ struct
 	     (* should print here, not in ReconQuery *)
 	     (* allocate new cid after checking modes! *)
 	     (* allocate cid after strictness has been checked! *)
-	     val cid = installConDec false (conDec, (fileName, ocOpt), r)
+	     val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
 	   in
 	     ()
 	   end)
@@ -651,7 +671,7 @@ struct
 	  val _ = List.foldr (fn ((G1, G2), k) => FunSyn.labelAdd 
 			    (FunSyn.LabelDec (Int.toString k, FunSyn.ctxToList G1, FunSyn.ctxToList G2))) 0 GBs
 								       
-	  val cid = installConDec false (E, (fileName, NONE), r)
+	  val cid = installConDec IntSyn.Ordinary (E, (fileName, NONE), r)
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
 	  val _ = ModeSyn.installMode (cid, MS)
 	  val _ = if !Global.chatter >= 3
@@ -685,7 +705,7 @@ struct
 		  else ()
 		    
 	in
-	  (Prover.install (fn E => installConDec false (E, (fileName, NONE), r));
+	  (Prover.install (fn E => installConDec IntSyn.Ordinary (E, (fileName, NONE), r));
 	   Skolem.install La) 
 	end 
 
@@ -708,7 +728,7 @@ struct
 	  val _ = Prover.auto () handle Prover.Error msg => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
 		    
 	in
-	  Prover.install (fn E => installConDec false (E, (fileName, NONE), r))
+	  Prover.install (fn E => installConDec IntSyn.Ordinary (E, (fileName, NONE), r))
 	end 
 
       (* Establish declaration *)
@@ -938,7 +958,7 @@ struct
 	let
 	  val _ = ModeCheck.checkD (conDec, "%use", NONE)
           (* put a more reasonable region here? -kw *)
-	  val cid = installConDec true (conDec, ("", NONE), Paths.Reg (0,0))
+	  val cid = installConDec IntSyn.FromCS (conDec, ("", NONE), Paths.Reg (0,0))
 	  val _ = if !Global.chatter >= 3
 		  then print (Print.conDecToString (conDec) ^ "\n")
 		  else ()
