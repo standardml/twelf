@@ -613,13 +613,13 @@ struct
 	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)
 		handle Abstract.Error (msg)
 		          => raise Abstract.Error (Paths.wrap (r, msg))
-	val _ = case level
-	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
-		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val ocd = Paths.def (r, i, oc1, SOME(oc2))
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, i, U'', V'', level))
-		 else (Strict.check ((U'', V''), SOME(ocd));
+		 else (case level
+			 of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+		          | _ => ();
+		       Strict.check ((U'', V''), SOME(ocd));
 		       Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level)))
 		    
        val _ = if !Global.chatter >= 3
@@ -644,13 +644,13 @@ struct
 		handle Abstract.Error (msg)
 		          => raise Abstract.Error (Paths.wrap (r, msg))
 	val level = inferLevel V''
-	val _ = case level
-	          of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
-		   | _ => ()
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val ocd = Paths.def (r, i, oc1, NONE)
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, i, U'', V'', level))
-		 else (Strict.check ((U'', V''), SOME(ocd));
+		 else (case level
+			 of IntSyn.Kind => error (r, "Type families cannot be defined, only objects")
+		          | _ => ();
+		       Strict.check ((U'', V''), SOME(ocd));
 		       Names.nameConDec (IntSyn.ConDef (name, i, U'', V'', level)))
 	           
         val _ = if !Global.chatter >= 3
