@@ -1,3 +1,66 @@
 Operational Semantics, including compiler and abstract machine
 Author: Iliano Cervesato
 Modified: Jeff Polakow, Frank Pfenning
+
+----------------------------------------------------------------------
+Some notes on clause head compilation.
+
+P is clause head
+G are subgoals and quantifiers
+
+G0 |- P : type
+
+Note---D must be changed to D' in output.
+Judgment
+
+G0 ; G ; D |- U % V' => G' ; D' |- U' | E & s
+
+INPUT
+G0, G, D, U
+OUTPUT
+G', D', U', s, E
+
+INVARIANTS
+
+G0, G, D |- U valid
+G0, G', D' |- V' : type
+G0, G', D' |- U' : V' (can we achieve this?)
+G0, G', D' |- s : G0, G, D
+G0, G', D' |- E eqns
+
+
+(h is constant c or declared in D)
+G0 ; G ; D |- h : V
+G0 ; G ; D |- S % V => G' ; D' |- S' | E & s
+------
+G0 ; G ; D |- h @ S % _ => G' ; D' |- h @ S' | E & s
+
+
+G0 ; G ; D |- U % V1' => G' ; D' |- U' | E & s
+G0 ; G' ; D' |- S[s] % V2'[U'.s] => G'' ; D'' |- S' | E' & s'
+------                     ????
+G0 ; G ; D |- U;S % {x:V1'}V2' => G'' ; D'' |- U'[s'];S'
+                                  | E[s'] /\ E' & (s o s')
+
+
+G0 ; G ; D,x:V1 |- U2 % V2 => G' ; D',x:V1' |- U2' | E & s
+------
+G0 ; G' ; D |- [x:V1]U2 % {x:_}V2 => G' ; D' |- [x:V1']U2'
+                                     | {x:V1'}E & (^ o s o ^-1)
+
+(Note:
+ if G0,G',D',x:V1' |- s: G0,G,D,x:V1
+ then G0,G',D' |- ^ o s o ^-1: G0,G,D,x:V1)
+
+First occurrence of X and S ~ D, X declared in G0
+X in G impossible?
+------
+G0 ; G ; D |- X @ S % _ => G ; D |- X @ S | tt & (id)
+
+
+Second occurrence of X or S ~ D
+(^) is an incorrect substitution here!
+------
+G0 ; G ; D |- X @ S % V' => G,X':{{D}}V' ; D[^] |- X' @ D
+                         | (X @ S)[^] = X' @ D & (^)
+
