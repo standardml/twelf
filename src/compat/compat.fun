@@ -5,6 +5,7 @@ functor Compat
   (structure Array : COMPAT_ARRAY
    structure Vector : COMPAT_VECTOR
    structure Path : COMPAT_PATH
+   structure Substring : COMPAT_SUBSTRING
    structure Timer : COMPAT_TIMER
   )
   : COMPAT =
@@ -15,5 +16,6 @@ struct
     struct
       structure Path = Path
     end
+  structure Substring = Substring
   structure Timer = Timer
 end;

@@ -1335,7 +1335,7 @@ struct
                               end
                         and parseStream (sources, configs) =
                             let
-                              val line = Substring.all (TextIO.inputLine instream)
+                              val line = Compat.Substring.full (TextIO.inputLine instream)
                             in
 	                      parseLine (sources, configs) line
                             end

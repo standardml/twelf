@@ -2,6 +2,7 @@ Library
   signature COMPAT_ARRAY
   signature COMPAT_VECTOR
   signature COMPAT_PATH
+  signature COMPAT_SUBSTRING
   signature COMPAT_TIMER
   signature COMPAT
   structure Compat
@@ -30,6 +31,7 @@ is
   array.sig
   vector.sig  
   path.sig
+  substring.sig
   timer.sig
   compat.sig
   compat.fun
@@ -42,12 +44,14 @@ is
   timer-97.sml
   array-97.sml
   vector-97.sml
+  substring-97.sml
   compat-smlnj98.sml
 #else
   timer-97.sml
   array-97.sml
   vector-97.sml
   path-97.sml
+  substring-97.sml
   compat-97.sml    
 #endif
 #if defined(BASIS_2002)

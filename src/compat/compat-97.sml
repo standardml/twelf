@@ -5,4 +5,5 @@ structure Compat :> COMPAT =
   Compat (structure Array = CompatArray97
           structure Vector = CompatVector97
           structure Path = CompatPath97
+	  structure Substring = CompatSubstring97
 	  structure Timer = CompatTimer97);

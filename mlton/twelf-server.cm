@@ -4,6 +4,7 @@ Group is
 ../src/compat/array.sig
 ../src/compat/vector.sig
 ../src/compat/path.sig
+../src/compat/substring.sig
 ../src/compat/timer.sig
 ../src/compat/compat.sig
 ../src/compat/compat.fun

@@ -27,7 +27,7 @@ struct
 	val line = getLine ()
         fun triml ss = Substring.dropl Char.isSpace ss
         fun trimr ss = Substring.dropr Char.isSpace ss
-        val line' = triml (trimr (Substring.all line))
+        val line' = triml (trimr (Compat.Substring.full line))
       in
 	if line = ""
 	  then ("OS.exit", "")

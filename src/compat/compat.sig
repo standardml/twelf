@@ -9,5 +9,6 @@ sig
   sig
     structure Path : COMPAT_PATH
   end
+  structure Substring : COMPAT_SUBSTRING
   structure Timer : COMPAT_TIMER
 end;

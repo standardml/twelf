@@ -4,11 +4,13 @@ Group is
 ../src/compat/array.sig
 ../src/compat/vector.sig
 ../src/compat/path.sig
+../src/compat/substring.sig
 ../src/compat/timer.sig
 ../src/compat/compat.sig
 ../src/compat/compat.fun
 ../src/compat/array-97.sml
 ../src/compat/vector-97.sml
+../src/compat/substring-97.sml
 ../src/compat/timer-97.sml
 ../src/compat/compat-smlnj98.sml
 ../src/timing/timing.sml
