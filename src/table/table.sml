@@ -21,3 +21,5 @@ structure SparseArray =
 
 structure SparseArray2 =
   SparseArray2(structure IntTable = IntHashTable)
+
+
