@@ -10,6 +10,9 @@ Library
    signature TOMEGAPRINT
    structure TomegaPrint
 is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
    ../frontend/sources.cm
    ../stream/sources.cm
    ../tomega/sources.cm

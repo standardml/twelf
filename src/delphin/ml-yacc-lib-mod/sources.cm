@@ -19,6 +19,10 @@ structure LrParser
 
 is
 
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+
 base.sig
 join.sml
 lrtable.sml
