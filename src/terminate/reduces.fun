@@ -1,7 +1,7 @@
 (* Reduction and Termination checker *)
-(* an extended version of the file termintes.fun  *)
-(* Author: Carsten Schuerman  *)
-(* Modified: Brigitte Pientka *)
+(* revised version of deriving an order from a valid order predicate context  *) 
+(* this implementation is based on ideas from the focusing calculus *)
+(* Author: Carsten Schuermanm, Brigitte Pientka *)
 (* checks if a type family reduces and terminates
    according to the given reduction order   
    
@@ -80,14 +80,16 @@ struct
      | union (G, I.Decl(G', P)) = 
          union (I.Decl(G, P), G')
 
+   (* shifting substitutions *)
+
    (* shiftO f O = O'
     if O is an order 
       then we shift the substitutions which are associated
 	with its terms by applying f to it
     *)
 
-    fun shiftO (R.Arg ((U,us), (V,vs))) f = 
-		 R.Arg ((U, (f us)), (V, (f vs)))
+    fun shiftO (R.Arg ((U, us), (V, vs))) f = 
+	    R.Arg ((U, (f us)), (V, (f vs)))
       | shiftO (R.Lex L) f = R.Lex (map (fn O => shiftO O f) L)
       | shiftO (R.Simul L) f = R.Simul (map (fn O => shiftO O f) L)
 
@@ -97,12 +99,12 @@ struct
       | shiftP (Pi(D, P)) f = Pi(D, shiftP P f)      
 
     fun shiftCtx I.Null f = I.Null
-      | shiftCtx (I.Decl(G, P)) f =
-	  I.Decl(shiftCtx G f, shiftP P f)
+      | shiftCtx (I.Decl(RG, P)) f =
+	  I.Decl(shiftCtx RG f, shiftP P f)
 	
     (* formatting *)
 
-    fun fmtFront (G, I.Idx i) = F.Hbox [F.String "I.Idx (" , F.String (Int.toString i) , F.String ")"]
+  fun fmtFront (G, I.Idx i) = F.Hbox [F.String "I.Idx (" , F.String (Int.toString i) , F.String ")"]
       | fmtFront (G, I.Exp e) = F.Hbox [F.String "I.Exp (" ,Print.formatExp(G, e) , F.String ")"]
       | fmtFront (G, I.Undef) = F.Hbox [F.String "I.Undef"]
 
@@ -119,17 +121,25 @@ struct
 		  fmtSubst (G, S), F.String " )"]
 
 
+    fun fmtSpine (G, I.Nil) = F.Hbox [F.String " I.Nil" ]
+      | fmtSpine (G, I.App(U, spine)) = 
+          F.Hbox [F.String "I.App ( ", Print.formatExp(G, U), F.String ", ", 
+		  fmtSpine (G, spine), F.String " )" ]
+      | fmtSpine (G, I.SClo (spine, S)) = 
+	  F.Hbox [F.String "I.SClo ( ", fmtSpine (G, spine), F.String ", ", 
+		  fmtSubst (G, S), F.String " )"]
+
     fun fmtOrder (G, O) =
         let
-	  fun fmtOrder' (R.Arg (Us as (U, s), Vs)) =
+	  fun fmtOrder' (R.Arg (Us as (U, s), Vs as (V, s'))) =
 	        F.Hbox [F.String "(", Print.formatExp (G, I.EClo Us), F.String ")"]
 	    | fmtOrder' (R.Lex L) =
 		F.Hbox [F.String "{", F.HOVbox0 1 0 1 (fmtOrders L), F.String "}"]
 	    | fmtOrder' (R.Simul L) =
 		F.Hbox [F.String "[", F.HOVbox0 1 0 1 (fmtOrders L), F.String "]"]
 	  
-	  and fmtOrders nil = nil
-	    | fmtOrders (O :: nil) = fmtOrder' O :: nil
+	  and fmtOrders [] = []
+	    | fmtOrders (O :: []) = fmtOrder' O :: []
 	    | fmtOrders (O :: L) = fmtOrder' O :: F.Break :: fmtOrders L
 	in
 	  fmtOrder' O
@@ -154,6 +164,43 @@ struct
 	F.makestring_fmt(fmtPredicate (G, P) )
       | fmtRGCtx (G, I.Decl(RG, P)) = 
 	F.makestring_fmt(fmtPredicate (G, P)) ^ " ," ^ fmtRGCtx(G, RG)
+
+    (* substitute (G, Q, M, X, N, sc) = M'
+
+         M[X]    and 
+         M' = M[y]
+     *)
+    fun subst (G, M as ((U, us), (V, vs)), I.BVar n , N) = 
+      let
+	fun shifts (0, s) = s
+	  | shifts (n, s) = shifts(n-1, I.Dot(I.Idx (n), s))
+	val s' = shifts (n - 1, I.Dot(I.Exp(N), I.Shift n))	    
+      in 
+	((U, I.comp(us, s')), (V, I.comp(vs, s')))
+      end 
+
+
+    fun substO (G, R.Arg UsVs, X, N) = R.Arg (subst (G, UsVs, X, N))
+      | substO (G, R.Lex L, X, N) = R.Lex (map (fn O => substO (G, O, X, N)) L)
+      | substO (G, R.Simul L, X, N) = R.Simul (map (fn O => substO (G, O, X, N)) L)
+         
+    fun substP (G, Eq(O, O'), X, N) = 
+          Eq(substO (G, O, X, N), substO(G, O', X, N))
+      | substP (G, Less (O, O'), X, N) = 
+          Less(substO (G, O, X, N), substO(G, O', X, N))
+      | substP (G, Leq (O, O'), X, N) = 
+          Leq(substO (G, O, X, N), substO(G, O', X, N))
+      | substP (G, Pi(D as I.Dec(_, V), P'), X, N) = 
+	  Pi(D, substP (G, P', X, N))
+
+    fun substCtx (G, TG, X, N) = 
+      let 
+	fun substCtx' (TG, I.Null, _, _) = TG
+	  | substCtx' (TG, I.Decl(TG', P), X, N) = 
+  	      substCtx' (I.Decl(TG, substP (G, P, X, N)), TG', X,  N)
+      in 
+       substCtx' (I.Null, TG, X, N)
+      end
 
     (* select (c, (S, s)) = P
       
@@ -231,6 +278,25 @@ struct
         Conv.conv (Vs, Vs') andalso  
 	Conv.conv (Us, Us') 
 
+    (* eq (G, ((U, s1), (V, s2)), (U', s'), sc) = B
+     
+       Invariant:
+       B holds  iff  
+            G |- s1 : G1   G1 |- U : V1
+       and  G |- s2 : G2   G2 |- V : L
+       and  G |- U[s1] : V[s2] 
+       and  G |- s' : G3  G3 |- U' : V'
+       and  U[s1] is unifiable with to U'[s']
+       and  all restrictions in sc are satisfied
+       and V[s2] is atomic
+       and only U'[s'] contains EVars
+    *)
+    fun eq (G, (Us, Vs), (Us', Vs'), sc) = 
+      CSManager.trail (fn () =>
+		       Unify.unifiable (G, Vs, Vs')
+		       andalso Unify.unifiable (G, Us, Us')
+		       andalso sc ())
+
     (* init () = true 
 
        Invariant:
@@ -240,6 +306,10 @@ struct
 
     fun isUniversal (Universal) = true
       | isUniversal (Existential) = false
+
+    fun isExistential (Universal) = false
+      | isExistential (Existential) = true
+
 
     (* isParameter (Q, X) = B
 
@@ -254,494 +324,227 @@ struct
     and isParameterW (Q, Us) = 
         isUniversal (I.ctxLookup (Q, Whnf.etaContract (I.EClo Us)))
 	handle Whnf.Eta => isFreeEVar (Us)
-
-    (* isFreeEVar (Us) = true
+ 
+   (* isFreeEVar (Us) = true
        iff Us represents a possibly lowered uninstantiated EVar.
 
        Invariant: it participated only in matching, not full unification
     *)
-    and isFreeEVar (I.EVar (_, _, _,ref nil), _) = true   (* constraints must be empty *)
+    and isFreeEVar (I.EVar (_, _, _,ref []), _) = true   (* constraints must be empty *)
       | isFreeEVar (I.Lam (D, U), s) = isFreeEVar (Whnf.whnf (U, I.dot1 s))
       | isFreeEVar _ = false
 
-    (* For functions: lt, LtW, LtSpine, eq, le, leW *)
-    (* first argument pair (UsVs) must be atomic! *)
-    (* For all functions below: (UsVs) may not contain any EVars *)
+    (* isAtomic (G, X) = true 
+       Invariant: 
+       If G |- X : V
+       and G : Q
+       then B holds iff X is an atomic term which is not a parameter
 
-    (* lt (G, Q, ((U, s1), (V, s2)), (U', s'), sc) = B
-     
-       Invariant:
-       B holds  iff  
-            G : Q
-       and  G |- s1 : G1   G1 |- U : V1
-       and  G |- s2 : G2   G2 |- V : L
-       and  G |- U[s1] : V [s2] 
-       and  G |- s' : G3  G3 |- U' : V'
-       and  U[s1] is a strict subterm of U'[s']
-       and  sc is a constraint continuation representing restrictions on EVars
-       and  V[s2] atomic
-       and  only U'[s'] contains EVars
-    *)
-    and lt (G, Q, UsVs, UsVs', sc) = 
-	ltW (G, Q, UsVs,Whnf.whnfEta UsVs' , sc)
-
-    and ltW (G, Q, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc) = 
-	  ltSpine (G, Q, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc) 
-      | ltW (G, Q, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc) = 
-	  let 
-	    val I.Dec (_, V') = I.ctxDec (G, n)
-	  in
-	    ltSpine (G, Q, (Us, Vs), ((S', s'), (V', I.id)), sc)
-	  end
-      | ltW (G, Q, _, ((I.EVar _, _), _), _) = false
-      | ltW (G, Q, ((U, s1), (V, s2)), 
-	     ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
-	      (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) =
-          if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
-	    let  (* enforce that X is only instantiated to parameters *) 
-	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      val sc' = fn () => (isParameter (Q, X); sc ())    
-	    in
-	      lt (G, Q, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X), s1')), 
-		   (V', I.Dot (I.Exp (X), s2'))), sc')
-	    end
-	  else
-	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
-	      let 
-		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      in
-		lt (G, Q, ((U, s1), (V, s2)), 
-		    ((U', I.Dot (I.Exp (X), s1')), 
-		     (V', I.Dot (I.Exp (X), s2'))), sc)
-	      end
-	    else false  (* possibly redundant if lhs always subordinate to rhs *)
-
-    and ltSpine (G, Q, (Us, Vs), (Ss', Vs'), sc) = 
-          ltSpineW (G, Q, (Us, Vs), (Ss', Whnf.whnf Vs'), sc) 
-
-    and ltSpineW (G, Q, (Us, Vs), ((I.Nil, _), _), _) = false
-      | ltSpineW (G, Q, (Us, Vs), ((I.SClo (S, s'), s''), Vs'), sc) =
-          ltSpineW (G, Q, (Us, Vs), ((S, I.comp (s', s'')), Vs'), sc)
-      | ltSpineW (G, Q, (Us, Vs), ((I.App (U', S'), s1'), 
-				   (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), sc) = 
-	  le (G, Q, (Us, Vs), ((U', s1'), (V1', s2')), sc) orelse 
-	  ltSpine (G, Q, (Us, Vs), 
-		   ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc)
-
-
-    (* eq (G, ((U, s1), (V, s2)), (U', s'), sc) = B
-     
-       Invariant:
-       B holds  iff  
-            G |- s1 : G1   G1 |- U : V1
-       and  G |- s2 : G2   G2 |- V : L
-       and  G |- U[s1] : V[s2] 
-       and  G |- s' : G3  G3 |- U' : V'
-       and  U[s1] is unifiable with to U'[s']
-       and  all restrictions in sc are satisfied
-       and V[s2] is atomic
-       and only U'[s'] contains EVars
-    *)
-    and eq (G, (Us, Vs), (Us', Vs'), sc) = 
-        CSManager.trail (fn () =>
-		     Unify.unifiable (G, Vs, Vs')
-		     andalso Unify.unifiable (G, Us, Us')
-		     andalso sc ())
-
-    (* le (G, Q, ((U, s1), (V, s2)), (U', s'), sc) = B
-     
-       Invariant:
-       B holds  iff  
-            G : Q
-       and  G |- s1 : G1   G1 |- U : V1
-       and  G |- s2 : G2   G2 |- V : L
-       and  G |- U[s1] : V[s2] 
-       and  G |- s' : G3  G3 |- U' : V'
-       and  U[s1] is a equal to or a subterm of U'[s']
-       and  sc is a constraint continuation representing restrictions on EVars
-       and  V[s2] is atomic
-       and only U'[s'] contains EVars
-    *)
-    and le (G, Q, UsVs, UsVs', sc) = 
-	eq (G, UsVs, UsVs', sc)
-	orelse 
-	leW (G, Q, UsVs, Whnf.whnfEta UsVs', sc)
-
-    and leW (G, Q, ((U, s1), (V, s2)), 
-	     ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
-	      (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) =
-	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *)
-	  then 
-	    let
-	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      (* enforces that X can only bound to parameter or remain uninstantiated *)
-	      val sc' = fn () => (isParameter (Q, X) andalso sc ())
-	    in                         
-	      le (G, Q, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X), s1')), 
-		   (V', I.Dot (I.Exp (X), s2'))), sc')
-	    end
-	else
-	  if Subordinate.below  (I.targetFam V1', I.targetFam V)
-	    then
-	      let 
-		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      in
-		le (G, Q, ((U, s1), (V, s2)), 
-		    ((U', I.Dot (I.Exp (X), s1')), 
-		     (V', I.Dot (I.Exp (X), s2'))), sc)
-	      end
-	  else false  (* impossible, if additional invariant assumed (see ltW) *)
-      | leW (G, Q, (Us, Vs), (Us', Vs'), sc) = 
-	  lt (G, Q, (Us, Vs), (Us', Vs'), sc) 
-	      
-
-    (* -bp *)
-
-    (* deriveEq (G, Q, RG, RG', Rpi, ((U, s), (V, s')), ((U1, s1), (V1, s1')), sc) = B
-     
-     Invariant:
-     B holds iff
-           G : Q
-       and G |- s : G''     G'' |- U : V'
-       and G |- s' : G'     G'  |- V : L
-       and G |- U[s] : V[s']
-       and G |- s1 : G3     G3 |- U1 : V1'
-       and G |- s1': G4     G4 |- V1 : L'
-       and G |- RG and G |- RG' and G |- Rpi
-       and RG subset of RG',	 
-       and RG |- U[s] = U1[s1] 
-       and RG', Rpi |- U[s] = U1[s1] 
-       and sc is a constraint continuation representing restrictions on EVars
-     
-    *)
-  
-    and deriveEq (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc) = 
-	let
-	  val (Us, Vs) =  Whnf.whnfEta UsVs
-	in
-	    eq (G, UsVs, U1sV1s, sc) 
-	  orelse  
-	    deriveEq' (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc)
-	  orelse
-	   (let val _ = (if (!Global.chatter) >= 5 then 
-			  print ("\n deriveEqSbt " ^ fmtRGCtx(G, RG) ^ " |- " ^  
-				 F.makestring_fmt (
-				  fmtPredicate(G, Eq(R.Arg UsVs, R.Arg U1sV1s)))
-				 ^"\n")
-			else 
-			  ())
-	    in 
-	      deriveEqSbt (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc)
-	    end)
-	end
-
-    and deriveEqSbt (G, Q, RG, RG', Rpi, UsVs, UsVs', sc) = 
-        let 
-	  val (Us, Vs) = Whnf.whnfEta UsVs 
-	  val (Us', Vs') = Whnf.whnfEta UsVs'
-	  val _ = (if (!Global.chatter) >= 5 then 
-		     print ("\n deriveEqSbt " ^ fmtRGCtx(G, RG) ^ " |- " ^  
-			    F.makestring_fmt(fmtPredicate(G, Eq(R.Arg UsVs, R.Arg UsVs'))) ^"\n")
-		   else 
-		     ())
-	in 
-	  case (Us, Us') of
-	    ((I.Root (I.Const c, S'), s'), (I.Root (I.Const c1, S1'), s1')) => 
-	      if c = c1 then 
-		((if (!Global.chatter) >= 5 then 
-		    (print ("heads are const. and they are equal \n");
-		     print ("\n derive " ^ 
-			    F.makestring_fmt 
-			    (fmtPredicate(G, Eq(R.Arg (Us, Vs), R.Arg (Us', Vs')))) ^"\n"))
-		  else 
-		    ());
-		  deriveEqSpine (G, Q, RG, RG', Rpi, 
-				 ((S', s'),(I.constType c, I.id)), 
-				 ((S1', s1'),(I.constType c1, I.id)), sc))
-	      else 
-		false
-	      | ((I.Root (I.BVar c, S'), s'),(I.Root (I.BVar c1, S1'), s1')) => 
-		let 
-		  val I.Dec (_, V') = I.ctxDec (G, c)
-		  val I.Dec (_, V1') = I.ctxDec (G, c1)
-		  val _ =  (if (!Global.chatter) >= 5 then 
-			      print ("heads are bound vars. \n")
-			    else 
-			      ())
-		in
-		  (c = c1) andalso 
-		  deriveEqSpine (G, Q, RG, RG', Rpi,((S', s'), (V', I.id)), ((S1', s1'), (V1', I.id)), sc)
-		end 
-	      | ((I.Lam (D as I.Dec (_, V1'), U'), s1'), (I.Lam (D' as I.Dec (_, V1''), U''), s1'')) => 
-		let
-		  val (I.Pi ((I.Dec (_, V2'), _), V'), s2') = Vs
-		  val (I.Pi ((I.Dec (_, V2''), _), V''), s2'') = Vs'
-		  val (G', Q') = (I.Decl (G, N.decLUName (G, I.decSub (D, s1'))),
-				  I.Decl (Q, Universal))
-		  val X = I.newEVar (G', I.EClo (V1'', s1'')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		  val sc' = fn () => (isParameter (Q', X); sc ())    
-		  val newUsVs = ((U', I.dot1 s1'), (V', I.dot1 s2'))
-		  val newUsVs' = ((U'', I.Dot (I.Exp(X), I.comp(s1'', I.shift))), 
-				  (V'', I.Dot (I.Exp(X), I.comp(s2'', I.shift))))
-		  val _ = (if (!Global.chatter) >= 5 then 
-			     print ("\n to show deriveEqSbt lam case: " ^ fmtRGCtx(G, Rpi) ^ " |- " ^  
-				    (F.makestring_fmt
-				     (fmtPredicate(G', Eq (R.Arg newUsVs, R.Arg newUsVs')))))
-			   else 
-			     ())
-		in
-		  focusPi (G', Q', RG', Rpi, Eq (R.Arg newUsVs, R.Arg newUsVs'), sc') 
-		end 
-  	      | _ => false
-	end 
-    and deriveEqSpine(G, Q, RG, RG', Rpi, (Us, Vs), (U1s, V1s1), sc) = 
-          deriveEqSpineW (G, Q, RG, RG', Rpi, (Us, (Whnf.whnf Vs)), (U1s, Whnf.whnf V1s1), sc)
-
-    and deriveEqSpineW (G, Q, RG, RG', Rpi, ((I.Nil, s'), Vs'), ((I.Nil, s1'), V1s), sc) = sc()
-      | deriveEqSpineW (G, Q, RG, RG', Rpi, ((I.SClo (S, s'), s''), Vs' as (V, s)), SV1s, sc) = 
-          deriveEqSpine (G, Q, RG, RG', Rpi, ((S, I.comp (s', s'')), Vs'), SV1s, sc)
-
-      | deriveEqSpineW (G, Q, RG, RG', Rpi, SVs, ((I.SClo (S, s'), s''), Vs' as (V, s)), sc) = 
-	   deriveEqSpine (G, Q, RG, RG', Rpi, SVs, ((S, I.comp (s', s'')), Vs'), sc)
-
-       | deriveEqSpineW (G, Q, RG, RG', Rpi, ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')),
-			((I.App (U'', S''), s1''), (I.Pi ((I.Dec (_, V1''), _), V2''), s2'')), sc)= 
-	   deriveEq (G, Q, RG, RG', Rpi, ((U', s1'), (V1', s2')), ((U'', s1''), (V1'', s2'')), sc)
-	   andalso
-	   deriveEqSpine (G, Q, RG, RG', Rpi, ((S',s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))),
-			 ((S'',s1''), (V2'', I.Dot (I.Exp (I.EClo (U'', s1'')), s2''))), sc)
-
-      | deriveEqSpineW (G, Q, RG, RG', Rpi, _, _, sc) = (print "\n false " ; false)
-      
-      
-    and	deriveEq' (G, Q, I.Null, RG', Rpi, UsVs, U1sV1s, sc) = false
-      | deriveEq' (G, Q,
-		  I.Decl(RG, Eq(R.Arg UsVs', R.Arg U1sV1s')), 
-                  RG', Rpi, UsVs, U1sV1s, sc) = 
-        let 
-	  val _ = if (!Global.chatter) >= 5 then 
-	              (print (" deriveEq' \n");
-		       print (" ctx : " ^ fmtRGCtx (G, I.Decl(RG, Eq(R.Arg UsVs', R.Arg U1sV1s'))) 
-			      ^ " |- " ^ F.makestring_fmt 
-			      (fmtPredicate(G,Eq(R.Arg UsVs, R.Arg U1sV1s))) ^  "\n");
-		       fmtDerive (G, Eq(R.Arg UsVs', R.Arg U1sV1s'),
-				  Eq(R.Arg UsVs, R.Arg U1sV1s)))
-		  else 
-		    ()
-	  val (Us',Vs') = Whnf.whnfEta UsVs'
-	  val (U1s', V1s') = Whnf.whnfEta U1sV1s'
-	  val (Us, Vs) = Whnf. whnfEta UsVs
-	  val (U1s, V1s) = Whnf.whnfEta U1sV1s
-	in
-	   (eq (G, (Us', Vs'), UsVs, sc) andalso                (* identity *)
-	   (eq (G, (U1s', V1s'), U1sV1s, sc)))  	     
-	  orelse
-	  (eq (G, (U1s', V1s'), UsVs, sc) andalso              (* reflexivity *)
-	   (eq (G, (Us', Vs'), U1sV1s, sc)))
-	  orelse
-	  (eq (G, (U1s', V1s'), U1sV1s, sc) andalso            (* transitivity *)
-	   deriveEq (G, Q, RG', RG', Rpi, UsVs, (Us', Vs'), sc))
-	  orelse
-	  (eq (G, (Us', Vs'), U1sV1s, sc) andalso              (* transitivity *)
-	   deriveEq (G, Q, RG, RG', Rpi, UsVs, (U1s', V1s'), sc))
-	  orelse
-	  deriveEq (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc)
-	(* bp Mon Jan 24 13:39:28 2000 - otherwise we might end up in an infinite loop 
-	   if it should fail
-	 deriveEq (G, Q, 
-	 RG, I.Decl(RG', Eq(R.Arg UsVs', R.Arg U1sV1s')), UsVs, U1sV1s, sc)
-	 *)
-	end
-
-      | deriveEq' (G, Q, I.Decl(RG, Less(R.Arg UsVs', R.Arg U1sV1s')), 
-		   RG', Rpi, UsVs, U1sV1s, sc) = 
-	deriveEq' (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc) 
-
-    (* deriveLt (G, Q, RG, RG', A, C , sc) = B
-
-     check if A < C is derivable in RG'
-
+      (* -bp  not sure, if this is right ... *)
      *)
-    
-    and deriveLt (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc) =
-	  (* A < B by subterm ordering *)
-	   (lt (G, Q, UsVs, U1sV1s, sc) 
-	    orelse 
-	    deriveLt' (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc))
+    fun isAtomic(G, Q, Us) = isAtomicW (G, Q, Whnf.normalize Us)
+    and isAtomicW (G, Q, (X as (I.Root (I.Const c, I.Nil)))) = true
+      | isAtomicW (G, Q, (X as (I.Root (I.BVar n, I.Nil)))) =
+          true
+      | isAtomicW (G, Q, (X as (I.Root (I.BVar n, S)))) = 
+	  isExistential(I.ctxLookup (Q, n))
+      | isAtomicW (G, Q, (X as (I.EClo _))) = true   (* existential var *)
+      | isAtomicW (G, Q, _) = false
 
-    and deriveLt' (G, Q, I.Null, RG', Rpi, UsVs, U1sV1s, sc) = false
-      | deriveLt' (G, Q,I.Decl(RG, Less(R.Arg UsVs', R.Arg U1sV1s')), RG', Rpi, UsVs, U1sV1s, sc) = 
-          let 
-	    val _ = if (!Global.chatter) >= 5 then 
-	               fmtDerive (G, Less(R.Arg UsVs', R.Arg U1sV1s'), Less(R.Arg UsVs, R.Arg U1sV1s))
-		    else 
-		      ()
-	    val (U1s', V1s') = Whnf.whnfEta U1sV1s'
-	    val (Us, Vs) =  Whnf.whnfEta UsVs
-	    val (Us', Vs') =  Whnf.whnfEta UsVs'
-	  in 
-            (*     
-	       ---------------------------
-	       G | Q | RG, A < B |- A < B  *)
-	    (eq (G, (Us, Vs),(Us', Vs'), sc)  andalso
-	     eq (G, (U1s', V1s'), U1sV1s, sc))
-	  orelse
-	    (* B' <= B  (G | Q | RG |- C < A  or  G | Q | RG |- C = A)
-	      --------------------------------------------------------------  
- 	                G | Q | RG, A < B' |- C < B    
-             *)
-	    ( lt (G, Q, (U1s', V1s') , U1sV1s, sc) 
-	     andalso
-	     (deriveLt (G, Q, RG', RG', Rpi, UsVs,(Us', Vs') , sc)   orelse 
-	      deriveEq (G, Q, RG', RG', Rpi, UsVs, (Us', Vs'), sc)))
-	  orelse
-	    (eq (G,(U1s', V1s') , U1sV1s, sc) 
-	     andalso
-	     (deriveLt (G, Q, RG', RG', Rpi, UsVs,(Us', Vs') , sc)  orelse 
-	      deriveEq (G, Q, RG', RG', Rpi, UsVs, (Us', Vs'), sc)))
-	  orelse
-	  deriveLt (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc) 
+    fun AtomicNotP (G, Q, Us as (U, s)) = 
+	isAtomic(G, Q, Us) andalso not(isParameter(Q, I.EClo(Us)))
 
-	  end
-      | deriveLt' (G, Q, I.Decl(RG, Eq(R.Arg UsVs', R.Arg U1sV1s')), RG', Rpi, UsVs, U1sV1s, sc) =
+    fun isActiveL (Less (R.Lex O, R.Lex O')) = true
+      | isActiveL (Less (R.Simul O, R.Simul O')) = true
+      | isActiveL (Less (R.Arg _, R.Arg ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)))) = true
+      | isActiveL (Less (R.Arg _, R.Arg (Us' as (I.Root _, s'), Vs'))) = true
+      | isActiveL (Leq (R.Arg _, R.Arg ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)))) = true
+      | isActiveL (Leq (R.Lex O, R.Lex O')) = true
+      | isActiveL (Leq (R.Simul O, R.Simul O')) = true
+      | isActiveL (Eq (R.Lex _, R.Lex _)) = true
+      | isActiveL (Eq (R.Simul _, R.Simul _)) = true
+      | isActiveL (Eq (R.Arg ((I.Lam _, _), _), R.Arg ((I.Lam _, _),_ ))) = false 
+      | isActiveL (Eq (R.Arg UsVs, R.Arg UsVs')) = true
+      | isActiveL (Pi (D, P)) = false
+(*      | isActiveL _ = true *)
+
+    (* ltRA (G, Q, TG, PG, O, O', sc) = B' *)
+    fun ltRA (G, Q, TG, PG, UsVs, UsVs', sc) = 
+	 ltRAW (G, Q, TG, PG, Whnf.whnfEta UsVs, UsVs', sc) 
+
+    and ltRAW (G, Q, TG, PG, ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)), 
+	      ((U', s1'), (V', s2')), sc) = 
+	ltRA (I.Decl (G, N.decLUName (G, I.decSub (D, s2))),
+	     I.Decl (Q, Universal), shiftCtx TG (fn s => I.comp(s, I.shift)), 
+	      shiftCtx PG (fn s => I.comp(s,I.shift)),
+	     ((U, I.dot1 s1), (V, I.dot1 s2)), 
+	     ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift))), sc)
+      | ltRAW (G, Q, TG, PG, UsVs, UsVs' ,sc) = 
+	(* UsVs any term of base type *)
+	focusL (G, Q, TG, PG, Less(R.Arg UsVs, R.Arg UsVs'), sc)
+
+    (* leRA (G, Q, TG, PG, O, O', sc) = B' *)
+    and leRA (G, Q, TG, PG, UsVs, UsVs', sc) = 
+	leRAW (G, Q, TG, PG, Whnf.whnfEta UsVs, UsVs', sc)
+    and leRAW (G, Q, TG, PG, ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)), 
+	      ((U', s1'), (V', s2')), sc) = 
+	leRA (I.Decl (G, N.decLUName (G, I.decSub (D, s2))),
+	     I.Decl (Q, Universal), shiftCtx TG (fn s => I.comp(s,I.shift)),
+	      shiftCtx PG (fn s => I.comp(s,I.shift)),  
+	     ((U, I.dot1 s1), (V, I.dot1 s2)), 
+	     ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift))), sc)
+      | leRAW (G, Q, TG, PG, UsVs, UsVs' ,sc) = 
+	(* UsVs any term of base type *)
+	focusL (G, Q, TG, PG, Leq(R.Arg UsVs, R.Arg UsVs'), sc)
+
+    (* eqRA (G, Q, TG, PG, O, O', sc) = B' 
+       O, O' need to be structurally equal *)
+    and eqRA (G, Q, TG, PG, UsVs as (Us, Vs), UsVs' as (Us', Vs'), sc) = 
+        eqRAW (G, Q, TG, PG, Whnf.whnfEta UsVs, Whnf.whnfEta UsVs', sc)
+
+    and eqRAW (G, Q, TG, PG, (Us as (I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+			      Vs as (I.Pi ((I.Dec (_, V2'), _), V'), s2')), 
+	     (Us' as (I.Lam (D' as I.Dec (_, V1''), U''), s1''), 
+	      Vs' as (I.Pi ((I.Dec (_, V2''), _), V''), s2'')), sc) = 
+	  eqRA (I.Decl (G, N.decLUName (G, I.decSub (D, s1'))),
+	       I.Decl (Q, Universal), shiftCtx TG (fn s => I.comp(s, I.shift)), 
+		shiftCtx PG (fn s => I.comp(s,I.shift)),
+	       ((U', I.dot1 s1'), (V', I.dot1 s2')),
+	       ((U'', I.dot1 s1''),(V'', I.dot1 s2'')), sc)
+    | eqRAW (G, Q, TG, PG, UsVs as ((I.Root (I.Const c, S'), s'), Vs), 
+	     UsVs' as ((I.Root (I.Const c1, S1), s1), Vs'), sc) = 
+	if (isAtomic (G, Q, (I.Root (I.Const c, S'), s')) orelse 
+	    isAtomic (G, Q, (I.Root (I.Const c1, S1), s1))) then
+	  focusL (G, Q, TG, PG, Eq(R.Arg UsVs, R.Arg UsVs'), sc)
+	else 
+	  (if c = c1 then 
+	     eqSpineRA (G, Q, TG, PG, ((S', s'),(I.constType c, I.id)), 
+			((S1, s1),(I.constType c1, I.id)), sc)
+	    else 
+	      false  (* ? - bp *))
+      | eqRAW (G, Q, TG, PG, UsVs as ((I.Root (I.BVar c, S'), s'), Vs),
+	      UsVs' as ((I.Root (I.BVar c1, S1'), s1'), Vs'), sc) = 
 	  let 
-	    val _ = if (!Global.chatter) >= 5 then 
-	                fmtDerive (G, Eq(R.Arg UsVs', R.Arg U1sV1s'),
-				   Less(R.Arg UsVs, R.Arg U1sV1s))
-		    else 
-		      ()
-	    val (Us',Vs') = Whnf.whnfEta UsVs'
-	    val (U1s', V1s') = Whnf.whnfEta U1sV1s' 
-	  in 
-	    (eq (G, (Us',Vs'), UsVs, sc) andalso 
-	     lt (G, Q, (U1s', V1s'), U1sV1s, sc))
-	    orelse 
-	    (eq (G, (U1s', V1s'), UsVs, sc) andalso 
-	     lt (G, Q, (Us',Vs'), U1sV1s, sc))
-	    orelse
-	    (*  G | Q | RG |- C < A  andalso B <= D
-	     * -------------------------------------
-	     *   G | Q | RG, B = A |- C < D
-             *)
-	    (lt (G, Q, (U1s', V1s'), U1sV1s, sc) andalso
-	       deriveLt (G, Q, RG', RG', Rpi, UsVs, UsVs', sc)) 
-	  orelse
-	    (*   G | Q | RG |- C < A  andalso  B <= D 
-	     *  ------------------------------------- 
-	     *   G | Q | RG, A = B |- C < D
-             *)
-	    (lt (G, Q, (Us',Vs'), U1sV1s, sc) andalso 
-	       deriveLt (G, Q, RG', RG', Rpi, UsVs, U1sV1s', sc))
-	   orelse
-	     (* t<=1 *)
-	     (eq (G, (Us',Vs'), U1sV1s, sc) andalso
-	      deriveLt (G, Q, RG', RG', Rpi, UsVs, U1sV1s', sc))
-	  orelse
-	     (* t<=2 *)
-	      (eq (G, (U1s', V1s'), U1sV1s, sc) andalso
-	       deriveLt (G, Q, RG', RG', Rpi, UsVs, UsVs', sc)) 
+	    val I.Dec (_, V') = I.ctxDec (G, c)
+	    val I.Dec (_, V1') = I.ctxDec (G, c1)	
+	  in
+	     if (isAtomic(G, Q, (I.Root (I.BVar c, S'), s')) orelse (* atomic term not a param. *)
+		 isAtomic(G, Q, (I.Root (I.BVar c1, S1'), s1'))) then
+	       focusL(G, Q, TG, PG, Eq(R.Arg UsVs, R.Arg UsVs'), sc)
+	     else 		
+	       ((c = c1)         
+		andalso 
+		eqSpineRA (G, Q, TG, PG, ((S', s'), (V', I.id)), ((S1', s1'), (V1', I.id)), sc)) 
+	  end 
 
-	  orelse
-	  deriveLt (G, Q, RG, RG', Rpi, UsVs, U1sV1s, sc)  
-	end
-		 
+      | eqRAW (G, Q, TG, PG, UsVs, UsVs', sc) = 
+       (* -bp TG, PG --> M = s N  should not be provable *)
+	    focusL (G, Q, TG, PG, Eq(R.Arg UsVs, R.Arg UsVs'), sc)
 
+    and eqSpineRA (G, Q, TG, PG, (Us, Vs), (Us', Vs'), sc) = 
+          eqSpineRAW (G, Q, TG, PG, (Us, (Whnf.whnf Vs)), (Us', (Whnf.whnf Vs')), sc) 
 
-    (* ltinit (G, Q, RG, Rpi, ((U, s1), (V, s2)), ((U', s1'), (V', s2')), sc) = B'
+          (* normalize Spines ...  eqSpineRAW (G, Q, TG, PG, (Us, Vs), (Us', Vs'), sc) - bp*)
 
-       Invariant:
-       B' holds  iff
-            G : Q 
-       and RG, Rpi is a context of reduction assumptions
-       and  G |- s1 : G1   G1 |- U : V1
-       and  G |- s2 : G2   G2 |- V : L
-       and  G |- U[s1] : V[s2] 
-       and  G |- s1' : G3   G3 |- U' : V1'
-       and  G |- s2' : G4   G4 |- V' : L
-       and  G |- U'[s1'] : V'[s2']
-       and  U[s1] is a strict subterm of U'[s1'] or  U[s1] < U'[s1']  is derivable from RG, Rpi
-       and  sc is a constraint continuation representing restrictions on EVars
-       and only U'[s'] contains EVars
-    *)
-    and ltinit (G, Q, RG, Rpi, (Us, Vs), UsVs', sc) = 
-          ltinitW (G, Q, RG, Rpi, Whnf.whnfEta (Us, Vs), UsVs', sc)
-    and ltinitW (G, Q, RG, Rpi, (Us, Vs as (I.Root _, _)), UsVs', sc) =
-          lt (G, Q, (Us, Vs), UsVs', sc) 
-      | ltinitW (G, Q, RG, Rpi, ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)), 
-		 ((U', s1'), (V', s2')), sc) =
-	  focusPi (I.Decl (G, N.decLUName (G, I.decSub (D, s2))),
-		  I.Decl (Q, Universal), RG, Rpi,  
-		  Less (R.Arg ((U, I.dot1 s1), (V, I.dot1 s2)),  
-		        R.Arg ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift)))), sc) 
+    and eqSpineRAW (G, Q, TG, PG, ((I.Nil, s'), Vs'), ((I.Nil, s1'), V1s), sc) = 
+          sc()
+      | eqSpineRAW (G, Q, TG, PG, ((I.SClo (S, s'), s''), Vs' as (V, s)), SV1s, sc) = 
+	  eqSpineRA (G, Q, TG, PG, ((S, I.comp (s', s'')), Vs'), SV1s, sc)
 
-    and ltinit' (G, Q, RG, Rpi, (Us, Vs), UsVs', sc) = 
-	(ltinit (G, Q, RG, Rpi, (Us, Vs), UsVs', sc)
-	  orelse 
-	  (let 
-	     val _ = if (!Global.chatter) >= 5 then 
-		       print ("\n derive " ^ 
-			      F.makestring_fmt (
-				fmtPredicate(G, Less(R.Arg (Us, Vs), R.Arg UsVs')))
-			      ^"\n")
-		     else 
-		       ()
-	     val B = deriveLt (G, Q, RG, RG, Rpi, (Us, Vs), UsVs', sc)
-	   in
-	     if (!Global.chatter) >= 5 then 
-		 if B then   
-		   (print ("\n derivation successful"); B)
-		 else 
-		   (print("\n derivation failed"); B)
-	     else
-	       B
-	   end ))
-	
+      | eqSpineRAW (G, Q, TG, PG, SVs, ((I.SClo (S1, s1'), s1''), V1s' as (V1, s1)), sc) = 
+	  eqSpineRA (G, Q, TG, PG, SVs, ((S1, I.comp (s1', s1'')), V1s'), sc)
 
-    (* ordlt (G, Q, RG, Rpi, O1, O2) = B'
+      | eqSpineRAW (G, Q, TG, PG, ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')),
+		  ((I.App (U'', S''), s1''), (I.Pi ((I.Dec (_, V1''), _), V2''), s2'')), sc) = 
+	eqRA (G, Q, TG, PG, ((U', s1'), (V1', s2')), ((U'', s1''), (V1'', s2'')), sc)
+	andalso 
+	eqSpineRA (G, Q, TG, PG, ((S',s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))),
+		  ((S'',s1''), (V2'', I.Dot (I.Exp (I.EClo (U'', s1'')), s2''))), sc)
+      | eqSpineRAW (G, Q, TG, PG, ((U, s), Vs), ((U', s'), Vs'), sc) = 
+	((if (!Global.chatter) > 6 then  
+	    print (" \n should never happen - " ^ F.makestring_fmt(fmtSpine (G, U)) ^ 
+		   " = " ^ F.makestring_fmt(fmtSpine (G, U')))
+	  else
+	    ());
+         false)
+
+     (* ltLexRA (G, Q, TG, PG, L1, L2, sc) = B'
      
-       Invariant:
-       If   G : Q and RG + Rpi is a context of reduction assumptions
-       and  G |- O1 augmented subterms
-       and  G |- O2 not contianing any EVars
-       then B' holds iff O1 is smaller than O2 
-	   -bp or is derivable from RG   
-    *)
-    and ordlt (G, Q, RG, Rpi, R.Arg UsVs, R.Arg UsVs', sc) =  
-	ltinit' (G, Q, RG, Rpi, UsVs, UsVs', sc)
-      | ordlt (G, Q, RG, Rpi, R.Lex L, R.Lex L', sc) = ordltLex (G, Q, RG, Rpi, L, L', sc)
-      | ordlt (G, Q, RG, Rpi, R.Simul L, R.Simul L', sc) = ordltSimul (G, Q, RG, Rpi, L, L', sc)
-
-    (* ordltLex (G, Q, RG, Rpi, L1, L2) = B'
-     
-       Invariant:
-       If   G : Q and RG + Rpi is a context of reduction assumptions
+       InvaRAiant:
+       If   G : Q and  (PG) is a context of reduction assumptions
        and  G |- L1 list of augmented subterms
        and  G |- L2 list of augmented subterms not containing any EVars
        then B' holds iff L1 is lexically smaller than L2 
     *)
-    and ordltLex (G, Q, RG, Rpi, nil, nil, sc) = false
-      | ordltLex (G, Q, RG, Rpi, O :: L, O' :: L', sc) =
-          ordlt (G, Q, RG, Rpi, O, O', sc) 
+    and ltLexRA (G, Q, TG, PG, [], [], sc) = false
+      | ltLexRA (G, Q, TG, PG, O :: L, O' :: L', sc) =
+          activeR (G, Q, TG, PG, Less(O, O'), sc) 
 	  orelse 
-	  (ordeq (G, Q, RG, Rpi, O, O', sc) andalso ordltLex (G, Q, RG, Rpi, L, L', sc))
+	  (activeR (G, Q, TG, PG, Eq(O, O'), sc) andalso ltLexRA (G, Q, TG, PG, L, L', sc))
       
-    (* ordltSimul (G, Q, RG, Rpi, L1, L2) = B'
+    (* eqLexRA (G, Q, TG, PG, Olist, Olist, sc) = B *)
+    and eqLexRA (G, Q, TG, PG, [], [], sc) = sc()
+      | eqLexRA (G, Q, TG, PG, (O::L), (O'::L'), sc) = 
+          activeR (G, Q, TG, PG, Eq(O, O'), sc)
+	  andalso 
+	  eqLexRA (G, Q, TG, PG, L, L', sc)
+
+    (* eqSimulRA (G, Q, TG, PG, Olist, Olist, sc) = B *)
+    and eqSimulRA (G, Q, TG, PG, [], [], sc) = sc()
+      | eqSimulRA (G, Q, TG, PG, (O::L), (O'::L'), sc) = 
+          activeR (G, Q, TG, PG, Eq(O, O'), sc)
+	  andalso 
+	  eqSimulRA (G, Q, TG, PG, L, L', sc)
+
+    (* activeR (G, Q, TG, PG,  P, sc) = B'
+     Invariant:
+       If   G : Q and 
+            G: PG  where PG is context of passive reduction assumptions
+            G: AG  where AG is context of active reduction assumptions
+       and  G |- P is a order predicate
+       then B' holds iff  PG, RG |- P 
+     *)
+    and activeR (G, Q, TG, PG, Eq(R.Simul O, R.Simul O'), sc) = 
+	  eqSimulRA (G, Q, TG, PG, O, O', sc)
+      | activeR (G, Q, TG, PG, Eq(R.Lex O, R.Lex O'), sc) = 
+	  eqLexRA (G, Q, TG, PG, O, O', sc)
+      | activeR (G, Q, TG, PG, P as Eq(R.Arg UsVs, R.Arg UsVs'), sc) = 
+          eqRA (G, Q, TG, PG, UsVs, UsVs', sc)
+      | activeR (G, Q, TG, PG, P as Less(R.Arg UsVs, R.Arg UsVs'), sc) = 
+	  ltRA (G, Q, TG, PG, UsVs, UsVs', sc)
+      | activeR (G, Q, TG, PG, P as Leq(R.Arg UsVs, R.Arg UsVs'), sc) = 
+	  leRA (G, Q, TG, PG, UsVs, UsVs', sc)
+      | activeR (G, Q, TG, PG, P, sc) = 
+	  ((if (!Global.chatter) > 6 then  
+	      print ("\n transition to focusL \n" ^ 
+		     "focusL: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^
+		     " L==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	    else 
+	      ());
+	    focusL (G, Q, TG, PG, P, sc))
+
+    and ltLexRF (G, Q, TG, [], [], sc) = true
+      | ltLexRF (G, Q, TG, O :: L, O' :: L', sc) = 
+          (activeR (G, Q, TG, I.Null, Less(O, O'), sc)
+           orelse
+	   (activeR (G, Q, TG, I.Null, Eq(O, O'), sc) andalso ltLexRF (G, Q, TG, L, L', sc)))
+
+  (* ltSimulRF (G, Q, TG, PG, L1, L2) = B'
      
        Invariant:
-       If   G : Q and RG is a context of reduction assumptions
+       If   G : Q and (PG) is a context of reduction assumptions
        and  G |- L1 list of augmented subterms
        and  G |- L2 list of augmented subterms not contianing any EVars
        then B' holds iff L1 is simultaneously smaller than L2 
     *)
-    and ordltSimul (G, Q, RG, Rpi, nil, nil, sc) = false
-      | ordltSimul (G, Q, RG, Rpi, O :: L, O' :: L', sc) = 
-          (ordlt (G, Q, RG, Rpi, O, O', sc) andalso ordleSimul (G, Q, RG, Rpi, L, L', sc))
-	  orelse 
-	  (ordeq (G, Q, RG, Rpi, O, O', sc) andalso ordltSimul (G, Q, RG, Rpi, L, L', sc))
+    and ltSimulRF (G, Q, TG, [], [], sc) = true
+      | ltSimulRF (G, Q, TG, O :: L, O' :: L', sc) = 
+         (activeR (G, Q, TG, I.Null, Less(O, O'), sc) andalso leSimulRF (G, Q, TG, L, L', sc))
+	  orelse 	  
+	  (activeR (G, Q, TG, I.Null, Eq(O, O'), sc) andalso ltSimulRF (G, Q, TG, L, L', sc))
+	   
 
-    (* ordleSimul (G, Q, RG, Rpi, L1, L2) = B'
+    (* leSimulRF (G, Q, TG, L1, L2) = B'
      
        Invariant:
        If   G : Q and RG is a context of reduction assumptions
@@ -749,181 +552,750 @@ struct
        and  G |- L2 list of augmented subterms not contianing any EVars
        then B' holds iff L1 is simultaneously less than or equal to L2 
     *)
-    and ordleSimul (G, Q, RG, Rpi, nil, nil, sc) = sc ()
-      | ordleSimul (G, Q, RG, Rpi, O :: L, O' :: L', sc) =
-          ordle (G, Q, RG, Rpi, O, O', sc) andalso ordleSimul (G, Q, RG, Rpi, L, L', sc) 
+    and leSimulRF (G, Q, TG, [], [], sc) = sc ()
+      | leSimulRF (G, Q, TG, O :: L, O' :: L', sc) =
+          activeR (G, Q, TG, I.Null, Leq(O, O'), sc) 
+	  andalso 
+	  leSimulRF (G, Q, TG, L, L', sc) 
 
-    (* ordeq (G, Q, RG, O1, O2) = B'
+    (* eqSimulRF (G, Q, TG, L1, L2) = B'
      
        Invariant:
-       If   G : Q and RG is a context of reduction assumptions
-       and  G |- O1 augmented subterm
-       and  G |- O2 augmented subterm not containing any EVars
-       then B' holds iff O1 is convertible to O2 
-    *)
-    and ordeq (G, Q, RG, Rpi, R.Arg UsVs, R.Arg UsVs', sc) =  
-       conv (UsVs, UsVs')
-	orelse
-	(let 
-	   val _ = if (!Global.chatter) >= 5 then 
-	              (print ("\n ordereq derive ");
-		      print(F.makestring_fmt 
-			     (fmtPredicate(G, Eq(R.Arg UsVs, R.Arg UsVs')))
-			     ^  "\n"))
-		   else 
-		        ()
-	   val B = deriveEq (G, Q, RG, RG, Rpi, UsVs, UsVs', sc)
-	 in
-	   if (!Global.chatter) >= 5 then 
-	      if B then   
-		 (print ("\n derivation successful"); B)
-	      else 
-		 (print("\n derivation failed"); B)
-	   else
-	       B
-	 end)
-      | ordeq (G, Q, RG, Rpi, R.Lex L, R.Lex L', sc) = ordeqs (G, Q, RG, Rpi, L, L', sc)
-      | ordeq (G, Q, RG, Rpi, R.Simul L, R.Simul L', sc) = ordeqs (G, Q, RG,  Rpi, L, L', sc)
-      
-    (* ordeqs (G, Q, RG, L1, L2) = B'
-     
-       Invariant:
-       If   G : Q and RG is a context of reduction assumptions
+       If   G : Q and (PG) is a context of reduction assumptions
        and  G |- L1 list of augmented subterms
        and  G |- L2 list of augmented subterms not contianing any EVars
        then B' holds iff L1 is convertible to L2 
     *)
-    and ordeqs (G, Q, RG, Rpi, nil, nil, sc) = sc()
-      | ordeqs (G, Q, RG, Rpi, O :: L, O' :: L', sc) = 
-          ordeq (G, Q, RG, Rpi, O, O', sc) andalso ordeqs (G, Q, RG, Rpi, L, L', sc)
+    and eqSimulRF (G, Q, TG, [], [], sc) = sc()
+      | eqSimulRF (G, Q, TG, O :: L, O' :: L', sc) = 
+          focusR (G, Q, TG, Eq(O, O'), sc) 
+	  andalso eqSimulRF (G, Q, TG, L, L', sc)
 
-    (* ordeq (G, Q, RG, O1, O2) = B'
+  (* eqLexRF (G, Q, TG, L1, L2) = B'
      
        Invariant:
-       If   G : Q and RG is a context of reduction assumptions
-       and  G |- O1 augmented subterm
-       and  G |- O2 augmented subterm not contianing any EVars
-       then B' holds iff O1 is convertible to O2 or O1 is smaller than O2 
+       If   G : Q and (TG) is a context of reduction assumptions
+       and  G |- L1 list of augmented subterms
+       and  G |- L2 list of augmented subterms not contianing any EVars
+       then B' holds iff L1 is convertible to L2 
     *)
+   and eqLexRF (G, Q, TG, [], [], sc) = sc()
+      | eqLexRF (G, Q, TG, O :: L, O' :: L', sc) = 
+          focusR (G, Q, TG, Eq(O, O'), sc) 
+	  andalso eqLexRF (G, Q, TG, L, L', sc)
 
-    and ordle (G, Q, RG, Rpi, O, O', sc) = 
-	ordeq (G, Q, RG, Rpi, O, O', sc) orelse ordlt (G, Q, RG, Rpi, O, O', sc)
+   (* ltRF (G, Q, TG, UsVs, UsVs' ,sc = B *)
+   and ltRF (G, Q, TG, UsVs, UsVs', sc) = 
+	ltRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)
+       (* ltRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)) *)
+   and ltRFW (G, Q, TG, UsVs as (Us, (V,s)), 
+	      ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+	       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) = 
+         (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	    let  (* enforce that X is only instantiated to parameters *) 
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val sc' = fn () => (isParameter (Q, X); sc ())    
+	    in
+	       ltRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
+				      (V', I.Dot (I.Exp (X), s2'))), sc')
+	    end
+	  else
+	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	      let 
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      in
+		ltRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
+				       (V', I.Dot (I.Exp (X), s2'))),sc)
+	      end
+	    else true)(* possibly redundant if lhs always subordinate to rhs *)
 
-    (* ordRight (G, Q, RG, Rpi', P, sc) = 
-     *)
-    and ordRight (G, Q, RG, Rpi, Less(O, O'), sc) = ordlt (G, Q, RG, Rpi, O, O', sc)
-      | ordRight (G, Q, RG, Rpi, Leq(O, O'), sc) = ordle (G, Q, RG, Rpi, O, O', sc)
-      | ordRight (G, Q, RG, Rpi, Eq(O, O'), sc) = ordeq (G, Q, RG, Rpi, O, O', sc)
-
-    (* ordLeft  (G, Q, RG, P) = 
-
-       first simplify the context RG and then the right side P
-       order of RG' is reversed
-
-       Precondition: RG does not contain any Pi-quanitfied reduction props.
-
-       Invariant:
-       If   G : Q and RG is a context of reduction assumptions
-       and  G |- O1 augmented subterm
-       and  G |- O2 augmented subterm not contianing any EVars
-       then B' holds iff O1 is equal to O2 or O1 is smaller than O2 
-
-     *)
-
-    and ordLeft (G, Q, RG, P, sc) = 
-	let 
-	  fun ordLeft' (G, Q, I.Null, D, Dpi, P) = 
-	      	((if (!Global.chatter) >= 5 then 
-		   print ("\n transition to right " ^ (F.makestring_fmt (fmtPredicate(G,P)))
-			  ^ "\n") 
-		 else 
-		    ());
-		 ordRight (G, Q, D, Dpi, P, sc))
-	    | ordLeft' (G, Q, I.Decl(D, Less(R.Arg UsVs', R.Arg U1sV1s')), D', Dpi, P) = 
-	        ordLeft' (G, Q, D, I.Decl(D', Less(R.Arg UsVs', R.Arg U1sV1s')), Dpi, P)
-	    | ordLeft' (G, Q, I.Decl(D, Eq(R.Arg UsVs', R.Arg U1sV1s')), D', Dpi, P) = 
-		ordLeft' (G, Q, D, I.Decl(D', Eq(R.Arg UsVs', R.Arg U1sV1s')), Dpi, P)
-          (* Leq *)
-	    | ordLeft' (G, Q, I.Decl(D, Leq(O, O')), D', Dpi, P) = 
-		ordLeft' (G, Q, I.Decl(D, Less (O, O')), D', Dpi, P)
- 	        andalso 
-		ordLeft' (G, Q, I.Decl(D, Eq (O, O')), D', Dpi, P)
-	  (* Lexicograqhic *)
-	  (* Equality *)
-	    | ordLeft' (G, Q, I.Decl (D, Eq(R.Lex [], R.Lex [])), D', Dpi, P) = 
-		ordLeft' (G, Q, D, D', Dpi, P)
-	    | ordLeft' (G, Q, I.Decl (D, Eq(R.Lex (O::Olist), R.Lex (O'::O'list))), D', Dpi, P) = 
-		ordLeft' (G, Q, I.Decl(I.Decl (D, Eq(O, O')), Eq(R.Lex Olist, R.Lex O'list)), D', Dpi, P)
-	  (* Less *)
-	    | ordLeft' (G, Q, I.Decl (D, Less(R.Lex [], R.Lex [])), D', Dpi, P) = 
-		ordLeft' (G, Q, D, D', Dpi, P)
-	    | ordLeft' (G, Q, I.Decl (D, Less(R.Lex (O::Olist), R.Lex (O'::O'list))), D', Dpi, P) = 
-		ordLeft' (G, Q, I.Decl (D, Less(O, O')), D', Dpi, P)
-		andalso 
- 		ordLeft' (G, Q, I.Decl(I.Decl (D, Eq(O, O')), Less (R.Lex Olist, R.Lex O'list)), D', Dpi, P)
-	  (* Simultanous *)
-	  (* Equality *)
-	    | ordLeft' (G, Q, I.Decl (D, Eq(R.Simul [], R.Simul [])), D', Dpi, P) = 
-		ordLeft' (G, Q, D, D', Dpi, P)
-	    | ordLeft' (G, Q, I.Decl (D, Eq(R.Simul (O::Olist), R.Simul (O'::O'list))), D', Dpi, P) = 
-		ordLeft' (G, Q, I.Decl(I.Decl (D, Eq(O, O')), Eq(R.Simul Olist, R.Simul O'list)), D', Dpi, P)
-	  (* Less *)
-	    | ordLeft' (G, Q, I.Decl (D, Less(R.Simul [], R.Simul [])), D', Dpi, P) = 
-		ordLeft' (G, Q, D, D', Dpi, P)
-	    | ordLeft' (G, Q, I.Decl (D, Less(R.Simul (O::Olist), R.Simul (O'::O'list))), D', Dpi, P) = 
-		ordLeft' (G, Q, I.Decl(I.Decl (D, Less(O, O')),Leq (R.Simul Olist, R.Simul O'list)), D', Dpi, P)
-		andalso 
-		ordLeft' (G, Q, I.Decl(I.Decl (D, Eq(O, O')), Less (R.Simul Olist, R.Simul O'list)), D', Dpi, P)
-	    (* Pi *)
-	    | ordLeft' (G, Q, I.Decl (D, P' as Pi(_, _)), D', Dpi, P) = 
-		ordLeft' (G, Q, D, D', I.Decl(Dpi, P'), P)
-	in
-	   ordLeft' (G, Q, RG, I.Null, I.Null, P)
-	end
-    
-    and focusPi (G, Q, RG, I.Null, P, sc) = 
-	(* multiplicity = 1 *)
-        ((if (!Global.chatter) >= 5 then 
-	   print ("\n Pi instantiated with existential vars - ")
-	 else 
+     | ltRFW (G, Q, TG, UsVs, (Us' as (I.Root (I.Const c, S'), s'), Vs'), sc) = 
+	if isAtomic (G, Q, (I.Root (I.Const c, S'), s')) then (* atomic term not a param. *)
+	  ((if (!Global.chatter) > 6 then  
+	    print ("\n atomic const - transition to focusT \n" ^ 
+		   "focusT: " ^ fmtRGCtx(G, TG) ^
+		   " L==>" ^  F.makestring_fmt (fmtPredicate(G, Less(R.Arg UsVs, R.Arg (Us', Vs'))))
+		     ^"\n")
+	  else 
 	    ());
-	 ordLeft (G, Q, RG, P, sc))
-      | focusPi (G, Q, RG, I.Decl(Rpi, Pi(D as I.Dec(_, V), P)), P', sc) =
+	  false )
+	  (*  -bp8/7/00. focusT (G, Q, TG, Less(R.Arg UsVs, R.Arg (Us', Vs')), sc)) *)
+	else 
+	  ltSpineRF (G, Q, TG, UsVs,((S', s'), (I.constType c, I.id)), sc)
+
+     | ltRFW (G, Q, TG, UsVs, (Us' as (I.Root (I.BVar c, S'), s'), Vs'), sc) = 
+	let 
+	  val I.Dec (_, V') = I.ctxDec (G, c)
+	in
+	  if isAtomic(G, Q, (I.Root (I.BVar c, S'), s')) then
+	    (if isParameter(Q, I.EClo((I.Root (I.BVar c, S')), s')) then (* atomic term not a param. *)
+	        false
+	     else 		
+	       ((if (!Global.chatter) > 6 then  
+		     print ("\n atomic bvar - transition to focusT \n" ^ 
+			    "focusT: " ^ fmtRGCtx(G, TG) ^
+			    " L==>" ^  F.makestring_fmt (fmtPredicate(G, Less(R.Arg UsVs, R.Arg (Us', Vs'))))
+				^"\n")
+		 else 
+		 ());
+		focusT (G, Q, TG, Less(R.Arg UsVs, R.Arg (Us', Vs')), sc)))
+	  else 
+	    ltSpineRF (G, Q, TG, UsVs, ((S', s'), (V', I.id)), sc)
+	end 
+      | ltRFW (G, Q, TG, UsVs, UsVs', sc) = 
+	((if (!Global.chatter) > 6 then  
+	    print ("\n should not happen !!! ltRFW - transition to focusT'\n" ^ fmtRGCtx(G, TG) ^
+		   " T-->" ^  F.makestring_fmt (fmtPredicate(G, Less(R.Arg UsVs, R.Arg UsVs')))
+		     ^"\n")
+	  else ());
+	   focusT' (G, Q, I.Null, TG, Less(R.Arg UsVs, R.Arg UsVs'), sc))
+
+    and ltSpineRF (G, Q, TG, UsVs, (Ss', Vs'), sc) = 
+	ltSpineRFW (G, Q, TG, UsVs, (Ss', Whnf.whnf Vs'), sc)
+    and ltSpineRFW (G, Q, TG, UsVs, ((I.Nil, _), _), sc) = 
+          false
+      | ltSpineRFW (G, Q, TG, UsVs, ((I.SClo (S, s'), s''), Vs'), sc) =
+	ltSpineRFW (G, Q, TG, UsVs, ((S, I.comp (s', s'')), Vs'), sc) 
+      | ltSpineRFW (G, Q, TG, UsVs, 
+		    ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), sc) = 
+	(leRF (G, Q, TG, UsVs, ((U', s1'), (V1', s2')), sc)
+	 orelse 
+	 ltSpineRFW (G, Q, TG, UsVs, 
+		     ((S', s1'),(V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc))
+    
+    (* leRF (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = B *) 
+    and leRF (G, Q, TG, UsVs, UsVs', sc) = leRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)
+    and leRFW (G, Q, TG, UsVs as (Us, (V, s)), 
+	      ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+	       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) = 
+         (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	    let  (* enforce that X is only instantiated to parameters *) 
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val sc' = fn () => (isParameter (Q, X); sc ())    
+	    in
+	      leRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
+				     (V', I.Dot (I.Exp (X), s2'))), sc')
+	    end
+	  else
+	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	      let 
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+ 	      in
+		leRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
+				       (V', I.Dot (I.Exp (X), s2'))),sc)
+	      end
+	    else true (* possibly redundant if lhs always subordinate to rhs *))
+      | leRFW (G, Q, TG, UsVs as ((I.Root _, _), Vs), 
+	      UsVs' as ((I.Root _, _), Vs'), sc) = 
+	(activeR (G, Q, TG, I.Null, Eq(R.Arg UsVs, R.Arg UsVs'), sc)
+	 orelse
+	 ltRF (G, Q, TG, UsVs, UsVs', sc))
+      | leRFW (G, Q, TG, UsVs, UsVs', sc) = 
+	(* should not happen *) false
+
+    (* focusR (G, Q, TG, P, sc) = B *)
+    and focusR (G, Q, TG, Less(R.Simul O, R.Simul O'), sc) = 
+	  ltSimulRF (G, Q, TG, O, O', sc)
+      | focusR (G, Q, TG, Less(R.Lex O, R.Lex O'), sc) = 
+	  ltLexRF (G, Q, TG, O, O', sc)
+      | focusR (G, Q, TG, Less(R.Arg UsVs, R.Arg UsVs'), sc) = 
+	  ltRF (G, Q, TG, UsVs, UsVs', sc)
+      | focusR (G, Q, TG, Leq(R.Simul O, R.Simul O'), sc) = 
+	  ltSimulRF (G, Q, TG, O, O', sc)
+	  orelse	  
+	  eqSimulRF (G, Q, TG, O, O', sc)
+      | focusR (G, Q, TG, Leq(R.Lex O, R.Lex O'), sc) = 
+	  ltLexRF (G, Q, TG, O, O', sc)
+	  orelse
+	   eqLexRF (G, Q, TG, O, O', sc)
+      | focusR (G, Q, TG, Leq(R.Arg UsVs, R.Arg UsVs'), sc) = 	   
+	   leRF (G, Q, TG, UsVs, UsVs', sc)
+      | focusR (G, Q, TG, P, sc) = 
+	   ((if (!Global.chatter) > 6 then  
+	      print ("\n fails in focusR because multiplicity might not be high enough!\n")
+	     else ());
+	   false)
+        (* should never happen this case 
+           - if multiplicity > 1 then transition to focusL *)
+		 
+    (* invariant: UsVs' is AtomicNotp *)
+    and ltLF (G, Q, TG, PG, UsVs, UsVs', P, sc) = 
+	ltLFW (G, Q, TG, PG, Whnf.whnfEta UsVs, UsVs', P, sc)
+    and ltLFW (G, Q, TG, PG, 
+	       ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+		(I.Pi ((I.Dec (_, V2'), _), V'), s2')), UsVs as (Us, (V,s)), P, sc) = 
+	  (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	     let  (* enforce that X is only instantiated to parameters *) 
+	       val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	       val sc' = fn () => (isParameter (Q, X); sc ())    
+	     in
+	       ltLF (G, Q, TG, PG, ((U', I.Dot (I.Exp (X), s1')), 
+				     (V', I.Dot (I.Exp (X), s2'))),
+		     UsVs, P, sc')
+	     end
+	   else
+	     if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	       let 
+		 val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	       in
+		 ltLF (G, Q, TG, PG, ((U', I.Dot (I.Exp (X), s1')), 
+				      (V', I.Dot (I.Exp (X), s2'))),
+		       UsVs, P, sc)
+	       end
+	     else true (* possibly redundant if lhs always subordinate to rhs *))
+      | ltLFW (G, Q, TG, PG, UsVs, UsVs', P, sc) =
+	     (* optimized - orig. activeL *)
+          focusL (G, Q, I.Decl(TG, Less (R.Arg UsVs, R.Arg UsVs')), PG, P, sc)
+
+    (* invariant: UsVs' is AtomicNotp *)
+    and leLF (G, Q, TG, PG, UsVs, UsVs', P, sc) = 
+	leLFW (G, Q, TG, PG, Whnf.whnfEta UsVs, UsVs', P, sc)
+    and leLFW (G, Q, TG, PG, 
+	       UsVs' as ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+		(I.Pi ((I.Dec (_, V2'), _), V'), s2')), UsVs as (Us,(V,s)), P, sc) = 
+	  (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	     let  (* enforce that X is only instantiated to parameters *) 
+	       val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	       val sc' = fn () => (isParameter (Q, X); sc ())    
+	     in
+	       leLF (G, Q, TG, PG, ((U', I.Dot (I.Exp (X), s1')), 
+				     (V', I.Dot (I.Exp (X), s2'))),
+		     UsVs, P, sc')
+	    (*    -bp8/7/00. dead code
+	     orelse 
+	       (activeL (G, Q, TG, PG, I.Decl(I.Null, Less (R.Arg UsVs', R.Arg UsVs)), P, sc)
+		andalso  
+		activeL (G, Q, TG, PG, I.Decl(I.Null, Eq (R.Arg UsVs', R.Arg UsVs)), P, sc)) *)
+	     end
+	   else
+	     if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	       let 
+		 val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	       in
+		 leLF (G, Q, TG, PG, ((U', I.Dot (I.Exp (X), s1')), 
+				      (V', I.Dot (I.Exp (X), s2'))),
+		       UsVs, P, sc)
+	       end
+	     else true (* possibly redundant if lhs always subordinate to rhs *))
+      | leLFW (G, Q, TG, PG, UsVs, UsVs', P, sc) =
+        (* optimized - orig. activeL *)
+          (focusL (G, Q, I.Decl(TG, Less (R.Arg UsVs, R.Arg UsVs')), PG, P, sc)
+	   andalso  
+	   focusL (G, Q, I.Decl(TG, Eq (R.Arg UsVs, R.Arg UsVs')), PG, P, sc))
+
+    and eqLF (G, Q, TG, PG, UsVs, UsVs', P, sc) = 
+	eqLFW (G, Q, TG, PG, Whnf.whnfEta UsVs, Whnf.whnfEta UsVs', P, sc)
+    and eqLFW (G, Q, TG, PG, 
+	       ((I.Lam (D as I.Dec (_, V1'), U'), s1'), (I.Pi ((I.Dec (_, V2'), _), V'), s2')),
+	       ((I.Lam (D' as I.Dec (_, V1''), U''), s1''), (I.Pi ((I.Dec (_, V2''), _), V''), s2'')),
+	       P, sc) = 
 	  let
-	    val X = I.newEVar (G, V) 
-	    val sc' = fn () => (isParameter (Q, X); sc ())	      
-	    fun plus1 (I.Shift n) = I.Shift (n + 1)
-	      | plus1 (I.Dot(I.Exp X, s)) = I.Dot(I.Exp X, plus1 s)
-	      | plus1 (I.Dot (I.Idx n, s)) = I.Dot (I.Idx n, s)
-
-	    val P1 = shiftP P (fn s => case s of I.Shift n => I.Dot(I.Exp X, I.Shift n)
-                        	  | I.Dot(I.Exp _, s') => I.Dot (I.Exp(X), plus1 s)
-				  | I.Dot(I.Idx n, s') => I.Dot(I.Exp X, I.Dot(I.bvarSub (n, s'), s')))     
+	    val (G', Q') = (I.Decl (G, N.decLUName (G, I.decSub (D, s1'))),
+			    I.Decl (Q, Universal))
+	    val X = I.newEVar (G', I.EClo (V1'', s1'')) (* = I.newEVar (I.EClo (V2', s2')) *)	   
 	  in
-	    focusPi (G, Q, RG, I.Decl(Rpi, P1), P', sc')
-	  end 	     
-      | focusPi (G, Q, RG, I.Decl(Rpi, Less(O, O')), P', sc) =
-	  ((if (!Global.chatter) >= 5 then 
-	      (print ("\n pi reduction predicate is" );
-	       print (F.makestring_fmt (fmtPredicate(G,Less(O ,O'))));  
-	       print ("\n to show: " ^ (F.makestring_fmt (fmtPredicate(G, P')))))
-	    else ());
-	   focusPi (G, Q, I.Decl(RG, Less(O ,O')), Rpi, P', sc))
-      | focusPi (G, Q, RG, I.Decl(Rpi, Leq(O, O')), P', sc) =
-	  ((if (!Global.chatter) >= 5 then 
-	      (print ("\n pi reduction predicate is " ^ 
-		      (F.makestring_fmt (fmtPredicate(G,Leq(O ,O' ))))^ "\n");
-	       print ("\n to show: " ^ (F.makestring_fmt (fmtPredicate(G,P')))))
-	      else ());
-	      focusPi (G, Q, I.Decl(RG,Leq(O, O')), Rpi, P', sc))
-      | focusPi (G, Q, RG, I.Decl(Rpi, Eq(O1, O2)), P',sc) =
-	   ((if (!Global.chatter) >= 5 then 
-	       (print ("\n pi reduction predicate is " );
-		print (F.makestring_fmt (fmtPredicate(G,Eq(O1 ,O2))));  
-		print ("\n to show: " ^ (F.makestring_fmt (fmtPredicate(G, P')))))
-	     else ());  
-	       focusPi (G, Q, I.Decl(RG, Eq(O1, O2)), Rpi, P', sc))
+	    eqLF (G', Q', TG, PG, ((U', I.Dot (I.Exp(X), s1')),  (V', I.Dot(I.Exp(X), s2'))), 
+		  ((U'', I.Dot (I.Exp(X), s1'')), 
+		   (V'', I.Dot (I.Exp(X), s2''))), P, 
+		  fn () => (isParameter (Q', X); sc ()))
+	   end 
+       | eqLFW (G, Q, TG, PG, UsVs, UsVs', P, sc) = 
+	   activeL (G, Q, TG, PG, I.Decl(I.Null, Eq(R.Arg UsVs, R.Arg UsVs')), P, sc)
+       
+    (* focusL (G, Q, TG, PG, P, sc) = B *)
+    and focusL (G, Q, TG, I.Null, P, sc) = 
+          ((if (!Global.chatter) > 6 then  
+	    print ("\n transition to focusT \n" ^ 
+		   "focusT: " ^ fmtRGCtx(G, TG) ^
+		   " L==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+          focusT (G, Q, TG, P, sc))
+      | focusL (G, Q, TG, I.Decl(PG, Pi(D as I.Dec(_, V), P)), P', sc) = 
+	let
+(*	  val X = I.newEVar (G, I.EClo (V, I.id)) *)
+	  val X = I.newEVar (G, V)
+	  val sc' = fn () => (isParameter (Q, X); sc ())	      
+	  val P1 = shiftP P (fn s => I.Dot (I.Exp(X),  s))
+	in
+	  (if (!Global.chatter) > 6 then  
+	    (print ("\n instantiate Pi \n" );
+	     print ( "focusT: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^
+		   " L==>" ^  F.makestring_fmt (fmtPredicate(G, P')) ^"\n" );
+	     print (" after " ^ fmtRGCtx(G, TG) ^ ", "  ^ fmtRGCtx(G, I.Decl(PG, P1))  ^
+		    " L==>" ^  F.makestring_fmt (fmtPredicate(G, P')) ^"\n"))
+	  else 
+	    ());
+	  focusL (G, Q, TG, I.Decl(PG, P1), P', sc')
+	end 
+      | focusL (G, Q, TG, I.Decl(PG, P' as Less(R.Arg UsVs, R.Arg (UsVs' as (Us', Vs')))), P, sc) = 
+	  if isAtomic (G, Q, Us') then 
+	    ltLF (G, Q, TG, PG, UsVs, UsVs', P, sc)
+	  else 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Less(R.Lex O, R.Lex O')), P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Less(R.Simul O, R.Simul O')), P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Leq(R.Lex O, R.Lex O')), P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Leq(R.Simul O, R.Simul O')), P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Leq(R.Arg UsVs, R.Arg ((I.Lam (_, U'), s1'), (I.Pi ((D', _), V'), s2')))),
+		P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Leq(R.Arg UsVs, R.Arg (UsVs' as ((I.Root (_, S), s), Vs)))), P, sc) = 
+	    leLF (G, Q, TG, PG, UsVs, UsVs', P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as 
+		Eq(R.Arg (UsVs as ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2))), 
+		   R.Arg (UsVs' as ((I.Lam (_, U'), s1'), (I.Pi ((D', _), V'), s2'))))), P, sc) = 
+	    eqLF (G, Q, TG, PG, UsVs, UsVs', P, sc)
+      | focusL (G, Q, TG, I.Decl(PG, P' as Eq(R.Arg  ((I.Root (_, S), s), Vs), 
+					      R.Arg ((I.Root (_, S'), s'), Vs'))), P, sc) = 
+	    activeL (G, Q, TG, PG, I.Decl(I.Null, P'), P, sc)
 
+   (* focusT (G, Q, TG, P, sc) = B *)
+    and focusT (G, Q, TG, P as Eq(R.Arg UsVs', R.Arg UsVs), sc) = 
+          focusTW (G, Q, TG, Eq(R.Arg (Whnf.whnfEta UsVs'), R.Arg (Whnf.whnfEta UsVs)), sc)
+      | focusT (G, Q, TG, P as Less(R.Arg UsVs', R.Arg UsVs), sc) = 
+          focusTW (G, Q, TG, Less(R.Arg UsVs', R.Arg (Whnf.whnfEta UsVs)), sc)
+      | focusT (G, Q, TG, P, sc) = focusTW (G, Q, TG, P, sc)
+
+    and focusTW (G, Q, TG, P as Eq(R.Arg (UsVs' as (Us', Vs')), R.Arg (UsVs as (Us, Vs))), sc) = 
+        (if (isAtomic (G, Q, Us') orelse isAtomic (G, Q, Us)) then 	      
+	   ((if (!Global.chatter) > 6 then  
+	      print ("\n transition to focusT' \n" ^ 
+		     "focusT': " ^ fmtRGCtx(G, TG) ^ 
+		     " L==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+	  focusT' (G, Q, I.Null, TG, Eq(R.Arg UsVs', R.Arg UsVs), sc))
+	 else 
+	   ((if (!Global.chatter) > 6 then  
+	       print ("\n not - atomic transition to focusR \n" ^ 
+		      "focusR: " ^ fmtRGCtx(G, TG) ^ 
+		      " R==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	     else 
+	       ());
+	   focusR(G, Q, TG, Eq(R.Arg UsVs', R.Arg UsVs), sc)))
+      | focusTW (G, Q, TG, P as Less(R.Arg UsVs',  R.Arg (Us, Vs)), sc) = 
+	  if isAtomic(G, Q, Us) then 
+	    ((if (!Global.chatter) > 6 then  
+	      print ("\n transition to focusT' \n" ^ 
+		     "focusT': " ^ fmtRGCtx(G, TG) ^ 
+		     " L==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+	    focusT' (G, Q, I.Null, TG, P, sc))
+	  else 
+	    ((if (!Global.chatter) > 6 then  
+	      print ("\n transition to focusR \n" ^ 
+		     "focusR: " ^ fmtRGCtx(G, TG) ^ 
+		     " R==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+	  focusR (G, Q, TG, P, sc))
+
+      | focusTW (G, Q, TG, P, sc) = 
+	  ((if (!Global.chatter) > 6 then  
+	      print ("\n transition to focusR \n" ^ 
+		     "focusR: " ^ fmtRGCtx(G, TG) ^ 
+		     " R==>" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+	  focusR (G, Q, TG, P, sc))
+
+    (* focusT' (G, Q, TG, P, sc) = B 
+       Invariant: P is atomic / max. unfolded. 
+                  TG is atomic / max. unfoled
+     *) 
+    and focusT' (G, Q, TG', I.Null, Less(R.Arg UsVs, R.Arg UsVs'), sc) = 
+         ((if (!Global.chatter) > 6 then  
+	     print ("\n False " ^ fmtRGCtx(G, TG') ^ " T-->" 
+		     ^  F.makestring_fmt (fmtPredicate(G, Less(R.Arg UsVs, R.Arg UsVs'))) ^"\n")
+	   else 
+	     ());
+	   false)
+        (* can be focusR *)
+      | focusT' (G, Q, TG', I.Null, 
+		  Eq(R.Arg UsVs1, R.Arg UsVs2), sc) =           
+	  (conv (UsVs1, UsVs2)
+	   orelse 
+	   eq(G, Whnf.whnfEta UsVs1, Whnf.whnfEta UsVs2, sc))
+      | focusT' (G, Q, TG', I.Decl(TG, Eq(R.Arg UsVs, R.Arg UsVs')), 
+		  Eq(R.Arg UsVs1 , R.Arg UsVs2), sc) =                     
+	  (conv (UsVs1, UsVs2)
+	   orelse 
+	   eq(G, Whnf.whnfEta UsVs1, Whnf.whnfEta UsVs2, sc)
+	   orelse	   
+	   transEqW (G, Q, union(TG',TG), UsVs, UsVs', 
+		     Eq(R.Arg UsVs1 , R.Arg UsVs2), sc)
+	   orelse 
+	   focusT' (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), TG, 
+		    Eq(R.Arg UsVs1 , R.Arg UsVs2), sc))
+
+      | focusT' (G, Q, TG', I.Decl(TG, Less(R.Arg UsVs, R.Arg UsVs')), 
+		  Eq(R.Arg UsVs1 , R.Arg UsVs2), sc) =           
+	  focusT' (G, Q, I.Decl(TG', Less(R.Arg UsVs, R.Arg UsVs')), TG, 
+		   Eq(R.Arg UsVs1 , R.Arg UsVs2), sc)
+      (* less *)
+      | focusT' (G, Q, TG', I.Decl(TG, Eq(R.Arg UsVs, R.Arg UsVs')), 
+		 Less(R.Arg UsVs1 , R.Arg UsVs2), sc) =  
+	  (transEqW (G, Q, union(TG',TG), UsVs, UsVs', 
+		     Less(R.Arg UsVs1 , R.Arg UsVs2), sc)
+	   orelse 
+	   focusT' (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), TG, 
+		    Less(R.Arg UsVs1 , R.Arg UsVs2), sc))
+
+      | focusT' (G, Q, TG', I.Decl(TG, Less(R.Arg UsVs, R.Arg UsVs')), 
+		 Less(R.Arg UsVs1 , R.Arg UsVs2), sc) =  
+	  (transLtW (G, Q, union(TG',TG), UsVs, UsVs',
+		     Less(R.Arg UsVs1 , R.Arg UsVs2), sc)
+	   orelse 
+	   focusT' (G, Q, I.Decl(TG', Less(R.Arg UsVs, R.Arg UsVs')), TG, 
+		    Less(R.Arg UsVs1 , R.Arg UsVs2), sc))
+
+    and transEqW (G, Q, TG, UsVs, UsVs', Eq(R.Arg UsVs1 , R.Arg UsVs2), sc) = 
+          ((eq (G, Whnf.whnfEta UsVs, UsVs1, sc) andalso            (* id *)
+	    eq (G, Whnf.whnfEta UsVs', UsVs2, sc))
+	   orelse 
+	   (eq (G, Whnf.whnfEta UsVs', UsVs1, sc) andalso              (* id-sym *)
+	    (eq (G, Whnf.whnfEta UsVs, UsVs2, sc)))
+	   orelse 
+	   (eq (G, Whnf.whnfEta UsVs, UsVs2, sc) andalso               (* t1 *)
+	    activeR (G, Q, TG, I.Null, Eq(R.Arg UsVs1 , R.Arg UsVs'), sc))
+	   orelse 
+	   ((eq (G, Whnf.whnfEta UsVs', UsVs2, sc) andalso              (* t2 *)
+	     activeR (G, Q, TG, I.Null, Eq(R.Arg UsVs1 , R.Arg UsVs), sc))))
+      | transEqW (G, Q, TG, UsVs, UsVs', Less(R.Arg UsVs1 , R.Arg UsVs2), sc) = 
+	    ((eq (G, Whnf.whnfEta UsVs, UsVs2, sc) andalso           (* t1 *)
+	     focusR (G, Q, TG, Less(R.Arg UsVs1 , R.Arg UsVs'), sc))	    
+	    orelse 
+	    (eq (G, Whnf.whnfEta UsVs', UsVs2, sc) andalso              (* t2 *)
+	     focusR (G, Q, TG, Less(R.Arg UsVs1 , R.Arg UsVs), sc)))
+
+    and transLtW (G, Q, TG, UsVs, UsVs', Less(R.Arg UsVs1 , R.Arg UsVs2), sc) = 
+	  ((eq (G, Whnf.whnfEta UsVs, UsVs1, sc) andalso            (* id *)
+	    eq (G, UsVs', Whnf.whnfEta UsVs2, sc))
+	   orelse 
+	   (eq (G, Whnf.whnfEta UsVs', UsVs2, sc) andalso
+	    focusR (G, Q, TG, Less(R.Arg UsVs1, R.Arg UsVs), sc))
+	   orelse
+	   (eq (G, Whnf.whnfEta UsVs', UsVs2, sc) andalso
+	    activeR (G, Q, TG, I.Null, Eq(R.Arg UsVs1, R.Arg UsVs), sc)))
+	   
+
+   and ltLexLA (G, Q, TG, PG, AG, [], [], P, sc) = 
+         true
+(* bp Mon Aug  7 08:48:07 2000	activeL (G, Q, TG, PG, AG, P, sc)*)
+     | ltLexLA (G, Q, TG, PG, AG,(O::Olist), (O'::O'list), P, sc) = 
+	activeL (G, Q, TG, PG, I.Decl(AG, Less(O, O')), P, sc)
+	andalso 
+	ltLexLA (G, Q, TG, PG, I.Decl(AG, Eq(O, O')), Olist, O'list, P, sc)
+
+   and ltSimulLA  (G, Q, TG, PG, AG, [], [], P, sc) = 
+         activeL (G, Q, TG, PG, AG, P, sc)  (* should not happen *)
+     | ltSimulLA (G, Q, TG, PG, AG, [O], [O'], P, sc) =   (* base case *)
+	 activeL (G, Q, TG, PG, I.Decl(AG, Less(O, O')), P, sc)
+	 
+     | ltSimulLA (G, Q, TG, PG, AG, (O::Olist), (O'::O'list), P, sc) = 
+	 activeL (G, Q, TG, PG, I.Decl(I.Decl(AG, Less(O, O')), Leq(R.Simul Olist, R.Simul O'list)),
+		 P, sc)
+	andalso 
+	ltSimulLA (G, Q, TG, PG, I.Decl(AG, Eq(O, O')), Olist, O'list, P, sc)
+
+   and eqLexLA (G, Q, TG, PG, AG, [], [], P, sc) = 
+	activeL (G, Q, TG, PG, AG, P, sc)
+      | eqLexLA (G, Q, TG, PG, AG,(O::Olist), (O'::O'list), P, sc) = 
+	eqLexLA (G, Q, TG, PG, I.Decl(AG, Eq(O, O')), Olist, O'list, P, sc)
+   and eqSimulLA (G, Q, TG, PG, AG, [], [], P, sc) = 
+	activeL (G, Q, TG, PG, AG, P, sc)
+      | eqSimulLA (G, Q, TG, PG, AG,(O::Olist), (O'::O'list), P, sc) = 
+	eqSimulLA (G, Q, TG, PG, I.Decl(AG, Eq(O, O')), Olist, O'list, P, sc)
+
+   and ltLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = 
+         ltLAW (G, Q, TG, PG, AG, UsVs, Whnf.whnfEta UsVs', P, sc)
+   and ltLAW (G, Q, TG, PG, AG, ((U,s1), (V, s2)),
+	      ((I.Lam (_, U'), s1'), (I.Pi ((D, _), V'), s2')), P, sc) = 
+	ltLA (I.Decl (G, N.decLUName (G, I.decSub (D, s2))), 
+	      I.Decl (Q, Universal), shiftCtx TG (fn s => I.comp(s,I.shift)),
+	       shiftCtx PG (fn s => I.comp(s,I.shift)),
+	       shiftCtx AG (fn s => I.comp(s,I.shift)), 
+	      ((U, I.comp (s1, I.shift)), (V, I.comp (s2, I.shift))), 
+	      ((U', I.dot1 s1'), (V', I.dot1 s2')), 
+	      shiftP P (fn s => I.comp(s, I.shift)), sc)
+     | ltLAW (G, Q, TG, PG, AG, UsVs,
+	      (Us' as (I.Root (I.Const c, S'), s'), Vs'), P, sc) = 
+	(* note: ... M < c L--> P trivially true *)
+	ltSpineLA (G, Q, TG, PG, AG, UsVs,((S', s'), (I.constType c, I.id)), P, sc) 
+     | ltLAW (G, Q, TG, PG, AG, UsVs as ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)), 
+	      (Us' as (I.Root (I.BVar c, S'), s'), Vs'), P, sc) = 
+	let 
+	  val I.Dec (_, V') = I.ctxDec (G, c)
+	in
+	  if isAtomic(G, Q, (I.Root (I.BVar c, S'), s')) then (* atomic term not a param. *)
+	    activeL (G, Q, TG, I.Decl(PG, Less(R.Arg UsVs, R.Arg (Us', Vs'))), AG, P, sc)
+	  else 
+	    ltSpineLA (G, Q, TG, PG, AG, UsVs, ((S', s'), (V', I.id)), P, sc)
+	end 
+
+     | ltLAW (G, Q, TG, PG, AG, UsVs as ((I.Root (_, S), s), Vs), 
+	      (Us' as (I.Root (I.BVar c, S'), s'), Vs'), P, sc) = 
+	let 
+	  val I.Dec (_, V') = I.ctxDec (G, c)
+	in
+	  if isAtomic(G, Q, (I.Root (I.BVar c, S'), s')) then (* atomic term not a param. *)
+	    activeL (G, Q, I.Decl(TG, Less(R.Arg UsVs, R.Arg (Us', Vs'))), PG, AG, P, sc)
+	  else 
+	    ltSpineLA (G, Q, TG, PG, AG, UsVs, ((S', s'), (V', I.id)), P, sc)
+	end 
+
+
+    (* ltSpineLA (G, Q, TG, PG, AG, UsVs, (Ss', Vs'), P, sc) *)
+    and ltSpineLA (G, Q, TG, PG, AG, UsVs, (Ss', Vs'), P, sc) = 
+	ltSpineLAW (G, Q, TG, PG, AG, UsVs, (Ss', Whnf.whnf Vs'), P, sc)
+    and ltSpineLAW (G, Q, TG, PG, AG, UsVs, ((I.Nil, _), _), P, sc) = 
+          true
+      | ltSpineLAW (G, Q, TG, PG, AG, UsVs, ((I.SClo (S, s'), s''), Vs'), P, sc) =
+	ltSpineLAW (G, Q, TG, PG, AG, UsVs, ((S, I.comp (s', s'')), Vs'), P, sc) 
+      | ltSpineLAW (G, Q, TG, PG, AG, UsVs, 
+		    ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), P, sc) = 
+	(leLA (G, Q, TG, PG, AG, UsVs, ((U', s1'), (V1', s2')), P, sc)
+	 andalso 
+	 ltSpineLAW (G, Q, TG, PG, AG, UsVs, ((S', s1'),(V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))),
+		    P, sc))
+    (* leLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = B *) 
+
+    and leLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = 
+          leLAW (G, Q, TG, PG, AG, UsVs, Whnf.whnfEta UsVs', P, sc)
+(*          leLAW (G, Q, TG, PG, AG, UsVs,  UsVs', P, sc) *)
+    and leLAW (G, Q, TG, PG, AG, UsVs as ((U,s1), (V, s2)),
+	      UsVs' as ((I.Lam (_, U'), s1'), (I.Pi ((D, _), V'), s2')), 
+	       P, sc) = 
+          let
+	    val G' = I.Decl (G, N.decLUName (G, I.decSub (D, s2)))
+	    val P' = shiftP P (fn s => (I.comp (s, I.shift)))
+	  in 
+	    leLA (I.Decl (G, N.decLUName (G, I.decSub (D, s2))), I.Decl (Q, Universal), 
+		  shiftCtx TG (fn s => I.comp(s,I.shift)),
+		  shiftCtx PG (fn s => I.comp(s,I.shift)),
+		  shiftCtx AG (fn s => I.comp(s,I.shift)),
+		  ((U, I.comp (s1, I.shift)), (V, I.comp (s2, I.shift))), 
+		  ((U', I.dot1 s1'), (V', I.dot1 s2')), P' , sc)
+	  end 
+      | leLAW (G, Q, TG, PG, AG, UsVs as ((I.Root _, _), Vs), 
+	      UsVs' as ((I.Root _, _), Vs'), P, sc) = 
+	(ltLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) andalso 
+	 eqLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc))
+      | leLAW (G, Q, TG, PG, AG, UsVs as ((I.Lam (_, U'), s1'), _), 
+	      UsVs' as ((I.Root _, _), Vs'), P, sc) = 
+	  activeL (G, Q, TG, I.Decl(PG, Leq(R.Arg UsVs, R.Arg UsVs')), AG, P, sc)
+
+   (*  eqLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = B *)
+    and eqLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = 
+          eqLAW (G, Q, TG, PG, AG, Whnf.whnfEta UsVs, Whnf.whnfEta UsVs', P, sc)
+    and eqLAW (G, Q, TG, PG, AG, (UsVs as ((I.Lam _ , _), (I.Pi _, _))),
+	      (UsVs' as ((I.Lam _, _), (I.Pi _, _))), P, sc) = 
+	activeL (G, Q, TG, I.Decl(PG, Eq(R.Arg UsVs, R.Arg UsVs')), AG, P, sc)
+      | eqLAW (G, Q, TG, PG, AG, ((I.Root (I.Const c, S'), s'), Vs),
+	      ((I.Root (I.Const c1, S1'), s1'), Vs'), P, sc) = 
+	if c = c1 then 	  
+	  eqSpineLA (G, Q, TG, PG, AG, ((S', s'),(I.constType c, I.id)), 
+		       ((S1', s1'),(I.constType c1, I.id)), P, sc)
+	else 
+	    (* trivially true *)
+	    true
+      | eqLAW (G, Q, TG, PG, AG, UsVs as ((I.Root (I.BVar c, S), s'), Vs),
+	      UsVs' as ((I.Root (I.BVar c1, S1'), s1'), Vs'), P, sc) =  
+	if AtomicNotP (G, Q, (I.Root (I.BVar c, S), s')) then 
+	  (* substitute: TG[UsVs'] ~> TG[UsVs], PG[UsVs'] ~> PG[UsVs], AG[UsVs'] ~> AG[UsVs] *)
+	  let
+	    val TG' = substCtx (G, TG, I.BVar c, I.Root (I.BVar c1, S1'))
+	    val PG' = substCtx (G, PG, I.BVar c, I.Root (I.BVar c1, S1'))
+	    val AG' = substCtx (G, AG, I.BVar c, I.Root (I.BVar c1, S1'))
+	    val _ = (if (!Global.chatter) > 6 then  
+		       (print ("\n before subst \n" ^ 
+			       "\n substitution " ^ F.makestring_fmt (fmtPredicate(G, Eq(R.Arg UsVs', R.Arg UsVs))) ^
+			       "\n ActiveR: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^", " ^ fmtRGCtx(G, AG)^
+			       " R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n");
+			print ("\n after substition \n" ^ 
+			       "\n ActiveR: " ^ fmtRGCtx(G, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs'))) ^ 
+			       ", " ^ fmtRGCtx(G, PG') ^", " ^ fmtRGCtx(G, AG') ^" R-->" ^  
+			       F.makestring_fmt (fmtPredicate(G, P)) ^"\n"))
+		     else 
+		       ())  
+	  in 
+	    activeL (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), PG', AG', P, sc)
+	  end 
+	else
+	  (if AtomicNotP (G, Q, (I.Root (I.BVar c1, S1'), s1')) then   
+	  (* substitute: TG[UsVs] ~> TG[UsVs'], PG[UsVs] ~> PG[UsVs'], AG[UsVs] ~> AG[UsVs'] *)
+	     let
+	       val TG' = substCtx (G, TG, I.BVar c1, I.Root (I.BVar c, S))
+	       val PG' = substCtx (G, PG, I.BVar c1, I.Root (I.BVar c, S))
+	       val AG' = substCtx (G, AG, I.BVar c1, I.Root (I.BVar c, S))
+	       val _ = (if (!Global.chatter) > 6 then  
+			  (print ("\n before subst \n" ^ 
+				  "\n substitution " ^ F.makestring_fmt (fmtPredicate(G, Eq(R.Arg UsVs', R.Arg UsVs))) ^
+				  "\n ActiveR: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^", " ^ fmtRGCtx(G, AG)^
+				  " R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n");
+			   print ("\n after substition \n" ^ 
+				  "\n ActiveR: " ^ fmtRGCtx(G, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs'))) ^ 
+				  ", " ^ fmtRGCtx(G, PG') ^", " ^ fmtRGCtx(G, AG') ^" R-->" ^  
+				  F.makestring_fmt (fmtPredicate(G, P)) ^"\n"))
+			else 
+		       ())  
+	     in 
+	       activeL (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), PG', AG', P, sc)
+	     end 
+	   else  	    
+	     let
+	       val I.Dec (_, V') = I.ctxDec (G, c)
+	       val I.Dec (_, V1') = I.ctxDec (G, c1)
+	     in 
+	       if c = c1 then 
+		 eqSpineLA (G, Q, TG, PG, AG, ((S, s'),(V', I.id)), 
+			    ((S1', s1'),(V1', I.id)), P, sc)
+	       else 
+	      (* trivially true *)
+		 true
+	     end) 
+
+       | eqLAW (G, Q, TG, PG, AG, UsVs as ((I.Root (I.BVar c, S1), s'), Vs), 
+		UsVs' as ((U', us'), Vs'), P, sc) = 
+	  if AtomicNotP (G, Q, (I.Root (I.BVar c, S1), s')) then 
+	    let
+	      val TG' = substCtx (G, TG, I.BVar c, U')
+	      val PG' = substCtx (G, PG, I.BVar c, U')
+	      val AG' = substCtx (G, AG, I.BVar c, U')
+	      val _ = (if (!Global.chatter) > 6 then  
+			 (print ("\n before subst \n" ^ 
+				"\n substitution " ^ F.makestring_fmt (fmtPredicate(G, Eq(R.Arg UsVs', R.Arg UsVs))) ^
+				"\n ActiveR: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^", " ^ fmtRGCtx(G, AG)^
+				" R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n");
+			 print ("\n after substition \n" ^ 
+				"\n ActiveR: " ^ fmtRGCtx(G, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs'))) ^ 
+				", " ^ fmtRGCtx(G, PG') ^", " ^ fmtRGCtx(G, AG') ^" R-->" ^  
+				F.makestring_fmt (fmtPredicate(G, P)) ^"\n"))
+		       else 
+			 ())
+
+	    in 
+	       activeL (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), PG', AG', P, sc)
+	    end 
+	  else 
+	    true
+      | eqLAW (G, Q, TG, PG, AG, UsVs' as ((U', us'), Vs'), 
+	       UsVs as ((I.Root (I.BVar c, S1), s'), Vs), P, sc) = 
+	  if AtomicNotP (G, Q, (I.Root (I.BVar c, S1), s')) then 
+	    let
+	      val TG' = substCtx (G, TG, I.BVar c, U') 
+	      val PG' = substCtx (G, PG, I.BVar c, U')
+	      val AG' = substCtx (G, AG, I.BVar c, U')
+              val _ = (if (!Global.chatter) > 6 then  
+			 (print ("\n before subst \n" ^ 
+				"\n substitution " ^ F.makestring_fmt (fmtPredicate(G, Eq(R.Arg UsVs', R.Arg UsVs))) ^
+				"\n ActiveR: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^", " ^ fmtRGCtx(G, AG) ^
+				" R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n");
+			 print ("\n after substition \n" ^ 
+				"\n ActiveR: " ^ fmtRGCtx(G, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs'))) ^ 
+				", " ^ fmtRGCtx(G, PG') ^", " ^ fmtRGCtx(G, AG') ^ 
+				" R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n"))
+		       else 
+			 ())
+	    in 
+	      activeL (G, Q, I.Decl(TG', Eq(R.Arg UsVs, R.Arg UsVs')), PG', AG', P, sc)
+	    end 
+	  else 
+	    true 
+      | eqLAW (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = 
+	  (print ("\n " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^", " ^ fmtRGCtx(G, AG) ^ 
+		  " *** " ^ F.makestring_fmt (fmtPredicate(G, Eq(R.Arg UsVs, R.Arg UsVs'))) ^  
+		  " *** " ^ 	" R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n");
+	   (* true *)
+	   activeL (G, Q, I.Decl(TG, Eq(R.Arg UsVs, R.Arg UsVs')), PG, AG, P, sc))
+	     
+							
+
+    and eqSpineLA (G, Q, TG, PG, AG, (S as (Sp, _), s1), (S' as (Sp', _), s2), P, sc) = 
+	eqSpineLAW (G, Q, TG, PG, AG, (S, Whnf.whnf s1), (S', Whnf.whnf s2), P, sc)
+    and eqSpineLAW (G, Q, TG, PG, AG, ((I.Nil, s'), Vs'), ((I.Nil, s1'), V1s), P, sc) = 
+	activeL (G, Q, TG, PG, AG, P, sc)
+      | eqSpineLAW (G, Q, TG, PG, AG, ((I.SClo (S, s'), s''), Vs' as (V, s)), SVs, P, sc) = 
+	eqSpineLA (G, Q, TG, PG, AG, ((S, I.comp (s', s'')), Vs'), SVs, P, sc)
+      | eqSpineLAW (G, Q, TG, PG, AG, SVs, ((I.SClo (S, s'), s''), Vs' as (V, s)), P, sc) = 
+	eqSpineLA (G, Q, TG, PG, AG, SVs, ((S, I.comp (s', s'')), Vs'), P, sc)
+      | eqSpineLAW (G, Q, TG, PG, AG, 
+		    ((I.App (U', S'), s1'), (I.Pi ((I.Dec (_, V1'), _), V2'), s2')),
+		    ((I.App (U'', S''), s1''), (I.Pi ((I.Dec (_, V1''), _), V2''), s2'')), 
+		    P, sc) = 
+	eqSpineLA (G, Q, TG, PG, 
+		    I.Decl(AG, Eq(R.Arg ((U', s1'), (V1', s2')), 
+				  R.Arg ((U'', s1''), (V1'', s2'')))),
+		    ((S',s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), 
+		    ((S'',s1''), (V2'', I.Dot (I.Exp (I.EClo (U'', s1'')), s2''))),
+		    P, sc)
+		    
+    (* activeL (G, Q, TG, PG, AG, P, sc) = B *)
+    and activeL (G, Q, TG, PG, I.Null, P, sc) = 
+        ((if (!Global.chatter) > 6 then  
+	    print ("\n transition to activeR \n" ^ 
+		   "ActiveR: " ^ fmtRGCtx(G, TG) ^ ", " ^ fmtRGCtx(G, PG) ^
+		   " R-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+	  activeR (G, Q, TG, PG, P, sc))
+      (* Less *)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Less(R.Lex O, R.Lex O')), P, sc) = 
+	ltLexLA (G, Q, TG, PG, AG, O, O', P, sc)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Less(R.Simul O, R.Simul O')), P, sc) = 
+	ltSimulLA (G, Q, TG, PG, AG, O, O', P, sc)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Less(R.Arg UsVs, R.Arg UsVs')), P, sc) = 
+	ltLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc)
+      (* Leq *)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Leq(R.Lex O, R.Lex O')), P, sc) =
+	activeL (G, Q, TG, PG, I.Decl(AG, Less(R.Lex O, R.Lex O')), P, sc)
+	orelse 
+	activeL (G, Q, TG, PG, I.Decl(AG, Eq(R.Lex O, R.Lex O')), P, sc)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Leq(R.Simul O, R.Simul O')), P, sc) =
+	activeL (G, Q, TG, PG, I.Decl(AG, Less(R.Simul O, R.Simul O')), P, sc)
+	orelse 
+	activeL (G, Q, TG, PG, I.Decl(AG, Eq(R.Simul O, R.Simul O')), P, sc)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Leq(R.Arg UsVs, R.Arg UsVs')), P, sc) = 
+	leLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc)
+      (* Equal *)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Eq(R.Lex O, R.Lex O')), P, sc) = 
+	eqLexLA (G, Q, TG, PG, AG, O, O', P, sc)
+      | activeL (G, Q, TG, PG, I.Decl(AG, Eq(R.Simul O, R.Simul O')), P, sc) = 
+	eqSimulLA (G, Q, TG, PG, AG, O, O', P, sc)
+     | activeL (G, Q, TG, PG, I.Decl(AG, Eq(R.Arg UsVs, R.Arg UsVs')), P, sc) = 
+	eqLA (G, Q, TG, PG, AG, UsVs, UsVs', P, sc)
+     | activeL (G, Q, TG, PG, I.Decl(AG, Pi(D as I.Dec(_, V), P')), P, sc) = 
+	activeL (G, Q, TG, I.Decl(PG, Pi(D, P')), AG, P, sc)
+	
+    fun deduce (G, Q, RG, P, sc) = 
+      ((if (!Global.chatter) > 6 then  
+	    print ("\n ActiveL: " ^ fmtRGCtx(G, RG) ^ 
+		   " L-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ());
+       let
+	 val result = activeL (G, Q, I.Null, I.Null, RG, P, sc)
+       in 
+	 (if result then 
+	   (if (!Global.chatter) > 6 then  
+	    print ("\n SUCCESS : Deduce : " ^ fmtRGCtx(G, RG) ^ 
+		   " L-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	  else 
+	    ())
+	 else 
+	   (if (!Global.chatter) > 6 then  
+	    print ("\n FAILS: " ^ fmtRGCtx(G, RG) ^ 
+		   " L-->" ^  F.makestring_fmt (fmtPredicate(G, P)) ^"\n")
+	    else 
+	      ())); 
+	    result
+       end )
 
     (* closeCtx (G, RG, D) = RG''
        Invariant: 
@@ -994,7 +1366,7 @@ struct
 	  val a's = R.mutLookup a
 	  val _ = R.selLookup a'   (* check if a' terminates *)	 
 	  (* -bp reduction predicate *)
-	  val RG' = ((if (!Global.chatter) >= 5 then  
+	  val RG' = ((if (!Global.chatter) > 5 then  
 			 print ("\n reduction predicate " ^ 
 				F.makestring_fmt (
 				  fmtPredicate(G, selectROrder (a, (S, s)) ))^
@@ -1002,7 +1374,7 @@ struct
 			 else ()) 
 		     ;   I.Decl(RG, selectROrder (a, (S, s))) ) 
                handle R.Error(msg) =>    
-			(if (!Global.chatter) >= 5 then  
+			(if (!Global.chatter) > 5 then  
 			   (print ("\n no reduction predicate defined for "^
                                      I.conDecName (I.sgnLookup a));
                             RG ) 
@@ -1012,9 +1384,9 @@ struct
 	  case lookup (a's, fn x' => x' = a') 
 	    of R.Empty => RG' 
 	     | R.LE _ =>  
-	      (if ordLeft (G, Q, RG, Leq(P, P'), init) then 
-		 (if (!Global.chatter) >= 5 then  
-		   (print  ("\n ordLeft on " ^ 
+	      (if deduce (G, Q, RG, Leq(P, P'), init) then 
+		 (if (!Global.chatter) > 5 then  
+		   (print  ("\n deduce  " ^ 
                             F.makestring_fmt (
                               fmtComparison (G, P, "<=", P')) ^ "\n");  
 		    RG') 
@@ -1023,8 +1395,8 @@ struct
 				       ^ F.makestring_fmt (fmtComparison (G, P, "<=", P'))) 
 		   ) 
 	     | R.LT _ =>  
-	      (if ordLeft (G, Q, RG, Less(P, P'), init) then   
-		 (if (!Global.chatter) >= 5 then  
+	      (if deduce (G, Q, RG, Less(P, P'), init) then   
+		 (if (!Global.chatter) > 5 then  
 		   (print  ("\n" ^ F.makestring_fmt (fmtComparison (G, P, "<", P')) ^ "\n"); 
 		    RG') 
 		 else RG') 
@@ -1108,13 +1480,13 @@ struct
      and 
        
        checkRImpW (G, Q, RG, RG', Vs as (I.Root (I.Const a, S), s), occ) =
-	(((if (!Global.chatter) >= 5 then 
+	(((if (!Global.chatter) > 5 then 
 	    (print ("\n reduction predicate " ^ I.conDecName (I.sgnLookup a) ^ " red. order added");
 	    print ("\n reduction predicate is " ^ (F.makestring_fmt (fmtPredicate(G, selectROrder (a, (S, s))))) ^ "\n"))
 	  else ());
 	    I.Decl(RG', selectROrder (a, (S, s))))
 	     handle R.Error(s) => 
-	       (if (!Global.chatter) >= 5 then 
+	       (if (!Global.chatter) > 5 then 
 		  (print ("\n no reduction predicate defined for " ^ I.conDecName (I.sgnLookup a));RG )
 		else
 		  RG'))
@@ -1123,7 +1495,7 @@ struct
 	    let 
 	      val RG'' = checkRImp (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
 				    I.Decl (Q, Universal), RG, RG', (V, I.dot1 s), P.body occ)
-	      val _ = if (!Global.chatter) >= 5 then 
+	      val _ = if (!Global.chatter) > 5 then 
 		        (print ("\n close ctx "))
 		      else
 			()
@@ -1139,7 +1511,7 @@ struct
 				     I.Decl (Q, Universal), RG, RG',  
 				     (V2, I.dot1 s), P.body occ)   
 	       val I.Decl(_, P'') = RG''
-	       val _ = if (!Global.chatter) >= 5 then 
+	       val _ = if (!Global.chatter) > 5 then 
 		          (print ("\n  G, D |- ");
 			   print (F.makestring_fmt (fmtPredicate(I.Decl (G, N.decLUName (G, I.decSub (D, s))), P''))))
 		       else
@@ -1177,13 +1549,13 @@ struct
       | checkReductionW (G, Q, RG, Vs as (I.Root (I.Const a, S), s), occ) =
 	let 
 	  val RO = selectROrder(a, (S, s))
-	  val _ = ((if (!Global.chatter) >= 5 then 
+	  val _ = ((if (!Global.chatter) > 5 then 
 			 (print ("\n check reduction predicate ");
 			  print (fmtRGCtx(G, RG) ^ " |- " ^  
 				 (F.makestring_fmt (fmtPredicate(G, RO))) ^ " \n"))
 			 else ())
 	             handle R.Error(s) => 
-			(if (!Global.chatter) >= 5 then 
+			(if (!Global.chatter) > 5 then 
 			  print ("\n no reduction predicate defined for " ^ I.conDecName (I.sgnLookup a))
 			 else
 	                    ()))    
@@ -1193,8 +1565,8 @@ struct
 	in
 	  case RO
 	    of Less(O, O') => 
-	       if ordLeft(G, Q, RG, Less(O, O'), init) then 
-		 if (!Global.chatter) >= 5 then 
+	       if deduce(G, Q, RG, Less(O, O'), init) then 
+		 if (!Global.chatter) > 5 then 
 		     (print  ("\n" ^ F.makestring_fmt 
 			      (fmtComparison (G, O, "<", O')) ^ "\n"))
 		 else
@@ -1202,8 +1574,8 @@ struct
 	       else  raise Error' (occ, "Reduction violation:\n" ^ F.makestring_fmt 
 				   (fmtComparison (G, O, "<", O')))
 	  | Leq(O, O') =>  
-	     if ordLeft(G, Q, RG, Leq(O, O'), init) then 
-	      if (!Global.chatter) >= 5 then 
+	     if deduce(G, Q, RG, Leq(O, O'), init) then 
+	      if (!Global.chatter) > 5 then 
 		  (print  ("\n" ^ F.makestring_fmt 
 			   (fmtComparison (G, O, "<=", O')) ^ "\n"))
 	      else
@@ -1212,8 +1584,8 @@ struct
 				 (fmtComparison (G, O, "<=", O')))
 
            | Eq(O, O') =>  
-	      if ordLeft (G, Q, RG, Eq(O, O'), init) then 
-	        if (!Global.chatter) >= 5 then 
+	      if deduce (G, Q, RG, Eq(O, O'), init) then 
+	        if (!Global.chatter) > 5 then 
 		    (print  ("\n" ^ F.makestring_fmt 
 			     (fmtComparison (G, O, "=", O')) ^ "\n"))
 		else
@@ -1231,63 +1603,63 @@ struct
     *)
     fun checkFamReduction a =
 	let 
-	  fun checkFam' nil = ()
+	  fun checkFam' [] = ()
 	    | checkFam' (I.Const b::bs) = 
-		(if (!Global.chatter) >= 4 then 
+		(if (!Global.chatter) > 4 then 
 		   print ("[" ^ N.constName b ^ ":")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) >= 5 then N.varReset () else ();
-		 ((if (!Global.chatter) >= 5 
-		     then print ("\nTermination Check successful") 
+		 if (!Global.chatter) > 5 then N.varReset () else ();
+		 ((if (!Global.chatter) > 5 
+		     then (* print ("\nTermination Check successful") *)
+		       print ("\n Reduction Checking") 
 		    else ());
-		   (checkClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top);
+		   ( (* checkClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top); *)
 		    checkReduction (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
-		 if (!Global.chatter) >= 4
+		 if (!Global.chatter) > 4
 		   then print ("]\n")
 		 else ();
 		 checkFam' bs)
-	  val _ = if (!Global.chatter) >= 4
+	  val _ = if (!Global.chatter) > 4
 		    then print "[Reduces: "
 		  else ()
 	in
 	  (checkFam' (Index.lookup a);
-	   if (!Global.chatter) >= 4 then 
+	   if (!Global.chatter) > 4 then 
 	     print "]\n" else ())
 	end
 
     fun checkFam a =
 	let 
-	  fun checkFam' nil = ()
+	  fun checkFam' [] = ()
 	    | checkFam' (I.Const b::bs) = 
-		(if (!Global.chatter) >= 4 then 
+		(if (!Global.chatter) > 4 then 
 		   print ("[" ^ N.constName b ^ ":")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) >= 5 then N.varReset () else ();
+		 if (!Global.chatter) > 5 then N.varReset () else ();
 	        (checkClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top)
 		 handle Error' (occ, msg) => error (b, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));
-		 if (!Global.chatter) >= 4
+		 if (!Global.chatter) > 4
 		   then print ("]\n")
 		 else ();
 		 checkFam' bs)
-	  val _ = if (!Global.chatter) >= 4
+	  val _ = if (!Global.chatter) > 4
 		    then print "[Terminates: "
 		  else ()
 	in
 	  (checkFam' (Index.lookup a);
-	   if (!Global.chatter) >= 4 then 
+	   if (!Global.chatter) > 4 then 
 	     print "]\n" else ())
 	end
 
     fun reset () = (R.reset(); R.resetROrder())
 
   in
-    val reset = reset
-    (* val check = fn Vs => checkClause (I.Null, I.Null, Vs, P.top) *)
+    val reset = reset 
     val checkFamReduction = checkFamReduction 
     val checkFam = checkFam  
   end (* local *)
