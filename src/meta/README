@@ -40,6 +40,8 @@ Running examples:
 use "TEST-CP/a.sml";    (* 2nd order copy *)
 use "TEST-CP/b.sml";    (* 3rd order copy *)
 use "TEST-CP/c.sml";    (* 4th order copy *)
+use "TEST-DED/a.sml";   (* abstraction theorem *)
+use "TEST-DED/b.sml";   (* Natural deduction -> Hilbert *)
 
 Open issues: 
 -cs  In recursion, when we look for the subterm of a functional
@@ -126,6 +128,9 @@ Parameter Cases
 		Reason: Formula information in tag was not maintained correctly
  		TODO splitting the first rewrite derivations yields a bad bad error
 	
+	- 3rd order copy
+	
+	  first split then say auto, Typecheck is raised why?
 
 
 Splitting Residual lemmas

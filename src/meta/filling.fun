@@ -49,10 +49,11 @@ struct
 	end
 
 
-    fun checkConstraints nil = raise Success
+(*    fun checkConstraints nil = raise Success
       | checkConstraints (X :: L) = 
         if Abstract.closedExp (I.Null, (Whnf.normalize (X, I.id), I.id)) then checkConstraints L
 	else ()
+*)
 
     (* expand' S = op'
 
