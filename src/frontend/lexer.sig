@@ -34,6 +34,7 @@ sig
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
     | TERMINATES       			(* `%terminates' *)
+    | BLOCK				(* `%block' *) (* -cs 5/29/01 *)
     | WORLDS       			(* `%worlds' *)
     | REDUCES       			(* `%reduces' *) (* -bp 6/5/99 *)
     | THEOREM                           (* `%theorem' *)

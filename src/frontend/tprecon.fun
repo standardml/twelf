@@ -17,6 +17,8 @@ functor TpRecon (structure Global : GLOBAL
 		   sharing Unify.IntSyn = IntSyn'
 		 structure Abstract : ABSTRACT
 		   sharing Abstract.IntSyn = IntSyn'
+		 structure Constraints : CONSTRAINTS
+		   sharing Constraints.IntSyn = IntSyn'
 		 structure TypeCheck : TYPECHECK
 		   sharing TypeCheck.IntSyn = IntSyn'
                  structure Conv : CONV
@@ -924,6 +926,7 @@ struct
   datatype condec =
       condec of name * term
     | condef of name option * term * term option
+    | blockdec of name * dec list * dec list
 
   (* Queries, with optional proof term variable *)
   datatype query =
@@ -1186,6 +1189,65 @@ struct
 	val optConDec = case optName of NONE => NONE | SOME _ => SOME (cd)
       in
 	(optConDec, SOME(ocd))
+      end
+    | condecToConDec (blockdec (name, Lsome, Lblock), Paths.Loc (fileName, r), abbFlag) =
+      let
+	fun makectx nil = IntSyn.Null
+	  | makectx (D :: L) = IntSyn.Decl (makectx L, D)
+	fun ctxToList (IntSyn.Null, acc) = acc
+	  | ctxToList (IntSyn.Decl (G, D), acc) = ctxToList (G, D :: acc)
+	fun join (NONE, r) = SOME(r)
+	  | join (SOME(r1), r2) = SOME (Paths.join (r1, r2))
+	fun ctxRegion (IntSyn.Null) = (IntSyn.Null, NONE)
+	  | ctxRegion (IntSyn.Decl (G, (D, ocOpt, r))) =
+  	    let
+	      val (G', rOpt) = ctxRegion G
+	    in
+	      (IntSyn.Decl (G', D), join (rOpt, r))
+	    end
+	fun ctxAppend (G, IntSyn.Null) = G
+	  | ctxAppend (G, IntSyn.Decl (G', D)) = IntSyn.Decl (ctxAppend (G, G'), D)
+	fun ctxBlockToString (G0, (G1, G2)) =
+  	    let
+	      val _ = Names.varReset IntSyn.Null
+	      val G0' = Names.ctxName G0
+	      val G1' = Names.ctxLUName G1
+	      val G2' = Names.ctxLUName G2
+	    in
+	      Print.ctxToString (IntSyn.Null, G0') ^ "\n"
+	      ^ (case G1' of IntSyn.Null => "" | _ => "some " ^ Print.ctxToString (G0', G1') ^ "\n")
+	      ^ "pi " ^ Print.ctxToString (ctxAppend (G0', G1'), G2')
+	    end
+	fun checkFreevars (IntSyn.Null, (G1, G2), r) = ()
+	  | checkFreevars (G0, (G1, G2), r) =
+  	    let
+	      val _ = Names.varReset IntSyn.Null
+	      val G0' = Names.ctxName G0
+	      val G1' = Names.ctxLUName G1
+	      val G2' = Names.ctxLUName G2
+	    in
+	      error (r, "Free variables in context block after term reconstruction:\n"
+		     ^ ctxBlockToString (G0', (G1', G2')))
+	    end
+
+	val [Gsome, Gblock] = (Timers.time Timers.recon ctxsToCtxs) [(makectx Lsome), (makectx Lblock)]
+	val (Gsome', r1Opt) = ctxRegion Gsome
+	val (Gblock', SOME(r2)) = ctxRegion Gblock	(* Gblock cannot be empty *)
+	val SOME(r) = join (r1Opt, r2)
+	val (G0, [Gsome'', Gblock'']) =	(* closed nf *)
+	  Abstract.abstractCtxs [Gsome', Gblock'] 
+	  handle Constraints.Error (C)
+	  => (raise Error (Paths.wrap (r, "Constraints remain in context block after term reconstruction:\n"
+		    ^ ctxBlockToString (IntSyn.Null, (Gsome', Gblock')) ^ "\n"
+		    ^ Print.cnstrsToString C)))
+	val _ = checkFreevars (G0, (Gsome'', Gblock''), r)
+	val bd = IntSyn.BlockDec (name, NONE, Gsome'', ctxToList (Gblock'', nil))
+        val _ = if !Global.chatter >= 3
+		  then print ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
+		else ()
+
+      in
+	(SOME bd, NONE)
       end
 
   fun lowerRigid (0, G, V, sc) =

@@ -301,19 +301,36 @@ struct
     *)
     fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
-	    val cid = IntSyn.sgnAdd conDec
-            val _ = (case (fromCS, !context)
-                       of (false, SOME namespace) =>
-                            Names.insertConst (namespace, cid)
-                        | _ => ())
-                    handle Names.Error msg =>
-                             raise Names.Error (Paths.wrap (r, msg))
-	    val _ = Names.installConstName cid
-            val _ = installConst fromCS (cid, fileNameocOpt)
-	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
+	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
+	  val cid = IntSyn.sgnAdd conDec
+	  val _ = (case (fromCS, !context)
+		     of (false, SOME namespace) =>
+		       Names.insertConst (namespace, cid)
+		   | _ => ())
+	          handle Names.Error msg =>
+		    raise Names.Error (Paths.wrap (r, msg))
+	  val _ = Names.installConstName cid
+	  val _ = installConst fromCS (cid, fileNameocOpt)
+	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
 	in 
 	  cid
 	end
+
+    fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
+	let
+	  val cid = IntSyn.sgnAdd conDec
+	  val _ = (case (fromCS, !context)
+		     of (false, SOME namespace) =>
+		       Names.insertConst (namespace, cid)
+		   | _ => ())
+	           handle Names.Error msg =>
+		     raise Names.Error (Paths.wrap (r, msg))
+	  val _ = Names.installConstName cid
+	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
+	in 
+	  cid
+	end
+
 
     fun installStrDec (strdec, module, r, isDef) =
         let
@@ -357,12 +374,18 @@ struct
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
 	   val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), false)
-	   fun icd (SOME(conDec)) =
+	   fun icd (SOME (conDec as IntSyn.BlockDec _)) = 
+	       let
+		 (* allocate new cid. *)
+		 val cid = installBlockDec false (conDec, (fileName, ocOpt), r)
+	       in
+		 ()
+	       end
+	     | icd (SOME (conDec)) =
 	       let
 		 (* names are assigned in TpRecon *)
 		 (* val conDec' = nameConDec (conDec) *)
 		 (* should print here, not in TpRecon *)
-		 val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 		 (* allocate new cid after checking modes! *)
 		 val cid = installConDec false (conDec, (fileName, ocOpt), r)
 	       in

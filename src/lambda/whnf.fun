@@ -10,7 +10,7 @@ struct
   (*
      Weak Head-Normal Form (whnf)
 
-     whnf ::= (L, s) | (Pi DP. U, s)
+     whnf ::= (L, s) | (Pi DP. U, s) | (Root (#k(b), S))
             | (Root(n,S), id) | (Root(c,S), id) | (Root(d,S), id) | (Root(F[s'], S), id)
             | (Root(fgnC,S), id) where fgnC is a foreign constant
             | (Lam D. U, s) | (X, s) where X is uninstantiated, X of base type
@@ -20,7 +20,7 @@ struct
      Normal Form (nf)
 
 	UA ::= L | Pi (DA,P). UA
-             | Root(n,SA) | Root(c,SA) | Root(d,SA) | Root(fgnC,SA)
+             | Root(n,SA) | Root(c,SA) | Root(d,SA) | Root(fgnC,SA) | Root (#k(b), S)
              | Lam DA. UA | FgnExp
 	DA ::= x:UA
 	SA ::= Nil | App (UA, SA)

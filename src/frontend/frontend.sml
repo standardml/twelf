@@ -20,6 +20,7 @@ structure TpRecon =
  	   structure Whnf = Whnf
 	   structure Unify = UnifyNoTrail
 	   structure Abstract = Abstract
+	   structure Constraints = Constraints
 	   structure TypeCheck = TypeCheck
            structure Conv = Conv
 	   structure Strict = Strict

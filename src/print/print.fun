@@ -599,6 +599,27 @@ local
     | skipI2 (i, G, I.Pi ((D, _), V), I.Lam (D', U)) =
         skipI2 (i-1, I.Decl (G, Names.decEName (G, D')), V, U)
 
+  fun ctxToDecList (I.Null, L) = L
+    | ctxToDecList (I.Decl (G, D), L) = ctxToDecList (G, D::L)
+
+  fun fmtDecList (G0, nil) = nil
+    | fmtDecList (G0, D::nil) = 
+        sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::nil
+    | fmtDecList (G0, D::L) =
+	sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::F.Break
+	::fmtDecList (I.Decl (G0, D), L)
+
+  (* Assume unique names are already assigned in G0 and G! *)
+  fun fmtCtx (G0, G) = fmtDecList (G0, ctxToDecList (G, nil))
+
+
+  fun fmtBlock (I.Null, Lblock)= 
+        [sym "block", F.Break] @ (fmtDecList (I.Null, Lblock))
+    | fmtBlock (Gsome, Lblock) =
+        [F.HVbox ([sym "some", F.Space] @ (fmtCtx (I.Null, Gsome))),
+	 F.Break,
+	 F.HVbox ([sym "block", F.Space] @ (fmtDecList (Gsome, Lblock)))]
+
   (* fmtConDec (hide, condec) = fmt
      formats a constant declaration (which must be closed and in normal form)
 
@@ -622,6 +643,14 @@ local
       in
 	F.HVbox [sym "%skolem", F.Break, fmtConstPath (Symbol.skonst, qid), F.Space,
 		 sym ":", F.Break, Vfmt, sym "."]
+      end
+    | fmtConDec (hide, condec as I.BlockDec (_, _, Gsome, Lblock)) =
+      let 
+	val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
+      in
+	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, qid), F.Space,
+		 sym ":", F.Break] @ (fmtBlock (Gsome, Lblock))  @ [sym "."])
       end
     | fmtConDec (hide, condec as I.ConDef (_, _, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
@@ -693,18 +722,6 @@ local
     | fmtCnstrL (ref Cnstr :: cnstrL) =
         (fmtCnstr Cnstr) @ [Str ";", F.Break] @ (fmtCnstrL cnstrL)
 
-  fun ctxToDecList (I.Null, L) = L
-    | ctxToDecList (I.Decl (G, D), L) = ctxToDecList (G, D::L)
-
-  fun fmtDecList (G0, nil) = nil
-    | fmtDecList (G0, D::nil) = 
-        sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::nil
-    | fmtDecList (G0, D::L) =
-	sym"{"::fmtDec (G0, 0, (D, I.id))::sym"}"::F.Break
-	::fmtDecList (I.Decl (G0, D), L)
-
-  (* Assume unique names are already assigned in G0 and G! *)
-  fun fmtCtx (G0, G) = fmtDecList (G0, ctxToDecList (G, nil))
 
   (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
      instantiations of EVars occurring in queries.  To that end, a list of

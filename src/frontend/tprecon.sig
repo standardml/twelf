@@ -34,6 +34,7 @@ sig
 
   type condec				(* constant declaration *)
   val condec : string * term -> condec	(* id : tm *)
+  val blockdec : string * dec list * dec list -> condec
   val condef : string option * term * term option -> condec
 					(* id : tm = tm | _ : tm = tm *)
 

@@ -417,7 +417,7 @@ struct
 	   | (Proj (b1, i1), Proj (b2, i2)) =>
 		 if i1 <> i2 then raise Unify "Global parameter clash"
 		 else 
-		   (case (b1, b2) 
+		   (case (b1, b2)
 		     of (LVar (r1, l1, t1), L as LVar (r2, l2, t2)) =>
 			  if l1 <> l2 then
 			    raise Unify "Label clash"
@@ -425,7 +425,9 @@ struct
 			    (* S(l) = Gsome, Lblock
 			       G1 |- s1 : Gsome 
 			       G2 |- s2 : Gsome *)
+			    (* (unifySub (G, comp (t1, s1), comp (t2, s2)); *)
 			    (unifySub (G, comp (t1, s1), comp (t2, s2));
+			     unifySub (G, t1, t2);
 			    r1 := SOME L))
 	   | (Skonst(c1), Skonst(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))

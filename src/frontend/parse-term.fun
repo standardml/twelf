@@ -311,10 +311,47 @@ struct
 	  end
       | decideRBracket (r0, (dec, LS.Cons ((_, r), s)), p) =
 	  Parsing.error (Paths.join(r0, r), "Unmatched open bracket")
+
+
+    (* Parses contexts of the form  G ::= {id:term} | G, {id:term} *)
+    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = (LS.expose s', r)
+      | stripRBrace (LS.Cons ((t, r), _))  = 
+          Parsing.error (r, "Expected `}', found " ^ L.toString t)
+
+    (* parseDec "{id:term} | {id}" *)
+    and parseBracedDec (r, f) =
+        let 
+	  val ((x, yOpt), f') = parseDec' f
+	  val (f'', r2) = stripRBrace f'
+          val d = (case yOpt
+                       of NONE => ExtSyn.dec0 (x, Paths.join (r, r2))
+                        | SOME y => ExtSyn.dec (x, y, Paths.join (r, r2)))
+	in
+	  (d, f'')
+	end
+
+    (* parseCtx (b, ds, f) = ds'
+       if   f is a stream "{x1:V1}...{xn:Vn} s"
+       and  b is true if no declarations has been parsed yet
+       and  ds is a context of declarations
+       then ds' = ds, x1:V1, ..., xn:Vn
+    *)
+    fun parseCtx (b, ds, LS.Cons (BS as ((L.LBRACE, r), s'))) = 
+        let
+	  val (d, f') = parseBracedDec (r, LS.expose s')
+	in
+	  parseCtx (false,  d :: ds, f')
+	end
+      | parseCtx (b, ds, f as LS.Cons ((t, r), s')) =
+	if b then Parsing.error (r, "Expected `{', found " ^ L.toString t)
+	else (ds, f)
+
+ 		    
   in
     val parseQualId' = parseQualId'
     val parseTerm' = (fn f => parseExp' (f, nil))
     val parseDec' = parseDec'
+    val parseCtx' = (fn f => (parseCtx (true, nil, f)))
   end  (* local ... in *)
 
 end;  (* functor ParseTerm *)

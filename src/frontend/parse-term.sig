@@ -9,6 +9,7 @@ sig
 
   val parseQualId' : (string list * Parsing.lexResult) Parsing.parser
   val parseTerm' : ExtSyn.term Parsing.parser
-  val parseDec'  : (string option * ExtSyn.term option) Parsing.parser
+  val parseDec' : (string option * ExtSyn.term option) Parsing.parser
+  val parseCtx' : (ExtSyn.dec list) Parsing.parser
 
 end;  (* signature PARSE_TERM *)
