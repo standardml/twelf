@@ -30,6 +30,7 @@ Library
   structure Interactive
   signature FLIT
   structure Flit
+  structure Subordinate
   signature STYLECHECK
   structure StyleCheck
 is

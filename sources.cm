@@ -16,5 +16,6 @@ Library
   structure Flit
   signature STYLECHECK
   structure StyleCheck
+  structure Subordinate
 is
   src/frontend/sources.cm
