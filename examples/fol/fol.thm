@@ -2,11 +2,11 @@
 % Induction is ruled out by specifying no induction variable.
 
 %theorem identity : forall* {P:atm} exists {D: !^ (` P => ` P)} true.
-%prove 5 {} (identity _).
+%establish 5 {} (identity _).
 
 %theorem curry : forall* {P:atm} {Q:atm} {R:atm}
 	         exists {D: !^ ((` P & ` Q => ` R) => (` P => (` Q => ` R)))} true.
-%prove 12 {} (curry _).   % OK
+%establish 12 {} (curry _).   % OK
 
 %theorem uncurry : forall* {P:atm} {Q:atm} {R:atm}
 	           exists {D: !^ ((` P => (` Q => ` R)) => (` P & ` Q => ` R))} true.
@@ -15,9 +15,7 @@
 %theorem split : forall* {P:atm}  {Q:atm} {R:atm}
 		 exists {D: !^ ((` P => ` Q & ` R) => (` P => ` Q) & (` P => ` R))} true.
 % %establish 15 {} (split _).  % OK
-%prove 15 {} (split _).
 
 %theorem join : forall* {P:atm}  {Q:atm} {R:atm}
 		 exists {D: !^ ((` P => ` Q) & (` P => ` R) => (` P => ` Q & ` R))} true.
 % %establish 12 {} (join _). % OK
-%prove 12 {} (join _).

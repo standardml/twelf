@@ -22,15 +22,12 @@
 
 
 
-%{
--bp not provable; interrupted it 
 %theorem m-dia : forallG (pi {x: term} {idx : x => x})
 		forall* {M:term}{M':term}{M'':term}
 		forall  {D1: M => M'} {D2: M => M''}
 		exists  {N:term}{E1: M' => N}{E2 : M'' => N}
 		true.
 %prove 4 [D1 D2] (m-dia D1 D2 _ _ _).
-}%
 
 %{
 %assert (m-dia _ _ _ _ _).

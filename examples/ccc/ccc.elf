@@ -10,9 +10,8 @@ obj : type.  %name obj _A.
 mor : obj -> obj -> type.  %name mor _F.
 
 % morphism equality
-
 == : mor A B -> mor A B -> type.  %name == _ME.
- %infix none 5 ==.
+%infix none 5 ==.
 
 % morphisms
 id : mor A A.

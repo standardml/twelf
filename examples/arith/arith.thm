@@ -27,14 +27,11 @@
 	        forall {P:nt X} {P':nt Y} {P'': nt Z} {P0:plus X Y Z}
 		exists {Q:plus Y X Z}
 		true.
-%% cannot be proven as after the application of the induction hypothesis
-%% we need to apply inversion (splitting again)
 
-%{
 %prove 3 [(N N') (M M')]
   (comm N M _ _ _)
   (comm' M' N' _ _ _).
-}%  
+
 %terminates [(N N') (M M')]
   (comm N M _ _ _)
   (comm' M' N' _ _ _).
