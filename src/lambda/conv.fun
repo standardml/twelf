@@ -61,6 +61,12 @@ struct
 	  convDecP ((DP1, s1), (DP2, s2)) 
 	  andalso convExp ((V1, dot1 s1), (V2, dot1 s2))
 
+      | convExpW (Us1 as (Pi _, _), Us2 as (Root (Def _, _), _)) =
+	  convExpW (Us1, Whnf.expandDef Us2)
+
+      | convExpW (Us1 as (Root (Def _, _), _), Us2 as (Pi _, _)) =
+	  convExpW (Whnf.expandDef Us1, Us2)
+
       | convExpW ((Lam (D1, U1), s1), (Lam (D2, U2), s2)) =
 	(* G |- D1[s1] = D2[s2] by typing invariant *)
 	  convExp ((U1, dot1 s1),  (U2, dot1 s2))
