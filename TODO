@@ -1,0 +1,6 @@
+Wed Mar 17 22:24:26 1999 -fp
+
+Currently, constraints attached to the variables occurring only the proof term
+are not printed.  There is not simple reliable way to summarize the active
+constraints.  This should be fixed in a more general CLP architecture.
+

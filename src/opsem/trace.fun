@@ -29,14 +29,13 @@ struct
 
     fun newline () = print "\n"
 
-    fun printCtx (I.Null) = print "No hypotheses or parameters\n"
+    fun printCtx (I.Null) = print "No hypotheses or parameters. "
       | printCtx (I.Decl(I.Null, D)) =
-          (print (decToString (I.Null, D));
-	   newline ())
+          print (decToString (I.Null, D))
       | printCtx (I.Decl(G, D)) =
 	  (printCtx (G);
-	   print (decToString (G, D));
-	   newline ())
+	   newline ();
+	   print (decToString (G, D)))
 
     fun evarsToString (Xnames) =
         let
@@ -116,8 +115,10 @@ struct
 \v X1 ... Xn - variables --- show instantiation of X1 ... Xn\n\
 \? for help"
 
-    val currentGoal = ref (I.Uni (I.Type)) (* dummy initialization *)
-    val currentEVarInst : (I.Exp * I.name) list ref = ref nil
+    val currentGoal : (I.dctx * I.Exp) ref =
+          ref (I.Null, I.Uni (I.Type)) (* dummy initialization *)
+    val currentEVarInst : (I.Exp * I.name) list ref =
+          ref nil
 
     fun setEVarInst (Xs) =
         currentEVarInst := List.map (fn X => (X, N.evarName (I.Null, X))) Xs
@@ -141,7 +142,7 @@ struct
 			print ("% Trace detail now " ^ Int.toString (!detail));
 			breakAction (G))
 	     | #"h" => (printCtx G; breakAction (G))
-	     | #"g" => (print (expToString (G, !currentGoal));
+	     | #"g" => (print (expToString (!currentGoal));
 			breakAction (G))
 	     | #"i" => (print (evarsToString (List.rev (!currentEVarInst)));
 			breakAction (G))
@@ -220,7 +221,7 @@ struct
     fun traceEvent (G, e) = print (eventToString (G, e))
 
     fun setGoal (G, V) = 
-        (currentGoal := V;
+        (currentGoal := (G, V);
 	 setEVarInst (Abstract.collectEVars (G, (V, I.id), nil)))
 
     fun monitorHead (cids, I.Const(c)) = List.exists (fn c' => c = c') cids

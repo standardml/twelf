@@ -12,3 +12,5 @@
 - Add Twelf.Print.TeX.sgn and prog
 
 - Add tracing.
+
+- %name takes optional second argument
