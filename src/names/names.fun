@@ -16,6 +16,14 @@ struct
 
   exception Error of string
 
+  (*
+     Unprintable is raised when trying to resolve the names
+     of unnamed variables.  Usually, this signals an error
+     in Twelf; the only exception is the use of anonymous
+     bound variables [_] or {_} in the source.
+  *)
+  exception Unprintable
+
   (***********************)
   (* Operator Precedence *)
   (***********************)
@@ -532,7 +540,8 @@ struct
     *)
     fun bvarName (G, k) =
         (case IntSyn.ctxLookup (G, k)
-	   of IntSyn.Dec(SOME(name), _) => name)
+	   of IntSyn.Dec(SOME(name), _) => name
+            | _ => raise Unprintable)
               (* NONE should not happen *)
 
     (* decName' role (G, D) = G,D'

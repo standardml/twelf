@@ -35,6 +35,7 @@ sig
   structure IntSyn : INTSYN
 
   exception Error of string
+  exception Unprintable
 
   structure Fixity : FIXITY
 
@@ -58,7 +59,7 @@ sig
   val getEVar : string -> IntSyn.Exp (* create, if undefined *)
   val getEVarOpt : string -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
-  val bvarName : IntSyn.dctx * int -> string (* must be defined *)
+  val bvarName : IntSyn.dctx * int -> string (* raises Unprintable if undefined *)
 
   val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* status unknown, like decEName *)
   val decEName : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* assign existential name *)

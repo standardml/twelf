@@ -1,0 +1,62 @@
+tp     : type.
+tm     : tp -> type.
+form   : tp.
+arrow  : tp -> tp -> tp.  %infix right 14 arrow.
+allt   : (tp -> tp) -> tp.
+pf     : tm form -> type.
+
+lamt   : ({T:tp} tm (F T)) -> tm (allt F).
+@@     : tm (allt F) -> {T:tp} tm (F T).     %infix left 20 @@.
+lam    : (tm T1 -> tm T2) -> tm (T1 arrow T2).
+@      : tm (T1 arrow T2) -> tm T1 -> tm T2.  %infix left 20 @.
+imp    : tm form -> tm form -> tm form.   %infix right 10 imp.
+forall : (tm T -> tm form) -> tm form.
+
+betat_e: {F: {S} tm (H S)}{P: tm (H T) -> tm form} 
+           pf (P (lamt F @@ T)) -> pf (P (F T)).
+betat_i: {F: {S} tm (H S)}{P: tm (H T) -> tm form} 
+           pf (P (F T)) -> pf (P (lamt F @@ T)).
+
+beta_e: {P: tm T -> tm form} pf (P (lam F @ X)) ->  pf (P (F X)).
+beta_i: {P: tm T -> tm form} pf (P (F X)) -> pf (P (lam F @ X)).
+
+imp_i   : (pf A -> pf B) -> pf (A imp B).
+imp_e   : pf (A imp B) -> pf A -> pf B.
+
+forall_i : ({X:tm T}pf (A X)) -> pf (forall A).
+forall_e : pf(forall A) -> {X:tm T}pf (A X).
+
+forall2 = [F] forall [X1] forall [X2] F X1 X2.
+forall3 = [F] forall [X1] forall [X2] forall [X3] F X1 X2 X3.
+forall4 = [F] forall [X1] forall [X2] forall [X3] forall [X4] F X1 X2 X3 X4.
+
+forall2_i: ({X1}{X2} pf (A X1 X2)) -> pf (forall2 A) =
+ [Q](forall_i ([Z1] (forall_i ([Z2] Q Z1 Z2)))).
+
+forall3_i: ({X1}{X2}{X3} pf (A X1 X2 X3)) -> pf (forall3 A) =
+ [Q] (forall_i ([Z] (forall2_i (Q Z)))).
+
+forall4_i: ({X1}{X2}{X3}{X4} pf (A X1 X2 X3 X4)) -> pf (forall4 A) =
+ [Q] (forall_i ([Z] (forall3_i (Q Z)))).
+
+cut : pf A -> (pf A -> pf B) -> pf B = 
+  [P1:pf A][P2:pf A -> pf B] imp_e (imp_i P2) P1.
+
+
+forall4_imp5_i: ({W}{X}{Y}{Z}pf (A W X Y Z) -> pf (B W X Y Z) -> pf (C W X Y Z) -> pf (D W X Y Z) -> pf (E W X Y Z) -> pf (F W X Y Z)) -> 
+                pf (forall4 [W][X][Y][Z] A W X Y Z imp B W X Y Z imp C W X Y Z imp D W X Y Z imp E W X Y Z imp F W X Y Z) =
+ [P1]
+ forall4_i [W][X][Y][Z]
+ imp_i [P2] imp_i [P3] imp_i [P4] imp_i [P5] imp_i [P6]
+ P1 W X Y Z P2 P3 P4 P5 P6.
+
+bighole: pf A.
+
+vacuous = [F] forall [_:tm form] forall [x2] F x2.
+vacuous1 = [F] forall [_1:tm form] forall [x2] F x2.
+
+validtype_i =
+ [P2]
+  (cut (forall4_imp5_i P2) [_]  % just to strictify P2
+   forall2_i [C1][C2][D1][D2]
+   bighole).

@@ -115,11 +115,15 @@ struct
 
   fun joinRegions (oc1, oc2) = Paths.join (Paths.toRegion oc1, Paths.toRegion oc2)
 
+  fun formatExp (G, U) =
+      Print.formatExp (G, U)
+      handle Names.Unprintable => F.String "%_unprintable_%"
+
   fun mismatchError (G, (V1', s), ((U2, V2), oc2), msg) =
       let
 	val r = Paths.toRegion oc2
-	val V1'fmt = Print.formatExp (G, IntSyn.EClo (V1', s))
-	val V2fmt = Print.formatExp (G, V2)
+	val V1'fmt = formatExp (G, IntSyn.EClo (V1', s))
+	val V2fmt = formatExp (G, V2)
 	val diff = F.Vbox0 0 1
 	           [F.String "Expected:", F.Space, V1'fmt, F.Break,
 		    F.String "Found:   ", F.Space, V2fmt]
@@ -132,8 +136,8 @@ struct
   fun hasTypeError (G, (V1, oc1), (V2, oc2), msg) =
       let
 	val r2 = Paths.toRegion oc2
-	val V1fmt = Print.formatExp (G, V1)
-	val V2fmt = Print.formatExp (G, V2)
+	val V1fmt = formatExp (G, V1)
+	val V2fmt = formatExp (G, V2)
 	val diff = F.Vbox0 0 1
 	           [F.String "Synthesized: ", V1fmt, F.Break,
 		    F.String "Ascribed:    ", V2fmt]
@@ -145,7 +149,7 @@ struct
 
   fun extraneousError (G, (V1, s), (U2, oc2)) =
       let
-	val V1fmt = Print.formatExp (G, IntSyn.EClo (V1, s))
+	val V1fmt = formatExp (G, IntSyn.EClo (V1, s))
 	val nonFun = F.HVbox [F.Space, V1fmt, F.Break,
 			      F.String "is not a function type"]
 	val r2 = Paths.toRegion oc2

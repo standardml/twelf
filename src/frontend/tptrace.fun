@@ -105,14 +105,18 @@ struct
 	   | SOME(constr) => inst ^ "\nConstraints:\n" ^ constr
       end
 
+  fun formatExp (G, U) =
+      Print.formatExp (G, U)
+      handle Names.Unprintable => F.String "%_unprintable_%"
+
   fun unify (G, (V1, s1), (V2, s2)) =
       if not (!trace) then Unify.unify (G, (V1, s1), (V2, s2))
       else 
       let 
 	val Xs = Abstract.collectEVars (G, (V2, s2), Abstract.collectEVars (G, (V1, s1), nil))
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
-	val eqnsFmt = F.HVbox [F.String "|?", F.Space, Print.formatExp (G, IntSyn.EClo (V1, s1)),
-			       F.Break, F.String "=", F.Space, Print.formatExp (G, IntSyn.EClo (V2, s2))]
+	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, IntSyn.EClo (V1, s1)),
+			       F.Break, F.String "=", F.Space, formatExp (G, IntSyn.EClo (V2, s2))]
 	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
 	val _ = Unify.unify (G, (V1, s1), (V2, s2))
 	val _ = print (evarsToString (Xnames) ^ "\n")
@@ -127,8 +131,8 @@ struct
 	val Xs = Abstract.collectEVars (G, (U, IntSyn.id),
 					Abstract.collectEVars (G, (V, IntSyn.id), nil))
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
-	val jFmt = F.HVbox [F.String "|-", F.Space, Print.formatExp (G, U), F.Break,
-			    F.String ":", F.Space, Print.formatExp (G, V)]
+	val jFmt = F.HVbox [F.String "|-", F.Space, formatExp (G, U), F.Break,
+			    F.String ":", F.Space, formatExp (G, V)]
 	val _ = print (F.makestring_fmt jFmt ^ "\n")
       in
 	()
@@ -141,8 +145,8 @@ struct
   fun mismatchError (G, (V1', s), ((U2, V2), oc2), msg) =
       let
 	val r = Paths.toRegion oc2
-	val V1'fmt = Print.formatExp (G, IntSyn.EClo (V1', s))
-	val V2fmt = Print.formatExp (G, V2)
+	val V1'fmt = formatExp (G, IntSyn.EClo (V1', s))
+	val V2fmt = formatExp (G, V2)
 	val diff = F.Vbox0 0 1
 	           [F.String "Expected:", F.Space, V1'fmt, F.Break,
 		    F.String "Found:   ", F.Space, V2fmt]
@@ -155,8 +159,8 @@ struct
   fun hasTypeError (G, (V1, oc1), (V2, oc2), msg) =
       let
 	val r2 = Paths.toRegion oc2
-	val V1fmt = Print.formatExp (G, V1)
-	val V2fmt = Print.formatExp (G, V2)
+	val V1fmt = formatExp (G, V1)
+	val V2fmt = formatExp (G, V2)
 	val diff = F.Vbox0 0 1
 	           [F.String "Synthesized: ", V1fmt, F.Break,
 		    F.String "Ascribed:    ", V2fmt]
@@ -168,7 +172,7 @@ struct
 
   fun extraneousError (G, (V1, s), (U2, oc2)) =
       let
-	val V1fmt = Print.formatExp (G, IntSyn.EClo (V1, s))
+	val V1fmt = formatExp (G, IntSyn.EClo (V1, s))
 	val nonFun = F.HVbox [F.Space, V1fmt, F.Break,
 			      F.String "is not a function type"]
 	val r2 = Paths.toRegion oc2
