@@ -210,7 +210,9 @@ struct
       let 
 	fun calcImplicit' (I.ConDec (_, _, k, _, V, _))  =
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
-	    (* only possibility since type families cannot be defined *)
+	  | calcImplicit' (I.ConDef (_, _, k, _, V, _)) =
+	    (* ignore definition for defined type family since they are opaque *)
+	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
       in 
 	(checkName mS; calcImplicit' (I.sgnLookup a)) 
 	handle Error (msg) => error (r, msg)  (* re-raise Error with location *)
