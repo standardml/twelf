@@ -96,7 +96,7 @@ struct
 	      val _ = printSplitting ()
 	      val SL = (Timers.time Timers.splitting MTPSplitting.apply) splitOp
 	      val _ = printCloseBracket ()
-	      val SL' = map (fn S => MTPRecursion.apply (MTPRecursion.expand S)) SL
+	      val SL' = map (fn S => (Timers.time Timers.recursion MTPRecursion.apply) (MTPRecursion.expand S)) SL
 	    in
 	      fill (SL' @ givenStates, os)
 	    end
@@ -107,7 +107,7 @@ struct
 	  of fillingOp =>
 	     let
 	       val _ = printFilling ()
-	       val qed = (Timers.time Timers.recursion MTPFilling.apply) fillingOp
+	       val qed = (Timers.time Timers.filling MTPFilling.apply) fillingOp
 	       val _ = printCloseBracket ()
 	     in
 	       if qed then  fill (givenStates, os)

@@ -435,37 +435,15 @@ struct
 *)       
 
     fun check (G, n, s, G0, O, IH, H, Fs) Ds = 
-(* Check for duplicates,
-   generate new assumption,
-   residual goals *)
-(*      if Abstract.closedSub (I.Null, s) then    
-	(* Induction hypothesis fully applied *)
-	if List.exists (fn (n', O') => n = n' andalso S.convOrder (O', O)) H then
-	  (* already seen *)
+      let
+	val Frl = residualLemma (G, G0, Fs)
+	val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
+      in 
+	if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
 	  Ds
 	else
-	  (*  new assumptions are being added *)
-	  Ass (n, S.normalizeOrder O, makeCtx (I.Null, Fs)) :: Ds
-      else 
-	(* Induction hypothesis only partially applied *)
-	let
-	  val Frl = residualLemma (G, s, IH)
-	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
-	in 
-	  if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) R then
-	    Ds
-	  else
-	    Lemma (n, Frl) :: Ds
-	end *)
-	let
-	  val Frl = residualLemma (G, G0, Fs)
-	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
-	in 
-	  if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
-	    Ds
-	  else
-	    Lemma (n, Frl) :: Ds
-	end
+	  Lemma (n, Frl) :: Ds
+      end
 
     fun merge (GB, (I.Null, s), T) = (GB, I.id)
       | merge ((G, B), (I.Decl (G', D), s), T) = 
@@ -492,11 +470,15 @@ struct
 	    returns s''  of type  GB, Ds, G'[...] |- w'' : GB, G
 	    and     V''  mapping (GB, Ds, G'[...] |- V) to (GB, Ds |- {G'[...]} V type)
 	    and     F''  mapping (GB, Ds, G'[...] |- F) to (GB, Ds |- {{G'[...]}} F formula)
+       then GB' = GB, Ds'    
+       and  |Ds'| = de
+       and  each declaration in Ds' corresponds to one existential quantifier in F
+       and  GB' |- s' : GB 
     *)
     
-    fun skolem (n, (du, de), GB, w, F.True, sc) = (GB, w)
-      | skolem (n, (du, de), GB, w, F.All (F.Prim D, F), sc) =
-          skolem (n, (du+1, de), GB, w, F, 
+    fun skolem ((du, de), GB, w, F.True, sc) = (GB, w)
+      | skolem ((du, de), GB, w, F.All (F.Prim D, F), sc) =
+          skolem ((du+1, de), GB, w, F, 
 		  fn (s, de') =>	
 					(* s'  :  GB, Ds |- s : GB   *)
 		     let 
@@ -513,7 +495,7 @@ struct
 					(* _   : maps (GB, Ds, G'[....], D[?] |- F : for) to  (GB, Ds, |- {{G[....], D[?]}} F : for) *)
 			)
 		     end)
-      | skolem (n, (du, de), (G, B), w, F.Ex (I.Dec (name, V), F), sc) = 
+      | skolem ((du, de), (G, B), w, F.Ex (I.Dec (name, V), F), sc) = 
 					(* V   : GB, G |- V type *)
 	  let 
 	    val (s', V', F') = sc (w, de)  
@@ -537,7 +519,7 @@ struct
 	    val T2 = S.Lemma (!MTPGlobal.maxSplit, F2)
 	                                (* T2  : GB, Ds |- T2 : tag *)
 	  in
-	    skolem (n, (du, de+1), (I.Decl (G, D2), I.Decl (B, T2)), I.comp (w, I.shift), F,
+	    skolem ((du, de+1), (I.Decl (G, D2), I.Decl (B, T2)), I.comp (w, I.shift), F,
 		    fn (s, de') => 
 					(* s   : GB, Ds, D2 |- s : GB *)
 		       let
@@ -552,11 +534,8 @@ struct
 			  V', F')
 		       end)
 	  end
-(*      | skolem (1, d, (G, B), w, F.And (F1, F2), sc) =
-	  skolem (1, d, (G, B), w, F1, sc)
-      | skolem (n, d, (G, B), w, F.And (F1, F2), sc) = 
-	  skolem (n-1, d, (G, B), w, F2, sc)
-*)
+
+
     (* updateState (S, (Ds, s))
 
        Invariant:
@@ -579,7 +558,7 @@ struct
 	end *)
       | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, F), (Lemma (n', Frl') :: L, s)) =
         let
-	  val ((G'', B''), s') = skolem (n', (0, 0), (G, B), I.id, F.forSub (Frl', s), 
+	  val ((G'', B''), s') = skolem ((0, 0), (G, B), I.id, F.forSub (Frl', s), 
 					 fn (s', _) => (s', fn V' => V', fn F' => F')) 
 	  val s'' = I.comp (s, s')
 	in

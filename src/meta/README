@@ -36,10 +36,10 @@ TODO list of meta theorem prover
 --------------------------------
 
 Code Walk (Invariants, Mutual recursion)
-DONE Anchor into Twelf
+DONE -cs Anchor into Twelf
 
-Unify induction hypothesis result/residual lemmas to one construct.
-Keep residual lemmas explicit
+DONE -cs Unify induction hypothesis result/residual lemmas to one construct.
+DONE -cs Keep residual lemmas explicit
 
 Make ctxblock adequate for formulas (left to right, instead  right to left)
 Parameter Cases
