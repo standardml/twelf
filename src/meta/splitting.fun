@@ -13,12 +13,16 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 		        sharing MTPAbstract.StateSyn = StateSyn'
 		      structure MTPrint : MTPRINT
 		        sharing MTPrint.StateSyn = StateSyn'
+		      structure Names : NAMES            (* too be removed  -cs *)
+			sharing Names.IntSyn = IntSyn    (* too be removed  -cs *)
 		      structure Conv :CONV
 			sharing Conv.IntSyn = IntSyn
 		      structure Whnf : WHNF
   		        sharing Whnf.IntSyn = IntSyn
 		      structure TypeCheck : TYPECHECK
 			sharing TypeCheck.IntSyn = IntSyn
+		      structure FunTypeCheck :FUNTYPECHECK
+			sharing FunTypeCheck.FunSyn = FunSyn
 		      structure Index : INDEX
 		        sharing Index.IntSyn = IntSyn
 		      structure Print : PRINT
@@ -55,6 +59,34 @@ struct
     structure I = IntSyn
     structure F = FunSyn
     structure S = StateSyn
+
+
+    (* aux (G, B) = L' 
+       
+       Invariant:
+       If   . |- G ctx
+       and  G |- B tags
+       then . |- L' = GxB lfctx
+    *)
+
+    fun aux (I.Null, I.Null) = I.Null
+      | aux (I.Decl (G, D), I.Decl (B, S.Lemma _)) = 
+          I.Decl (aux (G, B), F.Prim D)
+      | aux (G as I.Decl (_, D), B as I.Decl (_, S.Parameter (SOME l))) = 
+	let
+	  val F.LabelDec  (name, _, G2) = F.labelLookup l
+	  val (Psi', G') = aux' (G, B, List.length G2)
+	in
+	  I.Decl (Psi', F.Block (F.CtxBlock (SOME l, G')))
+	end
+
+    and aux' (G, B, 0) = (aux (G, B), I.Null)
+      | aux' (I.Decl (G, D), I.Decl (B, S.Parameter (SOME _)), n) =
+        let
+	  val (Psi', G') = aux' (G, B, n-1)
+	in
+	  (Psi', I.Decl (G', D))
+	end
 
 
 
@@ -188,6 +220,7 @@ struct
       | constCases (G, Vs, I.Const c::Sgn, abstract, ops) = 
 	let
 	  val (U, Vs') = createAtomConst (G, I.Const c)
+	  val _ = TextIO.print ("Trying Constant " ^ (I.conDecName (I.sgnLookup c)) ^ "\n")
 	in
 	  constCases (G, Vs, Sgn, abstract,
 		      Trail.trail (fn () => 
@@ -212,6 +245,7 @@ struct
       | paramCases (G, Vs, k, abstract, ops) = 
 	let 
 	  val (U, Vs') = createAtomBVar (G, k)
+ val _ = TextIO.print ("Trying parameter " ^ (Int.toString k) ^ "\n")
 	in
 	  paramCases (G, Vs, k-1, abstract, 
 		      Trail.trail (fn () =>
@@ -229,14 +263,19 @@ struct
 
     fun metaCases (d, ops0) (c, G, k, Vs, abstract) =
       let
+	val g = I.ctxLength G
+
 	fun select (0, ops)  = ops
 	  | select (d', ops) = 
 	    let  
-	      val I.Dec (_, V) = I.ctxDec (G, d'+k)
+	      val n = g-d'+1
+	      val I.Dec (_, V) = I.ctxDec (G, n)
 	      val ops' = if I.targetFam V = c then 
 		        let 
 			  val _ = TextIO.print "Parameter context candidate found\n"
-			  val (U, Vs') = createAtomBVar (G, d'+k)
+			  val (U, Vs') = createAtomBVar (G, n)
+			  val _ = TextIO.print ("Unifying " ^ (Print.expToString (G, I.EClo Vs)) ^ " with " ^
+			    (Print.expToString (G, I.EClo Vs')) ^ "\n")
 			in
 			  Trail.trail (fn () =>
 				       (if Unify.unifiable (G, Vs, Vs')
@@ -253,12 +292,16 @@ struct
       end
 
           
+fun inspect (I.Shift k) = TextIO.print ("^" ^ (Int.toString k))
+  | inspect (I.Dot (I.Idx n, s)) = (TextIO.print ("(" ^ (Int.toString n) ^ ")"); inspect s)
+  | inspect (I.Dot (I.Exp _, s)) = (TextIO.print ("X"); inspect s)
+  
 
 
     (* lowerSplitDest (G, k, (V, s'), abstract) = ops'
        
        Invariant: 
-       If   G0, G |- s' : G1  G1 |- V: type
+       If  G0, G |- s' : G1  G1 |- V: type
        and  k = |local parameters in G|
        and  G is the context of local parameters
        and  abstract abstraction function
@@ -266,7 +309,7 @@ struct
 	    (it contains constant and parameter cases)
     *)
     fun lowerSplitDest (G, k, (V as I.Root (I.Const c, _), s'), abstract, cases) =
-          cases (c, G, k, (V, s'), abstract)
+          cases (c, G, I.ctxLength G , (V, s'), abstract)
 (* k must change. It should consider all parameters in the context, and not just the local ones --cs *) 
 (*          constCases (G, (V, s'), Index.lookup c, abstract, 
 		      paramCases (G, (V, s'), I.ctxLength G, abstract, nil)) *)
@@ -289,49 +332,117 @@ struct
        raise MTPAbstract.Error "Cannot split right of parameters")
 
 
-    (* split (x:D, s, B, abstract) = ops'
+    (* split (x:D, sc, B, abstract) = cases'
 
        Invariant :
        If   |- G ctx
-       and  |- B : G tags
-       and  G' |- s : G   and  G |- D : L
-       and  abstract abstraction function
-       then ops' = (op1, ... opn) are resulting operators from splitting D[s]
+       and  G |- B tags
+       and  G |- D : L
+       then sc is a function, which maps
+	        Gp, Bp          (. |- Gp ctx   Gp |- Bp tags)
+            to (G', B'), s', (G, B), p' 
+		              (. |- G' = Gp, G'' ctx
+	                       G'' contains only parameter declarations from G
+	  	               G' |- B' tags
+    		               G' |- s' : G
+		               and p' holds iff (G', B') contains a parameter 
+	 	    	     block independent of Gp, Bp)
+        and  abstract is an abstraction function which maps
+	       (Gn, Bn), sn  (|- Gn ctx,  Gn |- Bn tags,  Gn |- sn : G)
+	    to S'            (|- S' state)
+
+       then cases' = (S1, ... Sn) are cases of the split
     *)
-    fun split (D as I.Dec (_, V), sc, B, abstract) = 
+    fun split ((D as I.Dec (_, V), T), sc, abstract) = 
         let
-(*	  fun abstractFinal (abstract) (B, s) =
-	        abstract (MTPAbstract.abstractSub (I.Null, B, s))
-*)
-	  fun split' (n, ops) = 
+	  fun split' (n, cases) = 
 	    if n < 0 then 
 	      let 
-		val (_, _, s) = sc (I.Null, I.Null)
+		val ((G', B'), s', (G0, B0), _) = sc (I.Null, I.Null)
+					(* |- G' = parameter blocks of G  ctx*)
+					(* G' |- B' tags *)
+					(* G' |- s' : G *)
+		fun abstract' U' = 
+		  let 
+					(* G' |- U' : V[s'] *)
+					(* G' |- U.s' : G, V *)
+		    val _ = TextIO.print ("[Abstraction in the base case: ...\n")
+		    val _ = TextIO.print "U'.s' = "
+		    val _ = inspect (I.Dot (I.Exp U', s'))
+		    val _ = TextIO.print "\n" 
+		    val _ = TextIO.print ("|G'| = " ^ (Int.toString (I.ctxLength G')) ^ "\n")
+		    val ((G'', B''), s'') = MTPAbstract.abstractSub' ((G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
+		    val _ = TextIO.print "s'' = "
+		    val _ = inspect s''
+		    val _ = TextIO.print "\n" 
+		    val Psi'' = aux (G'',B'')
+		    val _ = TypeCheck.typeCheckCtx (F.makectx Psi'')
+		    val _ = TextIO.print "\n|- Psi'' lfctx\n"
+
+		    val Psi = aux (I.Decl (G0, D), I.Decl (B0, T))
+		    val _ = TypeCheck.typeCheckCtx (F.makectx Psi)
+		    val _ = TextIO.print "|- Psi lfctx\n"
+		    val _ = FunTypeCheck.checkSub (Psi'', s'', Psi)
+		    val _ = TextIO.print ("]\n")
+		  in 
+		    abstract ((G'', B''), s'')
+		  end
 	      in
-		lowerSplitDest (I.Null, 0, (V, s),  
-				fn U' => abstract (MTPAbstract.abstractSub (I.id, (I.Null, I.Null), I.Dot (I.Exp (U'), s), B)),
-				constAndParamCases ops)
+		lowerSplitDest (G', 0, (V, s'), 
+				abstract',
+				constAndParamCases cases)
 	      end
 	    else
 	      let
 		val F.LabelDec (name, G1, G2) = F.labelLookup n
 		val t = someEVars (I.Null, G1, I.id)
+					(* . |- t : G1 *)
 		val G2t = ctxSub (G2, t)
+					(* . |- G2 [t] ctx *)
 		val length = List.length G2
 		val B2 = createTags (length , n)
-		val (G'', B'', s) = sc (F.listToCtx G2t, B2)   
-		val abstract' = if conv ((G'', I.id), (F.listToCtx G2t, I.id)) then abstract
-			      else abstractErrorRight (* G'' = G2t, otherwise incomplete *)
-(*		val ops' = lowerSplitDest (G'', 0, (V, s), *)
-		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)), 
-		 fn U' => abstract' (MTPAbstract.abstractSub (t, (G'', B''), I.Dot (I.Exp (U'), s), B)),
-(*					fn U' => U', *)
-					metaCases (length, ops))
+					(* G2 [t] |- B2 tags *)
+		val ((G', B'), s', (G0, B0), p) = sc (Names.ctxName (F.listToCtx G2t), B2)
+					(* . |- G' ctx *)
+					(* G' |- B' tags *)
+					(* G' |- s : G = G0 *)
+					(* G0 |- B0 tags *)
+
+		(* abstract' U = S' 
+		 
+		   Invariant:
+		   If   G' |- U' : V[s']
+		   then |- S' state *)
+		fun abstract' U' = 
+					(* G' |- U' : V[s'] *)
+		  if p then (TextIO.print "Cannot split right of parameters";
+			     raise MTPAbstract.Error "Cannot split right of parameters")
+		  else 
+		    let 
+					(* G' |- U.s' : G, V *)
+					(* . |- t : G1 *)
+		      val ((G'', B''), s'') = MTPAbstract.abstractSub (t, (G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
+
+(*HERE*)
+(*BUG: edit abstract so that it also collects EVars in the types of parameters
+  then change abstractSub to abstractSub' and remove t
+  -cs 
+*)
+					(* . |- G'' ctx *)
+					(* G'' |- B'' tags *)
+					(* G'' = G1'', G2', G2'' *)
+					(* where G1'' |- G2' ctx, G2' is the abstracted parameter block *)
+		    in 
+		      abstract ((G'', B''), s'')
+		    end
+				
+		val cases' = lowerSplitDest (G', 0, (V, s'), abstract',
+					   metaCases (length, cases))
 	      in
-		split' (n - 1, ops')
+		split' (n - 1, cases')
 	      end
 	in
-	  split' (F.labelSize () - 1, nil)
+	  split' (F.labelSize () -1, nil)
 	end
       
 
@@ -365,12 +476,34 @@ struct
     fun isIndexFail (D, isIndex) k = isIndex (k+1)
 
 
+    (* abstractInit S ((G', B'), s') = S'
+     
+       Invariant:
+       If   |- S = (n, (G, B), (IH, OH), d, O, H, F) state
+       and  |- G' ctx
+       and  G' |- B' tags
+       and  G' |- s' : G
+       then |- S' = (n, (G', B'), (IH, OH), d, O[s'], H[s'], F[s']) state
+    *)
     fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
 		   map (fn (i, F') => (i, F.forSub (F', s'))) H, F.forSub (F, s')))
 
 
+    (* abstractCont ((x:V, T), abstract) = abstract'
+	      
+       Invariant: 
+       If   |- G ctx
+       and  G |- V : type
+       and  G |- B tags
+       and  abstract is an abstraction function which maps
+	            (Gn, Bn), sn  (|- Gn ctx,  Gn |- Bn tags,  Gn |- sn : G, D)
+		 to S'            (|- S' state)
+       then abstract' is an abstraction function which maps
+	            (Gn', Bn'), sn'  (|- Gn' ctx,  Gn' |- Bn' tags,  Gn' |- sn' : G)
+		 to S'               (|- S' state)
+    *)
     fun abstractCont ((D, T), abstract) ((G, B), s) =  
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
 		     I.Decl (B, T)), I.dot1 s)
@@ -379,46 +512,37 @@ struct
     fun makeAddressInit S k = (S, k)
     fun makeAddressCont makeAddress k = makeAddress (k+1)
 
-    (* expand' ((G, B), isIndex, abstract, makeAddress) = (s', ops')
 
+    (* expand' ((G, B), isIndex, abstract, makeAddress) = (sc', ops')
+	 
        Invariant:
        If   |- G ctx
-       and  |- B : G tags
+       and  G |- B tags
        and  isIndex (k) = B function s.t. B holds iff k index
-       and  abstract, dynamic abstraction function
+       and  abstract is an abstraction function which maps
+               (Gn, Bn), sn  (|- Gn ctx,  Gn |- Bn tags,  Gn |- sn : G)
+	    to S'            (|- S' state)
        and  makeAddress, a function which calculates the index of the variable
-	    to be split
-       then sc is a function, mapping D to  D, G' |- s' : G,   where G' < G
-       and  tc is a function, mapping D to  D, G |- t' G,
+            to be split
+       then sc' is a function, which maps
+               Gp, Bp         (. |- Gp ctx   Gp |- Bp tags)
+            to (G', B'), s', (G, B), p' 
+		              (. |- G' = Gp, G'' ctx
+	                       G'' contains only parameter declarations from G
+	  	               G' |- B' tags
+    		               G' |- s' : G
+		               and p' holds iff (G', B') contains a parameter 
+	 	    	     block independent of Gp, Bp)
        and  ops' is a list of splitting operators
+	     
+       Optimization possible : 
+         instead of reconstructin (G, B) as the result of sc, just take (G, B)
     *)
-    fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) =
-          (fn (Gp, Bp) => (Gp, Bp, I.Shift (I.ctxLength Gp)), nil)
-(*      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
-		 isIndex, abstract, makeAddress) =
-	let 
-	  val (sc, ops) =
-	    expand' ((G, B), isIndexSucc (D, isIndex), 
-		     abstractCont ((D, T), abstract),
-		     makeAddressCont makeAddress)
-	  val I.Dec (xOpt, V) = D
-	  (*	  val X = I.newEVar (I.Null, I.EClo (V, s)) *)
-	  fun sc' (Gp, Bp) = 
-	    let 
-	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (G', I.EClo (V, s))
-	    in
-	      (G', B', I.Dot (I.Exp (X), s))
-	    end
-	  val ops' = if not (isIndex 1) andalso b > 0
-			   then 
-			     (makeAddress 1, split (D, sc, B', abstract))
-			     :: ops
-		     else ops
-	in
-	  (sc', ops')
-	end
-*)      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
+    fun expand' (GB as (I.Null, I.Null), isIndex,
+		 abstract, 
+		 makeAddress) =
+        (fn (Gp, Bp) => ((Gp, Bp), I.Shift (I.ctxLength Gp), GB, false), nil)
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
 		 isIndex, abstract, makeAddress) = 
 	let 
 	  val (sc, ops) =
@@ -426,41 +550,43 @@ struct
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
-	  (*	  val X = I.newEVar (I.Null, I.EClo (V, s)) *)
 	  fun sc' (Gp, Bp) = 
 	    let 
-	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (G', I.EClo (V, s))
+	      val ((G', B'), s', (G0, B0), p') = sc (Gp, Bp)
+	      val X = I.newEVar (G', I.EClo (V, s'))     (* G' |- X : V[s'] *)
 	    in
-	      (G', B', I.Dot (I.Exp (X), s))
+	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')        (* G' |- X.s' : G, D *)
 	    end
 	  val ops' = if not (isIndex 1) andalso b > 0
 		       then 
-			 (makeAddress 1, split (D, sc, B', abstract))
+			 (makeAddress 1, split ((D, T), sc, abstract))
 			 :: ops
 		     else ops
 	in
-	    (sc', ops')
+	  (sc', ops')
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, abstract, makeAddress) = 
-        let 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, 
+		 abstract, 
+		 makeAddress) = 
+	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
-	  (* val X = I.newEVar (I.Null, I.EClo (V, sc)) *)
 	  fun sc' (Gp, Bp) = 
 	    let 
-	      val (G', B', s) = sc (Gp, Bp)
-	      val X = I.newEVar (G', I.EClo (V, s))
+	      val ((G', B'), s', (G0, B0), p') = sc (Gp, Bp)
+	      val X = I.newEVar (G', I.EClo (V, s'))
 	    in
-	      (G', B', I.Dot (I.Exp (X), s))
+	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')
 	    end
-	  in
-	    (sc', ops)
-	  end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, abstract, makeAddress) = 
+	in
+	  (sc', ops)
+	end
+      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, 
+		 abstract, 
+		 makeAddress) = 
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
@@ -469,17 +595,18 @@ struct
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 
 	    let 
-	      val (G', B', s) = sc (Gp, Bp)
+	      val ((G', B'), s', (G0, B0), _) = sc (Gp, Bp)
+	      val _ = TextIO.print "*"
 	    in
-	      (I.Decl (G', I.decSub (D, s)), I.Decl (B', T), I.dot1 s)
+	      ((I.Decl (G', Names.decName (G', I.decSub (D, s'))), I.Decl (B', T)), 
+	       I.dot1 s', (I.Decl (G0, D), I.Decl (B0, T)), true)
 	    end
-
+	  
 	in
 	  (sc', ops)
 	end
-      (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
-
-
+    (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
+ 
 
 
     (* expand (S) = ops'
@@ -488,14 +615,14 @@ struct
        If   |- S state
        then ops' is a list of all possiblie splitting operators
     *)
-    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
+    fun expand (S0 as S.State (n, (G0, B0), _, _, _, _, _)) =
       let 
 	val (_, ops) =
-	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
+	  expand' ((G0, B0), isIndexInit, abstractInit S0, makeAddressInit S0)
       in
 	ops
       end
-
+    
     (* index (Op) = k
        
        Invariant:

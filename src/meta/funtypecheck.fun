@@ -448,5 +448,6 @@ struct
   in
     val isFor = isFor
     val check = checkRec
+    val checkSub = checkSub
   end
 end (* Signature FUNTYPECHECK *)       

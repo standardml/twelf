@@ -418,17 +418,96 @@ struct
 	end
 
 
-    (* abstractSub
+
+    (* abstractGlobalSub (K, s, B) = s'
+      
+       Invariant:
+       If   K > G   aux context
+       and  G |- s : G'
+       then K |- s' : G'
+    *)
+
+
+    fun abstractGlobalSub (K, I.Shift _, I.Null) = I.Shift (I.ctxLength K)
+      | abstractGlobalSub (K, I.Shift n, B as I.Decl _) =
+	  abstractGlobalSub (K, I.Dot (I.Idx (n+1), I.Shift (n+1)), B)
+      | abstractGlobalSub (K, I.Dot (I.Idx k, s'), I.Decl (B, T as S.Parameter _)) =
+          I.Dot (I.Idx (lookupBV (K, k)), abstractGlobalSub (K, s', B))
+      | abstractGlobalSub (K, I.Dot (I.Exp U, s'), I.Decl (B, T as S. Lemma _)) =
+          I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractGlobalSub (K, s', B))
+
+
+
+    (* collectGlobalSub (G0, s, B, collect) = collect'
+       
+       Invariant: 
+       If   |- G0 ctx
+       and  |- G ctx
+       and  G |- B tags
+       and  G0 |- s : G 
+       and  collect is a function which maps
+	       (d, K)  (d expresses the number of parameters in K, |- K aux ctx)
+	    to K'      (|- K' aux ctx, which collects all EVars in K)
+    *)
+    fun collectGlobalSub (G0, I.Shift _, I.Null, collect) =  collect 
+      | collectGlobalSub (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
+        let
+	  val _ = TextIO.print "Collected Parameter\n"
+	  val F.LabelDec (name, _, G2) = F.labelLookup l
+	in
+	  skip (G0, List.length G2, s, B, collect)
+	end
+      | collectGlobalSub (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	  collectGlobalSub (G0, s, B, fn (d, K) => 
+		       collect (d, collectExp (T, d, G0, (U, I.id), K)))
+    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+
+
+    and skip (G0, 0, s, B, collect) = collectGlobalSub (G0, s, B, collect)
+      | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
+          skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
+      
+    fun inspect (I.Null) = ""
+      | inspect (I.Decl (EBs, EV _)) = (inspect EBs) ^ "E"
+      | inspect (I.Decl (EBs, BV _)) = (inspect EBs) ^ "B"
+
+
+    (* abstractNew ((G0, B0), s, B) = ((G', B'), s')
 
        Invariant: 
+       If   . |- G0 ctx
+       and  G0 |- B0 tags
+       and  G0 |- s : G
+       and  G |- B tags
+       then . |- G' = G1, Gp, G2
+       and  G' |- B' tags
+       and  G' |- s' : G
+    *)
+    fun abstractNew ((G0, B0), s, B) =
+        let
+	  val cf = collectGlobalSub (G0, s, B, fn (_, K') => K')
+	  val K = cf (0, I.Null)
+	  val _ = TextIO.print ("INSPECT K: " ^ (inspect K) ^ "\n")
+	in
+	  (abstractCtx K, abstractGlobalSub (K, s, B))
+	end 
+
+
+
+
+    (* abstractSub (t, (G0, B0), s, B) = ((G', B'), s')
+
+       Invariant: 
+       If   . |- t : G0
+       and  G0 |- B0 tags
+       and  G0 |- s : G
+       and  G |- B tags
+       then . |- G' = G1, G0, G2
+       and  B' |- G' tags
+       and  G' |- s' : G
     *)
     fun abstractSubAll (t, (G0, B0), s, B) =
         let
-	  fun abstractSubAll' (K, s' as (I.Shift _)) = s'
-	    | abstractSubAll' (K, I.Dot (F as I.Idx _, s')) =
-	        I.Dot (F, abstractSubAll' (K, s'))
-	    | abstractSubAll' (K, I.Dot (I.Exp U, s')) =
-		I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractSubAll' (K, s'))
 
 	  (* collectSub (s, B) = (d', K')
 	   
@@ -440,7 +519,7 @@ struct
 	     then d' = |G1|
 	     and  K' is a auxiliary EVar context
 	    *)
-	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
+(*	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
 	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
 	      let
 		val F.LabelDec (name, _, G2) = F.labelLookup l
@@ -467,8 +546,39 @@ struct
 	      in
 	        (d + 1, I.Decl (K, BV (D, T)))
 	      end
+*)
+
+	  fun collectSub' (G0, I.Shift _, _, collect) = (fn (d, K) => collect (d, K))
+	    | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
+	      let
+		val F.LabelDec (name, _, G2) = F.labelLookup l
+	      in
+		skip (G0, List.length G2, s, B, collect)
+	      end
+	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	        collectSub' (G0, s, B, fn (d, K) => 
+			       collect (d, collectExp (T, d, G0, (U, I.id), K)))
+	    | collectSub' (_, I.Dot (I.Idx _, _), I.Decl (B, S.Lemma _), _) = raise Domain 
+(*  shouldn't occur *)
+
+	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+
+
+	  and skip (G0, 0, s, B, collect) = collectSub' (G0, s, B, collect)
+	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _), collect) =
+	        skip (G0, n-1, I.invDot1 s, B, fn (d, K) => collect (d+1, I.Decl (K, BV (D, T))))
 
 (* ----- *)
+
+          (* collectSub'' (G0, s, B, collect) = collect'
+	     
+	     Invariant: 
+	     If   G0 |- s : G
+	     and  G |- B tags
+	     and  collect extends a given K by EVars/BVars
+	     then collect' extends a given K according to K
+	            and adds the ones in s
+	  *)
 
 	  fun collectSub'' (G0, I.Shift _, _, collect) = collect
 	    | collectSub'' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
@@ -478,11 +588,18 @@ struct
 			     in
 			       collectExp (T, d', G0, (U, I.id), K'')
 			     end)
-	    | collectSub'' (G0, I.Dot (I.Idx _, s), I.Decl (B, T), collect) = 
-		collectSub'' (G0, s, B, collect)
+(*	    | collectSub'' (G0, I.Dot (I.Idx _, s), I.Decl (B, T), collect) = 
+		collectSub'' (G0, s, B, collect) *)
 	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
 
 
+	  (* skip'' (K, (G, B)) = K'
+	   
+	     Invariant:
+	     If   G = x1:V1 .. xn:Vn 
+	     and  G |- B = <param> ... <param> tags
+	     then  K' = K, BV (x1) .. BV (xn)
+	  *)
 
 	  fun skip'' (K, (I.Null, I.Null)) = K
 	    | skip'' (K, (I.Decl (G0, D), I.Decl(B0, T))) = I.Decl (skip'' (K, (G0, B0)), BV (D, T))
@@ -490,8 +607,8 @@ struct
 
 (* ------ *)
 
-          val collect2 = collectSub'' (G0, s, B, fn (_, K') => K')
-	  val collect0 = collectSub'' (I.Null, t, B0, fn (_, K') => K')
+          val collect2 = collectGlobalSub (G0, s, B, fn (_, K') => K')
+	  val collect0 = collectSub' (I.Null, t, B0, fn (_, K') => K')     (*BUG collectSub' doesn't work *)
 	  val K0 = collect0 (0, I.Null)
 	  val K1 = skip'' (K0, (G0, B0))
 	  val K = collect2 (I.ctxLength G0, K1)
@@ -499,15 +616,87 @@ struct
 (*	  val (_, K) = collectSub' (*change later *) (G0, s, B, fn (_, K') => K')
 *)
 	in
-	  (abstractCtx K, abstractSubAll' (K, s))
+	  (abstractCtx K, abstractGlobalSub (K, s, B))
 	end 
 
+(*
+
+
+    (* abstractNew ((G0, B0), s, B) = ((G', B'), s')
+
+       Invariant: 
+       If   . |- G0 ctx
+       and  G0 |- B0 tags
+       and  G0 |- s : G
+       and  G |- B tags
+       then . |- G' = G1, Gp, G2
+       and  G' |- B' tags
+       and  G' |- s' : G
+    *)
+    fun abstractNew ((G0, B0), s, B) =
+        let
+
+
+
+(*
+
+	  (* collectSub (s, B) = (d', K')
+	   
+	     Invariant:
+	     G1, G2 |- s : G 
+  	     |- G1 : ctx (only context blocks)
+	     |- G2 : ctx (only context blocks)
+	     G |- B tags
+	     then d' = |G1|
+	     and  K' is a auxiliary EVar context
+	    *)
+	  fun collectSub' (I.Null, I.Shift 0, _, collect) = (0, collect (0, I.Null))
+            | collectSub' (G0, s, B as I.Decl (_, S.Parameter (SOME l)), collect) = 
+	      let
+		val F.LabelDec (name, _, G2) = F.labelLookup l
+		val (d, K) = skip (G0, List.length G2, s, B)
+	      in
+		(d, collect (d, K))
+	      end
+	    | collectSub' (G0, I.Dot (I.Exp (U), s), I.Decl (B, T), collect) =
+	        collectSub' (G0, s, B, fn (d', K') => 
+			     let 
+			       val K'' = collect (d', K')
+			     in
+			       collectExp (T, d', G0, (U, I.id), K'')
+			     end)
+	    (* no cases for (G0, s, B as I.Decl (_, S.Parameter NONE), collect) *)
+
+
+
+
+	  and skip (G0, 0, s, B) = collectSub' (G0, s, B, fn (_, K') => K')
+	    | skip (I.Decl (G0, D), n, s, I.Decl (B, T as S.Parameter _)) =
+	      let 
+		val (d, K) = skip (G0, n-1, I.invDot1 s, B)
+	      in
+	        (d + 1, I.Decl (K, BV (D, T)))
+	      end
+
+	  val (_, K) = collectSub' (G0, s, B, fn (_, K') => K')
+ 
+	  val _ = TextIO.print ("OK: " ^ (Int.toString (I.ctxLength K)) ^ "\n")
+ ------ *)
+
+
+	  val cf = collectGlobalSub (G0, s, B, fn (_, K') => K')
+	  val K = cf (0, I.Null)
+	in
+	  (abstractCtx K, abstractGlobalSub (K, s))
+	end 
+*)
 
   in
     val weaken = weaken
     val raiseType = raiseType
 
     val abstractSub = abstractSubAll
+    val abstractSub' = abstractNew
   end
 
 end;  (* functor MTPAbstract *)

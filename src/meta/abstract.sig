@@ -14,5 +14,7 @@ sig
       
   val abstractSub : IntSyn.Sub * (IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub * StateSyn.Tag IntSyn.Ctx
         -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
+  val abstractSub' : (IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub * StateSyn.Tag IntSyn.Ctx
+        -> ((IntSyn.dctx * StateSyn.Tag IntSyn.Ctx) * IntSyn.Sub)
 
 end;  (* signature MTPABSTRACT *)
