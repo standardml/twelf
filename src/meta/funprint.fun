@@ -330,8 +330,8 @@ struct
 	  in
 	    case P 
 	      of (F.Inx (_, F.Unit)) => Fmt.Hbox (formatTuple' P)
-	      | _ => Fmt.Hbox (Fmt.String "(" :: 
-			       (formatTuple' P @ [Fmt.String ")"]))
+	      | _ => Fmt.HVbox0 1 1 1 
+		(Fmt.String "(" :: (formatTuple' P @ [Fmt.String ")"]))
 	  end
 
 	(* formatSplitArgs (Psi, L) = fmt'
@@ -352,8 +352,8 @@ struct
 		   Fmt.String "," :: Fmt.Break :: formatSplitArgs' L)
 	  in
 	    if List.length L = 1 then Fmt.Hbox (formatSplitArgs' L)
-	    else Fmt.Hbox (Fmt.String "(" :: 
-			   (formatSplitArgs' L @ [Fmt.String ")"]))
+	    else Fmt.HVbox0 1 1 1 
+	      (Fmt.String "(" :: (formatSplitArgs' L @ [Fmt.String ")"]))
 	  end
 
 	(* frontToExp (Ft) = U'
