@@ -127,6 +127,10 @@ structure MTPFilling =
 	      structure Whnf = Whnf)
 
 
+
+	       
+	       
+
 structure MTPSplitting = 
   MTPSplitting (structure MTPGlobal = MTPGlobal
 		structure Global = Global
@@ -146,12 +150,43 @@ structure MTPSplitting =
 		structure Print = Print
 		structure Unify = UnifyTrail)
 
+structure UniqueSearch =
+  UniqueSearch (structure Global = Global
+		structure IntSyn' = IntSyn
+		structure FunSyn' = FunSyn
+		structure StateSyn' = StateSyn
+		structure Abstract = Abstract
+		structure MTPGlobal = MTPGlobal
+		structure CompSyn' = CompSyn
+		structure Whnf = Whnf
+		structure Unify = Unify
+		structure Index = Index
+		structure Compile = Compile
+		structure Trail = Trail
+		structure CPrint = CPrint
+		structure Print = Print
+		structure Names = Names)
+
+structure Inference = 
+  Inference (structure MTPGlobal = MTPGlobal
+	     structure IntSyn = IntSyn
+	     structure FunSyn' = FunSyn
+	     structure StateSyn' = StateSyn
+	     structure Abstract = Abstract
+	     structure TypeCheck = TypeCheck
+	     structure FunTypeCheck = FunTypeCheck
+	     structure UniqueSearch = UniqueSearch
+	     structure Whnf = Whnf
+	     structure Print = Print)
+
+		  
 structure MTPRecursion = 
   MTPRecursion (structure Global =  Global
 		structure IntSyn = IntSyn
 		structure FunSyn = FunSyn
 		structure StateSyn' = StateSyn
 		structure FunTypeCheck = FunTypeCheck
+		structure MTPSearch = MTPSearch
 		structure Abstract = Abstract
 		structure MTPAbstract = MTPAbstract
 		structure Whnf = Whnf
@@ -165,6 +200,9 @@ structure MTPRecursion =
 		structure TypeCheck = TypeCheck
 		structure FunPrint = FunPrint
 		structure Formatter = Formatter)
+
+
+
 structure MTPStrategy = 
   MTPStrategy (structure MTPGlobal = MTPGlobal
 	       structure StateSyn' = StateSyn
@@ -173,6 +211,7 @@ structure MTPStrategy =
 	       structure MTPFilling = MTPFilling
 	       structure MTPSplitting = MTPSplitting
 	       structure MTPRecursion = MTPRecursion
+	       structure Inference = Inference
 	       structure Timers = Timers)
 	  
   
@@ -208,6 +247,7 @@ structure MTPi =
 	structure MTPData = MTPData
 	structure MTPSplitting = MTPSplitting
 	structure MTPRecursion = MTPRecursion
+	structure Inference = Inference
 	structure MTPStrategy = MTPStrategy
 	structure Names = Names
 	structure Order = Order

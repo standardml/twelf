@@ -70,7 +70,7 @@ struct
 	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (G) else ()
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in
-	  fn () => ((Search.searchEx (Xs, fn max => (if (!Global.doubleCheck) then 
+	  fn () => ((Search.searchEx (!MTPGlobal.maxFill, Xs, fn max => (if (!Global.doubleCheck) then 
 						       map (fn (X as I.EVar (_, G', V, _)) => 
 							    TypeCheck.typeCheck (G', (X, V))) Xs
 						     else []; raise Success max));

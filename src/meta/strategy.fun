@@ -10,6 +10,8 @@ functor MTPStrategy (structure MTPGlobal : MTPGLOBAL
 	  	       sharing MTPSplitting.StateSyn = StateSyn'
 		     structure MTPRecursion : MTPRECURSION
 		       sharing MTPRecursion.StateSyn = StateSyn'
+		     structure Inference : INFERENCE
+		       sharing Inference.StateSyn = StateSyn'
 		     structure MTPrint : MTPRINT
 		       sharing MTPrint.StateSyn = StateSyn'
 		     structure Timers : TIMERS) 
@@ -101,8 +103,9 @@ struct
 	      val SL = (Timers.time Timers.splitting MTPSplitting.apply) splitOp
 	      val _ = printCloseBracket ()
 	      val SL' = map (fn S => (Timers.time Timers.recursion MTPRecursion.apply) (MTPRecursion.expand S)) SL
+	      val SL'' = map (fn S => (Timers.time Timers.inference Inference.apply) (Inference.expand S)) SL'
 	    in
-	      fill (SL' @ givenStates, os)
+	      fill (SL'' @ givenStates, os)
 	    end
 
     and fill (nil, os) = os

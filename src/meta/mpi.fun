@@ -24,6 +24,9 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
   	      structure MTPFilling : MTPFILLING
 		sharing MTPFilling.FunSyn = FunSyn'
 	        sharing MTPFilling.StateSyn = StateSyn'
+	      structure Inference : INFERENCE
+		sharing Inference.FunSyn = FunSyn'
+		sharing Inference.StateSyn = StateSyn'
 	      structure MTPSplitting : MTPSPLITTING
 		sharing MTPSplitting.StateSyn = StateSyn'
 	      structure MTPRecursion : MTPRECURSION
@@ -55,6 +58,7 @@ struct
       Filling of MTPFilling.operator
     | Recursion of MTPRecursion.operator
     | Splitting of MTPSplitting.operator
+    | Inference of Inference.operator
 
     val Open : StateSyn.State Ring.ring ref = ref (Ring.init [])
     val Solved : StateSyn.State Ring.ring ref = ref (Ring.init [])
@@ -131,18 +135,22 @@ struct
 
     fun RecursionToMenu (O, A) = Recursion O :: A
 
+    fun InferenceToMenu (O, A) = Inference O :: A
+
     fun menu () = 
 	if empty () then Menu := NONE
 	else 
 	  let 
 	    val S = current ()
 	    val SplitO = MTPSplitting.expand S
+	    val InfO = Inference.expand S
 	    val RecO = MTPRecursion.expand S 
 	    val FillO = MTPFilling.expand S
 	  in
 	    Menu := SOME (FillingToMenu (FillO,
 					 RecursionToMenu (RecO, 
-							  SplittingToMenu (SplitO, nil))))
+							  InferenceToMenu (InfO,
+									   SplittingToMenu (SplitO, nil)))))
 	  end
 
 
@@ -186,6 +194,12 @@ struct
 		val (kopt, s) = menuToString' (k+1, M, kOopt)
 	      in
 		(kopt, s ^ "\n  " ^ (format k) ^ (MTPRecursion.menu O))
+	      end
+	    | menuToString' (k, Inference O :: M,kOopt) =
+	      let 
+		val (kopt, s) = menuToString' (k+1, M, kOopt)
+	      in
+		(kopt, s ^ "\n  " ^ (format k) ^ (Inference.menu O))
 	      end
 	in
 	  case !Menu of 
@@ -260,6 +274,7 @@ struct
 	   handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		| MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		| MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
+		| Inference.Error s => abort ("Inference Error: " ^ s)
 		| Error s => abort ("Mpi Error: " ^ s))
 	end
 
@@ -278,6 +293,15 @@ struct
 	    | select' (1, Recursion O :: _) = 
 		let 
 		  val S' = (Timers.time Timers.recursion MTPRecursion.apply) O  
+		  val _ = pushHistory ()
+		  val _ = delete ()
+		  val _ = insert (MTPrint.nameState S')
+		in
+		  (menu (); printMenu ())
+		end
+	    | select' (1, Inference O :: _) = 
+		let 
+		  val S' = (Timers.time Timers.recursion Inference.apply) O  
 		  val _ = pushHistory ()
 		  val _ = delete ()
 		  val _ = insert (MTPrint.nameState S')
@@ -303,6 +327,7 @@ struct
 	     handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		  | MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		  | MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
+	          | Inference.Error s => abort ("Inference Errror: " ^ s)
 		  | Error s => abort ("Mpi Error: " ^ s) 
 	end
 
@@ -317,6 +342,7 @@ struct
 	      handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		   | MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		   | MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
+ 	           | Inference.Error s => abort ("Inference Errror: " ^ s)
 		   | Error s => abort ("Mpi Error: " ^ s) 
 	    val _ = pushHistory ()
 	    val _ = delete ()
@@ -332,6 +358,7 @@ struct
 	    handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		 | MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		 | MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
+		 | Inference.Error s => abort ("Inference Errror: " ^ s)
 		 | Error s => abort ("Mpi Error: " ^ s) 
 	  val _ = pushHistory ()
 	  val _ = initOpen ()

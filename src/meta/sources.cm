@@ -47,8 +47,12 @@ Group is
   recursion.fun
   search.sig
   search.fun 
+  uniquesearch.sig
+  uniquesearch.fun
   splitting.sig
   splitting.fun
+  inference.sig
+  inference.fun
   statesyn.sig
   statesyn.fun
   strategy.sig
