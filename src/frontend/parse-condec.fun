@@ -9,7 +9,6 @@ functor ParseConDec
      sharing ParseTerm.ExtSyn = ExtConDec'.ExtSyn)
      : PARSE_CONDEC =
 struct
-
   (*! structure Parsing = Parsing' !*)
   structure ExtConDec = ExtConDec'
 

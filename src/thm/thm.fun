@@ -442,11 +442,14 @@ struct
 		 
     fun installTabled (L.TabledDecl cid) = TabledSyn.installTabled cid
 
+    fun installKeepTable (L.KeepTableDecl cid) = TabledSyn.installKeepTable cid
+
   in
     val installTotal = installTotal
     val installTerminates = installTerminates
     val installReduces = installReduces
     val installTabled = installTabled 
+    val installKeepTable = installKeepTable
   end (* local *)
 
 end; (* functor Thm *)

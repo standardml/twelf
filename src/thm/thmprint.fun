@@ -64,6 +64,9 @@ struct
 
     fun tabledDeclToString (L.TabledDecl cid) = 
 	F.makestring_fmt (F.HVbox ([F.String (I.conDecName (I.sgnLookup cid))]))
+
+    fun keepTableDeclToString (L.KeepTableDecl cid) = 
+	F.makestring_fmt (F.HVbox ([F.String (I.conDecName (I.sgnLookup cid))]))
 	
   in
     val tDeclToString = tDeclToString
@@ -71,6 +74,7 @@ struct
     val ROrderToString = ROrderToString            (* -bp *)
     val rDeclToString = rDeclToString	           (* -bp *)
     val tabledDeclToString = tabledDeclToString
+    val keepTableDeclToString = keepTableDeclToString
   end (* local *)
 
 end; (* functor ThmPrint *)

@@ -117,15 +117,26 @@ struct
 
     and fill (nil, os) = os
       | fill (S :: givenStates, os as (openStates, solvedStates)) =
-        case (Timers.time Timers.recursion MTPFilling.expand) S
+        (case (Timers.time Timers.recursion MTPFilling.expand) S
 	  of fillingOp =>
 	     (let
 	       val _ = printFilling ()
-	       val (max, P) = (Timers.time Timers.filling MTPFilling.apply) fillingOp
+	       val (max, P) = TimeLimit.timeLimit (!Global.timeLimit)
+		                     (Timers.time Timers.filling MTPFilling.apply) fillingOp
 	       val _ = printCloseBracket ()
 	      in
 		fill (givenStates, os)
-	      end) handle MTPFilling.Error _ => split (S :: givenStates, os)
+	      end)  handle MTPFilling.Error _ => split (S :: givenStates, os))
+
+	   (* Note: calling splitting in case filling fails, may cause the prover to succeed
+	      if there are no cases to split -- however this may in fact be wrong -bp*)
+	   (* for comparing depth-first search (logic programming) with iterative deepening search
+	      in the meta-theorem prover, we must disallow splitting :
+            
+		handle TimeLimit.TimeOut =>  raise Filling.Error "Time Out: Time limit exceeded\n"
+		handle MTPFilling.Error msg =>  raise Filling.Error msg
+		  ) handle MTPFilling.Error msg =>  raise Filling.Error msg
+   	    *)
 
     (* run givenStates = (openStates', solvedStates')
 
@@ -136,9 +147,10 @@ struct
 	 solved using Filling, Recursion, and Splitting
      *)       
     fun run givenStates = 
-        let
+        (let
 	  val _ = printInit ()
-	  val (openStates, solvedStates) = fill (givenStates, (nil, nil))
+	  val (openStates, solvedStates) = fill (givenStates, (nil, nil)) 
+	     
           val openStates' = map MTPrint.nameState openStates
           val solvedStates' = map MTPrint.nameState solvedStates
 	  val _ = case openStates
@@ -146,7 +158,8 @@ struct
 		     | _ => ()
 	in
 	  (openStates', solvedStates')
-	end
+	end)
+
 
   in
     val run = run

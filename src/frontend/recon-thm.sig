@@ -28,6 +28,9 @@ sig
   type tableddecl
   val tableddecl :  (string * Paths.region) -> tableddecl
 
+  type keepTabledecl
+  val keepTabledecl :  (string * Paths.region) -> keepTabledecl
+
   type prove
   val prove : int * tdecl -> prove
 
@@ -70,6 +73,7 @@ sig
   val rdeclTorDecl : rdecl -> (ThmSyn.RDecl * (Paths.region * Paths.region list))
 
   val tableddeclTotabledDecl : tableddecl -> (ThmSyn.TabledDecl * Paths.region)
+  val keepTabledeclToktDecl : keepTabledecl -> (ThmSyn.KeepTableDecl * Paths.region)
 
 
   val theoremToTheorem : theorem -> ThmSyn.ThDecl

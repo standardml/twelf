@@ -121,18 +121,26 @@ struct
 
     and fill (nil, os) = os
       | fill (S :: givenStates, os as (openStates, solvedStates)) =
-	case (Timers.time Timers.filling Filling.expand) S
-	  of (_, fillingOp) =>
-	     (let
-		val _ = printFilling ()
-		val [S'] = (Timers.time Timers.filling Filling.apply) fillingOp
-		val _ = printCloseBracket ()
-	      in
-		if Qed.subgoal S'
-		  then (printFinish S'; fill (givenStates, (openStates, S' :: solvedStates)))
-		else fill (S' :: givenStates, os)
-	      end 
-		handle Filling.Error _ => recurse (S :: givenStates, os))
+      let
+	fun fillOp () = 
+	  case (Timers.time Timers.filling Filling.expand) S
+	    of (_, fillingOp) =>
+	      (let
+		 val _ = printFilling ()
+		 val [S'] = (Timers.time Timers.filling Filling.apply) fillingOp
+		 val _ = printCloseBracket ()
+	       in
+		 if Qed.subgoal S'
+		   then (printFinish S'; fill (givenStates, (openStates, S' :: solvedStates)))
+		 else fill (S' :: givenStates, os)
+	       end 
+		 handle Filling.Error _ => recurse (S :: givenStates, os))
+      in 
+	(TimeLimit.timeLimit (!Global.timeLimit) fillOp ())
+	handle TimeLimit.TimeOut => 
+	  (print "\n----------- TIME OUT ---------------\n" ; raise Filling.TimeOut)
+	       
+      end 
 
     (* run givenStates = (openStates', solvedStates')
 

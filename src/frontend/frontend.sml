@@ -18,6 +18,7 @@ structure Parsing =
 	   structure Lexer' = Lexer);
 *)
 
+
 structure ReconTerm =
   ReconTerm ((*! structure IntSyn' = IntSyn !*)
 	     structure Names = Names
@@ -76,6 +77,7 @@ structure ReconThm =
 	    structure ThmSyn' = ThmSyn
 	    structure ReconTerm' = ReconTerm
 	    structure Print = Print);
+
 
 structure ReconModule =
   ReconModule (structure Global = Global
@@ -156,9 +158,14 @@ structure Solve =
          (*! structure CSManager = CSManager !*)
 	 structure AbsMachine = SwMachine
 	 structure PtRecon = PtRecon
+	 structure AbsMachineSbt = AbsMachineSbt
+	 structure PtRecon = PtRecon
+	 structure TableParam = TableParam
 	 structure Tabled = Tabled
-	 structure TableIndex = TableIndex
+(*	 structure TableIndex = TableIndex *)
+	 structure MemoTable = MemoTable
 	 structure Print = Print);
+
 
 structure Fquery =
   Fquery (structure Global = Global
@@ -213,9 +220,8 @@ structure Twelf =
 	 structure Compile = Compile
 	 structure CPrint = CPrint
 	 structure AbsMachine = SwMachine
-
+	 structure TableParam = TableParam
 	 structure Tabled = Tabled
-	 structure TableIndex = TableIndex
 	 structure Solve = Solve
 	 structure Fquery = Fquery
 

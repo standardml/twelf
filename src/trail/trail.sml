@@ -21,7 +21,8 @@ struct
     fun suspend (trail, copy) =
       let
 	fun suspend' Nil = Nil
-	  | suspend' (Mark trail) = (Mark (suspend' trail))
+(*	  | suspend' (Mark trail) = (Mark (suspend' trail))*)
+	  | suspend' (Mark trail) = (suspend' trail)
 	  | suspend' (Cons (action, trail)) =
 	  Cons (copy action,  suspend' trail)
 	val ftrail = suspend' (!trail)

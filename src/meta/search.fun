@@ -65,6 +65,17 @@ struct
       | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
       
 
+    (* raiseType (G, V) = {{G}} V
+
+       Invariant:
+       If G |- V : L
+       then  . |- {{G}} V : L
+
+       All abstractions are potentially dependent.
+    *)
+    fun raiseType (I.Null, V) = V
+      | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
+
     (* exists P K = B
        where B iff K = K1, Y, K2  s.t. P Y  holds
     *)
@@ -167,7 +178,9 @@ struct
 	    used in the universal case for max search depth)
        if  G |- M :: g[s] then G |- sc :: g[s] => Answer, Answer closed
   *)
-  fun solve (max, depth, (C.Atom p, s), dp, sc) = matchAtom (max, depth, (p,s), dp, sc)
+  fun solve (max, depth, (C.Atom p, s), dp as C.DProg(G, dPool), sc) = 
+      matchAtom (max, depth, (p,s), dp, sc)
+
     | solve (max, depth, (C.Impl (r, A, Ha, g), s), C.DProg (G, dPool), sc) =
        let
 	 val D' = I.Dec (NONE, I.EClo (A, s))
@@ -410,7 +423,7 @@ struct
        success continuation will raise exception 
     *)
     (* Shared contexts of EVars in GE may recompiled many times *)
-    fun search (maxFill, GE, sc) = searchEx (1, maxFill) (GE, sc)
+    fun search (maxFill, GE, sc) =  searchEx (1, maxFill) (GE, sc)
 
   in 
     val searchEx = search

@@ -39,6 +39,19 @@ sig
     val reset : unit -> unit	       (* reset trace, break, and detail *)
   end
 
+  structure Table :
+  sig
+    datatype Strategy = Variant | Subsumption  (* Variant | Subsumption *)
+
+    val strategy : Strategy ref	      (* strategy used for %querytabled *)
+    val strengthen : bool ref	      (* strengthenng used %querytabled *)
+    val resetGlobalTable : unit -> unit (* reset global table           *)
+
+  val top : unit -> unit    (* top-level for interactive tabled queries *)
+  end
+
+
+
   structure Timers :
   sig
     val show : unit -> unit	       (* show and reset timers *)
@@ -55,24 +68,16 @@ sig
 
   structure Compile :
   sig
-    val optimize : bool ref		(* true, optimize clauses *)
+    datatype Opt = No | LinearHeads | Indexing 
+    val optimize : Opt ref
   end
-
-  structure Table : 
-  sig 
-    datatype Strategy = Variant | Subsumption
-
-    val strategy : Strategy ref		(* Variant, tabling strategy *)
-    val strengthen : bool ref		(* false, tabling optimization *)
-
-    val top : unit -> unit		(* Top-level for tabled queries *)
-  end 
 
   structure Recon :
   sig
     datatype TraceMode = Progressive | Omniscient
-    val trace : bool ref		(* false, trace term reconstruction *)
-    val traceMode : TraceMode ref	(* Omniscient, trace mode *)
+    val trace : bool ref
+    val traceMode : TraceMode ref
+
   end
 
   structure Prover :
@@ -83,9 +88,10 @@ sig
     val maxRecurse : int ref	       (* 10, bound on recursion *)
   end
 
-  val chatter : int ref		       (* 3, chatter level *)
-  val doubleCheck : bool ref	       (* false, check after reconstruction *)
-  val unsafe : bool ref		       (* false, allows %assert *)
+  val chatter : int ref		             (* 3, chatter level *)
+  val doubleCheck : bool ref	             (* false, check after reconstruction *)
+  val unsafe : bool ref		             (* false, allows %assert *)
+  val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
 
   datatype Status = OK | ABORT	       (* return status *)
 

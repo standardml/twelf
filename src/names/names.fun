@@ -545,6 +545,7 @@ struct
         (* the following only needed because reconstruction replaces
            undetermined types with FVars *)
       | namePrefOf' (role, SOME(IntSyn.FVar _)) = namePrefOf'' (role, NONE)
+
       | namePrefOf' (role, SOME(IntSyn.NSDef cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
 
     (* namePrefOf (role, V) = name
@@ -788,14 +789,13 @@ struct
        way---check decName below instread of IntSyn.Dec
     *)
     fun bvarName (G, k) =
-        (case IntSyn.ctxLookup (G, k)
-	   of IntSyn.Dec(SOME(name), _) => name
-	    | IntSyn.ADec(SOME(name), _) =>  name
-	    | IntSyn.NDec => "<_>" (* should be impossible *)
-	    | _ => "?" (* should be impossible *)
-	    (* | _ => raise Unprintable *)
-	     )
-              (* NONE should not happen *)
+        case IntSyn.ctxLookup (G, k)
+	  of IntSyn.Dec(SOME(name), _) => name
+	   | IntSyn.ADec(SOME(name), _) =>  name
+	   | IntSyn.NDec => "<_>" (* should be impossible *)
+	   | IntSyn.ADec(None, _) => "ADec_" 
+	   | IntSyn.Dec(None, _) => "Dec_" 
+	   | _ => raise Unprintable
 
     (* decName' role (G, D) = G,D'
        where D' is a possible renaming of the declaration D

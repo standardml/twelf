@@ -19,5 +19,6 @@ sig
                        -> IntSyn.cid list 
 
   val installTabled : ThmSyn.TabledDecl -> unit
+  val installKeepTable : ThmSyn.KeepTableDecl -> unit
 
 end;  (* signature THM *)

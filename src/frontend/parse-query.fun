@@ -2,6 +2,7 @@
 (* Author: Frank Pfenning *)
 
 functor ParseQuery
+
   ((*! structure Parsing' : PARSING !*)
    structure ExtQuery' : EXTQUERY
    (*! sharing ExtQuery'.Paths = Parsing'.Lexer.Paths !*)

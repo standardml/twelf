@@ -119,10 +119,12 @@ struct
     *)
     fun auto () =
 	let 
+	  val _ = print "M2.Prover.auto\n"
 	  val (Open, solvedStates') = Strategy.run (!openStates)
 	     handle Splitting.Error s => error ("Splitting Error: " ^ s)
-		  | Filling.Error s => error ("Filling Error: " ^ s)
+		  | Filling.Error s => error ("A proof could not be found -- Filling Error: " ^ s)
 		  | Recursion.Error s => error ("Recursion Error: " ^ s)
+		  | Filling.TimeOut =>  error ("A proof could not be found -- Exceeding Time Limit\n")
 
 	  val _ = openStates := Open
 	  val _ = solvedStates := (!solvedStates) @ solvedStates' 

@@ -421,17 +421,25 @@ struct
 
 
     fun parseTabledDecl (f as LS.Cons ((L.ID (_, id), r), s'))=
-(* 	let	   *)
-(* 	  val (f as LS.Cons ((L.DOT, r'), _)) = (LS.expose s') *)
-(* 	in *)
 	  (case (LS.expose s') of 
 	     (f as LS.Cons ((L.DOT, r'), s)) =>  (E.tableddecl (id, r), f) 
 	    | _ => Parsing.error (r, "Expected ."))
-(*	end *)
+
 
   (* parseTabled' "%tabled thedec. " *)
    fun parseTabled' (LS.Cons ((L.TABLED, r), s')) = 
 	parseTabledDecl (LS.expose s')
+
+
+   fun parseKeepTableDecl (f as LS.Cons ((L.ID (_, id), r), s'))=
+	  (case (LS.expose s') of 
+	     (f as LS.Cons ((L.DOT, r'), s)) =>  (E.keepTabledecl (id, r), f) 
+	    | _ => Parsing.error (r, "Expected ."))
+
+
+  (* parseKeepTable' "%keepTabled thedec. " *)
+   fun parseKeepTable' (LS.Cons ((L.KEEPTABLE, r), s')) = 
+	parseKeepTableDecl (LS.expose s')
 
 
    fun parseWDecl f = 
@@ -457,6 +465,7 @@ struct
     val parseAssert' = parseAssert'
     val parseReduces' = parseReduces'		(*  -bp  6/05/99.*)	
     val parseTabled' = parseTabled'		(*  -bp 20/11/01.*)		 
+    val parseKeepTable' = parseKeepTable'		(*  -bp 20/11/01.*)		 
     val parseWorlds' = parseWorlds'
   end  (* local ... in *)
 

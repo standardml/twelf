@@ -6,6 +6,7 @@ sig
   structure MetaSyn : METASYN
 
   exception Error of string
+  exception TimeOut
 
   type operator
 

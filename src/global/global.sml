@@ -11,6 +11,8 @@ struct
   val maxCSid = 49
   val doubleCheck = ref false
   val unsafe = ref false
+  val timeLimit = ref (NONE : (Time.time option))
 
   fun chPrint n s = if !chatter >= n then print (s ()) else ()
+
 end;  (* structure Global *)

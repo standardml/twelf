@@ -7,6 +7,7 @@ sig
   structure StateSyn : STATESYN
 
   exception Error of string
+  exception TimeOut
 
   type operator
 

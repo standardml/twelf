@@ -37,6 +37,9 @@ sig
    datatype TabledDecl = 
     TabledDecl of IntSyn.cid
 
+   (* KeepTable declaration *)
+   datatype KeepTableDecl = 
+    KeepTableDecl of IntSyn.cid
 
   (* Theorem declaration  *)
   datatype ThDecl =

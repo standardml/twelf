@@ -385,6 +385,7 @@ struct
 
     fun show () = Table.app showFam soGraph;
 
+
     (* weaken (G, a) = (w') *)
     fun weaken (I.Null, a) = I.id
       | weaken (I.Decl (G', D as I.Dec (name, V)), a) = 
@@ -395,7 +396,7 @@ struct
 	  else I.comp (w', I.shift)
 	end
 
-
+ 
     (* showDef () = ()
        Effect: print some statistics about constant definitions
     *)

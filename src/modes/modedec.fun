@@ -106,6 +106,7 @@ struct
       | empty (k, ms, I.Pi (_, V)) =
           empty (k-1, I.Decl (ms, (M.Marg (M.Star, NONE), Implicit)), V)
 
+  
     (* inferVar (ms, m, k) = ms'
 
        Invariant:
@@ -140,6 +141,7 @@ struct
 			  ^ M.modeToString mode)
       | inferVar (I.Decl (ms, md), mode, k) = 
 	  I.Decl (inferVar (ms, mode, k-1), md)
+
 
     (* inferExp (ms, m, U) = ms'
 

@@ -43,6 +43,7 @@ sig
     | WORLDS       			(* `%worlds' *)
     | REDUCES       			(* `%reduces' *) (* -bp 6/5/99 *)
     | TABLED       			(* `%tabled' *)  (* -bp 6/5/99 *)
+    | KEEPTABLE       			(* `%keepTable' *)  (* -bp 04/11/04 *)
     | THEOREM                           (* `%theorem' *)
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)

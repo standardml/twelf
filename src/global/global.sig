@@ -11,4 +11,5 @@ sig
   val doubleCheck : bool ref
   val unsafe : bool ref
   val chPrint : int -> (unit -> string) -> unit
+  val timeLimit : (Time.time option) ref   (* in seconds *)
 end;  (* signature GLOBAL *)

@@ -158,6 +158,23 @@ struct
 
     fun tableddeclTotabledDecl T  = T
 
+    (* keepTable declaration *)
+    type keepTabledecl = (ThmSyn.KeepTableDecl * Paths.region) 
+    fun keepTabledecl (name, r) = 
+	let 
+	  val qid = Names.Qid (nil, name)
+	in
+	  (* check whether they are families here? *)
+         case Names.constLookup qid
+                  of NONE => error (r, "Undeclared identifier "
+                                    ^ Names.qidToString (valOf (Names.constUndef qid))
+                                    ^ " in call pattern")
+                   | SOME cid =>    (ThmSyn.KeepTableDecl cid, r) 
+	end 
+
+
+    fun keepTabledeclToktDecl T  = T
+
     (* Theorem and prove declarations *)
 
     type prove = ThmSyn.PDecl * (Paths.region * Paths.region list)
@@ -296,8 +313,12 @@ struct
     (* -bp *)
     type rdecl = rdecl
     val rdecl = rdecl
+
     type tableddecl = tableddecl
     val tableddecl = tableddecl
+
+    type keepTabledecl = keepTabledecl
+    val keepTabledecl = keepTabledecl
 
     type prove = prove
     val prove = prove
@@ -310,7 +331,10 @@ struct
 
     val tdeclTotDecl = tdeclTotDecl
     val rdeclTorDecl = rdeclTorDecl
+
     val tableddeclTotabledDecl = tableddeclTotabledDecl
+    val keepTabledeclToktDecl = keepTabledeclToktDecl
+
     val proveToProve = proveToProve
     val establishToEstablish = establishToEstablish
     val assertToAssert = assertToAssert

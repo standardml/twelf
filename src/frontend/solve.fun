@@ -14,7 +14,7 @@ functor Solve
      sharing type ReconQuery.query = Parser.ExtQuery.query
      sharing type ReconQuery.solve = Parser.ExtQuery.solve
      sharing type ReconQuery.define = Parser.ExtQuery.define
-     (* sharing type ReconQuery.Paths.occConDec = Origins.Paths.occConDec *)
+   (* sharing type ReconQuery.Paths.occConDec = Origins.Paths.occConDec *)
    structure Timers : TIMERS
    (*! structure CompSyn : COMPSYN !*)
    (*! sharing CompSyn.IntSyn = IntSyn' !*)
@@ -29,14 +29,18 @@ functor Solve
    structure AbsMachine : ABSMACHINE
    (*! sharing AbsMachine.IntSyn = IntSyn' !*)
    (*! sharing AbsMachine.CompSyn = CompSyn !*)
+   structure AbsMachineSbt : ABSMACHINESBT
+    (*! sharing AbsMachineSbt.IntSyn = IntSyn' !*)
+    (*! sharing AbsMachineSbt.CompSyn = CompSyn!*)
    structure PtRecon : PTRECON
    (*! sharing PtRecon.IntSyn = IntSyn' !*)
    (*! sharing PtRecon.CompSyn = CompSyn !*)
+   structure TableParam : TABLEPARAM
    structure Tabled : TABLED
    (*! sharing Tabled.IntSyn = IntSyn' !*)
    (*! sharing Tabled.CompSyn = CompSyn !*)
-   structure TableIndex : TABLEINDEX
-   (*! sharing TableIndex.IntSyn = IntSyn' !*)
+   structure MemoTable : MEMOTABLE
+    (*! sharing MemoTable.IntSyn = IntSyn' !*)
    structure Print : PRINT
    (*! sharing Print.IntSyn = IntSyn' !*)
      )
@@ -109,7 +113,6 @@ struct
   (* checkStages : bound * int -> unit *)
   (* raises AbortQuery(msg) if the actual #stages do not match *)
   (* the expected number, given the bound on the number of tries *)
-  (* dummy currently -bp *)
   fun checkStages (try, stages) = 
      if boundEq (try, SOME(stages))
 	then ()
@@ -143,14 +146,17 @@ struct
      is raised when M : A is the generalized form of a solution to the
      query A', where imp is the number of implicitly quantified arguments.
   *)
+
   exception Solution of IntSyn.Exp
+  exception SolutionSkel of CompSyn.pskeleton
+
 
   (* readfile (fileName) = status
      reads and processes declarations from fileName in order, issuing
      error messages and finally returning the status (either OK or
      ABORT).
   *)
-  fun solve (defines, solve, Paths.Loc (fileName, r)) =
+  fun solve' (defines, solve, Paths.Loc (fileName, r)) =
       let
         val (A, finish) = (* self timing *)
               ReconQuery.solveToSolve (defines, solve, Paths.Loc (fileName, r))
@@ -161,9 +167,49 @@ struct
 		else ()
 	val _ = if !Global.chatter >= 3
 		  then print ("\n"
-				     ^ (Timers.time Timers.printing expToString)
-				     (IntSyn.Null, A)
-				     ^ ".\n")
+			      ^ (Timers.time Timers.printing expToString)
+			      (IntSyn.Null, A)
+			      ^ ".\n")
+		else ()
+	val g = (Timers.time Timers.compiling Compile.compileGoal) 
+	            (IntSyn.Null, A)
+	fun search () = AbsMachine.solve
+	                  ((g, IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
+			   fn M => raise Solution M)
+      in
+	CSManager.reset ();
+	((* Call to solve raises Solution _ if there is a solution,
+	  returns () if there is none.  It could also not terminate
+	  *)
+	 (TimeLimit.timeLimit (!Global.timeLimit)
+	 (Timers.time Timers.solving search) ());		
+	 raise AbortQuery ("No solution to %solve found"))
+	handle Solution M => (if !Global.chatter >= 3
+                              then print (" OK\n")
+                              else ();
+                              finish M)
+	handle TimeLimit.TimeOut =>
+	  raise AbortQuery ("\n----------- TIME OUT ---------------\n")
+      end
+
+(* Using substitution tree indexing for clauses in signature
+   The logic programming interpreter then creates a proof skeleton
+  and reconstructs the actual proof term which can be checked 
+  -- this version can be used to produce oracles, however no user 
+  directive is added yet.
+*)
+  fun solveSbt (defines, solve, Paths.Loc (fileName, r)) =
+      let
+        val (A, finish) = (* self timing *)
+              ReconQuery.solveToSolve (defines, solve, Paths.Loc (fileName, r))
+
+	(* echo declaration, according to chatter level *)
+	val _ = if !Global.chatter >= 3
+		  then print ("%solve ")
+		else ()
+	val _ = if !Global.chatter >= 3
+		  then print ("\n" ^ (Timers.time Timers.printing expToString) (IntSyn.Null, A)
+			      ^ ".\n")
 		else ()
 
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
@@ -173,67 +219,84 @@ struct
 	((* Call to solve raises Solution _ if there is a solution,
 	  returns () if there is none.  It could also not terminate
 	  *)
-	 (Timers.time Timers.solving AbsMachine.solve)
+	 (TimeLimit.timeLimit (!Global.timeLimit))
+	 (Timers.time Timers.solving AbsMachineSbt.solve)
 	 ((g, IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
-	  fn M => raise Solution M);		
+	  fn Skel => raise SolutionSkel Skel);		
 	 raise AbortQuery ("No solution to %solve found"))
-	handle Solution M => (if !Global.chatter >= 3
-                              then print (" OK\n")
-                              else ();
-                              finish M)
+	handle SolutionSkel Skel =>
+	  (if !Global.chatter >= 2
+	     then print (" OK\n")
+	   else ();    
+	   ((Timers.time Timers.ptrecon PtRecon.solve)  
+	    (Skel, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),  
+	     (fn (Skel, M) => raise Solution M));
+	       raise AbortQuery ("Proof reconstruction for %solve failed"))
+	     handle Solution M => finish (M))
+        handle TimeLimit.TimeOut =>
+	  raise AbortQuery ("\n----------- TIME OUT ---------------\n" )
       end
 
-	    (* %query <expected> <try> A or %query <expected> <try> X : A *)
-      fun query ((expected, try, quy), Paths.Loc (fileName, r)) =
-	  let
-	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
-					(* times itself *)
-	    val _ = if !Global.chatter >= 3
-		      then print ("%query " ^ boundToString expected
-					 ^ " " ^ boundToString try ^ "\n")
-		    else ()
-	    val _ = if !Global.chatter >= 4
-		      then print (" ")
-		    else ()
-	    val _ = if !Global.chatter >= 3
-		      then print ("\n" ^ (Timers.time Timers.printing expToString)
-				  (IntSyn.Null, A) ^ ".\n")
-		    else ()
-	    (* Problem: we cannot give an answer substitution for the variables
-	       in the printed query, since the new variables in this query
-               may not necessarily have global scope.
+  fun solve args =
+    case (!Compile.optimize) of
+      (* solves A where program clauses are indexed using substitution trees
+         and reconstructs the proof term X afterwards - bp
+       *) 
+      Compile.Indexing => solveSbt args
+    | Compile.LinearHeads => solve' args 
+    | _ => solve' args
 
-               For the moment, we print only the answer substitution for the
-               original variables encountered during parsing.
-	     *)
-	     (*
-		val Xs' = if !Global.chatter >= 3 then Names.namedEVars () else Xs
-	     *)
-	     val g = (Timers.time Timers.compiling Compile.compileGoal) 
-	                (IntSyn.Null, A)
 
-	     (* solutions = ref <n> counts the number of solutions found *)
-	     val solutions = ref 0
+  (* %query <expected> <try> A or %query <expected> <try> X : A *)
+  fun query' ((expected, try, quy), Paths.Loc (fileName, r)) =
+    let
+      (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
+      val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
+      (* times itself *)
+      val _ = if !Global.chatter >= 3
+		then print ("%query " ^ boundToString expected
+			    ^ " " ^ boundToString try ^ "\n")
+	      else ()
+      val _ = if !Global.chatter >= 4
+		then print (" ")
+	      else ()
+      val _ = if !Global.chatter >= 3
+		then print ("\n" ^ (Timers.time Timers.printing expToString)
+			    (IntSyn.Null, A) ^ ".\n")
+	      else ()
+      (* Problem: we cannot give an answer substitution for the variables
+         in the printed query, since the new variables in this query
+         may not necessarily have global scope.
+       
+         For the moment, we print only the answer substitution for the
+         original variables encountered during parsing.
+       *)
+      (* val Xs' = if !Global.chatter >= 3 then Names.namedEVars () else Xs
+       *)
+      val g = (Timers.time Timers.compiling Compile.compileGoal) 
+	(IntSyn.Null, A)
 
-	     (* Initial success continuation prints substitution (according to chatter level)
-		and raises exception Done if bound has been reached, otherwise it returns
-                to search for further solutions
-              *)
-	      fun scInit M =
-		  (solutions := !solutions+1;
-		   if !Global.chatter >= 3
-		     then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
-			   print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
-		   else if !Global.chatter >= 3
-			  then print "."
-			else ();
-		   case optName
-		     of NONE => ()
-		      | SOME(name) =>
-		        if !Global.chatter >= 3
-			  then print ((Timers.time Timers.printing evarInstToString)
-					     [(M, name)] ^ "\n")
+      (* solutions = ref <n> counts the number of solutions found *)
+      val solutions = ref 0
+	
+      (* Initial success continuation prints substitution (according to chatter level)
+         and raises exception Done if bound has been reached, otherwise it returns
+         to search for further solutions
+       *)
+      fun scInit M =
+	(solutions := !solutions+1;
+	 if !Global.chatter >= 3
+	   then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
+		 print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
+	 else if !Global.chatter >= 3
+		then print "."
+	      else ();
+		case optName
+		  of NONE => ()
+		| SOME(name) =>
+		    if !Global.chatter >= 3
+		      then print ((Timers.time Timers.printing evarInstToString)
+				  [(M, name)] ^ "\n")
 			else ();
 		   if !Global.chatter >= 3
 		     (* Question: should we collect constraints in M? *)
@@ -246,14 +309,21 @@ struct
 		   if exceeds (SOME(!solutions),try)
 		     then raise Done
 		   else ())
+
+	fun search () = AbsMachine.solve
+			 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
+			  scInit) 
               in
 		if not (boundEq (try, SOME(0)))
 		  then (CSManager.reset ();
 			(* solve query if bound > 0 *)
-			((Timers.time Timers.solving AbsMachine.solve)
-			 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
-			  scInit)) handle Done => (); (* printing is timed into solving! *)
-			CSManager.reset ();	(* in case Done was raised *)
+			((TimeLimit.timeLimit (!Global.timeLimit)
+			  (Timers.time Timers.solving search) ())
+			 handle Done => () (* printing is timed into solving! *))
+			handle  TimeLimit.TimeOut =>
+			  raise AbortQuery ("\n----------- TIME OUT ---------------\n" );
+
+			CSManager.reset ();    (* in case Done was raised *)
 			(* check if number of solutions is correct *)
 		        checkSolutions (expected, try, !solutions))
 		else if !Global.chatter >= 3
@@ -268,26 +338,23 @@ struct
 		     else ()
               end
 
-
-     (* bp *)
-      fun querytabled ((numSol, try, quy), Paths.Loc (fileName, r)) =
-	  let
-	    val _ = if !Global.chatter >= 3
-
-		      then print ("%querytabled " ^ boundToString numSol ^ " " ^
-				  boundToString try)
-
-		    else ()
-	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
-	    val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
-					(* times itself *)
-	    val _ = if !Global.chatter >= 4
-		      then print (" ")
-		    else ()
-	    val _ = if !Global.chatter >= 3
-		      then print ("\n" ^ (Timers.time Timers.printing expToString)
-				  (IntSyn.Null, A) ^ ".\n")
-		    else ()
+  (* %query <expected> <try> A or %query <expected> <try> X : A *)
+  fun querySbt ((expected, try, quy), Paths.Loc (fileName, r)) =
+    let
+      (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
+      val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
+      (* times itself *)
+      val _ = if !Global.chatter >= 3
+		then print ("%query " ^ boundToString expected
+			    ^ " " ^ boundToString try ^ "\n")
+	      else ()
+      val _ = if !Global.chatter >= 4
+		then print (" ")
+	      else ()
+      val _ = if !Global.chatter >= 3
+		then print ("\n" ^ (Timers.time Timers.printing expToString)
+			    (IntSyn.Null, A) ^ ".\n")
+	      else ()
 	    (* Problem: we cannot give an answer substitution for the variables
 	       in the printed query, since the new variables in this query
                may not necessarily have global scope.
@@ -298,157 +365,259 @@ struct
 	     (*
 		val Xs' = if !Global.chatter >= 3 then Names.namedEVars () else Xs
 	     *)
-	     val g = (Timers.time Timers.compiling Compile.compileGoal) 
-	                (IntSyn.Null, A)
+      val g = (Timers.time Timers.compiling Compile.compileGoal) 
+	      (IntSyn.Null, A)
 
-	     (* solutions = ref <n> counts the number of solutions found *)
-	     (* -bp redundant ? *)
-	     val solutions = ref 0
-	     val status = ref false
-	     val uniquesol = ref 0
-	     val solExists = ref false 
+      (* solutions = ref <n> counts the number of solutions found *)
+      val solutions = ref 0
+	
+      (* Initial success continuation prints substitution (according to chatter level)
+         and raises exception Done if bound has been reached, otherwise it returns
+         to search for further solutions
+       *)
+      fun scInit M =
+	(solutions := !solutions+1;
+	 if !Global.chatter >= 3
+	   then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
+		 print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
+	 else if !Global.chatter >= 3
+		then print "."
+	      else ();		
 
-	     (* stage = ref <n> counts the number of stages found *)
-	     val stages = ref 1
-
-	     (* Initial success continuation prints substitution (according to chatter level)
-		and raises exception Done if bound has been reached, otherwise it returns
-                to search for further solutions
-              *)
-	      fun scInit O =
-		  (solutions := !solutions+1;	 
-		   solExists := true ;
-		   if !Global.chatter >= 3
-		     then (print ("\n---------- Solutions " ^ Int.toString (!solutions) ^ 
-				  " ----------\n");
-			   print ((Timers.time Timers.printing evarInstToString) Xs ^ " \n"))
-		   else if !Global.chatter >= 1
-			  then print "."
-			else ();
-		   (case optName
-		      of NONE => ()
-		    | SOME(name) => (Timers.time Timers.ptrecon PtRecon.solve) 
-				      (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
-				       (fn (O, M) => 
-					if !Global.chatter >= 3
-					  then print ((Timers.time Timers.printing evarInstToString)
-						      [(M, name)] ^ "\n")
-					else ())));
-		      (if !Global.chatter >= 3
-			 (* Question: should we collect constraints in M? *)
-			 then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
-			   of NONE => ()
-			 | SOME(str) =>
-			     print ("Remaining constraints:\n"
-				    ^ str ^ "\n")
-		       else ());
-
-		   case numSol of 
-		     NONE => ()
-		   | SOME n => (if (!solutions = n) then 
-				  raise Done
-				else 
-				  ())
-		       )
-              (* loops -- scinit will raise exception Done *)
-	      fun loop () =  (if exceeds (SOME(!stages-1),try)
-				then (print ("\n ================= " ^
-					     " Number of tries exceeds stages " ^ 
-					     " ======================= \n");  
-				      status := false;
-				      raise Done)
-			      else ();								
-				print ("\n ====================== Stage " ^ 
-				       Int.toString(!stages) ^ " finished =================== \n");
-                              if exceeds (SOME(!stages),try)
-				then (print ("\n ================= " ^
-					     " Number of tries exceeds stages " ^ 
-					     " ======================= \n");  
-				      status := false;
-				      raise Done)
-			      else ();	
-			      if Tabled.nextStage () then 
-				(stages := (!stages) + 1;
-				 loop ())
-			      else 
-				(* table did not change, 
-				 * i.e. all solutions have been found 
-				 * we check for *all* solutions
-				 *)
-				status := true;
-				raise Done) 
-	      val _ = Tabled.reset () 
-              in
-		if not (boundEq (try, SOME(0)))
-		  then (CSManager.reset ();
-			(* solve query if bound > 0 *)
-			(Timers.time Timers.solving Tabled.solve)  
-			((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
-			  scInit) handle Done => (); (* printing is timed into solving! *) 
-
-			CSManager.reset (); 	(* in case Done was raised *)
-			(* next stage until table doesn't change *)
-			(Timers.time Timers.solving loop) ();
-		        checkStages (try, !stages)  
-			)
-		    handle Done => ()
-		else if !Global.chatter >= 3
-		       then print ("Skipping query (bound = 0)\n")
-		     else if !Global.chatter >= 2
-			    then print ("skipping")
+	 case optName
+	   of NONE => () 
+	 | SOME(name) =>  (if !Global.chatter > 3 
+			    then 
+			      (print ("\n pskeleton \n"); 
+			       print ((CompSyn.pskeletonToString M) ^ "\n"))
 			  else ();
-		if !Global.chatter >= 4 then 
-		  TableIndex.printTable()
-		  else 
-		    ();
-		if !Global.chatter >= 3
-		  then 
-		    (print "\n____________________________________________\n\n";
-		     print ("number of stages: tried "    ^ boundToString try ^ " \n" ^ 
-			    "terminated after " ^ Int.toString (!stages) ^ " stages \n \n");
-                     (if (!solExists) then ()
-			else print "\nNO solution exists to query \n\n");
-		     (if (!status) then 
-			print "Tabled evaluation COMPLETE \n \n"
-		      else 
-			print "Tabled evaluation NOT COMPLETE \n \n");
-		     print "\n____________________________________________\n\n";
-		     print "\n Table Indexing parameters: \n";
-		     (case (!TableIndex.strategy) of
-			    TableIndex.Variant =>  print "\n       Table Strategy := Variant \n"
-			 |  TableIndex.Subsumption => print "\n       Table Strategy := Subsumption \n");
-		     (case (!TableIndex.termDepth) of
-			    NONE => print ("\n       Term Depth Abstraction := NONE \n")
-			  | SOME(d) => print ("\n       Term Depth Abstraction := " ^
-					       Int.toString(d) ^ "\n"));
 
-		     (case (!TableIndex.ctxDepth) of
-			    NONE => print ("\n       Ctx Depth Abstraction := NONE \n")
-			  | SOME(d) => print ("\n       Ctx Depth Abstraction := " ^
-					       Int.toString(d) ^ "\n"));
+			   (Timers.time Timers.ptrecon PtRecon.solve)  
+	                   (M, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),  
+			    (fn (pskel, M) => (if !Global.chatter >= 3
+				then print ((Timers.time Timers.printing evarInstToString)
+					    [(M, name)] ^ "\n")
+			      else ())))) ;
 
-		     (case (!TableIndex.ctxLength) of
-			    NONE => print ("\n       Ctx Length Abstraction := NONE \n")
-			  | SOME(d) => print ("\n       Ctx Length Abstraction := " ^
-					       Int.toString(d) ^ "\n"));
+	     if !Global.chatter >= 3
+	       (* Question: should we collect constraints in M? *)
+	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
+		 of NONE => ()
+	       | SOME(str) =>
+		   print ("Remaining constraints:\n"
+			  ^ str ^ "\n")
+	     else ();
+	       if exceeds (SOME(!solutions),try)
+		 then raise Done
+	       else ())
+	fun search () = AbsMachineSbt.solve
+	                  ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
+			   scInit)
+    in
+      if not (boundEq (try, SOME(0)))
+	then (CSManager.reset ();
+	      (* solve query if bound > 0 *)
+	       (TimeLimit.timeLimit (!Global.timeLimit)
+	       (Timers.time Timers.solving search) ())
+	       handle Done => ()
+	       handle  TimeLimit.TimeOut =>
+		 raise AbortQuery ("\n----------- TIME OUT ---------------\n" );
+  	      (* printing is timed into solving! *)
+	      CSManager.reset ();	    (* in case Done was raised *)
+	      (* check if number of solutions is correct *)
+	      checkSolutions (expected, try, !solutions))
+      else if !Global.chatter >= 3
+	     then print ("Skipping query (bound = 0)\n")
+	   else if !Global.chatter >= 4
+		  then print ("skipping")
+		else ();
+		  if !Global.chatter >= 3
+		    then print "____________________________________________\n\n"
+		  else if !Global.chatter >= 4
+			 then print (" OK\n")
+		       else ()
+    end
+
+  (* %query <expected> <try> A or %query <expected> <try> X : A  *)
+  fun query args =
+    case (!Compile.optimize) of
+         (* Execute query where program clauses are 
+	    indexed using substitution trees -- if we require the proof term X
+	    it will be reconstructed after the query A has succeeded - bp
+	  *) 
+      Compile.Indexing => querySbt args    
+    | Compile.LinearHeads => query' args
+    | _ => query' args
 
 
-		     (if (!TableIndex.strengthen) then 
-			print "\n       Strengthening := true \n"
-		      else 
-			print "\n       Strengthening := false \n");
+ (* %querytabled <expected solutions> <max stages tried>  A 
+or  %querytabled <expected solutions> <max stages tried>  X : A 
+  note : %querytabled terminates if we have found the expected number of
+  solutions or if we have reached the maximal number of stages *)
+  fun querytabled ((numSol, try, quy), Paths.Loc (fileName, r)) =
+    let
+      val _ = if !Global.chatter >= 3
+		then print ("%querytabled " ^ boundToString numSol ^ " " ^
+			    boundToString try)		  
+	      else ()
+      (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
+      val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
+      (* times itself *)
+      val _ = if !Global.chatter >= 4
+		then print (" ")
+	      else ()
+      val _ = if !Global.chatter >= 3
+		then print ("\n" ^ (Timers.time Timers.printing expToString)
+			    (IntSyn.Null, A) ^ ".\n")
+	      else ()
+     (* Problem: we cannot give an answer substitution for the variables
+        in the printed query, since the new variables in this query
+        may not necessarily have global scope.
+       
+        For the moment, we print only the answer substitution for the
+        original variables encountered during parsing.
+     *)
+     (* val Xs' = if !Global.chatter >= 3 then Names.namedEVars () else Xs *)
+      val g = (Timers.time Timers.compiling Compile.compileGoal) 
+	(IntSyn.Null, A)
+	
+      (* solutions = ref <n> counts the number of solutions found *)
+      val solutions = ref 0
+      val status = ref false
+      val solExists = ref false 
+	
+      (* stage = ref <n> counts the number of stages found *)
+      val stages = ref 1
+	
+      (* Initial success continuation prints substitution (according to chatter level)
+         and raises exception Done if bound has been reached, otherwise it returns
+         to search for further solutions
+       *)
+      fun scInit O =
+	(solutions := !solutions+1;	 
+	 solExists := true ;
+	 if !Global.chatter >= 3
+	   then (print ("\n---------- Solutions " ^ Int.toString (!solutions) ^ 
+			" ----------\n");
+		 print ((Timers.time Timers.printing evarInstToString) Xs ^ " \n"))
+	 else if !Global.chatter >= 1
+		then print "."
+	      else ();
+		
+	(case optName
+	   of NONE => ()
+	 | SOME(name) => (print (CompSyn.pskeletonToString O ^ "\n");
+			  (Timers.time Timers.ptrecon PtRecon.solve) 
+			      (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
+			       (fn (O, M) => 
+				if !Global.chatter >= 3
+				  then print ((Timers.time Timers.printing evarInstToString) 
+					      [(M, name)] ^ "\n")
+				else ()))));
 
-			print ("\n Number of table indices " ^ 
-			       Int.toString(length(!TableIndex.table)) ^ "\n");
+      (if !Global.chatter >= 3 then
+	 (* Question: should we collect constraints in M? *)
+	 case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs of
+	   NONE => ()
+	 | SOME(str) =>
+	     print ("Remaining constraints:\n"
+		    ^ str ^ "\n")
+       else ());
+       print "More solutions?\n";
+       case numSol of 
+	 NONE => ()
+       | SOME n => (if (!solutions = n) then 
+		      (print "Found enough solutions\n"; raise Done)
+		    else 
+		      ())
+	   )
+	
+      (* loops -- scinit will raise exception Done *)
+      fun loop () =  (if exceeds (SOME(!stages-1),try)
+			then (print ("\n ================= " ^
+				     " Number of tries exceeds stages " ^ 
+				     " ======================= \n");  
+			      status := false;
+			      raise Done)
+		      else ();								
+			print ("\n ====================== Stage " ^ 
+			       Int.toString(!stages) ^ " finished =================== \n");
+			if exceeds (SOME(!stages),try)
+			  then (print ("\n ================= " ^
+				       " Number of tries exceeds stages " ^ 
+				       " ======================= \n");  
+				status := false;
+				raise Done)
+			else ();	
+			if Tabled.nextStage () then 
+			  (stages := (!stages) + 1;
+			   loop ())
+			else 
+			  (* table did not change, 
+			   * i.e. all solutions have been found 
+			   * we check for *all* solutions
+			   *)
+			  status := true;
+			  raise Done) 
+      val _ = Tabled.reset () 
+      val _ = Tabled.fillTable ()
+      fun tabledSearch () = 
+	(Tabled.solve((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
+		      scInit) ;
+	 CSManager.reset (); 	(* in case Done was raised *)
+	 (* next stage until table doesn't change *)
+	 loop ();
+	 checkStages (try, !stages))
 
-			print ("Number of suspended goals : " ^ 
-			       Int.toString(length(!Tabled.SuspGoals)) ^ "\n");
+    in
+      if not (boundEq (try, SOME(0)))
+	then (CSManager.reset ();
+	      (* solve query if bound > 0 *)
+	      (TimeLimit.timeLimit (!Global.timeLimit)
+	       (Timers.time Timers.solving tabledSearch) ())
+	      handle TimeLimit.TimeOut => 
+	       (print "\n----------- TIME OUT ---------------\n" ; raise Done))
 
-		     print "\n____________________________________________\n\n")
-		else if !Global.chatter >= 3
-		       then print (" OK\n")
-		     else ()
-              end
+	  handle Done => ()
+      else if !Global.chatter >= 3
+	     then print ("Skipping query (bound = 0)\n")
+	   else if !Global.chatter >= 2
+		  then print ("skipping")
+		else ();
+      if !Global.chatter >= 3
+	then 
+	  (print "\n____________________________________________\n\n";
+	   print ("number of stages: tried "    ^ boundToString try ^ " \n" ^ 
+		  "terminated after " ^ Int.toString (!stages) ^ " stages \n \n");
+	   if (!solExists) then ()
+	    else print "\nNO solution exists to query \n\n";
+	   if (!status) then 
+	     print "Tabled evaluation COMPLETE \n \n"
+	   else 
+	     print "Tabled evaluation NOT COMPLETE \n \n";
+	   print "\n____________________________________________\n\n";
+	   print "\n Table Indexing parameters: \n";
+	   case (!TableParam.strategy) of
+	      TableParam.Variant =>  print "\n       Table Strategy := Variant \n"
+	    | TableParam.Subsumption => print "\n       Table Strategy := Subsumption \n";
+	    if (!TableParam.strengthen) 
+	      then 
+		print "\n       Strengthening := true \n"
+	    else 
+	      print "\n       Strengthening := false \n";
+	      
+	    print ("\nNumber of table indices : " ^ 
+		   Int.toString(Tabled.tableSize()) ^ "\n");
+	    
+	    print ("Number of suspended goals : " ^ 
+		   Int.toString(Tabled.suspGoalNo()) ^ "\n");
+	  
+	    print "\n____________________________________________\n\n")
+      else (if !Global.chatter >= 3
+	     then print (" OK\n")
+	   else ());
+	Tabled.updateGlobalTable (g, !status)
+    end
 
 
 
@@ -474,7 +643,7 @@ struct
 				       [(M, name)] ^ "\n")
 		  else ();
 	     if !Global.chatter >= 3
-	       (* Question: should we collect constraints from M? *)
+	       (* Question: should we collect constraints from M *)
 	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		      of NONE => ()
 		       | SOME(str) =>
@@ -515,8 +684,6 @@ struct
 		| SOME(name) =>
 		  if !Global.chatter >= 3
 		    then print (" Sorry cannot reconstruct pskeleton proof terms yet \n")
-(*		      ((Timers.time Timers.printing evarInstToString) *)
-(*				       [(M, name)] ^ "\n") *)
 		  else ();
 	     if !Global.chatter >= 3
 	       (* Question: should we collect constraints from M? *)

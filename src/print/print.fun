@@ -208,7 +208,8 @@ local
   fun projName (G, I.Proj (I.Bidx(k), i)) =
       let
 	val I.BDec (SOME(bname), (cid, t)) = I.ctxLookup (G, k)
-        (* names should have been assigned by invariant, NONE imppossible *)
+        (* names should have been assigned by invar
+	 iant, NONE imppossible *)
        in
 	 bname ^ "_" ^ parmName (cid, i)
        end

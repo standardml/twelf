@@ -100,12 +100,10 @@ functor Twelf
    structure AbsMachine : ABSMACHINE
    (*! sharing AbsMachine.IntSyn = IntSyn' !*)
    (*! sharing AbsMachine.CompSyn = CompSyn' !*)
-
+   structure TableParam : TABLEPARAM
    structure Tabled : TABLED
    (*! sharing Tabled.IntSyn = IntSyn' !*)
    (*! sharing Tabled.CompSyn = CompSyn' !*)
-   structure TableIndex : TABLEINDEX
-   (*! sharing TableIndex.IntSyn = IntSyn' !*)
    structure Solve : SOLVE
    (*! sharing Solve.IntSyn = IntSyn' !*)
      sharing type Solve.ExtQuery.query = Parser.ExtQuery.query
@@ -117,7 +115,6 @@ functor Twelf
      sharing type Fquery.ExtQuery.define = Parser.ExtQuery.define
      sharing type Fquery.ExtQuery.solve = Parser.ExtQuery.solve
 	     (*! sharing Solve.Paths = Paths !*)
-
    structure ThmSyn : THMSYN
    (*! sharing ThmSyn.Paths = Paths !*)
      sharing ThmSyn.Names = Names
@@ -131,6 +128,7 @@ functor Twelf
      sharing type ReconThm.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ReconThm.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
      sharing type ReconThm.tableddecl = Parser.ThmExtSyn.tableddecl (* -bp *)
+     sharing type ReconThm.keepTabledecl = Parser.ThmExtSyn.keepTabledecl (* -bp *)
      sharing type ReconThm.wdecl = Parser.ThmExtSyn.wdecl 
      sharing type ReconThm.theorem = Parser.ThmExtSyn.theorem
      sharing type ReconThm.theoremdec = Parser.ThmExtSyn.theoremdec 
@@ -502,6 +500,7 @@ struct
 	     (* allocate new cid after checking modes! *)
 	     (* allocate cid after strictness has been checked! *)
 	     val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
+
 	   in
 	     ()
 	   end)
@@ -821,6 +820,18 @@ struct
 	  (*  -bp6/12/99.   *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%tabled " ^ ThmPrint.tabledDeclToString T ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
+      (* %keepTable declaration *)
+      | install1 (fileName, (Parser.KeepTableDec tdecl, _)) =
+	let
+	  val (T,r) = ReconThm.keepTabledeclToktDecl tdecl 
+	  val La = Thm.installKeepTable T
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%keeptabled " ^ ThmPrint.keepTableDeclToString T ^ ".\n")
 		  else ()
 	in
 	  ()
@@ -1158,6 +1169,8 @@ struct
 		    FunSyn.labelReset ();
 		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
 		    CompSyn.detTableReset (); (*  -bp *)
+		    Compile.sProgReset (); (* resetting substitution trees *)
+
                     ModSyn.reset ();
                     CSManager.resetSolvers ();
                     context := NONE
@@ -1442,14 +1455,6 @@ struct
 	fun sgn () = printSgnTeX ()
 	fun prog () = printProgTeX ()
       end
-
-(*      structure Table =
-	struct
-	  fun print () = TableIndex.printTable ()
-          fun printEntries () = TableIndex.printTableEntries()
-	end
-
-*)
     end
 
     structure Trace :
@@ -1491,38 +1496,26 @@ struct
 
     structure Compile :
     sig
-      val optimize : bool ref
+      datatype Opt = datatype CompSyn.Opt
+      val optimize : Opt ref
     end
     =
     struct
-      val optimize = Compile.optimize
+      datatype Opt = datatype CompSyn.Opt      
+      val optimize = CompSyn.optimize
     end
 
-    structure Table : 
-      sig 
-	datatype Strategy = datatype TableIndex.Strategy
-	val strategy : Strategy ref
-	val strengthen : bool ref
-	val top : unit -> unit
-      end 
-    = 
+    structure Recon :
+    sig
+      datatype TraceMode = datatype ReconTerm.TraceMode
+      val trace : bool ref
+      val traceMode : TraceMode ref
+    end
+    =
     struct
-      datatype Strategy = datatype TableIndex.Strategy
-      val strategy = TableIndex.strategy
-      val strengthen = TableIndex.strengthen
-      	  
-      (* top () = () starts interactive query loop *)
-      fun top () = 
-	  let 
-	    fun sLoopT () = if Solve.qLoopT () then OK else ABORT
-      
-	    fun topLoopT () = 
-	        case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
-		  of ABORT => topLoopT ()
-		   | OK => ()
-	  in 
-	    topLoopT ()
-	  end 
+      datatype TraceMode = datatype ReconTerm.TraceMode
+      val trace = ReconTerm.trace
+      val traceMode = ReconTerm.traceMode
     end
 
     structure Recon :
@@ -1556,6 +1549,7 @@ struct
     val chatter : int ref = Global.chatter
     val doubleCheck : bool ref = Global.doubleCheck
     val unsafe : bool ref = Global.unsafe
+    val timeLimit : (Time.time option) ref = Global.timeLimit
 
     datatype Status = datatype Status
     val reset = reset
@@ -1577,7 +1571,39 @@ struct
     = Config
     val make = make
 
+
     val version = "Twelf 1.5, Aug 2003 (Tomega, Cover, Unique)"
+
+    structure Table : 
+      sig 
+	datatype Strategy = datatype TableParam.Strategy
+	val strategy : Strategy ref
+	val strengthen : bool ref
+	val resetGlobalTable : unit -> unit
+	val top : unit -> unit
+      end 
+    = 
+  struct
+    datatype Strategy = datatype TableParam.Strategy
+    val strategy = TableParam.strategy
+    val strengthen = TableParam.strengthen
+      	  
+    val resetGlobalTable = TableParam.resetGlobalTable
+
+    (* top () = () starts interactive query loop *)
+    fun top () = 
+      let 
+	fun sLoopT () = if Solve.qLoopT () then OK else ABORT
+      
+	fun topLoopT () = 
+	  case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
+	    of ABORT => topLoopT ()
+	  | OK => ()
+      in 
+	topLoopT ()
+      end 
+  end
+
 
   end  (* local *)
 end; (* functor Twelf *)
