@@ -118,6 +118,9 @@ struct
                 raise Error (occToString (ocdOpt, occ) ^ "Head not rigid, use %abbrev")
 	      | strictArgParms (I.Root _, _, _) = ()
               | strictArgParms (I.Pi _, _, _) = ()
+	      | strictArgParms (I.FgnExp _, _, _) = ()
+		  (* may not be sound in general *)
+		  (* Wed Aug 25 16:39:57 2004 -fp *)
 	      | strictArgParms (I.Lam (D, U'), I.Pi (_, V'), occ) = 
 	        if strictArgParm (1, U')
 		  then strictArgParms (U', V', Paths.body occ)
