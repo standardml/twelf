@@ -7,23 +7,20 @@ local
       of Twelf.OK => Twelf.OK
        | Twelf.ABORT => raise Domain;
 	
+
   fun test names =
     (let 
       val a = map (fn x => valOf (Names.nameLookup x)) names
       val name = foldr op^ "" names
+      val _ = Names.varReset ()
       val P = RelFun.convertPro a
       val F = RelFun.convertFor a
       val _ = (FunTypeCheck.check (P, F); Twelf.OK) 
+      val LD = F.LemmaDec (names, P, F)
+      val _ = TextIO.print (FunPrint.lemmaDecToString LD)
     in
-      FunNames.installName (name, F.lemmaAdd (F.LemmaDec (name, F)))
+      FunNames.installName (name, F.lemmaAdd LD)
     end)
-	handle 
-          FunTypeCheck.Error s => (TextIO.print ("FunTypeCheck Error: " ^ s ^ "\n"); raise Domain)
-	| TypeCheck.Error s => (TextIO.print ("TypeCheck Error: " ^ s ^ "\n"); raise Domain)
-	| IntSyn.Error s => (TextIO.print ("IntSyn Error: " ^ s ^ "\n"); raise Domain)
-	| RelFun.Error s => (TextIO.print ("RelFun Error: " ^ s ^ "\n"); raise Domain)
-	| _ => raise Domain
-    
 in
   val _ = Twelf.chatter := 1
   val _ = FunNames.reset();
