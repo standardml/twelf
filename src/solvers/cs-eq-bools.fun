@@ -511,34 +511,34 @@ struct
             myID := cs;
 
             boolID := 
-              installF (ConDec ("bool", 0,
+              installF (ConDec ("bool", NONE, 0,
                                 Constraint (!myID, solveBool),
                                 Uni (Type), Kind),
                         NONE, SOME(MS.Mnil));
 
             trueID :=
-              installF (ConDec ("true", 0,
+              installF (ConDec ("true", NONE, 0,
                                 Foreign (!myID, (fn _ => toFgn (Sum(true, nil)))),
                                 bool (),
                                 Type),
                         NONE, NONE);
 
             falseID :=
-              installF (ConDec ("false", 0,
+              installF (ConDec ("false", NONE, 0,
                                 Foreign (!myID, (fn _ => toFgn (Sum(false, nil)))),
                                 bool (),
                                 Type),
                         NONE, NONE);
 
             notID :=
-              installF (ConDec ("!", 0,
+              installF (ConDec ("!", NONE, 0,
                                 Foreign (!myID, makeFgnUnary notSum),
                                 arrow (bool (), bool ()),
                                 Type),
                         SOME(FX.Prefix (FX.maxPrec)), NONE);
 
             xorID :=
-              installF (ConDec ("||", 0,
+              installF (ConDec ("||", NONE, 0,
                                 Foreign (!myID, makeFgnBinary xorSum),
                                 arrow (bool (), arrow (bool (), bool ())),
                                 Type),
@@ -546,7 +546,7 @@ struct
                         NONE);
 
             andID :=
-              installF (ConDec ("&", 0,
+              installF (ConDec ("&", NONE, 0,
                                   Foreign (!myID, makeFgnBinary andSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),
@@ -554,7 +554,7 @@ struct
                         NONE);
 
            orID :=
-              installF (ConDec ("|", 0,
+              installF (ConDec ("|", NONE, 0,
                                 Foreign (!myID, makeFgnBinary orSum),
                                 arrow (bool (), arrow (bool (), bool ())),
                                 Type),
@@ -562,7 +562,7 @@ struct
                         NONE);
 
             impliesID :=
-              installF (ConDec ("=>", 0,
+              installF (ConDec ("=>", NONE, 0,
                                   Foreign (!myID, makeFgnBinary impliesSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),
@@ -570,7 +570,7 @@ struct
                         NONE);
 
             iffID :=
-              installF (ConDec ("<=>", 0,
+              installF (ConDec ("<=>", NONE, 0,
                                   Foreign (!myID, makeFgnBinary iffSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),

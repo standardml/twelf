@@ -8,6 +8,7 @@ functor ParseThm
      sharing Parsing'.Lexer.Paths = Paths
    structure ThmExtSyn' : THMEXTSYN
      sharing ThmExtSyn'.Paths = Paths
+     sharing ThmExtSyn'.ExtSyn.Paths = Paths
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ThmExtSyn'.ExtSyn)
@@ -226,10 +227,13 @@ struct
     (* parseDec "{id:term} | {id}" *)
     and parseDec (r, f) =
         let 
-	  val (D, f') = ParseTerm.parseDec' f
+	  val ((x, yOpt), f') = ParseTerm.parseDec' f
 	  val (f'', r2) = stripRBrace f'
+          val dec = (case yOpt
+                       of NONE => E.ExtSyn.dec0 (x, P.join (r, r2))
+                        | SOME y => E.ExtSyn.dec (x, y, P.join (r, r2)))
 	in
-	  ((D, P.join (r, r2)), f'')
+	  (dec, f'')
 	end
 
     (* parseDecs' "{id:term}...{id:term}", zero or more, ":term" optional *)
@@ -290,31 +294,31 @@ struct
         let
 	  val (t'', f'') = parseForallStar f'
 	in
-	  (E.forallG (gbs', (r, t'')), f'')
+	  (E.forallG (gbs', t''), f'')
 	end
 
     and forallStar ((g', f'), r) = 
         let 
 	  val (t'', f'') = parseForall f'
 	in 
-	  (E.forallStar (g', (r, t'')),  f'')
+	  (E.forallStar (g', t''),  f'')
 	end
 
     and forall ((g', f'), r) =      
         let 
 	  val (t'', f'') = parseExists f'
 	in 
-	  (E.forall (g', (r, t'')), f'')
+	  (E.forall (g', t''), f'')
 	end
 
     and exists ((g', f'), r) = 
         let 
 	  val (t'', f'') = parseTrue f'
 	in 
-	  (E.exists (g', (r, t'')), f'')
+	  (E.exists (g', t''), f'')
 	end
 
-    and top (f', r) = (E.top r, f')
+    and top (f', r) = (E.top, f')
 
     (* parseTrue "true" *)
     and parseTrue (LS.Cons ((L.ID (_, "true"), r), s')) =

@@ -21,7 +21,7 @@ sig
 
     val mnil  : Paths.region -> mspine
     val mapp  : (mode * string option) * mspine -> mspine 
-    val mroot : string * Paths.region * mspine -> mterm
+    val mroot : string list * string * Paths.region * mspine -> mterm
 
     val toModedec : mterm -> modedec
   end
@@ -31,7 +31,7 @@ sig
     type mterm
 
     val mroot : ExtSyn.term * Paths.region -> mterm
-    val mpi : mode * ExtSyn.dec * Paths.region * mterm -> mterm
+    val mpi : mode * ExtSyn.dec * mterm -> mterm
 
     val toModedec : mterm -> modedec
   end

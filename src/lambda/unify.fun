@@ -122,6 +122,9 @@ struct
               Trail.log (globalTrail, Instantiate (refU));
               awakenCnstrs := cnstrL @ !awakenCnstrs
             )
+
+      fun postponeUnify (G, U1, U2) =
+            awakenCnstrs := ref (Eqn (G, U1, U2)) :: !awakenCnstrs
     end  (* local *)
 
     (* intersection (s1, s2) = s'
@@ -221,6 +224,7 @@ struct
                          (* val V' = EClo (V, comp (s, ss)) *)
 		         val V' = pruneExp (G, (V, s), ss, rOccur, prunable)
 		         val Y = newEVar (GY, V')
+                         (* add another constraint if at type level? -kw *)
 		         val _ = addConstraint (cnstrs, ref (Eqn (G, EClo (X, s),
 							             EClo (Y, Whnf.invert ss))))
 		       in
@@ -311,13 +315,14 @@ struct
         end
       | copyTypeW (G, (G1, s1), Vs2 as (EVar _, s2)) =
         let
-          val V' = newTypeVar (G1)
+          val X = newTypeVar (G1)
         in
-          unifyExp (G, (V', s1), Vs2);
-          V'
+          postponeUnify (G, EClo (X, s1), EClo Vs2);
+          X
         end
 
-    and copyType (G, (G1, s1), Vs2) = copyTypeW (G, (G1, s1), Whnf.whnf Vs2)
+    and copyType (G, (G1, s1), Vs2) =
+          copyTypeW (G, (G1, s1), Whnf.whnf Vs2)
 
     (* copySpine (G, (G1, s1, (V, s2)), (S, s3)) = S'
         pre: G  |- s1 : G1
@@ -335,7 +340,7 @@ struct
           (* FIX: should be newLoweredEVar -kw *)
           val U' = newEVar (G1, EClo (V1, s2))
         in
-          unifyExp (G, (U', s1), (U, s3));
+          postponeUnify (G, EClo (U', s1), EClo (U, s3));
           App (U', copySpine (G, (G1, s1, (V2, Whnf.dotEta (Exp (U'), s2))), (S, s3)))
         end
       | copySpine (G, (G1, s1, (V, s2)), (SClo (S, s), s3)) =
@@ -414,16 +419,16 @@ struct
 	       else unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2))
 	   | (Def (d1), _) => unifyExpW (G, Whnf.expandDef Us1, Us2)
 	   | (_, Def(d2)) => unifyExpW (G, Us1, Whnf.expandDef Us2)
-           | (FgnConst (cs1, ConDec (n1, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _))) =>
+           | (FgnConst (cs1, ConDec (n1, _, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _, _))) =>
                (* we require unique string representation of external constants *)
                if (cs1 = cs2) andalso (n1 = n2) then ()
                else raise Unify "Foreign Constant clash"
-           | (FgnConst (cs1, ConDef (n1, _, W1, _, _)), FgnConst (cs2, ConDef (n2, _, V, W2, _))) =>
+           | (FgnConst (cs1, ConDef (n1, _, _, W1, _, _)), FgnConst (cs2, ConDef (n2, _, _, V, W2, _))) =>
                if (cs1 = cs2) andalso (n1 = n2) then ()
                else unifyExp (G, (W1, s1), (W2, s2))
-           | (FgnConst (_, ConDef (_, _, W1, _, _)), _) =>
+           | (FgnConst (_, ConDef (_, _, _, W1, _, _)), _) =>
                unifyExp (G, (W1, s1), Us2)
-           | (_, FgnConst (_, ConDef (_, _, W2, _, _))) =>
+           | (_, FgnConst (_, ConDef (_, _, _, W2, _, _))) =>
                unifyExp (G, Us1, (W2, s2))              
 	   | _ => raise Unify "Head mismatch")
 
@@ -598,8 +603,7 @@ struct
        Other effects: constraints may be added for flex-flex equations
     *)
     (* FIX: need FgnExp case *)
-    fun shapeExpW (Root (H1, S1), Root (H2, S2)) =
-        (* s1 == s2 == id by whnf *)
+    fun shapeExpW (Root (H1, _ (* Nil *)), Root (H2, _ (* Nil *))) =
           (case (H1, H2) of
              (Const(c1), Const(c2)) =>
                if (c1 = c2) then ()
@@ -613,16 +617,16 @@ struct
           (shapeDec (Da1, Da2);
            shapeExp (Va1, Va2))
 
-      | shapeExpW (Va1 as EVar(r1, G1, V1, cnstrs1),
-                   Va2 as EVar(r2, G2, V2, cnstrs2)) =
+      | shapeExpW (Va1 as EVar(r1, G1, V1, _ (* ref nil *)),
+                   Va2 as EVar(r2, G2, V2, _ (* ref nil *))) =
         if r1 = r2
           then ()
         else
-          instantiateEVar (r1, Va2, !cnstrs1)
-      | shapeExpW (EVar (r, GX, L, cnstrs), Va2) =
-          instantiateEVar (r, Va2, !cnstrs)
-      | shapeExpW (Va1, EVar (r, GX, V, cnstrs)) =
-          instantiateEVar (r, Va1, !cnstrs)
+          instantiateEVar (r1, Va2, nil)
+      | shapeExpW (EVar (r, GX, L, _ (* ref nil *)), Va2) =
+          (shapeOccurExpW (r, Va2); instantiateEVar (r, Va2, nil))
+      | shapeExpW (Va1, EVar (r, GX, V, _ (* ref nil *))) =
+          (shapeOccurExpW (r, Va1); instantiateEVar (r, Va1, nil))
 
       | shapeExpW (Va1, Va2) =
           raise Unify ("Shape clash")
@@ -637,6 +641,22 @@ struct
 
     and shapeDec (Dec(_, Va1), Dec (_, Va2)) =
           shapeExp (Va1, Va2)
+
+    and shapeOccurExpW (r, Pi ((Da1, _), Va1)) =
+          (shapeOccurDec (r, Da1); shapeOccurExp (r, Va1))
+      | shapeOccurExpW (r, EVar (r1, _, _, _)) =
+          if r = r1 then raise Unify ("Variable occurence")
+          else ()
+      | shapeOccurExpW (r, _) = ()
+
+    and shapeOccurExp (r, Va1) =
+        let
+          val (Va1', _) = Whnf.whnf (Va1, IntSyn.id)
+        in
+          shapeOccurExpW (r, Va1')
+        end
+
+    and shapeOccurDec (r, Dec (_, Va1)) = shapeOccurExp (r, Va1)
 
     fun shape (Va1, Va2) = shapeExp (Va1, Va2)
 

@@ -72,11 +72,11 @@ struct
 		    val I.Dec (_, V') = D
 		    val V'' = k (Whnf.normalize (V', s))
 		    val name' = Names.skonstName (name ^ "#")
-		    val SD = I.SkoDec (name', imp, V'', L)
+		    val SD = I.SkoDec (name', NONE, imp, V'', L)
 		    val sk = I.sgnAdd SD
 		    val H = I.Skonst sk
 		    val _ = IndexSkolem.install H
-		    val _ = Names.installName (name', sk)
+		    val _ = Names.installConstName sk
 		    val _ = (Timers.time Timers.compiling Compile.install) false sk
 (*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d
@@ -104,7 +104,7 @@ struct
     fun install nil = ()
       | install (a :: aL) = 
         let 
-	  val I.ConDec (name, imp, _, V, L) = I.sgnLookup a
+	  val I.ConDec (name, _, imp, _, V, L) = I.sgnLookup a
 	  val SOME mS = ModeSyn.modeLookup a
 	  val _ = installSkolem (name, imp, (V, mS), I.Type)
 	in

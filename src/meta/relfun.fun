@@ -52,7 +52,7 @@ struct
     fun convertOneFor cid =
       let
 	val V  = case I.sgnLookup cid 
-	           of I.ConDec (name, _, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 	val mS = case M.modeLookup cid
 	           of NONE => raise Error "Mode declaration expected"
@@ -375,7 +375,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 
@@ -420,7 +420,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 	(* transformInit' ((S, mS), V, (w, s)) = (w', s')
@@ -484,7 +484,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 
@@ -857,10 +857,10 @@ struct
 	    (NONE, L)
 
 	fun traverseSig' (c'', L) =
-	  if c'' = I.sgnSize () then L
+	  if c'' = #1 (I.sgnSize ()) then L
 	  else
 	    (case I.sgnLookup (c'')
-	       of I.ConDec (name, _, _, V, I.Type) => 
+	       of I.ConDec (name, _, _, _, V, I.Type) => 
 		 (case traverseNeg (c'', I.Null, (V, I.id), L) 
 		    of (SOME (wf, d', (P', Q')), L') =>  traverseSig' (c''+1, (P' (Q' wf)) :: L')
 		     | (NONE, L') => traverseSig' (c''+1, L'))
@@ -884,7 +884,7 @@ struct
 	fun convertOnePro a =
 	  let 
 	    val V = case I.sgnLookup a 
-	              of I.ConDec (name, _, _, V, I.Kind) => V
+	              of I.ConDec (name, _, _, _, V, I.Kind) => V
 		       | _ => raise Error "Type Constant declaration expected"
 	    val mS = case M.modeLookup a
 	               of NONE => raise Error "Mode declaration expected"

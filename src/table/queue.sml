@@ -23,6 +23,12 @@ struct
     | delete (inp, x::out) = SOME (x, (inp, out))
     | delete (inp, nil) = delete (nil, List.rev inp)
 
+  fun insertFront (x, (inp, out)) = (inp, x::out)
+
+  fun deleteEnd (nil, nil) = NONE
+    | deleteEnd (x::inp, out) = SOME (x, (inp, out))
+    | deleteEnd (nil, out) = delete (List.rev out, nil)
+
   (* toList q ==> (l, NONE)  means q == l and toList is constant time *)
   (* toList q ==> (l, SOME(q')) means q == l == q' *)
   (* and toList q' is constant time *)

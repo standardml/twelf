@@ -1,0 +1,10 @@
+structure ModSyn =
+  ModSyn (structure Global = Global
+          structure IntSyn' = IntSyn
+          structure Names' = Names
+          structure Paths' = Paths
+          structure Origins = Origins
+          structure Whnf = Whnf
+          structure Strict = Strict
+          structure IntTree = IntRedBlackTree
+          structure HashTable = StringHashTable);

@@ -150,6 +150,7 @@ struct
 	   (table := dict; oldEntry)
 	 end)
     val lookup = (fn table => fn key => lookup (!table) key)
+    val delete = (fn table => fn key => raise Fail "unimplemented")
     val clear = (fn table => (table := Empty))
     val app = (fn f => fn table => app f (!table))
   end

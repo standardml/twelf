@@ -319,7 +319,7 @@ struct
     fun checkBelow (a, b) =
         if not (below (a, b))
 	  then raise Error ("Subordination violation: "
-			    ^ Names.constName (a) ^ " not <| " ^ Names.constName (b))
+			    ^ Names.qidToString (Names.constQid (a)) ^ " not <| " ^ Names.qidToString (Names.constQid (b)))
 	else ()
 
     (* respectsExp (G, U, V) = () iff U respects current subordination
@@ -363,10 +363,10 @@ struct
     (* Reverse again --- do not sort *)
     (* Right now, Table.app will pick int order -- do not sort *)
     fun famsToString (nil, msg) = msg
-      | famsToString (a::AL, msg) = famsToString (AL, Names.constName a ^ " " ^ msg)
+      | famsToString (a::AL, msg) = famsToString (AL, Names.qidToString (Names.constQid a) ^ " " ^ msg)
 
     fun showFam (a, (AL, AR)) =
-        (print (Names.constName a ^ " |> "
+        (print (Names.qidToString (Names.constQid a) ^ " |> "
 		^ famsToString (AL, "\n")))
 
     fun show () = Table.app showFam soTable;

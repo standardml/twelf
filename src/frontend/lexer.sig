@@ -16,6 +16,7 @@ sig
   datatype Token =
       EOF				(* end of file or stream, also `%.' *)
     | DOT				(* `.' *)
+    | PATHSEP                           (* `.' between <id>s *)
     | COLON				(* `:' *)
     | LPAREN | RPAREN			(* `(' `)' *)
     | LBRACKET | RBRACKET		(* `[' `]' *)
@@ -40,6 +41,11 @@ sig
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
+    | SIG                               (* `%sig' *)
+    | STRUCT                            (* `%struct' *)
+    | WHERE                             (* `%where' *)
+    | INCLUDE                           (* `%include' *)
+    | OPEN                              (* `%open' *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)
 

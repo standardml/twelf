@@ -171,9 +171,9 @@ struct
 	handle Solution (i,(U,V)) =>
 	  let
 	    val conDec = ((Strict.check ((U, V), NONE); 
-	                   IntSyn.ConDef (name, i, U, V, IntSyn.Type)) 
+	                   IntSyn.ConDef (name, NONE, i, U, V, IntSyn.Type)) 
 			  handle Strict.Error _ => 
-			    IntSyn.AbbrevDef (name, i, U, V, IntSyn.Type))
+			    IntSyn.AbbrevDef (name, NONE, i, U, V, IntSyn.Type))
 	  in
 	    conDec
 	  end  (* solve _ handle Solution => _ *)

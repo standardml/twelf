@@ -175,10 +175,17 @@ struct
 	  checkSub (G', s', G)
 	end
 
-    
+    fun checkConv (U1, U2) =
+          if Conv.conv ((U1, I.id), (U2, I.id)) then ()
+          else raise Error ("Terms not equal\n  left: " ^
+                            Print.expToString (I.Null, U1) ^ "\n  right:" ^
+                            Print.expToString (I.Null, U2))
+
+
   in
       val check = check
       val checkDec = checkDec
+      val checkConv = checkConv
 
       val infer = infer
       val infer' = infer'

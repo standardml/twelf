@@ -7,6 +7,7 @@ struct
 
   type cid = int			(* Constant identifier        *)
   type name = string			(* Variable name              *)
+  type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
   (* Contexts *)
@@ -124,14 +125,19 @@ struct
   (* Global signature *)
 
   and ConDec =			        (* Constant declaration       *)
-    ConDec of string * int * Status    	(* a : K : kind  or           *)
+    ConDec of string * mid option * int * Status
+                                        (* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of string * int		(* a = A : K : kind  or       *)
+  | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | AbbrevDef of string * int		(* a = A : K : kind  or       *)
+  | AbbrevDef of string * mid option * int
+                                        (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | SkoDec of string * int		(* sa: K : kind  or           *)
+  | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+
+  datatype StrDec =                     (* Structure declaration      *)
+      StrDec of string * mid option
 
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
@@ -140,29 +146,43 @@ struct
 
   exception Error of string             (* raised if out of space     *)
 
-  fun conDecName (ConDec (name, _, _, _, _)) = name
-    | conDecName (ConDef (name, _, _, _, _)) = name
-    | conDecName (AbbrevDef (name, _, _, _, _)) = name
-    | conDecName (SkoDec (name, _, _, _)) = name
+  fun conDecName (ConDec (name, _, _, _, _, _)) = name
+    | conDecName (ConDef (name, _, _, _, _, _)) = name
+    | conDecName (AbbrevDef (name, _, _, _, _, _)) = name
+    | conDecName (SkoDec (name, _, _, _, _)) = name
 
-  fun conDecImp (ConDec (_, i, _, _, _)) = i
-    | conDecImp (ConDef (_, i, _, _, _)) = i
-    | conDecImp (AbbrevDef (_, i, _, _, _)) = i
-    | conDecImp (SkoDec (_, i, _, _)) = i
+  fun conDecParent (ConDec (_, parent, _, _, _, _)) = parent
+    | conDecParent (ConDef (_, parent, _, _, _, _)) = parent
+    | conDecParent (AbbrevDef (_, parent, _, _, _, _)) = parent
+    | conDecParent (SkoDec (_, parent, _, _, _)) = parent
 
-  fun conDecStatus (ConDec (_, _, status, _, _)) = status
+  fun conDecImp (ConDec (_, _, i, _, _, _)) = i
+    | conDecImp (ConDef (_, _, i, _, _, _)) = i
+    | conDecImp (AbbrevDef (_, _, i, _, _, _)) = i
+    | conDecImp (SkoDec (_, _, i, _, _)) = i
+
+  fun conDecStatus (ConDec (_, _, _, status, _, _)) = status
     | conDecStatus _ = Normal
 
-  fun conDecType (ConDec (_, _, _, V, _)) = V
-    | conDecType (ConDef (_, _, _, V, _)) = V
-    | conDecType (AbbrevDef (_, _, _, V, _)) = V
-    | conDecType (SkoDec (_, _, V, _)) = V
+  fun conDecType (ConDec (_, _, _, _, V, _)) = V
+    | conDecType (ConDef (_, _, _, _, V, _)) = V
+    | conDecType (AbbrevDef (_, _, _, _, V, _)) = V
+    | conDecType (SkoDec (_, _, _, V, _)) = V
+
+  fun strDecName (StrDec (name, _)) = name
+
+  fun strDecParent (StrDec (_, parent)) = parent
 
   local
     val maxCid = Global.maxCid
-    val sgnArray = Array.array (maxCid+1, ConDec("", 0, Normal, Uni (Kind), Kind))
+    val sgnArray = Array.array (maxCid+1, ConDec("", NONE, 0, Normal, Uni (Kind), Kind))
       : ConDec Array.array
     val nextCid  = ref(0)
+
+    val maxMid = Global.maxMid
+    val sgnStructArray = Array.array (maxMid+1, StrDec("", NONE))
+      : StrDec Array.array
+    val nextMid = ref (0)
 
   in
     (* Invariants *)
@@ -172,8 +192,8 @@ struct
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
     (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
-    fun sgnReset () = (nextCid := 0)
-    fun sgnSize () = (!nextCid)
+    fun sgnReset () = (nextCid := 0; nextMid := 0)
+    fun sgnSize () = (!nextCid, !nextMid)
 
     fun sgnAdd (conDec) = 
         let
@@ -197,33 +217,47 @@ struct
 	  sgnApp' (0)
 	end
 
+    fun sgnStructAdd (strDec) = 
+        let
+	  val mid = !nextMid
+	in
+	  if mid > maxMid
+	    then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
+	  else (Array.update (sgnStructArray, mid, strDec) ;
+		nextMid := mid + 1;
+		mid)
+	end
+
+    (* 0 <= mid < !nextMid *)
+    fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
+
   end
 
   fun constDef (d) =
       (case sgnLookup (d)
-	 of ConDef(_, _, U,_, _) => U
-	  | AbbrevDef (_, _, U,_, _) => U)
+	 of ConDef(_, _, _, U,_, _) => U
+	  | AbbrevDef (_, _, _, U,_, _) => U)
 
   fun constType (c) = conDecType (sgnLookup (c))
 
   fun constImp (c) =
       (case sgnLookup(c)
-	 of ConDec (_,i,_,_,_) => i
-          | ConDef (_,i,_,_,_) => i
-          | AbbrevDef (_,i,_,_,_) => i
-	  | SkoDec (_,i,_,_) => i)
+	 of ConDec (_,_,i,_,_,_) => i
+          | ConDef (_,_,i,_,_,_) => i
+          | AbbrevDef (_,_,i,_,_,_) => i
+	  | SkoDec (_,_,i,_,_) => i)
 
   fun constStatus (c) =
       (case sgnLookup (c)
-	 of ConDec (_, _, status, _, _) => status
+	 of ConDec (_, _, _, status, _, _) => status
           | _ => Normal)
 
   fun constUni (c) =
       (case sgnLookup(c)
-	 of ConDec (_,_,_,_,L) => L
-          | ConDef (_,_,_,_,L) => L
-          | AbbrevDef (_,_,_,_,L) => L
-	  | SkoDec (_,_,_,L) => L)
+	 of ConDec (_,_,_,_,_,L) => L
+          | ConDef (_,_,_,_,_,L) => L
+          | AbbrevDef (_,_,_,_,_,L) => L
+	  | SkoDec (_,_,_,_,L) => L)
 
   (* Declaration Contexts *)
 

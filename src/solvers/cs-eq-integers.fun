@@ -61,7 +61,7 @@ struct
     fun minusExp (U, V)   = Root (Const (!minusID), App (U, App (V, Nil)))
     fun timesExp (U, V)   = Root (Const (!timesID), App (U, App (V, Nil)))
 
-    fun numberConDec (d) = ConDec (toString (d), 0, Normal, number (), Type)
+    fun numberConDec (d) = ConDec (toString (d), NONE, 0, Normal, number (), Type)
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
     (* parseNumber str = SOME(conDec) or NONE 
@@ -650,13 +650,13 @@ struct
             myID := cs;
 
             numberID := 
-              installF (ConDec ("integer", 0,
+              installF (ConDec ("integer", NONE, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE, SOME(MS.Mnil));
 
             unaryMinusID :=
-              installF (ConDec ("~", 0,
+              installF (ConDec ("~", NONE, 0,
                                 Foreign (!myID, makeFgnUnary unaryMinusSum),
                                 arrow (number (), number ()),
                                 Type),
@@ -664,7 +664,7 @@ struct
                         NONE);
 
             plusID :=
-              installF (ConDec ("+", 0,
+              installF (ConDec ("+", NONE, 0,
                                 Foreign (!myID, makeFgnBinary plusSum),
                                 arrow (number (), arrow (number (), number ())),
                                 Type),
@@ -672,7 +672,7 @@ struct
                         NONE);
 
             minusID :=
-              installF (ConDec ("-", 0,
+              installF (ConDec ("-", NONE, 0,
                                   Foreign (!myID, makeFgnBinary minusSum),
                                   arrow (number (), arrow (number (), number ())),
                                   Type),
@@ -680,7 +680,7 @@ struct
                         NONE);
 
             timesID :=
-              installF (ConDec ("*", 0,
+              installF (ConDec ("*", NONE, 0,
                                   Foreign (!myID, makeFgnBinary timesSum),
                                   arrow (number (), arrow (number (), number ())),
                                   Type),

@@ -39,13 +39,13 @@ sig
   type theoremdec
 
   val null : decs
-  val decl : (decs * (ExtSyn.dec * Paths.region)) -> decs
+  val decl : (decs * ExtSyn.dec) -> decs
 
-  val top : Paths.region -> theorem
-  val exists : decs * (Paths.region * theorem) -> theorem
-  val forall : decs * (Paths.region * theorem) -> theorem
-  val forallStar : decs * (Paths.region * theorem) -> theorem
-  val forallG : (decs * decs) list * (Paths.region * theorem) -> theorem
+  val top : theorem
+  val exists : decs * theorem -> theorem
+  val forall : decs * theorem -> theorem
+  val forallStar : decs * theorem -> theorem
+  val forallG : (decs * decs) list * theorem -> theorem
 
   val dec : (string * theorem) -> theoremdec
 
@@ -64,8 +64,8 @@ sig
   exception Error of string
   val tdeclTotDecl : tdecl -> (ThmSyn.TDecl * (Paths.region * Paths.region list))
   val rdeclTorDecl : rdecl -> (ThmSyn.RDecl * (Paths.region * Paths.region list))
-  val theoremToTheorem : theorem -> (ThmSyn.ThDecl * Paths.region)
-  val theoremDecToTheoremDec : theoremdec -> (string * ThmSyn.ThDecl) * Paths.region
+  val theoremToTheorem : theorem -> ThmSyn.ThDecl
+  val theoremDecToTheoremDec : theoremdec -> string * ThmSyn.ThDecl
   val proveToProve : prove -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
   val establishToEstablish : establish -> (ThmSyn.PDecl * (Paths.region * Paths.region list))
   val assertToAssert : assert -> (ThmSyn.Callpats * Paths.region list)

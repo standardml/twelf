@@ -14,9 +14,9 @@ sig
   type term				(* term *)
   type dec				(* variable declaration *)
 
-  val lcid : string * Paths.region -> term (* lower case id *)
-  val ucid : string * Paths.region -> term (* upper case id *)
-  val quid : string * Paths.region -> term (* quoted id, currently not parsed *)
+  val lcid : string list * string * Paths.region -> term (* lower case id *)
+  val ucid : string list * string * Paths.region -> term (* upper case id *)
+  val quid : string list * string * Paths.region -> term (* quoted id, currently not parsed *)
   val scon : string * Paths.region -> term (* string constant *)
 
   val app : term * term -> term		(* tm tm *)
@@ -24,12 +24,13 @@ sig
   val backarrow : term * term -> term	(* tm <- tm *)
   val hastype : term * term -> term	(* tm : tm *)
   val omitobj : Paths.region -> term	(* _ as object, region for "_" *)
-  val pi : dec * term * Paths.region -> term (* {d} tm, region for "{d}" *)
-  val lam : dec * term * Paths.region -> term (* [d] tm, region for "[d]" *)
+  val pi : dec * term -> term           (* {d} tm *)
+  val lam : dec * term -> term          (* [d] tm *)
   val typ : Paths.region -> term	(* type, region for "type" *)
 
-  val dec : string option * term -> dec	(* id : tm | _ : tm *)
-  val dec0 : string option -> dec	(* id | _  (type omitted) *)
+  (* region for "{dec}" "[dec]" etc. *)
+  val dec : string option * term * Paths.region -> dec (* id : tm | _ : tm *)
+  val dec0 : string option * Paths.region -> dec (* id | _  (type omitted) *)
 
   type condec				(* constant declaration *)
   val condec : string * term -> condec	(* id : tm *)
@@ -55,25 +56,15 @@ sig
   include EXTSYN
 
   exception Error of string
-  val resetErrors : string -> unit	(* filename -fp *)
+  val resetErrors : string -> unit      (* filename -fp *)
 
-  type approxDec
-  type approxExp
-  type approxCtx = approxDec IntSyn.Ctx
+  type rdec = IntSyn.Dec * Paths.occExp option * Paths.region
 
-  val decToApproxDec : approxCtx * dec -> approxDec
-  val approxDecToDec : IntSyn.dctx * approxDec * Paths.region -> IntSyn.Dec
+  val ctxToCtx : dec IntSyn.Ctx -> rdec IntSyn.Ctx
+  val ctxsToCtxs : dec IntSyn.Ctx list -> rdec IntSyn.Ctx list
 
-  val termToApproxExp : approxCtx * term -> approxExp
-  val approxExpToExp : IntSyn.dctx * approxExp -> IntSyn.Exp * IntSyn.Exp
-
-  val termToApproxExp' : approxCtx * term -> approxExp
-  val approxExpToExp' : IntSyn.dctx * approxExp -> IntSyn.Exp * IntSyn.Exp
-
-  (* val ctxToCtx : (dec * Paths.region) IntSyn.Ctx -> IntSyn.dctx *)
-
-  val termToExp : (dec * Paths.region) IntSyn.Ctx * term
-                   -> IntSyn.dctx * IntSyn.Exp * IntSyn.Exp
+  val termToExp : dec IntSyn.Ctx * term
+                   -> rdec IntSyn.Ctx * IntSyn.Exp * IntSyn.Exp * Paths.occExp
 
   val queryToQuery : query * Paths.location
                      -> IntSyn.Exp * string option * (IntSyn.Exp * string) list
@@ -84,5 +75,9 @@ sig
   val condecToConDec : condec * Paths.location * bool -> IntSyn.ConDec option * Paths.occConDec option
                      (* optional ConDec is absent for anonymous definitions *)
                      (* bool = true means that condec is an abbreviation *)
-				   
+
+  val internalInst : IntSyn.ConDec * IntSyn.ConDec * Paths.region -> IntSyn.ConDec
+
+  val externalInst : IntSyn.ConDec * term * Paths.region -> IntSyn.ConDec
+
 end;  (* signature TP_RECON *)

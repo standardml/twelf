@@ -696,7 +696,7 @@ struct
     *)
     fun abstract (S as M.State (name, GM as M.Prefix (G, M, B), V)) = 
 	let
-	  val _ = Names.varReset ()
+	  val _ = Names.varReset I.Null
 	  val A = collect (GM, V)
 	  val (GM', _) = abstractCtx (A, GM)
 	  val V' = abstractExp (A, G, 0, (V, I.id))

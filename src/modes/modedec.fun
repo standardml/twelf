@@ -176,7 +176,7 @@ struct
           I.ctxPop (inferMode ((I.Decl (inferExp (ms, mode, V1), 
 					(M.Marg (mode, name), Explicit)), V2), mS))
       | inferMode ((M, I.Root _), _) = 
-        raise Error "Expected type family, found object constant"
+          raise Error "Expected type family, found object constant"
       | inferMode _ = raise Error "Not enough modes specified"
 
     (* abstractMode (ms, mS) = mS'
@@ -208,7 +208,7 @@ struct
     *)
     fun shortToFull (a, mS, r) =
       let 
-	fun calcImplicit' (I.ConDec (_, k, _, V, _))  =
+	fun calcImplicit' (I.ConDec (_, _, k, _, V, _))  =
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
 	    (* only possibility since type families cannot be defined *)
       in 
@@ -227,7 +227,7 @@ struct
     fun checkFull (a, mS, r) =  
         (checkName mS; 
 	 case I.sgnLookup a 
-	   of I.ConDec (_, _, _, V, _)  =>
+	   of I.ConDec (_, _, _, _, V, _)  =>
 	       (inferMode ((I.Null, V), mS); ()))
               (* only possibility: no defined type families *)
 	handle Error (msg) => error (r, msg)  (* re-raise error with location *)

@@ -46,12 +46,16 @@ struct
 
       fun mnil r = (M.Mnil, r)
       fun mapp (((m, r1), name), (mS, r2)) = (M.Mapp (M.Marg (m, name), mS), P.join (r1, r2))
-      fun mroot (id, r1, (mS, r2)) = 
-          let val r = P.join (r1, r2)
+      fun mroot (ids, id, r1, (mS, r2)) = 
+          let
+            val r = P.join (r1, r2)
+            val qid = Names.Qid (ids, id)
 	  in
-	    case Names.nameLookup id
-	      of NONE => error (r, "Undeclared identifier " ^ id ^ " cannot be moded")
-	       | SOME a => ((a, ModeDec.shortToFull (a, mS, r)), r)
+            case Names.constLookup qid
+              of NONE => error (r, "Undeclared identifier "
+                                ^ Names.qidToString (valOf (Names.constUndef qid))
+                                ^ " in mode declaration")
+               | SOME cid => ((cid, ModeDec.shortToFull (cid, mS, r)), r)
 	  end
 
       fun toModedec nmS = nmS
@@ -59,15 +63,15 @@ struct
 
     structure Full =
     struct
-      type mterm = (T.dec * P.region) I.Ctx * M.Mode I.Ctx
+      type mterm = T.dec I.Ctx * M.Mode I.Ctx
                      -> (I.cid * M.ModeSpine) * P.region
 
-      fun mpi ((m, _), d, r, t) (g, D) =
-            t (I.Decl (g, (d, r)), I.Decl (D, m))
+      fun mpi ((m, _), d, t) (g, D) =
+            t (I.Decl (g, d), I.Decl (D, m))
 
       fun mroot (tm, r) (g, D) =
 	  let
-            val (G, U, V) = T.termToExp (g, tm)
+            val (G, U, V, oc) = T.termToExp (g, tm)
 
             (* convert term spine to mode spine *)
 	    (* Each argument must be contractible to variable *)
@@ -77,7 +81,7 @@ struct
 		  val k = Whnf.etaContract U
 		          handle Whnf.Eta => 
 			    error (r, "Argument not a variable")  (* print U? -fp *)
-		  val I.Dec (name, _) = I.ctxLookup (G, k)
+		  val (I.Dec (name, _), _, _) = I.ctxLookup (G, k)
 		  val mode = I.ctxLookup (D, k)
 		in
 		  M.Mapp (M.Marg (mode, name), convertSpine S)
@@ -101,7 +105,7 @@ struct
 
       fun toModedec t =
           let
-            val _ = Names.varReset ()
+            val _ = Names.varReset I.Null
             val t' = t (I.Null, I.Null)
           in
             t'

@@ -6,6 +6,7 @@ signature INTSYN =
 sig
 
   type cid = int			(* Constant identifier        *)
+  type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
  
   (* Contexts *)
@@ -107,14 +108,19 @@ sig
   (* Global signature *)
 
   and ConDec =			        (* Constant declaration       *)
-    ConDec of string * int * Status    	(* a : K : kind  or           *)
+    ConDec of string * mid option * int * Status
+                                        (* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of string * int		(* a = A : K : kind  or       *)
+  | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | AbbrevDef of string * int		(* a = A : K : kind  or       *)
+  | AbbrevDef of string * mid option * int
+                                        (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | SkoDec of string * int		(* sa: K : kind  or           *)
+  | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+
+  datatype StrDec =                     (* Structure declaration      *)
+      StrDec of string * mid option
 
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
@@ -124,17 +130,24 @@ sig
   exception Error of string		(* raised if out of space     *)
   
   val conDecName   : ConDec -> string
+  val conDecParent : ConDec -> mid option
   val conDecImp    : ConDec -> int
   val conDecStatus : ConDec -> Status
   val conDecType   : ConDec -> Exp
 
+  val strDecName   : StrDec -> string
+  val strDecParent : StrDec -> mid option
+
+  val sgnReset     : unit -> unit
+  val sgnSize      : unit -> cid * mid
+
   val sgnAdd   : ConDec -> cid
   val sgnLookup: cid -> ConDec
-  val sgnReset : unit -> unit
-  val sgnSize  : unit -> int
-
   val sgnApp   : (cid -> unit) -> unit
-    
+
+  val sgnStructAdd    : StrDec -> mid
+  val sgnStructLookup : mid -> StrDec
+
   val constType   : cid -> Exp		(* type of c or d             *)
   val constDef    : cid -> Exp		(* definition of d            *)
   val constImp    : cid -> int

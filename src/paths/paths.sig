@@ -9,7 +9,7 @@ sig
 
   (* line numbering, used when printing regions *)
   type linesInfo			(* mapping from character positions to lines in a file *)
-  val resetLines : unit -> unit		(* reset line numbering *)
+  val resetLines : unit -> unit         (* reset line numbering *)
   val newLine : int -> unit		(* new line starts at character i *)
   val getLinesInfo : unit -> linesInfo  (* get lines info for current file *)
 
@@ -61,9 +61,9 @@ sig
   val removeImplicit : int * occSpine -> occSpine
 
   type occConDec			(* occurrence tree for constant declarations *)
-  val dec : region * int * occExp -> occConDec (* (r, #implicit, v) in c : V *)
-  val def : region * int * occExp * occExp option -> occConDec
-					(* (r, #implicit, u, v) in c : V = U *)
+  val dec : int * occExp -> occConDec   (* (#implicit, v) in c : V *)
+  val def : int * occExp * occExp option -> occConDec
+					(* (#implicit, u, v) in c : V = U *)
 
   val toRegion : occExp -> region
   val toRegionSpine : occSpine * region -> region

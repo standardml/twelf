@@ -7,6 +7,9 @@ sig
 
   exception Error of string
 
+  val raiseType : IntSyn.Dec IntSyn.Ctx * IntSyn.Exp -> IntSyn.Exp
+  val raiseTerm : IntSyn.Dec IntSyn.Ctx * IntSyn.Exp -> IntSyn.Exp
+
   val piDepend  : (IntSyn.Dec * IntSyn.Depend) * IntSyn.Exp -> IntSyn.Exp
   val closedDec : IntSyn.Dec IntSyn.Ctx * (IntSyn.Dec * IntSyn.Sub) -> bool
   val closedSub : IntSyn.Dec IntSyn.Ctx * IntSyn.Sub -> bool

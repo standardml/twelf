@@ -61,7 +61,7 @@ struct
 
     (* constant declaration for the proof object d>0 *)
     fun gtNConDec (d) = ConDec (toString (d) ^ ">" ^ toString (zero),
-                                0, Normal, gt0 (constant (d)), Type)
+                                NONE, 0, Normal, gt0 (constant (d)), Type)
 
     (* foreign constant for the proof object d>0 *)
     fun gtNExp (d) = Root (FgnConst (!myID, gtNConDec (d)), Nil)
@@ -1223,19 +1223,19 @@ struct
             myID := cs;
 
             gtID := 
-              installF (ConDec (">", 0,
+              installF (ConDec (">", NONE, 0,
                                 Constraint (!myID, solveGt),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
                         SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
 
             geqID := 
-              installF (ConDec (">=", 0,
+              installF (ConDec (">=", NONE, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
                         SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
 
             gtAddID :=
-              installF (ConDec ("+>", 2, Normal,
+              installF (ConDec ("+>", NONE, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),
@@ -1249,7 +1249,7 @@ struct
                         NONE, NONE);
 
             geqAddID :=
-              installF (ConDec ("+>=", 2, Normal,
+              installF (ConDec ("+>=", NONE, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),
@@ -1263,7 +1263,7 @@ struct
                         NONE, NONE);
 
             gtGeqID :=
-              installF (ConDec (">>=", 2, Normal,
+              installF (ConDec (">>=", NONE, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         arrow (gt (Root (BVar 2, Nil),
@@ -1274,7 +1274,7 @@ struct
                         NONE, NONE);
 
             geq00ID :=
-              installF (ConDec ("0>=0", 0, Normal,
+              installF (ConDec ("0>=0", NONE, 0, Normal,
                                 geq0 (constant (zero)),
                                 Type),
                         NONE, NONE);

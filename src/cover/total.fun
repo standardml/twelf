@@ -64,8 +64,8 @@ struct
 	   of (fileName, NONE) => raise Error (fileName ^ ":" ^ msg)
             | (fileName, SOME occDec) => 
 		raise Error (P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
-					 Origins.linesInfoLookup (fileName),
-					 msg)))
+                                        Origins.linesInfoLookup (fileName),
+                                        msg)))
 
     (* checkClause (G, (V, s), occ) = ()
        checkGoal (G, (V, s), occ) = ()
@@ -97,11 +97,11 @@ struct
 	()
     and checkGoal (G, Vs, occ) = checkGoalW (G, Whnf.whnf Vs, occ)
     and checkGoalW (G, (I.Pi _, s), occ) =
-        raise Error' (occ, "Totality: can not parametric or hypothetical subgoals yet")
+        raise Error' (occ, "Totality: can not check parametric or hypothetical subgoals yet")
       | checkGoalW (G, (V as I.Root (I.Const a, S), s), occ) =	(* s = id *)
 	let
 	  val _ = if not (total a)
-		    then raise Error' (occ, "Subgoal " ^ Names.constName a
+		    then raise Error' (occ, "Subgoal " ^ Names.qidToString (Names.constQid a)
 				       ^ " not declared to be total")
 		  else ()
 	in
@@ -131,7 +131,7 @@ struct
           (* Checking termination *)
 	  val _ = (Reduces.checkFam a;
 		   if !Global.chatter >= 4
-		     then print ("Terminates: " ^ Names.constName a ^ "\n")
+		     then print ("Terminates: " ^ Names.qidToString (Names.constQid a) ^ "\n")
 		   else ())
 	          handle Reduces.Error (msg) => raise Reduces.Error (msg)
 
@@ -140,7 +140,7 @@ struct
 	  val SOME(ms) = ModeSyn.modeLookup a
 	  val _ = (Cover.checkCovers (a, ms);
 		   if !Global.chatter >= 4
-		     then print ("Covers (+): " ^ Names.constName a ^ "\n")
+		     then print ("Covers (+): " ^ Names.qidToString (Names.constQid a) ^ "\n")
 		   else ())
 	          handle Cover.Error (msg) => raise Cover.Error (msg)
 
@@ -148,7 +148,7 @@ struct
           val cs = Index.lookup a
 	  val _ = (checkOutCover (cs);
 		   if !Global.chatter >= 4
-		     then print ("Covers (-): " ^ Names.constName a ^ "\n")
+		     then print ("Covers (-): " ^ Names.qidToString (Names.constQid a) ^ "\n")
 		   else ())
                   handle Cover.Error (msg) => raise Cover.Error (msg)
 	in

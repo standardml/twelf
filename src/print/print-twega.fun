@@ -105,28 +105,28 @@ local
 
      This function prints the quantifiers and abstractions only if hide = false.
   *)
-  fun fmtConDec (I.ConDec (name, imp, _, V, L)) =
+  fun fmtConDec (I.ConDec (name, parent, imp, _, V, L)) =
       let
-	val _ = Names.varReset ()
+	val _ = Names.varReset IntSyn.Null
       in
 	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
-    | fmtConDec (I.SkoDec (name, imp, V, L)) =
+    | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
       Str ("%% Skipping Skolem constant " ^ name ^ " %%")
-    | fmtConDec (I.ConDef (name, imp, U, V, L)) =
+    | fmtConDec (I.ConDef (name, parent, imp, U, V, L)) =
       let
-	val _ = Names.varReset ()
+	val _ = Names.varReset IntSyn.Null
       in
 	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
-    | fmtConDec (I.AbbrevDef (name, imp, U, V, L)) =
+    | fmtConDec (I.AbbrevDef (name, parent, imp, U, V, L)) =
       let
-	val _ = Names.varReset ()
+	val _ = Names.varReset IntSyn.Null
       in
 	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),

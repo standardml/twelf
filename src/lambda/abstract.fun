@@ -161,6 +161,17 @@ struct
     fun raiseType (I.Null, V) = V
       | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
 
+    (* raiseTerm (G, U) = [[G]] U
+
+       Invariant:
+       If G |- U : V
+       then  . |- [[G]] U : {{G}} V
+
+       All abstractions are potentially dependent.
+    *)
+    fun raiseTerm (I.Null, U) = U
+      | raiseTerm (I.Decl (G, D), U) = raiseTerm (G, I.Lam (D, U))
+
     (* collectExpW (G, (U, s), K) = K'
 
        Invariant: 
@@ -606,6 +617,9 @@ struct
           KToEVars (collectExp (G, Us, evarsToK (Xs)))
 
   in
+
+    val raiseType = raiseType
+    val raiseTerm = raiseTerm
 
     val piDepend = piDepend
     val closedDec = closedDec

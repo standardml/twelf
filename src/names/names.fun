@@ -7,8 +7,7 @@ functor Names (structure Global : GLOBAL
                structure Constraints : CONSTRAINTS
                  sharing Constraints.IntSyn = IntSyn'
 	       structure HashTable : TABLE where type key = string
-               structure RedBlackTree : TABLE where type key = string
-               structure IntTree : TABLE where type key = int)
+               structure StringTree : TABLE where type key = string)
   : NAMES =
 struct
 
@@ -85,27 +84,26 @@ struct
      if V expects exactly n arguments,
      raises Error(msg) otherwise
   *)
-  fun checkAtomic (name, IntSyn.Pi (D, V), 0) = ()
+  fun checkAtomic (name, IntSyn.Pi (D, V), 0) = true
       (* allow extraneous arguments, Sat Oct 23 14:18:27 1999 -fp *)
       (* raise Error ("Constant " ^ name ^ " takes too many explicit arguments for given fixity") *)
     | checkAtomic (name, IntSyn.Pi (D, V), n) =
 	checkAtomic (name, V, n-1)
-    | checkAtomic (_, IntSyn.Uni _, 0) = ()
-    | checkAtomic (_, IntSyn.Root _, 0) = ()
-    | checkAtomic (name, _, _) =
-      raise Error ("Constant " ^ name ^ " takes too few explicit arguments for given fixity")
+    | checkAtomic (_, IntSyn.Uni _, 0) = true
+    | checkAtomic (_, IntSyn.Root _, 0) = true
+    | checkAtomic (name, _, _) = false
 
   (* checkArgNumber (c, n) = ()
      if constant c expects exactly n explicit arguments,
      raises Error (msg) otherwise
   *)
-  fun checkArgNumber (IntSyn.ConDec (name, i, _, V, L), n) =
+  fun checkArgNumber (IntSyn.ConDec (name, _, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
-    | checkArgNumber (IntSyn.SkoDec (name, i, V, L), n) =
+    | checkArgNumber (IntSyn.SkoDec (name, _, i, V, L), n) =
 	checkAtomic (name, V, i+n)
-    | checkArgNumber (IntSyn.ConDef (name, i, _, V, L), n) =
+    | checkArgNumber (IntSyn.ConDef (name, _, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
-    | checkArgNumber (IntSyn.AbbrevDef (name, i, _, V, L), n) =
+    | checkArgNumber (IntSyn.AbbrevDef (name, _, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
 
   (* checkFixity (name, cidOpt, n) = ()
@@ -113,11 +111,10 @@ struct
      or name is declared and has n exactly explicit arguments,
      raises Error (msg) otherwise
   *)
-  fun checkFixity (_, _, 0) = ()
-    | checkFixity (name, NONE, n) =
-      raise Error ("Undeclared identifier " ^ name ^ " cannot be given fixity")
-    | checkFixity (name, SOME(cid), n) =
-	checkArgNumber (IntSyn.sgnLookup (cid), n)
+  fun checkFixity (name, _, 0) = ()
+    | checkFixity (name, cid, n) =
+      if checkArgNumber (IntSyn.sgnLookup (cid), n) then ()
+      else raise Error ("Constant " ^ name ^ " takes too few explicit arguments for given fixity")
 
   (****************************************)
   (* Constants Names and Name Preferences *)
@@ -145,131 +142,386 @@ struct
      consistent with each other.
   *)
 
-  (* nameInfo carries the print name and fixity for a constant *)
-  datatype nameInfo = NameInfo of string * Fixity.fixity
+  datatype Qid = Qid of string list * string
+    
+  fun qidToString (Qid (ids, name)) =
+        foldr (fn (id, s) => id ^ "." ^ s) name ids
+
+  fun validateQualName nil = NONE
+    | validateQualName (l as id::ids) =
+        if List.exists (fn s => s = "") l
+          then NONE
+        else SOME (Qid (rev ids, id))
+
+  fun stringToQid name =
+        validateQualName (rev (String.fields (fn c => c = #".") name))
+
+  fun unqualified (Qid (nil, id)) = SOME id
+    | unqualified _ = NONE
+
+  type namespace = IntSyn.mid StringTree.Table * IntSyn.cid StringTree.Table
+
+  fun newNamespace () : namespace =
+        (StringTree.new (0), StringTree.new (0))
+
+  fun insertConst ((structTable, constTable), cid) =
+      let
+        val condec = IntSyn.sgnLookup cid
+        val id = IntSyn.conDecName condec
+      in
+        case StringTree.insertShadow constTable (id, cid)
+          of NONE => ()
+           | SOME _ =>
+               raise Error ("Shadowing: A constant named " ^ id
+                            ^ "\nhas already been declared in this signature")
+      end
+
+  fun insertStruct ((structTable, constTable), mid) =
+      let
+        val strdec = IntSyn.sgnStructLookup mid
+        val id = IntSyn.strDecName strdec
+      in
+        case StringTree.insertShadow structTable (id, mid)
+          of NONE => ()
+           | SOME _ =>
+               raise Error ("Shadowing: A structure named " ^ id
+                            ^ "\nhas already been declared in this signature")
+      end
+
+  fun appConsts f (structTable, constTable) =
+        StringTree.app f constTable
+
+  fun appStructs f (structTable, constTable) =
+        StringTree.app f structTable
 
   local
+    fun fromTo f (from, to) = if from >= to then ()
+                              else (f from; fromTo f (from+1, to))
+
     val maxCid = Global.maxCid
-    (* nameArray maps constants to print names and fixity *)
-    val nameArray = Array.array (maxCid+1, NameInfo ("", Fixity.Nonfix))
-      : nameInfo Array.array
+    val shadowArray : IntSyn.cid option Array.array =
+          Array.array (maxCid+1, NONE)
+    fun shadowClear () = Array.modify (fn _ => NONE) shadowArray
+    val fixityArray : Fixity.fixity Array.array =
+          Array.array (maxCid+1, Fixity.Nonfix)
+    fun fixityClear () = Array.modify (fn _ => Fixity.Nonfix) fixityArray
+    val namePrefArray : (string * string) option Array.array =
+          Array.array (maxCid+1, NONE)
+    fun namePrefClear () = Array.modify (fn _ => NONE) namePrefArray
 
-    (* sgnHashTable maps identifiers (strings) to constants (cids) *)
-    val sgnHashTable : IntSyn.cid HashTable.Table = HashTable.new (4096)
-    val hashInsert = HashTable.insertShadow sgnHashTable (* returns optional shadowed entry *)
-    val hashLookup = HashTable.lookup sgnHashTable (* returns optional cid *)
-    fun hashClear () = HashTable.clear sgnHashTable
+    val topNamespace : IntSyn.cid HashTable.Table = HashTable.new (4096)
+    val topInsert = HashTable.insertShadow topNamespace
+    val topLookup = HashTable.lookup topNamespace
+    val topDelete = HashTable.delete topNamespace
+    fun topClear () = HashTable.clear topNamespace
 
-    (* namePrefTable maps constants (cids) to name preferences (strings) *)
-    val namePrefTable : (string * string) IntTree.Table = IntTree.new (0)
-    val namePrefInsert = IntTree.insert namePrefTable
-    val namePrefLookup = IntTree.lookup namePrefTable
-    fun namePrefClear () = IntTree.clear namePrefTable
+    val dummyNamespace = (StringTree.new (0), StringTree.new (0)) : namespace
+
+    val maxMid = Global.maxMid
+    val structShadowArray : IntSyn.mid option Array.array =
+          Array.array (maxMid+1, NONE)
+    fun structShadowClear () = Array.modify (fn _ => NONE) structShadowArray
+    val componentsArray : namespace Array.array =
+          Array.array (maxMid+1, dummyNamespace)
+    fun componentsClear () = Array.modify (fn _ => dummyNamespace) componentsArray
+
+    val topStructNamespace : IntSyn.mid HashTable.Table =
+          HashTable.new (4096)
+    val topStructInsert = HashTable.insertShadow topStructNamespace
+    val topStructLookup = HashTable.lookup topStructNamespace
+    val topStructDelete = HashTable.delete topStructNamespace
+    fun topStructClear () = HashTable.clear topStructNamespace
+
   in
-    (* reset () = ()
-       Effect: clear name tables related to constants
-
-       nameArray does not need to be reset, since it is reset individually
-       for every constant as it is declared
-    *)
-    fun reset () = (hashClear (); namePrefClear ())
-    
-    (* override (cid, nameInfo) = ()
-       Effect: mark cid as shadowed --- it will henceforth print as %name%
-    *)
-    fun override (cid, NameInfo (name, fixity)) =
-        (* should shadowed identifiers keep their fixity? *)
-          Array.update (nameArray, cid, NameInfo("%" ^ name ^ "%", fixity))
-
-    fun shadow NONE = ()
-      | shadow (SOME(_,cid)) =
-          override (cid, Array.sub (nameArray, cid))
 
     (* installName (name, cid) = ()
-       Effect: update mappings from constants to print names and identifiers
+       Effect: update mapping from identifiers
                to constants, taking into account shadowing
     *)
-    fun installName (name, cid) =
+    fun installConstName cid =
         let
-	  val shadowed = hashInsert (name, cid)	(* returns optional shadowed entry *)
-	in
-	  (Array.update (nameArray, cid, NameInfo (name, Fixity.Nonfix));
-	   shadow shadowed)
-	end
+          val condec = IntSyn.sgnLookup cid
+          val id = IntSyn.conDecName condec
+        in
+          case topInsert (id, cid)
+            of NONE => ()
+             | SOME (_, cid') => Array.update (shadowArray, cid, SOME cid')
+        end
 
-    (* nameLookup (name) = SOME(cid),  if cid has name and is not shadowed,
-                         = NONE,   if there is no such constant
+    fun uninstallConst cid =
+        let
+          val condec = IntSyn.sgnLookup cid
+          val id = IntSyn.conDecName condec
+        in
+          case Array.sub (shadowArray, cid)
+            of NONE => (if topLookup id = SOME cid
+                          then topDelete id
+                        else ())
+             | SOME cid' => (topInsert (id, cid');
+                             Array.update (shadowArray, cid, NONE));
+          Array.update (fixityArray, cid, Fixity.Nonfix);
+          Array.update (namePrefArray, cid, NONE)
+        end
+
+    fun installStructName mid =
+        let
+          val strdec = IntSyn.sgnStructLookup mid
+          val id = IntSyn.strDecName strdec
+        in
+          case topStructInsert (id, mid)
+            of NONE => ()
+             | SOME (_, mid') => Array.update (structShadowArray, mid, SOME mid')
+        end
+
+    fun uninstallStruct mid =
+        let
+          val strdec = IntSyn.sgnStructLookup mid
+          val id = IntSyn.strDecName strdec
+        in
+          case Array.sub (structShadowArray, mid)
+            of NONE => if topStructLookup id = SOME mid
+                         then topStructDelete id
+                       else ()
+             | SOME mid' => (topStructInsert (id, mid');
+                             Array.update (structShadowArray, mid, NONE));
+          Array.update (componentsArray, mid, dummyNamespace)
+        end
+
+    fun resetFrom (mark, markStruct) =
+        let
+          val (limit, limitStruct) = IntSyn.sgnSize ()
+          fun ct f (i, j) = if j < i then ()
+                            else (f j; ct f (i, j-1))
+        in
+          ct uninstallConst (mark, limit-1);
+          ct uninstallStruct (markStruct, limitStruct-1)
+        end
+
+    (* reset () = ()
+       Effect: clear name tables related to constants
     *)
-    fun nameLookup name = hashLookup name
+    fun reset () = (topClear (); topStructClear ();
+                    shadowClear (); structShadowClear ();
+                    fixityClear (); namePrefClear ();
+                    componentsClear ())
 
-    (* constName (cid) = name,
-       where `name' is the print name of cid
+    fun structComps mid = #1 (Array.sub (componentsArray, mid))
+    fun constComps mid = #2 (Array.sub (componentsArray, mid))
+
+    fun findStruct (structTable, [id]) =
+          StringTree.lookup structTable id
+      | findStruct (structTable, id::ids) =
+        (case StringTree.lookup structTable id
+           of NONE => NONE
+            | SOME mid => findStruct (structComps mid, ids))
+
+    fun findTopStruct [id] =
+          HashTable.lookup topStructNamespace id
+      | findTopStruct (id::ids) =
+        (case HashTable.lookup topStructNamespace id
+           of NONE => NONE
+            | SOME mid => findStruct (structComps mid, ids))
+
+    fun findUndefStruct (structTable, [id], ids') =
+        (case StringTree.lookup structTable id
+           of NONE => SOME (Qid (rev ids', id))
+            | SOME _ => NONE)
+      | findUndefStruct (structTable, id::ids, ids') =
+        (case StringTree.lookup structTable id
+           of NONE => SOME (Qid (rev ids', id))
+            | SOME mid => findUndefStruct (structComps mid, ids, id::ids'))
+
+    fun findTopUndefStruct [id] =
+        (case HashTable.lookup topStructNamespace id
+           of NONE => SOME (Qid (nil, id))
+            | SOME _ => NONE)
+      | findTopUndefStruct (id::ids) =
+        (case HashTable.lookup topStructNamespace id
+           of NONE => SOME (Qid (nil, id))
+            | SOME mid => findUndefStruct (structComps mid, ids, [id]))
+
+    fun constLookupIn ((structTable, constTable), Qid (nil, id)) =
+          StringTree.lookup constTable id
+      | constLookupIn ((structTable, constTable), Qid (ids, id)) =
+        (case findStruct (structTable, ids)
+           of NONE => NONE
+            | SOME mid => StringTree.lookup (constComps mid) id)
+
+    fun structLookupIn ((structTable, constTable), Qid (nil, id)) =
+          StringTree.lookup structTable id
+      | structLookupIn ((structTable, constTable), Qid (ids, id)) =
+        (case findStruct (structTable, ids)
+           of NONE => NONE
+            | SOME mid => StringTree.lookup (structComps mid) id)
+
+    fun constUndefIn ((structTable, constTable), Qid (nil, id)) =
+        (case StringTree.lookup constTable id
+           of NONE => SOME (Qid (nil, id))
+            | SOME _ => NONE)
+      | constUndefIn ((structTable, constTable), Qid (ids, id)) =
+        (case findUndefStruct (structTable, ids, nil)
+           of opt as SOME _ => opt
+            | NONE =>
+        (case StringTree.lookup (constComps (valOf (findStruct (structTable, ids)))) id
+           of NONE => SOME (Qid (ids, id))
+            | SOME _ => NONE))
+
+    fun structUndefIn ((structTable, constTable), Qid (nil, id)) =
+        (case StringTree.lookup structTable id
+           of NONE => SOME (Qid (nil, id))
+            | SOME _ => NONE)
+      | structUndefIn ((structTable, constTable), Qid (ids, id)) =
+        (case findUndefStruct (structTable, ids, nil)
+           of opt as SOME _ => opt
+            | NONE =>
+        (case StringTree.lookup (structComps (valOf (findStruct (structTable, ids)))) id
+           of NONE => SOME (Qid (ids, id))
+            | SOME _ => NONE))
+
+    (* nameLookup (qid) = SOME(cid),  if qid refers to cid in the current context,
+                        = NONE,       if there is no such constant
     *)
-    fun constName (cid) =
-        (case Array.sub (nameArray, cid)
-	   of (NameInfo (name, _)) => name)
+    fun constLookup (Qid (nil, id)) =
+          HashTable.lookup topNamespace id
+      | constLookup (Qid (ids, id)) =
+        (case findTopStruct ids
+           of NONE => NONE
+            | SOME mid => StringTree.lookup (constComps mid) id)
 
-    (* installFixity (name, fixity) = ()
-       Effect: install fixity for constant called name,
+    fun structLookup (Qid (nil, id)) =
+          HashTable.lookup topStructNamespace id
+      | structLookup (Qid (ids, id)) =
+        (case findTopStruct ids
+           of NONE => NONE
+            | SOME mid => StringTree.lookup (structComps mid) id)
+
+    fun constUndef (Qid (nil, id)) =
+        (case HashTable.lookup topNamespace id
+           of NONE => SOME (Qid (nil, id))
+            | SOME _ => NONE)
+      | constUndef (Qid (ids, id)) =
+        (case findTopUndefStruct ids
+           of opt as SOME _ => opt
+            | NONE => 
+        (case StringTree.lookup (constComps (valOf (findTopStruct ids))) id
+           of NONE => SOME (Qid (ids, id))
+            | SOME _ => NONE))
+
+    fun structUndef (Qid (nil, id)) =
+        (case HashTable.lookup topStructNamespace id
+           of NONE => SOME (Qid (nil, id))
+            | SOME _ => NONE)
+      | structUndef (Qid (ids, id)) =
+        (case findTopUndefStruct ids
+           of opt as SOME _ => opt
+            | NONE => 
+        (case StringTree.lookup (structComps (valOf (findTopStruct ids))) id
+           of NONE => SOME (Qid (ids, id))
+            | SOME _ => NONE))
+
+    fun structPath (mid, ids) =
+        let
+          val strdec = IntSyn.sgnStructLookup mid
+          val ids' = IntSyn.strDecName strdec::ids
+        in
+          case IntSyn.strDecParent strdec
+            of NONE => ids'
+             | SOME mid' => structPath (mid', ids')
+        end
+
+    fun maybeShadow (qid, false) = qid
+      | maybeShadow (Qid (nil, id), true) = Qid (nil, "%" ^ id ^ "%")
+      | maybeShadow (Qid (id::ids, name), true) = Qid ("%" ^ id ^ "%"::ids, name)
+
+    fun conDecQid condec =
+        let
+          val id = IntSyn.conDecName condec
+        in
+          case IntSyn.conDecParent condec
+            of NONE => Qid (nil, id)
+             | SOME mid => Qid (structPath (mid, nil), id)
+        end
+
+    (* constQid (cid) = qid,
+       where `qid' is the print name of cid
+    *)
+    fun constQid cid =
+        let
+          val condec = IntSyn.sgnLookup cid
+          val qid = conDecQid condec
+        in
+          maybeShadow (qid, constLookup qid <> SOME cid)
+        end
+
+    fun structQid mid =
+        let
+          val strdec = IntSyn.sgnStructLookup mid
+          val id = IntSyn.strDecName strdec
+          val qid = case IntSyn.strDecParent strdec
+                      of NONE => Qid (nil, id)
+                       | SOME mid => Qid (structPath (mid, nil), id)
+        in
+          maybeShadow (qid, structLookup qid <> SOME mid)
+        end
+
+    (* installFixity (cid, fixity) = ()
+       Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level
-       raise Error if name does not refer to a constant
     *)
-    fun installFixity (name, fixity) = 
+    fun installFixity (cid, fixity) =
         let
-	  val cidOpt = hashLookup name
-	in
-	  (checkFixity (name, cidOpt, argNumber fixity);
-	   if !Global.chatter >= 3
-	     then print ((if !Global.chatter >= 4 then "%" else "")
-				^ Fixity.toString fixity ^ " " ^ name ^ ".\n")
-	   else ();
-	   Array.update (nameArray, valOf cidOpt,
-			 NameInfo (name, fixity)))
-	end
+          val name = qidToString (constQid cid)
+        in
+	  checkFixity (name, cid, argNumber fixity);
+          Array.update (fixityArray, cid, fixity)
+        end
 
     (* getFixity (cid) = fixity
        fixity defaults to Fixity.Nonfix, if nothing has been declared
     *)
-    fun getFixity (cid) =
-        (case Array.sub (nameArray, cid)
-	   of (NameInfo (_, fixity)) => fixity)
+    fun getFixity (cid) = Array.sub (fixityArray, cid)
 
-    (* fixityLookup (name) = fixity
-       where fixity is the associated with constant name,
-       defaults to Fixity.Nonfix if name or fixity are undeclared
+    (* fixityLookup qid = fixity
+       where fixity is the fixity associated with constant named qid,
+       defaults to Fixity.Nonfix if qid or fixity are undeclared
     *)
-    fun fixityLookup (name) =
-        (case hashLookup (name)
-	   of SOME(cid) => getFixity (cid)
-            | NONE => Fixity.Nonfix)
+    fun fixityLookup qid =
+        (case constLookup qid
+           of NONE => Fixity.Nonfix
+            | SOME cid => getFixity cid)
 
     (* Name Preferences *)
     (* ePref is the name preference for existential variables of given type *)
     (* uPref is the name preference for universal variables of given type *)
 
-    (* installNamePref' (name, cidOpt, ePref, uPref) see installNamePref *)
-    fun installNamePref' (name, NONE, (ePref, uPref)) =
-        raise Error ("Undeclared identifier " ^ name ^ " cannot be given name preference")
-      | installNamePref' (name, SOME(cid), (ePref, uPref)) =
+    (* installNamePref' (cid, (ePref, uPref)) see installNamePref *)
+    fun installNamePref' (cid, (ePref, uPref)) =
 	let
 	  val L = IntSyn.constUni (cid)
 	  val _ = case L
 	            of IntSyn.Type =>
-		       raise Error ("Object constant " ^ name ^ " cannot be given name preference\n"
+		       raise Error ("Object constant " ^ qidToString (constQid cid) ^ " cannot be given name preference\n"
 				    ^ "Name preferences can only be established for type families")
 		     | IntSyn.Kind => ()
 	in
-	  namePrefInsert (cid, (ePref, uPref))
+	  Array.update (namePrefArray, cid, SOME (ePref, uPref))
 	end
 
-    (* installNamePref (name, (ePref, uPrefOpt)) = ()
-       Effect: install name preference for type family named by 'name'
-       raise Error if name is undeclared or name does not refer to a type family
+    (* installNamePref (cid, (ePref, uPrefOpt)) = ()
+       Effect: install name preference for type family cid
+       raise Error if cid does not refer to a type family
     *)
-    fun installNamePref (name, (ePref, SOME(uPref))) =
-          installNamePref' (name, nameLookup name, (ePref, uPref))
-      | installNamePref (name, (ePref, NONE)) =
-	  installNamePref' (name, nameLookup name, (ePref, String.map Char.toLower ePref))
+    fun installNamePref (cid, (ePref, SOME(uPref))) =
+          installNamePref' (cid, (ePref, uPref))
+      | installNamePref (cid, (ePref, NONE)) =
+	  installNamePref' (cid, (ePref, String.map Char.toLower ePref))
+
+    fun getNamePref cid = Array.sub (namePrefArray, cid)
+
+    fun installComponents (mid, namespace) =
+          Array.update (componentsArray, mid, namespace)
+
+    fun getComponents mid = Array.sub (componentsArray, mid)
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name
@@ -287,7 +539,7 @@ struct
 
     fun namePrefOf' (Exist, NONE) = "X"
       | namePrefOf' (Univ _, NONE) = "x"
-      | namePrefOf' (role, SOME(cid)) = namePrefOf'' (role, namePrefLookup (cid))
+      | namePrefOf' (role, SOME(cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
 
     (* namePrefOf (role, V) = name
        where name is the preferred base name for a variable with type V
@@ -342,10 +594,12 @@ struct
     (* varTable mapping identifiers (strings) to EVars and FVars *)
     (* A hashtable is too inefficient, since it is cleared too often; *)
     (* so we use a red/black trees instead *)
-    val varTable : varEntry RedBlackTree.Table = RedBlackTree.new (0) (* initial size hint *)
-    val varInsert = RedBlackTree.insert varTable
-    val varLookup = RedBlackTree.lookup varTable
-    fun varClear () = RedBlackTree.clear varTable
+    val varTable : varEntry StringTree.Table = StringTree.new (0) (* initial size hint *)
+    val varInsert = StringTree.insert varTable
+    val varLookup = StringTree.lookup varTable
+    fun varClear () = StringTree.clear varTable
+
+    val varContext : IntSyn.dctx ref = ref IntSyn.Null
 
     (* evarList mapping EVars to names *)
     (* names are assigned only when EVars are parsed or printed *)
@@ -381,10 +635,10 @@ struct
        The resulting identifer is not guaranteed to be new, and must be
        checked against the names of constants, FVars, EVars, and BVars.
     *)
-    val indexTable : int RedBlackTree.Table = RedBlackTree.new (0)
-    val indexInsert = RedBlackTree.insert indexTable
-    val indexLookup = RedBlackTree.lookup indexTable
-    fun indexClear () = RedBlackTree.clear indexTable
+    val indexTable : int StringTree.Table = StringTree.new (0)
+    val indexInsert = StringTree.insert indexTable
+    val indexLookup = StringTree.lookup indexTable
+    fun indexClear () = StringTree.clear indexTable
 
     fun nextIndex' (name, NONE) = (indexInsert (name, 1); 1)
       | nextIndex' (name, SOME(i)) = (indexInsert (name, i+1); i+1)
@@ -400,7 +654,8 @@ struct
        Effect: clear variable tables
        This must be called for each declaration or query
     *)
-    fun varReset () = (varClear (); evarReset (); indexClear ())
+    fun varReset G = (varClear (); evarReset (); indexClear ();
+                      varContext := G)
 
     (* getFVarType (name) = V
        where V is the type ascribed to free variable `name'.
@@ -431,10 +686,9 @@ struct
     fun getEVar (name) =
         (case varLookup name
 	   of NONE => let
-			(* free variables typed in empty context *)
-			val V = IntSyn.newTypeVar (IntSyn.Null)
+			val V = IntSyn.newTypeVar (!varContext)
                         val Va = IntSyn.newTypeVar (IntSyn.Null)
-			val (X as (IntSyn.EVar(r,_,_,_))) = IntSyn.newEVar (IntSyn.Null, V)
+			val (X as (IntSyn.EVar(r,_,_,_))) = IntSyn.newEVar (!varContext, V)
                         val set = ref false
 			val _ = varInsert (name, EVAR (X, Va, set))
 			val _ = evarInsert (X, name)
@@ -459,7 +713,7 @@ struct
 
     (* conDefined (name) = true iff `name' refers to a constant *)
     fun conDefined (name) =
-        (case nameLookup name
+        (case constLookup (Qid (nil, name))
 	   of NONE => false
             | SOME _ => true)
 
@@ -630,26 +884,26 @@ struct
 
     fun defEName UV = defEName' (IntSyn.Null, UV)
 
-    fun nameConDec' (IntSyn.ConDec (name, imp, status, V, L)) =
-          IntSyn.ConDec (name, imp, status, pisEName V, L)
-      | nameConDec' (IntSyn.ConDef (name, imp, U, V, L)) =
+    fun nameConDec' (IntSyn.ConDec (name, parent, imp, status, V, L)) =
+          IntSyn.ConDec (name, parent, imp, status, pisEName V, L)
+      | nameConDec' (IntSyn.ConDef (name, parent, imp, U, V, L)) =
 	let 
 	  val (U', V') = defEName (U, V)
 	in
-	  IntSyn.ConDef (name, imp, U', V', L)
+	  IntSyn.ConDef (name, parent, imp, U', V', L)
 	end
-      | nameConDec' (IntSyn.AbbrevDef (name, imp, U, V, L)) =
+      | nameConDec' (IntSyn.AbbrevDef (name, parent, imp, U, V, L)) =
 	let 
 	  val (U', V') = defEName (U, V)
 	in
-	  IntSyn.AbbrevDef (name, imp, U', V', L)
+	  IntSyn.AbbrevDef (name, parent, imp, U', V', L)
 	end
       | nameConDec' (skodec) = skodec (* fix ??? *)
 
     (* Assigns names to variables in a constant declaration *)
     (* The varReset (); is necessary so that explicitly named variables keep their name *)
     fun nameConDec (conDec) =
-        (varReset ();			(* declaration is always closed *)
+        (varReset IntSyn.Null;			(* declaration is always closed *)
 	 nameConDec' conDec)
 
     fun skonstName (name) =

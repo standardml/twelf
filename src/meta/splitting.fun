@@ -402,9 +402,8 @@ struct
 		fun abstract' U' = 
 		  let 
 					(* G' |- U' : V[s'] *)
-					(* G' |- U.s' : G, V *)
+					(* G' |- U'.s' : G, V[s'] *)
 		    val ((G'', B''), s'') = MTPAbstract.abstractSub' ((G', B'), I.Dot (I.Exp U', s'), I.Decl (B0, T))
-
 
 		    val _ = if !Global.doubleCheck then
 		              let 

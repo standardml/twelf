@@ -30,7 +30,7 @@ struct
 
     fun toString s = ("\"" ^ s ^ "\"")
 
-    fun stringConDec (str) = ConDec (toString (str), 0, Normal, 
+    fun stringConDec (str) = ConDec (toString (str), NONE, 0, Normal, 
                                      string (), Type)
 
     fun stringExp (str) = Root (FgnConst (!myID, stringConDec (str)), Nil)
@@ -329,6 +329,7 @@ struct
               | unifyRigid' ((String str1) :: AL1, (String str2) :: AL2) =
                   if (str1 = str2) then unifyRigid' (AL1, AL2)
                   else Failure
+                (* FIX: the next two cases are wrong -kw *)
               | unifyRigid' ((Exp (U1 as (EVar (r, _, _, _)), s)) :: AL1,
                              (Exp (U2 as (Root (FVar _, _)), _)) :: AL2) =
                   let
@@ -473,6 +474,7 @@ struct
           in
             case (AL1, AL2)
               of (nil, nil) => MultAssign nil
+                 (* FIX: the next two cases are wrong -kw *)
                | (nil, _) => Failure
                | (_, nil) => Failure
                | ([String str1], [String str2]) =>
@@ -575,12 +577,12 @@ struct
             myID := cs;
 
             stringID := 
-              installF (ConDec ("string", 0, Constraint (!myID, solveString),
+              installF (ConDec ("string", NONE, 0, Constraint (!myID, solveString),
                                 Uni (Type), Kind),
                         NONE, SOME(MS.Mnil));
 
             concatID :=
-              installF (ConDec ("++", 0,
+              installF (ConDec ("++", NONE, 0,
                                 Foreign (!myID, makeFgnBinary catConcat),
                                 arrow (string (), arrow (string (), string ())),
                                 Type),

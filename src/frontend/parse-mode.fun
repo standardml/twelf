@@ -7,6 +7,7 @@ functor ParseMode
      sharing Parsing'.Lexer.Paths = Paths
    structure ExtModes' : EXTMODES
      sharing ExtModes'.Paths = Paths
+     sharing ExtModes'.ExtSyn.Paths = Paths
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ExtModes'.ExtSyn)
@@ -82,11 +83,14 @@ struct
 	      let 
 		val mId = splitModeId (r0, id)
 		val m = validateMode (r0, mId)
-		val (d', f') = ParseTerm.parseDec' (LS.expose s'')
+		val ((x, yOpt), f') = ParseTerm.parseDec' (LS.expose s'')
 		val (f'', r') = stripRBrace f'
+                val dec = (case yOpt
+                             of NONE => ParseTerm.ExtSyn.dec0 (x, P.join (r, r'))
+                              | SOME y => ParseTerm.ExtSyn.dec (x, y, P.join (r, r')))
 		val (t', f''') = parseFull (f'', r1) 
 	      in 
-		(E.Full.mpi (m, d', P.join (r, r'), t'), f''')
+		(E.Full.mpi (m, dec, t'), f''')
 	      end
 	    | LS.Cons TS => 
 	      (* no quantifier --- parse atomic type *)
@@ -119,7 +123,7 @@ struct
 	let 
 	  val (mS', f') = parseShortSpine f
 	in
-	  (E.Short.toModedec (E.Short.mroot (name, r, mS')), f')
+	  (E.Short.toModedec (E.Short.mroot (nil, name, r, mS')), f')
 	end
 
     fun parseModeParen (LS.Cons ((L.ID (_, name), r0), s'), r) =
@@ -127,7 +131,7 @@ struct
 	  val (mS', f') = parseShortSpine (LS.expose s')
 	  val (f'', r') = stripRParen f'
 	in
-	  (E.Short.toModedec (E.Short.mroot (name, P.join (r, r'), mS')), f'')
+	  (E.Short.toModedec (E.Short.mroot (nil, name, P.join (r, r'), mS')), f'')
 	end
       | parseModeParen (LS.Cons ((t, r), s'), _) =
 	  Parsing.error (r, "Expected identifier, found " ^ L.toString t)

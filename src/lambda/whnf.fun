@@ -235,11 +235,7 @@ struct
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((NSDef (d), S), s) =
-	 let
-	   val AbbrevDef (_, _, U, _, _) = sgnLookup d
-	 in
-	   whnfRedex (whnf (U, id), (S, s))  
-	 end
+	  whnfRedex (whnf (IntSyn.constDef d, id), (S, s))  
       | whnfRoot ((H, S), s) =
 	 (Root (H, SClo (S, s)), id)
 

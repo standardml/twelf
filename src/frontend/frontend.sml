@@ -21,6 +21,7 @@ structure TpRecon =
 	   structure Unify = UnifyNoTrail
 	   structure Abstract = Abstract
 	   structure TypeCheck = TypeCheck
+           structure Conv = Conv
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
@@ -48,6 +49,15 @@ structure ThmRecon =
 	    structure TpRecon' = TpRecon
 	    structure Paths' = Paths
 	    structure Print = Print);
+
+structure ModRecon =
+  ModRecon (structure Global = Global
+            structure IntSyn = IntSyn
+            structure Names = Names
+            structure Paths' = Paths
+            structure TpRecon' = TpRecon
+            structure ModSyn' = ModSyn
+            structure IntTree = IntRedBlackTree);
 
 structure ParseTerm =
   ParseTerm (structure Parsing' = Parsing
@@ -80,6 +90,12 @@ structure ParseThm =
 	    structure ParseTerm = ParseTerm
 	    structure Paths = Paths);
 
+structure ParseModules =
+  ParseModules (structure Parsing' = Parsing
+                structure ModExtSyn' = ModRecon
+                structure ParseTerm = ParseTerm
+                structure Paths = Paths);
+
 structure Parser =
   Parser (structure Parsing' = Parsing
 	  structure Stream' = Stream
@@ -87,11 +103,13 @@ structure Parser =
 	  structure Names' = Names
 	  structure ExtModes' = ModeRecon
 	  structure ThmExtSyn' = ThmRecon
+          structure ModExtSyn' = ModRecon
 	  structure ParseConDec = ParseConDec
 	  structure ParseQuery = ParseQuery
 	  structure ParseFixity = ParseFixity
 	  structure ParseMode = ParseMode
 	  structure ParseThm = ParseThm
+          structure ParseModules = ParseModules
           structure ParseTerm = ParseTerm);
 
 structure Solve =
@@ -158,6 +176,9 @@ structure Twelf =
 	 structure Skolem = Skolem
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
+
+         structure ModSyn = ModSyn
+         structure ModRecon = ModRecon
 
 	 structure WorldSyn = WorldSyn
 	 structure WorldPrint = WorldPrint

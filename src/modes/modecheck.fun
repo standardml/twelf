@@ -56,8 +56,8 @@ struct
 	   of (fileName, NONE) => (fileName ^ ":" ^ msg)
             | (fileName, SOME occDec) => 
 		  (P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
-			       Origins.linesInfoLookup (fileName),
-			       "Constant " ^ Names.constName c ^ "\n" ^ msg)))
+                              Origins.linesInfoLookup (fileName),
+                              "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
 
     fun wrapMsg' (fileName, r, msg) =
           P.wrapLoc (P.Loc (fileName, r), msg)
@@ -390,7 +390,7 @@ struct
 
        (ocOpt is used in error messages)
     *)
-    fun checkD (conDec, fileName, ocOpt) = 
+    fun checkD (conDec, fileName, ocOpt) =
         let 
 	  fun checkable (I.Root (I.Const (a), _)) = 
 	      (case (M.modeLookup a) 
@@ -413,7 +413,7 @@ struct
     fun checkAll (nil) = ()
       | checkAll (I.Const c :: clist) =
         (if !Global.chatter > 3
-	   then print (Names.constName c ^ " ")
+	   then print (Names.qidToString (Names.constQid c) ^ " ")
 	 else ();
 	 checkDlocal (I.Null, I.constType c, P.top)
 	   handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
@@ -422,7 +422,7 @@ struct
     fun checkMode (a, ms) =
         let
 	  val _ = if !Global.chatter > 3
-		    then print ("Mode checking family " ^ Names.constName a ^ ":\n")
+		    then print ("Mode checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
 	  val _ = checkAll clist

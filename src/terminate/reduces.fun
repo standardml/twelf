@@ -74,8 +74,8 @@ struct
 	   of (fileName, NONE) => raise Error (fileName ^ ":" ^ msg)
             | (fileName, SOME occDec) => 
 		raise Error (P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
-					 Origins.linesInfoLookup (fileName),
-					 msg)))
+                                         Origins.linesInfoLookup (fileName),
+                                         msg)))
 
    fun union (I.Null, G) = G
      | union (G, I.Null) = G
@@ -240,7 +240,7 @@ struct
     fun selectOcc (c, (S, s), occ) =
         select (c, (S, s))
 	handle R.Error (msg) =>
-	  raise Error' (occ, "Termination violation: no order assigned for " ^ N.constName c)
+	  raise Error' (occ, "Termination violation: no order assigned for " ^ N.qidToString (N.constQid c))
 
     (* selectROrder (c, (S, s)) = P
        
@@ -282,7 +282,7 @@ struct
     fun selectROrderOcc (c, (S, s), occ) =
         selectROrder (c, (S, s))
 	handle R.Error (msg) =>
-	  raise Error' (occ, "Reduction violation: no order assigned for " ^ N.constName c)
+	  raise Error' (occ, "Reduction violation: no order assigned for " ^ N.qidToString (N.constQid c))
 
     fun conv ((Us, Vs), (Us', Vs')) =
         Conv.conv (Vs, Vs') andalso  
@@ -1613,10 +1613,10 @@ struct
 	  fun checkFam' [] = ()
 	    | checkFam' (I.Const b::bs) = 
 		(if (!Global.chatter) > 4 then 
-		   print ("[" ^ N.constName b ^ ":")
+		   print ("[" ^ N.qidToString (N.constQid b) ^ ":")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) > 5 then N.varReset () else ();
+		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
 		 ((if (!Global.chatter) > 5 
 		     then (* print ("\nTermination Check successful") *)
 		       print ("\n Reduction Checking") 
@@ -1643,10 +1643,10 @@ struct
 	  fun checkFam' [] = ()
 	    | checkFam' (I.Const b::bs) = 
 		(if (!Global.chatter) > 4 then 
-		   print ("[" ^ N.constName b ^ ":")
+		   print ("[" ^ N.qidToString (N.constQid b) ^ ":")
 		 else ();
 		 (* reuse variable names when tracing *)
-		 if (!Global.chatter) > 5 then N.varReset () else ();
+		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
 	        (checkClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top)
 		 handle Error' (occ, msg) => error (b, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));

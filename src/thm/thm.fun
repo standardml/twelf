@@ -55,10 +55,10 @@ struct
 	 		 	 else ()) A;
 	      unique' (V, P, x :: A))
 	  | unique' (I.Uni _, _, _) = error (r, "Too many arguments supplied to type family " 
-					        ^ Names.constName a)
+					        ^ Names.qidToString (Names.constQid a))
 	  | unique' (I.Pi (_, V), nil, _) = error (r, "Too few arguments supplied to type family " 
-						   ^ Names.constName a)
-          | unique' (I.Root _, _, _) = error (r, "Constant " ^ Names.constName a ^
+						   ^ Names.qidToString (Names.constQid a))
+          | unique' (I.Root _, _, _) = error (r, "Constant " ^ Names.qidToString (Names.constQid a) ^
 					      " is an object, not a type family")
 
   	fun skip (0, V, P, A) = unique' (V, P, A)
@@ -126,7 +126,7 @@ struct
 
 	  fun delete (x, (aP as (a, P)) :: C) = 
 	      (case M.modeLookup a 
-		 of NONE => error (r, "Expected " ^ Names.constName a
+		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
 				      ^ " to be moded")
 	          | SOME mS => if skip (I.constImp a, x, P, mS)
 				 then C
@@ -381,7 +381,7 @@ struct
 
 	  fun delete (x, (aP as (a, P)) :: C) = 
 	      (case M.modeLookup a 
-		 of NONE => error (r, "Expected " ^ Names.constName a
+		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
 				      ^ " to be moded")
 	          | SOME mS => if skip (I.constImp a, x, P, mS)
 				 then C

@@ -80,7 +80,7 @@ struct
     (* conDecToString (c, clause) printed representation of static clause *)
     fun conDecToString (c, SClause(r)) = 
 	let
-	  val _ = Names.varReset ()
+	  val _ = Names.varReset IntSyn.Null
 	  val name = IntSyn.conDecName (IntSyn.sgnLookup c)
 	  val l = String.size name
 	in
@@ -92,7 +92,7 @@ struct
 
     (* sProgToString () = printed representation of static program *)
     fun sProgToString () = 
-	let val size = IntSyn.sgnSize ()
+	let val (size, _) = IntSyn.sgnSize ()
 	    fun ts (cid) = if cid < size
 			     then conDecToString (cid, CompSyn.sProgLookup cid)
 				  ^ ts (cid+1)

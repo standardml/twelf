@@ -23,8 +23,8 @@ sig
   val lam : dec * obj -> obj
 
   val bvar : string -> head
-  val const : string -> head
-  val def : string -> head 
+  val const : string list * string -> head
+  val def : string list * string -> head 
   (* no evar, skonst, or fvar *)
 
   val nils : spine

@@ -3,5 +3,4 @@ structure Names =
 	 structure IntSyn' = IntSyn
          structure Constraints = Constraints
 	 structure HashTable = StringHashTable
-	 structure RedBlackTree = StringRedBlackTree
-	 structure IntTree = IntRedBlackTree);
+	 structure StringTree = StringRedBlackTree);

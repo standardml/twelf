@@ -17,6 +17,7 @@ struct
   structure IntSyn = IntSyn'
   structure CompSyn = CompSyn'
 
+  (* FIX: need to associate errors with occurrences -kw *)
   exception Error of string
 
   local
@@ -73,7 +74,7 @@ struct
     | compileGoalN fromCS (G, I.Pi((D as I.Dec (_, A1), I.Maybe), A2)) =
       (* A = {x:A1} A2 *)
        if not fromCS andalso isConstraint (head (A1))
-       then raise Error "constraint appears in dynamic clause position"
+       then raise Error "Constraint appears in dynamic clause position"
        else C.All (D, compileGoalN fromCS (I.Decl(G, D), A2))
   (*  compileGoalN _ should not arise by invariants *)
 
@@ -234,7 +235,7 @@ struct
       else
       *)
         if not fromCS andalso isConstraint (h)
-        then raise Error "constraint appears in dynamic clause position"
+        then raise Error "Constraint appears in dynamic clause position"
         else C.Eq(R)
     | compileClauseN fromCS opt (G, I.Pi((D as (I.Dec(_,A1)),I.No), A2)) =
       (* A = A1 -> A2 *)
@@ -299,9 +300,9 @@ struct
              No effect if condec has no operational meaning
   *)
   (* Defined constants are currently not compiled *)
-  fun compileConDec fromCS (a, I.ConDec(_, _, _, A, I.Type)) =
+  fun compileConDec fromCS (a, I.ConDec(_, _, _, _, A, I.Type)) =
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
-    | compileConDec fromCS (a, I.SkoDec(_, _, A, I.Type)) =
+    | compileConDec fromCS (a, I.SkoDec(_, _, _, A, I.Type)) =
         C.sProgInstall (a, C.SClause (compileClauseN fromCS true (I.Null, A)))
     | compileConDec _ _ = ()
 

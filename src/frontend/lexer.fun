@@ -22,6 +22,7 @@ struct
   datatype Token =
       EOF				(* end of file or stream, also `%.' *)
     | DOT				(* `.' *)
+    | PATHSEP                           (* `.' between <id>s *)
     | COLON				(* `:' *)
     | LPAREN | RPAREN			(* `(' `)' *)
     | LBRACKET | RBRACKET		(* `[' `]' *)
@@ -46,6 +47,11 @@ struct
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
+    | SIG                               (* `%sig' *)
+    | STRUCT                            (* `%struct' *)
+    | WHERE                             (* `%where' *)
+    | INCLUDE                           (* `%include' *)
+    | OPEN                              (* `%open' *)
     | USE                               (* `%use' *)
     | STRING of string                  (* string constants *)
 
@@ -89,7 +95,7 @@ struct
       val s = ref ""			(* current string (line) *)
       and left = ref 0			(* position of first character in s *)
       and right = ref 0			(* position after last character in s *)
-      val _ = P.resetLines ()	(* initialize line counter *)
+      val _ = P.resetLines ()   	(* initialize line counter *)
 
       (* neither lexer nor parser should ever try to look beyond EOF *)
       val EOFString = String.str #"\^D"
@@ -215,6 +221,11 @@ struct
       | lexPragmaKey (ID(_, "name"), r) = (NAME, r)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
+      | lexPragmaKey (ID(_, "sig"), r) = (SIG, r)
+      | lexPragmaKey (ID(_, "struct"), r) = (STRUCT, r)
+      | lexPragmaKey (ID(_, "where"), r) = (WHERE, r)
+      | lexPragmaKey (ID(_, "include"), r) = (INCLUDE, r)
+      | lexPragmaKey (ID(_, "open"), r) = (OPEN, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
       | lexPragmaKey (ID(_, s), r) =
         error (r, "Unknown keyword %" ^ s ^ " (single line comment starts with `%<whitespace>' or `%%')")
@@ -268,8 +279,20 @@ struct
     fun lexContinue (j) = Stream.delay (fn () => lexContinue' (j))
     and lexContinue' (j) = lexContinue'' (lexInitial (char(j), j+1))
 
-    and lexContinue'' (mt as (token, P.Reg (i,j))) =
+    and lexContinue'' (mt as (ID _, P.Reg (i,j))) =
+          Stream.Cons (mt, lexContinueQualId (j))
+      | lexContinue'' (mt as (token, P.Reg (i,j))) =
           Stream.Cons (mt, lexContinue (j))
+
+    and lexContinueQualId (j) =
+          Stream.delay (fn () => lexContinueQualId' (j))
+    and lexContinueQualId' (j) =
+          if char (j) = #"."
+            then if isIdChar (char (j+1))
+                   then Stream.Cons ((PATHSEP, P.Reg (j,j+1)), lexContinue (j+1))
+                 else Stream.Cons ((DOT, P.Reg (j,j+1)), lexContinue (j+1))
+          else lexContinue' (j)
+
   in
     lexContinue (0)
   end  (* fun lex (inputFun) = let ... in ... end *)
@@ -283,6 +306,7 @@ struct
 		      TextIO.inputLine (TextIO.stdIn)))
 
   fun toString' (DOT) = "."
+    | toString' (PATHSEP) = "."
     | toString' (COLON) = ":"
     | toString' (LPAREN) = "("
     | toString' (RPAREN) = ")"
@@ -312,6 +336,11 @@ struct
     | toString' (ESTABLISH) = "%establish"
     | toString' (ASSERT) = "%assert"
     | toString' (ABBREV) = "%abbrev"
+    | toString' (SIG) = "%sig"
+    | toString' (STRUCT) = "%struct"
+    | toString' (WHERE) = "%where"
+    | toString' (INCLUDE) = "%include"
+    | toString' (OPEN) = "%open"
     | toString' (USE) = "%use"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"

@@ -3,6 +3,7 @@ struct
 
   fun idSize s = (s, String.size s)
 
+  val str = idSize
   val evar = idSize
   val bvar = idSize
   val const = idSize
@@ -61,6 +62,7 @@ struct
   fun mathQuote s = String.translate mathQuoteChar s
   *)
 
+  fun str s = ("\\Str{" ^ quote s ^ "}", String.size s)
   fun evar s = ("\\EVar{" ^ quote s ^ "}", String.size s)
   fun bvar s = ("\\BVar{" ^ quote s ^ "}", String.size s)
   fun const s = ("\\Const{" ^ quote s ^ "}", String.size s)

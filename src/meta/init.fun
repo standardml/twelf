@@ -63,7 +63,7 @@ struct
               S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, F') :: Ss
 	    (* added in case there are no existentials -fp *)
       in
-	(Names.varReset ();
+	(Names.varReset I.Null;
 	 MTPData.maxFill := 0;
 	 init' ((I.Null, I.Null), OF, F, nil))
       end

@@ -185,21 +185,29 @@ local
     | argNumber (FX.Prefix _) = 1
     | argNumber (FX.Postfix _) = 1
 
+  (* FIX: this is certainly not correct -kw *)
+  fun fmtConstPath (f, Names.Qid (ids, id)) =
+        F.HVbox (foldr (fn (id, fmt) => Str0 (Symbol.str (id))::sym "."::fmt)
+                       [Str0 (f (id))] ids)
+
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
   fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
-    | fmtCon (G, I.Const(cid)) = Str0 (Symbol.const (Names.constName (cid)))
-    | fmtCon (G, I.Skonst(cid)) = Str0 (Symbol.skonst (Names.constName (cid)))
-    | fmtCon (G, I.Def(cid)) = Str0 (Symbol.def (Names.constName (cid)))
-    | fmtCon (G, I.NSDef (cid)) = Str0 (Symbol.def (Names.constName (cid)))
+    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, Names.constQid (cid))
+    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, Names.constQid (cid))
+    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
+    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
+          (* will need to be changed if qualified constraint constant
+             names are introduced... anyway, why should the user be
+             allowed to shadow constraint constants? -kw *)
           val name = I.conDecName conDec
         in
-          case Names.nameLookup (name)
+          case Names.constLookup (Names.Qid (nil, name))
             of SOME _ => (* the user has re-defined this name *)
                  Str0 (Symbol.const ("%" ^ name ^ "%"))
              | NONE =>
@@ -596,33 +604,36 @@ local
 
      This function prints the quantifiers and abstractions only if hide = false.
   *)
-  fun fmtConDec (hide, I.ConDec (name, imp, _, V, L)) =
+  fun fmtConDec (hide, condec as I.ConDec (_, _, imp, _, V, L)) =
       let
-	val _ = Names.varReset ()
+        val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
         val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [Str0 (Symbol.const (name)), F.Space, sym ":", F.Break, Vfmt, sym "."]
+	F.HVbox [fmtConstPath (Symbol.const, qid), F.Space, sym ":", F.Break, Vfmt, sym "."]
       end
-    | fmtConDec (hide, I.SkoDec (name, imp, V, L)) =
+    | fmtConDec (hide, condec as I.SkoDec (_, _, imp, V, L)) =
       let
-	val _ = Names.varReset ()
+        val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
 	val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [sym "%skolem", F.Break, Str0 (Symbol.skonst (name)), F.Space,
+	F.HVbox [sym "%skolem", F.Break, fmtConstPath (Symbol.skonst, qid), F.Space,
 		 sym ":", F.Break, Vfmt, sym "."]
       end
-    | fmtConDec (hide, I.ConDef (name, imp, U, V, L)) =
+    | fmtConDec (hide, condec as I.ConDef (_, _, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
-	val _ = Names.varReset ()
+        val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
 	val (G, V, U) = if hide then skipI2 (imp, I.Null, V, U) else (I.Null, V, U)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtConstPath (Symbol.def, qid), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]
@@ -634,16 +645,17 @@ local
 		F.Break,
 		F.HVbox [sym "%strict ", Str0 (Symbol.def (name)), sym "."]]
 *)      end
-    | fmtConDec (hide, I.AbbrevDef (name, imp, U, V, L)) =
+    | fmtConDec (hide, condec as I.AbbrevDef (_, _, imp, U, V, L)) =
       (* reset variable names in between to align names of type V and definition U *)
       let
-	val _ = Names.varReset ()
+        val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
 	val (G, V, U) = if hide then skipI2 (imp, I.Null, V, U) else (I.Null, V, U)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [Str0 (Symbol.def (name)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtConstPath (Symbol.def, qid), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]

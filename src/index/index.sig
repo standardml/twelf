@@ -8,6 +8,7 @@ sig
   structure IntSyn : INTSYN
     
   val reset : unit -> unit
+  val resetFrom : IntSyn.cid -> unit
 
   val install : IntSyn.Head -> unit
 

@@ -42,12 +42,38 @@ struct
     *)
     fun install (H as I.Const c) =
         (case I.sgnLookup (c)
-	  of I.ConDec (_, _, _, A, I.Type) => update (I.targetFam A, H)
+	  of I.ConDec (_, _, _, _, A, I.Type) => update (I.targetFam A, H)
 	   | _ => ())
       | install (H as I.Skonst c) =
         (case I.sgnLookup (c)
-	   of I.SkoDec (_, _, A, I.Type) => update (I.targetFam A, H)
+	   of I.SkoDec (_, _, _, A, I.Type) => update (I.targetFam A, H)
 	    | _ => ())
+
+    fun remove (a, cid) =
+        (case Queue.deleteEnd (Array.sub (indexArray, a))
+           of NONE => ()
+            | SOME (I.Const cid', queue') =>
+                if cid = cid' then Array.update (indexArray, a, queue')
+                else ()
+            | SOME (I.Skonst cid', queue') =>
+                if cid = cid' then Array.update (indexArray, a, queue')
+                else ())
+
+    fun uninstall cid =
+        (case I.sgnLookup cid
+           of I.ConDec (_, _, _, _, A, I.Type) => remove (I.targetFam A, cid)
+            | I.SkoDec (_, _, _, A, I.Type) => remove (I.targetFam A, cid)
+            | _ => ())
+
+    fun resetFrom mark =
+        let
+          val (limit, _) = I.sgnSize ()
+          fun iter i = if i < mark then ()
+                       else (uninstall i;
+                             Array.update (indexArray, i, Queue.empty))
+        in
+          iter (limit - 1)
+        end
 
     (* lookup a = [c1,...,cn] *)
     (*
@@ -68,6 +94,7 @@ struct
   in
 
     val reset = reset
+    val resetFrom = resetFrom
     val install = install
     val lookup = lookup
 

@@ -40,7 +40,7 @@ struct
     *)
     fun nameState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
         let 
-	  val _ = Names.varReset ()
+	  val _ = Names.varReset I.Null
 	  val G' = Names.ctxName G
 	in
 	  S.State (n, (G', B), (IH, OH), d, O, H, F)

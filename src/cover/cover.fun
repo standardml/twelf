@@ -624,7 +624,7 @@ struct
 
     fun formatCGoal (V, ms) =
         let
-	  val _ = Names.varReset ()
+	  val _ = Names.varReset I.Null
 	in
 	  Print.formatExp (I.Null, abbrevCGoal (I.Null, V, ms))
 	end

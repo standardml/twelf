@@ -260,7 +260,7 @@ struct
 
     fun init (k, names) = 
 	let 
-	  val cL = map (fn x => valOf (Names.nameLookup x)) names
+	  val cL = map (fn x => valOf (Names.constLookup (valOf (Names.stringToQid x)))) names
 	  val _ = MTPGlobal.maxFill := k
 	  val _ = reset ();
 	  val F = RelFun.convertFor cL

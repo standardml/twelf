@@ -137,7 +137,7 @@ struct
 
     fun makeConDec (M.State (name, M.Prefix (G, M, B), V)) = 
 	let 
-	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, k, I.Normal, V, I.Type)
+	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, NONE, k, I.Normal, V, I.Type)
 	    | makeConDec' (I.Decl (G, D), V, k) = 
 	      makeConDec' (G, I.Pi ((D, I.Maybe), V), k+1)
 	in
@@ -192,10 +192,13 @@ struct
     fun init (k, nL) = 
 	let 
 	  fun cids nil = nil
-	    | cids (name :: nL) = 
-		case (Names.nameLookup name) of
-		  SOME cid => cid :: (cids nL)
-		| NONE => raise Error ("Type family " ^ name ^ " not defined") 
+	    | cids (name :: nL) =
+              (case Names.stringToQid name
+                 of NONE => raise Error ("Malformed qualified identifier " ^ name)
+                  | SOME qid =>
+              (case Names.constLookup qid
+                 of NONE => raise Error ("Type family " ^ Names.qidToString qid ^ " not defined")
+                  | SOME cid => cid :: (cids nL)))
 	in
 	  ((init' (k, cids nL); menu (); printMenu ())
 	    handle Splitting.Error s => abort ("Splitting Error: " ^ s)
@@ -253,7 +256,7 @@ struct
 	else 
 	  let 
 	    val S = current ()
-	    val S' = Lemma.apply (S, valOf (Names.nameLookup name))
+	    val S' = Lemma.apply (S, valOf (Names.constLookup (valOf (Names.stringToQid name))))
 	      handle Splitting.Error s => abort ("Splitting Error: " ^ s)
 		   | Filling.Error s => abort ("Filling Error: " ^ s)
 		   | Recursion.Error s => abort ("Recursion Error: " ^ s)

@@ -140,7 +140,7 @@ struct
 	fun formatFor0 Args = 
 	  Fmt.Vbox0 0 1 (formatFor1 Args)
       in 
-	(Names.varReset (); formatFor0 (0, F.makectx Psi, (F, I.id)))
+	(Names.varReset I.Null; formatFor0 (0, F.makectx Psi, (F, I.id)))
       end
 
     fun formatForBare (G, F) = Fmt.HVbox (formatFor' (G, (F, I.id))) 
@@ -600,7 +600,7 @@ struct
 	fun formatPro0 (Psi, F.Rec (DD, P)) = 
           Fmt.Vbox0 0 1 (formatPro1 (0, Psi, P))
       in
-	(Names.varReset (); formatPro0 Args)
+	(Names.varReset I.Null; formatPro0 Args)
       end
     
     fun formatLemmaDec (F.LemmaDec (names, P, F)) =

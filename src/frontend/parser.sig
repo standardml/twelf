@@ -10,12 +10,13 @@ sig
   structure Names : NAMES
   structure ExtModes : EXTMODES
   structure ThmExtSyn : THMEXTSYN
+  structure ModExtSyn : MODEXTSYN
 
   datatype fileParseResult =
-      ConDec of ExtSyn.condec * ExtSyn.Paths.region
-    | FixDec of (string * ExtSyn.Paths.region) * Names.Fixity.fixity
-    | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
-    | ModeDec of ExtModes.modedec list (* * ExtSyn.Paths.region *)
+      ConDec of ExtSyn.condec
+    | FixDec of (Names.Qid * ExtSyn.Paths.region) * Names.Fixity.fixity
+    | NamePref of (Names.Qid * ExtSyn.Paths.region) * (string * string option)
+    | ModeDec of ExtModes.modedec list
     | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl
     | TerminatesDec of ThmExtSyn.tdecl
@@ -25,13 +26,18 @@ sig
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
-    | Query of int option * int option * ExtSyn.query * ExtSyn.Paths.region (* expected, try, A *)
-    | Solve of (string * ExtSyn.term) * ExtSyn.Paths.region
-    | AbbrevDec of ExtSyn.condec * ExtSyn.Paths.region
+    | Query of int option * int option * ExtSyn.query (* expected, try, A *)
+    | Solve of string * ExtSyn.term
+    | AbbrevDec of ExtSyn.condec
+    | SigDef of ModExtSyn.sigdef
+    | StructDec of ModExtSyn.structdec
+    | Include of ModExtSyn.sigexp
+    | Open of ModExtSyn.strexp
+    | BeginSubsig | EndSubsig (* enter/leave a new context *)
     | Use of string
     (* Further declarations to be added here *)
 
-  val parseStream: TextIO.instream -> fileParseResult Stream.stream
+  val parseStream: TextIO.instream -> (fileParseResult * ExtSyn.Paths.region) Stream.stream
   val parseTerminalQ : string * string -> ExtSyn.query Stream.stream (* reads from std input *)
 
 end;  (* signature PARSER *)

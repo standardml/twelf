@@ -1,6 +1,7 @@
 signature SYMBOL =
 sig
 
+  val str : string -> string * int
   val evar : string -> string * int
   val bvar : string -> string * int
   val const : string -> string * int

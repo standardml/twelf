@@ -49,7 +49,7 @@ struct
 	^ lineColToString (posToLineCol j)
 
   (* wrap (r, msg) = msg' which contains region *)
-  fun wrap (r, msg) = (toString r ^ " " ^ "Error: \n" ^ msg)
+  fun wrap (r, msg) = (toString r ^ " Error: \n" ^ msg)
 
   (* wrapLoc ((loc, r), msg) = msg' which contains region and filename
      This should be used for locations retrieved from origins, where
@@ -74,7 +74,7 @@ struct
     | wrapLoc' (loc, NONE, msg) = wrapLoc0 (loc, msg)
 
   fun wrapLoc (loc, msg) =
-         wrapLoc' (loc, SOME (getLinesInfo()), msg)
+        wrapLoc' (loc, SOME (getLinesInfo()), msg)
 
   (* Paths, occurrences and occurrence trees only work well for normal forms *)
   (* In the general case, regions only approximate true source location *)
@@ -122,9 +122,9 @@ struct
     | occToPath (arg(n,occ), path) = occToPath (occ, Arg(n,path))
 
   datatype occConDec =			(* occurrence tree for constant declarations *)
-      dec of region * int * occExp	(* (r, #implicit, v) in c : V *)
-    | def of region * int * occExp * occExp option
-					(* (r, #implicit, u, v) in c : V = U *)
+      dec of int * occExp               (* (#implicit, v) in c : V *)
+    | def of int * occExp * occExp option
+					(* (#implicit, u, v) in c : V = U *)
 
   (* val posToPath : occExp -> pos -> Path *)
   (* posToPath (u, k) = p
@@ -208,13 +208,13 @@ struct
   *)
   fun occToRegionExp u occ = pathToRegion (u, occToPath (occ, Here))
 
-  fun skipImplicit (r, 0, path) = path
-    | skipImplicit (r, n, Body(path)) =
-        skipImplicit (r, n-1, path)
-    | skipImplicit (r, n, Label(path)) =
+  fun skipImplicit (0, path) = path
+    | skipImplicit (n, Body(path)) =
+        skipImplicit (n-1, path)
+    | skipImplicit (n, Label(path)) =
 	(* implicit argument: approximate as best possible *)
 	Here
-    | skipImplicit (r, n, Here) =
+    | skipImplicit (n, Here) =
 	(* addressing body including implicit arguments: approximate by body *)
 	Here
     (* anything else should be impossible *)
@@ -222,20 +222,19 @@ struct
   (* occToRegionDec d occ = r
      where r is the closest region in v including occ for declaration c : V
   *)
-  fun occToRegionDec (dec (r, n, v)) occ =
-      pathToRegion (v, skipImplicit (r, n, occToPath (occ, Here)))
+  fun occToRegionDec (dec (n, v)) occ =
+      pathToRegion (v, skipImplicit (n, occToPath (occ, Here)))
 
   (* occToRegionDef1 d occ = r
      where r is the closest region in u including occ for declaration c : V = U
   *)
-  fun occToRegionDef1 (def (r, n, u, vOpt)) occ =
-      pathToRegion (u, skipImplicit (r, n, occToPath (occ, Here)))
+  fun occToRegionDef1 (def (n, u, vOpt)) occ =
+      pathToRegion (u, skipImplicit (n, occToPath (occ, Here)))
 
   (* occToRegionDef2 d occ = r
      where r is the closest region in V including occ for declaration c : V = U
   *)
-  fun occToRegionDef2 (def (r, n, u, NONE)) occ = r
-    | occToRegionDef2 (def (r, n, u, SOME(v))) occ =
-      pathToRegion (v, skipImplicit (r, n, occToPath (occ, Here)))
+  fun occToRegionDef2 (def (n, u, SOME(v))) occ =
+      pathToRegion (v, skipImplicit (n, occToPath (occ, Here)))
 
 end;  (* functor Paths *)

@@ -39,9 +39,9 @@ struct
     fun postfixOp (prec, tm) =
           Postfix (prec, (fn tm1 => ExtSyn.app (tm, tm1)))
 
-    fun idToTerm (L.Lower, name, r) = ExtSyn.lcid (name, r)
-      | idToTerm (L.Upper, name, r) = ExtSyn.ucid (name, r)
-      | idToTerm (L.Quoted, name, r) = ExtSyn.quid (name, r)
+    fun idToTerm (L.Lower, ids, name, r) = ExtSyn.lcid (ids, name, r)
+      | idToTerm (L.Upper, ids, name, r) = ExtSyn.ucid (ids, name, r)
+      | idToTerm (L.Quoted, ids, name, r) = ExtSyn.quid (ids, name, r)
 
     fun isQuoted (L.Quoted) = true
       | isQuoted _ = false
@@ -182,27 +182,43 @@ struct
 
     end  (* structure P *)
 
+    (* parseQualifier' f = (ids, f')
+       pre: f begins with L.ID
+
+       Enforced by the lexer. *)
+    fun parseQualId' (f as LS.Cons ((t as L.ID (_, id), r), s')) =
+        (case LS.expose s'
+           of LS.Cons ((L.PATHSEP, _), s'') =>
+              let
+                val ((ids, (t, r)), f') = parseQualId' (LS.expose s'')
+              in
+                ((id::ids, (t, r)), f')
+              end
+            | f' => ((nil, (t, r)), f'))
+
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
     fun parseExp (s, p) = parseExp' (LS.expose s, p)
 
-    and parseExp' (LS.Cons((L.ID(idCase,name),r), s), p) =
+    and parseExp' (f as LS.Cons((L.ID _, r0), _), p) =
         let
-	  val tm = idToTerm (idCase, name, r)
+          val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+          val r = Paths.join (r0, r1)
+	  val tm = idToTerm (idCase, ids, name, r)
 	in
 	  (* Currently, we cannot override fixity status of identifiers *)
 	  (* Thus isQuoted always returns false *)
 	  if isQuoted (idCase)
-	    then parseExp (s, P.shiftAtom (tm, p))
-	  else case Names.fixityLookup (name)
+	    then parseExp' (f', P.shiftAtom (tm, p))
+	  else case Names.fixityLookup (Names.Qid (ids, name))
 	         of FX.Nonfix =>
-		      parseExp (s, P.shiftAtom (tm, p))
+		      parseExp' (f', P.shiftAtom (tm, p))
 	          | FX.Infix infixity =>
-		      parseExp (s, P.resolve (r, infixOp (infixity, tm), p))
+		      parseExp' (f', P.resolve (r, infixOp (infixity, tm), p))
 		  | FX.Prefix (prec) =>
-		      parseExp (s, P.resolve (r, prefixOp (prec, tm), p))
+		      parseExp' (f', P.resolve (r, prefixOp (prec, tm), p))
 		  | FX.Postfix (prec) =>
-		      parseExp (s, P.resolve (r, postfixOp (prec, tm), p))
+		      parseExp' (f', P.resolve (r, postfixOp (prec, tm), p))
 	end
       | parseExp' (LS.Cons((L.UNDERSCORE,r), s), p) =
           parseExp (s, P.shiftAtom (ExtSyn.omitobj r, p))
@@ -244,7 +260,7 @@ struct
           (* cannot happen at present *)
 	  Parsing.error (r, "Illegal bound quoted identifier " ^ name)
       | parseDec' (LS.Cons ((L.ID (idCase,name), r), s')) =
-	(case Names.fixityLookup(name)
+	(case Names.fixityLookup (Names.Qid (nil, name))
 	   of FX.Nonfix => parseDec1 (SOME(name), LS.expose s')
 	    | FX.Infix _ => Parsing.error (r, "Cannot bind infix identifier " ^ name)
 	    | FX.Prefix _ => Parsing.error (r, "Cannot bind prefix identifier " ^ name)
@@ -258,11 +274,11 @@ struct
 
     and parseDec1 (x, LS.Cons((L.COLON, r), s')) =
         let val (tm, f'') = parseExp (s', nil)
-	in (ExtSyn.dec (x, tm), f'') end
+	in ((x, SOME tm), f'') end
       | parseDec1 (x, f as LS.Cons((L.RBRACE, _), _)) =
-          (ExtSyn.dec0 (x), f)
+          ((x, NONE), f)
       | parseDec1 (x, f as LS.Cons ((L.RBRACKET, _), _)) =
-          (ExtSyn.dec0 (x), f)
+          ((x, NONE), f)
       | parseDec1 (x, LS.Cons ((t,r), s')) =
 	  Parsing.error (r, "Expected optional type declaration, found token "
 			    ^ L.toString t)
@@ -272,26 +288,31 @@ struct
       | decideRParen (r0, (tm, LS.Cons((_, r), s)), p) =
 	  Parsing.error (Paths.join(r0, r), "Unmatched open parenthesis")
 
-    and decideRBrace (r0, (dec, LS.Cons ((L.RBRACE,r), s)), p) =
+    and decideRBrace (r0, ((x, yOpt), LS.Cons ((L.RBRACE,r), s)), p) =
           let
+            val dec = (case yOpt
+                         of NONE => ExtSyn.dec0 (x, Paths.join (r0, r))
+                          | SOME y => ExtSyn.dec (x, y, Paths.join (r0, r)))
 	    val (tm, f') = parseExp (s, nil)
 	  in
-	    parseExp' (f', P.shiftAtom (ExtSyn.pi (dec, tm,
-						   Paths.join (r0, r)), p))
+	    parseExp' (f', P.shiftAtom (ExtSyn.pi (dec, tm), p))
 	  end
-      | decideRBrace (r0, (dec, LS.Cons ((_, r), s)), p) =
+      | decideRBrace (r0, (_, LS.Cons ((_, r), s)), p) =
 	  Parsing.error (Paths.join(r0, r), "Unmatched open brace")
 
-    and decideRBracket (r0, (dec, LS.Cons ((L.RBRACKET,r), s)), p) =
+    and decideRBracket (r0, ((x, yOpt), LS.Cons ((L.RBRACKET,r), s)), p) =
           let
+            val dec = (case yOpt
+                         of NONE => ExtSyn.dec0 (x, Paths.join (r0, r))
+                          | SOME y => ExtSyn.dec (x, y, Paths.join (r0, r)))
 	    val (tm, f') = parseExp (s, nil)
 	  in
-	    parseExp' (f', P.shiftAtom (ExtSyn.lam (dec, tm,
-						    Paths.join (r0, r)), p))
+	    parseExp' (f', P.shiftAtom (ExtSyn.lam (dec, tm), p))
 	  end
       | decideRBracket (r0, (dec, LS.Cons ((_, r), s)), p) =
 	  Parsing.error (Paths.join(r0, r), "Unmatched open bracket")
   in
+    val parseQualId' = parseQualId'
     val parseTerm' = (fn f => parseExp' (f, nil))
     val parseDec' = parseDec'
   end  (* local ... in *)

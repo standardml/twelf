@@ -40,7 +40,7 @@ struct
 
     (* parseFixCon "id" *)
     fun parseFixCon (fixity, LS.Cons ((L.ID (_, name), r), s')) = 
-        (((name,r), fixity), LS.expose s')
+        (((Names.Qid (nil,name),r), fixity), LS.expose s')
       | parseFixCon (fixity, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected identifier to assign fixity, found " ^ L.toString t)
 
@@ -84,9 +84,9 @@ struct
     (* parseName3 "string" or "" *)
     fun parseName3 (name, r0, prefEName, LS.Cons ((L.ID (_, prefUName), r), s')) =
         (* prefUName should be lower case---not enforced *)
-        (((name, r0), (prefEName, SOME(prefUName))), LS.expose s')
+        (((Names.Qid (nil, name), r0), (prefEName, SOME(prefUName))), LS.expose s')
       | parseName3 (name, r0, prefEName, f) =
-	(((name, r0), (prefEName, NONE)), f)
+	(((Names.Qid (nil, name), r0), (prefEName, NONE)), f)
 
     (* parseName2 "string" or "string string" *)
     fun parseName2 (name, r0, LS.Cons ((L.ID (_, prefEName), r), s')) =

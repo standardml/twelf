@@ -90,7 +90,7 @@ struct
 								I.Maybe), V))
 		else error (r, "Free variables in theorem declaration")
 	in
-	  (GBs, I.ConDec (name, i, I.Normal, theoremToConDec' (G, I.Uni (I.Type)), I.Kind))
+	  (GBs, I.ConDec (name, NONE, i, I.Normal, theoremToConDec' (G, I.Uni (I.Type)), I.Kind))
 	end
    
 

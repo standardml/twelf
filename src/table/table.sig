@@ -17,6 +17,7 @@ sig
   (* insert entry, return shadowed entry if there is one *)
   val insertShadow : 'a Table -> 'a entry -> ('a entry) option
   val lookup : 'a Table -> key -> 'a option
+  val delete : 'a Table -> key -> unit
   val clear : 'a Table -> unit
 
   (* Apply function to all entries in unpredictable order *)

@@ -47,8 +47,8 @@ struct
 	 of (fileName, NONE) => (fileName ^ ":" ^ msg)
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
-			     Origins.linesInfoLookup (fileName),
-			     "Constant " ^ Names.constName c ^ "\n" ^ msg)))
+                             Origins.linesInfoLookup (fileName),
+                             "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
 
   type dlist = IntSyn.Dec list
 
@@ -66,7 +66,7 @@ struct
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
     fun getWorld (b) =
         (case Table.lookup worldsTable b
-	   of NONE => raise Error ("Family " ^ Names.constName b ^ " has no worlds declaration")
+	   of NONE => raise Error ("Family " ^ Names.qidToString (Names.constQid b) ^ " has no worlds declaration")
             | SOME (Wb) => Wb)
 
     (* subsumedTable
@@ -206,7 +206,7 @@ struct
     end =
     struct
       fun clause (c) =
-          print ("World checking clause " ^ Names.constName c ^ "\n")
+          print ("World checking clause " ^ Names.qidToString (Names.constQid c) ^ "\n")
       fun constraintsRemain () =
 	  if !Global.chatter > 4
 	    then print ("Constraints remain after matching hypotheses against context block\n")
@@ -319,7 +319,7 @@ struct
     *)
     fun checkSubsumedBlock (G, nil, L', Rb, b) =
         (( accR ((G, L'), Rb, b, init b) ;
-	  raise Error ("World subsumption failure for family " ^ Names.constName b) )
+	  raise Error ("World subsumption failure for family " ^ Names.qidToString (Names.constQid b)) )
 	 handle Success => ())
       | checkSubsumedBlock (G, D::L, L', Rb, b) =
 	  checkSubsumedBlock (decEName (G, D), L, L', Rb, b)
@@ -398,13 +398,13 @@ struct
     fun worldcheck W a =  
 	let
 	  val _ = if !Global.chatter > 3
-		    then print ("World checking family " ^ Names.constName a ^ ":\n")
+		    then print ("World checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
 		  else ()
 	  val _ = subsumedReset ()	(* initialize table of subsumed families *)
 	  fun checkAll nil = ()
 	    | checkAll (I.Const c :: clist) =
 	      (if !Global.chatter = 4
-		 then print (Names.constName c ^ " ")
+		 then print (Names.qidToString (Names.constQid c) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause c else ();
 	       checkClause (I.Null, I.constType c, W, P.top)

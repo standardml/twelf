@@ -57,7 +57,7 @@ struct
 
     (* constant declaration for the proof object d>=0 *)
     fun geqNConDec (d) = ConDec (Integers.toString (d) ^ ">=" ^ Integers.toString (zero_int),
-                                 0, Normal, geq0 (constant (d)), Type)
+                                 NONE, 0, Normal, geq0 (constant (d)), Type)
 
     (* foreign constant for the proof object d>=0 *)
     fun geqNExp (d) = Root (FgnConst (!myID, geqNConDec (d)), Nil)
@@ -1308,14 +1308,14 @@ struct
             myID := cs;
 
             geqID := 
-              installF (ConDec (">=", 0,
+              installF (ConDec (">=", NONE, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
                         SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
 
 
             geqAddID :=
-              installF (ConDec ("+>=", 2, Normal,
+              installF (ConDec ("+>=", NONE, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),
