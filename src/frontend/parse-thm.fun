@@ -244,6 +244,8 @@ struct
 
     fun parsePi (LS.Cons ((L.ID (_, "pi"), r), s')) =
           parseDecs (LS.expose s')
+      | parsePi (LS.Cons ((t, r), s')) =
+	  Parsing.error (r, "Expected `pi', found " ^ L.toString t)
 
     fun parseSome (gbs, LS.Cons ((L.ID (_, "some"), r), s')) =
         let
