@@ -41,13 +41,12 @@
 ;; for FSF Emacs 19
 (if (not (fboundp 'font-lock-any-faces-p))
     (defun font-lock-any-faces-p (start end)
-      (text-property-not-all start end 'font-lock nil)))
+      (text-property-not-all start end 'face nil)))
 
 ;; for FSF Emacs 19
 (if (not (fboundp 'font-lock-set-face))
     (defun font-lock-set-face (start end face)
-      (put-text-property start end 'face face)
-      (put-text-property start end 'font-lock t)))
+      (put-text-property start end 'face face)))
 
 ;; for FSF Emacs 19
 (if (and (boundp 'font-lock-face-attributes)
