@@ -63,6 +63,28 @@ Instruction for branch on coverage:
      cvs update -j coverage  % join branch coverage
      cvs commit -m "included branch 'coverage'"
 			     % commit changes to main branch
+
+Fri Dec 28 10:52:29 2001 -fp
+Integrated the coverage checker back into the main branch.
+
+Fri Dec 28 10:52:45 2001 -fp
+Bugs found in lp
+
+uni-sound.elf
+ss_and  : s_sound (s_and S2 S1) (andi D1 D2)
+	   <- s_sound S1 D1
+	   <- s_sound S2 D2.
+instead of 
+ss_and  : s_sound (s_and S2 S1) (andi D2 D1)
+	   <- s_sound S1 D1
+	   <- s_sound S2 D2.
+
+res-complete.elf
+missing case for universal quantifier
+
+s's_forall : s'_comp (s_forall S1) (gl_forall GL1) (s'_forall S'1)
+	      <- {a:i} s'_comp (S1 a) (GL1 a) (S'1 a).
+
 ----------------------------------------------------------------------
 Twelf.chatter := 1;
 Twelf.make "examples/church-rosser/sources.cfg";

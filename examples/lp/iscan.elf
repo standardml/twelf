@@ -38,18 +38,9 @@ isa_ander : isatm (ta_ander TA1) (atm_ander AT1)
 isa_foralle : isatm (ta_foralle TA1) (atm_foralle AT1)
 	       <- isatm TA1 AT1.
 
-%{
-%block l1 : some  {A:o} block {u: pf A}{ta:toatm u u}
-	     {at:atm u}{is:isatm ta at}.
-%block l2 : block {a:i}.
-%worlds (l1 | l2) (isatm _ _) (iscan _ _).
-%covers (isatm +TC -CA)
-        (iscan +TC -CN).=======
+%block l_isatm :
+  some {A:o} block {u:pf A} {ta:toatm u u} {at:atm u} {is:isatm ta at}.
+%block l_i : block {a:i}.
 
-%block l1 : some {A:o} block {u: pf A}{ta:toatm u u}{at:atm u}{is:isatm ta at}.
-%block l2 : block {a:i}.
-%worlds (l1 | l2) (isatm _ _) (iscan _ _).
-%covers (isatm +T -C)
-        (iscan +T -A).
-
-}%
+%worlds (l_isatm | l_i) (isatm _ _) (iscan _ _).
+%total (TA TC) (isatm TA CA) (iscan TC CN).

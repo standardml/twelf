@@ -25,7 +25,6 @@ whr_foralle : whr (foralle D T) (foralle D' T)
 
 %terminates D (whr D _).
 %worlds () (whr _ _).
-% %covers whr +D -E.  -cs No cases for introduction given.
 
 % Conversion to canonical and atomic form.
 
@@ -68,6 +67,3 @@ ta_ander : toatm (ander D) (ander D')
 ta_foralle : toatm (foralle D T) (foralle D' T)
 	      <- toatm D D'.
 
-
-% %covers (tocan +A +D -E).
-% %covers (toatm +D -E).    --cs no coverage in the atomic case.
