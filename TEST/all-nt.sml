@@ -37,6 +37,17 @@ test "examples\\mini-ml\\test.cfg";
 test "examples\\polylam\\test.cfg";
 test "examples\\prop-calc\\test.cfg";
 
+(* CLP Examples, part of the distribution *)
+test "examples-clp\\arith\\test.cfg";
+test "examples-clp\\base\\test.cfg";
+test "examples-clp\\crypt\\test.cfg";
+test "examples-clp\\integers\\test.cfg";
+test "examples-clp\\laplace\\test.cfg";
+test "examples-clp\\lists\\test.cfg";
+test "examples-clp\\mortgage\\test.cfg";
+test "examples-clp\\pelletier\\test.cfg";
+test "examples-clp\\sieve\\test.cfg";
+
 (* Exercises, not part of the distribution *)
 (*test "exercises\\units\\test.cfg";
 test "exercises\\opt-eval\\test.cfg";
