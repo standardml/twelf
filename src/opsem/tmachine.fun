@@ -97,12 +97,12 @@ struct
   *)
   and rSolve (ps', (Eq(Q), s), (G, dPool), HcHa, sc) =
       (T.signal (G, T.Unify (HcHa, I.EClo (Q, s), I.EClo ps'));
-       if Unify.unifiable (G, (Q, s), ps') (* effect: instantiate EVars *)
-	 then (T.signal (G, T.Resolved HcHa);
-	       sc I.Nil;			(* call success continuation *)
-	       true)			(* deep backtracking *)
-       else (T.signal (G, T.FailUnify HcHa);
-	     false)			(* shallow backtracking *)
+       case Unify.unifiable' (G, (Q, s), ps') (* effect: instantiate EVars *)
+	 of NONE => (T.signal (G, T.Resolved HcHa);
+		     sc I.Nil;		(* call success continuation *)
+		     true)		(* deep backtracking *)
+	  | SOME(msg) => (T.signal (G, T.FailUnify (HcHa, msg));
+			  false)	(* shallow backtracking *)
       )
     | rSolve (ps', (And(r, A, g), s), dProg as (G, dPool), HcHa, sc) =
       let

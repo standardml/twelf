@@ -238,7 +238,7 @@ struct
     | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 
     | Unify of (IntSyn.Head * IntSyn.Head) * IntSyn.Exp * IntSyn.Exp (* clause head == goal *)
-    | FailUnify of IntSyn.Head * IntSyn.Head
+    | FailUnify of (IntSyn.Head * IntSyn.Head) * string	(* failure message *)
    
     fun eventToString (G, IntroHyp (_, D)) =
         "% Introducing hypothesis\n" ^ decToString (G, D)
@@ -267,8 +267,9 @@ struct
       | eventToString (G, Unify ((Hc, Ha), Q, P)) =
 	"% Trying clause " ^ headToString (G, Hc) ^ "\n"
 	^ eqnToString (I.Eqn (G, Q, P))
-      | eventToString (G, FailUnify (Hc, Ha)) =
-	"% Unification failed with clause " ^ headToString (G, Hc)
+      | eventToString (G, FailUnify ((Hc, Ha), msg)) =
+	"% Unification failed with clause " ^ headToString (G, Hc) ^ ":\n"
+	^ msg
 
     fun traceEvent (G, e) = print (eventToString (G, e))
 
@@ -305,7 +306,7 @@ struct
 
       | monitorEvent (cids, Unify ((Hc, Ha), _, _)) =
 	  monitorHeads (cids, (Hc, Ha))
-      | monitorEvent (cids, FailUnify (Hc, Ha)) =
+      | monitorEvent (cids, FailUnify ((Hc, Ha), _)) =
 	  monitorHeads (cids, (Hc, Ha))
 
     fun monitorDetail (Unify _) = !detail >= 2

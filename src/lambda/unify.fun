@@ -336,5 +336,7 @@ struct
     val unifyW = unifyExpW
     val unify = unifyExp
     fun unifiable (G, Us1, Us2) = (unifyExp (G, Us1, Us2); true) handle Unify _ => false
+
+    fun unifiable' (g, Us1, Us2) = (unifyExp (g, Us1, Us2); NONE) handle Unify(msg) => SOME(msg)
   end
 end;  (* functor Unify *)
