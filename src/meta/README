@@ -163,3 +163,6 @@ General: Expressiveness of meta logic not powerfull enough.
 
 		    It's not expressible as Pi2 formula, maybe if we had equality.
 
+
+
+Filling: Do not use iterative deepening, just use Twelf.maxFill.
