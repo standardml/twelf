@@ -1156,15 +1156,19 @@ struct
 	| loadAbort (_, ABORT) = ABORT
 
       (* load (config) = Status
-         reset global signature and then reads the files in config
+         resets the global signature and then reads the files in config
          in order, stopping at the first error.
       *)
-      fun load (pwdir, sources) =
-	  (reset ();
-	   if pwdir = OS.FileSys.getDir () (* allow shorter messages if safe *)
+      fun load (config) =
+          (reset (); append (config))
+      (* append (config) = Status
+         reads the files in config in order, stopping at the first error.
+      *)
+      and append (pwdir, sources) =
+	  (if pwdir = OS.FileSys.getDir () (* allow shorter messages if safe *)
 	     then List.foldl loadAbort OK sources
 	   else List.foldl loadAbort OK
-	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources)) 
+	        (List.map (fn p => OS.Path.mkAbsolute (p, pwdir)) sources))
 
       fun define (sources) = (OS.FileSys.getDir (), sources)
 
@@ -1310,6 +1314,7 @@ struct
         val suffix : string ref         (* suffix of configuration files *)
 	val read : string -> config	(* read configuration from config file *)
 	val load : config -> Status	(* reset and load configuration *)
+	val append : config -> Status	(* load configuration (w/o reset) *)
 	val define : string list -> config  (* explicitly define configuration *)
       end
     = Config
