@@ -103,6 +103,14 @@ Unix Installation
   Summary
   -------
 
+    If you are using the NetBSD pkgsrc collection, you may install Twelf
+    as follows:
+
+      % cd .../pkgsrc/lang/twelf
+      % make install
+
+    Otherwise:
+
       % gunzip twelf-1-4.tar.gz
       % tar -xf twelf-1-4.tar
       % cd twelf
