@@ -81,7 +81,7 @@ structure Spass =
   Traverse (structure IntSyn' = IntSyn
 	    structure Whnf = Whnf
 	    structure Names = Names
-	    structure Traverser' = CCCTraverse);
+	    structure Traverser' = Spass);
 
 
 Twelf.Config.load (Twelf.Config.read "examples/ccc/spass.cfg");
