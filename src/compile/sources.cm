@@ -3,6 +3,8 @@ Library
   structure CompSyn
   signature COMPILE
   structure Compile
+  signature SUBTREE
+  structure SubTree
   signature CPRINT
   structure CPrint
   signature ASSIGN
@@ -19,14 +21,20 @@ is
   ../formatter/sources.cm  
   ../index/sources.cm
   ../typecheck/sources.cm
+  ../solvers/sources.cm
+  ../subordinate/sources.cm
+
   compsyn.sig
   compsyn.fun
 
   compile.sig
-  compile.fun 
+  compile.fun
 
   cprint.sig
   cprint.fun
+
+  subtree.sig
+  subtree.fun
 
   assign.sig
   assign.fun

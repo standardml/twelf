@@ -7,12 +7,17 @@ sig
 
   (*! structure IntSyn : INTSYN !*)
 
+  datatype Opt = No | LinearHeads | Indexing 
+
+  val optimize : Opt ref
+
   datatype Goal =                       (* Goals                      *)
     Atom of IntSyn.Exp                  (* g ::= p                    *)
   | Impl of ResGoal * IntSyn.Exp        (*     | (r,A,a) => g         *)
             * IntSyn.Head * Goal		
   | All  of IntSyn.Dec * Goal           (*     | all x:A. g           *)
 
+  (* dynamic clauses *)
   and ResGoal =                         (* Residual Goals             *)
     Eq     of IntSyn.Exp                (* r ::= p = ?                *)
   | Assign of IntSyn.Exp * AuxGoal      (*     | p = ?, where p has   *)
@@ -31,8 +36,16 @@ sig
              * IntSyn.Exp * AuxGoal
 
 
+  (* Static programs -- compiled version for substitution trees *)
+
+  datatype Conjunction = True | Conjunct of Goal * IntSyn.Exp * Conjunction
+
+  datatype CompHead = 
+     Head of (IntSyn.Exp * IntSyn.Dec IntSyn.Ctx * AuxGoal * IntSyn.cid)
+
+ (* pskeleton instead of proof term *)
   datatype Flatterm = 
-    Pc of int | Dc of int  | Csolver
+    Pc of int | Dc of int | Csolver of IntSyn.Exp
 
   type pskeleton = Flatterm list  
 
@@ -50,13 +63,15 @@ sig
   (* Dynamic programs: context with synchronous clause pool *)
   datatype DProg = DProg of (IntSyn.dctx * ComDec IntSyn.Ctx)
 
-  (* Static programs --- compiled version of the signature *)
-  datatype ConDec =			(* Compiled constant declaration *)
-    SClause of ResGoal	                (* c : A                      *)
-  | Void 		                (* Other declarations are ignored  *)
+  (* Programs --- compiled version of the signature (no direct head access) *)
+  datatype ConDec =			      (* Compiled constant declaration *)
+       SClause of ResGoal                     (* c : A  -- static clause (residual goal) *)
+    | Void 		                      (* Other declarations are ignored  *)
 
 
-  val sProgInstall : IntSyn.cid * ConDec -> unit
+  (* Install Programs (without indexing) *)
+  val sProgInstall : IntSyn.cid * ConDec -> unit  
+
   val sProgLookup: IntSyn.cid -> ConDec
   val sProgReset : unit -> unit
 
@@ -68,5 +83,7 @@ sig
   (* Explicit Substitutions *)
   val goalSub   : Goal * IntSyn.Sub -> Goal
   val resGoalSub: ResGoal * IntSyn.Sub -> ResGoal
+  
+  val pskeletonToString: pskeleton -> string
 
 end;  (* signature COMPSYN *)
