@@ -110,6 +110,8 @@ structure MTPFilling =
   MTPFilling (structure IntSyn = IntSyn
 	      structure FunSyn = FunSyn
 	      structure StateSyn' = StateSyn
+	      structure Whnf = Whnf
+	      structure Abstract = Abstract
 	      structure Search = MTPSearch
 	      structure Whnf = Whnf)
 

@@ -525,14 +525,18 @@ struct
               ltW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, Ds)
         and ltW (GB, k, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc, Ds) = 
     	      ltSpine (GB, k, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, Ds)
-          | ltW (GB as (G, _), k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, Ds) = 
-	    if n <= k then  (* n must be a local variable *)
-	      let 
-		val I.Dec (_, V') = I.ctxDec (G, n)
-	      in
-		ltSpine (GB, k, (Us, Vs), ((S', s'), (V', I.id)), sc, Ds)
-	      end
-	    else Ds
+          | ltW (GB as (G, B), k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, Ds) = 
+(*	    if n <= k then  (* n must be a local variable *) *)
+(* k might not be needed any more: Check --cs *)
+	    (case I.ctxLookup (B, n) 
+	      of S.Parameter _ =>
+	        let 
+		  val I.Dec (_, V') = I.ctxDec (G, n)
+		in 
+		  ltSpine (GB, k, (Us, Vs), ((S', s'), (V', I.id)), sc, Ds)
+		end
+	      | S.Lemma _ => Ds)
+(*	    else Ds *)
 	  | ltW (GB, _, _, ((I.EVar _, _), _), _, Ds) = Ds
 	  | ltW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 						       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, Ds) =
