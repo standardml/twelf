@@ -113,6 +113,7 @@ struct
         let fun strictArgParms (I.Root (I.BVar _, _), _, occ) =
                 raise Error (occToString (ocdOpt, occ) ^ "Head not rigid, use %abbrev")
 	      | strictArgParms (I.Root _, _, _) = ()
+              | strictArgParms (I.Pi _, _, _) = ()
 	      | strictArgParms (I.Lam (D, U'), I.Pi (_, V'), occ) = 
 	        if strictArgParm (1, U')
 		  then strictArgParms (U', V', Paths.body occ)
