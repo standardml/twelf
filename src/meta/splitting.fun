@@ -588,7 +588,8 @@ struct
         let 
 	  val U' = Whnf.normalize Us
 	in
-	  if occursInExp (k, U') then SOME (n, depthExp U') else sc (n+1)
+	  if occursInExp (k, U') then SOME (n, depthExp U' (* measures depth of term
+							      always sensible? *) ) else sc (n+1)
 	end
       | occursInOrder (n, S.Lex Os, k, sc) = occursInOrders (n, Os, k, sc)
       | occursInOrder (n, S.Simul Os, k, sc) = occursInOrders (n, Os, k, sc)
