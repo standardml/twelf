@@ -576,12 +576,27 @@ struct
           (fn instream =>
            let
 	     val {dir=configDir, file=_} = OS.Path.splitDirFile configFile
+             (* append_uniq (list1, list2) appends list2 to list1, removing
+                all elements of list2 which are already in list1
+             *)
+             fun append_uniq (l1, l2) =
+                   let
+                     fun append_uniq' (x :: l2) =
+                           if List.exists (fn y => x = y) l1
+                           then append_uniq' (l2)
+                           else x :: append_uniq' (l2)
+                       | append_uniq' (nil) = List.rev l1
+                   in
+                     List.rev (append_uniq' (List.rev l2))
+                   end
 	     (* mkRel interpretes a path p in the config file relative to
 	        configDir, the directory of the config file.
              *)
-	     fun mkRel (p) = if OS.Path.isAbsolute p
-			       then p
-			     else OS.Path.concat (configDir, p)
+	     fun mkRel (p) =
+                  OS.Path.mkCanonical
+                    (if OS.Path.isAbsolute p
+                     then p
+                     else OS.Path.concat (configDir, p))
              fun parseItem (item, sources) =
                    let
                      val suffix_size = (String.size (!suffix)) + 1
@@ -589,8 +604,8 @@ struct
                    in
                      if (suffix_start < 0)
                        orelse (String.substring (item, suffix_start, suffix_size) <> ("." ^ !suffix))
-                     then sources @ [mkRel(item)]
-                     else sources @ (#2(read (mkRel(item))))
+                     then append_uniq (sources, [mkRel(item)])
+                     else append_uniq (sources, (#2(read (mkRel(item)))))
                    end
 	     fun parseLine (sources, line) =
 		 if Substring.isEmpty line
@@ -752,6 +767,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.2 R9pl1 (with tracing, arithmetic)"
+    val version = "Twelf 1.2 R8pl1 (with tracing, arithmetic)"
   end  (* local *)
 end; (* functor Twelf *)
