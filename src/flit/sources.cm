@@ -1,8 +1,4 @@
 Library
-  signature TIMING
-  structure Timing
-  signature TWELF
-  structure Twelf
   signature FLIT
   structure Flit
 is
@@ -16,7 +12,6 @@ is
   ../index/sources.cm
   ../paths/sources.cm
   ../print/sources.cm
-  ../frontend/sources.cm
   flit.sig
   flit.fun
   flit.sml
