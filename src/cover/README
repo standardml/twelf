@@ -27,6 +27,15 @@ Version 2 --- added proper constraint handling
 
 - When constraints remain after matching, fail.
 
+Mon Mar 19 07:16:19 2001 -fp
+Version 3 --- added totality checking for closed worlds
+
+Syntax:
+
+%total tdecl.
+
+where tdecl is a termination declaration.
+
 ----------------------------------------------------------------------
 From: "Carsten Schuermann" <carsten@cs.yale.edu>
 To: "Frank Pfenning" <fp@cs.cmu.edu>
