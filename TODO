@@ -7,3 +7,28 @@ constraints.  This should be fixed in a more general CLP architecture.
 Tue Mar 30 10:38:02 1999
 
 remove local open's
+
+
+Wed Mar 31 18:28:56 EST 1999
+
+DONE -cs -fp in ctxLookup unnecessary wrapper function.
+
+
+Fri Apr  9 09:44:55 EDT 1999 -cs
+
+Non recursive type families do not receive the proper treatment. Their 
+ratio is commonly 1, but they should be prefered splitting candidates: The
+ranking of splitting variables should be something like
+
+1. Induction variables
+2. Non-recursive non-induction variables
+3. Recursive non-induction variables
+
+
+Thu May  6 16:00:06 EDT 1999 -cs
+abstract doesn't depend on unify
+
+
+Fri May 14 14:24:48 EDT 1999 -cs
+Extend type checker to type check also proof terms including Skolem constants
+and Skolem assumption. 
