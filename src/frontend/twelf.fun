@@ -733,7 +733,6 @@ struct
 	      in
 		checkFreeOut La 
 	      end
-(* temporarily disabled -cs
 	  val _ = checkFreeOut La
 	  val (lemma, projs, sels) = Converter.installPrg La
 
@@ -753,7 +752,6 @@ struct
 	      
 	  val result1 = (TomegaCoverage.coverageCheckPrg (WorldSyn.lookup (hd La), IntSyn.Null, P); NONE) 
 	                handle TomegaCoverage.Error msg => SOME msg
-*)
 	val result1 = NONE
 
  	  fun covererror (SOME msg1, msg2) = raise Cover.Error (Paths.wrap (r, "Functional and relational coverage checker report coverage error:\n[Functional] " 

@@ -85,6 +85,9 @@ struct
 	  parseConDec1 (NONE, LS.expose s')
       | parseConDec' (LS.Cons ((L.BLOCK, r), s')) = 
 	  parseBlockDec' (LS.expose s')
+      | parseConDec' (LS.Cons ((t, r), s')) = 
+	  Parsing.error (r, "Constant or block declaration expected, found token " ^ L.toString t)
+
 
     (* parseConDec --- currently not exported *)
     fun parseConDec (s) = parseConDec' (LS.expose s)
