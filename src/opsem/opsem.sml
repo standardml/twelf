@@ -79,3 +79,8 @@ structure TMachine =
             structure Names = Names
 	    structure Trace = Trace
               structure CSManager = CSManager);
+
+structure SwMachine =
+  SwMachine (structure Trace = Trace
+	     structure AbsMachine = AbsMachine
+             structure TMachine = TMachine);

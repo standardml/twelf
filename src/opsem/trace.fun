@@ -341,6 +341,11 @@ struct
 	 print "]\n")
       | showSpec (msg, All) = print (msg ^ " = All\n")
 
+    fun tracing () =
+        (case (!traceSpec, !breakSpec)
+           of (None, None) => false
+	    | _ => true)
+
     fun show () =
         (showSpec ("trace", !traceSpec);
 	 showSpec ("break", !breakSpec);

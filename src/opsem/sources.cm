@@ -22,4 +22,5 @@ Group is
   trace.sig
   trace.fun
   tmachine.fun
+  swmachine.fun
   opsem.sml

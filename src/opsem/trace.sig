@@ -28,6 +28,8 @@ sig
   val signal : IntSyn.dctx * Event -> unit
   val init : unit -> unit		(* initialize trace, break and tag *)
 
+  val tracing : unit -> bool            (* currently tracing or using breakpoints *)
+
   (* User interface *)
   datatype 'a Spec =
     None
