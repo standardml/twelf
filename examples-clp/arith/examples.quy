@@ -1,0 +1,9 @@
+%%% Sample queries.
+%%% Author: Roberto Virga.
+
+%solve
+exp : expression "(10*9)+35".
+
+%query 1 *
+eval exp Q.
+
