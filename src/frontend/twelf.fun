@@ -197,6 +197,14 @@ struct
 		       ^ f ^ "\n");
 	 ABORT)
 
+
+    (* should move to paths, or into the prover module... but not here! -cs *)
+    fun joinregion (r, nil) = r
+      | joinregion (r, r' :: rs) = 
+          joinregion (Paths.join (r, r'), rs)
+
+
+
     fun constraintsMsg (eqns) =
         "Typing ambiguous -- unresolved constraints\n" ^ Print.eqnsToString eqns
 
@@ -227,7 +235,7 @@ struct
 	      | IO.Io (ioError) => abortIO (fileName, ioError)
 	      | Solve.AbortQuery (msg) => abortFileMsg (fileName, msg)
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
-	      | Prover.Error (msg) => abort ("Prover error: " ^ msg ^ "\n")
+	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
 
     (* installConDec (conDec, ocOpt)
@@ -372,18 +380,19 @@ struct
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 
-	  val _ = Prover.auto () (* times itself *)
+	  val _ = Prover.auto () handle Prover.Error msg => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%QED\n")
 		  else ()
+		    
 	in
 	  (Prover.install (fn E => installConDec (E, (fileName, NONE)));
-	   Skolem.install La)
-	end
+	   Skolem.install La) 
+	end 
 
       (* Establish declaration *)
       | install1 (fileName, Parser.EstablishDec lterm) =
-	let 
+        let 
 	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.establishToEstablish lterm 
 	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
@@ -397,10 +406,11 @@ struct
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 
-	  val _ = Prover.auto () (* times itself *)
+	  val _ = Prover.auto () handle Prover.Error msg => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
+		    
 	in
 	  Prover.install (fn E => installConDec (E, (fileName, NONE)))
-	end
+	end 
 
       (* Establish declaration *)
       | install1 (fileName, Parser.AssertDec aterm) =
