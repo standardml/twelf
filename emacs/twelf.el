@@ -1111,6 +1111,10 @@ Also updates the error cursor to the current line."
 	 (while (string-match "/" filename)
 	   (setq filename (replace-match "\\" t t filename)))
 	 filename)
+	((eq system-type 'cygwin32)
+	 (while (string-match "/" filename)
+	   (setq filename (replace-match "\\" t t filename)))
+	 (concat "C:\\cygwin\\" filename))
 	(t (convert-standard-filename filename))))
 
 ;;;----------------------------------------------------------------------
