@@ -1047,9 +1047,13 @@ bound ::= nat         % @r{number of solutions}
 
 qdecl ::= bound bound query % @r{expected solutions, try limit, query}
 
+qtdecl ::= bound query      % @r{number of stages, query}
+
 decl ::= @dots{}
-       | %query qdecl.      % @r{execute query}
-       | %solve id : term.  % @r{solve and name proof term}
+       | %tabled id.          % @r{@math{a}, table family @math{a}}
+       | %query qdecl.        % @r{execute query}
+       | %querytabled qtdecl. % @r{execute query with tabled logic programming}
+       | %solve id : term.    % @r{solve and name proof term}
 @end group
 @end example
 
@@ -1459,6 +1463,150 @@ p:of e T1
 At the point where the second subgoals fails we backtrack.  However, all
 other alternatives fail immediately, since the clause head does not
 unify with the goal and the overall query fails.
+
+@node
+@section Tabled Logic Programming
+
+@cindex tabled logic programming
+@findex %tabled
+@findex %querytabled
+@findex Twelf.Table.strengthen
+@findex Twelf.Table.strategy
+@findex Twelf.Table.Variant
+@findex Twelf.Table.Subsumption
+@findex Twelf.Table.top
+
+Logic programming uses a simple depth-first search strategy to search
+for a proof of a given query.  This strategy is incomplete, that is,
+there are queries that are true, but the logic programming engine will
+not find a proof due to non-termination.  In addition, performance may
+be hampered by redundant computation.
+
+Tabled logic programming uses memoization to alleviate these problems by
+avoiding infinite and redundant paths of computation.  The central data
+structure is a table in which we store encountered subgoals and
+corresponding solutions.  When we solve a subgoal @code{G}, then we
+check whether @code{G} is in the table.  If it is not in the table, then
+it will be added.  If it is in the table and there are solutions
+available, then we can re-use them.  If it is in the table and no
+solutions are available, then we suspend the computation.  This basic
+idea is combined with globals stages.  In each stage, a depth-first
+search strategy is used to derive answers from the program.  If no more
+answers can be derived, computation terminates.  It is important to note
+that for each answer only one proof is generated, although multiple
+different proofs may exist.
+
+Tabled and non-tabled execution can be freely mixed.  This is achieved
+by requiring an explicit declaration
+
+@example
+%tabled a.
+@end example
+
+@noindent
+for every type family @code{a} that is to be tabled.  In addition,
+at present tabling must be explicitly enabled by invoking
+
+@example
+%querytabled @var{stages} A.
+@end example
+
+where @var{stages} bounds the number of stages to use before terminating
+while searching for a proof of @code{A}.  If @var{stages} is @code{*},
+then arbitrarily many stages may be explored, which can lead to
+non-termination over infinite domains.
+
+To illustrate, here is a small simple example that computes
+reachability in a cyclic graph.  First we declare the nodes
+in the graph and the edge relation.
+
+@example
+@group
+node : type.
+
+a : node.
+b : node.
+c : node.
+d : node.
+
+edge: node -> node -> type.
+
+e_ab : edge a b.
+e_ac : edge a c.
+e_ba : edge b a.
+e_bd : edge b d.
+@end group
+@end example
+
+Next we declare the reachability relation and declare it tabled
+in order to avoid an infinite loop.
+
+@example
+@group
+reach: node -> node -> type.
+%tabled reach.
+
+r_refl: reach X X.
+
+r_cl  : reach X Y 
+	 <- edge X Z
+	 <- reach Z Y.
+
+%querytabled * (reach a X).
+@end group
+@end example
+
+Note that, at present, tables will be completely ignored for ordinary
+queries, so that
+
+@example
+%query * * reach a X.
+@end example
+
+will not terminate, despite the fact that @code{reach} has been
+declared as tabled.
+
+In the example above we can also give an explicit bound on the
+number of stages during tabled evaluation with
+
+@example
+%querytabled 3 (reach a X).
+@end example
+
+Additional examples using tabling can be found in
+the directory @file{examples/tabled/} of the distribution. 
+
+One key question in tabled search is how to detect that a subgoal is
+similar to another sub-goal which is already in the table. There are
+two critical parameters which influence table lookup during search. 
+
+@code{Twelf.Table.strengthen} which defaults to @code{false}.
+If @code{true} it eliminates dependencies based on subordination
+during tabling.  This is more expensive, but can lead to increased
+re-use of prior subgoals in some cases.
+
+
+@code{Twelf.Table.strategy} which default to @code{Twelf.Table.Variant}.
+When set to @code{Twelf.Table.Variant}, then subgoals are compared
+for equality modulo renaming of existential and bound variables.
+When set to @code{Twelf.Table.Subsumption}, then comparison
+of subgoals with table entries allows instantiation of the table
+entries.  This is slower, but may lead to increased sharing and
+better termination properties.
+
+It is also possible (in analogy with @code{Twelf.top ();}, explained
+in @ref{Interactive Queries}, to start an interactive top level that
+executes the tabling logic programming interpreter with the command
+
+@example
+Twelf.Table.top ();
+@end example
+
+Furthermore, it should be noted that tracing does @emph{not} work for
+the tabled logic programming engine, and that other analyses such as
+termination checking do not take the tabling into account.  This is
+conservative, but means that many terminating tabled programs can at
+present not be verified.
 
 @node Constraint Domains, Modes, Logic Programming, Top
 @chapter Constraint Domains
@@ -3222,7 +3370,18 @@ by splitting.  Setting is to @code{0} will prohibit proof by cases.
 @findex Twelf.Prover.maxRecurse
  The maximal number of appeals to the induction hypothesis in any
 case during a proof.
+
+@item Twelf.Table.strategy := Twelf.Table.Variant;
+@findex Twelf.Table.strategy
+ Determines the subsumption strategy for tabled logic programming which is
+either @code{Twelf.Table.Variant} or @code{Twelf.Table.Subsumption}.
+
+@item Twelf.Table.strengthen := false;
+@findex Twelf.Table.strengthen
+ Determines whether table entry lookup takes subordination into
+account or not.
 @end table
+
 
 @node Signature Printing, Tracing and Breakpoints, Environment Parameters, ML Interface
 @section Signature Printing
@@ -4513,7 +4672,7 @@ older Elf implementations and is therefore slower.
 lexer, and @samp{=} (equality) is now a reserved identifier.  The syntax
 of @code{%name} declarations has changed by allowing only one preferred
 name to be specified.  Also, @code{%name}, @code{%infix}, @code{%prefix}
-and @code{%postfix} declarations must be terminated by a period @samp{.}
+and @code{%posftix} declarations must be terminated by a period @samp{.}
 which previously was optional.  Further, single lines comments now must
 start with @samp{%@var{whitespace}} or @samp{%%} in order to avoid
 misspelled keywords of the form @samp{%@var{keyword}} to be ignored.

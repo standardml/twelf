@@ -1,3 +1,16 @@
+Thu Apr  4 14:18:50 2002
+
+New in Twelf 1.4
+
+Tabled logic programming (-bp)
+  %tabled
+  %querytabled
+  Twelf.Table.strengthen
+  Twelf.Table.strategy
+  Twelf.Table.Variant
+  Twelf.Table.Subsumption
+  Twelf.Table.top
+
 Fri Dec 28 11:30:37 2001
 
 Created and tagged Twelf 1.3R3 which incorporates world checking,
