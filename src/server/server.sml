@@ -99,6 +99,7 @@ struct
     | setParm ("Print.length"::ts) = Twelf.Print.length := getLimit ts
     | setParm ("Print.indent"::ts) = Twelf.Print.indent := getNat ts
     | setParm ("Print.width"::ts) = Twelf.Print.width := getNat ts
+    | setParm ("Compile.optimize"::ts) = Twelf.Compile.optimize := getBool ts
     | setParm ("Prover.strategy"::ts) = Twelf.Prover.strategy := getStrategy ts
     | setParm ("Prover.maxSplit"::ts) = Twelf.Prover.maxSplit := getNat ts
     | setParm ("Prover.maxRecurse"::ts) = Twelf.Prover.maxRecurse := getNat ts
@@ -113,6 +114,7 @@ struct
     | getParm ("Print.length"::ts) = limitToString (!Twelf.Print.length)
     | getParm ("Print.indent"::ts) = Int.toString (!Twelf.Print.indent)
     | getParm ("Print.width"::ts) = Int.toString (!Twelf.Print.width)
+    | getParm ("Compile.optimize"::ts) = Bool.toString (!Twelf.Compile.optimize)
     | getParm ("Prover.strategy"::ts) = strategyToString (!Twelf.Prover.strategy)
     | getParm ("Prover.maxSplit"::ts) = Int.toString (!Twelf.Prover.maxSplit)
     | getParm ("Prover.maxRecurse"::ts) = Int.toString (!Twelf.Prover.maxRecurse)

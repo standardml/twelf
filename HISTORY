@@ -1,3 +1,22 @@
+Wed Sep 16 15:25:55 1998
+
+Created version Twelf 1.2 R 1 (optimize) after Larry Greenfield
+checked in the improved clause compiler.  Standard suite drops from
+68.9 to 54.8 secs.
+
+New:
+  Twelf.Compile.optimize : bool ref   (default true)
+
+also added this flag to the Twelf menu in Emacs mode and the
+server commands
+
+  set Compile.optimize false  (to turn off optimization)
+
+CVS:
+
+  Tagged as twelf-1-2R1
+
+======================================================================
 Mon Feb  9 10:35:12 EST 1998
 
 Observation: Splitting over index variables is necessary in the

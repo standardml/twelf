@@ -120,6 +120,8 @@ Print.printLength := NONE; (* SOME(l): replace lists longer than l by '...' *)
 Formatter.Indent := 3;  (* number of spaces for indentation level *)
 Formatter.Pagewidth := 80;  (* default page width for formatting *)
 (* see formatter/formatter.sig for more *)
+
+Compile.optimize := true  (* prevent optimizations if false *)
 --------------------
 Timing:
 
