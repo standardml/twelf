@@ -411,6 +411,7 @@ struct
 
 
     fun deriveTag (V, F.Ex (_, F.True)) = F.Ex (I.Dec (NONE, V), F.True)
+        (* F.True too restrictive ?? see arith example  -- cs *)
       | deriveTag (I.Pi ((D, DP), V), F.Ex (_, F)) = 
           F.Ex (D, deriveTag (V, F))
       | deriveTag (I.Pi ((D, DP), V), F.All (F.Prim _, F)) = 

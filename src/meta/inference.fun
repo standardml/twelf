@@ -93,7 +93,7 @@ struct
 
 
 
-    (* expand' ((G, B), n) = sc
+    (* expand' ((G, B), n) = ((Gnew, Bnew), sc)
       
        Invariant:
        If   |- G0 ctx    G0 |- B0 tags    
@@ -107,6 +107,9 @@ struct
 	    to  |- G'' ctx
 	    and G'' |- B'' tags
 	    and G'', B'' extends G, B
+       and |- Gnew = G ctx
+       and Gnew |- Bnew tags
+       where Bnew stems from B where all used lemmas (S.RL) are now tagged with (S.RLdone)
     *)
 
     fun expand' ((G0, B0), (I.Null, I.Null), n) =
