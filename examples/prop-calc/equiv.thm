@@ -4,7 +4,7 @@
 %theorem abst : forall* {A:o} {B:o} 
                 forall {P: (|- A -> |- B)}
                 exists {Q : |- A => B} true.
-%prove 4 P (abst P _).
+%prove 3 P (abst P _).
 
 %terminates P (abst P _).
 

@@ -10,7 +10,7 @@
 	           forall {I: A >> P}
 		   exists {DI : (pf A -> pf (atom P))} true.
 
-%prove 4 (S H I)
+%prove 3 (S H I)
   (s_snd S _) 
   (h_snd H _) 
   (i_snd I _).

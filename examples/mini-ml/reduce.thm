@@ -5,7 +5,7 @@
   forall {D:eval E V}
   exists {R* : E ==>* V} true.
 
-%prove 9 D (evalRed D _).
+%prove 5 D (evalRed D _).
 
 % Partial check if proof
 %terminates D (evalRed D _).

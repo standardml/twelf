@@ -59,4 +59,7 @@ tps : forall* {E:exp} {V:exp} {T:tp}
 e0 = (app (lam [x] x) (lam [y] y)).
 %solve p0 : of e0 T.
 %solve d0 : eval e0 V.
-%solve tps0 : tps d0 p0 Q.
+
+% the following line is commented out because tps does not 
+% have a proof term any more.
+% %solve tps0 : tps d0 p0 Q.      
