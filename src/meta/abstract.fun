@@ -406,7 +406,7 @@ struct
       | checkTags (I.Decl (G, _), I.Decl (B, T)) = 
         (checkTags (G, B);
 	 case T
-	   of S.Lemma (_, F) =>  FunTypeCheck. isFor (G, F)
+	   of S.Lemma (_, F) =>  FunTypeCheck.isFor (G, F)
   	    | _ => ())
 
 
@@ -484,7 +484,7 @@ struct
 	  abstractGlobalSub (K, I.Dot (I.Idx (n+1), I.Shift (n+1)), B)
       | abstractGlobalSub (K, I.Dot (I.Idx k, s'), I.Decl (B, T as S.Parameter _)) =
           I.Dot (I.Idx (lookupBV (K, k)), abstractGlobalSub (K, s', B))
-      | abstractGlobalSub (K, I.Dot (I.Exp U, s'), I.Decl (B, T as S. Lemma _)) =
+      | abstractGlobalSub (K, I.Dot (I.Exp U, s'), I.Decl (B, T as S.Lemma _)) =
           I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractGlobalSub (K, s', B))
 
 
