@@ -97,6 +97,8 @@ struct
 	val ocd = Paths.def (i, oc1, oc2Opt)
         val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, NONE, i, U'', V'', L))
 		 else (Strict.check ((U'', V''), SOME(ocd));
+		       (* stricter checking of types according to Chris Richards Fri Jul  2 16:33:46 2004 -fp *)
+		       (* (case optName of NONE => () | _ => Strict.checkType ((i, V''), SOME(ocd))); *)
 		       (Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', L,
 							 IntSyn.ancestor U''))))
 	           

@@ -130,7 +130,20 @@ struct
 	  strictArgParms (U, V, Paths.top)
 	end
 
+   fun occursInType ((i, V), ocdOpt) =
+       let fun oit ((0, V), occ) = ()
+	     | oit ((i, I.Pi((D,P), V)), occ) =
+	       (case Abstract.piDepend ((D,P), V)
+                  of I.Pi ((D', I.Maybe), V) => oit ((i-1, V), Paths.body occ)
+                   | _ => raise Error (occToString (ocdOpt, occ)
+				       ^ "No occurrence of " ^ decToVarName D ^ " in type, use %abbrev"))
+             | oit _ = ()
+       in
+	 oit ((i, V), Paths.top)
+       end
+
   in
     val check = strictTop
+    val checkType = occursInType
   end
 end;  (* functor Strict *)
