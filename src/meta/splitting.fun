@@ -57,6 +57,7 @@ struct
     Index of (int			(* Splitting depth *)
 	      * int option		(* Induction variable *)
 	      * int			(* Number of cases *)
+	      * int			(* maximal number of cases *)
 	      * int)			(* Position (left to right) *)
 	       
 
@@ -73,8 +74,8 @@ struct
 
 
 
-    fun makeOperator ((S, k), L, S.Splits n, g, I) = 
-      Operator ((S, k), L, Index (n, I, List.length L, g))
+    fun makeOperator ((S, k), L, S.Splits n, g, I, a) = 
+      Operator ((S, k), L, Index (n, I, List.length L, List.length (Index.lookup a), g+1))
 
     (* aux (G, B) = L' 
        
@@ -578,7 +579,7 @@ struct
 	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
 			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
-				       induction 1)
+				       induction 1, I.targetFam V)
 			 :: ops
 		     else ops
 	in
@@ -647,34 +648,35 @@ struct
        If   Op = (_, Sl) 
        then k = |Sl| 
     *)
-    fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
+    fun index (Operator ((S, index), Sl, Index (_, _, k, _, _))) = k
 
+    fun ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
 
-    fun compare' (Index (k1, NONE, c1, p1), Index (k2, NONE, c2, p2)) =
-        (case (Int.compare (k1, k2), Int.compare (c1, c2), Int.compare (p1, p2)) 
+    fun compare' (Index (k1, NONE, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
+        (case (Real.compare (ratio (c1, m1), ratio (c2, m2)), Int.compare (k1, k2), Int.compare (p1, p2)) 
 	   of (EQUAL, EQUAL, EQUAL) => EQUAL
 	    | (EQUAL, EQUAL, result) => result
 	    | (EQUAL, result, _) => result
 	    | (GREATER, _, _) => LESS
 	    | (LESS, _, _) => GREATER)
-      | compare' (Index (k1, NONE, c1, p1), Index (k2, SOME i2, c2, p2)) =
-	(case (Int.compare (k1, k2)) 
-	   of LESS => GREATER
-	    | EQUAL => GREATER
-	    | GREATER => LESS)
-      | compare' (Index (k1, SOME i1, c1, p1), Index (k2, NONE, c2, p2)) =
-	(case (Int.compare (k1, k2)) 
-	   of LESS => GREATER
+      | compare' (Index (k1, NONE, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
+	(case (Real.compare (ratio (c1, m1), ratio (c2, m2))) 
+	   of LESS => LESS
 	    | EQUAL => LESS
-	    | GREATER => LESS)
-      | compare' (Index (k1, SOME i1, c1, p1), Index (k2, SOME i2, c2, p2)) =
-        (case (Int.compare (k1, k2), Int.compare (i1, i2), Int.compare (c1, c2), Int.compare (p1, p2)) 
+	    | GREATER => GREATER)
+      | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
+	(case (Real.compare (ratio (c1, m1), ratio (c2, m2))) 
+	   of LESS => LESS
+	    | EQUAL => GREATER
+	    | GREATER => GREATER)
+      | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
+        (case (Real.compare (ratio (c1, m1), ratio (c2, m2)), Int.compare (i1, i2), Int.compare (k1, k2), Int.compare (p1, p2))
 	   of (EQUAL, EQUAL, EQUAL, EQUAL) => EQUAL
 	    | (EQUAL, EQUAL, EQUAL, result) => result
 	    | (EQUAL, EQUAL, result, _) => result
 	    | (EQUAL, result, _, _) => result
-	    | (GREATER, _, _, _) => LESS
-	    | (LESS, _, _, _) => GREATER)
+	    | (result, _, _, _) => result)
+
 
     fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
           compare' (I1, I2) 
@@ -740,12 +742,12 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
-	  fun indexToString (Index (k, NONE, c, p)) = "NI (sd=" ^ 
-	        (Int.toString k) ^ ", i=. , c=" ^ (Int.toString c) ^ ", p=" ^
+	  fun indexToString (Index (k, NONE, c, m, p)) = "NI (c/m=" ^ 
+	        (Real.toString (ratio (c, m))) ^ ", i=. , sd=" ^ (Int.toString k) ^ ", p=" ^
 		(Int.toString p) ^ ")"
-	    | indexToString (Index (k, SOME idx , c, p)) = 
-		"I (sd=" ^ 
-	        (Int.toString k) ^ ", i=" ^ (Int.toString idx) ^ ", c=" ^ (Int.toString c) ^ ", p=" ^
+	    | indexToString (Index (k, SOME idx , c, m, p)) = 
+		"I (c/m=" ^ 
+	        (Real.toString (ratio (c, m))) ^ ", i=" ^ (Int.toString idx) ^ ", sd=" ^ (Int.toString c) ^ ", p=" ^
 		(Int.toString p) ^ ")"
 		
 

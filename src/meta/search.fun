@@ -233,7 +233,14 @@ struct
     *)
     (* Efficiency: repeated whnf for every subterm in Vs!!! *)
     fun selectEVar (nil) = nil
-      | selectEVar ((X as I.EVar (r, _, _, _)) :: GE) = 
+      | selectEVar ((X as I.EVar (r, _, _, nil)) :: GE) = 
+        let 
+	  val Xs = selectEVar (GE)
+	in
+	  if nonIndex (r, Xs) then Xs @ [X]
+	  else Xs
+	end
+      | selectEVar ((X as I.EVar (r, _, _, Constr)) :: GE) =  (* Constraint case *)
         let 
 	  val Xs = selectEVar (GE)
 	in
@@ -299,14 +306,17 @@ struct
 					   val gE' = List.length GE'
 					   val _ = if !Global.chatter > 4 then TextIO.print (Int.toString gE' ^ " remaining EVars\n") else ()
 					 in
-					   if gE' > 0 then  searchEx (it-1, 1) (GE', sc) else  sc max
+					   if gE' > 0 then  
+					     if it > 0 then searchEx (it-1, 1) (GE', sc) 
+					     else ()
+					   else sc max
 					   (* warning: iterative deepening depth is not propably updated. 
 					      possible that it runs into an endless loop ? *)
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
 	  
-    fun search (GE, sc) = searchEx (2, !MTPGlobal.maxFill) (GE, sc)
+    fun search (GE, sc) = searchEx (1, !MTPGlobal.maxFill) (GE, sc)
 
 (*    (* searchAll' (GE, acc, sc) = acc'
 
