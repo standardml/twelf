@@ -2,9 +2,11 @@
 (* Author: Carsten Schuermann *)
 
 functor ParseThm
-  (structure Parsing' : PARSING
+  (structure Paths : PATHS
+   structure Parsing' : PARSING
+     sharing Parsing'.Lexer.Paths = Paths
    structure ThmExtSyn' : THMEXTSYN
-   structure Paths : PATHS
+     sharing ThmExtSyn'.Paths = Paths
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ThmExtSyn'.ExtSyn)

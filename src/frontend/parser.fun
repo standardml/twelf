@@ -4,7 +4,9 @@
 functor Parser (structure Parsing' : PARSING
 		structure Stream' : STREAM (* result stream *)
 		structure ExtSyn' : EXTSYN
+		  sharing ExtSyn'.Paths = Parsing'.Lexer.Paths
 		structure ExtSynQ' : EXTSYN
+		  sharing ExtSynQ'.Paths = Parsing'.Lexer.Paths
 		structure Names' : NAMES
 		structure ExtModes' : EXTMODES
 		structure ThmExtSyn' : THMEXTSYN

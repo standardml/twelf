@@ -2,9 +2,11 @@
 (* Author: Carsten Schuermann *)
 
 functor ParseMode
-  (structure Parsing' : PARSING
+  (structure Paths : PATHS
+   structure Parsing' : PARSING
+     sharing Parsing'.Lexer.Paths = Paths
    structure ExtModes' : EXTMODES
-   structure Paths : PATHS
+     sharing ExtModes'.Paths = Paths
    structure ParseTerm : PARSE_TERM
      sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ExtModes'.ExtSyn)

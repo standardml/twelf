@@ -5,8 +5,8 @@ functor Paths () :> PATHS =
 struct
 
   type pos = int			(* characters, starting at 0 *)
-  type region = pos * pos		(* r ::= (i,j) is interval [i,j) *)
-  type location = string * region	(* loc ::= (filename, region) *)
+  datatype region = Reg of pos * pos	(* r ::= (i,j) is interval [i,j) *)
+  datatype location = Loc of string * region (* loc ::= (filename, region) *)
 
   local
     (* !linePosList is a list of starting character positions for each input line *)
@@ -31,17 +31,18 @@ struct
   (* join (r1, r2) = r
      where r is the  smallest region containing both r1 and r2
   *)
-  fun join ((i1, j1), (i2, j2)) = (Int.min (i1, i2), Int.max (j1, j2))
+  fun join (Reg (i1, j1), Reg (i2, j2)) = Reg (Int.min (i1, i2), Int.max (j1, j2))
 
   (* The right endpoint of the interval counts IN RANGE *)
-  fun posInRegion (k:pos, (i,j):region) = i <= k andalso k <= j
+  fun posInRegion (k, Reg (i,j)) = i <= k andalso k <= j
 
   fun lineColToString (line,col) =
       Int.toString (line+1) ^ "." ^ Int.toString (col+1)
 
   (* toString r = "line1.col1-line2.col2", a format parsable by Emacs *)
-  fun toString (i,j) = lineColToString (posToLineCol i) ^ "-"
-                       ^ lineColToString (posToLineCol j)
+  fun toString (Reg (i,j)) =
+        lineColToString (posToLineCol i) ^ "-"
+	^ lineColToString (posToLineCol j)
 
   (* wrap (r, msg) = msg' which contains region *)
   fun wrap (r, msg) = (toString r ^ " " ^ "Error:\n" ^ msg)
@@ -50,7 +51,7 @@ struct
      This should be used for locations retrieved from origins, where
      the region is given in character positions, rather than lines and columns
   *)
-  fun wrapLoc ((filename, (i,j)), msg) =
+  fun wrapLoc (Loc (filename, Reg (i,j)), msg) =
         filename ^ ":" ^ Int.toString (i+1) ^ "-" ^ Int.toString (j+1)
 	^ " " ^ "Error:\n" ^ msg
 
@@ -120,15 +121,15 @@ struct
 	    | inside (bind (r, _, _)) = posInRegion (k, r)
 	    | inside (root (r, _, _, _)) = posInRegion (k, r)
 
-	  fun toPath (leaf (i,j)) = Here (* check? mark? *)
-	    | toPath (bind ((i,j), NONE, u)) =
+	  fun toPath (leaf (Reg (i,j))) = Here (* check? mark? *)
+	    | toPath (bind (Reg (i,j), NONE, u)) =
               if inside u then Body (toPath u)
 	      else Here
-	    | toPath (bind ((i,j), SOME(u1), u2)) =
+	    | toPath (bind (Reg (i,j), SOME(u1), u2)) =
 	      if inside u1 then Label (toPath u1)
 	      else if inside u2 then Body (toPath u2)
 		   else Here
-	    | toPath (root ((i,j), h, imp, s)) =
+	    | toPath (root (Reg (i,j), h, imp, s)) =
 	      if inside h then Head
 	      else (case toPathSpine (s, 1)
 		      of NONE => Here

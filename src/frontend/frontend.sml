@@ -169,7 +169,7 @@ structure Twelf =
 	 structure Print = Print
 
 	 structure Names = Names
-	 structure Paths' = Paths
+	 structure Paths = Paths
 	 structure Origins = Origins
 	 structure Lexer = Lexer
 	 structure Parsing = Parsing

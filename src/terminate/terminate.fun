@@ -53,7 +53,7 @@ struct
         (case Origins.originLookup c
 	   of (fileName, NONE) => raise Error (fileName ^ ":" ^ msg)
             | (fileName, SOME occDec) => 
-	      raise Error (P.wrapLoc ((fileName, P.occToRegionDec occDec occ), msg)))
+	      raise Error (P.wrapLoc (P.Loc (fileName, P.occToRegionDec occDec occ), msg)))
 
     fun fmtOrder (G, O) =
         let

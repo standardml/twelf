@@ -4,6 +4,7 @@
 functor ParseTerm
   (structure Parsing' : PARSING
    structure ExtSyn' : EXTSYN
+      sharing Parsing'.Lexer.Paths = ExtSyn'.Paths
    structure Names : NAMES)
   : PARSE_TERM =
 struct

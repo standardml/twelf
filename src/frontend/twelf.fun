@@ -13,15 +13,17 @@ functor Twelf
 
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn'
-   structure Paths' : PATHS
+   structure Paths : PATHS
    structure Origins : ORIGINS
-     sharing Origins.Paths = Paths'
+     sharing Origins.Paths = Paths
    structure Lexer : LEXER
-     sharing Lexer.Paths = Paths'
+     sharing Lexer.Paths = Paths
    structure Parsing : PARSING
      sharing Parsing.Lexer = Lexer
    structure Parser : PARSER
      sharing Parser.Names = Names
+     sharing Parser.ExtSyn.Paths = Paths
+     sharing Parser.ExtSynQ.Paths = Paths
    structure TypeCheck : TYPECHECK
    structure Strict : STRICT
      sharing Strict.IntSyn = IntSyn'
@@ -31,13 +33,13 @@ functor Twelf
      sharing Abstract.IntSyn = IntSyn'
    structure TpReconQ : TP_RECON
      sharing TpReconQ.IntSyn = IntSyn'
-     sharing TpReconQ.Paths = Paths'
+     sharing TpReconQ.Paths = Paths
      sharing type TpReconQ.term = Parser.ExtSynQ.term
      sharing type TpReconQ.query = Parser.ExtSynQ.query
      (* sharing type TpReconQ.Paths.occConDec = Origins.Paths.occConDec *)
    structure TpRecon : TP_RECON
      sharing TpRecon.IntSyn = IntSyn'
-     sharing TpRecon.Paths = Paths'
+     sharing TpRecon.Paths = Paths
      sharing type TpRecon.condec = Parser.ExtSyn.condec
      sharing type TpRecon.term = Parser.ExtSyn.term
      (* sharing type TpRecon.Paths.occConDec = Origins.Paths.occConDec *)
@@ -46,16 +48,16 @@ functor Twelf
      sharing ModeSyn.IntSyn = IntSyn'
    structure ModeCheck : MODECHECK
      sharing ModeCheck.ModeSyn = ModeSyn
-     sharing ModeCheck.Paths = Paths'
+     sharing ModeCheck.Paths = Paths
    structure ModeRecon : MODE_RECON
      sharing ModeRecon.ModeSyn = ModeSyn
-     sharing ModeRecon.Paths = Paths'
+     sharing ModeRecon.Paths = Paths
      sharing type ModeRecon.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
      sharing ModePrint.ModeSyn = ModeSyn
    structure ModeDec : MODEDEC
      sharing ModeDec.ModeSyn = ModeSyn
-     sharing ModeDec.Paths = Paths'
+     sharing ModeDec.Paths = Paths
 
    structure Terminate : TERMINATE
      sharing Terminate.IntSyn = IntSyn'
@@ -80,15 +82,15 @@ functor Twelf
      sharing Solve.IntSyn = IntSyn'
      sharing type Solve.ExtSynQ.term = Parser.ExtSynQ.term
      sharing type Solve.ExtSynQ.query = Parser.ExtSynQ.query
-     sharing Solve.Paths = Paths'
+     sharing Solve.Paths = Paths
    structure ThmSyn : THMSYN
-     sharing ThmSyn.Paths = Paths'
+     sharing ThmSyn.Paths = Paths
    structure Thm : THM
      sharing Thm.ThmSyn = ThmSyn
-     sharing Thm.Paths = Paths'
+     sharing Thm.Paths = Paths
    structure ThmRecon : THM_RECON
      sharing ThmRecon.ThmSyn = ThmSyn
-     sharing ThmRecon.Paths = Paths'
+     sharing ThmRecon.Paths = Paths
      sharing ThmRecon.ThmSyn.ModeSyn = ModeSyn
      sharing type ThmRecon.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
@@ -256,7 +258,7 @@ struct
     fun install1 (fileName, Parser.ConDec(condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
-	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, (fileName,r))
+	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r))
 	  fun icd (SOME(conDec)) =
 	      let
 		  (* names are assigned in TpRecon *)
@@ -279,7 +281,7 @@ struct
       (* Solve declarations %solve c : A *)
       | install1 (fileName, Parser.Solve((name,tm), r)) =
 	(let
-	  val conDec = Solve.solve ((name, tm), (fileName, r))
+	  val conDec = Solve.solve ((name, tm), Paths.Loc (fileName, r))
 	  val conDec' = Names.nameConDec (conDec)
 	  val _ = Strict.check (conDec', NONE)
 	  (* allocate cid after strictness has been checked! *)
@@ -299,7 +301,7 @@ struct
       (* %query <expected> <try> A or %query <expected> <try> X : A *)
       | install1 (fileName, Parser.Query(expected,try,query, r)) =
         (* Solve.query might raise Solve.AbortQuery (msg) *)
-	(Solve.query ((expected, try, query), (fileName, r))
+	(Solve.query ((expected, try, query), Paths.Loc (fileName, r))
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
 

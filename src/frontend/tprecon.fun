@@ -81,7 +81,6 @@ struct
   structure F = Print.Formatter
   type name = string
 
-
   (* Implementation of term and decl which are abstract in the parser.
      We write tm : term for the representation of a term tm and tm* :
      exp for its translation in internal syntax and d : dec for the
@@ -484,7 +483,7 @@ struct
   *)
   (* call TypeCheck... if !doubleCheck = true? *)
   (* Wed May 20 08:00:28 1998 -fp *)
-  fun queryToQuery (query (optName, tm), (fileName, r)) = 
+  fun queryToQuery (query (optName, tm), Paths.Loc (fileName, r)) = 
       let
 	val _ = Names.varReset ()
 	val ((V,L), oc) = (Timers.time Timers.recon termToExp0) tm
@@ -511,7 +510,7 @@ struct
   *)
   (* should printing of result be moved to frontend? *)
   (* Wed May 20 08:08:50 1998 -fp *)
-  fun condecToConDec (condec(name, tm), (fileName, r)) =
+  fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((V, L), oc) = (Timers.time Timers.recon termToExp0) tm
@@ -530,7 +529,7 @@ struct
       in
 	(SOME(cd), SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, SOME(tm2)), (fileName, r)) =
+    | condecToConDec (condef(optName, tm1, SOME(tm2)), Paths.Loc (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
@@ -560,7 +559,7 @@ struct
       in
 	(optConDec, SOME(ocd))
       end
-    | condecToConDec (condef(optName, tm1, NONE), (fileName, r)) =
+    | condecToConDec (condef(optName, tm1, NONE), Paths.Loc (fileName, r)) =
       let
 	val _ = Names.varReset ()
 	val ((U, V), oc1) = (Timers.time Timers.recon termToExp0) tm1

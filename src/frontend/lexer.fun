@@ -9,6 +9,10 @@ struct
   structure Stream = Stream'
   structure Paths = Paths'
 
+  local
+    structure P = Paths
+  in
+
   datatype IdCase =
       Upper				(* [A-Z]<id> or _<id> *)
     | Lower				(* any other <id> *)
@@ -39,7 +43,7 @@ struct
 
   exception Error of string
 
-  fun error (r, msg) = raise Error (Paths.wrap (r, msg))
+  fun error (r, msg) = raise Error (P.wrap (r, msg))
 
   (* isSym (c) = B iff c is a legal symbolic identifier constituent *)
   (* excludes quote character and digits, which are treated specially *)
@@ -69,14 +73,15 @@ struct
      inputFun maintains state, reading input one line at a time and
      returning a string terminated by <newline> each time.
      The end of the stream is signalled by a string consisting only of ^D
+     Argument to inputFun is the character position.
   *)
-  fun lex (inputFun:Paths.pos -> string) =
+  fun lex (inputFun:int -> string) =
   let
     local (* local state maintained by the lexer *)
       val s = ref ""			(* current string (line) *)
       and left = ref 0			(* position of first character in s *)
       and right = ref 0			(* position after last character in s *)
-      val _ = Paths.resetLines ()	(* initialize line counter *)
+      val _ = P.resetLines ()	(* initialize line counter *)
 
       (* neither lexer nor parser should ever try to look beyond EOF *)
       val EOFString = String.str #"\^D"
@@ -99,7 +104,7 @@ struct
 	    else (s := nextLine;
 		  left := !right;
 		  right := !right + nextSize;
-		  Paths.newLine (!left)) (* remember new line position *)
+		  P.newLine (!left)) (* remember new line position *)
 	  end
     in
       (* char (i) = character at position i
@@ -121,13 +126,13 @@ struct
     (* The remaining functions do not access the state or *)
     (* stream directly, using only functions char and string *)
 
-    fun idToToken (idCase, (i,j)) = stringToToken (idCase, string (i,j), (i,j))
+    fun idToToken (idCase, P.Reg (i,j)) = stringToToken (idCase, string (i,j), P.Reg (i,j))
 
     (* Quote characters are part of the name *)
     (* Treat quoted identifiers as lowercase, since they no longer *)
     (* override infix state.  Quoted identifiers are now only used *)
     (* inside pragmas *)
-    fun qidToToken (i,j) = (ID(Lower, string(i,j+1)), (i,j+1))
+    fun qidToToken (P.Reg (i,j)) = (ID(Lower, string(i,j+1)), P.Reg (i,j+1))
 
     (* The main lexing functions take a character c and the next
        input position i and return a token with its region
@@ -137,51 +142,51 @@ struct
        Lexing errors are currently fatal---some error recovery code is
        indicated in comments.
     *)
-    fun lexInitial (#":", i) = (COLON, (i-1,i))
-      | lexInitial (#".", i) = (DOT, (i-1,i))
-      | lexInitial (#"(", i) = (LPAREN, (i-1,i))
-      | lexInitial (#")", i) = (RPAREN, (i-1,i))
-      | lexInitial (#"[", i) = (LBRACKET, (i-1,i))
-      | lexInitial (#"]", i) = (RBRACKET, (i-1,i))
-      | lexInitial (#"{", i) = (LBRACE, (i-1,i))
-      | lexInitial (#"}", i) = (RBRACE, (i-1,i))
+    fun lexInitial (#":", i) = (COLON, P.Reg (i-1,i))
+      | lexInitial (#".", i) = (DOT, P.Reg (i-1,i))
+      | lexInitial (#"(", i) = (LPAREN, P.Reg (i-1,i))
+      | lexInitial (#")", i) = (RPAREN, P.Reg (i-1,i))
+      | lexInitial (#"[", i) = (LBRACKET, P.Reg (i-1,i))
+      | lexInitial (#"]", i) = (RBRACKET, P.Reg (i-1,i))
+      | lexInitial (#"{", i) = (LBRACE, P.Reg (i-1,i))
+      | lexInitial (#"}", i) = (RBRACE, P.Reg (i-1,i))
       | lexInitial (#"%", i) = lexPercent (char(i), i+1)
-      | lexInitial (#"_", i) = lexID (Upper,(i-1,i))
-      | lexInitial (#"'", i) = lexID (Lower,(i-1,i)) (* lexQUID (i-1,i) *)
-      | lexInitial (#"\^D", i) = (EOF, (i-1,i-1))
+      | lexInitial (#"_", i) = lexID (Upper, P.Reg (i-1,i))
+      | lexInitial (#"'", i) = lexID (Lower, P.Reg (i-1,i)) (* lexQUID (i-1,i) *)
+      | lexInitial (#"\^D", i) = (EOF, P.Reg (i-1,i-1))
       | lexInitial (c, i) =
 	if Char.isSpace (c) then lexInitial (char (i),i+1)
-	else if Char.isUpper(c) then lexID (Upper, (i-1,i))
-	else if Char.isDigit(c) then lexID (Lower, (i-1,i))
-	else if Char.isLower(c) then lexID (Lower, (i-1,i))
-	else if isSym(c) then lexID (Lower, (i-1,i))
-	else error ((i-1,i), "Illegal character " ^ Char.toString (c))
+	else if Char.isUpper(c) then lexID (Upper, P.Reg (i-1,i))
+	else if Char.isDigit(c) then lexID (Lower, P.Reg (i-1,i))
+	else if Char.isLower(c) then lexID (Lower, P.Reg (i-1,i))
+	else if isSym(c) then lexID (Lower, P.Reg (i-1,i))
+	else error (P.Reg (i-1,i), "Illegal character " ^ Char.toString (c))
         (* recover by ignoring: lexInitial (char(i), i+1) *)
 
-    and lexID (idCase, (i,j)) =
+    and lexID (idCase, P.Reg (i,j)) =
         let fun lexID' (j) =
 	        if isIdChar (char(j)) then lexID' (j+1)
-		else idToToken (idCase, (i,j))
+		else idToToken (idCase, P.Reg (i,j))
 	in
 	  lexID' (j)
 	end
 
     (* lexQUID is currently not used --- no quoted identifiers *)
-    and lexQUID (i,j) =
+    and lexQUID (P.Reg (i,j)) =
         if Char.isSpace (char(j))
-	  then error ((i,j+1), "Whitespace in quoted identifier")
+	  then error (P.Reg (i,j+1), "Whitespace in quoted identifier")
 	       (* recover by adding implicit quote? *)
 	       (* qidToToken (i, j) *)
-	else if isQuote (char(j)) then qidToToken (i,j)
-	     else lexQUID (i, j+1)
+	else if isQuote (char(j)) then qidToToken (P.Reg (i,j))
+	     else lexQUID (P.Reg (i, j+1))
 
-    and lexPercent (#".", i) = (EOF, (i-2,i))
+    and lexPercent (#".", i) = (EOF, P.Reg (i-2,i))
       | lexPercent (#"{", i) = lexPercentBrace (char(i), i+1)
       | lexPercent (#"%", i) = lexComment (#"%", i)
       | lexPercent (c, i) =
-        if isIdChar(c) then lexPragmaKey (lexID (Quoted, (i-1,i)))
+        if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1,i)))
 	else if Char.isSpace(c) then lexComment (c, i)
-	  else error ((i-1, i), "Comment character `%' not followed by white space")
+	  else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
 
     and lexPragmaKey (ID(_, "infix"), r) = (INFIX, r)
       | lexPragmaKey (ID(_, "prefix"), r) = (PREFIX, r)
@@ -205,11 +210,11 @@ struct
     and lexComment (#"\n", i) = lexInitial (char(i), i+1)
       | lexComment (#"%", i) = lexCommentPercent (char(i), i+1)
       | lexComment (#"\^D", i) =
-          error ((i-1, i-1), "Unclosed single-line comment at end of file")
+          error (P.Reg (i-1, i-1), "Unclosed single-line comment at end of file")
 	  (* recover: (EOF, (i-1,i-1)) *)
       | lexComment (c, i) = lexComment (char(i), i+1)
 
-    and lexCommentPercent (#".", i) = (EOF, (i-2, i))
+    and lexCommentPercent (#".", i) = (EOF, P.Reg (i-2, i))
       | lexCommentPercent (c, i) = lexComment (c, i)
 
     and lexPercentBrace (c, i) = lexDComment (c, 1, i)
@@ -219,13 +224,13 @@ struct
       | lexDComment (#"%", l, i) = lexDCommentPercent (char(i), l, i+1)
       | lexDComment (#"\^D", l, i) =
           (* pass comment beginning for error message? *)
-          error ((i-1,i-1), "Unclosed delimited comment at end of file")
+          error (P.Reg (i-1,i-1), "Unclosed delimited comment at end of file")
 	  (* recover: (EOF, (i-1,i-1)) *)
       | lexDComment (c, l, i) = lexDComment (char(i), l, i+1)
 
     and lexDCommentPercent (#"{", l, i) = lexDComment (char(i), l+1, i+1)
       | lexDCommentPercent (#".", l, i) =
-          error ((i-2, i), "Unclosed delimited comment at end of file token `%.'")
+          error (P.Reg (i-2, i), "Unclosed delimited comment at end of file token `%.'")
           (* recover: (EOF, (i-2,i)) *)
       | lexDCommentPercent (c, l, i) = lexDComment (c, l, i)
 
@@ -236,7 +241,7 @@ struct
     fun lexContinue (j) = Stream.delay (fn () => lexContinue' (j))
     and lexContinue' (j) = lexContinue'' (lexInitial (char(j), j+1))
 
-    and lexContinue'' (mt as (token, (i,j))) =
+    and lexContinue'' (mt as (token, P.Reg (i,j))) =
           Stream.Cons (mt, lexContinue (j))
   in
     lexContinue (0)
@@ -312,5 +317,7 @@ struct
        in
 	 Char.isUpper c orelse c = #"_"
       end
+
+  end  (* local ... *)
 
 end;  (* functor Lexer *)
