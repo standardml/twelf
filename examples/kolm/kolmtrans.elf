@@ -59,8 +59,9 @@ not_prop   : prop A -> prop (not A).
 true_prop  : prop true.
 false_prop : prop false.
 
-%theorem exkolm : forall* {A:o} forall {P:prop A} exists {A*:o} {K:kolm A A*} true.
-%prove 2 P (exkolm P A* K).
+%theorem exkolm :  forallG (pi {a:i})
+		   forall {A:o} exists {A*:o} {K:kolm A A*} true.
+%prove 3 A (exkolm A A* K).
 
 existskolm : {A:o} {A*:o} kolm A A* -> type.
 %mode existskolm +A -A* -K.

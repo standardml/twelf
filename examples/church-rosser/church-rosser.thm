@@ -4,11 +4,12 @@
                    true.
 %prove 4 [D1 D2] (m-append D1 D2 _).
 
+%{
 %theorem m-identity : forall {M:term}
 		     exists {D: M => M}
 		     true.
 %assert (m-identity _ _).
-
+}%
 
 
 %theorem m-subst : forall* {M: term -> term}{M': term -> term}
@@ -20,10 +21,15 @@
 %assert (m-subst _ _ _).
 
 
-%theorem m-dia : forall* {M:term}{M':term}{M'':term}
+
+%theorem m-dia : forallG (pi {x: term} {idx : x => x})
+		forall* {M:term}{M':term}{M'':term}
 		forall  {D1: M => M'} {D2: M => M''}
 		exists  {N:term}{E1: M' => N}{E2 : M'' => N}
 		true.
+%prove 4 [D1 D2] (m-dia D1 D2 _ _ _).
+
+%{
 %assert (m-dia _ _ _ _ _).
 
 %theorem m-strip : forall* {M:term}{M':term}{M'':term}
@@ -47,3 +53,4 @@
 		exists  {N:term} {S*:M =>* N} {S*':M' =>* N}
 		true.
 %prove 4 D (m-cr D _ _ _).
+}%

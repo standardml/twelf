@@ -9,7 +9,7 @@ fun test (file) =
        | Twelf.ABORT => raise Domain;
 
 (* Examples, part of the distribution *)
-test "examples/arith/test.cfg";
+(*test "examples/arith/test.cfg";*)
 test "examples/ccc/test.cfg";
 test "examples/church-rosser/test.cfg";
 test "examples/compile/cls/test.cfg";

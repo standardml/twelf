@@ -18,9 +18,9 @@
 % The induction is on the classical natural deduction NK of A.
 
 % Prover error: A proof could not be found
-% %theorem sound_auto : forall* {A:o} {A*:o} forall {NK:nk A} {K:kolm A A*} 
-%                       exists {NJ:nj A*} true.
-% %prove 2 NK (sound NK K NJ).
+%theorem sound_auto : forall* {A:o} {A*:o} forall {NK:nk A} {K:kolm A A*} 
+                      exists {NJ:nj A*} true.
+% %prove 8 NK (sound_auto NK K NJ).
 
 sound : nk A -> kolm A A* -> nj A* -> type.
 %mode sound +NK +K -NJ.
