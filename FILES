@@ -1,14 +1,7 @@
 twelf/Makefile
-# twelf/Makefile.NT
 twelf/README
-# twelf/README-1.2
-# twelf/README.NT
 twelf/bin/.mkexec
 twelf/bin/.heap/README
-# twelf/bin/.twelf-server
-# twelf/bin/.twelf-server.bat
-# twelf/bin/.twelf-sml
-# twelf/bin/.twelf-sml.bat
 twelf/nsis/INSTALL
 twelf/nsis/LICENSE
 twelf/nsis/Makefile
@@ -16,8 +9,8 @@ twelf/nsis/README
 twelf/nsis/README.txt
 twelf/nsis/disabled.bmp
 twelf/nsis/enabled.bmp
-twelf/nsis/mkexec.bat*
-twelf/nsis/run.x86-win32.exe*
+twelf/nsis/mkexec.bat
+twelf/nsis/run.x86-win32.exe
 twelf/nsis/twelf-init.el
 twelf/nsis/twelf.ico
 twelf/nsis/twelf.nsi
@@ -244,6 +237,10 @@ twelf/examples/guide/lists.elf
 twelf/examples/guide/nd.elf
 twelf/examples/guide/sources.cfg
 twelf/examples/guide/test.cfg
+twelf/examples/handbook/README
+twelf/examples/handbook/fol.elf
+twelf/examples/handbook/sources.cfg
+twelf/examples/handbook/test.cfg
 twelf/examples/incll/README
 twelf/examples/incll/cpm-incll.elf
 twelf/examples/incll/cpm-incll.quy
@@ -399,6 +396,10 @@ twelf/src/index/index.fun
 twelf/src/index/index.sig
 twelf/src/index/index.sml
 twelf/src/index/sources.cm
+twelf/src/int-inf/README
+twelf/src/int-inf/int-inf-sig.sml
+twelf/src/int-inf/int-inf.sml
+twelf/src/int-inf/sources.cm
 twelf/src/lambda/README
 twelf/src/lambda/abstract.fun
 twelf/src/lambda/abstract.sig

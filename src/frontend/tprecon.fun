@@ -328,7 +328,7 @@ struct
   (* ------------------------------------------------------------------------ *)
   (* Begin tracing code *)
 
-  val trace = ref true
+  val trace = ref false
 
   fun evarsToString (Xnames) =
       let

@@ -27,6 +27,7 @@ test "examples/cut-elim/test.cfg";
 test "examples/fol/test.cfg";
 (* guide not in test suite, ~.05 secs more *)
 test "examples/guide/test.cfg";
+test "examples/handbook/test.cfg";
 (* incll not in original test suite, ~55secs more *)
 (*test "examples/incll/test.cfg"; *)
 (* kolm not in original test suite *)

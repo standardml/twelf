@@ -2328,11 +2328,11 @@ allows only relations based on subterm ordering.  For example, we cannot
 reason about the length of a list or term.  Moreover, reduction checking
 presupposes that the right side of the reduction predicate corresponds
 to the input arguments and the left side of the predicate corresponds to
-the output arguments.  The declaration @code{%reduces} checks if the specified
-reduction predicate holds for a given program.  Moreover, it checks that
-the program is terminating, i.e. the input arguments are decreasing
-according to the specified order.  The syntax for @code{order} can
-be found in @ref{Termination}.
+the output arguments.  The declaration @code{%reduces} checks if the
+specified reduction predicate holds for a given program.  To check
+whether the predicate also terminates, one needs to check termination of
+the predicate separately.  The syntax for @code{order} can be found in
+@ref{Termination}.
 
 @example
 @group
@@ -2347,6 +2347,9 @@ decl ::= @dots{}
 @end group
 @end example
 
+A @code{pdecl} requires that both orders specified are of the same
+variety.  For example, if one is lexicographic, the other one must be as
+well.
 
 For example,
 
@@ -2606,9 +2609,6 @@ Horn logic.
 @noindent
 @strong{Disclaimer:} The theorem proving component of Twelf is in an
 even more experimental stage and currently under active development.
-There are two main restrictions which limit its utility:
-(1) it only support reasoning about closed objects, and (2)
-it cannot apply lemmas automatically.
 
 Nonetheless, it can prove a number of interesting examples automatically
 which illustrate our approach the meta-theorem proving which is
