@@ -354,39 +354,28 @@ struct
 
     (* wfRCallpats
        well-formed call pattern in a reduction declaration 
+       pattern does not need to be moded
+       Tue Apr 30 10:32:31 2002 -bp 
      *)
+
     fun wfRCallpats (L0, C0, r) =
 	let
 	  fun makestring nil = ""
 	    | makestring (s :: nil) = s
 	    | makestring (s :: L) = s ^ " " ^ (makestring L)
 
-	  fun exists' (x, nil, _) = false
-	    | exists' (x, NONE :: L, M.Mapp (_, mS)) = 
-		exists' (x, L, mS)
-	    | exists' (x, SOME y :: L, M.Mapp (M.Marg (mode, _), mS)) =
-	      if x = y then 		 
-		((* if mode = Mo then *)
-		 if (mode = M.Plus) orelse (M.Minus = mode) then
-		       true
-		   else 
-		       error (r, "Expected " ^ x ^ " to have " ^ " mode + or mode -"))
-	      else exists' (x, L, mS)
-
-	  (* skip (i, x, P, mS, Mode)  ignores first i argument in modeSpine mS,
-	     then returns true iff x occurs in argument list P
-	     Effect: raises Error if position of x is not input (+).
-          *)
-	  fun skip (0, x, P, mS) = exists' (x, P, mS)
-	    | skip (k, x, P, M.Mapp (_, mS)) = skip (k-1, x, P, mS)
+	  fun exists' (x, nil) = false
+	    | exists' (x, NONE :: L) = 
+		exists' (x, L)
+	    | exists' (x, SOME y :: L) =
+	      if x = y 
+		then true
+	      else exists' (x, L)
 
 	  fun delete (x, (aP as (a, P)) :: C) = 
-	      (case M.modeLookup a 
-		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
-				      ^ " to be moded")
-	          | SOME mS => if skip (I.constImp a, x, P, mS)
-				 then C
-			       else aP :: delete (x, C))
+	      (if exists' (x, P)
+		 then C
+	       else aP :: delete (x, C))
 	    | delete (x, nil) = error (r, "Variable " ^ x ^ " does not occur as argument")
 
 	  fun wfCallpats' (nil, nil) = ()
@@ -397,7 +386,7 @@ struct
 		          ^ ") does not cover all call patterns")
 	in
 	  wfCallpats' (L0, C0)
-	end
+	end 
 
  (* wfred ((Red(Pred,O.O'), C), (r, rs)) = ()
 
