@@ -12,12 +12,6 @@ i1 : integer N
        <- 0 > N
        <- split (~ N) 10 _ 0.
 
-%query 1 *
-integer ~34.
-
-%query 0 *
-integer 34/7.
-
 %% floor for residuals of splits
 floor_residual : rational -> rational -> type.
 
@@ -63,15 +57,3 @@ cl1 : ceiling X (~ (N + R))
         <- split (~ X) 10 L R'
         <- split N 10 L 0
         <- floor_residual R' R.
-
-%query 1 *
-floor ~15/4 N.
-
-%query 1 *
-floor 15/4 N.
-
-%query 1 *
-ceiling ~15/4 N.
-
-%query 1 *
-ceiling 15/4 N.

@@ -13,9 +13,6 @@ cont1 : continued_fraction Q (A , L)
           <- 1 == R * (Q - A)
           <- continued_fraction R L.
 
-%query 1 *
-continued_fraction 3/1999 L.
-
 %% numerators and denominators of convergents
 numerators   : list -> list -> type.
 denominators : list -> list -> type.
@@ -32,10 +29,3 @@ num0 : numerators L PL
 
 den0 : denominators L QL
          <- num_den_iterator L 0 1 QL.
-
-%query 1 *
-numerators (0 , 666 , 3 , nil) NL.
-
-%query 1 *
-denominators (0 , 666 , 3 , nil) DL.
-

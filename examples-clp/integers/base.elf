@@ -18,9 +18,6 @@ d1 : digit N B
        <- B > N
        <- digit (N - 1) B.
 
-%query 16 *
-digit N 16.
-
 %% lists of numbers
 list : type.
 
@@ -58,6 +55,3 @@ represent : rational -> rational -> list -> type.
 
 r0 : represent N B L
        <- split N B L 0.
-
-%query 1 *
-represent 32767 8 L.
