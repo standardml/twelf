@@ -19,8 +19,18 @@ struct
       | headToString (G, I.BVar(k)) = N.bvarName (G, k)
     fun expToString (GU) = P.expToString (GU) ^ ". "
     fun decToString (GD) = P.decToString (GD) ^ ". "
+    fun printExp (GU) = print (P.expToString GU)
 
     fun newline () = print "\n"
+
+    fun printCtx (I.Null) = print "--- no hypotheses or parameters ---\n"
+      | printCtx (I.Decl(I.Null, D)) =
+          (print (decToString (I.Null, D));
+	   newline ())
+      | printCtx (I.Decl(G, D)) =
+	  (printCtx (G);
+	   print (decToString (G, D));
+	   newline ())
 
     datatype 'a Spec =
         None
@@ -44,7 +54,7 @@ struct
     fun toCids (nil) = nil
       | toCids (name::names) =
         (case N.nameLookup name
-	   of NONE => (print ("Warning: ignoring undeclared constant " ^ name ^ "\n");
+	   of NONE => (print ("Trace warning: ignoring undeclared constant " ^ name ^ "\n");
 		       toCids names)
             | SOME (cid) => cid::toCids names)
 
@@ -57,24 +67,35 @@ struct
       | initBreak (All) = breakTSpec := All
 
     fun printHelp () =
-        print "<newline> - continue\n\
-\n - next (step from here)\n\
-\r - run\n\
-\t - trace all\n\
-\u - untrace all\n\
+        print
+"<newline> - continue --- execute with current settings\n\
+\n - next --- take a single step\n\
+\r - run --- remove all breakpoints and continue\n\
+\t - trace --- trace all events\n\
+\u - untrace --- trace no events\n\
+\h - hypotheses --- show current hypotheses\n\
+\g - goal --- show current goal\n\
 \? for help"
 
-    fun breakAction () =
+    val currentGoal = ref (I.Uni (I.Type)) (* dummy initialization *)
+
+    fun breakAction (G) =
         (print " ";
 	 case String.sub (TextIO.inputLine (TextIO.stdIn), 0)
 	     of #"\n" => ()
 	      | #"n" => (breakTSpec := All)
               | #"r" => (breakTSpec := None)
-	      | #"t" => (traceTSpec := All; breakAction ())
-	      | #"u" => (traceTSpec := None; breakAction ())
-	      | #"?" => (printHelp (); breakAction ())
+	      | #"t" => (traceTSpec := All;
+			 print "% Now tracing all";
+			 breakAction (G))
+	      | #"u" => (traceTSpec := None;
+			 print "% Now tracing none";
+			 breakAction (G))
+	      | #"h" => (printCtx G; breakAction (G))
+              | #"g" => (printExp (G, !currentGoal); breakAction (G))
+	      | #"?" => (printHelp (); breakAction (G))
 	      | _ => (print "unrecognized command (? for help)";
-		      breakAction ()))
+		      breakAction (G)))
 
     type goalTag = int option
 
@@ -95,87 +116,101 @@ struct
 	 initTag ())
 
     datatype Event =
-      AtomGoal of unit -> IntSyn.dctx * IntSyn.Exp
-    | ImplGoal of unit -> IntSyn.dctx * IntSyn.Exp
-    | AllGoal of unit -> IntSyn.dctx * IntSyn.Exp
+      AtomGoal of IntSyn.Exp
+    | ImplGoal of IntSyn.Exp
+    | AllGoal of IntSyn.Exp
 
-    | IntroHyp of unit -> IntSyn.dctx * IntSyn.Dec
-    | DischargeHyp of unit -> IntSyn.dctx * IntSyn.Dec
+    | IntroHyp of IntSyn.Head * IntSyn.Dec
+    | DischargeHyp of IntSyn.Head * IntSyn.Dec
 
-    | IntroParm of unit -> IntSyn.dctx * IntSyn.Dec
-    | DischargeParm of unit -> IntSyn.dctx * IntSyn.Dec
+    | IntroParm of IntSyn.Head * IntSyn.Dec
+    | DischargeParm of IntSyn.Head * IntSyn.Dec
 
-    | Unify of unit -> IntSyn.Eqn (* goal == clause head *)
-    | Resolved of IntSyn.dctx * IntSyn.Head (* resolved with clause H *)
-    | Subgoal of IntSyn.dctx * IntSyn.Head * (unit -> int) (* nth subgoal of H : _ *)
-    | IntroEVar of unit -> IntSyn.dctx * IntSyn.Exp * IntSyn.Exp (* X : V *)
+    | Unify of IntSyn.Exp * IntSyn.Exp	(* goal == clause head *)
+    | Resolved of IntSyn.Head * IntSyn.Head (* resolved with clause c, fam a *)
+    | Subgoal of (IntSyn.Head * IntSyn.Head) * (unit -> int) (* clause c, fam a, nth subgoal *)
+    | IntroEVar of IntSyn.Exp
 
-    | SolveGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
-    | RetryGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
-    | FailGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
+    | SolveGoal of goalTag * IntSyn.Head * IntSyn.Exp
+    | RetryGoal of goalTag * IntSyn.Head * IntSyn.Exp
+    | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 
-    | TryClause of unit -> IntSyn.dctx * IntSyn.Head
-    | FailClauseShallow of unit -> IntSyn.dctx * IntSyn.Head
-    | FailClauseDeep of unit -> IntSyn.dctx * IntSyn.Head 
+    | TryClause of IntSyn.Head
+    | FailClauseShallow of IntSyn.Head
+    | FailClauseDeep of IntSyn.Head 
    
-    fun eventToString (IntroHyp (msg)) =
-        "% Introducing hypothesis\n" ^ decToString (msg ())
-      | eventToString (DischargeHyp (msg)) =
-        (case msg ()
-	   of (G, I.Dec(SOME(x), _)) => "% Discharging hypothesis " ^ x)
-      | eventToString (IntroParm (msg)) =
-	"% Introducing parameter\n" ^ decToString (msg ())
-      | eventToString (DischargeParm (msg)) =
-	(case msg ()
-	   of (G, I.Dec(SOME(x), _)) => "% Discharging parameter " ^ x)
+    fun eventToString (G, IntroHyp (_, D)) =
+        "% Introducing hypothesis\n" ^ decToString (G, D)
+      | eventToString (G, DischargeHyp (_, I.Dec (SOME(x), _))) =
+	"% Discharging hypothesis " ^ x
+      | eventToString (G, IntroParm (_, D)) =
+	"% Introducing parameter\n" ^ decToString (G, D)
+      | eventToString (G, DischargeParm (_, I.Dec (SOME(x), _))) =
+	"% Discharging parameter " ^ x
 
-      | eventToString (Resolved (G, H)) =
-        "% Resolved with clause " ^ headToString (G, H)
-      | eventToString (Subgoal (G, H, msg)) =
-        "% Solving subgoal number (" ^ Int.toString (msg ()) ^ ") of clause "
-	^ headToString (G, H)
+      | eventToString (G, Resolved (Hc, Ha)) =
+        "% Resolved with clause " ^ headToString (G, Hc)
+      | eventToString (G, Subgoal ((Hc, Ha), msg)) =
+        "% Solving subgoal (" ^ Int.toString (msg ()) ^ ") of clause "
+	^ headToString (G, Hc)
 
-      | eventToString (SolveGoal (SOME(tag), _, msg)) =
-	"% Goal " ^ Int.toString tag ^ ":\n" ^ expToString (msg ())
-      | eventToString (RetryGoal (SOME(tag), _, msg)) =
-	"% Retrying goal " ^ Int.toString tag ^ ":\n" ^ expToString (msg ())
-      | eventToString (FailGoal (SOME(tag), _, msg)) =
+      | eventToString (G, SolveGoal (SOME(tag), _, V)) =
+	"% Goal " ^ Int.toString tag ^ ":\n" ^ expToString (G, V)
+      | eventToString (G, RetryGoal (SOME(tag), _, V)) =
+	"% Retrying goal " ^ Int.toString tag ^ ":\n" ^ expToString (G, V)
+      | eventToString (G, FailGoal (SOME(tag), _, V)) =
         "% Failed goal " ^ Int.toString tag
 
-    fun traceEvent (e) = print (eventToString (e))
+    fun traceEvent (G, e) = print (eventToString (G, e))
 
     fun monitorHead (cids, I.Const(c)) = List.exists (fn c' => c = c') cids
       | monitorHead (cids, I.BVar(k)) = false
 
-    fun monitorEvent (cids, SolveGoal (_, H, msg)) =
+    fun monitorEvent (cids, IntroHyp (H, _)) =
           monitorHead (cids, H)
-      | monitorEvent (cids, RetryGoal (_, H, msg)) =
+      | monitorEvent (cids, DischargeHyp (H, _)) =
 	  monitorHead (cids, H)
-      | monitorEvent (cids, FailGoal (_, H, msg)) =
+      | monitorEvent (cids, IntroParm (H, _)) =
+          monitorHead (cids, H)
+      | monitorEvent (cids, DischargeParm (H, _)) =
 	  monitorHead (cids, H)
-      | monitorEvent (cids, Resolved (G, H)) =
+      | monitorEvent (cids, SolveGoal (_, H, _)) =
+          monitorHead (cids, H)
+      | monitorEvent (cids, RetryGoal (_, H, _)) =
 	  monitorHead (cids, H)
-      | monitorEvent (cids, Subgoal (G, H, msg)) = 
+      | monitorEvent (cids, FailGoal (_, H, _)) =
 	  monitorHead (cids, H)
+      | monitorEvent (cids, Resolved (Hc, Ha)) =
+	  monitorHead (cids, Hc) orelse monitorHead (cids, Ha)
+      | monitorEvent (cids, Subgoal ((Hc, Ha), _)) = 
+	  monitorHead (cids, Hc) orelse monitorHead (cids, Ha)
       | monitorEvent _ = false
 
-    fun monitorBreak (None, e) = false
-      | monitorBreak (Some (cids), e) =
+    fun maintain (G, SolveGoal (_, _, V)) = (currentGoal := V)
+      | maintain (G, RetryGoal (_, _, V)) = (currentGoal := V)
+      | maintain (G, FailGoal (_, _, V)) = (currentGoal := V)
+      | maintain _ = ()
+
+    fun monitorBreak (None, G, e) = false
+      | monitorBreak (Some (cids), G, e) =
         if monitorEvent (cids, e)
-	  then (traceEvent e; breakAction (); true)
+	  then (traceEvent (G, e); breakAction (G); true)
 	else false
-      | monitorBreak (All, e) =
-	(traceEvent e; breakAction (); true)
+      | monitorBreak (All, G, e) =
+	(traceEvent (G, e); breakAction (G); true)
 
-    fun monitorTrace (None, e) = ()
-      | monitorTrace (Some (cids), e) =
-        if monitorEvent (cids, e) then (traceEvent e; newline ()) else ()
-      | monitorTrace (All, e) = (traceEvent e; newline ())
+    fun monitorTrace (None, G, e) = ()
+      | monitorTrace (Some (cids), G, e) =
+        if monitorEvent (cids, e)
+	  then (traceEvent (G, e); newline ()) 
+	else ()
+      | monitorTrace (All, G, e) = (traceEvent (G, e); newline ())
 
-    fun signal (e) =
-        if monitorBreak (!breakTSpec, e)
+    fun signal (G, e) =
+        (maintain (G, e);		(* maintain internal state *)
+	 if monitorBreak (!breakTSpec, G, e)
 	  then ()
-	else monitorTrace (!traceTSpec, e)
+	else monitorTrace (!traceTSpec, G, e))
 
     fun showSpec (msg, None) = print ("No " ^ msg ^ "\n")
       | showSpec (msg, Some(names)) =

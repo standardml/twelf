@@ -8,30 +8,30 @@ sig
   val tagGoal : unit -> goalTag
 
   datatype Event =
-    AtomGoal of unit -> IntSyn.dctx * IntSyn.Exp
-  | ImplGoal of unit -> IntSyn.dctx * IntSyn.Exp
-  | AllGoal of unit -> IntSyn.dctx * IntSyn.Exp
+    AtomGoal of IntSyn.Exp
+  | ImplGoal of IntSyn.Exp
+  | AllGoal of IntSyn.Exp
 
-  | IntroHyp of unit -> IntSyn.dctx * IntSyn.Dec
-  | DischargeHyp of unit -> IntSyn.dctx * IntSyn.Dec
+  | IntroHyp of IntSyn.Head * IntSyn.Dec
+  | DischargeHyp of IntSyn.Head * IntSyn.Dec
 
-  | IntroParm of unit -> IntSyn.dctx * IntSyn.Dec
-  | DischargeParm of unit -> IntSyn.dctx * IntSyn.Dec
+  | IntroParm of IntSyn.Head * IntSyn.Dec
+  | DischargeParm of IntSyn.Head * IntSyn.Dec
 
-  | Unify of unit -> IntSyn.Eqn (* goal == clause head *)
-  | Resolved of IntSyn.dctx * IntSyn.Head (* resolved with clause H *)
-  | Subgoal of IntSyn.dctx * IntSyn.Head * (unit -> int) (* nth subgoal of H : _ *)
-  | IntroEVar of unit -> IntSyn.dctx * IntSyn.Exp * IntSyn.Exp (* X : V *)
+  | Unify of IntSyn.Exp * IntSyn.Exp	(* goal == clause head *)
+  | Resolved of IntSyn.Head * IntSyn.Head (* resolved with clause c, fam a *)
+  | Subgoal of (IntSyn.Head * IntSyn.Head) * (unit -> int) (* clause c, fam a, nth subgoal *)
+  | IntroEVar of IntSyn.Exp
 
-  | SolveGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
-  | RetryGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
-  | FailGoal of goalTag * IntSyn.Head * (unit -> IntSyn.dctx * IntSyn.Exp)
+  | SolveGoal of goalTag * IntSyn.Head * IntSyn.Exp
+  | RetryGoal of goalTag * IntSyn.Head * IntSyn.Exp
+  | FailGoal of goalTag * IntSyn.Head * IntSyn.Exp
 
-  | TryClause of unit -> IntSyn.dctx * IntSyn.Head
-  | FailClauseShallow of unit -> IntSyn.dctx * IntSyn.Head
-  | FailClauseDeep of unit -> IntSyn.dctx * IntSyn.Head 
+  | TryClause of IntSyn.Head
+  | FailClauseShallow of IntSyn.Head
+  | FailClauseDeep of IntSyn.Head 
 
-  val signal : Event -> unit
+  val signal : IntSyn.dctx * Event -> unit
   val init : unit -> unit		(* initialize trace, break and tag *)
 
   (* User interface *)

@@ -60,29 +60,28 @@ struct
               any effect  sc M  might have
   *)
   fun solve ((Atom(p), s), dProg as (G, dPool), sc) =
-      ((* traceMsg (fn () => "Solving atomic goal\n");
-       traceInfo (fn () => P.expToString (G, I.EClo(p,s))); *)
-       matchAtom ((p,s), dProg, sc))
+      matchAtom ((p,s), dProg, sc)
     | solve ((Impl(r, A, a, g), s), (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decName (G, I.Dec(NONE, I.EClo(A,s)))
-	val _ = T.signal (T.IntroHyp (fn () => (G, D')))
+	val _ = T.signal (G, T.IntroHyp (I.Const(a), D'))
       in
 	solve ((g, I.dot1 s), (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, a))),
-	       (fn M => (T.signal (T.DischargeHyp (fn () => (G, D')));
+	       (fn M => (T.signal (G, T.DischargeHyp (I.Const(a), D'));
 			 sc (I.Lam (D', M)))))
       end
     | solve ((All(D, g), s), (G, dPool), sc) =
       let
-	val D' as I.Dec(SOME(x),_) = N.decName (G, I.decSub (D, s))
-	val _ = T.signal (T.IntroParm (fn () => (G, D')))
+	val D' as I.Dec(SOME(x),V) = N.decName (G, I.decSub (D, s))
+	val a = I.targetFam V
+	val _ = T.signal (G, T.IntroParm (I.Const(a), D'))
       in
 	solve ((g, I.dot1 s), (I.Decl(G, D'), I.Decl(dPool, NONE)),
-	       (fn M => (T.signal (T.DischargeParm (fn () => (G, D')));
+	       (fn M => (T.signal (G, T.DischargeParm (I.Const(a),  D'));
 			 sc (I.Lam (D', M)))))
       end
 
-  (* rsolve ((p,s'), (r,s), dProg, H, sc) = ()
+  (* rsolve ((p,s'), (r,s), dProg, (Hc, Ha), sc) = ()
      Invariants: 
        dProg = (G, dPool) where G ~ dPool
        G |- s : G'
@@ -91,43 +90,40 @@ struct
        G'' |- p : H @ S' (mod whnf)
        if G |- S : r[s]
        then sc S is evaluated
-       H is the clause which generated this residual goal
+       Hc is the clause which generated this residual goal
+       Ha is the target family of p and r (which must be equal)
      Effects: instantiation of EVars in p[s'], r[s], and dProg
               any effect  sc S  might have
   *)
-  and rSolve (ps', (Eq(Q), s), (G, dPool), H, sc) =
-     ((* traceMsg (fn () => "Trying clause ");
-      traceInfo (fn () => H);
-      traceMsg (fn () => "Unifying\n");
-      traceInfo (fn () => P.expToString (G, I.EClo ps') ^ " == "
-		 ^ P.expToString (G, I.EClo (Q, s))); *)
+  and rSolve (ps', (Eq(Q), s), (G, dPool), HcHa, sc) =
+     ((* 
+       T.signal (G, T.TryClause (H));
+       T.signal (G, T.Unify (I.EClo ps', I.EClo (Q, s)));
+       *)
       if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
-	then (T.signal (T.Resolved (G, H));
+	then (T.signal (G, T.Resolved HcHa);
 	      sc I.Nil;			(* call success continuation *)
 	      true)			(* deep backtracking *)
-      else ((* traceMsg (fn () => "Failed\n"); *)
-	    false)			(* shallow backtracking *)
+      else false			(* shallow backtracking *)
       )
-    | rSolve (ps', (And(r, A, g), s), dProg as (G, dPool), H, sc) =
+    | rSolve (ps', (And(r, A, g), s), dProg as (G, dPool), HcHa, sc) =
       let
 	(* is this EVar redundant? -fp *)
 	val X = I.newEVar (G, I.EClo(A, s))
       in
-        rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, H,
+        rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, HcHa,
 		(fn S => 
-		 (T.signal (T.Subgoal (G, H, fn () => subgoalNum S));
+		 (T.signal (G, T.Subgoal (HcHa, fn () => subgoalNum S));
 		  solve ((g, s), dProg,
 			 (fn M => 
 			  (sc (I.App (M, S))))))))
       end
-    | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg as (G, dPool), H, sc) =
+    | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg as (G, dPool), HcHa, sc) =
       let
 	val X = I.newEVar (G, I.EClo (A,s))
-	(* val _ = traceMsg (fn () => "Introducing new EVar ")*)
-	(* val _ = traceInfo (fn () => N.evarName (G, X)
-			   ^ " : " ^ P.expToString (G, I.EClo (A, s))) *)
+	(* T.signal (G, T.IntroEVar (X)) *)
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, H,
+	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, HcHa,
 		(fn S => sc (I.App(X,S))))
       end
 
@@ -144,37 +140,32 @@ struct
      This first tries the local assumptions in dProg then
      the static signature.
   *)
-  and matchAtom (ps' as (I.Root(H as I.Const(a),_),_), dProg as (G,dPool), sc) =
+  and matchAtom (ps' as (I.Root(Ha as I.Const(a),_),_), dProg as (G,dPool), sc) =
       let
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
            with c1.
         *)
 	val tag = T.tagGoal ()
-	val _ = T.signal (T.SolveGoal (tag, H, (fn () => (G, I.EClo ps'))))
+	val _ = T.signal (G, T.SolveGoal (tag, Ha, I.EClo ps'))
 	fun matchSig nil =
-	    (T.signal (T.FailGoal (tag, H, (fn () => (G, I.EClo ps'))));
+	    (T.signal (G, T.FailGoal (tag, Ha, I.EClo ps'));
 	     ())			(* return indicates failure *)
-	  | matchSig ((H as I.Const c)::sgn') =
+	  | matchSig ((Hc as I.Const c)::sgn') =
 	    let
 	      val SClause(r) = sProgLookup c
+	      (* val _ = T.signal (G, T.TryClause (Hc)); *)
 	    in
 	      (* trail to undo EVar instantiations *)
 	      if
-		Trail.trail
-		(fn () =>
-		 ((* traceMsg (fn () => "Trying clause ");
-		   traceInfo (fn () => N.constName c); *)
-		  rSolve (ps', (r, I.id), dProg, H,
-			  (fn S =>
-			   ((* traceMsg (fn () => "Succeeded clause ");
-			     traceInfo (fn () => N.constName c); *)
-			    sc (I.Root(H, S)))))
-		(* traceMsg (fn () => "Failed clause ");
-		 traceInfo (fn () => N.constName c) *) ))
+		Trail.trail (fn () =>
+			     rSolve (ps', (r, I.id), dProg, (Hc, Ha),
+				     (fn S => sc (I.Root(Hc, S)))))
 		then (* deep backtracking *)
-		  T.signal (T.RetryGoal (tag, H, (fn () => (G, I.EClo ps'))))
-	      else (); (* shallow backtracking *)
+		  (* T.signal (G, T.FailClauseDeep (Hc)); *)
+		  T.signal (G, T.RetryGoal (tag, Ha, I.EClo ps'))
+	      else (* T.signal (G, T.FailClauseShallow (Hc)); *)
+		  (); (* shallow backtracking *)
 	      matchSig sgn'
 	    end
 
@@ -189,20 +180,17 @@ struct
 	  | matchDProg (I.Decl (dPool', SOME(r, s, a')), k) =
 	    if a = a'
 	      then (* trail to undo EVar instantiations *)
-		(if
-		   Trail.trail
-		   (fn () =>
-		    ((* traceMsg (fn () => "Trying hypothesis ");
-		      traceInfo (fn () => N.bvarName (G, k)); *)
-		     rSolve (ps', (r, I.comp(s, I.Shift(k))), dProg, I.BVar(k),
-			     (fn S => ((* traceMsg (fn () => "Succeeded hypothesis ");
-					traceInfo (fn () => N.bvarName (G, k)); *)
-				       sc (I.Root(I.BVar(k), S)))))
-		   (* traceMsg (fn () => "Failed hypothesis ");
-		    traceInfo (fn () => N.bvarName (G, k)); *)))
+		((* T.signal (G, T.TryClause (I.BVar(k))); *)
+		 if
+		   Trail.trail (fn () =>
+				rSolve (ps', (r, I.comp(s, I.Shift(k))),
+					dProg, (I.BVar(k), Ha),
+					(fn S => sc (I.Root(I.BVar(k), S)))))
 		   then (* deep backtracking *)
-		     T.signal (T.RetryGoal (tag, H, (fn () => (G, I.EClo ps'))))
-		 else ();
+		     (* T.signal (G, T.FailClauseDeep (I.BVar(k))) *)
+		     T.signal (G, T.RetryGoal (tag, Ha, I.EClo ps'))
+		 else (* T.signal (G, T.FailClauseShallow (Hc)); *)
+		   (); (* shallow backtracking *)
 		 matchDProg (dPool', k+1))
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =
@@ -211,11 +199,8 @@ struct
 	matchDProg (dPool, 1)
       end
 
-
   val solve = fn (gs, dProg, sc) =>
                  (T.init (); solve (gs, dProg, sc))
-  val rSolve = fn (ps', rs, dProg, sc) =>
-                  (rSolve (ps', rs, dProg, I.BVar 0, sc); ())
   end (* local ... *)
 
 end; (* functor TMachine *)
