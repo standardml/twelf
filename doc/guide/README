@@ -18,6 +18,10 @@ To copy the resulting documentation to the right locations, type
 
   make install
 
+To copy the resulting documentation to the ~twelf/www type
+
+  make install-www
+
 To clean this directory to sources only:
 
   make clean

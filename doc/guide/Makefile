@@ -49,17 +49,27 @@ install : ;
 	cp -p twelf.dvi ../dvi/
 	@echo "Copying ps file"
 	cp -p twelf.ps ../ps/
+	@echo "Copying ps.gz file"
+	gzip -c twelf.ps > twelf.ps.gz
+	@echo "Copying pdf file"
+	@echo "Is the PDF file really up-to-date?"
+	cp -p twelf.pdf ../pdf/
+	@echo "Copying html files"
+	cp -p twelf_*.html ../html/
+	@echo "Consider install-www for release of a new version"
+
+install-www : ;
+	@echo "Copying ps file"
 	cp -p twelf.ps /afs/cs/project/twelf/www/guide/
 	@echo "Copying ps.gz file"
 	gzip -c twelf.ps > twelf.ps.gz
 	cp -p twelf.ps.gz /afs/cs/project/twelf/www/guide/
 	@echo "Copying pdf file"
 	@echo "Is the PDF file really up-to-date?"
-	cp -p twelf.pdf ../pdf/
 	cp -p twelf.pdf /afs/cs/project/twelf/www/guide/
 	@echo "Copying html files"
-	cp -p twelf_*.html ../html/
 	cp -p twelf_*.html /afs/cs/project/twelf/www/guide/
+	@echo "Please edit ~twelf/www/index.html as necessary"
 
 clean : ;
 	rm -f twelf.dvi;
