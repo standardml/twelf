@@ -694,16 +694,16 @@ struct
       | compare' (Index (k1, NONE, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
-	    | EQUAL => LESS
+	    | EQUAL => GREATER
 	    | GREATER => GREATER)
       | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
-	    | EQUAL => GREATER
+	    | EQUAL => LESS
 	    | GREATER => GREATER)
       | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
-        (case (Int.compare (c1*m2, c2*m1), Int.compare (i1, i2), 
-	       Int.compare (k2, k1), Int.compare (p1, p2))
+        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (i1, i2), 
+	       Int.compare (p1, p2))
 	   of (EQUAL, EQUAL, EQUAL, EQUAL) => EQUAL
 	    | (EQUAL, EQUAL, EQUAL, result) => result
 	    | (EQUAL, EQUAL, result, _) => result
@@ -775,16 +775,18 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
+	  fun realFmt (r) = Real.fmt (StringCvt.FIX (SOME(2))) r
+
 	  fun indexToString (Index (sd, NONE, c, m, p)) = 
-	        "NI (c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
-		(Real.toString (ratio (c, m))) ^ 
-		", i=. , sd=" ^ (Int.toString sd) ^ 
+	        "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
+		(realFmt (ratio (c, m))) ^ 
+		", ind=., sd=" ^ (Int.toString sd) ^ 
 		", p=" ^ (Int.toString p) ^ ")"
 
 	    | indexToString (Index (sd, SOME idx , c, m, p)) = 
-		"I (c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
-		(Real.toString (ratio (c, m))) ^ 
-		", i=" ^ (Int.toString idx) ^ 
+		"(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
+		(realFmt (ratio (c, m))) ^ 
+		", ind=" ^ (Int.toString idx) ^ 
 		", sd=" ^ (Int.toString sd) ^ 
 		", p=" ^ (Int.toString p) ^ ")"
 		
@@ -794,8 +796,8 @@ struct
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
 	  "Splitting : " ^ Print.decToString (G, I.ctxDec (G, i)) ^
-	  " (" ^ (indexToString I) ^ 
-	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ")"
+	  " " ^ (indexToString I) ^ 
+	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ""
 	end
 
   in
