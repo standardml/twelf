@@ -60,11 +60,11 @@ struct
 
   (* Wed Mar 13 10:27:00 2002 -bp  *)
   (* should probably go to intsyn.fun *)
-  fun compose'(IntSyn.Null, G) = G
-    | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+  fun compose (G, IntSyn.Null) = G
+    | compose (G, IntSyn.Decl(G', D)) = IntSyn.Decl(compose(G, G'), D)
 
-  fun shift (IntSyn.Null, s) = s
-    | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
+  fun shiftSub (IntSyn.Null, s) = s
+    | shiftSub (IntSyn.Decl(G, D), s) = I.dot1 (shiftSub (G, s))
                               
   (* solve' ((g, s), dp, sc, bt) = ()
      Invariants:
@@ -152,8 +152,8 @@ struct
       (if Assign.solveCnstr cnstr then sc () else ())
     | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc, bt) =
       let
-	val G'' = compose' (G', G)
-	val s' = shift (G', s)
+	val G'' = compose (G, G')
+	val s' = shiftSub (G', s)
       in 
 	if Assign.unifiable (G'', (N, s'), (e1, s'))
 	then aSolve ((eqns, s), dp, cnstr, sc, bt)

@@ -121,7 +121,10 @@ struct
 	 else 
 	   collectSpine (S, K', Vars', depth)
        end
-
+     | collectExp (U as I.Root(I.Def k, S), K, Vars, depth) = 
+        (* expand definitions and collect duplicates; 
+	   this is expensive Tue Jun 18 13:17:17 2002 -bp *)
+        collectExp (Whnf.normalize(Whnf.whnfExpandDef (U, I.id)), K, Vars, depth)
      (* h is either const, skonst or def *)
      | collectExp (I.Root(h, S), K, Vars, depth) =   
          collectSpine (S, K, Vars, depth)
@@ -200,8 +203,6 @@ struct
 	 (left, Vars, h, false)
      | linearHead(G, (h as I.Const k), S, left, Vars, depth, total) = 
 	 (left, Vars, h, false)
-     | linearHead(G, (h as I.Def k), S, left, Vars, depth, total) = 
-	 (left, Vars, h, false)
      (*
      | linearHead(G, (h as I.NSDef k), s, S, left, Vars, depth, total) = 
 	 (left, Vars, h, false)
@@ -211,6 +212,7 @@ struct
 
      | linearHead(G, (h as I.Skonst k) , S, left, Vars, depth, total) = 
 	 (left, Vars, h, false)
+     (* Def cannot occur *)
 
   (* linearExp (Gl, U, left, Vars, depth, total, eqns) = (left', Vars', N, Eqn)
 
@@ -223,7 +225,15 @@ struct
 
      "For any U', U = U' iff (N = U' and Eqn)"
   *)
-   fun linearExp (Gl, U as I.Root(h, S), left, Vars, depth, total, eqns) = 
+   fun linearExp (Gl, U as I.Root(h as I.Def k, S), left, Vars, depth, total, eqns) = 
+       (* expand definitions; this is expensive Tue Jun 18 13:17:36 2002 -bp  *)     
+       let
+	 val U = Whnf.normalize(Whnf.whnfExpandDef (I.Root(h, S), I.id))
+       in 
+	 linearExp(Gl, U, left, Vars, depth, total, eqns) 
+       end 
+
+     | linearExp (Gl, U as I.Root(h, S), left, Vars, depth, total, eqns) = 
        let
 	 val (left', Vars', h', replaced) =  linearHead (Gl, h, S, left, Vars, depth, total)
        in 
@@ -303,15 +313,14 @@ struct
 	     to all declaratons.
 	     Fri May  3 19:49:45 2002 -fp
 	  *)
-	  (*
+	  
 	  (if (!Global.chatter) >= 6 then
 	     (print ("\nClause Eqn" );
 	      print (CPrint.clauseToString "\t" (G, r));	 
 	      print "\n";
 	      print ("Clause orig \t" ^ Print.expToString(G, R) ^ "\n"))
 	   else 
-	     ());
-	  *)
+	     ());	  
 	     r
 	end
 

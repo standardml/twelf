@@ -53,7 +53,6 @@ sig
 
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
-  | NVar  of int			(*     | n                -bp *)
   | Const of cid			(*     | c                    *)
   | Proj  of Block * int		(*     | #k(b)                *)
   | Skonst of cid			(*     | c#                   *)
@@ -74,7 +73,6 @@ sig
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
   | Exp of Exp				(*     | U                    *)
-  | Axp of Exp				(*     | U                    *)
   | Block of Block			(*     | _x                   *)
   | Undef				(*     | _                    *)
 

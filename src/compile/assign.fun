@@ -149,6 +149,7 @@ struct
         (Unify.unifiable(G, (U1, id), (U2, id)) andalso solveCnstr Cnstr)
 	
     fun unifyW (G, (Xs1 as AVar(r as ref NONE), s), Us2) = 
+        (* s = id *)
           r := SOME(EClo(Us2))
       | unifyW (G, Xs1, Us2) = 
 	  (* Xs1 should not contain any uninstantiated AVar anymore *)
