@@ -36,7 +36,7 @@ twelf-server: ;
 	@echo "Twelf $(version): Server"
 	@echo "*************************************************"
 	$(sml) mlton/twelf-server.cm ;
-	mv twelf-server bin/$(twelfserver) ;
+	mv mlton/twelf-server bin/$(twelfserver) ;
 
 twelf-sml: ; 
 	@echo "*************************************************"
