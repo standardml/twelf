@@ -580,6 +580,7 @@ struct
 			        | _ => raise ModeTable.Error "Cannot declare modes for foreign constants")
 			    handle ModeTable.Error (msg) => raise ModeTable.Error (Paths.wrap (r, msg)))
 	          mdecs
+          val _ = List.app (fn mdec => ModeDec.checkPure mdec) mdecs
 	  val _ = List.app (fn (mdec, r) => ModeCheck.checkMode mdec (* exception comes with location *)
 			    handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg))
 	          mdecs
