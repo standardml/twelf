@@ -139,7 +139,16 @@ structure MTPRecursion =
 		structure Print = Print
 		structure FunPrint = FunPrint
 		structure Formatter = Formatter)
-
+structure MTPStrategy = 
+  MTPStrategy (structure MTPGlobal = MTPGlobal
+	       structure StateSyn' = StateSyn
+	       structure MTPrint = MTPrint
+	       structure MTPFilling = MTPFilling
+	       structure MTPSplitting = MTPSplitting
+	       structure MTPRecursion = MTPRecursion
+	       structure Timers = Timers)
+	  
+  
 structure MTProver =
   MTProver (structure FunSyn' = FunSyn
 	    structure StateSyn' = StateSyn
@@ -160,6 +169,7 @@ structure MTPi =
 	structure MTPFilling = MTPFilling
 	structure MTPSplitting = MTPSplitting
 	structure MTPRecursion = MTPRecursion
+	structure MTPStrategy = MTPStrategy
 	structure Names = Names
 	structure Timers = Timers
 	structure Ring = Ring)

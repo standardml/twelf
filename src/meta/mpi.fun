@@ -16,6 +16,8 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 		sharing MTPSplitting.StateSyn = StateSyn'
 	      structure MTPRecursion : MTPRECURSION
 	        sharing MTPRecursion.StateSyn = StateSyn'
+	      structure MTPStrategy : MTPSTRATEGY
+		sharing MTPStrategy.StateSyn = StateSyn'
 	      structure MTPrint : MTPRINT
 		sharing MTPrint.StateSyn = StateSyn'
 	      structure Names : NAMES
@@ -225,13 +227,13 @@ struct
 	end
 
 
-(*
+
     fun solve () = 
 	if empty () then raise Error "Nothing to prove"
 	else 
 	  let 
 	    val S = current ()
-	    val (Open', Solved') = Strategy.run [S]
+	    val (Open', Solved') = MTPStrategy.run [S]
 	      handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		   | MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		   | MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
@@ -243,10 +245,10 @@ struct
 	  in
 	    (menu (); printMenu ())
 	  end
-*)
-(*    fun auto () =
+
+    fun auto () =
 	let 
-	  val (Open', Solved') = Strategy.run (collectOpen ())
+	  val (Open', Solved') = MTPStrategy.run (collectOpen ())
 	    handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)
 		 | MTPFilling.Error s => abort ("Filling Error: " ^ s)
 		 | MTPRecursion.Error s => abort ("Recursion Error: " ^ s)
@@ -258,7 +260,7 @@ struct
 	in
 	  (menu (); printMenu ())
 	end
-*)
+
 
     fun next () = (nextOpen (); menu (); printMenu ())
 
@@ -270,8 +272,8 @@ struct
     val print = printMenu
     val next = next
     val reset = reset
-(*    val solve = solve *)
-(*    val auto = auto *)
+    val solve = solve 
+    val auto = auto
 (*    val extract = extract *)
 (*    val show = show *)
     val undo = undo

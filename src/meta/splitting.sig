@@ -12,5 +12,6 @@ sig
   val expand : StateSyn.State -> operator list 
   val menu : operator -> string
   val apply : operator -> StateSyn.State list
+  val index : operator -> int
 
 end;  (* signature MTPSPLITTING *)

@@ -129,7 +129,7 @@ struct
 				      then Active (abstract U)
 					   :: ops
 				    else ops)
-				  (* handle  MetaAbstract. Error _ => InActive :: ops *) ))
+				   handle  MTPAbstract.Error _ => InActive :: ops))
 	end
 
     (* paramCases (G, (V, s), k, abstract, C) = C'
@@ -152,7 +152,7 @@ struct
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract U) :: ops
 				    else ops)
-				  (* handle  MetaAbstract.  Error _ => InActive  :: ops*) ))
+				      handle  MTPAbstract.  Error _ => InActive  :: ops))
 	end
 
     (* lowerSplitDest (G, (V, s'), abstract) = C'
@@ -448,6 +448,23 @@ struct
 	  in
 	    (I.Dot (I.Exp (X), s'), ops')
 	  end
+      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Induction b))),
+		 isIndex, abstract, makeAddress) = 
+	  let 
+	    val (s', ops) =
+		expand' ((G, B), isIndexSucc (D, isIndex), 
+			 abstractCont ((D, T), abstract),
+			 makeAddressCont makeAddress)
+	    val I.Dec (xOpt, V) = D
+	    val X = I.newEVar (I.Null, I.EClo (V, s'))
+	    val ops' = if not (isIndex 1) 
+			   then 
+			       (makeAddress 1, split (D, s', B', abstractFinal abstract))
+			       :: ops
+		       else ops
+	  in
+	    (I.Dot (I.Exp (X), s'), ops')
+	  end
       | expand' ((I.Decl (G, D), I.Decl (B, T)), isIndex, abstract, makeAddress) = 
 	  let 
 	    val (s', ops) =
@@ -502,7 +519,7 @@ struct
        and  G |- D : L
        then s' = string describing the operator
     *)
-    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, R, F), k), Sl)) = 
+    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, R, F), i), Sl)) = 
 	let 
 	  fun active (nil, n) = n
 	    | active (InActive :: L, n) = active (L, n)
@@ -520,7 +537,7 @@ struct
 	    | flagToString (n, m) = " [active: " ^(Int.toString n) ^ 
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
-	  "Splitting : " ^ (* Print.decToString (G, I.ctxDec (G, i)) *)
+	  "Splitting : " ^  (* Print.decToString (G, I.ctxDec (G, i)) ^ *)
 	  " (" ^ (indexToString (index Op)) ^ 
 	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ")"
 	end
@@ -532,8 +549,8 @@ struct
     val menu = menu
     val apply = apply
 
-(*  val var = var
+(*  val var = var *)
     val index = index
-*)
+
   end (* local *)
 end;  (* functor Splitting *)

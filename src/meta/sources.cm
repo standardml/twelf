@@ -46,6 +46,8 @@ Group is
   splitting.fun
   statesyn.sig
   statesyn.fun
+  strategy.sig
+  strategy.fun 
   print.sig
   print.fun
   prover.sig

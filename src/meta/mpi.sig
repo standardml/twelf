@@ -13,8 +13,8 @@ sig
   val select : int -> unit 
   val print  : unit -> unit
   val next   : unit -> unit
-(*  val auto   : unit -> unit
-  val solve  : unit -> unit *)
+  val auto   : unit -> unit
+  val solve  : unit -> unit
 
   val reset  : unit -> unit
 (*  val extract: unit -> MetaSyn.Sgn *)

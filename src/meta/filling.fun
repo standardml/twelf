@@ -62,7 +62,7 @@ struct
     *)
     fun apply f = f ()
 
-    fun menu _ =  "Filling   : " 
+    fun menu _ =  "Filling   (closes this subgoal)" 
       
   in
     val expand = expand

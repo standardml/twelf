@@ -646,7 +646,7 @@ struct
        and   s uninstantiated on Gx'
     *)
 
-    fun residualLemma GsF =
+    fun residualLemma (G, s, F) =
       let 
 	(* collect (G, s, F) = (Gx', F')
 	 
@@ -657,20 +657,22 @@ struct
 	   and  G, Gx' |- F' formula
 	   and  G, Gx' |- F' = [[Gy]] true
 	*)
-(* normalize the expressions!!!!!!!! -cs *)
-	fun collect (G, s as I.Shift k, F) = (I.Null, F.normalizeFor (F, s))
-	  | collect (G, s as I.Dot (I.Exp U, s'), F) =
+
+
+	fun universalCtx (G, F.All (F.Prim D, F')) = universalCtx (I.Decl (G, D), F')
+	  | universalCtx (G, F) = (G, F)
+	  
+	fun collect (s as I.Shift k, I.Null) = (I.Null, s)
+	  | collect (s as I.Dot (I.Exp U, s'), I.Decl (G, D)) =
  	    let
-	      val (Gx', F.All (F.Prim D, F')) = collect (G, s', F)
+	      val (Gx', s'') = collect (s', G)
 	    in 
 	      if Abstract.closedExp (G, (U, I.id)) then
-		(Gx', F.normalizeFor (F', I.Dot (I.Exp (I.EClo (Whnf.normalize (U, I.id), 
-							 I.Shift (I.ctxLength Gx'))), I.id)))
-	      else 
-		(I.Decl (Gx', D), F')
+		(Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
+	      else
+		(I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
 	    end
 	  
-
  	(* abstract (Gx, F) = F'
 
 	   Invariant: 
@@ -679,8 +681,11 @@ struct
 	fun abstract (I.Null, F) = F
 	  | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
 	  
+	val (Gx, Fx) = universalCtx (I.Null, F) 
+	val (Gx', s') = collect (s, Gx)
+	val F' = abstract (Gx', F.normalizeFor (Fx, s'))
       in
-	abstract (collect GsF)
+	F'
       end
 
 
@@ -691,6 +696,15 @@ struct
       | makeCtx (G, (F.TClo (F, s'), s)) =
 	  makeCtx (G, (F, I.comp (s', s)))
       
+
+    fun nameCtx I.Null = I.Null
+      | nameCtx (I.Decl (G, D)) = 
+        let 
+	  val G' = nameCtx G
+	in
+	  I.Decl (G', Names.decName (G', D))
+	end
+
 
     (* Invariant: 
        Fs = (F, s),  G |- 
@@ -707,19 +721,17 @@ struct
 	  Ds
 	else
 	  (*  new assumptions are being added *)
-	  (TextIO.print ("IH <A> found\n"); 
-	   Ass (n, S.normalizeOrder O, makeCtx (I.Null, Fs)) :: Ds)
+	  Ass (n, S.normalizeOrder O, makeCtx (I.Null, Fs)) :: Ds
       else 
 	(* Induction hypothesis only partially applied *)
 	let
 	  val Frl = residualLemma (G, s, IH)
 	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
 	in 
-	  if List.exists (fn (n', F') => n = n' andalso F.convFor ((F', I.id), (Frl, I.id))) R then
+	  if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) R then
 	    Ds
 	  else
-	    (TextIO.print ("IH <R> found\n");
-	     Lemma (n, Frl) :: Ds)
+	    Lemma (n, Frl) :: Ds
 	end
 
 
@@ -775,18 +787,18 @@ struct
 	  val ((G'', B''), s') = merge ((G, B), (G', s), S.Induction (!MTPGlobal.maxSplit)) 
         in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
-				(n', S.orderSub (O', s)) :: 
+				(n', S.orderSub (O', s')) :: 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
 				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
 		       (L, I.comp (s, s')))
 	end
       | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F), (Lemma (n', Frl') :: L, s)) =
         let
-	  val ((G'', B''), s') = skolem (0, (G, B), I.id, (Frl', I.id), fn (V, w) => I.EClo (V, w)) 
+	  val ((G'', B''), s') = skolem (0, (G, B), I.id, (Frl', s), fn (V, w) => I.EClo (V, w)) 
 	in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, 
-				(n', F.TClo (Frl', s)) :: 
+				(n', F.TClo (Frl', s')) :: 
 				map (fn (n', F') => (n', F.TClo (F', s'))) R, F.TClo (F, s')),
 		       (L, I.comp (s, s')))
 	end
@@ -850,7 +862,7 @@ struct
 
     fun apply S = S
 
-    fun menu _ = "Recursion : " 
+    fun menu _ = "Recursion (calculates ALL new assumptions & residual lemmas)" 
 
     fun handleExceptions f P = 
         (f P) handle Order.Error s => raise Error s
