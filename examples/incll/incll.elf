@@ -30,7 +30,7 @@ int : sort.
 list : sort -> sort.
 
 nil : trm (list A).
-cons : trm A -> trm (list A) -> trm (list A).
+| : trm A -> trm (list A) -> trm (list A). %infix right 30 |.
 
 
 

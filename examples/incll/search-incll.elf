@@ -4,8 +4,8 @@
 %
 
 pint : sort.
-zero : trm pint.
-succ : trm pint -> trm pint.
+z : trm pint.
+s : trm pint -> trm pint.
 omega : trm pint.
 
 gtype = list (cross int (list int)).
@@ -61,7 +61,7 @@ finish2 : prog(
 %%
 %% add a node that was visited to R
 %%       
-^ finish (cons (pair V E) G) (cons (pair D V) R)  
+^ finish ((pair V E) | G) ((pair D V) | R)  
        0= ^ used (pair D V)  
        0= ^ finish G R
 ).
@@ -70,7 +70,7 @@ finish3 : prog(
 %%
 %% add a node that wasn't visited to R
 %%       
-^ finish (cons (pair V E) G) (cons (pair omega V) R) 
+^ finish ((pair V E) | G) ((pair omega V) | R) 
        0= ^ node (pair V E) 
        0= ^ finish G R
 ).
@@ -95,17 +95,17 @@ bfs2 : prog(
 %%
 %% place each node of graph into linear context
 %%
-^ bfs (cons N G) S R 
+^ bfs (N | G) S R 
       0=  (^ node N =0 ^ bfs G S R)
 ).
 
 bfs3 : prog(
 %%
 %% start the breadth-first traversal from start node
-%%   S and distance zero (zero)
+%%   S and distance z (zero)
 %%
 ^ bfs nil S R 
-      0=  ^ bfs' S zero R
+      0=  ^ bfs' S z R
 ).
 
 bfs4 : prog(
@@ -134,7 +134,7 @@ bfs6 : prog(
 %% put an edge into the left side of ordered context
 %%   also record distance to this edge
 %%
-^ bfs'' (cons E Es) D R  
+^ bfs'' (E | Es) D R  
       <<=  (^ next (pair E D) >=> ^ bfs'' Es D R)
 ).
 
@@ -146,7 +146,7 @@ bfs7 : prog(
 %%
 ^ bfs'' nil D R  
       <<= ^ next (pair V D')  
-      <<= ^ bfs' V (succ D') R
+      <<= ^ bfs' V (s D') R
 ).
 
 bfs8 : prog(
@@ -179,17 +179,17 @@ dfs2 : prog(
 %%
 %% place each node of graph into linear context
 %%
-^ dfs (cons N G) S R 
+^ dfs (N | G) S R 
       0=  (^ node N =0 ^ dfs G S R)
 ).
 
 dfs3 : prog(
 %%
 %% start the depth-first traversal from start node
-%%   S and distance zero (zero)
+%%   S and distance z (zero)
 %%
 ^ dfs nil S R 
-      0=  ^ dfs' S zero R
+      0=  ^ dfs' S z R
 ).
 
 dfs4 : prog(
@@ -218,7 +218,7 @@ dfs6 : prog(
 %% put an edge into the right side of ordered context
 %%   also record distance to this edge
 %%
-^ dfs'' (cons E Es) D R  
+^ dfs'' (E | Es) D R  
       <<=  (^ next (pair E D) =>> ^ dfs'' Es D R)
 ).
 
@@ -230,7 +230,7 @@ dfs7 : prog(
 %%
 ^ dfs'' nil D R  
       <<= ^ next (pair V D')  
-      <<= ^ dfs' V (succ D') R
+      <<= ^ dfs' V (s D') R
 ).
 
 dfs8 : prog(
@@ -243,4 +243,22 @@ dfs8 : prog(
       <= ^ nodes G  
       0= ^ finish G R
 ).
+
+
+
+%%% queries %%%
+
+edge1 = 2 | 3 | nil.  % cons 2 (cons 3 nil).
+edge2 = 1 | 4 | nil.  % cons 1 (cons 4 nil).
+edge3 = 1 | 4 | nil.  % cons 1 (cons 4 nil).
+edge4 = 2 | 3 | nil.  % cons 2 (cons 3 nil).
+
+% g1 = cons (pair 1 edge1) (cons (pair 2 edge2) (cons (pair 3 edge3) (cons (pair 4 edge4) nil))).
+g1 = (pair 1 edge1) | (pair 2 edge2) | (pair 3 edge3) | (pair 4 edge4) | nil.
+
+e1 = 2 | 3 | nil. % cons 2 (cons 3 nil).
+e2 = 1 | 3 | nil. % cons 1 (cons 3 nil).
+e3 = 1 | 2 | nil. % cons 1 (cons 2 nil).
+% g2 = cons (pair 1 e1) (cons (pair 2 e2) (cons (pair 3 e3) nil)).
+g2 = (pair 1 e1) | (pair 2 e2) | (pair 3 e3) | nil.
 
