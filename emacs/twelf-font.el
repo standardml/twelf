@@ -97,11 +97,10 @@
    ;; delimited comments, perhaps should use different font
    ;;("%{" "}%" comment)
    (twelf-font-find-delimited-comment . twelf-font-comment-face)
-   ;; empty-line comments, bug fix for next pattern
+   ;; empty-line comments
    ("%$" 0 twelf-font-comment-face)
    ;; single-line comments
-   ;; replace \\W by \\s- for whitespace?
-   ("%\\W.*$" 0 twelf-font-comment-face)
+   ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
    ("\\(%infix\\|%prefix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%theorem\\|%prove\\).*$"
     1 twelf-font-percent-key-face nil)
