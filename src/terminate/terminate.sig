@@ -1,14 +1,12 @@
-(* Reduction and Termination checker *)
-(* Author: Brigitte Pientka *)
+(* Termination checker *)
+(* Author: Carsten Schuermann *)
 
 signature TERMINATE =
 sig
   structure IntSyn : INTSYN
     
   exception Error of string
-
+    
   val reset : unit -> unit
-  val checkFamReduction : IntSyn.cid -> unit 
-  val checkFam : IntSyn.cid -> unit   
-
-end;  (* signature Terminate *)
+  val checkFam : IntSyn.cid -> unit 
+end;  (* signature TERMINATE *)
