@@ -1,5 +1,17 @@
-Group is
+Library
+  signature THMSYN
+  structure ThmSyn
+  signature THMPRINT
+  structure ThmPrint
+  signature THM
+  structure Thm
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
   ../lambda/sources.cm
+  ../names/sources.cm
   ../formatter/sources.cm
   ../modes/sources.cm
   ../order/sources.cm

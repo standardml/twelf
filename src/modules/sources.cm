@@ -1,5 +1,9 @@
-Group is
+Library
+  signature MODSYN
+  structure ModSyn
+is
   ../global/sources.cm
+  ../table/sources.cm
   ../lambda/sources.cm
   ../names/sources.cm
   ../paths/sources.cm

@@ -1,4 +1,23 @@
-Group is
+Library
+  signature INTSYN
+  structure IntSyn
+  signature WHNF
+  structure Whnf
+  signature CONV
+  structure Conv
+  signature CONSTRAINTS
+  structure Constraints
+  signature UNIFY
+  structure UnifyTrail
+  structure UnifyNoTrail
+  signature ABSTRACT
+  structure Abstract
+  signature APPROX
+  structure Approx
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   ../global/sources.cm
   ../trail/sources.cm
   intsyn.sig

@@ -1,5 +1,13 @@
-Group is
-  timing.sml
+Library
+  signature TIMERS
+  structure Timers
+  signature TIMING
+  structure Timing
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   timers.sig
   timers.fun
   timers.sml
+  timing.sml

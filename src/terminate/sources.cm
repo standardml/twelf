@@ -1,4 +1,14 @@
-Group is
+Library
+  signature CHECKING
+  structure Checking
+  signature REDUCES
+  structure Reduces
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../trail/sources.cm
   ../lambda/sources.cm
   ../names/sources.cm
   ../print/sources.cm

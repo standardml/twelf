@@ -1,5 +1,20 @@
-Group is
+Library
+  signature MODESYN
+  structure ModeSyn
+  signature MODEDEC
+  structure ModeDec
+  signature MODECHECK
+  structure ModeCheck
+  signature MODEPRINT
+  structure ModePrint
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../table/sources.cm
   ../lambda/sources.cm
+  ../formatter/sources.cm
   ../print/sources.cm
   ../names/sources.cm	
   ../paths/sources.cm

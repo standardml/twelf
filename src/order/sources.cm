@@ -1,4 +1,10 @@
-Group is
+Library
+  signature ORDER
+  structure Order
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   ../table/sources.cm
   ../lambda/sources.cm
   order.sig

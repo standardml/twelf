@@ -1,7 +1,18 @@
-Group is 
-  ../lambda/sources.cm
+Library
+  signature WORLDSYN
+  structure WorldSyn
+  signature WORLDPRINT
+  structure WorldPrint
+is
   ../global/sources.cm
   ../timing/sources.cm
+  ../table/sources.cm
+  ../lambda/sources.cm
+  ../names/sources.cm
+  ../paths/sources.cm
+  ../formatter/sources.cm
+  ../print/sources.cm
+  ../index/sources.cm
   ../subordinate/sources.cm
   ../meta/sources.cm
   ../solvers/sources.cm

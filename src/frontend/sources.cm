@@ -1,7 +1,16 @@
-Group is
+Library
+  signature LEXER
+  structure Lexer
+  signature TWELF
+  structure Twelf
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   ../timing/sources.cm 
   ../stream/sources.cm
   ../global/sources.cm
+  ../table/sources.cm
   ../lambda/sources.cm
   ../names/sources.cm
   ../paths/sources.cm

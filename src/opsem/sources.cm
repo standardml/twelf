@@ -1,5 +1,27 @@
-Group is
+Library
+  signature ABSTRACTTABLED
+  structure AbstractTabled
+  signature TABLEINDEX
+  structure TableIndex
+  signature TABLED
+  structure Tabled
+
+  signature ABSMACHINE
+  structure AbsMachine
+  signature PTRECON
+  structure PtRecon
+  signature TRACE
+  structure Trace
+  structure TMachine
+  structure SwMachine
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../table/sources.cm
   ../lambda/sources.cm
+  ../names/sources.cm
   ../print/sources.cm
   ../formatter/sources.cm  
   ../index/sources.cm
@@ -11,9 +33,9 @@ Group is
   abstract.sig  
   abstract.fun
   index.sig
-  index.fun  
+  index.fun
   tabled.sig
-  tabled.fun     
+  tabled.fun
 
   absmachine.sig
   absmachine.fun

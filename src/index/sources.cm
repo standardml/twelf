@@ -1,4 +1,11 @@
-Group is
+Library
+  signature INDEX
+  structure Index
+  structure IndexSkolem
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   ../lambda/sources.cm
   ../table/sources.cm
   ../global/sources.cm

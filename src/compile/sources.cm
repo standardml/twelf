@@ -1,5 +1,20 @@
-Group is
+Library
+  signature COMPSYN
+  structure CompSyn
+  signature COMPILE
+  structure Compile
+  signature CPRINT
+  structure CPrint
+  signature ASSIGN
+  structure Assign
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../global/sources.cm
+  ../table/sources.cm
   ../lambda/sources.cm
+  ../names/sources.cm
   ../print/sources.cm
   ../formatter/sources.cm  
   ../index/sources.cm

@@ -1,4 +1,17 @@
-Group is
+Library
+  signature METAGLOBAL
+  structure MetaGlobal
+  signature SKOLEM
+  structure Skolem
+  structure Splitting
+  structure Filling
+  structure Recursion
+  signature PROVER
+  structure Prover
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   ../timing/sources.cm
   ../stream/sources.cm
   ../global/sources.cm
@@ -6,6 +19,7 @@ Group is
   ../names/sources.cm
   ../modes/sources.cm 
   ../paths/sources.cm
+  ../formatter/sources.cm
   ../print/sources.cm
   ../typecheck/sources.cm
   ../terminate/sources.cm
@@ -13,6 +27,8 @@ Group is
   ../thm/sources.cm
   ../order/sources.cm
   ../opsem/sources.cm
+  ../compile/sources.cm
+  ../subordinate/sources.cm
   ../table/sources.cm
   ../timing/sources.cm
   ../solvers/sources.cm
@@ -47,7 +63,3 @@ Group is
   mpi.sig
   mpi.fun
   m2.sml
-
-
-
-

@@ -1,4 +1,20 @@
-Group is
+Library
+  signature TABLE
+  structure StringHashTable
+  structure StringRedBlackTree
+  structure IntRedBlackTree
+  signature RING
+  structure Ring
+  signature QUEUE
+  structure Queue
+  signature SPARSE_ARRAY
+  structure SparseArray
+  signature SPARSE_ARRAY2
+  structure SparseArray2
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
   table.sig
   hash-table.sml
   string-hash.sig

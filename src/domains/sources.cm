@@ -1,5 +1,17 @@
-Group is
+Library
+  signature FIELD
+  signature ORDERED_FIELD
+  signature INTEGERS
+  structure Integers
+  signature RATIONALS
+  structure Rationals
+is
+#if defined(NEW_CM)
+  $/basis.cm
+  $/smlnj-lib.cm
+#else
   ../int-inf/sources.cm
+#endif
   field.sig
   ordered-field.sig
   integers.sig

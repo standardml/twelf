@@ -1,4 +1,11 @@
-Group is
+Library
+  signature CS_MANAGER
+  structure CSManager
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../trail/sources.cm
   ../global/sources.cm
   ../domains/sources.cm
   ../lambda/sources.cm
