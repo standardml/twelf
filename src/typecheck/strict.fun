@@ -89,6 +89,7 @@ struct
 	          which starts with argument parameters
     *)
     fun strictArgParm (p, U as I.Root _) = strictExp (0, p, U)
+      | strictArgParm (p, U as I.FgnExp _) = strictExp (0, p, U)
       | strictArgParm (p, I.Lam (D, U)) = strictArgParm (p+1, U)
 
     fun occToString (SOME(ocd), occ) = Paths.wrap (Paths.occToRegionDef1 ocd occ, "")
@@ -100,7 +101,9 @@ struct
     (* strictTop ((U, V), ocdOpt) = ()
        
        Invariant:
-       condec has form c = U : V where . |- U : V
+       condec has form c = U : V where . |- U : Vmk_i_const0 : rational -> rational -> rational -> rational -> rational =
+
+ [op][rd][rs1][rs2] (16 * 16 * 16 * op + 16 * 16 * rd + 16 * rs1 + rs2).
        and U is in nf (normal form)
        then function returns () if U every argument parameter of U
 	    has at least one strict and rigid occurrence in U
@@ -110,7 +113,7 @@ struct
     *)
     fun strictTop ((U, V), ocdOpt) =
         let fun strictArgParms (I.Root (I.BVar _, _), _, occ) =
-                raise Error (occToString (ocdOpt, occ) ^ "Head not rigid")
+                raise Error (occToString (ocdOpt, occ) ^ "Head not rigid, use %abbrev")
 	      | strictArgParms (I.Root _, _, _) = ()
 	      | strictArgParms (I.Lam (D, U'), I.Pi (_, V'), occ) = 
 	        if strictArgParm (1, U')
@@ -120,9 +123,6 @@ struct
 	in
 	  strictArgParms (U, V, Paths.top)
 	end
-
-
-      
 
   in
     val check = strictTop
