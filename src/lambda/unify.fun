@@ -514,6 +514,11 @@ struct
 	  (unifyDec (G, (D1, s1), (D2, s2)) ;
 	   unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1), (U2, dot1 s2)))
 
+      | unifyExpW (G, Us1 as (Pi (_, _), _), Us2 as (Root (Def _, _), _)) =
+	  unifyExpW (G, Us1, Whnf.expandDef (Us2))
+      | unifyExpW (G, Us1 as  (Root (Def _, _), _), Us2 as (Pi (_, _), _)) =
+	  unifyExpW (G, Whnf.expandDef (Us1), Us2)
+
       | unifyExpW (G, (Lam (D1, U1), s1), (Lam (D2, U2), s2)) =           
           (* D1[s1] = D2[s2]  by invariant *)
 	  unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1),(U2, dot1 s2))
