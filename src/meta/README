@@ -85,12 +85,15 @@ Parameter Cases
 	DONE -cs abstract : add BV
 
 	DONE -cs splitting: calculate G0
-	splitting: correct calls to   abstract
+	DONE splitting: correct calls to   abstract
 	
+
 
 	TODO: Second parameter splitting to the right of a parameter block not yet detected.
 	TODO: Collect all parameter in paramCases, not just the local ones.
-
+   
+	BUG: It happens that parameters can be introduced by splitting an assumption to the
+	     left of an already present context block
 
 
 Splitting Residual lemmas

@@ -178,26 +178,29 @@ struct
 
   exception Error of string 
 
+  fun he f = f () handle ProverNew.Error s => raise Error s
+			| ProverOld.Error s => raise Error s
+
   local
     fun init Args = 
-      case !(MTPGlobal.prover) 
-	of MTPGlobal.New => ProverNew.init Args
-         | MTPGlobal.Old => ProverOld.init Args
-		 
+      he (fn () => case !(MTPGlobal.prover) 
+  	             of MTPGlobal.New => ProverNew.init Args
+		      | MTPGlobal.Old => ProverOld.init Args)
+	    
     fun auto Args = 
-      case !(MTPGlobal.prover) 
-	of MTPGlobal.New => ProverNew.auto Args
-         | MTPGlobal.Old => ProverOld.auto Args
+      he (fn () => case !(MTPGlobal.prover) 
+	             	of MTPGlobal.New => ProverNew.auto Args
+        	         | MTPGlobal.Old => ProverOld.auto Args)
 	
     fun print Args = 
-      case !(MTPGlobal.prover) 
-	of MTPGlobal.New => ProverNew.print Args
-         | MTPGlobal.Old => ProverOld.print Args
+      he (fn () => case !(MTPGlobal.prover) 
+	             	of MTPGlobal.New => ProverNew.print Args
+     		         | MTPGlobal.Old => ProverOld.print Args)
 	
     fun install Args = 
-      case !(MTPGlobal.prover) 
-	of MTPGlobal.New => ProverNew.install Args
-         | MTPGlobal.Old => ProverOld.install Args
+      he (fn () => case !(MTPGlobal.prover) 
+	             	of MTPGlobal.New => ProverNew.install Args
+       		         | MTPGlobal.Old => ProverOld.install Args)
   in
     val init = init
     val auto = auto
