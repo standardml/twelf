@@ -94,7 +94,7 @@ struct
  
        Invariant:
        If   L is a list of variable names of a virtual argument
-       and  C is a call pattern
+       and  C is a call pattern, the predicate in C has a mode
        then wfCallpats terminates with () if 
 	    1) there are as many call patterns as variable names
             2) each variable name occurs in a different call pattern
@@ -126,12 +126,9 @@ struct
 	    | skip (k, x, P, M.Mapp (_, mS)) = skip (k-1, x, P, mS)
 
 	  fun delete (x, (aP as (a, P)) :: C) = 
-	      (case M.modeLookup a 
-		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
-				      ^ " to be moded")
-	          | SOME mS => if skip (I.constImp a, x, P, mS)
-				 then C
-			       else aP :: delete (x, C))
+	      if skip (I.constImp a, x, P, valOf (M.modeLookup a)) (* exists by invariant *)
+		then C
+	      else aP :: delete (x, C)
 	    | delete (x, nil) = error (r, "Variable " ^ x ^ " does not occur as argument")
 
 	  fun wfCallpats' (nil, nil) = ()
@@ -163,8 +160,15 @@ struct
 
 	  and wfOrders (nil) = ()
 	    | wfOrders (O :: L) = (wfOrder O; wfOrders L)
+	  fun allModed (nil) = ()
+	    | allModed ((a, P) :: Cs) =
+	      (case M.modeLookup a 
+		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
+				      ^ " to be moded")
+	          | SOME mS => ();
+               allModed Cs)
 	in 
-	  (uniqueCallpats (C, rs); wfOrder O)
+	  (allModed C; uniqueCallpats (C, rs); wfOrder O)
 	end
 
     (* argPos (x, L, n) = nOpt
