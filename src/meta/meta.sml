@@ -130,11 +130,6 @@ structure MTPFilling =
 	      structure Search = MTPSearch
 	      structure Whnf = Whnf)
 
-
-
-	       
-	       
-
 structure MTPSplitting = 
   MTPSplitting (structure MTPGlobal = MTPGlobal
 		structure Global = Global
