@@ -159,7 +159,7 @@ struct
       | lexInitial (#"_", i) = lexID (Upper, P.Reg (i-1,i))
       | lexInitial (#"'", i) = lexID (Lower, P.Reg (i-1,i)) (* lexQUID (i-1,i) *)
       | lexInitial (#"\^D", i) = (EOF, P.Reg (i-1,i-1))
-      | lexInitial (#"\"", i) = lexString (P.Reg(i-1, i+1))
+      | lexInitial (#"\"", i) = lexString (P.Reg(i-1, i))
       | lexInitial (c, i) =
 	if Char.isSpace (c) then lexInitial (char (i),i+1)
 	else if Char.isUpper(c) then lexID (Upper, P.Reg (i-1,i))
