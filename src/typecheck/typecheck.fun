@@ -135,6 +135,8 @@ struct
     
   in
       val check = check
+      val checkDec = checkDec
+
       val infer = infer
       val infer' = infer'
       val typeCheck = fn (G, (U, V)) => 
