@@ -175,7 +175,7 @@ structure Twelf =
 	 structure ThmPrint = ThmPrint
 	 structure MetaGlobal = MetaGlobal
 	 structure Skolem = Skolem
-	 structure Prover = Prover
+	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
 
 	 structure PrintTeX = PrintTeX

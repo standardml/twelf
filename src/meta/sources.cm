@@ -10,6 +10,8 @@ Group is
   ../order/sources.cm
   ../opsem/sources.cm
   ../timing/sources.cm
+  ../m2/sources.cm    (* just for integetrating the new prover into
+			 Twelf *)
   funsyn.sig
   funsyn.fun
   funnames.sig    (* moves eventually to Names *)
@@ -50,5 +52,5 @@ Group is
   strategy.fun 
   print.sig
   print.fun
-  prover.sig
+(*  prover.sig *)
   prover.fun

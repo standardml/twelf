@@ -101,7 +101,7 @@ functor Twelf
    structure Skolem : SKOLEM
      sharing Skolem.IntSyn = IntSyn'
    structure Prover : PROVER
-     sharing Prover.MetaSyn.IntSyn = IntSyn'
+     sharing Prover.IntSyn = IntSyn'
    structure ClausePrint : CLAUSEPRINT
      sharing ClausePrint.IntSyn = IntSyn'
 

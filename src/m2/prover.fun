@@ -22,11 +22,12 @@ functor Prover (structure MetaGlobal : METAGLOBAL
 		structure Timers : TIMERS) 
   : PROVER =
 struct
-  structure MetaSyn = MetaSyn'
+  structure IntSyn = MetaSyn'.IntSyn
 
   exception Error of string
 
   local 
+    structure MetaSyn = MetaSyn'
     structure M = MetaSyn
     structure I = MetaSyn.IntSyn
 

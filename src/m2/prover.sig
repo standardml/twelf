@@ -3,12 +3,12 @@
 
 signature PROVER =
 sig
-  structure MetaSyn : METASYN
+  structure IntSyn : INTSYN
 
   exception Error of string 
 
-  val init   : (int * MetaSyn.IntSyn.cid list) -> unit
+  val init   : (int * IntSyn.cid list) -> unit
   val auto   : unit -> unit
   val print  : unit -> unit
-  val install: (MetaSyn.IntSyn.ConDec -> MetaSyn.IntSyn.cid) -> unit
+  val install: (IntSyn.ConDec -> IntSyn.cid) -> unit
 end;  (* signature PROVER *)

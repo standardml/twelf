@@ -150,13 +150,20 @@ structure MTPStrategy =
 	  
   
 structure MTProver =
-  MTProver (structure FunSyn' = FunSyn
-	    structure StateSyn' = StateSyn
+  MTProver (structure IntSyn' = IntSyn
+            structure FunSyn = FunSyn
+	    structure StateSyn = StateSyn
+	    structure Order = Order
 	    structure MTPrint = MTPrint
 	    structure MTPInit = MTPInit
-	    structure MTPFilling = MTPFilling
-	    structure MTPSplitting = MTPSplitting
-	    structure MTPRecursion = MTPRecursion)
+	    structure MTPStrategy = MTPStrategy
+	    structure RelFun = RelFun)
+
+structure CombiProver = 
+  CombiProver (structure MTPGlobal = MTPGlobal
+	       structure IntSyn' = IntSyn
+	       structure ProverNew = MTProver
+	       structure ProverOld = Prover)
 
 
 structure MTPi = 

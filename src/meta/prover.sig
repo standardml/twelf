@@ -1,6 +1,7 @@
 (* Meta Prover Version 1.3 *)
 (* Author: Carsten Schuermann *)
 
+
 signature MTPROVER =
 sig
   structure FunSyn : FUNSYN
