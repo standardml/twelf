@@ -1565,10 +1565,10 @@ This causes the declarations
 @group
 rational : type.
 
-~ : rational -> rational.              %prefix ~ 9999.
-+ : rational -> rational -> rational.  %infix + left 9997.
-- : rational -> rational -> rational.  %infix - left 9997.
-* : rational -> rational -> rational.  %infix * left 9998.
+~ : rational -> rational.              %prefix 9999 ~.
++ : rational -> rational -> rational.  %infix left 9997 +.
+- : rational -> rational -> rational.  %infix left 9997 -.
+* : rational -> rational -> rational.  %infix left 9998 *.
 @end group
 @end example
 
@@ -1688,10 +1688,10 @@ the main type:
 @group
 integer : type.
 
-~ : integer -> integer.             %prefix ~ 9999.
-+ : integer -> integer -> integer.  %infix + left 9997.
-- : integer -> integer -> integer.  %infix - left 9997.
-* : integer -> integer -> integer.  %infix * left 9998.
+~ : integer -> integer.             %prefix 9999 ~.
++ : integer -> integer -> integer.  %infix left 9997 +.
+- : integer -> integer -> integer.  %infix left 9997 -.
+* : integer -> integer -> integer.  %infix left 9998 *.
 @end group
 @end example
 
