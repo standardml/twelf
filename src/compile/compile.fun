@@ -37,7 +37,7 @@ struct
   in
 
 
-    datatype Duplicates = BVAR of int | FGN
+    datatype Duplicates = BVAR of int | FGN | DEF of int
 
     val optimize = ref true  
 
@@ -122,9 +122,7 @@ struct
 	   collectSpine (S, K', Vars', depth)
        end
      | collectExp (U as I.Root(I.Def k, S), K, Vars, depth) = 
-        (* expand definitions and collect duplicates; 
-	   this is expensive Tue Jun 18 13:17:17 2002 -bp *)
-        collectExp (Whnf.normalize(Whnf.whnfExpandDef (U, I.id)), K, Vars, depth)
+       ((depth, DEF k)::K, Vars)
      (* h is either const, skonst or def *)
      | collectExp (I.Root(h, S), K, Vars, depth) =   
          collectSpine (S, K, Vars, depth)
@@ -226,13 +224,12 @@ struct
      "For any U', U = U' iff (N = U' and Eqn)"
   *)
    fun linearExp (Gl, U as I.Root(h as I.Def k, S), left, Vars, depth, total, eqns) = 
-       (* expand definitions; this is expensive Tue Jun 18 13:17:36 2002 -bp  *)     
        let
-	 val U = Whnf.normalize(Whnf.whnfExpandDef (I.Root(h, S), I.id))
-       in 
-	 linearExp(Gl, U, left, Vars, depth, total, eqns) 
+	 val N = I.Root(I.BVar(left + depth), I.Nil)
+	 val U' = shiftExp(U, depth, total)  
+       in
+	 (left-1, Vars, N, C.UnifyEq(Gl, U', N, eqns))
        end 
-
      | linearExp (Gl, U as I.Root(h, S), left, Vars, depth, total, eqns) = 
        let
 	 val (left', Vars', h', replaced) =  linearHead (Gl, h, S, left, Vars, depth, total)
@@ -267,7 +264,7 @@ struct
 	 (left', Vars', I.Lam(D', U'), eqns')
        end
    | linearExp (Gl, U as I.FgnExp (cs, ops), left, Vars, depth, total, eqns) = 
-       let
+       let 
 	 val N = I.Root(I.BVar(left + depth), I.Nil)
 	 val U' = shiftExp(U, depth, total)  
        in

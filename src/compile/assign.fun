@@ -37,7 +37,8 @@ struct
 
      invariant:
      G |- s1 : G1    G1 |- U1 : V1   (U1, s1) in whnf
-     G |- s2 : G2    G2 |- U2 : V2   (U2, s2) is template *)
+     G |- s2 : G2    G2 |- U2 : V2   (U2, s2) is template 
+  *)   
     fun assignExpW (G, (Uni L1, _), (Uni L2, _), cnstr) = (* L1 = L2 by invariant *)
           cnstr
       | assignExpW (G, Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2), cnstr) =
@@ -55,15 +56,20 @@ struct
 	       else raise Assignment "Skolem constant clash"
 
 	  | (Def (d1), Def (d2)) =>
+	    (* cannot occur by invariant; all definitions in clause heads have been 
+               replaced by AVars Tue Jun 18 19:47:39 2002 -bp *)
 	       if (d1 = d2) then (* because of strict *) 
 		 assignSpine (G, (S1, s1), (S2, s2), cnstr)
 	       else assignExp (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2), cnstr)
 	  | (Def d1, _) => 
 		  assignExp (G, Whnf.expandDef Us1, Us2, cnstr)
-	  | (_, Def(d2)) => assignExp (G, Us1, Whnf.expandDef Us2, cnstr)
+	  | (_, Def(d2)) => 
+	    (* cannot occur by invariant; all definitions in clause heads have been 
+               replaced by AVars Tue Jun 18 19:47:44 2002 -bp *)
+  	    assignExp (G, Us1, Whnf.expandDef Us2, cnstr)
 
-           | (FgnConst (cs1, ConDec (n1, _, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _, _))) =>
-               (* we require unique string representation of external constants *)
+          | (FgnConst (cs1, ConDec (n1, _, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _, _))) =>
+            (* we require unique string representation of external constants *)
                if (cs1 = cs2) andalso (n1 = n2) then cnstr
                else raise Assignment "Foreign Constant clash"
 
@@ -76,7 +82,7 @@ struct
                assignExp (G, (W1, s1), Us2, cnstr)
 
            | (_, FgnConst (_, ConDef (_, _, _, W2, _, _))) =>
-               assignExp (G, Us1, (W2, s2), cnstr)              
+               assignExp (G, Us1, (W2, s2), cnstr)               
 
 	  | _ => (raise Assignment ("Head mismatch ")))
 
