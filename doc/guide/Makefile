@@ -44,7 +44,7 @@ twelf.pdf : twelf.dvi;
 
 install : ;
 	@echo "Copying info file"
-	cp -p twelf.info ../info/
+	cp -p twelf.info* ../info/
 	@echo "Copying dvi file"
 	cp -p twelf.dvi ../dvi/
 	@echo "Copying ps file"
