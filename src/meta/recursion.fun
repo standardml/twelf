@@ -44,7 +44,7 @@ struct
     structure Fmt = Formatter
 
     datatype Dec =			(* Newly created *)
-      Ass of S.Order * I.dctx		(* Induction hypothesis  *)
+      Ass of int * S.Order * I.dctx	(* Induction hypothesis  *)
     | Lemma of I.dctx			(* Residual Lemma *)
 
 (*    datatype Quantifier =                     (* Quantifier to mark parameters *)
@@ -623,7 +623,7 @@ struct
 	else
 	  (*  new assumptions are being added *)
 	  (TextIO.print ("IH <A> found\n"); 
-	   Ass (S.normalizeOrder O, makeCtx (I.Null, Fs)) :: Ds)
+	   Ass (n, S.normalizeOrder O, makeCtx (I.Null, Fs)) :: Ds)
       else 
 	(* Induction hypothesis only partially applied *)
 	let
@@ -651,11 +651,12 @@ struct
        G' |- s : G
     *)
     fun updateState (S, (nil, s)) = S
-      | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, F), (Ass (O', G') :: L, s)) =
+      | updateState (S as S.State (n, (G, B), (IH, OH), d, O, H, F), (Ass (n', O', G') :: L, s)) =
         let
 	  val ((G'', B''), s') = merge ((G, B), (G', s), S.Induction (!MTPGlobal.maxSplit)) 
         in
 	  updateState (S.State (n, (G'', B''), (IH, OH), d, S.orderSub (O, s'), 
+				(n', S.orderSub (O', s)) :: 
 				map (fn (n', O') => (n', S.orderSub (O', s'))) H, F.TClo (F, s')),
 		       (L, I.comp (s, s')))
 	end
