@@ -70,6 +70,7 @@ catchall = .;
 <INITIAL>"%block"               => (Tokens.BLOCKDEC(!line,!line));
 <INITIAL>"some"                 => (Tokens.SOME(yytext,!line,!line));
 <INITIAL>"block"                => (Tokens.BLOCK(yytext,!line,!line));
+<INITIAL>"create"                => (Tokens.CREATE(!line,!line));
 <INITIAL>"all"                  => (Tokens.ALL(!line,!line));
 <INITIAL>"all^"                 => (Tokens.ALLOMITTED(!line,!line));
 <INITIAL>"exists"               => (Tokens.EXISTS(!line,!line));

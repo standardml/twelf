@@ -29,6 +29,12 @@ and Decs
   | FormDecl of FormDecl * Decs
   | ValDecl of ValDecl * Decs
   | NewDecl of Dec * Decs
+  | TwelfDecl of Dec * Decs
+  | CreateDecl of CreateDecl * Decs
+
+and CreateDecl
+  = Create of Term * CreateDecl
+  | Decs of Decs
 
 and FormDecl 
   = Form of string * Form
