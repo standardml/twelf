@@ -1042,20 +1042,55 @@ struct
 	  OK
 	end
 
+    (* Support tracking file modification times for smart re-appending. *)
+    structure ModFile :
+    sig
+      type mfile
+      val create : string -> mfile
+      val fileName : mfile -> string
+      val editName : (string -> string) -> mfile -> mfile
+      val modified : mfile -> bool
+      val makeModified : mfile -> unit
+      val makeUnmodified : mfile -> unit
+    end
+    =
+    struct
+      type mfile = string * Time.time option ref
+                   
+      fun create file = (file, ref NONE)
+                   
+      fun fileName (file, _) = file
+
+      fun editName edit (file, mtime) = (edit file, mtime)
+
+      fun modified (_, ref NONE) = true
+        | modified (file, ref (SOME time)) =
+          (case Time.compare (time, OS.FileSys.modTime file)
+             of EQUAL => false
+              | _     => true)
+        
+      fun makeModified (_, mtime) =
+          mtime := NONE
+
+      fun makeUnmodified (file, mtime) =
+          mtime := SOME (OS.FileSys.modTime file)
+    end
+
     (* config = ["fileName1",...,"fileName<n>"] *)
     (* Files will be read in the order given! *)
     structure Config =
     struct
       (* A configuration (pwdir, sources) consists of an absolute directory
-         pwdir and a list of source file names which are interpreted
-         relative to pwdir.  pwdir will be the current working directory
+         pwdir and a list of source file names (which are interpreted
+         relative to pwdir) along with their modification times.
+         pwdir will be the current working directory
          when a configuration is loaded, which may not be same as the
          directory in which the configuration file is located.
 
 	 This representation allows shorter file names in chatter and
 	 error messages.
       *)
-      type config = string * string list
+      type config = string * ModFile.mfile list
 
       (* suffix of configuration files: "cfg" by default *)
       val suffix = ref "cfg"
@@ -1155,31 +1190,57 @@ struct
                       end)
             val pwdir = OS.FileSys.getDir ()
           in
-            (pwdir, #1(read' (nil, [config]) config))
+            (pwdir, List.map ModFile.create (#1(read' (nil, [config]) config)))
           (*
             handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
           *)
           end
 
-      fun loadAbort (filename, OK) = loadFile (filename)
+      fun loadAbort (mfile, OK) =
+	  let
+	    val status = loadFile (ModFile.fileName mfile)
+	  in
+	    case status
+	      of OK => ModFile.makeUnmodified mfile
+	       | _  => ();
+	    status
+	  end
 	| loadAbort (_, ABORT) = ABORT
 
       (* load (config) = Status
          resets the global signature and then reads the files in config
          in order, stopping at the first error.
       *)
-      fun load (config) =
-          (reset (); append (config))
+      fun load (config as (_, sources)) =
+          (reset (); List.app ModFile.makeModified sources; append (config))
       (* append (config) = Status
-         reads the files in config in order, stopping at the first error.
+         reads the files in config in order, beginning at the first
+         modified file, stopping at the first error.
       *)
       and append (pwdir, sources) =
-	  (if pwdir = OS.FileSys.getDir () (* allow shorter messages if safe *)
-	     then List.foldl loadAbort OK sources
-	   else List.foldl loadAbort OK
-	        (List.map (fn p => MkAbsolute.mkAbsolute {path=p, relativeTo=pwdir}) sources))
+          let
+            fun fromFirstModified nil = nil
+              | fromFirstModified (sources as x::xs) =
+                if ModFile.modified x
+                  then sources
+                  else fromFirstModified xs
 
-      fun define (sources) = (OS.FileSys.getDir (), sources)
+            fun mkAbsolute p =
+                MkAbsolute.mkAbsolute {path=p, relativeTo=pwdir}
+
+            val sources' = 
+                (* allow shorter messages if safe *)
+                if pwdir = OS.FileSys.getDir ()
+                  then sources
+                else List.map (ModFile.editName mkAbsolute) sources
+
+            val sources'' = fromFirstModified sources'
+          in
+            List.foldl loadAbort OK sources''
+          end
+
+      fun define (sources) = (OS.FileSys.getDir (),
+                              List.map ModFile.create sources)
 
     end  (* structure Config *)
 
