@@ -40,7 +40,7 @@ struct
     fun timesExp (U, V, W) = Root (Const (!timesID),
                                    App (U, App (V, App (W, Nil))))
 
-    fun quotExp (U, V, W) = Root (Const (!plusID),
+    fun quotExp (U, V, W) = Root (Const (!quotID),
                                   App (U, App (V, App (W , Nil))))
 
     (* constant ID's of the proof object generators and their proof objects *)
@@ -165,7 +165,7 @@ struct
           case (oper, scanBinopPf oper string)
             of (#"+", SOME(ds)) => SOME(plusPfConDec ds)
              | (#"*", SOME(ds)) => SOME(timesPfConDec ds)
-             | (#"/", SOME(ds)) => SOME(timesPfConDec ds)
+             | (#"/", SOME(ds)) => SOME(quotPfConDec ds)
              | _ => NONE
 
     val parsePlusPf = parseBinopPf #"+"
