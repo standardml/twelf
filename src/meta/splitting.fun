@@ -22,6 +22,8 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
   		        sharing Whnf.IntSyn = IntSyn
 		      structure TypeCheck : TYPECHECK
 			sharing TypeCheck.IntSyn = IntSyn
+		      structure Subordinate : SUBORDINATE
+			sharing Subordinate.IntSyn = IntSyn
 		      structure FunTypeCheck :FUNTYPECHECK
 			sharing FunTypeCheck.FunSyn = FunSyn
 		      structure Index : INDEX
@@ -58,6 +60,8 @@ struct
 	      * int option		(* Induction variable *)
 	      * int			(* Number of cases *)
 	      * int			(* maximal number of cases *)
+	      * int			(* 0 = non-recursive
+					   1 = recursive *)
 	      * int)			(* Position (left to right) *)
 	       
 
@@ -74,8 +78,10 @@ struct
 
 
 
-    fun makeOperator ((S, k), L, S.Splits n, g, I, m) = 
-      Operator ((S, k), L, Index (n, I, List.length L, m, g+1))
+    fun makeOperator ((S, k), L, S.Splits n, g, I, m, true) =    (* recursive case *)
+          Operator ((S, k), L, Index (n, I, List.length L, m, 1, g+1))
+      | makeOperator ((S, k), L, S.Splits n, g, I, m, false) =   (* non-recursive case *)
+	  Operator ((S, k), L, Index (n, I, List.length L, m, 0, g+1))
 
     (* aux (G, B) = L' 
        
@@ -610,9 +616,13 @@ struct
 	    end
 	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
-			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
-				       induction 1,  maxNumberCases (V, I.targetFam V))
-			 :: ops
+			 let 
+			   val a = I.targetFam V
+			 in
+			   makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
+					 induction 1,  maxNumberCases (V, a), Subordinate.below (a, a))
+			   :: ops
+			 end
 		     else ops
 	in
 	  (sc', ops')
@@ -680,35 +690,35 @@ struct
        If   Op = (_, Sl) 
        then k = |Sl| 
     *)
-    fun index (Operator ((S, index), Sl, Index (_, _, k, _, _))) = k
+    fun index (Operator ((S, index), Sl, Index (_, _, k, _, _, _))) = k
 
     fun ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
 
     (* c1/m1 < c2/m2 iff c1 m2 < c2 m1 *)
-    fun compare' (Index (k1, NONE, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
-        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (p1, p2))
-	   of (EQUAL, EQUAL, EQUAL) => EQUAL
-	    | (EQUAL, EQUAL, result) => result
-	    | (EQUAL, result, _) => result
-	    | (result, _, _) => result)
-      | compare' (Index (k1, NONE, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
+    fun compare' (Index (k1, NONE, c1, m1, r1, p1), Index (k2, NONE, c2, m2, r2, p2)) =
+        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (r1, r2), Int.compare (p1, p2))
+	   of (EQUAL, EQUAL, EQUAL, result) => result
+	    | (EQUAL, EQUAL, result, _) => result
+	    | (EQUAL, result, _, _) => result
+	    | (result, _, _, _) => result)
+      | compare' (Index (k1, NONE, c1, m1, r1, p1), Index (k2, SOME i2, c2, m2, r2, p2)) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => GREATER
 	    | GREATER => GREATER)
-      | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, NONE, c2, m2, p2)) =
+      | compare' (Index (k1, SOME i1, c1, m1, r1, p1), Index (k2, NONE, c2, m2, r2, p2)) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => LESS
 	    | GREATER => GREATER)
-      | compare' (Index (k1, SOME i1, c1, m1, p1), Index (k2, SOME i2, c2, m2, p2)) =
-        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (i1, i2), 
-	       Int.compare (p1, p2))
-	   of (EQUAL, EQUAL, EQUAL, EQUAL) => EQUAL
-	    | (EQUAL, EQUAL, EQUAL, result) => result
-	    | (EQUAL, EQUAL, result, _) => result
-	    | (EQUAL, result, _, _) => result
-	    | (result, _, _, _) => result)
+      | compare' (Index (k1, SOME i1, c1, m1, r1, p1), Index (k2, SOME i2, c2, m2, r2, p2)) =
+        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (r1, r2), 
+	       Int.compare (i1, i2), Int.compare (p1, p2))
+	   of (EQUAL, EQUAL, EQUAL, EQUAL, result) => result
+	    | (EQUAL, EQUAL, EQUAL, result, _) => result
+	    | (EQUAL, EQUAL, result, _, _) => result
+	    | (EQUAL, result, _, _, _) => result
+	    | (result, _, _, _, _) => result)
 
 
     fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
@@ -775,19 +785,22 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
+	  fun recToString 0 = "non-rec"
+	    | recToString 1 = "rec"
+
 	  fun realFmt (r) = Real.fmt (StringCvt.FIX (SOME(2))) r
 
-	  fun indexToString (Index (sd, NONE, c, m, p)) = 
+	  fun indexToString (Index (sd, NONE, c, m, r, p)) = 
 	        "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
 		(realFmt (ratio (c, m))) ^ 
-		", ind=., sd=" ^ (Int.toString sd) ^ 
+		", ind=., sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^
 		", p=" ^ (Int.toString p) ^ ")"
 
-	    | indexToString (Index (sd, SOME idx , c, m, p)) = 
+	    | indexToString (Index (sd, SOME idx , c, m, r, p)) = 
 		"(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
 		(realFmt (ratio (c, m))) ^ 
 		", ind=" ^ (Int.toString idx) ^ 
-		", sd=" ^ (Int.toString sd) ^ 
+		", sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^ 
 		", p=" ^ (Int.toString p) ^ ")"
 		
 

@@ -130,6 +130,7 @@ structure MTPSplitting =
 		structure Conv = Conv
 		structure Whnf = Whnf
 		structure TypeCheck = TypeCheck
+		structure Subordinate = Subordinate
 		structure FunTypeCheck = FunTypeCheck
 		structure Index = Index
 		structure Print = Print
