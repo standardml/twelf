@@ -52,6 +52,7 @@ sig
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
   | Const of cid			(*     | c                    *)
+  | Proj  of Block * int		(*     | #k(b)                *)
   | Skonst of cid			(*     | c#                   *)
   | Def   of cid			(*     | d (strict)           *)
   | NSDef of cid			(*     | d (non strict)       *)
@@ -74,8 +75,14 @@ sig
 
   and Dec =				(* Declarations:              *)
     Dec of string option * Exp		(* D ::= x:V                  *)
+  | BDec of cid * Sub			(*     | v:l[s]               *)
 
-  (* Constraints *)
+  and Block =				(* Blocks:                    *)
+    Bidx of int				(* b ::= v                    *)
+  | LVar of Block option ref * cid * Sub 
+                                        (*       L(l,s)               *)
+
+  (* constraints *)
 
   and Cnstr =				(* Constraint:                *)
     Solved                      	(* Cnstr ::= solved           *)
@@ -116,6 +123,8 @@ sig
   | AbbrevDef of string * mid option * int
                                         (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
+  | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
+              * Dec Ctx * Dec list
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
@@ -134,6 +143,7 @@ sig
   val conDecImp    : ConDec -> int
   val conDecStatus : ConDec -> Status
   val conDecType   : ConDec -> Exp
+  val conDecBlock  : ConDec -> dctx * Dec list   
 
   val strDecName   : StrDec -> string
   val strDecParent : StrDec -> mid option
@@ -157,6 +167,7 @@ sig
   (* Declaration Contexts *)
 
   val ctxDec    : dctx * int -> Dec	(* get variable declaration   *)
+  val blockDec  : dctx * Block * int -> Dec 
 
   (* Explicit substitutions *)
 

@@ -214,7 +214,7 @@ struct
 	       end
 	       else (* s not patsub *)
                  (
-		   EClo (X, pruneSub (G, s, ss, rOccur))
+		   EClo (X, pruneSub (G, s, ss, rOccur, false))
 		   handle Unify (msg) => 
 		     if prunable then
 		       let 
@@ -248,6 +248,8 @@ struct
 	   of Undef => raise Unify "Parameter dependency"
 	    | Idx k' => BVar k')
       | pruneHead (G, H as Const _, ss, rOccur, prunable) = H
+      | pruneHead (G, Proj (LVar (r, l, s), i), ss, rOccur, prunable) = 
+	   Proj (LVar (r, l, pruneSub (G, s, ss, rOccur, prunable)), i)
       | pruneHead (G, H as Skonst _, ss, rOccur, prunable) = H
       | pruneHead (G, H as Def _, ss, rOccur, prunable) = H
       | pruneHead (G, FVar (x, V, s'), ss, rOccur, prunable) =
@@ -256,19 +258,23 @@ struct
 	  (pruneExp (G, (V, id), id, rOccur, prunable);
 	   FVar (x, V, comp (s', ss)))
       | pruneHead (G, H as FgnConst _, ss, rOccur, prunable) = H
-    (* pruneSub never allows pruning *)
-    and pruneSub (G, s as Shift (n), ss, rOccur) =
+    (* pruneSub never allows pruning OUTDATED *)
+    (* in the presence of block variables, this invariant 
+       doesn't hold any more, because substitutions do not
+       only occur in EVar's any more but also in LVars!
+       and there pruning is allowed!   Tue May 29 21:50:17 EDT 2001 -cs *)
+    and pruneSub (G, s as Shift (n), ss, rOccur, prunable) =
         if n < ctxLength (G) 
-	  then pruneSub (G, Dot (Idx (n+1), Shift (n+1)), ss, rOccur)
+	  then pruneSub (G, Dot (Idx (n+1), Shift (n+1)), ss, rOccur, prunable)
 	else comp (s, ss)		(* must be defined *)
-      | pruneSub (G, Dot (Idx (n), s'), ss, rOccur) =
+      | pruneSub (G, Dot (Idx (n), s'), ss, rOccur, prunable) =
 	(case bvarSub (n, ss)
 	   of Undef => raise Unify "Not prunable"
-	    | Ft => Dot (Ft, pruneSub (G, s', ss, rOccur)))
-      | pruneSub (G, Dot (Exp (U), s'), ss, rOccur) =
+	    | Ft => Dot (Ft, pruneSub (G, s', ss, rOccur, prunable)))
+      | pruneSub (G, Dot (Exp (U), s'), ss, rOccur, prunable) =
 	  (* below my raise Unify *)
-	  Dot (Exp (pruneExp (G, (U, id), ss, rOccur, false)),
-	       pruneSub (G, s', ss, rOccur))
+	  Dot (Exp (pruneExp (G, (U, id), ss, rOccur, prunable)),
+	       pruneSub (G, s', ss, rOccur, prunable))
       (* pruneSub (G, Dot (Undef, s), ss, rOccur) is impossible *)
       (* By invariant, all EVars X[s] are such that s is defined everywhere *)
       (* Pruning establishes and maintains this invariant *)
@@ -352,6 +358,7 @@ struct
        If   G |- s1 : G1   G1 |- U1 : V1    (U1,s1) in whnf
        and  G |- s2 : G2   G2 |- U2 : V2    (U2,s2) in whnf 
        and  G |- V1 [s1] = V2 [s2]  : L    (for some level L)
+       and  s1, U1, s2, U2 do not contain any blockvariable indices Bidx
        then if   there is an instantiation I :  
                  s.t. G |- U1 [s1] <I> == U2 [s2] <I>
             then instantiation is applied as effect, () returned
@@ -407,6 +414,19 @@ struct
 	   | (Const(c1), Const(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Constant clash"
+	   | (Proj (b1, i1), Proj (b2, i2)) =>
+		 if i1 <> i2 then raise Unify "Global parameter clash"
+		 else 
+		   (case (b1, b2) 
+		     of (LVar (r1, l1, t1), L as LVar (r2, l2, t2)) =>
+			  if l1 <> l2 then
+			    raise Unify "Label clash"
+			  else
+			    (* S(l) = Gsome, Lblock
+			       G1 |- s1 : Gsome 
+			       G2 |- s2 : Gsome *)
+			    (unifySub (G, comp (t1, s1), comp (t2, s2));
+			    r1 := SOME L))
 	   | (Skonst(c1), Skonst(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Skolem constant clash"
@@ -564,6 +584,36 @@ struct
     and unifyDec (G, (Dec(_, V1), s1), (Dec (_, V2), s2)) =
           unifyExp (G, (V1, s1), (V2, s2))
 
+    (* unifySub (G, s1, s2) = ()
+     
+       Invariant:
+       If   G |- s1 : G'
+       and  G |- s2 : G'
+       then unifySub (G, s1, s2) terminates with () 
+	    iff there exists an instantiation I, such that
+	    s1 [I] = s2 [I]
+
+       Remark:  unifySub is used only to unify the instantiation of SOME variables
+    *)
+	 
+    and unifySub (G, Shift (n1), Shift (n2)) = ()
+         (* by invariant *)
+      | unifySub (G, Shift(n), s2 as Dot _) = 
+          unifySub (G, Dot(Idx(n+1), Shift(n+1)), s2)
+      | unifySub (G, s1 as Dot _, Shift(m)) = 
+	  unifySub (G, s1, Dot(Idx(m+1), Shift(m+1)))
+      | unifySub (G, Dot(Ft1,s1), Dot(Ft2,s2)) =
+	  ((case (Ft1, Ft2) of
+	     (Idx (n1), Idx (n2)) => 
+	       if n1 <> n2 then raise Error "SOME variables mismatch"
+	       else ()                      
+           | (Exp (U1), Exp (U2)) => unifyExp (G, (U1, id), (U2, id))
+	   | (Exp (U1), Idx (n2)) => unifyExp (G, (U1, id), (Root (BVar (n2), Nil), id))
+           | (Idx (n1), Exp (U2)) => unifyExp (G, (Root (BVar (n1), Nil), id), (U2, id)));
+(*	   | (Undef, Undef) => 
+	   | _ => false *)   (* not possible because of invariant? -cs *)
+	  unifySub (G, s1, s2))
+
 
     fun unify1W (G, Us1, Us2) =
           (unifyExpW (G, Us1, Us2); awakeCnstr (nextCnstr ()))
@@ -585,6 +635,7 @@ struct
 
     fun unify (G, Us1, Us2) =
           (resetAwakenCnstrs (); unify1 (G, Us1, Us2))
+
 
     (* Shape unification
        V1 ~~ V2 means that two types have the same shape

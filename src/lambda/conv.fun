@@ -40,6 +40,8 @@ struct
 	       (c1 = c2) andalso convSpine ((S1, s1), (S2, s2))
 	   | (Skonst c1, Skonst c2) =>
 	       (c1 = c2) andalso convSpine ((S1, s1), (S2, s2))
+	   | (Proj (Bidx v1, i1), Proj (Bidx v2, i2)) =>
+	       (v1 = v2) andalso (i1 = i2) andalso convSpine ((S1, s1), (S2, s2))
 	   | (FVar (n1,_,s1'), FVar (n2,_,s2')) =>
   	       (* s1' = s2' = ^|G| *)
 	       (n1 = n2) andalso convSpine ((S1, s1), (S2, s2))
@@ -155,5 +157,6 @@ struct
   in
     val conv = convExp 
     val convDec = convDec
+    val convSub = convSub
   end (* local *)
 end;  (* functor Conv *)

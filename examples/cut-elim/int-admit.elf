@@ -6,7 +6,7 @@ ca : {A:o} conc A -> (hyp A -> conc C) -> conc C -> type.
 
 %% Axiom Conversions
 
-ca_axiom_l : ca A (axiom H) E (E H).
+% ca_axiom_l : ca A (axiom H) E (E H).
 
 ca_axiom_r : ca A D ([h:hyp A] axiom h) D.
 
@@ -41,7 +41,6 @@ ca_or1  : ca (A1 or A2) (orr1 D1)
 		 ca (A1 or A2) (orr1 D1)
 		 ([h:hyp (A1 or A2)] E1 h h1) (E1' h1))
 	   <- ca A1 D1 E1' F.
-
 ca_or2  : ca (A1 or A2) (orr2 D2)
 	   ([h:hyp (A1 or A2)] orl (E1 h) (E2 h) h) F
 	   <- ({h2:hyp A2}
@@ -54,6 +53,7 @@ ca_not  : ca (not A1) (notr D1)
 	   <- ca (not A1) (notr D1) E1 F1
 	   <- ({p:o} ca A1 F1 ([h1:hyp A1] D1 p h1) (F2 p)).
 
+
 ca_forall : ca (forall A1) (forallr D1)
 	     ([h:hyp (forall A1)] foralll T (E1 h) h) F
 	     <- ({h2:hyp (A1 T)}
@@ -61,12 +61,15 @@ ca_forall : ca (forall A1) (forallr D1)
 		   ([h:hyp (forall A1)] E1 h h2) (E1' h2))
 	     <- ca (A1 T) (D1 T) E1' F.
 
+
 ca_exists : ca (exists A1) (existsr T D1)
 	     ([h:hyp (exists A1)] existsl (E1 h) h) F
 	     <- ({a:i} {h1:hyp (A1 a)}
 		   ca (exists A1) (existsr T D1)
 		   ([h:hyp (exists A1)] E1 h a h1) (E1' a h1))
 	     <- ca (A1 T) D1 (E1' T) F.
+
+
 
 %% Left Commutative Conversions
 
@@ -94,9 +97,10 @@ cal_existsl : ca A (existsl D1 H) E (existsl D1' H)
 	       <- ({a:i} {h:hyp (B1 a)}
 		     ca A (D1 a h) E (D1' a h)).
 
+
 %% Right Commutative Conversions
 
-car_axiom : ca A D ([h:hyp A] axiom H1) (axiom H1).
+% car_axiom : ca A D ([h:hyp A] axiom H1) (axiom H1).
 
 car_andr : ca A D ([h:hyp A] andr (E1 h) (E2 h)) (andr E1' E2')
 	    <- ca A D E1 E1'
@@ -144,6 +148,9 @@ car_foralll: ca A D ([h:hyp A] foralll T (E1 h) H) (foralll T E1' H)
 car_existsr : ca A D ([h:hyp A] existsr T (E1 h)) (existsr T E1')
 	       <- ca A D E1 E1'.
 
-car_existsl : ca A D ([h:hyp A] existsl (E1 h) H) (existsl E1' H)
-	       <- ({a:i} {h1:hyp (B1 a)}
-		     ca A D ([h:hyp A] E1 h a h1) (E1' a h1)).
+% car_existsl : ca A D ([h:hyp A] existsl (E1 h) H) (existsl E1' H)
+%	       <- ({a:i} {h1:hyp (B1 a)}
+%		     ca A D ([h:hyp A] E1 h a h1) (E1' a h1)).
+
+% world  (some {A:o} pi {h : hyp A} | pi {a:i} | pi {p:o}) (ca _ _ _).
+%covers ca +A +D +E *P.

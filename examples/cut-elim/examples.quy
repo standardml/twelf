@@ -58,6 +58,7 @@ conc ((A or B) imp (B or A)).
 % Below seems like a bug---there should not be constraints on
 % F remaining.
 
+%{
 %query 1 *
 {A:i -> o} {B:i -> o}
 {h1:hyp (exists [x:i] (A x or B x))}
@@ -73,7 +74,7 @@ ca
       ([h3:hyp (exists [x:i] B x)] orr1 (axiom h3))
       h))
 (F A B h1).
-
+}%
 % Example 5 (Classical Logic)
 _ = 
 ([A:o] [p:pos (A or not A)]

@@ -23,13 +23,14 @@ struct
       
     (* Intermediate Data Structure *)
 
-    datatype EFVar =
+    datatype EFLVar =
       EV of I.Exp			(* Y ::= X         for  GX |- X : VX *)
-    | FV of string * I.Exp		(*     | (F , V)      if . |- F : V *)
+    | FV of string * I.Exp		(*     | (F, V)        if . |- F : V *)
+    | LV of I.Block                     (*     | L             if . |- L in W *) 
 
 
     (*
-       We write {{K}} for the context of K, where EVars and FVars have
+       We write {{K}} for the context of K, where EVars, FVars, LVars have
        been translated to declarations and their occurrences to BVars.
        We write {{U}}_K, {{S}}_K for the corresponding translation of an
        expression or spine.
@@ -91,6 +92,13 @@ struct
     fun eqFVar (I.FVar (n1, _, _)) (FV (n2,  _)) = (n1 = n2)
       | eqFVar _ _ = false
 
+    (* eqLVar L Y = B
+       where B iff X and Y represent same variable
+    *)
+    fun eqLVar (I.LVar (r1,_, _)) (LV (I.LVar (r2, _, _))) = (r1 = r2)
+      | eqLVar _ _ = false
+
+
     (* exists P K = B
        where B iff K = K1, Y, K2  s.t. P Y  holds
     *)
@@ -127,6 +135,8 @@ struct
 	else DP
       | occursInHead (k, I.Const _, DP) = DP
       | occursInHead (k, I.Def _, DP) = DP
+      | occursInHead (k, I.Proj _, DP) = DP   
+          (* LVar's can't occur in a head if in nf Tue May 29 22:28:37 EDT 2001 -cs *)
       | occursInHead (k, I.FgnConst _, DP) = DP
       | occursInHead (k, I.Skonst _, I.No) = I.No
       | occursInHead (k, I.Skonst _, I.Meta) = I.Meta
@@ -190,6 +200,11 @@ struct
 	  then collectSpine (G, (S, s), K)
 	else (* s' = ^|G| *)
 	  collectSpine (G, (S, s), I.Decl (collectExp (I.Null, (V, I.id), K), FV (name, V)))
+      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, l, t), i), S), s), K) =
+	if exists (eqLVar L) K
+          then collectSpine (G, (S, s), K)
+	else 
+	  collectSpine (G, (S, s), I.Decl (collectSub (I.Null, t, K), LV L))
       | collectExpW (G, (I.Root (_ , S), s), K) =
 	  collectSpine (G, (S, s), K)
       | collectExpW (G, (I.Lam (D, U), s), K) =
@@ -287,7 +302,9 @@ struct
     fun abstractEVar (I.Decl (K', EV (I.EVar(r',_,_,_))), depth, X as I.EVar (r, _, _, _)) =
         if r = r' then I.BVar (depth+1)
 	else abstractEVar (K', depth+1, X)
-      | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
+(*      | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
+	  abstractEVar (K', depth+1, X) remove later --cs*)
+      | abstractEVar (I.Decl (K', _), depth, X) = 
 	  abstractEVar (K', depth+1, X)
 
     (* abstractFVar (K, depth, F) = C'
@@ -299,12 +316,29 @@ struct
        then C' = BVar (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractFVar (I.Decl(K', EV _), depth, F) =
-  	  abstractFVar (K', depth+1, F)
-      | abstractFVar (I.Decl(K', FV (n', _)), depth, F as I.FVar (n, _, _)) = 
+    fun abstractFVar (I.Decl(K', FV (n', _)), depth, F as I.FVar (n, _, _)) = 
 	  if n = n' then I.BVar (depth+1)
 	  else abstractFVar (K', depth+1, F)
- 
+(*      | abstractFVar (I.Decl(K', EV _), depth, F) =
+  	  abstractFVar (K', depth+1, F) remove later --cs *)
+      | abstractFVar (I.Decl(K', _), depth, F) =
+  	  abstractFVar (K', depth+1, F)
+       
+    (* abstractLVar (K, depth, L) = C'
+     
+       Invariant:
+       If   G |- L : V
+       and  |G| = depth
+       and  L occurs in K  at kth position (starting at 1)
+       then C' = Bidx (depth + k)
+       and  {{K}}, G |- C' : V
+    *)
+    fun abstractLVar (I.Decl(K', LV (I.LVar (r', _, _))), depth, L as I.LVar (r, _, _)) = 
+	  if r = r' then I.Bidx (depth+1)
+	  else abstractLVar (K', depth+1, L)
+      | abstractLVar (I.Decl(K', _), depth, L) =
+  	  abstractLVar (K', depth+1, L)
+      
     (* abstractExpW (K, depth, (U, s)) = U'
        U' = {{U[s]}}_K
 
@@ -323,6 +357,11 @@ struct
 		    abstractExp (K, depth + 1, (V, I.dot1 s)))
       | abstractExpW (K, depth, (I.Root (F as I.FVar _, S), s)) =
 	  I.Root (abstractFVar (K, depth, F), 
+		  abstractSpine (K, depth, (S, s)))
+      | abstractExpW (K, depth, (I.Root (I.Proj (L as I.LVar _, i), S), s)) =
+	  I.Root (I.Proj (abstractLVar (K, depth, L), i),  
+		  (* can we just ignore s here? 
+		     Wed May 30 11:02:43 EDT 2001 -cs *)
 		  abstractSpine (K, depth, (S, s)))
       | abstractExpW (K, depth, (I.Root (H, S) ,s)) =
 	  I.Root (H, abstractSpine (K, depth, (S, s)))   
@@ -391,6 +430,24 @@ struct
     *)
     and abstractDec (K, depth, (I.Dec (x, V), s)) =
 	  I.Dec (x, abstractExp (K, depth, (V, s)))
+
+
+
+    (* abstractSOME (K, s) = s'
+       s' = {{s}}_K
+
+       Invariant:
+       If    . |- s : G    
+       and   K is internal context in dependency order
+       and   K ||- s
+       then  {{K}} |- s' : G'
+    *)
+    fun abstractSOME (K, I.Shift n) = I.Shift n
+      | abstractSOME (K, I.Dot (I.Idx k, s)) = 
+          I.Dot (I.Idx k, abstractSOME (K, s))
+      | abstractSOME (K, I.Dot (I.Exp U, s)) =
+	  I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractSOME (K, s))
+
 
     (* abstractCtx (K, depth, G) = (G', depth')
        where G' = {{G}}_K
@@ -473,12 +530,18 @@ struct
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(NONE, V''), I.Maybe), V))
 	end
-      | abstractKPi (I.Decl(K', FV (name,V')), V) =
+      | abstractKPi (I.Decl (K', FV (name,V')), V) =
 	let
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(SOME(name), V''), I.Maybe), V))
+	end
+      | abstractKPi (I.Decl (K', LV (I.LVar (r, l, t))), V) =
+	let
+	  val t' = abstractSOME (K', t)	  
+	in
+	  abstractKPi (K', I.Pi ((I.BDec (l, t'), I.Maybe), V))
 	end
 
     (* abstractKLam (K, U) = U'
