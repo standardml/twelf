@@ -220,7 +220,8 @@ struct
 	 of NONE => NONE
           | SOME(cid) => (case IntSyn.sgnLookup(cid)
 			    of IntSyn.ConDec (_, i, V, _) => SOME(IntSyn.Const(cid), i, V)
-			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)))
+			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)
+			     | IntSyn.NSConDef  (_, i, _, V, _) => SOME(IntSyn.NSDef(cid), i, V)))
 
 
   (* Translating identifiers once they have been classified *)
