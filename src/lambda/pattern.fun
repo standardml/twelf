@@ -36,7 +36,7 @@ struct
        if   G, V1, .., Vn |- s : G1  and  G1 |- U : V
        then if   lam V1...lam Vn. U[s] =eta*=> k 
 	    then k' = k
-            and  G |- k' : Pi V1...Pi Vn. V
+            and  G |- k' : Pi V1...Pi Vn. V [s]
 	    else Eta is raised
 	      (even if U[s] might be eta-reducible to some other expressions).
     *)

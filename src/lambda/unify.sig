@@ -15,5 +15,6 @@ sig
   val unifiable : IntSyn.eclo * IntSyn.eclo -> bool
 
   val safeInvertExp : IntSyn.eclo * IntSyn.Sub -> IntSyn.Exp
+  val safeInvertSub : IntSyn.Sub * IntSyn.Sub -> IntSyn.Sub
 
 end;  (* signature UNIFY *)

@@ -265,7 +265,8 @@ struct
     *)
     (* improvement: use one reference, instead of creating a new one for every call -fp *)
     fun safeInvertExp (Us1, s2) = tryInvertExp (Us1, s2, ref NONE)
-
+    fun safeInvertSub (s1, s2) = tryInvertSub (s1, s2, ref NONE)
+      
     (* Instantiating EVars *)
     (* Awaken constraints associated with X identified by r *)
     fun instantiateEVarC (r, U, Cnstr) = 
@@ -602,5 +603,6 @@ struct
     val unify = unifyExp
     fun unifiable (Us1, Us2) = (unifyExp (Us1, Us2); true) handle Unify _ => false
     val safeInvertExp = safeInvertExp
+    val safeInvertSub = safeInvertSub
   end
 end;  (* functor Unify *)
