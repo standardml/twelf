@@ -1,0 +1,36 @@
+%%% Sample queries.
+%%% Author: Roberto Virga.
+
+%query 16 *
+digit N 16.
+
+%query 1 *
+represent 32767 8 L.
+
+%query 1 *
+continued_fraction 3/1999 L.
+
+%query 1 *
+numerators (0 , 666 , 3 , nil) NL.
+
+%query 1 *
+denominators (0 , 666 , 3 , nil) DL.
+
+%query 1 *
+integer ~34.
+
+%query 0 *
+integer 34/7.
+
+%query 1 *
+floor ~15/4 N.
+
+%query 1 *
+floor 15/4 N.
+
+%query 1 *
+ceiling ~15/4 N.
+
+%query 1 *
+ceiling 15/4 N.
+
