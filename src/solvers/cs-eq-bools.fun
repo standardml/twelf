@@ -21,7 +21,16 @@ struct
 
   and Mon =                              (* Monomials:                 *)
     Mon of (IntSyn.Exp * IntSyn.Sub) set
-                                         (* Mon ::= n * U1[s1] * ...   *)
+                                         (* Mon ::= U1[s1] * ...       *)
+
+  (* A monomial (U1[s1] * U2[s2] * ...) is said to be normal iff
+       (a) each (Ui,si) is in whnf and not a foreign term corresponding
+           to a sum;
+       (b) the terms Ui[si] are pairwise distinct.
+     A sum is normal iff all its monomials are normal, and moreover they
+     are pairwise distinct.
+  *)
+
   local
     open IntSyn
 
@@ -58,9 +67,11 @@ struct
     fun impliesExp (U, V) = Root (Const (!impliesID), App (U, App (V, Nil)))
     fun iffExp (U, V)     = Root (Const (!iffID), App (U, App (V, Nil)))
 
+    (* member eq (x, L) = true iff there there is a y in L s.t. eq(y, x) *)
     fun member eq (x, L) =
           List.exists (fn y => eq(x, y)) L
 
+    (* differenceSet eq L1 L2 = (L1 \ L2) U (L2 \ L1) *)
     fun differenceSet eq (L1, L2) =
           let
             val L1' = List.filter (fn x => not (member eq (x, L2))) L1
@@ -69,11 +80,13 @@ struct
             L1' @ L2'
           end
 
+    (* equalSet eq (L1, L2) = true iff L1 is equal to L2 (both seen as sets) *)
     fun equalSet eq (L1, L2) =
           (case differenceSet eq (L1, L2)
              of nil => true
               | (_ :: _) => false)
 
+    (* unionSet eq (L1, L2) = L1 U L2 *)
     fun unionSet eq (L1, L2) =
           let
             val L2' = List.filter (fn x => not (member eq (x, L1))) L2
@@ -81,6 +94,13 @@ struct
             L1 @ L2'
           end
 
+    (* fromExpW (U, s) = sum
+
+       Invariant:
+       If   G' |- s : G    G |- U : V    (U,s)  in whnf
+       then sum is the internal representation of U[s] as sum of monomials
+       and sum is normal
+    *)
     fun fromExpW (Us as (FgnExp (cs, ops), _)) =
           if (cs = !myID)
           then recoverSum (#toInternal(ops) ())
@@ -90,6 +110,13 @@ struct
     and fromExp Us =
           fromExpW (Whnf.whnf Us)
 
+    (* recoverSum U = sum
+
+       Invariant: 
+       If   G |- U : V and U is the Twelf syntax conversion of sum
+       then convert sum back to its original (internal) form
+       and sum is normal
+    *)
     and recoverSum (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
           if (cid = !xorID)
           then
@@ -117,6 +144,14 @@ struct
           in
             Sum (false, [mon])
           end
+
+
+    (* recoverMon U = mon
+
+       Invariant: 
+       If   G |- U : V and U is the Twelf syntax conversion of mon
+       then convert mon back to its original (internal) form
+    *)
     and recoverMon (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
           if (cid = !andID)
           then
@@ -134,9 +169,22 @@ struct
           in
             Mon [Us]
           end
+
+    (* recoverEClo U = Us
+
+       Invariant: 
+       If   G |- U : V and U is the Twelf syntax conversion of the variable U
+       then converts U back to its original (internal) form
+    *)
     and recoverEClo (EClo Us) = Us
       | recoverEClo U = (U, id)
 
+    (* toExp sum = U
+
+       Invariant:
+       If sum is normal
+       G |- U : V and U is the Twelf syntax conversion of sum
+    *)
     fun toExp (Sum (m, nil)) =
           let
             val cid = if m then !trueID else !falseID
@@ -148,21 +196,82 @@ struct
           else xorExp (toExp (Sum (m, nil)), toExpMon mon)
       | toExp (Sum (m, monLL as (mon :: monL))) =
           xorExp (toExp (Sum (m, monL)), toExpMon mon)
+
+    (* toExpMon mon = U
+
+       Invariant:
+       If mon is normal
+       G |- U : V and U is the Twelf syntax conversion of mon
+    *)
     and toExpMon (Mon [Us]) = toExpEClo Us
       | toExpMon (Mon (Us :: UsL)) =
           andExp (toExpMon (Mon UsL), toExpEClo Us)
+
+    (* toExpEClo (U,s) = U
+
+       Invariant: 
+       G |- U : V and U is the Twelf syntax conversion of Us
+    *)
     and toExpEClo (U, Shift (0)) = U
       | toExpEClo Us = EClo Us
 
+    (* compatibleMon (mon1, mon2) = true only if mon1 = mon2 (as monomials) *)
     fun compatibleMon (Mon UsL1, Mon UsL2) =
-          equalSet (fn ((U1, s1), (U2, s2)) => sameExp (U1, U2)
-                                               andalso sameSub (s1, s2))
+          equalSet (fn (Us1, Us2) => sameExp (Us1, Us2))
                    (UsL1, UsL2)
 
-    and sameExp (EVar (r1, _, _, _), EVar (r2, _, _, _)) = (r1 = r2)
-      | sameExp (Root(BVar (k1), _), Root(BVar (k2), _)) = (k1 = k2)
-      | sameExp (_, _) = false
+    (* sameExpW ((U1,s1), (U2,s2)) = T
 
+       Invariant:
+       If   G |- s1 : G1    G1 |- U1 : V1    (U1,s1)  in whnf
+       and  G |- s2 : G2    G2 |- U2 : V2    (U2,s2)  in whnf
+       then T only if U1[s1] = U2[s2] (as expressions)
+    *)
+    and sameExpW (Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
+          (case (H1, H2) of
+	     (BVar(k1), BVar(k2)) => 
+	       (k1 = k2) andalso sameSpine ((S1, s1), (S2, s2))
+	   | (FVar (n1,_,_), FVar (n2,_,_)) =>
+	       (n1 = n2) andalso sameSpine ((S1, s1), (S2, s2))
+           | _ => false)
+      | sameExpW (Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
+		  Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
+         (r1 = r2) andalso sameSub (s1, s2)
+      | sameExpW _ = false
+
+    (* sameExp ((U1,s1), (U2,s2)) = T
+
+       Invariant:
+       If   G |- s1 : G1    G1 |- U1 : V1
+       and  G |- s2 : G2    G2 |- U2 : V2
+       then T only if U1[s1] = U2[s2] (as expressions)
+    *)
+    and sameExp (Us1, Us2) = sameExp (Whnf.whnf Us1, Whnf.whnf Us2)
+
+    (* sameSpine (S1, S2) = T
+
+       Invariant:
+       If   G |- S1 : V > W
+       and  G |- S2 : V > W
+       then T only if S1 = S2 (as spines)
+    *)
+    and sameSpine ((Nil, s1), (Nil, s2)) = true
+      | sameSpine ((SClo (S1, s1'), s1), Ss2) =
+          sameSpine ((S1, comp (s1', s1)), Ss2)
+      | sameSpine (Ss1, (SClo (S2, s2'), s2)) =
+          sameSpine (Ss1, (S2, comp (s2', s2)))
+      | sameSpine ((App (U1, S1), s1), (App (U2, S2), s2)) =
+          sameExp ((U1, s1), (U2, s2))
+            andalso sameSpine ((S1, s1), (S2, s2))
+      | sameSpine _ = false
+
+    (* sameSub (s1, s2) = T
+
+       Invariant:
+       If   G |- s1 : G'
+       and  G |- s2 : G'
+       then T only if s1 = s2 (as substitutions)
+    *)
     and sameSub (Shift _, Shift _) = true
       | sameSub (Dot (Idx (k1), s1), Dot (Idx (k2), s2)) =
           (k1 = k2) andalso sameSub (s1, s2)
@@ -170,14 +279,27 @@ struct
           sameSub (s1, Dot (Idx (Int.+(k2,1)), Shift (Int.+(k2,1))))
       | sameSub (Shift (k1), s2 as Dot (Idx _, _)) =
           sameSub (Dot (Idx (Int.+(k1,1)), Shift (Int.+(k1,1))), s2)
-      | sameSub (_, _) = false
+      | sameSub _ = false
 
-    and sameEClo ((U1, s1), (U2, s2)) =
-          sameExp (U1, U2) andalso sameSub (s1, s2)
+    (* xorSum (sum1, sum2) = sum3
 
+       Invariant:
+       If   sum1 normal
+       and  sum2 normal
+       then sum3 normal
+       and  sum3 = sum1 xor sum2
+    *)
     fun xorSum (Sum (m1, monL1), Sum (m2, monL2)) =
           Sum (not (m1 = m2), differenceSet compatibleMon (monL1, monL2))
 
+    (* andSum (sum1, sum2) = sum3
+
+       Invariant:
+       If   sum1 normal
+       and  sum2 normal
+       then sum3 normal
+       and  sum3 = sum1 and sum2
+    *)
     fun andSum (sum1 as Sum (false, nil), sum2) = sum1
       | andSum (sum1, sum2 as Sum (false, nil)) = sum2
       | andSum (sum1 as Sum (true, nil), sum2) = sum2
@@ -185,42 +307,91 @@ struct
       | andSum (Sum (m1, mon1 :: monL1), sum2) =
           xorSum (andSumMon (sum2, mon1), andSum (Sum (m1, monL1), sum2))
 
+    (* andSumMon (sum1, mon2) = sum3
+
+       Invariant:
+       If   sum1 normal
+       and  mon2 normal
+       then sum3 normal
+       and  sum3 = sum1 and mon2
+    *)
     and andSumMon (Sum (true, nil), mon) = Sum (false, [mon])
       | andSumMon (sum1 as Sum (false, nil), mon) = sum1
       | andSumMon (Sum (m1, (Mon UsL1) :: monL1), mon2 as Mon UsL2) =
           let
-            val UsL = unionSet sameEClo (UsL1, UsL2)
+            val UsL = unionSet sameExp (UsL1, UsL2)
           in
             xorSum (Sum (false, [Mon UsL]),
                     andSumMon (Sum (m1, monL1), mon2))
           end
 
+    (* notSum sum = sum'
+
+       Invariant:
+       If   sum  normal
+       then sum' normal
+       and  sum' = not sum
+    *)
     fun notSum (Sum (m, monL)) =
           Sum (not m, monL)
 
+    (* orSum (sum1, sum2) = sum3
+
+       Invariant:
+       If   sum1 normal
+       and  sum2 normal
+       then sum3 normal
+       and  sum3 = sum1 or sum2
+    *)
     fun orSum (sum1, sum2) =
           xorSum (sum1, xorSum (sum2, andSum (sum1, sum2)))
 
+    (* impliesSum (sum1, sum2) = sum3
+
+       Invariant:
+       If   sum1 normal
+       and  sum2 normal
+       then sum3 normal
+       and  sum3 = sum1 implies sum2
+    *)
     fun impliesSum (sum1, sum2) =
           notSum (xorSum (sum1, andSum (sum1, sum2)))
 
+    (* iffSum (sum1, sum2) = sum3
+
+       Invariant:
+       If   sum1 normal
+       and  sum2 normal
+       then sum3 normal
+       and  sum3 = sum1 iff sum2
+    *)
     fun iffSum (sum1, sum2) =
            notSum (xorSum (sum1, sum2))
 
+    (* normalizeSum sum = sum', where sum' normal and sum' = sum *)
     fun normalizeSum (sum as (Sum (m, nil))) = sum
       | normalizeSum (Sum (m, [mon])) =
           xorSum (Sum (m, nil), normalizeMon mon)
       | normalizeSum (Sum (m, mon :: monL)) =
           xorSum (normalizeMon mon, normalizeSum (Sum (m, monL)))
+
+    (* normalizeMon mon = mon', where mon' normal and mon' = mon *)
     and normalizeMon (Mon [Us]) = fromExp Us
       | normalizeMon (Mon (Us :: UsL)) =
           andSum (fromExp Us, normalizeMon (Mon UsL))
 
+    (* mapSum (f, m + M1 + ...) = m + mapMon(f,M1) + ... *)
     and mapSum (f, Sum (m, monL)) =
           Sum (m, List.map (fn mon => mapMon (f, mon)) monL)
+
+    (* mapMon (f, n * (U1,s1) + ...) = n * f(U1,s1) * ... *)
     and mapMon (f, Mon UsL) =
           Mon (List.map (fn Us => Whnf.whnf (f (EClo Us), id)) UsL)
 
+    (* findMon f (G, sum) =
+         SOME(x) if f(M) = SOME(x) for some monomial M in sum
+         NONE    if f(M) = NONE for all monomials M in sum
+    *)
     fun findMon f (G, Sum(m, monL)) =
           let
             fun findMon' (nil, monL2) = NONE
@@ -232,6 +403,14 @@ struct
             findMon' (monL, nil)
           end
 
+    (* unifySum (G, sum1, sum2) = result
+
+       Invariant:
+       If   G |- sum1 : number     sum1 normal
+       and  G |- sum2 : number     sum2 normal
+       then result is the outcome (of type FgnUnify) of solving the
+       equation sum1 = sum2 by gaussian elimination.
+    *)
     fun unifySum (G, sum1, sum2) =
           let
             fun invertMon (G, Mon [(LHS as EVar (r, _, _, _), s)], sum) =
@@ -266,6 +445,12 @@ struct
                   )
           end   
 
+    (* toFgn sum = U
+
+       Invariant:
+       If sum normal
+       then U is a foreign expression representing sum.
+    *)
     and toFgn (sum as Sum (m, nil)) = toExp (sum)
       | toFgn (sum as Sum (m, monL)) =
           FgnExp (!myID,
@@ -317,6 +502,10 @@ struct
 
     fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
 
+    (* init (cs, installFunction) = ()
+       Initialize the constraint solver.
+       installFunction is used to add its signature symbols.
+    *)
     fun init (cs, installF) =
           (
             myID := cs;

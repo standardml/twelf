@@ -580,13 +580,16 @@ struct
             )
           end
 
+    (* delay all terms of a monomial on the given constraint *)
     fun delayMon (Mon(n, UsL), cnstr) =
           List.app (fn Us => Unify.delay (Us, cnstr)) UsL
 
+    (* unify two restrictions *)
     fun unifyRestr (Restr (G, proof), proof') =
           if Unify.unifiable (G, (proof, id), (proof', id)) then ()
           else raise Error
 
+    (* unify a sum with a number *)
     fun unifySum (G, sum, d) =
           if (Unify.unify (G, (toExp (sum), id), 
                                   (constant (floor (d)), id)); true)
@@ -701,6 +704,7 @@ struct
             )
           end
 
+    (* insert the given (unrestricted) expression in the tableau *)
     and insert (G, Us) =
           let
             val sum = fromExp Us
@@ -893,15 +897,13 @@ struct
     (* returns the list of unsolved constraints associated with the given position *)
     and restrictions (pos) =
           let
-            val _ = display()
             fun member (x, l) = List.exists (fn y => x = y) l
             fun test (l) = restricted(l) andalso not (dead(l))
-            fun reachable ((pos as Row(row)) :: candidates, closure) =
-                  if member (pos, closure)
-                  then reachable (candidates, closure)
+            fun reachable ((pos as Row(row)) :: candidates, tried, closure) =
+                  if member (pos, tried)
+                  then reachable (candidates, tried, closure)
                   else
                     let
-                      val _ = displayPos (pos)
                       val new_candidates = 
                             Array.foldl
                               (fn (col, _, candidates) => 
@@ -913,14 +915,15 @@ struct
                       val closure' = if test (label(pos)) then (pos :: closure)
                                      else closure
                     in
-                      reachable (new_candidates @ candidates, closure')
+                      reachable (new_candidates @ candidates,
+                                 pos :: tried,
+                                 closure')
                     end
-              | reachable ((pos as Col(col)) :: candidates, closure) =
-                  if member (pos, closure)
-                  then reachable (candidates, closure)
+              | reachable ((pos as Col(col)) :: candidates, tried, closure) =
+                  if member (pos, tried)
+                  then reachable (candidates, tried, closure)
                   else
                     let
-                      val _ = displayPos (pos)
                       val candidates' = 
                             Array.foldl
                               (fn (row, _, candidates) => 
@@ -932,9 +935,11 @@ struct
                       val closure' = if test (label(pos)) then (pos :: closure)
                                      else closure
                     in
-                      reachable (candidates' @ candidates, closure')
+                      reachable (candidates' @ candidates,
+                                 pos :: tried,
+                                 closure')
                     end
-              | reachable (nil, closure) = closure
+              | reachable (nil, _, closure) = closure
             fun restrExp (pos) =
                   let
                     val l = label(pos)
@@ -946,7 +951,7 @@ struct
                   end
                   
           in
-            List.map restrExp (reachable ([pos], nil))
+            List.map restrExp (reachable ([pos], nil, nil))
           end
                 
     (* returns the list of unsolved constraints associated with the given tag *)
@@ -977,7 +982,7 @@ struct
              of nil => true
               | (_ :: _) => false)
 
-    (* create a foreingn constraint for the given tag *)
+    (* create a foreign constraint for the given tag *)
     and makeCnstr (tag) =
           FgnCnstr (!myID,
                     {
@@ -1004,6 +1009,7 @@ struct
              NONE) handle Found i => SOME(i)
           end
 
+    (* bound the given expression below d *)
     and boundLower (G, decomp, d) =
           let
             val W = newEVar (G, number ())
@@ -1015,6 +1021,7 @@ struct
             (pos, Restr(G, proof))
           end
 
+    (* bound the given expression above d *)
     and boundUpper (G, decomp, d) =
           let
             val W = newEVar (G, number ())
@@ -1026,6 +1033,7 @@ struct
             (pos, Restr (G, proof))
           end
 
+    (* explore the relaxed solution space looking for integer solutions *) 
     and exploreBB (pos, restr) =
           (let
              val result = restrict (pos, restr)
@@ -1052,8 +1060,8 @@ struct
                  | NONE => BranchSucceed(result)
            end) handle Error => BranchFail
 
-    (* minimize a tableau that has been determined non-minimal (but consistent) as a consequence
-       of adding the given row
+    (* minimize a tableau that has been determined non-minimal (but consistent) as a
+       consequence of adding the given row
     *)
     and minimizeBB (row) =
           let
@@ -1096,9 +1104,7 @@ struct
                           | _ => ())
                     )
                   else ()
-            (* find out if the given row has been made trivial by killing some
-               columns
-            *)
+            (* find out if the given row has been made trivial by killing some columns *)
             fun killRow (i, l : label) =
                   if not (dead(l))
                   then

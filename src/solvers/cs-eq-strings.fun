@@ -30,9 +30,15 @@ struct
 
     fun toString s = ("\"" ^ s ^ "\"")
 
-    fun stringConDec (str) = ConDec (toString (str), 0, Normal, string (), Type)
+    fun stringConDec (str) = ConDec (toString (str), 0, Normal, 
+                                     string (), Type)
+
     fun stringExp (str) = Root (FgnConst (!myID, stringConDec (str)), Nil)
 
+    (* fromString string =
+         SOME(str)  if string parses to the string str
+         NONE       otherwise 
+    *)
     fun fromString string =
           let
             val len = String.size string
@@ -45,20 +51,45 @@ struct
               NONE
           end
 
+    (* parseString string = SOME(conDec) or NONE
+
+       Invariant: 
+       If str parses to the string str
+       then conDec is the (foreign) constant declaration of str
+    *)
     fun parseString string =
           (case fromString (string)
              of SOME(str) => SOME(stringConDec (str))
               | NONE => NONE)
 
+    (* solveString str = SOME(U)
+
+       Invariant: 
+       U is the term obtained applying the foreign constant
+       corresponding to the string str to an empty spine
+    *)
     fun solveString (G, S, k) = SOME(stringExp (Int.toString k))
 
     datatype Concat =
-      Concat of Atom list
+      Concat of Atom list                  (* Concatenation:             *)
+                                           (* Concat::= A1 ++ A2 ++ ...  *) 
 
-    and Atom =
-      String of string
-    | Exp of IntSyn.eclo
+    and Atom =                             (* Atoms:                     *)
+      String of string                     (* Atom ::= "str"             *)
+    | Exp of IntSyn.eclo                   (*        | (U,s)             *)   
 
+    (* A concatenation is said to be normal if
+         (a) it does not contain empty string atoms
+         (b) it does not contain two consecutive string atoms
+    *)
+
+    (* fromExpW (U, s) = concat
+
+       Invariant:
+       If   G' |- s : G    G |- U : V    (U,s)  in whnf
+       then concat is the representation of U[s] as concatenation of atoms
+       and  concat is normal
+    *)
     fun fromExpW (Us as (FgnExp (cs, ops), _)) =
           if (cs = !myID)
           then recoverConcat (#toInternal(ops) ())
@@ -71,9 +102,24 @@ struct
           else Concat [Exp Us]
       | fromExpW Us =
           Concat [Exp Us]
+
+    (* fromExp (U, s) = concat
+
+       Invariant:
+       If   G' |- s : G    G |- U : V
+       then concat is the representation of U[s] as concatenation of atoms
+       and  concat is normal
+    *)
     and fromExp Us =
           fromExpW (Whnf.whnf Us)
 
+    (* recoverConcat U = concat
+
+       Invariant: 
+       If   G |- U : V and U is the Twelf syntax conversion of concat
+       then convert concat back to its original (internal) form
+       and  concat is normal
+    *)
     and recoverConcat (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
           if (cid = !concatID)
           then
@@ -87,6 +133,12 @@ struct
             fromExp (U, id)
       | recoverConcat U = fromExp (U, id)
 
+    (* toExp concat = U
+
+       Invariant:
+       If concat is normal
+       G |- U : V and U is the Twelf syntax conversion of concat
+    *)
     fun toExp (Concat nil) = stringExp ""
       | toExp (Concat [String str]) = stringExp str
       | toExp (Concat [Exp (U, Shift(0))]) = U
@@ -94,6 +146,14 @@ struct
       | toExp (Concat (A :: AL)) =
           concatExp (toExp (Concat [A]), toExp (Concat AL))
 
+    (* catConcat (concat1, concat2) = concat3
+
+       Invariant:
+       If   concat1 normal
+       and  concat2 normal
+       then concat3 normal
+       and  concat3 = concat1 ++ concat2
+    *)
     fun catConcat (Concat nil, concat2) = concat2
       | catConcat (concat1, Concat nil) = concat1
       | catConcat (Concat AL1, Concat AL2) =
@@ -102,12 +162,14 @@ struct
                Concat ((List.rev revAL1') @ ((String (str1 ^ str2)) :: AL2'))
               | (_, _) => Concat (AL1 @ AL2))
 
+    (* normalize concat = concat', where concat' normal and concat' = concat *)
     fun normalize (concat as (Concat nil)) = concat
       | normalize (concat as (Concat [String str])) = concat
       | normalize (Concat [Exp Us]) = fromExp Us
       | normalize (Concat (A :: AL)) =
           catConcat (normalize (Concat [A]), normalize(Concat AL))
 
+    (* mapSum (f, A1 + ...) = f(A1) ++ ... *)
     fun mapConcat (f, Concat AL) =
           let
             fun mapConcat' nil = nil
@@ -119,10 +181,17 @@ struct
             Concat (mapConcat' AL)
           end
 
-    datatype Split = Split of string * string
+    (* Split:                                         *)
+    (* Split ::= str1 ++ str2                         *)
+    datatype Split = Split of string * string   
 
+    (* Decomposition:                                 *)
+    (* Decomp ::= toParse | [parsed1, ..., parsedn]   *)
     datatype Decomp = Decomp of string * string list
 
+    (* index (str1, str2) = [idx1, ..., idxn]
+       where the idxk are all the positions in str2 where str1 appear.
+    *)
     fun index (str1, str2) =
           let
             val max = (String.size str2) - (String.size str1)
@@ -138,6 +207,9 @@ struct
             index' 0
           end
 
+    (* split (str1, str2) = [Split(l1,r1), ..., Split(ln,rn)]
+       where, for each k, str2 = lk ++ str1 ++ rk.
+    *)
     fun split (str1, str2) =
           let
             val len = String.size str1
@@ -148,17 +220,166 @@ struct
             List.map split' (index (str1, str2))
           end
 
+    (* sameConcat (concat1, concat2) =
+         true only if concat1 = concat2 (as concatenations)
+    *)
+    fun sameConcat (Concat AL1, Concat AL2) =
+          let
+            fun sameConcat' (nil, nil) = true
+              | sameConcat' ((String str1) :: AL1, (String str2) :: AL2) =
+                  (str1 = str2) andalso sameConcat' (AL1, AL2)
+              | sameConcat' _ = false
+          in
+            sameConcat' (AL1, AL2)
+          end
+
+    (* sameExpW ((U1,s1), (U2,s2)) = T
+
+       Invariant:
+       If   G |- s1 : G1    G1 |- U1 : V1    (U1,s1)  in whnf
+       and  G |- s2 : G2    G2 |- U2 : V2    (U2,s2)  in whnf
+       then T only if U1[s1] = U2[s2] (as expressions)
+    *)
+    and sameExpW (Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
+          (case (H1, H2) of
+             (BVar(k1), BVar(k2)) =>
+               (k1 = k2) andalso sameSpine ((S1, s1), (S2, s2))
+           | (FVar (n1,_,_), FVar (n2,_,_)) =>
+               (n1 = n2) andalso sameSpine ((S1, s1), (S2, s2))
+           | _ => false)
+      | sameExpW (Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
+                  Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
+         (r1 = r2) andalso sameSub (s1, s2)
+      | sameExpW _ = false
+
+    (* sameExp ((U1,s1), (U2,s2)) = T
+
+       Invariant:
+       If   G |- s1 : G1    G1 |- U1 : V1
+       and  G |- s2 : G2    G2 |- U2 : V2
+       then T only if U1[s1] = U2[s2] (as expressions)
+    *)
+    and sameExp (Us1, Us2) = sameExp (Whnf.whnf Us1, Whnf.whnf Us2)
+
+    (* sameSpine (S1, S2) = T
+
+       Invariant:
+       If   G |- S1 : V > W
+       and  G |- S2 : V > W
+       then T only if S1 = S2 (as spines)
+    *)
+    and sameSpine ((Nil, s1), (Nil, s2)) = true
+      | sameSpine ((SClo (S1, s1'), s1), Ss2) =
+          sameSpine ((S1, comp (s1', s1)), Ss2)
+      | sameSpine (Ss1, (SClo (S2, s2'), s2)) =
+          sameSpine (Ss1, (S2, comp (s2', s2)))
+      | sameSpine ((App (U1, S1), s1), (App (U2, S2), s2)) =
+          sameExp ((U1, s1), (U2, s2))
+            andalso sameSpine ((S1, s1), (S2, s2))
+      | sameSpine _ = false
+
+    (* sameSub (s1, s2) = T
+
+       Invariant:
+       If   G |- s1 : G'
+       and  G |- s2 : G'
+       then T only if s1 = s2 (as substitutions)
+    *)
+    and sameSub (Shift _, Shift _) = true
+      | sameSub (Dot (Idx (k1), s1), Dot (Idx (k2), s2)) =
+          (k1 = k2) andalso sameSub (s1, s2)
+      | sameSub (s1 as Dot (Idx _, _), Shift (k2)) =
+          sameSub (s1, Dot (Idx (Int.+(k2,1)), Shift (Int.+(k2,1))))
+      | sameSub (Shift (k1), s2 as Dot (Idx _, _)) =
+          sameSub (Dot (Idx (Int.+(k1,1)), Shift (Int.+(k1,1))), s2)
+      | sameSub _ = false
+
+    (* Unification Result:
+       StringUnify ::= {G1 |- X1 := U1[s1], ..., Gn |- Xn := Un[sn]}
+                     | {delay U1 on cnstr1, ..., delay Un on cnstrn}
+                     | Failure
+    *)
     datatype StringUnify =
       MultAssign of (Dec Ctx * Exp * Exp * Sub) list
     | MultDelay of Exp list * Cnstr ref
     | Failure
 
+    (* toFgnUnify stringUnify = result
+       where result is obtained translating stringUnify.
+    *)
     fun toFgnUnify (MultAssign L) =
           IntSyn.Succeed (List.map (fn GXUss => Assign GXUss) L)
       | toFgnUnify (MultDelay (UL, cnstr)) =
           IntSyn.Succeed (List.map (fn U => Delay (U, cnstr)) UL)
       | toFgnUnify (Failure) = Fail
 
+    (* unifyRigid (G, concat1, concat2) = stringUnify
+
+       Invariant:
+       If   G |- concat1 : string    concat1 normal
+       and  G |- concat2 : string    concat2 normal 
+       then if there is an instantiation I :  
+               s.t. G |- concat1 <I> == concat2 <I>
+            then stringUnify = MultAssign I
+	    else stringUnify = Failure
+    *)
+    and unifyRigid (G, Concat AL1, Concat AL2) =
+          let
+            fun unifyRigid' (nil, nil) = MultAssign nil
+              | unifyRigid' ((String str1) :: AL1, (String str2) :: AL2) =
+                  if (str1 = str2) then unifyRigid' (AL1, AL2)
+                  else Failure
+              | unifyRigid' ((Exp (U1 as (EVar (r, _, _, _)), s)) :: AL1,
+                             (Exp (U2 as (Root (FVar _, _)), _)) :: AL2) =
+                  let
+                    val ss = Whnf.invert s
+                  in
+                    if Unify.invertible (G, (U2, id), ss, r)
+                    then (case (unifyRigid' (AL1, AL2))
+                            of MultAssign l =>
+                                 MultAssign ((G, U1, U2, ss) :: l)
+                             | Failure => Failure)
+                    else Failure
+                  end
+              | unifyRigid' ((Exp (U1 as (Root (FVar _, _)), _)) :: AL1,
+                             (Exp (U2 as (EVar (r, _, _, _)), s)) :: AL2) =
+                  let
+                    val ss = Whnf.invert s
+                  in
+                    if Unify.invertible (G, (U1, id), ss, r)
+                    then (case (unifyRigid' (AL1, AL2))
+                            of MultAssign l =>
+                                 MultAssign ((G, U2, U1, ss) :: l)
+                             | Failure => Failure)
+                    else Failure
+                  end
+              | unifyRigid'((Exp (Us1 as (Root (FVar _, _), _))) :: AL1,
+                            (Exp (Us2 as (Root (FVar _, _), _))) :: AL2) =
+                  if (sameExpW (Us1, Us2))
+                  then unifyRigid' (AL1, AL2)
+                  else Failure
+              | unifyRigid'((Exp (Us1 as (EVar (_, _, _, _), _))) :: AL1,
+                            (Exp (Us2 as (EVar (_, _, _, _), _))) :: AL2) =
+                  if (sameExpW (Us1, Us2))
+                  then unifyRigid' (AL1, AL2)
+                  else Failure
+              | unifyRigid' _ = Failure
+          in
+            unifyRigid' (AL1, AL2)
+          end
+
+    (* unifyString (G, concat, str, cnstr) = stringUnify
+
+       Invariant:
+       If   G |- concat : string    concat1 normal 
+       then if there is an instantiation I :  
+               s.t. G |- concat <I> == str
+            then stringUnify = MultAssign I
+	    else if there cannot be any possible such instantiation
+            then stringUnify = Failure
+            else stringUnify = MultDelay [U1, ..., Un] cnstr
+                   where U1, ..., Un are expression to be delayed on cnstr
+    *)
     fun unifyString (G, Concat AL, str, cnstr) =
           let
             fun unifyString' (AL, nil) =
@@ -231,52 +452,75 @@ struct
                 | (result, parsedL) => Failure)
           end
 
+    (* unifyConcat (G, concat1, concat2) = stringUnify
+
+       Invariant:
+       If   G |- concat1 : string    concat1 normal
+       and  G |- concat2 : string    concat2 normal 
+       then if there is an instantiation I :  
+               s.t. G |- concat1 <I> == concat2 <I>
+            then stringUnify = MultAssign I
+	    else if there cannot be any possible such instantiation
+            then stringUnify = Failure
+            else stringUnify = MultDelay [U1, ..., Un] cnstr
+                   where U1, ..., Un are expression to be delayed on cnstr
+    *)
     fun unifyConcat (G, concat1 as (Concat AL1), concat2 as (Concat AL2)) =
           let
             val U1 = toFgn concat1
             val U2 = toFgn concat2
             val cnstr = ref (Eqn (G, U1, U2))
           in
-            (case (AL1, AL2)
-               of (nil, nil) => MultAssign nil
-                | (nil, _) => Failure
-                | (_, nil) => Failure
-                | ([String str1], [String str2]) =>
-                 if (str1 = str2) then (MultAssign nil) else Failure
-                | ([Exp (U as (EVar(r, _, _, _)), s)], _) =>
-                    if (Whnf.isPatSub s)
-                    then
-                      let
-                        val ss = Whnf.invert s
-                      in
-                        if Unify.invertible (G, (U2, id), ss, r)
-                        then (MultAssign [(G, U, U2, ss)])
-                        else MultDelay ([U1, U2], cnstr)
-                      end
-                    else
-                      MultDelay ([U1, U2], cnstr)
-                | (_, [Exp (U as (EVar(r, _, _, _)), s)]) =>
-                    if (Whnf.isPatSub s)
-                    then
-                      let
-                        val ss = Whnf.invert s
-                      in
-                        if Unify.invertible (G, (U1, id), ss, r)
-                        then (MultAssign [(G, U, U1, ss)])
-                        else MultDelay ([U1, U2], cnstr)
-                      end
-                    else
-                      MultDelay ([U1, U2], cnstr)
-                | ([String str], _) =>
-                    unifyString (G, concat2, str, cnstr)
-                | (_, [String str]) =>
-                    unifyString (G, concat1, str, cnstr)
-                | _ =>
-                  MultDelay ([U1, U2], cnstr))
+            case (AL1, AL2)
+              of (nil, nil) => MultAssign nil
+               | (nil, _) => Failure
+               | (_, nil) => Failure
+               | ([String str1], [String str2]) =>
+                   if (str1 = str2) then (MultAssign nil) else Failure
+               | ([Exp (U as (EVar(r, _, _, _)), s)], _) =>
+                   if (Whnf.isPatSub s)
+                   then
+                     let
+                       val ss = Whnf.invert s
+                     in
+                       if Unify.invertible (G, (U2, id), ss, r)
+                       then (MultAssign [(G, U, U2, ss)])
+                       else MultDelay ([U1, U2], cnstr)
+                     end
+                   else
+                     MultDelay ([U1, U2], cnstr)
+               | (_, [Exp (U as (EVar(r, _, _, _)), s)]) =>
+                   if (Whnf.isPatSub s)
+                   then
+                     let
+                       val ss = Whnf.invert s
+                     in
+                       if Unify.invertible (G, (U1, id), ss, r)
+                       then (MultAssign [(G, U, U1, ss)])
+                       else MultDelay ([U1, U2], cnstr)
+                     end
+                   else
+                     MultDelay ([U1, U2], cnstr)
+               | ([String str], _) =>
+                   unifyString (G, concat2, str, cnstr)
+               | (_, [String str]) =>
+                   unifyString (G, concat1, str, cnstr)
+               | _ =>
+                   (case (unifyRigid (G, concat1, concat2))
+                      of (result as (MultAssign _)) => result
+                       | Failure => if (sameConcat (concat1, concat2))
+                                    then MultAssign nil
+                                    else MultDelay ([U1, U2], cnstr))
           end
 
+    (* toFgn sum = U
+
+       Invariant:
+       If sum normal
+       then U is a foreign expression representing sum.
+    *)
     and toFgn (concat as (Concat [String str])) = stringExp (str)
-      | toFgn (concat as (Concat [Exp Us])) = EClo Us
+      | toFgn (concat as (Concat [Exp (U, id)])) = U
       | toFgn (concat) =
           FgnExp (!myID,
                   {
@@ -287,7 +531,9 @@ struct
                     unifyWith = (fn (G, U2) =>
                                    toFgnUnify (unifyConcat (G, normalize (concat), 
                                                                fromExp (U2, id)))),
-                    equalTo = (fn U2 => false)
+                    equalTo = (fn U2 =>
+                                 sameConcat (normalize (concat),
+                                             fromExp (U2, id)))
                   })
 
     fun makeFgn (arity, opExp) (S) =
@@ -320,6 +566,10 @@ struct
 
     fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
 
+    (* init (cs, installFunction) = ()
+       Initialize the constraint solver.
+       installFunction is used to add its signature symbols.
+    *)
     fun init (cs, installF) =
           (
             myID := cs;

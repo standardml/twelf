@@ -55,7 +55,8 @@ struct
           Root (Const (!gtAddID), App (U1, App (U2, App (V,  App (W, Nil)))))
     fun geqAdd (U1, U2, V, W) =
           Root (Const (!geqAddID), App (U1, App (U2, App (V,  App (W, Nil)))))
-    fun gtGeq (U, V, W) = Root (Const (!gtGeqID), App (U, App (V, App (W, Nil))))
+    fun gtGeq (U, V, W) =
+          Root (Const (!gtGeqID), App (U, App (V, App (W, Nil))))
     fun geq00 () = Root (Const (!geq00ID), Nil)
 
     (* constant declaration for the proof object d>0 *)
@@ -472,8 +473,7 @@ struct
                              | NONE => NONE)
           end
 
-     (* find the coordinates of the pivot which gives the largest increase in 
-        const(row) *)
+     (* find the coordinates of the pivot which gives the largest increase in const(row) *)
      fun findPivot (row) =
           let
             (* extend Field.compare to deal with NONE (= infinity) *)
@@ -593,7 +593,8 @@ struct
     | Unbounded of int                     (* manifestly unbounded, pivoting on column col *)
 
     (* maximize the given row by performing pivot operations. 
-       Return a term of type MaximizeResult *)
+       Return a term of type MaximizeResult.
+    *)
     fun maximizeRow (row) =
           let
             val value = const(row)
@@ -616,13 +617,16 @@ struct
               Positive
           end
 
+    (* delay all terms of a monomial on the given constraint *)
     fun delayMon (Mon(n, UsL), cnstr) =
           List.app (fn Us => Unify.delay (Us, cnstr)) UsL
 
+    (* unify two restrictions *)
     fun unifyRestr (Restr (G, proof, strict), proof') =
           if Unify.unifiable (G, (proof, id), (proof', id)) then ()
           else raise Error
 
+    (* unify a sum with a number *)
     fun unifySum (G, sum, d) =
           if Unify.unifiable (G, (toExp (sum), id), (constant (d), id)) then ()
           else raise Error
@@ -703,6 +707,7 @@ struct
             )
           end
 
+    (* insert the given (unrestricted) expression in the tableau *)
     and insert (G, Us) =
           let
             val sum = fromExp Us
@@ -710,8 +715,8 @@ struct
             insertDecomp (decomposeSum (G, sum), Exp (G, sum))
           end
 
-    (* minimize a tableau that has been determined non-minimal (but consistent) as a consequence
-       of adding the given row
+    (* minimize a tableau that has been determined non-minimal (but consistent) as a
+       consequence of adding the given row.
     *)
     and minimize (row) =
           let
@@ -970,15 +975,13 @@ struct
     (* returns the list of unsolved constraints associated with the given position *)
     and restrictions (pos) =
           let
-            val _ = display()
             fun member (x, l) = List.exists (fn y => x = y) l
             fun test (l) = restricted(l) andalso not (dead(l))
-            fun reachable ((pos as Row(row)) :: candidates, closure) =
-                  if member (pos, closure)
-                  then reachable (candidates, closure)
+            fun reachable ((pos as Row(row)) :: candidates, tried, closure) =
+                  if member (pos, tried)
+                  then reachable (candidates, tried, closure)
                   else
                     let
-                      val _ = displayPos (pos)
                       val new_candidates = 
                             Array.foldl
                               (fn (col, _, candidates) => 
@@ -990,14 +993,15 @@ struct
                       val closure' = if test (label(pos)) then (pos :: closure)
                                      else closure
                     in
-                      reachable (new_candidates @ candidates, closure')
+                      reachable (new_candidates @ candidates,
+                                 pos :: tried,
+                                 closure')
                     end
-              | reachable ((pos as Col(col)) :: candidates, closure) =
-                  if member (pos, closure)
-                  then reachable (candidates, closure)
+              | reachable ((pos as Col(col)) :: candidates, tried, closure) =
+                  if member (pos, tried)
+                  then reachable (candidates, tried, closure)
                   else
                     let
-                      val _ = displayPos (pos)
                       val candidates' = 
                             Array.foldl
                               (fn (row, _, candidates) => 
@@ -1009,9 +1013,11 @@ struct
                       val closure' = if test (label(pos)) then (pos :: closure)
                                      else closure
                     in
-                      reachable (candidates' @ candidates, closure')
+                      reachable (candidates' @ candidates,
+                                 pos :: tried,
+                                 closure')
                     end
-              | reachable (nil, closure) = closure
+              | reachable (nil, _, closure) = closure
             fun restrExp (pos) =
                   let
                     val l = label(pos)
@@ -1025,7 +1031,7 @@ struct
                   end
                   
           in
-            List.map restrExp (reachable ([pos], nil))
+            List.map restrExp (reachable ([pos], nil, nil))
           end
                 
     (* returns the list of unsolved constraints associated with the given tag *)
