@@ -16,7 +16,7 @@ sig
 
   val compileClause: bool -> (IntSyn.Dec IntSyn.Ctx * IntSyn.Exp) 
                           -> CompSyn.ResGoal
-  val compileCtx: bool -> IntSyn.Dec IntSyn.Ctx -> CompSyn.dprog
+  val compileCtx: bool -> IntSyn.Dec IntSyn.Ctx -> CompSyn.DProg
   val compileGoal: (IntSyn.Dec IntSyn.Ctx * IntSyn.Exp) -> CompSyn.Goal
 
 end; (* signature COMPILE *)

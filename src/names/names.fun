@@ -28,11 +28,18 @@ struct
     datatype associativity = Left | Right | None
 
     (* Operator Precedence *)
-    type precedence = int
+    datatype precedence = Strength of int
 
     (* Maximal and minimal precedence which can be declared explicitly *)
-    val maxPrec = 9999
-    val minPrec = 0
+    val maxPrec = Strength(9999)
+    val minPrec = Strength(0)
+
+    fun less (Strength(p), Strength(q)) = (p < q)
+    fun leq (Strength(p), Strength(q)) = (p <= q)
+    fun compare (Strength(p), Strength(q)) = Int.compare (p, q)
+
+    fun inc (Strength(p)) = Strength(p+1)
+    fun dec (Strength(p)) = Strength(p-1)
 
     (* Fixities ascribed to constants *)
     datatype fixity =
@@ -45,14 +52,14 @@ struct
     fun prec (Infix(p,_)) = p
       | prec (Prefix(p)) = p
       | prec (Postfix(p)) = p
-      | prec (Nonfix) = maxPrec+1
+      | prec (Nonfix) = inc (maxPrec)
 
     (* toString (fix) = declaration corresponding to fix *)
-    fun toString (Infix(p,Left)) = "%infix left " ^ Int.toString p
-      | toString (Infix(p,Right)) = "%infix right " ^ Int.toString p
-      | toString (Infix(p,None)) = "%infix none " ^ Int.toString p
-      | toString (Prefix(p)) = "%prefix " ^ Int.toString p
-      | toString (Postfix(p)) = "%postfix " ^ Int.toString p
+    fun toString (Infix(Strength(p),Left)) = "%infix left " ^ Int.toString p
+      | toString (Infix(Strength(p),Right)) = "%infix right " ^ Int.toString p
+      | toString (Infix(Strength(p),None)) = "%infix none " ^ Int.toString p
+      | toString (Prefix(Strength(p))) = "%prefix " ^ Int.toString p
+      | toString (Postfix(Strength(p))) = "%postfix " ^ Int.toString p
       | toString (Nonfix) = "%nonfix"	(* not legal input *)
 
   end  (* structure Fixity *)
@@ -126,7 +133,7 @@ struct
   *)
 
   (* nameInfo carries the print name and fixity for a constant *)
-  datatype nameInfo = NameInfo of IntSyn.name * Fixity.fixity
+  datatype nameInfo = NameInfo of string * Fixity.fixity
 
   local
     val maxCid = Global.maxCid
@@ -141,7 +148,7 @@ struct
     fun hashClear () = HashTable.clear sgnHashTable
 
     (* namePrefTable maps constants (cids) to name preferences (strings) *)
-    val namePrefTable : (IntSyn.name * IntSyn.name) IntTree.Table = IntTree.new (0)
+    val namePrefTable : (string * string) IntTree.Table = IntTree.new (0)
     val namePrefInsert = IntTree.insert namePrefTable
     val namePrefLookup = IntTree.lookup namePrefTable
     fun namePrefClear () = IntTree.clear namePrefTable

@@ -9,23 +9,23 @@ functor Parser (structure Parsing' : PARSING
 		structure ExtModes' : EXTMODES
 		structure ThmExtSyn' : THMEXTSYN
 		structure ParseConDec : PARSE_CONDEC
-		  sharing ParseConDec.Parsing = Parsing'
+		  sharing ParseConDec.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseConDec.ExtSyn = ExtSyn'
 		structure ParseQuery : PARSE_QUERY
-		  sharing ParseQuery.Parsing = Parsing'
+		  sharing ParseQuery.Parsing.Lexer = Parsing'.Lexer
 		  sharing type ParseQuery.ExtSyn.term = ExtSynQ'.term
 		  sharing type ParseQuery.ExtSyn.query = ExtSynQ'.query
 		structure ParseFixity : PARSE_FIXITY
-		  sharing ParseFixity.Parsing = Parsing'
+		  sharing ParseFixity.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseFixity.Names = Names' 
                 structure ParseMode : PARSE_MODE
-		  sharing ParseMode.Parsing = Parsing'
+		  sharing ParseMode.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseMode.ExtModes = ExtModes'
 	        structure ParseThm : PARSE_THM
-		  sharing ParseThm.Parsing = Parsing'
+		  sharing ParseThm.Parsing.Lexer = Parsing'.Lexer
 		  sharing ParseThm.ThmExtSyn = ThmExtSyn'
                 structure ParseTermQ : PARSE_TERM 
-                  sharing ParseTermQ.Parsing = Parsing'
+                  sharing ParseTermQ.Parsing.Lexer = Parsing'.Lexer
                   sharing type ParseTermQ.ExtSyn.term = ExtSynQ'.term
 		  sharing type ParseTermQ.ExtSyn.query = ExtSynQ'.query)
   : PARSER =
@@ -41,8 +41,8 @@ struct
 
   datatype fileParseResult =
       ConDec of ExtSyn.condec * ExtSyn.Paths.region
-    | FixDec of (ExtSyn.name * ExtSyn.Paths.region) * Names.Fixity.fixity
-    | NamePref of (ExtSyn.name * ExtSyn.Paths.region) * (ExtSyn.name * ExtSyn.name option)
+    | FixDec of (string * ExtSyn.Paths.region) * Names.Fixity.fixity
+    | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec
     | TerminatesDec of ThmExtSyn.tdecl
     | TheoremDec of ThmExtSyn.theoremdec
@@ -50,7 +50,7 @@ struct
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtSynQ.query * ExtSyn.Paths.region (* expected, try, A *)
-    | Solve of (ExtSyn.name * ExtSynQ.term) * ExtSyn.Paths.region
+    | Solve of (string * ExtSynQ.term) * ExtSyn.Paths.region
     (* Further pragmas to be added later here *)
 
   local

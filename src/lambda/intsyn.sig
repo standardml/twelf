@@ -5,7 +5,6 @@ signature INTSYN =
 sig
 
   type cid = int			(* Constant identifier        *)
-  type name = string			(* Variable name              *)
 
   (* Contexts *)
 
@@ -43,7 +42,7 @@ sig
   | Const of cid			(*     | c                    *)
   | Skonst of cid			(*     | c#                   *)
   | Def   of cid			(*     | d                    *)
-  | FVar  of name * Exp * Sub		(*     | F[s]                 *)
+  | FVar  of string * Exp * Sub		(*     | F[s]                 *)
 
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
@@ -60,31 +59,28 @@ sig
   | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
-    Dec of name option * Exp		(* D ::= x:V                  *)
+    Dec of string option * Exp		(* D ::= x:V                  *)
 
   and Eqn =				(* Equations:                 *)
     Eqn of  Dec Ctx * Exp * Exp	       	(* Eqn ::= G|-(U1 == U2)      *)
 
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
-  type root = Head * Spine		(* R = H @ S                  *)
   type eclo = Exp * Sub   		(* Us = U[s]                  *)
 
   (* Global signature *)
 
   exception Error of string		(* raised if out of space     *)
   
-  type imp = int			(* # of implicit arguments    *)
-
   datatype ConDec =			(* Constant declaration       *)
-    ConDec of name * imp		(* a : K : kind  or           *)
+    ConDec of string * int		(* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of name * imp		(* a = A : K : kind  or       *)
+  | ConDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | SkoDec of name * imp		(* sa: K : kind  or           *)
+  | SkoDec of string * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
-  val conDecName : ConDec -> name
+  val conDecName : ConDec -> string
   val conDecType : ConDec -> Exp
 
   val sgnAdd   : ConDec -> cid
@@ -96,7 +92,7 @@ sig
     
   val constType : cid -> Exp		(* type of c or d             *)
   val constDef  : cid -> Exp		(* definition of d            *)
-  val constImp  : cid -> imp
+  val constImp  : cid -> int
   val constUni  : cid -> Uni
 
   (* Declaration Contexts *)

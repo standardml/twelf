@@ -11,7 +11,7 @@ sig
 
   datatype Mode = Plus | Star | Minus 
   datatype ModeSpine = Mnil | Mapp of Marg * ModeSpine
-  and Marg = Marg of Mode * IntSyn.name option
+  and Marg = Marg of Mode * string option
 
   val reset : unit -> unit
   val installMode : (IntSyn.cid * ModeSpine) -> unit 

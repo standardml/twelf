@@ -8,7 +8,7 @@ sig
 
   exception Error of string
 
-  type Param = ModeSyn.IntSyn.name option
+  type Param = string option
 
   datatype Order =
     Varg of string list

@@ -19,16 +19,16 @@ functor Solve
      sharing type TpReconQ.query = Parser.ExtSynQ.query
      (* sharing type TpReconQ.Paths.occConDec = Origins.Paths.occConDec *)
    structure Timers : TIMERS
-   structure CompSyn' : COMPSYN
-     sharing CompSyn'.IntSyn = IntSyn'
+   structure CompSyn : COMPSYN
+     sharing CompSyn.IntSyn = IntSyn'
    structure Compile : COMPILE
      sharing Compile.IntSyn = IntSyn'
-     sharing Compile.CompSyn = CompSyn'
+     sharing Compile.CompSyn = CompSyn
    structure Trail : TRAIL
      sharing Trail.IntSyn = IntSyn'
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
-     sharing AbsMachine.CompSyn = CompSyn'
+     sharing AbsMachine.CompSyn = CompSyn
    structure Print : PRINT
      sharing Print.IntSyn = IntSyn')
  : SOLVE =
@@ -120,7 +120,7 @@ struct
      is raised when M : A is the generalized form of a solution to the
      query A', where imp is the number of implicitly quantified arguments.
   *)
-  exception Solution of IntSyn.imp * (IntSyn.Exp * IntSyn.Exp)
+  exception Solution of int * (IntSyn.Exp * IntSyn.Exp)
 
   (* readfile (fileName) = status
      reads and processes declarations from fileName in order, issuing
@@ -164,7 +164,7 @@ struct
 	  returns () if there is none.  It could also not terminate
 	  *)
 	 (Timers.time Timers.solving AbsMachine.solve)
-	 ((g, IntSyn.id), (IntSyn.Null, IntSyn.Null),
+	 ((g, IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
 	  scInit);		
 	 raise AbortQuery ("No solution to %solve found"))
 	handle Solution (i,(U,V)) =>
@@ -253,7 +253,7 @@ struct
 		  then (Trail.reset ();
 			(* solve query if bound > 0 *)
 			((Timers.time Timers.solving AbsMachine.solve)
-			 ((g,IntSyn.id), (IntSyn.Null, IntSyn.Null),
+			 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
 			  scInit)) handle Done => (); (* printing is timed into solving! *)
 			Trail.reset ();	(* in case Done was raised *)
 			(* check if number of solutions is correct *)
@@ -303,7 +303,7 @@ struct
 		else ()
       in
 	((Timers.time Timers.solving AbsMachine.solve)
-	 ((g,IntSyn.id), (IntSyn.Null, IntSyn.Null), scInit); (* scInit is timed into solving! *)
+	 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), scInit); (* scInit is timed into solving! *)
 	 print "No more solutions\n")
 	handle Done => ();
 	(* Ignore s': parse one query at a time *)

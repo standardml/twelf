@@ -28,10 +28,10 @@ sig
   | Unify of IntSyn.Eqn * AuxGoal	(* call unify on IntSyn.eqn *)
 
   (* The dynamic clause pool --- compiled version of the context *)
-  type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx
+  (* type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx *)
 
   (* Dynamic programs: context with synchronous clause pool *)
-  type dprog = IntSyn.dctx * dpool
+  datatype DProg = DProg of (IntSyn.dctx * (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx)
 
   (* Static programs --- compiled version of the signature *)
   datatype ConDec =			(* Compiled constant declaration *)

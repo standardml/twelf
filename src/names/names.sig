@@ -6,10 +6,17 @@ signature FIXITY =
 sig
 
   datatype associativity = Left | Right | None
+  datatype precedence = Strength of int
 
-  type precedence = int
   val maxPrec : precedence
   val minPrec : precedence
+
+  val less : precedence * precedence -> bool
+  val leq : precedence * precedence -> bool
+  val compare : precedence * precedence -> order
+
+  val inc : precedence -> precedence
+  val dec : precedence -> precedence
 
   datatype fixity =
       Nonfix
@@ -36,20 +43,20 @@ sig
 
   val installFixity : string * Fixity.fixity -> unit
   val getFixity : IntSyn.cid -> Fixity.fixity
-  val fixityLookup : IntSyn.name -> Fixity.fixity
+  val fixityLookup : string -> Fixity.fixity
 
-  val installName : IntSyn.name * IntSyn.cid -> unit
-  val nameLookup : IntSyn.name -> IntSyn.cid option
+  val installName : string * IntSyn.cid -> unit
+  val nameLookup : string -> IntSyn.cid option
   val constName : IntSyn.cid -> string	(* will mark if shadowed *)
 
   (* Name preferences for anonymous variables: a, EPref, UPref *)
-  val installNamePref : IntSyn.name * (IntSyn.name * IntSyn.name option) -> unit
+  val installNamePref : string * (string * string option) -> unit
 
   (* EVar and BVar name choices *)
   val varReset : unit -> unit
-  val getFVarType : IntSyn.name -> IntSyn.Exp (* create, if undefined *)
-  val getEVar : IntSyn.name -> IntSyn.Exp (* create, if undefined *)
-  val getEVarOpt : IntSyn.name -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
+  val getFVarType : string -> IntSyn.Exp (* create, if undefined *)
+  val getEVar : string -> IntSyn.Exp (* create, if undefined *)
+  val getEVarOpt : string -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
   val bvarName : IntSyn.dctx * int -> string (* must be defined *)
 
@@ -64,10 +71,10 @@ sig
   val nameConDec : IntSyn.ConDec -> IntSyn.ConDec
 
   (* Skolem constants *)
-  val skonstName : IntSyn.name -> IntSyn.name
+  val skonstName : string -> string
 
   (* Named EVars, used for queries *)
-  val namedEVars : unit -> (IntSyn.Exp * IntSyn.name) list
+  val namedEVars : unit -> (IntSyn.Exp * string) list
   (* Uninstantiated named EVars with constraints *)
-  val evarCnstr : unit -> (IntSyn.Exp * IntSyn.name) list
+  val evarCnstr : unit -> (IntSyn.Exp * string) list
 end;  (* signature NAMES *)

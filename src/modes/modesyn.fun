@@ -15,7 +15,7 @@ struct
 
   datatype Mode = Plus | Star | Minus 
   datatype ModeSpine = Mnil | Mapp of Marg * ModeSpine
-  and  Marg = Marg of Mode * IntSyn.name option
+  and  Marg = Marg of Mode * string option
    
   local 
     structure I = IntSyn'

@@ -10,6 +10,6 @@ sig
   val goalToString: string -> IntSyn.dctx * CompSyn.Goal -> string
   val clauseToString: string -> IntSyn.dctx * CompSyn.ResGoal -> string
   val sProgToString: unit -> string
-  val dProgToString: CompSyn.dprog -> string
+  val dProgToString: CompSyn.DProg -> string
 
 end; (* signature CPRINT *)

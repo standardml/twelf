@@ -89,20 +89,18 @@ struct
     Eqn of Dec Ctx * Exp * Exp		(* Eqn ::= G|-(U1 == U2)      *)
 
   type dctx = Dec Ctx			(* G = . | G,D                *)
-  type root = Head * Spine		(* R = H @ S                  *)
   type eclo = Exp * Sub   		(* Us = U[s]                  *)
 
   (* Global signature *)
 
   exception Error of string             (* raised if out of space     *)
-  type imp = int			(* # of implicit arguments    *)
 
   datatype ConDec =			(* Constant Declaration       *)
-    ConDec of name * imp		(* a : K : kind  or           *)
+    ConDec of name * int		(* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of name * imp		(* a = A : K : kind  or       *)
+  | ConDef of name * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | SkoDec of name * imp		(* sa: K : kind  or           *)
+  | SkoDec of name * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
   fun conDecName (ConDec (name, _, _, _)) = name

@@ -120,7 +120,7 @@ struct
     val currentGoal : (I.dctx * I.Exp) ref =
           ref (I.Null, I.Uni (I.Type)) (* dummy initialization *)
 
-    val currentEVarInst : (I.Exp * I.name) list ref =
+    val currentEVarInst : (I.Exp * string) list ref =
           ref nil
 
     fun setEVarInst (Xs) =

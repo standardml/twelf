@@ -24,7 +24,7 @@ struct
 
     datatype EFVar =
       EV of I.Exp			(* Y ::= X         for  GX |- X : VX *)
-    | FV of I.name * I.Exp		(*     | (F , V)      if . |- F : V *)
+    | FV of string * I.Exp		(*     | (F , V)      if . |- F : V *)
 
 
     (*

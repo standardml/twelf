@@ -26,10 +26,10 @@ struct
       | Postfix of FX.precedence * ('a -> 'a)
 
     (* Predeclared infix operators *)
-    val juxOp = Infix ((FX.maxPrec+1, FX.Left), ExtSyn.app) (* juxtaposition *)
-    val arrowOp = Infix ((FX.minPrec-1, FX.Right), ExtSyn.arrow)
-    val backArrowOp = Infix ((FX.minPrec-1, FX.Left), ExtSyn.backarrow)
-    val colonOp = Infix ((FX.minPrec-2, FX.Left), ExtSyn.hastype)
+    val juxOp = Infix ((FX.inc FX.maxPrec, FX.Left), ExtSyn.app) (* juxtaposition *)
+    val arrowOp = Infix ((FX.dec FX.minPrec, FX.Right), ExtSyn.arrow)
+    val backArrowOp = Infix ((FX.dec FX.minPrec, FX.Left), ExtSyn.backarrow)
+    val colonOp = Infix ((FX.dec (FX.dec FX.minPrec), FX.Left), ExtSyn.hastype)
 
     fun infixOp (infixity, tm) =
           Infix (infixity, (fn (tm1, tm2) => ExtSyn.app (ExtSyn.app (tm, tm1), tm2)))
@@ -138,7 +138,7 @@ struct
       *)
       fun resolve (r, opr as Infix((prec, assoc), _),
 		     p as (Atom(_)::Infix((prec', assoc'), _)::p')) =
-	  (case (Int.compare(prec,prec'), assoc, assoc')
+	  (case (FX.compare(prec,prec'), assoc, assoc')
 	     of (GREATER,_,_) => shift(r, opr, p)
 	      | (LESS,_,_) => resolve (r, opr, reduce(p))
 	      | (EQUAL, FX.Left, FX.Left) => resolve (r, opr, reduce(p))
@@ -146,7 +146,7 @@ struct
 	      | _ => Parsing.error (r, "Ambiguous: infix following infix of identical precedence"))
 	| resolve (r, opr as Infix ((prec, assoc), _),
 		     p as (Atom(_)::Prefix(prec', _)::p')) =
-	  (case Int.compare(prec,prec')
+	  (case FX.compare(prec,prec')
 	     of GREATER => shift(r, opr, p)
 	      | LESS => resolve (r, opr, reduce(p))
 	      | EQUAL => Parsing.error (r, "Ambiguous: infix following prefix of identical precedence"))
@@ -161,14 +161,14 @@ struct
 	(* always reduce postfix, possibly after prior reduction *)
 	| resolve (r, opr as Postfix(prec, _),
 		     p as (Atom _::Prefix(prec', _)::p')) =
-	    (case Int.compare(prec,prec')
+	    (case FX.compare(prec,prec')
 	       of GREATER => reduce (shift (r, opr, p))
 		| LESS => resolve (r, opr, reduce (p))
 		| EQUAL => Parsing.error (r, "Ambiguous: postfix following prefix of identical precedence"))
 	(* always reduce postfix *)
 	| resolve (r, opr as Postfix(prec, _),
 		     p as (Atom _::Infix((prec', _), _)::p')) =
-	    (case Int.compare(prec,prec')
+	    (case FX.compare(prec,prec')
 	       of GREATER => reduce (shift (r, opr, p))
 		| LESS => resolve (r, opr, reduce (p))
 		| EQUAL => Parsing.error (r, "Ambiguous: postfix following infix of identical precedence"))

@@ -20,8 +20,8 @@ sig
     type mspine
 
     val mnil  : Paths.region -> mspine
-    val mapp  : (mode * ExtSyn.name option) * mspine -> mspine 
-    val mroot : ExtSyn.name * Paths.region * mspine -> mterm
+    val mapp  : (mode * string option) * mspine -> mspine 
+    val mroot : string * Paths.region * mspine -> mterm
 
     val toModedec : mterm -> modedec
   end

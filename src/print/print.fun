@@ -132,12 +132,14 @@ local
       OpArgs of FX.fixity * F.format list * I.Spine
     | EtaLong of I.Exp
 
-  val noCtxt = Ctxt (FX.Prefix(FX.minPrec-4), [], 0) (* empty left context *)
+  val noCtxt = Ctxt (FX.Prefix(FX.dec (FX.dec (FX.dec (FX.dec FX.minPrec)))), [], 0)
+					(* empty left context *)
 
-  val binderPrec = FX.minPrec-3		(* braces and brackets as a prefix operator *)
+  val binderPrec = FX.dec (FX.dec (FX.dec FX.minPrec))
+					(* braces and brackets as a prefix operator *)
   (* colon is of FX.minPrec-2, but doesn't occur in printing *)
-  val arrowPrec = FX.minPrec-1		(* arrow as infix operator *)
-  val juxPrec = FX.maxPrec+1		(* juxtaposition as infix operator *)
+  val arrowPrec = FX.dec FX.minPrec	(* arrow as infix operator *)
+  val juxPrec = FX.inc FX.maxPrec	(* juxtaposition as infix operator *)
 
   (* arrow (V1, V2) = oa
      where oa is the operator/argument representation of V1 -> V2
@@ -247,7 +249,7 @@ local
      fixity' is greater or equal to that of fixity, otherwise it is unchanged.
   *)
   fun parens ((fixity', fixity), fmt) =
-      if FX.prec(fixity') >= FX.prec(fixity)
+      if FX.leq (FX.prec(fixity), FX.prec(fixity'))
 	then F.Hbox [sym "(", fmt, sym ")"]
       else fmt
 

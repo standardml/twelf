@@ -5,14 +5,12 @@ signature FUNSYN =
 sig
   structure IntSyn : INTSYN
 
+  (* make abstract *)
   type label = int      
-  type name = string
   type lemma = int 
 
-  type dlist = IntSyn.Dec list 
-
   datatype LabelDec =			(* ContextBody                *)
-    LabelDec of name * dlist * dlist
+    LabelDec of string * IntSyn.Dec list * IntSyn.Dec list
 					(* BB ::= l: SOME Theta. Phi  *)
 
   datatype CtxBlock =                   (* ContextBlocks              *)
@@ -23,6 +21,7 @@ sig
     Prim of IntSyn.Dec			(* LD ::= x :: A              *)
   | Block of CtxBlock			(*      | B                   *)
 
+  (* ??? *)
   type lfctx = LFDec IntSyn.Ctx         (* Psi ::= . | Psi, LD        *) 
 
   datatype For =			(* Formulas                   *)
@@ -45,7 +44,7 @@ sig
                                         (* O ::= (Psi' |> s |-> P     *)
 
   and MDec =				(* Meta Declaration:          *)
-    MDec of name option * For		(* DD ::= xx : F              *)
+    MDec of string option * For		(* DD ::= xx : F              *)
  
   and Decs =				(* Declarations               *)
     Empty				(* Ds ::= .                   *)
@@ -58,8 +57,9 @@ sig
   | Right of int * Decs                 (*      | xx = pi2 yy, Ds     *)
  
   datatype LemmaDec =			(* Lemmas                     *)
-    LemmaDec of name list * Pro * For	(* L ::= c:F = P              *)
+    LemmaDec of string list * Pro * For	(* L ::= c:F = P              *)
 
+  (* ??? *)
   type mctx = MDec IntSyn.Ctx           (* Delta ::= . | Delta, xx : F*)
 
   val labelLookup : label -> LabelDec
@@ -85,8 +85,8 @@ sig
   val forSub : For * IntSyn.Sub -> For
   val normalizeFor : For * IntSyn.Sub -> For
 
-  val listToCtx : dlist -> IntSyn.dctx
-  val ctxToList : IntSyn.dctx -> dlist
+  val listToCtx : IntSyn.Dec list -> IntSyn.dctx
+  val ctxToList : IntSyn.dctx -> IntSyn.Dec list
 end (* Signature FUNSYN *)       
 
 

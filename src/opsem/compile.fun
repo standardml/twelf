@@ -253,7 +253,7 @@ struct
 	      I.Decl (compileCtx' G, SOME (compileClause opt (G, A), I.id, a))
 	    end
       in
-	(G, compileCtx' G)
+	C.DProg (G, compileCtx' G)
       end
 
   (* compileConDec (a, condec) = ()

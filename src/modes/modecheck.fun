@@ -23,7 +23,7 @@ struct
 
     datatype Status =                   (* Variable status             *)
         Existential of			(* S ::= Existential (I, xOpt) *)
-	  Info * I.name option
+	  Info * string option
       | Universal                       (*     | Universal             *)
 
 

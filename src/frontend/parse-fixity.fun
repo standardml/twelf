@@ -15,20 +15,22 @@ struct
     structure L = Parsing.Lexer
     structure LS = Parsing.Lexer.Stream  
     structure FX = Names.Fixity
+
+    fun fixToString (FX.Strength(p)) = Int.toString p
 	    
     (* idToPrec (region, (idCase, name)) = n
        where n is the precedence indicated by name, which should consists
        of all digits.  Raises error otherwise, or if precedence it too large
     *)
     fun idToPrec (r, (_, name)) =
-      let val prec = L.stringToNat (name)
+      let val prec = FX.Strength (L.stringToNat (name))
 	             handle Overflow => Parsing.error (r, "Precedence too large")
 		          | L.NotDigit _ => Parsing.error (r, "Precedence not a natural number")
       in
-	if prec < FX.minPrec orelse prec > FX.maxPrec
+	if FX.less(prec, FX.minPrec) orelse FX.less (FX.maxPrec, prec)
 	  then Parsing.error (r, "Precedence out of range ["
-			      ^ Int.toString FX.minPrec ^ ","
-			      ^ Int.toString FX.maxPrec ^ "]")
+			      ^ fixToString FX.minPrec ^ ","
+			      ^ fixToString FX.maxPrec ^ "]")
 	else prec
       end
 

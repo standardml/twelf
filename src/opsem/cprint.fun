@@ -94,15 +94,15 @@ struct
 	 end
 
     (* dProgToString (G, dProg) = printed representation of dynamic program *)
-    fun dProgToString (IntSyn.Null, IntSyn.Null) = ""
-      | dProgToString (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),
-		       IntSyn.Decl(dPool,SOME(r,_,_))) =
-          dProgToString (G,dPool)
+    fun dProgToString (DProg (IntSyn.Null, IntSyn.Null)) = ""
+      | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),
+		       IntSyn.Decl(dPool,SOME(r,_,_)))) =
+          dProgToString (DProg (G,dPool))
 	  ^ "\nClause    " ^ x ^ ":\t"
 	  ^ clauseToString "\t" (G, r)
-      | dProgToString (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
-		       IntSyn.Decl(dPool, NONE)) =
-	 dProgToString (G, dPool)
+      | dProgToString (DProg (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
+		       IntSyn.Decl(dPool, NONE))) =
+	 dProgToString (DProg (G, dPool))
 	 ^ "\nParameter " ^ x ^ ":\t"
 	 ^ Print.expToString (G, A)
 

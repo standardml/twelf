@@ -9,6 +9,6 @@ sig
    exception Error of IntSyn.Eqn list
 
    val simplify : IntSyn.Eqn list -> IntSyn.Eqn list
-   val warnConstraints : IntSyn.name list -> unit
+   val warnConstraints : string list -> unit
 
 end;  (* signature CONSTRAINTS *)

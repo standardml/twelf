@@ -5,7 +5,7 @@ functor ParseConDec
   (structure Parsing' : PARSING
    structure ExtSyn' : EXTSYN
    structure ParseTerm : PARSE_TERM
-     sharing ParseTerm.Parsing = Parsing'
+     sharing ParseTerm.Parsing.Lexer = Parsing'.Lexer
      sharing ParseTerm.ExtSyn = ExtSyn')
      : PARSE_CONDEC =
 struct

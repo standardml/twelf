@@ -16,7 +16,7 @@ struct
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
 
 
-  type Param = ModeSyn.IntSyn.name option
+  type Param = string option
 
   datatype Order =
     Varg of string list
