@@ -8,7 +8,7 @@ functor Cover
      sharing Whnf.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
      sharing Abstract.IntSyn = IntSyn'
-   structure Unify : UNIFY
+   structure Unify : UNIFY		(* must be trailing! *)
      sharing Unify.IntSyn = IntSyn'
    structure ModeSyn' : MODESYN
      sharing ModeSyn'.IntSyn = IntSyn'
@@ -18,7 +18,11 @@ functor Cover
      sharing CompSyn.IntSyn = IntSyn'
    structure Names : NAMES
      sharing Names.IntSyn = IntSyn'
-   structure Paths : PATHS)
+   structure Paths : PATHS
+   structure Print : PRINT
+     sharing Print.IntSyn = IntSyn'
+   structure CSManager : CS_MANAGER
+     sharing CSManager.IntSyn = IntSyn')
   : COVER =
 struct
   structure IntSyn = IntSyn'
@@ -31,6 +35,7 @@ struct
     structure M = ModeSyn
     structure C = CompSyn
     structure P = Paths
+    structure F = Print.Formatter
 
     (* Coverage goal is represented using all BVars *)
 
@@ -38,10 +43,14 @@ struct
       | buildSpine k = (* k > 0 *)
         I.App (I.Root (I.BVar(k), I.Nil), buildSpine (k-1))
 
-    fun initGoal' (a, k, G, I.Pi ((D, _), V)) =
-          initGoal' (a, k+1, I.Decl (G, D), V)
+    fun initGoal' (a, k, G, I.Pi ((D, P), V)) =
+        let
+	  val D' = Names.decEName (G, D)
+	in
+          I.Pi ((D', I.Maybe), initGoal' (a, k+1, I.Decl (G, D'), V))
+	end
       | initGoal' (a, k, G, I.Uni (I.Type)) =
-          (G, I.Root (a, buildSpine k))
+          I.Root (a, buildSpine k)
 
     fun initGoal (a) = initGoal' (I.Const (a), 0, I.Null, I.constType (a))
 
@@ -78,6 +87,7 @@ struct
         if matchEqns (es) then (Eqns (nil))
 	else Fail
       | resolveCands (Cands (ks)) = Cands (ks)
+      | resolveCands (Fail) = Fail
 
     datatype CandList =
         Covered				(* covered---no candidates *)
@@ -176,8 +186,12 @@ struct
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands')
 	end
       | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
-		       M.Mapp (_, ms'), cands) = (* Skip Output or Ignore argument *)
+		       M.Mapp (M.Marg (M.Star, _), ms'), cands) =
+	(* skip "ignore" arguments, later also "output" arguments *)
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
+      | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
+		       M.Mapp (M.Marg (M.Minus, _), ms'), cands) =
+	raise Error ("Output coverage not yet implemented")
 
     fun matchClause (G, ps', (C.Eq Q, s), ms) =
           resolveCands (matchTop (G, ps', (Q, s), ms))
@@ -215,6 +229,8 @@ struct
     (* no local assumptions *)
     fun match (G, V as I.Root (I.Const (a), S), ms) =
         matchSig (G, (V, I.id), Index.lookup a, ms, CandList (nil))
+      | match (G, I.Pi ((D, _), V'), ms) =
+	match (I.Decl (G, D), V', ms)
 
     (*** Selecting Splitting Variable ***)
 
@@ -230,65 +246,195 @@ struct
 
     (*** Splitting ***)
 
+    (*
     fun buildPi (I.Null, V, n) = (V, n)
       | buildPi (I.Decl (G, D), V, n) =
           buildPi (G, I.Pi ((D, I.Maybe), V), n+1)
+    *)
 
-    fun instEVars (Vs, n, Xopt) = instEVarsW (Whnf.whnf Vs, n, Xopt)
-    and instEVarsW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), n, Xopt) =
+    fun instEVars (Vs, XsRev) = instEVarsW (Whnf.whnf Vs, XsRev)
+    and instEVarsW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), XsRev) =
         let
 	  val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
 	in
-	  instEVars ((V2, I.Dot (I.Exp (X1), s)), n-1,
-		     if n = 0 then SOME(X1) else Xopt)
+	  instEVars ((V2, I.Dot (I.Exp (X1), s)), X1::XsRev)
 	end
-      | instEVarsW (Vs as (I.Root _, s), n, Xopt) = (Vs, Xopt)
+      | instEVarsW (Vs as (I.Root _, s), XsRev) = (Vs, XsRev)
 
     local 
-      val caseList : (I.dctx * I.Exp) list ref = ref nil
+      val caseList : I.Exp list ref = ref nil
     in
       fun resetCases () = (caseList := nil)
-      fun addCase (G, V) = (caseList := (G, V) :: !caseList)
+      fun addCase (V) = (caseList := V :: !caseList)
       fun getCases () = (!caseList)
     end
 
+    (* next section adapted from m2/metasyn.fun *)
+
+    (* createEVarSpineW (G, (V, s)) = ((V', s') , S')
+
+       Invariant:
+       If   G |- s : G1   and  G1 |- V = Pi {V1 .. Vn}. W : L
+       and  G1, V1 .. Vn |- W atomic  
+       then G |- s' : G2  and  G2 |- V' : L
+       and  S = X1; ...; Xn; Nil
+       and  G |- W [1.2...n. s o ^n] = V' [s']
+       and  G |- S : V [s] >  V' [s']
+    *)
+    fun createEVarSpine (G, Vs) = createEVarSpineW (G, Whnf.whnf Vs)
+    and createEVarSpineW (G, Vs as (I.Root _, s)) = (I.Nil, Vs)   (* s = id *)
+      | createEVarSpineW (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =  
+	let 
+	  val X = I.newEVar (G, I.EClo (V1, s))
+	  val (S, Vs) = createEVarSpine (G, (V2, I.Dot (I.Exp (X), s)))
+	in
+	  (I.App (X, S), Vs)
+	end
+      (* Uni or other cases should be impossible *)
+      (* mod: m2/metasyn.fun allows Uni(Type) *)
+
+    (* createAtomConst (G, c) = (U', (V', s'))
+
+       Invariant: 
+       If   S |- c : Pi {V1 .. Vn}. V 
+       then . |- U' = c @ (Xn; .. Xn; Nil)
+       and  . |- U' : V' [s']
+    *)
+    fun createAtomConst (G, H as I.Const (cid)) = 
+        let
+	  val V = I.constType cid
+	  val (S, Vs) = createEVarSpine (G, (V, I.id))
+	in
+	  (I.Root (H, S), Vs)
+	end
+        (* mod: m2/metasyn.fun allows skolem constants *)
+
+    (* createAtomBVar (G, k) = (U', (V', s'))
+
+       Invariant: 
+       If   G |- k : Pi {V1 .. Vn}. V 
+       then . |- U' = k @ (Xn; .. Xn; Nil)
+       and  . |- U' : V' [s']
+    *)
+    fun createAtomBVar (G, k) =
+	let
+	  val I.Dec (_, V) = I.ctxDec (G, k)
+	  val (S, Vs) = createEVarSpine (G, (V, I.id))
+	in
+	  (I.Root (I.BVar (k), S), Vs)
+	end
+
+    (* end m2/metasyn.fun *)
+
+    (* next section adapted from m2/splitting.fun *)
+    (* mod: success continuation with effect instead of abstraction function *)
+
+    fun constCases (G, Vs, nil, sc) = ()
+      | constCases (G, Vs, I.Const(c)::sgn', sc) =
+        let
+	  val (U, Vs') = createAtomConst (G, I.Const c)
+	  val _ = CSManager.trail (fn () =>
+				   if Unify.unifiable (G, Vs, Vs')
+				     then sc U
+				   else ())
+	in
+	  constCases (G, Vs, sgn', sc)
+	end
+
+    fun paramCases (G, Vs, 0, sc) = ()
+      | paramCases (G, Vs, k, sc) =
+        let
+	  val (U, Vs') = createAtomBVar (G, k)
+	  val _ = CSManager.trail (fn () =>
+				   if Unify.unifiable (G, Vs, Vs')
+				     then sc U
+				   else ())
+	in
+	  paramCases (G, Vs, k-1, sc)
+	end
+
+    fun lowerSplit (G, Vs, sc) = lowerSplitW (G, Whnf.whnf Vs, sc)
+    and lowerSplitW (G, Vs as (I.Root (I.Const a, _), s), sc) =
+        let
+	  val _ = constCases (G, Vs, Index.lookup a, sc) (* will trail *)
+	  val _ = paramCases (G, Vs, I.ctxLength G, sc)	(* will trail *)
+	in
+	  ()
+	end
+      | lowerSplitW (G, (I.Pi ((D, P), V), s), sc) =
+	let
+	  val D' = I.decSub (D, s)
+	in
+	  lowerSplit (I.Decl (G, D'), (V, I.dot1 s), fn U => sc (I.Lam (D', U)))
+	end
+
+    (* end m2/splitting.fun *)
+
+
     (* splitEVar X sc = ()  --- call sc on all possibilities for X *)
-    fun splitEVar X sc = ()
+
+    fun splitEVar ((X as I.EVar (_, GX, V, _)), sc) = (* GX = I.Null *)
+          lowerSplit (I.Null, (V, I.id),
+		      fn U => if Unify.unifiable (I.Null, (X, I.id), (U, I.id)) (* always succeeds? *)
+				then sc ()
+			      else ())
 
     (* abstract (V, s) = (G, V') *)
-    fun abstract (V, s) = (I.Null, I.EClo (V, s))
-
-    fun splitVar (G, V, k) =
+    fun abstract (V, s) = 
         let
-	  val (V1, n) = buildPi (G, V, 0) (* V1 has explicit Pi's for G *)
-	  val ((V2, s), SOME(X)) = instEVars ((V1, I.id), n-k, NONE)
-					(* split on n-k'th variable, starting at 0 *)
+	  val (i, V') = Abstract.abstractDecImp (I.EClo (V, s))
+	in
+	  V'
+	end
+
+    fun splitVar (V, k) =
+        let
+	  val ((V1, s), XsRev) = instEVars ((V, I.id), nil)
+          (* split on k'th variable, counting from innermost *)
+	  val X = List.nth (XsRev, k-1)
 	  val _ = resetCases ()
-	  val _ = splitEVar X (fn () => addCase (abstract (V2, s)))
+	  val _ = splitEVar (X, fn () => addCase (abstract (V1, s)))
 	in
 	  getCases ()
 	end
 
-    fun cover (G, V, ms, missing) = split (G, V, selectCand (match (G, V, ms)), ms, missing)
-    and split (G, V, Covered, ms, missing) = missing
-      | split (G, V, CandList (nil), ms, missing) = ((G, V)::missing)
-      | split (G, V, CandList ((_, Cands (k::_))::_), ms, missing) =
-          covers (splitVar (G, V, k), ms, missing)
+    (* fix formatGoal to pick existential and universal names appropriately according to mode *)
+    fun formatGoal (V) = Print.formatExp (I.Null, V)
+    fun formatGoals (V::nil) = [formatGoal (V)]
+      | formatGoals (V::Vs) =
+          Print.formatExp (I.Null, V) :: F.String "," :: F.Break :: formatGoals Vs
+
+    fun missingToString (Vs) =
+        F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (formatGoals Vs), F.String "."])
+
+    fun cover (V, ms, missing) =
+        let 
+	  val _ = if !Global.chatter >= 5
+		    then print ("Goal : " ^ F.makestring_fmt (formatGoal V) ^ "\n")
+		  else ()
+	in
+	  split (V, selectCand (match (I.Null, V, ms)), ms, missing)
+	end
+    and split (V, Covered, ms, missing) = missing
+      | split (V, CandList (nil), ms, missing) = (V::missing)
+      | split (V, CandList ((_, Cands (k::_))::_), ms, missing) =
+          covers (splitVar (V, k), ms, missing)
     and covers (nil, ms, missing) = missing
-      | covers ((G0, V0)::cases', ms, missing) =
-          covers (cases', ms, cover (G0, V0, ms, missing))
+      | covers (V::cases', ms, missing) =
+          covers (cases', ms, cover (V, ms, missing))
 
   in
     fun checkCovers (a, ms) =
         let
-	  val _ = print "Coverage checking not yet implemented!\n"
-	  val (G0, V0) = initGoal (a)
+	  (* val _ = print "Coverage checking not yet implemented!\n" *)
+	  val V0 = initGoal (a)
 	  (* val (G0, (V, s)) = CFormToCGoal (I.Null, (F0, I.id)) *)
-	  val missing = cover (G0, V0, ms, nil)
+	  val _ = CSManager.reset ()
+	  val missing = cover (V0, ms, nil)
 	  val _ = case missing
 	            of nil => print "Coverage satisfied!\n"
-		     | _ => print ("Coverage: " ^ Int.toString (List.length missing)
-				   ^ " case(s) missing!\n")
+		     | _ => print ("Coverage failed!  Missing cases:\n"
+				   ^ missingToString missing ^ "\n")
 	in
 	  ()
 	end
