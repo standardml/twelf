@@ -41,6 +41,7 @@ struct
     structure I = IntSyn
     structure P = Paths
     structure M = ModeSyn
+    structure N = Names
 
     (* totalTable (a) = SOME() iff a is total, otherwise NONE *)
     val totalTable : unit Table.Table = Table.new(0)
@@ -95,7 +96,7 @@ struct
     and checkClauseW (G, (I.Pi ((D1, I.Maybe), V2), s), occ) =
         (* quantifier *)
         let
-	  val D1' = Names.decEName (G, I.decSub (D1, s))
+	  val D1' = N.decEName (G, I.decSub (D1, s))
 	in
           checkClause (I.Decl (G, D1'), (V2, I.dot1 s), P.body occ)
 	end
@@ -115,7 +116,7 @@ struct
 	let
 	  val a = I.targetFam V
 	  val _ = if not (total a)
-		    then raise Error' (occ, "Subgoal " ^ Names.qidToString (Names.constQid a)
+		    then raise Error' (occ, "Subgoal " ^ N.qidToString (N.constQid a)
 				       ^ " not declared to be total")
 		  else ()
 	  val _ = checkDynOrderW (G, (V, s), 2, occ)
@@ -136,7 +137,7 @@ struct
       | checkDefinite (a, M.Mapp (M.Marg (M.Star, xOpt), ms')) =
         (* Note: filename and location are missing in this error message *)
         (* Fri Apr  5 19:25:54 2002 -fp *)
-        raise Error ("Error: Totality checking " ^ Names.qidToString (Names.constQid a) ^ ":\n"
+        raise Error ("Error: Totality checking " ^ N.qidToString (N.constQid a) ^ ":\n"
 		     ^ "All argument modes must be input (+) or output (-)"
 		     ^ (case xOpt of NONE => ""
 			  | SOME(x) => " but argument " ^ x ^ " is indefinite (*)"  ))
@@ -147,8 +148,11 @@ struct
     *)
     fun checkOutCover nil = ()
       | checkOutCover (I.Const(c)::cs) =
-        ( if !Global.chatter >= 6
-	    then print ("Output coverage: " ^ Names.qidToString (Names.constQid c) ^ "\n")
+        ( if !Global.chatter >= 4
+	    then print (N.qidToString (N.constQid c) ^ " ")
+	  else () ;
+	  if !Global.chatter >= 6
+	    then print ("\n")
 	  else () ;
 	  checkClause (I.Null, (I.constType (c), I.id), P.top)
 	     handle Error' (occ, msg) => error (c, occ, msg) ;
@@ -165,7 +169,7 @@ struct
           (* Checking termination *)
 	  val _ = (Reduces.checkFam a;
 		   if !Global.chatter >= 4
-		     then print ("Terminates: " ^ Names.qidToString (Names.constQid a) ^ "\n")
+		     then print ("Terminates: " ^ N.qidToString (N.constQid a) ^ "\n")
 		   else ())
 	          handle Reduces.Error (msg) => raise Reduces.Error (msg)
 
@@ -175,15 +179,22 @@ struct
 	  val _ = checkDefinite (a, ms) (* all arguments must be either input or output *)
 	  val _ = (Cover.checkCovers (a, ms) ;
 		   if !Global.chatter >= 4
-		     then print ("Covers (+): " ^ Names.qidToString (Names.constQid a) ^ "\n")
+		     then print ("Covers (input): " ^ N.qidToString (N.constQid a) ^ "\n")
 		   else ())
 	          handle Cover.Error (msg) => raise Cover.Error (msg)
 
           (* Checking output coverage *)
+	  val _ = if !Global.chatter >= 4
+		    then print ("Output coverage checking family " ^ N.qidToString (N.constQid a)
+				^ "\n")
+		  else ()
           val cs = Index.lookup a
 	  val _ = (checkOutCover (cs);
+		   if !Global.chatter = 4
+		     then print ("\n")
+		   else ();
 		   if !Global.chatter >= 4
-		     then print ("Covers (-): " ^ Names.qidToString (Names.constQid a) ^ "\n")
+		     then print ("Covers (output): " ^ N.qidToString (N.constQid a) ^ "\n")
 		   else ())
                   handle Cover.Error (msg) => raise Cover.Error (msg)
 	in

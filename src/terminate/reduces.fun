@@ -199,16 +199,12 @@ struct
          let
 	   val O = selectROrder (a, (S, s))
 	   val _ = case O 
-	            of NONE => if (!Global.chatter) > 5 
-				 then print ("\n no reduction predicate defined for " ^ 
-					     N.qidToString (N.constQid a))
-			       else
-				 ()
+	            of NONE => ()
 	             | SOME(O) => if (!Global.chatter) > 5 
-				       then print ("\n reduction predicate for " ^ 
+				       then print ("Reduction predicate for " ^ 
 						   N.qidToString (N.constQid a) ^ 
 						   " added : " ^ 
-						   orderToString (G, O))
+						   orderToString (G, O) ^ "\n")
 				      else ()
 	 in 
 	   O
@@ -569,7 +565,7 @@ struct
 		 checkFam' bs)
 	  val _ = if (!Global.chatter) > 3
 		    then print ("Termination checking family " ^ N.qidToString (N.constQid a)
-				^ ":\n")
+				^ "\n")
 		  else ()
 	in
 	  checkFam' (Index.lookup a)

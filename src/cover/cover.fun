@@ -40,6 +40,7 @@ struct
     structure W = WorldSyn
     structure P = Paths
     structure F = Print.Formatter
+    structure N = Names
 
     (*****************)
     (* Strengthening *)
@@ -133,6 +134,76 @@ struct
 	  Skip (outCoverInst ms')
       *)
 
+    (***************************)
+    (* Printing Coverage Goals *)
+    (***************************)
+
+    (* labels for cases for tracing coverage checker *)
+    datatype caseLabel =
+        Top				(* ^ *)
+      | Child of caseLabel * int        (* lab.n, n >= 1 *)
+
+    fun labToString (Top) = "^"
+      | labToString (Child(lab, n)) = labToString(lab) ^ "." ^ Int.toString(n)
+
+    fun chatter chlev f =
+        if !Global.chatter >= chlev
+	  then print (f ())
+	else ()
+
+    fun pluralize (1, s) = s
+      | pluralize (n, s) = s ^ "s"
+
+    (* we pass in the mode spine specifying coverage, but currently ignore it *)
+    fun abbrevCSpine (S, ci) = S
+
+    (* fix to identify existential and universal prefixes *)
+    fun abbrevCGoal (G, V, 0, ci) = (G, abbrevCGoal' (G, V, ci))
+      | abbrevCGoal (G, I.Pi((D, P), V), p, ci) = (* p > 0 *)
+        let 
+	  val D' = N.decEName (G, D)
+	in
+	  abbrevCGoal (I.Decl (G, D'), V, p-1, ci)
+	end
+    and abbrevCGoal' (G, I.Pi((D, P), V), ci) =
+        let
+	  val D' = N.decUName (G, D)
+	in
+	  I.Pi ((D', P), abbrevCGoal' (I.Decl (G, D'), V, ci))
+	end
+      | abbrevCGoal' (G, I.Root (a, S), ci) =
+ 	  I.Root (a, abbrevCSpine (S, ci))
+      (* other cases are impossible by CGoal invariant *)
+
+    fun formatCGoal (V, p, ci) =
+        let
+	  val _ = N.varReset I.Null
+	  val (G, V') = abbrevCGoal (I.Null, V, p, ci)
+	in
+	  F.HVbox [Print.formatCtx (I.Null, G), F.Break, F.String "|-",
+		   F.Space, Print.formatExp (G, V')]
+	end
+
+    fun formatCGoals ((V,p)::nil, ci) = [formatCGoal (V, p, ci)]
+      | formatCGoals ((V,p)::Vs, ci) =
+          formatCGoal (V, p, ci) :: F.String "," :: F.Break :: formatCGoals (Vs, ci)
+
+    fun missingToString (Vs, ci) =
+        F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (formatCGoals (Vs, ci)), F.String "."])
+
+    fun showSplitVar (V, p, k, ci) =
+        let
+	  val _ = N.varReset I.Null
+	  val (G, V') = abbrevCGoal (I.Null, V, p, ci)
+	  val I.Dec (SOME(x), _) = I.ctxLookup (G, k)
+	in
+	  "Split " ^ x ^ " in " ^ Print.expToString (G, V')
+	end
+
+    fun showPendingGoal (V, p, ci, lab) =
+          F.makestring_fmt (F.Hbox [F.String(labToString(lab)), F.Space, F.String "?- ",
+				    formatCGoal (V, p, ci), F.String "."])
+
     (*
        Coverage goals have the form {{G}} {{L}} a @ S
        where G are splittable variables
@@ -159,7 +230,7 @@ struct
     *)
     fun initCGoal' (a, k, G, I.Pi ((D, P), V)) =
         let
-	  val D' = Names.decEName (G, D)
+	  val D' = N.decEName (G, D)
 	  val (V', p) = initCGoal' (a, k+1, I.Decl(G, D'), V)
 	in
           (I.Pi ((D', I.Maybe), V'), p)
@@ -876,31 +947,20 @@ struct
        G |- V : type
        {{Gi}} Vi cover {{G}} V
     *)
-    fun splitVar (V, p, k, W) =
+    fun splitVar (V, p, k, (W, ci)) =
         let
+	  val _ = chatter 6 (fn () => showSplitVar (V, p, k, ci) ^ "\n")
 	  val ((V1, s), XsRev) = instEVars ((V, I.id), p, nil)
           (* split on k'th variable, counting from innermost *)
 	  val SOME(X) = List.nth (XsRev, k-1)
-	  val _ = if !Global.chatter >= 6
-		    then print ("Split " ^ Print.expToString (I.Null, X) ^ " in "
-				^ Print.expToString (I.Null, I.EClo(V1, s)) ^ ".\n")
-		  else ()
 	  val _ = resetCases ()
-	  val _ = splitEVar (X, W, fn () => addCase (abstract (V1, s)))
-          (*
-	   if !Global.chatter >= 7
-           then print ("Case: " ^ Print.expToString (I.Null, X) ^ " where\n"
-		        ^ Print.expToString (I.Null, I.EClo(V1,s)) ^ ".\n")
-           else ()
-	   *)
+	  val _ = splitEVar (X, W, fn () => addCase (abstract (V1, s)))	(* may raise Constraints.Error *)
 	in
 	  SOME (getCases ())
 	end
         (* Constraints.Error could be raised by abstract *)
         handle Constraints.Error (constrs) =>
-	  (if !Global.chatter >= 6	
-	     then print ("Inactive split:\n" ^ Print.cnstrsToString (constrs) ^ "\n")
-	   else ();
+	  (chatter 7 (fn () => "Inactive split:\n" ^ Print.cnstrsToString (constrs) ^ "\n");
 	   NONE)
 
     (**********************)
@@ -1020,20 +1080,14 @@ struct
     *)
     fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, cands) =
         ( resetCount () ;
-	  if !Global.chatter >= 7
-	    then print ("Trying " ^ Print.expToString (I.Null, X) ^ " : "
-			^ Print.expToString (I.Null, VX) ^ ".\n")
-	  else () ;
+	  chatter 7 (fn () => "Trying " ^ Print.expToString (I.Null, X) ^ " : "
+		     ^ Print.expToString (I.Null, VX) ^ ".\n") ;
 	  ( splitEVar (X, W, fn () => if recursive X
 					then raise NotFinitary
 				      else incCount ()) ;
-	    if !Global.chatter >= 7
-	      then print ("Finitary with " ^ Int.toString (getCount ()) ^ " candidates.\n")
-	    else () ;
+	    chatter 7 (fn () => "Finitary with " ^ Int.toString (getCount ()) ^ " candidates.\n");
 	    (k, getCount ())::cands )
-           handle NotFinitary => ( if !Global.chatter >= 7
-				     then print ("Not finitary.\n")
-				   else () ;
+           handle NotFinitary => ( chatter 7 (fn () => "Not finitary.\n");
 				   cands )
 	)
 
@@ -1060,47 +1114,6 @@ struct
 	  finitarySplits (XsRev, 1, W, nil)
 	end
 
-    (***************************)
-    (* Printing Coverage Goals *)
-    (***************************)
-
-    (* we pass in the mode spine specifying coverage, but currently ignore it *)
-    fun abbrevCSpine (S, ci) = S
-
-    (* fix to identify existential and universal prefixes *)
-    fun abbrevCGoal (G, V, 0, ci) = (G, abbrevCGoal' (G, V, ci))
-      | abbrevCGoal (G, I.Pi((D, P), V), p, ci) = (* p > 0 *)
-        let 
-	  val D' = Names.decEName (G, D)
-	in
-	  abbrevCGoal (I.Decl (G, D'), V, p-1, ci)
-	end
-    and abbrevCGoal' (G, I.Pi((D, P), V), ci) =
-        let
-	  val D' = Names.decUName (G, D)
-	in
-	  I.Pi ((D', P), abbrevCGoal' (I.Decl (G, D'), V, ci))
-	end
-      | abbrevCGoal' (G, I.Root (a, S), ci) =
- 	  I.Root (a, abbrevCSpine (S, ci))
-      (* other cases are impossible by CGoal invariant *)
-
-    fun formatCGoal (V, p, ci) =
-        let
-	  val _ = Names.varReset I.Null
-	  val (G, V') = abbrevCGoal (I.Null, V, p, ci)
-	in
-	  F.HVbox [Print.formatCtx (I.Null, G), F.Break, F.String "|-",
-		   F.Space, Print.formatExp (G, V')]
-	end
-
-    fun formatCGoals ((V,p)::nil, ci) = [formatCGoal (V, p, ci)]
-      | formatCGoals ((V,p)::Vs, ci) =
-          formatCGoal (V, p, ci) :: F.String "," :: F.Break :: formatCGoals (Vs, ci)
-
-    fun missingToString (Vs, ci) =
-        F.makestring_fmt (F.Hbox [F.Vbox0 0 1 (formatCGoals (Vs, ci)), F.String "."])
-
     (*********************)
     (* Coverage Checking *)
     (*********************)
@@ -1119,7 +1132,7 @@ struct
     (* need to improve tracing with higher chatter levels *)
     (* ccs = covering clauses *)
 
-    (* cover (V, p, (W, ci), ccs, missing) = missing'
+    (* cover (V, p, (W, ci), ccs, lab, missing) = missing'
        covers ([(V1,p1),...,(Vi,pi)], (W, ci), ccs, missing) = missing'
 
        check if Match arguments (+ for input, - for output) in V or all Vi, respectively,
@@ -1130,51 +1143,50 @@ struct
 
        W are the worlds for type family a
        ci are the cover instructions matching S
+
+       lab is the label for the current goal for tracing purposes
     *)
-    fun cover (V, p, wci as (W, ci), ccs, missing) =
-        ( if !Global.chatter >= 6
-	    then print (F.makestring_fmt (F.Hbox [F.String "?- ", formatCGoal (V, p, ci),
-						  F.String "."]) ^ "\n")
-	  else () ;
-	  cover' (V, p, wci, ccs, missing) )
+    fun cover (V, p, wci as (W, ci), ccs, lab, missing) =
+        ( chatter 6 (fn () => showPendingGoal (V, p, ci, lab) ^ "\n");
+	  cover' (V, p, wci, ccs, lab, missing) )
 
-    and cover' (V, p, wci as (W, ci), ccs, missing) =
-          split (V, p, selectCand (match (I.Null, V, p, ci, ccs)), wci, ccs, missing) 
+    and cover' (V, p, wci as (W, ci), ccs, lab, missing) =
+          split (V, p, selectCand (match (I.Null, V, p, ci, ccs)), wci, ccs, lab, missing) 
 
-    and split (V, p, NONE, wci, ccs, missing) = 
+    and split (V, p, NONE, wci, ccs, lab, missing) = 
         (* V is covered: return missing patterns from other cases *)
-        ( if !Global.chatter >= 6
-	    then print ("Covered\n")
-	  else ();
+        ( chatter 6 (fn () => "Covered\n");
           missing )
-      | split (V, p, SOME(nil), wci as (W, ci), ccs, missing) =
+      | split (V, p, SOME(nil), wci as (W, ci), ccs, lab, missing) =
         (* no strong candidates: check for finitary splitting candidates *)
-	( if !Global.chatter >= 6
-	    then print ("No strong candidates---calculating weak candidates:\n")
-	  else ();
-	  splitWeak (V, p, finitary (V, p, W, ci), wci, ccs, missing)
-         )
-      | split (V, p, SOME((k,_)::ksn), wci as (W, ci), ccs, missing) =
+	( chatter 6 (fn () => "No strong candidates---calculating weak candidates\n");
+	  splitWeak (V, p, finitary (V, p, W, ci), wci, ccs, lab, missing) )
+      | split (V, p, SOME((k,_)::ksn), wci as (W, ci), ccs, lab, missing) =
 	(* some candidates: split first candidate, ignoring multiplicities *)
 	(* candidates are in reverse order, so non-index candidates are split first *)
 	(* splitVar shows splitting as it happens *)
-	(case splitVar (V, p, k, W)
-	   of SOME(cases) => covers (cases, wci, ccs, missing)
+	(case splitVar (V, p, k, wci)
+	   of SOME(cases) => covers (cases, wci, ccs, lab, missing)
 	    | NONE => (* splitting variable k generated constraints *)
-	      split (V, p, SOME (ksn), wci, ccs, missing)) (* try other candidates *)
+	      split (V, p, SOME (ksn), wci, ccs, lab, missing)) (* try other candidates *)
 
-    and splitWeak (V, p, nil, wci, ccs, missing) =
-        ( if !Global.chatter >= 6
-	    then print ("No weak candidates---case not covered\n")
-	  else () ;
+    and splitWeak (V, p, nil, wci, ccs, lab, missing) =
+        ( chatter 6 (fn () => "No weak candidates---case " ^ labToString(lab) ^ " not covered\n");
 	  (V,p)::missing )
-      | splitWeak (V, p, ksn, wci, ccs, missing) = (* ksn <> nil *)
+      | splitWeak (V, p, ksn, wci, ccs, lab, missing) = (* ksn <> nil *)
         (* commit to the minimal candidate, since no constraints can arise *)
-	  split (V, p, SOME(findMin ksn::nil), wci, ccs, missing)
+	  split (V, p, SOME(findMin ksn::nil), wci, ccs, lab, missing)
 
-    and covers (nil, wci, ccs, missing) = missing
-      | covers ((V,p)::cases', wci, ccs, missing) =
-          covers (cases', wci, ccs, cover (V, p, wci, ccs, missing))
+    and covers (cases, wci, ccs, lab, missing) =
+        ( chatter 6 (fn () => "Found " ^ Int.toString (List.length cases)
+		              ^ pluralize (List.length cases, " case") ^ "\n");
+	  covers' (cases, 1, wci, ccs, lab, missing) )
+
+    and covers' (nil, n, wci, ccs, lab, missing) =
+        ( chatter 6 (fn () => "All subcases of " ^ labToString(lab) ^ " covered\n");
+	  missing )
+      | covers' ((V,p)::cases', n, wci, ccs, lab, missing) =
+          covers' (cases', n+1, wci, ccs, lab, cover (V, p, wci, ccs, Child(lab, n), missing))
 
     (******************)
     (* Input Coverage *)
@@ -1260,6 +1272,8 @@ struct
     *)
     fun checkCovers (a, ms) =
         let
+	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ N.qidToString (N.constQid a)
+			     ^ "\n")
 	  val (V0, p) = initCGoal (a)
 	  val _ = if !Global.doubleCheck
 		    then TypeCheck.typeCheck (I.Null, (V0, I.Uni (I.Type)))
@@ -1269,7 +1283,7 @@ struct
 	  val cs = Index.lookup a	(* lookup constants defining a *)
 	  val ccs = constsToTypes cs	(* calculate covering clauses *)
 	  val W = W.lookup a		(* world declarations for a; must be defined *)
-	  val missing = cover (V0, p, (W, cIn), Input(ccs), nil)
+	  val missing = cover (V0, p, (W, cIn), Input(ccs), Top, nil)
 	  val _ = case missing
 	            of nil => ()	(* all cases covered *)
 		     | _::_ => raise Error ("Coverage error --- missing cases:\n"
@@ -1294,7 +1308,7 @@ struct
 	  val V0 = createCoverGoal (I.Null, (V', I.id), q, ms) (* replace output by new EVars *)
 	  val (V0', p) = abstract (V0, I.id)	(* abstract will double-check *)
 	  val W = W.lookup a
-	  val missing = cover (V0', p, (W, cOut), Output(V',q), nil)
+	  val missing = cover (V0', p, (W, cOut), Output(V',q), Top, nil)
 	  val _ = case missing
 	            of nil => ()
 		     | _::_ => raise Error ("Output coverage error --- missing cases:\n"
