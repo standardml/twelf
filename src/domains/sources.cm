@@ -8,7 +8,17 @@ Library
 is
 #if defined(NEW_CM)
   $/basis.cm
+#endif
+#if defined(MLton)
+  (* Empty *)
+#elif (SMLNJ_VERSION > 110)
+  (* Empty *)
+#elif (SMLNJ_MINOR_VERSION >= 43)
+  (* Empty *)
+#elif defined(NEW_CM)
   $/smlnj-lib.cm
+#elif defined(SMLNJ_VERSION)
+  smlnj-lib.cm
 #else
   ../int-inf/sources.cm
 #endif

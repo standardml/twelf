@@ -7,5 +7,9 @@ is
   ../timing/sources.cm
   ../frontend/sources.cm
   sigint.sig
+#if defined(MLton)
+  sigint-mlton.sml
+#else
   sigint-smlnj.sml
+#endif
   server.sml
