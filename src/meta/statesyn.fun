@@ -21,9 +21,13 @@ struct
   | All of IntSyn.Dec * Order		(*     | {{D}} O              *)
   | And of Order * Order		(*     | O1 ^ O2              *)
     
+
+  datatype Info =
+    Splits of int
+
   datatype Tag = 
     Parameter of FunSyn.label option
-  | Lemma of int * FunSyn.For
+  | Lemma of Info * FunSyn.For
 (*  | Assumption of int *)
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
@@ -90,9 +94,13 @@ struct
        T is either an Assumption or Induction tag
        T' = T - 1
     *)
+    fun decreaseSplits (Splits k) = Splits (k-1)
+     
     fun (* decrease (Assumption k) = Assumption (k-1)
-      | *) decrease (Lemma (k, F)) = Lemma (k-1, F)
+      | *) decrease (Lemma (Sp, F)) = Lemma (decreaseSplits Sp, F)
 
+
+    fun splitDepth (Splits k) = k
 
     (* normalizeTag (T, s) = T'
       
@@ -103,11 +111,12 @@ struct
     *)
 
     fun normalizeTag (T as Parameter _, _) = T
-      | normalizeTag (Lemma (n, F), s) = Lemma (n, F.normalizeFor (F, s))
+      | normalizeTag (Lemma (K, F), s) = Lemma (K, F.normalizeFor (F, s))
 
   in
     val orderSub = orderSub
     val decrease = decrease
+    val splitDepth = splitDepth
     val normalizeOrder = normalizeOrder
     val convOrder = convOrder
     val normalizeTag = normalizeTag

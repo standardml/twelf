@@ -46,7 +46,7 @@ struct
 	      val D' = Names.decName (G, D)
 	    in
               init' ((I.Decl (G, D'), 
-		     I.Decl (B, S.Lemma (!MTPGlobal.maxSplit, F.Ex (D', F.True)))), 
+		     I.Decl (B, S.Lemma (S.Splits (!MTPGlobal.maxSplit), F.Ex (D', F.True)))), 
 		     O, F', Ss)
 	    end
 	      (* it is possible to calculuate 

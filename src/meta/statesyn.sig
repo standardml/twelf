@@ -13,11 +13,14 @@ sig
   | Simul of Order list			(*     | {O1 .. On}           *)
   | All of FunSyn.IntSyn.Dec * Order  	(*     | {{D}} O              *)
   | And of Order * Order		(*     | O1 ^ O2              *)
-    
 
+
+  datatype Info =
+    Splits of int
+    
   datatype Tag = 
     Parameter of FunSyn.label option
-  | Lemma of int * FunSyn.For
+  | Lemma of Info * FunSyn.For
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)
@@ -31,6 +34,8 @@ sig
 
   val orderSub : Order * FunSyn.IntSyn.Sub -> Order  
   val decrease : Tag -> Tag
+  val splitDepth : Info -> int
+
   val normalizeOrder : Order -> Order
   val convOrder : Order * Order -> bool
 

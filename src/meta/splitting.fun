@@ -8,6 +8,7 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 			sharing FunSyn.IntSyn = IntSyn
 		      structure StateSyn' : STATESYN
 			sharing StateSyn'.FunSyn = FunSyn
+			sharing StateSyn'.IntSyn = IntSyn
 		      structure MTPAbstract : MTPABSTRACT
 			sharing MTPAbstract.IntSyn = IntSyn
 		        sharing MTPAbstract.StateSyn = StateSyn'
@@ -52,14 +53,28 @@ struct
   datatype 'a flag = 
     Active of 'a | InActive
 
-  type operator = (StateSyn.State * int) * 
-		   StateSyn.State flag list
+  datatype Index = 
+    Index of (int			(* Splitting depth *)
+	      * int option		(* Induction variable *)
+	      * int			(* Number of cases *)
+	      * int)			(* Position (left to right) *)
+	       
+
+  datatype Operator = 
+    Operator of (StateSyn.State * int) * StateSyn.State flag list
+		   * Index 
+
+  type operator = Operator
 
   local
     structure I = IntSyn
     structure F = FunSyn
     structure S = StateSyn
 
+
+
+    fun makeOperator ((S, k), L, S.Splits n, g) = 
+      Operator ((S, k), L, Index (n, NONE, List.length L, g))
 
     (* aux (G, B) = L' 
        
@@ -208,7 +223,7 @@ struct
 
     fun createLemmaTags (I.Null) = I.Null
       | createLemmaTags (I.Decl (G, D)) = 
-           I.Decl (createLemmaTags G,  S.Lemma (!MTPGlobal.maxSplit, F.Ex (D, F.True)))
+           I.Decl (createLemmaTags G,  S.Lemma (S.Splits (!MTPGlobal.maxSplit), F.Ex (D, F.True)))
 
     (* constCases (G, (V, s), I, abstract, ops) = ops'
      
@@ -501,6 +516,21 @@ struct
     fun makeAddressCont makeAddress k = makeAddress (k+1)
 
 
+
+    fun occursInOrder (n, S.Arg (Us, Vt), k, sc) = 
+        if occursInExp (k, Whnf.normalize Us) then SOME n else sc (n+1)
+      | occursInOrder (n, S.Lex Os, k, sc) = occursInOrders (n, Os, k, sc)
+      | occursInOrder (n, S.Simul Os, k, sc) = occursInOrders (n, Os, k, sc)
+      (* no other case should be possible by invariant *)
+
+    and occursInOrders (n, nil, k, sc) = sc n
+      | occursInOrders (n, O :: Os, k, sc) = 
+          occursInOrder (n, O, k, fn n' => occursInOrders (n', Os, k, sc))
+
+
+    fun inductionInit O k = occursInOrder (0, O, k, fn n => NONE)
+    fun inductionCont induction k = induction (k+1)
+
     (* expand' ((G, B), isIndex, abstract, makeAddress) = (sc', ops')
 	 
        Invariant:
@@ -527,16 +557,16 @@ struct
          instead of reconstructin (G, B) as the result of sc, just take (G, B)
     *)
     fun expand' (GB as (I.Null, I.Null), isIndex,
-		 abstract, 
-		 makeAddress) =
+		 abstract, makeAddress, induction) =
         (fn (Gp, Bp) => ((Gp, Bp), I.Shift (I.ctxLength Gp), GB, false), nil)
-      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
-		 isIndex, abstract, makeAddress) = 
+      | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (K, F.Ex _)))),
+		 isIndex, abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex), 
 		     abstractCont ((D, T), abstract),
-		     makeAddressCont makeAddress)
+		     makeAddressCont makeAddress,
+		     inductionCont induction)
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 
 	    let 
@@ -545,22 +575,22 @@ struct
 	    in
 	      ((G', B'), I.Dot (I.Exp (X), s'), (I.Decl (G0, D), I.Decl (B0, T)), p')        (* G' |- X.s' : G, D *)
 	    end
-	  val ops' = if not (isIndex 1) andalso b > 0
+	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
-			 (makeAddress 1, split ((D, T), sc, abstract))
+			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G)
 			 :: ops
 		     else ops
 	in
 	  (sc', ops')
 	end
       | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, 
-		 abstract, 
-		 makeAddress) = 
+		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
 		     abstractCont ((D, T), abstract),
-		     makeAddressCont makeAddress)
+		     makeAddressCont makeAddress,
+		     inductionCont induction)
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 
 	    let 
@@ -573,13 +603,13 @@ struct
 	  (sc', ops)
 	end
       | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, 
-		 abstract, 
-		 makeAddress) = 
+		 abstract, makeAddress, induction) = 
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
 		     abstractErrorLeft,
-		     makeAddressCont makeAddress)
+		     makeAddressCont makeAddress,
+		     inductionCont induction)
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 
 	    let 
@@ -602,10 +632,10 @@ struct
        If   |- S state
        then ops' is a list of all possiblie splitting operators
     *)
-    fun expand (S0 as S.State (n, (G0, B0), _, _, _, _, _)) =
+    fun expand (S0 as S.State (n, (G0, B0), _, _, O, _, _)) =
       let 
 	val (_, ops) =
-	  expand' ((G0, B0), isIndexInit, abstractInit S0, makeAddressInit S0)
+	  expand' ((G0, B0), isIndexInit, abstractInit S0, makeAddressInit S0,  inductionInit O)
       in
 	ops
       end
@@ -616,8 +646,18 @@ struct
        If   Op = (_, Sl) 
        then k = |Sl| 
     *)
-    fun index (_, Sl) = List.length Sl
+    fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
 
+    fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
+      (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
+      
+
+
+    fun lt (op1, op2) = index (op1) < index (op2)
+    fun eq (Operator (_, _, I1), Operator (_, _, I2)) = 
+          indexEq (I1, I2) 
+      
+    fun le op12 = lt op12 orelse eq op12
 
     (* isInActive (F) = B
        
@@ -634,7 +674,7 @@ struct
        If   Op = (_, Sl) 
        then B' holds iff Sl does not contain inactive states
     *)
-    fun applicable (_, Sl) = not (List.exists isInActive Sl)
+    fun applicable (Operator (_, Sl, I)) = not (List.exists isInActive Sl)
 
 
     (* apply (Op) = Sl'
@@ -645,7 +685,7 @@ struct
        
        Side effect: If Sl contains inactive states, an exception is raised
     *)
-    fun apply (_, Sl) = 
+    fun apply (Operator (_, Sl, I)) = 
       map (fn (Active S) => S
 	    | InActive => raise Error "Not applicable: leftover constraints")
       Sl
@@ -660,7 +700,7 @@ struct
        (menu should hence be only called on operators which have 
         been calculated from a named state)
     *)
-    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, F), i), Sl)) = 
+    fun menu (Op as Operator ((S.State (n, (G, B), (IH, OH), d, O, H, F), i), Sl, I)) = 
 	let 
 	  fun active (nil, n) = n
 	    | active (InActive :: L, n) = active (L, n)
@@ -689,6 +729,8 @@ struct
     val applicable = applicable
     val apply = apply
     val index = index
-
+    val le = le
+    val lt = lt
+    val eq = eq
   end (* local *)
 end;  (* functor Splitting *)

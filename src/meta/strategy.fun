@@ -59,21 +59,21 @@ struct
     fun findMin nil = NONE
       | findMin L =
 	  let 
-	    fun findMin' (nil, k, result) = result
-	      | findMin' (O' :: L', NONE, NONE)=
+	    fun findMin' (nil, result) = result
+	      | findMin' (O' :: L', NONE) =
 	        if MTPSplitting.applicable O' then 
-		   findMin' (L', SOME (MTPSplitting.index O'), SOME O')
-		else findMin' (L', NONE, NONE)
-	      | findMin' (O' :: L', SOME k, result)=
+		   findMin' (L', SOME O')
+		else findMin' (L', NONE)
+	      | findMin' (O' :: L', Oopt as SOME O) =
 		let 
 		  val k' = MTPSplitting.index O' 
 		in
 		  if MTPSplitting.applicable O' andalso 
-		    MTPSplitting.index O' < k then findMin' (L', SOME k', SOME O')
-		  else findMin' (L', SOME k, result)
+		    MTPSplitting.lt (O', O) then findMin' (L', SOME O')
+		  else findMin' (L', Oopt)
 		end
 	  in
-	    findMin' (L, NONE, NONE)
+	    findMin' (L, NONE)
 	  end
 
     (* split   (givenStates, (openStates, solvedStates)) = (openStates', solvedStates')
