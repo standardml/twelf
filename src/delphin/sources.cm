@@ -13,6 +13,7 @@ is
 #if defined(NEW_CM)
   $/basis.cm
 #endif
+   ../compat/sources.cm
    ../frontend/sources.cm
    ../stream/sources.cm
    ../tomega/sources.cm
