@@ -1,0 +1,31 @@
+(* Mon Nov 11 10:26:04 2002 *)
+(* Using IntSet no eager transitive closure *)
+- Twelf.Print.subord();
+Total families = 1107
+Total edges =    6170 (*  6)
+subTrue =       61465 (* 10)
+subFalse =     380655 (*  6)
+subTotal =     442120 (+ subTrue SubFalse)
+reachCalls = 91143817 (* 206)
+
+val it = () : unit
+- Twelf.Timers.show ();
+Parsing       : Real =   2.029, Run =   2.110 (  2.100 usr,  0.060 gc)
+Reconstruction: Real =   4.701, Run =   4.850 (  4.840 usr,  0.510 gc)
+Abstraction   : Real =   1.808, Run =   1.570 (  1.540 usr,  0.420 gc)
+Checking      : Real =   2.144, Run =   1.970 (  1.970 usr,  0.130 gc)
+Modes         : Real =   0.357, Run =   0.290 (  0.290 usr,  0.000 gc)
+Subordination : Real =  16.077, Run =  15.320 ( 15.270 usr,  0.610 gc)
+Termination   : Real =   0.021, Run =   0.010 (  0.010 usr,  0.000 gc)
+Printing      : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Compiling     : Real =   0.036, Run =   0.000 (  0.000 usr,  0.000 gc)
+Solving       : Real =   0.139, Run =   0.130 (  0.130 usr,  0.010 gc)
+ProofRecon    : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling Tabled: Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Splitting     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Recursion     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Inference     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Total         : Real =  27.312, Run =  26.250 ( 26.150 usr,  1.740 gc)
+
+(* Improved after inverting the relation *)

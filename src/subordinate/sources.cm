@@ -9,6 +9,7 @@ is
   ../table/sources.cm
   ../lambda/sources.cm
   ../names/sources.cm
+  intset.sml
   subordinate.sig
   subordinate.fun
   subordinate.sml

@@ -3,4 +3,5 @@ structure Subordinate =
 	       structure IntSyn' = IntSyn
 	       structure Whnf = Whnf
 	       structure Names = Names
-	       structure Table = IntRedBlackTree);
+	       structure Table = IntRedBlackTree
+	       structure IntSet = IntSet);
