@@ -1,0 +1,26 @@
+%use word32.
+
+plus_word32: word32 -> word32 -> word32 -> type.
+%mode plus_word32 +A +B -C.
+
+plus_word32_tac:
+    plus_word32 A B C <-
+    + A B C.
+
+plus_word32_rev: word32 -> word32 -> word32 -> type.
+%mode plus_word32_rev -A +B +C.
+
+plus_word32_rev_tac:
+    plus_word32_rev A B C <-
+    + A B C.
+
+% wrong mode declaration --
+%     SHOULD NOT PASS MODE CHECKING
+%{
+plus_word32_broken: word32 -> word32 -> word32 -> type.
+%mode plus_word32_broken -A -B +C.
+
+plus_word32_broken_tac:
+    plus_word32_broken A B C <-
+    + A B C.
+}%

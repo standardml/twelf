@@ -77,7 +77,7 @@ struct
 	    val {usr = usr, sys = sys} = Compat.Timer.checkCPUTimer timer
 	    val gc = Compat.Timer.checkGCTime timer
 	in
-          {usr = Time.-(usr, gc), sys = sys, gc = gc}
+          {usr = usr, sys = sys, gc = gc}
 	end
 
     fun time (_, counters) (f:'a -> 'b) (x:'a) =

@@ -7,7 +7,7 @@ struct
       let
 	val {usr = usr, sys = sys, gc = gc} = Timer.checkCPUTimer timer
       in
-	{usr = Time.+(usr, gc), sys = sys}
+	{usr = usr, sys = sys}
       end
       
   fun checkGCTime timer =
