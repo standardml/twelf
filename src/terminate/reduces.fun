@@ -378,11 +378,9 @@ struct
      *)
 
      fun checkRImp (G, Q, RG, RG', Vs, occ) = 
-       checkRImpW (G, Q, RG, RG', Whnf.whnf Vs, occ)
+           checkRImpW (G, Q, RG, RG', Whnf.whnf Vs, occ)
 
-     and 
-       
-       checkRImpW (G, Q, RG, RG', Vs as (I.Root (I.Const a, S), s), occ) =
+     and checkRImpW (G, Q, RG, RG', Vs as (I.Root (I.Const a, S), s), occ) =
          (case selectROrder (a, (S, s)) 
 	    of NONE => (if (!Global.chatter) > 5 
 			 then print ("\n no reduction predicate defined for " ^ 
@@ -403,9 +401,9 @@ struct
 				    I.Decl (Q, C.Universal), RG, RG', (V, I.dot1 s),
 				    P.body occ)
 	    in 
-	     abstractRedCtx (G, RG1', D)
+	     abstractRedCtx (G, RG1', D) (* scope violation ??? *)
 	    end 
-	        
+
        | checkRImpW (G, Q, RG, RG', (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), occ) = 
 	    let
 	      val RG1 = C.shiftRCtx (append(RG, RG')) (fn us => I.comp(us, I.shift))
@@ -443,7 +441,7 @@ struct
 	  val RG1 = checkRImp (G, Q, RG, I.Null, (V1,s), P.label occ)  
 	  val RG2 = C.shiftRCtx (append(RG, RG1)) (fn us => I.comp(us, I.shift))
 	in 
-	  checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))), 
+	  checkRClause (I.Decl (G, N.decEName (G, I.decSub (D, s))),  (* name ??? *)
 			I.Decl (Q, C.Existential), RG2,  
 			(V2, I.dot1 s), P.body occ)  
 	end
@@ -452,31 +450,19 @@ struct
 	  val RO = case selectROrder (a, (S, s))
 	             of NONE => raise Error' (occ, "No reduction order assigned for " ^ 
 					      I.conDecName (I.sgnLookup a) ^ ".")
-		     | SOME(O) => (if (!Global.chatter) > 5
-				     then print ("\n check reduction predicate\n " ^
-						 ctxToString (G, RG) ^ " ---> " ^  
-						 orderToString (G, O) ^ " \n")
-				   else (); 
-				   O)
+		      | SOME(O) => O
+	  val _ = if (!Global.chatter) > 5
+		    then print ("\n check reduction predicate\n " ^
+				ctxToString (G, RG) ^ " ---> " ^  
+				orderToString (G, RO) ^ " \n")
+		  else ()
 	in
-	  case RO
-	    of C.Less(O, O') => if C.deduce(G, Q, RG, C.Less(O, O')) 
-				  then ()
-				else raise Error' (occ, "Reduction violation:\n" ^ 
-						   ctxToString (G, RG) ^ " ---> " ^  
-						   orderToString (G, C.Less(O, O')))
-	    | C.Leq(O, O') =>  if C.deduce(G, Q, RG, C.Leq(O, O')) 
-				 then ()
-			       else raise Error' (occ, "Reduction violation:\n" ^ 
-						  ctxToString (G, RG) ^ " ---> " ^  
-						  orderToString (G, C.Leq(O, O')))
-	    | C.Eq(O, O') =>  if C.deduce (G, Q, RG, C.Eq(O, O')) 
-				then ()
-			      else  raise Error' (occ, "Reduction violation:\n" ^ 
-					       ctxToString (G, RG) ^ " ---> " ^  
-					       orderToString (G, C.Eq(O, O')))
+	  if C.deduce(G, Q, RG, RO)
+	    then ()
+	  else raise Error' (occ, "Reduction violation:\n" ^ 
+			     ctxToString (G, RG) ^ " ---> " ^  (* rename ctx ??? *)
+			     orderToString (G, RO))
 	end
-
 
     (* checkFamReduction a = ()
        
@@ -496,9 +482,7 @@ struct
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 5 then N.varReset IntSyn.Null else ();
-		 (( (* Tue Apr 23 11:19:26 2002 -bp  
-		      checkClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top); *)
-		    checkRClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top))
+		 (( checkRClause (I.Null, I.Null, I.Null, (I.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
 		 if (!Global.chatter) > 4
