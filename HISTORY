@@ -1,3 +1,28 @@
+Sat Oct 10 10:35:11 1998
+
+The version in /afs/cs/project/twelf/www/dist/twelf-1-2.*
+is not Twelf 1.2 pl 3 (tagged as twelf-1-2pl3)
+
+Thu Oct  8 14:35:44 1998
+
+Applied patches 1 and 3 (where 3 supersedes 2) to twelf-1-2.
+Procedure:
+
+  - unpack the distribution
+  - apply /usr/fp/patch-1-2pl1 in the super-directory
+    % patch <patch-1-2pl1
+  - apply /uar/fp/patch-1-2pl3 in the super-directory
+    % patch <patch-1-2pl3
+  - do any derived files need to be regenerated (including .elc)?
+  - delete tmp files
+    find . -name '*.orig' -print
+  - copy /usr/fp/twelf/doc/info/twelf.info* into twelf/doc/info/
+  - re-pack the distribution
+
+  - replaced distribution in /afs/cs/project/twelf/www/dist/,
+    in this case without renaming since Twelf 1.2 has not been
+    officially released.
+
 Wed Sep 16 15:25:55 1998
 
 Created version Twelf 1.2 R 1 (optimize) after Larry Greenfield
