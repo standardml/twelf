@@ -293,12 +293,8 @@ struct
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands')
 	end
       | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
-		       M.Mapp (M.Marg (M.Star, _), ms'), cands) =
-	(* skip "ignore" arguments *)
-	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
-      | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
-		       M.Mapp (M.Marg (M.Minus, _), ms'), cands) =
-        (* skip "output" arguments *)
+		       M.Mapp (_, ms'), cands) =
+	(* skip "ignore" and "output" arguments *)
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
 
     (* matchClause (G, (a @ S1, s1), V, ms) = cands
@@ -314,21 +310,20 @@ struct
 	  matchClause (G, ps', (V2, I.Dot (I.Exp (X1), s)), ms)
 	end
 
-    (* matchSig (G, (a @ S, s), sgn, ms, klist) = klist'
+    (* matchSig (G, (a @ S, s), ccs, ms, klist) = klist'
        match coverage goal {{G}} a @ S[s]
-       against each constructor in sgn, 
-       adding one new pair (c,cand) for each constant in klist to obtain klist'
+       against each coverage clause V in ccs,
+       adding one new list cand for each V to klist to obtain klist'
 
        Invariants:
        G |- a @ S[s] : type
-       sgn consists of constructors with target type a @ S'
+       V consists of clauses with target type a @ S'
        ms matches S
        klist <> Covered
     *)
     fun matchSig (G, ps', nil, ms, klist) = klist
       | matchSig (G, ps', V::ccs', ms, klist) =
         let
-	  (* val V = I.constType (c) *)
 	  val cands = CSManager.trail
 	              (fn () => matchClause (G, ps', (V, I.id), ms))
 	in
@@ -342,8 +337,9 @@ struct
       | matchSig' (G, ps', ccs, ms, CandList (klist)) = (* not yet covered: continue to search *)
           matchSig (G, ps', ccs, ms, CandList (klist))
 
-    (* match (G, V, ms) = klist
-       matching coverage goal {{G}} V against signature yields klist
+    (* match (G, V, ms, ccs) = klist
+       matching coverage goal {{G}} V against coverage clauses Vi in ccs
+       yields candidates klist
        no local assumptions
        Invariants:
        V = {xk+1:Vk+1}...{xn:Vn} a @ S
@@ -647,18 +643,30 @@ struct
     (* need to improve tracing with higher chatter levels *)
     (* ccs = covering clauses *)
 
+    (* cover (V, ms, ccs, missing) = missing'
+       covers ([V1,...,Vi], ms, ccs, missing) = missing'
+
+       check if input (+) arguments in V or all Vi, respectively,
+       are covered by clauses ccs, adding omitted cases
+       to missing to yield missing'.
+       ms is mode spine designating input arguments (+)
+    *)
     fun cover (V, ms, ccs, missing) =
           split (V, selectCand (match (I.Null, V, ms, ccs)), ms, ccs, missing)
 
-    and split (V, NONE, ms, ccs, missing) = missing
+    and split (V, NONE, ms, ccs, missing) = 
+        (* V is covered: return missing patterns from other cases *)
+          missing
       | split (V, SOME(nil), ms, ccs, missing) =
-        if impossible(V)		(* no candidates: check if coverage goal is impossible *)
+        (* no candidates: check if coverage goal is impossible *)
+        if impossible(V)		
 	  then missing
 	else V::missing
-      | split (V, SOME((k,_)::ksn), ms, ccs, missing) = (* ignore multiplicities *)
+      | split (V, SOME((k,_)::ksn), ms, ccs, missing) =
+	(* some candidates: split first, ignoring multiplicities *)
 	(case splitVar (V, k)
 	   of SOME(cases) => covers (cases, ms, ccs, missing)
-	    | NONE =>			(* splitting variable k generated constraints *)
+	    | NONE => (* splitting variable k generated constraints *)
 	      split (V, SOME (ksn), ms, ccs, missing)) (* try other candidates *)
 
     and covers (nil, ms, ccs, missing) = missing
@@ -669,6 +677,9 @@ struct
     (* Input Coverage *)
     (******************)
 
+    (* constsToTypes [c1,...,cn] = [V1,...,Vn] where ci:Vi.
+       Generates coverage clauses from signature.
+    *)
     fun constsToTypes (nil) = nil
       | constsToTypes (I.Const(c)::cs') = I.constType(c)::constsToTypes(cs')
 
@@ -676,13 +687,16 @@ struct
     (* Output Coverage *)
     (*******************)
 
+    (* negateMode ms = ms'
+       replaces mode + by -, - by +.
+       Used for output coverage, where "ignore" ( * ) should be impossible.
+    *)
     fun negateMode (M.Mnil) = M.Mnil
       | negateMode (M.Mapp (M.Marg (M.Plus, x), ms')) =
            M.Mapp (M.Marg (M.Minus, x), negateMode ms')
-      | negateMode (M.Mapp (M.Marg (M.Star, x), ms')) = (* should be impossible here *)
-           M.Mapp (M.Marg (M.Star, x), negateMode ms')
       | negateMode (M.Mapp (M.Marg (M.Minus, x), ms')) =
            M.Mapp (M.Marg (M.Plus, x), negateMode ms')
+      (* M.Star impossible *)
 
     (* createCoverClause (G, V) = {{G}} V
        where {{G}} V is in NF
@@ -692,7 +706,18 @@ struct
       | createCoverClause (I.Null, V) =
 	  Whnf.normalize (V, I.id)
 
-    (* very inefficient: using EVars and abstraction *)
+    (* createCoverGoal (({{G}} a @ S, s), ms) = V'
+       createCoverSpine ((S, s), (V, s'), ms) = S'
+
+       where all variables in G are replaced by EVars
+       and output arguments in S are replaced by new EVars
+
+       Invariants: . |- ({{G}} a @ S)[s] : type
+                   ms matches S
+		   . |- V[s'] : type and (V,s) whnf
+
+       Could probably be done more efficiently.
+    *)
     fun createCoverGoal (Vs, ms) =
            createCoverGoalW (Whnf.whnf (Vs), ms)
     and createCoverGoalW ((I.Pi ((D as I.Dec (_, V1), _), V2), s), ms) =
@@ -704,9 +729,6 @@ struct
       | createCoverGoalW ((I.Root (a as I.Const(cid), S), s), ms) = (* s = id *)
 	I.Root (a, createCoverSpine ((S, s), (I.constType (cid), I.id), ms))
 
-    (* createCoverSpine ((S, s), (V, s'), ms) = S'
-       where (V,s') is whnf
-    *)
     and createCoverSpine ((I.Nil, s), _, M.Mnil) = I.Nil
       | createCoverSpine ((I.App (U1, S2), s), (I.Pi ((I.Dec (_, V1), _), V2), s'),
 			  M.Mapp (M.Marg (M.Minus, x), ms')) =
@@ -725,8 +747,8 @@ struct
 	  createCoverSpine ((S, I.comp (s', s)), Vs, ms)
 
   in
-    (* checkout (G, a @ S) = ()
-       checks if the most general goal a @ S' is output-covered by a @ S
+    (* checkOut (G, a @ S) = ()
+       checks if the most general goal a @ S' is locally output-covered by a @ S
        Effect: raises Error (msg) otherwise
     *)
     fun checkOut (G, V as I.Root (I.Const (a), S)) =
@@ -735,8 +757,7 @@ struct
 	  val SOME(ms) = ModeSyn.modeLookup a
 	  val negMs = negateMode ms	(* swap input/output modes *)
 	  val V' = createCoverClause (G, V)
-	  (* val V0 = initCGoal (a) *)
-	  val V0 = createCoverGoal ((V', I.id), ms) (* replace output by new EVars variables *)
+	  val V0 = createCoverGoal ((V', I.id), ms) (* replace output by new EVars *)
 	  val V0' = abstract (V0, I.id)
 	  val missing = cover (V0', negMs, V'::nil, nil)
 	  val _ = case missing

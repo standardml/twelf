@@ -4,10 +4,7 @@ Author: Frank Pfenning with Carsten Schuermann
 Version 1 --- only closed queries and predicates
           --- only input coverage
 
-Coverage checking is LOCAL.  Later we will
-use a declaration of the form
- %proves <thm> <fam>.
-for more global checking.
+Coverage checking is local.  See also %total below.
 
 Syntax:
 
@@ -17,7 +14,7 @@ where mdecl is a short or full mode declaration.
 
 + means input coverage
 * means no coverage checking
-[- means output coverage / currently prohibited]
+- means no coverage checking (see %total below)
 
 Mon Mar 12 23:27:16 2001 -fp
 Version 2 --- added proper constraint handling
@@ -29,6 +26,7 @@ Version 2 --- added proper constraint handling
 
 Mon Mar 19 07:16:19 2001 -fp
 Version 3 --- added totality checking for closed worlds
+          --- still no subordination
 
 Syntax:
 

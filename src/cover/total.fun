@@ -41,8 +41,9 @@ struct
     structure I = IntSyn
     structure P = Paths
 
-    (* totalTable (a) = true iff a is total *)
+    (* totalTable (a) = SOME() iff a is total, otherwise NONE *)
     val totalTable : unit Table.Table = Table.new(0)
+
     fun reset () = Table.clear totalTable
     fun install (cid) = Table.insert totalTable (cid, ())
     fun lookup (cid) = Table.lookup totalTable (cid)
@@ -65,29 +66,32 @@ struct
 		raise Error (P.wrapLoc (P.Loc (fileName, P.occToRegionDec occDec occ), msg)))
 
     (* checkClause (G, (V, s), occ) = ()
-       iff output coverage in V is satisfied.
+       checkGoal (G, (V, s), occ) = ()
+       iff local output coverage for V is satisfied
+           for clause V[s] or goal V[s], respectively.
+       Effect: raises Error' (occ, msg) if coverage is not satisfied at occ.
 
-       Invariant: G |- V[s] : type
-       occ is occurrence of V in current constant declaration
+       Currently does not allow parametric or hypothetical subgoals.
+
+       Invariants: G |- V[s] : type
     *)
     fun checkClause (G, Vs, occ) = checkClauseW (G, Whnf.whnf Vs, occ)
     and checkClauseW (G, (I.Pi ((D1, I.Maybe), V2), s), occ) =
-        (* quantifier D1 *)
+        (* quantifier *)
         let
 	  val D1' = Names.decEName (G, I.decSub (D1, s))
 	in
           checkClause (I.Decl (G, D1'), (V2, I.dot1 s), P.body occ)
 	end
       | checkClauseW (G, (I.Pi ((D1 as I.Dec (_, V1), I.No), V2), s), occ) =
-	(* subgoal V1 *)
+	(* subgoal *)
 	let
-	  (* do not add to the context --- no dependency *)
-	  (* val _ = checkClause (G, (V2, I.comp (s, I.shift)), P.body occ) *)
 	  val _ = checkClause (I.Decl (G, D1), (V2, I.dot1 s), P.body occ)
 	in
 	  checkGoal (G, (V1, s), P.label occ)
 	end
-      | checkClauseW (G, (I.Root _, s), occ) = (* clause head *)
+      | checkClauseW (G, (I.Root _, s), occ) =
+	(* clause head *)
 	()
     and checkGoal (G, Vs, occ) = checkGoalW (G, Whnf.whnf Vs, occ)
     and checkGoalW (G, (I.Pi _, s), occ) =
@@ -95,7 +99,8 @@ struct
       | checkGoalW (G, (V as I.Root (I.Const a, S), s), occ) =	(* s = id *)
 	let
 	  val _ = if not (total a)
-		    then raise Error' (occ, "Subgoal " ^ Names.constName a ^ " not total")
+		    then raise Error' (occ, "Subgoal " ^ Names.constName a
+				       ^ " not declared to be total")
 		  else ()
 	in
 	  Cover.checkOut (G, V)
@@ -103,12 +108,22 @@ struct
 	  => raise Error' (occ, "Totality: Output of subgoal not covered\n" ^ msg)
 	end
 
+    (* checkOutCover [c1,...,cn] = ()
+       iff local output coverage for every subgoal in ci:Vi is satisfied.
+       Effect: raises Error (msg) otherwise, where msg has filename and location.
+    *)
     fun checkOutCover nil = ()
       | checkOutCover (I.Const(c)::cs) =
         ( checkClause (I.Null, (I.constType (c), I.id), P.top)
 	     handle Error' (occ, msg) => error (c, occ, msg) ;
           checkOutCover cs )
 
+    (* checkFam (a) = ()
+       iff family a is total in its input arguments.
+       This requires termination, input coverage, and local output coverage.
+       Currently, there is no global output coverage.
+       Effect:raises Error (msg) otherwise, where msg has filename and location.
+    *)
     fun checkFam (a) =
         let
           (* Checking termination *)
