@@ -219,16 +219,22 @@ struct
       end
 
 
-    fun maxNumberCases (I.Pi ((I.Dec (_, V1), _), V2), a) =
+    fun maxNumberLocalParams (I.Pi ((I.Dec (_, V1), _), V2), a) =
         let
-	  val m = maxNumberCases (V2, a)
+	  val m = maxNumberLocalParams (V2, a)
 	in
 	  if I.targetFam V1 = a then m+1
 	  else m
 	end 
-      | maxNumberCases (I.Root _, a) = 
-	  List.length (Index.lookup a) + maxNumberParams a
+      | maxNumberLocalParams (I.Root _, a) = 0
 
+
+
+    fun maxNumberConstCases a =
+          List.length (Index.lookup a)
+
+    fun maxNumberCases (V, a) =
+      maxNumberParams a + maxNumberLocalParams (V, a) + maxNumberConstCases a
 
     (* ctxSub (G, s) = G'
 	     
