@@ -289,7 +289,7 @@ struct
        then acc' is a list containing the one result from executing the success continuation 
 	 All EVar's got instantiated with the smallest possible terms.
     *)    
-    fun searchEx depth (GE, sc) = 
+    fun searchEx (it, depth) (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
 	 deepen depth searchEx' (selectEVar (GE), 
 			   fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
@@ -299,14 +299,14 @@ struct
 					   val gE' = List.length GE'
 					   val _ = if !Global.chatter > 4 then TextIO.print (Int.toString gE' ^ " remaining EVars\n") else ()
 					 in
-					   if gE' > 0 then  searchEx (depth-max) (GE', sc) else  sc ()
+					   if gE' > 0 then  searchEx (it-1, 1) (GE', sc) else  sc max
 					   (* warning: iterative deepening depth is not propably updated. 
 					      possible that it runs into an endless loop ? *)
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
 	  
-    fun search (GE, sc) = searchEx (!MTPGlobal.maxFill) (GE, sc)
+    fun search (GE, sc) = searchEx (2, !MTPGlobal.maxFill) (GE, sc)
 
 (*    (* searchAll' (GE, acc, sc) = acc'
 

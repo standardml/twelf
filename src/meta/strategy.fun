@@ -36,7 +36,8 @@ struct
 	     else ()
 
     fun printSplitting splitOp = 
-        if !Global.chatter > 5 then print ("[" ^ MTPSplitting.menu splitOp)
+        (*if !Global.chatter > 5 then print ("[" ^ MTPSplitting.menu splitOp) *)
+        if !Global.chatter > 5 then print ("[Splitting ...")
 	else if !Global.chatter> 4 then print ("S")
 	     else ()
 

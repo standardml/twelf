@@ -649,27 +649,6 @@ struct
     *)
     fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
 
-(*
-    fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
-      (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
-
-    fun indexLt (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) =
-      (k1 > k2) orelse 
-      (case (iopt1, iopt2) 
-	 of (NONE, NONE) => (c1 < c2) orelse (p1 < p2)
-          | (SOME _, NONE) => true
-	  | (NONE, SOME _) => false
-          | (SOME i1, SOME i2) => (c1 < c2) orelse (i1 < i2) orelse (p1 < p2))
-	
-
-(*    fun lt (op1, op2) = index (op1) < index (op2) *)
-    fun lt (Operator (_, _, I1), Operator (_, _, I2)) = 
-          indexLt (I1, I2)
-    fun eq (Operator (_, _, I1), Operator (_, _, I2)) = 
-          indexEq (I1, I2)
-    fun le op12 = lt op12 orelse eq op12
-
-*)
 
     fun compare' (Index (k1, NONE, c1, p1), Index (k2, NONE, c2, p2)) =
         (case (Int.compare (k1, k2), Int.compare (c1, c2), Int.compare (p1, p2)) 
@@ -699,6 +678,12 @@ struct
 
     fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
           compare' (I1, I2) 
+
+(* Original version, proves Church-Rosser
+
+    fun compare (O1, O2) = 
+          Int.compare (index O1, index O2)
+*)
 
     (* isInActive (F) = B
        
@@ -755,13 +740,13 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
-	  fun indexToString (Index (k, NONE, c, p)) = "Non-Induction  (split = " ^ 
-	        (Int.toString k) ^ ", " ^ (casesToString c) ^ ", pos = " ^
-		(Int.toString p)
-	    | indexToString (Index (k, SOME idx , c, p)) = "(" ^ (Int.toString idx) ^ ".)" ^ 
-		"Induction  (split = " ^ 
-		(Int.toString k) ^ ", " ^ (casesToString c) ^ ", pos = " ^
-		(Int.toString p)
+	  fun indexToString (Index (k, NONE, c, p)) = "NI (sd=" ^ 
+	        (Int.toString k) ^ ", i=. , c=" ^ (Int.toString c) ^ ", p=" ^
+		(Int.toString p) ^ ")"
+	    | indexToString (Index (k, SOME idx , c, p)) = 
+		"I (sd=" ^ 
+	        (Int.toString k) ^ ", i=" ^ (Int.toString idx) ^ ", c=" ^ (Int.toString c) ^ ", p=" ^
+		(Int.toString p) ^ ")"
 		
 
 	  fun flagToString (_, 0) = ""

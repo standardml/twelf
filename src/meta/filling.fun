@@ -66,7 +66,7 @@ struct
 	let 
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in
-	  fn () => ((Search.searchEx (Xs, fn () => raise Success); raise Error "Filling unsuccessful")
+	  fn () => ((Search.searchEx (Xs, fn max => raise Success); raise Error "Filling unsuccessful")
 	            handle Success => P)
 	end
     

@@ -10,5 +10,5 @@ sig
   val searchEx : 
       StateSyn.FunSyn.IntSyn.Exp list
 (*      * (StateSyn.FunSyn.IntSyn.Exp * StateSyn.FunSyn.IntSyn.Sub) *)
-      * (unit -> unit) -> unit
+      * (int -> unit) -> unit
 end;  (* signature SEARCH *)
