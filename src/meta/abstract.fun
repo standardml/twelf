@@ -433,6 +433,16 @@ struct
 	in
 	  (I.Decl (G', D'), I.Decl (B', S.None))
 	end
+      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F), _))) =
+        let
+	  val V'' = abstractExp (K', 0, (V', I.id))
+	  val _ = checkType V''
+	  val (G', B') = abstractCtx K'
+	  val D' = I.Dec (NONE, V'')
+	  val T' = S.Lemma (b, F)
+	in
+	  (I.Decl (G', D'), I.Decl (B', T'))
+	end
       | abstractCtx (I.Decl (K', BV (D, T))) =
         let
 	  val D' = abstractDec (K', 0, (D, I.id))
