@@ -4,7 +4,7 @@
 @settitle Twelf User's Guide 
 @setchapternewpage odd
 @set VERSION 1.4
-@set UPDATED April 7, 2002
+@set UPDATED April 30, 2002
 @c @set VERSION 1.3
 @c @set UPDATED September 13, 2000
 @c @set VERSION 1.2
@@ -87,6 +87,7 @@ Logic Programming
 * Sample Trace::                An example how search works
 * Operational Semantics::       How queries are executed in some detail
 * Sample Program::              Type inference for a lambda-calculus
+* Deterministic Type Families::               How to prune unwanted solutions 
 * Tabled Logic Programming::    Executing queries with memo tables
 
 Constraint Domains
@@ -96,6 +97,7 @@ Constraint Domains
 * Inequalities over Rational Numbers::  Rationals with equality and inequality
 * Integer Constraints::         Integers with equality and inequality
 * Equalities over Strings::     Strings and concatenation
+* 32-bit Integers::             Integers representable as string of 32 bits
 * Restrictions and Caveats::    Alerts!
 
 Modes
@@ -489,48 +491,53 @@ appropriate sections.
 
 @example
 @group
-sig  ::=                    % @r{Empty signature}
-       | decl sig           % @r{Constant declaration}
+sig  ::=                       % @r{Empty signature}
+       | decl sig              % @r{Constant declaration}
 
-decl ::= id : term.         % @r{@math{a : K}  or  @math{c : A}}
-       | id : term = term.  % @r{@math{d : A = M}}
-       | id = term.         % @r{@math{d = M}}
-       | _ : term = term.   % @r{anonymous definition, for type-checking}
-       | _ = term.          % @r{anonymous definition, for type-checking}
-       | %abbrev adecl.     % @r{abbreviation}
-       | %infix ixdecl.     % @r{operator declaration}
-       | %prefix pxdecl.    % @r{operator declaration}
-       | %postfix pxdecl.   % @r{operator declaration}
-       | %name namepref.    % @r{name preference declaration}
-       | %query qdecl.      % @r{query declaration}
-       | %solve id : term.  % @r{solve declaration}
-       | %tabled id.        % @r{table declaration}
-       | %querytabled qtdecl % @r{tabled query declaration}
-       | %mode mdecl.       % @r{mode declaration}
-       | %terminates tdecl. % @r{termination declaration}
-       | %reduces rdecl.    % @r{reduction declaration}
-       | %block id : bdecl. % @r{block declaration}
-       | %worlds wdecl.     % @r{worlds declaration}
-       | %total tdecl.      % @r{totality declaration}
-       | %theorem thdecl.   % @r{theorem declaration}
-       | %prove pdecl.      % @r{prove declaration}
-       | %establish pdecl.  % @r{prove declaration, do not use as lemma later}
-       | %assert callpats.  % @r{assert theorem (requires @code{Twelf.unsafe})}
-       | %use domain.       % @r{installs constraint domain}
+decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
+       | id : term = term.     % @r{@math{d : A = M}}
+       | id = term.            % @r{@math{d = M}}
+       | _ : term = term.      % @r{anonymous definition, for type-checking}
+       | _ = term.             % @r{anonymous definition, for type-checking}
+       | %abbrev adecl.        % @r{abbreviation}
+       | %infix ixdecl.        % @r{operator declaration}
+       | %prefix pxdecl.       % @r{operator declaration}
+       | %postfix pxdecl.      % @r{operator declaration}
+       | %name namepref.       % @r{name preference declaration}
+       | %query qdecl.         % @r{query declaration}
+       | sdecl.                % @r{solve declaration}
+       | %tabled id.           % @r{table declaration}
+       | %querytabled qtdecl   % @r{tabled query declaration}
+       | %deterministic ddecl. % @r{deterministic declaration}
+       | %mode mdecl.          % @r{mode declaration}
+       | %terminates tdecl.    % @r{termination declaration}
+       | %reduces rdecl.       % @r{reduction declaration}
+       | %block id : bdecl.    % @r{block declaration}
+       | %worlds wdecl.        % @r{worlds declaration}
+       | %total tdecl.         % @r{totality declaration}
+       | %theorem thdecl.      % @r{theorem declaration}
+       | %prove pdecl.         % @r{prove declaration}
+       | %establish pdecl.     % @r{prove declaration, do not use as lemma later}
+       | %assert callpats.     % @r{assert theorem (requires @code{Twelf.unsafe})}
+       | %use domain.          % @r{installs constraint domain}
+
+sdecl ::= %define binding sdecl % @r{term binding}
+        | %solve id : term      % @r{solve with proof term}
+        | %solve _ : term       % @r{solve without proof term}
 @end group
 
 @group
-term ::= type               % @math{type}
-       | id                 % @r{variable @math{x} or constant @math{a} or @math{c}}
-       | term -> term       % @math{A} @t{->} @math{B}
-       | term <- term       % @r{@math{A} @t{<-} @math{B}, same as @math{B} @t{->} @math{A}}
-       | @{id : term@} term   % @r{@math{Pi x:A. K}  or  @math{Pi x:A. B}}
-       | [id : term] term   % @r{@math{lambda x:A. B}  or  @math{lambda x:A. M}}
-       | term term          % @r{@math{A M}  or  @math{M N}}
-       | term : term        % @r{explicit type ascription}
-       | _                  % @r{hole, to be filled by term reconstruction}
-       | @{id@} term          % @r{same as @code{@{id:_@}} term}
-       | [id] term          % @r{same as @code{[id:_]} term}
+term ::= type                  % @math{type}
+       | id                    % @r{variable @math{x} or constant @math{a} or @math{c}}
+       | term -> term          % @math{A} @t{->} @math{B}
+       | term <- term          % @r{@math{A} @t{<-} @math{B}, same as @math{B} @t{->} @math{A}}
+       | @{id : term@} term    % @r{@math{Pi x:A. K}  or  @math{Pi x:A. B}}
+       | [id : term] term      % @r{@math{lambda x:A. B}  or  @math{lambda x:A. M}}
+       | term term             % @r{@math{A M}  or  @math{M N}}
+       | term : term           % @r{explicit type ascription}
+       | _                     % @r{hole, to be filled by term reconstruction}
+       | @{id@} term           % @r{same as @code{@{id:_@}} term}
+       | [id] term             % @r{same as @code{[id:_]} term}
 @end group
 @end example
 
@@ -1161,21 +1168,28 @@ top-level invoked from ML with @code{Twelf.top} which prompts with
 
 @example
 @group
-query ::= id : term   % @r{@math{X : A}, @math{X} a free variable}
-        | term        % @r{@math{A}}
+query ::= id : term             % @r{@math{X : A}, @math{X} a free variable}
+        | term                  % @r{@math{A}}
 
-bound ::= nat         % @r{number of solutions}
-        | *           % @r{unbounded number}
+bound ::= nat                   % @r{number of solutions}
+        | *                     % @r{unbounded number}
 
-qdecl ::= bound bound query % @r{expected solutions, try limit, query}
+qdecl ::= bound bound query     % @r{expected solutions, try limit, query}
 
-qtdecl ::= bound query      % @r{number of stages, query}
+qtdecl ::= bound query          % @r{number of stages, query}
+
+sdecl ::= %define binding sdecl % @r{term binding}
+        | %solve id : term      % @r{solve with proof term}
+        | %solve _ : term       % @r{solve}
+
+binding ::= id = id             % @r{@math{c = X}, @math{X} a free variable}
+          | id = id : term      % @math{c = X : A}
 
 decl ::= @dots{}
-       | %tabled id.          % @r{@math{a}, table family @math{a}}
-       | %query qdecl.        % @r{execute query}
-       | %querytabled qtdecl. % @r{execute query with tabled logic programming}
-       | %solve id : term.    % @r{solve and name proof term}
+       | %tabled id.            % @r{@math{a}, table family @math{a}}
+       | %query qdecl.          % @r{execute query}
+       | %querytabled qtdecl.   % @r{execute query with tabled logic programming}
+       | sdecl.                 % @r{solve}
 @end group
 @end example
 
@@ -1194,6 +1208,7 @@ the query.
 * Sample Trace::                An example how search works
 * Operational Semantics::       How queries are executed in some detail
 * Sample Program::              Type inference for a lambda-calculus
+* Deterministic Type Families::               How to prune unwanted solutions 
 * Tabled Logic Programming::    Executing queries with memo tables
 @end menu
 
@@ -1245,9 +1260,27 @@ will search for the first solution @code{M} of @code{A} and then define
 c : A = M.
 @end example
 
-If there are any free variables remaining in @code{M} or @code{A} after
-search, they will be implicitly quantified in the new definition.  This
-form of definition is particularly useful to compute and name inputs to
+Optionally, it is possible to perform additional binding for the free
+variables in @code{A}. Let @code{X} a variable of type family @code{B}
+appearing in @code{A}, and let us assume that in the solution @code{M}
+this variable has been substituted with the term @code{N}; the query
+form
+
+@example
+%define d = X : B
+%solve c : A.
+@end example
+
+will also define
+
+@example
+d : B = N.
+@end example
+
+If there are any free variables remaining in @code{M}, @code{N} or @code{A}
+after search, they will be implicitly quantified in the new definitions.
+
+This form of definition is particularly useful to compute and name inputs to
 future queries.  An example of this feature from the file
 @file{examples/nd/lam.elf} can be found in @ref{Proof Realizations}.
 
@@ -1492,7 +1525,7 @@ Compilation will try to eliminate expensive appeals to unification
 with assignment where this optimization is sound.  This can be disabled
 by setting the parameter @code{Twelf.Compile.optimize} to @code{false}.
 
-@node Sample Program, Tabled Logic Programming, Operational Semantics, Logic Programming
+@node Sample Program, Deterministic Type Families, Operational Semantics, Logic Programming
 @section Sample Program
 
 @cindex lambda calculus example
@@ -1597,7 +1630,75 @@ At the point where the second subgoals fails we backtrack.  However, all
 other alternatives fail immediately, since the clause head does not
 unify with the goal and the overall query fails.
 
-@node Tabled Logic Programming,  , Sample Program, Logic Programming
+@node Deterministic Type Families, Tabled Logic Programming, Sample Program, Logic Programming
+@section Deterministic Type Families
+In general, a solvable goal may admit several (and possibly countably
+infinite) solutions. Through backtracking, Twelf will generate all of
+them. There are circumnstances, however, where only the only one of
+them is correct, or interesting. Consider, for example, list membership:
+
+@example
+@group
+element : type. %name element X.
+
+a : element.
+b : element.
+c : element.
+
+list : type.    %name list L.
+
+nil : list.
+cons : element -> list -> list.
+
+member : element -> list -> type.
+
+member1 : member X (cons X L).
+member2 : member X (cons Y L) <- member X L.
+@end group
+@end example
+
+the query
+
+@example
+?- member a (cons a (cons b (cons a nil)))
+@end example
+
+will succeed twice. Since all we are interested in is whether
+@code{a} is contained in the list or not, it may suffice for it to
+succeed once.
+
+Discarding unwanted solutions in Twelf is accomplished through the
+@code{%deterministic} directive. Declaring a type family deterministic
+will cause all queries involving it to succeed at most once: if there
+are several solutions, only the first one will be found. So for example
+declaring
+
+@example
+%deterministic member.
+@end example
+
+will have the effect of preventing backtracking in any query involving
+the type family @code{member}, once one solution has been found:
+
+@example
+@group
+?- member a (cons a (cons b (cons a nil))).
+Solving...
+Empty Substitution.
+More? y
+No more solutions
+@end group
+@end example
+
+In other logic programming languages like Prolog, pruning of unwanted
+solutions is usually accomplished by using the extra-logical operator
+cut. In general, @code{%deterministic} is less powerful than cut: in
+a language with cut, a deterministic predicate can be modelled by
+adding a cut at the end of all of its clauses. However, in most
+practical uses the two are equivalent, and the semantics of
+@code{%deterministic} families is cleaner and better understood.
+
+@node Tabled Logic Programming,  , Deterministic Type Families, Logic Programming
 @section Tabled Logic Programming
 
 @cindex tabled logic programming
@@ -1773,6 +1874,8 @@ elements of the domain.
 * Inequalities over Rational Numbers::  Rationals with equality and inequality
 * Integer Constraints::         Integers with equality and inequality
 * Equalities over Strings::     Strings and concatenation
+* 32-bit Integers::             Integers representable as string of 32 bits
+* Sample Constraint Programs::  Some examples of use
 * Restrictions and Caveats::    Alerts!
 @end menu
 
@@ -1802,7 +1905,10 @@ an extension introduces new symbols in the signature. For example,
 rational : type.
 @end example
 
-In addition to these symbols, a countably infinite set of ``special'' ones may be also accepted by the system as the result of loading one extension. In our example, after loading @code{equality/rationals} the symbols
+In addition to these symbols, a countably infinite set of ``special''
+ones may be also accepted by the system as the result of loading one
+extension. In our example, after loading @code{equality/rationals} the
+symbols
 
 @example
 135  5/13  ~1/4
@@ -1811,7 +1917,11 @@ In addition to these symbols, a countably infinite set of ``special'' ones may b
 @noindent
 become valid constants of type @code{rational}.
 
-Finally, it is possible for an extension to be built on top of others, and therefore to depend on them. Hence, loading an extension usually causes all the others it depends upon to be loaded as well, if they have not been already. For example, the extension @code{inequality/rationals} requires @code{equality/rationals}, and hence the declaration
+Finally, it is possible for an extension to be built on top of others,
+and therefore to depend on them. Hence, loading an extension usually
+causes all the others it depends upon to be loaded as well, if they have
+not been already. For example, the extension @code{inequality/rationals}
+requires @code{equality/rationals}, and hence the declaration
 
 @example
 %use inequality/rationals.
@@ -1957,7 +2067,7 @@ the proof objects to be finally completed).
 
 The extensions @code{equality/integers} and @code{inequality/integers}
 deal with equalities and inequalities over the ring of integer numbers,
-respectively. Since these two modules are very similar to their
+respectively. Since these two extensions are very similar to their
 rationals counterparts, we will limit ourselves to outlining the
 differences.
 
@@ -2020,11 +2130,11 @@ Note that all known methods for solving systems of integral linear
 inequations are notoriously inefficient. In the branch-and-bound method
 we adopted, the number of branches to consider is potentially
 exponential with respect to the size of the problem. We recommend using
-the @code{inequality/rationals} module instead, whenever the situation
+the @code{inequality/rationals} extension instead, whenever the situation
 allows the two to be used interchangeably.
 
-@node Equalities over Strings, Restrictions and Caveats, Integer Constraints, Constraint Domains
-@section Equalities over String
+@node Equalities over Strings, 32-bit Integers, Integer Constraints, Constraint Domains
+@section Equalities over Strings
 
 A third domain currently supported by the Twelf(X) extensions are
 strings of (printable) characters. The only operator provided is string
@@ -2064,6 +2174,82 @@ mystring : string = "foo
 @noindent
 is not considered syntactically correct.
 
+@node 32-bit Integers, Sample Constraint Programs, Equalities over Strings, Constraint Domains
+@section 32-bit Integers
+Another supported domain are 32-bit integers. This domain is used mainly in
+Proof Carrying Code applications, and because of this, it has fairly different
+structure and features than the extension for (unrestricted) integers
+(@pxref{Integer Constraints}). First of all, the algorithms used were kept short
+and simple, so that they can be easily read and verified to be correct. Secondly,
+the set of arithmetic operators provided has been kept to a minimum. Also, each of
+these is implemented as a type family instead of a function symbol, so that unification
+of arithmetic expressions follows the same rule as that of regular terms. Finally,
+for each arithmetic operator, we also provide a type family which, in addition to
+carry out the computation, also provides a proof object for it.
+
+Declaring
+
+@example
+%uses word32.
+@end example
+
+causes the following signature to be loaded into the system:
+
+@example
+@group
+word32 : type.
++ : word32 -> word32 -> word32 -> type.
+* : word32 -> word32 -> word32 -> type.
+/ : word32 -> word32 -> word32 -> type.
+prove+ : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:+ X Y Z@} type.
+proof+ : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:+ X Y Z@} prove+ X Y Z P.
+prove* : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:* X Y Z@} type.
+proof* : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:* X Y Z@} prove* X Y Z P.
+prove/ : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:+ X Y Z@} type.
+proof/ : @{X:word32@} @{Y:word32@} @{Z:word32@} @{P:+ X Y Z@} prove/ X Y Z P.
+@end group
+@end example
+
+Goals involving @code{+} and @code{*} are immediately solved if at least
+two of the arguments are ground objects (i.e. numbers), and delayed as
+constraints otherwise. In particular
+
+@example
+?- + 3 X 9.
+@end example
+
+is solved immediately and can be used to compute @math{9-3}.
+Goals involving @code{/} are delayed unless both the first and the second
+argument are known. The type families @code{prove+}, @code{prove*},
+@code{prove/} can be used to obtain proof object for the arithmetic
+operation, and use them in the remaining part of the computation:
+
+@example
+@group
+?- P : + 3 X 9.
+Solving...
+X = 6.
+P = 3+6.
+More? n
+?- prove+ 3 X 9 P.
+Solving...
+P = 3+6;
+X = 6.
+More? n
+@end group
+@end example
+
+It is important to stress that the domain modelled here is not the ring
+of integers modulo 32 but rather the restriction of the integer ring to the
+interval @math{0}...@math{4294967295}, so that for example the query:
+
+@example
+?- + 1 X 0.
+@end example
+
+will not admit a solution.
+
+@node Sample Constraint Programs, Restrictions and Caveats, 32-bit Integers, Constraint Domains
 @section Sample Constraint Programs
 
 Using Twelf(X), we can write a modified version of @code{append} that
@@ -2181,7 +2367,7 @@ ep : expression ("(" ++ X ++ ")")
        <- expression X.
 @end example
 
-@node Restrictions and Caveats,  , Equalities over Strings, Constraint Domains
+@node Restrictions and Caveats,  , Sample Constraint Programs, Constraint Domains
 @section Restrictions and Caveats
 
 To ensure the consistency of the calculus, use of types defined by
