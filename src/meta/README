@@ -45,6 +45,12 @@ Open issues:
 	 * Ignored recursive call: Argument not instantiated during unification)
 
 
+INVARIANT:
+  1) Proof requires only the introduction of at most ONE context block
+  2) All constant declarations in the signature do not have spurious variable
+	occurrences   (* otherwise we cannot abstract in splitting
+  		         by traversing only one substitution *)
+
 Code Walk (Invariants, Mutual recursion)
 DONE -cs Anchor into Twelf
 
@@ -66,8 +72,24 @@ Parameter Cases
 	
   base cases
     RECURSION: calculating twice induction hypothesis does not remove duplicates, check!!!
+    
+    TODO: expand' must construct G0 which is passed into abstracFinal to call abstraction.
 
-Splittin Residual lemmas
+    Implementation plan for abstract/splitting
+
+	DONE -cs abstract : remove FVARs
+	DONE -cs abstract : update collectSub
+	DONE -cs abstract : threat d through collect
+	DONE -cs abstract : add depth to EV
+	DONE -cs abstract : add BV
+
+	splitting: calculate G0
+	splitting: correct calls to   abstract
+
+	
+
+
+Splitting Residual lemmas
 Index variables
 Proof terms
 

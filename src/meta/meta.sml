@@ -56,6 +56,7 @@ structure StateSyn =
 
 structure MTPAbstract =
   MTPAbstract (structure IntSyn' = IntSyn
+	       structure FunSyn = FunSyn
 	       structure StateSyn' = StateSyn
 	       structure Whnf = Whnf
 	       structure Constraints = Constraints
