@@ -43,6 +43,7 @@ tps_letn : tps (ev_letn D2) (tp_letn P2 P1) Q2
 	    <- tps D2 P2 Q2.
 
 
+
 % Recursion
 tps_fix : tps (ev_fix D1) (tp_fix P1) Q1
 	    <- tps D1 (P1 _ (tp_fix P1)) Q1.
