@@ -80,7 +80,7 @@ struct
   fun shift (IntSyn.Null, s) = s
     | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
                      
-  (* solve ((g, s), dp, sc) = ()
+  (* solve' ((g, s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
        G |- s : G'
@@ -90,29 +90,29 @@ struct
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
-  fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
+  fun solve' ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =
       matchAtom ((p,s), dp, sc)
-    | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
+    | solve' ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),_) = N.decUName (G, I.Dec(NONE, I.EClo(A,s)))
 	val _ = T.signal (G, T.IntroHyp (Ha, D'))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
+	solve' ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, SOME(r, s, Ha))),
 	        (fn M => (T.signal (G, T.DischargeHyp (Ha, D'));
 			  sc (I.Lam (D', M)))))
       end
-    | solve ((C.All(D, g), s), C.DProg (G, dPool), sc) =
+    | solve' ((C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
 	val D' as I.Dec(SOME(x),V) = N.decUName (G, I.decSub (D, s))
 	val Ha = I.targetHead V
 	val _ = T.signal (G, T.IntroParm (Ha, D'))
       in
-	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
+	solve' ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl(dPool, NONE)),
 	        (fn M => (T.signal (G, T.DischargeParm (Ha,  D'));
 			  sc (I.Lam (D', M)))))
       end
 
-  (* rSolve ((p,s'), (r,s), dp, (Hc, Ha), sc) = T
+  (* rSolve' ((p,s'), (r,s), dp, (Hc, Ha), sc) = T
      Invariants: 
        dp = (G, dPool) where G ~ dPool
        G |- s : G'
@@ -153,7 +153,7 @@ struct
         rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, HcHa,
 		(fn S => 
 		 (T.signal (G, T.Subgoal (HcHa, fn () => subgoalNum S));
-		  solve ((g, s), dp, (fn M => sc (I.App (M, S)))))))
+		  solve' ((g, s), dp, (fn M => sc (I.App (M, S)))))))
       end
     | rSolve (ps', (C.Exists(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), HcHa, sc) =
       let
@@ -337,7 +337,7 @@ struct
       end
 
   in
-    fun solve (gs, dp, sc) = (T.init(); solve (gs, dp, sc))
+    fun solve (gs, dp, sc) = (T.init(); solve' (gs, dp, sc))
   end (* local ... *)
 
 end; (* functor TMachine *)
