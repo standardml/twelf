@@ -749,8 +749,9 @@ struct
 
 	fun traverseNeg (c'', Psi, (I.Pi ((D as I.Dec (_, V1), I.Maybe), V2), v), L) =
 	    (case traverseNeg (c'', I.Decl (Psi, F.Prim 
-				     (Names.decName (F.makectx Psi, Weaken.strengthenDec (D, v)))), 
-			       (V2, I.dot1 v), L)
+				     (Weaken.strengthenDec (D, v))), 
+(*				     (Names.decName (F.makectx Psi, Weaken.strengthenDec (D, v)))), 
+*)			       (V2, I.dot1 v), L)
 	       of (SOME (w', d', PQ'), L') => (SOME (peel w', d', PQ'), L')
 	        | (NONE, L') => (NONE, L'))
 

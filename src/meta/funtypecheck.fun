@@ -328,7 +328,7 @@ struct
 	     end
 	 | (F.MDec (name, F), s) => 
 	     raise Error ("Typecheck Error: Declaration App" ^ 
-			     (FunPrint.forToString (I.Null, F))))
+			     (FunPrint.forToString (I.Null, F) ["x"])))
       | assume (Psi, Delta, F.PApp ((kk, k), Ds)) =
 	(case infer (Delta, kk) of
 	   (F.MDec (name, F.All (F.Block (F.CtxBlock (l, G)), F)), s) =>
@@ -362,7 +362,8 @@ struct
 	 | _ => raise Error "Typecheck Error: Declaration Left")
       | assume (Psi, Delta, F.Lemma (cc, Ds)) =
 	let 
-	  val F.LemmaDec (name, F) = F.lemmaLookup cc
+	  val F.LemmaDec (names, _, F) = F.lemmaLookup cc
+	  val name = foldr op^ "" names 
 	  val DD = F.MDec (SOME name, F)
 	  val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	in

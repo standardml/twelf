@@ -6,11 +6,12 @@ sig
   structure FunSyn : FUNSYN
   structure Formatter : FORMATTER
 
-  val formatFor : FunSyn.lfctx * FunSyn.For -> Formatter.format
-  val formatPro : FunSyn.lfctx * FunSyn.mctx * FunSyn.Pro -> Formatter.format
+  val formatFor : FunSyn.lfctx * FunSyn.For -> string list -> Formatter.format
+  val formatPro : FunSyn.lfctx * FunSyn.Pro -> string list -> Formatter.format
+  val formatLemmaDec: FunSyn.LemmaDec -> Formatter.format
 
-  val forToString : FunSyn.lfctx * FunSyn.For -> string
-  val proToString : FunSyn.lfctx * FunSyn.mctx * FunSyn.Pro  -> string
-
+  val forToString : FunSyn.lfctx * FunSyn.For -> string list -> string
+  val proToString : FunSyn.lfctx * FunSyn.Pro -> string list -> string
+  val lemmaDecToString : FunSyn.LemmaDec -> string
 end;  (* signature PRINT *)
 

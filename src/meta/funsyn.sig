@@ -57,7 +57,7 @@ sig
   | Right of int * Decs                 (*      | xx = pi2 yy, Ds     *)
  
   datatype LemmaDec =			(* Lemmas                     *)
-    LemmaDec of name * For		(* L ::= c:F                  *)
+    LemmaDec of name list * Pro * For	(* L ::= c:F = P              *)
 
   type mctx = MDec IntSyn.Ctx           (* Delta ::= . | Delta, xx : F*)
 

@@ -10,7 +10,8 @@ structure FunNames =
 structure FunPrint = 
   FunPrint (structure FunSyn' = FunSyn
 	    structure Formatter = Formatter
-	    structure Print = Print);
+	    structure Print = Print
+	    structure Names = Names);
 
 structure FunTypeCheck = 
   FunTypeCheck (structure FunSyn' = FunSyn

@@ -60,7 +60,7 @@ struct
   | Right of int * Decs                 (*      | xx = pi2 yy, Ds     *)
  
   datatype LemmaDec =			(* Lemmas                     *)
-    LemmaDec of name * For		(* L ::= c:F                  *)
+    LemmaDec of name list * Pro * For  	(* L ::= c:F = P              *)
 
   type mctx = MDec IntSyn.Ctx           (* Delta ::= . | Delta, xx : F*)
 
@@ -69,10 +69,13 @@ struct
     val maxLabel = Global.maxCid
     val maxLemma = Global.maxCid
 
-    val labelArray = Array.array (maxLabel+1, LabelDec("", I.Null, I.Null)) : LabelDec Array.array
+    val labelArray = Array.array (maxLabel+1, 
+				  LabelDec("", I.Null, I.Null)) 
+                   : LabelDec Array.array
     val nextLabel = ref 0
 
-    val lemmaArray = Array.array (maxLemma+1, LemmaDec ("", True)) : LemmaDec Array.array
+    val lemmaArray = Array.array (maxLemma+1, LemmaDec (nil, Unit, True)) 
+                   : LemmaDec Array.array
     val nextLemma = ref 0
 
     fun labelLookup label = Array.sub (labelArray, label)
