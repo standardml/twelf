@@ -1,11 +1,13 @@
 (* Internal Syntax *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
+(* Modified: Roberto Virga *)
 
 functor IntSyn (structure Global : GLOBAL) :> INTSYN =
 struct
 
   type cid = int			(* Constant identifier        *)
   type name = string			(* Variable name              *)
+  type csid = int                       (* CS module identifier       *)
 
   (* Contexts *)
   datatype 'a Ctx =			(* Contexts                   *)
@@ -50,9 +52,18 @@ struct
   | Root  of Head * Spine		(*     | C @ S                *)
   | Redex of Exp * Spine		(*     | U @ S                *)
   | Lam   of Dec * Exp			(*     | lam D. U             *)
-  | EVar  of Exp option ref * Dec Ctx * Exp * Eqn list
-					(*     | X<I> : G|-V, Cnstr   *)
+  | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
+                                        (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
+  | FgnExp of csid *                    (*     | (foreign expression) *)
+      {
+        toInternal : unit -> Exp,       (* convert to internal syntax *)
+        map : (Exp -> Exp) -> Exp,      (* apply to subterms          *)
+        equalTo : Exp -> bool,
+                                        (* test for equality          *)
+        unifyWith : Dec Ctx * Exp -> FgnUnify
+                                        (* unify with another term    *)
+      }
     
   and Head =				(* Heads:                     *)
     BVar  of int			(* H ::= k                    *)
@@ -61,6 +72,7 @@ struct
   | Def   of cid			(*     | d                    *)
   | NSDef of cid			(*     | d (non strict)       *)
   | FVar  of name * Exp * Sub		(*     | F[s]                 *)
+  | FgnConst of csid * ConDec           (*     | (foreign constant)   *)
     
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
@@ -78,40 +90,74 @@ struct
 
   and Dec =				(* Declarations:              *)
     Dec of name option * Exp		(* D ::= x:V                  *)
-    
-  and Eqn =			        (* Equations                  *)
-    Eqn of Dec Ctx * Exp * Exp		(* Eqn ::= G|-(U1 == U2)      *)
 
-  type dctx = Dec Ctx			(* G = . | G,D                *)
-  type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  (* Constraints *)
+
+  and Cnstr =				(* Constraint:                *)
+    Solved                      	(* Cnstr ::= solved           *)
+  | Eqn      of Dec Ctx * Exp * Exp     (*         | G|-(U1 == U2)    *)
+  | FgnCnstr of csid *                  (*         | (foreign)        *)
+      {
+        toInternal : unit -> (Dec Ctx * Exp) list,
+                                        (* convert to internal syntax *)
+        awake : unit -> bool,           (* awake                      *)
+        simplify : unit -> bool         (* simplify                   *)
+      }
+
+  and Status =                          (* Status of a constant:      *)
+    Normal                              (*   inert                    *)
+  | Constraint of csid * (Dec Ctx * Spine * int -> Exp option)
+                                        (*   acts as constraint       *)
+  | Foreign of csid * (Spine -> Exp)    (*   is converted to foreign  *)
+
+  and FgnUnify =                        (* Result of foreign unify    *)
+    (* succeed with a list of (solvable) equations G |- X = U [ss] *)
+    Succeed of (Dec Ctx * Exp * Sub * Exp) list
+    (* delay a constraint on a list of variables *)
+  | Delay of Exp list * Cnstr ref
+    (* fail *)
+  | Fail
 
   (* Global signature *)
 
-  exception Error of string             (* raised if out of space     *)
-
-  datatype ConDec =			(* Constant Declaration       *)
-    ConDec of name * int		(* a : K : kind  or           *)
+  and ConDec =			        (* Constant declaration       *)
+    ConDec of string * int * Status    	(* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of name * int		(* a = A : K : kind  or       *)
+  | ConDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
   | AbbrevDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | SkoDec of name * int		(* sa: K : kind  or           *)
+  | SkoDec of string * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
-  fun conDecName (ConDec (name, _, _, _)) = name
+  (* Type abbreviations *)
+  type dctx = Dec Ctx			(* G = . | G,D                *)
+  type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  type cnstr = Cnstr ref
+
+  exception Error of string             (* raised if out of space     *)
+
+  fun conDecName (ConDec (name, _, _, _, _)) = name
     | conDecName (ConDef (name, _, _, _, _)) = name
     | conDecName (AbbrevDef (name, _, _, _, _)) = name
     | conDecName (SkoDec (name, _, _, _)) = name
 
-  fun conDecType (ConDec (_, _, V, _)) = V
+  fun conDecImp (ConDec (_, i, _, _, _)) = i
+    | conDecImp (ConDef (_, i, _, _, _)) = i
+    | conDecImp (AbbrevDef (_, i, _, _, _)) = i
+    | conDecImp (SkoDec (_, i, _, _)) = i
+
+  fun conDecStatus (ConDec (_, _, status, _, _)) = status
+    | conDecStatus _ = Normal
+
+  fun conDecType (ConDec (_, _, _, V, _)) = V
     | conDecType (ConDef (_, _, _, V, _)) = V
     | conDecType (AbbrevDef (_, _, _, V, _)) = V
     | conDecType (SkoDec (_, _, V, _)) = V
 
   local
     val maxCid = Global.maxCid
-    val sgnArray = Array.array (maxCid+1, ConDec("", 0, Uni (Kind), Kind))
+    val sgnArray = Array.array (maxCid+1, ConDec("", 0, Normal, Uni (Kind), Kind))
       : ConDec Array.array
     val nextCid  = ref(0)
 
@@ -121,7 +167,7 @@ struct
     (* Constant declarations are stored in beta-normal form *)
     (* All definitions are strict in all their arguments *)
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
-    (* If Def(cid) is valie, then sgnArray(cid) = ConDef _ *)
+    (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
     fun sgnReset () = (nextCid := 0)
     fun sgnSize () = (!nextCid)
@@ -159,14 +205,19 @@ struct
 
   fun constImp (c) =
       (case sgnLookup(c)
-	 of ConDec (_,i,_,_) => i
+	 of ConDec (_,i,_,_,_) => i
           | ConDef (_,i,_,_,_) => i
           | AbbrevDef (_,i,_,_,_) => i
 	  | SkoDec (_,i,_,_) => i)
 
+  fun constStatus (c) =
+      (case sgnLookup (c)
+	 of ConDec (_, _, status, _, _) => status
+          | _ => Normal)
+
   fun constUni (c) =
       (case sgnLookup(c)
-	 of ConDec (_,_,_,L) => L
+	 of ConDec (_,_,_,_,L) => L
           | ConDef (_,_,_,_,L) => L
           | AbbrevDef (_,_,_,_,L) => L
 	  | SkoDec (_,_,_,L) => L)
@@ -305,21 +356,12 @@ struct
   (* EVar related functions *)
 
   (* newEVar (G, V) = newEVarCnstr (G, V, nil) *)
-  fun newEVar (G, V) = EVar(ref NONE, G, V, nil)
-
-  (* newEVar (G, V, Cnstr) = X, X new, constraints Cnstr
-     If   G |- V : L
-            |= Cnstr Con  (Cnstr are valid constraints, each in its own context)
-     then G |- X : V
-          X is the immediate successor variable to the
-          variable Y indexing Cnstr
-  *)
-  fun newEVarCnstr (G, V, Cnstr) = EVar(ref NONE, G, V, Cnstr)
+  fun newEVar (G, V) = EVar(ref NONE, G, V, ref nil)
 
   (* newTypeVar (G) = X, X new
      where G |- X : type
   *)
-  fun newTypeVar (G) = EVar(ref NONE, G, Uni(Type), nil)
+  fun newTypeVar (G) = EVar(ref NONE, G, Uni(Type), ref nil)
 
   (* Type related functions *)
 
@@ -335,7 +377,9 @@ struct
     | targetFamOpt (EVar (ref (SOME(V)),_,_,_)) = targetFamOpt V
     | targetFamOpt (EClo (V, s)) = targetFamOpt V
     | targetFamOpt _ = NONE
-      (* Root(Bvar _, _), Root(FVar _, _),  EVar(ref NONE,..), Uni *)
+      (* Root(Bvar _, _), Root(FVar _, _), Root(FgnConst _, _),
+         EVar(ref NONE,..), Uni, FgnExp _
+      *)
       (* Root(Skonst _, _) can't occur *)
   (* targetFam (A) = a
      as in targetFamOpt, except V must be a valid type

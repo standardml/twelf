@@ -42,7 +42,7 @@ struct
     *)
     fun install (H as I.Const c) =
         (case I.sgnLookup (c)
-	  of I.ConDec (_, _, A, I.Type) => update (I.targetFam A, H)
+	  of I.ConDec (_, _, _, A, I.Type) => update (I.targetFam A, H)
 	   | _ => ())
       | install (H as I.Skonst c) =
         (case I.sgnLookup (c)

@@ -6,6 +6,7 @@ struct
 
   val chatter = ref 3
   val maxCid = 9999
+  val maxCSid = 49
   val doubleCheck = ref false
   val unsafe = ref false
 end;  (* structure Global *)

@@ -10,8 +10,6 @@ functor Recursion (structure Global : GLOBAL
 		   sharing Unify.IntSyn = MetaSyn'.IntSyn
 		   structure Conv : CONV
 		   sharing Conv.IntSyn = MetaSyn'.IntSyn
-		   structure Trail : TRAIL
-		   sharing Trail.IntSyn = MetaSyn'.IntSyn
 		   structure Names : NAMES
 		   sharing Names.IntSyn = MetaSyn'.IntSyn
 		   structure Subordinate : SUBORDINATE
@@ -30,7 +28,10 @@ functor Recursion (structure Global : GLOBAL
 		   sharing MetaPrint.MetaSyn = MetaSyn'
 		   structure MetaAbstract : METAABSTRACT
 		   sharing MetaAbstract.MetaSyn = MetaSyn'
-		   structure Formatter : FORMATTER)  : RECURSION =
+		   structure Formatter : FORMATTER
+		   structure CSManager : CS_MANAGER
+		   sharing CSManager.IntSyn = MetaSyn'.IntSyn
+)  : RECURSION =
 struct
 
   structure MetaSyn = MetaSyn'
@@ -115,7 +116,7 @@ struct
 		let 
 		  val D' as I.Dec (_, V') = I.ctxDec (G, k')
 		  val ops'' = 
-		    Trail.trail (fn () => 
+		    CSManager.trail (fn () => 
 				 if Unify.unifiable (G, (V, I.id), (V', I.id))
 				   andalso Unify.unifiable (G, (X, I.id), (I.Root (I.BVar k', I.Nil), I.id))
 				   then sc ops'
@@ -240,7 +241,7 @@ struct
 	    recursion operators resulting from U[s1] = U'[s']
     *)
     and eq (G, (Us, Vs), (Us', Vs'), sc, ops) = 
-        (Trail.trail (fn () => 
+        (CSManager.trail (fn () => 
 		      if Unify.unifiable (G, Vs, Vs') 
 			andalso Unify.unifiable (G, Us, Us') 
 			then sc ops
@@ -327,7 +328,7 @@ struct
     and ordltLex (G, nil, nil, sc, ops) = ops
       | ordltLex (G, O :: L, O' :: L', sc, ops) =
         let 
-	  val ops' = Trail.trail (fn () => ordlt (G, O, O', sc, ops))
+	  val ops' = CSManager.trail (fn () => ordlt (G, O, O', sc, ops))
 	in 
 	  ordeq (G, O, O', fn ops'' =>  ordltLex (G, L, L', sc, ops''), ops')
 	end
@@ -346,7 +347,7 @@ struct
     and ordltSimul (G, nil, nil, sc, ops) = ops
       | ordltSimul (G, O :: L, O' :: L', sc, ops) = 
         let
-	  val ops'' = Trail.trail (fn () => ordlt (G, O, O',
+	  val ops'' = CSManager.trail (fn () => ordlt (G, O, O',
 			fn ops' => ordleSimul (G, L, L', sc, ops'), ops))
 	in 
 	  ordeq (G, O, O', fn ops' => ordltSimul (G, L, L', sc, ops'), ops'')
@@ -412,7 +413,7 @@ struct
     *)
     and ordle (G, O, O', sc, ops) = 
 	let 
-	  val ops' = Trail.trail (fn () => ordeq (G, O, O', sc, ops))
+	  val ops' = CSManager.trail (fn () => ordeq (G, O, O', sc, ops))
 	in
 	  ordlt (G, O, O', sc, ops')
 	end

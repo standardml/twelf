@@ -74,8 +74,6 @@ functor Twelf
    structure Compile : COMPILE
      sharing Compile.IntSyn = IntSyn'
      sharing Compile.CompSyn = CompSyn'
-   structure Trail : TRAIL
-     sharing Trail.IntSyn = IntSyn'
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn'
@@ -117,7 +115,12 @@ functor Twelf
    structure PrintTeX : PRINT
      sharing PrintTeX.IntSyn = IntSyn'
    structure ClausePrintTeX : CLAUSEPRINT
-     sharing ClausePrintTeX.IntSyn = IntSyn')
+     sharing ClausePrintTeX.IntSyn = IntSyn'
+
+   structure CSManager : CS_MANAGER
+     sharing CSManager.IntSyn = IntSyn'
+     sharing CSManager.Fixity = Names.Fixity
+     sharing CSManager.ModeSyn = ModeSyn)
  :> TWELF =
 struct
 
@@ -208,8 +211,8 @@ struct
 
 
 
-    fun constraintsMsg (eqns) =
-        "Typing ambiguous -- unresolved constraints\n" ^ Print.eqnsToString eqns
+    fun constraintsMsg (cnstrL) =
+        "Typing ambiguous -- unresolved constraints\n" ^ Print.cnstrsToString cnstrL
 
     (* val handleExceptions : string -> ('a -> Status) -> 'a -> Status *)
     (* handleExceptions filename f x = f x
@@ -225,8 +228,9 @@ struct
 	      | TypeCheck.Error (msg) => abort ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
-	      (* | Constraints.Error (eqns) => abortFileMsg (fileName, constraintsMsg eqns) *)
+	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
 	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
+              | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abortFileMsg (fileName, msg)
@@ -240,20 +244,23 @@ struct
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
+              | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
 
-    (* installConDec (conDec, ocOpt)
+    (* installConDec fromCS (conDec, ocOpt)
        installs the constant declaration conDec which originates at ocOpt
        in various global tables, including the global signature.
+       Note: if fromCS = true then the declaration comes from a Constraint
+       Solver and some limitations on the types are lifted.
     *)
-    fun installConDec (conDec, fileNameocOpt) =
+    fun installConDec fromCS (conDec, fileNameocOpt) =
 	let
 	    val cid = IntSyn.sgnAdd conDec
 	    val _ = Names.installName (IntSyn.conDecName conDec, cid)
 	    val _ = Origins.installOrigin (cid, fileNameocOpt)
 	    val _ = Index.install (IntSyn.Const cid)
 	    val _ = IndexSkolem.install (IntSyn.Const cid)
-	    val _ = (Timers.time Timers.compiling Compile.install) cid
+	    val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
 	    val _ = (Timers.time Timers.subordinate Subordinate.install) cid
 	in 
 	  cid
@@ -275,7 +282,7 @@ struct
 	       (* should print here, not in TpRecon *)
 	       val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
 	       (* allocate new cid after checking modes! *)
-	       val cid = installConDec (conDec, (fileName, ocOpt))
+	       val cid = installConDec false (conDec, (fileName, ocOpt))
 	     in
 	       ()
 	     end
@@ -298,7 +305,7 @@ struct
 		  (* should print here, not in TpRecon *)
 		  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
 		  (* allocate new cid after checking modes! *)
-		  val cid = installConDec (conDec, (fileName, ocOpt))
+		  val cid = installConDec false (conDec, (fileName, ocOpt))
 	      in
 		()
 	      end
@@ -316,7 +323,7 @@ struct
 	  val conDec = Solve.solve ((name, tm), Paths.Loc (fileName, r))
 	  val conDec' = Names.nameConDec (conDec)
 	  (* allocate cid after strictness has been checked! *)
-	  val cid = installConDec (conDec', (fileName, NONE))
+	  val cid = installConDec false (conDec', (fileName, NONE))
 	  val _ = if !Global.chatter >= 3
 		    then print ((Timers.time Timers.printing Print.conDecToString)
 				       conDec' ^ "\n")
@@ -376,12 +383,12 @@ struct
       | install1 (fileName, Parser.TheoremDec tdec) =
 	let 
 	  val (Tdec, r) = ThmRecon.theoremDecToTheoremDec tdec
-	  val (GBs, E as IntSyn.ConDec (name, k, V, L)) = ThmSyn.theoremDecToConDec (Tdec, r)
+	  val (GBs, E as IntSyn.ConDec (name, k, _, V, L)) = ThmSyn.theoremDecToConDec (Tdec, r)
 	  val _ = FunSyn.labelReset ()
 	  val _ = List.foldr (fn ((G1, G2), k) => FunSyn.labelAdd 
 			    (FunSyn.LabelDec (Int.toString k, FunSyn.ctxToList G1, FunSyn.ctxToList G2))) 0 GBs
 								       
-	  val cid = installConDec (E, (fileName, NONE))
+	  val cid = installConDec false (E, (fileName, NONE))
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
 	  val _ = ModeSyn.installMode (cid, MS)
 	  val _ = if !Global.chatter >= 3
@@ -413,7 +420,7 @@ struct
 		  else ()
 		    
 	in
-	  (Prover.install (fn E => installConDec (E, (fileName, NONE)));
+	  (Prover.install (fn E => installConDec false (E, (fileName, NONE)));
 	   Skolem.install La) 
 	end 
 
@@ -436,7 +443,7 @@ struct
 	  val _ = Prover.auto () handle Prover.Error msg => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
 		    
 	in
-	  Prover.install (fn E => installConDec (E, (fileName, NONE)))
+	  Prover.install (fn E => installConDec false (E, (fileName, NONE)))
 	end 
 
       (* Establish declaration *)
@@ -458,6 +465,8 @@ struct
 	in
 	  Skolem.install La
 	end
+      | install1 (fileName, Parser.Use name) =
+          CSManager.useSolver (name)
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
@@ -487,12 +496,34 @@ struct
     (* top () = () starts interactive query loop *)
     fun top () = topLoop ()
 
+    fun installCSMDec (conDec, optFixity, optMdec) = 
+      let
+        val _ = ModeCheck.checkD (conDec, NONE)
+        val cid = installConDec true (conDec, ("", NONE))
+        val _ = if !Global.chatter >= 3
+                then print (Print.conDecToString (conDec) ^ "\n")
+                else ()
+        val _ = (case optFixity
+                   of SOME(fixity) =>
+                        Names.installFixity (IntSyn.conDecName (conDec), fixity)
+                    | NONE => ())
+        val _ = (case optMdec
+                   of SOME(mdec) =>
+                        ModeSyn.installMode (cid, mdec)
+                    | NONE => ())
+      in
+        cid
+      end
+
+    val _ = CSManager.setInstallFN (installCSMDec)
+ 
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
 		    Index.reset (); 
 		    IndexSkolem.reset (); Subordinate.reset (); Terminate.reset ();
 		    FunSyn.labelReset ();
-		    CompSyn.sProgReset () (* necessary? -fp *)
+		    CompSyn.sProgReset (); (* necessary? -fp *)
+                    CSManager.resetSolvers ()
 		    )
 
     fun readDecl () =

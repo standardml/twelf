@@ -1,5 +1,6 @@
 (* Weak Head-Normal Forms *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
+(* Modified: Roberto Virga *)
 
 functor Whnf (structure IntSyn' : INTSYN)
   : WHNF =
@@ -11,14 +12,16 @@ struct
 
      whnf ::= (L, s) | (Pi DP. U, s)
             | (Root(n,S), id) | (Root(c,S), id) | (Root(d,S), id) | (Root(F[s'], S), id)
+            | (Root(fgnC,S), id) where fgnC is a foreign constant
             | (Lam D. U, s) | (X, s) where X is uninstantiated, X of base type
                                      during type reconstruction, X might have variable type
+            | (FgnExp, id) where FgnExp is a foreign expression
 
      Normal Form (nf)
 
 	UA ::= L | Pi (DA,P). UA
-             | Root(n,SA) | Root(c,SA) | Root(d,SA) |
-             | Lam DA. UA
+             | Root(n,SA) | Root(c,SA) | Root(d,SA) | Root(fgnC,SA)
+             | Lam DA. UA | FgnExp
 	DA ::= x:UA
 	SA ::= Nil | App (UA, SA)
 
@@ -167,6 +170,7 @@ struct
 	  (* Ss2 must be App, since prior cases do not apply *)
 	  (* lowerEVar X results in redex, optimize by unfolding call to whnfRedex *)
 	  (lowerEVar X; whnfRedex (whnf Us, Ss2))
+      | whnfRedex (Us as (FgnExp _, _), _) = Us
       (* Uni and Pi can arise after instantiation of EVar X : K *)
       | whnfRedex (Us as (Uni _, s1), _) = Us	(* S2[s2] = Nil *)
       | whnfRedex (Us as (Pi _, s1), _) = Us	(* S2[s2] = Nil *)
@@ -206,7 +210,7 @@ struct
        Effect: X is instantiated to [[G']] X' if G' is empty
                otherwise X = X' and no effect occurs.
     *)
-    and lowerEVar (X as EVar (r, G, V, nil)) = lowerEVar1 (X, whnf (V, id))
+    and lowerEVar (X as EVar (r, G, V, ref nil)) = lowerEVar1 (X, whnf (V, id))
       | lowerEVar (EVar _) =
         (* It is not clear if this case can happen *)
         (* pre-Twelf 1.2 code walk, Fri May  8 11:05:08 1998 *)
@@ -274,7 +278,10 @@ struct
           (case whnf (V, id)
 	     of (Pi _, _) => (lowerEVar X; whnf Us) (* possible opt: call lowerEVar1 *)
 	      | _ => Us)
-      | whnf (EClo (U, s'), s) = whnf (U, comp (s', s)) 
+      | whnf (EClo (U, s'), s) = whnf (U, comp (s', s))
+      | whnf (Us as (FgnExp _, Shift (0))) = Us
+      | whnf (Us as (FgnExp (cs, ops), s)) =
+          (#map(ops) (fn U => EClo (U, s)), id)
 
     (* expandDef (Root (Def (d), S), s) = (U' ,s')
      
@@ -360,7 +367,6 @@ struct
 		 Redex (EClo (U, comp (s1, shift)), 
 			App (Root (BVar (1), Nil), Nil))), id), Vs2)
 
-
     (* Invariant:
      
        normalizeExp (U, s) = U'
@@ -380,7 +386,9 @@ struct
 	  Root (H, normalizeSpine (S, s))
       | normalizeExpW (Lam (D, U), s) = 
 	  Lam (normalizeDec (D, s), normalizeExp (U, dot1 s))
-      | normalizeExpW (Us as (EVar _, s)) = EClo Us 
+      | normalizeExpW (Us as (EVar _, s)) = EClo Us
+      | normalizeExpW (U as FgnExp (cs, ops), s) =
+          #map(ops) (fn U => normalizeExp (U, s))
 
     and normalizeSpine (Nil, s) = 
           Nil 
@@ -406,8 +414,6 @@ struct
     fun normalizeCtx Null = Null
       | normalizeCtx (Decl (G, D)) = 
           Decl (normalizeCtx G, normalizeDec (D, id))
-
-
 
 
     (* invert s = s'

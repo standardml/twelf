@@ -137,7 +137,7 @@ struct
 
     fun makeConDec (M.State (name, M.Prefix (G, M, B), V)) = 
 	let 
-	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, k, V, I.Type)
+	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, k, I.Normal, V, I.Type)
 	    | makeConDec' (I.Decl (G, D), V, k) = 
 	      makeConDec' (G, I.Pi ((D, I.Maybe), V), k+1)
 	in

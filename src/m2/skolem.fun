@@ -77,7 +77,7 @@ struct
 		    val H = I.Skonst sk
 		    val _ = IndexSkolem.install H
 		    val _ = Names.installName (name', sk)
-		    val _ = (Timers.time Timers.compiling Compile.install) sk
+		    val _ = (Timers.time Timers.compiling Compile.install) false sk
 (*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d
 		    val _ = if !Global.chatter >= 3 
@@ -104,7 +104,7 @@ struct
     fun install nil = ()
       | install (a :: aL) = 
         let 
-	  val I.ConDec (name, imp, V, L) = I.sgnLookup a
+	  val I.ConDec (name, imp, _, V, L) = I.sgnLookup a
 	  val SOME mS = ModeSyn.modeLookup a
 	  val _ = installSkolem (name, imp, (V, mS), I.Type)
 	in

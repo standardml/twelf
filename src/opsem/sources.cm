@@ -4,6 +4,7 @@ Group is
   ../formatter/sources.cm  
   ../index/sources.cm
   ../typecheck/sources.cm
+  ../solvers/sources.cm
   compsyn.sig
   compsyn.fun
   compile.sig

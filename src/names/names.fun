@@ -4,6 +4,8 @@
 
 functor Names (structure Global : GLOBAL
 	       structure IntSyn' : INTSYN
+               structure Constraints : CONSTRAINTS
+                 sharing Constraints.IntSyn = IntSyn'
 	       structure HashTable : TABLE where type key = string
                structure RedBlackTree : TABLE where type key = string
                structure IntTree : TABLE where type key = int)
@@ -88,7 +90,7 @@ struct
      if constant c expects exactly n explicit arguments,
      raises Error (msg) otherwise
   *)
-  fun checkArgNumber (IntSyn.ConDec (name, i, V, L), n) =
+  fun checkArgNumber (IntSyn.ConDec (name, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.SkoDec (name, i, V, L), n) =
 	checkAtomic (name, V, i+n)
@@ -357,8 +359,10 @@ struct
     (* return a list of names of EVars that have constraints on them *)
     (* Note that EVars which don't have names, will not be considered! *)
     fun evarCnstr' (nil, acc) = acc
-      | evarCnstr' ((Xn as (IntSyn.EVar(ref(NONE), _, _, Constr as (_::_)), name))::l, acc) =
-          evarCnstr' (l, Xn::acc)
+      | evarCnstr' ((Xn as (IntSyn.EVar(ref(NONE), _, _, cnstrs), name))::l, acc) =
+          (case Constraints.simplify (!cnstrs)
+             of nil => evarCnstr' (l, acc)
+              | (_::_) => evarCnstr' (l, Xn::acc))
       | evarCnstr' (_::l, acc) = evarCnstr' (l, acc)
     fun evarCnstr () = evarCnstr' (!evarList, nil)
 
@@ -607,8 +611,8 @@ struct
 
     fun defEName UV = defEName' (IntSyn.Null, UV)
 
-    fun nameConDec' (IntSyn.ConDec (name, imp, V, L)) =
-          IntSyn.ConDec (name, imp, pisEName V, L)
+    fun nameConDec' (IntSyn.ConDec (name, imp, status, V, L)) =
+          IntSyn.ConDec (name, imp, status, pisEName V, L)
       | nameConDec' (IntSyn.ConDef (name, imp, U, V, L)) =
 	let 
 	  val (U', V') = defEName (U, V)

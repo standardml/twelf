@@ -94,7 +94,7 @@ local
     | fmtClauseI (i, G, I.Pi ((D, _), V)) =
         fmtClauseI (i-1, I.Decl (G, Names.decEName (G, D)), V)
 
-  fun fmtConDec (I.ConDec (id, i, V, I.Type)) =
+  fun fmtConDec (I.ConDec (id, i, _, V, I.Type)) =
       let
 	val _ = Names.varReset ()
 	val Vfmt = fmtClauseI (i, I.Null, V)

@@ -18,8 +18,6 @@ functor MetaAbstract (structure Global : GLOBAL
 		        sharing Unify.IntSyn = MetaSyn'.IntSyn
 		      structure Names : NAMES
 		        sharing Names.IntSyn = MetaSyn'.IntSyn
-         	      structure Trail : TRAIL
-			sharing Trail.IntSyn = MetaSyn'.IntSyn
 		      structure TypeCheck : TYPECHECK
 			sharing TypeCheck.IntSyn = MetaSyn'.IntSyn
 		      structure Subordinate : SUBORDINATE
@@ -209,12 +207,12 @@ struct
 	end
       | collectExpW (lG0, G, (I.Root (C, S), s), mode, Adepth) =
 	  collectSpine (lG0, G, (S, s), mode, Adepth)
-      | collectExpW (lG0, G, (I.EVar (r, GX, V, Cnstr), s), mode, 
+      | collectExpW (lG0, G, (I.EVar (r, GX, V, cnstrs), s), mode, 
 		     Adepth as (A, depth)) =
 	(case atxLookup (A, r)
 	   of NONE =>
 	      let 
-	        val _ = checkEmpty Cnstr
+	        val _ = checkEmpty (!cnstrs)
 
 	        val lGp' = I.ctxLength GX - lG0 + depth   (* lGp' >= 0 *)
 		val w = weaken (lGp', GX, I.targetFam V)
@@ -223,7 +221,7 @@ struct
 	        val lGp'' = I.ctxLength GX' - lG0 + depth   (* lGp'' >= 0 *)
 		val Vraised = raiseType (lGp'', GX', I.EClo (V, iw))
 		val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw))
-		val _ = Trail.instantiateEVar (r, I.EClo (X', w))
+		val _ = Unify.instantiateEVar (r, I.EClo (X', w), nil)
 	      (* invariant: all variables (EV) in Vraised already seen *)
 	      in
 		collectSub (lG0, G, lGp'', s, mode, 

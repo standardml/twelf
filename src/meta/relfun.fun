@@ -8,8 +8,6 @@ functor RelFun (structure Global : GLOBAL
 		  sharing ModeSyn.IntSyn = FunSyn'.IntSyn
 		structure Names : NAMES
 		  sharing Names.IntSyn = FunSyn'.IntSyn
-		structure Trail : TRAIL
-		  sharing Trail.IntSyn = FunSyn'.IntSyn
 		structure Unify : UNIFY
 		  sharing Unify.IntSyn = FunSyn'.IntSyn
 	        structure Whnf : WHNF
@@ -54,7 +52,7 @@ struct
     fun convertOneFor cid =
       let
 	val V  = case I.sgnLookup cid 
-	           of I.ConDec (name, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 	val mS = case M.modeLookup cid
 	           of NONE => raise Error "Mode declaration expected"
@@ -136,12 +134,15 @@ struct
       | occursInExpN (k, I.Pi (DP, V)) = occursInDecP (k, DP) orelse occursInExpN (k+1, V)
       | occursInExpN (k, I.Root (H, S)) = occursInHead (k, H) orelse occursInSpine (k, S)
       | occursInExpN (k, I.Lam (D, V)) = occursInDec (k, D) orelse occursInExpN (k+1, V)
+      | occursInExpN (k, I.FgnExp (cs, ops)) =
+          occursInExp (k, #toInternal(ops)())
     (* no case for Redex, EVar, EClo *)
 
 
     and occursInHead (k, I.BVar (k')) = (k = k')
       | occursInHead (k, I.Const _) = false
       | occursInHead (k, I.Def _) = false
+      | occursInHead (k, I.FgnConst _) = false
       (* no case for FVar *)
 
     and occursInSpine (_, I.Nil) = false
@@ -151,7 +152,7 @@ struct
     and occursInDec (k, I.Dec (_, V)) = occursInExpN (k, V)
     and occursInDecP (k, (D, _)) = occursInDec (k, D)
 
-    fun occursInExp (k, U) = occursInExpN (k, Whnf.normalize (U, I.id))
+    and occursInExp (k, U) = occursInExpN (k, Whnf.normalize (U, I.id))
 
     (* dot1inv w = w'
 
@@ -375,7 +376,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 
@@ -420,7 +421,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 	(* transformInit' ((S, mS), V, (w, s)) = (w', s')
@@ -484,7 +485,7 @@ struct
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
-	           of I.ConDec (name, _, V, I.Kind) => V
+	           of I.ConDec (name, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
 
@@ -860,7 +861,7 @@ struct
 	  if c'' = I.sgnSize () then L
 	  else
 	    (case I.sgnLookup (c'')
-	       of I.ConDec (name, _, V, I.Type) => 
+	       of I.ConDec (name, _, _, V, I.Type) => 
 		 (case traverseNeg (c'', I.Null, (V, I.id), L) 
 		    of (SOME (wf, d', (P', Q')), L') =>  traverseSig' (c''+1, (P' (Q' wf)) :: L')
 		     | (NONE, L') => traverseSig' (c''+1, L'))
@@ -884,7 +885,7 @@ struct
 	fun convertOnePro a =
 	  let 
 	    val V = case I.sgnLookup a 
-	              of I.ConDec (name, _, V, I.Kind) => V
+	              of I.ConDec (name, _, _, V, I.Kind) => V
 		       | _ => raise Error "Type Constant declaration expected"
 	    val mS = case M.modeLookup a
 	               of NONE => raise Error "Mode declaration expected"

@@ -66,11 +66,11 @@ structure MTPAbstract =
 	       structure StateSyn' = StateSyn
 	       structure Whnf = Whnf
 	       structure Constraints = Constraints
+               structure Unify = UnifyTrail
 	       structure Subordinate = Subordinate
 	       structure TypeCheck = TypeCheck
 	       structure FunTypeCheck = FunTypeCheck
-	       structure Abstract = Abstract
-	       structure Trail = Trail);
+	       structure Abstract = Abstract);
 
 
 structure MTPInit = 
@@ -110,10 +110,10 @@ structure MTPSearch =
 	     structure Unify = UnifyTrail
 	     structure Index = IndexSkolem
 	     (* structure Assign = Assign *)
-	     structure Trail = Trail
 	     structure CPrint = CPrint
 	     structure Print = Print
-	     structure Names = Names); 
+	     structure Names = Names
+             structure CSManager = CSManager); 
 
 structure MTPFilling =
   MTPFilling (structure IntSyn = IntSyn
@@ -148,7 +148,8 @@ structure MTPSplitting =
 		structure FunTypeCheck = FunTypeCheck
 		structure Index = Index
 		structure Print = Print
-		structure Unify = UnifyTrail)
+		structure Unify = UnifyTrail
+                structure CSManager = CSManager); 
 
 structure UniqueSearch =
   UniqueSearch (structure Global = Global
@@ -162,10 +163,10 @@ structure UniqueSearch =
 		structure Unify = Unify
 		structure Index = Index
 		structure Compile = Compile
-		structure Trail = Trail
 		structure CPrint = CPrint
 		structure Print = Print
-		structure Names = Names)
+		structure Names = Names
+                structure CSManager = CSManager); 
 
 structure Inference = 
   Inference (structure MTPGlobal = MTPGlobal
@@ -192,14 +193,14 @@ structure MTPRecursion =
 		structure Whnf = Whnf
 		structure Unify = UnifyTrail
 		structure Conv = Conv
-		structure Trail = Trail
 		structure Names = Names
 		structure Subordinate = Subordinate
 		structure MTPrint = MTPrint
 		structure Print = Print
 		structure TypeCheck = TypeCheck
 		structure FunPrint = FunPrint
-		structure Formatter = Formatter)
+		structure Formatter = Formatter
+                structure CSManager = CSManager); 
 
 
 

@@ -1,5 +1,6 @@
-(* Tables *)
+(* Hash Tables *)
 (* Author: Frank Pfenning *)
+(* Modified: Roberto Virga *)
 
 (* This provides a common interface to hash tables *)
 (* red/black trees and similar data structures *)
@@ -15,7 +16,6 @@ sig
   val insert : 'a Table -> 'a entry -> unit
   (* insert entry, return shadowed entry if there is one *)
   val insertShadow : 'a Table -> 'a entry -> ('a entry) option
-
   val lookup : 'a Table -> key -> 'a option
   val clear : 'a Table -> unit
 

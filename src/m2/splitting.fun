@@ -16,7 +16,9 @@ functor Splitting (structure Global : GLOBAL
 		   structure Print : PRINT
 		   sharing Print.IntSyn = MetaSyn'.IntSyn
 		   structure Unify : UNIFY
-		   sharing Unify.IntSyn = MetaSyn'.IntSyn) 
+		   sharing Unify.IntSyn = MetaSyn'.IntSyn
+                   structure CSManager : CS_MANAGER
+                   sharing CSManager.IntSyn = MetaSyn'.IntSyn)
   : SPLITTING =
 struct
   structure MetaSyn = MetaSyn'
@@ -63,7 +65,7 @@ struct
 	  val (U, Vs') = M.createAtomConst (G, I.Const c)
 	in
 	  constCases (G, Vs, Sgn, abstract,
-		      Trail.trail (fn () => 
+		      CSManager.trail (fn () => 
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract (I.conDecName (I.sgnLookup c) ^ "/", U))
 					   :: ops
@@ -87,7 +89,7 @@ struct
 	  val (U, Vs') = M.createAtomBVar (G, k)
 	in
 	  paramCases (G, Vs, k-1, abstract, 
-		      Trail.trail (fn () =>
+		      CSManager.trail (fn () =>
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract (Int.toString k ^ "/", U)) :: ops
 				    else ops)

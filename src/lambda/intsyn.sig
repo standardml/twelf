@@ -1,11 +1,13 @@
 (* Internal Syntax *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
+(* Modified: Roberto Virga *)
 
 signature INTSYN =
 sig
 
   type cid = int			(* Constant identifier        *)
-
+  type csid = int                       (* CS module identifier       *)
+ 
   (* Contexts *)
 
   datatype 'a Ctx =			(* Contexts                   *)
@@ -33,9 +35,18 @@ sig
   | Root  of Head * Spine		(*     | H @ S                *)
   | Redex of Exp * Spine		(*     | U @ S                *)
   | Lam   of Dec * Exp			(*     | lam D. U             *)
-  | EVar  of Exp option ref * Dec Ctx * Exp * Eqn list
+  | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
                                         (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
+  | FgnExp of csid *                    (*     | (foreign expression) *)
+      {
+        toInternal : unit -> Exp,       (* convert to internal syntax *)
+        map : (Exp -> Exp) -> Exp,      (* apply to subterms          *)
+        equalTo : Exp -> bool,
+                                        (* test for equality          *)
+        unifyWith : Dec Ctx * Exp -> FgnUnify
+                                        (* unify with another term    *)
+      }
 
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
@@ -44,6 +55,7 @@ sig
   | Def   of cid			(*     | d (strict)           *)
   | NSDef of cid			(*     | d (non strict)       *)
   | FVar  of string * Exp * Sub		(*     | F[s]                 *)
+  | FgnConst of csid * ConDec           (*     | (foreign constant)   *)
 
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
@@ -62,19 +74,37 @@ sig
   and Dec =				(* Declarations:              *)
     Dec of string option * Exp		(* D ::= x:V                  *)
 
-  and Eqn =				(* Equations:                 *)
-    Eqn of  Dec Ctx * Exp * Exp	       	(* Eqn ::= G|-(U1 == U2)      *)
+  (* Constraints *)
 
-  (* Type abbreviations *)
-  type dctx = Dec Ctx			(* G = . | G,D                *)
-  type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  and Cnstr =				(* Constraint:                *)
+    Solved                      	(* Cnstr ::= solved           *)
+  | Eqn      of Dec Ctx * Exp * Exp     (*         | G|-(U1 == U2)    *)
+  | FgnCnstr of csid *                  (*         | (foreign)        *)
+      {
+        toInternal : unit -> (Dec Ctx * Exp) list,
+                                        (* convert to internal syntax *)
+        awake : unit -> bool,           (* awake                      *)
+        simplify : unit -> bool         (* simplify                   *)
+      }
+
+  and Status =                          (* Status of a constant:      *)
+    Normal                              (*   inert                    *)
+  | Constraint of csid * (Dec Ctx * Spine * int -> Exp option)
+                                        (*   acts as constraint       *)
+  | Foreign of csid * (Spine -> Exp)    (*   is converted to foreign  *)
+
+  and FgnUnify =                        (* Result of foreign unify    *)
+    (* succeed with a list of (solvable) equations G |- X = U [ss] *)
+    Succeed of (Dec Ctx * Exp * Sub * Exp) list
+    (* delay a constraint on a list of variables *)
+  | Delay of Exp list * Cnstr ref
+    (* fail *)
+  | Fail
 
   (* Global signature *)
 
-  exception Error of string		(* raised if out of space     *)
-  
-  datatype ConDec =			(* Constant declaration       *)
-    ConDec of string * int		(* a : K : kind  or           *)
+  and ConDec =			        (* Constant declaration       *)
+    ConDec of string * int * Status    	(* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
   | ConDef of string * int		(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
@@ -83,8 +113,17 @@ sig
   | SkoDec of string * int		(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
-  val conDecName : ConDec -> string
-  val conDecType : ConDec -> Exp
+  (* Type abbreviations *)
+  type dctx = Dec Ctx			(* G = . | G,D                *)
+  type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  type cnstr = Cnstr ref
+
+  exception Error of string		(* raised if out of space     *)
+  
+  val conDecName   : ConDec -> string
+  val conDecImp    : ConDec -> int
+  val conDecStatus : ConDec -> Status
+  val conDecType   : ConDec -> Exp
 
   val sgnAdd   : ConDec -> cid
   val sgnLookup: cid -> ConDec
@@ -93,10 +132,11 @@ sig
 
   val sgnApp   : (cid -> unit) -> unit
     
-  val constType : cid -> Exp		(* type of c or d             *)
-  val constDef  : cid -> Exp		(* definition of d            *)
-  val constImp  : cid -> int
-  val constUni  : cid -> Uni
+  val constType   : cid -> Exp		(* type of c or d             *)
+  val constDef    : cid -> Exp		(* definition of d            *)
+  val constImp    : cid -> int
+  val constStatus : cid -> Status
+  val constUni    : cid -> Uni
 
   (* Declaration Contexts *)
 
@@ -118,9 +158,7 @@ sig
 
   (* EVar related functions *)
 
-  val newEVar   : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
-  val newEVarCnstr : dctx * Exp * Eqn list -> Exp 
-					(* creates X:G|-V, Cnstr      *)
+  val newEVar    : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
 
   (* Type related functions *)

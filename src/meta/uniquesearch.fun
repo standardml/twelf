@@ -26,15 +26,15 @@ sharing Assign.IntSyn = IntSyn'
 		      structure Compile : COMPILE
 			sharing Compile.IntSyn = IntSyn'
 			sharing Compile.CompSyn = CompSyn'
-		      structure Trail : TRAIL
-			sharing Trail.IntSyn = IntSyn'
 		      structure CPrint : CPRINT
 			sharing CPrint.IntSyn = IntSyn'
 			sharing CPrint.CompSyn = CompSyn'
 		      structure Print : PRINT
 			sharing Print.IntSyn = IntSyn'
 		      structure Names : NAMES 
-			sharing Names.IntSyn = IntSyn')
+			sharing Names.IntSyn = IntSyn'
+                      structure CSManager : CS_MANAGER
+                        sharing CSManager.IntSyn = IntSyn')
   : UNIQUESEARCH =
 struct
 
@@ -118,14 +118,14 @@ struct
     *)
     (* Efficiency: repeated whnf for every subterm in Vs!!! *)
     fun selectEVar (nil) = nil
-      | selectEVar ((X as I.EVar (r, _, _, nil)) :: GE) = 
+      | selectEVar ((X as I.EVar (r, _, _, ref nil)) :: GE) = 
         let 
 	  val Xs = selectEVar (GE)
 	in
 	  if nonIndex (r, Xs) then Xs @ [X]
 	  else Xs
 	end
-      | selectEVar ((X as I.EVar (r, _, _, Constr)) :: GE) =  (* Constraint case *)
+      | selectEVar ((X as I.EVar (r, _, _, cnstrs)) :: GE) =  (* Constraint case *)
         let 
 	  val Xs = selectEVar (GE)
 	in
@@ -267,7 +267,7 @@ struct
 			     | I.Skonst cid => cid)
 				  
 	      val C.SClause(r) = C.sProgLookup cid'
-	      val acc''' = Trail.trail
+	      val acc''' = CSManager.trail
 		      (fn () =>
 		       rSolve (max-1, depth, ps', (r, I.id), dp,
 			       (fn (S, acc'') => sc (I.Root (H, S), acc'')), acc'))
@@ -279,7 +279,7 @@ struct
 	  | matchDProg (I.Decl (dPool', SOME (r, s, cid')), n, acc') =
 	    if cid = cid' then
 	      let
-		val acc''' = Trail.trail (fn () =>
+		val acc''' = CSManager.trail (fn () =>
 			    rSolve (max-1,depth, ps', (r, I.comp (s, I.Shift n)), dp,
 				    (fn (S, acc'') => sc (I.Root (I.BVar n, S), acc'')), acc'))
 	      in

@@ -11,6 +11,7 @@ Group is
   ../opsem/sources.cm
   ../heuristic/sources.cm
   ../timing/sources.cm
+  ../solvers/sources.cm
   ../m2/sources.cm    (* just for integetrating the new prover into
 			 Twelf *)
   funsyn.sig

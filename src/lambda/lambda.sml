@@ -12,12 +12,6 @@ structure Constraints =
   Constraints (structure IntSyn' = IntSyn
 	       structure Conv = Conv);
 
-structure Trail = 
-  Trail (structure IntSyn' = IntSyn);
-  
-structure NoTrail = 
-  NoTrail (structure IntSyn' = IntSyn);
-
 structure Unify =
   Unify (structure IntSyn' = IntSyn
 	 structure Whnf = Whnf

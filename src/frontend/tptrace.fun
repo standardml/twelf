@@ -1,6 +1,6 @@
 (* Type Reconstruction with Tracing *)
 (* Author: Frank Pfenning *)
-(* Modified: Jeff Polakow *)
+(* Modified: Jeff Polakow, Roberto Virga *)
 
 functor TpTrace (structure Global : GLOBAL
 		 structure IntSyn' : INTSYN
@@ -22,7 +22,9 @@ functor TpTrace (structure Global : GLOBAL
 		   sharing Print.IntSyn = IntSyn'
 		 structure Timers : TIMERS
                  structure Vars : VARS 
-                   sharing Vars.IntSyn = IntSyn')
+                   sharing Vars.IntSyn = IntSyn'
+                 structure CSManager : CS_MANAGER
+                   sharing CSManager.IntSyn = IntSyn')
   : TP_RECON =
 struct
 
@@ -30,7 +32,6 @@ struct
   structure Paths = Paths'
   structure F = Print.Formatter
   type name = string
-
 
   (* Implementation of term and decl which are abstract in the parser.
      We write tm : term for the representation of a term tm and tm* :
@@ -97,7 +98,7 @@ struct
   fun evarsToString (Xnames) =
       let
 	val inst = Print.evarInstToString (Xnames)
-	val constrOpt = Print.evarConstrToStringOpt (Xnames)
+	val constrOpt = Print.evarCnstrsToStringOpt (Xnames)
       in
 	case constrOpt
 	  of NONE => inst
@@ -110,9 +111,8 @@ struct
       let 
 	val Xs = Abstract.collectEVars (G, (V2, s2), Abstract.collectEVars (G, (V1, s1), nil))
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
-	val eqnsFmt = F.HVbox [F.String "|?", F.Space,
-			       Print.formatEqn (IntSyn.Eqn (G, IntSyn.EClo (V1, s1), 
-							    IntSyn.EClo (V2, s2)))]
+	val eqnsFmt = F.HVbox [F.String "|?", F.Space, Print.formatExp (G, IntSyn.EClo (V1, s1)),
+			       F.Break, F.String "=", F.Space, Print.formatExp (G, IntSyn.EClo (V2, s2))]
 	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
 	val _ = Unify.unify (G, (V1, s1), (V2, s2))
 	val _ = print (evarsToString (Xnames) ^ "\n")
@@ -217,19 +217,22 @@ struct
   *)
   fun findConst (name) =
       (case Names.nameLookup (name)
-	 of NONE => NONE
+	 of NONE => (case CSManager.parse (name)
+                       of NONE => NONE
+                        | SOME(cs, conDec) => SOME (IntSyn.FgnConst (cs, conDec), conDec))
           | SOME(cid) => (case IntSyn.sgnLookup(cid)
-			    of IntSyn.ConDec (_, i, V, _) => SOME(IntSyn.Const(cid), i, V)
-			     | IntSyn.ConDef (_, i, _, V, _) => SOME(IntSyn.Def(cid), i, V)
-			     | IntSyn.AbbrevDef  (_, i, _, V, _) => SOME(IntSyn.NSDef(cid), i, V)))
-
+			    of (conDec as IntSyn.ConDec _) => SOME(IntSyn.Const(cid), conDec)
+			     | (conDec as IntSyn.ConDef _) => SOME(IntSyn.Def(cid), conDec)
+                             | (conDec as IntSyn.AbbrevDef _) => SOME(IntSyn.NSDef(cid), conDec)))
 
   (* Translating identifiers once they have been classified *)
   (* as constant, bound variable, or free variable *)
 
   (* Constant *)
-  fun const ((c,i,V'), r, (G, SS)) =
+  fun const ((H, conDec), r, (G, SS)) =
       let
+        val i = IntSyn.conDecImp (conDec)
+
 	fun supplyImplicit (0, (V', s)) = SS (IntSyn.EClo(V', s))
 	  | supplyImplicit (i, (IntSyn.Pi ((IntSyn.Dec (x, V1), _), V2), s)) =
 	    let
@@ -239,10 +242,14 @@ struct
 	    in
 	      ((IntSyn.App (U1, S2), V), os)
 	    end
-	val ((S, V), os) = supplyImplicit (i, Whnf.whnf (V', IntSyn.id))
+	val ((S, V), os) = supplyImplicit (i, Whnf.whnf (IntSyn.conDecType (conDec),
+                                                         IntSyn.id))
+
+        fun makeForeign (IntSyn.Foreign (cs, toForeign), (H, S)) = toForeign S
+          | makeForeign (_, (H, S)) = IntSyn.Root (H, S)
+        val U = makeForeign (IntSyn.conDecStatus (conDec), (H, S))
       in
-	((IntSyn.Root (c, S), V),
-	 Paths.root (Paths.toRegionSpine (os, r), Paths.leaf r, i, os))
+	((U, V), Paths.root (Paths.toRegionSpine (os, r), Paths.leaf r, i, os))
       end
 
   (* Bound variable *)
@@ -581,7 +588,7 @@ struct
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
-	val cd = Names.nameConDec (IntSyn.ConDec (name, i, V', level))
+	val cd = Names.nameConDec (IntSyn.ConDec (name, i, IntSyn.Normal, V', level))
 	val ocd = Paths.dec (r, i, oc)
 	val _ = if !Global.chatter >= 3
 		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")

@@ -119,7 +119,7 @@ local
     *)
 
   (* ignore a : K, d : A = M, b : K = A, and skolem constants *)
-  fun fromConDec (I.ConDec (c, i, V, I.Type)) =
+  fun fromConDec (I.ConDec (c, i, _, V, I.Type)) =
         SOME (T.objdec (c, fromTp (I.Null, (V, I.id))))
     | fromConDec _ = NONE
 

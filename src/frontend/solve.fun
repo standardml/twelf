@@ -24,8 +24,8 @@ functor Solve
    structure Compile : COMPILE
      sharing Compile.IntSyn = IntSyn'
      sharing Compile.CompSyn = CompSyn
-   structure Trail : TRAIL
-     sharing Trail.IntSyn = IntSyn'
+   structure CSManager : CS_MANAGER
+     sharing CSManager.IntSyn = IntSyn'
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn
@@ -163,7 +163,7 @@ struct
 			    handle Abstract.Error (msg)
 			    => raise Abstract.Error (Paths.wrap (r, msg)))
       in
-	Trail.reset ();
+	CSManager.reset ();
 	((* Call to solve raises Solution _ if there is a solution,
 	  returns () if there is none.  It could also not terminate
 	  *)
@@ -247,7 +247,7 @@ struct
 			else ();
 		   if !Global.chatter >= 3
 		     (* Question: should we collect constraints in M? *)
-		     then case (Timers.time Timers.printing Print.evarConstrToStringOpt) Xs
+		     then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		            of NONE => ()
 			     | SOME(str) =>
 			       print ("Remaining constraints:\n"
@@ -258,12 +258,12 @@ struct
 		   else ())
               in
 		if not (boundEq (try, SOME(0)))
-		  then (Trail.reset ();
+		  then (CSManager.reset ();
 			(* solve query if bound > 0 *)
 			((Timers.time Timers.solving AbsMachine.solve)
 			 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),
 			  scInit)) handle Done => (); (* printing is timed into solving! *)
-			Trail.reset ();	(* in case Done was raised *)
+			CSManager.reset ();	(* in case Done was raised *)
 			(* check if number of solutions is correct *)
 		        checkSolutions (expected, try, !solutions))
 		else if !Global.chatter >= 3
@@ -300,7 +300,7 @@ struct
 		  else ();
 	     if !Global.chatter >= 3
 	       (* Question: should we collect constraints from M? *)
-	       then case (Timers.time Timers.printing Print.evarConstrToStringOpt) Xs
+	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		      of NONE => ()
 		       | SOME(str) =>
 			 print ("Remaining constraints:\n"

@@ -101,12 +101,15 @@ struct
 	  inferSpine (ms, mode, S)
       | inferExp (ms, mode, I.Root (I.Def (cid), S)) =
 	  inferSpine (ms, mode, S)
+      | inferExp (ms, mode, I.Root (I.FgnConst (cs, conDec), S)) =
+	  inferSpine (ms, mode, S)
       | inferExp (ms, mode, I.Lam (D as I.Dec (nameOpt, _), U)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
 				      (M.Marg (mode, nameOpt), Explicit)), mode, U))
       | inferExp (ms, mode, I.Pi ((D as I.Dec (nameOpt, _), _), V)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
-				      (M.Marg (mode, nameOpt), Explicit)), mode, V))
+				      (M.Marg (mode, nameOpt), Explicit)), mode, V)) (* cannot make any assumptions on what is inside a foreign object *)
+      | inferExp (ms, mode, I.FgnExp _) = ms
 
     (* inferSpine (ms, m, S) = ms'
 
@@ -205,7 +208,7 @@ struct
     *)
     fun shortToFull (a, mS, r) =
       let 
-	fun calcImplicit' (I.ConDec (_, k, V, _))  =
+	fun calcImplicit' (I.ConDec (_, k, _, V, _))  =
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
 	    (* only possibility since type families cannot be defined *)
       in 
@@ -224,7 +227,7 @@ struct
     fun checkFull (a, mS, r) =  
         (checkName mS; 
 	 case I.sgnLookup a 
-	   of I.ConDec (_, _, V, _)  =>
+	   of I.ConDec (_, _, _, V, _)  =>
 	       (inferMode ((I.Null, V), mS); ()))
               (* only possibility: no defined type families *)
 	handle Error (msg) => error (r, msg)  (* re-raise error with location *)

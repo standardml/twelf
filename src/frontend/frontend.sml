@@ -32,7 +32,8 @@ structure TpRecon =
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
-           structure Vars = FVars);
+           structure Vars = FVars
+           structure CSManager = CSManager);
 
 structure TpTrace =
   TpTrace (structure Global = Global
@@ -46,7 +47,8 @@ structure TpTrace =
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
-           structure Vars = FVars);
+           structure Vars = FVars
+           structure CSManager = CSManager);
 
 structure TpReconQ =
   TpRecon (structure Global = Global
@@ -60,7 +62,8 @@ structure TpReconQ =
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
-           structure Vars = EVars);
+           structure Vars = EVars
+           structure CSManager = CSManager);
 
 structure TpTraceQ =
   TpTrace (structure Global = Global
@@ -74,7 +77,8 @@ structure TpTraceQ =
 	   structure Strict = Strict
 	   structure Print = Print
 	   structure Timers = Timers
-           structure Vars = EVars);
+           structure Vars = EVars
+           structure CSManager = CSManager);
 
 structure ModeRecon =
   ModeRecon (structure Global = Global
@@ -157,10 +161,10 @@ structure Solve =
 	 structure Timers = Timers
 	 structure CompSyn = CompSyn
 	 structure Compile = Compile
-	 structure Trail = Trail
 	 structure AbsMachine = TMachine
 	 structure Strict = Strict
-	 structure Print = Print);
+	 structure Print = Print
+         structure CSManager = CSManager);
 
 structure Twelf =
   Twelf (structure Global = Global
@@ -195,7 +199,6 @@ structure Twelf =
 	 structure Subordinate = Subordinate
 	 structure CompSyn' = CompSyn
 	 structure Compile = Compile
-	 structure Trail = Trail
 	 structure AbsMachine = TMachine
 	 structure Solve = Solve
 
@@ -212,4 +215,6 @@ structure Twelf =
          structure Trace = Trace
 
 	 structure PrintTeX = PrintTeX
-	 structure ClausePrintTeX = ClausePrintTeX);
+	 structure ClausePrintTeX = ClausePrintTeX
+
+         structure CSManager = CSManager);

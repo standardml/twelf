@@ -33,7 +33,9 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 		      structure Print : PRINT
 		        sharing Print.IntSyn = IntSyn
 		      structure Unify : UNIFY
-		        sharing Unify.IntSyn = IntSyn) 
+		        sharing Unify.IntSyn = IntSyn
+                      structure CSManager : CS_MANAGER
+                        sharing CSManager.IntSyn = IntSyn) 
   : MTPSPLITTING =
 struct
   structure StateSyn = StateSyn'
@@ -272,7 +274,7 @@ struct
 	  val (U, Vs') = createAtomConst (G, I.Const c)
 	in
 	  constCases (G, Vs, Sgn, abstract,
-		      Trail.trail (fn () => 
+		      CSManager.trail (fn () => 
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract U)
 					   :: ops
@@ -296,7 +298,7 @@ struct
 	  val (U, Vs') = createAtomBVar (G, k)
 	in
 	  paramCases (G, Vs, k-1, abstract, 
-		      Trail.trail (fn () =>
+		      CSManager.trail (fn () =>
 				   (if Unify.unifiable (G, Vs, Vs')
 				      then Active (abstract U) :: ops
 				    else ops)
@@ -322,7 +324,7 @@ struct
 		        let 
  			  val (U, Vs') = createAtomBVar (G, n)
 			in
-			  Trail.trail (fn () =>
+			  CSManager.trail (fn () =>
 				       (if Unify.unifiable (G, Vs, Vs')
 					  then (Active (abstract U) :: ops) (* abstract state *)
 					else ops)

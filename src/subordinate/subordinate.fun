@@ -189,6 +189,8 @@ struct
 	   installExpW (G, (V1, s), (I.Uni I.Type, I.id));
 	   installExpW (I.Decl (G, I.decSub (D1, s)), (U, I.dot1 s), 
 			(V2, I.dot1 t)))
+      | installExpW (G, (I.FgnExp (cs, ops), s), Vs) =
+          installExpW (G, (#toInternal(ops) (), s), Vs)
 
     (* inferSpine (G, (S, s1), (V2, s2)) = ()
 
@@ -224,6 +226,7 @@ struct
       | inferCon (G, I.Const(c)) = I.constType (c)
       | inferCon (G, I.Def(d))  = I.constType (d)
       | inferCon (G, I.Skonst(c)) = I.constType (c)
+      | inferCon (G, I.FgnConst(cs, conDec)) = I.conDecType (conDec)
 
     (* install c = ()
 

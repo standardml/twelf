@@ -27,7 +27,8 @@ sig
 
   and AuxGoal =
     Trivial				(* trivially done *)
-  | Unify of IntSyn.Eqn * AuxGoal	(* call unify on IntSyn.eqn *)
+  | Unify of IntSyn.dctx * IntSyn.Exp   (* call unify *)
+             * IntSyn.Exp * AuxGoal
 
   (* The dynamic clause pool --- compiled version of the context *)
   (* type dpool = (ResGoal * IntSyn.Sub * IntSyn.cid) option IntSyn.Ctx *)

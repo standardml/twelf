@@ -15,6 +15,7 @@ Group is
   ../opsem/sources.cm
   ../table/sources.cm
   ../timing/sources.cm
+  ../solvers/sources.cm
   meta-global.sig
   meta-global.sml
   skolem.sig

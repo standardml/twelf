@@ -1,8 +1,10 @@
 (* Mode Checking *)
 (* Author: Carsten Schuermann *)
-(* Modified: Frank Pfenning *)
+(* Modified: Frank Pfenning, Roberto Virga *)
 
 functor ModeCheck (structure ModeSyn' : MODESYN
+                   structure Whnf : WHNF
+                     sharing Whnf.IntSyn = ModeSyn'.IntSyn
 		   structure Paths' : PATHS)
   : MODECHECK =
 struct
@@ -129,8 +131,12 @@ struct
 	  updateSpineN (D, S)
       | updateExpN (D, I.Root (I.Def d, S)) =
 	  updateSpineN (D, S)
+      | updateExpN (D, I.Root (I.FgnConst (cs, conDec), S)) =
+          updateSpineN (D, S)
       | updateExpN (D, I.Lam (_, U)) =
 	  I.ctxPop (updateExpN (I.Decl (D, Universal), U))
+      (* no occurrence inside a FgnExp is considered strict *)
+      | updateExpN (D, I.FgnExp _) = D
 
     (* updateSpineN (D, S) = D'    
      
@@ -195,8 +201,12 @@ struct
 	  groundSpineN (D, mode, S, (1, occ))
       | groundExpN (D, mode, I.Root (I.Def d, S), occ) =
 	  groundSpineN (D, mode, S, (1, occ))
+      | groundExpN (D, mode, I.Root (I.FgnConst (cs, conDec), S), occ) =
+	  groundSpineN (D, mode, S, (1, occ))
       | groundExpN (D, mode, I.Lam (_, U), occ) =
 	  groundExpN (I.Decl (D, Universal), mode, U, P.body occ)
+      | groundExpN (D, mode, I.FgnExp (cs, ops), occ) =
+          groundExpN (D, mode, Whnf.normalize (#toInternal(ops)(), I.id), occ)
 
     (* groundSpineN (D, mode, S, occ)  = () 
 

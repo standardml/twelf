@@ -1,5 +1,6 @@
 (* Abstraction *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
+(* Modified: Roberto Virga *)
 
 functor Abstract (structure IntSyn' : INTSYN
 		  structure Whnf    : WHNF
@@ -45,27 +46,26 @@ struct
     *)
 
 
-    (* collectConstraints K = eqns
-       where eqns collects all constraints attached to EVars in K
+    (* collectConstraints K = cnstrs
+       where cnstrs collects all constraints attached to EVars in K
     *)
     fun collectConstraints (I.Null) = nil
       | collectConstraints (I.Decl (G, FV _)) = collectConstraints G
-      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, nil)))) = collectConstraints G
-      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, Cnstr)))) =
-        C.simplify Cnstr @ collectConstraints G
+      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref nil)))) = collectConstraints G
+      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref cnstrL)))) =
+        (C.simplify cnstrL) @ collectConstraints G
 
     (* checkEmpty Cnstr = ()
        raises Error exception if constraints Cnstr cannot be simplified
        to the empty constraint
     *)
-    (* 
+    (*
     fun checkEmpty (nil) = ()
       | checkEmpty (Cnstr) =
         (case C.simplify Cnstr
 	   of nil => ()
 	    | _ => raise Error "Typing ambiguous -- unresolved constraints")
     *)
-
     (* eqEVar X Y = B
        where B iff X and Y represent same variable
     *)
@@ -109,6 +109,7 @@ struct
       | occursInExp (k, I.Pi (DP, V)) = or (occursInDecP (k, DP), occursInExp (k+1, V))
       | occursInExp (k, I.Root (H, S)) = occursInHead (k, H, occursInSpine (k, S))
       | occursInExp (k, I.Lam (D, V)) = or (occursInDec (k, D), occursInExp (k+1, V))
+      | occursInExp (k, I.FgnExp (cs, ops)) = occursInExp (k, #toInternal(ops) ())
       (* no case for Redex, EVar, EClo *)
 
     and occursInHead (k, I.BVar (k'), DP) = 
@@ -116,6 +117,7 @@ struct
 	else DP
       | occursInHead (k, I.Const _, DP) = DP
       | occursInHead (k, I.Def _, DP) = DP
+      | occursInHead (k, I.FgnConst _, DP) = DP
       | occursInHead (k, I.Skonst _, I.No) = I.No
       | occursInHead (k, I.Skonst _, I.Meta) = I.Meta
       | occursInHead (k, I.Skonst _, I.Maybe) = I.Meta
@@ -171,15 +173,17 @@ struct
 	  collectSpine (G, (S, s), K)
       | collectExpW (G, (I.Lam (D, U), s), K) =
 	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
+      | collectExpW (G, (X as I.EVar (r, GX, V, cnstrs), s), K) =
 	  if exists (eqEVar X) K
 	    then collectSub(G, s, K)
 	  else let
-	         (* val _ = checkEmpty Cnstr *)
+	         (* val _ = checkEmpty !cnstrs *)
 		 val V' = raiseType (GX, V) (* inefficient! *)
 	       in
 		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
 	       end
+      | collectExpW (G, (I.FgnExp (cs, ops), s), K) =
+          collectExp (G, (#toInternal(ops) (), s), K)
       (* No other cases can occur due to whnf invariant *)
 
     (* collectExp (G, (U, s), K) = K' 
@@ -280,6 +284,8 @@ struct
       | abstractExpW (K, depth, (X as I.EVar _, s)) =
  	  I.Root (abstractEVar (K, depth, X), 
 		  abstractSub (K, depth, s, I.Nil))
+      | abstractExpW (K, depth, (I.FgnExp (cs, ops), s)) =
+          #map(ops) (fn U => abstractExp (K, depth, (U, s)))
 
     (* abstractExp (K, depth, (U, s)) = U'
      
@@ -423,9 +429,7 @@ struct
         let
 	  val K = collectExp (I.Null, (V, I.id), I.Null)
 	  val constraints = collectConstraints K
-	  val _ = case constraints
-	            of nil => ()
-		     | _ => raise C.Error (constraints)
+          val _ = if (constraints = nil) then () else raise C.Error constraints
 	in
 	  (I.ctxLength K, abstractKPi (K, abstractExp (K, 0, (V, I.id))))
 	end 

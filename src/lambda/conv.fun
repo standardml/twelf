@@ -43,6 +43,10 @@ struct
 	   | (FVar (n1,_,s1'), FVar (n2,_,s2')) =>
   	       (* s1' = s2' = ^|G| *)
 	       (n1 = n2) andalso convSpine ((S1, s1), (S2, s2))
+           | (FgnConst (cs1, cD1), FgnConst (cs2, cD2)) =>
+               (* they must have the same string representation *)
+               (cs1 = cs2) andalso (conDecName (cD1) = conDecName (cD2))
+               andalso convSpine ((S1, s1), (S2, s2))
 	   | (Def (d1), Def (d2)) =>
 	       (* because of strict *) 
 	       ((d1 = d2) andalso convSpine ((S1, s1), (S2, s2)))
@@ -68,6 +72,12 @@ struct
 	  convExp ((Redex (EClo (U1, shift), 
 			   App (Root (BVar (1), Nil), Nil)), dot1 s1),
 		   (U2, dot1 s2))
+
+      | convExpW ((FgnExp(_, ops1), s1), Us2) = (* s1 = id *)
+          #equalTo(ops1) (EClo Us2)
+
+      | convExpW (Us1, (FgnExp(_, ops2), s2)) = (* s2 = id *)
+          #equalTo(ops2) (EClo Us1)
 
       | convExpW ((EVar (r1, _, _, _), s1), (EVar(r2, _, _, _), s2)) = 
 	  (r1 = r2) andalso convSub (s1, s2)

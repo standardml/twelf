@@ -8,15 +8,15 @@ functor TMachine (structure IntSyn' : INTSYN
 		    sharing Unify.IntSyn = IntSyn'
 		  structure Index : INDEX
 		    sharing Index.IntSyn = IntSyn'
-		  structure Trail : TRAIL
-		    sharing Trail.IntSyn = IntSyn'
                   structure CPrint : CPRINT 
                     sharing CPrint.IntSyn = IntSyn'
                     sharing CPrint.CompSyn = CompSyn'
 		  structure Names : NAMES
 		    sharing Names.IntSyn = IntSyn'
 		  structure Trace : TRACE
-		    sharing Trace.IntSyn = IntSyn')
+		    sharing Trace.IntSyn = IntSyn'
+		  structure CSManager : CS_MANAGER
+		    sharing CSManager.IntSyn = IntSyn')
   : ABSMACHINE =
 struct
 
@@ -145,7 +145,7 @@ struct
      This first tries the local assumptions in dp then
      the static signature.
   *)
-  and matchAtom (ps' as (I.Root(Ha as I.Const(a),_),_), dp as C.DProg (G,dPool), sc) =
+  and matchAtom (ps' as (I.Root(Ha as I.Const(a),S),s), dp as C.DProg (G,dPool), sc) =
       let
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
@@ -162,10 +162,10 @@ struct
 	    in
 	      (* trail to undo EVar instantiations *)
 	      if
-		Trail.trail (fn () =>
-			     rSolve (ps', (r, I.id), dp, (Hc, Ha),
-				     (fn S => (T.signal (G, T.SucceedGoal (tag, (Hc, Ha), I.EClo ps'));
-					       sc (I.Root(Hc, S))))))
+		CSManager.trail (fn () =>
+			         rSolve (ps', (r, I.id), dp, (Hc, Ha),
+				         (fn S => (T.signal (G, T.SucceedGoal (tag, (Hc, Ha), I.EClo ps'));
+					           sc (I.Root(Hc, S))))))
 		then (* deep backtracking *)
 		  (T.signal (G, T.RetryGoal (tag, (Hc, Ha), I.EClo ps'));
 		   ())
@@ -186,10 +186,10 @@ struct
 	    if a = a'
 	      then (* trail to undo EVar instantiations *)
 		(if
-		   Trail.trail (fn () =>
-				rSolve (ps', (r, I.comp(s, I.Shift(k))),
-					dp, (I.BVar(k), Ha),
-					(fn S => sc (I.Root(I.BVar(k), S)))))
+		   CSManager.trail (fn () =>
+				    rSolve (ps', (r, I.comp(s, I.Shift(k))),
+					    dp, (I.BVar(k), Ha),
+					    (fn S => sc (I.Root(I.BVar(k), S)))))
 		   then (* deep backtracking *)
 		     (T.signal (G, T.RetryGoal (tag, (I.BVar(k), Ha), I.EClo ps'));
 		      ())
@@ -199,8 +199,23 @@ struct
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =
 	      matchDProg (dPool', k+1)
+        fun matchConstraint (solve, try) =
+              let
+                val succeeded =
+                  CSManager.trail
+                    (fn () =>
+                       case (solve (G, I.SClo (S, s), try))
+                         of SOME(U) => (sc (U) ; true)
+                          | NONE => false)
+              in
+                if succeeded
+                then matchConstraint (solve, try+1)
+                else ()
+              end      
       in
-	matchDProg (dPool, 1)
+        case I.constStatus(a)
+          of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
+           | _ => matchDProg (dPool, 1)
       end
 
   val solve = fn (gs, dp, sc) =>

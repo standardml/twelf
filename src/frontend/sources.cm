@@ -16,6 +16,7 @@ Group is
   ../opsem/sources.cm
   ../subordinate/sources.cm
   ../meta/sources.cm
+  ../solvers/sources.cm
   lexer.sig
   lexer.fun
   parsing.sig

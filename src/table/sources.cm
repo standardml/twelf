@@ -1,6 +1,16 @@
 Group is
   table.sig
-  hash.sml
-  redblack.sml
+  hash-table.sml
+  string-hash.sig
+  string-hash.sml
+  red-black-tree.fun
+  ring.sig
   ring.sml
+  queue.sig
   queue.sml
+  sparse-array.sig
+  sparse-array.fun
+  sparse-array2.sig
+  sparse-array2.fun  
+  table.sml
+
