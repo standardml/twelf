@@ -320,7 +320,7 @@ struct
 		   map (fn (i, F') => (i, F.forSub (F', s'))) H, F.forSub (F, s')))
 
     fun abstractFinal (abstract) (B, s) =
-          abstract (MTPAbstract.abstractSub (B, s))
+          abstract (MTPAbstract.abstractSub (I.Null, B, s))
 
     fun abstractCont ((D, T), abstract) ((G, B), s) =  
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
@@ -342,11 +342,11 @@ struct
        and  ops' is a list of splitting operators
     *)
     fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) =
-          (I.id, nil)
+          ((I.Null, I.Null), I.id, nil)
       | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
 		 isIndex, abstract, makeAddress) =
 	let 
-	  val (s', ops) =
+	  val (GB0 as (G0, B0), s', ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex), 
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
@@ -358,12 +358,12 @@ struct
 			     :: ops
 		     else ops
 	in
-	  (I.Dot (I.Exp (X), s'), ops')
+	  (GB0, I.Dot (I.Exp (X), s'), ops')
 	end
       | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
 		 isIndex, abstract, makeAddress) = 
 	let 
-	  val (s', ops) =
+	  val (GB0 as (G0, B0), s', ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex), 
 		     abstractCont ((D, T), abstract),
 		     makeAddressCont makeAddress)
@@ -375,30 +375,30 @@ struct
 			 :: ops
 		     else ops
 	in
-	    (I.Dot (I.Exp (X), s'), ops')
+	    (GB0, I.Dot (I.Exp (X), s'), ops')
 	end
-      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, abstract, makeAddress) = 
-	let 
-	  val (s', ops) =
-	    expand' ((G, B), isIndexSucc (D, isIndex),
-		     abstractCont ((D, T), abstract),
-		     makeAddressCont makeAddress)
-	  val I.Dec (xOpt, V) = D
-	in
-	  (I.dot1 s', ops)
-	end
-      (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
       | expand' ((I.Decl (G, D), I.Decl (B, T as (S.Lemma (b, F.All _)))), isIndex, abstract, makeAddress) = 
 	  let 
-	    val (s', ops) =
+	    val (GB0 as (G0, B0), s', ops) =
 		expand' ((G, B), isIndexSucc (D, isIndex),
 			 abstractCont ((D, T), abstract),
 			 makeAddressCont makeAddress)
 	    val I.Dec (xOpt, V) = D
 	    val X = I.newEVar (I.Null, I.EClo (V, s'))
 	  in
-	    (I.Dot (I.Exp (X), s'), ops)
+	    (GB0, I.Dot (I.Exp (X), s'), ops)
 	  end
+      | expand' ((I.Decl (G, D), I.Decl (B, T as S.Parameter (SOME _))), isIndex, abstract, makeAddress) = 
+	let 
+	  val ((G0, B0), s', ops) =
+	    expand' ((G, B), isIndexSucc (D, isIndex),
+		     abstractCont ((D, T), abstract),
+		     makeAddressCont makeAddress)
+	  val I.Dec (xOpt, V) = D
+	in
+	  ((I.Decl (G0, I.decSub (D, s')), I.Decl (B0, T)), I.dot1 s', ops)
+	end
+      (* no case of (I.Decl (G, D), I.Decl (G, S.Parameter NONE)) *)
 
 
 
@@ -411,7 +411,7 @@ struct
     *)
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
       let 
-	val (_, ops) =
+	val (_, _, ops) =
 	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
       in
 	ops
