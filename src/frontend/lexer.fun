@@ -29,8 +29,6 @@ struct
     | BACKARROW | ARROW			(* `<-' `->' *)
     | TYPE				(* `type' *)
     | EQUAL				(* `=' *)
-    | LESS                              (* `<' *)  (*  -bp6/5/99. *)
-    | LEQ 				(* `<=' *) (*  -bp6/5/99. *)
     | ID of IdCase * string		(* identifer *)
     | UNDERSCORE			(* `_' *)
     | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)
@@ -72,8 +70,6 @@ struct
     | stringToToken (Lower, "->", r) = (ARROW, r)
     | stringToToken (Upper, "_", r) = (UNDERSCORE, r)
     | stringToToken (Lower, "=", r) = (EQUAL, r)
-    | stringToToken (Lower, "<", r) = (LESS, r)  (*  -bp6/5/99. *)
-    | stringToToken (Lower, "<=", r) = (LEQ, r)  (*  -bp6/5/99. *)
     | stringToToken (Lower, "type", r) = (TYPE, r)
     | stringToToken (idCase, s, r) = (ID(idCase,s), r)
 
@@ -170,13 +166,14 @@ struct
 	else if Char.isDigit(c) then lexID (Lower, P.Reg (i-1,i))
 	else if Char.isLower(c) then lexID (Lower, P.Reg (i-1,i))
 	else if isSym(c) then lexID (Lower, P.Reg (i-1,i))
-	else error (P.Reg (i-1,i), "Illegal character " ^ Char.toString (c))
+        else error (P.Reg (i-1,i), "Illegal character " ^ Char.toString (c))
         (* recover by ignoring: lexInitial (char(i), i+1) *)
 
     and lexID (idCase, P.Reg (i,j)) =
         let fun lexID' (j) =
 	        if isIdChar (char(j)) then lexID' (j+1)
-		else idToToken (idCase, P.Reg (i,j))
+		else 
+		   idToToken (idCase, P.Reg (i,j))
 	in
 	  lexID' (j)
 	end
@@ -188,13 +185,13 @@ struct
 	       (* recover by adding implicit quote? *)
 	       (* qidToToken (i, j) *)
 	else if isQuote (char(j)) then qidToToken (P.Reg (i,j))
-	     else lexQUID (P.Reg (i, j+1))
+	     else lexQUID (P.Reg (i, j+1)) 
 
     and lexPercent (#".", i) = (EOF, P.Reg (i-2,i))
       | lexPercent (#"{", i) = lexPercentBrace (char(i), i+1)
       | lexPercent (#"%", i) = lexComment (#"%", i)
       | lexPercent (c, i) =
-        if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1,i)))
+        if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1, i)))
 	else if Char.isSpace(c) then lexComment (c, i)
 	  else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
 
@@ -291,8 +288,6 @@ struct
     | toString' (ARROW) = "->"
     | toString' (TYPE) = "type"
     | toString' (EQUAL) = "="
-    | toString' (LESS) = "<"                       (*  -bp6/5/99. *)
-    | toString' (LEQ) = "<="                       (*  -bp6/5/99. *)
     | toString' (UNDERSCORE) = "_"
     | toString' (INFIX) = "%infix"
     | toString' (PREFIX) = "%prefix"

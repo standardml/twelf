@@ -214,18 +214,6 @@ structure MTPStrategy =
 	       structure MTPRecursion = MTPRecursion
 	       structure Inference = Inference
 	       structure Timers = Timers)
-(* -bp
-structure MTPStrategyTrace = 
-  MTPStrategyTrace (structure MTPGlobal = MTPGlobal
-	       structure StateSyn' = StateSyn
-	       structure MTPrint = MTPrint
-	       structure MTPData = MTPData
-	       structure MTPFilling = MTPFilling
-	       structure MTPSplitting = MTPSplitting
-	       structure MTPRecursion = MTPRecursion
-	       structure Inference = Inference
-	       structure Timers = Timers)	  
-*)  
 
 structure MTProver =
   MTProver (structure IntSyn' = IntSyn
@@ -234,7 +222,6 @@ structure MTProver =
 	    structure Order = Order
 	    structure MTPrint = MTPrint
 	    structure MTPInit = MTPInit
-(*	    structure MTPStrategy = MTPStrategyTrace -bp *)
 	    structure MTPStrategy = MTPStrategy
 	    structure RelFun = RelFun)
 
@@ -261,7 +248,6 @@ structure MTPi =
 	structure MTPSplitting = MTPSplitting
 	structure MTPRecursion = MTPRecursion
 	structure Inference = Inference
-(*	structure MTPStrategy = MTPStrategyTrace -bp *)
 	structure MTPStrategy = MTPStrategy
 	structure Names = Names
 	structure Order = Order

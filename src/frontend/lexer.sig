@@ -23,8 +23,6 @@ sig
     | BACKARROW | ARROW			(* `<-' `->' *)
     | TYPE				(* `type' *)
     | EQUAL				(* `=' *)
-    | LESS                              (* `<' *)  (*  -bp6/5/99. *)
-    | LEQ 				(* `<=' *) (*  -bp6/5/99. *)
     | ID of IdCase * string		(* identifer *)
     | UNDERSCORE			(* `_' *)
     | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)

@@ -383,9 +383,11 @@ struct
 
     (* parsePredicate f = (pred, f')               *)
     (* parses the reduction predicate, <, <=, =   *)
-    fun parsePredicate  (LS.Cons ((L.LESS, r), s')) = (E.predicate ("LESS", r), (LS.expose s'))
-      | parsePredicate  (LS.Cons ((L.LEQ, r), s')) = (E.predicate ("LEQ", r), (LS.expose s'))
-      | parsePredicate  (LS.Cons ((L.EQUAL, r), s')) = (E.predicate ("EQUAL", r), (LS.expose s'))
+    fun parsePredicate (LS.Cons ((L.ID(_, "<"), r), s')) = (E.predicate ("LESS", r), (LS.expose s'))
+      | parsePredicate (LS.Cons ((L.ID(_, "<="), r), s')) = (E.predicate ("LEQ", r), (LS.expose s'))
+      | parsePredicate (LS.Cons ((L.EQUAL, r), s')) = (E.predicate ("EQUAL", r), (LS.expose s'))
+      | parsePredicate (LS.Cons ((t, r), s')) = 
+	Parsing.error (r, "Expected reduction predicate <, = or <=, found " ^ L.toString t)
 
 
     (* parseRDecl "order callPats." *)

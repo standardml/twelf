@@ -48,7 +48,7 @@ struct
     | ModeDec of ExtModes.modedec
     | TerminatesDec of ThmExtSyn.tdecl
     | ReducesDec of ThmExtSyn.rdecl  (* -bp *)
-    | TheoremDec of ThmExtSyn.theoremdec
+    | TheoremDec of ThmExtSyn.theoremdec 
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
     | AssertDec of ThmExtSyn.assert
