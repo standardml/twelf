@@ -285,6 +285,17 @@ struct
 		end
 
 
+	    (* raiseType (G, V) = {{G}} V
+
+	     Invariant:
+	     If G |- V : L
+             then  . |- {{G}} V : L
+
+	       All abstractions are potentially dependent.
+	       *)
+	    fun raiseType (I.Null, V) = V
+	      | raiseType (I.Decl (G, D), V) = raiseType (G, Abstract.piDepend ((Whnf.normalizeDec (D, I.id), I.Maybe), V))
+
 	    (* raiseFor (G, F, w, sc) = F'
 	   
 	       Invariant:
@@ -313,7 +324,7 @@ struct
 					(* Generalize the invariant for Whnf.strengthen --cs *)
 		  val V'' = Whnf.normalize (V', iw)
 					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
-		  val V''' = Whnf.normalize (MTPAbstract.raiseType (Gw, V''), I.id)
+		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
 					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
 		  val S''' = S I.Nil
 					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
@@ -339,7 +350,7 @@ struct
 		  val g = I.ctxLength G
 		  val s = sc (w, k)                    
 					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-		  val V' = Whnf.normalize (MTPAbstract.raiseType (G, I.EClo (V, s)), I.id)
+		  val V' = Whnf.normalize (raiseType (G, I.EClo (V, s)), I.id)
 					(* G0, {G}GF[..] |- V' = {G}(V[s]) : type *)
 		  val S' = spine g
 					(* G0, {G}GF[..] |- S' > {G}(V[s]) > V[s] *)

@@ -123,14 +123,16 @@ Parameter Cases
  	    Suspect that a induction hypothesis is missing  (I guess that "open issues" from above is repsonsible for that)
 
 	- Church Rosser  interactive proof works. But
-	  TODO Filling in the first step immediately succeeds (constraints!!!)
 	  DONE -cs 
 		Reason: Formula information in tag was not maintained correctly
  		TODO splitting the first rewrite derivations yields a bad bad error
 	
-	- 3rd order copy
+	DONE -cs : 3rd order copy
+	DONE -cs : 4th order copy
 	
-	  first split then say auto, Typecheck is raised why?
+	BUG: first split then say auto, Typecheck is raised why?
+
+	BUG: Church Rosser: first case, filling, leaves open EVars in proof term
 
 
 Splitting Residual lemmas

@@ -120,7 +120,7 @@ struct
 	  end
 	val S.State (n, (G, B), (IH, OH), d, O, H, F) = current ()
       in
-	TextIO.print ("Filling successful with proof term: " ^ (Formatter.makestring_fmt (formatTuple (G, P))) ^ "\n")
+	TextIO.print ("Filling successful with proof term:\n" ^ (Formatter.makestring_fmt (formatTuple (G, P))) ^ "\n")
       end
 
     fun SplittingToMenu (nil, A) = A
