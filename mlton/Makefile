@@ -70,3 +70,26 @@ twelf-emacs: ;
 
 clean: ;
 	@echo "No temporary files with MLton"
+
+
+mlton-cm-files: twelf-server-cm twelf-server-97-cm ;
+
+twelf-server-cm: ;
+	{						\
+	echo "(* MLton version *)" ;			\
+	echo "(* For use with MLton >= 20030716 *)" ;	\
+	echo "Group is" ;				\
+	cmcat -DBASIS_2002 ../server.cm ;		\
+	echo "twelf-server.sml" ;			\
+	}						\
+	> twelf-server.cm
+
+twelf-server-97-cm: ;
+	{						\
+	echo "(* MLton version *)" ;			\
+	echo "(* For use with MLton < 20030716 *)" ;	\
+	echo "Group is" ;				\
+	cmcat ../server.cm ;				\
+	echo "twelf-server.sml" ;			\
+	}						\
+	> twelf-server-97.cm

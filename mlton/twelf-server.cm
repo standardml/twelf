@@ -1,6 +1,5 @@
 (* MLton version *)
 (* For use with MLton >= 20030716 *)
-(* If using cmcat to generate this file, please invoke with "-DBASIS_2002" *)
 Group is
 ../src/compat/array.sig
 ../src/compat/vector.sig
