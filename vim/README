@@ -1,0 +1,13 @@
+This directory contains scripts for the Vim editor to aid in working with
+Twelf.  Right now the scripts only really support syntax hilighting, but
+there will also be support for compiling/debugging/editing in the future.
+
+To install these scripts.  
+  1.  Create a directory ~/.vim if you do not already have one.
+  2.  Copy filetype.vim to ~/.vim, or append if you already have one.
+  3.  Create a directory ~/.vim/syntax if you do not already have one.
+  4.  Copy syntax/twelf.vim to ~/.vim/syntax.  
+
+Make sure you have ":syntax enable" in your .vimrc file.  
+
+$Id: README,v 1.1 2004-01-13 16:17:05 geoffw_lf Exp $
