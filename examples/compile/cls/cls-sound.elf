@@ -24,12 +24,12 @@ Lemma: The postfix relation on computations is transitive:
 Proof: By induction on the structure of R2.
 }%
 
-trans : C1 < C2 -> C2 < C3 -> C1 < C3 -> type.
-%mode trans +R1 +R2 -R3.
+trans* : C1 < C2 -> C2 < C3 -> C1 < C3 -> type.
+%mode trans* +R1 +R2 -R3.
 
-trans_imm : trans R1 (sub_imm) (sub_med R1).
-trans_med : trans R1 (sub_med R2) (sub_med R3)
-	  <- trans R1 R2 R3.
+trans*_imm : trans* R1 (sub_imm) (sub_med R1).
+trans*_med : trans* R1 (sub_med R2) (sub_med R3)
+	  <- trans* R1 R2 R3.
 
 %{
 Splitting Lemma:
@@ -69,34 +69,34 @@ spl_^+ : spl (c_^+ ~ C1) (fev_^+ D1) C2 (sub_med C2<C1)
 spl_z : spl (c_z ~ C1) (fev_z) C1 (sub_imm).
 spl_s : spl (c_s ~ C1) (fev_s D1) C2' (sub_med C2'<C1)
 	 <- spl C1 D1 (c_add1 ~ C2') C2<C1
-	 <- trans (sub_imm) C2<C1 C2'<C1.
+	 <- trans* (sub_imm) C2<C1 C2'<C1.
 
 spl_case_z : spl (c_case ~ C1) (fev_case_z D2 D1) C3 (sub_med C3<C1)
 	      <- spl C1 D1 (c_branch_z ~ C2') C2<C1
 	      <- spl C2' D2 C3 C3<C2'
-	      <- trans (sub_imm) C2<C1 C2'<C1
-	      <- trans C3<C2' C2'<C1 C3<C1.
+	      <- trans* (sub_imm) C2<C1 C2'<C1
+	      <- trans* C3<C2' C2'<C1 C3<C1.
 spl_case_s : spl (c_case ~ C1) (fev_case_s D3 D1) C3 (sub_med C3<C1)
 	      <- spl C1 D1 (c_branch_s ~ C2') C2<C1
 	      <- spl C2' D3 C3 C3<C2'
-	      <- trans (sub_imm) C2<C1 C2'<C1
-	      <- trans C3<C2' C2'<C1 C3<C1.
+	      <- trans* (sub_imm) C2<C1 C2'<C1
+	      <- trans* C3<C2' C2'<C1 C3<C1.
 
 % Pairs
 
 spl_pair : spl (c_pair ~ C1) (fev_pair D2 D1) C3' (sub_med C3'<C1)
 	 <- spl C1 D1 C2 C2<C1
 	 <- spl C2 D2 (c_mkpair ~ C3') C3<C2
-	 <- trans (sub_imm) C3<C2 C3'<C2
-	 <- trans C3'<C2 C2<C1 C3'<C1.
+	 <- trans* (sub_imm) C3<C2 C3'<C2
+	 <- trans* C3'<C2 C2<C1 C3'<C1.
 
 spl_fst : spl (c_fst ~ C1) (fev_fst D1) C2' (sub_med C2'<C1)
 	<- spl C1 D1 (c_getfst ~ C2') C2<C1
-	<- trans (sub_imm) C2<C1 C2'<C1.
+	<- trans* (sub_imm) C2<C1 C2'<C1.
 
 spl_snd : spl (c_snd ~ C1) (fev_snd D1) C2' (sub_med C2'<C1)
 	<- spl C1 D1 (c_getsnd ~ C2') C2<C1
-	<- trans (sub_imm) C2<C1 C2'<C1.
+	<- trans* (sub_imm) C2<C1 C2'<C1.
 
 % Functions
 
@@ -108,17 +108,17 @@ spl_app : spl (c_app ~ C1)
 	    <- spl C1 D1 C2 C2<C1
 	    <- spl C2 D2 (c_apply ~ C3') C3<C2
 	    <- spl C3' D3 C4 C4<C3'
-	    <- trans C3<C2 C2<C1 C3<C1
-	    <- trans (sub_imm) C3<C1 C3'<C1
-	    <- trans C4<C3' C3'<C1 C4<C1.
+	    <- trans* C3<C2 C2<C1 C3<C1
+	    <- trans* (sub_imm) C3<C1 C3'<C1
+	    <- trans* C4<C3' C3'<C1 C4<C1.
 
 % Definitions
 
 spl_letv : spl (c_letv ~ C1) (fev_letv D2 D1) C3 (sub_med C3<C1)
 	    <- spl C1 D1 (c_bind ~ C2') C2<C1
 	    <- spl C2' D2 C3 C3<C2'
-	    <- trans (sub_imm) C2<C1 C2'<C1
-	    <- trans C3<C2' C2'<C1 C3<C1.
+	    <- trans* (sub_imm) C2<C1 C2'<C1
+	    <- trans* C3<C2' C2'<C1 C3<C1.
 
 spl_letn : spl (c_letn ~ C2) (fev_letn D2) C3 (sub_med C3<C2)
 	    <- spl C2 D2 C3 C3<C2.
