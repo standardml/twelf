@@ -37,6 +37,8 @@ structure Assign =
 
 structure AbstractTabled =
   AbstractTabled (structure IntSyn' = IntSyn
+		  structure Print = Print
+		  structure Subordinate = Subordinate
 		  structure Whnf = Whnf
 		  structure Constraints = Constraints
 		  structure Unify = UnifyTrail
@@ -70,7 +72,8 @@ structure Tabled =
 	  structure CPrint = CPrint
 	  structure Print = Print
 	  structure Names = Names
-	  structure CSManager = CSManager); 
+	  structure CSManager = CSManager
+	  structure Subordinate = Subordinate); 
 
 structure Trace =
   Trace (structure IntSyn' = IntSyn

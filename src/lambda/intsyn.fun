@@ -88,7 +88,7 @@ struct
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
   | Exp of Exp				(*     | U                    *)
-  | Block of int			(*     | _x                   *)
+  | Block of Block			(*     | _x                   *)
   | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
