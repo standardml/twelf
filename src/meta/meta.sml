@@ -133,6 +133,7 @@ structure MTPSplitting =
 		structure IntSyn = IntSyn
 		structure FunSyn = FunSyn
 		structure StateSyn' = StateSyn
+		structure Heuristic = Heuristic
 		structure MTPrint = MTPrint
 		structure MTPAbstract = MTPAbstract
 		structure Names = Names  (* to be removed -cs *)

@@ -9,6 +9,7 @@ functor MTPSplitting (structure MTPGlobal : MTPGLOBAL
 		      structure StateSyn' : STATESYN
 			sharing StateSyn'.FunSyn = FunSyn
 			sharing StateSyn'.IntSyn = IntSyn
+		      structure Heuristic : HEURISTIC
 		      structure MTPAbstract : MTPABSTRACT
 			sharing MTPAbstract.IntSyn = IntSyn
 		        sharing MTPAbstract.StateSyn = StateSyn'
@@ -56,19 +57,9 @@ struct
   datatype 'a flag = 
     Active of 'a | InActive
 
-  datatype Index = 
-    Index of (int			(* Splitting depth *)
-	      * int option		(* Induction variable *)
-	      * int			(* Number of cases *)
-	      * int			(* maximal number of cases *)
-	      * int			(* 0 = non-recursive
-					   1 = recursive *)
-	      * int)			(* Position (left to right) *)
-	       
-
   datatype Operator = 
     Operator of (StateSyn.State * int) * StateSyn.State flag list
-		   * Index 
+		   * Heuristic.Index 
 
   type operator = Operator
 
@@ -76,13 +67,13 @@ struct
     structure I = IntSyn
     structure F = FunSyn
     structure S = StateSyn
-
+    structure H = Heuristic
 
 
     fun makeOperator ((S, k), L, S.Splits n, g, I, m, true) =    (* recursive case *)
-          Operator ((S, k), L, Index (n, I, List.length L, m, 1, g+1))
+          Operator ((S, k), L, H.Index (n, I, List.length L, m, 1, g+1))
       | makeOperator ((S, k), L, S.Splits n, g, I, m, false) =   (* non-recursive case *)
-	  Operator ((S, k), L, Index (n, I, List.length L, m, 0, g+1))
+	  Operator ((S, k), L, H.Index (n, I, List.length L, m, 0, g+1))
 
     (* aux (G, B) = L' 
        
@@ -541,6 +532,14 @@ struct
     and occursInDec (k, I.Dec (_, V)) = occursInExp (k, V)
     and occursInDecP (k, (D, _)) = occursInDec (k, D)
 
+
+    fun depthExp (I.Root (C, S)) = 1 + depthSpine S
+      | depthExp (I.Lam (D, U)) = depthExp U
+     
+    and depthSpine (I.Nil) = 0
+      | depthSpine (I.App (U, S)) = Int.max (depthExp U, depthSpine S)
+
+
     fun isIndexInit k = false
     fun isIndexSucc (D, isIndex) k = occursInDec (k, D) orelse isIndex (k+1)  
     fun isIndexFail (D, isIndex) k = isIndex (k+1)
@@ -586,7 +585,11 @@ struct
 
 
     fun occursInOrder (n, S.Arg (Us, Vt), k, sc) = 
-        if occursInExp (k, Whnf.normalize Us) then SOME n else sc (n+1)
+        let 
+	  val U' = Whnf.normalize Us
+	in
+	  if occursInExp (k, U') then SOME (n, depthExp U') else sc (n+1)
+	end
       | occursInOrder (n, S.Lex Os, k, sc) = occursInOrders (n, Os, k, sc)
       | occursInOrder (n, S.Simul Os, k, sc) = occursInOrders (n, Os, k, sc)
       (* no other case should be possible by invariant *)
@@ -700,7 +703,8 @@ struct
 
 
     (* expandRes ((G, D), (B, T)) (sc, ops) = ops'
-     
+       Splitting of Residual lemmas: currently only the first case can be executed
+
        Invariant:
        If   |- G ctx
        and  G |- D : type
@@ -761,39 +765,11 @@ struct
        If   Op = (_, Sl) 
        then k = |Sl| 
     *)
-    fun index (Operator ((S, index), Sl, Index (_, _, k, _, _, _))) = k
-
-    fun ratio (c, m) = (Real.fromInt c) / (Real.fromInt m)
-
-    (* c1/m1 < c2/m2 iff c1 m2 < c2 m1 *)
-    fun compare' (Index (k1, NONE, c1, m1, r1, p1), Index (k2, NONE, c2, m2, r2, p2)) =
-        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (r1, r2), Int.compare (p1, p2))
-	   of (EQUAL, EQUAL, EQUAL, result) => result
-	    | (EQUAL, EQUAL, result, _) => result
-	    | (EQUAL, result, _, _) => result
-	    | (result, _, _, _) => result)
-      | compare' (Index (k1, NONE, c1, m1, r1, p1), Index (k2, SOME i2, c2, m2, r2, p2)) =
-	(case (Int.compare (c1*m2, c2*m1)) 
-	   of LESS => LESS
-	    | EQUAL => GREATER
-	    | GREATER => GREATER)
-      | compare' (Index (k1, SOME i1, c1, m1, r1, p1), Index (k2, NONE, c2, m2, r2, p2)) =
-	(case (Int.compare (c1*m2, c2*m1)) 
-	   of LESS => LESS
-	    | EQUAL => LESS
-	    | GREATER => GREATER)
-      | compare' (Index (k1, SOME i1, c1, m1, r1, p1), Index (k2, SOME i2, c2, m2, r2, p2)) =
-        (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (r1, r2), 
-	       Int.compare (i1, i2), Int.compare (p1, p2))
-	   of (EQUAL, EQUAL, EQUAL, EQUAL, result) => result
-	    | (EQUAL, EQUAL, EQUAL, result, _) => result
-	    | (EQUAL, EQUAL, result, _, _) => result
-	    | (EQUAL, result, _, _, _) => result
-	    | (result, _, _, _, _) => result)
+    fun index (Operator ((S, index), Sl, H.Index (_, _, k, _, _, _))) = k
 
 
     fun compare (Operator (_, _, I1), Operator (_, _, I2)) = 
-          compare' (I1, I2) 
+          H.compare (I1, I2) 
 
 (* Original version, proves Church-Rosser
 
@@ -859,23 +835,6 @@ struct
 	    | casesToString 1 = "1 case"
 	    | casesToString n = (Int.toString n) ^ " cases"
 
-	  fun recToString 0 = "non-rec"
-	    | recToString 1 = "rec"
-
-	  fun realFmt (r) = Real.fmt (StringCvt.FIX (SOME(2))) r
-
-	  fun indexToString (Index (sd, NONE, c, m, r, p)) = 
-	        "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^
-		(realFmt (ratio (c, m))) ^ 
-		", ind=., sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^
-		", p=" ^ (Int.toString p) ^ ")"
-
-	    | indexToString (Index (sd, SOME idx , c, m, r, p)) = 
-		"(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
-		(realFmt (ratio (c, m))) ^ 
-		", ind=" ^ (Int.toString idx) ^ 
-		", sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^ 
-		", p=" ^ (Int.toString p) ^ ")"
 		
 
 	  fun flagToString (_, 0) = ""
@@ -883,7 +842,7 @@ struct
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
 	  "Splitting : " ^ Print.decToString (G, I.ctxDec (G, i)) ^
-	  " " ^ (indexToString I) ^ 
+	  " " ^ (H.indexToString I) ^ 
 	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ""
 	end
 

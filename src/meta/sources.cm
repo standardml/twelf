@@ -46,6 +46,8 @@ Group is
   recursion.fun
   search.sig
   search.fun 
+  heuristic.sig
+  heuristic.fun
   splitting.sig
   splitting.fun
   statesyn.sig
