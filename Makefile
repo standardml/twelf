@@ -72,3 +72,4 @@ twelf-emacs: ;
 
 clean: ;
 	rm -rf $(twelfdir)/src/*/CM ;
+	rm -rf $(twelfdir)/src/*/.cm ;
