@@ -1,59 +1,52 @@
 %%% Intuitionistic propositional calculus
 %%% Positive fragment with implies, and, true.
-%%% Operational meaning of derivations as programs.
-%%% Author: Frank Pfenning, Carsten Schuermann
+%%% Two formulations here: natural deduction and Hilbert-style system.
+%%% Author: Frank Pfenning
 
 % Type of propositions.
 o : type.
 %name o A.
 
 % Syntax: implication, plus a few constants.
-=> : o -> o -> o.			%infix right 10 =>.
+=> : o -> o -> o.  %infix right 10 =>.
+&  : o -> o -> o.  %infix right 11 &.
+true : o.
 
 % Provability.
-|- : o -> type.                         %prefix 9 |-.
-					%name |- P.
+|- : o -> type.    %prefix 9 |-.
+%name |- P.
 
 % Axioms.
 K : |- A => B => A.
 S : |- (A => B => C) => (A => B) => A => C.
+ONE : |- true.
+PAIR : |- A => B => A & B.
+LEFT : |- A & B => A.
+RIGHT : |- A & B => B.
 
 % Inference Rule.
 MP : |- A => B -> |- A -> |- B. 
 
-% Operational semantics
+% Natural Deduction.
 
-% Basic reductions
-==>   : |- A -> |- A -> type.		%infix right 9 ==>.
-stepK : MP (MP K X) Y ==> X. 
-stepS : MP (MP (MP S X) Y) Z ==> MP (MP X Z) (MP Y Z).
+! : o -> type.   %prefix 9 !.
+%name ! D.
 
-% Congruence rules
+trueI : ! true.
+andI  : ! A -> ! B -> ! A & B.
+andEL : ! A & B -> ! A.
+andER : ! A & B -> ! B.
+impliesI : (! A -> ! B) -> ! A => B.
+impliesE : ! A => B -> ! A -> ! B.
 
-congMPL : MP P1 P2 ==> MP P1 P2 
-	   <- P1 ==> P1'.
-congMPR : MP P1 P2 ==> MP P1 P2' 
-	   <- P2 ==> P2'.
+% Normal deductions (for faster search)
+!^ : o -> type.
+!v : o -> type.
 
-==>* : |- A -> |- A -> type.		%infix right 9 ==>*.
-refl : P ==>* P.
-step : P1 ==> P2 
-	-> P2 ==>* P3
-	-> P1 ==>* P3.	    
-
-% Examples:
-
-p1 = (MP (MP K S) S).
-
-p2 = MP (MP S K) K.
-
-p3 = MP (MP (MP S K) K) (MP (MP S K) K).
-
-p4 = MP (MP (MP S K) K) (MP (MP K S) S).
-
-%query 1 1  p1 ==> P.
-%query 0 0  p2 ==> P.
-%query 1 2  p3 ==> P.
-%query 3 3  p3 ==>* P.
-%query 4 4  p4 ==>* P.
-
+trueI^ : !^ true.
+andI^ : !^ A -> !^ B -> !^ (A & B).
+andEvL : !v (A & B) -> !v A.
+andEvR : !v (A & B) -> !v B.
+impI^ : (!v A -> !^ B) -> !^ (A => B).
+impEv : !v (A => B) -> !^ A -> !v B.
+close : !v A -> !^ A.
