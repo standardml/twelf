@@ -45,6 +45,21 @@ struct
     structure I = IntSyn
     structure C = CompSyn
 
+      
+    (* isInstantiated (V) = SOME(cid) or NONE
+       where cid is the type family of the atomic target type of V,
+       NONE if V is a kind or object or have variable type.
+    *)
+    fun isInstantiated (I.Root (I.Const(cid), _)) = true
+      | isInstantiated (I.Pi(_, V)) = isInstantiated V
+      | isInstantiated (I.Root (I.Def(cid), _)) = true
+      | isInstantiated (I.Redex (V, S)) = isInstantiated V
+      | isInstantiated (I.Lam (_, V)) = isInstantiated V
+      | isInstantiated (I.EVar (ref (SOME(V)),_,_,_)) = isInstantiated V
+      | isInstantiated (I.EClo (V, s)) = isInstantiated V
+      | isInstantiated _ = false
+      
+
     (* exists P K = B
        where B iff K = K1, Y, K2  s.t. P Y  holds
     *)
@@ -182,11 +197,12 @@ struct
     | rSolve (depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
 	(* is this EVar redundant? -fp *)
-	val X = Whnf.lowerEVar (I.newEVar (G, I.EClo(A, s)))
+	val X = I.newEVar (G, I.EClo(A, s))
       in
         rSolve (depth, ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn (S, acck') => solve (depth, (g, s), dp,
 					 (fn (M, acck'') => sc (I.App (M, S), acck'')), acck')), acck)
+
       end
     | rSolve (depth, ps', (C.In (r, A, g), s), dp as C.DProg (G, dPool), sc, acck) =
       let
@@ -194,26 +210,34 @@ struct
 					(* G |- A : type *)
 					(* G, A |- r resgoal *)
 					(* G0, Gl  |- s : G *)
-	val G0 = pruneCtx (G, depth)	
+	val G0 = pruneCtx (G, depth)
+	val dPool0 = pruneCtx (dPool, depth)
 	val w = I.Shift (depth)		(* G0, Gl  |- w : G0 *)
 	val iw = Whnf.invert w
 					(* G0 |- iw : G0, Gl *)
 	val s' = I.comp (s, iw)
 					(* G0 |- w : G *)
 	val X = I.newEVar (G0, I.EClo(A, s'))
-	val Y = Whnf.lowerEVar X	(* has effect on X *)
 					(* G0 |- X : A[s'] *)
 	val X' = I.EClo (X, w)
 					(* G0, Gl |- X' : A[s'][w] = A[s] *)
       in
 	rSolve (depth, ps', (r, I.Dot (I.Exp (X'), s)), dp,
 		(fn (S, acck') => 
+		   if isInstantiated X then sc (I.App (X', S), acck')
+		   else  solve (0, (g, s'), C.DProg (G0, dPool0),
+				(fn (M, acck'' as (acc'', _)) => 
+				 ((Unify.unify (G0, (X, I.id), (M, I.id)); 
+				  sc (I.App (I.EClo (M, w), S), acck'')) 
+				 handle Unify.Unify _ => acc'')), acck')), acck)
+
+(*
 		   case Y
 		     of I.EVar (ref NONE, _, _, _) => 
 		          solve (0, (g, s'), dp,
 				 (fn (M, acck'') => sc (I.App (I.EClo (M, w), S), acck'')), acck')
 		      | I.EVar (ref (SOME _), _, _, _) => sc (I.App (X', S), acck')), acck)
-
+*)
 (*		       (searchEx' k' (selectEVar (Abstract.collectEVars (G, (X', I.id), nil)),
 				      fn _ => (sc (I.App (X', S), acck'); ())))), acck)
 *)
@@ -238,14 +262,14 @@ struct
 *)      end
     | rSolve (depth, ps', (C.Exists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
-	  val X = Whnf.lowerEVar (I.newEVar (G, I.EClo (A, s)))
+	  val X = I.newEVar (G, I.EClo (A, s))
 	in
 	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
 	end
     | rSolve (depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
-	  val X = Whnf.lowerEVar (I.newEVar (G, I.EClo (A, s)))
+	  val X = I.newEVar (G, I.EClo (A, s))
 	in
 	  rSolve (depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (S, acck')), acck)
@@ -331,8 +355,8 @@ struct
       | searchEx' max ((X as I.EVar (r, G, V, _)) :: GE, sc) = 
 	  solve (0, (Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
-		 (fn (U', (acc', _)) => (Unify.unify (G, (X, I.id), (U', I.id)); 
-					 searchEx' max (GE, sc))),
+		 (fn (U', (acc', _)) => (Unify.unify (G, (X, I.id), (U', I.id));
+					 searchEx' max (GE, sc)) handle Unify.Unify _ => acc'),
 		 (nil, max))
 
     (* deepen (f, P) = R'
