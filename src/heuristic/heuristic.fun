@@ -4,7 +4,7 @@
 structure Heuristic : HEURISTIC = 
 struct
   type index = {sd: int,		(* Splitting depth *)
-	        ind: (int * int) option,(* Induction variable and depth of induction term *)
+	        ind: int option,	(* Induction variable *)
 	        c: int,			(* Number of cases *)
 		m: int,			(* maximal number of cases *)
 	        r: int,			(* 0 = non-recursive
@@ -21,19 +21,19 @@ struct
 	    | (EQUAL, result, _, _) => result
 	    | (result, _, _, _) => result)
       | compare ({sd=k1, ind=NONE, c=c1, m=m1, r=r1, p=p1}, 
-		 {sd=k2, ind=SOME (i2, _), c=c2, m=m2, r=r2, p=p2}) =
+		 {sd=k2, ind=SOME (i2), c=c2, m=m2, r=r2, p=p2}) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => GREATER
 	    | GREATER => GREATER)
-      | compare ({sd=k1, ind=SOME (i1, _), c=c1, m=m1, r=r1, p=p1}, 
+      | compare ({sd=k1, ind=SOME (i1), c=c1, m=m1, r=r1, p=p1}, 
 		 {sd=k2, ind=NONE, c=c2, m=m2, r=r2, p=p2}) =
 	(case (Int.compare (c1*m2, c2*m1)) 
 	   of LESS => LESS
 	    | EQUAL => LESS
 	    | GREATER => GREATER)
-      | compare ({sd=k1, ind=SOME (i1, _), c=c1, m=m1, r=r1, p=p1}, 
-		 {sd=k2, ind=SOME (i2, _), c=c2, m=m2, r=r2, p=p2}) =
+      | compare ({sd=k1, ind=SOME (i1), c=c1, m=m1, r=r1, p=p1}, 
+		 {sd=k2, ind=SOME (i2), c=c2, m=m2, r=r2, p=p2}) =
         (case (Int.compare (c1*m2, c2*m1), Int.compare (k2, k1), Int.compare (r1, r2), 
 	       Int.compare (i1, i2), Int.compare (p1, p2))
 	   of (EQUAL, EQUAL, EQUAL, EQUAL, result) => result
@@ -56,11 +56,10 @@ struct
 	  ", ind=., sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^
 	  ", p=" ^ (Int.toString p) ^ ")"
 	  
-      | indexToString {sd, ind=SOME (idx, indd) , c, m, r, p} = 
+      | indexToString {sd, ind=SOME (idx) , c, m, r, p} = 
 	  "(c/m=" ^ (Int.toString c) ^ "/" ^ (Int.toString m) ^ "=" ^ 
 	  (realFmt (ratio (c, m))) ^ 
 	  ", ind=" ^ (Int.toString idx) ^
-	  ", indd=" ^ (Int.toString indd) ^
 	  ", sd=" ^ (Int.toString sd) ^ ", " ^ (recToString r) ^ 
 	  ", p=" ^ (Int.toString p) ^ ")"
 	  

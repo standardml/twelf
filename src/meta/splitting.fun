@@ -533,13 +533,6 @@ struct
     and occursInDecP (k, (D, _)) = occursInDec (k, D)
 
 
-    fun depthExp (I.Root (C, S)) = 1 + depthSpine S
-      | depthExp (I.Lam (D, U)) = depthExp U
-     
-    and depthSpine (I.Nil) = 0
-      | depthSpine (I.App (U, S)) = Int.max (depthExp U, depthSpine S)
-
-
     fun isIndexInit k = false
     fun isIndexSucc (D, isIndex) k = occursInDec (k, D) orelse isIndex (k+1)  
     fun isIndexFail (D, isIndex) k = isIndex (k+1)
@@ -588,8 +581,7 @@ struct
         let 
 	  val U' = Whnf.normalize Us
 	in
-	  if occursInExp (k, U') then SOME (n, depthExp U' (* measures depth of term
-							      always sensible? *) ) else sc (n+1)
+	  if occursInExp (k, U') then SOME (n) else sc (n+1)
 	end
       | occursInOrder (n, S.Lex Os, k, sc) = occursInOrders (n, Os, k, sc)
       | occursInOrder (n, S.Simul Os, k, sc) = occursInOrders (n, Os, k, sc)

@@ -4,7 +4,7 @@
 signature HEURISTIC = 
 sig
   type index = {sd: int,		(* Splitting depth *)
-	        ind: (int * int) option,(* Induction variable and depth of induction term *)
+	        ind: int option,	(* Induction variable *)
 	        c: int,			(* Number of cases *)
 		m: int,			(* maximal number of cases *)
 	        r: int,			(* 0 = non-recursive
