@@ -584,6 +584,7 @@ juxtaposition or equal or lower precedence than @samp{->} and @samp{<-}.
 @cindex name preferences
 @cindex declarations, name preference
 @cindex variable naming
+@findex %name
 
 During printing, Twelf frequently has to assign names to anonymous
 variables.  In order to improve readability, the user can declare a name
