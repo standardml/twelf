@@ -1,0 +1,27 @@
+Group is
+  ../lambda/sources.cm
+  ../global/sources.cm
+  ../table/sources.cm
+  ../formatter/sources.cm
+  ../print/sources.cm
+  ../subordinate/sources.cm
+  ../modes/sources.cm
+  ../typecheck/sources.cm
+  funsyn.sig
+  funsyn.fun
+  funnames.sig    (* moves eventually to Names *)
+  funnames.fun
+  funtypecheck.sig 
+  funtypecheck.fun
+  funprint.sig
+  funprint.fun
+  weaken.sig      (* moves eventually to the core of Twelf *)
+  weaken.fun      (* " *)
+  funweaken.sig
+  funweaken.fun
+  relfun.sig  
+  relfun.fun 
+  interpret.sig
+  meta.sml 
+
+
