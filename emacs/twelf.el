@@ -1641,7 +1641,7 @@ This locally re-binds `twelf-server-timeout' to 15 secs."
       (start-process *twelf-server-process-name*
 		     twelf-server-buffer
 		     twelf-server-program)
-      (twelf-server-wait)
+      (twelf-server-wait nil)
       (twelf-server-process))))
 
 (defun twelf-server-process (&optional buffer)
@@ -1707,45 +1707,49 @@ forever (until the user aborts, typically with \\[keyboard-quit])."
 
 (defun twelf-server-wait (&optional displayp ok-message abort-message)
   "Wait for server acknowledgment and beep if error occurred.
-If optional argument DISPLAYP is non-NIL, or if an error occurred, the
-Twelf server buffer is displayed.  Optional second and third arguments
+If optional argument DISPLAYP is T, or if an error occurred, the
+Twelf server buffer is displayed.  If DISPLAYP is neither NIL nor T
+the Twelf server buffer is selected.  Optional second and third arguments
 OK-MESSAGE and ABORT-MESSAGE are the strings to show upon successful
 completion or abort of the server which default to \"Server OK\" and
 \"Server ABORT\"."
-  (let* ((chunk-count 0)
-         (last-point *twelf-server-last-process-mark*)
-         (previous-buffer (current-buffer))
-         (previous-match-data (match-data))
-         (twelf-server-buffer (twelf-get-server-buffer))
-         (twelf-server-process (get-buffer-process twelf-server-buffer)))
-    (unwind-protect
-        (catch 'done
-          (set-buffer twelf-server-buffer)
-          (while t
-            (goto-char last-point)
-            (if (re-search-forward "\\(%% OK %%\n\\)\\|\\(%% ABORT %%\n\\)"
-                                   (point-max) 'limit)
-                (cond ((match-beginning 1)
-                       (if displayp
-                           (display-server-buffer twelf-server-buffer))
-                       (message (or ok-message "Server OK"))
-                       (throw 'done nil))
-                      ((match-beginning 2)
-                       (display-server-buffer twelf-server-buffer)
-                       (error (or abort-message "Server ABORT"))
-                       (throw 'done nil)))
-              (cond ((or (not (twelf-accept-process-output
-                               twelf-server-process twelf-server-timeout))
-                         (= last-point (point)))
-                     (display-server-buffer twelf-server-buffer)
-                     (message "Server TIMEOUT, continuing Emacs")
-                     (throw 'done nil))
-                    (t (setq chunk-count (+ chunk-count 1))
-                       (if (= (mod chunk-count 10) 0)
-                           (message (make-string (/ chunk-count 10) ?#)))
-                       (sit-for 0))))))
-      (store-match-data previous-match-data)
-      (set-buffer previous-buffer))))
+  (if (or (eq displayp 'nil) (eq displayp 't))
+      (let* ((chunk-count 0)
+	     (last-point *twelf-server-last-process-mark*)
+	     (previous-match-data (match-data))
+	     (selectp (not (equal displayp t)))
+	     (twelf-server-buffer (twelf-get-server-buffer))
+	     (twelf-server-process (get-buffer-process twelf-server-buffer))
+	     (previous-buffer (current-buffer)))
+	(unwind-protect
+	    (catch 'done
+	      (set-buffer twelf-server-buffer)
+	      (while t
+		(goto-char last-point)
+		(if (re-search-forward "\\(%% OK %%\n\\)\\|\\(%% ABORT %%\n\\)"
+				       (point-max) 'limit)
+		    (cond ((match-beginning 1)
+			   (if displayp
+			       (display-server-buffer twelf-server-buffer))
+			   (message (or ok-message "Server OK"))
+			   (throw 'done nil))
+			  ((match-beginning 2)
+			   (display-server-buffer twelf-server-buffer)
+			   (error (or abort-message "Server ABORT"))
+			   (throw 'done nil)))
+		  (cond ((or (not (twelf-accept-process-output
+				   twelf-server-process twelf-server-timeout))
+			     (= last-point (point)))
+			 (display-server-buffer twelf-server-buffer)
+			 (message "Server TIMEOUT, continuing Emacs")
+			 (throw 'done nil))
+			(t (setq chunk-count (+ chunk-count 1))
+			   (if (= (mod chunk-count 10) 0)
+			       (message (make-string (/ chunk-count 10) ?#)))
+			   (sit-for 0))))))
+	  (store-match-data previous-match-data)
+	  (set-buffer previous-buffer)))
+    (twelf-server-display t)))
 
 (defun twelf-server-quit ()
   "Kill the Twelf server process."
@@ -1941,7 +1945,7 @@ Used in menus."
 When called interactively, promts for parameter, supporting completion."
   (interactive (list (completing-read "Parameter: " *twelf-parm-table* nil t)))
   (twelf-server-send-command (concat "get " parm))
-  (twelf-server-wait)
+  (twelf-server-wait nil)
   (save-window-excursion
     (let ((twelf-server-buffer (twelf-get-server-buffer)))
       (set-buffer twelf-server-buffer)

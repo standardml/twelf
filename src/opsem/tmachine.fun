@@ -33,6 +33,14 @@ struct
     fun subgoalNum (I.Nil) = 1
       | subgoalNum (I.App (U, S)) = 1 + subgoalNum S
 
+    (* currently unused *)
+    fun goalToType (All (D, g), s) =
+          I.Pi ((I.decSub (D,s), I.Maybe), goalToType (g, I.dot1 s))
+      | goalToType (Impl (_, A, _, g), s) =
+	  I.Pi ((I.Dec (NONE, I.EClo (A, s)), I.No), goalToType (g, I.dot1 s))
+      | goalToType (Atom(p), s) =
+	  I.EClo (p, s)
+
   (* We write
        G |- M : g
      if M is a canonical proof term for goal g which could be found
