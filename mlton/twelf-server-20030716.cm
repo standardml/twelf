@@ -320,6 +320,7 @@ Group is
 ../src/frontend/unknownexn-smlnj.sml
 ../src/frontend/frontend.sml
 ../src/server/sigint.sig
+../src/server/mlton-thread.sml
 ../src/server/sigint-mlton.sml
 ../src/server/server.sml
 twelf-server.sml

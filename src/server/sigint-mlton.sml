@@ -11,7 +11,9 @@ struct
 	    (Posix.Signal.int,
 	     MLton.Signal.Handler.handler
 		 (fn _ =>
-		     MLton.Thread.new (fn () => MLton.Cont.throw (k, ())))))
+		     MLton.Thread.prepare
+		     (MLton.Thread.new (fn () => MLton.Cont.throw (k, ())),
+		      ()))))
      in
 	loop ()
      end

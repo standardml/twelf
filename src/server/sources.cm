@@ -9,6 +9,11 @@ is
   ../frontend/sources.cm
   sigint.sig
 #if defined(MLton)
+#if defined(MLton_20041109)
+  (* Empty *)
+#else
+  mlton-thread.sml
+#endif
   sigint-mlton.sml
 #else
   sigint-smlnj.sml

@@ -1,5 +1,5 @@
 (* MLton version *)
-(* For use with MLton >= 20041109 *)
+(* For use with MLton >= 20040227 *)
 Group is
 ../src/compat/array.sig
 ../src/compat/vector.sig
@@ -319,6 +319,7 @@ Group is
 ../src/frontend/unknownexn-smlnj.sml
 ../src/frontend/frontend.sml
 ../src/server/sigint.sig
+../src/server/mlton-thread.sml
 ../src/server/sigint-mlton.sml
 ../src/server/server.sml
 twelf-server.sml
