@@ -35,8 +35,19 @@ structure CSEqZ = CSEqIntegers (structure Integers = Integers
                                 structure Unify = UnifyTrail
                                 structure CSManager = CSManager);
 
+structure CSIneqZ = CSIneqIntegers (structure Integers = Integers
+                                    structure Rationals = Rationals
+                                    structure IntSyn = IntSyn
+                                    structure Trail = Trail
+                                    structure Unify = UnifyTrail
+                                    structure SparseArray = SparseArray
+                                    structure SparseArray2 = SparseArray2
+                                    structure CSManager = CSManager
+                                    structure CSEqIntegers = CSEqZ);
+
 CSManager.installSolver (CSEqQ.solver);
 CSManager.installSolver (CSIneqQ.solver);
 CSManager.installSolver (CSEqStrings.solver);
 CSManager.installSolver (CSEqBools.solver);
 CSManager.installSolver (CSEqZ.solver);
+CSManager.installSolver (CSIneqZ.solver);

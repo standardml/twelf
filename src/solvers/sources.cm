@@ -13,7 +13,9 @@ Group is
   cs-eq-field.sig
   cs-eq-field.fun
   cs-ineq-field.fun
+  cs-eq-integers.sig
+  cs-eq-integers.fun
+  cs-ineq-integers.fun
   cs-eq-strings.fun
   cs-eq-bools.fun
-  cs-eq-integers.fun
   solvers.sml

@@ -9,7 +9,7 @@ functor CSEqIntegers (structure Integers : INTEGERS
                         sharing Unify.IntSyn = IntSyn
                       structure CSManager : CS_MANAGER
                         sharing CSManager.IntSyn = IntSyn)
- : CS =
+ : CS_EQ_INTEGERS =
 struct
   structure CSManager = CSManager
 
@@ -408,7 +408,7 @@ struct
             myID := cs;
 
             numberID := 
-              installF (ConDec ("int", 0,
+              installF (ConDec ("integer", 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE, SOME(MS.Mnil));

@@ -1,4 +1,4 @@
-(* Simplex Inequation Solver *)
+(* Solver for a linearly ordered field, based on the simplex method *)
 (* Author: Roberto Virga *)
 
 functor CSIneqField (structure OrderedField : ORDERED_FIELD
@@ -69,6 +69,8 @@ struct
     fun geqN0 (d) =
           if (d = zero) then geq00 ()
           else gtGeq (constant (d), constant (zero), gtNExp (d))
+
+    (* parsing proof objects d>0 *)
     fun parseGtN string =
           let
             val suffix   = (">" ^ (toString (zero)))
@@ -151,7 +153,7 @@ struct
                   )
                 end
         in
-          Int.+(min, floor(Real.*(nextrand(), Real.fromInt(size))))
+          Int.+(min, Real.floor(Real.*(nextrand(), Real.fromInt(size))))
         end
     end
 
@@ -791,10 +793,15 @@ struct
                      case maximizeRow row
                        of Unbounded col =>
                             (
-                              Trail.log (#trail(tableau), Pivot(row, col));
-                              pivot (row, col);
-                              Trail.log (#trail(tableau), Restrict(Col(col)));
-                              #restr(Array.sub (#clabels(tableau), col)) := SOME(restr)
+                              Trail.log (#trail(tableau), Restrict(Row(row)));
+                              #restr(Array.sub (#rlabels(tableau), row)) := SOME(restr);
+                              if (const(row) < zero)
+                              then
+                                (
+                                  Trail.log (#trail(tableau), Pivot(row, col));
+                                  pivot (row, col)
+                                )
+                              else ()
                             )
                         | Positive =>
                               ( 
@@ -1126,17 +1133,13 @@ struct
               installF (ConDec (">", 0,
                                 Constraint (!myID, solveGt),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
-                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE
-                        (* SOME(MS.Mapp (MS.Marg (MS.Plus, NONE), 
-                               MS.Mapp (MS.Marg (MS.Plus, NONE), MS.Mnil))) *));
+                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
 
             geqID := 
               installF (ConDec (">=", 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
-                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE
-                        (* SOME(MS.Mapp (MS.Marg (MS.Plus, NONE), 
-                               MS.Mapp (MS.Marg (MS.Plus, NONE), MS.Mnil))) *));
+                        SOME(FX.Infix(FX.minPrec, FX.None)), NONE);
 
             gtAddID :=
               installF (ConDec ("+>", 2, Normal,

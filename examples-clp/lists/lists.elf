@@ -2,14 +2,14 @@
 %%% Authors: Frank Pfenning, Roberto Virga
 
 %% load the constraint solvers
-%use equality/rationals.
+%use equality/integers.
 
 %% lists
-list : rational -> type.
+list : integer -> type.
 
 nil : list 0.
 
-,   : rational -> list N -> list (N + 1). %infix right 100 ,.
+,   : integer -> list N -> list (N + 1). %infix right 100 ,.
 
 %% append
 append : list M -> list N -> list (M + N) -> type.

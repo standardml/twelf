@@ -1,21 +1,23 @@
 (* Rationals *)
 (* Author: Roberto Virga *)
 
-functor Rationals (Integer : INTEGER) : ORDERED_FIELD =
+functor Rationals (Integers : INTEGERS) : RATIONALS =
 struct
+
+  structure Integers = Integers
 
   val name = "rational"
 
   exception Div = Div
 
   local
-    structure I = Integer
+    structure I = Integers
 
     datatype number =                          (* Rational number:              *)
       Fract of Int.int * I.int * I.int         (* q := Fract (sign, num, denom) *)
 
-    val zero = Fract (0,Integer.fromInt(0),Integer.fromInt(1))
-    val one  = Fract (1,Integer.fromInt(1),Integer.fromInt(1))
+    val zero = Fract (0, I.fromInt(0), I.fromInt(1))
+    val one  = Fract (1, I.fromInt(1), I.fromInt(1))
 
     exception Div
 
@@ -23,8 +25,8 @@ struct
       | normalize (Fract (s, n, d)) =
           let
             fun gcd (m, n) =
-                  if (m = Integer.fromInt(0)) then n
-                  else if (n = Integer.fromInt(0)) then m
+                  if (m = I.fromInt(0)) then n
+                  else if (n = I.fromInt(0)) then m
                   else if I.>(m, n) then gcd (I.mod(m, n), n)
                   else gcd (m, I.mod(n, m))
             val g = gcd (n, d)
@@ -58,11 +60,15 @@ struct
 
     fun sign (Fract (s, n, d)) = s
 
+    fun numerator (Fract (s, n, d)) = n
+
+    fun denominator (Fract (s, n, d)) = d
+
     fun abs (Fract (s, n, d)) = (Fract (Int.abs(s), n, d))
 
     fun compare (Fract (s1, n1, d1), Fract( s2, n2, d2)) =
-          Integer.compare (I.*(I.*(I.fromInt(s1), n1), d2),
-                           I.*(I.*(I.fromInt(s2), n2), d1))
+          I.compare (I.*(I.*(I.fromInt(s1), n1), d2),
+                     I.*(I.*(I.fromInt(s2), n2), d1))
 
     fun op> (q1, q2) = (compare (q1, q2) = GREATER)
 
@@ -74,8 +80,8 @@ struct
 
     fun fromInt (n) =
           (Fract (Int.sign (n),
-                  Integer.fromInt (Int.abs (n)),
-                  Integer.fromInt (1)))
+                  I.fromInt (Int.abs (n)),
+                  I.fromInt (1)))
 
     fun fromString (str) =
           let
@@ -96,11 +102,11 @@ struct
             in
               if (check_numerator (String.explode (numerator)))
               then
-                case (Integer.fromString (numerator))
+                case (I.fromString (numerator))
                   of SOME (n) => 
-                       SOME (Fract(Integer.sign(n),
-                                   Integer.abs(n),
-                                   Integer.fromInt(1)))
+                       SOME (Fract(I.sign(n),
+                                   I.abs(n),
+                                   I.fromInt(1)))
                    | _ =>
                        NONE
               else
@@ -115,9 +121,9 @@ struct
               if (check_numerator (String.explode (numerator)))
                 andalso (check_denominator (String.explode (denominator)))
               then
-                case (Integer.fromString (numerator), Integer.fromString (denominator))
+                case (I.fromString (numerator), I.fromString (denominator))
                   of (SOME (n), SOME (d)) =>
-                       SOME (normalize (Fract (Integer.sign(n), Integer.abs(n), d)))
+                       SOME (normalize (Fract (I.sign(n), I.abs(n), d)))
                    | _ =>
                        NONE
               else
@@ -130,10 +136,24 @@ struct
     fun toString (Fract(s, n, d)) =
           let
             val nStr = I.toString (I.* (I.fromInt(s), n))
-            val dStr = Integer.toString d
+            val dStr = I.toString d
           in
             if (d = I.fromInt(1)) then nStr else (nStr ^ "/" ^ dStr)
           end
+
+    fun fromInteger (n) =
+          Fract (I.sign (n), I.abs (n), I.fromInt(1))
+
+    fun floor (q as Fract (s, n, d)) =
+          if Int.>=(s, 0)
+          then I.quot (n, d)
+          else Integers.~(ceiling (~ q))
+
+    and ceiling (q as Fract (s, n, d)) =
+          if Int.>=(s, 0)
+          then I.quot (I.+ (n, I.- (d, I.fromInt(1))), d)
+          else Integers.~(floor (~ q))
+
   in
     type number = number
 
@@ -158,5 +178,12 @@ struct
     val op>= = op>=
     val op<= = op<=
     val compare = compare
+
+    val fromInteger = fromInteger
+    val floor = floor
+    val ceiling = ceiling
+
+    val numerator = numerator
+    val denominator = denominator
   end
 end;  (* structure Rationals *)

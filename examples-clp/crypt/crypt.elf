@@ -2,6 +2,7 @@
 %%% (taken from S. Michaylov's Ph.D. dissertation)
 %%% Author: Roberto Virga
 
+%% using inequality/integers leads to an exponential explosion of the constraint space
 %use inequality/rationals.
 
 %% equality

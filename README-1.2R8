@@ -1,4 +1,4 @@
-README for Twelf 1.2R7
+README for Twelf 1.2R8
 
 Major internal update to Twelf 1.2.
 
@@ -18,4 +18,7 @@ Externally visible changes:
    has not been written yet.
  - Theorem prover has been generalized, but is not yet stable or
    documented.  Old %theorem commands should (mostly) still work.
- - Constraint solving modules
+ - Constraint solving modules for:
+     rationals
+     integers
+

@@ -50,6 +50,6 @@ sig
 
   (* trailing operations *)
   val reset : unit -> unit
-  val trail : (unit -> 'a) -> 'a
+  val trail  : (unit -> 'a) -> 'a
 
 end  (* signature CS_MANAGER *)
