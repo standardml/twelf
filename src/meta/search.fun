@@ -250,7 +250,7 @@ struct
             otherwise searchEx' terminates with []
     *)
     (* contexts of EVars are recompiled for each search depth *)
-    fun searchEx' max (nil, sc) = [sc ()] 
+    fun searchEx' max (nil, sc) = [sc max] 
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
@@ -269,10 +269,10 @@ struct
        then R' is the result of applying f to P and 
 	 traversing all possible numbers up to MTPGlobal.maxLevel
     *)
-    fun deepen f P =
+    fun deepen depth f P =
 	let 
 	  fun deepen' (level, acc) = 
-	    if level > (!MTPGlobal.maxFill) then acc
+	    if level > depth then acc
 	    else (if !Global.chatter > 5 then print "#" else (); 
 		    deepen' (level+1, f level P))
 	in
@@ -289,23 +289,25 @@ struct
        then acc' is a list containing the one result from executing the success continuation 
 	 All EVar's got instantiated with the smallest possible terms.
     *)    
-    fun searchEx (G, GE, sc) = 
+    fun searchEx depth (GE, sc) = 
       (if !Global.chatter > 5 then print "[Search: " else ();  
-	 deepen searchEx' (selectEVar (GE), 
-			   fn Params => (if !Global.chatter > 5 then print "OK]\n" else ();
+	 deepen depth searchEx' (selectEVar (GE), 
+			   fn max => (if !Global.chatter > 5 then print "OK]\n" else ();
 					 let
-					   val GE' = foldr (fn (X, L) => 
+					   val GE' = foldr (fn (X as I.EVar (_, G, _, _), L) => 
 							    Abstract.collectEVars (G, (X, I.id), L)) nil GE
 					   val gE' = List.length GE'
 					   val _ = TextIO.print (Int.toString gE' ^ " remaining EVars\n")
 					 in
-					   if gE' > 0 then (TextIO.print ("Retry\n"); searchEx (G, GE', sc)) else  sc Params
+					   if gE' > 0 then (TextIO.print ("Retry\n"); searchEx (depth-max) (GE', sc)) else  sc ()
 					   (* warning: iterative deepening depth is not propably updated. 
 					      possible that it runs into an endless loop ? *)
 					 end)); 
 	 if !Global.chatter > 5 then print "FAIL]\n" else ();
 	   ())
 	  
+    fun search (GE, sc) = searchEx (!MTPGlobal.maxFill) (GE, sc)
+
 (*    (* searchAll' (GE, acc, sc) = acc'
 
        Invariant: 
@@ -339,7 +341,7 @@ struct
 *)
 
   in 
-    val searchEx = searchEx
+    val searchEx = search
   end (* local ... *)
 
 end; (* functor Search *)
