@@ -72,6 +72,7 @@
 ;; work poorly with that kind of face.
 (cond (twelf-font-dark-background
        (twelf-font-create-face 'twelf-font-keyword-face 'default nil)
+       (twelf-font-create-face 'twelf-font-const-face 'default nil)
        (twelf-font-create-face 'twelf-font-comment-face 'font-lock-comment-face
 			     nil)
        (twelf-font-create-face 'twelf-font-percent-key-face 'default "Plum")
@@ -81,6 +82,7 @@
        (twelf-font-create-face 'twelf-font-evar-face 'default "Aquamarine"))
       (t 
        (twelf-font-create-face 'twelf-font-keyword-face 'default nil)
+       (twelf-font-create-face 'twelf-font-const-face 'default nil)
        (twelf-font-create-face 'twelf-font-comment-face 'font-lock-comment-face
 			     nil)
        (twelf-font-create-face 'twelf-font-percent-key-face 'default "MediumPurple")
@@ -101,7 +103,7 @@
    ;; single-line comments
    ("%[% \t\f].*$" 0 twelf-font-comment-face)
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%abbrev\\|%solve\\|%query\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
+   ("\\(%infix\\|%prefix\\|%postfix\\|%name\\|%abbrev\\|%solve\\|%query\\|%mode\\|%worlds\\|%covers\\|%total\\|%terminates\\|%reduces\\|%theorem\\|%prove\\|%assert\\|%establish\\|%sig\\|%struct\\|%where\\|%include\\|%open\\|%use\\).*$"
     1 twelf-font-percent-key-face nil)
    ;; keywords, omit punctuations for now.
    ("\\(\\<<-\\>\\|\\<->\\>\\|\\<type\\>\\|\\<=\\>\\|\\<_\\>\\)"
@@ -123,6 +125,8 @@
    ;; lower-case identifiers (almost = constants)
    ;;("\\<\\([a-z!&$^+/<=>?@~|#*`;,]\\|\\-\\|\\\\\\)\\w*\\>"
    ;; nil black)
+   ;; qualified identifiers
+   ("\\<\\w+\\(\\.\\w+\\)+\\>" . twelf-font-const-face)
    ;; upper-case identifiers (almost = variables)
    ("\\<[A-Z_]\\w*\\>" . twelf-font-fvar-face)
    ;; numbers and quoted identifiers omitted for now
@@ -338,7 +342,9 @@ variable using the variable OCC-FACE."
 	(if (eobp)
 	    (setq found 'eob)
 	  (forward-char 1)
-	  (skip-chars-forward *whitespace*)
+	  ;; disable so that module expressions are more likely
+	  ;; to be highlighted correctly.   Thu May 24 2001 -fp
+	  ;;(skip-chars-forward *whitespace*)
 	  (if (looking-at var-pattern)
 	      ;;"\\<\\w+\\>"
 	      ;;"\\<[-a-z!&$^+/\\<=>?@~|#*`;,]\\w*\\>"
