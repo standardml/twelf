@@ -48,14 +48,14 @@ struct
 	C.Impl (compileClauseN false (G, A1), A1, a1, 
 		compileGoalN (I.Decl(G, I.Dec(NONE, A1)), A2))
       end
-    | compileGoalN (G, I.Pi((I.Dec(_,A1), I.Virtual), A2)) =
+    | compileGoalN (G, I.Pi((D as I.Dec(_, A1), I.Virtual), A2)) =
       (* A = A1 -> A2 *)
       let
 	val a1 = I.targetFam A1
       in
 	(* A1 is used to build the proof term, a1 for indexing *)
 	C.Impl (compileClauseN false (G, A1), A1, a1, 
-		compileGoalN (I.Decl(G, I.Dec(NONE, A1)), A2))
+		compileGoalN (I.Decl(G, D), A2))
       end
     | compileGoalN (G, I.Pi((D, I.Maybe), A2)) =
       (* A = {x:A1} A2 *)
