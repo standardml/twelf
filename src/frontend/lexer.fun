@@ -34,6 +34,7 @@ struct
     | UNDERSCORE			(* `_' *)
     | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)
     | NAME				(* `%name' *)
+    | DEFINE				(* `%define' *) (* -rv 8/27/01 *)
     | SOLVE				(* `%solve' *)
     | QUERY	  			(* `%query' *)
     | QUERYTABLED  			(* `%querytabled *)
@@ -223,6 +224,7 @@ struct
       | lexPragmaKey (ID(_, "assert"), r) = (ASSERT, r)
       | lexPragmaKey (ID(_, "abbrev"), r) = (ABBREV, r)
       | lexPragmaKey (ID(_, "name"), r) = (NAME, r)
+      | lexPragmaKey (ID(_, "define"), r) = (DEFINE, r) (* -rv 8/27/01 *)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
       | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
@@ -329,6 +331,7 @@ struct
     | toString' (PREFIX) = "%prefix"
     | toString' (POSTFIX) = "%postfix"
     | toString' (NAME) = "%name"
+    | toString' (DEFINE) = "%define"    (* -rv 8/27/01 *)
     | toString' (SOLVE) = "%solve"
     | toString' (QUERY) = "%query"
     | toString' (QUERYTABLED) = "%querytabled"

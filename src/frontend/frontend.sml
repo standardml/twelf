@@ -28,6 +28,12 @@ structure TpRecon =
 	   structure Timers = Timers
            structure CSManager = CSManager);
 
+structure DefineRecon =
+  DefineRecon (structure IntSyn' = IntSyn
+               structure Names = Names
+               structure TpRecon' = TpRecon
+               structure Paths' = Paths);
+
 structure ModeRecon =
   ModeRecon (structure Global = Global
 	     structure IntSyn = IntSyn
@@ -70,6 +76,12 @@ structure ParseConDec =
 	      structure ExtSyn' = TpRecon
 	      structure ParseTerm = ParseTerm);
 
+structure ParseDefine =
+  ParseDefine (structure Parsing' = Parsing
+	       structure ExtDefine' = DefineRecon
+	       structure Paths = Paths
+	       structure ParseTerm = ParseTerm);
+
 structure ParseQuery =
   ParseQuery (structure Parsing' = Parsing
 	      structure ExtSyn' = TpRecon
@@ -101,11 +113,13 @@ structure Parser =
   Parser (structure Parsing' = Parsing
 	  structure Stream' = Stream
 	  structure ExtSyn' = TpRecon
+          structure ExtDefine' = DefineRecon
 	  structure Names' = Names
 	  structure ExtModes' = ModeRecon
 	  structure ThmExtSyn' = ThmRecon
           structure ModExtSyn' = ModRecon
 	  structure ParseConDec = ParseConDec
+          structure ParseDefine = ParseDefine
 	  structure ParseQuery = ParseQuery
 	  structure ParseFixity = ParseFixity
 	  structure ParseMode = ParseMode
@@ -116,11 +130,14 @@ structure Parser =
 structure Solve =
   Solve (structure Global = Global
 	 structure IntSyn' = IntSyn
+ 	 structure Whnf = Whnf
 	 structure Names = Names
 	 structure Parser = Parser
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
+	 structure Unify = UnifyNoTrail
 	 structure TpRecon = TpRecon
+         structure DefineRecon = DefineRecon
 	 structure Timers = Timers
 	 structure CompSyn = CompSyn
 	 structure Compile = Compile
@@ -150,6 +167,8 @@ structure Twelf =
 	 structure Constraints = Constraints
 	 structure Abstract = Abstract
 	 structure TpRecon = TpRecon 
+
+         structure DefineRecon = DefineRecon
 
 	 structure ModeSyn = ModeSyn
 	 structure ModeCheck = ModeCheck

@@ -26,6 +26,8 @@ Group is
   parsing.fun
   tprecon.sig
   tprecon.fun
+  definerecon.sig
+  definerecon.fun
   moderecon.sig
   moderecon.fun
   thmrecon.sig
@@ -36,6 +38,8 @@ Group is
   parse-term.fun
   parse-condec.sig
   parse-condec.fun
+  parse-define.sig
+  parse-define.fun
   parse-query.sig
   parse-query.fun
   parse-fixity.sig

@@ -7,10 +7,11 @@ sig
   structure IntSyn : INTSYN
   structure ExtSyn : EXTSYN
   structure Paths : PATHS
+  structure ExtDefine : EXTDEFINE
 
   exception AbortQuery of string
 
-  val solve : (string * ExtSyn.term) * Paths.location -> IntSyn.ConDec
+  val solve : (ExtDefine.define list * string option * ExtSyn.term) * Paths.location -> IntSyn.ConDec list
 
   val query : (int option * int option * ExtSyn.query) * Paths.location -> unit
 					(* may raise AbortQuery(msg) *)

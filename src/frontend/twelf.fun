@@ -1,7 +1,7 @@
 (* Front End Interface *)
 (* Author: Frank Pfenning *)
 (* Modified: Carsten Schuermann, Jeff Polakow *)
-(* Modified: Brigitte Pientka *)
+(* Modified: Brigitte Pientka, Roberto Virga *)
 
 functor Twelf
   (structure Global : GLOBAL
@@ -38,6 +38,8 @@ functor Twelf
      sharing type TpRecon.condec = Parser.ExtSyn.condec
      sharing type TpRecon.term = Parser.ExtSyn.term
      (* sharing type TpRecon.Paths.occConDec = Origins.Paths.occConDec *)
+
+   structure DefineRecon : DEFINE_RECON
 
    structure ModeSyn : MODESYN
      sharing ModeSyn.IntSyn = IntSyn'
@@ -90,6 +92,7 @@ functor Twelf
      sharing Solve.IntSyn = IntSyn'
      sharing type Solve.ExtSyn.term = Parser.ExtSyn.term
      sharing type Solve.ExtSyn.query = Parser.ExtSyn.query
+     sharing type Solve.ExtDefine.define = Parser.ExtDefine.define
      sharing Solve.Paths = Paths
    structure ThmSyn : THMSYN
      sharing ThmSyn.Paths = Paths
@@ -262,6 +265,7 @@ struct
 	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
+              | DefineRecon.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
@@ -429,25 +433,32 @@ struct
 	       raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* Solve declarations %solve c : A *)
-      | install1 (fileName, (Parser.Solve (name,tm), r)) =
+      | install1 (fileName, (Parser.Solve (defineL,name,tm), r)) =
 	(let
-	  val conDec = Solve.solve ((name, tm), Paths.Loc (fileName, r))
-	               handle Solve.AbortQuery (msg) =>
-			raise Solve.AbortQuery (Paths.wrap (r, msg))
-	  val conDec' = Names.nameConDec (conDec)
-	  (* allocate cid after strictness has been checked! *)
-	  val cid = installConDec false (conDec', (fileName, NONE), r)
-	  val _ = if !Global.chatter >= 3
-		    then print ((Timers.time Timers.printing Print.conDecToString)
-				       conDec' ^ "\n")
-		  else if !Global.chatter >= 2
-			 then print (" OK\n")
-		       else ();
-	in
-	  ()
-	end
-        handle Constraints.Error (eqns) =>
-	       raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	  val conDecL = Solve.solve ((defineL, name, tm), Paths.Loc (fileName, r))
+	                handle Solve.AbortQuery (msg) =>
+			 raise Solve.AbortQuery (Paths.wrap (r, msg))
+          fun icd conDec =
+          (let
+	     val conDec' = Names.nameConDec (conDec)
+	     (* allocate cid after strictness has been checked! *)
+	     val cid = (installConDec false (conDec, (fileName, NONE), r)
+                        handle DefineRecon.Error (msg) =>
+                         raise DefineRecon.Error (Paths.wrap (r, msg)))
+	     val _ = if !Global.chatter >= 3
+		     then print ((Timers.time Timers.printing Print.conDecToString)
+			         conDec' ^ "\n")
+		     else if !Global.chatter >= 2
+			  then print (" OK\n")
+		          else ();
+	   in
+	     ()
+	   end)
+         in
+           List.app icd conDecL
+         end
+         handle Constraints.Error (eqns) =>
+	        raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* %query <expected> <try> A or %query <expected> <try> X : A *)
       | install1 (fileName, (Parser.Query(expected,try,query), r)) =

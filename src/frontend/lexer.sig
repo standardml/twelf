@@ -28,6 +28,7 @@ sig
     | UNDERSCORE			(* `_' *)
     | INFIX | PREFIX | POSTFIX		(* `%infix' `%prefix' `%postfix' *)
     | NAME				(* `%name' *)
+    | DEFINE				(* `%define' *) (* -rv 8/27/01 *)
     | SOLVE				(* `%solve' *)
     | QUERY				(* `%query' *)
     | QUERYTABLED			(* `%querytabled' *)
