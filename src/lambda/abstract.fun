@@ -111,6 +111,16 @@ struct
 	  exists' K
 	end
 
+    (* this should be non-strict *)
+    (* perhaps the whole repeated traversal are now a performance
+       bottleneck in PCC applications where logic programming search
+       followed by abstraction creates certificates.  such certificates
+       are large, so the quadratic algorithm is not really acceptable.
+       possible improvement, collect, abstract, then traverse one more
+       time to determine status of all variables.
+    *)
+    (* Wed Aug  6 16:37:57 2003 -fp *)
+    (* !!! *)
     fun or (I.Maybe, _) = I.Maybe
       | or (_, I.Maybe) = I.Maybe
       | or (I.Meta, _) = I.Meta

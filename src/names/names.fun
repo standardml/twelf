@@ -545,6 +545,7 @@ struct
         (* the following only needed because reconstruction replaces
            undetermined types with FVars *)
       | namePrefOf' (role, SOME(IntSyn.FVar _)) = namePrefOf'' (role, NONE)
+      | namePrefOf' (role, SOME(IntSyn.NSDef cid)) = namePrefOf'' (role, Array.sub (namePrefArray, cid))
 
     (* namePrefOf (role, V) = name
        where name is the preferred base name for a variable with type V
