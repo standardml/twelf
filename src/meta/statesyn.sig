@@ -18,7 +18,6 @@ sig
   datatype Tag = 
     Parameter of FunSyn.label option
   | Lemma of int * FunSyn.For
-  | Assumption of int
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)

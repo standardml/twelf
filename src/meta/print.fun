@@ -56,9 +56,9 @@ struct
 					 Fmt.String ":",
 					 FunPrint.formatForBare (G, F),
 					 Fmt.String ">"]
-      | formatTag (G, S.Assumption k) = [Fmt.String "<a",
+(*      | formatTag (G, S.Assumption k) = [Fmt.String "<a",
 					 Fmt.String (Int.toString k),
-					 Fmt.String ">"]
+					 Fmt.String ">"] *)
 
 
     (* formatCtx (G, B) = fmt'

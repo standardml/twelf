@@ -42,9 +42,13 @@ struct
     fun init (F, OF) = 
       let 
 	fun init' ((G, B), S.All (_, O), F.All (F.Prim D, F'), Ss) = 
-              init' ((I.Decl (G, Names.decName (G, D)), 
-		     I.Decl (B, S.Assumption (!MTPGlobal.maxSplit))), 
+	    let 
+	      val D' = Names.decName (G, D)
+	    in
+              init' ((I.Decl (G, D'), 
+		     I.Decl (B, S.Lemma (!MTPGlobal.maxSplit, F.Ex (D', F.True)))), 
 		     O, F', Ss)
+	    end
 	      (* it is possible to calculuate 
 	         index/induction variable information here 
 		 define occursOrder in StateSyn.fun  --cs *)

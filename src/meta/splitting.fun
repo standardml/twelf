@@ -320,10 +320,11 @@ struct
 		val length = List.length G2
 		val B2 = createTags (length , n)
 		val (G'', B'', s) = sc (F.listToCtx G2t, B2)   
-		val abstact = if conv ((G'', I.id), (F.listToCtx G2t, I.id)) then abstract
+		val abstract' = if conv ((G'', I.id), (F.listToCtx G2t, I.id)) then abstract
 			      else abstractErrorRight (* G'' = G2t, otherwise incomplete *)
-		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)),
-		 fn U' => abstract (MTPAbstract.abstractSub (t, (G'', B''), I.Dot (I.Exp (U'), s), B)),
+(*		val ops' = lowerSplitDest (G'', 0, (V, s), *)
+		val ops' = lowerSplitDest (G'', 0, (V, I.comp (s, I.Shift length)), 
+		 fn U' => abstract' (MTPAbstract.abstractSub (t, (G'', B''), I.Dot (I.Exp (U'), s), B)),
 (*					fn U' => U', *)
 					metaCases (length, ops))
 	      in
@@ -393,7 +394,7 @@ struct
     *)
     fun expand' ((I.Null, I.Null), isIndex, abstract, makeAddress) =
           (fn (Gp, Bp) => (Gp, Bp, I.Shift (I.ctxLength Gp)), nil)
-      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
+(*      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Assumption b))),
 		 isIndex, abstract, makeAddress) =
 	let 
 	  val (sc, ops) =
@@ -417,7 +418,7 @@ struct
 	in
 	  (sc', ops')
 	end
-      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
+*)      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
 		 isIndex, abstract, makeAddress) = 
 	let 
 	  val (sc, ops) =

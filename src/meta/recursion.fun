@@ -236,9 +236,9 @@ struct
 	        if l' = l then true else alreadyIntroduced (B, l)
 	      | alreadyIntroduced (I.Decl (B, S.Parameter NONE), l) = 
 		  alreadyIntroduced (B, l)
-	      | alreadyIntroduced (I.Decl (B, S.Assumption _), l) = 
+(*	      | alreadyIntroduced (I.Decl (B, S.Assumption _), l) = 
 		  alreadyIntroduced (B, l)
-	      | alreadyIntroduced (I.Decl (B, S.Lemma _), l) = 
+*)	      | alreadyIntroduced (I.Decl (B, S.Lemma _), l) = 
 		  alreadyIntroduced (B, l)
 		  
 

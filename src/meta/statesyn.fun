@@ -24,7 +24,7 @@ struct
   datatype Tag = 
     Parameter of FunSyn.label option
   | Lemma of int * FunSyn.For
-  | Assumption of int
+(*  | Assumption of int *)
 
   datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)
@@ -90,8 +90,8 @@ struct
        T is either an Assumption or Induction tag
        T' = T - 1
     *)
-    fun decrease (Assumption k) = Assumption (k-1)
-      | decrease (Lemma (k, F)) = Lemma (k-1, F)
+    fun (* decrease (Assumption k) = Assumption (k-1)
+      | *) decrease (Lemma (k, F)) = Lemma (k-1, F)
 
   in
     val orderSub = orderSub
