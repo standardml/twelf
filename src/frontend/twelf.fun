@@ -377,6 +377,9 @@ struct
 		  else [()]
 
 	  val _ = Prover.auto () (* times itself *)
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%QED\n")
+		  else ()
 	in
 	  (Prover.install (fn E => installConDec (E, (fileName, NONE)));
 	   Skolem.install La)

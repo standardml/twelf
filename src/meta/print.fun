@@ -1,7 +1,8 @@
 (* Meta Printer Version 1.3 *)
 (* Author: Carsten Schuermann *)
 
-functor MTPrint (structure IntSyn : INTSYN
+functor MTPrint (structure Global : GLOBAL
+		 structure IntSyn : INTSYN
 		 structure FunSyn : FUNSYN
 		   sharing FunSyn.IntSyn = IntSyn
 		 structure Names : NAMES
@@ -70,11 +71,18 @@ struct
     *)
     fun formatCtx (I.Null, B) = []
       | formatCtx (I.Decl (I.Null, D), I.Decl (I.Null, T)) = 
+        if !Global.chatter >= 4 then
           [Fmt.HVbox (formatTag (I.Null, T) @ [Fmt.Break, Print.formatDec (I.Null, D)])]
+	else
+          [Print.formatDec (I.Null, D)]
       | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
+        if !Global.chatter >= 4 then
 	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break] @ 
 	  [Fmt.HVbox (formatTag (G, T) @ [Fmt.Break, Print.formatDec (G, D)])] 
-
+	else
+	  formatCtx (G, B) @ [Fmt.String ",",  Fmt.Break] @ 
+	 [Fmt.Break, Print.formatDec (G, D)]
+	  
 
     (* formatState S = fmt'
      

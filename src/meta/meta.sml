@@ -79,7 +79,8 @@ structure MTPInit =
 	   structure FunPrint = FunPrint)
 
 structure MTPrint = 
-  MTPrint (structure IntSyn = IntSyn
+  MTPrint (structure Global = Global
+	   structure IntSyn = IntSyn
 	   structure FunSyn = FunSyn
 	   structure Names = Names
 	   structure StateSyn' = StateSyn
