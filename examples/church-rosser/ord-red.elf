@@ -22,23 +22,26 @@ apr1  :              M2 --> M2'
 
 id1   :    M -->* M.
 
-step1 :    M --> M'
-      ->  M' -->* M''
-      ->   M -->* M''.
+step1 :    M -->* M''
+      <-   M --> M'
+      <-   M' -->* M''.
+
 
 % Conversion
 
 <-> : term -> term -> type.  %infix none 10 <->.
 			     %name <-> C.
 
-refl :    M <-> M.
+refl :    M  <-> M.
 
-sym  :    M <-> M'
-     ->  M' <-> M.
+sym  :    M  <-> M'
+   <-     M' <-> M.
 
-trans:    M <-> M'
-     ->  M' <-> M''
-     ->   M <-> M''.
+trans:    M  <-> M''
+   <-     M  <-> M'
+   <-     M' <-> M''.
 
-red  :    M -->* M'
-     ->   M <-> M'.
+
+red  :    M  <->  M'
+   <-     M  -->* M'.
+

@@ -11,13 +11,14 @@
 % Diamond property for two different parallel reductions
 % out of the 4 above
 
+%{
 %query 1 *
 dia (beta ([x:term] [R4:x => x] ap R4 R4)
        (ap (lm ([x:term] [R5:x => x] R5)) (lm ([x:term] [R6:x => x] R6))))
     (ap (lm ([x:term] [R7:x => x] ap R7 R7))
        (beta ([x:term] [R8:x => x] R8) (lm ([x:term] [R9:x => x] R9))))
     S' S''.
-
+}%
 %{
 % Ordinary reduction.
 

@@ -20,11 +20,12 @@ lm   : ({x:term} x => x -> M x => M' x)
 =>* : term -> term -> type.  %infix none 10 =>*.
                              %name =>* R*.
 
-id   :           M =>* M.
+id   :          M  =>* M.
 
-;    :           M => M'
-     ->         M' =>* M''
-     ->          M =>* M''.  %infix right 10 ;.
+;    :          M  =>* M''  
+     <-         M  => M'
+     <-         M' =>* M''.   %infix right 10 ;.
+
 
 % Parallel conversion
 
