@@ -52,6 +52,7 @@ For release:
 	twelf/emacs/19.16/*
 	twelf/emacs/at-point/*
 	twelf/emacs/twelf-init.el
+        twelf/exercises/
 	twelf/src/*/WALK
 	twelf/src/WALK
 	twelf/work/*
