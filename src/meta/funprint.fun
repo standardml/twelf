@@ -37,7 +37,73 @@ struct
 
 
 
+
+    (* formatCtxBlock (G, (G1, s1)) = (G', s', fmts')
+      
+       Invariant:
+       If   |- G ctx
+       and  G |- G1 ctx
+       and  G2 |- s1 : G 
+       then G' = G2, G1 [s1]
+       and  G' |- s' : G, G1 
+       and  fmts is a format list of G1[s1]
+    *)
+    fun formatCtxBlock (G, (I.Null, s)) = (G, s, nil)
+      | formatCtxBlock (G, (I.Decl (G', D), s)) =
+        let 
+	  val (G'', s'', fmts) = formatCtxBlock (G, (G', s))
+	  val D'' = I.decSub (D, s'')
+	  val fmt = P.formatDec (G'', D'')
+	in
+	  (I.Decl (G'', D''), I.dot1 s'', fmts @ 
+	   [Fmt.String ",", Fmt.Break, fmt])
+	end
+
+
+    (* formatFor' (G, (F, s)) = fmts'
+     
+       Invariant:
+       If   |- G ctx
+       and  G |- s : Psi'
+       and  Psi' |- F formula
+       then fmts' is a list of formats for F
+    *)
+    fun formatFor' (G, (F.All (LD, F), s)) = 
+        (case LD 
+	   of F.Prim D => 
+	     let 
+	       val D' = Names.decName (G, D)
+	     in
+	       [Fmt.String "{{", P.formatDec 
+		(G, I.decSub (D', s)), 
+		Fmt.String "}}", Fmt.Break] @
+	       formatFor' (I.Decl (G, D'), (F, I.dot1 s))
+	     end
+	   | F.Block (F.CtxBlock (l, G')) => 
+	     let
+	       val (G'', s'', fmts) = formatCtxBlock (G, (G', s))
+	     in
+	       [Fmt.String "{", 
+		Fmt.Hbox fmts, 
+		Fmt.String "}", Fmt.Break] @
+	       formatFor' (G'', (F, s''))
+	     end)
+      | formatFor' (G, (F.Ex (D, F), s)) =
+	let
+	  val D' = Names.decName (G, D)
+	in
+	  [Fmt.String "[[", P.formatDec 
+	   (G, I.decSub (D', s)), Fmt.String "]]", Fmt.Break] @
+	  formatFor' (I.Decl (G, D'), (F, I.dot1 s))
+	end
+      | formatFor' (G, (F.True, s)) = 
+	[Fmt.String "True"]
+      | formatFor' (G, (F.TClo (F, s), s')) = 
+	formatFor' (G, (F, I.comp (s, s')))
+	
+
     (* formatFor (Psi, F) names = fmt'
+       formatForBare (Psi, F) = fmt'
 
        Invariant:
        If   |- Psi ctx
@@ -45,99 +111,35 @@ struct
        and  names is a list of n names, 
        then fmt' is the pretty printed format
     *)    
+    fun formatFor (Psi, F) names =
+      let 
 
-    fun formatFor (Psi, F) names = 
-      let
 	fun nameLookup index = List.nth (names, index)
-
-        (* formatCtxBlock (G, (G1, s1)) = (G', s', fmts')
-      
-           Invariant:
-           If   |- G ctx
-           and  G |- G1 ctx
-           and  G2 |- s1 : G 
-           then G' = G2, G1 [s1]
-           and  G' |- s' : G, G1 
-           and  fmts is a format list of G1[s1]
-        *)
-	fun formatCtxBlock (G, (I.Null, s)) = (G, s, nil)
-	  | formatCtxBlock (G, (I.Decl (G', D), s)) =
-            let 
-	      val (G'', s'', fmts) = formatCtxBlock (G, (G', s))
-	      val D'' = I.decSub (D, s'')
-	      val fmt = P.formatDec (G'', D'')
-	    in
-	      (I.Decl (G'', D''), I.dot1 s'', fmts @ 
-	       [Fmt.String ",", Fmt.Break, fmt])
-	    end
-
-
-	(* formatFor' (G, (F, s)) = fmts'
-	  
-	   Invariant:
-	   If   |- G ctx
-	   and  G |- s : Psi'
-	   and  Psi' |- F formula
-	   then fmts' is a list of formats for F
-	*)
-	fun formatFor' (G, (F.All (LD, F), s)) = 
-	    (case LD 
-	       of F.Prim D => 
-		 let 
-		   val D' = Names.decName (G, D)
-		 in
-		   [Fmt.String "{{", P.formatDec 
-		    (G, I.decSub (D', s)), 
-		    Fmt.String "}}", Fmt.Break] @
-		   formatFor' (I.Decl (G, D'), (F, I.dot1 s))
-		 end
-	     | F.Block (F.CtxBlock (l, G')) => 
-		 let
-		   val (G'', s'', fmts) = formatCtxBlock (G, (G', s))
-		 in
-		   [Fmt.String "{", 
-		    Fmt.Hbox fmts, 
-		    Fmt.String "}", Fmt.Break] @
-		   formatFor' (G'', (F, s''))
-		 end)
-	  | formatFor' (G, (F.Ex (D, F), s)) =
-	       let
-		 val D' = Names.decName (G, D)
-	       in
-		 [Fmt.String "[[", P.formatDec 
-		  (G, I.decSub (D', s)), Fmt.String "]]", Fmt.Break] @
-		 formatFor' (I.Decl (G, D'), (F, I.dot1 s))
-	       end
-	  | formatFor' (G, (F.True, s)) = 
-	       [Fmt.String "True"]
-	  | formatFor' (G, (F.TClo (F, s), s')) = 
-	       formatFor' (G, (F, I.comp (s, s')))
-
 
 	(* formatFor1 (index, G, (F, s)) = fmts'
 
-	   Invariant:
+           Invariant:
 	   If   |- G ctx
-	   and  G |- s : Psi
-	   and  Psi |- F1 ^ .. ^ F(index-1) ^ F formula
-	   then fmts' is a list of pretty printed formats for F
-	*)
-
+           and  G |- s : Psi
+           and  Psi |- F1 ^ .. ^ F(index-1) ^ F formula
+           then fmts' is a list of pretty printed formats for F
+        *)
 	fun formatFor1 (index, G, (F.And (F1, F2), s)) =
-	      formatFor1 (index, G, (F1, s)) @ [Fmt.Break] @
+              formatFor1 (index, G, (F1, s)) @ [Fmt.Break] @
 	      formatFor1 (index+1, G, (F2, s))
 	  | formatFor1 (index, G, (F, s)) = 
 	      [Fmt.String (nameLookup index), Fmt.Space,
 	       Fmt.String "::", 
 	       Fmt.Space, Fmt.HVbox (formatFor' (G, (F, s)))]
-	      
 
 	fun formatFor0 Args = 
 	  Fmt.Vbox0 0 1 (formatFor1 Args)
-      in
+      in 
 	(Names.varReset (); formatFor0 (0, F.makectx Psi, (F, I.id)))
       end
 
+    fun formatForBare (G, F) = Fmt.HVbox (formatFor' (G, (F, I.id))) 
+     
 
 
     (* formatPro (Psi, P) names = fmt'
@@ -606,6 +608,7 @@ struct
 
   in
     val formatFor = formatFor
+    val formatForBare = formatForBare
     val formatPro = formatPro
     val formatLemmaDec = formatLemmaDec
      

@@ -7,6 +7,8 @@ Group is
   ../subordinate/sources.cm
   ../modes/sources.cm
   ../typecheck/sources.cm
+  ../order/sources.cm
+  ../opsem/sources.cm
   funsyn.sig
   funsyn.fun
   funnames.sig    (* moves eventually to Names *)
@@ -24,4 +26,22 @@ Group is
   interpret.sig
   meta.sml 
 
-
+  (* Prover Version 1.3 *)
+  abstract.sig
+  abstract.fun
+  init.sig
+  init.fun
+  filling.sig
+  filling.fun
+  global.sig 
+  global.fun
+  search.sig
+  search.fun 
+  splitting.sig
+  splitting.fun
+  statesyn.sig
+  statesyn.fun
+  print.sig
+  print.fun
+  prover.sig
+  prover.fun

@@ -6,6 +6,7 @@ sig
   structure FunSyn : FUNSYN
   structure Formatter : FORMATTER
 
+  val formatForBare : FunSyn.IntSyn.dctx * FunSyn.For -> Formatter.format
   val formatFor : FunSyn.lfctx * FunSyn.For -> string list -> Formatter.format
   val formatPro : FunSyn.lfctx * FunSyn.Pro -> string list -> Formatter.format
   val formatLemmaDec: FunSyn.LemmaDec -> Formatter.format
