@@ -2006,7 +2006,7 @@ Optional argument TAGS-FILENAME specifies alternative filename."
           (or tags-filename
               (if (string-equal "sources.cfg"
 				(file-name-nondirectory config-filename))
-                  (concat (file-name-directory config-filename "TAGS"))
+                  (concat (file-name-directory config-filename) "TAGS")
 		(concat (file-name-sans-extension config-filename)
 			".tag")))))
     (save-excursion
