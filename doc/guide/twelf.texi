@@ -4917,6 +4917,10 @@ one of the following (explained in @ref{Environment Parameters}).
 @findex Table.top
  Enter interactive loop for tables queries (@pxref{Tabled Logic Programming}).
 
+@item version
+@findex version
+ Show server version.
+
 @item help
 @findex help
  Show available server commands, parameters, and server types.
