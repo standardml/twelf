@@ -284,7 +284,7 @@ struct
                        else ()
              | SOME mid' => (topStructInsert (id, mid');
                              Array.update (structShadowArray, mid, NONE));
-          Array.update (componentsArray, mid, dummyNamespace)
+	  Array.update (componentsArray, mid, dummyNamespace)
         end
 
     fun resetFrom (mark, markStruct) =
@@ -521,7 +521,8 @@ struct
     fun installComponents (mid, namespace) =
           Array.update (componentsArray, mid, namespace)
 
-    fun getComponents mid = Array.sub (componentsArray, mid)
+    fun getComponents mid =
+	  Array.sub (componentsArray, mid)
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name

@@ -569,7 +569,11 @@ struct
 	  SOME (getCases ())
 	end
         (* Constraints.Error could be raise by abstract *)
-        handle Constraints.Error (constrs) => NONE
+        handle Constraints.Error (constrs) =>
+	  (if !Global.chatter >= 6
+	     then print ("Inactive split:\n" ^ Print.cnstrsToString (constrs))
+	   else ();
+	     NONE)
 
     (*********************************)
     (* Checking for Impossible Cases *)
