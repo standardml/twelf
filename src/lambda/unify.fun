@@ -877,6 +877,9 @@ struct
     val unify = unify
     val unifyBlock = unifyBlock
 
+    val invertExp = invertExp
+    val pruneExp = pruneExp
+
     fun invertible (G, Us, ss, rOccur) =
           (invertExp (G, Us, ss, rOccur); true)
           handle NotInvertible => false

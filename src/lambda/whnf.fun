@@ -435,6 +435,7 @@ struct
     and normalizeDec (Dec (xOpt, V), s) = Dec (xOpt, normalizeExp (V, s))
       | normalizeDec (BDec (xOpt, (c, t)), s) = 
          BDec (xOpt, (c, normalizeSub (comp (t, s))))
+
     and normalizeDecP ((D, P), s) = (normalizeDec (D, s), P)
 
     (* dead code -fp *)

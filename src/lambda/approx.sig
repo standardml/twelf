@@ -34,6 +34,7 @@ sig
 
   val uniToApx : IntSyn.Uni -> Uni
   val classToApx : IntSyn.Exp -> Exp * Uni
+  val expToApx : IntSyn.Exp -> Exp * Exp (* Added reference by ABP:  2-17-05 *)
   val exactToApx : IntSyn.Exp * IntSyn.Exp -> Exp * Exp * Uni
 
   exception Ambiguous

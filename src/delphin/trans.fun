@@ -617,6 +617,11 @@ struct
       | transHead (Psi, D.AppLF (h, t), args) = transHead (Psi, h, t::args)
 
     and transHead' ((T.World (_, F), s), S, args) = transHead' ((F, s), S, args) 
+
+      (* ABP -- 12/16/04 -- I believe this is the culprit for the additional NDec's
+       * that are causing me so much grief...  I think what we need to do is first check 
+       * if something is a constant.. if so, handle it differently.
+       *)
       | transHead' ((T.All ((T.UDec (I.Dec (_, V)), T.Implicit), F'), s), S, args) =
         let 
 	  val X = I.newEVar (I.Decl(I.Null, I.NDec), I.EClo (V, T.coerceSub s))

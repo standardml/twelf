@@ -22,6 +22,7 @@ sig
   (* unconditionally interpreted as such *)
   val evar : string * Paths.region -> term
   val fvar : string * Paths.region -> term
+  val typevar : string * Paths.region -> term (* ABP 2/14/04 *)
 
   val typ : Paths.region -> term	(* type, region for "type" *)
   val arrow : term * term -> term	(* tm -> tm *)
@@ -35,8 +36,8 @@ sig
   (* region for "{dec}" "[dec]" etc. *)
   val dec : string option * term * Paths.region -> dec (* id : tm | _ : tm *)
   val dec0 : string option * Paths.region -> dec (* id | _  (type omitted) *)
-  val refdec : string option * term * Paths.region -> dec
-  val refdec0 : string option * Paths.region ->  dec
+  val refdec : string option * term * Paths.region * (IntSyn.Exp option) -> dec
+  val refdec0 : string option * Paths.region * (IntSyn.Exp option) ->  dec
    
   val ndec : Paths.region -> dec
 
@@ -70,6 +71,9 @@ sig
   val jclass : term -> job
   val jof : term * term -> job
   val jof' : term * IntSyn.Exp -> job
+
+  (* Added by ABP -- 2/18/05 *)
+  val jequalterm : term * IntSyn.Exp -> job
 
   datatype Job =
       JNothing

@@ -31,12 +31,23 @@ sig
   val intersection : IntSyn.Sub * IntSyn.Sub -> IntSyn.Sub
 
   exception Unify of string
+  exception NotInvertible
 
   val unify : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit	(* raises Unify *)
   val unifyW : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> unit (* raises Unify *)
   val unifyBlock : IntSyn.dctx * IntSyn.Block * IntSyn.Block -> unit (* raises Unify *)
 
+  val invertExp : IntSyn.Dec IntSyn.Ctx * IntSyn.eclo * IntSyn.Sub
+                  * IntSyn.Exp option ref
+                  -> IntSyn.Exp
+
+  val pruneExp : IntSyn.Dec IntSyn.Ctx * IntSyn.eclo * IntSyn.Sub
+                  * IntSyn.Exp option ref
+                  -> IntSyn.Exp
+
   val invertible : IntSyn.dctx * IntSyn.eclo * IntSyn.Sub * IntSyn.Exp option ref -> bool
+
+
   (* unifiable (G, Us,Us') will instantiate EVars as an effect *)
   val unifiable : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> bool
 

@@ -135,11 +135,14 @@ struct
     val evarApxTable : Apx.Exp StringTree.Table = StringTree.new (0)
     val fvarApxTable : Apx.Exp StringTree.Table = StringTree.new (0)
 
+    val typevarApxTable : (Apx.Uni * Apx.Exp * Apx.Exp) StringTree.Table = StringTree.new (0) (* ABP 2/14/05 *)
+
     val fvarTable : IntSyn.Exp StringTree.Table = StringTree.new (0)
   in
 
     fun varReset () = (StringTree.clear evarApxTable;
                        StringTree.clear fvarApxTable;
+		       StringTree.clear typevarApxTable;
                        StringTree.clear fvarTable)
 
     fun getEVarTypeApx name =
@@ -171,6 +174,19 @@ struct
               in
                 StringTree.insert fvarApxTable (name, V);
                 V
+              end)
+
+    fun getTypeVarTypeApx name =
+        (case StringTree.lookup typevarApxTable name
+           of SOME (L, V, U) => (L, V, U)
+            | NONE =>
+              let
+		val L = Apx.newLVar ()
+		val V = Apx.newCVar ()
+		val U = Apx.newCVar () (* guaranteed not to be used if L is type *)
+              in
+                StringTree.insert typevarApxTable (name, (L, V, U));
+                (L, V, U)
               end)
 
     fun getEVar (name, allowed) =
@@ -213,6 +229,7 @@ struct
     | bvar of int * Paths.region
     | evar of string * Paths.region
     | fvar of string * Paths.region
+    | typevar of string * Paths.region (* ABP:  2/14/04 *)
     | typ of Paths.region
     | arrow of term * term
     | pi of dec * term
@@ -239,21 +256,22 @@ struct
                    
   and dec =
       dec of string option * term * Paths.region
-      | decRef of (string option * term * Paths.region * ((term  * Apx.Exp) option) ) ref (* ABP -- 9/12/04 *)
+      | decRef of (string option * term * Paths.region * ((term  * Apx.Exp) option) * IntSyn.Exp option ) ref (* ABP -- 9/12/04 *)
       | ndec of Paths.region (* ABP -- 8/17/04 *)
 
   fun backarrow (tm1, tm2) = arrow (tm2, tm1)
              
   (* for now *)
   fun dec0 (nameOpt, r) = dec (nameOpt, omitted (r), r)
-  fun refdec (nameOpt, term, r) = decRef(ref (nameOpt, term, r, NONE))
-  fun refdec0 (nameOpt, r) = refdec (nameOpt, omitted (r), r)
+  fun refdec (nameOpt, term, r, Aopt) = decRef(ref (nameOpt, term, r, NONE, Aopt))
+  fun refdec0 (nameOpt, r, Aopt) = refdec (nameOpt, omitted (r), r, Aopt)
     
   datatype job =
       jnothing
     | jand of job * job
     | jwithctx of dec IntSyn.Ctx * job
     | jterm of term
+    | jequalterm of term * IntSyn.Exp
     | jclass of term
     | jof of term * term
     | jof' of term * IntSyn.Exp
@@ -263,6 +281,7 @@ struct
     | termRegion (bvar (k, r)) = r
     | termRegion (evar (name, r)) = r
     | termRegion (fvar (name, r)) = r
+    | termRegion (typevar (name, r)) = r
     | termRegion (typ (r)) = r
     | termRegion (arrow (tm1, tm2)) =
         Paths.join (termRegion tm1, termRegion tm2)
@@ -286,7 +305,7 @@ struct
 
   and decRegion (dec (name, tm, r)) = r
     | decRegion (ndec r) = r
-    | decRegion (decRef (ref (_, _, r, _))) = r
+    | decRegion (decRef (ref (_, _, r, _, _))) = r
 
   fun ctxRegion (IntSyn.Null) = NONE
     | ctxRegion (IntSyn.Decl (g, tm)) =
@@ -463,6 +482,13 @@ struct
           (tm, Undefined, getEVarTypeApx name, Type)
       | inferApx (G, tm as fvar (name, r)) =
           (tm, Undefined, getFVarTypeApx name, Type)
+      | inferApx (G, tm as typevar(name, r)) =
+        let
+	  val (L, V, U) = getTypeVarTypeApx name
+        in
+          (omitapx (U, V, L, r), U, V, L)
+        end
+
       | inferApx (G, tm as typ (r)) =
           (tm, Uni Type, Uni Kind, Hyperkind)
       | inferApx (G, arrow (tm1, tm2)) =
@@ -549,16 +575,27 @@ struct
           (dec (name, tm', r), D)
         end
       | inferApxDec (G, ndec r) = (ndec r, NDec)
-      | inferApxDec (G, decRef (X as (ref (nameOpt, tm, r, NONE)))) =
+      | inferApxDec (G, decRef (X as (ref (nameOpt, tm, r, NONE, Aopt)))) =
         let
           val (tm', V1) = checkApx (G, tm, Uni Type, Kind,
                                     "Classifier in declaration must be a type")
           val D = Dec (nameOpt, V1)
-	  val _ = X := (nameOpt, tm, r,  SOME(tm',  V1))
+	  val _ = X := (nameOpt, tm, r,  SOME(tm',  V1), Aopt)
+
+	  val _ = case Aopt 
+	          of SOME A =>
+		    let
+		      val (tm'', _) = Apx.expToApx (Whnf.normalize(A, IntSyn.id))
+		      val _ = match (V1, tm'') handle Unify s => raise Domain (* ADAM -- need to replace with some mismatch thing *)
+		    in
+		      ()
+		    end
+		   | NONE => ()
+
         in
           (dec (nameOpt, tm', r), D)
         end
-      | inferApxDec (G, decRef (X as (ref (nameOpt, tm, r, SOME(tm', V1))))) =
+      | inferApxDec (G, decRef (X as (ref (nameOpt, tm, r, SOME(tm', V1), _)))) =
 	  (dec (nameOpt, tm', r), Dec (nameOpt, V1))
 	
 
@@ -592,6 +629,21 @@ struct
         in
           jterm (tm')
         end
+
+      | inferApxJob (G, jequalterm (tm, A)) =
+	let
+	  val _ = clearDelayed ()
+          val (tm', U, V, L) = inferApx (G, tm)
+	  val (tm'', _) = Apx.expToApx (Whnf.normalize(A, IntSyn.id))
+          val _ = filterLevel (tm', L, 2,
+                               "The term in this position must be an object or a type family")
+	  val _ = match (U, tm'') handle Unify s => raise Domain (* ADAM -- need to replace with some mismatch thing *)
+          val _ = runDelayed ()
+        in
+          jterm (tm')
+        end
+
+
       | inferApxJob (G, jclass (tm)) =
         let
           val _ = clearDelayed ()
@@ -931,6 +983,9 @@ struct
         in
           (tm, Elim (fvarElim (name, V, s)), EClo (V, s))
         end
+
+
+
       | inferExactN (G, tm as typ (r)) =
           (tm, Intro (Uni Type), Uni Kind)
       | inferExactN (G, arrow (tm1, tm2)) =
