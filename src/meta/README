@@ -45,6 +45,7 @@ Open issues:
 	 * Ignored recursive call: Argument not instantiated during unification)
 
 
+
 INVARIANT:
   1) Proof requires only the introduction of at most ONE context block
   2) All constant declarations in the signature do not have spurious variable
@@ -83,13 +84,23 @@ Parameter Cases
 	DONE -cs abstract : add depth to EV
 	DONE -cs abstract : add BV
 
-	splitting: calculate G0
+	DONE -cs splitting: calculate G0
 	splitting: correct calls to   abstract
-
 	
+
+	TODO: Second parameter splitting to the right of a parameter block not yet detected.
+	TODO: Collect all parameter in paramCases, not just the local ones.
+
 
 
 Splitting Residual lemmas
+   Unify lemmas and assumptions tags: Assumption 
+	<a2> X:eval E V
+   could be reprsented as
+	<l2: [[X:eval E V]]> X:eval E V
+   this makes the code more uniform, especially in splitting. 
+  
+
 Index variables
 Proof terms
 

@@ -238,6 +238,7 @@ struct
     *)
     fun lowerSplitDest (G, k, (V as I.Root (I.Const c, _), s'), abstract, cases) =
           cases (c, G, k, (V, s'), abstract)
+(* k must change. It should consider all parameters in the context, and not just the local ones --cs *) 
 (*          constCases (G, (V, s'), Index.lookup c, abstract, 
 		      paramCases (G, (V, s'), I.ctxLength G, abstract, nil)) *)
       | lowerSplitDest (G, k, (I.Pi ((D, P), V), s'), abstract, cases) =
@@ -329,6 +330,10 @@ struct
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
 		     I.Decl (B, T)), I.dot1 s)
 
+    fun abstractError ((G, B), s) = 
+      (TextIO.print "Cannot split left of parameters";
+       raise MTPAbstract.Error "Cannot split left of parameters")
+
     fun makeAddressInit S k = (S, k)
     fun makeAddressCont makeAddress k = makeAddress (k+1)
 
@@ -417,7 +422,7 @@ struct
 	let 
 	  val (sc, ops) =
 	    expand' ((G, B), isIndexSucc (D, isIndex),
-		     abstractCont ((D, T), abstract),
+		     abstractError,
 		     makeAddressCont makeAddress)
 	  val I.Dec (xOpt, V) = D
 	  fun sc' (Gp, Bp) = 
