@@ -167,6 +167,19 @@ in
       IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
 				  print "\n"))
 
+
+  fun printSgnToFile filename =
+      let 
+	val file = TextIO.openOut filename
+
+	val _ =       IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+				  TextIO.output (file, "\n")))
+	val _ = TextIO.closeOut file
+
+      in
+	()
+      end
+
 end  (* local ... *)
 
 end  (* functor Print *)
