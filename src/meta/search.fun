@@ -389,7 +389,7 @@ struct
 					      val GE' = foldr (fn (X as I.EVar (_, G, _, _), L) => 
 							       Abstract.collectEVars (G, (X, I.id), L)) nil GE
 					      val gE' = List.length GE'
-					    in
+					    in 
 					      if gE' > 0 then  
 						if it > 0 then searchEx (it-1, 1) (GE', sc) 
 						else ()

@@ -3,7 +3,7 @@
 (* Modified: Jeff Polakow *)
 (* Modified: Carsten Schuermann *)
 
-functor PrintXML
+functor PrintOMDoc
   ((*! structure IntSyn' : INTSYN !*)
    structure Whnf : WHNF
    (*! sharing Whnf.IntSyn = IntSyn' !*)
@@ -24,9 +24,16 @@ local
   (* Shorthands *)
   structure I = IntSyn
   structure F = Formatter
-  val Str = F.String
+
+  fun escape nil = nil
+    | escape (#"&" :: rest) = String.explode "&amp;" @ (escape rest) 
+    | escape (#"<" :: rest) = String.explode "&lt;" @ (escape rest) 
+    | escape (#">" :: rest) = String.explode "&gt;" @ (escape rest) 
+    | escape (c :: rest) = c :: (escape rest) 
+
+  val Str  = F.String
   fun Str0 (s, n) = F.String0 n s
-  fun Name (x) = F.String ("\"" ^ x ^ "\"")
+  fun Name (x) = F.String ("\"" ^ (String.implode (escape (String.explode x))) ^ "\"")
   fun Integer (n) = F.String ("\"" ^ Int.toString n ^ "\"")
 
   fun sexp (fmts) = F.Hbox [F.HVbox fmts]
@@ -39,15 +46,15 @@ local
       let
 	val I.Dec (SOME n, _) = I.ctxDec (G, n)
       in 
-	sexp [Str ("<Var name = \"" ^ n ^ "\"/>")]
+	sexp [Str ("<OMV name = \"" ^ n ^ "\"/>")]
       end
-    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const name=\"", Str (I.conDecName (I.sgnLookup cid)), Str "\"/>"]
-    | fmtCon (G, I.Def(cid)) = sexp [Str "<Def>", F.Break, Integer cid, Str "</Def>"]
+    | fmtCon (G, I.Const(cid)) = sexp [Str "<OMS cd=\"global\" name=", Name (I.conDecName (I.sgnLookup cid)), Str "/>"]
+    | fmtCon (G, I.Def(cid)) = sexp [Str "<OMS cd=\"global\" name=", Name (I.conDecName (I.sgnLookup cid)), Str "/>"]
     (* I.Skonst, I.FVar cases should be impossible *)
 
   (* fmtUni (L) = "L" *)
-  fun fmtUni (I.Type) = Str "<Type/>"
-    | fmtUni (I.Kind) = Str "<Kind/>"
+  fun fmtUni (I.Type) = Str "<OMS cd=\"LF\" name=\"Type\"/>"
+    | fmtUni (I.Kind) = Str "<OMS cd=\"LF\" name=\"Kind\"/>"
 
   (* fmtExpW (G, (U, s)) = fmt
      
@@ -59,36 +66,48 @@ local
        G'' |- U : V   G' |- s : G''  (so  G' |- U[s] : V[s])
        (U,s) in whnf
   *)
-  fun fmtExpW (G, (I.Uni(L), s)) = sexp [Str "<Uni>", F.Break, fmtUni L, Str "</Uni>"]
+  fun fmtExpW (G, (I.Uni(L), s)) = sexp [fmtUni L]
     | fmtExpW (G, (I.Pi((D as I.Dec(_,V1),P),V2), s)) =
       (case P (* if Pi is dependent but anonymous, invent name here *)
 	 of I.Maybe => let
-			 val D' = Names.decLUName (G, D) (* could sometimes be EName *)
+			 val (D' as I.Dec (SOME(x), V1')) = Names.decLUName (G, D) (* could sometimes be EName *)
 			 val G' = I.Decl (G, D')
+			 val fmtType = fmtExp (G, (V1', s))
 		       in
-			 sexp [Str "<Pi>", F.Break, fmtDec (G, (D', s)),
-			       F.Break, (* Str "tw*maybe", F.Break, *) fmtExp (G', (V2, I.dot1 s)),
-			       Str "</Pi>"]
+	sexp [Str "<OMBIND> <OMS cd =\"LF\" name=\"pi\"/>",
+	      F.Break, Str "<OMBVAR>", F.Break, Str "<OMATTR>", F.Break,
+	      Str "<OMATP>", F.Break,
+	      Str "<OMS cd=\"LF\" name=\"typeof\"/>", F.Break,
+	      fmtType, F.Break, Str "</OMATP>", F.Break, 
+	      Str "<OMV name=",  Name (x),  Str "/></OMATTR></OMBVAR>",
+	      F.Break, fmtExp (G', (V2, I.dot1 s)), Str "</OMBIND>"]
 		       end
 	  | I.No => let
 		       val G' = I.Decl (G, D)
 		    in
-		      sexp [Str "<Arrow>", F.Break, fmtDec' (G, (D, s)),
+		      sexp [Str "<OMA>", F.Break, Str "<OMS cd=\"LF\" name=\"arrow\"/>",
+			    fmtExp (G, (V1, s)),
 			    F.Break, (* Str "tw*no", F.Break,*) fmtExp (G', (V2, I.dot1 s)),
-			    Str "</Arrow>"]
+			    Str "</OMA>"]
 		    end)
     | fmtExpW (G, (I.Root (H, S), s)) =
       (case (fmtSpine (G, (S, s)))
 	 of NONE =>  fmtCon (G, H)
-          | SOME fmts =>  F.HVbox [Str "<App>", fmtCon (G, H),
-	       F.Break, sexp (fmts), Str "</App>"])
+          | SOME fmts =>  F.HVbox [Str "<OMA>", fmtCon (G, H),
+	       F.Break, sexp (fmts), Str "</OMA>"])
     | fmtExpW (G, (I.Lam(D, U), s)) = 
       let
-	val D' = Names.decLUName (G, D)
+	val (D' as I.Dec (SOME(x), V)) = Names.decLUName (G, D)
 	val G' = I.Decl (G, D')
+	val fmtType = fmtExp (G, (V, s))
       in
-	sexp [Str "<Lam>", F.Break, fmtDec (G, (D', s)),
-	      F.Break, fmtExp (G', (U, I.dot1 s)), Str "</Lam>"]
+	sexp [Str "<OMBIND> <OMS cd =\"LF\" name=\"lambda\"/>",
+	      F.Break, Str "<OMBVAR>", F.Break, Str "<OMATTR>", F.Break,
+	      Str "<OMATP>", F.Break,
+	      Str "<OMS cd=\"LF\" name=\"typeof\"/>", F.Break,
+	      fmtType, F.Break, Str "</OMATP>", F.Break, 
+	      Str "<OMV name=",  Name (x),  Str "/></OMATTR></OMBVAR>",
+	      F.Break, fmtExp (G', (U, I.dot1 s)), Str "</OMBIND>"]
       end
     (* I.EClo, I.Redex, I.EVar not possible *)
 
@@ -106,17 +125,9 @@ local
 	 of NONE => SOME [fmtExp (G, (U, s))]
   	  | SOME fmts => SOME ([fmtExp (G, (U, s)), F.Break] @ fmts))
 
-  and fmtDec (G, (I.Dec (NONE, V), s)) =
-        sexp [Str "<Dec>", F.Break, fmtExp (G, (V, s)), Str "</Dec>"]
-    | fmtDec (G, (I.Dec (SOME(x), V), s)) =
-	sexp [Str "<Dec name =", Name x,  Str ">", F.Break, fmtExp (G, (V, s)), Str "</Dec>"]
 
 
-  and fmtDec' (G, (I.Dec (NONE, V), s)) =
-        sexp [fmtExp (G, (V, s))]
-    | fmtDec' (G, (I.Dec (SOME(x), V), s)) =
-	sexp [fmtExp (G, (V, s))]
-
+  fun fmtExpTop (G, (U, s)) = sexp [Str "<OMOBJ>", fmtExp (G, (U, s)), Str "</OMOBJ>"]
 
   (* fmtConDec (condec) = fmt
      formats a constant declaration (which must be closed and in normal form)
@@ -127,9 +138,9 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<Condec name=",  Name (name), F.Break, Str "implicit=", 
-	      Integer (imp), Str ">", F.Break, fmtExp (I.Null, (V, I.id)),
-	      F.Break, fmtUni (L), Str "</Condec>"]
+	sexp [Str "<symbol id=",  Name (name), Str ">", F.Break, Str "<type system=\"LF\">",
+	      F.Break, fmtExpTop (I.Null, (V, I.id)),
+	      Str "</type></symbol>"]
       end
     | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
       Str ("<! Skipping Skolem constant " ^ name ^ ">")
@@ -137,34 +148,28 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<Condef name=", Name (name), Str ">", F.Break,
-	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
-	      F.Break, fmtExp (I.Null, (V, I.id)),
-	      F.Break, fmtUni (L), Str "</Condef>"]
+	sexp [Str "<symbol id=", Name (name), Str ">",
+	      F.Break, Str "<type system=\"LF\">",
+	      F.Break, fmtExpTop (I.Null, (V, I.id)),
+	      Str "</type></symbol>", F.Break,
+	      Str "<definition id=",  Name (name), Str ".def", F.Break, 
+	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id)),
+	      Str "</definition>"]
       end
     | fmtConDec (I.AbbrevDef (name, parent, imp, U, V, L)) =
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<Abbrevdef name=", Name (name), Str ">", F.Break,
-	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
-	      F.Break, fmtExp (I.Null, (V, I.id)),
-	      F.Break, fmtUni (L), Str "</Abbrevdef>"]
+	sexp [Str "<symbol id=", Name (name),  Str ">",
+	      F.Break, Str "<type system=\"LF\">",
+	      F.Break, fmtExpTop (I.Null, (V, I.id)),
+	      Str "</type></symbol>", F.Break,
+	      Str "<definition id=",  Name (name), Str ".def", F.Break, 
+	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id)),
+	      Str "</definition>"]
       end
     | fmtConDec (I.BlockDec (name, _, _, _)) =
-      Str ("<! Skipping Skolem constant " ^ name ^ ">")
-
-  (* fmtEqn assumes that G is a valid printing context *)
-  fun fmtEqn (I.Eqn (G, U1, U2)) = (* print context?? *)
-      sexp [Str "<Equation>", F.Break, fmtExp (G, (U1, I.id)), F.Break, fmtExp (G, (U2, I.id)),
-	    Str "</Equation>"]
-
-  (* fmtEqnName and fmtEqns do not assume that G is a valid printing
-     context and will name or rename variables to make it so.
-     fmtEqns should only be used for printing constraints.
-  *)
-  fun fmtEqnName (I.Eqn (G, U1, U2)) =
-      fmtEqn (I.Eqn (Names.ctxLUName G, U1, U2))
+      Str ("<!-- Skipping Skolem constant " ^ name ^ "-->")
 
 in
 
@@ -173,16 +178,12 @@ in
          actually applied in the scope (typically, using Names.decName)
      (b) types need not be well-formed, since they are not used
   *)
-  fun formatDec (G, D) = fmtDec (G, (D, I.id))
   fun formatExp (G, U) = fmtExp (G, (U, I.id))
 (*  fun formatSpine (G, S) = sexp (fmtSpine (G, (S, I.id))) *)
   fun formatConDec (condec) = fmtConDec (condec)
-  fun formatEqn (E) = fmtEqn E
 
-  fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
-  fun eqnToString (E) = F.makestring_fmt (formatEqn E)
 
   fun printSgn () =
       IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
@@ -191,11 +192,11 @@ in
   fun printSgnToFile path filename =
       let 
 	val file = TextIO.openOut (path ^ filename)
-	val _ = TextIO.output (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- nsgmls ex.xml -->\n<!DOCTYPE Signature SYSTEM \"lf.dtd\">\n<Signature>")
+	val _ = TextIO.output (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- nsgmls ex.xml -->\n<!DOCTYPE omdoc PUBLIC \"-//OMDoc//DTD OMDoc V1.2//EN\" \"dtd/omdoc.dtd\">\n\n<omdoc id=\"" ^ filename ^ "\">\n<theory id=\"global\">\n")
 
 	val _ = IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
 				  TextIO.output (file, "\n")))
-	val _ = TextIO.output (file, "</Signature>")
+	val _ = TextIO.output (file, "</theory></omdoc>")
 	val _ = TextIO.closeOut file
 
       in

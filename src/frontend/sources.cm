@@ -26,6 +26,7 @@ Library
   structure Global
   structure PrintTwega
   structure PrintXML
+  structure PrintOMDoc
   structure Interactive
   signature FLIT
   structure Flit

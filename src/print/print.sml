@@ -52,3 +52,11 @@ structure PrintXML =
 	      structure Constraints = Constraints
 	      structure Names = Names
 	      structure Formatter' = Formatter);
+
+structure PrintOMDoc =
+  PrintOMDoc ((*! structure IntSyn' = IntSyn !*)
+	      structure Whnf = Whnf
+	      structure Abstract = Abstract
+	      structure Constraints = Constraints
+	      structure Names = Names
+	      structure Formatter' = Formatter);

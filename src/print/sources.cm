@@ -8,6 +8,7 @@ Library
   structure PrintTwega
   structure PrintXML
   structure PrintTwega
+  structure PrintOMDoc
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -28,3 +29,4 @@ is
   print-twega.fun
   print-xml.sig
   print-xml.fun
+  print-omdoc.fun

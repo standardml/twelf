@@ -10,6 +10,7 @@ Library
   signature INTSYN
   structure IntSyn
   structure PrintXML
+  structure PrintOMDoc
   structure PrintTwega
   signature FLIT
   structure Flit
