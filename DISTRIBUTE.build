@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 export SML="sml-cm"
-export TWELF_VERSION="1-3R4"
+export TWELF_VERSION="1-4"
 
 ###################### do not edit after this ###############################
 
