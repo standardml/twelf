@@ -4,6 +4,7 @@ Group is
   ../modes/sources.cm
   ../order/sources.cm
   ../paths/sources.cm
+  ../tabling/sources.cm
   thmsyn.sig
   thmsyn.fun
   thmprint.sig

@@ -39,6 +39,7 @@ sig
     | BLOCK				(* `%block' *) (* -cs 5/29/01 *)
     | WORLDS       			(* `%worlds' *)
     | REDUCES       			(* `%reduces' *) (* -bp 6/5/99 *)
+    | TABLED       			(* `%tabled' *)  (* -bp 6/5/99 *)
     | THEOREM                           (* `%theorem' *)
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)

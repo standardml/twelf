@@ -17,4 +17,7 @@ sig
   (* -bp *)
   val installReduces : ThmSyn.RDecl * (Paths.region * Paths.region list) 
                        -> ThmSyn.ModeSyn.IntSyn.cid list 
+
+  val installTabled : ThmSyn.TabledDecl -> unit
+
 end;  (* signature THM *)

@@ -56,6 +56,7 @@ struct
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl
     | ReducesDec of ThmExtSyn.rdecl  (* -bp *)
+    | TabledDec of ThmExtSyn.tableddecl 
     | TheoremDec of ThmExtSyn.theoremdec 
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish
@@ -184,6 +185,8 @@ struct
       | parseStream' (f as LS.Cons ((L.BLOCK, r), s'), sc) = parseConDec' (f, sc) (* -cs *)
       | parseStream' (f as LS.Cons ((L.WORLDS, r), s'), sc) = parseWorlds' (f, sc)
       | parseStream' (f as LS.Cons ((L.REDUCES, r), s'), sc) = parseReduces' (f, sc) (* -bp *)
+      | parseStream' (f as LS.Cons ((L.TABLED, r), s'), sc) = parseTabled' (f, sc) (* -bp *)
+
       | parseStream' (f as LS.Cons ((L.THEOREM, r), s'), sc) = parseTheorem' (f, sc)
       | parseStream' (f as LS.Cons ((L.PROVE, r), s'), sc) = parseProve' (f, sc)
       | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s'), sc) = parseEstablish' (f, sc)
@@ -286,6 +289,14 @@ struct
           val r = ExtSyn.Paths.join (r0, r')
 	in
 	  Stream.Cons ((ReducesDec ldec, r), parseStream (stripDot f', sc))
+	end
+
+    and parseTabled' (f as LS.Cons ((_, r0), _), sc) = 
+	let
+	  val (ldec, f' as LS.Cons ((_, r'), _)) = ParseThm.parseTabled' (f)
+          val r = ExtSyn.Paths.join (r0, r')
+	in
+	  Stream.Cons ((TabledDec ldec, r), parseStream (stripDot f', sc))
 	end
 
     and parseWorlds' (f as LS.Cons ((_, r0), _), sc) =

@@ -144,6 +144,7 @@ structure Solve =
 	 structure CPrint = CPrint
 	 structure AbsMachine = TMachine
 	 structure Tabled = Tabled
+	 structure PtRecon = PtRecon
 	 structure TableIndex = TableIndex
 	 structure Strict = Strict
 	 structure Print = Print
@@ -202,6 +203,8 @@ structure Twelf =
 	 structure Skolem = Skolem
 	 structure Prover = CombiProver
 	 structure ClausePrint = ClausePrint
+
+	 structure TabledSyn = TabledSyn
 
          structure ModSyn = ModSyn
          structure ModRecon = ModRecon

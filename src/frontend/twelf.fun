@@ -83,6 +83,7 @@ functor Twelf
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn'
+
    structure Tabled : TABLED
      sharing Tabled.IntSyn = IntSyn'
      sharing Tabled.CompSyn = CompSyn'
@@ -106,6 +107,7 @@ functor Twelf
      sharing ThmRecon.ThmSyn.ModeSyn = ModeSyn
      sharing type ThmRecon.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ThmRecon.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
+     sharing type ThmRecon.tableddecl = Parser.ThmExtSyn.tableddecl (* -bp *)
      sharing type ThmRecon.wdecl = Parser.ThmExtSyn.wdecl 
      sharing type ThmRecon.theorem = Parser.ThmExtSyn.theorem
      sharing type ThmRecon.theoremdec = Parser.ThmExtSyn.theoremdec 
@@ -114,6 +116,9 @@ functor Twelf
      sharing type ThmRecon.assert = Parser.ThmExtSyn.assert
    structure ThmPrint : THMPRINT
      sharing ThmPrint.ThmSyn = ThmSyn
+
+   structure TabledSyn : TABLEDSYN
+     sharing TabledSyn.IntSyn = IntSyn'
 
    structure WorldSyn : WORLDSYN
      sharing WorldSyn.IntSyn = IntSyn'
@@ -623,6 +628,20 @@ struct
 	  ()
 	end
 
+	(* Tabled declaration *)
+      | install1 (fileName, (Parser.TabledDec tdecl, _)) =
+	let
+	  val (T,r) = ThmRecon.tableddeclTotabledDecl tdecl 
+	  val La = Thm.installTabled T
+	  (*  -bp6/12/99.   *)
+	  val _ = if !Global.chatter >= 3 
+		    then print ("%tabled " ^ ThmPrint.tabledDeclToString T ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
+
       (* Theorem declaration *)
       | install1 (fileName, (Parser.TheoremDec tdec, r)) =
 	let 
@@ -906,13 +925,19 @@ struct
     (* Interactive Query Top Level *)
 
     fun sLoop () = if Solve.qLoop () then OK else ABORT
+    fun sLoopT () = if Solve.qLoopT () then OK else ABORT
 
     fun topLoop () = case (handleExceptions "stdIn" sLoop) () (* "stdIn" as fake fileName *)
 		       of ABORT => topLoop ()
 			| OK => ()
 
+    fun topLoopT () = case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
+		       of ABORT => topLoopT ()
+			| OK => ()
+
     (* top () = () starts interactive query loop *)
     fun top () = topLoop ()
+    fun topTabled () = topLoopT ()
 
     fun installCSMDec (conDec, optFixity, optMdec) = 
 	let
@@ -951,6 +976,7 @@ struct
 		    Total.reset ();	(* -fp *)
 		    WorldSyn.reset ();	(* -fp *)
 		    Reduces.reset ();	(* -bp *)
+		    TabledSyn.reset ();	(* -bp *)
 		    FunSyn.labelReset ();
 		    CompSyn.sProgReset (); (* necessary? -fp *)
                     ModSyn.reset ();
@@ -1209,6 +1235,7 @@ struct
     val decl = decl
 
     val top = top
+    val topTabled = topTabled
 
     structure Config :
       sig
@@ -1223,19 +1250,20 @@ struct
 
     val version = "Twelf 1.3R3, Dec 28 2001 (with world, coverage, and totality checking)"
 
-    val printTable = TableIndex.printTable      (* bp *)
+    val printTable = TableIndex.printTable                    (* bp *)
+    val printTableEntries = TableIndex.printTableEntries      (* bp *)
 
     structure Tabled : 
       sig
 	structure IntSyn : INTSYN
 	structure CompSyn : COMPSYN
 	structure Unify : UNIFY
-	
-	  val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.Exp  -> unit)) * 
-			     Unify.unifTrail) 
+	  
+	val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.pskeleton  -> unit)) * 
+			     Unify.unifTrail * int ref) 
 			    list) ref 
 
-(* 	val expToString : IntSyn.dctx * IntSyn.Exp -> string *)
+	val reset : unit -> unit
 
       end 
     = Tabled
@@ -1244,16 +1272,18 @@ struct
     structure TableIndex : 
       sig 
 	structure IntSyn : INTSYN
-	type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
+	type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
 		       lookup: int}
 	  
-	val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list ref 
+	val table : ((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
 	  
 	datatype Strategy = Variant | Subsumption
 	  
       (* global tabled search parameters *)
 	val strategy : Strategy ref
 	val termDepth : int option ref
+	val ctxDepth : int option ref
+	val ctxLength : int option ref 
 	val strengthen : bool ref
 
       end 

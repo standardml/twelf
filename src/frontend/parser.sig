@@ -23,6 +23,7 @@ sig
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl
     | ReducesDec of ThmExtSyn.rdecl   (* -bp *)
+    | TabledDec of ThmExtSyn.tableddecl 
     | TheoremDec of ThmExtSyn.theoremdec
     | ProveDec of ThmExtSyn.prove
     | EstablishDec of ThmExtSyn.establish

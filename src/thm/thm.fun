@@ -4,7 +4,7 @@
 
 functor Thm (structure Global : GLOBAL
 	     structure ThmSyn': THMSYN
-	       
+             structure TabledSyn : TABLEDSYN
       	     structure Order : ORDER
 	       sharing Order.IntSyn = ThmSyn'.ModeSyn.IntSyn
 	     structure ThmPrint : THMPRINT
@@ -14,6 +14,7 @@ functor Thm (structure Global : GLOBAL
 struct
   structure ThmSyn = ThmSyn'
   structure Paths = Paths'
+  structure TabledSyn = TabledSyn
  
   (* -bp *)
   datatype Order = Varg | Lex of Order list | Simul of Order list 
@@ -444,10 +445,13 @@ struct
     *)
     fun installReduces (L.RDecl (R, C), rrs) = (wfred ((R, C), rrs); installRDecl (R, C))
 		 
+    fun installTabled (L.TabledDecl cid) = TabledSyn.installTabled cid
+
   in
     val installTotal = installTotal
     val installTerminates = installTerminates
     val installReduces = installReduces
+    val installTabled = installTabled 
   end (* local *)
 
 end; (* functor Thm *)

@@ -8,6 +8,7 @@ Group is
   ../print/sources.cm
   ../typecheck/sources.cm
   ../modes/sources.cm 
+  ../tabling/sources.cm 
   ../terminate/sources.cm 
   ../index/sources.cm
   ../thm/sources.cm

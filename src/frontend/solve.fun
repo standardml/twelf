@@ -40,6 +40,9 @@ functor Solve
    structure AbsMachine : ABSMACHINE
      sharing AbsMachine.IntSyn = IntSyn'
      sharing AbsMachine.CompSyn = CompSyn
+   structure PtRecon : PTRECON
+     sharing PtRecon.IntSyn = IntSyn'
+     sharing PtRecon.CompSyn = CompSyn
    structure Tabled : TABLED
      sharing Tabled.IntSyn = IntSyn'
      sharing Tabled.CompSyn = CompSyn
@@ -147,6 +150,9 @@ struct
   *)
   exception Done
 
+ (* exception Completed raised by tabled computation when table is saturated *)
+  exception Completed 
+
   (* exception Solution (imp, (M, A))
      is raised when M : A is the generalized form of a solution to the
      query A', where imp is the number of implicitly quantified arguments.
@@ -219,7 +225,7 @@ struct
                                     Paths.Loc (fileName, r))
 					(* times itself *)
 	(* echo declaration, according to chatter level *)
-	val _ = if !Global.chatter >= 2
+	val _ = if !Global.chatter >= 3
 		  then print ("%solve ")
 		else ()
 	val _ = if !Global.chatter >= 3
@@ -280,11 +286,11 @@ struct
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
 	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
-	    val _ = if !Global.chatter >= 2
+	    val _ = if !Global.chatter >= 3
 		      then print ("%query " ^ boundToString expected
 					 ^ " " ^ boundToString try ^ "\n")
 		    else ()
-	    val _ = if !Global.chatter >= 2
+	    val _ = if !Global.chatter >= 4
 		      then print (" ")
 		    else ()
 	    val _ = if !Global.chatter >= 3
@@ -316,7 +322,7 @@ struct
 		   if !Global.chatter >= 3
 		     then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
 			   print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
-		   else if !Global.chatter >= 2
+		   else if !Global.chatter >= 3
 			  then print "."
 			else ();
 		   case optName
@@ -349,27 +355,27 @@ struct
 		        checkSolutions (expected, try, !solutions))
 		else if !Global.chatter >= 3
 		       then print ("Skipping query (bound = 0)\n")
-		     else if !Global.chatter >= 2
+		     else if !Global.chatter >= 4
 			    then print ("skipping")
 			  else ();
 		if !Global.chatter >= 3
 		  then print "____________________________________________\n\n"
-		else if !Global.chatter >= 2
+		else if !Global.chatter >= 4
 		       then print (" OK\n")
 		     else ()
               end
 
 
-  (* bp *)
+     (* bp *)
       fun querytabled ((try, quy), Paths.Loc (fileName, r)) =
 	  let
-	    val _ = if !Global.chatter >= 2
+	    val _ = if !Global.chatter >= 3
 		      then print ("%querytabled " ^ boundToString try)
 		    else ()
 	    (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
 	    val (A, optName, Xs) = TpRecon.queryToQuery(quy, Paths.Loc (fileName, r))
 					(* times itself *)
-	    val _ = if !Global.chatter >= 2
+	    val _ = if !Global.chatter >= 4
 		      then print (" ")
 		    else ()
 	    val _ = if !Global.chatter >= 3
@@ -389,18 +395,12 @@ struct
 	     val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	                (IntSyn.Null, A)
 
-	     (* is g always atomic ? - NO! too restrictive, might want to solve
-                universally quantified statements - bp *)
-(*
-	     val CompSyn.Atom(p') = g
-	     val (p,s) = Abstract.abstractEVarEClo (p',IntSyn.id)
-*)
-			
 	     (* solutions = ref <n> counts the number of solutions found *)
 	     (* -bp redundant ? *)
 	     val solutions = ref 0
 	     val status = ref false
 	     val uniquesol = ref 0
+	     val solExists = ref false 
 
 	     (* stage = ref <n> counts the number of stages found *)
 	     val stages = ref 1
@@ -409,23 +409,30 @@ struct
 		and raises exception Done if bound has been reached, otherwise it returns
                 to search for further solutions
               *)
-	      fun scInit M =
+	      fun scInit O =
 		  (solutions := !solutions+1;	 
-		   
+		   solExists := true ;
 		   if !Global.chatter >= 3
 		     then (print ("\n---------- Solutions " ^ Int.toString (!solutions) ^ 
 				  " ----------\n");
 			   print ((Timers.time Timers.printing evarInstToString) Xs ^ " \n"))
-		   else if !Global.chatter >= 2
+		   else if !Global.chatter >= 1
 			  then print "."
 			else ();
 		   case optName
 		     of NONE => ()
-		      | SOME(name) =>
-		        if !Global.chatter >= 3
-			  then print ((Timers.time Timers.printing evarInstToString)
-					     [(M, name)] ^ "\n")
-			else ();
+		      | SOME(name) => (print ("\n reconstruct proof term from pskeleton \n");
+				       print ((IntSyn.pskeletonToString O) ^ "\n");
+		         (Timers.time Timers.ptrecon PtRecon.solve) 
+			 (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
+			  (fn (O, M) => 
+			     if !Global.chatter >= 3
+			       then print ((Timers.time Timers.printing evarInstToString)
+					   [(M, name)] ^ "\n")
+			     else ())));
+(* 		        if !Global.chatter >= 3 *)
+(* 			  then print ("Reconstruct proof term : NOT DONE YET -- SORRY\n") *)
+(* 			else (); *)
 		   if !Global.chatter >= 3
 		     (* Question: should we collect constraints in M? *)
 		     then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
@@ -444,6 +451,13 @@ struct
 			      else ();								
 				print ("\n ====================== Stage " ^ 
 				       Int.toString(!stages) ^ " finished =================== \n");
+                              if exceeds (SOME(!stages),try)
+				then (print ("\n ================= " ^
+					     " Number of tries exceeds stages " ^ 
+					     " ======================= \n");  
+				      status := false;
+				      raise Done)
+			      else ();	
 			      if Tabled.nextStage () then 
 				(stages := (!stages) + 1;
 				 loop ())
@@ -454,7 +468,7 @@ struct
 				 *)
 				status := true;
 				raise Done) 
-	      val _ = Tabled.reset ()
+	      val _ = Tabled.reset () 
               in
 		if not (boundEq (try, SOME(0)))
 		  then (CSManager.reset ();
@@ -465,7 +479,7 @@ struct
 
 			CSManager.reset (); 	(* in case Done was raised *)
 			(* next stage until table doesn't change *)
-			loop();
+			(Timers.time Timers.solving loop) ();
 		        checkStages (try, !stages)  
 			)
 		    handle Done => ()
@@ -474,12 +488,17 @@ struct
 		     else if !Global.chatter >= 2
 			    then print ("skipping")
 			  else ();
+		if !Global.chatter >= 4 then 
+		  TableIndex.printTable()
+		  else 
+		    ();
 		if !Global.chatter >= 3
 		  then 
-		    (TableIndex.printTable();
-		     print "\n____________________________________________\n\n";
+		    (print "\n____________________________________________\n\n";
 		     print ("number of stages: tried "    ^ boundToString try ^ " \n" ^ 
 			    "terminated after " ^ Int.toString (!stages) ^ " stages \n \n");
+                     (if (!solExists) then ()
+			else print "\nNO solution exists to query \n\n");
 		     (if (!status) then 
 			print "Tabled evaluation COMPLETE \n \n"
 		      else 
@@ -493,6 +512,18 @@ struct
 			    NONE => print ("\n       Term Depth Abstraction := NONE \n")
 			  | SOME(d) => print ("\n       Term Depth Abstraction := " ^
 					       Int.toString(d) ^ "\n"));
+
+		     (case (!TableIndex.ctxDepth) of
+			    NONE => print ("\n       Ctx Depth Abstraction := NONE \n")
+			  | SOME(d) => print ("\n       Ctx Depth Abstraction := " ^
+					       Int.toString(d) ^ "\n"));
+
+		     (case (!TableIndex.ctxLength) of
+			    NONE => print ("\n       Ctx Length Abstraction := NONE \n")
+			  | SOME(d) => print ("\n       Ctx Length Abstraction := " ^
+					       Int.toString(d) ^ "\n"));
+
+
 		     (if (!TableIndex.strengthen) then 
 			print "\n       Strengthening := true \n"
 		      else 
@@ -552,6 +583,66 @@ struct
 	handle Done => ();
 	(* Ignore s': parse one query at a time *)
 	qLoop ()
+      end
+
+
+  (* querytabled interactive top loop *)
+  fun qLoopT () = qLoopsT (CSManager.reset ();
+                         Parser.parseTerminalQ ("?- ", "   ")) (* primary, secondary prompt *)
+  and qLoopsT (s) = qLoopsT' ((Timers.time Timers.parsing S.expose) s)
+  and qLoopsT' (S.Empty) = true		(* normal exit *)
+    | qLoopsT' (S.Cons (query, s')) =
+      let
+	val solExists = ref false 
+	val (A, optName, Xs) = TpRecon.queryToQuery(query, Paths.Loc ("stdIn", Paths.Reg (0,0)))
+					(* times itself *)
+	val g = (Timers.time Timers.compiling Compile.compileGoal) 
+	            (IntSyn.Null, A)
+	val _ = Tabled.reset () 
+	fun scInit O =
+	    (print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
+	     case optName
+	       of NONE => ()
+		| SOME(name) =>
+		  if !Global.chatter >= 3
+		    then print (" Sorry cannot reconstruct pskeleton proof terms yet \n")
+(*		      ((Timers.time Timers.printing evarInstToString) *)
+(*				       [(M, name)] ^ "\n") *)
+		  else ();
+	     if !Global.chatter >= 3
+	       (* Question: should we collect constraints from M? *)
+	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
+		      of NONE => ()
+		       | SOME(str) =>
+			 print ("Remaining constraints:\n"
+				^ str ^ "\n")
+	     else ();
+	     solExists := true;
+	     if moreSolutions () then () else raise Done)
+	(* loops -- scinit will raise exception Done *)
+	fun loop () =  (if Tabled.nextStage () then 				
+	                  loop ()
+		       else 
+			(* table did not change, 
+			 * i.e. all solutions have been found 
+			 * we check for *all* solutions
+			 *)
+			 raise Completed)
+	val _ = if !Global.chatter >= 3
+		  then print "Solving...\n"
+		else ()
+      in
+	((Timers.time Timers.solving Tabled.solve)
+	 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), scInit); (* scInit is timed into solving! *)
+	 (loop()
+	  handle Completed => 
+	    if !solExists then 
+	      print "No more solutions\n"
+	    else 
+	      print "the query has no solution\n"))
+	handle Done => (); 
+	(* Ignore s': parse one query at a time *)
+	qLoopT ()  
       end
 
 end; (* functor Solve *)

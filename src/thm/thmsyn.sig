@@ -37,6 +37,11 @@ sig
   datatype RDecl = 
     RDecl of (RedOrder * Callpats)
 
+   (* Tabled declaration *)
+   datatype TabledDecl = 
+    TabledDecl of IntSyn.cid
+
+
   (* Theorem declaration  *)
   datatype ThDecl =
     ThDecl of (IntSyn.Dec IntSyn.Ctx * IntSyn.Dec IntSyn.Ctx) list

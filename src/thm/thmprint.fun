@@ -60,12 +60,17 @@ struct
 	
     fun rDeclToString (L.RDecl (R,L.Callpats L)) = 
 	F.makestring_fmt (F.HVbox ((fmtROrder R @ (F.String " " :: fmtCallpats L))))
+
+
+    fun tabledDeclToString (L.TabledDecl cid) = 
+	F.makestring_fmt (F.HVbox ([F.String (I.conDecName (I.sgnLookup cid))]))
 	
   in
     val tDeclToString = tDeclToString
     val callpatsToString = callpatsToString
     val ROrderToString = ROrderToString            (* -bp *)
     val rDeclToString = rDeclToString	           (* -bp *)
+    val tabledDeclToString = tabledDeclToString
   end (* local *)
 
 end; (* functor ThmPrint *)

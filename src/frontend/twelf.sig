@@ -76,6 +76,7 @@ sig
   val decl : string -> Status	      (* print declaration of constant *)
 
   val top : unit -> unit	      (* top-level for interactive queries *)
+  val topTabled : unit -> unit	      (* top-level for interactive tabled queries *)
 
   structure Config :
   sig
@@ -91,7 +92,8 @@ sig
   val version : string		      (* Twelf version *)
 
 
-  val printTable : unit -> unit
+  val printTable        : unit -> unit
+  val printTableEntries : unit -> unit
 
 
   structure Tabled : 
@@ -100,25 +102,27 @@ sig
       structure CompSyn : COMPSYN
       structure Unify : UNIFY
 	
-      val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.Exp  -> unit)) * 
-			 Unify.unifTrail) list) ref 
-
+      val SuspGoals :  ((((IntSyn.Exp * IntSyn.Sub) * CompSyn.DProg * (IntSyn.pskeleton  -> unit)) * 
+			 Unify.unifTrail * int ref) list) ref 
+      val reset : unit -> unit
     end 
 
   structure TableIndex : 
     sig 
       structure IntSyn : INTSYN
 
-      type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
+      type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
 		     lookup: int}
 	
-      val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list ref 
+      val table : ((int ref * IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
 
       datatype Strategy = Variant | Subsumption
 
       (* global tabled search parameters *)
       val strategy : Strategy ref
       val termDepth : int option ref
+      val ctxDepth : int option ref
+      val ctxLength : int option ref
       val strengthen : bool ref
 
     end 
