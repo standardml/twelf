@@ -260,13 +260,16 @@ struct
     *)
     fun split (D as I.Dec (_, V), sc, B, abstract) = 
         let
+(*	  fun abstractFinal (abstract) (B, s) =
+	        abstract (MTPAbstract.abstractSub (I.Null, B, s))
+*)
 	  fun split' (n, ops) = 
 	    if n < 0 then 
 	      let 
 		val (_, _, s) = sc (I.Null, I.Null)
 	      in
 		lowerSplitDest (I.Null, 0, (V, s),  
-				fn U' => abstract (I.Dot (I.Exp (U'), s), B),
+				fn U' => abstract (MTPAbstract.abstractSub (I.Null, I.Dot (I.Exp (U'), s), B)),
 				constAndParamCases ops)
 	      end
 	    else
@@ -323,8 +326,6 @@ struct
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
 		   map (fn (i, F') => (i, F.forSub (F', s'))) H, F.forSub (F, s')))
 
-    fun abstractFinal (abstract) (B, s) =
-          abstract (MTPAbstract.abstractSub (I.Null, B, s))
 
     fun abstractCont ((D, T), abstract) ((G, B), s) =  
           abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
@@ -370,7 +371,7 @@ struct
 	    end
 	  val ops' = if not (isIndex 1) andalso b > 0
 			   then 
-			     (makeAddress 1, split (D, sc, B', abstractFinal abstract))
+			     (makeAddress 1, split (D, sc, B', abstract))
 			     :: ops
 		     else ops
 	in
@@ -394,7 +395,7 @@ struct
 	    end
 	  val ops' = if not (isIndex 1) andalso b > 0
 		       then 
-			 (makeAddress 1, split (D, sc, B', abstractFinal abstract))
+			 (makeAddress 1, split (D, sc, B', abstract))
 			 :: ops
 		     else ops
 	in
