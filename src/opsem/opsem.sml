@@ -18,7 +18,6 @@ structure CPrint =
 	  structure Names = Names);
 
 
-
 structure AbsMachine = 
   AbsMachine (structure IntSyn' = IntSyn
               structure CompSyn' = CompSyn
@@ -41,7 +40,8 @@ structure AbstractTabled =
 		  structure Whnf = Whnf
 		  structure Constraints = Constraints
 		  structure Unify = UnifyTrail
-		  structure Subordinate = Subordinate);
+		  structure Subordinate = Subordinate
+		  structure Print = Print);
 
 structure TableIndex = 
   TableIndex (structure Global = Global
@@ -62,6 +62,7 @@ structure Tabled =
 	  structure Unify = UnifyTrail 
 	  structure Whnf = Whnf
 	  (* structure Assign = Assign *)
+	  structure Subordinate = Subordinate
 	  structure Index = Index
 	  structure Queue = Queue
 	  structure TableIndex = TableIndex
