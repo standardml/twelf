@@ -1,13 +1,13 @@
 (* String Equation Solver *)
 (* Author: Roberto Virga *)
 
-functor CSEqString (structure IntSyn : INTSYN
-                    structure Whnf : WHNF
-                      sharing Whnf.IntSyn = IntSyn
-                    structure Unify : UNIFY
-                      sharing Unify.IntSyn = IntSyn
-                    structure CSManager : CS_MANAGER
-                      sharing CSManager.IntSyn = IntSyn)
+functor CSEqStrings (structure IntSyn : INTSYN
+                     structure Whnf : WHNF
+                       sharing Whnf.IntSyn = IntSyn
+                     structure Unify : UNIFY
+                       sharing Unify.IntSyn = IntSyn
+                     structure CSManager : CS_MANAGER
+                       sharing CSManager.IntSyn = IntSyn)
  : CS =
 struct
   structure CSManager = CSManager
@@ -148,47 +148,59 @@ struct
             List.map split' (index (str1, str2))
           end
 
+    datatype StringUnify =
+      MultAssign of (Dec Ctx * Exp * Exp * Sub) list
+    | MultDelay of Exp list * Cnstr ref
+    | Failure
+
+    fun toFgnUnify (MultAssign L) =
+          IntSyn.Succeed (List.map (fn GXUss => Assign GXUss) L)
+      | toFgnUnify (MultDelay (UL, cnstr)) =
+          IntSyn.Succeed (List.map (fn U => Delay (U, cnstr)) UL)
+      | toFgnUnify (Failure) = Fail
+
     fun unifyString (G, Concat AL, str, cnstr) =
           let
             fun unifyString' (AL, nil) =
-                  (Fail, nil)
+                  (Failure, nil)
               | unifyString' (nil, [Decomp (parse, parsedL)]) =
-                  (Succeed nil, parse :: parsedL)
+                  (MultAssign nil, parse :: parsedL)
               | unifyString' (nil, candidates) =
-                  (Delay (nil, cnstr), nil)
+                  (MultDelay (nil, cnstr), nil)
              | unifyString' ((Exp Us1) :: (Exp Us2) :: AL, _) =
-                  (Delay ([EClo Us1, EClo Us2], cnstr), nil)
+                  (MultDelay ([EClo Us1, EClo Us2], cnstr), nil)
               | unifyString' ((Exp (U as (EVar (r, _, _, _)), s)) :: AL, candidates) =
                   if (Whnf.isPatSub s)
                   then
                     let
                       fun assign r nil = NONE
-                        | assign r ((_, EVar (r', _, _, _), _,
-                                        Root (FgnConst (cs, conDec), Nil)) :: L) =
+                        | assign r ((_, EVar (r', _, _, _),
+                                        Root (FgnConst (cs, conDec), Nil), _) :: L) =
                             if (r = r') then fromString (conDecName (conDec))
                             else assign r L
                         | assign r (_ :: L) = assign r L
                     in
                       (case unifyString' (AL, candidates)
-                         of (Succeed L, parsed :: parsedL) =>
+                         of (MultAssign L, parsed :: parsedL) =>
                                (case (assign r L)
                                   of NONE =>
                                        let
                                          val ss = Whnf.invert s
                                          val W = stringExp(parsed)
                                        in
-                                         (Succeed ((G, U, ss, W) :: L), parsedL)
+                                         (MultAssign ((G, U, W, ss) :: L), parsedL)
                                        end
                                    | SOME(parsed') =>
-                                       if (parsed = parsed') then (Succeed L, parsedL)
-                                       else (Fail, nil))
-                          | (Delay (UL, cnstr), _) =>
-                               (Delay ((EClo (U, s)) :: UL, cnstr), nil)
-                          | (Fail, _) => (Fail, nil))
+                                       if (parsed = parsed')
+                                       then (MultAssign L, parsedL)
+                                       else (Failure, nil))
+                          | (MultDelay (UL, cnstr), _) =>
+                               (MultDelay ((EClo (U, s)) :: UL, cnstr), nil)
+                          | (Failure, _) => (Failure, nil))
                     end
-                  else (Delay ([EClo (U, s)], cnstr), nil)
+                  else (MultDelay ([EClo (U, s)], cnstr), nil)
               | unifyString' ((Exp Us) :: AL, _) =
-                  (Delay ([EClo Us], cnstr), nil)
+                  (MultDelay ([EClo Us], cnstr), nil)
               | unifyString' ([String str], candidates) =
                   let
                     fun successors (Decomp (parse, parsedL)) =
@@ -216,7 +228,7 @@ struct
             (case unifyString' (AL, [Decomp(str, nil)])
                of (result, nil) => result
                 | (result, [""]) => result
-                | (result, parsedL) => Fail)
+                | (result, parsedL) => Failure)
           end
 
     fun unifyConcat (G, concat1 as (Concat AL1), concat2 as (Concat AL2)) =
@@ -226,11 +238,11 @@ struct
             val cnstr = ref (Eqn (G, U1, U2))
           in
             (case (AL1, AL2)
-               of (nil, nil) => Succeed nil
-                | (nil, _) => Fail
-                | (_, nil) => Fail
+               of (nil, nil) => MultAssign nil
+                | (nil, _) => Failure
+                | (_, nil) => Failure
                 | ([String str1], [String str2]) =>
-                 if (str1 = str2) then (Succeed nil) else Fail
+                 if (str1 = str2) then (MultAssign nil) else Failure
                 | ([Exp (U as (EVar(r, _, _, _)), s)], _) =>
                     if (Whnf.isPatSub s)
                     then
@@ -238,11 +250,11 @@ struct
                         val ss = Whnf.invert s
                       in
                         if Unify.invertible (G, (U2, id), ss, r)
-                        then (Succeed [(G, U, ss, U2)])
-                        else Delay ([U1, U2], cnstr)
+                        then (MultAssign [(G, U, U2, ss)])
+                        else MultDelay ([U1, U2], cnstr)
                       end
                     else
-                      Delay ([U1, U2], cnstr)
+                      MultDelay ([U1, U2], cnstr)
                 | (_, [Exp (U as (EVar(r, _, _, _)), s)]) =>
                     if (Whnf.isPatSub s)
                     then
@@ -250,17 +262,17 @@ struct
                         val ss = Whnf.invert s
                       in
                         if Unify.invertible (G, (U1, id), ss, r)
-                        then (Succeed [(G, U, ss, U1)])
-                        else Delay ([U1, U2], cnstr)
+                        then (MultAssign [(G, U, U1, ss)])
+                        else MultDelay ([U1, U2], cnstr)
                       end
                     else
-                      Delay ([U1, U2], cnstr)
+                      MultDelay ([U1, U2], cnstr)
                 | ([String str], _) =>
                     unifyString (G, concat2, str, cnstr)
                 | (_, [String str]) =>
                     unifyString (G, concat1, str, cnstr)
                 | _ =>
-                  Delay ([U1, U2], cnstr))
+                  MultDelay ([U1, U2], cnstr))
           end
 
     and toFgn (concat as (Concat [String str])) = stringExp (str)
@@ -273,7 +285,8 @@ struct
                     map = (fn f =>
                               toFgn (normalize (mapConcat (f, concat)))),
                     unifyWith = (fn (G, U2) =>
-                                   unifyConcat (G, normalize (concat), fromExp (U2, id))),
+                                   toFgnUnify (unifyConcat (G, normalize (concat), 
+                                                               fromExp (U2, id)))),
                     equalTo = (fn U2 => false)
                   })
 
@@ -327,7 +340,8 @@ struct
   in
     val solver =
           {
-            name = ("equality/strings"),
+            name = "equality/strings",
+            keywords = "strings,equality",
             needs = ["Unify"],
 
             fgnConst = SOME({parse = parseString}),
@@ -340,4 +354,4 @@ struct
           } : CSManager.solver
 
   end
-end  (* functor CSEqString *)
+end  (* functor CSEqStrings *)

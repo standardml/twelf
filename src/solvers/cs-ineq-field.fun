@@ -1,27 +1,27 @@
 (* Simplex Inequation Solver *)
 (* Author: Roberto Virga *)
 
-functor CSIneqDomain (structure OrderedDomain : ORDERED_DOMAIN
-                      structure IntSyn : INTSYN
-                      structure Trail : TRAIL
-                      structure Unify : UNIFY
-                        sharing Unify.IntSyn = IntSyn
-                      structure SparseArray  : SPARSE_ARRAY
-                      structure SparseArray2 : SPARSE_ARRAY2
-                      structure CSManager : CS_MANAGER
-                        sharing CSManager.IntSyn = IntSyn
-                      structure CSEqDomain : CS_EQ_DOMAIN
-                        sharing CSEqDomain.Domain = OrderedDomain
-                        sharing CSEqDomain.IntSyn = IntSyn
-                        sharing CSEqDomain.CSManager = CSManager)
+functor CSIneqField (structure OrderedField : ORDERED_FIELD
+                     structure IntSyn : INTSYN
+                     structure Trail : TRAIL
+                     structure Unify : UNIFY
+                       sharing Unify.IntSyn = IntSyn
+                     structure SparseArray  : SPARSE_ARRAY
+                     structure SparseArray2 : SPARSE_ARRAY2
+                     structure CSManager : CS_MANAGER
+                       sharing CSManager.IntSyn = IntSyn
+                     structure CSEqField : CS_EQ_FIELD
+                       sharing CSEqField.Field = OrderedField
+                       sharing CSEqField.IntSyn = IntSyn
+                       sharing CSEqField.CSManager = CSManager)
  : CS =
 struct
   structure CSManager = CSManager
 
   local
     open IntSyn
-    open OrderedDomain
-    open CSEqDomain
+    open OrderedField
+    open CSEqField
 
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
@@ -410,7 +410,7 @@ struct
         const(row) *)
      fun findPivot (row) =
           let
-            (* extend Domain.compare to deal with NONE (= infinity) *)
+            (* extend Field.compare to deal with NONE (= infinity) *)
             fun compareScore (SOME(d), SOME(d')) =
                   compare (d, d')
               | compareScore (SOME(d), NONE) = LESS
@@ -1187,8 +1187,9 @@ struct
   in
     val solver =
           {
-            name = ("inequality/" ^ OrderedDomain.name ^ "s"),
-            needs = ["Unify", #name(CSEqDomain.solver)],
+            name = ("inequality/" ^ OrderedField.name ^ "s"),
+            keywords = "arithmetic,inequality",
+            needs = ["Unify", #name(CSEqField.solver)],
 
             fgnConst = SOME({parse = parseGtN}),
 
@@ -1199,4 +1200,4 @@ struct
             unwind = unwind
           } : CSManager.solver
   end
-end  (* functor CSIneqDomain *)
+end  (* functor CSIneqField *)

@@ -1,32 +1,32 @@
 (* Gaussian-Elimination Equation Solver *)
 (* Author: Roberto Virga *)
 
-functor CSEqDomain (structure Domain : DOMAIN
-                    structure IntSyn : INTSYN
-                    structure Whnf : WHNF
-                      sharing Whnf.IntSyn = IntSyn
-                    structure Unify : UNIFY
-                      sharing Unify.IntSyn = IntSyn
-                    structure CSManager : CS_MANAGER
-                      sharing CSManager.IntSyn = IntSyn)
- : CS_EQ_DOMAIN =
+functor CSEqField (structure Field : FIELD
+                   structure IntSyn : INTSYN
+                   structure Whnf : WHNF
+                     sharing Whnf.IntSyn = IntSyn
+                   structure Unify : UNIFY
+                     sharing Unify.IntSyn = IntSyn
+                   structure CSManager : CS_MANAGER
+                     sharing CSManager.IntSyn = IntSyn)
+ : CS_EQ_FIELD =
 struct
   structure CSManager = CSManager
 
-  structure Domain = Domain
+  structure Field = Field
   structure IntSyn = IntSyn
 
   type 'a mset = 'a list                 (* MultiSet                   *)
 
   datatype Sum =                         (* Sum :                      *)
-    Sum of Domain.number * Mon mset      (* Sum ::= m + M1 + ...       *)
+    Sum of Field.number * Mon mset       (* Sum ::= m + M1 + ...       *)
 
   and Mon =                              (* Monomials:                 *)
-    Mon of Domain.number * (IntSyn.Exp * IntSyn.Sub) mset
+    Mon of Field.number * (IntSyn.Exp * IntSyn.Sub) mset
                                          (* Mon ::= n * U1[s1] * ...   *)
   local
     open IntSyn
-    open Domain
+    open Field
 
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
@@ -252,37 +252,49 @@ struct
     and mapMon (f, Mon (n, UsL)) =
           Mon (n, List.map (fn Us => Whnf.whnf (f (EClo Us), id)) UsL)
 
+    fun findMon f (G, Sum(m, monL)) =
+          let
+            fun findMon' (nil, monL2) = NONE
+              | findMon' (mon :: monL1, monL2) =
+                  (case (f (G, mon, Sum(m, monL1 @ monL2)))
+                     of (result as SOME _) => result
+                      | NONE => findMon' (monL1, mon :: monL2))
+          in
+            findMon' (monL, nil)
+          end
+
     fun unifySum (G, sum1, sum2) =
           let
-            fun tryMon (nil, nil, m) =
-                  if (m = zero) then Succeed (nil) else Fail
-              | tryMon (nil, monL, m) =
-                  let
-                    val U = toFgn (Sum (m, monL))
-                    val cnstr = ref (Eqn (G, U, numberExp (zero)))
-                  in
-                    Delay ([U], cnstr)
-                  end
-              | tryMon ((mon as Mon (n, [(LHS as EVar (r, _, _, _), s)])) :: try, tried, m) =
-                  if (Whnf.isPatSub s)
+            fun invertMon (G, Mon (n, [(LHS as EVar (r, _, _, _), s)]), sum) =
+                  if Whnf.isPatSub s
                   then
                     let
                       val ss = Whnf.invert s
-                      val RHS = toFgn (timesSum (Sum (~ (inverse (n)), nil),
-                                                 Sum (m, try @ tried)))
+                      val RHS = toFgn (timesSum (Sum (~ (inverse n), nil), sum))
                     in
                       if Unify.invertible (G, (RHS, id), ss, r)
-                      then (Succeed [(G, LHS, ss, RHS)])
-                      else tryMon (try, mon :: tried, m)
+                      then SOME (G, LHS, RHS, ss)
+                      else NONE
                     end
-                  else
-                    tryMon (try, mon :: tried, m)
-              | tryMon (mon :: try, tried, m) =
-                  tryMon (try, mon :: tried, m)
-            val Sum(m, monL) = minusSum (sum2, sum1)
+                  else NONE
+              | invertMon _ = NONE
           in
-            tryMon (monL, nil, m)
-          end
+            case minusSum (sum2, sum1)
+              of Sum (m, nil) => if (m = zero) then Succeed nil else Fail
+               | sum => 
+                  (
+                    case findMon invertMon (G, sum)
+                      of SOME assignment => 
+                           Succeed [Assign assignment]
+                       | NONE => 
+                           let
+                             val U = toFgn sum
+                             val cnstr = ref (Eqn (G, U, numberExp (zero)))
+                           in 
+                             Succeed [Delay (U, cnstr)]
+                           end
+                  )
+          end   
 
     and toFgn (sum as Sum (m, nil)) = toExp (sum)
       | toFgn (sum as Sum (m, monL)) =
@@ -340,7 +352,7 @@ struct
             myID := cs;
 
             numberID := 
-              installF (ConDec (Domain.name, 0,
+              installF (ConDec (Field.name, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE, SOME(MS.Mnil));
@@ -381,7 +393,8 @@ struct
   in
     val solver =
           {
-            name = ("equality/" ^ Domain.name ^ "s"),
+            name = ("equality/" ^ Field.name ^ "s"),
+            keywords = "arithmetic,equality",
             needs = ["Unify"],
 
             fgnConst = SOME({parse = parseNumber}),
@@ -408,4 +421,4 @@ struct
 
     val constant = numberExp
   end
-end  (* functor CSEqDomain *)
+end  (* functor CSEqIntegers *)

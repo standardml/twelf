@@ -4,32 +4,39 @@ structure CSManager = CSManager (structure Global = Global
                                  structure Fixity = Names.Fixity
                                  structure ModeSyn = ModeSyn);
 
-structure CSEqQ = CSEqDomain (structure Domain = Rationals
-                              structure IntSyn = IntSyn
-                              structure Whnf = Whnf
-                              structure Unify = UnifyTrail
-                              structure CSManager = CSManager);
+structure CSEqQ = CSEqField (structure Field = Rationals
+                             structure IntSyn = IntSyn
+                             structure Whnf = Whnf
+                             structure Unify = UnifyTrail
+                             structure CSManager = CSManager);
 
-structure CSIneqQ = CSIneqDomain (structure OrderedDomain = Rationals
+structure CSIneqQ = CSIneqField (structure OrderedField = Rationals
                                   structure IntSyn = IntSyn
                                   structure Trail = Trail
                                   structure Unify = UnifyTrail
                                   structure SparseArray = SparseArray
                                   structure SparseArray2 = SparseArray2
                                   structure CSManager = CSManager
-                                  structure CSEqDomain = CSEqQ);
+                                  structure CSEqField = CSEqQ);
 
-structure CSEqString = CSEqString (structure IntSyn = IntSyn
-                                   structure Whnf = Whnf
-                                   structure Unify = UnifyTrail
-                                   structure CSManager = CSManager);
+structure CSEqStrings = CSEqStrings (structure IntSyn = IntSyn
+                                     structure Whnf = Whnf
+                                     structure Unify = UnifyTrail
+                                     structure CSManager = CSManager);
 
-structure CSEqBool = CSEqBool (structure IntSyn = IntSyn
-                               structure Whnf = Whnf
-                               structure Unify = UnifyTrail
-                               structure CSManager = CSManager);
+structure CSEqBools = CSEqBools (structure IntSyn = IntSyn
+                                 structure Whnf = Whnf
+                                 structure Unify = UnifyTrail
+                                 structure CSManager = CSManager);
+
+structure CSEqZ = CSEqIntegers (structure Integers = Integers
+                                structure IntSyn = IntSyn
+                                structure Whnf = Whnf
+                                structure Unify = UnifyTrail
+                                structure CSManager = CSManager);
 
 CSManager.installSolver (CSEqQ.solver);
 CSManager.installSolver (CSIneqQ.solver);
-CSManager.installSolver (CSEqString.solver);
-CSManager.installSolver (CSEqBool.solver);
+CSManager.installSolver (CSEqStrings.solver);
+CSManager.installSolver (CSEqBools.solver);
+CSManager.installSolver (CSEqZ.solver);

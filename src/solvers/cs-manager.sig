@@ -20,6 +20,9 @@ sig
     {
       (* name is the name of the solver *)
       name : string,
+      (* keywords identifying the type of solver *)
+      (* NOTE: no two solvers with the same keywords may be active simultaneously *)
+      keywords : string,
       (* names of other constraint solvers needed *)
       needs : string list,
       (* foreign constants declared (if any) *)

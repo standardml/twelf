@@ -1,13 +1,13 @@
 (* Booleans Equation Solver *)
 (* Author: Roberto Virga *)
 
-functor CSEqBool (structure IntSyn : INTSYN
-                  structure Whnf : WHNF
-                    sharing Whnf.IntSyn = IntSyn
-                  structure Unify : UNIFY
-                    sharing Unify.IntSyn = IntSyn
-                  structure CSManager : CS_MANAGER
-                    sharing CSManager.IntSyn = IntSyn)
+functor CSEqBools (structure IntSyn : INTSYN
+                   structure Whnf : WHNF
+                     sharing Whnf.IntSyn = IntSyn
+                   structure Unify : UNIFY
+                     sharing Unify.IntSyn = IntSyn
+                   structure CSManager : CS_MANAGER
+                     sharing CSManager.IntSyn = IntSyn)
  : CS =
 struct
   structure CSManager = CSManager
@@ -221,36 +221,50 @@ struct
     and mapMon (f, Mon UsL) =
           Mon (List.map (fn Us => Whnf.whnf (f (EClo Us), id)) UsL)
 
+    fun findMon f (G, Sum(m, monL)) =
+          let
+            fun findMon' (nil, monL2) = NONE
+              | findMon' (mon :: monL1, monL2) =
+                  (case (f (G, mon, Sum(m, monL1 @ monL2)))
+                     of (result as SOME _) => result
+                      | NONE => findMon' (monL1, mon :: monL2))
+          in
+            findMon' (monL, nil)
+          end
+
     fun unifySum (G, sum1, sum2) =
           let
-            fun tryMon (nil, nil, m) =
-                  if (m = false) then Succeed (nil) else Fail
-              | tryMon (nil, monL, m) =
-                  let
-                    val U = toFgn (Sum (m, monL))
-                    val cnstr = ref (Eqn (G, U, falseExp ()))
-                  in
-                    Delay ([U], cnstr)
-                  end
-              | tryMon ((mon as Mon [(LHS as EVar (r, _, _, _), s)]) :: try, tried, m) =
-                  if (Whnf.isPatSub s)
+            fun invertMon (G, Mon [(LHS as EVar (r, _, _, _), s)], sum) =
+                  if Whnf.isPatSub s
                   then
                     let
                       val ss = Whnf.invert s
-                      val RHS = toFgn (Sum (m, try @ tried))
+                      val RHS = toFgn sum
                     in
                       if Unify.invertible (G, (RHS, id), ss, r)
-                      then (Succeed [(G, LHS, ss, RHS)])
-                      else tryMon (try, mon :: tried, m)
+                      then SOME (G, LHS, RHS, ss)
+                      else NONE
                     end
-                  else
-                    tryMon (try, mon :: tried, m)
-              | tryMon (mon :: try, tried, m) =
-                  tryMon (try, mon :: tried, m)
-            val Sum(m, monL) = xorSum (sum2, sum1)
+                  else NONE
+              | invertMon _ = NONE
           in
-            tryMon (monL, nil, m)
-          end
+            case xorSum (sum2, sum1)
+              of Sum (false, nil) => Succeed nil
+               | Sum (true, nil) => Fail
+               | sum => 
+                  (
+                    case findMon invertMon (G, sum)
+                      of SOME assignment => 
+                           Succeed [Assign assignment]
+                       | NONE => 
+                           let
+                             val U = toFgn sum
+                             val cnstr = ref (Eqn (G, U, falseExp ()))
+                           in 
+                             Succeed [Delay (U, cnstr)]
+                           end
+                  )
+          end   
 
     and toFgn (sum as Sum (m, nil)) = toExp (sum)
       | toFgn (sum as Sum (m, monL)) =
@@ -379,7 +393,8 @@ struct
   in
     val solver =
           {
-            name = ("equality/booleans"),
+            name = "equality/booleans",
+            keywords = "booleans,equality",
             needs = ["Unify"],
 
             fgnConst = NONE,
@@ -391,4 +406,4 @@ struct
             unwind = (fn () => ())
           }
   end
-end  (* functor CSEqBool *)
+end  (* functor CSEqBools *)

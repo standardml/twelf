@@ -10,9 +10,10 @@ Group is
   cs-manager.sig
   cs-manager.fun
   cs.sig
-  cs-eq-domain.sig
-  cs-eq-domain.fun
-  cs-ineq-domain.fun
-  cs-eq-string.fun
-  cs-eq-bool.fun
+  cs-eq-field.sig
+  cs-eq-field.fun
+  cs-ineq-field.fun
+  cs-eq-strings.fun
+  cs-eq-bools.fun
+  cs-eq-integers.fun
   solvers.sml

@@ -26,6 +26,9 @@ struct
     {
       (* name is the name of the solver *)
       name : string,
+      (* keywords identifying the type of solver *)
+      (* NOTE: no two solvers with the same keywords may be active simultaneously *)
+      keywords : string,
       (* names of other constraint solvers needed *)
       needs : string list,
       (* foreign constants declared (if any) *)
@@ -47,6 +50,7 @@ struct
     val emptySolver =
         {
           name = "",
+          keywords = "",
           needs = nil,
 
           fgnConst = NONE,
@@ -62,6 +66,7 @@ struct
     val unifySolver =
         {
           name = "Unify",
+          keywords = "unification",
           needs = nil,
 
           fgnConst = NONE,
@@ -80,7 +85,7 @@ struct
     val maxCS = Global.maxCSid
     val csArray = Array.array (maxCS+1, Solver (emptySolver, ref false)) : Solver Array.array
     val _ = Array.update (csArray, 0, Solver (unifySolver, ref true))
-    val nextCS = ref(1)
+    val nextCS = ref(1) : int ref
 
     (* Installing function *)
     val installFN = ref (fn _ => ~1) : (sigEntry -> IntSyn.cid) ref
@@ -102,19 +107,25 @@ struct
     (* install the unification solver *)
     val _ = installSolver (unifySolver)
 
+    val activeKeywords = ref nil : string list ref
+
     (* make all the solvers inactive *)
     fun resetSolvers () =
-          Array.appi (fn (cs, Solver (solver, active)) =>
-                            if !active then
-                              (
-                                active := ((cs = 0) orelse false);
-                                #reset(solver) ()
-                              )
-                            else ())
-                     (csArray, 0, SOME(!nextCS))
+          (
+            Array.appi (fn (cs, Solver (solver, active)) =>
+                             if !active then
+                               (
+                                 active := false;
+                                  #reset(solver) ()
+                                )
+                              else ())
+                       (csArray, 0, SOME(!nextCS));
+            activeKeywords := nil;
+            useSolver "Unify"
+          )
 
     (* make the specified solver active *)
-    fun useSolver name =
+    and useSolver name =
           let
             exception Found of IntSyn.csid
             fun findSolver name =
@@ -133,9 +144,14 @@ struct
                      val Solver (solver, active) = Array.sub (csArray, cs)
                    in
                      if !active then ()
+                     else if List.exists (fn s => s = #keywords(solver))
+                                         (!activeKeywords)
+                     then raise Error ("solver " ^ name ^ 
+                                       " is incompatible with a currently active solver")
                      else 
                        (
                           active := true;
+                          activeKeywords := #keywords(solver) :: (!activeKeywords);
                           List.app useSolver (#needs(solver));
                           #init(solver) (cs, !installFN)
                        )
