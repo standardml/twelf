@@ -50,6 +50,7 @@ local
       end
     | fmtCon (G, I.Const(cid)) = sexp [Str "<OMS cd=\"global\" name=", Name (I.conDecName (I.sgnLookup cid)), Str "/>"]
     | fmtCon (G, I.Def(cid)) = sexp [Str "<OMS cd=\"global\" name=", Name (I.conDecName (I.sgnLookup cid)), Str "/>"]
+    | fmtCon (G, I.FgnConst (csid, condec)) = sexp [Str "FngConst"]  (* FIX -cs Fri Jan 28 17:45:35 2005*)
     (* I.Skonst, I.FVar cases should be impossible *)
 
   (* fmtUni (L) = "L" *)
@@ -109,6 +110,9 @@ local
 	      Str "<OMV name=",  Name (x),  Str "/></OMATTR></OMBVAR>",
 	      F.Break, fmtExp (G', (U, I.dot1 s)), Str "</OMBIND>"]
       end
+    | fmtExpW (G, (I.FgnExp (csid, F), s)) = sexp [Str "FgnExp"] (* FIX -cs Fri Jan 28 17:45:43 2005 *)
+
+
     (* I.EClo, I.Redex, I.EVar not possible *)
 
   and fmtExp (G, (U, s)) = fmtExpW (G, Whnf.whnf (U, s))
