@@ -556,6 +556,7 @@ in
   *)
   fun formatDec (G, D) = fmtDec (G, 0, (D, I.id))
   fun formatExp (G, U) = fmtExp (G, 0, noCtxt, (U, I.id))
+  fun formatSpine (G, S) = fmtSpine (G, 0, 0, (S, I.id))
   fun formatConDec (condec) = fmtConDec (condec)
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))

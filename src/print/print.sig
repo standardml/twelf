@@ -13,6 +13,7 @@ sig
 
   val formatDec : IntSyn.dctx * IntSyn.Dec -> Formatter.format
   val formatExp : IntSyn.dctx * IntSyn.Exp -> Formatter.format
+  val formatSpine : IntSyn.dctx * IntSyn.Spine -> Formatter.format list
   val formatConDec : IntSyn.ConDec -> Formatter.format
 
   val decToString : IntSyn.dctx * IntSyn.Dec -> string
