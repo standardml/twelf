@@ -21,6 +21,7 @@ struct
     fun modeToString M.Plus = "+"
       | modeToString M.Star = "*"
       | modeToString M.Minus = "-"
+      | modeToString M.Minus1 = "-1"
 
     fun argToString (M.Marg (m, _)) = modeToString m
 

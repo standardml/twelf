@@ -11,6 +11,7 @@ sig
   val plus  : Paths.region -> mode
   val star  : Paths.region -> mode
   val minus : Paths.region -> mode
+  val minus1 : Paths.region -> mode
 
   type modedec 
 

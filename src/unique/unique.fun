@@ -8,6 +8,7 @@ functor Unique
    structure Unify : UNIFY		(* must be trailing! *)
    structure Constraints : CONSTRAINTS
    structure UniqueTable : MODETABLE
+   structure UniqueCheck : MODECHECK
    structure Index : INDEX
    structure Subordinate : SUBORDINATE
 
@@ -344,6 +345,11 @@ struct
 	          handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
 	  val _ = checkUniqueWorlds (bs, cs, (a, ms))
 	          handle Error (msg) => raise Error ("Uniqueness checking " ^ cName a ^ ":\n" ^ msg)
+
+          val _ = chatter 5 (fn () => "Checking uniqueness modes for family " ^ cName a ^ "\n")
+          val _ = UniqueCheck.checkMode (a, ms)
+	          handle UniqueCheck.Error (msg) =>
+		         raise Error ("Uniqueness mode checking " ^ cName a ^ ":\n" ^ msg)
 	in
 	  ()
 	end

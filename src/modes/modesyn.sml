@@ -30,8 +30,8 @@ struct
   fun modeEqual (Plus, Plus) = true
     | modeEqual (Star, Star) = true
     | modeEqual (Minus, Minus) = true
-    | modeEqual _ = false
-
+    | modeEqual (Minus1, Minus1) = true
+    | modeEqual (_, _) = false
 
   (* modeToString M = string
     
@@ -40,5 +40,6 @@ struct
   fun modeToString Plus = "input (+)"
     | modeToString Star = "unrestricted (*)"
     | modeToString Minus = "output (-)"
+    | modeToString Minus1 = "unique output (-1)"
 
 end;  (* structure ModeSyn *)

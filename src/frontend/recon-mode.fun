@@ -37,6 +37,7 @@ struct
     fun plus r = (M.Plus, r)
     fun star r = (M.Star, r)
     fun minus r = (M.Minus, r)
+    fun minus1 r = (M.Minus1, r)
 
     type modedec = (I.cid * M.ModeSpine) * P.region
 
@@ -122,6 +123,7 @@ struct
     val plus = plus
     val star = star
     val minus = minus
+    val minus1 = minus1
 
     type modedec = modedec
 
