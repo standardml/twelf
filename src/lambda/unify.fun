@@ -553,6 +553,22 @@ struct
 		 unifySpine (G, (S1, s1), (S2, s2))
 	       else (*  unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
 		 unifyDefDefW (G, Us1, Us2)
+	   (* four new cases for defined constants *)
+	   | (Def (d1), Const (c2)) =>
+	     (case defAncestor d1
+	        of Anc (_, _, NONE) => (* conservative *) unifyExpW (G, Whnf.expandDef Us1, Us2)
+		 | Anc (_, _, SOME(c1)) =>
+		   if (c1 = c2) then unifyExpW (G, Whnf.expandDef Us1, Us2)
+		   else raise Unify "Constant clash")
+	   | (Const (c1), Def (d2)) =>
+	     (case defAncestor d2
+                of Anc (_, _, NONE) => (* conservative *) unifyExpW (G, Us1, Whnf.expandDef Us2)
+                 | Anc (_, _, SOME(c2)) =>
+		   if (c1 = c2) then unifyExpW (G, Us1, Whnf.expandDef Us2)
+		   else raise Unify "Constant clash")
+           | (Def (d1), BVar (k2)) => raise Unify "Head mismatch" (* due to strictness! *)
+	   | (BVar (k1), Def (d2)) => raise Unify "Head mismatch" (* due to strictness! *)
+           (* next two cases for def/fgn, fgn/def *)
 	   | (Def (d1), _) => unifyExpW (G, Whnf.expandDef Us1, Us2)
 	   | (_, Def(d2)) => unifyExpW (G, Us1, Whnf.expandDef Us2)
            | (FgnConst (cs1, ConDec (n1, _, _, _, _, _)), FgnConst (cs2, ConDec (n2, _, _, _, _, _))) =>
@@ -684,22 +700,16 @@ struct
           unifyExpW (G, Whnf.whnf Us1, Whnf.whnf Us2)
 
     and unifyDefDefW (G, Us1 as (Root (Def (d1), S1), s1), Us2 as (Root (Def (d2), S2), s2)) =
-        (* unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
+        (*  unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
         let
 	  val Anc (_, h1, c1Opt) = defAncestor d1
 	  val Anc (_, h2, c2Opt) = defAncestor d2
-	  (* the peek-ahead failure below slows does the Princeton suite from
-	     59s to 80s.  how could this be?
-	     With unifyExpW above it is 64s
-	     Sat Oct 18 19:48:18 2003 -fp *)
-	  (*
 	  val _ = case (c1Opt,c2Opt)
 	            of (SOME(c1), SOME(c2)) =>
 		       if c1 <> c2
 			 then raise Unify ("Irreconcilable defined constant clash")
 		       else ()
-		     | _ => () (* NONE/SOME? *)
-          *)
+		     | _ => () (* conservative *)
 	in
 	  case Int.compare (h1, h2)
 	    of EQUAL => unifyExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2))
