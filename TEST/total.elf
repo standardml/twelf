@@ -1,0 +1,13 @@
+% Testing totality checking
+
+a : type.
+c : a.
+
+b : a -> a -> a -> type.
+
+%mode b +X *Y -Z.
+
+b1 : b X Y X.
+
+%worlds () (b X Y Z).
+%total X (b X Y Z).

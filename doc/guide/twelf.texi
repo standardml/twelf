@@ -4,7 +4,7 @@
 @settitle Twelf User's Guide 
 @setchapternewpage odd
 @set VERSION 1.4
-@set UPDATED April 4, 2002
+@set UPDATED April 7, 2002
 @c @set VERSION 1.3
 @c @set UPDATED September 13, 2000
 @c @set VERSION 1.2
@@ -38,6 +38,7 @@ Last updated @value{UPDATED}.
 * Constraint Domains::          Using rationals and integers
 * Modes::                       Input/output behavior of relations
 * Termination::                 Verifying termination of programs
+* Coverage::                    Checking that all cases are covered
 * Theorem Prover::              Proving theorems and meta-theorems
 * ML Interface::                Running Twelf from ML
 * Twelf Server::                A stand-alone Twelf command interpreter
@@ -90,12 +91,12 @@ Logic Programming
 
 Constraint Domains
 
-* Installing an Extension::     making constraint domains available
-* Equalities of Rational Numbers::  rationals with equality
-* Inequalities over Rational Numbers::  rationals with equality and inequality
-* Integer Constraints::         integers with equality and inequality
-* Equalities over Strings::     strings and concatenation
-* Restrictions and Caveats::    alerts!
+* Installing an Extension::     Making constraint domains available
+* Equalities of Rational Numbers::  Rationals with equality
+* Inequalities over Rational Numbers::  Rationals with equality and inequality
+* Integer Constraints::         Integers with equality and inequality
+* Equalities over Strings::     Strings and concatenation
+* Restrictions and Caveats::    Alerts!
 
 Modes
 
@@ -111,6 +112,12 @@ Termination
 * Lexicographic Orders::        Termination by nested induction
 * Simultaneous Orders::         Termination by simultaneous induction
 * Mutual Recursion::            Termination of mutually recursive predicates
+
+Coverage
+
+* Regular Worlds::              Characterizing parameters and hypotheses
+* Input Coverage::              Checking if all cases have been covered
+* Totality::                    Verifying if a family is total in its input
 
 Theorem Prover
 
@@ -497,9 +504,14 @@ decl ::= id : term.         % @r{@math{a : K}  or  @math{c : A}}
        | %name namepref.    % @r{name preference declaration}
        | %query qdecl.      % @r{query declaration}
        | %solve id : term.  % @r{solve declaration}
+       | %tabled id.        % @r{table declaration}
+       | %querytabled qtdecl % @r{tabled query declaration}
        | %mode mdecl.       % @r{mode declaration}
        | %terminates tdecl. % @r{termination declaration}
        | %reduces rdecl.    % @r{reduction declaration}
+       | %block id : bdecl. % @r{block declaration}
+       | %worlds wdecl.     % @r{worlds declaration}
+       | %total tdecl.      % @r{totality declaration}
        | %theorem thdecl.   % @r{theorem declaration}
        | %prove pdecl.      % @r{prove declaration}
        | %establish pdecl.  % @r{prove declaration, do not use as lemma later}
@@ -1670,8 +1682,8 @@ reach: node -> node -> type.
 r_refl: reach X X.
 
 r_cl  : reach X Y 
-	 <- edge X Z
-	 <- reach Z Y.
+         <- edge X Z
+         <- reach Z Y.
 
 %querytabled * (reach a X).
 @end group
@@ -1707,9 +1719,9 @@ during tabling.  This is more expensive, but can lead to increased
 re-use of prior subgoals in some cases.
 
 
-@code{Twelf.Table.strategy} which default to @code{Twelf.Table.Variant}.
-When set to @code{Twelf.Table.Variant}, then subgoals are compared
-for equality modulo renaming of existential and bound variables.
+@code{Twelf.Table.strategy} which defaults to @code{Twelf.Table.Variant}.
+When at its default setting, @code{Twelf.Table.Variant}, then subgoals are
+compared for equality modulo renaming of existential and bound variables.
 When set to @code{Twelf.Table.Subsumption}, then comparison
 of subgoals with table entries allows instantiation of the table
 entries.  This is slower, but may lead to increased sharing and
@@ -1756,12 +1768,12 @@ elements of the domain.
 @end enumerate
 
 @menu
-* Installing an Extension::     making constraint domains available
-* Equalities of Rational Numbers::  rationals with equality
-* Inequalities over Rational Numbers::  rationals with equality and inequality
-* Integer Constraints::         integers with equality and inequality
-* Equalities over Strings::     strings and concatenation
-* Restrictions and Caveats::    alerts!
+* Installing an Extension::     Making constraint domains available
+* Equalities of Rational Numbers::  Rationals with equality
+* Inequalities over Rational Numbers::  Rationals with equality and inequality
+* Integer Constraints::         Integers with equality and inequality
+* Equalities over Strings::     Strings and concatenation
+* Restrictions and Caveats::    Alerts!
 @end menu
 
 @node Installing an Extension, Equalities of Rational Numbers, Constraint Domains, Constraint Domains
@@ -2411,7 +2423,7 @@ Arguments whose mode is unrestricted are ignored: they do no need to be
 checked, and they do not contribute any information about the
 instantiations of existential variables.
 
-@node Termination, Theorem Prover, Modes, Top
+@node Termination, Coverage, Modes, Top
 @chapter Termination
 
 @cindex termination checking
@@ -2869,7 +2881,539 @@ Mutual arguments are used, for example, in the proofs of soundness (file
 @*@file{examples/lp-horn/uni-complete.thm}) of uniform derivations for
 Horn logic.
 
-@node Theorem Prover, ML Interface, Termination, Top
+@node Coverage, Theorem Prover, Termination, Top
+@chapter Coverage
+
+@cindex coverage
+@cindex meta-theorem verification
+
+Coverage checking can verify that no cases in the definition of a type
+family have omitted.  In combination with mode and termination checking,
+it is a powerful tool for analysing signatures.  Its primary use in
+Twelf is for verifying totality of higher-level judgments, which can
+thereby be seen to represent proofs of meta-theorems.
+
+There are several features of LF and its use as a logical framework which
+make coverage checking a complex problem.
+
+The first is that higher-order representations often require us to
+consider classes of contexts.  For example, in the program for type
+inference (@pxref{Sample Program}) we introduce parameters @code{x:exp}
+together with a typing assumption @code{u:of x T} for some @code{T}.
+This means the type @code{exp} of expressions is dynamically extended
+with new parameters, and coverage must take these into account.
+
+The second are indexed types.  While it easy to see if all cases for a
+simple data type such as the natural numbers (either zero or successor)
+are covered, it is more difficult to verify whether all cases for
+indexed types, such as possible deductions of @math{A} implies @math{A},
+are covered.
+
+The third is the higher-order nature of encodings.  We may have to
+verify that all functions of a given type have been covered, not just
+values of atomic type.  The fact that functions in LF must be parametric
+makes this possible, but it can be subtle.
+
+Coverage addresses all three of these problems in different ways.  The
+programmer can specify the kinds of parameters and hypotheses considered
+valid for an encoding.  @emph{World checking} verifies that this
+specification is respected.  The programmer can also specify which
+arguments of a given type family should cover all possibilities
+exhaustively.  @emph{Coverage checking} verifies that this is indeed the
+case, or produces a list of missing cases.  Coverage checking is always
+relative to a world declaration.  Finally, @emph{totality checking}
+verifies both coverage and termination, thereby ensuring that any
+mode-correct invocation of the type family considered as a logic program
+will succeed.  Hence, a total type family represents a total, possibly
+non-deterministic, function and can thus be often seen to realize a
+meta-theoretic proof.
+
+@menu
+* Regular Worlds::              Characterizing parameters and hypotheses
+* Input Coverage::              Checking if all cases have been covered
+* Totality::                    Verifying if a family is total in its input
+@end menu
+
+@node Regular Worlds, Input Coverage, Coverage, Coverage
+@section Regular Worlds
+
+@cindex regular worlds
+@cindex regular context
+@cindex world checking
+@cindex parameter block
+@findex %block
+@findex %worlds
+
+The adequacy of an encoding using higher-order abstract syntax usually
+relies on a characterization of the possible parameters and hypotheses
+that may be introduced.  They often occur in blocks of assumptions that
+have to be made together in order for a representation to be correct.
+We refer to the total collection of assumptions as @emph{regular worlds}
+consisting of @emph{blocks}.
+
+In Twelf, we first declare names for such blocks with @code{%block},
+then we check if a given type family respects this block structure
+with @code{%worlds}.
+
+@example
+@group
+decs ::=                         % @r{Empty parameter declaration}
+       | @{id:term@} decs          % @r{@math{x:A} for parameter @math{x}}
+       | @{id@} decs               % @r{@math{x:A} with type @math{A} omitted}
+
+bdecl ::= some decs block decs   % @r{Blocks with indeterminate variables}
+        | block decs             % @r{Closed blocks}
+
+worlds ::=                       % @r{Empty world}
+         | id                    % @r{Block label @math{b}}
+         | id | worlds           % @r{Block label @math{b} and alternatives}
+
+wdecl ::= (worlds) callpats.     % @r{Worlds declaration}
+
+decl ::= @dots{}
+       | %block id : bdecl.      % @r{Block declaration with label @math{b}}
+       | %worlds wdecl.          % @r{Regular world declaration}
+@end group
+@end example
+
+The syntactic category of call patterns (@emph{callpats}) was in introduced
+in @ref{Termination Declaration}.
+
+Consider the typing judgment from @ref{Sample Program}
+which can also be found in file @file{examples/guide/lam.elf}.
+We show only the last three declarations here.
+
+@example
+@group
+of : exp -> tp -> type.
+
+tp_lam : of (lam E) (arrow T1 T2)
+          <- (@{x:exp@} of x T1 -> of (E x) T2).
+
+tp_app : of (app E1 E2) T1
+          <- of E1 (arrow T2 T1)
+          <- of E2 T2.
+@end group
+@end example
+
+Note that every time the clause @code{tp_lam} is invoked, it introduces
+a new parameter @code{x:exp} and also a new assumption @code{of x T}
+for some @code{T}.  In order for type inference to work correctly, it
+is important that those two hypotheses always occur together.  So, in
+general, the context consisting of all hypotheses should have the form
+@code{x1:exp, u1:of x1 T1, ..., xn:exp, un:of xn Tn}.  We call this
+a @emph{regular context}.  It consists of @emph{blocks} of the
+form @code{x:exp, u:of x T} for some @code{T}.
+
+We declare this block, labeled @code{tp_var}, and then verify
+that any hypotheses introduced by the type family @code{of}
+will have this form.
+
+@example
+%block tp_var : some @{T:tp@} block @{x:exp@} @{u:of x T@}.
+%worlds (tp_var) (of E T).
+@end example
+
+Our encoding of natural deduction (see @pxref{Sample Signature} and file
+@file{examples/guide/nd.elf}) shows that regular worlds also arise when
+a signature does not have an immediate operational interpretation.
+In this case, we may generate either a new parameter @code{x:i}
+(in @code{foralli} and @code{existse}) or a new assumption
+@code{u:nd A} for some proposition @code{A} (in @code{impi},
+@code{ore}, and @code{existse}).  This can be verified with
+
+@example
+%block nd_hyp : some @{A:o@} block @{u:nd A@}.
+%block nd_parm : block @{x:i@}.
+%worlds (nd_hyp | nd_parm) (nd A).
+@end example
+
+There are several subtleties in world checking.
+
+@table @asis
+@item Weakening.
+ The blocks listed in the worlds declaration need not actually be used
+anywhere in the type family that is checked.  That is, we can always
+weaken blocks.
+
+@item Duplication.
+ Arbitrarily many blocks may be introduced before each call to a type
+family.  That is, we can always duplicate blocks.
+
+@item No exchange.
+ No exchange of declarations, either within a block or between different
+blocks is allowed.  This simplifies world checking and improves error
+messages, but occasionally suggest some minor rewriting, such as using
+
+@example
+... <- (@{x:exp@} of x T -> @{y:exp@} of y S -> ...)
+@end example
+
+instead of
+
+@example
+... <- (@{x:exp@} @{y:exp@} of x T -> of y S -> ...).
+@end example
+
+@item Strengthening.
+ The worlds declared for a type family @math{a} cannot anticipate all
+possible future uses of @math{a}.  It is therefore legal to use @math{a}
+in an extended regular world, as long as it is clear that the additional
+hypotheses cannot interfere with @math{a}.  This condition of non-interference
+is verified via subordination.
+@end table
+
+As a special case of regular world declaration, the form
+
+@example
+%worlds () callpats.
+@end example
+
+@noindent
+declares that the type families in @math{callpats} do not introduce any
+new parameters or hypotheses.
+
+@node Input Coverage, Totality, Regular Worlds, Coverage
+@section Input Coverage
+
+@cindex input coverage
+@findex %covers
+
+Once a set of regular worlds has been decared for a type family, Twelf
+can determine if all the possible cases for a given collection of input
+arguments are covered.
+
+@example
+@group
+decl ::= @dots{}
+       | %covers mdecl.    %@r{coverage declaration}
+@end group
+@end example
+
+This form reuses the mode declaration @emph{mdecl} introduced in
+@ref{Modes} which comes in a short form (@pxref{Short Mode Declaration})
+and long form (@pxref{Full Mode Declaration}).  The coverage checker
+selects the arguments declared as input (+) and verifies that the given
+family provides a clause for any combination of ground input arguments.
+The term @emph{input coverage} emphasizes that we only verify the status
+of input arguments to a family, but not indefinite or output arguments.
+
+For example, in order to check that there is a typing rule for every
+expression in the type inference code for Mini-ML (@pxref{Sample
+Program}), we first declare the regular world and then check input
+coverage.
+
+@example
+@group
+%block tp_var : some @{T:tp@} block @{x:exp@} @{u:of x T@}.
+%worlds (tp_var) (of E T).
+%covers of +E *T.
+@end group
+@end example
+
+Coverage checking takes dependent types and subordination into
+account, but it is a decidable, syntactic test rather than a
+semantic criterion.  This means that it can list the missing
+cases when it fails.  For example, if we comment out the typing
+rule for application, we obtain the following error message:
+
+@example
+@group
+Coverage error --- missing cases:
+@{E1:exp@} @{E2:exp@} @{T1:tp@} |- of (app E1 E2) T1.
+@end group
+@end example
+
+The format of the missing cases is @code{G |- A}, where @code{A} is a
+form of goal for which does not unify with the head of any clause and
+@code{G} is a context declaring the types for the free (existential)
+variables in @code{A}.
+
+A more subtle error occurs, if we forget the typing assumption for
+a new variable.
+
+@example
+@group
+...
+tp_lam : of (lam E) (arrow T1 T2)
+          <- (@{x:exp@} of (E x) T2).
+
+%block tp_var : some @{T:tp@} block @{x:exp@}. % @{u:of x T@}.
+%worlds (tp_var) (of E T).
+%covers of +E *T.
+@end group
+@end example
+
+Clearly, coverage has to fail since there is no typing assumption for
+bound variables.  In this case we get the error message
+
+@example
+@group
+Coverage error --- missing cases:
+@{T1:tp@} @{#tp_var:@{x:exp@}@} @{T2:tp@} |- of #tp_var_x T2.
+@end group
+@end example
+
+Here we see the notation for parameters in context blocks.  The goal
+@code{of #tp_var_x T2} refers to a parameter called @code{x} in the
+context block @code{tp_var}.  The hypotheses available with this block
+are listed in the declaration @code{@{#tp_var:@{x:exp@}@}}.  This block
+contains no typing assumption for @code{x} and coverage is violated.
+Note that this notation can never be an input to Twelf; it is only
+used for error messages.
+
+One of the most difficult errors to analyse occurs when coverage is
+violated due to argument transposition and dependencies.  In that
+situation the error is often reflected in implicit arguments which may
+not be easy to discern.  An example of this form is given below in
+the next section.
+
+@node Totality,  , Input Coverage, Coverage
+@section Totality
+
+@cindex output coverage
+@cindex totality
+@cindex meta-theorem verification
+@findex %total
+
+The most advanced application of coverage checking is verifying the
+totality of a given type family.  This is usually used to ascertain that
+a given higher-level type family implements a meta-theoretic proof.
+Checking that a type family is total requires, in this order, mode
+checking, world checking, termination checking, and coverage checking.
+Mode and world declarations have to be made separately, while termination
+and coverage checking are folded into a single declaration.
+
+@example
+@group
+decl ::= @dots{}
+       | %total tdecl.    %@r{totality declaration}
+@end group
+@end example
+
+Here @emph{tdecl} is a termination declaration introduced in
+@ref{Termination Declaration}.  A totality declaration is processed
+in the following steps.
+
+@table @asis
+@item Modes.
+ Twelf verifies that the type families in @emph{tdecl} all have
+declared modes.  Indefinite modes (@code{*}) are not allowed.
+
+@item Worlds.
+ Twelf verifies that the type families in @emph{tdecl} all have
+declared worlds.
+
+@item Termination.
+ Twelf executes the termination checker using the @emph{tdecl}.  If it
+passes this test, it means that any well-moded query for the given
+families terminates, either with success or failure.
+
+@item Input Coverage.
+ Twelf then executes coverage checking according on the input arguments
+to the families based on the prior mode declarations.  If the family
+passes this test, it means that a clause applies to any well-moded query
+with free existential variables as output arguments.
+
+@item Output Coverage.
+ Twelf finally checks all subgoals in the given program in a final pass
+If the output arguments to the subgoal cover all the possible values
+that may be returned in these position, we say that @emph{output
+coverage} succeeds.  In the simplest and most frequent case the output
+argument is an existential variable of most general type, which automatically
+covers all possibilities for closed terms of the given type.
+@end table
+
+As an example, we use type preservation, a continuation of the
+sample programs for type inference and evaluation in Mini-ML
+(see @pxref{Sample Program} and file @file{examples/guide/lam.elf}).
+This can be proven automatically (see @pxref{Sample Theorems}), but
+we can also give the proof by hand and have Twelf verify it via
+totality checking.
+
+First, the correct program and verification.  The type preservation
+theorem states that for any closed evaluation @code{D:eval E V} and
+typing derivation @code{P:of E T} there exists a typing derivation
+@code{Q:of V T}.
+
+@example
+@group
+tps : eval E V -> of E T -> of V T -> type.
+
+tps_lam : tps (ev_lam) (tp_lam P) (tp_lam P).
+tps_app : tps (ev_app D3 D2 D1) (tp_app P2 P1) Q
+           <- tps D1 P1 (tp_lam Q1')
+           <- tps D2 P2 Q2
+           <- tps D3 (Q1' V2 Q2) Q.
+
+%mode tps +D +P -Q.
+%worlds () (tps D P _).
+%total D (tps D P _).
+@end group
+@end example
+
+The mode declaration specifies that the evaluation and typing derivation
+for @code{E} are input, while the typing derivation for @code{V} is
+output.  The worlds declaration expresses that expressions and types
+must be closed, that is, not depend on any parameters.  The final
+totality declaration claims that the logic programming execution of
+@code{tps D P Q} for ground @code{D} and @code{P} and free existential
+variable @code{Q} terminates because @code{tps} is inductively defined
+based on the structure of @code{D}.  Note that this implies that the
+meta-theorem of type preservation holds, because the type family
+@code{cps} realizes the proof: it can always compute a typing derivation
+@code{Q:of V T} when given arbitrary evaluation @code{D:eval E V} and
+typing derivation @code{P:of E T}.
+
+The signature above passes all three tests.  The main subtlety in this
+example lies in the output coverage of the first subgoal
+
+@example
+  <- tps D1 P1 (tp_lam Q1')
+@end example
+
+How does Twelf know that any typing derivation @code{Q1} returned by a
+call @code{tps D1 P1 Q1} must in fact have the form @code{tp_lam Q1'}
+for some @code{Q1'}?  Here, this follows by the structure of the
+indexed types: @code{Q1 : of (lam [x] E1' x) (arrow T2 T1)} for some
+@code{E1'}, @code{T1}, and @code{T2}.  Hence there remains only one
+applicable top-level constructor for @code{Q1}, namely @code{tp_lam},
+which corresponds to the typing rule lambda-abstraction.  In informal
+proofs, we refer to this as @emph{inversion} or @emph{genericity}.
+
+For the sake of illustration, we introduce two bugs into our proof
+and analyse the error message.  In the first, we reverse the arguments
+@code{D2} and @code{D3} in rule @code{tps_app}.
+
+@example
+tps_app : tps (ev_app D2 D3 D1) (tp_app P2 P1) Q
+           <- tps D1 P1 (tp_lam Q1')
+           <- tps D2 P2 Q2
+           <- tps D3 (Q1' V2 Q2) Q.
+@end example
+
+The resulting clause still passes all test up to input coverage, which
+fails with the message
+
+@example
+Coverage error --- missing cases:
+@{E1:exp@} @{E2:exp@} @{E3:exp@} @{T1:tp@} @{E4:exp -> exp@} @{E5:exp@} @{D1:eval (E4 E5) E3@}
+   @{D2:eval E2 E5@} @{D3:eval E1 (lam ([e:exp] E4 e))@} @{T2:tp@} @{P1:of E2 T2@}
+   @{P2:of E1 (arrow T2 T1)@} @{P3:of E3 T1@}
+   |- tps (ev_app D1 D2 D3) (tp_app P1 P2) P3.
+@end example
+
+This clearly identifies the missing case, but it does not help much in
+identifying which the rule @code{tps_app} fails to cover the given case.
+If look back at the declaration for @code{tps_app} after reconstruction
+
+@example
+tps_app :
+   @{E1:exp -> exp@} @{V2:exp@} @{T1:tp@} @{D3:eval (E1 V2) V2@} @{T2:tp@}
+      @{Q1':@{e:exp@} of e T2 -> of (E1 e) T1@} @{Q2:of V2 T2@} @{Q:of V2 T1@}
+      @{D2:eval (E1 V2) V2@} @{P2:of (E1 V2) T2@} @{E2:exp@}
+      @{D1:eval E2 (lam ([e:exp] E1 e))@} @{P1:of E2 (arrow T2 T1)@}
+      tps D3 (Q1' V2 Q2) Q -> tps D2 P2 Q2 -> tps D1 P1 (tp_lam Q1')
+         -> tps (ev_app D2 D3 D1) (tp_app P2 P1) Q.
+@end example
+
+@noindent
+we see that @code{@{D3:eval (E1 V2) V2@}} which is clearly non-sensical
+and points to an argument ordering problem (@code{V} and @code{V2}
+have been identified).
+
+As the second example of an intentional problem, we use an apparently
+correct implementation of a @code{copy} family implements the identity
+relation on expressions recursively (see file
+@file{example/guide/lam.elf}).
+
+@example
+@group
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+          <- cp E1 F1
+          <- cp E2 F2.
+
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+          <- (@{x:exp@} @{y:exp@} cp x y -> cp (E x) (F y)).
+
+%mode cp +E -F.
+%block cp_var : block @{x:exp@} @{y:exp@} @{u:cp x y@}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
+@end group
+@end example
+
+This fails with the message
+
+@example
+Coverage error --- missing cases:
+@{#cp_var:@{x:exp@} @{y:exp@} @{u:cp x y@}@} @{E1:exp@} |- cp #cp_var_y E1.
+@end example
+
+@noindent
+because the parameter @code{y:exp} is not accompanied by an assumption
+on how to copy @code{y}.  Twelf does not perform the global analysis
+that would be necessary to show that @code{y} actually can never occur
+as a first argument to @code{cp}.  If we introduce such an assumption,
+for example, @code{cp y y},
+
+@example
+@group
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+          <- cp E1 F1
+          <- cp E2 F2.
+
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+          <- (@{x:exp@} @{y:exp@} cp x y -> cp y y -> cp (E x) (F y)).
+
+%mode cp +E -F.
+%block cp_var : block @{x:exp@} @{y:exp@} @{u:cp x y@} @{w:cp y y@}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
+@end group
+@end example
+
+@noindent
+then totality checking still fails.  The error message
+
+@example
+Totality: Output of subgoal not covered
+Output coverage error --- missing cases:
+@{E1:exp -> exp@} @{E2:exp -> exp -> exp@}
+   |- @{x:exp@} @{y:exp@} cp x y -> cp y y -> cp (E1 x) (E2 x y).
+@end example
+
+@noindent
+shows that Twelf expected the output argument of the recursive call to
+possibly depend on both @code{x} and @code{y}, while the corresponding
+pattern @code{F y} allowed dependency only on @code{y}.  Again, Twelf
+does not perform the global analysis necessary to show that @code{x} can
+never appear in the output argument of @code{cp}.
+
+A correct and checkable implementation of @code{cp} introduces only one new
+parameter, thereby avoiding the problems above.
+
+@example
+@group
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+          <- cp E1 F1
+          <- cp E2 F2.
+
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+          <- (@{x:exp@} cp x x -> cp (E x) (F x)).
+
+%mode cp +E -F.
+%block cp_var : block @{x:exp@} @{u:cp x x@}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
+@end group
+@end example
+
+
+@node Theorem Prover, ML Interface, Coverage, Top
 @chapter Theorem Prover
 
 @cindex theorem prover
@@ -3030,7 +3574,7 @@ declaration.
 @example
 @group
 %theorem
-tps : forall* @{E:exp@} @{V:exp@} @{T:tp@}
+tpsa : forall* @{E:exp@} @{V:exp@} @{T:tp@}
        forall @{D:eval E V@} @{P:of E T@}
        exists @{Q:of V T@}
        true.
@@ -3043,7 +3587,7 @@ the following declaration (where the size bound of @code{5} on proof
 term size is somewhat arbitrary).
 
 @example
-%prove 5 D (tps D P Q).
+%prove 5 D (tpsa D P Q).
 @end example
 
 Twelf finds and displays the proof easily.  The resulting program is
@@ -3052,55 +3596,24 @@ preservation in subsequent proofs (@pxref{Proof Realizations}).
 
 The third example illustrates the use of regular contexts.
 We use the theorem prover to establish a simple
-theorem: If we have to different but structurally identical
-formulations of the lambda-calculus (@code{exp}, @code{exp'}), and
-a relation that shows how we can copy from one to the other, than this
-relation is total. In words, this theorem reads as: If @code{E} is
-an expression then there exists an expression @code{E'}, s.t. 
-@code{E'} is a structurally identical copy to @code{E}.
+theorem, namely that for every input to the copy predicate
+@code{cp} in @ref{Totality} (see also file @file{examples/guide/lam.elf})
+there exists a corresponding output.  This essentially is just
+a reformulation of the totality checking question for @code{cp},
+except that we use the more heavyweight tool of the theorem
+prover.
 
 @example
 @group
-exp : type.
-
-app : exp -> exp -> exp.
-lam : (exp -> exp) -> exp.
-
-exp' : type.
-
-app' : exp' -> exp' -> exp'.
-lam' : (exp' -> exp') -> exp'.
-
-cp : exp -> exp' -> type.
-cp_app : cp (app D1 D2) (app' E1 E2) 
-         <- cp D1 E1
-         <- cp D2 E2.
-cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
-         <- (@{x:exp@} @{y:exp'@} cp x y -> cp (D x) (E y)). 
-
-
-%theorem cpt :  forallG (pi @{x:exp@} @{y:exp'@} @{u:cp x y@})
-                forall @{E:exp@}
-                exists @{E':exp'@} @{D: cp E E'@} 
-                true.
-%prove 5 @{E@} (cpt E _ _).
+%theorem cpt : forallG (pi @{x:exp@} @{y:cp x x@})
+               forall @{D:exp@}
+	       exists @{F:exp@} @{C:cp E F@}
+               true.
+%prove 5 E (cpt E _ _).
 @end group
 @end example
 
-It is easy to see, that the @code{E} and the @code{E'} cannot be assumed
-to be closed, because otherwise the induction hypothesis cannot be
-applied.  In this situation, the induction hypothesis must be applied to
-an object under some additional assumptions, which are @code{x:exp,
-y:exp', u:cp x y}, and which we call a context block.  Clearly, one
-context block is not enough; in general @code{E} can occur in any
-context regularly built out of these blocks.  The @code{forallG} allows
-an inductive definition of a @emph{regular context}, abstractly
-describing the form of actual contexts.  Each context block consists of a
-@code{some} part which declares additional variables which are
-instantiated with some well-typed object in a real instance of a
-context, and a @code{pi} part which describes the parameters.
-
-The termination ordering @code{@{E@}} instructs Twelf to do induction
+The termination ordering @code{E} instructs Twelf to do induction
 over @code{E} to prove the theorem.  The @code{%prove} command executes
 the proof search.  In addition, if a proof has been found, the lemma is
 made accessible to the proof search evoked by subsequent theorems and
@@ -3211,12 +3724,12 @@ After the declarations,
 @example
 @group
 %theorem
-tps : forall* @{E:exp@} @{V:exp@} @{T:tp@}
+tpsa : forall* @{E:exp@} @{V:exp@} @{T:tp@}
        forall @{D:eval E V@} @{P:of E T@}
        exists @{Q:of V T@}
        true.
 
-%prove 5 D (tps D P Q).
+%prove 5 D (tpsa D P Q).
 @end group
 @end example
 

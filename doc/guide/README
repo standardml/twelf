@@ -12,7 +12,10 @@ versions of the manual.
   make twelf.dvi  (twelf.dvi)
   make twelf.ps   (twelf.ps)
   make twelf_toc.html (twelf_toc.html, twelf_*.html)
-  make twelf.pdf  (twelf.pdf ***Warning: cannot be created under PC/Linux***)
+  make twelf.pdf  (twelf.pdf)
+
+Note that twelf.pdf should be created after twelf.dvi in order
+to make sure that indexing and cross-reference work correctly.
 
 To copy the resulting documentation to the right locations, type
 

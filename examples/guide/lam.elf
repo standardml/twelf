@@ -44,43 +44,105 @@ ev_app  : eval (app E1 E2) V		% E1 E2 ==> V
 % Type inference terminates
 %terminates E (of E T).
 
+% Regular world for type-checking
+%block tp_var : some {T:tp} block {x:exp} {u:of x T}.
+%worlds (tp_var) (of E T).
+
+% There is at least one typing rule for every expression
+%covers of +E *T.
+
+% Next fails, because T is neither input nor output
+% %total E (of E T).
+
+% Closed worlds for evaluation
+%worlds () (eval E V).
+
+% There is a at least one evaluation rule for every closed expression
+%covers eval +E -V.
+
 % %terminates E (eval E V).   % fails for ev_app
 
-% Type preservation
+% Type preservation as higher-level family
+tps : eval E V -> of E T -> of V T -> type.
+
+tps_lam : tps (ev_lam) (tp_lam P) (tp_lam P).
+tps_app : tps (ev_app D3 D2 D1) (tp_app P2 P1) Q
+	   <- tps D1 P1 (tp_lam Q1')
+	   <- tps D2 P2 Q2
+	   <- tps D3 (Q1' V2 Q2) Q.
+
+%mode tps +D +P -Q.
+%worlds () (tps D P _).
+%total D (tps D P _).
+
+% Type preservation proven automatically
 %theorem
-tps : forall* {E:exp} {V:exp} {T:tp}
+tpsa : forall* {E:exp} {V:exp} {T:tp}
        forall {D:eval E V} {P:of E T}
        exists {Q:of V T}
        true.
 
-%prove 5 D (tps D P Q).
+%prove 5 D (tpsa D P Q).
 
 % Applying type preservation
 e0 = (app (lam [x] x) (lam [y] y)).
 %solve p0 : of e0 T.
 %solve d0 : eval e0 V.
+%solve tps0 : tps d0 p0 Q.      
 
-% the following line is commented out because tps does not 
-% have a proof term any more.
-% %solve tps0 : tps d0 p0 Q.      
+% Example of regular worlds
+% cp copies input to output.
 
-% Example of regular contexts
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+	  <- cp E1 F1
+	  <- cp E2 F2.
 
-exp' : type.
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+	  <- ({x:exp} cp x x -> cp (E x) (F x)).
 
-app' : exp' -> exp' -> exp'.
-lam' : (exp' -> exp') -> exp'.
+%mode cp +E -F.
+%block cp_var : block {x:exp} {u:cp x x}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
 
-cp : exp -> exp' -> type.
-cp_app : cp (app D1 D2) (app' E1 E2) 
-         <- cp D1 E1
-         <- cp D2 E2.
-cp_lam : cp (lam ([x:exp] D x)) (lam' ([y:exp'] E y))
-         <- ({x:exp} {y:exp'} cp x y -> cp (D x) (E y)). 
+% Following version cannot be checked
+% Input coverage on parameter y is violated
+%{
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+	  <- cp E1 F1
+	  <- cp E2 F2.
 
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+	  <- ({x:exp} {y:exp} cp x y -> cp (E x) (F y)).
 
-%theorem cpt :  forallG (pi {x:exp}{y:exp'}{u:cp x y})
-		forall {E:exp}
-		exists {E':exp'}{D: cp E E'} 
-		true.
-%prove 5 {E} (cpt E _ _).
+%mode cp +E -F.
+%block cp_var : block {x:exp} {y:exp} {u:cp x y}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
+}%
+
+% Following version cannot be checked
+% Output coverage on (F y) is violated.
+%{
+cp : exp -> exp -> type.
+cp_app : cp (app E1 E2) (app F1 F2)
+	  <- cp E1 F1
+	  <- cp E2 F2.
+
+cp_lam : cp (lam [x] E x) (lam [x] F x)
+	  <- ({x:exp} {y:exp} cp x y -> cp y y -> cp (E x) (F y)).
+
+%mode cp +E -F.
+%block cp_var : block {x:exp} {y:exp} {u:cp x y} {w:cp y y}.
+%worlds (cp_var) (cp E _).
+%total E (cp E _).
+}%
+
+%theorem cpt : forallG (pi {x:exp} {y:cp x x})
+               forall {E:exp}
+	       exists {F:exp} {C:cp E F}
+               true.
+%prove 5 E (cpt E _ _).
+

@@ -10,6 +10,18 @@ Tabled logic programming (-bp)
   Twelf.Table.Variant
   Twelf.Table.Subsumption
   Twelf.Table.top
+  (Twelf+, Server+, Emacs+, Guide+)
+
+Compiling optimizations (-bp)
+  Twelf.Compile.optimize
+  (Twelf+, Server+, Emacs+, Guide+)
+
+Coverage (-cs, -fp)
+  %block
+  %worlds
+  %covers
+  %total
+  (Twelf+, Emacs+, Guide+) [no changes to server]
 
 Fri Dec 28 11:30:37 2001
 

@@ -43,6 +43,11 @@ noti : (nd A -> nd false) -> nd (not A)
 note : nd (not A) -> nd A -> nd false
      = [D:nd (not A)] [E:nd A] impe D E.
 
+%%% Verifying regular worlds
+%block nd_hyp : some {A:o} block {u:nd A}.
+%block nd_parm : block {x:i}.
+%worlds (nd_hyp | nd_parm) (nd A).
+
 %%% Local reductions
 
 red : nd A -> nd A -> type.
