@@ -1,3 +1,29 @@
+README file for meta directory
+------------------------------
+
+funsyn        implements the functional calculus
+funtypecheck  implements a type checker for this calculus
+relfun        implements a converter from relational formulation
+		of primitive recursive functions as LF signature
+		to this functional calculus.
+
+
+Regression test
+---------------
+
+relfun and funtypecheck are regression tested using the
+command
+
+	use "TEST/meta.sml";
+
+from the  Twelf-SML top level. 
+
+
+
+
+TODO list for relfun.com
+------------------------
+
 DONE -cs  1) lemmas 
 DONE -cs  2) parameter cases
 DONE -cs  3) mutual recursion
