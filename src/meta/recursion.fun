@@ -602,11 +602,7 @@ struct
 	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
 	  let
 	    val AF = paramAbstract (A.Head (G, Fs, I.ctxLength G0))
-	    val _ = TextIO.print "["
 	    val Frl = A.abstractApproxFor AF
-	    val _ = TextIO.print "-"
-	    val _ = TextIO.print (Int.toString (I.ctxLength G))
-	    val _ = TextIO.print "]"
 	  in
 	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
 	      Ds
