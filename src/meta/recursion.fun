@@ -67,26 +67,26 @@ struct
 
 
 
-    (* residualLemma (s, F) = F'
+    (* residualLemma (Gx, (F1, s)) = F'
      
        Invariant:
-       If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
-       and  Gx |- F1 == [[Gy]] true
-       then G |- {{Gx'}} F' formula
+       If    G |- s : Gx    and  . |- Fx = {{Gx}} F1 formula
+       where s can contain free EVars
+       and   Gx |- F1 true
+       then  G |- F' == {{Gx'}} F1[s] formula
        where Gx' < Gx
-       and   s uninstantiated on Gx'
+       and   F' doesn't contain any free EVars
     *)
 
-    fun residualLemma (G, Gx, (Fx, s)) =
+    fun residualLemma (Gx, (Fx, s)) =
         let 
-	  (* collect (G, s, F) = (Gx', F')
-	 
+	  (* collect (s, Gx) = (Gx', s')
+
 	     Invariant: 
-	     If   G |- s : Gx    and  . |- F = {{Gx}} F1 formula
-	     then G |- Gx' ctx
+	     If   G |- s : Gx   
+	     then . |- Gx' ctx
 	     and  Gx' < Gx  (where s uninstantiated on Gx')
-	     and  G, Gx' |- F' formula
-             and  G, Gx' |- F' = [[Gy]] true
+	     and  G, Gx' |- s' : Gx
 	  *)
 	  
 	  fun collect (s as I.Shift k, I.Null) = (I.Null, s)
@@ -103,7 +103,8 @@ struct
 	  (* abstract (Gx, F) = F'
 
 	     Invariant: 
-	     F' = {{Gx}} F
+	     If   G, Gx |- F formula
+	     then G |- F' = {{Gx}} F formula
 	  *)
 	  fun abstract (I.Null, F) = F
 	    | abstract (I.Decl (Gx, D), F) = abstract (Gx, F.All (F.Prim D, F))
@@ -116,9 +117,65 @@ struct
 
 
 
-(* Notes: restriction!!!! only in the case that function and type are living on the
-   same level parameter cases are being generated.
-   Other case to follow, if necessary -cs *)
+    (* rlemma (G, G1, s, F) = F'
+     
+       Invariant:
+       If   G |- s : G1
+       and  s may contain EVars
+       and  G |- F : formula
+       and  F may contain EVars also introduced in s
+       then G, G1' |- F' : formula
+       and  G1' < G1
+       and  G, |- G1' ctx
+       and  F' does not contain any EVars 
+
+    *)
+    fun rlemma (G, G1, s, F) = 
+      let
+	(* rlemma (s, G1, sc) = F'
+
+           Invariant: 
+           If   G |- s : G1   
+	   and  sc success continuation which maps
+	        (G, G1') and 
+	        (G, G1' |- w1 : G1) and  
+		(G, G1' |- w2 : G) to (G |- {G1'} F' for)  
+           then G |- G1' ctx used to capture of EVars in G1
+	   
+	   Invariant: Instantiates free EVars in F
+	*)
+	
+	fun rlemma' (s as I.Shift k, I.Null, sc) = sc (G, s, I.id)
+	  | rlemma' (s as I.Dot (I.Exp U, s'), I.Decl (G1, D), sc) =
+	    let
+	      fun sc' (G', w1, w2) = 
+					(* G' = G, G1' *)
+					(* G, G1' |- w1 : G1 *)
+					(* G, G1' |- w2 : G *)
+		if Abstract.closedExp (G, (U, I.id)) then sc (G', I.Dot (I.Exp (I.EClo (U, w2)), w1), w2)
+		else 
+		  let
+		    val D' = Whnf.normalizeDec  (D, w1)
+					(* G, G1' |- D' : type *)
+		    val G'' = I.Decl (G', D')
+					(* G'' = G, G1', D [w1] *)
+		    val w2' = I.comp (w2, I.shift)
+					(* G, G1', D[w1] |- w2' : G *)
+		  in 
+		    Trail.trail (fn () => (Unify.unify (G'', (I.Root (I.BVar 1, I.Nil), I.id),
+							(U, w2')); (* must succeed *)
+					   F.All (F.Prim D', sc' (G'', I.dot1 w1, w2'))))
+		  end
+            in
+	      rlemma' (s', G1, sc')
+	    end
+
+	  val _ = TextIO.print ("<rlemma>")
+      in
+	rlemma' (s, G1, fn (G', w1, w2) => F.normalizeFor (F, w2))
+      end
+	  
+
 
     fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
 
@@ -328,6 +385,14 @@ struct
 
 
 
+	    (* ctxSub (G, s) = G'
+	     
+	       Invariant:
+	       If   G2 |- s : G1
+	       and  G1 |- G ctx
+	       then G2 |- G' = G[s] ctx
+	    *)
+
 	    fun ctxSub (nil, s) = nil
 	      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
 	      
@@ -372,14 +437,17 @@ struct
 	      else
 		let 
 		  val F.LabelDec (name, G1, G2) = F.labelLookup n   
-		(*	val Ds' = checkLabels (n-1, Ds)             (* not necessary!!! loop -cs *) *)
-		  val _ = TextIO.print ("*")
 		  val s = someEVars (G, G1, I.id)
 		  val G2' = ctxSub (G2, s)
 		in
 		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
-		    append (abstract (F.listToCtx (G2'), introduceParameters (n, (G, B), G2', I.id, kont)), Ds)
-		  else (* Ds' *) checkLabels (n-1, Ds) 
+		    let 
+		      val Ds' = abstract (F.listToCtx (G2'), introduceParameters (n, (G, B), G2', I.id, kont))
+		      val Ds'' = map (fn (Lemma (n, F)) => Lemma (n, rlemma (G, F.listToCtx G1, s, F))) Ds'
+		    in
+		      append (Ds'', Ds)
+		    end
+		  else checkLabels (n-1, Ds) 
 		end
 	      
 	  in
@@ -705,9 +773,10 @@ struct
 	   Fs = (F, s),  G |- 
 	 *)       
 
-	fun check (G, n, s, G0, O, IH, H, Fs) Ds = 
+	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
 	  let
-	    val Frl = residualLemma (G, G0, Fs)
+(*	    val Frl = rlemma (I.Null, G0, s1, F.forSub Fs) *)
+	    val Frl = residualLemma (G0, Fs)
 	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
 	  in 
 	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
