@@ -200,7 +200,7 @@ struct
     fun stripBar (LS.Cons ((L.ID (_, "|"), r), s')) = (LS.expose s')
       | stripBar (f as LS.Cons ((L.RPAREN, r), s')) = f
       | stripBar (LS.Cons ((t, r), s')) =
-          Parsing.error (r, "`|' expected, found token" ^ L.toString t)
+          Parsing.error (r, "Expected `|', found token " ^ L.toString t)
 
 
 	   
@@ -215,12 +215,12 @@ struct
       | parseQualIds1 (ls,  LS.Cons ((L.RPAREN, r), s')) =
          (ls, LS.expose s')
       | parseQualIds1 (ls, LS.Cons ((t, r), s)) =
-	 Parsing.error (r, "Label expected, found token " ^ L.toString t)
+	 Parsing.error (r, "Expected label, found token " ^ L.toString t)
 
     fun parseQualIds' (LS.Cons ((L.LPAREN, r), s')) =
         parseQualIds1 (nil, LS.expose s')
       | parseQualIds' (LS.Cons ((t, r), s')) =
-	  Parsing.error (r, "List of labels expected, found token " ^ L.toString t)
+	  Parsing.error (r, "Expected list of labels, found token " ^ L.toString t)
 
 
     (* val parseExp : (L.token * L.region) LS.stream * <p>
