@@ -1,14 +1,14 @@
 (* Solver for machine integers *)
 (* Author: Roberto Virga *)
 
-functor CSIntWord (structure Word : WORD
-                   structure IntSyn : INTSYN
+functor CSIntWord (structure IntSyn : INTSYN
                    structure Whnf : WHNF
                      sharing Whnf.IntSyn = IntSyn
                    structure Unify : UNIFY
                      sharing Unify.IntSyn = IntSyn
                    structure CSManager : CS_MANAGER
-                     sharing CSManager.IntSyn = IntSyn)
+                     sharing CSManager.IntSyn = IntSyn
+                   val wordSize : int)
  : CS =
 struct
   structure CSManager = CSManager
@@ -16,10 +16,37 @@ struct
   local
     open IntSyn
 
-    structure W = Word;
+    structure W = LargeWord;
 
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
+
+    val wordSize' = Int.min (wordSize, W.wordSize);
+
+    val zero = W.fromInt 0
+    val max = W.>> (W.notb zero, Word.fromInt (W.wordSize - wordSize'))
+
+    (* numCheck (d) = true iff d <= max *)
+    fun numCheck (d) = W.<= (d, max)
+
+    (* plusCheck (d1, d2) = true iff d1 + d2 <= max *)
+    fun plusCheck (d1, d2) =
+          let
+            val d3 = W.+ (d1, d2)
+          in
+            W.>= (d3, d1)
+            andalso W.>= (d3, d2)
+            andalso W.<= (d3, max)
+          end
+
+    (* timesCheck (d1, d2) = true iff d1 * d2 <= max *)
+    fun timesCheck (d1, d2) =
+          if(d1 = zero orelse d2 = zero) then true
+          else let val d3 = W.div (W.div (max, d1), d2)
+               in W.> (d3, zero) end
+
+    (* quotCheck (d1, d2) = true iff  d2 != zero *)
+    fun quotCheck (d1, d2) = W.> (d2, zero)
 
     (* constraint solver ID of this module *)
     val myID = ref ~1 : csid ref
@@ -85,7 +112,10 @@ struct
                   false
           in
             if check (String.explode str)
-            then StringCvt.scanString (W.scan StringCvt.DEC) str
+            then
+              case (StringCvt.scanString (W.scan StringCvt.DEC) str)
+                of SOME(d) => (if numCheck (d) then SOME(d) else NONE)
+                 | NONE => NONE
             else NONE
           end
 
@@ -256,26 +286,6 @@ struct
     (* fth (S, s) = U1, the fourth argument in S[s] *)
     fun fth (App (_, S), s) = trd (S, s)
       | fth (SClo (S, s'), s) = fth (S, comp (s', s))
-
-    val zero = W.fromInt 0
-    val max = W.notb zero
-
-    (* plusCheck (d1, d2) = true iff d1 + d2 < max *)
-    fun plusCheck (d1, d2) =
-          let
-            val d3 = W.+(d1, d2)
-          in
-            W.>= (d3, d1) andalso W.>= (d3, d2)
-          end
-
-    (* timesCheck (d1, d2) = true iff d1 * d2 < max *)
-    fun timesCheck (d1, d2) =
-          if(d1 = zero orelse d2 = zero) then true
-          else let val d3 = W.div (W.div (max, d1), d2)
-               in W.> (d3, zero) end
-
-    (* quotCheck (d1, d2) = true iff d1 * d2 < max *)
-    fun quotCheck (d1, d2) = W.> (d2, zero)
 
     fun toInternalPlus (G, U1, U2, U3) () =
           [(G, plusExp(U1, U2, U3))]
@@ -653,7 +663,7 @@ struct
   in
     val solver =
           {
-            name = "word" ^ Int.toString(W.wordSize),
+            name = "word" ^ Int.toString(wordSize'),
             keywords = "numbers,equality",
             needs = ["Unify"],
 
