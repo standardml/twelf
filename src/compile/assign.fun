@@ -128,11 +128,11 @@ struct
       | assignExpW (G, Us1 as (EClo(U,s'), s), Us2, cnstr) = 
 	  assignExp(G, (U, comp(s', s)), Us2, cnstr)
 
-      | assignExpW (G, Us1 as (FgnExp (_, ops), _), Us2, cnstr) =
+      | assignExpW (G, Us1 as (FgnExp (_, fe), _), Us2, cnstr) =
 	  (* by invariant Us2 cannot contain any FgnExp *)
 	    (Eqn(G, EClo(Us1), EClo(Us2))::cnstr)
 
-      | assignExpW (G, Us1, Us2 as (FgnExp (_, ops), _), cnstr) =
+      | assignExpW (G, Us1, Us2 as (FgnExp (_, fe), _), cnstr) =
 	    (Eqn(G, EClo(Us1), EClo(Us2))::cnstr)
 	  
     and assignSpine (G, (Nil, _), (Nil, _), cnstr) = cnstr

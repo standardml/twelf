@@ -82,11 +82,11 @@ struct
 			   App (Root (BVar (1), Nil), Nil)), dot1 s1),
 		   (U2, dot1 s2))
 
-      | convExpW ((FgnExp(_, ops1), s1), Us2) = (* s1 = id *)
-          #equalTo(ops1) (EClo Us2)
+      | convExpW ((FgnExp csfe1, s1), Us2) = (* s1 = id *)
+          FgnExpStd.EqualTo.apply csfe1 (EClo Us2)
 
-      | convExpW (Us1, (FgnExp(_, ops2), s2)) = (* s2 = id *)
-          #equalTo(ops2) (EClo Us1)
+      | convExpW (Us1, (FgnExp csfe2, s2)) = (* s2 = id *)
+          FgnExpStd.EqualTo.apply csfe2 (EClo Us1)
 
       | convExpW ((EVar (r1, _, _, _), s1), (EVar(r2, _, _, _), s2)) = 
 	  (r1 = r2) andalso convSub (s1, s2)

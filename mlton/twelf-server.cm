@@ -17,6 +17,8 @@ Group is
 ../src/table/sparse-array2.sig
 ../src/table/sparse-array2.fun
 ../src/table/table.sml
+../src/lambda/fgnopn.sig
+../src/lambda/fgnopntable.fun
 ../src/lambda/intsyn.sig
 ../src/lambda/intsyn.fun
 ../src/trail/trail.sig

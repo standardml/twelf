@@ -255,8 +255,8 @@ struct
 	  freeSpineN (D, d, mode, S, (1, occ), strictFun)
       | freeExpN (D, d, mode, I.Lam (_, U), occ, strictFun) =
 	  freeExpN (I.Decl (D, Universal), d+1, mode, U, P.body occ, strictFun)
-      | freeExpN (D, d, mode, I.FgnExp (cs, ops), occ, strictFun) =
-          freeExpN (D, d, mode, Whnf.normalize (#toInternal(ops)(), I.id), occ, strictFun)
+      | freeExpN (D, d, mode, I.FgnExp csfe, occ, strictFun) =
+	I.FgnExpStd.App.apply csfe (fn U => freeExpN (D, d, mode, Whnf.normalize (U, I.id), occ, strictFun)) (* punting on the occ here  - ak *)
 
     (* freeSpineN (D, mode, S, occ, strictFun)  = () 
 
@@ -458,8 +458,8 @@ struct
 	  groundSpineN (D, mode, S, (1, occ))
       | groundExpN (D, mode, I.Lam (_, U), occ) =
 	  groundExpN (I.Decl (D, Universal), mode, U, P.body occ)
-      | groundExpN (D, mode, I.FgnExp (cs, ops), occ) =
-          groundExpN (D, mode, Whnf.normalize (#toInternal(ops)(), I.id), occ)
+      | groundExpN (D, mode, I.FgnExp csfe, occ) =
+	I.FgnExpStd.App.apply csfe (fn U => groundExpN (D, mode, Whnf.normalize (U, I.id), occ)) (* punting on occ here  - ak *)
 
     (* groundSpineN (D, mode, S, occ)  = () 
 

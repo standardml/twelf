@@ -139,7 +139,9 @@ struct
       | occursInExp (k, I.Pi (DP, V)) = or (occursInDecP (k, DP), occursInExp (k+1, V))
       | occursInExp (k, I.Root (H, S)) = occursInHead (k, H, occursInSpine (k, S))
       | occursInExp (k, I.Lam (D, V)) = or (occursInDec (k, D), occursInExp (k+1, V))
-      | occursInExp (k, I.FgnExp (cs, ops)) = occursInExp (k, Whnf.normalize (#toInternal(ops) (), I.id))
+      | occursInExp (k, I.FgnExp csfe) =
+	I.FgnExpStd.fold csfe (fn (U, DP) => or (DP, (occursInExp (k, Whnf.normalize (U, I.id))))) I.No
+
       (* no case for Redex, EVar, EClo *)
 
     and occursInHead (k, I.BVar (k'), DP) = 
@@ -233,8 +235,8 @@ struct
 	     in
 	       collectSub(G, s, I.Decl (K', EV (X)))
 	     end
-      | collectExpW (G, (I.FgnExp (cs, ops), s), K) =
-          collectExp (G, (#toInternal(ops) (), s), K)
+      | collectExpW (G, (I.FgnExp csfe, s), K) =
+	  I.FgnExpStd.fold csfe (fn (U, K) => collectExp (G, (U, s), K)) K
       (* No other cases can occur due to whnf invariant *)
 
     (* collectExp (G, (U, s), K) = K' 
@@ -406,8 +408,8 @@ struct
       | abstractExpW (K, depth, (X as I.EVar _, s)) =
  	  I.Root (abstractEVar (K, depth, X), 
 		  abstractSub (K, depth, s, I.Nil))
-      | abstractExpW (K, depth, (I.FgnExp (cs, ops), s)) =
-          #map(ops) (fn U => abstractExp (K, depth, (U, s)))
+      | abstractExpW (K, depth, (I.FgnExp csfe, s)) =
+          I.FgnExpStd.Map.apply csfe (fn U => abstractExp (K, depth, (U, s)))
 
     (* abstractExp (K, depth, (U, s)) = U'
      

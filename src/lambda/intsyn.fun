@@ -37,6 +37,17 @@ struct
 	ctxLength' (G, 0)
       end
     
+  type FgnExp = exn                     (* foreign expression representation *)
+  exception UnexpectedFgnExp of FgnExp
+                                        (* raised by a constraint solver
+					   if passed an incorrect arg *)
+
+  type FgnCnstr = exn                   (* foreign unification constraint
+                                           representation *)
+  exception UnexpectedFgnCnstr of FgnCnstr
+                                        (* raised by a constraint solver
+                                           if passed an incorrect arg *)
+
   datatype Depend =                     (* Dependency information     *)
     No                                  (* P ::= No                   *)
   | Maybe                               (*     | Maybe                *)
@@ -60,15 +71,8 @@ struct
   | EClo  of Exp * Sub			(*     | U[s]                 *)
   | AVar  of Exp option ref             (*     | A<I>                 *)
 
-  | FgnExp of csid *                    (*     | (foreign expression) *)
-      {
-        toInternal : unit -> Exp,       (* convert to internal syntax *)
-        map : (Exp -> Exp) -> Exp,      (* apply to subterms          *)
-        equalTo : Exp -> bool,
-                                        (* test for equality          *)
-        unifyWith : Dec Ctx * Exp -> FgnUnify
-                                        (* unify with another term    *)
-      }
+  | FgnExp of csid * FgnExp
+                                        (*     | (foreign expression) *)
     
   and Head =				(* Heads:                     *)
     BVar  of int			(* H ::= k                    *)
@@ -110,13 +114,7 @@ struct
   and Cnstr =				(* Constraint:                *)
     Solved                      	(* Cnstr ::= solved           *)
   | Eqn      of Dec Ctx * Exp * Exp     (*         | G|-(U1 == U2)    *)
-  | FgnCnstr of csid *                  (*         | (foreign)        *)
-      {
-        toInternal : unit -> (Dec Ctx * Exp) list,
-                                        (* convert to internal syntax *)
-        awake : unit -> bool,           (* awake                      *)
-        simplify : unit -> bool         (* simplify                   *)
-      }
+  | FgnCnstr of csid * FgnCnstr         (*         | (foreign)        *)
 
   and Status =                          (* Status of a constant:      *)
     Normal                              (*   inert                    *)
@@ -167,6 +165,48 @@ struct
   type cnstr = Cnstr ref
 
   exception Error of string             (* raised if out of space     *)
+
+
+  structure FgnExpStd = struct
+
+    structure ToInternal = FgnOpnTable (type arg = unit
+					type result = Exp)
+
+    structure Map = FgnOpnTable (type arg = Exp -> Exp
+				 type result = Exp)
+
+    structure App = FgnOpnTable (type arg = Exp -> unit
+				 type result = unit)
+
+    structure EqualTo = FgnOpnTable (type arg = Exp
+				     type result = bool)
+
+    structure UnifyWith = FgnOpnTable (type arg = Dec Ctx * Exp
+				       type result = FgnUnify)
+
+			  
+
+    fun fold csfe f b = let
+	val r = ref b
+	fun g U = r := f (U,!r)
+    in
+	App.apply csfe g ; !r
+    end
+
+  end
+
+  structure FgnCnstrStd = struct
+
+    structure ToInternal = FgnOpnTable (type arg = unit
+					type result = (Dec Ctx * Exp) list)
+
+    structure Awake = FgnOpnTable (type arg = unit
+				   type result = bool)
+
+    structure Simplify = FgnOpnTable (type arg = unit
+				      type result = bool)
+
+  end
 
   fun conDecName (ConDec (name, _, _, _, _, _)) = name
     | conDecName (ConDef (name, _, _, _, _, _)) = name

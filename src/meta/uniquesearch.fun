@@ -98,8 +98,8 @@ struct
 	  occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
       | occursInExpW (r, (I.EVar (r' , _, V', _), s)) = 
           (r = r') orelse occursInExp (r, (V', s))
-      | occursInExpW (r, (I.FgnExp (cs, ops), s)) =
-          occursInExp (r, (#toInternal(ops)(), s))
+      | occursInExpW (r, (I.FgnExp csfe, s)) =
+	I.FgnExpStd.fold csfe (fn (U, B) => B orelse occursInExp (r, (U, s))) false
           (* hack - should consult cs  -rv *)
 
     and occursInSpine (_, (I.Nil, _)) = false

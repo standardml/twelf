@@ -9,6 +9,15 @@ sig
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
+  type FgnExp = exn                     (* foreign expression representation *)
+  exception UnexpectedFgnExp of FgnExp
+                                        (* raised by a constraint solver
+					   if passed an incorrect arg *)
+  type FgnCnstr = exn                   (* foreign constraint representation *)
+  exception UnexpectedFgnCnstr of FgnCnstr
+                                        (* raised by a constraint solver
+                                           if passed an incorrect arg *)
+
   (* Contexts *)
 
   datatype 'a Ctx =			(* Contexts                   *)
@@ -40,16 +49,7 @@ sig
                                         (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
   | AVar  of Exp option ref             (*     | A<I>                 *)
-
-  | FgnExp of csid *                    (*     | (foreign expression) *)
-      {
-        toInternal : unit -> Exp,       (* convert to internal syntax *)
-        map : (Exp -> Exp) -> Exp,      (* apply to subterms          *)
-        equalTo : Exp -> bool,
-                                        (* test for equality          *)
-        unifyWith : Dec Ctx * Exp -> FgnUnify
-                                        (* unify with another term    *)
-      }
+  | FgnExp of csid * FgnExp             (*     | (foreign expression) *)
 
   and Head =				(* Head:                      *)
     BVar  of int			(* H ::= k                    *)
@@ -92,13 +92,7 @@ sig
   and Cnstr =				(* Constraint:                *)
     Solved                      	(* Cnstr ::= solved           *)
   | Eqn      of Dec Ctx * Exp * Exp     (*         | G|-(U1 == U2)    *)
-  | FgnCnstr of csid *                  (*         | (foreign)        *)
-      {
-        toInternal : unit -> (Dec Ctx * Exp) list,
-                                        (* convert to internal syntax *)
-        awake : unit -> bool,           (* awake                      *)
-        simplify : unit -> bool         (* simplify                   *)
-      }
+  | FgnCnstr of csid * FgnCnstr         (*         | (foreign)        *)
 
   and Status =                          (* Status of a constant:      *)
     Normal                              (*   inert                    *)
@@ -149,6 +143,47 @@ sig
   type cnstr = Cnstr ref
 
   exception Error of string		(* raised if out of space     *)
+
+  (* standard operations on foreign expressions *)
+  structure FgnExpStd : sig
+    (* convert to internal syntax *)
+    structure ToInternal : FGN_OPN where type arg = unit
+                                   where type result = Exp
+
+    (* apply function to subterms *)
+    structure Map : FGN_OPN where type arg = Exp -> Exp
+			    where type result = Exp
+
+    (* apply function to subterms, for effect *)
+    structure App : FGN_OPN where type arg = Exp -> unit
+			    where type result = unit
+
+    (* test for equality *)
+    structure EqualTo : FGN_OPN where type arg = Exp
+                                where type result = bool
+
+    (* unify with another term *)
+    structure UnifyWith : FGN_OPN where type arg = Dec Ctx * Exp
+                                  where type result = FgnUnify
+
+    (* fold a function over the subterms *)
+    val fold : (csid * FgnExp) -> (Exp * 'a -> 'a) -> 'a -> 'a
+  end
+
+  (* standard operations on foreign constraints *)
+  structure FgnCnstrStd : sig
+    (* convert to internal syntax *)
+    structure ToInternal : FGN_OPN where type arg = unit
+                                   where type result = (Dec Ctx * Exp) list
+
+    (* awake *)
+    structure Awake : FGN_OPN where type arg = unit
+                              where type result = bool
+
+    (* simplify *)
+    structure Simplify : FGN_OPN where type arg = unit
+                                 where type result = bool
+  end
   
   val conDecName   : ConDec -> string
   val conDecParent : ConDec -> mid option

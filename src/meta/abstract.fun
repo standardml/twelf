@@ -213,8 +213,8 @@ struct
 	       in
 		 collectSub (T, d, G, I.comp (w, s), I.Decl (collectExp (T, d, Gp, (V', I.id), K), EV (r', V', T, d)))
 	       end
-      | collectExpW (T, d, G, (I.FgnExp (cs, ops), s), K) =
-          collectExp (T, d, G, (#toInternal(ops)(), s), K)
+      | collectExpW (T, d, G, (I.FgnExp csfe, s), K) =
+	I.FgnExpStd.fold csfe (fn (U, K') => collectExp (T, d, G, (U, s), K')) K
           (* hack - should consult cs    -rv *)
       (* No other cases can occur due to whnf invariant *)
 
@@ -337,8 +337,8 @@ struct
 	  in
 	    I.Root (H, abstractSub (I.ctxLength G - d,  K, depth, s, I.Nil))
 	  end
-      | abstractExpW (K, depth, (I.FgnExp (cs, ops), s)) =
-          #map(ops)(fn U => abstractExp (K, depth, (U, s)))
+      | abstractExpW (K, depth, (I.FgnExp csfe, s)) =
+          I.FgnExpStd.Map.apply csfe (fn U => abstractExp (K, depth, (U, s)))
           (* hack - should consult cs   -rv *)
 
     (* abstractExp (K, depth, (U, s)) = U'

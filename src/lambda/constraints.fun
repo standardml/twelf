@@ -43,8 +43,8 @@ struct
         if Conv.conv ((U1, I.id), (U2, I.id))
 	  then simplify cnstrs
         else Eqn :: (simplify cnstrs)
-      | simplify ((FgnCnstr as ref (I.FgnCnstr (cs, ops))) :: cnstrs) =
-        if #simplify(ops) ()
+      | simplify ((FgnCnstr as ref (I.FgnCnstr csfc)) :: cnstrs) =
+        if I.FgnCnstrStd.Simplify.apply csfc ()
           then simplify cnstrs
         else FgnCnstr :: (simplify cnstrs)
 

@@ -78,8 +78,8 @@ struct
 	   (I.Pi ((I.decSub (D, s), I.Maybe),
 		  I.EClo (inferExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s)))), I.id))
       (* no cases for Redex, EVars and EClo's *)
-      | inferExpW (G, (I.FgnExp (cs, ops), s)) =
-          inferExp (G, (#toInternal(ops)(), s))
+      | inferExpW (G, (I.FgnExp csfe, s)) =
+          inferExp (G, (I.FgnExpStd.ToInternal.apply csfe (), s))    (* AK: typecheck a representative -- presumably if one rep checks, they all do *)
 
     (* inferExp (G, Us) = (V', s')
 

@@ -16,6 +16,8 @@ use "src/table/sparse-array.fun";
 use "src/table/sparse-array2.sig";
 use "src/table/sparse-array2.fun";
 use "src/table/table.sml";
+use "src/lambda/fgnopn.sig";
+use "src/lambda/fgnopntable.fun";
 use "src/lambda/intsyn.sig";
 use "src/lambda/intsyn.fun";
 use "src/trail/trail.sig";

@@ -124,8 +124,8 @@ struct
           (delayDec ((D, s), cnstr); delayExp ((U, dot1 s), cnstr))
       | delayExpW ((EVar (G, r, V, cnstrs), s), cnstr) =
           addConstraint(cnstrs, cnstr)
-      | delayExpW ((FgnExp (cs, ops), s), cnstr) = (* s = id *)
-          delayExp ((#toInternal(ops) (), s), cnstr)
+      | delayExpW ((FgnExp csfe, s), cnstr) = (* s = id *)
+          FgnExpStd.App.apply csfe (fn U => delayExp ((U, s), cnstr))
       (* no other cases by invariant *)
 
     (* delayExp ((U, s), cnstr) = ()
@@ -303,8 +303,8 @@ struct
 		       end
 		     else raise Unify (msg)
                  )
-      | pruneExpW (G, (FgnExp (_, ops), s), ss, rOccur, prunable) =
-          #map(ops) (fn U => pruneExp (G, (U, s), ss, rOccur, prunable))
+      | pruneExpW (G, (FgnExp csfe, s), ss, rOccur, prunable) =
+          FgnExpStd.Map.apply csfe (fn U => pruneExp (G, (U, s), ss, rOccur, prunable))
 
       (* other cases impossible since (U,s1) whnf *)
     and pruneDec (G, (Dec (name, V), s), ss, rOccur, prunable) =
@@ -388,8 +388,8 @@ struct
        Other effects: EVars may be lowered
                       constraints may be added for non-patterns
     *)
-    and unifyExpW (G, Us1 as (FgnExp (_, ops), _), Us2) =
-          (case (#unifyWith(ops) (G, EClo Us2))
+    and unifyExpW (G, Us1 as (FgnExp csfe1, _), Us2) =
+          (case (FgnExpStd.UnifyWith.apply csfe1 (G, EClo Us2))
              of (Succeed residualL) =>
                   let
                     fun execResidual (Assign (G, EVar(r, _, _, cnstrs), W, ss)) =
@@ -405,8 +405,8 @@ struct
                   end
               | Fail => raise Unify "Foreign Expression Mismatch")
 
-      | unifyExpW (G, Us1, Us2 as (FgnExp (_, ops), _)) =
-          (case (#unifyWith(ops) (G, EClo Us1))
+      | unifyExpW (G, Us1, Us2 as (FgnExp csfe2, _)) =
+          (case (FgnExpStd.UnifyWith.apply csfe2 (G, EClo Us1))
              of (Succeed opL) =>
                   let
                     fun execOp (Assign (G, EVar(r, _, _, cnstrs), W, ss)) =
@@ -658,8 +658,8 @@ struct
       | awakeCnstr (SOME(cnstr as ref (Eqn (G, U1, U2)))) =
           (solveConstraint cnstr;
            unify1 (G, (U1, id), (U2, id)))
-      | awakeCnstr (SOME(ref (FgnCnstr (cs, ops)))) =
-          if (#awake(ops)()) then ()
+      | awakeCnstr (SOME(ref (FgnCnstr csfc))) =
+          if (FgnCnstrStd.Awake.apply csfc ()) then ()
           else raise Unify "Foreign constraint violated"
 
     fun unifyW (G, Us1, Us2) =

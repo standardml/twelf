@@ -1,4 +1,6 @@
 Library
+  signature FGN_OPN
+  functor FgnOpnTable
   signature INTSYN
   structure IntSyn
   signature WHNF
@@ -20,6 +22,8 @@ is
 #endif
   ../global/sources.cm
   ../trail/sources.cm
+  fgnopn.sig
+  fgnopntable.fun
   intsyn.sig
   intsyn.fun
   whnf.sig

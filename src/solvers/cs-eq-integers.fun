@@ -43,6 +43,11 @@ struct
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
 
+    exception MyIntsynRep of Sum
+
+    fun extractSum (MyIntsynRep sum) = sum
+      | extractSum fe = raise (UnexpectedFgnExp fe)
+
     val zero = fromInt 0
     val one  = fromInt 1
 
@@ -112,117 +117,6 @@ struct
               equalMSet'
             end
       
-    (* fromExpW (U, s) = sum
-
-       Invariant:
-       If   G' |- s : G    G |- U : V    (U,s)  in whnf
-       then sum is the internal representation of U[s] as sum of monomials
-       and sum is normal
-    *)
-    fun fromExpW (Us as (FgnExp (cs, ops), _)) =
-          if (cs = !myID)
-          then recoverSum (#toInternal(ops) ())
-          else Sum (zero, [Mon (one, [Us])])
-      | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
-          if (cs = !myID)
-          then (case (fromString (conDecName (conDec)))
-                  of SOME(m) => Sum (m, nil))
-          else Sum (zero, [Mon (one, [Us])])
-      | fromExpW Us =
-          Sum (zero, [Mon (one, [Us])])
-
-    (* fromExp (U, s) = sum
-
-       Invariant:
-       If   G' |- s : G    G |- U : V
-       then sum is the internal representation of U[s] as sum of monomials
-       and sum is normal
-    *)
-    and fromExp Us =
-          fromExpW (Whnf.whnf Us)
-
-    (* recoverSum U = sum
-
-       Invariant: 
-       If   G |- U : V and U is the Twelf syntax conversion of sum
-       then convert sum back to its original (internal) form
-       and sum is normal
-    *)
-    and recoverSum (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
-          if (cid = !plusID)
-          then
-            let
-              val Sum (m, monL) = recoverSum U1
-              val mon = recoverMon U2
-            in
-              Sum (m, mon :: monL)
-            end
-          else
-            let
-              val mon = recoverMon U
-            in
-              Sum (zero, [mon])
-            end
-      | recoverSum (U as Root (FgnConst (cs, conDec), Nil)) =
-          if (cs = !myID)
-          then
-            let
-              val SOME(m) = fromString (conDecName (conDec))
-            in
-              Sum (m, nil)
-            end
-          else
-            Sum (zero, [Mon (one, [(U, id)])])
-      | recoverSum U =
-          let
-            val mon = recoverMon U
-          in
-            Sum (zero, [mon])
-          end
-
-    (* recoverMon U = mon
-
-       Invariant: 
-       If   G |- U : V and U is the Twelf syntax conversion of mon
-       then convert mon back to its original (internal) form
-    *)
-    and recoverMon (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
-          if (cid = !timesID)
-          then
-            let
-              val Mon (n, UsL) = recoverMon U1
-              val Us = recoverEClo U2
-            in
-              Mon (n, Us :: UsL)
-            end
-          else
-            Mon (zero, [(U, id)])
-      | recoverMon (U as Root (FgnConst (cs, conDec), Nil)) =
-          if (cs = !myID)
-          then
-            let
-              val SOME(m) = fromString (conDecName (conDec))
-            in
-              Mon (m, nil)
-            end
-          else
-            Mon (one, [(U, id)])
-      | recoverMon U =
-          let
-            val Us = recoverEClo U
-          in
-            Mon (one, [Us])
-          end
-
-    (* recoverEClo U = Us
-
-       Invariant: 
-       If   G |- U : V and U is the Twelf syntax conversion of the variable U
-       then converts U back to its original (internal) form
-    *)
-    and recoverEClo (EClo Us) = Us
-      | recoverEClo U = (U, id)
-
     (* toExp sum = U
 
        Invariant:
@@ -418,8 +312,37 @@ struct
     fun minusSum (sum1, sum2) =
           plusSum (sum1, unaryMinusSum (sum2))
 
+    (* fromExpW (U, s) = sum
+
+       Invariant:
+       If   G' |- s : G    G |- U : V    (U,s)  in whnf
+       then sum is the internal representation of U[s] as sum of monomials
+       and sum is normal
+    *)
+    fun fromExpW (Us as (FgnExp (cs, fe), _)) =
+          if (cs = !myID)
+          then normalizeSum (extractSum fe)
+          else Sum (zero, [Mon (one, [Us])])
+      | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
+          if (cs = !myID)
+          then (case (fromString (conDecName (conDec)))
+                  of SOME(m) => Sum (m, nil))
+          else Sum (zero, [Mon (one, [Us])])
+      | fromExpW Us =
+          Sum (zero, [Mon (one, [Us])])
+
+    (* fromExp (U, s) = sum
+
+       Invariant:
+       If   G' |- s : G    G |- U : V
+       then sum is the internal representation of U[s] as sum of monomials
+       and sum is normal
+    *)
+    and fromExp Us =
+          fromExpW (Whnf.whnf Us)
+
     (* normalizeSum sum = sum', where sum' normal and sum' = sum *)
-    fun normalizeSum (sum as (Sum (m, nil))) = sum
+    and normalizeSum (sum as (Sum (m, nil))) = sum
       | normalizeSum (Sum (m, [mon])) =
           plusSum (Sum (m, nil), normalizeMon mon)
       | normalizeSum (Sum (m, mon :: monL)) =
@@ -439,6 +362,12 @@ struct
     (* mapMon (f, n * (U1,s1) + ...) = n * f(U1,s1) * ... *)
     and mapMon (f, Mon (n, UsL)) =
           Mon (n, List.map (fn Us => Whnf.whnf (f (EClo Us), id)) UsL)
+
+    fun appSum (f, Sum (m, monL)) =
+	List.app (fn mon => appMon (f, mon)) monL
+
+    and appMon (f, Mon (n, UsL)) =
+	List.app (fn Us => f (EClo Us)) UsL
 
     (* solvableSum (m + M1 + ....) =
          true iff the generalized gcd of the coefficients of the Mi
@@ -590,22 +519,65 @@ struct
        then U is a foreign expression representing sum.
     *)
     and toFgn (sum as Sum (m, nil)) = toExp (sum)
-      | toFgn (sum as Sum (m, monL)) =
-          FgnExp (!myID,
-                  {
-                    toInternal = (fn () => toExp (normalizeSum (sum))),
+      | toFgn (sum as Sum (m, monL)) = FgnExp (!myID, MyIntsynRep (sum))
 
-                    map = (fn f =>
-                              toFgn (normalizeSum (mapSum (f, sum)))),
-                    unifyWith = (fn (G, U2) =>
-                                   unifySum (G, normalizeSum (sum),
-                                                fromExp (U2, id))),
-                    equalTo = (fn U2 =>
-                                   case minusSum (normalizeSum (sum),
-                                                  fromExp (U2, id))
-                                     of Sum(m, nil) => (m = zero)
-                                      | _ => false)
-                  })
+    (* toInternal (fe) = U
+       Invariant:
+       if fe is (MyIntsynRep sum) and sum : normal
+       then U is the Twelf syntax conversion of sum
+    *)
+    fun toInternal (MyIntsynRep sum) () = toExp (normalizeSum sum)
+      | toInternal fe () = raise (UnexpectedFgnExp fe)
+
+    (* map (fe) f = U'
+
+       Invariant:
+       if fe is (MyIntsynRep sum)   sum : normal
+       and
+         f sum = f (m + mon1 + ... + monN) =
+               = m + f (m1 * Us1 * ... * UsM) + ...
+               = m + (m1 * (f Us1) * ... * f (UsM))
+               = sum'           sum' : normal
+       then
+         U' is a foreign expression representing sum'
+    *)
+    fun map (MyIntsynRep sum) f = toFgn (normalizeSum (mapSum (f,sum)))
+      | map fe _ = raise (UnexpectedFgnExp fe)
+
+    (* app (fe) f = ()
+
+       Invariant:
+       if fe is (MyIntsynRep sum)     sum : normal
+       and
+          sum = m + mon1 + ... monN
+          where moni = mi * Usi1 * ... UsiMi
+       then f is applied to each Usij
+         (since sum : normal, each Usij is in whnf)
+    *)
+    fun app (MyIntsynRep sum) f = appSum (f, sum)
+      | app fe _ = raise (UnexpectedFgnExp fe)
+
+    fun equalTo (MyIntsynRep sum) U2 = 
+	(case minusSum (normalizeSum (sum),
+		       (fromExp (U2, id)))
+	 of Sum(m, nil) => (m = zero)
+	  | _ => false)
+      | equalTo fe _ = raise (UnexpectedFgnExp fe)
+
+    fun unifyWith (MyIntsynRep sum) (G, U2) =
+	unifySum (G, normalizeSum sum, (fromExp (U2, id)))
+      | unifyWith fe _ = raise (UnexpectedFgnExp fe)
+
+    fun installFgnExpOps () = let
+	val csid = !myID
+	val _ = FgnExpStd.ToInternal.install (csid, toInternal)
+	val _ = FgnExpStd.Map.install (csid, map)
+	val _ = FgnExpStd.App.install (csid, app)
+	val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
+	val _ = FgnExpStd.EqualTo.install (csid, equalTo)
+    in
+	()
+    end
 
     fun makeFgn (arity, opExp) (S) =
           let
@@ -687,6 +659,7 @@ struct
                                   Type),
                         SOME(FX.Infix (FX.dec FX.maxPrec, FX.Left)),
                         nil);
+	    installFgnExpOps ();
             ()
           )
   in

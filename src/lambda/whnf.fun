@@ -303,8 +303,8 @@ struct
 	      | _ => Us)
       | whnf (EClo (U, s'), s) = whnf (U, comp (s', s))
       | whnf (Us as (FgnExp _, Shift (0))) = Us
-      | whnf (Us as (FgnExp (cs, ops), s)) =
-          (#map(ops) (fn U => EClo (U, s)), id)
+      | whnf (Us as (FgnExp csfe , s)) =
+          (FgnExpStd.Map.apply csfe (fn U => EClo (U, s)), id)
 
     (* expandDef (Root (Def (d), S), s) = (U' ,s')
      
@@ -443,8 +443,8 @@ struct
       | normalizeExpW (Lam (D, U), s) = 
 	  Lam (normalizeDec (D, s), normalizeExp (U, dot1 s))
       | normalizeExpW (Us as (EVar _, s)) = EClo Us
-      | normalizeExpW (U as FgnExp (cs, ops), s) =
-          #map(ops) (fn U => normalizeExp (U, s))
+      | normalizeExpW (FgnExp csfe , s) =
+          FgnExpStd.Map.apply csfe (fn U => normalizeExp (U, s))
 
     and normalizeSpine (Nil, s) = 
           Nil 

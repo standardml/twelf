@@ -134,7 +134,7 @@ struct
      | collectExp (I.Lam(D, U), K, Vars, depth) = 
 	 (* don't collect D, since it is ignored in unification *)
 	 collectExp (U, K, Vars, depth+1)
-     | collectExp (I.FgnExp (cs, ops), K, Vars, depth) = 
+     | collectExp (I.FgnExp (cs, fe), K, Vars, depth) = 
 	 ((depth, FGN)::K, Vars)
      (* no EVars, since U in NF *)
 
@@ -165,11 +165,11 @@ struct
 	I.Lam(shiftDec(D, depth, total), shiftExp(U, depth+1, total))
     | shiftExp (I.Pi((D, P), U), depth, total) =
 	I.Pi((shiftDec(D, depth, total), P), shiftExp (U, depth+1, total))
-    | shiftExp (I.FgnExp(cs, ops), depth, total) = 
+    | shiftExp (I.FgnExp csfe, depth, total) = 
 	(* calling normalize here because U may not be normal *)
 	(* this is overkill and could be very expensive for deeply nested foreign exps *)
 	(* Tue Apr  2 12:10:24 2002 -fp -bp *)
-	#map(ops) (fn U => shiftExp(Whnf.normalize (U, I.id), depth, total)) 
+	I.FgnExpStd.Map.apply csfe (fn U => shiftExp(Whnf.normalize (U, I.id), depth, total))
   and shiftSpine (I.Nil, _, _) = I.Nil
     | shiftSpine (I.App(U, S), depth, total) = 
         I.App(shiftExp(U, depth, total), shiftSpine(S, depth, total))
@@ -266,7 +266,7 @@ struct
        in 
 	 (left', Vars', I.Lam(D', U'), eqns')
        end
-   | linearExp (Gl, U as I.FgnExp (cs, ops), left, Vars, depth, total, eqns) = 
+   | linearExp (Gl, U as I.FgnExp (cs, fe), left, Vars, depth, total, eqns) = 
        let 
 	 val N = I.Root(I.BVar(left + depth), I.Nil)
 	 val U' = shiftExp(U, depth, total)  

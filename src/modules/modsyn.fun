@@ -57,7 +57,7 @@ struct
           | trExp (Pi ((D, P), V)) = Pi ((trDec D, P), trExp V)
           | trExp (Root (H, S)) = Root (trHead H, trSpine S)
           | trExp (Lam (D, U)) = Lam (trDec D, trExp U)
-          | trExp (U as FgnExp (csid, ops)) = #map ops trExp
+          | trExp (U as FgnExp csfe) = FgnExpStd.Map.apply csfe trExp
 
         and trDec (Dec (name, V)) = Dec (name, trExp V)
 

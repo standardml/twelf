@@ -135,7 +135,8 @@ struct
       | occursInExpN (k, I.Pi (DP, V)) = occursInDecP (k, DP) orelse occursInExpN (k+1, V)
       | occursInExpN (k, I.Root (H, S)) = occursInHead (k, H) orelse occursInSpine (k, S)
       | occursInExpN (k, I.Lam (D, V)) = occursInDec (k, D) orelse occursInExpN (k+1, V)
-      | occursInExpN (k, I.FgnExp (cs, ops)) = occursInExpN (k, Whnf.normalize (#toInternal(ops) (), I.id))
+      | occursInExpN (k, I.FgnExp csfe) =
+	I.FgnExpStd.fold csfe (fn (U,B) => B orelse occursInExpN (k, Whnf.normalize (U, I.id))) false
     (* no case for Redex, EVar, EClo *)
 
 

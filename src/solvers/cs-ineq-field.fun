@@ -125,6 +125,8 @@ struct
             nrows : int ref, ncols : int ref,         (* dimensions                        *)
             trail : Operation Trail.trail}            (* undo mechanism                    *)
 
+    exception MyFgnCnstrRep of int ref                (* FgnCnstr representation *)
+
     exception Error
 
     (* Representational invariants:
@@ -1035,14 +1037,18 @@ struct
             List.map restrExp (reachable ([pos], nil, nil))
           end
                 
+    (* create a foreingn constraint for the given tag *)
+    and makeCnstr (tag) =
+          FgnCnstr (!myID, MyFgnCnstrRep tag)
+
     (* returns the list of unsolved constraints associated with the given tag *)
-    and toInternal (tag) () =
+    fun toInternal (tag) () =
            (case findTag (tag)
               of NONE => nil
                | SOME(pos) => restrictions (pos))
                   
     (* awake function for tableau constraints *)
-    and awake (tag) () =
+    fun awake (tag) () =
           (
             (case findTag (tag)
                of SOME(pos) =>
@@ -1058,20 +1064,10 @@ struct
           )
 
     (* simplify function for tableau constraints *)
-    and simplify (tag) () =
+    fun simplify (tag) () =
           (case toInternal (tag) ()
              of nil => true
               | (_ :: _) => false)
-
-    (* create a foreingn constraint for the given tag *)
-    and makeCnstr (tag) =
-          FgnCnstr (!myID,
-                    {
-                      toInternal = toInternal (tag),
-                      awake = awake (tag),
-                      simplify = simplify (tag)
-                    }
-                   )
 
     (* undo function for trailing tableau operations *)
     fun undo (Insert(Row(row))) =
@@ -1218,6 +1214,21 @@ struct
     fun pi (name, U, V) = Pi ((Dec (SOME(name), U), Maybe), V)
     fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
 
+    fun installFgnCnstrOps () = let
+	val csid = !myID
+	val _ = FgnCnstrStd.ToInternal.install (csid,
+						(fn (MyFgnCnstrRep tag) => toInternal (tag)
+						  | fc => raise UnexpectedFgnCnstr fc))
+	val _ = FgnCnstrStd.Awake.install (csid,
+					   (fn (MyFgnCnstrRep tag) => awake (tag)
+					     | fc => raise UnexpectedFgnCnstr fc))
+	val _ = FgnCnstrStd.Simplify.install (csid,
+					      (fn (MyFgnCnstrRep tag) => simplify (tag)
+						| fc => raise UnexpectedFgnCnstr fc))
+    in
+	()
+    end
+
     (* install the signature *)
     fun init (cs, installF) =
           (
@@ -1284,6 +1295,8 @@ struct
                                 geq0 (constant (zero)),
                                 Type),
                         NONE, nil);
+
+	    installFgnCnstrOps ();
             ()
           )
   in

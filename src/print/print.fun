@@ -392,8 +392,8 @@ local
       if !implicit then aa (ctx, F.HVbox (fmtAVar(G,X)::fmtSub(G,d,s)))
       else fmtOpArgs (G, d, ctx, evarArgs' (G, d, X, s), I.id)
 
-    | fmtExpW (G, d, ctx, (U as I.FgnExp (_, ops), s)) =
-      fmtExp (G, d, ctx, (#toInternal(ops) (), s))
+    | fmtExpW (G, d, ctx, (U as I.FgnExp csfe, s)) =
+      fmtExp (G, d, ctx, (I.FgnExpStd.ToInternal.apply csfe (), s))
     (* I.EClo not possible for Whnf *)
 
   (* for internal printing *)
@@ -787,7 +787,7 @@ local
 	            F.Break, sym "=", F.Space,
 	            fmtExp (G', 0, noCtxt, (U2, I.id))]]
         end
-    | fmtCnstr (I.FgnCnstr (cs, ops)) =
+    | fmtCnstr (I.FgnCnstr (csfc as (cs, _))) =
         let
           fun fmtExpL (nil) = [Str "Empty Constraint"]
             | fmtExpL ((G, U) :: nil) =
@@ -795,7 +795,7 @@ local
             | fmtExpL ((G,U) :: expL) =
                 [fmtExp (Names.ctxLUName G, 0, noCtxt, (U, I.id)), Str ";", F.Break] @ fmtExpL expL
         in
-          fmtExpL (#toInternal(ops)())
+          fmtExpL (I.FgnCnstrStd.ToInternal.apply csfc ())
         end
 
   fun fmtCnstrL (nil) = [Str "Empty Constraint"]

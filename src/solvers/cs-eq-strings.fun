@@ -79,60 +79,16 @@ struct
       String of string                     (* Atom ::= "str"             *)
     | Exp of IntSyn.eclo                   (*        | (U,s)             *)   
 
+    exception MyIntsynRep of Concat        (* Internal syntax representation of this module *)
+
+    fun extractConcat (MyIntsynRep concat) = concat
+      | extractConcat fe = raise (UnexpectedFgnExp fe)
+
     (* A concatenation is said to be normal if
          (a) it does not contain empty string atoms
          (b) it does not contain two consecutive string atoms
     *)
-
-    (* fromExpW (U, s) = concat
-
-       Invariant:
-       If   G' |- s : G    G |- U : V    (U,s)  in whnf
-       then concat is the representation of U[s] as concatenation of atoms
-       and  concat is normal
-    *)
-    fun fromExpW (Us as (FgnExp (cs, ops), _)) =
-          if (cs = !myID)
-          then recoverConcat (#toInternal(ops) ())
-          else Concat [Exp Us]
-      | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
-          if (cs = !myID)
-          then (case fromString (conDecName (conDec))
-                  of SOME(str) => if (str = "") then Concat nil
-                                  else Concat [String str])
-          else Concat [Exp Us]
-      | fromExpW Us =
-          Concat [Exp Us]
-
-    (* fromExp (U, s) = concat
-
-       Invariant:
-       If   G' |- s : G    G |- U : V
-       then concat is the representation of U[s] as concatenation of atoms
-       and  concat is normal
-    *)
-    and fromExp Us =
-          fromExpW (Whnf.whnf Us)
-
-    (* recoverConcat U = concat
-
-       Invariant: 
-       If   G |- U : V and U is the Twelf syntax conversion of concat
-       then convert concat back to its original (internal) form
-       and  concat is normal
-    *)
-    and recoverConcat (U as Root (Const (cid), App (U1, App (U2, Nil)))) =
-          if (cid = !concatID)
-          then
-            let
-              val Concat AL1 = fromExp (U1, id)
-              val Concat AL2 = recoverConcat U2
-            in
-              Concat (AL1 @ AL2)
-            end
-          else
-            fromExp (U, id)
-      | recoverConcat U = fromExp (U, id)
+    (* ... and Exp atoms are in whnf?  - ak *)
 
     (* toExp concat = U
 
@@ -163,8 +119,38 @@ struct
                Concat ((List.rev revAL1') @ ((String (str1 ^ str2)) :: AL2'))
               | (_, _) => Concat (AL1 @ AL2))
 
+    (* fromExpW (U, s) = concat
+
+       Invariant:
+       If   G' |- s : G    G |- U : V    (U,s)  in whnf
+       then concat is the representation of U[s] as concatenation of atoms
+       and  concat is normal
+    *)
+    fun fromExpW (Us as (FgnExp (cs, fe), _)) =
+          if (cs = !myID)
+          then normalize (extractConcat fe)
+          else Concat [Exp Us]
+      | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
+          if (cs = !myID)
+          then (case fromString (conDecName (conDec))
+                  of SOME(str) => if (str = "") then Concat nil
+                                  else Concat [String str])
+          else Concat [Exp Us]
+      | fromExpW Us =
+          Concat [Exp Us]
+
+    (* fromExp (U, s) = concat
+
+       Invariant:
+       If   G' |- s : G    G |- U : V
+       then concat is the representation of U[s] as concatenation of atoms
+       and  concat is normal
+    *)
+    and fromExp Us =
+          fromExpW (Whnf.whnf Us)
+
     (* normalize concat = concat', where concat' normal and concat' = concat *)
-    fun normalize (concat as (Concat nil)) = concat
+    and normalize (concat as (Concat nil)) = concat
       | normalize (concat as (Concat [String str])) = concat
       | normalize (Concat [Exp Us]) = fromExp Us
       | normalize (Concat (A :: AL)) =
@@ -181,6 +167,15 @@ struct
           in
             Concat (mapConcat' AL)
           end
+
+    (* appConcat (f, A1 + ... ) = ()  and f(Ui) for Ai = Exp Ui *)
+    fun appConcat (f, Concat AL) =
+	let
+	    fun appAtom (Exp Us) = f (EClo Us)
+	      | appAtom (String _) = ()
+	in
+	    List.app appAtom AL
+	end
 
     (* Split:                                         *)
     (* Split ::= str1 ++ str2                         *)
@@ -536,19 +531,64 @@ struct
     and toFgn (concat as (Concat [String str])) = stringExp (str)
       | toFgn (concat as (Concat [Exp (U, id)])) = U
       | toFgn (concat) =
-          FgnExp (!myID,
-                  {
-                    toInternal = (fn () => toExp (normalize (concat))),
+	FgnExp (!myID, MyIntsynRep concat)
 
-                    map = (fn f =>
-                              toFgn (normalize (mapConcat (f, concat)))),
-                    unifyWith = (fn (G, U2) =>
-                                   toFgnUnify (unifyConcat (G, normalize (concat), 
-                                                               fromExp (U2, id)))),
-                    equalTo = (fn U2 =>
-                                 sameConcat (normalize (concat),
-                                             fromExp (U2, id)))
-                  })
+    (* toInternal (fe) = U
+
+       Invariant:
+       if fe is (MyIntsynRep concat) and concat : normal
+       then U is the Twelf syntax conversion of concat
+    *)
+    fun toInternal (MyIntsynRep concat) () = toExp (normalize concat)
+      | toInternal fe () = raise (UnexpectedFgnExp fe)
+
+    (* map (fe) f = U'
+
+       Invariant:
+       if fe is (MyIntsynRep concat)   concat : normal
+       and
+         f concat = f (A1 ++ ... ++ AN )
+                  = f (A1) ++ ... ++ f (AN)
+                  = concat'           concat' : normal
+       then
+         U' is a foreign expression representing concat'
+    *)
+    fun map (MyIntsynRep concat) f = toFgn (normalize (mapConcat (f,concat)))
+      | map fe _ = raise (UnexpectedFgnExp fe)
+
+    (* app (fe) f = ()
+
+       Invariant:
+       if fe is (MyIntsynRep concat)     concat : normal
+       and
+          concat = A1 ++ ... ++ AN
+	  where some Ai are (Exp Usi)
+       then f is applied to each Usi
+       (since concat : normal, each Usij is in whnf)
+    *)
+    fun app (MyIntsynRep concat) f = appConcat (f, concat)
+      | app fe _ = raise (UnexpectedFgnExp fe)
+
+    fun equalTo (MyIntsynRep concat) U2 = 
+	sameConcat (normalize (concat),
+		    fromExp (U2, id))
+      | equalTo fe _ = raise (UnexpectedFgnExp fe)
+
+    fun unifyWith (MyIntsynRep concat) (G, U2) =
+	toFgnUnify (unifyConcat (G, normalize (concat), 
+				 fromExp (U2, id)))
+      | unifyWith fe _ = raise (UnexpectedFgnExp fe)
+
+    fun installFgnExpOps () = let
+	val csid = !myID
+	val _ = FgnExpStd.ToInternal.install (csid, toInternal)
+	val _ = FgnExpStd.Map.install (csid, map)
+	val _ = FgnExpStd.App.install (csid, app)
+	val _ = FgnExpStd.UnifyWith.install (csid, unifyWith)
+	val _ = FgnExpStd.EqualTo.install (csid, equalTo)
+    in
+	()
+    end
 
     fun makeFgn (arity, opExp) (S) =
           let
@@ -599,6 +639,7 @@ struct
                                 arrow (string (), arrow (string (), string ())),
                                 Type),
                         SOME(FX.Infix (FX.maxPrec, FX.Right)), nil);
+	    installFgnExpOps ();
             ()
           )
   in

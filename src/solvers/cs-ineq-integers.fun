@@ -117,6 +117,8 @@ struct
             nrows : int ref, ncols : int ref,         (* dimensions                        *)
             trail : Operation Trail.trail}            (* undo mechanism                    *)
 
+    exception MyFgnCnstrRep of int ref                (* FgnCnstr representation *)
+
     exception Error
 
     (* Representational invariants:
@@ -985,14 +987,8 @@ struct
 
     (* create a foreign constraint for the given tag *)
     and makeCnstr (tag) =
-          FgnCnstr (!myID,
-                    {
-                      toInternal = toInternal (tag),
-                      awake = awake (tag),
-                      simplify = simplify (tag)
-                    }
-                   )
-  
+          FgnCnstr (!myID, MyFgnCnstrRep (tag))
+
     (* checks if the (primally and dually) feasible solution is an integral solution;
        returns NONE if it is, otherwise the coordinate of a non-integral component *)
     and isIntegral () =
@@ -1303,6 +1299,21 @@ struct
     fun pi (name, U, V) = Pi ((Dec (SOME(name), U), Maybe), V)
     fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
 
+    fun installFgnCnstrOps () = let
+	val csid = !myID
+	val _ = FgnCnstrStd.ToInternal.install (csid,
+						(fn (MyFgnCnstrRep tag) => toInternal (tag)
+						  | fc => raise UnexpectedFgnCnstr fc))
+	val _ = FgnCnstrStd.Awake.install (csid,
+					   (fn (MyFgnCnstrRep tag) => awake (tag)
+					     | fc => raise UnexpectedFgnCnstr fc))
+	val _ = FgnCnstrStd.Simplify.install (csid,
+					      (fn (MyFgnCnstrRep tag) => simplify (tag)
+						| fc => raise UnexpectedFgnCnstr fc))
+    in
+	()
+    end
+
     (* install the signature *)
     fun init (cs, installF) =
           (
@@ -1330,6 +1341,7 @@ struct
                                 Type),
                         NONE, nil);
 
+	    installFgnCnstrOps ();
             ()
           )
   in
