@@ -163,6 +163,8 @@ structure Twelf =
 	 structure ModeRecon = ModeRecon
 	 structure ModePrint = ModePrint
 
+         structure Cover = Cover
+
 	 structure Terminate = Terminate
 	 structure Reduces = Reduces
 

@@ -46,6 +46,7 @@ struct
     | FixDec of (string * ExtSyn.Paths.region) * Names.Fixity.fixity
     | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
     | ModeDec of ExtModes.modedec
+    | CoversDec of ExtModes.modedec
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl
     | ReducesDec of ThmExtSyn.rdecl  (* -bp *)
@@ -136,6 +137,7 @@ struct
           Stream.Cons (Query (expected, try, query, r), parseStream (stripDot f3))
         end
       | parseStream' (f as LS.Cons ((L.MODE, r), s')) = parseMode' f
+      | parseStream' (f as LS.Cons ((L.COVERS, r), s')) = parseCovers' f
       | parseStream' (f as LS.Cons ((L.TERMINATES, r), s')) = parseTerminates' f
       | parseStream' (f as LS.Cons ((L.WORLD, r), s')) = parseWorld' f
       | parseStream' (f as LS.Cons ((L.REDUCES, r), s')) = parseReduces' f (* -bp *)
@@ -176,6 +178,13 @@ struct
 	  val (mdec, f') = ParseMode.parseMode' (f)
 	in
 	  Stream.Cons (ModeDec mdec, parseStream (stripDot f'))
+	end
+
+    and parseCovers' (f) =
+        let
+	  val (mdec, f') = ParseMode.parseMode' (f)
+	in
+	  Stream.Cons (CoversDec mdec, parseStream (stripDot f'))
 	end
 
     and parseTerminates' (f) =

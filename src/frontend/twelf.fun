@@ -57,9 +57,13 @@ functor Twelf
      sharing type ModeRecon.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
      sharing ModePrint.ModeSyn = ModeSyn
-    structure ModeDec : MODEDEC
+   structure ModeDec : MODEDEC
      sharing ModeDec.ModeSyn = ModeSyn
      sharing ModeDec.Paths = Paths
+
+   structure Cover : COVER
+     sharing Cover.IntSyn = IntSyn'
+     sharing Cover.ModeSyn = ModeSyn
 
    structure Terminate : TERMINATE
      sharing Terminate.IntSyn = IntSyn'
@@ -246,6 +250,7 @@ struct
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
+              | Cover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Parsing.Error (msg) => abortFileMsg (fileName, msg)
 	      | Lexer.Error (msg) => abortFileMsg (fileName, msg)
 	      | IntSyn.Error (msg) => abort ("Signature error: " ^ msg ^ "\n")
@@ -373,6 +378,18 @@ struct
 	    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg))
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%mode " ^ (ModePrint.modeToString mdec) ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
+      (* Coverage declaration *)
+      | install1 (fileName, Parser.CoversDec mterm) =
+	let
+	  val (mdec, r) = ModeRecon.modeToMode mterm
+	  val _ = Cover.checkCovers mdec
+	  val _ = if !Global.chatter >= 3
+		    then print ("%covers " ^ ModePrint.modeToString mdec ^ ".\n")
 		  else ()
 	in
 	  ()
