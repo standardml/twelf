@@ -219,11 +219,10 @@ struct
     fun isIndexFail (D, isIndex) k = isIndex (k+1)
 
 
-    fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) ((G', B'), s') = 
+    fun abstractInit (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) ((G', B'), s') = 
           (if !Global.doubleCheck then TypeCheck.typeCheckCtx G' else ();
 	  S.State (n, (G', B'), (IH, OH), d, S.orderSub (O, s'), 
-		   map (fn (i, O') => (i, S.orderSub (O', s'))) H, 
-		   map (fn (i, F') => (i, F.forSub (F', s'))) R, F.forSub (F, s')))
+		   map (fn (i, F') => (i, F.forSub (F', s'))) H, F.forSub (F, s')))
 
     fun abstractFinal (abstract) (B, s) =
           abstract (MTPAbstract.abstractSub (B, s))
@@ -260,7 +259,7 @@ struct
 			 makeAddressCont makeAddress)
 	    val I.Dec (xOpt, V) = D
 	    val X = I.newEVar (I.Null, I.EClo (V, s'))
-	    val ops' = if not (isIndex 1) 
+	    val ops' = if not (isIndex 1) andalso b > 0
 			   then 
 			       (makeAddress 1, split (D, s', B', abstractFinal abstract))
 			       :: ops
@@ -268,7 +267,7 @@ struct
 	  in
 	    (I.Dot (I.Exp (X), s'), ops')
 	  end
-      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Induction b))),
+      | expand' ((I.Decl (G, D), B' as I.Decl (B, T as (S.Lemma (b, F.Ex _)))),
 		 isIndex, abstract, makeAddress) = 
 	  let 
 	    val (s', ops) =
@@ -277,7 +276,7 @@ struct
 			 makeAddressCont makeAddress)
 	    val I.Dec (xOpt, V) = D
 	    val X = I.newEVar (I.Null, I.EClo (V, s'))
-	    val ops' = if not (isIndex 1) 
+	    val ops' = if not (isIndex 1) andalso b > 0
 			   then 
 			       (makeAddress 1, split (D, s', B', abstractFinal abstract))
 			       :: ops
@@ -305,7 +304,7 @@ struct
        If   |- S state
        then ops' is a list of all possiblie splitting operators
     *)
-    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) =
+    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
       let 
 	val (_, ops) =
 	  expand' ((G, B), isIndexInit, abstractInit S, makeAddressInit S)
@@ -363,7 +362,7 @@ struct
        (menu should hence be only called on operators which have 
         been calculated from a named state)
     *)
-    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, R, F), i), Sl)) = 
+    fun menu (Op as ((S.State (n, (G, B), (IH, OH), d, O, H, F), i), Sl)) = 
 	let 
 	  fun active (nil, n) = n
 	    | active (InActive :: L, n) = active (L, n)

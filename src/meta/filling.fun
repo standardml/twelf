@@ -53,7 +53,7 @@ struct
        If   |- S state
        then op' is an operator which performs the filling operation
     *)
-    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
+    fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
 	let 
 	  val (Xs, P) = createEVars (G, (F, I.id))
 	in

@@ -17,18 +17,16 @@ sig
 
   datatype Tag = 
     Parameter
-  | Lemma 
+  | Lemma of int * FunSyn.For
   | Assumption of int
-  | Induction  of int
 
-  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, R, F> *)
+  datatype State =			(* S = <n, (G, B), (IH, OH), d, O, H, F> *)
     State of int			(* Part of theorem                   *)
 	   * (FunSyn.IntSyn.dctx	(* Context of Hypothesis, in general not named *)
            * Tag FunSyn.IntSyn.Ctx) (* Status information *)
            * (FunSyn.For * Order)	(* Induction hypothesis, order       *)
            * int			(* length of meta context            *)
            * Order			(* Current order *)
-           * (int * Order) list		(* History of Inductive calls (part of theorem, arguments) *)
            * (int * FunSyn.For) list	(* History of residual lemmas *)
            * FunSyn.For			(* Formula *)
 

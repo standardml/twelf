@@ -9,7 +9,7 @@ sig
   exception Error of string 
   
 
-  val init   : int * (FunSyn.For * StateSyn.Order) -> unit
+  val init   : int * string list -> unit
   val select : int -> unit 
   val print  : unit -> unit
   val next   : unit -> unit

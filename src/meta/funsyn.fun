@@ -2,6 +2,8 @@
 (* Author: Carsten Schuermann *)
 
 functor FunSyn (structure IntSyn' : INTSYN
+		structure Whnf : WHNF
+		  sharing Whnf.IntSyn = IntSyn'
 		structure Conv : CONV
 		  sharing Conv.IntSyn = IntSyn') : FUNSYN= 
 struct
@@ -221,6 +223,15 @@ struct
 
     fun mdecSub (MDec (name, F), s) = MDec (name, forSub (F, s))
 
+
+    fun normalizeFor (All (Prim D, F), s) = 
+          All (Prim (Whnf.normalizeDec (D, s)), normalizeFor (F, I.dot1 s))
+      | normalizeFor (Ex (D, F), s) =
+	  Ex (Whnf.normalizeDec (D, s), normalizeFor (F, I.dot1 s))
+      | normalizeFor (And (F1, F2), s) =
+	  And (normalizeFor (F1, s), normalizeFor (F2, s))
+      | normalizeFor (True, _) = True
+
   in 
     val labelLookup = labelLookup 
     val labelAdd = labelAdd
@@ -235,6 +246,7 @@ struct
     val dot1n = dot1n
     val convFor = convFor
     val forSub = forSub
+    val normalizeFor = normalizeFor
   end
 end (* functor FunSyn *)
 

@@ -1,5 +1,6 @@
 structure FunSyn = 
   FunSyn (structure IntSyn' = IntSyn
+	  structure Whnf = Whnf
 	  structure Conv = Conv);
 
 structure FunNames = 
@@ -137,6 +138,7 @@ structure MTPRecursion =
 		structure Names = Names
 		structure Subordinate = Subordinate
 		structure Print = Print
+		structure TypeCheck = TypeCheck
 		structure FunPrint = FunPrint
 		structure Formatter = Formatter)
 structure MTPStrategy = 
@@ -171,6 +173,7 @@ structure MTPi =
 	structure IntSyn = IntSyn
 	structure FunSyn' = FunSyn
 	structure StateSyn' = StateSyn
+	structure RelFun = RelFun
 	structure MTPrint = MTPrint
 	structure MTPInit = MTPInit
 	structure MTPFilling = MTPFilling
@@ -178,6 +181,7 @@ structure MTPi =
 	structure MTPRecursion = MTPRecursion
 	structure MTPStrategy = MTPStrategy
 	structure Names = Names
+	structure Order = Order
 	structure Timers = Timers
 	structure Ring = Ring)
 	  

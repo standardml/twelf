@@ -53,7 +53,7 @@ struct
 	  | init' (GB, S.And (O1, O2), F.And (F1, F2), Ss) = 
 	      init' (GB, O1, F1, init' (GB, O2, F2, Ss))
 	  | init' (GB, O, F' as F.Ex _, Ss) = 
-	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, nil, F') :: Ss
+	      S.State (List.length Ss + 1, GB, (F, OF), 1, O, nil, F') :: Ss
       in
 	(Names.varReset ();
 	 init' ((I.Null, I.Null), OF, F, nil))

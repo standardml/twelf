@@ -6,7 +6,10 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 	      structure FunSyn' : FUNSYN
 		sharing FunSyn'.IntSyn = IntSyn
 	      structure StateSyn' : STATESYN
+		sharing StateSyn'.IntSyn = IntSyn
 		sharing StateSyn'.FunSyn = FunSyn'
+	      structure RelFun : RELFUN
+	        sharing RelFun.FunSyn = FunSyn'
 	      structure MTPInit : MTPINIT
 	        sharing MTPInit.FunSyn = FunSyn'
 		sharing MTPInit.StateSyn = StateSyn'
@@ -20,6 +23,8 @@ functor MTPi (structure MTPGlobal : MTPGLOBAL
 		sharing MTPStrategy.StateSyn = StateSyn'
 	      structure MTPrint : MTPRINT
 		sharing MTPrint.StateSyn = StateSyn'
+	      structure Order : ORDER
+		sharing Order.IntSyn = IntSyn
 	      structure Names : NAMES
 	        sharing Names.IntSyn = IntSyn
 	      structure Timers : TIMERS
@@ -150,12 +155,36 @@ struct
     fun equiv (L1, L2) = 
 	  contains (L1, L2) andalso contains (L2, L1)
 
-    fun init (k, FO) = 
+    fun transformOrder' (G, Order.Arg k) = 
+        let 
+	  val k' = (I.ctxLength G) -k+1
+	  val I.Dec (_, V) = I.ctxDec (G, k')
+	in
+	  S.Arg ((I.Root (I.BVar k', I.Nil), I.id), (V, I.id))
+	end
+      | transformOrder' (G, Order.Lex Os) = 
+          S.Lex (map (fn O => transformOrder' (G, O)) Os)
+      | transformOrder' (G, Order.Simul Os) = 
+	  S.Simul (map (fn O => transformOrder' (G, O)) Os)
+
+    fun transformOrder (G, F.All (F.Prim D, F), Os) =
+          S.All (D, transformOrder (I.Decl (G, D), F, Os))
+      | transformOrder (G, F.And (F1, F2), O :: Os) =
+	  S.And (transformOrder (G, F1, [O]),
+		 transformOrder (G, F2, Os))
+      | transformOrder (G, F.Ex _, [O]) = transformOrder' (G, O) 
+
+    fun select c = (Order.selLookup c handle _ => Order.Lex [])
+
+    fun init (k, names) = 
 	let 
+	  val cL = map (fn x => valOf (Names.nameLookup x)) names
 	  val _ = MTPGlobal.maxFill := k
 	  val _ = reset ();
+	  val F = RelFun.convertFor cL
+	  val O = transformOrder (I.Null, F, map select cL)
 	in
-	  ((map (fn S => insert (MTPrint.nameState S)) (MTPInit.init FO);
+	  ((map (fn S => insert (MTPrint.nameState S)) (MTPInit.init (F, O));
 	    menu ();
 	    printMenu ())
 	   handle MTPSplitting.Error s => abort ("MTPSplitting. Error: " ^ s)

@@ -36,24 +36,29 @@ struct
        then |- S' State    and S' named
        and  |- S = S' state   
     *)
-    fun nameState (S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
+    fun nameState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
         let 
 	  val _ = Names.varReset ()
 	  val G' = Names.ctxName G
 	in
-	  S.State (n, (G', B), (IH, OH), d, O, H, R, F)
+	  S.State (n, (G', B), (IH, OH), d, O, H, F)
 	end
 
-    (* format T = s'
+    (* format T = fmt'
 
        Invariant:
        If   T is a tag
-       then s' is a string describing this tag in plain text 
+       then fmt' is a a format descibing the tag T
     *)
-    fun formatTag (S.Parameter) = Fmt.String "<p>"
-      | formatTag (S.Lemma) = Fmt.String "<l>"
-      | formatTag (S.Assumption k) = Fmt.String("<a" ^ Int.toString k ^ ">")
-      | formatTag (S.Induction k) = Fmt.String ("<i" ^ Int.toString k ^ ">")
+    fun formatTag (G, S.Parameter) = [Fmt.String "<p>"]
+      | formatTag (G, S.Lemma (k, F)) = [Fmt.String "<l",
+					 Fmt.String (Int.toString k), 
+					 Fmt.String ":",
+					 FunPrint.formatForBare (G, F),
+					 Fmt.String ">"]
+      | formatTag (G, S.Assumption k) = [Fmt.String "<a",
+					 Fmt.String (Int.toString k),
+					 Fmt.String ">"]
 
 
     (* formatCtx (G, B) = fmt'
@@ -65,10 +70,10 @@ struct
     *)
     fun formatCtx (I.Null, B) = []
       | formatCtx (I.Decl (I.Null, D), I.Decl (I.Null, T)) = 
-          [formatTag T, Print.formatDec (I.Null, D)]
+          [Fmt.HVbox (formatTag (I.Null, T) @ [Fmt.Break, Print.formatDec (I.Null, D)])]
       | formatCtx (I.Decl (G, D), I.Decl (B, T)) =
-	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break, formatTag T, 
-			      Print.formatDec (G, D)]
+	  formatCtx (G, B) @ [Fmt.String ",", Fmt.Space, Fmt.Break] @ 
+	  [Fmt.HVbox (formatTag (G, T) @ [Fmt.Break, Print.formatDec (G, D)])]
 
     (* formatState S = fmt'
      
@@ -76,7 +81,7 @@ struct
        If   |- S state      and  S named
        then fmt' is a format describing the state S
     *)
-    fun formatState (S.State (n, (G, B), (IH, OH), d, O, H, R, F)) = 
+    fun formatState (S.State (n, (G, B), (IH, OH), d, O, H, F)) = 
           Fmt.Vbox0 0 1 
 	  [Fmt.HVbox0 1 0 1 (formatCtx (G, B)), Fmt.Break,
 	   Fmt.String "------------------------", Fmt.Break,
