@@ -153,6 +153,7 @@ struct
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
   type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
   exception Error of string             (* raised if out of space     *)
@@ -365,7 +366,7 @@ struct
     | decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
   *)
   fun decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
-
+      
   (* comp (s1, s2) = s'
 
      Invariant:

@@ -458,20 +458,8 @@ struct
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Constant clash"
 	   | (Proj (b1, i1), Proj (b2, i2)) =>
-		 if i1 <> i2 then raise Unify "Global parameter clash"
-		 else 
-		   (case (b1, b2)
-		     of (LVar (r1, l1, t1), L as LVar (r2, l2, t2)) =>
-			  if l1 <> l2 then
-			    raise Unify "Label clash"
-			  else
-			    (* S(l) = Gsome, Lblock
-			       G1 |- s1 : Gsome 
-			       G2 |- s2 : Gsome *)
-			    (* (unifySub (G, comp (t1, s1), comp (t2, s2)); *)
-			    (unifySub (G, comp (t1, s1), comp (t2, s2));
-			     unifySub (G, t1, t2);
-			    r1 := SOME L))
+	       if (i1 = i2) then unifyBlock (G, (b1, s1), (b2, s2))
+	       else raise Unify "Global parameter clash"
 	   | (Skonst(c1), Skonst(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Skolem constant clash"
@@ -659,6 +647,14 @@ struct
 	   | _ => false *)   (* not possible because of invariant? -cs *)
 	  unifySub (G, s1, s2))
 
+    and unifyBlock (G, (LVar (r1, l1, t1), s1), (L as LVar (r2, l2, t2), s2)) = 
+        if l1 <> l2 then
+  	  raise Unify "Label clash"
+        else
+	  (unifySub (G, comp (t1, s1), comp (t2, s2));
+	   unifySub (G, t1, t2);
+	   r1 := SOME L)
+
 
     fun unify1W (G, Us1, Us2) =
           (unifyExpW (G, Us1, Us2); awakeCnstr (nextCnstr ()))
@@ -776,6 +772,7 @@ struct
 
     val unifyW = unifyW     
     val unify = unify
+    val unifyBlock = unifyBlock
     val shape = shape
 
     fun invertible (G, Us, ss, rOccurr) =

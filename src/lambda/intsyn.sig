@@ -136,6 +136,7 @@ sig
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
   type eclo = Exp * Sub   		(* Us = U[s]                  *)
+  type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
   exception Error of string		(* raised if out of space     *)
