@@ -94,7 +94,7 @@ struct
 	      let
 		val (Gx', s'') = collect (s', G)
 	      in 
-		if Abstract.closedExp (G, (U, I.id)) then
+		if Abstract.closedExp (G, (Whnf.normalize (U, I.id), I.id)) then
 		  (Gx', I.Dot (I.Exp (Whnf.normalize (U, I.Shift (I.ctxLength Gx'))), s''))
 		else
 		  (I.Decl (Gx', I.decSub (D, s'')), I.dot1 s'')
@@ -350,7 +350,7 @@ struct
 		  val g = I.ctxLength G
 		  val s = sc (w, k)                    
 					(* G0, {G}GF[..], G |- s : G0, G, GF *)
-		  val V' = Whnf.normalize (raiseType (G, I.EClo (V, s)), I.id)
+		  val V' = Whnf.normalize (raiseType (G, Whnf.normalize (V, s)), I.id)
 					(* G0, {G}GF[..] |- V' = {G}(V[s]) : type *)
 		  val S' = spine g
 					(* G0, {G}GF[..] |- S' > {G}(V[s]) > V[s] *)
@@ -442,7 +442,7 @@ struct
 
 	    fun closedSub (G, I.Shift _) = true
 	      | closedSub (G, I.Dot (I.Exp U, s)) =
-	          Abstract.closedExp (G, (U, I.id)) andalso closedSub (G, s) 
+	          Abstract.closedExp (G, (Whnf.normalize (U, I.id), I.id)) andalso closedSub (G, s) 
 	      
 
             (* checkLabels (n, ops) = ops'
