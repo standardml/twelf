@@ -67,325 +67,387 @@ struct
     fun spine 0 = I.Nil 
       | spine n = I.App (I.Root (I.BVar n, I.Nil),  spine (n-1))
 
-
-
-	    (* ctxSub (G, s) = G'
-	     
-	       Invariant:
-	       If   G2 |- s : G1
-	       and  G1 |- G ctx
-	       then G2 |- G' = G[s] ctx
-
-	       NOTE, should go into a different module. Code duplication!
-	    *)
-
-	    fun ctxSub (nil, s) = nil
-	      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
-
-	      
-
-    (*
-       paramAbstract F = AF
-    *)
-
-    fun calc (n', (G0, F', O'), S as S.State (n, (G, B), (IH, OH), d, O, H, F), paramAbstract, convertible) =
-
-      let
-	(* set_parameter (GB, X, k, sc, S) = S'
-
-	   Invariant:
-	   appends a list of recursion operators to S after
-	   instantiating X with all possible local parameters (between 1 and k)
-	   *)
-	fun set_parameter (GB as (G1, B1), X as I.EVar (r, _, V, _), k, sc, Ds) =
-	  let 
-	    (* set_parameter' ((G, B), k, Ds) = Ds'
-	   
-	       Invariant:
-	       If    G1, D < G
-	    *)
-	    fun set_parameter' ((I.Null, I.Null), _, Ds) =  Ds
-	      | set_parameter' ((I.Decl (G, D), I.Decl (B, S.Parameter _)), k, Ds) = 
-		let 
-		  val D' as I.Dec (_, V') = I.decSub (D, I.Shift (k))
-		  val Ds' = 
-		    Trail.trail (fn () => 
-				 if Unify.unifiable (G1, (V, I.id), (V', I.id))
-				   andalso Unify.unifiable (G1, (X, I.id), (I.Root (I.BVar k, I.Nil), I.id))
-				   then sc Ds
-				 else Ds)
-		in 
-		  set_parameter' ((G, B), k+1, Ds')
-		end
-	      | set_parameter' ((I.Decl (G, D), I.Decl (B, _)), k, Ds) =
-		  set_parameter' ((G, B), k+1, Ds)
-	  in
-	    set_parameter' (GB, 1, Ds)
-	  end
-
-	
-	fun ctxBlock (GB as (G1, B1), V, k, sc, Ds) =
-	  let
-	    (* checkCtx (G2, (V, s)) = B'
-	   
-               Invariant:
-	       if   G, G1 |- G2 ctx
-               and  G, G1 |- s : G3  G3 |- V : L
-               then B holds iff 
-	       G1 = V1 .. Vn and G, G1, V1 .. Vi-1 |- Vi unifies with V [s o ^i] : L
-	    *)
-	    fun checkCtx (nil, (V2, s)) = false
-	      | checkCtx (I.Dec (_, V1) :: G2, (V2, s)) = 
-	        let 
-		  val B' = Trail.trail (fn () => Unify.unifiable (G, (V1, I.id), (V2, s)))
-		in
-		  B' orelse checkCtx (G2, (V2, I.comp (s, I.shift)))
-		end
-
-	    fun alreadyIntroduced (I.Null, l) = false
-	      | alreadyIntroduced (I.Decl (B, S.Parameter (SOME l')), l) = 
-	        if l' = l then true else alreadyIntroduced (B, l)
-	      | alreadyIntroduced (I.Decl (B, S.Parameter NONE), l) = 
-		  alreadyIntroduced (B, l)
-(*	      | alreadyIntroduced (I.Decl (B, S.Assumption _), l) = 
-		  alreadyIntroduced (B, l)
-*)	      | alreadyIntroduced (I.Decl (B, S.Lemma _), l) = 
-		  alreadyIntroduced (B, l)
-		  
-
-
-	    fun kont paramAbstract' (GB3, s3) = 
-	      let 
-		val S3 = S.State (n, GB3, (IH, OH), d, 
-				  S.orderSub (O, s3),
-				  map (fn (n', F') => (n', F.forSub (F', s3))) H,
-				  F.forSub (F, s3))
-		val Ds' =  calc (n', (G0, F', O'), S3, paramAbstract', convertible)
-	      in 
-		Ds'
-	      end
-
-
-	    (* introduceParameters (l, (G1, B1), G2, s, sc) = Ds'
-       
-               Invariant :
-               If   |- G1 = G0, G0' ctx
-	       and  |- B1 : G1 tags
-	       and  l is a label
-               and  G1 |- G2 ctx
-	       and  G1 |- s : G0
-               then G1 |- Ds' is a list of lemma decalartions
-            *) 
-	    fun introduceParameters (l, (G, B), D :: G2, s, sc) = 
-	        let 
-		  val Ds' = introduceParameters (l, (I.Decl (G, D), I.Decl (B, S.Parameter (SOME l))), 
-						 G2, I.comp (s, I.shift), sc)
-		in
-		  Ds'
-		end
-	      | introduceParameters (l, GB, nil, s, sc) = sc (GB, s)
-
-
-	      
-
-	    (* someEVars (G, G1, s) = s'
+    (* someEVars (G, G1, s) = s'
 	       
-	       Invariant:
-	       If   |- G ctx
-	       and  G |- s : G
-	       then G |- s' : G, G1
-	    *)
+       Invariant:
+       If  |- G ctx
+       and  G |- s : G
+       then G |- s' : G, G1
+    *)
+    fun someEVars (G, nil, s) =  s
+      | someEVars (G, I.Dec (_, V) :: L, s) = 
+      someEVars(G, L, I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s))
 
-	    fun someEVars (G, nil, s) =  s
-	      | someEVars (G, I.Dec (_, V) :: L, s) = 
-	          someEVars(G, L, I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s))
 
 
-	    (* append (Ds1, Ds2) = Ds'
+    (* ctxSub (G, s) = G'
 	     
-	       Invariant:
-	       Ds1, Ds2 are a list of residual lemmas
-	       Ds' = Ds1 @ Ds2, where all duplicates are removed 
-	    *)
-	    fun append (nil, Ds) = Ds
-	      | append ((L as Lemma (n, F)) :: Ds1, Ds2) = 
-	        let
-		  val Ds' = append (Ds1, Ds2)
-		in
-		  if List.exists (fn (Lemma (n', F')) => (n = n') andalso F.convFor ((F, I.id), (F', I.id))) Ds'
-		    then Ds' 
-		  else L :: Ds'
-		end
+       Invariant:
+       If   G2 |- s : G1
+       and  G1 |- G ctx
+       then G2 |- G' = G[s] ctx
+
+       NOTE, should go into a different module. Code duplication!
+    *)
+    fun ctxSub (nil, s) = nil
+      | ctxSub (D :: G, s) = I.decSub (D, s) :: ctxSub (G, I.dot1 s)
 
 
-	    fun closedSub (G, I.Shift _) = true
-	      | closedSub (G, I.Dot (I.Exp U, s)) =
-	          Abstract.closedExp (G, (Whnf.normalize (U, I.id), I.id)) andalso closedSub (G, s) 
-	      
 
-            (* checkLabels (n, ops) = ops'
+    (* appendCtx ((G1, B1), T, G2) = (G', B')
+
+       Invariant:
+       If   |- G1 ctx
+       and  G1 |- B1 tags
+       and  T tag
+       and  G1 |- G2 ctx
+       then |- G' = G1, G2 ctx 
+       and  G' |- B' tags
+    *)
+    fun appendCtx (GB1, T, nil) = GB1
+      | appendCtx ((G1, B1), T, D :: G2) = 
+          appendCtx ((I.Decl (G1, D), I.Decl (B1, T)), T, G2)
+      
+
+
+    (* createCtx ((G, B), ll, s) = ((G', B'), s', af') 
+
+     Invariant:
+     If   |- G ctx
+     and  G |- B tags
+     and  . |- label list
+     and  |- G1 ctx
+     and  G |- s : G1
+
+     then |- G' : ctx
+     and  G' |- B' tags
+     and  G' = G, G''
+     and  G' |- s' : G1
+     and  af : forall . |- AF aux formulas. Ex . |- AF' = {{G''}} AF  auxFor
+     *)
+    fun createCtx ((G, B), nil, s) = 
+          ((G, B), s, fn AF => AF)
+      | createCtx ((G, B), n :: ll, s) = 
+        let 	
+	  val F.LabelDec (l, G1, G2) = F.labelLookup n   
+
+	  val t = someEVars (G, G1, I.id)
+					  (* G |- s' : G1 *)
+	  val G2' = ctxSub (G2, t)
+					  (* G |- G2' ctx *)
+	  val (G', B') = appendCtx ((G, B), S.Parameter (SOME n), G2') 
+					  (* . |- G' = G, G2' ctx *)
+	  val s' = I.comp (s, I.Shift (List.length  G2'))
+					  (* G' |- s'' : G0 *)
+	  val (GB'', s'', af'') = createCtx ((G', B'), ll, s') 
+	in
+	  (GB'', s'', fn AF => af'' (A.Block ((G, t, List.length G1, G2'), AF)))
+	end
+
+
+    (* createEVars' (G, G0) = s'
+        
+       Invariant : 
+       If   |- G ctx
+       and  |- G0 ctx
+       then G |- s' : G0
+       and  s' = X1 .. Xn where n = |G0|
+    *)
+    fun createEVars (G, I.Null) = I.Shift (I.ctxLength G)
+      | createEVars (G, I.Decl (G0, I.Dec (_, V))) = 
+        let 
+	  val s = createEVars (G, G0)
+	in
+	  I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s)
+	end
+
+
+    (* checkCtx (G, G2, (V, s)) = B'
+	   
+       Invariant:
+       If   |- G = G0, G1 ctx
+       and  G |- G2 ctx
+       and  G |- s : G0  
+       and  G0 |- V : L
+       then B' holds iff 
+            G1 = V1 .. Vn and G, G1, V1 .. Vi-1 |- Vi unifies with V [s o ^i] : L
+    *)
+    fun checkCtx (G, nil, (V2, s)) = false
+      | checkCtx (G, (D as I.Dec (_, V1)) :: G2, (V2, s)) =
+          (Trail.trail (fn () => Unify.unifiable (G, (V1, I.id), (V2, s)))
+	  orelse checkCtx (I.Decl (G, D), G2, (V2, I.comp (s, I.shift))))
+
+
+    (* checkLabels ((G', B'), V, ll, l) = lopt'
      
-               Invariant:
-               WORKS only for contexts with empty G1!!!
-	       EACH parameter block can only used once.
-	    *)
-	    fun checkLabels (n, Ds) = 
-	      if n < 0 then Ds
-	      else
-		let 
-		  val F.LabelDec (name, G1, G2) = F.labelLookup n   
-		  val s = someEVars (G, G1, I.id)
-		  val G2' = ctxSub (G2, s)
+       Invariant:
+       If   |- G' ctx
+       and  G' |- B' ctx
+       and  G' |- s : G0
+       and  G0 |- V : type
+       and  . |- ll label list
+       and  . |- l label number
+       then lopt' = NONE if no context block is applicable
+       or   lopt' = SOME l' if context block l' is applicable
 
-		  fun paramAbstract' AF = 
-		    paramAbstract (A.Block ((G, s, List.length G1, G2'), AF))
- 
-(*		      if closedSub (G, s) then 
-			let 
-			  val F' = paramAbstract (raiseFor (0, F.listToCtx (G2'), F, I.id, fn (w, _) => F.dot1n (F.listToCtx (G2'), w)))
-			in
-			  F'
-			end
-		      else (TextIO.print "* Incompleteness: SOME variables free\n"; NONE)
-*)
-		in
-		  if not (alreadyIntroduced (B, n)) andalso checkCtx (G2', (V, I.id)) then
-		    let 
-(*		      val Ds' = abstract (F.listToCtx (G2'), introduceParameters (n, (G, B), G2', I.id, kont paramAbstract')) *)
-		      val Ds' = introduceParameters (n, (G, B), G2', I.id, kont paramAbstract')
-(*		      val Ds'' = map (fn (Lemma (n, F)) => Lemma (n, rlemma (G, F.listToCtx G1, s, F))) Ds' *)
-		    in
-		      append (Ds', Ds)
-		    end
-		  else checkLabels (n-1, Ds) 
-		end
-	      
+       NOTE: For this implementation we only pick the first applicable contextblock.
+       It is not yet clear what should happen if there are inductive calls where more
+       then one contextblocks are introduced --cs 
+    *)
+    fun checkLabels ((G', B'), (V, s), ll as nil, l) =
+        if l < 0 then NONE
+	else
+	  let 
+	    val F.LabelDec (name, G1, G2) = F.labelLookup l   
+	    val s = someEVars (G', G1, I.id)
+	    val G2' = ctxSub (G2, s)
+
+	    val t = someEVars (G', G1, I.id) 
+					  (* G' |- t : G1 *)
+	    val G2' = ctxSub (G2, t)
+					  (* G |- G2' ctx *)
 	  in
-	    checkLabels (F.labelSize ()-1, Ds)
+	    if not (List.exists (fn l' => l = l') ll) andalso checkCtx (G', G2', (V, s)) then SOME l
+	    else checkLabels ((G', B'), (V, s), ll, l-1)
 	  end
-	
-	(* ltinit (GB, k, ((U1, s1), (V2, s2)), ((U3, s3), (V4, s4)), sc, Ds) = Ds'
-     
-           Invariant:
-           If   G = G0, Gp    (G0, global context, Gp, parameter context)
-           and  |Gp| = k
-           and  G |- s1 : G1   G1 |- U1 : V1
-           and  G |- s2 : G2   G2 |- V2 : L
-                G |- s3 : G1   G1 |- U3 : V3
-           and  G |- s4 : G2   G2 |- V4 : L
-           and  G |- V1[s1] == V2 [s2]
-           and  G |- V3[s3] == V4 [s5]
-           and  Ds is a set of all all possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-    	    recursion operators
-        *)
-	fun ltinit (GB, k, (Us, Vs), UsVs', sc, Ds) = 
-              ltinitW (GB, k, Whnf.whnfEta (Us, Vs), UsVs', sc, Ds)
-	and ltinitW (GB, k, (Us, Vs as (I.Root _, _)), UsVs', sc, Ds) =
-              lt (GB, k, (Us, Vs), UsVs', sc, Ds)
-	  | ltinitW ((G, B), k, 
-		     ((I.Lam (D1, U), s1), (I.Pi (D2, V), s2)), 
-		     ((U', s1'), (V', s2')),
-		     sc, Ds) =
-	      ltinit ((I.Decl (G, I.decSub (D1, s1) (* = I.decSub (D2, s2) *)),
-		       I.Decl (B, S.Parameter NONE)), k+1, 
-		      ((U, I.dot1 s1), (V, I.dot1 s2)), 
-		      ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift))), 
-		      sc, Ds)
+      | checkLabels _ = NONE  (* more than one context block is introduced *)
 
-	(* lt (GB, k, ((U, s1), (V, s2)), (U', s'), sc, Ds) = Ds'
+
+    (* appendRL (Ds1, Ds2) = Ds'
      
-           Invariant:
-           If   G = G0, Gp    (G0, global context, Gp, parameter context)
-           and  |Gp| = k
-           and  G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
-           and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
+       Invariant:
+       Ds1, Ds2 are a list of residual lemmas
+       Ds' = Ds1 @ Ds2, where all duplicates are removed 
+    *)
+    fun appendRL (nil, Ds) = Ds
+      | appendRL ((L as Lemma (n, F)) :: Ds1, Ds2) = 
+        let
+	  val Ds' = appendRL (Ds1, Ds2)
+	in
+	  if List.exists (fn (Lemma (n', F')) => (n = n') andalso F.convFor ((F, I.id), (F', I.id))) Ds'
+	    then Ds' 
+	  else L :: Ds'
+	end
+	
+
+    (* recursion ((nih, Gall, Fex, Oex), (ncurrent, (G0, B0), ll, Ocurrent, H, F)) = Ds
+
+       Invariant:
+ 
+       If 
+
+       nih  is the id or the induction hypothesis
+       |- Gall ctx
+       Gall |- Fex : for        (Fex doesn't contain any universal quantifiers)
+       Gall |- Oex : order
+
+       and
+       ncurrent is the id of the current proof goal
+       |- G0 ctx
+       G0 |- B0 tags
+       . |- ll label list 
+       G0 |- Ocurrent order
+       G0 |- H history
+       G0 |- F formula
+
+       then 
+       G0 |- Ds decs
+    *)
+    fun recursion ((nih, Gall, Fex, Oex), (ncurrent, (G0, B0), ll, Ocurrent, H, F)) =
+      let
+	val ((G', B'), s', af) = createCtx ((G0, B0), ll, I.id)
+					(* G' |- s' : G0 *)
+	val t' = createEVars (G', Gall)
+					(* G' |- t' : Gall *)
+	val AF = af (A.Head (G', (Fex, t'), I.ctxLength Gall))
+	val Oex' =  S.orderSub (Oex, t')
+	val Ocurrent' = S.orderSub (Ocurrent, s')
+	  
+	fun sc Ds = 
+	  let
+	    val Fnew = A.abstractApproxFor AF
+	  in 
+	    if List.exists (fn (nhist, Fhist) => nih = nhist andalso 
+			    F.convFor ((Fnew, I.id), (Fhist, I.id))) H then
+	      Ds
+	    else
+	      Lemma (nih, Fnew) :: Ds
+	  end
+
+	fun ac ((G', B'), Vs, Ds) =
+	  (case checkLabels ((G', B'), Vs, ll, F.labelSize ()-1)
+	     of NONE => Ds
+	      | SOME l' => 
+	          let 
+		    val Ds' = recursion ((nih, Gall, Fex, Oex), (ncurrent, (G0, B0), l' :: ll, Ocurrent, H, F))
+		  in
+		    appendRL (Ds', Ds)
+		  end)
+
+      in
+	if ncurrent < nih then ordle ((G', B'), Oex', Ocurrent', sc, ac, nil)
+	else ordlt ((G', B'), Oex', Ocurrent', sc, ac, nil)
+      end
+
+    
+
+    (* set_parameter (GB, X, k, sc, ac, S) = S'
+     
+       Invariant:
+       appends a list of recursion operators to S after
+       instantiating X with all possible local parameters (between 1 and k)
+    *)
+    and set_parameter (GB as (G1, B1), X as I.EVar (r, _, V, _), k, sc, ac, Ds) =
+      let 
+	(* set_parameter' ((G, B), k, Ds) = Ds'
+	   
+	   Invariant:
+	   If    G1, D < G
+	*)
+	fun set_parameter' ((I.Null, I.Null), _, Ds) =  Ds
+	  | set_parameter' ((I.Decl (G, D), I.Decl (B, S.Parameter _)), k, Ds) = 
+	    let 
+	      val D' as I.Dec (_, V') = I.decSub (D, I.Shift (k))
+	      val Ds' = 
+		Trail.trail (fn () => 
+			     if Unify.unifiable (G1, (V, I.id), (V', I.id))
+			       andalso Unify.unifiable (G1, (X, I.id), (I.Root (I.BVar k, I.Nil), I.id))
+			       then sc Ds
+			     else Ds)
+	    in 
+	      set_parameter' ((G, B), k+1, Ds')
+	    end
+	  | set_parameter' ((I.Decl (G, D), I.Decl (B, _)), k, Ds) =
+	      set_parameter' ((G, B), k+1, Ds)
+      in
+	set_parameter' (GB, 1, Ds)
+      end
+
+
+
+    (* ltinit (GB, k, ((U1, s1), (V2, s2)), ((U3, s3), (V4, s4)), sc, ac, Ds) = Ds'
+     
+       Invariant:
+       If   G = G0, Gp    (G0, global context, Gp, parameter context)
+       and  |Gp| = k
+       and  G |- s1 : G1   G1 |- U1 : V1
+       and  G |- s2 : G2   G2 |- V2 : L
                 G |- s3 : G1   G1 |- U3 : V3
-           and  G |- s4 : G2   G2 |- V4 : L
-           and  k is the length of the local context
-           and  G |- V1[s1] == V2 [s2]
-           and  G |- V3[s3] == V4 [s5]
-           and  Ds is a set of already calculuate possible states
-           and  sc is success continuation
+       and  G |- s4 : G2   G2 |- V4 : L
+       and  G |- V1[s1] == V2 [s2]
+       and  G |- V3[s3] == V4 [s5]
+       and  Ds is a set of all all possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+            recursion operators
+    *)
+    and ltinit (GB, k, (Us, Vs), UsVs', sc, ac, Ds) = 
+          ltinitW (GB, k, Whnf.whnfEta (Us, Vs), UsVs', sc, ac, Ds)
+    and ltinitW (GB, k, (Us, Vs as (I.Root _, _)), UsVs', sc, ac, Ds) =
+          lt (GB, k, (Us, Vs), UsVs', sc, ac, Ds)
+      | ltinitW ((G, B), k, 
+		 ((I.Lam (D1, U), s1), (I.Pi (D2, V), s2)), 
+		 ((U', s1'), (V', s2')),
+		 sc, ac, Ds) =
+	  ltinit ((I.Decl (G, I.decSub (D1, s1) (* = I.decSub (D2, s2) *)),
+		   I.Decl (B, S.Parameter NONE)), k+1, 
+		  ((U, I.dot1 s1), (V, I.dot1 s2)), 
+		  ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift))), 
+		  sc, ac, Ds)
+
+
+    (* lt (GB, k, ((U, s1), (V, s2)), (U', s'), sc, ac, Ds) = Ds'
+     
+       Invariant:
+       If   G = G0, Gp    (G0, global context, Gp, parameter context)
+       and  |Gp| = k
+       and  G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
+       and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
+	    G |- s3 : G1   G1 |- U3 : V3
+       and  G |- s4 : G2   G2 |- V4 : L
+       and  k is the length of the local context
+       and  G |- V1[s1] == V2 [s2]
+       and  G |- V3[s3] == V4 [s5]
+       and  Ds is a set of already calculuate possible states
+       and  sc is success continuation
            then Ds' is an extension of Ds, containing all 
 	        recursion operators
-        *)
-
-        (* Vs is Root!!! *)
-        (* (Us',Vs') may not be eta-expanded!!! *)
-        and lt (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) = 
-              ltW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, Ds)
-        and ltW (GB, k, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc, Ds) = 
-    	      ltSpine (GB, k, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, Ds)
-          | ltW (GB as (G, B), k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, Ds) = 
+    *)
+	  
+    (* Vs is Root!!! *)
+    (* (Us',Vs') may not be eta-expanded!!! *)
+    and lt (GB, k, (Us, Vs), (Us', Vs'), sc, ac, Ds) = 
+          ltW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, ac, Ds)
+    and ltW (GB, k, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc, ac, Ds) = 
+          ltSpine (GB, k, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, ac, Ds)
+      | ltW (GB as (G, B), k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, ac, Ds) = 
 (*	    if n <= k then  (* n must be a local variable *) *)
 (* k might not be needed any more: Check --cs *)
-	    (case I.ctxLookup (B, n) 
-	      of S.Parameter _ =>
-	        let 
-		  val I.Dec (_, V') = I.ctxDec (G, n)
-		in 
-		  ltSpine (GB, k, (Us, Vs), ((S', s'), (V', I.id)), sc, Ds)
-		end
-	      | S.Lemma _ => Ds)
-(*	    else Ds *)
-	  | ltW (GB, _, _, ((I.EVar _, _), _), _, Ds) = Ds
-	  | ltW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
-						       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, Ds) =
-	    let
-	      val Ds' = Ds (* ctxBlock (GB, I.EClo (V1', s1'), k, sc, Ds) *)
+	(case I.ctxLookup (B, n) 
+	   of S.Parameter _ =>
+	     let 
+	       val I.Dec (_, V') = I.ctxDec (G, n)
+	     in 
+	       ltSpine (GB, k, (Us, Vs), ((S', s'), (V', I.id)), sc, ac, Ds)
+	     end
+	 | S.Lemma _ => Ds)
+      (*	    else Ds *)
+      | ltW (GB, _, _, ((I.EVar _, _), _), _, _, Ds) = Ds
+      | ltW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+						   (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ac, Ds) =
+	let
+	  val Ds' = Ds (* ctxBlock (GB, I.EClo (V1', s1'), k, sc, ac, Ds) *)
+	in
+	  if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	    let  (* enforce that X gets only bound to parameters *) 
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val sc' = fn Ds'' => set_parameter (GB, X, k, sc, ac, Ds'')
 	    in
-	      if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
-		let  (* enforce that X gets only bound to parameters *) 
-		  val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		  val sc' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
-		in
-		  lt (GB, k, ((U, s1), (V, s2)), 
-		      ((U', I.Dot (I.Exp (X), s1')), 
-		       (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
-		end
-	      else
-		if Subordinate.below (I.targetFam V1', I.targetFam V) then
-		  let 
-		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		  in
-		    lt (GB, k, ((U, s1), (V, s2)), 
-			((U', I.Dot (I.Exp (X), s1')), 
-			 (V', I.Dot (I.Exp (X), s2'))), sc, Ds')
-		  end
-		else Ds'
+	      lt (GB, k, ((U, s1), (V, s2)), 
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc', ac, Ds')
 	    end
-		  
-	and ltSpine (GB, k, (Us, Vs), (Ss', Vs'), sc, Ds) = 
-              ltSpineW (GB, k, (Us, Vs), (Ss', Whnf.whnf Vs'), sc, Ds) 
-	and ltSpineW (GB, k, (Us, Vs), ((I.Nil, _), _), _, Ds) = Ds
-	  | ltSpineW (GB, k, (Us, Vs), ((I.SClo (S, s'), s''), Vs'), sc, Ds) =
-              ltSpineW (GB, k, (Us, Vs), ((S, I.comp (s', s'')), Vs'), sc, Ds)
-	  | ltSpineW (GB, k, (Us, Vs), ((I.App (U', S'), s1'), 
-					(I.Pi ((I.Dec (_, V1'), _), V2'), s2')), sc, Ds) = 
-	      let
-		val Ds' = le (GB, k, (Us, Vs), ((U', s1'), (V1', s2')), sc, Ds)
+	  else
+	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	      let 
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      in
-		ltSpine (GB, k, (Us, Vs), ((S', s1'), 
-					   (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc, Ds')
+		lt (GB, k, ((U, s1), (V, s2)), 
+		    ((U', I.Dot (I.Exp (X), s1')), 
+		     (V', I.Dot (I.Exp (X), s2'))), sc, ac, Ds')
 	      end
+	    else Ds'
+	end
+		  
+    and ltSpine (GB, k, (Us, Vs), (Ss', Vs'), sc, ac, Ds) = 
+          ltSpineW (GB, k, (Us, Vs), (Ss', Whnf.whnf Vs'), sc, ac, Ds) 
+    and ltSpineW (GB, k, (Us, Vs), ((I.Nil, _), _), _, _, Ds) = Ds
+      | ltSpineW (GB, k, (Us, Vs), ((I.SClo (S, s'), s''), Vs'), sc, ac, Ds) =
+          ltSpineW (GB, k, (Us, Vs), ((S, I.comp (s', s'')), Vs'), sc, ac, Ds)
+      | ltSpineW (GB, k, (Us, Vs), ((I.App (U', S'), s1'), 
+				    (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), sc, ac, Ds) = 
+	let
+	  val Ds' = le (GB, k, (Us, Vs), ((U', s1'), (V1', s2')), sc, ac, Ds)
+	in
+	  ltSpine (GB, k, (Us, Vs), ((S', s1'), 
+				     (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc, ac, Ds')
+	end
 
-	(* eq (GB, ((U, s1), (V, s2)), (U', s'), sc, Ds) = Ds'
+    (* eq (GB, ((U, s1), (V, s2)), (U', s'), sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
-           and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
-                G |- s3 : G1   G1 |- U3 : V3
-           and  G |- s4 : G2   G2 |- V4 : L
-           and  G |- V1[s1] == V2 [s2]
-           and  G |- V3[s3] == V4 [s5]
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
+       Invariant:
+       If   G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
+       and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
+	    G |- s3 : G1   G1 |- U3 : V3
+       and  G |- s4 : G2   G2 |- V4 : L
+       and  G |- V1[s1] == V2 [s2]
+       and  G |- V3[s3] == V4 [s5]
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
     	    recursion operators resulting from U[s1] = U'[s']
-        *)
-        and eq ((G, B), (Us, Vs), (Us', Vs'), sc, Ds) = 
+    *)
+    and eq ((G, B), (Us, Vs), (Us', Vs'), sc, ac, Ds) = 
             (Trail.trail (fn () => 
 			  if Unify.unifiable (G, Vs, Vs') 
 			    andalso Unify.unifiable (G, Us, Us') 
@@ -393,255 +455,186 @@ struct
 			  else Ds))
 	    
 
-        (* le (G, k, ((U, s1), (V, s2)), (U', s'), sc, Ds) = Ds'
+    (* le (G, k, ((U, s1), (V, s2)), (U', s'), sc, ac, Ds) = Ds'
      
-	   Invariant:
-           If   G = G0, Gp    (G0, global context, Gp, parameter context)
-           and  |Gp| = k
-           and  G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
-           and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
+       Invariant:
+       If   G = G0, Gp    (G0, global context, Gp, parameter context)
+       and  |Gp| = k
+       and  G |- s1 : G1   G1 |- U1 : V1   (U1 [s1] in  whnf)
+       and  G |- s2 : G2   G2 |- V2 : L    (V2 [s2] in  whnf)
                 G |- s3 : G1   G1 |- U3 : V3
-           and  G |- s4 : G2   G2 |- V4 : L
-           and  k is the length of the local context
-           and  G |- V1[s1] == V2 [s2]
-           and  G |- V3[s3] == V4 [s5]
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
+       and  G |- s4 : G2   G2 |- V4 : L
+       and  k is the length of the local context
+       and  G |- V1[s1] == V2 [s2]
+       and  G |- V3[s3] == V4 [s5]
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
     	    recursion operators resulting from U[s1] <= U'[s']
-        *)
+    *)
 
-        and le (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) = 
-    	    let 
-	      val Ds' = eq (GB, (Us, Vs), (Us', Vs'), sc, Ds)
-	    in
-	      leW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, Ds')
-	    end
+    and le (GB, k, (Us, Vs), (Us', Vs'), sc, ac, Ds) = 
+        let 
+	  val Ds' = eq (GB, (Us, Vs), (Us', Vs'), sc, ac, Ds)
+	in
+	  leW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, ac, Ds')
+	end
 
-	and leW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
-						       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, Ds) =
+    and leW (GB as (G, B), k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
+						   (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ac, Ds) =
+        let
+	  val Ds' = ac (GB, (V1', s1'), Ds)
+	in
+	  if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	    let
-	      val Ds' = ctxBlock (GB, I.EClo (V1', s1'), k, sc, Ds)
-	    in
-	      if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
-		let
-		  val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		  val sc' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
-		(* enforces that X can only bound to parameter *)
-		in                         
-		  le (GB, k, ((U, s1), (V, s2)), 
-		      ((U', I.Dot (I.Exp (X), s1')), 
-		       (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
-		end
-	      else
-		if Subordinate.below  (I.targetFam V1', I.targetFam V) then
-		  let 
-		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		      val sc' = sc 
-(*		    val sc' =  fn Ds'' => if Abstract.closedExp (G, (X, I.id)) then sc Ds''
-					(* possible incompleteness. 
-					   X will be free in some cases and must be universally quantified.
-					   -- cs *)
-		                          else (TextIO.print "* Ignored recursive call: Argument not instantiated during unification\n";
-						Ds'') 
-*)		    val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
-				    ((U', I.Dot (I.Exp (X), s1')), 
-				     (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
-		    val sc'' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
-		    val Ds''' =  le (GB, k, ((U, s1), (V, s2)), 
-				    ((U', I.Dot (I.Exp (X), s1')), 
-				     (V', I.Dot (I.Exp (X), s2'))), sc'', Ds'')
-		  in
-		    Ds'''
-		  end
-		else Ds'
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val sc' = fn Ds'' => set_parameter (GB, X, k, sc, ac, Ds'')
+	    (* enforces that X can only bound to parameter *)
+	    in                         
+	      le (GB, k, ((U, s1), (V, s2)), 
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc', ac, Ds')
 	    end
-	  | leW (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) = lt (GB, k, (Us, Vs), (Us', Vs'), sc, Ds) 
+	  else
+	    if Subordinate.below  (I.targetFam V1', I.targetFam V) then
+	      let 
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+		val sc' = sc 
+		val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
+				((U', I.Dot (I.Exp (X), s1')), 
+				 (V', I.Dot (I.Exp (X), s2'))), sc', ac, Ds')
+(*		val sc'' = fn Ds'' => set_parameter (GB, X, k, sc, ac, Ds'')   (* BUG -cs *)
+		val Ds''' =  le (GB, k, ((U, s1), (V, s2)), 
+				 ((U', I.Dot (I.Exp (X), s1')), 
+				  (V', I.Dot (I.Exp (X), s2'))), sc'', ac, Ds'') *)
+	      in
+		Ds''
+	      end
+	    else Ds'
+	end
+      | leW (GB, k, (Us, Vs), (Us', Vs'), sc, ac, Ds) = lt (GB, k, (Us, Vs), (Us', Vs'), sc, ac, Ds) 
 		
 	      
-	(* ordlt (GB, O1, O2, sc, Ds) = Ds'
+    (* ordlt (GB, O1, O2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- O1 augmented subterms   
-           and  G |- O2 augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-    	        recursion operators of all instantiations of EVars s.t. O1 is
-    	        lexicographically smaller than O2
-        *)
-	fun ordlt (GB, S.Arg UsVs, S.Arg UsVs', sc, Ds) =  ltinit (GB, 0, UsVs, UsVs', sc, Ds)
-	  | ordlt (GB, S.Lex L, S.Lex L', sc, Ds) = ordltLex (GB, L, L', sc, Ds)
-	  | ordlt (GB, S.Simul L, S.Simul L', sc, Ds) = ordltSimul (GB, L, L', sc, Ds)
+       Invariant:
+       If   G |- O1 augmented subterms   
+       and  G |- O2 augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. O1 is
+	    lexicographically smaller than O2
+    *)
+    and ordlt (GB, S.Arg UsVs, S.Arg UsVs', sc, ac, Ds) =  ltinit (GB, 0, UsVs, UsVs', sc, ac, Ds)
+      | ordlt (GB, S.Lex L, S.Lex L', sc, ac, Ds) = ordltLex (GB, L, L', sc, ac, Ds)
+      | ordlt (GB, S.Simul L, S.Simul L', sc, ac, Ds) = ordltSimul (GB, L, L', sc, ac, Ds)
 
 
-	(* ordltLex (GB, L1, L2, sc, Ds) = Ds'
+    (* ordltLex (GB, L1, L2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- L1 list of augmented subterms   
-           and  G |- L2 list of augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-    	        recursion operators of all instantiations of EVars s.t. L1 is
-	        lexicographically less then L2
-        *)
-	and ordltLex (GB, nil, nil, sc, Ds) = Ds
-	  | ordltLex (GB, O :: L, O' :: L', sc, Ds) =
-	    let 
-	      val Ds' = Trail.trail (fn () => ordlt (GB, O, O', sc, Ds))
-	    in 
-	      ordeq (GB, O, O', fn Ds'' =>  ordltLex (GB, L, L', sc, Ds''), Ds')
-	    end
+       Invariant:
+       If   G |- L1 list of augmented subterms   
+       and  G |- L2 list of augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. L1 is
+	    lexicographically less then L2
+    *)
+    and ordltLex (GB, nil, nil, sc, ac, Ds) = Ds
+      | ordltLex (GB, O :: L, O' :: L', sc, ac, Ds) =
+        let 
+	  val Ds' = Trail.trail (fn () => ordlt (GB, O, O', sc, ac, Ds))
+	in 
+	  ordeq (GB, O, O', fn Ds'' =>  ordltLex (GB, L, L', sc, ac, Ds''), ac, Ds')
+	end
 
-	(* ordltSimul (GB, L1, L2, sc, Ds) = Ds'
+    (* ordltSimul (GB, L1, L2, sc, ac, Ds) = Ds'
 	 
-	   Invariant:
-	   If   G |- L1 list of augmented subterms   
-           and  G |- L2 list of augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-	        recursion operators of all instantiations of EVars s.t. L1 is
-    	        simultaneously smaller than L2
-        *)
-	and ordltSimul (GB, nil, nil, sc, Ds) = Ds
-	  | ordltSimul (GB, O :: L, O' :: L', sc, Ds) = 
-	    let
-	      val Ds'' = Trail.trail (fn () => ordlt (GB, O, O',
-						      fn Ds' => ordleSimul (GB, L, L', sc, Ds'), Ds))
-	    in 
-	      ordeq (GB, O, O', fn Ds' => ordltSimul (GB, L, L', sc, Ds'), Ds'')
-	    end
+       Invariant:
+       If   G |- L1 list of augmented subterms   
+       and  G |- L2 list of augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. L1 is
+	    simultaneously smaller than L2
+    *)
+    and ordltSimul (GB, nil, nil, sc, ac, Ds) = Ds
+      | ordltSimul (GB, O :: L, O' :: L', sc, ac, Ds) = 
+        let
+	  val Ds'' = Trail.trail (fn () => ordlt (GB, O, O',
+						  fn Ds' => ordleSimul (GB, L, L', sc, ac, Ds'), ac, Ds))
+	in 
+	  ordeq (GB, O, O', fn Ds' => ordltSimul (GB, L, L', sc, ac, Ds'), ac, Ds'')
+	end
 	  
-	(* ordleSimul (GB, L1, L2, sc, Ds) = Ds'
+	
+    (* ordleSimul (GB, L1, L2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- L1 list of augmented subterms   
-           and  G |- L2 list of augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-	        recursion operators of all instantiations of EVars s.t. L1 is
-	        simultaneously smaller than or equal to L2
-        *)
-	and ordleSimul (GB, nil, nil, sc, Ds) = sc Ds
-	  | ordleSimul (GB, O :: L, O' :: L', sc, Ds) =
-              ordle (GB, O, O', fn Ds' => ordleSimul (GB, L, L', sc, Ds'), Ds)
+       Invariant:
+       If   G |- L1 list of augmented subterms   
+       and  G |- L2 list of augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. L1 is
+	    simultaneously smaller than or equal to L2
+    *)
+    and ordleSimul (GB, nil, nil, sc, ac, Ds) = sc Ds
+      | ordleSimul (GB, O :: L, O' :: L', sc, ac, Ds) =
+          ordle (GB, O, O', fn Ds' => ordleSimul (GB, L, L', sc, ac, Ds'), ac, Ds)
 
 	      
-	(* ordeq (GB, O1, O2, sc, Ds) = Ds'
+    (* ordeq (GB, O1, O2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- O1 augmented subterms   
-           and  G |- O2 augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-	        recursion operators of all instantiations of EVars s.t. O1 is
-	        convertible to O2
-        *)
-        and ordeq ((G, B), S.Arg (Us, Vs), S.Arg (Us' ,Vs'), sc, Ds) =  
-              if Unify.unifiable (G, Vs, Vs') andalso Unify.unifiable (G, Us, Us') then sc Ds else Ds
-	  | ordeq (GB, S.Lex L, S.Lex L', sc, Ds) = ordeqs (GB, L, L', sc, Ds)
-	  | ordeq (GB, S.Simul L, S.Simul L', sc, Ds) = ordeqs (GB, L, L', sc, Ds)
+       Invariant:
+       If   G |- O1 augmented subterms   
+       and  G |- O2 augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. O1 is
+	    convertible to O2
+    *)
+    and ordeq ((G, B), S.Arg (Us, Vs), S.Arg (Us' ,Vs'), sc, ac, Ds) =  
+        if Unify.unifiable (G, Vs, Vs') andalso Unify.unifiable (G, Us, Us') then sc Ds else Ds
+      | ordeq (GB, S.Lex L, S.Lex L', sc, ac, Ds) = ordeqs (GB, L, L', sc, ac, Ds)
+      | ordeq (GB, S.Simul L, S.Simul L', sc, ac, Ds) = ordeqs (GB, L, L', sc, ac, Ds)
       
-        (* ordlteqs (GB, L1, L2, sc, Ds) = Ds'
+    (* ordlteqs (GB, L1, L2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- L1 list of augmented subterms   
-           and  G |- L2 list of augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-	        recursion operators of all instantiations of EVars s.t. L1 is
-	        convertible to L2
-        *)
-        and ordeqs (GB, nil, nil, sc, Ds) = sc Ds
-	  | ordeqs (GB, O :: L, O' :: L', sc, Ds) = 
-              ordeq (GB, O, O', fn Ds' => ordeqs (GB, L, L', sc, Ds'), Ds)
+       Invariant:
+       If   G |- L1 list of augmented subterms   
+       and  G |- L2 list of augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. L1 is
+	    convertible to L2
+    *)
+    and ordeqs (GB, nil, nil, sc, ac, Ds) = sc Ds
+      | ordeqs (GB, O :: L, O' :: L', sc, ac, Ds) = 
+          ordeq (GB, O, O', fn Ds' => ordeqs (GB, L, L', sc, ac, Ds'), ac, Ds)
 
-        (* ordeq (GB, O1, O2, sc, Ds) = Ds'
+    (* ordeq (GB, O1, O2, sc, ac, Ds) = Ds'
      
-           Invariant:
-           If   G |- O1 augmented subterms   
-           and  G |- O2 augmented subterms
-           and  Ds is a set of already calculuated possible states
-           and  sc is success continuation
-           then Ds' is an extension of Ds, containing all 
-1	        recursion operators of all instantiations of EVars s.t. O1 is
-	        convertible to O2 or smaller than O2
-        *)
-        and ordle (GB, O, O', sc, Ds) = 
-	    let 
-	      val Ds' = Trail.trail (fn () => ordeq (GB, O, O', sc, Ds))
-	    in
-	      ordlt (GB, O, O', sc, Ds')
-	    end
-
-
-
-	fun makeCtx (G, (F.True, s)) = G
-	  | makeCtx (G, (F.Ex (D, F), s)) =
-              makeCtx (I.Decl (G, Whnf.normalizeDec (D, s)), (F, I.dot1 s))
-      
-
-	fun nameCtx I.Null = I.Null
-	  | nameCtx (I.Decl (G, D)) = 
-	    let 
-	      val G' = nameCtx G
-	    in
-	      I.Decl (G', Names.decName (G', D))
-	    end
-
-
-	(* Invariant: 
-	   Fs = (F, s),  G |- 
-	 *)       
-
-	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
-	  let
-	    val AF = paramAbstract (A.Head (G, Fs, I.ctxLength G0))
-	    val Frl = A.abstractApproxFor AF
-	  in
-	    if convertible (n, Frl) then
-(*	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then *)
-	      Ds
-	    else
-	      Lemma (n, Frl) :: Ds
-	  end
-
-
-	(* createEVars' (G, G0) = s'
-        
-  	   Invariant : 
-	   If   |- G ctx
-	   and  |- G0 ctx
-  	   then G |- s' : G0
-	   and  s' = X1 .. Xn where n = |G0|
-	*)
-	fun createEVars (G, I.Null) = I.Shift (I.ctxLength G)
-	  | createEVars (G, I.Decl (G0, I.Dec (_, V))) = 
-            let 
-	      val s = createEVars (G, G0)
-	    in
-	      I.Dot (I.Exp (I.newEVar (G, I.EClo (V, s))), s)
-	    end
-
-
-
-	val s' = createEVars (G, G0)
-	val Os' = S.orderSub (O', s')
-	val check' = check (G, n', s', G0, Os', IH, H, (F', s'))
-	val Ds = if n < n' then ordle ((G, B), Os', O, check', nil)
-		 else ordlt ((G, B), Os', O, check', nil)
-      in 
-	Ds
-      end
-
-      
-
-
+       Invariant:
+       If   G |- O1 augmented subterms   
+       and  G |- O2 augmented subterms
+       and  Ds is a set of already calculuated possible states
+       and  sc is success continuation
+       then Ds' is an extension of Ds, containing all 
+	    recursion operators of all instantiations of EVars s.t. O1 is
+	    convertible to O2 or smaller than O2
+    *)
+    and ordle (GB, O, O', sc, ac, Ds) = 
+        let 
+	  val Ds' = Trail.trail (fn () => ordeq (GB, O, O', sc, ac, Ds))
+	in
+	  ordlt (GB, O, O', sc, ac, Ds')
+	end
 
 
     (* skolem (n, (du, de), GB, w, F, sc) = (GB', s')
@@ -761,13 +754,11 @@ struct
 	in
 	  selectFormula (n, (G0, F2, O2), S')
 	end
-      | selectFormula (n, (G0, F, O), S as S.State (_, (_, _), (_, _), _, _, H, _)) = 
+      | selectFormula (nih, (Gall, Fex, Oex), S as S.State (ncurrent, (G0, B0), (_, _), _, Ocurrent, H, F)) =
 	let
-	  val Ds = calc (n, (G0, F, O), S, fn AF => AF, 
-			 fn (n', F') => List.exists (fn (n'', F'') => n' = n'' andalso 
-					       F.convFor ((F', I.id), (F'', I.id))) H)
+	  val Ds = recursion ((nih, Gall, Fex, Oex), (ncurrent, (G0, B0), nil, Ocurrent, H, F))
 	in
-	  (n+1, updateState (S, (Ds, I.id)))
+	  (nih+1, updateState (S, (Ds, I.id)))
 	end
 
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =

@@ -54,6 +54,24 @@ DONE -cs  In recursion, when we look for the subterm of a functional
 
 -cs Splitting Residual lemmas
 -cs gneration of proof terms
+-cs Also use definitions in search
+
+
+
+Problems: Leftover constraints in TEST-CR/a.sml when proving m-subst
+General: Expressiveness of meta logic not powerfull enough.
+	 You cannot express properties about dependency:
+	   
+	  Example : Assume  M u ==> M' u
+	 	    also Assume M doesn't dependent on u
+		    then we want to conclude that M' cannot depend on u either
+
+		    This is a property of the definition of ==> and must
+		    be proven explicitly. 
+
+		    It's not expressible as Pi2 formula, maybe if we had equality.
+
+
 
 
 INVARIANT:
@@ -78,13 +96,13 @@ Parameter Cases
     DONE -cs    Add parameter introduction in the case that parameter and functional object
 	do not live on the same level
     DONE -cs Add functionality for SOME clauses
-    Assumption, all EVars for SOME are replaced by something closed 
-	(* not a sensible assumption. Must be generalized *)
+    Removed -cs Assumption, all EVars for SOME are replaced by something closed 
+    	(* not a sensible assumption. Must be generalized *)
 	
   base cases
-    RECURSION: calculating twice induction hypothesis does not remove duplicates, check!!!
+    DONE -cs RECURSION: calculating twice induction hypothesis does not remove duplicates, check!!!
     
-    TODO: expand' must construct G0 which is passed into abstracFinal to call abstraction.
+    DONE -cs TODO: expand' must construct G0 which is passed into abstracFinal to call abstraction.
 
     Implementation plan for abstract/splitting
 
@@ -99,8 +117,8 @@ Parameter Cases
 	
 
 
-	TODO: Second parameter splitting to the right of a parameter block not yet detected.
-	TODO: Collect all parameter in paramCases, not just the local ones.
+	DONE -cs TODO: Second parameter splitting to the right of a parameter block not yet detected.
+	DONE -cs TODO: Collect all parameter in paramCases, not just the local ones.
    
 	DONE - cs
 	   BUG:  A context which contains already a parameter
@@ -121,10 +139,11 @@ Parameter Cases
 
 	Experimentation report
 
-	- Cut Elimination works except in the essentatial case: 
- 	    Suspect that a induction hypothesis is missing  (I guess that "open issues" from above is repsonsible for that)
+	DONE -cs - Cut Elimination works except in the essentatial case: 
+ 	             Suspect that a induction hypothesis is missing  
+		     (I guess that "open issues" from above is repsonsible for that)
 
-	- Church Rosser  interactive proof works. But
+	DONE -cs Church Rosser  interactive proof works. But
 	  DONE -cs 
 		Reason: Formula information in tag was not maintained correctly
  		TODO splitting the first rewrite derivations yields a bad bad error
@@ -132,11 +151,11 @@ Parameter Cases
 	DONE -cs : 3rd order copy
 	DONE -cs : 4th order copy
 	
-	BUG: first split then say auto, Typecheck is raised why?
+	DONE -cs : BUG: first split then say auto, Typecheck is raised why?
 
-	BUG: Church Rosser: first case, filling, leaves open EVars in proof term
+	DONE -cs : BUG: Church Rosser: first case, filling, leaves open EVars in proof term
 
-	BUG: Filling in Kolmogroff example, leftover EVars
+	DONE -cs : BUG: Filling in Kolmogroff example, leftover EVars
 
 	
 
@@ -147,22 +166,7 @@ DONE -cs Unify lemmas and assumptions tags: Assumption
    this makes the code more uniform, especially in splitting. 
   
 
-Index variables
-Proof terms
 
-
-Problems: Leftover constraints in TEST-CR/a.sml when proving m-subst
-General: Expressiveness of meta logic not powerfull enough.
-	 You cannot express properties about dependency:
-	   
-	  Example : Assume  M u ==> M' u
-	 	    also Assume M doesn't dependent on u
-		    then we want to conclude that M' cannot depend on u either
-
-		    This is a property of the definition of ==> and must
-		    be proven explicitly. 
-
-		    It's not expressible as Pi2 formula, maybe if we had equality.
 
 
 
@@ -219,8 +223,28 @@ Remember that the success continuation counts into Solving!
 
 
 
-Search: Also use definitions
+
+Thu Apr 22 14:01:44 EDT 1999
+
+Fixed -cs  Bug: Duplicate recognition fails even in the simplest version of the
+	      copy example
 
 
-Bug: Duplicate recognition fails even in the simplest version of the
-	copy example
+Running time improvement:
+ - Timers.show ();
+Parsing       : Real =   0.013, Run =   0.020 (  0.020 usr,  0.000 gc)
+Reconstruction: Real =   0.006, Run =   0.010 (  0.010 usr,  0.000 gc)
+Abstraction   : Real =   0.002, Run =   0.000 (  0.000 usr,  0.000 gc)
+Checking      : Real =   0.003, Run =   0.010 (  0.010 usr,  0.000 gc)
+Modes         : Real =   0.001, Run =   0.000 (  0.000 usr,  0.000 gc)
+Subordination : Real =   0.003, Run =   0.000 (  0.000 usr,  0.000 gc)
+Termination   : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Printing      : Real =   0.011, Run =   0.010 (  0.010 usr,  0.000 gc)
+Compiling     : Real =   0.001, Run =   0.000 (  0.000 usr,  0.000 gc)
+Solving       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real = 303.474, Run = 302.750 (302.420 usr,  0.490 gc)
+Splitting     : Real =   4.399, Run =   4.400 (  4.320 usr,  1.730 gc)
+Recursion     : Real =   0.008, Run =   0.020 (  0.020 usr,  0.000 gc)
+Total         : Real = 307.921, Run = 307.220 (306.810 usr,  2.220 gc)
+Remember that the success continuation counts into Solving!
+val it = () : unit
