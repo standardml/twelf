@@ -312,7 +312,7 @@ struct
     *)
     (* Shared contexts of EVars in GE may recompiled many times *)
 
-    fun searchAll' (nil, acc, sc) = sc () :: acc
+    fun searchAll' (nil, acc, sc) = sc (acc)
       | searchAll' (I.EVar (r, G, V, _) :: GE, acc, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 

@@ -16,6 +16,6 @@ sig
   val searchAll : 
       MetaSyn.IntSyn.dctx * MetaSyn.IntSyn.Exp list
       * (MetaSyn.IntSyn.Exp * MetaSyn.IntSyn.Sub)
-      * (unit -> MetaSyn.State)
+      * (MetaSyn.State list -> MetaSyn.State list)
       -> MetaSyn.State list
 end;  (* signature SEARCH *)

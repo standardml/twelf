@@ -111,9 +111,9 @@ struct
     fun expand (S as M.State (name, M.Prefix (G, M, B), V)) = 
 	let 
 	  val (M.Prefix (G', M', B'), s', GE') = createEVars (M.Prefix (G, M, B))
-	  fun abstractAll () = (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
-								I.EClo (V, s')))
-				handle MetaAbstract.Error s => raise Error s)
+	  fun abstractAll acc = (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
+								I.EClo (V, s'))) :: acc
+				handle MetaAbstract.Error s => acc)
 	  fun abstractEx () = (raise Success (MetaAbstract.abstract (M.State (name, M.Prefix (G', M', B'),
 							       I.EClo (V, s')))))
 			       handle MetaAbstract.Error s => ()
