@@ -69,8 +69,8 @@ struct
        then |- G' ctx
        and  G' |- M' mtx
        and  G' |- s' : G
-       and  GE a list (G, X) of EVars and their contexts in s'
-       !!!-fp
+       and  GE a list of EVars
+
     *)
     fun createEVars (M.Prefix (I.Null, I.Null, I.Null)) = 
           (M.Prefix (I.Null, I.Null, I.Null), I.id, nil)

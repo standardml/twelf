@@ -218,7 +218,7 @@ struct
     (* select (GE, (V, s), acc) = acc'
 
        Invariant:
-       If   GE is a list of (G, X) (EVars and their contexts) 
+       If   GE is a list of Evars
        and  G |- s : G'   G' |- V : L
        then acc' is a list of EVars (G', X') s.t.
 	 (0) it extends acc'
@@ -234,41 +234,6 @@ struct
 	  else selectEVar (GE, Vs, acc)
 
 
-    (* lowerEVar (G, X) = (G', X') 
-       
-       Invariant 
-       If    G |- X : {V1} .. {Vn} a S
-       then  G' = G, V1 .. Vn
-       and   G' |- X' : a S
-    *)
-    (* Efficiency improvement: do not create intermediate EVars -fp *)
-    (*
-    fun lowerEVar (GX as (G, X as I.EVar (r, _, V, C))) = 
-          lowerEVar' (G, X, Whnf.whnf (V, I.id), C)
-    and lowerEVar' (G, X, (V as I.Root _, s (* = id *)), C) = 
-          (G, X)
-      | lowerEVar' (G, X as I.EVar (r, _, _, _), (I.Pi ((D, _), V), s), C) =
-	let
-	  val D' = I.decSub (D, s)
-	  val X' = I.newEVar (I.Decl (G, D'), I.EClo (V, I.dot1 s))
-	in
-	  (r := SOME (I.Lam (D', X')); lowerEVar (I.Decl (G, D'), X'))
-	end
-    *)
-
-    (* lower GE = GE'
-
-       Invariant: 
-       For every (G, X) in GE there exisits a (G', X') s.t.
-       if    G |- X : {V1} .. {Vn} a S
-       then  G' = G, V1 .. Vn
-       and   G' |- X' : a S
-    *)
-    (*
-    fun lower nil = nil
-      | lower (GX :: GE) = (lowerEVar GX) :: (lower GE)
-    *)
-
 
     exception Success of M.State
     (* searchEx' max (GE, sc) = acc'
@@ -276,7 +241,7 @@ struct
        Invariant: 
        If   GE is a list of EVars to be instantiated
        and  max is the maximal number of constructors
-       then if an instantiation of EVars in GE is found GE is raised
+       then if an instantiation of EVars in GE is found Success is raised
             otherwise searchEx' terminates with []
     *)
     (* contexts of EVars are recompiled for each search depth *)
@@ -312,7 +277,7 @@ struct
     (* searchEx (G, GE, (V, s), sc) = acc'
        Invariant:
        If   G |- s : G'   G' |- V : level
-       and  GE is a list of (G, X) EVars contained in V[s]
+       and  GE is a list of EVars contained in V[s]
 	 where G |- X : VX
        and  sc is a function to be executed after all non-index variables have
 	 been instantiated
@@ -333,9 +298,9 @@ struct
        If   GE is a list of EVars to be instantiated
        and  acc is list of already collected results of the success continuation
        then acc' is an extension of acc', containing the results of sc
-	 after trying all comibinations of instantiations of EVars in GE
+	 after trying all combinations of instantiations of EVars in GE
     *)
-    (* Shared contexts in GEVars may recompiled many times *)
+    (* Shared contexts of EVars in GE may recompiled many times *)
 
     fun searchAll' (nil, acc, sc) = sc () :: acc
       | searchAll' (I.EVar (r, G, V, _) :: GE, acc, sc) = 
@@ -349,7 +314,7 @@ struct
      
        Invariant:
        If   G |- s : G'   G' |- V : level
-       and  GE is a list of (G, X) EVars contained in V[s]
+       and  GE is a list of EVars contained in V[s]
 	 where G |- X : VX
        and  sc is a function to be executed after all non-index variables have
 	 been instantiated
