@@ -12,7 +12,7 @@ sml = sml-cm
 # Do not edit the following lines
 # ---------------------------------------------------------------
 
-version = "1.2"
+version = "1.3"
 
 default : twelf-server twelf-emacs
 
