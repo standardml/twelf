@@ -196,14 +196,21 @@ struct
               end
             | f' => ((nil, (t, r)), f'))
 
+   
+    fun stripBar (LS.Cons ((L.ID (_, "|"), r), s')) = (LS.expose s')
+      | stripBar (f as LS.Cons ((L.RPAREN, r), s')) = f
+      | stripBar (LS.Cons ((t, r), s')) =
+          Parsing.error (r, "`|' expected, found token" ^ L.toString t)
+
 
 	   
     fun parseQualIds1 (ls, f as LS.Cons ((t as L.ID (_, id), r0), s')) =
         let 
 	  val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
 	  val r = Paths.join (r0, r1)
+	  val f'' = stripBar f'
 	in
-	  parseQualIds1 ((ids, name) :: ls, f')
+	  parseQualIds1 ((ids, name) :: ls, f'')
 	end
       | parseQualIds1 (ls,  LS.Cons ((L.RPAREN, r), s')) =
          (ls, LS.expose s')

@@ -42,7 +42,7 @@ foralle : nd (forall A) -> {T:i} nd (A T).
 %block l2 : block {p:o}.
 %block l3 : block {a:i}.
 
-%worlds (l1 l2 l3) (nd A).
+%worlds (l1 | l2 | l3) (nd A).
 
 %{
 %worlds ( some {A:o} pi {u:nd A}
@@ -176,7 +176,7 @@ ded_ug : ded ([u:hil A] ug (H1 u)) (mp f2 (ug H1'))
 	   {h:{C:o} ded ([w:hil C] v) (mp k v)}.
 
 %mode ded +H -H'.
-%worlds (l3 l2 l4) (ded H H').
+%worlds (l3 | l2 | l4) (ded H H').
 %terminates H (ded H _).
 % %covers ded +H -H'.
 % %total H (ded H _).
@@ -218,7 +218,7 @@ ndh_foralle : ndhil (foralle D1 T) (mp (f1 T) H1)
 %block l5 : some {A:o} block {u:nd A} {v:hil A}
 	   {h:{C:o} ded ([w:hil C] v) (mp k v)}
 	   {nh:ndhil u v}.
-%worlds (l3 l2 l5) (ndhil D H).
+%worlds (l3 | l2 | l5) (ndhil D H).
 %terminates D (ndhil D _).
 % %covers ndhil +D -H.
 % %total D (ndhil D _).
