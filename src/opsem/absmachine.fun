@@ -35,8 +35,6 @@ struct
     structure I = IntSyn
     structure C = CompSyn
 
-
-
   (* We write
        G |- M : g
      if M is a canonical proof term for goal g which could be found
@@ -53,9 +51,6 @@ struct
      return to indicate backtracking.
   *)
 
-  (* for deterministic execution *)
-  datatype Result = Succeed | Fail
-
   fun cidFromHead (I.Const a) = a
     | cidFromHead (I.Def a) = a
 
@@ -70,16 +65,14 @@ struct
 
   fun shift (IntSyn.Null, s) = s
     | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
-
                               
-  (* solve' ((g, s), dp, sc) = res
+  (* solve' ((g, s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
        G |- s : G'
        G' |- g  goal
        if  G |- M : g[s]
-       then  sc M  is evaluated with return value res
-       else res = Fail
+       then  sc M  is evaluated
      Effects: instantiation of EVars in g, s, and dp
               any effect  sc M  might have
   *)
@@ -99,7 +92,7 @@ struct
 	        (fn M => sc (I.Lam (D', M))))
       end
 
-  (* rSolve ((p,s'), (r,s), dp, sc) = res
+  (* rSolve ((p,s'), (r,s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where G ~ dPool
        G |- s : G'
@@ -107,20 +100,19 @@ struct
        G |- s' : G''
        G'' |- p : H @ S' (mod whnf)
        if G |- S : r[s]
-       then sc S is evaluated with return value res
-       else res = Fail
+       then sc S is evaluated
      Effects: instantiation of EVars in p[s'], r[s], and dp
               any effect  sc S  might have
   *)
   and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =     
       (if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
 	 then sc I.Nil			(* call success continuation *)
-       else Fail)			(* fail *)
+       else ())				(* fail *)
 
     | rSolve (ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), sc) = 
 	(case Assign.assignable (G, ps', (Q, s))
 	   of SOME(cnstr) => aSolve((eqns, s), dp, cnstr, (fn () => sc I.Nil))
-	    | NONE => Fail)
+	    | NONE => ())
 
     | rSolve (ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
@@ -145,40 +137,35 @@ struct
 	rSolve (ps', (r, I.Dot(I.Exp(I.EClo(X', I.Shift(~d))), s)), dp, sc)
    	(* we don't increase the proof term here! *)
       end
-     
 
-  (* aSolve ((ag, s), dp, sc) = res
+  (* aSolve ((ag, s), dp, sc) = ()
      Invariants:
        dp = (G, dPool) where G ~ dPool
        G |- s : G'
        if G |- ag[s] auxgoal
-       then sc () is evaluated with return value res
-       else res = Fail
+       then sc () is evaluated
      Effects: instantiation of EVars in ag[s], dp and sc () *)
 
   and aSolve ((C.Trivial, s), dp, cnstr, sc) = 
-      (if Assign.solveCnstr cnstr
-	 then sc ()
-       else Fail)
+      (if Assign.solveCnstr cnstr then sc () else ())
     | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc) =
       let
 	val G'' = compose' (G', G)
 	val s' = shift (G', s)
       in 
 	if Assign.unifiable (G'', (N, s'), (e1, s'))
-	  then aSolve ((eqns, s), dp, cnstr, sc)
-	else Fail
+	then aSolve ((eqns, s), dp, cnstr, sc)
+	else ()
      end
     
 
-  (* matchatom ((p, s), dp, sc) => res
+  (* matchatom ((p, s), dp, sc) => ()
      Invariants:
        dp = (G, dPool) where G ~ dPool
        G |- s : G'
        G' |- p : type, p = H @ S mod whnf
        if G |- M :: p[s]
-       then sc M is evaluated with return value res
-       else res = Fail
+       then sc M is evaluated
      Effects: instantiation of EVars in p[s] and dp
               any effect  sc M  might have
 
@@ -188,28 +175,26 @@ struct
   and matchAtom (ps' as (I.Root(Ha,S),s), dp as C.DProg (G,dPool), sc) =
       let
         val deterministic = C.detTableCheck (cidFromHead Ha)
-        val resRef : Result ref = ref Fail 
         (* matchSig [c1,...,cn] = ()
 	   try each constant ci in turn for solving atomic goal ps', starting
            with c1.
         *)
-	fun matchSig nil = !resRef	(* return on failure *)
+	fun matchSig nil = ()	(* return unit on failure *)
 	  | matchSig (Hc::sgn') =
 	    let
 	      val C.SClause(r) = C.sProgLookup (cidFromHead Hc)
-	      val res =
+              (* !succeeded iff all the subgoals of the clauses have been satisfied *)
+              val succeeded = ref false : bool ref
+	      val _ =
 	        (* trail to undo EVar instantiations *)
 	        CSManager.trail
                   (fn () =>
                      rSolve (ps', (r, I.id), dp,
-                             (fn S => (sc (I.Root(Hc, S)); Succeed))))
+                             (fn S => (succeeded := true; sc (I.Root(Hc, S))))))
             in
-              if (res = Succeed) 
-		then 	resRef := res
-	      else  ();
-	      if(res = Fail orelse not deterministic)
+	      if(not (!succeeded) orelse not deterministic)
               then matchSig sgn'
-              else res
+              else ()
 	    end
 
         (* matchDProg (dPool, k) = ()
@@ -224,15 +209,17 @@ struct
 	    if eqHead (Ha, Ha')
 	    then
               let
-                val res =
+                (* !succeeded iff all the subgoals of the clauses have been satisfied *)
+                val succeeded = ref false : bool ref
+                val _ =
                   CSManager.trail (* trail to undo EVar instantiations *)
                     (fn () => rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
-                                      (fn S => (sc (I.Root(I.BVar(k), S)); Succeed))))
+                                      fn S => (succeeded := true;
+                                               sc (I.Root(I.BVar(k), S)))))
               in
-                (if(res = Succeed) then resRef := res else ());
-                if(res = Fail orelse not deterministic)
+                if(not (!succeeded) orelse not deterministic)
                 then matchDProg (dPool', k+1)
-                else res
+                else ()
               end
 	    else matchDProg (dPool', k+1)
 	  | matchDProg (I.Decl (dPool', NONE), k) =
@@ -247,12 +234,11 @@ struct
                           | NONE => NONE)
               in
                 case resOpt
-                  of SOME(res) =>
-                       ((if(res = Succeed) then resRef := res else ());
-                        if(res = Fail orelse not deterministic)
+                  of SOME _ =>
+                       (if (not deterministic)
                         then matchConstraint (solve, try+1)
-                        else res)
-                   | NONE => Fail
+                        else ())
+                   | NONE => ()
               end
       in
         case I.constStatus(cidFromHead Ha)
@@ -260,7 +246,7 @@ struct
            | _ => matchDProg (dPool, 1)
       end
   in
-    fun solve (gs, dp, sc) = (solve'(gs, dp, (fn (U) => (sc (U); Succeed))); ())
+    val solve = solve'
   end (* local ... *)
 
 end; (* functor AbsMachine *)
