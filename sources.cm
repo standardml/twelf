@@ -10,5 +10,7 @@ Library
   signature INTSYN
   structure IntSyn
   structure PrintXML
+  signature FLIT
+  structure Flit
 is
   src/frontend/sources.cm

@@ -25,6 +25,8 @@ Library
   signature GLOBAL 
   structure Global
   structure PrintXML
+  signature FLIT
+  structure Flit
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -57,6 +59,7 @@ is
   ../cover/sources.cm
   ../tomega/sources.cm 
   ../prover/sources.cm
+  ../flit/sources.cm
   unknownexn.sig
   unknownexn.fun
   unknownexn-smlnj.sml
