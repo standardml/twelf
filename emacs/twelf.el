@@ -333,7 +333,7 @@ This is used by the error message parser.")
     ("Prover.maxRecurse" . nat))
   "Association between Twelf parameters and their types.")
 
-(defvar twelf-chatter 3
+(defvar twelf-chatter "3"
   "Chatter level in current Twelf server.
 Maintained to present reasonable menus.")
 
@@ -346,7 +346,7 @@ Maintained to present reasonable menus.")
 (defvar twelf-print-implicit "false"
   "Current value of Print.implicit Twelf parameter.")
 
-(defvar twelf-trace-detail 1
+(defvar twelf-trace-detail "1"
   "Trace detail in current Twelf server.")
 
 (defvar twelf-trace-history ()
@@ -1612,11 +1612,11 @@ created if it doesn't exist."
 
 (defun twelf-init-variables ()
   "Initialize variables that track Twelf server state."
-  (setq twelf-chatter 3)
+  (setq twelf-chatter "3")
   (setq twelf-double-check "false")
   (setq twelf-unsafe "false")
   (setq twelf-print-implicit "false")
-  (setq twelf-trace-detail 1)
+  (setq twelf-trace-detail "1")
   (setq twelf-compile-optimize "true"))
 
 (defun twelf-server (&optional program)
@@ -1878,12 +1878,12 @@ Starts a Twelf servers if necessary."
       (setq num (read-from-minibuffer "Number: " (if num (prin1-to-string num))
 				      nil t t))
       (if (not (natp num)) (beep)))
-    num))
+    (int-to-string num)))
 
 (defun twelf-read-bool ()
   "Read a boolean in mini-buffer."
   (completing-read "Boolean: "
-		   '(("true" . true) ("false" . false))
+		   '(("true" . "true") ("false" . "false"))
 		   nil t))
 
 (defun twelf-read-limit ()
@@ -1893,7 +1893,7 @@ Starts a Twelf servers if necessary."
 	input
       (let ((n (string-to-int input)))
 	(if (and (integerp n) (> n 0))
-	    n
+	    (int-to-string n)
 	  (error "Number must be non-negative integer"))))))
 
 (defun twelf-read-strategy ()
@@ -2176,7 +2176,8 @@ optional argument ERROR-BUFFER specifies alternative buffer for error message
 	  (beginning-of-line 1)
 	  (setq tag-string
 		(concat (buffer-substring (point) end-of-id)
-			"\C-?" (current-line-absolute) "," (point) "\n"))
+			"\C-?" (int-to-string (current-line-absolute)) ","
+			(int-to-string (point)) "\n"))
 	  (goto-char end-of-id)
 	  (if (not (twelf-end-of-par))
 	      (let ((error-line (current-line-absolute)))
@@ -2661,9 +2662,9 @@ Mode map
        ["Some" twelf-trace-break t])
       ["show" twelf-trace-show t]
       ("detail"
-       (, (radio "0" '(twelf-set "Trace.detail" 0) '(= twelf-trace-detail 0)))
-       (, (radio "1*" '(twelf-set "Trace.detail" 1) '(= twelf-trace-detail 1)))
-       (, (radio "2" '(twelf-set "Trace.detail" 2) '(= twelf-trace-detail 2)))))))
+       (, (radio "0" '(twelf-set "Trace.detail" "0") '(equal twelf-trace-detail "0")))
+       (, (radio "1*" '(twelf-set "Trace.detail" "1") '(equal twelf-trace-detail "1")))
+       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2")))))))
 
 (defconst twelf-server-state-menu
   '("Server State"
@@ -2699,13 +2700,13 @@ Mode map
       (, (toggle "Display Commands" '(twelf-toggle-server-display-commands)
 		 'twelf-server-display-commands))
       ("chatter"
-       (, (radio "0" '(twelf-set "chatter" 0) '(= twelf-chatter 0)))
-       (, (radio "1" '(twelf-set "chatter" 1) '(= twelf-chatter 1)))
-       (, (radio "2" '(twelf-set "chatter" 2) '(= twelf-chatter 2)))
-       (, (radio "3*" '(twelf-set "chatter" 3) '(= twelf-chatter 3)))
-       (, (radio "4" '(twelf-set "chatter" 4) '(= twelf-chatter 4)))
-       (, (radio "5" '(twelf-set "chatter" 5) '(= twelf-chatter 5)))
-       (, (radio "6" '(twelf-set "chatter" 6) '(= twelf-chatter 6))))
+       (, (radio "0" '(twelf-set "chatter" "0") '(equal twelf-chatter "0")))
+       (, (radio "1" '(twelf-set "chatter" "1") '(equal twelf-chatter "1")))
+       (, (radio "2" '(twelf-set "chatter" "2") '(equal twelf-chatter "2")))
+       (, (radio "3*" '(twelf-set "chatter" "3") '(equal twelf-chatter "3")))
+       (, (radio "4" '(twelf-set "chatter" "4") '(equal twelf-chatter "4")))
+       (, (radio "5" '(twelf-set "chatter" "5") '(equal twelf-chatter "5")))
+       (, (radio "6" '(twelf-set "chatter" "6") '(equal twelf-chatter "6"))))
       (, (toggle "doubleCheck" '(twelf-toggle-double-check)
 		 '(string-equal twelf-double-check "true")))
       (, (toggle "unsafe" '(twelf-toggle-unsafe)
@@ -2718,9 +2719,9 @@ Mode map
        ["indent" (twelf-set-parm "Print.indent") t]
        ["width" (twelf-set-parm "Print.width") t])
       ("Trace.detail"
-       (, (radio "0" '(twelf-set "Trace.detail" 0) '(= twelf-trace-detail 0)))
-       (, (radio "1*" '(twelf-set "Trace.detail" 1) '(= twelf-trace-detail 1)))
-       (, (radio "2" '(twelf-set "Trace.detail" 2) '(= twelf-trace-detail 2))))
+       (, (radio "0" '(twelf-set "Trace.detail" "0") '(equal twelf-trace-detail "0")))
+       (, (radio "1*" '(twelf-set "Trace.detail" "1") '(equal twelf-trace-detail "1")))
+       (, (radio "2" '(twelf-set "Trace.detail" "2") '(equal twelf-trace-detail "2"))))
       ("Compile."
        (, (toggle "optimize" '(twelf-toggle-compile-optimize)
 		  '(string-equal twelf-compile-optimize "true"))))
@@ -2728,13 +2729,6 @@ Mode map
        ["strategy" (twelf-set-parm "Prover.strategy") t]
        ["maxSplit" (twelf-set-parm "Prover.maxSplit") t]
        ["maxRecurse" (twelf-set-parm "Prover.maxRecurse") t])
-      ;;["Trace" nil nil]
-       ;; (, (radio "0" '(twelf-set "trace" 0) '(= twelf-trace 0)))
-       ;; (, (radio "1" '(twelf-set "trace 1) '(= twelf-trace 1)))
-       ;; (, (radio "2" '(twelf-set "trace" 2) '(= twelf-trace 2))))
-      ;;["Untrace" nil nil]
-      ;;(, (disable-form "Untrace" '(twelf-set "trace" 0)
-      ;;	       '(not (= twelf-trace 0))))
       ["Reset Menubar" twelf-reset-menu t]))
   "Menu to change options in Twelf mode.")
 
