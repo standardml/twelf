@@ -17,6 +17,7 @@ struct
 
     datatype Action =
       Instantiate of Exp option ref
+    | InstantiateBlock of Block option ref
     | Add of cnstr list ref
     | Solve of cnstr * Cnstr
 
@@ -25,6 +26,7 @@ struct
 
     datatype FAction = 
       BindExp of Exp option ref * Exp option
+    | BindBlock of Block option ref * Block option
     | BindAdd of cnstr list ref * CAction list
     | FSolve of Cnstr ref * Cnstr * Cnstr (* ? *)
 
@@ -39,6 +41,8 @@ struct
 
     fun copy (Instantiate refU) = 
           (BindExp (refU , !refU))
+      | copy (InstantiateBlock refB) = 
+          (BindBlock (refB , !refB))
       | copy (Add (cnstrs as ref Cnstrs)) = 
           (BindAdd (cnstrs , copyCnstr(!cnstrs)))
       | copy (Solve (cnstr, Cnstr)) =  
@@ -54,6 +58,9 @@ struct
     fun reset (BindExp (refU, U)) =
           (refU := U;
 	   Instantiate refU)
+      | reset (BindBlock (refB, B)) =
+          (refB := B;
+	   InstantiateBlock refB)
       | reset (BindAdd (cnstrs , CActions)) =
 	  (cnstrs := resetCnstr CActions;
 	   Add cnstrs)
@@ -68,6 +75,8 @@ struct
  
     fun undo (Instantiate refU) =
           (refU := NONE)
+      | undo (InstantiateBlock refB) =
+	  (refB := NONE)
       | undo (Add (cnstrs as ref(cnstr :: cnstrL))) =
           (cnstrs := cnstrL)
       | undo (Solve (cnstr, Cnstr)) =
@@ -164,6 +173,13 @@ struct
               refU := SOME(V);
               Trail.log (globalTrail, Instantiate (refU));
               awakenCnstrs := cnstrL @ !awakenCnstrs
+            )
+
+      (* Instantiating LVars  *)
+      fun instantiateLVar (refB, B) =
+            (
+              refB := SOME(B);
+              Trail.log (globalTrail, InstantiateBlock (refB))
             )
 
       fun postponeUnify (G, U1, U2) =
@@ -291,14 +307,23 @@ struct
 	   of Undef => raise Unify "Parameter dependency"
 	    | Idx k' => BVar k')
       | pruneHead (G, H as Const _, ss, rOccur, prunable) = H
-      | pruneHead (G, Proj (LVar (r, l, s), i), ss, rOccur, prunable) = 
-	   Proj (LVar (r, l, pruneSub (G, s, ss, rOccur, prunable)), i)
+      | pruneHead (G, Proj (B as Bidx k, i), ss, rOccur, pruneable) =
+	(* blockSub (B, ss) should always be defined *)
+	(* Fri Dec 28 10:03:12 2001 -fp !!! *)
+	(case blockSub (B, ss)
+	   of Bidx(k') => Proj (Bidx (k'), i))
+      | pruneHead (G, H as Proj (LVar (r, (l, t)), i), ss, rOccur, prunable) = 
+        (* claim: LVar does not need to be pruned since . |- t : Gsome *)
+	(* so we perform only the occurs-check here as for FVars *)
+	(* Sat Dec  8 13:39:41 2001 -fp !!! *)
+	   ( pruneSub (Null, t, id, rOccur, prunable) ;
+	     H )
       | pruneHead (G, H as Skonst _, ss, rOccur, prunable) = H
       | pruneHead (G, H as Def _, ss, rOccur, prunable) = H
       | pruneHead (G, FVar (x, V, s'), ss, rOccur, prunable) =
 	  (* V does not to be pruned, since . |- V : type and s' = ^k *)
 	  (* perform occurs-check for r only *)
-	  (pruneExp (G, (V, id), id, rOccur, prunable);
+	  (pruneExp (G, (V, id), id, rOccur, prunable);  (* why G here? -fp !!! *)
 	   FVar (x, V, comp (s', ss)))
       | pruneHead (G, H as FgnConst _, ss, rOccur, prunable) = H
     (* pruneSub never allows pruning OUTDATED *)
@@ -458,7 +483,7 @@ struct
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
 	       else raise Unify "Constant clash"
 	   | (Proj (b1, i1), Proj (b2, i2)) =>
-	       if (i1 = i2) then unifyBlock (G, (b1, s1), (b2, s2))
+	       if (i1 = i2) then unifyBlock (b1, b2)
 	       else raise Unify "Global parameter clash"
 	   | (Skonst(c1), Skonst(c2)) => 	  
 	       if (c1 = c2) then unifySpine (G, (S1, s1), (S2, s2))
@@ -628,7 +653,8 @@ struct
 
        Remark:  unifySub is used only to unify the instantiation of SOME variables
     *)
-	 
+    (* conjecture: G == Null at all times *)
+    (* Thu Dec  6 21:01:09 2001 -fp *)
     and unifySub (G, Shift (n1), Shift (n2)) = ()
          (* by invariant *)
       | unifySub (G, Shift(n), s2 as Dot _) = 
@@ -647,14 +673,26 @@ struct
 	   | _ => false *)   (* not possible because of invariant? -cs *)
 	  unifySub (G, s1, s2))
 
-    and unifyBlock (G, (LVar (r1, l1, t1), s1), (L as LVar (r2, l2, t2), s2)) = 
+    (* substitutions s1 and s2 were redundant here --- removed *)
+    (* Sat Dec  8 11:47:12 2001 -fp !!! *)
+    and unifyBlock (LVar (r1, (l1, t1)), L as LVar (r2, (l2, t2))) = 
         if l1 <> l2 then
   	  raise Unify "Label clash"
         else
-	  (unifySub (G, comp (t1, s1), comp (t2, s2));
-	   unifySub (G, t1, t2);
-	   r1 := SOME L)
-
+	  if r1 = r2
+	    then ()
+	  else
+	    ( unifySub (Null, t1, t2) ;
+	      instantiateLVar (r1, L) )
+      (* How can the next case arise? *)
+      (* Sat Dec  8 11:49:16 2001 -fp !!! *)
+      | unifyBlock (Bidx (n1), (Bidx (n2))) =
+	 if n1 <> n2
+	   then raise Unify "Block index clash"
+	 else ()
+      (* next two should be impossible *)
+      (* | unifyBlock (LVar _, Bidx _) *)
+      (* | unifyBlock (Bidx _, LVar _) *)
 
     fun unify1W (G, Us1, Us2) =
           (unifyExpW (G, Us1, Us2); awakeCnstr (nextCnstr ()))

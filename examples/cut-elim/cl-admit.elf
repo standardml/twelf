@@ -213,3 +213,11 @@ cal_existsl' :
      <- ({a:i} {n1:neg (B1 a)}
 	   ca' A ([p] D1 p a n1) E (F1 a n1)).
 
+%block lp : some {A:o} block {p:pos A}.
+%block ln : some {A:o} block {n:neg A}.
+%block li : block {a:i}.
+%block lo : block {p:o}.
+%worlds (lp | ln | li | lo) (ca' A D E F).
+%covers ca' +A +D +E *F.
+%terminates {A [D E]} (ca' A D E _).
+%total {A [D E]} (ca' A D E _).

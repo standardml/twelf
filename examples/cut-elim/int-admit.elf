@@ -6,7 +6,7 @@ ca : {A:o} conc A -> (hyp A -> conc C) -> conc C -> type.
 
 %% Axiom Conversions
 
-% ca_axiom_l : ca A (axiom H) E (E H).
+ca_axiom_l : ca A (axiom H) E (E H).
 
 ca_axiom_r : ca A D ([h:hyp A] axiom h) D.
 
@@ -100,7 +100,8 @@ cal_existsl : ca A (existsl D1 H) E (existsl D1' H)
 
 %% Right Commutative Conversions
 
-% car_axiom : ca A D ([h:hyp A] axiom H1) (axiom H1).
+% was commented out
+car_axiom : ca A D ([h:hyp A] axiom H1) (axiom H1).
 
 car_andr : ca A D ([h:hyp A] andr (E1 h) (E2 h)) (andr E1' E2')
 	    <- ca A D E1 E1'
@@ -148,9 +149,14 @@ car_foralll: ca A D ([h:hyp A] foralll T (E1 h) H) (foralll T E1' H)
 car_existsr : ca A D ([h:hyp A] existsr T (E1 h)) (existsr T E1')
 	       <- ca A D E1 E1'.
 
-% car_existsl : ca A D ([h:hyp A] existsl (E1 h) H) (existsl E1' H)
-%	       <- ({a:i} {h1:hyp (B1 a)}
-%		     ca A D ([h:hyp A] E1 h a h1) (E1' a h1)).
+car_existsl : ca A D ([h:hyp A] existsl (E1 h) H) (existsl E1' H)
+	       <- ({a:i} {h1:hyp (B1 a)}
+		     ca A D ([h:hyp A] E1 h a h1) (E1' a h1)).
 
-% world  (some {A:o} pi {h : hyp A} | pi {a:i} | pi {p:o}) (ca _ _ _).
-%covers ca +A +D +E *P.
+%block l1 : some {A:o} block {h:hyp A}.
+%block l2 : block {a:i}.
+%block l3 : block {p:o}.
+%worlds (l1 | l2 | l3) (ca A D E F).
+%covers ca +A +D +E -F.
+%terminates {A [D E]} (ca A D E _).
+%total {A [D E]} (ca A D E _).

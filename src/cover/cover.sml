@@ -7,9 +7,11 @@ structure Cover =
 	 structure Constraints = Constraints
 	 structure ModeSyn' = ModeSyn
 	 structure Index = Index
+         structure WorldSyn = WorldSyn
          structure Names = Names
 	 structure Paths = Paths
 	 structure Print = Print
+         structure TypeCheck = TypeCheck
 	 structure CSManager = CSManager);
 
 structure Total =

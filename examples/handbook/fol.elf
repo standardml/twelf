@@ -38,18 +38,11 @@ note    : nd (not A) -> {C:o} nd A -> nd C.
 foralli : ({a:i} nd (A a)) -> nd (forall A).
 foralle : nd (forall A) -> {T:i} nd (A T).
 
-%block l1 : some {A:o} block {u:nd A}.
-%block l2 : block {p:o}.
-%block l3 : block {a:i}.
+%block lnd : some {A:o} block {u:nd A}.
+%block lo : block {p:o}.
+%block li : block {a:i}.
 
-%worlds (l1 | l2 | l3) (nd A).
-
-%{
-%worlds ( some {A:o} pi {u:nd A}
-        | pi {p:o}
-        | pi {a:i} )
-(nd A).
-}%
+%worlds (lnd | lo | li) (nd A).
 
 % Example
 
@@ -73,7 +66,7 @@ f2 : hil ((forall [x:i] (B imp A x)) imp (B imp forall [x:i] A x)).
 mp : hil (A imp B) -> hil A -> hil B.
 ug : ({a:i} hil (A a)) -> hil (forall [x:i] A x).
 
-%worlds (l3) (hil A).
+%worlds (li) (hil A).
 
 % Local reductions
 
@@ -131,10 +124,10 @@ hnd_ug : hilnd (ug H1) (foralli D1)
 	    <- ({a:i} hilnd (H1 a) (D1 a)).
 
 %mode hilnd +H -D.
-%worlds (l3) (hilnd H D).
+%worlds (li) (hilnd H D).
 %terminates H (hilnd H _).
 %covers hilnd +H -D.
-% %total H (hilnd H _)
+%total H (hilnd H _).
 
 %solve id' : 
 hilnd (mp (mp s k) k) (D:nd (A imp A)).
@@ -172,14 +165,14 @@ ded_mp : ded ([u:hil A] mp (H1 u) (H2 u)) (mp (mp s H1') H2')
 ded_ug : ded ([u:hil A] ug (H1 u)) (mp f2 (ug H1'))
 	  <- ({a:i} ded ([u:hil A] H1 u a) (H1' a)).
 
-%block l4 : some {A:o} block {u:nd A} {v:hil A}
+%block lded : some {A:o} block {u:nd A} {v:hil A}
 	   {h:{C:o} ded ([w:hil C] v) (mp k v)}.
 
 %mode ded +H -H'.
-%worlds (l3 | l2 | l4) (ded H H').
+%worlds (li | lo | lded) (ded H H').
 %terminates H (ded H _).
-% %covers ded +H -H'.
-% %total H (ded H _).
+%covers ded +H -H'.
+%total H (ded H _).
 
 %%% Mapping natural deductions to Hilbert derivations.
 
@@ -215,10 +208,10 @@ ndh_foralle : ndhil (foralle D1 T) (mp (f1 T) H1)
 	       <- ndhil D1 H1.
 
 %mode ndhil +D -H.
-%block l5 : some {A:o} block {u:nd A} {v:hil A}
+%block lndhil : some {A:o} block {u:nd A} {v:hil A}
 	   {h:{C:o} ded ([w:hil C] v) (mp k v)}
 	   {nh:ndhil u v}.
-%worlds (l3 | l2 | l5) (ndhil D H).
+%worlds (li | lo | lndhil) (ndhil D H).
 %terminates D (ndhil D _).
-% %covers ndhil +D -H.
-% %total D (ndhil D _).
+%covers ndhil +D -H.
+%total D (ndhil D _).

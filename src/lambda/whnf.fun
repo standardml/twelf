@@ -232,13 +232,21 @@ struct
 	   of Idx (k) => (Root (BVar (k), SClo (S, s)), id)
 	    | Exp (U) => whnfRedex (whnf (U, id), (S, s)))
       (* Undef should be impossible *)
-      | whnfRoot ((Proj (Bidx v, i), S), s) = 
-	(case bvarSub (v, s)
-	   of Idx (w) => (Root (Proj (Bidx w, i), SClo (S, s)), id))
-      | whnfRoot ((Proj (LVar (ref NONE, l, t), i), S), s) =
-	 (Root (Proj (LVar (ref NONE, l, comp (t, s)), i), SClo (S, s)), id)
-      | whnfRoot ((Proj (LVar (ref (SOME L), l, t), i), S), s) =
-	 whnfRoot ((Proj (L, i), S), s)
+      | whnfRoot ((Proj (B as Bidx _, i), S), s) = 
+	 (* could blockSub (B, s) return instantiated LVar ? *)
+	 (* Sat Dec  8 13:43:17 2001 -fp !!! *)
+	 (* yes Thu Dec 13 21:48:10 2001 -fp !!! *)
+	 (* was: (Root (Proj (blockSub (B, s), i), SClo (S, s)), id) *)
+	(case blockSub (B, s)
+	   of B' as Bidx (k) => (Root (Proj (B', i), SClo (S, s)), id)
+            | B' as LVar _ => whnfRoot ((Proj (B', i), SClo (S, s)), id))
+      | whnfRoot ((Proj (LVar (ref (SOME L), (l, t)), i), S), s) =
+	 whnfRoot ((Proj (L, i), S), s) 
+      | whnfRoot ((Proj (L as LVar (r, (l, t)), i), S), s) = (* r = ref NONE *)
+	 (* was: (Root (Proj (LVar (r, (l, comp (t, s))), i), SClo (S, s)), id) *)
+         (* do not compose with t due to globality invariant *)
+	 (* Thu Dec  6 20:34:30 2001 -fp !!! *)
+	 (Root (Proj (L, i), SClo (S, s)), id)
       (* Undef and Exp should be impossible by definition of substitution -cs *)
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
@@ -458,9 +466,12 @@ struct
         let 
 	  val t' = comp (t, invShift)
 	in
+	  (* G |- D dec *)
+          (* G' |- t' : G *)
+	  (* G' |- D[t'] dec *)
           Decl (strengthen (t', G), decSub (D, t'))
 	end
-      | strengthen (Dot (Undef, t), Decl (G, d)) = 
+      | strengthen (Dot (Undef, t), Decl (G, D)) = 
           strengthen (t, G)
       | strengthen (Shift n, G) = 
 	  strengthen (Dot (Idx (n+1), Shift (n+1)), G)

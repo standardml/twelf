@@ -52,19 +52,23 @@ struct
 
   type dlist = IntSyn.Dec list
 
+  (*
   datatype LabelDec =			(* ContextBody                 *)
     LabelDec of string * dlist * dlist	(* B ::= l : SOME L1. BLOCK L2 *)
 
   datatype World =			(* Worlds                      *)
     Closed				(* W ::= .                     *)
   | Schema of World * LabelDec          (*     | W, B                  *)
+  *)
+
+  datatype Worlds = Worlds of IntSyn.cid list
 
   local
    
-    val worldsTable : World Table.Table = Table.new (0)
+    val worldsTable : Worlds Table.Table = Table.new (0)
     fun reset () = Table.clear worldsTable
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
-    fun getWorld (b) =
+    fun getWorlds (b) =
         (case Table.lookup worldsTable b
 	   of NONE => raise Error ("Family " ^ Names.qidToString (Names.constQid b) ^ " has no worlds declaration")
             | SOME (Wb) => Wb)
@@ -88,7 +92,7 @@ struct
        If R = r* then r = 1 or r does not accept the empty world
     *)
     datatype Reg			(* Regular world expressions  *)
-      = Block of LabelDec		(* R ::= LD                   *)
+      = Block of I.dctx * dlist		(* R ::= LD                   *)
       | Seq of dlist * I.Sub		(*     | (D1,...,Dn)[s]       *)
       | Star of Reg			(*     | R*                   *)
       | Plus of Reg * Reg		(*     | R1 + R2              *)
@@ -96,21 +100,21 @@ struct
 
     exception Success			(* signals worldcheck success *)
 
-    (* createEVarSub G L = s
+    (* createEVarSub G G' = s
      
        Invariant:
        If   G is a context
-       and  L is a context
-       then G |- s : L
+       and  G' is a context
+       then G |- s : G'
     *)
-    fun createEVarSub (G, nil) = I.Shift (I.ctxLength G)
-      | createEVarSub (G, (I.Dec (_, V) :: L)) = 
+    fun createEVarSub (G, I.Null) = I.Shift (I.ctxLength G)
+      | createEVarSub (G, I.Decl(G', D as I.Dec (_, V))) =
         let
-	  val s = createEVarSub (G, L)
+	  val s = createEVarSub (G, G')
 	  val V' = I.EClo (V, s)
 	  val X = I.newEVar (G, V')
 	in
-          I.Dot (I.Exp X, s)
+	  I.Dot (I.Exp X, s)
 	end
 
     (* from cover.fun *)
@@ -208,27 +212,27 @@ struct
       fun clause (c) =
           print ("World checking clause " ^ Names.qidToString (Names.constQid c) ^ "\n")
       fun constraintsRemain () =
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Constraints remain after matching hypotheses against context block\n")
 	  else ()
       fun matchBlock (GL, R) =		(* R = (D1,...,Dn)[t] *)
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Matching:\n" ^ wGoalToString (GL, R) ^ "\n")
 	  else ()
       fun unmatched GL =
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Unmatched hypotheses:\n" ^ hypsToString GL ^ "\n")
 	  else ()
       fun missing (G, R) =		(* R = (D1,...,Dn)[t] *)
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Missing hypotheses:\n" ^ worldToString (G, R) ^ "\n")
 	  else ()
       fun mismatch (G, Vs1, Vs2) =
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Mismatch:\n" ^ mismatchToString (G, Vs1, Vs2) ^ "\n")
 	  else ()
       fun success () =
-	  if !Global.chatter > 4
+	  if !Global.chatter > 7
 	    then print ("Success\n")
 	  else ()
     end
@@ -243,20 +247,15 @@ struct
     fun subGoalToDList (I.Pi ((D, _), V)) = D::subGoalToDList(V)
       | subGoalToDList (I.Root _) = nil
 
-    (* worldToReg W = R
-  
-       Invariant:
+    (* worldsToReg (Worlds [c1,...,cn]) = R
        W = R, except that R is a regular expression 
        with non-empty contextblocks as leaves
     *)
-    fun worldToReg W = 
-        let
-	  fun worldToReg' (Closed) = One
-	    | worldToReg' (Schema (Closed, L)) = Block L
-	    | worldToReg' (Schema (W, L)) = Plus (worldToReg' W, Block L)
-	in
-	  Star (worldToReg' W)
-	end
+    fun worldsToReg (Worlds nil) = One
+      | worldsToReg (Worlds cids) = Star (worldsToReg' cids)
+    and worldsToReg' (cid::nil) = Block (I.constBlock cid)
+      | worldsToReg' (cid::cids) =
+          Plus (Block (I.constBlock cid), worldsToReg' cids)
 
     (* init b (G, L) raises Success iff V is empty
        or none of the remaining declarations are relevant to b
@@ -280,7 +279,7 @@ struct
        trails at choice points to undo EVar instantiations during matching
     *)
     fun accR (GL, One, b, k) = k GL
-      | accR (GL as (G, L), Block (LabelDec (_, someDecs, piDecs)), b, k) =
+      | accR (GL as (G, L), Block (someDecs, piDecs), b, k) =
         let
 	  val t = createEVarSub (G, someDecs) (* G |- t : someDecs *)
 	  val _ = Trace.matchBlock (GL, Seq (piDecs, t))
@@ -317,12 +316,12 @@ struct
 
        Invariants: Rb = reg (worlds (b))
     *)
-    fun checkSubsumedBlock (G, nil, L', Rb, b) =
+    fun checkSubsumedBlock (G, I.Null, L', Rb, b) =
         (( accR ((G, L'), Rb, b, init b) ;
 	  raise Error ("World subsumption failure for family " ^ Names.qidToString (Names.constQid b)) )
 	 handle Success => ())
-      | checkSubsumedBlock (G, D::L, L', Rb, b) =
-	  checkSubsumedBlock (decEName (G, D), L, L', Rb, b)
+      | checkSubsumedBlock (G, I.Decl(G',D), L', Rb, b) =
+	  checkSubsumedBlock (decEName (G, D), G', L', Rb, b)
 
     (* checkSubsumedWorlds (Wa, Rb, b) = ()
        iff Wa is subsumed by Rb
@@ -330,10 +329,14 @@ struct
 
        Invariants: Rb = reg (worlds (b))
     *)
-    fun checkSubsumedWorlds (Closed, Rb, b) = ()
-      | checkSubsumedWorlds (Schema (Wa', LabelDec (_, someDecs, piDecs)), Rb, b) =
-        ( checkSubsumedBlock (I.Null, someDecs, piDecs, Rb, b);
-          checkSubsumedWorlds (Wa', Rb, b) )
+    fun checkSubsumedWorlds (nil, Rb, b) = ()
+      | checkSubsumedWorlds (cid::cids, Rb, b) =
+        let
+	  val (someDecs, piDecs) = I.constBlock cid
+	in
+	  checkSubsumedBlock (I.Null, someDecs, piDecs, Rb, b);
+	  checkSubsumedWorlds (cids, Rb, b)
+	end
 
     (* checkBlocks W (G, V, occ) = ()
        iff V = {{G'}} a @ S and G' satisfies worlds W
@@ -341,14 +344,14 @@ struct
   
        Invariants: G |- V : type, V nf
     *)
-    fun checkBlocks Wa (G, V, occ) = 
+    fun checkBlocks (Worlds cids) (G, V, occ) = 
         let
 	  val b = I.targetFam V
-	  val Wb = getWorld b handle Error (msg) => raise Error' (occ, msg)
-	  val Rb = worldToReg Wb
+	  val Wb = getWorlds b handle Error (msg) => raise Error' (occ, msg)
+	  val Rb = worldsToReg Wb
 	  val _ = if subsumedLookup b
 		    then ()
-		  else ( checkSubsumedWorlds (Wa, Rb, b) ;
+		  else ( checkSubsumedWorlds (cids, Rb, b) ;
 			 subsumedInsert (b) )
 		       handle Error (msg) => raise Error' (occ, msg)
 	  val L = subGoalToDList V
@@ -371,7 +374,7 @@ struct
      *)
      fun checkClause (G, I.Root (a, S), W, occ) = ()
        | checkClause (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2), W, occ) = 
-	 (checkClause (I.Decl (G, D), V2, W, P.body occ);
+	 (checkClause (decEName (G, D), V2, W, P.body occ);
 	  checkGoal (G, V1, W, P.label occ))
        | checkClause (G, I.Pi ((D as I.Dec (_, V1), I.No), V2), W, occ) = 
 	 (checkBlocks W (G, V1, P.label occ);
@@ -426,36 +429,43 @@ struct
        soundness.
     *)
 
-    (* checkSubordBlock (G, L, L') = ()
+    (* checkSubordBlock (G, G', L') = ()
        Effect: raises Error(msg) if subordination is not respected
-               in context block SOME L. PI L'
-       Invariants: G |- SOME L. PI L' block
+               in context block SOME G'. PI L'
+       Invariants: G |- SOME G'. PI L' block
     *)
-    fun checkSubordBlock (G, D::L, L') =
-          checkSubordBlock (I.Decl (G, D), L, L')
-      | checkSubordBlock (G, nil, (D as I.Dec(_,V))::L') =
+    fun checkSubordBlock (G, I.Decl(G', D), L') =
+          checkSubordBlock (I.Decl (G, D), G', L')
+      | checkSubordBlock (G, I.Null, (D as I.Dec(_,V))::L') =
 	  ( Subordinate.respectsN (G, V); (* is V nf?  Assume here: yes! *)
-	    checkSubordBlock (I.Decl (G, D), nil, L') )
-      | checkSubordBlock (G, nil, nil) = ()
+	    checkSubordBlock (I.Decl (G, D), I.Null, L') )
+      | checkSubordBlock (G, I.Null, nil) = ()
 
     (* checkSubordWorlds (W) = ()
        Effect: raises Error(msg) if subordination is not respected
                in some context block in W
     *)
-    fun checkSubordWorlds (Closed) = ()
-      | checkSubordWorlds (Schema (W, LabelDec (_, someDecs, piDecs))) =
-          ( checkSubordWorlds W ;
-	    checkSubordBlock (I.Null, someDecs, piDecs) )
+    fun checkSubordWorlds (nil) = ()
+      | checkSubordWorlds (cid::cids) =
+        let
+	  val (someDecs, piDecs) = I.constBlock cid
+	in
+          checkSubordBlock (I.Null, someDecs, piDecs) ;
+	  checkSubordWorlds cids
+	end
 
     (* install (a, W) = ()
        install worlds declaration W for family a
 
        Effect: raises Error if W does not respect subordination
     *)
-    fun install (a, W) =
-        ( checkSubordWorlds W
+    fun install (a, W as Worlds(cids)) =
+        ( checkSubordWorlds cids
 	    handle Subordinate.Error (msg) => raise Error (msg) ;
 	  insert (a, W) )
+
+    (* lookup (a) = SOME W if worlds declared for a, NONE otherwise *)
+    fun lookup a = getWorlds a
 
     (* ctxToList G = L
 
@@ -474,6 +484,7 @@ struct
   in
     val reset = reset
     val install = install
+    val lookup = lookup
     val worldcheck = worldcheck
     val ctxToList = ctxToList
   end

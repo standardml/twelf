@@ -34,6 +34,40 @@ Syntax:
 
 where tdecl is a termination declaration.
 
+Mon Dec 17 17:37:23 2001
+Version 4 --- worlds, subordination, and finitary splitting
+Tagged as input-cover on branch coverage
+
+- added worlds and variables blocks to coverage checking
+- added subordination when generating EVar's in order
+  to prevent spurious dependencies
+- generalized checking for impossible cases
+  by checking for variables with finitely many
+  instances without creating recursion
+- uses subordination in order to eliminate some
+  apparent recusion fo finitary splitting.
+
+Instruction for branch on coverage:
+
+     % tag currently checked out version
+
+     cvs tag -b coverage     % tag current working version
+     cvs update -r coverage  % switch current working version to branch
+
+     % checking out a branch (alternative to cvs update -r coverage)
+     cvs checkout -r coverage twelf
+
+     % merging changes from a branch back into the main development
+     cvs checkout twelf      % get fresh copy of main branch
+     cd twelf                
+     cvs update -j coverage  % join branch coverage
+     cvs commit -m "included branch 'coverage'"
+			     % commit changes to main branch
+----------------------------------------------------------------------
+Twelf.chatter := 1;
+Twelf.make "examples/church-rosser/sources.cfg";
+Twelf.make "examples/cut-elim/sources.cfg";
+Twelf.make "examples/handbook/sources.cfg";
 ----------------------------------------------------------------------
 From: "Carsten Schuermann" <carsten@cs.yale.edu>
 To: "Frank Pfenning" <fp@cs.cmu.edu>
@@ -109,3 +143,160 @@ However, in meta-abstract, I also just do the left-to-right traversal.  It
 worked there, so it should be fine.
 
 -- Carsten
+----------------------------------------------------------------------
+Sun Dec 16 18:12:17 2001 -f
+
+Hi Carsten,
+
+  here are some notes on the algorithm for output coverage.
+I am using as an example:
+
+tp : type.				%name tp A.
+arrow : tp -> tp -> tp.
+
+exp : tp -> type.			%name exp E x.
+lam : (exp A -> exp B) -> exp (arrow A B).
+app : exp (arrow A B) -> exp A -> exp B.
+
+cp : exp A -> exp A -> type.		%name cp D u.
+
+cp_lam : cp (lam E) (lam F)
+	  <- ({x:exp A} {y:exp A} cp x y -> cp (E x) (F y)).
+	     
+cp_app : cp (app E1 E2) (app F1 F2)
+	  <- cp E1 F1
+	  <- cp E2 F2.
+
+
+When examining a subgoal, we are in a context with two parts: the
+existential and the universal part.  We represent the universal
+part via explicit abstraction.  From cp_lam:
+
+{A:tp} {B:tp} {E:exp A -> exp B} {F:exp A -> exp B}
+|- {x:exp A} {y:exp A} {u:cp x y} cp (E x) (F y)
+
+Lets call this the coverage clause.  Since we don't factor different
+clauses for output coverage, the coverage clauses is unique.
+
+We next set up the initial coverage goal.  For this coverage goal the
+output arguments of the eventual atomic subgoal are maximally general
+(irrelevant arguments are replaced by underscore here for simplicity).
+Splittable variables are named V* and local parameters remain in the
+coverage goal.
+
+{A*:tp} {B*:tp} {G*:exp A* -> exp A* -> exp B*}
+?- {x:exp A*} {y:exp A*} {u:cp x y} cp _ (G* x y)
+
+Now we perform matching as for input coverage: we check if
+the single coverage clause above covers the single coverage
+goal below.
+
+We instantiate A, B, E, F with new logical variables _A, _B, _E, _F that
+can depend on A*, B*, G* (modulo subordination) and match
+
+{A*:tp} {B*:tp} {G*:exp A* -> exp A* -> exp B*}
+?- {x:exp A} {y:exp A} {u:cp x y} cp (E x) (F y)
+   = {x:exp A*} {y:exp A*} {u:cp x y} cp _ (G* x y) : type
+
+In this case this fails because of dependencies, where G* is
+not suggested as a splitting candidate.
+
+If we modify our example slightly (e.g. cp (E x) (app (F1 y) (F2 y))
+in the subgoal), the G* would become a candidate.  In that case
+we split the goal
+
+{A*:tp} {B*:tp} {G*:exp A* -> exp A* -> exp B*}
+?- {x:exp A*} {y:exp A*} {u:cp x y} cp _ (G* x y)
+
+by instantiating A*, B*, G* with new EVars (but not x, y, u),
+enumerating all possibilities for G*, then abstracting to
+obtain, for example (among others):
+
+{A*:tp} {B1*:tp} {B2*:tp}
+{G1*:exp A* -> exp A* -> exp (arrow B1* B2*)}
+{G2*:exp A* -> exp A* -> exp B1*}
+?- {x:exp A*} {y:exp A*} {u:cp x y} cp _ (app (G1* x y) (G2* x y))
+
+Then we proceed as before, this time without candidates.
+
+The main generalization to the current situation is that coverage clauses
+and coverage goals are no longer atomic.
+
+I am not sure if this is sound and terminating for the second-order
+case, but it seems at least plausible.  I haven't consider the case
+where local assumptions again have subgoals, because some issues of
+quantifier alternation may come into play.
+
+One possibility would be to rule that out for the moment, giving
+an error message for orders >= 3, and just implement what I sketched
+above.
+
+What do you think?  Do you believe the development above?
+Do you have any ideas for orders >= 3?  I'll wait for your input
+before proceeding with the implementation.
+
+----------------------------------------------------------------------
+Output coverage for orders >= 3
+Sun Dec 23 11:04:20 2001 fp
+
+Example (from fp-examples/coverage/third.elf)
+
+   tp : type.				%name tp A.
+   arrow : tp -> tp -> tp.
+
+   exp : tp -> type.			%name exp E x.
+   lam : (exp A -> exp B) -> exp (arrow A B).
+   app : exp (arrow A B) -> exp A -> exp B.
+   callcc : (({C:tp} exp A -> exp C) -> exp A) -> exp A.
+
+   %block exp_var : some {A:tp} block {x:exp A}.
+   %block exp_cont : some {A:tp} block {k:{C:tp} exp A -> exp C}.
+   %worlds (exp_var | exp_cont) (exp _).
+
+   cp : exp A -> exp A -> type.		%name cp D u.
+
+   cp_lam : cp (lam E) (lam F)
+	     <- ({x:exp A} cp x x -> cp (E x) (F x)).
+
+   cp_app : cp (app E1 E2) (app F1 F2)
+	     <- cp E1 F1
+	     <- cp E2 F2.
+
+   cp_callcc : cp (callcc E) (callcc F)
+		<- ({k:{C:tp} exp A -> exp C}
+		      ({C:tp} {H:exp A} {H':exp A} cp (k C H) (k C H') <- cp H H')
+		      -> cp (E k) (F k)).
+
+   %mode cp +E -F.
+   %block cp_var : some {A:tp} block {x:exp A} {u:cp x x}.
+   %block cp_cont : some {A:tp} block {k:{C:tp} exp A -> exp C}
+		    {w:{C:tp} {H:exp A} {H':exp A} cp (k C H) (k C H') <- cp H H'}.
+   %worlds (cp_var | cp_cont) (cp E F).
+   %covers cp +E -F.
+   %total E (cp E _).
+
+First-layer output coverage of cp_callcc:
+
+  Output coverage: cp_callcc
+  ?- {A1:tp} {E1:({C:tp} exp A1 -> exp C) -> exp A1}
+	{E2:({C:tp} exp A1 -> exp C) -> exp A1}
+	|- {k:{C:tp} exp A1 -> exp C}
+	      ({C:tp} {H:exp A1} {H':exp A1} cp H H' -> cp (k C H) (k C H'))
+		 -> cp (E1 k) (E2 k).
+                              |----|
+  Covered
+
+Second-layer output coverage would involve:
+
+  ?- {A1:tp} {E1:({C:tp} exp A1 -> exp C) -> exp A1}
+	{E2:({C:tp} exp A1 -> exp C) -> exp A1}
+	|- {k:{C:tp} exp A1 -> exp C}
+	      ({C:tp} {H:exp A1} {H':exp A1} cp H H').
+                                                 |-|
+and also (?)
+
+  ?- {A1:tp} {E1:({C:tp} exp A1 -> exp C) -> exp A1}
+	{E2:({C:tp} exp A1 -> exp C) -> exp A1}
+	|- {C:tp} exp A1.
+
+except exp A1 is never a subgoal and has no mode.

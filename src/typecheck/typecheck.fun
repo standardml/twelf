@@ -6,6 +6,8 @@ functor TypeCheck (structure IntSyn' : INTSYN
 		     sharing Conv.IntSyn = IntSyn'
 		   structure Whnf : WHNF
 		     sharing Whnf.IntSyn = IntSyn' 
+                   structure Names : NAMES
+		     sharing Names.IntSyn = IntSyn'
 		   structure Print : PRINT
 		     sharing Print.IntSyn = IntSyn')
   : TYPECHECK =
@@ -16,6 +18,20 @@ struct
   local 
     structure I = IntSyn
 
+    (* for debugging purposes *)
+    fun subToString (G, I.Dot (I.Idx (n), s)) =
+          Int.toString (n) ^ "." ^ subToString (G, s)
+      | subToString (G, I.Dot (I.Exp (U), s)) =
+	  "(" ^ Print.expToString (G, U) ^ ")." ^ subToString (G, s)
+      | subToString (G, I.Dot (I.Block (L as I.LVar _), s)) =
+	  LVarToString (G, L) ^ "." ^ subToString (G, s)
+      | subToString (G, I.Shift(n)) = "^" ^ Int.toString (n)
+
+    and LVarToString (G, I.LVar (ref (SOME B), _)) =
+          LVarToString (G, B)
+      | LVarToString (G, I.LVar (ref NONE, (cid, s))) =
+	  "#" ^ I.conDecName (I.sgnLookup cid) ^ "["
+	  ^ subToString (G, s) ^ "]"
 	  
     (* some well-formedness conditions are assumed for input expressions *)
     (* e.g. don't contain "Kind", Evar's are consistently instantiated, ... *)
@@ -115,12 +131,12 @@ struct
 	in
 	  V
 	end
-      | inferCon (G, I.Proj (v, i)) =
-	let 
-	  val I.Dec (_, V) = I.blockDec (G, v, i)   
+      | inferCon (G, I.Proj (B,  i)) = 
+        let 
+	  val I.Dec (_, V) = I.blockDec (G, B, i) 
 	in
 	  V
-	end 
+	end
       | inferCon (G, I.Const(c)) = I.constType (c)
       | inferCon (G, I.Def(d))  = I.constType (d)
       | inferCon (G, I.Skonst(c)) = I.constType (c) (* this is just a hack. --cs 
@@ -129,31 +145,12 @@ struct
       (* no case for FVar *)
       | inferCon (G, I.FgnConst(cs, conDec)) = I.conDecType(conDec)
 
-    (* checkDec (G, (x:V, s)) = B
 
-       Invariant: 
-       If G |- s : G1 
-       then B iff G |- V[s] : type
-    *)
-    and checkDec (G, (I.Dec (_, V) ,s)) =
-          checkExp (G, (V, s), (I.Uni (I.Type), I.id))
-
-    and checkCtx (I.Null) =  ()
-      | checkCtx (I.Decl (G, D)) = 
-          (checkCtx G; checkDec (G, (D, I.id)))
-
-
-    fun check (U, V) = checkExp (I.Null, (U, I.id), (V, I.id))
-    fun infer U = I.EClo (inferExp (I.Null, (U, I.id)))
-    fun infer' (G, U) = I.EClo (inferExp (G, (U, I.id)))
-
-
-
-    fun typeCheck (G, (U, V)) = 
+    and typeCheck (G, (U, V)) = 
           (checkCtx G; checkExp (G, (U, I.id), (V, I.id)))
 
 
-    (* checkSub (Psi1, s, Psi2) = ()
+    (* checkSub (G1, s, G2) = ()
 
        Invariant:
        The function terminates 
@@ -166,30 +163,77 @@ struct
       | checkSub (G', I.Shift k, G) =
 	  checkSub (G', I.Dot (I.Idx (k+1), I.Shift (k+1)), G)
       | checkSub (G', I.Dot (I.Idx k, s'), I.Decl (G, (I.Dec (_, V2)))) =
+        (* changed order of subgoals here Sun Dec  2 12:14:27 2001 -fp *)
 	let 
+	  val _ = checkSub (G', s', G) 
 	  val I.Dec (_, V1) = I.ctxDec (G', k)
 	in
-	  if Conv.conv ((V1, I.id), (V2, s')) then checkSub (G', s', G)
+	  if Conv.conv ((V1, I.id), (V2, s')) then ()
 	  else raise Error ("Substitution not well-typed \n  found: " ^
 			    Print.expToString (G', V1) ^ "\n  expected: " ^
 			    Print.expToString (G', I.EClo (V2, s')))
 	end
       | checkSub (G', I.Dot (I.Exp (U), s'), I.Decl (G, (I.Dec (_, V2)))) =
+	(* changed order of subgoals here Sun Dec  2 12:15:53 2001 -fp *)
 	let 
-	  val _ = typeCheck (G', (U, I.EClo (V2, s'))) 
+	  val _ = checkSub (G', s', G)
+	  val _ = typeCheck (G', (U, I.EClo (V2, s')))
 	in
-	  checkSub (G', s', G)
+	  ()
 	end
-      | checkSub (G', I.Dot (I.Idx (w), t), I.Decl (G, (I.BDec (l, s)))) =
+      | checkSub (G', I.Dot (I.Idx w, t), I.Decl (G, (I.BDec (_, (l, s))))) =
+	(* Front of the substitution cannot be a I.Bidx or LVar *)
+	(* changed order of subgoals here Sun Dec  2 12:15:53 2001 -fp *)
 	let
-	  val I.BDec (l', s') = I.ctxLookup (G', w)
+	  val _ = checkSub (G', t, G)
+	  val I.BDec (_, (l', s')) = I.ctxDec (G', w)
+	  (* G' |- s' : GSOME *)
+	  (* G  |- s  : GSOME *)
+	  (* G' |- t  : G       (verified below) *) 
 	in
 	  if (l <> l') 
 	    then raise Error "Incompatible block labels found"
-	  else if Conv.convSub (I.comp (s, t), s')
-		 then raise Error "Incompatible SOME substitutions found" 
-	       else checkSub (G', t, G)
+	  else 
+	    if Conv.convSub (I.comp (s, t), s')
+	      then ()
+	    else raise Error "Substitution in block declaration not well-typed"
 	end
+      | checkSub (G', s as I.Dot (_, _), I.Null) =
+	raise Error ("Long substitution" ^ "\n" ^ subToString (G', s)) 
+      (*
+      | checkSub (G', I.Dot (I.Block (I.Bidx _), t), G) =
+	raise Error "Unexpected block index in substitution"
+      | checkSub (G', I.Dot (I.Block (I.LVar _), t), G) =
+	raise Error "Unexpected LVar in substitution after abstraction"
+      *)
+
+    (* checkDec (G, (x:V, s)) = B
+
+       Invariant: 
+       If G |- s : G1 
+       then B iff G |- V[s] : type
+    *)
+    and checkDec (G, (I.Dec (_, V) ,s)) =
+          checkExp (G, (V, s), (I.Uni (I.Type), I.id))
+      | checkDec (G, (I.BDec (_, (c, t)), s)) =
+	  let 
+	    (* G1 |- t : GSOME *)
+	    (* G  |- s : G1 *)
+	    val (Gsome, piDecs) = I.constBlock c
+	  in
+	    checkSub (G, I.comp (t, s), Gsome)
+	  end
+
+    and checkCtx (I.Null) =  ()
+      | checkCtx (I.Decl (G, D)) = 
+          (checkCtx G; checkDec (G, (D, I.id)))
+
+
+    fun check (U, V) = checkExp (I.Null, (U, I.id), (V, I.id))
+    fun infer U = I.EClo (inferExp (I.Null, (U, I.id)))
+    fun infer' (G, U) = I.EClo (inferExp (G, (U, I.id)))
+
+
 
     fun checkConv (U1, U2) =
           if Conv.conv ((U1, I.id), (U2, I.id)) then ()

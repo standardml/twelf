@@ -58,3 +58,4 @@ existsr* : {T:i} conc* (A T)
 
 existsl* : ({a:i} hyp (A a) -> conc* C)
 	    -> (hyp (exists A) -> conc* C).
+

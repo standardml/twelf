@@ -39,11 +39,11 @@ mp_pair : map_eval (ev_pair D2 D1) (tr_pair C2 C1)
 
 mp_fst  : map_eval (ev_fst D1) (tr_fst C1)
 		   (fev_fst D1') U1
-	     <- map_eval D1 C1 D1' (vtr_pair U1 U2).
+	     <- map_eval D1 C1 D1' (vtr_pair U2 U1).
 
-mp_snd  : map_eval (ev_fst D1) (tr_fst C1)
-		   (fev_fst D1') U2
-	     <- map_eval D1 C1 D1' (vtr_pair U1 U2).
+mp_snd  : map_eval (ev_snd D1) (tr_snd C1)
+		   (fev_snd D1') U2
+	     <- map_eval D1 C1 D1' (vtr_pair U2 U1).
 
 % Functions
 mp_lam : map_eval (ev_lam) (tr_lam C)
@@ -69,3 +69,12 @@ mp_letn : map_eval (ev_letn D2) (tr_letn C2 C1)
 mp_fix : map_eval (ev_fix D1) (tr_fix C1)
 		  (fev_fix D1') U1
 	  <- map_eval D1 (C1 (fix' F1) (fix E1) (tr_fix C1)) D1' U1.
+
+%mode map_eval +D +C -D' -U.
+%worlds () (map_eval D C D' U).
+% problem here---fixed in 2001 version
+% %covers map_eval +D +C -D' -U.
+
+%mode map_eval -D +C +D' -U.
+%worlds () (map_eval D C D' U).
+%covers map_eval -D +C +D' -U.

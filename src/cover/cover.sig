@@ -10,7 +10,7 @@ sig
 
   exception Error of string
 
-  val checkOut : (IntSyn.dctx * IntSyn.Exp) -> unit
+  val checkOut : (IntSyn.dctx * IntSyn.eclo) -> unit
 
   val checkCovers : (IntSyn.cid * ModeSyn.ModeSpine) -> unit
 

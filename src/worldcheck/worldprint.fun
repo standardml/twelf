@@ -31,6 +31,7 @@ struct
        Invariant:
        LF is the resulting list of formats
     *)
+    (*
     fun formatdlist (G, nil) k = (k (G, nil) )
       | formatdlist (G, D :: L) k = 
           (formatdlist (I.Decl (G, D), L) 
@@ -53,8 +54,23 @@ struct
 		Fmt.String "pi", Fmt.HVbox F'', Fmt.String ""]))))
 		       :: F))
     fun worldToString W = Fmt.makestring_fmt (formatWorld (W, [Fmt.String ")"]))
+    *)
+    (* This is incorrect.  FIX!!! *)
+    fun cidToFmt (cid) = Fmt.String (Names.qidToString (Names.constQid cid))
+    fun formatCids (nil) = nil
+      | formatCids (cid::nil) = [cidToFmt cid]
+      | formatCids (cid::cids) = cidToFmt cid
+                                 :: Fmt.Break :: Fmt.String "|" :: Fmt.Space
+                                 :: formatCids cids
+
+    fun formatWorlds (W.Worlds cids) =
+        Fmt.Hbox [Fmt.String "(", Fmt.HVbox (formatCids cids), Fmt.String ")"]
+    
+
+    fun worldsToString (W) = Fmt.makestring_fmt (formatWorlds W)
+
   in
-    val formatWorld = fn W => formatWorld (W, [])
-    val worldToString = worldToString
+    val formatWorlds = formatWorlds
+    val worldsToString = worldsToString
   end
-end
+end;

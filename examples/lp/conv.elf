@@ -23,6 +23,10 @@ whr_impe  : whr (impe D E) (impe D' E)
 whr_foralle : whr (foralle D T) (foralle D' T)
 	       <- whr D D'.
 
+%terminates D (whr D _).
+%worlds () (whr _ _).
+% %covers whr +D -E.  -cs No cases for introduction given.
+
 % Conversion to canonical and atomic form.
 
 tocan : {A:o} pf A -> pf A -> type.  % Conversion to canonical form
@@ -63,3 +67,7 @@ ta_ander : toatm (ander D) (ander D')
 
 ta_foralle : toatm (foralle D T) (foralle D' T)
 	      <- toatm D D'.
+
+
+% %covers (tocan +A +D -E).
+% %covers (toatm +D -E).    --cs no coverage in the atomic case.

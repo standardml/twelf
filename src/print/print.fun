@@ -190,6 +190,30 @@ local
         F.HVbox (foldr (fn (id, fmt) => Str0 (Symbol.str (id))::sym "."::fmt)
                        [Str0 (f (id))] ids)
 
+  fun parmDec (D::L, 1) = D
+    | parmDec (D::L, j) = parmDec (L, j-1)
+
+  fun parmName (cid, i) =
+      let
+	val (Gsome, Gblock) = I.constBlock (cid)
+      in
+	case parmDec (Gblock, i)
+	  of I.Dec (SOME(pname), _) => pname
+	   | I.Dec (NONE, _) => Int.toString i
+      end
+
+  fun projName (G, I.Proj (I.Bidx(k), i)) =
+      let
+	val I.BDec (SOME(bname), (cid, t)) = I.ctxLookup (G, k)
+        (* names should have been assigned by invariant, NONE imppossible *)
+       in
+	 bname ^ "_" ^ parmName (cid, i)
+       end
+    | projName (G, I.Proj (I.LVar(_, (cid, t)), i)) =
+      (* note: this obscures LVar identity! *)
+       "_" ^ parmName (cid, i)
+
+
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
@@ -200,6 +224,12 @@ local
     | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
     | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
+    | fmtCon (G, H as I.Proj (I.Bidx(k), i)) =
+        Str0 (Symbol.const (projName (G, H)))
+    | fmtCon (G, H as I.Proj (I.LVar(_, (cid, t)), i)) =
+      (* identity of LVars is obscured! *)
+      fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
+		    Names.constQid (cid))
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
           (* will need to be changed if qualified constraint constant
@@ -316,6 +346,13 @@ local
 		       end
 	  | I.No => fmtLevel (I.Decl (G, D), (* I.decSub (D, s) *)
 			      d, ctx, (arrow(I.EClo(V1,I.shift), V2), I.dot1 s)))
+    | fmtExpW (G, d, ctx, (I.Pi((D as I.BDec _, P), V2), s)) =
+      let
+	val D' = Names.decLUName (G, D)
+      in
+	 fmtLevel (I.Decl (G, D'), d, ctx, (braces (G, d, ((D', V2), s)),
+					    I.dot1 s))
+      end
     | fmtExpW (G, d, ctx, (U as I.Root R, s)) = (* s = id *)
 	 fmtOpArgs (G, d, ctx, opargs (G, d, R), s)
     (* I.Redex not possible *)
@@ -591,6 +628,19 @@ local
       (* F.HVbox [Str0 (Symbol.bvar (nameOf (x))), F.Space, sym ":", F.Break,
                   fmtExp (G, d+1, noCtxt, (V,s))]
       *)
+    | fmtDec (G, d, (I.BDec (x, (cid, t)), s)) =
+      let
+	val (Gsome, Gblock) = I.constBlock cid
+      in
+	F.HVbox ([Str0 (Symbol.const (nameOf (x))), sym ":"]
+		 @ fmtDecList' (G, (Gblock, I.comp (t, s))))
+      end
+  and fmtDecList' (G0, (nil, s)) = nil
+    | fmtDecList' (G0, (D::nil, s)) = 
+        sym "{" :: fmtDec (G0, 0, (D, s)) :: sym "}" :: nil
+    | fmtDecList' (G0, (D::L, s)) =
+	sym "{" :: fmtDec (G0, 0, (D, s)) :: sym "}" :: F.Break
+	:: fmtDecList' (I.Decl (G0, D), (L, I.dot1 s))
 
   fun skipI (0, G, V) = (G, V)
     | skipI (i, G, I.Pi ((D, _), V)) = skipI (i-1, I.Decl (G, Names.decEName (G, D)), V)

@@ -8,6 +8,7 @@ sig
 
   exception Error of string 
 
-  val formatWorld : WorldSyn.World -> Formatter.format 
-  val worldToString : WorldSyn.World -> string
+  val formatWorlds : WorldSyn.Worlds -> Formatter.format 
+  val worldsToString : WorldSyn.Worlds -> string
+
 end;  (* signature WORLDPRINT *)

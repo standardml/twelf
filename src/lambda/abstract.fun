@@ -55,6 +55,7 @@ struct
       | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref nil)))) = collectConstraints G
       | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, ref cnstrL)))) =
         (C.simplify cnstrL) @ collectConstraints G
+      | collectConstraints (I.Decl (G, LV _)) = collectConstraints G
 
     (* checkConstraints (K) = ()
        Effect: raises Constraints.Error(C) if K contains unresolved constraints
@@ -95,7 +96,7 @@ struct
     (* eqLVar L Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqLVar (I.LVar (r1,_, _)) (LV (I.LVar (r2, _, _))) = (r1 = r2)
+    fun eqLVar (I.LVar (r1, _)) (LV (I.LVar (r2, _))) = (r1 = r2)
       | eqLVar _ _ = false
 
 
@@ -199,9 +200,12 @@ struct
 	  then collectSpine (G, (S, s), K)
 	else (* s' = ^|G| *)
 	  collectSpine (G, (S, s), I.Decl (collectExp (I.Null, (V, I.id), K), FV (name, V)))
-      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, l, t), i), S), s), K) =
+      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, (l, t)), i), S), s), K) =
 	if exists (eqLVar L) K
-          then collectSpine (G, (S, s), K)
+	  (* note: don't collect t again below *)
+	  (* was: collectSpine (G, (S, s), collectSub (I.Null, t, K)) *)
+	  (* Sun Dec 16 10:54:52 2001 -fp !!! *)
+	  then collectSpine (G, (S, s), K)
 	else 
 	  collectSpine (G, (S, s), I.Decl (collectSub (I.Null, t, K), LV L))
       | collectExpW (G, (I.Root (_ , S), s), K) =
@@ -214,8 +218,9 @@ struct
 	else let
 	       (* val _ = checkEmpty !cnstrs *)
 	       val V' = raiseType (GX, V) (* inefficient *)
+	       val K' = collectExp (I.Null, (V', I.id), K)
 	     in
-	       collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
+	       collectSub(G, s, I.Decl (K', EV (X)))
 	     end
       | collectExpW (G, (I.FgnExp (cs, ops), s), K) =
           collectExp (G, (#toInternal(ops) (), s), K)
@@ -249,6 +254,10 @@ struct
     *)
     and collectDec (G, (I.Dec (_, V), s), K) =
           collectExp (G, (V, s), K)
+      | collectDec (G, (I.BDec (_, (_, t)), s), K) =
+	  (* . |- t : Gsome, so do not compose with s *)
+	  (* Sat Dec  8 13:28:15 2001 -fp *)
+	  collectSub (I.Null, t, K)
 
     (* collectSub (G, s, K) = K' 
 
@@ -261,6 +270,24 @@ struct
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
       | collectSub (G, I.Dot (I.Exp (U), s), K) =
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
+      | collectSub (G, I.Dot (I.Block B, s), K) =
+	  collectSub (G, s, collectBlock (B, K))
+    (* next case should be impossible *)
+    (*
+      | collectSub (G, I.Dot (I.Undef, s), K) =
+          collectSub (G, s, K)
+    *)
+
+    (* collectBlock (B, K) where . |- B block *)
+    and collectBlock (I.LVar (ref (SOME B), _), K) =
+          collectBlock (B, K)
+      | collectBlock (L as I.LVar (_, (l, t)), K) = 
+        if exists (eqLVar L) K
+	  then collectSub (I.Null, t, K)
+	else I.Decl (collectSub (I.Null, t, K), LV L)
+    (* | collectBlock (G, I.Bidx _, K) = K *)
+    (* should be impossible: Fronts of substitutions are never Bidx *)
+    (* Sat Dec  8 13:30:43 2001 -fp *)
 
     (* collectCtx (G0, G, K) = (G0', K')
        Invariant:
@@ -332,7 +359,7 @@ struct
        then C' = Bidx (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractLVar (I.Decl(K', LV (I.LVar (r', _, _))), depth, L as I.LVar (r, _, _)) = 
+    fun abstractLVar (I.Decl(K', LV (I.LVar (r', _))), depth, L as I.LVar (r, _)) = 
 	  if r = r' then I.Bidx (depth+1)
 	  else abstractLVar (K', depth+1, L)
       | abstractLVar (I.Decl(K', _), depth, L) =
@@ -359,8 +386,6 @@ struct
 		  abstractSpine (K, depth, (S, s)))
       | abstractExpW (K, depth, (I.Root (I.Proj (L as I.LVar _, i), S), s)) =
 	  I.Root (I.Proj (abstractLVar (K, depth, L), i),  
-		  (* can we just ignore s here? 
-		     Wed May 30 11:02:43 EDT 2001 -cs *)
 		  abstractSpine (K, depth, (S, s)))
       | abstractExpW (K, depth, (I.Root (H, S) ,s)) =
 	  I.Root (H, abstractSpine (K, depth, (S, s)))   
@@ -430,23 +455,27 @@ struct
     and abstractDec (K, depth, (I.Dec (x, V), s)) =
 	  I.Dec (x, abstractExp (K, depth, (V, s)))
 
-
-
     (* abstractSOME (K, s) = s'
        s' = {{s}}_K
 
        Invariant:
-       If    . |- s : G    
+       If    . |- s : Gsome    
        and   K is internal context in dependency order
        and   K ||- s
-       then  {{K}} |- s' : G'
+       then  {{K}} |- s' : Gsome  --- not changing domain of s'
+
+       Update: modified for globality invariant of . |- t : Gsome
+       Sat Dec  8 13:35:55 2001 -fp
     *)
-    fun abstractSOME (K, I.Shift n) = I.Shift n
+    fun abstractSOME (K, I.Shift 0) = (* n = 0 by invariant, check for now *)
+          I.Shift (I.ctxLength(K))
       | abstractSOME (K, I.Dot (I.Idx k, s)) = 
           I.Dot (I.Idx k, abstractSOME (K, s))
       | abstractSOME (K, I.Dot (I.Exp U, s)) =
 	  I.Dot (I.Exp (abstractExp (K, 0, (U, I.id))), abstractSOME (K, s))
-
+      | abstractSOME (K, I.Dot (I.Block (L as I.LVar _), s)) =
+	  I.Dot (I.Block (abstractLVar (K, 0, L)), abstractSOME (K, s))
+      (* I.Block (I.Bidx _) should be impossible as head of substitutions *)
 
     (* abstractCtx (K, depth, G) = (G', depth')
        where G' = {{G}}_K
@@ -536,11 +565,11 @@ struct
 	in
 	  abstractKPi (K', I.Pi ((I.Dec(SOME(name), V''), I.Maybe), V))
 	end
-      | abstractKPi (I.Decl (K', LV (I.LVar (r, l, t))), V) =
+      | abstractKPi (I.Decl (K', LV (I.LVar (r, (l, t)))), V) =
 	let
 	  val t' = abstractSOME (K', t)	  
 	in
-	  abstractKPi (K', I.Pi ((I.BDec (l, t'), I.Maybe), V))
+	  abstractKPi (K', I.Pi ((I.BDec (NONE, (l, t')), I.Maybe), V))
 	end
 
     (* abstractKLam (K, U) = U'

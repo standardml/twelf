@@ -43,3 +43,14 @@ rs'_forall : r_sound (r_forall R1) (s'_exists T S'1) (pg_forall PG1)
 	      <- r_sound (R1 T) S'1 (PG1 T) I1.
 
 rs'_atom : r_sound (r_atom) (s'_eqp) (pg_atom) (i_atom).
+
+%{
+%block l5 :some {D2: prog}{A2:o}{PG2:pg A2 D2} 
+  block {h' : assume' D2}{h : assume A2}{hs':h'_sound h' PG2 h}.
+%worlds (l2 | l5) (s'_sound _ _ _)
+                  (h'_sound _ _ _)
+                  (r_sound _ _ _ _).
+%covers (s'_sound +S' +GL -S)
+        (h'_sound +H' -PG -H)
+        (r_sound +R +S' +PG -I).
+}%

@@ -689,28 +689,19 @@ struct
 	let
 	  val (ThmSyn.WDecl (qids, cp as ThmSyn.Callpats cpa), rs) =
 	         ThmRecon.wdeclTowDecl wdecl
-	  fun hack nil = WorldSyn.Closed
-	    | hack (qid :: qids) = 
-	        let 
-		  val cid =  case Names.constLookup qid
-		               of NONE => raise Names.Error ("Undeclared label "
+	  val W = WorldSyn.Worlds
+	      (List.map (fn qid => case Names.constLookup qid
+			            of NONE => raise Names.Error ("Undeclared label "
                                          ^ Names.qidToString (valOf (Names.constUndef qid))
                                          ^ ".")
-			        | SOME cid => cid
-		in 
-		  case (IntSyn.sgnLookup cid)
-		    of IntSyn.BlockDec (name, _, Gsome, Lblock) =>
-			 WorldSyn.Schema (hack qids, 
-					  WorldSyn.LabelDec (name, WorldSyn.ctxToList Gsome, Lblock))
-		     | _ => raise IntSyn.Error "Label does not correspond to a context block declaration" 
-		end
-	  val W = hack qids
+                                     | SOME cid => cid)
+	      qids)
 	  val _ = List.app (fn (a, _) => WorldSyn.install (a, W)) cpa
 	          handle WorldSyn.Error (msg)
 		         (* error location inaccurate here *)
 		         => raise WorldSyn.Error (Paths.wrapLoc (Paths.Loc (fileName, joinregions rs), msg))
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%worlds " ^ WorldPrint.worldToString W ^ " "
+		    then print ("%worlds " ^ WorldPrint.worldsToString W ^ " "
 				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in

@@ -60,3 +60,7 @@ ce_existsr': ce' (existsr^ T D1 P) (existsr' T D1' P)
 ce_existsl': ce' (existsl^ D1 N) (existsl' D1' N)
 	      <- ({a:i} {n1:neg (A1 a)} ce' (D1 a n1) (D1' a n1)).
 
+%worlds (lp | ln | li | lo) (ce' D D').
+%covers ce' +D *D'.
+%terminates D (ce' D _).
+%total D (ce' D _).

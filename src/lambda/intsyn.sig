@@ -76,13 +76,13 @@ sig
 
   and Dec =				(* Declarations:              *)
     Dec of string option * Exp		(* D ::= x:V                  *)
-  | BDec of cid * Sub			(*     | v:l[s]               *)
+  | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
 
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)
-  | LVar of Block option ref * cid * Sub 
+  | LVar of Block option ref * (cid * Sub) 
                                         (*     | L(l,s)               *)
-  | BClo of Block * Sub                 (*     | b[s]                 *)
+(*  | BClo of Block * Sub                 (*     | b[s]                 *) *)
 
   (* constraints *)
 
@@ -166,6 +166,7 @@ sig
   val constImp    : cid -> int
   val constStatus : cid -> Status
   val constUni    : cid -> Uni
+  val constBlock  : cid -> dctx * Dec list
 
   (* Declaration Contexts *)
 
@@ -181,6 +182,7 @@ sig
   val bvarSub   : int * Sub -> Front    (* k[s]                       *)
   val frontSub  : Front * Sub -> Front	(* H[s]                       *)
   val decSub    : Dec * Sub -> Dec	(* x:V[s]                     *)
+  val blockSub  : Block * Sub -> Block  (* B[s]                       *)
 
   val comp      : Sub * Sub -> Sub	(* s o s'                     *)
   val dot1      : Sub -> Sub		(* 1 . (s o ^)                *)
@@ -190,6 +192,7 @@ sig
 
   val newEVar    : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
+  val newLVar    : cid * Sub -> Block	(* creates B:(l,s)            *) 
 
   (* Type related functions *)
 

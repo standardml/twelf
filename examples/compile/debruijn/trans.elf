@@ -67,3 +67,13 @@ vtr_pair : vtrans (pair* W1 W2) (pair V1 V2)
 % Function values
 vtr_lam : vtrans (clo K (lam' F)) (lam E)
 	   <- trans K (lam' F) (lam E).
+
+%mode (trans +K +F -E) (vtrans +W -V).
+%block tr : some {K:env} block {f:exp'} {x:exp} {u:trans K f x}.
+%block vtr : block {w:val} {x:exp} {v:vtrans w x}.
+%worlds (tr | vtr) (trans K F E) (vtrans W V).
+% cases for F are covered, although totality is not obvious
+%covers trans *K +F *E.
+% cases for W are not covered, only closures over lambda!
+% fails:
+% %covers vtrans +W -V.

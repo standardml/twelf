@@ -60,8 +60,8 @@ ssc_and  : ss_can (ss_and SS2 SS1) (can_andi CN2 CN1)
 	    <- ss_can SS2 CN2.
 
 ssc_imp  : ss_can (ss_imp SS1) (can_impi CN1)
-	    <- {d:assume A} {u:pf A} {hs:h_sound d u} {at:atm u}
-	       hs_atm hs at -> ss_can (SS1 d u hs) (CN1 u at).
+	    <- ({d:assume A} {u:pf A} {hs:h_sound d u} {at:atm u}
+	       hs_atm hs at -> ss_can (SS1 d u hs) (CN1 u at)).
 
 ssc_true : ss_can (ss_true) (can_truei).
 
@@ -90,3 +90,13 @@ isc_forall : is_atm (is_forall IS1)
 	      <- is_atm IS1 AT1.
 
 isc_atom : is_atm (is_atom) ([u:pf (atom P)] [at:atm u] at).
+ 
+%{
+%block l3 : some {A:o}  block {d:assume A} {u:pf A} {hs:h_sound d u} {at:atm u}{h:hs_atm hs at}.
+%worlds (l2 | l3) (ss_can _ _)
+                  (hs_atm _ _)
+                  (is_atm _ _).
+%covers (ss_can +SS -CN)
+        (hs_atm +HS -AT)
+        (is_atm +IS -AT).   % Coverage problem.  Why?  --cs
+}%   
