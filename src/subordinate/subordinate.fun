@@ -37,11 +37,16 @@ struct
     val lookup = Table.lookup soTable
     val insert = Table.insert soTable
 
+    val fTable : bool Table.Table = Table.new (32)
+    val fLookup = Table.lookup fTable
+    val fInsert = Table.insert fTable
+
     (* reset () = ()
 
-       Effect: Empties soArray
+       Effect: Empties soTable, fTable
     *)
-    fun reset () = Table.clear soTable
+    fun reset () = (Table.clear soTable;
+                    Table.clear fTable)
 
     (* get (a) = (AL, AR)
        where AL <| a <| AR
@@ -59,6 +64,52 @@ struct
        Effect: set AL <| a <| AR
     *)
     fun set (a, ALAR) = insert (a, ALAR)
+
+    fun fGet (a) =
+        (case fLookup a
+           of SOME frozen => frozen
+            | NONE => false)
+
+    fun fSet (a, frozen) = fInsert (a, frozen)
+
+    fun checkFreeze (c, a) =
+        if fGet a
+        then raise Error ("Freezing violation: constant "
+                          ^ Names.qidToString (Names.constQid (c))
+                          ^ "\nextends type family "
+                          ^ Names.qidToString (Names.constQid (a)))
+        else ()
+
+    fun frozenSubError (a, b) =
+        raise Error ("Freezing violation: frozen type family "
+                     ^ Names.qidToString (Names.constQid b)
+                     ^ "\nwould depend on unfrozen type family "
+                     ^ Names.qidToString (Names.constQid a))
+
+    fun checkFrozenSub (a, b) =
+        (case (fGet a, fGet b)
+           of (false, true) => frozenSubError (a, b)
+            | _ => ())
+
+    fun checkMakeFrozen (b, otherFrozen) =
+        let
+          fun check a =
+              if fGet a orelse List.exists (fn x => x = a) otherFrozen
+              then ()
+              else frozenSubError (a, b)
+          val (BL, BR) = get (b)
+        in
+          case I.targetFamOpt (I.constType b)
+            of NONE => ()
+             | SOME _ => raise Error ("Constant " ^ Names.qidToString (Names.constQid b)
+                                      ^ " must be a type family to be frozen");
+          if fGet b then ()
+          else List.app check BL
+        end
+
+    fun installFrozen (L) =
+        (List.app (fn a => checkMakeFrozen (a, L)) L;
+         List.app (fn a => fSet (a, true)) L)
 
     (* a <| b = true iff a is (transitively) subordinate to b
 
@@ -150,6 +201,8 @@ struct
        If   soArray is valid
        then soArray is updated according to the information a < b
        and  soArray is still valid
+
+       Also checks for violations of %frozen
     *)
     fun transClosure (a, b) = 
 	if below (a, b) then ()
@@ -158,7 +211,10 @@ struct
 	    val (AL, AR) = get a
 	    val (BL, BR) = get b
 	  in
-	    (mergeLeft (a, b :: BR, nil); mergeRight (a :: AL, b, nil); ())
+            (checkFrozenSub (a, b);
+             mergeLeft (a, b :: BR, nil);
+             mergeRight (a :: AL, b, nil);
+             ())
 	  end
 
     (* installKind (V, a) = ()
@@ -305,9 +361,13 @@ struct
 	in
 	  case I.targetFamOpt V
 	    of NONE => installKind (V, c)
-	     | SOME a => (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
-			 (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
-			 installExp (I.Null, V, I.Uni(I.Type))
+	     | SOME a => (case IntSyn.sgnLookup c
+                            of IntSyn.ConDec _ => checkFreeze (c, a)
+                             | IntSyn.SkoDec _ => checkFreeze (c, a)
+                             | _ => ();
+                          (* installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id)) *)
+			  (* simplified  Tue Mar 27 20:58:31 2001 -fp *)
+			  installExp (I.Null, V, I.Uni(I.Type)))
 	end
 
     (* Respecting subordination *)
@@ -386,6 +446,7 @@ struct
     val reset = reset
      
     val install = install
+    val installFrozen = installFrozen
 
     val below = below
     val belowEq = belowEq

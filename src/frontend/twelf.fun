@@ -462,6 +462,27 @@ struct
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
 
+      (* %freeze <qid> ... *)
+      | install1 (fileName, (Parser.FreezeDec (qids), r)) = 
+        let
+          fun toCid qid =
+              case Names.constLookup qid
+                of NONE => raise Names.Error ("Undeclared identifier "
+                                              ^ Names.qidToString (valOf (Names.constUndef qid))
+                                              ^ " in freeze assertion")
+                 | SOME cid => cid
+          val cids = List.map toCid qids
+                     handle Names.Error (msg) => raise Names.Error (Paths.wrap (r, msg))
+        in
+          Subordinate.installFrozen cids
+          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg));
+          if !Global.chatter >= 3
+          then print ((if !Global.chatter >= 4 then "%" else "")
+                      ^ "freeze"
+                      ^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
+          else ()
+        end
+
       (* Fixity declaration for operator precedence parsing *)
       | install1 (fileName, (Parser.FixDec ((qid,r),fixity), _)) =
         (case Names.constLookup qid

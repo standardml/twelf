@@ -30,6 +30,7 @@ sig
     | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
     | Solve of string * ExtSyn.term
     | AbbrevDec of ExtSyn.condec
+    | FreezeDec of Names.Qid list
     | SigDef of ModExtSyn.sigdef
     | StructDec of ModExtSyn.structdec
     | Include of ModExtSyn.sigexp

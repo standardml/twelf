@@ -59,6 +59,7 @@ struct
     | Querytabled of int option * ExtSyn.query        (* expected, try, A *)
     | Solve of (string * ExtSyn.term)
     | AbbrevDec of ExtSyn.condec
+    | FreezeDec of Names.Qid list
     | SigDef of ModExtSyn.sigdef
     | StructDec of ModExtSyn.structdec
     | Include of ModExtSyn.sigexp
@@ -186,6 +187,7 @@ struct
       | parseStream' (f as LS.Cons ((L.PROVE, r), s'), sc) = parseProve' (f, sc)
       | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s'), sc) = parseEstablish' (f, sc)
       | parseStream' (f as LS.Cons ((L.ASSERT, r), s'), sc) = parseAssert' (f, sc)
+      | parseStream' (f as LS.Cons ((L.FREEZE, r), s'), sc) = parseFreeze' (f, sc)
       | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigDef' (f, sc)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStructDec' (f, sc)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)
@@ -300,6 +302,15 @@ struct
 	in
 	  Stream.Cons ((AssertDec ldec, r), parseStream (stripDot f', sc))
 	end
+
+    and parseFreeze' (f as LS.Cons ((_, r0), s), sc) =
+        let
+          val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseFreeze' (LS.expose s)
+          val r = ExtSyn.Paths.join (r0, r')
+          val qids = map Names.Qid qids
+        in
+          Stream.Cons ((FreezeDec qids, r), parseStream (stripDot f', sc))
+        end
 
     and parseSigDef' (f as LS.Cons ((_, r1), _), sc) =
         let

@@ -49,6 +49,7 @@ struct
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
+    | FREEZE                            (* `%freeze' *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
     | WHERE                             (* `%where' *)
@@ -225,6 +226,7 @@ struct
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
       | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
+      | lexPragmaKey (ID(_, "freeze"), r) = (FREEZE, r)
       | lexPragmaKey (ID(_, "sig"), r) = (SIG, r)
       | lexPragmaKey (ID(_, "struct"), r) = (STRUCT, r)
       | lexPragmaKey (ID(_, "where"), r) = (WHERE, r)
@@ -342,6 +344,7 @@ struct
     | toString' (ESTABLISH) = "%establish"
     | toString' (ASSERT) = "%assert"
     | toString' (ABBREV) = "%abbrev"
+    | toString' (FREEZE) = "%freeze"
     | toString' (SIG) = "%sig"
     | toString' (STRUCT) = "%struct"
     | toString' (WHERE) = "%where"

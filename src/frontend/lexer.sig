@@ -43,6 +43,7 @@ sig
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
     | ABBREV				(* `%abbrev' *)
+    | FREEZE                            (* `%freeze' *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
     | WHERE                             (* `%where' *)

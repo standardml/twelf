@@ -10,6 +10,7 @@ sig
 
   val reset : unit -> unit
   val install : IntSyn.cid -> unit
+  val installFrozen : IntSyn.cid list -> unit
 
   val below : IntSyn.cid * IntSyn.cid -> bool (* transitive closure *)
   val belowEq : IntSyn.cid * IntSyn.cid -> bool	(* refl. transitive closure *)

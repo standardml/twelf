@@ -185,7 +185,7 @@ struct
     (* parseQualifier' f = (ids, f')
        pre: f begins with L.ID
 
-       Enforced by the lexer. *)
+       Note: precondition for recursive call is enforced by the lexer. *)
     fun parseQualId' (f as LS.Cons ((t as L.ID (_, id), r), s')) =
         (case LS.expose s'
            of LS.Cons ((L.PATHSEP, _), s'') =>
@@ -222,6 +222,17 @@ struct
       | parseQualIds' (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected list of labels, found token " ^ L.toString t)
 
+    fun parseFreeze' (f as LS.Cons ((L.ID _, _), _), qids) =
+        let
+          val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+        in
+          parseFreeze' (f', (ids, name)::qids)
+        end
+      | parseFreeze' (f as LS.Cons ((L.DOT, _), _), qids) =
+          (List.rev qids, f)
+      | parseFreeze' (LS.Cons ((t, r), s'), qids) = 
+          Parsing.error (r, "Expected identifier, found token "
+                            ^ L.toString t)
 
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
@@ -377,6 +388,7 @@ struct
   in
     val parseQualId' = parseQualId'
     val parseQualIds' = parseQualIds'
+    val parseFreeze' = (fn f => parseFreeze' (f, nil))
     val parseTerm' = (fn f => parseExp' (f, nil))
     val parseDec' = parseDec'
     val parseCtx' = (fn f => (parseCtx (true, nil, f)))
