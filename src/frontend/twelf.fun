@@ -65,6 +65,9 @@ functor Twelf
      sharing Cover.IntSyn = IntSyn'
      sharing Cover.ModeSyn = ModeSyn
 
+   structure Total : TOTAL
+     sharing Total.IntSyn = IntSyn'
+
    structure Terminate : TERMINATE
      sharing Terminate.IntSyn = IntSyn'
    structure Reduces : REDUCES
@@ -243,8 +246,9 @@ struct
 						^ "This indicates a bug in Twelf.\n")
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
 	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
+	      | Total.Error (msg) => abort (msg ^ "\n")	(* Total includes filename *)
 	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
-	      | Reduces.Error (msg) => abort (msg ^ "\n")   (* Reduces includes filename *)
+	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
@@ -308,11 +312,11 @@ struct
 	 in
 	   icd optConDec
 	 end
-	   handle Constraints.Error (eqns) =>
-	     raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
+	 handle Constraints.Error (eqns) =>
+	        raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
 	   
       | install1 (fileName, Parser.AbbrevDec(condec, r)) =
-        (* Constant declarations c : V, c : V = U plus variations *)
+        (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
 	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), true)
 	  fun icd (SOME(conDec)) =
@@ -374,8 +378,8 @@ struct
       | install1 (fileName, Parser.ModeDec mterm) =
 	let 
 	  val (mdec, r) = ModeRecon.modeToMode mterm
-	  val _ =  ModeSyn.installMode mdec
-	    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg))
+	  val _ = ModeSyn.installMode mdec
+	          handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg))
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%mode " ^ (ModePrint.modeToString mdec) ^ ".\n")
 		  else ()
@@ -396,11 +400,28 @@ struct
 	  ()
 	end
 
+      (* Total declaration *)
+      | install1 (fileName, Parser.TotalDec lterm) =
+	let
+	  val (T, rrs as (r,rs)) = ThmRecon.tdeclTotDecl lterm
+	  val La = Thm.installTotal (T, rrs)
+	  val _ = map Total.install La	(* pre-install for recursive checking *)
+	  val _ = map Total.checkFam La
+	          handle Total.Error (msg) => raise Total.Error (msg) (* include region and file *)
+		       | Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))
+		       | Reduces.Error (msg) => raise Reduces.Error (msg) (* includes filename *)
+	  val _ = if !Global.chatter >= 3
+		    then print ("%total " ^ ThmPrint.tDeclToString T ^ ".\n")
+		  else ()
+	in
+	  ()
+	end
+
       (* Termination declaration *)
       | install1 (fileName, Parser.TerminatesDec lterm) =
 	let
 	  val (T, rrs) = ThmRecon.tdeclTotDecl lterm 
-	  val La = Thm.install (T, rrs)
+	  val La = Thm.installTerminates (T, rrs)
   	  val _ = map (Timers.time Timers.terminate Reduces.checkFam) La  
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%terminates " ^ ThmPrint.tDeclToString T ^ ".\n")
@@ -445,9 +466,9 @@ struct
 
       (* Prove declaration *)
       | install1 (fileName, Parser.ProveDec lterm) =
-	let 
+	let
 	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.proveToProve lterm 
-	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)
+	  val La = Thm.installTerminates (T, rrs)  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%prove " ^ (Int.toString depth) ^ " " ^
 				       (ThmPrint.tDeclToString T) ^ ".\n")
@@ -459,7 +480,9 @@ struct
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 
-	  val _ = Prover.auto () handle Prover.Error msg => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
+	  val _ = Prover.auto ()
+	          handle Prover.Error msg
+		         => raise Prover.Error (Paths.wrap (joinregion rrs, msg)) (* times itself *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%QED\n")
 		  else ()
@@ -473,7 +496,7 @@ struct
       | install1 (fileName, Parser.EstablishDec lterm) =
         let 
 	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.establishToEstablish lterm 
-	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)
+	  val La = Thm.installTerminates (T, rrs)  (* La is the list of type constants *)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%prove " ^ (Int.toString depth) ^ " " ^
 				       (ThmPrint.tDeclToString T) ^ ".\n")
@@ -580,8 +603,11 @@ struct
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
 		    Index.reset (); 
-		    IndexSkolem.reset (); Subordinate.reset (); Terminate.reset ();
-		    Reduces.reset (); (* -bp *)
+		    IndexSkolem.reset ();
+		    Subordinate.reset ();
+		    Terminate.reset (); (* needed? -fp *)
+		    Total.reset ();	(* -fp *)
+		    Reduces.reset ();	(* -bp *)
 		    FunSyn.labelReset ();
 		    CompSyn.sProgReset (); (* necessary? -fp *)
                     CSManager.resetSolvers ()

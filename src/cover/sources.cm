@@ -8,7 +8,12 @@ Group is
   ../modes/sources.cm
   ../typecheck/sources.cm
   ../order/sources.cm
-  ../opsem/sources.cm
+  ../subordinate/sources.cm
+  ../thm/sources.cm
+  ../terminate/sources.cm
+  ../solvers/sources.cm
   cover.sig
   cover.fun
+  total.sig
+  total.fun
   cover.sml

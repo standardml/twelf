@@ -37,6 +37,7 @@ struct
     | QUERY	  			(* `%query' *)
     | MODE				(* `%mode' *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
+    | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
     | TERMINATES			(* `%terminates' *)
     | REDUCES                           (* `%reduces' *) (* -bp 6/5/99 *)
     | THEOREM                           (* `%theorem' *)
@@ -204,7 +205,8 @@ struct
       | lexPragmaKey (ID(_, "terminates"), r) = (TERMINATES, r)
       | lexPragmaKey (ID(_, "world"), r) = (WORLD, r)
       | lexPragmaKey (ID(_, "covers"), r) = (COVERS, r)
-      | lexPragmaKey (ID(_, "reduces"), r) = (REDUCES, r) (* -bp6/5/99. *)
+      | lexPragmaKey (ID(_, "total"), r) = (TOTAL, r) (* -fp 3/18/01 *)
+      | lexPragmaKey (ID(_, "reduces"), r) = (REDUCES, r) (* -bp 6/5/99 *)
       | lexPragmaKey (ID(_, "theorem"), r) = (THEOREM, r)
       | lexPragmaKey (ID(_, "prove"), r) = (PROVE, r)
       | lexPragmaKey (ID(_, "establish"), r) = (ESTABLISH, r)
@@ -301,6 +303,7 @@ struct
     | toString' (QUERY) = "%query"
     | toString' (MODE) = "%mode"
     | toString' (COVERS) = "%covers"
+    | toString' (TOTAL) = "%total"
     | toString' (TERMINATES) = "%terminates"
     | toString' (WORLD) = "%world"
     | toString' (REDUCES) = "%reduces"              (*  -bp6/5/99. *)

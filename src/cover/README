@@ -19,6 +19,14 @@ where mdecl is a short or full mode declaration.
 * means no coverage checking
 [- means output coverage / currently prohibited]
 
+Mon Mar 12 23:27:16 2001 -fp
+Version 2 --- added proper constraint handling
+
+- When constraints remain after splitting, try to split over other
+  candidates.  If no candidates can be split, fail.
+
+- When constraints remain after matching, fail.
+
 ----------------------------------------------------------------------
 From: "Carsten Schuermann" <carsten@cs.yale.edu>
 To: "Frank Pfenning" <fp@cs.cmu.edu>

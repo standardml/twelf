@@ -164,6 +164,7 @@ structure Twelf =
 	 structure ModePrint = ModePrint
 
          structure Cover = Cover
+         structure Total = Total
 
 	 structure Terminate = Terminate
 	 structure Reduces = Reduces

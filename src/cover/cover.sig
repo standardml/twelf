@@ -10,6 +10,8 @@ sig
 
   exception Error of string
 
+  val checkOut : (IntSyn.dctx * IntSyn.Exp) -> unit
+
   val checkCovers : (IntSyn.cid * ModeSyn.ModeSpine) -> unit
 
 end;  (* signature COVER *)

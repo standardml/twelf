@@ -265,7 +265,7 @@ struct
         (installOrder (O, L, nil);
 	 map (fn (a, _) => a) L)
 
-    (* install (T, (r,rs)) = L'
+    (* installTerminates (T, (r,rs)) = L'
       
        Invariant: 
        If   T is a termination declaration of (O, C)
@@ -278,10 +278,14 @@ struct
         rs is a list of regions of C
 	used for error messages)
     *)
-    fun install (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
+    fun installTerminates (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
 		
+    (* installTotal (T, (r, rs)) = L'
+       Invariant as in installTerminates
+    *)
+    fun installTotal (L.TDecl T, rrs) = (wf (T, rrs); installDecl T)
 
-   (* -bp *)
+    (* -bp *)
 
     (* argROrder (O, P, n) = O'
 
@@ -442,7 +446,8 @@ struct
     fun installReduces (L.RDecl (R, C), rrs) = (wfred ((R, C), rrs); installRDecl (R, C))
 		 
   in
-    val install = install
+    val installTotal = installTotal
+    val installTerminates = installTerminates
     val installReduces = installReduces
   end (* local *)
 

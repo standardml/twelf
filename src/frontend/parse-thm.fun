@@ -157,6 +157,14 @@ struct
           parseTDecl (LS.expose s')
 
     (* ------------------- *)
+    (* %total declaration  *)
+    (* ------------------- *)
+
+    (* parseTotal' "%total tdecl." *)
+    fun parseTotal' (LS.Cons ((L.TOTAL, r), s')) =
+          parseTDecl (LS.expose s')
+
+    (* ------------------- *)
     (* %prove declarations *)
     (* ------------------- *)
 
@@ -421,6 +429,7 @@ struct
 
 
   in
+    val parseTotal' = parseTotal'
     val parseTerminates' = parseTerminates'
     val parseTheorem' = parseForallStar
     val parseTheoremDec' = parseTheoremDec'

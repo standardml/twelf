@@ -7,6 +7,7 @@ sig
   structure Parsing : PARSING
   structure ThmExtSyn: THMEXTSYN
 
+  val parseTotal' : ThmExtSyn.tdecl Parsing.parser (* -fp *)
   val parseTerminates' : ThmExtSyn.tdecl Parsing.parser
   val parseReduces' : ThmExtSyn.rdecl Parsing.parser  (* -bp *)
   val parseTheorem' : ThmExtSyn.theorem Parsing.parser

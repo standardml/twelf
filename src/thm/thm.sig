@@ -1,5 +1,6 @@
 (* Theorem Declarations *)
 (* Author: Carsten Schuermann *)
+(* Modified: Brigitte Pientka, Frank Pfenning *)
 
 signature THM =
 sig
@@ -8,9 +9,12 @@ sig
 
   exception  Error of string
 
-  val install : ThmSyn.TDecl * (Paths.region * Paths.region list) 
-                -> ThmSyn.ModeSyn.IntSyn.cid list
+  val installTotal : ThmSyn.TDecl * (Paths.region * Paths.region list)
+                     -> ThmSyn.ModeSyn.IntSyn.cid list
+
+  val installTerminates : ThmSyn.TDecl * (Paths.region * Paths.region list) 
+                          -> ThmSyn.ModeSyn.IntSyn.cid list
   (* -bp *)
   val installReduces : ThmSyn.RDecl * (Paths.region * Paths.region list) 
-                -> ThmSyn.ModeSyn.IntSyn.cid list 
+                       -> ThmSyn.ModeSyn.IntSyn.cid list 
 end;  (* signature THM *)

@@ -33,7 +33,6 @@ struct
   local
     structure I = IntSyn
     structure M = ModeSyn
-    structure C = CompSyn
     structure P = Paths
     structure F = Print.Formatter
 
@@ -177,15 +176,14 @@ struct
     *)
     datatype CandList =
         Covered				(* covered---no candidates *)
-      | CandList of (I.Head * Candidates) list
-					(* [(c1, cands1),...,(cn, candsn)] *)
+      | CandList of Candidates list     (* cands1,..., candsn *)
 
-    (* addKs ((c,cands), klist) = klist'
+    (* addKs (cands, klist) = klist'
        add new constructor to candidate list
     *)
-    fun addKs (ccs as (c, Cands(ks)), CandList (klist)) = CandList (ccs::klist)
-      | addKs (ces as (c, Eqns(nil)), CandList (klist)) = Covered
-      | addKs (cfl as (c, Fail), CandList (klist)) = CandList (cfl::klist)
+    fun addKs (ccs as Cands(ks), CandList (klist)) = CandList (ccs::klist)
+      | addKs (ces as Eqns(nil), CandList (klist)) = Covered
+      | addKs (cfl as Fail, CandList (klist)) = CandList (cfl::klist)
 
     (* matchExp (G, d, (U1, s1), (U2, s2), cands) = cands'
        matches U1[s1] (part of coverage goal)
@@ -300,8 +298,8 @@ struct
 	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
       | matchTopSpine (G, (I.App (U1, S1), s1), (I.App (U2, S2), s2),
 		       M.Mapp (M.Marg (M.Minus, _), ms'), cands) =
-        (* skip here when implemented *)
-	raise Error ("Output coverage not yet implemented")
+        (* skip "output" arguments *)
+	   matchTopSpine (G, (S1, s1), (S2, s2), ms', cands)
 
     (* matchClause (G, (a @ S1, s1), V, ms) = cands
        as in matchTop, but r is compiled clause
@@ -328,23 +326,21 @@ struct
        klist <> Covered
     *)
     fun matchSig (G, ps', nil, ms, klist) = klist
-      | matchSig (G, ps', I.Const(c)::sgn', ms, klist) =
+      | matchSig (G, ps', V::ccs', ms, klist) =
         let
-	  val V = I.constType (c)
+	  (* val V = I.constType (c) *)
 	  val cands = CSManager.trail
 	              (fn () => matchClause (G, ps', (V, I.id), ms))
 	in
-	  matchSig' (G, ps', sgn', ms, addKs ((I.Const(c),cands), klist))
+	  matchSig' (G, ps', ccs', ms, addKs (cands, klist))
 	end
-      | matchSig (G, ps', _::sgn', ms, klist) = matchSig (G, ps', sgn', ms, klist)
-      (* ignore Skolem constants *)
 
-    (* matchSig' (G, (a @ S, s), sgn, ms, klist) = klist'
+    (* matchSig' (G, (a @ S, s), ccs, ms, klist) = klist'
        as matchSig, but check if coverage goal {{G}} a @ S[s] is already matched
     *)
-    and matchSig' (G, ps', sgn, ms, Covered) = Covered (* already covered: return *)
-      | matchSig' (G, ps', sgn, ms, CandList (klist)) = (* not yet covered: continue to search *)
-          matchSig (G, ps', sgn, ms, CandList (klist))
+    and matchSig' (G, ps', ccs, ms, Covered) = Covered (* already covered: return *)
+      | matchSig' (G, ps', ccs, ms, CandList (klist)) = (* not yet covered: continue to search *)
+          matchSig (G, ps', ccs, ms, CandList (klist))
 
     (* match (G, V, ms) = klist
        matching coverage goal {{G}} V against signature yields klist
@@ -355,10 +351,10 @@ struct
        mode spine ms matches S
        G |- V : type
     *)
-    fun match (G, V as I.Root (I.Const (a), S), ms) =
-          matchSig (G, (V, I.id), Index.lookup a, ms, CandList (nil))
-      | match (G, I.Pi ((D, _), V'), ms) =
-	  match (I.Decl (G, D), V', ms)
+    fun match (G, V as I.Root (I.Const (a), S), ms, ccs) =
+          matchSig (G, (V, I.id), ccs, ms, CandList (nil))
+      | match (G, I.Pi ((D, _), V'), ms, ccs) =
+	  match (I.Decl (G, D), V', ms, ccs)
 
     (************************************)
     (*** Selecting Splitting Variable ***)
@@ -391,11 +387,11 @@ struct
       | selectCand (CandList (klist)) = selectCand' (klist, nil)
 
     and selectCand' (nil, ksn) = SOME(ksn) (* failure: case G,V is not covered! *)
-      | selectCand' ((c, Fail)::klist, ksn) = (* local failure (clash) and no candidates *)
+      | selectCand' (Fail::klist, ksn) = (* local failure (clash) and no candidates *)
           selectCand' (klist, ksn)
-      | selectCand' ((c, Cands(nil))::klist, ksn) = (* local failure but no candidates *)
+      | selectCand' (Cands(nil)::klist, ksn) = (* local failure but no candidates *)
 	  selectCand' (klist, ksn)
-      | selectCand' ((c, Cands(ks))::klist, ksn) = (* found candidates ks <> nil *)
+      | selectCand' (Cands(ks)::klist, ksn) = (* found candidates ks <> nil *)
 	  selectCand' (klist, join (ks, ksn))
 
     (*****************)
@@ -648,33 +644,120 @@ struct
     (* Coverage Checking *)
     (*********************)
 
-    (* currently handles only input coverage *)
     (* need to improve tracing with higher chatter levels *)
+    (* ccs = covering clauses *)
 
-    fun cover (V, ms, missing) =
-          split (V, selectCand (match (I.Null, V, ms)), ms, missing)
+    fun cover (V, ms, ccs, missing) =
+          split (V, selectCand (match (I.Null, V, ms, ccs)), ms, ccs, missing)
 
-    and split (V, NONE, ms, missing) = missing
-      | split (V, SOME(nil), ms, missing) =
+    and split (V, NONE, ms, ccs, missing) = missing
+      | split (V, SOME(nil), ms, ccs, missing) =
         if impossible(V)		(* no candidates: check if coverage goal is impossible *)
 	  then missing
 	else V::missing
-      | split (V, SOME((k,_)::ksn), ms, missing) = (* ignore multiplicities *)
+      | split (V, SOME((k,_)::ksn), ms, ccs, missing) = (* ignore multiplicities *)
 	(case splitVar (V, k)
-	   of SOME(cases) => covers (cases, ms, missing)
+	   of SOME(cases) => covers (cases, ms, ccs, missing)
 	    | NONE =>			(* splitting variable k generated constraints *)
-	      split (V, SOME (ksn), ms, missing)) (* try other candidates *)
+	      split (V, SOME (ksn), ms, ccs, missing)) (* try other candidates *)
 
-    and covers (nil, ms, missing) = missing
-      | covers (V::cases', ms, missing) =
-          covers (cases', ms, cover (V, ms, missing))
+    and covers (nil, ms, ccs, missing) = missing
+      | covers (V::cases', ms, ccs, missing) =
+          covers (cases', ms, ccs, cover (V, ms, ccs, missing))
+
+    (******************)
+    (* Input Coverage *)
+    (******************)
+
+    fun constsToTypes (nil) = nil
+      | constsToTypes (I.Const(c)::cs') = I.constType(c)::constsToTypes(cs')
+
+    (*******************)
+    (* Output Coverage *)
+    (*******************)
+
+    fun negateMode (M.Mnil) = M.Mnil
+      | negateMode (M.Mapp (M.Marg (M.Plus, x), ms')) =
+           M.Mapp (M.Marg (M.Minus, x), negateMode ms')
+      | negateMode (M.Mapp (M.Marg (M.Star, x), ms')) = (* should be impossible here *)
+           M.Mapp (M.Marg (M.Star, x), negateMode ms')
+      | negateMode (M.Mapp (M.Marg (M.Minus, x), ms')) =
+           M.Mapp (M.Marg (M.Plus, x), negateMode ms')
+
+    (* createCoverClause (G, V) = {{G}} V
+       where {{G}} V is in NF
+    *)
+    fun createCoverClause (I.Decl (G, D), V) =
+          createCoverClause (G, (I.Pi ((D, I.Maybe), V)))
+      | createCoverClause (I.Null, V) =
+	  Whnf.normalize (V, I.id)
+
+    (* very inefficient: using EVars and abstraction *)
+    fun createCoverGoal (Vs, ms) =
+           createCoverGoalW (Whnf.whnf (Vs), ms)
+    and createCoverGoalW ((I.Pi ((D as I.Dec (_, V1), _), V2), s), ms) =
+        let
+	  val X = I.newEVar (I.Null, I.EClo (V1, s))
+	in
+	  createCoverGoalW ((V2, I.Dot (I.Exp (X), s)), ms)
+	end
+      | createCoverGoalW ((I.Root (a as I.Const(cid), S), s), ms) = (* s = id *)
+	I.Root (a, createCoverSpine ((S, s), (I.constType (cid), I.id), ms))
+
+    (* createCoverSpine ((S, s), (V, s'), ms) = S'
+       where (V,s') is whnf
+    *)
+    and createCoverSpine ((I.Nil, s), _, M.Mnil) = I.Nil
+      | createCoverSpine ((I.App (U1, S2), s), (I.Pi ((I.Dec (_, V1), _), V2), s'),
+			  M.Mapp (M.Marg (M.Minus, x), ms')) =
+          (* replace output argument by new variable *)
+        let
+	  val X = I.newEVar (I.Null, I.EClo (V1, s'))
+	  val S2' = createCoverSpine ((S2, s), (V2, I.Dot (I.Exp (X), s')), ms')
+	in
+          I.App (X, S2')
+	end
+      | createCoverSpine ((I.App (U1, S2), s), (I.Pi (_, V2), s'), M.Mapp (_, ms')) =
+	(* leave input or ignore arguments as they are *)
+	  I.App (I.EClo (U1, s),
+		 createCoverSpine ((S2, s), Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U1, s)), s')), ms'))
+      | createCoverSpine ((I.SClo (S, s'), s), Vs, ms) =
+	  createCoverSpine ((S, I.comp (s', s)), Vs, ms)
 
   in
+    (* checkout (G, a @ S) = ()
+       checks if the most general goal a @ S' is output-covered by a @ S
+       Effect: raises Error (msg) otherwise
+    *)
+    fun checkOut (G, V as I.Root (I.Const (a), S)) =
+        let
+	  (* already know that subgoal is well-moded *)
+	  val SOME(ms) = ModeSyn.modeLookup a
+	  val negMs = negateMode ms	(* swap input/output modes *)
+	  val V' = createCoverClause (G, V)
+	  (* val V0 = initCGoal (a) *)
+	  val V0 = createCoverGoal ((V', I.id), ms) (* replace output by new EVars variables *)
+	  val V0' = abstract (V0, I.id)
+	  val missing = cover (V0', negMs, V'::nil, nil)
+	  val _ = case missing
+	            of nil => ()
+		     | _::_ => raise Error ("Output coverage error --- missing cases:\n"
+					    ^ missingToString (missing, ms) ^ "\n")
+	in
+	  ()
+	end
+
+    (* checkCovers (a, ms) = ()
+       checks coverage for type family a with respect to mode spine ms
+       Effect: raises Error (msg) otherwise
+    *)
     fun checkCovers (a, ms) =
         let
 	  val V0 = initCGoal (a)
 	  val _ = CSManager.reset ()
-	  val missing = cover (V0, ms, nil)
+	  val cs = Index.lookup a
+	  val ccs = constsToTypes cs	(* calculate covering clauses *)
+	  val missing = cover (V0, ms, ccs, nil)
 	  val _ = case missing
 	            of nil => ()	(* all cases covered *)
 		     | _::_ => raise Error ("Coverage error --- missing cases:\n"
