@@ -52,6 +52,14 @@ struct
       | clauseToString t (G, And(r, A, g)) =
 	 clauseToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), r) ^
 	 goalToString t (G, g)
+      | clauseToString t (G, In(r, A, g)) =
+         let
+           val D = Names.decEName (G, IntSyn.Dec (NONE, A))
+         in
+           clauseToString t (IntSyn.Decl(G, D), r) ^
+           t ^ "META    " ^ Print.decToString (G, D) ^ "\n" ^
+           goalToString t (G, g)
+         end
       | clauseToString t (G, Exists(D, r)) =
 	 let
 	   val D' = Names.decEName (G, D)
@@ -98,7 +106,7 @@ struct
       | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),
 		       IntSyn.Decl(dPool,SOME(r,_,_)))) =
           dProgToString (DProg (G,dPool))
-	  ^ "\nClause    " ^ x ^ ":\t"
+	  ^ "\nClause    " ^ x ^ ":\n"
 	  ^ clauseToString "\t" (G, r)
       | dProgToString (DProg (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
 		       IntSyn.Decl(dPool, NONE))) =
