@@ -40,16 +40,19 @@ struct
     structure FX = CSManager.Fixity
     structure MS = CSManager.ModeSyn
 
+    (* constraint solver ID of this module *)
     val myID = ref ~1 : csid ref
 
+    (* constant ID of the type family constant "number" *)
     val numberID = ref ~1 : cid ref
 
     fun number () = Root (Const (!numberID), Nil)
 
-    val unaryMinusID  = ref ~1 : cid ref
-    val plusID        = ref ~1 : cid ref
-    val minusID       = ref ~1 : cid ref
-    val timesID       = ref ~1 : cid ref
+    (* constant ID's of the object constant defined by this module *)
+    val unaryMinusID  = ref ~1 : cid ref  (* ~ : number -> number           *)
+    val plusID        = ref ~1 : cid ref  (* + : number -> number -> number *)
+    val minusID       = ref ~1 : cid ref  (* - : number -> number -> number *)
+    val timesID       = ref ~1 : cid ref  (* * : number -> number -> number *)
 
     fun unaryMinusExp (U) = Root (Const (!unaryMinusID), App (U, Nil))
     fun plusExp (U, V)    = Root (Const (!plusID), App (U, App (V, Nil)))
@@ -630,5 +633,5 @@ struct
     fun times (U, V) = toFgn (timesSum (fromExp (U, id), fromExp (V, id)))
 
     val constant = numberExp
-  end
-end  (* functor CSEqIntegers *)
+  end (* local *)
+end  (* functor CSEqField *)
