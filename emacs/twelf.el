@@ -1244,8 +1244,10 @@ If necessary, this will start up an Twelf server process."
       (call-interactively 'twelf-server-configure))
   (twelf-server-sync-config)
   (twelf-focus nil nil)
-  (if twelf-check-config-clears-server-buffer
-      (twelf-clear-server-buffer))
+  (when twelf-check-config-clears-server-buffer
+    (twelf-clear-server-buffer)
+    (twelf-server-send-command "version")
+    (twelf-server-wait nil ""))
   (twelf-server-send-command "Config.load")
   (twelf-server-wait displayp))
 
