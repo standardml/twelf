@@ -7,4 +7,5 @@ structure TypeCheck =
 
 structure Strict =
   Strict (structure IntSyn' = IntSyn
+	  structure Whnf = Whnf
 	  structure Paths' = Paths);

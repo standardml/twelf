@@ -113,6 +113,8 @@ struct
 	     Note that G |- U[s1] : V1 [s2]
 	     and hence V2 must be under the substitution    U[s1]: V1, s2
 	  *)
+      | inferSpine (G, Ss as (I.App _, _), Vs as (I.Root (I.Def _, _), _)) =
+	  inferSpine (G, Ss, Whnf.expandDef Vs)
       | inferSpine (G, (I.App (U , S), _), (V, s)) = (* V <> (Pi x:V1. V2, s) *)
 	  raise  Error ("Expression is applied, but not a function")
 

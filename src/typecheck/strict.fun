@@ -2,6 +2,8 @@
 (* Author: Carsten Schuermann *)
 
 functor Strict (structure IntSyn' : INTSYN
+		structure Whnf : WHNF
+		  sharing Whnf.IntSyn = IntSyn'
 		structure Paths' : PATHS)
   : STRICT = 
 struct
@@ -120,6 +122,9 @@ struct
 		  then strictArgParms (U', V', Paths.body occ)
 		else raise Error (occToString (ocdOpt, occ)
                                   ^ "No strict occurrence of " ^ decToVarName D ^ ", use %abbrev")
+	      | strictArgParms (U as I.Lam _, V as I.Root (I.Def _, _), occ) =
+		  strictArgParms (U, Whnf.normalize (Whnf.expandDef (V, I.id)), occ)
+
 	in
 	  strictArgParms (U, V, Paths.top)
 	end
