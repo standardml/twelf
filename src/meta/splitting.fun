@@ -59,11 +59,6 @@ struct
 	      * int			(* Number of cases *)
 	      * int)			(* Position (left to right) *)
 	       
-  fun indexToString (Index (n, i, num, pos)) =
-      "(depth " ^ Int.toString n ^ ", "
-      ^ (case i of NONE => "N" | SOME(i) => "I[" ^ Int.toString i ^ "]") ^ ", "
-      ^ "cases " ^ Int.toString num ^ ", "
-      ^ "pos " ^ Int.toString pos ^ ")"
 
   datatype Operator = 
     Operator of (StateSyn.State * int) * StateSyn.State flag list
@@ -78,8 +73,8 @@ struct
 
 
 
-    fun makeOperator ((S, k), L, S.Splits n, g) = 
-      Operator ((S, k), L, Index (n, NONE, List.length L, g))
+    fun makeOperator ((S, k), L, S.Splits n, g, I) = 
+      Operator ((S, k), L, Index (n, I, List.length L, g))
 
     (* aux (G, B) = L' 
        
@@ -532,6 +527,7 @@ struct
       | occursInOrders (n, O :: Os, k, sc) = 
           occursInOrder (n, O, k, fn n' => occursInOrders (n', Os, k, sc))
 
+
     fun inductionInit O k = occursInOrder (0, O, k, fn n => NONE)
     fun inductionCont induction k = induction (k+1)
 
@@ -581,7 +577,8 @@ struct
 	    end
 	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
-			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G)
+			 makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
+				       induction 1)
 			 :: ops
 		     else ops
 	in
@@ -651,24 +648,24 @@ struct
        then k = |Sl| 
     *)
     fun index (Operator ((S, index), Sl, Index (_, _, k, _))) = k
-    fun indexInfo (Operator (_, _, ind)) = ind
 
     fun indexEq (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) = 
       (k1 = k2) andalso (iopt1 = iopt2) andalso (c1 = c2) andalso (p1 = p2)
 
     fun indexLt (Index (k1, iopt1, c1, p1), Index (k2, iopt2, c2, p2)) =
-      (k1 > k2) orelse
+      (k1 > k2) orelse 
       (case (iopt1, iopt2) 
 	 of (NONE, NONE) => (c1 < c2) orelse (p1 < p2)
           | (SOME _, NONE) => true
 	  | (NONE, SOME _) => false
-          | (SOME k1, SOME k2) => (k1 < k2) orelse (p1 < p2) orelse (c1 < c2))
+          | (SOME i1, SOME i2) => (c1 < c2) orelse (i1 < i2) orelse (p1 < p2))
 	
+
 (*    fun lt (op1, op2) = index (op1) < index (op2) *)
     fun lt (Operator (_, _, I1), Operator (_, _, I2)) = 
           indexLt (I1, I2)
     fun eq (Operator (_, _, I1), Operator (_, _, I2)) = 
-          indexEq (I1, I2) 
+          indexEq (I1, I2)
       
     fun le op12 = lt op12 orelse eq op12
 
@@ -723,18 +720,25 @@ struct
 	    | inactive (InActive :: L, n) = inactive (L, n+1)
 	    | inactive ((Active _) :: L, n) = inactive (L, n)
 
-          (*
-	  fun indexToString 0 = "zero cases"
-	    | indexToString 1 = "1 case"
-	    | indexToString n = (Int.toString n) ^ " cases"
-          *)
+	  fun casesToString 0 = "zero cases"
+	    | casesToString 1 = "1 case"
+	    | casesToString n = (Int.toString n) ^ " cases"
+
+	  fun indexToString (Index (k, NONE, c, p)) = "Non-Induction  (split = " ^ 
+	        (Int.toString k) ^ ", " ^ (casesToString c) ^ ", pos = " ^
+		(Int.toString p)
+	    | indexToString (Index (k, SOME idx , c, p)) = "(" ^ (Int.toString idx) ^ ".)" ^ 
+		"Induction  (split = " ^ 
+		(Int.toString k) ^ ", " ^ (casesToString c) ^ ", pos = " ^
+		(Int.toString p)
+		
 
 	  fun flagToString (_, 0) = ""
 	    | flagToString (n, m) = " [active: " ^(Int.toString n) ^ 
 		" inactive: " ^ (Int.toString m) ^ "]"
 	in
 	  "Splitting : " ^ Print.decToString (G, I.ctxDec (G, i)) ^
-	  " (" ^ (indexToString (indexInfo Op)) ^ 
+	  " (" ^ (indexToString I) ^ 
 	   (flagToString (active (Sl, 0), inactive (Sl, 0))) ^ ")"
 	end
 
