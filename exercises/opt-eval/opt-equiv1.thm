@@ -4,7 +4,7 @@
   exists {RV*:repv* V V*}
   true.
 
-%prove 3 RE* (vlem _ RE* _).
+%prove 5 RE* (vlem _ RE* _).
 
 %theorem eq* :
   forall* {E:exp} {V:exp} {E*:exp*}
@@ -12,4 +12,4 @@
   exists {V*:val*} {RV*:repv* V V*} {D*:eval* E* V*}
   true.
 
-%prove 3 D (eq* D R* V* RV* D*).
+%prove 5 D (eq* D R* V* RV* D*).
