@@ -68,13 +68,27 @@ struct
   fun checkErrors (r) =
        if !errorCount > 0 then die (r) else ()
 
+  (* Since this structure uses a non-standard error reporting mechanism,
+     any errors reported here while chatter = 1 will be printed
+     in between the "[Loading file ..." message and the closing "]",
+     instead of after the closing "]".  If we don't emit a newline
+     when chatter = 1, the first such error will appear on the same line
+     as "[Loading file ...", terribly confusing the Emacs error parsing code.
+   *)
+  fun chatterOneNewline () =
+      if !Global.chatter = 1 andalso !errorCount = 1
+        then print "\n"
+      else ()
+
   fun fatalError (r, msg) =
       (errorCount := !errorCount + 1;
+       chatterOneNewline ();
        print (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
        die (r))       
       
   fun error (r, msg) =
       (errorCount := !errorCount + 1;
+       chatterOneNewline ();
        print (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
        if exceeds (!errorCount, !errorThreshold)
           then die (r)
