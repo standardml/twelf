@@ -8,7 +8,7 @@
 # Various program locations
 tex = tex
 dvips = dvips
-texi2html = texi2html
+texi2html = /afs/cs/project/twelf/misc/texi2html/texi2html
 makeinfo = makeinfo
 distill = distill
 
@@ -37,7 +37,8 @@ twelf_toc.html : twelf.texi;
 
 twelf.pdf : twelf.dvi;
 	@echo "Trying to create twelf.pdf"
-	@case "`uname`" in Linux) echo "distill not available under Linux" ; exit 1 ; \
+	@case "`uname`" in Linux) \
+	echo "distill not available under Linux" ; exit 1 ; \
 	;; esac;
 	$(dvips) -P embed -f twelf.dvi | $(distill) > twelf.pdf;
 
