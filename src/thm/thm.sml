@@ -3,7 +3,8 @@ structure ThmSyn =
 	  structure ModeSyn' = ModeSyn
 	  structure Abstract = Abstract
 	  structure Whnf = Whnf
-	  structure Paths' = Paths);
+	  structure Paths' = Paths
+	  structure Names' = Names);
 
 structure ThmPrint =
   ThmPrint (structure ThmSyn' = ThmSyn

@@ -10,15 +10,16 @@ functor ThmRecon (structure Global : GLOBAL
 		    sharing Constraints.IntSyn = IntSyn
 		  structure ModeSyn : MODESYN
 		    sharing ModeSyn.IntSyn = IntSyn
+		  structure Names : NAMES
+		    sharing Names.IntSyn = IntSyn
+		  structure Paths' : PATHS
 		  structure ThmSyn': THMSYN
 		    sharing ThmSyn'.ModeSyn = ModeSyn
-		    sharing ThmSyn'.ModeSyn = ModeSyn
-		  structure Paths' : PATHS
+		    sharing ThmSyn'.Paths = Paths'
+		    sharing ThmSyn'.Names = Names
 		  structure TpRecon': TP_RECON
 		    sharing TpRecon'.IntSyn = IntSyn
 		    sharing TpRecon'.Paths = Paths' 
-		  structure Names : NAMES
-		    sharing Names.IntSyn = IntSyn
 		  structure Print : PRINT
 		    sharing Print.IntSyn = IntSyn)
   : THM_RECON =
@@ -260,12 +261,12 @@ struct
 
     fun abstractWDecl W =
         let
-          val W' = List.map abstractCtxPair W
+          val W' = List.map Names.Qid W
 	in
 	  W'
 	end
 
-    type wdecl =  ThmSyn.WDecl * Paths.region list
+    type wdecl =  ThmSyn.WDecl * Paths.region list 
     fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (abstractWDecl W, cp), rs)
     fun wdeclTowDecl T = T
 

@@ -196,6 +196,24 @@ struct
               end
             | f' => ((nil, (t, r)), f'))
 
+
+	   
+    fun parseQualIds1 (ls, f as LS.Cons ((t as L.ID (_, id), r0), s')) =
+        let 
+	  val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+	  val r = Paths.join (r0, r1)
+	in
+	  parseQualIds1 ((ids, name) :: ls, f')
+	end
+      | parseQualIds1 (ls,  LS.Cons ((L.RPAREN, r), s')) =
+         (ls, LS.expose s')
+
+    fun parseQualIds' (LS.Cons ((L.LPAREN, r), s')) =
+        parseQualIds1 (nil, LS.expose s')
+      | parseQualIds' (LS.Cons ((t, r), s')) =
+	  Parsing.error (r, "List of labels expected, found token " ^ L.toString t)
+
+
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
     fun parseExp (s, p) = parseExp' (LS.expose s, p)
@@ -349,6 +367,7 @@ struct
  		    
   in
     val parseQualId' = parseQualId'
+    val parseQualIds' = parseQualIds'
     val parseTerm' = (fn f => parseExp' (f, nil))
     val parseDec' = parseDec'
     val parseCtx' = (fn f => (parseCtx (true, nil, f)))

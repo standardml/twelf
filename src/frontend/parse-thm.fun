@@ -422,10 +422,11 @@ struct
 
    fun parseWDecl f = 
        let
-	 val (GBs, f1) = parseGBs f
+(*	 val (GBs, f1) = parseGBs f *)
+	 val (qids, f1) = ParseTerm.parseQualIds' f
 	 val (callpats,f2) = parseCallPats f1
        in
-         (E.wdecl (GBs, E.callpats callpats), f2)
+         (E.wdecl (qids, E.callpats callpats), f2)
        end
 
    fun parseWorlds' (LS.Cons ((L.WORLDS, r), s')) = 

@@ -88,6 +88,7 @@ functor Twelf
      sharing Solve.Paths = Paths
    structure ThmSyn : THMSYN
      sharing ThmSyn.Paths = Paths
+     sharing ThmSyn.Names = Names
    structure Thm : THM
      sharing Thm.ThmSyn = ThmSyn
      sharing Thm.Paths = Paths
@@ -643,13 +644,24 @@ struct
 	end
       | install1 (fileName, (Parser.WorldDec wdecl, _)) =
 	let
-	  val (ThmSyn.WDecl (GBs, cp as ThmSyn.Callpats cpa), rs) =
+	  val (ThmSyn.WDecl (qids, cp as ThmSyn.Callpats cpa), rs) =
 	         ThmRecon.wdeclTowDecl wdecl
 	  fun hack nil = WorldSyn.Closed
-	    | hack ((some, pi) :: GBs) = 
-	        WorldSyn.Schema (hack GBs, WorldSyn.LabelDec
-				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
-	  val W = hack GBs
+	    | hack (qid :: qids) = 
+	        let 
+		  val cid =  case Names.constLookup qid
+		               of NONE => raise Names.Error ("Undeclared label "
+                                         ^ Names.qidToString (valOf (Names.constUndef qid))
+                                         ^ ".")
+			        | SOME cid => cid
+		in 
+		  case (IntSyn.sgnLookup cid)
+		    of IntSyn.BlockDec (name, _, Gsome, Lblock) =>
+			 WorldSyn.Schema (hack qids, 
+					  WorldSyn.LabelDec (name, WorldSyn.ctxToList Gsome, Lblock))
+		     | _ => raise IntSyn.Error "Label does not correspond to a context block declaration" 
+		end
+	  val W = hack qids
 	  val _ = List.app (fn (a, _) => WorldSyn.install (a, W)) cpa
 	          handle WorldSyn.Error (msg)
 		         (* error location inaccurate here *)

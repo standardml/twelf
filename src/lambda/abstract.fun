@@ -136,7 +136,6 @@ struct
       | occursInHead (k, I.Const _, DP) = DP
       | occursInHead (k, I.Def _, DP) = DP
       | occursInHead (k, I.Proj _, DP) = DP   
-          (* LVar's can't occur in a head if in nf Tue May 29 22:28:37 EDT 2001 -cs *)
       | occursInHead (k, I.FgnConst _, DP) = DP
       | occursInHead (k, I.Skonst _, I.No) = I.No
       | occursInHead (k, I.Skonst _, I.Meta) = I.Meta
