@@ -224,6 +224,7 @@ struct
     and strictDecN (D, p, I.Dec (_, V)) =
           strictExpN (D, p, V)
 
+    (*
     fun strictAtom (D, p, mode, I.Nil, (V, s), M.Mnil) = false
       | strictAtom (D, p, M.Minus, I.App (U, S), (I.Pi ((I.Dec (_, V1), _), V2), s),
 		     M.Mapp (M.Marg (M.Minus, _), mS)) =
@@ -231,6 +232,7 @@ struct
 	  orelse strictAtom (D, p, M.Minus, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS)
       | strictAtom (D, p, mode, I.App (U, S), (I.Pi (_, V2), s), M.Mapp(_, mS)) =
 	  strictAtom (D, p, mode, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS)
+    *)
 
     (* ------------------------------------------- freeness check *)
     (* freeExpN (D, mode, U, occ = ()
@@ -415,18 +417,19 @@ struct
       | updateAtom' (D, mode, I.App (U, S), M.Mapp (_, mS), (p, occ)) =
           updateAtom' (D, mode, S, mS, (p+1, occ)) 
 
-    fun freeAtom (D, mode, I.Nil, M.Mnil, _, strictFun) = ()
-      | freeAtom (D, M.Minus, I.App (U, S), M.Mapp (M.Marg (M.Minus, _), mS), (p, occ), strictFun) =
-          (freeExpN (D, 0, M.Minus, U, P.arg(p, occ), strictFun);
-	   freeAtom (D, M.Minus, S, mS, (p+1, occ), strictFun))
-      | freeAtom (D, mode, I.App (U, S), M.Mapp (_, mS), (p, occ), strictFun) =
-	  freeAtom (D, mode, S, mS, (p+1, occ), strictFun)
+    fun freeAtom (D, mode, I.Nil, Vs, M.Mnil, _) = ()
+      | freeAtom (D, M.Minus, I.App (U, S), (I.Pi ((I.Dec (_, V1), _), V2), s),
+		  M.Mapp (M.Marg (M.Minus, _), mS), (p, occ)) =
+          (freeExpN (D, 0, M.Minus, U, P.arg(p, occ),
+		     (fn q => strictExpN (D, q, Whnf.normalize (V1, s))));
+	   freeAtom (D, M.Minus, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS, (p+1, occ)))
+      | freeAtom (D, mode, I.App (U, S), (I.Pi (_, V2), s), M.Mapp (_, mS), (p, occ)) =
+	  freeAtom (D, mode, S, Whnf.whnfExpandDef (V2, I.Dot (I.Exp U, s)), mS, (p+1, occ))
 
     fun updateAtom (D, mode, S, a, mS, (p, occ)) =
         let
 	  val _ = if !checkFree
-		    then freeAtom (D, mode, S, mS, (p, occ),
-				   fn p => strictAtom (D, p, mode, S, (I.constType a, I.id), mS))
+		    then freeAtom (D, mode, S, (I.constType a, I.id), mS, (p, occ))
 		  else ()
 	in
 	  updateAtom' (D, mode, S, mS, (p, occ))
