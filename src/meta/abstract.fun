@@ -32,7 +32,7 @@ struct
   
   datatype ApproxFor =			(* Approximat formula *)
     Head of IntSyn.dctx * (FunSyn.For * IntSyn.Sub) * int	(* AF ::= F [s] *)
-  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.dctx) * ApproxFor
+  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.Dec list) * ApproxFor
 					(*      | (t, G2), AF *)
 
   local
@@ -414,9 +414,8 @@ struct
        BUG: non-local BVars must be correctly abstracted!!!! -cs 
     *)
     fun abstractCtx (I.Null) = (I.Null, I.Null)
-      | abstractCtx (I.Decl (K', EV (_, V', T, _))) =
+      | abstractCtx (I.Decl (K', EV (_, V', T as S.Lemma (b, F.Ex (_, F.True)), _))) =
         let
-	  val S.Lemma (b, F.Ex (_, F.True)) = T      
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	  val (G', B') = abstractCtx K'
@@ -424,6 +423,15 @@ struct
 	  val T' = S.Lemma (b, F.Ex (D', F.True))
 	in
 	  (I.Decl (G', D'), I.Decl (B', T'))
+	end
+      | abstractCtx (I.Decl (K', EV (_, V', T as S.None, _))) =
+        let
+	  val V'' = abstractExp (K', 0, (V', I.id))
+	  val _ = checkType V''
+	  val (G', B') = abstractCtx K'
+	  val D' = I.Dec (NONE, V'')
+	in
+	  (I.Decl (G', D'), I.Decl (B', S.None))
 	end
       | abstractCtx (I.Decl (K', BV (D, T))) =
         let
@@ -635,6 +643,14 @@ struct
       | lower (I.Decl (G, D), n) = I.Decl (lower (G, n-1), D)
 
 
+    fun split (G, 0) = (G, I.Null)
+      | split (I.Decl (G, D), n) = 
+        let 
+	  val (G1, G2) = split (G, n-1)
+	in
+	  (G1, I.Decl (G2, D))
+	end
+
 
 
 
@@ -801,35 +817,66 @@ struct
 		end
 	        (* the other case of F.All (F.Block _, _) is not yet covered *)
 
-    (* makeFor (G, d, AF) = F'
+	      
+    fun extend (K, nil) = K
+      | extend (K, D :: L) = extend (I.Decl (K, BV (D, S.None)), L)
+
+    (* makeFor (G, w, AF) = F'
      
        Invariant :
-       CASE 1:
-       AF = F [s] 
-       G |- s : G0
-       |G0| = d
-       F' = {{all free EVars in s}} F
+       If   |- G ctx
+       and  G |- w : G' 
+       and  G' |- AF approx for
+       then G'; . |- F' = {EVARS} AF  for
     *)
 
-    fun makeFor (Head (G, (F, s), d)) = 
+    fun makeFor (K, w, Head (G, (F, s), d)) = 
         let 
-	  val g = I.ctxLength G
 	  val cf = collectGlobalSub (G, s, createEmptyB d, fn (_, K') => K')
-	  val K = cf (g, convert G)
 	  val k = I.ctxLength K
-	  val (GK, _) = abstractCtx K
+	  val K' = cf (I.ctxLength G, K)
+	  val k' = I.ctxLength K'
+	  val (GK, _) = abstractCtx K'
 	  val _ = if !Global.doubleCheck then TypeCheck.typeCheckCtx (GK) else ()
-	  val GK' = lower (GK, k-g)
-	  val FK = abstractFor (K, 0, (F, I.comp (s, I.Shift (k-g))))
-	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, FK) else ()
+          val w' = I.comp (w, I.Shift (k'-k))
+	  val FK = abstractFor (K', 0, (F, s))
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK, FK) else ()
+	  val (GK1, GK2) = split (GK, k'-k)
 	in
-	  allClo (GK', FK)
+	  (GK1, allClo (GK2, FK))
 	end
-      | makeFor (Block ((G0, t, d, G2), AF)) = 
-					(* |- G ctx 
-					   *)
-		 raise Error "Serious incompleteness, I am working on it"
+      | makeFor (K, w, Block ((G, t, d, G2), AF)) = 
+	let
+	  val k = I.ctxLength K
+	  val collect = collectGlobalSub (G, t, createEmptyB d, fn (_, K') => K')
+	  val K' = collect (I.ctxLength G, K)   (* BUG *) 
+	  val k' = I.ctxLength K'
+	  val K'' = extend (K', G2)
+	  val w' = F.dot1n (F.listToCtx G2, I.comp (w, I.Shift (k'-k)))
+	  val (GK, F') = makeFor (K'', w', AF)
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK, F') else ()
+	  val (GK1, GK2) = split (GK, List.length G2)
+	  val F'' = raiseFor (0, GK2, F', I.id, fn (w, _) => F.dot1n (GK2, w))
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK1, F'') else ()
+	  val (GK11, GK12) = split (GK1, k' - k)
+	  val F''' = allClo (GK12, F'')
+	  val _ = if !Global.doubleCheck then FunTypeCheck.isFor (GK11, F''') else ()
+	in
+	  (GK11, F''')
+	end
 
+    fun abstractApproxFor (AF as Head (G, _, _)) = 
+        let 
+	  val (_, F) = makeFor (convert G, I.id, AF)
+	in
+	  F
+	end
+      | abstractApproxFor (AF as Block ((G, _, _, _), _)) = 
+	let
+	  val (_, F) = makeFor (convert G, I.id, AF)
+	in
+	  F
+	end
 
   in
     val weaken = weaken
@@ -838,7 +885,7 @@ struct
     val abstractSub = abstractSubAll
     val abstractSub' = abstractNew
 
-    val abstractApproxFor = makeFor
+    val abstractApproxFor = abstractApproxFor
   end
 
 end;  (* functor MTPAbstract *)

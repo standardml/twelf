@@ -11,7 +11,7 @@ sig
 
   datatype ApproxFor =			(* Approximat formula *)
     Head of IntSyn.dctx * (FunSyn.For * IntSyn.Sub) * int	(* AF ::= F [s] *)
-  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.dctx) * ApproxFor
+  | Block of (IntSyn.dctx * IntSyn.Sub * int * IntSyn.Dec list) * ApproxFor
 					(*  | (t, G2), AF *)
 
 

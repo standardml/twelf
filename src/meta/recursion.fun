@@ -238,7 +238,7 @@ struct
 		  val G2' = ctxSub (G2, s)
 
 		  fun paramAbstract' AF = 
-		    paramAbstract (A.Block ((G, s, List.length G1, F.listToCtx (G2')), AF))
+		    paramAbstract (A.Block ((G, s, List.length G1, G2'), AF))
  
 (*		      if closedSub (G, s) then 
 			let 
@@ -437,13 +437,14 @@ struct
 		if Subordinate.below  (I.targetFam V1', I.targetFam V) then
 		  let 
 		    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-		    val sc' =  fn Ds'' => if Abstract.closedExp (G, (X, I.id)) then sc Ds''
+		      val sc' = sc 
+(*		    val sc' =  fn Ds'' => if Abstract.closedExp (G, (X, I.id)) then sc Ds''
 					(* possible incompleteness. 
 					   X will be free in some cases and must be universally quantified.
 					   -- cs *)
 		                          else (TextIO.print "* Ignored recursive call: Argument not instantiated during unification\n";
 						Ds'') 
-		    val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
+*)		    val Ds'' =  le (GB, k, ((U, s1), (V, s2)), 
 				    ((U', I.Dot (I.Exp (X), s1')), 
 				     (V', I.Dot (I.Exp (X), s2'))), sc', Ds')
 		    val sc'' = fn Ds'' => set_parameter (GB, X, k, sc, Ds'')
@@ -601,9 +602,10 @@ struct
 	fun check (G, n, s, G0, O, IH, H, Fs as (F1, s1) ) Ds = 
 	  let
 	    val AF = paramAbstract (A.Head (G, Fs, I.ctxLength G0))
-	    val Frl = A.abstractApproxFor AF
 	    val _ = TextIO.print "["
-	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, Frl) else ()
+	    val Frl = A.abstractApproxFor AF
+	    val _ = TextIO.print "-"
+	    val _ = TextIO.print (Int.toString (I.ctxLength G))
 	    val _ = TextIO.print "]"
 	  in
 	    if List.exists (fn (n', F') => (n = n' andalso F.convFor ((F', I.id), (Frl, I.id)))) H then
