@@ -361,7 +361,10 @@ struct
 	   installSpine (G, S, V2))
 	  (* accurate would be instead of V2: *)
 	  (* Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2)) *)
-
+      | installSpine (G, S as I.App _, I.Root (I.Def (d), S')) =
+	  (* ignore S' because we only use approximate type *)
+	  (* correct??? -fp Tue Feb 19 14:26:31 2002 *)
+	  installSpine (G, S, I.constDef(d))
 
     (* install c = ()
 
