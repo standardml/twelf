@@ -419,7 +419,9 @@ struct
 	  (abstractCtx K, abstractSubAll' (K, s))
 	end 
 
+
   in
     val abstractSub = abstractSubAll
   end
+
 end;  (* functor MTPAbstract *)

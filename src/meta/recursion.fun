@@ -9,6 +9,8 @@ functor MTPRecursion (structure Global : GLOBAL
 		      structure StateSyn' : STATESYN
 			sharing StateSyn'.IntSyn = IntSyn
 			sharing StateSyn'.FunSyn = FunSyn
+		      structure Abstract : ABSTRACT
+			sharing Abstract.IntSyn = IntSyn
 		      structure Whnf : WHNF
 		        sharing Whnf.IntSyn = IntSyn
 		      structure Unify : UNIFY
@@ -603,20 +605,25 @@ struct
 (* Check for duplicates,
    generate new assumption,
    residual goals *)
-      (TextIO.print ("IH found\n"); S)
+      (if Abstract.closedSub (I.Null, s) then TextIO.print ("IH <A> found\n")
+       else TextIO.print ("IH <R> found\n");S)
 
 
     fun calc (n', G', (F', s'), (O', t'), S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
 	let
 	  val Ot' = S.orderSub (O', t')
 	in 
-	  if n < n' then ordle (G, O, Ot', check (t', Ot'), S)
-	  else ordlt (G, O, O', check (t', Ot'), S)
+	  if n < n' then ordle (G, Ot', O, check (t', Ot'), S)
+	  else ordlt (G, Ot', O, check (t', Ot'), S)
 	end
 
-    (* createEVars (G, M) = ((G', M'), s')
+    (* createEVars (n, G, (F, s), (O, t), S) = S'
       
        Invariant:
+       If   G |- s : G1  and  G1 |- F formula
+       and  G |- t : G2  and  G2 |- O order
+       and  S is a state
+       then S' is the state with 
        sc returns with all addition assumptions/residual lemmas for a certain
        branch of the theorem.
     *)
@@ -624,13 +631,13 @@ struct
         let 
 	  val X = I.newEVar (G, I.EClo (V, s))
 	in
-	  createEVars (n, I.Decl (G, I.decSub (D, s)), (F, I.Dot (I.Exp X, s)), (O, I.Dot (I.Exp X, t)), S)
+	  createEVars (n, G, (F, I.Dot (I.Exp X, s)), (O, I.Dot (I.Exp X, t)), S)
 	end
       | createEVars (n, G, (F.And (F1, F2), s), (S.And (O1, O2), t), S) =
 	let
-	  val (n', S') = createEVars (n, G, (F2, s), (O2, t), S)
+	  val (n', S') = createEVars (n, G, (F1, s), (O1, t), S)
 	in
-	  createEVars (n, G, (F1, s), (O1, t), S')
+	  createEVars (n, G, (F2, s), (O2, t), S')
 	end
       | createEVars (n, G, (F.TClo (F, s'), s), (O, t), S) =
 	  createEVars (n, G, (F, I.comp (s', s)), (O, t), S)
@@ -639,7 +646,8 @@ struct
 
     fun expand (S as S.State (n, (G, B), (IH, OH), d, O, H, F)) =
       let 
-	val (_, S') = createEVars (1, I.Null, (IH, I.id), (OH, I.id), S)
+	val s = I.Shift (I.ctxLength G)
+	val (_, S') = createEVars (1, G, (IH, s), (OH, s), S)
       in
 	S'
       end

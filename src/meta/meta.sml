@@ -125,6 +125,7 @@ structure MTPRecursion =
 		structure IntSyn = IntSyn
 		structure FunSyn = FunSyn
 		structure StateSyn' = StateSyn
+		structure Abstract = Abstract
 		structure Whnf = Whnf
 		structure Unify = UnifyTrail
 		structure Conv = Conv
