@@ -6,6 +6,14 @@ Future issues:
   - have true clause printing, including variable case.
     what is there works on prover output, but not in general.
 
+  - printing of EVars---take subordination into account??
+    Example: trace in Mini-ML:
+      of (app (app (fix [add] lam [x] lam [y]
+		      case y x [y'] s (app (app add x) y'))
+           (s (s z))) (s (s (s z))))
+      T.
+
+
 CM/
 README
 WALK

@@ -2633,7 +2633,7 @@ Mode map
        ["None" twelf-trace-unbreak t]
        ["Some" twelf-trace-break t])
       ["show" twelf-trace-show t]
-      ("Trace.detail"
+      ("detail"
        (, (radio "0" '(twelf-set "Trace.detail" 0) '(= twelf-trace-detail 0)))
        (, (radio "1*" '(twelf-set "Trace.detail" 1) '(= twelf-trace-detail 1)))
        (, (radio "2" '(twelf-set "Trace.detail" 2) '(= twelf-trace-detail 2)))))))

@@ -25,6 +25,8 @@ functor Twelf
    structure TypeCheck : TYPECHECK
    structure Strict : STRICT
      sharing Strict.IntSyn = IntSyn'
+   structure Constraints : CONSTRAINTS
+     sharing Constraints.IntSyn = IntSyn'
    structure Abstract : ABSTRACT
      sharing Abstract.IntSyn = IntSyn'
    structure TpReconQ : TP_RECON
@@ -193,6 +195,9 @@ struct
 		       ^ f ^ "\n");
 	 ABORT)
 
+    fun constraintsMsg (eqns) =
+        "Typing ambiguous -- unresolved constraints\n" ^ Print.eqnsToString eqns
+
     (* val handleExceptions : string -> ('a -> Status) -> 'a -> Status *)
     (* handleExceptions filename f x = f x
        where standard exceptions are handled and an appropriate error message is
@@ -208,6 +213,7 @@ struct
 						^ "This indicates a bug in Twelf.\n")
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
 	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
+	      (* | Constraints.Error (eqns) => abortFileMsg (fileName, constraintsMsg eqns) *)
 	      | Terminate.Error (msg) => abort (msg ^ "\n") (* Terminate includes filename *)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
@@ -247,7 +253,7 @@ struct
     *)
     fun install1 (fileName, Parser.ConDec(condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
-	let
+        (let
 	  val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, r)
 	  fun icd (SOME(conDec)) =
 	      let
@@ -265,10 +271,12 @@ struct
 	in
 	  icd optConDec
 	end
+        handle Constraints.Error (eqns) =>
+	       raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* Solve declarations %solve c : A *)
       | install1 (fileName, Parser.Solve((name,tm), r)) =
-	let
+	(let
 	  val conDec = Solve.solve ((name, tm), r)
 	  val conDec' = Names.nameConDec (conDec)
 	  val _ = Strict.check (conDec', NONE)
@@ -283,6 +291,8 @@ struct
 	in
 	  ()
 	end
+        handle Constraints.Error (eqns) =>
+	       raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
 
       (* %query <expected> <try> A or %query <expected> <try> X : A *)
       | install1 (fileName, Parser.Query(expected,try,query, r)) =
@@ -298,7 +308,7 @@ struct
 
       (* Name preference declaration for printing *)
       | install1 (fileName, Parser.NamePref ((name,r), namePref)) =
-	(Names.installNamePref (name, namePref, NONE)
+	(Names.installNamePref (name, namePref)
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
       (* Mode declaration *)

@@ -10,6 +10,8 @@ struct
 
   structure IntSyn = IntSyn'
 
+  exception Error of IntSyn.Eqn list
+
   (*
      Constraints cnstr are of the form (X<I>[s] = U).
      Invariants:

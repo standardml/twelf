@@ -67,14 +67,14 @@ local
         Print.formatExp (G, V)
   and fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2)) =
       let
-	val D' = Names.decUName (G, D)
+	val D' = Names.decLUName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtGQuants (I.Decl (G, D'), V2)
       end
     | fmtGQuants (G, I.Pi ((D as I.Dec (_, V1), I.Virtual), V2)) =
       let
-	val D' = Names.decUName (G, D)
+	val D' = Names.decLUName (G, D)
       in
 	sym "{" :: Print.formatDec (G, D') :: sym "}" :: F.Break
 	:: fmtGQuants (I.Decl (G, D'), V2)

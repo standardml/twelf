@@ -1,0 +1,36 @@
+exp  : type.  %name exp E.
+
+s     : exp -> exp.
+case  : exp -> exp -> (exp -> exp) -> exp.
+
+val* : type.  %name val* V*.
+
+val    : val* -> exp.
+
+s*     : val* -> val*.
+
+valof : exp -> val* -> type.
+%mode valof +E -V.
+
+v_s     : valof (s E) (s* V)
+	    <- valof E V.
+
+eval : exp -> exp -> type.  %name eval D.
+%mode eval +E -V.
+
+ev_case_s  : eval (case E1 E2 E3) V
+	      <- eval E1 (s V1')
+	      <- eval (E3 V1') V.
+
+eval* : exp -> val* -> type. %name eval* D*.
+
+ev_case_s* : eval* (case E1 E2 E3) V
+	      <- eval* E1 (s* V1')
+	      <- eval* (E3 (val V1')) V.
+
+eq : eval E V -> valof V V* -> eval* E V* -> type.
+%mode eq +D +R -P.
+
+eq_case_s  : eq (ev_case_s D3 D1) R (ev_case_s* P3 P1)
+	      <- eq D1 (v_s R1) P1
+	      <- eq D3 R P3.

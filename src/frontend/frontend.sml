@@ -148,6 +148,7 @@ structure Twelf =
 	 structure Parser = Parser
 	 structure TypeCheck = TypeCheck
 	 structure Strict = Strict
+	 structure Constraints = Constraints
 	 structure Abstract = Abstract
 	 structure TpReconQ = TpReconQ
 	 structure TpRecon = TpRecon 

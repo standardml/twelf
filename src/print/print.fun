@@ -297,14 +297,14 @@ local
     | fmtExpW (G, d, ctx, (I.Pi((D as I.Dec(_,V1),P),V2), s)) =
       (case P (* if Pi is dependent but anonymous, invent name here *)
 	 of I.Maybe => let
-			 val D' = Names.decUName (G, D)	(* could sometimes be EName *)
+			 val D' = Names.decLUName (G, D) (* could sometimes be EName *)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 				   d, ctx, (braces (G, d, ((D',V2), s)),
 					    I.dot1 s))
 		       end
 	  | I.Virtual => let
-			 val D' = Names.decUName (G, D)
+			 val D' = Names.decLUName (G, D)
 		       in
 			 fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 				   d, ctx, (braces (G, d, ((D',V2), s)),
@@ -317,7 +317,7 @@ local
     (* I.Redex not possible *)
     | fmtExpW (G, d, ctx, (I.Lam(D, U), s)) = 
       let
-	val D' = Names.decUName (G, D)
+	val D' = Names.decLUName (G, D)
       in
 	fmtLevel (I.Decl (G, D'), (* I.decSub (D', s) *)
 		  d, ctx, (brackets (G, d, ((D', U), s)), I.dot1 s))
@@ -584,6 +584,12 @@ local
 	       F.Break, sym "=", F.Space,
 	       fmtExp (G, 0, noCtxt, (U2, I.id))]
 
+  fun fmtEqnName (I.Eqn (G, U1, U2)) =
+      fmtEqn (I.Eqn (Names.ctxLUName G, U1, U2))
+  fun fmtEqns (nil) = [Str "Empty Constraint"]
+    | fmtEqns (E::nil) = fmtEqn E :: Str "." :: nil
+    | fmtEqns (E::Es) = fmtEqn E :: Str ";" :: F.Break :: fmtEqns Es
+
 in
 
   (* In the functions below, G must be a "printing context", that is,
@@ -597,11 +603,13 @@ in
   fun formatConDec (condec) = fmtConDec (false, condec)
   fun formatConDecI (condec) = fmtConDec (true, condec)
   fun formatEqn (E) = fmtEqn E
+  fun formatEqns (Es) = F.Vbox0 0 1 (fmtEqns Es)
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
   fun eqnToString (E) = F.makestring_fmt (formatEqn E)
+  fun eqnsToString (Es) = F.makestring_fmt (formatEqns Es)
 
   (* fmtNamedEVar, fmtEVarInst and evarInstToString are used to print
      instantiations of EVars occurring in queries.  To that end, a list of

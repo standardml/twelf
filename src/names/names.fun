@@ -228,9 +228,9 @@ struct
     (* uPref is the name preference for universal variables of given type *)
 
     (* installNamePref' (name, cidOpt, ePref, uPref) see installNamePref *)
-    fun installNamePref' (name, NONE, ePref, uPref) =
+    fun installNamePref' (name, NONE, (ePref, uPref)) =
         raise Error ("Undeclared identifier " ^ name ^ " cannot be given name preference")
-      | installNamePref' (name, SOME(cid), ePref, uPref) =
+      | installNamePref' (name, SOME(cid), (ePref, uPref)) =
 	let
 	  val L = IntSyn.constUni (cid)
 	  val _ = case L
@@ -242,24 +242,31 @@ struct
 	  namePrefInsert (cid, (ePref, uPref))
 	end
 
-    (* installNamePref (name, ePref, uPrefOpt) = ()
+    (* installNamePref (name, (ePref, uPrefOpt)) = ()
        Effect: install name preference for type family named by 'name'
        raise Error if name is undeclared or name does not refer to a type family
     *)
-    fun installNamePref (name, ePref, SOME(uPref)) =
-          installNamePref' (name, nameLookup name, ePref, uPref)
-      | installNamePref (name, ePref, NONE) =
-	  installNamePref' (name, nameLookup name, ePref, String.map Char.toLower ePref)
+    fun installNamePref (name, (ePref, SOME(uPref))) =
+          installNamePref' (name, nameLookup name, (ePref, uPref))
+      | installNamePref (name, (ePref, NONE)) =
+	  installNamePref' (name, nameLookup name, (ePref, String.map Char.toLower ePref))
 
-    datatype Role = Exist | Univ
+    (* local names are more easily re-used: they don't increment the
+       counter associated with a name
+    *)
+    datatype Extent = Local | Global
+    datatype Role = Exist | Univ of Extent
+
+    fun extent (Exist) = Global
+      | extent (Univ (ext)) = ext
 
     fun namePrefOf'' (Exist, NONE) = "X"
-      | namePrefOf'' (Univ, NONE) = "x"
+      | namePrefOf'' (Univ _, NONE) = "x"
       | namePrefOf'' (Exist, SOME(ePref, uPref)) = ePref
-      | namePrefOf'' (Univ, SOME(ePref, uPref)) = uPref
+      | namePrefOf'' (Univ _, SOME(ePref, uPref)) = uPref
 
     fun namePrefOf' (Exist, NONE) = "X"
-      | namePrefOf' (Univ, NONE) = "x"
+      | namePrefOf' (Univ _, NONE) = "x"
       | namePrefOf' (role, SOME(cid)) = namePrefOf'' (role, namePrefLookup (cid))
 
     (* namePrefOf (role, V) = name
@@ -450,9 +457,22 @@ struct
 	in
 	  if varDefined name orelse conDefined name
 	     orelse ctxDefined (G,name)
-	    then tryNextName (G,base)
+	    then tryNextName (G, base)
 	  else name
 	end
+
+    fun findNameLocal (G, base, i) =
+        let val name = base ^ (if i = 0 then "" else Int.toString (i))
+	in
+	  if varDefined name orelse conDefined name
+	     orelse ctxDefined (G, name)
+	    then findNameLocal (G, base, i+1)
+	  else name
+	end
+
+    fun findName (G, base, Local) = findNameLocal (G, base, 0)
+      | findName (G, base, Global) = tryNextName (G, base)
+        
 
     val takeNonDigits = Substring.takel (not o Char.isDigit)
 
@@ -509,7 +529,7 @@ struct
     *)
     fun decName' role (G, IntSyn.Dec (NONE, V)) =
         let
-	  val name = tryNextName (G, namePrefOf (role, V))
+	  val name = findName (G, namePrefOf (role, V), extent (role))
 	in
 	  IntSyn.Dec (SOME(name), V)
 	end
@@ -521,7 +541,8 @@ struct
 
     val decName = decName' Exist
     val decEName = decName' Exist
-    val decUName = decName' Univ
+    val decUName = decName' (Univ (Global))
+    val decLUName = decName' (Univ (Local))
 
     (* ctxName G = G'
        
@@ -534,11 +555,22 @@ struct
         let
 	  val G' = ctxName G
 	in
-	  IntSyn.Decl (G', decUName (G', D))
+	  IntSyn.Decl (G', decName (G', D))
+	end
+
+    (* ctxLUName G = G'
+       like ctxName, but names assigned are local universal names.
+    *)
+    fun ctxLUName (IntSyn.Null) = IntSyn.Null
+      | ctxLUName (IntSyn.Decl (G, D)) = 
+        let
+	  val G' = ctxLUName G
+	in
+	  IntSyn.Decl (G', decLUName (G', D))
 	end
 
     (* pisEName' (G, V) = V'
-       Assigns name to dependent Pi prefix of V.
+       Assigns names to dependent Pi prefix of V.
        Used for implicit EVar in constant declarations after abstraction.
     *)
     fun pisEName' (G, IntSyn.Pi ((D, IntSyn.Maybe), V)) =
@@ -568,19 +600,24 @@ struct
 
     fun defEName UV = defEName' (IntSyn.Null, UV)
 
-    fun nameConDec (IntSyn.ConDec (name, imp, V, L)) =
+    fun nameConDec' (IntSyn.ConDec (name, imp, V, L)) =
           IntSyn.ConDec (name, imp, pisEName V, L)
-      | nameConDec (IntSyn.ConDef (name, imp, U, V, L)) =
+      | nameConDec' (IntSyn.ConDef (name, imp, U, V, L)) =
 	let 
 	  val (U', V') = defEName (U, V)
 	in
 	  IntSyn.ConDef (name, imp, U', V', L)
 	end
-      | nameConDec (skodec) = skodec (* fix ??? *)
+      | nameConDec' (skodec) = skodec (* fix ??? *)
+
+    (* Assigns names to variables in a constant declaration *)
+    (* The varReset (); is necessary so that explicitly named variables keep their name *)
+    fun nameConDec (conDec) =
+        (varReset ();			(* declaration is always closed *)
+	 nameConDec' conDec)
 
     fun skonstName (name) =
-      tryNextName (IntSyn.Null, name)
-
+          tryNextName (IntSyn.Null, name)
 
     val namedEVars = namedEVars
     val evarCnstr = evarCnstr

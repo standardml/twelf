@@ -23,8 +23,8 @@ struct
     (* Intermediate Data Structure *)
 
     datatype EFVar =
-      EV of I.Exp option ref * I.Exp	(* Y ::= (X , {G} V)  if G |- X : V *)
-    | FV of I.name * I.Exp		(*     | (F , {G} V)  if G |- F : V *)
+      EV of I.Exp			(* Y ::= (X , {G} V)  if G |- X : V *)
+    | FV of I.name * I.Exp		(*     | (F , V)      if . |- F : V *)
 
 
     (*
@@ -44,20 +44,32 @@ struct
        constraints after simplification.
     *)
 
+
+    (* collectConstraints K = eqns
+       where eqns collects all constraints attached to EVars in K
+    *)
+    fun collectConstraints (I.Null) = nil
+      | collectConstraints (I.Decl (G, FV _)) = collectConstraints G
+      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, nil)))) = collectConstraints G
+      | collectConstraints (I.Decl (G, EV (I.EVar (_, _, _, Cnstr)))) =
+        C.simplify Cnstr @ collectConstraints G
+
     (* checkEmpty Cnstr = ()
        raises Error exception if constraints Cnstr cannot be simplified
        to the empty constraint
     *)
+    (* 
     fun checkEmpty (nil) = ()
       | checkEmpty (Cnstr) =
         (case C.simplify Cnstr
 	   of nil => ()
 	    | _ => raise Error "Typing ambiguous -- unresolved constraints")
+    *)
 
     (* eqEVar X Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2,  _)) = (r1 = r2)
+    fun eqEVar (I.EVar (r1, _, _, _)) (EV (I.EVar (r2, _, _, _))) = (r1 = r2)
       | eqEVar _ _ = false
 
     (* eqFVar F Y = B
@@ -163,10 +175,10 @@ struct
 	  if exists (eqEVar X) K
 	    then collectSub(G, s, K)
 	  else let
-	         val _ = checkEmpty Cnstr
-		 val V' = raiseType (GX, V)
+	         (* val _ = checkEmpty Cnstr *)
+		 val V' = raiseType (GX, V) (* inefficient! *)
 	       in
-		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV(r, V')))
+		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
 	       end
       (* No other cases can occur due to whnf invariant *)
 
@@ -220,7 +232,7 @@ struct
        then C' = BVar (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractEVar (I.Decl (K', EV (r', _)), depth, X as I.EVar (r, _, _, _)) =
+    fun abstractEVar (I.Decl (K', EV (I.EVar(r',_,_,_))), depth, X as I.EVar (r, _, _, _)) =
         if r = r' then I.BVar (depth+1)
 	else abstractEVar (K', depth+1, X)
       | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
@@ -358,8 +370,9 @@ struct
        and  . ||- V'
     *)
     fun abstractKPi (I.Null, V) = V
-      | abstractKPi (I.Decl (K', EV (_, V')), V) =
+      | abstractKPi (I.Decl (K', EV (I.EVar (_, GX, VX, _))), V) =
         let
+          val V' = raiseType (GX, VX) 
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''	
 	in
@@ -386,8 +399,12 @@ struct
        and  . ||- U'
     *)
     fun abstractKLam (I.Null, U) = U
-      | abstractKLam (I.Decl (K', EV (_,V')), U) =
+      | abstractKLam (I.Decl (K', EV (I.EVar (_, GX, VX, _))), U) =
+        let
+	  val V' = raiseType (GX, VX)
+	in
           abstractKLam (K', I.Lam (I.Dec(NONE, abstractExp (K', 0, (V', I.id))), U))
+	end
       | abstractKLam (I.Decl (K', FV (name,V')), U) =
  	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
 
@@ -405,6 +422,10 @@ struct
     fun abstractDecImp V =
         let
 	  val K = collectExp (I.Null, (V, I.id), I.Null)
+	  val constraints = collectConstraints K
+	  val _ = case constraints
+	            of nil => ()
+		     | _ => raise C.Error (constraints)
 	in
 	  (I.ctxLength K, abstractKPi (K, abstractExp (K, 0, (V, I.id))))
 	end 

@@ -29,7 +29,7 @@ struct
 	 goalToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), g) ^ "\n"
       | goalToString t (G, All(D,g)) =
 	 let
-	   val D' = Names.decUName (G, D)
+	   val D' = Names.decLUName (G, D)
 	 in
 	   t ^ "ALL     " ^
 	   Formatter.makestring_fmt (Print.formatDec (G, D')) ^ "\n" ^

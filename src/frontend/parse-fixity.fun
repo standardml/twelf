@@ -79,21 +79,28 @@ struct
     (* Parsing name preferences %name ... *)
     (*------------------------------------*)
 
-    (* parseName2 "string" *)
-    fun parseName2 (name, r0, LS.Cons ((L.ID (_, prefName), r), s')) =
-        if L.isUpper prefName
-	  then (((name, r0), prefName), LS.expose s')
-	else Parsing.error (r, "Expected uppercase identifer, found " ^ prefName)
+    (* parseName3 "string" or "" *)
+    fun parseName3 (name, r0, prefEName, LS.Cons ((L.ID (_, prefUName), r), s')) =
+        (* prefUName should be lower case---not enforced *)
+        (((name, r0), (prefEName, SOME(prefUName))), LS.expose s')
+      | parseName3 (name, r0, prefEName, f) =
+	(((name, r0), (prefEName, NONE)), f)
+
+    (* parseName2 "string" or "string string" *)
+    fun parseName2 (name, r0, LS.Cons ((L.ID (_, prefEName), r), s')) =
+        if L.isUpper prefEName
+	  then parseName3 (name, r0, prefEName, LS.expose s')
+	else Parsing.error (r, "Expected uppercase identifer, found " ^ prefEName)
       | parseName2 (name, r0, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected name preference, found " ^ L.toString t)
 
-    (* parseName1 "id string" *)
+    (* parseName1 "id string" or "id string string" *)
     fun parseName1 (LS.Cons ((L.ID (_, name), r), s')) =
           parseName2 (name, r, LS.expose s')
       | parseName1 (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected identifer to assign name preference, found " ^ L.toString t)
 
-    (* parseNamePref' "%name id string"
+    (* parseNamePref' "%name id string" or "%name id string string"
        Invariant: token stream starts with %name
     *)
     fun parseNamePref' (LS.Cons ((L.NAME, r), s')) = parseName1 (LS.expose s')

@@ -292,7 +292,7 @@ struct
           lt (G, Q, (Us, Vs), UsVs', sc)
       | ltinitW (G, Q, ((I.Lam (_, U), s1), (I.Pi ((D, _), V), s2)), 
 		 ((U', s1'), (V', s2')), sc) =
-          ltinit (I.Decl (G, N.decUName (G, I.decSub (D, s2))),
+          ltinit (I.Decl (G, N.decLUName (G, I.decSub (D, s2))),
 		  I.Decl (Q, Universal), 
 		  ((U, I.dot1 s1), (V, I.dot1 s2)), 
 		  ((U', I.comp (s1', I.shift)), (V', I.comp (s2', I.shift))), sc)
@@ -400,12 +400,12 @@ struct
     fun checkGoal (G, Q, Vs, Vs', occ) = checkGoalW (G, Q, Whnf.whnf Vs, Vs', occ)
     and checkGoalW (G, Q, (I.Pi ((D as I.Dec (_, V1), I.No), V2), s), (V', s'), occ) = 
           (checkClause (G, Q, (V1, s), P.label occ); 
-	   checkGoal (I.Decl (G, N.decUName (G, I.decSub (D, s))), 
+	   checkGoal (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
 		      I.Decl (Q, Universal), 
 		      (V2, I.dot1 s), 
 		      (V', I.comp (s', I.shift)), P.body occ))
       | checkGoalW (G, Q, (I.Pi ((D, I.Maybe), V), s), (V', s'), occ) =
-          checkGoal (I.Decl (G, N.decUName (G, I.decSub (D, s))), 
+          checkGoal (I.Decl (G, N.decLUName (G, I.decSub (D, s))), 
 		     I.Decl (Q, Universal),
 		     (V, I.dot1 s), 
 		     (V', I.comp (s', I.shift)), P.body occ)

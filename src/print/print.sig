@@ -22,6 +22,7 @@ sig
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
   val conDecToString : IntSyn.ConDec -> string
   val eqnToString : IntSyn.Eqn -> string
+  val eqnsToString : IntSyn.Eqn list -> string (* assigns names in contexts *)
 
   val evarInstToString : (IntSyn.Exp * IntSyn.name) list -> string
 

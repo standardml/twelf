@@ -43,7 +43,7 @@ sig
   val constName : IntSyn.cid -> string	(* will mark if shadowed *)
 
   (* Name preferences for anonymous variables: a, EPref, UPref *)
-  val installNamePref : IntSyn.name * IntSyn.name * IntSyn.name option -> unit
+  val installNamePref : IntSyn.name * (IntSyn.name * IntSyn.name option) -> unit
 
   (* EVar and BVar name choices *)
   val varReset : unit -> unit
@@ -53,11 +53,13 @@ sig
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
   val bvarName : IntSyn.dctx * int -> string (* must be defined *)
 
-  val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec
+  val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* status unknown, like decEName *)
   val decEName : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* assign existential name *)
   val decUName : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* assign universal name *)
+  val decLUName: IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* assign local universal name *)
 
-  val ctxName  : IntSyn.dctx -> IntSyn.dctx
+  val ctxName  : IntSyn.dctx -> IntSyn.dctx (* assign global existential names *)
+  val ctxLUName: IntSyn.dctx -> IntSyn.dctx (* assign local universal names *)
 
   val nameConDec : IntSyn.ConDec -> IntSyn.ConDec
 

@@ -1,14 +1,14 @@
-tree : type.				%name tree T
+tree : type.				%name tree T.
 
 leaf : tree.
 node : tree -> tree -> tree.
 
-any : tree -> type.			%name any A
+any : tree -> type.			%name any A.
 all_leaf : any leaf.
 all_node : any T1 -> any T2 -> any (node T1 T2).
 all_impl : any ((F:tree -> tree) X).
 
-eq : any T -> any T -> type.		%name eq E
+eq : any T -> any T -> type.		%name eq E.
 
 test1 : eq (all_leaf) (all_leaf).
 % test2 : eq (all_leaf) (all_node A1 A2).

@@ -15,7 +15,7 @@ sig
   datatype fileParseResult =
       ConDec of ExtSyn.condec * ExtSyn.Paths.region
     | FixDec of (ExtSyn.name * ExtSyn.Paths.region) * Names.Fixity.fixity
-    | NamePref of (ExtSyn.name * ExtSyn.Paths.region) * ExtSyn.name  
+    | NamePref of (ExtSyn.name * ExtSyn.Paths.region) * (ExtSyn.name * ExtSyn.name option)
     | ModeDec of ExtModes.modedec (* * ExtSyn.Paths.region *)
     | TerminatesDec of ThmExtSyn.tdecl
     | TheoremDec of ThmExtSyn.theoremdec
