@@ -55,6 +55,8 @@ struct
 	  S.And (transformOrder (G, F1, [O]),
 		 transformOrder (G, F2, Os))
       | transformOrder (G, F.Ex _, [O]) = transformOrder' (G, O) 
+      | transformOrder (G, F.True, [O]) = transformOrder' (G, O)
+	(* last case: no existentials---order must be trivial *)
 
     fun select c = (Order.selLookup c handle _ => Order.Lex [])
 

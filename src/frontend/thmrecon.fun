@@ -72,6 +72,32 @@ struct
 
     type callpats = (ThmSyn.Callpats * Paths.region list)
 
+    fun checkArgNumber (0, I.Uni (I.Type), nil, r) = ()
+      | checkArgNumber (0, I.Pi (_, V2), arg::args, r) =
+          checkArgNumber (0, V2, args, r)
+      | checkArgNumber (0, I.Pi (_, V2), nil, r) =
+	  error (r, "Missing arguments in call pattern")
+      | checkArgNumber (0, I.Uni (I.Type), arg::args, r) =
+	  error (r, "Extraneous arguments in call pattern")
+      | checkArgNumber (i, I.Pi (_, V2), args, r) =
+          checkArgNumber (i-1, V2, args, r)
+      (* everything else should be impossible! *)
+
+    fun checkCallPat (I.ConDec (_, i, I.Normal, V, I.Kind), P, r) =
+          checkArgNumber (i, V, P, r)
+      | checkCallPat (I.ConDec (a, _, I.Constraint _, _, _), P, r) =
+	  error (r, "Illegal constraint constant " ^ a ^ " in call pattern")
+      | checkCallPat (I.ConDec (a, _, I.Foreign _, _, _), P, r) =
+          error (r, "Illegal foreign constant " ^ a ^ " in call pattern")
+      | checkCallPat (I.ConDec (a, _, _, _, I.Type), P, r) =
+	  error (r, "Constant " ^ a ^ " in call pattern not a type family")
+      | checkCallPat (I.ConDef (a, _, _, _, _), P, r) =
+          error (r, "Illegal defined constant " ^ a ^ " in call pattern")
+      | checkCallPat (I.AbbrevDef (a, _, _, _, _), P, r) =
+	  error (r, "Illegal abbreviation " ^ a ^ " in call pattern")
+      | checkCallPat (I.SkoDec (a, _, _, _), P, r) =
+	  error (r, "Illegal Skolem constant " ^ a ^ " in call pattern")
+
     fun callpats L = 
         let 
 	  fun callpats' nil = (nil, nil)
@@ -82,7 +108,9 @@ struct
 		(* check whether they are families here? *)
 		case Names.nameLookup name
 		  of NONE => error (r, "Type family " ^ name ^ " not defined")
-		   | SOME cid => ((cid, P) :: cps, (r :: rs))
+		   | SOME cid => 
+		     ( checkCallPat (I.sgnLookup cid, P, r);
+		       ((cid, P) :: cps, (r :: rs)) )
 	      end
 	  val (cps, rs) = callpats' L
 	in
