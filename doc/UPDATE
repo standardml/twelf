@@ -1,7 +1,12 @@
 - Add remark about optimize
 - Remark about "mixed substitution incompleteness"
 - Add remark about "%assert" and "safe mode"
-- Add remark about "%establish" and "%proof"
+- Add remark about "%establish" and "%prove"
+
+- Add Twelf.unsafe
 
 - Add Twelf.Print.sgn
-- Add Twelf.Print.tex
+- Add Twelf.Print.prog
+
+- Add TeX remarks
+- Add Twelf.Print.TeX.sgn and prog

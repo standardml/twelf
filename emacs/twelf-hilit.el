@@ -49,7 +49,7 @@
  'twelf-mode
  '(
    ;; %keyword declarations
-   ("\\(%infix\\|%prefix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%theorem\\|%prove\\).*$"
+   ("\\(%infix\\|%prefix\\|%prefix\\|%postfix\\|%name\\|%solve\\|%query\\|%mode\\|%terminates\\|%theorem\\|%prove\\|%assert\\|%establish\\).*$"
     1 twelf-pragma)
    ;; single-line comments
    ("%\\W.*$" nil twelf-comment)
