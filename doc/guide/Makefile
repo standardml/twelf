@@ -8,11 +8,11 @@
 # Various program locations
 tex = tex
 dvips = dvips
-texi2html = /afs/cs/project/twelf/misc/texi2html/texi2html
-makeinfo = /afs/cs/project/twelf/misc/texinfo/bin/makeinfo
+texi2html = texi2html
+makeinfo = makeinfo
 # distill = distill
 pdftex = pdftex
-texindex = /afs/cs/project/twelf/misc/texinfo/bin/texindex
+texindex = texindex
 
 # ---------------------------------------------------------------
 # Do not edit the following lines
