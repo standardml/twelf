@@ -40,7 +40,9 @@ struct
 	let
 	  val V = I.constType cid
 	  fun fmtModeDec' (G, _, M.Mnil) = 
-		[P.formatExp (G, I.Root (I.Const (cid), makeSpine G))]
+		[F.String "(",
+		 P.formatExp (G, I.Root (I.Const (cid), makeSpine G)),
+		 F.String ")"]
 	    | fmtModeDec' (G, I.Pi ((D, _), V'), M.Mapp (marg, S)) =
 		let 
 		  val D' = nameDec (D, marg)
@@ -53,9 +55,15 @@ struct
 	  F.HVbox (fmtModeDec' (I.Null, V, mS))
 	end
 
+    fun fmtModeDecs ((cid, mS)::nil) = fmtModeDec (cid, mS)::nil
+      | fmtModeDecs ((cid, mS)::mdecs) =
+        fmtModeDec (cid, mS)::F.Break::fmtModeDecs mdecs
+
     fun modeToString cM = F.makestring_fmt (fmtModeDec cM)
+    fun modesToString mdecs = F.makestring_fmt (F.Vbox0 0 1 (fmtModeDecs mdecs))
   in
     val modeToString = modeToString
+    val modesToString = modesToString
   end (* local *)
 
 end; (* functor ModePrint *)

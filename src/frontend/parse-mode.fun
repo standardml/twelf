@@ -50,8 +50,18 @@ struct
       | validateMode (r, (_, SOME(id))) =
            Parsing.error (r, "Expected simple mode, found mode followed by identifier " ^ id) 
 
+    fun stripRParen (LS.Cons ((L.RPAREN, r), s')) = (LS.expose s', r)
+      | stripRParen (LS.Cons ((t, r), s')) = (* t = `.' or ? *)
+          Parsing.error (r, "Expected closing `)', found " ^ L.toString t)
+
+    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = (LS.expose s', r)
+      | stripRBrace (LS.Cons ((t, r), _))  = 
+          Parsing.error (r, "Expected `}', found " ^ L.toString t)
+
     (* parseShortSpine "modeid ... modeid." *)
     fun parseShortSpine (f as LS.Cons ((L.DOT, r), s')) =
+	  (E.Short.mnil r, f)
+      | parseShortSpine (f as LS.Cons ((L.RPAREN, r), s')) =
 	  (E.Short.mnil r, f)
       | parseShortSpine (LS.Cons ((L.ID (_, id), r), s')) =
 	let 
@@ -62,10 +72,6 @@ struct
 	end
       | parseShortSpine (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected mode or `.', found " ^ L.toString t)
-
-    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = (LS.expose s', r)
-      | stripRBrace (LS.Cons ((t, r), _))  = 
-          Parsing.error (r, "Expected `}', found " ^ L.toString t)
 
     (* parseFull "mode {id:term} ... mode {x:term} term" *)
     fun parseFull (LS.Cons (t0 as (L.ID (c, id), r0), s'), r1) =
@@ -90,6 +96,14 @@ struct
 	      in
 		(E.Full.mroot (t', P.join (r, r1)), f')
 	      end)
+      | parseFull (LS.Cons ((L.LPAREN, r0), s'), r1) =
+	(* Left paren --- parse atomic type *)
+	let
+	  val (t', f') = ParseTerm.parseTerm' (LS.expose s')
+	  val (f'', r') = stripRParen f'
+	in
+	  (E.Full.mroot (t', P.join (r', r1)), f'')
+	end
       | parseFull (LS.Cons ((t, r), s'), _) =
           Parsing.error (r, "Expected mode or identifier, found " ^ L.toString t)
 
@@ -108,10 +122,31 @@ struct
 	  (E.Short.toModedec (E.Short.mroot (name, r, mS')), f')
 	end
 
+    fun parseModeParen (LS.Cons ((L.ID (_, name), r0), s'), r) =
+        let
+	  val (mS', f') = parseShortSpine (LS.expose s')
+	  val (f'', r') = stripRParen f'
+	in
+	  (E.Short.toModedec (E.Short.mroot (name, P.join (r, r'), mS')), f'')
+	end
+      | parseModeParen (LS.Cons ((t, r), s'), _) =
+	  Parsing.error (r, "Expected identifier, found " ^ L.toString t)
+
     (* parseMode1 parses mdecl *)
-    fun parseMode1 (LS.Cons (lexid as (L.ID _, r), s')) = parseMode2 (lexid, LS.expose s', r)
+    fun parseMode1 (LS.Cons (lexid as (L.ID _, r), s')) =
+          parseModeNext (parseMode2 (lexid, LS.expose s', r))
+      | parseMode1 (LS.Cons ((L.LPAREN, r), s')) =
+	  parseModeNext (parseModeParen (LS.expose s', r))
       | parseMode1 (LS.Cons ((t, r), _)) =
           Parsing.error (r, "Expected identifier or mode, found " ^ L.toString t)
+
+    and parseModeNext (modedec, f as LS.Cons ((L.DOT, _), s')) = (modedec::nil, f)
+      | parseModeNext (modedec, f) =
+        let
+	  val (mdecs, f') = parseMode1 f
+	in
+	  (modedec::mdecs, f')
+	end
 
     (* parseMode' : lexResult front -> modedec * lexResult front
        Invariant: exposed input stream starts with MODE

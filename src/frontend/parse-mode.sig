@@ -7,6 +7,6 @@ sig
   structure Parsing : PARSING
   structure ExtModes: EXTMODES
 
-  val parseMode' : ExtModes.modedec Parsing.parser
+  val parseMode' : (ExtModes.modedec list) Parsing.parser
 
 end;  (* signature PARSE_MODE *)

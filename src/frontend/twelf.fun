@@ -378,28 +378,33 @@ struct
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
       (* Mode declaration *)
-      | install1 (fileName, Parser.ModeDec mterm) =
+      | install1 (fileName, Parser.ModeDec mterms) =
 	let 
-	  val (mdec, r) = ModeRecon.modeToMode mterm
-	  val _ = ModeSyn.installMode mdec
-	          handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg))
-	  val _ = ModeCheck.checkMode mdec (* exception comes with location *)
-	          handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg)
+	  val mdecs = List.map ModeRecon.modeToMode mterms
+	  val _ = List.app (fn (mdec, r) => ModeSyn.installMode mdec
+			    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg)))
+	          mdecs
+	  val _ = List.app (fn (mdec, r) => ModeCheck.checkMode mdec (* exception comes with location *)
+			    handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg))
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%mode " ^ (ModePrint.modeToString mdec) ^ ".\n")
+		    then print ("%mode " ^ ModePrint.modesToString
+				           (List.map (fn (mdec, r) => mdec) mdecs)
+					 ^ ".\n")
 		  else ()
 	in
 	  ()
 	end
 
       (* Coverage declaration *)
-      | install1 (fileName, Parser.CoversDec mterm) =
+      | install1 (fileName, Parser.CoversDec mterms) =
 	let
-	  val (mdec, r) = ModeRecon.modeToMode mterm
-	  val _ = Cover.checkCovers mdec
-	          handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg))
+	  val mdecs = List.map ModeRecon.modeToMode mterms
+	  val _ = List.app (fn (mdec, r) => Cover.checkCovers mdec
+			    handle Cover.Error (msg) => raise Cover.Error (Paths.wrap (r, msg)))
 	  val _ = if !Global.chatter >= 3
-		    then print ("%covers " ^ ModePrint.modeToString mdec ^ ".\n")
+		    then print ("%covers " ^ ModePrint.modesToString
+				             (List.map (fn (mdec, r) => mdec) mdecs)
+					   ^ ".\n")
 		  else ()
 	in
 	  ()

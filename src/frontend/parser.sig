@@ -16,8 +16,8 @@ sig
       ConDec of ExtSyn.condec * ExtSyn.Paths.region
     | FixDec of (string * ExtSyn.Paths.region) * Names.Fixity.fixity
     | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
-    | ModeDec of ExtModes.modedec (* * ExtSyn.Paths.region *)
-    | CoversDec of ExtModes.modedec
+    | ModeDec of ExtModes.modedec list (* * ExtSyn.Paths.region *)
+    | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl

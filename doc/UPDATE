@@ -3,10 +3,10 @@ Preparation for Twelf 1.4
 Externally visible changes:
 
 - mode checking can now be done post-hoc
+- %mode and %covers allows mutual declarations (using paren syntax)
 - %covers mdec.  (where mdec is mode declaration)
 - %total tdec.   (where tdec is termination declaration)
 - %worlds wdec callpats.  (where wdec is worlds declarations)
-- 
 
 README for Twelf 1.3
 

@@ -45,8 +45,8 @@ struct
       ConDec of ExtSyn.condec * ExtSyn.Paths.region
     | FixDec of (string * ExtSyn.Paths.region) * Names.Fixity.fixity
     | NamePref of (string * ExtSyn.Paths.region) * (string * string option)
-    | ModeDec of ExtModes.modedec
-    | CoversDec of ExtModes.modedec
+    | ModeDec of ExtModes.modedec list
+    | CoversDec of ExtModes.modedec list
     | TotalDec of ThmExtSyn.tdecl	(* -fp *)
     | TerminatesDec of ThmExtSyn.tdecl
     | WorldDec of ThmExtSyn.wdecl
@@ -177,16 +177,16 @@ struct
 
     and parseMode' (f) =
         let
-	  val (mdec, f') = ParseMode.parseMode' (f)
+	  val (mdecs, f') = ParseMode.parseMode' (f)
 	in
-	  Stream.Cons (ModeDec mdec, parseStream (stripDot f'))
+	  Stream.Cons (ModeDec mdecs, parseStream (stripDot f'))
 	end
 
     and parseCovers' (f) =
         let
-	  val (mdec, f') = ParseMode.parseMode' (f)
+	  val (mdecs, f') = ParseMode.parseMode' (f)
 	in
-	  Stream.Cons (CoversDec mdec, parseStream (stripDot f'))
+	  Stream.Cons (CoversDec mdecs, parseStream (stripDot f'))
 	end
 
     and parseTotal' (f) =
