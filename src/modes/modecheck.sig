@@ -6,8 +6,8 @@ signature MODECHECK =
 sig
 
   (*! structure IntSyn : INTSYN !*)
-  structure ModeSyn : MODESYN
-  (*! sharing ModeSyn.IntSyn = IntSyn !*)
+  (*! structure ModeSyn : MODESYN !*)
+  (*! sharing ModeTable.IntSyn = IntSyn !*)
   (*! structure Paths : PATHS !*)
 
   exception Error of string

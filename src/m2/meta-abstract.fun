@@ -6,7 +6,7 @@ functor MetaAbstract (structure Global : GLOBAL
 		      structure MetaGlobal : METAGLOBAL
 		      structure Abstract : ABSTRACT
 		      (*! sharing Abstract.IntSyn = MetaSyn'.IntSyn !*)
-		      structure ModeSyn : MODESYN
+		      structure ModeTable : MODETABLE
 		      (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
 		      structure Whnf : WHNF
 		      (*! sharing Whnf.IntSyn = MetaSyn'.IntSyn !*)
@@ -359,7 +359,7 @@ struct
 				 if modeEq (m, modeIn) then 
 				   collectExp (lG0, G, (U, s), modeRec, Adepth)
 				 else Adepth)
-	    val mS = valOf (ModeSyn.modeLookup (cid))
+	    val mS = valOf (ModeTable.modeLookup (cid))
 	  in
 	    collectModeW' (((S, s), mS), Adepth)
 	  end

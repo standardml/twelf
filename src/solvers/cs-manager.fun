@@ -6,12 +6,12 @@ functor CSManager (structure Global : GLOBAL
                    structure Unify : UNIFY
 		   (*! sharing Unify.IntSyn = IntSyn !*)
                    structure Fixity : FIXITY
-                   structure ModeSyn : MODESYN)
+                   (*! structure ModeSyn : MODESYN !*))
   : CS_MANAGER =
 struct
   structure IntSyn  = IntSyn
   structure Fixity  = Fixity
-  structure ModeSyn = ModeSyn
+  (* structure ModeSyn = ModeSyn *)
 
   type sigEntry = (* global signature entry *)
     (* constant declaration plus optional precedence and mode information *)
@@ -240,4 +240,4 @@ structure CSManager = CSManager (structure Global = Global
                                  (*! structure IntSyn = IntSyn !*)
                                  structure Unify = UnifyTrail
                                  structure Fixity = Names.Fixity
-                                 structure ModeSyn = ModeSyn);
+                                 (*! structure ModeSyn = ModeSyn !*));

@@ -1,7 +1,7 @@
 (* Printing Mode Declarations *)
 (* Author: Carsten Schuermann *)
 
-functor ModePrint (structure ModeSyn' : MODESYN
+functor ModePrint ((*! structure ModeSyn' : MODESYN !*)
 		   structure Names : NAMES
 		   (*! sharing Names.IntSyn = ModeSyn'.IntSyn !*)
 		   structure Formatter : FORMATTER
@@ -10,7 +10,7 @@ functor ModePrint (structure ModeSyn' : MODESYN
 		     sharing Print.Formatter = Formatter)
   : MODEPRINT =
 struct
-  structure ModeSyn = ModeSyn'
+  (* structure ModeSyn = ModeSyn' *)
 
   local
     structure I = IntSyn

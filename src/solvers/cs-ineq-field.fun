@@ -25,7 +25,7 @@ struct
     open CSEqField
 
     structure FX = CSManager.Fixity
-    structure MS = CSManager.ModeSyn
+    structure MS = ModeSyn (* CSManager.ModeSyn *)
 
     structure Array  = SparseArray
     structure Array2 = SparseArray2

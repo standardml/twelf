@@ -36,7 +36,7 @@ struct
     open IntSyn
 
     structure FX = CSManager.Fixity
-    structure MS = CSManager.ModeSyn
+    structure MS = ModeSyn (* CSManager.ModeSyn *)
 
     exception MyIntsynRep of Sum
 

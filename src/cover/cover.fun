@@ -12,7 +12,7 @@ functor Cover
    (*! sharing Unify.IntSyn = IntSyn' !*)
    structure Constraints : CONSTRAINTS
    (*! sharing Constraints.IntSyn = IntSyn' !*)
-   structure ModeSyn' : MODESYN
+   structure ModeTable : MODETABLE
    (*! sharing ModeSyn'.IntSyn = IntSyn' !*)
    structure Index : INDEX
    (*! sharing Index.IntSyn = IntSyn' !*)
@@ -34,7 +34,7 @@ functor Cover
   : COVER =
 struct
   (*! structure IntSyn = IntSyn' !*)
-  structure ModeSyn = ModeSyn'
+  (*! structure ModeSyn = ModeSyn' !*)
 
   exception Error of string
 
@@ -1314,7 +1314,7 @@ struct
     fun checkOut (G, (V, s)) =
 	let
 	  val a = I.targetFam V
-	  val SOME(ms) = ModeSyn.modeLookup a (* must be defined and well-moded *)
+	  val SOME(ms) = ModeTable.modeLookup a (* must be defined and well-moded *)
 	  val cOut = outCoverInst ms	(* determine cover instructions *)
 	  val (V', q) = createCoverClause (G, I.EClo(V, s), 0) (* abstract all variables in G *)
 	  val _ = if !Global.doubleCheck

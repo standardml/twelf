@@ -3,7 +3,7 @@
 (* Modified: Frank Pfenning, Roberto Virga *)
 
 functor ModeCheck ((*! structure IntSyn : INTSYN !*)
-		   structure ModeSyn : MODESYN
+		   structure ModeTable : MODETABLE
 		   (*! sharing ModeSyn.IntSyn = IntSyn !*)
                    structure Whnf : WHNF
 		   (*! sharing Whnf.IntSyn = IntSyn !*)
@@ -17,7 +17,7 @@ functor ModeCheck ((*! structure IntSyn : INTSYN !*)
   : MODECHECK =
 struct
   (*! structure IntSyn = IntSyn !*)
-  structure ModeSyn = ModeSyn
+  (*! structure ModeSyn = ModeSyn !*)
   (*! structure Paths = Paths !*)
 
   exception Error of string
@@ -80,7 +80,7 @@ struct
        (occ is used in error message)
     *)
     fun lookup (a, occ) =  
-        case M.mmodeLookup a
+        case ModeTable.mmodeLookup a
 	  of nil => raise Error' (occ, "No mode declaration for " ^ I.conDecName (I.sgnLookup a))
            | sMs => sMs 
 
@@ -711,7 +711,7 @@ struct
         let 
 	  val _ = (checkFree := false)
 	  fun checkable (I.Root (Ha, _)) = 
-	      (case (M.mmodeLookup (cidFromHead Ha)) 
+	      (case (ModeTable.mmodeLookup (cidFromHead Ha)) 
 		 of nil => false
 	          | _ => true)
 	    | checkable (I.Uni _) = false

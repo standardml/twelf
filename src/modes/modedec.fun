@@ -2,12 +2,12 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Frank Pfenning *)
 
-functor ModeDec (structure ModeSyn' : MODESYN
+functor ModeDec ((*! structure ModeSyn' : MODESYN !*)
 		 (*! structure Paths' : PATHS !*)
 		   )
   : MODEDEC =
 struct
-  structure ModeSyn = ModeSyn'
+  (*! structure ModeSyn = ModeSyn' !*)
   (*! structure Paths = Paths' !*)
 
   exception Error of string
@@ -32,10 +32,12 @@ struct
       
     fun error (r, msg) = raise Error (P.wrap (r, msg))
 
+    (*
     fun lookup a =
-        case M.modeLookup a
+        case ModeTable.modeLookup a
 	  of NONE => raise Error ("No mode declaration for " ^ I.conDecName (I.sgnLookup a))
 	   | SOME sM => sM 
+    *)
 
     (* checkname mS = ()
        

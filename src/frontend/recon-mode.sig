@@ -41,7 +41,7 @@ end;  (* signature EXTMODES *)
 
 signature RECON_MODE =
 sig
-  structure ModeSyn : MODESYN
+  (*! structure ModeSyn : MODESYN !*)
   include EXTMODES
 
   exception Error of string

@@ -18,7 +18,7 @@ functor Recursion (structure Global : GLOBAL
 		   (*! sharing Print.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Order : ORDER
 		   (*! sharing Order.IntSyn = MetaSyn'.IntSyn !*)
-		   structure ModeSyn : MODESYN
+		   structure ModeTable : MODETABLE
 		   (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
 		   structure Lemma : LEMMA
 		   sharing Lemma.MetaSyn = MetaSyn'
@@ -544,7 +544,7 @@ struct
     fun inputConv (Vs1, Vs2) = inputConvW (Whnf.whnf Vs1, Whnf.whnf Vs2)
     and inputConvW ((I.Root (I.Const c1, S1), s1), (I.Root (I.Const c2, S2), s2)) =
           (* s1 = s2 = id *)
-          if c1 = c2 then inputConvSpine (valOf (ModeSyn.modeLookup c1), 
+          if c1 = c2 then inputConvSpine (valOf (ModeTable.modeLookup c1), 
 					  ((S1, s1), (I.constType c1, I.id)), 
 					  ((S2, s2), (I.constType c2, I.id)))
 	  else false

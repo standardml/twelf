@@ -28,7 +28,7 @@ struct
 
     structure CSM = CSManager
     structure FX = CSM.Fixity
-    structure MS = CSM.ModeSyn
+    structure MS = ModeSyn (* CSM.ModeSyn *)
 
     structure Array  = SparseArray
     structure Array2 = SparseArray2

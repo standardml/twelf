@@ -8,14 +8,14 @@ functor ReconThm (structure Global : GLOBAL
 		  (*! sharing Abstract.IntSyn = IntSyn !*)
 		  structure Constraints : CONSTRAINTS
 		  (*! sharing Constraints.IntSyn = IntSyn !*)
-		  structure ModeSyn : MODESYN
+		  (*! structure ModeSyn : MODESYN !*)
 		  (*! sharing ModeSyn.IntSyn = IntSyn !*)
 		  structure Names : NAMES
 		  (*! sharing Names.IntSyn = IntSyn !*)
 		  (*! structure Paths' : PATHS !*)
 		  structure ThmSyn': THMSYN
-		    sharing ThmSyn'.ModeSyn = ModeSyn
-		    (*! sharing ThmSyn'.Paths = Paths' !*)
+		  (*! sharing ThmSyn'.ModeSyn = ModeSyn !*)
+		  (*! sharing ThmSyn'.Paths = Paths' !*)
 		    sharing ThmSyn'.Names = Names
 		  structure ReconTerm': RECON_TERM
 		  (*! sharing ReconTerm'.IntSyn = IntSyn !*)

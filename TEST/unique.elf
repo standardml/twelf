@@ -38,4 +38,4 @@ capp : copy (app E1 E2) (app F1 F2)
 % %block cb3 : block {x:exp} {u:{E:exp} copy (app x E) (app E E)}.
 % %worlds (cb | cb3) (copy E F).
 
-%unique copy +E -F.
+%unique copy -E +F.

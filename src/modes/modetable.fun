@@ -1,27 +1,24 @@
-(* Mode Syntax *)
+(* Mode Table *)
 (* Author: Carsten Schuermann *)
 (* Modified: Frank Pfenning, Roberto Virga *)
 
-functor ModeSyn ((*! structure IntSyn' : INTSYN !*)
-		 structure Names : NAMES
-		 (*! sharing Names.IntSyn = IntSyn' !*)
-		 structure Table : TABLE where type key = int
-		 structure Index : INDEX
-		 (*! sharing Index.IntSyn = IntSyn' !*)
-		   ) : MODESYN =
+functor ModeTable
+  ((*! structure IntSyn' : INTSYN !*)
+   (* structure Names : NAMES *)
+   (*! sharing Names.IntSyn = IntSyn' !*)
+   structure Table : TABLE where type key = int
+   (* structure Index : INDEX *)
+   (*! sharing Index.IntSyn = IntSyn' !*)
+   ) : MODETABLE =
 struct
   (*! structure IntSyn = IntSyn' !*)
-
   exception Error of string
 
-  datatype Mode = Plus | Star | Minus 
-  datatype ModeSpine = Mnil | Mapp of Marg * ModeSpine
-  and  Marg = Marg of Mode * string option
-   
   local 
     structure I = IntSyn
+    structure M = ModeSyn
       
-    val modeSignature : (ModeSpine list) Table.Table = Table.new(0);
+    val modeSignature : (M.ModeSpine list) Table.Table = Table.new(0);
 
     (* reset () = ()
 
@@ -71,21 +68,6 @@ struct
             Table.insert modeSignature (a, mS :: mSs)
 	  end
 
-    (* modeEqual (M1, M2) = true iff M1 = M2 *)
-    fun modeEqual (Plus, Plus) = true
-      | modeEqual (Star, Star) = true
-      | modeEqual (Minus, Minus) = true
-      | modeEqual _ = false
-
-
-    (* modeToString M = string
-    
-       converts a mode into a string for error messages
-    *)
-    fun modeToString Plus = "input (+)"
-      | modeToString Star = "unrestricted (*)"
-      | modeToString Minus = "output (-)"
-
   in
     val reset = reset
 
@@ -94,8 +76,5 @@ struct
 
     val installMmode = installMmode
     val mmodeLookup = mmodeLookup
-
-    val modeEqual = modeEqual
-    val modeToString = modeToString
   end
-end;  (* functor ModeSyn *)
+end;  (* functor ModeTable *)

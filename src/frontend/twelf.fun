@@ -43,28 +43,29 @@ functor Twelf
      sharing type ReconConDec.condec = Parser.ExtConDec.condec
    structure ReconQuery : RECON_QUERY
 
-   structure ModeSyn : MODESYN
+   structure ModeTable : MODETABLE
    (*! sharing ModeSyn.IntSyn = IntSyn' !*)
    structure ModeCheck : MODECHECK
    (*! sharing ModeCheck.IntSyn = IntSyn' !*)
-     sharing ModeCheck.ModeSyn = ModeSyn
-     (*! sharing ModeCheck.Paths = Paths !*)
+   (*! sharing ModeCheck.ModeSyn = ModeSyn !*)
+   (*! sharing ModeCheck.Paths = Paths !*)
    structure ReconMode : RECON_MODE
-     sharing ReconMode.ModeSyn = ModeSyn
+   (*! sharing ReconMode.ModeSyn = ModeSyn !*)
      (*! sharing ReconMode.Paths = Paths !*)
      sharing type ReconMode.modedec = Parser.ExtModes.modedec
    structure ModePrint : MODEPRINT
-     sharing ModePrint.ModeSyn = ModeSyn
+   (*! sharing ModePrint.ModeSyn = ModeSyn !*)
    structure ModeDec : MODEDEC
-     sharing ModeDec.ModeSyn = ModeSyn
+   (*! sharing ModeDec.ModeSyn = ModeSyn !*)
      (*! sharing ModeDec.Paths = Paths !*)
 
    structure Unique : UNIQUE
-     sharing Unique.ModeSyn = ModeSyn
+   (*! sharing Unique.ModeSyn = ModeSyn !*)
+   structure UniqueTable : MODETABLE
 
    structure Cover : COVER
    (*! sharing Cover.IntSyn = IntSyn' !*)
-     sharing Cover.ModeSyn = ModeSyn
+   (*! sharing Cover.ModeSyn = ModeSyn !*)
 
    structure Total : TOTAL
    (*! sharing Total.IntSyn = IntSyn' !*)
@@ -108,7 +109,7 @@ functor Twelf
    structure ReconThm : RECON_THM
      sharing ReconThm.ThmSyn = ThmSyn
      (*! sharing ReconThm.Paths = Paths !*)
-     sharing ReconThm.ThmSyn.ModeSyn = ModeSyn
+     (*! sharing ReconThm.ThmSyn.ModeSyn = ModeSyn !*)
      sharing type ReconThm.tdecl = Parser.ThmExtSyn.tdecl
      sharing type ReconThm.rdecl = Parser.ThmExtSyn.rdecl (* -bp *)
      sharing type ReconThm.tableddecl = Parser.ThmExtSyn.tableddecl (* -bp *)
@@ -160,7 +161,7 @@ functor Twelf
    structure CSManager : CS_MANAGER
    (*! sharing CSManager.IntSyn = IntSyn' !*)
      sharing CSManager.Fixity = Names.Fixity
-     sharing CSManager.ModeSyn = ModeSyn
+   (*! sharing CSManager.ModeSyn = ModeSyn !*)
     
    structure CSInstaller : CS_INSTALLER
    structure MkAbsolute : MK_ABSOLUTE
@@ -280,7 +281,7 @@ struct
 	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
-	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
+	      | ModeTable.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
               | Unique.Error (msg) => abortFileMsg (fileName, msg)
@@ -575,9 +576,9 @@ struct
           val _ = ReconTerm.checkErrors (r)
 	  val _ = List.app (fn (mdec as (a, _), r) => 
 	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
-			       of IntSyn.Normal => ModeSyn.installMode mdec
-			        | _ => raise ModeSyn.Error "Cannot declare modes for foreign constants")
-			    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg)))
+			       of IntSyn.Normal => ModeTable.installMode mdec
+			        | _ => raise ModeTable.Error "Cannot declare modes for foreign constants")
+			    handle ModeTable.Error (msg) => raise ModeTable.Error (Paths.wrap (r, msg)))
 	          mdecs
 	  val _ = List.app (fn (mdec, r) => ModeCheck.checkMode mdec (* exception comes with location *)
 			    handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg))
@@ -596,11 +597,12 @@ struct
 	let
 	  val mdecs = List.map ReconMode.modeToMode mterms
 	  val _ = ReconTerm.checkErrors (r)
+          (* convert all UniqueTable.Error to Unique.Error *)
 	  val _ = List.app (fn (mdec as (a, _), r) => 
 	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
-			       of IntSyn.Normal => ModeSyn.installMode mdec
-			        | _ => raise ModeSyn.Error "Cannot declare modes for foreign constants")
-			    handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg)))
+			       of IntSyn.Normal => UniqueTable.installMode mdec
+			        | _ => raise UniqueTable.Error "Cannot declare modes for foreign constants")
+			    handle UniqueTable.Error (msg) => raise Unique.Error (Paths.wrap (r, msg)))
 	          mdecs
           (* Timing added to coverage --- fix !!! -fp Sun Aug 17 12:17:51 2003 *)
           val _ = List.app (fn (mdec, r) => (Timers.time Timers.coverage Unique.checkUnique) mdec
@@ -712,7 +714,7 @@ struct
 								       
 	  val cid = installConDec IntSyn.Ordinary (E, (fileName, NONE), r)
 	  val MS = ThmSyn.theoremDecToModeSpine (Tdec, r)
-	  val _ = ModeSyn.installMode (cid, MS)
+	  val _ = ModeTable.installMode (cid, MS)
 	  val _ = if !Global.chatter >= 3
 		    then print ("%theorem " ^ Print.conDecToString E ^ "\n")
 		  else ()
@@ -732,7 +734,7 @@ struct
 	  val _ = Prover.init (depth, La)
 	  val _ = if !Global.chatter >= 3 
 		    then map (fn a => print ("%mode " ^ 
-					     (ModePrint.modeToString (a, valOf (ModeSyn.modeLookup a)))
+					     (ModePrint.modeToString (a, valOf (ModeTable.modeLookup a)))
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 
@@ -760,7 +762,7 @@ struct
 	  val _ = Prover.init (depth, La)
 	  val _ = if !Global.chatter >= 3 
 		    then map (fn a => print ("%mode " ^ 
-					     (ModePrint.modeToString (a, valOf (ModeSyn.modeLookup a)))
+					     (ModePrint.modeToString (a, valOf (ModeTable.modeLookup a)))
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 
@@ -783,7 +785,7 @@ struct
 		  else ()
 	  val _ = if !Global.chatter >= 3 
 		    then map (fn a => print ("%mode " ^ 
-					     (ModePrint.modeToString (a, valOf (ModeSyn.modeLookup a)))
+					     (ModePrint.modeToString (a, valOf (ModeTable.modeLookup a)))
 					     ^ ".\n")) La   (* mode must be declared!*)
 		  else [()]
 	in
@@ -940,7 +942,7 @@ struct
           val _ = Index.resetFrom mark
           val _ = IndexSkolem.resetFrom mark
           val _ = ModSyn.resetFrom markSigDef
-          (* val _ = ModeSyn.resetFrom mark *)
+          (* val _ = ModeTable.resetFrom mark *)
           (* val _ = Total.resetFrom mark *)
           (* val _ = Subordinate.resetFrom mark (* ouch! *) *)
           (* val _ = Reduces.resetFrom mark *)
@@ -1011,7 +1013,7 @@ struct
                                          ^ Names.qidToString (Names.constQid cid) ^ ".\n")
                            else ())
 		      | NONE => ())
-	  val _ = List.app (fn mdec => ModeSyn.installMmode (cid, mdec)) mdecL
+	  val _ = List.app (fn mdec => ModeTable.installMmode (cid, mdec)) mdecL
 	in
 	  cid
 	end
@@ -1020,7 +1022,7 @@ struct
  
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); Origins.reset ();
-		    ModeSyn.reset ();
+		    ModeTable.reset ();
 		    Index.reset (); 
 		    IndexSkolem.reset ();
 		    Subordinate.reset ();
@@ -1063,7 +1065,7 @@ struct
 	  val conDec = IntSyn.sgnLookup (cid)
 	  (* val fixity = Names.getFixity (cid) *)
 	  (* can't get name preference right now *)
-	  (* val mode = ModeSyn.modeLookup (cid) *)
+	  (* val mode = ModeTable.modeLookup (cid) *)
 	  (* can't get termination declaration *)
 	in
 	  print (Print.conDecToString conDec ^ "\n");

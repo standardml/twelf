@@ -7,7 +7,7 @@ functor Unique
    structure Abstract : ABSTRACT
    structure Unify : UNIFY		(* must be trailing! *)
    structure Constraints : CONSTRAINTS
-   structure ModeSyn' : MODESYN
+   structure UniqueTable : MODETABLE
    structure Index : INDEX
    structure Subordinate : SUBORDINATE
 
@@ -18,8 +18,6 @@ functor Unique
    structure Timers : TIMERS)
   : UNIQUE =
 struct
-
-  structure ModeSyn = ModeSyn'
 
   exception Error of string
 

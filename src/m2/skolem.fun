@@ -9,7 +9,7 @@ functor Skolem (structure Global : GLOBAL
 		(*! sharing Abstract.IntSyn = IntSyn' !*)
 		structure IndexSkolem : INDEX
 		(*! sharing IndexSkolem.IntSyn = IntSyn' !*)
-		structure ModeSyn : MODESYN
+		structure ModeTable : MODETABLE
 		(*! sharing ModeSyn.IntSyn = IntSyn' !*)
 		structure Print : PRINT
 		(*! sharing Print.IntSyn = IntSyn' !*)
@@ -106,7 +106,7 @@ struct
       | install (a :: aL) = 
         let 
 	  val I.ConDec (name, _, imp, _, V, L) = I.sgnLookup a
-	  val SOME mS = ModeSyn.modeLookup a
+	  val SOME mS = ModeTable.modeLookup a
 	  val _ = installSkolem (name, imp, (V, mS), I.Type)
 	in
 	  install aL

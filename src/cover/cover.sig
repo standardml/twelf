@@ -5,8 +5,8 @@ signature COVER =
 sig
 
   (*! structure IntSyn : INTSYN !*)
-  structure ModeSyn : MODESYN
-  (*! sharing ModeSyn.IntSyn = IntSyn !*)
+  (*! structure ModeTable : MODESYN !*)
+  (*! sharing ModeTable.IntSyn = IntSyn !*)
 
   exception Error of string
 

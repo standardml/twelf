@@ -2,24 +2,24 @@
 (* Author: Carsten Schuermann *)
 
 functor ReconMode (structure Global : GLOBAL
-		   structure ModeSyn' : MODESYN
+		   (*! structure ModeSyn' : MODESYN !*)
 		   structure Whnf : WHNF
 		   (*! sharing Whnf.IntSyn = ModeSyn'.IntSyn !*)
 		   (*! structure Paths' : PATHS !*)
                    structure Names : NAMES
 		   (*! sharing Names.IntSyn = ModeSyn'.IntSyn !*)
 		   structure ModePrint : MODEPRINT
-		     sharing ModePrint.ModeSyn = ModeSyn'
+		   (*! sharing ModePrint.ModeSyn = ModeSyn' !*)
 		   structure ModeDec : MODEDEC
-		     sharing ModeDec.ModeSyn = ModeSyn'
-		     (*! sharing ModeDec.Paths = Paths' !*)
+		   (*! sharing ModeDec.ModeSyn = ModeSyn' !*)
+		   (*! sharing ModeDec.Paths = Paths' !*)
 		   structure ReconTerm' : RECON_TERM
 		   (*! sharing ReconTerm'.IntSyn = ModeSyn'.IntSyn !*)
 		   (*! sharing ReconTerm'.Paths = Paths' !*)
 		       )
   : RECON_MODE =
 struct
-  structure ModeSyn = ModeSyn'
+  (*! structure ModeSyn = ModeSyn' !*)
   structure ExtSyn = ReconTerm'
   (*! structure Paths = Paths' !*)
 

@@ -4,7 +4,7 @@
 
 functor RelFun (structure Global : GLOBAL
                 (*! structure FunSyn' : FUNSYN !*)
-		structure ModeSyn : MODESYN
+		structure ModeTable : MODETABLE
 		(*! sharing ModeSyn.IntSyn = FunSyn'.IntSyn !*)
 		structure Names : NAMES
 		(*! sharing Names.IntSyn = FunSyn'.IntSyn !*)
@@ -55,7 +55,7 @@ struct
 	val V  = case I.sgnLookup cid 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
-	val mS = case M.modeLookup cid
+	val mS = case ModeTable.modeLookup cid
 	           of NONE => raise Error "Mode declaration expected"
 	            | SOME mS => mS
 
@@ -213,7 +213,7 @@ struct
 
     fun strengthen (Psi, (a, S), w, m) =
       let 
-	val mS = case M.modeLookup a
+	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 
@@ -376,7 +376,7 @@ struct
     fun abstract (a) = 
 
       let 
-	val mS = case M.modeLookup a
+	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
@@ -421,7 +421,7 @@ struct
     *)
     fun transformInit (Psi, (a, S), w1) = 
       let
-	val mS = case M.modeLookup a
+	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
@@ -485,7 +485,7 @@ struct
 
     fun transformDec (Ts, (Psi, G0), d, (a, S), w1, w2, t0) = 
       let
-	val mS = case M.modeLookup a
+	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 	val V = case I.sgnLookup a 
@@ -712,7 +712,7 @@ struct
     *)
     fun transformConc ((a, S), w) = 
       let
-	val mS = case M.modeLookup a
+	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
 
@@ -891,7 +891,7 @@ struct
 	    val V = case I.sgnLookup a 
 	              of I.ConDec (name, _, _, _, V, I.Kind) => V
 		       | _ => raise Error "Type Constant declaration expected"
-	    val mS = case M.modeLookup a
+	    val mS = case ModeTable.modeLookup a
 	               of NONE => raise Error "Mode declaration expected"
 		        | SOME mS => mS
 	

@@ -12,11 +12,9 @@ functor Total
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
 
-   structure ModeSyn : MODESYN
+   structure ModeTable : MODETABLE
    (*! sharing ModeSyn.IntSyn = IntSyn' !*)
    structure ModeCheck : MODECHECK
-     sharing ModeCheck.ModeSyn = ModeSyn
-     (*! sharing ModeCheck.IntSyn = IntSyn' !*)
 
    structure Index : INDEX
    (*! sharing Index.IntSyn = IntSyn' !*)
@@ -31,7 +29,6 @@ functor Total
 
    structure Cover : COVER
    (*! sharing Cover.IntSyn = IntSyn' !*)
-     sharing Cover.ModeSyn = ModeSyn
 
      (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
@@ -201,7 +198,7 @@ struct
 
           (* Checking input coverage *)
 	  (* by termination invariant, there must be consistent mode for a *)
-	  val SOME(ms) = M.modeLookup a	(* must be defined and well-moded *)
+	  val SOME(ms) = ModeTable.modeLookup a	(* must be defined and well-moded *)
 	  val _ = checkDefinite (a, ms) (* all arguments must be either input or output *)
 	  val _ = ((Timers.time Timers.coverage Cover.checkCovers) (a, ms) ;
 		   if !Global.chatter >= 4

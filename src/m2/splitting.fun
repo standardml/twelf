@@ -7,7 +7,7 @@ functor Splitting (structure Global : GLOBAL
 		   structure MetaPrint : METAPRINT
 		   sharing MetaPrint.MetaSyn = MetaSyn'
 		   sharing MetaAbstract.MetaSyn = MetaSyn'
-		   structure ModeSyn : MODESYN
+		   structure ModeTable : MODETABLE
 		   (*! sharing ModeSyn.IntSyn = MetaSyn'.IntSyn !*)
                    structure Whnf : WHNF
 		   (*! sharing Whnf.IntSyn = MetaSyn'.IntSyn !*)
@@ -311,7 +311,7 @@ struct
 		     k', V' as I.Root (I.Const(cid'), S'), Bdd') =
 	(* cid = cid' *)
 	let
-	  val mS = valOf (ModeSyn.modeLookup (cid))
+	  val mS = valOf (ModeTable.modeLookup (cid))
 	in
 	  inheritSpineMode (M.Top, mS, B, k, S, k', S', Bdd')
 	end
@@ -324,7 +324,7 @@ struct
 		     k', I.Root (I.Const (cid'), S'), Bdd') =
 	  (* cid = cid' *)
 	  let
-	    val mS = valOf (ModeSyn.modeLookup (cid))
+	    val mS = valOf (ModeTable.modeLookup (cid))
 	  in
 	    inheritSpineMode (M.Bot, mS, B, k, S, k', S', Bdd')
 	  end
@@ -332,7 +332,7 @@ struct
     and inheritG (B, k, I.Root (I.Const (cid), S),
 		  k', V' as I.Root (I.Const (cid'), S'), Bdd') =
         let
-	  val mS = valOf (ModeSyn.modeLookup (cid))
+	  val mS = valOf (ModeTable.modeLookup (cid))
 	in
 	  (* mode dependency in Goal: first M.Top, then M.Bot *)
 	  inheritSpineMode (M.Bot, mS, B, k, S, k', S', 

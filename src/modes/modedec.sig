@@ -5,7 +5,7 @@
 signature MODEDEC =
 sig
 
-  structure ModeSyn : MODESYN
+  (*! structure ModeSyn : MODESYN !*)
   (*! structure Paths : PATHS !*)
 
   exception  Error of string

@@ -3,7 +3,7 @@
 (* Modified: Brigitte Pientka *)
 
 functor ThmSyn ((*! structure IntSyn : INTSYN !*)
-		structure ModeSyn' : MODESYN
+		(*! structure ModeSyn' : MODESYN !*)
 		(*! sharing ModeSyn'.IntSyn = IntSyn !*)
 		structure Abstract : ABSTRACT
 		(*! sharing Abstract.IntSyn = IntSyn !*)
@@ -16,7 +16,7 @@ functor ThmSyn ((*! structure IntSyn : INTSYN !*)
   : THMSYN =
 struct
   (*! structure IntSyn = IntSyn !*)
-  structure ModeSyn = ModeSyn'
+  (*! structure ModeSyn = ModeSyn' *)
   (*! structure Paths = Paths' !*)
   structure Names = Names'
 

@@ -1,6 +1,7 @@
 Library
   signature UNIQUE
   structure Unique
+  structure UniqueTable
 is
 #if defined(NEW_CM)
   $/basis.cm

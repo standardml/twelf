@@ -17,7 +17,7 @@ struct
     open IntSyn
 
     structure FX = CSManager.Fixity
-    structure MS = CSManager.ModeSyn
+    structure MS = ModeSyn (* CSManager.ModeSyn *)
 
     val myID = ref ~1 : IntSyn.csid ref
 

@@ -57,7 +57,7 @@ structure ReconQuery =
 
 structure ReconMode =
   ReconMode (structure Global = Global
-	     structure ModeSyn' = ModeSyn
+	     (*! structure ModeSyn' = ModeSyn !*)
 	     structure Whnf = Whnf
 	     (*! structure Paths' = Paths !*)
              structure Names = Names
@@ -70,7 +70,7 @@ structure ReconThm =
 	    structure IntSyn = IntSyn
 	    structure Abstract = Abstract
 	    structure Constraints = Constraints
-	    structure ModeSyn = ModeSyn
+	    (*! structure ModeSyn = ModeSyn !*)
 	    structure Names = Names
 	    (*! structure Paths' = Paths !*)
 	    structure ThmSyn' = ThmSyn
@@ -181,13 +181,14 @@ structure Twelf =
          structure ReconConDec = ReconConDec
          structure ReconQuery = ReconQuery
 
-	 structure ModeSyn = ModeSyn
+	 structure ModeTable = ModeTable
 	 structure ModeCheck = ModeCheck
 	 structure ModeDec = ModeDec
 	 structure ReconMode = ReconMode
 	 structure ModePrint = ModePrint
 
          structure Unique = Unique
+         structure UniqueTable = UniqueTable
 
          structure Cover = Cover
          structure Total = Total

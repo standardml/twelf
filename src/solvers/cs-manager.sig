@@ -5,7 +5,7 @@ signature CS_MANAGER =
 sig
   (* structure IntSyn : INTSYN *)
   structure Fixity  : FIXITY
-  structure ModeSyn : MODESYN
+  (*! structure ModeSyn : MODESYN !*)
 
   type sigEntry = (* global signature entry *)
     (* constant declaration plus optional precedence and mode information *)

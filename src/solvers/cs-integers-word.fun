@@ -19,7 +19,7 @@ struct
     structure W = LargeWord;
 
     structure FX = CSManager.Fixity
-    structure MS = CSManager.ModeSyn
+    structure MS = ModeSyn (* CSManager.ModeSyn *)
 
     exception MyFgnCnstrRepPlus of dctx * Exp * Exp * Exp * Exp
                                         (* FgnCnstr Representation: (G, proof, U1, U2, U3) *)

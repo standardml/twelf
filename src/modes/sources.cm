@@ -1,6 +1,9 @@
 Library
   signature MODESYN
   structure ModeSyn
+  signature MODETABLE
+  functor ModeTable
+  structure ModeTable
   signature MODEDEC
   structure ModeDec
   signature MODECHECK
@@ -19,8 +22,9 @@ is
   ../names/sources.cm	
   ../paths/sources.cm
   ../index/sources.cm
-  modesyn.sig
-  modesyn.fun
+  modesyn.sml
+  modetable.sig
+  modetable.fun
   modedec.sig
   modedec.fun
   modecheck.sig
