@@ -203,6 +203,18 @@ struct
        The inherit functions below copy the splitting depth attribute
        between successive states, using a simultaneous traversal
        in mode dependency order.
+
+       Invariant: 
+       (G,M,B) |- V type
+       G = G0, G1, G2
+       |G2| = k       (length of local context)
+       d = |G1, G2|   (last BVar seen)
+       let n < |G|
+       if   n>d then n is an index of a variable already seen in mdo
+       if   n=d then n is an index of a variable now seen for the first 
+	             time
+       if   n<=k then n is a local parameter
+       it is impossible for     k < n < d
     *)
     (* invariants on inheritXXX functions? -fp *)
     fun inheritBelow (b', k', I.Lam (D', U'), Bdd') =

@@ -4,15 +4,21 @@
 functor Prover (structure MetaGlobal : METAGLOBAL
 		structure MetaSyn' : METASYN
 		structure Init : INIT
-		sharing Init.MetaSyn = MetaSyn'
+ 		  sharing Init.MetaSyn = MetaSyn'
 		structure Strategy : STRATEGY
-		sharing Strategy.MetaSyn = MetaSyn'
+		  sharing Strategy.MetaSyn = MetaSyn'
+		structure Filling : FILLING
+		  sharing Filling.MetaSyn = MetaSyn'
+		structure Splitting : SPLITTING
+		  sharing Splitting.MetaSyn = MetaSyn'
+		structure Recursion : RECURSION
+		  sharing Recursion.MetaSyn = MetaSyn'
 		structure Qed : QED 
-		sharing Qed.MetaSyn = MetaSyn'
+		  sharing Qed.MetaSyn = MetaSyn'
 		structure MetaPrint : METAPRINT
-		sharing MetaPrint.MetaSyn = MetaSyn'
+		  sharing MetaPrint.MetaSyn = MetaSyn'
 		structure Names : NAMES
-		sharing Names.IntSyn = MetaSyn'.IntSyn
+		  sharing Names.IntSyn = MetaSyn'.IntSyn
 		structure Timers : TIMERS) 
   : PROVER =
 struct
@@ -29,6 +35,10 @@ struct
 
     (* List of solved states *)
     val solvedStates : MetaSyn.State list ref = ref nil
+
+
+
+    fun error s = raise Error s
 
     (* reset () = ()
 
@@ -109,6 +119,10 @@ struct
     fun auto () =
 	let 
 	  val (Open, solvedStates') = Strategy.run (!openStates)
+	     handle Splitting.Error s => error ("Splitting Error: " ^ s)
+		  | Filling.Error s => error ("Filling Error: " ^ s)
+		  | Recursion.Error s => error ("Recursion Error: " ^ s)
+
 	  val _ = openStates := Open
 	  val _ = solvedStates := (!solvedStates) @ solvedStates' 
 	in

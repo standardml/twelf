@@ -37,6 +37,20 @@ struct
     structure C = Constraints
 
     (* Invariants? *)
+
+    (* Definition: Mode dependency order
+
+       A pair ((G, M), V) is in mode dependency order iff 
+           G |- V : type
+	   G |- M modes
+       and G = G0+, G1-, G1+,  ... G0-
+       and V = {xn:Vn} ..{x1:V1}P0
+       where G0+ collects all +variables when traversing P0 in order
+       and Gi+ collects all +variables when traverseing Vi in order  (i > 0)
+       and Gi- collects all -variables when traversing Vi in order   (i > 0)
+       and G0- collects all -variables when traversing P0 in order.
+    *)
+
     datatype Var =			(* Variable found during collect  *)
       EV of I.Exp option ref		(* Var ::= EVar <r_, V, St>       *)
       * I.Exp * MetaSyn.Mode

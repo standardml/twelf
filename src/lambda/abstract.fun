@@ -90,6 +90,7 @@ struct
     and occursInHead (k, I.BVar (k')) = (k = k')
       | occursInHead (k, I.Const _) = false
       | occursInHead (k, I.Def _) = false
+      | occursInHead (k, I.Skonst _) = false
       (* no case for FVar *)
       (* no case for Skonst *)
 

@@ -4,4 +4,4 @@ fun test (file) =
        | Twelf.ABORT => raise Domain;
 
 Global.safe := false;
-test "examples/church-rosser/test.cfg";
+test "examples/church-rosser/test-cr.cfg";

@@ -5,6 +5,8 @@ functor Skolem (structure Global : GLOBAL
                 structure IntSyn' : INTSYN
 		structure Whnf : WHNF
 		  sharing Whnf.IntSyn = IntSyn'
+		structure Abstract : ABSTRACT
+		  sharing Abstract.IntSyn = IntSyn'
 		structure IndexSkolem : INDEX
 		  sharing IndexSkolem.IntSyn = IntSyn'
 		structure ModeSyn : MODESYN
@@ -63,7 +65,8 @@ struct
 	    (case mS 
 	       of M.Mapp (M.Marg (M.Plus, _), mS') => 
 		    installSkolem' (d+1, (V, mS'), I.dot1 s, 
-				    fn V => k (I.Pi ((I.decSub (D, s), I.Maybe), V)))
+				    fn V => k (Abstract.piDepend ((Whnf.normalizeDec (D, s), I.Maybe), V))) 
+(*				    fn V => k (I.Pi ((Whnf.normalizeDec (D, s), DP), V))) *) 
 		| M.Mapp (M.Marg (M.Minus, _), mS') => 
 		  let 
 		    val I.Dec (_, V') = D
@@ -75,7 +78,7 @@ struct
 		    val _ = IndexSkolem.install H
 		    val _ = Names.installName (name', sk)
 		    val _ = (Timers.time Timers.compiling Compile.install) sk
-		    val CompSyn.SClause r = CompSyn.sProgLookup sk
+(*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d
 		    val _ = if !Global.chatter >= 3 
 			      then TextIO.print (Print.conDecToString SD ^ "\n")
