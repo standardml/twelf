@@ -151,17 +151,50 @@ struct
 
     fun menuToString () =
 	let 
-	  fun menuToString' (k, nil) = ""
-	    | menuToString' (k, Splitting O :: M) =  
-		(menuToString' (k+1, M)) ^ "\n" ^ (format k) ^ (MTPSplitting.menu O)
-	    | menuToString' (k, Filling O :: M) = 
-		(menuToString' (k+1, M)) ^ "\n" ^ (format k) ^ (MTPFilling.menu O)
-	    | menuToString' (k, Recursion O :: M) = 
-		(menuToString' (k+1, M)) ^ "\n" ^ (format k) ^ (MTPRecursion.menu O)
+	  fun menuToString' (k, nil, (NONE, _)) = (SOME k, "") 
+	    | menuToString' (k, nil, (kopt' as SOME _, _)) = (kopt', "") 
+	    | menuToString' (k, Splitting O :: M, kOopt' as (NONE, NONE)) =  
+	      let 
+		val kOopt'' = if MTPSplitting.applicable O then (SOME k, SOME O)
+			      else kOopt'
+		val (kopt as SOME k'', s) = menuToString' (k+1, M, kOopt'')
+	      in 
+		(kopt, if k = k'' then s ^ "\n* " ^ (format k) ^ (MTPSplitting.menu O)
+		       else s ^ "\n  " ^ (format k) ^ (MTPSplitting.menu O))
+	      end
+	    | menuToString' (k, Splitting O :: M, kOopt' as (SOME k', SOME O')) =
+	      let
+		val kOopt'' = if MTPSplitting.applicable O then
+		                case MTPSplitting.compare (O, O')
+				  of LESS => (SOME k, SOME O)
+				   | _ => kOopt'
+				else  kOopt'
+		val (kopt as SOME k'', s) = menuToString' (k+1, M, kOopt'')
+	      in
+		(kopt, if  k = k'' then s ^ "\n* " ^ (format k) ^ (MTPSplitting.menu O)
+		       else s ^ "\n  " ^ (format k) ^ (MTPSplitting.menu O))
+	      end
+	    | menuToString' (k, Filling O :: M, kOopt) = 
+	      let 
+		val (kopt, s) = menuToString' (k+1, M, kOopt)
+	      in 
+		(kopt, s ^ "\n  " ^ (format k) ^ (MTPFilling.menu O))
+	      end
+	    | menuToString' (k, Recursion O :: M,kOopt) =
+	      let 
+		val (kopt, s) = menuToString' (k+1, M, kOopt)
+	      in
+		(kopt, s ^ "\n  " ^ (format k) ^ (MTPRecursion.menu O))
+	      end
 	in
 	  case !Menu of 
 	    NONE => raise Error "Menu is empty"
-	  | SOME M => menuToString' (1, M)
+	  | SOME M => 
+	      let 
+		val (kopt, s) = menuToString' (1, M, (NONE, NONE))
+	      in
+		s 
+	      end
 	end
 
 
