@@ -2,21 +2,29 @@
 (* Author: Carsten Schuermann *)
 (* Modified: Frank Pfenning, Roberto Virga *)
 
-functor ModeCheck (structure ModeSyn' : MODESYN
+functor ModeCheck (structure IntSyn : INTSYN
+		   structure ModeSyn : MODESYN
+		     sharing ModeSyn.IntSyn = IntSyn
                    structure Whnf : WHNF
-                     sharing Whnf.IntSyn = ModeSyn'.IntSyn
-		   structure Paths' : PATHS)
+                     sharing Whnf.IntSyn = IntSyn
+		   structure Index : INDEX
+		     sharing Index.IntSyn = IntSyn
+		   structure Paths : PATHS
+		   structure Origins : ORIGINS
+		     sharing Origins.Paths = Paths
+		     sharing Origins.IntSyn = IntSyn)
   : MODECHECK =
 struct
-  structure ModeSyn = ModeSyn'
-  structure Paths = Paths'
+  structure IntSyn = IntSyn
+  structure ModeSyn = ModeSyn
+  structure Paths = Paths
 
   exception Error of string
 
    
   local 
+    structure I = IntSyn
     structure M = ModeSyn
-    structure I = ModeSyn.IntSyn
     structure P = Paths
       
     datatype Info =                     (* Groundness information      *)
@@ -42,9 +50,19 @@ struct
        a context G, we write G ~ D
     *)
 
-    exception Error' of P.occ * string
+   (* copied from worldcheck/worldsyn.fun *)
+    fun wrapMsg (c, occ, msg) =  
+        (case Origins.originLookup c
+	   of (fileName, NONE) => (fileName ^ ":" ^ msg)
+            | (fileName, SOME occDec) => 
+		  (P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
+			       Origins.linesInfoLookup (fileName),
+			       "Constant " ^ Names.constName c ^ "\n" ^ msg)))
 
-    fun error (r, msg) = raise Error (P.wrap (r, msg))
+    fun wrapMsg' (fileName, r, msg) =
+          P.wrapLoc (P.Loc (fileName, r), msg)
+
+    exception Error' of P.occ * string
 
     (* lookup (a, occ) = mS
      
@@ -372,7 +390,7 @@ struct
 
        (ocOpt is used in error messages)
     *)
-    fun checkD (conDec, ocOpt) = 
+    fun checkD (conDec, fileName, ocOpt) = 
         let 
 	  fun checkable (I.Root (I.Const (a), _)) = 
 	      (case (M.modeLookup a) 
@@ -387,11 +405,34 @@ struct
 	         handle Error' (occ, msg) =>   
 		   (case ocOpt 
 		      of NONE => raise Error (msg)
-		       | SOME occTree => error (P.occToRegionDec occTree occ, msg))
+		       | SOME occTree =>
+			   raise Error (wrapMsg' (fileName, P.occToRegionDec occTree occ, msg)))
 	  else ()
+	end
+
+    fun checkAll (nil) = ()
+      | checkAll (I.Const c :: clist) =
+        (if !Global.chatter > 3
+	   then print (Names.constName c ^ " ")
+	 else ();
+	 checkDlocal (I.Null, I.constType c, P.top)
+	   handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
+	 checkAll clist)
+
+    fun checkMode (a, ms) =
+        let
+	  val _ = if !Global.chatter > 3
+		    then print ("Mode checking family " ^ Names.constName a ^ ":\n")
+		  else ()
+	  val clist = Index.lookup a
+	  val _ = checkAll clist
+	  val _ = if !Global.chatter > 3 then print "\n" else ()
+	in
+	  ()
 	end
 
   in
     val checkD = checkD
+    val checkMode = checkMode
   end
 end;  (* functor ModeCheck *)

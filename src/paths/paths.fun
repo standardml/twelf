@@ -8,6 +8,17 @@ struct
   datatype region = Reg of pos * pos	(* r ::= (i,j) is interval [i,j) *)
   datatype location = Loc of string * region (* loc ::= (filename, region) *)
 
+  type linesInfo = pos list
+  fun posToLineCol' (linesInfo, i) =
+      let fun ptlc (j::js) = if i >= j then (List.length js, i-j)
+			     else ptlc js
+	    (* first line should start at 0 *)
+	    (* nil means first "line" was not terminated by <newline> *)
+	    | ptlc (nil) = (0, i)
+      in
+	ptlc (linesInfo)
+      end
+
   local
     (* !linePosList is a list of starting character positions for each input line *)
     (* used to convert character positions into line.column format *)
@@ -16,16 +27,9 @@ struct
   in
     fun resetLines () = linePosList := nil
     fun newLine (i) = linePosList := i::(!linePosList)
+    fun getLinesInfo () = !linePosList
     (* posToLineCol (i) = (line,column) for character position i *)
-    fun posToLineCol (i) =
-        let fun ptlc (j::js) = if i >= j then (List.length js, i-j)
-			       else ptlc js
-	      (* first line should start at 0 *)
-	      (* nil means first "line" was not terminated by <newline> *)
-	      | ptlc (nil) = (0, i)
-	in
-	  ptlc (!linePosList)
-	end
+    fun posToLineCol (i) = posToLineCol' (!linePosList, i)
   end
 
   (* join (r1, r2) = r
@@ -47,13 +51,27 @@ struct
   (* wrap (r, msg) = msg' which contains region *)
   fun wrap (r, msg) = (toString r ^ " " ^ "Error: \n" ^ msg)
 
-  (* wrapLoc ((filename, r), msg) = msg' which contains region and filename
+  (* wrapLoc ((loc, r), msg) = msg' which contains region and filename
      This should be used for locations retrieved from origins, where
      the region is given in character positions, rather than lines and columns
   *)
   fun wrapLoc (Loc (filename, Reg (i,j)), msg) =
-        filename ^ ":" ^ Int.toString (i+1) ^ "-" ^ Int.toString (j+1)
-	^ " " ^ "Error: \n" ^ msg
+         filename ^ ":" ^ Int.toString (i+1) ^ "-" ^ Int.toString (j+1)
+	 ^ " " ^ "Error: \n" ^ msg
+
+  (* wrapLoc' ((loc, r), linesInfo, msg) = msg'
+     like wrapLoc, but converts character positions to line.col format based
+     on linesInfo, if possible
+  *)
+  fun wrapLoc' (Loc (filename, Reg (i,j)), SOME(linesInfo), msg) =
+      let
+	val lcfrom = posToLineCol' (linesInfo, i)
+	val lcto = posToLineCol' (linesInfo, j)
+	val regString = lineColToString (lcfrom) ^ "-" ^ lineColToString (lcto)
+      in
+	filename ^ ":" ^ regString ^ " " ^ "Error: \n" ^ msg
+      end
+    | wrapLoc' (loc, NONE, msg) = wrapLoc (loc, msg)
 
   (* Paths, occurrences and occurrence trees only work well for normal forms *)
   (* In the general case, regions only approximate true source location *)

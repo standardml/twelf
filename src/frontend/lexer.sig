@@ -33,7 +33,7 @@ sig
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)
     | TERMINATES       			(* `%terminates' *)
-    | WORLD       			(* `%world' *)
+    | WORLDS       			(* `%worlds' *)
     | REDUCES       			(* `%reduces' *) (* -bp 6/5/99 *)
     | THEOREM                           (* `%theorem' *)
     | PROVE                             (* `%prove' *)

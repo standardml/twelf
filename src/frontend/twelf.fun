@@ -49,6 +49,7 @@ functor Twelf
    structure ModeSyn : MODESYN
      sharing ModeSyn.IntSyn = IntSyn'
    structure ModeCheck : MODECHECK
+     sharing ModeCheck.IntSyn = IntSyn'
      sharing ModeCheck.ModeSyn = ModeSyn
      sharing ModeCheck.Paths = Paths
    structure ModeRecon : MODE_RECON
@@ -264,7 +265,7 @@ struct
 	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
-	      | WorldSyn.Error (msg) => abortFileMsg (fileName, msg)
+	      | WorldSyn.Error (msg) => abort (msg ^ "\n") (* includes filename *)
               | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort ("Unrecognized exception\n"); raise exn))
 
@@ -274,11 +275,12 @@ struct
        Note: if fromCS = true then the declaration comes from a Constraint
        Solver and some limitations on the types are lifted.
     *)
-    fun installConDec fromCS (conDec, fileNameocOpt) =
+    fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt)) =
 	let
 	    val cid = IntSyn.sgnAdd conDec
 	    val _ = Names.installName (IntSyn.conDecName conDec, cid)
 	    val _ = Origins.installOrigin (cid, fileNameocOpt)
+	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
 	    val _ = Index.install (IntSyn.Const cid)
 	    val _ = IndexSkolem.install (IntSyn.Const cid)
 	    val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
@@ -297,24 +299,24 @@ struct
         (let
 	   val (optConDec, ocOpt) = TpRecon.condecToConDec (condec, Paths.Loc (fileName,r), false)
 	   fun icd (SOME(conDec)) =
-	     let
-	       (* names are assigned in TpRecon *)
-	       (* val conDec' = nameConDec (conDec) *)
-	       (* should print here, not in TpRecon *)
-	       val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
-	       (* allocate new cid after checking modes! *)
-	       val cid = installConDec false (conDec, (fileName, ocOpt))
-	     in
-	       ()
-	     end
+	       let
+		 (* names are assigned in TpRecon *)
+		 (* val conDec' = nameConDec (conDec) *)
+		 (* should print here, not in TpRecon *)
+		 val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
+		 (* allocate new cid after checking modes! *)
+		 val cid = installConDec false (conDec, (fileName, ocOpt))
+	       in
+		 ()
+	       end
 	     | icd (NONE) = (* anonymous definition for type-checking *)
-	     ()
+	         ()
 	 in
 	   icd optConDec
 	 end
 	 handle Constraints.Error (eqns) =>
 	        raise TpRecon.Error (Paths.wrap (r, constraintsMsg eqns)))
-	   
+
       | install1 (fileName, Parser.AbbrevDec(condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
@@ -324,7 +326,7 @@ struct
 		  (* names are assigned in TpRecon *)
 		  (* val conDec' = nameConDec (conDec) *)
 		  (* should print here, not in TpRecon *)
-		  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, ocOpt)
+		  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 		  (* allocate new cid after checking modes! *)
 		  val cid = installConDec false (conDec, (fileName, ocOpt))
 	      in
@@ -380,6 +382,8 @@ struct
 	  val (mdec, r) = ModeRecon.modeToMode mterm
 	  val _ = ModeSyn.installMode mdec
 	          handle ModeSyn.Error (msg) => raise ModeSyn.Error (Paths.wrap (r, msg))
+	  val _ = ModeCheck.checkMode mdec (* exception comes with location *)
+	          handle ModeCheck.Error (msg) => raise ModeCheck.Error (msg)
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%mode " ^ (ModePrint.modeToString mdec) ^ ".\n")
 		  else ()
@@ -542,7 +546,7 @@ struct
 				 ("", WorldSyn.ctxToList some, WorldSyn.ctxToList pi))
 	  val W = hack GBs
 	  val _ = if !Global.chatter >= 3 
-		    then print ("%world " ^ WorldPrint.worldToString W ^ " " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
+		    then print ("%worlds " ^ WorldPrint.worldToString W ^ " " ^ (ThmPrint.callpatsToString cp) ^ ".\n")
 		  else ()
 	in
 	  (map (fn (c, _) => WorldSyn.worldcheck W c) cpa ; ())
@@ -562,6 +566,8 @@ struct
 	    val _ = TpRecon.resetErrors fileName
 	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	    and install' (S.Empty) = OK
+	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
+	        (* now done in installConDec *)
 	      | install' (S.Cons(decl, s')) =
 	        (install1 (fileName, decl); install s')
 	  in
@@ -580,28 +586,29 @@ struct
     fun top () = topLoop ()
 
     fun installCSMDec (conDec, optFixity, optMdec) = 
-      let
-        val _ = ModeCheck.checkD (conDec, NONE)
-        val cid = installConDec true (conDec, ("", NONE))
-        val _ = if !Global.chatter >= 3
-                then print (Print.conDecToString (conDec) ^ "\n")
-                else ()
-        val _ = (case optFixity
-                   of SOME(fixity) =>
-                        Names.installFixity (IntSyn.conDecName (conDec), fixity)
-                    | NONE => ())
-        val _ = (case optMdec
-                   of SOME(mdec) =>
-                        ModeSyn.installMode (cid, mdec)
-                    | NONE => ())
-      in
-        cid
-      end
+	let
+	  val _ = ModeCheck.checkD (conDec, "%use", NONE)
+	  val cid = installConDec true (conDec, ("", NONE))
+	  val _ = if !Global.chatter >= 3
+		  then print (Print.conDecToString (conDec) ^ "\n")
+		  else ()
+	  val _ = (case optFixity
+		     of SOME(fixity) =>
+			  Names.installFixity (IntSyn.conDecName (conDec), fixity)
+		      | NONE => ())
+	  val _ = (case optMdec
+		     of SOME(mdec) =>
+			  ModeSyn.installMode (cid, mdec)
+		      | NONE => ())
+	in
+	  cid
+	end
 
     val _ = CSManager.setInstallFN (installCSMDec)
  
     (* reset () = () clears all global tables, including the signature *)
-    fun reset () = (IntSyn.sgnReset (); Names.reset (); ModeSyn.reset ();
+    fun reset () = (IntSyn.sgnReset (); Names.reset (); Origins.reset ();
+		    ModeSyn.reset ();
 		    Index.reset (); 
 		    IndexSkolem.reset ();
 		    Subordinate.reset ();
@@ -867,6 +874,6 @@ struct
     = Config
     val make = make
 
-    val version = "Twelf 1.3R1, Mar 19 2001 (with coverage and totality checking)"
+    val version = "Twelf 1.3R1, Mar 19 2001 (with coverage and totality checking for closed worlds)"
   end  (* local *)
 end; (* functor Twelf *)

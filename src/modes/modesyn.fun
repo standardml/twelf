@@ -33,11 +33,16 @@ struct
         
        Effect: the ModeSpine mS is stored with the type family a
     *)
-    fun installMode (a, mS) =
+    fun installMode (a, mS) = Table.insert modeSignature (a, mS)
+
+    (* modified to post-hoc checking of modes *)
+    (* Sun Mar 25 19:16:43 2001 -fp *)
+    (*
         case Index.lookup a
 	  of nil => Table.insert modeSignature (a, mS)
            | _ => raise Error ("Mode for predicate " ^ Names.constName a
 			       ^ " declared after clauses defining it")
+    *)
 
     (* modeLookup a = mS'
 

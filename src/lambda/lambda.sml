@@ -12,7 +12,7 @@ structure Constraints =
   Constraints (structure IntSyn' = IntSyn
 	       structure Conv = Conv);
 
-structure Unify =
+structure UnifyNoTrail =
   Unify (structure IntSyn' = IntSyn
 	 structure Whnf = Whnf
 	 structure Trail = NoTrail);
@@ -26,4 +26,4 @@ structure Abstract =
   Abstract (structure IntSyn' = IntSyn
 	    structure Whnf = Whnf
 	    structure Constraints = Constraints
-	    structure Unify = Unify);
+	    structure Unify = UnifyNoTrail);

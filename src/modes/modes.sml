@@ -9,9 +9,12 @@ structure ModeDec =
 	   structure Paths' = Paths);
 
 structure ModeCheck =
-  ModeCheck (structure ModeSyn' = ModeSyn
+  ModeCheck (structure IntSyn = IntSyn
+	     structure ModeSyn = ModeSyn
              structure Whnf = Whnf
-	     structure Paths' = Paths);
+	     structure Index = Index
+	     structure Paths = Paths
+	     structure Origins = Origins);
 
 structure ModePrint =
   ModePrint (structure ModeSyn' = ModeSyn

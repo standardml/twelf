@@ -424,7 +424,7 @@ struct
          (E. wdecl (GBs, E.callpats callpats), f2)
        end
 
-   fun parseWorld' (LS.Cons ((L.WORLD, r), s')) = 
+   fun parseWorlds' (LS.Cons ((L.WORLDS, r), s')) = 
         parseWDecl (LS.expose s')
 
 
@@ -437,7 +437,7 @@ struct
     val parseEstablish' = parseEstablish'
     val parseAssert' = parseAssert'
     val parseReduces' = parseReduces'		(*  -bp6/5/99.*)		 
-    val parseWorld' = parseWorld'
+    val parseWorlds' = parseWorlds'
   end  (* local ... in *)
 
 end;  (* functor Parser *)

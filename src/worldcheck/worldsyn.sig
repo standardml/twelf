@@ -1,4 +1,4 @@
-(* Syntax for worlds *) 
+(* World Checking *) 
 (* Author: Carsten Schuermann *)
 
 

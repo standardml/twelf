@@ -1,10 +1,15 @@
 structure WorldSyn = 
   WorldSyn (structure IntSyn = IntSyn
-	    structure Unify = Unify
 	    structure Whnf = Whnf
 	    structure Names = Names
+	    structure Unify = UnifyTrail
+	    structure Abstract = Abstract
+	    structure Constraints = Constraints
 	    structure Index = Index
-	    structure CSManager = CSManager)
+	    structure CSManager = CSManager
+	    structure Print = Print
+	    structure Paths = Paths
+	    structure Origins = Origins);
 
 structure WorldPrint =
   WorldPrint (structure Global = Global
@@ -12,4 +17,4 @@ structure WorldPrint =
 	      structure WorldSyn' = WorldSyn
 	      structure Names = Names
 	      structure Formatter' = Formatter
-	      structure Print = Print)
+	      structure Print = Print);

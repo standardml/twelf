@@ -41,7 +41,7 @@ struct
     | TERMINATES			(* `%terminates' *)
     | REDUCES                           (* `%reduces' *) (* -bp 6/5/99 *)
     | THEOREM                           (* `%theorem' *)
-    | WORLD                             (* `%world' *)
+    | WORLDS                            (* `%worlds' *)
     | PROVE                             (* `%prove' *)
     | ESTABLISH				(* `%establish' *)
     | ASSERT				(* `%assert' *)
@@ -203,7 +203,7 @@ struct
       | lexPragmaKey (ID(_, "postfix"), r) = (POSTFIX, r)
       | lexPragmaKey (ID(_, "mode"), r) = (MODE, r)
       | lexPragmaKey (ID(_, "terminates"), r) = (TERMINATES, r)
-      | lexPragmaKey (ID(_, "world"), r) = (WORLD, r)
+      | lexPragmaKey (ID(_, "worlds"), r) = (WORLDS, r)
       | lexPragmaKey (ID(_, "covers"), r) = (COVERS, r)
       | lexPragmaKey (ID(_, "total"), r) = (TOTAL, r) (* -fp 3/18/01 *)
       | lexPragmaKey (ID(_, "reduces"), r) = (REDUCES, r) (* -bp 6/5/99 *)
@@ -305,7 +305,7 @@ struct
     | toString' (COVERS) = "%covers"
     | toString' (TOTAL) = "%total"
     | toString' (TERMINATES) = "%terminates"
-    | toString' (WORLD) = "%world"
+    | toString' (WORLDS) = "%worlds"
     | toString' (REDUCES) = "%reduces"              (*  -bp6/5/99. *)
     | toString' (THEOREM) = "%theorem"
     | toString' (PROVE) = "%prove"

@@ -132,3 +132,13 @@ Also fixed bug with incorrect error message when parsing call patterns:
 - uncaught match exception if head is object-level constant
 - no error location if called family has not been declared
 
+Sun Mar 25 19:48:03 2001 -fp
+
+Mode checking can now be done post-hoc!
+
+Added
+  %covers mdec.  (syntax: mode declaration)
+  %total tdec.   (syntax: termination declaration)
+for closed worlds and
+  %worlds wdec callpats.        (modified from -cs)
+which checks worlds locally.

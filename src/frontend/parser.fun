@@ -141,7 +141,7 @@ struct
       | parseStream' (f as LS.Cons ((L.COVERS, r), s')) = parseCovers' f
       | parseStream' (f as LS.Cons ((L.TOTAL, r), s')) = parseTotal' f (* -fp *)
       | parseStream' (f as LS.Cons ((L.TERMINATES, r), s')) = parseTerminates' f
-      | parseStream' (f as LS.Cons ((L.WORLD, r), s')) = parseWorld' f
+      | parseStream' (f as LS.Cons ((L.WORLDS, r), s')) = parseWorlds' f
       | parseStream' (f as LS.Cons ((L.REDUCES, r), s')) = parseReduces' f (* -bp *)
       | parseStream' (f as LS.Cons ((L.THEOREM, r), s')) = parseTheorem' f
       | parseStream' (f as LS.Cons ((L.PROVE, r), s')) = parseProve' f
@@ -211,9 +211,9 @@ struct
 	  Stream.Cons (ReducesDec ldec, parseStream (stripDot f'))
 	end
 
-    and parseWorld' (f) =
+    and parseWorlds' (f) =
         let
-	  val (ldec, f') = ParseThm.parseWorld' (f)
+	  val (ldec, f') = ParseThm.parseWorlds' (f)
 	in
 	  Stream.Cons (WorldDec ldec, parseStream (stripDot f'))
 	end

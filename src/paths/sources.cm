@@ -3,6 +3,7 @@ Group is
   paths.fun
   ../lambda/sources.cm
   ../global/sources.cm
+  ../table/sources.cm
   origins.sig
   origins.fun
   paths.sml

@@ -8,13 +8,17 @@ sig
   datatype location = Loc of string * region (* loc ::= (filename, region) *)
 
   (* line numbering, used when printing regions *)
+  type linesInfo			(* mapping from character positions to lines in a file *)
   val resetLines : unit -> unit		(* reset line numbering *)
   val newLine : int -> unit		(* new line starts at character i *)
+  val getLinesInfo : unit -> linesInfo  (* get lines info for current file *)
 
   val join : region * region -> region	(* join(r1,r2) = smallest region enclosing r1 and r2 *)
   val toString : region -> string	(* line1.col1-line2.col2, parsable by Emacs *)
   val wrap : region * string -> string  (* add region to error message, parsable by Emacs *)
   val wrapLoc : location * string -> string  (* add location to error message, also parsable *)
+  val wrapLoc' : location * linesInfo option * string -> string
+					(* add location to error message in line.col format *)
 
   (* Paths, occurrences and occurrence trees only work well for normal forms *)
   (* In the general case, regions only approximate true source location *)

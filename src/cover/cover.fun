@@ -137,7 +137,7 @@ struct
       | resolveCands (Cands (ks)) = Cands (ks)
       | resolveCands (Fail) = Fail
 
-    (* collectConstrins (Xs) = constrs
+    (* collectConstraints (Xs) = constrs
        collect all the constraints that may be attached to EVars Xs
 
        try simplifying away the constraints in case they are "hard"
