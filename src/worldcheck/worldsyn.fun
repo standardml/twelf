@@ -114,18 +114,6 @@ struct
     *) 
     fun worldcheck W a =  
       let
-
-	(* checkValidity (G, V) = ()
-
-	   Invariant:
-	   If   G is a context
-           and  G |- V : K       (V is in normal form)
-	   then checkValidity (G, V) = () iff
-	        V extends the world in a valid way
-	*)
-	fun checkValidity (G, I.Root _) = ()
-	  | checkValidity GV = (checkBlocks W GV)
-	
 	(* checkPos (G, V) = ()
 
   	   Invariant:
