@@ -1,12 +1,12 @@
 Carsten Schuermann, Yale University
 2/8/2001
 
-1. Add regions
++1. Add regions  DONE -fp Thu Mar 29 19:13:25 2001
 2. Check validity of call patterns
-3. Improve error messages
++3. Improve error messages  DONE -fp Thu Mar 29 19:13:33 2001
 4. Improve the %world printout.  thmprint should offer a function
 	that returns a Formatter.format.
-5. Add occurrence information to the world checker.
++5. Add occurrence information to the world checker.
 
 ----------------------------------------------------------------------
 From: "Carsten Schuermann" <carsten@cs.yale.edu>

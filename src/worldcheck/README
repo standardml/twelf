@@ -1,0 +1,89 @@
+World Checking
+Carsten Schuermann, Yale
+Frank Pfenning, CMU
+
+For the purpose of this description, we may identify
+contexts (G) and declaration lists (L) that differ
+only in whether they are left-nested or right nested.
+
+Blocks B ::= SOME G1. PI G2
+Worlds W ::= B1 | ... | Bn
+Subordination:  A not <| b  --- A is not subordinate or equal to b
+
+JUDGMENT: Declaration List Subsumption
+G0 |- G <= Wb --- Declaration list G (from caller) is subsumed by Wb (callee b)
+                  Invariant: G0 |- G ctx
+                             Wb are the worlds assigned to b
+
+Defined by three rules based on a non-deterministic decomposition of G
+
+G0 |- G1 <= Wb
+G0, G1 |- G2 <= Wb
+------------------- Concatenation
+G0 |- G1, G2 <= Wb
+
+Wb = ... | SOME G1. PI G2 | ...
+G0 |- theta : G1
+-------------------------------- Instantiation
+G0 |- [theta]G2 <= Wb
+
+A not <| b
+G0 |- (G1,G2) ctx
+G0 |- G1, G2 <= Wb  
+------------------------ Strengthening
+G0 |- G1, x:A, G2 <= Wb
+
+
+JUDGMENT: World Subsumption
+Wa <= Wb   --- Wa (caller) is subsumed by Wb (callee)
+
+Defined by two rules inductively on Wa.
+
+------- Empty
+. <= Wb
+
+G1 |- G2 <= Wb
+Wa' <= Wb
+---------------------------- Block
+(SOME G1. PI G2 | Wa') <= Wb
+
+
+JUDGMENTs: World Checking family a (fixed and suppressed in judgments)
+G0 |= D  --- world checking clause D in context G0
+G0 |= G  --- world checking goal G in context G0
+
+Defined by mutual induction on D and G, calling upon
+world subsumption and declaration list subsumption
+
+G0 |= G
+G0, x:G |= D
+------------- clausePi
+G0 |= {x:G} D
+
+
+G = {x1:A1}...{xn:An} b @ S
+G0 |- Wa <= Wb                  (* caller's (a) worlds are subsumed by callee's (b) worlds *)
+G0 |- {x1:A1}...{xn:An} <= Wb   (* this call's world is subsumed by callee's (b) worlds *)
+G0 |= G
+G0, u:G |= D
+------------ clauseArrow
+G0 |= G -> D
+
+
+----------- clauseAtom
+G0 |= a @ S
+
+
+G0 |= D
+G0, x:D |= G
+-------------- goalPi
+G0 |= {x:D} G
+
+G0 |= D
+G0, x:D |= G
+------------- goalArrow
+G0 |= D -> G
+
+
+----------- goalAtom
+G0 |= a @ S

@@ -253,7 +253,7 @@ struct
               | Compile.Error (msg) => abortFileMsg (fileName, msg)
 	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
 	      | ModeSyn.Error (msg) => abortFileMsg (fileName, msg)
-	      | ModeCheck.Error (msg) => abortFileMsg (fileName, msg)
+	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
 	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
               | Cover.Error (msg) => abortFileMsg (fileName, msg)
 	      | Parsing.Error (msg) => abortFileMsg (fileName, msg)

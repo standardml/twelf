@@ -258,15 +258,18 @@ struct
 	  Star (worldToReg' W)
 	end
 
-    (* init (G, V) raises Success iff V is atomic
+    (* init b (G, L) raises Success iff V is empty
+       or none of the remaining declarations are relevant to b
        otherwise fails by returning ()
        Initial continuation for world checker
 
-       Invariant: G |- V : type, V nf
+       Invariant: G |- L dlist, L nf
     *)
-    fun init (_, nil) = ( Trace.success () ; raise Success)
-      | init (G, L) = ( Trace.unmatched (G, L) ; () )
-      (* bug in line above: check subsumption!! *)
+    fun init b (_, nil) = ( Trace.success () ; raise Success)
+      | init b (G, L as (D1 as I.Dec (_, V1))::L2) =
+        if Subordinate.belowEq (I.targetFam V1, b)
+	  then ( Trace.unmatched (G, L) ; () )
+	else init b (decUName (G, D1), L2)
 
     (* accR ((G, L), R, k)   raises Success
        iff L = L1,L2 such that R accepts L1
@@ -290,13 +293,13 @@ struct
 	end
       | accR ((G, L as (D as I.Dec (_, V1))::L2),
 	      L' as Seq (I.Dec (_, V1')::L2', t), b, k) =
-	if Subordinate.belowEq (I.targetFam V1, b)
-	  then (* relevant to family b *)
-	    if Unify.unifiable (G, (V1, I.id), (V1', t))
-		 then accR ((decUName (G, D), L2), Seq (L2', I.dot1 t), b, k)
-	       else ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
-	else (* skip irrelevant declarations in L *)
-	  accR ((decUName (G, D), L2), L', b, k)
+	if Unify.unifiable (G, (V1, I.id), (V1', t))
+	  then accR ((decUName (G, D), L2), Seq (L2', I.dot1 t), b, k)
+	else if Subordinate.belowEq (I.targetFam V1, b)
+	       then (* relevant to family b, fail *)
+		 ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
+	     else (* not relevant to family b, skip in L *)
+	       accR ((decUName (G, D), L2), L', b, k)
       | accR (GL, Seq (nil, t), b, k) = k GL
       | accR (GL as (G, nil), R as Seq (L', t), b, k) =
 	  ( Trace.missing (G, R); () )	(* L is missing *)
@@ -315,7 +318,7 @@ struct
        Invariants: Rb = reg (worlds (b))
     *)
     fun checkSubsumedBlock (G, nil, L', Rb, b) =
-        (( accR ((G, L'), Rb, b, init) ;
+        (( accR ((G, L'), Rb, b, init b) ;
 	  raise Error ("World subsumption failure for family " ^ Names.constName b) )
 	 handle Success => ())
       | checkSubsumedBlock (G, D::L, L', Rb, b) =
@@ -338,7 +341,6 @@ struct
   
        Invariants: G |- V : type, V nf
     *)
-    (* optimize: do not check atomic subgoals? *)
     fun checkBlocks Wa (G, V, occ) = 
         let
 	  val b = I.targetFam V
@@ -348,9 +350,10 @@ struct
 		    then ()
 		  else ( checkSubsumedWorlds (Wa, Rb, b) ;
 			 subsumedInsert (b) )
+		       handle Error (msg) => raise Error' (occ, msg)
 	  val L = subGoalToDList V
 	in
-	  (accR ((G, L), Rb, b, init);
+	  (accR ((G, L), Rb, b, init b);
 	   raise Error' (occ, "World violation"))
 	end
 	handle Success => ()
@@ -431,7 +434,7 @@ struct
     fun checkSubordBlock (G, D::L, L') =
           checkSubordBlock (I.Decl (G, D), L, L')
       | checkSubordBlock (G, nil, (D as I.Dec(_,V))::L') =
-	  ( Subordinate.respectsN (G, V); (* is V nf?  Assume here: yes -fp *)
+	  ( Subordinate.respects (G, (V, I.id)); (* is V nf?  Assume here: no *)
 	    checkSubordBlock (I.Decl (G, D), nil, L') )
       | checkSubordBlock (G, nil, nil) = ()
 
