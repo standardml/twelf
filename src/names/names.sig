@@ -55,8 +55,8 @@ sig
 
   (* EVar and BVar name choices *)
   val varReset : unit -> unit
-  val getFVarType : string -> IntSyn.Exp (* create, if undefined *)
-  val getEVar : string -> IntSyn.Exp (* create, if undefined *)
+  val getFVarType : string -> IntSyn.Exp * IntSyn.Exp * bool ref (* create, if undefined *)
+  val getEVar : string -> IntSyn.Exp * IntSyn.Exp * bool ref (* create, if undefined *)
   val getEVarOpt : string -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
   val bvarName : IntSyn.dctx * int -> string (* raises Unprintable if undefined *)

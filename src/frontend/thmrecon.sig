@@ -34,18 +34,18 @@ sig
   type assert
   val assert : callpats -> assert
 
-  type ctx
+  type decs
   type theorem
   type theoremdec
 
-  val null : ctx
-  val decl : (ctx * ExtSyn.dec) -> ctx
+  val null : decs
+  val decl : (decs * (ExtSyn.dec * Paths.region)) -> decs
 
   val top : Paths.region -> theorem
-  val exists : ctx * (Paths.region * theorem) -> theorem
-  val forall : ctx * (Paths.region * theorem) -> theorem
-  val forallStar : ctx * (Paths.region * theorem) -> theorem
-  val forallG : (ctx * ctx) list * (Paths.region * theorem) -> theorem
+  val exists : decs * (Paths.region * theorem) -> theorem
+  val forall : decs * (Paths.region * theorem) -> theorem
+  val forallStar : decs * (Paths.region * theorem) -> theorem
+  val forallG : (decs * decs) list * (Paths.region * theorem) -> theorem
 
   val dec : (string * theorem) -> theoremdec
 

@@ -88,6 +88,9 @@ struct
       app of occExp * occSpine		(* u;s *)
     | nils				(* nil *)
 
+  fun removeImplicit (0, os) = os
+    | removeImplicit (i, app (oc, os)) = removeImplicit (i-1, os)
+
   (* occToPath (occ, p) = p'(p) and occ corresponds to p' *)
   fun occToPath (top, path) = path
     | occToPath (label(occ), path) = occToPath (occ, Label(path))

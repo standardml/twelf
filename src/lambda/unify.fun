@@ -112,8 +112,8 @@ struct
       fun nextCnstr () = 
             case !awakenCnstrs
               of nil => NONE
-               | (ref Cnstr :: cnstrL) => 
-                   (awakenCnstrs := cnstrL; SOME(Cnstr))
+               | (cnstr :: cnstrL) => 
+                   (awakenCnstrs := cnstrL; SOME(cnstr))
 
       (* Instantiating EVars  *)
       fun instantiateEVar (refU, V, cnstrL) =
@@ -209,7 +209,7 @@ struct
 		   end
 		      else raise Unify "Not prunable"
 	       end
-	       else (* s1 not patsub *)
+	       else (* s not patsub *)
                  (
 		   EClo (X, pruneSub (G, s, ss, rOccur))
 		   handle Unify (msg) => 
@@ -280,6 +280,66 @@ struct
           pruneCtx (t, G, rOccur, prunable)
       | pruneCtx (Shift n, G, rOccur, prunable) = 
 	  pruneCtx (Dot (Idx (n+1), Shift (n+1)), G, rOccur, prunable)
+
+    fun isUniType (V, s) =
+        (case Whnf.whnf (V, s)
+           of (Uni Type, _) => true
+            | _ => false)
+
+    (* copyTypeW (G, (G1, s1), (V, s2)) = V'
+       If   G |~ s1 : G1
+            G |~ s2 : G2   G2 |~ V : L   (V,s2) in whnf
+       then G1 |~ V' : type
+        and G  |~ V [s2] <I> ~~ V' [s1] <I> : type
+        and instantiation I is applied
+    *)
+    fun copyTypeW (G, (G1, s1), (V as Uni _, s2)) = V
+      | copyTypeW (G, (G1, s1), (Pi ((D as Dec (name, V1), P), V2), s2)) =
+        let
+          val V1' = copyType (G, (G1, s1), (V1, s2))
+          val D' = Dec (name, V1')
+          val V2' = copyType (Decl (G, decSub (D, s2)),
+                              (Decl (G1, D'), dot1 s1), (V2, dot1 s2))
+        in
+          Pi ((D', P), V2')
+        end
+      | copyTypeW (G, (G1, s1), (Root (H as Const (c), S), s2)) =
+        let
+          val V = constType (c)
+        in
+          Root (H, copySpine (G, (G1, s1, (V, id)), (S, s2)))
+        end
+      | copyTypeW (G, (G1, s1), Vs2 as (EVar _, s2)) =
+        let
+          val V' = newTypeVar (G1)
+        in
+          unifyExp (G, (V', s1), Vs2);
+          V'
+        end
+
+    and copyType (G, (G1, s1), Vs2) = copyTypeW (G, (G1, s1), Whnf.whnf Vs2)
+
+    (* copySpine (G, (G1, s1, (V, s2)), (S, s3)) = S'
+        pre: G  |- s1 : G1
+             G1 |- s2 : G2  G2 |- V : L
+             G  |- s3 : G3  G3 |- S : Vs > a
+             G  |- Vs[s3] = V[s2][s1]
+       post: G1 |- S' : V[s2] > a'
+             G  |- a[s3] = a'[s1]
+             G  |- S[s3] = S'[s1]
+     *)
+       
+    and copySpine (G, (G1, s1, (V, s2)), (Nil, s3)) = Nil
+      | copySpine (G, (G1, s1, (Pi ((Dec (_, V1), _), V2), s2)), (App (U, S), s3)) =
+        let
+          (* FIX: should be newLoweredEVar -kw *)
+          val U' = newEVar (G1, EClo (V1, s2))
+        in
+          unifyExp (G, (U', s1), (U, s3));
+          App (U', copySpine (G, (G1, s1, (V2, Whnf.dotEta (Exp (U'), s2))), (S, s3)))
+        end
+      | copySpine (G, (G1, s1, (V, s2)), (SClo (S, s), s3)) =
+          copySpine (G, (G1, s1, (V, s2)), (S, comp (s, s3)))
 
     (* unifyExpW (G, (U1, s1), (U2, s2)) = ()
      
@@ -424,7 +484,15 @@ struct
 	        (* invertExpW (Us1, s2, ref NONE) *)
 		instantiateEVar (r2, U1', !cnstrs2)
 	      end
-		else addConstraint (cnstrs1, ref (Eqn (G, EClo Us1, EClo Us2)))
+            else
+              let
+                val cnstr = ref (Eqn (G, EClo Us1, EClo Us2))
+              in
+                addConstraint (cnstrs1, cnstr);
+                if isUniType (V1, s1)
+                  then addConstraint (cnstrs2, cnstr)
+                else ()
+              end
 
       | unifyExpW (G, Us1 as (EVar(r, GX, V, cnstrs), s), Us2 as (U2,s2)) =
 	if Whnf.isPatSub(s) then
@@ -435,7 +503,9 @@ struct
 	    (* invertExpW (Us2, s, r) *)
 	    instantiateEVar (r, U2', !cnstrs)
 	  end
-	else 
+	else if isUniType (V, s) then
+          instantiateEVar (r, copyType (G, (GX, s), Us2), !cnstrs)
+        else
           addConstraint (cnstrs, ref (Eqn (G, EClo Us1, EClo Us2)))
 
       | unifyExpW (G, Us1 as (U1,s1), Us2 as (EVar (r, GX, V, cnstrs), s)) =
@@ -447,6 +517,8 @@ struct
 	    (* invertExpW (Us1, s, r) *)
 	    instantiateEVar (r, U1', !cnstrs)
 	  end
+        else if isUniType (V, s) then
+          instantiateEVar (r, copyType (G, (GX, s), Us1), !cnstrs)
         else
           addConstraint (cnstrs, ref (Eqn (G, EClo Us1, EClo Us2)))
 
@@ -495,9 +567,11 @@ struct
           (unifyExp (G, Us1, Us2); awakeCnstr (nextCnstr ()))
 
     and awakeCnstr (NONE) = ()
-      | awakeCnstr (SOME(Solved)) = awakeCnstr (nextCnstr ())
-      | awakeCnstr (SOME(Eqn (G, U1, U2))) = unify1 (G, (U1, id), (U2, id))
-      | awakeCnstr (SOME(FgnCnstr (cs, ops))) =
+      | awakeCnstr (SOME(ref Solved)) = awakeCnstr (nextCnstr ())
+      | awakeCnstr (SOME(cnstr as ref (Eqn (G, U1, U2)))) =
+          (solveConstraint cnstr;
+           unify1 (G, (U1, id), (U2, id)))
+      | awakeCnstr (SOME(ref (FgnCnstr (cs, ops)))) =
           if (#awake(ops)()) then ()
           else raise Unify "Foreign constraint violated"
 
@@ -506,6 +580,65 @@ struct
 
     fun unify (G, Us1, Us2) =
           (resetAwakenCnstrs (); unify1 (G, Us1, Us2))
+
+    (* Shape unification
+       V1 ~~ V2 means that two types have the same shape
+       G |~ ... means that an object is well-typed up to shape
+    *)
+
+    (* shapeExpW (G, (U1, s1), (U2, s2)) = ()
+
+       Invariant:
+       If   G |~ s1 : G1   G1 |~ U1 : L  (U1,s1) in whnf
+       and  G |~ s2 : G2   G2 |~ U2 : L  (U2,s2) in whnf 
+       then if   there is an instantiation I :  
+                 s.t. G |~ U1 [s1] <I> ~~ U2 [s2] <I>
+            then instantiation is applied as effect, () returned
+            else exception Unify is raised
+       Other effects: constraints may be added for flex-flex equations
+    *)
+    (* FIX: need FgnExp case *)
+    fun shapeExpW (Root (H1, S1), Root (H2, S2)) =
+        (* s1 == s2 == id by whnf *)
+          (case (H1, H2) of
+             (Const(c1), Const(c2)) =>
+               if (c1 = c2) then ()
+               else raise Unify "Constant clash"
+             (* FIX: need FgnConst case *)
+             (* all other cases impossible by invariant *))
+
+      | shapeExpW (Uni Type, Uni Type) = ()
+
+      | shapeExpW (Pi ((Da1, _), Va1), Pi ((Da2, _), Va2)) =
+          (shapeDec (Da1, Da2);
+           shapeExp (Va1, Va2))
+
+      | shapeExpW (Va1 as EVar(r1, G1, V1, cnstrs1),
+                   Va2 as EVar(r2, G2, V2, cnstrs2)) =
+        if r1 = r2
+          then ()
+        else
+          instantiateEVar (r1, Va2, !cnstrs1)
+      | shapeExpW (EVar (r, GX, L, cnstrs), Va2) =
+          instantiateEVar (r, Va2, !cnstrs)
+      | shapeExpW (Va1, EVar (r, GX, V, cnstrs)) =
+          instantiateEVar (r, Va1, !cnstrs)
+
+      | shapeExpW (Va1, Va2) =
+          raise Unify ("Shape clash")
+
+    and shapeExp (Va1, Va2) =
+        let
+          val (Va1', _) = Whnf.whnf (Va1, IntSyn.id)
+          val (Va2', _) = Whnf.whnf (Va2, IntSyn.id)
+        in
+          shapeExpW (Va1', Va2')
+        end
+
+    and shapeDec (Dec(_, Va1), Dec (_, Va2)) =
+          shapeExp (Va1, Va2)
+
+    fun shape (Va1, Va2) = shapeExp (Va1, Va2)
 
   in
     val reset = reset
@@ -522,6 +655,7 @@ struct
 
     val unifyW = unifyW     
     val unify = unify
+    val shape = shape
 
     fun invertible (G, Us, ss, rOccurr) =
           (pruneExp (G, Us, ss, rOccurr, false); true)

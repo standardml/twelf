@@ -54,6 +54,8 @@ sig
   val app : occExp * occSpine -> occSpine
   val nils : occSpine
 
+  val removeImplicit : int * occSpine -> occSpine
+
   type occConDec			(* occurrence tree for constant declarations *)
   val dec : region * int * occExp -> occConDec (* (r, #implicit, v) in c : V *)
   val def : region * int * occExp * occExp option -> occConDec

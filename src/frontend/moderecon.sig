@@ -31,7 +31,7 @@ sig
     type mterm
 
     val mroot : ExtSyn.term * Paths.region -> mterm
-    val mpi : mode * ExtSyn.dec * mterm -> mterm
+    val mpi : mode * ExtSyn.dec * Paths.region * mterm -> mterm
 
     val toModedec : mterm -> modedec
   end

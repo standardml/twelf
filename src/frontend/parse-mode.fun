@@ -63,7 +63,7 @@ struct
       | parseShortSpine (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected mode or `.', found " ^ L.toString t)
 
-    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = LS.expose s'
+    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = (LS.expose s', r)
       | stripRBrace (LS.Cons ((t, r), _))  = 
           Parsing.error (r, "Expected `}', found " ^ L.toString t)
 
@@ -77,10 +77,10 @@ struct
 		val mId = splitModeId (r0, id)
 		val m = validateMode (r0, mId)
 		val (d', f') = ParseTerm.parseDec' (LS.expose s'')
-		val f'' = stripRBrace f'
+		val (f'', r') = stripRBrace f'
 		val (t', f''') = parseFull (f'', r1) 
 	      in 
-		(E.Full.mpi (m, d', t'), f''')
+		(E.Full.mpi (m, d', P.join (r, r'), t'), f''')
 	      end
 	    | LS.Cons TS => 
 	      (* no quantifier --- parse atomic type *)

@@ -24,13 +24,12 @@ sig
   val backarrow : term * term -> term	(* tm <- tm *)
   val hastype : term * term -> term	(* tm : tm *)
   val omitobj : Paths.region -> term	(* _ as object, region for "_" *)
-  val omittyp : Paths.region -> term	(* _ as type, region for "_" *)
   val pi : dec * term * Paths.region -> term (* {d} tm, region for "{d}" *)
   val lam : dec * term * Paths.region -> term (* [d] tm, region for "[d]" *)
   val typ : Paths.region -> term	(* type, region for "type" *)
 
   val dec : string option * term -> dec	(* id : tm | _ : tm *)
-  val dec0 : string option -> dec		(* id | _  (type omitted) *)
+  val dec0 : string option -> dec	(* id | _  (type omitted) *)
 
   type condec				(* constant declaration *)
   val condec : string * term -> condec	(* id : tm *)
@@ -51,7 +50,7 @@ signature VARS =
 sig
   structure IntSyn : INTSYN
 
-  val var : string * int -> (IntSyn.Exp * (IntSyn.Spine -> IntSyn.Exp)) 
+  val var : string * int -> (IntSyn.Exp * IntSyn.Exp * bool ref * (IntSyn.Spine -> IntSyn.Exp)) 
 end;  (* signature VARS *)
 
 (* signature TP_RECON
@@ -69,8 +68,15 @@ sig
 
   exception Error of string
 
-  val decToDec : IntSyn.dctx * dec -> IntSyn.Dec (* reconstructs D such that G |- D dec *)
-  val termToExp : IntSyn.dctx * term -> IntSyn.Exp (* reconstructs V such that G |- V : type *)
+  type approxDec
+  type approxExp
+  type approxCtx = approxDec IntSyn.Ctx
+
+  val decToApproxDec : approxCtx * dec -> approxDec
+  val approxDecToDec : IntSyn.dctx * approxCtx * approxDec * Paths.region -> IntSyn.Dec
+
+  val termToApproxExp : approxCtx * term -> approxExp
+  val approxExpToExp : IntSyn.dctx * approxCtx * approxExp -> IntSyn.Exp
 
   val queryToQuery : query * Paths.location
                      -> IntSyn.Exp * string option * (IntSyn.Exp * string) list

@@ -116,14 +116,15 @@ struct
     fun assert (cp, rs) = (cp, rs)
     fun assertToAssert P = P 
 
-    type ctx = T.dec I.Ctx
+    type decs = (ExtSyn.dec * P.region) I.Ctx
     val null = I.Null
     val decl = I.Decl
 
-    type labeldec = I.Dec I.Ctx * I.Dec I.Ctx
-    type thm = labeldec list * I.Dec I.Ctx * ModeSyn.Mode I.Ctx * int
+    type labeldec = I.dctx * I.dctx
+    type thm = labeldec list * I.dctx * T.approxCtx * ModeSyn.Mode I.Ctx
 
-    type theorem = thm -> thm * Paths.region
+    type theorem2 = thm -> thm
+    type theorem = T.approxCtx * int -> T.approxCtx * int * Paths.region * theorem2
     type theoremdec = string * theorem
 
     (* implicit arguments, Type, Modevector *)
@@ -139,67 +140,102 @@ struct
        and  M' = M, mode ... mode   (|G2| times)
        
     *)
-    fun abstract (GBs, G, M, I.Null, k, _) = (GBs, G, M, k)
-      | abstract (GBs, G, M, I.Decl (g, d), k, mode) =
+    fun abstract (GBs, G, Ga, M, I.Null, _) = (GBs, G, Ga, M)
+      | abstract (GBs, G, Ga, M, I.Decl (ctx, (Da, r)), mode) =
 	let 
-	  val (GBs', G', M', k') = abstract (GBs, G, M, g, k, mode)
-	  val D = T.decToDec (G', d)
+	  val (GBs', G', Ga', M') = abstract (GBs, G, Ga, M, ctx, mode)
+	  val D = T.approxDecToDec (G', Ga', Da, r)
 	in
-	  (GBs', I.Decl (G', D), I.Decl (M', mode), k)
+	  (GBs', I.Decl (G', D), I.Decl (Ga', Da), I.Decl (M', mode))
 	end
 
     fun abstractCtx (G, I.Null) = (G, I.Null)
-      | abstractCtx (G, I.Decl (ctx, d)) =
+      | abstractCtx (G, I.Decl (ctx, (d, r))) =
         let
 	  val (G', G'') = abstractCtx (G, ctx)
-	  val D = T.decToDec (G', d)
+	  val D = T.decToApproxDec (G', d)
 	in
-          (I.Decl (G', D), I.Decl (G'', D))
+          (I.Decl (G', D), I.Decl (G'', (D, r)))
 	end
+
+    fun abstractCtx2 ((G1, Ga1), I.Null) = ((G1, Ga1), (I.Null, I.Null))
+      | abstractCtx2 ((G1, Ga1), I.Decl (ctx, (Da, r))) =
+        let
+          val ((G', Ga'), (G'', Ga'')) = abstractCtx2 ((G1, Ga1), ctx)
+          val D = T.approxDecToDec (G', Ga', Da, r)
+        in
+          ((I.Decl (G', D), I.Decl (Ga', Da)),
+           (I.Decl (G'', D), I.Decl (Ga'', Da)))
+        end
 
     fun abstractCtxPair (ctxSome, ctxPi) =
         let
-	  val (_, G1) = abstractCtx (I.Null, ctxSome)
-	  val (_, G2) = abstractCtx (G1, ctxPi)
+	  val (Ga1, Ga2) = abstractCtx (I.Null, ctxSome)
+	  val (_, Ga3) = abstractCtx (Ga1, ctxPi)
 	in
-	  (G1, G2)
+	  (Ga2, Ga3)
 	end
-   
-    fun top r (GBs, G, M, k) = ((GBs, G, M, k), r)
-    fun exists (g, (r, t)) (GBs, G, M, k) = 
-        let 
-	  val (t', r') = t (abstract (GBs, G, M, g, k, M.Minus))
-	in
-	  (t', P.join (r, r'))
-	end
-    fun forall (g, (r, t)) (GBs, G, M, k) = 
-        let 
-	  val (t', r') = t (abstract (GBs, G, M, g, k, M.Plus))
-	in
-	  (t', P.join (r, r'))
-	end
-    fun forallStar (g, (r, t)) (GBs, G, M, k) = 
+
+    fun abstractCtxPair2 (ctxSome, ctxPi) =
         let
-	  val (t', r') = t (abstract (GBs, G, M, g, I.ctxLength g, M.Plus))
-	in
-	  (t', P.join (r, r'))
-	end
-    fun forallG (gbs, (r, t)) (_, G, M, k) =
-         let
-	   val GBs = List.map abstractCtxPair gbs
-	   val (t', r') = t (GBs, G, M, k)
-	 in
-	   (t', P.join (r, r'))
-	 end
+          val (_, (G1, Ga1)) = abstractCtx2 ((I.Null, I.Null), ctxSome)
+          val (_, (G2, Ga2)) = abstractCtx2 ((G1, Ga1), ctxPi)
+        in
+          (G1, G2)
+        end
+
+    fun top2 (GBs, G, Ga, M) = (GBs, G, Ga, M)
+    fun top r (Ga, k) = (Ga, k, r, top2)
+    fun exists2 (ga, t) (GBs, G, Ga, M) =
+          t (abstract (GBs, G, Ga, M, ga, M.Minus))
+    fun exists (g, (r, t)) (Ga, k) =
+        let
+          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga', k', r', t') = t (Ga1, k)
+        in
+          (Ga', k', P.join (r, r'), exists2 (Ga2, t'))
+        end
+    fun forall2 (ga, t) (GBs, G, Ga, M) =
+          t (abstract (GBs, G, Ga, M, ga, M.Plus))
+    fun forall (g, (r, t)) (Ga, k) =
+        let
+          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga', k', r', t') = t (Ga1, k)
+        in
+          (Ga', k', P.join (r, r'), forall2 (Ga2, t'))
+        end
+    fun forallStar2 (ga, t) (GBs, G, Ga, M) =
+          t (abstract (GBs, G, Ga, M, ga, M.Plus))
+    fun forallStar (g, (r, t)) (Ga, k) =
+        let
+          val (Ga1, Ga2) = abstractCtx (Ga, g)
+          val (Ga', k', r', t') = t (Ga1, I.ctxLength g)
+        in
+          (Ga', k', P.join (r, r'), forallStar2 (Ga2, t'))
+        end
+    fun forallG2 (GBas, t) (_, G, Ga, M) =
+        let
+          val GBs = List.map abstractCtxPair2 GBas
+        in
+          t (GBs, G, Ga, M)
+        end
+    fun forallG (gbs, (r, t)) (Ga, k) =
+        let
+          val GBas = List.map abstractCtxPair gbs
+          val (Ga', k', r', t') = t (Ga, k)
+        in
+          (Ga', k', P.join (r, r'), forallG2 (GBas, t'))
+        end
 
     fun dec (name, t) = (name, t)
 
     fun theoremToTheorem t = 
         let
 	  val _ = Names.varReset ()
-	  val (t', r') = t (nil, I.Null, I.Null, 0)
+          val (_, k, r', t') = t (I.Null, 0)
+	  val (GBs, G, _, M) = t' (nil, I.Null, I.Null, I.Null)
 	in
-	  (L.ThDecl t', r')
+	  (L.ThDecl (GBs, G, M, k), r')
 	end
 
     fun theoremDecToTheoremDec (name, t) =
@@ -245,7 +281,7 @@ struct
     val establishToEstablish = establishToEstablish
     val assertToAssert = assertToAssert
       
-    type ctx = ctx
+    type decs = decs
     val null = null
     val decl = decl
       

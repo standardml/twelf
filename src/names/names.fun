@@ -336,8 +336,8 @@ struct
   *)
   local
     datatype varEntry =
-        FVAR of IntSyn.Exp		(* global type V for F:V *)
-      | EVAR of IntSyn.Exp		(* EVar X *)
+        FVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* V, Va, set *)
+      | EVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* X, Va, set *)
 
     (* varTable mapping identifiers (strings) to EVars and FVars *)
     (* A hashtable is too inefficient, since it is cleared too often; *)
@@ -412,9 +412,11 @@ struct
         (case varLookup name
 	   of NONE => let
 			val V = IntSyn.newTypeVar (IntSyn.Null)	(* FVars typed in empty Ctx *)
-			val _ = varInsert (name, FVAR (V));
+                        val Va = IntSyn.newTypeVar (IntSyn.Null)
+                        val set = ref false
+			val _ = varInsert (name, FVAR (V, Va, set));
 		      in 
-			 V
+			 (V, Va, set)
 		      end
             | SOME(FVAR(V)) => V)
 	    (* other cases should be impossible *)
@@ -431,11 +433,13 @@ struct
 	   of NONE => let
 			(* free variables typed in empty context *)
 			val V = IntSyn.newTypeVar (IntSyn.Null)
+                        val Va = IntSyn.newTypeVar (IntSyn.Null)
 			val (X as (IntSyn.EVar(r,_,_,_))) = IntSyn.newEVar (IntSyn.Null, V)
-			val _ = varInsert (name, EVAR (X))
+                        val set = ref false
+			val _ = varInsert (name, EVAR (X, Va, set))
 			val _ = evarInsert (X, name)
 		      in 
-			 X
+			(X, Va, set)
 		      end
             | SOME(EVAR(X)) => X)
 	    (* other cases should be impossible *)
@@ -443,8 +447,8 @@ struct
     fun getEVarOpt (name) =
         (case varLookup name
 	  of NONE => NONE
-           | SOME(EVAR(X)) => SOME(X)
-           | SOME(FVAR(X)) => NONE)
+           | SOME(EVAR(X, _, _)) => SOME(X)
+           | SOME(FVAR(_)) => NONE)
 
     (* varDefined (name) = true iff `name' refers to a free variable, *)
     (* which could be an EVar for constant declarations or FVar for queries *)
@@ -525,8 +529,11 @@ struct
         (case evarLookup X
 	   of NONE => let
 			val name = newEVarName (G, X)
+                        (* is it really necessary to put this in the
+                           varTable? -kw *)
+                        val Va = IntSyn.newTypeVar (IntSyn.Null)
 		      in
-			(varInsert (name, EVAR(X));
+			(varInsert (name, EVAR(X, Va, ref false));
 			 name)
 		      end
             | SOME (name) => name)

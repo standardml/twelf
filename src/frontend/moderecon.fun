@@ -6,13 +6,16 @@ functor ModeRecon (structure Global : GLOBAL
 		   structure Whnf : WHNF
 		     sharing Whnf.IntSyn = ModeSyn'.IntSyn
 		   structure Paths' : PATHS
+                   structure Names : NAMES
+                     sharing Names.IntSyn = ModeSyn'.IntSyn
 		   structure ModePrint : MODEPRINT
 		     sharing ModePrint.ModeSyn = ModeSyn'
 		   structure ModeDec : MODEDEC
 		     sharing ModeDec.ModeSyn = ModeSyn'
 		     sharing ModeDec.Paths = Paths'
 		   structure TpRecon' : TP_RECON
-		     sharing TpRecon'.IntSyn = ModeSyn'.IntSyn)
+		     sharing TpRecon'.IntSyn = ModeSyn'.IntSyn
+                     sharing TpRecon'.Paths = Paths')
   : MODE_RECON =
 struct
   structure ModeSyn = ModeSyn'
@@ -56,12 +59,22 @@ struct
 
     structure Full =
     struct
-      type mterm = I.dctx * M.Mode I.Ctx -> (I.cid * M.ModeSpine) * P.region
+      type mterm2 = I.dctx * T.approxCtx * M.Mode I.Ctx -> (I.cid * M.ModeSpine) * P.region
+      type mterm = T.approxCtx -> mterm2
 
-      fun mpi ((m, _), d, t) (G, D) =  
-	  t (I.Decl (G, T.decToDec (G, d)), I.Decl (D, m))
+      fun mpi2 (m, Da, t, r) (G, Ga, D) =
+	  t (I.Decl (G, T.approxDecToDec (G, Ga, Da, r)), I.Decl (Ga, Da),
+             I.Decl (D, m))
 
-      fun mroot (t, r) (G, D) = 
+      fun mpi ((m, _), d, r, t) (Ga) =
+          let
+            val Da = T.decToApproxDec (Ga, d)
+            val t' = t (I.Decl (Ga, Da))
+          in
+            mpi2 (m, Da, t', r)
+          end
+
+      fun mroot2 (Ua, r) (G, Ga, D) = 
 	  let
             (* convert term spine to mode spine *)
 	    (* Each argument must be contractible to variable *)
@@ -89,12 +102,26 @@ struct
 	      (* convertExp (I.Root (I.Skonst _, S)) can't occur *)
 		  
 
-	    val (a, mS) = convertExp (T.termToExp (G, t))
+	    val (a, mS) = convertExp (T.approxExpToExp (G, Ga, Ua))
 	  in
 	    (ModeDec.checkFull (a, mS, r);  ((a, mS), r))
 	  end
 
-      fun toModedec t = t (I.Null, I.Null)
+      fun mroot (tm, r) (Ga) =
+          let
+            val Ua = T.termToApproxExp (Ga, tm)
+          in
+            mroot2 (Ua, r)
+          end
+
+      fun toModedec t =
+          let
+            val _ = Names.varReset ()
+            val t' = t (I.Null)
+            val t'' = t' (I.Null, I.Null, I.Null)
+          in
+            t''
+          end
 
     end  (* structure Full *)
 

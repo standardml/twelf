@@ -661,9 +661,9 @@ local
         let
           val G' = Names.ctxLUName G
         in
-          [F.HVbox [fmtExp (G, 0, noCtxt, (U1, I.id)),
+          [F.HVbox [fmtExp (G', 0, noCtxt, (U1, I.id)),
 	            F.Break, sym "=", F.Space,
-	            fmtExp (G, 0, noCtxt, (U2, I.id))]]
+	            fmtExp (G', 0, noCtxt, (U2, I.id))]]
         end
     | fmtCnstr (I.FgnCnstr (cs, ops)) =
         let
@@ -714,9 +714,18 @@ local
     | collectEVars ((U,_)::Xnames, Xs) =
 	collectEVars (Xnames, Abstract.collectEVars (I.Null, (U, I.id), Xs))
 
+  fun eqCnstr r1 r2 = (r1 = r2)
+
+  fun mergeConstraints (nil, cnstrs2) = cnstrs2
+    | mergeConstraints (cnstr::cnstrs1, cnstrs2) =
+        if List.exists (eqCnstr cnstr) cnstrs2
+          then mergeConstraints (cnstrs1, cnstrs2)
+        else cnstr::(mergeConstraints (cnstrs1, cnstrs2))
+
   fun collectConstraints (nil) = nil
     | collectConstraints (I.EVar(ref(NONE),_,_,cnstrs) :: Xs) =
-	Constraints.simplify (!cnstrs) @ collectConstraints Xs
+        mergeConstraints (Constraints.simplify (!cnstrs),
+                          collectConstraints Xs)
     | collectConstraints (_ :: Xs) = collectConstraints (Xs)
 
 in

@@ -211,34 +211,34 @@ struct
     (* %theorem declarations *)
     (* --------------------- *)
 
-    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = LS.expose s'
+    fun stripRBrace (LS.Cons ((L.RBRACE, r), s')) = (LS.expose s', r)
       | stripRBrace (LS.Cons ((t, r), _))  = 
           Parsing.error (r, "Expected `}', found " ^ L.toString t)
 
     (* parseDec "{id:term} | {id}" *)
-    and parseDec (f) =
+    and parseDec (r, f) =
         let 
 	  val (D, f') = ParseTerm.parseDec' f
-	  val f'' = stripRBrace f'
+	  val (f'', r2) = stripRBrace f'
 	in
-	  (D, f'')
+	  ((D, P.join (r, r2)), f'')
 	end
 
     (* parseDecs' "{id:term}...{id:term}", zero or more, ":term" optional *)
-    and parseDecs' (Ds, LS.Cons (BS as ((L.LBRACE, r), s'))) = 
+    and parseDecs' (Drs, LS.Cons (BS as ((L.LBRACE, r), s'))) = 
         let
-	  val (D, f') = parseDec (LS.expose s')
+	  val (Dr, f') = parseDec (r, LS.expose s')
 	in
-	  parseDecs' (E.decl (Ds, D), f')
+	  parseDecs' (E.decl (Drs, Dr), f')
 	end
-      | parseDecs' Ds = Ds
+      | parseDecs' Drs = Drs
 
     (* parseDecs "{id:term}...{id:term}", one ore more, ":term" optional *)
     and parseDecs (LS.Cons (BS as ((L.LBRACE, r), s'))) = 
         let
-	  val (D, f') = parseDec (LS.expose s')
+	  val (Dr, f') = parseDec (r, LS.expose s')
 	in
-	  parseDecs' (E.decl (E.null, D), f')
+	  parseDecs' (E.decl (E.null, Dr), f')
 	end
       | parseDecs (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected `{', found " ^ L.toString t)
