@@ -1,0 +1,15 @@
+%theorem vev :
+  forall* {V*:val*} {V:exp}
+  forall {RV:repv V* V}
+  exists {D:eval V V}
+  true.
+
+%prove 3 RV (vev RV D).
+
+%theorem eq :
+  forall* {E*:exp*} {V*:val*} {E:exp}
+  forall {D*:eval* E* V*} {R:rep E* E}
+  exists {V:exp} {RV:repv V* V} {D:eval E V}
+  true.
+
+%prove 3 D* (eq D* R V RV D).
