@@ -16,6 +16,7 @@ struct
   local 
     structure I = IntSyn
 
+	  
     (* some well-formedness conditions are assumed for input expressions *)
     (* e.g. don't contain "Kind", Evar's are consistently instantiated, ... *)
 
@@ -128,13 +129,49 @@ struct
     and checkDec (G, (I.Dec (_, V) ,s)) =
           checkExp (G, (V, s), (I.Uni (I.Type), I.id))
 
+    and checkCtx (I.Null) =  ()
+      | checkCtx (I.Decl (G, D)) = 
+          (checkCtx G; checkDec (G, (D, I.id)))
+
+
     fun check (U, V) = checkExp (I.Null, (U, I.id), (V, I.id))
     fun infer U = I.EClo (inferExp (I.Null, (U, I.id)))
     fun infer' (G, U) = I.EClo (inferExp (G, (U, I.id)))
 
-    fun checkCtx (I.Null) =  ()
-      | checkCtx (I.Decl (G, D)) = 
-          (checkCtx G; checkDec (G, (D, I.id)))
+
+
+    fun typeCheck (G, (U, V)) = 
+          (checkCtx G; checkExp (G, (U, I.id), (V, I.id)))
+
+
+    (* checkSub (Psi1, s, Psi2) = ()
+
+       Invariant:
+       The function terminates 
+       iff  G1 |- s : G2
+    *)
+    and checkSub (I.Null, I.Shift 0, I.Null) = ()
+      | checkSub (I.Decl (G, D), I.Shift k, I.Null) = 
+        if k>0 then checkSub (G, I.Shift (k-1), I.Null)
+	else raise Error "Substitution not well-typed"
+      | checkSub (G', I.Shift k, G) =
+	  checkSub (G', I.Dot (I.Idx (k+1), I.Shift (k+1)), G)
+      | checkSub (G', I.Dot (I.Idx k, s'), I.Decl (G, (I.Dec (_, V2)))) =
+	let 
+	  val I.Dec (_, V1) = I.ctxDec (G', k)
+	in
+	  if Conv.conv ((V1, I.id), (V2, s')) then checkSub (G', s', G)
+	  else raise Error ("Substitution not well-typed \n  found: " ^
+			    Print.expToString (G', V1) ^ "\n  expected: " ^
+			    Print.expToString (G', I.EClo (V2, s')))
+	end
+      | checkSub (G', I.Dot (I.Exp (U), s'), I.Decl (G, (I.Dec (_, V2)))) =
+	let 
+	  val _ = typeCheck (G', (U, I.EClo (V2, s'))) 
+	in
+	  checkSub (G', s', G)
+	end
+
     
   in
       val check = check
@@ -142,9 +179,8 @@ struct
 
       val infer = infer
       val infer' = infer'
-      val typeCheck = fn (G, (U, V)) => 
-	                   (checkCtx G; checkExp (G, (U, I.id), (V, I.id)))
+      val typeCheck = typeCheck
       val typeCheckCtx = checkCtx			   
-
+      val typeCheckSub = checkSub
   end  (* local ... *)
 end; (* functor TypeCheck *)
