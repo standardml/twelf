@@ -4,7 +4,7 @@ functor UnknownExn (val exnHistory : exn -> string list) : UNKNOWN_EXN =
 struct
   fun unknownExn exn =
     let
-      val history = exnHistory exn
+      val history = rev (exnHistory exn)
       fun wrap1 x = "  raised at: " ^ x ^ "\n"
       fun wrapn x = "             " ^ x ^ "\n"
     in
