@@ -25,8 +25,10 @@ struct
         fun trimr ss = Substring.dropr Char.isSpace ss
         val line' = triml (trimr (Substring.all line))
       in
-	if Substring.size (line') = 0
-        then readLine ()
+	if line = ""
+	  then ("OS.exit", "")
+	else if Substring.size (line') = 0
+	  then readLine ()
         else
           let
             val (command', args') = Substring.position " " line'
