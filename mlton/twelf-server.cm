@@ -241,6 +241,9 @@ Group is
 ../src/cover/cover.sml
 ../src/frontend/mkabsolute.sig
 ../src/frontend/mkabsolute.sml
+../src/frontend/unknownexn.sig
+../src/frontend/unknownexn.fun
+../src/frontend/unknownexn-smlnj.sml
 ../src/frontend/recon-term.sig
 ../src/frontend/recon-term.fun
 ../src/frontend/recon-condec.sig

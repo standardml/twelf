@@ -161,6 +161,7 @@ functor Twelf
     
    structure CSInstaller : CS_INSTALLER
    structure MkAbsolute : MK_ABSOLUTE
+   structure UnknownExn : UNKNOWN_EXN
      )
  :> TWELF =
 struct
@@ -293,7 +294,7 @@ struct
 	      | WorldSyn.Error (msg) => abort (msg ^ "\n") (* includes filename *)
               | ModSyn.Error (msg) => abortFileMsg (fileName, msg)
               | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
-	      | exn => (abort ("Unrecognized exception\n"); raise exn))
+	      | exn => (abort (UnknownExn.unknownExn exn); raise exn))
 
     (* During elaboration of a signature expression, each constant
        that that the user declares is added to this table.  At top level,

@@ -41,6 +41,9 @@ is
 #else
   mkabsolute-97.sml
 #endif
+  unknownexn.sig
+  unknownexn.fun
+  unknownexn-smlnj.sml
   lexer.sig
   lexer.fun
   parsing.sig
