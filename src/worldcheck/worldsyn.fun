@@ -159,7 +159,11 @@ struct
     (* Declaration lists *)
     fun formatDList (G, nil, t) = nil
       | formatDList (G, D :: nil, t) =
-          formatD (G, D) :: nil (* Names.decUName (G, I.decSub(D, t)) *)
+        let
+	  val D' = I.decSub (D, t)
+	in
+          formatD (G, D') :: nil (* Names.decUName (G, I.decSub(D, t)) *)
+	end
       | formatDList (G, D :: L, t) = 
         let
 	  val D' = I.decSub (D, t) (* Names.decUName (G, I.decSub (D, t)) *)
