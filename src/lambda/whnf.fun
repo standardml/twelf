@@ -62,6 +62,8 @@ struct
       | isPatSub (Dot (Undef, s)) = isPatSub s
       | isPatSub _ = false
 
+    exception Undefined
+
     exception Eta
 
     (* etaContract (U, s, n) = k'
@@ -87,6 +89,8 @@ struct
 	  etaContract (U, comp (s', s), n)
       | etaContract (EVar (ref (SOME(U)), _, _, _), s, n) =
 	  etaContract (U, s, n)
+      | etaContract (AVar (ref (SOME(U))), s, n) =
+	  etaContract (U, s, n) 
       | etaContract _ = raise Eta
         (* Should fail: (c@S), (d@S), (F@S), X *)
         (* Not treated (fails): U@S *)
@@ -170,6 +174,9 @@ struct
 	  (* Ss2 must be App, since prior cases do not apply *)
 	  (* lowerEVar X results in redex, optimize by unfolding call to whnfRedex *)
 	  (lowerEVar X; whnfRedex (whnf Us, Ss2))
+      | whnfRedex (Us as (AVar(ref (SOME U)), s1), Ss2) = 
+	  whnfRedex((U,s1), Ss2)
+      | whnfRedex (Us as (AVar(ref NONE), s1), Ss2) = Us
       | whnfRedex (Us as (FgnExp _, _), _) = Us
       (* Uni and Pi can arise after instantiation of EVar X : K *)
       | whnfRedex (Us as (Uni _, s1), _) = Us	(* S2[s2] = Nil *)
@@ -270,25 +277,28 @@ struct
 	 Fails currently because appendSpine does not necessairly return a closure  -cs
 	 Advantage: in unify, abstract... the spine needn't be treated under id, but under s
     *)
-    and whnf (Us as (Uni _, s)) = Us
-      | whnf (Us as (Pi _, s)) = Us
+    and whnf (U as Uni _, s) = (U,s)
+      | whnf (U as Pi _, s) = (U,s)
       (* simple optimization (C@S)[id] = C@S[id] *)
       (* applied in Twelf 1.1 *)
       (* Sat Feb 14 20:53:08 1998 -fp *)
 (*      | whnf (Us as (Root _, Shift (0))) = Us*)
       (* commented out, because non-strict definitions slip
 	 Mon May 24 09:50:22 EDT 1999 -cs  *)
-      | whnf (Root R, s) = whnfRoot (R, s)
-      | whnf (Redex (U, S), s) = whnfRedex (whnf (U, s), (S, s))
+      | whnf (Root R, s) =  whnfRoot (R, s)
+      | whnf (Redex (U, S), s) =  whnfRedex (whnf (U, s), (S, s))
       | whnf (Us as (Lam _, s)) = Us
+      | whnf (AVar (ref (SOME U)), s) =  whnf (U, s)
+      | whnf (Us as (AVar _, s)) =  Us
       | whnf (EVar (ref (SOME U), _, _, _), s) = whnf (U, s)
       (* | whnf (Us as (EVar _, s)) = Us *)
       (* next two avoid calls to whnf (V, id), where V is type of X *)
-      | whnf (Us as (EVar (r, _, Root _, _), s)) = Us 
-      | whnf (Us as (EVar (r, _, Uni _, _), s)) = Us 
+      | whnf (Us as (EVar (r, _, Root _, _), s)) =  Us
+      | whnf (Us as (EVar (r, _, Uni _, _), s)) =  Us
       | whnf (Us as (X as EVar (r, _, V, _), s)) = 
           (case whnf (V, id)
-	     of (Pi _, _) => (lowerEVar X; whnf Us) (* possible opt: call lowerEVar1 *)
+	     of (Pi _, _) => (lowerEVar X; whnf Us)
+	                     (* possible opt: call lowerEVar1 *)
 	      | _ => Us)
       | whnf (EClo (U, s'), s) = whnf (U, comp (s', s))
       | whnf (Us as (FgnExp _, Shift (0))) = Us
@@ -327,6 +337,7 @@ struct
     fun inferCon (Const (cid)) = constType (cid)
       | inferCon (Skonst (cid)) = constType (cid) 
       | inferCon (Def (cid)) = constType (cid)
+
     (* etaExpand' (U, (V,s)) = U'
            
        Invariant : 
@@ -522,6 +533,7 @@ struct
     val etaContract = (fn U => etaContract (U, id, 0))
 
     val whnf = whnf
+
     val expandDef = expandDef
     val etaExpandRoot = etaExpandRoot
     val whnfEta = whnfEta

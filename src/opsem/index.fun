@@ -48,7 +48,6 @@ struct
    * lookup  : pointer to the i-th element in solution list
    *)
 
-  (* proof term skeleton could be stored with tabled call ? *)
   type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * IntSyn.pskeleton) list,
 		 lookup: int}
 
@@ -77,7 +76,7 @@ struct
   val ctxLength = ref NONE : int option ref;
 
 (*   val termDepth = ref (!globalTermDepth); *)
-(*   val ctxDepth = ref (!globalCtxDepth); *)
+(*   val ctxDepth = ref (!globalCtxDepth);   *)
 (*   val ctxLength = ref (!globalCtxLength); *)
 
   (* apply strengthening during abstraction *)
@@ -294,63 +293,8 @@ struct
 	 in 
 	   countSpine (max(ctrDepth', ctrDepth), S)
       end 
-    
+ 
 
-(*     fun exceedsLength (i) =  *)
-(*       case (!termDepth) of  *)
-(* 	NONE => false *)
-(*       | SOME(n) => (n <= (i +1)) *)
-      
-(*     fun exceedsTermDepth U =  *)
-(*       let *)
-(* 	fun exceeds (0, _ ) = true *)
-(* 	  | exceeds (depth, (U as I.Uni (L))) = false *)
-(* 	  | exceeds (depth, I.Pi ((D, _), V)) = *)
-(*  	     exceedsDec(depth-1 , D) orelse exceeds(depth-1, V) *)
-(* 	  | exceeds (depth, I.Root (F, S)) = *)
-(* 	     exceedsSpine ((depth-1), S) *)
-(* 	  | exceeds (depth, I.Redex (U, S)) = *)
-(* 	     exceedsLength(lengthSpine(S))  *)
-(* 	     orelse *)
-(* 	     exceeds(depth, U)  *)
-(* 	     orelse  *)
-(* 	     exceedsSpine' ((depth-1), S)	      *)
-(* 	  | exceeds (depth, I.Lam (D, U)) = *)
-(* 	     exceeds (depth, U) *)
-(* 	  | exceeds (depth, (X as I.EVar _)) =  *)
-(* 	     (* shouldn't happen *) *)
-(* 	     true *)
-(* 	  | exceeds (depth, I.EClo(E, s)) =  *)
-(* 	     exceeds (depth, E) *)
-(* 	  | exceeds (depth, (F as I.FgnExp (cs, ops))) =  *)
-(* 	     (* shouldn't happen *) *)
-(* 	     true *)
-(* (*	  | exceeds (depth, _) = (print "\nexceeds anything else ??? \n"; true) *) *)
-	  
-(* 	and exceedsSpine (depth, I.Nil)  = (depth = 0)  *)
-(* 	  | exceedsSpine (depth, I.SClo (S, s')) =  *)
-(* 	     (* ? *) *)
-(* 	      exceedsSpine (depth, S) *)
-(* 	  | exceedsSpine (depth, I.App (U, S)) = *)
-(* 	      (exceeds (depth, U) orelse *)
-(* 	       exceedsSpine (depth-1, S)) *)
-
-(* 	and exceedsSpine' (depth, I.Nil)  = (depth = 0)  *)
-(* 	  | exceedsSpine' (depth, I.SClo (S, s')) =  *)
-(* 	     (* ? *) *)
-(* 	      exceedsSpine' (depth, S) *)
-(* 	  | exceedsSpine' (depth, I.App (U, S)) = *)
-(* 	      (exceeds (depth, U) orelse *)
-(* 	       exceedsSpine' (depth, S)) *)
-
-
-(* 	and exceedsDec (depth, I.Dec(_, U)) =  *)
-(* 	  exceeds (depth, U) *)
-(*       in  *)
-(* 	case (!termDepth) of *)
-(* 	  NONE => false *)
-(* 	  | SOME(k) => 	exceeds(k, U) *)
-(*       end  *)
 
    (* ---------------------------------------------------------------------- *)
    (* reinstSub (G, D, s) = s' 
@@ -442,7 +386,7 @@ struct
 	val Upi = A.raiseType(concat(G, D), U)
 	fun lookup ((G, D, U), []) = 
 	  (table := ((ref 1, G, D, U), {solutions = [],lookup = 0})::(!table); 
-	   (if (!Global.chatter) >= 4 then 
+	   (if (!Global.chatter) >= 5 then 
 	      (print ("\n \n Added " );
 	       print (Print.expToString (I.Null, Upi) ^ "\n to Table \n"))
 	    else 
@@ -455,7 +399,7 @@ struct
 		  " exceeds depth or length ? \n"); *)
 		 
 		 if exceeds (A.raiseType(G, U)) then 
-		   ((if (!Global.chatter) >= 4 then 
+		   ((if (!Global.chatter) >= 5 then 
 		       print ("\n term " ^ Print.expToString (I.Null, Upi) ^ 
 			      " exceeds depth or length \n")
 		     else 
@@ -666,11 +610,7 @@ struct
 		            (print "\n new answer to be added to Index \n";
 			     print (Print.expToString(I.Null, 
 						    A.raiseType(concat(G', D'), U')) ^"\n");
-			     print "\n reinstantiated Table index\n";
-			     print (Print.expToString(I.Null,
-						    I.EClo(A.raiseType(G', U'), s'))
-				    ^ "\n");
-			     print "\n answer to be added \n";
+			     print "\n answer added \n";
 			     print (Print.expToString(I.Null, A.raiseType(Dk, 
 			                I.EClo(A.raiseType(G, U), sk))) ^ "\n"))
 			   else 
@@ -739,12 +679,6 @@ struct
 		      print (Print.expToString(I.Null, A.raiseType(Dk',
 					       I.EClo(A.raiseType(G', U'), sk')))
 			     ^ "\n"))
-
-(*		      print (Print.expToString(I.Null,
-					       A.raiseType(Dk',
-							   I.EClo(A.raiseType(G',U'), sk')))
-			     ^ "\n"))
-*)
 		  else 
 		    ());
 		  new 
@@ -811,7 +745,7 @@ struct
 
   in
 
-(*    val termDepth = termDepth
+(*  val termDepth = termDepth
     val ctxDepth = ctxDepth
     val ctxLength = ctxLength
 *)

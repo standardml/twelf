@@ -34,6 +34,13 @@ struct
 
     val globalTrail = Trail.trail () : Action Trail.trail 
 
+ fun frontToString (Idx i) = "(idx " ^ Int.toString i ^ ")"
+      | frontToString (Exp E) = " exp _ "
+      | frontToString (Undef) = " undef "
+
+    fun subToString (Shift i) = "(shift " ^ Int.toString i ^ ")"
+      | subToString (Dot(ft, s)) = frontToString ft ^ ". " ^ subToString s
+
 
     fun copyCnstr [] = []
       | copyCnstr (refC :: clist) = 
@@ -235,7 +242,8 @@ struct
        Effect: prunes EVars in U[s] according to ss
                raises Unify if U[s][ss] does not exist, or rOccur occurs in U[s]
     *)
-    fun pruneExp  (G, Us, ss, rOccur, prunable) = pruneExpW (G, Whnf.whnf Us, ss, rOccur, prunable)
+    fun pruneExp  (G, Us, ss, rOccur, prunable) = 
+          pruneExpW (G, Whnf.whnf Us, ss, rOccur, prunable)
     and pruneExpW (G, (U as Uni _, s), _, _, _) = U
       | pruneExpW (G, (Pi ((D, P), V), s), ss, rOccur, prunable) = 
           Pi ((pruneDec (G, (D, s), ss, rOccur, prunable), P),
@@ -293,6 +301,7 @@ struct
                  )
       | pruneExpW (G, (FgnExp (_, ops), s), ss, rOccur, prunable) =
           #map(ops) (fn U => pruneExp (G, (U, s), ss, rOccur, prunable))
+
       (* other cases impossible since (U,s1) whnf *)
     and pruneDec (G, (Dec (name, V), s), ss, rOccur, prunable) =
 	  Dec (name, pruneExp (G, (V, s), ss, rOccur, prunable))
@@ -329,7 +338,7 @@ struct
     (* pruneSub never allows pruning OUTDATED *)
     (* in the presence of block variables, this invariant 
        doesn't hold any more, because substitutions do not
-       only occur in EVar's any more but also in LVars!
+       only occur in EVars any more but also in LVars!
        and there pruning is allowed!   Tue May 29 21:50:17 EDT 2001 -cs *)
     and pruneSub (G, s as Shift (n), ss, rOccur, prunable) =
         if n < ctxLength (G) 
@@ -510,6 +519,7 @@ struct
                unifyExp (G, Us1, (W2, s2))              
 	   | _ => raise Unify "Head mismatch")
 
+
       | unifyExpW (G, (Pi ((D1, _), U1), s1), (Pi ((D2, _), U2), s2)) =         
 	  (unifyDec (G, (D1, s1), (D2, s2)) ;
 	   unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1), (U2, dot1 s2)))
@@ -536,7 +546,7 @@ struct
 		    (Redex (EClo (U1, shift), App (Root (BVar (1), Nil), Nil)), dot1 s1),
 		    (U2, dot1 s2))  
 	   (* same reasoning holds as above *)
-
+	
       | unifyExpW (G, Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
 		   Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
 	  (* postpone, if s1 or s2 are not patsub *)
@@ -823,8 +833,9 @@ struct
           handle Unify _ => false
 
     fun unifiable (G, Us1, Us2) =
-          (unify (G, Us1, Us2); true)
-          handle Unify _ => false
+          (unify (G, Us1, Us2); 
+	   true)
+          handle Unify msg =>  false
 
     fun unifiable' (G, Us1, Us2) = 
           (unify (G, Us1, Us2); NONE)

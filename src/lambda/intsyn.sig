@@ -48,6 +48,8 @@ sig
   | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
                                         (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
+  | AVar  of Exp option ref             (*     | A<I>                 *)
+
   | FgnExp of csid *                    (*     | (foreign expression) *)
       {
         toInternal : unit -> Exp,       (* convert to internal syntax *)
@@ -86,6 +88,7 @@ sig
   and Dec =				(* Declarations:              *)
     Dec of string option * Exp		(* D ::= x:V                  *)
   | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
+  | ADec of string option * int	        (*     | v[^-d]               *)
 
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)
@@ -200,6 +203,7 @@ sig
   (* EVar related functions *)
 
   val newEVar    : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
+  val newAVar    : unit ->  Exp	        (* creates A (bare)           *) 
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
   val newLVar    : cid * Sub -> Block	(* creates B:(l,s)            *) 
 

@@ -592,6 +592,8 @@ struct
     datatype varEntry =
         FVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* V, Va, set *)
       | EVAR of IntSyn.Exp * IntSyn.Exp * bool ref  (* X, Va, set *)
+      | EVAR' of IntSyn.Exp * bool ref              (* X, set *) 
+      (* Fri Mar 15 16:33:04 2002 -bp  need this ? *)
 
     (* varTable mapping identifiers (strings) to EVars and FVars *)
     (* A hashtable is too inefficient, since it is cleared too often; *)
@@ -611,12 +613,16 @@ struct
     val evarList : (IntSyn.Exp * string) list ref = ref nil
 
     fun evarReset () = (evarList := nil)
-    fun evarLookup (IntSyn.EVar(r,_,_,_)) =
-        let fun evlk (nil) = NONE
-	      | evlk ((IntSyn.EVar(r',_,_,_), name)::l) =
-	        if r = r' then SOME(name) else evlk l
+    fun evarLookup (X) =
+        let fun evlk (r, nil) = NONE
+	      | evlk (r, (IntSyn.EVar(r',_,_,_), name)::l) =
+	        if r = r' then SOME(name) else evlk (r, l)
+	      | evlk (r, ((IntSyn.AVar(r'), name)::l)) =
+	        if r = r' then SOME(name) else evlk (r, l)
 	in
-	  evlk (!evarList)
+	  case X of
+	    IntSyn.EVar(r,_,_,_) => evlk (r, (!evarList))
+	  | IntSyn.AVar(r) => evlk (r, (!evarList))
 	end
     fun evarInsert entry = (evarList := entry::(!evarList))
 
@@ -796,6 +802,38 @@ struct
 		      end
             | SOME (name) => name)
 
+
+
+    (* newEvarName' (G, X) = name
+       where name is the next unused name appropriate for X,
+    *)
+    fun newEVarName' (G, X as IntSyn.AVar(r)) =
+        let
+	  (* use name preferences below *)
+	  val name = tryNextName (G, namePrefOf' (Exist, NONE))
+	in
+	  (evarInsert (X, name);
+	   name)
+	end
+
+    (* evarName' (G, X) = name
+       where `name' is the print name X.
+       If no name has been assigned yet, assign a new one.
+       Effect: if a name is assigned, update varTable
+    *)
+    fun evarName' (G, X) =
+        (case evarLookup X
+	   of NONE => let
+			val name = newEVarName' (G, X)
+                        (* is it really necessary to put this in the
+                           varTable? -kw *)
+		      in
+			(varInsert (name, EVAR'(X, ref false));
+			 name)
+		      end
+            | SOME (name) => name)
+
+
     (* bvarName (G, k) = name
        where `name' is the print name for variable with deBruijn index k.
        Invariant: 1 <= k <= |G|
@@ -806,6 +844,7 @@ struct
     fun bvarName (G, k) =
         (case IntSyn.ctxLookup (G, k)
 	   of IntSyn.Dec(SOME(name), _) => name
+	    | IntSyn.ADec(SOME(name), _) =>  name
 	    | _ => raise Unprintable)
               (* NONE should not happen *)
 
@@ -837,6 +876,18 @@ struct
 	if varDefined name orelse conDefined name
 	  orelse ctxDefined (G, name)
 	  then IntSyn.BDec (SOME (tryNextName (G, baseOf name)), b)
+	else D
+      | decName' role (G, IntSyn.ADec (NONE, d)) =
+        let
+	  val name = findName (G, namePrefOf' (role, NONE), extent (role))
+	in
+	  IntSyn.ADec (SOME(name), d)
+	end
+      | decName' role (G, D as IntSyn.ADec (SOME(name), d)) =
+(*	IntSyn.ADec(SOME(name), d) *)
+	if varDefined name orelse conDefined name
+	  orelse ctxDefined (G, name)
+	  then IntSyn.ADec (SOME (tryNextName (G, baseOf name)), d)
 	else D
 
     val decName = decName' Exist

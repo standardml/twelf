@@ -9,10 +9,8 @@ functor PtRecon (structure IntSyn' : INTSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
 		    structure Unify : UNIFY
 		      sharing Unify.IntSyn = IntSyn'
-		    (*
                     structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
-		    *)
 
 		    structure Index : INDEX
 		      sharing Index.IntSyn = IntSyn'
@@ -43,6 +41,12 @@ struct
     fun eqHead (I.Const a, I.Const a') = a = a'
       | eqHead (I.Def a, I.Def a') = a = a'
       | eqHead _ = false
+
+  fun compose'(IntSyn.Null, G) = G
+    | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+
+  fun shift (IntSyn.Null, s) = s
+    | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
 
   (* We write
        G |- M : g
@@ -107,12 +111,13 @@ struct
 	then sc (O, I.Nil)			(* call success continuation *)
       else ()				(* fail *)
 	)
-    (* Fri Jan 15 14:29:28 1999 -fp,cs
-    | rSolve (ps', (Assign(Q, ag), s), dp, sc) = 
-     (if Assign.assignable (ps', (Q, s)) then
-	aSolve ((ag, s), dp, (fn () => sc I.Nil))
-      else ())
-    *)
+
+    | rSolve (O, ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), sc) = 
+	(case Assign.assignable (G, ps', (Q, s)) of
+	  SOME(cnstr) => 	    
+	    aSolve((eqns, s), dp, cnstr, (fn () => sc (O, I.Nil)))
+        | NONE => ())
+
     | rSolve (O, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
@@ -129,29 +134,39 @@ struct
 	rSolve (O, ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn (O,S) => sc (O, (I.App(X,S)))))
       end
-    (*
-    | rSolve (O, ps', (C.Exists'(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
-      let
-	val X = I.newEVar (G, I.EClo (A,s))
-      in
-	rSolve (O, ps', (r, I.Dot(I.Exp(X), s)), dp, sc)
-   	          (* we don't increase the proof term here! *)
-      end
-     *)
 
-  (* aSolve ((ag, s), dp, sc) = ()
+    | rSolve (O, ps', (C.Axists(I.ADec(SOME(X), d), r), s), dp as C.DProg (G, dPool), sc) =
+      let
+	val X' = I.newAVar ()
+      in
+	rSolve (O, ps', (r, I.Dot(I.Exp(I.EClo(X', I.Shift(~d))), s)), dp, sc)
+   	(* we don't increase the proof term here! *)
+      end
+
+  (* aSolve ((ag, s), dp, sc) = res
      Invariants:
        dp = (G, dPool) where G ~ dPool
        G |- s : G'
-       if G |- ag[s] auxgoal then
-       sc () is evaluated
+       if G |- ag[s] auxgoal
+       then sc () is evaluated with return value res
+       else res = Fail
      Effects: instantiation of EVars in ag[s], dp and sc () *)
-  and aSolve (O, (C.Trivial, s), dp, sc) = sc ()
-    (* Fri Jan 15 14:31:20 1999 -fp,cs
-    | aSolve ((Unify(I.Eqn(e1, e2), ag), s), dp, sc) =
-    (if Unify.unifiable ((e1, s), (e2, s)) then aSolve ((ag, s), dp, sc)
-     else ())
-    *)
+
+  and aSolve ((C.Trivial, s), dp, cnstr, sc) = 
+        (if Assign.solveCnstr cnstr then
+	  sc ()
+	else 
+	   ())
+    | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc) =
+      let
+	val (G'') = compose'(G', G)
+	val s' = shift (G', s)
+      in 
+	if Assign.unifiable (G'', (N, s'), (e1, s')) then  	  
+	      aSolve ((eqns, s), dp, cnstr, sc)
+	else ()
+     end
+    
 
   (* matchatom (O, (p, s), dp, sc) => ()
      Invariants:
@@ -174,8 +189,6 @@ struct
         *)
 	fun matchSig (nil, k) = 
 	  let 
-	    val _ = print ("\n #pc number " ^ (Int.toString k) ^ "\n") 
-	    val _ = print("\n  wanted clause : " ^  Names.qidToString(Names.constQid(k)))
 	  in 
 	     raise Error (" \noracle #pc does not exist \n") end
 	     (* should not happen *)

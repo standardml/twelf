@@ -7,12 +7,7 @@ Group is
   ../solvers/sources.cm
   ../subordinate/sources.cm
   ../tabling/sources.cm
-  compsyn.sig
-  compsyn.fun
-  compile.sig
-  compile.fun
-  cprint.sig
-  cprint.fun
+  ../compile/sources.cm
   abstract.sig  
   abstract.fun
   index.sig
@@ -20,10 +15,6 @@ Group is
   tabled.sig
   tabled.fun     
 
-  (*
-  assign.sig
-  assign.fun
-  *)
   absmachine.sig
   absmachine.fun
   ptrecon.sig

@@ -100,6 +100,7 @@ sig
   val getEVar : string -> IntSyn.Exp * IntSyn.Exp * bool ref (* create, if undefined *)
   val getEVarOpt : string -> IntSyn.Exp option (* NONE, if undefined or not EVar *)
   val evarName : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
+  val evarName' : IntSyn.dctx * IntSyn.Exp -> string (* create, if undefined *)
   val bvarName : IntSyn.dctx * int -> string (* raises Unprintable if undefined *)
 
   val decName  : IntSyn.dctx * IntSyn.Dec -> IntSyn.Dec (* status unknown, like decEName *)

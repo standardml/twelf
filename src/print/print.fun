@@ -40,6 +40,7 @@ local
   (* fmtEVar (G, X) = "X", the name of the EVar X *)
   (* Effect: Names.evarName will assign a name if X does not yet have one *)
   fun fmtEVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X)))
+  fun fmtAVar (G, X) = Str0 (Symbol.evar (Names.evarName'(G, X) ^ "_"))
 
   (* isNil S = true iff S == Nil *)
   fun isNil (I.Nil) = true
@@ -252,6 +253,11 @@ local
       OpArgs (FX.Nonfix, [fmtEVar(G, X)],
 	      subToSpine (I.ctxLength(G), s))
 
+
+  fun evarArgs' (G, d, X, s) =
+      OpArgs (FX.Nonfix, [fmtAVar(G, X)],
+	      subToSpine (I.ctxLength(G), s))
+
   (* fst (S, s) = U1, the first argument in S[s] *)
   fun fst (I.App (U1, _), s) = (U1, s)
     | fst (I.SClo (S, s'), s) = fst (S, I.comp (s', s))
@@ -353,6 +359,17 @@ local
 	 fmtLevel (I.Decl (G, D'), d, ctx, (braces (G, d, ((D', V2), s)),
 					    I.dot1 s))
       end
+    (* -bp *)
+    | fmtExpW (G, d, ctx, (I.Pi((D as I.ADec _, P), V2), s)) =
+      let
+(*	val D' = Names.decLUName (G, D) *)
+	val braces = OpArgs(FX.Prefix(binderPrec),
+			    [sym "[" , sym "_", sym "]", F.Break],
+		IntSyn.App(V2, IntSyn.Nil))
+      in
+	 fmtLevel (I.Decl (G, D), d, ctx, (braces, I.dot1 s))
+      end
+
     | fmtExpW (G, d, ctx, (U as I.Root R, s)) = (* s = id *)
 	 fmtOpArgs (G, d, ctx, opargs (G, d, R), s)
     (* I.Redex not possible *)
@@ -367,6 +384,12 @@ local
       (* assume dereferenced during whnf *)
       if !implicit then aa (ctx, F.HVbox (fmtEVar(G,X)::fmtSub(G,d,s)))
       else fmtOpArgs (G, d, ctx, evarArgs (G, d, X, s), I.id)
+
+    | fmtExpW (G, d, ctx, (X as I.AVar _, s)) =
+      (* assume dereferenced during whnf *)
+      if !implicit then aa (ctx, F.HVbox (fmtAVar(G,X)::fmtSub(G,d,s)))
+      else fmtOpArgs (G, d, ctx, evarArgs' (G, d, X, s), I.id)
+
     | fmtExpW (G, d, ctx, (U as I.FgnExp (_, ops), s)) =
       fmtExp (G, d, ctx, (#toInternal(ops) (), s))
     (* I.EClo not possible for Whnf *)
@@ -635,6 +658,12 @@ local
 	F.HVbox ([Str0 (Symbol.const (nameOf (x))), sym ":"]
 		 @ fmtDecList' (G, (Gblock, I.comp (t, s))))
       end
+    | fmtDec (G, d, (I.ADec (x, _), s)) =
+      F.HVbox [Str0 (Symbol.bvar (nameOf (x))), sym ":_"]
+      (* alternative with more whitespace *)
+      (* F.HVbox [Str0 (Symbol.bvar (nameOf (x))), F.Space, sym ":", F.Break,
+                  fmtExp (G, d+1, noCtxt, (V,s))]
+      *)
   and fmtDecList' (G0, (nil, s)) = nil
     | fmtDecList' (G0, (D::nil, s)) = 
         sym "{" :: fmtDec (G0, 0, (D, s)) :: sym "}" :: nil
@@ -778,7 +807,7 @@ local
      EVars paired with their is passed, thereby representing a substitution
      for logic variables.
 
-     We always raise EVar's to the empty context.
+     We always raise AVars to the empty context.
   *)
   fun abstractLam (I.Null, U) = U
     | abstractLam (I.Decl (G, D), U) = abstractLam (G, I.Lam (D, U))

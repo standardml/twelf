@@ -8,6 +8,10 @@ functor TMachine (structure IntSyn' : INTSYN
 		    sharing Unify.IntSyn = IntSyn'
 		  structure Index : INDEX
 		    sharing Index.IntSyn = IntSyn'
+
+                  structure Assign : ASSIGN
+		    sharing Assign.IntSyn = IntSyn'
+
                   structure CPrint : CPRINT 
                     sharing CPrint.IntSyn = IntSyn'
                     sharing CPrint.CompSyn = CompSyn'
@@ -31,6 +35,11 @@ struct
 
     datatype Result = Succeed | Fail
 
+    (* Wed Mar 13 10:27:00 2002 -bp  *)
+    (* should probably go to intsyn.fun *)
+    fun compose(IntSyn.Null, G) = G
+    | compose(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose(G, G'), D)
+    
     fun subgoalNum (I.Nil) = 1
       | subgoalNum (I.App (U, S)) = 1 + subgoalNum S
 
@@ -64,7 +73,14 @@ struct
   fun eqHead (I.Const a, I.Const a') = a = a'
     | eqHead (I.Def a, I.Def a') = a = a'
     | eqHead _ = false
-                              
+         
+  (* should probably go to intsyn.fun Mon Mar 25 16:04:47 2002 -bp *)
+  fun compose'(IntSyn.Null, G) = G
+    | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+
+  fun shift (IntSyn.Null, s) = s
+    | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
+                     
   (* solve' ((g, s), dp, sc) = res
      Invariants:
        dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
@@ -121,6 +137,24 @@ struct
 		      true))			(* deep backtracking *)
 	  | SOME(msg) => (T.signal (G, T.FailUnify (HcHa, msg));
 			  (Fail, false)))	(* shallow backtracking *)
+
+      
+    | rSolve (ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), HcHa, sc) = 
+	(* to be replaced by assignment *)
+    (* 
+     (if Assign.assignable (ps', (Q, s)) then
+	aSolve ((ag, s), dp, (fn () => sc I.Nil))
+      else Fail)
+    *)
+     (case Assign.assignable (G, ps', (Q, s)) of
+	  SOME(cnstr) => aSolve((eqns, s), dp, cnstr, (fn () => sc I.Nil))
+        | NONE => (Fail, false))
+
+
+(*      (if Assign.assignable (G, ps', (Q, s)) then
+	aSolve ((eqns, s), dp, HcHa, (fn () => sc I.Nil))
+      else (Fail, false))
+*)
     | rSolve (ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), HcHa, sc) =
       let
 	(* is this EVar redundant? -fp *)
@@ -140,7 +174,49 @@ struct
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, HcHa,
 		(fn S => sc (I.App(X,S))))
       end
+    | rSolve (ps', (C.Axists(I.ADec(_), r), s), dp as C.DProg (G, dPool), HcHa,sc) =
+      let
+	val X = I.newAVar ()
+      in
+	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, HcHa, sc)
+   	(* we don't increase the proof term here! *)
+      end
 
+  (* aSolve ((ag, s), dp, HcHa, sc) = res
+     Invariants:
+       dp = (G, dPool) where G ~ dPool
+       G |- s : G'
+       if G |- ag[s] auxgoal
+       then sc () is evaluated with return value res
+       else res = Fail
+     Effects: instantiation of EVars in ag[s], dp and sc () *)
+
+
+  and aSolve ((C.Trivial, s), dp, cnstr, sc) = 
+        (if Assign.solveCnstr cnstr then
+	  (sc (), true)
+	else 
+	  (Fail, false))
+    | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc) =
+      let
+	val G'' = compose'(G', G)
+	val s' = shift (G', s)
+      in 
+	if Assign.unifiable (G'', (N, s'), (e1, s')) then  
+	  aSolve ((eqns, s), dp, cnstr, sc)
+	else (Fail, false)
+     end
+
+
+(*  and aSolve ((C.Trivial, s), dp, HcHa, sc) = (sc (), true)
+    (* Fri Jan 15 14:31:20 1999 -fp,cs
+       Wed Mar 13 10:20:47 2002 -bp  *)
+    | aSolve ((C.UnifyEq(G',e1, e2, eqns), s), dp as C.DProg(G, dPool), HcHa, sc) =
+    (if Unify.unifiable (compose(G', G), (e1, s), (e2, s)) then 
+       aSolve ((eqns, s), dp, HcHa,sc)
+     else (Fail, false))
+    
+*)
   (* matchatom ((p, s), dp, sc) = res
      Invariants:
        dp = (G, dPool) where G ~ dPool
@@ -248,7 +324,7 @@ struct
 
   in
     fun solve (gs, dp, sc) =
-      (T.init();
+      (T.init(); print "SOLVE'";
        solve'(gs, dp, (fn (U) => (sc (U); Succeed)));
        ())
   end (* local ... *)

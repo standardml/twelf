@@ -8,7 +8,7 @@ Group is
   ../modes/sources.cm
   ../typecheck/sources.cm
   ../order/sources.cm
-  ../opsem/sources.cm
+  ../compile/sources.cm
   ../heuristic/sources.cm
   ../timing/sources.cm
   ../solvers/sources.cm

@@ -7,10 +7,9 @@ functor AbsMachine (structure IntSyn' : INTSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
 		    structure Unify : UNIFY
 		      sharing Unify.IntSyn = IntSyn'
-		    (*
+
                     structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
-		    *)
 
 		    structure Index : INDEX
 		      sharing Index.IntSyn = IntSyn'
@@ -18,6 +17,10 @@ functor AbsMachine (structure IntSyn' : INTSYN
 		    structure CPrint : CPRINT 
                       sharing CPrint.IntSyn = IntSyn'
                       sharing CPrint.CompSyn = CompSyn'
+
+		    structure Print : PRINT 
+                      sharing Print.IntSyn = IntSyn'
+
 		    structure Names : NAMES 
                       sharing Names.IntSyn = IntSyn'
 		    structure CSManager : CS_MANAGER
@@ -31,7 +34,9 @@ struct
   local
     structure I = IntSyn
     structure C = CompSyn
-  
+
+
+
   (* We write
        G |- M : g
      if M is a canonical proof term for goal g which could be found
@@ -57,6 +62,15 @@ struct
   fun eqHead (I.Const a, I.Const a') = a = a'
     | eqHead (I.Def a, I.Def a') = a = a'
     | eqHead _ = false
+
+  (* Wed Mar 13 10:27:00 2002 -bp  *)
+  (* should probably go to intsyn.fun *)
+  fun compose'(IntSyn.Null, G) = G
+    | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+
+  fun shift (IntSyn.Null, s) = s
+    | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
+
                               
   (* solve' ((g, s), dp, sc) = res
      Invariants:
@@ -98,16 +112,16 @@ struct
      Effects: instantiation of EVars in p[s'], r[s], and dp
               any effect  sc S  might have
   *)
-  and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =
-     (if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
-	then sc I.Nil			  (* call success continuation *)
-      else Fail)			  (* fail *)
-    (* Fri Jan 15 14:29:28 1999 -fp,cs
-    | rSolve (ps', (Assign(Q, ag), s), dp, sc) = 
-     (if Assign.assignable (ps', (Q, s)) then
-	aSolve ((ag, s), dp, (fn () => sc I.Nil))
-      else Fail)
-    *)
+  and rSolve (ps', (C.Eq(Q), s), C.DProg (G, dPool), sc) =     
+      (if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
+	 then sc I.Nil			(* call success continuation *)
+       else Fail)			(* fail *)
+
+    | rSolve (ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), sc) = 
+	(case Assign.assignable (G, ps', (Q, s))
+	   of SOME(cnstr) => aSolve((eqns, s), dp, cnstr, (fn () => sc I.Nil))
+	    | NONE => Fail)
+
     | rSolve (ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
@@ -124,15 +138,14 @@ struct
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn S => sc (I.App(X,S))))
       end
-    (*
-    | rSolve (ps', (C.Exists'(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
+    | rSolve (ps', (C.Axists(I.ADec(_, d), r), s), dp as C.DProg (G, dPool), sc) =
       let
-	val X = I.newEVar (G, I.EClo (A,s))
+	val X' = I.newAVar ()
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp, sc)
+	rSolve (ps', (r, I.Dot(I.Exp(I.EClo(X', I.Shift(~d))), s)), dp, sc)
    	(* we don't increase the proof term here! *)
       end
-     *)
+     
 
   (* aSolve ((ag, s), dp, sc) = res
      Invariants:
@@ -142,12 +155,21 @@ struct
        then sc () is evaluated with return value res
        else res = Fail
      Effects: instantiation of EVars in ag[s], dp and sc () *)
-  and aSolve ((C.Trivial, s), dp, sc) = sc ()
-    (* Fri Jan 15 14:31:20 1999 -fp,cs
-    | aSolve ((Unify(I.Eqn(e1, e2), ag), s), dp, sc) =
-    (if Unify.unifiable ((e1, s), (e2, s)) then aSolve ((ag, s), dp, sc)
-     else Fail)
-    *)
+
+  and aSolve ((C.Trivial, s), dp, cnstr, sc) = 
+      (if Assign.solveCnstr cnstr
+	 then sc ()
+       else Fail)
+    | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc) =
+      let
+	val G'' = compose' (G', G)
+	val s' = shift (G', s)
+      in 
+	if Assign.unifiable (G'', (N, s'), (e1, s'))
+	  then aSolve ((eqns, s), dp, cnstr, sc)
+	else Fail
+     end
+    
 
   (* matchatom ((p, s), dp, sc) => res
      Invariants:

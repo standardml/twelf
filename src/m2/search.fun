@@ -129,14 +129,14 @@ struct
 	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
 	end
-    | rSolve (ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
+(*    | rSolve (ps', (C.Axists (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acck) =
         let
 	  val X = I.newEVar (G, I.EClo (A, s))
 	in
 	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acck') => sc (S, acck')), acck)
 	end
-
+*)
   (* aSolve ... *)
   and aSolve ((C.Trivial, s), dp, sc, acc) = sc ()
     (* Fri Jan 15 16:04:39 1999 -fp,cs

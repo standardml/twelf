@@ -243,6 +243,7 @@ struct
 	      in
 		collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV (X)))
 	      end
+	      
       | collectExpW (G, (I.FgnExp (cs, ops), s), K) =
           collectExp (G, (#toInternal(ops) (), s), K)
       (* No other cases can occur due to whnf invariant *)
@@ -669,15 +670,15 @@ struct
 	end 
 
 
-       (* lowerEVar' (G, V[s]) = (X', U), see lowerEVar *)
-    fun lowerEVar' (X, G, (I.Pi ((D',_), V'), s')) =
+       (* lowerAVar (G, V[s]) = (X', U), see lowerEVar *)
+    fun lowerAVar (X, G, (I.Pi ((D',_), V'), s')) =
         let
 	  val D'' = I.decSub (D', s')
-	  val (X', U) = lowerEVar' (X, I.Decl (G, D''), Whnf.whnf (V', I.dot1 s'))
+	  val (X', U) = lowerAVar (X, I.Decl (G, D''), Whnf.whnf (V', I.dot1 s'))
 	in
 	  (X', I.Lam (D'', U))
 	end
-      | lowerEVar' (X, G, Vs') =
+      | lowerAVar (X, G, Vs') =
         let
 (*	  val X' = newEVar (G, EClo Vs') *)
 	  val X' = X
@@ -688,7 +689,7 @@ struct
     and (* lowerEVar1 (X, I.EVar (r, G, _, _), (V as I.Pi _, s)) = *)
       lowerEVar1 (X, I.EVar (r, G, _, _), (V as I.Pi _, s)) =
         let 
-	  val (X', U) = lowerEVar' (X, G, (V,s))
+	  val (X', U) = lowerAVar (X, G, (V,s))
 (*	  val _ = r := SOME (U) *)
 	in
 (*	  X' *)

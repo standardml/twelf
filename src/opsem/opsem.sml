@@ -1,31 +1,11 @@
-structure CompSyn =
-  CompSyn (structure Global = Global
-           structure IntSyn' = IntSyn
-	   structure Names = Names
-           structure Table = IntRedBlackTree);
-
-structure Compile =
-  Compile (structure IntSyn' = IntSyn
-	   structure CompSyn' = CompSyn
-	   structure Whnf = Whnf
-	   structure TypeCheck = TypeCheck
-	   structure Names = Names);
-
-structure CPrint =
-  CPrint (structure IntSyn' = IntSyn
-	  structure CompSyn' = CompSyn
-	  structure Print = Print
-	  structure Formatter = Formatter
-	  structure Names = Names);
-
-
 structure AbsMachine = 
   AbsMachine (structure IntSyn' = IntSyn
               structure CompSyn' = CompSyn
               structure Unify = UnifyTrail
-	      (* structure Assign = Assign *)
+	      structure Assign = Assign 
 	      structure Index = Index
               structure CPrint = CPrint
+              structure Print = Print
               structure Names = Names
               structure CSManager = CSManager); 
 
@@ -33,18 +13,12 @@ structure PtRecon =
   PtRecon (structure IntSyn' = IntSyn
 	  structure CompSyn' = CompSyn
 	  structure Unify = UnifyTrail
-	  (* structure Assign = Assign *)
+	  structure Assign = Assign 
 	  structure Index = Index
 	  structure CPrint = CPrint
 	  structure Names = Names
 	  structure CSManager = CSManager); 
 
-(*
-structure Assign =
-  Assign (structure IntSyn' = IntSyn
-	  structure Whnf = Whnf
-	  structure Unify = UnifyTrail);
-*)
 
 structure AbstractTabled =
   AbstractTabled (structure IntSyn' = IntSyn
@@ -60,8 +34,7 @@ structure TableIndex =
   TableIndex (structure Global = Global
 	      structure Queue = Queue
 	      structure IntSyn' = IntSyn
-	      
-structure Subordinate = Subordinate
+	      structure Subordinate = Subordinate
 	      structure CompSyn' = CompSyn
 	      structure Conv = Conv
 	      structure Unify = UnifyTrail 
@@ -77,7 +50,7 @@ structure Tabled =
 	  structure Unify = UnifyTrail 
 	  structure Whnf = Whnf
 	  structure TabledSyn = TabledSyn
-	  (* structure Assign = Assign *)
+	  structure Assign = Assign 
 	  structure Subordinate = Subordinate
 	  structure Index = Index
 	  structure Queue = Queue
@@ -101,6 +74,7 @@ structure TMachine =
 	    structure CompSyn' = CompSyn
 	    structure Unify = UnifyTrail
 	    structure Index = Index
+	    structure Assign = Assign 
 	    structure CPrint = CPrint
             structure Names = Names
 	    structure Trace = Trace

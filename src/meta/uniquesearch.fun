@@ -17,10 +17,8 @@ functor UniqueSearch (structure Global : GLOBAL
 			sharing Whnf.IntSyn = IntSyn'
 		      structure Unify : UNIFY
 			sharing Unify.IntSyn = IntSyn'
-			(*
-structure Assign : ASSIGN
-sharing Assign.IntSyn = IntSyn'
-			 *)
+		      structure Assign : ASSIGN
+			sharing Assign.IntSyn = IntSyn'			 
 		      structure Index : INDEX
 		        sharing Index.IntSyn = IntSyn'
 		      structure Compile : COMPILE
@@ -65,6 +63,12 @@ struct
       | isInstantiated (I.EClo (V, s)) = isInstantiated V
       | isInstantiated _ = false
       
+
+    fun compose'(IntSyn.Null, G) = G
+      | compose'(IntSyn.Decl(G, D), G') = IntSyn.Decl(compose'(G, G'), D)
+      
+    fun shift (IntSyn.Null, s) = s
+      | shift (IntSyn.Decl(G, D), s) = I.dot1 (shift(G, s))
 
     (* exists P K = B
        where B iff K = K1, Y, K2  s.t. P Y  holds
@@ -205,6 +209,13 @@ struct
       else acc
       (* replaced below by above.  -fp Mon Aug 17 10:41:09 1998
         ((Unify.unify (ps', (Q, s)); sc (I.Nil, acck)) handle Unify.Unify _ => acc) *)
+
+    | rSolve (max, depth, ps', (C.Assign(Q, eqns), s), dp as C.DProg(G, dPool), sc, acc) = 
+	 (case Assign.assignable (G, ps', (Q, s)) of
+	  SOME(cnstr) => 	    
+	    aSolve((eqns, s), dp, cnstr, (fn () => sc (I.Nil, acc)), acc)
+        | NONE => acc)
+
     | rSolve (max, depth, ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc, acc) =
       let
 	(* is this EVar redundant? -fp *)
@@ -249,12 +260,37 @@ struct
 	  rSolve (max, depth, ps', (r, I.Dot (I.Exp (X), s)), dp,
 		  (fn (S, acc') => sc (I.App (X, S), acc')), acc)
 	end
-    | rSolve (max, depth, ps', (C.Exists' (I.Dec (_, A), r), s), dp as C.DProg (G, dPool), sc, acc) =
-        let
-	  val X = I.newEVar (G, I.EClo (A, s))
-	in
-	  rSolve (max, depth, ps', (r, I.Dot (I.Exp (X), s)), dp, sc, acc)
-	end
+    | rSolve (max, depth, ps', (C.Axists(I.ADec(SOME(X), d), r), s), dp as C.DProg (G, dPool), sc, acc) =
+      let
+	val X' = I.newAVar ()
+      in
+	rSolve (max, depth, ps', (r, I.Dot(I.Exp(I.EClo(X', I.Shift(~d))), s)), dp, sc, acc)
+   	(* we don't increase the proof term here! *)
+      end
+
+  (* aSolve ((ag, s), dp, sc) = res
+     Invariants:
+       dp = (G, dPool) where G ~ dPool
+       G |- s : G'
+       if G |- ag[s] auxgoal
+       then sc () is evaluated with return value res
+       else res = Fail
+     Effects: instantiation of EVars in ag[s], dp and sc () *)
+
+  and aSolve ((C.Trivial, s), dp, cnstr, sc, acc) = 
+        (if Assign.solveCnstr cnstr then
+	  sc ()
+	else 
+	   acc)
+    | aSolve ((C.UnifyEq(G',e1, N, eqns), s), dp as C.DProg(G, dPool), cnstr, sc, acc) =
+      let
+	val G'' = compose'(G', G)
+	val s' = shift (G', s)
+      in 
+	if Assign.unifiable (G'', (N, s'), (e1, s')) then  	  
+	      aSolve ((eqns, s), dp, cnstr, sc, acc)
+	else acc
+     end
 
   (* matchatom ((p, s), (G, dPool), sc, (acc, k)) => ()
      G |- s : G'

@@ -14,6 +14,7 @@ Group is
   ../thm/sources.cm
   ../order/sources.cm
   ../m2/sources.cm
+  ../compile/sources.cm
   ../opsem/sources.cm
   ../subordinate/sources.cm
   ../modules/sources.cm

@@ -64,3 +64,171 @@ Second occurrence of X or S ~ D
 G0 ; G ; D |- X @ S % V' => G,X':{{D}}V' ; D[^] |- X' @ D
                          | (X @ S)[^] = X' @ D & (^)
 
+----------------------------------------------------------------------
+
+Notes on linear head compilation and execution :
+
+Parameter : 
+
+Twelf.Optimize.compile = bool (default false)
+
+During clause head compilation, the head is transformed into 
+a linear clause head together with a set of unifying equations. 
+
+G |- U ~> Exists'(Xn, ...., Exists'(X1, (ASSIGN U' , Eqs)))
+
+Linear Head compilation proceeds in two stages:
+
+given: G |- U as I.Root (h, S)) 
+
+1) Collect all duplicate universally quantified variables:
+   K = list of duplicates
+
+2) For each element E in K, 
+    replace E with a new variable X in the clause head U 
+    and generate a unifying equation UnifyEq(G', E, X)
+
+    [X1/E1, ..., Xi/E_i]U == U' 
+    Eqs = UnifyEq(G_1, E1, X1, (UnifyEq(G2,E2,X2, ....., UnifyEq(Gi, Ei, Xi))))
+   
+  ~> ASSIGN(U', Eqs)
+
+3) Generate Exists' prefix for all new variables X_i introduced, s.t. 
+   Exists'(X1, .....Exists'(Xi, Assign(U', Eqs)))
+
+
+Abstract Machine (with linear heads)
+
+ when "unifying" a linear head with the current goal we will use
+ assignment rather than full unification. (see assign.fun)
+
+ when we introduce a new EVar' for Exists' bound variable,
+ this new EVar' is always already in the correct context, i.e.
+ it is appropriately, lowered if necessary.
+
+
+ToDo:
+
+ - extend printin for UDec and EVar' ?
+ - define own specialized term data-structures for assignment?
+ - do not call whnf but specialized whnf(=expandPattern)?
+
+----------------------------------------------------------------------
+
+Notes on tabled logic programming
+
+Relevant files:
+---------------
+
+ tabled.fun/sig   : tabled logic programming engine
+ index.fun/sig    : index for encountered tabled subgoals
+ abstract.fun/sig : abstraction over existential variables in subgoal 
+
+
+Table:(set-up) 
+--------------
+table entry:               D, G  |- u 
+
+Answer substitution:      Dk, G  |- sk : D, G
+
+Proof Skeleton:           ps ~> p (ps translates to proof term p = {ps})
+
+Answer:                   Dk, G |- {ps} : u[sk]
+
+
+Table Parameter:
+----------------
+
+Strategy = Variant | Subsumption        (default Variant)
+strengthen = bool                       (default false)
+
+(experimental stage -- to be revised)
+termDepth = int option                  (default NONE)
+ctxDepth  = int option                  (default NONE)
+ctxLength = int option                  (default NONE)
+
+
+Additional Invariants for Table:
+----------------------------------
+
+Subsumption: 
+
+later table entries are more general than earlier entries;
+i.e. when retrieving answers for goal D', G' |- u' 
+it suffices to return the last entry D, G |- u + its answer list 
+for which the the following property holds: 
+
+D', G' |- u' is an instance of D, G |- u
+
+
+THERFORE (for both strategies, subsumption and variant),
+there is exactly one most general entry D, G |- u s.t. 
+the goal D', G' |- u' is an instance of D, G |- u
+
+
+
+Abstract Machine for tabled logic programming:
+---------------------------------------------
+
+similar to abstract machine for logic programming (absmachine.fun)
+
+solve ((p, s), dp, sc) => ()
+
+Invariants:
+
+dp = (G, dPool) where  G ~ dPool  (context G matches dPool)
+G  |- s : G'
+G' |- p  goal
+
+if  G |- {ps} : p[s]         where {ps} is a proof skeleton 
+then  sc M  is evaluated
+
+Effects: instantiation of EVars in g, s, and dp
+         any effect  sc {ps}  might have
+
+if g is tabled then 
+
+   D',G' |- U' is the abstraction of G |- p[s]
+      G  |- s' : D', G'   and s' is a substitution for all 
+                              open existential variables
+
+  and G  |- U'[s'] is equivalent to G |- p[s]
+
+  if D', G' |- U' is not in the table then  
+     add it to the table with an empty AnswerList
+     and continue exexuting G |- p[s] with a new success
+         continuation sc' 
+
+         sc' = (fn ps => case answerCheck(G', D', U', s') 
+                              of repeated => () (* Fail *)
+	                       | new      => sc ps)
+
+  otherwise (D', G' |- U' is in the table)
+  
+     if there are answers associated to D', G' |- U' then
+       retrieve them
+     else 
+       suspend execution on G |- p[s]
+    
+
+
+
+ToDo: 
+
+- subsumption strategy: (doesn't allow queries which are not atomic)
+
+- Term abstraction and ctx abstraction by depth : 
+  to be improved when anti-unification is added
+  
+- linear head compilation and tabled do not interact
+  (to be done soon?)
+
+- %deterministic and %tabled do not interact
+  (any predicate below a deterministic predicate should not be allowed
+   to be tabled)
+
+
+Other efficiency improvements:
+
+- suspension: store abstracted goal together G |- p[s] 
+  (i.e. we do not need to abstract over G |- p[s] every time we re-awaken it)

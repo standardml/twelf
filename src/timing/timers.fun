@@ -17,7 +17,7 @@ struct
   val printing    = Timing.newCenter ("Printing      ")
   val compiling   = Timing.newCenter ("Compiling     ")
   val solving     = Timing.newCenter ("Solving       ")
-  val ptrecon      = Timing.newCenter ("ProofRecon   ")
+  val ptrecon     = Timing.newCenter ("ProofRecon    ")
   val filling     = Timing.newCenter ("Filling       ")
   val filltabled  = Timing.newCenter ("Filling Tabled")
   val splitting   = Timing.newCenter ("Splitting     ")

@@ -19,6 +19,7 @@ struct
   fun pskeletonToString [] = " " 
     | pskeletonToString ((pc i)::O) = ("(pc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
     | pskeletonToString ((dc i)::O) = ("(dc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+    | pskeletonToString (csolver::O) = ("cs " ^ (pskeletonToString O))
 
 
   (* Contexts *)
@@ -66,7 +67,10 @@ struct
   | Lam   of Dec * Exp			(*     | lam D. U             *)
   | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
                                         (*     | X<I> : G|-V, Cnstr   *)
+
   | EClo  of Exp * Sub			(*     | U[s]                 *)
+  | AVar  of Exp option ref             (*     | A<I>                 *)
+
   | FgnExp of csid *                    (*     | (foreign expression) *)
       {
         toInternal : unit -> Exp,       (* convert to internal syntax *)
@@ -105,6 +109,7 @@ struct
   and Dec =				(* Declarations:              *)
     Dec of name option * Exp		(* D ::= x:V                  *)
   | BDec of name option * (cid * Sub)	(*     | v:l[s]               *)
+  | ADec of name option * int   	(*     | v[^-d]               *)
 
   and Block =				(* Blocks:                    *)
     Bidx of int 			(* b ::= v                    *)
@@ -498,6 +503,10 @@ struct
 
   (* newEVar (G, V) = newEVarCnstr (G, V, nil) *)
   fun newEVar (G, V) = EVar(ref NONE, G, V, ref nil)
+
+  (* newAVar G = new AVar (assignable variable) *)
+  (* AVars carry no type, ctx, or cnstr *)
+  fun newAVar () = AVar(ref NONE)
 
   (* newTypeVar (G) = X, X new
      where G |- X : type

@@ -605,7 +605,7 @@ struct
 	let
 	  val (T, rrs) = ThmRecon.tdeclTotDecl lterm 
 	  val La = Thm.installTerminates (T, rrs)
-  	  val _ = map (Timers.time Timers.terminate Reduces.checkFam) La  
+  	  val _ = map (Timers.time Timers.terminate Reduces.checkFam) La   
 	  val _ = if !Global.chatter >= 3 
 		    then print ("%terminates " ^ ThmPrint.tDeclToString T ^ ".\n")
 		  else ()
