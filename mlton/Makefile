@@ -40,11 +40,10 @@ twelf-server: ;
 	if   [ $$mltonversion -ge 20041109 ]; then			\
 		cmfileid="";						\
 	elif [ $$mltonversion -ge 20040227 ]; then			\
-		cmfileid="-20040227";					\
-	elif [ $$mltonversion -ge 20030716 ]; then			\
-		cmfileid="-20030716";					\
+		cmfileid="-legacy";					\
 	else								\
-		cmfileid="-97";						\
+		echo; echo "Error: MLton >= 20040227 required";	echo;	\
+		exit 1;							\
 	fi;								\
 	$(sml) mlton/twelf-server$${cmfileid}.cm ;			\
 	mv mlton/twelf-server$${cmfileid} bin/$(twelfserver)
@@ -76,46 +75,24 @@ clean: ;
 	@echo "No temporary files with MLton"
 
 
-mlton-cm-files: twelf-server-cm twelf-server-20040227-cm \
-		twelf-server-20030716-cm twelf-server-97-cm ;
+mlton-cm-files: twelf-server-cm twelf-server-legacy-cm ;
 
 twelf-server-cm: ;
-	{								\
-	echo "(* MLton version *)" ;					\
-	echo "(* For use with MLton >= 20041109 *)" ;			\
-	echo "Group is" ;						\
-	cmcat -DMLton_20041109 -DMLton_20040227 -DMLton_20030716	\
-	      ../server.cm ;						\
-	echo "twelf-server.sml" ;					\
-	}								\
-	> twelf-server.cm
-
-twelf-server-20040227-cm: ;
 	{							\
 	echo "(* MLton version *)" ;				\
-	echo "(* For use with MLton >= 20040227 *)" ;		\
+	echo "(* For use with MLton >= 20041109 *)" ;		\
 	echo "Group is" ;					\
-	cmcat -DMLton_20040227 -DMLton_20030716 ../server.cm ;	\
+	cmcat -DMLton_20041109 -DMLton_20040227 ../server.cm ;	\
 	echo "twelf-server.sml" ;				\
 	}							\
-	> twelf-server-20040227.cm
+	> twelf-server.cm
 
-twelf-server-20030716-cm: ;
+twelf-server-legacy-cm: ;
 	{						\
 	echo "(* MLton version *)" ;			\
-	echo "(* For use with MLton >= 20030716 *)" ;	\
+	echo "(* For use with MLton >= 20040227 *)" ;	\
 	echo "Group is" ;				\
-	cmcat -DMLton_20030716 ../server.cm ;		\
+	cmcat -DMLton_20040227 ../server.cm ;		\
 	echo "twelf-server.sml" ;			\
 	}						\
-	> twelf-server-20030716.cm
-
-twelf-server-97-cm: ;
-	{						\
-	echo "(* MLton version *)" ;			\
-	echo "(* For use with MLton < 20030716 *)" ;	\
-	echo "Group is" ;				\
-	cmcat ../server.cm ;				\
-	echo "twelf-server.sml" ;			\
-	}						\
-	> twelf-server-97.cm
+	> twelf-server-legacy.cm

@@ -9,9 +9,9 @@ Library
   structure Compat
   signature TIME_LIMIT
   structure TimeLimit
-#if defined(MLton_20030716)
+#if defined(MLton_20040227)
   (* Empty *)
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110048)
   (* Empty *)
 #else
   signature ARRAY_SLICE
@@ -35,21 +35,8 @@ is
   compat.fun
 #if defined(MLton_20040227)
   compat.sml
-#elif defined(MLton_20030716)
-  text-io-97.sml
-  compat-mlton-20030716.sml
 #elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110048)
   compat.sml
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
-  timer-97.sml
-  compat-smlnj03.sml
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110009)
-  timer-97.sml
-  array-97.sml
-  vector-97.sml
-  substring-97.sml
-  text-io-97.sml
-  compat-smlnj98.sml
 #else
   timer-97.sml
   array-97.sml
@@ -58,12 +45,6 @@ is
   substring-97.sml
   text-io-97.sml
   compat-97.sml    
-#endif
-#if defined(MLton_20030716)
-  (* Empty *)
-#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
-  (* Empty *)
-#else
   array-slice.sig
   array-slice.sml
   vector-slice.sig

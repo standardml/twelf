@@ -11,15 +11,8 @@ is
 #endif
 #if defined(MLton)
   (* Empty *)
-#elif (SMLNJ_VERSION > 110)
+#elif (SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION >= 110043)
   (* Empty *)
-#elif (SMLNJ_MINOR_VERSION >= 43)
-  (* Empty *)
-#elif defined(NEW_CM)
-  $/smlnj-lib.cm
-#elif defined(SMLNJ_VERSION)
-  (* smlnj-lib.cm *)
-  ../int-inf/sources.cm
 #else
   ../int-inf/sources.cm
 #endif
