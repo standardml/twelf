@@ -11,6 +11,8 @@ functor Tabled (structure IntSyn' : INTSYN
                     structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
 		    *)
+		  structure Subordinate : SUBORDINATE
+		    sharing Subordinate.IntSyn = IntSyn'
 
 		    structure Index : INDEX
 		      sharing Index.IntSyn = IntSyn'
@@ -65,6 +67,43 @@ struct
       | reverse (I.Decl(G, D), G') = 
           reverse (G, I.Decl(G', D))
 
+
+    (* ---------------------------------------------------------------------- *)
+
+    (* strengthenExp (U, s) = U' 
+     
+       Invariant:
+       If   G |- s : G'
+       and  G |- U : V
+       then G' |- U' = U[s^-1] : V [s^-1] 
+    *)
+    fun strengthenExp (U, s) = Whnf.normalize (Whnf.cloInv (U, s), I.id)
+
+    (* strengthenDec (x:V, s) = x:V'
+     
+       Invariant:
+       If   G |- s : G'
+       and  G |- V : L
+       then G' |- V' = V[s^-1] : L
+    *)
+    fun strengthenDec (I.Dec (name, V), s) = I.Dec (name, strengthenExp (V, s))
+
+    (* strengthenCtx (G, s) = (G', s')
+     
+       If   G0 |- G ctx
+       and  G0 |- s G1 
+       then G1 |- G' = G[s^-1] ctx
+       and  G0 |- s' : G1, G'  
+    *)
+    fun strengthenCtx (I.Null, s) = (I.Null, s)
+      | strengthenCtx (I.Decl (G, D), s) = 
+        let 
+	  val (G', s') = strengthenCtx (G, s)
+	in
+	  (I.Decl (G', strengthenDec (D, s')), I.dot1 s')
+	end
+
+
     (* ---------------------------------------------------------------------- *)
     (* We write
        G |- M : g
@@ -100,30 +139,34 @@ struct
 
    (* ---------------------------------------------------------------------- *)
 
-   (* retrieve' (G, (V,s), answ_i, sc) = ()
+   (* retrieve' (G, ((M, V), s), answ_i, sc) = ()
    
      G |- s : G'
-     G' |- V atomic goal 
+     G' |- M : V atomic goal 
 
      and answ_i = s_1 .... s_n
    
      for all k from 1 to n:
 
-     if G |- M : V[s_k]
-     then sc M is evaluated
+     if G |- M [s_k] : V[s_k]
+     then sc M[s_k] is evaluated 
+          where any bound var in Gas, is replaced by
+            an existential variable
 
      Effects: instantiation of EVars in V, s, and dp
               any effect  sc M  might have
      
    *)
 
-   fun retrieve' (n, Gdp, Vs, (Gdp', Gs', U), [], sc, L)  = 
-         retrieve (Gdp, Vs, L, sc)
-     | retrieve' (n, Gdp, Vs as (V,s), (Gdp', Gs', U), (((Gs1, s1), (Gmdp, M))::A),  sc, L) =  
+   fun retrieve' (n, Gdp, MVs, (Gdp', Gs', N, U), [], (G, sc), L)  = 
+         retrieve (Gdp, MVs, L, (G, sc))
+     | retrieve' (n, Gdp, MVs as ((M, V),s), (Gdp', Gs', N, U), ((Gs1, s1)::A),  (G, sc), L) =  
      let 
        val Vpi = A.raiseType(Gdp, V)
        val Upi = A.raiseType(Gdp', U)
-       val Mdp' = A.raiseType(Gmdp, M)
+
+       val Mpi = A.raiseType(Gdp, M)
+       val Npi = A.raiseType(Gdp', N)
 
        val s1' = reinstSub (Gdp', Gs1, I.id)  
 
@@ -137,21 +180,44 @@ struct
 		 print (Print.expToString(I.Null, I.EClo(I.EClo(Upi,s1), s1')) ^ "\n"))
 	       else 
 		 ()		 
+       fun shift (0, s) = s
+	 | shift (n, s) = shift(n-1, I.dot1 s)
      in
        CSManager.trail  
        (fn () =>  
-	(if Unify.unifiable (I.Null, (Vpi, s), (I.EClo(Upi, s1),s1'))   then 
+	(if Unify.unifiable (I.Null, (Vpi, s), (I.EClo(Upi, s1),s1')) 
+	   andalso Unify.unifiable(I.Null, (Mpi, s), (I.EClo(Npi, s1), s1')) then 
 	   
 	   (* sideeffect: (V,s) is now instantiated with answer *)
 	   ((if (!Global.chatter) >= 5 then
 	       (print ("            After Unification : ");
-		print (Print.expToString(IntSyn.Null, I.EClo(Vpi, s)) ^ "\n"))
+		print (Print.expToString(IntSyn.Null, I.EClo(Vpi, s)) ^ "\n");
+		print ("           Proof Term : ");
+		print (Print.expToString(IntSyn.Null, I.EClo(Mpi, s)) ^ "\n");
+		print "1 "; 
+		print (Print.expToString(IntSyn.Null, A.raiseType(Gdp, I.EClo(M, shift (IntSyn.ctxLength(Gdp),s)))) ^ "\n"))
 	     else 
 	       ());
-	       sc (I.EClo(M, s1')))
+(*	       sc (I.EClo(I.EClo(M, s1), s1')) *)
+	       (* problem: M is possibly strengthened! but should not be, when passed into sc 
+		* solution 1: strengthen every new evar so everything is max. strengthened
+		* solution 2: pass in strengthened and non-strengthened ? 
+		* apply weakening to it!!!!!!! bp Fri Sep 28 18:08:07 2001 
+		*)
+
+	       let 
+		 val w = if (!TableIndex.strengthen) then
+		            Subordinate.weaken (G, IntSyn.targetFam(I.EClo(V, s)))
+			 else 
+			   I.id
+(* 		 val _ =  print "2 " *)
+(* 		 val _  = print (Print.expToString(I.Null, A.raiseType(G,I.EClo(M, I.comp(shift(I.ctxLength(G),s), w)))) ^ "\n") *)
+	       in 
+	       sc (I.EClo(M, I.comp(shift(I.ctxLength(Gdp),s), w)))
+	       end)
 	 else 
 	   ()));
-       retrieve' (n+1, Gdp, Vs, (Gdp', Gs', U), A, sc, L)
+       retrieve' (n+1, Gdp, MVs, (Gdp', Gs', N, U), A, (G, sc), L)
      end 
    
 
@@ -172,9 +238,9 @@ struct
               any effect  sc M  might have
      
    *)
-    and retrieve (Gdp, Vs, [], sc) = ()
-      | retrieve (Gdp, Vs, ((H as ((Gdp', Gs', U), answ))::L), sc) =
-        retrieve' (0, Gdp, Vs, (Gdp', Gs', U), TableIndex.solutions(answ), sc, L)
+    and retrieve (Gdp, ((M, V), s), [], (G, sc)) = ()
+      | retrieve (Gdp, MVs as ((M, V), s), ((H as ((Gdp', Gs', N, U), answ))::L), (G, sc)) =
+        retrieve' (0, Gdp, MVs, (Gdp', Gs', N, U), TableIndex.solutions(answ), (G, sc), L)
 (*	 retrieve (Gdp, Vs, L, sc)) *)
 
 
@@ -192,9 +258,22 @@ struct
   *)
   fun solve ((C.Atom(p), s'), dp as C.DProg (G, dPool), sc) =     
       let
+	val N = I.newEVar(G, I.EClo(p, s'))
 (*	val (Gdp1, Gex, U1, sex) = A.abstractEVarECloCtx (G, I.EClo(p,s')) *)
 (*	val (abstract, Gdp1, Gex, U1, sex) = A.abstractEVarCtx (G, (p, s')) *) 
-	val (abstract, Gdp, Gs, U, s) = A.abstractEVarCtx (G, (p, s'))
+	val (Gdp, Gs, N', U, s) = A.abstractEVarCtx (G, (N, p), s')
+(*	val (abstract', Gdp', Gs', M, s'') = A.abstractEVarCtx (G, (M, I.id)) 
+         -- extend abstraction: abstractEVarCtx(G, (p,s'), M) 
+            return Gdp, Gs, U, M', s 
+	    where  Gsm, Gdp |- M : U
+                   Gdp |- s : Gsm, Gdp
+		   
+
+            after this goal is solved: 
+	           Gex, Gdp |- s : Gsm, Gdp  (closed)
+		   Gex, Gdp |- M[s]:U[s]     (closed answer)
+
+		   *)
 
 	val _ = if (!Global.chatter) >= 5 then 
 	         (print "\n solve : " ;
@@ -210,7 +289,7 @@ struct
 		  ()
 
       in 
-	case TableIndex.callCheck (Gdp, Gs, U) 
+	case TableIndex.callCheck (Gdp, Gs, N', U) 
 	  of NONE => 
 	    (* dp |= (p,s) was not in table 
 	     * SIDE EFFECT: dp |= (p,s): added to table
@@ -223,17 +302,8 @@ struct
 			(* M' = abstract M in ctx dp! 
 			 pass M' into callAnswerCheck ! *)
 			let
-			  val (Gs', Gdp', M', Mpi') = A.abstractECloCtx (G, M)  
-(*			  val (Gex', Mex', sex') = abstract (M, sex) *)
 			  val _ = if (!Global.chatter) >= 5 then 
-			           ((* print "\n Proof term: ";
-				     print (Print.expToString (I.Null,
-				     A.raiseType(concat(Gdp',Gs'), M')) ^ "\n");*)
- 
-                                   (* print "\n Proof term : (abstracted)" *)
-                                   (* print (Print.expToString (I.Null, *)
-                                   (*          A.raiseType(concat(Gdp,Gex'), Mex')) ^ "\n") *)
-				    print ("\n ANSWER : ");
+			           (print ("\n ANSWER : ");
 				    print (Print.expToString(I.Null, 
 							     A.raiseType(G, I.EClo(p, s'))) 
 					   ^ "\n");
@@ -249,10 +319,45 @@ struct
 									  I.EClo(U, I.id)))))
 				  else 
 				    ()
+			  val w = if (!TableIndex.strengthen) then
+			            Subordinate.weaken (G, IntSyn.targetFam(I.EClo(U, s)))
+				   else 
+				     I.id
+			    
+			  val _ = Unify.unifiable (I.Null, (A.raiseType(G, M), I.id),
+						   (A.raiseType(Gdp, N'), I.comp(s, w)))
+                          (* side effect: s contains the instantiation of 
+			   all ex. vars and the proof term instantiation
+  			   Trail ???
+			   *)
 
-(*			  val (Gasub, G', asub, Ma) = A.abstractAnswSubPterm (G, s, M)  *)
+			  val _ = if (!Global.chatter) >= 5 then 
+			             (print "\n Proof term: ";
+				      (print (Print.expToString (I.Null, 
+					A.raiseType(G,  I.EClo(N, I.comp(s, w)))) ^ "\n ok \n")
+				     handle _ => 
+				       (print "\n             \n";
+					print (Print.expToString (I.Null, 
+					A.raiseType(G, M)) ^ "\n")
+				       )))
+				  else 
+				    ()
+
+
+(*			  val _ = if (!Global.chatter) >= 5 then 
+				    (print "\n Proof term (abstract) 1 : ";
+				      print (Print.expToString (I.Null, 
+							       A.raiseType(G,  N)) ^ "\n") 
+
+(*				     print "\n Proof term (abstract) 2  : ";
+				     print (Print.expToString (I.Null,
+							       A.raiseType(concat(Gdp, Gs), I.EClo(N', s))) ^ "\n")*)
+				     )
+				  else 
+				    ()
+*)
 			in
-			  case TableIndex.answerCheck (Gdp, Gs, (U,s), (concat(Gdp', Gs'), M'))
+			  case TableIndex.answerCheck (Gdp, Gs, (N', U), s)
 			    of TableIndex.repeated => ()
 			     | TableIndex.new      => sc M (* should we fail here ? *)
 			end )))
@@ -295,8 +400,11 @@ struct
 	       *        from the current stage, we can only enter this
 	       *        case if we are in stage 2 or greater. 
 	       *    
-	       *)		      
-	       retrieve (Gdp, (U,s), L, sc)
+	       *)	
+	      (*  (Gdp |- n'[s]:u[s].... but
+                    G |- N     G |- sc (n'[s])
+                   if we apply strengthening then  we switch ctx !???) *)
+	       retrieve (Gdp, ((N', U) ,s), L, (G, sc))
       end 
     
     | solve ((C.Impl(r, A, a, g), s), C.DProg (G, dPool), sc) =
@@ -341,7 +449,7 @@ struct
     | rSolve (ps', (C.And(r, A, g), s), dp as C.DProg (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
-	val X = I.newEVar (G, I.EClo(A, s))
+	val X = I.newEVar(G, I.EClo(A, s)) 
       in
         rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn S => solve ((g, s), dp,
@@ -349,7 +457,7 @@ struct
       end
     | rSolve (ps', (C.Exists(I.Dec(_,A), r), s), dp as C.DProg (G, dPool), sc) =
       let
-	val X = I.newEVar (G, I.EClo (A,s))
+	val X = I.newEVar(G, I.EClo(A, s)) 
       in
 	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dp,
 		(fn S => sc (I.App(X,S))))
@@ -452,9 +560,11 @@ struct
 
   fun retrieval ((p,s'), dp as C.DProg(G, dPool), sc, t) =    
     let
-      val (abstract, Gdp, Gs, U, s) = A.abstractEVarCtx (G, (p, s'))
+	val N = I.newEVar(G, I.EClo(p, s')) 
+
+      val (Gdp, Gs, N', U, s) =   A.abstractEVarCtx (G, (N, p), s')
     in 
-      case TableIndex.callCheck (Gdp, Gs, U) 
+      case TableIndex.callCheck (Gdp, Gs, N', U) 
 	of NONE => print ("\n should not happen! \n")	    	    
       | SOME(L) => 
 	  if TableIndex.noAnswers L then 	    
@@ -479,7 +589,7 @@ struct
 	     * resolve current goal with all possible answers
 	     *    
 	     *)		      
-	    retrieve (Gdp, (U,s), L, sc)
+	    retrieve (Gdp, ((N', U), s), L, (G, sc))
     end 
   
   (* fun nextStage () = bool 
@@ -509,7 +619,8 @@ struct
 	resume (Goals, n-1))   
        (* less efficient version *)
        (* CSManager.trail(fn () => solve ((C.Atom(p),s), dp, sc)))); *)
-     val SG = rev(!SuspGoals)
+     val SG = rev(!SuspGoals) 
+(*    val SG = !SuspGoals *)
      val l = length(SG)
    in    
      if (!Global.chatter) >= 4 then 

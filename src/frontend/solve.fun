@@ -432,7 +432,12 @@ struct
 			print "\n       Strengthening := true \n"
 		      else 
 			print "\n       Strengthening := false \n");
+		
+			print ("\n Number of table indices " ^ 
+			       Int.toString(length(!TableIndex.table)) ^ "\n");
 
+			print ("Number of suspended goals : " ^ 
+			       Int.toString(length(!Tabled.SuspGoals)) ^ "\n");
 		     print "\n____________________________________________\n\n")
 		else if !Global.chatter >= 2
 		       then print (" OK\n")

@@ -31,31 +31,28 @@ struct
 
   (* TABLE 
 
-   table entry : Gs, Gdp  |- u 
+   table entry : Gsm, Gdp  |- m : u 
 
 
    Answer substitution: 
 
-                 Gas, Gdp  |- as : Gs, Gdp
-		 Gas, Gdp  |- M             ( currently proof terms are not always generated )
+                 Gas, Gdp  |- as : Gsm, Gdp
 
    Answer : 
-                 Gas, Gdp |- u[as] : M
+                 Gas, Gdp |- m[as] : u[as]
    *)
  
-  (* solution: (Gas, as) * (Gm, M) (currently )
-     solution: (Gas, (as, M))      (should be eventually)
+  (* solution: (Gas, as) 
 
    * lookup  : pointer to the i-th element in solution list
    *)
 
   (* proof term skeleton could be stored with tabled call ? *)
-  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * 
-			      (IntSyn.dctx * IntSyn.Exp)) list,
+  type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
 		 lookup: int}
 
 
-  type entry = ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer)
+  type entry = ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer)
 
   type entries = entry list 
 
@@ -110,19 +107,24 @@ struct
 
     fun printTable () = 
       let 
-        fun proofTerms (Gdp, Gs, U, []) = print ""
-	  | proofTerms (Gdp, Gs, U, (((Gs', s'), (Gm, M'))::S)) = 
+        fun proofTerms (Gdp, Gs, M, U, []) = print ""
+	  | proofTerms (Gdp, Gs, M, U, ((Gs', s')::S)) = 
           ((print (Print.expToString (I.Null, 
 		     A.raiseType(Gs',
 			I.EClo(A.raiseType(Gdp, U), s'))))
 	    handle _ => print "EXCEPTION" );	    
 	  print " : ";
 	   (* printing proof terms *)
+	   (print (Print.expToString (I.Null, 
+				      A.raiseType(Gs',
+						  I.EClo(A.raiseType(Gdp, M), s'))))
+	    handle _ => print "EXCEPTION" );	    
+
 	   print ", \n\t";
-	   proofTerms (Gdp, Gs, U, S))
+	   proofTerms (Gdp, Gs, M, U, S))
 
 	fun printT [] = ()
-	  | printT (((Gdp, Gs, U),
+	  | printT (((Gdp, Gs, M, U),
 		     {solutions =  S, lookup = i})::T) = 
 	    case S
 	      of [] => (printT T ; 
@@ -133,12 +135,13 @@ struct
 			      print (Print.expToString (I.Null, 
 							A.raiseType(concat(Gdp, Gs), U)) ^
 				     ", [\n\t");
-			      proofTerms (Gdp, Gs, U, (rev S));
+			      proofTerms (Gdp, Gs, M, U, (rev S));
 			      print (" ] -- lookup : " ^ Int.toString i ^ "\n\n")) 
       in
 	print ("Table: \n");
 	printT (!table);
-	print ("End Table\n")
+	print ("End Table \n");
+	print ("Number of table entries   : " ^ Int.toString(length(!table)) ^ "\n")
       end 			       	    
 
     
@@ -260,6 +263,7 @@ struct
 			 Unify.unifiable (Gs, (Upi', s'), (Upi, I.id)))
       end 
 
+
     fun equalSub (I.Shift k, I.Shift k') = (k = k')
       | equalSub (I.Dot(F, S), I.Dot(F', S')) = 
         equalFront (F, F') andalso equalSub (S, S')
@@ -269,6 +273,9 @@ struct
     and equalFront (I.Idx n, I.Idx n') = (n = n')
       | equalFront (I.Exp U, I.Exp V) = Conv.conv ((U, I.id), (V, I.id))
       | equalFront (I.Undef, I.Undef) = true
+
+    fun equalSub1 (I.Dot(ms, s), I.Dot(ms', s')) = 
+          equalSub (s, s')
 
     (* ---------------------------------------------------------------------- *)
     (* Call check and insert *)
@@ -287,11 +294,11 @@ struct
 
     *)
 
-    fun callCheckVariant (Gdp, Gs, U) = 
+    fun callCheckVariant (Gdp, Gs, M, U) = 
       let
 	val Upi = A.raiseType(concat(Gdp, Gs), U)
-	fun lookup (Gdp, Gs, U) [] (NONE) = 
-	     (table := ((Gdp, Gs, U), {solutions = [],lookup = 0})::(!table); 
+	fun lookup (Gdp, Gs, M, U) [] (NONE) = 
+	     (table := ((Gdp, Gs, M, U), {solutions = [],lookup = 0})::(!table); 
 	      (if (!Global.chatter) >= 4 then 
 		 (print ("\n \n Added " );
 		  print (Print.expToString (I.Null, Upi) ^ "\n to Table \n"))
@@ -312,9 +319,9 @@ struct
 			     SOME([]))
 		       else 
 			 NONE))
-	  | lookup (Gdp, Gs, U) [] (SOME(L)) = 
+	  | lookup (Gdp, Gs, M, U) [] (SOME(L)) = 
 	     SOME(L)
-	  | lookup (Gdp, Gs, U) ((H as ((Gdp', Gs', U'), answ))::T) opt =
+	  | lookup (Gdp, Gs, M, U) ((H as ((Gdp', Gs', M', U'), answ))::T) opt =
 	     if variant ((Upi, I.id), (A.raiseType(concat(Gdp',Gs'), U'), I.id)) then
 	       let
 		 val opt' = case opt of 
@@ -325,21 +332,21 @@ struct
 		    print ("call " ^ Print.expToString (I.Null, Upi) ^ " found in table \n ")
 		  else 
 		    ());
-		  lookup (Gdp, Gs, U) T opt' 
+		  lookup (Gdp, Gs, M, U) T opt' 
 	       end 
 	     else  
-	       lookup (Gdp, Gs, U) T opt
+	       lookup (Gdp, Gs, M, U) T opt
       in 
-	lookup (Gdp, Gs, U) (!table) NONE
+	lookup (Gdp, Gs, M, U) (!table) NONE
       end
 
 
 
-    fun callCheckSubsumes (Gdp, Gs, U) = 
+    fun callCheckSubsumes (Gdp, Gs, M, U) = 
       let 		
 	val Upi = A.raiseType(concat(Gdp, Gs), U)
-	fun lookup ((Gdp, Gs, U), [], NONE) = 
-	    (table := ((Gdp, Gs, U), {solutions = [],lookup = 0})::(!table); 
+	fun lookup ((Gdp, Gs, M, U), [], NONE) = 
+	    (table := ((Gdp, Gs, M, U), {solutions = [],lookup = 0})::(!table); 
 	     (if (!Global.chatter) >= 5 then
 		print ("Added " ^  Print.expToString (I.Null, Upi) ^ " to Table \n")
 	      else 
@@ -354,42 +361,47 @@ struct
 		SOME([]))
 	      else 
 		NONE)
-	  | lookup ((Gdp, Gs, U), [], SOME(L)) = 
+	  | lookup ((Gdp, Gs, M, U), [], SOME(L)) = 
 	     SOME(L)
-	  | lookup ((Gdp, Gs, U), (((Gdp', Gs', U'), answ)::T), opt) =
+	  | lookup ((Gdp, Gs, M, U), (((Gdp', Gs', M', U'), answ)::T), opt) =
 	    if (subsumes ((Gdp, Gs, U), (Gdp', Gs', U'))) then	       
 	      let
 		 val opt' = case opt of 
-		               NONE => SOME([((Gdp', Gs', U'), answ)]) 
-			     | SOME(L) => SOME(((Gdp', Gs', U'), answ)::L) 
+		               NONE => SOME([((Gdp', Gs', M', U'), answ)]) 
+			     | SOME(L) => SOME(((Gdp', Gs', M', U'), answ)::L) 
 	       in 
 		 (if (!Global.chatter) >= 5 then
 		    print ("call " ^ Print.expToString (I.Null, Upi) ^ "found in table \n ")
 		  else 
 		    ());
-		  lookup ((Gdp, Gs, U), T, opt') 
+		  lookup ((Gdp, Gs, M, U), T, opt') 
 	      end
 	    else 
-	      lookup ((Gdp, Gs, U), T, opt)
+	      lookup ((Gdp, Gs, M, U), T, opt)
       in 
-	lookup ((Gdp, Gs, U), (!table), NONE)
+	lookup ((Gdp, Gs, M, U), (!table), NONE)
       end
 
     (* ---------------------------------------------------------------------- *)
     (* answer check and insert 
       
-      if     Gdp |- U[s]
-         Gs, Gdp |- U
-	     Gdp |- s : Gdp 
+      if     Gdp |- M[s] : U[s]
+         Gs, Gdp |- M : U
+	     Gdp |- s : Gs, Gdp 
       
       answerCheck (Gdp, Gs, (U,s), _) = repeated
          if s already occurs in answer list for U
       answerCheck (Gdp, Gs, (U,s), _) = new
          if s did not occur in answer list for U
          Sideeffect: update answer list for U
+       
+        Gas, Gdp |- s : Gs, Gdp
+	Gas, Gdp |- M[as] : U[as]
+
+        as is the abstraction of s 
       
      *) 
-    fun answCheckVariant (Gdp, Gs, (U,s), (Gmdp, M)) =  
+    fun answCheckVariant (Gdp, Gs, (M, U),s) =  
       let 
 	val Upi = A.raiseType(concat(Gdp, Gs), I.EClo(U, I.id))
 
@@ -403,22 +415,26 @@ struct
 		  ()
 
 	fun member ((Gus, us), []) = false
-	  | member ((Gus, us), (((Gs1, s1),_)::S)) = 
+	  | member ((Gus, us), ((Gs1, s1)::S)) = 
 
 	  (* for variance checking we only need to compare abstract substitutions 
 	   * should we compare Gus and Gs1 ?
+	   * bp Fri Sep 21 13:33:38 2001 : do not take into account "proof term sub"
+	   * the first element of the substitution is the substitution for the proof term
+	   * when comparing substitutions we only care about answer, and not the proof term
 	   *)
-	  if equalSub (us,s1) then  
+	  if equalSub1 (us,s1) then   
+(*	  if equalSub (us,s1) then   *)
 	    true
 	  else 
 	    member ((Gus, us), S)
 	
-	fun lookup  (Gdp, Gs, (U,s)) [] T = 
+	fun lookup  (Gdp, Gs, (M, U),s) [] T = 
 	  (* cannot happen ! *) 
 	  (print (Print.expToString(I.Null, I.EClo(A.raiseType(Gdp,U),s))  
 		  ^ " call should always be already in the table !\n") ; 
 	   repeated)
-	  | lookup (Gdp, Gs, (U,s)) ((H as ((Gdp', Gs', U'), 
+	  | lookup (Gdp, Gs, (M, U),s) ((H as ((Gdp', Gs', M', U'), 
 					    {solutions = S, lookup = i}))::T) T' = 
 	  if variant ((Upi, I.id),
 		      (A.raiseType(concat(Gdp', Gs'), 
@@ -426,34 +442,33 @@ struct
 	    then 
 	      let 
 		val (Gus, us) = A.abstractAnswSub s
-		val (Gus, us) = A.abstractAnswSub s
-
-		val Mpi = A.raiseType(Gmdp, M)
 	      in 	       	       
 		(* answer check *)
 		if member ((Gus, us), S) then  
 		  repeated
 		else 
-		  (table := (rev T')@(((Gdp', Gs', U'),
-				       {solutions = (((Gus, us), (Gmdp, M))::S), 
+		  (table := (rev T')@(((Gdp', Gs', M', U'),
+				       {solutions = ((Gus, us)::S), 
 					lookup = i})::T); 
 		   
 		   (if (!Global.chatter) >= 5 then 
 		      (print ("\n solution added  -- " ); 
 		       print (Print.expToString(I.Null, 
 						A.raiseType(Gus,
-							    I.EClo(A.raiseType(Gdp',U'), us))))
-		       (* print ("\n proof term : "); *)
-		       (* print (Print.expToString(I.Null, Mpi ) ^ "\n");   *)
+							    I.EClo(A.raiseType(Gdp',U'), us))));
+		       print ("\n proof term : "); 
+		       print (Print.expToString(I.Null, A.raiseType(Gus, 
+								    I.EClo(A.raiseType(Gdp',M'), us)))
+			      ^ "\n")
 		       )
 		    else 
 		      ());
 		   new)
 	      end
 	   else 
-	      lookup (Gdp, Gs, (U,s)) T (H::T')
+	      lookup (Gdp, Gs, (M, U),s) T (H::T')
       in 
-	lookup (Gdp, Gs, (U,s)) (!table) []
+	lookup (Gdp, Gs, (M, U),s) (!table) []
       end 
 
    fun reverse (I.Null, G') = G'
@@ -461,7 +476,7 @@ struct
          reverse (G, I.Decl(G', D))
 
     fun memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', [])) = false
-      | memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', (((Gs1, s1),_)::S))) = 
+      | memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', ((Gs1, s1)::S))) = 
         let
 	  val Upi = A.raiseType(Gdp, U)
 	  val Upi' = A.raiseType(Gdp',U')
@@ -481,7 +496,7 @@ struct
 	    memberSubsumes ((Gdp, Gs, U, s), (Gdp', U', S)) 
 	end 
 	
-   fun answCheckSubsumes (Gdp, Gs, (U,s), (Gmdp, M)) = 
+   fun answCheckSubsumes (Gdp, Gs, (M, U),s) = 
       let
 	val Upi = A.raiseType(Gdp, U)
 	val _ = if (!Global.chatter) >= 4 then 
@@ -489,16 +504,15 @@ struct
 		     print(Print.expToString(I.Null, I.EClo(Upi, s))
 		       ^ "\n"))
 		else ()
-	fun lookup ((Gdp, Gs, (U,s)), [], T) = 
+	fun lookup ((Gdp, Gs, (M, U),s), [], T) = 
 	  (* cannot happen ! *) 
 	  (print (Print.expToString(concat(Gdp, Gs), I.EClo(U,s)) 
 		  ^ " call should always be already in the table !\n") ; 
 	   repeated)
-	  | lookup ((Gdp, Gs, (U,s)), (((Gdp', Gs', U'), {solutions = S, lookup = i})::T), T') = 
+	  | lookup ((Gdp, Gs, (M, U),s), (((Gdp', Gs', M', U'), {solutions = S, lookup = i})::T), T') = 
 	  if (subsumes ((Gdp, Gs, U), (Gdp', Gs', U'))) then
 	     let 
 	      val (Gus, us) = A.abstractAnswSub s
-	      val Mpi = A.raiseType(Gmdp, M)
 	     in 
 	       if memberSubsumes ((Gdp, Gus, U, us), (Gdp', U', S)) then
 		 repeated
@@ -519,8 +533,10 @@ struct
 			   else 
 			     ()
 		   (*  higher-order matching *)
-		   val _ = if Unify.unifiable (Gus, (A.raiseType(Gdp, U), us),  
-					       (A.raiseType(Gdp', U'), s'))			    
+		   val _ = if (Unify.unifiable (Gus, (A.raiseType(Gdp, U), us),  
+					       (A.raiseType(Gdp', U'), s'))
+			       andalso Unify.unifiable (Gus, (A.raiseType(Gdp, M), us),
+							(A.raiseType(Gdp', M'), s')))
 			     then (if (!Global.chatter) >= 4 then 
 				     (print "\n1 unification successful !\n";
 				      print (Print.expToString(I.Null,
@@ -532,8 +548,8 @@ struct
 		   val (Gus', us') = A.abstractAnsw (Gus, s')
 		 (*			  val Gus'' = reverse(Gus', I.Null) *)
 		in 			   
-		  table := ((rev T')@(((Gdp', Gs', U'),
-				       {solutions = (((Gus', us'), (Gmdp, M))::S), 
+		  table := ((rev T')@(((Gdp', Gs', M', U'),
+				       {solutions = ((Gus', us')::S), 
 					lookup = i})::T));
 		  (if (!Global.chatter) >= 5 then 
 		     (print ("\n \n solution (original) was: \n");
@@ -557,10 +573,10 @@ struct
 		end
 	     end 
 	  else 
-	    lookup ((Gdp, Gs, (U,s)), T, (((Gdp', Gs', U'), 
+	    lookup ((Gdp, Gs, (M, U), s), T, (((Gdp', Gs', M', U'), 
 					   {solutions = S, lookup = i})::T')) 	   
       in 
-	lookup ((Gdp, Gs, (U,s)), (!table), [])
+	lookup ((Gdp, Gs, (M, U),s), (!table), [])
       end 
 
    (* ---------------------------------------------------------------------- *)
@@ -574,37 +590,37 @@ struct
 
 
     fun noAnswers [] = true
-      | noAnswers ((H as ((Gdp', G', U'), answ))::T) = 
+      | noAnswers ((H as ((Gdp', G', M', U'), answ))::T) = 
           case (List.take (solutions(answ), lookup(answ))) 
 	    of [] => noAnswers T
 	  | L  => false
 
 
-    fun callCheck (Gdp, Gs, U) = 
+    fun callCheck (Gdp, Gs, M, U) = 
           case (!strategy) of 
-	    Variant => callCheckVariant (Gdp, Gs, U)
-	  | Subsumption => callCheckSubsumes (Gdp, Gs, U)
+	    Variant => callCheckVariant (Gdp, Gs, M, U)
+	  | Subsumption => callCheckSubsumes (Gdp, Gs, M, U)
 
-    fun answCheck (Gdp, Gs, Us, (Gdp', M)) = 
-          case (!strategy) of
-	    Variant => answCheckVariant (Gdp, Gs, Us, (Gdp',M))
-	  | Subsumption => answCheckSubsumes (Gdp, Gs, Us, (Gdp', M))
+    fun answCheck (Gdp, Gs, (M, U), s) = 
+      case (!strategy) of
+	Variant => answCheckVariant (Gdp, Gs, (M, U), s)
+      | Subsumption => answCheckSubsumes (Gdp, Gs, (M, U), s)
 	      
 
     (* needs to take into account previous size of table *)
     fun updateTable () = 
           let 
 	    fun update [] T Flag = (Flag, T)
-	      | update (((dp, G, U), {solutions = S, lookup = i})::T) T' Flag =
+	      | update (((dp, G, M, U), {solutions = S, lookup = i})::T) T' Flag =
 	      let 
 		val l = length(S) 
 	      in 
 		if (l = i) then 
 		  (* no new solutions were added in the previous stage *) 	      
-		  update T (((dp, G, U), {solutions = S, lookup = List.length(S)})::T') Flag
+		  update T (((dp, G, M, U), {solutions = S, lookup = List.length(S)})::T') Flag
 		else 
 		  (* new solutions were added *)
-		  update T (((dp, G, U), {solutions = S, lookup = List.length(S)})::T') true
+		  update T (((dp, G, M, U), {solutions = S, lookup = List.length(S)})::T') true
 	      end 
 	    val (Flag, T) = update (!table) [] false
 	    val r = Flag orelse (!added)

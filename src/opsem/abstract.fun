@@ -11,7 +11,8 @@ functor AbstractTabled (structure IntSyn' : INTSYN
 		    sharing Constraints.IntSyn = IntSyn'
 		  structure Subordinate : SUBORDINATE
 		    sharing Subordinate.IntSyn = IntSyn'
-
+		  structure Print : PRINT 
+		    sharing Print.IntSyn = IntSyn'
 		      )
   : ABSTRACTTABLED =
 struct
@@ -21,7 +22,7 @@ struct
   exception Error of string
 
   (* apply strenghening during abstraction *)
-  val strengthen = ref true;
+  val strengthen = ref false;
 
 
 
@@ -177,7 +178,6 @@ struct
       | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
 
 
-
     (* getlevel (V) = L if G |- V : L
 
        Invariant: G |- V : L' for some L'
@@ -231,7 +231,7 @@ struct
 		val iw = Whnf.invert w 
 		val GX' = Whnf.strengthen (iw, GX)
 		val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw))
-		val _ = Unify.instantiateEVar (r, I.EClo (X', w), nil)
+		val _ = Unify.instantiateEVar (r, I.EClo (X', w), nil) 
 		val V' = raiseType (GX', I.EClo (V, iw))		 
 	      in		
 		collectSub(G, I.comp(w, s), I.Decl (collectExp (I.Null, (V', I.id), K), EV (X')))  
@@ -288,6 +288,7 @@ struct
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
       | collectSub (G, I.Dot (I.Exp (U), s), K) =
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
+      | collectSub (G, I.Dot(Undef, s), K) = collectSub(G, s, K) (* bp Fri Sep 28 17:55:00 2001 ? *)
 
 
     (* bp Tue Aug  7 14:58:30 2001 *)
@@ -398,6 +399,8 @@ struct
 	  abstractSub (K, depth, s, I.App (I.Root (I.BVar (k), I.Nil), S))
       | abstractSub (K, depth, I.Dot (I.Exp (U), s), S) =
 	  abstractSub (K, depth, s, I.App (abstractExp (K, depth, (U, I.id)), S))
+      | abstractSub (K, depth, I.Dot (Undef, s), S) = I.Nil
+(*	  abstractSub (K, depth, s, S) *)
  
     (* abstractSpine (K, depth, (S, s)) = S'
        where S' = {{S[s]}}_K
@@ -786,7 +789,7 @@ struct
     fun abstractAnswSubPterm (Gdp, K, d, G) (M, s) =
       let
 	(* K contains all existential variables (inst. or uninst) of G *)
-	val K1 = collectExp(G, (M, I.id), I.Null)
+	val K1 = collectExp(G, (M, I.id), K)
 	(* K1 contains all existential vars in M *)
 	val K2 = collectSub(Gdp, s, K1) 
 	(* K2 and K'' contains all existential vars in s *)
@@ -824,33 +827,34 @@ struct
 
 
     val abstractEVarCtx = 
-      (fn (G, (p,s)) => 
+      (fn (G, (m, p),s) => 
        let
 	 (* Kdp contains all EVars in G
 	  * G0' = G
+	  * abstract over m too! first or last ?
 	  *)
 	 val (G0', Kdp) = collectCtx (I.Null, G, I.Null)  	 
 	 (* K contains all EVars in (p,s) *)
-	 val K = collectExp(G, (p, s), Kdp)	
+	 val Km = collectExp(I.Null, (m, I.id), Kdp)
+	 val K = collectExp(G, (p, s), Km)	
+
 	 (* d = length(G) *)
 	 val (Gdp, d) = abstractCtx(K, 0, G)
 	 val U = abstractExp(K, d, (p,s))
+	 val N = abstractExp(K, d, (m,I.id))
 
-	 val (Gex,I.Shift(0)) = abstractKSub' (I.Null, K, I.id)  
-	 val (_,sex) = abstractKSubEVar (I.Null, K, I.id)   
-
-	 val abstract = abstractAnswSubPterm (Gdp, K, d, G)
-	   (* abstract = fn (M,s) => (Gex', sex', M')  s.t. 
-	      Gex', Gdp |- sex' : Gs, Gdp
-	      Gex', Gdp | u[sex']
-	      Gex', Gdp |- M'
+	 val (Gx,I.Shift(0)) = abstractKSub' (I.Null, K, I.id)  
+	 val (_,sx) = abstractKSubEVar (I.Null, K, I.id)   
+	   (* 
+	      Gx, Gdp |- sx : Gs, Gdp
+	      Gx, Gdp | n[sx] : u[sx]
 	    *)
        in 		
-	 (* Gex, Gdp |- U
-	  * Gdp |- sex : gex, Gdp
-	  * Gdp |- U[sex]
+	 (* Gx, Gdp |- U
+	  * Gdp |- sx : Gx, Gdp
+	  * Gdp |- n[sx]: u[sx]
 	  *)
-	 (abstract, Gdp, Gex, U, sex)
+	 (Gdp, Gx, N, U, sx)
        end)
 
 

@@ -13,9 +13,8 @@ sig
                         (IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp)  
 
 
-  val abstractEVarCtx : (IntSyn.dctx * (IntSyn.Exp * IntSyn.Sub)) ->  
-                        ((IntSyn.Exp * IntSyn.Sub -> IntSyn.dctx * IntSyn.Exp * IntSyn.Sub) * 
-                          IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Sub)
+  val abstractEVarCtx : (IntSyn.dctx * (IntSyn.Exp * IntSyn.Exp) * IntSyn.Sub) ->  
+                        (IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp * IntSyn.Sub)
 
 
   val abstractAnswSub : IntSyn.Sub -> IntSyn.dctx * IntSyn.Sub

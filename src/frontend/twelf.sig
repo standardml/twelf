@@ -109,11 +109,10 @@ sig
     sig 
       structure IntSyn : INTSYN
 
-      type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * 
-				  (IntSyn.dctx * IntSyn.Exp)) list,
+      type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
 		     lookup: int}
 	
-      val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
+      val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list ref 
 
       datatype Strategy = Variant | Subsumption
 

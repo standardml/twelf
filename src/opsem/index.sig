@@ -6,8 +6,7 @@ sig
 
   structure IntSyn : INTSYN
     
-  type answer = {solutions : ((IntSyn.dctx * IntSyn.Sub) * 
-			      (IntSyn.dctx * IntSyn.Exp)) list,
+  type answer = {solutions : (IntSyn.dctx * IntSyn.Sub) list,
 		 lookup: int}
 
   datatype Strategy = Variant | Subsumption
@@ -22,23 +21,23 @@ sig
   (* table: G, Gdprog |- goal , 
             (answ list (ith stage) , answ list (1 to i-1 th stage))
    *) 
-  val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list ref 
+  val table : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list ref 
 
-  val noAnswers : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list -> bool
+  val noAnswers : ((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list -> bool
 
   (* call check/insert *)
 
-  (* callCheck (Gdp, G, U)
+  (* callCheck (Gdp, G, M, U)
    *
-   * if Gdp, G |= U     in table  
+   * if Gdp, G |= _ : U     in table  
    *    then SOME(entries)
    * if Gdp, G |= U not in table 
    *    then NONE  
-   *          SIDE EFFECT: Gdp, G |= U added to table
+   *          SIDE EFFECT: Gdp, G |= M : U added to table
    *)
 
-  val callCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.Exp ->  
-                  (((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp) * answer) list) option
+  val callCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp ->  
+                  (((IntSyn.dctx * IntSyn.dctx * IntSyn.Exp * IntSyn.Exp) * answer) list) option
   
 
   (* answer check/insert *)
@@ -51,8 +50,8 @@ sig
    *  else new
    *)
 
-  val answerCheck : IntSyn.dctx * IntSyn.dctx * IntSyn.eclo * 
-                    (IntSyn.dctx * IntSyn.Exp) -> answState
+  val answerCheck : IntSyn.dctx * IntSyn.dctx * 
+                    (IntSyn.Exp * IntSyn.Exp) * IntSyn.Sub  -> answState
 
   (* reset table *)
   val reset: unit -> unit
@@ -72,8 +71,8 @@ sig
    
   val updateTable : unit -> bool
 
-  val solutions : answer -> ((IntSyn.dctx * IntSyn.Sub) * 
-			     (IntSyn.dctx * IntSyn.Exp)) list
+  val solutions : answer -> (IntSyn.dctx * IntSyn.Sub) list
   val lookup : answer -> int
 
 end;  (* signature TABLEINDEX *)
+
