@@ -149,3 +149,18 @@ structure MTProver =
 	    structure MTPSplitting = MTPSplitting
 	    structure MTPRecursion = MTPRecursion)
 
+
+structure MTPi = 
+  MTPi (structure MTPGlobal = MTPGlobal
+	structure IntSyn = IntSyn
+	structure FunSyn' = FunSyn
+	structure StateSyn' = StateSyn
+	structure MTPrint = MTPrint
+	structure MTPInit = MTPInit
+	structure MTPFilling = MTPFilling
+	structure MTPSplitting = MTPSplitting
+	structure MTPRecursion = MTPRecursion
+	structure Names = Names
+	structure Timers = Timers
+	structure Ring = Ring)
+	  

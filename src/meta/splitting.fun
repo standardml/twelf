@@ -418,7 +418,7 @@ struct
           abstract (MTPAbstract.abstractSub (B, s))
 
     fun abstractCont ((D, T), abstract) ((G, B), s) =  
-          abstract ((I.Decl (G, I.decSub (D, s)),
+          abstract ((I.Decl (G, Whnf.normalizeDec (D, s)),
 		     I.Decl (B, T)), I.dot1 s)
 
     fun makeAddressInit S k = (S, k)

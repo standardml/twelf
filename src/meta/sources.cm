@@ -9,6 +9,7 @@ Group is
   ../typecheck/sources.cm
   ../order/sources.cm
   ../opsem/sources.cm
+  ../timing/sources.cm
   funsyn.sig
   funsyn.fun
   funnames.sig    (* moves eventually to Names *)
@@ -35,6 +36,8 @@ Group is
   filling.fun
   global.sig 
   global.fun
+  mpi.sig
+  mpi.fun
   recursion.sig
   recursion.fun
   search.sig

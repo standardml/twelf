@@ -728,7 +728,7 @@ struct
           let 
 	    val ((G', B'), s') = merge ((G, B), (G', s), T)
 	  in
-	    ((I.Decl (G', Names.decName (G', I.decSub (D, I.comp(s, s')))), 
+	    ((I.Decl (G', Names.decName (G', Whnf.normalizeDec (D, I.comp(s, s')))), 
 	      I.Decl (B', T)), I.comp (s', I.shift))
 	  end
 
@@ -751,7 +751,7 @@ struct
 		  fn (V', w') => k (I.Pi ((I.decSub (D, I.comp (s, w)), I.Virtual), V'), w'))
       | skolem (d, (G, B), w, (F.Ex (I.Dec (_, V), F), s), k) = 
 	  let 
-	    val V' = k (I.EClo (V, s), w)
+	    val V' = Whnf.normalize (k (I.EClo (V, s), w), I.id)
 	    val D' = Names.decName (G, I.Dec (NONE, V'))
 	  in
 	    skolem (d, (I.Decl (G, D'), I.Decl (B, S.Lemma)), 
