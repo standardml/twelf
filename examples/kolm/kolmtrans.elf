@@ -45,8 +45,9 @@ kolm_exists : kolm (exists A) (n (exists A*))
 
 % I was not able to prove this automatically (I gave up).
 %  Note:  The theorem prover will not split over an index variable, such as A.
-% %theorem existskolm_auto : forall {A:o} exists {A*:o} {K:kolm A A*} true.
-% %prove 2 A (existskolm_auto A A* K).
+% this is proven very easily ??? - bp
+% %theorem existskolm_auto : forallG (pi {a:i}) forall {A:o} exists {A*:o} {K:kolm A A*} true.
+% %establish 2 A (existskolm_auto A A* K).
 
 % Let me prove it automatically for the propositional case (using
 % induction on the derivation of the judgement that A is propositional.)
@@ -59,6 +60,9 @@ not_prop   : prop A -> prop (not A).
 true_prop  : prop true.
 false_prop : prop false.
 
+% -bp this is the theorem above which caused problems for Chad ... 
+% proven easily automatically
+ 
 %theorem exkolm :  forallG (pi {a:i})
 		   forall {A:o} exists {A*:o} {K:kolm A A*} true.
 %prove 3 A (exkolm A A* K).

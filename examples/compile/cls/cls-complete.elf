@@ -13,16 +13,6 @@ there exists a computation
 Proof: By induction on the structure of C.
 }%
 
-% -bp 
-%theorem app : forall* {Ks:envstack}{P:program}{S:env}
-	               {Ks':envstack}{P':program}{S':env}
-                       {Ks'':envstack}{P'':program}{S'':env}
-		forall {C: st Ks P S =>* st Ks' P' S'}
-		       {C': st Ks' P' S' =>* st Ks'' P'' S''}
-		exists {C'': st Ks P S =>* st Ks'' P'' S''} true.
-	
-%prove 2 C (app C C' _).	
-
 append : st Ks P S =>* st Ks' P' S'
        -> st Ks' P' S' =>* st Ks'' P'' S''
        -> st Ks P S =>* st Ks'' P'' S''
@@ -40,20 +30,6 @@ environment stack Ks, program P, and stack S there exists a computation
   C :: st (Ks ;; K) (ev F & P) S =>* st Ks P (S ; W)
 
 Proof: By induction on the structure of D
-}%
-
-% -bp proven automatically - just takes really long because of filling depth 5
-% and so many cases; hand assistance (avoining unnecessary filling) is very
-% helpful and increases efficiency here
-
-%theorem sbcomp : forall* {K:env} {F:exp'}{W:val}{Ks:envstack}{P:program}{S:env}
-		   forall {D: feval K F W}
-		   exists {C: st (Ks ;; K) (ev F & P) S =>* st Ks P (S ; W)} true.
-%{
-%prove 5 D (sbcomp D _).
-}%
-%{
-%assert (sbcomp D _).
 }%
 
 subcomp : feval K F W
@@ -145,11 +121,3 @@ cev_complete : feval K F W -> ceval K F W -> type.
 %mode cev_complete +D -CE.
 
 cevc : cev_complete D (run C) <- subcomp D C.
-
-% -bp 
-%theorem ccomplete: forall* {K:env} {F:exp'}{W:val}
-		   forall {D: feval K F W}
-                   exists {C: ceval K F W} true.
-%{ -bp syntax is wrong
-%prove 2 (ccomplete D _).
-}%

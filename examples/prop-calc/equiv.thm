@@ -13,12 +13,6 @@
 	           forall {P : |- A}
 	           exists {Q : ! A} true.
 %terminates P (comdefn P _).
-%{ -bp this takes a loooong time; filling has a lot of work to do 
-in two of the cases (each one of these problematic cases takes nearly
-2 hours)
-- strangely enough, when Twelf can't prove it when I run it over night 
-}%
-%prove 6 P (comdefn P _).
+% %prove 4 P (comdefn P _).
 	
-
 

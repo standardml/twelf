@@ -24,19 +24,6 @@ Lemma: The postfix relation on computations is transitive:
 Proof: By induction on the structure of R2.
 }%
 
-% -bp 
-%theorem trns* : forall* {Ks:envstack}{P:program}{S:env}
-	                 {Ks1:envstack}{P1:program}{S1:env}
-                         {Ks2:envstack}{P2:program}{S2:env}
-		         {Ks3:envstack}{P3:program}{S3:env}
-		         {C1: (st Ks1 P1 S1) =>* (st Ks P S)}
-		         {C2: (st Ks2 P2 S2) =>* (st Ks P S)}
-		         {C3: (st Ks3 P3 S3) =>* (st Ks P S)}
-		  forall {R2: C2 < C3}{R1: C1 < C2}
-		  exists {R3: C1 < C3} true.
-
-%prove 2 R2 (trns* R2 R1 _).
-
 trans* : C1 < C2 -> C2 < C3 -> C1 < C3 -> type.
 %mode trans* +R1 +R2 -R3.
 
@@ -55,14 +42,6 @@ Splitting Lemma:
 
 Proof: By complete induction on C.
 }%
-
-%theorem split: forall* {KS:envstack}{P:program}{S:env}
-		        {K:env}{W:val}{F:exp'}{W':val}
-		 forall {C:(st (KS ;; K) (ev F & P) S) =>* (st (emptys) (done) (empty ; W'))}
-		 exists {D: feval K F W}
-                        {C':(st KS P (S ; W)) =>* (st (emptys) (done) (empty ; W'))} true.
-
-%prove 4 C (split C _ _ ).
 
 spl : {C : (st (KS ;; K) (ev F & P) S) =>* (st (emptys) (done) (empty ; W'))}
       feval K F W ->

@@ -2,13 +2,6 @@
 %%% Version restricted to pure lambda-calculus
 %%% Author: Frank Pfenning, based on [Hannan & Pfenning 92]
 
-%theorem mapEval: forall* {E:exp}{V:exp}{F:exp'}{E':exp'}{K:env}
-		   forall {C:trans K F E}{D: eval E V}
-		   exists {W:val}{D': feval K F W}{U:vtrans W V} true.
-
-%prove 5 {[D C]} (mapEval C D _ _ _).
-
-
 map_eval : eval E V -> trans K F E
 	      -> feval K F W -> vtrans W V -> type.
 
