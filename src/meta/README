@@ -35,6 +35,12 @@ DONE -cs  3) mutual recursion
 TODO list of meta theorem prover
 --------------------------------
 
+Running examples:
+
+use "TEST-CP/a.sml";    (* 2nd order copy *)
+use "TEST-CP/b.sml";    (* 3rd order copy *)
+use "TEST-CP/c.sml";    (* 4th order copy *)
+
 Open issues: 
 -cs  In recursion, when we look for the subterm of a functional
 	assumptions, we apply it to EVars, and continue search.
