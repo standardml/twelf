@@ -139,5 +139,7 @@ struct
       val infer' = infer'
       val typeCheck = fn (G, (U, V)) => 
 	                   (checkCtx G; checkExp (G, (U, I.id), (V, I.id)))
+      val typeCheckCtx = checkCtx			   
+
   end  (* local ... *)
 end; (* functor TypeCheck *)
