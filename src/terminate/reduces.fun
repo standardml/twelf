@@ -597,14 +597,14 @@ struct
    (* ltRF (G, Q, TG, UsVs, UsVs' ,sc = B *)
    and ltRF (G, Q, TG, UsVs, UsVs', sc) = 
 	ltRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)
-       (* ltRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)) *)
+
    and ltRFW (G, Q, TG, UsVs as (Us, (V,s)), 
 	      ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 	       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) = 
          (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	    let  (* enforce that X is only instantiated to parameters *) 
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      val sc' = fn () => (isParameter (Q, X); sc ())    
+	      val sc' = fn () => (isParameter (Q, X) andalso sc ())    
 	    in
 	       ltRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
 				      (V', I.Dot (I.Exp (X), s2'))), sc')
@@ -674,14 +674,15 @@ struct
 		     ((S', s1'),(V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc))
     
     (* leRF (G, Q, TG, PG, AG, UsVs, UsVs', P, sc) = B *) 
-    and leRF (G, Q, TG, UsVs, UsVs', sc) = leRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)
+    and leRF (G, Q, TG, UsVs, UsVs', sc) = 
+           leRFW (G, Q, TG, UsVs, Whnf.whnfEta UsVs', sc)
     and leRFW (G, Q, TG, UsVs as (Us, (V, s)), 
 	      ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 	       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) = 
          (if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	    let  (* enforce that X is only instantiated to parameters *) 
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
-	      val sc' = fn () => (isParameter (Q, X); sc ())    
+	      val sc' = fn () => (isParameter (Q, X) andalso sc ())    
 	    in
 	      leRF (G, Q, TG, UsVs, ((U', I.Dot (I.Exp (X), s1')), 
 				     (V', I.Dot (I.Exp (X), s2'))), sc')
