@@ -346,7 +346,7 @@ struct
 	
 	      | raiseFor (k, Gorig, F.All (F.Prim (I.Dec (name, V)), F), w, sc) =
 		let
-		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
+(*		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
 		  val g = I.ctxLength G
 		  val s = sc (w, k)                    
 					(* G0, {G}GF[..], G |- s : G0, G, GF *)
@@ -366,6 +366,41 @@ struct
 		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
 		in
 		  F.All (F.Prim (I.Dec (name, V')), F')
+*)
+		  val G = F.listToCtx (ctxSub (F.ctxToList Gorig, w))
+		  val g = I.ctxLength G
+		  val s = sc (w, k)                    
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+		  val V' = I.EClo (V, s)
+					(* G0, {G}GF[..], G |- V' : type *)
+		  val (nw, S) = weaken (G, I.targetFam V, 1)
+					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
+					   Gw < G *)
+
+		  val iw = Whnf.invert nw	  
+  					(* G0, {G}GF[..], Gw |- iw : G0, {G}GF[..], G *)
+  		  val Gw = Whnf.strengthen (iw, G)
+					(* Generalize the invariant for Whnf.strengthen --cs *)
+		  val V'' = Whnf.normalize (V', iw)
+					(* G0, {G}GF[..], Gw |- V'' = V'[iw] : type*)
+		  val V''' = Whnf.normalize (raiseType (Gw, V''), I.id)
+					(* G0, {G}GF[..] |- V''' = {Gw} V'' : type*)
+		  val S''' = S I.Nil
+					(* G0, {G}GF[..], G[..] |- S''' : {Gw} V''[..] > V''[..] *)
+					(* G0, {G}GF[..], G |- s : G0, G, GF *)
+
+		  val sc' = fn (w', k') => 
+		              let
+					(* G0, GA |- w' : G0 *)
+				val s' = sc (w', k')
+				        (* G0, GA, G[..] |- s' : G0, G, GF *)
+			      in
+				I.Dot (I.Exp (I.Root (I.BVar (g+k'-k), S''')), s')
+					(* G0, GA, G[..] |- (g+k'-k). S', s' : G0, G, GF, V *)
+			      end
+		  val F' = raiseFor (k+1, Gorig, F, I.comp (w, I.shift), sc')
+		in
+		  F.All(F.Prim (I.Dec (name, V''')), F')
 		end
 	        (* the other case of F.All (F.Block _, _) is not yet covered *)
 	      
