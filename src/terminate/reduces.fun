@@ -100,11 +100,6 @@ struct
     fun orderToString (G, P) = F.makestring_fmt(fmtPredicate (G, P))
 
    (*--------------------------------------------------------------------*)
-   fun append (I.Null, G) = G
-     | append (G, I.Null) = G
-     | append (G, I.Decl(G', P)) = 
-         append (I.Decl(G, P), G')
-
    (* select (c, (S, s)) = P
       
       select parameters according to termination order        
@@ -254,10 +249,7 @@ struct
 		if (f a) then a's else lookup (a's', f)
 	    | lookup (a's as R.LT (a, a's'), f) =
 		if (f a) then a's else lookup (a's', f)
-	  val P = select (a, (S, s))	(* only if a terminates? *)
-	    handle Order.Error (msg)
-	    => raise Error' (occ, "Termination violation: no order assigned for " ^ 
-			     N.qidToString (N.constQid a))
+	  val P = selectOcc (a, (S, s), occ)	(* only if a terminates? *)
 	  val P' = select (a', (S', s')) (* always succeeds? -fp *)
 	  (*
 	    handle Order.Error (msg)
