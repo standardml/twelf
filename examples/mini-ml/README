@@ -19,7 +19,7 @@ sources.cfg     --- standard configuration
 
 Additional material
 
+sources1.cfg    --- pure LF configuration
 eval1.elf       --- evaluation judgment in pure LF
-eval2.elf       --- evaluation judgment in declarative order
 
-test.cfg        --- regression testing configuration
+eval2.elf       --- evaluation judgment in declarative order
