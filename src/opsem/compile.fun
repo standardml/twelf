@@ -53,7 +53,9 @@ struct
        C.All (D, compileGoalN (I.Decl(G, D), A2))
   (*  compileGoalN _ should not arise by invariants *)
 
-
+  (* temporarily disabled because of missing context information *)
+  (* Fri Jan 15 14:26:21 1999, -fp,cs *)
+  (*
   and compileRootN (G, R as I.Root (h as (I.Const cid | I.Def cid), S)) =
     let
       fun findDupsS (I.Nil, (seen, dups, n)) = (seen, dups, n)
@@ -187,6 +189,7 @@ struct
     in
       i
     end
+  *)
 
   (* compileClauseN A => G
      if A is a type interpreted as a clause and G is its compiled form.
@@ -201,9 +204,11 @@ struct
   *)
 
   and compileClauseN opt (G, R as I.Root (h, S)) =
+      (*
       if opt andalso !optimize then
         compileRootN (G, R)
       else
+      *)
 	C.Eq(R)
     | compileClauseN opt (G, I.Pi((D as (I.Dec(_,A1)),I.No), A2)) =
       (* A = A1 -> A2 *)

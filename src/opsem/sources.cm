@@ -10,8 +10,10 @@ Group is
   compile.fun
   cprint.sig
   cprint.fun
+  (*
   assign.sig
   assign.fun
+  *)
   absmachine.sig
   absmachine.fun
   opsem.sml

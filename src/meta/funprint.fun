@@ -362,7 +362,7 @@ struct
 	   G |- Ft = U' : V   for a G, V
         *)
 	fun frontToExp (I.Idx k) = I.Root (I.BVar k, I.Nil)
-	  | frontToExp (I.Exp (U, _)) = U
+	  | frontToExp (I.Exp (U)) = U
 
 
 	(* formatDecs1 (Psi, Ds, s, L) = L'

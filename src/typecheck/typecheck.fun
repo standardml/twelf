@@ -83,7 +83,7 @@ struct
 	  inferSpine (G, (S, I.comp (s', s)), Vs)
       | inferSpine (G, (I.App (U, S), s1), (I.Pi ((I.Dec (_, V1), _), V2), s2)) =
 	  (checkExp(G, (U, s1), (V1, s2));
-	   inferSpine (G, (S, s1), Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1), V1), s2))))
+	   inferSpine (G, (S, s1), Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))))
 	  (* G |- Pi (x:V1, V2) [s2] = Pi (x: V1 [s2], V2 [1.s2 o ^1] : L
 	     G |- U [s1] : V1 [s2]
 	     Hence

@@ -21,9 +21,7 @@ functor RelFun (structure Global : GLOBAL
 		structure FunWeaken : FUNWEAKEN
 		  sharing FunWeaken.FunSyn = FunSyn'
 		structure FunNames : FUNNAMES 
-		  sharing FunNames.FunSyn = FunSyn'
-         	structure Pattern : PATTERN
-		  sharing Pattern.IntSyn = FunSyn'.IntSyn)
+		  sharing FunNames.FunSyn = FunSyn')
   : RELFUN = 
 struct
   structure FunSyn = FunSyn'
@@ -452,7 +450,7 @@ struct
 	      val V1' = Weaken.strengthenExp (V1, w)
 	      val w' =  I.dot1 w
 	      val U' = Weaken.strengthenExp (U, w1)
-	      val s' = Pattern.dotEta (I.Exp (U', V1'), s)
+	      val s' = Whnf.dotEta (I.Exp (U'), s)
 	    in
 	      transformInit' ((S, mS), V2, (w', s'))
 	    end
@@ -622,12 +620,12 @@ struct
 
 		val U0 = raiseExp (G0, U, I.targetFam V1'')
 		val U' = Weaken.strengthenExp (U0, w2)
-	       	val t' = Pattern.dotEta (I.Exp (U', V1''), t)
+	       	val t' = Whnf.dotEta (I.Exp (U'), t)
 		val z1' = I.comp (z1, I.shift)
 		val xc  = exchangeSub G0
 		val z2n = I.comp (z2, I.comp (I.shift, xc))
 		val Ur' = I.EClo (Ur, xc)
-		val z2' = Pattern.dotEta (I.Exp (Ur', V1), z2n)
+		val z2' = Whnf.dotEta (I.Exp (Ur'), z2n)
 		val (w'', t'', (d', Dplus, Dminus)) = 
 		  transformDec' (d+1, (S, mS), V2, (z1', z2'), (w', t'))
 	      in
@@ -641,7 +639,7 @@ struct
 	      val U' = Weaken.strengthenExp (U, w1)
 	      val t' = t
 	      val z1' = F.dot1n (G0, z1)
-	      val z2' = I.Dot (I.Exp (I.EClo (U', z1'), V1), z2)
+	      val z2' = I.Dot (I.Exp (I.EClo (U', z1')), z2)
 	      val (w'', t'', (d', Dplus, Dminus)) = 
 		transformDec' (d+1, (S, mS), V2, (z1, z2'), (w', t'))
 	    in
@@ -807,7 +805,7 @@ struct
 
 	  | traversePos (c'', Psi, I.Null, (V, v), SOME (w1, d, (P, Q)), L) = 
 	    let (* Lemma calls (no context block) *)
-	      val I.Root (I.Const a', S) = Weaken.strengthenExp (V, v)
+	      val (I.Root (I.Const a', S), _ (* = id *)) = Whnf.whnf (Weaken.strengthenExp (V, v), I.id)
 	      val (Psi', w2) = strengthen (Psi, (a', S), w1, M.Minus)
 
 	      val _ = if !Global.doubleCheck 

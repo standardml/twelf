@@ -35,9 +35,9 @@ struct
       | createEVars (M.Prefix (I.Decl (G, I.Dec (_, V)), I.Decl (M, M.Bot), I.Decl (B, _))) =
 	let 
 	  val (M.Prefix (G', M', B'), s') = createEVars (M.Prefix (G, M, B))
-	  val X  = I.newEVar (I.EClo (V, s'))
+	  val X  = I.newEVar (G', I.EClo (V, s'))
 	in
-	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X, V), s'))
+	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X), s'))
 	end
 
     (* apply (((G, M), V), a) = ((G', M'), V')

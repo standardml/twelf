@@ -12,8 +12,6 @@ functor MetaAbstract (structure Global : GLOBAL
 		        sharing Whnf.IntSyn = MetaSyn'.IntSyn
 		      structure Print : PRINT
 			sharing Print.IntSyn = MetaSyn'.IntSyn
-		      structure Pattern : PATTERN
-		        sharing Pattern.IntSyn = MetaSyn'.IntSyn
 		      structure Constraints : CONSTRAINTS
 			sharing Constraints.IntSyn = MetaSyn'.IntSyn
 		      structure Unify : UNIFY
@@ -108,136 +106,29 @@ struct
         if (r = r') then SOME E
 	else atxLookup (M, r)
 
-	   
-    (* raiseRoot V rho = (V', X[rho]), X:V' new EVar
+    (* raiseType (k, G, V) = {{G'}} V
 
-       Invariant: 
-       If   G |- V : type
-       and  G |- rho : G'
-       then G' |- V' = V[rho^-1] : type
-       and  G' |- X : V'
-       and  G |- X[rho] : V
+       Invariant:
+       If G |- V : L
+          G = G0, G'  (so k <= |G|)
+       then  G0 |- {{G'}} V : L
+             |G'| = k
+
+       All abstractions are potentially dependent.
     *)
-    fun raiseRoot V rho = 
-	let 
-	  val V' = Unify.safeInvertExp ((V, I.id), rho)
+    fun raiseType (0, G, V) = V
+      | raiseType (depth, I.Decl (G, D), V) = 
+          raiseType (depth-1, G, I.Pi ((D, I.Maybe), V))
+
+    (* weaken (depth,  G, a) = (w')
+    *)
+    fun weaken (0, G, a) = I.id 
+      | weaken (depth, I.Decl (G', D as I.Dec (name, V)), a) = 
+        let 
+	  val w' = weaken (depth-1, G', a) 
 	in
-	  (V', I.EClo (I.newEVar V', rho))
-	end
-
-    (* raisePiPrune sc rho = (V', X')
-
-       Invariant:
-       If   G |- V = {V1} {V2}... {Vn} a;S  : type
-       and  G |- rho : G'
-       and  sc is a function mapping ({V2} .. {Vn}   a;S, rho2) to 
-	                             ({V2'} .. {Vm'} a;S', X2')
-	    s.t. for all G1, G1', s.t.  G1 |- rho2 : G1'
-	       G1, V2 .. Vn |- rho2, rho2' : G1', V2', .. Vm'
-               G1' |- {V2'} .. {Vm'} a;S' : type
-	       G1 V2 .. Vn |- X : a;S
-       then with G, V1 |- rho o ^ : G'
-            G' |- {V2'} ... {Vm'} a; S' : type
-       and  G, V1 .. Vn |- X' : a;S 
-	    pruning G,X1 .. Vn |- X : a;S
-    *)
-    fun raisePiPrune sc rho =
-          sc (I.comp (rho, I.shift))
-
-    (* raiseNonPiPrune sc rho = (V', X')
-
-       Invariant:
-       If   G |- V = {V1} {V2}... {Vn} a;S  : type
-       and  G |- rho : G'
-       and  sc is a function mapping ({V2} .. {Vn}   a;S, rho2) to 
-	                             ({V2'} .. {Vm'} a;S', X2')
-	    s.t. for all G1, G1', s.t.  G1 |- rho2 : G1'
-	       G1, V2 .. Vn |- rho2, rho2' : G1', V2', .. Vm'
-               G1' |- {V2'} .. {Vm'} a;S' : type
-	       G1 V2 .. Vn |- X : a;S
-       then with G, V1 |- 1. rho o ^ : G', V1 [rho ^ -1] (= V1')
-            G' |- {V1'} {V2'} ... {Vm'} a; S' : type
-       and  G, V1 .. Vn |- X' : a;S 
-	    pruning G, X1 .. Vn |- X : a;S
-    *)
-    fun raisePiNonPrune (I.Dec (x, V1), sc) rho =
-      let
-	val (V', X') = sc (I.dot1 rho)
-      in
-	(I.Pi ((I.Dec (x, Unify.safeInvertExp ((V1, I.id), rho)), 
-		I.Maybe), V'), X')
-      end
-
-    (* raiseType (G, depth, (V, s)) = (V', X'[rho'])
-     
-       Invariant: 
-       If   G0, GO', Gp |- s : G0, G'     G0, G' |- V : L
-       and  depth = |G'|
-       then G0, G' |- rho' : G0, G'' 
-                   (G'' = G' pruned using subordination information)
-       and  V' = {G''} V
-       and  G0 |- V' : L
-       and  G0, G'' |- X' : V''
-       and  G0, G' |- X' [rho'] : V = V'' [rho']
-    *)
-    fun raiseType (G, depth, (V, s)) = 
-      let 
-	val b = I.targetFam V
-
-	fun raiseType' (0, _, sc) = sc I.id
-	  | raiseType' (depth, I.Shift (k), sc) =
-	      raiseType' (depth, I.Dot (I.Idx (k+1), I.Shift (k+1)), sc) 
-	  | raiseType' (depth, I.Dot (I.Idx (k), s'), sc) =
-            let 
-	      val (D as I.Dec (_, V')) =
-	          if Pattern.checkSub s'
-		    then let
-			   val I.Dec (name, V) =  I.ctxDec (G, k)
-			 in (* must succeed --- do not handle Unify.NonInvertible *)
-			   I.Dec (name, Unify.safeInvertExp((V, I.id), s'))
-			 end
-		  else raise Error "Mixed substitution cannot be raised"
-	    in
-	      if Subordinate.belowEq (I.targetFam V', b) then 
-		(* non pruning case *)
-		raiseType' (depth-1, s', raisePiNonPrune (D, sc))  
-	      else 
-		(* pruning case *)
-	        raiseType' (depth-1, s', raisePiPrune sc)
-	    end
-	  | raiseType' (depth, I.Dot (I.Exp (_, V'), s'), sc) =
-	    if Subordinate.belowEq (I.targetFam V', b) then
-	      (* old case *)
-	      raiseType' (depth-1, s', raisePiNonPrune (I.Dec (NONE, V'), sc))
-	    else 
-	      (* new case *)
-	      raiseType' (depth-1, s', raisePiPrune sc)
-      in
-	raiseType' (depth, s, raiseRoot V)
-      end
-
-
-    (* lengthDomain (G, s) = n' 
-     
-       Invariant:
-       If   G |- s : G'
-       then n' = |G'|
-    *)
-    fun lengthDomain (G, s) =
-	let 
-	  val depth = I.ctxLength (G)
-
-	  fun lengthDomain' (I.Shift (k), n) =
-	      if k < depth
-		then lengthDomain' (I.Dot (I.Idx (k+1), I.Shift (k+1)), n) 
-	      (* eta expansion *)
-	      else n (* k = depth *) 
-	    | lengthDomain' (I.Dot (I.Idx (k), s'), n) =
-		lengthDomain' (s', n+1)
-	    | lengthDomain' (I.Dot (I.Exp (_, V'), s'), n) =
-		lengthDomain' (s', n+1)
-	in 
-	  lengthDomain' (s, 0)
+	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  else I.comp (w', I.shift)
 	end
 
     (* countPi V = n'
@@ -251,6 +142,7 @@ struct
 	let
 	  fun countPi' (I.Root _, n) = n
 	    | countPi' (I.Pi (_, V), n) = countPi' (V, n+1)
+	    | countPi' (I.EClo (V, _), n) = countPi' (V, n)
 	in
 	  countPi' (V, 0)
 	end
@@ -294,7 +186,7 @@ struct
 	    then 
 	      let 
 		val I.Dec (_, V) = I.ctxDec (G, k)
-		  (* invariant: all variables (EV or BV) in V already seen!!! *)
+	      (* invariant: all variables (EV or BV) in V already seen! *)
 	      in
 		collectSpine (lG0, G, (S, s), mode, (I.Decl (A, BV), depth-1))
 	      end
@@ -303,26 +195,32 @@ struct
 	end
       | collectExpW (lG0, G, (I.Root (C, S), s), mode, Adepth) =
 	  collectSpine (lG0, G, (S, s), mode, Adepth)
-      | collectExpW (lG0, G, (I.EVar (r, V, Cnstr), s), mode, 
+      | collectExpW (lG0, G, (I.EVar (r, GX, V, Cnstr), s), mode, 
 		     Adepth as (A, depth)) =
 	(case atxLookup (A, r)
 	   of NONE =>
 	      let 
 	        val _ = checkEmpty Cnstr
-	        val lGp' = lengthDomain (G, s) - lG0 + depth   (* lGp' >= 0 *)
-	        val (Vraised, X' as I.EClo (I.EVar (r', _,_), _)) = raiseType (G, lGp', (V, s))
-		val _ = Trail.instantiateEVar (r, X')
-	      (* invariant: all variables (EV) in Vraised already seen!!! *)
+
+	        val lGp' = I.ctxLength GX - lG0 + depth   (* lGp' >= 0 *)
+		val w = weaken (lGp', GX, I.targetFam V)
+		val iw = Whnf.invert w
+		val GX' = Whnf.strengthen (iw, GX)
+	        val lGp'' = I.ctxLength GX' - lG0 + depth   (* lGp'' >= 0 *)
+		val Vraised = raiseType (lGp'', GX', I.EClo (V, iw))
+		val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw))
+		val _ = Trail.instantiateEVar (r, I.EClo (X', w))
+	      (* invariant: all variables (EV) in Vraised already seen *)
 	      in
-		collectSub (lG0, G, lGp', s, mode, 
+		collectSub (lG0, G, lGp'', s, mode, 
 			    (I.Decl (A, EV (r', Vraised, mode)), depth))
 	      end
-	   | SOME (EV (_, V, _)) =>
-	     let
-	       val lGp' = countPi V
-	     in
-	       collectSub (lG0, G, lGp', s, mode, Adepth)
-	     end)
+	    | SOME (EV (_, V, _)) =>
+	      let
+		val lGp' = countPi V
+	      in
+		collectSub (lG0, G, lGp', s, mode, Adepth)
+	      end)
       
 	  
     (* collectSub (lG0, G, lG'', s, mode, (A, depth)) = (A', depth') 
@@ -356,7 +254,7 @@ struct
 	  (* typing invariant guarantees that (EV, BV) in k : V already 
 	     collected !! *)
 	  collectSub (lG0, G, lG'-1, s, mode, Adepth)
-      | collectSub (lG0, G, lG', I.Dot (I.Exp (U, V), s), mode, Adepth) =
+      | collectSub (lG0, G, lG', I.Dot (I.Exp (U), s), mode, Adepth) =
 	  (* typing invariant guarantees that (EV, BV) in V already 
 	     collected !! *)
 	  collectSub (lG0, G, lG'-1, s, mode,
@@ -652,7 +550,7 @@ struct
 	    I.Root (C, abstractSpine (A, G, depth, (S, s)))
       | abstractExpW (A, G, depth, (I.Root (C, S), s)) =  (* s = id *)
 	  I.Root (C, abstractSpine (A, G, depth, (S, s)))
-      | abstractExpW (A, G, depth, (I.EVar (r, V, _), s)) =
+      | abstractExpW (A, G, depth, (I.EVar (r, _, V, _), s)) =
 	  let 
 	    val (k, Vraised) = lookupEV (A, r)    
 	    (* IMPROVE: remove the raised variable, replace by V -cs ?-fp *)
@@ -716,7 +614,7 @@ struct
 			 I.App (I.Root (I.BVar (k), I.Nil), S))
 	end
       | abstractSubW (A, G, depth, XVt as (I.Pi (_, XV'), t), 
-		      I.Dot (I.Exp (U, V), s), b, S) =
+		      I.Dot (I.Exp (U), s), b, S) =
 	  abstractSub (A, G, depth, (XV', I.dot1 t), s, b, 
 		       I.App (abstractExp (A, G, depth, (U, I.id)), S)) 
 

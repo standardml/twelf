@@ -94,7 +94,7 @@ struct
 	    | select'W (n, ((I.SClo (S', s1'), s2'), Vs'')) =
 		select'W (n, ((S', I.comp (s1', s2')), Vs''))
 	    | select'W (n, ((I.App (U', S'), s'), (I.Pi ((I.Dec (_, V1''), _), V2''), s''))) = 
-		select' (n-1, ((S', s'), (V2'', I.Dot (I.Exp (I.EClo (U', s'), V1''), s''))))
+		select' (n-1, ((S', s'), (V2'', I.Dot (I.Exp (I.EClo (U', s')), s''))))
 	  fun select (O.Arg n) = O.Arg (select' (n, ((S, s), Vid)))
 	    | select (O.Lex L) = O.Lex (map select L)
 	    | select (O.Simul L) = O.Simul (map select L)
@@ -108,7 +108,7 @@ struct
        appends a list of recursion operators to ops after
        instantiating X with all possible local parameters (between 1 and k)
     *)
-    fun set_parameter (G, X as I.EVar (r, V, _), k, sc, ops) =
+    fun set_parameter (G, X as I.EVar (r, _, V, _), k, sc, ops) =
 	let 
 	  fun set_parameter' (0, ops') =  ops'
 	    | set_parameter' (k', ops') = 
@@ -116,8 +116,8 @@ struct
 		  val D' as I.Dec (_, V') = I.ctxDec (G, k')
 		  val ops'' = 
 		    Trail.trail (fn () => 
-				 if Unify.unifiable ((V, I.id), (V', I.id))
-				   andalso Unify.unifiable ((X, I.id), (I.Root (I.BVar k', I.Nil), I.id))
+				 if Unify.unifiable (G, (V, I.id), (V', I.id))
+				   andalso Unify.unifiable (G, (X, I.id), (I.Root (I.BVar k', I.Nil), I.id))
 				   then sc ops'
 				 else ops')
 		in 
@@ -193,21 +193,21 @@ struct
 					(I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ops) =
 	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	  let  (* enforce that X gets only bound to parameters *) 
-	    val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    val sc' = fn ops' => set_parameter (G, X, k, sc, ops')
 	  in
 	    lt (G, k, ((U, s1), (V, s2)), 
-		((U', I.Dot (I.Exp (X, V1'), s1')), 
-		 (V', I.Dot (I.Exp (X, V2'), s2'))), sc', ops)
+		((U', I.Dot (I.Exp (X), s1')), 
+		 (V', I.Dot (I.Exp (X), s2'))), sc', ops)
 	  end
 	else
 	  if Subordinate.below (I.targetFam V1', I.targetFam V) then
 	    let 
-	      val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    in
 	      lt (G, k, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		   (V', I.Dot (I.Exp (X, V2'), s2'))), sc, ops)
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc, ops)
 	    end
 	  else ops
 
@@ -222,7 +222,7 @@ struct
 	  val ops' = le (G, k, (Us, Vs), ((U', s1'), (V1', s2')), sc, ops)
 	in
 	  ltSpine (G, k, (Us, Vs), ((S', s1'), 
-				 (V2', I.Dot (I.Exp (I.EClo (U', s1'), V1'), s2'))), sc, ops')
+				 (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc, ops')
 	end
 
     (* eq (G, ((U, s1), (V, s2)), (U', s'), sc, ops) = ops'
@@ -241,8 +241,8 @@ struct
     *)
     and eq (G, (Us, Vs), (Us', Vs'), sc, ops) = 
         (Trail.trail (fn () => 
-		      if Unify.unifiable (Vs, Vs') 
-			andalso Unify.unifiable (Us, Us') 
+		      if Unify.unifiable (G, Vs, Vs') 
+			andalso Unify.unifiable (G, Us, Us') 
 			then sc ops
 		      else ops))
     
@@ -276,22 +276,22 @@ struct
 					(I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ops) =
 	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	  let
-	    val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    val sc' = fn ops' => set_parameter (G, X, k, sc, ops')
 	  (* enforces that X can only bound to parameter *)
 	  in                         
 	    le (G, k, ((U, s1), (V, s2)), 
-		((U', I.Dot (I.Exp (X, V1'), s1')), 
-		 (V', I.Dot (I.Exp (X, V2'), s2'))), sc', ops)
+		((U', I.Dot (I.Exp (X), s1')), 
+		 (V', I.Dot (I.Exp (X), s2'))), sc', ops)
 	  end
 	else
 	  if Subordinate.below  (I.targetFam V1', I.targetFam V) then
 	    let 
-	      val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    in
 	      le (G, k, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		   (V', I.Dot (I.Exp (X, V2'), s2'))), sc, ops)
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc, ops)
 	    end
 	  else ops
       | leW (G, k, (Us, Vs), (Us', Vs'), sc, ops) = lt (G, k, (Us, Vs), (Us', Vs'), sc, ops) 
@@ -380,7 +380,7 @@ struct
 	    convertible to O2
     *)
     and ordeq (G, O.Arg (Us, Vs), O.Arg (Us' ,Vs'), sc, ops) =  
-          if Unify.unifiable (Vs, Vs') andalso Unify.unifiable (Us, Us') then sc ops else ops
+          if Unify.unifiable (G, Vs, Vs') andalso Unify.unifiable (G, Us, Us') then sc ops else ops
       | ordeq (G, O.Lex L, O.Lex L', sc, ops) = ordeqs (G, L, L', sc, ops)
       | ordeq (G, O.Simul L, O.Simul L', sc, ops) = ordeqs (G, L, L', sc, ops)
       
@@ -438,9 +438,9 @@ struct
       | createEVars (M.Prefix (I.Decl (G, I.Dec (_, V)), I.Decl (M, M.Bot), I.Decl (B, _))) =
 	let 
 	  val (M.Prefix (G', M', B'), s') = createEVars (M.Prefix (G, M, B))
-	  val X  = I.newEVar (I.EClo (V, s'))
+	  val X  = I.newEVar (G', I.EClo (V, s'))
 	in
-	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X, V), s'))
+	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X), s'))
 	end
 
     (* select (G, (V, s)) = (G', (V1', s1'), (V2', s2'))
@@ -558,8 +558,8 @@ struct
 			((I.App (U2, S2), s2), (I.Pi ((I.Dec (_, V2), _), W2), t2))) =
 	  Conv.conv ((V1, t1), (V2, t2)) andalso	  
 	  inputConvSpine (mS, 
-			  ((S1, s1), (W1, I.Dot (I.Exp (I.EClo (U1, s1), V1), t1))),
-			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U1, s1), V2), t2))))
+			  ((S1, s1), (W1, I.Dot (I.Exp (I.EClo (U1, s1)), t1))),
+			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U1, s1)), t2))))
           (* BUG: use the same variable (U1, s1) to continue comparing! --cs
                   in ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U2, s2), V2), t2))))
 	     FIXED: --cs Mon Nov  9 19:38:55 EST 1998 *)
@@ -567,8 +567,8 @@ struct
 			((I.App (U1, S1), s1), (I.Pi ((I.Dec (_, V1), _), W1), t1)),
 			((I.App (U2, S2), s2), (I.Pi ((I.Dec (_, V2), _), W2), t2))) =
 	   inputConvSpine (mS, 
-			  ((S1, s1), (W1, I.Dot (I.Exp (I.EClo (U1, s1), V1), t1))),
-			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U2, s2), V2), t2))))
+			  ((S1, s1), (W1, I.Dot (I.Exp (I.EClo (U1, s1)), t1))),
+			  ((S2, s2), (W2, I.Dot (I.Exp (I.EClo (U2, s2)), t2))))
 
 
     (* removeDuplicates ops = ops'

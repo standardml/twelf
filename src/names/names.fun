@@ -318,9 +318,9 @@ struct
     val evarList : (IntSyn.Exp * string) list ref = ref nil
 
     fun evarReset () = (evarList := nil)
-    fun evarLookup (IntSyn.EVar(r,_,_)) =
+    fun evarLookup (IntSyn.EVar(r,_,_,_)) =
         let fun evlk (nil) = NONE
-	      | evlk ((IntSyn.EVar(r',_,_), name)::l) =
+	      | evlk ((IntSyn.EVar(r',_,_,_), name)::l) =
 	        if r = r' then SOME(name) else evlk l
 	in
 	  evlk (!evarList)
@@ -333,7 +333,7 @@ struct
     (* return a list of names of EVars that have constraints on them *)
     (* Note that EVars which don't have names, will not be considered! *)
     fun evarCnstr' (nil, acc) = acc
-      | evarCnstr' ((IntSyn.EVar(ref(NONE), _, Constr as (_::_)), name)::l, acc) =
+      | evarCnstr' ((IntSyn.EVar(ref(NONE), _, _, Constr as (_::_)), name)::l, acc) =
           evarCnstr' (l, name::acc)
       | evarCnstr' (_::l, acc) = evarCnstr' (l, acc)
     fun evarCnstr () = evarCnstr' (!evarList, nil)
@@ -372,7 +372,7 @@ struct
     fun getFVarType (name) =
         (case varLookup name
 	   of NONE => let
-			val V = IntSyn.newTypeVar ()
+			val V = IntSyn.newTypeVar (IntSyn.Null)	(* FVars typed in empty Ctx *)
 			val _ = varInsert (name, FVAR (V));
 		      in 
 			 V
@@ -390,8 +390,9 @@ struct
     fun getEVar (name) =
         (case varLookup name
 	   of NONE => let
-			val V = IntSyn.newTypeVar ()
-			val (X as (IntSyn.EVar(r,_,_))) = IntSyn.newEVar V
+			(* free variables typed in empty context *)
+			val V = IntSyn.newTypeVar (IntSyn.Null)
+			val (X as (IntSyn.EVar(r,_,_,_))) = IntSyn.newEVar (IntSyn.Null, V)
 			val _ = varInsert (name, EVAR (X))
 			val _ = evarInsert (X, name)
 		      in 
@@ -448,7 +449,7 @@ struct
        where name is the next unused name appropriate for X,
        based on the name preference declaration for A if X:A
     *)
-    fun newEVarName (G, X as IntSyn.EVar(r, V, Cnstr)) =
+    fun newEVarName (G, X as IntSyn.EVar(r, _, V, Cnstr)) =
         let
 	  (* use name preferences below *)
 	  val name = tryNextName (G, namePrefOf V)

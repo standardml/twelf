@@ -58,7 +58,7 @@ local
 	      else (* k >= depth *) S
 	    | sTS (I.Dot(I.Idx(k), s), S) =
 		sTS (s, I.App(I.Root(I.BVar(k), I.Nil), S))
-	    | sTS (I.Dot(I.Exp(U, _), s), S) =
+	    | sTS (I.Dot(I.Exp(U), s), S) =
 		sTS (s, I.App(U, S))
       in
 	sTS (s, I.Nil)
@@ -339,7 +339,7 @@ local
   and fmtSub'' (G, d, l, I.Shift(k)) = [Str ("^" ^ Int.toString k), Str "]"]
     | fmtSub'' (G, d, l, I.Dot(I.Idx(k), s)) =
         Str (Names.bvarName (G, k)) :: Str "." :: F.Break :: fmtSub' (G, d, l+1, s)
-    | fmtSub'' (G, d, l, I.Dot(I.Exp(U,_), s)) =
+    | fmtSub'' (G, d, l, I.Dot(I.Exp(U), s)) =
 	fmtExp (G, d+1, noCtxt, (U, I.id))
 	:: Str "." :: F.Break :: fmtSub' (G, d, l+1, s)
 

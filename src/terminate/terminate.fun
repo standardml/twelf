@@ -6,8 +6,6 @@ functor Terminate (structure Global : GLOBAL
 		   structure IntSyn': INTSYN
 		   structure Whnf : WHNF
 		     sharing Whnf.IntSyn = IntSyn'
-		   structure Pattern : PATTERN
-		     sharing Pattern.IntSyn = IntSyn'
 	           structure Conv : CONV
 		     sharing Conv.IntSyn = IntSyn'
 	           structure Unify : UNIFY
@@ -98,7 +96,7 @@ struct
 	    | select''W (n, ((I.App (U', S'), s'), 
 			     (I.Pi ((I.Dec (_, V1''), _), V2''), s''))) = 
 		select'' (n-1, ((S', s'), 
-				(V2'', I.Dot (I.Exp (I.EClo (U', s'), V1''), s''))))
+				(V2'', I.Dot (I.Exp (I.EClo (U', s')), s''))))
 	  fun select' (Order.Arg n) = Order.Arg (select'' (n, ((S, s), Vid)))
 	    | select' (Order.Lex L) = Order.Lex (map select' L)
 	    | select' (Order.Simul L) = Order.Simul (map select' L)
@@ -131,15 +129,15 @@ struct
     fun isParameter (Q, X) = isParameterW (Q, Whnf.whnf (X, I.id))
 
     and isParameterW (Q, Us) = 
-        isUniversal (I.ctxLookup (Q, Pattern.etaContract (I.EClo Us)))
-	handle Pattern.Eta => isFreeEVar (Us)
+        isUniversal (I.ctxLookup (Q, Whnf.etaContract (I.EClo Us)))
+	handle Whnf.Eta => isFreeEVar (Us)
 
     (* isFreeEVar (Us) = true
        iff Us represents a possibly lowered uninstantiated EVar.
 
        Invariant: it participated only in matching, not full unification
     *)
-    and isFreeEVar (I.EVar (_, _, nil), _) = true   (* constraints must be empty *)
+    and isFreeEVar (I.EVar (_, _, _, nil), _) = true   (* constraints must be empty *)
       | isFreeEVar (I.Lam (D, U), s) = isFreeEVar (Whnf.whnf (U, I.dot1 s))
       | isFreeEVar _ = false
 
@@ -178,21 +176,21 @@ struct
 	      (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc) =
           if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
 	    let  (* enforce that X is only instantiated to parameters *) 
-	      val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      val sc' = fn () => (isParameter (Q, X); sc ())    
 	    in
 	      lt (G, Q, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		   (V', I.Dot (I.Exp (X, V2'), s2'))), sc')
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc')
 	    end
 	  else
 	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
 	      let 
-		val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      in
 		lt (G, Q, ((U, s1), (V, s2)), 
-		    ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		     (V', I.Dot (I.Exp (X, V2'), s2'))), sc)
+		    ((U', I.Dot (I.Exp (X), s1')), 
+		     (V', I.Dot (I.Exp (X), s2'))), sc)
 	      end
 	    else false  (* possibly redundant if lhs always subordinate to rhs *)
 
@@ -206,7 +204,7 @@ struct
 				   (I.Pi ((I.Dec (_, V1'), _), V2'), s2')), sc) = 
 	  le (G, Q, (Us, Vs), ((U', s1'), (V1', s2')), sc) orelse 
 	  ltSpine (G, Q, (Us, Vs), 
-		   ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1'), V1'), s2'))), sc)
+		   ((S', s1'), (V2', I.Dot (I.Exp (I.EClo (U', s1')), s2'))), sc)
 
 
     (* eq (G, ((U, s1), (V, s2)), (U', s'), sc) = B
@@ -224,8 +222,8 @@ struct
     *)
     and eq (G, (Us, Vs), (Us', Vs'), sc) = 
         Trail.trail (fn () =>
-		     Unify.unifiable (Vs, Vs')
-		     andalso Unify.unifiable (Us, Us')
+		     Unify.unifiable (G, Vs, Vs')
+		     andalso Unify.unifiable (G, Us, Us')
 		     andalso sc ())
 
     (* le (G, Q, ((U, s1), (V, s2)), (U', s'), sc) = B
@@ -250,23 +248,23 @@ struct
 	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *)
 	  then 
 	    let
-	      val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      (* enforces that X can only bound to parameter or remain uninstantiated *)
 	      val sc' = fn () => (isParameter (Q, X) andalso sc ())
 	    in                         
 	      le (G, Q, ((U, s1), (V, s2)), 
-		  ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		   (V', I.Dot (I.Exp (X, V2'), s2'))), sc')
+		  ((U', I.Dot (I.Exp (X), s1')), 
+		   (V', I.Dot (I.Exp (X), s2'))), sc')
 	    end
 	else
 	  if Subordinate.below  (I.targetFam V1', I.targetFam V)
 	    then
 	      let 
-		val X = I.newEVar (I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
+		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      in
 		le (G, Q, ((U, s1), (V, s2)), 
-		    ((U', I.Dot (I.Exp (X, V1'), s1')), 
-		     (V', I.Dot (I.Exp (X, V2'), s2'))), sc)
+		    ((U', I.Dot (I.Exp (X), s1')), 
+		     (V', I.Dot (I.Exp (X), s2'))), sc)
 	      end
 	  else false (* impossible, if additional invariant assumed (see ltW) *)
       | leW (G, Q, (Us, Vs), (Us', Vs'), sc) = 

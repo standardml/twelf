@@ -9,8 +9,10 @@ functor AbsMachine (structure IntSyn' : INTSYN
 		      sharing CompSyn'.IntSyn = IntSyn'
 		    structure Unify : UNIFY
 		      sharing Unify.IntSyn = IntSyn'
-		    structure Assign : ASSIGN
+		    (*
+                    structure Assign : ASSIGN
 		      sharing Assign.IntSyn = IntSyn'
+		    *)
 		    structure Trail : TRAIL
 		      sharing Trail.IntSyn = IntSyn'
 		    (* CPrint currently unused *)
@@ -90,42 +92,44 @@ struct
      Effects: instantiation of EVars in p[s'], r[s], and dProg
               any effect  sc S  might have
   *)
-  and rSolve (ps', (Eq(Q), s), dProg, sc) =
+  and rSolve (ps', (Eq(Q), s), (G, dPool), sc) =
      (showTrace (fn () => "unifying...\n");
-      if Unify.unifiable (ps', (Q, s))	(* effect: instantiate EVars *)
+      if Unify.unifiable (G, ps', (Q, s)) (* effect: instantiate EVars *)
 	then sc I.Nil			(* call success continuation *)
       else ()				(* fail *)
 	)
+    (* Fri Jan 15 14:29:28 1999 -fp,cs
     | rSolve (ps', (Assign(Q, ag), s), dProg, sc) = 
      (showTrace (fn () => "assigning...\n");
       if Assign.assignable (ps', (Q, s)) then
 	aSolve ((ag, s), dProg, (fn () => sc I.Nil))
       else ())
-    | rSolve (ps', (And(r, A, g), s), dProg, sc) =
+    *)
+    | rSolve (ps', (And(r, A, g), s), dProg as (G, dPool), sc) =
       let
 	(* is this EVar redundant? -fp *)
-	val X = I.newEVar (I.EClo(A, s))
+	val X = I.newEVar (G, I.EClo(A, s))
       in
-        rSolve (ps', (r, I.Dot(I.Exp(X,A), s)), dProg,
+        rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg,
 		(fn S => solve ((g, s), dProg,
 				(fn M => sc (I.App (M, S))))))
       end
-    | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg, sc) =
+    | rSolve (ps', (Exists(I.Dec(_,A), r), s), dProg as (G, dPool), sc) =
       let
-	val X = I.newEVar (I.EClo (A,s))
+	val X = I.newEVar (G, I.EClo (A,s))
 
 	val _ = showTrace (fn () => "introducing existential variable...\n")
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X,A), s)), dProg,
+	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg,
 		(fn S => sc (I.App(X,S))))
       end
-    | rSolve (ps', (Exists'(I.Dec(_,A), r), s), dProg, sc) =
+    | rSolve (ps', (Exists'(I.Dec(_,A), r), s), dProg as (G, dPool), sc) =
       let
-	val X = I.newEVar (I.EClo (A,s))
+	val X = I.newEVar (G, I.EClo (A,s))
 
 	val _ = showTrace (fn () => "introducing existential' variable...\n")
       in
-	rSolve (ps', (r, I.Dot(I.Exp(X,A), s)), dProg, sc)
+	rSolve (ps', (r, I.Dot(I.Exp(X), s)), dProg, sc)
    	          (* we don't increase the proof term here! *)
       end
 
@@ -137,10 +141,12 @@ struct
        sc () is evaluated
      Effects: instantiation of EVars in ag[s], dProg and sc () *)
   and aSolve ((Trivial, s), dProg, sc) = sc ()
+    (* Fri Jan 15 14:31:20 1999 -fp,cs
     | aSolve ((Unify(I.Eqn(e1, e2), ag), s), dProg, sc) =
     (showTrace (fn () => "unifying...\n");
      if Unify.unifiable ((e1, s), (e2, s)) then aSolve ((ag, s), dProg, sc)
      else ())
+    *)
 
   (* matchatom ((p, s), dProg, sc) => ()
      Invariants:

@@ -39,6 +39,7 @@ in
   val _ = Twelf.loadFile "TEST/cp.elf"
   val _ = test ["cpt"]
 
+
   (* Regression test for ccc *)
   val _ = load "examples/ccc/sources.cfg"
   val _ = test ["conc"]

@@ -11,8 +11,10 @@ functor Search (structure IntSyn' : INTSYN
 		sharing Whnf.IntSyn = IntSyn'
 		structure Unify : UNIFY
 		sharing Unify.IntSyn = IntSyn'
+		(*
 		structure Assign : ASSIGN
 		sharing Assign.IntSyn = IntSyn'
+		*)
 		structure Compile : COMPILE
 		sharing Compile.IntSyn = IntSyn'
 		sharing Compile.CompSyn = CompSyn'
@@ -82,47 +84,51 @@ struct
 	    used in the universal case for max search depth)
        if G |- S :: r[s] then G |- sc : (r >> p[s']) => Answer
   *)
-  and rSolve (ps', (C.Eq Q, s), DProg, sc, acck as (acc, k)) =
-      if Unify.unifiable (ps', (Q, s))
+  and rSolve (ps', (C.Eq Q, s), (G, dPool), sc, acck as (acc, k)) =
+      if Unify.unifiable (G, ps', (Q, s))
 	then sc (I.Nil, acck)
       else acc
       (* replaced below by above.  -fp Mon Aug 17 10:41:09 1998
         ((Unify.unify (ps', (Q, s)); sc (I.Nil, acck)) handle Unify.Unify _ => acc) *)
+    (*
     | rSolve (ps', (C.Assign (Q, ag), s), DProg, sc, acck as (acc, k)) =
         ((Assign.assign (ps', (Q, s));
 	  aSolve ((ag, s), DProg, (fn () => sc (I.Nil, acck)) , acc))
 	  handle Unify.Unify _ => acc
 	       | Assign.Assign _ => acc)
-    | rSolve (ps', (C.And (r, A, g), s), DProg, sc, acck) =
+    *)
+    | rSolve (ps', (C.And (r, A, g), s), DProg as (G, dPool), sc, acck) =
       let
-	val X = I.newEVar (I.EClo(A, s))
+	val X = I.newEVar (G, I.EClo(A, s))
       in
-	rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
+	rSolve (ps', (r, I.Dot (I.Exp (X), s)), DProg,
 		(fn (S, acck') => solve ((g, s), DProg,
 					 (fn (M, acck'') => sc (I.App (M, S), acck'')), 
 					 acck')), acck)
       end
-    | rSolve (ps', (C.Exists (I.Dec (_, A), r), s), DProg, sc, acck) =
+    | rSolve (ps', (C.Exists (I.Dec (_, A), r), s), DProg as (G, dPool), sc, acck) =
         let
-	  val X = I.newEVar (I.EClo (A, s))
+	  val X = I.newEVar (G, I.EClo (A, s))
 	in
-	  rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
+	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), DProg,
 		  (fn (S, acck') => sc (I.App (X, S), acck')), acck)
 	end
-    | rSolve (ps', (C.Exists' (I.Dec (_, A), r), s), DProg, sc, acck) =
+    | rSolve (ps', (C.Exists' (I.Dec (_, A), r), s), DProg as (G, dPool), sc, acck) =
         let
-	  val X = I.newEVar (I.EClo (A, s))
+	  val X = I.newEVar (G, I.EClo (A, s))
 	in
-	  rSolve (ps', (r, I.Dot (I.Exp (X, A), s)), DProg,
+	  rSolve (ps', (r, I.Dot (I.Exp (X), s)), DProg,
 		  (fn (S, acck') => sc (S, acck')), acck)
 	end
 
   (* aSolve ... *)
   and aSolve ((C.Trivial, s), DProg, sc, acc) = sc ()
+    (* Fri Jan 15 16:04:39 1999 -fp,cs
     | aSolve ((C.Unify(I.Eqn(e1, e2), ag), s), DProg, sc, acc) =
       ((Unify.unify ((e1, s), (e2, s));
         aSolve ((ag, s), DProg, sc, acc))
        handle Unify.Unify _ => acc)
+     *)
 
   (* matchatom ((p, s), (G, dPool), sc, (acc, k)) => ()
      G |- s : G'
@@ -188,7 +194,7 @@ struct
       | occursInExpW (r, (I.Root (_, S), s)) = occursInSpine (r, (S, s))
       | occursInExpW (r, (I.Lam (D, V), s)) = 
 	  occursInDec (r, (D, s)) orelse occursInExp (r, (V, I.dot1 s))
-      | occursInExpW (r, (I.EVar (r' ,V', _), s)) = 
+      | occursInExpW (r, (I.EVar (r' , _, V', _), s)) = 
           (r = r') orelse occursInExp (r, (V', s))
 
     and occursInSpine (_, (I.Nil, _)) = false
@@ -206,7 +212,7 @@ struct
         r does not occur in any type of EVars in GE
     *)
     fun nonIndex (_, nil) = true
-      | nonIndex (r, (G, I.EVar (_, V, _)) :: GE) = 
+      | nonIndex (r, (G, I.EVar (_, _, V, _)) :: GE) = 
           (not (occursInExp (r, (V, I.id)))) andalso nonIndex (r, GE)
 
     (* select (GE, (V, s), acc) = acc'
@@ -222,7 +228,7 @@ struct
     (* Efficiency: repeated whnf for every subterm in Vs!!! *)
 
     fun selectEVar (nil, _, acc) = acc
-      | selectEVar ((GX as (G, I.EVar (r, _, _))) :: GE, Vs, acc) = 
+      | selectEVar ((GX as (G, I.EVar (r, _, _, _))) :: GE, Vs, acc) = 
           if occursInExp (r, Vs) andalso nonIndex (r, acc) then
 	    selectEVar (GE, Vs, GX :: acc)
 	  else selectEVar (GE, Vs, acc)
@@ -236,14 +242,14 @@ struct
        and   G' |- X' : a S
     *)
     (* Efficiency improvement: do not create intermediate EVars -fp *)
-    fun lowerEVar (GX as (G, X as I.EVar (r, V, C))) = 
+    fun lowerEVar (GX as (G, X as I.EVar (r, _, V, C))) = 
           lowerEVar' (G, X, Whnf.whnf (V, I.id), C)
     and lowerEVar' (G, X, (V as I.Root _, s (* = id *)), C) = 
           (G, X)
-      | lowerEVar' (G, X as I.EVar (r, _, _), (I.Pi ((D, _), V), s), C) =
+      | lowerEVar' (G, X as I.EVar (r, _, _, _), (I.Pi ((D, _), V), s), C) =
 	let
 	  val D' = I.decSub (D, s)
-	  val X' = I.newEVar (I.EClo (V, I.dot1 s))
+	  val X' = I.newEVar (I.Decl (G, D'), I.EClo (V, I.dot1 s))
 	in
 	  (r := SOME (I.Lam (D', X')); lowerEVar (I.Decl (G, D'), X'))
 	end
@@ -274,7 +280,7 @@ struct
         (* Possible optimization: 
 	   Check if there are still variables left over
 	*)
-      | searchEx' max ((G, I.EVar (r, V, _)) :: GE, sc) = 
+      | searchEx' max ((G, I.EVar (r, _, V, _)) :: GE, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 
@@ -328,7 +334,7 @@ struct
     (* Shared contexts in GEVars may recompiled many times *)
 
     fun searchAll' (nil, acc, sc) = sc () :: acc
-      | searchAll' ((G, I.EVar (r, V, _)) :: GE, acc, sc) = 
+      | searchAll' ((G, I.EVar (r, _, V, _)) :: GE, acc, sc) = 
 	  solve ((Compile.compileGoal (G, V), I.id), 
 		 Compile.compileCtx false G, 
 		 (fn (U', (acc', _)) => (Trail.instantiateEVar (r, U'); 

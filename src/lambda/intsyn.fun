@@ -56,8 +56,8 @@ struct
   | Root  of Head * Spine		(*     | C @ S                *)
   | Redex of Exp * Spine		(*     | U @ S                *)
   | Lam   of Dec * Exp			(*     | lam D. U             *)
-  | EVar  of Exp option ref * Exp * Eqn list
-					(*     | X<I> : V             *)
+  | EVar  of Exp option ref * Dec Ctx * Exp * Eqn list
+					(*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
     
   and Head =				(* Heads:                     *)
@@ -77,13 +77,14 @@ struct
 
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
-  | Exp of Exp * Exp			(*     | (U:V)                *)
+  | Exp of Exp				(*     | U                    *)
+  | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
     Dec of name option * Exp		(* D ::= x:V                  *)
     
   and Eqn =			        (* Equations                  *)
-    Eqn of Exp * Exp			(* Eqn ::= (U1 == U2)         *)
+    Eqn of Dec Ctx * Exp * Exp		(* Eqn ::= G|-(U1 == U2)      *)
 
   type dctx = Dec Ctx			(* G = . | G,D                *)
   type root = Head * Spine		(* R = H @ S                  *)
@@ -188,6 +189,12 @@ struct
   *)
   val shift = Shift(1)
 
+  (* invShift = ^-1 = _.^0
+     Invariant:
+     G |- ^-1 : G, V     ^-1 is patsub
+  *)
+  val invShift = Dot(Undef, id)
+
   (* bvarSub (n, s) = Ft'
    
      Invariant: 
@@ -206,9 +213,14 @@ struct
      If   G |- s : G'     G' |- Ft : V
      then Ft' = Ft [s]
      and  G |- Ft' : V [s]
+
+     NOTE: EClo (U, s) might be undefined, so if this is ever
+     computed eagerly, we must introduce an "Undefined" exception,
+     raise it in whnf and handle it here so Exp (EClo (U, s)) => Undef
   *)
   and frontSub (Idx (n), s) = bvarSub (n, s)
-    | frontSub (Exp (U, V), s) = Exp(EClo (U, s),V)
+    | frontSub (Exp (U), s) = Exp (EClo (U, s))
+    | frontSub (Undef, s) = Undef
 
   (* decSub (x:V, s) = D'
 
@@ -264,24 +276,34 @@ struct
   fun dot1 (s as Shift (0)) = s
     | dot1 s = Dot (Idx(1), comp(s, shift))
 
+  (* invDot (s) = s'
+     invDot (1. s' o ^) = s'
+
+     Invariant:
+     s = 1 . s' o ^
+     If G' |- s' : G
+     (so G',V[s] |- s : G,V)
+  *)
+  fun invDot1 (s) = comp (comp(shift, s), invShift)
+
   (* EVar related functions *)
 
-  (* newEVar (V) = newEVarCnstr (V, nil) *)
-  fun newEVar (V) = EVar(ref NONE, V, nil)
+  (* newEVar (G, V) = newEVarCnstr (G, V, nil) *)
+  fun newEVar (G, V) = EVar(ref NONE, G, V, nil)
 
-  (* newEVar (V, Cnstr) = X, X new, constraints Cnstr
+  (* newEVar (G, V, Cnstr) = X, X new, constraints Cnstr
      If   G |- V : L
             |= Cnstr Con  (Cnstr are valid constraints, each in its own context)
      then G |- X : V
           X is the immediate successor variable to the
           variable Y indexing Cnstr
   *)
-  fun newEVarCnstr (V, Cnstr) = EVar(ref NONE, V, Cnstr)
+  fun newEVarCnstr (G, V, Cnstr) = EVar(ref NONE, G, V, Cnstr)
 
-  (* newTypeVar () = X, X new
+  (* newTypeVar (G) = X, X new
      where G |- X : type
   *)
-  fun newTypeVar () = EVar(ref NONE, Uni(Type), nil)
+  fun newTypeVar (G) = EVar(ref NONE, G, Uni(Type), nil)
 
   (* Type related functions *)
 
@@ -294,7 +316,7 @@ struct
     | targetFamOpt (Root (Def(cid), _)) = SOME(cid)
     | targetFamOpt (Redex (V, S)) = targetFamOpt V
     | targetFamOpt (Lam (_, V)) = targetFamOpt V
-    | targetFamOpt (EVar (ref (SOME(V)), _,_)) = targetFamOpt V
+    | targetFamOpt (EVar (ref (SOME(V)),_,_,_)) = targetFamOpt V
     | targetFamOpt (EClo (V, s)) = targetFamOpt V
     | targetFamOpt _ = NONE
       (* Root(Bvar _, _), Root(FVar _, _), EVar(ref NONE,..), Uni *)

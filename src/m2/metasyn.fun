@@ -48,9 +48,8 @@ struct
       | createEVarSpineW (G, Vs as (I.Root _, s)) = (I.Nil, Vs)   (* s = id *)
       | createEVarSpineW (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s)) =  
 	let 
-	  val X = I.newEVar (I.EClo (V1, s))
-	  val (S, Vs) = createEVarSpine (I.Decl (G, I.decSub (D, s)), 
-					 (V2, I.Dot (I.Exp (X, V1), s)))
+	  val X = I.newEVar (G, I.EClo (V1, s))
+	  val (S, Vs) = createEVarSpine (G, (V2, I.Dot (I.Exp (X), s)))
 	in
 	  (I.App (X, S), Vs)
 	end

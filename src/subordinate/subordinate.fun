@@ -207,7 +207,7 @@ struct
 		      (I.Pi ((I.Dec (_, V1), _), V2), s2)) =
 	  (installExp (G, (U, s1), (V1, s2));
 	   installSpine (G, (S, s1), 
-			 Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1), V1), s2))))
+			 Whnf.whnf (V2, I.Dot (I.Exp (I.EClo (U, s1)), s2))))
 
     (* inferCon (G, C) = V'
 
@@ -241,6 +241,19 @@ struct
 	   | SOME a => installExp (I.Null, (V, I.id), (I.Uni I.Type, I.id))
       end
 
+    (* weaken (G, a) = (w')
+    *)
+    fun weaken (I.Null, a) = I.id
+      | weaken (I.Decl (G', D as I.Dec (name, V)), a) = 
+        let 
+	  val w' = weaken (G', a) 
+	in
+	  if belowEq (I.targetFam V, a) then I.dot1 w'
+	  else I.comp (w', I.shift)
+	end
+
+
+
   in
     val reset = reset
      
@@ -249,5 +262,8 @@ struct
     val below = below
     val belowEq = belowEq
     val equiv = equiv
+
+    val weaken = weaken
+
   end (* local *)
 end; (* functor Subordinate *)

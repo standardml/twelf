@@ -4,8 +4,6 @@
 functor Abstract (structure IntSyn' : INTSYN
 		  structure Whnf    : WHNF
 		    sharing Whnf.IntSyn = IntSyn'
-		  structure Pattern : PATTERN
-		    sharing Pattern.IntSyn = IntSyn'
 		  structure Unify   : UNIFY
 		    sharing Unify.IntSyn = IntSyn'
 		  structure Constraints : CONSTRAINTS
@@ -58,7 +56,7 @@ struct
     (* eqEVar X Y = B
        where B iff X and Y represent same variable
     *)
-    fun eqEVar (I.EVar (r1, _, _)) (EV (r2,  _)) = (r1 = r2)
+    fun eqEVar (I.EVar (r1, _, _, _)) (EV (r2,  _)) = (r1 = r2)
       | eqEVar _ _ = false
 
     (* eqFVar F Y = B
@@ -112,37 +110,16 @@ struct
 	  then I.Pi ((D, I.Maybe), V)
 	else I.Pi ((D, I.No), V)
 
-    (* raiseType (G, (V, s)) = V'
-     
-       Invariant: 
-       If   G |- s : G'     G' |- V : L
-       then V' = {G'} V
-       and  . |- V' : L
+    (* raiseType (G, V) = {{G}} V
+
+       Invariant:
+       If G |- V : L
+       then  . |- {{G}} V : L
+
+       All abstractions are potentially dependent.
     *)
-    fun raiseType (G, (V, s)) = 
-      let 
-	val depth = I.ctxLength (G)
-	fun raiseType' (I.Shift (k), V) =
-	    if k < depth
-	      then raiseType' (I.Dot (I.Idx (k+1), I.Shift (k+1)), V)
-	    else (* k = depth *) V
-	  | raiseType' (I.Dot (I.Idx (k), s'), V) =
-            let val D =
-	          if Pattern.checkSub s'
-		    then let
-			   val I.Dec (name, V) =  I.ctxDec (G, k)
-			 in (* must succeed --- do not handle Unify.NonInvertible *)
-			   I.Dec (name, Unify.safeInvertExp((V, I.id), s'))
-			 end
-		  else raise Error "Typing ambiguous -- mixed substitution cannot be raised"
-	    in
-	      raiseType' (s', I.Pi ((D, I.Maybe), V))
-	    end
-	  | raiseType' (I.Dot (I.Exp (_, V'), s'), V) =
-	      raiseType' (s', I.Pi ((I.Dec (NONE, V'), I.Maybe), V))
-      in
-	raiseType' (s, V)
-      end
+    fun raiseType (I.Null, V) = V
+      | raiseType (I.Decl (G, D), V) = raiseType (G, I.Pi ((D, I.Maybe), V))
 
     (* collectExpW (G, (U, s), K) = K'
 
@@ -166,12 +143,12 @@ struct
 	  collectSpine (G, (S, s), K)
       | collectExpW (G, (I.Lam (D, U), s), K) =
 	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
-      | collectExpW (G, (X as I.EVar (r, V, Cnstr), s), K) =
+      | collectExpW (G, (X as I.EVar (r, GX, V, Cnstr), s), K) =
 	  if exists (eqEVar X) K
 	    then collectSub(G, s, K)
 	  else let
 	         val _ = checkEmpty Cnstr
-		 val V' = raiseType(G, (V, s))
+		 val V' = raiseType (GX, V)
 	       in
 		 collectSub(G, s, I.Decl (collectExp (I.Null, (V', I.id), K), EV(r, V')))
 	       end
@@ -215,10 +192,7 @@ struct
     *)
     and collectSub (G, I.Shift _, K) = K
       | collectSub (G, I.Dot (I.Idx _, s), K) = collectSub (G, s, K)
-      | collectSub (G, I.Dot (I.Exp (U, V), s), K) =
-          (* Staging invariant guarantees that we do not need to collect in V? -fp *)
-          (* relies on left-to-right traversal, see also remarks on invertExpW in unify.fun *)
-          (* pre-Twelf 1.2 code walk Fri May  8 11:08:40 1998 *)
+      | collectSub (G, I.Dot (I.Exp (U), s), K) =
 	  collectSub (G, s, collectExp (G, (U, I.id), K))
 
     (* abstractEVar (K, depth, X) = C'
@@ -230,7 +204,7 @@ struct
        then C' = BVar (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractEVar (I.Decl (K', EV (r', _)), depth, X as I.EVar (r, _, _)) =
+    fun abstractEVar (I.Decl (K', EV (r', _)), depth, X as I.EVar (r, _, _, _)) =
         if r = r' then I.BVar (depth+1)
 	else abstractEVar (K', depth+1, X)
       | abstractEVar (I.Decl (K', FV (n', _)), depth, X) = 
@@ -301,7 +275,7 @@ struct
 	else (* k = depth *) S
       | abstractSub (K, depth, I.Dot (I.Idx (k), s), S) =
 	  abstractSub (K, depth, s, I.App (I.Root (I.BVar (k), I.Nil), S))
-      | abstractSub (K, depth, I.Dot (I.Exp (U, _), s), S) =
+      | abstractSub (K, depth, I.Dot (I.Exp (U), s), S) =
 	  abstractSub (K, depth, s, I.App (abstractExp (K, depth, (U, I.id)), S))
  
     (* abstractSpine (K, depth, (S, s)) = S'
@@ -451,7 +425,6 @@ struct
          | _ => false
 
   in
-    val raiseType = raiseType
     val piDepend = piDepend
     val closedDec = closedDec
 

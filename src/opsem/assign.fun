@@ -35,7 +35,7 @@ struct
     fun expandPattern (Uni L, s) = (Uni L, s)
       | expandPattern (Root (BVar k, Nil), s) =
           (case bvarSub (k, s)
-	     of Exp (U, V) => (U, id))
+	     of Exp (U) => (U, id))
 	     (* no other cases *)
       | expandPattern (Root (H, S), s) =
 	     (Root(H, SClo (S, s)), id)
@@ -59,11 +59,11 @@ struct
 		  assignExp (Whnf.expandDef Us1, Us2)
 	  | _ => raise Assign "head mismatch")
       | assignExpW (Us1 as (U, s1),
-		    Us2 as (EVar(r2, V2, nil), s2)) =
+		    Us2 as (EVar(r2, _, V2, nil), s2)) =
 	    (* s2 = id *)
 	    r2 := SOME (EClo Us1)
 
-      | assignExpW (Us1 as (EVar(r, V, Cnstr), s), Us2) =
+      | assignExpW (Us1 as (EVar(r, _, V, Cnstr), s), Us2) =
 	    Unify.unify (Us1, Us2)
 
       | assignExpW _ = (print "huh\n"; raise Assign "huh")

@@ -2,7 +2,6 @@ structure Terminate =
   Terminate (structure Global = Global
 	     structure IntSyn' = IntSyn
 	     structure Whnf = Whnf
-	     structure Pattern = Pattern
 	     structure Conv = Conv
 	     structure Unify = UnifyTrail
 	     structure Trail = Trail

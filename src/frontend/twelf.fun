@@ -317,6 +317,8 @@ struct
 
       (* Prove declaration *)
       | install1 (fileName, Parser.ProveDec lterm) =
+(*        ()
+      (* Fri Jan 15 16:48:09 1999 -fp *)*)
 	let 
 	  val (ThmSyn.PDecl (depth, T), rrs) = ThmRecon.proveToProve lterm 
 	  val La = Thm.install (T, rrs)  (* La is the list of type constants *)

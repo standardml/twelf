@@ -33,8 +33,8 @@ sig
   | Root  of Head * Spine		(*     | H @ S                *)
   | Redex of Exp * Spine		(*     | U @ S                *)
   | Lam   of Dec * Exp			(*     | lam D. U             *)
-  | EVar  of Exp option ref * Exp * Eqn list
-                                        (*     | X<I> : V, Cnstr      *)
+  | EVar  of Exp option ref * Dec Ctx * Exp * Eqn list
+                                        (*     | X<I> : G|-V, Cnstr   *)
   | EClo  of Exp * Sub			(*     | U[s]                 *)
 
   and Head =				(* Head:                      *)
@@ -42,7 +42,7 @@ sig
   | Const of cid			(*     | c                    *)
   | Def   of cid			(*     | d                    *)
   | FVar  of name * Exp * Sub		(*     | F[s]                 *)
-    
+
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
   | App   of Exp * Spine		(*     | U ; S                *)
@@ -54,13 +54,14 @@ sig
 
   and Front =				(* Fronts:                    *)
     Idx of int				(* Ft ::= k                   *)
-  | Exp of Exp * Exp			(*     | (U:V)                *)
+  | Exp of Exp				(*     | U                    *)
+  | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
     Dec of name option * Exp		(* D ::= x:V                  *)
 
   and Eqn =				(* Equations:                 *)
-    Eqn of  Exp * Exp			(* Eqn ::= (U1 == U2)         *)
+    Eqn of  Dec Ctx * Exp * Exp	       	(* Eqn ::= G|-(U1 == U2)      *)
 
   (* Type abbreviations *)
   type dctx = Dec Ctx			(* G = . | G,D                *)
@@ -100,6 +101,7 @@ sig
 
   val id        : Sub			(* id                         *)
   val shift     : Sub			(* ^                          *)
+  val invShift  : Sub                   (* ^-1                        *)
 
   val bvarSub   : int * Sub -> Front    (* k[s]                       *)
   val frontSub  : Front * Sub -> Front	(* H[s]                       *)
@@ -107,12 +109,14 @@ sig
 
   val comp      : Sub * Sub -> Sub	(* s o s'                     *)
   val dot1      : Sub -> Sub		(* 1 . (s o ^)                *)
-    
+  val invDot1   : Sub -> Sub		(* (^ o s) o ^-1)             *)
+
   (* EVar related functions *)
 
-  val newEVar   : Exp -> Exp            (* creates X:V, []            *) 
-  val newEVarCnstr : Exp * Eqn list -> Exp  (* creates X:V, Cnstr     *)
-  val newTypeVar : unit -> Exp		(* creates X:type, []         *)
+  val newEVar   : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
+  val newEVarCnstr : dctx * Exp * Eqn list -> Exp 
+					(* creates X:G|-V, Cnstr      *)
+  val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
 
   (* Type related functions *)
 

@@ -83,9 +83,9 @@ struct
       | createEVars (M.Prefix (I.Decl (G, I.Dec (_, V)), I.Decl (M, M.Bot), I.Decl (B, _))) =
 	let 
 	  val (M.Prefix (G', M', B'), s', GE') = createEVars (M.Prefix (G, M, B))
-	  val X  = I.newEVar (I.EClo (V, s'))
+	  val X  = I.newEVar (G', I.EClo (V, s'))
 	in
-	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X, V), s'), (G', X) :: GE')
+	  (M.Prefix (G', M', B'), I.Dot (I.Exp (X), s'), (G', X) :: GE')
 	end
 
 

@@ -1,9 +1,7 @@
 (* Weak Head-Normal Forms *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
 
-functor Whnf (structure IntSyn' : INTSYN
-	      structure Pattern : PATTERN
-	         sharing Pattern.IntSyn = IntSyn')
+functor Whnf (structure IntSyn' : INTSYN)
   : WHNF =
 struct
   structure IntSyn = IntSyn'
@@ -35,6 +33,98 @@ struct
 
   local 
     open IntSyn
+
+    (* functions previously in the Pattern functor *)
+    (* eventually, they may need to be mutually recursive with whnf *)
+
+    (* isPatSub s = B
+
+       Invariant:
+       If    G |- s : G' 
+       and   s = n1 .. nm ^k
+       then  B iff  n1, .., nm pairwise distinct
+               and  ni <= k or ni = _ for all 1 <= i <= m
+    *)
+    fun isPatSub (Shift(k)) = true
+      | isPatSub (Dot (Idx (n), s)) = 
+          let fun checkBVar (Shift(k)) = (n <= k)
+		| checkBVar (Dot (Idx (n'), s)) = 
+	            n <> n' andalso checkBVar (s)
+		| checkBVar (Dot (Undef, s)) =
+		    checkBVar (s)
+		| checkBVar _ = false
+	  in
+	    checkBVar s andalso isPatSub s
+	  end
+      | isPatSub (Dot (Undef, s)) = isPatSub s
+      | isPatSub _ = false
+
+    exception Eta
+
+    (* etaContract (U, s, n) = k'
+
+       Invariant: 
+       if   G, V1, .., Vn |- s : G1  and  G1 |- U : V
+       then if   lam V1...lam Vn. U[s] =eta*=> k 
+	    then k' = k
+            and  G |- k' : Pi V1...Pi Vn. V [s]
+	    else Eta is raised
+	      (even if U[s] might be eta-reducible to some other expressions).
+    *)
+    (* optimization(?): quick check w/o substitution first *)
+    fun etaContract (Root (BVar(k), S), s, n) =
+        (case bvarSub (k, s)
+	   of Idx (k') => if k' > n
+			    then (etaContract' (S, s, n); k'-n)
+			  else raise Eta
+	    | _ => raise Eta)
+      | etaContract (Lam (D, U), s, n) =
+	  etaContract (U, dot1 s, n+1)
+      | etaContract (EClo (U, s'), s, n) =
+	  etaContract (U, comp (s', s), n)
+      | etaContract (EVar (ref (SOME(U)), _, _, _), s, n) =
+	  etaContract (U, s, n)
+      | etaContract _ = raise Eta
+        (* Should fail: (c@S), (d@S), (F@S), X *)
+        (* Not treated (fails): U@S *)
+        (* Could weak head-normalize for more thorough checks *)
+        (* Impossible: L, Pi D.V *)
+
+    (* etaContract' (S, s, n) = R'
+
+       Invariant:
+       If  G |- s : G1    and  G1 |- S : V > W
+       then if   S[s] =eta*=> n ; n-1 ; ... ; 1 ; Nil
+	    then () 
+       else Eta is raised
+    *)
+    and etaContract' (Nil, s, 0) = ()
+      | etaContract' (App(U, S), s, n) =
+          if etaContract (U, s, 0) = n
+	    then etaContract' (S, s, n-1)
+	  else raise Eta
+      | etaContract' (SClo (S, s'), s, n) =
+	  etaContract' (S, comp (s', s), n)
+      | etaContract' _ = raise Eta
+
+    (* dotEta (Ft, s) = s'
+       
+       Invariant: 
+       If   G |- s : G1, V  and G |- Ft : V [s]
+       then Ft  =eta*=>  Ft1
+       and  s' = Ft1 . s
+       and  G |- s' : G1, V
+    *)
+    fun dotEta (Ft as Idx _, s) = Dot (Ft, s)
+      | dotEta (Ft as Exp (U), s) =
+	let
+	  val Ft' = Idx (etaContract (U, id, 0))
+		   handle Eta => Ft
+	in
+	  Dot (Ft', s)
+	end
+      | dotEta (Ft as Undef, s) = Dot (Ft, s)
+ 
 
     (* appendSpine ((S1, s1), (S2, s2)) = S' 
 
@@ -69,8 +159,8 @@ struct
       | whnfRedex ((Root (H1, S1), s1), (S2, s2)) =
 	  (* S2 = App _, only possible if term is not eta-expanded *)
 	  (Root (H1, appendSpine ((S1, s1), (S2, s2))), id)
-      | whnfRedex ((Lam (Dec (_, V2), U1), s1), (App (U2, S), s2)) =
-	  whnfRedex (whnf (U1, Pattern.dotEta (frontSub (Exp (U2, V2), s2), s1)), (S, s2)) 
+      | whnfRedex ((Lam (_, U1), s1), (App (U2, S), s2)) =
+	  whnfRedex (whnf (U1, dotEta (frontSub (Exp (U2), s2), s1)), (S, s2)) 
       | whnfRedex (Us as (Lam _, s1), _) = Us  (* S2[s2] = Nil *)
       | whnfRedex (Us as (EVar _, s1), (Nil, s2)) = Us
       | whnfRedex (Us as (X as EVar _, s1), Ss2) = 
@@ -91,13 +181,16 @@ struct
        Effects: X is instantiated
     *)
     (* possible optimization: lower all the way to base type in one step *)
-    and lower (EVar (r, V, nil)) = lower' (r, whnf (V, id))
+    and lower (EVar (r, G, V, nil)) = lower' (r, G, whnf (V, id))
       | lower (EVar _) =
         (* It is not clear if this case can happen *)
         (* pre-Twelf 1.2 code walk, Fri May  8 11:05:08 1998 *)
         raise Error "Typing ambiguous -- constraint of functional type cannot be simplified"
-    and lower' (r, (Pi ((D', _), V'), s')) = 
-          (r := SOME (Lam (decSub (D', s'), newEVar (EClo (V', dot1 s')))))
+    and lower' (r, G, (Pi ((D', _), V'), s')) = 
+        let val D'' = decSub (D', s')
+	in
+          (r := SOME (Lam (D'', newEVar (Decl (G, D''), EClo (V', dot1 s')))))
+	end
         (* no other cases possible by well-typing invariant *)
 
     (* whnfRoot ((H, S), s) = (U', s')
@@ -113,7 +206,8 @@ struct
     and whnfRoot ((BVar (k), S), s)   =
         (case bvarSub (k, s)
 	   of Idx (k) => (Root (BVar (k), SClo (S, s)), id)
-	    | Exp (U,V) => whnfRedex (whnf (U, id), (S, s)))
+	    | Exp (U) => whnfRedex (whnf (U, id), (S, s)))
+	    (* Undef should be impossible *)
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((H, S), s) =
@@ -143,12 +237,12 @@ struct
       | whnf (Root R, s) = whnfRoot (R, s)
       | whnf (Redex (U, S), s) = whnfRedex (whnf (U, s), (S, s))
       | whnf (Us as (Lam _, s)) = Us
-      | whnf (EVar (ref (SOME U), _, _), s) = whnf (U, s)
+      | whnf (EVar (ref (SOME U), _, _, _), s) = whnf (U, s)
       (* | whnf (Us as (EVar _, s)) = Us *)
       (* next two avoid calls to whnf (V, id), where V is type of X *)
-      | whnf (Us as (EVar (r, Root _, _), s)) = Us 
-      | whnf (Us as (EVar (r, Uni _, _), s)) = Us 
-      | whnf (Us as (X as EVar (r, V, _), s)) = 
+      | whnf (Us as (EVar (r, _, Root _, _), s)) = Us 
+      | whnf (Us as (EVar (r, _, Uni _, _), s)) = Us 
+      | whnf (Us as (X as EVar (r, _, V, _), s)) = 
           (case whnf (V, id)
 	     of (Pi _, _) => (lower X; whnf Us)
 	      | _ => Us)
@@ -179,8 +273,8 @@ struct
     fun inferSpine ((Nil, _), Vs) = Vs
       | inferSpine ((SClo (S, s'), s), Vs) = 
           inferSpine ((S, comp (s', s)), Vs)
-      | inferSpine ((App (U, S), s1), (Pi ((Dec (_, V1), _), V2), s2)) =
-	  inferSpine ((S, s1), whnf (V2, Dot (Exp (EClo (U, s1), V1), s2)))
+      | inferSpine ((App (U, S), s1), (Pi (_, V2), s2)) =
+	  inferSpine ((S, s1), whnf (V2, Dot (Exp (EClo (U, s1)), s2)))
 
     (* inferCon (C) = V  if C = c or C = d and |- C : V *)
     fun inferCon (Const (cid)) = constType (cid)
@@ -283,7 +377,102 @@ struct
       | normalizeCtx (Decl (G, D)) = 
           Decl (normalizeCtx G, normalizeDec (D, id))
 
+
+
+
+    (* invert s = s'
+
+       Invariant:
+       If   G |- s : G'    (and s patsub)
+       then G' |- s' : G
+       s.t. s' o s = id  
+    *)
+    fun invert (s) = 
+      let
+        (* index (0, a1...ap.^n) = (n,p) *)
+	fun index (k, Dot (_, s')) = index (k+1, s')
+	  | index (k, Shift (n)) = (n, k)
+	  
+	fun init (0, p) = Shift p
+	  | init (n, p) = 
+              Dot (Undef, init (n-1, p))
+
+	fun update (Dot (Undef, s'), 1, ft) = Dot (ft, s') 
+	  | update (Dot (ft', s'), k, ft) = 
+              Dot (ft', update (s', k-1, ft))
+	  
+	fun recurse (k, Dot (Undef, s1), s2) = 
+              recurse (k+1, s1, s2)
+	  | recurse (k, Dot (Idx k1, s1), s2) =
+	      recurse (k+1, s1, update (s2, k1, Idx k))
+	  | recurse (k, Shift n, s2) = s2
+      in
+	recurse (1, s, init (index (0, s)))
+      end
+
+    
+    (* strengthen (t, G) = G'
+
+       Invariant:
+       If   G'' |- t : G    (* and t strsub *)
+       then G' |- t : G  and G' subcontext of G
+    *)
+    fun strengthen (Shift n, Null) = Null
+      | strengthen (Dot (Idx k, t), Decl (G, D)) =
+        let 
+	  val t' = comp (t, invShift)   (* bug fix -- cs *)
+	in
+          Decl (strengthen (t', G), decSub (D, t'))
+	end
+      | strengthen (Dot (Undef, t), Decl (G, d)) = 
+          strengthen (t, G)
+      | strengthen (Shift n, G) = 
+	  strengthen (Dot (Idx (n+1), Shift (n+1)), G)
+
+
+    (* isId s = B
+     
+       Invariant:
+       If   G |- s: G', s weakensub
+       then B holds 
+            iff s = id, G' = G
+    *)
+    fun isId' (Shift(k), k') = (k = k')
+      | isId' (Dot (Idx(n), s'), k') =
+          n = k' andalso isId' (s', k'+1)
+      | isId' _ = false
+    fun isId s = isId' (s, 0)
+
+    (* cloInv (U, w) = U[w^-1]
+
+       Invariant:
+       If G |- U : V
+          G |- w : G'  w weakening subst
+          U[w^-1] defined (without pruning or constraints)
+
+       then G' |- U[w^-1] : V[w^-1]
+       Effects: None
+    *)
+    fun cloInv (U, w) = EClo (U, invert w)
+
+    (* cloInv (s, w) = s o w^-1
+
+       Invariant:
+       If G |- s : G1
+          G |- w : G2  s weakening subst
+          s o w^-1 defined (without pruning or constraints)
+
+       then G2 |- s o w^-1 : G1
+       Effects: None
+    *)
+    fun compInv (s, w) = comp (s, invert w)
+
   in
+    val isPatSub = isPatSub
+    val dotEta = dotEta
+    exception Eta = Eta
+    val etaContract = (fn U => etaContract (U, id, 0))
+
     val whnf = whnf
     val expandDef = expandDef
     val etaExpandRoot = etaExpandRoot
@@ -292,5 +481,12 @@ struct
     val normalize = normalizeExp
     val normalizeDec = normalizeDec
     val normalizeCtx = normalizeCtx
+
+    val invert = invert
+    val strengthen = strengthen
+    val isId = isId
+
+    val cloInv = cloInv
+    val compInv = compInv
   end
 end;  (* functor Whnf *)

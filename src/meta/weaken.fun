@@ -2,8 +2,8 @@
 (* Author: Carsten Schuermann *)
 
 functor Weaken (structure IntSyn' : INTSYN
-		structure Unify : UNIFY
-		  sharing Unify.IntSyn = IntSyn') : WEAKEN = 
+		structure Whnf : WHNF
+		  sharing Whnf.IntSyn = IntSyn') : WEAKEN = 
 struct
   structure IntSyn = IntSyn'
 
@@ -17,7 +17,7 @@ struct
        and  G |- U : V
        then G' |- U' = U[s^-1] : V [s^-1] 
     *)
-    fun strengthenExp (U, s) = Unify.safeInvertExp ((U, I.id), s)
+    fun strengthenExp (U, s) = Whnf.normalize (Whnf.cloInv (U, s), I.id)
 
     (* strengthenDec (x:V, s) = x:V'
      
@@ -43,7 +43,7 @@ struct
 	  (I.Decl (G', strengthenDec (D, s')), I.dot1 s')
 	end
 
-    fun strengthenSub (s, t) = Unify.safeInvertSub (s, t)
+    fun strengthenSub (s, t) = Whnf.compInv (s, t)
 
     fun strengthenSpine (I.Nil, t) = I.Nil
       | strengthenSpine (I.App (U, S), t) = I.App (strengthenExp (U, t), strengthenSpine (S, t))

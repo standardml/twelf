@@ -17,16 +17,18 @@ structure CPrint =
 	  structure Formatter = Formatter
 	  structure Names = Names);
 
+(*
 structure Assign =
   Assign (structure IntSyn' = IntSyn
 	  structure Whnf = Whnf
 	  structure Unify = UnifyTrail);
+*)
 
 structure AbsMachine = 
   AbsMachine (structure IntSyn' = IntSyn
               structure CompSyn' = CompSyn
               structure Unify = UnifyTrail
-	      structure Assign = Assign
+	      (* structure Assign = Assign *)
               structure Trail = Trail
               structure CPrint = CPrint
               structure Names = Names); 

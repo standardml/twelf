@@ -38,7 +38,7 @@ struct
 
     (* auxToString (G, r) where G |- r auxgoal *)
     and auxToString t (G, Trivial) = ""
-      | auxToString t (G, Unify(IntSyn.Eqn(p1, p2), ga)) =
+      | auxToString t (G, Unify(IntSyn.Eqn(_, p1, p2), ga)) =
          t ^ "UNIFY   " ^ Print.expToString (G, p1) ^ " = " ^
                        Print.expToString (G, p2) ^ "\n" ^
          auxToString t (G, ga)

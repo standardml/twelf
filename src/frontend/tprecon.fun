@@ -16,7 +16,7 @@ struct
 
   fun var (name, depth) =
       let
-	val (X as IntSyn.EVar(_,V,_)) = Names.getEVar name
+	val (X as IntSyn.EVar(_,_,V,_)) = Names.getEVar name
 	val s = IntSyn.Shift depth
       in
 	(IntSyn.EClo (V, s),
@@ -59,8 +59,6 @@ functor TpRecon (structure Global : GLOBAL
 		 structure Paths' : PATHS
 		 structure Whnf : WHNF
 		   sharing Whnf.IntSyn = IntSyn'
-		 structure Pattern : PATTERN
-		   sharing Pattern.IntSyn = IntSyn'
 		 structure Unify : UNIFY
 		   sharing Unify.IntSyn = IntSyn'
 		 structure Abstract : ABSTRACT
@@ -205,14 +203,14 @@ struct
   (* as constant, bound variable, or free variable *)
 
   (* Constant *)
-  fun const ((c,i,V'), r, SS) =
+  fun const ((c,i,V'), r, (G, SS)) =
       let
 	fun supplyImplicit (0, (V', s)) = SS (IntSyn.EClo(V', s))
 	  | supplyImplicit (i, (IntSyn.Pi ((IntSyn.Dec (x, V1), _), V2), s)) =
 	    let
-	      val U1 = IntSyn.newEVar (IntSyn.EClo(V1, s))
+	      val U1 = IntSyn.newEVar (G, IntSyn.EClo(V1, s))
 	      val ((S2, V), os) =
-		     supplyImplicit (i-1, Whnf.whnf (V2, IntSyn.Dot(IntSyn.Exp(U1,V1), s)))
+		     supplyImplicit (i-1, Whnf.whnf (V2, IntSyn.Dot(IntSyn.Exp(U1), s)))
 	    in
 	      ((IntSyn.App (U1, S2), V), os)
 	    end
@@ -250,7 +248,7 @@ struct
       (case findBVar (name, G)
 	 of NONE => (case findConst (name)
 		       of NONE => error (r, "Undeclared constant " ^ name)
-			| SOME info => (const (info, r, SS)))
+			| SOME info => (const (info, r, (G, SS))))
           | SOME nV => bvar (nV, r, SS))
 
   (* ucid -- upper case identifier *)
@@ -258,7 +256,7 @@ struct
       (case findBVar (name, G)
 	 of NONE => (case findConst (name)
 		       of NONE => var (name, r, IntSyn.ctxLength G, SS)
-			| SOME info => const (info, r, SS))
+			| SOME info => const (info, r, (G, SS)))
 	  | SOME nV => bvar (nV, r, SS))
 
   (* quid -- quoted identifier *)
@@ -266,7 +264,7 @@ struct
   fun quid (name,r) (G, SS) =
       (case findConst (name)
 	 of NONE => error (r, "Undeclared quoted constant " ^ name)
-	  | SOME info => const (info, r, SS))
+	  | SOME info => const (info, r, (G, SS)))
 
   (* Application "tm1 tm2" *)
   fun app (tm1, tm2) (G, SS) =
@@ -281,22 +279,23 @@ struct
       (case Whnf.whnf (V1, IntSyn.id)
 	 of (IntSyn.Pi ((IntSyn.Dec (x, V1'), P), V1''), s) =>
 	    let
-	      val _ = Unify.unify ((V1', s), (V2, IntSyn.id))
+	      val _ = Unify.unify (G, (V1', s), (V2, IntSyn.id))
 		      handle Unify.Unify(msg) => mismatchError (G, (V1', s), UV2, msg)
-	      val ((S, V), os) = SS (IntSyn.EClo (V1'', Pattern.dotEta (IntSyn.Exp(U2,V1'), s)))
+	      val ((S, V), os) = SS (IntSyn.EClo (V1'', Whnf.dotEta (IntSyn.Exp(U2), s)))
 	    in
 	      ((IntSyn.App (U2, S), V), Paths.app (oc2, os))
 	    end
 	  | (V1, s) =>
 	    let
-	      val V1' = IntSyn.newTypeVar ()
-	      val V1'' = IntSyn.newTypeVar ()
+	      val V1' = IntSyn.newTypeVar (G)
+	      val D' = IntSyn.Dec (NONE, V1')
+	      val V1'' = IntSyn.newTypeVar (IntSyn.Decl (G, D'))
 	      (* Invariant: type families are always constants and *)
 	      (* therefore of known kind.  In case tm1 is a type family *)
 	      (* the other case (V1 = Pi x:A. K) applies *)
-	      val V = IntSyn.Pi ((IntSyn.Dec (NONE, V1'), IntSyn.Maybe), V1'')
+	      val V = IntSyn.Pi ((D', IntSyn.Maybe), V1'')
 	    in
-	      Unify.unify ((V1, s), (V, IntSyn.id))
+	      Unify.unify (G, (V1, s), (V, IntSyn.id))
 	      handle Unify.Unify (msg) => extraneousError (G, (V1, s), (U2, oc2));
 	      (* now, first case must apply *)
 	      app2' (UV2) (G, SS) (V)
@@ -330,7 +329,7 @@ struct
 	val ((U1, V1), oc1) = tm1 (G, nilSS)
 	val ((V2, L2), oc2) = tm2 (G, nilSS)
 	val _ = checkUni (L2, Paths.toRegion oc2)
-	val _ = Unify.unify ((V1, IntSyn.id), (V2, IntSyn.id))
+	val _ = Unify.unify (G, (V1, IntSyn.id), (V2, IntSyn.id))
 	        handle Unify.Unify(msg) => hasTypeError (G, (V1, oc1), (V2, oc2), msg)
       (* regions apply only to normal forms: errors in type ascriptions are hard *)
       (* to trace -- V2 and oc2 are ignored below. -fp *)
@@ -345,8 +344,8 @@ struct
   (* Omitted objects (from underscore) "_" *)
   fun omitobj (r) (G, SS) =
       let
-	val V = IntSyn.newTypeVar ()
-	val X = IntSyn.newEVar (V)
+	val V = IntSyn.newTypeVar (G)
+	val X = IntSyn.newEVar (G, V)
       in
 	  case SS V
 	    of ((IntSyn.Nil, V'), _) => ((X, V), Paths.leaf r) (* V = V' *)
@@ -356,7 +355,7 @@ struct
   (* Omitted types (from definitions) *)
   fun omittyp (r) (G, SS) =
       let
-	val X = IntSyn.newTypeVar ()
+	val X = IntSyn.newTypeVar (G)
       in
 	case SS (IntSyn.Uni (IntSyn.Type))
 	  of ((IntSyn.Nil, L), _) => ((X, L), Paths.leaf r) (* L = type *)
@@ -419,7 +418,7 @@ struct
   (* Declarations with implicit type "id" *)
   fun dec0 (x) (G) =
       let
-	val V = IntSyn.newTypeVar ()
+	val V = IntSyn.newTypeVar (G)
       in
 	(IntSyn.Dec (x, V), NONE)
       end
@@ -537,7 +536,7 @@ struct
 	val ((V, L), oc2) = (Timers.time Timers.recon termToExp0) tm2
 	val level = getUni (L, Paths.toRegion oc2)
 	val ((U, V'), oc1) = (Timers.time Timers.recon termToExp0) tm1
-	val _ = (Timers.time Timers.recon Unify.unify) ((V', IntSyn.id), (V, IntSyn.id))
+	val _ = (Timers.time Timers.recon Unify.unify) (IntSyn.Null, (V', IntSyn.id), (V, IntSyn.id))
 	        handle Unify.Unify (msg) => hasTypeError (IntSyn.Null, (V', oc1), (V, oc2), msg)
 	val (i, (U'', V'')) =
 	        (Timers.time Timers.abstract Abstract.abstractDef) (U, V)

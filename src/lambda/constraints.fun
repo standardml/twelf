@@ -24,21 +24,30 @@ struct
      or to a descendent  -fp?
   *)
 
-  (* simplify Eqns = Eqns'
-     Effects: simplifies the constraints in Eqns by removing constraints
-       of the form U = U' where G |- U == U' : V (mod beta/eta)
-       Neither U nor U' needs to be a pattern
-  *)
-  fun simplify nil = nil
-    | simplify ((Eqn as IntSyn.Eqn (U1, U2)) :: Cnstr) =
-      if Conv.conv ((U1, IntSyn.id), (U2, IntSyn.id))
-	then simplify Cnstr
-      else Eqn :: simplify Cnstr
+  local
+    structure I = IntSyn
+  
+    (* simplify Eqns = Eqns'
+       Effects: simplifies the constraints in Eqns by removing constraints
+         of the form U = U' where G |- U == U' : V (mod beta/eta)
+         Neither U nor U' needs to be a pattern
+	 *)
+    fun simplify nil = nil
+      | simplify ((Eqn as I.Eqn (G, U1, U2)) :: Cnstr) =
+        if Conv.conv ((U1, I.id), (U2, I.id))
+	  then simplify Cnstr
+        else Eqn :: simplify Cnstr
 
-  fun namesToString (name::nil) = name ^ "."
-    | namesToString (name::names) = name ^ ", " ^ namesToString names
+    fun namesToString (name::nil) = name ^ "."
+      | namesToString (name::names) = name ^ ", " ^ namesToString names
 
-  fun warnConstraints (nil) = ()
-    | warnConstraints (names) = print ("Constraints remain on " ^ namesToString names ^ "\n")
+    fun warnConstraints (nil) = ()
+      | warnConstraints (names) = print ("Constraints remain on " ^ namesToString names ^ "\n")
+
+  in
+    val simplify = simplify
+    val namesToString = namesToString
+    val warnConstraints = warnConstraints
+  end
 
 end;  (* functor Constraints *)

@@ -281,6 +281,7 @@ nj_ore u13
    NK.
 
 % Oh, what about excluded middle itself!
+
 %query 1 * D:({a:o} {ka:kolm a (not not a)} existskolm a (not not a) ka ->
                 sound % (a or (not a)) (not not ((not not a) or (not not not not not a)))
                       (nk_dnotr
@@ -335,6 +336,7 @@ nj_ore u13
 
 % How about the DeMorgan's Law Example which is an NK theorem, but not NJ.
 % -(A and B) -> -A or -B.
+
 %query 1 * D:({a:o} {b:o} {ka:kolm a (n a)} {kb:kolm b (n b)}
    existskolm a (n a) ka ->
    existskolm b (n b) kb ->

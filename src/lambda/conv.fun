@@ -67,7 +67,7 @@ struct
 			   App (Root (BVar (1), Nil), Nil)), dot1 s1),
 		   (U2, dot1 s2))
 
-      | convExpW ((EVar (r1, _, _), s1), (EVar(r2, _, _), s2)) = 
+      | convExpW ((EVar (r1, _, _, _), s1), (EVar(r2, _, _, _), s2)) = 
 	  (r1 = r2) andalso convSub (s1, s2)
 
       | convExpW _ = false
@@ -120,9 +120,11 @@ struct
       | convSub (Dot(Ft1,s1), Dot(Ft2,s2)) =
 	  (case (Ft1, Ft2) of
 	     (Idx (n1), Idx (n2)) => (n1 = n2)
-           | (Exp (U1, _), Exp (U2, _)) => convExp ((U1, id), (U2, id))
-	   | (Exp (U1, _), Idx (n2)) => convExp ((U1, id), (Root (BVar (n2), Nil), id))
-           | (Idx (n1), Exp (U2, _)) => convExp ((Root (BVar (n1), Nil), id), (U2, id)))
+           | (Exp (U1), Exp (U2)) => convExp ((U1, id), (U2, id))
+	   | (Exp (U1), Idx (n2)) => convExp ((U1, id), (Root (BVar (n2), Nil), id))
+           | (Idx (n1), Exp (U2)) => convExp ((Root (BVar (n1), Nil), id), (U2, id))
+	   | (Undef, Undef) => true
+	   | _ => false)
 	  andalso convSub (s1, s2)
 
     (* convDec ((x1:V1, s1), (x2:V2, s2)) = B

@@ -10,12 +10,12 @@ functor FunTypeCheck (structure FunSyn' : FUNSYN
 			sharing Conv.IntSyn = FunSyn'.IntSyn
 	              structure Whnf : WHNF
 			sharing Whnf.IntSyn = FunSyn'.IntSyn
-		      structure Unify : UNIFY
-			sharing Unify.IntSyn = FunSyn'.IntSyn
 		      structure Print : PRINT
 			sharing Print.IntSyn = FunSyn'.IntSyn
 		      structure Subordinate : SUBORDINATE
 			sharing Subordinate.IntSyn = FunSyn'.IntSyn
+		      structure Weaken : WEAKEN
+			sharing Weaken.IntSyn = FunSyn'.IntSyn  
 		      structure FunPrint : FUNPRINT
 			sharing FunPrint.FunSyn = FunSyn') : FUNTYPECHECK= 
 struct
@@ -124,11 +124,11 @@ struct
 	    end
 	
 	fun term m' =
-	  let 
-	    val I.Dec (_, V) = I.ctxDec (Psi', m')
-	  in
-	    I.Exp (I.Root (I.BVar (n+m'), args (n, I.targetFam (V), I.Nil)), V)
-	  end
+	    let 
+	      val I.Dec (_, V) = I.ctxDec (Psi', m')
+	    in
+	      I.Exp (I.Root (I.BVar (n+m'), args (n, I.targetFam (V), I.Nil)))
+	    end
 		 
 	fun raiseSub'' (0, s) = s
 	  | raiseSub'' (m', s) = raiseSub'' (m'-1, I.Dot (term m', s))
@@ -154,7 +154,7 @@ struct
 	  | raiseType'' (I.Decl (G', D as I.Dec (_, V')), Vn, a) = 
 	    if Subordinate.belowEq (I.targetFam V', a) 
 	      then raiseType'' (G', Abstract.piDepend ((D, I.Maybe), Vn), a) 
-	    else raiseType'' (G', Unify.safeInvertExp ((Vn, I.id), I.shift), a)
+	    else raiseType'' (G', Weaken.strengthenExp (Vn, I.shift), a)
 	fun raiseType' (Psi1, nil) = nil
 	  | raiseType' (Psi1, F.Prim (D as I.Dec (x, V)) :: Psi1') = 
 	    let
@@ -259,7 +259,7 @@ struct
 	 else raise Error "Typecheck Error: Block Abstraction")
       | check (Psi, Delta, F.Inx (M, P), (F.Ex (I.Dec (_, V'), F'), s')) =
  	  (TypeCheck.typeCheck (F.makectx Psi, (M, (I.EClo (V', s'))));
-	   check (Psi, Delta, P, (F', I.Dot (I.Exp (M, V'), s'))))
+	   check (Psi, Delta, P, (F', I.Dot (I.Exp (M), s'))))
       | check (Psi, Delta, F.Case (F.Opts O), (F', s')) =
 	  checkOpts (Psi, Delta, O, (F', s'))
       | check (Psi, Delta, F.Pair (P1, P2), (F.And (F1', F2'), s')) = 
@@ -321,7 +321,7 @@ struct
 						   TypeCheck.infer' (F.makectx Psi, U)) ^
 				" expected " ^ 
 				Print.expToString (F.makectx Psi, I.EClo (V, s)))
-	       val DD = F.MDec (name, F.TClo (F, I.Dot (I.Exp (U, V), s)))
+	       val DD = F.MDec (name, F.TClo (F, I.Dot (I.Exp (U), s)))
 	       val (Psi', Delta', s') = assume (Psi, I.Decl (Delta, DD), Ds)
 	     in
 	       (Psi', F.mdecSub (DD, s') :: Delta', s')
@@ -400,15 +400,12 @@ struct
 			    Print.expToString (G', V1) ^ "\n  expected: " ^
 			    Print.expToString (G', I.EClo (V2, s')))
 	end
-      | checkSub (Psi', I.Dot (I.Exp (U, V1), s'), I.Decl (Psi, F.Prim (I.Dec (_, V2)))) =
+      | checkSub (Psi', I.Dot (I.Exp (U), s'), I.Decl (Psi, F.Prim (I.Dec (_, V2)))) =
 	let 
 	  val G' = F.makectx Psi'
 	  val _ = TypeCheck.typeCheck (G', (U, I.EClo (V2, s'))) 
 	in
-	  if Conv.conv ((V1, s'), (V2, s')) then checkSub (Psi', s', Psi)
-	  else raise Error ("Substitution not well-typed \n expected: " ^
-			    Print.expToString (G', I.EClo (V1, s')) ^ "\nfound: " ^
-			    Print.expToString (G', I.EClo (V2, s')))
+	  checkSub (Psi', s', Psi)
 	end
       | checkSub (Psi', s as I.Dot (I.Idx k, _), I.Decl (Psi, F.Block (F.CtxBlock (l1, G)))) =
 	let 
