@@ -3,6 +3,11 @@ Author: Frank Pfenning with Carsten Schuermann
 
 Version 1 --- only closed queries and predicates
 
+Coverage checking is LOCAL.  Later we will
+use a declaration of the form
+ %proves <thm> <fam>.
+for more global checking.
+
 Syntax:
 
 %covers mdecl.
