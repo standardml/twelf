@@ -22,6 +22,7 @@ struct
     (* Printing Utilities *)
 
     fun headToString (G, I.Const (c)) = N.qidToString (N.constQid c)
+      | headToString (G, I.Def (d)) = N.qidToString (N.constQid d)
       | headToString (G, I.BVar(k)) = N.bvarName (G, k)
     fun expToString (GU) = P.expToString (GU) ^ ". "
     fun decToString (GD) = P.decToString (GD) ^ ". "
@@ -243,6 +244,7 @@ struct
     fun traceEvent (G, e) = print (eventToString (G, e))
 
     fun monitorHead (cids, I.Const(c)) = List.exists (fn c' => c = c') cids
+      | monitorHead (cids, I.Def(d)) = List.exists (fn c' => d = c') cids
       | monitorHead (cids, I.BVar(k)) = false
 
     fun monitorHeads (cids, (Hc, Ha)) =
