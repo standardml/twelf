@@ -23,7 +23,7 @@ struct
        If   G |- s1 : G1    G1 |- U1 : V1    (U1,s1) in whnf
             G |- s2 : G2    G2 |- U2 : V2    (U2,s2) in whnf
             G |- V1[s1] == V2[s2] == V : L
-       then B iff G |- U1[s1] = U2[s2] : V
+       then B iff G |- U1[s1] == U2[s2] : V
 
        Effects: EVars may be lowered
     *)

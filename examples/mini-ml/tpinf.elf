@@ -42,4 +42,5 @@ tp_letn : of (letn E1 E2) T2
 tp_fix : of (fix E) T
 	  <- ({x:exp} of x T -> of (E x) T).
 
-%worlds (some {T:tp} pi {x:exp} {d:of x T}) (of E T).
+%block l : some {T:tp} block {x:exp} {d:of x T}.
+%worlds (l) (of E T).

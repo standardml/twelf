@@ -207,6 +207,8 @@ struct
 	end
       | parseQualIds1 (ls,  LS.Cons ((L.RPAREN, r), s')) =
          (ls, LS.expose s')
+      | parseQualIds1 (ls, LS.Cons ((t, r), s)) =
+	 Parsing.error (r, "Label expected, found token " ^ L.toString t)
 
     fun parseQualIds' (LS.Cons ((L.LPAREN, r), s')) =
         parseQualIds1 (nil, LS.expose s')
