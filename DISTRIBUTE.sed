@@ -7,10 +7,11 @@
 /^twelf\/TEST/d;
 /^twelf\/OLD/d;
 /^twelf\/bin\/\.heap\/twelf/d;
-/^twelf\/bin\/\clean/d;
-/^twelf\/bin\/\create\-tags/d;
-/^twelf\/bin\/\tag/d;
-/^twelf\/bin\/\twelf/d;
+/^twelf\/bin\/clean/d;
+/^twelf\/bin\/create\-tags/d;
+/^twelf\/bin\/tag/d;
+/^twelf\/bin\/twelf/d;
+/^twelf\/bin\/\.twelf/d;
 /WALK$/d;
 /^twelf\/doc\/guide/d;
 /^twelf\/exercises/d;
