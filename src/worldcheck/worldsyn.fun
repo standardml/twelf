@@ -64,8 +64,24 @@ struct
     val worldsTable : World Table.Table = Table.new (0)
     fun reset () = Table.clear worldsTable
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
-    fun lookup (cid) = Table.lookup worldsTable (cid)
-    
+    fun getWorld (b) =
+        (case Table.lookup worldsTable b
+	   of NONE => raise Error ("Family " ^ Names.constName b ^ " has no worlds declaration")
+            | SOME (Wb) => Wb)
+
+    (* subsumedTable
+       For each family a that is world-checked, this
+       contains the subordinate families b whose worlds
+       subsume that of a modulo subordination
+    *)
+    val subsumedTable : unit Table.Table = Table.new (0)
+    fun subsumedReset () = Table.clear subsumedTable
+    fun subsumedInsert (cid) = Table.insert subsumedTable (cid, ())
+    fun subsumedLookup (cid) =
+        (case Table.lookup subsumedTable cid
+	   of NONE => false
+            | SOME _ => true)
+
     (* Regular world expressions R
        Invariants:
        If R = (D1,...,Dn)[s] then G |- s : G' and G' |- D1,...,Dn ctx
@@ -148,13 +164,15 @@ struct
 	  :: formatDList (I.Decl (G, D'), L, I.dot1 t)
 	end
 
+    (*
     fun hypsToDList (I.Root _) = nil
       | hypsToDList (I.Pi ((D, _), V)) =
           D::hypsToDList V
+    *)
 
     (* Hypotheses and declaration lists *)
-    fun wGoalToString ((G, V), Seq (piDecs, t)) =
-        F.makestring_fmt (F.HVbox [F.HVbox (formatDList (G, hypsToDList V, I.id)), F.Break,
+    fun wGoalToString ((G, L), Seq (piDecs, t)) =
+        F.makestring_fmt (F.HVbox [F.HVbox (formatDList (G, L, I.id)), F.Break,
 				   F.String "<|", F.Break,
 				   F.HVbox (formatDList (G, piDecs, t))])
 
@@ -163,8 +181,8 @@ struct
           F.makestring_fmt (F.HVbox (formatDList (G, piDecs, t)))
 
     (* Hypotheses *)
-    fun hypsToString (G, V) =
-          F.makestring_fmt (F.HVbox (formatDList (G, hypsToDList V, I.id)))
+    fun hypsToString (G, L) =
+          F.makestring_fmt (F.HVbox (formatDList (G, L, I.id)))
 
     (* Mismatch between hypothesis and world declaration *)
     fun mismatchToString (G, (V1, s1), (V2, s2)) =
@@ -180,8 +198,8 @@ struct
     sig
       val clause : I.cid -> unit
       val constraintsRemain : unit -> unit
-      val matchBlock : (I.dctx * I.Exp) * Reg -> unit
-      val unmatched : I.dctx * I.Exp -> unit
+      val matchBlock : (I.dctx * dlist) * Reg -> unit
+      val unmatched : I.dctx * dlist -> unit
       val missing : I.dctx * Reg -> unit
       val mismatch : I.dctx * I.eclo * I.eclo -> unit
       val success : unit -> unit
@@ -193,13 +211,13 @@ struct
 	  if !Global.chatter > 4
 	    then print ("Constraints remain after matching hypotheses against context block\n")
 	  else ()
-      fun matchBlock (GV, R) =		(* R = (D1,...,Dn)[t] *)
+      fun matchBlock (GL, R) =		(* R = (D1,...,Dn)[t] *)
 	  if !Global.chatter > 4
-	    then print ("Matching:\n" ^ wGoalToString (GV, R) ^ "\n")
+	    then print ("Matching:\n" ^ wGoalToString (GL, R) ^ "\n")
 	  else ()
-      fun unmatched (G, V) =
+      fun unmatched GL =
 	  if !Global.chatter > 4
-	    then print ("Unmatched hypotheses:\n" ^ hypsToString (G, V) ^ "\n")
+	    then print ("Unmatched hypotheses:\n" ^ hypsToString GL ^ "\n")
 	  else ()
       fun missing (G, R) =		(* R = (D1,...,Dn)[t] *)
 	  if !Global.chatter > 4
@@ -222,64 +240,8 @@ struct
     (* Matching hypotheses against worlds *)
     (**************************************)
 
-    (* init (G, V) raises Success iff V is atomic
-       otherwise fails by returning ()
-       Initial continuation for world checker
-
-       Invariant: G |- V : type, V nf
-    *)
-    fun init (_, I.Root _) = ( Trace.success () ; raise Success)
-      | init (G, V) = ( Trace.unmatched (G, V) ; () )
-
-    (* accR ((G, V), R, k)   raises Success
-       iff V = {{G'}}V' such that R accepts {{G'}}
-           and k ((G,G'), V') succeeds
-       otherwise fails by returning ()
-       Invariant: G |- V : type, V nf
-                  R regular world expression
-       trails at choice points to undo EVar instantiations during matching
-    *)
-    fun accR (GV, One, k) = k GV
-      | accR (GV as (G, V), Block (LabelDec (_, someDecs, piDecs)), k) =
-        let
-	  val t = createEVarSub (G, someDecs) (* G |- t : someDecs *)
-	  val _ = Trace.matchBlock (GV, Seq (piDecs, t))
- 	  (* if block matches, check for remaining constraints *)
-	  val k' = (fn GV' => if noConstraints (G, t)
-				then k GV'
-			      else ( Trace.constraintsRemain () ; () ))
-	in
-	  accR (GV, Seq (piDecs, t), k')
-	end
-      | accR ((G, V as I.Pi ((D as I.Dec (_, V1), _), V2)),
-	      Seq (I.Dec (_, V1')::L2, t), k) =
-	if Unify.unifiable (G, (V1, I.id), (V1', t))
-	  then accR ((decUName (G, D), V2), Seq (L2, I.dot1 t), k)
-	else ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
-      | accR (GV, Seq (nil, t), k) = k GV
-      | accR (GV as (G, I.Root _), R as Seq (L, t), k) =
-	  ( Trace.missing (G, R); () )	(* L is missing *)
-      | accR (GV, Plus (r1, r2), k) =
-	  ( CSManager.trail (fn () => accR (GV, r1, k)) ;
-	    accR (GV, r2, k) )
-      | accR (GV, Star (One), k) = k GV	(* only possibility for non-termination in next rule *)
-      | accR (GV, r as Star(r'), k) =	(* r' does not accept empty declaration list *)
-	  ( CSManager.trail (fn () => k GV) ;
-	    accR (GV, r', fn GV' => accR (GV', r, k)))
-
-    (* ctxtolist G = L
-      
-       Invariant:
-       G = L  (G is left associative, L is right associative)
-    *)
-    fun ctxToList (Gin) = 
-	let
-	  fun ctxToList' (I.Null, G ) = G
-	    | ctxToList' (I.Decl (G, D), G') =
-	    ctxToList' (G, D :: G')
-	in
-	  ctxToList' (Gin, nil)
-	end
+    fun subGoalToDList (I.Pi ((D, _), V)) = D::subGoalToDList(V)
+      | subGoalToDList (I.Root _) = nil
 
     (* worldToReg W = R
   
@@ -296,6 +258,80 @@ struct
 	  Star (worldToReg' W)
 	end
 
+    (* init (G, V) raises Success iff V is atomic
+       otherwise fails by returning ()
+       Initial continuation for world checker
+
+       Invariant: G |- V : type, V nf
+    *)
+    fun init (_, nil) = ( Trace.success () ; raise Success)
+      | init (G, L) = ( Trace.unmatched (G, L) ; () )
+      (* bug in line above: check subsumption!! *)
+
+    (* accR ((G, L), R, k)   raises Success
+       iff L = L1,L2 such that R accepts L1
+           and k ((G, L1), L2) succeeds
+       otherwise fails by returning ()
+       Invariant: G |- L dlist, L nf
+                  R regular world expression
+       trails at choice points to undo EVar instantiations during matching
+    *)
+    fun accR (GL, One, b, k) = k GL
+      | accR (GL as (G, L), Block (LabelDec (_, someDecs, piDecs)), b, k) =
+        let
+	  val t = createEVarSub (G, someDecs) (* G |- t : someDecs *)
+	  val _ = Trace.matchBlock (GL, Seq (piDecs, t))
+ 	  (* if block matches, check for remaining constraints *)
+	  val k' = (fn GL' => if noConstraints (G, t)
+				then k GL'
+			      else ( Trace.constraintsRemain () ; () ))
+	in
+	  accR (GL, Seq (piDecs, t), b, k')
+	end
+      | accR ((G, L as (D as I.Dec (_, V1))::L2),
+	      L' as Seq (I.Dec (_, V1')::L2', t), b, k) =
+	if Subordinate.belowEq (I.targetFam V1, b)
+	  then (* relevant to family b *)
+	    if Unify.unifiable (G, (V1, I.id), (V1', t))
+		 then accR ((decUName (G, D), L2), Seq (L2', I.dot1 t), b, k)
+	       else ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
+	else (* skip irrelevant declarations in L *)
+	  accR ((decUName (G, D), L2), L', b, k)
+      | accR (GL, Seq (nil, t), b, k) = k GL
+      | accR (GL as (G, nil), R as Seq (L', t), b, k) =
+	  ( Trace.missing (G, R); () )	(* L is missing *)
+      | accR (GL, Plus (r1, r2), b, k) =
+	  ( CSManager.trail (fn () => accR (GL, r1, b, k)) ;
+	    accR (GL, r2, b, k) )
+      | accR (GL, Star (One), b, k) = k GL (* only possibility for non-termination in next rule *)
+      | accR (GL, r as Star(r'), b, k) = (* r' does not accept empty declaration list *)
+	  ( CSManager.trail (fn () => k GL) ;
+	    accR (GL, r', b, fn GL' => accR (GL', r, b, k)))
+
+    (* checkSubsumedBlock (G, someDecs, piDecs, Rb, b) = ()
+       iff block SOME someDecs. PI piDecs is subsumed by Rb
+       Effect: raises Error (msg) otherwise
+
+       Invariants: Rb = reg (worlds (b))
+    *)
+    fun checkSubsumedBlock (G, nil, L', Rb, b) =
+        (( accR ((G, L'), Rb, b, init) ;
+	  raise Error ("World subsumption failure for family " ^ Names.constName b) )
+	 handle Success => ())
+      | checkSubsumedBlock (G, D::L, L', Rb, b) =
+	  checkSubsumedBlock (decEName (G, D), L, L', Rb, b)
+
+    (* checkSubsumedWorlds (Wa, Rb, b) = ()
+       iff Wa is subsumed by Rb
+       Effect: raises Error (msg) otherwise
+
+       Invariants: Rb = reg (worlds (b))
+    *)
+    fun checkSubsumedWorlds (Closed, Rb, b) = ()
+      | checkSubsumedWorlds (Schema (Wa', LabelDec (_, someDecs, piDecs)), Rb, b) =
+        ( checkSubsumedBlock (I.Null, someDecs, piDecs, Rb, b);
+          checkSubsumedWorlds (Wa', Rb, b) )
+
     (* checkBlocks W (G, V, occ) = ()
        iff V = {{G'}} a @ S and G' satisfies worlds W
        Effect: raises Error'(occ, msg) otherwise
@@ -303,9 +339,20 @@ struct
        Invariants: G |- V : type, V nf
     *)
     (* optimize: do not check atomic subgoals? *)
-    fun checkBlocks W (G, V, occ) = 
-        (accR ((G, V), worldToReg W, init);
-	 raise Error' (occ, "World violation"))
+    fun checkBlocks Wa (G, V, occ) = 
+        let
+	  val b = I.targetFam V
+	  val Wb = getWorld b handle Error (msg) => raise Error' (occ, msg)
+	  val Rb = worldToReg Wb
+	  val _ = if subsumedLookup b
+		    then ()
+		  else ( checkSubsumedWorlds (Wa, Rb, b) ;
+			 subsumedInsert (b) )
+	  val L = subGoalToDList V
+	in
+	  (accR ((G, L), Rb, b, init);
+	   raise Error' (occ, "World violation"))
+	end
 	handle Success => ()
 
     (******************************)
@@ -334,10 +381,12 @@ struct
 
 	Invariant: G |- V : type, V nf
      *)
+     (* Question: should dependent Pi's really be checked recursively? *)
+     (* Thu Mar 29 09:38:20 2001 -fp *)
      and checkGoal (G, I.Root (a, S), W, occ) = ()
        | checkGoal (G, I.Pi ((D as I.Dec (_, V1), _), V2), W, occ) =
-	   (checkGoal (decUName (G, D), V2, W, P.body occ) ;
-	    checkClause (G, V1, W, P.label occ))
+	 (checkGoal (decUName (G, D), V2, W, P.body occ);
+	  checkClause (G, V1, W, P.label occ))
 
     (* worldcheck W a = ()
        iff all subgoals in all clauses defining a satisfy world spec W
@@ -348,6 +397,7 @@ struct
 	  val _ = if !Global.chatter > 3
 		    then print ("World checking family " ^ Names.constName a ^ ":\n")
 		  else ()
+	  val _ = subsumedReset ()	(* initialize table of subsumed families *)
 	  fun checkAll nil = ()
 	    | checkAll (I.Const c :: clist) =
 	      (if !Global.chatter = 4
@@ -363,8 +413,21 @@ struct
 	()
       end
 
-    (* Checking that worlds declaration respects the subordination that is present *)
+    (**************************)
+    (* Checking Subordination *)
+    (**************************)
 
+    (*
+       At present, worlds declarations must respect the
+       current subordination relation in order to guarantee
+       soundness.
+    *)
+
+    (* checkSubordBlock (G, L, L') = ()
+       Effect: raises Error(msg) if subordination is not respected
+               in context block SOME L. PI L'
+       Invariants: G |- SOME L. PI L' block
+    *)
     fun checkSubordBlock (G, D::L, L') =
           checkSubordBlock (I.Decl (G, D), L, L')
       | checkSubordBlock (G, nil, (D as I.Dec(_,V))::L') =
@@ -372,6 +435,10 @@ struct
 	    checkSubordBlock (I.Decl (G, D), nil, L') )
       | checkSubordBlock (G, nil, nil) = ()
 
+    (* checkSubordWorlds (W) = ()
+       Effect: raises Error(msg) if subordination is not respected
+               in some context block in W
+    *)
     fun checkSubordWorlds (Closed) = ()
       | checkSubordWorlds (Schema (W, LabelDec (_, someDecs, piDecs))) =
           ( checkSubordWorlds W ;
@@ -380,12 +447,26 @@ struct
     (* install (a, W) = ()
        install worlds declaration W for family a
 
-       Effect: raises Error if W would change subordination
+       Effect: raises Error if W does not respect subordination
     *)
     fun install (a, W) =
         ( checkSubordWorlds W
 	    handle Subordinate.Error (msg) => raise Error (msg) ;
 	  insert (a, W) )
+
+    (* ctxtolist G = L
+      
+       Invariant:
+       G = L  (G is left associative, L is right associative)
+    *)
+    fun ctxToList (Gin) = 
+	let
+	  fun ctxToList' (I.Null, G ) = G
+	    | ctxToList' (I.Decl (G, D), G') =
+	    ctxToList' (G, D :: G')
+	in
+	  ctxToList' (Gin, nil)
+	end
 
   in
     val reset = reset
