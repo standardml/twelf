@@ -1,0 +1,7 @@
+Twelf 1.2 has been successfully installed.
+To use the Twelf server from NT Emacs, add
+
+(load "C:/Twelf/emacs/twelf-init.el")
+
+to your _emacs file.
+
