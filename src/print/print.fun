@@ -71,7 +71,7 @@ local
 	    | sTS (I.Dot(I.Exp(U), s), S) =
 		sTS (s, I.App(U, S))
 	    (* Added by ABP -- 12/17/04*)
-	    | sTS (I.Dot(I.Undef, s), S) = raise Domain (* S?? *)
+	    | sTS (I.Dot(I.Undef, s), S) = raise Domain (* S?? *) 
       in
 	sTS (s, I.Nil)
       end 

@@ -214,7 +214,8 @@ struct
     and whnfRoot ((BVar (k), S), s)   =
         (case bvarSub (k, s)
 	   of Idx (k) => (Root (BVar (k), SClo (S, s)), id)
-	    | Exp (U) => whnfRedex (whnf (U, id), (S, s)))
+	    | Exp (U) => whnfRedex (whnf (U, id), (S, s))
+	    | Undef => raise Domain)	   
       (* Undef should be impossible *)
       | whnfRoot ((Proj (B as Bidx _, i), S), s) = 
 	 (* could blockSub (B, s) return instantiated LVar ? *)

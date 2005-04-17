@@ -527,6 +527,8 @@ struct
            *)
 	fun ctxDec' (Decl (G', Dec (x, V')), 1) = Dec (x, EClo (V', Shift (k)))
 	  | ctxDec' (Decl (G', BDec (n, (l, s))), 1) = BDec (n, (l, comp (s, Shift (k))))
+	  | ctxDec' (Decl (G', NDec), 1) = raise Domain
+
 	  | ctxDec' (Decl (G', _), k') = ctxDec' (G', k'-1)
 	 (* ctxDec' (Null, k')  should not occur by invariant *)
       in
