@@ -30,6 +30,8 @@ functor Worldify
    (*! sharing Print.IntSyn = IntSyn !*)
 
    structure Table : TABLE where type key = int
+   structure MemoTable : TABLE where type key = int * int
+   structure IntSet : INTSET
 
    (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
@@ -48,6 +50,31 @@ struct
   exception Error of string 
 
   exception Error' of P.occ * string
+
+
+  (* World Subsumption graph
+
+       World subsumption Graph is valid
+       iff for any type families a and b
+       if b > a then there a path from b to a in the graph.
+
+       World subsumption is transitive and reflexive.
+  *)
+  val subGraph : (IntSet.intset) Table.Table = Table.new (32)
+  val insert = Table.insert subGraph
+  fun adjNodes a = valOf (Table.lookup subGraph a)  (* must be defined! *)
+  fun insertNewFam a =
+        Table.insert subGraph (a, IntSet.empty)
+  val updateFam = Table.insert subGraph
+    
+  (* memotable to avoid repeated graph traversal *)
+  (* think of hash-table model *)
+  val memoTable : (bool * int) MemoTable.Table = MemoTable.new (2048)
+  val memoInsert = MemoTable.insert memoTable
+  val memoLookup = MemoTable.lookup memoTable
+  val memoClear = fn () => MemoTable.clear memoTable
+  val memoCounter = ref 0
+
 
   (* copied from terminates/reduces.fun *)
   fun wrapMsg (c, occ, msg) =  
@@ -395,6 +422,13 @@ struct
 	   condecs
 	 end
 
+
+     fun check a = 
+         let 
+	   val condecs = worldify a
+	 in 
+	   ()
+	 end
   in
     val worldify = worldify
     val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.lookup (I.targetFam V), P.top)

@@ -1,3 +1,8 @@
+structure MemoTable =
+  HashTable (type key' = int * int
+	     val hash = (fn (n,m) => 7 * n + m)
+             val eq = (op =));
+
 structure WorldSyn = 
   WorldSyn (structure Global = Global
 	    structure Whnf = Whnf
@@ -29,7 +34,9 @@ structure Worldify = Worldify
    structure Subordinate = Subordinate
    structure Print = Print
    structure Table = IntRedBlackTree
-   (*! structure Paths = Paths !*)
+   structure MemoTable = MemoTable
+   structure IntSet = IntSet 
+  (*! structure Paths = Paths !*)
    structure Origins = Origins);
 
 structure WorldPrint = WorldPrint 
