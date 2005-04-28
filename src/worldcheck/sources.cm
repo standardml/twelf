@@ -6,6 +6,10 @@ Library
   signature WORLDPRINT
   structure WorldPrint
 is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+
   ../global/sources.cm
   ../timing/sources.cm
   ../table/sources.cm

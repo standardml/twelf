@@ -1,4 +1,4 @@
-(* Worldification *)
+(* Worldification and World-checking *)
 (* Author: Carsten Schuermann *)
 (* Modified: Frank Pfenning *)
 
@@ -51,31 +51,6 @@ struct
 
   exception Error' of P.occ * string
 
-
-  (* World Subsumption graph
-
-       World subsumption Graph is valid
-       iff for any type families a and b
-       if b > a then there a path from b to a in the graph.
-
-       World subsumption is transitive and reflexive.
-  *)
-  val subGraph : (IntSet.intset) Table.Table = Table.new (32)
-  val insert = Table.insert subGraph
-  fun adjNodes a = valOf (Table.lookup subGraph a)  (* must be defined! *)
-  fun insertNewFam a =
-        Table.insert subGraph (a, IntSet.empty)
-  val updateFam = Table.insert subGraph
-    
-  (* memotable to avoid repeated graph traversal *)
-  (* think of hash-table model *)
-  val memoTable : (bool * int) MemoTable.Table = MemoTable.new (2048)
-  val memoInsert = MemoTable.insert memoTable
-  val memoLookup = MemoTable.lookup memoTable
-  val memoClear = fn () => MemoTable.clear memoTable
-  val memoCounter = ref 0
-
-
   (* copied from terminates/reduces.fun *)
   fun wrapMsg (c, occ, msg) =  
       (case Origins.originLookup c
@@ -83,7 +58,16 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
+                             "Constant " ^ Names.qidToString (Names.constQid c) ^ ":" ^ msg)))
+
+  fun wrapMsgBlock (c, occ, msg) =  
+      (case Origins.originLookup c
+	 of (fileName, NONE) => (fileName ^ ":" ^ msg)
+          | (fileName, SOME occDec) => 
+		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
+                             Origins.linesInfoLookup (fileName),
+                             "Block " ^ Names.qidToString (Names.constQid c) ^ ":" ^ msg)))
+
 
   type dlist = IntSyn.Dec list
 
@@ -151,7 +135,6 @@ struct
         (case collectConstraints (collectEVars (G, s, nil))
 	   of nil => true
 	    | _ => false)
-    (* end from cover.fun *)
 
     (************)
     (* Printing *)
@@ -249,6 +232,183 @@ struct
     fun decUName (G, D) = I.Decl (G, Names.decUName (G, D))
     fun decEName (G, D) = I.Decl (G, Names.decEName (G, D))
 
+
+
+    (* ******************** *)
+    (* World Subsumption    *)
+    (* The STATIC part      *)
+    (* ******************** *)
+
+     (* equivList (G, (t, L), L') 
+
+        Invariant:
+	If  . |- t : G 
+        and G |- L block
+	then  B = true if  L [t] unifies with L'
+	      B = false otherwise 
+     *)
+     fun equivList (G, (_, nil), nil) = true
+       | equivList (G, (t, I.Dec (_, V1) :: L1), I.Dec (_, V2) :: L2) = 
+           (( Unify.unify (G, (V1, t), (V2, I.id))
+	    ; equivList (G, (I.dot1 t, L1), L2)
+            ) handle Unify.Unify _ => false)
+       | equivList _ = false
+
+
+     (* equivBlock ((G, L), L') = B
+
+        Invariant:
+	If   G |- L block
+	then B = true if there exists a substitution . |- t : G, s.t. L[t] = L'
+	     B = false otherwise
+     *)
+     fun equivBlock ((G, L), L') =
+         let 
+	   val t = createEVarSub (I.Null, G)
+	 in 
+	   equivList (I.Null, (t, L), L') 
+	 end 
+
+     (* equivBlocks W L = B
+
+        Invariant:
+	Let W be a world and L be a block.
+	B = true if exists L' in W such that L = L'
+	B = false otherwise 
+     *)
+     fun equivBlocks W1 nil = true
+       | equivBlocks nil L' = false
+       | equivBlocks (b :: W1) L' = 
+           equivBlock (I.constBlock b, L')
+	   orelse equivBlocks W1 L'
+
+     (* strengthen a (t, L) = L'
+
+        Invariant:
+	If   a is a type family,
+	and  . |- t : G
+	and  G |- L block
+	then . |- L' block
+	where V \in L and not V < a then V \in L'
+	and   V \in L and V < a then not V \in L'      
+     *)
+     fun strengthen a (t, nil) = nil
+       | strengthen a (t, (D as I.Dec (_, V)) :: L) =
+         if Subordinate.below (I.targetFam V, a) then (I.decSub (D, t) :: strengthen a (I.dot1 t, L))
+	 else strengthen a (I.Dot (I.Undef,  t), L)
+	
+
+     (* subsumedBlock a W1 (G, L) = ()
+
+        Invariant:
+	If   a is a type family
+	and  W1 the world in which the callee is defined
+	and (G, L) one block in the world of the caller
+        Then the function returns () if (G, L) is subsumed by W1
+	otherwise Error is raised
+     *)
+     fun subsumedBlock a W1 (G, L) =
+         let
+	   val t = createEVarSub (I.Null, G) (* G |- t : someDecs *)
+	   val L' = strengthen a (t, L)
+	 in
+	   if equivBlocks W1 L' then () else raise Error "Static world subsumption failed"
+	 end
+
+     (* subsumedBlocks a W1 W2 = ()
+
+        Invariant:
+	Let W1 be the world in which the callee is defined
+	Let W2 be the world in which the caller is defined
+	Then the function returns () if W2 is subsumed by W1
+	otherwise Error is raised 
+     *)
+     fun subsumedBlocks a W1 nil = ()
+       | subsumedBlocks a W1 (b :: W2) =
+           ( subsumedBlock a W1 (I.constBlock b)
+	   ; subsumedBlocks a W1 W2
+	   )
+
+     (* subsumedWorld a W1 W2 = ()
+
+        Invariant:
+	Let W1 be the world in which the callee is defined
+	Let W2 be the world in which the caller is defined
+	Then the function returns () if W2 is subsumed by W1
+	otherwise Error is raised 
+     *)
+     fun subsumedWorld a (T.Worlds W1) (T.Worlds W2) =
+         subsumedBlocks a W1 W2
+
+
+    (* ******************** *)
+    (* World Subsumption    *)
+    (* The DYNAMIC part     *)
+    (* ******************** *)
+
+
+     (* sumbsumedCtx (G, W) = ()
+ 
+        Invariant: 
+        Let G be a context of blocks
+	and W a world
+	Then the function returns () if every block in G
+	is listed in W
+	otherwise Error is raised
+     *)
+     fun subsumedCtx (I.Null, W) = ()
+       | subsumedCtx (I.Decl (G, I.BDec (_, (b, _))), W as T.Worlds Bs) = 
+          ( if List.exists (fn b' => b = b') Bs  (* NEEDS TO BE EXPANDED. Labels are semantically transparent
+						  Fri Apr 22 16:21:49 2005 --cs
+						  otherwise %block l1 : block {x:exp}.  
+						  and       %block l2 : block {x:exp}.  
+						  are treated differently. *)
+	      then () else raise Error "Dynamic world subsumption failed"
+          ; subsumedCtx (G, W)
+          )
+       | subsumedCtx (I.Decl (G, _), W as T.Worlds Bs) = 
+	  subsumedCtx (G, W)
+
+
+
+    (******************************)
+    (* Checking clauses and goals *)
+    (******************************)
+
+     (* checkGoal W (G, V, occ) = () 
+        iff all (embedded) subgoals in V satisfy world spec W
+        Effect: raises Error' (occ', msg) otherwise
+
+	Invariant: G |- V : type, V nf
+     *)
+     fun checkGoal W (G, I.Root (I.Const a, S), occ) = 
+         let 
+	   val W' = W.getWorlds a
+	 in
+	   ( subsumedWorld a W' W
+	   ; subsumedCtx (G, W)
+	   )
+	 end
+       | checkGoal W (G, I.Pi ((D, _), V2), occ) =
+	   checkGoal W (decUName (G, D), V2, P.body occ)
+
+    (* checkClause (G, V, W, occ) = ()
+       iff all subgoals in V satisfy world spec W
+       Effect: raises Error' (occ', msg) otherwise
+
+       Invariant: G |- V : type, V nf
+       occ is occurrence of V in current clause
+     *)
+     fun checkClause W (G, I.Root (a, S), occ) = ()
+       | checkClause W (G, I.Pi ((D as I.Dec (_, V1), _), V2), occ) = 
+	 (checkClause W (decEName (G, D), V2, P.body occ);
+	  checkGoal W (G, V1, P.label occ))
+
+     fun checkConDec W (I.ConDec (s, m, k, status, V, L)) =
+           checkClause W (I.Null, V, P.top)
+         
+
+
     (**************************************)
     (* Matching hypotheses against worlds *)
     (**************************************)
@@ -273,13 +433,11 @@ struct
 
        Invariant: G |- L dlist, L nf
     *)
-    fun init b (_, Vs as (I.Root _, s)) = 
+    fun init (_, Vs as (I.Root _, s)) = 
         (Trace.success () ; 
 	 raise Success (Whnf.normalize Vs))
-      | init b (G, (V as I.Pi ((D1 as I.Dec (_, V1), _), V2), s)) =
-(*        if Subordinate.belowEq (I.targetFam V1, b)
-	  then *) (Trace.unmatched (G, subGoalToDList (Whnf.normalize (V, s))) ; ())
-(*	else init b (decUName (G, D1), V2) *)
+      | init (G, (V as I.Pi ((D1 as I.Dec (_, V1), _), V2), s)) =
+	(Trace.unmatched (G, subGoalToDList (Whnf.normalize (V, s))) ; ())
 
     (* accR ((G, (V, s)), R, k)   raises Success
        iff V[s] = {L1}{L2} P  such that R accepts L1
@@ -289,44 +447,37 @@ struct
                   R regular world expression
        trails at choice points to undo EVar instantiations during matching
     *)
-    fun accR (GVs, One, b, k) = k GVs
-      | accR (GVs as (G, (V, s)), Block (c, (someDecs, piDecs)), b, k) =
+    fun accR (GVs, One, k) = k GVs
+      | accR (GVs as (G, (V, s)), Block (c, (someDecs, piDecs)), k) =
         let
 	  val t = createEVarSub (G, someDecs) (* G |- t : someDecs *)
 	  val _ = Trace.matchBlock ((G, subGoalToDList (Whnf.normalize (V, s))), Seq (1, piDecs, t))
- 	  (* if block matches, check for remaining constraints *)
-	  (* can there be uninstantiated variable left over? 
-	     I suspect no.  If yes, something is underspecified 
-	     Is this part of the invariant? --cs *)
 	  val k' = (fn (G', Vs') => 
-		    ((* print ("OK block identified: " ^ I.conDecName (I.sgnLookup c) ^ "\n");
-		        --cs Sat Nov 15 09:20:36 2003 *)
-		      if noConstraints (G, t)
-		     then k (G', Vs')
-		     else (Trace.constraintsRemain (); ())))
-		       
+		    if noConstraints (G, t)
+		      then k (G', Vs')
+		    else (Trace.constraintsRemain (); ()))
+	    
 	in
 	  accR ((decUName (G, I.BDec (NONE, (c, t))), (V, I.comp (s, I.shift))), 
-		Seq (1, piDecs, I.comp (t, I.shift)), b, k')
+		Seq (1, piDecs, I.comp (t, I.shift)), k')
 	  handle Success V => raise Success (Whnf.normalize (I.Pi ((I.BDec (NONE, (c, t)), I.Maybe), V), I.id))
 	end
       | accR ((G, (V as I.Pi ((D as I.Dec (_, V1), _), V2), s)),
-	      L' as Seq (j, I.Dec (_, V1')::L2', t), b, k) =
+	      L' as Seq (j, I.Dec (_, V1')::L2', t), k) =
 	if Unify.unifiable (G, (V1, s), (V1', t))
 	  then accR ((G, (V2, I.Dot (I.Exp (I.Root (I.Proj (I.Bidx 1, j), I.Nil)), s))), 
-		     Seq (j+1, L2', I.Dot (I.Exp (I.Root (I.Proj (I.Bidx 1, j), I.Nil)), t)), b, k)
+		     Seq (j+1, L2', I.Dot (I.Exp (I.Root (I.Proj (I.Bidx 1, j), I.Nil)), t)), k)
 	else  (Trace.mismatch (G, (V1, I.id), (V1', t)) ; ())  
-          (* different from world checking, we do not allow skipping of assumptions here *)
-      | accR (GVs, Seq (_, nil, t), b, k) = k GVs
-      | accR (GVs as (G, (I.Root _, s)), R as Seq (_, L', t), b, k) =
+      | accR (GVs, Seq (_, nil, t), k) = k GVs
+      | accR (GVs as (G, (I.Root _, s)), R as Seq (_, L', t), k) =
 	  ( Trace.missing (G, R); () )	(* L is missing *)
-      | accR (GVs, Plus (r1, r2), b, k) =
-	  ( CSManager.trail (fn () => accR (GVs, r1, b, k)) ;
-	    accR (GVs, r2, b, k) )
-      | accR (GVs, Star (One), b, k) = k GVs (* only possibility for non-termination in next rule *)
-      | accR (GVs, r as Star(r'), b, k) = (* r' does not accept empty declaration list *)
+      | accR (GVs, Plus (r1, r2), k) =
+	  ( CSManager.trail (fn () => accR (GVs, r1, k)) ;
+	    accR (GVs, r2, k) )
+      | accR (GVs, Star (One), k) = k GVs (* only possibility for non-termination in next rule *)
+      | accR (GVs, r as Star(r'), k) = (* r' does not accept empty declaration list *)
 	  ( CSManager.trail (fn () => k GVs) ;
-	    accR (GVs, r', b, fn GVs' => accR (GVs', r, b, k)))
+	    accR (GVs, r', fn GVs' => accR (GVs', r, k)))
 
 
     (* worldifyBlocks W (G, V, occ) = ()
@@ -335,14 +486,13 @@ struct
   
        Invariants: G |- V : type, V nf
     *)
-    fun worldifyBlocks (W as T.Worlds cids) (G, V, occ) = 
+    fun worldifyDecs (W as T.Worlds cids) (G, V, occ) = 
         let
 	  val b = I.targetFam V
-	  val _ = W.isSubsumed W b
 	  val Wb = W.getWorlds b
 	  val Rb = worldsToReg Wb
 	in
-	  (accR ((G, (V, I.id)), Rb, b, init b);
+	  (accR ((G, (V, I.id)), Rb, init);
 	   raise Error' (occ, "World violation"))
 	end
 	handle Success V' => V'
@@ -368,7 +518,7 @@ struct
 	 end
        | worldifyClause (G, I.Pi ((D as I.Dec (x, V1), I.No), V2), W, occ) = 
 	 let 
-	   val W1 = worldifyBlocks W (G, V1, P.label occ)
+	   val W1 = worldifyDecs W (G, V1, P.label occ)
 	   val W2 = worldifyClause (decEName (G, D), V2, W, P.body occ);
      	   (* worldifyGoal (G, V1, W, P.label occ))  -- unnecessary?*)
 	 in
@@ -406,16 +556,44 @@ struct
 	      handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg)))
        (* by invariant, other cases cannot apply *)
 
+     fun worldifyBlock W (G, nil) = ()
+       | worldifyBlock W (G, (D as (I.Dec (_, V))):: L) = 
+         let
+	   val a = I.targetFam V
+	   val W' = W.getWorlds a
+	 in
+	   ( checkClause W' (G, worldifyClause (I.Null, V, W', P.top), P.top)
+	   ; worldifyBlock W (decUName(G, D), L)
+	   )
+	 end
+       
+     fun worldifyBlocks W nil = ()
+       | worldifyBlocks W (b :: Bs) = 
+         let 
+	   val _ = worldifyBlocks W Bs
+	   val (Gsome, Lblock) = I.constBlock b
+	   val _ = print "."
+         in 
+	   worldifyBlock W (Gsome, Lblock) 
+	   handle Error' (occ, s) => raise Error (wrapMsgBlock (b, occ, "World not hereditarily closed"))
+         end
+		 
+     fun worldifyWorld (W as T.Worlds Bs) = worldifyBlocks W Bs
+
      fun worldify a =  
 	 let
-	   val W = W.lookup a
+	   val W = W.getWorlds a
+	   val _ = print "["
+	   val W' = worldifyWorld W
+	   val _ = print "."
 	   val _ = if !Global.chatter > 3
 		     then print ("World checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
 		   else ()
-(*	   val _ = subsumedReset ()	(* initialize table of subsumed families *)
-*)	    
-	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, I.sgnLookup c)) 
+	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, I.sgnLookup c) handle Error' (occ, s) => raise Error (wrapMsg (c, occ, s)))
 	                     (Index.lookup a)
+	   val _ = map (fn condec => ( print "."
+				     ; checkConDec W condec)) condecs
+	   val _ = print "]"
 
 	   val _ = if !Global.chatter = 4 then print "\n" else ()
 	 in
@@ -423,15 +601,9 @@ struct
 	 end
 
 
-     fun check a = 
-         let 
-	   val condecs = worldify a
-	 in 
-	   ()
-	 end
   in
     val worldify = worldify
-    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.lookup (I.targetFam V), P.top)
+    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (I.targetFam V), P.top)
   end
 
 end;  (* functor Worldify *)

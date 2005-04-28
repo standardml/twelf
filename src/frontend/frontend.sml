@@ -236,6 +236,7 @@ structure Twelf =
 
 	 structure WorldSyn = WorldSyn
 	 structure WorldPrint = WorldPrint
+	 structure Worldify = Worldify
 
          structure ModSyn = ModSyn
          structure ReconModule = ReconModule

@@ -143,6 +143,7 @@ functor Twelf
 
    structure WorldSyn : WORLDSYN
    (*! sharing WorldSyn.IntSyn = IntSyn' !*)
+   structure Worldify : WORLDIFY
    structure WorldPrint : WORLDPRINT
    (*! sharing WorldPrint.Tomega = Tomega !*)
 
@@ -315,6 +316,7 @@ struct
 	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
               | Subordinate.Error (msg) => abortFileMsg (fileName, msg)
 	      | WorldSyn.Error (msg) => abort (msg ^ "\n") (* includes filename *)
+	      | Worldify.Error (msg) => abort (msg ^ "\n") (* includes filename *)
               | ModSyn.Error (msg) => abortFileMsg (fileName, msg)
 	      | Converter.Error (msg) => abortFileMsg (fileName, msg)
               | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
@@ -1051,7 +1053,11 @@ struct
 				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in
-	  (Timers.time Timers.worlds (map (fn (a, _) => WorldSyn.worldcheck W a)) cpa ; ())
+	  (Timers.time Timers.worlds (map (fn (a, _) => WorldSyn.worldcheck W a)) cpa ;
+	   if !Global.doubleCheck 
+	     then (map (fn (a,_) => Worldify.worldify a) cpa; ())
+	   else  ())
+	  
 	end
       | install1 (fileName, declr as (Parser.SigDef _, _)) =
           install1WithSig (fileName, NONE, declr)
