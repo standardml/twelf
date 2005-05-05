@@ -346,6 +346,47 @@ struct
     (* The DYNAMIC part     *)
     (* ******************** *)
 
+    (* eqCtx (G1, G2) = B 
+ 
+        Invariant:
+	Let  G1, G2 constexts of declarations (as the occur in the some part
+	            of a block).
+	B = true if G1 and G2 are equal (modulo renaming of variables)
+	B = false otherwise 
+     *)
+     fun eqCtx (I.Null, I.Null)  = true
+       | eqCtx (I.Decl (G1, D1), I.Decl (G2, D2)) = 
+           eqCtx (G1, G2) andalso Conv.convDec ((D1, I.id), (D2, I.id))  
+       | eqCtx _ = false
+
+     (* eqList (L1, L2) = B 
+ 
+        Invariant:
+	Let  L1, L2 lists of declarations (as the occur in a block).
+	B = true if L1 and L2 are equal (modulo renaming of variables)
+	B = false otherwise 
+     *)
+     fun eqList (nil, nil) = true
+       | eqList (D1 :: L1, D2 :: L2) =
+           Conv.convDec ((D1, I.id), (D2, I.id)) andalso eqList (L1, L2)
+       | eqList _ = false
+
+
+     (* eqBlock (b1, b2) = B 
+ 
+        Invariant:
+	Let  b1, b2 blocks.
+	B = true if b1 and b2 are equal (modulo renaming of variables)
+	B = false otherwise 
+     *)
+     fun eqBlock (b1, b2) =
+         let
+	   val (G1, L1) = I.constBlock b1
+	   val (G2, L2) = I.constBlock b2
+	 in
+	   eqCtx (G1, G2) andalso eqList (L1, L2)	   
+	 end
+
 
      (* sumbsumedCtx (G, W) = ()
  
@@ -358,11 +399,7 @@ struct
      *)
      fun subsumedCtx (I.Null, W) = ()
        | subsumedCtx (I.Decl (G, I.BDec (_, (b, _))), W as T.Worlds Bs) = 
-          ( if List.exists (fn b' => b = b') Bs  (* NEEDS TO BE EXPANDED. Labels are semantically transparent
-						  Fri Apr 22 16:21:49 2005 --cs
-						  otherwise %block l1 : block {x:exp}.  
-						  and       %block l2 : block {x:exp}.  
-						  are treated differently. *)
+          ( if List.exists (fn b' => eqBlock (b, b')) Bs 
 	      then () else raise Error "Dynamic world subsumption failed"
           ; subsumedCtx (G, W)
           )
