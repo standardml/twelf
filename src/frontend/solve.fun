@@ -39,7 +39,7 @@ functor Solve
    structure Tabled : TABLED
    (*! sharing Tabled.IntSyn = IntSyn' !*)
    (*! sharing Tabled.CompSyn = CompSyn !*)
-   structure MemoTable : MEMOTABLE
+   (*! structure MemoTable : MEMOTABLE !*)
     (*! sharing MemoTable.IntSyn = IntSyn' !*)
    structure Print : PRINT
    (*! sharing Print.IntSyn = IntSyn' !*)

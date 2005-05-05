@@ -163,7 +163,7 @@ structure Solve =
 	 (*! structure TableParam = TableParam !*)
 	 structure Tabled = Tabled
 (*	 structure TableIndex = TableIndex *)
-	 structure MemoTable = MemoTable
+(*	 structure MemoTable = MemoTable *)
 	 structure Print = Print);
 
 
