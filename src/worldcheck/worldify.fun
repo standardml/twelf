@@ -437,7 +437,9 @@ struct
        occ is occurrence of V in current clause
      *)
      fun checkClause W (G, I.Root (a, S), occ) = ()
-       | checkClause W (G, I.Pi ((D as I.Dec (_, V1), _), V2), occ) = 
+       | checkClause W (G, I.Pi ((D as I.Dec (_, V1), I.Maybe), V2), occ) = 
+	 checkClause W (decEName (G, D), V2, P.body occ)
+       | checkClause W (G, I.Pi ((D as I.Dec (_, V1), I.No), V2), occ) = 
 	 (checkClause W (decEName (G, D), V2, P.body occ);
 	  checkGoal W (G, V1, P.label occ))
 
@@ -517,13 +519,17 @@ struct
 	    accR (GVs, r', fn GVs' => accR (GVs', r, k)))
 
 
-    (* worldifyBlocks W (G, V, occ) = ()
+    (******************************)
+    (* Worldifying clauses and goals *)
+    (******************************)
+
+    (* worldifyGoal (G, V, W, occ) = () 
        iff V = {{G'}} a @ S and G' satisfies worlds W
-       Effect: raises Error'(occ, msg) otherwise
-  
-       Invariants: G |- V : type, V nf
+       Effect: raises Error' (occ', msg) otherwise
+
+       Invariant: G |- V : type, V nf
     *)
-    fun worldifyDecs (W as T.Worlds cids) (G, V, occ) = 
+    fun worldifyGoal (G, V, W as T.Worlds cids, occ) = 
         let
 	  val b = I.targetFam V
 	  val Wb = W.getWorlds b
@@ -534,9 +540,6 @@ struct
 	end
 	handle Success V' => V'
 
-    (******************************)
-    (* Worldifying clauses and goals *)
-    (******************************)
 
     (* worldifyClause (G, V, W, occ) = ()
        iff all subgoals in V satisfy world spec W
@@ -548,35 +551,19 @@ struct
      fun worldifyClause (G, V as I.Root (a, S), W, occ) = V
        | worldifyClause (G, I.Pi ((D as I.Dec (x, V1), I.Maybe), V2), W, occ) = 
          let 
+	   val _ = print "{"
 	   val W2 = worldifyClause (decEName (G, D), V2, W, P.body occ)
-	   val W1 = worldifyGoal (G, V1, W, P.label occ)
+	   val _ = print "}"
+(*	   val W1 = worldifyGoal (G, V1, W, P.label occ) *)
 	 in 
-	   I.Pi ((I.Dec (x, W1), I.Maybe), W2)
+	   I.Pi ((I.Dec (x, V1 (* W1*)), I.Maybe), W2)
 	 end
        | worldifyClause (G, I.Pi ((D as I.Dec (x, V1), I.No), V2), W, occ) = 
 	 let 
-	   val W1 = worldifyDecs W (G, V1, P.label occ)
+	   val W1 = worldifyGoal (G, V1, W, P.label occ)
 	   val W2 = worldifyClause (decEName (G, D), V2, W, P.body occ);
-     	   (* worldifyGoal (G, V1, W, P.label occ))  -- unnecessary?*)
 	 in
 	   I.Pi ((I.Dec (x, W1), I.No), W2)
-	 end
-
-     (* worldifyGoal (G, V, W, occ) = () 
-        iff all (embedded) subgoals in V satisfy world spec W
-        Effect: raises Error' (occ', msg) otherwise
-
-	Invariant: G |- V : type, V nf
-     *)
-     (* Question: should dependent Pi's really be worldifyed recursively? *)
-     (* Thu Mar 29 09:38:20 2001 -fp *)
-     and worldifyGoal (G, V as I.Root (a, S), W, occ) = V
-       | worldifyGoal (G, I.Pi ((D as I.Dec (x, V1), DP), V2), W, occ) =
-         let 
-	   val W2 = worldifyGoal (decUName (G, D), V2, W, P.body occ)
-	   val W1 = worldifyClause (G, V1, W, P.label occ)
-	 in
-	   I.Pi ((I.Dec (x, W1), DP), V2)
 	 end
 
 
@@ -596,7 +583,7 @@ struct
      fun worldifyBlock W (G, nil) = ()
        | worldifyBlock W (G, (D as (I.Dec (_, V))):: L) = 
          let
-	   val a = I.targetFam V
+	   val a = I.targetFam V    (* here's a bug, because it only works for embedded arrows but not pis ?--cs *)
 	   val W' = W.getWorlds a
 	 in
 	   ( checkClause W' (G, worldifyClause (I.Null, V, W', P.top), P.top)
@@ -609,7 +596,7 @@ struct
          let 
 	   val _ = worldifyBlocks W Bs
 	   val (Gsome, Lblock) = I.constBlock b
-	   val _ = print "."
+	   val _ = print "|"
          in 
 	   worldifyBlock W (Gsome, Lblock) 
 	   handle Error' (occ, s) => raise Error (wrapMsgBlock (b, occ, "World not hereditarily closed"))
@@ -620,15 +607,15 @@ struct
      fun worldify a =  
 	 let
 	   val W = W.getWorlds a
-	   val _ = print "["
+	   val _ = print "[?"
 	   val W' = worldifyWorld W
-	   val _ = print "."
+	   val _ = print ";"
 	   val _ = if !Global.chatter > 3
 		     then print ("World checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
 		   else ()
 	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, I.sgnLookup c) handle Error' (occ, s) => raise Error (wrapMsg (c, occ, s)))
 	                     (Index.lookup a)
-	   val _ = map (fn condec => ( print "."
+	   val _ = map (fn condec => ( print "#"
 				     ; checkConDec W condec)) condecs
 	   val _ = print "]"
 
@@ -640,7 +627,7 @@ struct
 
   in
     val worldify = worldify
-    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (I.targetFam V), P.top)
+    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (I.targetFam V), P.top) 
   end
 
 end;  (* functor Worldify *)
