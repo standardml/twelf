@@ -580,29 +580,29 @@ struct
 	      handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg)))
        (* by invariant, other cases cannot apply *)
 
-     fun worldifyBlock W (G, nil) = ()
-       | worldifyBlock W (G, (D as (I.Dec (_, V))):: L) = 
+     fun worldifyBlock (G, nil) = ()
+       | worldifyBlock (G, (D as (I.Dec (_, V))):: L) = 
          let
-	   val a = I.targetFam V    (* here's a bug, because it only works for embedded arrows but not pis ?--cs *)
+	   val a = I.targetFam V 
 	   val W' = W.getWorlds a
 	 in
 	   ( checkClause W' (G, worldifyClause (I.Null, V, W', P.top), P.top)
-	   ; worldifyBlock W (decUName(G, D), L)
+	   ; worldifyBlock (decUName(G, D), L)
 	   )
 	 end
        
-     fun worldifyBlocks W nil = ()
-       | worldifyBlocks W (b :: Bs) = 
+     fun worldifyBlocks nil = ()
+       | worldifyBlocks (b :: Bs) = 
          let 
-	   val _ = worldifyBlocks W Bs
+	   val _ = worldifyBlocks Bs
 	   val (Gsome, Lblock) = I.constBlock b
 	   val _ = print "|"
          in 
-	   worldifyBlock W (Gsome, Lblock) 
+	   worldifyBlock (Gsome, Lblock) 
 	   handle Error' (occ, s) => raise Error (wrapMsgBlock (b, occ, "World not hereditarily closed"))
          end
 		 
-     fun worldifyWorld (W as T.Worlds Bs) = worldifyBlocks W Bs
+     fun worldifyWorld (T.Worlds Bs) = worldifyBlocks Bs
 
      fun worldify a =  
 	 let
@@ -624,7 +624,7 @@ struct
 	   condecs
 	 end
 
-
+       
   in
     val worldify = worldify
     val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (I.targetFam V), P.top) 
