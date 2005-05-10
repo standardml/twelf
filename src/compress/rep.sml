@@ -1,3 +1,4 @@
+
 structure Rep =
 struct
 
@@ -70,13 +71,16 @@ fun gen_graph n autoCompress =
 	val s = foldl op^ "" 
 		      (map (fn (x,y) => 
 			       Int.toString x ^ " " ^ Int.toString y ^ "\n" ) pairs) 
-	val f = TextIO.openOut "/cygwin/tmp/graph"
+	val f = TextIO.openOut "/tmp/graph"
 	val _ = TextIO.output(f,s)
 	val _ = TextIO.closeOut(f)
     in
 	()
     end
 (* DEBUG  handle Reductio.Matching2 s => (print "doesn'tmatch"; k := SOME s); *)
+
+(* fun gg n = (Compress.sgnReset(); gen_graph n
+	    (fn n => Compress.sgnAutoCompressUpTo n Compress.naiveModes)) *)
 
 (* Syntax.size_term (Option.valOf(#o_def (Compress.sgnLookup n))) *)
 

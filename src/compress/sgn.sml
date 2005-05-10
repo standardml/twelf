@@ -43,9 +43,10 @@ struct
 		   o_def : def,
 		   abbreviation : bool}
 
-    val sigma : sigent option list ref = ref []
-    val all_modes : mode list option list ref = ref []
-    val all_ps : bool option list ref = ref []
+    val sgn_size = 14000 (* XXX *)
+    val sigma : sigent option Array.array = Array.array(sgn_size, NONE)
+    val all_modes : mode list option Array.array = Array.array(sgn_size, NONE)
+    val all_ps : bool option Array.array = Array.array(sgn_size, NONE)
 
     fun  split (h::tl) 0 = ([], h, tl)
        | split (h::tl) n = let 
@@ -56,9 +57,9 @@ struct
        | split [] n = split [NONE] n 
 
     fun clear () = let in
-		       sigma := [];
-		       all_modes := [];
-		       all_ps := []
+		       Array.modify (fn _ => NONE) sigma;
+		       Array.modify (fn _ => NONE) all_modes;
+		       Array.modify (fn _ => NONE) all_ps
 		   end
 		       
     fun condec (s, a, oa) = {name = s, classifier = tclass a, o_classifier = tclass oa,
@@ -75,9 +76,8 @@ struct
 				    def = DEF_TYPE a, o_def = DEF_TYPE oa, abbreviation = true}
     fun typeOfSigent (e : sigent) = Syntax.typeOf (#classifier e)
 
-    fun setter table (n, x) = let val (pre, thing, post) = split (!table) n
-		       in table := pre @ (SOME x :: post) end
-    fun getter table id = ( (List.nth (!table, id)) handle Subscript => NONE)
+    fun setter table (n, x) = Array.update (table, n, SOME x)
+    fun getter table id = Array.sub (table, id)
 
     val set_modes = setter all_modes
     val get_modes = getter all_modes

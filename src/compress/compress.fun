@@ -10,22 +10,6 @@ struct
 
   val debug = ref ~1
 
-(*  datatype Uni = Kind | Type
-
-  datatype ConDec = ConDec of string * S.tp
-		  | TyConDec of string * S.knd
-		  | ConDef of string * S.term * S.tp
-		  | AbbrevDef of string * S.term * S.tp
-
-  val maxCid = Global.maxCid
-  val dummyEntry = NONE
-  val sgnArray = Array.array (maxCid+1, dummyEntry)
-		 : ConDec option Array.array
-
-  fun sgnClean i = if i >= maxCid then ()
-                     else (Array.update (sgnArray, i, dummyEntry);
-			   sgnClean (i+1)) 
-	*)		  
   fun sgnReset () = Sgn.clear ()
 
 (* xlate_type : IntSyn.Exp -> Syntax.tp *) 
