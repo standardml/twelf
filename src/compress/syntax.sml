@@ -153,7 +153,7 @@ struct
 	  | reduce (srTerm(t as NTerm(NRoot(h,sp)), a), []) = t
 	  | reduce (srTerm(t as ATerm(ARoot(h,sp)), a), []) = t
 	  | reduce (srTerm(ATerm(t as ERoot ((ref (SOME _), _), _)), a), []) = reduce(srTerm(eroot_elim t, a), [])
-            (* assumes this evar substitution result is uninstantiated? *)
+	  | reduce (srTerm(ATerm(t as ERoot ((ref NONE, _), _)), a), []) = ATerm t
 	  | reduce (srEVar ((x, a), sl), sp) = 
 	    let
 		val (a',subst) = lower (substs_comp sl) (a, sp)
@@ -173,8 +173,7 @@ struct
 	  | reduce_plus (srTerm(NTerm(t as NRoot(h,sp)), a), []) = Ascribe(t, a)
 	  | reduce_plus (srTerm(ATerm(t as ARoot(h,sp)), a), []) = AElt t
 	  | reduce_plus (srTerm(ATerm(t as ERoot ((ref (SOME _), _), _)), a), []) = reduce_plus(srTerm(eroot_elim t, a), [])
-            (* assumes this evar substitution result is uninstantiated? *)
-            (* 2005.2.28: not sure what significance these two comments above have *)
+	  | reduce_plus (srTerm(ATerm(t as ERoot ((ref NONE, _), _)), a), []) = AElt t
 	  | reduce_plus (srEVar ((x, a), sl), sp) = 
 	    let
 		val (a',subst) = lower (substs_comp sl) (a, sp)

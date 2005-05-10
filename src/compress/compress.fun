@@ -292,7 +292,7 @@ struct
 		  val s = compress (cid, I.sgnLookup cid)
 		  val t = Sgn.typeOfSigent s
 (*		  val _ = if true then log := !log @ [s] else () *)
-		  val isValid = Reductio.check_plusconst_type t
+		  val isValid = Reductio.check_plusconst_strictness t
 (*		  val _ = if isValid then print "yup\n" else print "nope\n" *)
 	      in
 		  isValid

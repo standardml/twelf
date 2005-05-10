@@ -499,5 +499,31 @@ struct
 
 	fun check_plusconst_type t = check_type CON_PLUS ([], t)
 	fun check_minusconst_type t = check_type CON_MINUS ([], t)
+
+(* check_strictness_type : bool -> tp -> bool
+
+   For a type B = Pi x1 : A1 . Pi x2 : A2 ... a . S (where the Pis
+   may be omit or plus or minus) 
+   and plus_const : bool
+   the call
+   check_strictness_type plus_const B
+   returns true iff for every i, the following holds:
+     the variable xi has either a strict occurrence in Aj for
+     some j > i where xj is bound by a plus-Pi, or else 
+     plus_const = false and xi has a strict occurrence in a . S.
+
+  This function does *not* check to make sure types such as A1
+  do not contain omit-Pis and plus-Pis. This test is carried
+  out in check_type. check_strictness_type is useful mainly when
+  we are simply deciding, by trial and error, which of the arguments
+  to B we should omit and which to force to be synthesizing.
+ *)
+	fun check_strictness_type _ (TRoot(n, s)) = true
+	  | check_strictness_type plusconst (TPi(OMIT,_,b)) = 
+	    check_strictness_type plusconst b andalso Strict.check_strict_type plusconst b 
+	  | check_strictness_type plusconst (TPi(_,_,b)) = check_strictness_type plusconst b
+							
+	val check_plusconst_strictness = check_strictness_type true
+	val check_minusconst_strictness = check_strictness_type false
 end
 
