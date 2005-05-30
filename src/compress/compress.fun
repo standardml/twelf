@@ -136,6 +136,7 @@ struct
     | compress_type' G (NONE, a as S.TRoot _) = compress_type G (SOME [], a)
     | compress_type' G (SOME [], a as S.TPi _) = compress_type G (NONE, a) (* XXX sketchy *)
 
+(* XXX: optimization: don't compute mstar if omit? *)
   and compress_type_spine G ([], w, wstar) = []
     | compress_type_spine G ((S.Elt m)::sp, S.KPi(_, a, v), S.KPi(mode, astar, vstar)) = 
       let
@@ -210,7 +211,7 @@ struct
 	  val m = xlate_term m
 	  val a = xlate_type a
 	  val astar = compress_type [] (NONE, a)
-	  val mstar = compress_term [] (m, astar)
+	  val mstar = compress_term [] (m, a)
       in 
 	  Sgn.defn(name, astar, a, mstar, m) 
       end
@@ -228,7 +229,7 @@ struct
 	  val m = xlate_term m
 	  val a = xlate_type a
 	  val astar = compress_type [] (NONE, a)
-	  val mstar = compress_term [] (m, astar)
+	  val mstar = compress_term [] (m, a)
       in 
 	  Sgn.abbrev(name, astar, a, mstar, m) 
       end
@@ -343,7 +344,6 @@ struct
       Sgn.update (n, compress (n, IntSyn.sgnLookup n))
   end handle NoModes => ())
 
-
   fun sgnAutoCompressUpTo' n0 n f =  
       if n0 > n
       then () 
@@ -357,7 +357,7 @@ struct
 		      let 
 			  val modes = f n0 
 		      in 
-			  (Sgn.set_modes(n0, modes); 
+                           (Sgn.set_modes(n0, modes);
 			   Sgn.update (n0, compress (n0, IntSyn.sgnLookup n0));
 			   if n0 mod 100 = 0 then print (Int.toString n0 ^ "\n") else ())
 		      end handle NoModes => ()
