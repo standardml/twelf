@@ -1,0 +1,4 @@
+Examples of encoding modal logics in Twelf
+
+modal.elf       - Intuitionistic modal logic based upon Alex Simpson's thesis.
+modal-judge.elf - Intuitionistic modal logic based upon Pfenning and Davies.

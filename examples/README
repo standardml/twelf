@@ -12,5 +12,6 @@ kolm		Kolmogorov translation from classical to intuitionistic logic
 lp		Logic programming, uniform derivations
 lp-horn		Horn fragment of logic program
 mini-ml		Mini-ml, type preservation and related theorems
+modal           Examples of encoding modal logics in Twelf
 polylam		Polymorphic lambda-calculus
 prop-calc       Natural deduction and Hilbert propositional calculus
