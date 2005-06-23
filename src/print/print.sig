@@ -8,8 +8,10 @@ sig
   structure Formatter : FORMATTER
 
   val implicit : bool ref
+  val printInfix : bool ref
   val printDepth : int option ref
   val printLength : int option ref
+  val noShadow : bool ref
 
   val formatDec : IntSyn.dctx * IntSyn.Dec -> Formatter.format
   val formatExp : IntSyn.dctx * IntSyn.Exp -> Formatter.format

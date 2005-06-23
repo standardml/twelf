@@ -21,9 +21,11 @@ structure Formatter = Formatter'
 
 (* Externally visible parameters *)
 
-val implicit = ref (false)		(* whether to print implicit arguments *)
+val implicit = ref (false)	        (* whether to print implicit arguments *)
+val printInfix = ref (false)		(* if implicit is ref true, whether to print infix ops when possible *)
 val printDepth = ref (NONE:int option)	(* limit on term depth to print *)
 val printLength = ref (NONE:int option)	(* limit on number of arguments to print *)
+val noShadow = ref (false)		(* if true, don't print shadowed constants as "%const%" *)
 
 local
   (* Shorthands *)
@@ -220,15 +222,20 @@ local
        "*"    (* to be fixed --cs *)
 
 
+  fun constQid (cid) = 
+      if !noShadow 
+      then Names.conDecQid (I.sgnLookup cid)
+      else Names.constQid cid
+			       
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
   fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
-    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, Names.constQid (cid))
-    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, Names.constQid (cid))
-    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
-    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, Names.constQid (cid))
+    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, constQid (cid))
+    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, constQid (cid))
+    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, constQid (cid))
+    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, constQid (cid))
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
     | fmtCon (G, H as I.Proj (I.Bidx(k), i)) =
         Str0 (Symbol.const (projName (G, H)))
@@ -236,7 +243,7 @@ local
       (* identity of LVars is obscured! *)
 					(* LVar fixed Sun Dec  1 11:36:55 2002 -cs *)
       fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
-		    Names.constQid (cid))
+		    constQid (cid))
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
           (* will need to be changed if qualified constraint constant
@@ -244,10 +251,10 @@ local
              allowed to shadow constraint constants? -kw *)
           val name = I.conDecName conDec
         in
-          case Names.constLookup (Names.Qid (nil, name))
-            of SOME _ => (* the user has re-defined this name *)
+          case (Names.constLookup (Names.Qid (nil, name)), !noShadow)
+            of (SOME _, false) => (* the user has re-defined this name *)
                  Str0 (Symbol.const ("%" ^ name ^ "%"))
-             | NONE =>
+             | _ =>
                  Str0 (Symbol.const name)
         end
 
@@ -408,6 +415,26 @@ local
   *)
   and opargsImplicit (G, d, (C,S)) = OpArgs (FX.Nonfix, [fmtCon(G,C)], S)
 
+  (* for flit printing -jcreed 6/2005 *)
+  (* opargsImplicit (G, (C, S)) = oa
+     converts C @ S into operator/arguments form, showing all implicit
+     arguments.  In this form, infix declarations are obeyed. It is an
+     error to call this function if an infix declaration has been made for
+     a term which has more than two arguments. (This could have happened if the term
+     had two explicit arguments and further implicit arguments)
+
+     In other words, it is an error if an infix declaration had any
+     implicit arguments.
+  *)
+  and opargsImplicitInfix (G, d, R as (C,S)) = 
+      let
+	  val fixity = fixityCon C
+      in
+	  case fixity of
+	      FX.Infix _ => opargsExplicit(G, d, R) (* Can't have implicit arguments by invariant *)
+	    | _          => OpArgs (FX.Nonfix, [fmtCon (G, C)], S)
+      end
+
   (* for external printing *)
   (* opargsExplicit (G, (C, S)) = oa
      converts C @ S into operator/arguments form, eliding implicit
@@ -448,7 +475,8 @@ local
      value of !implicit
   *)
   and opargs (G, d, R) =
-      if !implicit then opargsImplicit (G, d, R)
+      if !implicit then if !printInfix then opargsImplicitInfix (G, d, R)
+			else opargsImplicit (G, d, R)
       else opargsExplicit (G, d, R)
 
   (* fmtOpArgs (G, d, ctx, oa, s) = fmt
