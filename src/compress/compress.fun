@@ -324,7 +324,7 @@ struct
 		  I.ConDec(name, package, o_a, status, ak, uni) => (ak, o_a)
 		| I.ConDef(name, package, o_a, ak, def, uni, _) => (ak, o_a)
 		| I.AbbrevDef(name, package, o_a, ak, def, uni) => (ak, o_a)
-		| _ => raise Match
+		| _ => raise NoModes
 	  fun count_args (I.Pi(_, ak')) = 1 + count_args ak'
 	    | count_args _ = 0
 	  val total_args = count_args ak
