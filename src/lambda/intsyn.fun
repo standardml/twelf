@@ -355,6 +355,19 @@ struct
     (* 0 <= mid < !nextMid *)
     fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
 
+    (* A hack used in Flit - jcreed 6/05 *)
+    fun rename (cid, new) =
+	let
+	    val newConDec = case sgnLookup cid of 
+		ConDec (n,m,i,s,e,u) => ConDec(new,m,i,s,e,u)
+	      | ConDef (n,m,i,e,e',u,a) => ConDef(new,m,i,e,e',u,a)
+	      | AbbrevDef (n,m,i,e,e',u) => AbbrevDef (new,m,i,e,e',u)
+	      | BlockDec (n,m,d,d') => BlockDec (new,m,d,d')
+	      | SkoDec (n,m,i,e,u) => SkoDec (new,m,i,e,u)
+	in
+	    Array.update (sgnArray, cid, newConDec)
+	end
+
   end
 
   fun constDef (d) =

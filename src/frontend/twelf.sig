@@ -6,10 +6,12 @@ sig
   structure Print :
   sig
     val implicit : bool ref	       (* false, print implicit args *)
+    val printInfix : bool ref	       (* false, print fully explicit form infix when possible *)
     val depth : int option ref	       (* NONE, limit print depth *)
     val length : int option ref	       (* NONE, limit argument length *)
     val indent : int ref	       (* 3, indentation of subterms *)
     val width : int ref		       (* 80, line width *)
+    val noShadow : bool ref	       (* if true, don't print shadowed constants as "%const%" *)
 
     val sgn : unit -> unit	       (* print signature *)
     val prog : unit -> unit	       (* print signature as program *)
@@ -105,6 +107,8 @@ sig
     type config			       (* configuration *)
     val suffix : string ref            (* suffix of configuration files *)
     val read : string -> config	       (* read config file *)
+    val readWithout : string * config -> config 
+                                       (* read config file, minus contents of another *)
     val load : config -> Status	       (* reset and load configuration *)
     val append : config -> Status      (* load configuration (w/o reset) *)
     val define : string list -> config (* explicitly define configuration *)

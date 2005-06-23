@@ -278,4 +278,7 @@ sig
   val targetFamOpt : Exp -> cid option  (* target type family or NONE *)
   val targetFam : Exp -> cid            (* target type family         *)
 
+  (* Used in Flit *)
+  val rename : cid * string -> unit
+
 end;  (* signature INTSYN *)

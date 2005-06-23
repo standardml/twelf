@@ -1373,6 +1373,16 @@ struct
       (* suffix of configuration files: "cfg" by default *)
       val suffix = ref "cfg"
 
+	    (* mkRel transforms a relative path into an absolute one
+               by adding the specified prefix. If the path is already
+               absolute, no prefix is added to it.
+            *)
+	    fun mkRel (prefix, path) =
+                OS.Path.mkCanonical
+                  (if OS.Path.isAbsolute path
+                   then path
+                   else OS.Path.concat (prefix, path))
+	       
       (* more efficient recursive version  Sat 08/26/2002 -rv *)
       fun read config =
           let
@@ -1412,15 +1422,6 @@ struct
                 in
                   OS.Path.toString {isAbs = isAbs, vol=vol, arcs=arcs}
                 end
-	    (* mkRel transforms a relative path into an absolute one
-               by adding the specified prefix. If the path is already
-               absolute, no prefix is added to it.
-            *)
-	    fun mkRel (prefix, path) =
-                OS.Path.mkCanonical
-                  (if OS.Path.isAbsolute path
-                   then path
-                   else OS.Path.concat (prefix, path))
             fun read' (sources, configs) config =
                 withOpenIn config
                   (fn instream =>
@@ -1473,6 +1474,23 @@ struct
             handle IO.Io (ioError) => (abortIO (configFile, ioError); raise IO.io (ioError))
           *)
           end
+
+      (* Read a config file s but omit everything that is already in config c 
+         XXX: naive and inefficient implementation *)
+      fun readWithout (s, c) =
+	  let
+	      val (d,fs) = read s
+	      val (d',fs') = c
+	      val fns' = map (fn m => mkRel(d', ModFile.fileName m)) fs'
+	      fun redundant m =
+		  let 
+		      val n = mkRel(d, ModFile.fileName m) 
+		  in
+		      List.exists (fn n' => n = n') fns'
+		  end
+	  in
+	      (d, List.filter (not o redundant) fs)
+	  end
 
       fun loadAbort (mfile, OK) =
 	  let
@@ -1533,10 +1551,12 @@ struct
     structure Print :
       sig
 	val implicit : bool ref		(* false, print implicit args *)
+	val printInfix : bool ref	(* false, print fully explicit form infix when possible *)
 	val depth : int option ref	(* NONE, limit print depth *)
 	val length : int option ref	(* NONE, limit argument length *)
 	val indent : int ref		(* 3, indentation of subterms *)
 	val width : int ref		(* 80, line width *)
+	val noShadow : bool ref	        (* if true, don't print shadowed constants as "%const%" *)
         val sgn : unit -> unit		(* print signature *)
         val prog : unit -> unit		(* print signature as program *)
 	val subord : unit -> unit       (* print subordination relation *)
@@ -1551,10 +1571,12 @@ struct
     =
     struct
       val implicit = Print.implicit
+      val printInfix = Print.printInfix
       val depth = Print.printDepth
       val length = Print.printLength
       val indent = Print.Formatter.Indent
       val width = Print.Formatter.Pagewidth
+      val noShadow = Print.noShadow
       fun sgn () = Print.printSgn ()
       fun prog () = ClausePrint.printSgn ()
       fun subord () = Subordinate.show ()
@@ -1675,6 +1697,8 @@ struct
 	type config			(* configuration *)
         val suffix : string ref         (* suffix of configuration files *)
 	val read : string -> config	(* read configuration from config file *)
+	val readWithout : string * config -> config 
+                                        (* read config file, minus contents of another *)
 	val load : config -> Status	(* reset and load configuration *)
 	val append : config -> Status	(* load configuration (w/o reset) *)
 	val define : string list -> config  (* explicitly define configuration *)
