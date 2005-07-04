@@ -13,8 +13,8 @@ sig
   (* dump (symbol, dag_file) *)
   val dump : (string * string) -> int
 
-  (* dumpText (output_file) *)
-  val dumpText : string -> unit
+  (* dumpText (outputSemant, outputChecker) *)
+  val dumpText : string * string -> unit
 
   (* setFlag () *)
   val setFlag : unit -> unit
