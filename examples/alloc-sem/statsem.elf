@@ -1,0 +1,122 @@
+%%% Simply Typed Lambda Calculus w/ small-step, allocation semantics
+%%% Author: Matthew Fluet (June 2005)
+%%% statsem.elf
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Static Semantics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-loc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-loc          : sttp -> loc -> tp -> type.
+%name |-loc DLocTc.
+%mode |-loc +ST +L -T.
+
+|-loc_         : |-loc ST L T
+		  <- sttp_lookup ST L T.
+%terminates {} (|-loc _ _ _).
+%worlds () (|-loc _ _ _).
+%covers |-loc +ST +E -T.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-var
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-var          : exp -> tp -> type.
+%name |-var DVarTc.
+%mode |-var +E -T. % Church-style
+%% %mode |-var +E *T. % Curry-style
+%block |-var_block : some {T:tp} block {x:exp} {_:|-var x T}.
+%terminates {} (|-var _ _).
+%worlds (|-var_block) (|-var _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-exp
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-exp          : sttp -> exp -> tp -> type.
+%name |-exp DExpTc.
+%mode |-exp +ST +E -T. % Church-style
+%% %mode |-exp +ST +E *T. % Curry-style
+
+|-exp_var      : |-exp ST E T
+		  <- |-var E T.
+|-exp_loc      : |-exp ST (loc_e L) T
+		  <- |-loc ST L T.
+|-exp_lam      : |-exp ST (lam_e Tx F) (fn_t Tx T)
+		  <- ({x} |-var x Tx -> |-exp ST (F x) T).
+|-exp_app      : |-exp ST (app_e E1 E2) T
+		  <- |-exp ST E1 (fn_t Tx T) 
+		  <- |-exp ST E2 Tx.
+|-exp_unit     : |-exp ST (unit_e) (unit_t).
+|-exp_letunit  : |-exp ST (letunit_e E1 E2) T
+		  <- |-exp ST E1 (unit_t) 
+		  <- |-exp ST E2 T.
+|-exp_pair     : |-exp ST (pair_e E1 E2) (pair_t T1 T2)
+		  <- |-exp ST E1 T1 
+		  <- |-exp ST E2 T2.
+|-exp_letpair  : |-exp ST (letpair_e E1 F2) T
+		  <- |-exp ST E1 (pair_t Tx Ty) 
+		  <- ({x} |-var x Tx -> 
+		      {y} |-var y Ty 
+		       -> |-exp ST (F2 x y) T).
+
+%terminates E (|-exp _ E _).
+%worlds (|-var_block) (|-exp _ _ _).
+%covers |-exp +ST +E -T.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-val
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-val          : sttp -> val -> tp -> type.
+%name |-val DValTc.
+%mode |-val +ST +V -T. % Church-style
+%% %mode |-val +ST +V *T. % Curry-style
+
+|-val_lam      : |-val ST (lam_v Tx F) (fn_t Tx T)
+		  <- ({x} |-var x Tx -> |-exp ST (F x) T).
+|-val_unit     : |-val ST unit_v unit_t.
+|-val_pair     : |-val ST (pair_v L1 L2) (pair_t T1 T2)
+		  <- |-loc ST L1 T1 
+		  <- |-loc ST L2 T2.
+
+%terminates V (|-val _ V _).
+%worlds (|-var_block) (|-val _ _ _).
+%covers |-val +ST +V -T.
+
+raa_|-val      : absurd -> |-val ST V T -> type.
+%mode +{ST:sttp} +{V:val} +{T:tp} +{Absurd:absurd} -{DValTc: |-val ST V T} 
+      (raa_|-val Absurd DValTc).
+%worlds () (raa_|-val _ _).
+%total {} (raa_|-val _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-st
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-st           : st -> sttp -> type.
+%name |-st DStTc.
+%mode |-st +S -ST. % Church-style
+%% %mode |-st +S +ST. % Curry-style
+
+|-st_nil       : |-st nil_st nil_sttp.
+|-st_cons      : |-st (cons_st L V S') (cons_sttp L T ST')
+		  <- |-st S' ST'
+		  <- |-val ST' V T.
+
+%terminates S (|-st S _).
+%worlds () (|-st _ _).
+%covers |-st +S -ST.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% |-stwf
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+|-stwf         : st -> sttp -> type.
+%name |-stwf DStTcWf.
+%mode |-stwf +S -ST. % Church-style
+%% %mode |-stwf +S +ST. % Curry-style
+|-stwf_        : |-stwf S ST
+		  <- |-st S ST
+		  <- st_wf S 
+		  <- sttp_wf ST.
+%terminates S (|-stwf S _).
+%worlds () (|-stwf _ _).
+%covers |-st +S -ST.

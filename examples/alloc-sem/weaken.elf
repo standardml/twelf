@@ -1,0 +1,138 @@
+%%% Simply Typed Lambda Calculus w/ small-step, allocation semantics
+%%% Author: Matthew Fluet (June 2005)
+%%% weaken.elf
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Weaken Store Typing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% sttp_lookup
+sttp_weak_sttp_lookup
+               : sttp_lookup ST1 L T -> 
+                 sttp_extend ST1 ST2
+                  -> sttp_lookup ST2 L T -> type.
+%mode sttp_weak_sttp_lookup +DSttpLookup1 +DSttpExtend -DSttpLookup2.
+-hit_hit       : sttp_weak_sttp_lookup (sttp_lookup_hit)
+		                       (sttp_extend_cons_hit DSttpExtend')
+		                       (sttp_lookup_hit).
+-miss_hit      : sttp_weak_sttp_lookup (sttp_lookup_miss DSttpLookup DLocLt)
+                                       (sttp_extend_cons_hit DSttpExtend')
+                                       (sttp_lookup_miss DSttpLookup''  DLocLt)
+		  <- sttp_weak_sttp_lookup DSttpLookup
+                                           DSttpExtend'
+                                           DSttpLookup''.
+-hit_miss      : sttp_weak_sttp_lookup (sttp_lookup_hit)
+                                       (sttp_extend_cons_miss DSttpExtend' DLocLt')
+                                       (sttp_lookup_miss DSttpLookup'' DLocLt')
+		  <- sttp_weak_sttp_lookup (sttp_lookup_hit)
+                                           DSttpExtend'
+                                           DSttpLookup''.
+-miss_miss     : sttp_weak_sttp_lookup (sttp_lookup_miss DSttpLookup DLocLt)
+                                       (sttp_extend_cons_miss DSttpExtend' DLocLt')
+                                       (sttp_lookup_miss DSttpLookup'' DLocLt'')
+		  <- sttp_weak_sttp_lookup (sttp_lookup_miss DSttpLookup DLocLt)
+                                           DSttpExtend'
+                                           DSttpLookup''
+		  <- loc!lt_trans DLocLt DLocLt' DLocLt''.
+%terminates DSttpExtend (sttp_weak_sttp_lookup _ DSttpExtend _).
+%worlds () (sttp_weak_sttp_lookup _ _ _).
+%covers sttp_weak_sttp_lookup +DSttpLookup1 +DSttpExtend -DSttpLookup2.
+%total DSttpExtend (sttp_weak_sttp_lookup _ DSttpExtend _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% |-loc
+sttp_weak_|-loc
+               : |-loc ST1 L T ->
+                 sttp_extend ST1 ST2
+                  -> |-loc ST2 L T -> type.
+%mode sttp_weak_|-loc +DLocTc +DSttpExtend -DLocTc'.
+sttp_weak_|-loc_ 
+               : sttp_weak_|-loc (|-loc_ DSttpLookup) DSttpExtend (|-loc_ DSttpLookup')
+		  <- sttp_weak_sttp_lookup DSttpLookup DSttpExtend DSttpLookup'.
+%terminates {} (sttp_weak_|-loc _ _ _).
+%worlds () (sttp_weak_|-loc _ _ _).
+%covers sttp_weak_|-loc +DLocTc +DSttpExtend -DLocTc'.
+%total {} (sttp_weak_|-loc _ _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% |-exp
+sttp_weak_|-exp
+               : |-exp ST1 E T ->
+                 sttp_extend ST1 ST2
+                  -> |-exp ST2 E T -> type.
+%mode sttp_weak_|-exp +DExpTc1 +DSttpExtend -DExpTc2.
+-var           : sttp_weak_|-exp (|-exp_var DVarTc)
+                                 DSttpExtend
+		                 (|-exp_var DVarTc).
+-loc           : sttp_weak_|-exp (|-exp_loc DLocTc)
+                                 DSttpExtend
+                                 (|-exp_loc DLocTc')
+		  <- sttp_weak_|-loc DLocTc DSttpExtend DLocTc'.
+-lam           : sttp_weak_|-exp (|-exp_lam DExpTcF)
+                                 DSttpExtend
+                                 (|-exp_lam DExpTcF')
+		  <- ({x}{DVarTcX : |-var x Tx}
+			sttp_weak_|-exp (DExpTcF x DVarTcX) 
+			                DSttpExtend 
+                                        (DExpTcF' x DVarTcX)).
+-app           : sttp_weak_|-exp (|-exp_app DExpTcE2 DExpTcE1 )
+                                 DSttpExtend
+                                 (|-exp_app DExpTcE2' DExpTcE1')
+		  <- sttp_weak_|-exp DExpTcE1 DSttpExtend DExpTcE1'
+		  <- sttp_weak_|-exp DExpTcE2 DSttpExtend DExpTcE2'.
+-unit          : sttp_weak_|-exp (|-exp_unit)
+                                 DSttpExtend
+                                 (|-exp_unit).
+-letunit       : sttp_weak_|-exp (|-exp_letunit DExpTcE2 DExpTcE1)
+                                 DSttpExtend
+                                 (|-exp_letunit DExpTcE2' DExpTcE1')
+		  <- sttp_weak_|-exp DExpTcE1 DSttpExtend DExpTcE1'
+		  <- sttp_weak_|-exp DExpTcE2 DSttpExtend DExpTcE2'.
+-pair          : sttp_weak_|-exp (|-exp_pair DExpTcE2 DExpTcE1)
+                                 DSttpExtend
+                                 (|-exp_pair DExpTcE2' DExpTcE1')
+		  <- sttp_weak_|-exp DExpTcE1 DSttpExtend DExpTcE1'
+		  <- sttp_weak_|-exp DExpTcE2 DSttpExtend DExpTcE2'.
+-letpair       : sttp_weak_|-exp (|-exp_letpair DExpTcF2 DExpTcE1)
+                                 DSttpExtend
+                                 (|-exp_letpair DExpTcF2' DExpTcE1')
+		  <- sttp_weak_|-exp DExpTcE1 DSttpExtend DExpTcE1'
+		  <- ({x}{DVarTcX : |-var x Tx}
+		      {y}{DVarTcY : |-var y Ty}
+			sttp_weak_|-exp (DExpTcF2 x DVarTcX y DVarTcY)
+                                        DSttpExtend
+                                        (DExpTcF2' x DVarTcX y DVarTcY)).
+%terminates DExpTc (sttp_weak_|-exp DExpTc _ _).
+%worlds (|-var_block) (sttp_weak_|-exp _ _ _).
+%covers sttp_weak_|-exp +DExpTc +DSttpExtend -DExpTc'.
+%total DExpTc (sttp_weak_|-exp DExpTc _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% |-val
+sttp_weak_|-val
+               : |-val ST1 V T ->
+                 sttp_extend ST1 ST2
+                  -> |-val ST2 V T -> type.
+%mode sttp_weak_|-val +DValTc1 +DSttpExtend -DValTc2.
+-lam           : sttp_weak_|-val (|-val_lam DExpTcF)
+                                 DSttpExtend
+                                 (|-val_lam DExpTcF')
+		  <- ({x}{DVarTcX : |-var x Tx}
+			sttp_weak_|-exp (DExpTcF x DVarTcX) 
+			                DSttpExtend 
+                                        (DExpTcF' x DVarTcX)).
+-unit          : sttp_weak_|-val (|-val_unit)
+                                 DSttpExtend
+                                 (|-val_unit).
+-pair          : sttp_weak_|-val (|-val_pair DLocTcL2 DLocTcL1)
+                                 DSttpExtend
+                                 (|-val_pair DLocTcL2' DLocTcL1')
+		  <- sttp_weak_|-loc DLocTcL1 DSttpExtend DLocTcL1'
+		  <- sttp_weak_|-loc DLocTcL2 DSttpExtend DLocTcL2'.
+%terminates {} (sttp_weak_|-val _ _ _).
+%worlds (|-var_block) (sttp_weak_|-val _ _ _).
+%covers sttp_weak_|-val +DValTc +DSttpExtend -DValTc'.
+%total {} (sttp_weak_|-val _ _ _).

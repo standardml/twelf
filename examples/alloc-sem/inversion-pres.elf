@@ -1,0 +1,79 @@
+%%% Simply Typed Lambda Calculus w/ small-step, allocation semantics
+%%% Author: Matthew Fluet (June 2005)
+%%% inversion-pres.elf
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Store Typing Inversion (Preservation)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pres_|-st_inversion_aux
+               : sttp_wf ST -> st_wf S -> |-st S ST ->
+                 sttp_lookup ST L T ->
+                 st_lookup S L V 
+                  -> |-val ST V T -> type.
+%mode pres_|-st_inversion_aux +DSTWf +DSWf +DStTc +SttpLookup +StLookup -DValTc.
+-hit_hit       : pres_|-st_inversion_aux DSTWf DSWf (|-st_cons DValTc' _)
+                                         (sttp_lookup_hit)
+                                         (st_lookup_hit)
+		                         DValTc
+		  <- sttp!wf_cons_implies_extend_cons DSTWf DSttpExtend
+		  <- sttp_weak_|-val DValTc' DSttpExtend DValTc.
+-miss_hit_contra
+               : pres_|-st_inversion_aux DSTWf DSWf (|-st_cons DValTc' _)
+                                         (sttp_lookup_miss DSttpLookup' DLocLt)
+                                         (st_lookup_hit)
+		                         DValTc
+		  <- loc!lt_contradict DLocLt Absurd
+		  <- raa_|-val Absurd DValTc.
+-miss_miss     : pres_|-st_inversion_aux DSTWf DSWf (|-st_cons _ DStTc')
+                                         (sttp_lookup_miss DSttpLookup' _)
+                                         (st_lookup_miss DStLookup' DLocLt)
+                                         DValTc
+		  <- sttp!wf_tail DSTWf DSTWf'
+		  <- st!wf_tail DSWf DSWf'
+		  <- pres_|-st_inversion_aux DSTWf' DSWf' DStTc' 
+                                             DSttpLookup' 
+                                             DStLookup' 
+                                             DValTc'
+		  <- sttp!wf_cons_implies_extend_cons DSTWf DSttpExtend'
+		  <- sttp_weak_|-val DValTc' DSttpExtend' DValTc.
+-miss_miss_contra
+               : pres_|-st_inversion_aux _ _ (|-st_cons _ _)
+                                         (sttp_lookup_miss _ DLocLtB)
+                                         (st_lookup_miss _ DLocLtA)
+                                         DValTc
+		  <- loc!lt_trans DLocLtA DLocLtB DLocLtC
+		  <- loc!lt_contradict DLocLtC Absurd
+		  <- raa_|-val Absurd DValTc.
+-hit_miss_contra
+               : pres_|-st_inversion_aux DSTWf DSWf (|-st_cons DValTc' _)
+                                         (sttp_lookup_hit)
+                                         (st_lookup_miss DStLookup' DLocLt)
+                                         DValTc
+		  <- loc!lt_contradict DLocLt Absurd
+		  <- raa_|-val Absurd DValTc.
+%terminates DSttpLookup (pres_|-st_inversion_aux _ _ _ DSttpLookup _ _).
+%worlds () (pres_|-st_inversion_aux _ _ _ _ _ _).
+%covers pres_|-st_inversion_aux +DSTWf +DSWf +DStTc +SttpLookup +StLookup -DValTc.
+%total DSttpLookup (pres_|-st_inversion_aux _ _ _ DSttpLookup _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pres_|-st_inversion 
+               : |-stwf S ST ->
+                 sttp_lookup ST L T ->
+                 st_lookup S L V 
+                  -> |-val ST V T -> type.
+%mode pres_|-st_inversion +DStTcWf +SttpLookup +StLookup -DValTc.
+-              : pres_|-st_inversion (|-stwf_  DSTWf DSWf DStTc)
+                                     DSttpLookup
+                                     DStLookup
+                                     DValTc
+		  <- pres_|-st_inversion_aux DSTWf DSWf DStTc
+                                             DSttpLookup
+                                             DStLookup
+                                             DValTc.
+%terminates {} (pres_|-st_inversion _ _ _ _).
+%worlds () (pres_|-st_inversion _ _ _ _).
+%covers pres_|-st_inversion +DStTcWf +SttpLookup +StLookup -DValTc.
+%total {} (pres_|-st_inversion _ _ _ _).

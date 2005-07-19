@@ -1,3 +1,4 @@
+alloc-sem       Simply Typed Lambda-Calculus with a small-step, allocation semantics
 arith           Associativity and commutativity of unary addition
 ccc             Cartesian-closed categories [incomplete]
 church-rosser   The Church-Rosser theorem for untyped lambda-calculus
