@@ -17,3 +17,4 @@ modal           Examples of encoding modal logics in Twelf
 polylam		Polymorphic lambda-calculus
 prop-calc       Natural deduction and Hilbert propositional calculus
 small-step      Brief tutorial on proving progress and preservation in Twelf
+tapl-ch13       A formalization of Chapter 13 from "Types and Programming Languages"
