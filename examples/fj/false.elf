@@ -1,0 +1,5 @@
+% Library about false.
+
+false : type.
+%name false FALSE f.
+
