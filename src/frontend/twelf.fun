@@ -1053,10 +1053,10 @@ struct
 				^ ThmPrint.callpatsToString cp ^ ".\n")
 		  else ()
 	in
-	  (Timers.time Timers.worlds (map (fn (a, _) => WorldSyn.worldcheck W a)) cpa ;
-	   if !Global.doubleCheck 
+	  (Timers.time Timers.worlds (map (fn (a, _) => WorldSyn.worldcheck W a)) cpa ; ()
+	   (*if !Global.doubleCheck 
 	     then (map (fn (a,_) => Worldify.worldify a) cpa; ())
-	   else  ())
+	   else  ()  --cs Sat Aug 27 22:04:29 2005 *))
 	  
 	end
       | install1 (fileName, declr as (Parser.SigDef _, _)) =
