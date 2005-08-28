@@ -255,8 +255,8 @@ struct
     (* status ::= OK | ABORT  is the return status of various operations *)
     datatype Status = OK | ABORT
 
-    fun abort (msg) = (print (msg); ABORT)
-    fun abortFileMsg (fileName, msg) = abort (fileName ^ ":" ^ msg ^ "\n")
+    fun abort chlev (msg) = (Global.chPrint chlev (fn () => msg); ABORT)
+    fun abortFileMsg chlev (fileName, msg) = abort chlev (fileName ^ ":" ^ msg ^ "\n")
 
     fun abortIO (fileName, {cause = OS.SysErr (msg, _), function = f, name = n}) =
 	(print ("IO Error on file " ^ fileName ^ ":\n" ^ msg ^ "\n");
@@ -265,7 +265,6 @@ struct
 	(print ("IO Error on file " ^ fileName ^ " from function "
 		       ^ f ^ "\n");
 	 ABORT)
-
 
     (* should move to paths, or into the prover module... but not here! -cs *)
     fun joinregion (r, nil) = r
@@ -277,50 +276,51 @@ struct
     fun constraintsMsg (cnstrL) =
         "Typing ambiguous -- unresolved constraints\n" ^ Print.cnstrsToString cnstrL
 
-    (* val handleExceptions : string -> ('a -> Status) -> 'a -> Status *)
-    (* handleExceptions filename f x = f x
+    (* val handleExceptions : int -> string -> ('a -> Status) -> 'a -> Status *)
+    (* handleExceptions chlev filename f x = f x
        where standard exceptions are handled and an appropriate error message is
-       issued.  Unrecognized exceptions are re-raised.
+       issued if chatter level is greater or equal to chlev.
+       Unrecognized exceptions are re-raised.
     *)
-    fun handleExceptions fileName (f:'a -> Status) (x:'a) =
+    fun handleExceptions chlev fileName (f:'a -> Status) (x:'a) =
 	(f x
-	 handle ReconTerm.Error (msg) => abortFileMsg (fileName, msg)
-	      | ReconConDec.Error (msg) => abortFileMsg (fileName, msg)
-	      | ReconQuery.Error (msg) => abortFileMsg (fileName, msg)
-	      | ReconMode.Error (msg) => abortFileMsg (fileName, msg)
-	      | ReconThm.Error (msg) => abortFileMsg (fileName, msg)
-              | ReconModule.Error (msg) => abortFileMsg (fileName, msg)
-	      | TypeCheck.Error (msg) => abort ("Double-checking types fails: " ^ msg ^ "\n"
+	 handle ReconTerm.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ReconConDec.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ReconQuery.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ReconMode.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ReconThm.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | ReconModule.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | TypeCheck.Error (msg) => abort 0 ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
-	      | Abstract.Error (msg) => abortFileMsg (fileName, msg)
+	      | Abstract.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
-	      | Total.Error (msg) => abort (msg ^ "\n")	(* Total includes filename *)
-	      | Reduces.Error (msg) => abort (msg ^ "\n") (* Reduces includes filename *)
-              | Compile.Error (msg) => abortFileMsg (fileName, msg)
-	      | Thm.Error (msg) => abortFileMsg (fileName, msg)
-	      | ModeTable.Error (msg) => abortFileMsg (fileName, msg)
-	      | ModeCheck.Error (msg) => abort (msg ^ "\n") (* ModeCheck includes filename *)
-	      | ModeDec.Error (msg) => abortFileMsg (fileName, msg)
-              | Unique.Error (msg) => abortFileMsg (fileName, msg)
-              | Cover.Error (msg) => abortFileMsg (fileName, msg)
-	      | Parsing.Error (msg) => abortFileMsg (fileName, msg)
-	      | Lexer.Error (msg) => abortFileMsg (fileName, msg)
-	      | IntSyn.Error (msg) => abort ("Signature error: " ^ msg ^ "\n")
-	      | Names.Error (msg) => abortFileMsg (fileName, msg)
+	      | Total.Error (msg) => abort chlev (msg ^ "\n")	(* Total includes filename *)
+	      | Reduces.Error (msg) => abort chlev (msg ^ "\n") (* Reduces includes filename *)
+              | Compile.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Thm.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ModeTable.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | ModeCheck.Error (msg) => abort chlev (msg ^ "\n") (* ModeCheck includes filename *)
+	      | ModeDec.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | Unique.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | Cover.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Parsing.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Lexer.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | IntSyn.Error (msg) => abort chlev ("Signature error: " ^ msg ^ "\n")
+	      | Names.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      (* - Not supported in polyML ABP - 4/20/03 
  	      * | IO.Io (ioError) => abortIO (fileName, ioError)
 	      *)
-	      | Solve.AbortQuery (msg) => abortFileMsg (fileName, msg)
-	      | ThmSyn.Error (msg) => abortFileMsg (fileName, msg)
-	      | Prover.Error (msg) => abortFileMsg (fileName, msg)
-	      | Strict.Error (msg) => abortFileMsg (fileName, msg)
-              | Subordinate.Error (msg) => abortFileMsg (fileName, msg)
-	      | WorldSyn.Error (msg) => abort (msg ^ "\n") (* includes filename *)
-	      | Worldify.Error (msg) => abort (msg ^ "\n") (* includes filename *)
-              | ModSyn.Error (msg) => abortFileMsg (fileName, msg)
-	      | Converter.Error (msg) => abortFileMsg (fileName, msg)
-              | CSManager.Error (msg) => abort ("Constraint Solver Manager error: " ^ msg ^ "\n")
-	      | exn => (abort (UnknownExn.unknownExn exn); raise exn))
+	      | Solve.AbortQuery (msg) => abortFileMsg chlev (fileName, msg)
+	      | ThmSyn.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Prover.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Strict.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | Subordinate.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | WorldSyn.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
+	      | Worldify.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
+              | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Converter.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | CSManager.Error (msg) => abort chlev ("Constraint Solver Manager error: " ^ msg ^ "\n")
+	      | exn => (abort 0 (UnknownExn.unknownExn exn); raise exn))
 
     (* During elaboration of a signature expression, each constant
        that that the user declares is added to this table.  At top level,
@@ -550,6 +550,21 @@ struct
 	(Solve.querytabled ((numSol, try, query), Paths.Loc (fileName, r))
 	 handle Solve.AbortQuery (msg)
 	        => raise Solve.AbortQuery (Paths.wrap (r, msg)))
+
+      (* %trustme <decl> *)
+      | install1 (fileName, (Parser.TrustMe(dec,r'), r)) =
+	let 
+          val _ = if not (!Global.unsafe)
+		    then raise Thm.Error("%trustme not safe: Toggle `unsafe' flag")
+		  else ()
+	  val _ = Global.chPrint 3 (fn () => "[%trustme ...\n")
+	  val _ = case handleExceptions 4 fileName (fn args => (install1 args; OK)) (fileName, (dec, r))
+		   of OK => Global.chPrint 3 (fn () => "trustme subject succeeded\n")
+		    | ABORT => Global.chPrint 3 (fn () => "trustme subject failed; continuing\n")
+          val _ = Global.chPrint 3 (fn () => "%]\n")
+	in
+	  ()
+	end
 
       (* %freeze <qid> ... *)
       | install1 (fileName, (Parser.FreezeDec (qids), r)) = 
@@ -1213,7 +1228,7 @@ struct
        ABORT).
     *)
     fun loadFile (fileName) = 
-	handleExceptions fileName (withOpenIn fileName)
+	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
             val _ = ReconTerm.resetErrors fileName
@@ -1233,7 +1248,7 @@ struct
 
     fun sLoop () = if Solve.qLoop () then OK else ABORT
 
-    fun topLoop () = case (handleExceptions "stdIn" sLoop) () (* "stdIn" as fake fileName *)
+    fun topLoop () = case (handleExceptions 0 "stdIn" sLoop) () (* "stdIn" as fake fileName *)
 		       of ABORT => topLoop ()
 			| OK => ()
 
@@ -1287,7 +1302,7 @@ struct
 		    )
 
     fun readDecl () =
-        handleExceptions "stdIn"
+        handleExceptions 0 "stdIn"
 	(fn () =>
 	 let val _ = ReconTerm.resetErrors "stdIn"
              fun install s = install' ((Timers.time Timers.parsing S.expose) s)
@@ -1731,7 +1746,7 @@ struct
 	fun sLoopT () = if Solve.qLoopT () then OK else ABORT
       
 	fun topLoopT () = 
-	  case (handleExceptions "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
+	  case (handleExceptions 0 "stdIn" sLoopT) () (* "stdIn" as fake fileName *)
 	    of ABORT => topLoopT ()
 	  | OK => ()
       in 

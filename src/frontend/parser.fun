@@ -68,6 +68,7 @@ struct
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
+    | TrustMe of fileParseResult * Paths.region (* -fp *)
     | FreezeDec of Names.Qid list
     | ThawDec of Names.Qid list
     | DeterministicDec of Names.Qid list  (* -rv *)
@@ -194,6 +195,7 @@ struct
       | parseStream' (f as LS.Cons ((L.PROVE, r), s'), sc) = parseProve' (f, sc)
       | parseStream' (f as LS.Cons ((L.ESTABLISH, r), s'), sc) = parseEstablish' (f, sc)
       | parseStream' (f as LS.Cons ((L.ASSERT, r), s'), sc) = parseAssert' (f, sc)
+      | parseStream' (f as LS.Cons ((L.TRUSTME, r), s'), sc) = parseTrustMe' (f, sc)
       | parseStream' (f as LS.Cons ((L.FREEZE, r), s'), sc) = parseFreeze' (f, sc)
       | parseStream' (f as LS.Cons ((L.THAW, r), s'), sc) = parseThaw' (f, sc)
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
@@ -352,6 +354,16 @@ struct
           val r = Paths.join (r0, r')            
 	in
 	  Stream.Cons ((AssertDec ldec, r), parseStream (stripDot f', sc))
+	end
+
+    and parseTrustMe' (f as LS.Cons ((_, r0), s), sc) =
+	let 
+	  fun parseNextDec' (Stream.Cons((dec,r),s')) =
+	         Stream.Cons ((TrustMe(dec,r),r0),s')
+            | parseNextDec' (Stream.Empty) =
+                 Parsing.error (r0, "No declaration after `%trustme'")
+	in 
+	  parseNextDec' (parseStream' (LS.expose s, sc))
 	end
 
     and parseFreeze' (f as LS.Cons ((_, r0), s), sc) =
