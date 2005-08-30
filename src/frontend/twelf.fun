@@ -1722,7 +1722,7 @@ struct
     val make = make
 
 
-    val version = "Twelf 1.5R2, Mar 13, 2005 (tabling,autoFreeze)"
+    val version = "Twelf 1.5R3, Aug 30, 2005 (%trustme)"
 
     structure Table : 
       sig 
