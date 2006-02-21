@@ -23,7 +23,8 @@ functor ReconTerm ((*! structure IntSyn' : INTSYN !*)
 		   (*! sharing Print.IntSyn = IntSyn' !*)
                    (*! structure CSManager : CS_MANAGER !*)
 		   (*! sharing CSManager.IntSyn = IntSyn' !*)
-                   structure StringTree : TABLE where type key = string)
+                   structure StringTree : TABLE where type key = string
+                   structure Msg : MSG)
   : RECON_TERM =
 struct
 
@@ -77,19 +78,19 @@ struct
    *)
   fun chatterOneNewline () =
       if !Global.chatter = 1 andalso !errorCount = 1
-        then print "\n"
+        then Msg.message "\n"
       else ()
 
   fun fatalError (r, msg) =
       (errorCount := !errorCount + 1;
        chatterOneNewline ();
-       print (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
+       Msg.message (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
        die (r))       
       
   fun error (r, msg) =
       (errorCount := !errorCount + 1;
        chatterOneNewline ();
-       print (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
+       Msg.message (!errorFileName ^ ":" ^ Paths.wrap (r, msg) ^ "\n");
        if exceeds (!errorCount, !errorThreshold)
           then die (r)
        else ())
@@ -714,8 +715,8 @@ struct
       handle Names.Unprintable => print "%_constraints unprintable_%\n"
                                                   
   fun reportInst (Xnames) =
-      (print (Print.evarInstToString (Xnames) ^ "\n"))
-      handle Names.Unprintable => print "%_unifier unprintable_%\n"
+      (Msg.message (Print.evarInstToString (Xnames) ^ "\n"))
+      handle Names.Unprintable => Msg.message "%_unifier unprintable_%\n"
 
   fun delayMismatch (G, V1, V2, r2, location_msg, problem_msg) =
       addDelayed (fn () =>
@@ -790,9 +791,9 @@ struct
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
 	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
 			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
-	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
+	val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
         val _ = reportConstraints Xnames
-        val _ = print ("Failed: " ^ problem_msg ^ "\n"
+        val _ = Msg.message ("Failed: " ^ problem_msg ^ "\n"
                        ^ "Continuing with subterm replaced by _\n")
       in
         ()
@@ -805,10 +806,10 @@ struct
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
 	val eqnsFmt = F.HVbox [F.String "|?", F.Space, formatExp (G, EClo Vs1),
 			       F.Break, F.String "=", F.Space, formatExp (G, EClo Vs2)]
-	val _ = print (F.makestring_fmt eqnsFmt ^ "\n")
+	val _ = Msg.message (F.makestring_fmt eqnsFmt ^ "\n")
         val _ = unifyIdem (G, Vs1, Vs2)
                 handle e as Unify.Unify msg =>
-                       (print ("Failed: " ^ msg ^ "\n"
+                       (Msg.message ("Failed: " ^ msg ^ "\n"
                                ^ "Continuing with subterm replaced by _\n");
                         raise e)
         val _ = reportInst Xnames
@@ -834,7 +835,7 @@ struct
         val omit = F.HVbox [F.String "|-", F.Space, F.String "_", F.Space,
                             F.String "==>", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
-        val _ = print (F.makestring_fmt omit ^ "\n")
+        val _ = Msg.message (F.makestring_fmt omit ^ "\n")
         val _ = reportConstraints Xnames
       in
         ()
@@ -849,7 +850,7 @@ struct
 	val Xnames = List.map (fn X => (X, Names.evarName (IntSyn.Null, X))) Xs
         val judg = F.HVbox [F.String "|-", F.Space, formatExp (G, U), F.Break,
                             F.String ":", F.Space, formatExp (G, V)]
-        val _ = print (F.makestring_fmt judg ^ "\n")
+        val _ = Msg.message (F.makestring_fmt judg ^ "\n")
         val _ = reportConstraints Xnames
       in
         ()

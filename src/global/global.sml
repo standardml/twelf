@@ -15,5 +15,6 @@ struct
   val timeLimit = ref (NONE : (Time.time option))
 
   fun chPrint n s = if !chatter >= n then print (s ()) else ()
+  fun chMessage n s f = if !chatter >= n then f (s ()) else ()
 
 end;  (* structure Global *)

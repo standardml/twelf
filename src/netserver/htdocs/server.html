@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <title>Twelf Web Interface</title>
+    <script type="text/javascript" src="server.js">
+    <link rel="stylesheet" type="text/css" href="server.css"/>
+  </head>  
+<body>
+<div id="container">
+<h1><img id ="twelfguy" src="twelfguy.png" alt="Twelf"> Web Interface</h1>
+<div class="quiet">(email <tt>jcreed at cs.cmu.edu</tt> for support)</div>
+   <body id="body"> 
+<div class="io inputimg"><textarea class="console" id="input"  ></textarea></div>
+
+<div class="floatright">
+<!-- Example selector. Most of the examples that are commented out are
+     so simply because they lack a sources.cfg in the top-level directory,
+     whereas last I checked, alloc-sem actually fails. 
+     (jcreed, feb 2006) -->
+   <select id="exampleSelect">
+   <option value="ccc">ccc</option>
+   <option value="cut-elim">cut-elim</option>
+   <option value="handbook">handbook</option>
+   <option value="lp-horn">lp-horn</option>
+   <option value="prop-calc">prop-calc</option>
+   <!-- <option value="units">units</option> --> 
+   <option value="church-rosser">church-rosser</option>
+   <option value="fj">fj</option>
+   <option value="incll">incll</option>
+   <option value="mini-ml">mini-ml</option>
+   <!-- <option value="small-step">small-step</option> -->
+   <!-- <option value="alloc-sem">alloc-sem</option> XXX nat.elf:22.13-22.24 Error: Cannot declare worlds for frozen family nat_lt??? -->
+   <!-- <option value="compile">compile</option> -->
+   <option value="fol">fol</option>
+   <option value="kolm">kolm</option>
+   <!-- <option value="modal">modal</option> -->
+   <!-- <option value="tabled">tabled</option> -->
+   <option value="arith">arith</option>
+   <option value="cpsocc">cpsocc</option>
+   <option value="guide">guide</option>
+   <option value="lp">lp</option>
+   <option value="polylam">polylam</option>
+   <option value="tapl-ch13">tapl-ch13</option>
+   </select>
+   <input type="submit" class="submit" value="run example" onclick="btnExample()">
+</div>
+
+
+<!-- <a href="#" type="submit" class="submit" value="send" onclick="press()">send</A> -->
+<input type="submit" class="submit" value="send" onclick="btnReadDecl()">
+<input type="submit" class="submit" value="quit" onclick="btnQuit()"> 
+<!-- <input type="submit" class="submit" value="decl" onclick="btnDecl()"> -->
+
+
+<!--
+<select id="chatterSelect">
+<option value="0">Silent (0)</option>
+<option value="1">Quiet (1)</option>
+<option value="2">Chatty (2)</option>
+<option value="3">Normal (3)</option>
+<option value="4">Verbose (4)</option>
+</select> 
+<input type="submit" class="submit" value="set chatter" onclick="btnChatter()"> -->
+
+<div class="io outputimg"><textarea class="console" id="output" readonly=true ></textarea></div>
+<span id="tip"></span>
+</div>
+  </body>
+</html>

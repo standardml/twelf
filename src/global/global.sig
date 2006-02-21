@@ -12,5 +12,6 @@ sig
   val unsafe : bool ref
   val autoFreeze : bool ref
   val chPrint : int -> (unit -> string) -> unit
+  val chMessage : int -> (unit -> string) -> (string -> unit) -> unit
   val timeLimit : (Time.time option) ref   (* in seconds *)
 end;  (* signature GLOBAL *)

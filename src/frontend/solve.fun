@@ -43,7 +43,7 @@ functor Solve
     (*! sharing MemoTable.IntSyn = IntSyn' !*)
    structure Print : PRINT
    (*! sharing Print.IntSyn = IntSyn' !*)
-     )
+   structure Msg : MSG)
  : SOLVE =
 struct
 
@@ -163,10 +163,10 @@ struct
 
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 3
-		  then print ("%solve ")
+		  then Msg.message ("%solve ")
 		else ()
 	val _ = if !Global.chatter >= 3
-		  then print ("\n"
+		  then Msg.message ("\n"
 			      ^ (Timers.time Timers.printing expToString)
 			      (IntSyn.Null, A)
 			      ^ ".\n")
@@ -185,7 +185,7 @@ struct
 	 (Timers.time Timers.solving search) ());		
 	 raise AbortQuery ("No solution to %solve found"))
 	handle Solution M => (if !Global.chatter >= 3
-                              then print (" OK\n")
+                              then Msg.message (" OK\n")
                               else ();
                               finish M)
 	handle TimeLimit.TimeOut =>
@@ -205,10 +205,10 @@ struct
 
 	(* echo declaration, according to chatter level *)
 	val _ = if !Global.chatter >= 3
-		  then print ("%solve ")
+		  then Msg.message ("%solve ")
 		else ()
 	val _ = if !Global.chatter >= 3
-		  then print ("\n" ^ (Timers.time Timers.printing expToString) (IntSyn.Null, A)
+		  then Msg.message ("\n" ^ (Timers.time Timers.printing expToString) (IntSyn.Null, A)
 			      ^ ".\n")
 		else ()
 
@@ -226,7 +226,7 @@ struct
 	 raise AbortQuery ("No solution to %solve found"))
 	handle SolutionSkel Skel =>
 	  (if !Global.chatter >= 2
-	     then print (" OK\n")
+	     then Msg.message (" OK\n")
 	   else ();    
 	   ((Timers.time Timers.ptrecon PtRecon.solve)  
 	    (Skel, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),  
@@ -254,14 +254,14 @@ struct
       val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
       (* times itself *)
       val _ = if !Global.chatter >= 3
-		then print ("%query " ^ boundToString expected
+		then Msg.message ("%query " ^ boundToString expected
 			    ^ " " ^ boundToString try ^ "\n")
 	      else ()
       val _ = if !Global.chatter >= 4
-		then print (" ")
+		then Msg.message (" ")
 	      else ()
       val _ = if !Global.chatter >= 3
-		then print ("\n" ^ (Timers.time Timers.printing expToString)
+		then Msg.message ("\n" ^ (Timers.time Timers.printing expToString)
 			    (IntSyn.Null, A) ^ ".\n")
 	      else ()
       (* Problem: we cannot give an answer substitution for the variables
@@ -286,16 +286,16 @@ struct
       fun scInit M =
 	(solutions := !solutions+1;
 	 if !Global.chatter >= 3
-	   then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
-		 print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
+	   then (Msg.message ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
+		 Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
 	 else if !Global.chatter >= 3
-		then print "."
+		then Msg.message "."
 	      else ();
 		case optName
 		  of NONE => ()
 		| SOME(name) =>
 		    if !Global.chatter >= 3
-		      then print ((Timers.time Timers.printing evarInstToString)
+		      then Msg.message ((Timers.time Timers.printing evarInstToString)
 				  [(M, name)] ^ "\n")
 			else ();
 		   if !Global.chatter >= 3
@@ -303,7 +303,7 @@ struct
 		     then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		            of NONE => ()
 			     | SOME(str) =>
-			       print ("Remaining constraints:\n"
+			       Msg.message ("Remaining constraints:\n"
 				      ^ str ^ "\n")
 		   else ();
 		   if exceeds (SOME(!solutions),try)
@@ -327,14 +327,14 @@ struct
 			(* check if number of solutions is correct *)
 		        checkSolutions (expected, try, !solutions))
 		else if !Global.chatter >= 3
-		       then print ("Skipping query (bound = 0)\n")
+		       then Msg.message ("Skipping query (bound = 0)\n")
 		     else if !Global.chatter >= 4
-			    then print ("skipping")
+			    then Msg.message ("skipping")
 			  else ();
 		if !Global.chatter >= 3
-		  then print "____________________________________________\n\n"
+		  then Msg.message "____________________________________________\n\n"
 		else if !Global.chatter >= 4
-		       then print (" OK\n")
+		       then Msg.message (" OK\n")
 		     else ()
               end
 
@@ -345,14 +345,14 @@ struct
       val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
       (* times itself *)
       val _ = if !Global.chatter >= 3
-		then print ("%query " ^ boundToString expected
+		then Msg.message ("%query " ^ boundToString expected
 			    ^ " " ^ boundToString try ^ "\n")
 	      else ()
       val _ = if !Global.chatter >= 4
-		then print (" ")
+		then Msg.message (" ")
 	      else ()
       val _ = if !Global.chatter >= 3
-		then print ("\n" ^ (Timers.time Timers.printing expToString)
+		then Msg.message ("\n" ^ (Timers.time Timers.printing expToString)
 			    (IntSyn.Null, A) ^ ".\n")
 	      else ()
 	    (* Problem: we cannot give an answer substitution for the variables
@@ -378,24 +378,24 @@ struct
       fun scInit M =
 	(solutions := !solutions+1;
 	 if !Global.chatter >= 3
-	   then (print ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
-		 print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
+	   then (Msg.message ("---------- Solution " ^ Int.toString (!solutions) ^ " ----------\n");
+		 Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n"))
 	 else if !Global.chatter >= 3
-		then print "."
+		then Msg.message "."
 	      else ();		
 
 	 case optName
 	   of NONE => () 
 	 | SOME(name) =>  (if !Global.chatter > 3 
 			    then 
-			      (print ("\n pskeleton \n"); 
-			       print ((CompSyn.pskeletonToString M) ^ "\n"))
+			      (Msg.message ("\n pskeleton \n"); 
+			       Msg.message ((CompSyn.pskeletonToString M) ^ "\n"))
 			  else ();
 
 			   (Timers.time Timers.ptrecon PtRecon.solve)  
 	                   (M, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null),  
 			    (fn (pskel, M) => (if !Global.chatter >= 3
-				then print ((Timers.time Timers.printing evarInstToString)
+				then Msg.message ((Timers.time Timers.printing evarInstToString)
 					    [(M, name)] ^ "\n")
 			      else ())))) ;
 
@@ -404,7 +404,7 @@ struct
 	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		 of NONE => ()
 	       | SOME(str) =>
-		   print ("Remaining constraints:\n"
+		   Msg.message ("Remaining constraints:\n"
 			  ^ str ^ "\n")
 	     else ();
 	       if exceeds (SOME(!solutions),try)
@@ -427,14 +427,14 @@ struct
 	      (* check if number of solutions is correct *)
 	      checkSolutions (expected, try, !solutions))
       else if !Global.chatter >= 3
-	     then print ("Skipping query (bound = 0)\n")
+	     then Msg.message ("Skipping query (bound = 0)\n")
 	   else if !Global.chatter >= 4
-		  then print ("skipping")
+		  then Msg.message ("skipping")
 		else ();
 		  if !Global.chatter >= 3
-		    then print "____________________________________________\n\n"
+		    then Msg.message "____________________________________________\n\n"
 		  else if !Global.chatter >= 4
-			 then print (" OK\n")
+			 then Msg.message (" OK\n")
 		       else ()
     end
 
@@ -457,17 +457,17 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
   fun querytabled ((numSol, try, quy), Paths.Loc (fileName, r)) =
     let
       val _ = if !Global.chatter >= 3
-		then print ("%querytabled " ^ boundToString numSol ^ " " ^
+		then Msg.message ("%querytabled " ^ boundToString numSol ^ " " ^
 			    boundToString try)		  
 	      else ()
       (* optName = SOME(X) or NONE, Xs = free variables in query excluding X *)
       val (A, optName, Xs) = ReconQuery.queryToQuery(quy, Paths.Loc (fileName, r))
       (* times itself *)
       val _ = if !Global.chatter >= 4
-		then print (" ")
+		then Msg.message (" ")
 	      else ()
       val _ = if !Global.chatter >= 3
-		then print ("\n" ^ (Timers.time Timers.printing expToString)
+		then Msg.message ("\n" ^ (Timers.time Timers.printing expToString)
 			    (IntSyn.Null, A) ^ ".\n")
 	      else ()
      (* Problem: we cannot give an answer substitution for the variables
@@ -497,21 +497,21 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	(solutions := !solutions+1;	 
 	 solExists := true ;
 	 if !Global.chatter >= 3
-	   then (print ("\n---------- Solutions " ^ Int.toString (!solutions) ^ 
+	   then (Msg.message ("\n---------- Solutions " ^ Int.toString (!solutions) ^ 
 			" ----------\n");
-		 print ((Timers.time Timers.printing evarInstToString) Xs ^ " \n"))
+		 Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ " \n"))
 	 else if !Global.chatter >= 1
-		then print "."
+		then Msg.message "."
 	      else ();
 		
 	(case optName
 	   of NONE => ()
-	 | SOME(name) => (print (CompSyn.pskeletonToString O ^ "\n");
+	 | SOME(name) => (Msg.message (CompSyn.pskeletonToString O ^ "\n");
 			  (Timers.time Timers.ptrecon PtRecon.solve) 
 			      (O, (g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), 
 			       (fn (O, M) => 
 				if !Global.chatter >= 3
-				  then print ((Timers.time Timers.printing evarInstToString) 
+				  then Msg.message ((Timers.time Timers.printing evarInstToString) 
 					      [(M, name)] ^ "\n")
 				else ()))));
 
@@ -520,30 +520,30 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	 case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs of
 	   NONE => ()
 	 | SOME(str) =>
-	     print ("Remaining constraints:\n"
+	     Msg.message ("Remaining constraints:\n"
 		    ^ str ^ "\n")
        else ());
-       print "More solutions?\n";
+       Msg.message "More solutions?\n";
        case numSol of 
 	 NONE => ()
        | SOME n => (if (!solutions = n) then 
-		      (print "Found enough solutions\n"; raise Done)
+		      (Msg.message "Found enough solutions\n"; raise Done)
 		    else 
 		      ())
 	   )
 	
       (* loops -- scinit will raise exception Done *)
       fun loop () =  (if exceeds (SOME(!stages-1),try)
-			then (print ("\n ================= " ^
+			then (Msg.message ("\n ================= " ^
 				     " Number of tries exceeds stages " ^ 
 				     " ======================= \n");  
 			      status := false;
 			      raise Done)
 		      else ();								
-			print ("\n ====================== Stage " ^ 
+			Msg.message ("\n ====================== Stage " ^ 
 			       Int.toString(!stages) ^ " finished =================== \n");
 			if exceeds (SOME(!stages),try)
-			  then (print ("\n ================= " ^
+			  then (Msg.message ("\n ================= " ^
 				       " Number of tries exceeds stages " ^ 
 				       " ======================= \n");  
 				status := false;
@@ -576,45 +576,45 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	      (TimeLimit.timeLimit (!Global.timeLimit)
 	       (Timers.time Timers.solving tabledSearch) ())
 	      handle TimeLimit.TimeOut => 
-	       (print "\n----------- TIME OUT ---------------\n" ; raise Done))
+	       (Msg.message "\n----------- TIME OUT ---------------\n" ; raise Done))
 
 	  handle Done => ()
       else if !Global.chatter >= 3
-	     then print ("Skipping query (bound = 0)\n")
+	     then Msg.message ("Skipping query (bound = 0)\n")
 	   else if !Global.chatter >= 2
-		  then print ("skipping")
+		  then Msg.message ("skipping")
 		else ();
       if !Global.chatter >= 3
 	then 
-	  (print "\n____________________________________________\n\n";
-	   print ("number of stages: tried "    ^ boundToString try ^ " \n" ^ 
+	  (Msg.message "\n____________________________________________\n\n";
+	   Msg.message ("number of stages: tried "    ^ boundToString try ^ " \n" ^ 
 		  "terminated after " ^ Int.toString (!stages) ^ " stages \n \n");
 	   if (!solExists) then ()
-	    else print "\nNO solution exists to query \n\n";
+	    else Msg.message "\nNO solution exists to query \n\n";
 	   if (!status) then 
-	     print "Tabled evaluation COMPLETE \n \n"
+	     Msg.message "Tabled evaluation COMPLETE \n \n"
 	   else 
-	     print "Tabled evaluation NOT COMPLETE \n \n";
-	   print "\n____________________________________________\n\n";
-	   print "\n Table Indexing parameters: \n";
+	     Msg.message "Tabled evaluation NOT COMPLETE \n \n";
+	   Msg.message "\n____________________________________________\n\n";
+	   Msg.message "\n Table Indexing parameters: \n";
 	   case (!TableParam.strategy) of
-	      TableParam.Variant =>  print "\n       Table Strategy := Variant \n"
-	    | TableParam.Subsumption => print "\n       Table Strategy := Subsumption \n";
+	      TableParam.Variant =>  Msg.message "\n       Table Strategy := Variant \n"
+	    | TableParam.Subsumption => Msg.message "\n       Table Strategy := Subsumption \n";
 	    if (!TableParam.strengthen) 
 	      then 
-		print "\n       Strengthening := true \n"
+		Msg.message "\n       Strengthening := true \n"
 	    else 
-	      print "\n       Strengthening := false \n";
+	      Msg.message "\n       Strengthening := false \n";
 	      
-	    print ("\nNumber of table indices : " ^ 
+	    Msg.message ("\nNumber of table indices : " ^ 
 		   Int.toString(Tabled.tableSize()) ^ "\n");
 	    
-	    print ("Number of suspended goals : " ^ 
+	    Msg.message ("Number of suspended goals : " ^ 
 		   Int.toString(Tabled.suspGoalNo()) ^ "\n");
 	  
-	    print "\n____________________________________________\n\n")
+	    Msg.message "\n____________________________________________\n\n")
       else (if !Global.chatter >= 3
-	     then print (" OK\n")
+	     then Msg.message (" OK\n")
 	   else ());
 	Tabled.updateGlobalTable (g, !status)
     end
@@ -634,12 +634,12 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)
 	fun scInit M =
-	    (print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
+	    (Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
 	     case optName
 	       of NONE => ()
 		| SOME(name) =>
 		  if !Global.chatter >= 3
-		    then print ((Timers.time Timers.printing evarInstToString)
+		    then Msg.message ((Timers.time Timers.printing evarInstToString)
 				       [(M, name)] ^ "\n")
 		  else ();
 	     if !Global.chatter >= 3
@@ -647,17 +647,17 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		      of NONE => ()
 		       | SOME(str) =>
-			 print ("Remaining constraints:\n"
+			 Msg.message ("Remaining constraints:\n"
 				^ str ^ "\n")
 	     else ();
 	     if moreSolutions () then () else raise Done)
 	val _ = if !Global.chatter >= 3
-		  then print "Solving...\n"
+		  then Msg.message "Solving...\n"
 		else ()
       in
 	((Timers.time Timers.solving AbsMachine.solve)
 	 ((g,IntSyn.id), CompSyn.DProg (IntSyn.Null, IntSyn.Null), scInit); (* scInit is timed into solving! *)
-	 print "No more solutions\n")
+	 Msg.message "No more solutions\n")
 	handle Done => ();
 	(* Ignore s': parse one query at a time *)
 	qLoop ()
@@ -678,19 +678,19 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	            (IntSyn.Null, A)
 	val _ = Tabled.reset () 
 	fun scInit O =
-	    (print ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
+	    (Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
 	     case optName
 	       of NONE => ()
 		| SOME(name) =>
 		  if !Global.chatter >= 3
-		    then print (" Sorry cannot reconstruct pskeleton proof terms yet \n")
+		    then Msg.message (" Sorry cannot reconstruct pskeleton proof terms yet \n")
 		  else ();
 	     if !Global.chatter >= 3
 	       (* Question: should we collect constraints from M? *)
 	       then case (Timers.time Timers.printing Print.evarCnstrsToStringOpt) Xs
 		      of NONE => ()
 		       | SOME(str) =>
-			 print ("Remaining constraints:\n"
+			 Msg.message ("Remaining constraints:\n"
 				^ str ^ "\n")
 	     else ();
 	     solExists := true;
@@ -705,7 +705,7 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 			 *)
 			 raise Completed)
 	val _ = if !Global.chatter >= 3
-		  then print "Solving...\n"
+		  then Msg.message "Solving...\n"
 		else ()
       in
 	((Timers.time Timers.solving Tabled.solve)
@@ -713,9 +713,9 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	 (loop()
 	  handle Completed => 
 	    if !solExists then 
-	      print "No more solutions\n"
+	      Msg.message "No more solutions\n"
 	    else 
-	      print "the query has no solution\n"))
+	      Msg.message "the query has no solution\n"))
 	handle Done => (); 
 	(* Ignore s': parse one query at a time *)
 	qLoopT ()  

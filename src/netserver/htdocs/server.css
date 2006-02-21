@@ -1,0 +1,107 @@
+
+.console {
+display: inline;
+ height: 150px;
+ width: 660px;
+ font-family: nitz, monospace, courier, serif; 
+
+ font-size: 9pt; 
+ white-space: pre; 
+
+ margin: 0px;
+ padding: 5px;
+ 
+ background-color: #efefef;
+ border: 1px solid #9f9f9f;
+ border-left-width: 0px;
+ background-image: url(grad.png);
+ background-repeat: repeat-x;
+ background-position: bottom;
+}
+
+div.io {
+ padding: 0px;
+ padding-left: 20px;
+ margin: 10px;
+ background-position: left;
+}
+
+.inputimg { background-image: url(input.png); }
+.outputimg { background-image: url(output.png); }
+
+#output {
+ color: #004f00;
+}
+
+.submit, select {
+background-color: #dddddd; 
+/*  width:60px; height:23px; */
+ border:1px solid #777777;
+margin: 10px;
+cursor: pointer;
+}
+select {
+background-color: #f7f7f7;
+}
+.submit:hover {
+background-color: #eeeeee; 
+}
+h1 {
+ margin: 0; padding: 0;
+}
+#twelfguy {
+ vertical-align: middle;
+}
+.floatright {
+ margin: 0; padding: 0;
+ float: right;
+}
+
+h1 {
+ font-family: sans-serif;
+ color: #004f00;
+}
+
+#container {
+ background-color: #f7f7f7;
+ margin: auto;
+ padding: 10px;
+ margin-top: 50px;
+ width: 700px;
+ border: 1px solid #777777;
+}
+
+html, body {
+ margin: 0px;
+ padding: 0px;
+ background-color: #afafaf;
+}
+
+.quiet {
+ color: #7f7f7f;
+ font-family: sans-serif;
+ font-size: 12px;
+ margin: 10px;
+}
+
+/* stuff I was using for tooltips */
+.tip {
+ position: absolute;
+ visibility: visible;
+ background-color: white;
+ border: 1px solid black;
+ margin: 5px;
+ padding: 5px;
+ font-family: nitz, monospace, courier, serif; 
+
+ font-size: 9pt; 
+}
+.bvar {
+ color: #007f1f;
+ font-weight: bold;
+ cursor: pointer;
+}
+.invisible {
+ visibility: hidden;
+}
+

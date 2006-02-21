@@ -1,0 +1,11 @@
+Library
+  structure NetServer
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../compat/sources.cm
+  ../timing/sources.cm
+  ../frontend/sources.cm
+  ../msg/sources.cm
+  netserver.sml

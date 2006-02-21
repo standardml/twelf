@@ -22,6 +22,7 @@ functor ReconConDec (structure Global : GLOBAL
 		     structure Timers : TIMERS
                      structure Print : PRINT
 		     (*! sharing Print.IntSyn = IntSyn' !*)
+                     structure Msg : MSG
 		       )
   : RECON_CONDEC =
 struct
@@ -66,7 +67,7 @@ struct
 	val cd = Names.nameConDec (IntSyn.ConDec (name, NONE, i, IntSyn.Normal, V', L))
 	val ocd = Paths.dec (i, oc)
 	val _ = if !Global.chatter >= 3
-		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
+		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()
 	val _ = if !Global.doubleCheck
 		  then (Timers.time Timers.checking TypeCheck.check) (V', IntSyn.Uni L)
@@ -103,7 +104,7 @@ struct
 							 IntSyn.ancestor U''))))
 	           
         val _ = if !Global.chatter >= 3
-		  then print ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
+		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
 		else ()
 	val _ = if !Global.doubleCheck
 		  then ((Timers.time Timers.checking TypeCheck.check) (V'', IntSyn.Uni L);
@@ -166,7 +167,7 @@ struct
 	val _ = checkFreevars (G0, (Gsome', Gblock'), r')
 	val bd = IntSyn.BlockDec (name, NONE, Gsome', ctxToList (Gblock', nil))
         val _ = if !Global.chatter >= 3
-		  then print ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
+		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
 		else ()
 
       in

@@ -97,6 +97,7 @@ sig
 
   val reset : unit -> unit	       (* reset global signature *)
   val loadFile : string -> Status      (* load file *)
+  val loadString : string -> Status    (* load string *)
   val readDecl : unit -> Status	       (* read declaration interactively *)
   val decl : string -> Status	       (* print declaration of constant *)
 
