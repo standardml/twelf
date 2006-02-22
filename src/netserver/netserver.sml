@@ -41,9 +41,9 @@ fun loop f  = (f (); loop f)
 fun vec2str v = String.implode 
 		    (map (Char.chr o Word8.toInt)
 				    (Word8Vector.foldr op:: nil v))
-fun str2vec l = Word8VectorSlice.full 
-		    (Word8Vector.fromList (map (Word8.fromInt o Char.ord)
-					       (String.explode l)))	
+fun str2vec l = Word8Vector.fromList
+			 (map (Word8.fromInt o Char.ord)
+			      (String.explode l))
 
 fun fileText fname = 
     let
@@ -66,16 +66,16 @@ fun fileData fname =
 exception EOF
 exception Quit
 
-fun send conn str = (S.sendVec(conn, str2vec str); ())
+fun send conn str = (Compat.SocketIO.sendVec(conn, str2vec str); ())
 
 local
-    structure S = Substring
+    structure SS = Substring
 in
 fun parseCmd s = 
     let
-	val (c,a) = S.position " " (S.full s)
+	val (c,a) = SS.position " " (Compat.Substring.full s)
     in
-	(S.string c, S.string (S.dropl Char.isSpace a))
+	(SS.string c, SS.string (SS.dropl Char.isSpace a))
     end
 end
 
@@ -144,7 +144,7 @@ fun exec conn str = (case exec' conn (parseCmd str)
 		       | Twelf.ABORT => Msg.message "%%% ABORT %%%\n")
 		    
 		    
-fun stripcr s = Substring.string (Substring.dropr (fn x => x = #"\r") (Substring.full s))
+fun stripcr s = Substring.string (Substring.dropr (fn x => x = #"\r") (Compat.Substring.full s))
 
 fun flashProto() = 
     let 

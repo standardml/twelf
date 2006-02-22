@@ -31,7 +31,9 @@ is
   substring.sig
   text-io.sig
   timer.sig
+  socket.sig
   compat.sig
+  socket.sml
   compat.fun
 #if defined(MLton_20040227)
   compat.sml
@@ -44,6 +46,7 @@ is
   path-97.sml
   substring-97.sml
   text-io-97.sml
+  socket-97.sml
   compat-97.sml    
   array-slice.sig
   array-slice.sml
