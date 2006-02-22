@@ -125,6 +125,11 @@ fun getNat (t::nil) =
   | getNat (nil) = error "Missing natural number"
   | getNat (ts) = error "Extraneous arguments"
 
+(* Example specifiers *)
+fun getExample (t::nil) = t
+  | getExample (nil) = error "Missing example"
+  | getExample (ts) = error "Extraneous arguments"
+
 (* Setting Twelf parameters *)
 fun setParm ("chatter"::ts) = Twelf.chatter := getNat ts
   | setParm (t::ts) = error ("Unknown parameter " ^ quote t)
@@ -134,7 +139,7 @@ fun exec' conn ("quit", args) = (Msg.message "goodbye.\n"; raise Quit)
   | exec' conn ("set", args) = (setParm (String.tokens Char.isSpace args); Twelf.OK) 
   | exec' conn ("readDecl", args) = Twelf.loadString args
   | exec' conn ("decl", args) = Twelf.decl args
-  | exec' conn ("example", args) = serveExample args
+  | exec' conn ("example", args) = serveExample (getExample (String.tokens Char.isSpace args))
   | exec' conn (t, args) = raise Error ("Unrecognized command " ^ quote t)
 
 fun exec conn str = (case exec' conn (parseCmd str) 
@@ -229,6 +234,7 @@ fun httpProto dir =
 			   | "/twelfguy.png" => (fileData (dir ^ "/twelfguy.png"), "image/png", ok)
 			   | "/input.png" => (fileData (dir ^ "/input.png"), "image/png", ok)
 			   | "/output.png" => (fileData (dir ^ "/output.png"), "image/png", ok)
+			   | "/floral.png" => (fileData (dir ^ "/floral.png"), "image/png", ok)
 			   | _ => ("Error 404", "text/plain", missing))
 					      
 		val clmsg = "Content-Length: " ^ Int.toString (size content) ^ "\r\n"

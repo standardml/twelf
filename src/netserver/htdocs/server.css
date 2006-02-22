@@ -64,9 +64,10 @@ h1 {
 
 #container {
  background-color: #f7f7f7;
- margin: auto;
+ margin-left: auto;
+ margin-right: auto;
  padding: 10px;
- margin-top: 50px;
+margin-top: 50px;
  width: 700px;
  border: 1px solid #777777;
 }
@@ -74,9 +75,13 @@ h1 {
 html, body {
  margin: 0px;
  padding: 0px;
- background-color: #afafaf;
+
+/* background-color: #afafaf; */
 }
 
+body { 
+ background-image: url(floral.png);
+}
 .quiet {
  color: #7f7f7f;
  font-family: sans-serif;
