@@ -20,7 +20,7 @@ struct
   structure I = IntSyn
 
     exception Error = S.Error
-    type operator = S.State
+    type operator = (T.Prg option ref * T.Prg)
 
 
     (* expand S = S'
@@ -30,18 +30,20 @@ struct
        and  F does not start with an all quantifier
        then S' = (Psi, xx :: F |> F)
     *)
-    fun expand (S.State ((Psi, F), W)) =  
-          S.State ((I.Decl (Psi, T.PDec (SOME "IH" , F)),   (* find better name -cs *)
-			  T.forSub (F, T.Shift 1)), W)
-
+    fun expand (S.Focus (T.EVar (Psi, r, F, _, TCs), W), O) =  
+        let 
+	  val D = T.PDec (SOME "IH" , F, SOME O, SOME O)
+	  val X = T.newEVar (I.Decl (Psi, D), T.forSub (F, T.Shift 1))
+	in
+	  (r, T.Rec (D, X))
+	end
 
     (* apply O = S 
      
        Invariant:
        O = S 
     *)
-    fun apply S = S
-
+    fun apply (r, P) = (r := SOME P)   (* should be trailed -cs Thu Apr 22 11:20:32 2004 *)
 
     (* menu O = s 
 

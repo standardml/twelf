@@ -11,8 +11,8 @@ sig
 
   type operator
 
-  val expand : State.State -> operator option
-  val apply : operator -> State.State
+  val expand :  State.Focus -> operator option
+  val apply : operator -> unit
   val menu : operator -> string
 end; (* signature INTRODUCE *)
 

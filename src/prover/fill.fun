@@ -20,6 +20,9 @@ functor Fill
      sharing Search.State = State'
    structure Whnf : WHNF
    (*! sharing Whnf.IntSyn = IntSyn' !*)
+   structure Unify : UNIFY
+   (*! sharing Unify.IntSyn = IntSyn' !*)
+ 
        )
      : FILL =
 struct
@@ -29,7 +32,10 @@ struct
 
   exception Error of string
 
-  type operator = (Tomega.Dec IntSyn.Ctx * Tomega.For) * Tomega.Worlds * (unit -> int * Tomega.Prg)
+  datatype Operator = 
+    FillWithConst of IntSyn.Exp * IntSyn.cid 
+    | FillWithBVar of IntSyn.Exp * int
+  type operator = Operator 
 
   local
     structure S = State
@@ -38,34 +44,6 @@ struct
 
     exception Success of int
 
-    (* Checking for constraints: Used to be in abstract, now must be done explicitly! --cs*)
-
-    (* createEVars (G, F) = (Xs', P')
-      
-       Invariant:
-       If   |- G ctx
-       and  G |- F = [[x1:A1]] .. [[xn::An]] formula
-       then Xs' = (X1', .., Xn') a list of EVars
-       and  G |- Xi' : A1 [X1'/x1..X(i-1)'/x(i-1)]          for all i <= n
-       and  G; D |- P' = <X1', <.... <Xn', <>> ..> in F     for some D
-    *)
-    fun createEVarsN (G, T.Ex ((I.Dec (_, V), _), F)) = 
-	let 
-	  val X = I.newEVar (G, V)
-	  val X' = Whnf.lowerEVar X
-	  val (Xs, P, F') = createEVars (G, (F, T.Dot (T.Exp X, T.id)))
-	in
-	  (X' :: Xs, T.PairExp (X, P), F')
-	end
-      | createEVarsN (G, F) = (nil, T.Unit, F)
-    and createEVars (G, (F, t)) = createEVarsN (G, T.forSub (F, t))
-       
-
-(*    fun checkConstraints nil = raise Success
-      | checkConstraints (X :: L) = 
-        if Abstract.closedExp (I.Null, (Whnf.normalize (X, I.id), I.id)) then checkConstraints L
-	else ()
-*)
 
     (* expand' S = op'
 
@@ -73,23 +51,39 @@ struct
        If   |- S state
        then op' is an operator which performs the filling operation
     *)
-    fun expand (S as S.State ((Psi, F), W)) = 
-	let 
-	  val G = T.coerceCtx Psi
-	  val (Xs, P, F') = createEVars (G, (F, T.id))
-(*	  val _ = if (!Global.doubleCheck) then TypeCheck.typeCheckCtx (G) else () *)
-(*	  val (G, w, s) = T.strengthenCtx Psi
-	  val (Xs, P, F') = createEVars (G, (F, s))
-*)	in
-	  ((Psi, F'), W, fn () => ((Search.searchEx (!Data.maxFill, Xs, fn max => (if (!Global.doubleCheck) then 
-						       map (fn (X as I.EVar (_, G', V, _)) => 
-							    TypeCheck.typeCheck (G', (X, V))) Xs
-						     else []; raise Success max));
-		     raise Error "Filling unsuccessful")
-	            handle Success max => (Data.maxFill := Int.max (!Data.maxFill, max);
-					   (max, P))))
-	end
-    
+    fun expand (S.FocusLF (Y as I.EVar (r, G, V, _))) =   (* Can we assume that the evar is lowered? --cs Fri Mar  3 13:48:20 2006 *)
+      let
+
+	fun lower (G0, Wt as (I.Root (I.Const a, _), t)) = 
+	    let
+	      fun try (Vs as (I.Root _, _), Fs, O) = 
+		((Unify.unify (G0, Vs, Wt); O :: Fs)
+		 handle Unify.Unify _ => Fs)
+		| try ((I.Pi ((I.Dec (_, V1), _), V2), s), Fs, O) =
+  		  let 
+		    val X = I.newEVar (G0, I.EClo (V1, s)) 
+		  in
+		    try ((V2, I.Dot (I.Exp X, s)), Fs, O)
+		  end
+	        | try ((I.EClo (V, s'), s), Fs, O) = try ((V, I.comp (s', s)), Fs, O)
+
+	      fun matchCtx (I.Null, _, Fs) = Fs 
+		| matchCtx (I.Decl (G, I.Dec (x, V)), n, Fs) =
+		    matchCtx (G, n+1, try ((V, I.Shift n), Fs, FillWithBVar (Y, n)))
+		| matchCtx (I.Decl (G, I.NDec), n, Fs) = 
+		    matchCtx (G, n+1, Fs)
+
+	      fun matchSig (nil, Fs) = Fs
+		| matchSig (I.Const (c)::L, Fs) =
+		   matchSig (L, try ((I.constType (c), I.id), Fs, FillWithConst (Y, c)))
+	    in
+	      matchCtx (G0, 1, matchSig (Index.lookup (a), nil))
+	    end
+	  | lower (G, (I.Pi ((D, _), V), t)) = lower (I.Decl (G, I.decSub (D, t)), (V, I.dot1 t))
+	  | lower (G, (I.EClo (V, s), t)) = lower (G, (V, (I.comp (s, t))))
+      in
+	lower (G, (V, I.id))
+      end
 
     (* apply op = B' 
 
@@ -97,7 +91,61 @@ struct
        If op is a filling operator
        then B' holds iff the filling operation was successful
     *)
-    fun apply ((Psi, F), W, f) = (f ();  S.State ((Psi, F), W)) 
+    fun apply (FillWithBVar(Y as I.EVar (r, G0, V, _), n)) = 
+      let
+
+	fun lower (G0, Wt as (I.Root _, t), k) = 
+	    let
+	      fun doit (Vs as (I.Root _, _),  k) = 
+		(Unify.unify (G0, Vs, Wt); (k I.Nil))  (* Unify must succeed *)
+		| doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
+		let 
+		  val X = I.newEVar (G0, I.EClo (V1, s)) 
+		in
+		  doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
+		end
+	      val I.Dec (_, W) = I.ctxDec (G0, n)
+	    in	      
+	      doit ((W, I.id),  fn S => k (I.Root (I.BVar n, S)))
+	    end
+	  | lower (G, (I.Pi ((D, _), V), t), k) =
+	    let
+	      val D' = I.decSub (D, t)
+	    in
+	      lower (I.Decl (G, D'), (V, I.dot1 t), fn U => k (I.Lam (D', U)))
+	    end
+	  | lower (G, (I.EClo (V, s), t), k) = lower (G, (V, (I.comp (s, t))), k)
+       in
+	lower (G0, (V, I.id), fn U => Unify.unify (G0, (Y, I.id), (U, I.id)))
+      end
+
+    | apply (FillWithConst(Y as I.EVar (r, G0, V, _), c)) = 
+      let
+
+	fun lower (G0, Wt as (I.Root _, t), k) = 
+	    let
+	      fun doit (Vs as (I.Root _, _),  k) = 
+		(Unify.unify (G0, Vs, Wt); (k I.Nil))  (* Unify must succeed *)
+		| doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
+		let 
+		  val X = I.newEVar (G0, I.EClo (V1, s)) 
+		in
+		  doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
+		end
+	      val W = I.constType c
+	    in	      
+	      doit ((W, I.id),  fn S => k (I.Root (I.Const c, S)))
+	    end
+	  | lower (G, (I.Pi ((D, _), V), t), k) =
+	    let
+	      val D' = I.decSub (D, t)
+	    in
+	      lower (I.Decl (G, D'), (V, I.dot1 t), fn U => k (I.Lam (D', U)))
+	    end
+	  | lower (G, (I.EClo (V, s), t), k) = lower (G, (V, (I.comp (s, t))), k)
+      in
+	lower (G0, (V, I.id), fn U => Unify.unify (G0, (Y, I.id), (U, I.id)))
+      end
 
     (* menu op = s'
        
@@ -105,7 +153,13 @@ struct
        If op is a filling operator
        then s' is a string describing the operation in plain text
     *)
-    fun menu _ =  "Fill" 
+    fun menu (FillWithBVar (X as I.EVar (_, G, _, _), n)) =
+        (case (I.ctxLookup (G, n)) 
+	  of I.Dec (SOME x, _) => 
+	    ("Fill " ^ Names.evarName (G, X) ^ " with variable " ^ x))
+	   (* Invariant: Context is named  --cs Fri Mar  3 14:31:08 2006 *)
+      | menu (FillWithConst (X as I.EVar (_, G, _, _), c)) = 
+	   ("Fill " ^ Names.evarName (G, X) ^ " with constant " ^ IntSyn.conDecName (IntSyn.sgnLookup c))
       
   in
     val expand = expand

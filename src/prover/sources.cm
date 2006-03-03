@@ -17,6 +17,7 @@ is
   ../subordinate/sources.cm
   ../solvers/sources.cm
   ../opsem/sources.cm
+  (* ../order/sources.cm *)
   ../compile/sources.cm
   ../worldcheck/sources.cm
   ../formatter/sources.cm
@@ -34,10 +35,9 @@ is
   fixedpoint.sig  (* Fixed point rule *)
   fixedpoint.fun 
   recurse.sig     (* Computing induction hypotheses *)
+  recurse.fun	
   introduce.sig   (* Introduce assumptions in the context *)
   introduce.fun
-  stateprint.sig  (* State printer *) 
-  stateprint.fun
   interactive.sig
   interactive.fun
   weaken.sig

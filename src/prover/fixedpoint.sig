@@ -11,8 +11,8 @@ sig
 
   type operator
 
-  val expand : State.State -> operator
-  val apply : operator -> State.State 
+  val expand : (State.Focus * Tomega.TC) -> operator
+  val apply : operator -> unit
   val menu : operator -> string
 end; (* signature Fixed Point *)
 

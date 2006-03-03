@@ -4,16 +4,6 @@ structure State = State
    structure WorldSyn' = WorldSyn
    structure Formatter = Formatter)
      
-structure StatePrint = StatePrint 
-  (structure Global = Global
-   (*! structure IntSyn' = IntSyn !*)
-   (*! structure Tomega' = Tomega !*)
-   structure State' = State
-   structure Names = Names
-   structure Formatter' = Formatter
-   structure Print = Print
-   structure TomegaPrint = TomegaPrint)
-
 structure Introduce = Introduce 
   ((*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
@@ -76,6 +66,27 @@ structure Weaken =
   Weaken ((*! structure IntSyn' = IntSyn !*)
 	  structure Whnf = Whnf)
 
+
+structure Recurse = Recurse
+  (structure Global = Global
+   structure Data = Data
+   structure State' = State
+   structure Whnf = Whnf
+   structure Conv = Conv
+   structure Names = Names
+   structure Subordinate = Subordinate
+   structure Print = Print
+   structure Formatter = Formatter
+   structure TomegaPrint = TomegaPrint
+   structure Abstract = Abstract
+   structure Unify = UnifyTrail
+   structure Constraints = Constraints
+   structure Index = Index
+   structure Search = Search
+   structure TypeCheck = TypeCheck)
+
+
+
 structure Interactive = Interactive
   (structure Global = Global
    (*! structure IntSyn' = IntSyn !*)
@@ -87,9 +98,9 @@ structure Interactive = Interactive
    structure Weaken = Weaken
    structure ModeSyn = ModeSyn
    structure WorldSyn = WorldSyn
-   structure StatePrint = StatePrint
    structure Introduce = Introduce
    structure FixedPoint = FixedPoint
    structure Split = Split
-   structure Fill = Fill)
+   structure Fill = Fill
+   structure Recurse = Recurse)
  

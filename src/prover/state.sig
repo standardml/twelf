@@ -6,14 +6,17 @@ sig
   exception Error of string
 
   datatype State =
-    State of (Tomega.Dec IntSyn.Ctx * Tomega.For)
-           * Tomega.Worlds
+    State of Tomega.Worlds 
+      * Tomega.Dec IntSyn.Ctx * Tomega.Prg * Tomega.For	
+  | StateLF of IntSyn.Exp
 
+  datatype Focus = 
+    Focus of Tomega.Prg * Tomega.Worlds (* Focus (EVar, W) *)
+  | FocusLF of IntSyn.Exp	        (* focus EVar *)
+ 
   val init : Tomega.For * Tomega.Worlds -> State
   val close : State -> bool  
 
-  val construct : State              
-                  -> (Tomega.Prg -> Tomega.Prg)      (* Success continuation *)
-                  -> (unit -> Tomega.Prg)            (* Failure continuation *)
-                  -> Tomega.Prg
+  val collectT  : Tomega.Prg -> Tomega.Prg list
+  val collectLF : Tomega.Prg -> IntSyn.Exp list
 end
