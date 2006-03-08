@@ -51,38 +51,30 @@ struct
        If   |- S state
        then op' is an operator which performs the filling operation
     *)
-    fun expand (S.FocusLF (Y as I.EVar (r, G, V, _))) =   (* Can we assume that the evar is lowered? --cs Fri Mar  3 13:48:20 2006 *)
+    fun expand (S.FocusLF (Y as I.EVar (r, G, V, _))) =   (* Y is lowered *)
       let
-
-	fun lower (G0, Wt as (I.Root (I.Const a, _), t)) = 
-	    let
-	      fun try (Vs as (I.Root _, _), Fs, O) = 
-		((Unify.unify (G0, Vs, Wt); O :: Fs)
-		 handle Unify.Unify _ => Fs)
-		| try ((I.Pi ((I.Dec (_, V1), _), V2), s), Fs, O) =
-  		  let 
-		    val X = I.newEVar (G0, I.EClo (V1, s)) 
-		  in
-		    try ((V2, I.Dot (I.Exp X, s)), Fs, O)
-		  end
-	        | try ((I.EClo (V, s'), s), Fs, O) = try ((V, I.comp (s', s)), Fs, O)
-
-	      fun matchCtx (I.Null, _, Fs) = Fs 
-		| matchCtx (I.Decl (G, I.Dec (x, V)), n, Fs) =
-		    matchCtx (G, n+1, try ((V, I.Shift n), Fs, FillWithBVar (Y, n)))
-		| matchCtx (I.Decl (G, I.NDec), n, Fs) = 
-		    matchCtx (G, n+1, Fs)
-
-	      fun matchSig (nil, Fs) = Fs
-		| matchSig (I.Const (c)::L, Fs) =
-		   matchSig (L, try ((I.constType (c), I.id), Fs, FillWithConst (Y, c)))
-	    in
-	      matchCtx (G0, 1, matchSig (Index.lookup (a), nil))
-	    end
-	  | lower (G, (I.Pi ((D, _), V), t)) = lower (I.Decl (G, I.decSub (D, t)), (V, I.dot1 t))
-	  | lower (G, (I.EClo (V, s), t)) = lower (G, (V, (I.comp (s, t))))
+	fun try (Vs as (I.Root _, _), Fs, O) = 
+	  (CSManager.trail (fn () => (Unify.unify (G, Vs, (V, I.id)); O :: Fs))
+	   handle Unify.Unify _ => Fs)
+	  | try ((I.Pi ((I.Dec (_, V1), _), V2), s), Fs, O) =
+	  let 
+	    val X = I.newEVar (G, I.EClo (V1, s)) 
+	  in
+	    try ((V2, I.Dot (I.Exp X, s)), Fs, O)
+	  end
+	  | try ((I.EClo (V, s'), s), Fs, O) = try ((V, I.comp (s', s)), Fs, O)
+	  
+	fun matchCtx (I.Null, _, Fs) = Fs 
+	  | matchCtx (I.Decl (G, I.Dec (x, V)), n, Fs) =
+	  matchCtx (G, n+1, try ((V, I.Shift n), Fs, FillWithBVar (Y, n)))
+	  | matchCtx (I.Decl (G, I.NDec), n, Fs) = 
+	  matchCtx (G, n+1, Fs)
+	  
+	fun matchSig (nil, Fs) = Fs
+	  | matchSig (I.Const (c)::L, Fs) =
+	  matchSig (L, try ((I.constType (c), I.id), Fs, FillWithConst (Y, c)))
       in
-	lower (G, (V, I.id))
+	matchCtx (G, 1, matchSig (Index.lookup (I.targetFam V), nil))
       end
 
     (* apply op = B' 
@@ -91,60 +83,35 @@ struct
        If op is a filling operator
        then B' holds iff the filling operation was successful
     *)
-    fun apply (FillWithBVar(Y as I.EVar (r, G0, V, _), n)) = 
+    fun apply (FillWithBVar(Y as I.EVar (r, G, V, _), n)) = (* Y is lowered *)
       let
-
-	fun lower (G0, Wt as (I.Root _, t), k) = 
-	    let
-	      fun doit (Vs as (I.Root _, _),  k) = 
-		(Unify.unify (G0, Vs, Wt); (k I.Nil))  (* Unify must succeed *)
-		| doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
-		let 
-		  val X = I.newEVar (G0, I.EClo (V1, s)) 
-		in
-		  doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
-		end
-	      val I.Dec (_, W) = I.ctxDec (G0, n)
-	    in	      
-	      doit ((W, I.id),  fn S => k (I.Root (I.BVar n, S)))
-	    end
-	  | lower (G, (I.Pi ((D, _), V), t), k) =
-	    let
-	      val D' = I.decSub (D, t)
+	fun doit (Vs as (I.Root _, _),  k) = 
+	  (Unify.unify (G, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
+	  | doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
+  	    let 
+	      val X = I.newEVar (G, I.EClo (V1, s)) 
 	    in
-	      lower (I.Decl (G, D'), (V, I.dot1 t), fn U => k (I.Lam (D', U)))
+	      doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
 	    end
-	  | lower (G, (I.EClo (V, s), t), k) = lower (G, (V, (I.comp (s, t))), k)
-       in
-	lower (G0, (V, I.id), fn U => Unify.unify (G0, (Y, I.id), (U, I.id)))
+	  | doit ((I.EClo (V, t), s), k) = doit ((V, I.comp (t, s)), k)
+	  
+	val I.Dec (_, W) = I.ctxDec (G, n)
+      in	      
+	doit ((W, I.id),  fn S => Unify.unify (G, (Y, I.id), (I.Root (I.BVar n, S), I.id)))
       end
-
     | apply (FillWithConst(Y as I.EVar (r, G0, V, _), c)) = 
       let
-
-	fun lower (G0, Wt as (I.Root _, t), k) = 
-	    let
-	      fun doit (Vs as (I.Root _, _),  k) = 
-		(Unify.unify (G0, Vs, Wt); (k I.Nil))  (* Unify must succeed *)
-		| doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
-		let 
-		  val X = I.newEVar (G0, I.EClo (V1, s)) 
-		in
-		  doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
-		end
-	      val W = I.constType c
-	    in	      
-	      doit ((W, I.id),  fn S => k (I.Root (I.Const c, S)))
-	    end
-	  | lower (G, (I.Pi ((D, _), V), t), k) =
-	    let
-	      val D' = I.decSub (D, t)
-	    in
-	      lower (I.Decl (G, D'), (V, I.dot1 t), fn U => k (I.Lam (D', U)))
-	    end
-	  | lower (G, (I.EClo (V, s), t), k) = lower (G, (V, (I.comp (s, t))), k)
-      in
-	lower (G0, (V, I.id), fn U => Unify.unify (G0, (Y, I.id), (U, I.id)))
+	fun doit (Vs as (I.Root _, _),  k) = 
+	  (Unify.unify (G0, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
+	  | doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
+	  let 
+	    val X = I.newEVar (G0, I.EClo (V1, s)) 
+	  in
+	    doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
+	  end
+	val W = I.constType c
+      in	      
+	doit ((W, I.id),  fn S => Unify.unify (G0, (Y, I.id), (I.Root (I.Const c, S), I.id)))
       end
 
     (* menu op = s'

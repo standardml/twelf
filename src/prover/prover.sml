@@ -9,6 +9,19 @@ structure Introduce = Introduce
    (*! structure Tomega' = Tomega !*)
    structure State' = State)
 
+   
+structure Elim = Elim 
+  (structure Data = Data
+   (*! structure IntSyn' = IntSyn !*)
+   (*! structure Tomega' = Tomega !*)
+   structure State' = State
+   structure Whnf = Whnf
+   structure Abstract = Abstract
+   structure Unify = UnifyTrail
+   structure Constraints = Constraints
+   structure Index = Index
+   structure TypeCheck = TypeCheck)
+ 
 structure FixedPoint = FixedPoint 
   ((*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
@@ -102,5 +115,6 @@ structure Interactive = Interactive
    structure FixedPoint = FixedPoint
    structure Split = Split
    structure Fill = Fill
+   structure Elim = Elim
    structure Recurse = Recurse)
  

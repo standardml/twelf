@@ -11,7 +11,7 @@ struct
   datatype State =
     State of Tomega.Worlds 
       * Tomega.Dec IntSyn.Ctx * Tomega.Prg * Tomega.For	
-    | StateLF of IntSyn.Exp
+  | StateLF of IntSyn.Exp    (* StateLF X, X is always lowered *)
 
   datatype Focus = 
     Focus of Tomega.Prg * Tomega.Worlds

@@ -3,3 +3,10 @@
 
 %query 1 *
 sieve 500 L.
+
+
+%solve D:sieve 500 L.
+
+d = 5.
+
+d = +> 467 128414>0.

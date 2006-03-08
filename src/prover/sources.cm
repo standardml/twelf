@@ -34,10 +34,12 @@ is
   split.fun
   fixedpoint.sig  (* Fixed point rule *)
   fixedpoint.fun 
-  recurse.sig     (* Computing induction hypotheses *)
-  recurse.fun	
+(*   recurse.sig     (* Computing induction hypotheses *)
+  recurse.fun	*)
   introduce.sig   (* Introduce assumptions in the context *)
   introduce.fun
+  elim.sig        (* Elimination forms for meta level assumptions *)
+  elim.fun
   interactive.sig
   interactive.fun
   weaken.sig

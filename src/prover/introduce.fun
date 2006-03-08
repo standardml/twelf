@@ -20,7 +20,7 @@ struct
   structure I = IntSyn
 
     exception Error = S.Error
-    type operator = T.Prg option ref * T.Prg
+    type operator = T.Prg * T.Prg
 
     fun stripTC (T.Abs (_, TC)) = TC
       
@@ -41,17 +41,20 @@ struct
        and  F does not start with an all quantifier
        then S' = (Psi, x1:A1, ... xn:An |> F)
     *)
-    fun expand (S.Focus (T.EVar (Psi, r, T.All ((D, _), F), NONE, NONE), W)) =  
-	  SOME (r, T.Lam (D, T.newEVar (I.Decl (strip Psi, D), F)))
-      | expand (S.Focus (T.EVar (Psi, r, T.Ex ((D as I.Dec (_, V), _), F), NONE, NONE), W)) =  
+    fun expand (S.Focus (R as T.EVar (Psi, r, T.All ((D, _), F), NONE, NONE), W)) =  
+	  SOME (R, T.Lam (D, T.newEVar (I.Decl (strip Psi, D), F)))
+      | expand (S.Focus (R as T.EVar (Psi, r, T.Ex ((D as I.Dec (_, V), _), F), NONE, NONE), W)) =  
 	   let 
 	     val X = I.newEVar (T.coerceCtx (Psi), V)
 	     val Y = T.newEVar (Psi, T.forSub (F, T.Dot (T.Exp X, T.id)))
 	   in
-	     SOME (r, T.PairExp (X, Y))
+	     SOME (R, T.PairExp (X, Y))
 	   end
-      | expand (S.Focus (T.EVar (Psi, r, T.True, NONE, NONE), W)) = 
-	   (SOME (r, T.Unit))
+      | expand (S.Focus (R as T.EVar (Psi, r, T.True, NONE, NONE), W)) = 
+	   (SOME (R, T.Unit))
+
+      | expand (S.Focus (T.EVar (Psi, r, T.FClo (F, s), TC1, TC2), W)) = 
+	   expand (S.Focus (T.EVar (Psi, r, T.forSub (F, s), TC1, TC2), W)) 
       | expand (S.Focus (T.EVar (Psi, r, _, _, _), W)) = NONE
 
     (* apply O = S 
@@ -59,15 +62,15 @@ struct
        Invariant:
        O = S 
     *)
-    fun apply (r, P) = (r := SOME P)   (* need to trail for back *)
+    fun apply (T.EVar (_, r, _, _, _), P) = (r := SOME P)   (* need to trail for back *)
 
     (* menu O = s 
 
        Invariant:
        s = "Apply universal introduction rules"
     *)
-    fun menu _ = "Intro"
-      
+    fun menu (r, P) = "Intro " ^ TomegaPrint.nameEVar r
+		      
 
   in
     exception Error = Error

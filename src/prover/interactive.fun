@@ -24,6 +24,10 @@ functor Interactive
    (*! sharing Introduce.IntSyn = IntSyn' !*)
    (*! sharing Introduce.Tomega = Tomega' !*)
      sharing Introduce.State = State'
+   structure Elim : ELIM
+   (*! sharing Elim.IntSyn = IntSyn' !*)
+   (*! sharing Elim.Tomega = Tomega' !*)
+     sharing Elim.State = State'
    structure Split : SPLIT
    (*! sharing Split.IntSyn = IntSyn' !*)
    (*! sharing Split.Tomega = Tomega' !*)
@@ -141,6 +145,7 @@ struct
     | Introduce of Introduce.operator
     | Fix       of FixedPoint.operator
     | Recurse   of Recurse.operator
+    | Elim      of Elim.operator
 
     val Open : (S.State list) ref = ref []
 
@@ -243,13 +248,13 @@ struct
 	      in 
 		s ^ "\n  " ^ (format k) ^ (FixedPoint.menu O)
 	      end
-(*	    | menuToString' (k, Recursion O :: M,kOopt) =
+	    | menuToString' (k, Elim O :: M) =
 	      let 
-		val (kopt, s) = menuToString' (k+1, M, kOopt)
+		val s = menuToString' (k+1, M)
 	      in
-		(kopt, s ^ "\n  " ^ (format k) ^ (MTPRecursion.menu O))
+		s ^ "\n  " ^ (format k) ^ (Elim.menu O)
 	      end
-	    | menuToString' (k, Inference O :: M,kOopt) =
+(*	    | menuToString' (k, Inference O :: M,kOopt) =
 	      let 
 		val (kopt, s) = menuToString' (k+1, M, kOopt)
 	      in
@@ -324,10 +329,14 @@ struct
 		val intro = introMenu (map Introduce.expand F1)
 
 		val fill = foldr (fn (S, l) => l @ map (fn O => Fill O) (Fill.expand S)) nil F2 
-	      
-(*		val recurse = map Recurse.expand F1 *)
+	     
+		fun elimMenu [] = []
+		  | elimMenu (operators :: l) = map Elim operators @ elimMenu l
+
+		val elim = elimMenu (map Elim.expand F1)
+
 	      in
-		Menu := SOME (intro @ split @ fill)
+		Menu := SOME (intro @ split @ fill @ elim)
  	      end
 	    | (S.StateLF Y :: _) => 
 	      let
