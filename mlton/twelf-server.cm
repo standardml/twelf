@@ -7,7 +7,9 @@ Group is
 ../src/compat/substring.sig
 ../src/compat/text-io.sig
 ../src/compat/timer.sig
+../src/compat/socket.sig
 ../src/compat/compat.sig
+../src/compat/socket.sml
 ../src/compat/compat.fun
 ../src/compat/compat.sml
 ../src/timing/timing.sml
@@ -294,6 +296,7 @@ Group is
 ../src/tomega/coverage.sig
 ../src/tomega/coverage.fun
 ../src/tomega/tomega.sml
+../src/msg/msg.sml
 ../src/frontend/recon-term.sig
 ../src/frontend/recon-term.fun
 ../src/frontend/recon-condec.sig
