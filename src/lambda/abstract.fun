@@ -19,6 +19,7 @@ struct
     structure I = IntSyn
     structure T = Tomega
     structure C = Constraints
+    structure O = Order
       
     (* Intermediate Data Structure *)
 
@@ -269,6 +270,7 @@ struct
 	  (* . |- t : Gsome, so do not compose with s *)
 	  (* Sat Dec  8 13:28:15 2001 -fp *)
 	  collectSub (I.Null, t, K)
+      | collectDec (G, (I.NDec, s), K) = K
 
     (* collectSub (G, s, K) = K' 
 
@@ -734,6 +736,21 @@ struct
       | closedCtx (I.Decl (G, D)) =
           closedCtx G andalso closedDec (G, (D, I.id))
 
+
+    fun closedFor (Psi, T.True) = true
+      | closedFor (Psi, T.All ((D, _), F)) =
+          closedDEC (Psi, D) andalso closedFor (I.Decl (Psi, D), F)
+      | closedFor (Psi, T.Ex ((D, _), F)) =
+          closedDec (T.coerceCtx Psi, (D, I.id)) andalso closedFor (I.Decl (Psi, T.UDec D), F)
+
+    and closedDEC (Psi, T.UDec D) = closedDec (T.coerceCtx Psi, (D, I.id))
+      | closedDEC (Psi, T.PDec (_, F, _, _)) =  closedFor (Psi, F)
+
+
+    fun closedCTX I.Null = true
+      | closedCTX (I.Decl (Psi,  D)) = 
+          closedCTX Psi andalso closedDEC (Psi, D)
+
     fun evarsToK (nil) = I.Null
       | evarsToK (X::Xs) = I.Decl (evarsToK (Xs), EV(X))
 
@@ -757,7 +774,7 @@ struct
        collect and abstract in subsitutions  including residual lemmas       
        pending approval of Frank.
     *)
-    fun collectPrg (_, P as T.EVar (Psi, r, F), K) =
+    fun collectPrg (_, P as T.EVar (Psi, r, F, _, _, _), K) =
           I.Decl (K, PV P)
       | collectPrg (Psi, T.Unit, K) = K
       | collectPrg (Psi, T.PairExp (U, P), K) = 
@@ -773,7 +790,7 @@ struct
        then C' = Bidx (depth + k)
        and  {{K}}, G |- C' : V
     *)
-    fun abstractPVar (I.Decl(K', PV (T.EVar (_, r', _))), depth, P as T.EVar (_, r, _)) = 
+    fun abstractPVar (I.Decl(K', PV (T.EVar (_, r', _, _, _, _))), depth, P as T.EVar (_, r, _, _, _, _)) = 
 	  if r = r' then T.Var (depth+1)
 	  else abstractPVar (K', depth+1, P)
       | abstractPVar (I.Decl(K', _), depth, P) =
@@ -793,9 +810,31 @@ struct
       | collectTomegaSub (T.Dot (T.Prg P, t)) = 
 	  collectPrg (I.Null, P, collectTomegaSub t)
 
+    fun abstractOrder (K, depth, O.Arg (Us1, Us2)) =
+	  O.Arg ((abstractExp (K, depth, Us1), I.id),
+		 (abstractExp (K, depth, Us2), I.id))
+      | abstractOrder (K, depth, O.Simul (Os)) =
+	  O.Simul (map (fn O => abstractOrder (K, depth, O)) Os)
+      | abstractOrder (K, depth, O.Lex (Os)) =
+	  O.Lex (map (fn O => abstractOrder (K, depth, O)) Os)
+
+    fun abstractTC (K, depth, T.Abs (D, TC)) = 
+          T.Abs (abstractDec (K, depth, (D, I.id)), 
+		 abstractTC (K, depth, TC))
+      | abstractTC (K, depth, T.Conj (TC1, TC2)) = 
+	  T.Conj (abstractTC (K, depth, TC1),
+		  abstractTC (K, depth, TC2))
+      | abstractTC (K, depth, T.Base (O)) =
+	  T.Base (abstractOrder (K, depth, O))
+	  
+    fun abstractTCOpt (K, depth, NONE) = NONE
+      | abstractTCOpt (K, depth, SOME TC) = 
+          SOME (abstractTC (K, depth, TC))
        
     fun abstractMetaDec (K, depth, T.UDec D) = T.UDec (abstractDec (K, depth, (D, I.id)))
-      | abstractMetaDec (K, depth, T.PDec (xx, F)) = T.PDec (xx, abstractFor (K, depth, F))
+      | abstractMetaDec (K, depth, T.PDec (xx, F, TC1, TC2)) = T.PDec (xx, abstractFor (K, depth, F), TC1, TC2)
+         (* TC cannot contain free FVAR's or EVars'
+	    --cs  Fri Apr 30 13:45:50 2004 *)
 
     (* Argument must be in normal form *)
     and abstractFor (K, depth, T.True) = T.True
@@ -832,12 +871,15 @@ struct
 	in
 	  I.Decl (abstractPsi K', T.UDec (I.BDec (NONE, (l, t'))))
 	end
-      | abstractPsi (I.Decl (K', PV (T.EVar (GX, _, FX)))) =
+      | abstractPsi (I.Decl (K', PV (T.EVar (GX, _, FX, TC1, TC2, _)))) =
 	(* What's happening with GX? *)
+	(* What's happening with TCs? *)
         let
 	  val F' = abstractFor (K', 0, T.forSub (FX, T.id))
+	  val TC1' = abstractTCOpt (K', 0, TC1)
+	  val TC2' = abstractTCOpt (K', 0, TC2)
 	in
-	  I.Decl (abstractPsi K', T.PDec (NONE, F'))
+	  I.Decl (abstractPsi K', T.PDec (NONE, F', TC1, TC2))
 	end
       
     fun abstractTomegaSub t =
@@ -896,5 +938,6 @@ struct
     val collectEVarsSpine = collectEVarsSpine
 
     val closedCtx = closedCtx
+    val closedCTX = closedCTX
   end
 end;  (* functor Abstract *)

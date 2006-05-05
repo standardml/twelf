@@ -10,6 +10,7 @@ sig
   val closedSub : IntSyn.Dec IntSyn.Ctx * IntSyn.Sub -> bool
   val closedExp : IntSyn.Dec IntSyn.Ctx * (IntSyn.Exp * IntSyn.Sub) -> bool
   val closedCtx : IntSyn.Dec IntSyn.Ctx -> bool
+  val closedCTX : Tomega.Dec IntSyn.Ctx -> bool
 
   val abstractDecImp : IntSyn.Exp  -> (int * IntSyn.Exp)
   val abstractDef : (IntSyn.Exp * IntSyn.Exp)

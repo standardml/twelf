@@ -17,7 +17,7 @@ is
   ../subordinate/sources.cm
   ../modes/sources.cm
   ../typecheck/sources.cm
-  ../order/sources.cm
+  (* ../order/sources.cm *)
   ../thm/sources.cm
   ../terminate/sources.cm
   ../index/sources.cm

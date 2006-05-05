@@ -79,7 +79,7 @@ structure Weaken =
   Weaken ((*! structure IntSyn' = IntSyn !*)
 	  structure Whnf = Whnf)
 
-
+(*
 structure Recurse = Recurse
   (structure Global = Global
    structure Data = Data
@@ -97,7 +97,7 @@ structure Recurse = Recurse
    structure Index = Index
    structure Search = Search
    structure TypeCheck = TypeCheck)
-
+*)
 
 
 structure Interactive = Interactive
@@ -115,6 +115,5 @@ structure Interactive = Interactive
    structure FixedPoint = FixedPoint
    structure Split = Split
    structure Fill = Fill
-   structure Elim = Elim
-   structure Recurse = Recurse)
+   structure Elim = Elim)
  

@@ -501,6 +501,7 @@ struct
     | decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
   *)
   fun decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
+    | decSub (NDec, s) = NDec
     | decSub (BDec (n, (l, t)), s) = BDec (n, (l, comp (t, s)))
 
   (* dot1 (s) = s'

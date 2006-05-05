@@ -64,7 +64,7 @@ functor Redundant (structure Opsem : OPSEM) : REDUNDANT  =
 
 
     and decEqual ( T.UDec (D1), (T.UDec (D2), t2) ) = Conv.convDec ((D1, I.id),(D2, T.coerceSub(t2)))
-      | decEqual ( T.PDec (_, F1), (T.PDec (_, F2), t2) ) = T.convFor ((F1, T.id), (F2, t2))
+      | decEqual ( T.PDec (_, F1, _, _), (T.PDec (_, F2, _, _), t2) ) = T.convFor ((F1, T.id), (F2, t2))
       | decEqual _ = false
 
     and caseEqual (((Psi1, t1, P1)::O1), (((Psi2, t2, P2)::O2), tAfter)) =
@@ -140,7 +140,7 @@ functor Redundant (structure Opsem : OPSEM) : REDUNDANT  =
 
       | prgEqual ((T.PClo (P1, t1)), (T.PClo (P2, t2a), t2b)) = (* there are no PClo created in converter *) raise Error "PClo should not exist!"		
 
-      | prgEqual ((T.EVar (Psi1, P1optRef, F1)), (T.EVar (Psi2, P2optref, F2), t2)) = raise Error "No EVARs should exist!"
+      | prgEqual ((T.EVar (Psi1, P1optRef, F1, _, _, _)), (T.EVar (Psi2, P2optref, F2, _, _, _), t2)) = raise Error "No EVARs should exist!"
 
       | prgEqual _ = false
 
@@ -361,7 +361,7 @@ functor Redundant (structure Opsem : OPSEM) : REDUNDANT  =
 		else
 		  raise Error "Let don't match"
 
-      | mergePrgs ((T.EVar (Psi1, P1optRef, F1)), (T.EVar (Psi2, P2optref, F2), t2)) = raise Error "No EVARs should exist!"
+      | mergePrgs ((T.EVar (Psi1, P1optRef, F1, _, _, _)), (T.EVar (Psi2, P2optref, F2, _, _, _), t2)) = raise Error "No EVARs should exist!"
 
       | mergePrgs _ = raise Error "Redundancy in cases could not automatically be removed."
 

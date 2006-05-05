@@ -26,7 +26,7 @@ is
   ../terminate/sources.cm
   ../index/sources.cm
   ../thm/sources.cm
-  ../order/sources.cm
+  (* ../order/sources.cm *)
   ../opsem/sources.cm
   ../compile/sources.cm
   ../subordinate/sources.cm

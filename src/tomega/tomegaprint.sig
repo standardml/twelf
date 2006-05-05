@@ -7,6 +7,8 @@ sig
   (*! structure Tomega : TOMEGA  !*)
   structure Formatter : FORMATTER
 
+  exception Error of string
+
   val formatFor   : Tomega.Dec IntSyn.Ctx * Tomega.For -> Formatter.format
   val forToString : Tomega.Dec IntSyn.Ctx * Tomega.For -> string
   val formatFun : (string list * Tomega.lemma list) * Tomega.Prg -> Formatter.format
@@ -21,8 +23,16 @@ sig
      same order as names.  The nth name corresponds to the nth projection function
   *)
      
+  val evarReset : unit -> unit
+  val evarName : string -> Tomega.Prg
+  val nameEVar : Tomega.Prg -> string
 
   val prgToString : Tomega.Dec IntSyn.Ctx * Tomega.Prg -> string
+    
+  val nameCtx   : Tomega.Dec IntSyn.Ctx -> Tomega.Dec IntSyn.Ctx
+  val formatCtx : Tomega.Dec IntSyn.Ctx -> Formatter.format
+  val ctxToString : Tomega.Dec IntSyn.Ctx -> string
+
 (*  val lemmaDecToString : FunSyn.LemmaDec -> string *)
 end;  (* signature TOMEGAPRINT *)
 

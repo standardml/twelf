@@ -23,7 +23,7 @@ is
   ../modes/sources.cm
   ../typecheck/sources.cm
   ../index/sources.cm
-  ../order/sources.cm
+  (* ../order/sources.cm *)
   ../opsem/sources.cm
   ../compile/sources.cm
   ../heuristic/sources.cm

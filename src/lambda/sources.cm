@@ -20,6 +20,8 @@ Library
   structure Abstract
   signature APPROX
   structure Approx
+  signature ORDER
+  structure Order
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -29,6 +31,9 @@ is
   fgnopn.sig
   fgnopntable.fun
   ../table/sources.cm
+  order.sig
+  order.fun
+  order.sml
   intsyn.sig
   intsyn.fun
   tomega.sig

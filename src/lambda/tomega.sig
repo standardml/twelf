@@ -1,4 +1,3 @@
-
 (* Internal syntax for Delphin *)
 (* Author: Carsten Schuermann *)
 
@@ -14,6 +13,13 @@ sig
     
   datatype Quantifier = Implicit | Explicit
 
+
+  datatype TC	=			(* Terminiation Condition     *)
+    Abs of IntSyn.Dec * TC      	(* T ::= {{D}} O              *)
+  | Conj of TC * TC			(*     | O1 ^ O2              *)
+  | Base of ((IntSyn.Exp * IntSyn.Sub) * 
+	     (IntSyn.Exp * IntSyn.Sub)) Order.Order
+
   datatype For  			(* Formulas                   *)
   = World of Worlds * For               (* F ::= World l1...ln. F     *)  
   | All of (Dec * Quantifier) * For     (*     | All LD. F            *)
@@ -27,7 +33,8 @@ sig
 
   and Dec =			        (* Declaration:               *)
     UDec of IntSyn.Dec                  (* D ::= x:A                  *)
-  | PDec of string option * For         (*     | xx :: F              *)
+  | PDec of string option * For * TC option * TC option  
+                                        (*     | xx :: F              *)
 
   and Prg =				(* Programs:                  *)
     Box of Worlds * Prg                 (*     | box W. P             *)
@@ -43,11 +50,14 @@ sig
   | Case of Cases                       (*     | case t of O          *)
   | PClo of Prg * Sub			(*     | P [t]                *)
   | Let of Dec * Prg * Prg              (*     | let D = P1 in P2     *)
-  | EVar of (Dec IntSyn.Ctx * Prg option ref * For)
-					(*     | E (G, F)             *)
+  | EVar of Dec IntSyn.Ctx * Prg option ref * For * TC option * TC option * IntSyn.Exp
+					(*     | E (G, F, _, _, X)    *)
+                                        (* X is just just for printing*)
+    
   | Const of lemma                      (* P ::= cc                   *)
   | Var of int                          (*     | xx                   *)
-  
+  | LetPairExp of IntSyn.Dec * Dec * Prg * Prg
+  | LetUnit of Prg * Prg
 
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
@@ -94,6 +104,7 @@ sig
   val whnfFor   : For * Sub -> For * Sub
   val normalizePrg : Prg * Sub -> Prg 
   val normalizeSub : Sub -> Sub 
+  val derefPrg : Prg -> Prg 
   
   val lemmaLookup : lemma -> ConDec
   val lemmaName   : string -> lemma
@@ -106,6 +117,7 @@ sig
 
   val convFor     : (For * Sub) * (For * Sub) -> bool
   val newEVar     : Dec IntSyn.Ctx * For -> Prg
+  val newEVarTC   : Dec IntSyn.Ctx * For * TC option * TC option -> Prg 
 
 (* Below are added by Yu Liao *)
   val ctxDec : Dec IntSyn.Ctx * int -> Dec
@@ -116,6 +128,13 @@ sig
   val coerceFront : Front -> IntSyn.Front
   val revCoerceFront : IntSyn.Front -> Front
   val deblockify : IntSyn.Dec IntSyn.Ctx -> IntSyn.Dec IntSyn.Ctx * Sub
+
+(* Stuff that has to do with termination conditions *)
+  val TCSub : TC * IntSyn.Sub -> TC
+  val normalizeTC : TC -> TC
+  val convTC : TC * TC -> bool
+  val transformTC : IntSyn.Dec IntSyn.Ctx * For * int Order.Order list -> TC
+    
 
 end (* Signature TOMEGA *)
 

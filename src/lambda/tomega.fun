@@ -14,6 +14,12 @@ struct
 
   datatype Quantifier = Implicit | Explicit
 
+  datatype TC	=			(* Terminiation Condition     *)
+    Abs of IntSyn.Dec * TC      	(* T ::= {{D}} O              *)
+  | Conj of TC * TC			(*     | O1 ^ O2              *)
+  | Base of ((IntSyn.Exp * IntSyn.Sub) * 
+	     (IntSyn.Exp * IntSyn.Sub)) Order.Order
+
   datatype For  			(* Formulas                   *)
   = World of Worlds * For               (* F ::= World l1...ln. F     *)  
   | All of (Dec * Quantifier) * For	(*     | All LD. F            *)
@@ -27,7 +33,8 @@ struct
 
   and Dec =			        (* Declaration:               *)
     UDec of IntSyn.Dec                  (* D ::= x:A                  *)
-  | PDec of string option * For         (*     | xx :: F              *)
+  | PDec of string option * For * TC option * TC option
+					(*     | xx :: F              *)
 
   and Prg =				(* Programs:                  *)
     Box of Worlds * Prg                 (*     | box W. P             *)
@@ -43,10 +50,12 @@ struct
   | Case of Cases                       (*     | case t of O          *)
   | PClo of Prg * Sub			(*     | P [t]                *)
   | Let of Dec * Prg * Prg              (*     | let D = P1 in P2     *)
-  | EVar of (Dec IntSyn.Ctx * Prg option ref * For)
-					(*     | E (G, F)             *)
+  | EVar of Dec IntSyn.Ctx * Prg option ref * For * TC option * TC option * IntSyn.Exp
+					(*     | E (G, F, TC)         *)
   | Const of lemma                      (* P ::= cc                   *)
   | Var of int                          (*     | xx                   *)
+  | LetPairExp of IntSyn.Dec * Dec * Prg * Prg
+  | LetUnit of Prg * Prg
 
   and Spine =				(* Spines:                    *)
     Nil					(* S ::= Nil                  *)
@@ -78,6 +87,8 @@ struct
 
   local
     structure I = IntSyn
+    structure O = Order
+
     val maxLemma = Global.maxCid
     val lemmaArray = Array.array (maxLemma+1, ForDec ("", True)) 
                    : ConDec Array.array
@@ -213,6 +224,94 @@ struct
           I.Decl (embedCtx G, UDec D)
 
 
+
+      (* orderSub (O, s) = O'
+      
+         Invariant:
+         If   G' |- O order    and    G |- s : G'
+         then G |- O' order
+         and  G |- O' == O[s] order
+      *)     
+      fun orderSub (O.Arg ((U, s1), (V, s2)), s) = 
+            O.Arg ((U,  I.comp (s1, s)), (V, I.comp (s2, s)))
+	| orderSub (O.Lex Os, s) = O.Lex (map (fn O => orderSub (O, s)) Os)
+	| orderSub (O.Simul Os, s) = O.Simul (map (fn O => orderSub (O, s)) Os)
+
+      fun TCSub (Base O, s) = Base (orderSub (O, s))
+	| TCSub (Conj (TC1, TC2), s) = Conj (TCSub (TC1, s), TCSub (TC2, s))
+	| TCSub (Abs (D, TC), s) = Abs (I.decSub (D, s), TCSub (TC, I.dot1 s)) 
+
+      fun TCSubOpt (NONE, s) = NONE
+	| TCSubOpt (SOME TC, s) = SOME (TCSub (TC, s))
+
+      (* normalizeTC (O) = O'
+     
+         Invariant:
+         If   G |- O TC
+         then G |- O' TC
+         and  G |- O = O' TC
+         and  each sub term of O' is in normal form.
+      *)
+      fun normalizeTC' (O.Arg (Us, Vs)) = 
+            O.Arg ((Whnf.normalize Us, I.id), (Whnf.normalize Vs, I.id))
+        | normalizeTC' (O.Lex Os) = O.Lex (map normalizeTC' Os)
+        | normalizeTC' (O.Simul Os) = O.Simul (map normalizeTC' Os)
+
+      fun normalizeTC (Base  O) = Base (normalizeTC' O)
+	| normalizeTC (Conj (TC1, TC2)) = Conj (normalizeTC TC1, normalizeTC TC2)
+	| normalizeTC (Abs (D, TC)) = Abs (Whnf.normalizeDec (D, I.id), normalizeTC TC)
+
+      fun normalizeTCOpt (NONE) = NONE
+	| normalizeTCOpt (SOME TC) = SOME (normalizeTC TC)
+
+      (* convTC (O1, O2) = B'
+ 
+         Invariant:
+         If   G |- O1 TC
+         and  G |- O2 TC
+         then B' holds iff G |- O1 == O2 TC
+      *)
+      fun convTC' (O.Arg (Us1, _), O.Arg (Us2, _ )) = Conv.conv (Us1, Us2)
+	| convTC' (O.Lex Os1, O.Lex Os2) = convTCs (Os1, Os2)
+	| convTC' (O.Simul Os1, O.Simul Os2) = convTCs (Os1, Os2)
+      and convTCs (nil, nil) = true
+	| convTCs (O1 :: L1, O2 :: L2) = 
+  	    convTC' (O1, O2) andalso convTCs (L1, L2)
+
+      fun convTC (Base  O, Base O') =  convTC' (O, O')
+	| convTC (Conj (TC1, TC2), Conj (TC1', TC2')) = convTC (TC1, TC1') 
+		     andalso convTC (TC2, TC2')
+	| convTC (Abs (D, TC), Abs (D', TC')) = Conv.convDec ((D, I.id), (D', I.id)) andalso 
+		     convTC (TC, TC')
+	| convTC _ = false
+
+      fun convTCOpt (NONE, NONE) = true
+	| convTCOpt (SOME TC1, SOME TC2) = convTC (TC1, TC2)
+	| convTCOpt _ = false
+
+    fun transformTC' (G, O.Arg k) = 
+        let 
+	  val k' = (I.ctxLength G) -k+1
+	  val I.Dec (_, V) = I.ctxDec (G, k')
+	in
+	  O.Arg ((I.Root (I.BVar k', I.Nil), I.id), (V, I.id))
+	end
+      | transformTC' (G, O.Lex Os) = 
+          O.Lex (map (fn O => transformTC' (G, O)) Os)
+      | transformTC' (G, O.Simul Os) = 
+	  O.Simul (map (fn O => transformTC' (G, O)) Os)
+
+    fun transformTC (G, All ((UDec D, _), F), Os) =
+          Abs (D, transformTC (I.Decl (G, D), F, Os))
+      | transformTC (G, And (F1, F2), O :: Os) =
+	  Conj (transformTC (G, F1, [O]),
+		 transformTC (G, F2, Os))
+      | transformTC (G, Ex _, [O]) = Base (transformTC' (G, O))
+
+
+
+
+
     (* bvarSub (n, t) = Ft'
    
        Invariant: 
@@ -226,15 +325,6 @@ struct
       | varSub (n, Shift(k))  = Idx (n+k)
 
 
-    (* decSub (x::F, t) = D'
-
-       Invariant:
-       If   Psi  |- t : Psi'    Psi' |- F formula
-       then D' = x:F[t]
-       and  Psi  |- F[t] formula
-    *)
-    fun decSub (PDec (x, F), t) = PDec (x, FClo (F, t))
-      | decSub (UDec D, t) = UDec (I.decSub (D, coerceSub t))
 
 
     (* frontSub (Ft, t) = Ft' 
@@ -298,6 +388,45 @@ struct
       | weakenSub (I.Decl (Psi, D as PDec _)) =
 	  comp (weakenSub Psi, shift)
 
+
+    (* forSub (F, t) = F'
+     
+       Invariant:
+       If    Psi |- F for
+       and   Psi' |- t : Psi
+       then  Psi' |- F' = F[t] for
+    *)
+    fun forSub (All ((D, Q), F), t) = 
+          All ((decSub (D, t), Q),  
+		 forSub (F, dot1 t)) 
+      | forSub (Ex ((D, Q), F), t) = 
+	  Ex ((I.decSub (D, coerceSub t), Q),
+		 forSub (F, dot1 t))
+      | forSub (And (F1, F2), t) =
+	  And (forSub (F1, t), 
+		 forSub (F2, t))
+      | forSub (FClo (F, t1), t2) = 
+	  forSub (F, comp (t1, t2))
+      | forSub (World (W, F), t) =
+	  World (W, forSub (F, t))
+      | forSub (True, _) = True
+
+
+
+    (* decSub (x::F, t) = D'
+
+       Invariant:
+       If   Psi  |- t : Psi'    Psi' |- F formula
+       then D' = x:F[t]
+       and  Psi  |- F[t] formula
+    *)
+    and decSub (PDec (x, F, TC1, NONE), t) = 
+        let 
+	  val s = coerceSub t
+	in
+	  PDec (x, forSub (F, t), TCSubOpt (TC1, s), NONE)
+	end
+      | decSub (UDec D, t) = UDec (I.decSub (D, coerceSub t))
 
 
     (* invertSub s = s'
@@ -428,12 +557,15 @@ struct
       | convFor _ = false
     and convDec ((UDec D1, t1), (UDec D2, t2)) = 
           Conv.convDec ((D1, coerceSub t1), (D2, coerceSub t2))
-      | convDec ((PDec (_, F1), t1), (PDec (_, F2), t2)) =
-	  convFor ((F1, t1), (F2, t2))
+      | convDec ((PDec (_, F1, TC1, TC1'), t1), (PDec (_, F2, TC2, TC2'), t2)) =
+	  (convFor ((F1, t1), (F2, t2));
+	   convTCOpt (TC1, TC1');
+	   convTCOpt (TC2, TC2'))
 
 
   (* newEVar (G, V) = newEVarCnstr (G, V, nil) *)
-  fun newEVar (Psi, F) = EVar(Psi, ref NONE, F)
+  fun newEVar (Psi, F) = EVar(Psi, ref NONE, F, NONE, NONE, I.newEVar (coerceCtx Psi, I.Uni I.Type))
+  fun newEVarTC (Psi, F, TC, TC') = EVar (Psi, ref NONE, F, TC, TC', I.newEVar (coerceCtx Psi, I.Uni I.Type))
 
   fun exists (x, []) = false 
     | exists (x, y :: W2) = (x = y) orelse exists (x, W2)
@@ -456,7 +588,8 @@ struct
            *)
 	fun ctxDec' (I.Decl (G', UDec (I.Dec(x, V'))), 1) = UDec (I.Dec(x, I.EClo (V', I.Shift (k))))
 	  | ctxDec' (I.Decl (G', UDec (I.BDec (l, (c, s)))), 1) = UDec (I.BDec (l, (c, I.comp (s, I.Shift (k)))))
-	  | ctxDec' (I.Decl (G', PDec (x, F)), 1) = PDec(x, FClo (F, Shift(k)))
+	  | ctxDec' (I.Decl (G', PDec (x, F, TC1, TC2)), 1) = 
+	      PDec(x, forSub (F, Shift(k)),  TCSubOpt (TC1, I.Shift k), TCSubOpt (TC2, I.Shift k))
 	  | ctxDec' (I.Decl (G', _), k') = ctxDec' (G', k'-1)
 	 (* ctxDec' (Null, k')  should not occur by invariant *)
       in
@@ -500,29 +633,6 @@ struct
     and append (G', (nil, s)) = G'
       | append (G', (D :: L, s)) = 
           append (I.Decl (G', I.decSub (D, s)), (L, I.dot1 s))
-
-
-    (* forSub (F, t) = F'
-     
-       Invariant:
-       If    Psi |- F for
-       and   Psi' |- t : Psi
-       then  Psi' |- F' = F[t] for
-    *)
-    fun forSub (All ((D, Q), F), t) = 
-          All ((decSub (D, t), Q),  
-		 forSub (F, dot1 t)) 
-      | forSub (Ex ((D, Q), F), t) = 
-	  Ex ((I.decSub (D, coerceSub t), Q),
-		 forSub (F, dot1 t))
-      | forSub (And (F1, F2), t) =
-	  And (forSub (F1, t), 
-		 forSub (F2, t))
-      | forSub (FClo (F, t1), t2) = 
-	  forSub (F, comp (t1, t2))
-      | forSub (World (W, F), t) =
-	  World (W, forSub (F, t))
-      | forSub (True, _) = True
 
 
     (* whnfFor (F, t) = (F', t')
@@ -575,10 +685,12 @@ struct
       | normalizePrg (PairPrg (P1, P2), t) =
           PairPrg (normalizePrg (P1, t), normalizePrg (P2, t))
       | normalizePrg (Unit, _) = Unit
-      | normalizePrg (EVar (_, ref (SOME P), _), t) = PClo(P, t)
+      | normalizePrg (EVar (_, ref (SOME P), _, _, _, _), t) = PClo(P, t)
       | normalizePrg (P as EVar _, t) = PClo(P,t) 
+      | normalizePrg (Lam (D, P), t) = Lam (normalizeDec (D, t), normalizePrg (P, dot1 t))
+      | normalizePrg (Rec (D, P), t) = Rec (normalizeDec (D, t), normalizePrg (P, dot1 t))
       | normalizePrg (PClo (P, t), t') = normalizePrg (P, comp (t, t'))
-
+ 
     and normalizeSpine (Nil, t) = Nil
       | normalizeSpine (AppExp (U, S), t) =
          AppExp (Whnf.normalize (U, coerceSub t), normalizeSpine (S, t)) 
@@ -588,6 +700,10 @@ struct
           AppBlock (I.blockSub (B, coerceSub t), normalizeSpine (S, t))
       | normalizeSpine (SClo (S, t1), t2) =
 	  normalizeSpine (S, comp (t1, t2))
+
+    and normalizeDec (PDec (name, F, TC1, NONE), t) = 
+          PDec (name, forSub (F, t), normalizeTCOpt (TCSubOpt (TC1, coerceSub t)), NONE)
+      | normalizeDec (UDec D, t) = UDec (Whnf.normalizeDec (D, coerceSub t))
 
     fun normalizeSub (s as Shift n) = s
       | normalizeSub (Dot (Prg P, s)) =
@@ -599,7 +715,57 @@ struct
       | normalizeSub (Dot (Idx k, s)) = 
 	  Dot (Idx k, normalizeSub s)
 
+    (* derefPrg (P, t) = (P', t')
+     
+       Invariant:
+       If   Psi' |- V :: F
+       and  Psi' |- V value
+       and  Psi  |- t :: Psi'
+       and  P doesn't contain free EVars
+       then there exists a Psi'', F' 
+       s.t. Psi'' |- F' for
+       and  Psi'' |- P' :: F'
+       and  Psi |- t' : Psi''
+       and  Psi |- F [t] == F' [t']
+       and  Psi |- P [t] == P' [t'] : F [t]
+       and  Psi |- P' [t'] :nf: F [t]
+    *)
+    fun derefPrg (Var n) = Var n 
+      | derefPrg (PairExp (U, P')) = 
+	  PairExp (U, derefPrg P')
+      | derefPrg (PairBlock (B, P')) = 
+	  PairBlock (B, derefPrg P')
+      | derefPrg (PairPrg (P1, P2)) =
+          PairPrg (derefPrg (P1), derefPrg (P2))
+      | derefPrg (Unit) = Unit
+      | derefPrg (EVar (_, ref (SOME P), _, _, _, _)) = P
+      | derefPrg (P as EVar _) = P
+      | derefPrg (Lam (D, P)) = Lam (derefDec D, derefPrg P)
+      | derefPrg (Rec (D, P)) = Rec (derefDec D, derefPrg P)
+      | derefPrg (Redex (P, S)) = Redex (derefPrg P, derefSpine S)
+      | derefPrg (Case (Cases Cs)) = 
+	  Case (Cases (flattenCases (map (fn (Psi, s, P) => (Psi, s, derefPrg P)) Cs)))
+      | derefPrg (Let (D, P1, P2)) = Let (derefDec D, derefPrg P1, derefPrg P2)
+      | derefPrg (LetPairExp (D1, D2, P1, P2)) = LetPairExp (D1, derefDec D2, derefPrg P1, derefPrg P2)
+      | derefPrg (LetUnit (P1, P2)) = LetUnit (derefPrg P1, derefPrg P2)
 
+
+    and flattenCases ((Psi, s, Case (Cases L)) :: Cs) = 
+           map (fn (Psi', s', P') => (Psi', comp (s, s'), P')) (flattenCases L)
+	   @ flattenCases Cs
+      | flattenCases ((Psi, s, P) :: Cs)  = (Psi, s, P) :: flattenCases Cs
+      | flattenCases nil = nil
+
+    and derefSpine Nil = Nil
+      | derefSpine (AppExp (U, S)) =
+         AppExp (U, derefSpine S) 
+      | derefSpine (AppPrg (P, S)) =
+          AppPrg (derefPrg (P), derefSpine (S))
+      | derefSpine (AppBlock (B, S)) =
+          AppBlock (B, derefSpine (S))
+
+    and derefDec (PDec (name, F, TC1, TC2)) = PDec (name, F, TC1, TC2)
+      | derefDec (UDec D) = UDec D
 
   in 
     val lemmaLookup = lemmaLookup 
@@ -626,11 +792,13 @@ struct
     val whnfFor = whnfFor
     val normalizePrg = normalizePrg
     val normalizeSub = normalizeSub
+    val derefPrg = derefPrg
       
     val id = id
     val dotEta = dotEta
     val convFor = convFor
     val newEVar = newEVar
+    val newEVarTC = newEVarTC 
 
 (* Below are added by Yu Liao *)
     val embedSub = embedSub
@@ -643,6 +811,13 @@ struct
     val coerceFront = coerceFront
     val revCoerceFront = revCoerceFront
     val deblockify = deblockify
+
+(* Stuff that has to do with termination conditions *)
+  val TCSub = TCSub
+  val normalizeTC  = normalizeTC
+  val convTC = convTC
+  val transformTC = transformTC
+
 
   end
 end;  (* functor FunSyn *)

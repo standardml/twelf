@@ -51,10 +51,14 @@ struct
       | findPrg (T.Case (T.Cases C)) = findCases C
       | findPrg (T.PClo (P, t)) = findPrg P @ findSub t
       | findPrg (T.Let (D, P1, P2)) = findPrg P1 @ findPrg P2
-      | findPrg (X as T.EVar _) = [X]
+      | findPrg (T.LetPairExp (D1, D2, P1, P2)) = findPrg P1 @ findPrg P2
+      | findPrg (T.LetUnit (P1, P2)) = findPrg P1 @ findPrg P2
+      | findPrg (X as T.EVar (_, ref NONE, _, _, _, _)) = [X]
+      | findPrg (X as T.EVar (_, ref (SOME P), _, _, _, _)) = findPrg P
       | findPrg (T.Const _) = []
       | findPrg (T.Var _) = []
-
+      | findPrg (T.Redex (P, S)) = findPrg P @ findSpine S
+      
     and findCases nil = [] 
       | findCases ((_, _, P) :: C) = findPrg P @ findCases C
 
@@ -67,6 +71,10 @@ struct
       | findFront (T.Block _) = []
       | findFront (T.Undef) = []
 
+    and findSpine (T.Nil) = []
+      | findSpine (T.AppPrg (P, S)) = findPrg P @ findSpine S
+      | findSpine (T.AppExp (_, S)) = findSpine S
+      | findSpine (T.AppBlock (_, S)) = findSpine S   (* by invariant: blocks don't contain free evars *)
 
     (* find P = [X1 .... Xn]
        Invariant:
@@ -88,9 +96,20 @@ struct
 	  findExpSub (Psi, t) (findExp (Psi, P) K)
       | findExp (Psi, T.Let (D, P1, P2)) K = 
 	  findExp (I.Decl (Psi, D), P2) (findExp (Psi, P1) K)
+      | findExp (Psi, T.LetPairExp (D1, D2, P1, P2)) K =
+	  findExp (I.Decl (I.Decl (Psi, T.UDec D1), D2), P2) (findExp (Psi, P1) K)
+      | findExp (Psi, T.LetUnit (P1, P2)) K =
+	  findExp (Psi, P2) (findExp (Psi, P1) K)
       | findExp (Psi, X as T.EVar _) K = K
       | findExp (Psi, T.Const _) K = K
       | findExp (Psi, T.Var _) K = K
+      | findExp (Psi, T.Redex (P, S)) K = findExpSpine (Psi, S) K
+
+    and findExpSpine (Psi, T.Nil) K = K
+      | findExpSpine (Psi, T.AppPrg (_, S)) K = findExpSpine (Psi, S) K
+      | findExpSpine (Psi, T.AppExp (M, S)) K = findExpSpine (Psi, S) (Abstract.collectEVars (T.coerceCtx Psi, (M, I.id), K))
+      | findExpSpine (Psi, T.AppBlock (_, S)) K = findExpSpine (Psi, S) K
+      
 
     and findExpCases (Psi, nil) K = K
       | findExpCases (Psi, (_, _, P) :: C) K = 
@@ -136,5 +155,6 @@ struct
 
     val collectT = findPrg
     val collectLF = fn P => findExp (I.Null, P) []
+    val collectLFSub = fn s => findExpSub (I.Null, s) []
   end
 end

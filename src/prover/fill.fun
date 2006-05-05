@@ -1,5 +1,6 @@
-(* Filling  Version 1.4 *)
+(* Filling *)
 (* Author: Carsten Schuermann *)
+(* Date: Thu Mar 16 13:08:33 2006 *)
 
 functor Fill 
   (structure Data : DATA
@@ -32,9 +33,20 @@ struct
 
   exception Error of string
 
-  datatype Operator = 
+  datatype Operator =  
     FillWithConst of IntSyn.Exp * IntSyn.cid 
+       (* Representation Invariant:  FillWithConst (X, c) :
+	   X is an evar GX |- X : VX
+	   Sigma |- c : W
+	   and VX and W are unifiable
+       *)
     | FillWithBVar of IntSyn.Exp * int
+       (* Representation Invariant:  FillWithBVar (X, n) :
+	   X is an evar GX |- X : VX
+	   GX |- n : W
+	   and VX and W are unifiable
+       *)
+
   type operator = Operator 
 
   local
@@ -49,7 +61,7 @@ struct
 
        Invariant:
        If   |- S state
-       then op' is an operator which performs the filling operation
+       then op' satifies representation invariant. 
     *)
     fun expand (S.FocusLF (Y as I.EVar (r, G, V, _))) =   (* Y is lowered *)
       let
@@ -64,9 +76,16 @@ struct
 	  end
 	  | try ((I.EClo (V, s'), s), Fs, O) = try ((V, I.comp (s', s)), Fs, O)
 	  
+	(* matchCtx (G, n, Fs) = Fs'
+
+	   Invariant:
+	   If G0 = G, G' and |G'| = n and Fs a list of filling operators that
+	   satisfy the representation invariant, then Fs' is a list of filling operators
+	   that satisfy the representation invariant.
+	*)
 	fun matchCtx (I.Null, _, Fs) = Fs 
 	  | matchCtx (I.Decl (G, I.Dec (x, V)), n, Fs) =
-	  matchCtx (G, n+1, try ((V, I.Shift n), Fs, FillWithBVar (Y, n)))
+	  matchCtx (G, n+1, try ((V, I.Shift (n+1)), Fs, FillWithBVar (Y, n+1)))
 	  | matchCtx (I.Decl (G, I.NDec), n, Fs) = 
 	  matchCtx (G, n+1, Fs)
 	  
@@ -74,19 +93,20 @@ struct
 	  | matchSig (I.Const (c)::L, Fs) =
 	  matchSig (L, try ((I.constType (c), I.id), Fs, FillWithConst (Y, c)))
       in
-	matchCtx (G, 1, matchSig (Index.lookup (I.targetFam V), nil))
+	matchCtx (G, 0, matchSig (Index.lookup (I.targetFam V), nil))
       end
 
-    (* apply op = B' 
+    (* apply op = ()
 
        Invariant:
-       If op is a filling operator
-       then B' holds iff the filling operation was successful
+       If op is a filling operator that satisfies the representation invariant.
+       The apply operation is guaranteed to always succeed.
     *)
     fun apply (FillWithBVar(Y as I.EVar (r, G, V, _), n)) = (* Y is lowered *)
       let
+	(* Invariant : G |- s : G'   G' |- V : type *) 
 	fun doit (Vs as (I.Root _, _),  k) = 
-	  (Unify.unify (G, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
+	    (Unify.unify (G, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
 	  | doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
   	    let 
 	      val X = I.newEVar (G, I.EClo (V1, s)) 
@@ -102,13 +122,13 @@ struct
     | apply (FillWithConst(Y as I.EVar (r, G0, V, _), c)) = 
       let
 	fun doit (Vs as (I.Root _, _),  k) = 
-	  (Unify.unify (G0, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
+  	    (Unify.unify (G0, Vs, (V, I.id)); (k I.Nil))  (* Unify must succeed *)
 	  | doit ((I.Pi ((I.Dec (_, V1), _), V2), s), k) =
-	  let 
-	    val X = I.newEVar (G0, I.EClo (V1, s)) 
-	  in
-	    doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
-	  end
+	    let 
+	      val X = I.newEVar (G0, I.EClo (V1, s)) 
+	    in
+	      doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
+	    end
 	val W = I.constType c
       in	      
 	doit ((W, I.id),  fn S => Unify.unify (G0, (Y, I.id), (I.Root (I.Const c, S), I.id)))
@@ -121,7 +141,7 @@ struct
        then s' is a string describing the operation in plain text
     *)
     fun menu (FillWithBVar (X as I.EVar (_, G, _, _), n)) =
-        (case (I.ctxLookup (G, n)) 
+        (case (I.ctxLookup (Names.ctxName G, n)) 
 	  of I.Dec (SOME x, _) => 
 	    ("Fill " ^ Names.evarName (G, X) ^ " with variable " ^ x))
 	   (* Invariant: Context is named  --cs Fri Mar  3 14:31:08 2006 *)

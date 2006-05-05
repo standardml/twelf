@@ -68,7 +68,7 @@ struct
 	 (* ABP -- Do we need this? I added it *)
 	 matchVal (Psi, (P',t1), T.PClo(P, T.comp (t2, t3)))
 
-      | matchVal (Psi, (P',t1), T.PClo(T.EVar (_, r as ref NONE, _), t2)) =  
+      | matchVal (Psi, (P',t1), T.PClo(T.EVar (_, r as ref NONE, _, _, _, _), t2)) =  
 	 let
 	   val iw = T.invertSub t2
 	 in
@@ -76,10 +76,10 @@ struct
 	   r := SOME (T.PClo (P', T.comp(t1, iw)))
 	 end
 
-      | matchVal (Psi, (P', t1), T.EVar (_, r as ref NONE, _)) =  
+      | matchVal (Psi, (P', t1), T.EVar (_, r as ref NONE, _, _, _, _)) =  
 	 r := SOME (T.PClo (P', t1))
 
-      | matchVal (Psi, (V,t), T.EVar ((D, r as ref (SOME P), F))) =  
+      | matchVal (Psi, (V,t), T.EVar ((D, r as ref (SOME P), F, _, _, _))) =  
 	 (* ABP -- this should never occur, since we normalized it to start *)
 	 matchVal (Psi, (V,t), P) 
 
@@ -181,7 +181,7 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
 	   *)		  
 	  match (Psi, t', T.Cases (rev O))
 
-      | evalPrg (Psi, (T.EVar ((D, r as ref (SOME P), F)), t)) =  
+      | evalPrg (Psi, (T.EVar (D, r as ref (SOME P), F, _, _, _), t)) =  
 	  evalPrg (Psi, (P, t))
 
       | evalPrg (Psi, (T.Let (D, P1, P2), t)) = 
@@ -297,10 +297,10 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
     *)
     and createVarSub (Psi, I.Null) = T.Shift(I.ctxLength(Psi))
 
-      | createVarSub (Psi, Psi'' as I.Decl (Psi', T.PDec (name, F))) =  
+      | createVarSub (Psi, Psi'' as I.Decl (Psi', T.PDec (name, F, NONE, NONE))) =  
         let 
 	  val t = createVarSub (Psi, Psi')
-	  val t' = T.Dot (T.Prg (T.newEVar (Psi, T.forSub(F,t))), t) 
+	  val t' = T.Dot (T.Prg (T.newEVarTC (Psi, T.forSub(F,t), NONE, NONE)), t) 
 	in
 	  t'
 	end
@@ -463,7 +463,7 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
       | topLevel (Psi, d, (T.Let (D, P1, P2), t)) =  
         (* function definition *)
 	let
-	  val T.PDec (SOME name, F) = D
+	  val T.PDec (SOME name, F, _, _) = D
 	  val V = evalPrg (Psi, (P1, t)) 
 	  val _ = print ("val " ^ name ^ " = " ^ TomegaPrint.prgToString (Psi, V) ^ " :: " ^ TomegaPrint.forToString (Psi, F) ^ "\n")
 	  val V' = topLevel (Psi, d+1, (P2, T.Dot (T.Prg V, t)))

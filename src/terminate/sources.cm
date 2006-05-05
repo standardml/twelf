@@ -14,7 +14,7 @@ is
   ../print/sources.cm
   ../formatter/sources.cm
   ../index/sources.cm
-  ../order/sources.cm
+(*  (* ../order/sources.cm *) *)
   ../subordinate/sources.cm
   ../paths/sources.cm
   ../solvers/sources.cm

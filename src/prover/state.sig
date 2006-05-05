@@ -19,4 +19,5 @@ sig
 
   val collectT  : Tomega.Prg -> Tomega.Prg list
   val collectLF : Tomega.Prg -> IntSyn.Exp list
+  val collectLFSub : Tomega.Sub -> IntSyn.Exp list
 end

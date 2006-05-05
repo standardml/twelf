@@ -83,11 +83,6 @@ struct
 	end
 
 
-    (* In a coverage goal {{G}} {{L}} a @ S we instantiate each
-       declaration in G with a new EVar, then split one of these variables,
-       then abstract to obtain a new coverage goal {{G'}} {{L'}} a @ S'
-    *)
-
     (* instEVars ({x1:V1}...{xp:Vp} V, p, nil) = (V[s], [X1,...,Xn])
        where . |- s : {x1:V1}...{xp:Vp}
        and s = Xp...X1.id, all Xi are new EVars
@@ -156,8 +151,7 @@ struct
 	in
 	  (I.Root (H, S), Vs)
 	end
-        (* mod: m2/metasyn.fun allows skolem constants *)
-
+ 
     (* createAtomBVar (G, k) = (U', (V', s'))
 
        Invariant: 
@@ -281,12 +275,14 @@ struct
 	in
 	  ()
 	end
-      | lowerSplitW (G, (I.Pi ((D, P), V), s), W, sc) =
+ (*     | lowerSplitW (G, (I.Pi ((D, P), V), s), W, sc) =
 	let
 	  val D' = I.decSub (D, s)
 	in
 	  lowerSplit (I.Decl (G, D'), (V, I.dot1 s), W, fn U => sc (I.Lam (D', U)))
 	end
+      we assume that all EVars are lowere :-)
+*)
 
     (* splitEVar (X, W, sc) = ()
 
@@ -299,23 +295,6 @@ struct
 				then sc ()
 			      else ())
 
-    (* abstract (V, s) = V'
-       where V' = {{G}} Vs' and G abstracts over all EVars in V[s]
-       in arbitrary order respecting dependency
-
-       Invariants: . |- V[s] : type
-       Effect: may raise Constraints.Error (constrs)
-     *)
-    fun abstract (V, s) = 
-        let
-	  val (i, V') = Abstract.abstractDecImp (I.EClo (V, s))
-	  val _ = if !Global.doubleCheck
-		    then TypeCheck.typeCheck (I.Null, (V', I.Uni(I.Type)))
-		  else ()
-	in
-	  (V', i)
-	end
-
     (* createSub (Psi) = s
        
        Invariant:
@@ -323,30 +302,30 @@ struct
        then s = Xp...X1.id, all Xi are new EVars/LVars/MVars
        and  . |- s : Psi
     *)       
-    fun createSub (I.Null) = (T.id, nil)
+    fun createSub (I.Null) = (T.id)
       | createSub (I.Decl (Psi, T.UDec (I.Dec (xOpt, V1)))) = 
         let 
-	  val (t', Xs) = createSub Psi
-	  val X = I.newEVar (I.Null, I.EClo (V1, T.coerceSub t')) (* all EVars are global *)
+	  val (t') = createSub Psi
+	  val X = I.newEVar (I.Null, I.EClo (Whnf.whnf (V1, T.coerceSub t'))) (* all EVars are global and lowered *)
 	in
-	   (T.Dot (T.Exp X, t'), X :: Xs)
+	   (T.Dot (T.Exp X, t'))
 	end
       | createSub (I.Decl (Psi, T.UDec (I.BDec (_, (l, s))))) =
         (* Psi0 |- t : Gsome *)
 	(* . |- s : Psi0 *)
 	let
-	  val (t', Xs) = createSub Psi
+	  val (t') = createSub Psi
 	  val L = I.newLVar (I.Shift(0), (l, I.comp(s, T.coerceSub t')))
 					(* --cs Sun Dec  1 06:34:00 2002 *)
 	in
-	  (T.Dot (T.Block L, t'), Xs)
+	  (T.Dot (T.Block L, t'))
 	end
       | createSub (I.Decl (Psi, T.PDec (_, F, TC1, TC2))) =
 	let (* p > 0 *)
-	  val (t', Xs) = createSub Psi
-	  val XX = T.newEVarTC (I.Null, T.FClo (F, t'), TC1, TC2)
+	  val t' = createSub Psi
+	  val Y = T.newEVarTC (I.Null, T.FClo (F, t'), TC1, TC2)
 	in
-	  (T.Dot (T.Prg XX, t'), Xs)
+	  (T.Dot (T.Prg Y, t'))
 	end
 
 
@@ -386,8 +365,18 @@ struct
 		 and  t = t' [si]
     *)
 
-    fun split (S.Focus (T.EVar (Psi, r, F, NONE, NONE), W)) =
+    fun split (S.Focus (T.EVar (Psi, r, F, NONE, NONE, _), W)) =
       let
+
+	(* splitXs (G, i) (Xs, F, W, sc) = Os
+	   Invariant: 
+	   If   Psi is a CONTEXT
+	   and  G ~ Psi a context, 
+	   and  G |- i : V
+	   and  Psi |- F formula
+           and  Xs are all logic variables 
+	   then Os is a list of splitting operators 
+        *)
 	fun splitXs (G, i) (nil, _, _, _) = nil
 	  | splitXs (G, i) (X :: Xs, F, W, sc) =
   	    let
@@ -396,7 +385,7 @@ struct
 		      else ()
 	      val Os = splitXs (G,i+1) (Xs, F, W, sc)    (* returns a list of operators *)
 	      val _ = resetCases ()
-	      val s = Print.decToString (G, I.ctxDec (G, i))
+	      val s = Print.expToString (G, X)
 	      val Os' = (splitEVar (X, W, sc);   
 			 Split (r, T.Case (T.Cases (mkCases (getCases (), F))), s) :: Os)
 		handle  Constraints.Error (constrs) => 
@@ -408,16 +397,17 @@ struct
 	      Os'
 	    end
 	  
-
-	val (t, Xs) = createSub Psi   (* this t will be used in the case proof term *)
-	fun init () =  addCase (Abstract.abstractTomegaSub t)
+	val t = createSub Psi  (* . |- t :: Psi *)
+	val Xs = State.collectLFSub t
+	fun init () = (print "["; addCase (Abstract.abstractTomegaSub t); print "]")
 	val G = T.coerceCtx Psi
 	val Os = splitXs (G, 1) (Xs, F, W, init)
       in
 	Os
       end
 
-    fun expand S = split S
+    fun expand (S as S.Focus (T.EVar (Psi, r, F, NONE, NONE, _), W)) = 
+      if Abstract.closedCTX Psi then split S else []
       
     (* apply (Op) = Sl'
        

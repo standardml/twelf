@@ -76,25 +76,25 @@ struct
        and   Psi' |- s' : Psi
     *)
     fun purifyCtx (t as T.Shift k, Psi) =  (t, Psi, T.id)
-      | purifyCtx (T.Dot (T.Prg P, t), I.Decl (Psi, T.PDec (_, T.All _))) =
+      | purifyCtx (T.Dot (T.Prg P, t), I.Decl (Psi, T.PDec (_, T.All _, _, _))) =
         let 
 	  val (t', Psi', s') = purifyCtx (t, Psi)
 	in 
           (t', Psi', T.Dot (T.Undef, s'))
 	end
-      | purifyCtx (T.Dot (T.Prg (T.Var _), t), I.Decl (Psi, T.PDec (_, _))) =
+      | purifyCtx (T.Dot (T.Prg (T.Var _), t), I.Decl (Psi, T.PDec (_, _, _, _))) =
         let 
 	  val (t', Psi', s') = purifyCtx (t, Psi)
 	in 
           (t', Psi', T.Dot (T.Undef, s'))
 	end
-      | purifyCtx (T.Dot (T.Prg (T.Const _), t), I.Decl (Psi, T.PDec (_, _))) =
+      | purifyCtx (T.Dot (T.Prg (T.Const _), t), I.Decl (Psi, T.PDec (_, _, _, _))) =
         let 
 	  val (t', Psi', s') = purifyCtx (t, Psi)
 	in 
           (t', Psi', T.Dot (T.Undef, s'))
 	end
-      | purifyCtx (T.Dot (T.Prg (T.PairPrg (_, _)), t), I.Decl (Psi, T.PDec (_, _))) =
+      | purifyCtx (T.Dot (T.Prg (T.PairPrg (_, _)), t), I.Decl (Psi, T.PDec (_, _, _, _))) =
 					(* Mutual recursive predicates
 					   don't have to be checked.
 					 --cs Fri Jan  3 11:35:09 2003 *)
@@ -103,7 +103,7 @@ struct
 	in 
           (t', Psi', T.Dot (T.Undef, s'))
 	end
-      | purifyCtx (T.Dot (T.Prg P, t), I.Decl (Psi, T.PDec (_, F))) =
+      | purifyCtx (T.Dot (T.Prg P, t), I.Decl (Psi, T.PDec (_, F, _, _))) =
         let 
 	  val (t', Psi', s') = purifyCtx (t, Psi)
 	  val (t'', Psi'', s'') = purifyFor ((P, t'), (Psi', T.forSub (F, s')), s')

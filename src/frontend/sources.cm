@@ -33,6 +33,8 @@ Library
   structure Subordinate
   signature STYLECHECK
   structure StyleCheck
+  signature INTERACTIVE
+  structure Interactive
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -53,7 +55,7 @@ is
   ../terminate/sources.cm 
   ../index/sources.cm
   ../thm/sources.cm
-  ../order/sources.cm
+(*  ../order/sources.cm *)
   ../m2/sources.cm
   ../compile/sources.cm
   ../opsem/sources.cm

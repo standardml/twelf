@@ -108,4 +108,3 @@ structure TomegaCoverage = TomegaCoverage
    structure TomegaPrint = TomegaPrint
    structure TomegaTypeCheck = TomegaTypeCheck
    structure Cover = Cover);
-

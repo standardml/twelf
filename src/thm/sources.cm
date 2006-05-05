@@ -14,7 +14,7 @@ is
   ../names/sources.cm
   ../formatter/sources.cm
   ../modes/sources.cm
-  ../order/sources.cm
+(*  ../order/sources.cm *)
   ../paths/sources.cm
   ../tabling/sources.cm
   thmsyn.sig

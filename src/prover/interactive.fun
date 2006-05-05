@@ -36,8 +36,6 @@ functor Interactive
    (*! sharing FixedPoint.IntSyn = IntSyn' !*)
    (*! sharing FixedPoint.Tomega = Tomega' !*)
      sharing FixedPoint.State = State'
-   structure Recurse : RECURSE
-     sharing Recurse.State = State'
    structure Fill : FILL
    (*! sharing Fill.IntSyn = IntSyn' !*)
    (*! sharing Fill.Tomega = Tomega' !*)
@@ -144,7 +142,6 @@ struct
     | Fill      of Fill.operator
     | Introduce of Introduce.operator
     | Fix       of FixedPoint.operator
-    | Recurse   of Recurse.operator
     | Elim      of Elim.operator
 
     val Open : (S.State list) ref = ref []
@@ -312,28 +309,40 @@ struct
             | (S.State (W, Psi, P, F) :: _) =>
   	      let 
 		val Xs = S.collectT P
-		val F1 = map (fn (T.EVar (Psi, r, F, TC, TCs)) => (Names.varReset I.Null; 
-							     S.Focus (T.EVar (TomegaPrint.nameCtx Psi, r, F, TC, TCs), W))) Xs
+		val F1 = map (fn (T.EVar (Psi, r, F, TC, TCs, X)) => (Names.varReset I.Null; 
+							     S.Focus (T.EVar (TomegaPrint.nameCtx Psi, r, F, TC, TCs, X), W))) Xs
 		val Ys = S.collectLF P
 		val F2 = map (fn Y => S.FocusLF Y) Ys
+
+		val _ = print "["
 
 		fun splitMenu [] = []
 		  | splitMenu (operators :: l) = map Split operators @ splitMenu l
  
-		val split = splitMenu (map Split.expand F1) 
+		val _ = Global.doubleCheck := true
 
-		fun introMenu [] = []
+
+		fun introMenu [] =  []
 		  | introMenu ((SOME oper) :: l) = (Introduce oper) :: introMenu l
 		  | introMenu (NONE :: l) = introMenu l
 
+		val _ = print "I"
 		val intro = introMenu (map Introduce.expand F1)
 
+
+		val _ = print "F"
 		val fill = foldr (fn (S, l) => l @ map (fn O => Fill O) (Fill.expand S)) nil F2 
 	     
 		fun elimMenu [] = []
 		  | elimMenu (operators :: l) = map Elim operators @ elimMenu l
 
+		val _ = print "E"
 		val elim = elimMenu (map Elim.expand F1)
+
+		val _ = print "S"
+		val split = splitMenu (map Split.expand F1)
+
+		val _ = print "]"
 
 	      in
 		Menu := SOME (intro @ split @ fill @ elim)
@@ -355,9 +364,9 @@ struct
 	        (Timers.time Timers.splitting Split.apply) O
 	    | select' (1, Introduce O :: _) =
 		Introduce.apply O    (* no timer yet -- cs *)
-(*	    | select' (1, Fix O :: _) =
-		FixedPoint.apply O    (* no timer yet -- cs *)
-*)	    | select' (1, Fill O :: _) =
+	    | select' (1, Elim O :: _) =
+		Elim.apply O    (* no timer yet -- cs *)
+	    | select' (1, Fill O :: _) =
 		(Timers.time Timers.filling Fill.apply) O
 	    | select' (k, _ :: M) = select' (k-1, M) 
 	in
@@ -386,8 +395,8 @@ struct
 		     of [] => abort "Initialization of proof goal failed\n"
 		   | (S.State (W, Psi, P, F) :: _) => P)
 	  val Xs = S.collectT P
-	  val F = map (fn (T.EVar (Psi, r, F, TC, TCs)) => (Names.varReset I.Null; 
-						    S.Focus (T.EVar (TomegaPrint.nameCtx Psi, r, F, TC, TCs), W))) Xs
+	  val F = map (fn (T.EVar (Psi, r, F, TC, TCs, X)) => (Names.varReset I.Null; 
+						    S.Focus (T.EVar (TomegaPrint.nameCtx Psi, r, F, TC, TCs, X), W))) Xs
 	  val [Ofix] = map (fn f => (FixedPoint.expand (f, TC))) F
 	  val _ = FixedPoint.apply Ofix 
 	  val _ = normalize ();
@@ -402,7 +411,7 @@ struct
     fun focus n = 
       (case (List.find (fn (Y, m) => n = m)) (Names.namedEVars ())
 	of NONE => let
-		    val (X as T.EVar (Psi, r, F, _, _)) = TomegaPrint.evarName n
+		    val (X as T.EVar (Psi, r, F, _, _, _)) = TomegaPrint.evarName n
 		    val (S.State (W, _, _ , _) :: _) = ! Open
 		    val Psi' = TomegaPrint.nameCtx Psi
 		    val _ = Open := (S.State (W, Psi', X, F) :: !Open)

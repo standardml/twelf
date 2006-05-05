@@ -81,7 +81,7 @@ struct
 	in 
 	    inferSpine (Psi, S, (F2, T.Dot(T.Block(I.Bidx k), t2)))
 	end
-      | inferSpineW (Psi, T.AppPrg (P, S), (T.All ((T.PDec (_, F1), _), F2), t)) =
+      | inferSpineW (Psi, T.AppPrg (P, S), (T.All ((T.PDec (_, F1, _, _), _), F2), t)) =
 	let 
 	    val _ = checkPrg (Psi, (P, (F1, t)))
 	in 
@@ -125,7 +125,7 @@ struct
 	  T.And (F1, F2)
 	end
       | inferPrg (Psi, T.Unit) = T.True
-      | inferPrg (Psi, T.Var k) = (case T.ctxDec (Psi, k) of T.PDec (_, F') => F')
+      | inferPrg (Psi, T.Var k) = (case T.ctxDec (Psi, k) of T.PDec (_, F', _, _) => F')
       | inferPrg (Psi, T.Const c) = inferLemma c
       | inferPrg (Psi, T.Redex (P, S)) = 
 	let
@@ -134,13 +134,13 @@ struct
 	in 
 	  T.forSub F2
 	end
-      | inferPrg (Psi, T.Rec (D as T.PDec (_, F), P)) = 
+      | inferPrg (Psi, T.Rec (D as T.PDec (_, F, _, _), P)) = 
 	let
 	  val _ = checkPrg (I.Decl (Psi, D), (P, (F, T.id)))
 	in
 	  F
 	end
-      | inferPrg (Psi, T.Let (D as T.PDec (_, F1), P1, P2)) =
+      | inferPrg (Psi, T.Let (D as T.PDec (_, F1, _, _), P1, P2)) =
 	let 
 	  val _ = checkPrg (Psi, (P1, (F1, T.id)))
 	  val F2 = inferPrg (I.Decl (Psi, D), P2)
@@ -168,8 +168,8 @@ struct
       | checkPrgW (Psi, (T.Const lemma, (F, t))) = 
 	  convFor (Psi, (inferLemma lemma, T.id), (F, t))
       | checkPrgW (Psi, (T.Var k, (F, t))) = 
-	  (case T.ctxDec (Psi, k) of T.PDec (_, F') => convFor (Psi, (F', T.id), (F, t)))
-      | checkPrgW (Psi, (T.Lam (D as T.PDec (x, F1), P), (T.All ((T.PDec (x', F1'), _), F2), t))) = 
+	  (case T.ctxDec (Psi, k) of T.PDec (_, F', _, _) => convFor (Psi, (F', T.id), (F, t)))
+      | checkPrgW (Psi, (T.Lam (D as T.PDec (x, F1, _, _), P), (T.All ((T.PDec (x', F1', _, _), _), F2), t))) = 
 	let 
 	  val _ = chatter 4 (fn () => "[lam[p]")
 	    val _ = convFor (Psi, (F1, T.id), (F1', t))
@@ -215,7 +215,7 @@ struct
 	end
       | checkPrgW (Psi, (T.Case Omega, Ft)) = 
 	  checkCases (Psi, (Omega, Ft))
-      | checkPrgW (Psi, (T.Rec (D as T.PDec (x, F), P), (F', t))) =
+      | checkPrgW (Psi, (T.Rec (D as T.PDec (x, F, _, _), P), (F', t))) =
 	let 
 	  val _ = chatter 4 (fn () => "[rec")
 	  val _ = convFor(Psi, (F, T.id), (F', t))
@@ -223,7 +223,7 @@ struct
 	in 
 	    checkPrg (I.Decl(Psi, D), (P, (F', t)))
 	end
-      | checkPrgW (Psi, (T.Let (D as T.PDec(_, F1), P1, P2), (F2, t))) = 
+      | checkPrgW (Psi, (T.Let (D as T.PDec(_, F1, _, _), P1, P2), (F2, t))) = 
 					(* Psi |- let xx :: F1 = P1 in P2 : F2' *)
 	                                (* Psi |- t : Psi' *)
 					(* Psi' |- F2 for *)
@@ -267,7 +267,7 @@ struct
       | checkSpine (Psi, T.AppExp (U, S), (T.All ((T.UDec (I.Dec (_, V)), _), F), t), (F', t')) =
         (TypeCheck.typeCheck (T.coerceCtx Psi, (U, I.EClo (V, T.coerceSub t)));
          checkSpine (Psi, S, (F, T.Dot (T.Exp U, t)), (F', t')))
-      | checkSpine (Psi, T.AppPrg (P, S), (T.All ((T.PDec (_, F1) , _), F2), t),  (F', t')) =
+      | checkSpine (Psi, T.AppPrg (P, S), (T.All ((T.PDec (_, F1, _, _) , _), F2), t),  (F', t')) =
 	(checkPrgW (Psi, (P, (F1, t)));  checkSpine (Psi, S, (F2, T.Dot (T.Undef, t)), (F', t')))
       | checkSpine (Psi, T.AppExp (U, S), (T.FClo (F, t1) , t), (F', t')) = 
 	  checkSpine (Psi, T.AppExp (U, S), (F, T.comp (t1 , t)), (F', t')) 
@@ -384,8 +384,8 @@ struct
 	  ()
 	end
       | convForW (Psi, 
-		  (T.All((D as T.PDec(_, F1), _), F1'), t1), 
-		  (T.All((     T.PDec(_, F2), _), F2'), t2)) =
+		  (T.All((D as T.PDec(_, F1, _, _), _), F1'), t1), 
+		  (T.All((     T.PDec(_, F2, _, _), _), F2'), t2)) =
 	let 
 	  val _ = convFor (Psi, (F1, t1), (F2, t2))
 	  val D' = T.decSub (D, t1)
@@ -431,7 +431,7 @@ struct
 	in
 	    convSub(G, s1, s2, G')
 	end
-      | convSub(G, T.Dot(T.Prg P1, s1), T.Dot(T.Prg P2, s2), I.Decl(G', T.PDec(_, F))) =
+      | convSub(G, T.Dot(T.Prg P1, s1), T.Dot(T.Prg P2, s2), I.Decl(G', T.PDec(_, F, _, _))) =
 	let
 	    val _ = isValue P1
 	    val _ = isValue P2
@@ -453,14 +453,14 @@ struct
 	in
 	    convSub(G, s1, s2, G')
 	end
-      | convSub(G, T.Dot(T.Idx k1, s1), T.Dot(T.Prg P2, s2), I.Decl(G', T.PDec(_, F))) =
+      | convSub(G, T.Dot(T.Idx k1, s1), T.Dot(T.Prg P2, s2), I.Decl(G', T.PDec(_, F, _, _))) =
 	let
 	    val _ = isValue P2
 	    val _ = convValue (G, T.Var k1, P2, F)
 	in
 	    convSub(G, s1, s2, G')
 	end
-      | convSub(G, T.Dot(T.Prg P1, s1), T.Dot(T.Idx k2, s2), I.Decl(G', T.PDec(_, F))) =
+      | convSub(G, T.Dot(T.Prg P1, s1), T.Dot(T.Idx k2, s2), I.Decl(G', T.PDec(_, F, _, _))) =
 	let
 	    val _ = isValue P1
 	    val _ = convValue (G, P1, T.Var k2, F)
@@ -470,7 +470,7 @@ struct
       
     and convValue (G, P1, P2, F) = ()
     and checkFor (Psi, (T.True, _)) = ()
-      | checkFor (Psi, (T.All ((D as T.PDec (_ ,F1), _), F2), t)) = 
+      | checkFor (Psi, (T.All ((D as T.PDec (_ ,F1, _, _), _), F2), t)) = 
           (checkFor (Psi, (F1, t)); checkFor (I.Decl (Psi, D), (F2, T.dot1 t)))
       | checkFor (Psi, (T.All ((D' as T.UDec D, _), F), t)) =
 	  (TypeCheck.checkDec (T.coerceCtx Psi, (D, T.coerceSub t));
@@ -490,7 +490,7 @@ struct
       | checkCtx (I.Decl (Psi, T.UDec D)) = 
           (checkCtx (Psi); 
 	   TypeCheck.checkDec (T.coerceCtx Psi, (D, I.id)))
-      | checkCtx (I.Decl (Psi, T.PDec (_, F))) =
+      | checkCtx (I.Decl (Psi, T.PDec (_, F, _, _))) =
 	  (checkCtx (Psi);
 	   checkFor (Psi, (F, T.id)))
 
@@ -527,10 +527,10 @@ struct
 		then ()
 		else raise Error "Sub isn't well typed!"
 	end
-      | checkSub (G, T.Dot (T.Idx k, s), I.Decl (G', T.PDec(_, F'))) = 
+      | checkSub (G, T.Dot (T.Idx k, s), I.Decl (G', T.PDec(_, F', _, _))) = 
 	let 
 	    val _ = checkSub (G, s, G')
-	    val T.PDec(_, F1) = T.ctxDec (G, k)
+	    val T.PDec(_, F1, _, _) = T.ctxDec (G, k)
 	in
 	    convFor (G, (F1, T.id), (F', s))
 	end
@@ -540,7 +540,7 @@ struct
 	in
 	    TypeCheck.typeCheck (T.coerceCtx G, (M, I.EClo(A, T.coerceSub(s))))
 	end
-      | checkSub (Psi, T.Dot (T.Prg P, t), I.Decl(Psi', T.PDec(_, F'))) =
+      | checkSub (Psi, T.Dot (T.Prg P, t), I.Decl(Psi', T.PDec(_, F', _, _))) =
 	let 
 	  val _ = chatter 4 (fn () => "$")
 	  val _ = checkSub (Psi, t, Psi')

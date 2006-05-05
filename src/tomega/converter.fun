@@ -139,6 +139,36 @@ exception Error' of Tomega.Sub
 	  T.Ex ((strengthenDec (D, s), Q), strengthenFor (F, I.dot1 s))
 
 
+
+
+
+    (* strengthenOrder (O, s) = O'
+     
+       If   Psi0 |- O order
+       and  Psi0 |- s :: Psi1 
+       then Psi1 |- O' = O[s^-1] ctx
+    *)
+    fun strengthenOrder (Order.Arg((U,s1), (V, s2)), s) = 
+          Order.Arg ((U, strengthenSub (s1, s)), (V, strengthenSub (s2, s)))
+      | strengthenOrder (Order.Simul Os, s) = 
+          Order.Simul (map (fn O => strengthenOrder (O, s)) Os)
+      | strengthenOrder (Order.Lex Os, s) =
+          Order.Lex (map (fn O => strengthenOrder (O, s)) Os)
+
+
+    (* strengthenTC (TC, s) = TC'
+     
+       If   Psi0 |- TC : termination condition
+       and  Psi0 |- s :: Psi1 
+       then Psi1 |- TC' = TC[s^-1] ctx
+    *)
+    fun strengthenTC (T.Base O, s) = T.Base (strengthenOrder (O, s))
+      | strengthenTC (T.Conj (TC1, TC2), s) = 
+          T.Conj (strengthenTC (TC1, s), strengthenTC (TC2, s))
+      | strengthenTC (T.Abs (D, TC), s) =
+	  T.Abs (strengthenDec (D, s), strengthenTC (TC, I.dot1 s))
+
+
     fun strengthenSpine (I.Nil, t) = I.Nil
       | strengthenSpine (I.App (U, S), t) = I.App (strengthenExp (U, t), strengthenSpine (S, t))
 
@@ -158,11 +188,11 @@ exception Error' of Tomega.Sub
 	in
 	  (I.Decl (Psi', T.UDec (strengthenDec (D, s'))), I.dot1 s')
 	end
-      | strengthenPsi (I.Decl (Psi, T.PDec (name, F)), s) = 
+      | strengthenPsi (I.Decl (Psi, T.PDec (name, F, NONE, NONE)), s) = 
         let 
 	  val (Psi', s') = strengthenPsi (Psi, s)
 	in
-	  (I.Decl (Psi', T.PDec (name, strengthenFor (F, s'))), I.dot1 s')
+	  (I.Decl (Psi', T.PDec (name, strengthenFor (F, s'), NONE, NONE)), I.dot1 s')
 	end
 
 
@@ -549,13 +579,13 @@ exception Error' of Tomega.Sub
 		in
 		  (Psi1'', I.comp (w', I.shift), z')
 		end
-	  | strengthen' (I.Decl (Psi1, D as T.PDec (name, F)), Psi2, L, w1) =
+	  | strengthen' (I.Decl (Psi1, D as T.PDec (name, F, NONE, NONE)), Psi2, L, w1) =
 	    let 
 	      val w1' = dot1inv w1
 	      val (Psi1', w', z') = strengthen' (Psi1, D :: Psi2, L, w1')
 	      val F' = strengthenFor (F, w')
 	    in
-	      (I.Decl (Psi1', T.PDec (name, F')), I.dot1 w', I.dot1 z')
+	      (I.Decl (Psi1', T.PDec (name, F', NONE, NONE)), I.dot1 w', I.dot1 z')
 	    end	    
 	  | strengthen' (I.Decl (Psi1, LD as T.UDec (I.BDec (name, (cid, s)))), Psi2, L, w1) =
 	    let  (* blocks are always used! *)
@@ -816,7 +846,7 @@ exception Error' of Tomega.Sub
 	      (* strengthened invariant Psi0 might be empty --cs Fri Apr 11 15:25:32 2003 *)
 	      val (HP, F) = if I.ctxLength Psi0 > 0 then 
 		              let
-				val T.PDec(_, F0) =  I.ctxLookup (Psi0, 1)
+				val T.PDec(_, F0, _, _) =  I.ctxLookup (Psi0, 1)
 			      in
 				lookup ((L, projs, F0), a)
 			      end
@@ -960,7 +990,7 @@ exception Error' of Tomega.Sub
                                         (* Psi0, G3 |- t :: Psi0, G', x :: F4  *)
 	    in     
 	      (SOME (w3, 
-		     (fn p => P (T.Let (T.PDec (NONE, F'''), P''', 
+		     (fn p => P (T.Let (T.PDec (NONE, F''', NONE, NONE), P''', 
 					T.Case (T.Cases [(Psi2, t, p)]))), Q)))
 	    end
 
@@ -1145,7 +1175,7 @@ exception Error' of Tomega.Sub
     fun convertPrg (L, projs) = 
       let
 	val (name, F0) = createIH L
-	val D0 = T.PDec (SOME name, F0)
+	val D0 = T.PDec (SOME name, F0, NONE, NONE)
 	val Psi0 = I.Decl (I.Null, D0)
 	val Prec = fn p => T.Rec (D0, p)
 	fun convertWorlds [a] = 
@@ -1226,16 +1256,16 @@ exception Error' of Tomega.Sub
       | depthConj F = 1
 
     fun createProjection (Psi, depth, F as T.And (F1, F2), Pattern) = 
-          createProjection (I.Decl (Psi, T.PDec (NONE, F1)), depth+1, 
+          createProjection (I.Decl (Psi, T.PDec (NONE, F1, NONE, NONE)), depth+1, 
 			    T.forSub (F2, T.Shift 1), 
 			    T.PairPrg (T.Var (depth+2), Pattern))
       | createProjection (Psi, depth, F,  Pattern) =
 	  let 
-	    val Psi' = I.Decl (Psi, T.PDec (NONE, F))
+	    val Psi' = I.Decl (Psi, T.PDec (NONE, F, NONE, NONE))
 	    val depth' = depth + 1
 	  in
 	    fn k => let
-		      val T.PDec (_, F') = T.ctxDec (Psi', k)
+		      val T.PDec (_, F', _, _) = T.ctxDec (Psi', k)
 		    in
 		      (T.Case (T.Cases [(Psi',
 				       T.Dot (T.Prg (Pattern), 
@@ -1248,8 +1278,8 @@ exception Error' of Tomega.Sub
       | installProjection (cid :: cids, n, F, Proj) = 
         let
 	  val (P', F') = Proj n
-	  val P = T.Lam (T.PDec (NONE, F), P')
-	  val F'' = T.All ((T.PDec (NONE, F), T.Explicit), F')
+	  val P = T.Lam (T.PDec (NONE, F, NONE, NONE), P')
+	  val F'' = T.All ((T.PDec (NONE, F, NONE, NONE), T.Explicit), F')
 	  val name = I.conDecName (I.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F''))
 	  val lemma = T.lemmaAdd (T.ValDec ("#" ^ name, P, F''))

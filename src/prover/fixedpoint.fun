@@ -30,9 +30,10 @@ struct
        and  F does not start with an all quantifier
        then S' = (Psi, xx :: F |> F)
     *)
-    fun expand (S.Focus (T.EVar (Psi, r, F, _, TCs), W), O) =  
+    fun expand (S.Focus (T.EVar (Psi, r, F, _, TCs, _), W), O) =  
         let 
-	  val D = T.PDec (SOME "IH" , F, SOME O, SOME O)
+(*	  val D = T.PDec (SOME "IH" , F, SOME O, SOME O) *)
+	  val D = T.PDec (SOME "IH" , F, NONE, NONE) 
 	  val X = T.newEVar (I.Decl (Psi, D), T.forSub (F, T.Shift 1))
 	in
 	  (r, T.Rec (D, X))

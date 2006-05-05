@@ -22,6 +22,11 @@ struct
   (*! structure Tomega = Tomega' !*)
   structure Formatter = Formatter
 
+    exception Error of string		
+    (* is just here because we don't have a
+     module yet for names. move later 
+     --cs Tue Apr 27 12:04:45 2004 *)
+
   local
     structure I = IntSyn
     structure T = Tomega
@@ -45,8 +50,22 @@ struct
      *)
 
 
+    val evarList : (T.Prg) list ref = ref nil
 
+    fun evarReset () = (evarList := nil)
 
+    fun evarName n = 
+      let 
+	
+	fun evarName' nil = raise Error "not found"
+	  | evarName' ((Y as T.EVar (_, _, _, _, _, X as I.EVar (_, G, r, _))) :: L) = 
+	    if Names.evarName (G, X) = n then Y else evarName' L
+      in
+	evarName' (!evarList)
+      end
+
+    fun nameEVar (T.EVar (_, _, _, _, _, X as I.EVar (_, G, r, _))) = Names.evarName (G, X)
+	    
     (* formatCtxBlock (G, (G1, s1)) = (G', s', fmts')
       
        Invariant:
@@ -163,7 +182,7 @@ struct
 	   then LD' = LD modulo new non-conficting variable names.
 	*)
 	fun decName (G, T.UDec D) =  T.UDec (Names.decName (G, D))
-	  | decName (G, T.PDec (NONE, F))= T.PDec (SOME "xx", F)
+	  | decName (G, T.PDec (NONE, F, TC1, TC2))= T.PDec (SOME "xx", F, TC1, TC2)
 	       (* needs to be integrated with Names *)
 	  | decName (G, D) = D
 	  
@@ -236,9 +255,9 @@ struct
 		in
 		  copyNames (s, G) Psi1'
 		end
-	      | copyNames (T.Dot (T.Prg k, s), I.Decl (G, T.PDec (NONE, _))) Psi1 =
+	      | copyNames (T.Dot (T.Prg k, s), I.Decl (G, T.PDec (NONE, _, _, _))) Psi1 =
 		  copyNames (s, G) Psi1
-	      | copyNames (T.Dot (T.Prg k, s), I.Decl (G, T.PDec (SOME name, _))) Psi1 =
+	      | copyNames (T.Dot (T.Prg k, s), I.Decl (G, T.PDec (SOME name, _, _, _))) Psi1 =
 		  copyNames (s, G) Psi1
 
 		
@@ -528,7 +547,7 @@ struct
         and formatRedex callname (Psi, T.Var k, S) = 
 	    (* no mutual recursion, recursive call *)
 	    let 
-	      val T.PDec (SOME name, _) = I.ctxLookup (Psi, k)
+	      val T.PDec (SOME name, _, _, _) = I.ctxLookup (Psi, k)
 	      val Fspine = fmtSpine callname (Psi, S)
 	    in
               Fmt.Hbox [Fmt.Space, 
@@ -555,6 +574,46 @@ struct
 	    end
 	  
 	  
+	and formatCase callname (max, Psi', s, Psi) = 
+	    let 
+	      val S = argsToSpine (s, I.ctxLength Psi - max, T.Nil)
+	      val Fspine = fmtSpine callname (Psi', S)
+	    in
+              Fmt.Hbox [Fmt.HVbox (Fspine)]
+	    end
+	      
+	      
+	(* formatCases ((max, index), Psi, L) = fmts'
+	 
+	   Invariant:
+	   If   |- Psi ctx
+	   and  Psi |- L a list of cases
+	   then fmts' list of pretty print formats of L
+	*)
+	and formatCases (max, Psi, nil, callname) = nil
+	  | formatCases (max, Psi, (Psi', s, P) :: nil, callname) =
+	    let 
+	      val Psi'' = psiName (Psi', s, Psi, 0)
+	      val _ = Names.varReset I.Null
+	    in
+	      [Fmt.HVbox0 1 5 1
+	       [formatCase callname (max, Psi'', s, Psi),
+		Fmt.Space, Fmt.String "=",  Fmt.Break,
+		formatPrg3 callname  (Psi'', P)], Fmt.Break]
+	    end
+	  | formatCases (max, Psi, (Psi', s, P) :: O, callname) =
+	    let 
+	      val 
+		Psi'' = psiName (Psi', s, Psi, 0)
+	      val _ = Names.varReset I.Null
+	    in
+	      formatCases (max, Psi, O, callname) @
+	      [Fmt.HVbox0 1 5 1
+	       [Fmt.String "|", Fmt.Space, formatCase callname (max, Psi'', s, Psi), 
+		Fmt.Space, Fmt.String "=", Fmt.Break,
+		formatPrg3 callname  (Psi'', P)], Fmt.Break]
+	    end
+
 
 	(* formatPrg3 callname  (Psi, P) = fmt
 	 
@@ -570,12 +629,40 @@ struct
 			 Fmt.String ",", Fmt.Break, formatPrg3 callname  (Psi, P), Fmt.String ">"]
 (* formatTuple (Psi, P) *)
 	  | formatPrg3 callname  (Psi, P as T.Let _) = formatLet callname (Psi, P, nil)
+	  | formatPrg3 callname  (Psi, P as T.LetPairExp (D1, D2, P1, P2)) = formatLet callname (Psi, P, nil)
+	  | formatPrg3 callname  (Psi, P as T.LetUnit (P1, P2)) = formatLet callname (Psi, P, nil)
 	  | formatPrg3 callname  (Psi, P as T.New (T.Lam (T.UDec (I.BDec (l, (c, s))), _))) = 
 	      formatNew callname (Psi, P, nil)
 	  | formatPrg3 callname  (Psi, T.Redex (P, S)) =  formatRedex callname (Psi, P, S)
-	  | formatPrg3 callname  (Psi, T.Lam _) = Fmt.String "fn"
+	  | formatPrg3 callname  (Psi, T.Lam (D as T.UDec D', P)) = 
+	      Fmt.HVbox [Fmt.String "lam", Fmt.Space, Fmt.String "(",
+			 Print.formatDec (T.coerceCtx Psi, D'), Fmt.String ")", Fmt.Space,
+			 formatPrg3 callname (I.Decl (Psi, D), P)]
+	  | formatPrg3 callname  (Psi, T.Rec (D as T.PDec (SOME name, F, NONE, NONE), P)) = 
+	      Fmt.HVbox [Fmt.String "fix*", Fmt.Space, Fmt.String "(",
+			 Fmt.String name, Fmt.String ":", formatFor (Psi, F), Fmt.String ")", Fmt.Space,
+			 formatPrg3 callname (I.Decl (Psi, D), P)]
+	  | formatPrg3 callname  (Psi, T.Rec (D as T.PDec (SOME name, F, SOME TC1, SOME TC2), P)) = 
+	      Fmt.HVbox [Fmt.String "fix", Fmt.Space, Fmt.String "(",
+			 Fmt.String name, Fmt.String ":", formatFor (Psi, F), Fmt.String ")", Fmt.Space,
+			 formatPrg3 callname (I.Decl (Psi, D), P)]
+	  | formatPrg3 callname (Psi, T.PClo (P, t)) =  
+	      Fmt.HVbox [formatPrg3 callname (Psi, P), Fmt.String "..."] 
+	  | formatPrg3 callname (Psi, X as T.EVar (_, ref (SOME P), _, _, _, _)) = formatPrg3 callname (Psi, P)
+	  | formatPrg3 callname (Psi, X as T.EVar (_, ref NONE, _, _, _, _)) = 
+	      Fmt.String (nameEVar X)
+	  | formatPrg3 callname (Psi, T.Case (T.Cases Cs)) = 
+              Fmt.HVbox (Fmt.String "case" :: Fmt.Break
+			 :: formatCases (1, Psi, Cs, callname) @ [Fmt.String "."])
+	  (* need to fix the first  argument to formatcases Tue Apr 27 10:38:57 2004 --cs *)
+	  | formatPrg3 callname  (Psi, T.Var n) = 
+	      let
+		val T.PDec (SOME n, _, _, _) = I.ctxLookup (Psi,n)
+	      in
+		Fmt.String n
+	      end
 	  | formatPrg3 callname  _ = Fmt.String "missing case"
-
+		 
 
         and formatNew callname (Psi, T.New (T.Lam (T.UDec (D as I.BDec (l, (c, s))), P)), fmts) = 
 	    let
@@ -639,14 +726,14 @@ struct
 		Fmt.Hbox [Fmt.String " ..." , Fmt.Space, Fmt.String "=",  Fmt.Break, F1] *)
 	    in
 	      Fmt.Vbox0 0 1 ([Fmt.String "let", 
-			      Fmt.Vbox0 0 1 (fmts @ [Fmt.Break, fmt]),
+			      Fmt.Vbox0 2 1 (fmts @ [Fmt.Break, fmt]),
 			      Fmt.Break,
 			      Fmt.String "in", Fmt.Break,
 			      Fmt.Spaces 2, formatPrg3 callname  (Psi1', P2),
 			      Fmt.Break,
 			      Fmt.String "end"])
 	    end
-
+	  
 
 	  (* Added by ABP -- 2/25/03 -- Now a let can have multiple cases *)
 
@@ -702,7 +789,34 @@ struct
 			      Fmt.Break,
 			      Fmt.String "end"]) 
 
-		    
+	  | formatLet callname (Psi, R as (T.Let (D as T.PDec (SOME name,F,_,_), P1, P2)), fmts) = 	
+	      Fmt.Vbox0 0 1 ([Fmt.String "let", Fmt.Break,
+			      Fmt.Vbox0 0 1 ([Fmt.String name , Fmt.Space,
+					      Fmt.String"=",formatPrg3 callname (Psi, P1)]),
+			      Fmt.Break,
+			      Fmt.String "in", Fmt.Break,
+			      Fmt.Spaces 2, formatPrg3 callname (I.Decl (Psi, D), P2),
+			      Fmt.Break,
+			      Fmt.String "end"]) 
+	      
+	  | formatLet callname (Psi, R as (T.LetPairExp (D1 as I.Dec(SOME n1, _), D2 as T.PDec (SOME n2,F,_,_), P1, P2)), fmts) = 	
+	      Fmt.Vbox0 0 1 ([Fmt.String "let", Fmt.Break, Fmt.Spaces 2,
+			      Fmt.Vbox0 0 1 ([Fmt.String "(", Fmt.String n1, Fmt.String ",", Fmt.Space, Fmt.String n2,  Fmt.String ")", Fmt.Space,
+					      Fmt.String "=", Fmt.Space, formatPrg3 callname (Psi, P1)]),
+			      Fmt.Break,
+			      Fmt.String "in", Fmt.Break,
+			      Fmt.Spaces 2, formatPrg3 callname (I.Decl (I.Decl (Psi, T.UDec D1), D2), P2),
+			      Fmt.Break,
+			      Fmt.String "end"]) 
+	  | formatLet callname (Psi, R as (T.LetUnit (P1, P2)), fmts) = 	
+	      Fmt.Vbox0 0 1 ([Fmt.String "let", Fmt.Break, Fmt.Spaces 2,
+			      Fmt.Vbox0 0 1 ([Fmt.String "()", Fmt.Space,
+					      Fmt.String "=", Fmt.Space, formatPrg3 callname (Psi, P1)]),
+			      Fmt.Break,
+			      Fmt.String "in", Fmt.Break,
+			      Fmt.Spaces 2, formatPrg3 callname (Psi, P2),
+			      Fmt.Break,
+			      Fmt.String "end"]) 
 	    
 
         (* formatHead callname (index, Psi1, s, Psi2) = fmt'
@@ -713,7 +827,7 @@ struct
 	   where index represents the function name
 	   and   s the spine.
         *)
-	fun formatHead callname (name, (max, index), Psi', s, Psi) = 
+	and formatHead callname (name, (max, index), Psi', s, Psi) = 
 	    let 
 (*	      val T.PDec (SOME name, _) = I.ctxLookup (Psi, index) *)
 	      val S = argsToSpine (s, I.ctxLength Psi - max, T.Nil)
@@ -795,7 +909,7 @@ struct
         fun lookup (name :: names, proj :: projs) lemma = 
 	    if lemma = proj then name else lookup (names, projs) lemma
 
-	fun formatPrg0 ((names, projs), T.Rec (D as T.PDec (SOME _, F), P)) =
+	fun formatPrg0 ((names, projs), T.Rec (D as T.PDec (SOME _, F, _, _), P)) =
 	  let 
 	      
 	    val max = 1	(* number of ih. *)
@@ -815,15 +929,78 @@ struct
 (*   fun lemmaDecToString Args = Fmt.makestring_fmt (formatLemmaDec Args) *)
 
 (*    fun prgToString Args names = "not yet implemented " *)
+
+   fun nameCtx I.Null = I.Null
+      | nameCtx (I.Decl (Psi, T.UDec D)) = 
+          I.Decl (nameCtx Psi, 
+		  T.UDec (Names.decName (T.coerceCtx Psi, D)))
+      | nameCtx (I.Decl (Psi, T.PDec (NONE, F, TC1, TC2))) = 
+          I.Decl (nameCtx Psi, 
+		  T.PDec (SOME "s", F, TC1, TC2))   (* to be fixed! --cs *)
+      | nameCtx (I.Decl (Psi, D as T.PDec (SOME n, F, _, _))) = 
+          I.Decl (nameCtx Psi, D)
+      
+
+   fun flag NONE = ""
+     | flag (SOME _) = "*"
+
+    (* formatCtx (Psi) = fmt'
+     
+       Invariant:
+       If   |- Psi ctx       and Psi is already named
+       then fmt' is a format describing the context Psi
+    *)
+    fun formatCtx (I.Null) = []
+      | formatCtx (I.Decl (I.Null, T.UDec D)) = 
+        if !Global.chatter >= 4 then
+          [Fmt.HVbox ([Fmt.Break, Print.formatDec (I.Null, D)])]
+	else
+          [Print.formatDec (I.Null, D)]
+      | formatCtx (I.Decl (I.Null, T.PDec (SOME s, F, TC1, TC2))) = 
+        if !Global.chatter >= 4 then
+          [Fmt.HVbox ([Fmt.Break, Fmt.String s, Fmt.Space, 
+		       Fmt.String ("::" ^ flag TC1), Fmt.Space, formatFor (I.Null, F)])]
+	else
+          [Fmt.String s, Fmt.Space, Fmt.String ("::" ^ flag TC1), Fmt.Space,
+	   formatFor (I.Null, F)]
+      | formatCtx (I.Decl (Psi, T.UDec D)) =
+	let 
+	  val G = T.coerceCtx Psi
+	in
+	  if !Global.chatter >= 4 then
+	    formatCtx Psi @ [Fmt.String ",", Fmt.Break, Fmt.Break] @ 
+	    [Fmt.HVbox ([Fmt.Break, Print.formatDec (G, D)])] 
+	  else
+	    formatCtx Psi @ [Fmt.String ",",  Fmt.Break] @ 
+	    [Fmt.Break, Print.formatDec (G, D)]
+	end
+      | formatCtx (I.Decl (Psi, T.PDec (SOME s, F, TC1, TC2))) =
+	if !Global.chatter >= 4 then
+	  formatCtx Psi @ [Fmt.String ",", Fmt.Break, Fmt.Break] @ 
+	  [Fmt.HVbox ([Fmt.Break, Fmt.String s, Fmt.Space, Fmt.String ("::" ^ flag TC1), Fmt.Space, formatFor (Psi, F)])] 
+	else
+	  formatCtx Psi @ [Fmt.String ",",  Fmt.Break] @ 
+	  [Fmt.Break, Fmt.String s, Fmt.Space, Fmt.String ("::" ^ flag TC1), Fmt.Space,
+	   formatFor (Psi, F)]
+
+    fun ctxToString Psi = Fmt.makestring_fmt (Fmt.HVbox (formatCtx Psi))
+
   in
     val formatFor = formatFor
     val forToString = forToString
     val formatFun = formatFun
     val formatPrg = formatPrg3 (fn _ => "?")
 (*    val formatLemmaDec = formatLemmaDec *)
-     
+    val evarName = evarName
+    val evarReset = evarReset 
+    val nameEVar = nameEVar
+
     val prgToString = prgToString 
     val funToString = funToString 
+
+    val nameCtx = nameCtx
+    val formatCtx = fn Psi => Fmt.HVbox (formatCtx Psi)
+    val ctxToString = ctxToString
 (*    val lemmaDecToString = lemmaDecToString *)
   end
 end;  (* signature FUNPRINT *)
