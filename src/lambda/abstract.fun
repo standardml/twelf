@@ -270,7 +270,7 @@ struct
 	  (* . |- t : Gsome, so do not compose with s *)
 	  (* Sat Dec  8 13:28:15 2001 -fp *)
 	  collectSub (I.Null, t, K)
-      | collectDec (G, (I.NDec, s), K) = K
+      | collectDec (G, (I.NDec _, s), K) = K
 
     (* collectSub (G, s, K) = K' 
 

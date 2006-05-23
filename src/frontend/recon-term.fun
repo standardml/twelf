@@ -294,7 +294,7 @@ struct
   local
     open Apx
     datatype Ctx = datatype IntSyn.Ctx
-    datatype Dec = Dec of string option * Exp | NDec
+    datatype Dec = Dec of string option * Exp | NDec of string option
   in
   
     (* Phase 1:
@@ -358,7 +358,7 @@ struct
     fun findBVar' (Null, name, k) = NONE
       | findBVar' (Decl (G, Dec (NONE, _)), name, k) =
           findBVar' (G, name, k+1)
-      | findBVar' (Decl (G, NDec), name, k) =
+      | findBVar' (Decl (G, NDec _), name, k) =
           findBVar' (G, name, k+1)
       | findBVar' (Decl (G, Dec (SOME(name'), _)), name, k) =
           if name = name' then SOME (k)
@@ -614,8 +614,8 @@ struct
         end
 
     fun ctxToApx IntSyn.Null = IntSyn.Null
-      | ctxToApx (IntSyn.Decl (G, IntSyn.NDec)) =
-          IntSyn.Decl (ctxToApx G, NDec)
+      | ctxToApx (IntSyn.Decl (G, IntSyn.NDec x)) =
+          IntSyn.Decl (ctxToApx G, NDec x)
       | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (name, V))) = 
           let 
 	    val (V', _) = Apx.classToApx V

@@ -1287,7 +1287,7 @@ struct
 	else eqInp (G', k+1, a, Ss, ms)
       | eqInp (I.Decl(G', I.Dec(_, I.Pi _)), k, a, Ss, ms) =
           eqInp (G', k+1, a, Ss, ms)
-      | eqInp (I.Decl(G', I.NDec), k, a, Ss, ms) =
+      | eqInp (I.Decl(G', I.NDec _), k, a, Ss, ms) =
 	  eqInp (G', k+1, a, Ss, ms)
       | eqInp (I.Decl(G', I.BDec(_, (b, t))), k, a, Ss, ms) =
 	  eqInp (G', k+1, a, Ss, ms)
@@ -1312,7 +1312,7 @@ struct
       | contractionCands (I.Decl(G', I.Dec(_, I.Pi _)), k) =
           (* ignore Pi --- contraction cands unclear *)
           contractionCands (G', k+1)
-      | contractionCands (I.Decl(G', I.NDec), k) =
+      | contractionCands (I.Decl(G', I.NDec _), k) =
           contractionCands (G', k+1)
       | contractionCands (I.Decl(G', I.BDec(_, (b, t))), k) =
           (* ignore blocks --- contraction cands unclear *)
@@ -1720,7 +1720,7 @@ struct
 	in 
 	  I.Dot (I.Exp (X), s')
 	end
-      | newEVarSubst (G, I.Decl(G', D as I.NDec)) =
+      | newEVarSubst (G, I.Decl(G', D as I.NDec _)) =
 	let
 	  val s' = newEVarSubst (G, G')
 	in
@@ -1990,7 +1990,7 @@ struct
     fun substToSpine' (I.Shift(n), I.Null, T) = T
       | substToSpine' (I.Shift(n), G as I.Decl _, T) =
           substToSpine' (I.Dot (I.Idx (n+1), I.Shift(n+1)), G, T)
-      | substToSpine' (I.Dot(_, s), I.Decl(G, I.NDec), T) =
+      | substToSpine' (I.Dot(_, s), I.Decl(G, I.NDec _), T) =
 	  (* Skip over NDec's; must be either Undef or Idx [from eta-expansion] *)
 	  (* Unusable meta-decs are eliminated here *)
           substToSpine' (s, G, T)
@@ -2028,7 +2028,7 @@ struct
        then  |- G ctx and  G' |- s : G
     *)
     fun purify' (I.Null) = (I.Null, I.id)
-      | purify' (I.Decl (G, I.NDec)) =
+      | purify' (I.Decl (G, I.NDec _)) =
         let val (G', s) = purify' G
 	  (* G' |- s : G *)
 	in

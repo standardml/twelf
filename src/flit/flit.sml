@@ -1,7 +1,7 @@
 structure Flit =
   Flit (structure Global = Global
         structure Word = Word32
-        structure Pack = Pack32Little
+        structure Pack = PackWord32Little
         structure IntSyn = IntSyn
         structure Whnf = Whnf
         structure Print = Print
