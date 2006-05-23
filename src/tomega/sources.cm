@@ -9,6 +9,8 @@ Library
   structure TomegaTypeCheck
   signature TOMEGAABSTRACT
   structure TomegaAbstract
+  signature TOMEGANAMES
+  structure TomegaNames
 
   signature REDUNDANT	
   structure Redundant
@@ -39,6 +41,8 @@ is
   typecheck.fun
   tomegaprint.sig
   tomegaprint.fun 
+  tomeganames.sig
+  tomeganames.fun
   unify.sig
   unify.fun
   coverage.sig

@@ -17,6 +17,7 @@ is
   ../subordinate/sources.cm
   ../solvers/sources.cm
   ../opsem/sources.cm
+  ../trail/sources.cm
   (* ../order/sources.cm *)
   ../compile/sources.cm
   ../worldcheck/sources.cm

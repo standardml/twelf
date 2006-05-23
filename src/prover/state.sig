@@ -7,7 +7,7 @@ sig
 
   datatype State =
     State of Tomega.Worlds 
-      * Tomega.Dec IntSyn.Ctx * Tomega.Prg * Tomega.For	
+      * Tomegas.Dec IntSyn.Ctx * Tomega.Prg * Tomega.For	
   | StateLF of IntSyn.Exp
 
   datatype Focus = 

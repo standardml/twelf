@@ -48,7 +48,7 @@ struct
           then simplify cnstrs
         else FgnCnstr :: (simplify cnstrs)
 
-    fun `namesToString (name::nil) = name ^ "."
+    fun namesToString (name::nil) = name ^ "."
       | namesToString (name::names) = name ^ ", " ^ namesToString names
 
     fun warnConstraints (nil) = ()

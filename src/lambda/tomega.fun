@@ -510,8 +510,8 @@ struct
     fun coerceCtx I.Null = I.Null
       | coerceCtx (I.Decl (Psi, UDec D)) = 
           I.Decl (coerceCtx Psi, D)
-      | coerceCtx (I.Decl (Psi, PDec _)) = 
-	  I.Decl (coerceCtx Psi, I.NDec) 
+      | coerceCtx (I.Decl (Psi, PDec (x, _, _, _))) = 
+	  I.Decl (coerceCtx Psi, I.NDec x) 
 
     
 

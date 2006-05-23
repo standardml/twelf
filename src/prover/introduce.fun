@@ -6,6 +6,7 @@ functor Introduce
    (*! structure Tomega' : TOMEGA !*)
    (*! sharing Tomega'.IntSyn = IntSyn' !*)
    structure State' : STATE
+   structure TomegaNames : TOMEGANAMES
    (*! sharing State'.IntSyn = IntSyn' !*)
    (*! sharing State'.Tomega = Tomega' !*)
        ) : INTRODUCE  =
@@ -44,7 +45,11 @@ struct
        then S' = (Psi, x1:A1, ... xn:An |> F)
     *)
     fun expand (S.Focus (R as T.EVar (Psi, r, T.All ((D, _), F), NONE, NONE, _), W)) =  
-	  SOME (R, T.Lam (D, T.newEVar (I.Decl (strip Psi, D), F)))
+        let 
+	  val D' = TomegaNames.decName (Psi, D)
+	in 
+	  SOME (R, T.Lam (D', T.newEVar (I.Decl (strip Psi, D'), F)))
+	end
       | expand (S.Focus (R as T.EVar (Psi, r, T.Ex ((D as I.Dec (_, V), _), F), NONE, NONE, _), W)) =  
 	   let 
 	     val X = I.newEVar (T.coerceCtx (Psi), V)

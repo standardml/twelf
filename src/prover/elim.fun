@@ -89,7 +89,8 @@ struct
 	    of T.All ((T.UDec (I.Dec (_, V)), _), F) =>
 	     let
 	       val X = I.newEVar (T.coerceCtx (strip Psi), V)
-	       val D = T.PDec (SOME "name", T.forSub (F, T.Dot (T.Exp X, T.id)), NONE, NONE)
+	       val I.NDec x = Names.decName (T.coerceCtx Psi, I.NDec NONE)
+	       val D = T.PDec (x, T.forSub (F, T.Dot (T.Exp X, T.id)), NONE, NONE)
 	       (* the NONE, NONE may breach an invariant *)
 	       (* revisit when we add subterm orderings *)
 	       val Psi' = I.Decl (Psi, D)
@@ -100,9 +101,11 @@ struct
 	 | T.Ex ((D1, _), F) =>
 	     let
 	       val D1' = Names.decName (T.coerceCtx Psi, D1)
-	       val D2 = T.PDec (SOME "name", F, NONE, NONE)
-	       val Psi' = I.Decl (I.Decl (Psi, T.UDec D1'), D2)
-	       val Y = T.newEVar (strip Psi', T.forSub (G, T.Shift 2))
+	       val Psi' = I.Decl (Psi, T.UDec D1')
+	       val I.NDec x = Names.decName (T.coerceCtx (Psi'), I.NDec NONE)
+	       val D2 = T.PDec (x, F, NONE, NONE)
+	       val Psi'' = I.Decl (Psi', D2)
+	       val Y = T.newEVar (strip Psi'', T.forSub (G, T.Shift 2))
 	     in
 	       (r := SOME (T.LetPairExp (D1', D2, T.Var n, Y)))
 	     end

@@ -411,7 +411,7 @@ struct
       (* other cases impossible since (U,s1) whnf *)
     and pruneDec (G, (Dec (name, V), s), ss, rOccur) =
 	  Dec (name, pruneExp (G, (V, s), ss, rOccur))
-      | pruneDec (G, (NDec, _), _, _) = NDec
+      | pruneDec (G, (NDec x, _), _, _) = NDec x
       (* Added for the meta level -cs Tue Aug 17 17:09:27 2004 *)
     and pruneSpine (G, (Nil, s), ss, rOccur) = Nil
       | pruneSpine (G, (App (U, S), s), ss, rOccur) = 

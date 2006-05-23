@@ -86,7 +86,7 @@ struct
 	fun matchCtx (I.Null, _, Fs) = Fs 
 	  | matchCtx (I.Decl (G, I.Dec (x, V)), n, Fs) =
 	  matchCtx (G, n+1, try ((V, I.Shift (n+1)), Fs, FillWithBVar (Y, n+1)))
-	  | matchCtx (I.Decl (G, I.NDec), n, Fs) = 
+	  | matchCtx (I.Decl (G, I.NDec _), n, Fs) = 
 	  matchCtx (G, n+1, Fs)
 	  
 	fun matchSig (nil, Fs) = Fs

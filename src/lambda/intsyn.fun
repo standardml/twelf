@@ -109,7 +109,7 @@ struct
     Dec of name option * Exp		(* D ::= x:V                  *)
   | BDec of name option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of name option * int   	(*     | v[^-d]               *)
-  | NDec
+  | NDec of name option
 
   and Block =				(* Blocks:                    *)
     Bidx of int 			(* b ::= v                    *)
@@ -501,7 +501,7 @@ struct
     | decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
   *)
   fun decSub (Dec (x, V), s) = Dec (x, EClo (V, s))
-    | decSub (NDec, s) = NDec
+    | decSub (NDec x, s) = NDec x
     | decSub (BDec (n, (l, t)), s) = BDec (n, (l, comp (t, s)))
 
   (* dot1 (s) = s'

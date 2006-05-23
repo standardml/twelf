@@ -37,6 +37,7 @@ struct
     structure Fmt = Formatter
 
  
+(*
     fun nameCtx I.Null = I.Null
       | nameCtx (I.Decl (Psi, T.UDec D)) = 
           I.Decl (nameCtx Psi, 
@@ -45,6 +46,9 @@ struct
           I.Decl (nameCtx Psi, 
 		  T.PDec (SOME "s", F, TC))   (* to be fixed! --cs *)
       
+*)
+
+      fun nameCtx Psi = Psi
 
 
     (* nameState S = S'

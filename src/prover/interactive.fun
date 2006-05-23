@@ -10,6 +10,7 @@ functor Interactive
    (*! sharing State'.IntSyn = IntSyn' !*)
    (*! sharing State'.Tomega = Tomega' !*)
    structure Formatter : FORMATTER
+   structure Trail : TRAIL
    structure Ring : RING
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
@@ -144,74 +145,24 @@ struct
     | Fix       of FixedPoint.operator
     | Elim      of Elim.operator
 
-    val Open : (S.State list) ref = ref []
+    val Focus : (S.State list) ref = ref []
 
     val Menu : MenuItem list option ref = ref NONE
       
 
     fun SplittingToMenu (O, A) = Split O :: A
 
-    fun initOpen () = (Open := [])
-
-(*    val Solved : S.State Ring.ring ref = ref (Ring.init [])
-    val History : (S.State Ring.ring * S.State Ring.ring) list ref = ref nil 
-  
-    fun initOpen () = Open := Ring.init [];
-    fun initSolved () = Solved := Ring.init [];
-    fun empty () = Ring.empty (!Open)
-    fun current () = Ring.current (!Open)
-    fun delete () = Open := Ring.delete (!Open)
-    fun insertOpen S = Open := Ring.insert (!Open, S)
-    fun insertSolved S = Solved := Ring.insert (!Solved, S)
-
-    fun insert S = insertOpen S
-
-    fun collectOpen () = Ring.foldr op:: nil (!Open) 
-    fun collectSolved () = Ring.foldr op:: nil (!Solved) 
-    fun nextOpen () = Open := Ring.next (!Open)
-
-    fun pushHistory () = 
-	  History :=  (!Open, !Solved) :: (!History) 
-    fun popHistory () = 
-	case (!History)
-	  of nil => raise Error "History stack empty"
-	   | (Open', Solved') :: History' => 
-	     (History := History';
-	      Open := Open';
-	      Solved := Solved')
-
-
-
-    fun cLToString (nil) = ""
-      | cLToString (c :: nil) = 
-	  (I.conDecName (I.sgnLookup c))
-      | cLToString (c :: L) = 
-	  (I.conDecName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
-
-    fun IntroduceToMenu (SOME O, A) = Introduce O :: A
-      | IntroduceToMenu (NONE, A) = A
-
-    fun SplittingToMenu (nil, A) = A
-      | SplittingToMenu (O :: L, A) = SplittingToMenu (L, Split O :: A)
-
-    fun FillingToMenu (O, A) = Fill O :: A
-
-    fun FixedPointToMenu (O, A) = Fix O :: A
-
-    fun RecursionToMenu (O, A) = (* Recursion O :: *) A
-
-    fun InferenceToMenu (O, A) = (* Inference O :: *) A
-*)
+    fun initFocus () = (Focus := [])
 
 
     fun normalize () =
-        (case (!Open) 
+        (case (!Focus) 
 	  of (S.State (W, Psi, P, F) :: Rest) =>
-	      (Open := (S.State (W, Psi, T.derefPrg P, F) :: Rest))
+	      (Focus := (S.State (W, Psi, T.derefPrg P, F) :: Rest))
 	   | _ => ())
 	
     fun reset () = 
-        (initOpen ();
+        (initFocus ();
 	 Menu := NONE)
 
     fun format k = 
@@ -276,7 +227,7 @@ struct
 	end
 
     fun printmenu () =
-        (case !Open
+        (case !Focus
            of [] => abort "QED"
 	    | (S.State (W, Psi, P, F) :: R) => 
 		  (print ("\n=======================");
@@ -304,7 +255,7 @@ struct
 	      
 
     fun menu () = 
-        (case (!Open) 
+        (case (!Focus) 
 	   of [] => print "Please initialize first\n"
             | (S.State (W, Psi, P, F) :: _) =>
   	      let 
@@ -314,7 +265,6 @@ struct
 		val Ys = S.collectLF P
 		val F2 = map (fn Y => S.FocusLF Y) Ys
 
-		val _ = print "["
 
 		fun splitMenu [] = []
 		  | splitMenu (operators :: l) = map Split operators @ splitMenu l
@@ -326,24 +276,17 @@ struct
 		  | introMenu ((SOME oper) :: l) = (Introduce oper) :: introMenu l
 		  | introMenu (NONE :: l) = introMenu l
 
-		val _ = print "I"
 		val intro = introMenu (map Introduce.expand F1)
 
 
-		val _ = print "F"
 		val fill = foldr (fn (S, l) => l @ map (fn O => Fill O) (Fill.expand S)) nil F2 
 	     
 		fun elimMenu [] = []
 		  | elimMenu (operators :: l) = map Elim operators @ elimMenu l
 
-		val _ = print "E"
 		val elim = elimMenu (map Elim.expand F1)
 
-		val _ = print "S"
 		val split = splitMenu (map Split.expand F1)
-
-		val _ = print "]"
-
 	      in
 		Menu := SOME (intro @ split @ fill @ elim)
  	      end
@@ -390,8 +333,8 @@ struct
 	     declared in the same world 
           *)
 	  val (W :: _) = Ws
-	  val _ = Open :=  [S.init (F, W)]
-	  val P = (case (!Open) 
+	  val _ = Focus :=  [S.init (F, W)]
+	  val P = (case (!Focus) 
 		     of [] => abort "Initialization of proof goal failed\n"
 		   | (S.State (W, Psi, P, F) :: _) => P)
 	  val Xs = S.collectT P
@@ -407,37 +350,53 @@ struct
 	end
 
 
-
+    (* focus n = ()
+     
+       Invariant:
+       Let n be a string.
+       Side effect: Focus on selected subgoal.
+    *)
     fun focus n = 
-      (case (List.find (fn (Y, m) => n = m)) (Names.namedEVars ())
-	of NONE => let
-		    val (X as T.EVar (Psi, r, F, _, _, _)) = TomegaPrint.evarName n
-		    val (S.State (W, _, _ , _) :: _) = ! Open
-		    val Psi' = TomegaPrint.nameCtx Psi
-		    val _ = Open := (S.State (W, Psi', X, F) :: !Open)
-		    (* think about the O here ... *)
-		    val _ = normalize ()
-		    val _ = menu ()
-		    val _ = printmenu ()
-		  in
-		    ()
-		  end
-      | SOME (Y, _) => let 
-		      val _ = Open := (S.StateLF Y :: !Open)
-  	 	      val _ = normalize ()
-		      val _ = menu ()
-		      val _ = printmenu ()
-		    in
-		      ()
-		    end)
+        (case (!Focus) 
+	   of [] => print "Please initialize first\n"
+            | (S.State (W, Psi, P, F) :: _) =>
+  	      let 
+		fun findIEVar nil = raise Error ("cannot focus on " ^ n)
+		  | findIEVar (Y :: Ys) =
+		    if Names.evarName (T.coerceCtx Psi, Y) = n then 
+		       (Focus := (S.StateLF Y :: !Focus);
+			normalize ();
+			menu ();
+			printmenu ())
+		    else findIEVar Ys
+		fun findTEVar nil = findIEVar (S.collectLF P)
+		  | findTEVar ((X as T.EVar (Psi, r, F, TC, TCs, Y)) :: Xs) = 
+		    if Names.evarName (T.coerceCtx Psi, Y) = n then
+		      (Focus := (S.State (W, TomegaPrint.nameCtx Psi, X, F) :: !Focus);
+		       normalize ();
+		       menu ();
+		       printmenu ())
+		    else findTEVar Xs
+	      in
+		findTEVar (S.collectT P)
+	      end
+            | (S.StateLF (U) :: _) =>
+	      (* Invariant: U has already been printed, all EVars occuring 
+	         in U are already named.
+	      *)
+  	      (case (Names.getEVarOpt n) 
+		 of NONE => raise Error ("cannot focus on " ^ n)
+		  | SOME Y =>
+		       (Focus := (S.StateLF Y :: !Focus);
+			normalize ();
+			menu ();
+			printmenu ())))
 
 
     fun return () = 
-      (case (!Open)
+      (case (!Focus)
 	of [S] => if S.close S then print "[Q.E.D.]\n" else ()
-	 | (S :: Rest) => (Open := Rest ; normalize (); menu (); printmenu ()))
-	
-	  
+	 | (S :: Rest) => (Focus := Rest ; normalize (); menu (); printmenu ()))
 
   in
     val init = init

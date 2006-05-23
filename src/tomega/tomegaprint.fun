@@ -935,8 +935,12 @@ struct
           I.Decl (nameCtx Psi, 
 		  T.UDec (Names.decName (T.coerceCtx Psi, D)))
       | nameCtx (I.Decl (Psi, T.PDec (NONE, F, TC1, TC2))) = 
-          I.Decl (nameCtx Psi, 
-		  T.PDec (SOME "s", F, TC1, TC2))   (* to be fixed! --cs *)
+	  let
+	    val Psi' = nameCtx Psi
+	    val I.NDec x = Names.decName (T.coerceCtx Psi', I.NDec NONE)
+	  in
+	    I.Decl (Psi', T.PDec (x, F, TC1, TC2))   
+	  end
       | nameCtx (I.Decl (Psi, D as T.PDec (SOME n, F, _, _))) = 
           I.Decl (nameCtx Psi, D)
       

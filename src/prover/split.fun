@@ -385,6 +385,7 @@ struct
 		      else ()
 	      val Os = splitXs (G,i+1) (Xs, F, W, sc)    (* returns a list of operators *)
 	      val _ = resetCases ()
+(*	      val I.Dec (SOME s, _) = I.ctxLookup (G, i) *)
 	      val s = Print.expToString (G, X)
 	      val Os' = (splitEVar (X, W, sc);   
 			 Split (r, T.Case (T.Cases (mkCases (getCases (), F))), s) :: Os)
@@ -399,7 +400,7 @@ struct
 	  
 	val t = createSub Psi  (* . |- t :: Psi *)
 	val Xs = State.collectLFSub t
-	fun init () = (print "["; addCase (Abstract.abstractTomegaSub t); print "]")
+	fun init () = (addCase (Abstract.abstractTomegaSub t))
 	val G = T.coerceCtx Psi
 	val Os = splitXs (G, 1) (Xs, F, W, init)
       in

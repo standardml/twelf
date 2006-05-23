@@ -7,6 +7,7 @@ structure State = State
 structure Introduce = Introduce 
   ((*! structure IntSyn' = IntSyn !*)
    (*! structure Tomega' = Tomega !*)
+   structure TomegaNames = TomegaNames
    structure State' = State)
 
    
@@ -107,6 +108,7 @@ structure Interactive = Interactive
    structure State' = State
    structure Ring = Ring
    structure Formatter = Formatter
+   structure Trail = Trail
    structure Names = Names
    structure Weaken = Weaken
    structure ModeSyn = ModeSyn

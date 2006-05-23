@@ -705,6 +705,8 @@ struct
                   name = name' orelse cdfd G'
               | cdfd (IntSyn.Decl(G', IntSyn.BDec(SOME(name'),_))) =
 		  name = name' orelse cdfd G'
+              | cdfd (IntSyn.Decl(G', IntSyn.NDec(SOME(name')))) =
+		  name = name' orelse cdfd G'
 	      | cdfd (IntSyn.Decl(G', _)) = cdfd G'
 	in
 	  cdfd G
@@ -792,7 +794,7 @@ struct
         case IntSyn.ctxLookup (G, k)
 	  of IntSyn.Dec(SOME(name), _) => name
 	   | IntSyn.ADec(SOME(name), _) =>  name
-	   | IntSyn.NDec => "<_>" (* should be impossible *)
+	   | IntSyn.NDec(SOME(name)) =>  name (* Evars can depend on NDec :-( *)
 	   | IntSyn.ADec(None, _) => "ADec_" 
 	   | IntSyn.Dec(None, _) => "Dec_" 
 	   | _ => raise Unprintable
@@ -838,7 +840,19 @@ struct
 	  orelse ctxDefined (G, name)
 	  then IntSyn.ADec (SOME (tryNextName (G, baseOf name)), d)
 	else D
-      | decName' role (G, D as IntSyn.NDec) = D
+      | decName' role (G, D as IntSyn.NDec NONE) = 
+	let 
+	  val name = findName (G, "@x", Local)
+	    val _ = print name
+	     
+	in 
+	  IntSyn.NDec (SOME name)
+	end
+      | decName' role (G, D as IntSyn.NDec (SOME name)) = 
+	if varDefined name orelse conDefined name
+	  orelse ctxDefined (G, name)
+	  then IntSyn.NDec (SOME (tryNextName (G, baseOf name)))
+	else D
 
     val decName = decName' Exist
     val decEName = decName' Exist

@@ -87,7 +87,7 @@ sig
     Dec of string option * Exp		(* D ::= x:V                  *)
   | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of string option * int	        (*     | v[^-d]               *)
-  | NDec  
+  | NDec of string option 
 
   and Block =				(* Blocks:                    *)
     Bidx of int				(* b ::= v                    *)
