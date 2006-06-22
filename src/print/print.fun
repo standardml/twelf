@@ -41,7 +41,7 @@ local
 
   (* fmtEVar (G, X) = "X", the name of the EVar X *)
   (* Effect: Names.evarName will assign a name if X does not yet have one *)
-  fun fmtEVar (G, X as I.EVar (_, _, _, ref [])) = Str0 (Symbol.evar (Names.evarName(G, X)))
+  fun fmtEVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X)))
   (* should probably be a new Symbol constructor for AVars -kw *)
   fun fmtAVar (G, X) = Str0 (Symbol.evar (Names.evarName(G, X) ^ "_"))
 
