@@ -287,19 +287,20 @@ struct
 	   then print (Names.qidToString (Names.constQid c) ^ " ")
 	 else ();
 	   checkType' c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDec)
-      | checkConDec c (I.ConDef (_, _, implicit, U, V, _, _)) =
+      | checkConDec c (I.ConDef (_, _, implicit, U, V, I.Type, _)) =
 	   (if !Global.chatter > 3
 	      then print (Names.qidToString (Names.constQid c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2 @
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
+	      (* type level definitions ? *)
       | checkConDec c (I.AbbrevDef (_, _, implicit, U, V, I.Type)) =
 	   (if !Global.chatter > 3
 	      then print (Names.qidToString (Names.constQid c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2; 
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
-	      (* eventually, add case for type level definitions for I.Kind *)
+	      (* type level abbreviations ? *)
       | checkConDec c _ = []   (* in all other cases *)
 
 
