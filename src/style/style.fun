@@ -115,7 +115,6 @@ struct
 	checkSpine c ((G, P), 1, implicitHead H, S, P.body occ) err
       | checkExp c ((G, P), I.FgnExp (_, _), occ) err = []
 
-
     (* checkType c ((G, P), V, pol, occ) err = L
        
        Invariant:
@@ -294,12 +293,13 @@ struct
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2 @
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
-      | checkConDec c (I.AbbrevDef (_, _, implicit, U, V, _)) =
+      | checkConDec c (I.AbbrevDef (_, _, implicit, U, V, I.Type)) =
 	   (if !Global.chatter > 3
 	      then print (Names.qidToString (Names.constQid c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2; 
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
+	      (* eventually, add case for type level definitions for I.Kind *)
       | checkConDec c _ = []   (* in all other cases *)
 
 
