@@ -377,27 +377,7 @@ struct
                      (* val V' = EClo (V, wi) *)
 		     val V' = pruneExp (GX, (V, id), wi, rOccur)
                      (* val GY = Whnf.strengthen (wi, GX) *)
-		     val _ = print "ADAM333"
-
-
-    fun subToString' (Shift k) = "Shift " ^ (Int.toString k)
-      | subToString' (Dot (Idx k, t)) = "Idx " ^ (Int.toString k) ^ " . " ^ subToString'(t)
-      | subToString' (Dot (Block _, t)) = "Block" ^ " . " ^ subToString'(t)
-      | subToString' (Dot (Exp _, t)) = "Exp" ^ " . " ^ subToString'(t)
-      | subToString' (Dot (Undef, t)) = "Undef" ^ " . " ^ subToString'(t)
-
-
-		     val _ = print (subToString' s) 
-		     val _ = print "\n\n" 
-		     val _ = print (subToString' ss) 
-		     val _ = print "\n\n" 
-		     val _ = print (subToString' w) 
-		     val _ = print "\n\n" 
-
-
-		     val _ = print (Int.toString(ctxLength(GX)))
 		     val GY = pruneCtx (wi, GX, rOccur)
-		     val _ = print "ADAM444"
 		     (* shortcut on GY possible by invariant on GX and V[s]? -fp *)
 		     (* could optimize by checking for identity subst *)
 		     val Y = newEVar (GY, V')
