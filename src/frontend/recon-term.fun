@@ -265,6 +265,9 @@ struct
   fun dec0 (nameOpt, r) = dec (nameOpt, omitted (r), r)
   fun refdec (nameOpt, term, r, Aopt) = decRef(ref (nameOpt, term, r, NONE, Aopt))
   fun refdec0 (nameOpt, r, Aopt) = refdec (nameOpt, omitted (r), r, Aopt)
+  fun getStringOption (dec (sO, _, _)) = sO
+    | getStringOption (decRef (ref (sO,_,_, _, _))) = sO
+    | getStringOption (ndec _) = NONE
     
   datatype job =
       jnothing

@@ -38,7 +38,7 @@ sig
   val dec0 : string option * Paths.region -> dec (* id | _  (type omitted) *)
   val refdec : string option * term * Paths.region * (IntSyn.Exp option) -> dec
   val refdec0 : string option * Paths.region * (IntSyn.Exp option) ->  dec
-   
+  val getStringOption : dec -> string option (* added by ABP *)
   val ndec : Paths.region -> dec
 
 end;  (* signature EXTSYN *)
