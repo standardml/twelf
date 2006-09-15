@@ -252,7 +252,7 @@ struct
      c : V or c : V = U.
   *)
   fun occToRegionClause (d as dec _) occ = occToRegionDec d occ
-    | occToRegionClause (d as def (_, _, SOME(_))) occ = occToRegionDef2 d occ
+    | occToRegionClause (d as def _) occ = occToRegionDef2 d occ
 
 end;  (* functor Paths *)
 
