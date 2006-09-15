@@ -15,4 +15,8 @@ is
   ../print/sources.cm
   flit.sig
   flit.fun
+#if (defined(SMLNJ_VERSION) andalso SMLNJ_VERSION * 1000 + SMLNJ_MINOR_VERSION <= 110056)
+  flit-old-smlnj-pack.sml
+#else
   flit.sml
+#endif
