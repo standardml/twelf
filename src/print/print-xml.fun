@@ -139,8 +139,8 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<Condef name=", Name (name), Str ">", F.Break,
-	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
+	sexp [Str "<Condef name=", Name (name), F.Break, Str "implicit=",
+	      Integer (imp), Str ">", F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L), Str "</Condef>"]
       end
