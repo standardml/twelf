@@ -143,7 +143,7 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<symbol id=",  Name (name), Str ">", F.Break, Str "<type system=\"LF\">",
+	sexp [Str "<symbol name=",  Name (name), Str ">", F.Break, Str "<type system=\"LF\">",
 	      F.Break, fmtExpTop (I.Null, (V, I.id), imp),
 	      Str "</type></symbol>"]
       end
@@ -153,11 +153,11 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<symbol id=", Name (name), Str ">",
+	sexp [Str "<symbol name=", Name (name), Str ">",
 	      F.Break, Str "<type system=\"LF\">",
 	      F.Break, fmtExpTop (I.Null, (V, I.id), imp),
 	      Str "</type></symbol>", F.Break,
-	      Str "<definition id=",  Name (name ^ ".def"), F.Break, 
+	      Str "<definition xml:id=",  Name (name ^ ".def"), F.Break, 
 	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id), imp),
 	      Str "</definition>"]
       end
@@ -165,11 +165,11 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "<symbol id=", Name (name),  Str ">",
+	sexp [Str "<symbol name=", Name (name),  Str ">",
 	      F.Break, Str "<type system=\"LF\">",
 	      F.Break, fmtExpTop (I.Null, (V, I.id), imp),
 	      Str "</type></symbol>", F.Break,
-	      Str "<definition id=",  Name (name ^ ".def"), F.Break, 
+	      Str "<definition xml:id=",  Name (name ^ ".def"), F.Break, 
 	      Str "for=",  Name (name), Str ">",fmtExpTop (I.Null, (U, I.id), imp),
 	      Str "</definition>"]
       end
@@ -197,7 +197,15 @@ in
   fun printSgnToFile path filename =
       let 
 	val file = TextIO.openOut (path ^ filename)
-	val _ = TextIO.output (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- nsgmls ex.xml -->\n<!DOCTYPE omdoc PUBLIC \"-//OMDoc//DTD OMDoc V1.2//EN\" \"dtd/omdoc.dtd\">\n\n<omdoc id=\"" ^ filename ^ "\">\n<theory id=\"global\">\n")
+	val OMDocPrefix =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?> " ^
+"<!DOCTYPE omdoc PUBLIC \"-//OMDoc//DTD OMDoc V1.2//EN\" \"../../../dtd/omdoc.dtd\">" ^
+"<omdoc xml:id=\"" ^ filename ^ "\" " ^
+"xmlns=\"http://www.mathweb.org/omdoc\" " ^
+"xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " ^
+"version=\"1.2\">"
+
+	val _ = TextIO.output (file, OMDocPrefix ^ "<theory xml:id=\"global\">\n")
 
 	val _ = IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
 				  TextIO.output (file, "\n")))
