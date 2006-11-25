@@ -40,8 +40,10 @@ struct
     datatype precedence = Strength of int
 
     (* Maximal and minimal precedence which can be declared explicitly *)
-    val maxPrec = Strength(9999)
-    val minPrec = Strength(0)
+    val maxPrecInt = 9999
+    val maxPrec = Strength(maxPrecInt)
+    val minPrecInt = 0
+    val minPrec = Strength(minPrecInt)
 
     fun less (Strength(p), Strength(q)) = (p < q)
     fun leq (Strength(p), Strength(q)) = (p <= q)
@@ -56,6 +58,12 @@ struct
       | Infix of precedence * associativity
       | Prefix of precedence
       | Postfix of precedence
+
+    (* returns integer for precedence such that lower values correspond to higher precedence, useful for exports *)
+    fun precToIntAsc(Infix(Strength n,_)) = maxPrecInt + 1 - n
+      | precToIntAsc(Prefix(Strength n)) = maxPrecInt + 1 - n
+      | precToIntAsc(Postfix(Strength n)) = maxPrecInt + 1 - n
+      | precToIntAsc(Nonfix) = minPrecInt
 
     (* prec (fix) = precedence of fix *)
     fun prec (Infix(p,_)) = p
