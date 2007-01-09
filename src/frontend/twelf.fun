@@ -600,6 +600,9 @@ struct
       (* %thaw <qid> ... *)
       | install1 (fileName, (Parser.ThawDec (qids), r)) =
 	let
+	  val _ = if not (!Global.unsafe)
+		    then raise ThmSyn.Error "%thaw not safe: Toggle `unsafe' flag"
+	          else ()
 	  fun toCid qid =
 	      case Names.constLookup qid
 		of NONE => raise Names.Error ("Undeclared identifier "
