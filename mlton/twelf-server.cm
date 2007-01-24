@@ -26,9 +26,7 @@ Group is
 ../src/lambda/whnf.fun
 ../src/lambda/conv.sig
 ../src/lambda/conv.fun
-../src/lambda/tomega.sig
-../src/lambda/tomega.fun
-../src/lambda/tomega.sml
+
 ../src/table/table.sig
 ../src/table/hash-table.sml
 ../src/table/string-hash.sig
@@ -39,6 +37,14 @@ Group is
 ../src/table/sparse-array2.sig
 ../src/table/sparse-array2.fun
 ../src/table/table.sml
+
+../src/order/order.sig
+../src/order/order.fun
+../src/order/order.sml
+
+../src/lambda/tomega.sig
+../src/lambda/tomega.fun
+../src/lambda/tomega.sml
 ../src/paths/paths.sig
 ../src/paths/paths.fun
 ../src/paths/origins.sig
@@ -340,3 +346,4 @@ Group is
 ../src/server/sigint-mlton.sml
 ../src/server/server.sml
 twelf-server.sml
+
