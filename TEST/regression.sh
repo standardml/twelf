@@ -10,7 +10,7 @@
 
 MLTON="mlton"
 SML="sml"
-SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false" # -Ccontrol.poly-eq-warn=false"
+SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"
 POSTFIX=$( date +%y%m%d )
 TIME="/usr/bin/time -f%e\treal\n%U\tuser"
 
