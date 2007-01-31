@@ -41,6 +41,8 @@ twelf-server: ;
 		cmfileid="";						\
 	elif [ $$mltonversion -ge 20040227 ]; then			\
 		cmfileid="-legacy";					\
+	elif [ $$mltonversion="MLTONVERSION" ]; then			\
+		cmfileid="";						\
 	else								\
 		echo; echo "Error: MLton >= 20040227 required";	echo;	\
 		exit 1;							\
