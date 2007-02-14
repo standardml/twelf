@@ -33,3 +33,4 @@ is
   print-xml.sig
   print-xml.fun
   print-omdoc.fun
+  print-omdoc.sig
