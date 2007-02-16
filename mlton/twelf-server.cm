@@ -83,6 +83,7 @@ Group is
 ../src/formatter/formatter.sig
 ../src/formatter/formatter.fun
 ../src/formatter/formatter.sml
+../src/print/print-omdoc.sig
 ../src/print/print-xml.sig
 ../src/print/print-omdoc.fun
 ../src/print/print-xml.fun
