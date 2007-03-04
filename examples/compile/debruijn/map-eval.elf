@@ -2,13 +2,23 @@
 %%% Author: Frank Pfenning, based on [Hannan & Pfenning 92]
 %%% Modified: Robert J. Simmons
 
-map_eval : eval E V -> trans K F E
+% Helper lemma
+cong_vtrans : id_exp E1 E2 -> vtrans W1 E1 -> vtrans W1 E2 -> type.
+
+cong_vtrans_ : cong_vtrans id_exp_ D D.
+
+%mode cong_vtrans +I +U1 -U2.
+%worlds () (cong_vtrans _ _ _).
+%total {} (cong_vtrans _ _ _).
+
+map_eval :  eval E V -> trans K F E
 	      -> feval K F W -> vtrans W V -> type.
 
 % Variables
-mp_1  : map_eval D (tr_1 U1) (fev_1) U1
+mp_1  : map_eval D (tr_1 U1) (fev_1) U2
 	   <- vtrans_val U1 P
-	   <- val_eval P D.
+	   <- val_eval P D I
+	   <- cong_vtrans I U1 U2.
 
 mp_^  : map_eval D (tr_^ C1) (fev_^ D1') U1
 	   <- map_eval D C1 D1' U1.
@@ -74,7 +84,7 @@ mp_fix : map_eval (ev_fix D1) (tr_fix C1)
 %mode map_eval +D +C -D' -U.
 %worlds () (map_eval D C D' U).
 % problem here---fixed in 2001 version
-% %covers map_eval +D +C -D' -U.
+%covers map_eval +D +C -D' -U.
 
 
 
@@ -87,7 +97,7 @@ map_eval' : eval E V -> trans K F E
 % Variables
 mp_1  : map_eval' D (tr_1 U1) (fev_1) U1
 	   <- vtrans_val U1 P
-	   <- val_eval P D.
+	   <- val_eval P D _.
 
 mp_^  : map_eval' D (tr_^ C1) (fev_^ D1') U1
 	   <- map_eval' D C1 D1' U1.

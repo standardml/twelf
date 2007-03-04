@@ -1,5 +1,6 @@
 %%% Lemmas about values.
 %%% Author: Frank Pfenning
+%%% Modified: Robert J. Simmons
 
   %%% Values correspond to value expressions.
   vtrans_val : vtrans W E -> value E -> type.
@@ -18,19 +19,47 @@
 %worlds () (vtrans_val U P).
 %covers vtrans_val +U -P.
 
+  %%% Identity on expressions %%%
+  id_exp : exp -> exp -> type.
+  
+  id_exp_ : id_exp E E.
+
+  %%% Identity repsects syntax %%%
+  
+  resp_succ : id_exp E1 E2 -> id_exp (s E1) (s E2) -> type.
+  
+  resp_succ_ : resp_succ id_exp_ id_exp_.
+
+%mode resp_succ +I1 -I2.
+%worlds () (resp_succ _ _).
+%total {} (resp_succ T _).
+
+  resp_pair : id_exp E1 E2 -> id_exp E1' E2'
+		 -> id_exp (pair E1 E1') (pair E2 E2') -> type.
+
+  resp_pair_ : resp_pair id_exp_ id_exp_ id_exp_.
+
+%mode resp_pair +I1 +I1' -I2.
+%worlds () (resp_pair _ _ _).
+%total {} (resp_pair _ _ _).
+
+
   %%% Values evaluate only to themselves.
-  val_eval  : value E -> eval E E -> type.
+  val_eval  : value E -> eval E E' -> id_exp E E' -> type.
 
-  vev_z     : val_eval (val_z) (ev_z).
-  vev_s	    : val_eval (val_s P1) (ev_s D1)
-	       <- val_eval P1 D1.
+  vev_z     : val_eval (val_z) (ev_z) id_exp_.
+  vev_s	    : val_eval (val_s P1) (ev_s D1) I2
+	       <- val_eval P1 D1 I1
+	       <- resp_succ I1 I2.
 
-  vev_pair  : val_eval (val_pair P2 P1) (ev_pair D2 D1)
-	         <- val_eval P1 D1
-		 <- val_eval P2 D2.
+  vev_pair  : val_eval (val_pair P2 P1) (ev_pair D2 D1) I3
+	         <- val_eval P1 D1 I1
+		 <- val_eval P2 D2 I2
+		 <- resp_pair I1 I2 I3.
 
-  vev_lam   : val_eval (val_lam) (ev_lam).
+  vev_lam   : val_eval (val_lam) (ev_lam) id_exp_.
 
-%mode val_eval +P -D.
-%worlds () (val_eval P D).
-%covers val_eval +P -D.
+%mode val_eval +P -D -I.
+%worlds () (val_eval P D I).
+%covers val_eval +P -D -I.
+%total T (val_eval T _ _).
