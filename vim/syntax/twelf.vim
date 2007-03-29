@@ -20,7 +20,7 @@ endif
 syn keyword twelfPercentKey %mode %infix %prefix %abbrev %postfix %name %freeze %clause %define %solve %querytabled %query %tabled %deterministic %unique %block %worlds %covers %total %terminates %reduces %theorem %prove %assert %establish %sig %struct %where %include %open %use
 
 syn keyword twelfType type
-syn match twelfPunct ":\|\.\|="
+syn match twelfPunct ":\|\.\|\<=\>"
 syn match twelfFVar "\<[A-Z_]\k*\>"  
 syn keyword twelfSymbol -> <-
 syn match twelfDecl "^\s*[^A-Z_]\k*\s*:" contains=twelfPunct
