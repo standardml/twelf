@@ -1,19 +1,22 @@
 val print = TextIO.print;
 
+use "src/compat/array.sig";
+use "src/compat/vector.sig";
+use "src/compat/path.sig";
+use "src/compat/substring.sig";
+use "src/compat/text-io.sig";
+use "src/compat/timer.sig";
+use "src/compat/socket.sig";
+use "src/compat/compat.sig";
+use "src/compat/socket.sml";
+use "src/compat/compat.fun";
+use "src/compat/compat.sml";
+use "src/timing/timing.sml";
+use "src/timing/timers.sig";
+use "src/timing/timers.fun";
+use "src/timing/timers.sml";
 use "src/global/global.sig";
 use "src/global/global.sml";
-use "src/table/table.sig";
-use "src/table/hash-table.sml";
-use "src/table/string-hash.sig";
-use "src/table/string-hash.sml";
-use "src/table/red-black-tree.fun";
-use "src/compat/vector-slice.sig";
-use "src/compat/vector-slice.sml";
-use "src/table/sparse-array.sig";
-use "src/table/sparse-array.fun";
-use "src/table/sparse-array2.sig";
-use "src/table/sparse-array2.fun";
-use "src/table/table.sml";
 use "src/lambda/fgnopn.sig";
 use "src/lambda/fgnopntable.fun";
 use "src/lambda/intsyn.sig";
@@ -22,9 +25,36 @@ use "src/lambda/whnf.sig";
 use "src/lambda/whnf.fun";
 use "src/lambda/conv.sig";
 use "src/lambda/conv.fun";
+
+use "src/table/table.sig";
+use "src/table/hash-table.sml";
+use "src/table/string-hash.sig";
+use "src/table/string-hash.sml";
+use "src/table/red-black-tree.fun";
+use "src/table/sparse-array.sig";
+use "src/table/sparse-array.fun";
+use "src/table/sparse-array2.sig";
+use "src/table/sparse-array2.fun";
+use "src/table/table.sml";
+
+use "src/order/order.sig";
+use "src/order/order.fun";
+use "src/order/order.sml";
+
 use "src/lambda/tomega.sig";
 use "src/lambda/tomega.fun";
 use "src/lambda/tomega.sml";
+use "src/paths/paths.sig";
+use "src/paths/paths.fun";
+use "src/paths/origins.sig";
+use "src/paths/origins.fun";
+use "src/paths/paths.sml";
+use "src/table/queue.sig";
+use "src/table/queue.sml";
+use "src/index/index.sig";
+use "src/index/index.fun";
+use "src/index/index-skolem.fun";
+use "src/index/index.sml";
 use "src/trail/trail.sig";
 use "src/trail/notrail.sml";
 use "src/trail/trail.sml";
@@ -39,27 +69,20 @@ use "src/lambda/abstract.fun";
 use "src/lambda/approx.sig";
 use "src/lambda/approx.fun";
 use "src/lambda/lambda.sml";
-use "src/compat/array.sig";
-use "src/compat/vector.sig";
-use "src/compat/path.sig";
-use "src/compat/substring.sig";
-use "src/compat/text-io.sig";
-use "src/compat/timer.sig";
-use "src/compat/compat.sig";
-use "src/compat/compat.fun";
-use "src/compat/array-97.sml";
-use "src/compat/vector-97.sml"; 
-(* use "src/compat/path-97.sml"; *)
-use "src/compat/substring-97.sml";
-use "src/compat/text-io-97.sml";
-(* use "src/compat/timer-97.sml"; *)
-use "src/compat/compat-poly02.sml";
 use "src/names/names.sig";
 use "src/names/names.fun";
 use "src/names/names.sml";
+use "src/style/style.sig";
+use "src/style/style.fun";
+use "src/style/style.sml";
+use "src/stream/stream.sml";
+use "src/frontend/lexer.sig";
+use "src/frontend/lexer.fun";
+use "src/frontend/twelf.sig";
 use "src/formatter/formatter.sig";
 use "src/formatter/formatter.fun";
 use "src/formatter/formatter.sml";
+use "src/print/print-omdoc.sig";
 use "src/print/print-xml.sig";
 use "src/print/print-omdoc.fun";
 use "src/print/print-xml.fun";
@@ -72,37 +95,11 @@ use "src/print/print.fun";
 use "src/print/clause-print.sig";
 use "src/print/clause-print.fun";
 use "src/print/print.sml";
-use "src/table/queue.sig";
-use "src/table/queue.sml";
-use "src/index/index.sig";
-use "src/index/index.fun";
-use "src/index/index-skolem.fun";
-use "src/index/index.sml";
-use "src/compat/mono-array-slice.sig";
-use "src/compat/word8-array-slice.sml";
-(* Compatibility problem
-use "src/flit/flit.sig";
-use "src/flit/flit.fun";
-use "src/flit/flit.sml";
-*)
-use "src/timing/timing.sml";
-use "src/timing/timers.sig";
-use "src/timing/timers.fun";
-use "src/timing/timers.sml";
-use "src/stream/stream.sml";
-use "src/paths/paths.sig";
-use "src/paths/paths.fun";
-use "src/paths/origins.sig";
-use "src/paths/origins.fun";
-use "src/paths/paths.sml";
 use "src/typecheck/strict.sig";
 use "src/typecheck/strict.fun";
 use "src/typecheck/typecheck.sig";
 use "src/typecheck/typecheck.fun";
 use "src/typecheck/typecheck.sml";
-use "src/style/style.sig";
-use "src/style/style.fun";
-use "src/style/style.sml";
 use "src/modes/modesyn.sml";
 use "src/modes/modetable.sig";
 use "src/modes/modetable.fun";
@@ -117,19 +114,11 @@ use "src/tabling/tabledsyn.sig";
 use "src/tabling/tabledsyn.fun";
 use "src/tabling/tabled.sml";
 use "src/subordinate/intset.sml";
-use "src/compat/array-slice.sig";
-use "src/compat/array-slice.sml";
 use "src/subordinate/subordinate.sig";
 use "src/subordinate/subordinate.fun";
 use "src/subordinate/subordinate.sml";
 use "src/solvers/cs-manager.sig";
 use "src/solvers/cs-manager.fun";
-
-(* Do not need for PolyML
-use "src/int-inf/int-inf-sig.sml";
-use "src/int-inf/int-inf.sml";
-*)
-
 use "src/domains/integers.sig";
 use "src/domains/integers.fun";
 use "src/domains/field.sig";
@@ -149,9 +138,6 @@ use "src/solvers/cs-eq-integers.fun";
 use "src/solvers/cs-ineq-integers.fun";
 use "src/solvers/cs-integers-word.fun";
 use "src/solvers/solvers.sml";
-use "src/order/order.sig";
-use "src/order/order.fun";
-use "src/order/order.sml";
 use "src/terminate/checking.sig";
 use "src/terminate/checking.fun";
 use "src/terminate/reduces.sig";
@@ -313,6 +299,7 @@ use "src/tomega/converter.fun";
 use "src/tomega/coverage.sig";
 use "src/tomega/coverage.fun";
 use "src/tomega/tomega.sml";
+use "src/msg/msg.sml";
 use "src/frontend/recon-term.sig";
 use "src/frontend/recon-term.fun";
 use "src/frontend/recon-condec.sig";
@@ -325,8 +312,6 @@ use "src/frontend/recon-thm.sig";
 use "src/frontend/recon-thm.fun";
 use "src/frontend/recon-module.sig";
 use "src/frontend/recon-module.fun";
-use "src/frontend/lexer.sig";
-use "src/frontend/lexer.fun";
 use "src/frontend/parsing.sig";
 use "src/frontend/parsing.fun";
 use "src/frontend/parse-term.sig";
@@ -350,7 +335,6 @@ use "src/frontend/solve.fun";
 use "src/frontend/fquery.sig";
 use "src/frontend/fquery.fun";
 use "src/frontend/unknownexn.sig";
-use "src/frontend/twelf.sig";
 use "src/frontend/twelf.fun";
 use "src/frontend/unknownexn.fun";
 use "src/frontend/unknownexn-stub.sml";
@@ -358,3 +342,18 @@ use "src/frontend/frontend.sml";
 use "src/server/sigint.sig";
 use "src/server/sigint-polyml.sml";
 use "src/server/server.sml";
+
+
+fun server () = 
+    let
+	val status = Server.server("",[])
+    in 
+	1 + OS.Process.exit status
+    end
+
+
+(* The exported files work, but do not appear to link correctly according
+to the minimal instructions on the Polyml website - RJS 4/07
+PolyML.export ("../bin/twelf-server", server);
+PolyML.export ("../bin/twelf-sml", fn x => x);
+*)
