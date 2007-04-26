@@ -139,9 +139,6 @@ Group is
 ../src/solvers/cs-ineq-integers.fun
 ../src/solvers/cs-integers-word.fun
 ../src/solvers/solvers.sml
-../src/order/order.sig
-../src/order/order.fun
-../src/order/order.sml
 ../src/terminate/checking.sig
 ../src/terminate/checking.fun
 ../src/terminate/reduces.sig
