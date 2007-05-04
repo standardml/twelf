@@ -12,23 +12,25 @@ we have data for both cases.  Thus, the (SML) signature
 should reflect that either is possible as an implementation.
 
 <<signat.sig>>=
+
 signature SIGNAT =
 sig
-  type (''a,'b) sgn
+  type key
+  type 'a sgn
   <<exceptions>>
-  val empty : unit -> (''a,'b) sgn
-  val insert : (''a,'b) sgn -> ''a * 'b -> (''a,'b) sgn
-  val lookup : (''a,'b) sgn -> ''a -> 'b (* raises Signat *)
-  val size : (''a,'b) sgn -> int
+  val empty : unit -> 'a sgn
+  val insert : 'a sgn -> key * 'a -> 'a sgn
+  val lookup : 'a sgn -> key -> 'a (* raises Signat *)
+  val size : 'a sgn -> int
 end
 
 <<signat.sml>>=
-structure ListSignat : SIGNAT =
+structure ListSignat : SIGNAT where type key = int =
 struct 
 
   structure L = Lib
-  
-  type (''a,'b) sgn = (''a * 'b) list
+  type key = int
+  type 'a sgn = (key * 'a) list
 
   <<exceptions>>
                       
@@ -46,20 +48,17 @@ struct
 end
 
 @ 
-We can implement signatures more efficiently
-if we know the indexing type is int.
-Though this shouldn't be forced upon the user,
-we can provide implementations for when this is the case.
 
 <<signat.sml>>=
-structure GrowarraySignat : SIGNAT =
+structure GrowarraySignat : SIGNAT where type key = int =
 struct
   
   structure L = Lib
   structure G = GrowArray
 
-  type (''a,'b) sgn = {arr : 'b G.growarray,
-                       size : int ref}
+  type key = int
+  type 'a sgn = {arr : 'a G.growarray,
+                 size : int ref}
 
   <<exceptions>>
                       
@@ -68,14 +67,14 @@ struct
   fun empty() = {arr = G.empty(),
                  size = ref 0}
 
-  fun insert (sgn:(''a,'b) sgn) (n,v) =
+  fun insert (sgn:('a sgn)) (n,v) =
       (G.update (#arr sgn) n v;
        (if n > !(#size sgn) then (#size sgn) := n else ());
        sgn)
 
-  fun lookup (sgn:(int,'b) sgn) n = G.sub (#arr sgn) n
+  fun lookup (sgn:'a sgn) n = G.sub (#arr sgn) n
 
-  fun size (sgn:(int,'b) sgn) = !(#size sgn)
+  fun size (sgn:'a sgn) = !(#size sgn)
 
 end
 

@@ -2,7 +2,8 @@ CM.make "sources.cm";
 Control.Print.printDepth := 1000;;
 Control.Print.printLength := 1000;;
 Control.Print.stringDepth := 1000;;
-Twelf.make "../../sources.cfg"; 
+Twelf.make "examples/sources.cfg"; 
+
 val n = Lib.fst (IntSyn.sgnSize()); 
 val cs = map IntSyn.sgnLookup (Lib.upto(0,n-1)); 
 structure L = Lib

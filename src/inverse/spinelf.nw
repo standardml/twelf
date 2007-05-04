@@ -291,14 +291,14 @@ sig
   structure Sgn :
   sig
     type sgn
-    val empty : sgn
+    val empty : unit -> sgn
     val insert : sgn -> dec -> sgn
-    val lookup : sgn -> const -> dec option
+    val lookup : sgn -> const -> dec (* raises Check *)
   end
 
-  val check : Sgn.sgn -> exp -> exp -> bool
-  val print_exp : Sgn.sgn -> exp -> unit
-  val expand_def : Sgn.sgn -> exp -> exp
+  val check : Sgn.sgn -> exp -> exp -> unit (* raises Check *)
+(*   val print_exp : Sgn.sgn -> exp -> unit *)
+(*   val expand_def : Sgn.sgn -> exp -> exp *)
 
 end
 
@@ -327,47 +327,46 @@ struct
   fun shift 0 = SubId
     | shift n = SubComp(SubShift,shift (n-1))
   fun is_def sgn c = 
-      case Sig.lookup sgn c of 
-        SOME (Dec decl) => L.is_some (#def decl)
-      | NONE => raise Check "is_def: not a constant"
+      let
+        val (Dec decl) = Sig.lookup sgn c 
+      in
+        L.is_some (#def decl)
+      end
 
   exception Fail2 of string * exp * exp
 
   (* Typechecking *)
-  fun check' sgn ctx (ExpLev LevType) (ExpLev LevKind) = true
+  fun check' sgn ctx (ExpLev LevType) (ExpLev LevKind) = ()
     | check' sgn ctx (ExpLam M) (ExpPi(A1,A2)) =
       check' sgn (C.push ctx A1) M A2
     | check' sgn ctx (ExpApp(HdConst con,S)) V = 
-      (case Sig.lookup sgn con of
-         SOME (Dec decl) => 
          let 
+           val (Dec decl) = Sig.lookup sgn con 
            val U = focus sgn ctx S (#exp decl) 
          in
-           if equiv_exp sgn U V then true
+           if equiv_exp sgn U V then ()
            else raise Fail2("ExpApp,Const",U,V)
          end
-       | NONE => raise Check ("focus: can't find constant: " ^ Int.toString con))
     | check' sgn ctx (ExpApp(HdVar i,S)) V = 
       (case C.lookup ctx (i-1) (* DeBruijn indices start at 1 *) of
          SOME A =>
          let
            val U = focus sgn ctx S (apply_exp (shift i) A) 
          in
-           if equiv_exp sgn U V then true
+           if equiv_exp sgn U V then ()
            else raise Fail2("ExpApp,Var",U,V)
          end
        | NONE => raise Check ("focus: var out of bounds"))
     | check' sgn ctx (ExpPi(A1,A2)) (lev as ExpLev _) = 
-      check' sgn ctx A1 ExpType andalso 
-      check' sgn (C.push ctx A1) A2 lev
+      (check' sgn ctx A1 ExpType;
+       check' sgn (C.push ctx A1) A2 lev)
     | check' _ _ _ _ = raise Check "check: bad case"
 
   and focus sgn ctx SpNil (ty as ExpLev LevType) = ty
     | focus sgn ctx SpNil (hd as ExpApp (HdConst _,_)) = hd
     | focus sgn ctx (SpCons(M,S)) (ExpPi(A1,A2)) = 
-      if check' sgn ctx M A1 then
-        focus sgn ctx S (apply_exp (SubCons(M,SubId)) A2)
-      else raise Check "focus:2"
+      (check' sgn ctx M A1;
+       focus sgn ctx S (apply_exp (SubCons(M,SubId)) A2))
     | focus _ _ _ _ = raise Check "focus: bad case"
  
   (* Substitutions *)
@@ -412,7 +411,7 @@ struct
     | expand_defs sgn (ExpApp(con as HdConst c,S)) =
       if not (is_def sgn c) then ExpApp(con,expand_defs_spine sgn S) else
       let
-        val Dec decl = L.the (Sig.lookup sgn c)
+        val (Dec decl) = Sig.lookup sgn c
         val {exp=M,...} = L.the (#def decl)
       in
         expand_defs sgn (reduce M S)
@@ -444,29 +443,25 @@ struct
 
   fun check sgn E1 E2 = check' sgn C.empty E1 E2
 
-
   structure Sgn =
   struct
 
-    type sgn = (const,dec) Sig.sgn
+    type sgn = dec Sig.sgn
 
     val empty = Sig.empty
 
     fun insert sgn (dec as Dec decl) = 
-        case #level decl of 
-          LevKind => 
-          if check sgn (#exp decl) ExpKind then 
-            Sig.insert sgn (#id decl,dec)
-          else raise Check "insert:1"
-        | LevType => 
-          if check sgn (#exp decl) ExpType then 
-            case #def decl of
-              NONE => Sig.insert sgn (#id decl,dec)
-            | SOME {exp=M,height=height} => 
-              if check sgn M (#exp decl) then 
-                Sig.insert sgn (#id decl,dec)
-              else raise Check "insert:2"
-          else raise Check "insert:3"
+        case #level decl of
+          LevKind =>
+          (check sgn (#exp decl) ExpKind;
+           Sig.insert sgn (#id decl,dec))
+        | LevType =>
+          (check sgn (#exp decl) ExpType;
+           case #def decl of
+             NONE => Sig.insert sgn (#id decl,dec)
+           | SOME {exp=M,height=height} =>
+             (check sgn M (#exp decl);
+              Sig.insert sgn (#id decl,dec)))
 
     fun lookup sgn c = Sig.lookup sgn c 
   

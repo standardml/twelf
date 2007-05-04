@@ -8,18 +8,19 @@ Library
   structure IntSyn
   structure ClausePrint
 
-  structure Signat
   structure Context
+  structure Signat
   structure SpineLF
   structure Translate
 is
 
-  ../../../sml/std-lib/sources.cm
-  ../../my-twelf/sources.cm
+  std-lib/sources.cm
+  ../lambda/sources.cm
+  ../print/sources.cm
+  ../frontend/sources.cm
 
-  context.nw 
+  context.nw
   signat.nw
-  clf.nw
   spinelf.nw
   translate.nw
 

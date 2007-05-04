@@ -72,7 +72,7 @@ struct
         val cds' = L.map2 translate_condec ns cds
         fun fold_fun (dec,sgn) = Sgn.insert sgn dec
       in
-        foldl fold_fun Sgn.empty cds'
+        foldl fold_fun (Sgn.empty()) cds'
       end
 
 (* 
