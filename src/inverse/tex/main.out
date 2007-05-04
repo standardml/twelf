@@ -1,0 +1,17 @@
+\BOOKMARK [1][-]{section.1}{Canonical LF}{}
+\BOOKMARK [2][-]{subsection.1.1}{Terms}{section.1}
+\BOOKMARK [1][-]{section.2}{Spine-Form Canonical LF}{}
+\BOOKMARK [2][-]{subsection.2.1}{Name-carrying representation}{section.2}
+\BOOKMARK [2][-]{subsection.2.2}{DeBruijn representation}{section.2}
+\BOOKMARK [2][-]{subsection.2.3}{Contexts}{section.2}
+\BOOKMARK [2][-]{subsection.2.4}{Signatures}{section.2}
+\BOOKMARK [2][-]{subsection.2.5}{Substitutions}{section.2}
+\BOOKMARK [2][-]{subsection.2.6}{Uni-level representation}{section.2}
+\BOOKMARK [1][-]{section.3}{Translate}{}
+\BOOKMARK [1][-]{appendix.A}{Structures}{}
+\BOOKMARK [2][-]{subsection.A.1}{Contexts}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.2}{Signatures}{appendix.A}
+\BOOKMARK [2][-]{subsection.A.3}{Twelf Grammar}{appendix.A}
+\BOOKMARK [1][-]{appendix.B}{Using Twelf and User Code from the SML Top Level Loop}{}
+\BOOKMARK [2][-]{subsection.B.1}{Loading Files}{appendix.B}
+\BOOKMARK [2][-]{subsection.B.2}{Using Twelf}{appendix.B}

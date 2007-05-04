@@ -1,0 +1,28 @@
+
+Library
+  structure Lib
+  structure GrowArray
+
+  structure Layout
+  structure Twelf
+  structure IntSyn
+  structure ClausePrint
+
+  structure Signat
+  structure Context
+  structure SpineLF
+  structure Translate
+is
+
+  ../../../sml/std-lib/sources.cm
+  ../../my-twelf/sources.cm
+
+  context.nw 
+  signat.nw
+  clf.nw
+  spinelf.nw
+  translate.nw
+
+  $/basis.cm
+  $/noweb-tool.cm       
+  $/smlnj-lib.cm

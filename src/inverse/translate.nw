@@ -1,0 +1,112 @@
+% -*- mode: Noweb; noweb-code-mode: sml-mode -*-
+
+\section{Translate}
+
+<<exceptions>>=
+  exception Translate of string
+
+<<translate.sig>>=
+signature TRANSLATE =
+sig
+  <<exceptions>>
+  val translate_signature : unit -> SpineLF.Sgn.sgn
+  val dec_to_string : SpineLF.dec -> string
+
+end
+
+<<translate.sml>>=
+structure Translate (* : TRANSLATE  *) =
+struct 
+
+  structure L = Lib
+  structure I = IntSyn
+  structure S = SpineLF
+  structure Sgn = S.Sgn
+  structure C = ClausePrint
+
+  <<exceptions>>
+
+  fun translate_uni I.Kind = S.LevKind 
+    | translate_uni I.Type = S.LevType
+
+  and translate_exp (I.Uni uni) = S.ExpLev (translate_uni uni)
+    | translate_exp (I.Pi((I.Dec(name_opt,U1),_),U2)) = 
+      S.ExpPi(translate_exp U1,translate_exp U2)
+    | translate_exp (I.Root(H,S)) =
+      S.ExpApp(translate_head H,translate_spine S)
+    | translate_exp (I.Lam(I.Dec(name_opt,_),U)) =
+      S.ExpLam(translate_exp U)
+    | translate_exp _ = raise Translate "translate_exp: bad case"
+
+  and translate_head (I.BVar i) = S.HdVar i
+    | translate_head (I.Const c) = 
+      S.HdConst c
+    | translate_head (I.Def c) = 
+      S.HdConst c
+    | translate_head _ = raise Translate "translate_head: bad case"
+
+  and translate_spine I.Nil = S.SpNil
+    | translate_spine (I.App(U,S)) = 
+      S.SpCons(translate_exp U,translate_spine S)
+    | translate_spine _ = raise Translate "translate_spine: bad case"
+
+  and translate_condec (cid,I.ConDec(name,_,_,_,E,U)) =
+      S.Dec {id = cid,
+             name = name,
+             exp = translate_exp E,
+             def = NONE,
+             level = translate_uni U}
+    | translate_condec (cid,I.ConDef(name,_,_,U,V,I.Type,I.Anc(_,h,_))) =
+      S.Dec {id = cid,
+             name = name,
+             exp = translate_exp V,
+             def = SOME {exp=translate_exp U,height=h},
+             level = S.LevType}
+    | translate_condec _ = raise Translate "translate_condec: bad case"
+
+  and translate_signature() = 
+      let
+        val n = L.fst (IntSyn.sgnSize()) 
+        val ns = L.upto(0,n-1)
+        val cds = map IntSyn.sgnLookup ns
+        val cds' = L.map2 translate_condec ns cds
+        fun fold_fun (dec,sgn) = Sgn.insert sgn dec
+      in
+        foldl fold_fun Sgn.empty cds'
+      end
+
+(* 
+  fun encode_dec (S.Dec decl) = 
+      case #def decl of
+        NONE => I.ConDec(#name decl,NONE,0,I.Normal,
+                         encode_exp (#exp decl),
+                         encode_level (#level decl))
+      | SOME M => 
+        I.ConDef(#name decl,NONE,0,
+                 encode_exp (#exp decl),
+                 encode_exp M, 
+                 encode_level (#level decl),
+                 I.Anc(NONE,0,NONE))
+
+  and encode_exp (S.ExpLev l) = I.Uni (encode_level l)
+    | encode_exp (S.ExpPi(U,V)) = I.Pi ((I.Dec(NONE,encode_exp U),I.Maybe),encode_exp V)
+    | encode_exp (S.ExpLam M) = I.Lam (I.Dec(NONE,I.NVar 0),encode_exp M)
+    | encode_exp (S.ExpApp(H,S)) = I.Root (encode_head H,encode_spine S)
+
+  and encode_head (S.HdConst c) = I.Const c
+    | encode_head (S.HdVar i) = I.BVar i
+
+  and encode_spine S.SpNil = I.Nil
+    | encode_spine (S.SpCons(M,S)) = I.App(encode_exp M,encode_spine S)
+
+  and encode_level S.LevType = I.Type
+    | encode_level S.LevKind = I.Kind
+
+  fun dec_to_string (c,dec) = C.conDecToString (encode_dec dec)
+
+  fun exp_to_string (exp,lev) = 
+      C.conDecToString (I.ConDec("tmp",NONE,0,I.Normal,encode_exp exp,encode_level lev))
+*) 
+
+end
+

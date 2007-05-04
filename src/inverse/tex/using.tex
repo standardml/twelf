@@ -1,0 +1,122 @@
+\section{Using Twelf and User Code from the SML Top Level Loop}
+
+This section describes using Twelf and user extensions from the SML/NJ top level
+loop.
+
+
+\subsection{Loading Files}
+First, start sml:
+
+
+\begin{verbatim} 
+~/save/projects/twelf/my-twelf
+\$ sml
+Standard ML of New Jersey v110.59 [built: Wed Sep 20 23:04:52 2006]
+- 
+\end{verbatim} 
+
+Next, cd to the twelf directory, and load Twelf via
+the compilation manager using the command [[CM.make]].
+
+\begin{verbatim} 
+- CM.make "sources.cm"; 
+[autoloading]
+[library \$smlnj/cm/cm.cm is stable]
+... lots more loading
+[loading (sources.cm):src/frontend/(sources.cm):frontend.sml]
+[New bindings added.]
+val it = true : bool
+\end{verbatim} 
+
+Next, load the user extensions, again using
+the compilation manager.
+
+\begin{verbatim} 
+- CM.make "../prover/sources.cm"; 
+[scanning ../prover/sources.cm]
+[loading ../prover/(sources.cm):../../sml/std-lib/lib.sig.sml]
+[loading ../prover/(sources.cm):../../sml/std-lib/lib.sml]
+[loading ../prover/(sources.cm):canonical_lf.sml]
+[loading ../prover/(sources.cm):translate.sml]
+[New bindings added.]
+val it = true : bool
+- 
+\end{verbatim} 
+
+Finally load whatever elf file you want to manipulate,
+via [[Twelf.make]]
+
+\begin{verbatim} 
+- Twelf.make ("../sources.cfg");
+[Opening file ../sources.cfg]
+[Closing file ../sources.cfg]
+[Opening file ../prop.elf]
+prop : type.
+top : prop.
+bot : prop.
+and : prop -> prop -> prop.
+/\ : prop -> prop -> prop = [x:prop] [y:prop] and x y.
+imp : prop -> prop -> prop.
+... lots more signature
+[Closing file ../prop.elf]
+val it = OK : Twelf.Status
+\end{verbatim} 
+
+Now you should be able to use the modules exported
+by the [[sources.cm]] file in the Twelf directory, 
+(those between [[Library]] modules [[is]]),
+along with whatever code you write.  In our case
+the various translators for parsing and printing.
+
+\subsection{Using Twelf}
+
+Some common things you'll want to do:
+
+\begin{itemize} 
+\item Print a signature.
+
+\begin{verbatim} 
+- Twelf.Print.sgn();
+prop : type.
+top : prop.
+...
+\end{verbatim} 
+
+\item Print a signature with your own printer.
+
+\begin{verbatim} 
+- Twelf.Print.Coq.sgn();
+Definition and := (fun x => (fun y => (and x y))).
+Definition or := (fun x => (fun y => (or x y))).
+Definition imp := (fun x => (fun y => (imp x y))).
+....
+\end{verbatim} 
+
+\item Get the size of the signature
+
+\begin{verbatim} 
+- IntSyn.sgnSize();
+val it = (74,0) : IntSyn.cid * IntSyn.mid
+\end{verbatim} 
+
+\item Get the abstract syntax of an element (by number)
+\begin{verbatim} 
+- IntSyn.sgnLookup 5;
+val it = ConDec ("or",NONE,0,Normal,Pi ((#,#),Pi #),Type) : IntSyn.ConDec
+\end{verbatim} 
+
+\item Get the whole signature
+\begin{verbatim} 
+- map IntSyn.sgnLookup (Lib.upto(0,73));
+val it =
+  [ConDec ("prop",NONE,0,Normal,Uni Type,Kind),
+   ConDec ("top",NONE,0,Normal,Root (#,#),Type),
+   ConDec ("bot",NONE,0,Normal,Root (#,#),Type),
+   ConDec ("and",NONE,0,Normal,Pi (#,#),Type),
+   ...
+   ConDec ("iff",NONE,0,Normal,Pi (#,#),Type),...] : IntSyn.ConDec list
+\end{verbatim} 
+
+\end{itemize} 
+
+Now that the sandbox is complete with toys, play away!

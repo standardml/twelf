@@ -1,0 +1,94 @@
+\subsection{Twelf Grammar}
+
+see \texttt{twelf/src/lambda/intsyn.sig}
+
+\begin{verbatim} 
+
+  type cid = int			(* Constant identifier        *)
+  type mid = int                        (* Structure identifier       *)
+  type csid = int                       (* CS module identifier       *)
+
+  datatype 'a Ctx =			(* Contexts                   *)
+    Null				(* G ::= .                    *)
+  | Decl of 'a Ctx * 'a			(*     | G, D                 *)
+
+  datatype Depend =                     (* Dependency information     *)
+    No                                  (* P ::= No                   *)
+  | Maybe                               (*     | Maybe                *)
+  | Meta				(*     | Meta                 *)
+
+  datatype Uni =			(* Universes:                 *)
+    Kind				(* L ::= Kind                 *)
+  | Type				(*     | Type                 *)
+
+  datatype Exp =			(* Expressions:               *)
+    Uni   of Uni			(* U ::= L                    *)
+  | Pi    of (Dec * Depend) * Exp	(*     | Pi (D, P). V         *)
+  | Root  of Head * Spine		(*     | H @ S                *)
+  | Redex of Exp * Spine		(*     | U @ S                *)
+  | Lam   of Dec * Exp			(*     | lam D. U             *)
+  | EVar  of Exp option ref * Dec Ctx * Exp * (Cnstr ref) list ref
+                                        (*     | X<I> : G|-V, Cnstr   *)
+  | EClo  of Exp * Sub			(*     | U[s]                 *)
+  | AVar  of Exp option ref             (*     | A<I>                 *)
+
+  | FgnExp of csid * FgnExp             (*     | (foreign expression) *)
+
+  | NVar  of int			(*     | n (linear, 
+                                               fully applied variable
+                                               used in indexing       *)
+
+  and Head =				(* Head:                      *)
+    BVar  of int			(* H ::= k                    *)
+  | Const of cid			(*     | c                    *)
+  | Proj  of Block * int		(*     | #k(b)                *)
+  | Skonst of cid			(*     | c#                   *)
+  | Def   of cid			(*     | d (strict)           *)
+  | NSDef of cid			(*     | d (non strict)       *)
+  | FVar  of string * Exp * Sub		(*     | F[s]                 *)
+  | FgnConst of csid * ConDec           (*     | (foreign constant)   *)
+
+  and Spine =				(* Spines:                    *)
+    Nil					(* S ::= Nil                  *)
+  | App   of Exp * Spine		(*     | U ; S                *)
+  | SClo  of Spine * Sub		(*     | S[s]                 *)
+
+  and Sub =				(* Explicit substitutions:    *)
+    Shift of int			(* s ::= ^n                   *)
+  | Dot   of Front * Sub		(*     | Ft.s                 *)
+
+  and Front =				(* Fronts:                    *)
+    Idx of int				(* Ft ::= k                   *)
+  | Exp of Exp				(*     | U                    *)
+  | Axp of Exp				(*     | U                    *)
+  | Block of Block			(*     | _x                   *)
+  | Undef				(*     | _                    *)
+
+  and Dec =				(* Declarations:              *)
+    Dec of string option * Exp		(* D ::= x:V                  *)
+  | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
+  | ADec of string option * int	        (*     | v[^-d]               *)
+  | NDec  
+
+  and Block =				(* Blocks:                    *)
+    Bidx of int				(* b ::= v                    *)
+  | LVar of Block option ref * Sub * (cid * Sub)
+                                        (*     | L(l[^k],t)           *)
+  | Inst of Exp list                    (*     | U1, ..., Un          *)
+
+  and ConDec =			        (* Constant declaration       *)
+    ConDec of string * mid option * int * Status
+                                        (* a : K : kind  or           *)
+              * Exp * Uni	        (* c : A : type               *)
+  | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
+              * Exp * Exp * Uni		(* d = M : A : type           *)
+              * Ancestor                (* Ancestor info for d or a   *)
+  | AbbrevDef of string * mid option * int
+                                        (* a = A : K : kind  or       *)
+              * Exp * Exp * Uni		(* d = M : A : type           *)
+  | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
+              * Dec Ctx * Dec list
+  | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
+              * Exp * Uni	        (* sc: A : type               *)
+
+\end{verbatim} 

@@ -1,0 +1,38 @@
+% -*- mode: Noweb; noweb-code-mode: sml-mode -*-
+
+\subsection{Contexts}
+
+<<context.sig>>=
+signature CONTEXT =
+sig
+  type 'a ctx 
+  <<exceptions>>
+  val empty : 'a ctx
+  val lookup : 'a ctx -> int -> 'a option
+  val push : 'a ctx -> 'a -> 'a ctx
+end
+
+<<context.sml>>=
+structure Context : CONTEXT =
+struct 
+
+  structure L = Lib
+
+  type 'a ctx = 'a list
+  <<exceptions>>
+                      
+  val empty = []
+
+  fun lookup l n = 
+      SOME (L.ith n l) handle L.Failure _ => NONE
+
+  fun push ctx p = p::ctx
+
+end
+
+<<exceptions>>=
+  exception Context of string
+
+<<*>>=
+  <<signature>>
+  <<structure>>

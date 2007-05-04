@@ -1,0 +1,38 @@
+\documentclass[11pt,twoside]{article}
+\usepackage{noweb,fullpage,clrscode,proof,hyperref,amsmath}
+\usepackage{clf}
+
+\title{Towards a Focusing Inverse-Method Theorem Prover for Canonical LF}
+\author{Sean McLaughlin}
+
+\begin{document} 
+\maketitle
+
+\begin{abstract} 
+This is an experiment at implementing \emph{Canonical LF}.  We intend
+to present muliple forms of representation.  We will begin with a
+simple name-carrying implementation of Canonical LF.  We will continue
+with spine forms and explicit substitutions, and finally add
+meta-variables.  Through this process, we hope to experiment with the
+various representations to find a good trade-off between efficiency
+and elegance.
+\end{abstract} 
+
+\input{../NW_TEX/clf.tex}
+\input{../NW_TEX/spinelf.tex}
+\input{../NW_TEX/translate.tex}
+
+\appendix
+
+\section{Structures}
+\input{../NW_TEX/context.tex}
+\input{../NW_TEX/signat.tex}
+
+\input{twelf_grammar.tex}
+\input{using.tex}
+
+\bibliographystyle{abbrv}
+
+\bibliography{all}
+
+\end{document}
