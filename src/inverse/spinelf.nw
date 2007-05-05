@@ -294,6 +294,7 @@ sig
     val empty : unit -> sgn
     val insert : sgn -> dec -> sgn
     val lookup : sgn -> const -> dec (* raises Check *)
+    val array : sgn -> dec array
   end
 
   val check : Sgn.sgn -> exp -> exp -> unit (* raises Check *)
@@ -303,7 +304,7 @@ sig
 end
 
 <<spinelf.sml>>=
-structure SpineLF : SPINE_LF =
+structure SpineLF (* : SPINE_LF *) =
 struct 
 
   structure L = Lib
@@ -464,6 +465,8 @@ struct
               Sig.insert sgn (#id decl,dec)))
 
     fun lookup sgn c = Sig.lookup sgn c 
+
+    fun array sgn = Sig.array sgn
   
   end
 

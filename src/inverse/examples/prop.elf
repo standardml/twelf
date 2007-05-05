@@ -1,0 +1,314 @@
+
+prop : type.
+
+top : prop.
+bot : prop.
+and : prop -> prop -> prop.
+/\ = [x][y] and x y. %infix left 60 /\.
+
+or : prop -> prop -> prop.
+\/ = [x][y] or x y. %infix left 50 \/.
+imp : prop -> prop -> prop.
+==> = [x][y] imp x y. %infix left 40 ==>.
+not : prop -> prop. 
+~ = [A] not A. 
+iff : prop -> prop -> prop.
+<=> = [x][y] iff x y. %infix left 30 <=>.
+
+pf : prop -> type.
+
+topI : pf top.
+botE : pf bot -> {A : prop} pf A.
+conjI : pf A -> pf B -> pf (A /\ B).
+conjEL : pf (A /\ B) -> pf A.
+conjER : pf (A /\ B) -> pf B.
+disjIL : pf A -> {B : prop} pf (A \/ B).
+disjIR : pf B -> {A : prop} pf (A \/ B).
+disjE : pf (A \/ B) -> (pf A -> pf C) -> (pf B -> pf C) -> pf C.
+impI : (pf A -> pf B) -> pf (imp A B).
+impE: pf (A ==> B) -> pf A -> pf B.
+notI : {A} (pf A -> pf bot) -> pf (~ A).
+notE : pf (~ A) -> pf A -> {c} pf c.
+iffI : (pf A -> pf B) -> (pf B -> pf A) -> pf (A <=> B).
+iffEL : pf (A <=> B) -> pf A -> pf B.
+iffER : pf (A <=> B) -> pf B -> pf A.
+
+lem : {A} pf (A \/ ~ A).
+
+%query 1 1 (pf top).
+
+% --------------------------------  "equality"  --------------------------------
+
+
+refl : {A} pf (A <=> A) = 
+ %{ {{{ }%
+
+[A] iffI ([H] H) ([H] H).
+
+ %{ }}} }%
+
+
+sym : pf (A <=> B) -> pf (B <=> A) = 
+ %{ {{{ }%
+  [HAB] iffI ([HB] iffER HAB HB) ([HA] iffEL HAB HA).
+ %{ }}} }%
+
+trans : pf (A <=> B) -> pf (B <=> C) -> pf (A <=> C) =
+ %{ {{{ }%
+  [HAB][HBC] iffI ([HA] iffEL HBC (iffEL HAB HA)) ([HC] iffER HAB (iffER HBC HC)). 
+ %{ }}} }%
+
+dist_not : pf (A <=> B) -> pf (~ A <=> ~ B) = 
+ %{ {{{ }%
+
+  [HAB] iffI ([HnA] notI _ [HB] notE HnA (iffER HAB HB) bot) 
+             ([HnB] notI _ [HA] notE HnB (iffEL HAB HA) bot).
+
+ %{ }}} }%
+
+dist_not' : pf (~ A <=> ~ B) -> pf (A <=> B) = 
+ %{ {{{ }%
+  [HAB] iffI ([HA] disjE (lem B) ([HB] HB) ([HnB] notE (iffER HAB HnB) HA _))
+             ([HB] disjE (lem A) ([HA] HA) ([HnA] notE (iffEL HAB HnA) HB _)).
+ %{ }}} }%
+
+dist_and : pf (A <=> B) -> pf (C <=> D) -> pf (A /\ C <=> B /\ D) =
+ %{ {{{ }%
+
+  [HAB][HCD] iffI ([HAC] conjI (iffEL HAB (conjEL HAC)) (iffEL HCD (conjER HAC)))
+                  ([HBD] conjI (iffER HAB (conjEL HBD)) (iffER HCD (conjER HBD))).
+
+ %{ }}} }%
+
+dist_or : pf (A <=> B) -> pf (C <=> D) -> pf (A \/ C <=> B \/ D) =
+ %{ {{{ }%
+  [HAB][HCD] iffI ([HAC] disjE HAC ([HA] disjIL (iffEL HAB HA) D) ([HC] disjIR (iffEL HCD HC) B))
+                  ([HBD] disjE HBD ([HB] disjIL (iffER HAB HB) C) ([HD] disjIR (iffER HCD HD) A)).
+ %{ }}} }%
+
+% BUG 
+dist_imp : pf (A <=> B) -> pf (C <=> D) -> pf (A ==> C <=> B ==> D) =
+ %{ {{{ }%
+  [HAB][HCD] iffI ([HAC] impI [HB] iffEL HCD (impE HAC (iffER HAB HB)))
+                  ([HBD] impI [HA] iffER HCD (impE HBD (iffEL HAB HA))).
+ %{ }}} }%
+
+
+dist_iff : pf (A <=> B) -> pf (C <=> D) -> pf ((A <=> C) <=> (B <=> D)) =
+ %{ {{{ }%
+  [HAB][HCD] iffI ([HAC] iffI ([HB] iffEL HCD (iffEL HAC (iffER HAB HB))) 
+                                   ([HD] iffEL HAB (iffER HAC (iffER HCD HD)))) 
+                  ([HBD] iffI ([HA] iffER HCD (iffEL HBD (iffEL HAB HA))) 
+                                   ([HC] iffER HAB (iffER HBD (iffEL HCD HC)))).
+ %{ }}} }%
+
+
+% ---------------------------------  negation  ---------------------------------
+
+dneg : pf (~ (~ A)) -> pf A = 
+ %{ {{{ }%
+  [HnnA] disjE (lem A) ([HA] HA) ([HnA] notE HnnA HnA A).
+ %{ }}} }%
+
+nneg : pf A -> pf (~ (~ A)) = 
+ %{ {{{ }%
+  [HA] notI _ ([HnA] notE HnA HA bot).
+ %{ }}} }%
+
+dblneg : pf (~ (~ A) <=> A) = 
+ %{ {{{ }%
+  iffI dneg nneg.
+ %{ }}} }%
+
+% --------------------------------  de Morgan  ---------------------------------
+
+imp_disj : pf (A ==> B <=> (~ A) \/ B) = 
+ %{ {{{ }%
+  iffI ([HAB] disjE (lem A) ([HA] disjIR (impE HAB HA) _) ([HnA] disjIL HnA B))
+       ([HAB] disjE HAB ([HnA] impI [HA] notE HnA HA B) ([HB] impI [_] HB)).
+ %{ }}} }%
+
+iff_disj : pf (A <=> B <=> A /\ B \/ ~ A /\ ~ B) = 
+ %{ {{{ }%
+  iffI ([HAB] disjE (lem A) ([HA] disjE (lem B) ([HB] disjIL (conjI HA HB) _) 
+                                                     ([HnB] notE HnB (iffEL HAB HA) _)) 
+                                 ([HnA] disjE (lem B) ([HB] notE HnA (iffER HAB HB) _)
+                                                      ([HnB] disjIR (conjI HnA HnB) _)))
+       ([HABAB] disjE HABAB ([HAB] iffI ([_] conjER HAB) ([_] conjEL HAB))
+                                 ([HnAnB] iffI ([HA] notE (conjEL HnAnB) HA _) ([HB] notE (conjER HnAnB) HB _))).
+ %{ }}} }%
+
+not_and : pf (~ (A /\ B) <=> ~ A \/ ~ B) = 
+ %{ {{{ }%
+  iffI ([HnAB] disjE (lem A) ([HA] disjE (lem B) ([HB] notE HnAB (conjI HA HB) _) ([HnB] disjIR HnB _)) ([HnA] disjIL HnA _)) 
+       ([HnAnB] notI _ ([HAB] disjE HnAnB ([HnA] notE HnA (conjEL HAB) _) ([HnB] notE HnB (conjER HAB) _))).
+ %{ }}} }%
+
+not_or : pf (~ (A \/ B) <=> ~ A /\ ~ B) = 
+ %{ {{{ }%
+  iffI ([HnAB] disjE (lem A) ([HA] notE HnAB (disjIL HA _) _) ([HnA] disjE (lem B) ([HB] notE HnAB (disjIR HB _) _) ([HnB] conjI HnA HnB)))
+       ([HnAnB] notI _ [HAB] disjE HAB ([HA] notE (conjEL HnAnB) HA _) ([HB] notE (conjER HnAnB) HB _)).
+ %{ }}} }%
+
+not_imp : pf (~ (A ==> B) <=> A /\ ~ B) = 
+ %{ {{{ }%
+  iffI ([HnAB] disjE (lem B) ([HB] notE HnAB (impI [_] HB) _) ([HnB] disjE (lem A) ([HA] conjI HA HnB) ([HnA] notE HnAB (impI [HA] notE HnA HA _) _)))
+       ([HAnB] notI _ [HAB] notE (conjER HAnB) (impE HAB (conjEL HAnB)) _).
+ %{ }}} }%
+
+not_iff : pf (~ (A <=> B) <=> A /\ ~ B \/ ~ A /\ B) = 
+ %{ {{{ }%
+
+  iffI ([HnAB] disjE (lem A) ([HA] disjE (lem B) ([HB] notE HnAB (iffI ([_] HB) ([_] HA)) _) 
+                                                      ([HnB] disjIL (conjI HA HnB) _)) 
+                                  ([HnA] disjE (lem B) ([HB] disjIR (conjI HnA HB) _)
+                                                       ([HnB] notE HnAB (dist_not' (iffI ([_] HnB) ([_] HnA))) _)))
+       ([HAABB] notI _ [HAB] disjE HAABB ([HAnB] notE (conjER HAnB) (iffEL HAB (conjEL HAnB)) _) 
+                                                 ([HnAB] notE (conjEL HnAB) (iffER HAB (conjER HnAB)) _)).
+
+ %{ }}} }%
+
+dist_ao : pf (A /\ (B \/ C) <=> A /\ B \/ A /\ C) = 
+ %{ {{{ }%
+  iffI ([HABC] disjE (conjER HABC) ([HB] disjIL (conjI (conjEL HABC) HB) _) 
+                                        ([HC] disjIR (conjI (conjEL HABC) HC) _))
+       ([HABAC] disjE HABAC ([HAB] conjI (conjEL HAB) (disjIL (conjER HAB) _))
+                                 ([HAC] conjI (conjEL HAC) (disjIR (conjER HAC) _))).
+ %{ }}} }%
+
+dist_oa : pf ((A \/ B) /\ C <=> A /\ C \/ B /\ C) =
+ %{ {{{ }%
+  iffI ([HABC] disjE (conjEL HABC) ([HA] disjIL (conjI HA (conjER HABC)) _)
+                                        ([HB] disjIR (conjI HB (conjER HABC)) _))
+       ([HACBC] disjE HACBC ([HAC] conjI (disjIL (conjEL HAC) _) (conjER HAC)) 
+                                 ([HBC] conjI (disjIR (conjEL HBC) _) (conjER HBC))).
+ %{ }}} }%
+
+% ---------------------------------  symmetry  ---------------------------------
+
+sym_and : pf (A /\ B) -> pf (B /\ A) =
+ %{ {{{ }%
+  [HAB] conjI (conjER HAB) (conjEL HAB).
+ %{ }}} }%
+
+sym_and_eq : pf (A /\ B <=> B /\ A) =
+ %{ {{{ }%
+  iffI sym_and sym_and.
+ %{ }}} }%
+
+sym_or : pf (A \/ B) -> pf (B \/ A) =
+ %{ {{{ }%
+  [HAB] disjE HAB ([HA] disjIR HA _) ([HB] disjIL HB _).
+ %{ }}} }%
+
+sym_or_eq : pf (A \/ B <=> B \/ A) =
+ %{ {{{ }%
+  iffI sym_or sym_or.
+ %{ }}} }%
+
+sym_iff : pf (A <=> B) -> pf (B <=> A) =
+ %{ {{{ }%
+  [HAB] iffI ([HB] iffER HAB HB) ([HA] iffEL HAB HA).
+ %{ }}} }%
+
+sym_iff_eq : pf ((A <=> B) <=> (B <=> A)) =
+ %{ {{{ }%
+  iffI sym_iff sym_iff.
+ %{ }}} }%
+
+% ---------------------------  simplify identities  ----------------------------
+
+ntf : pf (~ top <=> bot) =
+  %{ {{{ }%
+
+  iffI ([HnT] notE HnT topI bot) ([Hb] botE Hb _).
+
+ %{ }}} }%
+
+nft : pf (~ bot <=> top) =
+ %{ {{{ }%
+  trans (sym (dist_not ntf)) (iffI dneg nneg).
+ %{ }}} }%
+
+conjPF : {A} pf (A /\ bot <=> bot) = 
+ %{ {{{ }%
+  [A] iffI ([HAb] botE (conjER HAb) _) ([Hb] botE Hb _).
+ %{ }}} }%
+
+conjFP : {A} pf (bot /\ A <=> bot) =
+ %{ {{{ }%
+  [A] trans sym_and_eq (conjPF _).
+ %{ }}} }%
+
+conjPT : {A} pf (A /\ top <=> A) = 
+ %{ {{{ }%
+  [A] iffI ([HAt] conjEL HAt) ([HA] conjI HA topI).
+ %{ }}} }%
+
+conjTP : {A} pf (top /\ A <=> A) = 
+ %{ {{{ }%
+  [A] trans sym_and_eq (conjPT _).
+ %{ }}} }%
+  
+disjPF : {A} pf (A \/ bot <=> A) = 
+ %{ {{{ }%
+  [A] iffI ([HAb] disjE HAb ([HA] HA) ([Hb] botE Hb _)) ([HA] disjIL HA _).
+ %{ }}} }%
+
+disjFP : {A} pf (bot \/ A <=> A) =
+ %{ {{{ }%
+  [A] trans sym_or_eq (disjPF _).
+ %{ }}} }%
+  
+disjPT : {A} pf (A \/ top <=> top) =
+ %{ {{{ }%
+  [A] iffI ([_] topI) ([_] disjIR topI _).
+ %{ }}} }%
+
+disjTP : {A} pf (top \/ A <=> top) =
+ %{ {{{ }%
+  [A] trans sym_or_eq (disjPT _).
+ %{ }}} }%
+  
+impPF : {A} pf (A ==> bot <=> ~ A) =
+ %{ {{{ }%
+  [A] iffI ([HAb] notI _ [HA] botE (impE HAb HA) _) ([HnA] impI [HA] notE HnA HA _).
+ %{ }}} }%
+
+impFP : {A} pf (bot ==> A <=> top) = 
+ %{ {{{ }%
+  [A] iffI ([_] topI) ([_] impI [Hb] botE Hb _). 
+ %{ }}} }%
+
+impPT : {A} pf (A ==> top <=> top) =
+ %{ {{{ }%
+  [A] iffI ([_] topI) ([_] impI [_] topI). 
+ %{ }}} }%
+
+impTP : {A} pf (top ==> A <=> A) = 
+ %{ {{{ }%
+  [A] iffI ([HtA] impE HtA topI) ([HA] impI [_] HA). 
+ %{ }}} }%
+  
+iffPF : {A} pf ((A <=> bot) <=> ~ A) =
+ %{ {{{ }%
+  [A] iffI ([HAb] notI _ [HA] botE (iffEL HAb HA) _) ([HnA] iffI ([HA] notE HnA HA _) ([Hb] botE Hb _)).
+ %{ }}} }%
+
+iffFP : {A} pf ((bot <=> A) <=> ~ A) =
+ %{ {{{ }%
+  [A] trans sym_iff_eq (iffPF _).
+ %{ }}} }%
+
+iffPT : {A} pf ((A <=> top) <=> A) =
+ %{ {{{ }%
+  [A] iffI ([HAt] iffER HAt topI) ([HA] iffI([_] topI) ([_] HA)).
+ %{ }}} }%
+
+iffTP : {A} pf ((top <=> A) <=> A) =
+ %{ {{{ }%
+  [A] trans sym_iff_eq (iffPT _).
+ %{ }}} }%
+
+
+

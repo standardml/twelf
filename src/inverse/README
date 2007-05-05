@@ -19,3 +19,8 @@ To use the signature, you can look things up, or
 turn it into an array:
 
 - SpineLF.Sgn.array sgn;
+
+
+To read the NOWEB document, go
+to the `tex' directory and run make.  
+The file is `main.pdf'

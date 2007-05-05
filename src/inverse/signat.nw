@@ -22,6 +22,7 @@ sig
   val insert : 'a sgn -> key * 'a -> 'a sgn
   val lookup : 'a sgn -> key -> 'a (* raises Signat *)
   val size : 'a sgn -> int
+  val array : 'a sgn -> 'a array
 end
 
 <<signat.sml>>=
@@ -44,6 +45,8 @@ struct
       | NONE => raise Signat "out of bounds"
 
   fun size l = length l
+
+  fun array l = (Array.fromList o map L.snd) l
 
 end
 
@@ -75,6 +78,8 @@ struct
   fun lookup (sgn:'a sgn) n = G.sub (#arr sgn) n
 
   fun size (sgn:'a sgn) = !(#size sgn)
+
+  fun array (sgn:'a sgn) = G.finalize (#arr sgn)
 
 end
 
