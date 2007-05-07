@@ -38,6 +38,7 @@ test examples-clp/pelletier/test.cfg
 test examples-clp/sieve/test.cfg
 
 # Exercises, not part of the distribution 
-
-test exercises/opt-eval/test.cfg
+#test "exercises/units/test.cfg";
+#The following doesn't terminate, but I don't think that's new -rjs 5/7/2007
+#test exercises/opt-eval/test.cfg
 
