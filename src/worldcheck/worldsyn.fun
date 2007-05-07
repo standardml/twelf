@@ -287,14 +287,16 @@ struct
 	  accR (GL, Seq (piDecs, t), b, k')
 	end
       | accR ((G, L as (D as I.Dec (_, V1))::L2),
-	      L' as Seq (I.Dec (_, V1')::L2', t), b, k) =
+	      L' as Seq (B' as I.Dec (_, V1')::L2', t), b, k) =
 	if Unify.unifiable (G, (V1, I.id), (V1', t))
 	  then accR ((decUName (G, D), L2), Seq (L2', I.dot1 t), b, k)
 	else if Subordinate.belowEq (I.targetFam V1, b)
 	       then (* relevant to family b, fail *)
 		 ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
 	     else (* not relevant to family b, skip in L *)
-	       accR ((decUName (G, D), L2), L', b, k)
+	       accR ((decUName (G, D), L2), Seq (B', I.comp(t, I.shift)), b, k)
+               (* fixed bug in previous line; was: t instead of t o ^ *)
+               (* Mon May 7 2007 -fp *)
       | accR (GL, Seq (nil, t), b, k) = k GL
       | accR (GL as (G, nil), R as Seq (L', t), b, k) =
 	  ( Trace.missing (G, R); () )	(* L is missing *)
