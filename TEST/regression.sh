@@ -26,11 +26,21 @@ TIME="/usr/bin/time -f%e\treal\n%U\tuser"
 echo "=== Compiling regression test package in MLton ==="
 $TIME $MLTON -default-ann "nonexhaustiveMatch ignore" TEST/mlton-regression.cm
 
+echo ""
 echo "=== Running regression test in MLton ==="
 $TIME TEST/mlton-regression TEST/regression.txt
 
+echo ""
 echo "=== Running TALT ==="
 $TIME TEST/mlton-regression TEST/regression-talt.txt
+
+echo ""
+echo "=== Running TS-LF (Definition of Standard ML) ==="
+$TIME TEST/mlton-regression TEST/regression-tslf.txt
+
+echo ""
+echo "=== Running misc. public code ==="
+$TIME TEST/mlton-regression TEST/regression-public.txt
 
 rm -f TEST/mlton-regression
 
