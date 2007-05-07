@@ -14,21 +14,23 @@ SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sour
 POSTFIX=$( date +%y%m%d )
 TIME="/usr/bin/time -f%e\treal\n%U\tuser"
 
-echo "=== Running regression test in SML/NJ ==="
-$TIME $SML $SML_FLAGS sources.cm TEST/quiet.sml TEST/regression.sml
+#echo "=== Running regression test in SML/NJ ==="
+#$TIME $SML $SML_FLAGS sources.cm TEST/quiet.sml TEST/regression.txt
+#
+#if [ $1 = "" ]
+#then
+#   echo "==== Completed! ==="
+#   exit
+#fi
 
-if [ $1 = "" ]
-then
-   echo "==== Completed! ==="
-   exit
-fi
-
-echo "=== Compiling regression test in MLton ==="
+echo "=== Compiling regression test package in MLton ==="
 $TIME $MLTON -default-ann "nonexhaustiveMatch ignore" TEST/mlton-regression.cm
 
 echo "=== Running regression test in MLton ==="
-$TIME TEST/mlton-regression
+$TIME TEST/mlton-regression TEST/regression.txt
 
+echo "=== Running TALT ==="
+$TIME TEST/mlton-regression TEST/regression-talt.txt
 
 rm -f TEST/mlton-regression
 
