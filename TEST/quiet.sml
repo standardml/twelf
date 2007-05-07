@@ -27,7 +27,11 @@ structure RegressionTest = struct
  fun testUnsafe (file) = 
      let
 	 val _ = print ("Test Unsafe: "^file) 
-	 val _ = Twelf.unsafe := true
+	 val _ = Twelf.unsafe := true- 
+[root@moog rjsimmon]# man sml
+No manual entry for sml
+[root@moog rjsimmon]# sml help
+Standard ML of New Jersey 
 	 val stat = Twelf.make file 
 	     handle e => Twelf.ABORT
 	 val _ = Twelf.unsafe := false

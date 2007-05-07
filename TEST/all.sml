@@ -1,4 +1,4 @@
-(* (Outdated) Regression test *)
+(* (Outdated) Regression test - *)
 (* Author: Frank Pfenning *)
 
 (* Twelf.chatter := 0; *)
