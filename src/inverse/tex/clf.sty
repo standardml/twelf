@@ -1,22 +1,46 @@
 
 %---------------------------------  Constants  ---------------------------------
 
-\newcommand{\Nil}{\mathtt{nil}}
-\newcommand{\Kind}{\mathtt{kind}}
-\newcommand{\Type}{\mathtt{type}}
-\newcommand{\IdSub}{\mathtt{id}}
+\providecommand{\Nil}{\mathtt{nil}}
+\providecommand{\Kind}{\mathtt{kind}}
+\providecommand{\Type}{\mathtt{type}}
+\providecommand{\IdSub}{\mathtt{id}}
+\providecommand{\Of}[2]{#1\ :\ #2}
 
-%----------------------------------  Binders  ----------------------------------
+%-----------------------------------  Terms  -----------------------------------
 
-\newcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
-\newcommand{\Lam}[2]{\lambda #1.\ #2}
-\newcommand{\Appl}[2]{#1\ #2}
-\newcommand{\Arr}[2]{#1\to #2}
+\providecommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
+\providecommand{\Lam}[2]{\lambda #1.\ #2}
+\providecommand{\Appl}[2]{#1\ #2}
+\providecommand{\Arr}[2]{#1\to #2}
+\providecommand{\HSub}[4]{[#1/#2]^{#3}#4}
+
 
 %--------------------------------  Separators  ---------------------------------
 
-\newcommand{\Spb}{\ |\ }
-\newcommand{\Shift}{\uparrow}
-\newcommand{\Set}[1]{\{#1\}}
-\newcommand{\Comp}{~\circ~}
-\newcommand{\App}{~@~}
+\providecommand{\Spb}{\ |\ }
+\providecommand{\Shift}{\uparrow}
+\providecommand{\Set}[1]{\{#1\}}
+\providecommand{\Comp}{~\circ~}
+\providecommand{\App}{~@~}
+\providecommand{\SeqArr}{\Longrightarrow}
+\providecommand{\LFArr}{\to}
+
+%--------------------------------  Basic math  ---------------------------------
+
+\providecommand{\set}[1]{\{#1\}}
+\providecommand{\Not}{\neg}
+\providecommand{\And}{\wedge}
+\providecommand{\Or}{\vee}
+\providecommand{\AND}{\bigwedge}
+\providecommand{\OR}{\bigvee}
+\providecommand{\Imp}{\supset}
+\providecommand{\Iff}{\Longleftrightarrow}
+\providecommand{\Arr}{\Rightarrow}
+
+
+\def\incomplete#1{XXX #1 XXX}
+
+
+
+

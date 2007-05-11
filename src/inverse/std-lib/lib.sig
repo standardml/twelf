@@ -2,10 +2,7 @@
 signature LIB = 
 sig
 
-  exception Failure of string
   exception Not_implemented
-
-  val failwith : string -> exn
 
   (* -------------------------------------------------------------------------- *)
   (*  Booleans                                                                  *)

@@ -8,6 +8,7 @@ Library
   structure IntSyn
   structure ClausePrint
 
+  structure Debug
   structure Context
   structure Signat
   structure SpineLF
@@ -19,6 +20,7 @@ is
   ../print/sources.cm
   ../frontend/sources.cm
 
+  debug.nw
   context.nw
   signat.nw
   spinelf.nw

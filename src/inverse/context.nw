@@ -10,6 +10,7 @@ sig
   val empty : 'a ctx
   val lookup : 'a ctx -> int -> 'a option
   val push : 'a ctx -> 'a -> 'a ctx
+  val list : 'a ctx -> 'a list
 end
 
 <<context.sml>>=
@@ -24,9 +25,11 @@ struct
   val empty = []
 
   fun lookup l n = 
-      SOME (L.ith n l) handle L.Failure _ => NONE
+      SOME (L.ith n l) handle Fail _ => NONE
 
   fun push ctx p = p::ctx
+
+  fun list l = l
 
 end
 

@@ -4,11 +4,11 @@ Library
   structure GrowArray
 is
 
+  growarray.sig
   growarray.sml
-  growarray.sig.sml
-  lib.sig.sml
+  lib.sig
   lib.sml      
-  layout.sig.sml
+  layout.sig
   layout.sml
 
   $/basis.cm

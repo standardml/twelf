@@ -5,11 +5,8 @@ struct
   nonfix upto mem ins union subset mod div
   infix ~~ -- += -= ::= @= oo ooo oooo
  
-  exception Failure of string
   exception Not_implemented
 
-  fun failwith s = raise Failure s
- 
   (* ------------------------------------------------------------------------- *)
   (*  Booleans                                                                 *)
   (* ------------------------------------------------------------------------- *)
@@ -59,12 +56,12 @@ struct
 
   val nat_s = ones_f 0
 
-  fun nth_s n SNil = failwith "s_nth"
+  fun nth_s n SNil = raise Fail "s_nth"
     | nth_s 0 (SCons f) = fst(f())
     | nth_s n (SCons f) = let val (_,s') = f() in nth_s (n - 1) s' end
 
   fun listof_s 0 _ = []
-    | listof_s n SNil = failwith "listof_s"
+    | listof_s n SNil = raise Fail "listof_s"
     | listof_s n (SCons f) = let val (v,s) = f() in v::listof_s (n - 1) s end
 
   (* ---------------------------------------------------------------------- *)
@@ -149,7 +146,7 @@ struct
   (*  Debug                                                                 *)
   (* ---------------------------------------------------------------------- *)
  
-  fun assert b s = if b then () else failwith ("Assertion Failure: " ^ s)
+  fun assert b s = if b then () else raise Fail ("Assertion Failure: " ^ s)
   
   val warn = ref true
   fun warning s = if !warn then TextIO.print ("Warning: " ^ s ^ "\n") else ()
@@ -168,26 +165,26 @@ struct
 
   fun citlist f l b = itlist (curry f) l b
 
-  fun ith i [] = failwith "ith: empty"
+  fun ith i [] = raise Fail "ith: empty"
     | ith 0 (h::t) = h
     | ith n (h::t) = ith (n-1) t
 
   fun map2 f [] [] = []
     | map2 f (h1::t1) (h2::t2) = 
       f(h1,h2)::map2 f t1 t2
-    | map2 f _ _ = failwith "map2: length mismatch"
+    | map2 f _ _ = raise Fail "map2: length mismatch"
 
   fun map3 f [] [] [] = []
     | map3 f (h1::t1) (h2::t2) (h3::t3) = f(h1,h2,h3)::map3 f t1 t2 t3
-    | map3 f _ _ _= failwith "map3: unequal lengths"
+    | map3 f _ _ _= raise Fail "map3: unequal lengths"
 
   fun map4 f [] [] [] [] = []
     | map4 f (h1::t1) (h2::t2) (h3::t3) (h4::t4) = f(h1,h2,h3,h4)::map4 f t1 t2 t3 t4
-    | map4 f _ _ _ _ = failwith "map4: unequal lengths"
+    | map4 f _ _ _ _ = raise Fail "map4: unequal lengths"
 
   fun map5 f [] [] [] [] [] = []
     | map5 f (h1::t1) (h2::t2) (h3::t3) (h4::t4) (h5::t5) = f(h1,h2,h3,h4,h5)::map5 f t1 t2 t3 t4 t5
-    | map5 f _ _ _ _ _ = failwith "map5: unequal lengths"
+    | map5 f _ _ _ _ _ = raise Fail "map5: unequal lengths"
 
   fun zip l1 l2 = map2 id l1 l2
   fun zip3 l1 l2 l3 = map3 id l1 l2 l3
@@ -200,7 +197,7 @@ struct
 
   fun x ~~ y = zip x y
 
-  fun end_itlist f [] = failwith "end_itlist"
+  fun end_itlist f [] = raise Fail "end_itlist"
     | end_itlist f [x] = x
     | end_itlist f (h::t) = f h (end_itlist f t)
 
@@ -208,13 +205,13 @@ struct
 
   fun itlist2 f [] [] b = b
     | itlist2 f (h1::t1) (h2::t2) b = f h1 h2 (itlist2 f t1 t2 b)
-    | itlist2 _ _ _ _ = failwith "itlist2"
+    | itlist2 _ _ _ _ = raise Fail "itlist2"
 
   (* same as foldl *)
   fun rev_itlist f [] b = b
     | rev_itlist f (h::t) b = rev_itlist f t (f h b)
 
-  fun rev_end_itlist f [] = failwith "rev_end_itlist"
+  fun rev_end_itlist f [] = raise Fail "rev_end_itlist"
     | rev_end_itlist f [x] = x
     | rev_end_itlist f (h::t) = f (rev_end_itlist f t) h 
 
@@ -227,11 +224,11 @@ struct
   fun forall f [] = true
     | forall f (h::t) = f h andalso forall f t
 
-  fun last [] = failwith "Last"
+  fun last [] = raise Fail "Last"
     | last (h::[]) = h
     | last (h::t) = last t
 
-  fun butlast [] = failwith "Butlast"
+  fun butlast [] = raise Fail "Butlast"
     | butlast (h::[]) = []
     | butlast (h::t) = h::butlast t
 
@@ -268,14 +265,14 @@ struct
 
   fun uniq_list comp l = length (uniq comp l) = length l
 
-  fun split_at _ [] = failwith "split_at: splitting empty"
+  fun split_at _ [] = raise Fail "split_at: splitting empty"
     | split_at 0 l = ([],l)
     | split_at n (xs as x::ys) =
-      if n < 0 then failwith "split_at: arg out of range" else
+      if n < 0 then raise Fail "split_at: arg out of range" else
       let val (ps,qs) = split_at (n-1) ys in (x::ps,qs) end
 
   fun list_prefix n l = fst (split_at n l)
-                        handle Failure _ => failwith "list_prefix"
+                        handle Fail _ => raise Fail "list_prefix"
 
   fun list_slice n m l = 
       let
@@ -316,7 +313,7 @@ struct
   fun chop_list 0 l = ([],l)
     | chop_list n l = 
       let val (l1,l2) = chop_list (n-1) (tl l) in (hd l::l1,l2) end
-        handle _ => failwith "chop_list"
+        handle _ => raise Fail "chop_list"
 
   fun list_to_string f l = 
       let
@@ -325,7 +322,7 @@ struct
         itlist (fn x => fn y => x ^ "," ^ y) ("["::l'@["]"]) ""
       end
 
-  fun remove p [] = failwith "remove"
+  fun remove p [] = raise Fail "remove"
     | remove p (h::t) = 
       if p h then (h,t) else
       let val (y,n) = remove p t in (y,h::n) end
@@ -464,7 +461,7 @@ struct
       let
         val n = case index c (String.explode s) of
                   SOME x => x
-                | NONE => failwith "strip_path"
+                | NONE => raise Fail "strip_path"
         val m = substring(s,0,n)
         val m' = substring(s,n+1,size s - n - 1)
       in
@@ -475,7 +472,7 @@ struct
   fun rev_strip_path c s =
       let
         val no = last_index c (String.explode s)
-        val n = case no of SOME x => x | NONE => failwith "rev_strip_path"
+        val n = case no of SOME x => x | NONE => raise Fail "rev_strip_path"
         val m = substring(s,0,n)
         val m' = substring(s,n+1,size s - n - 1)
       in
@@ -487,7 +484,7 @@ struct
   (* ------------------------------------------------------------------------- *)
 
   fun the (SOME x) = x
-    | the _ = failwith "the"
+    | the _ = raise Fail "the"
 
   fun is_some (SOME _) = true
     | is_some _ = false
@@ -500,7 +497,7 @@ struct
     | list_of_opt_list (SOME x::t) = x::list_of_opt_list t
 
   fun get_opt (SOME x) _ = x
-    | get_opt NONE err = failwith err
+    | get_opt NONE err = raise Fail err
 
   fun get_list (SOME l) = l
     | get_list NONE = []

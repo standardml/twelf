@@ -1,282 +1,62 @@
  % -*- mode: Noweb; noweb-code-mode: sml-mode -*-
 
-@
-\section{Spine-Form Canonical LF}
-
-There are a number of difficulties with the naive name-carrying
-implementation of Canonical LF.  The first is that we must
-implement capture-avoiding substitution and $\alpha$-conversion.
-This is a pain, and error-prone.  We can circumvent this difficulty
-by using DeBruijn indices\cite{DeBruijn80}.  A more significant 
-difficulty lies in the implementation of hereditary substitution.
-When applying a substitution, we often need to determine whether
-the head of an expression is a constant or a variable in order
-to know which rule to apply.  Thus, for a term of the form
-$$f\ x_1\ x_2\ \ldots\ x_n = (\ldots((f\ x_1)\ x_2)\ \ldots\ x_n) $$
-we need to take apart $n$ applications just to determine how
-a substitution should be applied.  Later, when we implement
-unification, that algorithm will need to compare the heads
-of such terms for equality.  Thus, quick access to the head
-of such a term is essential for a reasonably efficient implementation.
-This is the motivation for the following definition of 
-\emph{Spine-Form LF}.
-
-\subsection{Name-carrying representation}
-
-The name-carrying language of Spine-Form LF is given by the following
-grammar.
-$$
-\begin{array}{llll}
-\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
-\mathbf{Types} & A & ::= & a\cdot S \Spb \PiTyp{x}{A_1}{A_2} \\
-\mathbf{Terms} & M & ::= & H\cdot S \Spb \Lam{x}{M} \\
-\mathbf{Heads} & H & ::= & c \Spb x\\
-\mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
-\end{array} 
-$$
-
-\subsection{DeBruijn representation}
-
-As mentioned above, we want to use DeBruijn indices rather
-than variable names.  This yields instead,
-
-\renewcommand{\PiTyp}[2]{\Pi #1.#2}
-\renewcommand{\Lam}[1]{\lambda #1}
-
-$$
-\begin{array}{llll}
-\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{A}{K} \\
-\mathbf{Types} & A & ::= & a\cdot S \Spb \PiTyp{A_1}{A_2} \\
-\mathbf{Terms} & M & ::= & H\cdot S \Spb \Lam{M} \\
-\mathbf{Heads} & H & ::= & c \Spb i\\
-\mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
-\end{array} 
-$$
-
-The typing rules for the DeBruijn grammar are
-
-\newcommand{\CheckTy}[3][\Gamma]{#1\vdash #2 \Leftarrow #3}
-\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
-
-\bigskip 
-\framebox{$\CheckTy{M}{A}$}
-\bigskip 
-
-$$
-\begin{array}{cc}
-\infer{\CheckTy{\Lam{M}}{\PiTyp{A_1}{A_2}}}{\CheckTy[\Gamma,A_1]{M}{A_2}} &
-\infer{\CheckTy{c\cdot S}{A_2}}{\Sigma(c)=A_1 & \Focus{S}{A_1}{A_2}} \\\\
-\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1[\Shift^i]}{A_2}}
-\end{array} 
-$$
-
-Note that you must shift the type you extract from $\Gamma$, as the
-free variables (indices) should point to the slots before $i$.  Moving
-the type $A$ from the context to the consequent must adjust the pointers.
-(This was a nasty bug to find in my first attempt.)
-
-\bigskip 
-\framebox{$\Focus{S}{A_1}{A_2}$}
-\bigskip 
-
-$$
-\begin{array}{lr}
-\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{} & 
-\infer{\Focus{(M;S)}{\PiTyp{A_1}{A_2}}{A_3}}{\CheckTy{M}{A_1} & \Focus{S}{A_2[M\cdot\IdSub]}{A_3}}
-\end{array} 
-$$
-
-\bigskip 
-\framebox{$\CheckTy{A}{\Type}$}
-\bigskip 
-
-$$
-\begin{array}{cc}
-\infer{\CheckTy{\PiTyp{A_1}{A_2}}{\Type}}{\CheckTy{A_1}{\Type} & \CheckTy[\Gamma,A_1]{A_2}{\Type}} &
-\infer{\CheckTy{a\cdot S}{\Type}}{\Sigma(a) = K & \Focus{S}{K}{\Type}}
-\end{array} 
-$$
-
-\bigskip 
-\framebox{$\Focus{S}{K}{\Type}$}
-\bigskip 
-
-$$
-\begin{array}{lr}
-\infer{\Focus{\Nil}{\Type}{\Type}}{} & 
-\infer{\Focus{(M;S)}{\PiTyp{A}{K}}{\Type}}{\CheckTy{M}{A} & \Focus{S}{K[M\cdot\IdSub]}{\Type}}
-\end{array} 
-$$
-
-\bigskip 
-\framebox{$\CheckTy{K}{\Kind}$}
-\bigskip 
-
-$$
-\begin{array}{cc}
-\infer{\CheckTy{\Type}{\Kind}}{} &
-\infer{\CheckTy{\PiTyp{A}{K}}{\Kind}}{\CheckTy{A}{\Type} & \CheckTy[\Gamma,A]{K}{\Kind}}
-\end{array} 
-$$
-
-\subsection{Contexts}
-
-Contexts map (DeBruijn) variables to types.  
-
-\newcommand{\Ctx}{\ \mathtt{ctx}}
-\bigskip 
-\framebox{$\Gamma\Ctx$}
-\bigskip 
-
-$$
-\begin{array}{cc}
-\infer{\cdot\Ctx}{} &
-\infer{\Gamma,A\Ctx}{\Gamma\Ctx & \CheckTy[\cdot]{A}{\Type}}
-\end{array} 
-$$
-
-\subsection{Signatures}
-
-Signatures map constants to types and kinds.
-
-\newcommand{\Sig}{\ \mathtt{sig}}
-\bigskip 
-\framebox{$\Sigma\Ctx$}
-\bigskip 
-
-$$
-\begin{array}{ccc}
-\infer{\cdot\Sig}{}&
-\infer{\Sigma,c:A\Sig}{\Sigma\Sig & \CheckTy[\cdot]{A}{\Type}}&
-\infer{\Sigma,a:K\Sig}{\Sigma\Sig & \CheckTy[\cdot]{K}{\Kind}}
-\end{array} 
-$$
-
-
-\subsection{Substitutions}
-
-Even though the substitution judgment (at this point) is operational,
-and in principle a substitution is simply a list of terms $M$,
-it is still useful to define a syntax of substitutions.  
-
-$$
-\begin{array}{llll}
-\mathbf{Substitutions} & \sigma & ::= & \IdSub \Spb M\cdot\sigma \Spb \Shift \Spb \sigma_1\Comp\sigma_2\\
-\end{array} 
-$$
-
-We can \emph{apply} subsitutions to terms.
-
-\newcommand{\Msub}{[\sigma]}
-\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
-
-\bigskip
-\framebox{$K\Msub = K'$}
-
-\begin{align*} 
-\Type\Msub &= \Type \\
-(\PiTyp{A}{K})\Msub &= \PiTyp{(A\Msub)}{(K\Ssub)}\\
-\end{align*} 
-
-\framebox{$A\Msub = A'$}
-
-\begin{align*} 
-(a\cdot S)\Msub &= a\cdot (S\Msub) \\
-(\PiTyp{A_1}{A_2})\Msub &= \PiTyp{(A_1\Msub)}{(A_2\Ssub)} \\
-\end{align*} 
-
-\framebox{$M\Msub = M'$}
-
-\begin{align*} 
-(\Lam{M})\Msub &= \Lam{(M\Ssub)}\\
-(c\cdot S)\Msub &= c\cdot S\Msub \\
-(i\cdot S)\Msub &= \begin{cases}
-                     j\cdot S\Msub \mbox{\ if $i\Msub = j$} \\
-                     M \App S\Msub\mbox{\ if $i\Msub = M$}
-                   \end{cases} 
-\end{align*} 
-
-\framebox{$S\Msub = S'$}
-
-\begin{align*} 
-\Nil\Msub &= \Nil\\
-(M;S)\Msub &= M\Msub;S\Msub
-\end{align*} 
-
-\framebox{$i\Msub = M$}
-
-\begin{align*} 
-i[\IdSub] &= i\\
-1[M\cdot\sigma] &= M\\
-n+1[M\cdot\sigma] &= n[\sigma]\\
-i[\Shift] &= i+1\\
-i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]
-\end{align*} 
-
-
-We still need the notion of beta reduction when a 
-head gets instantiated with a lambda.  We show
-only the possible cases.
-
-\bigskip 
-\framebox{$M \App M' = M''$}
-
-\begin{align*} 
-(H\cdot S)\App\Nil &= H\cdot S\\
-\Lam{M}\App(M';S) &= M[M'\cdot\IdSub]\App S
-\end{align*} 
-
-\subsection{Uni-level representation}
-
-Note that the rules for types and kinds are very similar.
-Pfenning's experience with implementing Twelf is that if they
-are separate much of the code has to be duplicated for
-the two levels.  These concerns lead to the final 
-grammar for Spine-Form LF, a single level for terms and types.
-
-$$
-\begin{array}{llll}
-\mathbf{Levels} & L & ::= & \Type \Spb \Kind \\
-\mathbf{Expressions} & U & ::= & L \Spb \Pi(U_1,U_2) \Spb \lambda U \Spb H\cdot S \\
-\mathbf{Heads} & H & ::= & c \Spb i\\
-\mathbf{Spines} & S & ::= & \Nil \Spb U;S\\
-\end{array} 
-$$
-
+\subsection{SpineLF Code}
 
 <<exceptions>>=
   exception Check of string
 
 <<datatypes>>=
-  datatype level = LevType 
-                 | LevKind
+  datatype uni = Type 
+               | Kind
                    
-       and exp = ExpLev of level
-               | ExpPi of exp * exp
-               | ExpLam of exp
-               | ExpApp of head * spine
+  datatype head = Const of const
+                | BVar of int
 
-       and head = HdConst of const
-                | HdVar of int
-                
-       and spine = SpNil
-                 | SpCons of exp * spine
+  datatype depend = No | Maybe
 
-       and sub = SubId
-               | SubCons of exp * sub
-               | SubShift
-               | SubComp of sub * sub
+  datatype exp = Uni of uni
+               | Pi of pi
+               | Lam of lam 
+               | Root of head * spine
 
-  type def_data = {exp : exp,
-                   height : int}
-                   
+       and spine = Nil
+                 | App of exp * spine
+
+  withtype pi = {var : string option,
+                 arg : exp,
+                 depend : depend,
+                 body : exp}
+
+       and lam = {var : string option,
+                  body : exp}
+
+  datatype sub = Dot of exp * sub
+               | Shift of int
+               | Comp of sub * sub
+
   type decl = {id : const,
                name : string,
                exp : exp,
-               def : def_data option,
-               level : level}
+               uni : uni}
 
-  datatype dec = Dec of decl
+  type def  = {id : const,
+               name : string,
+               exp : exp,
+               def : exp,
+               height : int,
+               root : const,
+               uni : uni}
+
+  type abbrev = {id : const,
+                 name : string,
+                 exp : exp,
+                 def : exp,
+                 uni : uni}
+
+  datatype dec = Decl of decl
+               | Def of def
+               | Abbrev of abbrev
+
 
 <<spinelf.sig>>=
 signature SPINE_LF =
@@ -288,18 +68,25 @@ sig
 
   <<datatypes>>  
 
+@ 
+[[Sgn]] is a simple wrapper around the [[Signat]] structure.
+It typechecks the declarations before inserting them
+in the signature. This is to maintain the invariant
+that the signature is well formed.
+([[Signat]] itself ensures the keys (consts)
+are distinct).
+
+<<spinelf.sig>>=
   structure Sgn :
   sig
     type sgn
     val empty : unit -> sgn
     val insert : sgn -> dec -> sgn
     val lookup : sgn -> const -> dec (* raises Check *)
-    val array : sgn -> dec array
   end
 
   val check : Sgn.sgn -> exp -> exp -> unit (* raises Check *)
-(*   val print_exp : Sgn.sgn -> exp -> unit *)
-(*   val expand_def : Sgn.sgn -> exp -> exp *)
+  val exp_to_string : Sgn.sgn -> exp -> string
 
 end
 
@@ -310,6 +97,7 @@ struct
   structure L = Lib
   structure Sig = Signat
   structure C = Context
+  structure D = Debug
 
   <<exceptions>>
 
@@ -320,129 +108,265 @@ struct
   type sgn = dec Sig.sgn
 
   (* Util *)
-  val ExpType = ExpLev LevType
-  val ExpKind = ExpLev LevKind
-  fun ExpInt n = ExpApp(HdVar n,SpNil)
-  val Exp1 = ExpInt 1
-  fun push_sub s = SubCons(Exp1,SubComp(s,SubShift))
-  fun shift 0 = SubId
-    | shift n = SubComp(SubShift,shift (n-1))
+  val expType = Uni Type
+  val expKind = Uni Kind
+
+  fun int n = Root(BVar n,Nil)
+  val one = int 1
+  fun push_sub s = Dot(one,Comp(s,Shift 1))
+  val id_sub = Shift 0
+
+  fun id (Decl decl) = #id decl
+    | id (Def def) = #id def
+    | id (Abbrev abb) = #id abb
+
+  fun name (Decl decl) = #name decl
+    | name (Def def) = #name def
+    | name (Abbrev abb) = #name abb
+
   fun is_def sgn c = 
-      let
-        val (Dec decl) = Sig.lookup sgn c 
+      case Sig.lookup sgn c of
+        Def _ => true
+      | Abbrev _ => true
+      | Decl _ => false        
+
+  fun def sgn c = 
+      case Sig.lookup sgn c of
+        Def def => #def def
+      | Abbrev abb => #def abb
+      | Decl _ => raise Fail "def: not a def"
+
+  (* debug *)
+  local   
+    nonfix $ % & %%
+    fun op$ x = Layout.str x
+    fun op% x = Layout.mayAlign x
+    fun op%% x = Layout.align x
+    fun op& x = Layout.seq x
+    fun paren x = %[$"(",x,$")"]
+    val ctr = ref 0
+    fun reset() = ctr := 0
+    fun next() = (ctr := !ctr + 1;"x_" ^ Int.toString (!ctr))
+  in
+    exception Fail_exp of string * exp
+    exception Fail_exp2 of string * exp * exp
+    exception Fail_exp_spine of string * exp * spine
+
+    fun uni_to_layout Type = $"type"
+      | uni_to_layout Kind = $"kind"
+
+    fun const_to_string sgn c = name(Sig.lookup sgn c)
+
+    fun var_to_string (SOME s) = s
+      | var_to_string NONE = next()
+
+    fun head_to_layout sgn ctx (Const c) = $(const_to_string sgn c)
+      | head_to_layout sgn ctx (BVar n) = 
+        $(L.ith (n - 1) ctx) 
+        handle Fail _ => raise Fail ("head_to_layout: var out of bounds: " ^ Int.toString n ^ " ctx size: " ^ Int.toString (length ctx))
+
+    fun spine_to_layout sgn ctx Nil = $""
+      | spine_to_layout sgn ctx (App(E,S)) = %[paren (exp_to_layout sgn ctx E),spine_to_layout sgn ctx S]
+        
+    and exp_to_layout sgn ctx (Uni lev) = uni_to_layout lev
+      | exp_to_layout sgn ctx (Pi pi) = 
+        let 
+          val v = var_to_string (#var pi) 
+        in
+          %[$"{",$v,$":",exp_to_layout sgn ctx (#arg pi),$"}",exp_to_layout sgn (v::ctx) (#body pi)]
+        end
+      | exp_to_layout sgn ctx (Lam lam) = 
+        let
+          val v = var_to_string (#var lam) 
+        in
+          %[$"[",$v,$"]",exp_to_layout sgn (v::ctx) (#body lam)]
+        end
+      | exp_to_layout sgn ctx (Root(H,S)) = paren(%[head_to_layout sgn ctx H,spine_to_layout sgn ctx S])
+    
+    fun context_to_ctx ctx = map (var_to_string o L.fst) ctx
+
+    fun exp_to_string sgn ctx exp = Layout.tostring (exp_to_layout sgn (context_to_ctx (C.list ctx)) exp) 
+    fun spine_to_string sgn ctx exp = Layout.tostring (spine_to_layout sgn (context_to_ctx (C.list ctx)) exp) 
+
+  end
+
+@ 
+\subsubsection*{Typechecking}
+
+[[check' : Signat.sgn -> exp Context.ctx -> exp -> exp -> unit]]
+
+\noindent
+The basic typechecking function on the uni-level representation.
+Basic invariants for 
+
+\bigskip 
+$[[check']]\ \Sigma\ \Gamma\ U\ V$
+\bigskip 
+
+\begin{enumerate} 
+\item $\Sigma$ is a well formed signature: $\Gamma\Sig$
+\item $\Gamma$ is a well formed context: $\Gamma\Ctx$
+\item $[[check']]\ \Sigma\ \Gamma\ U\ V$ succeeds iff $\CheckTy{U}{V}$ with $\Sigma$
+\end{enumerate} 
+
+<<spinelf.sml>>=
+
+  fun check_aux sgn ctx (Uni Type) (Uni Kind) = ()
+    | check_aux sgn ctx (Lam {body=M,...}) (Pi {var,arg=U,body=V,...}) =
+      check_exp sgn (C.push ctx (var,U)) M V
+    | check_aux sgn ctx (Root(Const con,S)) V = 
+      let 
+        fun foc exp =
+           let
+             val U = focus sgn ctx S exp
+           in
+             if equiv_exp sgn ctx U V then ()
+             else raise Fail_exp2 ("check_aux:0",U,V)
+           end
       in
-        L.is_some (#def decl)
+        case Sig.lookup sgn con of
+           Decl decl => foc (#exp decl) 
+         | Def def => foc (#exp def)
+         | Abbrev abbrev => raise Fail "check_aux:1"
       end
-
-  exception Fail2 of string * exp * exp
-
-  (* Typechecking *)
-  fun check' sgn ctx (ExpLev LevType) (ExpLev LevKind) = ()
-    | check' sgn ctx (ExpLam M) (ExpPi(A1,A2)) =
-      check' sgn (C.push ctx A1) M A2
-    | check' sgn ctx (ExpApp(HdConst con,S)) V = 
-         let 
-           val (Dec decl) = Sig.lookup sgn con 
-           val U = focus sgn ctx S (#exp decl) 
-         in
-           if equiv_exp sgn U V then ()
-           else raise Fail2("ExpApp,Const",U,V)
-         end
-    | check' sgn ctx (ExpApp(HdVar i,S)) V = 
+    | check_aux sgn ctx (Root(BVar i,S)) V = 
       (case C.lookup ctx (i-1) (* DeBruijn indices start at 1 *) of
-         SOME A =>
+         SOME (_,A) =>
          let
-           val U = focus sgn ctx S (apply_exp (shift i) A) 
+           val U = focus sgn ctx S (apply_exp sgn ctx (Shift i) A) 
          in
-           if equiv_exp sgn U V then ()
-           else raise Fail2("ExpApp,Var",U,V)
+           if equiv_exp sgn ctx U V then ()
+           else raise Fail_exp2("check_aux: Root,BVar",U,V)
          end
        | NONE => raise Check ("focus: var out of bounds"))
-    | check' sgn ctx (ExpPi(A1,A2)) (lev as ExpLev _) = 
-      (check' sgn ctx A1 ExpType;
-       check' sgn (C.push ctx A1) A2 lev)
-    | check' _ _ _ _ = raise Check "check: bad case"
+    | check_aux sgn ctx (Pi {var,arg=A1,body=A2,...}) (uni as Uni _) = 
+      (check_exp sgn ctx A1 expType;
+       check_exp sgn (C.push ctx (var,A1)) A2 uni)
+    | check_aux _ _ _ _ = raise Check "check: bad case"
 
-  and focus sgn ctx SpNil (ty as ExpLev LevType) = ty
-    | focus sgn ctx SpNil (hd as ExpApp (HdConst _,_)) = hd
-    | focus sgn ctx (SpCons(M,S)) (ExpPi(A1,A2)) = 
-      (check' sgn ctx M A1;
-       focus sgn ctx S (apply_exp (SubCons(M,SubId)) A2))
+  and check_exp sgn ctx U V = 
+      (
+(*        Debug.print ("Checking: " ^ exp_to_string sgn ctx U); *)
+(*        Debug.print ("at type: " ^ exp_to_string sgn ctx V); *)
+       check_aux sgn ctx U V
+      )
+
+  and focus sgn ctx Nil (ty as Uni Type) = ty
+    | focus sgn ctx Nil (hd as Root (Const _,_)) = hd
+    | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) =
+      (check_exp sgn ctx M A1;
+       focus sgn ctx S (apply_exp sgn ctx (Dot(M,id_sub)) A2))
     | focus _ _ _ _ = raise Check "focus: bad case"
  
   (* Substitutions *)
-  and apply_exp sub (lev as ExpLev _) = lev
-    | apply_exp sub (ExpPi(U1,U2)) = 
-      ExpPi(apply_exp sub U1,apply_exp (push_sub sub) U2)
-    | apply_exp sub (ExpLam U) = ExpLam(apply_exp (push_sub sub) U)
-    | apply_exp sub (ExpApp(H,S)) = 
+  and apply_exp sgn ctx sub (uni as Uni _) = uni
+    | apply_exp sgn ctx sub (Pi {var,arg=U,depend,body=V}) =
+      Pi ({var = var,
+           arg = apply_exp sgn ctx sub U,
+           depend = depend,
+           body = apply_exp sgn ctx (push_sub sub) V} : pi)
+    | apply_exp sgn ctx sub (Lam {var,body=U}) =
+      Lam {var=var,
+           body=apply_exp sgn ctx (push_sub sub) U}
+    | apply_exp sgn ctx sub (Root(H,S)) =
       let
-        val S' = apply_spine sub S
+        val S' = apply_spine sgn ctx sub S
       in
         case H of
-          con as HdConst _ => ExpApp(con,S')
-        | HdVar i => 
-          case apply_var sub i of
-            ExpApp(var as HdVar j,SpNil) => ExpApp(var,S')
-          | M => reduce M S'          
+          Const _ => Root(H,S')
+        | BVar i =>
+          case apply_var sgn ctx sub i of
+            Root(var as BVar _,Nil) => Root(var,S')
+          | Root(BVar _,_) => raise Check "apply_exp: bad case"
+          | M => reduce sgn ctx M S'
       end
 
-  and apply_spine sub SpNil = SpNil
-    | apply_spine sub (SpCons(M,S)) = SpCons(apply_exp sub M,apply_spine sub S)
+  and apply_spine sgn ctx sub Nil = Nil
+    | apply_spine sgn ctx sub (App(M,S)) = App(apply_exp sgn ctx sub M,apply_spine sgn ctx sub S)
 
-  and apply_var SubId i = ExpInt i
-    | apply_var (SubCons(M,sub)) i = 
-      if i = 1 then M else apply_var sub (i-1)
-    | apply_var SubShift i = ExpInt (i+1)
-    | apply_var (SubComp(sub1,sub2)) i = 
-      apply_exp sub2 (apply_var sub1 i)
+  and apply_var sgn ctx (Dot(M,sub)) i =
+      if i = 1 then M else apply_var sgn ctx sub (i-1)
+    | apply_var sgn ctx (Shift n) i = int (i+n)
+    | apply_var sgn ctx (Comp(sub1,sub2)) i =
+      apply_exp sgn ctx sub2 (apply_var sgn ctx sub1 i)
 
   (* Beta *)
-  and reduce (exp as ExpApp(_,_)) SpNil = exp
-    | reduce (ExpLam M) (SpCons(M',S)) = 
-      reduce (apply_exp (SubCons(M',SubId)) M)  S
-    | reduce _ _ = raise Check "reduce: bad case"
+  and reduce sgn ctx (exp as Root(_,_)) Nil = exp
+    | reduce sgn ctx (Lam {body=M,...}) (App(M',S)) =
+      reduce sgn ctx (apply_exp sgn ctx (Dot(M',id_sub)) M)  S
+    | reduce sgn ctx E S =
+      raise Fail ("reduce: bad case: head: " ^ exp_to_string sgn ctx E ^ " spine: " ^ spine_to_string sgn ctx S)
 
   (* Equivalence modulo defintitions *)
-  and expand_defs sgn (lev as ExpLev _) = lev
-    | expand_defs sgn (ExpPi(U,V)) = ExpPi(expand_defs sgn U,expand_defs sgn V)
-    | expand_defs sgn (ExpLam U) = ExpLam(expand_defs sgn U)
-    | expand_defs sgn (ExpApp(var as HdVar _,S)) =
-      ExpApp(var,expand_defs_spine sgn S)
-    | expand_defs sgn (ExpApp(con as HdConst c,S)) =
-      if not (is_def sgn c) then ExpApp(con,expand_defs_spine sgn S) else
-      let
-        val (Dec decl) = Sig.lookup sgn c
-        val {exp=M,...} = L.the (#def decl)
-      in
-        expand_defs sgn (reduce M S)
-      end
 
-  and expand_defs_spine sgn SpNil = SpNil
-    | expand_defs_spine sgn (SpCons(M,S)) = SpCons(expand_defs sgn M,expand_defs_spine sgn S)
+(* expand all definitions, for testing purposes *) 
+
+(*   and expand_defs sgn ctx (uni as Uni _) = uni *)
+(*     | expand_defs sgn ctx (Pi {arg=U,body=V,var,depend}) =  *)
+(*       Pi {arg = expand_defs sgn ctx U, *)
+(*           body = expand_defs sgn ctx V, *)
+(*           var = var, *)
+(*           depend = depend} *)
+(*     | expand_defs sgn ctx (Lam {body = U,var}) = *)
+(*       Lam {var = var, *)
+(*            body = expand_defs sgn ctx U} *)
+(*     | expand_defs sgn ctx (Root(var as BVar _,S)) = *)
+(*       Root(var,expand_defs_spine sgn ctx S) *)
+(*     | expand_defs sgn ctx (Root(con as Const c,S)) = *)
+(*       if not (is_def sgn c) then Root(con,expand_defs_spine sgn ctx S)  *)
+(*       else expand_defs sgn ctx (reduce sgn ctx (def sgn c) S) *)
+
+(*   and expand_defs_spine sgn ctx Nil = Nil *)
+(*     | expand_defs_spine sgn ctx (App(M,S)) = App(expand_defs sgn ctx M,expand_defs_spine sgn ctx S) *)
         
-  and equiv_exp sgn E1 E2 = (expand_defs sgn E1) = (expand_defs sgn E2)
+(*   and equiv_exp sgn ctx E1 E2 = (expand_defs sgn ctx E1) = (expand_defs sgn ctx E2) *)
+@ 
+Equivalence modulo definitions.
+See section \ref{main:equiv} for the motivation behind our
+expression equivalence function
 
-(*   and equiv_exp sgn (ExpLev L1) (ExpLev L2) = L1 = L2  *)
-(*     | equiv_exp (ExpPi(U1,V1)) (ExpPi(U2,V2)) =  *)
-(*       equiv_exp U1 U2 andalso equiv_exp V1 V2 *)
-(*     | equiv_exp (ExpLam U) (ExpLam U') =  *)
-(*       equiv_exp U U' *)
-(*     | equiv_exp (ExpApp(HdVar i,S1)) (ExpApp(HdVar i',S2)) =  *)
-(*       i = i' andalso equiv_spine S1 S2 *)
-(*     | equiv_exp (ExpApp(HdConst c,S1)) (ExpApp(HdConst c',S2)) =  *)
-(*       if c = c' then equiv_spine S1 S2 else *)
-(*       case Sgn.lookup sgn c of *)
-(*         SOME (Dec decl) =>  *)
-        
+<<spinelf.sml>>=
 
-(*       let *)
-(*         val  *)
-(*       in *)
-        
-(*       end *)
+  and equiv_exp sgn ctx (Uni u1) (Uni u2) = u1 = u2
+    | equiv_exp sgn ctx (Pi {arg=U1,body=V1,...}) (Pi {arg=U2,body=V2,...}) =
+      equiv_exp sgn ctx U1 U2 andalso equiv_exp sgn ctx V1 V2
+    | equiv_exp sgn ctx (Lam {body=U,...}) (Lam {body=U',...}) =
+      equiv_exp sgn ctx U U'
+    | equiv_exp sgn ctx (Root(BVar i,S1)) (Root(BVar i',S2)) =
+      i = i' andalso equiv_spine sgn ctx S1 S2
+    | equiv_exp sgn ctx (exp as Root(Const c,S)) (exp' as Root(Const c',S')) =
+      if c = c' then equiv_spine sgn ctx S S' else
+      (case (Sig.lookup sgn c,Sig.lookup sgn c') of
+         (Decl decl,Def def) =>
+         if #root def <> #id decl then false
+         else equiv_exp sgn ctx exp (reduce sgn ctx (#def def) S')
+       | (Def def,Decl decl) =>
+         if #root def <> #id decl then false
+         else equiv_exp sgn ctx (reduce sgn ctx (#def def) S) exp'
+       | (Abbrev {def,...},_) => equiv_exp sgn ctx (reduce sgn ctx def S) exp'
+       | (_,Abbrev {def,...}) => equiv_exp sgn ctx exp (reduce sgn ctx def S')
+       | (Def {def=def,height=h,root=rc,...},
+          Def {def=def',height=h',root=rc',...}) =>
+         if rc <> rc' then false else
+         if h = h' then equiv_exp sgn ctx (reduce sgn ctx def S) (reduce sgn ctx def' S')
+         else if h > h' then equiv_exp sgn ctx (reduce sgn ctx def S) exp'
+         else equiv_exp sgn ctx exp (reduce sgn ctx def' S')
+       | (_,_) => raise Check "equiv_exp: bad case")
+    | equiv_exp _ _ _ _ = false
 
-  fun check sgn E1 E2 = check' sgn C.empty E1 E2
+  and equiv_spine sgn ctx Nil Nil = true
+    | equiv_spine sgn ctx (App(E,S)) (App(E',S')) =
+      equiv_exp sgn ctx E E' andalso equiv_spine sgn ctx S S'
+    | equiv_spine _ _ _ _ = false
+
+  fun check sgn E1 E2 = check_exp sgn C.empty E1 E2
+
+@
+
+Sgn is a wrapper around Signat that does type checking
+before insertion to preserve the consistency of the signature
+
+<<spinelf.sml>>=
 
   structure Sgn =
   struct
@@ -451,23 +375,20 @@ struct
 
     val empty = Sig.empty
 
-    fun insert sgn (dec as Dec decl) = 
-        case #level decl of
-          LevKind =>
-          (check sgn (#exp decl) ExpKind;
-           Sig.insert sgn (#id decl,dec))
-        | LevType =>
-          (check sgn (#exp decl) ExpType;
-           case #def decl of
-             NONE => Sig.insert sgn (#id decl,dec)
-           | SOME {exp=M,height=height} =>
-             (check sgn M (#exp decl);
-              Sig.insert sgn (#id decl,dec)))
+    fun insert sgn (dec as Decl decl) = 
+        (check sgn (#exp decl) (Uni (#uni decl));
+         Sig.insert sgn (#id decl,dec))
+      | insert sgn (dec as Def def) = 
+        (check sgn (#exp def) (Uni (#uni def));
+         check sgn (#def def) (#exp def);
+         Sig.insert sgn (#id def,dec))
+      | insert sgn (dec as Abbrev abb) = 
+        (check sgn (#exp abb) (Uni (#uni abb));
+         check sgn (#def abb) (#exp abb);
+         Sig.insert sgn (#id abb,dec))
 
     fun lookup sgn c = Sig.lookup sgn c 
 
-    fun array sgn = Sig.array sgn
-  
   end
 
 end

@@ -1,9 +1,9 @@
 
 NW_DIR = ../NW_TEX
 
-default : main.dvi
+NOWEB_FILES = spinelf context signat translate sequent
 
-NOWEB_FILES = clf spinelf context signat translate
+default : $(addsuffix .tex,$(NOWEB_FILES))
 
 vpath %.tex $(NW_DIR)
 vpath %.nw ..

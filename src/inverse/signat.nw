@@ -19,10 +19,10 @@ sig
   type 'a sgn
   <<exceptions>>
   val empty : unit -> 'a sgn
-  val insert : 'a sgn -> key * 'a -> 'a sgn
-  val lookup : 'a sgn -> key -> 'a (* raises Signat *)
+  val insert : 'a sgn -> key * 'a -> 'a sgn (* raises Signat if key is not fresh*)
+  val lookup : 'a sgn -> key -> 'a (* raises Signat if not present *)
   val size : 'a sgn -> int
-  val array : 'a sgn -> 'a array
+  (* val array : 'a sgn -> 'a array *)
 end
 
 <<signat.sml>>=
@@ -37,16 +37,19 @@ struct
                       
   fun empty() = []
 
-  fun insert sgn p = p::sgn
+  fun insert sgn (p as (k,a)) = 
+      if L.exists (fn (k',_) => k = k') sgn
+      then raise Signat "insert: signat contains key"
+      else p::sgn
 
   fun lookup sgn x = 
       case L.assoc x sgn of 
         SOME y => y
-      | NONE => raise Signat "out of bounds"
+      | NONE => raise Signat "lookup: no such key"
 
   fun size l = length l
 
-  fun array l = (Array.fromList o map L.snd) l
+(*   fun array l = (Array.fromList o map L.snd) l *)
 
 end
 
@@ -71,15 +74,18 @@ struct
                  size = ref 0}
 
   fun insert (sgn:('a sgn)) (n,v) =
-      (G.update (#arr sgn) n v;
-       (if n > !(#size sgn) then (#size sgn) := n else ());
-       sgn)
+      if G.length (#arr sgn) > n
+      then raise Signat "insert: signat contains key"
+      else
+        (G.update (#arr sgn) n v;
+         (if n > !(#size sgn) then (#size sgn) := n else ());
+         sgn)
 
   fun lookup (sgn:'a sgn) n = G.sub (#arr sgn) n
 
   fun size (sgn:'a sgn) = !(#size sgn)
 
-  fun array (sgn:'a sgn) = G.finalize (#arr sgn)
+(*   fun array (sgn:'a sgn) = G.finalize (#arr sgn) *)
 
 end
 

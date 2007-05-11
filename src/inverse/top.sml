@@ -1,16 +1,33 @@
-CM.make "sources.cm"; 
-Control.Print.printDepth := 1000;;
+
+Control.Print.printDepth := 10;;
 Control.Print.printLength := 1000;;
 Control.Print.stringDepth := 1000;;
 
 CM.make "sources.cm"; 
 Twelf.make "examples/sources.cfg"; 
-val sgn = Translate.translate_signature();
-val SpineLF.Sgn.array sgn;
+exception Success;
+
+Twelf.make "/Users/seanmcl/save/projects/twelf/test/lf/sources-chk.cfg"
+Twelf.make "/Users/seanmcl/save/projects/twelf/test/lf/sources.cfg"
+
+val sgn = 
+(Translate.translate_signature();raise Success)
+handle Fail x => x
+
+
+
+
+
+handle Translate.Trans1 x => x
+     | Translate.Fail3 x => x
+
+val s = SpineLF.Sgn.array sgn;
 
 (* -------------------------------------------------------------------------- *)
 (*  Debug                                                                     *)
 (* -------------------------------------------------------------------------- *)
+
+
 
 
 val n = Lib.fst (IntSyn.sgnSize()); 
@@ -19,6 +36,12 @@ structure L = Lib
 structure T = Translate
 structure S = SpineLF
 structure Sgn = S.Sgn
+structure I = IntSyn
+fun name n = I.conDecName (I.sgnLookup n)
+name 2
+name 42
+
+
 structure C = ClausePrint
 structure Ctx = Context
 val sgn = Sgn.empty

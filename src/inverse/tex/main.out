@@ -7,11 +7,11 @@
 \BOOKMARK [2][-]{subsection.2.4}{Signatures}{section.2}
 \BOOKMARK [2][-]{subsection.2.5}{Substitutions}{section.2}
 \BOOKMARK [2][-]{subsection.2.6}{Uni-level representation}{section.2}
+\BOOKMARK [2][-]{subsection.2.7}{Equivalence checking}{section.2}
+\BOOKMARK [2][-]{subsection.2.8}{SpineLF Code}{section.2}
 \BOOKMARK [1][-]{section.3}{Translate}{}
-\BOOKMARK [1][-]{section.A}{Structures}{}
-\BOOKMARK [2][-]{subsection.A.1}{Contexts}{section.A}
-\BOOKMARK [2][-]{subsection.A.2}{Signatures}{section.A}
-\BOOKMARK [2][-]{subsection.A.3}{Twelf Grammar}{section.A}
-\BOOKMARK [1][-]{section.B}{Using Twelf and User Code from the SML Top Level Loop}{}
-\BOOKMARK [2][-]{subsection.B.1}{Loading Files}{section.B}
-\BOOKMARK [2][-]{subsection.B.2}{Using Twelf}{section.B}
+\BOOKMARK [1][-]{section.4}{Sequent Calculus}{}
+\BOOKMARK [2][-]{subsection.4.1}{Backward sequent calculus}{section.4}
+\BOOKMARK [2][-]{subsection.4.2}{Proof terms for backward sequent calculus}{section.4}
+\BOOKMARK [2][-]{subsection.4.3}{Forward sequent calculus}{section.4}
+\BOOKMARK [2][-]{subsection.4.4}{Proof terms for forward sequent calculus}{section.4}
