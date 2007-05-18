@@ -1,18 +1,5 @@
-% -*- mode: Noweb; noweb-code-mode: sml-mode -*-
 
-<<exceptions>>=
-  exception Translate of string
 
-<<translate.sig>>=
-signature TRANSLATE =
-sig
-  <<exceptions>>
-  val translate_signature : unit -> SpineLF.Sgn.sgn
-  val dec_to_string : SpineLF.dec -> string
-
-end
-
-<<translate.sml>>=
 structure Translate (* : TRANSLATE  *) =
 struct 
 
@@ -23,9 +10,17 @@ struct
   structure C = ClausePrint
   structure D = Debug
 
-  <<exceptions>>
+  (* -------------------------------------------------------------------------- *)
+  (*  Exceptions                                                                *)
+  (* -------------------------------------------------------------------------- *)
+
+  exception Translate of string
   exception Trans1 of S.const * I.ConDec
   exception Fail_exp of string * I.Exp
+
+  (* -------------------------------------------------------------------------- *)
+  (*  Translation                                                               *)
+  (* -------------------------------------------------------------------------- *)
 
   fun translate_uni I.Kind = S.Kind 
     | translate_uni I.Type = S.Type
