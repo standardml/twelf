@@ -7,6 +7,7 @@ Library
   structure Twelf
   structure IntSyn
   structure ClausePrint
+  structure Timing
 
   structure Debug
   structure Context
@@ -19,12 +20,13 @@ is
   ../lambda/sources.cm
   ../print/sources.cm
   ../frontend/sources.cm
+  ../timing/sources.cm
 
-  debug.nw
-  context.nw
-  signat.nw
-  spinelf.nw
-  translate.nw
+  debug.sml
+  context.sml
+  signat.sml
+  spinelf.sml
+  translate.sml
 
   $/basis.cm
   $/noweb-tool.cm       

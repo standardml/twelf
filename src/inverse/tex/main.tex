@@ -126,7 +126,6 @@ $$
 Note that you must shift the type you extract from $\Gamma$, as the
 free variables (indices) should point to the slots before $i$.  Moving
 the type $A$ from the context to the consequent must adjust the pointers.
-(This was a nasty bug to find in my first attempt.)
 
 \bigskip 
 \framebox{$\Focus{S}{A_1}{A_2}$}
@@ -172,58 +171,24 @@ $$
 \end{array} 
 $$
 
-\subsection{Contexts}
-
-Contexts map (DeBruijn) variables to types.  
-
-\newcommand{\Ctx}{\ \mathtt{ctx}}
-\bigskip 
-\framebox{$\Gamma\Ctx$}
-\bigskip 
-
-$$
-\begin{array}{cc}
-\infer{\cdot\Ctx}{} &
-\infer{\Gamma,A\Ctx}{\Gamma\Ctx & \CheckTy[\cdot]{A}{\Type}}
-\end{array} 
-$$
-
-\subsection{Signatures}
-
-Signatures map constants to types and kinds.
-
-\newcommand{\Sig}{\ \mathtt{sig}}
-\bigskip 
-\framebox{$\Sigma\Sig$}
-\bigskip 
-
-$$
-\begin{array}{ccc}
-\infer{\cdot\Sig}{}&
-\infer{\Sigma,c:A\Sig}{\Sigma\Sig & \CheckTy[\cdot]{A}{\Type}}&
-\infer{\Sigma,a:K\Sig}{\Sigma\Sig & \CheckTy[\cdot]{K}{\Kind}}
-\end{array} 
-$$
-
-
 \subsection{Substitutions}
 
 Even though the substitution judgment (at this point) is operational,
 and in principle a substitution is simply a list of terms $M$,
 it is still useful to define a syntax of substitutions.  
 
+\newcommand{\Msub}{[\sigma]}
+\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
+
 $$
 \begin{array}{llll}
-\mathbf{Substitutions} & \sigma & ::= & \IdSub \Spb M\cdot\sigma \Spb \Shift^n \Spb \sigma_1\Comp\sigma_2\\
+\mathbf{Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \\
 \end{array} 
 $$
 
-(The notation $\Shift$ means $\Shift^1$.)  
+(The notation $\Shift$ means $\Shift^1$, and $\IdSub$ means $\Shift^0$.)  
 
 We can \emph{apply} subsitutions to terms.
-
-\newcommand{\Msub}{[\sigma]}
-\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
 
 \bigskip
 \framebox{$K\Msub = K'$}
@@ -261,11 +226,10 @@ We can \emph{apply} subsitutions to terms.
 \framebox{$i\Msub = M$}
 
 \begin{align*} 
-i[\IdSub] &= i\\
 1[M\cdot\sigma] &= M\\
 n+1[M\cdot\sigma] &= n[\sigma]\\
 i[\Shift^n] &= i+n\\
-i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]
+% i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]
 \end{align*} 
 
 We still need the notion of beta reduction when a 
@@ -273,12 +237,60 @@ head gets instantiated with a lambda.  We show
 only the possible cases.
 
 \bigskip 
-\framebox{$M \App M' = M''$}
+\framebox{$M \App S = M'$}
 
 \begin{align*} 
 (H\cdot S)\App\Nil &= H\cdot S\\
 \Lam{M}\App(M';S) &= M[M'\cdot\IdSub]\App S
 \end{align*} 
+
+The rules for composing substitutions are:
+
+\bigskip 
+\framebox{$\sigma\Comp\sigma' = \sigma''$}
+
+$$
+\begin{array}{llll}
+(M\cdot \sigma) & \Comp \sigma' &= &M[\sigma']\cdot (\sigma\Comp\sigma') \\
+\Shift^n & \Comp \Shift^m &= &\Shift^{n+m}\\
+\Shift^0 & \Comp \sigma &= &\sigma\\
+\Shift^{n+1}&\Comp (M\cdot\sigma) &= &\Shift^n\Comp\sigma
+\end{array} 
+$$
+
+\subsection{Contexts}
+
+Contexts map (DeBruijn) variables to types.  
+
+\newcommand{\Ctx}{\ \mathtt{ctx}}
+\bigskip 
+\framebox{$\Gamma\Ctx$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\cdot\Ctx}{} &
+\infer{\Gamma,A\Ctx}{\Gamma\Ctx & \CheckTy[\cdot]{A}{\Type}}
+\end{array} 
+$$
+
+\subsection{Signatures}
+
+Signatures map constants to types and kinds.
+
+\newcommand{\Sig}{\ \mathtt{sig}}
+\bigskip 
+\framebox{$\Sigma\Sig$}
+\bigskip 
+
+$$
+\begin{array}{ccc}
+\infer{\cdot\Sig}{}&
+\infer{\Sigma,c:A\Sig}{\Sigma\Sig & \CheckTy[\cdot]{A}{\Type}}&
+\infer{\Sigma,a:K\Sig}{\Sigma\Sig & \CheckTy[\cdot]{K}{\Kind}}
+\end{array} 
+$$
+
 
 \subsection{Uni-level representation}
 
@@ -332,12 +344,149 @@ where the constants differ\footnote{indeed, unification fails
 around \%80 of the time}, the clash will be found long before
 the terms are fully expanded.  
 
+\subsection{Code}
+
 \input{../NW_TEX/spinelf.tex}
 \input{../NW_TEX/translate.tex}
 
 %-------------------------------------------------------------------------------
 % Sequent Calculus                                                              
 %-------------------------------------------------------------------------------
+\section{Sequent Calculus}
+
+We now attempt to describe proof search for LF.
+Given a type $A$, we seek to determine whether $A$ 
+is inhabited. The backbone of our method will be sequent calculi.
+
+\renewcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
+\renewcommand{\Lam}[2]{\lambda #1.\ #2}
+
+
+\subsection{Backward sequent calculus}
+For our sequent calculi, we distinguish between $\Pi$ types
+that refer to their argument.  We write types 
+$\PiTyp{x}{A}{B}$ where $x$ is not free in $B$ as
+$A \LFArr B$.  The sequents have two regions in the antecedent:
+
+\newcommand{\Sequent}[4][]{#2\ ;\ #3 \SeqArr_{#1} #4}
+
+$$
+\begin{array}{llll}
+\mathbf{Sequents} & S & ::= & \Sequent[\Sigma]{\Delta}{\Gamma}{A} \\
+\end{array} 
+$$
+
+\noindent 
+where $\Sigma$ refers to the signature (and is usually omitted),
+$\Gamma$ is a context, and $\Delta$ is a list of parameters.   
+This stratification is the basis of the operational semantics
+of Twelf, and is described in \incomplete{Where is this described?}
+A sequent $\Sequent{\Delta}{\Gamma}{A}$
+can be interpreted as ``from parameters $\Delta$ and hypotheses 
+and derivations $\Gamma$ we can show $A$''.  
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\Delta}{\Gamma,A}{A}}{} \\\\
+\infer[\LFArr_R]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                {\Sequent{\Delta}{\Gamma,A}{B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma,A\LFArr B}{C}}
+                {\Sequent{\Delta}{\Gamma,A\LFArr B}{A} & 
+                 \Sequent{\Delta}{\Gamma,A\LFArr B,B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B}}{C}}
+             {\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B},\HSub{M}{x}{A}{B}}{C} & 
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{Proof terms for backward sequent calculus}
+
+  We can attach proof terms in the following manner, giving
+witnesses of inhabitation.
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\Delta}{\Gamma,x:A}{x:A}}{} \\\\
+\infer[\LFArr_R]{\Sequent{\Delta}{\Gamma}{\Lam{x}{M} : A\LFArr B}}
+                {\Sequent{\Delta}{\Gamma,x:A}{M:B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma,x:A\LFArr B}{\HSub{x\ M}{y}{B}{C}}}
+                {\Sequent{\Delta}{\Gamma,x:A\LFArr B}{M:A} & 
+                 \Sequent{\Delta}{\Gamma,x:A\LFArr B,y:B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{M}:\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{M:B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,y : \PiTyp{x}{A}{B}}{[y\ M/z] C}}
+             {\Sequent{\Delta}{\Gamma,y : \PiTyp{x}{A}{B},z : \HSub{M}{x}{A}{B}}{C} &
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{Forward sequent calculus}
+
+The backward rules defined above lead to a backward style search
+of the space of proof terms.  
+ In some cases, it is preferable to
+search forward from the program, rather than backwards from the
+goal. 
+
+\renewcommand{\Sequent}[4][]{#2\ ;\ #3 \longrightarrow_{#1} #4}
+
+$$
+\begin{array}{llll}
+\mathbf{Sequents} & S & ::= & \Sequent[\Sigma]{\Delta}{\Gamma}{A} \\
+\end{array} 
+$$
+
+ This is formalized in the following sequent, which in contrast
+to the backward case, is read as ``from parameters $\Delta$,
+using \emph{all} the hypotheses in $\Gamma$ we can show $A$''.
+We correspondingly read the rules from top to bottom, rather
+than from bottom to top.
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\cdot}{A}{A}}{} \\\\
+\infer[\LFArr_{R1}]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                  {\Sequent{\Delta}{\Gamma,A}{B}} \\\\
+\infer[\LFArr_{R2}]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                  {\Sequent{\Delta}{\Gamma}{B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma_1\cup\Gamma_2,A\LFArr B}{C}}
+                {\Sequent{\Delta}{\Gamma_1}{A} & 
+                 \Sequent{\Delta}{\Gamma_2,B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B}}{C}}
+             {\Sequent{\Delta}{\Gamma,\HSub{M}{x}{A}{B}}{C} & 
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{ProoF Terms for Forward Sequent Calculus}
+
+Proof terms in the forward direction are complicated by the
+$\LFArr_L$ rule, where the hypotheses are split and joined.
+We can handle this in one of two ways: either we can
+track which hypotheses are used where and create proof terms
+at each step, or we can maintain some kind of minimal information
+that allows us to construct a backward-style/natural deduction
+proof term when search is complete.  We have yet to experiment
+with these options, and thus leave this section incomplete.
+
+\subsection{The Subformula Property}
+
+LF has a straightforward subformula property:
+
+$$
+\begin{array}{llll}
+\mathbf{Positive} & E^+ & ::= & P^+ \Spb A_1^- \LFArr A_2^+ \Spb \PiTyp{x}{A^-}{B^+}\\
+\mathbf{Negative} & E^+ & ::= & P^- \Spb A_1^+ \LFArr A_2^- \Spb \PiTyp{x}{A^+}{B^-}\\
+\end{array} 
+$$
+
+
+
+\subsection{Code}
 
 \input{../NW_TEX/sequent.tex}
 

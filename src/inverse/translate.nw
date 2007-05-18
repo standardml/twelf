@@ -1,7 +1,5 @@
 % -*- mode: Noweb; noweb-code-mode: sml-mode -*-
 
-\section{Translate}
-
 <<exceptions>>=
   exception Translate of string
 
@@ -23,9 +21,11 @@ struct
   structure S = SpineLF
   structure Sgn = S.Sgn
   structure C = ClausePrint
+  structure D = Debug
 
   <<exceptions>>
   exception Trans1 of S.const * I.ConDec
+  exception Fail_exp of string * I.Exp
 
   fun translate_uni I.Kind = S.Kind 
     | translate_uni I.Type = S.Type
@@ -50,7 +50,7 @@ struct
     | translate_exp (I.Lam(I.Dec(name,_),U)) =
       S.Lam {var = name,
              body = translate_exp U}
-    | translate_exp _ = raise Translate "translate_exp: bad case"
+    | translate_exp E = raise Fail_exp("translate_exp: bad case",E)
 
   and translate_spine I.Nil = S.Nil
     | translate_spine (I.App(U,S)) = 
@@ -79,14 +79,20 @@ struct
     | translate_condec cdec = raise Trans1 cdec
 (*     | translate_condec _ = raise Translate "translate_condec: bad case" *)
 
+  fun can_translate (I.ConDec _) = true
+    | can_translate (I.ConDef _) = true
+    | can_translate (I.AbbrevDef _) = true
+    | can_translate _ = false
+
   fun translate_signature() = 
       let
         val n = L.fst (IntSyn.sgnSize()) 
         val ns = L.upto(0,n-1)
         val cds = map IntSyn.sgnLookup ns
-        val cds' = L.map2 translate_condec ns cds
+        val cds' = L.filter (fn (id,dec) => can_translate dec) (L.zip ns cds)
+        val cds' = map translate_condec cds'
         fun fold_fun (dec,sgn) = 
-            (print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");
+            (D.print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");
              Sgn.insert sgn dec)
       in
         foldl fold_fun (Sgn.empty()) cds'

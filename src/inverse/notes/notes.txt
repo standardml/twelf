@@ -1,0 +1,19 @@
+
+
+1) what to formalize in Twelf?
+2) do I need weak head normal form?
+
+
+1) Comp as concrete or not
+2) lazy or eager normalization
+
+
+Rob Svn:
+
+seanmcl
+twelfisaflewt
+
+svn co svn://cmu.redundancymanman.org/proj/proving proving
+
+proving/core/sorces.cfg
+proving/core/tree/...

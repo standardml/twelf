@@ -3,15 +3,16 @@
 \BOOKMARK [1][-]{section.2}{Spine-Form Canonical LF}{}
 \BOOKMARK [2][-]{subsection.2.1}{Name-carrying representation}{section.2}
 \BOOKMARK [2][-]{subsection.2.2}{DeBruijn representation}{section.2}
-\BOOKMARK [2][-]{subsection.2.3}{Contexts}{section.2}
-\BOOKMARK [2][-]{subsection.2.4}{Signatures}{section.2}
-\BOOKMARK [2][-]{subsection.2.5}{Substitutions}{section.2}
+\BOOKMARK [2][-]{subsection.2.3}{Substitutions}{section.2}
+\BOOKMARK [2][-]{subsection.2.4}{Contexts}{section.2}
+\BOOKMARK [2][-]{subsection.2.5}{Signatures}{section.2}
 \BOOKMARK [2][-]{subsection.2.6}{Uni-level representation}{section.2}
 \BOOKMARK [2][-]{subsection.2.7}{Equivalence checking}{section.2}
-\BOOKMARK [2][-]{subsection.2.8}{SpineLF Code}{section.2}
-\BOOKMARK [1][-]{section.3}{Translate}{}
-\BOOKMARK [1][-]{section.4}{Sequent Calculus}{}
-\BOOKMARK [2][-]{subsection.4.1}{Backward sequent calculus}{section.4}
-\BOOKMARK [2][-]{subsection.4.2}{Proof terms for backward sequent calculus}{section.4}
-\BOOKMARK [2][-]{subsection.4.3}{Forward sequent calculus}{section.4}
-\BOOKMARK [2][-]{subsection.4.4}{Proof terms for forward sequent calculus}{section.4}
+\BOOKMARK [2][-]{subsection.2.8}{Code}{section.2}
+\BOOKMARK [1][-]{section.3}{Sequent Calculus}{}
+\BOOKMARK [2][-]{subsection.3.1}{Backward sequent calculus}{section.3}
+\BOOKMARK [2][-]{subsection.3.2}{Proof terms for backward sequent calculus}{section.3}
+\BOOKMARK [2][-]{subsection.3.3}{Forward sequent calculus}{section.3}
+\BOOKMARK [2][-]{subsection.3.4}{ProoF Terms for Forward Sequent Calculus}{section.3}
+\BOOKMARK [2][-]{subsection.3.5}{The Subformula Property}{section.3}
+\BOOKMARK [2][-]{subsection.3.6}{Code}{section.3}
