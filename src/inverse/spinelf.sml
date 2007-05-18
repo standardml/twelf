@@ -157,8 +157,29 @@ struct
       | exp_to_layout sgn (Lam lam) = &[$"LAM. ",exp_to_layout sgn (#body lam)]
       | exp_to_layout sgn (Root(H,Nil)) = head_to_layout sgn H
       | exp_to_layout sgn (Root(H,S)) = &[head_to_layout sgn H,$" ^ ",maybe_sparen S (spine_to_layout sgn S)]
+
+    datatype subelem = SubShift of int | SubExp of exp
+
+    fun sub_to_list (sub as Shift n) = [SubShift n]
+      | sub_to_list (Dot(M,sub)) = SubExp M::sub_to_list sub
+
+    fun sub_to_layout sgn sub = 
+        let
+          val sub' = sub_to_list sub 
+          fun mapfn (SubShift n) = $("^" ^ Int.toString n)
+            | mapfn (SubExp exp) = exp_to_layout sgn exp
+          val sub'' = map mapfn sub'
+        in
+          Layout.list sub''
+        end        
+
   in    
     fun exp_to_string sgn exp = Layout.tostring (exp_to_layout sgn exp) 
+    fun spine_to_string sgn sp = Layout.tostring (spine_to_layout sgn sp) 
+    fun sub_to_string sgn sub = Layout.tostring (sub_to_layout sgn sub) 
+    fun print_exp sgn exp = print ("\n" ^ exp_to_string sgn exp ^ "\n")
+    fun print_spine sgn sp = print ("\n" ^ spine_to_string sgn sp ^ "\n")
+    fun print_sub sgn sub = print ("\n" ^ sub_to_string sgn sub ^ "\n")
   end
 
   (* -------------------------------------------------------------------------- *)
@@ -170,18 +191,20 @@ struct
       check_exp sgn (C.push ctx (var,U)) M V
     | check_exp sgn ctx (Root(Const con,S)) V = 
       let 
+        (* pull some common code out of the following case *)
         fun foc exp =
            let
              val U = focus sgn ctx S exp
            in
              if equiv_exp sgn U V then ()
-             else raise Fail_exp2 ("check_exp:0",U,V)
+             else raise Check "check_exp: exps not equivalent"
            end
       in
         case Sig.lookup sgn con of
            Decl decl => foc (#exp decl) 
          | Def def => foc (#exp def)
-         | Abbrev abbrev => raise Fail "check_exp:1"
+         (* why does this fail?*)
+         | Abbrev abbrev => raise Fail "check_exp: abbrev"
       end
     | check_exp sgn ctx (Root(BVar i,S)) V = 
       (case C.lookup ctx (i-1) (* DeBruijn indices start at 1 *) of
@@ -198,8 +221,14 @@ struct
        check_exp sgn (C.push ctx (var,A1)) A2 uni)
     | check_exp _ _ _ _ = raise Check "check: bad case"
 
-  and focus sgn ctx Nil (ty as Uni Type) = ty
-    | focus sgn ctx Nil (hd as Root (Const _,_)) = hd
+(*   and focus sgn ctx Nil (ty as Uni Type) = ty *)
+(*     | focus sgn ctx Nil (hd as Root (Const _,_)) = hd *)
+(*     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) = *)
+(*       (check_exp sgn ctx M A1; *)
+(*        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2)) *)
+(*     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E) *)
+
+  and focus sgn ctx Nil E = E
     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) =
       (check_exp sgn ctx M A1;
        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2))
@@ -255,7 +284,12 @@ struct
   (*  Beta                                                                      *)
   (* -------------------------------------------------------------------------- *)
 
-  and reduce (exp as Root(_,_)) Nil = exp
+(*   and reduce (exp as Root(_,_)) Nil = exp *)
+(*     | reduce (Lam {body=M,...}) (App(M',S)) = *)
+(*       reduce (apply_exp (Dot(M',id_sub)) M) S *)
+(*     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S) *)
+
+  and reduce exp Nil = exp
     | reduce (Lam {body=M,...}) (App(M',S)) =
       reduce (apply_exp (Dot(M',id_sub)) M) S
     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S)

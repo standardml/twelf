@@ -23,7 +23,6 @@ exception Success;
 (*  Debug                                                                     *)
 (* -------------------------------------------------------------------------- *)
 
-D.enable_printing();
 exception Success;
 structure D = Debug;
 structure L = Lib;
@@ -45,15 +44,154 @@ val cds' = L.filter (fn (id,dec) => T.can_translate dec) (L.zip ns cds);
 val cds'' = map T.translate_condec cds';
 fun fold_fun (dec,sgn) = (D.print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");Sgn.insert sgn dec);
 val sgn = foldl fold_fun (Sgn.empty()) cds'';
+open S
+val f = Const 4
+val tm_eqi = Const 8
+val test6 = Const 9
+val tm = Const 0
+val tm_eq = Const 6
 
-val tbug = L.the (Lib.find (get "bug") cs)
-val S.Decl sbug = Translate.translate_condec (~1,tbug)
-val decl = sbug
+val tm_exp = Root(tm,Nil)
+val tm_tm = Pi{var=NONE,arg=tm_exp,depend=No,body=tm_exp}
+val tm_tm_tm = Pi{var=NONE,arg=tm_tm,depend=No,body=tm_exp}
+val tp = expType
 
-val hsp = (S.check sgn (#exp decl) (S.Uni (#uni decl));raise Success)
-  handle S.Fail_spine_exp x => x
 
-print (S.exp_to_string sgn (#exp decl) ^ "\n")
+val one = Root(BVar 1,Nil)
+val two = Root(BVar 2,Nil)
+val f1 = Root(f,App(one,Nil))
+val lam_f1 = Lam {var=NONE,body=f1}
+val one_lam_f1 = Root(BVar 1,App(lam_f1,Nil))
+val two_one = Root(BVar 2,App(one,Nil))
+val lam_21 = Lam{var=NONE,body=two_one}
+val tm_eqi_1_lam_f1 = Root(tm_eqi,App(one_lam_f1,Nil))
+val spine0 = App(tm_eqi_1_lam_f1,Nil)
+val spine1 = App(lam_21,spine0)
+val test6_args = Root(test6,spine1)
+
+val spine2 = App(one_lam_f1,App(one_lam_f1,Nil))
+val tm_eq_args = Root(tm_eq,spine2)
+val pi_tm_eq = Pi{var=NONE,arg=tm_eq_args,depend=No,body=tp}
+val pi_tm_tm_tm = Pi{var=NONE,arg=tm_tm_tm,depend=No,body=pi_tm_eq}
+val one_sp = App(one,Nil)
+
+val ctx = C.push C.empty (NONE:string option,tm_tm_tm)
+
+val ctx' = C.push ctx (NONE:string option,tm_tm)
+
+
+check_exp sgn ctx test6_args tp
+
+focus sgn ctx spine1 pi_tm_tm_tm
+
+check_exp sgn ctx lam_21 tm_tm_tm
+
+val sub1 = (Dot(lam_21,id_sub))
+
+
+
+
+focus sgn ctx spine0 (apply_exp sub1 pi_tm_eq)
+
+apply_exp sub1 tm_eq_args
+
+print_exp sgn tm_eq_args
+
+apply_spine sub1 spine2
+
+print_spine sgn spine2
+
+apply_exp sub1 one_lam_f1
+
+apply_spine sub1 Nil
+
+val RetExp tmp = apply_var sub1 1
+
+print_exp sgn tmp
+
+print_exp sgn one_lam_f1
+print_sub sgn sub1
+
+
+
+
+  and focus sgn ctx Nil E = E
+    | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) =
+      (check_exp sgn ctx M A1;
+       focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2))
+    | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E)
+
+
+focus sgn ctx' one tm_tm_tm
+
+
+check_exp sgn ctx' two_one tm_exp
+
+focus sgn ctx' one_sp tm_tm_tm
+
+
+check_exp sgn ctx' one tm_tm
+
+focus sgn ctx' Nil tm_tm
+
+
+
+print (exp_to_string sgn tm_tm_tm)
+
+
+
+
+val tbug = L.the (Lib.find (get "bug") cs);
+val S.Decl sbug = Translate.translate_condec (~1,tbug);
+val decl = sbug;
+
+
+
+
+
+
+
+
+
+
+
+check sgn (#exp decl) (Uni (#uni decl))
+
+val (U1,V1) = (#exp decl,Uni (#uni decl))
+val ctx = C.empty
+check_exp sgn C.empty U1 V1
+val (Pi {var,arg=A1,body=A2,...},uni as Uni _) = (U1,V1)
+val ctx = (C.push ctx (var,A1))
+val (Root(Const con,S),V) = (A2,uni)
+
+fun foc exp =
+    let
+      val U = focus sgn ctx S exp
+    in
+      if equiv_exp sgn U V then ()
+      else raise Fail_exp2 ("check_exp:0",U,V)
+    end
+
+in
+
+val Decl decl = Sig.lookup sgn con
+foc (#exp decl)
+
+        case Sig.lookup sgn con of
+           Decl decl => foc (#exp decl) 
+         | Def def => foc (#exp def)
+         | Abbrev abbrev => raise Fail "check_exp:1"
+      end
+
+val exp = #exp decl
+
+
+
+
+val it =
+  ("focus: bad case",Nil,
+   Pi {arg=Root (Const 0,Nil),body=Root (Const 0,Nil),depend=No,var=NONE})
+  : string * SpineLF.spine * SpineLF.exp
 
 
 (* -------------------------------------------------------------------------- *)
@@ -68,9 +206,10 @@ Twelf.Print.length := NONE
 Twelf.Timers.show()
 (Translate.translate_signature();raise Success)
 
-
 val center = Timing.newCenter "checker"
+Debug.disable_printing()
 Timing.time center Translate.translate_signature ()
+1;
 Timing.toString center
 
 (* ========================================================================== *)
@@ -93,6 +232,8 @@ val it =
 - val it = (541,"eterm-eq/i") : IntSyn.cid * string
 - val it = (543,"etp-eq/i") : IntSyn.cid * string
 - val it = (591,"eterm-resp-bind") : IntSyn.cid * string
+val hsp = (S.check sgn (#exp decl) (S.Uni (#uni decl));raise Success)
+  handle S.Fail_spine_exp x => x
 
 
 
