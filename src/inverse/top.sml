@@ -12,12 +12,13 @@ Control.Print.stringDepth := 1000;
 
 CM.make "sources.cm"; 
 Twelf.make "../../../test/talt/sources-chk.cfg";
+Twelf.make "../../../test/talt/sources.cfg";
 Twelf.make "../../../test/sml-sound/sources.cfg";
 Twelf.make "../../../test/princeton/sources.cfg";
 Twelf.make "../../../test/misc/sources.cfg";
 exception Success;
 (TranslateEE.translate_signature();raise Success)
-  handle TypecheckEE.Fail_spine_exp x => x;
+  handle TypecheckEE.Fail_exp_skel x => x;
 
 (* -------------------------------------------------------------------------- *)
 (*  Debug                                                                     *)
@@ -49,8 +50,55 @@ val cds'' = map T.translate_condec cds';
 fun fold_fun (dec,sgn) = (D.print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");Sgn.insert sgn dec);
 val sgn = foldl fold_fun (Sgn.empty()) cds'';
 
-val t_val = I.sgnLookup 9
-val S.Decl s_val = Sgn.lookup sgn 9
+val t_val = I.sgnLookup 11
+val S.Decl s_val = Sgn.lookup sgn 10
+
+val bug = Def{id=11,
+              name="1+",
+              exp=tm_tm,
+              def=Lam{var=NONE,
+                      body=Root(Const 4,App(Root(BVar 1,Nil),Nil))},
+              height = 1,
+              root = 4,
+              uni = Type
+             }
+
+
+eta_expand sgn (Lam{var=NONE,body=Root(Const 4,App(Root(BVar 1,Nil),Nil))})
+
+
+    fun insert sgn (Decl {id,name,exp,uni}) = 
+        let
+          val exp' = eta_expand sgn exp 
+        in
+          check sgn exp' (Uni uni);
+          Sig.insert sgn (id,Decl {id=id,name=name,exp=exp',uni=uni})
+        end
+      | insert sgn (Def {id,name,exp,def,height,root,uni}) =
+        let
+          val exp' = eta_expand sgn exp 
+          val def' = eta_expand sgn def 
+        in
+          check sgn exp' (Uni uni);
+          check sgn def' exp';
+          Sig.insert sgn (id,Def {id=id,name=name,exp=exp',def=def',
+                                  height=height,root=root,uni=uni})
+        end
+      | insert sgn (Abbrev {id,name,exp,def,uni}) =
+        let
+          val exp' = eta_expand sgn exp 
+          val def' = eta_expand sgn def 
+        in
+          check sgn exp' (Uni uni);
+          check sgn def' exp';
+          Sig.insert sgn (id,Abbrev{id=id,name=name,exp=exp',
+                                    def=def',uni=uni})
+        end
+
+
+S.print_exp sgn t_val
+
+
 S.print_exp sgn (#exp s_val)
 
 - 
@@ -73,6 +121,9 @@ val tm_exp = Root(tm,Nil)
 val tm_tm = Pi{var=NONE,arg=tm_exp,depend=No,body=tm_exp}
 val tm_tm_tm = Pi{var=NONE,arg=tm_tm,depend=No,body=tm_exp}
 val tp = expType
+
+
+
 
 
 val one = Root(BVar 1,Nil)

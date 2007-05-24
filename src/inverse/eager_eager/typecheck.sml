@@ -1,5 +1,5 @@
 
-(* eager composition of substitutions, and eager application. *)
+(** eager composition of substitutions, and eager application. *)
 
 structure TypecheckEE =
 struct 
@@ -80,6 +80,7 @@ struct
   exception Fail_spine_exp of string * spine * exp
   exception Fail_hd_spine of string * head * spine
   exception Fail_sub_exp of string * sub * exp
+  exception Fail_sub_exp of string * sub * exp
 
   (* -------------------------------------------------------------------------- *)
   (*  Util                                                                      *)
@@ -100,6 +101,10 @@ struct
   fun name (Decl decl) = #name decl
     | name (Def def) = #name def
     | name (Abbrev abb) = #name abb
+
+  fun exp (Decl decl) = #exp decl
+    | exp (Def def) = #exp def
+    | exp (Abbrev abb) = #exp abb
 
   fun is_def sgn c = 
       case Sig.lookup sgn c of
@@ -229,12 +234,6 @@ struct
        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2))
     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E)
 
-(*   and focus sgn ctx Nil E = E *)
-(*     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) = *)
-(*       (check_exp sgn ctx M A1; *)
-(*        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2)) *)
-(*     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E) *)
-
   and check sgn E1 E2 = check_exp sgn C.empty E1 E2
  
   (* -------------------------------------------------------------------------- *)
@@ -243,10 +242,10 @@ struct
 
   and apply_exp _ (uni as Uni _) = uni
     | apply_exp sub (Pi {var,arg=U,depend,body=V}) =
-      Pi ({var = var,
+      Pi {var = var,
            arg = apply_exp sub U,
            depend = depend,
-           body = apply_exp (push_sub sub) V} : pi)
+           body = apply_exp (push_sub sub) V}
     | apply_exp sub (Lam {var,body=U}) =
       Lam {var=var,
            body=apply_exp (push_sub sub) U}
@@ -290,11 +289,6 @@ struct
       reduce (apply_exp (Dot(M',id_sub)) M) S
     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S)
 
-(*   and reduce exp Nil = exp *)
-(*     | reduce (Lam {body=M,...}) (App(M',S)) = *)
-(*       reduce (apply_exp (Dot(M',id_sub)) M) S *)
-(*     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S) *)
-
   (* -------------------------------------------------------------------------- *)
   (*  Equivalence wrt Definitions                                               *)
   (* -------------------------------------------------------------------------- *)
@@ -332,6 +326,123 @@ struct
     | equiv_spine _ _ _ = false
 
   (* -------------------------------------------------------------------------- *)
+  (*  Eta                                                                       *)
+  (* -------------------------------------------------------------------------- *)
+
+  datatype skel = Base
+                | Arrow of skel * skel
+
+  fun card Nil = 0
+    | card (App(M,S)) = 1 + card S
+
+  fun num_pi_quants (Pi {body,...}) = 1 + num_pi_quants body
+    | num_pi_quants _ = 0
+
+  fun skel_length Base = 0
+    | skel_length (Arrow(_,tau)) = 1 + skel_length tau
+
+  fun concat Nil M = App(M,Nil)
+    | concat (App(M,S)) M' = App(M,concat S M')
+
+  fun skeleton sgn ctx (Uni Type) = Base
+    | skeleton sgn ctx (Root(Const a,S)) = 
+      let
+        val aty = exp(Sig.lookup sgn a)
+        val n = num_pi_quants aty
+        val n' = card S
+      in
+        if n = n' then Base 
+        else raise Fail "skeleton: not eta expanded"
+      end
+    | skeleton sgn ctx (Root(BVar i,S)) = 
+      let
+        val aty = L.ith (i-1) ctx
+        val n = skel_length aty
+        val n' = card S
+      in
+        if n = n' then Base 
+        else raise Fail "skeleton: not eta expanded"
+      end
+    | skeleton sgn ctx (Pi {arg,body,...}) = 
+      let
+        val tau1 = skeleton sgn ctx arg
+        val tau2 = skeleton sgn ctx body
+      in
+        Arrow(tau1,tau2)
+      end
+    | skeleton _ _ exp = raise Fail_exp("skeleton: bad case",exp)
+
+  exception Fail_exp_skel of string * exp * skel 
+
+  local
+    val changed = ref false
+  in
+
+    fun long_exp sgn ctx (exp as Uni Type) Base = exp
+      | long_exp sgn ctx (Pi {arg,body,depend,var}) Base =
+        let
+          val arg' = long_exp sgn ctx arg Base 
+          val tau = skeleton sgn ctx arg'
+          val body' = long_exp sgn (tau::ctx) body Base 
+        in
+          Pi {arg=arg',body=body',depend=depend,var=var}
+        end
+      | long_exp sgn ctx (Lam {var,body}) (Arrow(tau1,tau2)) =
+        let
+          val body' = long_exp sgn (tau1::ctx) body tau2
+        in
+          Lam {var=var,body=body'}
+        end
+      | long_exp sgn ctx (expr as Root(con as Const a,S)) Base =
+        let
+          val tau = skeleton sgn ctx (exp(Sig.lookup sgn a))
+        in
+          Root(con,long_spine sgn ctx S tau)
+        end
+      | long_exp sgn ctx (exp as Root(var as BVar i,S)) Base =
+        let
+          val tau = L.ith (i-1) ctx (* indices start at 1 *)
+        in
+          Root(var,long_spine sgn ctx S tau)
+        end
+      | long_exp sgn ctx (Root(con as Const c,S)) (tau as Arrow(tau1,tau2)) =
+        let
+          val S' = concat (apply_spine shift S) one
+        in
+          changed := true;
+          long_exp sgn ctx (Lam {var=NONE,body=Root(con,S')}) tau 
+        end
+      | long_exp sgn ctx (Root(BVar i,S)) (tau as Arrow(tau1,tau2)) =
+        let
+          val S' = concat (apply_spine shift S) one
+        in
+          changed := true;
+          long_exp sgn ctx (Lam {var=NONE,body=Root(BVar(i+1),S')}) tau 
+        end
+      | long_exp _ _ exp skel = raise Fail_exp_skel("long_exp: bad case",exp,skel)
+
+    and long_spine sgn ctx Nil Base = Nil
+      | long_spine sgn ctx (App(M,S)) (Arrow(tau1,tau2)) =
+        let
+          val M' = long_exp sgn ctx M tau1 
+          val S' = long_spine sgn ctx S tau2
+        in
+          App(M',S')
+        end
+      | long_spine _ _ _ _ = raise Fail "long_spine: bad case"
+
+    fun eta_expand sgn exp skel = 
+        let
+          val () = changed := false
+          val exp' = long_exp sgn [] exp skel
+        in
+          if !changed then L.warning "expression is not eta long" else ();
+          exp'
+        end
+
+  end
+
+  (* -------------------------------------------------------------------------- *)
   (*  Signatures                                                                *)
   (* -------------------------------------------------------------------------- *)
 
@@ -342,17 +453,33 @@ struct
 
     val empty = Sig.empty
 
-    fun insert sgn (dec as Decl decl) = 
-        (check sgn (#exp decl) (Uni (#uni decl));
-         Sig.insert sgn (#id decl,dec))
-      | insert sgn (dec as Def def) = 
-        (check sgn (#exp def) (Uni (#uni def));
-         check sgn (#def def) (#exp def);
-         Sig.insert sgn (#id def,dec))
-      | insert sgn (dec as Abbrev abb) = 
-        (check sgn (#exp abb) (Uni (#uni abb));
-         check sgn (#def abb) (#exp abb);
-         Sig.insert sgn (#id abb,dec))
+    fun insert sgn (Decl {id,name,exp,uni}) = 
+        let
+          val exp' = eta_expand sgn exp Base
+        in
+          check sgn exp' (Uni uni);
+          Sig.insert sgn (id,Decl {id=id,name=name,exp=exp',uni=uni})
+        end
+      | insert sgn (Def {id,name,exp,def,height,root,uni}) =
+        let
+          val exp' = eta_expand sgn exp Base
+          val def' = eta_expand sgn def (skeleton sgn [] exp')
+        in
+          check sgn exp' (Uni uni);
+          check sgn def' exp';
+          Sig.insert sgn (id,Def {id=id,name=name,exp=exp',def=def',
+                                  height=height,root=root,uni=uni})
+        end
+      | insert sgn (Abbrev {id,name,exp,def,uni}) =
+        let
+          val exp' = eta_expand sgn exp Base
+          val def' = eta_expand sgn def (skeleton sgn [] exp')
+        in
+          check sgn exp' (Uni uni);
+          check sgn def' exp';
+          Sig.insert sgn (id,Abbrev{id=id,name=name,exp=exp',
+                                    def=def',uni=uni})
+        end
 
     fun lookup sgn c = Sig.lookup sgn c 
 

@@ -79,8 +79,6 @@ struct
     | can_translate (I.AbbrevDef _) = true
     | can_translate _ = false
 
-
-
   fun translate_signature() = 
       let
         val n = L.fst (IntSyn.sgnSize()) 

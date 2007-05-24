@@ -1,21 +1,30 @@
+(**
+ A library of useful functions for everyday programming.
+*) 
 
 signature LIB = 
 sig
 
+  (** Nice for postponing an implementation. *) 
   exception Not_implemented
 
   (* -------------------------------------------------------------------------- *)
   (*  Booleans                                                                  *)
   (* -------------------------------------------------------------------------- *)
   
+  (** Curried <code> andalso </code> *) 
   val andalso' : bool -> bool -> bool
+
+  (** Curried <code> orelse </code> *) 
   val orelse' : bool -> bool -> bool
  
   (* -------------------------------------------------------------------------- *)
   (*  Pairs                                                                     *)
   (* -------------------------------------------------------------------------- *)
 
+  (** First element of a pair. *)
   val fst : 'a * 'b -> 'a
+  (** Second element of a pair. *)
   val snd : 'a * 'b -> 'b
 
   (* -------------------------------------------------------------------------- *)
@@ -24,59 +33,92 @@ sig
 
   val is_none : 'a option -> bool
   val is_some : 'a option -> bool
+  (** Get the content of an option type. 
+      @exception Fail
+   *)
   val the : 'a option -> 'a
 
   (* ------------------------------------------------------------------------- *)
   (*  Refs                                                                     *)
   (* ------------------------------------------------------------------------- *)
 
-  val += : int ref * int -> unit
-  val -= : int ref * int -> unit
+  (** Increment an <code> int ref <\code> *)                          
   val incr : int ref -> unit
+  (** Increment an <code> int ref <\code> *)                          
+  val += : int ref * int -> unit
+  (** Decrement an <code> int ref <\code> *)
+  val -= : int ref * int -> unit
+  (** Decrement an <code> int ref <\code> *)
   val decr : int ref -> unit
+  (** Prepend an element to a <code> list </code> *)
   val ::= : 'a list ref * 'a -> unit
+  (** Append a list at the back of a <code> list </code> *)
   val @= : 'a list ref * 'a list -> unit
 
   (* -------------------------------------------------------------------------- *)
   (*  Streams                                                                   *)
   (* -------------------------------------------------------------------------- *)
 
+  (** Infinite streams. *)
   type 'a stream
 
+  (** Prefix of a stream, as a list *)
   val listof_s : int -> 'a stream -> 'a list
-  val nth_s : int -> 'a stream -> 'a (* raises Failure if not enough elements *)
+  (** 
+     Select an element from a stream
+     @exception Fail if there are not enough elements in the stream.
+   *)
+  val nth_s : int -> 'a stream -> 'a 
 
   (* ---------------------------------------------------------------------- *)
   (*  Functions                                                             *)
   (* ---------------------------------------------------------------------- *)
 
+  (** Curry a function. *)
   val curry : ('a * 'b -> 'c) -> 'a -> 'b -> 'c
+  (** Uncurry a function. *)
   val uncurry : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
+  (** Curry a 3 argument function.  Occasionally useful. *)
   val curry3 : ('a * 'b * 'c -> 'd) -> 'a -> 'b -> 'c -> 'd
+  (** Identity combinator *)
   val id : 'a -> 'a
+  (** Returns true iff a function application returns a value. *)
   val can : ('a -> 'b) -> 'a -> bool
+  (** Returns true iff a function application raises an exception. *)
   val cant : ('a -> 'b) -> 'a -> bool
+  (** Returns true iff a (2 argument) function application returns a value. *)
   val can2 : ('a -> 'b -> 'c) -> 'a -> 'b -> bool
+  (** Curried equality *)
   val ceq : ''a -> ''a -> bool
+  (** Swap the arguments of a function. *)
   val swap : ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+  (** Explicit application. *)
   val apply : ('a -> 'b) * 'a -> 'b
+  (** Apply a function a given number of times. *)
   val repeat : ('a -> 'a) -> int -> 'a -> 'a
  
   (* -------------------------------------------------------------------------- *)
   (*  Ints                                                                      *)
   (* -------------------------------------------------------------------------- *)
 
+  (** Add up a list of ints *)
   val sum : int list -> int
+  (** max of a list of ints *)
   val max : int list -> int
+  (** upto 3 5 ~~> [3,4,5] *)
   val upto : int * int -> int list
+  (** @see upto *)
   val -- : int * int -> int list
+  (** 3 --< 5 ~~> [3,4] *)
   val --< : int * int -> int list
 
   (* -------------------------------------------------------------------------- *)
   (*  Reals                                                                     *)
   (* -------------------------------------------------------------------------- *)
 
+  (** max of a list of reals *)  
   val real_max : real list -> real
+  (** sum of a list of reals *)  
   val real_sum : real list -> real
 
   (* ------------------------------------------------------------------------- *)
@@ -93,7 +135,12 @@ sig
   (* ---------------------------------------------------------------------- *)
  
   val assert : bool -> string -> unit
+  (** !warn = true iff <code> warning s</code> will print 
+      <code> s</code> to stdout. *)
   val warn : bool ref
+  (** Print a warning message to stdout.  
+   @see warn
+   *)
   val warning : string -> unit
 
   (* ---------------------------------------------------------------------- *)
