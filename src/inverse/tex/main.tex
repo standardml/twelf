@@ -321,7 +321,8 @@ Note that the rules for types and kinds are very similar.
 Pfenning's experience with implementing Twelf is that if they
 are separate much of the code has to be duplicated for
 the two levels.  These concerns lead to the final 
-grammar for Spine-Form LF, a single level for terms and types.
+grammar for Spine-Form LF, a single class of expressions for
+terms, types, and kinds, classified by level.
 
 $$
 \begin{array}{llll}
@@ -371,7 +372,6 @@ where the constants differ\footnote{indeed, unification fails
 around \%80 of the time}, the clash will be found long before
 the terms are fully expanded.  
 
-
 %-------------------------------------------------------------------------------
 % Eta expansion                                                                 
 %-------------------------------------------------------------------------------
@@ -412,8 +412,9 @@ We first define a simple erasure of the dependent types to obtain
 a very simple skeleton of the type.  We use the term \emph{skeleton type}
 to distinguish from the $\emph{erased types}$ of hereditary substitution.
 
-\newcommand{\Skel}[2]{#1 \rightsquigarrow #2}
+\newcommand{\Skel}[3][\Gamma]{#1\vdash #2 \rightsquigarrow #3}
 \newcommand{\SkBase}{o}
+\newcommand{\tauskel}{\tau_1\to\tau_2\to\ldots\to\tau_n\to\SkBase}
 
 $$
 \begin{array}{llll}
@@ -428,9 +429,10 @@ $o$ stands for any base type, $\to$ for any pi type.
 \bigskip 
 
 $$
-\begin{array}{lr}
-\infer{\Skel{a\cdot S}{\SkBase}}{\Sigma(a) = \Pi A_1.\Pi A_2\ldots\Pi A_n.\Type & \card{S}=n}&
-\infer{\Skel{\PiTyp{A_1}{A_2}}{\tau_1\to\tau_2}}{\Skel{A_1}{\tau_1} & \Skel{A_2}{\tau_2}}
+\begin{array}{c}
+\infer{\Skel{a\cdot S}{\SkBase}}{\Sigma(a) = \Pi A_1.\Pi A_2\ldots\Pi A_n.\Type & \card{S}=n}\\\\
+\infer{\Skel{i\cdot S}{\SkBase}}{\Gamma(i) = \tauskel & \card{S}=n}\\\\
+\infer{\Skel{\PiTyp{A_1}{A_2}}{\tau_1\to\tau_2}}{\Skel{A_1}{\tau_1} & \Skel[\Gamma,\tau_1]{A_2}{\tau_2}}
 \end{array} 
 $$
 
@@ -457,11 +459,10 @@ $$
 \framebox{$\Long{A}$}
 \bigskip 
 
-\newcommand{\tauskel}{\tau_1\to\tau_2\to\ldots\to\tau_n\to\SkBase}
 
 $$
 \begin{array}{c}
-\infer{\Long{a\cdot S}}{\Skel{\Sigma(a)}{\tauskel} & \card{S} = n & \LongAt{S}{\tauskel}} \\\\
+\infer{\Long{a\cdot S}}{\Skel{\Sigma(a)}{\tau} & \LongAt{S}{\tau}} \\\\
 \infer{\Long{\PiTyp{A_1}{A_2}}}{\Long{A_1} & \Skel{A_1}{\tau_1} & \Long[\Gamma,\tau_1]{A_2}}
 \end{array} 
 $$
@@ -482,9 +483,9 @@ $$
 \bigskip 
 
 $$
-\begin{array}{c}
-\infer{\LongAt{i\cdot S}{\SkBase}}{\Gamma(i) = \tauskel & \card{S} = n & \LongAt{S}{\tauskel}}\\\\
-\infer{\LongAt{c\cdot S}{\SkBase}}{\Skel{\Sigma(c)}{\tauskel} & \card{S} = n & \LongAt{S}{\tauskel}}\\\\
+\begin{array}{lr}
+\infer{\LongAt{i\cdot S}{\SkBase}}{\LongAt{S}{\Gamma(i)}} & 
+\infer{\LongAt{c\cdot S}{\SkBase}}{\Skel{\Sigma(c)}{\tau} & \LongAt{S}{\tau}}\\\\
 \infer{\LongAt{\Lam{M}}{\tau_1\to\tau_2}}{\LongAt[\Gamma,\tau_1]{M}{\tau_2}}
 \end{array} 
 $$
@@ -503,7 +504,8 @@ terms to yield an algorithm for ``$\eta$-lengthening'' a term.
 $$
 \begin{array}{lcr}
 \infer{\Long{\Type}{\Type}}{} & &
-\infer{\Long{\PiTyp{A}{K}}{\PiTyp{A'}{K'}}}{\Long{A}{A'} & \Skel{A'}{\tau} & \Long[\Gamma,\tau]{K}{K'}}
+\infer{\Long{\PiTyp{A}{K}}{\PiTyp{A'}{K'}}}{\Long{A}{A'} & 
+                           \Skel{A'}{\tau} & \Long[\Gamma,\tau]{K}{K'}}
 \end{array} 
 $$
 
@@ -517,8 +519,8 @@ a valid skeleton.
 \bigskip 
 
 $$
-\begin{array}{c}
-\infer{\Long{a\cdot S}{a\cdot S'}}{\Skel{\Sigma(a)}{\tauskel} & \card{S} = n & \LongAt{S}{\tauskel}{S'}} \\\\
+\begin{array}{lcr}
+\infer{\Long{a\cdot S}{a\cdot S'}}{\Skel{\Sigma(a)}{\tau} & \LongAt{S}{\tau}{S'}} &&
 \infer{\Long{\PiTyp{A_1}{A_2}}{\PiTyp{A_1'}{A_2'}}}{\Long{A_1}{A_1'} & \Skel{A_1'}{\tau_1} & \Long[\Gamma,\tau_1]{A_2}{A_2'}}
 \end{array} 
 $$
@@ -542,25 +544,31 @@ $$
 
 $$
 \begin{array}{c}
-\infer{\LongAt{i\cdot S}{\SkBase}{i\cdot S'}}{\Gamma(i) = \tauskel & \card{S} = n & \LongAt{S}{\tauskel}{S'}}\\\\
-\infer{\LongAt{i\cdot S}{\tau_1\to\tau_2}{M}}{\LongAt{\Lam{i\cdot(S[\Shift] \Concat 1)}}{\tau_1\to\tau_2}{M}}\\\\
-\infer{\LongAt{c\cdot S}{\SkBase}{c\cdot S'}}{\Skel{\Sigma(c)}{\tauskel} & \card{S} = n & \LongAt{S}{\tauskel}{S'}}\\\\
+\infer{\LongAt{i\cdot S}{\SkBase}{i\cdot S'}}{\LongAt{S}{\Gamma(i)}{S'}}\\\\
+\infer{\LongAt{i\cdot S}{\tau_1\to\tau_2}{M}}{\LongAt{\Lam{(i+1)\cdot(S[\Shift] \Concat 1)}}{\tau_1\to\tau_2}{M}}\\\\
+\infer{\LongAt{c\cdot S}{\SkBase}{c\cdot S'}}{\Skel{\Sigma(c)}{\tau} & \LongAt{S}{\tau}{S'}}\\\\
 \infer{\LongAt{c\cdot S}{\tau_1\to\tau_2}{M}}{\LongAt{\Lam{c\cdot(S[\Shift] \Concat 1)}}{\tau_1\to\tau_2}{M}}\\\\
 \infer{\LongAt{\Lam{M}}{\tau_1\to\tau_2}{\Lam{M'}}}{\LongAt[\Gamma,\tau_1]{M}{\tau_2}{M'}}
 \end{array} 
 $$
 
-The $\Concat$ operator simply appends a term to the end of a spine:
 
 \bigskip 
 \framebox{$S\Concat M$}
+\bigskip 
+
+The $\Concat$ operator simply appends a term to the end of a spine:
 
 \begin{align*} 
 \Nil\Concat M &= M;\Nil\\
 (M;S)\Concat M' &= M;(S\Concat M')
 \end{align*} 
 
+%-------------------------------------------------------------------------------
+% Non-checking                                                                  
+%-------------------------------------------------------------------------------
 
+We include judgments indicat
 
 
 %-------------------------------------------------------------------------------
