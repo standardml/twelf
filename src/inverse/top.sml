@@ -16,22 +16,26 @@ Twelf.make "../../../test/sml-sound/sources.cfg";
 Twelf.make "../../../test/princeton/sources.cfg";
 Twelf.make "../../../test/misc/sources.cfg";
 exception Success;
-(Translate.translate_signature();raise Success)
-  handle SpineLF.Fail_spine_exp x => x;
+(TranslateEE.translate_signature();raise Success)
+  handle TypecheckEE.Fail_spine_exp x => x;
 
 (* -------------------------------------------------------------------------- *)
 (*  Debug                                                                     *)
 (* -------------------------------------------------------------------------- *)
 
-exception Success;
 structure D = Debug;
 structure L = Lib;
-structure T = Translate;
-structure S = SpineLF;
+structure T = TranslateEE;
+structure S = TypecheckEE;
 structure Sgn = S.Sgn;
 structure I = IntSyn;
 structure D = Debug;
 structure C = Context;
+
+
+T.translate_signature
+ I.sgnLookup 9
+S.
 
 fun name n = (n,I.conDecName (I.sgnLookup n));
 fun get x (I.ConDec(x',_,_,_,_,_)) = x = x' | get _ _ = false;
@@ -44,6 +48,20 @@ val cds' = L.filter (fn (id,dec) => T.can_translate dec) (L.zip ns cds);
 val cds'' = map T.translate_condec cds';
 fun fold_fun (dec,sgn) = (D.print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");Sgn.insert sgn dec);
 val sgn = foldl fold_fun (Sgn.empty()) cds'';
+
+val t_val = I.sgnLookup 9
+val S.Decl s_val = Sgn.lookup sgn 9
+S.print_exp sgn (#exp s_val)
+
+- 
+PI (PI (PI tm. 
+	   tm). 
+       tm). 
+   PI (tm-eq ^ (1 ^ (LAM. f ^ 1)
+		1 ^ (LAM. f ^ 1))). 
+      type
+
+
 open S
 val f = Const 4
 val tm_eqi = Const 8

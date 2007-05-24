@@ -1,11 +1,11 @@
 
 
-structure Translate (* : TRANSLATE  *) =
+structure TranslateEE =
 struct 
 
   structure L = Lib
   structure I = IntSyn
-  structure S = SpineLF
+  structure S = TypecheckEE
   structure Sgn = S.Sgn
   structure C = ClausePrint
   structure D = Debug
@@ -19,7 +19,7 @@ struct
   exception Fail_exp of string * I.Exp
 
   (* -------------------------------------------------------------------------- *)
-  (*  Translation                                                               *)
+  (*  Basic Translation                                                         *)
   (* -------------------------------------------------------------------------- *)
 
   fun translate_uni I.Kind = S.Kind 
@@ -78,6 +78,8 @@ struct
     | can_translate (I.ConDef _) = true
     | can_translate (I.AbbrevDef _) = true
     | can_translate _ = false
+
+
 
   fun translate_signature() = 
       let

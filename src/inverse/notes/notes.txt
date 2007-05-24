@@ -2,10 +2,12 @@
 
 1) what to formalize in Twelf?
 2) do I need weak head normal form?
-
+3) What invariants to put in code?
 
 1) Comp as concrete or not
 2) lazy or eager normalization
+
+
 
 
 Rob Svn:

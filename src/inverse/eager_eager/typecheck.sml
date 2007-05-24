@@ -1,6 +1,7 @@
 
+(* eager composition of substitutions, and eager application. *)
 
-structure SpineLF (* : SPINE_LF *) =
+structure TypecheckEE =
 struct 
 
   structure L = Lib
@@ -221,18 +222,18 @@ struct
        check_exp sgn (C.push ctx (var,A1)) A2 uni)
     | check_exp _ _ _ _ = raise Check "check: bad case"
 
-(*   and focus sgn ctx Nil (ty as Uni Type) = ty *)
-(*     | focus sgn ctx Nil (hd as Root (Const _,_)) = hd *)
-(*     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) = *)
-(*       (check_exp sgn ctx M A1; *)
-(*        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2)) *)
-(*     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E) *)
-
-  and focus sgn ctx Nil E = E
+  and focus sgn ctx Nil (ty as Uni Type) = ty
+    | focus sgn ctx Nil (hd as Root (Const _,_)) = hd
     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) =
       (check_exp sgn ctx M A1;
        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2))
     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E)
+
+(*   and focus sgn ctx Nil E = E *)
+(*     | focus sgn ctx (App(M,S)) (Pi {arg=A1,body=A2,...}) = *)
+(*       (check_exp sgn ctx M A1; *)
+(*        focus sgn ctx S (apply_exp (Dot(M,id_sub)) A2)) *)
+(*     | focus _ _ S E = raise Fail_spine_exp("focus: bad case",S,E) *)
 
   and check sgn E1 E2 = check_exp sgn C.empty E1 E2
  
@@ -284,15 +285,15 @@ struct
   (*  Beta                                                                      *)
   (* -------------------------------------------------------------------------- *)
 
-(*   and reduce (exp as Root(_,_)) Nil = exp *)
-(*     | reduce (Lam {body=M,...}) (App(M',S)) = *)
-(*       reduce (apply_exp (Dot(M',id_sub)) M) S *)
-(*     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S) *)
-
-  and reduce exp Nil = exp
+  and reduce (exp as Root(_,_)) Nil = exp
     | reduce (Lam {body=M,...}) (App(M',S)) =
       reduce (apply_exp (Dot(M',id_sub)) M) S
     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S)
+
+(*   and reduce exp Nil = exp *)
+(*     | reduce (Lam {body=M,...}) (App(M',S)) = *)
+(*       reduce (apply_exp (Dot(M',id_sub)) M) S *)
+(*     | reduce E S = raise Fail_exp_spine ("reduce: bad case: head: ",E,S) *)
 
   (* -------------------------------------------------------------------------- *)
   (*  Equivalence wrt Definitions                                               *)

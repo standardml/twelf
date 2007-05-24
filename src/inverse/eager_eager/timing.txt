@@ -1,0 +1,74 @@
+
+================================================================================
+ TALT                                                                           
+================================================================================
+
+
+Twelf.Timers.reset()
+Twelf.make "/Users/seanmcl/save/projects/twelf/test/lf/sources-chk.cfg"
+Twelf.Timers.show()
+
+- Parsing       : Real =   0.946, Run =   0.423 (  0.397 usr,  0.034 gc)
+Reconstruction: Real =   1.310, Run =   0.744 (  0.709 usr,  0.078 gc)
+Abstraction   : Real =   2.834, Run =   1.259 (  1.119 usr,  0.447 gc)
+Checking      : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Modes         : Real =   0.306, Run =   0.082 (  0.070 usr,  0.000 gc)
+Subordination : Real =   0.686, Run =   0.292 (  0.270 usr,  0.037 gc)
+Termination   : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Printing      : Real =   2.361, Run =   1.408 (  1.300 usr,  0.344 gc)
+Compiling     : Real =   0.169, Run =   0.024 (  0.016 usr,  0.000 gc)
+Solving       : Real =   0.318, Run =   0.158 (  0.148 usr,  0.033 gc)
+Coverage      : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Worlds        : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+ProofRecon    : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling Tabled: Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Splitting     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Recursion     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Inference     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Delphin       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Total         : Real =   8.930, Run =   4.389 (  4.029 usr,  0.972 gc)
+Remember that the success continuation counts into Solving!
+val it = () : unit
+- 
+
+--------------------------------------------------------------------------------
+
+val center = Timing.newCenter "checker"
+Timing.time center Translate.translate_signature ()
+Timing.toString center
+
+- val it = "checker: Real =  13.711, Run =   1.032 (  0.938 usr,  0.159 gc)\n"
+  : string
+
+
+
+================================================================================
+ Type soundness of SML                                                          
+================================================================================
+
+[Closing file /Users/seanmcl/save/projects/twelf/test/sml-sound/preservation.elf]
+%% OK %%
+Timers.show
+Parsing       : Real =  16.391, Run =   2.933 (  2.731 usr,  0.252 gc)
+Reconstruction: Real =  55.361, Run =  10.430 (  9.727 usr,  1.842 gc)
+Abstraction   : Real =  16.844, Run =   3.144 (  2.985 usr,  0.405 gc)
+Checking      : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Modes         : Real =   6.850, Run =   1.013 (  0.931 usr,  0.149 gc)
+Subordination : Real =  53.669, Run =  11.138 ( 10.669 usr,  0.735 gc)
+Termination   : Real =   7.251, Run =   1.071 (  1.012 usr,  0.026 gc)
+Printing      : Real =   3.623, Run =   0.372 (  0.330 usr,  0.029 gc)
+Compiling     : Real =   1.327, Run =   0.074 (  0.050 usr,  0.033 gc)
+Solving       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Coverage      : Real = 113.150, Run =  23.676 ( 22.674 usr,  1.705 gc)
+Worlds        : Real =  28.408, Run =   5.458 (  5.241 usr,  0.236 gc)
+ProofRecon    : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Filling Tabled: Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Splitting     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Recursion     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Inference     : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Delphin       : Real =   0.000, Run =   0.000 (  0.000 usr,  0.000 gc)
+Total         : Real = 302.873, Run =  59.309 ( 56.349 usr,  5.411 gc)
+Remember that the success continuation counts into Solving!
+%% OK %%

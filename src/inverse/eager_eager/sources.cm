@@ -17,17 +17,23 @@ Library
 is
 
   (* Twelf *)
-  ../lambda/sources.cm
-  ../print/sources.cm
-  ../frontend/sources.cm
-  ../timing/sources.cm
+  ../../lambda/sources.cm
+  ../../print/sources.cm
+  ../../frontend/sources.cm
+  ../../timing/sources.cm
 
   (* My Lib *)
-  std-lib/sources.cm
+  ../std-lib/sources.cm
 
   (* Typechecking *)
-  shared/sources.cm
-  eager_eager/sources.cm
+  ../shared/sources.cm
 
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  (* Typechecking *)
+  typecheck.sml
+  translate.sml
+  
   $/basis.cm
   $/smlnj-lib.cm
