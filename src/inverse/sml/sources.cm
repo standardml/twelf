@@ -1,0 +1,93 @@
+
+Library
+  signature DEBUG
+  structure Debug
+
+  signature CONTEXT
+  structure Context
+
+  signature SIGNAT
+  structure Signat        
+
+is
+
+  debug.sml
+  context.sml
+  signat.sml
+
+  ../std-lib/sources.cm
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+Library
+  structure Lib
+  structure GrowArray
+
+  structure Layout
+  structure Twelf
+  structure IntSyn
+  structure ClausePrint
+  structure Timing
+
+  structure Debug
+  structure Context
+  structure Signat
+  structure TypecheckEE
+  structure TranslateEE
+is
+
+  (* Twelf *)
+  ../lambda/sources.cm
+  ../print/sources.cm
+  ../frontend/sources.cm
+  ../timing/sources.cm
+
+  (* My Lib *)
+  std-lib/sources.cm
+
+  (* Typechecking *)
+  shared/sources.cm
+  eager_eager/sources.cm
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+Library
+  structure Lib
+  structure GrowArray
+
+  structure Layout
+  structure Twelf
+  structure IntSyn
+  structure ClausePrint
+  structure Timing
+
+  structure Debug
+  structure Context
+  structure Signat
+  structure TypecheckEE
+  structure TranslateEE
+is
+
+  (* Twelf *)
+  ../../lambda/sources.cm
+  ../../print/sources.cm
+  ../../frontend/sources.cm
+  ../../timing/sources.cm
+
+  (* My Lib *)
+  ../std-lib/sources.cm
+
+  (* Typechecking *)
+  ../shared/sources.cm
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  (* Typechecking *)
+  typecheck.sml
+  translate.sml
+  
+  $/basis.cm
+  $/smlnj-lib.cm
