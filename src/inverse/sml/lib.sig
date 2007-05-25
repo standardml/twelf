@@ -147,7 +147,9 @@ sig
   (*  Lists                                                                 *)
   (* ---------------------------------------------------------------------- *)
 
+  (** Cons. *)
   val cons : 'a -> 'a list -> 'a list
+  (** Singleton list. *)
   val list : 'a -> 'a list
   val itlist : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
   val citlist : ('a * 'b -> 'b) -> 'a list -> 'b -> 'b

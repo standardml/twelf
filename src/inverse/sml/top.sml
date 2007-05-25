@@ -11,11 +11,13 @@ Control.Print.stringDepth := 1000;
 (* -------------------------------------------------------------------------- *)
 
 CM.make "sources.cm"; 
-Twelf.make "../../../test/talt/sources-chk.cfg";
-Twelf.make "../../../test/talt/sources.cfg";
-Twelf.make "../../../test/sml-sound/sources.cfg";
-Twelf.make "../../../test/princeton/sources.cfg";
-Twelf.make "../../../test/misc/sources.cfg";
+val test = "../../../../test/";
+Twelf.make (test ^ "talt/sources-chk.cfg");
+Twelf.make (test ^ "talt/sources.cfg")
+Twelf.make (test ^ "sml-sound/sources.cfg");
+Twelf.make (test ^ "princeton/sources.cfg");
+Twelf.make (test ^ "misc/sources.cfg");
+
 exception Success;
 (TranslateEE.translate_signature();raise Success)
   handle TypecheckEE.Fail_exp_skel x => x;
