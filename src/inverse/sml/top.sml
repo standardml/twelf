@@ -19,7 +19,10 @@ Twelf.make (test ^ "princeton/sources.cfg");
 Twelf.make (test ^ "misc/sources.cfg");
 
 exception Success;
-(TranslateEE.translate_signature();raise Success)
+(Translate.EE.translate_signature();raise Success)
+  handle TypecheckEE.Fail_exp_skel x => x;
+
+(Translate.EL.translate_signature();raise Success)
   handle TypecheckEE.Fail_exp_skel x => x;
 
 (* -------------------------------------------------------------------------- *)

@@ -1,11 +1,10 @@
 
-
-structure TranslateEE =
+structure Translate : TRANSLATE =
 struct 
 
   structure L = Lib
   structure I = IntSyn
-  structure S = TypecheckEE
+  structure S = Syntax
   structure Sgn = S.Sgn
   structure C = ClausePrint
   structure D = Debug

@@ -2,7 +2,7 @@
 Library
   (* Twelf stuff *)
   structure Twelf
-  structure IntSyn
+  structure IntSyn 
   structure ClausePrint
   structure Timing
 
@@ -21,8 +21,13 @@ Library
   signature SIGNAT
   structure Signat        
 
-  structure TypecheckEE
-  structure TranslateEE
+  signature SYNTAX
+  structure Syntax
+
+  signature TRANSLATE
+  structure Translate
+
+(*   structure Typecheck *)
 is
 
 
@@ -39,15 +44,31 @@ is
   layout.sml
   growarray.sig
   growarray.sml
+  table.sig
+  table.sml
 
   (* Shared *)
+  debug.sig
   debug.sml
+
+  context.sig
   context.sml
+
+  signat.sig
   signat.sml
 
-  (* Typechecking *)
-  typecheck.sml
+  syntax.sig
+  syntax.sml
+
+  translate.sig
   translate.sml
+
+  (* Typechecking *)
+(*   typecheck.sml *)
+(*   typecheckEE.sml *)
+(*   typecheckEL.sml *)
+
+(*   translateEE.sml *)
 
   (* Basis *)
   $/basis.cm

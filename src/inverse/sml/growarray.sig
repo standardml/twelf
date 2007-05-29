@@ -9,6 +9,7 @@ sig
   type 'a growarray
     
   val growarray : int -> 'a -> 'a growarray
+
   val empty : unit -> 'a growarray
 
   (** return actual length *)
@@ -22,6 +23,9 @@ sig
 
   (** stick an element at the end *)
   val append : 'a growarray -> 'a -> unit
+
+  (** true if a position has been set *)
+  val used : 'a growarray -> int -> bool
 
   (** 
      after calling this, don't use the growarray
