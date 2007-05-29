@@ -230,6 +230,7 @@ sig
   (*  Printing                                                                  *)
   (* -------------------------------------------------------------------------- *)
                                             
+  val printl : string -> unit
 (*   val bracket : string -> string *)
 (*   val separate : string -> string list -> string *)
 

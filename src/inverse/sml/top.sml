@@ -11,6 +11,11 @@ Control.Print.stringDepth := 1000;
 (* -------------------------------------------------------------------------- *)
 
 CM.make "sources.cm"; 
+
+Twelf.doubleCheck := true;
+Twelf.Print.depth := SOME 0
+Twelf.Print.length := SOME 0
+Twelf.Timers.reset()
 val test = "../../../../test/";
 Twelf.make (test ^ "talt/sources-chk.cfg");
 Twelf.make (test ^ "talt/sources.cfg")
@@ -18,7 +23,25 @@ Twelf.make (test ^ "sml-sound/sources.cfg");
 Twelf.make (test ^ "princeton/sources.cfg");
 Twelf.make (test ^ "misc/sources.cfg");
 
-exception Success;
+Twelf.Timers.check()
+Timers.reset()
+val signat = (Translate.translate_signat ())
+Timers.check()
+Typecheck.EE.check_signat signat
+Timers.reset()
+
+Syntax.Signat.reset()
+
+
+  handle Syntax.Fail_exp x => x;
+
+(Lib.printl "";Timers.check())
+
+Twelf.Timers.check()
+Timers.check()
+
+Twelf.Timers.reset()
+
 (Translate.EE.translate_signature();raise Success)
   handle TypecheckEE.Fail_exp_skel x => x;
 

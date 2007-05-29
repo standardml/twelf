@@ -1,5 +1,5 @@
 
-structure Lib : LIB =
+structure Lib :> LIB =
 struct
 
   nonfix upto mem ins union subset mod div
@@ -533,6 +533,8 @@ struct
   (* ------------------------------------------------------------------------- *)
   (*  IO                                                                       *)
   (* ------------------------------------------------------------------------- *)
+
+  fun printl s = print (s ^ "\n")
 
   fun read_file file = 
       let

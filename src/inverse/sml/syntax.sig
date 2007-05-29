@@ -2,10 +2,6 @@
 signature SYNTAX =
 sig
 
-  (* -------------------------------------------------------------------------- *)
-  (*  Types                                                                     *)
-  (* -------------------------------------------------------------------------- *)
-
   type const = int 
 
   datatype uni = Type 
@@ -68,25 +64,33 @@ sig
 
     type signat
 
+    (** Lookup. *)
     val lookup : const -> dec
+    (** Insert. *)
     val insert : const * dec -> unit
+    (** number of constants *)
     val size : unit -> int
+    (** iterate a function over the signat *)
     val app : (const * dec -> unit) -> unit
-(*     val foldr : ((const * dec) * 'a -> 'a) -> 'a -> 'a *)
-(*     val foldl : ((const * dec) * 'a -> 'a) -> 'a -> 'a *)
+    (** clear the signature*)
+    val reset : unit -> unit
+
   end
 
   (* -------------------------------------------------------------------------- *)
   (*  Exceptions                                                                *)
   (* -------------------------------------------------------------------------- *)
 
-  exception Check of string
   exception Fail_exp of string * exp
   exception Fail_exp2 of string * exp * exp
   exception Fail_exp_spine of string * exp * spine
   exception Fail_spine_exp of string * spine * exp
   exception Fail_hd_spine of string * head * spine
   exception Fail_sub_exp of string * sub * exp
+
+  (** Eta expand an expression against a type.  
+      Assumes the expressions are already beta-normal. *)
+  val eta_expand : (exp * exp) -> exp
 
   (* -------------------------------------------------------------------------- *)
   (*  Util                                                                      *)
@@ -103,5 +107,7 @@ sig
   val id : dec -> const
   val name : dec -> string
   val exp : dec -> exp
+  val is_def : const -> bool
+  val def : const -> exp
 
 end

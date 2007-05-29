@@ -5,7 +5,7 @@ structure Typecheck =
 struct 
 
   structure EE = TypecheckEE
-  structure EL = TypecheckEL
+(*   structure EL = TypecheckEL *)
 (*   structure LE = TypecheckLE *)
 (*   structure LL = TypecheckLL *)
 

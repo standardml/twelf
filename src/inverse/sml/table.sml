@@ -24,7 +24,7 @@
 
 (* end *)
 
-structure ArrayTable : TABLE where type key = int =
+structure ArrayTable :> TABLE where type key = int =
 struct
   
   structure L = Lib
@@ -34,8 +34,12 @@ struct
   type 'a table = {arr : 'a option array,
                    used : int ref}
 
-  fun empty n = {arr = A.array(n,NONE),
+  fun table n = {arr = A.array(n,NONE),
                  used = ref 0}
+
+  fun clear {arr,used} = 
+      (used := 0;
+       A.modify (fn _ => NONE) arr)
 
   fun insert (t as {arr,used}) (n,v) =
       if n < 0 orelse n > A.length arr then raise Subscript
@@ -62,6 +66,18 @@ struct
         fun f'(i,x) = if i >= used' then raise Done else
                       case x of 
                         SOME n => f n
+                      | NONE => ()
+      in
+        A.appi f' arr
+        handle Done => ()
+      end
+
+  fun appi f {arr,used} = 
+      let
+        val used' = !used 
+        fun f'(i,x) = if i >= used' then raise Done else
+                      case x of 
+                        SOME n => f(i,n)
                       | NONE => ()
       in
         A.appi f' arr

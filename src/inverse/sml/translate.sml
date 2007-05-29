@@ -1,11 +1,11 @@
 
-structure Translate : TRANSLATE =
+structure Translate :> TRANSLATE =
 struct 
 
   structure L = Lib
   structure I = IntSyn
   structure S = Syntax
-  structure Sgn = S.Sgn
+  structure Sig = S.Signat
   structure C = ClausePrint
   structure D = Debug
 
@@ -78,19 +78,17 @@ struct
     | can_translate (I.AbbrevDef _) = true
     | can_translate _ = false
 
-  fun translate_signature() = 
+  fun translate_signat'() = 
       let
         val n = L.fst (IntSyn.sgnSize()) 
         val ns = L.upto(0,n-1)
         val cds = map IntSyn.sgnLookup ns
         val cds' = L.filter (fn (id,dec) => can_translate dec) (L.zip ns cds)
-        val cds' = map translate_condec cds'
-        fun fold_fun (dec,sgn) = 
-            (D.print ("translating: " ^ I.conDecName (I.sgnLookup (S.id dec)) ^ "\n");
-             Sgn.insert sgn dec)
       in
-        foldl fold_fun (Sgn.empty()) cds'
+        map (fn (dec as (c,e)) => (c,translate_condec dec)) cds'
       end
+
+  fun translate_signat() = (Timers.time Timers.translation translate_signat') ()
 
 end
 

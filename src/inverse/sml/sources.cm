@@ -7,9 +7,20 @@ Library
   structure Timing
 
   (* My library *)
+  signature LIB
   structure Lib
+
+  signature GROWARRAY
   structure GrowArray
+
+  signature LAYOUT
   structure Layout
+
+  signature TABLE
+  structure Table
+
+  signature TIMERS
+  structure Timers
 
   (* Shared *)
   signature DEBUG
@@ -18,16 +29,15 @@ Library
   signature CONTEXT
   structure Context
 
-  signature SIGNAT
-  structure Signat        
-
   signature SYNTAX
   structure Syntax
-
+            
   signature TRANSLATE
   structure Translate
 
-(*   structure Typecheck *)
+  signature TYPECHECK          
+  structure Typecheck
+
 is
 
 
@@ -40,12 +50,18 @@ is
   (* My library *)
   lib.sig
   lib.sml
+
   layout.sig
   layout.sml
+
   growarray.sig
   growarray.sml
+
   table.sig
   table.sml
+
+  timers.sig
+  timers.sml 
 
   (* Shared *)
   debug.sig
@@ -54,9 +70,6 @@ is
   context.sig
   context.sml
 
-  signat.sig
-  signat.sml
-
   syntax.sig
   syntax.sml
 
@@ -64,11 +77,10 @@ is
   translate.sml
 
   (* Typechecking *)
-(*   typecheck.sml *)
-(*   typecheckEE.sml *)
+  typecheck.sig
+  typecheckEE.sml
 (*   typecheckEL.sml *)
-
-(*   translateEE.sml *)
+  typecheck.sml
 
   (* Basis *)
   $/basis.cm

@@ -1,5 +1,5 @@
 
-structure Debug : DEBUG = 
+structure Debug :> DEBUG = 
 struct 
 
   exception Assert of exn
@@ -16,7 +16,7 @@ struct
   fun enable_printing() = print' := true;
   fun disable_printing() = print' := false;
 
-  fun assert c exn =
+  fun assert (c,exn) =
       if !assert' then
         if c then () 
         else raise Assert exn

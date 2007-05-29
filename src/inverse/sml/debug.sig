@@ -11,7 +11,7 @@ sig
   (* assertions *) 
   val enable_assertions : unit -> unit
   val disable_assertions : unit -> unit
-  val assert : bool -> exn -> unit (* raises Assert *)
+  val assert : bool * exn -> unit (* raises Assert *)
 
   (* printing *) 
   val enable_printing : unit -> unit

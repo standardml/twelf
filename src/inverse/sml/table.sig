@@ -12,7 +12,7 @@ sig
       Some implementations may grow outside that initial
       bound if necessary.  Others may raise an exception.
    *)
-  val empty : int -> 'a table
+  val table : int -> 'a table
 
   (** Insert a key/value pair into the table.  
       Raise Fail if key is already present. *)
@@ -24,8 +24,13 @@ sig
   (** number of key/value pairs *)
   val size : 'a table -> int
 
+  (** Iterate a procedure over the table. *)
   val app : ('a -> unit) -> 'a table -> unit
-(*   val foldl : ('a * 'b -> 'b) -> 'b -> 'a table -> 'b *)
-(*   val foldr : ('a * 'b -> 'b) -> 'b -> 'a table -> 'b *)
+
+  (** Iterate a procedure over the table. *)
+  val appi : (int * 'a -> unit) -> 'a table -> unit
+
+  (** Clear the table. *)
+  val clear : 'a table -> unit
 
 end
