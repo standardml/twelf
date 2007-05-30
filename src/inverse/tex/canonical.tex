@@ -4,14 +4,17 @@
 %-------------------------------------------------------------------------------
 
 \section{Canonical LF}
-We begin by describing Canonical LF, the language at the
-heart of our work.  While the various representations will
-differ rather wildly from that presented here, this language
-should always be kept in mind.
+We begin by describing Canonical LF, the language at the heart of our
+work.  While the various representations will differ from the one presented here, 
+(e.g., for efficiency) this language should always be kept in mind.
 
-\subsection{Terms}\label{CLF:types}  
-  We follow Harper and Licata \cite{HarperLicataCLF} for the
-abstract syntax of Canonical LF. 
+The main difference between Canonical LF and earlier versions
+is the lack of a type annotation on $\lambda$-expressions.
+See Harper and Licata\cite{HarperLicataCLF} for an extended
+exposition.
+
+\renewcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
+\renewcommand{\Lam}[2]{\lambda #1.\ #2}
 
 $$
 \begin{array}{llll}
@@ -33,12 +36,20 @@ $$
 
 \subsection{Spine-Form Canonical LF}
 
-There are a number of difficulties with the naive name-carrying
-implementation of Canonical LF.  The first is that we must
-implement capture-avoiding substitution and $\alpha$-conversion.
-This is a pain, and error-prone.  We can circumvent this difficulty
-by using DeBruijn indices\cite{DeBruijn80}.  A more significant 
-difficulty lies in the implementation of hereditary substitution. \incomplete{citation needed}
+\renewcommand{\PiTyp}[2]{\Pi #1.#2}
+\renewcommand{\Lam}[1]{\lambda #1}
+
+There are a number of difficulties with the name-carrying 
+representation\footnote{i.e., variable names associated with binders}
+of Canonical LF.  The first is that we must
+implement capture-avoiding substitution and $\alpha$-conversion,
+a notoriously delicate and error-prone process.
+We can circumvent this difficulty
+by using DeBruijn indices\cite{DeBruijn80}. 
+
+ A more significant 
+difficulty lies in the implementation of hereditary substitution. 
+\incomplete{citation needed}
 When applying a substitution, we often need to determine whether
 the head of an expression is a constant or a variable in order
 to know which rule to apply.  Thus, for a term of the form
@@ -48,20 +59,49 @@ a substitution should be applied.  Later, when we implement
 unification, that algorithm will need to compare the heads
 of such terms for equality.  Thus, quick access to the head
 of such a term is essential for a reasonably efficient implementation.
-This is the motivation for the following definition of 
-\emph{Spine-Form LF}.
-
-\subsection{Name-carrying representation}
-
-The name-carrying language of Spine-Form LF is given by the following
-grammar.
+We thus define \emph{Spine-Form Canonical LF}.
 
 $$
 \begin{array}{llll}
-\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
-\mathbf{Types} & A & ::= & a\cdot S \Spb \PiTyp{x}{A_1}{A_2} \\
-\mathbf{Terms} & M & ::= & H\cdot S \Spb \Lam{x}{M} \\
-\mathbf{Heads} & H & ::= & c \Spb x\\
+\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{A}{K} \\
+\mathbf{Canonical\ Type\ Families} & A & ::= & P \Spb \PiTyp{A_1}{A_2} \\
+\mathbf{Atomic\ Type\ Families} & P & ::= & a\cdot S \\
+\mathbf{Canonical\ Terms} & M & ::= & R \Spb \Lam{M} \\
+\mathbf{Atomic\ Terms} & R & ::= & H\cdot S \\
+\mathbf{Heads} & H & ::= & c \Spb i\\
 \mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
 \end{array} 
 $$
+
+In the following judgments will have the same
+form for different classes.  For instance,
+the rules for $\Pi$-types and $\Pi$-kinds will
+oftentimes be identical in structure.  To avoid the
+repetition of rules, we introduce a convenient 
+syntax.
+
+$$
+\begin{array}{llll}
+\mathbf{Levels} & L & ::= & \Type \Spb \Kind \\
+\mathbf{Expressions} & U & ::= & L \Spb \Pi(U_1,U_2) \Spb \lambda U \Spb H\cdot S \\
+\mathbf{Heads} & H & ::= & c \Spb i\\
+\mathbf{Spines} & S & ::= & \Nil \Spb U;S\\
+\end{array} 
+$$
+
+Constants $c$ are either type ($a$) or term ($c$) constants.
+The rules that follow will refer to this basic syntax.  While this
+is somewhat less precise than the more explicit separation of 
+levels in the syntax above (indeed, we can easily write gramatically
+correct nonsense in this language, such as $\Lam{(\PiTyp{U1}{U2})}$)
+we are willing to allow such terms to lessen the number of rules.
+Terms that are not even gramatically correct (much less type-correct) 
+in the original language, will be excluded by type-checking (rather than expression 
+formation, as in the previous version).
+
+We will freely mix the more concrete classes such as $K,A$ and $P$
+above when the rules restrict the expressions to such cases.
+We see no potential for confusion however, and again notational
+convenience is our guide.  
+
+

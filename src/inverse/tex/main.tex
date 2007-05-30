@@ -24,10 +24,20 @@ various representations to find a good trade-off between efficiency
 and elegance.
 \end{abstract} 
 
+\input{canonical.tex}
+
 \section{Typechecking}
 
+While we have just described Canonical LF, a language where all
+expressions are canonical, it is sometimes useful to relax the canonicity
+restriction to take advantage of various implementation 
+techniques.  To get a better idea of the efficiency of various
+implementations, we present here two different methods of
+typechecking, called \emph{eager} and \emph{lazy}, with
+two minor variants of each method.
+
 \input{eagercheck.tex}
-\input{lazycheck.tex}
+%% \input{lazycheck.tex}
 
 
 %% \input{twelf_grammar.tex}
