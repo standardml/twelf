@@ -5,7 +5,7 @@
 \newcommand{\Equiv}[2]{#1\equiv #2}
 
 
-\subsection{Eager Typechecking}
+\section{Eager Typechecking}
 
 There are two variations on eager typechecking. 
 They both implement pure Canonical LF, in the sense that
@@ -29,10 +29,11 @@ extra case of a substitution, they will be labelled as such.
 $$
 \begin{array}{llll}
 \mathbf{Levels} & L & ::= & \Type \Spb \Kind \\
-\mathbf{Expressions} & U,V & ::= & L \Spb \Pi(U_1,U_2) \Spb \lambda U \Spb H\cdot S \\
+\mathbf{Expressions} & U,V & ::= & L \Spb \PiTyp{U_1}{U_2} \Spb \lambda U \Spb H\cdot S \\
 \mathbf{Heads} & H & ::= & c \Spb i\\
 \mathbf{Spines} & S & ::= & \Nil \Spb U;S\\
-\mathbf{Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n [\Spb \sigma_1 \Comp \sigma_2]\\
+\mathbf{Eager\ Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \\
+\mathbf{Lazy\ Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \Spb \sigma_1 \Comp \sigma_2\\
 \end{array} 
 $$
 
@@ -53,15 +54,19 @@ $$
 \infer{\CheckTy{\PiTyp{A}{U}}{V}}{\CheckTy{A}{\Type} & \CheckTy[\Gamma,A]{U}{V}}\\\\
 \infer{\CheckTy{c\cdot S}{V}}{\Sigma(c) = U & \Focus{S}{U}{V'} & \Equiv{V'}{V}} &
 \infer{\CheckTy{\Lam{M}}{\PiTyp{A_1}{A_2}}}{\CheckTy[\Gamma,A_1]{M}{A_2}} \\\\
-\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1[\Shift^i]}{A_2'} & \Equiv{A_2'}{A_2}}
+\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1}{A_2'} & \Equiv{A_2'}{A_2}}
 \end{array} 
 $$
 
 \bigskip 
 
+\begin{Note}\label{context:shift} 
 Note that you must shift the type you extract from $\Gamma$, as the
 free variables (indices) should point to the slots before $i$.  Moving
 the type $A$ from the context to the consequent must adjust the pointers.
+We thus define $\Gamma(i) = A$ as the $i$th element of $\Gamma$
+under $\Shift^i$.
+\end{Note} 
 
 \bigskip 
 \framebox{$\Focus{S}{U}{V}$}
@@ -70,7 +75,7 @@ the type $A$ from the context to the consequent must adjust the pointers.
 $$
 \begin{array}{lr}
 \infer{\Focus{\Nil}{\Type}{\Type}}{} & 
-\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{} \\\\
+\infer{\Focus{\Nil}{P}{P}}{} \\\\
 \infer{\Focus{(M;S)}{\PiTyp{A}{U}}{V}}{\CheckTy{M}{A} & \Focus{S}{U[M\cdot\IdSub]}{V}}
 \end{array} 
 $$
@@ -112,12 +117,17 @@ We \emph{apply} subsitutions to terms.
 \end{align*} 
 
 \framebox{$i\Msub = M$}
+\bigskip 
+
+This judgment is the first place we distinguish between 
+the different notions of substitution.  The rule (*)
+holds only for the second variant.
 
 \begin{align*} 
 1[M\cdot\sigma] &= M\\
 n+1[M\cdot\sigma] &= n[\sigma]\\
 i[\Shift^n] &= i+n\\
-% i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]
+i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]\tag{*}
 \end{align*} 
 
 We still need the notion of beta reduction when a 
@@ -132,7 +142,9 @@ only the possible cases.
 \Lam{M}\App(M';S) &= M[M'\cdot\IdSub]\App S
 \end{align*} 
 
-The rules for composing substitutions are:
+In the first case of eager typechecking, composition doesn't
+have a syntactic existence.  Thus we need to carry out all 
+compositions eagerly.  The rules for composing substitutions are:
 
 \bigskip 
 \framebox{$\sigma\Comp\sigma' = \sigma''$}
@@ -167,6 +179,7 @@ type level definitions, we do not need to check for equivalent kinds.)
 
 We use the judgment $c\StepsTo M$  to mean
 that the constant $c$ has definition $M$. 
+
 \bigskip 
 \framebox{$\Equiv{U}{U'}$}
 \bigskip 
@@ -193,7 +206,7 @@ $$
 \end{array} 
 $$
 
-\subsubsection{A Note on Implementing Equivalence Checking}
+\subsection{A Note on Implementing Equivalence Checking}
 
   For various reasons, we need equivalence checking to
 be as fast as possible.  Equivalence checking is complicated
@@ -239,5 +252,4 @@ $$
 $$
 
 where $\card{c}$ is the height of $c$, and $\Root(c)$ is the root.
-
 This holds in both the eager and lazy cases.

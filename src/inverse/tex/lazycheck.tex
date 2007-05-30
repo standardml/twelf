@@ -1,76 +1,175 @@
 
-\subsection{Lazy Typechecking}
+\section{Lazy Typechecking}
 
+There are two variations on lazy typechecking, with the
+same distinction as the eager case, viz. the existence
+of a syntactic composition of substitutions.
 
+In the lazy case we relax the canonicity requirements and 
+admit terms into the language with explicit $\beta$-redexes
+and explicit substitutions.
 
-\newcommand{\CheckTy}[5][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5}
-\newcommand{\CheckTm}[6][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5 \times #6}
-\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
-\newcommand{\Equiv}[2]{#1\equiv #2}
+%-------------------------------------------------------------------------------
+% Terms                                                                         
+%-------------------------------------------------------------------------------
+
+\subsection{Terms}
+
+$$
+\begin{array}{llll}
+\mathbf{Levels} & L & ::= & \Type \Spb \Kind \\
+\mathbf{Expressions} & U,V & ::= & L \Spb \PiTyp{U_1}{U_2} \Spb \lambda U \Spb H\cdot S \Spb U[\sigma] \Spb M @ S\\
+\mathbf{Heads} & H & ::= & c \Spb i\\
+\mathbf{Spines} & S & ::= & \Nil \Spb U;S \Spb S[\sigma]\\
+\mathbf{Eager\ Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \\
+\mathbf{Lazy\ Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \Spb \sigma_1 \Comp \sigma_2\\
+\end{array} 
+$$
+
+%-------------------------------------------------------------------------------
+% Weak Head Normal Form                                                         
+%-------------------------------------------------------------------------------
+
+\subsection{Weak Head Normalization}
+
+\newcommand{\Weak}{\hookrightarrow}
+
+For terms With explicit substitutions $U[\sigma]$ and redexes $M @ S$,
+we can usually not decide which rule to apply during typechecking.
+We need to discover the top level structure of the term.  
+The least work we need to do to discover this form is called 
+\emph{weak head normalization}.  
+
 
 \bigskip 
-\framebox{$\CheckTy{K}{\Kind}{\Gamma}{K'}$}
+\framebox{$U\Weak U'$}
 \bigskip 
 
 $$
 \begin{array}{cc}
-\infer{\CheckTy{\Type}{\Kind}{\Gamma}{\Type}}{} &
-\infer{\CheckTy{\PiTyp{A}{K}}{\Kind}}{\CheckTy{A}{\Type} & \CheckTy[\Gamma,A]{K}{\Kind}}
+\infer{L \Weak L}{} &
+\infer{\PiTyp{U_1}{U_2} \Weak \PiTyp{U_1}{U_2}}{} \\\\
+\infer{\Lam{U} \Weak \Lam{U}}{} &
+\infer{H\cdot S \Weak H\cdot S}{} \\\\
+\infer{L[\sigma] \Weak L}{}&
+\infer{(\PiTyp{U_1}{U_2})[\sigma] \Weak \PiTyp{(U_1[\sigma])}{(U_2\Ssub)}}{} \\\\
+\infer{(\Lam{U})[\sigma] \Weak \Lam{(U\Ssub)}}{} &
+\infer{(c\cdot S)[\sigma] \Weak c\cdot (S[\sigma])}{} \\\\
+\infer{(U[\sigma])[\sigma'] \Weak U'}{U[\sigma\Comp\sigma']\Weak U'} \\\\
+\infer{M @ S \Weak H\cdot S}{M\Weak H\cdot S & S \Weak \Nil} &
+\infer{M @ S \Weak M_3}{M\Weak \Lam{M_1} & S \Weak M_2;S' & M_1[M_2\cdot\IdSub] @ S'\Weak M_3} \\\\
+\infer{(i\cdot S)[\sigma]\Weak j\cdot (S[\sigma])}{i[\sigma] \Weak j} &
+\infer{(i\cdot S)[\sigma]\Weak M'}{i[\sigma] \Weak M & M@(S[\sigma])\Weak M'} \\\\
 \end{array} 
 $$
 
 \bigskip 
-\framebox{$\CheckTy{A}{\Type}$}
+\framebox{$S\Weak S'$}
 \bigskip 
 
 $$
 \begin{array}{cc}
-\infer{\CheckTy{\PiTyp{A_1}{A_2}}{\Type}}{\CheckTy{A_1}{\Type} & \CheckTy[\Gamma,A_1]{A_2}{\Type}} &
-\infer{\CheckTy{a\cdot S}{\Type}}{\Sigma(a) = K & \Focus{S}{K}{\Type}}
+\infer{\Nil \Weak \Nil}{} &
+\infer{M;S \Weak M;S}{} \\\\
+\infer{\Nil[\sigma] \Weak \Nil}{} &
+\infer{(M;S)[\sigma] \Weak M[\sigma];S[\sigma]}{} 
 \end{array} 
 $$
 
 \bigskip 
-\framebox{$\CheckTy{M}{A}$}
+\framebox{$i[\sigma] \Weak M$}
 \bigskip 
-
-We assume that if $\CheckTy{M}{A}$ then $\CheckTy{A}{\Type}$.
 
 $$
 \begin{array}{cc}
-\infer{\CheckTy{\Lam{M}}{\PiTyp{A_1}{A_2}}}{\CheckTy[\Gamma,A_1]{M}{A_2}} &
-\infer{\CheckTy{c\cdot S}{A_2}}{\Sigma(c)=A_1 & \Focus{S}{A_1}{A_2'} & \Equiv{A_2'}{A_2}} \\\\
-\multicolumn{2}{c}{\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1[\Shift^i]}{A_2'} & \Equiv{A_2'}{A_2}}}
+\infer{i[\Shift^n] \Weak i + n}{} &
+\infer{1[M;S] \Weak M'}{M\Weak M'} \\\\
+\infer{(n+1)[M\cdot \sigma] \Weak M'}{n[\sigma]\Weak M'} &
+\infer[\mbox{\textbf{lazy}}]{i[\sigma_1\Comp\sigma_2] \Weak M'}{i[\sigma_1] \Weak M & M[\sigma_2]\Weak M'} 
+\end{array} 
+$$
+
+%-------------------------------------------------------------------------------
+% Typecheck                                                                     
+%-------------------------------------------------------------------------------
+
+\subsection{Typechecking}
+
+Typechecking is slightly more complicated in the lazy case, as
+we need to return any terms that have been partially evaluated
+by the typechecking process.
+
+\renewcommand{\CheckTy}[6][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5 \times #6}
+\renewcommand{\Focus}[6][\Gamma]{#1\vdash #2 : #3 > #4 \times #5 \times #6}
+\renewcommand{\Equiv}[4]{#1\equiv #2 > #3 \times #4}
+
+\bigskip 
+\framebox{$\CheckTy{U}{V}{\Gamma'}{U'}{V'}$}
+\bigskip 
+
+$$
+\begin{array}{c}
+\infer{\CheckTy{U}{V}{\Gamma'}{U''}{V''}}{U\Weak U' & V\Weak V' & \CheckTy{U'}{V'}{\Gamma'}{U''}{V''}}\\\\
+\infer{\CheckTy{\Type}{\Kind}{\Gamma}{\Type}{\Kind}}{} \\\\
+\infer{\CheckTy{\PiTyp{A}{U}}{L}{\Gamma''}{\PiTyp{A''}{U'}}{L}}{\CheckTy{A}{\Type}{\Gamma'}{A'}{\Type} & \CheckTy[\Gamma',A']{U}{L}{\Gamma'',A''}{U'}{L}} \\\\
+\infer{\CheckTy{U[\sigma]}{V}{\Gamma'}{U''}{V'}}{U[\sigma]\Weak U' & \CheckTy{U'}{V}{\Gamma'}{U''}{V'}} \\\\
+\infer{\CheckTy{M @ S}{A}{\Gamma'}{M''}{A'}}{M@S\Weak M' & \CheckTy{M'}{A}{\Gamma'}{M''}{A'}} \\\\
+\infer{\CheckTy{\Lam{M}}{A}{\Gamma'}{\Lam{M'}}{\PiTyp{A_1'}{A_2'}}}{A\Weak \PiTyp{A_1}{A_2} & \CheckTy[\Gamma,A_1]{M}{A_2}{\Gamma',A_1'}{M'}{A_2'}} \\\\
+\infer{\CheckTy{c\cdot S}{V_1}{\Gamma'}{c\cdot S'}{V_1'}}{\Sigma(c) = V_2 & \Focus{S}{V_2}{\Gamma'}{S'}{V_2} & \Equiv{V_2}{V_1}{V_2}{V_1'}} \\\\
+\infer{\CheckTy{i\cdot S}{A_1}{\Gamma'}{i\cdot S'}{A_1'}}{\Gamma(i) = A_2 & \Focus{S}{A_2}{\Gamma'}{S'}{A_2} & \Equiv{A_2}{A_1}{A_2}{A_1'}} \\\\
+\end{array} 
+$$
+
+Note that in the rule for $c\cdot S$, $\Sigma$ contains only canonical terms,
+thus the weak head normalization does not affect it.
+Also recall note \ref{context:shift}.
+
+\bigskip 
+\framebox{$\Focus{S}{U}{\Gamma'}{S'}{U'}$}
+\bigskip 
+
+$$
+\begin{array}{c}
+\infer{\Focus{U}{V}{\Gamma'}{U''}{V''}}{U\Weak U' & V\Weak V' & \Focus{U'}{V'}{\Gamma'}{U''}{V''}}\\\\
+\infer{\Focus{\Nil}{\Type}{\Gamma}{\Nil}{\Type}}{} \\\\
+\infer{\Focus{P}{L}{\Gamma}{P}{L}}{} \\\\
+\infer{\Focus{M;S}{\PiTyp{A}{V}}{\Gamma''}{M';S'}{\PiTyp{A'}{V'}}}{\CheckTy{M}{A}{\Gamma'}{M'}{A'} & \Focus[\Gamma']{S}{V[M'\cdot\IdSub]}{\Gamma''}{S'}{V'}} \\\\
+\end{array} 
+$$
+
+
+%-------------------------------------------------------------------------------
+% Equivalence                                                                   
+%-------------------------------------------------------------------------------
+
+\subsection{Equivalence} 
+
+\bigskip 
+\framebox{$\Equiv{U_1}{U_2}{U_1'}{U_2'}$}
+\bigskip 
+
+$$
+\begin{array}{c}
+\infer{\Equiv{U_1}{U_2}{U_1''}{U_2''}}{U_1\Weak U_1' & U_2\Weak U_2' & \Equiv{U_1'}{U_2'}{U_1''}{U_2''}}\\\\
+\infer{\Equiv{U_1}{U_2}{U_1'}{U_2'}}{\Equiv{U_2}{U_1}{U_2'}{U_1'}} \\\\
+\infer{\Equiv{\PiTyp{U_1}{U_2}}{\PiTyp{U_3}{U_4}}{\PiTyp{U_1'}{U_2'}}{\PiTyp{U_3'}{U_4'}}}{\Equiv{U_1}{U_3}{U_1'}{U_3'} & \Equiv{U_2}{U_4}{U_2'}{U_4'}} \\\\
+\infer{\Equiv{c\cdot S_1}{c\cdot S_2}{c\cdot S_1'}{c\cdot S_2'}}{\Equiv{S_1}{S_2}{S_1'}{S_2'}} \\\\
+\infer{\Equiv{i\cdot S_1}{i\cdot S_2}{i\cdot S_1'}{i\cdot S_2'}}{\Equiv{S_1}{S_2}{S_1'}{S_2'}} \\\\
+\infer{\Equiv{\Lam{M_1}}{\Lam{M_2}}{\Lam{M_1'}}{\Lam{M_2'}}}{\Equiv{M_1}{M_2}{M_1'}{M_2'}} \\\\
+\infer{\Equiv{U_1[\sigma_1]}{U_2[\sigma_2]}{U_1'[\sigma_1']}{U_2'[\sigma_2']}}{\Equiv{U_1}{U_2}{U_1'}{U_2'} & \Equiv{\sigma_1}{\sigma_2}{\sigma_1'}{\sigma_2'}} \\\\
+\infer{\Equiv{c\cdot S}{M}{M''}{M'}}{c\StepsTo M' & \Equiv{M'@S}{M}{M''}{M'}} 
 \end{array} 
 $$
 
 \bigskip 
-
-Note that you must shift the type you extract from $\Gamma$, as the
-free variables (indices) should point to the slots before $i$.  Moving
-the type $A$ from the context to the consequent must adjust the pointers.
-
-\bigskip 
-\framebox{$\Focus{S}{K}{\Type}$}
+\framebox{$\Equiv{S_1}{S_2}{S_1'}{S_2'}$}
 \bigskip 
 
 $$
-\begin{array}{lr}
-\infer{\Focus{\Nil}{\Type}{\Type}}{} & 
-\infer{\Focus{(M;S)}{\PiTyp{A}{K}}{\Type}}{\CheckTy{M}{A} & \Focus{S}{K[M\cdot\IdSub]}{\Type}}
+\begin{array}{c}
+\infer{\Equiv{S_1}{S_2}{S_1''}{S_2''}}{S_1\Weak S_1' & S_2\Weak S_2' & \Equiv{S_1'}{S_2'}{S_1''}{S_2''}}\\\\
+\infer{\Equiv{\Nil}{\Nil}{\Nil}{\Nil}}{}\\\\
+\infer{\Equiv{M_1;S_1}{M_2;S_2}{M_1';S_1'}{M_2';S_2'}}{\Equiv{M_1}{M_2}{M_1'}{M_2'} & \Equiv{S_1}{S_2}{S_1'}{S_2'}} \\\\
+\infer{\Equiv{S_1[\sigma_1]}{S_2[\sigma_2]}{S_1'[\sigma_1']}{S_2'[\sigma_2']}}{\Equiv{S_1}{S_2}{S_1'}{S_2'} & \Equiv{\sigma_1}{\sigma_2}{\sigma_1'}{\sigma_2'}} \\\\
 \end{array} 
 $$
-
-\bigskip 
-\framebox{$\Focus{S}{A_1}{A_2}$}
-\bigskip 
-
-Again, we assume that if $\Focus{S}{A_1}{A_2}$ that $\CheckTy{A_1}{\Type}$.
-
-$$
-\begin{array}{lr}
-\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{} & 
-\infer{\Focus{(M;S)}{\PiTyp{A_1}{A_2}}{A_3}}{\CheckTy{M}{A_1} & \Focus{S}{A_2[M\cdot\IdSub]}{A_3}}
-\end{array} 
-$$
-
