@@ -1,0 +1,138 @@
+
+%-------------------------------------------------------------------------------
+% Sequent Calculus                                                              
+%-------------------------------------------------------------------------------
+
+
+\section{Sequent Calculus}
+
+We now attempt to describe proof search for LF.
+Given a type $A$, we seek to determine whether $A$ 
+is inhabited. The backbone of our method will be sequent calculi.
+
+\renewcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
+\renewcommand{\Lam}[2]{\lambda #1.\ #2}
+
+
+\subsection{Backward sequent calculus}
+For our sequent calculi, we distinguish between $\Pi$ types
+that refer to their argument.  We write types 
+$\PiTyp{x}{A}{B}$ where $x$ is not free in $B$ as
+$A \LFArr B$.  The sequents have two regions in the antecedent:
+
+\newcommand{\Sequent}[4][]{#2\ ;\ #3 \SeqArr_{#1} #4}
+
+$$
+\begin{array}{llll}
+\mathbf{Sequents} & S & ::= & \Sequent[\Sigma]{\Delta}{\Gamma}{A} \\
+\end{array} 
+$$
+
+\noindent 
+where $\Sigma$ refers to the signature (and is usually omitted),
+$\Gamma$ is a context, and $\Delta$ is a list of parameters.   
+This stratification is the basis of the operational semantics
+of Twelf, and is described in \incomplete{Where is this described?}
+A sequent $\Sequent{\Delta}{\Gamma}{A}$
+can be interpreted as ``from parameters $\Delta$ and hypotheses 
+and derivations $\Gamma$ we can show $A$''.  
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\Delta}{\Gamma,A}{A}}{} \\\\
+\infer[\LFArr_R]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                {\Sequent{\Delta}{\Gamma,A}{B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma,A\LFArr B}{C}}
+                {\Sequent{\Delta}{\Gamma,A\LFArr B}{A} & 
+                 \Sequent{\Delta}{\Gamma,A\LFArr B,B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B}}{C}}
+             {\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B},\HSub{M}{x}{A}{B}}{C} & 
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{Proof terms for backward sequent calculus}
+
+  We can attach proof terms in the following manner, giving
+witnesses of inhabitation.
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\Delta}{\Gamma,x:A}{x:A}}{} \\\\
+\infer[\LFArr_R]{\Sequent{\Delta}{\Gamma}{\Lam{x}{M} : A\LFArr B}}
+                {\Sequent{\Delta}{\Gamma,x:A}{M:B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma,x:A\LFArr B}{\HSub{x\ M}{y}{B}{C}}}
+                {\Sequent{\Delta}{\Gamma,x:A\LFArr B}{M:A} & 
+                 \Sequent{\Delta}{\Gamma,x:A\LFArr B,y:B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{M}:\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{M:B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,y : \PiTyp{x}{A}{B}}{[y\ M/z] C}}
+             {\Sequent{\Delta}{\Gamma,y : \PiTyp{x}{A}{B},z : \HSub{M}{x}{A}{B}}{C} &
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{Forward sequent calculus}
+
+The backward rules defined above lead to a backward style search
+of the space of proof terms.  
+ In some cases, it is preferable to
+search forward from the program, rather than backwards from the
+goal. 
+
+\renewcommand{\Sequent}[4][]{#2\ ;\ #3 \longrightarrow_{#1} #4}
+
+$$
+\begin{array}{llll}
+\mathbf{Sequents} & S & ::= & \Sequent[\Sigma]{\Delta}{\Gamma}{A} \\
+\end{array} 
+$$
+
+ This is formalized in the following sequent, which in contrast
+to the backward case, is read as ``from parameters $\Delta$,
+using \emph{all} the hypotheses in $\Gamma$ we can show $A$''.
+We correspondingly read the rules from top to bottom, rather
+than from bottom to top.
+
+$$
+\begin{array}{c}
+\infer[init]{\Sequent{\cdot}{A}{A}}{} \\\\
+\infer[\LFArr_{R1}]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                  {\Sequent{\Delta}{\Gamma,A}{B}} \\\\
+\infer[\LFArr_{R2}]{\Sequent{\Delta}{\Gamma}{A\LFArr B}}
+                  {\Sequent{\Delta}{\Gamma}{B}} \\\\
+\infer[\LFArr_L]{\Sequent{\Delta}{\Gamma_1\cup\Gamma_2,A\LFArr B}{C}}
+                {\Sequent{\Delta}{\Gamma_1}{A} & 
+                 \Sequent{\Delta}{\Gamma_2,B}{C}}\\\\
+\infer[\Pi_R]{\Sequent{\Delta}{\Gamma}{\PiTyp{x}{A}{B}}}
+             {\Sequent{\Delta,x:A}{\Gamma}{B}} \\\\
+\infer[\Pi_L]{\Sequent{\Delta}{\Gamma,\PiTyp{x}{A}{B}}{C}}
+             {\Sequent{\Delta}{\Gamma,\HSub{M}{x}{A}{B}}{C} & 
+              \Gamma \vdash M : A}
+\end{array} 
+$$
+
+\subsection{ProoF Terms for Forward Sequent Calculus}
+
+Proof terms in the forward direction are complicated by the
+$\LFArr_L$ rule, where the hypotheses are split and joined.
+We can handle this in one of two ways: either we can
+track which hypotheses are used where and create proof terms
+at each step, or we can maintain some kind of minimal information
+that allows us to construct a backward-style/natural deduction
+proof term when search is complete.  We have yet to experiment
+with these options, and thus leave this section incomplete.
+
+\subsection{The Subformula Property}
+
+LF has a straightforward subformula property:
+
+$$
+\begin{array}{llll}
+\mathbf{Positive} & E^+ & ::= & P^+ \Spb A_1^- \LFArr A_2^+ \Spb \PiTyp{x}{A^-}{B^+}\\
+\mathbf{Negative} & E^+ & ::= & P^- \Spb A_1^+ \LFArr A_2^- \Spb \PiTyp{x}{A^+}{B^-}\\
+\end{array} 
+$$
+

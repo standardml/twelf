@@ -1,0 +1,19 @@
+%-------------------------------------------------------------------------------
+% Contexts                                                                      
+%-------------------------------------------------------------------------------
+
+\subsection{Contexts}
+
+Contexts map (DeBruijn) variables to types.  
+
+\newcommand{\Ctx}{\ \mathtt{ctx}}
+\bigskip 
+\framebox{$\Gamma\Ctx$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\cdot\Ctx}{} &
+\infer{\Gamma,A\Ctx}{\Gamma\Ctx & \CheckTy[\cdot]{A}{\Type}}
+\end{array} 
+$$

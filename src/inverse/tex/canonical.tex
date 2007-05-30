@@ -1,0 +1,67 @@
+
+%-------------------------------------------------------------------------------
+% Canonical LF                                                                  
+%-------------------------------------------------------------------------------
+
+\section{Canonical LF}
+We begin by describing Canonical LF, the language at the
+heart of our work.  While the various representations will
+differ rather wildly from that presented here, this language
+should always be kept in mind.
+
+\subsection{Terms}\label{CLF:types}  
+  We follow Harper and Licata \cite{HarperLicataCLF} for the
+abstract syntax of Canonical LF. 
+
+$$
+\begin{array}{llll}
+\textbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
+\textbf{Canonical Type Families} & A & ::= & P \Spb \PiTyp{x}{A_2}{A} \\
+\textbf{Atomic Type Families} & P & ::= & a \Spb \Appl{P}{M} \\
+\textbf{Canonical Terms} & M & ::= & R \Spb \Lam{x}{M} \\
+\textbf{Atomic Terms} & R & ::= &  x \Spb c \Spb \Appl{R}{M}\\
+\textbf{Signatures} & \Sigma & ::= & \cdot \Spb \Sigma,\Of{c}{A} 
+\Spb \Sigma,\Of{a}{K}\\
+\textbf{Contexts} & \Gamma & ::= & \cdot \Spb \Gamma,\Of{x}{A}\\
+% \textbf{Simple Types} & \alpha & ::= & a \Spb \Arr{\alpha_1}{\alpha_2} \\
+\end{array}
+$$
+
+%-------------------------------------------------------------------------------
+% Spine Form LF                                                                 
+%-------------------------------------------------------------------------------
+
+\subsection{Spine-Form Canonical LF}
+
+There are a number of difficulties with the naive name-carrying
+implementation of Canonical LF.  The first is that we must
+implement capture-avoiding substitution and $\alpha$-conversion.
+This is a pain, and error-prone.  We can circumvent this difficulty
+by using DeBruijn indices\cite{DeBruijn80}.  A more significant 
+difficulty lies in the implementation of hereditary substitution. \incomplete{citation needed}
+When applying a substitution, we often need to determine whether
+the head of an expression is a constant or a variable in order
+to know which rule to apply.  Thus, for a term of the form
+$$f\ x_1\ x_2\ \ldots\ x_n = (\ldots((f\ x_1)\ x_2)\ \ldots\ x_n) $$
+we need to take apart $n$ applications just to determine how
+a substitution should be applied.  Later, when we implement
+unification, that algorithm will need to compare the heads
+of such terms for equality.  Thus, quick access to the head
+of such a term is essential for a reasonably efficient implementation.
+This is the motivation for the following definition of 
+\emph{Spine-Form LF}.
+
+\subsection{Name-carrying representation}
+
+The name-carrying language of Spine-Form LF is given by the following
+grammar.
+
+$$
+\begin{array}{llll}
+\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
+\mathbf{Types} & A & ::= & a\cdot S \Spb \PiTyp{x}{A_1}{A_2} \\
+\mathbf{Terms} & M & ::= & H\cdot S \Spb \Lam{x}{M} \\
+\mathbf{Heads} & H & ::= & c \Spb x\\
+\mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
+\end{array} 
+$$

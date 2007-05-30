@@ -1,0 +1,209 @@
+
+%-------------------------------------------------------------------------------
+% Eta expansion                                                                 
+%-------------------------------------------------------------------------------
+
+\subsection{$\eta$ Expansion}
+
+In Canonical LF, all terms are fully $\eta$ expanded.  This can be seen
+by considering the focusing rules
+
+$$
+\begin{array}{lr}
+\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{}\\
+\\
+\infer{\Focus{\Nil}{\Type}{\Type}}{} 
+\end{array} 
+$$
+
+and the $\beta$-reduction rule
+
+$$
+(H\cdot S)\App\Nil = H\cdot S
+$$
+
+The restriction to atomic expressions means that well-typed terms
+are $\eta$ expanded.  However, is interesting to formalize the notion
+of an $\eta$ expanded, or $\eta$-long term.  The following judgments
+make this explicit.
+
+%% First, we define $\card{S}$ to be the length of the spine $S$.  
+%% This is defined inductively as 
+
+%% \begin{align*} 
+%% \card{\Nil} = 0\\
+%% \card{M;S} = 1 + \card{S}
+%% \end{align*} 
+
+We first define a simple erasure of the dependent types to obtain
+a very simple skeleton of the type.  We use the term \emph{skeleton type}
+to distinguish from the $\emph{erased types}$ of hereditary substitution.
+
+\newcommand{\Skel}[3][\Gamma]{#1\vdash #2 \rightsquigarrow #3}
+\newcommand{\SkBase}{o}
+\newcommand{\tauskel}{\tau_1\to\tau_2\to\ldots\to\tau_n\to\SkBase}
+
+\bigskip 
+$$
+\begin{array}{llll}
+\mathbf{Skeleton\ Types} & \tau & ::= & \SkBase \Spb \tau_1\to\tau_2 \\
+\end{array} 
+$$
+\bigskip 
+
+In a skeleton type, $o$ stands for any base type $a\cdot S$ and $\to$ for any $\Pi$ type.
+We assume that if $\Skel{A}{\tau}$ then $\CheckTy[\Gamma']{A}{\Type}$ in the corresponding
+(unskeletonized) context $\Gamma'$.
+
+
+\bigskip 
+\framebox{$\Skel{A}{\tau}$}
+\bigskip 
+
+%% $$
+%% \begin{array}{c}
+%% \infer{\Skel{a\cdot S}{\SkBase}}{\Sigma(a) = \Pi A_1.\Pi A_2\ldots\Pi A_n.\Type & \card{S}=n}\\\\
+%% \infer{\Skel{i\cdot S}{\SkBase}}{\Gamma(i) = \tauskel & \card{S}=n}\\\\
+%% \infer{\Skel{\PiTyp{A_1}{A_2}}{\tau_1\to\tau_2}}{\Skel{A_1}{\tau_1} & \Skel[\Gamma,\tau_1]{A_2}{\tau_2}}
+%% \end{array} 
+%% $$
+
+$$
+\begin{array}{ccc}
+\infer{\Skel{a\cdot S}{\SkBase}}{} &
+\infer{\Skel{i\cdot S}{\SkBase}}{} &
+\infer{\Skel{\PiTyp{A_1}{A_2}}{\tau_1\to\tau_2}}{\Skel{A_1}{\tau_1} & \Skel[\Gamma,\tau_1]{A_2}{\tau_2}}
+\end{array} 
+$$
+
+\subsubsection{Checking $\eta$-long}
+
+We now define the judgments defining $\eta$-long.  We assume that
+each element of $\Sigma$ is $\eta$-long.  Similar to type-checking,
+we need to pass the skeleton type for the argument of a $\lambda$.
+
+\newcommand{\Long}[2][\Gamma]{#1\vdash #2\ \mathbf{long}}
+\newcommand{\LongAt}[3][\Gamma]{#1\vdash #2\ \mathbf{long\ at\ } #3}
+
+\bigskip 
+\framebox{$\Long{K}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\Long{\Type}}{} & &
+\infer{\Long{\PiTyp{A}{K}}}{\Long{A} & \Skel{A}{\tau} & \Long[\Gamma,\tau]{K}}
+\end{array} 
+$$
+
+
+\bigskip 
+\framebox{$\Long{A}$}
+\bigskip 
+
+
+$$
+\begin{array}{c}
+\infer{\Long{a\cdot S}}{\Skel{\Sigma(a)}{\tau} & \LongAt{S}{\tau}} \\\\
+\infer{\Long{\PiTyp{A_1}{A_2}}}{\Long{A_1} & \Skel{A_1}{\tau_1} & \Long[\Gamma,\tau_1]{A_2}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\LongAt{S}{\tau}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\LongAt{\Nil}{\SkBase}}{} && 
+\infer{\LongAt{M;S}{\tau_1\to\tau_2}}{\LongAt{M}{\tau_1} & \LongAt{S}{\tau_2}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\LongAt{M}{\tau}$}
+\bigskip 
+
+$$
+\begin{array}{lr}
+\infer{\LongAt{i\cdot S}{\SkBase}}{\LongAt{S}{\Gamma(i)}} & 
+\infer{\LongAt{c\cdot S}{\SkBase}}{\Skel{\Sigma(c)}{\tau} & \LongAt{S}{\tau}}\\\\
+\infer{\LongAt{\Lam{M}}{\tau_1\to\tau_2}}{\LongAt[\Gamma,\tau_1]{M}{\tau_2}}
+\end{array} 
+$$
+
+\subsubsection{$\eta$-expansion}
+
+Now, given a term that is $\beta$-normal, but possibly not $\eta$-long,
+we can instrument the previous judgments with local adjustments to the
+terms to yield an algorithm for ``$\eta$-lengthening'' a term.
+
+\renewcommand{\Long}[3][\Gamma]{#1\vdash #2 > #3}
+\renewcommand{\LongAt}[4][\Gamma]{#1\vdash #2\ \mathbf{at\ } #3 > #4}
+
+\bigskip 
+\framebox{$\Long{K}{K'}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\Long{\Type}{\Type}}{} & &
+\infer{\Long{\PiTyp{A}{K}}{\PiTyp{A'}{K'}}}{\Long{A}{A'} & 
+                           \Skel{A'}{\tau} & \Long[\Gamma,\tau]{K}{K'}}
+\end{array} 
+$$
+
+We maintain the invariant in this and the following judgments that if 
+$\Long{X}{Y}$ or $\LongAt{X}{\tau}{Y}$ then $Y$ is $\eta$-long.
+Thus, in the second rule, $A'$ is $\eta$-long and will thus have
+a valid skeleton.
+
+\bigskip 
+\framebox{$\Long{A}{A'}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\Long{a\cdot S}{a\cdot S'}}{\Skel{\Sigma(a)}{\tau} & \LongAt{S}{\tau}{S'}} &&
+\infer{\Long{\PiTyp{A_1}{A_2}}{\PiTyp{A_1'}{A_2'}}}{\Long{A_1}{A_1'} & \Skel{A_1'}{\tau_1} & \Long[\Gamma,\tau_1]{A_2}{A_2'}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\LongAt{S}{\tau}{S'}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\LongAt{\Nil}{\SkBase}{\Nil}}{} && 
+\infer{\LongAt{M;S}{\tau_1\to\tau_2}{M';S'}}{\LongAt{M}{\tau_1}{M'} & \LongAt{S}{\tau_2}{S'}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\LongAt{M}{\tau}{M'}$}
+\bigskip 
+
+\newcommand{\Concat}{\bowtie}
+
+$$
+\begin{array}{c}
+\infer{\LongAt{i\cdot S}{\SkBase}{i\cdot S'}}{\LongAt{S}{\Gamma(i)}{S'}}\\\\
+\infer{\LongAt{i\cdot S}{\tau_1\to\tau_2}{M}}{\LongAt{\Lam{(i+1)\cdot(S[\Shift] \Concat 1)}}{\tau_1\to\tau_2}{M}}\\\\
+\infer{\LongAt{c\cdot S}{\SkBase}{c\cdot S'}}{\Skel{\Sigma(c)}{\tau} & \LongAt{S}{\tau}{S'}}\\\\
+\infer{\LongAt{c\cdot S}{\tau_1\to\tau_2}{M}}{\LongAt{\Lam{c\cdot(S[\Shift] \Concat 1)}}{\tau_1\to\tau_2}{M}}\\\\
+\infer{\LongAt{\Lam{M}}{\tau_1\to\tau_2}{\Lam{M'}}}{\LongAt[\Gamma,\tau_1]{M}{\tau_2}{M'}}
+\end{array} 
+$$
+
+
+\bigskip 
+\framebox{$S\Concat M$}
+\bigskip 
+
+The $\Concat$ operator simply appends a term to the end of a spine:
+
+\begin{align*} 
+\Nil\Concat M &= M;\Nil\\
+(M;S)\Concat M' &= M;(S\Concat M')
+\end{align*} 

@@ -1,0 +1,245 @@
+
+\subsection{Eager Typechecking}
+
+\renewcommand{\PiTyp}[2]{\Pi #1.#2}
+\renewcommand{\Lam}[1]{\lambda #1}
+\newcommand{\CheckTy}[3][\Gamma]{#1\vdash #2 \Leftarrow #3}
+\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
+\newcommand{\Equiv}[2]{#1\equiv #2}
+
+%-------------------------------------------------------------------------------
+% Terms                                                                         
+%-------------------------------------------------------------------------------
+
+\subsection{Terms}
+
+$$
+\begin{array}{llll}
+\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{A}{K} \\
+\mathbf{Types} & A & ::= & a\cdot S \Spb \PiTyp{A_1}{A_2} \\
+\mathbf{Terms} & M & ::= & H\cdot S \Spb \Lam{M} \\
+\mathbf{Heads} & H & ::= & c \Spb i\\
+\mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
+\end{array} 
+$$
+
+
+%-------------------------------------------------------------------------------
+% Typecheck                                                                     
+%-------------------------------------------------------------------------------
+
+\bigskip 
+\framebox{$\CheckTy{K}{\Kind}$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\Type}{\Kind}}{} &
+\infer{\CheckTy{\PiTyp{A}{K}}{\Kind}}{\CheckTy{A}{\Type} & \CheckTy[\Gamma,A]{K}{\Kind}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\CheckTy{A}{\Type}$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\PiTyp{A_1}{A_2}}{\Type}}{\CheckTy{A_1}{\Type} & \CheckTy[\Gamma,A_1]{A_2}{\Type}} &
+\infer{\CheckTy{a\cdot S}{\Type}}{\Sigma(a) = K & \Focus{S}{K}{\Type}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\CheckTy{M}{A}$}
+\bigskip 
+
+We assume that if $\CheckTy{M}{A}$ then $\CheckTy{A}{\Type}$.
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\Lam{M}}{\PiTyp{A_1}{A_2}}}{\CheckTy[\Gamma,A_1]{M}{A_2}} &
+\infer{\CheckTy{c\cdot S}{A_2}}{\Sigma(c)=A_1 & \Focus{S}{A_1}{A_2'} & \Equiv{A_2'}{A_2}} \\\\
+\multicolumn{2}{c}{\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1[\Shift^i]}{A_2'} & \Equiv{A_2'}{A_2}}}
+\end{array} 
+$$
+
+\bigskip 
+
+Note that you must shift the type you extract from $\Gamma$, as the
+free variables (indices) should point to the slots before $i$.  Moving
+the type $A$ from the context to the consequent must adjust the pointers.
+
+\bigskip 
+\framebox{$\Focus{S}{K}{\Type}$}
+\bigskip 
+
+$$
+\begin{array}{lr}
+\infer{\Focus{\Nil}{\Type}{\Type}}{} & 
+\infer{\Focus{(M;S)}{\PiTyp{A}{K}}{\Type}}{\CheckTy{M}{A} & \Focus{S}{K[M\cdot\IdSub]}{\Type}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\Focus{S}{A_1}{A_2}$}
+\bigskip 
+
+Again, we assume that if $\Focus{S}{A_1}{A_2}$ that $\CheckTy{A_1}{\Type}$.
+
+$$
+\begin{array}{lr}
+\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{} & 
+\infer{\Focus{(M;S)}{\PiTyp{A_1}{A_2}}{A_3}}{\CheckTy{M}{A_1} & \Focus{S}{A_2[M\cdot\IdSub]}{A_3}}
+\end{array} 
+$$
+
+%-------------------------------------------------------------------------------
+% Substitutions                                                                 
+%-------------------------------------------------------------------------------
+
+\subsection{Substitutions}
+
+Even though the substitution judgment (at this point) is operational,
+and in principle a substitution is simply a list of terms $M$,
+it is still useful to define a syntax of substitutions.  
+
+\newcommand{\Msub}{[\sigma]}
+\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
+
+$$
+\begin{array}{llll}
+\mathbf{Substitutions} & \sigma & ::= & M\cdot\sigma \Spb \Shift^n \\
+\end{array} 
+$$
+
+(The notation $\Shift$ means $\Shift^1$, and $\IdSub$ means $\Shift^0$.)  
+
+We can \emph{apply} subsitutions to terms.
+
+\bigskip
+\framebox{$K\Msub = K'$}
+
+\begin{align*} 
+\Type\Msub &= \Type \\
+(\PiTyp{A}{K})\Msub &= \PiTyp{(A\Msub)}{(K\Ssub)}\\
+\end{align*} 
+
+\framebox{$A\Msub = A'$}
+
+\begin{align*} 
+(a\cdot S)\Msub &= a\cdot (S\Msub) \\
+(\PiTyp{A_1}{A_2})\Msub &= \PiTyp{(A_1\Msub)}{(A_2\Ssub)} \\
+\end{align*} 
+
+\framebox{$M\Msub = M'$}
+
+\begin{align*} 
+(\Lam{M})\Msub &= \Lam{(M\Ssub)}\\
+(c\cdot S)\Msub &= c\cdot S\Msub \\
+(i\cdot S)\Msub &= \begin{cases}
+                     j\cdot S\Msub \mbox{\ if $i\Msub = j$} \\
+                     M \App S\Msub\mbox{\ if $i\Msub = M$}
+                   \end{cases} 
+\end{align*} 
+
+\framebox{$S\Msub = S'$}
+
+\begin{align*} 
+\Nil\Msub &= \Nil\\
+(M;S)\Msub &= M\Msub;S\Msub
+\end{align*} 
+
+\framebox{$i\Msub = M$}
+
+\begin{align*} 
+1[M\cdot\sigma] &= M\\
+n+1[M\cdot\sigma] &= n[\sigma]\\
+i[\Shift^n] &= i+n\\
+% i[\sigma_1\Comp\sigma_2] &= (i[\sigma_1])[\sigma_2]
+\end{align*} 
+
+We still need the notion of beta reduction when a 
+head gets instantiated with a lambda.  We show
+only the possible cases.
+
+\bigskip 
+\framebox{$M \App S = M'$}
+
+\begin{align*} 
+(H\cdot S)\App\Nil &= H\cdot S\\
+\Lam{M}\App(M';S) &= M[M'\cdot\IdSub]\App S
+\end{align*} 
+
+The rules for composing substitutions are:
+
+\bigskip 
+\framebox{$\sigma\Comp\sigma' = \sigma''$}
+
+$$
+\begin{array}{llll}
+(M\cdot \sigma) & \Comp \sigma' &= &M[\sigma']\cdot (\sigma\Comp\sigma') \\
+\Shift^n & \Comp \Shift^m &= &\Shift^{n+m}\\
+\Shift^0 & \Comp \sigma &= &\sigma\\
+\Shift^{n+1}&\Comp (M\cdot\sigma) &= &\Shift^n\Comp\sigma
+\end{array} 
+$$
+
+%-------------------------------------------------------------------------------
+% Equivalence                                                                   
+%-------------------------------------------------------------------------------
+
+\subsection{Equivalence} 
+
+If we only allowed constant declarations in a signature then checking equivalence
+of terms would be a simple matter of checking syntactic equality.  
+With definitions of the form $c : A = M$, we must account
+for the fact that a focusing phase might return a type $A$ to 
+check against a type $A'$ that are not syntactically equal, but
+if one expanded all the definitions and normalized the resulting
+terms than they would be identical.  We thus need a judgment for the
+equivalence of types $A$ and terms $M$.  (Since we are not allowing
+type level definitions, we do not need to check for equivalent kinds.)
+
+\newcommand{\StepsTo}{\rightsquigarrow}
+\newcommand{\NoStep}{\not\rightsquigarrow}
+
+We use the judgments $c\StepsTo M$  to mean
+that the constant $c$ has definition $M$, and $c\NoStep$ means
+$c$ does not have a definition (i.e. is a declared constant).
+
+\bigskip 
+\framebox{$\Equiv{A}{A'}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}\
+\infer{\Equiv{A}{A'}}{\Equiv{A'}{A}} &  
+\infer{\Equiv{\PiTyp{A_1}{A_2}}{\PiTyp{A_1'}{A_2'}}}{\Equiv{A_1}{A_1'} & \Equiv{A_2}{A_2'}} & 
+\infer{\Equiv{a\cdot S}{a\cdot S'}}{\Equiv{S}{S'}} 
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\Equiv{S}{S'}$}
+\bigskip 
+
+$$
+\begin{array}{lcr}
+\infer{\Equiv{\Nil}{\Nil}}{} &
+\infer{\Equiv{M;S}{M';S'}}{\Equiv{M}{M'} & \Equiv{S}{S'}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\Equiv{M}{M'}$}
+\bigskip 
+
+$$
+\begin{array}{cccc}
+\infer{\Equiv{\Lam{M}}{\Lam{M'}}}{\Equiv{M}{M'}} &
+\infer{\Equiv{i\cdot S}{i\cdot S'}}{\Equiv{S}{S'}} &
+\infer{\Equiv{c\cdot S}{c\cdot S'}}{\Equiv{S}{S'}} &
+\infer{\Equiv{c\cdot S}{M}}{c\StepsTo M' & \Equiv{M'@S}{M}} 
+\end{array} 
+$$

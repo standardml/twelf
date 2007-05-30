@@ -1,0 +1,21 @@
+
+%-------------------------------------------------------------------------------
+% Signatures                                                                    
+%-------------------------------------------------------------------------------
+
+\subsection{Signatures}
+
+Signatures map constants to types and kinds.
+
+\newcommand{\Sig}{\ \mathtt{sig}}
+\bigskip 
+\framebox{$\Sigma\Sig$}
+\bigskip 
+
+$$
+\begin{array}{ccc}
+\infer{\cdot\Sig}{}&
+\infer{\Sigma,c:A\Sig}{\Sigma\Sig & \CheckTy[\cdot]{A}{\Type}}&
+\infer{\Sigma,a:K\Sig}{\Sigma\Sig & \CheckTy[\cdot]{K}{\Kind}}
+\end{array} 
+$$

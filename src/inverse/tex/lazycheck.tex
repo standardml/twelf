@@ -1,0 +1,76 @@
+
+\subsection{Lazy Typechecking}
+
+
+
+\newcommand{\CheckTy}[5][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5}
+\newcommand{\CheckTm}[6][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5 \times #6}
+\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
+\newcommand{\Equiv}[2]{#1\equiv #2}
+
+\bigskip 
+\framebox{$\CheckTy{K}{\Kind}{\Gamma}{K'}$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\Type}{\Kind}{\Gamma}{\Type}}{} &
+\infer{\CheckTy{\PiTyp{A}{K}}{\Kind}}{\CheckTy{A}{\Type} & \CheckTy[\Gamma,A]{K}{\Kind}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\CheckTy{A}{\Type}$}
+\bigskip 
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\PiTyp{A_1}{A_2}}{\Type}}{\CheckTy{A_1}{\Type} & \CheckTy[\Gamma,A_1]{A_2}{\Type}} &
+\infer{\CheckTy{a\cdot S}{\Type}}{\Sigma(a) = K & \Focus{S}{K}{\Type}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\CheckTy{M}{A}$}
+\bigskip 
+
+We assume that if $\CheckTy{M}{A}$ then $\CheckTy{A}{\Type}$.
+
+$$
+\begin{array}{cc}
+\infer{\CheckTy{\Lam{M}}{\PiTyp{A_1}{A_2}}}{\CheckTy[\Gamma,A_1]{M}{A_2}} &
+\infer{\CheckTy{c\cdot S}{A_2}}{\Sigma(c)=A_1 & \Focus{S}{A_1}{A_2'} & \Equiv{A_2'}{A_2}} \\\\
+\multicolumn{2}{c}{\infer{\CheckTy{i\cdot S}{A_2}}{\Gamma(i)=A_1 & \Focus{S}{A_1[\Shift^i]}{A_2'} & \Equiv{A_2'}{A_2}}}
+\end{array} 
+$$
+
+\bigskip 
+
+Note that you must shift the type you extract from $\Gamma$, as the
+free variables (indices) should point to the slots before $i$.  Moving
+the type $A$ from the context to the consequent must adjust the pointers.
+
+\bigskip 
+\framebox{$\Focus{S}{K}{\Type}$}
+\bigskip 
+
+$$
+\begin{array}{lr}
+\infer{\Focus{\Nil}{\Type}{\Type}}{} & 
+\infer{\Focus{(M;S)}{\PiTyp{A}{K}}{\Type}}{\CheckTy{M}{A} & \Focus{S}{K[M\cdot\IdSub]}{\Type}}
+\end{array} 
+$$
+
+\bigskip 
+\framebox{$\Focus{S}{A_1}{A_2}$}
+\bigskip 
+
+Again, we assume that if $\Focus{S}{A_1}{A_2}$ that $\CheckTy{A_1}{\Type}$.
+
+$$
+\begin{array}{lr}
+\infer{\Focus{\Nil}{a\cdot S}{a\cdot S}}{} & 
+\infer{\Focus{(M;S)}{\PiTyp{A_1}{A_2}}{A_3}}{\CheckTy{M}{A_1} & \Focus{S}{A_2[M\cdot\IdSub]}{A_3}}
+\end{array} 
+$$
+
