@@ -1197,33 +1197,55 @@ struct
 
     exception NotFinitary
 
-    (* finitary1 (X, k, W, cands)
+    (* finitary1 (X, k, W, f, cands)
         = ((k, n)::cands) if X is finitary with n possibilities
         = cands if X is not finitary
     *)
-    fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, cands) =
+    (* The function f has been added to ensure that k is splittable without 
+       constraints.   In the previous version, this check was not performed.
+       nat : type.
+       z : nat.
+       s : nat -> nat.
+
+       eqz :  nat -> type.
+       eqz_z : eqz z.
+
+       unit : type.
+       * : unit.
+
+       test : {f : unit -> nat} eqz (f *) -> type.
+       %worlds () (test _ _).
+       %covers test +F +Q.  %% loops! 
+       (Counterexample due to Andrzej.  Fix due to Adam.
+	Mon Oct 15 15:08:25 2007 --cs)
+    *)
+    fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, f, cands) =
         ( resetCount () ;
 	  chatter 7 (fn () => "Trying " ^ Print.expToString (I.Null, X) ^ " : "
 		     ^ Print.expToString (I.Null, VX) ^ ".\n") ;
-	  ( splitEVar (X, W, fn () => if recursive X
+	  ( splitEVar (X, W, fn () => (f (); if recursive X
 					then raise NotFinitary
-				      else incCount ()) ;
+				      else incCount ())) ;
 	    chatter 7 (fn () => "Finitary with " ^ Int.toString (getCount ()) ^ " candidates.\n");
 	    (k, getCount ())::cands )
            handle NotFinitary => ( chatter 7 (fn () => "Not finitary.\n");
+				   cands )
+	         | Constraints.Error (constrs) =>
+	                         ( chatter 7 (fn () => "Inactive finitary split.\n");
 				   cands )
 	)
 
     (* finitarySplits (XsRev, k, W, cands) = [(k1,n1),...,(km,nm)]@cands
        where all ki are finitary with ni possibilities for X(i+k)
     *)
-    fun finitarySplits (nil, k, W, cands) = cands
-      | finitarySplits (NONE::Xs, k, W, cands) =
+    fun finitarySplits (nil, k, W, f, cands) = cands
+      | finitarySplits (NONE::Xs, k, W, f, cands) =
         (* parameter blocks can never be split *)
-          finitarySplits (Xs, k+1, W, cands)
-      | finitarySplits (SOME(X)::Xs, k, W, cands) =
-          finitarySplits (Xs, k+1, W,
-			  CSManager.trail (fn () => finitary1 (X, k, W, cands)))
+          finitarySplits (Xs, k+1, W, f, cands)
+      | finitarySplits (SOME(X)::Xs, k, W, f, cands) =
+          finitarySplits (Xs, k+1, W, f,
+			  CSManager.trail (fn () => finitary1 (X, k, W, f,cands)))
+
 
     (* finitary ({{G}} V, p, W) = [(k1,n1),...,(km,nm)]
        where ki are indices of splittable variables in G with ni possibilities
@@ -1233,8 +1255,9 @@ struct
     fun finitary (V, p, W, ci) =
         let
 	  val ((V1, s), XsRev) = instEVarsSkip ((V, I.id), p, nil, ci)
+
 	in
-	  finitarySplits (XsRev, 1, W, nil)
+	  finitarySplits (XsRev, 1, W, fn () => abstract (V1, s), nil)
 	end
 
 
@@ -1880,7 +1903,7 @@ struct
 	  val XsRev = subToXsRev (s)
 	  (* XsRev = [SOME(X1),...,SOME(Xn)] *)
 	in
-	  finitarySplits (XsRev, 1, w, nil)
+	  finitarySplits (XsRev, 1, w, fn () => abstractSpine (S, s), nil)
 	end
 
     (***************)
