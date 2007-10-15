@@ -1213,11 +1213,11 @@ struct
        unit : type.
        * : unit.
 
-       test : {f : unit -> nat} eqz (f *) -> type.
+       test : {f : unit -> nat} eqz (f * ) -> type.
        %worlds () (test _ _).
        %covers test +F +Q.  %% loops! 
-       (Counterexample due to Andrzej.  Fix due to Adam.
-	Mon Oct 15 15:08:25 2007 --cs)
+        Counterexample due to Andrzej.  Fix due to Adam.
+	Mon Oct 15 15:08:25 2007 --cs 
     *)
     fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, f, cands) =
         ( resetCount () ;
