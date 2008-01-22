@@ -1,9 +1,5 @@
 
 
-\newcommand{\CheckTy}[3][\Gamma]{#1\vdash #2 \Leftarrow #3}
-\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
-\newcommand{\Equiv}[2]{#1\equiv #2}
-
 
 \section{Eager Typechecking}
 
@@ -85,9 +81,6 @@ $$
 %-------------------------------------------------------------------------------
 
 \subsection{Substitutions}
-
-\newcommand{\Msub}{[\sigma]}
-\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
 
 (The notation $\Shift$ means $\Shift^1$, and $\IdSub$ means $\Shift^0$.)  
 
@@ -174,9 +167,6 @@ terms than they would be identical.  We thus need a judgment for the
 equivalence of types $A$ and terms $M$.  (Since we are not allowing
 type level definitions, we do not need to check for equivalent kinds.)
 
-\newcommand{\StepsTo}{\rightsquigarrow}
-\newcommand{\NoStep}{\not\rightsquigarrow}
-
 We use the judgment $c\StepsTo M$  to mean
 that the constant $c$ has definition $M$. 
 
@@ -244,7 +234,6 @@ the terms are fully expanded.
 
 This leads to an additional rule 
 
-\newcommand{\Root}{\mbox{root}}
 $$
 \begin{array}{cccc}
 \infer{\Equiv{c\cdot S}{c'\cdot S'}}{\Root(c)=\Root(c') & \card{c} \geq \card{c'} & c\StepsTo M' & \Equiv{M'@S}{c'\cdot S'}} 

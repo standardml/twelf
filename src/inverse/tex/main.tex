@@ -1,7 +1,6 @@
 \documentclass[11pt,twoside]{article}
 \usepackage{noweb,fullpage,clrscode,proof,hyperref,amsmath,amssymb}
 \usepackage[open-square,define-standard-theorems,roman-theorems]{QED}
-\usepackage{clf}
 
 \title{Towards a Focusing Inverse-Method Theorem Prover for Canonical LF}
 \author{Sean McLaughlin}
@@ -25,6 +24,8 @@ various representations to find a good trade-off between efficiency
 and elegance.
 \end{abstract} 
 
+\input{commands.tex}
+
 \input{canonical.tex}
 
 While we have just described Canonical LF, a language where all
@@ -37,6 +38,7 @@ two minor variants of each method.
 
 \input{eagercheck.tex}
 \input{lazycheck.tex}
+
 \input{inverse.tex}
 
 

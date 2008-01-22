@@ -1,5 +1,14 @@
 
 default : main.dvi
 
-main.dvi : clf.sty canonical.tex context.tex eagercheck.tex etalong.tex \
-lazycheck.tex main.tex noncheck.tex sequent.tex signat.tex uni.tex inverse.tex
+FILES = \
+main.tex \
+canonical.tex \
+eagercheck.tex \
+lazycheck.tex \
+inverse.tex \
+
+main.dvi : $(FILES)
+
+clean : 
+	@rm -rf *.dvi *.pdf $(JUNK)

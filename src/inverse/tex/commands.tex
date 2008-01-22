@@ -1,0 +1,40 @@
+
+%-------------------------------------------------------------------------------
+% LF                                                                            
+%-------------------------------------------------------------------------------
+
+% General Form
+\newcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
+\newcommand{\Lam}[2]{\lambda #1.\ #2}
+
+% Spine Form
+\newcommand{\SpPiTyp}[2]{\Pi #1.#2}
+\newcommand{\SpLam}[1]{\lambda #1}
+\newcommand{\Root}{\mbox{root}}
+
+% Type Checking
+
+%% Eager
+\newcommand{\CheckTy}[3][\Gamma]{#1\vdash #2 \Leftarrow #3}
+\newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
+\newcommand{\Equiv}[2]{#1\equiv #2}
+
+%% Lazy
+\newcommand{\LzCheckTy}[6][\Gamma]{#1\vdash #2 \Leftarrow #3 > #4 \times #5 \times #6}
+\newcommand{\LzFocus}[6][\Gamma]{#1\vdash #2 : #3 > #4 \times #5 \times #6}
+\newcommand{\LzEquiv}[4]{#1\equiv #2 > #3 \times #4}
+
+% Substitutions
+\newcommand{\Msub}{[\sigma]}
+\newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
+
+% Equivalence
+\newcommand{\StepsTo}{\rightsquigarrow}
+\newcommand{\NoStep}{\not\rightsquigarrow}
+
+% Weak Head Normal Form
+\newcommand{\Weak}{\hookrightarrow}
+
+% Sequents
+\newcommand{\SeqArr}{\Longrightarrow}
+\newcommand{\Sequent}[4][]{#2\ ;\ #3 \SeqArr_{#1} #4}

@@ -1,0 +1,45 @@
+
+%---------------------------------  Constants  ---------------------------------
+
+\newcommand{\Nil}{\mathtt{nil}}
+\newcommand{\Kind}{\mathtt{kind}}
+\newcommand{\Type}{\mathtt{type}}
+\newcommand{\IdSub}{\mathtt{id}}
+\newcommand{\Of}[2]{#1\ :\ #2}
+
+%-----------------------------------  Terms  -----------------------------------
+
+\newcommand{\PiTyp}[2]{\Pi #1.#2}
+\newcommand{\Lam}[1]{\lambda #1}
+\newcommand{\Appl}[2]{#1\ #2}
+\newcommand{\Arr}[2]{#1\to #2}
+\newcommand{\HSub}[4]{[#1/#2]^{#3}#4}
+
+%--------------------------------  Separators  ---------------------------------
+
+\newcommand{\Spb}{\ |\ }
+\newcommand{\Shift}{\uparrow}
+\newcommand{\Set}[1]{\{#1\}}
+\newcommand{\Comp}{~\circ~}
+\newcommand{\App}{~@~}
+\newcommand{\LFArr}{\to}
+
+%--------------------------------  Basic math  ---------------------------------
+
+\newcommand{\set}[1]{\{#1\}}
+\newcommand{\card}[1]{\left|#1\right|}
+\newcommand{\Not}{\neg}
+\newcommand{\And}{\wedge}
+\newcommand{\Or}{\vee}
+\newcommand{\AND}{\bigwedge}
+\newcommand{\OR}{\bigvee}
+\newcommand{\Imp}{\supset}
+\newcommand{\Iff}{\Longleftrightarrow}
+\newcommand{\Arr}{\Rightarrow}
+
+
+\def\incomplete#1{XXX #1 XXX}
+
+
+
+

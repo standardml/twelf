@@ -13,9 +13,6 @@ is the lack of a type annotation on $\lambda$-expressions.
 See Harper and Licata\cite{HarperLicataCLF} for an extended
 exposition.
 
-\renewcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
-\renewcommand{\Lam}[2]{\lambda #1.\ #2}
-
 $$
 \begin{array}{llll}
 \textbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
@@ -35,9 +32,6 @@ $$
 %-------------------------------------------------------------------------------
 
 \subsection{Spine-Form Canonical LF}
-
-\renewcommand{\PiTyp}[2]{\Pi #1.#2}
-\renewcommand{\Lam}[1]{\lambda #1}
 
 There are a number of difficulties with the name-carrying 
 representation\footnote{i.e., variable names associated with binders}
@@ -63,10 +57,10 @@ We thus define \emph{Spine-Form Canonical LF}.
 
 $$
 \begin{array}{llll}
-\mathbf{Kinds} & K & ::= & \Type \Spb \PiTyp{A}{K} \\
-\mathbf{Canonical\ Type\ Families} & A & ::= & P \Spb \PiTyp{A_1}{A_2} \\
+\mathbf{Kinds} & K & ::= & \Type \Spb \SpPiTyp{A}{K} \\
+\mathbf{Canonical\ Type\ Families} & A & ::= & P \Spb \SpPiTyp{A_1}{A_2} \\
 \mathbf{Atomic\ Type\ Families} & P & ::= & a\cdot S \\
-\mathbf{Canonical\ Terms} & M & ::= & R \Spb \Lam{M} \\
+\mathbf{Canonical\ Terms} & M & ::= & R \Spb \SpLam{M} \\
 \mathbf{Atomic\ Terms} & R & ::= & H\cdot S \\
 \mathbf{Heads} & H & ::= & c \Spb i\\
 \mathbf{Spines} & S & ::= & \Nil \Spb M;S\\
@@ -83,7 +77,7 @@ syntax.
 $$
 \begin{array}{llll}
 \mathbf{Levels} & L & ::= & \Type \Spb \Kind \\
-\mathbf{Expressions} & U & ::= & L \Spb \PiTyp{U_1}{U_2} \Spb \lambda U \Spb H\cdot S \\
+\mathbf{Expressions} & U & ::= & L \Spb \SpPiTyp{U_1}{U_2} \Spb \lambda U \Spb H\cdot S \\
 \mathbf{Heads} & H & ::= & c \Spb i\\
 \mathbf{Spines} & S & ::= & \Nil \Spb U;S\\
 \end{array} 
@@ -93,7 +87,7 @@ Constants $c$ are either type ($a$) or term ($c$) constants.
 The rules that follow will refer to this basic syntax.  While this
 is somewhat less precise than the more explicit separation of 
 levels in the syntax above (indeed, we can easily write gramatically
-correct nonsense in this language, such as $\Lam{(\PiTyp{U1}{U2})}$)
+correct nonsense in this language, such as $\SpLam{(\SpPiTyp{U1}{U2})}$)
 we are willing to allow such terms to lessen the number of rules.
 Terms that are not even gramatically correct (much less type-correct) 
 in the original language, will be excluded by type-checking (rather than expression 

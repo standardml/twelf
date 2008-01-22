@@ -1,0 +1,59 @@
+
+\section{The Inverse Method}
+
+\subsection{Requirements}
+
+\begin{enumerate} 
+\item Typechecker
+  \begin{itemize} 
+  \item Internal api, e.g. ``\%doublecheck''
+  \item External api, for Deepak say.  Perhaps support explicit sharing of terms.
+  \end{itemize} 
+\item Term Reconstruction
+\item Logic programming engine (Bottom up)
+\item M2 Checker (\%mode,\%worlds,\%terminates,\%covers,\%total)
+\item logic programming engine (Top down)
+\item Meta-theorem prover (produce .prf files from .thm files)
+\end{enumerate} 
+
+\subsection{The Propositional Case}
+
+\newcommand{\init}{(\Gamma_0^-,C_0^+)}
+
+\infer[Atom]{P \vdash P}{P \leq^+ \init & P \leq^- \init}
+
+\infer[Contract]{\Gamma,A \vdash B}{\Gamma,A,A\vdash B}
+
+\infer[ArrowR1]{\Gamma\vdash A \to B}{\Gamma,A \vdash B & (A\to B \leq^+ \init)}
+\bigskip 
+
+\infer[ArrowR2]{\Gamma\vdash A \to B}{\Gamma \vdash B & A \not\in\Gamma & (A\to B \leq^+ \init)}
+\bigskip 
+
+\infer[ArrowL]{\Gamma_1,\Gamma_2,A \to B\vdash C}{\Gamma_1,\vdash A,& \Gamma_2,A \vdash B & (A\to B \leq^- \init)}
+\bigskip 
+
+\subsection{The First Order Case}
+
+\newcommand{\seq}[3][\Sigma]{#1 ; #2 \vdash #3}
+\newcommand{\unif}[3][\Sigma]{#1 ; #2 = #3}
+\newcommand{\renaming}[1]{#1\ \mathsf{renaming}}
+
+General Form:
+
+$$\Sigma; \Gamma[\tau] \vdash C[\sigma]$$
+
+which is shorthand for
+
+$$\Sigma; A_1[\tau_1],\ldots,A_n[\tau_n] \vdash C[\sigma]$$
+
+\bigskip 
+
+\infer[Atom]{\seq{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}} {}
+\bigskip 
+when $\unif{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}$ and $\renaming{\rho}$
+\bigskip 
+
+\infer[PiR]{\seq{\Gamma}{}}{}
+\bigskip 
+
