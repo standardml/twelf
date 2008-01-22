@@ -210,7 +210,7 @@ Pfenning and Reed, is to store two extra bits of information
 with each constant.  The first is the \emph{height} of a constant.
 This merely records the definition depth of a constant.  Constants that
 do not refer to other constants have height 0.  A constant $c$ that refers
-to others has height $1 + \max\set{\mbox{height of constants occuring in } c}$.
+to others has height $1 + \max\Set{\mbox{height of constants occuring in } c}$.
 Note that only constants with the same height can be equal.  
 The second bit of data is the \emph{root}, it{i.e.} the head of the term that would be obtained by 
 expanding all definitions.  Note that any two equal terms must have the
@@ -236,9 +236,9 @@ This leads to an additional rule
 
 $$
 \begin{array}{cccc}
-\infer{\Equiv{c\cdot S}{c'\cdot S'}}{\Root(c)=\Root(c') & \card{c} \geq \card{c'} & c\StepsTo M' & \Equiv{M'@S}{c'\cdot S'}} 
+\infer{\Equiv{c\cdot S}{c'\cdot S'}}{\Root(c)=\Root(c') & \Card{c} \geq \Card{c'} & c\StepsTo M' & \Equiv{M'@S}{c'\cdot S'}} 
 \end{array} 
 $$
 
-where $\card{c}$ is the height of $c$, and $\Root(c)$ is the root.
+where $\Card{c}$ is the height of $c$, and $\Root(c)$ is the root.
 This holds in both the eager and lazy cases.

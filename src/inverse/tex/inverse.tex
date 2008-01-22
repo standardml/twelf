@@ -18,19 +18,39 @@
 
 \subsection{The Propositional Case}
 
+\subsubsection{The Subformula Property}
+
+\begin{Theorem} The cut rule is admissible in LF \end{Theorem} 
+\Incomplete{Needs reference}
+
+It is a property of cut-free sequent calculi that all propositions occurring
+in a derivation are \emph{subformulas} of the endsequent in the following sense.
+
+\begin{align*} 
+  &p^+ \Subform p^+\\
+  &p^- \Subform p^-\\
+  &A^- \Subform (A \LFArrow B)^+\\
+  &B^+ \Subform (A \LFArrow B)^+\\
+  &A^- \Subform (A \LFArrow B)^+\\
+\end{align*} 
+
 \newcommand{\init}{(\Gamma_0^-,C_0^+)}
 
-\infer[Atom]{P \vdash P}{P \leq^+ \init & P \leq^- \init}
-
-\infer[Contract]{\Gamma,A \vdash B}{\Gamma,A,A\vdash B}
-
-\infer[ArrowR1]{\Gamma\vdash A \to B}{\Gamma,A \vdash B & (A\to B \leq^+ \init)}
+\infer[$Atom$]{P \vdash P}{}
+\bigskip 
+when $P \leq^+ \init$ and $P \leq^- \init$
 \bigskip 
 
-\infer[ArrowR2]{\Gamma\vdash A \to B}{\Gamma \vdash B & A \not\in\Gamma & (A\to B \leq^+ \init)}
+\infer[$Contract$]{\Gamma,A \vdash B}{\Gamma,A,A\vdash B}
 \bigskip 
 
-\infer[ArrowL]{\Gamma_1,\Gamma_2,A \to B\vdash C}{\Gamma_1,\vdash A,& \Gamma_2,A \vdash B & (A\to B \leq^- \init)}
+\infer[\to$R1$]{\Gamma\vdash A \LFArrow B}{\Gamma,A \vdash B & (A\LFArrow B \leq^+ \init)}
+\bigskip 
+
+\infer[\LFArrow$R2$]{\Gamma\vdash A \LFArrow B}{\Gamma \vdash B & A \not\in\Gamma & (A\LFArrow B \leq^+ \init)}
+\bigskip 
+
+\infer[\LFArrow$L$]{\Gamma_1,\Gamma_2,A \LFArrow B\vdash C}{\Gamma_1,\vdash A,& \Gamma_2,A \vdash B & (A\LFArrow B \leq^- \init)}
 \bigskip 
 
 \subsection{The First Order Case}
@@ -49,11 +69,11 @@ $$\Sigma; A_1[\tau_1],\ldots,A_n[\tau_n] \vdash C[\sigma]$$
 
 \bigskip 
 
-\infer[Atom]{\seq{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}} {}
+\infer[$Atom$]{\seq{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}} {}
 \bigskip 
 when $\unif{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}$ and $\renaming{\rho}$
 \bigskip 
 
-\infer[PiR]{\seq{\Gamma}{}}{}
+\infer[\Pi$-R$]{\seq{\Gamma}{}}{}
 \bigskip 
 

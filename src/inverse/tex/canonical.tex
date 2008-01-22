@@ -10,7 +10,7 @@ work.  While the various representations will differ from the one presented here
 
 The main difference between Canonical LF and earlier versions
 is the lack of a type annotation on $\lambda$-expressions.
-See Harper and Licata\cite{HarperLicataCLF} for an extended
+See Harper and Licata\cite{Harper:2006:Mechanizing} for an extended
 exposition.
 
 $$
@@ -39,11 +39,11 @@ of Canonical LF.  The first is that we must
 implement capture-avoiding substitution and $\alpha$-conversion,
 a notoriously delicate and error-prone process.
 We can circumvent this difficulty
-by using DeBruijn indices\cite{DeBruijn80}. 
+by using DeBruijn indices\cite{DeBruijn:1972:Terms}. 
 
  A more significant 
 difficulty lies in the implementation of hereditary substitution. 
-\incomplete{citation needed}
+\Incomplete{citation needed}
 When applying a substitution, we often need to determine whether
 the head of an expression is a constant or a variable in order
 to know which rule to apply.  Thus, for a term of the form

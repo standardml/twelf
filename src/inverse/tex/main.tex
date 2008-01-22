@@ -1,14 +1,26 @@
+%-------------------------------------------------------------------------------
+% Topmatter                                                                     
+%-------------------------------------------------------------------------------
+
 \documentclass[11pt,twoside]{article}
 \usepackage{noweb,fullpage,clrscode,proof,hyperref,amsmath,amssymb}
 \usepackage[open-square,define-standard-theorems,roman-theorems]{QED}
 
+%-------------------------------------------------------------------------------
+% Title                                                                         
+%-------------------------------------------------------------------------------
+
 \title{Towards a Focusing Inverse-Method Theorem Prover for Canonical LF}
 \author{Sean McLaughlin}
 
+%-------------------------------------------------------------------------------
+% Begin                                                                         
+%-------------------------------------------------------------------------------
+
 \begin{document} 
 \maketitle
-
 \arraycolsep=12pt
+\input{commands.tex}
 
 %-------------------------------------------------------------------------------
 % Abstract                                                                      
@@ -24,9 +36,15 @@ various representations to find a good trade-off between efficiency
 and elegance.
 \end{abstract} 
 
-\input{commands.tex}
+%-------------------------------------------------------------------------------
+% Canonical LF                                                                  
+%-------------------------------------------------------------------------------
 
 \input{canonical.tex}
+
+%-------------------------------------------------------------------------------
+% Typechecking                                                                  
+%-------------------------------------------------------------------------------
 
 While we have just described Canonical LF, a language where all
 expressions are canonical, it is sometimes useful to relax the canonicity
@@ -39,14 +57,28 @@ two minor variants of each method.
 \input{eagercheck.tex}
 \input{lazycheck.tex}
 
+%-------------------------------------------------------------------------------
+% The Inverse Method                                                            
+%-------------------------------------------------------------------------------
+
 \input{inverse.tex}
 
+%-------------------------------------------------------------------------------
+% Appendices                                                                    
+%-------------------------------------------------------------------------------
 
 %% \input{twelf_grammar.tex}
 %% \input{using.tex}
 
-\bibliographystyle{abbrv}
+%-------------------------------------------------------------------------------
+% Bibliography                                                                  
+%-------------------------------------------------------------------------------
 
+\bibliographystyle{abbrv}
 \bibliography{all}
+
+%-------------------------------------------------------------------------------
+% End                                                                           
+%-------------------------------------------------------------------------------
 
 \end{document}

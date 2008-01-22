@@ -1,4 +1,15 @@
 
+
+%-------------------------------------------------------------------------------
+% General                                                                       
+%-------------------------------------------------------------------------------
+
+\newcommand{\Spb}{\ |\ }
+\newcommand{\Set}[1]{\{#1\}}
+\newcommand{\Card}[1]{\left|#1\right|}
+\def\Incomplete#1{XXX #1 XXX}
+
+
 %-------------------------------------------------------------------------------
 % LF                                                                            
 %-------------------------------------------------------------------------------
@@ -6,11 +17,17 @@
 % General Form
 \newcommand{\PiTyp}[3]{\Pi #1 : #2.\ #3}
 \newcommand{\Lam}[2]{\lambda #1.\ #2}
+\newcommand{\Type}{\mathtt{type}}
+\newcommand{\Kind}{\mathtt{kind}}
+\newcommand{\Appl}[2]{#1\ #2}
+\newcommand{\Of}[2]{#1\ :\ #2}
+\newcommand{\LFArrow}{\to}
 
 % Spine Form
 \newcommand{\SpPiTyp}[2]{\Pi #1.#2}
 \newcommand{\SpLam}[1]{\lambda #1}
 \newcommand{\Root}{\mbox{root}}
+\newcommand{\Nil}{\mathtt{nil}}
 
 % Type Checking
 
@@ -27,6 +44,10 @@
 % Substitutions
 \newcommand{\Msub}{[\sigma]}
 \newcommand{\Ssub}{[1\cdot(\sigma\Comp\Shift)]}
+\newcommand{\Comp}{~\circ~}
+\newcommand{\App}{~@~}
+\newcommand{\Shift}{\uparrow}
+\newcommand{\IdSub}{\mathtt{id}}
 
 % Equivalence
 \newcommand{\StepsTo}{\rightsquigarrow}
@@ -38,3 +59,7 @@
 % Sequents
 \newcommand{\SeqArr}{\Longrightarrow}
 \newcommand{\Sequent}[4][]{#2\ ;\ #3 \SeqArr_{#1} #4}
+
+% Subformulas
+\newcommand{\Subform}{\leq}
+

@@ -2,6 +2,7 @@
 default : main.dvi
 
 FILES = \
+all.bib \
 main.tex \
 canonical.tex \
 eagercheck.tex \
