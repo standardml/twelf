@@ -1,5 +1,28 @@
 
 %-------------------------------------------------------------------------------
+% LF                                                                            
+%-------------------------------------------------------------------------------
+
+\section{LF: A Logical Framework}
+
+The original LF logical framework was specified as follows:
+$$
+\begin{array}{llll}
+\textbf{Kinds} & K & ::= & \Type \Spb \PiTyp{x}{A}{K} \\
+\textbf{Families} & A & ::= & a \Spb \PiTyp{x}{A_2}{A} \Spb \Lam{x : A_2}{A} \Spb \Appl{A}{M} \\
+\textbf{Terms} & M & ::= & c \Spb x \Spb \Lam{x : A}{M} \Spb \Appl{M}{M_2} \\
+\textbf{Signatures} & \Sigma & ::= & \cdot \Spb \Sigma,\Of{c}{A} 
+\Spb \Sigma,\Of{a}{K}\\
+\textbf{Contexts} & \Gamma & ::= & \cdot \Spb \Gamma,\Of{x}{A}\\
+% \textbf{Simple Types} & \alpha & ::= & a \Spb \Arr{\alpha_1}{\alpha_2} \\
+\end{array}
+$$
+
+While this definition is the simplest, the meta-theory of LF was
+significantly simplfied by the introduction of Canonical LF, admitting
+only the so-called \emph{canonical forms} into the language.
+
+%-------------------------------------------------------------------------------
 % Canonical LF                                                                  
 %-------------------------------------------------------------------------------
 
@@ -9,7 +32,8 @@ work.  While the various representations will differ from the one presented here
 (e.g., for efficiency) this language should always be kept in mind.
 
 The main difference between Canonical LF and earlier versions
-is the lack of a type annotation on $\lambda$-expressions.
+is the lack of explicit $\beta$-redices in types and terms.  
+Also, a type annotation on $\lambda$-expressions is no longer required (or allowed).
 See Harper and Licata\cite{Harper:2006:Mechanizing} for an extended
 exposition.
 
@@ -43,7 +67,7 @@ by using DeBruijn indices\cite{DeBruijn:1972:Terms}.
 
  A more significant 
 difficulty lies in the implementation of hereditary substitution. 
-\Incomplete{citation needed}
+\XXX{citation needed}
 When applying a substitution, we often need to determine whether
 the head of an expression is a constant or a variable in order
 to know which rule to apply.  Thus, for a term of the form
