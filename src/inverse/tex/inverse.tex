@@ -16,17 +16,7 @@
 \item Meta-theorem prover (produce .prf files from .thm files)
 \end{enumerate} 
 
-\subsection{The Propositional Case}
-
-\subsubsection{The Subformula Property}
-
-We define \emph{signed subformulas} of a formula $F$ by the following rules:
-
-
-
-
-
-
+\subsection{The Subformula Property}
 
 \begin{Theorem} The cut rule is admissible in LF \end{Theorem} 
 \XXX{Needs reference}
@@ -34,15 +24,182 @@ We define \emph{signed subformulas} of a formula $F$ by the following rules:
 It is a property of cut-free sequent calculi that all propositions occurring
 in a derivation are \emph{subformulas} of the endsequent in the following sense.
 
-
+We define \emph{signed subformulas} of a formula $F$ with judgments:
 
 \begin{align*} 
-  &p^+ \Subform p^+\\
-  &p^- \Subform p^-\\
-  &A^- \Subform (A \LFArrow B)^+\\
-  &B^+ \Subform (A \LFArrow B)^+\\
-  &A^- \Subform (A \LFArrow B)^+\\
+\PSubform{A} & & \mbox{$A$ is a positive subformula of the initial goal.}\\
+\NSubform{A} & & \mbox{$A$ is a negative subformula of the initial goal.}
 \end{align*} 
+
+where 
+$$\Psi ::= \circ \Spb \Psi, v:A \Spb \Psi, x:A$$
+
+Here $v$ ranges over arbitrary terms and $x$ ranges over
+fixed parameters.
+
+
+These rules are defined as a forward logic program by the following inference
+rules:
+
+\bigskip 
+\begin{tabular}{cc}
+\infer{\NSubform{A}}{\PSubform{A\LFArrow B}} &
+\infer{\NSubform{B}}{\PSubform{A\LFArrow B}} \\
+\infer{\PSubform{A}}{\NSubform{A\LFArrow B}} &
+\infer{\PSubform{B}}{\NSubform{A\LFArrow B}} \\
+\infer{\PSubform[\Psi,x:A]{B}}{\PSubform{\PiTyp{x}{A}{B}}} &
+\infer{\NSubform[\Psi,u:A]{B}}{\NSubform{\PiTyp{u}{A}{B}}} \\
+\end{tabular} 
+\bigskip 
+
+Note that there are no rules for families of kind $\Type$.
+
+To find the subformulas of a given goal formula, we run
+the above rules as a forward logic program to saturation.  
+
+\subsection{Admissible Substitutions}
+
+Explicit substitutions are an integral part of the theory and 
+implementation of our development.  They are necessary because
+when logic variables arise during proof search, it is not always
+possible to apply a substitution immediately.  While contexts 
+do the necessary bookkeeping of tracking the types of bound variables,
+substitutions track variable (term) instantiations.
+The language of substitutions is
+
+$$\sigma ::= \circ \Spb \sigma,(M/u) \Spb \sigma, (y//x)$$ 
+
+where $M$ ranges over arbitrary terms, and $y$ ranges over
+parameters.
+
+An invariant(*) of admissible substitutions is that if $\AdmSub{\sigma}{\Psi}$ then
+the domain of $\sigma$ is exactly the free variables of $\Psi$.  The codomain
+need not be all of $\Sigma$.  Similarly, whenever we apply 
+$A[\Theta]$ it will be the case that $\Theta$ substitutes exactly for the
+free variables of $A$.  
+
+The judgment on admissible substitutions will be 
+$$\AdmSub{\sigma}{\Psi}$$
+read ``$\sigma$ is an admissible substitution from $\Psi$ to $\Sigma$''.
+and meaning that $\sigma$ substitutes for all the free variables in
+$\Psi$, but can mention variables in $\Sigma$.  
+
+\bigskip 
+
+\infer{\AdmSub{\cdot}{\cdot}}{} 
+\bigskip 
+
+\infer{\AdmSub{(\sigma,M/u)}{\Psi,u:A}}{\AdmSub{\sigma}{\Psi} & \CheckTy[\Sigma]{M}{A[\sigma]}} 
+\bigskip 
+
+\infer{\AdmSub{(\sigma,y//x)}{\Psi,x:A}}{\AdmSub{\sigma}{\Psi} & \SynthTy[\Sigma]{y}{A'} & A' = \HerSub{A}} 
+\bigskip 
+
+\subsection{Forward Sequents}
+
+For the inverse method, we think of the usual sequent calculus rules, which work bottom-up, 
+backwards to work top-down.  
+
+The judgment 
+
+$$\Sequent{\Sigma}{A_1[\tau_1],\ldots,A_n[\tau_n]}{C[\sigma]}$$
+
+where for all $i$, 
+
+\begin{align*} 
+  &\AdmSub{\tau_i}{\Psi_i}\\
+  &\NSubform[\Psi_i]{A_i}\\
+  &\AdmSub{\sigma}{\Psi}\\
+  &\PSubform[\Psi]{C}
+\end{align*} 
+
+can be read as (modulo constraints on substitutions)
+``Given with parameters $\Sigma$ and hypotheses and derived formulas 
+$A_i$ under admissible substitutions $\tau_i$, the goal $C$ under admissible
+substitution $\sigma$ is derivable.''
+
+\subsection{Subsumption}
+
+$$
+\Sequent{\Sigma}{A_1[\tau_1],\ldots,A_n[\tau_n]}{C[\sigma]} \leq 
+\Sequent{\Sigma'}{A_1[\tau_1'],\ldots,A_k[\tau_k']}{C[\sigma']}
+$$
+
+if there exists an admissible substitution $\AdmSub[Sigma']{\Theta}{\Sigma}$
+such that 
+$\tau_1' = \tau_1 \Comp \Theta, \ldots, \tau_k' = \tau_k \Comp \Theta, \sigma' = \sigma \Comp \Theta$
+
+for some $n\leq k$.  
+
+\subsection{Unification}
+
+\subsection{Most General Unifiers}
+In the pattern fragment of LF, most general unifiers exist.  Therefore the
+function $\mgu(x,y)$ is well defined.  Keeping our invariant (*) in mind, 
+we will write $\mgu = (\Theta_1,\Theta_2)$ when the domain of the intended
+terms to which we apply the substitutions have different sets of free variables.
+That is, if the most general unifier of $A_1,A_2$ is $\Theta$ and 
+$fv(A_1) \neq fv(A_2)$ then 
+\begin{align*} 
+  \Theta_1 &= \mathbf{filter}\ (\lambda(x,\_).\ \mathbf{mem}(fv(A_1,x),x))\ \Theta \\ 
+  \Theta_2 &= \mathbf{filter}\ (\lambda(x,\_).\ \mathbf{mem}(fv(A_2,x),x))\ \Theta
+\end{align*} 
+
+
+\subsection{Forward Sequent Rules, Pattern Fragment}
+
+\infer[\textbf{Init}]{\Sequent{\Sigma}{P_1[\Theta_1]}{P_2[\Theta_2]}}{}
+\bigskip 
+for any $\NSubform[\Psi_1]{P_1}, \PSubform[\Psi_2]{P_2}$
+such that $\MGU{(\Theta_1,\Theta_2)}{\NSubform[\Psi_1]{P_1}}{\PSubform[\Psi_2]{P_2}}$
+with $\AdmSub{\Theta_1}{\Psi_1}$ and $\AdmSub{\Theta_2}{\Psi_2}$.
+
+\bigskip 
+\infer[\textbf{Contract}]{\Sequent{\Sigma'}{\Gamma[\Theta],A[\tau_1 \Comp \Theta}{C[\sigma \Comp \Theta}}
+                         {\Sequent{\Sigma}{\Gamma,A[\tau_1],A[\tau_2]}{C[\sigma]}}
+
+\bigskip 
+when $\AdmSub{\tau_1}{\Psi}$, $\AdmSub{\tau_2}{\Psi}$, and $\MGU[\Sigma']{\Theta}{\tau_1}{\tau_2}$
+\bigskip 
+
+\infer[\textbf{ArrowR1}]{\Sequent{\Sigma'}{\Gamma[\Theta]}{(A\LFArrow B)[\tau \Comp \Theta]}}
+                       {\Sequent{\Sigma}{\Gamma,A[\tau]}{B[\sigma]}}
+\bigskip 
+when $\MGU[\Sigma']{\Theta}{\tau}{\sigma}$, $\AdmSub{\Theta}{\Psi}$, $\AdmSub{\sigma}{\Psi}$, 
+and $\PSubform{A \LFArrow B}$
+\bigskip 
+
+\infer[\textbf{ArrowR2}]{\Sequent{\Sigma}{\Gamma}{(A\LFArrow B)[\sigma]}}
+                        {\Sequent{\Sigma}{\Gamma}{B[\sigma]}}
+\bigskip 
+when $\AdmSub{\sigma}{\Psi}$, and $\PSubform{A \LFArrow B}$
+\bigskip 
+
+\infer[\textbf{ArrowL}]{\Sequent{\Sigma}{\Gamma_1[\Theta_1],\Gamma_2[\Theta_2],(A\LFArrow B)[\tau_1 \Comp \Theta_1]}{C[\sigma \Comp \tau_2]}}
+                       {\Sequent{\Sigma_1}{\Gamma_1}{A[\tau_1]} & \Sequent{\Sigma_2}{\Gamma_2,B[\tau_2]}{C[\sigma]}}
+\bigskip 
+when
+\begin{align*} 
+  &\MGU{(\Theta_1,\Theta_2)}{\AdmSub{\Theta_1}{\Sigma_1}}{\AdmSub{\Theta_2}{\Sigma_2}}\\
+  &\AdmSub{\tau_1}{\Psi}\\
+  &\AdmSub{\tau_2}{\Psi}\\
+  &\NSubform{A \LFArrow B}
+\end{align*} 
+\bigskip 
+
+\infer[\textbf{PiL}]{\Sequent{\Sigma}{\Gamma, (\PiTyp{u}{A}{B})[\tau]}{C[\sigma]}}
+                    {\Sequent{\Sigma}{\Gamma, B[\tau,M/u]}{C[\sigma]}}
+\bigskip 
+when $\NSubform{\PiTyp{u}{A}{B}}$
+
+\bigskip 
+\infer[\textbf{PiR}]{\Sequent{\Sigma}{\Gamma}{(\PiTyp{x}{A}{B})[\sigma]}}
+                    {\Sequent{\Sigma,y:A'}{\Gamma}{B[\sigma,y//x]}}
+\bigskip 
+when $y\not\in \Gamma$, $A' = A[\sigma]$ and $\PSubform{\PiTyp{x}{A}{B}}$
+
+\subsection{Junk}
+
 
 \newcommand{\init}{(\Gamma_0^-,C_0^+)}
 

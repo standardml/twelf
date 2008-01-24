@@ -33,6 +33,7 @@
 
 %% Eager
 \newcommand{\CheckTy}[3][\Gamma]{#1\vdash #2 \Leftarrow #3}
+\newcommand{\SynthTy}[3][\Gamma]{#1\vdash #2 \Rightarrow #3}
 \newcommand{\Focus}[4][\Gamma]{#1\vdash #2 : #3 > #4}
 \newcommand{\Equiv}[2]{#1\equiv #2}
 
@@ -48,6 +49,10 @@
 \newcommand{\App}{~@~}
 \newcommand{\Shift}{\uparrow}
 \newcommand{\IdSub}{\mathtt{id}}
+%% Admissible substitutions
+\newcommand{\AdmSub}[3][\Sigma]{#1\vdash #2:#3}
+%% Hereditary substitutions
+\newcommand{\HerSub}[2][\sigma]{#2[#1]_h}
 
 % Equivalence
 \newcommand{\StepsTo}{\rightsquigarrow}
@@ -61,5 +66,9 @@
 \newcommand{\Sequent}[4][]{#2\ ;\ #3 \SeqArr_{#1} #4}
 
 % Subformulas
-\newcommand{\Subform}{\leq}
+\newcommand{\PSubform}[2][\Psi]{\ensuremath{#1\vdash #2^+}}
+\newcommand{\NSubform}[2][\Psi]{\ensuremath{#1\vdash #2^-}}
 
+% Unification
+\newcommand{\mgu}{\mathit{mgu}}
+\newcommand{\MGU}[4][\Sigma]{#1\vdash #2 = \mgu(#3,#4)}
