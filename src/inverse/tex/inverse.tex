@@ -32,7 +32,7 @@ We define \emph{signed subformulas} of a formula $F$ with judgments:
 \end{align*} 
 
 where 
-$$\Psi ::= \circ \Spb \Psi, v:A \Spb \Psi, x:A$$
+$$\Psi ::= \cdot \Spb \Psi, v:A \Spb \Psi, x:A$$
 
 Here $v$ ranges over arbitrary terms and $x$ ranges over
 fixed parameters.
@@ -43,19 +43,19 @@ rules:
 
 \bigskip 
 \begin{tabular}{cc}
-\infer{\NSubform{A}}{\PSubform{A\LFArrow B}} &
-\infer{\NSubform{B}}{\PSubform{A\LFArrow B}} \\
-\infer{\PSubform{A}}{\NSubform{A\LFArrow B}} &
-\infer{\PSubform{B}}{\NSubform{A\LFArrow B}} \\
-\infer{\PSubform[\Psi,x:A]{B}}{\PSubform{\PiTyp{x}{A}{B}}} &
-\infer{\NSubform[\Psi,u:A]{B}}{\NSubform{\PiTyp{u}{A}{B}}} \\
+\infer{\NSubform{A}}{\PSubform{(A\LFArrow B)}} &
+\infer{\NSubform{B}}{\PSubform{(A\LFArrow B)}} \\
+\infer{\PSubform{A}}{\NSubform{(A\LFArrow B)}} &
+\infer{\PSubform{B}}{\NSubform{(A\LFArrow B)}} \\
+\infer{\PSubform[\Psi,x:A]{B}}{\PSubform{(\PiTyp{x}{A}{B})}} &
+\infer{\NSubform[\Psi,u:A]{B}}{\NSubform{(\PiTyp{u}{A}{B})}} \\
 \end{tabular} 
 \bigskip 
 
 Note that there are no rules for families of kind $\Type$.
 
-To find the subformulas of a given goal formula, we run
-the above rules as a forward logic program to saturation.  
+To find the subformulas of a given goal formula $G$, we run
+the above rules as a forward logic program to saturation on $\PSubform{G}$.  
 
 \subsection{Admissible Substitutions}
 
@@ -73,8 +73,8 @@ where $M$ ranges over arbitrary terms, and $y$ ranges over
 parameters.
 
 An invariant(*) of admissible substitutions is that if $\AdmSub{\sigma}{\Psi}$ then
-the domain of $\sigma$ is exactly the free variables of $\Psi$.  The codomain
-need not be all of $\Sigma$.  Similarly, whenever we apply 
+the domain of $\sigma$ is exactly the free variables of $\Psi$.  (The codomain
+need not mention all of $\Sigma$.)  Similarly, whenever we apply 
 $A[\Theta]$ it will be the case that $\Theta$ substitutes exactly for the
 free variables of $A$.  
 
@@ -90,9 +90,13 @@ $\Psi$, but can mention variables in $\Sigma$.
 \bigskip 
 
 \infer{\AdmSub{(\sigma,M/u)}{\Psi,u:A}}{\AdmSub{\sigma}{\Psi} & \CheckTy[\Sigma]{M}{A[\sigma]}} 
+\smallskip 
+when $u\not\in\Psi$
 \bigskip 
 
 \infer{\AdmSub{(\sigma,y//x)}{\Psi,x:A}}{\AdmSub{\sigma}{\Psi} & \SynthTy[\Sigma]{y}{A'} & A' = \HerSub{A}} 
+\smallskip 
+when $x\not\in\Psi$
 \bigskip 
 
 \subsection{Forward Sequents}
@@ -114,18 +118,18 @@ where for all $i$,
 \end{align*} 
 
 can be read as (modulo constraints on substitutions)
-``Given with parameters $\Sigma$ and hypotheses and derived formulas 
+``Given the parameters $\Sigma$ and hypotheses and derived formulas 
 $A_i$ under admissible substitutions $\tau_i$, the goal $C$ under admissible
 substitution $\sigma$ is derivable.''
 
 \subsection{Subsumption}
 
 $$
-\Sequent{\Sigma}{A_1[\tau_1],\ldots,A_n[\tau_n]}{C[\sigma]} \leq 
-\Sequent{\Sigma'}{A_1[\tau_1'],\ldots,A_k[\tau_k']}{C[\sigma']}
+(\Sequent{\Sigma}{A_1[\tau_1],\ldots,A_n[\tau_n]}{C[\sigma]}) \leq 
+(\Sequent{\Sigma'}{A_1[\tau_1'],\ldots,A_k[\tau_k']}{C[\sigma']})
 $$
 
-if there exists an admissible substitution $\AdmSub[Sigma']{\Theta}{\Sigma}$
+if there exists an admissible substitution $\AdmSub[\Sigma']{\Theta}{\Sigma}$
 such that 
 $\tau_1' = \tau_1 \Comp \Theta, \ldots, \tau_k' = \tau_k \Comp \Theta, \sigma' = \sigma \Comp \Theta$
 
@@ -149,35 +153,44 @@ $fv(A_1) \neq fv(A_2)$ then
 \subsection{Forward Sequent Rules, Pattern Fragment}
 
 \infer[\textbf{Init}]{\Sequent{\Sigma}{P_1[\Theta_1]}{P_2[\Theta_2]}}{}
-\bigskip 
-for any $\NSubform[\Psi_1]{P_1}, \PSubform[\Psi_2]{P_2}$
-such that $\MGU{(\Theta_1,\Theta_2)}{\NSubform[\Psi_1]{P_1}}{\PSubform[\Psi_2]{P_2}}$
-with $\AdmSub{\Theta_1}{\Psi_1}$ and $\AdmSub{\Theta_2}{\Psi_2}$.
+when
+\begin{align*} 
+  &\NSubform[\Psi_1]{P_1}\\
+  &\PSubform[\Psi_2]{P_2}\\
+  &\MGU{(\Theta_1,\Theta_2)}{\NSubform[\Psi_1]{P_1}}{\PSubform[\Psi_2]{P_2}}\\
+  &\AdmSub{\Theta_1}{\Psi_1}\\
+  &\AdmSub{\Theta_2}{\Psi_2}
+\end{align*} 
 
-\bigskip 
-\infer[\textbf{Contract}]{\Sequent{\Sigma'}{\Gamma[\Theta],A[\tau_1 \Comp \Theta}{C[\sigma \Comp \Theta}}
+\infer[\textbf{Contract}]{\Sequent{\Sigma'}{\Gamma[\Theta],A[\tau_1] \Comp \Theta}{C[\sigma \Comp \Theta]}}
                          {\Sequent{\Sigma}{\Gamma,A[\tau_1],A[\tau_2]}{C[\sigma]}}
-
-\bigskip 
-when $\AdmSub{\tau_1}{\Psi}$, $\AdmSub{\tau_2}{\Psi}$, and $\MGU[\Sigma']{\Theta}{\tau_1}{\tau_2}$
-\bigskip 
+when
+\begin{align*} 
+  &\AdmSub{\tau_1}{\Psi}\\
+  &\AdmSub{\tau_2}{\Psi}\\  
+  &\MGU[\Sigma']{\Theta}{\tau_1}{\tau_2}
+\end{align*} 
 
 \infer[\textbf{ArrowR1}]{\Sequent{\Sigma'}{\Gamma[\Theta]}{(A\LFArrow B)[\tau \Comp \Theta]}}
                        {\Sequent{\Sigma}{\Gamma,A[\tau]}{B[\sigma]}}
-\bigskip 
-when $\MGU[\Sigma']{\Theta}{\tau}{\sigma}$, $\AdmSub{\Theta}{\Psi}$, $\AdmSub{\sigma}{\Psi}$, 
-and $\PSubform{A \LFArrow B}$
-\bigskip 
+when 
+\begin{align*} 
+  &\MGU[\Sigma']{\Theta}{\tau}{\sigma} \\
+  &\AdmSub{\Theta}{\Psi} \\
+  &\AdmSub{\sigma}{\Psi}\\
+  &\PSubform{A \LFArrow B}
+\end{align*} 
 
 \infer[\textbf{ArrowR2}]{\Sequent{\Sigma}{\Gamma}{(A\LFArrow B)[\sigma]}}
                         {\Sequent{\Sigma}{\Gamma}{B[\sigma]}}
-\bigskip 
-when $\AdmSub{\sigma}{\Psi}$, and $\PSubform{A \LFArrow B}$
-\bigskip 
+when 
+\begin{align*} 
+  &\AdmSub{\sigma}{\Psi}\\
+  &\PSubform{A \LFArrow B}
+\end{align*} 
 
 \infer[\textbf{ArrowL}]{\Sequent{\Sigma}{\Gamma_1[\Theta_1],\Gamma_2[\Theta_2],(A\LFArrow B)[\tau_1 \Comp \Theta_1]}{C[\sigma \Comp \tau_2]}}
                        {\Sequent{\Sigma_1}{\Gamma_1}{A[\tau_1]} & \Sequent{\Sigma_2}{\Gamma_2,B[\tau_2]}{C[\sigma]}}
-\bigskip 
 when
 \begin{align*} 
   &\MGU{(\Theta_1,\Theta_2)}{\AdmSub{\Theta_1}{\Sigma_1}}{\AdmSub{\Theta_2}{\Sigma_2}}\\
@@ -185,62 +198,67 @@ when
   &\AdmSub{\tau_2}{\Psi}\\
   &\NSubform{A \LFArrow B}
 \end{align*} 
-\bigskip 
 
 \infer[\textbf{PiL}]{\Sequent{\Sigma}{\Gamma, (\PiTyp{u}{A}{B})[\tau]}{C[\sigma]}}
                     {\Sequent{\Sigma}{\Gamma, B[\tau,M/u]}{C[\sigma]}}
-\bigskip 
-when $\NSubform{\PiTyp{u}{A}{B}}$
+when 
+\begin{align*} 
+  \NSubform{\PiTyp{u}{A}{B}}
+\end{align*} 
 
-\bigskip 
 \infer[\textbf{PiR}]{\Sequent{\Sigma}{\Gamma}{(\PiTyp{x}{A}{B})[\sigma]}}
                     {\Sequent{\Sigma,y:A'}{\Gamma}{B[\sigma,y//x]}}
-\bigskip 
-when $y\not\in \Gamma$, $A' = A[\sigma]$ and $\PSubform{\PiTyp{x}{A}{B}}$
 
-\subsection{Junk}
+when 
+\begin{align*} 
+  &y\not\in \Gamma \\
+  &A' = A[\sigma] \\
+  &\PSubform{\PiTyp{x}{A}{B}}
+\end{align*} 
+
+%% \subsection{Junk}
 
 
-\newcommand{\init}{(\Gamma_0^-,C_0^+)}
+%% \newcommand{\init}{(\Gamma_0^-,C_0^+)}
 
-\infer[$Atom$]{P \vdash P}{}
-\bigskip 
-when $P \leq^+ \init$ and $P \leq^- \init$
-\bigskip 
+%% \infer[$Atom$]{P \vdash P}{}
+%% \bigskip 
+%% when $P \leq^+ \init$ and $P \leq^- \init$
+%% \bigskip 
 
-\infer[$Contract$]{\Gamma,A \vdash B}{\Gamma,A,A\vdash B}
-\bigskip 
+%% \infer[$Contract$]{\Gamma,A \vdash B}{\Gamma,A,A\vdash B}
+%% \bigskip 
 
-\infer[\to$R1$]{\Gamma\vdash A \LFArrow B}{\Gamma,A \vdash B & (A\LFArrow B \leq^+ \init)}
-\bigskip 
+%% \infer[\to$R1$]{\Gamma\vdash A \LFArrow B}{\Gamma,A \vdash B & (A\LFArrow B \leq^+ \init)}
+%% \bigskip 
 
-\infer[\LFArrow$R2$]{\Gamma\vdash A \LFArrow B}{\Gamma \vdash B & A \not\in\Gamma & (A\LFArrow B \leq^+ \init)}
-\bigskip 
+%% \infer[\LFArrow$R2$]{\Gamma\vdash A \LFArrow B}{\Gamma \vdash B & A \not\in\Gamma & (A\LFArrow B \leq^+ \init)}
+%% \bigskip 
 
-\infer[\LFArrow$L$]{\Gamma_1,\Gamma_2,A \LFArrow B\vdash C}{\Gamma_1,\vdash A,& \Gamma_2,A \vdash B & (A\LFArrow B \leq^- \init)}
-\bigskip 
+%% \infer[\LFArrow$L$]{\Gamma_1,\Gamma_2,A \LFArrow B\vdash C}{\Gamma_1,\vdash A,& \Gamma_2,A \vdash B & (A\LFArrow B \leq^- \init)}
+%% \bigskip 
 
-\subsection{The First Order Case}
+%% \subsection{The First Order Case}
 
-\newcommand{\seq}[3][\Sigma]{#1 ; #2 \vdash #3}
-\newcommand{\unif}[3][\Sigma]{#1 ; #2 = #3}
-\newcommand{\renaming}[1]{#1\ \mathsf{renaming}}
+%% \newcommand{\seq}[3][\Sigma]{#1 ; #2 \vdash #3}
+%% \newcommand{\unif}[3][\Sigma]{#1 ; #2 = #3}
+%% \newcommand{\renaming}[1]{#1\ \mathsf{renaming}}
 
-General Form:
+%% General Form:
 
-$$\Sigma; \Gamma[\tau] \vdash C[\sigma]$$
+%% $$\Sigma; \Gamma[\tau] \vdash C[\sigma]$$
 
-which is shorthand for
+%% which is shorthand for
 
-$$\Sigma; A_1[\tau_1],\ldots,A_n[\tau_n] \vdash C[\sigma]$$
+%% $$\Sigma; A_1[\tau_1],\ldots,A_n[\tau_n] \vdash C[\sigma]$$
 
-\bigskip 
+%% \bigskip 
 
-\infer[$Atom$]{\seq{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}} {}
-\bigskip 
-when $\unif{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}$ and $\renaming{\rho}$
-\bigskip 
+%% \infer[$Atom$]{\seq{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}} {}
+%% \bigskip 
+%% when $\unif{P_1^-[\rho\circ\tau]}{P_2^+[\tau]}$ and $\renaming{\rho}$
+%% \bigskip 
 
-\infer[\Pi$-R$]{\seq{\Gamma}{}}{}
-\bigskip 
+%% \infer[\Pi$-R$]{\seq{\Gamma}{}}{}
+%% \bigskip 
 
