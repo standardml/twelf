@@ -1,6 +1,0 @@
-#!/bin/csh
-echo "%files"
-echo "/usr/bin/twelf-server"
-foreach f (`find /usr/share/twelf -type f -print`)
-  echo $f
-end
