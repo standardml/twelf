@@ -1,6 +1,0 @@
-(* MLton version *)
-(* For use with MLton >= 20041109 *)
-Group is
-twelf.cm
-twelf-server.sml
-

@@ -16,10 +16,11 @@ Twelf is an implementation of
  - a set of expansion modules to deal natively with numbers and strings
  - an Emacs interface
 
-This README file applies to version Twelf 1.4 alpha, Dec 27 2002.
+This README file applies to version Twelf 1.4 alpha, Dec 27 2002; these
+instructions are out of date.
 For current information regarding Twelf, see the Twelf home page at
 
-  http://www.cs.cmu.edu/~twelf
+  http://www.twelf.org/
 
 Twelf can be compiled and installed under Unix, either as a separate
 "Twelf Server" intended primarily as an inferior process to Emacs, or as
@@ -31,7 +32,6 @@ Files
 
  README            --- this file
  Makefile          --- enables make
- load.sml          --- enables  use "load.sml"; (* especially for MLWorks *)
  twelf-server.sml  --- used to build Twelf Server
  twelf-sml         --- used to build Twelf SML
  bin/              --- utility scripts and heap location
@@ -43,9 +43,7 @@ Files
  sources.cm        --- enables make of Twelf-SML
  src/              --- the SML sources for Twelf
  tex/              --- TeX macros and style files
- smlnj/            --- build files for SML/NJ 110.20 or higher
- polyml/           --- build files for Poly/ML (tested with 4.1.3)
- mlton/            --- build files for MLton (tested with 20020923)
+ build/            --- build files (type "make" to see options)
 
 Installation Instructions
 =========================
