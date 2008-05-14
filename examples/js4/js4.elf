@@ -1,0 +1,107 @@
+%{
+   Judgmental S4
+   [A judgmental reconstruction of modal logic, F.Pfenning and R.Davies,
+    MSCS 11:511-540, 2001]
+
+   Representation with intrinsic types, worlds,
+   but not a Kripke semantics
+
+   Idea: Translate the judgment
+     u1::B1,...,un::Bn ; x1:A1,...,xm:Am |- J
+   as
+     u1:{W'}tm B1 W',...,un:{W'}tm Bn W', ---, 
+     x1:tm A1 W,...,xm:tm Am W |- J*
+
+   where "---" are assumptions y:tm B W' for W' <> W
+   and if J = (M : A) then J* = M* : tm A W
+       if J = (E - A) then J* = E* : exp A W
+}%
+
+tp : type.				%name tp A.
+=> : tp -> tp -> tp.
+box : tp -> tp.
+dia : tp -> tp.
+%infix right 10 =>.
+
+world : type.				%name world W w.
+
+tm : tp -> world -> type.		%name tm M x.
+exp : tp -> world -> type.		%name exp E.
+
+lam : (tm A W -> tm B W) -> tm (A => B) W.
+app : tm (A => B) W -> tm A W -> tm B W.
+boxi : ({w:world} tm A w) -> tm (box A) W.
+boxe : tm (box A) W -> (({W':world} tm A W') -> tm C W) -> tm C W.
+t2e : tm A W -> exp A W.
+diai : exp A W -> tm (dia A) W.
+diae : tm (dia A) W -> ({w:world} tm A w -> exp C w) -> exp C W.
+boxep : tm (box A) W -> (({W':world} tm A W') -> exp C W) -> exp C W.
+
+subdia : exp A W -> ({w:world} tm A w -> exp C w) -> exp C W -> type.
+%mode subdia +E +F -F'.
+
+sdt2e : subdia (t2e M) ([w][x] F w x) (F W M).
+sddiae : subdia (diae M [v][y] E v y) ([w][x] F w x) (diae M [v][y] F' v y)
+	  <- ({v:world}{y:tm B v} subdia (E v y) ([w][x] F w x) (F' v y)).
+sdboxep : subdia (boxep M [u] E u) ([w][x] F w x) (boxep M [u] F' u)
+	   <- ({u:{V:world} tm B V} subdia (E u) ([w][x] F w x) (F' u)).
+
+%block by : some {B:tp} block {v:world}{y:tm B v}.
+%block bu : some {B:tp} block {u:{V:world} tm B V}.
+%worlds (by | bu) (subdia E F F').
+%total E (subdia E F _).
+
+%{ This does not work, unfortunately
+str : (tm A W -> {w:world} tm C w) -> ({w:world} tm C w) -> type.
+stre : (tm A W -> {w:world} exp C w) -> ({w:world} exp C w) -> type.
+strlam : str ([x][w] lam [y2] M1 x w y2) ([w] lam [y2] M1' w y2)
+	  <- ({y2:tm C2 w}		% problem here!
+		str ([x][w] y2) ([w] y2)
+		-> str ([x][w] M1 x w y2) ([w] M1' w y2)).
+strapp : str ([x][w] app (M1 x w) (M2 x w)) ([w] app (M1' w) (M2' w))
+	  <- str ([x] [w] M1 x w) ([w] M1' w)
+	  <- str ([x] [w] M2 x w) ([w] M2' w).
+strboxi : str ([x][w] boxi [v] M1 x w v) ([w] boxi [v] M1' w v)
+	   <- ({v:world} str ([x][w] M1 x w v) ([w] M1' w v)).
+strboxe : str ([x][w] boxe (M1 x w) [u] M2 x w u) ([w] boxe (M1' w) [u] M2' w u)
+	   <- str ([x][w] M1 x w) ([w] M1' w)
+	   <- ({u:{W':world} tm A W'}
+		 str ([x][w] u w) ([w] u w)
+		 -> str ([x][w] M2 x w u) (M2' w u)).
+... more case missing ...
+}%
+
+% Examples
+
+_ : tm (box A => A) W
+     = lam [x] boxe x [u] u W.
+_ : tm (box A => box (box A)) W
+     = lam [x] boxe x [u] boxi [w] boxi [w'] u w'.
+_ : tm (box (A => B) => box A => box B) W
+     = lam [x] lam [y] boxe x [u] boxe y [v] boxi [w] app (u w) (v w).
+_ : tm (A => dia A) W
+     = lam [x] diai (t2e x).
+_ : tm (dia (dia A) => dia A) W
+     = lam [x] diai (diae x [w][y] diae y [v][z] t2e z).
+_ : tm (box (A => B) => dia A => dia B) W
+     = lam [x] lam [y] diai (boxep x [u] diae y [w][z] t2e (app (u w) z)).
+
+% Counterexamples, all must fail
+%{
+% next two are characteristic
+_ : tm (A => box A) W
+     = lam [x] boxi [w] x.
+_ : tm (dia A => A) W
+     = lam [x] diae x [w][y] t2e y.
+% next shows dia is not "normal"
+_ : tm (dia (A => B) => dia A => dia B) W
+     = lam [x] lam [y] diai (diae x [w][x'] diae y [v][y'] t2e (app x' y')).
+% next one is true is Kripke semantics a la Simpson
+_ : tm ((dia A => box B) => box (A => B)) W
+     = lam [x] boxi [w] lam [y] boxe (app x (diai (t2e y))) [u] u w.
+% next two are true in S5, not S4
+_ : tm (dia A => box (dia A)) W
+     = lam [x] diae x [w][x'] t2e (boxi [v] diai (t2e x')).
+_ : tm (dia (box A) => box A) W
+     = lam [x] boxi [w] diae x [w'][x'] boxe x' [u] u w.
+}%
