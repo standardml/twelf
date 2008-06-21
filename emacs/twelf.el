@@ -479,8 +479,8 @@ Maintained to present reasonable menus.")
   ;; Delimited comments are %{ }%, see 1234 below.
   (set-twelf-syntax ?\ "    ")            ; whitespace
   (set-twelf-syntax ?\t "    ")           ; whitespace
-  (set-twelf-syntax ?% "< 14")            ; comment begin
-  (set-twelf-syntax ?\n ">   ")           ; comment end
+  (set-twelf-syntax ?% "< 14b")           ; comment begin
+  (set-twelf-syntax ?\n ">  b")           ; comment end
   (set-twelf-syntax ?: ".   ")            ; punctuation
   (set-twelf-syntax ?. ".   ")            ; punctuation
   (set-twelf-syntax ?\( "()  ")           ; open delimiter
