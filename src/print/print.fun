@@ -893,6 +893,7 @@ in
      (b) types need not be well-formed, since they are not used
   *)
   fun formatDec (G, D) = fmtDec (G, 0, (D, I.id))
+  fun formatDecList (G, D) = F.HVbox (fmtDecList (G, D))
   fun formatExp (G, U) = fmtExp (G, 0, noCtxt, (U, I.id))
   fun formatSpine (G, S) = fmtSpine (G, 0, 0, (S, I.id))
   fun formatConDec (condec) = fmtConDec (false, condec)

@@ -48,7 +48,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
+                             "While checking constant " ^ Names.qidToString (Names.constQid c) ^ ":\n" ^ msg)))
 
   type dlist = IntSyn.Dec list
 
@@ -91,6 +91,43 @@ struct
       | One				(*     | 1                    *)
 
     exception Success			(* signals worldcheck success *)
+
+
+    (* Format a regular world *)
+    fun formatReg r =
+	(case r 
+           of Block (G, dl) =>
+	      Print.formatDecList (G, dl)
+            (* Is this correct? - gaw *) 
+	    | Seq (dl, s) =>
+	      Print.formatDecList (I.Null, map (fn d => I.decSub(d, s)) dl)
+	    | Star r =>
+	      F.Hbox ([F.String "(", formatReg r, F.String ")*"])
+	    | Plus (r1, r2) => 
+	      F.Hbox ([F.String "(", formatReg r1, F.String ")",
+		       F.Space, F.String "|", F.Space, 
+		       F.String "(", formatReg r2, F.String ")"])
+	    | One => 
+              F.String "1")
+
+    (* Format a subsumption failure judgment 
+       msg: Prefix for the message
+       dl : declaration list
+       Rb : regular world
+       b : family
+       Displays:
+
+         msg for family b:
+         G |- dl </: Rb
+     *)
+    fun formatSubsump msg (G, dl, Rb, b) =
+	F.HVbox ([F.String msg, F.Space, F.String "for family", F.Space,
+		  F.String ((Names.qidToString (Names.constQid b)) ^ ":"),
+		  F.Newline (),
+		  Print.formatCtx(I.Null, G), F.Break, F.String "|-",
+		  F.Space, Print.formatDecList (G, dl),
+		  F.Space, F.String ("</:"), F.Space,
+		  formatReg Rb])
 
     (* createEVarSub G G' = s
      
@@ -316,7 +353,7 @@ struct
     *)
     fun checkSubsumedBlock (G, I.Null, L', Rb, b) =
         (( accR ((G, L'), Rb, b, init b) ;
-	  raise Error ("World subsumption failure for family " ^ Names.qidToString (Names.constQid b)) )
+	  raise Error (F.makestring_fmt (formatSubsump "World subsumption failure" (G, L', Rb, b)))) 
 	 handle Success => ())
       | checkSubsumedBlock (G, I.Decl(G',D), L', Rb, b) =
 	  checkSubsumedBlock (decEName (G, D), G', L', Rb, b)
@@ -355,7 +392,7 @@ struct
 	  val L = subGoalToDList V
 	in
 	  (accR ((G, L), Rb, b, init b);
-	   raise Error' (occ, "World violation"))
+	   raise Error' (occ, F.makestring_fmt (formatSubsump "World violation" (G, L, Rb, b))))
 	end
 	handle Success => ()
 
