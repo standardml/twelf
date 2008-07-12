@@ -10,6 +10,7 @@ sig
   val parseQualId' : (string list * Parsing.lexResult) Parsing.parser
   val parseQualIds' : ((string list * string) list) Parsing.parser 
   val parseFreeze' : ((string list * string) list) Parsing.parser
+  val parseSubord' : (((string list * string) * (string list * string)) list) Parsing.parser
   val parseThaw' : ((string list * string) list) Parsing.parser
   val parseDeterministic' : ((string list * string) list) Parsing.parser
   val parseCompile' : ((string list * string) list) Parsing.parser (* -ABP 4/4/03 *)

@@ -52,6 +52,7 @@ sig
     | TRUSTME			        (* `%trustme' *)
     | FREEZE                            (* `%freeze' *)
     | THAW				(* `%thaw' *)
+    | SUBORD				(* `%subord' *) (* -gaw 07/11/08 *)
     | DETERMINISTIC                     (* `%deterministic' *) (* -rv 11/27/01 *)
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)

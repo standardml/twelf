@@ -38,6 +38,7 @@ sig
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
     | TrustMe of fileParseResult * Paths.region (* -fp *)
+    | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
     | FreezeDec of Names.Qid list
     | ThawDec of Names.Qid list
     | DeterministicDec of Names.Qid list  (* -rv *)

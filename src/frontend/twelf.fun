@@ -571,6 +571,31 @@ struct
 	  ()
 	end
 
+      (* %subord (<qid> <qid>) ... *)
+      | install1 (fileName, (Parser.SubordDec (qidpairs), r)) = 
+        let
+          fun toCid qid =
+              case Names.constLookup qid
+                of NONE => raise Names.Error ("Undeclared identifier "
+                                              ^ Names.qidToString (valOf (Names.constUndef qid))
+                                              ^ " in subord declaration")
+                 | SOME cid => cid
+          val cidpairs = List.map (fn (qid1, qid2) => (toCid qid1, toCid qid2)) qidpairs
+                     handle Names.Error (msg) =>
+		       raise Names.Error (Paths.wrap (r, msg))
+	  val _ = List.app Subordinate.addSubord cidpairs
+    	            handle Subordinate.Error (msg) =>
+		      raise Subordinate.Error (Paths.wrap (r, msg))
+        in
+          if !Global.chatter >= 3
+          then msg ("%subord"
+                      ^ List.foldr 
+			    (fn ((a1, a2), s) => " (" ^ 
+				Names.qidToString (Names.constQid a1) ^ " " ^
+				Names.qidToString (Names.constQid a2) ^ ")" ^ s) ".\n" cidpairs)
+          else ()
+        end
+
       (* %freeze <qid> ... *)
       | install1 (fileName, (Parser.FreezeDec (qids), r)) = 
         let

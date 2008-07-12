@@ -68,7 +68,8 @@ struct
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
-    | TrustMe of fileParseResult * Paths.region (* -fp *)
+    | TrustMe of fileParseResult * Paths.region (* -fp *)    
+    | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
     | FreezeDec of Names.Qid list
     | ThawDec of Names.Qid list
     | DeterministicDec of Names.Qid list  (* -rv *)
@@ -197,6 +198,7 @@ struct
       | parseStream' (f as LS.Cons ((L.ASSERT, r), s'), sc) = parseAssert' (f, sc)
       | parseStream' (f as LS.Cons ((L.TRUSTME, r), s'), sc) = parseTrustMe' (f, sc)
       | parseStream' (f as LS.Cons ((L.FREEZE, r), s'), sc) = parseFreeze' (f, sc)
+      | parseStream' (f as LS.Cons ((L.SUBORD, r), s'), sc) = parseSubord' (f, sc)
       | parseStream' (f as LS.Cons ((L.THAW, r), s'), sc) = parseThaw' (f, sc)
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
       | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
@@ -365,6 +367,15 @@ struct
 	in 
 	  parseNextDec' (parseStream' (LS.expose s, sc))
 	end
+
+    and parseSubord' (f as LS.Cons ((_, r0), s), sc) =
+        let
+          val (qidpairs, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseSubord' (LS.expose s)
+          val r = Paths.join (r0, r')
+          val qidpairs = map (fn (qid1, qid2) => (Names.Qid qid1, Names.Qid qid2)) qidpairs
+        in
+          Stream.Cons ((SubordDec qidpairs, r), parseStream (stripDot f', sc))
+        end
 
     and parseFreeze' (f as LS.Cons ((_, r0), s), sc) =
         let

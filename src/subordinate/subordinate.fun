@@ -554,6 +554,8 @@ struct
     val frozen = frozen
     val thaw = thaw
 
+    val addSubord = addSubord
+
     val below = below
     val belowEq = belowEq
     val equiv = equiv

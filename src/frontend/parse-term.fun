@@ -222,6 +222,45 @@ struct
       | parseQualIds' (LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected list of labels, found token " ^ L.toString t)
 
+    (* Copied from parse-mode, should probably try to abstract all 
+       of the strip* functions into a common location - gaw *)
+    fun stripRParen (LS.Cons ((L.RPAREN, r), s')) = LS.expose s'
+      | stripRParen (LS.Cons ((t, r), s')) = (* t = `.' or ? *)
+          Parsing.error (r, "Expected closing `)', found " ^ L.toString t)
+
+    fun parseSubordPair2 (f as LS.Cons ((L.ID _, _), _), qid) =
+        let
+          val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+        in
+	  ((qid, (ids, name)), stripRParen f')
+        end
+      | parseSubordPair2 (LS.Cons ((t, r), s'), qid) = 
+          Parsing.error (r, "Expected identifier, found token "
+                            ^ L.toString t)
+
+    fun parseSubordPair1 (f as LS.Cons ((L.ID _, _), _)) =
+        let
+          val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
+        in
+	  parseSubordPair2(f', (ids, name))
+        end
+      | parseSubordPair1 (LS.Cons ((t, r), s')) = 
+          Parsing.error (r, "Expected identifier, found token "
+                            ^ L.toString t)
+
+    fun parseSubord' (LS.Cons ((L.LPAREN, r), s'), qidpairs) =
+        let
+          val (qidpair, f) = parseSubordPair1 (LS.expose s')
+        in
+          parseSubord' (f, qidpair::qidpairs)
+        end
+      | parseSubord' (f as LS.Cons ((L.DOT, _), _), qidpairs) =
+          (List.rev qidpairs, f)
+      | parseSubord' (LS.Cons ((t, r), s'), qidpairs) = 
+          Parsing.error (r, "Expected a pair of identifiers, found token "
+                            ^ L.toString t)
+
+
     fun parseFreeze' (f as LS.Cons ((L.ID _, _), _), qids) =
         let
           val ((ids, (L.ID (idCase, name), r1)), f') = parseQualId' f
@@ -421,6 +460,7 @@ struct
   in
     val parseQualId' = parseQualId'
     val parseQualIds' = parseQualIds'
+    val parseSubord' = (fn f => parseSubord' (f, nil))
     val parseFreeze' = (fn f => parseFreeze' (f, nil))
     val parseThaw' = (fn f => parseThaw' (f, nil))
     val parseDeterministic' = (fn f => parseDeterministic' (f, nil))

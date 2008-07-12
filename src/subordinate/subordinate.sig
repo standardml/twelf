@@ -19,6 +19,8 @@ sig
   val thaw : IntSyn.cid list -> IntSyn.cid list (* reverse transitive thaw, returns thawed cids *)
   val frozen : IntSyn.cid list -> bool (* any cid in list frozen? *)
 
+  val addSubord : IntSyn.cid * IntSyn.cid -> unit
+
   val below : IntSyn.cid * IntSyn.cid -> bool (* transitive closure *)
   val belowEq : IntSyn.cid * IntSyn.cid -> bool	(* refl. transitive closure *)
   val equiv : IntSyn.cid * IntSyn.cid -> bool (* mutual dependency *)
