@@ -381,6 +381,7 @@ struct
     | toString' (ASSERT) = "%assert"
     | toString' (ABBREV) = "%abbrev"
     | toString' (TRUSTME) = "%trustme"
+    | toString' (SUBORD) = "%subord"
     | toString' (FREEZE) = "%freeze"
     | toString' (THAW) = "%thaw"
     | toString' (DETERMINISTIC) = "%deterministic"  (* -rv 11/27/01. *)
