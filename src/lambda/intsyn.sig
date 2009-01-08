@@ -4,12 +4,13 @@
 
 signature INTSYN =
 sig
+  
 
   type cid = int			(* Constant identifier        *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
-
+  
   type FgnExp = exn                     (* foreign expression representation *)
   exception UnexpectedFgnExp of FgnExp
                                         (* raised by a constraint solver

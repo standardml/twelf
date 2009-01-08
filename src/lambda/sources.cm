@@ -34,6 +34,8 @@ is
   order.sig
   order.fun
   order.sml
+  signature.sig
+  signature.fun
   intsyn.sig
   intsyn.fun
   tomega.sig

@@ -178,7 +178,72 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
-(*  exception Error of string             (* raised if out of space     *) *)
+
+  (* *************************************************** *)
+  structure  Signature  =
+    struct
+      val emptystr = StrDec ("", NONE)
+      val emptycon = ConDec("", NONE, 0, Normal, Uni (Kind), Kind)
+	
+      val maxCid = Global.maxCid
+      val sgnArray = Array.array (maxCid+1, emptycon)
+	: ConDec Array.array
+      val nextCid  = ref(0)
+	
+      val maxMid = Global.maxMid
+      val sgnStructArray = Array.array (maxMid+1,emptystr)
+	: StrDec Array.array
+      val nextMid = ref (0)
+	
+      fun sgnClean (i) = if i >= !nextCid then ()
+			 else (Array.update (sgnArray, i, emptycon);
+			       sgnClean (i+1))
+			   
+      fun sgnReset () = (sgnClean (0);
+			 nextCid := 0; nextMid := 0)
+      fun sgnSize () = (!nextCid, !nextMid)
+	
+      fun sgnAdd (conDec:ConDec) = 
+        let
+	  val cid = !nextCid
+	in
+	  if cid > maxCid
+	    then raise Error ("Global signature size " ^ Int.toString (maxCid+1) ^ " exceeded")
+	  else (Array.update (sgnArray, cid, conDec) ;
+		nextCid := cid + 1;
+		cid)
+	end
+      
+      (* 0 <= cid < !nextCid *)
+      fun sgnLookup (cid) = Array.sub (sgnArray, cid)
+	
+      fun sgnApp (f) =
+        let
+	  fun sgnApp' (cid) = 
+	    if cid = !nextCid then () else (f cid; sgnApp' (cid+1)) 
+	in
+	  sgnApp' (0)
+	end
+      
+      fun sgnStructAdd (strDec:StrDec) = 
+        let
+	  val mid = !nextMid
+	in
+	  if mid > maxMid
+	    then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
+	  else (Array.update (sgnStructArray, mid, strDec) ;
+		nextMid := mid + 1;
+		mid)
+	end
+      
+      (* 0 <= mid < !nextMid *)
+      fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
+	
+	
+      fun hack (cid, conDec:ConDec) = Array.update (sgnArray, cid, conDec)
+	
+    end;  (* end signature *)
+  (* *************************************************** *)
 
 
   structure FgnExpStd = struct
@@ -289,19 +354,6 @@ struct
 
   fun strDecParent (StrDec (_, parent)) = parent
 
-  local
-    val maxCid = Global.maxCid
-    val dummyEntry = ConDec("", NONE, 0, Normal, Uni (Kind), Kind)
-    val sgnArray = Array.array (maxCid+1, dummyEntry)
-      : ConDec Array.array
-    val nextCid  = ref(0)
-
-    val maxMid = Global.maxMid
-    val sgnStructArray = Array.array (maxMid+1, StrDec("", NONE))
-      : StrDec Array.array
-    val nextMid = ref (0)
-
-  in
     (* Invariants *)
     (* Constant declarations are all well-typed *)
     (* Constant declarations are stored in beta-normal form *)
@@ -309,53 +361,14 @@ struct
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
     (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
-    fun sgnClean (i) = if i >= !nextCid then ()
-                       else (Array.update (sgnArray, i, dummyEntry);
-			     sgnClean (i+1))
-
-    fun sgnReset () = ((* Fri Dec 20 12:04:24 2002 -fp *)
-		       (* this circumvents a space leak *)
-		       sgnClean (0);
-		       nextCid := 0; nextMid := 0)
-    fun sgnSize () = (!nextCid, !nextMid)
-
-    fun sgnAdd (conDec) = 
-        let
-	  val cid = !nextCid
-	in
-	  if cid > maxCid
-	    then raise Error ("Global signature size " ^ Int.toString (maxCid+1) ^ " exceeded")
-	  else (Array.update (sgnArray, cid, conDec) ;
-		nextCid := cid + 1;
-		cid)
-	end
-
-    (* 0 <= cid < !nextCid *)
-    fun sgnLookup (cid) = Array.sub (sgnArray, cid)
-
-    fun sgnApp (f) =
-        let
-	  fun sgnApp' (cid) = 
-	      if cid = !nextCid then () else (f cid; sgnApp' (cid+1)) 
-	in
-	  sgnApp' (0)
-	end
-
-    fun sgnStructAdd (strDec) = 
-        let
-	  val mid = !nextMid
-	in
-	  if mid > maxMid
-	    then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
-	  else (Array.update (sgnStructArray, mid, strDec) ;
-		nextMid := mid + 1;
-		mid)
-	end
-
-    (* 0 <= mid < !nextMid *)
-    fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
-
-    (* A hack used in Flit - jcreed 6/05 *)
+    val sgnClean = Signature.sgnClean
+    val sgnReset = Signature.sgnReset
+    val sgnSize = Signature.sgnSize
+    val sgnAdd  = Signature.sgnAdd
+    val sgnLookup = Signature.sgnLookup
+    val sgnApp =  Signature.sgnApp
+    val sgnStructAdd = Signature.sgnStructAdd
+    val sgnStructLookup = Signature.sgnStructLookup
     fun rename (cid, new) =
 	let
 	    val newConDec = case sgnLookup cid of 
@@ -365,10 +378,8 @@ struct
 	      | BlockDec (n,m,d,d') => BlockDec (new,m,d,d')
 	      | SkoDec (n,m,i,e,u) => SkoDec (new,m,i,e,u)
 	in
-	    Array.update (sgnArray, cid, newConDec)
+	    Signature.hack (cid, newConDec)
 	end
-
-  end
 
   fun constDef (d) =
       (case sgnLookup (d)
@@ -662,3 +673,4 @@ end;  (* functor IntSyn *)
 
 structure IntSyn :> INTSYN =
   IntSyn (structure Global = Global);
+
