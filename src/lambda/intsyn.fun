@@ -7,7 +7,8 @@ struct
 
   type cid = int			(* Constant identifier        *)
   type name = string			(* Variable name              *)
-  type mid = int                        (* Structure identifier       *)
+  type mid = int                        (* Module identifier          *)
+  type qid = int list                   (* Qualified identifier       *)
   type csid = int                       (* CS module identifier       *)
 
 
@@ -163,9 +164,6 @@ struct
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
-  datatype StrDec =                     (* Structure declaration      *)
-      StrDec of string * mid option
-
   (* Form of constant declaration *)
   datatype ConDecForm =
     FromCS				(* from constraint domain *)
@@ -178,71 +176,80 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
+  datatype StrDec = StrDec of mid * ((qid * Exp) list)
 
-  (* *************************************************** *)
-  structure  Signature  =
+  (* This structure encapsulates the state, i.e., the table containing the declarations. *)
+  (* An attempt to put it into a separate file failed because ConDec cannot be taken out IntSyn. *)
+  structure Signature  =
     struct
-      val emptystr = StrDec ("", NONE)
-      val emptycon = ConDec("", NONE, 0, Normal, Uni (Kind), Kind)
-	
-      val maxCid = Global.maxCid
-      val sgnArray = Array.array (maxCid+1, emptycon)
-	: ConDec Array.array
-      val nextCid  = ref(0)
-	
-      val maxMid = Global.maxMid
-      val sgnStructArray = Array.array (maxMid+1,emptystr)
-	: StrDec Array.array
-      val nextMid = ref (0)
-	
-      fun sgnClean (i) = if i >= !nextCid then ()
+    	structure LH = ListHashTable
+    	structure IH = IntHashTable
+	 (* a structure declaration instantiates a module with a list of assignments of expressions to qids *)
+	val symTable   : ConDec LH.Table = LH.new(19999)
+	val structTable : StrDec LH.Table = LH.new(999)
+	val modTable   : (int * int) IH.Table = IH.new(499)
+	(* should be array since editing is necessary for every entry *)
+
+        val nextMid = ref(0)
+	fun nextCid(m : mid) = #1 (valOf (IH.lookup(modTable)(m)))
+	fun incrCid(m : mid) = ()
+	fun nextSid(m : mid) = #2 (valOf (IH.lookup(modTable)(m)))
+	fun incrSid(m : mid) = ()
+
+        val scope : int list ref = ref nil
+        fun current() = hd (! scope)
+
+      (* fun sgnClean (i) = if i >= !nextCid then ()
 			 else (Array.update (sgnArray, i, emptycon);
 			       sgnClean (i+1))
-			   
-      fun sgnReset () = (sgnClean (0);
-			 nextCid := 0; nextMid := 0)
-      fun sgnSize () = (!nextCid, !nextMid)
-	
-      fun sgnAdd (conDec:ConDec) = 
+	*)
+      fun sgnReset () = ()
+
+      fun sgnSize () = (0,0)
+      
+      fun sgnAdd' (m : mid, conDec : ConDec) =
         let
-	  val cid = !nextCid
+	  val cid = nextCid(m)
 	in
-	  if cid > maxCid
-	    then raise Error ("Global signature size " ^ Int.toString (maxCid+1) ^ " exceeded")
-	  else (Array.update (sgnArray, cid, conDec) ;
-		nextCid := cid + 1;
-		cid)
+	  LH.insert(symTable)(m :: cid :: nil, conDec);
+	  cid
 	end
       
-      (* 0 <= cid < !nextCid *)
-      fun sgnLookup (cid) = Array.sub (sgnArray, cid)
-	
-      fun sgnApp (f) =
-        let
-	  fun sgnApp' (cid) = 
-	    if cid = !nextCid then () else (f cid; sgnApp' (cid+1)) 
-	in
-	  sgnApp' (0)
-	end
+      fun sgnAdd (conDec : ConDec) = sgnAdd'(current(), conDec)
+
+      fun sgnLookup' (m : mid, q : qid) = valOf(LH.lookup(symTable)(m :: q))
+      fun sgnLookup (c : cid) = sgnLookup'(current(), c :: nil)
       
-      fun sgnStructAdd (strDec:StrDec) = 
+      fun sgnApp'(m : mid, f : cid -> unit) =
         let
-	  val mid = !nextMid
+	  fun doRest(cid) = 
+	    if cid = nextCid(m) then () else (f cid; doRest(cid+1))
 	in
-	  if mid > maxMid
-	    then raise Error ("Global signature size " ^ Int.toString (maxMid+1) ^ " exceeded")
-	  else (Array.update (sgnStructArray, mid, strDec) ;
-		nextMid := mid + 1;
-		mid)
+	  doRest(0)
 	end
+      fun sgnApp (f) = sgnApp'(current(), f)
       
-      (* 0 <= mid < !nextMid *)
-      fun sgnStructLookup (mid) = Array.sub (sgnStructArray, mid)
+      fun sgnStructAdd' (m : mid, strDec : StrDec) =
+        let
+	  val sid = nextSid(m)
+	in
+	  LH.insert(structTable)(m :: sid :: nil, strDec);
+	  sid
+	end      
+      fun sgnStructAdd (strDec : StrDec) = sgnStructAdd'(current(), strDec)
+      
+      fun sgnStructLookup'(m : mid, q : qid) = valOf(LH.lookup(structTable)(m :: q))
+      fun sgnStructLookup(c : cid) = sgnStructLookup'(current(), c :: nil)
 	
+      fun hack (cid, conDec : ConDec) =
+         let
+            val key = current() :: cid :: nil
+         in
+           LH.delete(symTable)(key) ;
+           LH.insert(symTable)(key, conDec)
+         end
 	
-      fun hack (cid, conDec:ConDec) = Array.update (sgnArray, cid, conDec)
-	
-    end;  (* end signature *)
+    end;  (* end Signature *)
   (* *************************************************** *)
 
 
@@ -350,9 +357,9 @@ struct
     | conDecUni (SkoDec (_, _, _, _, L)) = L
 
 
-  fun strDecName (StrDec (name, _)) = name
-
-  fun strDecParent (StrDec (_, parent)) = parent
+(*  fun strDecName (StrDec (name, _)) = name
+    fun strDecParent (StrDec (_, parent)) = parent
+*)
 
     (* Invariants *)
     (* Constant declarations are all well-typed *)
@@ -361,7 +368,7 @@ struct
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
     (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
-    val sgnClean = Signature.sgnClean
+    (* val sgnClean = Signature.sgnClean *)
     val sgnReset = Signature.sgnReset
     val sgnSize = Signature.sgnSize
     val sgnAdd  = Signature.sgnAdd

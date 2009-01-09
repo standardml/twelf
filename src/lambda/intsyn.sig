@@ -7,7 +7,8 @@ sig
   
 
   type cid = int			(* Constant identifier        *)
-  type mid = int                        (* Structure identifier       *)
+  type mid = int                        (* Module identifier          *)
+  type qid = int list                   (* Qualified identifier       *)
   type csid = int                       (* CS module identifier       *)
 
   
@@ -150,8 +151,7 @@ sig
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
-  datatype StrDec =                     (* Structure declaration      *)
-      StrDec of string * mid option
+  datatype StrDec = StrDec of mid * ((qid * Exp) list)  (* Structure declaration      *)
 
   (* Form of constant declaration *)
   datatype ConDecForm =
@@ -216,8 +216,9 @@ sig
   val conDecBlock  : ConDec -> dctx * Dec list
   val conDecUni    : ConDec -> Uni
 
-  val strDecName   : StrDec -> string
+  (* val strDecName   : StrDec -> string
   val strDecParent : StrDec -> mid option
+  *)
 
   val sgnReset     : unit -> unit
   val sgnSize      : unit -> cid * mid
