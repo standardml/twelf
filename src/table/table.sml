@@ -3,11 +3,10 @@ structure StringHashTable =
              val hash = StringHash.stringHash
              val eq = (op =));
 
-structure PairHashTable =
-  HashTable (type key' = int * int
-             val hash = fn (x, y) => x * y mod 19999
+structure ListHashTable =
+  HashTable (type key' = int list
+             val hash = fn l => (List.foldl (fn (x,y) => x * y) 1 l)
              val eq = (op =));
-
 
 structure IntHashTable =
   HashTable (type key' = int
