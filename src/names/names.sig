@@ -34,7 +34,6 @@ end;  (* signature FIXITY *)
 
 signature NAMES =
 sig
-
   (*! structure IntSyn : INTSYN !*)
 
   exception Error of string
@@ -42,62 +41,19 @@ sig
 
   structure Fixity : FIXITY
 
-  (* Constant names and fixities *)
-
-(*  datatype Qid = Qid of string list * string
-
-  val qidToString : Qid -> string
-  val stringToQid : string -> Qid option
-  val unqualified : Qid -> string option
-
-  type namespace
-
-  val newNamespace : unit -> namespace
-  val insertConst : namespace * IntSyn.cid -> unit (* shadowing disallowed *)
-  val insertStruct : namespace * IntSyn.mid -> unit (* shadowing disallowed *)
-  val appConsts : (string * IntSyn.cid -> unit) -> namespace -> unit
-  val appStructs : (string * IntSyn.mid -> unit) -> namespace -> unit
-
-  val resetFrom : IntSyn.cid * IntSyn.mid -> unit
-
-  (* The following functions have to do with the mapping from names
-     to cids/mids only. *)
-  val installConstName : IntSyn.cid -> unit
-  val installStructName : IntSyn.mid -> unit
-
-  val constLookup : Qid -> IntSyn.cid option
-  val structLookup : Qid -> IntSyn.mid option
-  val constUndef : Qid -> Qid option (* shortest undefined prefix of Qid *)
-  val structUndef : Qid -> Qid option
-
-  val constLookupIn : namespace * Qid -> IntSyn.cid option
-  val structLookupIn : namespace * Qid -> IntSyn.mid option
-  val constUndefIn : namespace * Qid -> Qid option
-  val structUndefIn : namespace * Qid -> Qid option
-
-  (* This function maps cids/mids to names.  It uses the information in
-     the IntSyn.ConDec or IntSyn.StrDec entries only, and only considers
-     the name->cid/mid mapping defined above in order to tell whether a
-     name is shadowed (any constant or structure whose canonical name
-     would map to something else, or to nothing at all, in the case of
-     an anonymous structure, is shadowed). *)
-  val conDecQid : IntSyn.ConDec -> Qid
-  val constQid : IntSyn.cid -> Qid (* will mark if shadowed *)
-  val structQid : IntSyn.mid -> Qid (* will mark if shadowed *)
-
-  val getFixity : IntSyn.cid -> Fixity.fixity
-
-  (* Name preferences for anonymous variables: a, EPref, UPref *)
-  val installComponents : IntSyn.mid * namespace -> unit
-  val getComponents : IntSyn.mid -> namespace
-*)
-
-  val installName : IDs.cid * string list -> unit 
+  (* maps global declaration id's to their local qualified names *)
+  val installName : IDs.cid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
+
+  (* maps global declaration id's to their fixities, Nonfix if undefined *)
   val installFixity : IDs.cid * Fixity.fixity -> unit
-  val fixityLookup : IDs.cid -> Fixity.fixity (* Nonfix if undefined *)
+  val fixityLookup : IDs.cid -> Fixity.fixity
+
+  (* maps global declaration id's to their name preferences *)
   val installNamePref : IDs.cid * (string list * string list) -> unit
   val namePrefLookup : IDs.cid -> (string list * string list) option
+
+  (* resets the above three mappings *)
   val reset : unit -> unit
 
   (* EVar and BVar name choices *)

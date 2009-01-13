@@ -1,23 +1,25 @@
+(* This structure encapsulates all data types and their methods pertaining to id's. *)
 structure IDs = struct
-   type lid = int
-   type mid = int
-   type cid = mid * lid
-   fun cidhash(x,y) = 1000 * x + y
-   fun cidcompare((x,y),(x',y')) =
+   type lid = int                        (* local id's of (declared or imported) declarations *)
+   type mid = int                        (* global id's of modules (= signatures) *)
+   type cid = mid * lid                  (* global id's of declarations *)
+   type qid = lid list                   (* qualified local id, this gives the path along which a declaration was imported *)
+   fun cidhash(x,y) = 1000 * x + y       (* hashing cid's *)
+   fun cidcompare((x,y),(x',y')) =       (* comparing cid's *)
       case Int.compare(x,x')
         of LESS => LESS
          | GREATER => GREATER
          | EQUAL => Int.compare(y,y')
-   type qid = lid list
-   fun newcid(m,c) = (m,c)
-   fun midOf(m,_) = m
+   fun newcid(m,c) = (m,c)               (* constructor for cid's *)
+   fun midOf(m,_) = m                    (* cid field accessors *)
    fun lidOf(_,l) = l
-   fun nextMid(m) = m + 1
+   fun nextMid(m) = m + 1                (* simple functions to hide the implementation in terms of integers *)
    fun nextLid(l) = l + 1
    fun firstMid() = 0
    fun firstLid() = 0
 end
 
+(* These tables should be moved to the others *) 
 structure CidHashTable =
   HashTable (type key' = IDs.cid
              val hash = IDs.cidhash

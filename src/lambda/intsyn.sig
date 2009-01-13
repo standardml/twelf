@@ -4,12 +4,11 @@
 
 signature INTSYN =
 sig
-  
-  type mid = IDs.mid                        (* Module identifier          *)
+  (* abbreviation for id-related types *)
+  type mid = IDs.mid
   type lid = IDs.lid
-  type cid = IDs.cid			(* Constant identifier        *)
+  type cid = IDs.cid
   type csid = int                       (* CS module identifier       *)
-
   
   type FgnExp = exn                     (* foreign expression representation *)
   exception UnexpectedFgnExp of FgnExp
@@ -102,7 +101,6 @@ sig
      I suggest however to wait until the next big overhaul 
      of the system -- cs *)
 
-
 (*  | BClo of Block * Sub                 (*     | b[s]                 *) *)
 
   (* constraints *)
@@ -130,27 +128,31 @@ sig
     (* delay cnstr, associating it with all the rigid EVars in U  *)
 
   (* Global signature *)
-
-  and ConDec =			        (* Constant declaration       *)
+  
+  (* the datatype for constant declarations *)
+  (* common fields: string list = qualified name as list of local names
+                    IDs.qid     = qualified name as list of local id's
+  *)
+  and ConDec =
     ConDec of (string list) * IDs.qid * int * Status
                                         (* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of (string list) * IDs.qid * int	(* a = A : K : kind  or       *)
+  | ConDef of (string list) * IDs.qid * int
+                                        (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
               * Ancestor                (* Ancestor info for d or a   *)
   | AbbrevDef of (string list) * IDs.qid * int
                                         (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | BlockDec of (string list) * IDs.qid       (* %block l : SOME G1 PI G2   *)
-              * Dec Ctx * Dec list
-  | SkoDec of (string list) * IDs.qid * int	(* sa: K : kind  or           *)
+  | BlockDec of (string list) * IDs.qid
+              * Dec Ctx * Dec list      (* %block l : SOME G1 PI G2   *)
+  | SkoDec of (string list) * IDs.qid * int
+                                        (* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
-  and Ancestor =			(* Ancestor of d or a         *)
+  and Ancestor =			 (* Ancestor of d or a         *)
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
-                                        (* NONE means expands to {x:A}B *)
-
-  datatype StrDec = StrDec of string * IDs.qid * mid * ((cid * Exp) list)  (* Structure declaration      *)
+                                         (* NONE means expands to {x:A}B *)
 
   (* Form of constant declaration *)
   datatype ConDecForm =
@@ -206,33 +208,39 @@ sig
     structure Simplify : FGN_OPN where type arg = unit
                                  where type result = bool
   end
+
+  (* the datatype for structure declarations *)
+  datatype StrDec = StrDec of
+     string                             (* name *)
+     * IDs.qid                          (* qualified local id *)
+     * mid                              (* domain (= instantiated module) *)
+     * ((cid * Exp) list)               (* instantiations *)
+
   
-  val conDecName   : ConDec -> string list
-  val conDecFoldName: ConDec -> string
-  val conDecQid    : ConDec -> IDs.qid
-  val conDecImp    : ConDec -> int
-  val conDecStatus : ConDec -> Status
-  val conDecType   : ConDec -> Exp
-  val conDecBlock  : ConDec -> dctx * Dec list
-  val conDecUni    : ConDec -> Uni
-
-  val strDecName   : StrDec -> string
-  val strDecDomain : StrDec -> mid
-
-  val sgnReset     : unit -> unit
-
+  (* adds a constant declaration to a module *)
   val sgnAdd   : mid * ConDec -> cid
-  val sgnAddC   : ConDec -> cid
+  (* adds a declaration condec to the current module *)
+  val sgnAddC  : ConDec -> cid
+  (* looks up a constant declaration by global id *)
   val sgnLookup: cid -> ConDec
+  (* apply a function to all declarations in a module *)
   val sgnApp   : mid * (cid -> unit) -> unit
+  (* apply a function to all modules *)
   val modApp   : (mid -> unit) -> unit
- 
+  (* global reset *)
+  val sgnReset     : unit -> unit
+  
+  (* the current module *)
   val currentMod : unit -> mid
+  (* maps local id's in the current module to global id's *)
   val inCurrent : lid -> cid
 
+  (* adds a strucutre constant declaration to a module *)
   val structAdd    : mid * StrDec -> cid
+  (* looks up a structure by global id *)
   val structLookup : cid -> StrDec
 
+  (* convenience methods to access components of an installed constant declaration *)
   val constType   : cid -> Exp		(* type of c or d             *)
   val constDef    : cid -> Exp		(* definition of d            *)
   val constImp    : cid -> int
@@ -240,13 +248,25 @@ sig
   val constUni    : cid -> Uni
   val constBlock  : cid -> dctx * Dec list
 
-  (* Declaration Contexts *)
+  (* convenience methods to access components of a constant declaration *)
+  val conDecName   : ConDec -> string list
+  val conDecFoldName: ConDec -> string           (* returns qualified name as dot-separated string *)
+  val conDecQid    : ConDec -> IDs.qid
+  val conDecImp    : ConDec -> int
+  val conDecStatus : ConDec -> Status
+  val conDecType   : ConDec -> Exp
+  val conDecBlock  : ConDec -> dctx * Dec list
+  val conDecUni    : ConDec -> Uni
 
+  (* convenience methods to access components of a structure declaration *)
+  val strDecName   : StrDec -> string
+  val strDecDomain : StrDec -> mid
+
+  (* Declaration Contexts *)
   val ctxDec    : dctx * int -> Dec	(* get variable declaration   *)
   val blockDec  : dctx * Block * int -> Dec 
 
   (* Explicit substitutions *)
-
   val id        : Sub			(* id                         *)
   val shift     : Sub			(* ^                          *)
   val invShift  : Sub                   (* ^-1                        *)
@@ -261,7 +281,6 @@ sig
   val invDot1   : Sub -> Sub		(* (^ o s) o ^-1)             *)
 
   (* EVar related functions *)
-
   val newEVar    : dctx * Exp -> Exp	(* creates X:G|-V, []         *) 
   val newAVar    : unit ->  Exp	        (* creates A (bare)           *) 
   val newTypeVar : dctx -> Exp		(* creates X:G|-type, []      *)
@@ -283,7 +302,7 @@ sig
   val targetFamOpt : Exp -> cid option  (* target type family or NONE *)
   val targetFam : Exp -> cid            (* target type family         *)
 
-  (* Used in Flit *)
+  (* a hack used in Flit *)
   val rename : lid * string -> unit
 
 end;  (* signature INTSYN *)
