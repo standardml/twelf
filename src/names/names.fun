@@ -23,7 +23,6 @@ struct
   *)
   exception Unprintable
 
-  fun getQualName cid = List.foldl (fn (s,t) => s ^ "." ^ t) "" (IntSyn.getQualName cid)
   (***********************)
   (* Operator Precedence *)
   (***********************)
@@ -123,7 +122,7 @@ struct
   fun checkFixity (_, 0) = ()
     | checkFixity (cid, n) =
       if checkArgNumber (IntSyn.sgnLookup (cid), n) then ()
-      else raise Error ("Constant " ^  (getQualName cid) ^ " takes too few explicit arguments for given fixity")
+      else raise Error ("Constant " ^ (IntSyn.conDecFoldName (IntSyn.sgnLookup cid)) ^ " takes too few explicit arguments for given fixity")
 
   (****************************************)
   (* Constants Names and Name Preferences *)
@@ -162,23 +161,23 @@ struct
     
     type namePref = (string list * string list) option
     val namePrefTable : namePref CH.Table = CH.new(4096)
-    val insertNamePref : cid * namePref -> unit = QH.insert namePrefTable
+    val insertNamePref : cid * namePref -> unit = CH.insert namePrefTable
 
-    val fixityTable : Fixity.fixity QH.Table = QH.new(4096)
+    val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
 
     val inCurrent = IntSyn.inCurrent
   in
 
-    val installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
+    fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
     val nameLookup : IDs.mid * string list -> cid option = SH.lookup nameTable
-    val nameLookupC = nameLookup o inCurrent
+    fun nameLookupC(l : string list) = nameLookup(IntSyn.currentMod(), l)
     (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level
     *)
     fun installFixity (cid, fixity) = (
-	  checkFixity (qqid, argNumber fixity);
-          QH.insert fixityTable (cid, fixity)
+	  checkFixity (cid, argNumber fixity);
+          CH.insert fixityTable (cid, fixity)
     )
 
     (* fixityLookup cid = fixity
@@ -186,7 +185,7 @@ struct
        defaults to Fixity.Nonfix if fixity undeclared
     *)
     fun fixityLookup cid =
-        (case QH.lookup fixityTable cid
+        (case CH.lookup fixityTable cid
            of NONE => Fixity.Nonfix
             | SOME fix => fix
         )
@@ -206,7 +205,7 @@ struct
 	    val L = IntSyn.constUni (cid)
 	    val _ = case L
 	            of IntSyn.Type =>
-		       raise Error ("Object constant " ^ (getQualName cid) ^ " cannot be given name preference\n"
+		       raise Error ("Object constant " ^ (IntSyn.conDecFoldName (IntSyn.sgnLookup cid)) ^ " cannot be given name preference\n"
 				    ^ "Name preferences can only be established for type families")
 		     | IntSyn.Kind => ()
 	in
@@ -218,7 +217,7 @@ struct
         | installNamePref (cid, (ePref, uPref)) =
             installNamePref' (cid, (ePref, uPref))
     end
-    val namePrefLookup = CH.lookup namePrefTable
+    val namePrefLookup = Option.join o (CH.lookup namePrefTable)
     val namePrefLookupC = namePrefLookup o inCurrent
 
     fun reset () = (SH.clear nameTable; CH.clear fixityTable; CH.clear namePrefTable)
@@ -518,7 +517,8 @@ struct
       | decName' role (G, D as IntSyn.BDec (NONE, b as (cid, t))) =
         (* use #l as base name preference for label l *)
 	let
-	  val name = findName (G, "#" ^ IntSyn.conDecName (IntSyn.sgnLookup cid), Local)
+	  (* not sure what the semantics is here; putting conDecFoldName instead of conDecName for now -fr *)
+	  val name = findName (G, "#" ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid), Local)
 	in
 	  IntSyn.BDec (SOME(name), b)
 	end

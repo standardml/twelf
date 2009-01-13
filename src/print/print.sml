@@ -19,6 +19,13 @@ structure ClausePrint =
 	       structure Print = Print
 	       structure Symbol = SymbolAscii);
 
+structure PrintTeX = Print
+structure ClausePrintTeX = Print
+structure PrintTwega = Print
+structure PrintXML = Print
+structure PrintOMDoc = Print
+
+(* I'm commenting out the rest because adapting the printers is so tedious and should be done last anyway -fr
 structure PrintTeX =
   Print ((*! structure IntSyn' = IntSyn !*)
 	 structure Whnf = Whnf
@@ -60,3 +67,4 @@ structure PrintOMDoc =
 	      structure Constraints = Constraints
 	      structure Names = Names
 	      structure Formatter' = Formatter);
+*)

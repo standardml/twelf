@@ -3,7 +3,7 @@
 (* Modified: Brigitte Pientka *)
 
 functor Order ((*! structure IntSyn' : INTSYN !*)
-	       structure Table : TABLE where type key = int)
+	       structure Table : TABLE where type key = IDs.cid)
   : ORDER =
 struct
   (*! structure IntSyn = IntSyn' !*)
@@ -66,22 +66,22 @@ struct
 
     fun selLookup a = 
         case lookup a
-	  of NONE => raise Error ("No termination order assigned for " ^ I.conDecName (I.sgnLookup a))
+	  of NONE => raise Error ("No termination order assigned for " ^ I.conDecFoldName (I.sgnLookup a))
 	   | SOME (TDec (S, _)) => S
 
     fun selLookupROrder a = 
         case lookupROrder a
-	  of NONE => raise Error ("No reduction order assigned for " ^ I.conDecName (I.sgnLookup a) ^ ".")
+	  of NONE => raise Error ("No reduction order assigned for " ^ I.conDecFoldName (I.sgnLookup a) ^ ".")
 	   | SOME (RDec (P, _)) => P
 
     fun mutLookupROrder a = 
         case lookupROrder a
-	  of NONE => raise Error ("No order assigned for " ^ I.conDecName (I.sgnLookup a) ^ ".")
+	  of NONE => raise Error ("No order assigned for " ^ I.conDecFoldName (I.sgnLookup a) ^ ".")
 	   | SOME (RDec (_, M)) => M
 
     fun mutLookup a = 
         case lookup a
-	  of NONE => raise Error ("No order assigned for " ^ I.conDecName (I.sgnLookup a))
+	  of NONE => raise Error ("No order assigned for " ^ I.conDecFoldName (I.sgnLookup a))
 	   | SOME (TDec (_, M)) => M
 
     (* mutual a = a's

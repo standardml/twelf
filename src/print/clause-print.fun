@@ -94,12 +94,13 @@ local
     | fmtClauseI (i, G, I.Pi ((D, _), V)) =
         fmtClauseI (i-1, I.Decl (G, Names.decEName (G, D)), V)
 
-  fun fmtConDec (I.ConDec (id, parent, i, _, V, I.Type)) =
+  fun fmtConDec (condec as I.ConDec (_, parent, i, _, V, I.Type)) =
       let
 	val _ = Names.varReset IntSyn.Null
 	val Vfmt = fmtClauseI (i, I.Null, V)
+	val name = I.conDecFoldName condec (* should be done by exposing fmtConstPath -fr *)
       in
-	F.HVbox [Str0 (Symbol.const (id)), F.Space, sym ":", F.Break,
+	F.HVbox [Str0 (Symbol.const (name)), F.Space, sym ":", F.Break,
 		 Vfmt, sym "."]
       end
     | fmtConDec (condec) =
@@ -114,8 +115,11 @@ in
   fun clauseToString (G, V) = F.makestring_fmt (formatClause (G, V))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
 
-  fun printSgn () = 
-      IntSyn.sgnApp (fn (cid) => (print (conDecToString (IntSyn.sgnLookup cid)); print "\n"))
+  fun printSingleSgn (mid) = 
+      IntSyn.sgnApp (mid, fn (cid) => (print (conDecToString (IntSyn.sgnLookup cid)); print "\n"))
+  (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} -fr *)
+  fun printSgn() =
+      IntSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
 end  (* local ... *)
 
 end  (* functor ClausePrint *)

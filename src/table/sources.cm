@@ -2,6 +2,7 @@ Library
   signature TABLE
   structure StringHash
   structure StringHashTable
+  structure IntHashTable
   structure StringRedBlackTree
   structure IntRedBlackTree
   signature RBSET
@@ -15,7 +16,7 @@ Library
   signature SPARSE_ARRAY2
   structure SparseArray2
   functor HashTable
-  structure IntHashTable
+  functor RedBlackTree
 is
 #if defined(NEW_CM)
   $/basis.cm

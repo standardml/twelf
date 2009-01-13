@@ -95,7 +95,8 @@ struct
 	end
 
 
-    fun constName c = I.conDecName (I.sgnLookup c)
+    (* This should be done by exposing fmtConstPath in print.fun -fr *)
+    fun constName c = I.conDecFoldName (I.sgnLookup c)
 
     fun formatWorld nil = []
       | formatWorld [c] = [Fmt.String (constName c)]

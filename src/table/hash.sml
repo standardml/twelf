@@ -1,6 +1,8 @@
 (* Hash Tables *)
 (* Author: Frank Pfenning *)
 
+(* unused file? -- FR *)
+
 functor HashTable
   (type key'
    val hash : key' -> int

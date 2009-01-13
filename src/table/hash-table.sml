@@ -72,7 +72,7 @@ struct
       in
 	deleteA bucket
       end
-
+  
   fun clear (a,n) = Array.modify (fn _ => Nil) a
 
   fun appBucket f (Nil) = ()

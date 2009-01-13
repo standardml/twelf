@@ -2,6 +2,8 @@
    representation of proof terms *)
 (* Author: Carsten Schuermann *)
 
+(* replacing various conDecName's with conDecFoldName's; check this -fr *)
+
 functor Converter 
   (structure Global : GLOBAL
    (*! structure IntSyn' : INTSYN !*)
@@ -329,14 +331,14 @@ exception Error' of Tomega.Sub
     fun createIH nil = raise Error "Empty theorem"
       | createIH [a] = 
         let 
-	  val name = I.conDecName (I.sgnLookup a)
+	  val name = I.conDecFoldName (I.sgnLookup a)
 	  val F = convertOneFor a
 	in
 	  (name, F)
 	end
       | createIH (a :: L) = 
 	let
-	  val name = I.conDecName (I.sgnLookup a)
+	  val name = I.conDecFoldName (I.sgnLookup a)
 	  val F = convertOneFor a
 	  val (name', F') = createIH  L
 	in
@@ -811,7 +813,7 @@ exception Error' of Tomega.Sub
 
               fun lookupbase a =  
 		  let 
-		    val s = I.conDecName (I.sgnLookup a)
+		    val s = I.conDecFoldName (I.sgnLookup a)
 		    val l = T.lemmaName s
 		    val T.ValDec (_, P, F) = T.lemmaLookup l
 		  in
@@ -1068,17 +1070,15 @@ exception Error' of Tomega.Sub
 	        (* Design decision: Let's keep all of G *)
 		val L' = transformList (L, I.id) 
 		val (cids'', wmap) = transformWorlds' (cids')
-		val cid' = I.sgnAdd (I.BlockDec (s, m, G, L'))
+		(* changed sgnAdd to sgnAddC -fr *)
+		val cid' = I.sgnAddC (I.BlockDec (s, m, G, L'))
 	      in
 		(cid' :: cids'', fn c => if c = cid then cid' else wmap c)
 	      end
-
 	  val (cids', wmap) = transformWorlds' (cids)
-
 	in
           (T.Worlds cids', wmap)
 	end
-
 
     (* dynamicSig (Psi0, fams, W) = Sig'
 
@@ -1160,8 +1160,8 @@ exception Error' of Tomega.Sub
       | staticSig (Psi0, I.ConDec (name, _, _, _, V, I.Type) :: Sig) =
           (I.Null, Whnf.normalize (V, I.Shift (I.ctxLength Psi0))) :: staticSig (Psi0, Sig)
 
-    fun name [a] = I.conDecName (I.sgnLookup a)
-      | name (a :: L) = I.conDecName (I.sgnLookup a) ^ "/" ^ (name L)
+    fun name [a] = I.conDecFoldName (I.sgnLookup a)
+      | name (a :: L) = I.conDecFoldName (I.sgnLookup a) ^ "/" ^ (name L)
         
     (* convertPrg L = P'
 
@@ -1244,7 +1244,7 @@ exception Error' of Tomega.Sub
     fun installFor [cid] = 
         let 
 	  val F = convertFor [cid]
-	  val name = I.conDecName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (I.sgnLookup cid)
 	  val _ = T.lemmaAdd (T.ForDec (name, F))
 	in
 	  ()
@@ -1280,7 +1280,7 @@ exception Error' of Tomega.Sub
 	  val (P', F') = Proj n
 	  val P = T.Lam (T.PDec (NONE, F, NONE, NONE), P')
 	  val F'' = T.All ((T.PDec (NONE, F, NONE, NONE), T.Explicit), F')
-	  val name = I.conDecName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (I.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F''))
 	  val lemma = T.lemmaAdd (T.ValDec ("#" ^ name, P, F''))
 	in
@@ -1291,7 +1291,7 @@ exception Error' of Tomega.Sub
     fun installSelection ([cid], [lemma], F1, main) =
         let
 	  val P = T.Redex (T.Const lemma, T.AppPrg (T.Const main, T.Nil))
-	  val name = I.conDecName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (I.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F1)) 
 	  val lemma' = T.lemmaAdd (T.ValDec (name, P, F1))
 	in
@@ -1300,7 +1300,7 @@ exception Error' of Tomega.Sub
       | installSelection (cid :: cids, lemma :: lemmas, T.And (F1, F2), main) = 
         let
 	  val P = T.Redex (T.Const lemma, T.AppPrg (T.Const main, T.Nil))
-	  val name = I.conDecName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (I.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F1))
 	  val lemma' = T.lemmaAdd (T.ValDec (name, P, F1))
 	in
@@ -1312,15 +1312,13 @@ exception Error' of Tomega.Sub
         let
 	  val F = convertFor [cid]
 	  val P = convertPrg ([cid], NONE)
-	  val name = I.conDecName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (I.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F))
 	  val _ = if (!Global.chatter >= 4) then print ("[Redundancy Checker (factoring) ...") else ()
 	  val factP = Redundant.convert P
 	  val _ = if (!Global.chatter >= 4) then print ("done]\n") else ()
 
 	  val lemma = T.lemmaAdd (T.ValDec (name, factP, F))
-
-
 	in
 	  (lemma, [], [])
 	end

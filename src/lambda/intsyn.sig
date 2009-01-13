@@ -5,10 +5,9 @@
 signature INTSYN =
 sig
   
-
-  type cid = IDs.cid			(* Constant identifier        *)
   type mid = IDs.mid                        (* Module identifier          *)
-  type qqid = IDs.qqid                  (* Qualified identifier       *)
+  type lid = IDs.lid
+  type cid = IDs.cid			(* Constant identifier        *)
   type csid = int                       (* CS module identifier       *)
 
   
@@ -133,25 +132,25 @@ sig
   (* Global signature *)
 
   and ConDec =			        (* Constant declaration       *)
-    ConDec of string * mid option * int * Status
+    ConDec of (string list) * IDs.qid * int * Status
                                         (* a : K : kind  or           *)
               * Exp * Uni	        (* c : A : type               *)
-  | ConDef of string * mid option * int	(* a = A : K : kind  or       *)
+  | ConDef of (string list) * IDs.qid * int	(* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
               * Ancestor                (* Ancestor info for d or a   *)
-  | AbbrevDef of string * mid option * int
+  | AbbrevDef of (string list) * IDs.qid * int
                                         (* a = A : K : kind  or       *)
               * Exp * Exp * Uni		(* d = M : A : type           *)
-  | BlockDec of string * mid option     (* %block l : SOME G1 PI G2   *)
+  | BlockDec of (string list) * IDs.qid       (* %block l : SOME G1 PI G2   *)
               * Dec Ctx * Dec list
-  | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
+  | SkoDec of (string list) * IDs.qid * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
 
   and Ancestor =			(* Ancestor of d or a         *)
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
-  datatype StrDec = StrDec of mid * ((cid * Exp) list)  (* Structure declaration      *)
+  datatype StrDec = StrDec of string * IDs.qid * mid * ((cid * Exp) list)  (* Structure declaration      *)
 
   (* Form of constant declaration *)
   datatype ConDecForm =
@@ -208,30 +207,31 @@ sig
                                  where type result = bool
   end
   
-  val getQualName : cid -> string list
-
-  val conDecName   : ConDec -> string
-  val conDecParent : ConDec -> mid option
+  val conDecName   : ConDec -> string list
+  val conDecFoldName: ConDec -> string
+  val conDecQid    : ConDec -> IDs.qid
   val conDecImp    : ConDec -> int
   val conDecStatus : ConDec -> Status
   val conDecType   : ConDec -> Exp
   val conDecBlock  : ConDec -> dctx * Dec list
   val conDecUni    : ConDec -> Uni
 
-  (* val strDecName   : StrDec -> string
-  val strDecParent : StrDec -> mid option
-  *)
+  val strDecName   : StrDec -> string
+  val strDecDomain : StrDec -> mid
 
   val sgnReset     : unit -> unit
 
-  val sgnAdd   : ConDec -> cid
+  val sgnAdd   : mid * ConDec -> cid
+  val sgnAddC   : ConDec -> cid
   val sgnLookup: cid -> ConDec
-  val sgnApp   : (cid -> unit) -> unit
+  val sgnApp   : mid * (cid -> unit) -> unit
+  val modApp   : (mid -> unit) -> unit
  
-  val inCurrent : cid -> qqid
+  val currentMod : unit -> mid
+  val inCurrent : lid -> cid
 
-  val sgnStructAdd    : StrDec -> cid
-  val sgnStructLookup : cid -> StrDec
+  val structAdd    : mid * StrDec -> cid
+  val structLookup : cid -> StrDec
 
   val constType   : cid -> Exp		(* type of c or d             *)
   val constDef    : cid -> Exp		(* definition of d            *)

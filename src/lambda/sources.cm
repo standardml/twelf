@@ -3,7 +3,7 @@ Library
   functor FgnOpnTable
   signature INTSYN
   structure IntSyn
-  structure QqidHashTable
+  structure CidHashTable
   structure IDs
   signature WHNF
   structure Whnf

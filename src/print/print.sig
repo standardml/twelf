@@ -32,6 +32,7 @@ sig
   val evarInstToString : (IntSyn.Exp * string) list -> string
   val evarCnstrsToStringOpt : (IntSyn.Exp * string) list -> string option
 
+  val printSingleSgn : IDs.mid -> unit
   val printSgn : unit -> unit
 
 end;  (* signature PRINT *)

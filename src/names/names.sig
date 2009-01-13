@@ -92,7 +92,7 @@ sig
   val getComponents : IntSyn.mid -> namespace
 *)
 
-  val installName : (IDs.mid * string list) * IDs.qqid -> unit 
+  val installName : IDs.cid * string list -> unit 
   val nameLookup : IDs.mid * string list -> IDs.cid option
   val installFixity : IDs.cid * Fixity.fixity -> unit
   val fixityLookup : IDs.cid -> Fixity.fixity (* Nonfix if undefined *)

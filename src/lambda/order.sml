@@ -1,6 +1,6 @@
 structure Order =
   Order ((*! structure IntSyn' = IntSyn !*)
-	 structure Table = IntRedBlackTree);
+	 structure Table = CidRedBlackTree);
 (* -bp *)
 (*
 structure RedOrder = 
