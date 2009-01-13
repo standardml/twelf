@@ -3,6 +3,8 @@ Library
   functor FgnOpnTable
   signature INTSYN
   structure IntSyn
+  structure QqidHashTable
+  structure IDs
   signature WHNF
   structure Whnf
   signature CONV
@@ -34,6 +36,7 @@ is
   order.sig
   order.fun
   order.sml
+  IDs.fun
   intsyn.sig
   intsyn.fun
   tomega.sig

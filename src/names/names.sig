@@ -44,7 +44,7 @@ sig
 
   (* Constant names and fixities *)
 
-  datatype Qid = Qid of string list * string
+(*  datatype Qid = Qid of string list * string
 
   val qidToString : Qid -> string
   val stringToQid : string -> Qid option
@@ -58,7 +58,6 @@ sig
   val appConsts : (string * IntSyn.cid -> unit) -> namespace -> unit
   val appStructs : (string * IntSyn.mid -> unit) -> namespace -> unit
 
-  val reset : unit -> unit
   val resetFrom : IntSyn.cid * IntSyn.mid -> unit
 
   (* The following functions have to do with the mapping from names
@@ -86,16 +85,20 @@ sig
   val constQid : IntSyn.cid -> Qid (* will mark if shadowed *)
   val structQid : IntSyn.mid -> Qid (* will mark if shadowed *)
 
-  val installFixity : IntSyn.cid * Fixity.fixity -> unit
   val getFixity : IntSyn.cid -> Fixity.fixity
-  val fixityLookup : Qid -> Fixity.fixity (* Nonfix if undefined *)
 
   (* Name preferences for anonymous variables: a, EPref, UPref *)
-  val installNamePref : IntSyn.cid * (string list * string list) -> unit
-  val getNamePref : IntSyn.cid -> (string list * string list) option
-
   val installComponents : IntSyn.mid * namespace -> unit
   val getComponents : IntSyn.mid -> namespace
+*)
+
+  val installName : (IDs.mid * string list) * IDs.qqid -> unit 
+  val nameLookup : IDs.mid * string list -> IDs.cid option
+  val installFixity : IDs.cid * Fixity.fixity -> unit
+  val fixityLookup : IDs.cid -> Fixity.fixity (* Nonfix if undefined *)
+  val installNamePref : IDs.cid * (string list * string list) -> unit
+  val namePrefLookup : IDs.cid -> (string list * string list) option
+  val reset : unit -> unit
 
   (* EVar and BVar name choices *)
   val varReset : IntSyn.dctx -> unit (* context in which EVars are created *)

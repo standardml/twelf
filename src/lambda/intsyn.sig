@@ -6,9 +6,9 @@ signature INTSYN =
 sig
   
 
-  type cid = int			(* Constant identifier        *)
-  type mid = int                        (* Module identifier          *)
-  type qid = int list                   (* Qualified identifier       *)
+  type cid = IDs.cid			(* Constant identifier        *)
+  type mid = IDs.mid                        (* Module identifier          *)
+  type qqid = IDs.qqid                  (* Qualified identifier       *)
   type csid = int                       (* CS module identifier       *)
 
   
@@ -151,7 +151,7 @@ sig
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
-  datatype StrDec = StrDec of mid * ((qid * Exp) list)  (* Structure declaration      *)
+  datatype StrDec = StrDec of mid * ((cid * Exp) list)  (* Structure declaration      *)
 
   (* Form of constant declaration *)
   datatype ConDecForm =
@@ -208,6 +208,8 @@ sig
                                  where type result = bool
   end
   
+  val getQualName : cid -> string list
+
   val conDecName   : ConDec -> string
   val conDecParent : ConDec -> mid option
   val conDecImp    : ConDec -> int
@@ -221,14 +223,15 @@ sig
   *)
 
   val sgnReset     : unit -> unit
-  val sgnSize      : unit -> cid * mid
 
   val sgnAdd   : ConDec -> cid
   val sgnLookup: cid -> ConDec
   val sgnApp   : (cid -> unit) -> unit
+ 
+  val inCurrent : cid -> qqid
 
-  val sgnStructAdd    : StrDec -> mid
-  val sgnStructLookup : mid -> StrDec
+  val sgnStructAdd    : StrDec -> cid
+  val sgnStructLookup : cid -> StrDec
 
   val constType   : cid -> Exp		(* type of c or d             *)
   val constDef    : cid -> Exp		(* definition of d            *)
@@ -281,6 +284,6 @@ sig
   val targetFam : Exp -> cid            (* target type family         *)
 
   (* Used in Flit *)
-  val rename : cid * string -> unit
+  val rename : lid * string -> unit
 
 end;  (* signature INTSYN *)

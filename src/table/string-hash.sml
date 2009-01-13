@@ -19,4 +19,7 @@ struct
 	       num(a)+128*(num(b)+128*(num(c)+128*num(d)))
 	     end
       end
+  (* recurse over list, adding hash values for single strings as computed above *)
+  fun stringListHash(nil) = 0
+    | stringListHash(s :: rest) = stringHash(s) + 10 * stringListHash(rest)
 end;  (* structure StringHash *)

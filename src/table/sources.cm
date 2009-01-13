@@ -1,5 +1,6 @@
 Library
   signature TABLE
+  structure StringHash
   structure StringHashTable
   structure StringRedBlackTree
   structure IntRedBlackTree
@@ -15,7 +16,6 @@ Library
   structure SparseArray2
   functor HashTable
   structure IntHashTable
-  structure ListHashTable
 is
 #if defined(NEW_CM)
   $/basis.cm

@@ -4,4 +4,5 @@
 signature STRING_HASH =
 sig
   val stringHash : string -> int
+  val stringListHash : string list -> int
 end;

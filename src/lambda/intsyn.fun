@@ -2,14 +2,16 @@
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
 
+
+
 functor IntSyn (structure Global : GLOBAL) :> INTSYN =
 struct
 
-  type cid = int			(* Constant identifier        *)
-  type name = string			(* Variable name              *)
-  type mid = int                        (* Module identifier          *)
-  type qid = int list                   (* Qualified identifier       *)
+  type cid = IDs.cid  		(* Constant identifier        *)
+  type mid = IDs.mid                  (* Module identifier          *)
+  type lid = IDs.lid                  (* Qualified identifier       *)
   type csid = int                       (* CS module identifier       *)
+  type name = string	       		(* Variable name              *)
 
 
   (* Contexts *)
@@ -82,7 +84,7 @@ struct
     
   and Head =				(* Heads:                     *)
     BVar  of int			(* H ::= k                    *)
-  | Const of cid			(*     | c                    *)
+  | Const of qqid			(*     | c                    *)
   | Proj  of Block * int		(*     | #k(b)                *)
   | Skonst of cid			(*     | c#                   *)
   | Def   of cid			(*     | d                    *)
@@ -176,78 +178,76 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
-  datatype StrDec = StrDec of mid * ((qid * Exp) list)
+  datatype StrDec = StrDec of mid * ((cid * Exp) list)
 
   (* This structure encapsulates the state, i.e., the table containing the declarations. *)
   (* An attempt to put it into a separate file failed because ConDec cannot be taken out IntSyn. *)
   structure Signature  =
     struct
-    	structure LH = ListHashTable
+    	structure QH = CidHashTable
     	structure IH = IntHashTable
 	 (* a structure declaration instantiates a module with a list of assignments of expressions to qids *)
-	val symTable   : ConDec LH.Table = LH.new(19999)
-	val structTable : StrDec LH.Table = LH.new(999)
-	val modTable   : (int * int) IH.Table = IH.new(499)
+	val symTable   : ConDec QH.Table = QH.new(19999)
+	val structTable : StrDec QH.Table = QH.new(999)
+	val modTable   : int IH.Table = IH.new(499)
 	(* should be array since editing is necessary for every entry *)
 
-        val nextMid = ref(0)
-	fun nextCid(m : mid) = #1 (valOf (IH.lookup(modTable)(m)))
-	fun incrCid(m : mid) = ()
-	fun nextSid(m : mid) = #2 (valOf (IH.lookup(modTable)(m)))
-	fun incrSid(m : mid) = ()
+        val nextMid = ref 0
+	fun nextLid(m : mid) = valOf (IH.lookup(modTable)(m))
+	fun incrLid(m : mid) = IH.update(modTable)(m, nextLid(m) + 1)
 
         val scope : int list ref = ref nil
         fun current() = hd (! scope)
+	fun inCurrent(l : lid) = IDs.newcid(current(), l)
+        fun sgnReset () = (QH.clear symTable; QH.clear structTable; IH.clear modTable)
+      
+	fun sgnAdd (m : mid, conDec : ConDec) =
+            let
+		val c = IDs.newcid(m, nextLid(m))
+	    in
+		QH.insert(symTable)(c, conDec);
+		incrLid(m);
+		c
+	    end
+      
+	fun sgnAddC (conDec : ConDec) = sgnAdd(current(), conDec)
 
-      (* fun sgnClean (i) = if i >= !nextCid then ()
-			 else (Array.update (sgnArray, i, emptycon);
-			       sgnClean (i+1))
-	*)
-      fun sgnReset () = ()
-
-      fun sgnSize () = (0,0)
+	fun sgnLookup (c : cid) = case QH.lookup(symTable)(c)
+            of SOME d => d
+             | NONE => raise UndefinedCid 
+	val sgnLookupC = sgnLookup o inCurrent
       
-      fun sgnAdd' (m : mid, conDec : ConDec) =
-        let
-	  val cid = nextCid(m)
-	in
-	  LH.insert(symTable)(m :: cid :: nil, conDec);
-	  cid
-	end
+	fun sgnApp(m : mid, f : cid -> unit) =
+            let
+		fun doRest(l) = 
+		    if l = nextLid(m) then () else (f cid; doRest(IDs.nextLid(l)))
+	    in
+		doRest(IDs.firstLid())
+	    end
+	fun sgnAppC (f) = sgnApp(current(), f)
       
-      fun sgnAdd (conDec : ConDec) = sgnAdd'(current(), conDec)
-
-      fun sgnLookup' (m : mid, q : qid) = valOf(LH.lookup(symTable)(m :: q))
-      fun sgnLookup (c : cid) = sgnLookup'(current(), c :: nil)
+      fun sgnStructAdd (m : mid, strDec : StrDec) =
+          let
+	      val c = IDs.newcid(m, nextLid(m))
+	  in
+	      QH.insert(structTable)(c, strDec);
+	      incrLid(m);
+	      c
+	  end      
+      fun sgnStructAddC (strDec : StrDec) = sgnStructAdd'(current(), strDec)
       
-      fun sgnApp'(m : mid, f : cid -> unit) =
-        let
-	  fun doRest(cid) = 
-	    if cid = nextCid(m) then () else (f cid; doRest(cid+1))
-	in
-	  doRest(0)
-	end
-      fun sgnApp (f) = sgnApp'(current(), f)
-      
-      fun sgnStructAdd' (m : mid, strDec : StrDec) =
-        let
-	  val sid = nextSid(m)
-	in
-	  LH.insert(structTable)(m :: sid :: nil, strDec);
-	  sid
-	end      
-      fun sgnStructAdd (strDec : StrDec) = sgnStructAdd'(current(), strDec)
-      
-      fun sgnStructLookup'(m : mid, q : qid) = valOf(LH.lookup(structTable)(m :: q))
-      fun sgnStructLookup(c : cid) = sgnStructLookup'(current(), c :: nil)
+      fun sgnStructLookup(c : cid) = case QH.lookup(structTable)(c)
+          of SOME d => d
+           | NONE => raise UndefinedCid
+      val sgnStructLookupC = sgnStructLookup o inCurrent
 	
-      fun hack (cid, conDec : ConDec) =
-         let
-            val key = current() :: cid :: nil
-         in
-           LH.delete(symTable)(key) ;
-           LH.insert(symTable)(key, conDec)
-         end
+      fun hack (lid, conDec : ConDec) =
+          let
+              val key = IDs.newcid(current(), lid)
+          in
+              QH.delete(symTable)(key) ;
+	      QH.insert(symTable)(key, conDec)
+          end
 	
     end;  (* end Signature *)
   (* *************************************************** *)
@@ -268,18 +268,16 @@ struct
 				     type result = bool)
 
     structure UnifyWith = FgnOpnTable (type arg = Dec Ctx * Exp
-				       type result = FgnUnify)
+				       type result = FgnUnify)			  
 
-			  
-
-    fun fold csfe f b = let
+(*    fun fold csfe f b = let
 	val r = ref b
 	fun g U = r := f (U,!r)
     in
 	App.apply csfe g ; !r
     end
 
-  end
+  end *)
 
   structure FgnCnstrStd = struct
 
@@ -291,8 +289,22 @@ struct
 
     structure Simplify = FgnOpnTable (type arg = unit
 				      type result = bool)
-
   end
+
+  fun getQualName(c : cid) =
+      let
+	  fun doRest(m, l :: nil) =
+	        strDecName o sgnStructLookup o IDs.newcid (m,l)
+	       (* handle UndefinedCid => conDecName sgnLookup IDs.newcid(m,l)*)
+            | doRest(m, hd :: tl) =
+	      let
+		  val S = sgnStructLookup o IDs.newcid(m, hd)
+	      in 
+		  (strDecName S) :: doRest(strDecDomain S, tl)
+	      end
+      in
+	  doRest(IDs.midOf c, conDecQid c)
+      end
 
   fun conDecName (ConDec (name, _, _, _, _, _)) = name
     | conDecName (ConDef (name, _, _, _, _, _, _)) = name
@@ -300,11 +312,11 @@ struct
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
 
-  fun conDecParent (ConDec (_, parent, _, _, _, _)) = parent
-    | conDecParent (ConDef (_, parent, _, _, _, _, _)) = parent
-    | conDecParent (AbbrevDef (_, parent, _, _, _, _)) = parent
-    | conDecParent (SkoDec (_, parent, _, _, _)) = parent
-    | conDecParent (BlockDec (_, parent, _, _)) = parent
+  fun conDecQid (ConDec (_, qid, _, _, _, _)) = qid
+    | conDecQid (ConDef (_, qid, _, _, _, _, _)) = qid
+    | conDecQid (AbbrevDef (_, qid, _, _, _, _)) = qid
+    | conDecQid (SkoDec (_, qid, _, _, _)) = qid
+    | conDecQid (BlockDec (_, qid, _, _)) = qid
 
   (* conDecImp (CD) = k
 
@@ -358,7 +370,7 @@ struct
 
 
 (*  fun strDecName (StrDec (name, _)) = name
-    fun strDecParent (StrDec (_, parent)) = parent
+    fun strDecQid (StrDec (_, qid)) = qid
 *)
 
     (* Invariants *)
@@ -368,7 +380,6 @@ struct
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
     (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
-    (* val sgnClean = Signature.sgnClean *)
     val sgnReset = Signature.sgnReset
     val sgnSize = Signature.sgnSize
     val sgnAdd  = Signature.sgnAdd
@@ -376,9 +387,13 @@ struct
     val sgnApp =  Signature.sgnApp
     val sgnStructAdd = Signature.sgnStructAdd
     val sgnStructLookup = Signature.sgnStructLookup
-    fun rename (cid, new) =
+    val currentMod = Signature.current()
+    val inCurrent = Signature.inCurrent
+    fun rename (lid, new) =
 	let
-	    val newConDec = case sgnLookup cid of 
+	    val cid = inCurrent lid
+	    val newConDec = 
+		case sgnLookup cid of 
 		ConDec (n,m,i,s,e,u) => ConDec(new,m,i,s,e,u)
 	      | ConDef (n,m,i,e,e',u,a) => ConDef(new,m,i,e,e',u,a)
 	      | AbbrevDef (n,m,i,e,e',u) => AbbrevDef (new,m,i,e,e',u)
@@ -674,8 +689,9 @@ struct
   (* targetFam (A) = a
      as in targetFamOpt, except V must be a valid type
   *)
-  fun targetFam (A) = valOf (targetFamOpt A)
-                      
+  fun targetFam (A) = valOf (targetFamOpt A)                      
+
+
 end;  (* functor IntSyn *)
 
 structure IntSyn :> INTSYN =
