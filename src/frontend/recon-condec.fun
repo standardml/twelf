@@ -64,7 +64,7 @@ struct
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
-	val cd = Names.nameConDec (IntSyn.ConDec (name, NONE, i, IntSyn.Normal, V', L))
+	val cd = Names.nameConDec (IntSyn.ConDec ([name], nil, i, IntSyn.Normal, V', L))
 	val ocd = Paths.dec (i, oc)
 	val _ = if !Global.chatter >= 3
 		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
@@ -96,11 +96,11 @@ struct
 		          => raise Abstract.Error (Paths.wrap (r, msg))
 	val name = case optName of NONE => "_" | SOME(name) => name
 	val ocd = Paths.def (i, oc1, oc2Opt)
-        val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef (name, NONE, i, U'', V'', L))
+        val cd = if abbFlag then Names.nameConDec (IntSyn.AbbrevDef ([name], nil, i, U'', V'', L))
 		 else (Strict.check ((U'', V''), SOME(ocd));
 		       (* stricter checking of types according to Chris Richards Fri Jul  2 16:33:46 2004 -fp *)
 		       (* (case optName of NONE => () | _ => Strict.checkType ((i, V''), SOME(ocd))); *)
-		       (Names.nameConDec (IntSyn.ConDef (name, NONE, i, U'', V'', L,
+		       (Names.nameConDec (IntSyn.ConDef ([name], nil, i, U'', V'', L,
 							 IntSyn.ancestor U''))))
 	           
         val _ = if !Global.chatter >= 3
@@ -165,7 +165,7 @@ struct
 		    ^ ctxBlockToString (IntSyn.Null, (Gsome, Gblock)) ^ "\n"
 		    ^ Print.cnstrsToString C))
 	val _ = checkFreevars (G0, (Gsome', Gblock'), r')
-	val bd = IntSyn.BlockDec (name, NONE, Gsome', ctxToList (Gblock', nil))
+	val bd = IntSyn.BlockDec ([name], nil, Gsome', ctxToList (Gblock', nil))
         val _ = if !Global.chatter >= 3
 		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) bd ^ "\n")
 		else ()

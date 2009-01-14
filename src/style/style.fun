@@ -305,6 +305,7 @@ struct
 
 
     (* computes and prints all error messages in the current module *)
+    (* maybe adapt this to print messages for a specific module -fr Jan 09 *)
     fun check () =
        let
        	  val result = ref nil

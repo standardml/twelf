@@ -44,6 +44,7 @@ sig
   (* maps global declaration id's to their local qualified names *)
   val installName : IDs.cid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
+  val nameLookupC : string list -> IDs.cid option
 
   (* maps global declaration id's to their fixities, Nonfix if undefined *)
   val installFixity : IDs.cid * Fixity.fixity -> unit
@@ -54,6 +55,7 @@ sig
   val namePrefLookup : IDs.cid -> (string list * string list) option
 
   val parseQualifiedName : string -> string list (* temporary *)
+  val foldQualifiedName : string list -> string (* temporary *)
   (* resets the above three mappings *)
   val reset : unit -> unit
 

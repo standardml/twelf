@@ -11,7 +11,6 @@ functor ReconThm (structure Global : GLOBAL
 		  (*! sharing Names.IntSyn = IntSyn !*)
 		  (*! structure Paths' : PATHS !*)
 		  structure ThmSyn': THMSYN
-		    sharing ThmSyn'.Names = Names
 		  structure ReconTerm': RECON_TERM
 		  (*! sharing ReconTerm'.IntSyn = IntSyn !*)
 		  (*! sharing ReconTerm'.Paths = Paths'  !*)
@@ -80,22 +79,23 @@ struct
           checkArgNumber (i-1, V2, args, r)
       (* everything else should be impossible! *)
 
+    val foldName = Names.foldQualifiedName
     fun checkCallPat (I.ConDec (_, _, i, I.Normal, V, I.Kind), P, r) =
           checkArgNumber (i, V, P, r)
       | checkCallPat (I.ConDec (a, _, _, I.Constraint _, _, _), P, r) =
-	  error (r, "Illegal constraint constant " ^ a ^ " in call pattern")
+	  error (r, "Illegal constraint constant " ^ foldName a ^ " in call pattern")
       | checkCallPat (I.ConDec (a, _, _, I.Foreign _, _, _), P, r) =
-          error (r, "Illegal foreign constant " ^ a ^ " in call pattern")
+          error (r, "Illegal foreign constant " ^ foldName a ^ " in call pattern")
       | checkCallPat (I.ConDec (a, _, _, _, _, I.Type), P, r) =
-	  error (r, "Constant " ^ a ^ " in call pattern not a type family")
+	  error (r, "Constant " ^ foldName a ^ " in call pattern not a type family")
       | checkCallPat (I.ConDef (a, _, _, _, _, _, _), P, r) =
-          error (r, "Illegal defined constant " ^ a ^ " in call pattern")
+          error (r, "Illegal defined constant " ^ foldName a ^ " in call pattern")
       | checkCallPat (I.AbbrevDef (a, _, _, _, _, _), P, r) =
-	  error (r, "Illegal abbreviation " ^ a ^ " in call pattern")
+	  error (r, "Illegal abbreviation " ^ foldName a ^ " in call pattern")
       | checkCallPat (I.BlockDec (a, _, _, _), P, r) =
-	  error (r, "Illegal block identifier " ^ a ^ " in call pattern")
+	  error (r, "Illegal block identifier " ^ foldName a ^ " in call pattern")
       | checkCallPat (I.SkoDec (a, _, _, _, _), P, r) =
-	  error (r, "Illegal Skolem constant " ^ a ^ " in call pattern")
+	  error (r, "Illegal Skolem constant " ^ foldName a ^ " in call pattern")
 
     fun callpats L = 
         let 
@@ -103,12 +103,13 @@ struct
 	    | callpats' ((name, P, r) :: L) =  
 	      let 
 		val (cps, rs) = (callpats' L)
-                val qid = Names.Qid (nil, name)
+                val qid = [name]
 	      in
 		(* check whether they are families here? *)
-                case Names.constLookup qid
+                case Names.nameLookupC qid
                   of NONE => error (r, "Undeclared identifier "
-                                    ^ Names.qidToString (valOf (Names.constUndef qid))
+                  (* better: find shortest undefined prefix *)
+                                    ^ foldName qid
                                     ^ " in call pattern")
                    | SOME cid => 
                        (checkCallPat (I.sgnLookup cid, P, r);
@@ -145,12 +146,13 @@ struct
     type tableddecl = (ThmSyn.TabledDecl * Paths.region) 
     fun tableddecl (name, r) = 
 	let 
-	  val qid = Names.Qid (nil, name)
+	  val qid = [name]
 	in
 	  (* check whether they are families here? *)
-         case Names.constLookup qid
+         case Names.nameLookupC qid
                   of NONE => error (r, "Undeclared identifier "
-                                    ^ Names.qidToString (valOf (Names.constUndef qid))
+                  (* better: find shortest -fr *)
+                                    ^ foldName qid
                                     ^ " in call pattern")
                    | SOME cid =>    (ThmSyn.TabledDecl cid, r) 
 	end 
@@ -162,12 +164,13 @@ struct
     type keepTabledecl = (ThmSyn.KeepTableDecl * Paths.region) 
     fun keepTabledecl (name, r) = 
 	let 
-	  val qid = Names.Qid (nil, name)
+	  val qid = [name]
 	in
 	  (* check whether they are families here? *)
-         case Names.constLookup qid
+         case Names.nameLookupC qid
                   of NONE => error (r, "Undeclared identifier "
-                                    ^ Names.qidToString (valOf (Names.constUndef qid))
+                  (* better: find shortest -fr *)
+                                    ^ foldName qid
                                     ^ " in call pattern")
                    | SOME cid =>    (ThmSyn.KeepTableDecl cid, r) 
 	end 
@@ -282,15 +285,8 @@ struct
 
     (* World checker *)
 
-    fun abstractWDecl W =
-        let
-          val W' = List.map Names.Qid W
-	in
-	  W'
-	end
-
     type wdecl =  ThmSyn.WDecl * Paths.region list 
-    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (abstractWDecl W, cp), rs)
+    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (W, cp), rs)
     fun wdeclTowDecl T = T
 
   in

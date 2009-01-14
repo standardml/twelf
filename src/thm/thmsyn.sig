@@ -4,8 +4,6 @@
 
 signature THMSYN =
 sig
-  structure Names : NAMES
-
   exception Error of string
 
   (*! type Param = string option !*)
@@ -56,7 +54,7 @@ sig
 	      IntSyn.Dec IntSyn.Ctx) list * Callpats
 *)
   datatype WDecl = 
-    WDecl of Names.Qid list * Callpats
+    WDecl of (string list) list * Callpats
 
   val theoremDecToConDec : ((string * ThDecl) * Paths.region) -> 
                            (IntSyn.Dec IntSyn.Ctx * IntSyn.Dec IntSyn.Ctx) list * IntSyn.ConDec

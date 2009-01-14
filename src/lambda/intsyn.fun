@@ -326,11 +326,9 @@ struct
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
 
-  fun conDecFoldName(condec) =
-     let val names = conDecName condec
-     in foldl (fn (x,y) => x ^ "." ^ y) (hd names) (tl names)
-     end
-
+  fun foldName l = foldl (fn (x,y) => x ^ "." ^ y) (hd l) (tl l)
+  fun conDecFoldName(condec) = foldName (conDecName condec)
+  
   fun conDecQid (ConDec (_, qid, _, _, _, _)) = qid
     | conDecQid (ConDef (_, qid, _, _, _, _, _)) = qid
     | conDecQid (AbbrevDef (_, qid, _, _, _, _)) = qid

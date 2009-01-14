@@ -50,11 +50,12 @@ struct
       fun mroot (ids, id, r1, (mS, r2)) = 
           let
             val r = P.join (r1, r2)
-            val qid = Names.Qid (ids, id)
+            val qid = ids @ [id]
 	  in
-            case Names.constLookup qid
+            case Names.nameLookupC qid
               of NONE => error (r, "Undeclared identifier "
-                                ^ Names.qidToString (valOf (Names.constUndef qid))
+              (* better: find shortest undefined prefix -fr *)
+                                ^ (Names.foldQualifiedName qid)
                                 ^ " in mode declaration")
                | SOME cid => ((cid, ModeDec.shortToFull (cid, mS, r)), r)
 	  end

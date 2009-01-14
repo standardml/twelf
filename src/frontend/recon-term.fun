@@ -352,7 +352,8 @@ struct
   
     fun findOmitted (G, qid, r) =
           (error (r, "Undeclared identifier "
-                     ^ Names.qidToString (valOf (Names.constUndef qid)));
+          (* better: find shortest undefined prefix and print that instead of the whole qualified identifier -fr *)
+                     ^ (Names.foldQualifiedName qid));
            omitted (r))
 
     fun findBVar' (Null, name, k) = NONE
@@ -365,15 +366,16 @@ struct
           else findBVar' (G, name, k+1)
   
     fun findBVar fc (G, qid, r) =
-        (case Names.unqualified qid
-           of NONE => fc (G, qid, r)
-            | SOME name =>
+        (case qid
+           of [name] =>
               (case findBVar' (G, name, 1)
                  of NONE => fc (G, qid, r)
-                  | SOME k => bvar (k, r)))
+                  | SOME k => bvar (k, r))
+            | _ => fc (G, qid, r)
+        )
 
     fun findConst fc (G, qid, r) =
-        (case Names.constLookup qid
+        (case Names.nameLookupC qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
 	      (case IntSyn.sgnLookup cid
@@ -382,28 +384,29 @@ struct
 		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
 		  | _ => 
 		    (error (r, "Invalid identifier\n"
-			    ^ "Identifier `" ^ Names.qidToString qid
+			    ^ "Identifier `" ^ Names.foldQualifiedName qid
 			    ^ "' is not a constant, definition or abbreviation");
 		     omitted (r))))
 
     fun findCSConst fc (G, qid, r) =
-        (case Names.unqualified qid
-           of NONE => fc (G, qid, r)
-            | SOME name =>
+        (case qid
+           of [name] =>
               (case CSManager.parse name
                  of NONE => fc (G, qid, r)
                   | SOME (cs, conDec) =>
-                      constant (IntSyn.FgnConst (cs, conDec), r)))
+                      constant (IntSyn.FgnConst (cs, conDec), r))
+            | _ => fc (G, qid, r)
+         )
 
     fun findEFVar fc (G, qid, r) =
-        (case Names.unqualified qid
-           of NONE => fc (G, qid, r)
-            | SOME name => (if !queryMode then evar else fvar) (name, r))
+        (case qid
+            of [name] => (if !queryMode then evar else fvar) (name, r)
+             | _ => fc (G, qid, r)
+        )
 
     fun findLCID x = findBVar (findConst (findCSConst findOmitted)) x
     fun findUCID x = findBVar (findConst (findCSConst (findEFVar findOmitted))) x
     fun findQUID x = findConst (findCSConst findOmitted) x
-
 
     fun inferApx (G, tm as internal (U, V, r)) =
         let
@@ -414,19 +417,19 @@ struct
 
       | inferApx (G, tm as lcid (ids, name, r)) =
         let
-          val qid = Names.Qid (ids, name)
+          val qid = ids @ [name]
         in
           inferApx (G, findLCID (G, qid, r))
         end
       | inferApx (G, tm as ucid (ids, name, r)) =
         let
-          val qid = Names.Qid (ids, name)
+          val qid = ids @ [name]
         in
           inferApx (G, findUCID (G, qid, r))
         end
       | inferApx (G, tm as quid (ids, name, r)) =
         let
-          val qid = Names.Qid (ids, name)
+          val qid = ids @ [name]
         in
           inferApx (G, findQUID (G, qid, r))
         end
