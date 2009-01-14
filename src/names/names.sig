@@ -53,7 +53,7 @@ sig
   val installNamePref : IDs.cid * (string list * string list) -> unit
   val namePrefLookup : IDs.cid -> (string list * string list) option
 
-val parseQualifiedName : string -> string list (* temporary *)
+  val parseQualifiedName : string -> string list (* temporary *)
   (* resets the above three mappings *)
   val reset : unit -> unit
 

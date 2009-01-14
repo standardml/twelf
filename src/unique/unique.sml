@@ -1,5 +1,5 @@
 structure UniqueTable =
-  ModeTable (structure Table = IntRedBlackTree);
+  ModeTable (structure Table = CidRedBlackTree);
 
 structure UniqueCheck =
   ModeCheck (structure ModeTable = UniqueTable

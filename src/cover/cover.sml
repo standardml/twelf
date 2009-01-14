@@ -19,7 +19,7 @@ structure Cover =
 
 structure Total =
   Total (structure Global = Global
-	 structure Table = IntRedBlackTree
+	 structure Table = CidRedBlackTree
 	 (*! structure IntSyn' = IntSyn !*)
 	 structure Whnf = Whnf
 	 structure Names = Names

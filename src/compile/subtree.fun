@@ -113,18 +113,16 @@ struct
    fun noChildren C = RBSet.isEmpty C
 
 
+  local
   (* Index array                             
-   
    Invariant: 
    For all type families  a  indexArray = [a1,...,an]
    where a1,...,an is a substitution tree consisting of all constants 
    for target family ai
-
    *)
-  val indexArray = Array.tabulate (Global.maxCid, (fn i => (ref 0, makeTree ())));
-
-  local
-
+    structure CH = CidHashTable
+    val indexTable : ((int ref) * (Tree ref)) CH.Table = CH.new(500)
+    fun lookup a = Option.getOpt(CH.lookup indexTable a, (ref 0, makeTree()))
     structure I = IntSyn
     structure C = CompSyn
     structure S = RBSet
@@ -830,7 +828,7 @@ struct
 
  fun matchSig (a, G, ps as (I.Root(Ha,S),s), sc) = 
      let
-       val (n, Tree) = Array.sub (indexArray, a)
+       val (n, Tree) = lookup a
      in              
        (* retrieval (n, !Tree, G, I.EClo(ps), sc)   *)
        retrieveCandidates (n, !Tree, G, I.EClo(ps), sc)   
@@ -839,20 +837,16 @@ struct
 
  fun matchSigIt (a, G, ps as (I.Root(Ha,S),s), sc) = 
      let
-       val (n, Tree) = Array.sub (indexArray, a)
+       val (n, Tree) = lookup a
      in              
        retrieval (n, !Tree, G, I.EClo(ps), sc)   
      end 
 
- fun sProgReset () = 
-   (nctr := 1; 
-     Array.modify (fn (n, Tree) => (n := 0; Tree := !(makeTree ()); 
-				   (n, Tree))) indexArray)
-
+ fun sProgReset () = (nctr := 1; CH.clear indexTable)
 
  fun sProgInstall (a, C.Head(E, G, Eqs, cid), R) = 
    let 
-     val (n, Tree) = Array.sub (indexArray, a)     
+     val (n, Tree) = lookup a
      val nsub_goal = S.new()             
    in       
       S.insert nsub_goal (1, (Body, E));

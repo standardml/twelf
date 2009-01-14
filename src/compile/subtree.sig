@@ -32,8 +32,6 @@ sig
 
 (*  type candidate = assSubsts * normalSubsts * cnstrSubsts * Cnstr * IntSyn.Dec IntSyn.Ctx * CGoal *)
 
-  val indexArray : ((int ref) * (Tree ref)) Array.array
-
   val sProgReset : unit -> unit
   val sProgInstall : (IntSyn.cid * CompSyn.CompHead * CompSyn.Conjunction) -> unit
   val matchSig : IntSyn.cid * IntSyn.Dec IntSyn.Ctx * IntSyn.eclo * 

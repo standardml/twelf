@@ -58,7 +58,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ Names.qidToString (Names.constQid c) ^ ":" ^ msg)))
+                             "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":" ^ msg)))
 
   fun wrapMsgBlock (c, occ, msg) =  
       (case Origins.originLookup c
@@ -66,7 +66,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Block " ^ Names.qidToString (Names.constQid c) ^ ":" ^ msg)))
+                             "Block " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":" ^ msg)))
 
 
   type dlist = IntSyn.Dec list
@@ -202,7 +202,7 @@ struct
     end =
     struct
       fun clause (c) =
-          print ("World checking clause " ^ Names.qidToString (Names.constQid c) ^ "\n")
+          print ("World checking clause " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n")
       fun constraintsRemain () =
 	  if !Global.chatter > 7
 	    then print ("Constraints remain after matching hypotheses against context block\n")
@@ -573,7 +573,7 @@ struct
      *)
      fun worldifyConDec W (c, I.ConDec (s, m, k, status, V, L)) = 
          (if !Global.chatter = 4
-	    then print (Names.qidToString (Names.constQid c) ^ " ")
+	    then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	  else ();
 	    if !Global.chatter > 4 then Trace.clause c else ();
 	      (I.ConDec (s, m, k, status, worldifyClause (I.Null, V, W, P.top), L))
@@ -611,7 +611,7 @@ struct
 	   val W' = worldifyWorld W
 	   val _ = print ";"
 	   val _ = if !Global.chatter > 3
-		     then print ("World checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
+		     then print ("World checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
 		   else ()
 	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, I.sgnLookup c) handle Error' (occ, s) => raise Error (wrapMsg (c, occ, s)))
 	                     (Index.lookup a)

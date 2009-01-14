@@ -74,7 +74,7 @@ struct
        then I is Correct else Incorrect
     *)
     fun checkVar (I.Dec (SOME n, V), pol) = 
-        (case (Names.getNamePref (I.targetFam V)) 
+        (case (Names.namePrefLookup (I.targetFam V)) 
 	   of NONE => Correct
 	    | SOME (prefENames, prefUNames) =>  
  	      (case pol 
@@ -284,19 +284,19 @@ struct
     *)
     fun checkConDec c (I.ConDec (_, _, implicit, _, U, _)) =
         (if !Global.chatter > 3
-	   then print (Names.qidToString (Names.constQid c) ^ " ")
+	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	 else ();
 	   checkType' c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDec)
       | checkConDec c (I.ConDef (_, _, implicit, U, V, I.Type, _)) =
 	   (if !Global.chatter > 3
-	      then print (Names.qidToString (Names.constQid c) ^ " ")
+	      then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2 @
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
 	      (* type level definitions ? *)
       | checkConDec c (I.AbbrevDef (_, _, implicit, U, V, I.Type)) =
 	   (if !Global.chatter > 3
-	      then print (Names.qidToString (Names.constQid c) ^ " ")
+	      then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2; 
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
@@ -304,27 +304,15 @@ struct
       | checkConDec c _ = []   (* in all other cases *)
 
 
-    (* checkAll (c, n) = L
-       
-       Invariant:
-       Let   c be a cid
-       and   n the max. number of cids
-       then  L is a list of  strings (error messages) computed from the signature c<=n
-    *)
-    fun checkAll (c, n) = 
-        (if c <= n then checkConDec c (I.sgnLookup c) @ checkAll (c+1, n) else [])
-
-    (* checkAll () = L
-       
-       Invariant:
-       L is a list of  strings (error messages) computed from the entire Twelf signature 
-    *)
-    fun check () = 
-      let 
-	val (n, _) = I.sgnSize () 
-      in (map print (checkAll (0, n)); ())
-      end
- 
+    (* computes and prints all error messages in the current module *)
+    fun check () =
+       let
+       	  val result = ref nil
+       	  val _ = I.sgnAppC (fn cid => result := ! result @ (checkConDec cid (I.sgnLookup cid)))
+       	  val _ = map print (! result)
+       in
+       	  ()
+       end
   in
     val checkConDec = (fn c => (map print (checkConDec c (I.sgnLookup c)); ()))
     val check = check

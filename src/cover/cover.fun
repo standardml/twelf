@@ -1628,7 +1628,7 @@ struct
     fun checkNoDef (a) =
         (case I.sgnLookup a
            of I.ConDef _ =>
-	        raise Error ("Coverage checking " ^ N.qidToString (N.constQid a)
+	        raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 			     ^ ":\ntype family must not be defined.")
             | _ => ())
 
@@ -1638,12 +1638,12 @@ struct
     *)
     fun checkCovers (a, ms) =
         let
-	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ N.qidToString (N.constQid a)
+	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 			     ^ "\n")
 	  val _ = checkNoDef (a)
 	  val _ = Subordinate.checkNoDef (a)
 	          handle Subordinate.Error (msg) =>
-		    raise Error ("Coverage checking " ^ N.qidToString (N.constQid a) ^ ":\n"
+		    raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n"
 				 ^ msg)
 	  val (V0, p) = initCGoal (a)
 	  val _ = if !Global.doubleCheck

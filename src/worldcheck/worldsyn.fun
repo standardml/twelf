@@ -23,7 +23,7 @@ functor WorldSyn
    structure Print : PRINT
    (*! sharing Print.IntSyn = IntSyn !*)
 
-   structure Table : TABLE where type key = int
+   structure Table : TABLE where type key = IDs.cid
 
    (*! structure Paths : PATHS !*)
    structure Origins : ORIGINS
@@ -48,21 +48,17 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "While checking constant " ^ Names.qidToString (Names.constQid c) ^ ":\n" ^ msg)))
+                             "While checking constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":\n" ^ msg)))
 
   type dlist = IntSyn.Dec list
 
-
   local
-
-
-   
     val worldsTable : T.Worlds Table.Table = Table.new (0)
     fun reset () = Table.clear worldsTable
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
     fun getWorlds (b) =
         (case Table.lookup worldsTable b
-	   of NONE => raise Error ("Family " ^ Names.qidToString (Names.constQid b) ^ " has no worlds declaration")
+	   of NONE => raise Error ("Family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b) ^ " has no worlds declaration")
             | SOME (Wb) => Wb)
 
     (* subsumedTable
@@ -122,7 +118,7 @@ struct
      *)
     fun formatSubsump msg (G, dl, Rb, b) =
 	F.HVbox ([F.String msg, F.Space, F.String "for family", F.Space,
-		  F.String ((Names.qidToString (Names.constQid b)) ^ ":"),
+		  F.String ((IntSyn.conDecFoldName (IntSyn.sgnLookup b)) ^ ":"),
 		  F.Newline (),
 		  Print.formatCtx(I.Null, G), F.Break, F.String "|-",
 		  F.Space, Print.formatDecList (G, dl),
@@ -243,7 +239,7 @@ struct
     end =
     struct
       fun clause (c) =
-          print ("World checking clause " ^ Names.qidToString (Names.constQid c) ^ "\n")
+          print ("World checking clause " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n")
       fun constraintsRemain () =
 	  if !Global.chatter > 7
 	    then print ("Constraints remain after matching hypotheses against context block\n")
@@ -436,13 +432,13 @@ struct
     fun worldcheck W a =  
 	let
 	  val _ = if !Global.chatter > 3
-		    then print ("World checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
+		    then print ("World checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val _ = subsumedReset ()	(* initialize table of subsumed families *)
 	  fun checkAll nil = ()
 	    | checkAll (I.Const(c) :: clist) =
 	      (if !Global.chatter = 4
-		 then print (Names.qidToString (Names.constQid c) ^ " ")
+		 then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause c else ();
 	       checkClause (I.Null, I.constType c, W, P.top)
@@ -450,7 +446,7 @@ struct
                checkAll clist)
 	    | checkAll (I.Def(d) :: clist) =
 	      (if !Global.chatter = 4
-		 then print (Names.qidToString (Names.constQid d) ^ " ")
+		 then print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause d else ();
 	       checkClause (I.Null, I.constType d, W, P.top)
@@ -493,7 +489,7 @@ struct
     *)
     fun conDecBlock (I.BlockDec (_, _, Gsome, Lpi)) = (Gsome, Lpi)
       | conDecBlock condec =
-        raise Error ("Identifier " ^ I.conDecName condec
+        raise Error ("Identifier " ^ I.conDecFoldName condec
 		     ^ " is not a block label")
 
     (* constBlock cid = (someDecs, piDecs)

@@ -36,7 +36,7 @@ struct
 	  then print (f ())
 	else ()
 
-    fun cName (cid) = N.qidToString (N.constQid cid)
+    fun cName (cid) = IntSyn.conDecFoldName (IntSyn.sgnLookup cid)
 
     fun pName (cid, SOME(x)) = "#" ^ cName cid ^ "_" ^ x
       | pName (cid, NONE) = "#" ^ cName cid ^ "_?"

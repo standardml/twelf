@@ -38,7 +38,7 @@ struct
     structure C = CompSyn
   in
     
-    datatype Duplicates = BVAR of int | FGN | DEF of int
+    datatype Duplicates = BVAR of int | FGN | DEF of IDs.cid
 
     fun notCS (I.FromCS) = false
       | notCS _ = true
