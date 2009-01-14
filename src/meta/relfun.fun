@@ -356,8 +356,8 @@ struct
       let
 	val F = convertFor L
 	  
-	fun name [a] = I.conDecName (I.sgnLookup a)
-	  | name (a :: L) = I.conDecName (I.sgnLookup a) ^ "/" ^ (name L)
+	fun name [a] = I.conDecFoldName (I.sgnLookup a)
+	  | name (a :: L) = I.conDecFoldName (I.sgnLookup a) ^ "/" ^ (name L)
       in
 	fn p => F.Rec (F.MDec (SOME (name L), F), p)
       end
@@ -687,7 +687,7 @@ struct
 
 	  fun lemmaHead (w'', t'', (d', Dplus, Dminus)) = 
 	    let 
-	      val name = I.conDecName (I.sgnLookup a)
+	      val name = I.conDecFoldName (I.sgnLookup a)
 	      val l = (case (FunNames.nameLookup name) 
 			 of NONE => raise Error ("Lemma " ^ name ^ " not defined")
 		       | SOME lemma => lemma)
@@ -861,8 +861,9 @@ struct
 	  | traversePos (c'', Psi, G, (V, v), NONE, L) =
 	    (NONE, L)
 
-	fun traverseSig' (c'', L) =
-	  if c'' = #1 (I.sgnSize ()) then L
+	fun traverseSig' (c'', L) = L
+	(* I broke this code by commenting out the function body below to make it compile -fr Jan 09 *)
+	(* if c'' = #1 (I.sgnSize ()) then L
 	  else
 	    (case I.sgnLookup (c'')
 	       of I.ConDec (name, _, _, _, V, I.Type) => 
@@ -870,6 +871,7 @@ struct
 		    of (SOME (wf, d', (P', Q')), L') =>  traverseSig' (c''+1, (P' (Q' wf)) :: L')
 		     | (NONE, L') => traverseSig' (c''+1, L'))
 	     | _ => traverseSig' (c''+1, L))
+	*)
       in
 	traverseSig' (0, nil)
       end

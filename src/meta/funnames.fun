@@ -1,5 +1,6 @@
 (* Names of Constants and Variables *)
 (* Author: Carsten Schuermann *)
+(* I filled in bogus names to make this compile since Carsten said the code is not used anyway. -fr Jan 09 *)
 
 functor FunNames (structure Global : GLOBAL
 		  (*! structure FunSyn' : FUNSYN !*)
@@ -41,13 +42,12 @@ struct
   datatype nameInfo = NameInfo of string
 
   local
-    val maxCid = Global.maxCid
     (* nameArray maps constants to print names and fixity *)
-    val nameArray = Array.array (maxCid+1, NameInfo "")
+    val nameArray = Array.array (1, NameInfo "")
       : nameInfo Array.array
 
     (* sgnHashTable maps identifiers (strings) to constants (cids) *)
-    val sgnHashTable : IntSyn.cid HashTable.Table = HashTable.new (4096)
+    val sgnHashTable : int HashTable.Table = HashTable.new (4096)
     val hashInsert = HashTable.insertShadow sgnHashTable (* returns optional shadowed entry *)
     val hashLookup = HashTable.lookup sgnHashTable (* returns optional cid *)
     fun hashClear () = HashTable.clear sgnHashTable
@@ -66,11 +66,11 @@ struct
     *)
     fun override (cid, NameInfo (name)) =
         (* should shadowed identifiers keep their fixity? *)
-          Array.update (nameArray, cid, NameInfo("%" ^ name ^ "%"))
+          Array.update (nameArray, 0, NameInfo("%" ^ name ^ "%"))
 
     fun shadow NONE = ()
       | shadow (SOME(_,cid)) =
-          override (cid, Array.sub (nameArray, cid))
+          override (cid, Array.sub (nameArray, 0))
 
     (* installName (name, cid) = ()
        Effect: update mappings from constants to print names and identifiers
@@ -80,7 +80,7 @@ struct
         let
 	  val shadowed = hashInsert (name, lemma)	(* returns optional shadowed entry *)
 	in
-	  (Array.update (nameArray, lemma, NameInfo (name));
+	  (Array.update (nameArray, 0, NameInfo (name));
 	   shadow shadowed)
 	end
 
@@ -93,7 +93,7 @@ struct
        where `name' is the print name of cid
     *)
     fun constName (cid) =
-        (case Array.sub (nameArray, cid)
+        (case Array.sub (nameArray, 0)
 	   of (NameInfo (name)) => name)
 
   end  (* local ... *)
