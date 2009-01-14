@@ -6,7 +6,7 @@ functor ModeTable
   ((*! structure IntSyn' : INTSYN !*)
    (* structure Names : NAMES *)
    (*! sharing Names.IntSyn = IntSyn' !*)
-   structure Table : TABLE where type key = int
+   structure Table : TABLE where type key = IDs.cid
    (* structure Index : INDEX *)
    (*! sharing Index.IntSyn = IntSyn' !*)
    ) : MODETABLE =

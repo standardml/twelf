@@ -1,7 +1,7 @@
 (* structure ModeSyn  in modesyn.sml *)
 
 structure ModeTable =
-  ModeTable (structure Table = IntRedBlackTree);
+  ModeTable (structure Table = CidRedBlackTree);
 
 structure ModeDec =
   ModeDec ((*! structure ModeSyn' = ModeSyn !*)

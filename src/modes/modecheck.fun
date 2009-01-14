@@ -69,7 +69,7 @@ struct
             | (fileName, SOME occDec) => 
 	        (P.wrapLoc' (P.Loc (fileName, P.occToRegionClause occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ Names.qidToString (Names.constQid c) ^ "\n" ^ msg)))
+                             "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n" ^ msg)))
 
     fun wrapMsg' (fileName, r, msg) =
           P.wrapLoc (P.Loc (fileName, r), msg)
@@ -85,7 +85,7 @@ struct
     *)
     fun lookup (a, occ) =  
         case ModeTable.mmodeLookup a
-	  of nil => raise Error' (occ, "No mode declaration for " ^ I.conDecName (I.sgnLookup a))
+	  of nil => raise Error' (occ, "No mode declaration for " ^ I.conDecFoldName (I.sgnLookup a))
            | sMs => sMs 
 
     (* nameOf S, selects a name for S *)
@@ -820,14 +820,14 @@ struct
     fun checkAll (nil) = ()
       | checkAll (I.Const(c) :: clist) =
         (if !Global.chatter > 3
-	   then print (Names.qidToString (Names.constQid c) ^ " ")
+	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
 	 else ();
 	 checkDlocal (I.Null, I.constType c, P.top)
 	   handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
 	 checkAll clist)
       | checkAll (I.Def(d) :: clist) =
         (if !Global.chatter > 3
-	   then print (Names.qidToString (Names.constQid d) ^ " ")
+	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
 	 else ();
 	 checkDlocal (I.Null, I.constType d, P.top)
 	   handle Error' (occ, msg) => raise Error (wrapMsg (d, occ, msg));
@@ -836,7 +836,7 @@ struct
     fun checkMode (a, ms) =
         let
 	  val _ = if !Global.chatter > 3
-		    then print ("Mode checking family " ^ Names.qidToString (Names.constQid a) ^ ":\n")
+		    then print ("Mode checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
 	  val _ = (checkFree := false)
@@ -849,7 +849,7 @@ struct
     fun checkFreeOut (a, ms) =
         let
 	  val _ = if !Global.chatter > 3
-		    then print ("Checking output freeness of " ^ Names.qidToString (Names.constQid a) ^ ":\n")
+		    then print ("Checking output freeness of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
 	  val _ = (checkFree := true)

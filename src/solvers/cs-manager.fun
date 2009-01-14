@@ -88,7 +88,7 @@ struct
     val nextCS = ref(1) : int ref
 
     (* Installing function *)
-    val installFN = ref (fn _ => ~1) : (sigEntry -> IntSyn.cid) ref
+    val installFN = ref (fn _ => IDs.invalidCid) : (sigEntry -> IntSyn.cid) ref
     fun setInstallFN f = (installFN := f)
 
     (* install the specified solver *)

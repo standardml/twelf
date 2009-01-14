@@ -90,7 +90,7 @@ struct
     fun conDecToString (c, SClause(r)) = 
 	let
 	  val _ = Names.varReset IntSyn.Null
-	  val name = IntSyn.conDecName (IntSyn.sgnLookup c)
+	  val name = IntSyn.conDecFoldName (IntSyn.sgnLookup c)
 	  val l = String.size name
 	in
 	  name ^ (if l > 6 then ":\n" else ":") ^
@@ -100,16 +100,19 @@ struct
 	  Print.conDecToString (IntSyn.sgnLookup c) ^ "\n\n"
 
     (* sProgToString () = printed representation of static program *)
-    fun sProgToString () = 
-	let val (size, _) = IntSyn.sgnSize ()
-	    fun ts (cid) = if cid < size
-			     then conDecToString (cid, CompSyn.sProgLookup cid)
-				  ^ ts (cid+1)
-			   else ""
-	 in
-	   ts 0
-	 end
-
+    fun sSingleProgToString (mid) =
+       let val result = ref ""
+       in
+       	  IntSyn.sgnApp(mid, fn cid => result := ! result ^ conDecToString (cid, CompSyn.sProgLookup cid)) ;
+       	  ! result
+       end
+    fun sProgToString() =
+       let val result = ref ""
+       in
+       	  IntSyn.modApp(fn mid => result := ! result ^ (sSingleProgToString mid)) ;
+       	  ! result
+       end
+       
     (* dProgToString (G, dProg) = printed representation of dynamic program *)
     fun dProgToString (DProg (IntSyn.Null, IntSyn.Null)) = ""
       | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),

@@ -16,29 +16,28 @@ struct
     fun cidFromHead (I.Const c) = c
       | cidFromHead (I.Def c) = c
 
-    (* Index array                             
-
+    (* Index table
        Invariant: 
        For all type families  a
-       indexArray (a) = c1,...,cn
+       indexTable (a) = c1,...,cn
        where c1,...,cn is a queue consisting of all constants with
        target family a
     *)
-    val indexArray : (IntSyn.Head Queue.queue) Array.array =
-        Array.array (Global.maxCid + 1, Queue.empty)
+    structure CH = CidHashTable
+    val indexTable : (IntSyn.Head Queue.queue) CH.Table = CH.new(500)
 
     (* reset () = ()
        Empties index array
     *)
-    fun reset () = Array.modify (fn _ => Queue.empty) indexArray
-      
+    fun reset () = CH.clear indexTable
+    val lookup' = valOf o (CH.lookup indexTable)
+    val update' = CH.insert indexTable
+
     (* update (a, c) = ()
        inserts c into the index queue for family a
        Invariant: a = target family of c
     *)
-    fun update (a, c) =
-        Array.update (indexArray, a,
-		      Queue.insert (c, Array.sub (indexArray, a)))
+    fun update (a, c) = CH.insert indexTable (a, Queue.insert (c, lookup' a))
 
     (* install (c) = ()
        installs c into the correct index queue
@@ -54,32 +53,6 @@ struct
 	   of I.SkoDec (_, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
 	    | _ => ())
 
-    fun remove (a, cid) =
-        (case Queue.deleteEnd (Array.sub (indexArray, a))
-           of NONE => ()
-            | SOME (I.Const cid', queue') =>
-                if cid = cid' then Array.update (indexArray, a, queue')
-                else ()
-            | SOME (I.Skonst cid', queue') =>
-                if cid = cid' then Array.update (indexArray, a, queue')
-                else ())
-
-    fun uninstall cid =
-        (case I.sgnLookup cid
-           of I.ConDec (_, _, _, _, A, I.Type) => remove (cidFromHead (I.targetHead A), cid)
-            | I.SkoDec (_, _, _, A, I.Type) => remove (cidFromHead (I.targetHead A), cid)
-            | _ => ())
-
-    fun resetFrom mark =
-        let
-          val (limit, _) = I.sgnSize ()
-          fun iter i = if i < mark then ()
-                       else (uninstall i;
-                             Array.update (indexArray, i, Queue.empty))
-        in
-          iter (limit - 1)
-        end
-
     (* lookup a = [c1,...,cn] *)
     (*
        c1,...,cn are all constants with target family a
@@ -91,15 +64,14 @@ struct
     fun lookup a =
         let fun lk (l, NONE) = l
 	      | lk (l, SOME(q')) =
-	        (Array.update (indexArray, a, q'); l)
+	        (update' (a, q'); l)
 	in
-	  lk (Queue.toList (Array.sub (indexArray, a)))
+	  lk (Queue.toList (lookup' a))
 	end
 
   in
 
     val reset = reset
-    val resetFrom = resetFrom
     val install = install
     val lookup = lookup
 

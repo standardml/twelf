@@ -1,6 +1,6 @@
 structure MemoTable =
-  HashTable (type key' = int * int
-	     val hash = (fn (n,m) => 7 * n + m)
+  HashTable (type key' = IDs.cid * IDs.cid
+	     val hash = (fn (n,m) => 7 * (IDs.cidhash n) + (IDs.cidhash m))
              val eq = (op =));
 
 structure Subordinate = 
@@ -8,6 +8,6 @@ structure Subordinate =
 	       (*! structure IntSyn' = IntSyn !*)
 	       structure Whnf = Whnf
 	       structure Names = Names
-	       structure Table = IntRedBlackTree
+	       structure Table = CidRedBlackTree
 	       structure MemoTable = MemoTable
 	       structure IntSet = IntSet);

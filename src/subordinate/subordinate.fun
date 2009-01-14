@@ -101,7 +101,7 @@ struct
     fun fSet (a, frozen) =
         let val _ = Global.chPrint 5
 	            (fn () => (if frozen then "Freezing " else "Thawing ")
-		              ^ Names.qidToString (Names.constQid a) ^ "\n")
+		              ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ "\n")
 	in
 	  fInsert (a, frozen)
 	end
@@ -110,9 +110,9 @@ struct
     fun checkFreeze (c, a) =
         if fGet a
         then raise Error ("Freezing violation: constant "
-                          ^ Names.qidToString (Names.constQid (c))
+                          ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
                           ^ "\nextends type family "
-                          ^ Names.qidToString (Names.constQid (a)))
+                          ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c))
         else ()
 
     (* no longer needed since freeze is now transitive *)
@@ -162,7 +162,7 @@ struct
 
     fun expandFamilyAbbrevs a =
         (case I.constUni a
-           of I.Type => raise Error ("Constant " ^ Names.qidToString (Names.constQid a)
+           of I.Type => raise Error ("Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
                                      ^ " must be a type family to be frozen or thawed")
             | I.Kind =>
         (case IntSyn.sgnLookup a
@@ -247,9 +247,9 @@ struct
 	       (* if b is frozen and not already b #> a *)
 	       (* subordination would change; signal error *)
 	       then raise Error ("Freezing violation: "
-				 ^ Names.qidToString (Names.constQid b)
+				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b)
 				 ^ " would depend on "
-				 ^ Names.qidToString (Names.constQid a))
+				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
 	     else addNewEdge (b, a)
 
     (* Thawing frozen families *)
@@ -331,14 +331,14 @@ struct
     fun checkNoDef a =
         if occursInDef a
 	  then raise Error ("Definition violation: family "
-			    ^ Names.qidToString (Names.constQid a)
+			    ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 			    ^ "\noccurs as right-hand side of type-level definition")
 	else appReachable (fn a' =>
 	     if occursInDef a'
 	       then raise Error ("Definition violation: family "
-				 ^ Names.qidToString (Names.constQid a)
+				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 				 ^ " |> "
-				 ^ Names.qidToString (Names.constQid a')
+				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a')
 				 ^ ",\nwhich occurs as right-hand side of a type-level definition")
 	     else ())
 	     a
@@ -438,7 +438,7 @@ struct
     fun checkBelow (a, b) =
         if not (below (a, b))
 	  then raise Error ("Subordination violation: "
-			    ^ Names.qidToString (Names.constQid (a)) ^ " not <| " ^ Names.qidToString (Names.constQid (b)))
+			    ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ " not <| " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b))
 	else ()
 
     (* respectsTypeN' (V, a) = () iff V respects current subordination
@@ -471,14 +471,14 @@ struct
     (* Reverse again --- do not sort *)
     (* Right now, Table.app will pick int order -- do not sort *)
     fun famsToString (bs, msg) =
-        IntSet.foldl (fn (a, msg) => Names.qidToString (Names.constQid a) ^ " " ^ msg) "\n" bs
+        IntSet.foldl (fn (a, msg) => IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ " " ^ msg) "\n" bs
     (*
     fun famsToString (nil, msg) = msg
       | famsToString (a::AL, msg) = famsToString (AL, Names.qidToString (Names.constQid a) ^ " " ^ msg)
     *)
 
     fun showFam (a, bs) =
-        (print (Names.qidToString (Names.constQid a)
+        (print (IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 		^ (if fGet a then " #> " else " |> ")
 		^ famsToString (bs, "\n")))
 

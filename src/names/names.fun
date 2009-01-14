@@ -222,6 +222,10 @@ struct
 
     fun reset () = (SH.clear nameTable; CH.clear fixityTable; CH.clear namePrefTable)
 
+    (* this must be replaced with the parsing method for qualified names -fr *)
+     fun parseQualifiedName (name : string) =
+        String.fields (fn c => c = #".") name
+
     (* local names are more easily re-used: they don't increment the
        counter associated with a name
     *)

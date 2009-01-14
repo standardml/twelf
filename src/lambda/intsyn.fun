@@ -207,6 +207,7 @@ struct
 	fun inCurrent(l : lid) = IDs.newcid(current(), l)
         fun sgnReset () = (QH.clear symTable; QH.clear structTable; IH.clear modTable)
       
+        (* if conDecQid is nil, it should be replaced with lid; used in m2/prover.fun *)
 	fun sgnAdd (m : mid, conDec : ConDec) =
             let
 		val c = IDs.newcid(m, nextLid(m))
@@ -291,22 +292,16 @@ struct
 	end
 
   structure FgnExpStd = struct
-
     structure ToInternal = FgnOpnTable (type arg = unit
 					type result = Exp)
-
     structure Map = FgnOpnTable (type arg = Exp -> Exp
 				 type result = Exp)
-
     structure App = FgnOpnTable (type arg = Exp -> unit
 				 type result = unit)
-
     structure EqualTo = FgnOpnTable (type arg = Exp
 				     type result = bool)
-
     structure UnifyWith = FgnOpnTable (type arg = Dec Ctx * Exp
 				       type result = FgnUnify)			  
-
     fun fold csfe f b =
     let
 	val r = ref b
@@ -317,13 +312,10 @@ struct
   end
 
   structure FgnCnstrStd = struct
-
     structure ToInternal = FgnOpnTable (type arg = unit
 					type result = (Dec Ctx * Exp) list)
-
     structure Awake = FgnOpnTable (type arg = unit
 				   type result = bool)
-
     structure Simplify = FgnOpnTable (type arg = unit
 				      type result = bool)
   end

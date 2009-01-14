@@ -45,8 +45,7 @@ sig
 
  (* pskeleton instead of proof term *)
   datatype Flatterm = 
-    Pc of int | Dc of int | Csolver of IntSyn.Exp
-
+    Pc of IntSyn.cid | Dc of IntSyn.cid | Csolver of IntSyn.Exp
   type pskeleton = Flatterm list  
 
   (* The dynamic clause pool --- compiled version of the context *)
@@ -70,9 +69,9 @@ sig
 
 
   (* Install Programs (without indexing) *)
-  val sProgInstall : IntSyn.cid * ConDec -> unit  
+  val sProgInstall : IDs.cid * ConDec -> unit  
 
-  val sProgLookup: IntSyn.cid -> ConDec
+  val sProgLookup: IDs.cid -> ConDec
   val sProgReset : unit -> unit
 
   (* Deterministic flag *)

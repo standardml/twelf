@@ -2,6 +2,7 @@
 (* Specialized for subordination *)
 (* Author: Frank Pfenning *)
 (* Copied from src/table/red-black-tree.fun *)
+(* The key was changed from int to cid. Consequently, it should be renamed CidSet *)
 
 signature INTSET =
 sig

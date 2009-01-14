@@ -25,11 +25,11 @@ struct
   end
 
   local
-    val originArray = Array.array (Global.maxCid+1, ("", NONE))
-        : (string * Paths.occConDec option) Array.array
+    structure CH = CidHashTable
+    val originTable : (string * Paths.occConDec option) CH.Table = CH.new(1000)
   in
-    fun installOrigin (cid, fileNameOpt) = Array.update (originArray, cid, fileNameOpt)
-    fun originLookup (cid) = Array.sub (originArray, cid)
+    val installOrigin = CH.insert originTable
+    val originLookup = valOf o (CH.lookup originTable)
   end
 
 end;  (* functor Origins *)

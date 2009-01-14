@@ -4,7 +4,7 @@
 
 signature INTSYN =
 sig
-  (* abbreviation for id-related types *)
+  (* abbreviations for id-related types *)
   type mid = IDs.mid
   type lid = IDs.lid
   type cid = IDs.cid

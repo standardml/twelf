@@ -4,6 +4,7 @@ Library
   signature INTSYN
   structure IntSyn
   structure CidHashTable
+  structure CidRedBlackTree
   structure IDs
   signature WHNF
   structure Whnf

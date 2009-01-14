@@ -9,7 +9,7 @@ functor CompSyn (structure Global : GLOBAL
 		 structure Names : NAMES
 		 (*! sharing Names.IntSyn = IntSyn' !*)
                  structure Table : TABLE
-                   where type key = int)
+                   where type key = IDs.cid)
   : COMPSYN =
 struct
 
@@ -134,19 +134,19 @@ struct
   datatype DProg = DProg of IntSyn.dctx * ComDec IntSyn.Ctx
 
   local
-    val maxCid = Global.maxCid
+    structure CH = CidHashTable
     (* program array indexed by clause names (no direct head access) *)
-    val sProgArray = Array.array (maxCid+1, Void) : ConDec Array.array
+    val sProgTable : ConDec CH.Table = CH.new(1000)
 
     val detTable : bool Table.Table = Table.new (32)
   in
     (* Invariants *)
     (* 0 <= cid < I.sgnSize () *)
     (* program array indexed by clause names (no direct head access) *)
-    fun sProgInstall (cid, conDec) = Array.update (sProgArray, cid, conDec)
+    fun sProgInstall (cid, conDec) = CH.insert (sProgTable) (cid, conDec)
 
-    fun sProgLookup (cid) = Array.sub (sProgArray, cid)
-    fun sProgReset () = Array.modify (fn _ => Void) sProgArray
+    fun sProgLookup (cid) = valOf (CH.lookup sProgTable cid)
+    fun sProgReset () = CH.clear sProgTable
 
     val detTableInsert = Table.insert detTable;
     fun detTableCheck (cid) = (case (Table.lookup detTable cid)
@@ -186,9 +186,9 @@ struct
 
   fun pskeletonToString [] = " " 
     | pskeletonToString ((Pc i)::O) = 
-        Names.qidToString (Names.constQid i) ^ " " ^ (pskeletonToString O)
+        IntSyn.conDecFoldName (IntSyn.sgnLookup i) ^ " " ^ (pskeletonToString O)
     | pskeletonToString ((Dc i)::O) = 
-        ("(Dc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
+        ("(Dc " ^ (IDs.cidToString i) ^ ") ") ^ (pskeletonToString O)
     | pskeletonToString (Csolver U ::O) = 
         ("(cs _ ) " ^ (pskeletonToString O))
 
@@ -199,5 +199,5 @@ structure CompSyn =
   CompSyn (structure Global = Global
            (*! structure IntSyn' = IntSyn !*)
 	   structure Names = Names
-           structure Table = IntRedBlackTree);
+           structure Table = CidRedBlackTree);
   

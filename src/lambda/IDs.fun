@@ -17,6 +17,8 @@ structure IDs = struct
    fun nextLid(l) = l + 1
    fun firstMid() = 0
    fun firstLid() = 0
+   fun cidToString(m,l) = "(" ^ (Int.toString m) ^ "," ^ (Int.toString l) ^ ")"
+   val invalidCid = (~1,~1)
 end
 
 (* These tables should be moved to the others *) 
