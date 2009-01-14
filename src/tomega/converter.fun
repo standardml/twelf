@@ -2,7 +2,6 @@
    representation of proof terms *)
 (* Author: Carsten Schuermann *)
 
-(* replacing various conDecName's with conDecFoldName's; check this -fr *)
 
 functor Converter 
   (structure Global : GLOBAL
@@ -1070,7 +1069,7 @@ exception Error' of Tomega.Sub
 	        (* Design decision: Let's keep all of G *)
 		val L' = transformList (L, I.id) 
 		val (cids'', wmap) = transformWorlds' (cids')
-		(* changed sgnAdd to sgnAddC -fr *)
+		(* changed sgnAdd to sgnAddC -fr Wed Jan 14 12:57:22 2009 *)
 		val cid' = I.sgnAddC (I.BlockDec (s, m, G, L'))
 	      in
 		(cid' :: cids'', fn c => if c = cid then cid' else wmap c)

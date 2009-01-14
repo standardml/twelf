@@ -269,6 +269,7 @@ struct
     val sgnAddC =  Signature.sgnAddC
     val sgnLookup = Signature.sgnLookup
     val sgnApp =  Signature.sgnApp
+    val sgnAppC =  Signature.sgnAppC
     val modApp = Signature.modApp
     val structAdd = Signature.structAdd
     val structLookup = Signature.structLookup

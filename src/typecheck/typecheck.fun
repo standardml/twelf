@@ -32,7 +32,6 @@ struct
           LVarToString (G, I.blockSub (B, sk))
 					(* whnf for Blocks ? Sun Dec  1 11:38:17 2002 -cs *)
       | LVarToString (G, I.LVar (ref NONE, sk, (cid, t))) =
-      (* not sure, putting conDecFoldName instead of conDecName -fr *)
 	  "#" ^ I.conDecFoldName (I.sgnLookup cid) ^ "["
 	  ^ subToString (G, t) ^ "]"
 	  

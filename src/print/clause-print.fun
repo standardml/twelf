@@ -98,7 +98,8 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
 	val Vfmt = fmtClauseI (i, I.Null, V)
-	val name = I.conDecFoldName condec (* should be done by exposing fmtConstPath -fr *)
+	val name = I.conDecFoldName condec (* should be done by exposing fmtConstPath -fr 
+					    Wed Jan 14 12:55:02 2009*)
       in
 	F.HVbox [Str0 (Symbol.const (name)), F.Space, sym ":", F.Break,
 		 Vfmt, sym "."]

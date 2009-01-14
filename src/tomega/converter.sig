@@ -11,7 +11,6 @@ sig
   exception Error' of Tomega.Sub
   val convertFor : IntSyn.cid list -> Tomega.For
   val convertPrg : IntSyn.cid list -> Tomega.Prg
-  (* check this change -fr *)
   val installPrg : IntSyn.cid list -> Tomega.lemma * Tomega.lemma list   (* projections *) * Tomega.lemma list   (* selections *)
   val convertGoal : Tomega.Dec IntSyn.Ctx * IntSyn.Exp -> Tomega.Prg
 end (* Signature CONVERTER *)       

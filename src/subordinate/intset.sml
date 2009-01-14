@@ -7,9 +7,9 @@ signature INTSET =
 sig
   type intset
   val empty : intset
-  val insert : int * intset -> intset
-  val member : int * intset -> bool
-  val foldl : (int * 'b -> 'b) -> 'b -> intset -> 'b
+  val insert : IDs.cid * intset -> intset
+  val member : IDs.cid * intset -> bool
+  val foldl : (IDs.cid * 'b -> 'b) -> 'b -> intset -> 'b
 end;
 
 structure IntSet :> INTSET =
@@ -17,8 +17,8 @@ struct
 
   datatype rbt =
     Empty				(* considered black *)
-  | Red of int * rbt * rbt
-  | Black of int * rbt * rbt
+  | Red of IDs.cid * rbt * rbt
+  | Black of IDs.cid * rbt * rbt
 
   (* Representation Invariants *)
   (*
@@ -40,7 +40,7 @@ struct
 	| lk (Red tree) = lk' tree
         | lk (Black tree) = lk' tree
       and lk' (x1, left, right) =
-	    (case Int.compare(x,x1)
+	    (case IDs.cidcompare(x,x1)
 	       of EQUAL => true
 	        | LESS => lk left
 		| GREATER => lk right)
@@ -92,12 +92,12 @@ struct
       (* ins preserves black height *)
       fun ins (Empty) = Red(x, Empty, Empty)
 	| ins (Red(x1, left, right)) =
-	  (case Int.compare(x,x1)
+	  (case IDs.cidcompare(x,x1)
 	     of EQUAL => Red(x, left, right)
 	      | LESS => Red(x1, ins left, right)
 	      | GREATER => Red(x1, left, ins right))
 	| ins (Black(x1, left, right)) =
-	  (case Int.compare(x,x1)
+	  (case IDs.cidcompare(x,x1)
 	     of EQUAL => Black(x, left, right)
 	      | LESS => restore_left (Black(x1, ins left, right))
 	      | GREATER => restore_right (Black(x1, left, ins right)))

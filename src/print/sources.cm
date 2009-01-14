@@ -26,8 +26,8 @@ is
   clause-print.sig
   clause-print.fun
   print.sml
-  traverse.sig
-  traverse.fun
+  traverse.sig   (* dead code --cs Fri Jan  9 14:41:53 2009 *)
+  traverse.fun   (* .. *)
   print-twega.sig
   print-twega.fun
   print-xml.sig

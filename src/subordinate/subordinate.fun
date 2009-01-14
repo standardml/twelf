@@ -10,8 +10,8 @@ functor Subordinate
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
-   structure Table : TABLE where type key = int
-   structure MemoTable : TABLE where type key = int * int
+   structure Table : TABLE where type key = IDs.cid
+   structure MemoTable : TABLE where type key = IDs.cid * IDs.cid
    structure IntSet : INTSET
      )
   : SUBORDINATE =
@@ -527,7 +527,7 @@ struct
       fun showDef () =
 	  let
 	    val _ = reset ()
-	    val _ = I.sgnApp (fn c => analyze (I.sgnLookup c))
+	    val _ = I.sgnAppC (fn c => analyze (I.sgnLookup c))
 	    val _ = print ("Declared: " ^ Int.toString (!declared) ^ "\n")
 	    val _ = print ("Defined : " ^ Int.toString (!defined) ^ "\n")
 	    val _ = print ("Abbrevs : " ^ Int.toString (!abbrev) ^ "\n")

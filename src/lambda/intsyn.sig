@@ -225,6 +225,7 @@ sig
   val sgnLookup: cid -> ConDec
   (* apply a function to all declarations in a module *)
   val sgnApp   : mid * (cid -> unit) -> unit
+  val sgnAppC  : (cid -> unit) -> unit
   (* apply a function to all modules *)
   val modApp   : (mid -> unit) -> unit
   (* global reset *)

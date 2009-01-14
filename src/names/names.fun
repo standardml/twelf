@@ -517,7 +517,6 @@ struct
       | decName' role (G, D as IntSyn.BDec (NONE, b as (cid, t))) =
         (* use #l as base name preference for label l *)
 	let
-	  (* not sure what the semantics is here; putting conDecFoldName instead of conDecName for now -fr *)
 	  val name = findName (G, "#" ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid), Local)
 	in
 	  IntSyn.BDec (SOME(name), b)

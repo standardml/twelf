@@ -190,7 +190,7 @@ local
     | argNumber (FX.Prefix _) = 1
     | argNumber (FX.Postfix _) = 1
 
-  (* tried to fix this, not sure what it will look like -fr *)
+  (* tried to fix this, not sure what it will look like -fr Wed Jan 14 12:52:08 2009 *)
   fun fmtConstPath (f : string -> (string * int), names : string list) =
      let
      	val formattedNames = List.map (Str0 o f) names
@@ -253,7 +253,7 @@ local
         in
           case (NONE, !noShadow)
           (* the above NONE must be replaced with a check whether name has been shadowed,
-             but we don't know in which module -fr *)
+             but we don't know in which module -fr Wed Jan 14 12:52:33 2009 *)
             of (SOME _, false) => (* the user has re-defined this name *)
                  Str0 (Symbol.const ("%" ^ name ^ "%"))
              | _ =>
@@ -921,7 +921,8 @@ in
 
   fun printSingleSgn(mid) =
       IntSyn.sgnApp (mid, fn (cid) => (print (F.makestring_fmt (formatConDecI (IntSyn.sgnLookup cid))); print "\n"))
-  (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} -fr *)
+  (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} 
+   -fr Wed Jan 14 12:53:02 2009 *)
   fun printSgn() =
       IntSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
 
