@@ -73,11 +73,11 @@ struct
 		    val I.Dec (_, V') = D
 		    val V'' = k (Whnf.normalize (V', s))
 		    val name' = Names.skonstName (name ^ "#")
-		    val SD = I.SkoDec (name', NONE, imp, V'', L)
-		    val sk = I.sgnAdd SD
+		    val SD = I.SkoDec ([name'], nil, imp, V'', L)
+		    val sk = I.sgnAddC SD
 		    val H = I.Skonst sk
 		    val _ = IndexSkolem.install I.Ordinary H
-		    val _ = Names.installConstName sk
+		    val _ = Names.installName(sk, [name'])
 		    val _ = (Timers.time Timers.compiling Compile.install) I.Ordinary sk
 (*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d
@@ -98,7 +98,8 @@ struct
 
        Invariant:
            L is a list of a's (mututal inductive theorems)
-	   which have an associated mode declaration 
+	   which have an associated mode declaration
+	   and whose names are not qualified
  
        Effect: Skolem constants for all theorems are generated, named, and indexed
     *)
@@ -107,7 +108,7 @@ struct
         let 
 	  val I.ConDec (name, _, imp, _, V, L) = I.sgnLookup a
 	  val SOME mS = ModeTable.modeLookup a
-	  val _ = installSkolem (name, imp, (V, mS), I.Type)
+	  val _ = installSkolem (hd name, imp, (V, mS), I.Type)
 	in
 	  install aL
 	end

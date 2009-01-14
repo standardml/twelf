@@ -86,9 +86,9 @@ struct
     *)
     fun cLToString (nil) = ""
       | cLToString (c :: nil) = 
-	  (I.conDecName (I.sgnLookup c))
+	  (I.conDecFoldName (I.sgnLookup c))
       | cLToString (c :: L) = 
-	  (I.conDecName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
+	  (I.conDecFoldName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
 
     (* init (k, cL) = ()
 
@@ -143,8 +143,8 @@ struct
        then e' = (name, |G|, {G}.V, Type) is a signature conDec 
     *)
     fun makeConDec (M.State (name, M.Prefix (G, M, B), V)) = 
-	let 
-	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, NONE, k, I.Normal, V, I.Type)
+	let
+	  fun makeConDec' (I.Null, V, k) = I.ConDec ([name], nil, k, I.Normal, V, I.Type)
 	    | makeConDec' (I.Decl (G, D), V, k) = 
 	      makeConDec' (G, I.Pi ((D, I.Maybe), V), k+1)
 	in

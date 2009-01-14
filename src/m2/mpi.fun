@@ -86,9 +86,9 @@ struct
 
     fun cLToString (nil) = ""
       | cLToString (c :: nil) = 
-	  (I.conDecName (I.sgnLookup c))
+	  (I.conDecFoldName (I.sgnLookup c))
       | cLToString (c :: L) = 
-	  (I.conDecName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
+	  (I.conDecFoldName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
 
     fun SplittingToMenu (nil, A) = A
       | SplittingToMenu (O :: L, A) = SplittingToMenu (L, Splitting O :: A)
@@ -137,7 +137,7 @@ struct
 
     fun makeConDec (M.State (name, M.Prefix (G, M, B), V)) = 
 	let 
-	  fun makeConDec' (I.Null, V, k) = I.ConDec (name, NONE, k, I.Normal, V, I.Type)
+	  fun makeConDec' (I.Null, V, k) = I.ConDec ([name], nil, k, I.Normal, V, I.Type)
 	    | makeConDec' (I.Decl (G, D), V, k) = 
 	      makeConDec' (G, I.Pi ((D, I.Maybe), V), k+1)
 	in
@@ -193,11 +193,11 @@ struct
 	let 
 	  fun cids nil = nil
 	    | cids (name :: nL) =
-              (case Names.stringToQid name
+              (case SOME(Names.parseQualifiedName name)
                  of NONE => raise Error ("Malformed qualified identifier " ^ name)
-                  | SOME qid =>
-              (case Names.constLookup qid
-                 of NONE => raise Error ("Type family " ^ Names.qidToString qid ^ " not defined")
+                  | SOME qname =>
+              (case Names.nameLookup(IntSyn.currentMod(), qname)
+                 of NONE => raise Error ("Type family " ^ name ^ " not defined")
                   | SOME cid => cid :: (cids nL)))
 	in
 	  ((init' (k, cids nL); menu (); printMenu ())
@@ -256,7 +256,7 @@ struct
 	else 
 	  let 
 	    val S = current ()
-	    val S' = Lemma.apply (S, valOf (Names.constLookup (valOf (Names.stringToQid name))))
+	    val S' = Lemma.apply (S, valOf (Names.nameLookup (IntSyn.currentMod(), Names.parseQualifiedName name)))
 	      handle Splitting.Error s => abort ("Splitting Error: " ^ s)
 		   | Filling.Error s => abort ("Filling Error: " ^ s)
 		   | Recursion.Error s => abort ("Recursion Error: " ^ s)

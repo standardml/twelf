@@ -68,7 +68,7 @@ struct
 	  constCases (G, Vs, Sgn, abstract,
 		      CSManager.trail (fn () => 
 				   (if Unify.unifiable (G, Vs, Vs')
-				      then Active (abstract (I.conDecName (I.sgnLookup c) ^ "/", U))
+				      then Active (abstract (I.conDecFoldName (I.sgnLookup c) ^ "/", U))
 					   :: ops
 				    else ops)
 				   handle MetaAbstract.Error _ => InActive :: ops))
