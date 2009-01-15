@@ -10,16 +10,12 @@ functor ThmSyn ((*! structure IntSyn : INTSYN !*)
 		structure Whnf : WHNF
 		(*! sharing Whnf.IntSyn = IntSyn !*)
 		(*! structure Paths' : PATHS !*)
-		structure Names' : NAMES
-	        (*! sharing Names'.IntSyn = IntSyn !*)
 		  )
   : THMSYN =
 struct
   (*! structure IntSyn = IntSyn !*)
   (*! structure ModeSyn = ModeSyn' *)
   (*! structure Paths = Paths' !*)
-  structure Names = Names'
-
   exception Error of string
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
 
@@ -71,7 +67,7 @@ struct
     WDecl of (IntSyn.Dec IntSyn.Ctx * 
 	      IntSyn.Dec IntSyn.Ctx) list * Callpats *)
   datatype WDecl = 
-    WDecl of Names.Qid list * Callpats
+    WDecl of IDs.Qid list * Callpats
 
   local
 
