@@ -39,10 +39,10 @@ struct
     val one_int  = Integers.fromInt(1)
 
     (* solver ID of this solver *)
-    val myID = ref ~1 : cid ref
+    val myID = ref ~1 : csid ref
 
    (* constant IDs of the declared type constants *)
-    val geqID  = ref ~1 : cid ref
+    val geqID  = ref IDs.invalidCid : cid ref
 
     (* constructors for the declared types *)
     fun geq (U, V) = Root (Const (!geqID), App (U, App (V, Nil)))
@@ -51,15 +51,15 @@ struct
     fun geq0 (U) = geq (U, constant (zero_int))
 
     (* constant IDs of the declared object constants *)
-    val geqAddID = ref ~1 : cid ref
+    val geqAddID = ref IDs.invalidCid : cid ref
 
     (* constructors for the declared objects *)
     fun geqAdd (U1, U2, V, W) =
           Root (Const (!geqAddID), App (U1, App (U2, App (V,  App (W, Nil)))))
 
     (* constant declaration for the proof object d>=0 *)
-    fun geqNConDec (d) = ConDec (Integers.toString (d) ^ ">=" ^ Integers.toString (zero_int),
-                                 NONE, 0, Normal, geq0 (constant (d)), Type)
+    fun geqNConDec (d) = ConDec ([Integers.toString (d) ^ ">=" ^ Integers.toString (zero_int)],
+                                 nil, 0, Normal, geq0 (constant (d)), Type)
 
     (* foreign constant for the proof object d>=0 *)
     fun geqNExp (d) = Root (FgnConst (!myID, geqNConDec (d)), Nil)
@@ -1321,7 +1321,7 @@ struct
             myID := cs;
 
             geqID := 
-              installF (ConDec (">=", NONE, 0,
+              installF (ConDec ([">="], nil, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
                         SOME(FX.Infix(FX.minPrec, FX.None)),
@@ -1329,7 +1329,7 @@ struct
                                 MS.Mapp(MS.Marg(MS.Star, NONE), MS.Mnil))]);
 
             geqAddID :=
-              installF (ConDec ("+>=", NONE, 2, Normal,
+              installF (ConDec (["+>="], nil, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),

@@ -57,14 +57,14 @@ struct
     val myID = ref ~1 : csid ref
 
     (* constant ID of the type family constant "wordXX" *)
-    val wordID = ref ~1 : cid ref
+    val wordID = ref IDs.invalidCid : cid ref
 
     fun word () = Root (Const (!wordID), Nil)
 
     (* constant ID's of the operators defined by this module *)
-    val plusID  = ref ~1 : cid ref   (* + : wordXX -> wordXX -> wordXX -> type *)
-    val timesID = ref ~1 : cid ref   (* * : wordXX -> wordXX -> wordXX -> type *)
-    val quotID  = ref ~1 : cid ref   (* / : wordXX -> wordXX -> wordXX -> type *)
+    val plusID  = ref IDs.invalidCid : cid ref   (* + : wordXX -> wordXX -> wordXX -> type *)
+    val timesID = ref IDs.invalidCid : cid ref   (* * : wordXX -> wordXX -> wordXX -> type *)
+    val quotID  = ref IDs.invalidCid : cid ref   (* / : wordXX -> wordXX -> wordXX -> type *)
 
     fun plusExp (U, V, W) = Root (Const (!plusID),
                                   App (U, App (V, App (W , Nil))))
@@ -77,12 +77,12 @@ struct
 
     (* constant ID's of the proof object generators and their proof objects *)
     (* (these are used as workaround for the lack of sigma types in Twelf)  *)
-    val provePlusID  = ref ~1 : cid ref (* prove+ : {U}{V}{W} + U V W -> type *) 
-    val proveTimesID = ref ~1 : cid ref (* prove* : {U}{V}{W} * U V W -> type *)
-    val proveQuotID  = ref ~1 : cid ref (* prove/ : {U}{V}{W} / U V W -> type *)
-    val proofPlusID  = ref ~1 : cid ref (* proof* : {U}{V}{W}{P} prove+ U V W P *)
-    val proofTimesID = ref ~1 : cid ref (* proof* : {U}{V}{W}{P} prove* U V W P *)
-    val proofQuotID  = ref ~1 : cid ref (* proof/ : {U}{V}{W}{P} prove/ U V W P *)
+    val provePlusID  = ref IDs.invalidCid : cid ref (* prove+ : {U}{V}{W} + U V W -> type *) 
+    val proveTimesID = ref IDs.invalidCid : cid ref (* prove* : {U}{V}{W} * U V W -> type *)
+    val proveQuotID  = ref IDs.invalidCid : cid ref (* prove/ : {U}{V}{W} / U V W -> type *)
+    val proofPlusID  = ref IDs.invalidCid : cid ref (* proof* : {U}{V}{W}{P} prove+ U V W P *)
+    val proofTimesID = ref IDs.invalidCid : cid ref (* proof* : {U}{V}{W}{P} prove* U V W P *)
+    val proofQuotID  = ref IDs.invalidCid : cid ref (* proof/ : {U}{V}{W}{P} prove/ U V W P *)
 
     fun provePlusExp (U, V, W, P) = Root (Const (!provePlusID),
                                           App (U, App (V, App (W, App (P , Nil)))))
@@ -99,7 +99,7 @@ struct
     fun proofQuotExp (U, V, W, P) = Root (Const (!proofQuotID),
                                           App (U, App (V, App (W, App (P , Nil)))))
 
-    fun numberConDec (d) = ConDec (W.fmt StringCvt.DEC (d), NONE, 0, Normal, word (), Type)
+    fun numberConDec (d) = ConDec ([W.fmt StringCvt.DEC (d)], nil, 0, Normal, word (), Type)
 
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
@@ -139,10 +139,10 @@ struct
           let
             val d3 = W.+ (d1, d2)
           in 
-            ConDec (W.fmt StringCvt.DEC d1 
+            ConDec ([W.fmt StringCvt.DEC d1 
                     ^ "+"
-                    ^ W.fmt StringCvt.DEC d2,
-                    NONE, 0, Normal,
+                    ^ W.fmt StringCvt.DEC d2],
+                    nil, 0, Normal,
                     plusExp (numberExp d1, numberExp d2, numberExp d3),
                     Type)
           end
@@ -153,10 +153,10 @@ struct
           let
             val d3 = W.* (d1, d2)
           in
-            ConDec (W.fmt StringCvt.DEC d1
+            ConDec ([W.fmt StringCvt.DEC d1
                     ^ "*"
-                    ^ W.fmt StringCvt.DEC d2,
-                    NONE, 0, Normal,
+                    ^ W.fmt StringCvt.DEC d2],
+                    nil, 0, Normal,
                     timesExp (numberExp d1, numberExp d2, numberExp d3),
                     Type)
           end
@@ -167,10 +167,10 @@ struct
           let
             val d3 = W.div (d1, d2)
           in
-            ConDec (W.fmt StringCvt.DEC d1 
+            ConDec ([W.fmt StringCvt.DEC d1 
                     ^ "/"
-                    ^ W.fmt StringCvt.DEC d2,
-                    NONE, 0, Normal,
+                    ^ W.fmt StringCvt.DEC d2],
+                    nil, 0, Normal,
                     quotExp (numberExp d1, numberExp d2, numberExp d3),
                     Type)
           end
@@ -235,7 +235,7 @@ struct
           if (cs = !myID)
           then
             let
-              val string = conDecName conDec
+              val string = conDecFoldName conDec
             in
               (case (scanNumber string)
                  of SOME(d) => Num d
@@ -538,13 +538,13 @@ struct
             myID := cs;
 
             wordID := 
-              installF (ConDec ("word" ^ Int.toString(wordSize'), NONE, 0,
+              installF (ConDec (["word" ^ Int.toString(wordSize')], nil, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE : FX.fixity option, [MS.Mnil]);
 
             plusID :=
-              installF (ConDec ("+", NONE, 0,
+              installF (ConDec (["+"], nil, 0,
                                 Constraint (!myID, solvePlus),
                                 arrow (word (),
                                   arrow (word (),
@@ -561,7 +561,7 @@ struct
                                          MS.Mapp(MS.Marg(MS.Plus, SOME "Z"), MS.Mnil)))]);
 
             timesID :=
-              installF (ConDec ("*", NONE, 0,
+              installF (ConDec (["*"], nil, 0,
                                 Constraint (!myID, solveTimes),
                                 arrow (word (),
                                   arrow (word (),
@@ -578,7 +578,7 @@ struct
                                          MS.Mapp(MS.Marg(MS.Plus, SOME "Z"), MS.Mnil)))]);
 
             quotID :=
-              installF (ConDec ("/", NONE, 0,
+              installF (ConDec (["/"], nil, 0,
                                 Constraint (!myID, solveQuot),
                                 arrow (word (),
                                   arrow (word (),
@@ -592,7 +592,7 @@ struct
                                          MS.Mapp(MS.Marg(MS.Plus, SOME "Z"), MS.Mnil)))]);
 
             provePlusID :=
-              installF (ConDec ("prove+", NONE, 0,
+              installF (ConDec (["prove+"], nil, 0,
                                 Constraint (!myID, solveProvePlus),
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -607,7 +607,7 @@ struct
                                                  MS.Mapp(MS.Marg(MS.Star, SOME "P"),
                                                          MS.Mnil))))]);
             proofPlusID := 
-              installF (ConDec ("proof+", NONE, 0, Normal,
+              installF (ConDec (["proof+"], nil, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
                                     pi ("Z", word (),
@@ -617,7 +617,7 @@ struct
                         NONE, nil);
             
             proveTimesID :=
-              installF (ConDec ("prove*", NONE, 0,
+              installF (ConDec (["prove*"], nil, 0,
                                 Constraint (!myID, solveProveTimes),
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -633,7 +633,7 @@ struct
                                                          MS.Mnil))))]);
  
             proofTimesID := 
-              installF (ConDec ("proof*", NONE, 0, Normal,
+              installF (ConDec (["proof*"], nil, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
                                     pi ("Z", word (),
@@ -643,7 +643,7 @@ struct
                         NONE, nil);
             
             proveQuotID :=
-              installF (ConDec ("prove/", NONE, 0,
+              installF (ConDec (["prove/"], nil, 0,
                                 Constraint (!myID, solveProveQuot),
                                 pi ("X", word (),
                                   pi ("Y", word (),
@@ -659,7 +659,7 @@ struct
                                                          MS.Mnil))))]);
 
             proofQuotID := 
-              installF (ConDec ("proof/", NONE, 0, Normal,
+              installF (ConDec (["proof/"], nil, 0, Normal,
                                 pi ("X", word (),
                                   pi ("Y", word (),
                                     pi ("Z", word (),

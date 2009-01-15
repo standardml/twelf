@@ -50,22 +50,22 @@ struct
     val myID = ref ~1 : csid ref
 
     (* constant ID of the type family constant "number" *)
-    val numberID = ref ~1 : cid ref
+    val numberID = ref IDs.invalidCid : cid ref
 
     fun number () = Root (Const (!numberID), Nil)
 
     (* constant ID's of the object constants defined by this module *)
-    val unaryMinusID  = ref ~1 : cid ref  (* ~ : number -> number           *)
-    val plusID        = ref ~1 : cid ref  (* + : number -> number -> number *)
-    val minusID       = ref ~1 : cid ref  (* - : number -> number -> number *)
-    val timesID       = ref ~1 : cid ref  (* * : number -> number -> number *)
+    val unaryMinusID  = ref IDs.invalidCid : cid ref  (* ~ : number -> number           *)
+    val plusID        = ref IDs.invalidCid : cid ref  (* + : number -> number -> number *)
+    val minusID       = ref IDs.invalidCid : cid ref  (* - : number -> number -> number *)
+    val timesID       = ref IDs.invalidCid : cid ref  (* * : number -> number -> number *)
 
     fun unaryMinusExp (U) = Root (Const (!unaryMinusID), App (U, Nil))
     fun plusExp (U, V)    = Root (Const (!plusID), App (U, App (V, Nil)))
     fun minusExp (U, V)   = Root (Const (!minusID), App (U, App (V, Nil)))
     fun timesExp (U, V)   = Root (Const (!timesID), App (U, App (V, Nil)))
 
-    fun numberConDec (d) = ConDec (toString (d), NONE, 0, Normal, number (), Type)
+    fun numberConDec (d) = ConDec ([toString (d)], nil, 0, Normal, number (), Type)
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
     (* parseNumber str = SOME(conDec) or NONE
@@ -323,7 +323,7 @@ struct
           else Sum (zero, [Mon (one, [Us])])
       | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
           if (cs = !myID)
-          then (case (fromString (conDecName (conDec)))
+          then (case (fromString (conDecFoldName (conDec)))
                   of SOME(m) => Sum (m, nil))
           else Sum (zero, [Mon (one, [Us])])
       | fromExpW (Us as (Root (Def(d), _), _)) =
@@ -539,13 +539,13 @@ struct
             myID := cs;
 
             numberID := 
-              installF (ConDec (Field.name, NONE, 0,
+              installF (ConDec ([Field.name], nil, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE, [MS.Mnil]);
 
             unaryMinusID :=
-              installF (ConDec ("~", NONE, 0,
+              installF (ConDec (["~"], nil, 0,
                                 Foreign (!myID, makeFgnUnary unaryMinusSum),
                                 arrow (number (), number ()),
                                 Type),
@@ -553,7 +553,7 @@ struct
                         nil);
 
             plusID :=
-              installF (ConDec ("+", NONE, 0,
+              installF (ConDec (["+"], nil, 0,
                                 Foreign (!myID, makeFgnBinary plusSum),
                                 arrow (number (), arrow (number (), number ())),
                                 Type),
@@ -561,7 +561,7 @@ struct
                         nil);
 
             minusID :=
-              installF (ConDec ("-", NONE, 0,
+              installF (ConDec (["-"], nil, 0,
                                   Foreign (!myID, makeFgnBinary minusSum),
                                   arrow (number (),
                                          arrow (number (), number ())),
@@ -570,7 +570,7 @@ struct
                         nil);
 
             timesID :=
-              installF (ConDec ("*", NONE, 0,
+              installF (ConDec (["*"], nil, 0,
                                   Foreign (!myID, makeFgnBinary timesSum),
                                   arrow (number (),
                                          arrow (number (), number ())),

@@ -32,11 +32,11 @@ struct
     structure Array2 = SparseArray2
 
     (* solver ID of this solver *)
-    val myID = ref ~1 : cid ref
+    val myID = ref ~1 : csid ref
 
     (* constant IDs of the declared type constants *)
-    val gtID   = ref ~1 : cid ref
-    val geqID  = ref ~1 : cid ref
+    val gtID   = ref IDs.invalidCid : cid ref
+    val geqID  = ref IDs.invalidCid : cid ref
 
     (* constructors for the declared types *)
     fun gt (U, V) = Root (Const (!gtID), App (U, App (V, Nil)))
@@ -47,10 +47,10 @@ struct
     fun geq0 (U) = geq (U, constant (zero))
 
     (* constant IDs of the declared object constants *)
-    val gtAddID  = ref ~1 : cid ref
-    val geqAddID = ref ~1 : cid ref
-    val gtGeqID = ref ~1 : cid ref
-    val geq00ID = ref ~1 : cid ref
+    val gtAddID  = ref IDs.invalidCid : cid ref
+    val geqAddID = ref IDs.invalidCid : cid ref
+    val gtGeqID = ref IDs.invalidCid : cid ref
+    val geq00ID = ref IDs.invalidCid : cid ref
 
     (* constructors for the declared objects *)
     fun gtAdd (U1, U2, V, W) =
@@ -62,8 +62,8 @@ struct
     fun geq00 () = Root (Const (!geq00ID), Nil)
 
     (* constant declaration for the proof object d>0 *)
-    fun gtNConDec (d) = ConDec (toString (d) ^ ">" ^ toString (zero),
-                                NONE, 0, Normal, gt0 (constant (d)), Type)
+    fun gtNConDec (d) = ConDec ([toString (d) ^ ">" ^ toString (zero)],
+                                nil, 0, Normal, gt0 (constant (d)), Type)
 
     (* foreign constant for the proof object d>0 *)
     fun gtNExp (d) = Root (FgnConst (!myID, gtNConDec (d)), Nil)
@@ -1236,7 +1236,7 @@ struct
             myID := cs;
 
             gtID := 
-              installF (ConDec (">", NONE, 0,
+              installF (ConDec ([">"], nil, 0,
                                 Constraint (!myID, solveGt),
                                 arrow (number (),
                                        arrow (number (), Uni (Type))), Kind),
@@ -1245,7 +1245,7 @@ struct
                                 MS.Mapp(MS.Marg(MS.Star, NONE), MS.Mnil))]);
 
             geqID := 
-              installF (ConDec (">=", NONE, 0,
+              installF (ConDec ([">="], nil, 0,
                                 Constraint (!myID, solveGeq),
                                 arrow (number (), arrow (number (), Uni (Type))), Kind),
                         SOME(FX.Infix(FX.minPrec, FX.None)),
@@ -1253,7 +1253,7 @@ struct
                                 MS.Mapp(MS.Marg(MS.Star, NONE), MS.Mnil))]);
 
             gtAddID :=
-              installF (ConDec ("+>", NONE, 2, Normal,
+              installF (ConDec (["+>"], nil, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),
@@ -1267,7 +1267,7 @@ struct
                         NONE, nil);
 
             geqAddID :=
-              installF (ConDec ("+>=", NONE, 2, Normal,
+              installF (ConDec (["+>="], nil, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         pi ("Z", number(),
@@ -1281,7 +1281,7 @@ struct
                         NONE, nil);
 
             gtGeqID :=
-              installF (ConDec (">>=", NONE, 2, Normal,
+              installF (ConDec ([">>="], nil, 2, Normal,
                                 pi ("X", number(),
                                     pi ("Y", number(),
                                         arrow (gt (Root (BVar 2, Nil),
@@ -1292,7 +1292,7 @@ struct
                         NONE, nil);
 
             geq00ID :=
-              installF (ConDec ("0>=0", NONE, 0, Normal,
+              installF (ConDec (["0>=0"], nil, 0, Normal,
                                 geq0 (constant (zero)),
                                 Type),
                         NONE, nil);

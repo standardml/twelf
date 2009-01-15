@@ -53,21 +53,21 @@ struct
 
     val myID = ref ~1 : csid ref
 
-    val numberID = ref ~1 : cid ref
+    val numberID = ref IDs.invalidCid : cid ref
 
     fun number () = Root (Const (!numberID), Nil)
 
-    val unaryMinusID  = ref ~1 : cid ref
-    val plusID        = ref ~1 : cid ref
-    val minusID       = ref ~1 : cid ref
-    val timesID       = ref ~1 : cid ref
+    val unaryMinusID  = ref IDs.invalidCid : cid ref
+    val plusID        = ref IDs.invalidCid : cid ref
+    val minusID       = ref IDs.invalidCid : cid ref
+    val timesID       = ref IDs.invalidCid : cid ref
 
     fun unaryMinusExp (U) = Root (Const (!unaryMinusID), App (U, Nil))
     fun plusExp (U, V)    = Root (Const (!plusID), App (U, App (V, Nil)))
     fun minusExp (U, V)   = Root (Const (!minusID), App (U, App (V, Nil)))
     fun timesExp (U, V)   = Root (Const (!timesID), App (U, App (V, Nil)))
 
-    fun numberConDec (d) = ConDec (toString (d), NONE, 0, Normal, number (), Type)
+    fun numberConDec (d) = ConDec ([toString (d)], nil, 0, Normal, number (), Type)
     fun numberExp (d) = Root (FgnConst (!myID, numberConDec (d)), Nil)
 
     (* parseNumber str = SOME(conDec) or NONE 
@@ -325,7 +325,7 @@ struct
           else Sum (zero, [Mon (one, [Us])])
       | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
           if (cs = !myID)
-          then (case (fromString (conDecName (conDec)))
+          then (case (fromString (conDecFoldName (conDec)))
                   of SOME(m) => Sum (m, nil))
           else Sum (zero, [Mon (one, [Us])])
       | fromExpW Us =
@@ -623,13 +623,13 @@ struct
             myID := cs;
 
             numberID := 
-              installF (ConDec ("integer", NONE, 0,
+              installF (ConDec (["integer"], nil, 0,
                                 Constraint (!myID, solveNumber),
                                 Uni (Type), Kind),
                         NONE, [MS.Mnil]);
 
             unaryMinusID :=
-              installF (ConDec ("~", NONE, 0,
+              installF (ConDec (["~"], nil, 0,
                                 Foreign (!myID, makeFgnUnary unaryMinusSum),
                                 arrow (number (), number ()),
                                 Type),
@@ -637,7 +637,7 @@ struct
                         nil);
 
             plusID :=
-              installF (ConDec ("+", NONE, 0,
+              installF (ConDec (["+"], nil, 0,
                                 Foreign (!myID, makeFgnBinary plusSum),
                                 arrow (number (), arrow (number (), number ())),
                                 Type),
@@ -645,7 +645,7 @@ struct
                         nil);
 
             minusID :=
-              installF (ConDec ("-", NONE, 0,
+              installF (ConDec (["-"], nil, 0,
                                   Foreign (!myID, makeFgnBinary minusSum),
                                   arrow (number (), arrow (number (), number ())),
                                   Type),
@@ -653,7 +653,7 @@ struct
                         nil);
 
             timesID :=
-              installF (ConDec ("*", NONE, 0,
+              installF (ConDec (["*"], nil, 0,
                                   Foreign (!myID, makeFgnBinary timesSum),
                                   arrow (number (), arrow (number (), number ())),
                                   Type),

@@ -45,12 +45,12 @@ struct
 
     val myID = ref ~1 : csid ref
 
-    val boolID = ref ~1 : cid ref
+    val boolID = ref IDs.invalidCid : cid ref
 
     fun bool () = Root (Const (!boolID), Nil)
 
-    val trueID  = ref ~1 : cid ref
-    val falseID = ref ~1 : cid ref
+    val trueID  = ref IDs.invalidCid : cid ref
+    val falseID = ref IDs.invalidCid : cid ref
 
     fun trueExp ()  = Root (Const (!trueID), Nil)
     fun falseExp () = Root (Const (!falseID), Nil)
@@ -59,12 +59,12 @@ struct
       | solveBool (G, S, 1) = SOME(falseExp ())
       | solveBool (G, S, k) = NONE
 
-    val notID     = ref ~1 : cid ref
-    val xorID     = ref ~1 : cid ref
-    val andID     = ref ~1 : cid ref
-    val orID      = ref ~1 : cid ref
-    val impliesID = ref ~1 : cid ref
-    val iffID     = ref ~1 : cid ref
+    val notID     = ref IDs.invalidCid : cid ref
+    val xorID     = ref IDs.invalidCid : cid ref
+    val andID     = ref IDs.invalidCid : cid ref
+    val orID      = ref IDs.invalidCid : cid ref
+    val impliesID = ref IDs.invalidCid : cid ref
+    val iffID     = ref IDs.invalidCid : cid ref
 
     fun notExp (U)        = Root (Const (!notID), App (U, Nil))
     fun xorExp (U, V)     = Root (Const (!xorID), App (U, App (V, Nil)))
@@ -500,27 +500,27 @@ struct
             myID := cs;
 
             boolID := 
-              installF (ConDec ("bool", NONE, 0,
+              installF (ConDec (["bool"], nil, 0,
                                 Constraint (!myID, solveBool),
                                 Uni (Type), Kind),
                         NONE, [MS.Mnil]);
 
             trueID :=
-              installF (ConDec ("true", NONE, 0,
+              installF (ConDec (["true"], nil, 0,
                                 Foreign (!myID, (fn _ => toFgn (Sum(true, nil)))),
                                 bool (),
                                 Type),
                         NONE, nil);
 
             falseID :=
-              installF (ConDec ("false", NONE, 0,
+              installF (ConDec (["false"], nil, 0,
                                 Foreign (!myID, (fn _ => toFgn (Sum(false, nil)))),
                                 bool (),
                                 Type),
                         NONE, nil);
 
             notID :=
-              installF (ConDec ("!", NONE, 0,
+              installF (ConDec (["!"], nil, 0,
                                 Foreign (!myID, makeFgnUnary notSum),
                                 arrow (bool (), bool ()),
                                 Type),
@@ -528,7 +528,7 @@ struct
                         nil);
 
             xorID :=
-              installF (ConDec ("||", NONE, 0,
+              installF (ConDec (["||"], nil, 0,
                                 Foreign (!myID, makeFgnBinary xorSum),
                                 arrow (bool (), arrow (bool (), bool ())),
                                 Type),
@@ -536,7 +536,7 @@ struct
                         nil);
 
             andID :=
-              installF (ConDec ("&", NONE, 0,
+              installF (ConDec (["&"], nil, 0,
                                   Foreign (!myID, makeFgnBinary andSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),
@@ -544,7 +544,7 @@ struct
                         nil);
 
            orID :=
-              installF (ConDec ("|", NONE, 0,
+              installF (ConDec (["|"], nil, 0,
                                 Foreign (!myID, makeFgnBinary orSum),
                                 arrow (bool (), arrow (bool (), bool ())),
                                 Type),
@@ -552,7 +552,7 @@ struct
                         nil);
 
             impliesID :=
-              installF (ConDec ("=>", NONE, 0,
+              installF (ConDec (["=>"], nil, 0,
                                   Foreign (!myID, makeFgnBinary impliesSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),
@@ -560,7 +560,7 @@ struct
                         nil);
 
             iffID :=
-              installF (ConDec ("<=>", NONE, 0,
+              installF (ConDec (["<=>"], nil, 0,
                                   Foreign (!myID, makeFgnBinary iffSum),
                                   arrow (bool (), arrow (bool (), bool ())),
                                   Type),

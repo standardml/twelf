@@ -21,17 +21,17 @@ struct
 
     val myID = ref ~1 : IntSyn.csid ref
 
-    val stringID = ref ~1 : IntSyn.cid ref
+    val stringID = ref IDs.invalidCid : IntSyn.cid ref
 
     fun string () = Root (Const (!stringID), Nil)
 
-    val concatID = ref ~1 : IntSyn.cid ref
+    val concatID = ref IDs.invalidCid : IntSyn.cid ref
 
     fun concatExp (U, V) = Root (Const (!concatID), App (U, App (V, Nil)))
 
     fun toString s = ("\"" ^ s ^ "\"")
 
-    fun stringConDec (str) = ConDec (toString (str), NONE, 0, Normal, 
+    fun stringConDec (str) = ConDec ([toString (str)], nil, 0, Normal, 
                                      string (), Type)
 
     fun stringExp (str) = Root (FgnConst (!myID, stringConDec (str)), Nil)
@@ -132,7 +132,7 @@ struct
           else Concat [Exp Us]
       | fromExpW (Us as (Root (FgnConst (cs, conDec), _), _)) =
           if (cs = !myID)
-          then (case fromString (conDecName (conDec))
+          then (case fromString (conDecFoldName (conDec))
                   of SOME(str) => if (str = "") then Concat nil
                                   else Concat [String str])
           else Concat [Exp Us]
@@ -405,7 +405,7 @@ struct
                       fun assign r nil = NONE
                         | assign r ((_, EVar (r', _, _, _),
                                         Root (FgnConst (cs, conDec), Nil), _) :: L) =
-                            if (r = r') then fromString (conDecName (conDec))
+                            if (r = r') then fromString (conDecFoldName (conDec))
                             else assign r L
                         | assign r (_ :: L) = assign r L
                     in
@@ -629,12 +629,12 @@ struct
             myID := cs;
 
             stringID := 
-              installF (ConDec ("string", NONE, 0, Constraint (!myID, solveString),
+              installF (ConDec (["string"], nil, 0, Constraint (!myID, solveString),
                                 Uni (Type), Kind),
                         NONE, [MS.Mnil]);
 
             concatID :=
-              installF (ConDec ("++", NONE, 0,
+              installF (ConDec (["++"], nil, 0,
                                 Foreign (!myID, makeFgnBinary catConcat),
                                 arrow (string (), arrow (string (), string ())),
                                 Type),

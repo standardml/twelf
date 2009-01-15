@@ -187,13 +187,13 @@ struct
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
       | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
-      | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigBegin' (f, sc)
-      | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)
+      | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigBegin' (f, sc) (* -fr *)
+      | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr *)
       (* cases for INCLUDE and OPEN removed -fr Jan 09 *)
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
-      | parseStream' (f as LS.Cons ((L.RBRACE, r), _), sc) =
-          Stream.Cons ((ModEnd, r), parseStream (stripDot f', sc))
+      | parseStream' (f as LS.Cons ((L.RBRACE, r), _), sc) = 
+          Stream.Cons ((ModEnd, r), parseStream (stripDot f, sc))  (* -fr *)
       | parseStream' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or pragma keyword, found "
 			    ^ L.toString t)
