@@ -68,6 +68,12 @@ struct
 
     type callpats = (ThmSyn.Callpats * Paths.region list)
 
+    val foldName = Names.foldQualifiedName
+    (* common error message *)
+    fun undeclaredIdentifier(qid : IDs.Qid) =
+       (* better: find shortest undeclared prefix of qid -fr Jan 09 *)
+      "Undeclared identifier " ^ (foldName qid) ^ " in call pattern"
+       
     fun checkArgNumber (0, I.Uni (I.Type), nil, r) = ()
       | checkArgNumber (0, I.Pi (_, V2), arg::args, r) =
           checkArgNumber (0, V2, args, r)
@@ -79,7 +85,6 @@ struct
           checkArgNumber (i-1, V2, args, r)
       (* everything else should be impossible! *)
 
-    val foldName = Names.foldQualifiedName
     fun checkCallPat (I.ConDec (_, _, i, I.Normal, V, I.Kind), P, r) =
           checkArgNumber (i, V, P, r)
       | checkCallPat (I.ConDec (a, _, _, I.Constraint _, _, _), P, r) =
@@ -107,10 +112,7 @@ struct
 	      in
 		(* check whether they are families here? *)
                 case Names.nameLookupC qid
-                  of NONE => error (r, "Undeclared identifier "
-                  (* better: find shortest undefined prefix *)
-                                    ^ foldName qid
-                                    ^ " in call pattern")
+                  of NONE => error (r, undeclaredIdentifier qid)
                    | SOME cid => 
                        (checkCallPat (I.sgnLookup cid, P, r);
                         ((cid, P) :: cps, (r :: rs)))
@@ -150,10 +152,7 @@ struct
 	in
 	  (* check whether they are families here? *)
          case Names.nameLookupC qid
-                  of NONE => error (r, "Undeclared identifier "
-                  (* better: find shortest -fr *)
-                                    ^ foldName qid
-                                    ^ " in call pattern")
+                  of NONE => error (r, undeclaredIdentifier qid)
                    | SOME cid =>    (ThmSyn.TabledDecl cid, r) 
 	end 
 
@@ -168,10 +167,7 @@ struct
 	in
 	  (* check whether they are families here? *)
          case Names.nameLookupC qid
-                  of NONE => error (r, "Undeclared identifier "
-                  (* better: find shortest -fr *)
-                                    ^ foldName qid
-                                    ^ " in call pattern")
+                  of NONE => error (r, undeclaredIdentifier qid)
                    | SOME cid =>    (ThmSyn.KeepTableDecl cid, r) 
 	end 
 
@@ -284,9 +280,8 @@ struct
           (name, theoremToTheorem t)
 
     (* World checker *)
-
     type wdecl =  ThmSyn.WDecl * Paths.region list 
-    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (W, cp), rs)
+    fun wdecl (W, (cp, rs)) = (ThmSyn.WDecl (List.map (fn (l : string list, s : string) => l @ [s]) W, cp), rs)
     fun wdeclTowDecl T = T
 
   in
