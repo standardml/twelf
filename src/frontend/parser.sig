@@ -13,11 +13,13 @@ sig
   structure ExtModes : EXTMODES
   structure ThmExtSyn : THMEXTSYN
   structure ModExtSyn : MODEXTSYN
-
+ 
+  type Qid = IDs.Qid
+  
   datatype fileParseResult =
       ConDec of ExtConDec.condec
-    | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
-    | NamePref of (Names.Qid * Paths.region) * (string list * string list)
+    | FixDec of (Qid * Paths.region) * Names.Fixity.fixity
+    | NamePref of (Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list
     | UniqueDec of ExtModes.modedec list (* -fp 8/17/03 *)
     | CoversDec of ExtModes.modedec list
@@ -33,21 +35,21 @@ sig
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtQuery.query (* expected, try, A *)
     | FQuery of ExtQuery.query (* A *)
-    | Compile of Names.Qid list (* -ABP 4/4/03 *)
+    | Compile of Qid list (* -ABP 4/4/03 *)
     | Querytabled of int option * int option * ExtQuery.query        (* expected, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
     | TrustMe of fileParseResult * Paths.region (* -fp *)
-    | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
-    | FreezeDec of Names.Qid list
-    | ThawDec of Names.Qid list
-    | DeterministicDec of Names.Qid list  (* -rv *)
+    | SubordDec of (Qid * Qid) list (* -gaw *)
+    | FreezeDec of Qid list
+    | ThawDec of Qid list
+    | DeterministicDec of Qid list  (* -rv *)
     | ClauseDec of ExtConDec.condec (* -fp *)
-    | SigDef of ModExtSyn.sigdef
-    | StructDec of ModExtSyn.structdec
-    | Include of ModExtSyn.sigexp
-    | Open of ModExtSyn.strexp
-    | BeginSubsig | EndSubsig (* enter/leave a new context *)
+    | ModBegin of ModExtSyn.modbegin
+    | ModEnd
+    | StrDec of ModExtSyn.strdec
+    | Include of ModExtSyn.siginclude
+    | Open of ModExtSyn.stropen
     | Use of string
     (* Further declarations to be added here *)
 

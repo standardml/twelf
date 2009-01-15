@@ -18,10 +18,13 @@ struct
      coninst of (string list * string * Paths.region) * (ExtSyn.term * Paths.region)
    | strinst of (string list * string * Paths.region) * (morph       * Paths.region)
 
-  datatype strdec = strdec of string * (string * Paths.region) * (syminst list)
+  datatype strdec = strdec of string * (string list * Paths.region) * (syminst list)
+                  | strdef of string * (morph * Paths.region)
 
   datatype modbegin = sigbegin of string
-  datatype modend = sigend
+  
+  type siginclude = unit
+  type stropen = unit
 (* end MODEXTSYN *)
 
 (* implementing the remaining declarations of RECON_MODULE *)

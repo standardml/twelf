@@ -178,7 +178,9 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
-  datatype StrDec = StrDec of string * IDs.qid * mid * ((cid * Exp) list)
+  datatype Morph = MorStr of cid
+  datatype SymInst = ConInst of cid * Exp | StrInst of cid * Morph
+  datatype StrDec = StrDec of string * IDs.qid * mid * (SymInst list)
   fun strDecName (StrDec(n, _, _, _)) = n
   fun strDecQid (StrDec(_, _, q, _)) = q
   fun strDecDomain (StrDec(_, _, m, _)) = m
@@ -275,7 +277,7 @@ struct
     val structAdd = Signature.structAdd
     val structLookup = Signature.structLookup
     fun currentMod() = Signature.current()
-    val inCurrent = Signature.inCurrent
+    val inCurrent = Signature.inCurrent (* obsolete? -fr *)
     fun rename (lid, name) =
 	let
 	    val cid = inCurrent lid

@@ -4,6 +4,7 @@ structure IDs = struct
    type mid = int                        (* global id's of modules (= signatures) *)
    type cid = mid * lid                  (* global id's of declarations *)
    type qid = lid list                   (* qualified local id, this gives the path along which a declaration was imported *)
+   type Qid = string list
    fun cidhash(x,y) = 1000 * x + y       (* hashing cid's *)
    fun cidcompare((x,y),(x',y')) =       (* comparing cid's *)
       case Int.compare(x,x')

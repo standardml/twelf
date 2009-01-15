@@ -210,11 +210,13 @@ sig
   end
 
   (* the datatype for structure declarations *)
+  datatype Morph = MorStr of cid
+  datatype SymInst = ConInst of cid * Exp | StrInst of cid * Morph
   datatype StrDec = StrDec of
      string                             (* name *)
      * IDs.qid                          (* qualified local id *)
      * mid                              (* domain (= instantiated module) *)
-     * ((cid * Exp) list)               (* instantiations *)
+     * SymInst list                     (* instantiations *)
 
   
   (* adds a constant declaration to a module *)

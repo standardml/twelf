@@ -44,11 +44,14 @@ struct
   structure ExtModes = ExtModes'
   structure ThmExtSyn = ThmExtSyn'
   structure ModExtSyn = ModExtSyn'
+  
+  type Qid = IDs.Qid
+  fun Qid(l : string list, s : string) = l @ [s]
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
-    | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
-    | NamePref of (Names.Qid * Paths.region) * (string list * string list)
+    | FixDec of (Qid * Paths.region) * Names.Fixity.fixity
+    | NamePref of (Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list
     | UniqueDec of ExtModes.modedec list (* -fp 8/17/03 *)
     | CoversDec of ExtModes.modedec list
@@ -64,21 +67,21 @@ struct
     | AssertDec of ThmExtSyn.assert
     | Query of int option * int option * ExtQuery.query (* expected, try, A *)
     | FQuery of ExtQuery.query (* expected, try, A *)
-    | Compile of Names.Qid list (* -ABP 4/4/03 *)
+    | Compile of Qid list (* -ABP 4/4/03 *)
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
     | TrustMe of fileParseResult * Paths.region (* -fp *)    
-    | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
-    | FreezeDec of Names.Qid list
-    | ThawDec of Names.Qid list
-    | DeterministicDec of Names.Qid list  (* -rv *)
+    | SubordDec of (Qid * Qid) list (* -gaw *)
+    | FreezeDec of Qid list
+    | ThawDec of Qid list
+    | DeterministicDec of Qid list  (* -rv *)
     | ClauseDec of ExtConDec.condec (* -fp *)
-    | SigDef of ModExtSyn.sigdef
-    | StructDec of ModExtSyn.structdec
-    | Include of ModExtSyn.sigexp
-    | Open of ModExtSyn.strexp
-    | BeginSubsig | EndSubsig (* enter/leave a new context *)
+    | ModBegin of ModExtSyn.modbegin
+    | ModEnd
+    | StrDec of ModExtSyn.strdec
+    | Include of ModExtSyn.siginclude
+    | Open of ModExtSyn.stropen
     | Use of string
     (* Further pragmas to be added later here *)
 
@@ -114,25 +117,6 @@ struct
       | parseBound' (LS.Cons ((t,r), s')) =
 	  Parsing.error (r, "Expected bound `*' or natural number, found "
 			    ^ L.toString t)
-
-    (* pass parseStream as theSigParser in order to be able to use
-       this function polymorphically in the definition of parseStream *)
-    fun recParse (s, recparser, theSigParser, sc) =
-          Stream.delay (fn () => recParse' (LS.expose s, recparser, theSigParser, sc))
-    and recParse' (f, recparser, theSigParser, sc) =
-        (case recparser f
-           of (Parsing.Done x, f') => sc (x, f')
-            | (Parsing.Continuation k, LS.Cons ((L.LBRACE, r1), s')) =>
-              let
-                fun finish (LS.Cons ((L.RBRACE, r2), s'')) =
-                      Stream.Cons ((EndSubsig, r2), recParse (s'', k, theSigParser, sc))
-                  | finish (LS.Cons ((t, r), _)) =
-                      Parsing.error (r, "Expected `}', found " ^ L.toString t)
-              in
-                Stream.Cons ((BeginSubsig, r1), theSigParser (s', finish))
-              end
-            | (Parsing.Continuation _, LS.Cons ((t, r), _)) => 
-                Parsing.error (r, "Expected `{', found " ^ L.toString t))
 
     fun parseStream (s, sc) =
           Stream.delay (fn () => parseStream' (LS.expose s, sc))
@@ -203,13 +187,13 @@ struct
       | parseStream' (f as LS.Cons ((L.DETERMINISTIC, r), s'), sc) = parseDeterministic' (f, sc) (* -rv *)
       | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
-      | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigDef' (f, sc)
-      | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStructDec' (f, sc)
-      | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)
-      | parseStream' (f as LS.Cons ((L.OPEN, r), s'), sc) = parseOpen' (f, sc)
+      | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigBegin' (f, sc)
+      | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)
+      (* cases for INCLUDE and OPEN removed -fr Jan 09 *)
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
-      | parseStream' (f as LS.Cons ((L.RBRACE, _), _), sc) = sc f
+      | parseStream' (f as LS.Cons ((L.RBRACE, r), _), sc) =
+          Stream.Cons ((ModEnd, r), parseStream (stripDot f', sc))
       | parseStream' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or pragma keyword, found "
 			    ^ L.toString t)
@@ -372,7 +356,7 @@ struct
         let
           val (qidpairs, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseSubord' (LS.expose s)
           val r = Paths.join (r0, r')
-          val qidpairs = map (fn (qid1, qid2) => (Names.Qid qid1, Names.Qid qid2)) qidpairs
+          val qidpairs = map (fn (qid1, qid2) => (Qid qid1, Qid qid2)) qidpairs
         in
           Stream.Cons ((SubordDec qidpairs, r), parseStream (stripDot f', sc))
         end
@@ -381,7 +365,7 @@ struct
         let
           val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseFreeze' (LS.expose s)
           val r = Paths.join (r0, r')
-          val qids = map Names.Qid qids
+          val qids = map Qid qids
         in
           Stream.Cons ((FreezeDec qids, r), parseStream (stripDot f', sc))
         end
@@ -390,7 +374,7 @@ struct
         let
 	  val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseThaw' (LS.expose s)
 	  val r = Paths.join (r0, r')
-	  val qids = map Names.Qid qids
+	  val qids = map Qid qids
 	in
 	  Stream.Cons ((ThawDec qids, r), parseStream (stripDot f', sc))
 	end
@@ -399,7 +383,7 @@ struct
         let
           val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseDeterministic' (LS.expose s)
           val r = Paths.join (r0, r')
-          val qids = map Names.Qid qids
+          val qids = map Qid qids
         in
           Stream.Cons ((DeterministicDec qids, r), parseStream (stripDot f', sc))
         end
@@ -409,46 +393,25 @@ struct
         let
           val (qids, f' as LS.Cons ((_, r'), _)) = ParseTerm.parseCompile' (LS.expose s)
           val r = Paths.join (r0, r')
-          val qids = map Names.Qid qids
+          val qids = map Qid qids
         in
           Stream.Cons ((Compile qids, r), parseStream (stripDot f', sc))
         end
 
-
-    and parseSigDef' (f as LS.Cons ((_, r1), _), sc) =
+    and parseSigBegin' (f as LS.Cons ((_, r0), _), sc) =
         let
-          fun finish (sigdef, f' as LS.Cons ((_, r2), _)) =
-                Stream.Cons ((SigDef sigdef, Paths.join (r1, r2)),
-                             parseStream (stripDot f', sc))
+          val (sigBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseSigBegin' (f)
+	  val r = Paths.join (r0, r')
         in
-          recParse' (f, ParseModule.parseSigDef', parseStream, finish)
+	  Stream.Cons ((ModBegin sigBegin, r), parseStream (LS.delay (fn () => f'), sc))
         end
 
-    and parseStructDec' (f as LS.Cons ((_, r1), _), sc) =
+    and parseStrDec' (f as LS.Cons ((_, r0), _), sc) =
         let
-          fun finish (structdec, f' as LS.Cons ((_, r2), _)) =
-                Stream.Cons ((StructDec structdec, Paths.join (r1, r2)),
-                             parseStream (stripDot f', sc))
+           val (strDec, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrDec'(f)
+           val r = Paths.join (r0, r')
         in
-          recParse' (f, ParseModule.parseStructDec', parseStream, finish)
-        end
-
-    and parseInclude' (f as LS.Cons ((_, r1), _), sc) =
-        let
-          fun finish (sigexp, f' as LS.Cons ((_, r2), _)) =
-                Stream.Cons ((Include sigexp, Paths.join (r1, r2)),
-                             parseStream (stripDot f', sc))
-        in
-          recParse' (f, ParseModule.parseInclude', parseStream, finish)
-        end
-
-    and parseOpen' (f as LS.Cons ((_, r1), _), sc) =
-        let
-          val (strexp, f' as LS.Cons ((_, r2), _)) =
-                ParseModule.parseOpen' (f)
-        in
-          Stream.Cons ((Open strexp, Paths.join (r1, r2)),
-                       parseStream (stripDot f', sc))
+	  Stream.Cons ((StrDec strDec, r), parseStream (stripDot f', sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

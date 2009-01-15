@@ -20,14 +20,11 @@ struct
   structure LS = Lexer.Stream  
   structure E = ModExtSyn
 
-  fun parseStructExp' (f as LS.Cons ((L.ID _, r0), _)) =
-      let
-        val ((ids, (L.ID (_, id), r1)), f') = ParseTerm.parseQualId' f
-      in
-        (E.strexp (ids, id, Paths.join (r0, r1)), f')
-      end
-    | parseStructExp' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
+  fun parseLBrace'(LS.Cons ((L.LBRACE, _), s')) = ((), LS.expose s')
+    | parseLBrace'(LS.Cons ((t, r), _)) = Parsing.error (r, "Expected `{', found token " ^ L.toString t)
+
+  fun parseEqual'(LS.Cons ((L.EQUAL, _), s')) = ((), LS.expose s')
+    | parseEqual'(LS.Cons ((t, r), _)) = Parsing.error (r, "Expected `=', found token " ^ L.toString t)
 
   fun parseColonEqual' (LS.Cons ((L.COLON, r1), s')) =
       (case LS.expose s'
@@ -41,6 +38,15 @@ struct
     | parseDot' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `.', found token " ^ L.toString t)
 
+  fun parseMorph' (f as LS.Cons ((L.ID _, r0), _)) =
+      let
+          val ((ids, (L.ID (_, id), r1)), f') = ParseTerm.parseQualId' f
+      in
+         (E.morstr(ids, id, Paths.join (r0, r1)), f')
+      end
+    | parseMorph' (LS.Cons ((t, r), s')) =
+        Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
+
   fun parseConInst' (f as LS.Cons ((L.ID _, r0), _)) =
       let
         val ((ids, (L.ID (_, id), r1)), f1) = ParseTerm.parseQualId' (f)
@@ -48,7 +54,7 @@ struct
         val (tm, f3) = ParseTerm.parseTerm' (f2)
         val (r2, f4) = parseDot' (f3)
       in
-        (E.coninst ((ids, id, Paths.join (r0, r1)), tm, Paths.join (r0, r2)),
+        (E.coninst ((ids, id, Paths.join (r0, r1)), (tm, Paths.join (r0, r2))),
          f4)
       end
     | parseConInst' (LS.Cons ((t, r), s')) =
@@ -58,11 +64,11 @@ struct
       let
         val ((ids, (L.ID (_, id), r2)), f1) = ParseTerm.parseQualId' (f)
         val (_, f2) = parseColonEqual' (f1)
-        val (strexp, f3) = parseStructExp' (f2)
+        val (mor, f3) = parseMorph' (f2)
         val (r3, f4) = parseDot' (f3)
       in
         (E.strinst ((ids, id, Paths.join (r1, r2)),
-                    strexp, Paths.join (r0, r3)),
+                    (mor, Paths.join (r0, r3))),
          f4)
       end
     | parseStrInst2' (r0, LS.Cons ((t, r), s')) =
@@ -97,73 +103,48 @@ struct
     | parseInstantiate' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `{', found token " ^ L.toString t)
 
-  fun parseWhereClauses' (f as LS.Cons ((L.WHERE, _), s'), sigexp) =
-      let
-        val (insts, f') = parseInstantiate' (LS.expose s')
-      in
-        parseWhereClauses' (f', E.wheresig (sigexp, insts))
-      end
-    | parseWhereClauses' (f, sigexp) = (sigexp, f)
+  fun parseSigBegin' (LS.Cons ((L.SIG, r), s')) =
+     case LS.expose s'
+       of LS.Cons ((L.ID (_, id), r), s') =>
+          let
+             val f' = LS.expose s'
+             val (_, f') = parseEqual' (f')
+             val (_, f') = parseLBrace' (f')
+          in
+             (E.sigbegin id, f')
+          end 
+        | LS.Cons ((t, r), s') =>
+	  Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
 
-  fun parseSigExp' (LS.Cons ((L.ID (_, id), r), s)) =
-      let
-        val (sigexp, f') = parseWhereClauses' (LS.expose s, E.sigid (id, r))
-      in
-        (Parsing.Done (sigexp), f')
-      end
-    | parseSigExp' (f as LS.Cons ((L.LBRACE, r), _)) =
-        (Parsing.Continuation (fn f' =>
-         let
-           val (sigexp, f'') = parseWhereClauses' (f', E.thesig)
-         in
-           (Parsing.Done (sigexp), f'')
-         end), f)
-    | parseSigExp' (LS.Cons ((t, r), _)) =
-        Parsing.error (r, "Expected signature name or expression, found token "
-                       ^ L.toString t)
+  fun parseStrDec' (LS.Cons ((L.STRUCT, r), s')) =
+     case LS.expose s'
+        of LS.Cons ((L.ID (_, id), r1), s1') => (
+           case LS.expose s1'
+              of LS.Cons ((L.COLON, r2), s2') =>
+                 let
+                     val f' = LS.expose s2'
+                     val ((domids, (L.ID (_, domid), r3)), f') = ParseTerm.parseQualId' (f')
+                     val (_, f') = parseEqual' (f')
+                     val (insts, f') = parseInstantiate'(f')
+                  in
+                     (* don't know what to put instead of r3 -fr *)
+                     (E.strdec(id, (domids @ [domid], r3), insts), f')
+                  end
+               | LS.Cons ((L.EQUAL, r2), s2') =>
+                 let
+                    val (mor, f') = parseMorph' (LS.expose s2')
+                 in
+                    (* don't know what to put instead of r2 -fr *)
+                    ((E.strdef (id, (mor, r2))), f')
+                 end
+               | LS.Cons ((t, r), s') =>
+                 Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
+         )
+         | LS.Cons ((t, r), s') =>
+           Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
 
-  fun parseSgEqual' (idOpt, LS.Cons ((L.EQUAL, r), s')) =
-        Parsing.recwith (parseSigExp', fn sigexp => E.sigdef (idOpt, sigexp))
-                        (LS.expose s')
-    | parseSgEqual' (idOpt, LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected `=', found token " ^ L.toString t)
-
-  fun parseSgDef' (LS.Cons ((L.ID (_, id), r), s')) =
-        parseSgEqual' (SOME (id), LS.expose s')
-    | parseSgDef' (LS.Cons ((L.UNDERSCORE, r), s')) =
-        parseSgEqual' (NONE, LS.expose s')
-    | parseSgDef' (LS.Cons ((t, r), s')) =
-	Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
-
-  fun parseSigDef' (LS.Cons ((L.SIG, r), s')) =
-        parseSgDef' (LS.expose s')
-
-  fun parseStrDec2' (idOpt, LS.Cons ((L.COLON, r), s')) =
-        Parsing.recwith (parseSigExp', fn sigexp => E.structdec (idOpt, sigexp))
-                        (LS.expose s')
-    | parseStrDec2' (idOpt, LS.Cons ((L.EQUAL, r), s')) =
-      let
-        val (strexp, f') = parseStructExp' (LS.expose s')
-      in
-        (Parsing.Done (E.structdef (idOpt, strexp)), f')
-      end
-    | parseStrDec2' (idOpt, LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
-
-  fun parseStrDec' (LS.Cons ((L.ID (_, id), r), s')) =
-        parseStrDec2' (SOME id, LS.expose s')
-    | parseStrDec' (LS.Cons ((L.UNDERSCORE, r), s')) =
-        parseStrDec2' (NONE, LS.expose s')
-    | parseStrDec' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
-
-  fun parseStructDec' (LS.Cons ((L.STRUCT, r), s')) =
-        parseStrDec' (LS.expose s')
-
-  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
-        parseSigExp' (LS.expose s')
-
-  fun parseOpen' (LS.Cons ((L.OPEN, r), s')) =
-        parseStructExp' (LS.expose s')
+  (* ignoring these two tokens *)
+  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) = ((), LS.expose s')
+  fun parseOpen' (LS.Cons ((L.OPEN, r), s')) = ((), LS.expose s')
 
 end

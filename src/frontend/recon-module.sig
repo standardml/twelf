@@ -8,7 +8,7 @@ sig
   (* morphisms *)
   type morph
   val morstr : string list * string * Paths.region -> morph
- 
+
   (* symbol (= constant or structure) instantiations *)
   type syminst
   val coninst : (string list * string * Paths.region) * (ExtSyn.term * Paths.region) -> syminst
@@ -16,13 +16,15 @@ sig
 
   (* structure declarations *)
   type strdec
-  val strdec : string * (string * Paths.region) * (syminst list) -> strdec
+  val strdec : string * (string list * Paths.region) * (syminst list) -> strdec
+  val strdef : string * (morph * Paths.region) -> strdec
 
   (* begin and end of a module *)
   type modbegin
   val sigbegin : string -> modbegin
-  type modend
-  val sigend : modend
+  
+  type siginclude = unit
+  type stropen = unit
 end;
 
 signature RECON_MODULE =
