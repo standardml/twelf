@@ -1,55 +1,35 @@
 (* External syntax for module expressions *)
-(* Author: Kevin Watkins *)
+(* Author: Florian Rabe *)
 
 signature MODEXTSYN =
 sig
-
   structure ExtSyn : EXTSYN
-  (*! structure Paths : PATHS !*)
 
-  type strexp
-  val strexp : string list * string * Paths.region -> strexp
+  (* morphisms *)
+  type morph
+  val morstr : string list * string * Paths.region -> morph
+ 
+  (* symbol (= constant or structure) instantiations *)
+  type syminst
+  val coninst : (string list * string * Paths.region) * (ExtSyn.term * Paths.region) -> syminst
+  val strinst : (string list * string * Paths.region) * (morph       * Paths.region) -> syminst
 
-  type inst
-  val coninst : (string list * string * Paths.region)
-                  * ExtSyn.term * Paths.region -> inst
-  val strinst : (string list * string * Paths.region)
-                  * strexp * Paths.region -> inst
+  (* structure declarations *)
+  type strdec
+  val strdec : string * (string * Paths.region) * (syminst list) -> strdec
 
-  type sigexp
-  val thesig : sigexp
-  val sigid : string * Paths.region -> sigexp
-  val wheresig : sigexp * inst list -> sigexp
-
-  type sigdef
-  val sigdef : string option * sigexp -> sigdef
-
-  type structdec
-  val structdec : string option * sigexp -> structdec
-  val structdef : string option * strexp -> structdec
-
+  (* begin and end of a module *)
+  type modbegin
+  val sigbegin : string -> modbegin
+  type modend
+  val sigend : modend
 end;
 
 signature RECON_MODULE =
 sig
-
   include MODEXTSYN
-  structure ModSyn : MODSYN
-
   exception Error of string
-
-  type whereclause
-
-  datatype StructDec =
-      StructDec of string option * ModSyn.module * whereclause list
-    | StructDef of string option * IntSyn.mid
-
-  val strexpToStrexp : strexp -> IntSyn.mid
-  val sigexpToSigexp : sigexp * ModSyn.module option -> ModSyn.module * whereclause list
-  val sigdefToSigdef : sigdef * ModSyn.module option
-                         -> string option * ModSyn.module * whereclause list
-  val structdecToStructDec : structdec * ModSyn.module option -> StructDec
-
-  val moduleWhere : ModSyn.module * whereclause -> ModSyn.module
-
+  val morphToMorph : morph * Paths.location -> IntSyn.Morph
+  val syminstToSymInst : syminst * Paths.location -> IntSyn.SymInst
+  val strdecToStrDec : strdec * Paths.location -> IntSyn.StrDec
 end

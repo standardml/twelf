@@ -147,17 +147,9 @@ functor Twelf
    structure WorldPrint : WORLDPRINT
    (*! sharing WorldPrint.Tomega = Tomega !*)
 
-   structure ModSyn : MODSYN
-   (*! sharing ModSyn.IntSyn = IntSyn' !*)
-     sharing ModSyn.Names = Names
-     (*! sharing ModSyn.Paths = Paths !*)
+(*   structure ModSyn : MODSYN
+     sharing ModSyn.Names = Names *)
    structure ReconModule : RECON_MODULE
-     sharing ReconModule.ModSyn = ModSyn
-     sharing type ReconModule.sigdef = Parser.ModExtSyn.sigdef
-     sharing type ReconModule.structdec = Parser.ModExtSyn.structdec
-     sharing type ReconModule.sigexp = Parser.ModExtSyn.sigexp
-     sharing type ReconModule.strexp = Parser.ModExtSyn.strexp
-
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
    (*! sharing FunSyn.IntSyn = IntSyn' !*)
@@ -322,17 +314,10 @@ struct
               | Subordinate.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | WorldSyn.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
 	      | Worldify.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
-              | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg)
+              (* | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg) -fr *)
 	      | Converter.Error (msg) => abortFileMsg chlev (fileName, msg)
               | CSManager.Error (msg) => abort chlev ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort 0 (UnknownExn.unknownExn exn); raise exn))
-
-    (* During elaboration of a signature expression, each constant
-       that that the user declares is added to this table.  At top level,
-       however, the reference holds NONE (in particular, shadowing is
-       allowed).
-    *)
-    val context : Names.namespace option ref = ref NONE
 
     fun installConst fromCS (cid, fileNameocOpt) =
         let
@@ -356,13 +341,14 @@ struct
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = IntSyn.sgnAdd conDec
-	  val _ = (case (fromCS, !context)
+(*	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		      | (IntSyn.Clause, SOME namespace) => Names.insertConst (namespace, cid)
 		      | _ => ())
 	          handle Names.Error msg =>
 		    raise Names.Error (Paths.wrap (r, msg))
-	  val _ = Names.installConstName cid
+seems obsolete -fr *)
+	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
 	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
@@ -370,10 +356,10 @@ struct
 	in 
 	  cid
 	end
-
+    
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
-	  val cid = IntSyn.sgnAdd conDec
+	  val cid = IntSyn.sgnAddC conDec
 	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		        (* (Clause, _) should be impossible *)
@@ -389,41 +375,9 @@ struct
 	  cid
 	end
 
+    fun installStrDec (strDec, r) = ()
 
-    fun installStrDec (strdec, module, r, isDef) =
-        let
-          fun installAction (data as (cid, _)) =
-              (installConst IntSyn.Ordinary data;
-	       if !Global.chatter >= 4
-                 then msg (Print.conDecToString (IntSyn.sgnLookup cid) ^ "\n")
-               else ())
-
-
-          val _ = ModSyn.installStruct (strdec, module, !context,
-                                        installAction, isDef)
-                  handle Names.Error msg =>
-                           raise Names.Error (Paths.wrap (r, msg))
-        in
-          ()
-        end
-
-    fun includeSig (module, r, isDef) =
-        let
-          fun installAction (data as (cid, _)) =
-              (installConst IntSyn.Ordinary data;
-	       if !Global.chatter >= 4
-                 then msg (Print.conDecToString (IntSyn.sgnLookup cid) ^ "\n")
-               else ())
-
-          val _ = ModSyn.installSig (module, !context,
-                                     installAction, isDef)
-                  handle Names.Error msg =>
-                           raise Names.Error (Paths.wrap (r, msg))
-        in
-          ()
-        end
-
-    fun cidToString a = Names.qidToString (Names.constQid a)
+    fun cidToString a = IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 
     fun invalidate uninstallFun cids msg =
         let
@@ -591,8 +545,8 @@ struct
           then msg ("%subord"
                       ^ List.foldr 
 			    (fn ((a1, a2), s) => " (" ^ 
-				Names.qidToString (Names.constQid a1) ^ " " ^
-				Names.qidToString (Names.constQid a2) ^ ")" ^ s) ".\n" cidpairs)
+				IntSyn.conDecFoldName (IntSyn.sgnLookup a1) ^ " " ^
+				IntSyn.conDecFoldName (IntSyn.sgnLookup a2) ^ ")" ^ s) ".\n" cidpairs)
           else ()
         end
 
@@ -615,10 +569,10 @@ struct
 	  (* Subordinate.installFrozen cids *)
           if !Global.chatter >= 3
           then msg ("%freeze"
-                      ^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
+                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
           else ();
 	  if !Global.chatter >= 4
-	    then msg ("Frozen:" ^ List.foldr (fn (a,s) => " " ^ Names.qidToString (Names.constQid a) ^ s) "\n" frozen)
+	    then msg ("Frozen:" ^ List.foldr (fn (a,s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) "\n" frozen)
 	  else ()
         end
 
@@ -676,7 +630,7 @@ struct
           if !Global.chatter >= 3
           then msg ((if !Global.chatter >= 4 then "%" else "")
                       ^ "%deterministic"
-                      ^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
+                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
           else ()
         end
 
@@ -722,7 +676,7 @@ struct
           val _ = if !Global.chatter >= 3
 		    then msg ((if !Global.chatter >= 4 then "%" else "")
 				^ "%compile"
-				^ List.foldr (fn (a, s) => " " ^ Names.qidToString (Names.constQid a) ^ s) ".\n" cids)
+				^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
 		  else ()
         in
 	  ()
@@ -738,7 +692,7 @@ struct
                            if !Global.chatter >= 3
                              then msg ((if !Global.chatter >= 4 then "%" else "")
                                          ^ Names.Fixity.toString fixity ^ " "
-                                         ^ Names.qidToString (Names.constQid cid) ^ ".\n")
+                                         ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid) ^ ".\n")
                            else ())
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
@@ -761,7 +715,7 @@ struct
 			      of NONE => ()
 			       | SOME _ =>
 				 if Subordinate.frozen [a]
-				   then raise ModeTable.Error (Paths.wrap (r, "Cannot redeclare mode for frozen constant " ^ Names.qidToString (Names.constQid a)))
+				   then raise ModeTable.Error (Paths.wrap (r, "Cannot redeclare mode for frozen constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
 				 else ())
 		  mdecs
 	  val _ = List.app (fn (mdec as (a, _), r) => 
@@ -913,7 +867,7 @@ struct
 			      andalso ((Order.selLookup a; true) handle Order.Error _ => false)
 			    then raise Total.Error (fileName ^ ":"
                                        ^ Paths.wrap (r, "Cannot redeclare termination order for frozen constant "
-						   ^ Names.qidToString (Names.constQid a)))
+						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
 			    else ())
 	          (callpats, rs)
           *)
@@ -941,7 +895,7 @@ struct
 			      andalso ((Order.selLookupROrder a; true) handle Order.Error _ => false)
 			    then raise Total.Error (fileName ^ ":"
                                        ^ Paths.wrap (r, "Cannot redeclare reduction order for frozen constant "
-						   ^ Names.qidToString (Names.constQid a)))
+						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
 			    else ())
 	          (callpats, rs)
           *)
@@ -1079,7 +1033,7 @@ struct
 	  val _ = ListPair.app (fn ((a, _), r) =>
 		    if Subordinate.frozen [a]
 		      then raise WorldSyn.Error (Paths.wrapLoc (Paths.Loc (fileName, r), "Cannot declare worlds for frozen family "
-								^ Names.qidToString (Names.constQid a)))
+								^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
 		    else ())
 	         (cpa, rs)
 	  val W = Tomega.Worlds
@@ -1107,153 +1061,20 @@ struct
 	   else  ()  --cs Sat Aug 27 22:04:29 2005 *))
 	  
 	end
-      | install1 (fileName, declr as (Parser.SigDef _, _)) =
-          install1WithSig (fileName, NONE, declr)
-      | install1 (fileName, declr as (Parser.StructDec _, _)) =
-          install1WithSig (fileName, NONE, declr)
-      | install1 (fileName, declr as (Parser.Include _, _)) =
-          install1WithSig (fileName, NONE, declr)
-      | install1 (fileName, declr as (Parser.Open _, _)) =
-          install1WithSig (fileName, NONE, declr)
+
+      | install1 (fileName, declr as (Parser.SigDef _, r)) = ()
+      | install1 (fileName, declr as (Parser.StructDec _, r)) =
+         let
+         	val strDec = ReconModule.strdecToStrDec (condec, Paths.Loc (fileName,r))
+         in
+                installStrDec (strDec, r)
+         end
+      | install1 (fileName, declr as (Parser.Include _, r)) = ()
+      | install1 (fileName, declr as (Parser.Open _, r)) = ()
       | install1 (fileName, (Parser.Use name, r)) =
         (case !context
            of NONE => CSManager.useSolver (name)
             | _ => raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level")))
-
-    and install1WithSig (fileName, moduleOpt, (Parser.SigDef sigdef, r)) =
-        (* Signature declaration *)
-        let
-          (* FIX: should probably time this -kw *)
-          val (idOpt, module, wherecls) =
-                ReconModule.sigdefToSigdef (sigdef, moduleOpt)
-          val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
-          val name = (case idOpt
-                        of SOME id => (ModSyn.installSigDef (id, module');
-                                       id)
-                         | NONE => "_" (* anonymous *))
-                  handle ModSyn.Error msg => raise ModSyn.Error (Paths.wrap (r, msg))
-	  val _ = if !Global.chatter >= 3 
-		    then msg ("%sig " ^ name ^ " = { ... }.\n")
-		  else ()
-        in
-          ()
-        end
-      | install1WithSig (fileName, moduleOpt, (Parser.StructDec structdec, r)) =
-        (* Structure declaration *)
-        (case ReconModule.structdecToStructDec (structdec, moduleOpt)
-           of ReconModule.StructDec (idOpt, module, wherecls) =>
-              let
-                val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
-                val name = (case idOpt
-                              of SOME id =>
-                                   (installStrDec (IntSyn.StrDec (id, NONE), module', r, false);
-                                    id)
-                               | NONE => "_" (* anonymous *))
-                val _ = if !Global.chatter = 3
-                          then msg ("%struct " ^ name ^ " : { ... }.\n")
-                        else ()
-              in
-                ()
-              end
-            | ReconModule.StructDef (idOpt, mid) =>
-              let
-                val ns = Names.getComponents mid
-                val module = ModSyn.abstractModule (ns, SOME mid)
-                val name = (case idOpt
-                              of SOME id =>
-                                   (installStrDec (IntSyn.StrDec (id, NONE), module, r, true);
-                                    id)
-                               | NONE => "_" (* anonymous *))
-                val _ = if !Global.chatter = 3
-                          then msg ("%struct " ^ name ^ " = " ^ Names.qidToString (Names.structQid mid) ^ ".\n")
-                        else ()
-              in
-                ()
-              end)
-          
-      | install1WithSig (fileName, moduleOpt, (Parser.Include sigexp, r)) =
-        (* Include declaration *)
-        let
-          val (module, wherecls) = ReconModule.sigexpToSigexp (sigexp, moduleOpt)
-          val module' = foldl (fn (inst, module) => ReconModule.moduleWhere (module, inst)) module wherecls
-          val _ = includeSig (module', r, false)
-          val _ = if !Global.chatter = 3
-                    then msg ("%include { ... }.\n")
-                  else ()
-        in
-          ()
-        end
-
-      | install1WithSig (fileName, NONE, (Parser.Open strexp, r)) =
-        (* Open declaration *)
-        let
-          val mid = ReconModule.strexpToStrexp strexp
-          val ns = Names.getComponents mid
-          val module = ModSyn.abstractModule (ns, SOME mid)
-          val _ = includeSig (module, r, true)
-          val _ = if !Global.chatter = 3
-                    then msg ("%open " ^ Names.qidToString (Names.structQid mid) ^ ".\n")
-                  else ()
-        in
-          ()
-        end
-
-    fun installSubsig (fileName, s) =
-        let
-          val namespace = Names.newNamespace ()
-
-          val (mark, markStruct) = IntSyn.sgnSize ()
-          val markSigDef = ModSyn.sigDefSize ()
-          val oldContext = !context
-          val _ = context := SOME namespace
-          val _ = if !Global.chatter >= 4
-                    then msg ("\n% begin subsignature\n")
-                  else ()
-
-          fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-          and install' (S.Cons ((Parser.BeginSubsig, _), s')) =
-                install (installSubsig (fileName, s'))
-            | install' (S.Cons ((Parser.EndSubsig, _), s')) = s'
-            | install' (S.Cons (declr, s')) =
-                (install1 (fileName, declr); install s')
-
-          val result =
-              let
-                val s' = install s
-                val module = ModSyn.abstractModule (namespace, NONE)
-                val _ = if !Global.chatter >= 4
-                          then msg ("% end subsignature\n\n")
-                        else ()
-              in
-                Value (module, s')
-              end
-              handle exn => Exception exn
-
-          val _ = context := oldContext
-
-          val _ = Names.resetFrom (mark, markStruct)
-          val _ = Index.resetFrom mark
-          val _ = IndexSkolem.resetFrom mark
-          val _ = ModSyn.resetFrom markSigDef
-          (* val _ = ModeTable.resetFrom mark *)
-          (* val _ = Total.resetFrom mark *)
-          (* val _ = Subordinate.resetFrom mark (* ouch! *) *)
-          (* val _ = Reduces.resetFrom mark *)
-          (* Origins, CompSyn, FunSyn harmless? -kw *)
-          (* val _ = IntSyn.resetFrom (mark, markStruct)
-             FIX: DON'T eliminate out-of-scope cids for now -kw *)
-        in
-          case result
-            of Value (module, s') =>
-               let
-                 val S.Cons (declr, s'') =
-                       (Timers.time Timers.parsing S.expose) s'
-               in
-                 install1WithSig (fileName, SOME module, declr);
-                 s''
-               end
-             | Exception exn => raise exn
-        end
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
@@ -1321,7 +1142,7 @@ struct
                            if !Global.chatter >= 3
                              then msg ((if !Global.chatter >= 4 then "%" else "")
                                          ^ Names.Fixity.toString fixity ^ " "
-                                         ^ Names.qidToString (Names.constQid cid) ^ ".\n")
+                                         ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid) ^ ".\n")
                            else ())
 		      | NONE => ())
 	  val _ = List.app (fn mdec => ModeTable.installMmode (cid, mdec)) mdecL
@@ -1346,8 +1167,7 @@ struct
 		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
 		    CompSyn.detTableReset (); (*  -bp *)
 		    Compile.sProgReset (); (* resetting substitution trees *)
-
-                    ModSyn.reset ();
+                    (* ModSyn.reset (); -fr *)
                     CSManager.resetSolvers ();
                     context := NONE
 		    )
@@ -1806,7 +1626,6 @@ struct
 	topLoopT ()
       end 
   end
-
 
   end  (* local *)
 end; (* functor Twelf *)

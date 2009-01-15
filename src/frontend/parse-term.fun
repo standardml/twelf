@@ -301,7 +301,9 @@ struct
           Parsing.error (r, "Expected identifier, found token "
                             ^ L.toString t)
 
-
+    (* looks up a name, then looks up its fixity; if the name is not declared, Nonfix is returned *)
+    fun fixityLookup (qid : IDs.Qid) =
+      Option.getOpt( Option.map Names.fixityLookup (Names.nameLookupC qid) , FX.Nonfix)
     (* val parseExp : (L.token * L.region) LS.stream * <p>
                         -> ExtSyn.term * (L.token * L.region) LS.front *)
     fun parseExp (s, p) = parseExp' (LS.expose s, p)
@@ -316,7 +318,7 @@ struct
 	  (* Thus isQuoted always returns false *)
 	  if isQuoted (idCase)
 	    then parseExp' (f', P.shiftAtom (tm, p))
-	  else case Names.fixityLookup (Names.Qid (ids, name))
+	  else case fixityLookup (ids @ [name])
 	         of FX.Nonfix =>
 		      parseExp' (f', P.shiftAtom (tm, p))
 	          | FX.Infix infixity =>
@@ -371,7 +373,7 @@ struct
           (* cannot happen at present *)
 	  Parsing.error (r, "Illegal bound quoted identifier " ^ name)
       | parseDec' (LS.Cons ((L.ID (idCase,name), r), s')) =
-	(case Names.fixityLookup (Names.Qid (nil, name))
+	(case fixityLookup [name]
 	   of FX.Nonfix => parseDec1 (SOME(name), LS.expose s')
 	    | FX.Infix _ => Parsing.error (r, "Cannot bind infix identifier " ^ name)
 	    | FX.Prefix _ => Parsing.error (r, "Cannot bind prefix identifier " ^ name)

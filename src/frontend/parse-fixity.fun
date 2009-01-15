@@ -40,7 +40,7 @@ struct
 
     (* parseFixCon "id" *)
     fun parseFixCon (fixity, LS.Cons ((L.ID (_, name), r), s')) = 
-        (((Names.Qid (nil,name),r), fixity), LS.expose s')
+        ((([name],r), fixity), LS.expose s')
       | parseFixCon (fixity, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected identifier to assign fixity, found " ^ L.toString t)
 
@@ -86,18 +86,18 @@ struct
         (* prefUName should be lower case---not enforced *)
         parseName5 (name, r0, prefENames, prefUNames @ [prefUName] , LS.expose s')	
       | parseName5 (name, r0, prefENames, prefUNames, LS.Cons ((L.RPAREN, r), s')) = 
-	(((Names.Qid (nil, name), r0), (prefENames, prefUNames)), LS.expose s')
+	((([name], r0), (prefENames, prefUNames)), LS.expose s')
       | parseName5 (name, r0, prefENames, prefUNames, LS.Cons ((t, r), s')) =
 	  Parsing.error (r, "Expected name preference or ')', found " ^ L.toString t)
 
     (* parseName3 "string" or "" *)
     fun parseName3 (name, r0, prefEName, LS.Cons ((L.ID (_, prefUName), r), s')) =
         (* prefUName should be lower case---not enforced *)
-        (((Names.Qid (nil, name), r0), (prefEName, [prefUName])), LS.expose s')
+        ((([name], r0), (prefEName, [prefUName])), LS.expose s')
       | parseName3 (name, r0, prefEName, LS.Cons ((L.LPAREN, r), s')) = 
 	parseName5 (name, r0, prefEName, nil, LS.expose s')
       | parseName3 (name, r0, prefEName, f) =
-	(((Names.Qid (nil, name), r0), (prefEName, nil)), f)
+	((([name], r0), (prefEName, nil)), f)
 
     (* parseName4 "string ... )" or ")" *)
     fun parseName4 (name, r0, prefENames, LS.Cons ((L.ID (_, prefEName), r), s')) =

@@ -7,8 +7,8 @@ sig
   (*! structure Parsing : PARSING !*)
   structure Names : NAMES
 
-  val parseFixity' : ((Names.Qid * Paths.region) * Names.Fixity.fixity) Parsing.parser
-  val parseNamePref' : ((Names.Qid * Paths.region)
+  val parseFixity' : ((string list * Paths.region) * Names.Fixity.fixity) Parsing.parser
+  val parseNamePref' : ((string list * Paths.region)
 			* (string list * string list)) Parsing.parser
 
 end;  (* signature PARSE_FIXITY *)
