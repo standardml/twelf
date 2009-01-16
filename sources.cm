@@ -12,8 +12,7 @@ Library
   structure PrintXML
   structure PrintOMDoc
   structure PrintTwega
-  signature FLIT
-  structure Flit
+(* removed FLIT and Flit -fr Jan 09 *)
   signature STYLECHECK
   structure StyleCheck
   structure Subordinate
