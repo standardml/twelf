@@ -251,13 +251,12 @@ struct
 			(fn (O,S) => sc (O, (I.Root(I.BVar(k), S)))))
 	    else (* shouldn't happen *) 
 	      raise Error ("\n selected dynamic clause does not match current goal!\n")
-	      
 	  | matchDProg (I.Decl (dPool', dc), i ,k) =
 	      matchDProg (dPool', i-1, k)
       in
 	(case Ho of 
 	   C.Pc i => matchSig (Index.lookup (cidFromHead Ha), i)
-	 | C.Dc i => matchDProg (dPool, i, i)
+	 | C.Dc i => raise Error ("debug me") (* @CS: check this -fr *) (*matchDProg (dPool, i, i) *)
 	 | C.Csolver U => sc (O, U))
       end
 

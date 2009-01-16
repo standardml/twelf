@@ -52,8 +52,6 @@ sig
    *)
    
   val updateTable : unit -> bool
-
-
   val tableSize : unit -> int
 end;  (* signature MemoTable *)
 

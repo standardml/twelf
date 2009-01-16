@@ -862,7 +862,7 @@ struct
 	    (NONE, L)
 
 	fun traverseSig' (c'', L) = L
-	(* I broke this code by commenting out the function body below to make it compile -fr Jan 09 *)
+	(* @CS: I broke this code by commenting out the function body below to make it compile -fr Jan 09 *)
 	(* if c'' = #1 (I.sgnSize ()) then L
 	  else
 	    (case I.sgnLookup (c'')

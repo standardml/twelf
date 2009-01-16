@@ -1,6 +1,6 @@
 (* Names of Constants and Variables *)
 (* Author: Carsten Schuermann *)
-(* I filled in bogus names to make this compile since Carsten said the code is not used anyway. -fr Jan 09 *)
+(* @CS: I filled in bogus names to make this compile; the semantics is broken. -fr *)
 
 functor FunNames (structure Global : GLOBAL
 		  (*! structure FunSyn' : FUNSYN !*)

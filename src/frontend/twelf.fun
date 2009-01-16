@@ -117,7 +117,6 @@ functor Twelf
 	     (*! sharing Solve.Paths = Paths !*)
    structure ThmSyn : THMSYN
    (*! sharing ThmSyn.Paths = Paths !*)
-     sharing ThmSyn.Names = Names
    structure Thm : THM
      sharing Thm.ThmSyn = ThmSyn
      (*! sharing Thm.Paths = Paths !*)
@@ -147,9 +146,10 @@ functor Twelf
    structure WorldPrint : WORLDPRINT
    (*! sharing WorldPrint.Tomega = Tomega !*)
 
-(*   structure ModSyn : MODSYN
-     sharing ModSyn.Names = Names *)
+   structure ModSyn : MODSYN
    structure ReconModule : RECON_MODULE
+     sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
+     sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
    (*! sharing FunSyn.IntSyn = IntSyn' !*)
@@ -319,6 +319,9 @@ struct
               | CSManager.Error (msg) => abort chlev ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort 0 (UnknownExn.unknownExn exn); raise exn))
 
+    (* better: lookup shortest undefined prefix -fr *)
+    fun undeclaredIdentifier qid = Names.foldQualifiedName qid
+    
     fun installConst fromCS (cid, fileNameocOpt) =
         let
           val _ = Origins.installOrigin (cid, fileNameocOpt)
@@ -340,7 +343,7 @@ struct
     fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
-	  val cid = IntSyn.sgnAdd conDec
+	  val cid = IntSyn.sgnAddC conDec
 (*	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		      | (IntSyn.Clause, SOME namespace) => Names.insertConst (namespace, cid)
@@ -360,13 +363,14 @@ seems obsolete -fr *)
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val cid = IntSyn.sgnAddC conDec
-	  val _ = (case (fromCS, !context)
+(*	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		        (* (Clause, _) should be impossible *)
 		      | _ => ())
 	           handle Names.Error msg =>
 		     raise Names.Error (Paths.wrap (r, msg))
-	  val _ = Names.installConstName cid
+seems obsolete -fr *)
+	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
 	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
 	  val _ = (Timers.time Timers.subordinate Subordinate.installBlock) cid
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
@@ -529,9 +533,9 @@ seems obsolete -fr *)
       | install1 (fileName, (Parser.SubordDec (qidpairs), r)) = 
         let
           fun toCid qid =
-              case Names.constLookup qid
+              case Names.nameLookupC qid
                 of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ Names.qidToString (valOf (Names.constUndef qid))
+                                              ^ undeclaredIdentifier qid
                                               ^ " in subord declaration")
                  | SOME cid => cid
           val cidpairs = List.map (fn (qid1, qid2) => (toCid qid1, toCid qid2)) qidpairs
@@ -554,9 +558,9 @@ seems obsolete -fr *)
       | install1 (fileName, (Parser.FreezeDec (qids), r)) = 
         let
           fun toCid qid =
-              case Names.constLookup qid
+              case Names.nameLookupC qid
                 of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ Names.qidToString (valOf (Names.constUndef qid))
+                                              ^ undeclaredIdentifier qid
                                               ^ " in freeze declaration")
                  | SOME cid => cid
           val cids = List.map toCid qids
@@ -583,9 +587,9 @@ seems obsolete -fr *)
 		    then raise ThmSyn.Error "%thaw not safe: Toggle `unsafe' flag"
 	          else ()
 	  fun toCid qid =
-	      case Names.constLookup qid
+	      case Names.nameLookupC qid
 		of NONE => raise Names.Error ("Undeclared identifier "
-					      ^ Names.qidToString (valOf (Names.constUndef qid))
+					      ^ undeclaredIdentifier qid
 					      ^ " in thaw declaration")
 		 | SOME cid => cid
 	  val cids = List.map toCid qids
@@ -615,10 +619,10 @@ seems obsolete -fr *)
       | install1 (fileName, (Parser.DeterministicDec (qids), r)) = 
         let
           fun toCid qid =
-              case Names.constLookup qid
+              case Names.nameLookupC qid
                 of NONE =>
                     raise Names.Error ("Undeclared identifier "
-                                       ^ Names.qidToString (valOf (Names.constUndef qid))
+                                       ^ undeclaredIdentifier qid
                                        ^ " in deterministic declaration")
                  | SOME cid => cid
           fun insertCid cid = CompSyn.detTableInsert (cid, true)
@@ -638,9 +642,9 @@ seems obsolete -fr *)
       | install1 (fileName, (Parser.Compile (qids), r)) = 
         let
           fun toCid qid =
-              case Names.constLookup qid
+              case Names.nameLookupC qid
                 of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ Names.qidToString (valOf (Names.constUndef qid))
+                                              ^ undeclaredIdentifier qid
                                               ^ " in compile assertion")
                  | SOME cid => cid
           val cids = List.map toCid qids
@@ -665,7 +669,7 @@ seems obsolete -fr *)
 	  val F = Converter.convertFor cids
 	  val _ = TomegaTypeCheck.checkPrg (IntSyn.Null, (P, F))
 
-	  fun f cid = IntSyn.conDecName (IntSyn.sgnLookup cid)
+	  fun f cid = IntSyn.conDecFoldName (IntSyn.sgnLookup cid)
 
 	  val _ = if !Global.chatter >= 2 
 		    then msg ("\n" ^ 
@@ -684,9 +688,9 @@ seems obsolete -fr *)
 
       (* Fixity declaration for operator precedence parsing *)
       | install1 (fileName, (Parser.FixDec ((qid,r),fixity), _)) =
-        (case Names.constLookup qid
+        (case Names.nameLookupC qid
            of NONE => raise Names.Error ("Undeclared identifier "
-                                         ^ Names.qidToString (valOf (Names.constUndef qid))
+                                         ^ undeclaredIdentifier qid
                                          ^ " in fixity declaration")
             | SOME cid => (Names.installFixity (cid, fixity);
                            if !Global.chatter >= 3
@@ -698,9 +702,9 @@ seems obsolete -fr *)
 
       (* Name preference declaration for printing *)
       | install1 (fileName, (Parser.NamePref ((qid,r), namePref), _)) =
-        (case Names.constLookup qid
+        (case Names.nameLookupC qid
            of NONE => raise Names.Error ("Undeclared identifier "
-                                         ^ Names.qidToString (valOf (Names.constUndef qid))
+                                         ^ undeclaredIdentifier qid
                                          ^ " in name preference")
             | SOME cid => Names.installNamePref (cid, namePref)
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
@@ -1037,9 +1041,9 @@ seems obsolete -fr *)
 		    else ())
 	         (cpa, rs)
 	  val W = Tomega.Worlds
-	      (List.map (fn qid => case Names.constLookup qid
+	      (List.map (fn qid => case Names.nameLookupC qid
 			            of NONE => raise Names.Error ("Undeclared label "
-                                         ^ Names.qidToString (valOf (Names.constUndef qid))
+                                         ^ undeclaredIdentifier qid
                                          ^ ".")
                                      | SOME cid => cid)
 	      qids)
@@ -1062,19 +1066,21 @@ seems obsolete -fr *)
 	  
 	end
 
-      | install1 (fileName, declr as (Parser.SigDef _, r)) = ()
-      | install1 (fileName, declr as (Parser.StructDec _, r)) =
+      | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) = ()
+      | install1 (fileName, declr as (Parser.ModEnd, r)) = ()
+      | install1 (fileName, declr as (Parser.StrDec decl, r)) =
          let
-         	val strDec = ReconModule.strdecToStrDec (condec, Paths.Loc (fileName,r))
+         	val strDec = ReconModule.strdecToStrDec (decl, Paths.Loc (fileName,r))
          in
                 installStrDec (strDec, r)
          end
       | install1 (fileName, declr as (Parser.Include _, r)) = ()
       | install1 (fileName, declr as (Parser.Open _, r)) = ()
       | install1 (fileName, (Parser.Use name, r)) =
-        (case !context
-           of NONE => CSManager.useSolver (name)
-            | _ => raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level")))
+        (if IntSyn.currentMod() = IDs.firstMid()
+           then CSManager.useSolver (name)
+           else raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level"))
+        )
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
@@ -1090,8 +1096,6 @@ seems obsolete -fr *)
 	    and install' (S.Empty) = OK
 	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
 	        (* now done in installConDec *)
-              | install' (S.Cons((Parser.BeginSubsig, _), s')) =
-                  install (installSubsig (fileName, s'))
 	      | install' (S.Cons(decl, s')) =
 	        (install1 (fileName, decl); install s')
 	  in
@@ -1108,8 +1112,6 @@ seems obsolete -fr *)
 	    let val _ = ReconTerm.resetErrors "string"
 		fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 		and install' (S.Empty) = OK
-		  | install' (S.Cons((Parser.BeginSubsig, _), s')) =
-                    (installSubsig ("string", s'); install s')
 		  | install' (S.Cons (decl, s')) =
 	            (install1 ("string", decl); install s')
 	    in
@@ -1168,8 +1170,7 @@ seems obsolete -fr *)
 		    CompSyn.detTableReset (); (*  -bp *)
 		    Compile.sProgReset (); (* resetting substitution trees *)
                     (* ModSyn.reset (); -fr *)
-                    CSManager.resetSolvers ();
-                    context := NONE
+                    CSManager.resetSolvers ()
 		    )
 
     fun readDecl () =
@@ -1178,22 +1179,23 @@ seems obsolete -fr *)
 	 let val _ = ReconTerm.resetErrors "stdIn"
              fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	     and install' (S.Empty) = ABORT
-               | install' (S.Cons((Parser.BeginSubsig, _), s')) =
-                   (installSubsig ("stdIn", s'); OK)
 	       | install' (S.Cons (decl, s')) =
 	           (install1 ("stdIn", decl); OK)
 	 in
 	   install (Parser.parseStream TextIO.stdIn)
 	 end) ()
 
-    (* decl (id) = () prints declaration of constant id *)
-    fun decl (id) =
-        (case Names.stringToQid id
-           of NONE => (msg (id ^ " is not a well-formed qualified identifier\n"); ABORT)
-            | SOME qid => 
-        (case Names.constLookup qid
-           of NONE => (msg (Names.qidToString (valOf (Names.constUndef qid)) ^ " has not been declared\n"); ABORT)
-            | SOME cid => decl' (cid)))
+    (* decl (name) = () prints declaration of constant id *)
+    fun decl (modname, name) =
+        (* modname must be looked up and result assigned to mid here -fr *)
+        let
+           val mid = IDs.firstMid()
+           val qname = Names.parseQualifiedName name 
+         in
+           case Names.nameLookup(mid, qname)
+             of NONE => (msg (undeclaredIdentifier qname ^ " has not been declared\n"); ABORT)
+              | SOME cid => decl' (cid)
+        end
     and decl' (cid) =
         let
 	  val conDec = IntSyn.sgnLookup (cid)

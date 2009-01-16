@@ -58,10 +58,10 @@ struct
 	 		 	 else ()) A;
 	      unique' (V, P, x :: A))
 	  | unique' (I.Uni _, _, _) = error (r, "Too many arguments supplied to type family " 
-					        ^ Names.qidToString (Names.constQid a))
+					        ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
 	  | unique' (I.Pi (_, V), nil, _) = error (r, "Too few arguments supplied to type family " 
-						   ^ Names.qidToString (Names.constQid a))
-          | unique' (I.Root _, _, _) = error (r, "Constant " ^ Names.qidToString (Names.constQid a) ^
+						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
+          | unique' (I.Root _, _, _) = error (r, "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^
 					      " is an object, not a type family")
 
   	fun skip (0, V, P, A) = unique' (V, P, A)
@@ -165,7 +165,7 @@ struct
 	  fun allModed (nil) = ()
 	    | allModed ((a, P) :: Cs) =
 	      (case ModeTable.modeLookup a 
-		 of NONE => error (r, "Expected " ^ Names.qidToString (Names.constQid a)
+		 of NONE => error (r, "Expected " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
 				      ^ " to be moded")
 	          | SOME mS => ();
                allModed Cs)

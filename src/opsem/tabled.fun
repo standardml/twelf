@@ -575,16 +575,17 @@ struct
 	    matchSig (Index.lookup (cidFromHead Ha))
 
 	  | matchDProg (I.Decl(G, _),
-			I.Decl (dPool', C.Dec(r, s, Ha')), k) =
-	    if eqHead (Ha, Ha')	      
+			I.Decl (dPool', C.Dec(r, s, Ha')), k) = ()
+           (* @CS: check this -fr *)
+	   (* if eqHead (Ha, Ha')	      
 	      then 
 		(* trail to undo EVar instantiations *)
 		(CSManager.trail (fn () =>
 				    rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
 					    (fn S => sc ((C.Dc k)::S)))); 
 		   matchDProg (G, dPool', k+1))
-
-	    else matchDProg (G, dPool', k+1)
+              else matchDProg (G, dPool', k+1)
+           *)
 	  | matchDProg (I.Decl(G, _), I.Decl (dPool', C.Parameter), k) =
 	      matchDProg (G, dPool', k+1)
 

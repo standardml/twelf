@@ -125,8 +125,6 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
    are stored in an array [a1,...,an]   where ai is a substitution tree for type family ai
    *)
 
-  val indexArray = Array.tabulate (Global.maxCid, (fn i => (ref 0, makeTree ())));
-    
   exception Error of string
   
   local
@@ -137,6 +135,9 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
     structure A   = AbstractTabled
     structure T   = TableParam 
 
+    structure CH = CidHashTable
+    val indexTable : ((int ref) * (Tree ref)) CH.Table = CH.new(500)
+    fun lookup a = Option.getOpt(CH.lookup indexTable a, (ref 0, makeTree()))
       
     exception Assignment of string
 
@@ -1568,12 +1569,10 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
     (* ---------------------------------------------------------------------- *)
     fun reset () = 
       (nctr := 1; 
-      (* Reset Subsitution Tree *)
-       Array.modify (fn (n, Tree) => (n := 0; 
-				      Tree := !(makeTree ());
-				      answList := []; 
-				      added := false;
-				      (n, Tree))) indexArray)
+       answList := []; 
+       added := false;
+       CH.clear indexTable
+     )
 
     (* makeCtx (n, G, G') =  unit 
      if G LF ctx 
@@ -1625,7 +1624,7 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
    *)      
     fun callCheck (a, DAVars, DEVars, G , U, eqn, status) = 
       let 
-	val (n, Tree) = Array.sub (indexArray, a)     
+	val (n, Tree) = lookup a
 	val sq = S.new()             
 	val DAEVars = compose (DEVars, DAVars)
 	val Dq = emptyCtx()
@@ -1654,7 +1653,7 @@ functor MemoTableInst ((*! structure IntSyn' : INTSYN !*)
     (* we assume we alsways insert new things into the tree *)
     fun insertIntoTree (a, DAVars, DEVars, G , U, eqn, answRef, status) = 
       let 
-	val (n, Tree) = Array.sub (indexArray, a)     
+	val (n, Tree) = lookup a
 	val sq = S.new()             (* sq = query substitution *)
 	val DAEVars = compose (DEVars, DAVars)
 	val Dq = emptyCtx()

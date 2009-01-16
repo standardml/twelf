@@ -22,8 +22,8 @@ struct
 
     (* Printing Utilities *)
 
-    fun headToString (G, I.Const (c)) = N.qidToString (N.constQid c)
-      | headToString (G, I.Def (d)) = N.qidToString (N.constQid d)
+    fun headToString (G, I.Const (c)) = IntSyn.conDecFoldName (IntSyn.sgnLookup  c)
+      | headToString (G, I.Def (d)) = IntSyn.conDecFoldName (IntSyn.sgnLookup  d)
       | headToString (G, I.BVar(k)) = N.bvarName (G, k)
     fun expToString (GU) = P.expToString (GU) ^ ". "
     fun decToString (GD) = P.decToString (GD) ^ ". "
@@ -91,14 +91,11 @@ struct
 
     fun toCids (nil) = nil
       | toCids (name::names) =
-        (case N.stringToQid name
-           of NONE => (print ("Trace warning: ignoring malformed qualified identifier " ^ name ^ "\n");
+        (case N.nameLookupC (N.parseQualifiedName name)
+           of NONE => (print ("Trace warning: ignoring undeclared constant " ^ name ^ "\n");
                        toCids names)
-            | SOME qid =>
-        (case N.constLookup qid
-           of NONE => (print ("Trace warning: ignoring undeclared constant " ^ N.qidToString qid ^ "\n");
-                       toCids names)
-            | SOME cid => cid::toCids names))
+            | SOME cid => cid::toCids names
+        )
 
     fun initTrace (None) = traceTSpec := None
       | initTrace (Some (names)) = traceTSpec := Some (toCids names)

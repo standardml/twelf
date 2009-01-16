@@ -20,7 +20,7 @@ structure ClausePrint =
 	       structure Symbol = SymbolAscii);
 
 structure PrintTeX = Print
-structure ClausePrintTeX = Print
+structure ClausePrintTeX = ClausePrint
 structure PrintTwega = Print
 structure PrintXML = Print
 structure PrintOMDoc = Print

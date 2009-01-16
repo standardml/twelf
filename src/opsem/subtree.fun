@@ -131,18 +131,20 @@ functor MemoTable ((*! structure IntSyn' : INTSYN !*)
      are stored in an array [a1,...,an]   where ai is a substitution tree for type family ai
      *)
 
-    val indexArray = Array.tabulate (Global.maxCid, (fn i => (ref 0, makeTree ())));
     
     exception Error of string
   
     local
-
       structure I   = IntSyn
       structure C   = CompSyn
       structure S   = RBSet
       structure A   = AbstractTabled
       structure T   = TableParam 
 
+      structure CH = CidHashTable
+      type entry = (int ref) * (Tree ref)
+      val indexTable : entry CH.Table = CH.new(500)
+      fun lookup a = Option.getOpt(CH.lookup indexTable a, (ref 0, makeTree()))
       
       exception Assignment of string
     
@@ -151,7 +153,6 @@ functor MemoTable ((*! structure IntSyn' : INTSYN !*)
 
       fun emptyAnswer () = T.emptyAnsw ()
  
-
       val answList : (TableParam.answer list) ref = ref []; 
 
       val added = ref false; 
@@ -739,11 +740,10 @@ functor MemoTable ((*! structure IntSyn' : INTSYN !*)
     (* ---------------------------------------------------------------------- *)
     fun reset () = 
       (nctr := 1; 
-       Array.modify (fn (n, Tree) => (n := 0; 
-				      Tree := !(makeTree ());
-				      answList := []; 
-				      added := false;
-				      (n, Tree))) indexArray)
+       answList := []; 
+       added := false;
+       CH.clear indexTable
+     )
 
     fun makeCtx (n, I.Null, DEVars : ctx) = n
       | makeCtx (n, I.Decl(G, D), DEVars : ctx) = 
@@ -764,7 +764,7 @@ functor MemoTable ((*! structure IntSyn' : INTSYN !*)
      *)
     fun callCheck (a, DAVars, DEVars, G,  U, eqn, status) = 
       let 
-	val (n, Tree) = Array.sub (indexArray, a)     
+	val (n, Tree) = lookup a
 	val nsub_goal = S.new()             
 	val DAEVars = compose (DEVars, DAVars)
 	val D = emptyCtx()
@@ -807,7 +807,7 @@ functor MemoTable ((*! structure IntSyn' : INTSYN !*)
      *)
     fun insertIntoTree (a, DAVars, DEVars, G,  U, eqn, answRef, status) = 
       let 
-	val (n, Tree) = Array.sub (indexArray, a)     
+	val (n, Tree) = lookup a
 	val nsub_goal = S.new()             
 	val DAEVars = compose (DEVars, DAVars)
 	val D = emptyCtx()

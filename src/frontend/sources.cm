@@ -28,8 +28,7 @@ Library
   structure PrintXML
   structure PrintOMDoc
   structure Interactive
-  signature FLIT
-  structure Flit
+(* removed FLIT and Flit -fr Jan 09 *)
   structure Subordinate
   signature STYLECHECK
   structure StyleCheck
@@ -69,7 +68,7 @@ is
   ../cover/sources.cm
   ../tomega/sources.cm 
   ../prover/sources.cm
-  ../flit/sources.cm
+(*  removed ../flit/sources.cm  -fr Jan 09 *)
   ../msg/sources.cm
   unknownexn.sig
   unknownexn.fun
