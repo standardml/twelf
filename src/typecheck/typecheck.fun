@@ -38,6 +38,26 @@ struct
     (* some well-formedness conditions are assumed for input expressions *)
     (* e.g. don't contain "Kind", Evar's are consistently instantiated, ... *)
 
+  (* blockDec (G, v, i) = V
+     Invariant:
+     If   G (v) = l[s]
+     and  Sigma (l) = SOME Gsome BLOCK Lblock
+     and  G |- s : Gsome
+     then G |- pi (v, i) : V
+  *)
+  fun blockDec (G, v as (I.Bidx k), i) =
+    let 
+      val I.BDec (_, (l, s)) = I.ctxDec (G, k)  
+      (* G |- s : Gsome *)
+      val (Gsome, Lblock) = I.conDecBlock (ModSyn.sgnLookup l)
+      fun blockDec' (t, D :: L, 1, j) = I.decSub (D, t)
+	| blockDec' (t, _ :: L, n, j) =
+	    blockDec' (I.Dot (I.Exp (I.Root (I.Proj (v, j), I.Nil)), t),
+			  L, n-1, j+1)
+    in
+      blockDec' (s, Lblock, i, 1)
+    end
+
     (* checkExp (G, (U, s1), (V2, s2)) = ()
 
        Invariant: 
@@ -137,7 +157,7 @@ struct
 	end
       | inferCon (G, I.Proj (B,  i)) = 
         let 
-	  val I.Dec (_, V) = I.blockDec (G, B, i) 
+	  val I.Dec (_, V) = blockDec (G, B, i) 
 	in
 	  V
 	end

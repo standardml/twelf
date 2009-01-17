@@ -270,13 +270,13 @@ struct
 		 matchDefDefW (G, Us1, Us2)
 	   (* four new cases for defined constants *)
 	   | (Def (d1), Const (c2)) =>
-	     (case defAncestor d1
+	     (case ModSyn.defAncestor d1
 	        of Anc (_, _, NONE) => (* conservative *) matchExpW (G, Whnf.expandDef Us1, Us2)
 		 | Anc (_, _, SOME(c1)) =>
 		   if (c1 = c2) then matchExpW (G, Whnf.expandDef Us1, Us2)
 		   else raise Match "Constant clash")
 	   | (Const (c1), Def (d2)) =>
-	     (case defAncestor d2
+	     (case ModSyn.defAncestor d2
                 of Anc (_, _, NONE) => (* conservative *) matchExpW (G, Us1, Whnf.expandDef Us2)
                  | Anc (_, _, SOME(c2)) =>
 		   if (c1 = c2) then matchExpW (G, Us1, Whnf.expandDef Us2)
@@ -417,8 +417,8 @@ struct
     and matchDefDefW (G, Us1 as (Root (Def (d1), S1), s1), Us2 as (Root (Def (d2), S2), s2)) =
         (*  matchExpW (G, Whnf.expandDef (Us1), Whnf.expandDef (Us2)) *)
         let
-	  val Anc (_, h1, c1Opt) = defAncestor d1
-	  val Anc (_, h2, c2Opt) = defAncestor d2
+	  val Anc (_, h1, c1Opt) = ModSyn.defAncestor d1
+	  val Anc (_, h2, c2Opt) = ModSyn.defAncestor d2
 	  val _ = case (c1Opt,c2Opt)
 	            of (SOME(c1), SOME(c2)) =>
 		       if c1 <> c2

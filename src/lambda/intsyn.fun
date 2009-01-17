@@ -1,18 +1,17 @@
 (* Internal Syntax *)
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
-
-
+(* Modified: Florian Rabe, Carsten Schuermann, Jan 09, all state moved into ModSyn *)
 
 functor IntSyn (structure Global : GLOBAL) :> INTSYN =
 struct
 
-  type cid = IDs.cid  		(* Constant identifier        *)
+  (* identifiers *)
+  type cid = IDs.cid  		      (* Constant identifier        *)
   type mid = IDs.mid                  (* Module identifier          *)
   type lid = IDs.lid                  (* Qualified identifier       *)
-  type csid = int                       (* CS module identifier       *)
-  type name = string	       		(* Variable name              *)
-
+  type csid = int                     (* CS module identifier       *)
+  type name = string	       	      (* Variable name              *)
 
   (* Contexts *)
   datatype 'a Ctx =			(* Contexts                   *)
@@ -120,7 +119,6 @@ struct
                                         (*     | L(l[^k],t)           *)
   | Inst of Exp list			(*     | u1, ..., Un          *)
 
-
   (* Constraints *)
 
   and Cnstr =				(* Constraint:                *)
@@ -144,8 +142,6 @@ struct
     (* perform the assignment G |- X = U [ss] *)
   | Delay of Exp * Cnstr ref
     (* delay cnstr, associating it with all the rigid EVars in U  *)
-
-  (* Global signature *)
 
   and ConDec =			        (* Constant declaration       *)
     ConDec of (string list) * IDs.qid * int * Status
@@ -177,123 +173,6 @@ struct
   type eclo = Exp * Sub   		(* Us = U[s]                  *)
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
-
- (* remove later -cs *)
-  datatype Morph = MorStr of cid
-  datatype SymInst = ConInst of cid * Exp | StrInst of cid * Morph
-  datatype StrDec = StrDec of string * IDs.qid * mid * (SymInst list)
-  fun strDecName (StrDec(n, _, _, _)) = n
-  fun strDecQid (StrDec(_, _, q, _)) = q
-  fun strDecDomain (StrDec(_, _, m, _)) = m
-  datatype SymDec = StrSym of StrDec | ConSym of ConDec
-  
-  (* This structure encapsulates the state, i.e., the table containing the declarations. *)
-  (* An attempt to put it into a separate file failed because ConDec cannot be taken out IntSyn. *)
-
-
-  structure Signature  =
-    struct
-    	structure QH = CidHashTable
-    	structure IH = IntHashTable
-	 (* a structure declaration instantiates a module with a list of assignments of expressions to qids *)
-	exception UndefinedCid
-	val symTable : ConDec QH.Table = QH.new(19999)
-	val structTable : StrDec QH.Table = QH.new(999)
-	val modTable : int IH.Table = IH.new(499)
-	(* should be array since editing is necessary for every entry *)
-
-        val nextMid = ref 0
-	fun nextLid(m : mid) = valOf (IH.lookup(modTable)(m))
-	fun incrLid(m : mid) = IH.insert(modTable)(m, nextLid(m) + 1)
-
-        val scope : mid list ref = ref nil
-        fun current() = hd (! scope)
-	fun inCurrent(l : lid) = IDs.newcid(current(), l)
-        fun sgnReset () = (QH.clear symTable; QH.clear structTable; IH.clear modTable)
-      
-        (* if conDecQid is nil, it should be replaced with lid; used in m2/prover.fun *)
-	fun sgnAdd (m : mid, conDec : ConDec) =
-            let
-		val c = IDs.newcid(m, nextLid(m))
-	    in
-		QH.insert(symTable)(c, conDec);
-		incrLid(m);
-		c
-	    end
-      
-	fun sgnAddC (conDec : ConDec) = sgnAdd(current(), conDec)
-
-	fun sgnLookup (c : cid) = case QH.lookup(symTable)(c)
-            of SOME d => d
-             | NONE => raise UndefinedCid 
-	val sgnLookupC = sgnLookup o inCurrent
-      
-	fun sgnApp(m : mid, f : cid -> unit) =
-            let
-		fun doRest(l) = 
-		    if l = nextLid(m) then () else (f (IDs.newcid(m,l)); doRest(IDs.nextLid(l)))
-	    in
-		doRest(IDs.firstLid())
-	    end
-	fun sgnAppC (f) = sgnApp(current(), f)
-	fun modApp(f : mid -> unit) =
-            let
-		fun doRest(m) = 
-		    if m = (! nextMid) then () else ((f m); doRest(IDs.nextMid(m)))
-	    in
-		doRest(IDs.firstLid())
-	    end
-	fun sgnAppC (f) = sgnApp(current(), f)
-      
-        fun structAdd (m : mid, strDec : StrDec) =
-          let
-	      val c = IDs.newcid(m, nextLid(m))
-	  in
-	      QH.insert(structTable)(c, strDec);
-	      incrLid(m);
-	      c
-	  end      
-        fun structAddC (strDec : StrDec) = structAdd(current(), strDec)
-      
-        fun structLookup(c : cid) = case QH.lookup(structTable)(c)
-          of SOME d => d
-           | NONE => raise UndefinedCid
-        val structLookupC = structLookup o inCurrent
-
-        fun symLookup(c : cid) =
-      	  StrSym(structLookup c)
-	  handle UndefinedCid => ConSym(sgnLookup c)
-      
-        fun hack (cid, conDec : ConDec) =
-	  QH.insert(symTable)(cid, conDec)
-	
-    end;  (* end Signature *)
-  (* *************************************************** *)
-  (*  val sgnReset = Signature.sgnReset *)
-    val sgnAdd  = Signature.sgnAdd
-    val sgnAddC =  Signature.sgnAddC
-    val sgnLookup = Signature.sgnLookup
-    val sgnApp =  Signature.sgnApp
-    val sgnAppC =  Signature.sgnAppC
-    val modApp = Signature.modApp
-    val structAdd = Signature.structAdd
-    val structLookup = Signature.structLookup
-    fun currentMod() = Signature.current()
-    val inCurrent = Signature.inCurrent (* obsolete? -fr *)
-    fun rename (lid, name) =
-	let
-	    val cid = inCurrent lid
-	    val new = name :: nil
-	    val newConDec = 
-		case sgnLookup cid of 
-		ConDec (n,m,i,s,e,u) => ConDec(new,m,i,s,e,u)
-	      | ConDef (n,m,i,e,e',u,a) => ConDef(new,m,i,e,e',u,a)
-	      | AbbrevDef (n,m,i,e,e',u) => AbbrevDef (new,m,i,e,e',u)
-	      | BlockDec (n,m,d,d') => BlockDec (new,m,d,d')
-	      | SkoDec (n,m,i,e,u) => SkoDec (new,m,i,e,u)
-	in
-	    Signature.hack (cid, newConDec)
-	end
 
   structure FgnExpStd = struct
     structure ToInternal = FgnOpnTable (type arg = unit
@@ -389,18 +268,6 @@ struct
     | conDecUni (AbbrevDef (_, _, _, _, _, L)) = L
     | conDecUni (SkoDec (_, _, _, _, L)) = L
 
-(*  fun strDecName (StrDec (name, _)) = name
-    fun strDecQid (StrDec (_, qid)) = qid
-*)
-
-    (* Invariants *)
-    (* Constant declarations are all well-typed *)
-    (* Constant declarations are stored in beta-normal form *)
-    (* All definitions are strict in all their arguments *)
-    (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
-    (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
-
-
   (* Explicit Substitutions *)
 
   (* id = ^0 
@@ -484,12 +351,10 @@ struct
     (* this should be right but somebody should verify *) 
 
   (* frontSub (Ft, s) = Ft'
-
      Invariant:
      If   G |- s : G'     G' |- Ft : V
      then Ft' = Ft [s]
      and  G |- Ft' : V [s]
-
      NOTE: EClo (U, s) might be undefined, so if this is ever
      computed eagerly, we must introduce an "Undefined" exception,
      raise it in whnf and handle it here so Exp (EClo (U, s)) => Undef
@@ -545,7 +410,6 @@ struct
   *)
   fun invDot1 (s) = comp (comp(shift, s), invShift)
 
-
   (* Declaration Contexts *)
 
   (* ctxDec (G, k) = x:V
@@ -564,28 +428,6 @@ struct
       in
 	ctxDec' (G, k)
       end
-
-  (* blockDec (G, v, i) = V
-     
-     Invariant:
-     If   G (v) = l[s]
-     and  Sigma (l) = SOME Gsome BLOCK Lblock
-     and  G |- s : Gsome
-     then G |- pi (v, i) : V
-  *)
-
-  fun blockDec (G, v as (Bidx k), i) =
-    let 
-      val BDec (_, (l, s)) = ctxDec (G, k)  
-      (* G |- s : Gsome *)
-      val (Gsome, Lblock) = conDecBlock (sgnLookup l)
-      fun blockDec' (t, D :: L, 1, j) = decSub (D, t)
-	| blockDec' (t, _ :: L, n, j) =
-	    blockDec' (Dot (Exp (Root (Proj (v, j), Nil)), t),
-			  L, n-1, j+1)
-    in
-      blockDec' (s, Lblock, i, 1)
-    end
 
   (* EVar related functions *)
 
@@ -610,21 +452,6 @@ struct
     | headOpt (Lam (_, U)) = headOpt U
     | headOpt _ = NONE
 
-  fun ancestor' (NONE) = Anc(NONE, 0, NONE)
-    | ancestor' (SOME(Const(c))) = Anc(SOME(c), 1, SOME(c))
-    | ancestor' (SOME(Def(d))) =
-      (case sgnLookup(d)
-	 of ConDef(_, _, _, _, _, _, Anc(_, height, cOpt))
-            => Anc(SOME(d), height+1, cOpt))
-    | ancestor' (SOME _) = (* FgnConst possible, BVar impossible by strictness *)
-      Anc(NONE, 0, NONE)
-  (* ancestor(U) = ancestor info for d = U *)
-  fun ancestor (U) = ancestor' (headOpt U)
-
-  (* defAncestor(d) = ancestor of d, d must be defined *)
-  fun defAncestor (d) =
-      (case sgnLookup(d)
-	 of ConDef(_, _, _, _, _, _, anc) => anc)
 
   (* Type related functions *)
 

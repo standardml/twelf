@@ -1,6 +1,7 @@
 (* Internal Syntax *)  
 (* Author: Frank Pfenning, Carsten Schuermann *)
 (* Modified: Roberto Virga *)
+(* Modified: Florian Rabe, Carsten Schuermann, Jan 09, all state moved into ModSyn *)
 
 signature INTSYN =
 sig
@@ -208,7 +209,6 @@ sig
     structure Simplify : FGN_OPN where type arg = unit
                                  where type result = bool
   end
-
  
   (* convenience methods to access components of a constant declaration *)
   val conDecName   : ConDec -> string list
@@ -219,11 +219,9 @@ sig
   val conDecType   : ConDec -> Exp
   val conDecBlock  : ConDec -> dctx * Dec list
   val conDecUni    : ConDec -> Uni
-
  
   (* Declaration Contexts *)
   val ctxDec    : dctx * int -> Dec	(* get variable declaration   *)
-  val blockDec  : dctx * Block * int -> Dec 
 
   (* Explicit substitutions *)
   val id        : Sub			(* id                         *)
@@ -248,17 +246,11 @@ sig
 
   (* Definition related functions *)
   val headOpt : Exp -> Head option
-  val ancestor : Exp -> Ancestor
-  val defAncestor : cid -> Ancestor
 
   (* Type related functions *)
 
   (* Not expanding type definitions *)
   val targetHeadOpt : Exp -> Head option (* target type family or NONE *)
   val targetHead : Exp -> Head           (* target type family         *)
-
-
-  (* a hack used in Flit *)
-  val rename : lid * string -> unit
 
 end;  (* signature INTSYN *)

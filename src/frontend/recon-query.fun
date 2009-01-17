@@ -101,7 +101,7 @@ struct
         val name = case optName of NONE => "_" | SOME(name) => name
         val ocd = Paths.def (i, oc1, oc2Opt)
         val cd = ((Strict.check ((U', V'), SOME(ocd));
-	           IntSyn.ConDef ([name], nil, i, U', V', L, IntSyn.ancestor U')) 
+	           IntSyn.ConDef ([name], nil, i, U', V', L, ModSyn.ancestor U')) 
 		  handle Strict.Error _ => 
 			 IntSyn.AbbrevDef ([name], nil, i, U', V', L))
         (* is this necessary? -kw *)
@@ -126,7 +126,7 @@ struct
                    => raise Abstract.Error (Paths.wrap (r, msg))
         val name = case nameOpt of NONE => "_" | SOME(name) => name
 	val cd = ((Strict.check ((U', V'), NONE); 
-	           IntSyn.ConDef ([name], nil, i, U', V', IntSyn.Type, IntSyn.ancestor U')) 
+	           IntSyn.ConDef ([name], nil, i, U', V', IntSyn.Type, ModSyn.ancestor U')) 
 		  handle Strict.Error _ => 
 			 IntSyn.AbbrevDef ([name], nil, i, U', V', IntSyn.Type))
         (* is this necessary? -kw *)

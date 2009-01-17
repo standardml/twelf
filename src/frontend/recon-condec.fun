@@ -101,7 +101,7 @@ struct
 		       (* stricter checking of types according to Chris Richards Fri Jul  2 16:33:46 2004 -fp *)
 		       (* (case optName of NONE => () | _ => Strict.checkType ((i, V''), SOME(ocd))); *)
 		       (Names.nameConDec (IntSyn.ConDef ([name], nil, i, U'', V'', L,
-							 IntSyn.ancestor U''))))
+							 ModSyn.ancestor U''))))
 	           
         val _ = if !Global.chatter >= 3
 		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
