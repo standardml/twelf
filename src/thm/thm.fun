@@ -58,17 +58,17 @@ struct
 	 		 	 else ()) A;
 	      unique' (V, P, x :: A))
 	  | unique' (I.Uni _, _, _) = error (r, "Too many arguments supplied to type family " 
-					        ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
+					        ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a))
 	  | unique' (I.Pi (_, V), nil, _) = error (r, "Too few arguments supplied to type family " 
-						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
-          | unique' (I.Root _, _, _) = error (r, "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^
+						   ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a))
+          | unique' (I.Root _, _, _) = error (r, "Constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^
 					      " is an object, not a type family")
 
   	fun skip (0, V, P, A) = unique' (V, P, A)
 	  | skip (k, I.Pi (_, V), P, A) = skip (k-1, V, P, A)
 
       in						   
-        skip (I.constImp a, I.constType a, P, A)
+        skip (ModSyn.constImp a, ModSyn.constType a, P, A)
       end
 	      
     (* uniqueCallpats (L, rs) = ()
@@ -128,7 +128,7 @@ struct
 	    | skip (k, x, P, M.Mapp (_, mS)) = skip (k-1, x, P, mS)
 
 	  fun delete (x, (aP as (a, P)) :: C) = 
-	      if skip (I.constImp a, x, P, valOf (ModeTable.modeLookup a)) (* exists by invariant *)
+	      if skip (ModSyn.constImp a, x, P, valOf (ModeTable.modeLookup a)) (* exists by invariant *)
 		then C
 	      else aP :: delete (x, C)
 	    | delete (x, nil) = error (r, "Variable " ^ x ^ " does not occur as argument")
@@ -165,7 +165,7 @@ struct
 	  fun allModed (nil) = ()
 	    | allModed ((a, P) :: Cs) =
 	      (case ModeTable.modeLookup a 
-		 of NONE => error (r, "Expected " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+		 of NONE => error (r, "Expected " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				      ^ " to be moded")
 	          | SOME mS => ();
                allModed Cs)
@@ -253,7 +253,7 @@ struct
 	  val M' = argOrderMutual (thmsLE, fn ((a, _), L) => O.LE (a, L),
 				    argOrderMutual (aP :: thmsLT, 
 						     fn ((a, _), L) => O.LT (a, L), O.Empty))
-	  val O' = argOrder (O, P, I.constImp a)
+	  val O' = argOrder (O, P, ModSyn.constImp a)
 	  val S' = O.install (a, O.TDec (O',M'))
 	in
 	  installOrder (O, thmsLE, aP :: thmsLT)
@@ -338,8 +338,8 @@ struct
 	  val M' = argOrderMutual (thmsLE, fn ((a, _), L) => O.LE (a, L),
 				   argOrderMutual (aP :: thmsLT, 
 						   fn ((a, _), L) => O.LT (a, L), O.Empty))
-	  val O1' = argROrder (O1, P, I.constImp a)
-	  val O2' = argROrder (O2, P, I.constImp a)
+	  val O1' = argROrder (O1, P, ModSyn.constImp a)
+	  val O2' = argROrder (O2, P, ModSyn.constImp a)
 	  val pr  = argPredicate (Pred, O1', O2')
 	  (* install termination order *)
 	  (* bug: %reduces should not entail %terminates *)

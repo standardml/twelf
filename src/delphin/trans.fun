@@ -135,7 +135,7 @@ struct
 	  val _ = TypeCheck.check (V3, I.Uni I.Type)
 	  val _ = if !Global.chatter >= 4 
 		    then print (Print.conDecToString condec ^ "\n") else () 
-	  val cid = I.sgnAdd condec
+	  val cid = ModSyn.sgnAdd condec
 	  val _ = Names.installConstName cid
 	  val _ = Array.update (internal, cid, Const (m, n))
 	in
@@ -169,7 +169,7 @@ struct
         let
 	  val V' = closure (Gsome, I.Uni I.Type)
 	  val C = I.ConDec (name ^ "'", NONE, 0, I.Normal, V', I.Kind)
-	  val a = I.sgnAdd C
+	  val a = ModSyn.sgnAdd C
 	  val _ = Array.update (internal, a, Type cid)
 	  val _ = Names.installConstName a
 	  val S = makeSpine (0, Gsome, I.Nil)
@@ -190,13 +190,13 @@ struct
     *)
     fun internalizeSig () = 
         let
-	  val (max, _) = I.sgnSize  ()
+	  val (max, _) = ModSyn.sgnSize  ()
 	    (* we might want to save max, here to restore the original 
  	         signature after parsing is over  --cs Thu Apr 17 09:46:29 2003 *)
 	  fun internalizeSig' n = 
 	      if n>=max then ()
 	      else 
-		(internalizeCondec (n, I.sgnLookup n); internalizeSig' (n+1))
+		(internalizeCondec (n, ModSyn.sgnLookup n); internalizeSig' (n+1))
 	in
 	  internalizeSig' 0
 	end
@@ -216,7 +216,7 @@ struct
       | externalizeExp' (I.Pi ((D, DP), U)) = I.Pi ((externalizeDec D, DP), externalizeExp U)
       | externalizeExp' (I.Root (H as I.BVar _, S)) = I.Root (H, externalizeSpine S)
       | externalizeExp' (I.Root (H as I.Const c, S)) =
-        (case I.constUni c 
+        (case ModSyn.constUni c 
 	   of I.Kind => I.Root (H, externalizeSpine S)
             | I.Type => let
 			  val Const (n, i) = Array.sub (internal, c)
@@ -329,7 +329,7 @@ struct
 	in
 	  case Names.constLookup qid
 	    of NONE => (s, nil)
-	     | SOME cid => (case (I.sgnLookup cid)
+	     | SOME cid => (case (ModSyn.sgnLookup cid)
 			      of I.BlockDec _ => (s ^ "'", nil)
   	  		       | _ => (s, nil))
 	end

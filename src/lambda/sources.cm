@@ -5,6 +5,8 @@ Library
   structure IntSyn
   structure CidHashTable
   structure CidRedBlackTree
+  signature MODSYN
+  structure ModSyn
   structure IDs
   signature WHNF
   structure Whnf
@@ -38,6 +40,8 @@ is
   order.fun
   order.sml
   IDs.fun
+  modsyn.sig
+  modsyn.fun	
   intsyn.sig
   intsyn.fun
   tomega.sig

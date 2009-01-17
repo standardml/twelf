@@ -117,10 +117,10 @@ in
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
 
   fun printSingleSgn (mid) = 
-      IntSyn.sgnApp (mid, fn (cid) => (print (conDecToString (IntSyn.sgnLookup cid)); print "\n"))
+      ModSyn.sgnApp (mid, fn (cid) => (print (conDecToString (ModSyn.sgnLookup cid)); print "\n"))
   (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} -fr *)
   fun printSgn() =
-      IntSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
+      ModSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
 end  (* local ... *)
 
 end  (* functor ClausePrint *)

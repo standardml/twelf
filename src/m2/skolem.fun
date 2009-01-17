@@ -74,7 +74,7 @@ struct
 		    val V'' = k (Whnf.normalize (V', s))
 		    val name' = Names.skonstName (name ^ "#")
 		    val SD = I.SkoDec ([name'], nil, imp, V'', L)
-		    val sk = I.sgnAddC SD
+		    val sk = ModSyn.sgnAddC SD
 		    val H = I.Skonst sk
 		    val _ = IndexSkolem.install I.Ordinary H
 		    val _ = Names.installName(sk, [name'])
@@ -106,7 +106,7 @@ struct
     fun install nil = ()
       | install (a :: aL) = 
         let 
-	  val I.ConDec (name, _, imp, _, V, L) = I.sgnLookup a
+	  val I.ConDec (name, _, imp, _, V, L) = ModSyn.sgnLookup a
 	  val SOME mS = ModeTable.modeLookup a
 	  val _ = installSkolem (hd name, imp, (V, mS), I.Type)
 	in

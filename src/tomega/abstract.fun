@@ -79,8 +79,8 @@ struct
 				   	            (* Psi, B, G, x:V |- F for *)
 					            (* Psi, G' |- B' ctx  *)
 	let 
-(* 	  val (w, S) = subweaken (B', 1, I.targetFam V, I.Nil)     *)
-	  val w = S.weaken (B', I.targetFam V)
+(* 	  val (w, S) = subweaken (B', 1, ModSyn.targetFam V, I.Nil)     *)
+	  val w = S.weaken (B', ModSyn.targetFam V)
                                                    (* B'  |- w  : B''    *)
 	  val iw = Whnf.invert w 	            (* B'' |- iw : B'     *)
 	  val B'' = Whnf.strengthen (iw, B')        (* Psi0, G' |- B'' ctx *)
@@ -130,7 +130,7 @@ struct
 	end
       | raisePrg (G, (T.PairExp (U, P), t), T.Ex ((I.Dec (_, V), _), F)) =
 	let 
-	  val w = S.weaken (G, I.targetFam V)
+	  val w = S.weaken (G, ModSyn.targetFam V)
                                                    (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	            (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)        (* Psi0, G' |- B'' ctx *)

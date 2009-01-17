@@ -66,13 +66,13 @@ exception Error' of Tomega.Sub
 	   | SOME mS => mS
 	    
     fun typeOf a =
-        case I.sgnLookup a 
+        case ModSyn.sgnLookup a 
 	  of I.ConDec (name, _, _, _, V, I.Kind) => V
 	   | _ => raise Error "Type Constant declaration expected"
 
 
     fun nameOf a =
-        case I.sgnLookup a 
+        case ModSyn.sgnLookup a 
 	  of I.ConDec (name, _, _, _, V, I.Kind) => name
 	   | _ => raise Error "Type Constant declaration expected"
 
@@ -254,7 +254,7 @@ exception Error' of Tomega.Sub
 
     fun convertOneFor cid =
       let
-	val V  = case I.sgnLookup cid 
+	val V  = case ModSyn.sgnLookup cid 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 	val mS = case ModeTable.modeLookup cid
@@ -330,14 +330,14 @@ exception Error' of Tomega.Sub
     fun createIH nil = raise Error "Empty theorem"
       | createIH [a] = 
         let 
-	  val name = I.conDecFoldName (I.sgnLookup a)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup a)
 	  val F = convertOneFor a
 	in
 	  (name, F)
 	end
       | createIH (a :: L) = 
 	let
-	  val name = I.conDecFoldName (I.sgnLookup a)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup a)
 	  val F = convertOneFor a
 	  val (name', F') = createIH  L
 	in
@@ -481,7 +481,7 @@ exception Error' of Tomega.Sub
               occursInExp (n, V) orelse occursInPsi (n+1, (Psi1, L))
 	  | occursInPsi (n, (T.UDec (I.BDec (_, (cid, s))) :: Psi1, L)) =
 	      let
-		val I.BlockDec (_, _, G, _) = I.sgnLookup cid
+		val I.BlockDec (_, _, G, _) = ModSyn.sgnLookup cid
 	      in
 		occursInSub (n, s, G) orelse occursInPsi (n+1, (Psi1, L))
 	      end
@@ -726,11 +726,11 @@ exception Error' of Tomega.Sub
 
     fun rename (I.BDec (_, (c, s)), V) = 
         let
-	  val (G, L) = I.constBlock c
+	  val (G, L) = ModSyn.constBlock c
 
 	  fun makeSubst (n, G, s, nil, f) = (G, f)
 	    | makeSubst (n, G, s,( D as I.Dec (x, V')) :: L, f) = 
-	      if Subordinate.belowEq (I.targetFam V', I.targetFam V) then
+	      if Subordinate.belowEq (ModSyn.targetFam V', ModSyn.targetFam V) then
 		makeSubst (n+1, I.Decl (G, I.decSub (D, s)), I.dot1 s, L,
 			   f)
 	      else 
@@ -787,10 +787,10 @@ exception Error' of Tomega.Sub
 	      val c' = wmap c
 	      val n = I.ctxLength Psi0 + I.ctxLength G
 
-	      val (Gsome, Lpi) = I.constBlock c
+	      val (Gsome, Lpi) = ModSyn.constBlock c
 	      val _ = TypeCheck.typeCheckCtx (T.coerceCtx (append(append(Psi0, Psi), T.embedCtx G)))
 	      val _ = TypeCheck.typeCheckSub (T.coerceCtx (append(append(Psi0, Psi), T.embedCtx G)), s, Gsome)
-	      val (Gsome', Lpi') = I.constBlock c'
+	      val (Gsome', Lpi') = ModSyn.constBlock c'
 	      val _ = TypeCheck.typeCheckCtx (T.coerceCtx (append(append(Psi0, Psi), T.embedCtx G)))
 	      val _ = TypeCheck.typeCheckSub (T.coerceCtx (append(append(Psi0, Psi), T.embedCtx G)), s, Gsome')
 	    in
@@ -812,7 +812,7 @@ exception Error' of Tomega.Sub
 
               fun lookupbase a =  
 		  let 
-		    val s = I.conDecFoldName (I.sgnLookup a)
+		    val s = I.conDecFoldName (ModSyn.sgnLookup a)
 		    val l = T.lemmaName s
 		    val T.ValDec (_, P, F) = T.lemmaLookup l
 		  in
@@ -1053,7 +1053,7 @@ exception Error' of Tomega.Sub
 	  *)
 	  fun transformList (nil, w) = nil
 	    | transformList ((D as I.Dec (x, V)) :: L, w) = 
-	      if List.foldr (fn (a, b) => b andalso Subordinate.belowEq (a, I.targetFam V)) true fams then 
+	      if List.foldr (fn (a, b) => b andalso Subordinate.belowEq (a, ModSyn.targetFam V)) true fams then 
 		transformList (L,  I.comp (w, I.shift))
 	      else
 		let 
@@ -1065,12 +1065,12 @@ exception Error' of Tomega.Sub
 	  fun transformWorlds' (nil) = (nil, fn c => raise Error "World not found")
 	    | transformWorlds' (cid :: cids') = 
 	      let 
-		val I.BlockDec (s, m, G, L) = I.sgnLookup cid
+		val I.BlockDec (s, m, G, L) = ModSyn.sgnLookup cid
 	        (* Design decision: Let's keep all of G *)
 		val L' = transformList (L, I.id) 
 		val (cids'', wmap) = transformWorlds' (cids')
 		(* changed sgnAdd to sgnAddC -fr Wed Jan 14 12:57:22 2009 *)
-		val cid' = I.sgnAddC (I.BlockDec (s, m, G, L'))
+		val cid' = ModSyn.sgnAddC (I.BlockDec (s, m, G, L'))
 	      in
 		(cid' :: cids'', fn c => if c = cid then cid' else wmap c)
 	      end
@@ -1104,7 +1104,7 @@ exception Error' of Tomega.Sub
 	    | findDec (G, n, D :: L, w, Sig) = 
 	      let 
 		val (D' as I.Dec (x, V')) = I.decSub (D, w)
-		val b = I.targetFam V'
+		val b = ModSyn.targetFam V'
 		val Sig' = if b = a then  (G, Whnf.normalize (V',I.id)) :: Sig
 			   else Sig
 	      in
@@ -1131,7 +1131,7 @@ exception Error' of Tomega.Sub
 	  fun findDecs' (nil, Sig) = Sig
 	    | findDecs' (cid :: cids', Sig) = 
 	      let 
-		val I.BlockDec (s, m, G, L) = I.sgnLookup cid
+		val I.BlockDec (s, m, G, L) = ModSyn.sgnLookup cid
 					(* G |- L ctx *)
 		val (G0, s') = mediateSub G
 					(* Psi0, G0 |- s'' : G *)
@@ -1159,8 +1159,8 @@ exception Error' of Tomega.Sub
       | staticSig (Psi0, I.ConDec (name, _, _, _, V, I.Type) :: Sig) =
           (I.Null, Whnf.normalize (V, I.Shift (I.ctxLength Psi0))) :: staticSig (Psi0, Sig)
 
-    fun name [a] = I.conDecFoldName (I.sgnLookup a)
-      | name (a :: L) = I.conDecFoldName (I.sgnLookup a) ^ "/" ^ (name L)
+    fun name [a] = I.conDecFoldName (ModSyn.sgnLookup a)
+      | name (a :: L) = I.conDecFoldName (ModSyn.sgnLookup a) ^ "/" ^ (name L)
         
     (* convertPrg L = P'
 
@@ -1243,7 +1243,7 @@ exception Error' of Tomega.Sub
     fun installFor [cid] = 
         let 
 	  val F = convertFor [cid]
-	  val name = I.conDecFoldName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup cid)
 	  val _ = T.lemmaAdd (T.ForDec (name, F))
 	in
 	  ()
@@ -1279,7 +1279,7 @@ exception Error' of Tomega.Sub
 	  val (P', F') = Proj n
 	  val P = T.Lam (T.PDec (NONE, F, NONE, NONE), P')
 	  val F'' = T.All ((T.PDec (NONE, F, NONE, NONE), T.Explicit), F')
-	  val name = I.conDecFoldName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F''))
 	  val lemma = T.lemmaAdd (T.ValDec ("#" ^ name, P, F''))
 	in
@@ -1290,7 +1290,7 @@ exception Error' of Tomega.Sub
     fun installSelection ([cid], [lemma], F1, main) =
         let
 	  val P = T.Redex (T.Const lemma, T.AppPrg (T.Const main, T.Nil))
-	  val name = I.conDecFoldName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F1)) 
 	  val lemma' = T.lemmaAdd (T.ValDec (name, P, F1))
 	in
@@ -1299,7 +1299,7 @@ exception Error' of Tomega.Sub
       | installSelection (cid :: cids, lemma :: lemmas, T.And (F1, F2), main) = 
         let
 	  val P = T.Redex (T.Const lemma, T.AppPrg (T.Const main, T.Nil))
-	  val name = I.conDecFoldName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F1))
 	  val lemma' = T.lemmaAdd (T.ValDec (name, P, F1))
 	in
@@ -1311,7 +1311,7 @@ exception Error' of Tomega.Sub
         let
 	  val F = convertFor [cid]
 	  val P = convertPrg ([cid], NONE)
-	  val name = I.conDecFoldName (I.sgnLookup cid)
+	  val name = I.conDecFoldName (ModSyn.sgnLookup cid)
 	  val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F))
 	  val _ = if (!Global.chatter >= 4) then print ("[Redundancy Checker (factoring) ...") else ()
 	  val factP = Redundant.convert P
@@ -1351,7 +1351,7 @@ exception Error' of Tomega.Sub
 
     fun convertGoal (G, V)  =
       let
-	val a = I.targetFam V
+	val a = ModSyn.targetFam V
 	val W = WorldSyn.lookup a
 	val (W', wmap) = transformWorlds ([a], W)
 	val SOME (_, (P', Q')) = traversePos ([], wmap, NONE) 

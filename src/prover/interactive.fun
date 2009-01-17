@@ -65,7 +65,7 @@ struct
     *)
     fun convertOneFor cid =
       let
-	val V  = case I.sgnLookup cid 
+	val V  = case ModSyn.sgnLookup cid 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 	val mS = case ModeTable.modeLookup cid

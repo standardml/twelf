@@ -267,7 +267,7 @@ struct
                 else ()
               end      
       in
-        case I.constStatus(cidFromHead Ha)
+        case ModSyn.constStatus(cidFromHead Ha)
           of (I.Constraint (cs, cnstrSolve)) => matchConstraint (cnstrSolve, 0)
            | _ => matchDProg (dPool, 1)
       end

@@ -103,11 +103,11 @@ struct
     val imitatesTable : int IHT.Table = IHT.new 32
     val replaceTable : string IHT.Table = IHT.new 32
 
-    fun cname cid = I.conDecName (I.sgnLookup cid)
+    fun cname cid = I.conDecName (ModSyn.sgnLookup cid)
 
     fun clookup name =
           let
-            val size = #1 (I.sgnSize ());
+            val size = #1 (ModSyn.sgnSize ());
             fun clookup' cid =
                   if (cid = size)
                   then raise Error ("symbol " ^ name ^ " not found")
@@ -121,7 +121,7 @@ struct
     fun print_once cid =
           case (Table.lookup printTable cid)
             of NONE => (Table.insert printTable (cid, ());
-                        print (Print.conDecToString (I.sgnLookup cid) ^ "\n"))
+                        print (Print.conDecToString (ModSyn.sgnLookup cid) ^ "\n"))
              | SOME _ => ()
 
     fun print_tuple (addr, code, (cld, prd, cls), arg1, arg2) =
@@ -243,7 +243,7 @@ struct
           end
 
     fun isPredicate cid =
-          case (!startClause, I.constUni cid)
+          case (!startClause, ModSyn.constUni cid)
             of (SOME cid', I.Kind) => (cid >= cid')
              | _ => false
 
@@ -254,12 +254,12 @@ struct
       | headCID _ = NONE
 
     fun isClause cid =
-          case (!startClause, I.constUni cid)
+          case (!startClause, ModSyn.constUni cid)
             of (SOME cid', I.Type) =>
               if (cid >= cid')
               then
                 let
-                  val a = I.targetHead (I.constType cid)
+                  val a = I.targetHead (ModSyn.constType cid)
                   val clauses = List.mapPartial headCID (Idx.lookup (valOf (headCID a)))
                 in
                   List.exists (fn x => x = cid) clauses
@@ -272,7 +272,7 @@ struct
             of SOME(idx) => idx
              | NONE =>
                  let
-                   val idx = compileConDec (I.sgnLookup cid, (isPredicate cid, isClause cid))
+                   val idx = compileConDec (ModSyn.sgnLookup cid, (isPredicate cid, isClause cid))
                    val () = Table.insert symTable (cid, idx)
                    val () = if (!Global.chatter >= 3) then print_once cid else ()
                  in
@@ -414,16 +414,16 @@ struct
     fun setFlag () =
           case (!startClause)
             of SOME(cid) => print ("Error: flag already set\n")
-             | NONE => startClause := SOME(#1 (I.sgnSize ()))
+             | NONE => startClause := SOME(#1 (ModSyn.sgnSize ()))
 
     fun setEndTcb () =
           case (!startSemant)
             of SOME(cid) => print ("Error: flag already set\n")
-             | NONE => startSemant := SOME(#1 (I.sgnSize ()))
+             | NONE => startSemant := SOME(#1 (ModSyn.sgnSize ()))
 
     fun dumpFlagged file =
           let
-            val max = #1 (I.sgnSize ())
+            val max = #1 (ModSyn.sgnSize ())
             fun compileSeq cid =
                   if (cid < max)
                   then
@@ -465,7 +465,7 @@ struct
                    (case (Table.lookup symTable cid, dumpFixity cid)
                       of (SOME(idx), (level, assoc)) =>
                            TextIO.output (stream,
-                                          I.conDecName(I.sgnLookup(cid)) ^ "\t" ^
+                                          I.conDecName(ModSyn.sgnLookup(cid)) ^ "\t" ^
                                           (Word.fmt StringCvt.DEC idx) ^ "\t" ^
                                           Int.toString(level) ^ "\t" ^
                                           Int.toString(assoc) ^ "\n")
@@ -529,7 +529,7 @@ struct
     (* returns a tuple of the name of the cid and SOME of the shadowing cid if any *)
     fun isShadowedBy cid =
 	let 
-	    val name = I.conDecName(I.sgnLookup cid)
+	    val name = I.conDecName(ModSyn.sgnLookup cid)
 	    val currentcid = valOfE (noPriorEntry name) (SHT.lookup shadowTable name)
 	in 
 	    (name, if currentcid <> cid then SOME currentcid else NONE)
@@ -551,7 +551,7 @@ struct
 						    (fn x => (case isShadowedBy x of 
 						    (_, SOME _) => NONE 
                                   		      | (x, NONE) => SOME x)) *) (* XXX worrying - jcreed 7/05 *)
-				     Option.map (I.conDecName o I.sgnLookup) (Table.lookup imitatesTable cid)
+				     Option.map (I.conDecName o ModSyn.sgnLookup) (Table.lookup imitatesTable cid)
 			     in
 				 case replacement of 
 				     NONE => 
@@ -583,7 +583,7 @@ struct
 	    fun processCid cid =
 		let
 		    
-		    val name = I.conDecName(I.sgnLookup cid)
+		    val name = I.conDecName(ModSyn.sgnLookup cid)
 		    (* val _ = print ("DX processing cid " ^ Int.toString cid ^ " which has name [" ^ name ^ "].\n") *)
 		in
 		    List.app (processDep cid) (sortedKeys(valOf(IHT.lookup depTable cid)))
@@ -595,12 +595,12 @@ struct
 	    !changes
 	end
 
-  fun is_def cid = ((I.constDef cid; true) handle Match => false)
+  fun is_def cid = ((ModSyn.constDef cid; true) handle Match => false)
 
   fun fixityDec cid =
       (case N.getFixity cid of
 	  (f as F.Infix _) => 
-	      F.toString f ^ " " ^ I.conDecName(I.sgnLookup cid) ^ ".\n"
+	      F.toString f ^ " " ^ I.conDecName(ModSyn.sgnLookup cid) ^ ".\n"
 	      | _ => "")
 
   fun record_once k cid = (case IHT.insertShadow recordTable (cid,()) of
@@ -650,7 +650,7 @@ struct
     | traverseDescendants' cid (ConDef (_,_,_,M,V,_,_)) = (travExp cid M; travExp cid V)
     | traverseDescendants' cid (AbbrevDef (_,_,_,M,V,_)) = (travExp cid M; travExp cid V)
     | traverseDescendants' cid _ = ()
-  and traverseDescendants cid = traverseDescendants' cid (I.sgnLookup cid)
+  and traverseDescendants cid = traverseDescendants' cid (ModSyn.sgnLookup cid)
   and traverse cid  = 
       let
 	  val name = conDecName(sgnLookup cid)
@@ -689,7 +689,7 @@ struct
 	  fun waitUntilFalse f = if f() then waitUntilFalse f else ()
 	  fun outputCid cid = (* if cid < (valOf(!startSemant)) then () else *) (* DX *)
 	      let 
-		  val s = Print.conDecToString(I.sgnLookup cid) ^ "\n"
+		  val s = Print.conDecToString(ModSyn.sgnLookup cid) ^ "\n"
 		  val s' = if cid >= valOf(!startClause) andalso is_def cid 
 			   then if isClause cid 
 				then "%clause " ^ s
@@ -715,7 +715,7 @@ struct
 
   fun dumpText (outputSemant, outputChecker) = 
       let
-          val max = #1 (I.sgnSize ())
+          val max = #1 (ModSyn.sgnSize ())
 
 	  (* val _ = print ("DX startSemant = " ^ Int.toString(valOf(!startSemant)) ^ "\n") *)
 	  (* val _ = print ("DX startClause = " ^ Int.toString(valOf(!startClause)) ^ "\n") *)
@@ -725,8 +725,8 @@ struct
 		  then
 		      (let
 			   val fixity = N.getFixity cid
-			   val imp = I.constImp cid
-			   val name = I.conDecName (I.sgnLookup cid)
+			   val imp = ModSyn.constImp cid
+			   val name = I.conDecName (ModSyn.sgnLookup cid)
 			   (* val _ = case fixity of F.Infix _ => print ("DX Infix " ^ Int.toString cid ^ " " ^ name ^ " " ^ Int.toString imp ^ " \n") | _ => () *)
 			   val inSemant = cid >= valOf(!startSemant) andalso cid < valOf(!startClause)
 			   val makeNonfix = 

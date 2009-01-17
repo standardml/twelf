@@ -178,10 +178,10 @@ local
     | fixityCon _ = FX.Nonfix (* BVar, FVar *)
 
   (* impCon (c) = number of implicit arguments to c *)
-  fun impCon (I.Const(cid)) = I.constImp (cid)
-    | impCon (I.Skonst(cid)) = I.constImp (cid)
-    | impCon (I.Def(cid)) = I.constImp (cid)
-    | impCon (I.NSDef(cid)) = I.constImp (cid)
+  fun impCon (I.Const(cid)) = ModSyn.constImp (cid)
+    | impCon (I.Skonst(cid)) = ModSyn.constImp (cid)
+    | impCon (I.Def(cid)) = ModSyn.constImp (cid)
+    | impCon (I.NSDef(cid)) = ModSyn.constImp (cid)
     | impCon _ = 0			(* BVar, FVar *)
 
   (* argNumber (fixity) = number of required arguments to head with fixity *)
@@ -203,7 +203,7 @@ local
 
   fun parmName (cid, i) =
       let
-	val (Gsome, Gblock) = I.constBlock (cid)
+	val (Gsome, Gblock) = ModSyn.constBlock (cid)
       in
 	case parmDec (Gblock, i)
 	  of I.Dec (SOME(pname), _) => pname
@@ -227,7 +227,7 @@ local
 
   (* fun constQid (cid) = 
       if !noShadow 
-      then Names.conDecQid (I.sgnLookup cid)
+      then Names.conDecQid (ModSyn.sgnLookup cid)
       else Names.constQid cid
 	*) 		       
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
@@ -235,10 +235,10 @@ local
      FVar's are printed with a preceding "`" (backquote) character
   *)
   fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
-    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, I.conDecName (I.sgnLookup cid))
-    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, I.conDecName (I.sgnLookup cid))
-    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, I.conDecName (I.sgnLookup cid))
-    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, I.conDecName (I.sgnLookup cid))
+    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, I.conDecName (ModSyn.sgnLookup cid))
+    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, I.conDecName (ModSyn.sgnLookup cid))
+    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, I.conDecName (ModSyn.sgnLookup cid))
+    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, I.conDecName (ModSyn.sgnLookup cid))
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
     | fmtCon (G, H as I.Proj (I.Bidx(k), i)) =
         Str0 (Symbol.const (projName (G, H)))
@@ -246,7 +246,7 @@ local
       (* identity of LVars is obscured! *)
 					(* LVar fixed Sun Dec  1 11:36:55 2002 -cs *)
       fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
-		    I.conDecName (I.sgnLookup cid))
+		    I.conDecName (ModSyn.sgnLookup cid))
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
           val name = I.conDecFoldName conDec
@@ -689,7 +689,7 @@ local
       *)
     | fmtDec (G, d, (I.BDec (x, (cid, t)), s)) =
       let
-	val (Gsome, Gblock) = I.constBlock cid
+	val (Gsome, Gblock) = ModSyn.constBlock cid
       in
 	F.HVbox ([Str0 (Symbol.const (nameOf (x))), sym ":"]
 		 @ fmtDecList' (G, (Gblock, I.comp (t, s))))
@@ -920,11 +920,11 @@ in
       end
 
   fun printSingleSgn(mid) =
-      IntSyn.sgnApp (mid, fn (cid) => (print (F.makestring_fmt (formatConDecI (IntSyn.sgnLookup cid))); print "\n"))
+      ModSyn.sgnApp (mid, fn (cid) => (print (F.makestring_fmt (formatConDecI (ModSyn.sgnLookup cid))); print "\n"))
   (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} 
    -fr Wed Jan 14 12:53:02 2009 *)
   fun printSgn() =
-      IntSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
+      ModSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
 
 end  (* local ... *)
 

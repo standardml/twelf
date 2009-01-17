@@ -106,10 +106,10 @@ struct
     open IntSyn
   in
   
-  fun headConDec (Const c) = sgnLookup c
-    | headConDec (Skonst c) = sgnLookup c
-    | headConDec (Def d) = sgnLookup d
-    | headConDec (NSDef d) = sgnLookup d
+  fun headConDec (Const c) = ModSyn.sgnLookup c
+    | headConDec (Skonst c) = ModSyn.sgnLookup c
+    | headConDec (Def d) = ModSyn.sgnLookup d
+    | headConDec (NSDef d) = ModSyn.sgnLookup d
     | headConDec (FgnConst (_, cd)) = cd
       (* others impossible by invariant *)
 
@@ -378,7 +378,7 @@ struct
         (case Names.nameLookupC qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
-	      (case IntSyn.sgnLookup cid
+	      (case ModSyn.sgnLookup cid
 		 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
 	          | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
 		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
@@ -667,7 +667,7 @@ struct
      assumes H not Proj _ *)
   fun headElim (BVar n) = bvarElim n
     | headElim (FVar fv) = fvarElim fv
-    | headElim (NSDef d) = redexElim (constDef d)
+    | headElim (NSDef d) = redexElim (ModSyn.constDef d)
     | headElim (H) =
       (case conDecStatus (headConDec H)
          of Foreign (csid, f) => (fn (s, S) => f S)

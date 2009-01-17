@@ -102,9 +102,9 @@ struct
 
     fun cLToString (nil) = ""
       | cLToString (c :: nil) = 
-	  (I.conDecFoldName (I.sgnLookup c))
+	  (I.conDecFoldName (ModSyn.sgnLookup c))
       | cLToString (c :: L) = 
-	  (I.conDecFoldName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
+	  (I.conDecFoldName (ModSyn.sgnLookup c)) ^ ", " ^ (cLToString L)
 
 
     fun printFillResult (_, P) = 
@@ -260,7 +260,7 @@ struct
 
     fun init (k, names) = 
 	let 
-	  val cL = map (fn x => valOf (Names.nameLookup (IntSyn.currentMod(),(Names.parseQualifiedName x)))) names
+	  val cL = map (fn x => valOf (Names.nameLookup (ModSyn.currentMod(),(Names.parseQualifiedName x)))) names
 	  val _ = MTPGlobal.maxFill := k
 	  val _ = reset ();
 	  val F = RelFun.convertFor cL

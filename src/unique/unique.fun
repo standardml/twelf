@@ -36,7 +36,7 @@ struct
 	  then print (f ())
 	else ()
 
-    fun cName (cid) = IntSyn.conDecFoldName (IntSyn.sgnLookup cid)
+    fun cName (cid) = IntSyn.conDecFoldName (ModSyn.sgnLookup cid)
 
     fun pName (cid, SOME(x)) = "#" ^ cName cid ^ "_" ^ x
       | pName (cid, NONE) = "#" ^ cName cid ^ "_?"
@@ -125,8 +125,8 @@ struct
     fun checkDiffConstConst (I.Const(cid), I.Const(cid'), ms) =
         let
 	  val _ = chatter 6 (fn () => "?- " ^ cName cid ^ " ~ " ^ cName cid' ^ "\n")
-	  val Vs = instEVars (I.Null, (I.constType cid, I.id))
-	  val Vs' = instEVars (I.Null, (I.constType cid', I.id))
+	  val Vs = instEVars (I.Null, (ModSyn.constType cid, I.id))
+	  val Vs' = instEVars (I.Null, (ModSyn.constType cid', I.id))
 	  val _ = CSManager.trail (fn () =>
 				   if unifiableRoots (I.Null, Vs, Vs', ms)
 				     then raise Error ("Constants " ^ cName cid ^ " and "
@@ -169,7 +169,7 @@ struct
     fun checkDiffBlocksInternal (G, Vs, (t, nil), (a, ms), bx) = ()
       | checkDiffBlocksInternal (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (b, xOpt)) =
         let
-	  val a' = I.targetFam V'
+	  val a' = ModSyn.targetFam V'
 	  val _ = if (a = a')
 		    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, ((b, xOpt), (b, yOpt)))
 		  else ()
@@ -189,7 +189,7 @@ struct
     fun checkUniqueBlockInternal' (G, (t, nil), (a, ms), b) = ()
       | checkUniqueBlockInternal' (G, (t, (D as I.Dec(xOpt, V))::piDecs), (a, ms), b) =
         let
-	  val a' = I.targetFam V
+	  val a' = ModSyn.targetFam V
 	  val _ = if (a = a')
 		    then let val (V', s) = instEVars (G, (V, t))
 			 in
@@ -222,7 +222,7 @@ struct
       | checkUniqueBlockConsts (G, Vs, I.Const(cid)::cs, ms, bx) =
         let
 	  val _ = chatter 6 (fn () => "?- " ^ pName bx ^ " ~ " ^ cName cid ^ "\n")
-	  val Vs' = instEVars (G, (I.constType cid, I.id))
+	  val Vs' = instEVars (G, (ModSyn.constType cid, I.id))
 	  val _ = CSManager.trail (fn () =>
 				   if unifiableRoots (G, Vs, Vs', ms)
 				     then raise Error ("Block " ^ pName bx ^ " and constant "
@@ -242,7 +242,7 @@ struct
     fun checkUniqueBlockBlock (G, Vs, (t, nil), (a, ms), (bx, b')) = ()
       | checkUniqueBlockBlock (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (bx, b')) =
         let
-	  val a' = I.targetFam V'
+	  val a' = ModSyn.targetFam V'
 	  val _ = if (a = a')
 		    then checkNotUnifiableTypes (G, (V, s), instEVars (G, (V', t)), ms, (bx, (b', yOpt)))
 		  else ()
@@ -258,7 +258,7 @@ struct
     fun checkUniqueBlockBlocks (G, Vs, nil, (a, ms), bx) = ()
       | checkUniqueBlockBlocks (G, Vs, b::bs, (a, ms), bx) =
         let
-	  val (Gsome, piDecs) = I.constBlock b
+	  val (Gsome, piDecs) = ModSyn.constBlock b
 	  val t = createEVarSub (G, Gsome)
 	  val _ = checkUniqueBlockBlock (G, Vs, (t, piDecs), (a, ms), (bx, b))
 	in
@@ -274,7 +274,7 @@ struct
     fun checkUniqueBlock' (G, (t, nil), bs, cs, (a, ms), b) = ()
       | checkUniqueBlock' (G, (t, (D as I.Dec(xOpt, V))::piDecs), bs, cs, (a, ms), b) =
         let
-	  val a' = I.targetFam V
+	  val a' = ModSyn.targetFam V
 	  val _ = if (a = a')
 		    then let 
 			   val (V', s) = instEVars (G, (V, t))
@@ -305,8 +305,8 @@ struct
     *)
     fun checkUniqueWorlds (nil, cs, (a, ms)) = ()
       | checkUniqueWorlds (b::bs, cs, (a, ms)) =
-        ( checkUniqueBlockInternal (I.constBlock b, (a, ms), b) ;
-	  checkUniqueBlock (I.constBlock b, b::bs, cs, (a, ms), b) ;
+        ( checkUniqueBlockInternal (ModSyn.constBlock b, (a, ms), b) ;
+	  checkUniqueBlock (ModSyn.constBlock b, b::bs, cs, (a, ms), b) ;
           checkUniqueWorlds (bs, cs, (a, ms)) )
 
   in
@@ -314,7 +314,7 @@ struct
        Effect: raises Error if a is a defined type family
     *)
     fun checkNoDef (a) =
-        (case I.sgnLookup a
+        (case ModSyn.sgnLookup a
            of I.ConDef _ =>
 	        raise Error ("Uniqueness checking " ^ cName a
 			     ^ ":\ntype family must not be defined.")

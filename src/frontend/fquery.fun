@@ -60,7 +60,7 @@ struct
 	val (k, V1)  = Abstract.abstractDecImp V
 	val (G, V2) = lower (k, I.Null, V1)
 					(* G |- V'' : type *)
-	val a = I.targetFam V2
+	val a = ModSyn.targetFam V2
 	val W = W.lookup a
 	val V3 = Worldify.worldifyGoal (G, V2)
 	val _ = TypeCheck.typeCheck (G, (V3, I.Uni I.Type))

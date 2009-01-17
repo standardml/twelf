@@ -389,7 +389,7 @@ struct
     and lt (GB, k, (Us, Vs), (Us', Vs'), sc, ac, Ds) = 
           ltW (GB, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, ac, Ds)
     and ltW (GB, k, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc, ac, Ds) = 
-          ltSpine (GB, k, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, ac, Ds)
+          ltSpine (GB, k, (Us, Vs), ((S', s'), (ModSyn.constType c, I.id)), sc, ac, Ds)
       | ltW (GB as (G, B), k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, ac, Ds) = 
 (*	    if n <= k then  (* n must be a local variable *) *)
 (* k might not be needed any more: Check --cs *)
@@ -408,7 +408,7 @@ struct
 	let
 	  val Ds' = Ds (* ctxBlock (GB, I.EClo (V1', s1'), k, sc, ac, Ds) *)
 	in
-	  if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	  if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') (* == ModSyn.targetFam V2' *) then 
 	    let  (* enforce that X gets only bound to parameters *) 
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      val sc' = fn Ds'' => set_parameter (GB, X, k, sc, ac, Ds'')
@@ -418,7 +418,7 @@ struct
 		   (V', I.Dot (I.Exp (X), s2'))), sc', ac, Ds')
 	    end
 	  else
-	    if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	    if Subordinate.below (ModSyn.targetFam V1', ModSyn.targetFam V) then
 	      let 
 		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      in
@@ -495,7 +495,7 @@ struct
         let
 	  val Ds' = ac (GB, (V1', s1'), Ds)
 	in
-	  if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	  if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') (* == ModSyn.targetFam V2' *) then 
 	    let
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	      val sc' = fn Ds'' => set_parameter (GB, X, k, sc, ac, Ds'')
@@ -506,7 +506,7 @@ struct
 		   (V', I.Dot (I.Exp (X), s2'))), sc', ac, Ds')
 	    end
 	  else
-	    if Subordinate.below  (I.targetFam V1', I.targetFam V) then
+	    if Subordinate.below  (ModSyn.targetFam V1', ModSyn.targetFam V) then
 	      let 
 		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 		val sc' = sc 

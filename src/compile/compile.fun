@@ -53,7 +53,7 @@ struct
        where B iff H is a constant with constraint status
     *)
     fun isConstraint (I.Const (c)) =
-          (case I.constStatus (c)
+          (case ModSyn.constStatus (c)
              of (I.Constraint _) => true
               | _ => false)
       | isConstraint H = false
@@ -523,7 +523,7 @@ struct
 	    end
 	  | compileCtx' (I.Decl (G, I.BDec (_, (c, s)))) =
 	    let
-	      val (G, L)= I.constBlock c
+	      val (G, L)= ModSyn.constBlock c
 	      val dpool = compileCtx' G
 	      val n = I.ctxLength dpool   (* this is inefficient! -cs *)
 	    in
@@ -559,7 +559,7 @@ struct
 	    end
 	  | compileCtx' (I.Decl (G, I.BDec (_, (c, s)))) =
 	    let
-	      val (G, L)= I.constBlock c
+	      val (G, L)= ModSyn.constBlock c
 	      val dpool = compileCtx' G
 	      val n = I.ctxLength dpool   (* this is inefficient! -cs *)
 	    in
@@ -574,7 +574,7 @@ struct
 	    end
 	  | compilePsi' (I.Decl (Psi, T.UDec (I.BDec (_, (c, s))))) =
 	    let
-	      val (G, L)= I.constBlock c
+	      val (G, L)= ModSyn.constBlock c
 	      val dpool = compileCtx' G
 	      val n = I.ctxLength dpool   (* this is inefficient! -cs *)
 	    in
@@ -628,7 +628,7 @@ struct
 	C.sProgInstall (a, C.SClause (compileDClauseN I.Clause true (I.Null, Whnf.normalize (A, I.id))))
     | compileConDec _ _ = ()
 
-  fun install fromCS (cid) =  compileConDec fromCS (cid, I.sgnLookup cid)
+  fun install fromCS (cid) =  compileConDec fromCS (cid, ModSyn.sgnLookup cid)
   
   fun sProgReset () = (SubTree.sProgReset(); C.sProgReset())
    

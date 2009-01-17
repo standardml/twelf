@@ -86,7 +86,7 @@ struct
     *)
     fun vector (c, (S, s)) =
 	let 
-	  val Vid = (I.constType c, I.id)
+	  val Vid = (ModSyn.constType c, I.id)
 	  fun select' (n, (Ss', Vs'')) =
 		select'W (n, (Ss', Whnf.whnf Vs''))
 	  and select'W (1, ((I.App (U', S'), s'), (I.Pi ((I.Dec (_, V''), _), _), s''))) = 
@@ -180,7 +180,7 @@ struct
     and lt (G, k, (Us, Vs), (Us', Vs'), sc, ops) = 
           ltW (G, k, (Us, Vs), Whnf.whnfEta (Us', Vs'), sc, ops)
     and ltW (G, k, (Us, Vs), ((I.Root (I.Const c, S'), s'), Vs'), sc, ops) = 
-	  ltSpine (G, k, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, ops)
+	  ltSpine (G, k, (Us, Vs), ((S', s'), (ModSyn.constType c, I.id)), sc, ops)
       | ltW (G, k, (Us, Vs), ((I.Root (I.BVar n, S'), s'), Vs'), sc, ops) = 
 	  if n <= k then  (* n must be a local variable *)
 	    let 
@@ -192,7 +192,7 @@ struct
       | ltW (G, _, _, ((I.EVar _, _), _), _, ops) = ops
       | ltW (G, k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 					(I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ops) =
-	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') (* == ModSyn.targetFam V2' *) then 
 	  let  (* enforce that X gets only bound to parameters *) 
 	    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    val sc' = fn ops' => set_parameter (G, X, k, sc, ops')
@@ -202,7 +202,7 @@ struct
 		 (V', I.Dot (I.Exp (X), s2'))), sc', ops)
 	  end
 	else
-	  if Subordinate.below (I.targetFam V1', I.targetFam V) then
+	  if Subordinate.below (ModSyn.targetFam V1', ModSyn.targetFam V) then
 	    let 
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    in
@@ -275,7 +275,7 @@ struct
 
     and leW (G, k, ((U, s1), (V, s2)), ((I.Lam (D as I.Dec (_, V1'), U'), s1'), 
 					(I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, ops) =
-	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *) then 
+	if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') (* == ModSyn.targetFam V2' *) then 
 	  let
 	    val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    val sc' = fn ops' => set_parameter (G, X, k, sc, ops')
@@ -286,7 +286,7 @@ struct
 		 (V', I.Dot (I.Exp (X), s2'))), sc', ops)
 	  end
 	else
-	  if Subordinate.below  (I.targetFam V1', I.targetFam V) then
+	  if Subordinate.below  (ModSyn.targetFam V1', ModSyn.targetFam V) then
 	    let 
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
 	    in
@@ -529,7 +529,7 @@ struct
     *)
     fun expandLazy (S as M.State (_, _, V)) =
         if recursionDepth V > (!MetaGlobal.maxRecurse) then nil
-	else expandLazy' (S, (O.mutLookup (I.targetFam  V)), nil)
+	else expandLazy' (S, (O.mutLookup (ModSyn.targetFam  V)), nil)
 
 
     (* inputConv ((V1, s1), (V2, s2)) = B
@@ -545,8 +545,8 @@ struct
     and inputConvW ((I.Root (I.Const c1, S1), s1), (I.Root (I.Const c2, S2), s2)) =
           (* s1 = s2 = id *)
           if c1 = c2 then inputConvSpine (valOf (ModeTable.modeLookup c1), 
-					  ((S1, s1), (I.constType c1, I.id)), 
-					  ((S2, s2), (I.constType c2, I.id)))
+					  ((S1, s1), (ModSyn.constType c1, I.id)), 
+					  ((S2, s2), (ModSyn.constType c2, I.id)))
 	  else false
     
     and inputConvSpine (ModeSyn.Mnil, ((S1, _), _), ((S2, _), _)) = true (* S1 = S2 = Nil *)

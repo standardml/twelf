@@ -121,8 +121,8 @@ struct
   *)
   fun checkFixity (_, 0) = ()
     | checkFixity (cid, n) =
-      if checkArgNumber (IntSyn.sgnLookup (cid), n) then ()
-      else raise Error ("Constant " ^ (IntSyn.conDecFoldName (IntSyn.sgnLookup cid)) ^ " takes too few explicit arguments for given fixity")
+      if checkArgNumber (ModSyn.sgnLookup (cid), n) then ()
+      else raise Error ("Constant " ^ (IntSyn.conDecFoldName (ModSyn.sgnLookup cid)) ^ " takes too few explicit arguments for given fixity")
 
   (****************************************)
   (* Constants Names and Name Preferences *)
@@ -165,12 +165,12 @@ struct
 
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
 
-    val inCurrent = IntSyn.inCurrent
+    val inCurrent = ModSyn.inCurrent
   in
 
     fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
     val nameLookup : IDs.mid * string list -> cid option = SH.lookup nameTable
-    fun nameLookupC(l : string list) = nameLookup(IntSyn.currentMod(), l)
+    fun nameLookupC(l : string list) = nameLookup(ModSyn.currentMod(), l)
     (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level
@@ -202,10 +202,10 @@ struct
     local   
        fun installNamePref' (cid, (ePref, uPref)) =
          let
-	    val L = IntSyn.constUni (cid)
+	    val L = ModSyn.constUni (cid)
 	    val _ = case L
 	            of IntSyn.Type =>
-		       raise Error ("Object constant " ^ (IntSyn.conDecFoldName (IntSyn.sgnLookup cid)) ^ " cannot be given name preference\n"
+		       raise Error ("Object constant " ^ (IntSyn.conDecFoldName (ModSyn.sgnLookup cid)) ^ " cannot be given name preference\n"
 				    ^ "Name preferences can only be established for type families")
 		     | IntSyn.Kind => ()
 	in
@@ -522,7 +522,7 @@ struct
       | decName' role (G, D as IntSyn.BDec (NONE, b as (cid, t))) =
         (* use #l as base name preference for label l *)
 	let
-	  val name = findName (G, "#" ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid), Local)
+	  val name = findName (G, "#" ^ IntSyn.conDecFoldName (ModSyn.sgnLookup cid), Local)
 	in
 	  IntSyn.BDec (SOME(name), b)
 	end

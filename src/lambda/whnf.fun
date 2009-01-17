@@ -238,7 +238,7 @@ struct
       | whnfRoot ((FVar (name, V, s'), S), s) =
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((NSDef (d), S), s) =
-	  whnfRedex (whnf (IntSyn.constDef d, id), (S, s))  
+	  whnfRedex (whnf (ModSyn.constDef d, id), (S, s))  
       | whnfRoot ((H, S), s) =
 	 (Root (H, SClo (S, s)), id)
 
@@ -299,7 +299,7 @@ struct
 
     and expandDef (Root (Def (d), S), s) =
           (* why the call to whnf?  isn't constDef (d) in nf? -kw *)
-	  whnfRedex (whnf (constDef (d), id), (S, s))
+	  whnfRedex (whnf (ModSyn.constDef (d), id), (S, s))
 
     and whnfExpandDefW (Us as (Root (Def _, _), _)) = whnfExpandDefW (expandDef Us)
       | whnfExpandDefW Us = Us
@@ -346,9 +346,9 @@ struct
 
     (* inferCon (C) = V  if C = c or C = d or C = sk and |- C : V *)
     (* FIX: this is almost certainly mis-design -kw *)
-    fun inferCon (Const (cid)) = constType (cid)
-      | inferCon (Skonst (cid)) = constType (cid) 
-      | inferCon (Def (cid)) = constType (cid)
+    fun inferCon (Const (cid)) = ModSyn.constType (cid)
+      | inferCon (Skonst (cid)) = ModSyn.constType (cid) 
+      | inferCon (Def (cid)) = ModSyn.constType (cid)
 
     (* etaExpand' (U, (V,s)) = U'
            

@@ -114,7 +114,7 @@ struct
                 case Names.nameLookupC qid
                   of NONE => error (r, undeclaredIdentifier qid)
                    | SOME cid => 
-                       (checkCallPat (I.sgnLookup cid, P, r);
+                       (checkCallPat (ModSyn.sgnLookup cid, P, r);
                         ((cid, P) :: cps, (r :: rs)))
 	      end
 	  val (cps, rs) = callpats' L

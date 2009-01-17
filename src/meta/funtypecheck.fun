@@ -122,7 +122,7 @@ struct
 	    let 
 	      val I.Dec (_, V) = I.ctxDec (G, n')
 	    in
-	      if Subordinate.belowEq (I.targetFam V, a)
+	      if Subordinate.belowEq (ModSyn.targetFam V, a)
 		then args (n'-1, a, I.App (I.Root (I.BVar n', I.Nil), S))
 	      else args (n'-1, a, S)
 	    end
@@ -131,7 +131,7 @@ struct
 	    let 
 	      val I.Dec (_, V) = I.ctxDec (Psi', m')
 	    in
-	      I.Exp (I.Root (I.BVar (n+m'), args (n, I.targetFam (V), I.Nil)))
+	      I.Exp (I.Root (I.BVar (n+m'), args (n, ModSyn.targetFam (V), I.Nil)))
 	    end
 		 
 	fun raiseSub'' (0, s) = s
@@ -156,7 +156,7 @@ struct
       let 
 	fun raiseType'' (I.Null, Vn, a) = Vn
 	  | raiseType'' (I.Decl (G', D as I.Dec (_, V')), Vn, a) = 
-	    if Subordinate.belowEq (I.targetFam V', a) 
+	    if Subordinate.belowEq (ModSyn.targetFam V', a) 
 	      then raiseType'' (G', Abstract.piDepend ((D, I.Maybe), Vn), a) 
 	    else raiseType'' (G', Weaken.strengthenExp (Vn, I.shift), a)
 	fun raiseType' (Psi1, nil) = nil
@@ -164,7 +164,7 @@ struct
 	    let
 	      val s = raiseSub (G, Psi1)
 	      val Vn = Whnf.normalize (V, s)
-	      val a = I.targetFam Vn
+	      val a = ModSyn.targetFam Vn
 	      val D' = I.Dec (x, raiseType'' (G, Vn, a))
 	    in
 	      F.Prim (D') :: (raiseType'(I.Decl (Psi1, D),  Psi1'))

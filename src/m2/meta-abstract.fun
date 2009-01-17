@@ -140,7 +140,7 @@ struct
         let 
 	  val w' = weaken (depth-1, G', a) 
 	in
-	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  if Subordinate.belowEq (ModSyn.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
 	end
 
@@ -216,7 +216,7 @@ struct
 	        val _ = checkEmpty (!cnstrs)
 
 	        val lGp' = I.ctxLength GX - lG0 + depth   (* lGp' >= 0 *)
-		val w = weaken (lGp', GX, I.targetFam V)
+		val w = weaken (lGp', GX, ModSyn.targetFam V)
 		val iw = Whnf.invert w
 		val GX' = Whnf.strengthen (iw, GX)
 	        val lGp'' = I.ctxLength GX' - lG0 + depth   (* lGp'' >= 0 *)
@@ -573,7 +573,7 @@ struct
 	  in
 	    I.Root (I.BVar (k+depth), 
 		    abstractSub (A, G, depth, (Vraised, I.id), 
-				 s, I.targetFam V, I.Nil))
+				 s, ModSyn.targetFam V, I.Nil))
 	  end
       | abstractExpW (A, G, depth, (I.FgnExp csfe, s)) =
           I.FgnExpStd.Map.apply csfe (fn U => abstractExp (A, G, depth, (U, s)))

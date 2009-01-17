@@ -31,7 +31,7 @@ signature RECON_MODULE =
 sig
   include MODEXTSYN
   exception Error of string
-  val morphToMorph : morph * Paths.location -> IntSyn.Morph
-  val syminstToSymInst : syminst * Paths.location -> IntSyn.SymInst
-  val strdecToStrDec : strdec * Paths.location -> IntSyn.StrDec
+  val morphToMorph : morph * Paths.location -> ModSyn.Morph
+  val syminstToSymInst : syminst * Paths.location -> ModSyn.SymInst
+  val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
 end

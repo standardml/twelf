@@ -146,7 +146,6 @@ functor Twelf
    structure WorldPrint : WORLDPRINT
    (*! sharing WorldPrint.Tomega = Tomega !*)
 
-   structure ModSyn : MODSYN
    structure ReconModule : RECON_MODULE
      sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
@@ -343,7 +342,7 @@ struct
     fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
-	  val cid = IntSyn.sgnAddC conDec
+	  val cid = ModSyn.sgnAddC conDec
 (*	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		      | (IntSyn.Clause, SOME namespace) => Names.insertConst (namespace, cid)
@@ -362,7 +361,7 @@ seems obsolete -fr *)
     
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
-	  val cid = IntSyn.sgnAddC conDec
+	  val cid = ModSyn.sgnAddC conDec
 (*	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
 		        (* (Clause, _) should be impossible *)
@@ -381,7 +380,7 @@ seems obsolete -fr *)
 
     fun installStrDec (strDec, r) = ()
 
-    fun cidToString a = IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+    fun cidToString a = IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 
     fun invalidate uninstallFun cids msg =
         let
@@ -549,8 +548,8 @@ seems obsolete -fr *)
           then msg ("%subord"
                       ^ List.foldr 
 			    (fn ((a1, a2), s) => " (" ^ 
-				IntSyn.conDecFoldName (IntSyn.sgnLookup a1) ^ " " ^
-				IntSyn.conDecFoldName (IntSyn.sgnLookup a2) ^ ")" ^ s) ".\n" cidpairs)
+				IntSyn.conDecFoldName (ModSyn.sgnLookup a1) ^ " " ^
+				IntSyn.conDecFoldName (ModSyn.sgnLookup a2) ^ ")" ^ s) ".\n" cidpairs)
           else ()
         end
 
@@ -573,10 +572,10 @@ seems obsolete -fr *)
 	  (* Subordinate.installFrozen cids *)
           if !Global.chatter >= 3
           then msg ("%freeze"
-                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
+                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ s) ".\n" cids)
           else ();
 	  if !Global.chatter >= 4
-	    then msg ("Frozen:" ^ List.foldr (fn (a,s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) "\n" frozen)
+	    then msg ("Frozen:" ^ List.foldr (fn (a,s) => " " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ s) "\n" frozen)
 	  else ()
         end
 
@@ -634,7 +633,7 @@ seems obsolete -fr *)
           if !Global.chatter >= 3
           then msg ((if !Global.chatter >= 4 then "%" else "")
                       ^ "%deterministic"
-                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
+                      ^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ s) ".\n" cids)
           else ()
         end
 
@@ -669,7 +668,7 @@ seems obsolete -fr *)
 	  val F = Converter.convertFor cids
 	  val _ = TomegaTypeCheck.checkPrg (IntSyn.Null, (P, F))
 
-	  fun f cid = IntSyn.conDecFoldName (IntSyn.sgnLookup cid)
+	  fun f cid = IntSyn.conDecFoldName (ModSyn.sgnLookup cid)
 
 	  val _ = if !Global.chatter >= 2 
 		    then msg ("\n" ^ 
@@ -680,7 +679,7 @@ seems obsolete -fr *)
           val _ = if !Global.chatter >= 3
 		    then msg ((if !Global.chatter >= 4 then "%" else "")
 				^ "%compile"
-				^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ s) ".\n" cids)
+				^ List.foldr (fn (a, s) => " " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ s) ".\n" cids)
 		  else ()
         in
 	  ()
@@ -696,7 +695,7 @@ seems obsolete -fr *)
                            if !Global.chatter >= 3
                              then msg ((if !Global.chatter >= 4 then "%" else "")
                                          ^ Names.Fixity.toString fixity ^ " "
-                                         ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid) ^ ".\n")
+                                         ^ IntSyn.conDecFoldName (ModSyn.sgnLookup cid) ^ ".\n")
                            else ())
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
@@ -719,11 +718,11 @@ seems obsolete -fr *)
 			      of NONE => ()
 			       | SOME _ =>
 				 if Subordinate.frozen [a]
-				   then raise ModeTable.Error (Paths.wrap (r, "Cannot redeclare mode for frozen constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
+				   then raise ModeTable.Error (Paths.wrap (r, "Cannot redeclare mode for frozen constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)))
 				 else ())
 		  mdecs
 	  val _ = List.app (fn (mdec as (a, _), r) => 
-	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
+	                    (case (IntSyn.conDecStatus (ModSyn.sgnLookup a))
 			       of IntSyn.Normal => ModeTable.installMode mdec
 			        | _ => raise ModeTable.Error "Cannot declare modes for foreign constants")
 			    handle ModeTable.Error (msg) => raise ModeTable.Error (Paths.wrap (r, msg)))
@@ -748,7 +747,7 @@ seems obsolete -fr *)
 	  val _ = ReconTerm.checkErrors (r)
           (* convert all UniqueTable.Error to Unique.Error *)
 	  val _ = List.app (fn (mdec as (a, _), r) => 
-	                    (case (IntSyn.conDecStatus (IntSyn.sgnLookup a))
+	                    (case (IntSyn.conDecStatus (ModSyn.sgnLookup a))
 			       of IntSyn.Normal => UniqueTable.installMode mdec
 			        | _ => raise UniqueTable.Error "Cannot declare modes for foreign constants")
 			    handle UniqueTable.Error (msg) => raise Unique.Error (Paths.wrap (r, msg)))
@@ -821,7 +820,7 @@ seems obsolete -fr *)
 	  val F = Converter.convertFor La
 
 	  val _ = if !Global.chatter >= 2
-		    then print (TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (IntSyn.sgnLookup cid)) La,
+		    then print (TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (ModSyn.sgnLookup cid)) La,
 							  projs), P) ^ "\n")
 		  else ()
 
@@ -871,7 +870,7 @@ seems obsolete -fr *)
 			      andalso ((Order.selLookup a; true) handle Order.Error _ => false)
 			    then raise Total.Error (fileName ^ ":"
                                        ^ Paths.wrap (r, "Cannot redeclare termination order for frozen constant "
-						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
+						   ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)))
 			    else ())
 	          (callpats, rs)
           *)
@@ -899,7 +898,7 @@ seems obsolete -fr *)
 			      andalso ((Order.selLookupROrder a; true) handle Order.Error _ => false)
 			    then raise Total.Error (fileName ^ ":"
                                        ^ Paths.wrap (r, "Cannot redeclare reduction order for frozen constant "
-						   ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
+						   ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)))
 			    else ())
 	          (callpats, rs)
           *)
@@ -1037,7 +1036,7 @@ seems obsolete -fr *)
 	  val _ = ListPair.app (fn ((a, _), r) =>
 		    if Subordinate.frozen [a]
 		      then raise WorldSyn.Error (Paths.wrapLoc (Paths.Loc (fileName, r), "Cannot declare worlds for frozen family "
-								^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)))
+								^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)))
 		    else ())
 	         (cpa, rs)
 	  val W = Tomega.Worlds
@@ -1077,7 +1076,7 @@ seems obsolete -fr *)
       | install1 (fileName, declr as (Parser.Include _, r)) = ()
       | install1 (fileName, declr as (Parser.Open _, r)) = ()
       | install1 (fileName, (Parser.Use name, r)) =
-        (if IntSyn.currentMod() = IDs.firstMid()
+        (if ModSyn.currentMod() = IDs.firstMid()
            then CSManager.useSolver (name)
            else raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level"))
         )
@@ -1144,7 +1143,7 @@ seems obsolete -fr *)
                            if !Global.chatter >= 3
                              then msg ((if !Global.chatter >= 4 then "%" else "")
                                          ^ Names.Fixity.toString fixity ^ " "
-                                         ^ IntSyn.conDecFoldName (IntSyn.sgnLookup cid) ^ ".\n")
+                                         ^ IntSyn.conDecFoldName (ModSyn.sgnLookup cid) ^ ".\n")
                            else ())
 		      | NONE => ())
 	  val _ = List.app (fn mdec => ModeTable.installMmode (cid, mdec)) mdecL
@@ -1155,7 +1154,7 @@ seems obsolete -fr *)
     val _ = CSManager.setInstallFN (installCSMDec)
  
     (* reset () = () clears all global tables, including the signature *)
-    fun reset () = (IntSyn.sgnReset (); Names.reset (); Origins.reset ();
+    fun reset () = (ModSyn.sgnReset (); Names.reset (); Origins.reset ();
 		    ModeTable.reset ();
 		    UniqueTable.reset (); (* -fp Wed Mar  9 20:24:45 2005 *)
 		    Index.reset (); 
@@ -1198,7 +1197,7 @@ seems obsolete -fr *)
         end
     and decl' (cid) =
         let
-	  val conDec = IntSyn.sgnLookup (cid)
+	  val conDec = ModSyn.sgnLookup (cid)
 	  (* val fixity = Names.getFixity (cid) *)
 	  (* can't get name preference right now *)
 	  (* val mode = ModeTable.modeLookup (cid) *)

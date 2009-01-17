@@ -44,12 +44,12 @@ struct
        presently ignores definitions
     *)
     fun install fromCS (H as I.Const c) =
-        (case (fromCS, I.sgnLookup (c))
+        (case (fromCS, ModSyn.sgnLookup (c))
 	  of (_, I.ConDec (_, _, _, _, A, I.Type)) => update (cidFromHead (I.targetHead A), H)
            | (I.Clause, I.ConDef (_, _, _, _, A, I.Type, _)) => update (cidFromHead (I.targetHead A), I.Def(c))
 	   | _ => ())
       | install fromCS (H as I.Skonst c) =
-        (case I.sgnLookup (c)
+        (case ModSyn.sgnLookup (c)
 	   of I.SkoDec (_, _, _, A, I.Type) => update (cidFromHead (I.targetHead A), H)
 	    | _ => ())
 

@@ -129,9 +129,9 @@ struct
     and checkGoal (G, Vs, occ) = checkGoalW (G, Whnf.whnf Vs, occ)
     and checkGoalW (G, (V, s), occ) =
 	let
-	  val a = I.targetFam V
+	  val a = ModSyn.targetFam V
 	  val _ = if not (total a)
-		    then raise Error' (occ, "Subgoal " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+		    then raise Error' (occ, "Subgoal " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				       ^ " not declared to be total")
 		  else ()
 	  val _ = checkDynOrderW (G, (V, s), 2, occ)
@@ -153,7 +153,7 @@ struct
         (* Note: filename and location are missing in this error message *)
         (* Fri Apr  5 19:25:54 2002 -fp *)
         error (a, P.top,
-	       "Error: Totality checking " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n"
+	       "Error: Totality checking " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n"
 	       ^ "All argument modes must be input (+) or output (-)"
 	       ^ (case xOpt of NONE => ""
 	             | SOME(x) => " but argument " ^ x ^ " is indefinite (*)"  ))
@@ -165,22 +165,22 @@ struct
     fun checkOutCover nil = ()
       | checkOutCover (I.Const(c)::cs) =
         ( if !Global.chatter >= 4
-	    then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	    then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	  else () ;
 	  if !Global.chatter >= 6
 	    then print ("\n")
 	  else () ;
-	  checkClause (I.Null, (I.constType (c), I.id), P.top)
+	  checkClause (I.Null, (ModSyn.constType (c), I.id), P.top)
 	     handle Error' (occ, msg) => error (c, occ, msg) ;
           checkOutCover cs )
       | checkOutCover (I.Def(d)::cs) =
         ( if !Global.chatter >= 4
-	    then print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
+	    then print (IntSyn.conDecFoldName (ModSyn.sgnLookup d) ^ " ")
 	  else () ;
 	  if !Global.chatter >= 6
 	    then print ("\n")
 	  else () ;
-	  checkClause (I.Null, (I.constType (d), I.id), P.top)
+	  checkClause (I.Null, (ModSyn.constType (d), I.id), P.top)
 	     handle Error' (occ, msg) => error (d, occ, msg) ;
           checkOutCover cs )
 
@@ -197,12 +197,12 @@ struct
 	  val _ = Subordinate.checkNoDef (a) (* a cannot depend on type-level definitions *)
 	          handle Subordinate.Error (msg) =>
 		            raise Subordinate.Error ("Totality checking " ^
-						     IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+						     IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 						     ^ ":\n" ^ msg)
           (* Checking termination *)
 	  val _ = ((Timers.time Timers.terminate Reduces.checkFam) a;
 		   if !Global.chatter >= 4
-		     then print ("Terminates: " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ "\n")
+		     then print ("Terminates: " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ "\n")
 		   else ())
 	          handle Reduces.Error (msg) => raise Reduces.Error (msg)
 
@@ -212,13 +212,13 @@ struct
 	  val _ = checkDefinite (a, ms) (* all arguments must be either input or output *)
 	  val _ = ((Timers.time Timers.coverage Cover.checkCovers) (a, ms) ;
 		   if !Global.chatter >= 4
-		     then print ("Covers (input): " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ "\n")
+		     then print ("Covers (input): " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ "\n")
 		   else ())
 	          handle Cover.Error (msg) => raise Cover.Error (msg)
 
           (* Checking output coverage *)
 	  val _ = if !Global.chatter >= 4
-		    then print ("Output coverage checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+		    then print ("Output coverage checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				^ "\n")
 		  else ()
           val _ = ModeCheck.checkFreeOut (a, ms) (* all variables in output args must be free *)
@@ -228,7 +228,7 @@ struct
 		     then print ("\n")
 		   else ();
 		   if !Global.chatter >= 4
-		     then print ("Covers (output): " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ "\n")
+		     then print ("Covers (output): " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ "\n")
 		   else ())
                   handle Cover.Error (msg) => raise Cover.Error (msg)
 	in

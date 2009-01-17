@@ -86,9 +86,9 @@ struct
     *)
     fun cLToString (nil) = ""
       | cLToString (c :: nil) = 
-	  (I.conDecFoldName (I.sgnLookup c))
+	  (I.conDecFoldName (ModSyn.sgnLookup c))
       | cLToString (c :: L) = 
-	  (I.conDecFoldName (I.sgnLookup c)) ^ ", " ^ (cLToString L)
+	  (I.conDecFoldName (ModSyn.sgnLookup c)) ^ ", " ^ (cLToString L)
 
     (* init (k, cL) = ()
 

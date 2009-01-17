@@ -91,9 +91,9 @@ struct
 	  
 	fun matchSig (nil, Fs) = Fs
 	  | matchSig (I.Const (c)::L, Fs) =
-	  matchSig (L, try ((I.constType (c), I.id), Fs, FillWithConst (Y, c)))
+	  matchSig (L, try ((ModSyn.constType (c), I.id), Fs, FillWithConst (Y, c)))
       in
-	matchCtx (G, 0, matchSig (Index.lookup (I.targetFam V), nil))
+	matchCtx (G, 0, matchSig (Index.lookup (ModSyn.targetFam V), nil))
       end
 
     (* apply op = ()
@@ -129,7 +129,7 @@ struct
 	    in
 	      doit ((V2, I.Dot (I.Exp X, s)),  (fn S => k (I.App (X, S))))
 	    end
-	val W = I.constType c
+	val W = ModSyn.constType c
       in	      
 	doit ((W, I.id),  fn S => Unify.unify (G0, (Y, I.id), (I.Root (I.Const c, S), I.id)))
       end
@@ -146,7 +146,7 @@ struct
 	    ("Fill " ^ Names.evarName (G, X) ^ " with variable " ^ x))
 	   (* Invariant: Context is named  --cs Fri Mar  3 14:31:08 2006 *)
       | menu (FillWithConst (X as I.EVar (_, G, _, _), c)) = 
-	   ("Fill " ^ Names.evarName (G, X) ^ " with constant " ^ IntSyn.conDecName (IntSyn.sgnLookup c))
+	   ("Fill " ^ Names.evarName (G, X) ^ " with constant " ^ IntSyn.conDecName (ModSyn.sgnLookup c))
       
   in
     val expand = expand

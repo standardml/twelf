@@ -22,8 +22,8 @@ struct
 
     (* Printing Utilities *)
 
-    fun headToString (G, I.Const (c)) = IntSyn.conDecFoldName (IntSyn.sgnLookup  c)
-      | headToString (G, I.Def (d)) = IntSyn.conDecFoldName (IntSyn.sgnLookup  d)
+    fun headToString (G, I.Const (c)) = IntSyn.conDecFoldName (ModSyn.sgnLookup  c)
+      | headToString (G, I.Def (d)) = IntSyn.conDecFoldName (ModSyn.sgnLookup  d)
       | headToString (G, I.BVar(k)) = N.bvarName (G, k)
     fun expToString (GU) = P.expToString (GU) ^ ". "
     fun decToString (GD) = P.decToString (GD) ^ ". "

@@ -617,7 +617,7 @@ struct
         let
 	  val (G', t') = deblockify  G
 					(* G' |- t' : G *)
-          val (_, L) = I.constBlock c
+          val (_, L) = ModSyn.constBlock c
 	  val n = List.length L
 	  val G'' = append (G', (L, I.comp (s, coerceSub t')))
 					(* G'' = G', V1 ... Vn *)

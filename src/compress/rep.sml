@@ -9,14 +9,14 @@ fun defSize x = (case x of
    		       Sgn.DEF_TERM y => S.size_term y
 		     | Sgn.DEF_TYPE y => S.size_tp y)
 
-fun cidSize cid = (case I.sgnLookup cid of 
+fun cidSize cid = (case ModSyn.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => S.size_tp (S.typeOf (Sgn.classifier cid))
  | I.ConDec(_,_,_,_,_,I.Kind) => S.size_knd (S.kindOf (Sgn.classifier cid))
  | I.ConDef(_,_,_,_,_,_,_) => defSize(Sgn.def cid)
  | I.AbbrevDef(_,_,_,_,_,_) => defSize(Sgn.def cid)
  | _ => 0)
 
-fun o_cidSize cid = (case I.sgnLookup cid of 
+fun o_cidSize cid = (case ModSyn.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => S.size_tp (S.typeOf (Sgn.o_classifier cid))
  | I.ConDec(_,_,_,_,_,I.Kind) => S.size_knd (S.kindOf (Sgn.o_classifier cid))
  | I.ConDef(_,_,_,_,_,_,_) => defSize(Sgn.o_def cid)
@@ -31,7 +31,7 @@ val k : Reductio.eq_c option ref = ref NONE
 
 
 exception Crap
-fun sanityCheck cid = ((case I.sgnLookup cid of 
+fun sanityCheck cid = ((case ModSyn.sgnLookup cid of 
    I.ConDec(_,_,_,_,_,I.Type) => (Reductio.check_plusconst_type (Sgn.typeOf (Sgn.classifier cid)))
  | I.ConDec(_,_,_,_,_,I.Kind) => (Reductio.check_kind ([], Sgn.kindOf (Sgn.classifier cid)))
  | I.ConDef(_,_,_,_,_,I.Type,_) => let val Sgn.DEF_TERM y = Sgn.def cid

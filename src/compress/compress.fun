@@ -250,7 +250,7 @@ struct
       in 
 	  case c of NONE =>
 		    let
-			val c' = compress (cid, I.sgnLookup cid)
+			val c' = compress (cid, ModSyn.sgnLookup cid)
 			val _ = Sgn.update (cid, c')
 			val _ = print (Int.toString cid ^ "\n")
 		    in
@@ -259,7 +259,7 @@ struct
 		  | SOME x => x
       end
 
- (*  val sgnApp  = IntSyn.sgnApp
+ (*  val sgnApp  = ModSyn.sgnApp
 	  
   fun sgnCompress () = sgnApp (ignore o sgnLookup) *)
 
@@ -278,7 +278,7 @@ struct
   fun naiveModes cid = 
       let
 	  val (ak, omitted_args, uni) = 
-	      case I.sgnLookup cid of
+	      case ModSyn.sgnLookup cid of
 		  I.ConDec(name, package, o_a, status, ak, uni) => (ak, o_a, uni)
 		| I.ConDef(name, package, o_a, ak, def, uni, _) => (ak, o_a, uni)
 		| I.AbbrevDef(name, package, o_a, ak, def, uni) => (ak, o_a, uni)
@@ -290,7 +290,7 @@ struct
 	  fun can_omit ms = 
 	      let
 		  val _ = Sgn.set_modes (cid, ms)
-		  val s = compress (cid, I.sgnLookup cid)
+		  val s = compress (cid, ModSyn.sgnLookup cid)
 		  val t = Sgn.typeOfSigent s
 (*		  val _ = if true then log := !log @ [s] else () *)
 		  val isValid = Reductio.check_plusconst_strictness t
@@ -320,7 +320,7 @@ struct
   fun idealModes cid = 
       let
 	  val (ak, omitted_args) = 
-	      case I.sgnLookup cid of
+	      case ModSyn.sgnLookup cid of
 		  I.ConDec(name, package, o_a, status, ak, uni) => (ak, o_a)
 		| I.ConDef(name, package, o_a, ak, def, uni, _) => (ak, o_a)
 		| I.AbbrevDef(name, package, o_a, ak, def, uni) => (ak, o_a)
@@ -341,7 +341,7 @@ struct
       val modes = f n 
   in
       Sgn.set_modes(n, modes);  
-      Sgn.update (n, compress (n, IntSyn.sgnLookup n))
+      Sgn.update (n, compress (n, ModSyn.sgnLookup n))
   end handle NoModes => ())
 
   fun sgnAutoCompressUpTo' n0 n f =  
@@ -358,7 +358,7 @@ struct
 			  val modes = f n0 
 		      in 
                            (Sgn.set_modes(n0, modes);
-			   Sgn.update (n0, compress (n0, IntSyn.sgnLookup n0));
+			   Sgn.update (n0, compress (n0, ModSyn.sgnLookup n0));
 			   if n0 mod 100 = 0 then print (Int.toString n0 ^ "\n") else ())
 		      end handle NoModes => ()
 	  in

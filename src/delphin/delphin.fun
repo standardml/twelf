@@ -84,7 +84,7 @@ struct
 (*	     val P = Redundant.convert (Tomega.lemmaDef lemma) *)
 	     val F = Converter.convertFor La	       
 	     val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F))
-	     val _ = TextIO.print ("\n" ^ TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (IntSyn.sgnLookup cid)) La,
+	     val _ = TextIO.print ("\n" ^ TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (ModSyn.sgnLookup cid)) La,
 						     projs), P) ^ "\n")	
 	   in (P, F)
 	   end)
@@ -97,7 +97,7 @@ struct
 	     val F = Converter.convertFor La	       
 
 	     val _ = TomegaTypeCheck.checkPrg (I.Null, (P, F))
-	     val _ = TextIO.print ("\n" ^ TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (IntSyn.sgnLookup cid)) La,
+	     val _ = TextIO.print ("\n" ^ TomegaPrint.funToString ((map (fn (cid) => IntSyn.conDecName (ModSyn.sgnLookup cid)) La,
 						     projs), P) ^ "\n")	
 	   in (Tomega.lemmaDef (hd sels), F)
 	   end)

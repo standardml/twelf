@@ -74,7 +74,7 @@ struct
 		     (T.All ((T.UDec (I.BDec (_, (cid, s))), _), F2), t2)) =
 	let 
 	  val T.UDec (I.BDec(_, (cid', s')))= T.ctxDec(Psi, k)
-	  val (G', _) = I.conDecBlock (I.sgnLookup cid')
+	  val (G', _) = I.conDecBlock (ModSyn.sgnLookup cid')
 	  val _ = if (cid <> cid') then raise Error("Block label incompatible") else ()
 	  val s'' = T.coerceSub (T.comp (T.embedSub s, t2))
 	  val _ = Conv.convSub (s', s'') 
@@ -197,7 +197,7 @@ struct
       | checkPrgW (Psi, (T.PairBlock (I.Bidx k, P), (T.Ex ((I.BDec (_, (cid, s)), _), F2), t))) =
 	let
 	  val T.UDec (I.BDec(_, (cid', s'))) = T.ctxDec (Psi, k)
-	  val (G', _) = I.conDecBlock (I.sgnLookup cid)
+	  val (G', _) = I.conDecBlock (ModSyn.sgnLookup cid)
 	  val _ = if (cid' <> cid) then raise Error ("Block label mismatch") else ()
 	  val _ = convSub (Psi, T.embedSub s', T.comp(T.embedSub(s), t), T.revCoerceCtx(G'))  
 	in 
@@ -335,7 +335,7 @@ struct
 		  (T.All((T.UDec (I.BDec(_, (l2, s2))), _), F2), t2)) =
 	let 
 	  val _ = if l1 <> l2 then raise Error "Contextblock clash" else ()
-	  val (G', _) = I.conDecBlock (I.sgnLookup l1)
+	  val (G', _) = I.conDecBlock (ModSyn.sgnLookup l1)
 	  val _ = convSub (Psi, 
 			   T.comp (T.embedSub s1, t1),
 			   T.comp (T.embedSub s2, t2), T.embedCtx G')  
@@ -364,7 +364,7 @@ struct
 		  (T.Ex ((     I.BDec(_,    (l2, s2)), _), F2), t2)) =
 	let 
 	  val _ = if l1 <> l2 then raise Error "Contextblock clash" else ()
-	  val (G', _) = I.conDecBlock (I.sgnLookup l1)
+	  val (G', _) = I.conDecBlock (ModSyn.sgnLookup l1)
 	  val s1 = T.coerceSub t1
 	  val _ = convSub (Psi, 
 			   T.comp (T.embedSub s1, t1), 
@@ -425,7 +425,7 @@ struct
 	    val T.UDec (I.BDec(_, (l2, s22)))= T.ctxDec(G, v2)			 
 	    val _ = if l1 = l2 then () else raise Error "Sub not equivalent"
 	    val _ = if l1 = l then () else raise Error "Sub not equivalent"
-	    val (G'', _) = I.conDecBlock (I.sgnLookup l)
+	    val (G'', _) = I.conDecBlock (ModSyn.sgnLookup l)
 	    val _ = convSub (G, T.embedSub s11, T.embedSub s22, T.revCoerceCtx(G''))
   	    val _ = convSub (G, T.embedSub s11, T.embedSub s, T.revCoerceCtx(G''))
 	in
@@ -554,7 +554,7 @@ struct
 	  val _ = checkSub (Psi, t, Psi')
 					(* Psi |- t : Psi' *)
 					(* Psi' |- s2 : SOME variables of c *)
-	  val (G, L) = I.constBlock c
+	  val (G, L) = ModSyn.constBlock c
 					(* Psi |- s2 : G *)
 	  val _ = TypeCheck.typeCheckSub (T.coerceCtx Psi', s2, G)
 	in
@@ -573,7 +573,7 @@ struct
 	end
       | checkBlock (Psi, (I.Inst UL, (c2, s2))) = 
 	let
-	  val (G, L) = I.constBlock c2
+	  val (G, L) = ModSyn.constBlock c2
 					(* Psi |- s2 : G *)
 	  val _ = TypeCheck.typeCheckSub (T.coerceCtx Psi, s2, G)
 	in

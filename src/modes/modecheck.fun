@@ -69,7 +69,7 @@ struct
             | (fileName, SOME occDec) => 
 	        (P.wrapLoc' (P.Loc (fileName, P.occToRegionClause occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n" ^ msg)))
+                             "Constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ "\n" ^ msg)))
 
     fun wrapMsg' (fileName, r, msg) =
           P.wrapLoc (P.Loc (fileName, r), msg)
@@ -85,7 +85,7 @@ struct
     *)
     fun lookup (a, occ) =  
         case ModeTable.mmodeLookup a
-	  of nil => raise Error' (occ, "No mode declaration for " ^ I.conDecFoldName (I.sgnLookup a))
+	  of nil => raise Error' (occ, "No mode declaration for " ^ I.conDecFoldName (ModSyn.sgnLookup a))
            | sMs => sMs 
 
     (* nameOf S, selects a name for S *)
@@ -476,7 +476,7 @@ struct
     fun updateAtom (D, mode, S, a, mS, (p, occ)) =
         let
 	  val _ = if !checkFree
-		    then freeAtom (D, ambiguate mode, S, (I.constType a, I.id), mS, (p, occ))
+		    then freeAtom (D, ambiguate mode, S, (ModSyn.constType a, I.id), mS, (p, occ))
 		  else ()
 	in
 	  updateAtom' (D, mode, S, mS, (p, occ))
@@ -820,23 +820,23 @@ struct
     fun checkAll (nil) = ()
       | checkAll (I.Const(c) :: clist) =
         (if !Global.chatter > 3
-	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	   then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	 else ();
-	 checkDlocal (I.Null, I.constType c, P.top)
+	 checkDlocal (I.Null, ModSyn.constType c, P.top)
 	   handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
 	 checkAll clist)
       | checkAll (I.Def(d) :: clist) =
         (if !Global.chatter > 3
-	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
+	   then print (IntSyn.conDecFoldName (ModSyn.sgnLookup d) ^ " ")
 	 else ();
-	 checkDlocal (I.Null, I.constType d, P.top)
+	 checkDlocal (I.Null, ModSyn.constType d, P.top)
 	   handle Error' (occ, msg) => raise Error (wrapMsg (d, occ, msg));
 	 checkAll clist)
 
     fun checkMode (a, ms) =
         let
 	  val _ = if !Global.chatter > 3
-		    then print ("Mode checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
+		    then print ("Mode checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
 	  val _ = (checkFree := false)
@@ -849,7 +849,7 @@ struct
     fun checkFreeOut (a, ms) =
         let
 	  val _ = if !Global.chatter > 3
-		    then print ("Checking output freeness of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
+		    then print ("Checking output freeness of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val clist = Index.lookup a
 	  val _ = (checkFree := true)

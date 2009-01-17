@@ -355,7 +355,7 @@ struct
 
     and collectEVarStr (Gss as (Gs, ss), Gl, (X as I.EVar (r, GX, V, cnstrs), s), K, DupVars, flag, d) = 
       let
-	val w = Subordinate.weaken (GX, I.targetFam V)
+	val w = Subordinate.weaken (GX, ModSyn.targetFam V)
 	val iw = Whnf.invert w 
 	val GX' = Whnf.strengthen (iw, GX)
 	val X' as I.EVar (r', _, _, _) = I.newEVar (GX', I.EClo (V, iw)) (* ? *)
@@ -978,7 +978,7 @@ struct
       let
 	val (Gs, ss, d) =  (if (!TableParam.strengthen) then 
 			      let
-				val w' = Subordinate.weaken (G, I.targetFam p)
+				val w' = Subordinate.weaken (G, ModSyn.targetFam p)
 				val iw = Whnf.invert w' 
 				val G' = Whnf.strengthen (iw, G)
 				val d' = I.ctxLength (G')
@@ -1011,7 +1011,7 @@ struct
        in 		
 	 if (!TableParam.strengthen) then 
 	   let
-	     val w' = Subordinate.weaken (G'', I.targetFam U')
+	     val w' = Subordinate.weaken (G'', ModSyn.targetFam U')
 	     val iw = Whnf.invert w' 
 	     val Gs' = Whnf.strengthen (iw, G'')
 	   in		

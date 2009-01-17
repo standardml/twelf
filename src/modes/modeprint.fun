@@ -39,7 +39,7 @@ struct
 
     fun fmtModeDec (cid, mS) =
 	let
-	  val V = I.constType cid
+	  val V = ModSyn.constType cid
 	  fun fmtModeDec' (G, _, M.Mnil) = 
 		[F.String "(",
 		 P.formatExp (G, I.Root (I.Const (cid), makeSpine G)),

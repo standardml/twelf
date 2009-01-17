@@ -52,7 +52,7 @@ struct
 
     fun convertOneFor cid =
       let
-	val V  = case I.sgnLookup cid 
+	val V  = case ModSyn.sgnLookup cid 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 	val mS = case ModeTable.modeLookup cid
@@ -356,8 +356,8 @@ struct
       let
 	val F = convertFor L
 	  
-	fun name [a] = I.conDecFoldName (I.sgnLookup a)
-	  | name (a :: L) = I.conDecFoldName (I.sgnLookup a) ^ "/" ^ (name L)
+	fun name [a] = I.conDecFoldName (ModSyn.sgnLookup a)
+	  | name (a :: L) = I.conDecFoldName (ModSyn.sgnLookup a) ^ "/" ^ (name L)
       in
 	fn p => F.Rec (F.MDec (SOME (name L), F), p)
       end
@@ -379,7 +379,7 @@ struct
 	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
-	val V = case I.sgnLookup a 
+	val V = case ModSyn.sgnLookup a 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
@@ -424,7 +424,7 @@ struct
 	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
-	val V = case I.sgnLookup a 
+	val V = case ModSyn.sgnLookup a 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
@@ -488,7 +488,7 @@ struct
 	val mS = case ModeTable.modeLookup a
 	           of NONE => raise Error "Mode declaration expected"
 		    | SOME mS => mS
-	val V = case I.sgnLookup a 
+	val V = case ModSyn.sgnLookup a 
 	           of I.ConDec (name, _, _, _, V, I.Kind) => V
 	            | _ => raise Error "Type Constant declaration expected"
 
@@ -520,7 +520,7 @@ struct
 	        let
 		  val (w, k) = raiseExp' G
 		in
-		  if Subordinate.belowEq (I.targetFam V, a) then 
+		  if Subordinate.belowEq (ModSyn.targetFam V, a) then 
 		    (I.dot1 w, fn x => k (I.Lam (Weaken.strengthenDec (D, w), x)))
 		  else 
 		    (I.comp (w, I.shift), k)
@@ -563,7 +563,7 @@ struct
 		let
 		  val (w, k, k') = raiseType' (G, n+1)
 		in
-		  if Subordinate.belowEq (I.targetFam V, a) then 
+		  if Subordinate.belowEq (ModSyn.targetFam V, a) then 
 		    (I.dot1 w, fn x => k (I.Pi ((Weaken.strengthenDec (D, w), I.Maybe), x)), 
 		               fn S => I.App (I.Root (I.BVar n, I.Nil), S))
 		  else 
@@ -619,12 +619,12 @@ struct
 		val w1' = peeln (g, w1)
 		val (G1, _) = Weaken.strengthenCtx (G0, w1')
 		val (G2, _) = ctxSub (G1, z1)
-                val (V1'', Ur) = raiseType (G2, I.EClo (V1, z2), I.targetFam V1)
+                val (V1'', Ur) = raiseType (G2, I.EClo (V1, z2), ModSyn.targetFam V1)
                 val w' = (case DP 
 			    of I.Maybe => I.dot1 w
 			    |  I.No => I.comp (w, I.shift))
 
-		val U0 = raiseExp (G0, U, I.targetFam V1'')
+		val U0 = raiseExp (G0, U, ModSyn.targetFam V1'')
 		val U' = Weaken.strengthenExp (U0, w2)
 	       	val t' = Whnf.dotEta (I.Exp (U'), t)
 		val z1' = I.comp (z1, I.shift)
@@ -687,7 +687,7 @@ struct
 
 	  fun lemmaHead (w'', t'', (d', Dplus, Dminus)) = 
 	    let 
-	      val name = I.conDecFoldName (I.sgnLookup a)
+	      val name = I.conDecFoldName (ModSyn.sgnLookup a)
 	      val l = (case (FunNames.nameLookup name) 
 			 of NONE => raise Error ("Lemma " ^ name ^ " not defined")
 		       | SOME lemma => lemma)
@@ -863,9 +863,9 @@ struct
 
 	fun traverseSig' (c'', L) = L
 	(* @CS: I broke this code by commenting out the function body below to make it compile -fr Jan 09 *)
-	(* if c'' = #1 (I.sgnSize ()) then L
+	(* if c'' = #1 (ModSyn.sgnSize ()) then L
 	  else
-	    (case I.sgnLookup (c'')
+	    (case ModSyn.sgnLookup (c'')
 	       of I.ConDec (name, _, _, _, V, I.Type) => 
 		 (case traverseNeg (c'', I.Null, (V, I.id), L) 
 		    of (SOME (wf, d', (P', Q')), L') =>  traverseSig' (c''+1, (P' (Q' wf)) :: L')
@@ -890,7 +890,7 @@ struct
       let 
 	fun convertOnePro a =
 	  let 
-	    val V = case I.sgnLookup a 
+	    val V = case ModSyn.sgnLookup a 
 	              of I.ConDec (name, _, _, _, V, I.Kind) => V
 		       | _ => raise Error "Type Constant declaration expected"
 	    val mS = case ModeTable.modeLookup a

@@ -60,7 +60,7 @@ local
   else
   	"_"
   fun Name (cid) = let
-  	val n = I.conDecName(I.sgnLookup cid)
+  	val n = I.conDecName(ModSyn.sgnLookup cid)
   	val name = String.translate replace n
   	val start = if (Char.isAlpha (String.sub(name,0))) orelse (String.sub(name,0) = #"_") then "" else "_"
   in
@@ -165,7 +165,7 @@ local
 	  		 | I.Def(c) => (true,c)
 		       	 | I.NSDef(c) => (true,c)
 		       	 | _ => (false,0)
-		val imp = IntSyn.conDecImp (IntSyn.sgnLookup cid)
+		val imp = IntSyn.conDecImp (ModSyn.sgnLookup cid)
       		val (test,args) = if test then
 			case Names.getFixity cid of
 				  Names.Fixity.Infix(_,_) => (true,imp + 2)
@@ -247,7 +247,7 @@ local
 	"<definition xml:id=\"" ^ name ^ ".def\" for=\"#" ^ name ^ "\">" ^ nl_ind() ^
 	fmtExpTop (I.Null, (U, I.id), imp) ^ nl_unind() ^ "</definition>"
   and fmtPresentation(cid) = let
-  	val imp = I.conDecImp (I.sgnLookup cid)
+  	val imp = I.conDecImp (ModSyn.sgnLookup cid)
   	val fixity = Names.getFixity (cid)
 	val fixString = " fixity=\"" ^ (case fixity of
 		  Names.Fixity.Nonfix => "prefix"	(* case identified by @precedence = Names.Fixity.minPrefInt *)
@@ -265,7 +265,7 @@ local
 	val sepString = " separator=\" \""
 	val implicitString = " implicit=\"" ^ (Int.toString imp) ^ "\""
 	val useString1 = "<use format=\"twelf\""
-	val useString2 = ">" ^ (escape (I.conDecName(I.sgnLookup cid))) ^ "</use>"
+	val useString2 = ">" ^ (escape (I.conDecName(ModSyn.sgnLookup cid))) ^ "</use>"
 	val presString1 = "<presentation for=\"#" ^ (Name cid) ^ "\""
 	val presString2 = "</presentation>"
   in
@@ -276,7 +276,7 @@ local
   (* fixity string attached to omdoc file in private element (no escaping, fixity string cannot contain ]]>) *)
   and fmtFixity(cid) = let
   	val fixity = Names.getFixity (cid)
-  	val name = I.conDecName (I.sgnLookup cid)
+  	val name = I.conDecName (ModSyn.sgnLookup cid)
       in
       	if (fixity = Names.Fixity.Nonfix) then "" else
 	nl() ^ "<private for=\"#" ^ (Name cid) ^ "\">" ^ nl_ind() ^
@@ -331,7 +331,7 @@ in
   fun conDecToString (condec) = (formatConDec (condec))
 
   
-  fun fmtConst cid = formatConDec (cid, IntSyn.sgnLookup cid) ^ "\n" ^ fmtPresentation(cid) ^ fmtFixity(cid)
+  fun fmtConst cid = formatConDec (cid, ModSyn.sgnLookup cid) ^ "\n" ^ fmtPresentation(cid) ^ fmtFixity(cid)
 
   fun printConst cid = (namesafe := false; fmtConst cid)
 
@@ -351,7 +351,7 @@ in
 "version=\"1.2\">\n\n"
 	val _ = TextIO.output (file, OMDocPrefix ^ "<theory xml:id=\"global\">\n\n")
 
-	val _ = IntSyn.sgnApp (fn (cid) => (
+	val _ = ModSyn.sgnApp (fn (cid) => (
 			(TextIO.output (file, fmtConst cid)) ;
 		 	TextIO.output (file, "\n\n")
 		)

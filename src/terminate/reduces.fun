@@ -115,7 +115,7 @@ struct
     fun select (c, (S, s)) =
         let 
 	  val SO = R.selLookup c 
-	  val Vid = (I.constType c, I.id)
+	  val Vid = (ModSyn.constType c, I.id)
 	  fun select'' (n, (Ss', Vs'')) =
 	        select''W (n, (Ss', Whnf.whnf Vs''))
 	  and select''W (1, ((I.App (U', S'), s'), 
@@ -138,7 +138,7 @@ struct
         select (c, (S, s))
 	handle R.Error (msg) =>
 	  raise Error' (occ, "Termination violation: no order assigned for " ^ 
-			IntSyn.conDecFoldName (IntSyn.sgnLookup c))
+			IntSyn.conDecFoldName (ModSyn.sgnLookup c))
 
     (* selectROrder (c, (S, s)) = P
        
@@ -153,7 +153,7 @@ struct
     *)
     fun selectROrder (c, (S, s)) =
         let 
-	  val Vid = (I.constType c, I.id)
+	  val Vid = (ModSyn.constType c, I.id)
 	  fun select'' (n, (Ss', Vs'')) =
 	        select''W (n, (Ss', Whnf.whnf Vs''))
 	  and select''W (1, ((I.App (U', S'), s'), 
@@ -203,7 +203,7 @@ struct
 	            of NONE => ()
 	             | SOME(O) => if (!Global.chatter) > 5 
 				       then print ("Reduction predicate for " ^ 
-						   IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ 
+						   IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ 
 						   " added : " ^ 
 						   orderToString (G, O) ^ "\n")
 				      else ()
@@ -229,7 +229,7 @@ struct
 	  end 
       | getROrderW (G, Q, Vs as (I.Root (I.Def a, S), s), occ) = 
 	  raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-			^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+			^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
     (*--------------------------------------------------------------------*)
 
@@ -295,11 +295,11 @@ struct
 	end 
       | checkGoalW (G0, Q0, Rl, Vs as (I.Root (I.Def a, S), s), Vs', occ) = 
 	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
       | checkGoalW (G0, Q0, Rl, Vs, Vs' as (I.Root (I.Def a', S'), s'), occ) = 
 	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-			^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a') ^ ".")
+			^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a') ^ ".")
 
     (* checkSubgoals (G0, Q0, Rl, Vs, n, (G, Q), Vs, occ) 
 
@@ -369,7 +369,7 @@ struct
 
       | checkClauseW (GQR, G, Q, (I.Root (I.Def a, S), s), occ) =
 	raise Error' (occ, "Termination checking for defined type families not yet available:\n"
-		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
 
     fun checkClause' (Vs, occ) = 
@@ -410,7 +410,7 @@ struct
 
        | checkRGoalW (G, Q, Rl, (I.Root (I.Def a, S), s), occ) =
 	   raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-			 ^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+			 ^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
 
     (* checkRImp (G, Q, Rl, (V1, s1), (V2, s2), occ) = ()
@@ -450,7 +450,7 @@ struct
 	  checkRGoal (G, Q, Rl, Vs, occ)
       | checkRImpW (G, Q, Rl, Vs' as (I.Root (I.Def a, S), s), Vs, occ) =
 	  raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-			^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+			^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
 
     (* checkRClause (G, Q, Rl, (V, s)) = ()
@@ -489,7 +489,7 @@ struct
 	let 
 	  val RO = case selectROrder (a, (S, s))
 	             of NONE => raise Error' (occ, "No reduction order assigned for " ^ 
-					      IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+					      IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 		      | SOME(O) => O
 	  val _ = if !Global.chatter > 4
 		    then print ("Verifying reduction property:\n" ^
@@ -505,7 +505,7 @@ struct
 	end
       | checkRClauseW (G, Q, Rl, VS as (I.Root (I.Def a, S), s), occ) =
 	raise Error' (occ, "Reduction checking for defined type families not yet available:\n"
-		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ".")
+		      ^ "Illegal use of " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ".")
 
     (* checkFamReduction a = ()
        
@@ -524,30 +524,30 @@ struct
 	       else () ; ())
 	    | checkFam' (I.Const(b)::bs) = 
 		(if (!Global.chatter) > 3 then 
-		   print (IntSyn.conDecFoldName (IntSyn.sgnLookup b) ^ " ")
+		   print (IntSyn.conDecFoldName (ModSyn.sgnLookup b) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 4
 		   then (N.varReset IntSyn.Null; print "\n")
 		 else ();
-		 (( checkRClause (I.Null, I.Null, nil, (I.constType (b), I.id), P.top))
+		 (( checkRClause (I.Null, I.Null, nil, (ModSyn.constType (b), I.id), P.top))
 		    handle Error' (occ, msg) => error (b, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
 		   checkFam' bs)
 	    | checkFam' (I.Def(d)::bs) = 
 		(if (!Global.chatter) > 3 then 
-		   print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
+		   print (IntSyn.conDecFoldName (ModSyn.sgnLookup d) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 4
 		   then (N.varReset IntSyn.Null; print "\n")
 		 else ();
-		 (( checkRClause (I.Null, I.Null, nil, (I.constType (d), I.id), P.top))
+		 (( checkRClause (I.Null, I.Null, nil, (ModSyn.constType (d), I.id), P.top))
 		    handle Error' (occ, msg) => error (d, occ, msg)
 			 | R.Error (msg) => raise Error (msg));
 		   checkFam' bs)
 	  val _ = if (!Global.chatter) > 3
-		    then print ("Reduction checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+		    then print ("Reduction checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				^ ":\n")
 		  else ()
 	in
@@ -573,30 +573,30 @@ struct
 	       else () ; ())
 	    | checkFam' (I.Const b::bs) = 
 		(if (!Global.chatter) > 3 then 
-		   print (IntSyn.conDecFoldName (IntSyn.sgnLookup b) ^ " ")
+		   print (IntSyn.conDecFoldName (ModSyn.sgnLookup b) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 4
 		   then (N.varReset IntSyn.Null; print "\n")
 		 else ();
-	        (checkClause' ((I.constType (b), I.id), P.top)
+	        (checkClause' ((ModSyn.constType (b), I.id), P.top)
 		 handle Error' (occ, msg) => error (b, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));
 		 checkFam' bs)
 	    | checkFam' (I.Def(d)::bs) = 
 		(if (!Global.chatter) > 3 then 
-		   print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
+		   print (IntSyn.conDecFoldName (ModSyn.sgnLookup d) ^ " ")
 		 else ();
 		 (* reuse variable names when tracing *)
 		 if (!Global.chatter) > 4
 		   then (N.varReset IntSyn.Null; print "\n")
 		 else ();
-	        (checkClause' ((I.constType (d), I.id), P.top)
+	        (checkClause' ((ModSyn.constType (d), I.id), P.top)
 		 handle Error' (occ, msg) => error (d, occ, msg)
 		      | Order.Error (msg) => raise Error (msg));
 		 checkFam' bs)
 	  val _ = if (!Global.chatter) > 3
-		    then print ("Termination checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+		    then print ("Termination checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				^ "\n")
 		  else ()
 	in

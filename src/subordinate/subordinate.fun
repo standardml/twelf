@@ -101,7 +101,7 @@ struct
     fun fSet (a, frozen) =
         let val _ = Global.chPrint 5
 	            (fn () => (if frozen then "Freezing " else "Thawing ")
-		              ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ "\n")
+		              ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ "\n")
 	in
 	  fInsert (a, frozen)
 	end
@@ -110,9 +110,9 @@ struct
     fun checkFreeze (c, a) =
         if fGet a
         then raise Error ("Freezing violation: constant "
-                          ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
                           ^ "\nextends type family "
-                          ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c))
+                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c))
         else ()
 
     (* no longer needed since freeze is now transitive *)
@@ -161,17 +161,17 @@ struct
     *)
 
     fun expandFamilyAbbrevs a =
-        (case I.constUni a
-           of I.Type => raise Error ("Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+        (case ModSyn.constUni a
+           of I.Type => raise Error ("Constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
                                      ^ " must be a type family to be frozen or thawed")
             | I.Kind =>
-        (case IntSyn.sgnLookup a
+        (case ModSyn.sgnLookup a
            of IntSyn.ConDec _ => a
             | IntSyn.ConDef _ =>
-                IntSyn.targetFam (IntSyn.constDef a)
+                ModSyn.targetFam (ModSyn.constDef a)
             | IntSyn.SkoDec _ => a
             | IntSyn.AbbrevDef _ =>
-                IntSyn.targetFam (IntSyn.constDef a)))
+                ModSyn.targetFam (ModSyn.constDef a)))
 
     (* superseded by freeze *)
     (*
@@ -247,9 +247,9 @@ struct
 	       (* if b is frozen and not already b #> a *)
 	       (* subordination would change; signal error *)
 	       then raise Error ("Freezing violation: "
-				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b)
+				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup b)
 				 ^ " would depend on "
-				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a))
+				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a))
 	     else addNewEdge (b, a)
 
     (* Thawing frozen families *)
@@ -318,11 +318,11 @@ struct
                update definition graph.
     *)
     fun installConDec (b, I.ConDef (_, _, _, A, K, I.Kind, _)) =
-          (* I.targetFam must be defined, but expands definitions! *)
-          insertNewDef (b, I.targetFam A) 
+          (* ModSyn.targetFam must be defined, but expands definitions! *)
+          insertNewDef (b, ModSyn.targetFam A) 
       | installConDec _ = ()
 
-    fun installDef c = installConDec (c, I.sgnLookup c)
+    fun installDef c = installConDec (c, ModSyn.sgnLookup c)
 
     (* checkNoDef a = ()
        Effect: raises Error(msg) if there exists a b such that b <# a
@@ -331,14 +331,14 @@ struct
     fun checkNoDef a =
         if occursInDef a
 	  then raise Error ("Definition violation: family "
-			    ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+			    ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 			    ^ "\noccurs as right-hand side of type-level definition")
 	else appReachable (fn a' =>
 	     if occursInDef a'
 	       then raise Error ("Definition violation: family "
-				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 				 ^ " |> "
-				 ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a')
+				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a')
 				 ^ ",\nwhich occurs as right-hand side of a type-level definition")
 	     else ())
 	     a
@@ -366,7 +366,7 @@ struct
        Effect: add subordination info from V into table
     *)
     and installTypeN' (I.Pi ((D as I.Dec (_, V1), _), V2), a) = 
-          (addSubord (I.targetFam V1, a);
+          (addSubord (ModSyn.targetFam V1, a);
 	   installTypeN (V1);
 	   installTypeN' (V2, a))
       | installTypeN' (V as I.Root (I.Def _, _), a) =
@@ -378,7 +378,7 @@ struct
 	  installTypeN' (V', a)
 	end
       | installTypeN' (I.Root _, _) = ()
-    and installTypeN (V) = installTypeN' (V, I.targetFam V)
+    and installTypeN (V) = installTypeN' (V, ModSyn.targetFam V)
 
     (* installKindN (V, a) = ()
        V nf, a : {x1:A1}...{xn:An} type, V = {xi:Ai}...{xn:An}type
@@ -387,7 +387,7 @@ struct
     (* there are no kind-level definitions *)
     fun installKindN (I.Uni(L), a) = ()
       | installKindN (I.Pi ((I.Dec (_, V1), P), V2), a) =
-	  (addSubord (I.targetFam V1, a);
+	  (addSubord (ModSyn.targetFam V1, a);
 	   installTypeN (V1);
 	   installKindN (V2, a))
 
@@ -397,12 +397,12 @@ struct
     *)
     fun install c = 
 	let 
-	  val V = I.constType c
+	  val V = ModSyn.constType c
 	in
-	  case I.targetFamOpt V
+	  case ModSyn.targetFamOpt V
 	    of NONE => (insertNewFam (c);
 			installKindN (V, c))
-	     | SOME a => (case IntSyn.sgnLookup c
+	     | SOME a => (case ModSyn.sgnLookup c
                             of IntSyn.ConDec _ => checkFreeze (c, a)
                              | IntSyn.SkoDec _ => checkFreeze (c, a)
                                (* FIX: skolem types should probably be created frozen -kw *)
@@ -424,7 +424,7 @@ struct
     (* b must be block *)
     fun installBlock b =
         let
-	  val I.BlockDec(_, _, G, Ds) = I.sgnLookup b
+	  val I.BlockDec(_, _, G, Ds) = ModSyn.sgnLookup b
 	in
 	  installSome G;
 	  List.app (fn D => installDec D) Ds
@@ -438,7 +438,7 @@ struct
     fun checkBelow (a, b) =
         if not (below (a, b))
 	  then raise Error ("Subordination violation: "
-			    ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ " not <| " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b))
+			    ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ " not <| " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup b))
 	else ()
 
     (* respectsTypeN' (V, a) = () iff V respects current subordination
@@ -448,7 +448,7 @@ struct
        Effect: raise Error (msg)
     *)
     fun respectsTypeN' (I.Pi ((D as I.Dec (_, V1), _), V2), a) =
-          (checkBelow (I.targetFam V1, a);
+          (checkBelow (ModSyn.targetFam V1, a);
 	   respectsTypeN (V1);
 	   respectsTypeN' (V2, a))
       | respectsTypeN' (V as I.Root (I.Def _, _), a) =
@@ -460,7 +460,7 @@ struct
 	  respectsTypeN' (V', a)
 	end
       | respectsTypeN' (I.Root _, _) = ()
-    and respectsTypeN (V) = respectsTypeN' (V, I.targetFam V)
+    and respectsTypeN (V) = respectsTypeN' (V, ModSyn.targetFam V)
 
     fun respects (G, (V, s)) = respectsTypeN (Whnf.normalize (V, s))
     fun respectsN (G, V) = respectsTypeN (V)
@@ -471,14 +471,14 @@ struct
     (* Reverse again --- do not sort *)
     (* Right now, Table.app will pick int order -- do not sort *)
     fun famsToString (bs, msg) =
-        IntSet.foldl (fn (a, msg) => IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ " " ^ msg) "\n" bs
+        IntSet.foldl (fn (a, msg) => IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ " " ^ msg) "\n" bs
     (*
     fun famsToString (nil, msg) = msg
       | famsToString (a::AL, msg) = famsToString (AL, Names.qidToString (Names.constQid a) ^ " " ^ msg)
     *)
 
     fun showFam (a, bs) =
-        (print (IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+        (print (IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 		^ (if fGet a then " #> " else " |> ")
 		^ famsToString (bs, "\n")))
 
@@ -491,7 +491,7 @@ struct
         let 
 	  val w' = weaken (G', a) 
 	in
-	  if belowEq (I.targetFam V, a) then I.dot1 w'
+	  if belowEq (ModSyn.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
 	end
 
@@ -527,7 +527,7 @@ struct
       fun showDef () =
 	  let
 	    val _ = reset ()
-	    val _ = I.sgnAppC (fn c => analyze (I.sgnLookup c))
+	    val _ = ModSyn.sgnAppC (fn c => analyze (ModSyn.sgnLookup c))
 	    val _ = print ("Declared: " ^ Int.toString (!declared) ^ "\n")
 	    val _ = print ("Defined : " ^ Int.toString (!defined) ^ "\n")
 	    val _ = print ("Abbrevs : " ^ Int.toString (!abbrev) ^ "\n")

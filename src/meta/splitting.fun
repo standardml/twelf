@@ -166,7 +166,7 @@ struct
 	val cid = (case H 
 	             of (I.Const cid) => cid
 		      | (I.Skonst cid) => cid)
-	val V = I.constType cid
+	val V = ModSyn.constType cid
 	val (S, Vs) = createEVarSpine (G, (V, I.id))
       in
 	(I.Root (H, S), Vs)
@@ -211,7 +211,7 @@ struct
 	    let
 	      val F.LabelDec (name, G1, G2) = F.labelLookup n
 	      val m' = foldr (fn (I.Dec (_, V), m) => 
-			      if I.targetFam V = a then m + 1 else m) 0 G2
+			      if ModSyn.targetFam V = a then m + 1 else m) 0 G2
 	    in
 	      maxNumberParams' (n-1) + m'
 	    end
@@ -224,7 +224,7 @@ struct
         let
 	  val m = maxNumberLocalParams (V2, a)
 	in
-	  if I.targetFam V1 = a then m+1
+	  if ModSyn.targetFam V1 = a then m+1
 	  else m
 	end 
       | maxNumberLocalParams (I.Root _, a) = 0
@@ -321,7 +321,7 @@ struct
 	    let  
 	      val n = g-d'+1
 	      val I.Dec (_, V) = I.ctxDec (G, n)
-	      val ops' = if I.targetFam V = c then 
+	      val ops' = if ModSyn.targetFam V = c then 
 		        let 
  			  val (U, Vs') = createAtomBVar (G, n)
 			in
@@ -620,7 +620,7 @@ struct
 	  val ops' = if not (isIndex 1) andalso (S.splitDepth K) > 0
 		       then 
 			 let 
-			   val a = I.targetFam V
+			   val a = ModSyn.targetFam V
 			 in
 			   makeOperator (makeAddress 1, split ((D, T), sc, abstract), K, I.ctxLength G, 
 					 induction 1,  maxNumberCases (V, a), Subordinate.below (a, a))

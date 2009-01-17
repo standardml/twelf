@@ -32,7 +32,7 @@ struct
           LVarToString (G, I.blockSub (B, sk))
 					(* whnf for Blocks ? Sun Dec  1 11:38:17 2002 -cs *)
       | LVarToString (G, I.LVar (ref NONE, sk, (cid, t))) =
-	  "#" ^ I.conDecFoldName (I.sgnLookup cid) ^ "["
+	  "#" ^ I.conDecFoldName (ModSyn.sgnLookup cid) ^ "["
 	  ^ subToString (G, t) ^ "]"
 	  
     (* some well-formedness conditions are assumed for input expressions *)
@@ -141,9 +141,9 @@ struct
 	in
 	  V
 	end
-      | inferCon (G, I.Const(c)) = I.constType (c)
-      | inferCon (G, I.Def(d))  = I.constType (d)
-      | inferCon (G, I.Skonst(c)) = I.constType (c) (* this is just a hack. --cs 
+      | inferCon (G, I.Const(c)) = ModSyn.constType (c)
+      | inferCon (G, I.Def(d))  = ModSyn.constType (d)
+      | inferCon (G, I.Skonst(c)) = ModSyn.constType (c) (* this is just a hack. --cs 
 						       must be extended to handle arbitrary 
 						       Skolem constants in the right way *)
       (* no case for FVar *)
@@ -205,7 +205,7 @@ struct
       | checkSub (G', I.Dot (I.Block (I.Inst I), t), I.Decl (G, (I.BDec (_, (l, s))))) =
 	let
 	  val _ = checkSub (G', t, G)
-	  val (G, L) = I.constBlock l
+	  val (G, L) = ModSyn.constBlock l
 	  val _ = checkBlock (G', I, (I.comp (s, t), L))
 	in
 	  ()
@@ -235,7 +235,7 @@ struct
 	  let 
 	    (* G1 |- t : GSOME *)
 	    (* G  |- s : G1 *)
-	    val (Gsome, piDecs) = I.constBlock c
+	    val (Gsome, piDecs) = ModSyn.constBlock c
 	  in
 	    checkSub (G, I.comp (t, s), Gsome)
 	  end

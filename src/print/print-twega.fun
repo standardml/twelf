@@ -164,7 +164,7 @@ in
   fun eqnToString (E) = F.makestring_fmt (formatEqn E)
 
   fun printSgn () =
-      IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+      ModSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
 				  print "\n"))
 
 
@@ -172,7 +172,7 @@ in
       let 
 	val file = TextIO.openOut filename
 
-	val _ =       IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+	val _ =       ModSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
 				  TextIO.output (file, "\n")))
 	val _ = TextIO.closeOut file
 

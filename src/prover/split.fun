@@ -55,7 +55,7 @@ struct
 	let
 	  val w' = weaken (G', a)
 	in
-	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  if Subordinate.belowEq (ModSyn.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
 	end
       (* added next case, probably should not arise *)
@@ -73,7 +73,7 @@ struct
     *)
     fun createEVar (G, V) =
         let (* G |- V : L *)
-	  val w = weaken (G, I.targetFam V)       (* G  |- w  : G'    *)
+	  val w = weaken (G, ModSyn.targetFam V)       (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)
 	  val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
@@ -146,7 +146,7 @@ struct
     *)
     fun createAtomConst (G, H as I.Const (cid)) = 
         let
-	  val V = I.constType cid
+	  val V = ModSyn.constType cid
 	  val (S, Vs) = createEVarSpine (G, (V, I.id))
 	in
 	  (I.Root (H, S), Vs)
@@ -226,7 +226,7 @@ struct
 	end
 
     (* hack *)
-    fun blockName (cid) = I.conDecName (I.sgnLookup (cid))
+    fun blockName (cid) = I.conDecName (ModSyn.sgnLookup (cid))
 
     (* blockCases (G, Vs, B, (Gsome, piDecs), sc) = 
 
@@ -263,7 +263,7 @@ struct
 
     fun worldCases (G, Vs, T.Worlds (nil), sc) = ()
       | worldCases (G, Vs, T.Worlds (cid::cids), sc) =
-          ( blockCases (G, Vs, cid, I.constBlock cid, sc) ;
+          ( blockCases (G, Vs, cid, ModSyn.constBlock cid, sc) ;
 	    worldCases (G, Vs, T.Worlds (cids), sc) )
 
     fun lowerSplit (G, Vs, W, sc) = lowerSplitW (G, Whnf.whnf Vs, W, sc)

@@ -37,8 +37,8 @@ local
       in
 	Whnf.whnf (V, I.id)
       end
-    | inferConW (G, I.Const(c)) = (I.constType (c), I.id)
-    | inferConW (G, I.Def(d))  = (I.constType (d), I.id)
+    | inferConW (G, I.Const(c)) = (ModSyn.constType (c), I.id)
+    | inferConW (G, I.Def(d))  = (ModSyn.constType (d), I.id)
     (* no case for FVar, Skonst *)
 
   fun fromHead (G, I.BVar(n)) = T.bvar (Names.bvarName (G, n))
@@ -59,9 +59,9 @@ local
     | fromHead _ = raise Error ("Head not recognized")
 
   (* see also: print.fun *)
-  fun impCon (I.Const (cid)) = I.constImp (cid)
-    (*| imps (I.Skonst (cid)) = I.constImp (cid) *)
-    | impCon (I.Def (cid)) = I.constImp (cid)
+  fun impCon (I.Const (cid)) = ModSyn.constImp (cid)
+    (*| imps (I.Skonst (cid)) = ModSyn.constImp (cid) *)
+    | impCon (I.Def (cid)) = ModSyn.constImp (cid)
     | impCon _ = 0
 
   (* see also: print.fun *)
@@ -143,7 +143,7 @@ in
                        | SOME qid => qid
           val cidOpt = Names.constLookup qid
           fun getConDec (NONE) = raise Error ("Undeclared identifier " ^ Names.qidToString qid)
-            | getConDec (SOME cid) = IntSyn.sgnLookup cid
+            | getConDec (SOME cid) = ModSyn.sgnLookup cid
 	  val conDec = getConDec cidOpt
 	  val _ = Names.varReset IntSyn.Null
 	  fun result (NONE) = raise Error ("Wrong kind of declaration")

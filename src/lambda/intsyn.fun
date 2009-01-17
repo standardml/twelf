@@ -178,17 +178,19 @@ struct
   type bclo = Block * Sub   		(* Bs = B[s]                  *)
   type cnstr = Cnstr ref
 
+ (* remove later -cs *)
   datatype Morph = MorStr of cid
   datatype SymInst = ConInst of cid * Exp | StrInst of cid * Morph
   datatype StrDec = StrDec of string * IDs.qid * mid * (SymInst list)
   fun strDecName (StrDec(n, _, _, _)) = n
   fun strDecQid (StrDec(_, _, q, _)) = q
   fun strDecDomain (StrDec(_, _, m, _)) = m
-  
   datatype SymDec = StrSym of StrDec | ConSym of ConDec
   
   (* This structure encapsulates the state, i.e., the table containing the declarations. *)
   (* An attempt to put it into a separate file failed because ConDec cannot be taken out IntSyn. *)
+
+
   structure Signature  =
     struct
     	structure QH = CidHashTable
@@ -267,7 +269,7 @@ struct
 	
     end;  (* end Signature *)
   (* *************************************************** *)
-    val sgnReset = Signature.sgnReset
+  (*  val sgnReset = Signature.sgnReset *)
     val sgnAdd  = Signature.sgnAdd
     val sgnAddC =  Signature.sgnAddC
     val sgnLookup = Signature.sgnLookup
@@ -398,20 +400,6 @@ struct
     (* If Const(cid) is valid, then sgnArray(cid) = ConDec _ *)
     (* If Def(cid) is valid, then sgnArray(cid) = ConDef _ *)
 
-  fun constDef (d) =
-      (case sgnLookup (d)
-	 of ConDef(_, _, _, U,_, _, _) => U
-	  | AbbrevDef (_, _, _, U,_, _) => U)
-
-  fun constType (c) = conDecType (sgnLookup c)
-  fun constImp (c) = conDecImp (sgnLookup c)
-  fun constUni (c) = conDecUni (sgnLookup c)
-  fun constBlock (c) = conDecBlock (sgnLookup c)
-
-  fun constStatus (c) =
-      (case sgnLookup (c)
-	 of ConDec (_, _, _, status, _, _) => status
-          | _ => Normal)
 
   (* Explicit Substitutions *)
 
@@ -662,27 +650,6 @@ struct
   *)
   fun targetHead (A) = valOf (targetHeadOpt A)
                       
-  (* targetFamOpt (V) = SOME(cid) or NONE
-     where cid is the type family of the atomic target type of V,
-     NONE if V is a kind or object or have variable type.
-     Does expand type definitions.
-  *)
-  fun targetFamOpt (Root (Const(cid), _)) = SOME(cid)
-    | targetFamOpt (Pi(_, V)) = targetFamOpt V
-    | targetFamOpt (Root (Def(cid), _)) = targetFamOpt (constDef cid)
-    | targetFamOpt (Redex (V, S)) = targetFamOpt V
-    | targetFamOpt (Lam (_, V)) = targetFamOpt V
-    | targetFamOpt (EVar (ref (SOME(V)),_,_,_)) = targetFamOpt V
-    | targetFamOpt (EClo (V, s)) = targetFamOpt V
-    | targetFamOpt _ = NONE
-      (* Root(Bvar _, _), Root(FVar _, _), Root(FgnConst _, _),
-         EVar(ref NONE,..), Uni, FgnExp _
-      *)
-      (* Root(Skonst _, _) can't occur *)
-  (* targetFam (A) = a
-     as in targetFamOpt, except V must be a valid type
-  *)
-  fun targetFam (A) = valOf (targetFamOpt A)
 end;  (* functor IntSyn *)
 
 structure IntSyn :> INTSYN =

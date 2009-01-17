@@ -210,7 +210,7 @@ struct
 
   fun firstConstArg (A as IntSyn.Root(h as IntSyn.Const c, S), s) =    
     let
-      val i = IntSyn.conDecImp(IntSyn.sgnLookup(c)) (* #implicit arguments to predicate *)
+      val i = IntSyn.conDecImp(ModSyn.sgnLookup(c)) (* #implicit arguments to predicate *)
 
       fun constExp (U, s) = constExpW (Whnf.whnf (U,s))
       and constExpW (IntSyn.Lam (D, U), s) = constExp (U, s)

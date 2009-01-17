@@ -24,7 +24,7 @@ struct
       let 
 	val (V, _) = M.createAtomConst (I.Null, I.Const cid)
       in
-	MetaAbstract.abstract (M.State ("/" ^ I.conDecFoldName (I.sgnLookup cid) ^ "/", 
+	MetaAbstract.abstract (M.State ("/" ^ I.conDecFoldName (ModSyn.sgnLookup cid) ^ "/", 
 					M.Prefix (I.Null, I.Null, I.Null), V))
       end
 

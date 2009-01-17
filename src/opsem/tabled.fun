@@ -211,7 +211,7 @@ struct
 		   else print "\nresidual equation not solvable!\n" 
       val status = if flag then TableParam.Complete else TableParam.Incomplete
     in 
-      if TabledSyn.keepTable (IntSyn.targetFam U')  
+      if TabledSyn.keepTable (ModSyn.targetFam U')  
 	then 
 	  case MT.callCheck (DAVars, DEVars, G', U', eqn', status) 
 	    of T.RepeatedEntry(_, answRef, _) => 
@@ -363,7 +363,7 @@ struct
      any effect  sc M  might have
      *)
    fun solve ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) =     
-     if TabledSyn.tabledLookup (I.targetFam p) 
+     if TabledSyn.tabledLookup (ModSyn.targetFam p) 
        then 
 	 let           
 	   val (G', DAVars, DEVars, U', eqn', s') =  A.abstractEVarCtx (dp, p, s)
@@ -603,7 +603,7 @@ struct
 	      else ()
 	    end      
       in
-        case I.constStatus(cidFromHead Ha)
+        case ModSyn.constStatus(cidFromHead Ha)
           of (I.Constraint (cs, solve)) => matchConstraint (solve, 0)
 	| _ => matchDProg (G, dPool, 1)
       end

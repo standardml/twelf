@@ -242,7 +242,7 @@ struct
 	    (* ignore definition for defined type family since they are opaque *)
 	      abstractMode (inferMode (empty (k, I.Null, V), mS), mS)
       in 
-	(checkName mS; calcImplicit' (I.sgnLookup a)) 
+	(checkName mS; calcImplicit' (ModSyn.sgnLookup a)) 
 	handle Error (msg) => error (r, msg)  (* re-raise Error with location *)
       end
 
@@ -256,7 +256,7 @@ struct
     *)
     fun checkFull (a, mS, r) =  
         (checkName mS; 
-	 case I.sgnLookup a 
+	 case ModSyn.sgnLookup a 
 	   of I.ConDec (_, _, _, _, V, _)  =>
 	       (inferMode ((I.Null, V), mS); ())
               (* defined type families treated as separate types for

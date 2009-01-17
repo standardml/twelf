@@ -57,7 +57,7 @@ struct
     fun worldToString W = Fmt.makestring_fmt (formatWorld (W, [Fmt.String ")"]))
     *)
     (* This is incorrect.  FIX!!! *)
-    fun cidToFmt (cid) = Fmt.String (IntSyn.conDecFoldName (IntSyn.sgnLookup cid))
+    fun cidToFmt (cid) = Fmt.String (IntSyn.conDecFoldName (ModSyn.sgnLookup cid))
     fun formatCids (nil) = nil
       | formatCids (cid::nil) = [cidToFmt cid]
       | formatCids (cid::cids) = cidToFmt cid

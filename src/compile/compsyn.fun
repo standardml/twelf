@@ -141,7 +141,7 @@ struct
     val detTable : bool Table.Table = Table.new (32)
   in
     (* Invariants *)
-    (* 0 <= cid < I.sgnSize () *)
+    (* 0 <= cid < ModSyn.sgnSize () *)
     (* program array indexed by clause names (no direct head access) *)
     fun sProgInstall (cid, conDec) = CH.insert (sProgTable) (cid, conDec)
 
@@ -186,7 +186,7 @@ struct
 
   fun pskeletonToString [] = " " 
     | pskeletonToString ((Pc i)::O) = 
-        IntSyn.conDecFoldName (IntSyn.sgnLookup i) ^ " " ^ (pskeletonToString O)
+        IntSyn.conDecFoldName (ModSyn.sgnLookup i) ^ " " ^ (pskeletonToString O)
     | pskeletonToString ((Dc i)::O) = 
         ("(Dc " ^ (IDs.cidToString i) ^ ") ") ^ (pskeletonToString O)
     | pskeletonToString (Csolver U ::O) = 

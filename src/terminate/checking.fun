@@ -558,7 +558,7 @@ struct
 
     and ltInstLW (GQ as (G, Q), D, D', ((I.Lam (Dec as I.Dec (_, V1), U), s1), 
 	       (I.Pi ((I.Dec (_, V2), _), V), s2)), ((U', s1'), (V', s2')), P', sc) = 
-      	if Subordinate.equiv (I.targetFam V', I.targetFam V1) (* == I.targetFam V2' *)
+      	if Subordinate.equiv (ModSyn.targetFam V', ModSyn.targetFam V1) (* == ModSyn.targetFam V2' *)
 	  then 
 	    let
 	      val X = I.newEVar (G, I.EClo (V1, s1)) 
@@ -571,7 +571,7 @@ struct
 		  ((U', s1'), (V', s2')), P', sc')
 	    end
 	else
-	  if Subordinate.below  (I.targetFam V1, I.targetFam V')
+	  if Subordinate.below  (ModSyn.targetFam V1, ModSyn.targetFam V')
 	    then
 	      let 
 		val X = I.newEVar (G, I.EClo (V1, s1)) 
@@ -611,7 +611,7 @@ struct
 
     and leInstLW (GQ as (G, Q), D, D', ((I.Lam (I.Dec (_, V1), U), s1), 
 	       (I.Pi ((I.Dec (_, V2), _), V), s2)), ((U', s1'), (V', s2')), P', sc) = 
-      	if Subordinate.equiv (I.targetFam V', I.targetFam V1) (* == I.targetFam V2' *)
+      	if Subordinate.equiv (ModSyn.targetFam V', ModSyn.targetFam V1) (* == ModSyn.targetFam V2' *)
 	  then 
 	    let
 	      val X = I.newEVar (G, I.EClo (V1, s1)) 
@@ -624,7 +624,7 @@ struct
 		  ((U', s1'), (V', s2')), P', sc')
 	    end
 	else
-	  if Subordinate.below  (I.targetFam V1, I.targetFam V')
+	  if Subordinate.below  (ModSyn.targetFam V1, ModSyn.targetFam V')
 	    then
 	      let 
 		val X = I.newEVar (G, I.EClo (V1, s1)) 
@@ -702,8 +702,8 @@ struct
    and eqIL (GQ as (G, Q), D, D', UsVs as ((I.Root (I.Const c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Const c', S'), s'), Vs'), P', sc) = 
          if eqCid(c, c') 
-	   then eqSpineIL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), P', sc)
+	   then eqSpineIL (GQ, D, D', ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), P', sc)
 	 else 
 	   (if !Global.chatter > 4
 	      then print (" Proved: " ^ atomicRCtxToString (G, (Eq(UsVs, UsVs') :: D))
@@ -715,8 +715,8 @@ struct
      | eqIL (GQ as (G, Q), D, D', UsVs as ((I.Root (I.Def c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), P', sc) = 
          if eqCid(c, c') 
-	   then eqSpineIL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), P', sc)
+	   then eqSpineIL (GQ, D, D', ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), P', sc)
 	 else 
 	   (if !Global.chatter > 4
 	      then print (" Proved: " ^ atomicRCtxToString (G, (Eq(UsVs, UsVs') :: D))
@@ -1074,14 +1074,14 @@ struct
 	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
                (* either leftInstantiate D or  atomic reasoning *)
 	else 
-	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, k)
+	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (ModSyn.constType c, I.id)), sc, k)
 
     | ltRW (GQ, D, (Us, Vs), (Us' as (I.Root (I.Def c, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us')
 	  then k (GQ, D, nil, Less((Us,Vs), (Us', Vs')), sc)
                (* either leftInstantiate D or  atomic reasoning *)
 	else 
-	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (I.constType c, I.id)), sc, k)
+	  ltSpineR (GQ, D, (Us, Vs), ((S', s'), (ModSyn.constType c, I.id)), sc, k)
 
     | ltRW (GQ as (G, Q), D, (Us, Vs), (Us' as (I.Root (I.BVar n, S'), s'), Vs'), sc, k) = 
 	if isAtomic (GQ, Us') 
@@ -1099,8 +1099,8 @@ struct
       | ltRW (GQ as (G, Q), D, ((U, s1), (V, s2)), 
 	      ((I.Lam (I.Dec (_, V1'), U'), s1'), 
 	       (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, k) =
-	  if Subordinate.equiv (I.targetFam V, I.targetFam V1') 
-	    (* == I.targetFam V2' *) 
+	  if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') 
+	    (* == ModSyn.targetFam V2' *) 
 	    then 
 	      let  (* enforce that X is only instantiated to parameters *) 
 		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
@@ -1111,7 +1111,7 @@ struct
 		      (V', I.Dot (I.Exp (X), s2'))), sc', k)
 	      end
 	  else
-	    if Subordinate.below (I.targetFam V1', I.targetFam V) 
+	    if Subordinate.below (ModSyn.targetFam V1', ModSyn.targetFam V) 
 	      then
 		let 
 		  val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
@@ -1160,7 +1160,7 @@ struct
    and leRW (GQ as (G, Q), D, ((U, s1), (V, s2)), 
 	     ((I.Lam (I.Dec (_, V1'), U'), s1'), 
 	      (I.Pi ((I.Dec (_, V2'), _), V'), s2')), sc, k) =
-	if Subordinate.equiv (I.targetFam V, I.targetFam V1') (* == I.targetFam V2' *)
+	if Subordinate.equiv (ModSyn.targetFam V, ModSyn.targetFam V1') (* == ModSyn.targetFam V2' *)
 	  then 
 	    let
 	      val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
@@ -1172,7 +1172,7 @@ struct
 		   (V', I.Dot (I.Exp (X), s2'))), sc', k)
 	    end
 	else
-	  if Subordinate.below  (I.targetFam V1', I.targetFam V)
+	  if Subordinate.below  (ModSyn.targetFam V1', ModSyn.targetFam V)
 	    then
 	      let 
 		val X = I.newEVar (G, I.EClo (V1', s1')) (* = I.newEVar (I.EClo (V2', s2')) *)
@@ -1221,8 +1221,8 @@ struct
      | eqR' (GQ, D, UsVs as ((I.Root (I.Const c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Const c', S'), s'), Vs'), sc, k) = 
          if eqCid(c, c') 
-	   then eqSpineR (GQ, D, ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), sc, k)
+	   then eqSpineR (GQ, D, ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), sc, k)
 	 else 
 	   false
 
@@ -1246,8 +1246,8 @@ struct
      | eqR' (GQ, D, UsVs as ((I.Root (I.Def c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), sc, k) = 
          if eqCid(c, c') 
-	   then eqSpineR (GQ, D, ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), sc, k)
+	   then eqSpineR (GQ, D, ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), sc, k)
 	 else 
 	   false
 
@@ -1526,10 +1526,10 @@ struct
 	      ltSpineL (GQ, D, D', UsVs, ((S', s'), (V', I.id)), P) 
 	    end 
       | ltLW (GQ, D, D', UsVs, ((I.Root (I.Const c, S'), s'), Vs'), P) =  
-         ltSpineL (GQ, D, D', UsVs, ((S', s'), (I.constType c, I.id)), P) 
+         ltSpineL (GQ, D, D', UsVs, ((S', s'), (ModSyn.constType c, I.id)), P) 
 
       | ltLW (GQ, D, D', UsVs, ((I.Root (I.Def c, S'), s'), Vs'), P) =  
-         ltSpineL (GQ, D, D', UsVs, ((S', s'), (I.constType c, I.id)), P) 
+         ltSpineL (GQ, D, D', UsVs, ((S', s'), (ModSyn.constType c, I.id)), P) 
 
     and ltSpineL (GQ, D, D', UsVs, (Ss', Vs'), P) = 
           ltSpineLW (GQ, D, D', UsVs, (Ss', Whnf.whnf Vs'), P) 
@@ -1584,8 +1584,8 @@ struct
     | eqLW (GQ, D, D', UsVs as ((I.Root (I.Const c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Const c', S'), s'), Vs'), P) = 
          if eqCid(c, c') 
-	   then eqSpineL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), P)
+	   then eqSpineL (GQ, D, D', ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), P)
 	 else 
 	   true
 
@@ -1606,8 +1606,8 @@ struct
     | eqLW (GQ, D, D', UsVs as ((I.Root (I.Def c, S), s), Vs), 
 	    UsVs' as ((I.Root (I.Def c', S'), s'), Vs'), P) = 
          if eqCid(c, c') 
-	   then eqSpineL (GQ, D, D', ((S, s), (I.constType c, I.id)), 
-			 ((S', s'), (I.constType c', I.id)), P)
+	   then eqSpineL (GQ, D, D', ((S, s), (ModSyn.constType c, I.id)), 
+			 ((S', s'), (ModSyn.constType c', I.id)), P)
 	 else 
 	   true
 

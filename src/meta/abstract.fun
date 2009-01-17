@@ -153,7 +153,7 @@ struct
         let 
 	  val w' = weaken (G', a)
 	in
-	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  if Subordinate.belowEq (ModSyn.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
 	end
 
@@ -204,7 +204,7 @@ struct
 	  else let
 	         val (Gp, GX) = restore (I.ctxLength GdX - d, GdX)   (* optimization possible for d = 0 *)
 	         val _ = checkEmpty (!cnstrs)
-		 val w = weaken (GX, I.targetFam V)
+		 val w = weaken (GX, ModSyn.targetFam V)
 		 val iw = Whnf.invert w
 		 val GX' = Whnf.strengthen (iw, GX)
 		 val X' as I.EVar (r', _, _, _) = I.newEVar (concat (Gp, GX'), I.EClo (V, iw))
@@ -676,7 +676,7 @@ struct
         let 
 	  val (w', S') = weaken2 (G', a, i+1)
 	in
-	  if Subordinate.belowEq (I.targetFam V, a) then 
+	  if Subordinate.belowEq (ModSyn.targetFam V, a) then 
 	    (I.dot1 w', fn S => I.App (I.Root (I.BVar i, I.Nil), S))
 	  else (I.comp (w', I.shift), S')
 	end
@@ -711,7 +711,7 @@ struct
 					(* G0, {G}GF[..], G |- s : G0, G, GF *)
 	  val V' = I.EClo (V, s)
 					(* G0, {G}GF[..], G |- V' : type *)
-	  val (nw, S) = weaken2 (G, I.targetFam V, 1)
+	  val (nw, S) = weaken2 (G, ModSyn.targetFam V, 1)
 					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
 					 Gw < G *)
 	    
@@ -770,7 +770,7 @@ struct
 					(* G0, {G}GF[..], G |- s : G0, G, GF *)
 	  val V' = I.EClo (V, s)
 					(* G0, {G}GF[..], G |- V' : type *)
-	  val (nw, S) = weaken2 (G, I.targetFam V, 1)
+	  val (nw, S) = weaken2 (G, ModSyn.targetFam V, 1)
 					(* G0, {G}GF[..], G |- nw : G0, {G}GF[..], Gw
 					 Gw < G *)
 	    

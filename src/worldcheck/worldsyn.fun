@@ -48,7 +48,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "While checking constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":\n" ^ msg)))
+                             "While checking constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ ":\n" ^ msg)))
 
   type dlist = IntSyn.Dec list
 
@@ -58,7 +58,7 @@ struct
     fun insert (cid, W) = Table.insert worldsTable (cid, W)
     fun getWorlds (b) =
         (case Table.lookup worldsTable b
-	   of NONE => raise Error ("Family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup b) ^ " has no worlds declaration")
+	   of NONE => raise Error ("Family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup b) ^ " has no worlds declaration")
             | SOME (Wb) => Wb)
 
     (* subsumedTable
@@ -118,7 +118,7 @@ struct
      *)
     fun formatSubsump msg (G, dl, Rb, b) =
 	F.HVbox ([F.String msg, F.Space, F.String "for family", F.Space,
-		  F.String ((IntSyn.conDecFoldName (IntSyn.sgnLookup b)) ^ ":"),
+		  F.String ((IntSyn.conDecFoldName (ModSyn.sgnLookup b)) ^ ":"),
 		  F.Newline (),
 		  Print.formatCtx(I.Null, G), F.Break, F.String "|-",
 		  F.Space, Print.formatDecList (G, dl),
@@ -239,7 +239,7 @@ struct
     end =
     struct
       fun clause (c) =
-          print ("World checking clause " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n")
+          print ("World checking clause " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ "\n")
       fun constraintsRemain () =
 	  if !Global.chatter > 7
 	    then print ("Constraints remain after matching hypotheses against context block\n")
@@ -282,9 +282,9 @@ struct
     *)
     fun worldsToReg (T.Worlds nil) = One
       | worldsToReg (T.Worlds cids) = Star (worldsToReg' cids)
-    and worldsToReg' (cid::nil) = Block (I.constBlock cid)
+    and worldsToReg' (cid::nil) = Block (ModSyn.constBlock cid)
       | worldsToReg' (cid::cids) =
-          Plus (Block (I.constBlock cid), worldsToReg' cids)
+          Plus (Block (ModSyn.constBlock cid), worldsToReg' cids)
 
     (* init b (G, L) raises Success iff V is empty
        or none of the remaining declarations are relevant to b
@@ -295,7 +295,7 @@ struct
     *)
     fun init b (_, nil) = ( Trace.success () ; raise Success)
       | init b (G, L as (D1 as I.Dec (_, V1))::L2) =
-        if Subordinate.belowEq (I.targetFam V1, b)
+        if Subordinate.belowEq (ModSyn.targetFam V1, b)
 	  then ( Trace.unmatched (G, L) ; () )
 	else init b (decUName (G, D1), L2)
 
@@ -323,7 +323,7 @@ struct
 	      L' as Seq (B' as I.Dec (_, V1')::L2', t), b, k) =
 	if Unify.unifiable (G, (V1, I.id), (V1', t))
 	  then accR ((decUName (G, D), L2), Seq (L2', I.dot1 t), b, k)
-	else if Subordinate.belowEq (I.targetFam V1, b)
+	else if Subordinate.belowEq (ModSyn.targetFam V1, b)
 	       then (* relevant to family b, fail *)
 		 ( Trace.mismatch (G, (V1, I.id), (V1', t)) ; () )
 	     else (* not relevant to family b, skip in L *)
@@ -363,7 +363,7 @@ struct
     fun checkSubsumedWorlds (nil, Rb, b) = ()
       | checkSubsumedWorlds (cid::cids, Rb, b) =
         let
-	  val (someDecs, piDecs) = I.constBlock cid
+	  val (someDecs, piDecs) = ModSyn.constBlock cid
 	in
 	  checkSubsumedBlock (I.Null, someDecs, piDecs, Rb, b);
 	  checkSubsumedWorlds (cids, Rb, b)
@@ -377,7 +377,7 @@ struct
     *)
     fun checkBlocks (T.Worlds cids) (G, V, occ) = 
         let
-	  val b = I.targetFam V
+	  val b = ModSyn.targetFam V
 	  val Wb = getWorlds b handle Error (msg) => raise Error' (occ, msg)
 	  val Rb = worldsToReg Wb
 	  val _ = if subsumedLookup b
@@ -432,24 +432,24 @@ struct
     fun worldcheck W a =  
 	let
 	  val _ = if !Global.chatter > 3
-		    then print ("World checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
+		    then print ("World checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n")
 		  else ()
 	  val _ = subsumedReset ()	(* initialize table of subsumed families *)
 	  fun checkAll nil = ()
 	    | checkAll (I.Const(c) :: clist) =
 	      (if !Global.chatter = 4
-		 then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+		 then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause c else ();
-	       checkClause (I.Null, I.constType c, W, P.top)
+	       checkClause (I.Null, ModSyn.constType c, W, P.top)
 		 handle Error' (occ, msg) => raise Error (wrapMsg (c, occ, msg));
                checkAll clist)
 	    | checkAll (I.Def(d) :: clist) =
 	      (if !Global.chatter = 4
-		 then print (IntSyn.conDecFoldName (IntSyn.sgnLookup d) ^ " ")
+		 then print (IntSyn.conDecFoldName (ModSyn.sgnLookup d) ^ " ")
 	       else ();
 	       if !Global.chatter > 4 then Trace.clause d else ();
-	       checkClause (I.Null, I.constType d, W, P.top)
+	       checkClause (I.Null, ModSyn.constType d, W, P.top)
 		 handle Error' (occ, msg) => raise Error (wrapMsg (d, occ, msg));
                checkAll clist)
 	  val _ = checkAll (Index.lookup a)
@@ -496,7 +496,7 @@ struct
        if cid is defined as a context block
        Effect: raise Error (msg) otherwise
     *)
-    fun constBlock (cid) = conDecBlock (I.sgnLookup cid)
+    fun constBlock (cid) = conDecBlock (ModSyn.sgnLookup cid)
 
     (* checkSubordWorlds (W) = ()
        Effect: raises Error(msg) if subordination is not respected

@@ -58,7 +58,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Constant " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":" ^ msg)))
+                             "Constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ ":" ^ msg)))
 
   fun wrapMsgBlock (c, occ, msg) =  
       (case Origins.originLookup c
@@ -66,7 +66,7 @@ struct
           | (fileName, SOME occDec) => 
 		(P.wrapLoc' (P.Loc (fileName, P.occToRegionDec occDec occ),
                              Origins.linesInfoLookup (fileName),
-                             "Block " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ ":" ^ msg)))
+                             "Block " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ ":" ^ msg)))
 
 
   type dlist = IntSyn.Dec list
@@ -202,7 +202,7 @@ struct
     end =
     struct
       fun clause (c) =
-          print ("World checking clause " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ "\n")
+          print ("World checking clause " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ "\n")
       fun constraintsRemain () =
 	  if !Global.chatter > 7
 	    then print ("Constraints remain after matching hypotheses against context block\n")
@@ -279,7 +279,7 @@ struct
      fun equivBlocks W1 nil = true
        | equivBlocks nil L' = false
        | equivBlocks (b :: W1) L' = 
-           equivBlock (I.constBlock b, L')
+           equivBlock (ModSyn.constBlock b, L')
 	   orelse equivBlocks W1 L'
 
      (* strengthen a (t, L) = L'
@@ -294,7 +294,7 @@ struct
      *)
      fun strengthen a (t, nil) = nil
        | strengthen a (t, (D as I.Dec (_, V)) :: L) =
-         if Subordinate.below (I.targetFam V, a) then (I.decSub (D, t) :: strengthen a (I.dot1 t, L))
+         if Subordinate.below (ModSyn.targetFam V, a) then (I.decSub (D, t) :: strengthen a (I.dot1 t, L))
 	 else strengthen a (I.Dot (I.Undef,  t), L)
 	
 
@@ -325,7 +325,7 @@ struct
      *)
      fun subsumedBlocks a W1 nil = ()
        | subsumedBlocks a W1 (b :: W2) =
-           ( subsumedBlock a W1 (I.constBlock b)
+           ( subsumedBlock a W1 (ModSyn.constBlock b)
 	   ; subsumedBlocks a W1 W2
 	   )
 
@@ -381,8 +381,8 @@ struct
      *)
      fun eqBlock (b1, b2) =
          let
-	   val (G1, L1) = I.constBlock b1
-	   val (G2, L2) = I.constBlock b2
+	   val (G1, L1) = ModSyn.constBlock b1
+	   val (G2, L2) = ModSyn.constBlock b2
 	 in
 	   eqCtx (G1, G2) andalso eqList (L1, L2)	   
 	 end
@@ -461,9 +461,9 @@ struct
     *)
     fun worldsToReg (T.Worlds nil) = One
       | worldsToReg (T.Worlds cids) = Star (worldsToReg' cids)
-    and worldsToReg' (cid::nil) = Block (cid, I.constBlock cid)
+    and worldsToReg' (cid::nil) = Block (cid, ModSyn.constBlock cid)
       | worldsToReg' (cid::cids) =
-          Plus (Block (cid, I.constBlock cid), worldsToReg' cids)
+          Plus (Block (cid, ModSyn.constBlock cid), worldsToReg' cids)
 
     (* init b (G, L) raises Success iff V is empty
        or none of the remaining declarations are relevant to b
@@ -531,7 +531,7 @@ struct
     *)
     fun worldifyGoal (G, V, W as T.Worlds cids, occ) = 
         let
-	  val b = I.targetFam V
+	  val b = ModSyn.targetFam V
 	  val Wb = W.getWorlds b
 	  val Rb = worldsToReg Wb
 	in
@@ -573,7 +573,7 @@ struct
      *)
      fun worldifyConDec W (c, I.ConDec (s, m, k, status, V, L)) = 
          (if !Global.chatter = 4
-	    then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	    then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	  else ();
 	    if !Global.chatter > 4 then Trace.clause c else ();
 	      (I.ConDec (s, m, k, status, worldifyClause (I.Null, V, W, P.top), L))
@@ -583,7 +583,7 @@ struct
      fun worldifyBlock (G, nil) = ()
        | worldifyBlock (G, (D as (I.Dec (_, V))):: L) = 
          let
-	   val a = I.targetFam V 
+	   val a = ModSyn.targetFam V 
 	   val W' = W.getWorlds a
 	 in
 	   ( checkClause W' (G, worldifyClause (I.Null, V, W', P.top), P.top)
@@ -595,7 +595,7 @@ struct
        | worldifyBlocks (b :: Bs) = 
          let 
 	   val _ = worldifyBlocks Bs
-	   val (Gsome, Lblock) = I.constBlock b
+	   val (Gsome, Lblock) = ModSyn.constBlock b
 	   val _ = print "|"
          in 
 	   worldifyBlock (Gsome, Lblock) 
@@ -611,9 +611,9 @@ struct
 	   val W' = worldifyWorld W
 	   val _ = print ";"
 	   val _ = if !Global.chatter > 3
-		     then print ("World checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n")
+		     then print ("World checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n")
 		   else ()
-	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, I.sgnLookup c) handle Error' (occ, s) => raise Error (wrapMsg (c, occ, s)))
+	   val condecs = map (fn (I.Const c) => worldifyConDec W (c, ModSyn.sgnLookup c) handle Error' (occ, s) => raise Error (wrapMsg (c, occ, s)))
 	                     (Index.lookup a)
 	   val _ = map (fn condec => ( print "#"
 				     ; checkConDec W condec)) condecs
@@ -627,7 +627,7 @@ struct
        
   in
     val worldify = worldify
-    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (I.targetFam V), P.top) 
+    val worldifyGoal = fn (G,V) => worldifyGoal (G, V, W.getWorlds (ModSyn.targetFam V), P.top) 
   end
 
 end;  (* functor Worldify *)

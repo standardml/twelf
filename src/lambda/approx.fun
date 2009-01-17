@@ -11,10 +11,10 @@ struct
   (*! structure IntSyn = IntSyn' !*)
   structure I = IntSyn
 
-  fun headConDec (I.Const c) = I.sgnLookup c
-    | headConDec (I.Skonst c) = I.sgnLookup c
-    | headConDec (I.Def d) = I.sgnLookup d
-    | headConDec (I.NSDef d) = I.sgnLookup d
+  fun headConDec (I.Const c) = ModSyn.sgnLookup c
+    | headConDec (I.Skonst c) = ModSyn.sgnLookup c
+    | headConDec (I.Def d) = ModSyn.sgnLookup d
+    | headConDec (I.NSDef d) = ModSyn.sgnLookup d
     | headConDec (I.FgnConst (_, cd)) = cd
       (* others impossible by invariant *)
 
@@ -214,7 +214,7 @@ struct
   (* constDefApx (d) = V-
      if |- d = V : type *)
   fun constDefApx d =
-      (case I.sgnLookup d
+      (case ModSyn.sgnLookup d
          of I.ConDef (_, _, _, U, _, _, _) =>
             let
               val (V', _ (* Uni Type *)) = expToApx U

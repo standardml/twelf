@@ -114,7 +114,7 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
       compute the type information of U,  
       more thought is required 
    *)
-	  val w = S.weaken (G, I.targetFam V)
+	  val w = S.weaken (G, ModSyn.targetFam V)
                                                    (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	            (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)        (* Psi0, G' |- B'' ctx *)
@@ -239,7 +239,7 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
 	           choose (k+1, Psi')
 	       | choose (k, I.Decl (Psi', T.UDec (I.BDec (_, (l1, s1))))) = 
 		   let
-		     val (Gsome, Gpi) = I.constBlock l1
+		     val (Gsome, Gpi) = ModSyn.constBlock l1
 		     val S = substToSpine' (s1, Gsome, T.AppBlock (I.Bidx k, T.Nil))
 		   in
 		     evalPrg (Psi, (T.Redex (T.PClo (P, t), S), T.id)) handle Abort => choose (k+1, Psi')

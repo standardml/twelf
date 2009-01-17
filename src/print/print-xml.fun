@@ -41,7 +41,7 @@ local
       in 
 	sexp [Str ("<Var name = \"" ^ n ^ "\"/>")]
       end
-    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const name=\"", Str (I.conDecName (I.sgnLookup cid)), Str "\"/>"]
+    | fmtCon (G, I.Const(cid)) = sexp [Str "<Const name=\"", Str (I.conDecName (ModSyn.sgnLookup cid)), Str "\"/>"]
     | fmtCon (G, I.Def(cid)) = sexp [Str "<Def>", F.Break, Integer cid, Str "</Def>"]
     | fmtCon (G, I.FgnConst (csid, condec)) = sexp [Str "FngConst"]  (* FIX -cs Fri Jan 28 17:45:35 2005*)
     (* I.Skonst, I.FVar cases should be impossible *)
@@ -187,7 +187,7 @@ in
   fun eqnToString (E) = F.makestring_fmt (formatEqn E)
 
   fun printSgn () =
-      IntSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+      ModSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
 				  print "\n"))
 
   fun printSgnToFile path filename =
@@ -195,7 +195,7 @@ in
 	val file = TextIO.openOut (path ^ filename)
 	val _ = TextIO.output (file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!-- nsgmls ex.xml -->\n<!DOCTYPE Signature SYSTEM \"lf.dtd\">\n<Signature>")
 
-	val _ = IntSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (IntSyn.sgnLookup cid)));
+	val _ = ModSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
 				  TextIO.output (file, "\n")))
 	val _ = TextIO.output (file, "</Signature>")
 	val _ = TextIO.closeOut file

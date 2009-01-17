@@ -74,7 +74,7 @@ struct
        then I is Correct else Incorrect
     *)
     fun checkVar (I.Dec (SOME n, V), pol) = 
-        (case (Names.namePrefLookup (I.targetFam V)) 
+        (case (Names.namePrefLookup (ModSyn.targetFam V)) 
 	   of NONE => Correct
 	    | SOME (prefENames, prefUNames) =>  
  	      (case pol 
@@ -88,10 +88,10 @@ struct
        k = # implicit arguments associated with H
     *)
     fun implicitHead (I.BVar k) = 0
-      | implicitHead (I.Const c) = I.constImp c
+      | implicitHead (I.Const c) = ModSyn.constImp c
       | implicitHead (I.Skonst k) = 0
-      | implicitHead (I.Def d) = I.constImp d
-      | implicitHead (I.NSDef d) = I.constImp d
+      | implicitHead (I.Def d) = ModSyn.constImp d
+      | implicitHead (I.NSDef d) = ModSyn.constImp d
       | implicitHead (I.FgnConst _) = 0
 
 
@@ -284,19 +284,19 @@ struct
     *)
     fun checkConDec c (I.ConDec (_, _, implicit, _, U, _)) =
         (if !Global.chatter > 3
-	   then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	   then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	 else ();
 	   checkType' c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDec)
       | checkConDec c (I.ConDef (_, _, implicit, U, V, I.Type, _)) =
 	   (if !Global.chatter > 3
-	      then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	      then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2 @
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
 	      (* type level definitions ? *)
       | checkConDec c (I.AbbrevDef (_, _, implicit, U, V, I.Type)) =
 	   (if !Global.chatter > 3
-	      then print (IntSyn.conDecFoldName (IntSyn.sgnLookup c) ^ " ")
+	      then print (IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " ")
 	    else ();
 	   checkType' c ((I.Null, I.Null), implicit, V, P.top) P.occToRegionDef2; 
 	   checkDef c ((I.Null, I.Null), implicit, U, P.top) P.occToRegionDef1)
@@ -309,13 +309,13 @@ struct
     fun check () =
        let
        	  val result = ref nil
-       	  val _ = I.sgnAppC (fn cid => result := ! result @ (checkConDec cid (I.sgnLookup cid)))
+       	  val _ = ModSyn.sgnAppC (fn cid => result := ! result @ (checkConDec cid (ModSyn.sgnLookup cid)))
        	  val _ = map print (! result)
        in
        	  ()
        end
   in
-    val checkConDec = (fn c => (map print (checkConDec c (I.sgnLookup c)); ()))
+    val checkConDec = (fn c => (map print (checkConDec c (ModSyn.sgnLookup c)); ()))
     val check = check
   end
 end

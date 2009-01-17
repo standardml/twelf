@@ -61,7 +61,7 @@ struct
 	let
 	  val w' = weaken (G', a)
 	in
-	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
+	  if Subordinate.belowEq (ModSyn.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
 	end
       (* added next case, probably should not arise *)
@@ -79,7 +79,7 @@ struct
     *)
     fun createEVar (G, V) =
         let (* G |- V : L *)
-	  val w = weaken (G, I.targetFam V)       (* G  |- w  : G'    *)
+	  val w = weaken (G, ModSyn.targetFam V)       (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)
 	  val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
@@ -242,7 +242,7 @@ struct
     (* initCGoal (a) = {x1:V1}...{xn:Vn} a x1...xn
        where a : {x1:V1}...{xn:Vn} type
     *)
-    fun initCGoal (a) = initCGoal' (I.Const (a), 0, I.Null, I.constType (a))
+    fun initCGoal (a) = initCGoal' (I.Const (a), 0, I.Null, ModSyn.constType (a))
 
     (****************)
     (*** Matching ***)
@@ -717,7 +717,7 @@ struct
 	end
       | matchCtx (G, s', I.Decl(G'', I.BDec(_, (cid, s))), V, k, ci, klist) =
         let
-	  val (Gsome, piDecs) = I.constBlock cid	
+	  val (Gsome, piDecs) = ModSyn.constBlock cid	
 	  val s'' = I.comp (I.shift, s')
 	  (* G'' |- s : Gsome,
              G |- s'' : G''
@@ -880,7 +880,7 @@ struct
     *)
     fun createAtomConst (G, H as I.Const (cid)) = 
         let
-	  val V = I.constType cid
+	  val V = ModSyn.constType cid
 	  val (S, Vs) = createEVarSpine (G, (V, I.id))
 	in
 	  (I.Root (H, S), Vs)
@@ -962,7 +962,7 @@ struct
 	end
 
     (* hack *)
-    fun blockName (cid) = I.conDecName (I.sgnLookup (cid))
+    fun blockName (cid) = I.conDecName (ModSyn.sgnLookup (cid))
 
     (* blockCases (G, Vs, B, (Gsome, piDecs), sc) = 
 
@@ -1006,7 +1006,7 @@ struct
 
     fun worldCases (G, Vs, T.Worlds (nil), sc) = ()
       | worldCases (G, Vs, T.Worlds (cid::cids), sc) =
-          ( blockCases (G, Vs, cid, I.constBlock cid, sc) ;
+          ( blockCases (G, Vs, cid, ModSyn.constBlock cid, sc) ;
 	    worldCases (G, Vs, T.Worlds (cids), sc) )
 
     fun lowerSplit (G, Vs, W, sc) = lowerSplitW (G, Whnf.whnf Vs, W, sc)
@@ -1163,7 +1163,7 @@ struct
 	end
 
     fun targetBelowEq (a, I.EVar (ref(NONE), GY, VY, ref nil)) =
-          Subordinate.belowEq (a, I.targetFam VY)
+          Subordinate.belowEq (a, ModSyn.targetFam VY)
       | targetBelowEq (a, I.EVar (ref(NONE), GY, VY, ref (_::_))) =
 	  (* if contraints remain, consider recursive and thereby unsplittable *)
 	  true
@@ -1178,7 +1178,7 @@ struct
     fun recursive (X as I.EVar (ref(SOME(U)), GX, VX, _)) =
         let (* GX = I.Null*)
 	    (* is this always true? --cs!!!*)
-	  val a = I.targetFam VX
+	  val a = ModSyn.targetFam VX
 	  val Ys = Abstract.collectEVars (GX, (X, I.id), nil)
 	  (* LVars are ignored here.  OK because never splittable? *)
 	  (* Sat Dec 15 22:42:10 2001 -fp !!! *)
@@ -1556,8 +1556,8 @@ struct
        Generates coverage clauses from signature.
     *)
     fun constsToTypes (nil) = nil
-      | constsToTypes (I.Const(c)::cs') = I.constType(c)::constsToTypes(cs')
-      | constsToTypes (I.Def(d)::cs') = I.constType(d)::constsToTypes(cs')
+      | constsToTypes (I.Const(c)::cs') = ModSyn.constType(c)::constsToTypes(cs')
+      | constsToTypes (I.Def(d)::cs') = ModSyn.constType(d)::constsToTypes(cs')
 
     (*******************)
     (* Output Coverage *)
@@ -1604,7 +1604,7 @@ struct
 	  createCoverGoal (G, (V2, I.Dot (I.Exp (X), s)), p-1, ms)
 	end
       | createCoverGoalW (G, (I.Root (a as I.Const(cid), S), s), p, ms) = (* s = id, p >= 0 *)
-	I.Root (a, createCoverSpine (G, (S, s), (I.constType (cid), I.id), ms))
+	I.Root (a, createCoverSpine (G, (S, s), (ModSyn.constType (cid), I.id), ms))
 
     and createCoverSpine (G, (I.Nil, s), _, M.Mnil) = I.Nil
       | createCoverSpine (G, (I.App (U1, S2), s), (I.Pi ((I.Dec (_, V1), _), V2), s'),
@@ -1626,9 +1626,9 @@ struct
 
   in
     fun checkNoDef (a) =
-        (case I.sgnLookup a
+        (case ModSyn.sgnLookup a
            of I.ConDef _ =>
-	        raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+	        raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 			     ^ ":\ntype family must not be defined.")
             | _ => ())
 
@@ -1638,12 +1638,12 @@ struct
     *)
     fun checkCovers (a, ms) =
         let
-	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a)
+	  val _ = chatter 4 (fn () => "Input coverage checking family " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 			     ^ "\n")
 	  val _ = checkNoDef (a)
 	  val _ = Subordinate.checkNoDef (a)
 	          handle Subordinate.Error (msg) =>
-		    raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (IntSyn.sgnLookup a) ^ ":\n"
+		    raise Error ("Coverage checking " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ ":\n"
 				 ^ msg)
 	  val (V0, p) = initCGoal (a)
 	  val _ = if !Global.doubleCheck
@@ -1669,7 +1669,7 @@ struct
     *)
     fun checkOut (G, (V, s)) =
 	let
-	  val a = I.targetFam V
+	  val a = ModSyn.targetFam V
 	  val SOME(ms) = ModeTable.modeLookup a (* must be defined and well-moded *)
 	  val cOut = outCoverInst ms	(* determine cover instructions *)
 	  val (V', q) = createCoverClause (G, I.EClo(V, s), 0) (* abstract all variables in G *)

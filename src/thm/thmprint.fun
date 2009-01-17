@@ -23,7 +23,7 @@ struct
       | fmtParams (SOME n :: L) = [F.String (n), F.String " "] @ (fmtParams L)
       | fmtParams (NONE :: L) = [F.String ("_"), F.String " "] @ (fmtParams L)
 
-    fun fmtType (c, L) = F.HVbox ([F.String (I.conDecFoldName (I.sgnLookup c)), F.String " "] @ (fmtParams L))
+    fun fmtType (c, L) = F.HVbox ([F.String (I.conDecFoldName (ModSyn.sgnLookup c)), F.String " "] @ (fmtParams L))
       
     fun fmtCallpats nil = []
       | fmtCallpats (T :: nil) = [F.String "(", fmtType T, F.String ")"]
@@ -63,10 +63,10 @@ struct
 
 
     fun tabledDeclToString (L.TabledDecl cid) = 
-	F.makestring_fmt (F.HVbox ([F.String (I.conDecFoldName (I.sgnLookup cid))]))
+	F.makestring_fmt (F.HVbox ([F.String (I.conDecFoldName (ModSyn.sgnLookup cid))]))
 
     fun keepTableDeclToString (L.KeepTableDecl cid) = 
-	F.makestring_fmt (F.HVbox ([F.String (I.conDecFoldName (I.sgnLookup cid))]))
+	F.makestring_fmt (F.HVbox ([F.String (I.conDecFoldName (ModSyn.sgnLookup cid))]))
 	
   in
     val tDeclToString = tDeclToString

@@ -659,7 +659,7 @@ struct
 				  let 
 				    val w = if (!strengthen) 
 					      then
-						Subordinate.weaken (I.Null, IntSyn.targetFam(I.EClo(U1, s1)))
+						Subordinate.weaken (I.Null, ModSyn.targetFam(I.EClo(U1, s1)))
 					    else 
 					      I.id
 				  in 

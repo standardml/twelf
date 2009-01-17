@@ -67,7 +67,7 @@ struct
 	val cid = (case H 
 	             of (I.Const cid) => cid
 		      | (I.Skonst cid) => cid)
-	val V = I.constType cid
+	val V = ModSyn.constType cid
 	val (S, Vs) = createEVarSpine (G, (V, I.id))
       in
 	(I.Root (H, S), Vs)

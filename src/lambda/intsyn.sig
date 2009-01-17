@@ -209,48 +209,7 @@ sig
                                  where type result = bool
   end
 
-  (* the datatype for structure declarations *)
-  datatype Morph = MorStr of cid
-  datatype SymInst = ConInst of cid * Exp | StrInst of cid * Morph
-  datatype StrDec = StrDec of
-     string                             (* name *)
-     * IDs.qid                          (* qualified local id *)
-     * mid                              (* domain (= instantiated module) *)
-     * SymInst list                     (* instantiations *)
-
-  
-  (* adds a constant declaration to a module *)
-  val sgnAdd   : mid * ConDec -> cid
-  (* adds a declaration condec to the current module *)
-  val sgnAddC  : ConDec -> cid
-  (* looks up a constant declaration by global id *)
-  val sgnLookup: cid -> ConDec
-  (* apply a function to all declarations in a module *)
-  val sgnApp   : mid * (cid -> unit) -> unit
-  val sgnAppC  : (cid -> unit) -> unit
-  (* apply a function to all modules *)
-  val modApp   : (mid -> unit) -> unit
-  (* global reset *)
-  val sgnReset     : unit -> unit
-  
-  (* the current module *)
-  val currentMod : unit -> mid
-  (* maps local id's in the current module to global id's *)
-  val inCurrent : lid -> cid
-
-  (* adds a strucutre constant declaration to a module *)
-  val structAdd    : mid * StrDec -> cid
-  (* looks up a structure by global id *)
-  val structLookup : cid -> StrDec
-
-  (* convenience methods to access components of an installed constant declaration *)
-  val constType   : cid -> Exp		(* type of c or d             *)
-  val constDef    : cid -> Exp		(* definition of d            *)
-  val constImp    : cid -> int
-  val constStatus : cid -> Status
-  val constUni    : cid -> Uni
-  val constBlock  : cid -> dctx * Dec list
-
+ 
   (* convenience methods to access components of a constant declaration *)
   val conDecName   : ConDec -> string list
   val conDecFoldName: ConDec -> string           (* returns qualified name as dot-separated string *)
@@ -261,10 +220,7 @@ sig
   val conDecBlock  : ConDec -> dctx * Dec list
   val conDecUni    : ConDec -> Uni
 
-  (* convenience methods to access components of a structure declaration *)
-  val strDecName   : StrDec -> string
-  val strDecDomain : StrDec -> mid
-
+ 
   (* Declaration Contexts *)
   val ctxDec    : dctx * int -> Dec	(* get variable declaration   *)
   val blockDec  : dctx * Block * int -> Dec 
@@ -301,9 +257,6 @@ sig
   val targetHeadOpt : Exp -> Head option (* target type family or NONE *)
   val targetHead : Exp -> Head           (* target type family         *)
 
-  (* Expanding type definitions *)
-  val targetFamOpt : Exp -> cid option  (* target type family or NONE *)
-  val targetFam : Exp -> cid            (* target type family         *)
 
   (* a hack used in Flit *)
   val rename : lid * string -> unit
