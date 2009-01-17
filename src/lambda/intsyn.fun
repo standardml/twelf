@@ -477,7 +477,7 @@ struct
   *)
   fun targetHead (A) = valOf (targetHeadOpt A)
                       
-end;  (* functor IntSyn *)
+end;  (* IntSyn *)
 
 structure IntSyn :> INTSYN =
   IntSyn (structure Global = Global);

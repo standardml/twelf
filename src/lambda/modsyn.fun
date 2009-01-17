@@ -31,26 +31,46 @@ struct
   val symTable : I.ConDec QH.Table = QH.new(19999)
   val structTable : StrDec QH.Table = QH.new(999)
   (* should be array since editing is necessary for every entry *)
-  val modTable : int IH.Table = IH.new(499)
+  val modTable : IDs.lid IH.Table = IH.new(499)
  
   val scope : IDs.mid list ref = ref nil
 
   fun currentMod () = hd (! scope)
   fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
     
-  val nextMid = ref 0
-  fun nextLid(m : IDs.mid) = valOf (IH.lookup(modTable)(m))
-  fun incrLid(m : IDs.mid) = IH.insert(modTable)(m, nextLid(m) + 1)
+  val nextMid : IDs.mid ref = ref 0
+  fun incrNextMid() = nextMid := ! nextMid + 1
+  val getNextLid = valOf o (IH.lookup modTable)
+  val setNextLid = IH.insert modTable
+  fun incrNextLid(m : IDs.mid) = setNextLid(m, IDs.nextLid(getNextLid m))
     
-  fun sgnReset () = (QH.clear symTable; QH.clear structTable; IH.clear modTable)
+  fun modOpen() =
+    let
+    	val m = ! nextMid
+    	val _ = incrNextMid
+    	val _ = setNextLid(m,0)
+    	val _ = scope := m :: (! scope)
+     in
+     	m
+     end
+
+  fun modClose() = ()
     
+  fun sgnReset () = (
+    QH.clear symTable; 
+    QH.clear structTable;
+    IH.clear modTable;
+    modOpen();
+    ()
+  )
+  
   (* if conDecQid is nil, it should be replaced with lid; used in m2/prover.fun *)
   fun sgnAdd (m : IDs.mid, conDec : I.ConDec) =
     let
-      val c = IDs.newcid(m, nextLid(m))
+      val c = IDs.newcid(m, getNextLid(m))
     in
       QH.insert(symTable)(c, conDec);
-      incrLid(m);
+      incrNextLid(m);
       c
     end
   
@@ -64,7 +84,7 @@ struct
   fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
     let
       fun doRest(l) = 
-	if l = nextLid(m) then () else (f (IDs.newcid(m,l)); doRest(IDs.nextLid(l)))
+	if l = getNextLid(m) then () else (f (IDs.newcid(m,l)); doRest(IDs.nextLid(l)))
     in
       doRest(IDs.firstLid())
     end
@@ -80,10 +100,10 @@ struct
     
   fun structAdd (m : IDs.mid, strDec : StrDec) =
     let
-      val c = IDs.newcid(m, nextLid(m))
+      val c = IDs.newcid(m, getNextLid(m))
     in
       QH.insert(structTable)(c, strDec);
-      incrLid(m);
+      incrNextLid(m);
       c
     end      
   fun structAddC (strDec : StrDec) = structAdd(currentMod(), strDec)
