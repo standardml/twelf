@@ -12,7 +12,7 @@ struct
 
   datatype Morph = MorStr of IDs.cid
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
-  datatype StrDec = StrDec of string * IDs.qid * IDs.mid * (SymInst list)
+  datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list)
 
   datatype SymDec = StrSym of StrDec | ConSym of I.ConDec
 
@@ -21,6 +21,7 @@ struct
   fun strDecDomain (StrDec(_, _, m, _)) = m
 
   exception UndefinedCid
+  exception NoOpenModule
     (* Invariants *)
     (* Constant declarations are all well-typed *)
     (* Constant declarations are stored in beta-normal form *)
@@ -54,9 +55,14 @@ struct
      	m
      end
 
-  fun modClose() = ()
+  fun modClose() =
+    if (List.length (! scope) < 1)
+       then
+       	  raise NoOpenModule
+       else
+       	  scope := tl (! scope)
     
-  fun sgnReset () = (
+  fun reset () = (
     QH.clear symTable; 
     QH.clear structTable;
     IH.clear modTable;
@@ -101,13 +107,13 @@ struct
   fun structAdd (m : IDs.mid, strDec : StrDec) =
     let
       val c = IDs.newcid(m, getNextLid(m))
+      val _ = incrNextLid(m);
+      val _ = QH.insert(structTable)(c, strDec)
     in
-      QH.insert(structTable)(c, strDec);
-      incrNextLid(m);
       c
     end      
   fun structAddC (strDec : StrDec) = structAdd(currentMod(), strDec)
-    
+
   fun structLookup(c : IDs.cid) = case QH.lookup(structTable)(c)
     of SOME d => d
   | NONE => raise UndefinedCid
@@ -116,6 +122,10 @@ struct
   fun symLookup(c : IDs.cid) =
     StrSym(structLookup c)
     handle UndefinedCid => ConSym(sgnLookup c)
+
+  fun flatten(c : IDs.cid, installConDec : IntSyn.ConDec -> unit, installStrDec : StrDec -> unit) =
+  (* do elaboration here *)
+     ()
 
   (* Convenience methods to access constant declarations by id *)
   fun constDef (d) =

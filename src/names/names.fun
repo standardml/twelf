@@ -154,10 +154,15 @@ struct
     structure SH = HashTable (type key' = (IDs.mid * string list)
              val hash = fn (m,l) => 1000 * m + StringHash.stringListHash(l)
              val eq = (op =));
+    structure MH = HashTable (type key' = string list
+             val hash = StringHash.stringListHash
+             val eq = (op =));
     structure CH = CidHashTable
     type cid = IDs.cid
+    type mid = IDs.mid
 
     val nameTable : cid SH.Table = SH.new(4096)
+    val modnameTable : mid MH.Table = MH.new(4096)
     
     type namePref = (string list * string list) option
     val namePrefTable : namePref CH.Table = CH.new(4096)
@@ -168,9 +173,12 @@ struct
     val inCurrent = ModSyn.inCurrent
   in
 
+    fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
+    val modnameLookup : string list -> mid option = MH.lookup modnameTable
     fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
-    val nameLookup : IDs.mid * string list -> cid option = SH.lookup nameTable
+    val nameLookup : mid * string list -> cid option = SH.lookup nameTable
     fun nameLookupC(l : string list) = nameLookup(ModSyn.currentMod(), l)
+    
     (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level

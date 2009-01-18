@@ -41,7 +41,10 @@ sig
 
   structure Fixity : FIXITY
 
-  (* maps global declaration id's to their local qualified names *)
+  (* map between module ids and their qualified names *)
+  val installModname : IDs.mid * (string list) -> unit
+  val modnameLookup : string list -> IDs.mid option
+  (* map between global declaration ids and their local qualified names *)
   val installName : IDs.cid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
   val nameLookupC : string list -> IDs.cid option

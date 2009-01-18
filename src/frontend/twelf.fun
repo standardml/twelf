@@ -349,7 +349,7 @@ struct
 		      | _ => ())
 	          handle Names.Error msg =>
 		    raise Names.Error (Paths.wrap (r, msg))
-seems obsolete -fr *)
+@CS seems obsolete -fr, check also parameter fromCS *)
 	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
@@ -368,7 +368,7 @@ seems obsolete -fr *)
 		      | _ => ())
 	           handle Names.Error msg =>
 		     raise Names.Error (Paths.wrap (r, msg))
-seems obsolete -fr *)
+@CS seems obsolete -fr, check also parameter fromCS *)
 	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
 	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
 	  val _ = (Timers.time Timers.subordinate Subordinate.installBlock) cid
@@ -377,8 +377,14 @@ seems obsolete -fr *)
 	in 
 	  cid
 	end
-
-    fun installStrDec (strDec, r) = ()
+    
+    fun installStrDec(strDec, r) =
+       let 
+          val c : IDs.cid = ModSyn.structAddC(strDec)
+          val _ = Names.installName(c, ModSyn.strDecName strDec)
+       in
+       	  c
+       end
 
     fun cidToString a = IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 
@@ -1064,22 +1070,39 @@ seems obsolete -fr *)
 	   else  ()  --cs Sat Aug 27 22:04:29 2005 *))
 	  
 	end
-
-      | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) = ()
-      | install1 (fileName, declr as (Parser.ModEnd, r)) = ()
-      | install1 (fileName, declr as (Parser.StrDec decl, r)) =
-         let
-         	val strDec = ReconModule.strdecToStrDec (decl, Paths.Loc (fileName,r))
-         in
-                installStrDec (strDec, r)
-         end
-      | install1 (fileName, declr as (Parser.Include _, r)) = ()
-      | install1 (fileName, declr as (Parser.Open _, r)) = ()
       | install1 (fileName, (Parser.Use name, r)) =
         (if ModSyn.currentMod() = IDs.firstMid()
            then CSManager.useSolver (name)
            else raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level"))
         )
+
+      (* cases for the module system *)
+      | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) = (
+         case modBegin
+           of ReconModule.sigbegin name =>
+              let
+              	 val m = ModSyn.modOpen()
+              	 val _ = Names.installModname(m, [name])
+              in
+              	()
+              end
+        )
+      | install1 (fileName, declr as (Parser.ModEnd, r)) = ModSyn.modClose()
+      | install1 (fileName, declr as (Parser.StrDec strdec, r)) =
+         let
+            val strDec = ReconModule.strdecToStrDec (ModSyn.currentMod(), strdec, Paths.Loc (fileName,r))
+            val c = installStrDec (strDec, r)
+            val dummyRegion = Paths.Reg (0,0)
+            val callbackInstallConDec = fn d : IntSyn.ConDec =>
+                                           (installConDec IntSyn.Ordinary (d, (fileName, NONE), dummyRegion); ())
+            val callbackInstallStrDec = fn d : ModSyn.StrDec => (installStrDec(d, dummyRegion); ())
+            val _ = ModSyn.flatten(c, callbackInstallConDec, callbackInstallStrDec)
+         in
+            ()
+         end
+      (* currently unused cases of the module system *)
+      | install1 (fileName, declr as (Parser.Include _, r)) = ()
+      | install1 (fileName, declr as (Parser.Open _, r)) = ()
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
@@ -1154,7 +1177,9 @@ seems obsolete -fr *)
     val _ = CSManager.setInstallFN (installCSMDec)
  
     (* reset () = () clears all global tables, including the signature *)
-    fun reset () = (ModSyn.sgnReset (); Names.reset (); Origins.reset ();
+    fun reset () = (ModSyn.reset (); (* -fr *)
+                    Names.reset ();
+                    Origins.reset ();
 		    ModeTable.reset ();
 		    UniqueTable.reset (); (* -fp Wed Mar  9 20:24:45 2005 *)
 		    Index.reset (); 
@@ -1168,7 +1193,6 @@ seems obsolete -fr *)
 		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
 		    CompSyn.detTableReset (); (*  -bp *)
 		    Compile.sProgReset (); (* resetting substitution trees *)
-                    (* ModSyn.reset (); -fr *)
                     CSManager.resetSolvers ()
 		    )
 

@@ -45,12 +45,12 @@ sig
     | ThawDec of Qid list
     | DeterministicDec of Qid list  (* -rv *)
     | ClauseDec of ExtConDec.condec (* -fp *)
-    | ModBegin of ModExtSyn.modbegin
-    | ModEnd
-    | StrDec of ModExtSyn.strdec
-    | Include of ModExtSyn.siginclude
-    | Open of ModExtSyn.stropen
     | Use of string
+    | ModBegin of ModExtSyn.modbegin   (* -fr, module system *)
+    | ModEnd                           (* -fr, module system *)
+    | StrDec of ModExtSyn.strdec       (* -fr, module system *)
+    | Include of ModExtSyn.siginclude  (* -fr, module system *)
+    | Open of ModExtSyn.stropen        (* -fr, module system *)
     (* Further declarations to be added here *)
 
   val parseStream: TextIO.instream -> (fileParseResult * Paths.region) Stream.stream

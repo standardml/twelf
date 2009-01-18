@@ -10,16 +10,18 @@ sig
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   (* a structure declaration instantiates a module with a list of assignments of expressions to qids *)
   datatype StrDec = StrDec of
-    string                             (* name *)
+    string list                        (* qualified name *)
     * IDs.qid                          (* qualified local id *)
     * IDs.mid                          (* domain (= instantiated module) *)
     * SymInst list                     (* instantiations *)
     
   (* convenience methods to access components of a structure declaration *)
-  val strDecName   : StrDec -> string
+  val strDecName   : StrDec -> string list
   val strDecDomain : StrDec -> IDs.mid
 
-  val sgnReset : unit -> unit
+  val modOpen : unit -> IDs.mid
+  val modClose : unit -> unit
+  val reset : unit -> unit
   val sgnAdd   : IDs.mid * I.ConDec -> IDs.cid 
   val sgnAddC  : I.ConDec -> IDs.cid
   val sgnLookup: IDs.cid -> I.ConDec
@@ -35,8 +37,12 @@ sig
 
   (* adds a strucutre constant declaration to a module *)
   val structAdd    : IDs.mid * StrDec -> IDs.cid
+  val structAddC   : StrDec -> IDs.cid
   (* looks up a structure by global id *)
   val structLookup : IDs.cid -> StrDec
+  
+  (* flatten a structure declaration *)
+  val flatten      : IDs.cid * (I.ConDec -> unit) * (StrDec -> unit) -> unit
 
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d             *)
