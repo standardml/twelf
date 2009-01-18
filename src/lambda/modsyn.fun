@@ -1,6 +1,7 @@
-(* Syntax for elaborated modules *)
+(* Syntax and semantics of the module system, also encapsulation of the state of modular LF *)
 (* Author: Florian Rabe *)
 
+(* The datatypes and interface methods are well-documented in the declaration of MODSYN. *)
 functor ModSyn (structure IntSyn : INTSYN)
   : MODSYN =
 struct
@@ -10,11 +11,14 @@ struct
   
   exception Error of string
 
-  datatype Morph = MorStr of IDs.cid
+  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list)
+  datatype SigDec = SigDec of string list
+  datatype ViewDec = ViewDec of string list * IDs.mid * IDs.mid
 
-  datatype SymDec = StrSym of StrDec | ConSym of I.ConDec
+  (* unifies constant and structure declarations *)
+  datatype SymDec = ConSym of I.ConDec | StrSym of StrDec
 
   fun strDecName (StrDec(n, _, _, _)) = n
   fun strDecQid (StrDec(_, _, q, _)) = q
@@ -22,6 +26,7 @@ struct
 
   exception UndefinedCid
   exception NoOpenModule
+
     (* Invariants *)
     (* Constant declarations are all well-typed *)
     (* Constant declarations are stored in beta-normal form *)
@@ -34,17 +39,18 @@ struct
   (* should be array since editing is necessary for every entry *)
   val modTable : IDs.lid IH.Table = IH.new(499)
  
+  (* management of the currently opened modules *)
   val scope : IDs.mid list ref = ref nil
-
   fun currentMod () = hd (! scope)
   fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
-    
+
+  (* maintenance of next available mids and lids *)    
   val nextMid : IDs.mid ref = ref 0
   fun incrNextMid() = nextMid := ! nextMid + 1
   val getNextLid = valOf o (IH.lookup modTable)
   val setNextLid = IH.insert modTable
   fun incrNextLid(m : IDs.mid) = setNextLid(m, IDs.nextLid(getNextLid m))
-    
+
   fun modOpen() =
     let
     	val m = ! nextMid
@@ -70,7 +76,6 @@ struct
     ()
   )
   
-  (* if conDecQid is nil, it should be replaced with lid; used in m2/prover.fun *)
   fun sgnAdd (m : IDs.mid, conDec : I.ConDec) =
     let
       val c = IDs.newcid(m, getNextLid(m))
@@ -127,7 +132,6 @@ struct
   (* do elaboration here *)
      ()
 
-  (* Convenience methods to access constant declarations by id *)
   fun constDef (d) =
       (case sgnLookup (d)
 	 of I.ConDef(_, _, _, U,_, _, _) => U
@@ -141,8 +145,6 @@ struct
 	 of I.ConDec (_, _, _, status, _, _) => status
           | _ => I.Normal)
   
-  (* These might also be in IntSyn.fun. But they must be here because they need to look up and expand type definitions. *)
-
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)
     | ancestor' (SOME(I.Const(c))) = I.Anc(SOME(c), 1, SOME(c))
     | ancestor' (SOME(I.Def(d))) =
@@ -185,8 +187,10 @@ struct
   fun rename (c, conDec : I.ConDec) =
     QH.insert(symTable)(c, conDec)
    *)
-end
+end (* functor ModSyn *)
 
+
+(* ModSyn is instantiated with IntSyn right away. Both are visible globally. *)
 structure ModSyn =
   ModSyn (structure IntSyn = IntSyn);
 
