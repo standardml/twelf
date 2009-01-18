@@ -30,14 +30,17 @@ struct
        Empties index array
     *)
     fun reset () = CH.clear indexTable
-    val lookup' = valOf o (CH.lookup indexTable)
+    fun lookup' a =
+       case CH.lookup indexTable a
+         of SOME e => e
+          | NONE => Queue.empty
     val update' = CH.insert indexTable
 
     (* update (a, c) = ()
        inserts c into the index queue for family a
        Invariant: a = target family of c
     *)
-    fun update (a, c) = CH.insert indexTable (a, Queue.insert (c, lookup' a))
+    fun update (a, c) = update' (a, Queue.insert (c, lookup' a))
 
     (* install (c) = ()
        installs c into the correct index queue

@@ -78,7 +78,7 @@ struct
     
   fun sgnLookup (c : IDs.cid) = case QH.lookup(symTable)(c)
     of SOME d => d
-  | NONE => raise UndefinedCid 
+  | NONE => raise UndefinedCid
   val sgnLookupC = sgnLookup o inCurrent
     
   fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =

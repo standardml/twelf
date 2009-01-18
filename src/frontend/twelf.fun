@@ -326,9 +326,13 @@ struct
           val _ = Origins.installOrigin (cid, fileNameocOpt)
           val _ = Index.install fromCS (IntSyn.Const cid)
           val _ = IndexSkolem.install fromCS (IntSyn.Const cid)
+	          handle Subordinate.Error (msg) => raise Subordinate.Error (msg)
           val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
+	          handle Subordinate.Error (msg) => raise Subordinate.Error (msg)
           val _ = (Timers.time Timers.subordinate Subordinate.install) cid
+	          handle Subordinate.Error (msg) => raise Subordinate.Error (msg)
           val _ = (Timers.time Timers.subordinate Subordinate.installDef) cid
+	          handle Subordinate.Error (msg) => raise Subordinate.Error (msg)
         in
           ()
         end
