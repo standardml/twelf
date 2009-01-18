@@ -181,9 +181,10 @@ struct
   *)
   fun targetFam (A) = valOf (targetFamOpt A)
 
-  (* used for Flit *)
-  fun hack (c, conDec : I.ConDec) =
+  (* was used only by Flit, probably violates invariants
+  fun rename (c, conDec : I.ConDec) =
     QH.insert(symTable)(c, conDec)
+   *)
 end
 
 structure ModSyn =
