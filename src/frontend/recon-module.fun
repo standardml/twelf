@@ -1,4 +1,4 @@
-(* Elaboration for module expressions *)
+(* Reconstruction for modular expressions *)
 (* Author: Florian Rabe *)
 
 functor ReconModule

@@ -343,14 +343,8 @@ struct
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = ModSyn.sgnAddC conDec
-(*	  val _ = (case (fromCS, !context)
-		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
-		      | (IntSyn.Clause, SOME namespace) => Names.insertConst (namespace, cid)
-		      | _ => ())
-	          handle Names.Error msg =>
-		    raise Names.Error (Paths.wrap (r, msg))
-@CS seems obsolete -fr, check also parameter fromCS *)
 	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
+	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
 	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
@@ -362,14 +356,8 @@ struct
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val cid = ModSyn.sgnAddC conDec
-(*	  val _ = (case (fromCS, !context)
-		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
-		        (* (Clause, _) should be impossible *)
-		      | _ => ())
-	           handle Names.Error msg =>
-		     raise Names.Error (Paths.wrap (r, msg))
-@CS seems obsolete -fr, check also parameter fromCS *)
 	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
+	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
 	  val _ = (Timers.time Timers.subordinate Subordinate.installBlock) cid
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
@@ -379,9 +367,10 @@ struct
 	end
     
     fun installStrDec(strDec, r) =
-       let 
+       let
           val c : IDs.cid = ModSyn.structAddC(strDec)
           val _ = Names.installName(c, ModSyn.strDecName strDec)
+                  handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
        in
        	  c
        end
@@ -1094,8 +1083,8 @@ struct
             val c = installStrDec (strDec, r)
             val dummyRegion = Paths.Reg (0,0)
             val callbackInstallConDec = fn d : IntSyn.ConDec =>
-                                           (installConDec IntSyn.Ordinary (d, (fileName, NONE), dummyRegion); ())
-            val callbackInstallStrDec = fn d : ModSyn.StrDec => (installStrDec(d, dummyRegion); ())
+                                           installConDec IntSyn.Ordinary (d, (fileName, NONE), dummyRegion)
+            val callbackInstallStrDec = fn d : ModSyn.StrDec => installStrDec(d, dummyRegion)
             val _ = ModSyn.flatten(c, callbackInstallConDec, callbackInstallStrDec)
          in
             ()

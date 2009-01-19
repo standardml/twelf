@@ -1,5 +1,6 @@
 (* Parsing modules *)
-(* Author: Kevin Watkins *)
+(* Author: Keven Watkins *)
+(* Redesigned: Florian Rabe, Jan 09 *)
 
 signature PARSE_MODULE =
 sig

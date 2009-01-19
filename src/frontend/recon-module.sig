@@ -1,4 +1,4 @@
-(* External syntax for module expressions *)
+(* Reconstruction for modular expressions *)
 (* Author: Florian Rabe *)
 
 signature MODEXTSYN =

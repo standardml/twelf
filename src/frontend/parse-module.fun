@@ -1,5 +1,6 @@
 (* Parsing modules *)
-(* Author: Kevin Watkins *)
+(* Author: Keven Watkins *)
+(* Redesigned: Florian Rabe, Jan 09 *)
 
 functor ParseModule
   ((*! structure Paths : PATHS !*)
@@ -96,7 +97,7 @@ struct
     | parseInsts' (LS.Cons ((L.RBRACE, _), s')) =
         (nil, LS.expose s')
     | parseInsts' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected identifier or `%struct', found token " ^ L.toString t)
+        Parsing.error (r, "Expected identifier, `%struct', or `}', found token " ^ L.toString t)
 
   fun parseInstantiate' (f as LS.Cons ((L.LBRACE, _), s')) =
         parseInsts' (LS.expose s')
@@ -105,7 +106,7 @@ struct
 
   fun parseSigBegin' (LS.Cons ((L.SIG, r), s')) =
      case LS.expose s'
-       of LS.Cons ((L.ID (_, id), r), s') =>
+       of LS.Cons ((L.ID (_, id), r1), s') =>
           let
              val f' = LS.expose s'
              val (_, f') = parseEqual' (f')
@@ -113,35 +114,33 @@ struct
           in
              (E.sigbegin id, f')
           end 
-        | LS.Cons ((t, r), s') =>
-	  Parsing.error (r, "Expected signature identifier, found token " ^ L.toString t)
+        | LS.Cons ((t, r1), s') =>
+	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
 
-  fun parseStrDec' (LS.Cons ((L.STRUCT, r), s')) =
+  fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
      case LS.expose s'
         of LS.Cons ((L.ID (_, id), r1), s1') => (
            case LS.expose s1'
               of LS.Cons ((L.COLON, r2), s2') =>
                  let
                      val f' = LS.expose s2'
-                     val ((domids, (L.ID (_, domid), r3)), f') = ParseTerm.parseQualId' (f')
+                     val ((domids, (L.ID (_, domid), r3)), f' as LS.Cons((_,r4),_)) = ParseTerm.parseQualId' (f')
                      val (_, f') = parseEqual' (f')
                      val (insts, f') = parseInstantiate'(f')
                   in
-                     (* don't know what to put instead of r3 -fr *)
-                     (E.strdec(id, (domids @ [domid], r3), insts), f')
+                     (E.strdec(id, (domids @ [domid], Paths.join(r3,r4)), insts), f')
                   end
                | LS.Cons ((L.EQUAL, r2), s2') =>
                  let
-                    val (mor, f') = parseMorph' (LS.expose s2')
+                    val (mor, f' as LS.Cons((_,r3),_)) = parseMorph' (LS.expose s2')
                  in
-                    (* don't know what to put instead of r2 -fr *)
-                    ((E.strdef (id, (mor, r2))), f')
+                    ((E.strdef (id, (mor, Paths.join(r0,r3)))), f')
                  end
                | LS.Cons ((t, r), s') =>
                  Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
          )
          | LS.Cons ((t, r), s') =>
-           Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
+           Parsing.error (r, "Expected new identifier, found token " ^ L.toString t)
 
   (* ignoring these two tokens *)
   fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) = ((), LS.expose s')
