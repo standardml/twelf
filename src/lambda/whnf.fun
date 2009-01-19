@@ -460,7 +460,13 @@ struct
       | normalizeCtx (Decl (G, D)) = 
           Decl (normalizeCtx G, normalizeDec (D, id))
 
-
+    fun normalizeExp0 U = normalizeExp(U, Shift 0)
+    fun normalizeConDec(ConDec(a,b,c,d,U,e)) = ConDec(a,b,c,d, normalizeExp0 U, e)
+      | normalizeConDec(ConDef(a,b,c,U,V,e,f)) = ConDef(a,b,c, normalizeExp0 U, normalizeExp0 V, e, f)
+      | normalizeConDec(AbbrevDef(a,b,c,U,V,e)) = AbbrevDef(a,b,c,normalizeExp0 U, normalizeExp0 V, e)
+      | normalizeConDec(BlockDec(a, b, DC, DL)) = BlockDec(a,b, normalizeCtx DC, List.map (fn D => normalizeDec(D, Shift 0)) DL)
+      | normalizeConDec(SkoDec(a,b,c,U,e)) = SkoDec(a,b,c,normalizeExp0 U,e)
+    
     (* invert s = s'
 
        Invariant:
@@ -641,6 +647,7 @@ struct
     val normalize = normalizeExp
     val normalizeDec = normalizeDec
     val normalizeCtx = normalizeCtx
+    val normalizeConDec = normalizeConDec
 
     val invert = invert
     val strengthen = strengthen

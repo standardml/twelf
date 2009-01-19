@@ -10,7 +10,6 @@ functor Twelf
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Print : PRINT
    (*! sharing Print.IntSyn = IntSyn' !*)
-
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
    (*! structure Paths : PATHS !*)
@@ -1082,8 +1081,8 @@ struct
             val strDec = ReconModule.strdecToStrDec (ModSyn.currentMod(), strdec, Paths.Loc (fileName,r))
             val c = installStrDec (strDec, r)
             val dummyRegion = Paths.Reg (0,0)
-            val callbackInstallConDec = fn d : IntSyn.ConDec =>
-                                           installConDec IntSyn.Ordinary (d, (fileName, NONE), dummyRegion)
+            val callbackInstallConDec =
+               fn d : IntSyn.ConDec => installConDec IntSyn.Ordinary (Whnf.normalizeConDec d, (fileName, NONE), dummyRegion)
             val callbackInstallStrDec = fn d : ModSyn.StrDec => installStrDec(d, dummyRegion)
             val _ = ModSyn.flatten(c, callbackInstallConDec, callbackInstallStrDec)
          in

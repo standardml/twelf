@@ -157,13 +157,14 @@ struct
 	 of I.ConDec (_, _, _, status, _, _) => status
           | _ => I.Normal)
   
-  fun cidToExp c = I.Root(I.Const c, I.Nil)
+  fun headToExp h = I.Root(h, I.Nil)
+  fun cidToExp c = headToExp(I.Const c)
   exception FixMe (* @CS: search for this exception, only temporary to make stuff compile *)
   fun applyMorph(U, mor) =
      let
      	fun A(I.Uni L) = I.Uni L
      	  | A(I.Pi((D, P), V)) = I.Pi((ADec D, P), A V)
-     	  | A(I.Root(H, S)) = I.Root(AHead H, ASpine S)
+     	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)
      	  | A(I.Redex(U, S)) = I.Redex(A U, ASpine S)
      	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
      	  | A(I.EVar(E, C, U, Constr)) = raise FixMe
@@ -171,13 +172,13 @@ struct
           | A(I.AVar(I)) = raise FixMe
           | A(I.FgnExp(cs, F)) = raise FixMe
           | A(I.NVar n) = I.NVar n
-        and AHead(I.BVar k) = I.BVar k
+        and AHead(I.BVar k) = headToExp(I.BVar k)
           | AHead(I.Const c) = ACid c          (* apply morphism to constant *)
-          | AHead(I.Proj(b,k)) = I.Proj (ABlock b, k)
+          | AHead(I.Proj(b,k)) = headToExp(I.Proj (ABlock b, k))
           | AHead(I.Skonst c) = ACid c         (* apply morphism to constant *)
           | AHead(I.Def d) = A (constDef d)    (* expand definition *)
           | AHead(I.NSDef d) = A (constDef d)  (* expand definition *)
-          | AHead(I.FVar(x, U, s)) = I.FVar(x, A U, ASub s)
+          | AHead(I.FVar(x, U, s)) = headToExp(I.FVar(x, A U, ASub s))
           | AHead(I.FgnConst(cs, condec)) = raise FixMe
         and ASpine(I.Nil) = I.Nil
           | ASpine(I.App(U,S)) = I.App(A U, ASpine S)
