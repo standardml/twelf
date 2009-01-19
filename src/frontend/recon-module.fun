@@ -58,7 +58,7 @@ struct
         of coninst(con as (names, name, r), term) =>
              let
              	val Con = nameLookupWithError(Dom, names @ [name], r)
-             	val Term = error(r, "not implemented yet") (* @CS: I want to call something like ExtSyn.termToTerm(term, l) *)
+		val JTerm ((Term, occ), V, L) = ReconTerm.recon (ReconTerm.jterm term)
              in
              	ModSyn.ConInst(Con, Term)
              end
