@@ -21,25 +21,29 @@ sig
   (*
      morphisms
      morphisms have a domain and a codomain signature
-     a morphism from S to T can be regarded as an expression of type S over signature T
-     MorStr(c) is the morphism induced by a structure
-     MorView(m) is the morphism induced by a view
+     a morphism from S to T can be regarded as a (structure) expression of type S over signature T
+     MorStr(c) is the morphism induced by the structure c
+     MorView(m) is the morphism induced by the view m
      MorComp(mor,mor') is the composition of mor and mor' in diagram order (i.e., mor' o mor)
   *)
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
+  
   (*
      symbol instantiations
      instantiations are the building blocks of structures and views, say from S to T
      ConInst(c, t) instantiates the constant c of S with the expression t over T
-     StrInst(i, m) instantiates the structure i (say with domain R) of S with the expression m, i.e., a morphism from R to T
+     StrInst(r, mor) instantiates the structure r (say with domain R) of S with the expression mor,
+        i.e., a morphism from R to T
+     deep assignments are possible, e.g., ConInst(r.s.c, t) or Str(r.s, mor)
   *)
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   
   (*
      structure declarations
-     a structure declared instantiates another signature, say S
-     such a structure i declared in signature T induces a morphism MorStr(i) from S to T
+     a structure instantiates another signature, say S
+     such a structure s declared in signature T induces a morphism MorStr(s) from S to T
      such a structure carries instantiations of symbols of S with expressions of T
+     structure definitions define a structure with a morphism
   *)
   datatype StrDec
   = StrDec of
@@ -58,9 +62,6 @@ sig
      a signature is a list of symbol declarations
      the declarations of a signtature are stored separately and are not part of the SigDec
   *)
-  datatype SigDec = SigDec of
-    string list                        (* qualified name *)
-
   (*
      view declarations
      a view from S to T provides instantiations for all symbols of S in terms of expressions over T
@@ -68,39 +69,42 @@ sig
      thus a view from S to T can be seen as a functor from T to S
      the instantiations of a view are stored separately and are not part of the ViewDec
   *)
-  datatype ViewDec = ViewDec of
-    string list                        (* qualified name *)
-    * IDs.mid                          (* domain *)
-    * IDs.mid                          (* codomain *)
+  datatype ModDec
+     = SigDec of string list           (* qualified name *)
+     | ViewDec of
+         string                        (* name *)
+       * IDs.mid                       (* domain *)
+       * IDs.mid                       (* codomain *)
     
   (* convenience methods to access components of declarations *)
   val strDecName: StrDec -> string list
+  val strDecFoldName: StrDec -> string
   val strDecQid : StrDec -> IDs.qid
   val strDecDom : StrDec -> IDs.mid
+  
+  val modDecFoldName : ModDec -> string
 
   (********************** Interface methods that affect the state **********************)
   
   (* called at the beginning of a module *)
-  val modOpen    : unit -> IDs.mid
+  val modOpen    : ModDec -> IDs.mid
   (* called at the end of a module *)
   val modClose   : unit -> unit
   (* called to add a constant declaration to a signature *)
-  val sgnAdd     : IDs.mid * I.ConDec -> IDs.cid 
   val sgnAddC    : I.ConDec -> IDs.cid
   (* called to add a structure declaration to a signature *)
-  val structAdd  : IDs.mid * StrDec -> IDs.cid
   val structAddC : StrDec -> IDs.cid
   (* called to reset the state *)
   val reset      : unit -> unit
 
-  (* flattens a structure declaration
+  (* called to flatten a structure declaration
      - computes all declarations imported by the structure to the codomain signature (in the order declared in the domain)
      - calls the functions passed as argument on the computed symbol declarations
   *)
   (* precondition: It is assumed that flatten is called after a structAdd is called,
      but before Names.installName is called on the structure's name.
-     This is necessary because ill-typed structure declarations are caught only during the flattening.
-     This is not a design feature of the module system per se, but a compromise to ease integration with the existing Twelf code.
+     This is necessary because ill-typed structure declarations are caught only during the flattening, not during structAdd.
+     It would be better if structAdd called flatten already, but this way eases integration with the existing Twelf code.
   *)
   val flatten    : IDs.cid * (I.ConDec -> IDs.cid) * (StrDec -> IDs.cid) -> unit
 
@@ -110,6 +114,8 @@ sig
   val sgnLookup  : IDs.cid -> I.ConDec
   (* look up structure declarations by global id *)
   val structLookup: IDs.cid -> StrDec
+  val onToplevel : unit -> bool
+  val modLookup  : IDs.mid -> ModDec
   (* application of a method to all constants of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit

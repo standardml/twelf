@@ -18,14 +18,15 @@ struct
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list)
                   | StrDef of string list * IDs.qid * IDs.mid * Morph
-  datatype SigDec = SigDec of string list
-  datatype ViewDec = ViewDec of string list * IDs.mid * IDs.mid
+  datatype ModDec = SigDec of string list | ViewDec of string * IDs.mid * IDs.mid
 
   (* unifies constant and structure declarations *)
   datatype SymDec = SymCon of I.ConDec | SymStr of StrDec
 
+  fun foldName l = foldl (fn (x,y) => x ^ "." ^ y) (hd l) (tl l)
   fun strDecName (StrDec(n, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _)) = n
+  fun strDecFoldName s = foldName (strDecName s)
   fun strDecQid (StrDec(_, q, _, _)) = q
     | strDecQid (StrDef(_, q, _, _)) = q
   fun strDecDom (StrDec(_, _, m, _)) = m
@@ -33,6 +34,9 @@ struct
 
   fun symInstCid(ConInst(c, _)) = c
     | symInstCid(StrInst(c, _)) = c
+
+  fun modDecFoldName (SigDec n) = foldName n
+    | modDecFoldName (ViewDec(n, _, _)) = n
 
   exception UndefinedCid
   exception NoOpenModule
@@ -46,92 +50,70 @@ struct
 
   val symTable : I.ConDec CH.Table = CH.new(19999)
   val structTable : StrDec CH.Table = CH.new(999)
-  (* should be array since editing is necessary for every entry *)
-  val modTable : IDs.lid IH.Table = IH.new(499)
+  (* maps modules IDs to module declarations and sizes; size is -1 if the module is still open *)
+  val modTable : (ModDec * int) IH.Table = IH.new(499)
   val structMapTable : IDs.cid CCH.Table = CCH.new(19999)
    
-  (* management of the currently opened modules *)
-  val scope : IDs.mid list ref = ref nil
-  fun currentMod () = hd (! scope)
+  (* scope holds a list of the currently opened modules and their next available lid *)
+  val scope : (IDs.mid * IDs.lid) list ref = ref nil
+  val nextMid : IDs.mid ref = ref 0
+
+  fun currentMod() = #1 (hd (! scope))
   fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
 
-  (* maintenance of next available mids and lids *)    
-  val nextMid : IDs.mid ref = ref 0
-  fun incrNextMid() = nextMid := ! nextMid + 1
-  val getNextLid = valOf o (IH.lookup modTable)
-  val setNextLid = IH.insert modTable
-  fun incrNextLid(m : IDs.mid) = setNextLid(m, IDs.nextLid(getNextLid m))
+  fun modLookup(m : IDs.mid) = #1 (valOf (IH.lookup modTable m))
+  fun modSize(m : IDs.mid) =
+     case List.find (fn (x,_) => x = m) (! scope)
+        of SOME (_,l) => l                             (* size of open module stored in scope *)
+         | NONE => #2 (valOf (IH.lookup modTable m))   (* size of closed module stored in modTable *)
 
-  fun modOpen() =
+  fun onToplevel() = List.length (! scope) = 1
+  fun modOpen(sigDec) =
+     (* @FR: case for views missing, should check nesting of signatures, views here *)
      let
         val m = ! nextMid
-        val _ = incrNextMid
-    	val _ = setNextLid(m,0)
-        val _ = scope := m :: (! scope)
+        val _ = nextMid := ! nextMid + 1
+        val _ = scope := (m,0) :: (! scope)
+        val _ = IH.insert modTable (m, (sigDec, ~1))
      in
      	m
      end
-
   fun modClose() =
-    if (List.length (! scope) < 1)
-       then
-       	  raise NoOpenModule
-       else
-       	  scope := tl (! scope)
-    
-  fun reset () = (
-    CH.clear symTable; 
-    CH.clear structTable;
-    IH.clear modTable;
-    modOpen();
-    ()
-  )
-  
-  fun sgnAdd (m : IDs.mid, conDec : I.ConDec) =
+    if onToplevel()
+    then raise NoOpenModule
+    else
+      let
+         val (m,l) = hd (! scope)
+         val _ = scope := tl (! scope)
+         val _ = IH.insert modTable (m, (modLookup m, l))
+      in
+         ()
+      end
+  fun sgnAddC (conDec : I.ConDec) =
     let
-      val c = IDs.newcid(m, getNextLid(m))
+      val (c as (m,l)) :: scopetail = ! scope
       val q = I.conDecQid conDec
     in
       CH.insert(symTable)(c, conDec);
-      incrNextLid(m);
+      scope := (m, l+1) :: scopetail;
       (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
       List.map (fn sc => CCH.insert structMapTable (sc, c)) q;
       c
     end
-  
-  fun sgnAddC (conDec : I.ConDec) = sgnAdd(currentMod(), conDec)
-    
+      
   fun sgnLookup (c : IDs.cid) = case CH.lookup(symTable)(c)
     of SOME d => d
   | NONE => raise UndefinedCid
   val sgnLookupC = sgnLookup o inCurrent
-    
-  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
+  
+  fun structAddC(strDec : StrDec) =
     let
-      fun doRest(l) = 
-	if l = getNextLid(m) then () else (f (IDs.newcid(m,l)); doRest(IDs.nextLid(l)))
-    in
-      doRest(IDs.firstLid())
-    end
-  fun sgnAppC (f) = sgnApp(currentMod(), f)
-
-  fun modApp(f : IDs.mid -> unit) =
-    let
-      fun doRest(m) = 
-	if m = (! nextMid) then () else ((f m); doRest(IDs.nextMid(m)))
-    in
-      doRest(IDs.firstLid())
-    end
-    
-  fun structAdd (m : IDs.mid, strDec : StrDec) =
-    let
-      val c = IDs.newcid(m, getNextLid(m))
-      val _ = incrNextLid(m);
+      val (c as (m,l)) :: scopetail = ! scope
+      val _ = scope := (m, l+1) :: scopetail
       val _ = CH.insert(structTable)(c, strDec)
     in
       c
-    end      
-  fun structAddC (strDec : StrDec) = structAdd(currentMod(), strDec)
+    end
 
   fun structLookup(c : IDs.cid) = case CH.lookup(structTable)(c)
     of SOME d => d
@@ -142,6 +124,33 @@ struct
     SymStr(structLookup c)
     handle UndefinedCid => SymCon(sgnLookup c)
 
+  fun reset () = (
+    CH.clear symTable; 
+    CH.clear structTable;
+    IH.clear modTable;
+    modOpen(SigDec ["toplevel"]); (* open toplevel *)
+    ()
+  )
+ 
+  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
+    let
+      val length = modSize m
+      fun doRest(l) =
+	if l = length then () else (f (m,l); doRest(l+1))
+    in
+      doRest(0)
+    end
+  fun sgnAppC (f) = sgnApp(currentMod(), f)
+
+  fun modApp(f : IDs.mid -> unit) =
+    let
+      val length = ! nextMid
+      fun doRest(m) = 
+	if m = length then () else ((f m); doRest(m+1))
+    in
+      doRest(0)
+    end
+    
   fun constDefOpt (d) =
       (case sgnLookup (d)
 	 of I.ConDef(_, _, _, U,_, _, _) => SOME U
@@ -215,7 +224,10 @@ struct
     | getInst'(inst :: insts, c, q) = (
         case inst
            (* if c is instantiated directly, return its instantiation *)
-           of ConInst(c, e) => SOME e
+           of ConInst(c', e) =>
+              if c' = c
+              then SOME e
+              else getInst'(insts, c, q)
            (* if c can be addressed as c' imported via s, and if s is instantiated with mor,
               return the application of mor to c' *)
             | StrInst(s, mor) => (
@@ -270,37 +282,50 @@ struct
   (* Note: This function can be left unchanged if this code is reused for a different internal syntax
      except for the local function translateConDec.
      It would be nicer to put translateConDec on toplevel, but that would be less efficient. *)
-  fun flatten(c : IDs.cid, installConDec : I.ConDec -> IDs.cid, installStrDec : StrDec -> IDs.cid) =
+  fun flatten(s : IDs.cid, installConDec : I.ConDec -> IDs.cid, installStrDec : StrDec -> IDs.cid) =
      let
-     	val str = structLookup c
+     	val str = structLookup s
      	val name = strDecName str
      	val q = strDecQid str
      	val dom = strDecDom str
      	val structMap : (IDs.cid -> IDs.cid) ref = ref (fn x => x)
         fun translateConDec(c', I.ConDec(name', q', imp', stat', typ', uni')) =
               let
-                 val typ = applyMorph(typ', MorStr(c))
-                 val tq = (c, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                 val typ = applyMorph(typ', MorStr(s))
+                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
               in
                  case getInst(str, c', q')
                    of SOME def =>
-                      I.AbbrevDef(name @ name', tq, imp', typ, def, uni') (* @CS: can this be a ConDef? *)
+                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni') (* @CS: can this be a ConDef? *)
                     | NONE =>
                       I.ConDec(name @ name', tq, imp', stat', typ, uni')
               end
           | translateConDec(c', I.ConDef(name', q', imp', typ', def', uni', anc')) =
               let
-                 val typ = applyMorph(typ', MorStr(c))
-                 val def = applyMorph(def', MorStr(c))
-                 val tq = (c, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                 val typ = applyMorph(typ', MorStr(s))
+                 val def = applyMorph(def', MorStr(s))
+                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
               in
                  case getInst(str, c', q')
                    (* @CS: can those AbbrevDefs be ConDefs? *)
                    of SOME def =>
                       (* @FR: check def = def' *)
-                      I.AbbrevDef(name @ name', tq, imp', typ, def, uni')
+                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni')
                     | NONE =>
-                      I.AbbrevDef(name @ name', tq, imp', typ, applyMorph(def', MorStr(c)), uni')
+                      I.AbbrevDef(name @ name', tq, imp', applyMorph(def', MorStr(s)), typ, uni')
+              end
+          | translateConDec(c', I.AbbrevDef(name', q', imp', typ', def', uni')) =
+              let
+                 val typ = applyMorph(typ', MorStr(s))
+                 val def = applyMorph(def', MorStr(s))
+                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+              in
+                 case getInst(str, c', q')
+                   of SOME def =>
+                      (* @FR: check def = def' *)
+                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni')
+                    | NONE =>
+                      I.AbbrevDef(name @ name', tq, imp', applyMorph(def', MorStr(s)), typ, uni')
               end
      	fun flatten1(c' : IDs.cid) =
      	   case symLookup c'
@@ -310,12 +335,13 @@ struct
                  )
                | SymStr(str') =>
                 let
+                   val s' = c'
                    val name' = strDecName str'
                    val q' = strDecQid str'
                    val dom' = strDecDom str'
-                   val tq' = (c, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
-                   val tc' = installStrDec (StrDef(name @ name', tq', dom', MorComp(MorStr(c'), MorStr(c))))
-                   val _ = structMap := (fn x => if x = c' then tc' else (! structMap) x)
+                   val tq = (s, s') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                   val ss' = installStrDec (StrDef(name @ name', tq, dom', MorComp(MorStr(s'), MorStr(s))))
+                   val _ = structMap := (fn x => if x = s' then ss' else (! structMap) x)
                 in
                    ()
                 end

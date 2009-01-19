@@ -16,10 +16,10 @@ struct
 	       val c = b div 2
 	       val d = b + c
 	     in
-	       num(a)+128*(num(b)+128*(num(c)+128*num(d)))
+	       num(a)+64*(num(b)+64*(num(c)+64*num(d)))
 	     end
       end
   (* recurse over list, adding hash values for single strings as computed above *)
   fun stringListHash(nil) = 0
-    | stringListHash(s :: rest) = stringHash(s) + 10 * stringListHash(rest)
+    | stringListHash(s :: rest) = stringHash(s) + 5 * stringListHash(rest)
 end;  (* structure StringHash *)

@@ -11,10 +11,10 @@
   
   d : a' -> type.
   test : d b.
-}
+}.
 
 %sig T = {
   %struct r : R = {}.
   %struct s : S = {}.
-  %struct s': S = {%struct r := r}
-}
+  %struct s': S = {%struct r := r.}.
+}.

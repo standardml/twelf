@@ -190,7 +190,7 @@ local
     | argNumber (FX.Prefix _) = 1
     | argNumber (FX.Postfix _) = 1
 
-  (* tried to fix this, not sure what it will look like -fr Wed Jan 14 12:52:08 2009 *)
+  (* tried to fix this, not sure what it will look like @FR *)
   fun fmtConstPath (f : string -> (string * int), names : string list) =
      let
      	val formattedNames = List.map (Str0 o f) names
@@ -881,6 +881,8 @@ local
                           collectConstraints Xs)
     | collectConstraints (_ :: Xs) = collectConstraints (Xs)
 
+  fun mkString(nil : string list, pre, mid, post) = pre ^ post
+    | mkString(a :: l, pre, mid, post) = pre ^ (foldl (fn (x,y) => x ^ mid ^ y) a l) ^ post
 in
 
   (* In the functions below, G must be a "printing context", that is,
@@ -901,6 +903,32 @@ in
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
+
+  (* FR: cases for views missing *)
+  fun modBeginToString(ModSyn.SigDec name) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
+  fun modEndToString(ModSyn.SigDec name) = "}. % end signature " ^ (Names.foldQualifiedName name)
+  fun morphToString(ModSyn.MorStr(c)) =
+      ModSyn.strDecFoldName (ModSyn.structLookup c)
+    | morphToString(ModSyn.MorView(m)) =
+      ModSyn.modDecFoldName (ModSyn.modLookup m)
+    | morphToString(ModSyn.MorComp(mor1,mor2)) =
+      morphToString(mor1) ^ " " ^ morphToString(mor2)
+      
+  fun instToString(ModSyn.ConInst(c, U)) =
+         IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U)
+    | instToString(ModSyn.StrInst(c, mor)) =
+        "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor)
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) = (
+     "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modDecFoldName (ModSyn.modLookup dom)) ^ " = " ^
+     mkString(List.map instToString insts, "{", " ", "}.")
+     handle e => raise e
+    )
+   | strDecToString(ModSyn.StrDef(name, _, dom, def)) = (
+     "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modDecFoldName (ModSyn.modLookup dom)) ^ " = " ^
+     morphToString def ^ "."
+     handle e => raise e
+    )
+
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)
   fun ctxToString (G0, G) = F.makestring_fmt (formatCtx (G0, G))

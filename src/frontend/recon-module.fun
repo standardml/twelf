@@ -55,10 +55,10 @@ struct
   
   fun syminstToSymInst(Dom : IDs.mid, Cod : IDs.mid, inst : syminst, l as Paths.Loc (fileName, r)) =
      case inst
-        of coninst(con as (names, name, r), term) =>
+        of coninst(con as (names, name, r), (term, _)) =>
              let
              	val Con = nameLookupWithError(Dom, names @ [name], r)
-		val JTerm ((Term, occ), V, L) = ReconTerm.recon (ReconTerm.jterm term)
+		val ExtSyn.JTerm((Term, occ), V, L) = ExtSyn.recon (ExtSyn.jterm term)
              in
              	ModSyn.ConInst(Con, Term)
              end

@@ -830,7 +830,7 @@ struct
 									    ^ msg1 ^ "\n[Relational] " ^ msg2))
 	    | covererror (NONE, msg2)      = raise Cover.Error (Paths.wrap (r, "Functional coverage succeeds, relationals fails:\n[Relational] " ^ msg2))
 
-7 ******************************************* *)
+ ******************************************* *)
 
 	  val _ = map Total.install La	(* pre-install for recursive checking *)
 	  val _ = map Total.checkFam La
@@ -1059,7 +1059,7 @@ struct
 	  
 	end
       | install1 (fileName, (Parser.Use name, r)) =
-        (if ModSyn.currentMod() = IDs.firstMid()
+        (if ModSyn.onToplevel()
            then CSManager.useSolver (name)
            else raise ModSyn.Error (Paths.wrap (r, "%use declaration needs to be at top level"))
         )
@@ -1069,21 +1069,47 @@ struct
          case modBegin
            of ReconModule.sigbegin name =>
               let
-              	 val m = ModSyn.modOpen()
+              	 (* @FR: actually the name should be qualified using the currently open signatures *)
+              	 val sigDec = ModSyn.SigDec [name]
+              	 val m = ModSyn.modOpen(sigDec)
               	 val _ = Names.installModname(m, [name])
+         	 val _ = if !Global.chatter >= 3
+		         then msg (Print.modBeginToString(sigDec) ^ "\n")
+		         else ()
               in
               	()
               end
         )
-      | install1 (fileName, declr as (Parser.ModEnd, r)) = ModSyn.modClose()
+      | install1 (fileName, declr as (Parser.ModEnd, r)) =
+          let
+             val cmod = ModSyn.modLookup (ModSyn.currentMod())
+          in
+             ModSyn.modClose();
+             if !Global.chatter >= 3
+	     then msg (Print.modEndToString(cmod) ^ "\n\n")
+             else ()
+          end
       | install1 (fileName, declr as (Parser.StrDec strdec, r)) =
          let
             val strDec = ReconModule.strdecToStrDec (ModSyn.currentMod(), strdec, Paths.Loc (fileName,r))
             val c = installStrDec (strDec, r)
+            val _ = msg (Print.strDecToString strDec ^ "\n")
             val dummyRegion = Paths.Reg (0,0)
-            val callbackInstallConDec =
-               fn d : IntSyn.ConDec => installConDec IntSyn.Ordinary (Whnf.normalizeConDec d, (fileName, NONE), dummyRegion)
-            val callbackInstallStrDec = fn d : ModSyn.StrDec => installStrDec(d, dummyRegion)
+            fun callbackInstallConDec(d : IntSyn.ConDec) =
+               let
+               	  val d' = Whnf.normalizeConDec d
+                  val c = installConDec IntSyn.Ordinary (d', (fileName, NONE), dummyRegion);
+                  val _ = msg ("% induced: " ^ (Print.conDecToString d') ^ "\n")
+               in
+                  c
+               end
+            fun callbackInstallStrDec(d : ModSyn.StrDec) =
+               let
+               	  val s = installStrDec(d, dummyRegion)
+               	  val _ = msg ("% induced: " ^ (Print.strDecToString d) ^ "\n")
+               in
+               	  s
+               end
             val _ = ModSyn.flatten(c, callbackInstallConDec, callbackInstallStrDec)
          in
             ()
@@ -1198,15 +1224,13 @@ struct
 
     (* decl (name) = () prints declaration of constant id *)
     fun decl (modname, name) =
-        (* modname must be looked up and result assigned to mid here -fr *)
-        let
-           val mid = IDs.firstMid()
-           val qname = Names.parseQualifiedName name 
-         in
-           case Names.nameLookup(mid, qname)
-             of NONE => (msg (undeclaredIdentifier qname ^ " has not been declared\n"); ABORT)
-              | SOME cid => decl' (cid)
-        end
+       case Names.modnameLookup (Names.parseQualifiedName modname)
+          of NONE => (msg (modname ^ " has not been declared\n"); ABORT)
+           | SOME m => (
+                case Names.nameLookup(m, Names.parseQualifiedName name)
+                   of NONE => (msg (name ^ " has not been declared\n"); ABORT)
+                  | SOME cid => decl' (cid)
+             )
     and decl' (cid) =
         let
 	  val conDec = ModSyn.sgnLookup (cid)
