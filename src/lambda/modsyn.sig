@@ -22,8 +22,11 @@ sig
      morphisms
      morphisms have a domain and a codomain signature
      a morphism from S to T can be regarded as an expression of type S over signature T
+     MorStr(c) is the morphism induced by a structure
+     MorView(m) is the morphism induced by a view
+     MorComp(mor,mor') is the composition of mor and mor' in diagram order (i.e., mor' o mor)
   *)
-  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid
+  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
   (*
      symbol instantiations
      instantiations are the building blocks of structures and views, say from S to T
@@ -38,11 +41,17 @@ sig
      such a structure i declared in signature T induces a morphism MorStr(i) from S to T
      such a structure carries instantiations of symbols of S with expressions of T
   *)
-  datatype StrDec = StrDec of
-    string list                        (* qualified name *)
+  datatype StrDec
+  = StrDec of
+      string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)
     * IDs.mid                          (* domain (= instantiated signature) *)
     * SymInst list                     (* instantiations *)
+  | StrDef of
+      string list                      (* qualified name *)
+    * IDs.qid                          (* list of structures via which it is imported *)
+    * IDs.mid                          (* domain (= instantiated signature) *)
+    * Morph                            (* definition *)    
     
   (*
      signature declarations
@@ -65,8 +74,9 @@ sig
     * IDs.mid                          (* codomain *)
     
   (* convenience methods to access components of declarations *)
-  val strDecName   : StrDec -> string list
-  val strDecDomain : StrDec -> IDs.mid
+  val strDecName: StrDec -> string list
+  val strDecQid : StrDec -> IDs.qid
+  val strDecDom : StrDec -> IDs.mid
 
   (********************** Interface methods that affect the state **********************)
   
@@ -92,7 +102,7 @@ sig
      This is necessary because ill-typed structure declarations are caught only during the flattening.
      This is not a design feature of the module system per se, but a compromise to ease integration with the existing Twelf code.
   *)
-  val flatten    : IDs.cid * (I.ConDec -> unit) * (StrDec -> unit) -> unit
+  val flatten    : IDs.cid * (I.ConDec -> IDs.cid) * (StrDec -> IDs.cid) -> unit
 
   (********************** Interface methods that do not affect the state **********************)
   

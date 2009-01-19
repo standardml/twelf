@@ -3,8 +3,7 @@ structure IDs = struct
    type lid = int                        (* local id's of (declared or imported) declarations *)
    type mid = int                        (* global id's of modules (= signatures) *)
    type cid = mid * lid                  (* global id's of declarations *)
-   type qid = lid list                   (* qualified local id, this gives the path along which a declaration was imported *)
-   type Qid = string list
+   type qid = (cid * cid) list           (* qualified local id, this gives the path along which a declaration was imported *)
    fun cidhash(x,y) = 1000 * x + y       (* hashing cid's *)
    fun cidcompare((x,y),(x',y')) =       (* comparing cid's *)
       case Int.compare(x,x')
@@ -20,6 +19,10 @@ structure IDs = struct
    fun firstLid() = 0
    fun cidToString(m,l) = "(" ^ (Int.toString m) ^ "," ^ (Int.toString l) ^ ")"
    val invalidCid = (~1,~1)
+   fun preimageFromQid(s : cid, nil : qid) = NONE
+     | preimageFromQid(s,       (s',c) :: tl) = if s = s' then SOME c else preimageFromQid(s, tl)
+
+   type Qid = string list
 end
 
 (* These tables should be moved to the others *) 
