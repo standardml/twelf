@@ -1,0 +1,20 @@
+%sig R = {
+  a : type.
+  c : a.
+}.
+
+%sig S = {
+  a' : type.
+  b' : a'.
+  %struct r : R = {a := a'.}.
+  b : r.a.
+  
+  d : a' -> type.
+  test : d b.
+}
+
+%sig T = {
+  %struct r : R = {}.
+  %struct s : S = {}.
+  %struct s': S = {%struct r := r}
+}

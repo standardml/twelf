@@ -164,7 +164,7 @@ struct
      let
      	fun A(I.Uni L) = I.Uni L
      	  | A(I.Pi((D, P), V)) = I.Pi((ADec D, P), A V)
-     	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)
+     	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
      	  | A(I.Redex(U, S)) = I.Redex(A U, ASpine S)
      	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
      	  | A(I.EVar(E, C, U, Constr)) = raise FixMe
@@ -200,6 +200,7 @@ struct
         and AConstr(I.Solved) = I.Solved
           | AConstr(I.Eqn(G, U1, U2)) = raise FixMe
           | AConstr(I.FgnCnstr(cs, fgnC)) = I.FgnCnstr(cs, fgnC)
+        (* apply morphism to constant *)
         and ACid(c) =
            case mor
              of MorStr(s) => cidToExp(valOf(CCH.lookup structMapTable (s,c)))  (* get the cid to which s maps c *)
