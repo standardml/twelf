@@ -6,7 +6,10 @@
     %struct lc: LC = {}.
     %struct par: PAR = {%struct lc := lc.}. 
 
-identity : {M:lc.term} M par.=> M  ->  type.
+%abbrev test : lc.term -> par.lc.term = [x]x.
+
+identity : {M:lc.term} par.=> M M  ->  type.
+
 %mode identity +M -R.
     %sig lid = {x:lc.term.
              eqx: x par.=> x.

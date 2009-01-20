@@ -6,17 +6,20 @@
 %sig S = {
   a' : type.
   b' : a'.
-  %struct r : R = {a := a'.}.
-  b : r.a.
+  %struct r' : R = {a := a'.}.
+  c' : r'.a.
   
-  d : a' -> type.
-  test : d b.
-
-  x : ([x:a'] d x) b.
+  d' : a' -> type.
+  test : d' b'.
 }.
 
 %sig T = {
-  %struct r : R = {}.
-  %struct s : S = {}.
-  %struct s': S = {%struct r := r.}.
+  a'' : type.
+  b'' = a'' -> a''.
+  %struct r'' : R = {a := a'' -> a''.}.
+  %struct s'': S = {a' := b''. %struct r' := r''.}. %% need to check: s''(r'.a) = r.a
+}.
+
+%sig U = {
+%struct t''' : T = {}.
 }.
