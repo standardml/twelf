@@ -21,5 +21,5 @@ struct
       end
   (* recurse over list, adding hash values for single strings as computed above *)
   fun stringListHash(nil) = 0
-    | stringListHash(s :: rest) = stringHash(s) + 5 * stringListHash(rest)
+    | stringListHash(s :: rest) = (stringHash(s) + 5 * stringListHash(rest)) mod 16777216  (* modulo needed to prevent Overflow exception *)
 end;  (* structure StringHash *)

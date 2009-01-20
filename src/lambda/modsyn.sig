@@ -81,8 +81,8 @@ sig
   val strDecFoldName: StrDec -> string
   val strDecQid : StrDec -> IDs.qid
   val strDecDom : StrDec -> IDs.mid
-  
-  val modDecFoldName : ModDec -> string
+  val modFoldName : IDs.mid -> string
+  val symFoldName: IDs.cid -> string  
 
   (********************** Interface methods that affect the state **********************)
   

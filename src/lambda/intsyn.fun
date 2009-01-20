@@ -209,8 +209,7 @@ struct
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
 
-  fun foldName l = foldl (fn (x,y) => x ^ "." ^ y) (hd l) (tl l)
-  fun conDecFoldName(condec) = foldName (conDecName condec)
+  fun conDecFoldName(condec) = IDs.mkString(conDecName condec, "", ".", "")
   
   fun conDecQid (ConDec (_, qid, _, _, _, _)) = qid
     | conDecQid (ConDef (_, qid, _, _, _, _, _)) = qid

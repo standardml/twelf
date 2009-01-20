@@ -18,7 +18,12 @@ structure IDs = struct
    fun preimageFromQid(s : cid, nil : qid) = NONE
      | preimageFromQid(s,       (s',c) :: tl) = if s = s' then SOME c else preimageFromQid(s, tl)
 
+(* This stuff doesn't belong here, but I didn't know where else to put it. -fr *)
    type Qid = string list
+   (* get a string from a list *)
+   fun mkString(nil : string list, pre, mid, post) = pre ^ post
+    | mkString(a :: l, pre, mid, post) = pre ^ (foldl (fn (x,y) => y ^ mid ^ x) a l) ^ post
+
 end
 
 (* These tables should be moved to the others *) 

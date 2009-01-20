@@ -1095,12 +1095,17 @@ struct
             val c = installStrDec (strDec, r)
             val _ = msg (Print.strDecToString strDec ^ "\n")
             val dummyRegion = Paths.Reg (0,0)
+            fun qidToString(q : IDs.qid) = 
+               IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
+                            "", ", ", "")
             fun callbackInstallConDec(d : IntSyn.ConDec) =
                let
                	  val d' = Whnf.normalizeConDec d
 		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec d' else ()
                   val c = installConDec IntSyn.Ordinary (d', (fileName, NONE), dummyRegion);
                   val _ = msg ("% induced: " ^ (Print.conDecToString d') ^ "\n")
+                  val _ = if ! Global.chatter < 10 then () else
+                  	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid d) ^ "\n")
                in
                   c
                end
@@ -1108,6 +1113,8 @@ struct
                let
                	  val s = installStrDec(d, dummyRegion)
                	  val _ = msg ("% induced: " ^ (Print.strDecToString d) ^ "\n")
+                  val _ = if ! Global.chatter < 10 then () else
+                  	msg("% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")
                in
                	  s
                end

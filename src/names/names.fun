@@ -233,7 +233,7 @@ struct
     (* this must be replaced with the parsing method for qualified names -fr *)
      fun parseQualifiedName (name : string) =
         String.fields (fn c => c = #".") name
-     fun foldQualifiedName l = foldl (fn (x,y) => x ^ "." ^ y) (hd l) (tl l)
+     fun foldQualifiedName l = IDs.mkString(l,"",".","")
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name

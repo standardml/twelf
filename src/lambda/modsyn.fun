@@ -23,10 +23,9 @@ struct
   (* unifies constant and structure declarations *)
   datatype SymDec = SymCon of I.ConDec | SymStr of StrDec
 
-  fun foldName l = foldl (fn (x,y) => x ^ "." ^ y) (hd l) (tl l)
   fun strDecName (StrDec(n, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _)) = n
-  fun strDecFoldName s = foldName (strDecName s)
+  fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
   fun strDecQid (StrDec(_, q, _, _)) = q
     | strDecQid (StrDef(_, q, _, _)) = q
   fun strDecDom (StrDec(_, _, m, _)) = m
@@ -34,9 +33,6 @@ struct
 
   fun symInstCid(ConInst(c, _)) = c
     | symInstCid(StrInst(c, _)) = c
-
-  fun modDecFoldName (SigDec n) = foldName n
-    | modDecFoldName (ViewDec(n, _, _)) = n
 
   exception UndefinedCid
   exception NoOpenModule
@@ -165,7 +161,15 @@ struct
       (case sgnLookup (c)
 	 of I.ConDec (_, _, _, status, _, _) => status
           | _ => I.Normal)
-  
+  fun symFoldName(c) =
+     case symLookup(c)
+       of SymCon(condec) => IntSyn.conDecFoldName condec
+        | SymStr(strdec) => strDecFoldName strdec
+    fun modFoldName m =
+    case modLookup m 
+       of SigDec n => IDs.mkString(n,"",".","")
+        | ViewDec(n, _, _) => n
+
   fun headToExp h = I.Root(h, I.Nil)
   fun cidToExp c = headToExp(I.Const c)
   exception FixMe (* @CS: search for this exception, only temporary to make stuff compile *)
@@ -282,50 +286,58 @@ struct
   (* Note: This function can be left unchanged if this code is reused for a different internal syntax
      except for the local function translateConDec.
      It would be nicer to put translateConDec on toplevel, but that would be less efficient. *)
-  fun flatten(s : IDs.cid, installConDec : I.ConDec -> IDs.cid, installStrDec : StrDec -> IDs.cid) =
+   (* variable naming convention:
+      - flattened structure: upper case
+      - declaration in instantiated signature: primed lower case
+      - induced declaration in instantiating signature: unprimed lower case
+    *)
+  fun flatten(S : IDs.cid, installConDec : I.ConDec -> IDs.cid, installStrDec : StrDec -> IDs.cid) =
      let
-     	val str = structLookup s
-     	val name = strDecName str
-     	val q = strDecQid str
-     	val dom = strDecDom str
-     	val structMap : (IDs.cid -> IDs.cid) ref = ref (fn x => x)
+     	val Str = structLookup S
+     	val Name = strDecName Str
+     	val Q = strDecQid Str
+     	val Dom = strDecDom Str
+     	val structMap : (IDs.cid * IDs.cid) list ref = ref nil
+     	fun applyStructMap(q) = List.map (fn (x,y) => (#2 (valOf (List.find (fn z => #1 z = x) (!structMap))), 
+     	                                                y)
+     	                                  ) q
         fun translateConDec(c', I.ConDec(name', q', imp', stat', typ', uni')) =
               let
-                 val typ = applyMorph(typ', MorStr(s))
-                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                 val typ = applyMorph(typ', MorStr(S))
+                 val q = (S, c') :: (applyStructMap q')
               in
-                 case getInst(str, c', q')
+                 case getInst(Str, c', q')
                    of SOME def =>
-                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni') (* @CS: can this be a ConDef? *)
+                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @CS: can this be a ConDef? *)
                     | NONE =>
-                      I.ConDec(name @ name', tq, imp', stat', typ, uni')
+                      I.ConDec(Name @ name', q, imp', stat', typ, uni')
               end
-          | translateConDec(c', I.ConDef(name', q', imp', typ', def', uni', anc')) =
+          | translateConDec(c', I.ConDef(name', q', imp', def', typ', uni', anc')) =
               let
-                 val typ = applyMorph(typ', MorStr(s))
-                 val def = applyMorph(def', MorStr(s))
-                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                 val typ = applyMorph(typ', MorStr(S))
+                 val def = applyMorph(def', MorStr(S))
+                 val q = (S, c') :: (applyStructMap q')
               in
-                 case getInst(str, c', q')
+                 case getInst(Str, c', q')
                    (* @CS: can those AbbrevDefs be ConDefs? *)
                    of SOME def =>
                       (* @FR: check def = def' *)
-                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni')
+                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni')
                     | NONE =>
-                      I.AbbrevDef(name @ name', tq, imp', applyMorph(def', MorStr(s)), typ, uni')
+                      I.AbbrevDef(Name @ name', q, imp', applyMorph(def', MorStr(S)), typ, uni')
               end
-          | translateConDec(c', I.AbbrevDef(name', q', imp', typ', def', uni')) =
+          | translateConDec(c', I.AbbrevDef(name', q', imp', def', typ', uni')) =
               let
-                 val typ = applyMorph(typ', MorStr(s))
-                 val def = applyMorph(def', MorStr(s))
-                 val tq = (s, c') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
+                 val typ = applyMorph(typ', MorStr(S))
+                 val def = applyMorph(def', MorStr(S))
+                 val q = (S, c') :: (applyStructMap q')
               in
-                 case getInst(str, c', q')
+                 case getInst(Str, c', q')
                    of SOME def =>
                       (* @FR: check def = def' *)
-                      I.AbbrevDef(name @ name', tq, imp', def, typ, uni')
+                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni')
                     | NONE =>
-                      I.AbbrevDef(name @ name', tq, imp', applyMorph(def', MorStr(s)), typ, uni')
+                      I.AbbrevDef(Name @ name', q, imp', applyMorph(def', MorStr(S)), typ, uni')
               end
      	fun flatten1(c' : IDs.cid) =
      	   case symLookup c'
@@ -339,14 +351,14 @@ struct
                    val name' = strDecName str'
                    val q' = strDecQid str'
                    val dom' = strDecDom str'
-                   val tq = (s, s') :: List.map (fn (x,y) => ((! structMap) x, y)) q'
-                   val ss' = installStrDec (StrDef(name @ name', tq, dom', MorComp(MorStr(s'), MorStr(s))))
-                   val _ = structMap := (fn x => if x = s' then ss' else (! structMap) x)
+                   val q = (S, s') :: (applyStructMap q')
+                   val s = installStrDec (StrDef(Name @ name', q, dom', MorComp(MorStr(s'), MorStr(S))))
+                   val _ = structMap := (s',s) :: (! structMap)
                 in
                    ()
                 end
      in
-     	sgnApp(dom, flatten1)
+     	sgnApp(Dom, flatten1)
      end
 
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)

@@ -36,12 +36,12 @@ struct
   fun nameLookupWithError(m : IDs.mid, l : IDs.Qid, r : Paths.region) =
      case Names.nameLookup (m,l)
        of SOME c => c
-        | NONE => error(r, "undeclared identifier")
+        | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
 
   fun modnameLookupWithError(l : string list, r : Paths.region) =
      case Names.modnameLookup l
        of SOME c => c
-        | NONE => error(r, "undeclared module identifier")
+        | NONE => error(r, "undeclared module identifier: " ^ Names.foldQualifiedName l)
 
 (* @CS: is all the paths stuff right in the sequel *)
   fun morphToMorph(Dom : IDs.mid, Cod : IDs.mid, (mor, r)) =
