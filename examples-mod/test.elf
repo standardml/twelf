@@ -17,7 +17,7 @@
   a'' : type.
   b'' = a'' -> a''.
   %struct r'' : R = {a := a'' -> a''.}.
-  %struct s'': S = {a' := b''. %struct r' := r''.}. %% need to check: s''(r'.a) = r.a
+  %struct s'': S = {a' := b''. %struct r' := r''.}. %% need to check: s''(r'a) = ra
 }.
 
 %sig U = {
