@@ -270,7 +270,14 @@ struct
     fun infer U = I.EClo (inferExp (I.Null, (U, I.id)))
     fun infer' (G, U) = I.EClo (inferExp (G, (U, I.id)))
 
-
+    fun checkConDec (I.ConDec (_, _, _, _, V, K)) = checkExp (I.Null, (V, I.id), (I.Uni K, I.id))
+      | checkConDec (I.AbbrevDef (_, _, _, U, V, K)) = 
+         (checkExp (I.Null, (V, I.id), (I.Uni K, I.id));
+	  checkExp (I.Null, (U, I.id), (V, I.id)))
+      | checkConDec (I.ConDef (_, _, _, U, V, K, _)) = 
+         (checkExp (I.Null, (V, I.id), (I.Uni K, I.id));
+	  checkExp (I.Null, (U, I.id), (V, I.id));
+	  Strict.check ((U,V), NONE))
 
     fun checkConv (U1, U2) =
           if Conv.conv ((U1, I.id), (U2, I.id)) then ()
@@ -283,11 +290,12 @@ struct
       val check = check
       val checkDec = checkDec
       val checkConv = checkConv
+      val checkConDec = checkConDec
 
       val infer = infer
       val infer' = infer'
       val typeCheck = typeCheck
       val typeCheckCtx = checkCtx			   
-      val typeCheckSub = checkSub
+      val typeCheckSub = checkSub	
   end  (* local ... *)
 end; (* functor TypeCheck *)

@@ -1098,6 +1098,7 @@ struct
             fun callbackInstallConDec(d : IntSyn.ConDec) =
                let
                	  val d' = Whnf.normalizeConDec d
+		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec d' else ()
                   val c = installConDec IntSyn.Ordinary (d', (fileName, NONE), dummyRegion);
                   val _ = msg ("% induced: " ^ (Print.conDecToString d') ^ "\n")
                in

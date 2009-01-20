@@ -11,6 +11,8 @@
   
   d : a' -> type.
   test : d b.
+
+  x : ([x:a'] d x) b.
 }.
 
 %sig T = {

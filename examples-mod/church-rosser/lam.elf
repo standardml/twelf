@@ -1,0 +1,9 @@
+%%% Untyped lambda-calculus
+%%% Author: Frank Pfenning
+
+%sig LC = {
+term : type.  %name term M.
+
+lam : (term -> term) -> term.
+app : term -> term -> term.
+}.

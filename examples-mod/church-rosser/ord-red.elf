@@ -1,0 +1,47 @@
+%%% Ordinary reduction for the untyped lambda-calculus
+%%% Author: Frank Pfenning
+
+%sig ORD = {
+  %struct lc : LC = {}.
+
+  --> : lc.term -> lc.term -> type.  %infix none 10 -->.
+			     %name --> R.
+
+  beta1 :   (lc.app (lc.lam M1) M2) --> M1 M2.
+
+  lm1   :       ({x:lc.term} M x --> M' x)
+       ->            (lc.lam M) --> (lc.lam M').
+
+  apl1  :              M1 --> M1'
+      ->    (lc.app M1 M2) --> (lc.app M1' M2).
+
+  apr1  :              M2 --> M2'
+      ->    (lc.app M1 M2) --> (lc.app M1 M2').
+
+  % Multi-step reduction
+
+  -->* : lc.term -> lc.term -> type.  %infix none 10 -->*.
+			      %name -->* R*.
+
+  id1   :    M -->* M.
+
+  step1 : M --> M' -> M' -->* M'' -> M -->* M''.
+
+  % Conversion
+
+  <-> : lc.term -> lc.term -> type.  %infix none 10 <->.
+			     %name <-> C.
+
+  refl :    M  <-> M.
+
+  sym  :    M  <-> M'
+     <-     M' <-> M.
+
+  trans:    M  <-> M''
+     <-     M  <-> M'
+     <-     M' <-> M''.
+
+
+  red  :    M  <->  M'
+     <-     M  -->* M'.
+}.

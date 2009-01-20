@@ -150,3 +150,9 @@ struct
     val checkType = occursInType
   end
 end;  (* functor Strict *)
+
+
+structure Strict =
+  Strict ((*! structure IntSyn' = IntSyn !*)
+	  structure Whnf = Whnf
+	  structure Paths' = Paths);

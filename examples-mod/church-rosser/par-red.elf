@@ -1,0 +1,47 @@
+%%% Parallel reduction in the untyped lambda calculus
+%%% Author: Frank Pfenning
+
+%sig PAR = {
+  %struct lc : LC = {}.
+=> : lc.term -> lc.term -> type.  %infix none 10 =>.
+                            %name => R.
+
+beta : ({x:lc.term} x => x -> M1 x => M1' x)
+     ->                      M2 => M2'
+     ->       (lc.app (lc.lam M1) M2) => M1' M2'.
+
+ap   :            M1 => M1'
+     ->           M2 => M2'
+     ->  (lc.app M1 M2) => (lc.app M1' M2').
+
+lm   : ({x:lc.term} x => x -> M x => M' x)
+     ->                  lc.lam M => lc.lam M'.
+
+% Parallel, multi-step reduction
+
+=>* : lc.term -> lc.term -> type.  %infix none 10 =>*.
+                             %name =>* R*.
+
+id   :          M  =>* M.
+
+;    :  M  => M' -> M' =>* M'' ->  M  =>* M''.
+
+%infix right 10 ;.
+
+
+
+% Parallel conversion
+
+<=> : lc.term -> lc.term -> type.  %infix none 10 <=>.
+                             %name <=> C.
+
+reduce :  M  =>* M'
+       -> M  <=> M'.
+
+expand :  M  =>* M'
+       -> M' <=> M.
+
+;;     :  M  <=> M'
+       -> M' <=> M''
+       -> M  <=> M''.  %infix none 8 ;;.
+}.
