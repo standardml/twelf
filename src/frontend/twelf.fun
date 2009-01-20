@@ -1093,7 +1093,8 @@ struct
          let
             val strDec = ReconModule.strdecToStrDec (ModSyn.currentMod(), strdec, Paths.Loc (fileName,r))
             val c = installStrDec (strDec, r)
-            val _ = msg (Print.strDecToString strDec ^ "\n")
+            val prefix = if (! Global.printFlat) then "% " else ""
+            val _ = msg (prefix ^ Print.strDecToString strDec ^ "\n")
             val dummyRegion = Paths.Reg (0,0)
             fun qidToString(q : IDs.qid) = 
                IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
@@ -1103,7 +1104,8 @@ struct
                	  val d' = Whnf.normalizeConDec d
 		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec d' else ()
                   val c = installConDec IntSyn.Ordinary (d', (fileName, NONE), dummyRegion);
-                  val _ = msg ("% induced: " ^ (Print.conDecToString d') ^ "\n")
+                  val prefix = if (! Global.printFlat) then "" else "% induced: "
+                  val _ = msg (prefix ^ (Print.conDecToString d') ^ "\n")
                   val _ = if ! Global.chatter < 10 then () else
                   	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid d) ^ "\n")
                in
@@ -1615,6 +1617,7 @@ struct
     val unsafe : bool ref = Global.unsafe
     val autoFreeze : bool ref = Global.autoFreeze
     val timeLimit : (Time.time option) ref = Global.timeLimit
+    val printFlat : bool ref = Global.printFlat (* -fr *)
 
     datatype Status = datatype Status
     val reset = reset

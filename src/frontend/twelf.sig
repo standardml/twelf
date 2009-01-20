@@ -92,6 +92,7 @@ sig
   val unsafe : bool ref		             (* false, allows %assert *)
   val autoFreeze : bool ref		(* false, freezes families in meta-theorems *)
   val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
+  val printFlat : bool ref             (* toggle whether signature is mirrored in modular or flat syntax -fr *)
 
   datatype Status = OK | ABORT	       (* return status *)
 
