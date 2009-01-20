@@ -124,7 +124,20 @@ struct
     of SOME d => d
   | NONE => raise UndefinedCid
   val sgnLookupC = sgnLookup o inCurrent
-  
+
+  fun structAddC(strDec : StrDec) =
+    let
+      val (c as (m,l)) :: scopetail = ! scope
+      val _ = scope := (m, l+1) :: scopetail
+      val _ = CH.insert(structTable)(c, strDec)
+    in
+      c
+    end
+  fun structLookup(c : IDs.cid) = case CH.lookup(structTable)(c)
+    of SOME d => d
+  | NONE => raise UndefinedCid
+  val structLookupC = structLookup o inCurrent
+
   fun symLookup(c : IDs.cid) =
     SymStr(structLookup c)
     handle UndefinedCid => SymCon(sgnLookup c)
@@ -183,7 +196,7 @@ struct
   (********************** Semantics of the module system **********************)
   fun headToExp h = I.Root(h, I.Nil)
   fun cidToExp c = headToExp(I.Const c)
-  exception FixMe (* @CS: search for this exception, only temporary to make stuff compile *)
+  exception FixMe (* @CS: This exception is raised for unimplemented cases. *)
   fun applyMorph(U, mor) =
      let
      	fun A(I.Uni L) = I.Uni L
@@ -352,8 +365,8 @@ struct
                     | NONE =>
                       I.AbbrevDef(Name @ name', q, imp', applyMorph(def', MorStr(S)), typ, uni')
               end
-           | translateConDec(_, I.BlockDec(_, _, _, _,) = raise FixMe
-           | translateConDec(_, I.SkoDec(_, _, _, _, _) = raise FixMe
+           | translateConDec(_, I.BlockDec(_, _, _, _)) = raise FixMe
+           | translateConDec(_, I.SkoDec(_, _, _, _, _)) = raise FixMe
         (* takes the declaration c' from the instantiated signature and computes and installs the translated declaration *)
      	fun flatten1(c' : IDs.cid) =
      	   case symLookup c'
