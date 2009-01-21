@@ -34,9 +34,9 @@ struct
   fun symInstCid(ConInst(c, _)) = c
     | symInstCid(StrInst(c, _)) = c
 
-  exception UndefinedCid
-  exception NoOpenModule
-
+  exception UndefinedCid of IDs.cid
+  exception UndefinedMid of IDs.mid
+  
   (********************** Stateful data structures **********************)
 
     (* Invariants *)
@@ -61,8 +61,8 @@ struct
    For structures, also the inverse of this mapping cid -> qid is maintained:
    structMapTable contains for pairs (S,s') of structure ids, the id of the structure arising from applying S to s'.
   *)
-  (* maps modules IDs to module declarations and sizes; size is -1 if the module is still open *)
-  val modTable : (ModDec * int) IH.Table = IH.new(499)
+  (* maps modules IDs to module declarations, sizes, and containing module; size is -1 if the module is still open *)
+  val modTable : (ModDec * int * (IDs.mid option)) IH.Table = IH.new(499)
   (* maps symbol ids to constant declarations *)
   val symTable : I.ConDec CH.Table = CH.new(19999)
   (* maps symbol ids to structure declarations *)
@@ -82,28 +82,37 @@ struct
   fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
 
   fun modLookup(m : IDs.mid) = #1 (valOf (IH.lookup modTable m))
+                               handle Option => raise UndefinedMid(m)
   fun modSize(m : IDs.mid) =
      case List.find (fn (x,_) => x = m) (! scope)
         of SOME (_,l) => l                             (* size of open module stored in scope *)
          | NONE => #2 (valOf (IH.lookup modTable m))   (* size of closed module stored in modTable *)
-  fun modOpen(sigDec) =
-     (* @FR: case for views missing, should check nesting of signatures, views here *)
+                   handle Option => raise UndefinedMid(m)
+  fun modParent(m : IDs.mid) = #3 (valOf (IH.lookup modTable m))
+                               handle Option => raise UndefinedMid(m)
+  fun modOpen(sigDec as SigDec _) =
      let
+     	val parent = SOME (currentMod())
+     	             handle Empty => NONE
+     	val _ = case Option.map modLookup parent
+     	          of SOME (ViewDec _) => raise Error("signatures may not occur inside views")
+     	           | _ => ()
         val m = ! nextMid
         val _ = nextMid := ! nextMid + 1
         val _ = scope := (m,0) :: (! scope)
-        val _ = IH.insert modTable (m, (sigDec, ~1))
+        val _ = IH.insert modTable (m, (sigDec, ~1, parent))
      in
      	m
      end
+    | modOpen(viewDec as ViewDec _) = raise Error("views are currently not implemented") (* @FR *)
   fun modClose() =
     if onToplevel()
-    then raise NoOpenModule
+    then raise Error("no open module to close")
     else
       let
          val (m,l) = hd (! scope)
          val _ = scope := tl (! scope)
-         val _ = IH.insert modTable (m, (modLookup m, l))
+         val _ = IH.insert modTable (m, (modLookup m, l, modParent m))
       in
          ()
       end
@@ -122,7 +131,7 @@ struct
       
   fun sgnLookup (c : IDs.cid) = case CH.lookup(symTable)(c)
     of SOME d => d
-  | NONE => raise UndefinedCid
+    | NONE => raise (UndefinedCid c)
   val sgnLookupC = sgnLookup o inCurrent
 
   fun structAddC(strDec : StrDec) =
@@ -135,12 +144,12 @@ struct
     end
   fun structLookup(c : IDs.cid) = case CH.lookup(structTable)(c)
     of SOME d => d
-  | NONE => raise UndefinedCid
+  | NONE => raise (UndefinedCid c)
   val structLookupC = structLookup o inCurrent
 
   fun symLookup(c : IDs.cid) =
     SymStr(structLookup c)
-    handle UndefinedCid => SymCon(sgnLookup c)
+    handle UndefinedCid _ => SymCon(sgnLookup c)
 
   fun modApp(f : IDs.mid -> unit) =
     let
@@ -188,7 +197,7 @@ struct
      case symLookup(c)
        of SymCon(condec) => IntSyn.conDecFoldName condec
         | SymStr(strdec) => strDecFoldName strdec
-    fun modFoldName m =
+  fun modFoldName m =
     case modLookup m 
        of SigDec n => IDs.mkString(n,"",".","")
         | ViewDec(n, _, _) => n
@@ -336,6 +345,25 @@ struct
      	fun applyStructMap(q: IDs.qid) = List.map (fn (x,y) => (#2 (valOf (List.find (fn z => #1 z = x) (!structMap))), 
      	                                                y)
      	                                          ) q
+     	(* auxiliary function used in translated ConDec to unify the cases of ConDef and AbbrevDef *)
+     	fun translateDefOrAbbrev(c', name', q', imp', def', typ', uni', anc'Opt) =
+              let
+                 val typ = applyMorph(typ', MorStr(S))
+                 val defold = applyMorph(def', MorStr(S))
+                 val defnew = case getInst(Str, c', q')
+                    of SOME def =>
+                       (* @FR: check def = def' *)
+                       def
+                    | NONE => defold
+                 val q = (S, c') :: (applyStructMap q')
+              in 
+                 if not (anc'Opt = NONE) andalso uni' = I.Type andalso Strict.check((defnew, typ), NONE)
+                 (* return a ConDef if the input was a term-level ConDef and strictness is preserved *)
+                 then I.ConDef(Name @ name', q, imp', defnew, typ, uni', valOf anc'Opt) (* @CS: ancestor wrong *)
+                 (* otherwise return AbbrevDef *)
+                 else I.AbbrevDef(Name @ name', q, imp', defnew, typ, uni')
+              end
+     	   
      	(* translates a constant declaration (with id c') along S *)
         (* This function must be changed if this code is reused for a different internal syntax.
            It would be nicer to put it on toplevel, but that would be less efficient. *)
@@ -346,37 +374,14 @@ struct
               in
                  case getInst(Str, c', q')
                    of SOME def =>
-                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @CS: can this be a ConDef? *)
+                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @FR: can this be a ConDef? *)
                     | NONE =>
                       I.ConDec(Name @ name', q, imp', stat', typ, uni')
               end
-          | translateConDec(c', I.ConDef(name', q', imp', def', typ', uni', anc')) =
-              let
-                 val typ = applyMorph(typ', MorStr(S))
-                 val def = applyMorph(def', MorStr(S))
-                 val q = (S, c') :: (applyStructMap q')
-              in
-                 case getInst(Str, c', q')
-                   (* @CS: can those AbbrevDefs be ConDefs? *)
-                   of SOME def =>
-                      (* @FR: check def = def' *)
-                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni')
-                    | NONE =>
-                      I.AbbrevDef(Name @ name', q, imp', applyMorph(def', MorStr(S)), typ, uni')
-              end
-          | translateConDec(c', I.AbbrevDef(name', q', imp', def', typ', uni')) =
-              let
-                 val typ = applyMorph(typ', MorStr(S))
-                 val def = applyMorph(def', MorStr(S))
-                 val q = (S, c') :: (applyStructMap q')
-              in
-                 case getInst(Str, c', q')
-                   of SOME def =>
-                      (* @FR: check def = def' *)
-                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni')
-                    | NONE =>
-                      I.AbbrevDef(Name @ name', q, imp', applyMorph(def', MorStr(S)), typ, uni')
-              end
+           | translateConDec(c', I.ConDef(name', q', imp', def', typ', uni', anc')) =
+               translateDefOrAbbrev(c', name', q', imp', def', typ', uni', SOME anc')
+           | translateConDec(c', I.AbbrevDef(name', q', imp', def', typ', uni')) =
+               translateDefOrAbbrev(c', name', q', imp', def', typ', uni', NONE)
            | translateConDec(_, I.BlockDec(_, _, _, _)) = raise FixMe
            | translateConDec(_, I.SkoDec(_, _, _, _, _)) = raise FixMe
         (* takes the declaration c' from the instantiated signature and computes and installs the translated declaration *)
@@ -403,6 +408,71 @@ struct
      	(* calls flatten1 on all declarations of the instantiated signature (including imported ones) *)
      	sgnApp(Dom, flatten1)
      end
+
+  (********************** Module level type checking **********************)
+  
+  (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
+  fun reconMorph(MorComp(mor1,mor2)) =
+        let
+           val (d1,c1) = reconMorph mor1
+           val (d2,c2) = reconMorph mor2
+        in
+           if (c1 = d2)
+           then (d1,c2)
+           else raise Error("morphisms not composable")
+        end
+    | reconMorph(MorStr(s)) = ((strDecDom (structLookup s), IDs.midOf(s))
+                              handle UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
+    | reconMorph(MorView(m)) =
+        let
+           val ViewDec(_,dom, cod) = modLookup m
+                                        handle UndefinedMid _ => raise Error("non-view module reference in morphism")
+        in
+           (dom, cod)
+        end
+  (* checks the judgment |- mor : dom -> cod *)
+  fun checkMorph(mor, dom, cod) =
+     if reconMorph mor = (dom, cod)
+     then ()
+     else raise Error("morphism does not have expected type")
+  
+  (* auxiliary function of checkStrDec, checks whether the intended domain is permitted *)
+  fun checkStrDecDomain(dom : IDs.mid) =
+      case modLookup dom
+         of ViewDec _ => raise Error("domain of structure refers to a view instead of a signature")
+          | SigDec _ =>
+            let
+               val _ = if List.exists (fn x => #1 x = dom) (! scope)
+                       then raise Error("signature attempts to instantiate own ancestor")
+                       else ()
+               val par = valOf (modParent dom) (* NONE only if dom is toplevel, which is caught above *)
+               val _ = if not (List.exists (fn x => #1 x = par) (! scope))
+                       then raise Error("signature attempts to instantiate unreachable signature")
+                       else ()
+             in
+             	()
+             end
+  
+  (* checks simple well-typedness conditions for structure declarations
+     does not check:
+     - all instantiations instantiate domain symbols with codomain expressions
+       already checked during parsing/reconstruction
+     - all instantiations are well-typed and preserve equalities
+       will be checked during flattening
+     postcondition: getInst yields all information that is needed to check the latter during flattening
+  *)
+  fun checkStrDec(StrDec(_,_, dom, insts)) = (
+        checkStrDecDomain(dom);
+        case findClash insts
+          of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
+                                    symFoldName c ^ " in structure declaration")
+           | NONE => ()
+        )
+    | checkStrDec(StrDef(_,_, dom, mor)) = (
+        checkStrDecDomain(dom);
+        checkMorph(mor, dom, currentMod())
+      )
+
 
   (********************** Convenience methods **********************)
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)

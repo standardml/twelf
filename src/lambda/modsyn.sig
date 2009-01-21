@@ -126,6 +126,10 @@ sig
   (* maps local id's in the current module to global id's *)
   val inCurrent  : IDs.lid -> IDs.cid
 
+  (* type checking methods *)
+  val checkStrDec : StrDec -> unit
+  val checkMorph  : Morph * IDs.mid * IDs.mid -> unit 
+
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d *)
   val constDef    : IDs.cid -> I.Exp		(* definition of d *)
