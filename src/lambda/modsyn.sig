@@ -4,7 +4,10 @@
 signature MODSYN =
 sig
   exception Error of string
+  exception UndefinedCid of IDs.cid
+  exception UndefinedMid of IDs.mid
   structure I : INTSYN
+
 
   (* general notes
      The concept of modules unifies the concepts of signatures and views.
@@ -56,6 +59,8 @@ sig
     * IDs.qid                          (* list of structures via which it is imported *)
     * IDs.mid                          (* domain (= instantiated signature) *)
     * Morph                            (* definition *)    
+  (* unifies constant and structure declarations *)
+  datatype SymDec = SymCon of I.ConDec | SymStr of StrDec
     
   (*
      signature declarations
@@ -76,6 +81,7 @@ sig
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
     
+
   (* convenience methods to access components of declarations *)
   val strDecName: StrDec -> string list
   val strDecFoldName: StrDec -> string
@@ -83,7 +89,7 @@ sig
   val strDecDom : StrDec -> IDs.mid
   val modFoldName : IDs.mid -> string
   val symFoldName: IDs.cid -> string  
-
+  val symInstCid : SymInst -> IDs.cid
   (********************** Interface methods that affect the state **********************)
   
   (* called at the beginning of a module *)
@@ -106,16 +112,19 @@ sig
      This is necessary because ill-typed structure declarations are caught only during the flattening, not during structAdd.
      It would be better if structAdd called flatten already, but this way eases integration with the existing Twelf code.
   *)
-  val flatten    : IDs.cid * (IDs.cid * I.ConDec -> IDs.cid) * (IDs.cid * StrDec -> IDs.cid) -> unit
-
+(*  val flatten    : IDs.cid * (IDs.cid * I.ConDec -> IDs.cid) * (IDs.cid * StrDec -> IDs.cid) -> unit
+  remove --cs *)
   (********************** Interface methods that do not affect the state **********************)
   
   (* look up of constant declarations by global id *)
   val sgnLookup  : IDs.cid -> I.ConDec
   (* look up structure declarations by global id *)
   val structLookup: IDs.cid -> StrDec
+
+  val symLookup : IDs.cid -> SymDec
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
+  val modParent  : IDs.mid -> IDs.mid option
   (* application of a method to all constants of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit
@@ -125,10 +134,10 @@ sig
   val currentMod : unit -> IDs.mid
   (* maps local id's in the current module to global id's *)
   val inCurrent  : IDs.lid -> IDs.cid
+  val getScope   : unit -> IDs.mid list 
 
-  (* type checking methods *)
-  val checkStrDec : StrDec -> unit
-  val checkMorph  : Morph * IDs.mid * IDs.mid -> unit 
+  val structMap : IDs.cid * IDs.cid -> IDs.cid option
+    
 
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d *)

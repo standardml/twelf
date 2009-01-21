@@ -367,7 +367,7 @@ struct
     
     fun installStrDec(strDec, r) =
        let
-       	  val _ = ModSyn.checkStrDec(strDec)
+       	  val _ = Elab.checkStrDec(strDec)
           val c : IDs.cid = ModSyn.structAddC(strDec)
           val _ = Names.installName(c, ModSyn.strDecName strDec)
                   handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
@@ -1127,7 +1127,7 @@ struct
                in
                	  s
                end
-            val _ = ModSyn.flatten(c, callbackInstallConDec, callbackInstallStrDec)
+            val _ = Elab.flatten(c, callbackInstallConDec, callbackInstallStrDec)
          in
             ()
          end
