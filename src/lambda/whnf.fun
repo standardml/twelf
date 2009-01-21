@@ -12,7 +12,9 @@ struct
      Weak Head-Normal Form (whnf)
 
      whnf ::= (L, s) | (Pi DP. U, s) | (Root (#k(b), S))
-            | (Root(n,S), id) | (Root(c,S), id) | (Root(d,S), id) | (Root(F[s'], S), id)
+            | (Root(n,S), id) | (Root(c,S), id) 
+            | (Root(d,S), id) where d is a definition and *not* an abbreviation.
+            | (Root(F[s'], S), id)
             | (Root(fgnC,S), id) where fgnC is a foreign constant
             | (Lam D. U, s) | (X, s) where X is uninstantiated, X of base type
                                      during type reconstruction, X might have variable type

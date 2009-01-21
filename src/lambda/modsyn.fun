@@ -195,7 +195,11 @@ struct
 
   (********************** Semantics of the module system **********************)
   fun headToExp h = I.Root(h, I.Nil)
-  fun cidToExp c = headToExp(I.Const c)
+  fun cidToExp c = (case (sgnLookup c)
+		      of (I.ConDec _) => headToExp(I.Const c)
+		       | (I.ConDef _) => headToExp (I.Def c)
+		       | (I.AbbrevDef _) => headToExp (I.NSDef c))
+		      
   exception FixMe (* @CS: This exception is raised for unimplemented cases. *)
   fun applyMorph(U, mor) =
      let

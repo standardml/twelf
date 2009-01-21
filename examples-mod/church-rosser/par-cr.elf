@@ -32,7 +32,7 @@ subst_lm  : subst ([x:term] [idx: x => x] lm (R1 x idx))
                          S (R1' y idy)).
 
 
-%block l1 : block {x:term} {idx: x => x}
+%block l1 : block {x:term A} {idx: x => x}
 	     {hs: {N:term} {N':term} {S':N => N'}
 		   subst ([y:term][idy:y => y] idx) S' idx}.
 %worlds (l1) (subst R S R').

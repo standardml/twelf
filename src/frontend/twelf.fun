@@ -1095,7 +1095,7 @@ struct
             val c = installStrDec (strDec, r)
             val prefix = if (! Global.printFlat) then "% " else ""
             val _ = msg (prefix ^ Print.strDecToString strDec ^ "\n")
-            val dummyRegion = Paths.Reg (0,0)
+            val dummyRegion = r
             fun qidToString(q : IDs.qid) = 
                IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
                             "", ", ", "")

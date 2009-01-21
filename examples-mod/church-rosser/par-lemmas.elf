@@ -6,14 +6,12 @@
     %struct lc: LC = {}.
     %struct par: PAR = {%struct lc := lc.}. 
 
-%abbrev test : lc.term -> par.lc.term = [x]x.
+    identity : {M:lc.term} par.=> M M  ->  type.
 
-identity : {M:lc.term} par.=> M M  ->  type.
-
-%mode identity +M -R.
-    %sig lid = {x:lc.term.
-             eqx: x par.=> x.
-              u:identity x eqx.}.
+    %mode identity +M -R.
+    %block lid : block {x:lc.term}
+               {eqx: x par.=> x}
+                {u:identity x eqx}.
     
     id_lam : identity (lc.lam M1) (par.lm R1)
        <- ({x:lc.term} {eqx: x par.=> x}
@@ -23,12 +21,11 @@ identity : {M:lc.term} par.=> M M  ->  type.
        <- identity M1 R1
        <- identity M2 R2.
 
-
     %total (lid) M (identity M _).
-%worlds (lid) (identity M R).
-%covers identity +M -R.
-%lc.terminates M (identity M _).
-%total M (identity M _).
+    %worlds (lid) (identity M R).
+    %covers identity +M -R.
+    %lc.terminates M (identity M _).
+    %total M (identity M _).
 }% 
 
 %  Parallel multi-step reduction is transitive.
