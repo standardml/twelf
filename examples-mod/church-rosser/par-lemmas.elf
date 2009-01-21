@@ -6,7 +6,7 @@
     %struct lc: LC = {}.
     %struct par: PAR = {%struct lc := lc.}. 
 
-    identity : {M:lc.term} par.=> M M  ->  type.
+    identity : {M:lc.term} M par.=> M  ->  type.
 
     %mode identity +M -R.
     %block lid : block {x:lc.term}
@@ -21,12 +21,14 @@
        <- identity M1 R1
        <- identity M2 R2.
 
-    %total (lid) M (identity M _).
     %worlds (lid) (identity M R).
     %covers identity +M -R.
-    %lc.terminates M (identity M _).
     %total M (identity M _).
-}% 
+    %terminates M (identity M _).
+    %total M (identity M _).
+}.
+
+%{ 
 
 %  Parallel multi-step reduction is transitive.
 
@@ -37,10 +39,8 @@ append_id   : append par.id S* S*.
 append_step : append (R1 par.; R2*) S* (R1 par.; S2*')
            <- append R2* S* S2*'.
 
-%{
 %worlds () (append R* S* S*').
 %covers append +R* +S* -S*'.
 %lc.terminates R* (append R* S* _).
 %total R* (append R* S* _).
 }%
-}.
