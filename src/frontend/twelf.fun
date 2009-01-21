@@ -1095,25 +1095,31 @@ struct
             val c = installStrDec (strDec, r)
             val prefix = if (! Global.printFlat) then "% " else ""
             val _ = msg (prefix ^ Print.strDecToString strDec ^ "\n")
-            val dummyRegion = r
+            val region = r
             fun qidToString(q : IDs.qid) = 
                IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
                             "", ", ", "")
-            fun callbackInstallConDec(d : IntSyn.ConDec) =
+            fun callbackInstallConDec(c' : IDs.cid, d : IntSyn.ConDec) =
                let
-               	  val d' = Whnf.normalizeConDec d
-		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec d' else ()
-                  val c = installConDec IntSyn.Ordinary (d', (fileName, NONE), dummyRegion);
+               	  val dn = Whnf.normalizeConDec d
+		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec dn else ()
+                  val c = installConDec IntSyn.Ordinary (dn, (fileName, NONE), region);
+                  val _ = case Names.fixityLookup c'
+                            of Names.Fixity.Nonfix => ()
+                             | fix => Names.installFixity(c, fix)
+                  val _ = case Names.namePrefLookup c'
+                            of NONE => ()
+                             | SOME pref => Names.installNamePref(c, pref)
                   val prefix = if (! Global.printFlat) then "" else "% induced: "
-                  val _ = msg (prefix ^ (Print.conDecToString d') ^ "\n")
+                  val _ = msg (prefix ^ (Print.conDecToString dn) ^ "\n")
                   val _ = if ! Global.chatter < 10 then () else
-                  	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid d) ^ "\n")
+                  	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid dn) ^ "\n")
                in
                   c
                end
-            fun callbackInstallStrDec(d : ModSyn.StrDec) =
+            fun callbackInstallStrDec(_, d : ModSyn.StrDec) =
                let
-               	  val s = installStrDec(d, dummyRegion)
+               	  val s = installStrDec(d, region)
                	  val _ = msg ("% induced: " ^ (Print.strDecToString d) ^ "\n")
                   val _ = if ! Global.chatter < 10 then () else
                   	msg("% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")

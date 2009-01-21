@@ -311,12 +311,20 @@ struct
   *)
   fun findClash(insts) = findClash'(insts, nil, nil)
 
-   (* variable naming convention:
-      - flattened structure: upper case
-      - declaration in instantiated signature: primed lower case
-      - induced declaration in instantiating signature: unprimed lower case
-    *)
-  fun flatten(S : IDs.cid, installConDec : I.ConDec -> IDs.cid, installStrDec : StrDec -> IDs.cid) =
+  (* flattens a structure by computing all generated declarations (the order is depth first declaration order)
+     - S: cid of the structure to be flattened
+     - installConDec(c', condec): called for every generated constant declaration
+       - c': the cid of the declaration in the domain
+       - condec the generated declaration in the codomain
+       - returns: the cid of the generated declaration
+     - installStrDec: as installConDec, but for generated structure declarations
+  *)
+  (* variable naming convention:
+     - flattened structure: upper case
+     - declaration in domain: primed lower case
+     - induced declaration in codomain: unprimed lower case
+  *)
+  fun flatten(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * StrDec -> IDs.cid) =
      let
      	val Str = structLookup S
      	val Name = strDecName Str
@@ -327,7 +335,7 @@ struct
      	(* applies structMap to the first components of the pairs in q *)
      	fun applyStructMap(q: IDs.qid) = List.map (fn (x,y) => (#2 (valOf (List.find (fn z => #1 z = x) (!structMap))), 
      	                                                y)
-     	                                  ) q
+     	                                          ) q
      	(* translates a constant declaration (with id c') along S *)
         (* This function must be changed if this code is reused for a different internal syntax.
            It would be nicer to put it on toplevel, but that would be less efficient. *)
@@ -375,7 +383,7 @@ struct
      	fun flatten1(c' : IDs.cid) =
      	   case symLookup c'
               of SymCon(con') => (
-                   installConDec (translateConDec(c', con'));
+                   installConDec (c', translateConDec(c', con'));
                    ()
                  )
                | SymStr(str') =>
@@ -386,7 +394,7 @@ struct
                    val q' = strDecQid str'
                    val dom' = strDecDom str'
                    val q = (S, s') :: (applyStructMap q')
-                   val s = installStrDec (StrDef(Name @ name', q, dom', MorComp(MorStr(s'), MorStr(S))))
+                   val s = installStrDec (s', StrDef(Name @ name', q, dom', MorComp(MorStr(s'), MorStr(S))))
                    val _ = structMap := (s',s) :: (! structMap)
                 in
                    ()

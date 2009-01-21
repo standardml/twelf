@@ -106,7 +106,7 @@ sig
      This is necessary because ill-typed structure declarations are caught only during the flattening, not during structAdd.
      It would be better if structAdd called flatten already, but this way eases integration with the existing Twelf code.
   *)
-  val flatten    : IDs.cid * (I.ConDec -> IDs.cid) * (StrDec -> IDs.cid) -> unit
+  val flatten    : IDs.cid * (IDs.cid * I.ConDec -> IDs.cid) * (IDs.cid * StrDec -> IDs.cid) -> unit
 
   (********************** Interface methods that do not affect the state **********************)
   
