@@ -228,7 +228,7 @@ struct
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
     val namePrefLookupC = namePrefLookup o inCurrent
 
-    fun reset () = (SH.clear nameTable; CH.clear fixityTable; CH.clear namePrefTable)
+    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear fixityTable; CH.clear namePrefTable)
 
     (* this must be replaced with the parsing method for qualified names -fr *)
      fun parseQualifiedName (name : string) =

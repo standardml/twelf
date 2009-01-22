@@ -1,19 +1,29 @@
 structure Elab : ELAB =
 struct
-  structure M = ModSyn
   structure I = IntSyn
-
-  exception Error of string
-  exception FixMe
+  structure M = ModSyn
+  
+  (* the following methods are all that the module system needs about the semantics of the non-modular syntax *)
+  
+  (* check whether n = U : V can be a strict definition
+     (only needed as an optimization to return ConDefs if possible) *)
+  fun checkStrict(U : I.Exp, V : I.Exp) : bool = (Strict.check((U,V), NONE); true) handle Strict.Error _ => false
+  (* check whether U has type/kind V *)
+  fun checkType(U : I.Exp, V : I.Exp) : bool = (TypeCheck.check(U,V); true) handle TypeCheck.Error _ => false
+  (* check whether U has type/kind V *)
+  fun checkEqual(U : I.Exp, U' : I.Exp) : bool = Conv.conv((U, I.id), (U', I.id))
+  
+  exception Error of string (* raised on type-checking errors *)
+  exception FixMe           (* @CS: raised for unimplemented cases *)
 
  (********************** Semantics of the module system **********************)
+  (* auxiliary methods to get Exps from cids *)
   fun headToExp h = I.Root(h, I.Nil)
   fun cidToExp c = (case (M.sgnLookup c)
 		      of (I.ConDec _) => headToExp(I.Const c)
 		       | (I.ConDef _) => headToExp (I.Def c)
 		       | (I.AbbrevDef _) => headToExp (I.NSDef c))
 		      
-  exception FixMe (* @CS: This exception is raised for unimplemented cases. *)
   fun applyMorph(U, mor) =
      let
      	fun A(I.Uni L) = I.Uni L
@@ -27,9 +37,9 @@ struct
           | A(I.FgnExp(cs, F)) = raise FixMe
           | A(I.NVar n) = I.NVar n
         and AHead(I.BVar k) = headToExp(I.BVar k)
-          | AHead(I.Const c) = ACid c          (* apply morphism to constant *)
+          | AHead(I.Const c) = ACid c            (* apply morphism to constant *)
           | AHead(I.Proj(b,k)) = headToExp(I.Proj (ABlock b, k))
-          | AHead(I.Skonst c) = ACid c         (* apply morphism to constant *)
+          | AHead(I.Skonst c) = ACid c           (* apply morphism to constant *)
           | AHead(I.Def d) = A (M.constDef d)    (* expand definition *)
           | AHead(I.NSDef d) = A (M.constDef d)  (* expand definition *)
           | AHead(I.FVar(x, U, s)) = headToExp(I.FVar(x, A U, ASub s))
@@ -57,8 +67,8 @@ struct
         (* apply morphism to constant *)
         and ACid(c) =
            case mor
-             of M.MorStr(s) => cidToExp(valOf(M.structMap (s,c)))  (* get the cid to which s maps c *)
-              | M.MorView(m) => raise FixMe                                      (* views not implemented yet *)
+             of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
+              | M.MorView(m) => raise FixMe                          (* views not implemented yet *)
               | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
      in
      	A U
@@ -89,41 +99,6 @@ struct
   fun getInst(M.StrDec(_,_,_,insts), c, q) = getInst'(insts, c, q)
     | getInst(M.StrDef(_,_,_,mor), c, _) = SOME (applyMorph(cidToExp c, mor))
   
-  (* auxiliary function of findClash
-     if s is in forbiddenPrefixes, instantiations of s.c are forbidden
-     if c is in forbiddenCids, instantiations of c are forbidden
-  *)
-  fun findClash'(nil, _, _) = NONE
-    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
-        let
-           val c = M.symInstCid inst
-        in
-           (* check whether c is in the list of cids of forbidden cids *)
-           if List.exists (fn x => x = c) forbiddenCids
-           then SOME(c)
-           else
-              let
-              	 (* get the list of proper prefixes of c *)
-                 val prefixes = List.map #1 (I.conDecQid (M.sgnLookup c))
-              in
-                 (* check whether a prefix of c is in the list of forbidden prefixes *)
-                 if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes
-            	 then SOME(c)
-            	 (* forbid futher instantiations of
-            	    - anything that has c as a prefix
-            	    - c and any prefix of c *)
-                 else findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids)
-              end
-        end
-  (* checks whether two instantiations in insts clash
-     - return NONE if no clash
-     - returns SOME c if an instantation for c is the first one leading to a clash
-     a clash arises if there are instantiations for both
-     - c and c, or
-     - s and s.c
-  *)
-  fun findClash(insts) = findClash'(insts, nil, nil)
-
   (* flattens a structure by computing all generated declarations (the order is depth first declaration order)
      - S: cid of the structure to be flattened
      - installConDec(c', condec): called for every generated constant declaration
@@ -156,12 +131,18 @@ struct
                  val defold = applyMorph(def', M.MorStr(S))
                  val defnew = case getInst(Str, c', q')
                     of SOME def =>
-                       (* @FR: check def = def' *)
-                       def
+                       (* if existing definitions are overridden, equality must be checked *)
+                       if checkEqual(defold, def)
+                       then def
+                       else raise Error("clash between instantiation and translation of existing definiton for constant " ^
+                                         M.symFoldName c')
                     | NONE => defold
+                 val _ = if checkType(defnew, typ)
+                         then ()
+                         else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
                  val q = (S, c') :: (applyStructMap q')
               in 
-                 if not (anc'Opt = NONE) andalso uni' = I.Type andalso (Strict.check((defnew, typ), NONE); true handle _ => false)
+                 if not (anc'Opt = NONE) andalso uni' = I.Type andalso checkStrict(defnew, typ)
                  (* return a ConDef if the input was a term-level ConDef and strictness is preserved *)
                  then I.ConDef(Name @ name', q, imp', defnew, typ, uni', valOf anc'Opt) (* @CS: ancestor wrong *)
                  (* otherwise return AbbrevDef *)
@@ -178,7 +159,9 @@ struct
               in
                  case getInst(Str, c', q')
                    of SOME def =>
-                      I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @FR: can this be a ConDef? *)
+                         if checkType(def, typ)
+                         then I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @FR: can this be a ConDef? *)
+                         else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
                     | NONE =>
                       I.ConDec(Name @ name', q, imp', stat', typ, uni')
               end
@@ -240,6 +223,41 @@ struct
      then ()
      else raise Error("morphism does not have expected type")
   
+  (* auxiliary function of findClash
+     if s is in forbiddenPrefixes, instantiations of s.c are forbidden
+     if c is in forbiddenCids, instantiations of c are forbidden
+  *)
+  fun findClash'(nil, _, _) = NONE
+    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
+        let
+           val c = M.symInstCid inst
+        in
+           (* check whether c is in the list of cids of forbidden cids *)
+           if List.exists (fn x => x = c) forbiddenCids
+           then SOME(c)
+           else
+              let
+              	 (* get the list of proper prefixes of c *)
+                 val prefixes = List.map #1 (M.symQid c)
+              in
+                 (* check whether a prefix of c is in the list of forbidden prefixes *)
+                 if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes
+            	 then SOME(c)
+            	 (* forbid futher instantiations of
+            	    - anything that has c as a prefix
+            	    - c and any prefix of c *)
+                 else findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids)
+              end
+        end
+  (* checks whether two instantiations in insts clash
+     - return NONE if no clash
+     - returns SOME c if an instantation for c is the first one leading to a clash
+     a clash arises if there are instantiations for both
+     - c and c, or
+     - s and s.c
+  *)
+  fun findClash(insts) = findClash'(insts, nil, nil)
+
   (* auxiliary function of checkStrDec, checks whether the intended domain is permitted *)
   fun checkStrDecDomain(dom : IDs.mid) =
       case M.modLookup dom
@@ -276,7 +294,4 @@ struct
         checkStrDecDomain(dom);
         checkMorph(mor, dom, M.currentMod())
       )
-
-
-
 end

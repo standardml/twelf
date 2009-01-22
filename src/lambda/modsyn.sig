@@ -83,13 +83,15 @@ sig
     
 
   (* convenience methods to access components of declarations *)
-  val strDecName: StrDec -> string list
+  val strDecName : StrDec -> string list
   val strDecFoldName: StrDec -> string
-  val strDecQid : StrDec -> IDs.qid
-  val strDecDom : StrDec -> IDs.mid
-  val modFoldName : IDs.mid -> string
-  val symFoldName: IDs.cid -> string  
+  val strDecQid  : StrDec -> IDs.qid
+  val strDecDom  : StrDec -> IDs.mid
   val symInstCid : SymInst -> IDs.cid
+  val modFoldName: IDs.mid -> string
+  val symFoldName: IDs.cid -> string  
+  val symQid     : IDs.cid -> IDs.qid
+
   (********************** Interface methods that affect the state **********************)
   
   (* called at the beginning of a module *)
@@ -136,7 +138,7 @@ sig
   val inCurrent  : IDs.lid -> IDs.cid
   val getScope   : unit -> IDs.mid list 
 
-  val structMap : IDs.cid * IDs.cid -> IDs.cid option
+  val structMapLookup : IDs.cid * IDs.cid -> IDs.cid option
     
 
   (* convenience methods to access components of an installed constant declaration *)

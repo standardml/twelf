@@ -2,8 +2,10 @@ signature ELAB =
 sig
   exception Error of string
 
-  (* type checking methods *)
+  (* type checking modular data types *)
+  (* checks a StrDec *)
   val checkStrDec : ModSyn.StrDec -> unit
+  (* checks a morphism against domain and codomain signature *)
   val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> unit 
 
   (* called to flatten a structure declaration
@@ -15,6 +17,8 @@ sig
      This is necessary because ill-typed structure declarations are caught only during the flattening, not during structAdd.
      It would be better if structAdd called flatten already, but this way eases integration with the existing Twelf code.
   *)
-
   val flatten    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
+  
+  (* apply a morphism to a term *)
+  val applyMorph : IntSyn.Exp * ModSyn.Morph -> IntSyn.Exp
 end

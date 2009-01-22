@@ -93,15 +93,14 @@ struct
                                handle Option => raise UndefinedMid(m)
   fun modOpen(sigDec as SigDec _) =
      let
-     	val parent = SOME (currentMod())
-     	             handle Empty => NONE
-     	val _ = case Option.map modLookup parent
-     	          of SOME (ViewDec _) => raise Error("signatures may not occur inside views")
+     	val parent = currentMod()
+     	val _ = case modLookup parent
+     	          of ViewDec _ => raise Error("signatures may not occur inside views")
      	           | _ => ()
         val m = ! nextMid
         val _ = nextMid := ! nextMid + 1
         val _ = scope := (m,0) :: (! scope)
-        val _ = IH.insert modTable (m, (sigDec, ~1, parent))
+        val _ = IH.insert modTable (m, (sigDec, ~1, SOME parent))
      in
      	m
      end
@@ -132,7 +131,7 @@ struct
       
   fun sgnLookup (c : IDs.cid) = case CH.lookup(symTable)(c)
     of SOME d => d
-    | NONE => raise (UndefinedCid c)
+     | NONE => raise (UndefinedCid c)
   val sgnLookupC = sgnLookup o inCurrent
 
   fun structAddC(strDec : StrDec) =
@@ -147,12 +146,14 @@ struct
     of SOME d => d
   | NONE => raise (UndefinedCid c)
   val structLookupC = structLookup o inCurrent
-
-  fun structMap (s,c) = CCH.lookup structMapTable (s,c)
+  fun structMapLookup (S,s') = CCH.lookup structMapTable (S,s')
 
   fun symLookup(c : IDs.cid) =
     SymStr(structLookup c)
     handle UndefinedCid _ => SymCon(sgnLookup c)
+  fun symQid(c : IDs.cid) = case symLookup c
+       of SymCon condec => I.conDecQid condec
+        | SymStr strdec => strDecQid strdec
 
   fun modApp(f : IDs.mid -> unit) =
     let
@@ -174,11 +175,13 @@ struct
   fun sgnAppC (f) = sgnApp(currentMod(), f)
 
   fun reset () = (
-    CH.clear symTable; 
+    CH.clear symTable;               (* clear tables *)
     CH.clear structTable;
     IH.clear modTable;
-    modOpen(SigDec ["toplevel"]); (* open toplevel *)
-    ()
+    CCH.clear structMapTable;
+    nextMid := 1;                    (* initial mid *)
+    scope := [(0,0)];                (* toplevel with mid 0 and no parent is always open *)
+    IH.insert modTable (0, (SigDec ["toplevel"], ~1, NONE))  
   )
  
   (********************** Convenience methods **********************)

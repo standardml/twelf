@@ -40,7 +40,7 @@ struct
 
   fun modnameLookupWithError(l : string list, r : Paths.region) =
      case Names.modnameLookup l
-       of SOME c => c
+       of SOME m => m
         | NONE => error(r, "undeclared module identifier: " ^ Names.foldQualifiedName l)
 
 (* @CS: is all the paths stuff right in the sequel *)
