@@ -1,25 +1,32 @@
+%% testing basic syntax
 %sig R = {
   a : type.
   c : a.
 }.
 
+%% testing basic semantics, note why "test" is well-typed
 %sig S = {
   a' : type.
   b' : a'.
+  b'2: a'.
   %struct r' : R = {a := a'.}.
   c' : r'.a.
-  
   d' : a' -> type.
   test : d' b'.
 }.
 
+%% testing instantiations of structures, try removing the instantantion of a'
 %sig T = {
   a'' : type.
   b'' = a'' -> a''.
   %struct r'' : R = {a := a'' -> a''.}.
-  %struct s'': S = {a' := b''. %struct r' := r''.}. %% need to check: s''(r'a) = ra
+  %struct s'': S = {a' := b''. %struct r' := r''.}.
 }.
 
+%% testing a deep instantiation, i.e, r''.c := f''', also try removing the instantiation of a''
+%% also note that the order of instantiations is not relevant
 %sig U = {
-%struct t''' : T = {}.
+  a''' : type.
+  f''' : a''' -> a'''.
+  %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
 }.
