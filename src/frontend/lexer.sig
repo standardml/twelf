@@ -57,7 +57,7 @@ sig
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
-    | WHERE                             (* `%where' *)
+    | VIEW                              (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | USE                               (* `%use'    *)

@@ -64,7 +64,7 @@ struct
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
-    | WHERE                             (* `%where' *)
+    | VIEW                             (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | USE                               (* `%use' *)
@@ -259,7 +259,7 @@ struct
       | lexPragmaKey (ID(_, "clause"), r) = (CLAUSE, r) (* -fp 08/09/02 *)
       | lexPragmaKey (ID(_, "sig"), r) = (SIG, r)
       | lexPragmaKey (ID(_, "struct"), r) = (STRUCT, r)
-      | lexPragmaKey (ID(_, "where"), r) = (WHERE, r)
+      | lexPragmaKey (ID(_, "view"), r) = (VIEW, r)
       | lexPragmaKey (ID(_, "include"), r) = (INCLUDE, r)
       | lexPragmaKey (ID(_, "open"), r) = (OPEN, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
@@ -388,7 +388,7 @@ struct
     | toString' (CLAUSE) = "%clause" (* -fp 08/09/02 *)
     | toString' (SIG) = "%sig"
     | toString' (STRUCT) = "%struct"
-    | toString' (WHERE) = "%where"
+    | toString' (VIEW) = "%view"
     | toString' (INCLUDE) = "%include"
     | toString' (OPEN) = "%open"
     | toString' (USE) = "%use"

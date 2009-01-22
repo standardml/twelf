@@ -188,6 +188,7 @@ struct
       | parseStream' (f as LS.Cons ((L.COMPILE, r), s'), sc) = parseCompile' (f, sc) (* -ABP 4/4/03 *)
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
       | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigBegin' (f, sc)   (* -fr, module system *)
+      | parseStream' (f as LS.Cons ((L.VIEW, r), s'), sc) = parseViewBegin' (f, sc)   (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       (* cases for OPEN and INCLUDE removed, -fr *)
@@ -403,6 +404,14 @@ struct
 	  val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((ModBegin sigBegin, r), parseStream (LS.delay (fn () => f'), sc))
+        end
+
+    and parseViewBegin' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (ViewBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseViewBegin' (f)
+	  val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((ModBegin ViewBegin, r), parseStream (LS.delay (fn () => f'), sc))
         end
 
     and parseModEnd'(f as LS.Cons ((_, r0), s'), sc) =
