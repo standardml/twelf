@@ -80,6 +80,7 @@ struct
     | ModBegin of ModExtSyn.modbegin
     | ModEnd
     | StrDec of ModExtSyn.strdec
+    | SymInst of ModExtSyn.syminst
     | Include of ModExtSyn.siginclude
     | Open of ModExtSyn.stropen
     | Use of string
@@ -117,9 +118,16 @@ struct
       | parseBound' (LS.Cons ((t,r), s')) =
 	  Parsing.error (r, "Expected bound `*' or natural number, found "
 			    ^ L.toString t)
-
+    
+    (* parseDeclarations is a global switch that toggles between two different parsers
+       true: parsing declarations (standard case as in non-modular Twelf)
+       false: parsing instantiations in a view (added for module system)
+       The type would have to be changed to "bool list ref" if nested views were considered. *)
+    val parseDeclarations : bool ref = ref true
     fun parseStream (s, sc) =
-          Stream.delay (fn () => parseStream' (LS.expose s, sc))
+       if ! parseDeclarations
+       then Stream.delay (fn () => parseStream' (LS.expose s, sc))
+       else Stream.delay (fn () => parseStreamInView' (LS.expose s, sc))
 
     (* parseStream' : lexResult front -> fileParseResult front *)
     (* parseStream' switches between various specialized parsers *)
@@ -195,9 +203,14 @@ struct
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =
-	  Parsing.error (r, "Expected constant name or pragma keyword, found "
-			    ^ L.toString t)
+	  Parsing.error (r, "Expected constant name or pragma keyword, found " ^ L.toString t)
 
+    (* -fr, parsing in a view must split differently *)
+    and parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrInst' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseConInst' (f, sc)
+      | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
+	  Parsing.error (r, "Expected constant name or %struct keyword, found "	^ L.toString t)
+  
     and parseConDec' (f as LS.Cons ((_, r0), _), sc) =
         let
 	  val (conDec, f' as LS.Cons((_,r'),_)) = ParseConDec.parseConDec' (f)
@@ -410,12 +423,15 @@ struct
         let
           val (ViewBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseViewBegin' (f)
 	  val r = Paths.join (r0, r')
+	  val _ = parseDeclarations := false   (* switching parser into parseStreamInView' cases *)
         in
 	  Stream.Cons ((ModBegin ViewBegin, r), parseStream (LS.delay (fn () => f'), sc))
         end
 
-    and parseModEnd'(f as LS.Cons ((_, r0), s'), sc) =
+    and parseModEnd'(f as LS.Cons ((_, r0), s'), sc) = (
+       parseDeclarations := true; (* switching parser back into parseStream' cases *)
        Stream.Cons ((ModEnd, r0), parseStream (stripDot (LS.expose s'), sc))
+    )
 
     and parseStrDec' (f as LS.Cons ((_, r0), _), sc) =
         let
@@ -423,6 +439,22 @@ struct
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((StrDec strDec, r), parseStream (stripDot f', sc))
+        end
+
+    and parseConInst' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (conInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseConInst'(f)
+           val r = Paths.join (r0, r')
+        in
+	   Stream.Cons ((SymInst conInst, r), parseStream (LS.delay (fn () => f'), sc))
+        end
+
+    and parseStrInst' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (strInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrInst'(f)
+           val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((SymInst strInst, r), parseStream (LS.delay (fn () => f'), sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

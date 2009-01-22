@@ -68,7 +68,7 @@ struct
         and ACid(c) =
            case mor
              of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-              | M.MorView(m) => raise FixMe                          (* views not implemented yet *)
+              | M.MorView(m) => ModSyn.conInstLookup(m, IDs.lidOf(c))      (* @FR flattening missing *)
               | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
      in
      	A U
@@ -260,20 +260,17 @@ struct
 
   (* auxiliary function of checkStrDec, checks whether the intended domain is permitted *)
   fun checkStrDecDomain(dom : IDs.mid) =
-      case M.modLookup dom
-         of M.ViewDec _ => raise Error("domain of structure refers to a view instead of a signature")
-          | M.SigDec _ =>
-            let
-               val _ = if List.exists (fn x => x = dom) (M.getScope ())
-                       then raise Error("signature attempts to instantiate own ancestor")
-                       else ()
-               val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
-               val _ = if not (List.exists (fn x => x = par) (M.getScope ()))
-                       then raise Error("signature attempts to instantiate unreachable signature")
-                       else ()
-             in
-             	()
-             end
+      let
+         val _ = if List.exists (fn x => x = dom) (M.getScope ())
+                 then raise Error("signature attempts to instantiate own ancestor")
+                 else ()
+         val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
+         val _ = if not (List.exists (fn x => x = par) (M.getScope ()))
+                 then raise Error("signature attempts to instantiate unreachable signature")
+                 else ()
+      in
+         ()
+      end
   
   (* checks simple well-typedness conditions for structure declarations
      does not check:

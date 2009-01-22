@@ -60,7 +60,7 @@ sig
     * IDs.mid                          (* domain (= instantiated signature) *)
     * Morph                            (* definition *)    
   (* unifies constant and structure declarations *)
-  datatype SymDec = SymCon of I.ConDec | SymStr of StrDec
+  datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of I.Exp | SymStrInst of Morph
     
   (*
      signature declarations
@@ -77,12 +77,13 @@ sig
   datatype ModDec
      = SigDec of string list           (* qualified name *)
      | ViewDec of
-         string                        (* name *)
+         string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
     
 
   (* convenience methods to access components of declarations *)
+  val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list
   val strDecFoldName: StrDec -> string
   val strDecQid  : StrDec -> IDs.qid
@@ -98,10 +99,12 @@ sig
   val modOpen    : ModDec -> IDs.mid
   (* called at the end of a module *)
   val modClose   : unit -> unit
-  (* called to add a constant declaration to a signature *)
+  (* called to add a constant declaration to the current signature, which must be a signature *)
   val sgnAddC    : I.ConDec -> IDs.cid
-  (* called to add a structure declaration to a signature *)
+  (* called to add a structure declaration to the current module, which must be a signature *)
   val structAddC : StrDec -> IDs.cid
+  (* called to add an instantiation to the current module, which must be a view *)
+  val instAddC   : SymInst -> IDs.cid
   (* called to reset the state *)
   val reset      : unit -> unit
 
@@ -117,13 +120,15 @@ sig
 (*  val flatten    : IDs.cid * (IDs.cid * I.ConDec -> IDs.cid) * (IDs.cid * StrDec -> IDs.cid) -> unit
   remove --cs *)
   (********************** Interface methods that do not affect the state **********************)
-  
-  (* look up of constant declarations by global id *)
-  val sgnLookup  : IDs.cid -> I.ConDec
-  (* look up structure declarations by global id *)
-  val structLookup: IDs.cid -> StrDec
 
-  val symLookup : IDs.cid -> SymDec
+  (* generic lookup of symbol declarations or instantiation by global id, raises (UndefinedCid c) *)
+  val symLookup : IDs.cid -> SymLevelData
+  (* specialized lookups; these raise (UndefinedCid _) if the cid is defined but returns the wrong data *)
+  val sgnLookup     : IDs.cid -> I.ConDec          (* constant declarations *)
+  val structLookup  : IDs.cid -> StrDec            (* structure declarations *)
+  val conInstLookup : IDs.cid -> I.Exp             (* constant instantiations *)
+  val strInstLookup : IDs.cid -> Morph             (* structure instantiations *)
+
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
   val modParent  : IDs.mid -> IDs.mid option
@@ -136,6 +141,7 @@ sig
   val currentMod : unit -> IDs.mid
   (* maps local id's in the current module to global id's *)
   val inCurrent  : IDs.lid -> IDs.cid
+  (* returns the list of currently open modules in declaration order *)
   val getScope   : unit -> IDs.mid list 
 
   val structMapLookup : IDs.cid * IDs.cid -> IDs.cid option

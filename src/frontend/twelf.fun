@@ -147,6 +147,7 @@ functor Twelf
 
    structure ReconModule : RECON_MODULE
      sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
+     sharing type ReconModule.syminst = Parser.ModExtSyn.syminst
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
@@ -933,7 +934,6 @@ struct
 	  ()
 	end
 
-
       (* Theorem declaration *)
       | install1 (fileName, (Parser.TheoremDec tdec, r)) =
 	let 
@@ -1067,21 +1067,20 @@ struct
 
       (* cases for the module system *)
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) = (
-         case modBegin
-           of ReconModule.sigbegin name =>
-              let
-              	 (* @FR: actually the name should be qualified using the currently open signatures *)
-              	 val sigDec = ModSyn.SigDec [name]
-              	 val m = ModSyn.modOpen(sigDec)
-                         handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-              	 val _ = Names.installModname(m, [name])
-              	         handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
-         	 val _ = if !Global.chatter >= 3
-		         then msg (Print.modBeginToString(sigDec) ^ "\n")
-		         else ()
-              in
-              	()
-              end
+           let
+              (* @FR: actually the name should be qualified using the currently open signatures *)
+               val dec = ReconModule.modbeginToModDec modBegin
+               val name = ModSyn.modDecName dec
+               val m = ModSyn.modOpen(dec)
+                       handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+               val _ = Names.installModname(m, name)
+                       handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
+               val _ = if !Global.chatter >= 3
+		       then msg (Print.modBeginToString(dec) ^ "\n")
+		       else ()
+           in
+             ()
+           end
         )
       | install1 (fileName, declr as (Parser.ModEnd, r)) =
           let
@@ -1148,6 +1147,21 @@ struct
          in
             ()
          end
+      | install1 (fileName, declr as (Parser.SymInst inst, r)) = (
+           let
+               val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
+                  of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
+                   | ModSyn.ViewDec(_, d, c) => (d,c)
+               val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
+               val _ = ModSyn.instAddC(Inst)
+                       handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+               val _ = if !Global.chatter >= 3
+		       then msg (Print.instToString(Inst) ^ "\n")
+		       else ()
+           in
+             ()
+           end
+        )
       (* currently unused cases of the module system *)
       | install1 (fileName, declr as (Parser.Include _, r)) = ()
       | install1 (fileName, declr as (Parser.Open _, r)) = ()

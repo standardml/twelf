@@ -902,8 +902,10 @@ in
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
 
-  (* @FR: cases for views missing *)
   fun modBeginToString(ModSyn.SigDec name) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
+    | modBeginToString(ModSyn.ViewDec(name, dom, cod)) =
+        "%view " ^ (Names.foldQualifiedName name) ^ " : " ^
+         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec name) = "}. % end signature " ^ (Names.foldQualifiedName name)
   fun morphToString(ModSyn.MorStr(c)) =
       ModSyn.modFoldName (IDs.midOf c) ^ "." ^ ModSyn.symFoldName c

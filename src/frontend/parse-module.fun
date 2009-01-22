@@ -21,56 +21,61 @@ struct
   structure LS = Lexer.Stream  
   structure E = ModExtSyn
 
-  fun parseLBrace'(LS.Cons ((L.LBRACE, _), s')) = ((), LS.expose s')
-    | parseLBrace'(LS.Cons ((t, r), _)) = Parsing.error (r, "Expected `{', found token " ^ L.toString t)
+  type ID = string list * Paths.region
+  type Front = (L.Token * Paths.region) LS.front
 
-  fun parseEqual'(LS.Cons ((L.EQUAL, _), s')) = ((), LS.expose s')
-    | parseEqual'(LS.Cons ((t, r), _)) = Parsing.error (r, "Expected `=', found token " ^ L.toString t)
-
-  fun parseColonEqual' (LS.Cons ((L.COLON, r1), s')) =
-      (case LS.expose s'
-         of LS.Cons ((L.EQUAL, _), s'') => ((), LS.expose s'')
-          | LS.Cons ((t, r2), s'') =>
-              Parsing.error (r2, "Expected `=', found token " ^ L.toString t))
-    | parseColonEqual' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected `:=', found token " ^ L.toString t)
-
-  fun parseDot' (LS.Cons ((L.DOT, r), s')) = (r, LS.expose s')
-    | parseDot' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected `.', found token " ^ L.toString t)
-
-  fun parseMorph' (f as LS.Cons ((L.ID _, r0), _)) =
+  fun parseSingleToken' (token, ascii) f' : Paths.region * Front =
+     let
+     	val LS.Cons ((t, r), s') = f'
+     in 
+     	if t = token
+     	then (r, LS.expose s')
+        else Parsing.error (r, "Expected `" ^ ascii ^ "', found token " ^ L.toString t)
+     end
+  val parseLBrace' = parseSingleToken'(L.LBRACE, "{")
+  val parseArrow' = parseSingleToken'(L.ARROW, "->")
+  val parseEqual' = parseSingleToken'(L.EQUAL, "=")
+  val parseColon' = parseSingleToken'(L.COLON, ":")
+  val parseDot' = parseSingleToken'(L.DOT, ".")
+  
+  fun parseQualId'(f') :  ID * Front =
+    let
+       val ((ids, (L.ID (_, id), r)), f' as LS.Cons((_,r'),s')) = ParseTerm.parseQualId' (f')
+    in
+       ((ids @ [id], Paths.join(r, r')), f')
+    end
+  
+  fun parseMorph' (f as LS.Cons ((L.ID _, _), _)) =
       let
-          val ((ids, (L.ID (_, id), r1)), f') = ParseTerm.parseQualId' f
+          val (str, f') = parseQualId' f
       in
-         (E.morstr(ids, id, Paths.join (r0, r1)), f')
+         (E.morlink(str), f')
       end
     | parseMorph' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
 
-  fun parseConInst' (f as LS.Cons ((L.ID _, r0), _)) =
+  fun parseConInst' (f' as LS.Cons ((L.ID _, r0), _)) =
       let
-        val ((ids, (L.ID (_, id), r1)), f1) = ParseTerm.parseQualId' (f)
-        val (_, f2) = parseColonEqual' (f1)
-        val (tm, f3) = ParseTerm.parseTerm' (f2)
-        val (r2, f4) = parseDot' (f3)
+         val (con, f') = parseQualId'(f')
+         val (_, f') = parseColon'(f')
+         val (_, f') = parseEqual'(f')
+         val (tm, f') = ParseTerm.parseTerm'(f')
+         val (r2, f') = parseDot' (f')
       in
-        (E.coninst ((ids, id, Paths.join (r0, r1)), (tm, Paths.join (r0, r2))),
-         f4)
+        (E.coninst (con, (tm, Paths.join (r0, r2))), f')
       end
     | parseConInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected identifier, found token " ^ L.toString t)
 
-  fun parseStrInst2' (r0, f as LS.Cons ((L.ID _, r1), _)) =
+  fun parseStrInst2' (r0, f' as LS.Cons ((L.ID _, r1), _)) =
       let
-        val ((ids, (L.ID (_, id), r2)), f1) = ParseTerm.parseQualId' (f)
-        val (_, f2) = parseColonEqual' (f1)
-        val (mor, f3) = parseMorph' (f2)
-        val (r3, f4) = parseDot' (f3)
+         val (str, f') = parseQualId' (f')
+         val (_, f') = parseColon' (f')
+         val (_, f') = parseEqual' (f')
+         val (mor, f') = parseMorph' (f')
+         val (r3, f') = parseDot' (f')
       in
-        (E.strinst ((ids, id, Paths.join (r1, r2)),
-                    (mor, Paths.join (r0, r3))),
-         f4)
+        (E.strinst (str, (mor, Paths.join (r0, r3))), f')
       end
     | parseStrInst2' (r0, LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
@@ -117,6 +122,23 @@ struct
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
 
+  fun parseViewBegin' (LS.Cons ((L.VIEW, r), s')) =
+     case LS.expose s'
+       of LS.Cons ((L.ID (_, id), r1), s') =>
+          let
+             val f' = LS.expose s'
+             val (_, f') = parseColon' (f')
+             val (dom, f') = parseQualId' (f')
+             val (_, f') = parseArrow'(f')
+             val (cod, f') = parseQualId' (f')
+             val (_, f') = parseEqual' (f')
+             val (_, f') = parseLBrace' (f')
+          in
+             (E.viewbegin(id, dom, cod), f')
+          end 
+        | LS.Cons ((t, r1), s') =>
+	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
+
   fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
      case LS.expose s'
         of LS.Cons ((L.ID (_, id), r1), s1') => (
@@ -124,11 +146,11 @@ struct
               of LS.Cons ((L.COLON, r2), s2') =>
                  let
                      val f' = LS.expose s2'
-                     val ((domids, (L.ID (_, domid), r3)), f' as LS.Cons((_,r4),_)) = ParseTerm.parseQualId' (f')
+                     val (dom,f') = parseQualId'(f')
                      val (_, f') = parseEqual' (f')
                      val (insts, f') = parseInstantiate'(f')
                   in
-                     (E.strdec(id, (domids @ [domid], Paths.join(r3,r4)), insts), f')
+                     (E.strdec(id, dom, insts), f')
                   end
                | LS.Cons ((L.EQUAL, r2), s2') =>
                  let
