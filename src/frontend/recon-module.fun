@@ -6,14 +6,14 @@ functor ReconModule
    structure Names : NAMES
    structure ReconTerm' : RECON_TERM
    structure ModSyn' : MODSYN
-   structure IntTree : TABLE where type key = int)
+  )
   : RECON_MODULE =
 struct
 
 (* implementing the signature MODEXTSYN *)
   structure ExtSyn = ReconTerm'
 
-  datatype morph = morlink of (string list * Paths.region)
+  datatype morph = (string list * Paths.region) list
   datatype syminst =
      coninst of (string list * Paths.region) * (ExtSyn.term * Paths.region)
    | strinst of (string list * Paths.region) * (morph       * Paths.region)
@@ -61,11 +61,23 @@ struct
         | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
 
 (* @CS: is all the paths stuff right in the sequel *)
-  fun morphToMorph(Dom : IDs.mid, Cod : IDs.mid, (mor, r)) =
-     case mor
-       of morlink(names, r) => ModSyn.MorStr (nameLookupWithError STRUC (Cod, names, r))
-             handle Error _ => ModSyn.MorView (modnameLookupWithError VIEW (names, r))
-  
+  fun morphToMorph(Dom : IDs.mid, Cod : IDs.mid, (mor, r0)) =
+     let
+     	val (names, r) = List.last mor
+     	val init = List.take ((List.length mor) - 1) mor
+     	val (link, nextCod) = let val s = nameLookupWithError STRUC (Cod, names, r)
+     	                      in (ModSyn.MorStr s, ModSyn.strDecDomain (ModSyn.structLookup s))
+     	                      end
+            handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
+                                  val ModSyn.ViewDec(_,dom,_) = ModSyn.modLookup m
+                              in (ModSyn.MorView m, dom)
+                              end
+     in
+     	if (init == nil)
+     	then link
+        else ModSyn.MorComp(morphToMorph(Dom, nextCod, (init, r0)), link)
+     end
+
   fun syminstToSymInst(Dom : IDs.mid, Cod : IDs.mid, inst : syminst, l as Paths.Loc (fileName, r)) =
      case inst
         of coninst((names, r), (term, _)) =>

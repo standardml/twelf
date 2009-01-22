@@ -6,7 +6,7 @@ sig
   structure ExtSyn : EXTSYN
 
   (* morphisms *)
-  datatype morph = morlink of (string list * Paths.region)
+  datatype morph = (string list * Paths.region) list
 
   (* symbol (= constant or structure) instantiations *)
   datatype syminst =

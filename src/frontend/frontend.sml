@@ -87,8 +87,7 @@ structure ReconModule =
                structure Names = Names
                (*! structure Paths' = Paths !*)
                structure ReconTerm' = ReconTerm
-               structure ModSyn' = ModSyn
-               structure IntTree = IntRedBlackTree);
+               structure ModSyn' = ModSyn);
 
 structure ParseTerm =
   ParseTerm ((*! structure Parsing' = Parsing !*)
