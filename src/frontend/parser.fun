@@ -208,6 +208,7 @@ struct
     (* -fr, parsing in a view must split differently *)
     and parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseConInst' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or %struct keyword, found "	^ L.toString t)
   

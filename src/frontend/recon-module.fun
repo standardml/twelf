@@ -13,7 +13,7 @@ struct
 (* implementing the signature MODEXTSYN *)
   structure ExtSyn = ReconTerm'
 
-  datatype morph = (string list * Paths.region) list
+  type morph = (string list * Paths.region) list
   datatype syminst =
      coninst of (string list * Paths.region) * (ExtSyn.term * Paths.region)
    | strinst of (string list * Paths.region) * (morph       * Paths.region)
@@ -61,46 +61,62 @@ struct
         | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
 
 (* @CS: is all the paths stuff right in the sequel *)
-  fun morphToMorph(Dom : IDs.mid, Cod : IDs.mid, (mor, r0)) =
+  fun morphToMorph(cod : IDs.mid, (mor, r0)) =
      let
      	val (names, r) = List.last mor
-     	val init = List.take ((List.length mor) - 1) mor
-     	val (link, nextCod) = let val s = nameLookupWithError STRUC (Cod, names, r)
-     	                      in (ModSyn.MorStr s, ModSyn.strDecDomain (ModSyn.structLookup s))
+     	val init = List.take (mor, (List.length mor) - 1)
+     	val (link, nextCod) = let val s = nameLookupWithError STRUC (cod, names, r)
+     	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
             handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
                                   val ModSyn.ViewDec(_,dom,_) = ModSyn.modLookup m
                               in (ModSyn.MorView m, dom)
                               end
      in
-     	if (init == nil)
+     	if (init = nil)
      	then link
-        else ModSyn.MorComp(morphToMorph(Dom, nextCod, (init, r0)), link)
+        else ModSyn.MorComp(morphToMorph(nextCod, (init, r0)), link)
      end
 
-  fun syminstToSymInst(Dom : IDs.mid, Cod : IDs.mid, inst : syminst, l as Paths.Loc (fileName, r)) =
+  fun syminstToSymInst(dom : IDs.mid, cod : IDs.mid, inst : syminst, l as Paths.Loc (fileName, r)) =
      case inst
-        of coninst((names, r), (term, _)) =>
+        of coninst((names, r), (term, r')) =>
              let
-             	val Con = nameLookupWithError CON (Dom, names, r)
-		val ExtSyn.JTerm((Term, occ), V, L) = ExtSyn.recon (ExtSyn.jterm term)
+             	val Con = nameLookupWithError CON (dom, names, r)
+             	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
+             	val expType =
+             	  if ModSyn.inSignature()
+             	  then NONE                                                            (* instantiation in a structure *)
+             	  else SOME (Elab.applyMorph(ModSyn.constType Con,
+             	                             ModSyn.MorView(ModSyn.currentMod())))     (* instantiation in a view *)
+             	       handle Elab.UndefinedMorph(_,c) =>
+             	          error(Paths.join(r,r'), "instantiation for " ^ ModSyn.symFoldName Con ^
+             	          " must occur after instantiation for " ^ ModSyn.symFoldName c)
+             	val job = case expType
+             	  of NONE => ExtSyn.jterm term
+             	   | SOME V => ExtSyn.jof'(term, V)
+		val Term = (case ExtSyn.recon job
+		   of ExtSyn.JTerm((U, _), _, _) => U
+		    | ExtSyn.JOf((U,_), _, _) => U
+		   ) handle _ => raise Error ""
              in
              	ModSyn.ConInst(Con, Term)
              end
         
          | strinst((names, r), mor) =>
              let
-             	val Str = nameLookupWithError STRUC (Dom, names, r)
-             	val Mor = morphToMorph (Dom, Cod, mor)
+             	val Str = nameLookupWithError STRUC (dom, names, r)
+             	val Mor = morphToMorph (cod, mor)
              in
              	ModSyn.StrInst(Str, Mor)
              end
   
-  fun strdecToStrDec(Cod : IDs.mid, strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list),
+  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list),
                      l as Paths.Loc (fileName, r2)
   ) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
+    	val Cod = ModSyn.currentTargetSig()
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,l)) insts
     in
     	ModSyn.StrDec([name], nil, Dom, Insts)

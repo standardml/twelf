@@ -285,7 +285,6 @@ struct
 	      | ReconQuery.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconMode.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconThm.Error (msg) => abortFileMsg chlev (fileName, msg)
-              | ReconModule.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | TypeCheck.Error (msg) => abort 0 ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
 	      | Abstract.Error (msg) => abortFileMsg chlev (fileName, msg)
@@ -314,6 +313,7 @@ struct
 	      | WorldSyn.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
 	      | Worldify.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
               | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg)  (* -fr *)
+              | ReconModule.Error (msg) => abortFileMsg chlev (fileName, msg)  (* -fr *)
               | Elab.Error (msg) => abortFileMsg chlev (fileName, msg)    (* -fr *)
 	      | Converter.Error (msg) => abortFileMsg chlev (fileName, msg)
               | CSManager.Error (msg) => abort chlev ("Constraint Solver Manager error: " ^ msg ^ "\n")
@@ -1096,7 +1096,7 @@ struct
          let
             (* reconstruct, check, and install structure declaration
                only structural checking at this point, full type-checking only in Elab.flatten below *)
-            val strDec = ReconModule.strdecToStrDec (ModSyn.currentMod(), strdec, Paths.Loc (fileName,r))
+            val strDec = ReconModule.strdecToStrDec (strdec, Paths.Loc (fileName,r))
             val _ = Elab.checkStrDec(strDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
             val c = installStrDec (strDec, r)
@@ -1150,9 +1150,10 @@ struct
       | install1 (fileName, declr as (Parser.SymInst inst, r)) = (
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
-                  of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
-                   | ModSyn.ViewDec(_, d, c) => (d,c)
+                            of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
+                             | ModSyn.ViewDec(_, d, c) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
+                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
                val _ = ModSyn.instAddC(Inst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                val _ = if !Global.chatter >= 3

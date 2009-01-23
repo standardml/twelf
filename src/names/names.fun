@@ -169,15 +169,13 @@ struct
     val insertNamePref : cid * namePref -> unit = CH.insert namePrefTable
 
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
-
-    val inCurrent = ModSyn.inCurrent
   in
 
     fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
     fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
     val nameLookup : mid * string list -> cid option = SH.lookup nameTable
-    fun nameLookupC(l : string list) = nameLookup(ModSyn.currentMod(), l)
+    fun nameLookupC(l : string list) = nameLookup(ModSyn.currentTargetSig(), l)
     
     (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
@@ -197,7 +195,6 @@ struct
            of NONE => Fixity.Nonfix
             | SOME fix => fix
         )
-    val fixityLookupC = fixityLookup o inCurrent
 
     (* Name Preferences *)
     (* ePref is the name preference for existential variables of given type *)
@@ -226,7 +223,6 @@ struct
             installNamePref' (cid, (ePref, uPref))
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
-    val namePrefLookupC = namePrefLookup o inCurrent
 
     fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear fixityTable; CH.clear namePrefTable)
 

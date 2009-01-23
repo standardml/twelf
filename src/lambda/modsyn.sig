@@ -3,10 +3,11 @@
 
 signature MODSYN =
 sig
-  exception Error of string
-  exception UndefinedCid of IDs.cid
-  exception UndefinedMid of IDs.mid
   structure I : INTSYN
+
+  exception Error of string           (* raised on general errors *)
+  exception UndefinedCid of IDs.cid   (* raised when symbol lookups fail *)
+  exception UndefinedMid of IDs.mid   (* raised when module lookups fail *)
 
 
   (* general notes
@@ -139,8 +140,10 @@ sig
   val modApp     : (IDs.mid -> unit) -> unit
   (* the current module *)
   val currentMod : unit -> IDs.mid
-  (* maps local id's in the current module to global id's *)
-  val inCurrent  : IDs.lid -> IDs.cid
+  (* true: current module is signature, false: current module is view *)
+  val inSignature: unit -> bool
+  (* the current target signature: the current module if a signature, or its codomain if a view *)
+  val currentTargetSig : unit -> IDs.mid
   (* returns the list of currently open modules in declaration order *)
   val getScope   : unit -> IDs.mid list 
 

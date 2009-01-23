@@ -1,6 +1,7 @@
 signature ELAB =
 sig
   exception Error of string
+  exception UndefinedMorph of IDs.mid * IDs.cid    (* raised if partially defined views cannot be applied *)
 
   (* type checking modular data types *)
   (* checks a StrDec *)

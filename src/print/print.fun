@@ -907,6 +907,7 @@ in
         "%view " ^ (Names.foldQualifiedName name) ^ " : " ^
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec name) = "}. % end signature " ^ (Names.foldQualifiedName name)
+    | modEndToString(ModSyn.ViewDec(name, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
   fun morphToString(ModSyn.MorStr(c)) =
       ModSyn.modFoldName (IDs.midOf c) ^ "." ^ ModSyn.symFoldName c
     | morphToString(ModSyn.MorView(m)) =

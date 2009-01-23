@@ -1313,7 +1313,7 @@ struct
           val (oc1, r1) = occIntro tm1'
 (*          val (Uni L2, _) = Whnf.whnf (L2, id) *)
         in
-          JOf ((U1, oc1), (V2, oc1), Type)
+          JOf ((U1, oc1), (V2, oc1), Type) (* @CS Should this rather be a JTerm? *)
         end
 
     fun recon' (j) =

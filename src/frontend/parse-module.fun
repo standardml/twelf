@@ -44,24 +44,21 @@ struct
     in
        ((ids @ [id], Paths.join(r, r')), f')
     end
-  
-  fun parseLink' (f' as LS.Cons ((L.ID _, _), _)) =
+
+(* @CS: is all the paths stuff right in the sequel *)
+  fun parseMorphAux'(f' as LS.Cons ((L.ID _, _), _)) =
       let
           val (id, f') = parseQualId' f'
+          val (rest, f') = parseMorphAux'(f')
       in
-         (E.morlink(id), f')
+         (id :: rest, f')
       end
-    | parseMorph' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)
+    | parseMorphAux'(f') = (nil, f')
 
-  fun parseMorph'(f' as LS.Cons ((L.ID _, _), _)) =
-      let
-          val (link, f') = parseLink' f'
-      in
-         link :: parseMorph(f')
-      end
-    | parseMorph'(_) = nil
-
+  fun parseMorph'(f' as LS.Cons ((t, r), _)) = case parseMorphAux' f'
+    of (nil, _) => Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)
+     | mf => mf
+  
   fun parseConInst' (f' as LS.Cons ((L.ID _, r0), _)) =
       let
          val (con, f') = parseQualId'(f')

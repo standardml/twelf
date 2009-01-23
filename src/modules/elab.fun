@@ -13,8 +13,9 @@ struct
   (* check whether U has type/kind V *)
   fun checkEqual(U : I.Exp, U' : I.Exp) : bool = Conv.conv((U, I.id), (U', I.id))
   
-  exception Error of string (* raised on type-checking errors *)
-  exception FixMe           (* @CS: raised for unimplemented cases *)
+  exception Error of string                       (* raised on type-checking errors *)
+  exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
+  exception FixMe                                 (* @CS: raised for unimplemented cases *)
 
  (********************** Semantics of the module system **********************)
   (* auxiliary methods to get Exps from cids *)
@@ -68,7 +69,10 @@ struct
         and ACid(c) =
            case mor
              of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-              | M.MorView(m) => ModSyn.conInstLookup(m, IDs.lidOf(c))      (* @FR flattening missing *)
+              | M.MorView(m) => (
+                  ModSyn.conInstLookup(m, IDs.lidOf(c))                    (* @FR flattening missing *)
+                  handle ModSyn.UndefinedCid _ => raise UndefinedMorph(m,c)
+                )
               | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
      in
      	A U

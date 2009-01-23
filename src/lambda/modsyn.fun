@@ -13,6 +13,8 @@ struct
   structure I = IntSyn
 
   exception Error of string
+  exception UndefinedCid of IDs.cid
+  exception UndefinedMid of IDs.mid
 
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
@@ -36,9 +38,6 @@ struct
   fun symInstCid(ConInst(c, _)) = c
     | symInstCid(StrInst(c, _)) = c
 
-  exception UndefinedCid of IDs.cid
-  exception UndefinedMid of IDs.mid
-  
   (********************** Stateful data structures **********************)
 
   (* Invariants:
@@ -75,8 +74,7 @@ struct
   val modTable : (ModDec * int * (IDs.mid option)) IH.Table = IH.new(499)
   (* maps cids to constant and structure declarations and instantiations *)
   val symTable : SymLevelData CH.Table = CH.new(19999)
-
-  (* maps pairs of (CID(S), CID(s')) of structure ids to the structure id CID(S.s') *)
+  (* maps pairs of (CID(S), CID(c')) of structure and structure/constant ids to the structure/constant id CID(S.c') *)
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
    
   (* scope holds a list of the currently opened modules and their next available lid (in inverse declaration order) *)
@@ -85,12 +83,6 @@ struct
   val nextMid : IDs.mid ref = ref 0
 
   (********************** End stateful data structures **********************)
-
-  fun currentMod() = #1 (hd (! scope))
-
-  fun getScope () = map #1 (! scope)
-  fun onToplevel() = List.length (! scope) = 1
-  fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
 
   fun modLookup(m : IDs.mid) = #1 (valOf (IH.lookup modTable m))
                                handle Option => raise UndefinedMid(m)
@@ -101,6 +93,19 @@ struct
                    handle Option => raise UndefinedMid(m)
   fun modParent(m : IDs.mid) = #3 (valOf (IH.lookup modTable m))
                                handle Option => raise UndefinedMid(m)
+
+  fun currentMod() = #1 (hd (! scope))
+  fun currentTargetSig() =
+     let val m = currentMod()
+     in case modLookup m
+       of SigDec _ => m
+        | ViewDec(_,_,cod) => cod
+     end
+
+  fun getScope () = map #1 (! scope)
+  fun onToplevel() = List.length (! scope) = 1
+  fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
+
   (* true: currentMod() is SigDec, false: currentMod() is ViewDec *)
   fun inSignature() = case modLookup (currentMod())
                           of SigDec _ => true
