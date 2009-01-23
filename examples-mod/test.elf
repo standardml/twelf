@@ -45,5 +45,5 @@ c := [x] c.
   %struct r' := r''.
   c' := [x] x.
   d' := [x: b''] (a'' -> s''.d' x).
-  test := [x] s''.a'.
+  test := [x] s''.test.
 }.

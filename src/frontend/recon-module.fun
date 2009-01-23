@@ -91,14 +91,13 @@ struct
              	                             ModSyn.MorView(ModSyn.currentMod())))     (* instantiation in a view *)
              	       handle Elab.UndefinedMorph(_,c) =>
              	          error(Paths.join(r,r'), "instantiation for " ^ ModSyn.symFoldName Con ^
-             	          " must occur after instantiation for " ^ ModSyn.symFoldName c)
+             	          " must occur after (possibly induced) instantiation for " ^ ModSyn.symFoldName c)
              	val job = case expType
              	  of NONE => ExtSyn.jterm term
              	   | SOME V => ExtSyn.jof'(term, V)
-		val Term = (case ExtSyn.recon job
+		val Term = case ExtSyn.recon job
 		   of ExtSyn.JTerm((U, _), _, _) => U
 		    | ExtSyn.JOf((U,_), _, _) => U
-		   ) handle _ => raise Error ""
              in
              	ModSyn.ConInst(Con, Term)
              end

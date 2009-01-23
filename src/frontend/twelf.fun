@@ -1097,6 +1097,7 @@ struct
             (* reconstruct, check, and install structure declaration
                only structural checking at this point, full type-checking only in Elab.flatten below *)
             val strDec = ReconModule.strdecToStrDec (strdec, Paths.Loc (fileName,r))
+            val _ = ReconTerm.checkErrors(r)
             val _ = Elab.checkStrDec(strDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
             val c = installStrDec (strDec, r)
@@ -1154,6 +1155,7 @@ struct
                              | ModSyn.ViewDec(_, d, c) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
+               val _ = ReconTerm.checkErrors(r)
                val _ = ModSyn.instAddC(Inst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                val _ = if !Global.chatter >= 3
