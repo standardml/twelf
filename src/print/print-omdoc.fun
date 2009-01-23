@@ -1,35 +1,21 @@
-(* Printing *)
-(* Author: Frank Pfenning *)
-(* Modified: Jeff Polakow *)
-(* Modified: Carsten Schuermann *)
-(* Modified: Florian Rabe *)
+(* Printing to OMDoc *)
+(* Author: Florian Rabe, based on print.fun *)
 
-functor PrintOMDoc
-  ((*! structure IntSyn' : INTSYN !*)
+functor PrintOMDoc(
    structure Whnf : WHNF
-   (*! sharing Whnf.IntSyn = IntSyn' !*)
-   structure Abstract : ABSTRACT
-   (*! sharing Abstract.IntSyn = IntSyn' !*)
-   structure Constraints : CONSTRAINTS
-   (*! sharing Constraints.IntSyn = IntSyn' !*)
    structure Names : NAMES
-   (*! sharing Names.IntSyn = IntSyn' !*)
-   structure Formatter' : FORMATTER)
+)
   : PRINT_OMDOC =
 struct
 
-  (*! structure IntSyn = IntSyn' !*)
-structure Formatter = Formatter'
-
-local
-  (* Shorthands *)
   structure I = IntSyn
 
-  (* The Formatter isn't really helpful for OMDoc output. So the basic functions are reimplemented here.
-     indent : current indentatioin width
+  (* Indentation
+     indent : current indentation width
      nl_ind()() : newline and indent
      nl_unind()() : newline and unindent
-     nl() : newline (with current indentation) *)
+     nl() : newline (keeping current indentation)
+  *)
   val indent = ref 0
   val tabstring = "   "
   fun tabs(n) = if (n <= 0) then "" else tabstring ^ tabs(n-1)
@@ -40,89 +26,84 @@ local
   fun nl_unind() = (indent := !indent - 1; "\n" ^ tabs(!indent))
   fun nl() = "\n" ^ tabs(!indent)
 
+  (* XML and OMDoc escaping
+     Among the printable non-whitespace ascii characters, the following are not URI pchars (RFC 3986): "#%&/<>?[\]^`{|}
+     We have to escape "&<> for XML and ?/% for OMDoc. The others must only be encoded in URI references.
+     These are actually possible in Twelf names: "#&/<>?\^`| *)
   fun escape s = let 
 	  fun escapelist nil = nil
-	    | escapelist (#"&" :: rest) = String.explode "&amp;" @ (escapelist rest) 
+	    | escapelist (#"&" :: rest) = String.explode "&amp;" @ (escapelist rest)
 	    | escapelist (#"<" :: rest) = String.explode "&lt;" @ (escapelist rest) 
-	    | escapelist (#">" :: rest) = String.explode "&gt;" @ (escapelist rest) 
+	    | escapelist (#">" :: rest) = String.explode "&gt;" @ (escapelist rest)
+	    | escapelist (#"\"" :: rest) = String.explode "&quot;" @ (escapelist rest)
+	    | escapelist (#"?" :: rest) = String.explode "%3F" @ (escapelist rest)
+	    | escapelist (#"/" :: rest) = String.explode "%2F" @ (escapelist rest)
 	    | escapelist (c :: rest) = c :: (escapelist rest)
   in
     String.implode (escapelist (String.explode s))
   end
-
- (* If namesafe is true during printing, the output is guaranteed to be namesafe (no duplicate names).
-    But it doesn't look good. If the user knows that are no overloaded constants, namesafe can be set to false. *)
- val namesafe = ref true
-
-  (* XML start characters: ":" | "_" | [A-Z] | [a-z], further characters: "-" | "." | [0-9] *)
-  fun replace c = if (Char.isAlphaNum c) orelse (Char.contains ":_-." c) then
- 	(String.str c)
-  else
-  	"_"
-  fun Name (cid) = let
-  	val n = I.conDecName(ModSyn.sgnLookup cid)
-  	val name = String.translate replace n
-  	val start = if (Char.isAlpha (String.sub(name,0))) orelse (String.sub(name,0) = #"_") then "" else "_"
-  in
-  	if (!namesafe) then
-  		start ^ name ^ "__c" ^ (Int.toString cid)
-  	else
-  		n
-  end
-  (* x must be the number of the varialbe in left ro right order in the context *)
-  fun VarName (x,n) = let
-  	val name = String.translate replace n
-  	val start = if (Char.isAlpha (String.sub(name,0))) orelse (String.sub(name,0) = #"_") then "" else "_"
-  in
-  	if (!namesafe) then
-  		start ^ name ^ "__v" ^ (Int.toString x)
-  	else
-  		n
-  end
-
-  (* Some original Formatter functions replaced with trivial functions. *)
-  (* val Str  = F.String
-  fun Str0 (s, n) = F.String0 n s
-  fun Integer (n) = ("\"" ^ Int.toString n ^ "\"") *)
-  fun Str (s) = s
-  (* fun sexp (fmts) = F.Hbox [F.HVbox fmts] *)
-  fun sexp (l) = String.concat l
-
-  (* This is probably defined elsewhere, too. It's needed to check how many arguments there will be in an om:OMA element *)
+  
+  (* locations of meta theories *)
+  val baseMMT = "http://cds.omdoc.org/mmt"
+  val baseLF = "http://cds.omdoc.org/lf"
+  val cdMMT = ["mmt"]
+  val cdLF = ["lf"]
+  val cdTwelf = "twelf"
+  
+  (* XML and OMDoc constructors, return string *)
+  fun ElemOpen'(label, attrs) = "<" ^ label ^ IDs.mkString(attrs, " ", " ", "")
+  fun ElemOpen(label, attrs) = ElemOpen'(label, attrs) ^ ">"
+  fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
+  fun Attr(label, value) = label ^ "\"" ^ value ^ "\""
+  fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
+  fun mpath(doc, module) = doc ^ "?" ^ (localPath module)
+  fun OMS3(base, module, name) = let
+     val baseA = if base = "" then nil else [Attr("base", base)]
+     val modA = if module = nil then nil else [Attr("module", localPath module)]
+     val nameA = if name = nil then nil else [Attr("name", localPath name)]
+   in
+      ElemEmpty("om:OMS", baseA @ modA @ nameA)
+   end
+  fun OMS(cd,name) = OMS3("", cd, name)
+  fun OMV(name) = ElemEmpty("om:OMV", [Attr("name", escape name)])
+  fun OMA(func, args) = "<om:OMA>" ^ nl_ind() ^ IDs.mkString(args, "", nl(), "") ^ nl_unind() ^ "</om:OMA>"
+  fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "<om:OMBIND>"
+  fun OM1ATTR(obj, key, value) = "<om:OMATTR><om:OMATP>" ^ nl_ind() ^ key ^ nl() ^ value ^ nl() ^ "</om:OMATP>" ^
+                                 obj ^ nl_unind() ^ "</om:ATTR>"
+  fun OM1BVAR(name, key, value) = "<om:OMBVAR>" ^ nl_ind() ^ OM1ATTR(OMV(name), key, value) ^ nl_unind() ^ "</om:OMBVAR>"
+  
+  (* Printing expressions *)
+  
+  (* check how many arguments there will be in an om:OMA element *)
   fun spineLength I.Nil = 0
     | spineLength (I.SClo (S, _)) = spineLength S
     | spineLength (I.App(_, S)) = 1 + (spineLength S)
 
-  (* fmtCon (c) = "c" where the name is assigned according the the Name table
-     maintained in the names module.
-     FVar's are printed with a preceding "`" (backquote) character
-  *)
+  fun fmtCid(cid) = OMS(ModSyn.modName (IDs.midOf cid), ModSyn.symName cid)
   fun fmtCon (G, I.BVar(x)) = 
       let
 	val I.Dec (SOME n, _) = I.ctxDec (G, x)
       in 
-	sexp [Str ("<om:OMV name=\"" ^ VarName(I.ctxLength G - x + 1,n) ^ "\"/>")]
+	OMV(n)
       end
-    | fmtCon (G, I.Const(cid)) = sexp [Str "<om:OMS cd=\"global\" name=\"", Name cid, Str "\"/>"]
-    | fmtCon (G, I.Def(cid)) = sexp [Str "<om:OMS cd=\"global\" name=\"", Name cid, Str "\"/>"]
-    | fmtCon (G, I.FgnConst (csid, condec)) = sexp [Str "FgnConst"]  (* FIX -cs Fri Jan 28 17:45:35 2005*)
+    | fmtCon (G, I.Const(cid)) = fmtCid cid
+    | fmtCon (G, I.Def(cid)) = fmtCid cid
+    | fmtCon (G, I.NSDef(cid)) = fmtCid cid
+    | fmtCon (G, I.FgnConst (csid, condec)) = "FgnConst"  (* FIX -cs Fri Jan 28 17:45:35 2005*)
     (* I.Skonst, I.FVar cases should be impossible *)
 
-  (* fmtUni (L) = "L" *)
-  fun fmtUni (I.Type) = Str "<om:OMS cd=\"twelf\" name=\"type\"/>"
-    | fmtUni (I.Kind) = Str "<om:OMS cd=\"twelf\" name=\"kind\"/>"
+  fun fmtUni (I.Type) = OMS(cdLF, ["type"])
+    | fmtUni (I.Kind) = OMS(cdLF, ["kind"])
 
   (* fmtExpW (G, (U, s)) = fmt
-     
      format the expression U[s].
-
      Invariants:
        G is a "printing context" (names in it are unique, but
             types may be incorrect) approximating G'
        G'' |- U : V   G' |- s : G''  (so  G' |- U[s] : V[s])
        (U,s) in whnf
   *)
-  fun fmtExpW (G, (I.Uni(L), s), _) = sexp [fmtUni L]
+  fun fmtExpW (G, (I.Uni(L), s), _) = fmtUni L
     | fmtExpW (G, (I.Pi((D as I.Dec(_,V1),P),V2), s), imp) =
       (case P (* if Pi is dependent but anonymous, invent name here *)
 	 of I.Maybe => let
@@ -134,17 +115,13 @@ local
 			 val fmtType = fmtExp (G, (V1', s), 0)
 			 val _ = unind(2)
 			 val pi = if (imp > 0) then "implicit_Pi" else "Pi"
-			 val id = VarName(I.ctxLength G',name)
 		       in
-				fmtBinder(pi, name, id, fmtType, fmtBody)
+				fmtBinder(pi, name, fmtType, fmtBody)
 		       end
 	  | I.No => let
 		       val G' = I.Decl (G, D)
 		    in
-		      sexp [Str "<om:OMA>", nl_ind(), Str "<om:OMS cd=\"twelf\" name=\"arrow\"/>", nl(),
-			    fmtExp (G, (V1, s), 0), nl(),
-			    fmtExp (G', (V2, I.dot1 s), 0), nl_unind(),
-			    Str "</om:OMA>"]
+		       OMA(OMS(cdLF, ["arrow"]), [fmtExp (G, (V1, s), 0), fmtExp (G', (V2, I.dot1 s), 0)])
 		    end)
     | fmtExpW (G, (I.Root (H, S), s), _) = let
 	val l = spineLength(S)
@@ -158,23 +135,22 @@ local
 		(* If there are more than two explicit arguments to an infix operator,
 		   the implict and the first two explicit arguments have to be wrapped in their own om:OMA element.
 		   In this case, the output will not be in normal form. *)
-    		val (test,cid) =
+    		val cOpt =
     			case H of
-		       	   I.Const(c) => (true,c)
-		       	 | I.Skonst(c) => (true,c)
-	  		 | I.Def(c) => (true,c)
-		       	 | I.NSDef(c) => (true,c)
-		       	 | _ => (false,0)
-		val imp = IntSyn.conDecImp (ModSyn.sgnLookup cid)
-      		val (test,args) = if test then
-			case Names.getFixity cid of
-				  Names.Fixity.Infix(_,_) => (true,imp + 2)
-				| _ => (false,0)
-	    	else (false,0)
-		val _ = if test andalso (l > args) then
-			out := !out ^ "<om:OMA>" ^ nl_ind()
-		else
-			()
+		       	   I.Const(c) => SOME c
+		       	 | I.Skonst(c) => SOME c
+	  		 | I.Def(c) => SOME c
+		       	 | I.NSDef(c) => SOME c
+		       	 | _ => NONE
+      		val args = case cOpt
+      		     of SOME c => (case Names.fixityLookup c
+			  of Names.Fixity.Infix(_,_) => IntSyn.conDecImp (ModSyn.sgnLookup c) + 2
+		           | _ => 0
+		         )
+		      | NONE => 0
+		val _ = if args > 0 andalso (l > args)
+		        then out := !out ^ "<om:OMA>" ^ nl_ind()
+		        else ()
 	(* print constant and arguments,
 	   args is passed to fmtSpine so that fmtSpine can insert a closing tag after args arguments, 0 means no effect *)
 	in out := !out ^ fmtCon (G, H) ^ fmtSpine (G, (S, s), args) ^ "</om:OMA>"
@@ -192,11 +168,10 @@ local
 	val fmtType = fmtExp (G, (V, s), 0)
 	val _ = unind(2)
 	val lam = if (imp > 0) then "implicit_lambda" else "lambda"
-	val id = VarName(I.ctxLength G',name)
       in
-      	fmtBinder(lam, name, id, fmtType, fmtBody)
+      	fmtBinder(lam, name, fmtType, fmtBody)
       end
-    | fmtExpW (G, (I.FgnExp (csid, F), s), 0) = sexp [Str "FgnExp"] (* FIX -cs Fri Jan 28 17:45:43 2005 *)
+    | fmtExpW (G, (I.FgnExp (csid, F), s), 0) = "FgnExp" (* FIX -cs Fri Jan 28 17:45:43 2005 *)
 
     (* I.EClo, I.Redex, I.EVar not possible *)
 
@@ -222,148 +197,159 @@ local
       in !out ^ fmtSpine (G, (S, s), args-1)
       end
     	
-  and fmtExpTop (G, (U, s), imp) = sexp [Str "<om:OMOBJ>", nl_ind(), fmtExp (G, (U, s), imp), nl_unind(), Str "</om:OMOBJ>"]
+  and fmtExpTop (G, (U, s), imp) = "<om:OMOBJ>" ^ nl_ind() ^ fmtExp (G, (U, s), imp) ^ nl_unind() ^ "</om:OMOBJ>"
+  
+  and fmtBinder(binder, name, typ, scope) = OMBIND(OMS(cdLF, [binder]), OM1BVAR(name, OMS(cdLF, ["oftype"]), typ), scope)
+  
+  (* Printing non-modular symbol level declarations *)
+  
+  fun fmtSymbol(name, V, Uopt, imp) =
+  	ElemOpen("constant", [Attr("name", escape name)]) ^ nl_ind() ^
+  	   "<type>" ^ nl_ind() ^
+  	      fmtExpTop (I.Null, (V, I.id), imp) ^ nl_unind() ^
+  	   "</type>" ^
+  	   (case Uopt
+  	      of NONE => ""
+  	       | SOME U =>
+  	          nl() ^
+  	          "<definition>" ^ nl_ind() ^
+  	             fmtExpTop (I.Null, (U, I.id), imp) ^ nl_unind() ^
+  	          "</definition>"
+  	   ) ^ nl_unind() ^
+  	"</constant>"
 
-  (* top-level and shared OMDoc output, used in fmtConDec *)
-  and fmtBinder(binder, varname, varid, typ, body) =
-	"<om:OMBIND>" ^ nl_ind() ^ "<om:OMS cd=\"twelf\" name=\"" ^ binder ^ "\"/>" ^ nl() ^ "<om:OMBVAR><om:OMATTR>" ^ nl_ind() ^
-	(if (!namesafe) then
-		("<om:OMATP><om:OMS cd=\"omdoc\" name=\"notation\"/><om:OMFOREIGN encoding=\"application/omdoc+xml\">" ^
-		"<presentation for=\"#" ^ varid ^ "\"><use format=\"twelf\">" ^ varname ^ 
-		"</use></presentation>" ^
-		"</om:OMFOREIGN></om:OMATP>")
-	else (* In the presentation information for variables can be omitted since it's their name anyway *)
-		"")
-	^ "<om:OMATP>" ^ nl() ^
-	"<om:OMS cd=\"twelf\" name=\"oftype\"/>" ^ nl() ^
-	typ ^ nl() ^ "</om:OMATP>" ^ nl() ^
-	"<om:OMV name=\"" ^ varid ^ "\"/>" ^ nl_unind() ^ "</om:OMATTR></om:OMBVAR>" ^ nl() ^
-	body ^ nl_unind() ^ "</om:OMBIND>"
-  and fmtSymbol(name, V, imp) =
-  	"<symbol name=\"" ^ name ^ "\">" ^ nl_ind() ^ "<type system=\"twelf\">" ^
-  	 nl_ind() ^ fmtExpTop (I.Null, (V, I.id), imp) ^ nl_unind() ^
-	 "</type>" ^ nl_unind() ^ "</symbol>"
-  and fmtDefinition(name, U, imp) =
-	"<definition xml:id=\"" ^ name ^ ".def\" for=\"#" ^ name ^ "\">" ^ nl_ind() ^
-	fmtExpTop (I.Null, (U, I.id), imp) ^ nl_unind() ^ "</definition>"
-  and fmtPresentation(cid) = let
+  fun fmtPresentation(cid) =
+     let
   	val imp = I.conDecImp (ModSyn.sgnLookup cid)
-  	val fixity = Names.getFixity (cid)
-	val fixString = " fixity=\"" ^ (case fixity of
-		  Names.Fixity.Nonfix => "prefix"	(* case identified by @precedence = Names.Fixity.minPrefInt *)
-		| Names.Fixity.Infix(prec, assoc) => (
+  	val fixity = Names.fixityLookup cid
+	val fixString = case fixity
+	       of Names.Fixity.Nonfix => "prefix"	(* case identified by @precedence = Names.Fixity.minPrefInt *)
+		| Names.Fixity.Infix(_, assoc) => (
 			case assoc of
-			  Names.Fixity.Left => "infixl"
-			| Names.Fixity.Right => "infixr"
+			  Names.Fixity.Left => "leftassoc"
+			| Names.Fixity.Right => "rightassoc"
 			| Names.Fixity.None => "infix"
 		)
-		| Names.Fixity.Prefix(prec) => "prefix"
-		| Names.Fixity.Postfix(prec) => "postfix"
-	) ^ "\""
-	val precString = " precedence=\"" ^ (Int.toString (Names.Fixity.precToIntAsc(fixity))) ^ "\""
-	val bracString = " bracket-style=\"lisp\" lbrack=\"(\" rbrack=\")\""
-	val sepString = " separator=\" \""
-	val implicitString = " implicit=\"" ^ (Int.toString imp) ^ "\""
-	val useString1 = "<use format=\"twelf\""
-	val useString2 = ">" ^ (escape (I.conDecName(ModSyn.sgnLookup cid))) ^ "</use>"
-	val presString1 = "<presentation for=\"#" ^ (Name cid) ^ "\""
-	val presString2 = "</presentation>"
-  in
-  	presString1 ^ ">" ^ nl_ind() ^ useString1 ^ useString2 ^ nl_unind() ^ presString2 ^ nl() ^
-  	presString1 ^ " role=\"applied\"" ^ fixString ^ precString ^ bracString ^ sepString ^ implicitString ^
-  	">" ^ nl_ind() ^ useString1 ^ useString2 ^ nl_unind() ^ presString2
-  end
-  (* fixity string attached to omdoc file in private element (no escaping, fixity string cannot contain ]]>) *)
-  and fmtFixity(cid) = let
-  	val fixity = Names.getFixity (cid)
-  	val name = I.conDecName (ModSyn.sgnLookup cid)
-      in
-      	if (fixity = Names.Fixity.Nonfix) then "" else
-	nl() ^ "<private for=\"#" ^ (Name cid) ^ "\">" ^ nl_ind() ^
-	"<data format=\"twelf\"><![CDATA[" ^ (Names.Fixity.toString fixity) ^ " " ^ name ^ ".]]></data>" ^ nl_unind() ^
-	"</private>"
-      end
+		| Names.Fixity.Prefix(_) => "prefix"
+		| Names.Fixity.Postfix(_) => "postfix"
+        val name = localPath (List.map escape (I.conDecName(ModSyn.sgnLookup cid)))
+    in
+        ElemEmpty("notation",
+	  [Attr("for", name),
+	   Attr("precedece", Int.toString (Names.Fixity.precToIntAsc(fixity))),
+	   Attr("fixity", fixString),
+	   Attr("implicit", Int.toString imp)]
+        )
+    end
 
   (* fmtConDec (condec) = fmt
      formats a constant declaration (which must be closed and in normal form)
-
      This function prints the quantifiers and abstractions only if hide = false.
   *)
   
-  fun fmtConDec (cid, I.ConDec (name, parent, imp, _, V, L)) =
+  fun fmtConDec (I.ConDec (name, _, imp, _, V, L)) =
       let
 	val _ = Names.varReset IntSyn.Null
-	val name = Name cid
       in
-	fmtSymbol(name, V, imp)
+	fmtSymbol(localPath name, V, NONE, imp)
       end
-    | fmtConDec (_, I.SkoDec (name, parent, imp, V, L)) =
-      Str ("<!-- Skipping Skolem constant " ^ name ^ "-->")
-    | fmtConDec (cid, I.ConDef (name, parent, imp, U, V, L, _)) =
+    | fmtConDec (I.ConDef (name, _, imp, U, V, L, _)) =
       let
 	val _ = Names.varReset IntSyn.Null
-	val name = Name cid
       in
-	fmtSymbol(name, V, imp) ^ nl() ^ fmtDefinition(name, U, imp)
+	fmtSymbol(localPath name, V, SOME U, imp)
       end
-    | fmtConDec (cid, I.AbbrevDef (name, parent, imp, U, V, L)) =
+    | fmtConDec (I.AbbrevDef (name, parent, imp, U, V, L)) =
       let
 	val _ = Names.varReset IntSyn.Null
-	val name = Name cid
       in
-	fmtSymbol(name, V, imp) ^ nl() ^ fmtDefinition(name, U, imp)
+	fmtSymbol(localPath name, V, SOME U, imp)
       end
-    | fmtConDec (_, I.BlockDec (name, _, _, _)) =
-      Str ("<!-- Skipping Skolem constant " ^ name ^ "-->")
+    | fmtConDec (I.SkoDec (name, _, imp, V, L)) =
+      "<!-- Skipping Skolem constant " ^ localPath name ^ "-->"
+    | fmtConDec (I.BlockDec (name, _, _, _)) =
+      "<!-- Skipping block declaration constant " ^ localPath name ^ "-->"
 
-in
 
-  (* In the functions below, G must be a "printing context", that is,
-     (a) unique names must be assigned to each declaration which may
-         actually applied in the scope (typically, using Names.decName)
-     (b) types need not be well-formed, since they are not used
-  *)
-  fun formatExp (G, U, imp) = fmtExp (G, (U, I.id), imp)
-(*  fun formatSpine (G, S) = sexp (fmtSpine (G, (S, I.id))) *)
-  fun formatConDec (condec) = fmtConDec (condec)
-
-  (* fun expToString (G, U) = F.makestring_fmt (formatExp (G, U, 0)) *)
-  fun conDecToString (condec) = (formatConDec (condec))
-
+  (* Printing module level declarations *)
   
-  fun fmtConst cid = formatConDec (cid, ModSyn.sgnLookup cid) ^ "\n" ^ fmtPresentation(cid) ^ fmtFixity(cid)
+  fun docBeginToString() =
+           "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
+           "<omdoc " ^
+           "xmlns=\"http://www.mathweb.org/omdoc\" " ^
+           "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
+           ">\n" ^ nl_ind()
+  fun docEndToString() = nl_unind() ^ "</omdoc>"
+  
+  fun modBeginToString(ModSyn.SigDec name) =
+        ElemOpen("theory", [Attr("name", localPath name), Attr("meta=\"", mpath(baseLF, cdLF))]) ^
+        nl_ind()
+    | modBeginToString(ModSyn.ViewDec(name, dom, cod)) =
+        ElemOpen("view", [Attr("name", localPath name),
+                          Attr("from", mpath("", ModSyn.modName dom)),
+                          Attr("to", mpath("", ModSyn.modName cod))]
+                )
+  fun modEndToString(ModSyn.SigDec _) = "</theory>"
+    | modEndToString(ModSyn.ViewDec _) = "</view>"
+    
+  fun expToString (G, U, imp) = fmtExp (G, (U, I.id), imp)  
+  
+  fun morphToString(ModSyn.MorStr(c)) = fmtCid c
+    | morphToString(ModSyn.MorView(m)) = OMS3("", ModSyn.modName m, nil)
+    | morphToString(ModSyn.MorComp(mor1,mor2)) =
+      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1), morphToString(mor2)])
+      
+  fun instToString(ModSyn.ConInst(c, U)) = 
+         ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
+         expToString(IntSyn.Null, U, 0) ^ nl_unind() ^ "</conass>"
+    | instToString(ModSyn.StrInst(c, mor)) =
+         ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
+         morphToString(mor) ^ nl_unind() ^ "</strass>"
 
-  fun printConst cid = (namesafe := false; fmtConst cid)
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) =
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", localPath (ModSyn.modName dom))]) ^
+     IDs.mkString(List.map instToString insts, nl_ind(), nl(), nl_unind()) ^
+     "</structure>"    
+   | strDecToString(ModSyn.StrDef(name, _, dom, def)) =
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", localPath (ModSyn.modName dom))]) ^
+     "<definition>" ^ nl_ind() ^ morphToString def ^ nl_unind() ^ "</definition>" ^
+     "</structure>"
 
-  fun printSgn filename ns =
-      let 
-      	val _ = namesafe := ns
-      	val _ = ind_reset()
-	val file = TextIO.openOut (filename)
-	val OMDocPrefix =
-"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
-"<!DOCTYPE omdoc PUBLIC \"-//OMDoc//DTD OMDoc V1.2//EN\" " ^
-(* "\"https://svn.mathweb.org/repos/mathweb.org/branches/omdoc-1.2/dtd/omdoc.dtd\">\n" ^ *)
-"\"../../dtd/omdoc.dtd\">\n" ^
-"<omdoc xml:id=\"" ^ filename ^ "\" " ^
-"xmlns=\"http://www.mathweb.org/omdoc\" " ^
-"xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-"version=\"1.2\">\n\n"
-	val _ = TextIO.output (file, OMDocPrefix ^ "<theory xml:id=\"global\">\n\n")
+  fun conDecToString cid = fmtConDec (ModSyn.sgnLookup cid) ^ "\n" ^ fmtPresentation(cid)
 
-	val _ = ModSyn.sgnApp (fn (cid) => (
-			(TextIO.output (file, fmtConst cid)) ;
-		 	TextIO.output (file, "\n\n")
-		)
-	)
-	val _ = TextIO.output (file, "</theory>\n\n</omdoc>")
-	val _ = TextIO.closeOut file
+  (* Main interface methods *)
+    
+  fun printModule f m =
+     let val mdec = ModSyn.modLookup m
+     in (
+        f(modBeginToString mdec);
+        ModSyn.sgnApp(m, fn c => (
+           case ModSyn.symLookup c
+             of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
+                                 then f (conDecToString c)
+                                 else ()
+              | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
+                                 then f (strDecToString strdec)
+                                 else ()
+              | ModSyn.SymConInst exp => f (instToString (ModSyn.ConInst(c,exp)))
+              | ModSyn.SymStrInst mor => f (instToString (ModSyn.StrInst(c,mor)))
+           ;
+           f(nl())
+           )
+        );
+        f(modEndToString mdec)
+     )
+     end
 
-      in
-	()
-      end
+  fun printDoc filename =
+     let val file = TextIO.openOut (filename)
+     in (
+        ind_reset();
+        TextIO.output(file, docBeginToString());
+        ModSyn.modApp(fn m => printModule (fn x => TextIO.output(file, x)) m);
+        TextIO.output(file, docEndToString());
+        TextIO.closeOut file
+     )
+     end
 
-
-end  (* local ... *)
-
-end  (* functor PrintXml *)
+end  (* functor PrintOMDoc *)

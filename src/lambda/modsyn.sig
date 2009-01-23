@@ -90,7 +90,9 @@ sig
   val strDecQid  : StrDec -> IDs.qid
   val strDecDom  : StrDec -> IDs.mid
   val symInstCid : SymInst -> IDs.cid
+  val modName    : IDs.mid -> string list
   val modFoldName: IDs.mid -> string
+  val symName    : IDs.cid -> string list
   val symFoldName: IDs.cid -> string  
   val symQid     : IDs.cid -> IDs.qid
 

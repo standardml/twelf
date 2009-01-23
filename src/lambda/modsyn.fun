@@ -244,11 +244,13 @@ struct
       (case sgnLookup (c)
 	 of I.ConDec (_, _, _, status, _, _) => status
           | _ => I.Normal)
-  fun symFoldName(c) =
+  fun symName(c) =
      case symLookup(c)
-       of SymCon condec => IntSyn.conDecFoldName condec
-        | SymStr strdec => strDecFoldName strdec
-  fun modFoldName m = IDs.mkString(modDecName (modLookup m) ,"",".","")
+       of SymCon condec => IntSyn.conDecName condec
+        | SymStr strdec => strDecName strdec
+  fun symFoldName(c) = IDs.mkString(symName c ,"",".","") 
+  fun modName m = modDecName (modLookup m)
+  fun modFoldName m = IDs.mkString(modName m ,"",".","")
  
   (********************** Convenience methods **********************)
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)

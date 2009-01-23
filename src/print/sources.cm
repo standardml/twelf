@@ -1,17 +1,17 @@
 Library
   signature PRINT
   structure Print
-  structure PrintTeX
   signature CLAUSEPRINT
   structure ClausePrint
-  structure ClausePrintTeX
-  structure PrintTwega
-  structure PrintXML
-  structure PrintTwega
   structure PrintOMDoc
   signature SYMBOL
   structure SymbolAscii
   structure SymbolTeX
+  structure PrintTeX
+  structure ClausePrintTeX
+  structure PrintTwega
+  structure PrintXML
+
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -25,12 +25,12 @@ is
   print.fun
   clause-print.sig
   clause-print.fun
+  print-omdoc.fun
+  print-omdoc.sig
   print.sml
-  traverse.sig   (* dead code --cs Fri Jan  9 14:41:53 2009 *)
-  traverse.fun   (* .. *)
+(* outdated -fr
   print-twega.sig
   print-twega.fun
   print-xml.sig
   print-xml.fun
-  print-omdoc.fun
-  print-omdoc.sig
+*)

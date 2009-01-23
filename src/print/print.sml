@@ -19,13 +19,18 @@ structure ClausePrint =
 	       structure Print = Print
 	       structure Symbol = SymbolAscii);
 
+structure PrintOMDoc =
+  PrintOMDoc (structure Whnf = Whnf
+	      structure Names = Names);
+
+(* defining with trivial values for now in case someone still wants to adapt the printers below -fr *)
 structure PrintTeX = Print
 structure ClausePrintTeX = ClausePrint
 structure PrintTwega = Print
 structure PrintXML = Print
-structure PrintOMDoc = Print
 
-(* I'm commenting out the rest because adapting the printers is so tedious and should be done last anyway -fr
+(* The following are outdated. Instead of adapting them, the generic OMDoc printers should be used -fr *)
+(*
 structure PrintTeX =
   Print ((*! structure IntSyn' = IntSyn !*)
 	 structure Whnf = Whnf
@@ -60,11 +65,4 @@ structure PrintXML =
 	      structure Names = Names
 	      structure Formatter' = Formatter);
 
-structure PrintOMDoc =
-  PrintOMDoc ((*! structure IntSyn' = IntSyn !*)
-	      structure Whnf = Whnf
-	      structure Abstract = Abstract
-	      structure Constraints = Constraints
-	      structure Names = Names
-	      structure Formatter' = Formatter);
 *)
