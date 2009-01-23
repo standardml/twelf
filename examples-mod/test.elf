@@ -31,7 +31,19 @@
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
 }.
 
-%view idR : R -> R = {
-a := a.
-c := c.
+%% testing views
+%view V : R -> R = {
+a := a -> a.
+c := [x] c.
+}.
+
+%% testing views with structure instantiations; in general not so easy to type-check by hand
+%view W : S -> T = {
+  a' := a'' -> a''.
+  b' := s''.b'.
+  b'2 := r''.c.
+  %struct r' := r''.
+  c' := [x] x.
+  d' := [x: b''] (a'' -> s''.d' x).
+  test := [x] s''.a'.
 }.
