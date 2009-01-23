@@ -1,87 +1,105 @@
-%sig ND = {
-  i : type.  % individuals
-  o : type.  % formulas
-  %name i T x.
-  %name o A p.
 
-  % Formulas
-
+%sig FORMULA- = {
+  o : type.
+  i : type.
+  false  : o. 
   imp    : o -> o -> o.   %infix right 10 imp.
-  not    : o -> o.        %prefix 12 not.
-  forall : (i -> o) -> o.
+  forall : (i -> o) -> o.	    
+}.
 
+
+%sig FORMULA = {
+  %struct F : FORMULA- = {}.		 
+  o = F.o.
+  i = F.i. 
+  not    : F.o -> F.o.        %prefix 12 not.
+  false  = F.false.
+  imp   = [p] [q] p F.imp q.    %infix right 10 imp.
+  forall = F.forall.
+}.
+
+
+
+%sig ND = {
   % Natural deductions
+  %struct F : FORMULA = {}.
 
-  nd : o -> type.
+  nd : F.o -> type.
   %name nd D u.
 
-  impi    : (nd A -> nd B) -> nd (A imp B).
-  impe    : nd (A imp B) -> nd A -> nd B.
+  impi    : (nd A -> nd B) -> nd (A F.imp B).
+  impe    : nd (A F.imp B) -> nd A -> nd B.
 
-  noti    : ({p:o} nd A -> nd p) -> nd (not A).
-  note    : nd (not A) -> {C:o} nd A -> nd C.
+  noti    : ({p:F.o} nd A -> nd p) -> nd (F.not A).
+  note    : nd (F.not A) -> {C:F.o} nd A -> nd C.
 
-  foralli : ({a:i} nd (A a)) -> nd (forall A).
-  foralle : nd (forall A) -> {T:i} nd (A T).
+  foralli : ({a:F.i} nd (A a)) -> nd (F.forall A).
+  foralle : nd (F.forall A) -> {T:F.i} nd (A T).
 
-  %block lnd : some {A:o} block {u:nd A}.
-  %block lo : block {p:o}.
-  %block li : block {a:i}.
+  % block lnd : some {A:F.o} block {u:nd A}.
+  % block lo : block {p:F.o}.
+  % block li : block {a:F.i}.
 
-  %worlds (lnd | lo | li) (nd A).
+  % worlds (lnd | lo | li) (nd A).
 
   % Example
 
-  _ : nd (A imp (B imp A))
-    = (impi [u:nd A] impi [v:nd B] u).
+  _ : nd (A F.imp (B F.imp A))
+    = (impi [u:nd A] impi [v:nd B] u).   
+
+  %abbrev     % why isn't this strict. BUG Fri Jan 23 12:49:57 2009 --cs
+   dn : nd (A F.imp F.not F.not A)
+     = (impi [u:nd A] noti [p:F.o] [w:nd (F.not A)] note w p u).
+
+
 }.
 
-% Hilbert deductions
 
-%sig HIL : {
-  hil : o -> type.  % Hilbert deductions
+%sig HIL = {
+  % Hilbert deductions
+
+  %struct F : FORMULA = {}.
+  hil : F.o -> type.  % Hilbert deductions
   %name hil H u.
  
-  k : hil (A imp (B imp A)).
-  s : hil ((A imp (B imp C)) imp ((A imp B) imp (A imp C))).
+  k : hil (A F.imp (B F.imp A)).
+  s : hil ((A F.imp (B F.imp C)) F.imp ((A F.imp B) F.imp (A F.imp C))).
 
-  n1 : hil ((A imp (not B)) imp ((A imp B) imp (not A))).
-  n2 : hil ((not A) imp (A imp B)).
+  n1 : hil ((A F.imp (F.not B)) F.imp ((A F.imp B) F.imp (F.not A))).
+  n2 : hil ((F.not A) F.imp (A F.imp B)).
 
-  f1 : {T:i} hil ((forall [x:i] A x) imp (A T)).
-  f2 : hil ((forall [x:i] (B imp A x)) imp (B imp forall [x:i] A x)).
+  f1 : {T:F.i} hil ((F.forall [x:F.i] A x) F.imp (A T)).
+  f2 : hil ((F.forall [x:F.i] (B F.imp A x)) F.imp (B F.imp F.forall [x:F.i] A x)).
 
-  mp : hil (A imp B) -> hil A -> hil B.
-  ug : ({a:i} hil (A a)) -> hil (forall [x:i] A x).
+  mp : hil (A F.imp B) -> hil A -> hil B.
+  ug : ({a:F.i} hil (A a)) -> hil (F.forall [x:F.i] A x).
 
-  %worlds (li) (hil A).
+  % worlds (li) (hil A).
+
 }.
 
 % Local reductions
 
 %sig REDEXP = {
-  %struct a : ND.
-  ==>R : a.nd A -> a.nd A -> type.  %infix none 14 ==>R.
+  %struct F : FORMULA = {}.
+  %struct ND : ND = {%struct F := F.}.
+  ==>R : ND.nd A -> ND.nd A -> type.  %infix none 14 ==>R.
   %name ==>R R.
 
-  redl_imp    : (a.impe (a.impi [u:nd A] D u) E) ==>R (D E).
-  redl_not    : (a.note (a.noti [p:o] [u:nd A] D p u) C E) ==>R (D C E).
-  redl_forall : (a.foralle (a.foralli [a:i] D a) T) ==>R (D T).
+  redl_imp    : (ND.impe (ND.impi [u:ND.nd A] D u) E) ==>R (D E).
+  redl_not    : (ND.note (ND.noti [p:F.o] [u:ND.nd A] D p u) C E) ==>R (D C E).
+  redl_forall : (ND.foralle (ND.foralli [a:F.i] D a) T) ==>R (D T).
 
   % Local expansions
 
-  ==>E : a.nd A -> a.nd A -> type.  %infix none 14 ==>E.
+  ==>E : ND.nd A -> ND.nd A -> type.  %infix none 14 ==>E.
   %name ==>E E.
 
-  expl_imp    : {D:a.nd (A a.imp B)}  D ==>E (a.impi [u:a.nd A] a.impe D u).
-  expl_not    : {D:a.nd (a.not A)}    D ==>E (a.noti [p:a.o] [u:a.nd A] a.note D p u).
-  expl_forall : {D:a.nd (a.forall A)} D ==>E (a.foralli [a:a.i] a.foralle D a).
+  expl_imp    : {D:ND.nd (A F.imp B)}  D ==>E (ND.impi [u:ND.nd A] ND.impe D u).
+  expl_not    : {D:ND.nd (F.not A)}    D ==>E (ND.noti [p:F.o] [u:ND.nd A] ND.note D p u).
+  expl_forall : {D:ND.nd (F.forall A)} D ==>E (ND.foralli [a:F.i] ND.foralle D a).
+
 }.
-
-% Sequent calculus search result
-
-dn : nd (A imp not not A)
-   = (impi [u:nd A] noti [p:o] [w:nd (not A)] note w p u).
 
 % Translating Hilbert derivations to natural deductions
 

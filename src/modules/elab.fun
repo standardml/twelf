@@ -131,22 +131,23 @@ struct
      	(* auxiliary function used in translated ConDec to unify the cases of ConDef and AbbrevDef *)
      	fun translateDefOrAbbrev(c', name', q', imp', def', typ', uni', anc'Opt) =
               let
-                 val typ = applyMorph(typ', M.MorStr(S))
-                 val defold = applyMorph(def', M.MorStr(S))
-                 val defnew = case getInst(Str, c', q')
-                    of SOME def =>
+                 val typ = Whnf.normalize (applyMorph(typ', M.MorStr(S)), I.id)
+                 val defold =applyMorph(def', M.MorStr(S))
+                 val defnew = case getInst(Str, c', q')  
+                    of SOME def =>  
                        (* if existing definitions are overridden, equality must be checked *)
                        if checkEqual(defold, def)
-                       then def
+                       then Whnf.normalize (def, I.id)    (* don't understand why it is not normal
+							   investigate ! -- cs Fri Jan 23 14:29:08 2009 *)
                        else raise Error("clash between instantiation and translation of existing definiton for constant " ^
                                          M.symFoldName c')
-                    | NONE => defold
+                    | NONE => Whnf.normalize (defold, I.id)
                  val _ = if checkType(defnew, typ)
                          then ()
                          else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
                  val q = (S, c') :: (applyStructMap q')
               in 
-                 if not (anc'Opt = NONE) andalso uni' = I.Type andalso checkStrict(defnew, typ)
+                 if false (* not (anc'Opt = NONE) andalso uni' = I.Type andalso checkStrict(defnew, typ) *)
                  (* return a ConDef if the input was a term-level ConDef and strictness is preserved *)
                  then I.ConDef(Name @ name', q, imp', defnew, typ, uni', valOf anc'Opt) (* @CS: ancestor wrong *)
                  (* otherwise return AbbrevDef *)
