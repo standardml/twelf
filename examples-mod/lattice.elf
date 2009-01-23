@@ -1,0 +1,60 @@
+%sig FOL = {
+  i : type
+  o : type
+  ...
+}
+
+%sig Semigroup = {
+  %import FOL
+  comp : i -> i -> i %% (actually FOL.i; this must be discussed)
+  assoc : ...
+}
+
+%sig Monoid = {
+  %import FOL
+  %struc sgr : Semigroup
+  e : i
+  unit-left : ...
+  unit-right : ...
+}
+
+%sig Order = {
+  %import FOL
+  leq : i -> i -> o
+  refl : ...
+  antisym : ...
+  trans : ...
+}
+
+%view Opposite : Order -> Order = {
+  leq := [x][y] (leq y x)
+  refl := ...
+  antisym := ...
+  trans := ...
+}
+
+%sig Semilattice = {
+  %import FOL
+  %struc ord : Order
+  %struc comp : Semigroup
+}
+
+%sig Lattice = {
+  %import FOL
+  %struc min : Semilattice
+  %struc max : Semilattice where {ord := Opposite min.ord}
+  /\ = min.comp
+  \/ = max.comp
+}
+
+%% lattice with least and greatest elements (by using monoids instead of semigroups)
+%sig LGLattice = {
+  %import FOL
+  %struc lat : Lattice
+  %struc min : Monoid where {sgr := lat.min.comp}
+  %struc max : Monoid where {sgr := lat.max.comp}
+  /\ = lat./\
+  \/ = lat.\/
+  bot = min.unit
+  top = max.unit
+}

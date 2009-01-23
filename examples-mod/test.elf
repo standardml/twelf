@@ -24,7 +24,7 @@
 }.
 
 %% testing a deep instantiation, i.e, r''.c := f''', also try removing the instantiation of a''
-%% also note that the order of instantiations is not relevant
+%% note that the order of instantiations in a structure is not relevant
 %sig U = {
   a''' : type.
   f''' : a''' -> a'''.
@@ -37,7 +37,8 @@ a := a -> a.
 c := [x] c.
 }.
 
-%% testing views with structure instantiations; in general not so easy to type-check by hand
+%% testing views with structure instantiations; not so easy to type-check by hand anymore
+%% note that type reconstruction works
 %view W : S -> T = {
   a' := a'' -> a''.
   b' := s''.b'.
