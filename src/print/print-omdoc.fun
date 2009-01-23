@@ -54,7 +54,7 @@ struct
   fun ElemOpen'(label, attrs) = "<" ^ label ^ IDs.mkString(attrs, " ", " ", "")
   fun ElemOpen(label, attrs) = ElemOpen'(label, attrs) ^ ">"
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
-  fun Attr(label, value) = label ^ "\"" ^ value ^ "\""
+  fun Attr(label, value) = label ^ "=\"" ^ value ^ "\""
   fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
   fun mpath(doc, module) = doc ^ "?" ^ (localPath module)
   fun OMS3(base, module, name) = let
@@ -66,10 +66,10 @@ struct
    end
   fun OMS(cd,name) = OMS3("", cd, name)
   fun OMV(name) = ElemEmpty("om:OMV", [Attr("name", escape name)])
-  fun OMA(func, args) = "<om:OMA>" ^ nl_ind() ^ IDs.mkString(args, "", nl(), "") ^ nl_unind() ^ "</om:OMA>"
-  fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "<om:OMBIND>"
+  fun OMA(func, args) = "<om:OMA>" ^ nl_ind() ^ func ^ nl() ^ IDs.mkString(args, "", nl(), "") ^ nl_unind() ^ "</om:OMA>"
+  fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "</om:OMBIND>"
   fun OM1ATTR(obj, key, value) = "<om:OMATTR><om:OMATP>" ^ nl_ind() ^ key ^ nl() ^ value ^ nl() ^ "</om:OMATP>" ^
-                                 obj ^ nl_unind() ^ "</om:ATTR>"
+                                 obj ^ nl_unind() ^ "</om:OMATTR>"
   fun OM1BVAR(name, key, value) = "<om:OMBVAR>" ^ nl_ind() ^ OM1ATTR(OMV(name), key, value) ^ nl_unind() ^ "</om:OMBVAR>"
   
   (* Printing expressions *)
@@ -276,21 +276,22 @@ struct
   fun docBeginToString() =
            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
            "<omdoc " ^
-           "xmlns=\"http://www.mathweb.org/omdoc\" " ^
-           "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-           ">\n" ^ nl_ind()
-  fun docEndToString() = nl_unind() ^ "</omdoc>"
+           "xmlns=\"http://omdoc.org/omdoc\" " ^
+           "xmlns:om=\"http://www.openmath.org/OpenMath\"" ^
+           ">\n"
+  fun docEndToString() = "</omdoc>"
   
   fun modBeginToString(ModSyn.SigDec name) =
-        ElemOpen("theory", [Attr("name", localPath name), Attr("meta=\"", mpath(baseLF, cdLF))]) ^
+        ElemOpen("theory", [Attr("name", localPath name), Attr("meta", mpath(baseLF, cdLF))]) ^
         nl_ind()
     | modBeginToString(ModSyn.ViewDec(name, dom, cod)) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", mpath("", ModSyn.modName dom)),
                           Attr("to", mpath("", ModSyn.modName cod))]
-                )
-  fun modEndToString(ModSyn.SigDec _) = "</theory>"
-    | modEndToString(ModSyn.ViewDec _) = "</view>"
+        ) ^ nl_unind()
+               
+  fun modEndToString(ModSyn.SigDec _) = nl_unind() ^ "</theory>"
+    | modEndToString(ModSyn.ViewDec _) = nl_unind() ^ "</view>"
     
   fun expToString (G, U, imp) = fmtExp (G, (U, I.id), imp)  
   
@@ -301,43 +302,46 @@ struct
       
   fun instToString(ModSyn.ConInst(c, U)) = 
          ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         expToString(IntSyn.Null, U, 0) ^ nl_unind() ^ "</conass>"
+         fmtExpTop(I.Null, (U, I.id), 0) ^ nl_unind() ^ "</conass>"
     | instToString(ModSyn.StrInst(c, mor)) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          morphToString(mor) ^ nl_unind() ^ "</strass>"
 
   fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) =
-     ElemOpen("structure", [Attr("name", localPath name), Attr("from", localPath (ModSyn.modName dom))]) ^
-     IDs.mkString(List.map instToString insts, nl_ind(), nl(), nl_unind()) ^
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("", ModSyn.modName dom))]) ^
+     nl_ind() ^ IDs.mkString(List.map instToString insts, "", nl(), "") ^ nl_unind() ^
      "</structure>"    
    | strDecToString(ModSyn.StrDef(name, _, dom, def)) =
-     ElemOpen("structure", [Attr("name", localPath name), Attr("from", localPath (ModSyn.modName dom))]) ^
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("",ModSyn.modName dom))]) ^
      "<definition>" ^ nl_ind() ^ morphToString def ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
-  fun conDecToString cid = fmtConDec (ModSyn.sgnLookup cid) ^ "\n" ^ fmtPresentation(cid)
+  fun conDecToString cid = fmtConDec (ModSyn.sgnLookup cid) ^ nl() ^ fmtPresentation(cid)
 
   (* Main interface methods *)
     
-  fun printModule f m =
-     let val mdec = ModSyn.modLookup m
+  fun printModule print flush m =
+     let
+     	 val mdec = ModSyn.modLookup m
      in (
-        f(modBeginToString mdec);
+        print(modBeginToString mdec);
         ModSyn.sgnApp(m, fn c => (
-           case ModSyn.symLookup c
+           (case ModSyn.symLookup c
              of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
-                                 then f (conDecToString c)
+                                 then print (conDecToString c)
                                  else ()
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
-                                 then f (strDecToString strdec)
+                                 then print (strDecToString strdec)
                                  else ()
-              | ModSyn.SymConInst exp => f (instToString (ModSyn.ConInst(c,exp)))
-              | ModSyn.SymStrInst mor => f (instToString (ModSyn.StrInst(c,mor)))
+              | ModSyn.SymConInst inst => print (instToString inst)
+              | ModSyn.SymStrInst inst => print (instToString inst)
+           ) handle ModSyn.UndefinedCid _ => ()  (* @FR in views not everything is defined *)
            ;
-           f(nl())
+           flush();
+           print(nl())
            )
         );
-        f(modEndToString mdec)
+        print(modEndToString mdec)
      )
      end
 
@@ -346,7 +350,11 @@ struct
      in (
         ind_reset();
         TextIO.output(file, docBeginToString());
-        ModSyn.modApp(fn m => printModule (fn x => TextIO.output(file, x)) m);
+        ModSyn.modApp(fn m => (
+           printModule (fn x => (TextIO.output(file, x))) (fn () => TextIO.flushOut file) m;
+           TextIO.output(file, nl() ^ nl())
+        ));
+        TextIO.output(file, nl() ^ nl());
         TextIO.output(file, docEndToString());
         TextIO.closeOut file
      )

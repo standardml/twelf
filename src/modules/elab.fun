@@ -70,7 +70,9 @@ struct
            case mor
              of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
               | M.MorView(m) => (
-                  ModSyn.conInstLookup(m, IDs.lidOf(c))                    (* @FR flattening missing *)
+                  let val ModSyn.ConInst(_, exp) = ModSyn.conInstLookup(m, IDs.lidOf(c))
+                  in exp
+                  end                   (* @FR flattening missing *)
                   handle ModSyn.UndefinedCid _ => raise UndefinedMorph(m,c)
                 )
               | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)

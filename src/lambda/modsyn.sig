@@ -61,7 +61,7 @@ sig
     * IDs.mid                          (* domain (= instantiated signature) *)
     * Morph                            (* definition *)    
   (* unifies constant and structure declarations *)
-  datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of I.Exp | SymStrInst of Morph
+  datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
     
   (*
      signature declarations
@@ -129,8 +129,8 @@ sig
   (* specialized lookups; these raise (UndefinedCid _) if the cid is defined but returns the wrong data *)
   val sgnLookup     : IDs.cid -> I.ConDec          (* constant declarations *)
   val structLookup  : IDs.cid -> StrDec            (* structure declarations *)
-  val conInstLookup : IDs.cid -> I.Exp             (* constant instantiations *)
-  val strInstLookup : IDs.cid -> Morph             (* structure instantiations *)
+  val conInstLookup : IDs.cid -> SymInst           (* constant instantiations *)
+  val strInstLookup : IDs.cid -> SymInst           (* structure instantiations *)
 
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec

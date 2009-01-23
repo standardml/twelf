@@ -23,7 +23,7 @@ struct
   datatype ModDec = SigDec of string list | ViewDec of string list * IDs.mid * IDs.mid
 
   (* unifies constant and structure declarations and instantiations *)
-  datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of I.Exp | SymStrInst of Morph
+  datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
 
   fun modDecName (SigDec n) = n
     | modDecName (ViewDec(n,_,_)) = n
@@ -186,8 +186,8 @@ struct
       val c = (m, IDs.lidOf(symInstCid inst))
     in
       (case inst
-        of ConInst(_, exp) => CH.insert(symTable)(c, SymConInst exp)
-         | StrInst(_, mor) => CH.insert(symTable)(c, SymStrInst mor)
+        of ConInst _ => CH.insert(symTable)(c, SymConInst inst)
+         | StrInst _ => CH.insert(symTable)(c, SymStrInst inst)
       );
       scope := (m, l+1) :: scopetail;
       c 
