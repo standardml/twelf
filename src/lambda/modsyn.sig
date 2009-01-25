@@ -81,7 +81,10 @@ sig
          string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
-    
+  
+  datatype ModIncl
+     = SigIncl of IDs.mid              (* included signature *)
+
 
   (* convenience methods to access components of declarations *)
   val modDecName : ModDec -> string list
@@ -102,6 +105,8 @@ sig
   val modOpen    : ModDec -> IDs.mid
   (* called at the end of a module *)
   val modClose   : unit -> unit
+  (* called to add an inclusion to the current module, which must be a signature *)
+  val inclAddC   : ModIncl -> unit
   (* called to add a constant declaration to the current signature, which must be a signature *)
   val sgnAddC    : I.ConDec -> IDs.cid
   (* called to add a structure declaration to the current module, which must be a signature *)
@@ -135,6 +140,8 @@ sig
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
   val modParent  : IDs.mid -> IDs.mid option
+  val modInclLookup: IDs.mid -> IDs.mid list
+  val modInclCheck: IDs.mid * IDs.mid -> bool
   (* application of a method to all constants of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit

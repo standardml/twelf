@@ -265,20 +265,38 @@ struct
   *)
   fun findClash(insts) = findClash'(insts, nil, nil)
 
-  (* auxiliary function of checkStrDec, checks whether the intended domain is permitted *)
-  fun checkStrDecDomain(dom : IDs.mid) =
+  (* auxiliary functions of checkStrDec and checkSigIncl, checks whether the intended domain is permitted *)
+  fun checkDomain(dom : IDs.mid) =
       let
-         val _ = if List.exists (fn x => x = dom) (M.getScope ())
-                 then raise Error("signature attempts to instantiate own ancestor")
+      	 (* no ancestors may be instantiated *)
+      	 val scope = M.getScope()
+         val _ = if List.exists (fn x => x = dom) scope
+                 then raise Error("signature attempts to instantiate or include own ancestor")
                  else ()
+         (* only children of ancestors may be instantiated *)
          val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
-         val _ = if not (List.exists (fn x => x = par) (M.getScope ()))
-                 then raise Error("signature attempts to instantiate unreachable signature")
+         val _ = if not (List.exists (fn x => x = par) scope)
+                 then raise Error("signature attempts to instantiate or include unreachable signature")
                  else ()
+      in
+         ()
+      end  
+  fun checkIncludes(dom : IDs.mid) =
+      let
+         (* all includes of the domain must also be included in the codomain *)
+         val curr = M.currentMod()
+         val domincl = M.modInclLookup dom
+         val _ = case List.find (fn x => not(M.modInclCheck(x,curr))) domincl
+              of NONE => ()
+               | SOME x => raise Error("signature " ^ M.modFoldName x ^ " included into " ^ M.modFoldName dom ^
+                                       " but not into " ^ M.modFoldName curr)
       in
          ()
       end
   
+  (* checks well-typedness condition for includes *)
+  fun checkModIncl(M.SigIncl m) = checkDomain m
+
   (* checks simple well-typedness conditions for structure declarations
      does not check:
      - all instantiations instantiate domain symbols with codomain expressions
@@ -288,14 +306,15 @@ struct
      postcondition: getInst yields all information that is needed to check the latter during flattening
   *)
   fun checkStrDec(M.StrDec(_,_, dom, insts)) = (
-        checkStrDecDomain(dom);
+        checkDomain(dom);
+        checkIncludes(dom);
         case findClash insts
           of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                     M.symFoldName c ^ " in structure declaration")
            | NONE => ()
         )
     | checkStrDec(M.StrDef(_,_, dom, mor)) = (
-        checkStrDecDomain(dom);
+        checkDomain(dom);
         checkMorph(mor, dom, M.currentMod())
       )
 end

@@ -64,7 +64,7 @@ struct
     | CLAUSE				(* `%clause' *) (* -fp 8/9/02 *)
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
-    | VIEW                             (* `%view' *)
+    | VIEW                              (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | USE                               (* `%use' *)

@@ -169,8 +169,14 @@ struct
          | LS.Cons ((t, r), s') =>
            Parsing.error (r, "Expected new identifier, found token " ^ L.toString t)
 
-  (* ignoring these two tokens *)
-  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) = ((), LS.expose s')
+  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
+     let
+        val (id, f') = parseQualId'(LS.expose s')
+     in
+       (E.sigincl id, f')
+     end 
+
+  (* ignoring thistoken *)
   fun parseOpen' (LS.Cons ((L.OPEN, r), s')) = ((), LS.expose s')
 
 end

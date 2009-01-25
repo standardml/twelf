@@ -171,12 +171,43 @@ struct
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
   in
 
+    (* @FR: need to check for already defined names *)
     fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
-    val modnameLookup : string list -> mid option = MH.lookup modnameTable
     fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
-    val nameLookup : mid * string list -> cid option = SH.lookup nameTable
-    fun nameLookupC(l : string list) = nameLookup(ModSyn.currentTargetSig(), l)
+
+    val modnameLookup : string list -> mid option = MH.lookup modnameTable
+    fun nameLookup(current : IDs.mid, cons : string list) : cid option = SH.lookup nameTable (current, cons)
+    fun fullNameLookup(mods : string list, cons : string list) =
+       case modnameLookup(mods)
+         of NONE => NONE
+          | SOME m => nameLookup(m, cons)
     
+    (* This function is called by and only by the parsing/reconcstruction algorithms when finding constant identifiers.
+       It should be defined in terms of the lookup functions above, and can be changed to change the namespace semantic.
+       Current behaviour: The name [N_1,...,N_r] is resolved by trying in order
+       - N_1. ... .N_r in current signature
+       - N_2. ... .N_r in signature N_1
+       - ...
+       - N_r in signature N_1. ... .N_{r-1}
+       precondition: names != nil
+       postcondition: if nameLookupC(names) = SOME c,
+                      then c is defined in, imported into, or included into the current signature.
+    *)
+    fun nameLookupC(name :: names : string list) =
+       let
+       	  val current = ModSyn.currentTargetSig()
+       	  fun tryAll(_, nil) = NONE
+       	    | tryAll(mods, con :: cons) = case fullNameLookup(mods, con :: cons)
+       	         of NONE => tryAll(mods @ [con], cons)
+       	          | SOME c => if ModSyn.modInclCheck(IDs.midOf c, current)
+       	                      then SOME c
+       	                      else NONE
+        in
+           case nameLookup(current, name :: names)
+             of SOME c => SOME c
+              | NONE => tryAll([name], names)
+        end
+
     (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level

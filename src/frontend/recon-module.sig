@@ -5,24 +5,29 @@ signature MODEXTSYN =
 sig
   structure ExtSyn : EXTSYN
 
+  (* module or symbol level identifier *)
+  type id = string list * Paths.region
+  
   (* morphisms *)
-  type morph = (string list * Paths.region) list
+  type morph = id list
 
   (* symbol (= constant or structure) instantiations *)
   datatype syminst =
-     coninst of (string list * Paths.region) * (ExtSyn.term * Paths.region)
-   | strinst of (string list * Paths.region) * (morph       * Paths.region)
+     coninst of id * (ExtSyn.term * Paths.region)
+   | strinst of id * (morph       * Paths.region)
 
   (* structure declarations *)
-  datatype strdec = strdec of string * (string list * Paths.region) * (syminst list)
+  datatype strdec = strdec of string * id * (syminst list)
                   | strdef of string * (morph * Paths.region)
 
   (* begin of a module *)
   datatype modbegin = sigbegin of string
-                    | viewbegin of string * (string list * Paths.region) * (string list * Paths.region)
-  
-  (* include and open currently not supported *)
-  type siginclude = unit
+                    | viewbegin of string * id * id
+
+  (* inclusion of a module *)  
+  datatype modincl = sigincl of id
+
+  (* open currently not supported *)
   type stropen = unit
 end;
 
@@ -38,4 +43,6 @@ sig
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
   (* reconstructs the begin of a module declaration *)
   val modbeginToModDec : modbegin -> ModSyn.ModDec
+  (* reconstructs a module inclusion *)
+  val modinclToModIncl : modincl -> ModSyn.ModIncl
 end

@@ -10,6 +10,6 @@ sig
   val parseStrDec'    : ModExtSyn.strdec Parsing.parser
   val parseConInst'   : ModExtSyn.syminst Parsing.parser
   val parseStrInst'   : ModExtSyn.syminst Parsing.parser
-  val parseInclude'   : ModExtSyn.siginclude Parsing.parser
+  val parseInclude'   : ModExtSyn.modincl Parsing.parser
   val parseOpen'      : ModExtSyn.stropen Parsing.parser
 end

@@ -13,18 +13,21 @@ struct
 (* implementing the signature MODEXTSYN *)
   structure ExtSyn = ReconTerm'
 
-  type morph = (string list * Paths.region) list
+  type id = string list * Paths.region
+  
+  type morph = id list
   datatype syminst =
-     coninst of (string list * Paths.region) * (ExtSyn.term * Paths.region)
-   | strinst of (string list * Paths.region) * (morph       * Paths.region)
+     coninst of id * (ExtSyn.term * Paths.region)
+   | strinst of id * (morph       * Paths.region)
 
-  datatype strdec = strdec of string * (string list * Paths.region) * (syminst list)
+  datatype strdec = strdec of string * id * (syminst list)
                   | strdef of string * (morph * Paths.region)
 
   datatype modbegin = sigbegin of string
-                    | viewbegin of string * (string list * Paths.region) * (string list * Paths.region)
+                    | viewbegin of string * id * id
   
-  type siginclude = unit
+  datatype modincl = sigincl of id
+  
   type stropen = unit
 (* end MODEXTSYN *)
 
@@ -129,4 +132,11 @@ struct
          in
             ModSyn.ViewDec ([name], Dom, Cod)
          end
+
+   fun modinclToModIncl(sigincl name) =
+      let
+      	 val m = modnameLookupWithError SIG name
+      in
+      	 ModSyn.SigIncl m
+      end
 end (* end RECON_MODULE *)

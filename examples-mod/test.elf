@@ -12,7 +12,7 @@
   %struct r' : R = {a := a'.}.
   c' : r'.a.
   d' : a' -> type.
-  test : d' b'.
+  test : d' c'.
 }.
 
 %% testing instantiations of structures, try removing the instantantion of a'
@@ -31,6 +31,12 @@
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
 }.
 
+%% testing includes
+%sig R' = {
+  %include R.
+  d : R.a.
+}.
+
 %% testing views
 %view V : R -> R = {
 a := a -> a.
@@ -41,10 +47,10 @@ c := [x] c.
 %% note that type reconstruction works
 %view W : S -> T = {
   a' := a'' -> a''.
-  b' := s''.b'.
+  b' := [x] x.
   b'2 := r''.c.
   %struct r' := r''.
-  c' := [x] x.
+  c' := s''.c'.
   d' := [x: b''] (a'' -> s''.d' x).
   test := [x] s''.test.
 }.

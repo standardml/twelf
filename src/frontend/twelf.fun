@@ -149,6 +149,7 @@ functor Twelf
      sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
      sharing type ReconModule.syminst = Parser.ModExtSyn.syminst
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
+     sharing type ReconModule.modincl = Parser.ModExtSyn.modincl
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
    (*! sharing FunSyn.IntSyn = IntSyn' !*)
@@ -1165,8 +1166,19 @@ struct
              ()
            end
         )
-      (* currently unused cases of the module system *)
-      | install1 (fileName, declr as (Parser.Include _, r)) = ()
+      | install1 (fileName, declr as (Parser.Include incl, r)) =
+         let
+            val Incl = ReconModule.modinclToModIncl incl
+            val _ = Elab.checkModIncl Incl
+            val _ = ModSyn.inclAddC(Incl)
+            val _ = if !Global.chatter >= 3
+                    then msg (Print.modInclToString(Incl) ^ "\n")
+                    else ()
+         in
+            ()
+         end
+
+      (* currently unused case of the module system *)
       | install1 (fileName, declr as (Parser.Open _, r)) = ()
 
     (* loadFile (fileName) = status

@@ -378,10 +378,11 @@ struct
         (case Names.nameLookupC qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
-	      (case ModSyn.sgnLookup cid
-		 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
-	          | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
-		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
+	      (case ModSyn.symLookup cid
+	         (* added "ModSyn.SymCon ..." so that structure identifiers are rejected as well -fr Jan 09 *)
+		 of ModSyn.SymCon (IntSyn.ConDec _) => constant (IntSyn.Const cid, r)
+	          | ModSyn.SymCon (IntSyn.ConDef _) => constant (IntSyn.Def cid, r)
+		  | ModSyn.SymCon (IntSyn.AbbrevDef _) => constant (IntSyn.NSDef cid, r)
 		  | _ => 
 		    (error (r, "Invalid identifier\n"
 			    ^ "Identifier `" ^ Names.foldQualifiedName qid
