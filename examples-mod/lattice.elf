@@ -3,29 +3,29 @@
   o : type.
   true : o -> type.
   %% ...
-}
+}.
 
 %sig Semigroup = {
   %include FOL.
-  comp : i -> i -> i. %% (actually FOL.i; this must be discussed)
+  comp : FOL.i -> FOL.i -> FOL.i.
   %% assoc : ...
-}
+}.
 
 %sig Monoid = {
   %include FOL.
-  %struc sgr : Semigroup = {}.
-  e : i.
+  %struct sgr : Semigroup = {}.
+  unit : FOL.i.
   %% unit-left : ...
   %% unit-right : ...
-}
+}.
 
 %sig Order = {
   %include FOL.
-  leq : i -> i -> o.
+  leq : FOL.i -> FOL.i -> FOL.o.
   %% refl : ...
   %% antisym : ...
   %% trans : ...
-}
+}.
 
 %view Opposite : Order -> Order = {
   leq := [x][y] (leq y x).
@@ -36,24 +36,25 @@
 
 %sig Semilattice = {
   %include FOL.
-  %struc ord : Order = {}.
-  %struc comp : Semigroup = {}.
+  %struct ord : Order = {}.
+  %struct sg : Semigroup = {}.
+  %% actually we should use commutative semigroups here
 }.
 
 %sig Lattice = {
   %include FOL.
-  %struc min : Semilattice = {}.
-  %struc max : Semilattice = {ord := Opposite min.ord}.
-  /\ = min.comp
-  \/ = max.comp
+  %struct min : Semilattice = {}.
+  %struct max : Semilattice = {%struct ord := Opposite min.ord.}.
+  /\ = min.sg.comp.
+  \/ = max.sg.comp.
 }.
 
 %% lattice with least and greatest elements (by using monoids instead of semigroups)
 %sig LGLattice = {
   %include FOL.
-  %struc lat : Lattice = {}.
-  %struc min : Monoid = {sgr := lat.min.comp.}.
-  %struc max : Monoid = {sgr := lat.max.comp.}.
+  %struct lat : Lattice = {}.
+  %struct min : Monoid = {%struct sgr := lat.min.sg.}.
+  %struct max : Monoid = {%struct sgr := lat.max.sg.}.
   /\ = lat./\.
   \/ = lat.\/.
   bot = min.unit.
