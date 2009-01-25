@@ -9,6 +9,7 @@ sig
   val skonst : string -> string * int
   val def : string -> string * int
   val fvar : string -> string * int
+  val module : string -> string * int
 
   val sym : string -> string * int
 

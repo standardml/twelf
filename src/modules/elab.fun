@@ -17,6 +17,122 @@ struct
   exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
   exception FixMe                                 (* @CS: raised for unimplemented cases *)
 
+
+  (********************** Module level type checking **********************)
+  
+  (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
+  fun reconMorph(M.MorComp(mor1,mor2)) =
+        let
+           val (d1,c1) = reconMorph mor1
+           val (d2,c2) = reconMorph mor2
+        in
+           if (c1 = d2)
+           then (d1,c2)
+           else raise Error("morphisms not composable")
+        end
+    | reconMorph(M.MorStr(s)) = ((M.strDecDom (M.structLookup s), IDs.midOf(s))
+                              handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
+    | reconMorph(M.MorView(m)) =
+        let
+           val M.ViewDec(_,dom, cod) = M.modLookup m
+                                        handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
+        in
+           (dom, cod)
+        end
+  (* checks the judgment |- mor : dom -> cod *)
+  fun checkMorph(mor, dom, cod) =
+     if reconMorph mor = (dom, cod)
+     then ()
+     else raise Error("morphism does not have expected type")
+  
+  (* auxiliary function of findClash
+     if s is in forbiddenPrefixes, instantiations of s.c are forbidden
+     if c is in forbiddenCids, instantiations of c are forbidden
+  *)
+  fun findClash'(nil, _, _) = NONE
+    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
+        let
+           val c = M.symInstCid inst
+        in
+           (* check whether c is in the list of cids of forbidden cids *)
+           if List.exists (fn x => x = c) forbiddenCids
+           then SOME(c)
+           else
+              let
+              	 (* get the list of proper prefixes of c *)
+                 val prefixes = List.map #1 (M.symQid c)
+              in
+                 (* check whether a prefix of c is in the list of forbidden prefixes *)
+                 if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes
+            	 then SOME(c)
+            	 (* forbid futher instantiations of
+            	    - anything that has c as a prefix
+            	    - c and any prefix of c *)
+                 else findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids)
+              end
+        end
+  (* checks whether two instantiations in insts clash
+     - return NONE if no clash
+     - returns SOME c if an instantation for c is the first one leading to a clash
+     a clash arises if there are instantiations for both
+     - c and c, or
+     - s and s.c
+  *)
+  fun findClash(insts) = findClash'(insts, nil, nil)
+
+  (* auxiliary functions of checkStrDec and checkSigIncl, checks whether the intended domain is permitted *)
+  fun checkDomain(dom : IDs.mid) =
+      let
+      	 (* no ancestors may be instantiated *)
+      	 val scope = M.getScope()
+         val _ = if List.exists (fn x => x = dom) scope
+                 then raise Error("signature attempts to instantiate or include own ancestor")
+                 else ()
+         (* only children of ancestors may be instantiated *)
+         val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
+         val _ = if not (List.exists (fn x => x = par) scope)
+                 then raise Error("signature attempts to instantiate or include unreachable signature")
+                 else ()
+      in
+         ()
+      end  
+  fun checkIncludes(dom : IDs.mid) =
+      let
+         (* all includes of the domain must also be included in the codomain *)
+         val curr = M.currentMod()
+         val domincl = M.modInclLookup dom
+         val _ = case List.find (fn x => not(M.modInclCheck(x,curr))) domincl
+              of NONE => ()
+               | SOME x => raise Error("signature " ^ M.modFoldName x ^ " included into " ^ M.modFoldName dom ^
+                                       " but not into " ^ M.modFoldName curr)
+      in
+         ()
+      end
+  
+  (* checks well-typedness condition for includes *)
+  fun checkModIncl(M.SigIncl m) = checkDomain m
+
+  (* checks simple well-typedness conditions for structure declarations
+     does not check:
+     - all instantiations instantiate domain symbols with codomain expressions
+       already checked during parsing/reconstruction
+     - all instantiations are well-typed and preserve equalities
+       will be checked during flattening
+     postcondition: getInst yields all information that is needed to check the latter during flattening
+  *)
+  fun checkStrDec(M.StrDec(_,_, dom, insts)) = (
+        checkDomain(dom);
+        checkIncludes(dom);
+        case findClash insts
+          of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
+                                    M.symFoldName c ^ " in structure declaration")
+           | NONE => ()
+        )
+    | checkStrDec(M.StrDef(_,_, dom, mor)) = (
+        checkDomain(dom);
+        checkMorph(mor, dom, M.currentMod())
+      )
+
  (********************** Semantics of the module system **********************)
   (* auxiliary methods to get Exps from cids *)
   fun headToExp h = I.Root(h, I.Nil)
@@ -27,6 +143,7 @@ struct
 		      
   fun applyMorph(U, mor) =
      let
+     	val (dom, cod) = reconMorph mor
      	fun A(I.Uni L) = I.Uni L
      	  | A(I.Pi((D, P), V)) = I.Pi((ADec D, P), A V)
      	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
@@ -67,7 +184,9 @@ struct
           | AConstr(I.FgnCnstr(cs, fgnC)) = I.FgnCnstr(cs, fgnC)
         (* apply morphism to constant *)
         and ACid(c) =
-           case mor
+           if not(IDs.midOf c = dom)
+           then cidToExp c   (* included constants are mapped to themselves *)
+           else case mor
              of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
               | M.MorView(m) => (
                   let val ModSyn.ConInst(_, exp) = ModSyn.conInstLookup(m, IDs.lidOf(c))
@@ -202,119 +321,4 @@ struct
      	(* calls flatten1 on all declarations of the instantiated signature (including imported ones) *)
      	M.sgnApp(Dom, flatten1)
      end
-
-  (********************** Module level type checking **********************)
-  
-  (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
-  fun reconMorph(M.MorComp(mor1,mor2)) =
-        let
-           val (d1,c1) = reconMorph mor1
-           val (d2,c2) = reconMorph mor2
-        in
-           if (c1 = d2)
-           then (d1,c2)
-           else raise Error("morphisms not composable")
-        end
-    | reconMorph(M.MorStr(s)) = ((M.strDecDom (M.structLookup s), IDs.midOf(s))
-                              handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
-    | reconMorph(M.MorView(m)) =
-        let
-           val M.ViewDec(_,dom, cod) = M.modLookup m
-                                        handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
-        in
-           (dom, cod)
-        end
-  (* checks the judgment |- mor : dom -> cod *)
-  fun checkMorph(mor, dom, cod) =
-     if reconMorph mor = (dom, cod)
-     then ()
-     else raise Error("morphism does not have expected type")
-  
-  (* auxiliary function of findClash
-     if s is in forbiddenPrefixes, instantiations of s.c are forbidden
-     if c is in forbiddenCids, instantiations of c are forbidden
-  *)
-  fun findClash'(nil, _, _) = NONE
-    | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
-        let
-           val c = M.symInstCid inst
-        in
-           (* check whether c is in the list of cids of forbidden cids *)
-           if List.exists (fn x => x = c) forbiddenCids
-           then SOME(c)
-           else
-              let
-              	 (* get the list of proper prefixes of c *)
-                 val prefixes = List.map #1 (M.symQid c)
-              in
-                 (* check whether a prefix of c is in the list of forbidden prefixes *)
-                 if List.exists (fn p => List.exists (fn x => x = p) forbiddenPrefixes) prefixes
-            	 then SOME(c)
-            	 (* forbid futher instantiations of
-            	    - anything that has c as a prefix
-            	    - c and any prefix of c *)
-                 else findClash'(insts, c :: forbiddenPrefixes, c :: prefixes @ forbiddenCids)
-              end
-        end
-  (* checks whether two instantiations in insts clash
-     - return NONE if no clash
-     - returns SOME c if an instantation for c is the first one leading to a clash
-     a clash arises if there are instantiations for both
-     - c and c, or
-     - s and s.c
-  *)
-  fun findClash(insts) = findClash'(insts, nil, nil)
-
-  (* auxiliary functions of checkStrDec and checkSigIncl, checks whether the intended domain is permitted *)
-  fun checkDomain(dom : IDs.mid) =
-      let
-      	 (* no ancestors may be instantiated *)
-      	 val scope = M.getScope()
-         val _ = if List.exists (fn x => x = dom) scope
-                 then raise Error("signature attempts to instantiate or include own ancestor")
-                 else ()
-         (* only children of ancestors may be instantiated *)
-         val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
-         val _ = if not (List.exists (fn x => x = par) scope)
-                 then raise Error("signature attempts to instantiate or include unreachable signature")
-                 else ()
-      in
-         ()
-      end  
-  fun checkIncludes(dom : IDs.mid) =
-      let
-         (* all includes of the domain must also be included in the codomain *)
-         val curr = M.currentMod()
-         val domincl = M.modInclLookup dom
-         val _ = case List.find (fn x => not(M.modInclCheck(x,curr))) domincl
-              of NONE => ()
-               | SOME x => raise Error("signature " ^ M.modFoldName x ^ " included into " ^ M.modFoldName dom ^
-                                       " but not into " ^ M.modFoldName curr)
-      in
-         ()
-      end
-  
-  (* checks well-typedness condition for includes *)
-  fun checkModIncl(M.SigIncl m) = checkDomain m
-
-  (* checks simple well-typedness conditions for structure declarations
-     does not check:
-     - all instantiations instantiate domain symbols with codomain expressions
-       already checked during parsing/reconstruction
-     - all instantiations are well-typed and preserve equalities
-       will be checked during flattening
-     postcondition: getInst yields all information that is needed to check the latter during flattening
-  *)
-  fun checkStrDec(M.StrDec(_,_, dom, insts)) = (
-        checkDomain(dom);
-        checkIncludes(dom);
-        case findClash insts
-          of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
-                                    M.symFoldName c ^ " in structure declaration")
-           | NONE => ()
-        )
-    | checkStrDec(M.StrDef(_,_, dom, mor)) = (
-        checkDomain(dom);
-        checkMorph(mor, dom, M.currentMod())
-      )
 end

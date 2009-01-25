@@ -313,9 +313,9 @@ struct
               | Subordinate.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | WorldSyn.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
 	      | Worldify.Error (msg) => abort chlev (msg ^ "\n") (* includes filename *)
-              | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg)  (* -fr *)
+              | ModSyn.Error (msg) => abortFileMsg chlev (fileName, msg)       (* -fr *)
               | ReconModule.Error (msg) => abortFileMsg chlev (fileName, msg)  (* -fr *)
-              | Elab.Error (msg) => abortFileMsg chlev (fileName, msg)    (* -fr *)
+              | Elab.Error (msg) => abortFileMsg chlev (fileName, msg)         (* -fr *)
 	      | Converter.Error (msg) => abortFileMsg chlev (fileName, msg)
               | CSManager.Error (msg) => abort chlev ("Constraint Solver Manager error: " ^ msg ^ "\n")
 	      | exn => (abort 0 (UnknownExn.unknownExn exn); raise exn))
@@ -1169,8 +1169,11 @@ struct
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
             val Incl = ReconModule.modinclToModIncl incl
+                       handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val _ = Elab.checkModIncl Incl
+                    handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
             val _ = ModSyn.inclAddC(Incl)
+                    handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
             val _ = if !Global.chatter >= 3
                     then msg (Print.modInclToString(Incl) ^ "\n")
                     else ()

@@ -12,6 +12,7 @@ struct
   val def = idSize
   fun fvar s = idSize ("`" ^ s)
   val sym = idSize
+  val module = idSize
 
 end;  (* functor SymbolAscii *)
 
@@ -71,6 +72,7 @@ struct
   fun skonst s = ("\\Skonst{" ^ quote s ^ "}", String.size s)
   fun def s = ("\\Def{" ^ quote s ^ "}", String.size s)
   fun fvar s = ("\\FVar{" ^ quote s ^ "}", String.size s)
+  fun module s = ("\\Module{" ^ quote s ^ "}", String.size s)
 
   fun sym "->" = ("$\\rightarrow$", 1)
     | sym "<-" = ("$\\leftarrow$", 1)
@@ -142,6 +144,7 @@ struct
   fun skonst s = ("\\Skonst{" ^ quote s ^ "}", String.size s)
   fun def s = ("\\Def{" ^ quote s ^ "}", String.size s)
   fun fvar s = ("\\FVar{" ^ quote s ^ "}", String.size s)
+  fun module s = ("\\Module{" ^ quote s ^ "}", String.size s)
 
   fun sym "->" = ("$\\rightarrow$", 1)
     | sym "<-" = ("$\\leftarrow$", 1)

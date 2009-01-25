@@ -31,16 +31,10 @@
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
 }.
 
-%% testing includes
-%sig R' = {
-  %include R.
-  d : R.a.
-}.
-
 %% testing views
 %view V : R -> R = {
-a := a -> a.
-c := [x] c.
+  a := a -> a.
+  c := [x] c.
 }.
 
 %% testing views with structure instantiations; not so easy to type-check by hand anymore
@@ -53,4 +47,17 @@ c := [x] c.
   c' := s''.c'.
   d' := [x: b''] (a'' -> s''.d' x).
   test := [x] s''.test.
+}.
+
+%% testing includes
+%sig R' = {
+  %include R.
+  a : type.
+  d : R.a.
+}.
+
+%sig R'' = {
+  %include R'.
+  d' : R'.a.
+  d : R.a.
 }.
