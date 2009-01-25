@@ -191,7 +191,7 @@ local
     | argNumber (FX.Postfix _) = 1
 
   (* formats a qualified name "names" as a "sep"-separated list, "f" formats the individual components of "names" -fr *)
-  val sep = "/"
+  val sep = "."
   fun fmtConstPath (f : string -> (string * int), names : string list) =
      let
      	val formattedNames = List.map (Str0 o f) names
