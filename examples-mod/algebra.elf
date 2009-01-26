@@ -1,0 +1,135 @@
+%sig FOL = {
+  i : type.
+  o : type.
+  true : o.
+  false : o.
+  == : i -> i -> o.
+  %infix none 4 ==.
+  forall : (i -> o) -> o.
+  exists : (i -> o) -> o.
+  neg : o -> o.
+  and : o -> o -> o.
+  %infix none 3 and.
+  or : o -> o -> o.
+  %infix none 2 or.
+  => : o -> o -> o.
+  %infix none 1 =>.
+  <=> : o -> o -> o.
+  %infix none 1 <=>.
+  ded : o -> type.
+  %prefix 0 ded.
+}.
+
+%sig Magma = {
+  %include FOL.
+  * : FOL.i -> FOL.i -> FOL.i. 
+  %infix none 10 *.
+}.
+
+%sig Commutativity = {
+  %include FOL.
+  %struct mag : Magma. 
+  commut : FOL.ded FOL.forall [x] FOL.forall [y] (x mag.* y FOL.== y mag.* x).
+}.
+
+%sig Associativity = {
+  %include FOL.
+  %struct mag : Magma.
+  assoc : FOL.ded FOL.forall [x] FOL.forall [y] FOL.forall [z] ((x mag.* y) mag.* z FOL.== x mag.* (y mag.* z)).
+}.
+
+%sig MagmaCommut = {
+  %include FOL.
+  %struct mag : Magma.
+  %struct commut : Commutativity = {%struct mag := mag.}.
+}.
+
+%sig Semigroup = {
+  %include FOL.
+  %struct mag : Magma.
+  %struct assoc : Associativity = {%struct mag := mag.}.
+}.
+
+%sig SemigroupCommut = {
+  %include FOL.
+  %struct sg : Semigroup.
+  %struct commut : Commutativity = {%struct mag := sg.mag.}.
+}.
+
+%sig Monoid = {
+  %include FOL.
+  %struct sg : Semigroup.
+  e : FOL.i.
+  idenRight : FOL.ded FOL.forall [x] (x sg.mag.* e FOL.== x).
+  idenLeft : FOL.ded FOL.forall [x] (e sg.mag.* x FOL.== x).
+}.
+
+%sig MonoidCommut = {
+  %include FOL.
+  %struct mon : Monoid.
+  %struct commut : Commutativity = {%struct mag := mon.sg.mag.}.
+}.
+
+%sig Group = {
+  %include FOL.
+  %struct mon : Monoid.
+  inv : FOL.i -> FOL.i.
+  invRight : FOL.ded FOL.forall [x] (x mon.sg.mag.* (inv x) FOL.== mon.e).
+  invLeft : FOL.ded FOL.forall [x] ((inv x) mon.sg.mag.* x FOL.== mon.e).
+}.
+
+%sig GroupAbelian = {
+  %include FOL.
+  %struct g : Group.
+  %struct commut : Commutativity = {%struct mag := g.mon.sg.mag.}.
+  + = [x][y] x g.mon.sg.mag.* y.  
+  %infix none 5 +.
+  0 = g.mon.e.
+  - = g.inv.
+}.
+
+%sig Ring = {
+  %include FOL.
+  %struct ga : GroupAbelian.
+  %struct sg : Semigroup.
+  distrib : FOL.ded FOL.forall [x] FOL.forall [y] FOL.forall [z] ((x ga.+ y) sg.mag.* z FOL.== x sg.mag.* z ga.+ y sg.mag.* z).
+}.
+
+%sig RingCommut = {
+  %include FOL.
+  %struct r : Ring.
+  %struct commut : Commutativity = {%struct mag := r.sg.mag.}.
+}.
+
+%sig RingUnit = {
+  %include FOL.
+  %struct r : Ring.
+  %struct mon : Monoid = {%struct sg := r.sg.}.
+  1 = mon.e.
+}.
+
+%sig RingUnitCommut = {
+  %include FOL.
+  %struct ru : RingUnit.
+  %struct commut : Commutativity = {%struct mag := ru.mon.sg.mag.}.
+}.
+
+%sig IntegralDomain = {
+  %include FOL.
+  %struct ru : RingUnit.
+  noZeroDiv : FOL.ded FOL.forall [x] FOL.forall [y] (x ru.r.sg.mag.* y FOL.== ru.r.ga.0 FOL.=> x FOL.== ru.r.ga.0 FOL.or y FOL.== ru.r.ga.0).
+}.  
+
+%sig RingDivision = {
+  %include FOL.
+  %struct ru : RingUnit.
+  inv : FOL.i -> FOL.i.
+  invLeft : FOL.ded FOL.forall [x] (FOL.neg (x FOL.== ru.r.ga.0) FOL.=> x ru.mon.sg.mag.* (inv x) FOL.== ru.1). 
+  invRight : FOL.ded FOL.forall [x] (FOL.neg (x FOL.== ru.r.ga.0) FOL.=> (inv x) ru.mon.sg.mag.* x FOL.== ru.1).
+}.
+
+%sig Field = {
+  %include FOL.
+  %struct rd : RingDivision.
+  %struct commut : Commutativity = {%struct mag := rd.ru.mon.sg.mag.}.
+}.
