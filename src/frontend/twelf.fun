@@ -1071,9 +1071,11 @@ struct
            let
               (* @FR: actually the name should be qualified using the currently open signatures *)
                val dec = ReconModule.modbeginToModDec modBegin
-               val name = ModSyn.modDecName dec
+               val _ = Elab.checkModDec dec
+                       handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val m = ModSyn.modOpen(dec)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+               val name = ModSyn.modDecName dec
                val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
                val _ = if !Global.chatter >= 3

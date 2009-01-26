@@ -177,6 +177,25 @@ struct
   fun modName m = modDecName (modLookup m)
   fun modFoldName m = IDs.mkString(modName m ,"",".","")
  
+  fun modApp(f : IDs.mid -> unit) =
+    let
+      val length = ! nextMid
+      fun doRest(m) = 
+	if m = length then () else ((f m); doRest(m+1))
+    in
+      doRest(0)
+    end
+    
+  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
+    let
+      val length = modSize m
+      fun doRest(l) =
+	if l = length then () else (f (m,l); doRest(l+1))
+    in
+      doRest(0)
+    end
+  fun sgnAppC (f) = sgnApp(currentMod(), f)
+
   (********************** Effectful methods **********************)
   fun modOpen(dec) =
      let
@@ -194,15 +213,25 @@ struct
      end
 
   fun modClose() =
-    if onToplevel()
-    then raise Error("no open module to close")
-    else
-      let
-         val (m,l) = hd (! scope)
-         val _ = scope := tl (! scope)
-         val SOME (a,_,b,c) = MH.lookup modTable m
-         val _ = MH.insert modTable (m, (a, l, b, c))
-         (* FR: check totality, and include condition of views, no defined constants may be instantiated *)
+     let
+     	val _ = if onToplevel() then raise Error("no open module to close") else ()
+        val _ = if inSignature() then () else
+            (* check totality of view: every constant id of dom must have an instantiation in m *)
+            let
+               val m = currentMod()
+               val ViewDec(_,dom,_) = modLookup m
+               fun checkDefined(c' : IDs.cid) = case symLookup c'
+                  of SymStr _ => ()
+                   | SymCon _ => (symLookup(m, IDs.lidOf c') ; ())
+                                 handle UndefinedCid _ => raise Error("view not total: missing instatiation for " ^ symFoldName c')
+            in
+               sgnApp(dom, checkDefined)
+            end
+        val (m,l) = hd (! scope)
+        val _ = scope := tl (! scope)
+        val SOME (a,_,b,c) = MH.lookup modTable m
+        val _ = MH.insert modTable (m, (a, l, b, c))
+        (* FR: check that no defined constants may be instantiated *)
       in
          ()
       end
@@ -270,25 +299,6 @@ struct
     MH.insert modTable (0, (SigDec ["toplevel"], ~1, NONE, nil))  
   )
  
-  fun modApp(f : IDs.mid -> unit) =
-    let
-      val length = ! nextMid
-      fun doRest(m) = 
-	if m = length then () else ((f m); doRest(m+1))
-    in
-      doRest(0)
-    end
-    
-  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
-    let
-      val length = modSize m
-      fun doRest(l) =
-	if l = length then () else (f (m,l); doRest(l+1))
-    in
-      doRest(0)
-    end
-  fun sgnAppC (f) = sgnApp(currentMod(), f)
-
   (********************** Convenience methods **********************)
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)
     | ancestor' (SOME(I.Const(c))) = I.Anc(SOME(c), 1, SOME(c))

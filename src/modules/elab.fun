@@ -98,15 +98,14 @@ struct
       in
          ()
       end  
-  fun checkIncludes(dom : IDs.mid) =
+  fun checkIncludes(dom : IDs.mid, cod : IDs.mid) =
       let
          (* all includes of the domain must also be included in the codomain *)
-         val curr = M.currentMod()
          val domincl = M.modInclLookup dom
-         val _ = case List.find (fn x => not(M.modInclCheck(x,curr))) domincl
+         val _ = case List.find (fn x => not(M.modInclCheck(x,cod))) domincl
               of NONE => ()
                | SOME x => raise Error("signature " ^ M.modFoldName x ^ " included into " ^ M.modFoldName dom ^
-                                       " but not into " ^ M.modFoldName curr)
+                                       " but not into " ^ M.modFoldName cod)
       in
          ()
       end
@@ -124,7 +123,7 @@ struct
   *)
   fun checkStrDec(M.StrDec(_,_, dom, insts)) = (
         checkDomain(dom);
-        checkIncludes(dom);
+        checkIncludes(dom, M.currentMod());
         case findClash insts
           of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                     M.symFoldName c ^ " in structure declaration")
@@ -134,6 +133,9 @@ struct
         checkDomain(dom);
         checkMorph(mor, dom, M.currentMod())
       )
+
+  fun checkModDec(M.ViewDec(_, dom, cod)) = checkIncludes(dom, cod)
+    | checkModDec(M.SigDec _) = ()
 
  (********************** Semantics of the module system **********************)
   (* auxiliary methods to get Exps from cids *)

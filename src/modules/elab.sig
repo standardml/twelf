@@ -4,6 +4,7 @@ sig
   exception UndefinedMorph of IDs.mid * IDs.cid    (* raised if partially defined views cannot be applied *)
 
   (* type checking modular data types *)
+  val checkModDec : ModSyn.ModDec -> unit
   (* checks a SigIncl *)
   val checkModIncl: ModSyn.ModIncl -> unit
   (* checks a StrDec *)
