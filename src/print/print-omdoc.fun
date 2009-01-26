@@ -236,7 +236,7 @@ struct
     in
         ElemEmpty("notation",
 	  [Attr("for", name),
-	   Attr("precedece", Int.toString (Names.Fixity.precToIntAsc(fixity))),
+	   Attr("precedence", Int.toString (Names.Fixity.precToIntAsc(fixity))),
 	   Attr("fixity", fixString),
 	   Attr("implicit", Int.toString imp)]
         )
@@ -281,18 +281,25 @@ struct
            ">\n"
   fun docEndToString() = "</omdoc>"
   
-  fun modBeginToString(ModSyn.SigDec name) =
-        ElemOpen("theory", [Attr("name", localPath name), Attr("meta", mpath(baseLF, cdLF))]) ^
-        nl_ind()
-    | modBeginToString(ModSyn.ViewDec(name, dom, cod)) =
+  fun modInclToString(m) = ElemEmpty("import", [Attr("from", mpath("", ModSyn.modName m))]) ^ nl()
+  
+  fun modBeginToString(ModSyn.SigDec name, incls) =
+      let val (incls, meta) = case incls
+                of nil => (nil, mpath(baseLF, cdLF))
+                 | m :: tl => (tl, mpath("", ModSyn.modName m))
+      in
+         ElemOpen("theory", [Attr("name", localPath name), Attr("meta", meta)]) ^ nl_ind() ^
+         IDs.mkString(List.map (fn x => modInclToString x) incls, "", nl(), nl())
+      end
+    | modBeginToString(ModSyn.ViewDec(name, dom, cod), _) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", mpath("", ModSyn.modName dom)),
                           Attr("to", mpath("", ModSyn.modName cod))]
-        ) ^ nl_unind()
+        ) ^ nl_ind()
                
   fun modEndToString(ModSyn.SigDec _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _) = nl_unind() ^ "</view>"
-    
+  
   fun expToString (G, U, imp) = fmtExp (G, (U, I.id), imp)  
   
   fun morphToString(ModSyn.MorStr(c)) = fmtCid c
@@ -308,9 +315,15 @@ struct
          morphToString(mor) ^ nl_unind() ^ "</strass>"
 
   fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) =
-     ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("", ModSyn.modName dom))]) ^
-     nl_ind() ^ IDs.mkString(List.map instToString insts, "", nl(), "") ^ nl_unind() ^
-     "</structure>"    
+     let 
+     	fun dolist(_, nil, _) = ""
+           | dolist(f, hd::nil, nl) = f hd
+           | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
+     in
+     	ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("", ModSyn.modName dom))]) ^ (
+        case insts of nil => "" | _ => nl_ind() ^ dolist(instToString, insts, nl) ^ nl_unind()
+        ) ^ "</structure>"
+     end
    | strDecToString(ModSyn.StrDef(name, _, dom, def)) =
      ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("",ModSyn.modName dom))]) ^
      "<definition>" ^ nl_ind() ^ morphToString def ^ nl_unind() ^ "</definition>" ^
@@ -323,22 +336,22 @@ struct
   fun printModule print flush m =
      let
      	 val mdec = ModSyn.modLookup m
+     	 val incls = List.rev (ModSyn.modInclLookup m)
      in (
-        print(modBeginToString mdec);
+        print(modBeginToString(mdec, incls));
         ModSyn.sgnApp(m, fn c => (
            (case ModSyn.symLookup c
              of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
-                                 then print (conDecToString c)
+                                 then print (conDecToString c ^ nl())
                                  else ()
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
-                                 then print (strDecToString strdec)
+                                 then print (strDecToString strdec ^ nl())
                                  else ()
-              | ModSyn.SymConInst inst => print (instToString inst)
-              | ModSyn.SymStrInst inst => print (instToString inst)
+              | ModSyn.SymConInst inst => print (instToString inst ^ nl())
+              | ModSyn.SymStrInst inst => print (instToString inst ^ nl())
            ) handle ModSyn.UndefinedCid _ => ()  (* @FR in views not everything is defined *)
            ;
-           flush();
-           print(nl())
+           flush()
            )
         );
         print(modEndToString mdec)
@@ -354,7 +367,6 @@ struct
            printModule (fn x => (TextIO.output(file, x))) (fn () => TextIO.flushOut file) m;
            TextIO.output(file, nl() ^ nl())
         ));
-        TextIO.output(file, nl() ^ nl());
         TextIO.output(file, docEndToString());
         TextIO.closeOut file
      )
