@@ -1074,7 +1074,7 @@ struct
                val name = ModSyn.modDecName dec
                val m = ModSyn.modOpen(dec)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-               val _ = Names.installModname(m, name)
+               val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
                val _ = if !Global.chatter >= 3
 		       then msg (Print.modBeginToString(dec) ^ "\n")
@@ -1104,7 +1104,7 @@ struct
             val c = installStrDec (strDec, r)
             (* print it *)
             val prefix = if (! Global.printFlat) then "% " else ""
-            val _ = msg (prefix ^ Print.strDecToString strDec ^ "\n")
+            val _ = if ! Global.chatter >= 3 then msg (prefix ^ Print.strDecToString strDec ^ "\n") else ()
             val region = r
             (* auxiliary function for printing debug info *)
             fun qidToString(q : IDs.qid) = 
@@ -1144,7 +1144,7 @@ struct
                end
             (* flatten the structure, i.e., generate all induced declarations
                full type-checking of structure declaration done in this function *)
-            val _ = Elab.flatten(c, callbackInstallConDec, callbackInstallStrDec)
+            val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
          in
             ()
@@ -1157,11 +1157,31 @@ struct
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
                val _ = ReconTerm.checkErrors(r)
-               val _ = ModSyn.instAddC(Inst)
+               val c = ModSyn.instAddC(Inst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                val _ = if !Global.chatter >= 3
 		       then msg (Print.instToString(Inst) ^ "\n")
 		       else ()
+	       val _ = case Inst
+	           of ModSyn.ConInst _ => ()
+	            | ModSyn.StrInst _ =>
+	                let
+	                   fun callbackInstallInst(inst) =
+	                      let
+	                      	 (* @FR: add double-checking here *)
+	                         val c = ModSyn.instAddC(inst)
+	                                 handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+                                 val prefix = if (! Global.printFlat) then "" else "% induced: "
+                                 val _ = if !Global.chatter >= 3
+                                         then msg (prefix ^ Print.instToString(inst) ^ "\n")
+		                         else ()
+		               in
+		               	  c
+                               end
+	                 in
+	                    Elab.flattenInst(c, callbackInstallInst)
+	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+	                 end
            in
              ()
            end

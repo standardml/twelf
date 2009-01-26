@@ -12,6 +12,8 @@ struct
   fun checkType(U : I.Exp, V : I.Exp) : bool = (TypeCheck.check(U,V); true) handle TypeCheck.Error _ => false
   (* check whether U has type/kind V *)
   fun checkEqual(U : I.Exp, U' : I.Exp) : bool = Conv.conv((U, I.id), (U', I.id))
+  (* normalizes an expression *)
+  fun normalize(U : I.Exp) : I.Exp = Whnf.normalize(U, I.id)
   
   exception Error of string                       (* raised on type-checking errors *)
   exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
@@ -191,7 +193,7 @@ struct
               | M.MorView(m) => (
                   let val ModSyn.ConInst(_, exp) = ModSyn.conInstLookup(m, IDs.lidOf(c))
                   in exp
-                  end                   (* @FR flattening missing *)
+                  end
                   handle ModSyn.UndefinedCid _ => raise UndefinedMorph(m,c)
                 )
               | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
@@ -237,7 +239,7 @@ struct
      - declaration in domain: primed lower case
      - induced declaration in codomain: unprimed lower case
   *)
-  fun flatten(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * M.StrDec -> IDs.cid) =
+  fun flattenDec(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * M.StrDec -> IDs.cid) =
      let
      	val Str = M.structLookup S
      	val Name = M.strDecName Str
@@ -252,17 +254,16 @@ struct
      	(* auxiliary function used in translated ConDec to unify the cases of ConDef and AbbrevDef *)
      	fun translateDefOrAbbrev(c', name', q', imp', def', typ', uni', anc'Opt) =
               let
-                 val typ = Whnf.normalize (applyMorph(typ', M.MorStr(S)), I.id)
-                 val defold =applyMorph(def', M.MorStr(S))
+                 val typ = normalize (applyMorph(typ', M.MorStr(S)))
+                 val defold = applyMorph(def', M.MorStr(S))
                  val defnew = case getInst(Str, c', q')  
                     of SOME def =>  
                        (* if existing definitions are overridden, equality must be checked *)
                        if checkEqual(defold, def)
-                       then Whnf.normalize (def, I.id)    (* don't understand why it is not normal
-							   investigate ! -- cs Fri Jan 23 14:29:08 2009 *)
+                       then normalize def
                        else raise Error("clash between instantiation and translation of existing definiton for constant " ^
                                          M.symFoldName c')
-                    | NONE => Whnf.normalize (defold, I.id)
+                    | NONE => normalize defold
                  val _ = if checkType(defnew, typ)
                          then ()
                          else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
@@ -318,7 +319,40 @@ struct
                    ()
                 end
      in
-     	(* calls flatten1 on all declarations of the instantiated signature (including imported ones) *)
+     	(* calls flatten1 on all declarations of the instantiated signature (including generated ones) *)
      	M.sgnApp(Dom, flatten1)
+     end
+
+  fun flattenInst(instID : IDs.cid, installInst : M.SymInst -> IDs.cid) =
+     let
+        val viewID = IDs.midOf instID
+        val M.SymStrInst(M.StrInst(s, mor)) = M.symLookup instID
+        val (dom, _) = reconMorph mor
+        fun flatten1(c' : IDs.cid) =
+           let 
+              val c = valOf (M.structMapLookup(s,c'))
+              val _ = case M.symLookup c'
+                 of M.SymCon _ =>
+                   let
+                      val defCod = normalize (applyMorph(cidToExp c', mor))
+                      val typDomTrans = normalize(applyMorph(M.constType c, M.MorView viewID))
+                      val _ = if checkType(defCod, typDomTrans)
+                              then ()
+                              else raise Error("type mismatch in induced instantiation of " ^ M.symFoldName c)
+                      val _ = case M.constDefOpt c
+                                of NONE => ()
+                                 | SOME defDom =>
+                                   if checkEqual(applyMorph(defDom, M.MorView viewID), defCod)
+                                   then ()
+                                   else raise Error("clash between induced instantiation and translation of existing definition of " ^ M.symFoldName c)
+                   in
+                      installInst(M.ConInst(c, defCod))
+                   end
+                  | M.SymStr _ => installInst(M.StrInst(c, M.MorComp(M.MorStr c', mor)))
+           in
+              () 
+           end
+     in
+        M.sgnApp(dom, flatten1)
      end
 end

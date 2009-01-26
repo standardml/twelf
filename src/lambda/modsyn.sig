@@ -162,6 +162,7 @@ sig
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d *)
   val constDef    : IDs.cid -> I.Exp		(* definition of d *)
+  val constDefOpt : IDs.cid -> I.Exp option
   val constImp    : IDs.cid -> int
   val constStatus : IDs.cid -> I.Status
   val constUni    : IDs.cid -> I.Uni

@@ -1,6 +1,3 @@
-(* Twelf.chatter := 0; *)
-(* Twelf.chatter := 1; *)
-(* Twelf.chatter := 2; *)
 Twelf.chatter := 5;
 Twelf.doubleCheck := true;
 
@@ -31,7 +28,7 @@ test "examples\\guide\\test.cfg";
 (*test "examples\\incll\\test.cfg"; *)
 (* kolm not in original test suite *)
 test "examples\\kolm\\test.cfg";
-test "examples\\lp\\test.cfg";
+(* test "examples\\lp\\test.cfg";  needs unsafe flag -fr *)
 test "examples\\lp-horn\\test.cfg";
 test "examples\\mini-ml\\test.cfg";
 test "examples\\polylam\\test.cfg";

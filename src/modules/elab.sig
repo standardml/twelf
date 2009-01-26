@@ -20,7 +20,8 @@ sig
      This is necessary because ill-typed structure declarations are caught only during the flattening, not during structAdd.
      It would be better if structAdd called flatten already, but this way eases integration with the existing Twelf code.
   *)
-  val flatten    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
+  val flattenDec    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
+  val flattenInst   : IDs.cid * (ModSyn.SymInst -> IDs.cid) -> unit
   
   (* apply a morphism to a term *)
   val applyMorph : IntSyn.Exp * ModSyn.Morph -> IntSyn.Exp

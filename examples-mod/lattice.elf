@@ -13,7 +13,7 @@
 
 %sig Monoid = {
   %include FOL.
-  %struct sgr : Semigroup = {}.
+  %struct sgr : Semigroup.
   unit : FOL.i.
   %% unit-left : ...
   %% unit-right : ...
@@ -36,14 +36,14 @@
 
 %sig Semilattice = {
   %include FOL.
-  %struct ord : Order = {}.
-  %struct sg : Semigroup = {}.
+  %struct ord : Order.
+  %struct sg : Semigroup.
   %% actually we should use commutative semigroups here
 }.
 
 %sig Lattice = {
   %include FOL.
-  %struct min : Semilattice = {}.
+  %struct min : Semilattice.
   %struct max : Semilattice = {%struct ord := Opposite min.ord.}.
   /\ = min.sg.comp.
   \/ = max.sg.comp.
@@ -52,7 +52,7 @@
 %% lattice with least and greatest elements (by using monoids instead of semigroups)
 %sig LGLattice = {
   %include FOL.
-  %struct lat : Lattice = {}.
+  %struct lat : Lattice.
   %struct min : Monoid = {%struct sgr := lat.min.sg.}.
   %struct max : Monoid = {%struct sgr := lat.max.sg.}.
   /\ = lat./\.

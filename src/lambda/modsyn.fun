@@ -71,7 +71,7 @@ struct
    structMapTable contains for pairs (S,s') of structure ids, the id of the structure arising from applying S to s'.
   *)
 
-  (* maps mids to module declarations, sizes, containing module, and included modules
+  (* maps mids to module declarations, sizes, containing module, and list of directly included modules
      size is -1 if the module is still open *)
   val modTable : (ModDec * int * (IDs.mid option) * (IDs.mid list)) MH.Table = MH.new(499)
   (* maps cids to constant and structure declarations and instantiations *)
@@ -84,8 +84,7 @@ struct
   (* the next available module id *)
   val nextMid : IDs.mid ref = ref 0
 
-  (********************** End stateful data structures **********************)
-
+  (********************** Effect-free (lookup) methods **********************)
   fun modLookup(m : IDs.mid) = #1 (valOf (MH.lookup modTable m))
                                handle Option => raise UndefinedMid(m)
   fun modSize(m : IDs.mid) =
@@ -115,45 +114,6 @@ struct
                           of SigDec _ => true
                            | ViewDec _ => false
 
-  fun modOpen(dec) =
-     let
-     	val parent = currentMod()
-     	val _ = case (modLookup parent, dec)
-     	          of (ViewDec _, _) => raise Error("modules may not occur inside views")
-     	           | (SigDec_, ViewDec _) => if onToplevel() then () else raise Error("views may not occur inside signatures")
-     	           | _ => ()
-        val m = ! nextMid
-        val _ = nextMid := ! nextMid + 1
-        val _ = scope := (m,0) :: (! scope)
-        val _ = MH.insert modTable (m, (dec, ~1, SOME parent, nil))
-     in
-     	m
-     end
-  fun modClose() =
-    if onToplevel()
-    then raise Error("no open module to close")
-    else
-      let
-         val (m,l) = hd (! scope)
-         val _ = scope := tl (! scope)
-         val SOME (a,_,b,c) = MH.lookup modTable m
-         val _ = MH.insert modTable (m, (a, l, b, c))
-         (* FR: check totality, clash-freeness, and include condition of views *)
-      in
-         ()
-      end
-
-  fun inclAddC(SigIncl from) =
-     let
-        val _ = if inSignature() then () else raise Error("include only allowed in signature")
-        val to = currentMod()
-        val _ = if modSize to = 0 then () else raise Error("include must occur at beginning of signature")
-        val SOME (a,b,c,incl) = MH.lookup modTable to
-        val _ = MH.insert modTable (to, (a,b,c, from :: incl))
-      in
-         ()
-      end
-  
   (* straight forward implementation of reflexive-transitive closure; no caching because presumably no efficiency bottleneck *)
   fun modInclCheck(from, to) =
      let
@@ -169,36 +129,11 @@ struct
   fun symLookup(c : IDs.cid) = valOf (CH.lookup(symTable)(c))
                                handle Option => raise (UndefinedCid c)
 
-  fun sgnAddC (conDec : I.ConDec) =
-    let
-      val _ = if inSignature() then () else raise Error("constant declarations only allowed in signature")
-      val (c as (m,l)) :: scopetail = ! scope
-      val q = I.conDecQid conDec
-    in
-      CH.insert(symTable)(c, SymCon conDec);
-      scope := (m, l+1) :: scopetail;
-      (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
-      List.map (fn sc => CCH.insert structMapTable (sc, c)) q;
-      c
-    end
-      
   fun sgnLookup (c : IDs.cid) = case symLookup c
     of SymCon d => d
      | _ => raise (UndefinedCid c)
   val sgnLookupC = sgnLookup o inCurrent
 
-  fun structAddC(strDec : StrDec) =
-    let
-      val _ = if inSignature() then () else raise Error("structure declarations only allowed in signature")
-      val (c as (m,l)) :: scopetail = ! scope
-      val _ = scope := (m, l+1) :: scopetail
-      val _ = CH.insert(symTable)(c, SymStr strDec)
-      (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
-      val q = strDecQid strDec
-      val _ = List.map (fn sc => CCH.insert structMapTable (sc, c)) q
-    in
-      c
-    end
   fun structLookup(c : IDs.cid) = case symLookup c
     of SymStr d => d
   | _ => raise (UndefinedCid c)
@@ -210,20 +145,6 @@ struct
        of SymCon condec => I.conDecQid condec
         | SymStr strdec => strDecQid strdec
 
-  fun instAddC(inst : SymInst) =
-    let
-      val _ = if inSignature() then raise Error("instantiations only allowed in view") else ()
-      val (m,l) :: scopetail = ! scope
-      val c = (m, IDs.lidOf(symInstCid inst))
-    in
-      (case inst
-        of ConInst _ => CH.insert(symTable)(c, SymConInst inst)
-         | StrInst _ => CH.insert(symTable)(c, SymStrInst inst)
-      );
-      scope := (m, l+1) :: scopetail;
-      c 
-    end
-
   fun conInstLookup(c : IDs.cid) = case symLookup c
     of SymConInst exp => exp
      | _ => raise (UndefinedCid c)
@@ -232,34 +153,7 @@ struct
     of SymStrInst mor => mor
      | _ => raise (UndefinedCid c)
 
-  fun modApp(f : IDs.mid -> unit) =
-    let
-      val length = ! nextMid
-      fun doRest(m) = 
-	if m = length then () else ((f m); doRest(m+1))
-    in
-      doRest(0)
-    end
-    
-  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
-    let
-      val length = modSize m
-      fun doRest(l) =
-	if l = length then () else (f (m,l); doRest(l+1))
-    in
-      doRest(0)
-    end
-  fun sgnAppC (f) = sgnApp(currentMod(), f)
 
-  fun reset () = (
-    CH.clear symTable;               (* clear tables *)
-    MH.clear modTable;
-    CCH.clear structMapTable;
-    nextMid := 1;                    (* initial mid *)
-    scope := [(0,0)];                (* toplevel with mid 0 and no parent is always open *)
-    MH.insert modTable (0, (SigDec ["toplevel"], ~1, NONE, nil))  
-  )
- 
   (********************** Convenience methods **********************)
   fun constDefOpt (d) =
       (case sgnLookup (d)
@@ -283,6 +177,118 @@ struct
   fun modName m = modDecName (modLookup m)
   fun modFoldName m = IDs.mkString(modName m ,"",".","")
  
+  (********************** Effectful methods **********************)
+  fun modOpen(dec) =
+     let
+     	val parent = currentMod()
+     	val _ = case (modLookup parent, dec)
+     	          of (ViewDec _, _) => raise Error("modules may not occur inside views")
+     	           | (SigDec_, ViewDec _) => if onToplevel() then () else raise Error("views may not occur inside signatures")
+     	           | _ => ()
+        val m = ! nextMid
+        val _ = nextMid := ! nextMid + 1
+        val _ = scope := (m,0) :: (! scope)
+        val _ = MH.insert modTable (m, (dec, ~1, SOME parent, nil))
+     in
+     	m
+     end
+
+  fun modClose() =
+    if onToplevel()
+    then raise Error("no open module to close")
+    else
+      let
+         val (m,l) = hd (! scope)
+         val _ = scope := tl (! scope)
+         val SOME (a,_,b,c) = MH.lookup modTable m
+         val _ = MH.insert modTable (m, (a, l, b, c))
+         (* FR: check totality, and include condition of views, no defined constants may be instantiated *)
+      in
+         ()
+      end
+
+  fun inclAddC(SigIncl from) =
+     let
+        val _ = if inSignature() then () else raise Error("include only allowed in signature")
+        val to = currentMod()
+        val _ = if modSize to = 0 then () else raise Error("include must occur at beginning of signature")
+        val SOME (a,b,c,incl) = MH.lookup modTable to
+        val _ = MH.insert modTable (to, (a,b,c, from :: incl))
+      in
+         ()
+      end
+  
+  fun sgnAddC (conDec : I.ConDec) =
+    let
+      val _ = if inSignature() then () else raise Error("constant declarations only allowed in signature")
+      val (c as (m,l)) :: scopetail = ! scope
+      val q = I.conDecQid conDec
+    in
+      CH.insert(symTable)(c, SymCon conDec);
+      scope := (m, l+1) :: scopetail;
+      (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
+      List.map (fn sc => CCH.insert structMapTable (sc, c)) q;
+      c
+    end
+      
+  fun structAddC(strDec : StrDec) =
+    let
+      val _ = if inSignature() then () else raise Error("structure declarations only allowed in signature")
+      val (c as (m,l)) :: scopetail = ! scope
+      val _ = scope := (m, l+1) :: scopetail
+      val _ = CH.insert(symTable)(c, SymStr strDec)
+      (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
+      val q = strDecQid strDec
+      val _ = List.map (fn sc => CCH.insert structMapTable (sc, c)) q
+    in
+      c
+    end
+
+  fun instAddC(inst : SymInst) =
+    let
+      val _ = if inSignature() then raise Error("instantiations only allowed in view") else ()
+      val (m,l) :: scopetail = ! scope
+      val c' = symInstCid inst
+      val c = (m, IDs.lidOf c')
+      (* make sure there are no clashes, i.e., symLookup c must be undefined *)
+      val _ = (symLookup c; raise Error("instantiation for " ^ symFoldName c' ^ " already defined")) handle UndefinedCid _ => ()
+    in
+      (case inst
+        of ConInst _ => CH.insert(symTable)(c, SymConInst inst)
+         | StrInst _ => CH.insert(symTable)(c, SymStrInst inst)
+      );
+      scope := (m, l+1) :: scopetail;
+      c 
+    end
+
+  fun reset () = (
+    CH.clear symTable;               (* clear tables *)
+    MH.clear modTable;
+    CCH.clear structMapTable;
+    nextMid := 1;                    (* initial mid *)
+    scope := [(0,0)];                (* toplevel with mid 0 and no parent is always open *)
+    MH.insert modTable (0, (SigDec ["toplevel"], ~1, NONE, nil))  
+  )
+ 
+  fun modApp(f : IDs.mid -> unit) =
+    let
+      val length = ! nextMid
+      fun doRest(m) = 
+	if m = length then () else ((f m); doRest(m+1))
+    in
+      doRest(0)
+    end
+    
+  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
+    let
+      val length = modSize m
+      fun doRest(l) =
+	if l = length then () else (f (m,l); doRest(l+1))
+    in
+      doRest(0)
+    end
+  fun sgnAppC (f) = sgnApp(currentMod(), f)
+
   (********************** Convenience methods **********************)
   fun ancestor' (NONE) = I.Anc(NONE, 0, NONE)
     | ancestor' (SOME(I.Const(c))) = I.Anc(SOME(c), 1, SOME(c))
