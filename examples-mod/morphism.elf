@@ -1,0 +1,33 @@
+%sig FOL = {
+  i : type.
+}.
+
+%sig Magma = {
+  %include FOL.
+}.
+
+%sig SFOL = {
+  sort : type.
+  tm : sort -> type.
+}.
+
+%sig SFOL2 = {
+  %include SFOL.
+  i : sort.
+  j : sort.
+}.
+
+%view incl_i : FOL -> SFOL2 = {
+  i := tm i.
+}.
+
+%view incl_j : FOL -> SFOL2 = {
+  i := tm j.
+}.
+
+%sig MagamMorphism = {
+  %include SFOL2.
+  %struct dom : Magma = {FOL := incl_i}.  %% such instantiations are not implemented yet
+  %struct cod : Magma = {FOL := incl_j}.  %% such instantiations are not implemented yet
+  h : tm i -> tm j.
+}.
