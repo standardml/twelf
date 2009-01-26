@@ -216,14 +216,17 @@ struct
      let
      	val _ = if onToplevel() then raise Error("no open module to close") else ()
         val _ = if inSignature() then () else
-            (* check totality of view: every constant id of dom must have an instantiation in m *)
+            (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
+            (* @CS what about block and skodec? *)
             let
                val m = currentMod()
                val ViewDec(_,dom,_) = modLookup m
                fun checkDefined(c' : IDs.cid) = case symLookup c'
-                  of SymStr _ => ()
-                   | SymCon _ => (symLookup(m, IDs.lidOf c') ; ())
-                                 handle UndefinedCid _ => raise Error("view not total: missing instatiation for " ^ symFoldName c')
+                  of SymCon (I.ConDec _) => ((symLookup(m, IDs.lidOf c') ; ())
+                                            handle UndefinedCid _ =>
+                                               raise Error("view not total: missing instatiation for " ^ symFoldName c'))
+                   | _ => ()
+                   
             in
                sgnApp(dom, checkDefined)
             end
