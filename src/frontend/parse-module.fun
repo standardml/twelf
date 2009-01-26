@@ -152,8 +152,9 @@ struct
                  let
                      val f' = LS.expose s2'
                      val (dom,f') = parseQualId'(f')
-                     val (_, f') = parseEqual' (f')
-                     val (insts, f') = parseInstantiate'(f')
+                     val (insts, f') = case f'
+                         of LS.Cons((L.DOT,_),_) => (nil, f')
+                          | _ => parseInstantiate'(#2 (parseEqual' f'))
                   in
                      (E.strdec(id, dom, insts), f')
                   end
