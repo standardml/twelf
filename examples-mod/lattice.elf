@@ -1,34 +1,14 @@
-%sig FOL = {
-  i : type.
-  o : type.
-  true : o -> type.
-  %% ...
-}.
-
-%sig Semigroup = {
-  %include FOL.
-  comp : FOL.i -> FOL.i -> FOL.i.
-  %% assoc : ...
-}.
-
-%sig Monoid = {
-  %include FOL.
-  %struct sgr : Semigroup.
-  unit : FOL.i.
-  %% unit-left : ...
-  %% unit-right : ...
-}.
-
 %sig Order = {
   %include FOL.
   leq : FOL.i -> FOL.i -> FOL.o.
-  %% refl : ...
-  %% antisym : ...
-  %% trans : ...
+  %infix none 4 leq.
+  %%refl : FOL.ded FOL.forall [x] (x leq x).
+  %%antisym : FOL.ded FOL.forall [x] (FOL.forall [y] (x leq y FOL.and y leq x FOL.=> x FOL.== y)).
+  %%trans : FOL.ded FOL.forall [x] (FOL.forall [y] (FOL.forall [z] (x leq y FOL.and y leq z FOL.=> x leq z))).
 }.
 
 %view Opposite : Order -> Order = {
-  leq := [x][y] (leq y x).
+  leq := [x][y] (y leq x).
   %% refl := ...
   %% antisym := ...
   %% trans := ...
@@ -36,27 +16,33 @@
 
 %sig Semilattice = {
   %include FOL.
+  %struct sgc : SemigroupCommut.
+  %struct midem : MagmaIdempotent = {%struct mag := sgc.sg.mag.}.
+  /\ = [x] [y] (x sgc.sg.mag.* y).
+  %infix none 5 /\. 
   %struct ord : Order.
-  %struct sg : Semigroup.
-  %% actually we should use commutative semigroups here
+  ax : FOL.ded FOL.forall [x] (FOL.forall [y] (x /\ y FOL.== x FOL.<=> x ord.leq y)).   
+}.
+
+%sig SemilatticeBounded = {
+  %include FOL.
+  %struct sl : Semilattice.
+  %struct mon : Monoid = {%struct sg := sl.sgc.sg.}.
 }.
 
 %sig Lattice = {
   %include FOL.
-  %struct min : Semilattice.
-  %struct max : Semilattice = {%struct ord := Opposite min.ord.}.
-  /\ = min.sg.comp.
-  \/ = max.sg.comp.
+  %struct meet : Semilattice = {}.
+  %struct join : Semilattice = {%struct ord := Opposite meet.ord.}.
+  /\ = [x][y] x meet.sgc.sg.mag.* y.
+  \/ = [x][y] x join.sgc.sg.mag.* y.
 }.
 
-%% lattice with least and greatest elements (by using monoids instead of semigroups)
-%sig LGLattice = {
+%sig LatticeBounded = {
   %include FOL.
-  %struct lat : Lattice.
-  %struct min : Monoid = {%struct sgr := lat.min.sg.}.
-  %struct max : Monoid = {%struct sgr := lat.max.sg.}.
-  /\ = lat./\.
-  \/ = lat.\/.
-  bot = min.unit.
-  top = max.unit.
+  %struct lat : Lattice = {}.
+  %struct meetBdd : SemilatticeBounded = {%struct sl := lat.meet.}. 
+  %struct joinBdd : SemilatticeBounded = {%struct sl := lat.join.}. 
+  bot = meetBdd.mon.e.
+  top = joinBdd.mon.e.
 }.
