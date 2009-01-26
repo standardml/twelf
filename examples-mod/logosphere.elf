@@ -1,3 +1,27 @@
+%sig N = { 
+	    nat : type.
+            z : nat.
+            s : nat -> nat. 
+}.
+
+%sig L = {
+         elt : type.
+	 list: type.
+	 nil : list.
+	 cons : elt -> list -> list.
+         append : list -> list -> list -> type.
+         appnil : append L nil L.
+         appcons: append L (cons E M) (cons E N)
+  		      <- append L M N.
+ }.
+
+%sig NL = {
+	     %include N.
+             %struct L : L = {elt := N.nat.}.
+             123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
+             %solve d : L.append 123 123 X.
+}.
+
 %sig P = {
   o: type.
   =>: o -> o -> o.    %infix left 10 =>.
@@ -12,6 +36,7 @@
   =>E : true (A P.=> B) -> true A -> true B.
   notI : ({p} true A -> true p) -> true (P.not A).
   notE : true (P.not A) -> true A -> true C.
+  notnotI : true A -> true (P.n A) = [D] (notI [p:P.o] [u: true (P.not A)] (notE u D)).
 }.
 
 %sig CL = {
@@ -20,35 +45,6 @@
          exm : IL.true (P.not (P.not A) P.=> A). 
 }.
 
-%sig N = { 
-	    nat : type.
-            z : nat.
-            s : nat -> nat. 
-}.
-
-%sig L = {
-         elt : type.
-	 list: type.
-	 nil : list.
-	 cons : elt -> list -> list.
-
-         append : list -> list -> list -> type.
-         appnil : append L nil L.
-         appcons: append L (cons E M) (cons E N)
-  		      <- append L M N.
- }.
-
-%sig NL = {
-	     %include N.
-             %struct L : L = {elt := N.nat.}.
-
-             123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
-
-             %solve d : L.append 123 123 X.
-}.
-
-
-       
 %sig DN  = {
   %struct IL : IL.
   %struct CL : CL.
@@ -56,20 +52,23 @@
   n = IL.P.n.
 
   dne : CL.P.o -> IL.P.o -> type.
-	 
-	 d=> : dne A A' -> dne B B' -> dne (A CL.P.=> B) ((n A') IL.P.=> (n B')).
-         dnot : dne A A' -> dne (CL.P.not A) (n A').
-	 
-	 % Translation
-
-	 elim : CL.IL.true A -> dne A A' -> IL.true A' -> type.
+  d=> : dne A A' -> dne B B' -> dne (A CL.P.=> B) ((n A') IL.P.=> (n B')).
+  dnot : dne A A' -> dne (CL.P.not A) (n A').
+  % Translation
+  elim : CL.IL.true A -> dne A A' -> IL.true A' -> type.
 
 }.
 
 %view KOLM : CL -> IL = {
    P.o := P.o.
-   P.=> := [x][y] P.n x P.=> P.n y. 
-   P.not := [x] P.not (P.n x). 
-   P.n := P.n.
-   %struct IL.P := P.
+   P.=> := [x][y] P.n (x P.=> y).
+   P.not := [x] P.n (P.not x).
+   IL.true := true.
+   IL.=>I := [A][B][p] (notnotI (=>I p)).
+%{ 
+   IL.=>E := 
+   IL.notI := 
+   IL.notE :=
+   exm :=
+}%
 }.
