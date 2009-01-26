@@ -52,7 +52,7 @@
   n = IL.P.n.
 
   dne : CL.P.o -> IL.P.o -> type.
-  d=> : dne A A' -> dne B B' -> dne (A CL.P.=> B) ((n A') IL.P.=> (n B')).
+  d=> : dne A A' -> dne B B' -> dne (A CL.P.=> B) ((n A') IL.P.=> (n B')). %%@CS: is this case wrong?
   dnot : dne A A' -> dne (CL.P.not A) (n A').
   % Translation
   elim : CL.IL.true A -> dne A A' -> IL.true A' -> type.
@@ -64,7 +64,7 @@
    P.=> := [x][y] P.n (x P.=> y).
    P.not := [x] P.n (P.not x).
    IL.true := true.
-   IL.=>I := [A][B][p] (notnotI (=>I p)).
+   IL.=>I := [A][B][p] (notnotI (=>I p)).  %% implicit arguments don't work here yet
 %{ 
    IL.=>E := 
    IL.notI := 
