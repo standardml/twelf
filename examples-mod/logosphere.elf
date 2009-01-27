@@ -25,8 +25,9 @@
 %sig P = {
   o: type.
   =>: o -> o -> o.    %infix left 10 =>.
-  not : o -> o.
-  n =  [p] (not (not p)).
+  ~ : o -> o.
+  bot : o.
+  n =  [p] (~ (~ p)).
 }.
 
 %sig IL = {
@@ -34,15 +35,16 @@
   true : P.o -> type.
   =>I : (true A -> true B) -> true (A P.=> B).
   =>E : true (A P.=> B) -> true A -> true B.
-  notI : ({p} true A -> true p) -> true (P.not A).
-  notE : true (P.not A) -> true A -> true C.
-  notnotI : true A -> true (P.n A) = [D] (notI [p:P.o] [u: true (P.not A)] (notE u D)).
+  ~I : ({p} true A -> true p) -> true (P.~ A).
+  ~E : true (P.~ A) -> true A -> true C.
+  botE : true P.bot -> true A.
+  ~~I : true A -> true (P.n A) = [D] (~I [p:P.o] [u: true (P.~ A)] (~E u D)).
 }.
 
 %sig CL = {
 	 %struct P : P.
        	 %struct IL : IL = {%struct P := P.}.
-         exm : IL.true (P.not (P.not A) P.=> A). 
+         exm : IL.true (P.~ (P.~ A) P.=> A). 
 }.
 
 %sig DN  = {
@@ -53,7 +55,7 @@
 
   kolm : CL.P.o -> IL.P.o -> type.
   k=> : kolm A A' -> kolm B B' -> kolm (A CL.P.=> B) (n (A' IL.P.=> B')). 
-  knot : kolm A A' -> kolm (CL.P.not A) (n A').
+  knot : kolm A A' -> kolm (CL.P.~ A) (n A').
 
   % Translation
   elim : CL.IL.true A -> kolm A A' -> IL.true A' -> type.
@@ -62,13 +64,14 @@
 
 %view KOLM : CL -> IL = {
    P.o := P.o.
-   P.=> := [x][y] P.n (x P.=> y).
-   P.not := [x] P.n (P.not x).
-   IL.true := true.
-   IL.=>I := [A][B][D] notnotI (=>I D).  %% implicit arguments don't work here yet
-   IL.=>E := [A][B][D][E] (notI _).
-   IL.notI := 
-   IL.notE :=
+   P.=> := [x][y] ((P.n x) P.=> (P.n y)).
+   P.~ := [x] P.~ (P.n x).
+   P.bot := P.bot.
+   IL.true := [x] true (P.n x).
+   IL.=>I := [A][B][D] ~~I (=>I D).  %% implicit arguments don't work here yet
+   IL.=>E :=
+   IL.~I := 
+   IL.~E :=
+   IL.botE := 
    exm :=
-
 }.

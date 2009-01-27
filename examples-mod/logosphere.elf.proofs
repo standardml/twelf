@@ -1,0 +1,55 @@
+proof1 : pf (P.~ P.~ P.~ P.~ P.~ A P.=> P.~ P.~ A P.=> P.~ P.~ C) =
+=>I [H] 
+    =>I [H2] 
+      =>I [H3] 
+        botE(=>E 
+                H
+                (=>I [H4] 
+                   botE(=>E 
+                           H4
+                           (=>I [H5] 
+                              botE(=>E 
+                                      H2
+                                      (=>I [H6] 
+                                         botE(=>E 
+                                                 H5
+                                                 H6))))))).
+
+
+proof2 : pf ((P.~ P.~ A P.=> bot) P.=> P.~ P.~ P.~ P.~ P.~ A) =
+  =>I [H] 
+    =>I [H2] 
+      botE(=>E 
+              H2
+              (=>I [H3] 
+                 botE(=>E 
+                         H3
+                         (=>I [H4] 
+                            botE(=>E 
+                                    H
+                                    (=>I [H5] 
+                                       botE(=>E 
+                                               H5
+                                               H4))))))).
+
+proof3 : pf (P.~ P.~(P.~ P.~ A P.=> P.~ P.~ B) P.=> P.~ P.~ A P.=> P.~ P.~ B) =
+  =>I [H] 
+    =>I [H2] 
+      =>I [H3] 
+        botE(=>E 
+                H
+                (=>I [H4] 
+                   botE(=>E 
+                           (=>E 
+                              H4
+                              (=>I [H5] 
+                                 botE(=>E 
+                                         H2
+                                         (=>I [H6] 
+                                            botE(=>E 
+                                                    H5
+                                                    H6)))))
+                           (=>I [H7] 
+                              botE(=>E 
+                                      H3
+                                      H7))))).
