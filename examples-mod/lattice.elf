@@ -2,16 +2,16 @@
   %include FOL.
   leq : FOL.i -> FOL.i -> FOL.o.
   %infix none 4 leq.
-  %%refl : FOL.ded FOL.forall [x] (x leq x).
-  %%antisym : FOL.ded FOL.forall [x] (FOL.forall [y] (x leq y FOL.and y leq x FOL.=> x FOL.== y)).
-  %%trans : FOL.ded FOL.forall [x] (FOL.forall [y] (FOL.forall [z] (x leq y FOL.and y leq z FOL.=> x leq z))).
+  refl : FOL.ded FOL.forall [x] (x leq x).
+  antisym : FOL.ded FOL.forall [x] (FOL.forall [y] (x leq y FOL.and y leq x FOL.=> x FOL.== y)).
+  trans : FOL.ded FOL.forall [x] (FOL.forall [y] (FOL.forall [z] (x leq y FOL.and y leq z FOL.=> x leq z))).
 }.
 
 %view Opposite : Order -> Order = {
   leq := [x][y] (y leq x).
   refl := refl.
-  antisym := forallI([x] forallI([y] (implI ([z : FOL.ded y leq x FOL.and x leq y] (impE(forallE(y,forallE(x,antisym)),andI(andEr(z),andEl(z)))))))).
-  trans := forallI([x] forallI([y] (forallI [z] (implI ([u : FOL.ded y leq x and z leq y] (implE(forallE(x,forallE(y,forallE(z,trans))),andI(andEr(z),andEl(z))))))))).      		  
+  antisym := FOL.forallI [x] FOL.forallI [y] FOL.impI [z : FOL.ded y leq x FOL.and x leq y] (FOL.impE (FOL.forallE y (FOL.forallE x antisym)) (FOL.andI (FOL.andEr z) (FOL.andEl z))).
+  trans := FOL.forallI [x] FOL.forallI [y] FOL.forallI [z] FOL.impI [u : FOL.ded y leq x FOL.and z leq y] (FOL.impE (FOL.forallE x (FOL.forallE y (FOL.forallE z trans))) (FOL.andI (FOL.andEr u) (FOL.andEl u))).      		  
 }.
 
 %sig Semilattice = {
