@@ -43,11 +43,11 @@ struct
 
   local
     (* nameArray maps constants to print names and fixity *)
-    val nameArray = Array.array (1, NameInfo "")
+    val nameArray = Array.array (1, NameInfo "")  (* @CS must become hash table *)
       : nameInfo Array.array
 
     (* sgnHashTable maps identifiers (strings) to constants (cids) *)
-    val sgnHashTable : int HashTable.Table = HashTable.new (4096)
+    val sgnHashTable : int HashTable.Table = HashTable.new (4096) (* @CS must become IDs.cid HashTable.Table *)
     val hashInsert = HashTable.insertShadow sgnHashTable (* returns optional shadowed entry *)
     val hashLookup = HashTable.lookup sgnHashTable (* returns optional cid *)
     fun hashClear () = HashTable.clear sgnHashTable
@@ -66,11 +66,11 @@ struct
     *)
     fun override (cid, NameInfo (name)) =
         (* should shadowed identifiers keep their fixity? *)
-          Array.update (nameArray, 0, NameInfo("%" ^ name ^ "%"))
+          Array.update (nameArray, 0, NameInfo("%" ^ name ^ "%")) (* @CS 0 was cid *)
 
     fun shadow NONE = ()
       | shadow (SOME(_,cid)) =
-          override (cid, Array.sub (nameArray, 0))
+          override (cid, Array.sub (nameArray, 0)) (* @CS 0 was cid *)
 
     (* installName (name, cid) = ()
        Effect: update mappings from constants to print names and identifiers
@@ -80,7 +80,7 @@ struct
         let
 	  val shadowed = hashInsert (name, lemma)	(* returns optional shadowed entry *)
 	in
-	  (Array.update (nameArray, 0, NameInfo (name));
+	  (Array.update (nameArray, 0, NameInfo (name)); (* @CS 0 was lemma *)
 	   shadow shadowed)
 	end
 
@@ -93,7 +93,7 @@ struct
        where `name' is the print name of cid
     *)
     fun constName (cid) =
-        (case Array.sub (nameArray, 0)
+        (case Array.sub (nameArray, 0) (* @CS 0 was cid *)
 	   of (NameInfo (name)) => name)
 
   end  (* local ... *)
