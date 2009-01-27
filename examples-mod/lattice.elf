@@ -14,6 +14,8 @@
   trans := FOL.forallI [x] FOL.forallI [y] FOL.forallI [z] FOL.impI [u : FOL.ded y leq x FOL.and z leq y] (FOL.impE (FOL.forallE x (FOL.forallE y (FOL.forallE z trans))) (FOL.andI (FOL.andEr u) (FOL.andEl u))).      		  
 }.
 
+
+
 %sig Semilattice = {
   %include FOL.
   %struct sgc : SemigroupCommut.
