@@ -9,9 +9,9 @@
 
 %view Opposite : Order -> Order = {
   leq := [x][y] (y leq x).
-  %% refl := ...
-  %% antisym := ...
-  %% trans := ...
+  refl := refl.
+  antisym := forallI([x] forallI([y] (implI ([z : FOL.ded y leq x FOL.and x leq y] (impE(forallE(y,forallE(x,antisym)),andI(andEr(z),andEl(z)))))))).
+  trans := forallI([x] forallI([y] (forallI [z] (implI ([u : FOL.ded y leq x and z leq y] (implE(forallE(x,forallE(y,forallE(z,trans))),andI(andEr(z),andEl(z))))))))).      		  
 }.
 
 %sig Semilattice = {
