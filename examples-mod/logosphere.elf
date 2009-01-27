@@ -5,7 +5,7 @@
 }.
 
 %sig L = {
-         elt : type.
+	 elt : type.
 	 list: type.
 	 nil : list.
 	 cons : elt -> list -> list.
@@ -16,7 +16,7 @@
  }.
 
 %sig NL = {
-	     %include N.
+	     %include N. 
              %struct L : L = {elt := N.nat.}.
              123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
              %solve d : L.append 123 123 X.
@@ -51,11 +51,12 @@
   
   n = IL.P.n.
 
-  dne : CL.P.o -> IL.P.o -> type.
-  d=> : dne A A' -> dne B B' -> dne (A CL.P.=> B) ((n A') IL.P.=> (n B')). %%@CS: is this case wrong?
-  dnot : dne A A' -> dne (CL.P.not A) (n A').
+  kolm : CL.P.o -> IL.P.o -> type.
+  k=> : kolm A A' -> kolm B B' -> kolm (A CL.P.=> B) (n (A' IL.P.=> B')). 
+  knot : kolm A A' -> kolm (CL.P.not A) (n A').
+
   % Translation
-  elim : CL.IL.true A -> dne A A' -> IL.true A' -> type.
+  elim : CL.IL.true A -> kolm A A' -> IL.true A' -> type.
 
 }.
 
@@ -64,11 +65,10 @@
    P.=> := [x][y] P.n (x P.=> y).
    P.not := [x] P.n (P.not x).
    IL.true := true.
-   IL.=>I := [A][B][p] (notnotI (=>I p)).  %% implicit arguments don't work here yet
-%{ 
-   IL.=>E := 
+   IL.=>I := [A][B][D] notnotI (=>I D).  %% implicit arguments don't work here yet
+   IL.=>E := [A][B][D][E] (notI _).
    IL.notI := 
    IL.notE :=
    exm :=
-}%
+
 }.

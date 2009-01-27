@@ -45,7 +45,6 @@ struct
        ((ids @ [id], Paths.join(r, r')), f')
     end
 
-(* @CS: is all the paths stuff right in the sequel *)
   fun parseMorphAux'(f' as LS.Cons ((L.ID _, _), _)) =
       let
           val (id, f') = parseQualId' f'
@@ -72,7 +71,7 @@ struct
     | parseConInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected identifier, found token " ^ L.toString t)
 
-  fun parseStrInst2' (r0, f' as LS.Cons ((L.ID _, r1), _)) =
+  fun parseStrInst2' ( f' as LS.Cons ((L.ID _, r), _)) =
       let
          val (str, f') = parseQualId' (f')
          val (_, f') = parseColon' (f')
@@ -80,13 +79,13 @@ struct
          val (mor, f') = parseMorph' (f')
          val (r3, f') = parseDot' (f')
       in
-        (E.strinst (str, (mor, Paths.join (r0, r3))), f')
+        (E.strinst (str, (mor, Paths.join (r, r3))), f')
       end
-    | parseStrInst2' (r0, LS.Cons ((t, r), s')) =
+    | parseStrInst2' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected structure identifier, found token " ^ L.toString t)
 
-  fun parseStrInst' (LS.Cons ((L.STRUCT, r), s')) =
-        parseStrInst2' (r, LS.expose s')
+  fun parseStrInst' (LS.Cons ((L.STRUCT, _), s')) =
+        parseStrInst2' (LS.expose s')
     | parseStrInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `%struct', found token " ^ L.toString t)
 
@@ -142,7 +141,7 @@ struct
              (E.viewbegin(id, dom, cod), f')
           end 
         | LS.Cons ((t, r1), s') =>
-	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
+	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
 
   fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
      case LS.expose s'
@@ -162,7 +161,7 @@ struct
                  let
                     val (mor, f' as LS.Cons((_,r3),_)) = parseMorph' (LS.expose s2')
                  in
-                    ((E.strdef (id, (mor, Paths.join(r0,r3)))), f')
+                    ((E.strdef (id, (mor, Paths.join(r2,r3)))), f')
                  end
                | LS.Cons ((t, r), s') =>
                  Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
