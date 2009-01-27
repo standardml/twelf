@@ -1,30 +1,25 @@
 %sig FOL = {
-  i : type.
-  o : type.
-  ded : o.
-  false : o.
-  == : i -> i -> o.
-  %infix none 4 ==.
+  i      : type.
+  o      : type.
   forall : (i -> o) -> o.
-  exists : (i -> o) -> o.
-  neg : o -> o.
-  and : o -> o -> o.
-  %infix none 3 and.
-  or : o -> o -> o.
-  %infix none 2 or.
-  => : o -> o -> o.
-  %infix none 1 =>.
-  <=> : o -> o -> o.
-  %infix none 1 <=>.
-  ded : o -> type.
-  %prefix 0 ded.
+  not    : o -> o.
+  and    : o -> o -> o.         %infix none 3 and.
+  =>     : o -> o -> o.         %infix none 2 =>.
+  <=>    : o -> o -> o
+         = [x][y]((x => y) and (y => x)).
+                                %infix none 1 <=>.
+  ==     : i -> i -> o.         %infix none 4 ==.
+  !=     : i -> i -> o
+         = [x][y] not (x == y). %infix none 4 !=.
+  ded : o -> type.              %prefix 0 ded.
   
   forallI : ({x}ded A x) -> ded forall A.
   forallE : {x} ded forall A -> ded A x.
-  impI : (ded A -> ded B) -> ded (A => B).
-  impE : ded (A => B) -> ded A -> ded B.
-  andI : ded A -> ded B -> ded (A and B).
-  andEl : ded (A and B) -> ded A.
-  andEr : ded (A and B) -> ded B.
-  
+  notI    : (ded A -> ded P) -> ded not A.
+  notE    : ded A -> ded not A -> ded P.
+  impI    : (ded A -> ded B) -> ded (A => B).
+  impE    : ded (A => B) -> ded A -> ded B.
+  andI    : ded A -> ded B -> ded (A and B).
+  andEl   : ded (A and B) -> ded A.
+  andEr   : ded (A and B) -> ded B.
 }.

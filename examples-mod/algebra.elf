@@ -1,7 +1,6 @@
 %sig Magma = {
   %include FOL.
-  * : FOL.i -> FOL.i -> FOL.i. 
-  %infix none 10 *.
+  * : FOL.i -> FOL.i -> FOL.i.    %infix none 10 *.
 }.
 
 %sig MagmaCommut = {
@@ -64,8 +63,8 @@
   %include FOL.
   %struct mid : MagmaIdentity.
   inv : FOL.i -> FOL.i.
-  invRight : FOL.ded FOL.forall [x] (x mid.mag.* (inv x) FOL.== mid.e).
-  invLeft : FOL.ded FOL.forall [x] ((inv x) mid.mag.* x FOL.== mid.e). 
+  invRight : FOL.ded FOL.forall [x] (x mid.mag.* (inv x)  FOL.==  mid.e).
+  invLeft : FOL.ded FOL.forall [x] ((inv x) mid.mag.* x  FOL.==  mid.e). 
 }. 
 
 %sig Group = {
@@ -79,8 +78,7 @@
   %include FOL.
   %struct g : Group.
   %struct mc : MagmaCommut = {%struct mag := g.mon.sg.mag.}.
-  + = [x][y] x g.mon.sg.mag.* y.  
-  %infix none 5 +.  
+  + = [x][y] x g.mon.sg.mag.* y.    %infix none 5 +.  
   0 = g.mon.mid.e.
   - = g.inv.  
 }.
@@ -114,15 +112,31 @@
 %sig IntegralDomain = {
   %include FOL.
   %struct ru : RingUnit.
-  noZeroDiv : FOL.ded FOL.forall [x] FOL.forall [y] (x ru.r.sg.mag.* y FOL.== ru.r.ga.0 FOL.=> x FOL.== ru.r.ga.0 FOL.or y FOL.== ru.r.ga.0).
+  noZeroDiv : FOL.ded
+    FOL.forall [x] FOL.forall [y] (
+          x  FOL.!=  ru.r.ga.0
+        FOL.and
+          y  FOL.!=  ru.r.ga.0
+      FOL.=>
+        x ru.r.sg.mag.* y  FOL.!=  ru.r.ga.0 ).
 }.  
 
 %sig RingDivision = {
   %include FOL.
   %struct ru : RingUnit.
   inv : FOL.i -> FOL.i.
-  invLeft : FOL.ded FOL.forall [x] (FOL.neg (x FOL.== ru.r.ga.0) FOL.=> x ru.mon.sg.mag.* (inv x) FOL.== ru.1). 
-  invRight : FOL.ded FOL.forall [x] (FOL.neg (x FOL.== ru.r.ga.0) FOL.=> (inv x) ru.mon.sg.mag.* x FOL.== ru.1).
+  invLeft : FOL.ded
+    FOL.forall [x] (
+        x FOL.!= ru.r.ga.0
+      FOL.=>
+        x ru.mon.sg.mag.* (inv x)  FOL.==  ru.1
+    ). 
+  invRight : FOL.ded
+    FOL.forall [x] (
+        x FOL.!= ru.r.ga.0
+      FOL.=>
+        (inv x) ru.mon.sg.mag.* x  FOL.==  ru.1
+    ).
 }.
 
 %sig Field = {
