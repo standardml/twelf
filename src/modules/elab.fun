@@ -14,6 +14,8 @@ struct
   fun checkEqual(U : I.Exp, U' : I.Exp) : bool = Conv.conv((U, I.id), (U', I.id))
   (* normalizes an expression *)
   fun normalize(U : I.Exp) : I.Exp = Whnf.normalize(U, I.id)
+  (* abstracts away free variables left over after type reconstruction *)
+  fun abstract(U : I.Exp) : I.Exp = #2 (Abstract.abstractDecImp U)
   
   exception Error of string                       (* raised on type-checking errors *)
   exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)

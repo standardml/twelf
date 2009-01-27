@@ -99,8 +99,8 @@ struct
              	  of NONE => ExtSyn.jterm term
              	   | SOME V => ExtSyn.jof'(term, V)
 		val Term = case ExtSyn.recon job
-		   of ExtSyn.JTerm((U, _), _, _) => U
-		    | ExtSyn.JOf((U,_), _, _) => U
+		   of ExtSyn.JTerm((U, _), _, _) => #2 (Abstract.abstractDecImp U)
+		    | ExtSyn.JOf((U,_), _, _) => #2 (Abstract.abstractDecImp U)
              in
              	ModSyn.ConInst(Con, Term)
              end
