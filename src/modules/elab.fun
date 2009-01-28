@@ -5,16 +5,26 @@ struct
   
   (* the following methods are all that the module system needs about the semantics of the non-modular syntax *)
   
+  (*
+     N: Normalized: no Redex, no EVar (SOME _)
+     A: Abstracted: no EVar, no FVar, implicit arguments Pi-bound
+     E: Abbrevs expanded: no NSDef
+  *)
+
   (* check whether n = U : V can be a strict definition
      (only needed as an optimization to return ConDefs if possible) *)
   fun checkStrict(U : I.Exp, V : I.Exp) : bool = (Strict.check((U,V), NONE); true) handle Strict.Error _ => false
   (* check whether U has type/kind V *)
+  (* pre: NAE *)  
   fun checkType(U : I.Exp, V : I.Exp) : bool = (TypeCheck.check(U,V); true) handle TypeCheck.Error _ => false
   (* check whether U has type/kind V *)
+  (* pre: NAE *)  
   fun checkEqual(U : I.Exp, U' : I.Exp) : bool = Conv.conv((U, I.id), (U', I.id))
   (* normalizes an expression *)
+  (* pre: true; post: NE *)
   fun normalize(U : I.Exp) : I.Exp = Whnf.normalize(U, I.id)
   (* abstracts away free variables left over after type reconstruction *)
+  (* pre: true; post: NAE, #1 is number of implicit arguments *) 
   fun abstract(U : I.Exp) : I.Exp = #2 (Abstract.abstractDecImp U)
   
   exception Error of string                       (* raised on type-checking errors *)
