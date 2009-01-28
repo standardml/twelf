@@ -45,7 +45,7 @@ sig
 
  (* pskeleton instead of proof term *)
   datatype Flatterm = 
-    Pc of IntSyn.cid | Dc of IntSyn.cid | Csolver of IntSyn.Exp
+    Pc of IntSyn.cid | Dc of int | Csolver of IntSyn.Exp
   type pskeleton = Flatterm list  
 
   (* The dynamic clause pool --- compiled version of the context *)

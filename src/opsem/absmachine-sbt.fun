@@ -272,15 +272,13 @@ struct
              *)	  
 	  (!mSig) (ps', dp, sc)
 
-	  | matchDProg (I.Decl (dPool', C.Dec(r, s, Ha')), k) = ()
-	  (* @CS: check this -fr *)
-	  (* if eqHead (Ha, Ha')
+	  | matchDProg (I.Decl (dPool', C.Dec(r, s, Ha')), k) = 
+	    if eqHead (Ha, Ha')
 	      then (CSManager.trail (* trail to undo EVar instantiations *)
                     (fn () => rSolve (ps', (r, I.comp(s, I.Shift(k))), dp,
                                       (fn S => sc ((C.Dc k) :: S))));
 		    matchDProg (dPool', k+1)) 
-	    else matchDProg (dPool', k+1)
-	  *)
+	    else matchDProg (dPool', k+1)	  
 	  | matchDProg (I.Decl (dPool', C.Parameter), k) =
 	      matchDProg (dPool', k+1)
         

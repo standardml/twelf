@@ -256,7 +256,7 @@ struct
       in
 	(case Ho of 
 	   C.Pc i => matchSig (Index.lookup (cidFromHead Ha), i)
-	 | C.Dc i => raise Error ("debug me") (* @CS: check this -fr *) (*matchDProg (dPool, i, i) *)
+	 | C.Dc i => matchDProg (dPool, i, i) 
 	 | C.Csolver U => sc (O, U))
       end
 

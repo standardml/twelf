@@ -63,7 +63,6 @@ struct
           )
         | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
 
-(* @CS: is all the paths stuff right in the sequel *)
   fun morphToMorph(cod : IDs.mid, (mor, r0)) =
      let
      	val (names, r) = List.last mor
@@ -114,8 +113,7 @@ struct
              end
   
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list),
-                     l as Paths.Loc (fileName, r2)
-  ) = 
+                     l as Paths.Loc (fileName, r2)) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()

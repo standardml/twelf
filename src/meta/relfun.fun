@@ -861,19 +861,25 @@ struct
 	  | traversePos (c'', Psi, G, (V, v), NONE, L) =
 	    (NONE, L)
 
-	fun traverseSig' (c'', L) = L
-	(* @CS: I broke this code by commenting out the function body below to make it compile -fr Jan 09 *)
-	(* if c'' = #1 (ModSyn.sgnSize ()) then L
-	  else
-	    (case ModSyn.sgnLookup (c'')
-	       of I.ConDec (name, _, _, _, V, I.Type) => 
-		 (case traverseNeg (c'', I.Null, (V, I.id), L) 
-		    of (SOME (wf, d', (P', Q')), L') =>  traverseSig' (c''+1, (P' (Q' wf)) :: L')
-		     | (NONE, L') => traverseSig' (c''+1, L'))
-	     | _ => traverseSig' (c''+1, L))
-	*)
+	fun traverseSig' () = 
+	    let 
+	      (* this is so ugly because of the module system --cs Tue Jan 27 17:10:35 2009 *)
+	      val result = ref nil
+	      val _ = 
+		ModSyn.sgnAppC (fn c => 
+				(case ModSyn.sgnLookup (c)
+				   of I.ConDec (name, _, _, _, V, I.Type) => 
+				     (case traverseNeg (c, I.Null, (V, I.id), !result) 
+					of (SOME (wf, d', (P', Q')), L') =>  (result :=  P' (Q' wf) :: L')
+				      | (NONE, L') => result := L')
+				 | _ => ()))
+	    in 
+	      !result
+	    end
+
+ 	
       in
-	traverseSig' (0, nil)
+	traverseSig' ()
       end
 
 

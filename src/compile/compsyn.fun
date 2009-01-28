@@ -56,7 +56,7 @@ struct
 
   (* proof skeletons instead of proof term *)
   datatype Flatterm = 
-    Pc of IntSyn.cid | Dc of IntSyn.cid | Csolver of IntSyn.Exp
+    Pc of IntSyn.cid | Dc of int | Csolver of IntSyn.Exp
 
   type pskeleton = Flatterm list  
 
@@ -188,7 +188,7 @@ struct
     | pskeletonToString ((Pc i)::O) = 
         IntSyn.conDecFoldName (ModSyn.sgnLookup i) ^ " " ^ (pskeletonToString O)
     | pskeletonToString ((Dc i)::O) = 
-        ("(Dc " ^ (IDs.cidToString i) ^ ") ") ^ (pskeletonToString O)
+        ("(Dc " ^ (Int.toString i) ^ ") ") ^ (pskeletonToString O)
     | pskeletonToString (Csolver U ::O) = 
         ("(cs _ ) " ^ (pskeletonToString O))
 
