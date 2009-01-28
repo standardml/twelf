@@ -10,7 +10,8 @@ functor Subordinate
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
-   structure Table : TABLE where type key = IDs.cid
+   structure Table : TABLE where type key = IDs.mid * IDs.cid
+   structure CidTable : TABLE where type key =  IDs.cid
    structure MemoTable : TABLE where type key = IDs.cid * IDs.cid
    structure IntSet : INTSET
      )
@@ -32,11 +33,12 @@ struct
        Subordination is transitive, but not necessarily reflexive.
     *)
     val soGraph : (IntSet.intset) Table.Table = Table.new (32)
-    val insert = Table.insert soGraph
-    fun adjNodes a = valOf (Table.lookup soGraph a)  (* must be defined! *)
+    fun adjNodes a = valOf (Table.lookup soGraph (ModSyn.currentMod(), a))  (* must be defined! *)
     fun insertNewFam a =
-           Table.insert soGraph (a, IntSet.empty)
-    val updateFam = Table.insert soGraph
+           Table.insert soGraph ((ModSyn.currentMod(), a), IntSet.empty)
+    fun updateFam (a, is)  = Table.insert soGraph ((ModSyn.currentMod(), a), is)
+    val insert = updateFam
+
 
     (* memotable to avoid repeated graph traversal *)
     (* think of hash-table model *)
@@ -84,8 +86,8 @@ struct
 	  updateFam (b, IntSet.insert(a,adjNodes(b))) )
 
     val fTable : bool Table.Table = Table.new (32)
-    val fLookup = Table.lookup fTable
-    val fInsert = Table.insert fTable
+    fun fLookup a = Table.lookup fTable (ModSyn.currentMod (), a)
+    fun fInsert (a, is) = Table.insert fTable ((ModSyn.currentMod (), a), is)
 
     (*
        Freezing type families
@@ -264,7 +266,8 @@ struct
         let
 	  val a's' = map expandFamilyAbbrevs a's
 	  val _ = aboveList := nil
-	  val _ = Table.app (fn (b,_) => addIfBelowEq a's' b) soGraph;
+          val curr = ModSyn.currentMod()
+	  val _ = Table.app (fn ((m, c),_) => if m = curr then addIfBelowEq a's' c else ()) soGraph;
 	  val _ = List.app (fn b => fSet(b, false)) (!aboveList)
 	in
 	  !aboveList
@@ -291,13 +294,18 @@ struct
 
        Fri Dec 27 08:37:42 2002 -fp (just before 1.4 alpha)
     *)
-    val defGraph : (IntSet.intset) Table.Table = Table.new (32)
+
+    (* While implmenting the Modulesystem, we have decided that
+       the defGraph in on cids and not on (mid, cid) pairs. 
+       --cs --fr Wed Jan 28 16:06:37 2009
+    *)
+    val defGraph : (IntSet.intset) CidTable.Table = CidTable.new (32)
 
     (* occursInDef a = true
        iff there is a b such that a #> b
     *)
     fun occursInDef a =
-        (case Table.lookup defGraph a
+        (case CidTable.lookup defGraph a
 	   of NONE => false
             | SOME _ => true)
 
@@ -309,9 +317,9 @@ struct
        to record a #> b.
     *)
     fun insertNewDef (b, a) =
-        (case Table.lookup defGraph a
-	   of NONE => Table.insert defGraph (a, IntSet.insert (b, IntSet.empty))
-            | SOME(bs) => Table.insert defGraph (a, IntSet.insert (b, bs)))
+        (case CidTable.lookup defGraph a
+	   of NONE => CidTable.insert defGraph (a, IntSet.insert (b, IntSet.empty))
+            | SOME(bs) => CidTable.insert defGraph (a, IntSet.insert (b, bs)))
 
     (* installDef (c) = ()
        Effect: if c is a type-level definition,
@@ -324,9 +332,19 @@ struct
 
     fun installDef c = installConDec (c, ModSyn.sgnLookup c)
 
+    fun installInclude(ModSyn.SigIncl from) =
+      Table.app (fn ((m, c), is) =>
+                    if m = from
+                    then (
+                       insertNewFam c; 
+                       IntSet.foldl  (fn (d, ()) => addSubord(c,d)) () is
+		    ) else ()
+                )
+                soGraph 
+      
     (* checkNoDef a = ()
        Effect: raises Error(msg) if there exists a b such that b <# a
-               or b <# a' for some a' < a.
+               or b <# a' for some a' < a in the current signature.
     *)
     fun checkNoDef a =
         if occursInDef a
@@ -350,7 +368,7 @@ struct
     fun reset () = (Table.clear soGraph;
                     Table.clear fTable;
 		    MemoTable.clear memoTable;
-		    Table.clear defGraph)
+		    CidTable.clear defGraph)
 
     (* 
        Subordination checking no longer traverses spines,
@@ -482,8 +500,13 @@ struct
 		^ (if fGet a then " #> " else " |> ")
 		^ famsToString (bs, "\n")))
 
-    fun show () = Table.app showFam soGraph;
-
+    fun showOne m = Table.app (fn ((m', a), bs) => if m = m' then showFam (a, bs) else ()) soGraph;
+    fun show () = ModSyn.modApp (fn m => (case ModSyn.modLookup m 
+				           of ModSyn.SigDec (name) =>
+					      (print("signature " ^ Names.foldQualifiedName name ^ "\n");
+					      showOne m;
+					      print("\n"))
+					    | _ => ()) )
 
     (* weaken (G, a) = (w') *)
     fun weaken (I.Null, a) = I.id
@@ -547,6 +570,7 @@ struct
     val install = install
     val installDef = installDef
     val installBlock = installBlock
+    val installInclude = installInclude
 
     (* val installFrozen = installFrozen *)
 

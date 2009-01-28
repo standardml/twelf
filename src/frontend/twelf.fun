@@ -1196,6 +1196,7 @@ struct
                     handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
             val _ = ModSyn.inclAddC(Incl)
                     handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
+	    val _ = Subordinate.installInclude Incl
             val _ = if !Global.chatter >= 3
                     then msg (Print.modInclToString(Incl) ^ "\n")
                     else ()

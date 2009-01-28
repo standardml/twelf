@@ -12,6 +12,7 @@ sig
   val install : IntSyn.cid -> unit
   val installDef : IntSyn.cid -> unit
   val installBlock : IntSyn.cid -> unit
+  val installInclude : ModSyn.ModIncl -> unit
 
   (* val installFrozen : IntSyn.cid list -> unit *) (* superseded by freeze *)
 

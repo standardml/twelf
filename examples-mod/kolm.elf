@@ -49,14 +49,3 @@
 }.
 
 
-%sig TEST = {
-   %struct P : P.
-   %struct CL : CL = { %struct P := P.}.
-}.
-
-%sig TEST2 = {
-   %struct IL : IL.
-   %struct t : TEST = { %struct CL := KOLM IL.}.
-}
-   			
-  

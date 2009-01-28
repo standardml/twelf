@@ -54,6 +54,7 @@
   %include R.
   a : type.
   d : R.a.
+  c : a -> R.a.
 }.
 
 %sig R'' = {
@@ -61,3 +62,4 @@
   d' : R'.a.
   d : R.a.
 }.
+

@@ -5,6 +5,7 @@ Library
   structure IntSyn
   structure CidHashTable
   structure CidRedBlackTree
+  structure MidCidRedBlackTree
   signature MODSYN
   structure ModSyn
   structure IDs
