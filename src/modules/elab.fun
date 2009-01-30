@@ -165,9 +165,9 @@ struct
      	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
      	  | A(I.Redex(U, S)) = I.Redex(A U, ASpine S)
      	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
-     	  | A(I.EVar(E, C, U, Constr)) = raise FixMe
+(*     	  | A(I.EVar(E, C, U, Constr)) = raise FixMe *)
           | A(I.EClo(U,s)) = I.EClo(A U, ASub s)
-          | A(I.AVar(I)) = raise FixMe
+(*          | A(I.AVar(I)) = raise FixMe *)
           | A(I.FgnExp(cs, F)) = raise FixMe
           | A(I.NVar n) = I.NVar n
         and AHead(I.BVar k) = headToExp(I.BVar k)
@@ -189,15 +189,15 @@ struct
           | AFront(I.Block b) = I.Block (ABlock b)
           | AFront(I.Undef) = I.Undef
         and ADec(I.Dec(x,V)) = I.Dec(x, A V)
-          | ADec(I.BDec(v,(l,s))) = I.BDec(v,(raise FixMe, ASub s))
+(*          | ADec(I.BDec(v,(l,s))) = I.BDec(v,(raise FixMe, ASub s)) *)
           | ADec(I.ADec(v,d)) = I.ADec(v,d)
           | ADec(I.NDec v) = I.NDec v
         and ABlock(I.Bidx i) = I.Bidx i
-          | ABlock(I.LVar(b,s,(c,s'))) = raise FixMe
+(*          | ABlock(I.LVar(b,s,(c,s'))) = raise FixMe *)
           | ABlock(I.Inst l) = I.Inst (List.map A l)
-        and AConstr(I.Solved) = I.Solved
+(*        and AConstr(I.Solved) = I.Solved
           | AConstr(I.Eqn(G, U1, U2)) = raise FixMe
-          | AConstr(I.FgnCnstr(cs, fgnC)) = I.FgnCnstr(cs, fgnC)
+          | AConstr(I.FgnCnstr(cs, fgnC)) = I.FgnCnstr(cs, fgnC) *)
         (* apply morphism to constant *)
         and ACid(c) =
            if not(IDs.midOf c = dom)

@@ -1,3 +1,4 @@
+% Kolmogorov translation
 
 %sig P = {
   o: type.
@@ -27,12 +28,11 @@
    P.=> := [x][y] ((P.n x) P.=> (P.n y)).
    P.~ := [x] P.~ x.
    IL.true := [x] true (P.n x).
-   IL.=>I := [A][B][D] ~~I (=>I D).  %% implicit arguments don't work here yet
+   IL.=>I := [A][B][D] ~~I (=>I D).
    IL.=>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E  v E) u).
    IL.~I := [A][D] ~I [q][u] ~E (D (P.~ A) u) u.
    IL.~E := [A][C][D][E] ~I [p][u] ~E D E .
    exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
-   % leftover logic variables should not be abstracted.  BUG?
 }.
 
 
@@ -40,7 +40,6 @@
    P.o := P.o.			      
    P.=> := [x][y] x P.=> y.
    P.~ := [x] P.~ x.
-% true := [x] true x.   %%%%%% BUG
    true := [x] IL.true x.
    =>I := [A][B][D] IL.=>I D.
    =>E := [A][B][D][E] IL.=>E D E.

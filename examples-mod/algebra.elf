@@ -1,3 +1,23 @@
+% Algebraic hierarchy
+
+
+%sig FOL = {
+  i      : type.
+  o      : type.
+  forall : (i -> o) -> o.
+  not    : o -> o.
+  and    : o -> o -> o.         %infix none 3 and.
+  =>     : o -> o -> o.         %infix none 2 =>.
+  <=>    : o -> o -> o
+         = [x][y]((x => y) and (y => x)).
+                                %infix none 1 <=>.
+  ==     : i -> i -> o.         %infix none 4 ==.
+  !=     : i -> i -> o
+         = [x][y] not (x == y). %infix none 4 !=.
+  ded : o -> type.              %prefix 0 ded.
+}.
+
+
 %sig Magma = {
   %include FOL.
   * : FOL.i -> FOL.i -> FOL.i.    %infix none 10 *.
