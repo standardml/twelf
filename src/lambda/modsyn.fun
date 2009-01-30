@@ -199,8 +199,8 @@ struct
   
   fun sgnAppI'(m : IDs.mid, f : IDs.cid -> unit, done : IDs.mid list) =
      let
-     	fun isDone m' = List.exists (fn x => x = m') done
-     	val incl = List.filter isDone (modInclLookup m)
+     	fun isNotDone m' = not(List.exists (fn x => x = m') done)
+     	val incl = List.filter isNotDone (modInclLookup m)
      in
         List.map (fn m' => sgnAppI'(m', f, m :: done)) incl;
         sgnApp(m,f)
