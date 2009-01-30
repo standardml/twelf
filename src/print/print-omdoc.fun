@@ -336,7 +336,7 @@ struct
   fun printModule print flush m =
      let
      	 val mdec = ModSyn.modLookup m
-     	 val incls = List.rev (ModSyn.modInclLookup m)
+     	 val incls = ModSyn.modInclLookup m
      in (
         print(modBeginToString(mdec, incls));
         ModSyn.sgnApp(m, fn c => (

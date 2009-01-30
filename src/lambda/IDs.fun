@@ -16,7 +16,12 @@ structure IDs = struct
         of LESS => LESS
          | GREATER => GREATER
          | EQUAL => cidcompare(y,y')
-
+   fun midcidcidcompare ((x,(y1,y2)), (x',(y1',y2'))) =
+      case midcidcompare((x,y1),(x',y1'))
+        of LESS => LESS
+         | GREATER => GREATER
+         | EQUAL => cidcompare(y2,y2')
+   
    fun newcid(m,c) = (m,c)               (* constructor for cid's *)
    fun midOf(m,_) = m                    (* cid field accessors *)
    fun lidOf(_,l) = l
@@ -39,11 +44,16 @@ structure CidHashTable =
              val hash = IDs.cidhash
              val eq = (op =));
 
+structure MidRedBlackTree = IntRedBlackTree
+
 structure CidRedBlackTree =
   RedBlackTree (type key' = IDs.cid
 		val compare = IDs.cidcompare) 
 
-
 structure MidCidRedBlackTree =
   RedBlackTree (type key' = IDs.mid * IDs.cid
 		val compare = IDs.midcidcompare) 
+
+structure MidCidCidRedBlackTree =
+  RedBlackTree (type key' = IDs.mid * (IDs.cid * IDs.cid)
+		val compare = IDs.midcidcidcompare) 

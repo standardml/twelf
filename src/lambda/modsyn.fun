@@ -176,6 +176,7 @@ struct
   fun symFoldName(c) = IDs.mkString(symName c ,"",".","") 
   fun modName m = modDecName (modLookup m)
   fun modFoldName m = IDs.mkString(modName m ,"",".","")
+  fun fullFoldName(c) = modFoldName(IDs.midOf c) ^ "." ^ (symFoldName c)
  
   fun modApp(f : IDs.mid -> unit) =
     let
@@ -195,6 +196,16 @@ struct
       doRest(0)
     end
   fun sgnAppC (f) = sgnApp(currentMod(), f)
+  
+  fun sgnAppI'(m : IDs.mid, f : IDs.cid -> unit, done : IDs.mid list) =
+     let
+     	fun isDone m' = List.exists (fn x => x = m') done
+     	val incl = List.filter isDone (modInclLookup m)
+     in
+        List.map (fn m' => sgnAppI'(m', f, m :: done)) incl;
+        sgnApp(m,f)
+     end
+  fun sgnAppI(m : IDs.mid, f : IDs.cid -> unit) = sgnAppI'(m,f,nil)
 
   (********************** Effectful methods **********************)
   fun modOpen(dec) =
@@ -245,7 +256,7 @@ struct
         val to = currentMod()
         val _ = if modSize to = 0 then () else raise Error("include must occur at beginning of signature")
         val SOME (a,b,c,incl) = MH.lookup modTable to
-        val _ = MH.insert modTable (to, (a,b,c, from :: incl))
+        val _ = MH.insert modTable (to, (a,b,c, incl @ [from]))
       in
          ()
       end

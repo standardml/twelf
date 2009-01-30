@@ -9,10 +9,10 @@ sig
   exception Error of string
 
   val reset : unit -> unit
-  val install : IntSyn.cid -> unit
-  val installDef : IntSyn.cid -> unit
-  val installBlock : IntSyn.cid -> unit
-  val installInclude : ModSyn.ModIncl -> unit
+  val install : IDs.cid -> unit
+  val installDef : IDs.cid -> unit
+  val installBlock : IDs.cid -> unit
+  val installInclude : IDs.mid -> unit
 
   (* val installFrozen : IntSyn.cid list -> unit *) (* superseded by freeze *)
 

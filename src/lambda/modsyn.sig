@@ -90,13 +90,14 @@ sig
   val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list
   val strDecFoldName: StrDec -> string
-  val strDecQid  : StrDec -> IDs.qid
-  val strDecDom  : StrDec -> IDs.mid
-  val symInstCid : SymInst -> IDs.cid
   val modName    : IDs.mid -> string list
   val modFoldName: IDs.mid -> string
   val symName    : IDs.cid -> string list
-  val symFoldName: IDs.cid -> string  
+  val symFoldName: IDs.cid -> string
+  val fullFoldName: IDs.cid -> string
+  val strDecQid  : StrDec -> IDs.qid
+  val strDecDom  : StrDec -> IDs.mid
+  val symInstCid : SymInst -> IDs.cid
   val symQid     : IDs.cid -> IDs.qid
 
   (********************** Interface methods that affect the state **********************)
@@ -142,9 +143,11 @@ sig
   val modParent  : IDs.mid -> IDs.mid option
   val modInclLookup: IDs.mid -> IDs.mid list
   val modInclCheck: IDs.mid * IDs.mid -> bool
-  (* application of a method to all constants of a signature in declaration order *)
+  (* application of a method to all declarations of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit
+  (* as sgnApp but including all included signatures in dependency order (i.e., depth-first) skipping duplicates *)
+  val sgnAppI    : IDs.mid * (IDs.cid -> unit) -> unit
   (* application of a method to all modules in declaration order *)
   val modApp     : (IDs.mid -> unit) -> unit
   (* the current module *)

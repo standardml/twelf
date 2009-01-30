@@ -10,9 +10,10 @@ functor Subordinate
    (*! sharing Whnf.IntSyn = IntSyn' !*)
    structure Names : NAMES
    (*! sharing Names.IntSyn = IntSyn' !*)
-   structure Table : TABLE where type key = IDs.mid * IDs.cid
-   structure CidTable : TABLE where type key =  IDs.cid
-   structure MemoTable : TABLE where type key = IDs.cid * IDs.cid
+   structure MTable : TABLE where type key = IDs.mid
+   structure CTable : TABLE where type key =  IDs.cid
+   structure MCTable : TABLE where type key = IDs.mid * IDs.cid
+   structure MCCTable : TABLE where type key = IDs.mid * (IDs.cid * IDs.cid)
    structure IntSet : INTSET
      )
   : SUBORDINATE =
@@ -32,21 +33,27 @@ struct
 
        Subordination is transitive, but not necessarily reflexive.
     *)
-    val soGraph : (IntSet.intset) Table.Table = Table.new (32)
-    fun adjNodes a = valOf (Table.lookup soGraph (ModSyn.currentMod(), a))  (* must be defined! *)
+    val soGraph : (IntSet.intset) MCTable.Table = MCTable.new (32)
+    fun adjNodes (m,a) = valOf (MCTable.lookup soGraph (m, a))  (* must be defined! *)
+    fun adjNodesC a = adjNodes(ModSyn.currentMod(), a)
     fun insertNewFam a =
-           Table.insert soGraph ((ModSyn.currentMod(), a), IntSet.empty)
-    fun updateFam (a, is)  = Table.insert soGraph ((ModSyn.currentMod(), a), is)
+           MCTable.insert soGraph ((ModSyn.currentMod(), a), IntSet.empty)
+    fun updateFam (a, is)  = MCTable.insert soGraph ((ModSyn.currentMod(), a), is)
     val insert = updateFam
 
 
     (* memotable to avoid repeated graph traversal *)
     (* think of hash-table model *)
-    val memoTable : (bool * int) MemoTable.Table = MemoTable.new (2048)
-    val memoInsert = MemoTable.insert memoTable
-    val memoLookup = MemoTable.lookup memoTable
-    val memoClear = fn () => MemoTable.clear memoTable
-    val memoCounter = ref 0
+    (* stores for (m, c, c') the last result of reachable(c,c') and the value of memoCounter at the time;
+       the information is maintained for every module m, inserts and lookups effect current module --fr Jan 09 *)
+    val memoTable : (bool * int) MCCTable.Table = MCCTable.new (2048)
+    fun memoInsert (k, v) = MCCTable.insert memoTable ((ModSyn.currentMod(), k), v)
+    fun memoLookup k = MCCTable.lookup memoTable (ModSyn.currentMod(), k)
+    val memoClear = fn () => MCCTable.clear memoTable
+    (* one memo-counter for every module, insert and lookup effect current module --fr Jan 09 *)
+    val memoCounterTable : int MTable.Table = MTable.new(128)
+    fun memoCounter() = Option.getOpt(MTable.lookup memoCounterTable (ModSyn.currentMod()), 0)
+    fun incrMemoCounter() = MTable.insert memoCounterTable (ModSyn.currentMod(), memoCounter() + 1)
 
     (* Apply f to every node reachable from b *)
     (* Includes the node itself (reflexive) *)
@@ -55,17 +62,18 @@ struct
 	        if IntSet.member (b, visited)
 		  then visited
 		else (f b ;
-		      IntSet.foldl rch (IntSet.insert (b, visited)) (adjNodes b))
+		      IntSet.foldl rch (IntSet.insert (b, visited)) (adjNodesC b))
 	in
 	  (rch (b, IntSet.empty) ; ())
 	end
 
     exception Reachable
+    (* tries to reach a from b (going downwards), visited stores visited nodes; returns a set of nodes below b *)
     fun reach (b, a, visited) =
         let fun rch (b, visited) =
 	        if IntSet.member (b, visited)
 		  then visited
-		else let val adj = adjNodes b
+		else let val adj = (adjNodesC b)
 		     in
 		       if IntSet.member (a, adj)
 			 then raise Reachable
@@ -81,13 +89,13 @@ struct
     (* this is sometimes violated below, is this a bug? *)
     (* Thu Mar 10 13:13:01 2005 -fp *)
     fun addNewEdge (b, a) =
-        ( memoCounter := !memoCounter+1 ;
-	  memoInsert ((b,a), (true, !memoCounter)) ;
-	  updateFam (b, IntSet.insert(a,adjNodes(b))) )
+        ( incrMemoCounter();
+	  memoInsert ((b,a), (true, memoCounter())) ;
+	  updateFam (b, IntSet.insert(a,adjNodesC(b))) )
 
-    val fTable : bool Table.Table = Table.new (32)
-    fun fLookup a = Table.lookup fTable (ModSyn.currentMod (), a)
-    fun fInsert (a, is) = Table.insert fTable ((ModSyn.currentMod (), a), is)
+    val fTable : bool MCTable.Table = MCTable.new (32)
+    fun fLookup a = MCTable.lookup fTable (ModSyn.currentMod (), a)
+    fun fInsert (a, is) = MCTable.insert fTable ((ModSyn.currentMod (), a), is)
 
     (*
        Freezing type families
@@ -221,14 +229,14 @@ struct
        Invariant: a, b families
     *)
     fun computeBelow (a, b) =
-        (reachable (b, a); memoInsert ((b,a), (false,!memoCounter)); false)
-	handle Reachable => (memoInsert ((b,a), (true, !memoCounter)); true)
+        (reachable (b, a); memoInsert ((b,a), (false, memoCounter())); false)
+	handle Reachable => (memoInsert ((b,a), (true, memoCounter())); true)
 
     fun below (a, b) =
         case memoLookup (b, a)
 	  of NONE => computeBelow (a, b)
            | SOME(true,c) => true	(* true entries remain valid *)
-           | SOME(false,c) => if c = !memoCounter then false
+           | SOME(false,c) => if c = memoCounter() then false
 			      else computeBelow (a, b) (* false entries are invalidated *)
 
     (* a <* b = true iff a is transitively and reflexively subordinate to b
@@ -245,7 +253,7 @@ struct
 
     fun addSubord (a, b) =
         if below (a, b) then ()
-	else if fGet b
+	else if (fGet b)
 	       (* if b is frozen and not already b #> a *)
 	       (* subordination would change; signal error *)
 	       then raise Error ("Freezing violation: "
@@ -267,7 +275,7 @@ struct
 	  val a's' = map expandFamilyAbbrevs a's
 	  val _ = aboveList := nil
           val curr = ModSyn.currentMod()
-	  val _ = Table.app (fn ((m, c),_) => if m = curr then addIfBelowEq a's' c else ()) soGraph;
+	  val _ = MCTable.app (fn ((m, c),_) => if m = curr then addIfBelowEq a's' c else ()) soGraph;
 	  val _ = List.app (fn b => fSet(b, false)) (!aboveList)
 	in
 	  !aboveList
@@ -299,13 +307,13 @@ struct
        the defGraph in on cids and not on (mid, cid) pairs. 
        --cs --fr Wed Jan 28 16:06:37 2009
     *)
-    val defGraph : (IntSet.intset) CidTable.Table = CidTable.new (32)
+    val defGraph : (IntSet.intset) CTable.Table = CTable.new (32)
 
     (* occursInDef a = true
        iff there is a b such that a #> b
     *)
     fun occursInDef a =
-        (case CidTable.lookup defGraph a
+        (case CTable.lookup defGraph a
 	   of NONE => false
             | SOME _ => true)
 
@@ -317,9 +325,9 @@ struct
        to record a #> b.
     *)
     fun insertNewDef (b, a) =
-        (case CidTable.lookup defGraph a
-	   of NONE => CidTable.insert defGraph (a, IntSet.insert (b, IntSet.empty))
-            | SOME(bs) => CidTable.insert defGraph (a, IntSet.insert (b, bs)))
+        (case CTable.lookup defGraph a
+	   of NONE => CTable.insert defGraph (a, IntSet.insert (b, IntSet.empty))
+            | SOME(bs) => CTable.insert defGraph (a, IntSet.insert (b, bs)))
 
     (* installDef (c) = ()
        Effect: if c is a type-level definition,
@@ -332,15 +340,23 @@ struct
 
     fun installDef c = installConDec (c, ModSyn.sgnLookup c)
 
-    fun installInclude(ModSyn.SigIncl from) =
-      Table.app (fn ((m, c), is) =>
-                    if m = from
-                    then (
-                       insertNewFam c; 
-                       IntSet.foldl  (fn (d, ()) => addSubord(c,d)) () is
-		    ) else ()
-                )
-                soGraph 
+    fun installInclude(from) =
+       let
+         (* for all type-level constant declarations with cid c declared, imported, or included in signature "from" ... *)
+         fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
+           of ModSyn.SymStr _ => ()
+            | ModSyn.SymCon (IntSyn.BlockDec _) => ()
+            | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
+                of IntSyn.Kind => (
+                     insertNewFam c;
+                     (* ... and all entries d below c in "from", add a subordination edge in the current module *)
+                     IntSet.foldl (fn (d, ()) => addSubord(c,d)) () (adjNodes(from, c))
+                   )
+                 | _ => ()
+              )
+       in
+         ModSyn.sgnAppI(from, copyEntry)
+       end
       
     (* checkNoDef a = ()
        Effect: raises Error(msg) if there exists a b such that b <# a
@@ -365,10 +381,11 @@ struct
 
        Effect: Empties soGraph, fTable, defGraph
     *)
-    fun reset () = (Table.clear soGraph;
-                    Table.clear fTable;
-		    MemoTable.clear memoTable;
-		    CidTable.clear defGraph)
+    fun reset () = (MCTable.clear soGraph;
+                    MCTable.clear fTable;
+		    MCCTable.clear memoTable;
+		    MTable.clear memoCounterTable; (* memoCounter was not reset before; looked like a bug --fr Jan 09 *)
+		    CTable.clear defGraph)
 
     (* 
        Subordination checking no longer traverses spines,
@@ -489,18 +506,18 @@ struct
     (* Reverse again --- do not sort *)
     (* Right now, Table.app will pick int order -- do not sort *)
     fun famsToString (bs, msg) =
-        IntSet.foldl (fn (a, msg) => IntSyn.conDecFoldName (ModSyn.sgnLookup a) ^ " " ^ msg) "\n" bs
+        IntSet.foldl (fn (a, msg) => (ModSyn.fullFoldName a) ^ " " ^ msg) "\n" bs
     (*
     fun famsToString (nil, msg) = msg
       | famsToString (a::AL, msg) = famsToString (AL, Names.qidToString (Names.constQid a) ^ " " ^ msg)
     *)
 
     fun showFam (a, bs) =
-        (print (IntSyn.conDecFoldName (ModSyn.sgnLookup a)
+        print ((ModSyn.fullFoldName a)
 		^ (if fGet a then " #> " else " |> ")
-		^ famsToString (bs, "\n")))
+		^ famsToString (bs, "\n"))
 
-    fun showOne m = Table.app (fn ((m', a), bs) => if m = m' then showFam (a, bs) else ()) soGraph;
+    fun showOne m = MCTable.app (fn ((m', a), bs) => if m = m' then showFam (a, bs) else ()) soGraph;
     fun show () = ModSyn.modApp (fn m => (case ModSyn.modLookup m 
 				           of ModSyn.SigDec (name) =>
 					      (print("signature " ^ Names.foldQualifiedName name ^ "\n");
