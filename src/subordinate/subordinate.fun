@@ -340,24 +340,6 @@ struct
 
     fun installDef c = installConDec (c, ModSyn.sgnLookup c)
 
-    fun installInclude(from) =
-       let
-         (* for all type-level constant declarations with cid c declared, imported, or included in signature "from" ... *)
-         fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
-           of ModSyn.SymStr _ => ()
-            | ModSyn.SymCon (IntSyn.BlockDec _) => ()
-            | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
-                of IntSyn.Kind => (
-                     insertNewFam c;
-                     (* ... and all entries d below c in "from", add a subordination edge in the current module *)
-                     IntSet.foldl (fn (d, ()) => addSubord(c,d)) () (adjNodes(from, c))
-                   )
-                 | _ => ()
-              )
-       in
-         ModSyn.sgnAppI(from, copyEntry)
-       end
-      
     (* checkNoDef a = ()
        Effect: raises Error(msg) if there exists a b such that b <# a
                or b <# a' for some a' < a in the current signature.
@@ -465,6 +447,24 @@ struct
 	  List.app (fn D => installDec D) Ds
 	end
 
+    fun installInclude(from) =
+       let
+         (* for all type-level constant declarations with cid c declared, imported, or included in signature "from" ... *)
+         fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
+           of ModSyn.SymStr _ => ()
+            | ModSyn.SymCon (IntSyn.BlockDec _) => ()
+            | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
+                of IntSyn.Kind => (
+                     insertNewFam c;
+                     (* ... and all entries d below c in "from", add a subordination edge in the current module *)
+                     IntSet.foldl (fn (d, ()) => addSubord(d,c)) () (adjNodes(from, c))
+                   )
+                 | _ => ()
+              )
+       in
+         ModSyn.sgnAppI(from, copyEntry)
+       end
+      
     (* Respecting subordination *)
 
     (* checkBelow (a, b) = () iff a <| b
@@ -504,7 +504,6 @@ struct
 
     (* Right now, AL is in always reverse order *)
     (* Reverse again --- do not sort *)
-    (* Right now, Table.app will pick int order -- do not sort *)
     fun famsToString (bs, msg) =
         IntSet.foldl (fn (a, msg) => (ModSyn.fullFoldName a) ^ " " ^ msg) "\n" bs
     (*

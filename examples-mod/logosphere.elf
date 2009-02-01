@@ -77,7 +77,7 @@
    P.o := P.o.			      
    P.=> := [x][y] x P.=> y.
    P.~ := [x] P.~ x.
-% true := [x] true x.   %%%%%% BUG
+ % true := [x] true x.   %%%%%% BUG
    true := [x] IL.true x.
    =>I := [A][B][D] IL.=>I D.
    =>E := [A][B][D][E] IL.=>E D E.

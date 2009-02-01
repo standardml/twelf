@@ -49,17 +49,15 @@
   test := [x] s''.test.
 }.
 
-%% testing includes
+%% testing includes and subordination
 %sig R' = {
   %include R.
   a : type.
-  d : R.a.
-  c : a -> R.a.
+  %% no subordination between R.a and R'.a
 }.
 
 %sig R'' = {
   %include R'.
-  d' : R'.a.
-  d : R.a.
+  f : R.a -> R'.a.   %% creates subordination
 }.
 

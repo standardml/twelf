@@ -23,4 +23,3 @@
   andEl   : ded (A and B) -> ded A.
   andEr   : ded (A and B) -> ded B.
 }.
-
