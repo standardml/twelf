@@ -123,7 +123,7 @@ struct
       end
   
   (* checks well-typedness condition for includes *)
-  fun checkModIncl(M.SigIncl m) = checkDomain m
+  fun checkModIncl(M.SigIncl (m,_)) = checkDomain m
 
   (* checks simple well-typedness conditions for structure declarations
      does not check:
@@ -133,7 +133,7 @@ struct
        will be checked during flattening
      postcondition: getInst yields all information that is needed to check the latter during flattening
   *)
-  fun checkStrDec(M.StrDec(_,_, dom, insts)) = (
+  fun checkStrDec(M.StrDec(_,_, dom, insts, _)) = (
         checkDomain(dom);
         checkIncludes(dom, M.currentMod());
         case findClash insts
@@ -237,7 +237,7 @@ struct
      this finds both explicit instantiations (c := e) and induced instantiations (s := mor in case c = s.c')
      in StrDefs, the instantiation is obtained by applying the definition of the structure to c
   *)
-  fun getInst(M.StrDec(_,_,_,insts), c, q) = getInst'(insts, c, q)
+  fun getInst(M.StrDec(_,_,_,insts, _), c, q) = getInst'(insts, c, q)
     | getInst(M.StrDef(_,_,_,mor), c, _) = SOME (applyMorph(cidToExp c, mor))
   
   (* flattens a structure by computing all generated declarations (the order is depth first declaration order)

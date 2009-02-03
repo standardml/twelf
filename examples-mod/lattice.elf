@@ -1,9 +1,9 @@
 %sig Order = {
-  %include FOL.
-  leq : FOL.i -> FOL.i -> FOL.o.  %infix none 4 leq.
-  refl : FOL.ded FOL.forall [x] (x leq x).
-  antisym : FOL.ded FOL.forall [x] (FOL.forall [y] (x leq y FOL.and y leq x FOL.=> x FOL.== y)).
-  trans : FOL.ded FOL.forall [x] (FOL.forall [y] (FOL.forall [z] (x leq y FOL.and y leq z FOL.=> x leq z))).
+  %include FOL %open i o forall ded == and =>.
+  leq : i -> i -> o.  %infix none 4 leq.
+  refl : ded forall [x] (x leq x).
+  antisym : ded forall [x] (forall [y] (x leq y and y leq x => x == y)).
+  trans : ded forall [x] (forall [y] (forall [z] (x leq y and y leq z => x leq z))).
 }.
 
 %view Opposite : Order -> Order = {
@@ -14,12 +14,12 @@
 }.
 
 %sig Semilattice = {
-  %include FOL.
+  %include FOL %open ded forall == <=>.
   %struct sgc : SemigroupCommut.
   %struct midem : MagmaIdempotent = {%struct mag := sgc.sg.mag.}.
   /\ = [x] [y] (x sgc.sg.mag.* y).    %infix none 5 /\. 
-  %struct ord : Order.
-  ax : FOL.ded FOL.forall [x] (FOL.forall [y] (x /\ y FOL.== x FOL.<=> x ord.leq y)).   
+  %struct ord : Order %open leq.
+  ax : ded forall [x] (forall [y] (x /\ y == x <=> x leq y)).
 }.
 
 %sig SemilatticeBounded = {
@@ -32,8 +32,8 @@
   %include FOL.
   %struct meet : Semilattice = {}.
   %struct join : Semilattice = {%struct ord := Opposite meet.ord.}.
-  /\ = [x][y] x meet.sgc.sg.mag.* y.
-  \/ = [x][y] x join.sgc.sg.mag.* y.
+  /\ = [x][y] x meet./\ y.
+  \/ = [x][y] x join./\ y.
 }.
 
 %sig LatticeBounded = {

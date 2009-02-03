@@ -171,18 +171,26 @@ struct
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
   in
 
-    (* @FR: need to check for already defined names *)
+     (* this must be replaced with the parsing method for qualified names -fr *)
+   fun parseQualifiedName (name : string) =
+       String.fields (fn c => c = #".") name
+   fun foldQualifiedName l = IDs.mkString(l,"",".","")
+
+   (* @FR: need to check for already defined names *)
     fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
-    fun installName(c : cid, l : string list) = SH.insert nameTable ((IDs.midOf c, l), c) 
+    fun installName(c : cid, l : string list) = SH.insert nameTable ((ModSyn.currentMod(), l), c) 
 
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
-    fun nameLookup(current : IDs.mid, cons : string list) : cid option = SH.lookup nameTable (current, cons)
+    fun nameLookup(m : IDs.mid, cons : string list) : cid option = SH.lookup nameTable (m, cons)
     fun fullNameLookup(mods : string list, cons : string list) =
        case modnameLookup(mods)
          of NONE => NONE
           | SOME m => nameLookup(m, cons)
-    
-    (* This function is called by and only by the parsing/reconcstruction algorithms when finding constant identifiers.
+    fun nameLookupWithError(m,q) = case nameLookup(m,q)
+      of SOME c => c
+       | NONE => raise Error("identifier " ^ foldQualifiedName q ^ " undefined")
+
+   (* This function is called by and only by the parsing/reconcstruction algorithms when finding constant identifiers.
        It should be defined in terms of the lookup functions above, and can be changed to change the namespace semantic.
        Current behaviour: The name [N_1,...,N_r] is resolved by trying in order
        - N_1. ... .N_r in current signature
@@ -207,8 +215,8 @@ struct
              of SOME c => SOME c
               | NONE => tryAll([name], names)
         end
-
-    (* installFixity (cid, fixity) = ()
+    
+   (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level
     *)
@@ -256,11 +264,6 @@ struct
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
     fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear fixityTable; CH.clear namePrefTable)
-
-    (* this must be replaced with the parsing method for qualified names -fr *)
-     fun parseQualifiedName (name : string) =
-        String.fields (fn c => c = #".") name
-     fun foldQualifiedName l = IDs.mkString(l,"",".","")
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name

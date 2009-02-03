@@ -8,38 +8,37 @@
 }.
 
 %sig IL = {
-  %struct P : P.
-  true : P.o -> type.
-  =>I : (true A -> true B) -> true (A P.=> B).
-  =>E : true (A P.=> B) -> true A -> true B.
-  ~I : ({p} true A -> true p) -> true (P.~ A).
-  ~E : true (P.~ A) -> true A -> true C.
-  ~~I : true A -> true (P.n A) = [D] (~I [p:P.o] [u: true (P.~ A)] (~E u D)).
+  %struct P : P %open o => ~ n.
+  true : o -> type.
+  =>I : (true A -> true B) -> true (A => B).
+  =>E : true (A => B) -> true A -> true B.
+  ~I : ({p} true A -> true p) -> true (~ A).
+  ~E : true (~ A) -> true A -> true C.
+  ~~I : true A -> true (n A) = [D] (~I [p:o] [u: true (~ A)] (~E u D)).
 }.
 
 %sig CL = {
-	 %struct P : P.
-       	 %struct IL : IL = {%struct P := P.}.
-         exm : IL.true (P.~ (P.~ A) P.=> A). 
+  %struct P : P %open o => ~ n.
+  %struct IL : IL = {%struct P := P.} %open true.
+  exm : true (~ (~ A) => A). 
 }.
 
 %view KOLM : CL -> IL = {
-   P.o := P.o.
-   P.=> := [x][y] ((P.n x) P.=> (P.n y)).
-   P.~ := [x] P.~ x.
-   IL.true := [x] true (P.n x).
+   o := o.
+   => := [x][y] ((n x) => (n y)).
+   ~ := [x] ~ x.
+   true := [x] true (n x).
    IL.=>I := [A][B][D] ~~I (=>I D).
    IL.=>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E  v E) u).
-   IL.~I := [A][D] ~I [q][u] ~E (D (P.~ A) u) u.
+   IL.~I := [A][D] ~I [q][u] ~E (D (~ A) u) u.
    IL.~E := [A][C][D][E] ~I [p][u] ~E D E .
    exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
 }.
 
-
 %view KOLMINV : IL -> CL = {
-   P.o := P.o.			      
-   P.=> := [x][y] x P.=> y.
-   P.~ := [x] P.~ x.
+   o := o.			      
+   => := [x][y] x => y.
+   ~ := [x] ~ x.
    true := [x] IL.true x.
    =>I := [A][B][D] IL.=>I D.
    =>E := [A][B][D][E] IL.=>E D E.

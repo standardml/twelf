@@ -18,22 +18,22 @@ struct
 
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
-  datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list)
+  datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * (IDs.Qid list)
                   | StrDef of string list * IDs.qid * IDs.mid * Morph
   datatype ModDec = SigDec of string list | ViewDec of string list * IDs.mid * IDs.mid
-  datatype ModIncl = SigIncl of IDs.mid
+  datatype ModIncl = SigIncl of IDs.mid * (IDs.Qid list)
 
   (* unifies constant and structure declarations and instantiations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
 
   fun modDecName (SigDec n) = n
     | modDecName (ViewDec(n,_,_)) = n
-  fun strDecName (StrDec(n, _, _, _)) = n
+  fun strDecName (StrDec(n, _, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _)) = n
   fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
-  fun strDecQid (StrDec(_, q, _, _)) = q
+  fun strDecQid (StrDec(_, q, _, _, _)) = q
     | strDecQid (StrDef(_, q, _, _)) = q
-  fun strDecDom (StrDec(_, _, m, _)) = m
+  fun strDecDom (StrDec(_, _, m, _, _)) = m
     | strDecDom (StrDef(_, _, m, _)) = m
 
   fun symInstCid(ConInst(c, _)) = c
@@ -250,7 +250,7 @@ struct
          ()
       end
 
-  fun inclAddC(SigIncl from) =
+  fun inclAddC(SigIncl (from, _)) =
      let
         val _ = if inSignature() then () else raise Error("include only allowed in signature")
         val to = currentMod()

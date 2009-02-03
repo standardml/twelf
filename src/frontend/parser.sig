@@ -51,7 +51,6 @@ sig
     | StrDec of ModExtSyn.strdec       (* -fr, module system *)
     | SymInst of ModExtSyn.syminst     (* -fr, module system *)
     | Include of ModExtSyn.modincl     (* -fr, module system *)
-    | Open of ModExtSyn.stropen        (* -fr, module system *)
     (* Further declarations to be added here *)
 
   val parseStream: TextIO.instream -> (fileParseResult * Paths.region) Stream.stream

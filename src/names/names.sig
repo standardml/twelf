@@ -47,7 +47,8 @@ sig
   (* map between global declaration ids and their local qualified names *)
   val installName : IDs.cid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
-  val nameLookupC : string list -> IDs.cid option            (* lookup in the current target signature *)
+  val nameLookupWithError : IDs.mid * string list -> IDs.cid   (* as above, but raise exception if undefined *)
+  val nameLookupC : string list -> IDs.cid option              (* lookup in the current target signature *)
 
   (* maps global declaration id's to their fixities, Nonfix if undefined *)
   val installFixity : IDs.cid * Fixity.fixity -> unit

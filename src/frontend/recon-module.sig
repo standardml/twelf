@@ -7,6 +7,8 @@ sig
 
   (* module or symbol level identifier *)
   type id = string list * Paths.region
+  (* list of ids to be opened *)
+  type openids = id list
   
   (* morphisms *)
   type morph = id list
@@ -17,7 +19,7 @@ sig
    | strinst of id * (morph       * Paths.region)
 
   (* structure declarations *)
-  datatype strdec = strdec of string * id * (syminst list)
+  datatype strdec = strdec of string * id * (syminst list) * openids
                   | strdef of string * (morph * Paths.region)
 
   (* begin of a module *)
@@ -25,10 +27,7 @@ sig
                     | viewbegin of string * id * id
 
   (* inclusion of a module *)  
-  datatype modincl = sigincl of id
-
-  (* open currently not supported *)
-  type stropen = unit
+  datatype modincl = sigincl of id * openids
 end;
 
 signature RECON_MODULE =

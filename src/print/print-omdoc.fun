@@ -314,7 +314,7 @@ struct
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          morphToString(mor) ^ nl_unind() ^ "</strass>"
 
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) =
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, _)) =
      let 
      	fun dolist(_, nil, _) = ""
            | dolist(f, hd::nil, nl) = f hd

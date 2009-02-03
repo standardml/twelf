@@ -143,6 +143,20 @@ struct
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
 
+  fun parseQualIdList'(f' as LS.Cons((L.DOT, _), _)) = (nil, f')
+    | parseQualIdList'(f') =
+       let
+          val (id, f') = parseQualId' f'
+	  val (ids, f') = parseQualIdList' f'
+       in
+          (id :: ids, f')
+       end
+
+  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (nil, f')
+    | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) = parseQualIdList' (LS.expose s')
+    | parseOpen'(LS.Cons ((t, r), s')) =
+             Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
+
   fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
      case LS.expose s'
         of LS.Cons ((L.ID (_, id), r1), s1') => (
@@ -153,9 +167,11 @@ struct
                      val (dom,f') = parseQualId'(f')
                      val (insts, f') = case f'
                          of LS.Cons((L.DOT,_),_) => (nil, f')
+			  | LS.Cons((L.OPEN,_),_) => (nil, f')
                           | _ => parseInstantiate'(#2 (parseEqual' f'))
+	             val (ids, f') = parseOpen' f'
                   in
-                     (E.strdec(id, dom, insts), f')
+                     (E.strdec(id, dom, insts, ids), f')
                   end
                | LS.Cons ((L.EQUAL, r2), s2') =>
                  let
@@ -172,8 +188,9 @@ struct
   fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
      let
         val (id, f') = parseQualId'(LS.expose s')
+	val (ids, f') = parseOpen' f'
      in
-       (E.sigincl id, f')
+       (E.sigincl (id, ids), f')
      end 
 
   (* ignoring thistoken *)

@@ -82,7 +82,6 @@ struct
     | StrDec of ModExtSyn.strdec
     | SymInst of ModExtSyn.syminst
     | Include of ModExtSyn.modincl
-    | Open of ModExtSyn.stropen
     | Use of string
     (* Further pragmas to be added later here *)
 
@@ -193,7 +192,6 @@ struct
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)(* -fr, module system *)
-      (* case for OPEN removed, -fr *)
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =

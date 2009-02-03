@@ -14,21 +14,21 @@ struct
   structure ExtSyn = ReconTerm'
 
   type id = string list * Paths.region
+  type openids = id list
   
   type morph = id list
   datatype syminst =
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
 
-  datatype strdec = strdec of string * id * (syminst list)
+  datatype strdec = strdec of string * id * (syminst list) * openids
                   | strdef of string * (morph * Paths.region)
 
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
   
-  datatype modincl = sigincl of id
+  datatype modincl = sigincl of id * openids
   
-  type stropen = unit
 (* end MODEXTSYN *)
 
 (* implementing the remaining declarations of RECON_MODULE *)
@@ -53,7 +53,7 @@ struct
           )
         | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
 
-  fun modnameLookupWithError expected (l : string list, r : Paths.region) =
+  fun modnameLookupWithError expected (l : IDs.Qid, r : Paths.region) =
      case Names.modnameLookup l
        of SOME m => (
            case (expected, ModSyn.modLookup m)
@@ -112,14 +112,16 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list),
+  (* @FR: what about strdef here? *)
+  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list, ids : openids),
                      l as Paths.Loc (fileName, r2)) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,l)) insts
+	val Ids = List.map (fn (cname,_) => cname) ids
     in
-    	ModSyn.StrDec([name], nil, Dom, Insts)
+    	ModSyn.StrDec([name], nil, Dom, Insts, Ids)
     end
     
    fun modbeginToModDec(sigbegin name) = ModSyn.SigDec [name]
@@ -131,10 +133,11 @@ struct
             ModSyn.ViewDec ([name], Dom, Cod)
          end
 
-   fun modinclToModIncl(sigincl name) =
+   fun modinclToModIncl(sigincl (sigid, openids)) =
       let
-      	 val m = modnameLookupWithError SIG name
+      	 val m = modnameLookupWithError SIG sigid
+	 val Openids = List.map (fn (cname,_) => cname) openids
       in
-      	 ModSyn.SigIncl m
+      	 ModSyn.SigIncl (m, Openids)
       end
 end (* end RECON_MODULE *)

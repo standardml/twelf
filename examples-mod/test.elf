@@ -51,13 +51,20 @@
 
 %% testing includes and subordination
 %sig R' = {
-  %include R.
-  a : type.
-  %% no subordination between R.a and R'.a
+  %include R .
+  a' : type.
+  %% no subordination between R.a and R'.a'
 }.
 
 %sig R'' = {
   %include R'.
-  f : R.a -> R'.a.   %% creates subordination
+  f : R.a -> R'.a'.   %% creates subordination
 }.
 
+%% testing opens
+%sig X = {
+  %include R %open a c.
+  d = c : a.
+  %struct s : S %open a' b'.
+  e = b' : a'.
+}.

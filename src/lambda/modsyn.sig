@@ -55,6 +55,7 @@ sig
     * IDs.qid                          (* list of structures via which it is imported *)
     * IDs.mid                          (* domain (= instantiated signature) *)
     * SymInst list                     (* instantiations *)
+    * (IDs.Qid list)                   (* list of imported names that are available without qualification *)
   | StrDef of
       string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)
@@ -84,6 +85,7 @@ sig
   
   datatype ModIncl
      = SigIncl of IDs.mid              (* included signature *)
+                * (IDs.Qid list)       (* constants in that signature that become available without qualification *)
 
 
   (* convenience methods to access components of declarations *)

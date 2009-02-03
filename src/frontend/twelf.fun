@@ -377,6 +377,18 @@ struct
        	  c
        end
 
+    (* auxiliary method shared by install1(StrDec _) and install1(ModIncl _) *)
+    fun installOpen(dom : IDs.mid, q : IDs.Qid, cont : (IDs.cid -> IDs.cid) option, r) =
+       let
+          val c = Names.nameLookupWithError(dom, q)
+	  val c' = case cont
+	     of NONE => c
+	      | SOME f => f c
+       in
+          Names.installName(c', [List.last q])
+       end
+       handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,msg))
+
     fun cidToString a = IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 
     fun invalidate uninstallFun cids msg =
@@ -1107,7 +1119,6 @@ struct
             (* print it *)
             val prefix = if (! Global.printFlat) then "% " else ""
             val _ = if ! Global.chatter >= 3 then msg (prefix ^ Print.strDecToString strDec ^ "\n") else ()
-            val region = r
             (* auxiliary function for printing debug info *)
             fun qidToString(q : IDs.qid) = 
                IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
@@ -1118,7 +1129,7 @@ struct
                	  (* normalize, double check, and install generated declaration *)
                	  val dn = Whnf.normalizeConDec d
 		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec dn else ()
-                  val c = installConDec IntSyn.Ordinary (dn, (fileName, NONE), region)
+                  val c = installConDec IntSyn.Ordinary (dn, (fileName, NONE), r)
                   (* copy fixity and name preferences from the original to the new declaration *)
                   val _ = case Names.fixityLookup c'
                             of Names.Fixity.Nonfix => ()
@@ -1137,17 +1148,20 @@ struct
             (* as callbackInstallConDec, but for structures *)
             fun callbackInstallStrDec(_, d : ModSyn.StrDec) =
                let
-               	  val s = installStrDec(d, region)
+               	  val s = installStrDec(d, r)
                	  val _ = msg ("% induced: " ^ (Print.strDecToString d) ^ "\n")
                   val _ = if ! Global.chatter < 10 then () else
                   	msg("% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")
                in
                	  s
                end
-            (* flatten the structure, i.e., generate all induced declarations
-               full type-checking of structure declaration done in this function *)
+            (* flatten the structure, i.e., generate all induced declarations, full type-checking of structure declaration done in this function *)
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+            val _ = case strDec
+	       of ModSyn.StrDec(_,_,dom,_, openids) =>
+	           (List.map (fn q => installOpen(dom,q, SOME(fn c' => valOf (ModSyn.structMapLookup(c,c'))), r)) openids; ())
+	        | ModSyn.StrDef _ => ()
          in
             ()
          end
@@ -1190,22 +1204,20 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl as ModSyn.SigIncl from = ReconModule.modinclToModIncl incl
+            val Incl as ModSyn.SigIncl (from, openids) = ReconModule.modinclToModIncl incl
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val _ = Elab.checkModIncl Incl
                     handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
             val _ = ModSyn.inclAddC(Incl)
                     handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
-	    val _ = Subordinate.installInclude from
+	    val _ = List.map (fn q => installOpen(from,q, NONE, r)) openids
+	    val _ = Subordinate.installInclude from (* no exception should be possible *)
             val _ = if !Global.chatter >= 3
                     then msg (Print.modInclToString(Incl) ^ "\n")
                     else ()
          in
             ()
          end
-
-      (* currently unused case of the module system *)
-      | install1 (fileName, declr as (Parser.Open _, r)) = ()
 
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing

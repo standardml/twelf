@@ -1,38 +1,20 @@
 % Algebraic hierarchy
 
-
-%sig FOL = {
-  i      : type.
-  o      : type.
-  forall : (i -> o) -> o.
-  not    : o -> o.
-  and    : o -> o -> o.         %infix none 3 and.
-  =>     : o -> o -> o.         %infix none 2 =>.
-  <=>    : o -> o -> o
-         = [x][y]((x => y) and (y => x)).
-                                %infix none 1 <=>.
-  ==     : i -> i -> o.         %infix none 4 ==.
-  !=     : i -> i -> o
-         = [x][y] not (x == y). %infix none 4 !=.
-  ded : o -> type.              %prefix 0 ded.
-}.
-
-
 %sig Magma = {
-  %include FOL.
+  %include FOL %open i.
   * : FOL.i -> FOL.i -> FOL.i.    %infix none 10 *.
 }.
 
 %sig MagmaCommut = {
-  %include FOL.
-  %struct mag : Magma. 
-  commut : FOL.ded FOL.forall [x] FOL.forall [y] (x mag.* y FOL.== y mag.* x).
+  %include FOL %open ded forall ==.
+  %struct mag : Magma %open *. 
+  commut : ded forall [x] forall [y] (x * y == y * x).
 }.
 
 %sig Semigroup = {
-  %include FOL.
-  %struct mag : Magma.
-  assoc : FOL.ded FOL.forall [x] FOL.forall [y] FOL.forall [z] ((x mag.* y) mag.* z FOL.== x mag.* (y mag.* z)).
+  %include FOL %open ded forall ==.
+  %struct mag : Magma %open *.
+  assoc : ded forall [x] forall [y] forall [z] ((x * y) * z == x * (y * z)).
 }.
 
 %sig SemigroupCommut = {
@@ -42,53 +24,53 @@
 }.
 
 %sig MagmaDistrib = {
-  %include FOL.
+  %include FOL %open ded forall ==.
   %struct mag1 : Magma.
   %struct mag2 : Magma.
   + = [x] [y] x mag1.* y.
   * = [x] [y] x mag2.* y.
   %infix none 5 +.
   %infix none 10 *.    
-  dist : FOL.ded FOL.forall [x] (FOL.forall [y] (FOL.forall [z] ((x + y) * z FOL.== x * z + y * z))).
+  dist : ded forall [x] (forall [y] (forall [z] ((x + y) * z == x * z + y * z))).
 }.
 
 %sig MagmaIdempotent = {
-  %include FOL.
-  %struct mag : Magma. 
-  idem : FOL.ded FOL.forall [x] (x mag.* x FOL.== x). 
+  %include FOL %open ded forall ==.
+  %struct mag : Magma %open *. 
+  idem : ded forall [x] (x * x == x). 
 }.
 
 %sig MagmaIdentity = {
-  %include FOL.
-  %struct mag : Magma. 
+  %include FOL %open ded forall ==.
+  %struct mag : Magma %open *. 
   e : FOL.i.
-  idenRight : FOL.ded FOL.forall [x] (x mag.* e FOL.== x).
-  idenLeft : FOL.ded FOL.forall [x] (e mag.* x FOL.== x).
+  idenRight : ded forall [x] (x * e == x).
+  idenLeft : ded forall [x] (e * x == x).
 }.
 
 %sig Monoid = {
-  %include FOL.
+  %include FOL %open ded forall ==.
   %struct sg : Semigroup.
-  %struct mid : MagmaIdentity = {%struct mag := sg.mag.}. 
+  %struct mid : MagmaIdentity = {%struct mag := sg.mag.}  %open * e.
   e = mid.e.
 }.
 
 %sig MonoidCommut = {
-  %include FOL.
+  %include FOL %open ded forall ==.
   %struct mon : Monoid.
   %struct mc : MagmaCommut = {%struct mag := mon.sg.mag.}.
 }.
 
 %sig MagmaInverse = {
-  %include FOL.
-  %struct mid : MagmaIdentity.
+  %include FOL %open ded forall ==.
+  %struct mid : MagmaIdentity  %open * e.
   inv : FOL.i -> FOL.i.
-  invRight : FOL.ded FOL.forall [x] (x mid.mag.* (inv x)  FOL.==  mid.e).
-  invLeft : FOL.ded FOL.forall [x] ((inv x) mid.mag.* x  FOL.==  mid.e). 
+  invRight : ded forall [x] (x * (inv x) == e).
+  invLeft : ded forall [x] ((inv x) * x == e). 
 }. 
 
 %sig Group = {
-  %include FOL.
+  %include FOL %open ded forall ==.
   %struct mon : Monoid.
   %struct minv : MagmaInverse = {%struct mid := mon.mid.}.
   inv = minv.inv.
@@ -105,58 +87,42 @@
 
 %sig Ring = {
   %include FOL.
-  %struct ga : GroupAbelian.
-  %struct sg : Semigroup.
+  %struct ga : GroupAbelian %open + 0 -.
+  %struct sg : Semigroup %open *.
   %struct md : MagmaDistrib = {%struct mag1 := ga.g.mon.sg.mag. %struct mag2 := sg.mag.}.
 }.
 
 %sig RingCommut = {
   %include FOL.
-  %struct r : Ring.
+  %struct r : Ring %open + 0 - *.
   %struct mc : MagmaCommut = {%struct mag := r.sg.mag.}.
 }.
 
 %sig RingUnit = {
   %include FOL.
-  %struct r : Ring.
+  %struct r : Ring %open + 0 - *.
   %struct mon : Monoid = {%struct sg := r.sg.}.
   1 = mon.e.
 }.
 
 %sig RingUnitCommut = {
   %include FOL.
-  %struct ru : RingUnit.
+  %struct ru : RingUnit %open + 0 - * 1.
   %struct mc : MagmaCommut = {%struct mag := ru.mon.sg.mag.}.
 }.
 
 %sig IntegralDomain = {
-  %include FOL.
-  %struct ru : RingUnit.
-  noZeroDiv : FOL.ded
-    FOL.forall [x] FOL.forall [y] (
-          x  FOL.!=  ru.r.ga.0
-        FOL.and
-          y  FOL.!=  ru.r.ga.0
-      FOL.=>
-        x ru.r.sg.mag.* y  FOL.!=  ru.r.ga.0 ).
+  %include FOL %open ded forall != and =>.
+  %struct ru : RingUnit %open + 0 - * 1.
+  noZeroDiv : ded forall [x] forall [y] (x != 0  and  y != 0  => x * y != 0).
 }.  
 
 %sig RingDivision = {
-  %include FOL.
-  %struct ru : RingUnit.
-  inv : FOL.i -> FOL.i.
-  invLeft : FOL.ded
-    FOL.forall [x] (
-        x FOL.!= ru.r.ga.0
-      FOL.=>
-        x ru.mon.sg.mag.* (inv x)  FOL.==  ru.1
-    ). 
-  invRight : FOL.ded
-    FOL.forall [x] (
-        x FOL.!= ru.r.ga.0
-      FOL.=>
-        (inv x) ru.mon.sg.mag.* x  FOL.==  ru.1
-    ).
+  %include FOL %open ded i forall != == =>.
+  %struct ru : RingUnit %open + 0 - * 1.
+  inv : i -> i.
+  invLeft : ded forall [x] (x != 0  =>  x * (inv x) == 1). 
+  invRight : ded forall [x] (x != 0  => (inv x) * x == 1).
 }.
 
 %sig Field = {

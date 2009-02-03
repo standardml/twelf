@@ -920,7 +920,13 @@ in
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec name) = "}. % end signature " ^ (Names.foldQualifiedName name)
     | modEndToString(ModSyn.ViewDec(name, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
-  fun modInclToString(ModSyn.SigIncl m) = "%include " ^ (ModSyn.modFoldName m) ^ "."
+  fun openToString(nil) = ""
+    | openToString(l) =
+       let fun doList(nil) = ""
+             | doList(hd :: tl) =  " " ^ (Names.foldQualifiedName hd) ^ (doList tl)
+       in " %open" ^ (doList l)
+       end
+  fun modInclToString(ModSyn.SigIncl (m, openids)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString openids) ^ "."
   fun morphToString(ModSyn.MorStr(c)) =
       ModSyn.modFoldName (IDs.midOf c) ^ "." ^ ModSyn.symFoldName c
     | morphToString(ModSyn.MorView(m)) =
@@ -932,9 +938,9 @@ in
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(ModSyn.StrInst(c, mor)) =
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts)) = (
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, openids)) = (
      "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
-     IDs.mkString(List.map instToString insts, "{", " ", "}.")
+     IDs.mkString(List.map instToString insts, "{", " ", "}") ^ (openToString openids) ^ "."
     )
    | strDecToString(ModSyn.StrDef(name, _, dom, def)) = (
      "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
