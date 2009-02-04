@@ -23,12 +23,14 @@
   %struct s'': S = {a' := b''. %struct r' := r''.}.
 }.
 
-%% testing a deep instantiation, i.e, r''.c := f''', also try removing the instantiation of a''
+%% testing a deep instantiation r''.c := f''', and a structure definition s''' = T..s'' t'''.
+%% also try removing the instantiation of a''
 %% note that the order of instantiations in a structure is not relevant
 %sig U = {
   a''' : type.
   f''' : a''' -> a'''.
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
+  %struct s''' = T..s'' t'''.
 }.
 
 %% testing views
@@ -58,7 +60,7 @@
 
 %sig R'' = {
   %include R'.
-  f : R.a -> R'.a'.   %% creates subordination
+  f : R..a -> R'..a'.   %% creates subordination
 }.
 
 %% testing opens

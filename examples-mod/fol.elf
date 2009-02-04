@@ -24,7 +24,7 @@
   andEr   : ded (A and B) -> ded B.
   
   eqrefl  : ded X == X.
-  eqsymm  : ded X == Y -> ded Y == X.
+  eqsym   : ded X == Y -> ded Y == X.
   eqtrans : ded X == Y -> ded Y == Z -> ded X == Z.
   eqcong  : ded X == Y -> ded (F X) == (F Y).
 }.

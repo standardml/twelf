@@ -38,7 +38,7 @@ struct
   val parseColon' = parseSingleToken'(L.COLON, ":")
   val parseDot' = parseSingleToken'(L.DOT, ".")
   
-  fun parseQualId'(f') :  ID * Front =
+  fun parseQualId'(f') : ID * Front =
     let
        val ((ids, (L.ID (_, id), r)), f' as LS.Cons((_,r'),s')) = ParseTerm.parseQualId' (f')
     in

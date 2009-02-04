@@ -173,10 +173,12 @@ struct
      case symLookup(c)
        of SymCon condec => IntSyn.conDecName condec
         | SymStr strdec => strDecName strdec
-  fun symFoldName(c) = IDs.mkString(symName c ,"",".","") 
+  val sep = "."
+  val Sep = ".."
+  fun symFoldName(c) = IDs.mkString(symName c ,"",sep,"") 
   fun modName m = modDecName (modLookup m)
-  fun modFoldName m = IDs.mkString(modName m ,"",".","")
-  fun fullFoldName(c) = modFoldName(IDs.midOf c) ^ "." ^ (symFoldName c)
+  fun modFoldName m = IDs.mkString(modName m ,"",sep,"")
+  fun fullFoldName(c) = modFoldName(IDs.midOf c) ^ Sep ^ (symFoldName c)
  
   fun modApp(f : IDs.mid -> unit) =
     let

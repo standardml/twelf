@@ -190,17 +190,18 @@ local
     | argNumber (FX.Prefix _) = 1
     | argNumber (FX.Postfix _) = 1
 
-  (* formats a qualified name "names" as a "sep"-separated list, "f" formats the individual components of "names" -fr *)
+  (* formats a qualified name "names" as a "sep/Sep"-separated list, "f" formats the individual components of "names" -fr *)
   val sep = "."
+  val Sep = ".."
   fun fmtConstPath (f : string -> (string * int), (mods : (string list) option, names : string list)) =
      let
+     	fun fold l = foldl (fn (x,y) => y @ [sym sep, x]) (List.take(l,1)) (tl l)
      	val formattedMods = case mods
      	                      of NONE => nil
-     	                       | SOME l => List.map (Str0 o Symbol.module) l
-     	val formattedNames = List.map (Str0 o f) names
-     	val formatted = formattedMods @ formattedNames
+     	                       | SOME l => (fold (List.map (Str0 o Symbol.module) l)) @ [sym Sep]
+     	val formattedNames = fold (List.map (Str0 o f) names)
      in
-        F.HVbox (foldl (fn (x,y) => y @ [sym sep, x]) (List.take(formatted,1)) (tl formatted))
+        F.HVbox (formattedMods @ formattedNames)
      end
 
   fun parmDec (D::L, 1) = D

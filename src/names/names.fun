@@ -171,50 +171,49 @@ struct
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
   in
 
-     (* this must be replaced with the parsing method for qualified names -fr *)
+   (* this must be replaced with the parsing method for qualified names -fr *)
    fun parseQualifiedName (name : string) =
        String.fields (fn c => c = #".") name
    fun foldQualifiedName l = IDs.mkString(l,"",".","")
+   fun splitName names =
+      let fun aux(left, nil) = (left, nil)
+            | aux(left, name :: names) =
+               if name = "" then (left, names) else aux(left @ [name], names)
+      in  aux(nil, names)
+      end
+ 
 
    (* @FR: need to check for already defined names *)
     fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
     fun installName(c : cid, l : string list) = SH.insert nameTable ((ModSyn.currentMod(), l), c) 
 
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
-    fun nameLookup(m : IDs.mid, cons : string list) : cid option = SH.lookup nameTable (m, cons)
-    fun fullNameLookup(mods : string list, cons : string list) =
+    val nameLookup' : IDs.mid * string list -> cid option = SH.lookup nameTable
+    fun fullNameLookup'(mods : string list, cons : string list) =
        case modnameLookup(mods)
          of NONE => NONE
-          | SOME m => nameLookup(m, cons)
+          | SOME m => nameLookup'(m, cons)
+
+    fun nameLookup(current, names) =
+       let
+       	  val (left, right) = splitName names
+       in
+       	  if right = nil
+       	  then nameLookup'(current, left)
+       	  else case fullNameLookup'(left, right)
+       	         of NONE => NONE
+       	          | SOME c => (case ModSyn.symLookup c
+       	                         of ModSyn.SymCon _ => if ModSyn.modInclCheck(IDs.midOf c, current)
+       	                                               then SOME c
+       	                                               else NONE
+       	                          | ModSyn.SymStr _ => SOME c
+       	                          | _ => NONE
+       	                       )
+        end
+    fun nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
     fun nameLookupWithError(m,q) = case nameLookup(m,q)
       of SOME c => c
-       | NONE => raise Error("identifier " ^ foldQualifiedName q ^ " undefined")
-
-   (* This function is called by and only by the parsing/reconcstruction algorithms when finding constant identifiers.
-       It should be defined in terms of the lookup functions above, and can be changed to change the namespace semantic.
-       Current behaviour: The name [N_1,...,N_r] is resolved by trying in order
-       - N_1. ... .N_r in current signature
-       - N_2. ... .N_r in signature N_1
-       - ...
-       - N_r in signature N_1. ... .N_{r-1}
-       precondition: names != nil
-       postcondition: if nameLookupC(names) = SOME c,
-                      then c is defined in, imported into, or included into the current signature.
-    *)
-    fun nameLookupC(name :: names : string list) =
-       let
-       	  val current = ModSyn.currentTargetSig()
-       	  fun tryAll(_, nil) = NONE
-       	    | tryAll(mods, con :: cons) = case fullNameLookup(mods, con :: cons)
-       	         of NONE => tryAll(mods @ [con], cons)
-       	          | SOME c => if ModSyn.modInclCheck(IDs.midOf c, current)
-       	                      then SOME c
-       	                      else NONE
-        in
-           case nameLookup(current, name :: names)
-             of SOME c => SOME c
-              | NONE => tryAll([name], names)
-        end
+       | NONE => raise Error("undeclared identifier " ^ foldQualifiedName q)
     
    (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,

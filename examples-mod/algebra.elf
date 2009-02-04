@@ -6,7 +6,7 @@
 }.
 
 %view OppositeMagma : Magma -> Magma = {
-  * := [x][y] x * y.
+  * := [x][y] y * x.
 }.
 
 %sig MagmaCommut = {
@@ -16,8 +16,8 @@
 }.
 
 %view OppositeMagmaCommut : MagmaCommut -> MagmaCommut = {
-  %struct mag = OppositeMagma mag.
-  commut := FOL.forallI [x] FOL.forallI [y] (FOL.eqsym (FOL.forallE x FOL.forallE y commut)).
+  %struct mag := OppositeMagma mag.
+  commut := FOL..forallI [x] FOL..forallI [y] (FOL..forallE x (FOL..forallE y commut)).
 }.
 
 %sig Semigroup = {
@@ -27,8 +27,8 @@
 }.
 
 %view OppositeSemigroup : Semigroup -> Semigroup = {
-  %struct mag = OppositeMagma mag.
-  assoc := FOL.forallI [z] FOL.forallI [y] FOL.forallI [x] (FOL.eqsym (FOL.forallE x FOL.forallE y FOL.forallE z assoc)).
+  %struct mag := OppositeMagma mag.
+  assoc := FOL..forallI [z] FOL..forallI [y] FOL..forallI [x] (FOL..eqsym (FOL..forallE z (FOL..forallE y (FOL..forallE x assoc)))).
 }.
 
 %sig SemigroupCommut = {
@@ -52,7 +52,7 @@
 %sig RightIdentity = {
   %include FOL %open ded forall ==.
   %struct mag : Magma %open *. 
-  e : FOL.i.
+  e : FOL..i.
   iden : ded forall [x] (x * e == x).
 }.
 
@@ -78,18 +78,18 @@
 
 %sig Group = {
   %include FOL %open ded forall ==.
-  %struct mon : Monoid.
+  %struct mon : Monoid %open * e.
   %struct minv : RightInverse = {%struct rid := mon.rid.}.
   inv = minv.inv.
 }.
 
 %sig GroupAbelian = {
   %include FOL.
-  %struct g : Group.
+  %struct g : Group %open * e inv.
   %struct mc : MagmaCommut = {%struct mag := g.mon.sg.mag.}.
-  + = [x][y] x g.mon.sg.mag.* y.    %infix none 5 +.  
-  0 = g.mon.mid.e.
-  - = g.inv.  
+  + = [x][y] x * y.    %infix none 5 +.  
+  0 = e.
+  - = inv.  
 }.
 
 %sig MagmaDistrib = {
@@ -119,8 +119,8 @@
 %sig RingUnit = {
   %include FOL.
   %struct r : Ring %open + 0 - *.
-  %struct mon : Monoid = {%struct sg := r.sg.}.
-  1 = mon.e.
+  %struct mon : Monoid = {%struct sg := r.sg.} %open e.
+  1 = e.
 }.
 
 %sig RingUnitCommut = {

@@ -16,7 +16,7 @@ sig
   datatype Token =
       EOF				(* end of file or stream, also `%.' *)
     | DOT				(* `.' *)
-    | PATHSEP                           (* `.' between <id>s *)
+    | PATHSEP | NAMESEP                 (* `.' and `..' between <id>s *)
     | COLON				(* `:' *)
     | LPAREN | RPAREN			(* `(' `)' *)
     | LBRACKET | RBRACKET		(* `[' `]' *)

@@ -23,7 +23,7 @@ struct
   datatype Token =
       EOF				(* end of file or stream, also `%.' *)
     | DOT				(* `.' *)
-    | PATHSEP                           (* `.' between <id>s *)
+    | PATHSEP | NAMESEP                 (* `.' and `..' between <id>s *)
     | COLON				(* `:' *)
     | LPAREN | RPAREN			(* `(' `)' *)
     | LBRACKET | RBRACKET		(* `[' `]' *)
@@ -325,8 +325,10 @@ struct
     and lexContinueQualId' (j) =
           if char (j) = #"."
             then if isIdChar (char (j+1))
-                   then Stream.Cons ((PATHSEP, P.Reg (j,j+1)), lexContinue (j+1))
-                 else Stream.Cons ((DOT, P.Reg (j,j+1)), lexContinue (j+1))
+                 then Stream.Cons ((PATHSEP, P.Reg (j,j+1)), lexContinue (j+1))
+                 else if char(j+1) = #"."
+                      then Stream.Cons ((NAMESEP, P.Reg (j,j+2)), lexContinue (j+2))
+                      else Stream.Cons ((DOT, P.Reg (j,j+1)), lexContinue (j+1))
           else lexContinue' (j)
 
   in
@@ -343,6 +345,7 @@ struct
 
   fun toString' (DOT) = "."
     | toString' (PATHSEP) = "."
+    | toString' (NAMESEP) = ".."
     | toString' (COLON) = ":"
     | toString' (LPAREN) = "("
     | toString' (RPAREN) = ")"
