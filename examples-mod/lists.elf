@@ -1,0 +1,23 @@
+%sig N = { 
+  nat : type.
+  z : nat.
+  s : nat -> nat. 
+}.
+
+%sig L = {
+  elt : type.
+  list: type.
+  nil : list.
+  cons : elt -> list -> list.
+  append : list -> list -> list -> type.
+  appnil : append L nil L.
+  appcons: append L (cons E M) (cons E N)
+        <- append L M N.
+}.
+
+%sig NL = {
+  %include N. 
+  %struct L : L = {elt := N.nat.}.
+  123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
+  %solve d : L.append 123 123 X.
+}.
