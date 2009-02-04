@@ -1171,8 +1171,9 @@ struct
                             of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                              | ModSyn.ViewDec(_, d, c) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
-                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
-               val _ = ReconTerm.checkErrors(r)
+                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error *)
+               val _ = Elab.checkSymInst(Inst)
+                       handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(Inst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                val _ = if !Global.chatter >= 3

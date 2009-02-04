@@ -72,12 +72,10 @@
    exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
 }.
 
-
 %view KOLMINV : IL -> CL = {
    P.o := P.o.			      
    P.=> := [x][y] x P.=> y.
    P.~ := [x] P.~ x.
- % true := [x] true x.   %%%%%% BUG
    true := [x] IL.true x.
    =>I := [A][B][D] IL.=>I D.
    =>E := [A][B][D][E] IL.=>E D E.

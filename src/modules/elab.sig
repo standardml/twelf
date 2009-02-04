@@ -4,13 +4,18 @@ sig
   exception UndefinedMorph of IDs.mid * IDs.cid    (* raised if partially defined views cannot be applied *)
 
   (* type checking modular data types *)
+  (* checks a ModDec *)
   val checkModDec : ModSyn.ModDec -> unit
   (* checks a SigIncl *)
   val checkModIncl: ModSyn.ModIncl -> unit
   (* checks a StrDec *)
   val checkStrDec : ModSyn.StrDec -> unit
+  (* checks a SymInst *)
+  val checkSymInst: ModSyn.SymInst -> unit
   (* checks a morphism against domain and codomain signature *)
-  val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> unit 
+  val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> unit
+  (* infers domain and codomain, raises Error if not composable *)
+  val reconMorph  : ModSyn.Morph -> IDs.mid * IDs.mid
 
   (* called to flatten a structure declaration
      - computes all declarations imported by the structure to the codomain signature (in the order declared in the domain)

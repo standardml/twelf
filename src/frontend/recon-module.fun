@@ -80,10 +80,11 @@ struct
         else ModSyn.MorComp(morphToMorph(nextCod, (init, r0)), link)
      end
 
-  fun syminstToSymInst(dom : IDs.mid, cod : IDs.mid, inst : syminst, l as Paths.Loc (fileName, r)) =
+  fun syminstToSymInst(dom : IDs.mid, cod : IDs.mid, inst : syminst, l) =
      case inst
         of coninst((names, r), (term, r')) =>
              let
+             	val rr = Paths.join(r,r')
              	val Con = nameLookupWithError CON (dom, names, r)
              	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
              	val expType =
@@ -92,16 +93,20 @@ struct
              	  else SOME (Elab.applyMorph(ModSyn.constType Con,
              	                             ModSyn.MorView(ModSyn.currentMod())))     (* instantiation in a view *)
              	       handle Elab.UndefinedMorph(_,c) =>
-             	          error(Paths.join(r,r'), "instantiation for " ^ ModSyn.symFoldName Con ^
+             	          error(rr, "instantiation for " ^ ModSyn.symFoldName Con ^
              	          " must occur after (possibly induced) instantiation for " ^ ModSyn.symFoldName c)
              	val job = case expType
              	  of NONE => ExtSyn.jterm term
              	   | SOME V => ExtSyn.jof'(term, V)
-		val Term = case ExtSyn.recon job
-		   of ExtSyn.JTerm((U, _), _, _) => #2 (Abstract.abstractDecImp U)
-		    | ExtSyn.JOf((U,_), _, _) => #2 (Abstract.abstractDecImp U)
+		val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon job
+                val _ = ExtSyn.checkErrors(rr)
+		val (impl, Term) = Abstract.abstractDecImp U
+		val _ = if impl > 0 then error(r', "implicit arguments not allowed in instantiation") else ()
+		(* val expImpl = ModSyn.constImp Con *)
              in
-             	ModSyn.ConInst(Con, Term)
+		ModSyn.ConInst(Con, Term)
+		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
+		                                                                         ", declaration " ^ Int.toString expImpl) *)
              end
         
          | strinst((names, r), mor) =>
@@ -112,9 +117,7 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-  (* @FR: what about strdef here? *)
-  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list, ids : openids),
-                     l as Paths.Loc (fileName, r2)) = 
+  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list, ids : openids), l) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
@@ -123,6 +126,13 @@ struct
     in
     	ModSyn.StrDec([name], nil, Dom, Insts, Ids)
     end
+    | strdecToStrDec(strdef(name : string, morr), l) =
+       let
+       	  val Mor = morphToMorph(ModSyn.currentTargetSig(), morr)
+       	  val (Dom, _) = Elab.reconMorph Mor (* @FR: taking domain of first link is enough here *)
+       in
+       	  ModSyn.StrDef([name], nil, Dom, Mor)
+       end
     
    fun modbeginToModDec(sigbegin name) = ModSyn.SigDec [name]
      | modbeginToModDec(viewbegin(name, dom, cod)) =

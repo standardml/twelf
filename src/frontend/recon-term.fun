@@ -996,7 +996,8 @@ struct
                    in
                      delayAmbiguous (G, U', r, "Omitted " ^
                        (case Apx.whnfUni L
-                          of Apx.Level 2 => "type"
+                          of Apx.Level 1 => "term" (* added this because I got Match exception when implementing module system -fr Jan 09 *)
+                           | Apx.Level 2 => "type"
                            | Apx.Level 3 => "kind") ^ " is ambiguous");
                      U'
                    end
@@ -1316,10 +1317,7 @@ struct
         in
 
 	  JTerm ((U1, oc1), V2, Type) 
-	  (* was : JOf ((U1, oc1), (V2, oc1), Type) 
-
-               -cs,fr Tue Jan 27 16:31:09 2009
-          *)	   
+	  (* was : JOf ((U1, oc1), (V2, oc1), Type) -cs,fr Tue Jan 27 16:31:09 2009 *)	   
         end
 
     fun recon' (j) =

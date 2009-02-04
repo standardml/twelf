@@ -15,7 +15,7 @@ struct
      (only needed as an optimization to return ConDefs if possible) *)
   fun checkStrict(U : I.Exp, V : I.Exp) : bool = (Strict.check((U,V), NONE); true) handle Strict.Error _ => false
   (* check whether U has type/kind V *)
-  (* pre: NAE *)  
+  (* pre: NAE *)
   fun checkType(U : I.Exp, V : I.Exp) : bool = (TypeCheck.check(U,V); true) handle TypeCheck.Error _ => false
   (* check whether U has type/kind V *)
   (* pre: NAE *)  
@@ -29,7 +29,7 @@ struct
   
   exception Error of string                       (* raised on type-checking errors *)
   exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
-  exception FixMe                                 (* @CS: raised for unimplemented cases *)
+  exception FixMe                                 (* raised for unimplemented cases *)
 
 
   (********************** Module level type checking **********************)
@@ -165,9 +165,9 @@ struct
      	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
      	  | A(I.Redex(U, S)) = I.Redex(A U, ASpine S)
      	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
-(*     	  | A(I.EVar(E, C, U, Constr)) = raise FixMe *)
+(*     	  | A(I.EVar(E, C, U, Constr)) = impossible by precondition *)
           | A(I.EClo(U,s)) = I.EClo(A U, ASub s)
-(*          | A(I.AVar(I)) = raise FixMe *)
+(*          | A(I.AVar(I)) = impossible by precondition *)
           | A(I.FgnExp(cs, F)) = raise FixMe
           | A(I.NVar n) = I.NVar n
         and AHead(I.BVar k) = headToExp(I.BVar k)
@@ -189,15 +189,13 @@ struct
           | AFront(I.Block b) = I.Block (ABlock b)
           | AFront(I.Undef) = I.Undef
         and ADec(I.Dec(x,V)) = I.Dec(x, A V)
-(*          | ADec(I.BDec(v,(l,s))) = I.BDec(v,(raise FixMe, ASub s)) *)
+(*          | ADec(I.BDec(v,(l,s))) = impossible by precondition *)
           | ADec(I.ADec(v,d)) = I.ADec(v,d)
           | ADec(I.NDec v) = I.NDec v
         and ABlock(I.Bidx i) = I.Bidx i
-(*          | ABlock(I.LVar(b,s,(c,s'))) = raise FixMe *)
+(*          | ABlock(I.LVar(b,s,(c,s'))) = impossible by precondition  *)
           | ABlock(I.Inst l) = I.Inst (List.map A l)
-(*        and AConstr(I.Solved) = I.Solved
-          | AConstr(I.Eqn(G, U1, U2)) = raise FixMe
-          | AConstr(I.FgnCnstr(cs, fgnC)) = I.FgnCnstr(cs, fgnC) *)
+(*      and AConstr(_) = impossible by precondition  *)
         (* apply morphism to constant *)
         and ACid(c) =
            if not(IDs.midOf c = dom)
@@ -368,5 +366,23 @@ struct
            end
      in
         M.sgnApp(dom, flatten1)
+     end
+
+(********************** another type checking method **********************)
+  fun checkSymInst(M.ConInst(con, term)) =
+     let
+     	val v = M.currentMod()
+     	val typ = M.constType con
+     	val expTyp = applyMorph(typ, M.MorView v)
+     in
+     	if checkType(term, expTyp)
+     	then ()
+        else raise Error("type mismatch")
+     end
+    | checkSymInst(M.StrInst(str, mor)) =
+     let
+     	val expDom = M.strDecDom (M.structLookup str)
+     in
+     	checkMorph(mor, expDom, M.currentTargetSig())
      end
 end
