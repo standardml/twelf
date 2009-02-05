@@ -1,0 +1,18 @@
+%sig Category = {
+  %include DFOL %open Sort ^ forall ==.
+  obj : Sort.
+  Obj = ^ obj.
+  Mor = [x][y] (^ (mor x y))
+  id : Mor A A.
+  ; : Mor A B -> mor B C -> mor A C.  %infix 15 left ;.
+  
+  assoc : ded forall [f] forall [g] forall [h] (f ; g) ; h == f ; (g ; h).
+  idenRight : ded forall [f] f ; id == f.
+  idenLeft : ded forall [f] id ; f == f.
+}.
+
+%sig CatLog = {
+  %include Category %open Obj Mor.
+    
+}.
+
