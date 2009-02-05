@@ -10,9 +10,3 @@
   idenRight : ded forall [f] f ; id == f.
   idenLeft : ded forall [f] id ; f == f.
 }.
-
-%sig CatLog = {
-  %include Category %open Obj Mor.
-    
-}.
-
