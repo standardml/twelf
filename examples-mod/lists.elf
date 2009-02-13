@@ -10,14 +10,20 @@
   nil : list.
   cons : elt -> list -> list.
   append : list -> list -> list -> type.
-  appnil : append L nil L.
-  appcons: append L (cons E M) (cons E N)
+  appnil : append nil L L.
+  appcons: append (cons E L) M (cons E N)
         <- append L M N.
+  %block e : block {x : elt}.
+  %worlds (e) (append +L +M -N).
+  %total append +L +M -N.
 }.
 
 %sig NL = {
-  %include N. 
+  %struct N : N = {}. 
   %struct L : L = {elt := N.nat.}.
+
   123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
   %solve d : L.append 123 123 X.
+
+  % %total L.append +L +M -N. preserved
 }.
