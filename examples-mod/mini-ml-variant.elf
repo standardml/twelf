@@ -60,7 +60,7 @@
 %sig PAIR = {
   %struct core : CORE %open tp exp of eval tps.
 
-  cross : tp -> tp -> tp.			% Pairs
+  cross : tp -> tp -> tp.
   pair : exp -> exp -> exp.
   fst  : exp -> exp.
   snd  : exp -> exp.
@@ -163,6 +163,9 @@
 
 % Recursion
 %sig REC = {
+
+  %struct core : CORE %open tp exp of eval tps.
+
   fix  : (exp -> exp) -> exp.
 
   tp_fix : of (fix E) T
