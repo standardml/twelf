@@ -1,0 +1,56 @@
+%sig CORE = {
+   nat : type.
+   z: nat.
+   s : nat -> nat.
+   a: type.   
+   thm : a -> nat -> type.
+   lem : nat -> a -> type.
+}.
+
+%sig m1 = {
+   %struct C : CORE %open nat z s a thm lem.
+   c : a.
+   lem_case : lem N c.
+   %mode lem +N -A.
+   %worlds () (lem _ _).
+   %total D (lem D _).
+
+   thm_case : thm c z
+	       <- lem z c.
+   %mode thm +A -N.
+   %worlds () (thm _ _).
+   %total D (thm D _).
+}.
+
+
+%sig m2 = {
+   %struct C : CORE %open nat z s a thm lem.
+   b : a.
+   lem_case : lem N b.
+   %mode lem +N -A.
+   %worlds () (lem _ _).
+   %total D (lem D _).
+
+   thm_case : thm b z
+	       <- lem z b.
+   %mode thm +A -N.
+   %worlds () (thm _ _).
+   %total D (thm D _).
+}.
+
+
+%sig merge = {
+   %struct C : CORE %open nat z s a thm lem.
+   %struct M1 : m1 = {%struct C := C.}.
+   %struct M2 : m2 = {%struct C := C.}.
+
+   %mode lem +N -A.
+   %worlds () (lem _ _).
+   %total D (lem D _).
+
+   %mode thm +A -N.
+   %worlds () (thm _ _).
+   %total D (thm D _).
+}.
+
+

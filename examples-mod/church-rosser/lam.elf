@@ -2,8 +2,8 @@
 %%% Author: Frank Pfenning
 
 %sig LC = {
-term : type.  %name term M.
+  term : type.  %name term M.
 
-lam : (term -> term) -> term.
-app : term -> term -> term.
+  lam : (term -> term) -> term.
+  app : term -> term -> term.
 }.
