@@ -1,0 +1,85 @@
+%sig TT = {
+  tp : type.
+  tm : tp -> type.        %prefix 1 tm.
+
+  === : tp -> tp -> type. %infix none 3 ===.
+  refl  : A === A.
+  sym   : A === B -> B === A.
+  trans : A === B -> B === C -> A === C.
+  cong  : A === B -> {F : tp -> tp} (F A) === (F B).
+}.
+
+%sig UNIT = {
+  %struct TT : TT %open tp tm.
+
+  unit' : tp.
+  unit = tm unit'.
+  ! : unit.
+}.
+
+%sig VOID = {
+  %struct TT : TT %open tp tm.
+
+  void' : tp.
+  void = tm void'.
+  !! : void -> tm A.
+}.
+  
+%sig IDENT = {
+  %struct TT : TT %open tp tm.
+
+  =='   : tm A -> tm A -> tp.         %infix none 10 =='.
+  ==    = [a][b] (tm (a ==' b)).      %infix none 10 ==.
+  refl  : X == X.
+  sym   : X == Y -> Y == X.
+  subsTerm : X == Y -> {F : tm A -> tm B} (F X) == (F Y).
+  subsType : X == Y -> {F : tm A -> tp} (F X) === (F Y).
+  eq   : A TT.=== B -> A -> B.
+  eqid : {p : A === B} {a : tm A} a == (eq (TT.sym p) (eq p a)).
+
+  trans : X == Y -> Y == Z -> X == Z
+        = [p][q] (eq (subsType q ([a] X == a)) p).
+}.
+  
+%sig DUNION = {
+  %struct TT : TT %open tp tm.
+
+  +' : tp -> tp -> tp.        %infix none 5 +'.
+  +  = [a][b] (tm a +' b).    %infix none 5 +.
+  i : tm A -> tm (A + B).
+  j : tm B -> tm (A + B).
+  case : tm (A + B) -> (tm A -> tm C) -> (tm B -> tm C) -> tm C.
+}.
+  
+%sig PI = {
+  %struct TT : TT %open tp tm.
+
+  P : (tm A -> tp) -> tp.
+  lam : ({a : tm A} tm (B a)) -> tm (P [x] (B x)).
+  @ : tm (P [x] (B x)) -> {a : tm A} -> tm (B a).  %infix left 15 @.
+  =>' = [a][b] P [x:tm a] b.                       %infix none 10 =>'.
+  => = [a][b] (tm a =>' b).                        %infix none 10 =>.
+}.
+  
+%sig SIGMA = {
+  %struct TT : TT %open tp tm.
+
+  S : (tm A -> tp) -> tp.
+  pair : {a : tm A} tm (B a) -> tm (S [x] (B x)).
+  pi1 : tm (S [x : tm A] (B x)) -> tm A.
+  pi2 : {u : tm (S [x : tm A] (B x))} tm (B (pi1 u)).
+  *' = [a][b] S [x:tm a] b.                          %infix none 5 *'.
+  * = [a][b] (tm a *' b).                            %infix none 5 *.
+}.
+
+%sig MLTT = {
+  %struct TT : TT %open tp tm.
+  %struct U : UNIT   = {%struct TT := TT.}.
+  %struct V : VOID   = {%struct TT := TT.}.
+  %struct I : IDENT  = {%struct TT := TT.}.
+  %struct D : DUNION = {%struct TT := TT.}.
+  %struct S : SIGMA  = {%struct TT := TT.}.
+  %struct P : PI     = {%struct TT := TT.}.
+  -' = [a] (a P.=>' V.void').
+  - = [a] tm (-' a).
+}.
