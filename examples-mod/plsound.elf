@@ -23,8 +23,8 @@
 
 %sig PLMOD = {
   %include PL %open ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType.
-  1 = FOL..true.
-  0 = FOL..false.
+  1 = true.
+  0 = false.
   desig0 : - (ded' 0).
   desig1 : ded 1.
   boole : {A} (A ==' 1 + A ==' 0).
