@@ -293,14 +293,16 @@ struct
            It would be nicer to put it on toplevel, but that would be less efficient. *)
         fun translateConDec(c', I.ConDec(name', q', imp', stat', typ', uni')) =
               let
-                 val typ = applyMorph(typ', M.MorStr(S))
+                 val typ = normalize (applyMorph(typ', M.MorStr(S)))
                  val q = (S, c') :: (applyStructMap q')
               in
                  case getInst(Str, c', q')
                    of SOME def =>
-                         if checkType(def, typ)
-                         then I.AbbrevDef(Name @ name', q, imp', def, typ, uni') (* @FR: can this be a ConDef? *)
-                         else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
+                       let val defn = normalize def
+                       in if checkType(defn, typ)
+                          then I.AbbrevDef(Name @ name', q, imp', defn, typ, uni') (* @FR: can this be a ConDef? *)
+                          else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
+                       end
                     | NONE =>
                       I.ConDec(Name @ name', q, imp', stat', typ, uni')
               end

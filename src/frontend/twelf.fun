@@ -1139,7 +1139,7 @@ struct
                              | SOME pref => Names.installNamePref(c, pref)
                   (* print out generated declaration *)
                   val prefix = if (! Global.printFlat) then "" else "% induced: "
-                  val _ = (msg (prefix ^ (Print.conDecToString dn) ^ "\n")) handle e => raise e
+                  val _ = (msg (prefix ^ (Print.conDecToString dn) ^ "\n"))
                   val _ = if ! Global.chatter < 10 then () else
                   	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid dn) ^ "\n")
                in
