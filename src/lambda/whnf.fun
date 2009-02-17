@@ -367,6 +367,8 @@ struct
           Lam (decSub (D, s), 
 	       etaExpand' (Redex (EClo (U, shift), 
 				  App (Root (BVar (1), Nil), Nil)), whnfExpandDef (V, dot1 s)))
+      | etaExpand' (U, (Uni _, s)) = U   (* since we allow type level definitions... 
+					    Tue Feb 17 16:25:18 2009 -cs *)
 
     (* etaExpandRoot (Root(H, S)) = U' where H = c or H = d
 
