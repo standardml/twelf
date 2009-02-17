@@ -52,29 +52,29 @@
   impI := [A][B][p: ded A -> ded B] (
              true-ded (impTrue 
                (MLTT..case (boole A)
-                  [q : A == 1] (MLTT..inj2 (ded-true (p (true-ded q))))
-                  [q : A == 0](MLTT..inj1 q)
+                  ([q : A == 1] MLTT..inj2 (ded-true (p (true-ded q))))
+                  ([q : A == 0] MLTT..inj1 q)
                )
              )
           ).
   impE := [A][B][p : ded (A imp B)][q : ded A] (
              true-ded (
                 MLTT..D.case (boole B)
-                   [r : B == 1] r
-                   [r : B == 0] (MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
+                   ([r : B == 1] r)
+                   ([r : B == 0] MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
              )
           ).
   notI := [p : ded A -> {B} ded B] (
              MLTT..D.case (boole A)
-                [q : A == 1] (p (true-ded q) (not A))
-                [q : A == 0] (true-ded (notTrue q))
+                ([q : A == 1] p (true-ded q) (not A))
+                ([q : A == 0] true-ded (notTrue q))
           ).
-  notE := [p : ded A] [q : ded (not A)] [B] (MLTT..!! (contra (notFalse (ded-true p)) (ded-true q))).
+  notE := ([p : ded A] [q : ded (not A)] [B] MLTT..!! (contra (notFalse (ded-true p)) (ded-true q))).
   tnd := [A] true-ded (
                impTrue (
                  MLTT..case (boole A)
-                    [p : A == 1] (MLTT..inj2 p)
-                    [p : A == 0] (MLTT..inj1 (notFalse (notTrue p)))
+                    ([p : A == 1] MLTT..inj2 p)
+                    ([p : A == 0] MLTT..inj1 (notFalse (notTrue p)))
                )
              ).
 }.
