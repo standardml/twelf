@@ -50,10 +50,12 @@
 	     <- tps D1 P1 (tp_s Q1')
 	     <- tps D3 (P3 V1 Q1') Q3.
 
+%{
   %worlds () (tps D _ _).
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.
 
 % Pairs
@@ -89,10 +91,12 @@
   tps_snd  : tps (ev_snd D1) (tp_snd P1) Q2
 	      <- tps D1 P1 (tp_pair Q2 Q1).
 
+%{
   %worlds () (tps D _ _).
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.
 
 % Functions
@@ -122,10 +126,12 @@
 	    <- tps D2 P2 Q2
 	    <- tps D3 (Q1' V2 Q2) Q3.
 
+%{
   %worlds () (tps D _ _).
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.
 
 % Definitions
@@ -155,10 +161,12 @@
   tps_letn : tps (ev_letn D2) (tp_letn P2 P1) Q2
 	    <- tps D2 P2 Q2.
 
+%{
   %worlds () (tps D _ _).
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.
 
 % Recursion
@@ -177,10 +185,12 @@
   tps_fix : tps (ev_fix D1) (tp_fix P1) Q1
 	    <- tps D1 (P1 _ (tp_fix P1)) Q1.
 
+%{
   %worlds () (tps D _ _).
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.
 
 %sig MINIML = {
@@ -192,6 +202,7 @@
   %struct D : DEF = {%struct core := core.}.
   %struct R : REC = {%struct core := core.}.
 
+%{
   %%% Evaluation
   %block l : some {T:tp} block {x:exp} {d:of x T}.
   %worlds (l) (of E T).
@@ -204,4 +215,5 @@
   %terminates D (tps D _ _). 
   %covers tps +D +P -Q.
   %total D (tps D P _).
+}%
 }.

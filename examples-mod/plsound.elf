@@ -22,7 +22,7 @@
 }.
 
 %sig PLMOD = {
-  %include PL %open ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType.
+  %include PL %open ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType MLTT..@.
   1 = true.
   0 = false.
   desig0 : - (ded' 0).
@@ -39,16 +39,16 @@
                      ([q : A == 0] (MLTT..!! (desig0 @ (MLTT..I.eq (subsType q ded') p))))
                  ).
   true-ded : A == 1 -> ded A
-           = [p] (MLTT..I.eq (MLTT..sym (subsType p ded')) desig).
+           = [p] (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1).
   cons  : - (0 ==' 1)
-        = [p : 0 == 1] (desig0 @ (MLTT..I.eq (MLTT..sym (subsType p ded')) desig1)).
-  contra : A == 0 -> A == 1 -> MLTT..void.
-         = [p][q] (cons @ (MLTT..I.trans p (MLTT..I.sym q))).
+        = MLTT..lam [p : 0 == 1] (desig0 @ (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1)).
+  contra : A == 0 -> A == 1 -> MLTT..void
+         = [p][q] (cons @ (MLTT..I.trans (MLTT..I.sym p) q)).
 }.
 
 %view PLsound : PLPF -> PLMOD = {
-  trueI := truth.
-  falseE := [p : ded false][A] (MLTT..!! (desig0 @ p))
+  trueI := desig1.
+  falseE := [p : ded false][A] (MLTT..!! (desig0 @ p)).
   impI := [A][B][p: ded A -> ded B] (
              true-ded (impTrue 
                (MLTT..case (boole A)
@@ -56,14 +56,14 @@
                   [q : A == 0](MLTT..inj1 q)
                )
              )
-          )
+          ).
   impE := [A][B][p : ded (A imp B)][q : ded A] (
              true-ded (
                 MLTT..D.case (boole B)
                    [r : B == 1] r
                    [r : B == 0] (MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
              )
-          )
+          ).
   notI := [p : ded A -> {B} ded B] (
              MLTT..D.case (boole A)
                 [q : A == 1] (p (true-ded q) (not A))
@@ -76,5 +76,5 @@
                     [p : A == 1] (MLTT..inj2 p)
                     [p : A == 0] (MLTT..inj1 (notFalse (notTrue p)))
                )
-             )
+             ).
 }.
