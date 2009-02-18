@@ -1,20 +1,19 @@
 % Kolmogorov translation
 
-%sig CORE = { 
+%sig JUDGMENTS = { 
    o : type.
    true : o -> type.
 }.	        
 
 %sig IMP = { 
-   %struct C : CORE %open o true.
+   %struct J : JUDGMENTS %open o true.
   =>: o -> o -> o.    %infix left 10 =>.
   =>I : (true A -> true B) -> true (A => B).
   =>E : true (A => B) -> true A -> true B.
-
 }.
 
 %sig NEG = {
-   %struct C : CORE %open o true.
+   %struct J : JUDGMENTS %open o true.
   ~ : o -> o.
   n =  [p] (~ (~ p)).
   ~I : ({p} true A -> true p) -> true (~ A).
@@ -23,40 +22,68 @@
 }.
 
 %sig IL = { 
-   %struct C : CORE %open o true.
-   %struct I : IMP  = { %struct C := C.} %open => =>I =>E.
-   %struct N : NEG  = { %struct C := C.} %open ~ n ~I ~E ~~I. 
+   %struct J : JUDGMENTS %open o true.
+   %struct I : IMP  = { %struct J := J.} %open => =>I =>E.
+   %struct N : NEG  = { %struct J := J.} %open ~ n ~I ~E ~~I. 
 }.
 
 %sig CL = {
-  %include IL  %open o true => =>I =>E ~ n ~I ~E ~~I.
-  exm : true (~ (~ A) => A). 
+   %struct IL : IL %open o true => =>I =>E ~ n ~I ~E ~~I.
+   exm : true (~ (~ A) => A). 
 }.
 
-
-%view KOLMINV : IL -> CL = {
-   o := o.			      
-   => := [x][y] x => y.
-   ~ := [x] ~ x.
-   true := [x] true x.
-   =>I := [A][B][D] =>I D.
-   =>E := [A][B][D][E] =>E D E.
-   ~I := [A][D] ~I D.
-   ~E := [A][C][D][E] ~E D E.
+%view KOLMJ : JUDGMENTS -> IL = {
+  o := o.
+  true :=  [x] true (n x).
 }.
 
+%view KOLMN : NEG -> IL = {
+  %struct  J := KOLMJ.				
+  ~ := [x] ~ x.
+  ~I := [A][D] ~I [q][u] ~E (D (~ A) u) u.
+  ~E := [A][C][D][E] ~I [p][u] ~E D E .
+}.
+
+%view KOLMI : IMP -> IL = {
+  %struct  J := KOLMJ.				
+  => := [x][y] ((n x) => (n y)).
+  =>I := [A][B][D] ~~I (=>I D).
+  =>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E v E) u).
+}.
 
 %view KOLM : CL -> IL = {
-   o := o.
-   => := [x][y] ((n x) => (n y)).
-   ~ := [x] ~ x.
-   true := [x] true (n x).
-   =>I := [A][B][D] ~~I (=>I D).
-   =>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E v E) u).
-   ~I := [A][D] ~I [q][u] ~E (D (~ A) u) u.
-   ~E := [A][C][D][E] ~I [p][u] ~E D E .
-   exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
+  %struct IL.J := KOLMJ.
+  %struct IL.I := KOLMI.
+  %struct IL.N := KOLMN.
+  exm :=  [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
 }.
+
+%view KOLMJinv : JUDGMENTS -> CL = {
+  o := o.
+  true :=  [x] true x.
+}.
+
+%view KOLMNinv : NEG -> CL = {
+  %struct J := KOLMJinv.				      
+  ~ := [x] ~ x.
+  ~I := [A][D] ~I D.
+  ~E := [A][C][D][E] ~E D E.
+}.
+
+
+%view KOLMIinv : IMP -> CL = {
+  %struct J := KOLMJinv.
+  => := [x][y] x => y.
+  =>I := [A][B][D] =>I D.
+  =>E := [A][B][D][E] =>E D E.
+}.
+
+%view KOLMILinv : IL -> CL = {
+  %struct J := KOLMJinv.
+  %struct I := KOLMIinv.
+  %struct N := KOLMNinv.
+}.
+
 
 
 % Old code below.
