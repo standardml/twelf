@@ -1,5 +1,65 @@
 % Kolmogorov translation
 
+%sig CORE = { 
+   o : type.
+   true : o -> type.
+}.	        
+
+%sig IMP = { 
+   %struct C : CORE %open o true.
+  =>: o -> o -> o.    %infix left 10 =>.
+  =>I : (true A -> true B) -> true (A => B).
+  =>E : true (A => B) -> true A -> true B.
+
+}.
+
+%sig NEG = {
+   %struct C : CORE %open o true.
+  ~ : o -> o.
+  n =  [p] (~ (~ p)).
+  ~I : ({p} true A -> true p) -> true (~ A).
+  ~E : true (~ A) -> true A -> true B.
+  ~~I : true A -> true (n A) = [D] (~I [p:o] [u: true (~ A)] (~E u D)).
+}.
+
+%sig IL = { 
+   %struct C : CORE %open o true.
+   %struct I : IMP  = { %struct C := C.} %open => =>I =>E.
+   %struct N : NEG  = { %struct C := C.} %open ~ n ~I ~E ~~I. 
+}.
+
+%sig CL = {
+  %include IL  %open o true => =>I =>E ~ n ~I ~E ~~I.
+  exm : true (~ (~ A) => A). 
+}.
+
+
+%view KOLMINV : IL -> CL = {
+   o := o.			      
+   => := [x][y] x => y.
+   ~ := [x] ~ x.
+   true := [x] true x.
+   =>I := [A][B][D] =>I D.
+   =>E := [A][B][D][E] =>E D E.
+   ~I := [A][D] ~I D.
+   ~E := [A][C][D][E] ~E D E.
+}.
+
+
+%view KOLM : CL -> IL = {
+   o := o.
+   => := [x][y] ((n x) => (n y)).
+   ~ := [x] ~ x.
+   true := [x] true (n x).
+   =>I := [A][B][D] ~~I (=>I D).
+   =>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E v E) u).
+   ~I := [A][D] ~I [q][u] ~E (D (~ A) u) u.
+   ~E := [A][C][D][E] ~I [p][u] ~E D E .
+   exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
+}.
+
+
+% Old code below.
 %sig P = {
   o: type.
   =>: o -> o -> o.    %infix left 10 =>.
@@ -8,6 +68,7 @@
 }.
 
 %sig IL = {
+	     
   %struct P : P %open o => ~ n.
   true : o -> type.
   =>I : (true A -> true B) -> true (A => B).
@@ -35,28 +96,5 @@
    exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
 }.
 
-
-%view KOLM : CL -> IL = {
-   o := true.
-   => := [x][y] true.
-   ~ := [x] true.
-   true := [x] true (n x).
-   IL.=>I := [A][B][D] ~~I (=>I D).
-   IL.=>E := [A][B][D][E] ~I [p][u] ~E D (~I [q][v] ~E (=>E  v E) u).
-   IL.~I := [A][D] ~I [q][u] ~E (D (~ A) u) u.
-   IL.~E := [A][C][D][E] ~I [p][u] ~E D E .
-   exm := [A] ~I [p] [u] ~E u (=>I [u] ~I [p] [v] ~E u (~I [q][w] ~E w v)).
-}.
-
-%view KOLMINV : IL -> CL = {
-   o := o.			      
-   => := [x][y] x => y.
-   ~ := [x] ~ x.
-   true := [x] IL.true x.
-   =>I := [A][B][D] IL.=>I D.
-   =>E := [A][B][D][E] IL.=>E D E.
-   ~I := [A][D] IL.~I D.
-   ~E := [A][C][D][E] IL.~E D E.
-}.
 
 
