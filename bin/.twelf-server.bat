@@ -1,3 +1,4 @@
 @echo off
-%SML @SMLload=%TWELFDIR/bin/.heap/twelf-server \
-     @SMLdebug=/dev/null
+SET SML=sml
+SET TWELFDIR=C:\Program Files\Twelf\
+%SML% @SMLload="%TWELFDIR%bin\.heap\twelf-server"
