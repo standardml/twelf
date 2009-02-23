@@ -53,7 +53,7 @@
 
 %% testing includes and subordination
 %sig R' = {
-  %include R .
+  %include R.
   a' : type.
   %% no subordination between R.a and R'.a'
 }.

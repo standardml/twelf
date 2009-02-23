@@ -183,9 +183,22 @@ struct
       end
  
 
-   (* @FR: need to check for already defined names *)
-    fun installModname(m : mid, l : string list) = MH.insert modnameTable (l,m)
-    fun installName(c : cid, l : string list) = SH.insert nameTable ((ModSyn.currentMod(), l), c) 
+    fun installModname(m : mid, l : string list) =
+       case MH.insertShadow modnameTable (l,m)
+         of NONE => ()
+          | SOME e => (
+             MH.insert modnameTable e; (* roll back insertShadow *)
+             raise Error("module name " ^ foldQualifiedName l ^ " already declared")
+            )
+   (* @FR: currently shadowing is disallowed completely,
+      but for backwards compatibility symbol level shadowing in the toplevel signature is needed *)
+    fun installName(c : cid, l : string list) =
+       case SH.insertShadow nameTable ((ModSyn.currentMod(), l), c)
+         of NONE => ()
+          | SOME e => (
+              SH.insert nameTable e; (* roll back insertShadow *)
+              raise Error("symbol name " ^ foldQualifiedName l ^ " already declared")
+            )
 
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
     val nameLookup' : IDs.mid * string list -> cid option = SH.lookup nameTable

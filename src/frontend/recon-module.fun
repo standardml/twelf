@@ -86,6 +86,7 @@ struct
              let
              	val rr = Paths.join(r,r')
              	val Con = nameLookupWithError CON (dom, names, r)
+             	val _ = if (IDs.midOf Con = dom) then () else error(r, "instantiation of included symbol not allowed")
              	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
              	val expType =
              	  if ModSyn.inSignature()

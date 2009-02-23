@@ -1130,13 +1130,16 @@ struct
                	  val dn = Whnf.normalizeConDec d
 		  val _ = if ! Global.doubleCheck then TypeCheck.checkConDec dn else ()
                   val c = installConDec IntSyn.Ordinary (dn, (fileName, NONE), r)
-                  (* copy fixity and name preferences from the original to the new declaration *)
+                  (* copy fixity, name preferences, mode from the original to the new declaration *)
                   val _ = case Names.fixityLookup c'
                             of Names.Fixity.Nonfix => ()
                              | fix => Names.installFixity(c, fix)
                   val _ = case Names.namePrefLookup c'
                             of NONE => ()
                              | SOME pref => Names.installNamePref(c, pref)
+                  val _ = case ModeTable.modeLookup c'
+                            of NONE => ()
+                             | SOME mode => ModeTable.installMode(c, mode)
                   (* print out generated declaration *)
                   val prefix = if (! Global.printFlat) then "" else "% induced: "
                   val _ = (msg (prefix ^ (Print.conDecToString dn) ^ "\n"))
