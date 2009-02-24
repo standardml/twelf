@@ -78,8 +78,8 @@
   %struct V : VOID   = {%struct TT := TT.} %open void void' !!.
   %struct I : IDENT  = {%struct TT := TT.} %open == ==' subsTerm subsType.
   %struct D : DUNION = {%struct TT := TT.} %open + +' inj1 inj2 case.
-  %struct S : SIGMA  = {%struct TT := TT.} %open S pair pi1 pi2.
-  %struct P : PI     = {%struct TT := TT.} %open P lam @.
-  -' = [a] (a P.=>' V.void').
+  %struct SIG : SIGMA  = {%struct TT := TT.} %open S pair pi1 pi2.
+  %struct PI : PI     = {%struct TT := TT.} %open P lam @.
+  -' = [a] (a PI.=>' V.void').
   - = [a] tm (-' a).
 }.

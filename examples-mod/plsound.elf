@@ -22,12 +22,14 @@
 }.
 
 %sig PLMOD = {
-  %include PL %open ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType MLTT..@.
-  1 = true.
-  0 = false.
+  %include PL %open o ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType MLTT..@.
+  1 : o.
+  0 : o.
   desig0 : - (ded' 0).
   desig1 : ded 1.
   boole : {A} (A ==' 1 + A ==' 0).
+  trueTrue : true == 1.
+  falseFalse : false == 0.
   impTrue : A ==' 0 + B ==' 1 -> (A imp B) == 1.
   impFalse: A == 1 -> B == 0 -> (A imp B) == 0.
   notTrue : A == 0 -> (not A) == 1.
@@ -47,8 +49,8 @@
 }.
 
 %view PLsound : PLPF -> PLMOD = {
-  trueI := desig1.
-  falseE := [p : ded false][A] (MLTT..!! (desig0 @ p)).
+  trueI := true-ded trueTrue.
+  falseE := [p : ded false][A] (MLTT..!! (contra falseFalse (ded-true p))).
   impI := [A][B][p: ded A -> ded B] (
              true-ded (impTrue 
                (MLTT..case (boole A)
