@@ -2,11 +2,12 @@
   %include DFOL %open Sort ^ forall ==.
   obj : Sort.
   Obj = ^ obj.
+  mor : Obj -> Obj -> Sort.
   Mor = [x][y] (^ (mor x y))
   id : Mor A A.
-  ; : Mor A B -> mor B C -> mor A C.  %infix 15 left ;.
+  ; : Mor A B -> Mor B C -> Mor A C.  %infix 15 left ;.
   
-  assoc : ded forall [f] forall [g] forall [h] (f ; g) ; h == f ; (g ; h).
-  idenRight : ded forall [f] f ; id == f.
-  idenLeft : ded forall [f] id ; f == f.
+  assoc : |- forall [f] forall [g] forall [h] (f ; g) ; h == f ; (g ; h).
+  idenRight : |- forall [f] f ; id == f.
+  idenLeft : |- ded forall [f] id ; f == f.
 }.
