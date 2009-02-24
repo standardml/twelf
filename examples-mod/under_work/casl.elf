@@ -1,5 +1,7 @@
 sort : type.                        % type of sorts
-subsort : sort -> sort -> type.     % subsorting predicate
+subsort : sort -> sort -> type.     % subsorting predicate, reflexive and transitive
+ssrefl : subsort A A.
+sstrans : subsort A B -> subsort A C -> subsort A C.
 tm : sort -> type.                  % type of terms of a sort
 o : type.                           % type of formulas
 
