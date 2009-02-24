@@ -1,0 +1,15 @@
+sort : type.                        % type of sorts
+subsort : sort -> sort -> type.     % subsorting predicate
+tm : sort -> type.                  % type of terms of a sort
+o : type.                           % type of formulas
+
+existsunique : (tm A -> o) -> o.    % unique existence
+eeq : tm A -> tm A -> o.            % existential equality (equal and defined)
+eq  : tm A -> tm A -> o.            % equality (possibly undefined)
+
+defined : tm A -> o.                % definedness
+in : tm A -> sort -> o.             % extrinsic typing, decidably equivalent to true or false
+if : o -> tm A -> tm A -> tm A.     % if then else
+
+cast : tm B -> subsort A B -> tm A. % (partial) downcast from type to sub type
+
