@@ -35,6 +35,7 @@ struct
   (********************** Module level type checking **********************)
   
   (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
+  (* @FR: must use inclusion relation to determine composability *)
   fun reconMorph(M.MorComp(mor1,mor2)) =
         let
            val (d1,c1) = reconMorph mor1
@@ -54,6 +55,7 @@ struct
            (dom, cod)
         end
   (* checks the judgment |- mor : dom -> cod *)
+  (* @FR: must use inclusion relation *)
   fun checkMorph(mor, dom, cod) =
      if reconMorph mor = (dom, cod)
      then ()
