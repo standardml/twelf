@@ -148,12 +148,12 @@
                    ([r : B == 0] MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
              )
           ).
-  notI := [p : ded A -> {B} ded B] (
+  notI := [A][p : ded A -> {B} ded B] (
              MLTT..D.case (boole A)
                 ([q : A == 1] p (true-ded q) (not A))
                 ([q : A == 0] true-ded (notTrue q))
           ).
-  notE := ([p : ded A] [q : ded (not A)] [B] MLTT..!! (contra (notFalse (ded-true p)) (ded-true q))).
+  notE := [A] ([p : ded A] [q : ded (not A)] [B] MLTT..!! (contra (notFalse (ded-true p)) (ded-true q))).
   tnd := [A] true-ded (
                impTrue (
                  MLTT..case (boole A)
