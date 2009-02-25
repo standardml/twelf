@@ -1,9 +1,6 @@
 %sig PLBase = {
-  %include MLTT %open tp tm.
-  o'    : tp.
-  o     = tm o'.
-  ded'  : o -> tp.
-  ded   = [a] tm (ded' a).
+  o     : type.
+  ded   : o -> type.
 }.
 
 %sig Truth = {
@@ -104,7 +101,10 @@
 }.
 
 %sig PLMOD = {
-  %include PL %open o ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType MLTT..@.
+  %include MLTT %open tm tp - == ==' + subsType @.
+  o'    : tp.
+  ded'  : o -> tp.
+  %struct PL : PLBase = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
   1 : o.
   0 : o.
   desig0 : - (ded' 0).
