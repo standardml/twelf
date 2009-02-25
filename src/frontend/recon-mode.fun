@@ -83,7 +83,10 @@ struct
 		let 
 		  val k = Whnf.etaContract U
 		          handle Whnf.Eta => 
-			    error (r, "Argument not a variable")  (* print U? -fp *)
+			    error (r, "Argument " ^ 
+                                      (Print.expToString(G, U)) ^ 
+                                      " not a variable") 
+                                      (* print U? -fp *) (* yes, print U. -gaw *)
 		  val I.Dec (name, _) = I.ctxLookup (G, k)
 		  val mode = I.ctxLookup (D, k)
 		in
