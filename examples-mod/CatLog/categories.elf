@@ -9,5 +9,5 @@
   
   assoc : |- forall [f] forall [g] forall [h] (f ; g) ; h == f ; (g ; h).
   idenRight : |- forall [f] f ; id == f.
-  idenLeft : |- ded forall [f] id ; f == f.
+  idenLeft : |- forall [f] id ; f == f.
 }.
