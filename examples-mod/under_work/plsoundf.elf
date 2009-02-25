@@ -4,43 +4,43 @@
 }.
 
 %sig Truth = {
-  %struct plbase : PLBase %open o.
+  %struct plbase   : PLBase %open o.
   true  : o.
 }.
 
 %sig Falsity = {
-  %struct plbase : PLBase %open o.
+  %struct plbase   : PLBase %open o.
   false : o.
 }.
 
 %sig NEG = {
-  %struct plbase : PLBase %open o.
+  %struct plbase   : PLBase %open o.
   not   : o -> o.
 }.
 
 %sig IMP = {
-  %struct plbase : PLBase %open o.
+  %struct plbase   : PLBase %open o.
   imp   : o -> o -> o.  %infix none 15 imp.
 }.
 
-%sig CNJ = {
-  %struct plbase : PLBase %open o.
+%sig CONJ = {
+  %struct plbase   : PLBase %open o.
   and   : o -> o -> o.  %infix none 10 and.
 }.
 
-%sig DSJ = {
-  %struct plbase : PLBase %open o.
+%sig DISJ = {
+  %struct plbase   : PLBase %open o.
   or   : o -> o -> o.   %infix none 10 or.
 }.
 
 %sig PL = {
-  %struct plbase  : PLBase.
-  %struct truth   : Truth   = {%struct plbase := plbase.}.
-  %struct falsity : Falsity = {%struct plbase := plbase.}.
-  %struct neg     : NEG     = {%struct plbase := plbase.}.
-  %struct imp     : IMP     = {%struct plbase := plbase.}.
-  %struct cnj     : CNJ     = {%struct plbase := plbase.}.
-  %struct dsj     : DSJ     = {%struct plbase := plbase.}.
+  %struct plbase   : PLBase.
+  %struct truth    : Truth   = {%struct plbase := plbase.}.
+  %struct falsity  : Falsity = {%struct plbase := plbase.}.
+  %struct neg      : NEG     = {%struct plbase := plbase.}.
+  %struct imp      : IMP     = {%struct plbase := plbase.}.
+  %struct conj     : CONJ     = {%struct plbase := plbase.}.
+  %struct disj     : DISJ     = {%struct plbase := plbase.}.
 }.
 
 %sig PLBasePF = {
