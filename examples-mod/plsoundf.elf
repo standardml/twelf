@@ -1,0 +1,166 @@
+%sig PLBase = {
+  %include MLTT %open tp tm.
+  o'    : tp.
+  o     = tm o'.
+  ded'  : o -> tp.
+  ded   = [a] tm (ded' a).
+}.
+
+%sig Truth = {
+  %struct plbase : PLBase %open o.
+  true  : o.
+}.
+
+%sig Falsity = {
+  %struct plbase : PLBase %open o.
+  false : o.
+}.
+
+%sig NEG = {
+  %struct plbase : PLBase %open o.
+  not   : o -> o.
+}.
+
+%sig IMP = {
+  %struct plbase : PLBase %open o.
+  imp   : o -> o -> o.  %infix none 15 imp.
+}.
+
+%sig CNJ = {
+  %struct plbase : PLBase %open o.
+  and   : o -> o -> o.  %infix none 10 and.
+}.
+
+%sig DSJ = {
+  %struct plbase : PLBase %open o.
+  or   : o -> o -> o.   %infix none 10 or.
+}.
+
+%sig PL = {
+  %struct plbase  : PLBase.
+  %struct truth   : Truth   = {%struct plbase := plbase.}.
+  %struct falsity : Falsity = {%struct plbase := plbase.}.
+  %struct neg     : NEG     = {%struct plbase := plbase.}.
+  %struct imp     : IMP     = {%struct plbase := plbase.}.
+  %struct cnj     : CNJ     = {%struct plbase := plbase.}.
+  %struct dsj     : DSJ     = {%struct plbase := plbase.}.
+}.
+
+%sig PLBasePF = {
+ %struct plbase : PLBase.
+}.
+
+%sig TruthPF = {
+  %include PLBasePF %open ded.
+  %include Truth %open true.
+  trueI  : ded true.
+}.
+
+%sig FalsityPF = {
+  %include PLBasePF %open ded.
+  %include Falsity %open false.
+  falseE : ded false -> {A} ded A.
+}.
+
+%sig NEGPF = {
+  %include PLBasePF %open ded.
+  %include NEG %open not.
+  notI   : (ded A -> {B} ded B) -> ded (not A).
+  notE   : ded A -> ded (not A) -> {B} ded B.
+}.
+
+%sig IMPPF = {
+  %include PLBasePF %open ded.
+  %include IMP %open imp.
+  impI   : (ded A -> ded B) -> ded (A imp B).
+  impE   : ded (A imp B) -> ded A -> ded B
+}.
+
+%sig CNJPF = {
+  %include PLBasePF %open ded.
+  %include CNJ %open and.
+  andI   : ded A -> ded B -> ded (A and B).
+  andEl  : ded (A and B) -> ded A.
+  andEr  : ded (A and B) -> ded B.
+}.
+
+%sig DSJPF = {
+  %include PLBasePF %open ded.
+  %include DSJ %open or.
+  orIl    : ded A -> ded (A or B).
+  orIr    : ded B -> ded (A or B).
+  orE    : ded (A or B) -> (ded A -> ded C) -> (ded B -> ded C) -> ded C.
+}.
+
+
+
+%sig PLPF = {
+  %include PL %open ded true false not imp.
+  
+  
+ .
+  
+  tnd    : ded ((not (not A)) imp A).
+}.
+
+%sig PLMOD = {
+  %include PL %open o ded ded' true false not imp MLTT..- MLTT..== MLTT..==' MLTT..+ MLTT..subsType MLTT..@.
+  1 : o.
+  0 : o.
+  desig0 : - (ded' 0).
+  desig1 : ded 1.
+  boole : {A} (A ==' 1 + A ==' 0).
+  trueTrue : true == 1.
+  falseFalse : false == 0.
+  impTrue : A ==' 0 + B ==' 1 -> (A imp B) == 1.
+  impFalse: A == 1 -> B == 0 -> (A imp B) == 0.
+  notTrue : A == 0 -> (not A) == 1.
+  notFalse : A == 1 -> (not A) == 0.
+  
+  ded-true : ded A -> A == 1
+           = [p] (MLTT..D.case (boole A)
+                     ([q : A == 1] q)
+                     ([q : A == 0] (MLTT..!! (desig0 @ (MLTT..I.eq (subsType q ded') p))))
+                 ).
+  true-ded : A == 1 -> ded A
+           = [p] (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1).
+  cons  : - (0 ==' 1)
+        = MLTT..lam [p : 0 == 1] (desig0 @ (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1)).
+  contra : A == 0 -> A == 1 -> MLTT..void
+         = [p][q] (cons @ (MLTT..I.trans (MLTT..I.sym p) q)).
+}.
+
+%view PLsound : PLPF -> PLMOD = {
+  trueI := true-ded trueTrue.
+  falseE := [p : ded false][A] (MLTT..!! (contra falseFalse (ded-true p))).
+  impI := [A][B][p: ded A -> ded B] (
+             true-ded (impTrue 
+               (MLTT..case (boole A)
+                  ([q : A == 1] MLTT..inj2 (ded-true (p (true-ded q))))
+                  ([q : A == 0] MLTT..inj1 q)
+               )
+             )
+          ).
+  impE := [A][B][p : ded (A imp B)][q : ded A] (
+             true-ded (
+                MLTT..D.case (boole B)
+                   ([r : B == 1] r)
+                   ([r : B == 0] MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
+             )
+          ).
+  notI := [p : ded A -> {B} ded B] (
+             MLTT..D.case (boole A)
+                ([q : A == 1] p (true-ded q) (not A))
+                ([q : A == 0] true-ded (notTrue q))
+          ).
+  notE := ([p : ded A] [q : ded (not A)] [B] MLTT..!! (contra (notFalse (ded-true p)) (ded-true q))).
+  tnd := [A] true-ded (
+               impTrue (
+                 MLTT..case (boole A)
+                    ([p : A == 1] MLTT..inj2 p)
+                    ([p : A == 0] MLTT..inj1 (notFalse (notTrue p)))
+               )
+             ).
+}.
+
+%}
