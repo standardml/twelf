@@ -1,101 +1,106 @@
-%sig PLBase = {
+%sig Base = {
   o     : type.
   ded   : o -> type.
 }.
 
 %sig Truth = {
-  %struct plbase   : PLBase %open o.
+  %struct base     : Base   %open o.
   true  : o.
 }.
 
 %sig Falsity = {
-  %struct plbase   : PLBase %open o.
+  %struct base     : Base   %open o.
   false : o.
 }.
 
 %sig NEG = {
-  %struct plbase   : PLBase %open o.
+  %struct base     : Base   %open o.
   not   : o -> o.
 }.
 
 %sig IMP = {
-  %struct plbase   : PLBase %open o.
-  imp   : o -> o -> o.  %infix none 15 imp.
+  %struct base     : Base   %open o.
+  imp   : o -> o -> o.        %infix none 15 imp.
 }.
 
 %sig CONJ = {
-  %struct plbase   : PLBase %open o.
-  and   : o -> o -> o.  %infix none 10 and.
+  %struct base     : Base   %open o.
+  and   : o -> o -> o.        %infix none 10 and.
 }.
 
 %sig DISJ = {
-  %struct plbase   : PLBase %open o.
-  or   : o -> o -> o.   %infix none 10 or.
+  %struct base     : Base   %open o.
+  or   : o -> o -> o.         %infix none 10 or.
 }.
 
 %sig PL = {
-  %struct plbase   : PLBase.
-  %struct truth    : Truth   = {%struct plbase := plbase.}.
-  %struct falsity  : Falsity = {%struct plbase := plbase.}.
-  %struct neg      : NEG     = {%struct plbase := plbase.}.
-  %struct imp      : IMP     = {%struct plbase := plbase.}.
-  %struct conj     : CONJ     = {%struct plbase := plbase.}.
-  %struct disj     : DISJ     = {%struct plbase := plbase.}.
-}.
+  %struct base     : Base.
+  %struct truth    : Truth   = {%struct base := base.}.
+  %struct falsity  : Falsity = {%struct base := base.}.
+  %struct neg      : NEG     = {%struct base := base.}.
+  %struct impl     : IMP     = {%struct base := base.}.
+  %struct conj     : CONJ    = {%struct base := base.}.
+  %struct disj     : DISJ    = {%struct base := base.}.
+}. 
 
-%sig PLBasePF = {
- %struct plbase : PLBase.
+%sig BasePF = {
+ %struct base      : Base.
 }.
 
 %sig TruthPF = {
-  %include PLBasePF %open ded.
-  %include Truth %open true.
+  %struct basepf   : BasePF %open base.ded.
+  %struct truth    : Truth    = {%struct base := basepf.base.}  %open true.
   trueI  : ded true.
 }.
 
 %sig FalsityPF = {
-  %include PLBasePF %open ded.
-  %include Falsity %open false.
+  %struct basepf   : BasePF %open base.ded.
+  %struct falsity  : Falsity  = {%struct base := basepf.base.}  %open false.
   falseE : ded false -> {A} ded A.
 }.
 
 %sig NEGPF = {
-  %include PLBasePF %open ded.
-  %include NEG %open not.
+  %struct basepf   : BasePF %open base.ded.
+  %struct neg      : NEG      = {%struct base := basepf.base.}  %open not.
   notI   : (ded A -> {B} ded B) -> ded (not A).
   notE   : ded A -> ded (not A) -> {B} ded B.
 }.
 
 %sig IMPPF = {
-  %include PLBasePF %open ded.
-  %include IMP %open imp.
+  %struct basepf   : BasePF %open base.ded.
+  %struct impl     : IMP      = {%struct base := basepf.base.}  %open imp.
   impI   : (ded A -> ded B) -> ded (A imp B).
-  impE   : ded (A imp B) -> ded A -> ded B
+  impE   : ded (A imp B) -> ded A -> ded B.
 }.
 
-%sig CNJPF = {
-  %include PLBasePF %open ded.
-  %include CNJ %open and.
+%sig CONJPF = {
+  %struct basepf   : BasePF %open base.ded.
+  %struct conj     : CONJ      = {%struct base := basepf.base.}  %open and.
   andI   : ded A -> ded B -> ded (A and B).
   andEl  : ded (A and B) -> ded A.
   andEr  : ded (A and B) -> ded B.
 }.
 
-%sig DSJPF = {
-  %include PLBasePF %open ded.
-  %include DSJ %open or.
+%sig DISJPF = {
+  %struct basepf   : BasePF %open base.ded.
+  %struct disj     : DISJ      = {%struct base := basepf.base.}  %open or.
   orIl    : ded A -> ded (A or B).
   orIr    : ded B -> ded (A or B).
-  orE    : ded (A or B) -> (ded A -> ded C) -> (ded B -> ded C) -> ded C.
+  orE     : ded (A or B) -> (ded A -> ded C) -> (ded B -> ded C) -> ded C.
 }.
 
-
-
 %sig PLPF = {
-  %include PL %open ded true false not imp.
-  
-  
- .
+  %struct basepf  : BasePF.
+  %struct truthpf : TruthPF = {%struct basepf := basepf.}.
+  %struct falsitypf : FalsityPF = {%struct basepf := basepf.}.
+  %struct negpf : NEGPF = {%struct basepf := basepf.}.
+  %struct imppf : IMPPF = {%struct basepf := basepf.}.
+  %struct conjpf : CONJPF = {%struct basepf := basepf.}.
+  %struct dispf : DISJPF = {%struct basepf := basepf.}.
+}.
+
+%{
+%sig PL_rest = {  
   
   tnd    : ded ((not (not A)) imp A).
 }.
@@ -104,7 +109,7 @@
   %include MLTT %open tm tp - == ==' + subsType @.
   o'    : tp.
   ded'  : o -> tp.
-  %struct PL : PLBase = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
+  %struct PL : Base = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
   1 : o.
   0 : o.
   desig0 : - (ded' 0).
