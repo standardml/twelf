@@ -11,4 +11,5 @@ sig
   val parseConInst'   : ModExtSyn.syminst Parsing.parser
   val parseStrInst'   : ModExtSyn.syminst Parsing.parser
   val parseInclude'   : ModExtSyn.modincl Parsing.parser
+  val parseIncludeView': ModExtSyn.modincl Parsing.parser
 end

@@ -21,7 +21,7 @@ struct
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * (IDs.Qid list)
                   | StrDef of string list * IDs.qid * IDs.mid * Morph
   datatype ModDec = SigDec of string list | ViewDec of string list * IDs.mid * IDs.mid
-  datatype ModIncl = SigIncl of IDs.mid * (IDs.Qid list)
+  datatype ModIncl = SigIncl of IDs.mid * (IDs.Qid list) | ViewIncl of Morph
 
   (* unifies constant and structure declarations and instantiations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
@@ -262,6 +262,7 @@ struct
       in
          ()
       end
+    | inclAddC(ViewIncl mor) = () (* @FR: add case *)
   
   fun sgnAddC (conDec : I.ConDec) =
     let

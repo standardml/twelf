@@ -1209,14 +1209,18 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl as ModSyn.SigIncl (from, openids) = ReconModule.modinclToModIncl incl
+            val Incl = ReconModule.modinclToModIncl incl
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val _ = Elab.checkModIncl Incl
-                    handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
+                       handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
             val _ = ModSyn.inclAddC(Incl)
-                    handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
-	    val _ = List.map (fn q => installOpen(from,q, NONE, r)) openids
-	    val _ = Subordinate.installInclude from (* no exception should be possible *)
+                       handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
+            val _ = case Incl
+               of ModSyn.SigIncl (from, openids) => (
+		    List.map (fn q => installOpen(from,q, NONE, r)) openids;
+		    Subordinate.installInclude from (* no exception should be possible *)
+		  )
+		| _ => ()
             val _ = if !Global.chatter >= 3
                     then msg (Print.modInclToString(Incl) ^ "\n")
                     else ()

@@ -27,7 +27,7 @@ struct
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
   
-  datatype modincl = sigincl of id * openids
+  datatype modincl = sigincl of id * openids | viewincl of morph * Paths.region
   
 (* end MODEXTSYN *)
 
@@ -151,4 +151,11 @@ struct
       in
       	 ModSyn.SigIncl (m, Openids)
       end
+    | modinclToModIncl(viewincl mor) =
+       let
+       	  val Cod = ModSyn.currentTargetSig()
+          val Mor = morphToMorph(Cod, mor)
+       in
+       	  ModSyn.ViewIncl(Mor)
+       end
 end (* end RECON_MODULE *)

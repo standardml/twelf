@@ -124,6 +124,7 @@ struct
   
   (* checks well-typedness condition for includes *)
   fun checkModIncl(M.SigIncl (m,_)) = checkDomain m
+    | checkModIncl(M.ViewIncl mor) = () (* @FR: add check *)
 
   (* checks simple well-typedness conditions for structure declarations
      does not check:

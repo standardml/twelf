@@ -201,6 +201,7 @@ struct
     and parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInViewStrInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInViewConInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInViewInclude' (f, sc)
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or %struct keyword, found "	^ L.toString t)
   
@@ -455,6 +456,14 @@ struct
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((SymInst strInst, r), parseStreamInView (LS.delay (fn () => f'), sc))
+        end
+
+    and parseInViewInclude' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseIncludeView'(f)
+           val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((Include incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

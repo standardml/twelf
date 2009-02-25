@@ -26,8 +26,9 @@ sig
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
 
-  (* inclusion of a module *)  
+  (* inclusion of signatures into signatures and morphisms into view *)  
   datatype modincl = sigincl of id * openids
+                   | viewincl of morph * Paths.region
 end;
 
 signature RECON_MODULE =

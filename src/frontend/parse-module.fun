@@ -193,7 +193,11 @@ struct
        (E.sigincl (id, ids), f')
      end 
 
-  (* ignoring thistoken *)
-  fun parseOpen' (LS.Cons ((L.OPEN, r), s')) = ((), LS.expose s')
-
+  fun parseIncludeView' (LS.Cons ((L.INCLUDE, r), s')) =
+     let
+        val (mor, f') = parseMorph'(LS.expose s')
+        val (r', f') = parseDot' (f')
+     in
+       (E.viewincl (mor, Paths.join(r,r')), f')
+     end 
 end

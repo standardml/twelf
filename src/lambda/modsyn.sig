@@ -86,6 +86,7 @@ sig
   datatype ModIncl
      = SigIncl of IDs.mid              (* included signature *)
                 * (IDs.Qid list)       (* constants in that signature that become available without qualification *)
+     | ViewIncl of Morph               (* morphism translating signature included into domain *)
 
 
   (* convenience methods to access components of declarations *)

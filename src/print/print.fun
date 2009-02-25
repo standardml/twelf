@@ -927,7 +927,6 @@ in
              | doList(hd :: tl) =  " " ^ (Names.foldQualifiedName hd) ^ (doList tl)
        in " %open" ^ (doList l)
        end
-  fun modInclToString(ModSyn.SigIncl (m, openids)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString openids) ^ "."
   fun morphToString(ModSyn.MorStr(c)) =
       ModSyn.modFoldName (IDs.midOf c) ^ "." ^ ModSyn.symFoldName c
     | morphToString(ModSyn.MorView(m)) =
@@ -935,6 +934,9 @@ in
     | morphToString(ModSyn.MorComp(mor1,mor2)) =
       morphToString(mor1) ^ " " ^ morphToString(mor2)
       
+  fun modInclToString(ModSyn.SigIncl (m, openids)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString openids) ^ "."
+    | modInclToString(ModSyn.ViewIncl mor) = "%include " ^ (morphToString mor) ^ "."
+
   fun instToString(ModSyn.ConInst(c, U)) = 
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(ModSyn.StrInst(c, mor)) =
