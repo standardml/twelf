@@ -110,20 +110,45 @@
   %struct mltt : MLTT %open tm tp - == ==' + subsType @.
   o'    : tp.
   ded'  : tm o' -> tp.
-  %struct base : Base = {o := tm o'. ded := [a] tm (ded' a).}.
+  %struct base : Base = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
+  1 : o.
+  0 : o.
+  desig0 : - (ded' 0).
+  desig1 : ded 1.
+  boole : {A} (A ==' 1 + A ==' 0).
 }.
 
 %sig TruthMOD = {
- %struct mltt : MLTT.
- %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
- 1 : o.
+  %struct mltt : MLTT.
+  %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+ 
 }.
 
-%sig FalsityMOD = {}.
-%sig NEGMOD = {}.
-%sig IMPMOD = {}.
-%sig CONJMOD = {}.
-%sig DISJMOD = {}.
+%sig FalsityMOD = {
+  %struct mltt : MLTT.
+  %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+  
+}.
+
+%sig NEGMOD = {
+ %struct mltt : MLTT.
+ %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+}.
+
+%sig IMPMOD = {
+ %struct mltt : MLTT.
+ %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+}.
+
+%sig CONJMOD = {
+ %struct mltt : MLTT.
+ %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+}.
+
+%sig DISJMOD = {
+ %struct mltt : MLTT.
+ %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
+}.
 
 %{
 
@@ -131,10 +156,7 @@
   
   
   
-  0 : o.
-  desig0 : - (ded' 0).
-  desig1 : ded 1.
-  boole : {A} (A ==' 1 + A ==' 0).
+  
   
   trueTrue : true == 1.
   falseFalse : false == 0.
