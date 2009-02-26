@@ -1,6 +1,6 @@
 %sig Base = {
   o     : type.
-  ded   : o -> type.
+  ded   : o -> type. 
 }.
 
 %sig Truth = {
@@ -90,13 +90,13 @@
 }.
 
 %sig PLPF = {
-  %struct basepf  : BasePF.
-  %struct truthpf : TruthPF = {%struct basepf := basepf.}.
+  %struct basepf    : BasePF.
+  %struct truthpf   : TruthPF = {%struct basepf := basepf.}.
   %struct falsitypf : FalsityPF = {%struct basepf := basepf.}.
-  %struct negpf : NEGPF = {%struct basepf := basepf.}.
-  %struct imppf : IMPPF = {%struct basepf := basepf.}.
-  %struct conjpf : CONJPF = {%struct basepf := basepf.}.
-  %struct dispf : DISJPF = {%struct basepf := basepf.}.
+  %struct negpf     : NEGPF = {%struct basepf := basepf.}.
+  %struct imppf     : IMPPF = {%struct basepf := basepf.}.
+  %struct conjpf    : CONJPF = {%struct basepf := basepf.}.
+  %struct dispf     : DISJPF = {%struct basepf := basepf.}.
 }.
 
 %{
@@ -104,17 +104,35 @@
   
   tnd    : ded ((not (not A)) imp A).
 }.
+}%
 
-%sig PLMOD = {
+%sig BaseMOD = {
   %include MLTT %open tm tp - == ==' + subsType @.
   o'    : tp.
-  ded'  : o -> tp.
-  %struct PL : Base = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
+  ded'  : o' -> tp.
+  %struct base : Base = {o := tm o'. ded := [a] tm (ded' a).}.
+}.
+
+%sig TruthMOD = {
+ %struct basemod : BaseMOD.
+}.
+
+%sig FalsityMOD = {}.
+%sig NEGMOD = {}.
+%sig IMPMOD = {}.
+%sig CONJMOD = {}.
+%sig DISJMOD = {}.
+
+
+%sig PLMOD = {
+  
+  
   1 : o.
   0 : o.
   desig0 : - (ded' 0).
   desig1 : ded 1.
   boole : {A} (A ==' 1 + A ==' 0).
+  
   trueTrue : true == 1.
   falseFalse : false == 0.
   impTrue : A ==' 0 + B ==' 1 -> (A imp B) == 1.
