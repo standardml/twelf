@@ -107,24 +107,25 @@
 }%
 
 %sig BaseMOD = {
-  %struct mltt : MLTT %open tm tp - == ==' + subsType @.
+  %include MLTT %open tm tp - == ==' + subsType @.
   o'    : tp.
   ded'  : tm o' -> tp.
   %struct base : Base = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
   1 : o.
   0 : o.
-  %%desig0 : - (ded 0).
-  %%desig1 : ded 1.
+  desig0 : - (ded' 0).
+  desig1 : ded 1.
   boole : {A} (A ==' 1 + A ==' 0).
 }.
 
 %sig TruthMOD = {
-  %struct mltt : MLTT.
-  %struct basemod : BaseMOD = {%struct mltt := mltt.} %open 1.
-  %struct truth : Truth %open true. %%Truth alread has a struct from Base, so does BaseMOD. 
-  trueTrue : true mltt.== 1.
+  %include MLTT %open ==.
+  %struct basemod : BaseMOD %open 1.
+  %struct truth : Truth = {%struct base := basemod.base.} %open true. 
+  trueTrue : true == 1.
 }.
 
+%{
 %sig FalsityMOD = {
   %struct mltt : MLTT.
   %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
