@@ -56,9 +56,9 @@
 
   P : (tm A -> tp) -> tp.
   lam : ({a : tm A} tm (B a)) -> tm (P [x] (B x)).
-  @ : tm (P [x] (B x)) -> {a : tm A} tm (B a).  %infix left 15 @.
-  =>' = [a][b] P [x:tm a] b.                       %infix none 10 =>'.
-  => = [a][b] (tm a =>' b).                        %infix none 10 =>.
+  @ : tm (P [x] (B x)) -> {a : tm A} tm (B a).      %infix left 15 @.
+  =>' = [a][b] P [x:tm a] b.                        %infix none 10 =>'.
+  => = [a][b] (tm a =>' b).                         %infix none 10 =>.
 }.
   
 %sig SIGMA = {
@@ -66,6 +66,8 @@
 
   S : (tm A -> tp) -> tp.
   pair : {a : tm A} tm (B a) -> tm (S [x] (B x)).
+  , : {a : tm A} tm (B a) -> tm (S [x] (B x)) = [a][b] (pair a b).
+                                                     %infix left 1 ,.
   pi1 : tm (S [x : tm A] (B x)) -> tm A.
   pi2 : {u : tm (S [x : tm A] (B x))} tm (B (pi1 u)).
   *' = [a][b] S [x:tm a] b.                          %infix none 5 *'.
@@ -78,7 +80,7 @@
   %struct V : VOID   = {%struct TT := TT.} %open void void' !!.
   %struct I : IDENT  = {%struct TT := TT.} %open == ==' subsTerm subsType.
   %struct D : DUNION = {%struct TT := TT.} %open + +' inj1 inj2 case.
-  %struct SIG : SIGMA  = {%struct TT := TT.} %open S pair pi1 pi2 *.
+  %struct SIG : SIGMA  = {%struct TT := TT.} %open S pair , pi1 pi2 *.
   %struct PI : PI     = {%struct TT := TT.} %open P lam @ =>.
   -' = [a] (a PI.=>' V.void').
   - = [a] tm (-' a).
