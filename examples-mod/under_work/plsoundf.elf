@@ -89,22 +89,27 @@
   orE     : ded (A or B) -> (ded A -> ded C) -> (ded B -> ded C) -> ded C.
 }.
 
-%sig PLPF = {
+%sig IPLPF = {
   %struct basepf    : BasePF.
   %struct truthpf   : TruthPF = {%struct basepf := basepf.}.
   %struct falsitypf : FalsityPF = {%struct basepf := basepf.}.
   %struct negpf     : NEGPF = {%struct basepf := basepf.}.
   %struct imppf     : IMPPF = {%struct basepf := basepf.}.
   %struct conjpf    : CONJPF = {%struct basepf := basepf.}.
-  %struct dispf     : DISJPF = {%struct basepf := basepf.}.
+  %struct disjpf    : DISJPF = {%struct basepf := basepf.}.
 }.
 
-%{
-%sig PL_rest = {  
-  
-  tnd    : ded ((not (not A)) imp A).
+%sig TND = {  
+  %struct basepf : BasePF %open base.ded.
+  %struct neg  : NEG = {%struct base := basepf.base.} %open not.
+  %struct disj : DISJ = {%struct base := basepf.base.} %open or. 
+  tnd    : ded (A or (not A)).
 }.
-}%
+
+%sig CPLPF = {
+  %struct iplpf : IPLPF.
+  %struct tnd : TND = {%struct basepf := iplpf.basepf. %struct neg := iplpf.negpf.neg. %struct disj := iplpf.disjpf.disj.}.
+}.
 
 %sig BaseMOD = {
   %include MLTT %open tm tp - == ==' + subsType @.
@@ -115,64 +120,13 @@
   0 : o.
   desig0 : - (ded' 0).
   desig1 : ded 1.
-  boole : {A} (A ==' 1 + A ==' 0).
-}.
-
-%sig TruthMOD = {
-  %include MLTT %open ==.
-  %struct basemod : BaseMOD %open 1.
-  %struct truth : Truth = {%struct base := basemod.base.} %open true. 
-  trueTrue : true == 1.
-}.
-
-%{
-%sig FalsityMOD = {
-  %struct mltt : MLTT.
-  %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
-  
-}.
-
-%sig NEGMOD = {
- %struct mltt : MLTT.
- %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
-}.
-
-%sig IMPMOD = {
- %struct mltt : MLTT.
- %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
-}.
-
-%sig CONJMOD = {
- %struct mltt : MLTT.
- %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
-}.
-
-%sig DISJMOD = {
- %struct mltt : MLTT.
- %struct basemod : BaseMOD = {%struct mltt := mltt.} %open base.o.
-}.
-
-%{
-
-%sig PLMOD = {
-  
-  
-  
-  
-  
-  
-  falseFalse : false == 0.
-  impTrue : A ==' 0 + B ==' 1 -> (A imp B) == 1.
-  impFalse: A == 1 -> B == 0 -> (A imp B) == 0.
-  notTrue : A == 0 -> (not A) == 1.
-  notFalse : A == 1 -> (not A) == 0.
-  
-  ded-true : ded A -> A == 1
-           = [p] (MLTT..D.case (boole A)
+  boole  : {A} (A ==' 1 + A ==' 0).
+  ded-1  : ded A -> A == 1
+         = [p] (MLTT..D.case (boole A)
                      ([q : A == 1] q)
                      ([q : A == 0] (MLTT..!! (desig0 @ (MLTT..I.eq (subsType q ded') p))))
                  ).
-  true-ded : A == 1 -> ded A
+  1-ded : A == 1 -> ded A
            = [p] (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1).
   cons  : - (0 ==' 1)
         = MLTT..lam [p : 0 == 1] (desig0 @ (MLTT..I.eq (MLTT..TT.sym (subsType p ded')) desig1)).
@@ -180,9 +134,83 @@
          = [p][q] (cons @ (MLTT..I.trans (MLTT..I.sym p) q)).
 }.
 
+%sig TruthMOD = {
+  %include MLTT %open ==.
+  %struct basemod : BaseMOD %open 1.
+  %struct truth : Truth = {%struct base := basemod.base.} %open true. 
+  true1 : true == 1.
+}.
+
+%sig FalsityMOD = {
+  %include MLTT %open ==.
+  %struct basemod : BaseMOD %open 0.
+  %struct falsity : Falsity = {%struct base := basemod.base.} %open false. 
+  false0 : false == 0.
+}.
+
+%sig NEGMOD = {
+  %include MLTT %open ==.
+  %struct basemod : BaseMOD %open 1 0.
+  %struct neg : NEG = {%struct base := basemod.base.} %open not. 
+  not1 : A == 0 -> (not A) == 1.
+  not0 : A == 1 -> (not A) == 0.
+}.
+
+%sig IMPMOD = {
+  %include MLTT %open == ==' + *.
+  %struct basemod : BaseMOD %open 1 0.
+  %struct impl : IMP = {%struct base := basemod.base.} %open imp. 
+  imp1 : A ==' 0 + B ==' 1 -> (A imp B) == 1.
+  imp0 : A ==' 1 * B ==' 0 -> (A imp B) == 0.
+}.
+
+
+%sig CONJMOD = {
+  %include MLTT %open == ==' + *.
+  %struct basemod : BaseMOD %open 1 0.
+  %struct conj : CONJ = {%struct base := basemod.base.} %open and.
+  and1 : A ==' 1 * B ==' 1 -> (A and B) == 1. 
+  and0 : A ==' 0 + B ==' 0 -> (A and B) == 0.
+}.
+
+%sig DISJMOD = {
+  %include MLTT %open == ==' + *.
+  %struct basemod : BaseMOD %open 1 0.
+  %struct disj : DISJ = {%struct base := basemod.base.} %open or.
+  or1 : A ==' 1 + B ==' 1 -> (A or B) == 1. 
+  or0 : A ==' 0 * B ==' 0 -> (A or B) == 0.
+}.
+
+%sig PLMOD = {
+  %include MLTT.
+  %struct basemod    : BaseMOD.
+  %struct truthmod   : TruthMOD = {%struct basemod := basemod.}.
+  %struct falsitymod : FalsityMOD = {%struct basemod := basemod.}.
+  %struct negmod     : NEGMOD = {%struct basemod := basemod.}.
+  %struct impmod     : IMPMOD = {%struct basemod := basemod.}.
+  %struct conjmod    : CONJMOD = {%struct basemod := basemod.}.
+  %struct disjmod    : DISJMOD = {%struct basemod := basemod.}.
+}.
+
+%view SoundBase : BasePF -> BaseMOD = {
+  %struct base := base.
+}.
+
+%view SoundTruth : TruthPF -> TruthMOD = {
+  %struct basepf := SoundBase TruthMOD..basemod.
+  %struct truth := truth.
+  trueI := basemod.1-ded true1.
+}.
+
+%view SoundFalsity : FalsityPF -> FalsityMOD = {
+  %struct basepf := SoundBase FalsityMOD..basemod.
+  %struct falsity := falsity.
+  falseE := [p : basemod.base.ded false][A] (MLTT..!! (basemod.contra false0 (basemod.ded-1 p))).
+}.
+
+%.
+
 %view PLsound : PLPF -> PLMOD = {
-  trueI := true-ded trueTrue.
-  falseE := [p : ded false][A] (MLTT..!! (contra falseFalse (ded-true p))).
   impI := [A][B][p: ded A -> ded B] (
              true-ded (impTrue 
                (MLTT..case (boole A)
@@ -212,5 +240,3 @@
                )
              ).
 }.
-
-%}
