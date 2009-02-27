@@ -208,24 +208,28 @@
   falseE := [p : basemod.base.ded false][A] (MLTT..!! (basemod.contra false0 (basemod.ded-1 p))).
 }.
 
-%.
-
-%view PLsound : PLPF -> PLMOD = {
-  impI := [A][B][p: ded A -> ded B] (
-             true-ded (impTrue 
-               (MLTT..case (boole A)
-                  ([q : A == 1] MLTT..inj2 (ded-true (p (true-ded q))))
+%view SoundIMP : IMPPF -> IMPMOD  = {
+  %struct basepf := SoundBase IMPMOD..basemod.
+  %struct impl := impl.
+  impI := [A][B][p: basemod.base.ded A -> basemod.base.ded B] (
+             basemod.1-ded (imp1 
+               (MLTT..case (basemod.boole A)
+                  ([q : A == 1] MLTT..inj2 (basemod.ded-1 (p (basemod.1-ded q))))
                   ([q : A == 0] MLTT..inj1 q)
                )
              )
           ).
-  impE := [A][B][p : ded (A imp B)][q : ded A] (
-             true-ded (
-                MLTT..D.case (boole B)
+  impE := [A][B][p : basemod.base.ded (A imp B)][q : basemod.base.ded A] (
+             basemod.1-ded (
+                MLTT..D.case (basemod.boole B)
                    ([r : B == 1] r)
-                   ([r : B == 0] MLTT..!! (contra (impFalse (ded-true q) r) (ded-true p)))
+                   ([r : B == 0] MLTT..!! (basemod.contra (imp0 (MLTT..pair (basemod.ded-1 q) r)) (basemod.ded-1 p)))
              )
           ).
+}.
+
+%.
+%view PLsound : PLPF -> PLMOD = {
   notI := [A][p : ded A -> {B} ded B] (
              MLTT..D.case (boole A)
                 ([q : A == 1] p (true-ded q) (not A))
