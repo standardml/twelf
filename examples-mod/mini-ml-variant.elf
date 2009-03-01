@@ -1,0 +1,207 @@
+%sig CORE = {
+  tp : type.  %name tp T.
+  exp : type.  %name exp E x.
+
+  of : exp -> tp -> type.  %name of P u.
+  %mode of +E *T.
+
+  eval : exp -> exp -> type.  %name eval D.
+  %mode eval +E -V.
+
+  tps : eval E V -> of E T -> of V T -> type.
+  %mode tps +D +P -Q.
+}.
+
+% Natural Numbers
+%sig NAT = {
+  %struct core : CORE %open tp exp of eval tps.
+
+  nat   : tp.
+  z    : exp.
+  s    : exp -> exp.
+  case : exp -> exp -> (exp -> exp) -> exp.
+ 
+  tp_z     : of z nat.
+  tp_s     : of (s E) nat
+  	    <- of E nat.
+  tp_case  : of (case E1 E2 E3) T
+	    <- of E1 nat
+	    <- of E2 T
+	    <- ({x:exp} of x nat -> of (E3 x) T).
+
+  ev_z      : eval z z.
+  ev_s      : eval (s E) (s V)  
+  	     <- eval E V.
+  ev_case_z : eval (case E1 E2 E3) V
+	     <- eval E1 z
+	     <- eval E2 V.
+  ev_case_s : eval (case E1 E2 E3) V
+	     <- eval E1 (s V1')
+	     <- eval (E3 V1') V.
+
+  tps_z     : tps (ev_z) (tp_z) (tp_z).
+  tps_s     : tps (ev_s D1) (tp_s P1) (tp_s Q1)
+	     <- tps D1 P1 Q1.
+
+  tps_case_z: tps (ev_case_z D2 D1) (tp_case P3 P2 P1) Q2
+	     <- tps D2 P2 Q2.
+
+  tps_case_s: tps (ev_case_s D3 D1) (tp_case P3 P2 P1) Q3
+	     <- tps D1 P1 (tp_s Q1')
+	     <- tps D3 (P3 V1 Q1') Q3.
+
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
+
+% Pairs
+%sig PAIR = {
+  %struct core : CORE %open tp exp of eval tps.
+
+  cross : tp -> tp -> tp.
+  pair : exp -> exp -> exp.
+  fst  : exp -> exp.
+  snd  : exp -> exp.
+
+  tp_pair : of (pair E1 E2) (cross T1 T2)
+	   <- of E1 T1
+	   <- of E2 T2.
+  tp_fst  : of (fst E) T1
+	   <- of E (cross T1 T2).
+  tp_snd  : of (snd E) T2
+	   <- of E (cross T1 T2).
+
+  ev_pair : eval (pair E1 E2) (pair V1 V2)
+	   <- eval E1 V1
+	   <- eval E2 V2.
+  ev_fst  : eval (fst E) V1
+ 	   <- eval E (pair V1 V2).
+  ev_snd  : eval (snd E) V2
+	   <- eval E (pair V1 V2).
+
+  tps_pair : tps (ev_pair D2 D1) (tp_pair P2 P1) (tp_pair Q2 Q1)
+	      <- tps D1 P1 Q1
+	      <- tps D2 P2 Q2.
+  tps_fst  : tps (ev_fst D1) (tp_fst P1) Q1
+	      <- tps D1 P1 (tp_pair Q2 Q1).
+  tps_snd  : tps (ev_snd D1) (tp_snd P1) Q2
+	      <- tps D1 P1 (tp_pair Q2 Q1).
+
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
+
+% Functions
+%sig FUN = {
+  %struct core : CORE %open tp exp of eval tps.
+
+  arrow : tp -> tp -> tp.
+  lam  : (exp -> exp) -> exp.
+  app  : exp -> exp -> exp.
+
+  tp_lam : of (lam E) (arrow T1 T2)
+	  <- ({x:exp} of x T1 -> of (E x) T2).
+  tp_app : of (app E1 E2) T1
+	  <- of E1 (arrow T2 T1)
+	  <- of E2 T2.
+
+  ev_lam : eval (lam E) (lam E).
+  ev_app : eval (app E1 E2) V
+	  <- eval E1 (lam E1')
+	  <- eval E2 V2
+	  <- eval (E1' V2) V.
+
+  tps_lam  : tps (ev_lam) (tp_lam P) (tp_lam P).
+
+  tps_app  : tps (ev_app D3 D2 D1) (tp_app P2 P1) Q3
+	    <- tps D1 P1 (tp_lam Q1')
+	    <- tps D2 P2 Q2
+	    <- tps D3 (Q1' V2 Q2) Q3.
+
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
+
+% Definitions
+%sig DEF = {
+
+  %struct core : CORE %open tp exp of eval tps.
+
+  letv : exp -> (exp -> exp) -> exp.
+  letn : exp -> (exp -> exp) -> exp.
+
+  tp_letv : of (letv E1 E2) T2 
+	   <- of E1 T1
+	   <- ({x:exp} of x T1 -> of (E2 x) T2).
+  tp_letn : of (letn E1 E2) T2
+	   <- of E1 T1
+	   <- of (E2 E1) T2.
+
+  ev_letv : eval (letv E1 E2) V
+	   <- eval E1 V1
+	   <- eval (E2 V1) V.
+  ev_letn : eval (letn E1 E2) V
+ 	   <- eval (E2 E1) V.
+
+  tps_letv : tps (ev_letv D2 D1) (tp_letv P2 P1) Q2
+	    <- tps D1 P1 Q1
+	    <- tps D2 (P2 V1 Q1) Q2.
+  tps_letn : tps (ev_letn D2) (tp_letn P2 P1) Q2
+	    <- tps D2 P2 Q2.
+
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
+
+% Recursion
+%sig REC = {
+
+  %struct core : CORE %open tp exp of eval tps.
+
+  fix  : (exp -> exp) -> exp.
+
+  tp_fix : of (fix E) T
+	  <- ({x:exp} of x T -> of (E x) T).
+
+  ev_fix  : eval (fix E) V
+	   <- eval (E (fix E)) V.
+
+  tps_fix : tps (ev_fix D1) (tp_fix P1) Q1
+	    <- tps D1 (P1 _ (tp_fix P1)) Q1.
+
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
+
+%sig MINIML = {
+  %struct core : CORE %open tp exp of eval tps.
+
+  %struct N : NAT = {%struct core := core.}.
+  %struct P : PAIR = {%struct core := core.}.
+  %struct F : FUN = {%struct core := core.}.
+  %struct D : DEF = {%struct core := core.}.
+  %struct R : REC = {%struct core := core.}.
+
+  %%% Evaluation
+  %block l : some {T:tp} block {x:exp} {d:of x T}.
+  %worlds (l) (of E T).
+  %worlds () (eval D V).
+  %terminates E (eval E V).
+  %covers eval +E -V.
+ 
+  %%% Type preservation
+  %worlds () (tps D _ _).
+  %terminates D (tps D _ _). 
+  %covers tps +D +P -Q.
+  %total D (tps D P _).
+}.
