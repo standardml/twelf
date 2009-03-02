@@ -1,6 +1,7 @@
 %sig Base = {
   o     : type.
-  ded   : o -> type. 
+  i     : type.
+  ded   : o -> type.
 }.
 
 %sig Truth = {
@@ -31,6 +32,16 @@
 %sig DISJ = {
   %struct base     : Base   %open o.
   or   : o -> o -> o.         %infix none 10 or.
+}.
+
+%sig Forall = {
+  %struct base : Base %open o i.
+  forall : (i -> o) -> o.
+}.
+
+%sig Exists = {
+  %struct base : Base %open o i.
+  exists : (i -> o) -> o.
 }.
 
 %sig PL = {
@@ -111,11 +122,32 @@
   %struct tnd : TND = {%struct basepf := iplpf.basepf. %struct neg := iplpf.negpf.neg. %struct disj := iplpf.disjpf.disj.}.
 }.
 
+%sig ForallPF = {
+ %struct basepf   : BasePF %open base.ded base.i. 
+ %struct univq    : Forall = {%struct base := basepf.base.} %open forall. 
+ forallI : ({x:i} ded (F x)) -> ded (forall [x] F x).
+ forallE : ded (forall [x] F x) -> {c:i} ded (F c).
+}.
+
+%sig ExistsPF = {
+ %struct basepf : BasePF %open base.ded base.i.
+ %struct existq   : Exists = {%struct base := basepf.base.} %open exists. 
+ existsI : {x:i} ded (F x) -> ded (exists [x] F x).
+ existsE : ded (exists [x] F x) -> ({y:i} ded (F y) -> ded G) -> ded G.
+}.
+
+%sig FOLPF = {
+ %struct cplpf    : CPLPF.
+ %struct forallpf : ForallPF = {%struct basepf := cplpf.iplpf.basepf.}.
+ %struct existspf : ExistsPF = {%struct basepf := cplpf.iplpf.basepf.}.
+}.
+
 %sig BaseMOD = {
   %include MLTT %open tm tp - == ==' + subsType @.
   o'    : tp.
   ded'  : tm o' -> tp.
-  %struct base : Base = {o := tm o'. ded := [a] tm (ded' a).} %open o ded.
+  i'    : tp.
+  %struct base : Base = {o := tm o'. ded := [a] tm (ded' a). i := tm i'.} %open o ded i.
   1 : o.
   0 : o.
   desig0 : - (ded' 0).
@@ -168,7 +200,6 @@
   imp0 : A ==' 1 * B ==' 0 -> (A imp B) == 0.
 }.
 
-
 %sig CONJMOD = {
   %include MLTT %open == ==' + *.
   %struct basemod : BaseMOD %open 1 0.
@@ -185,15 +216,38 @@
   or0 : A ==' 0 * B ==' 0 -> (A or B) == 0.
 }.
 
+%sig ForallMOD = {
+ %include MLTT %open == ==' P S.
+ %struct basemod : BaseMOD %open 1 0.
+ %struct univq : Forall = {%struct base := basemod.base.} %open forall.
+ forall1 : P ([x] (F x) ==' 1) -> (forall [x] F x) == 1.
+ forall0 : S ([x] (F x) ==' 0) -> (forall [x] F x) == 0.
+}.
+
+%sig ExistsMOD = {
+ %include MLTT %open == ==' P S.
+ %struct basemod : BaseMOD %open 1 0.
+ %struct existq : Exists = {%struct base := basemod.base.} %open exists.
+ exists1 : S ([x] (F x) ==' 1) -> (exists [x] F x) == 1.
+ exists0 : P ([x] (F x) ==' 0) -> (exists [x] F x) == 0.
+}.
+
 %sig PLMOD = {
   %include MLTT.
   %struct basemod    : BaseMOD.
-  %struct truthmod   : TruthMOD = {%struct basemod := basemod.}.
+  %struct truthmod   : TruthMOD   = {%struct basemod := basemod.}.
   %struct falsitymod : FalsityMOD = {%struct basemod := basemod.}.
-  %struct negmod     : NEGMOD = {%struct basemod := basemod.}.
-  %struct impmod     : IMPMOD = {%struct basemod := basemod.}.
-  %struct conjmod    : CONJMOD = {%struct basemod := basemod.}.
-  %struct disjmod    : DISJMOD = {%struct basemod := basemod.}.
+  %struct negmod     : NEGMOD     = {%struct basemod := basemod.}.
+  %struct impmod     : IMPMOD     = {%struct basemod := basemod.}.
+  %struct conjmod    : CONJMOD    = {%struct basemod := basemod.}.
+  %struct disjmod    : DISJMOD    = {%struct basemod := basemod.}.
+}.
+
+%sig FOLMOD = {
+  %include MLTT.
+  %struct plmod  : PLMOD.
+  %struct univq  : ForallMOD = {%struct basemod := plmod.basemod.}.
+  %struct existq : ExistsMOD = {%struct basemod := plmod.basemod.}.
 }.
 
 %view SoundBase : BasePF -> BaseMOD = {
@@ -243,7 +297,6 @@
   notE := [A] ([p : basemod.base.ded A] [q : basemod.base.ded (not A)] [B] MLTT..!! (basemod.contra (not0 (basemod.ded-1 p)) (basemod.ded-1 q))).
 }.
 
-
 %view SoundCONJ : CONJPF -> CONJMOD = {
   %struct basepf := SoundBase CONJMOD..basemod.
   %struct conj := conj.
@@ -280,6 +333,12 @@
           ).   
 }.
 
+%view SoundForall : ForallPF -> ForallMOD = {
+  %struct basepf := SoundBase ForallMOD..basemod.
+  %struct univq  := univq.
+  forallI := [f] basemod.1-ded (P f).
+  forallE := [p][c] basemod.1-ded (p c).
+}.
 
 %view SoundTND : TND -> PLMOD = {  
  %struct basepf := SoundBase PLMOD..basemod.
