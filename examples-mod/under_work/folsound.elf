@@ -307,7 +307,7 @@
                 (basemod.contra (and0 (MLTT..inj1 q)) (basemod.ded-1 p))
               )
            ).
-   andEr := [A][B][p : basemod.base.ded (A and B)] (
+  andEr := [A][B][p : basemod.base.ded (A and B)] (
               basemod.1-ded (basemod.indirect [q : B == 0]
                 (basemod.contra (and0 (MLTT..inj2 q)) (basemod.ded-1 p))
               )
@@ -336,8 +336,15 @@
 %view SoundForall : ForallPF -> ForallMOD = {
   %struct basepf := SoundBase ForallMOD..basemod.
   %struct univq  := univq.
-  forallI := [f] basemod.1-ded (P f).
-  forallE := [p][c] basemod.1-ded (p c).
+  forallI := [F][p : {x} basemod.base.ded (F x)] 
+               basemod.1-ded (forall1 (MLTT..lam [x] (basemod.ded-1 (p x)))).
+  forallE := [F][p : basemod.base.ded (forall [x] F x)] 
+               [c] basemod.1-ded (basemod.indirect 
+                ([q : (F c) == 0] basemod.contra 
+                 (forall0 (MLTT..pair c q)) 
+                 (basemod.ded-1 p)
+                )  
+               ).
 }.
 
 %view SoundTND : TND -> PLMOD = {  
