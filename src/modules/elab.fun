@@ -303,24 +303,25 @@ struct
                    of SOME def =>
                        let val defn = normalize def
                        in if checkType(defn, typ)
-                          then I.AbbrevDef(Name @ name', q, imp', defn, typ, uni') (* @FR: can this be a ConDef? *)
+                          then SOME(I.AbbrevDef(Name @ name', q, imp', defn, typ, uni')) (* @FR: can this be a ConDef? *)
                           else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
                        end
                     | NONE =>
-                      I.ConDec(Name @ name', q, imp', stat', typ, uni')
+                      SOME(I.ConDec(Name @ name', q, imp', stat', typ, uni'))
               end
            | translateConDec(c', I.ConDef(name', q', imp', def', typ', uni', anc')) =
-               translateDefOrAbbrev(c', name', q', imp', def', typ', uni', SOME anc')
+               SOME(translateDefOrAbbrev(c', name', q', imp', def', typ', uni', SOME anc'))
            | translateConDec(c', I.AbbrevDef(name', q', imp', def', typ', uni')) =
-               translateDefOrAbbrev(c', name', q', imp', def', typ', uni', NONE)
-           | translateConDec(_, I.BlockDec(_, _, _, _)) = raise FixMe
+               SOME(translateDefOrAbbrev(c', name', q', imp', def', typ', uni', NONE))
+           | translateConDec(_, I.BlockDec(_, _, _, _)) = NONE
            | translateConDec(_, I.SkoDec(_, _, _, _, _)) = raise FixMe
         (* takes the declaration c' from the instantiated signature and computes and installs the translated declaration *)
      	fun flatten1(c' : IDs.cid) =
      	   case M.symLookup c'
               of M.SymCon(con') => (
-                   installConDec (c', translateConDec(c', con'));
-                   ()
+                 case translateConDec(c', con')
+                   of NONE => ()
+                    | SOME con => (installConDec (c', con); ())
                  )
                | M.SymStr(str') =>
                 (* translates a structure declaration (with id s') along S and adds an entry to structMap *)
