@@ -1,0 +1,6 @@
+Unrecognized exception UndefinedMorph
+  raised at: src\modules\elab.fun:209.57-209.76
+             src\frontend\twelf.fun:1204.83
+             src\frontend\twelf.fun:221.34-221.37
+             
+better error message for instantiation/definition clash
