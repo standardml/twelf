@@ -4,3 +4,7 @@ Unrecognized exception UndefinedMorph
              src\frontend\twelf.fun:221.34-221.37
              
 better error message for instantiation/definition clash
+
+abbrev's in views, better any declaration
+
+separate compilation exists
