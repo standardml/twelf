@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>mainMenu</key>
+	<dict>
+		<key>items</key>
+		<array>
+			<string>146A5243-C6F2-49A3-BE50-3FDF7C2ECCB3</string>
+		</array>
+		<key>submenus</key>
+		<dict>
+			<key>146A5243-C6F2-49A3-BE50-3FDF7C2ECCB3</key>
+			<dict>
+				<key>items</key>
+				<array/>
+				<key>name</key>
+				<string>Run</string>
+			</dict>
+		</dict>
+	</dict>
+	<key>name</key>
+	<string>Twelf</string>
+	<key>ordering</key>
+	<array>
+		<string>2AC9CFF5-BCFD-4AA6-B80C-7109B338BF20</string>
+		<string>146DB308-331A-412B-A2B6-BC692AF83245</string>
+		<string>7A63157E-7B43-4D8E-8837-3728E80FB926</string>
+		<string>F0882893-0379-4A66-900D-5BC59C5B9EA2</string>
+		<string>671DF83F-2D29-4980-B47A-72D5F6918997</string>
+	</array>
+	<key>uuid</key>
+	<string>BC491345-4CEF-493E-AB36-56E96DC76CDB</string>
+</dict>
+</plist>
