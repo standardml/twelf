@@ -7,4 +7,10 @@ better error message for instantiation/definition clash
 
 abbrev's in views, better any declaration
 
+map constants to skolem constants
+
 separate compilation exists
+
+no %use in signatures
+
+shadowing on toplevel?
