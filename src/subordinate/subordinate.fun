@@ -72,7 +72,7 @@ struct
     fun reach (b, a, visited) =
         let fun rch (b, visited) =
 	        if IntSet.member (b, visited)
-		  then visited
+		   then visited
 		else let val adj = (adjNodesC b)
 		     in
 		       if IntSet.member (a, adj)
@@ -88,6 +88,7 @@ struct
     (* b must be new *)
     (* this is sometimes violated below, is this a bug? *)
     (* Thu Mar 10 13:13:01 2005 -fp *)
+    (* b subordinates a *)
     fun addNewEdge (b, a) =
         ( incrMemoCounter();
 	  memoInsert ((b,a), (true, memoCounter())) ;
@@ -232,6 +233,7 @@ struct
         (reachable (b, a); memoInsert ((b,a), (false, memoCounter())); false)
 	handle Reachable => (memoInsert ((b,a), (true, memoCounter())); true)
 
+    (* true if b subordinates a *)
     fun below (a, b) =
         case memoLookup (b, a)
 	  of NONE => computeBelow (a, b)
@@ -251,15 +253,16 @@ struct
     *)
     fun equiv (a, b) = belowEq (a, b) andalso belowEq (b, a)
 
+    (* b shall subordinate a *)
     fun addSubord (a, b) =
         if below (a, b) then ()
 	else if (fGet b)
 	       (* if b is frozen and not already b #> a *)
 	       (* subordination would change; signal error *)
 	       then raise Error ("Freezing violation: "
-				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup b)
+				 ^ ModSyn.symFoldName b
 				 ^ " would depend on "
-				 ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a))
+				 ^ ModSyn.symFoldName a)
 	     else addNewEdge (b, a)
 
     (* Thawing frozen families *)
@@ -457,7 +460,10 @@ struct
                 of IntSyn.Kind => (
                      insertNewFam c;
                      (* ... and all entries d below c in "from", add a subordination edge in the current module *)
-                     IntSet.foldl (fn (d, ()) => addSubord(d,c)) () (adjNodes(from, c))
+                     IntSet.foldl (fn (d, ()) => (
+                        (adjNodesC(d);()) handle Option => insertNewFam d; (* add d if not yet added *)
+                        addSubord(d,c)
+                     )) () (adjNodes(from, c))
                    )
                  | _ => ()
               )
