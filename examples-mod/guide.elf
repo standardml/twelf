@@ -1,0 +1,116 @@
+%sig JUDGMENTS = {
+  %%% Propositions
+  o : type.		    %name o A.
+ 
+  %%% Natural Deductions
+  nd : o -> type.	    %name nd D.
+}.
+
+
+%sig IMPLICATION = {
+  %struct J : JUDGMENTS  %open o nd.
+  imp    : o -> o -> o.	    %infix right 10 imp.
+  impi    : (nd A -> nd B) -> nd (A imp B).
+  impe    : nd (A imp B) -> nd A -> nd B.
+
+}.
+
+%sig CONJUNCTION = {
+  %struct J : JUDGMENTS %open o nd.
+  and    : o -> o -> o.	    %infix right 11 and.
+  andi    : nd A -> nd B -> nd (A and B).
+  ande1   : nd (A and B) -> nd A.
+  ande2   : nd (A and B) -> nd B.
+}.
+
+
+%sig TRUTH = {
+  %struct J : JUDGMENTS %open o nd.
+  true   : o.
+  truei   : nd (true).
+  % no truee
+}.
+
+%sig DISJUNCTION = {
+  %struct J : JUDGMENTS %open o nd.
+  or     : o -> o -> o.	    %infix right 11 or.
+  ori1    : nd A -> nd (A or B).
+  ori2    : nd B -> nd (A or B).
+  ore     : nd (A or B) -> (nd A -> nd C) -> (nd B -> nd C) -> nd C.
+}.
+
+%sig FALSEHOOD = {
+  %struct J : JUDGMENTS %open o nd.
+  false  : o.
+  % no falsei
+  falsee  : nd false -> nd C.
+}.
+
+%sig NEGATION = {
+  %struct J : JUDGMENTS %open o nd.
+  %struct F : FALSEHOOD = {%struct J := J.} %open false falsee.
+  not : o -> o.
+  noti : (nd A -> nd false) -> nd (not A).
+  note : nd (not A) -> nd A -> nd false.
+}.
+
+%sig FOL = { 
+  %struct J : JUDGMENTS %open o nd.
+  %struct I : IMPLICATION = {%struct J := J.} %open imp impi impe.
+  %struct C : CONJUNCTION = {%struct J := J.} %open and andi ande1 ande2.
+  %struct T : TRUTH = {%struct J := J.} %open true truei.
+  %struct F : FALSEHOOD = {%struct J := J.} %open false falsee.
+  %struct D : DISJUNCTION = {%struct J := J.} %open or ori1 ori2 ore.
+  %struct N : NEGATION = {%struct J := J.
+                         %struct F := F.} %open not noti note.
+}.
+
+%sig MINIMAL = {
+  %struct J : JUDGMENTS %open o nd.
+  %struct T : TRUTH = {%struct J := J.} %open true truei.
+  %struct F : FALSEHOOD = {%struct J := J.} %open false falsee.
+  %struct I : IMPLICATION = {%struct J := J.} %open imp impi impe.
+}.
+
+%view morphJ :  JUDGMENTS -> MINIMAL = {
+  o := o.
+  nd := nd.   
+}.
+
+%view morphI :  IMPLICATION -> MINIMAL = {
+  %struct J := morphJ.					     
+  imp := [x] [y]  x imp y.
+  impi := [A][B][D] impi D.
+  impe := [A][B][D1][D2] impe D1 D2.
+}.
+ 
+
+%view morphF: FALSEHOOD -> MINIMAL = {
+  %struct J := morphJ.
+  false := false.
+}.
+
+%view morphN :  NEGATION -> MINIMAL = {
+  %struct J := morphJ.
+  not := [A] A imp false.
+  noti : (nd A -> nd false) -> nd (not A)
+     = [D:nd A -> nd false] impi D.
+  note : nd (not A) -> nd A -> nd false
+     = [D:nd (not A)] [E:nd A] impe D E.
+}.
+
+
+
+%%% Local reductions
+
+red : nd A -> nd A -> type.
+impred : red (impe (impi D) E) (D E).
+andred1 : red (ande1 (andi D E)) D.
+andred2 : red (ande2 (andi D E)) E.
+% no truered
+orred1 : red (ore (ori1 D) E1 E2) (E1 D).
+orred2 : red (ore (ori2 D) E1 E2) (E2 D).
+% no falsered
+forallred : red (foralle (foralli D) T) (D T).
+existsred : red (existse (existsi T D) E) (E T D).
+
