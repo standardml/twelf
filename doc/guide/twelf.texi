@@ -34,7 +34,8 @@ Last updated @value{UPDATED}.
 * Lexical Conventions::         Reserved characters and identifiers
 * Syntax::                      Grammar of signatures
 * Term Reconstruction::         Checking and inferring types 
-* Module System::               How to structure Twelf source code
+* 
+Module System::               How to structure Twelf source code
 * Logic Programming::           How to interpret signatures as programs
 * Constraint Domains::          Using rationals and integers
 * Modes::                       Input/output behavior of relations
@@ -1250,10 +1251,72 @@ To be written @emph{Some introductory remarks about the module system in general
 
 To be written @emph{Modularize the example from the previous section.}
 
+@example
+@group
+%sig JUDGMENTS = @{
+  %%% Propositions
+  o : type.		    %name o A.
+ 
+  %%% Natural Deductions
+  nd : o -> type.	    %name nd D.
+@}.
+@end group
+@end example
+
 @node Structure Declaration, View Declaration, Signature Declaration, Module System
 @section Structure Declaration
 
 @cindex structure
+@example
+@group
+%sig IMPLICATION = @{
+  %struct J : JUDGMENTS  %open o nd.
+  imp    : o -> o -> o.	    %infix right 10 imp.
+  impi    : (nd A -> nd B) -> nd (A imp B).
+  impe    : nd (A imp B) -> nd A -> nd B.
+
+@}.
+
+%sig TRUTH = @{
+  %struct J : JUDGMENTS %open o nd.
+  true   : o.
+  truei   : nd (true).
+  % no truee
+@}.
+
+%sig FALSEHOOD = @{
+  %struct J : JUDGMENTS %open o nd.
+  false  : o.
+  % no falsei
+  falsee  : nd false -> nd C.
+@}.
+
+%sig NEGATION = @{
+  %struct J : JUDGMENTS %open o nd.
+  %struct F : FALSEHOOD = @{%struct J := J.@} %open false falsee.
+  not : o -> o.
+  noti : (nd A -> nd false) -> nd (not A).
+  note : nd (not A) -> nd A -> nd false.
+@}.
+
+%sig FOL = @{ 
+  %struct J : JUDGMENTS %open o nd.
+  %struct I : IMPLICATION = @{%struct J := J.@} %open imp impi impe.
+  %struct T : TRUTH = @{%struct J := J.@} %open true truei.
+  %struct F : FALSEHOOD = @{%struct J := J.@} %open false falsee.
+  %struct N : NEGATION = @{%struct J := J.
+                          %struct F := F.@} %open not noti note.
+@}.
+
+%sig MINIMAL = @{
+  %struct J : JUDGMENTS %open o nd.
+  %struct I : IMPLICATION = @{%struct J := J.@} %open imp impi impe.
+  %struct F : FALSEHOOD = @{%struct J := J.@} %open false falsee.
+@}.
+@end group
+@end example
+
+
 
 To be written @emph{Modularize the example from the previous section.}
 
@@ -1261,6 +1324,51 @@ To be written @emph{Modularize the example from the previous section.}
 @section View Declaration
 
 @cindex view
+
+
+@example
+@group
+%view morphJ :  JUDGMENTS -> MINIMAL = @{
+  o := o.
+  nd := nd.   
+@}.
+
+%view morphI :  IMPLICATION -> MINIMAL = @{
+  %struct J := morphJ.					     
+  imp := [x] [y]  x imp y.
+  impi := [A][B][D] impi D.
+  impe := [A][B][D1][D2] impe D1 D2.
+@}.
+ 
+%view morphF: FALSEHOOD -> MINIMAL = @{
+  %struct J := morphJ.
+  false := false.
+  falsee := [C][D] falsee D.
+@}.
+
+%view morphN :  NEGATION -> MINIMAL = @{
+  %struct J := morphJ.
+  %struct F := morphF.
+  not := [A] A imp false.
+  noti := [A] [D:nd A -> nd false] impi D.
+  note := [A] [D:nd (A imp false)] [E:nd A] impe D E.
+@}.
+
+%view morphT : TRUTH -> MINIMAL = @{
+  %struct J := morphJ.
+  true := false imp false.
+  truei := impi [u] falsee u.
+@}.
+
+%view morphFOL : FOL -> MINIMAL = @{
+  %struct J := morphJ.
+  %struct I := morphI.
+  %struct T := morphT.
+  %struct F := morphF.
+  %struct N := morphN.
+@}.
+@end group
+@end example
 
 To be written @emph{Modularize the example from the previous section.}
 
