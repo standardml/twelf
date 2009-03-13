@@ -34,6 +34,7 @@ Last updated @value{UPDATED}.
 * Lexical Conventions::         Reserved characters and identifiers
 * Syntax::                      Grammar of signatures
 * Term Reconstruction::         Checking and inferring types 
+* Module System::               How to structure Twelf source code
 * Logic Programming::           How to interpret signatures as programs
 * Constraint Domains::          Using rationals and integers
 * Modes::                       Input/output behavior of relations
@@ -79,6 +80,13 @@ Term Reconstruction
 * Type Ascription::             Disambiguating terms
 * Error Messages::              When things go wrong
 * Tracing Reconstruction::      Seeing what happens during reconstruction
+
+Module System
+
+* Signature Declaration::       Basic organization structure
+* Structure Declaration::       Signature morphism that copies one signature into another
+* View Declaration::            Signature morphism that translates one signature into another
+* Sample Elaboration::          An example of who one should think of modules semantically  
 
 Logic Programming
 
@@ -826,7 +834,7 @@ note : nd (not A) -> nd A -> nd false
 @end group
 @end example
 
-@node Term Reconstruction, Logic Programming, Syntax, Top
+@node Term Reconstruction, Module System, Syntax, Top
 @chapter Term Reconstruction
 
 @cindex term reconstruction
@@ -1221,7 +1229,49 @@ are encountered.  Both have their uses, depending on the form of
 the problem with reconstruction.
 
 
-@node Logic Programming, Constraint Domains, Term Reconstruction, Top
+@node Module System, Logic Programming, Term Reconstruction, Top
+@chapter Module System
+
+@cindex module system
+
+To be written @emph{Some introductory remarks about the module system in general.}
+
+@menu
+* Signature Declaration::       Basic organization structure
+* Structure Declaration::       Signature morphism that copies one signature into another
+* View Declaration::            Signature morphism that translates one signature into another
+* Sample Elaboration::          An example of who one should think of modules semantically  
+@end menu
+
+@node Signature Declaration, Structure Declaration, Module System, Module System
+@section Signature Declaration
+
+@cindex signature
+
+To be written @emph{Modularize the example from the previous section.}
+
+@node Structure Declaration, View Declaration, Signature Declaration, Module System
+@section Structure Declaration
+
+@cindex structure
+
+To be written @emph{Modularize the example from the previous section.}
+
+@node View Declaration, Sample Elaboration, Structure Declaration, Module System
+@section View Declaration
+
+@cindex view
+
+To be written @emph{Modularize the example from the previous section.}
+
+@node Sample Elaboration, Logic Programming, View Declaration, Module System
+@section Sample Elaboration
+
+@cindex elaboration
+
+To be written @emph{Modularize the example from the previous section.}
+
+@node Logic Programming, Constraint Domains, Module System, Top
 @chapter Logic Programming
 
 @cindex logic programming
