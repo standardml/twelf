@@ -56,16 +56,33 @@ struct
         end
   (* checks the judgment |- mor : dom -> cod *)
   (* @FR: must use inclusion relation *)
-  fun checkMorph(mor, dom, cod) =
+  and checkMorph(mor, dom, cod) =
      if reconMorph mor = (dom, cod)
      then ()
      else raise Error("morphism does not have expected type")
   
+  and checkSymInst(M.ConInst(con, term)) =
+     let
+     	val v = M.currentMod()
+     	val typ = M.constType con
+     	val expTyp = applyMorph(typ, M.MorView v)
+     in
+     	if checkType(term, expTyp)
+     	then ()
+        else raise Error("type mismatch")
+     end
+    | checkSymInst(M.StrInst(str, mor)) =
+     let
+     	val expDom = M.strDecDom (M.structLookup str)
+     in
+     	checkMorph(mor, expDom, M.currentTargetSig())
+     end
+
   (* auxiliary function of findClash
      if s is in forbiddenPrefixes, instantiations of s.c are forbidden
      if c is in forbiddenCids, instantiations of c are forbidden
   *)
-  fun findClash'(nil, _, _) = NONE
+  and findClash'(nil, _, _) = NONE
     | findClash'(inst :: insts, forbiddenPrefixes, forbiddenCids) =
         let
            val c = M.symInstCid inst
@@ -94,10 +111,10 @@ struct
      - c and c, or
      - s and s.c
   *)
-  fun findClash(insts) = findClash'(insts, nil, nil)
+  and findClash(insts) = findClash'(insts, nil, nil)
 
   (* auxiliary functions of checkStrDec and checkSigIncl, checks whether the intended domain is permitted *)
-  fun checkDomain(dom : IDs.mid) =
+  and checkDomain(dom : IDs.mid) =
       let
       	 (* no ancestors may be instantiated *)
       	 val scope = M.getScope()
@@ -112,7 +129,7 @@ struct
       in
          ()
       end  
-  fun checkIncludes(dom : IDs.mid, cod : IDs.mid) =
+  and checkIncludes(dom : IDs.mid, cod : IDs.mid) =
       let
          (* all includes of the domain must also be included in the codomain *)
          val domincl = M.modInclLookup dom
@@ -125,7 +142,7 @@ struct
       end
   
   (* checks well-typedness condition for includes *)
-  fun checkModIncl(M.SigIncl (m,_)) = checkDomain m
+  and checkModIncl(M.SigIncl (m,_)) = checkDomain m
     | checkModIncl(M.ViewIncl mor) = () (* @FR: add check *)
 
   (* checks simple well-typedness conditions for structure declarations
@@ -136,31 +153,35 @@ struct
        will be checked during flattening
      postcondition: getInst yields all information that is needed to check the latter during flattening
   *)
-  fun checkStrDec(M.StrDec(_,_, dom, insts, _)) = (
+  and checkStrDec(M.StrDec(_,_, dom, insts, _)) = (
         checkDomain(dom);
         checkIncludes(dom, M.currentMod());
         case findClash insts
           of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                     M.symFoldName c ^ " in structure declaration")
-           | NONE => ()
-        )
+           | NONE => ();
+        List.map checkSymInst insts;
+        ()
+      )
     | checkStrDec(M.StrDef(_,_, dom, mor)) = (
         checkDomain(dom);
         checkMorph(mor, dom, M.currentMod())
       )
 
-  fun checkModDec(M.ViewDec(_, dom, cod)) = checkIncludes(dom, cod)
+  and checkModDec(M.ViewDec(_, dom, cod)) = checkIncludes(dom, cod)
     | checkModDec(M.SigDec _) = ()
 
  (********************** Semantics of the module system **********************)
   (* auxiliary methods to get Exps from cids *)
-  fun headToExp h = I.Root(h, I.Nil)
-  fun cidToExp c = (case (M.sgnLookup c)
+  and headToExp h = I.Root(h, I.Nil)
+  and cidToExp c = (case (M.sgnLookup c)
 		      of (I.ConDec _) => headToExp(I.Const c)
 		       | (I.ConDef _) => headToExp (I.Def c)
 		       | (I.AbbrevDef _) => headToExp (I.NSDef c))
-		      
-  fun applyMorph(U, mor) =
+  (* pre: U is well-formed term over the domain of mor
+     post: U is well-formed term over the codomain of mor
+   *)
+  and applyMorph(U, mor) =
      let
      	val (dom, cod) = reconMorph mor
      	fun A(I.Uni L) = I.Uni L
@@ -217,7 +238,7 @@ struct
      end
   
   (* auxiliary function of getInst, its first argument is a list of instantiations *)
-  fun getInst'(nil, c, q) = NONE
+  and getInst'(nil, c, q) = NONE
     | getInst'(inst :: insts, c, q) = (
         case inst
            (* if c is instantiated directly, return its instantiation *)
@@ -238,7 +259,7 @@ struct
      this finds both explicit instantiations (c := e) and induced instantiations (s := mor in case c = s.c')
      in StrDefs, the instantiation is obtained by applying the definition of the structure to c
   *)
-  fun getInst(M.StrDec(_,_,_,insts, _), c, q) = getInst'(insts, c, q)
+  and getInst(M.StrDec(_,_,_,insts, _), c, q) = getInst'(insts, c, q)
     | getInst(M.StrDef(_,_,_,mor), c, _) = SOME (applyMorph(cidToExp c, mor))
   
   (* flattens a structure by computing all generated declarations (the order is depth first declaration order)
@@ -254,7 +275,7 @@ struct
      - declaration in domain: primed lower case
      - induced declaration in codomain: unprimed lower case
   *)
-  fun flattenDec(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * M.StrDec -> IDs.cid) =
+  and flattenDec(S : IDs.cid, installConDec : IDs.cid * I.ConDec -> IDs.cid, installStrDec : IDs.cid * M.StrDec -> IDs.cid) =
      let
      	val Str = M.structLookup S
      	val Name = M.strDecName Str
@@ -341,7 +362,7 @@ struct
      	M.sgnApp(Dom, flatten1)
      end
 
-  fun flattenInst(instID : IDs.cid, installInst : M.SymInst -> IDs.cid) =
+  and flattenInst(instID : IDs.cid, installInst : M.SymInst -> IDs.cid) =
      let
         val viewID = IDs.midOf instID
         val M.SymStrInst(M.StrInst(s, mor)) = M.symLookup instID
@@ -372,23 +393,5 @@ struct
            end
      in
         M.sgnApp(dom, flatten1)
-     end
-
-(********************** another type checking method **********************)
-  fun checkSymInst(M.ConInst(con, term)) =
-     let
-     	val v = M.currentMod()
-     	val typ = M.constType con
-     	val expTyp = applyMorph(typ, M.MorView v)
-     in
-     	if checkType(term, expTyp)
-     	then ()
-        else raise Error("type mismatch")
-     end
-    | checkSymInst(M.StrInst(str, mor)) =
-     let
-     	val expDom = M.strDecDom (M.structLookup str)
-     in
-     	checkMorph(mor, expDom, M.currentTargetSig())
      end
 end

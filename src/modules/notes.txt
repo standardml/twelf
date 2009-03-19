@@ -14,3 +14,11 @@ separate compilation exists
 no %use in signatures
 
 shadowing on toplevel?
+
+implement isomorphism check
+
+make symbols with fixity parsable separately
+
+forbid instantiating defined constants
+
+read assignments in structures separately
