@@ -160,7 +160,7 @@ struct
           of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                     M.symFoldName c ^ " in structure declaration")
            | NONE => ();
-        List.map checkSymInst insts;
+        List.map checkSymInst (List.filter (fn M.StrInst _ => true | _ => false) insts);
         ()
       )
     | checkStrDec(M.StrDef(_,_, dom, mor)) = (
