@@ -34,8 +34,7 @@ Last updated @value{UPDATED}.
 * Lexical Conventions::         Reserved characters and identifiers
 * Syntax::                      Grammar of signatures
 * Term Reconstruction::         Checking and inferring types 
-* 
-Module System::               How to structure Twelf source code
+* Module System::               How to structure Twelf source code
 * Logic Programming::           How to interpret signatures as programs
 * Constraint Domains::          Using rationals and integers
 * Modes::                       Input/output behavior of relations
@@ -86,8 +85,10 @@ Module System
 
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
-* View Declaration::            Signature morphism that translates one signature into another
+* View Declaration::            Signature morphism that translates one signature to another
 * Sample Elaboration::          An example of who one should think of modules semantically  
+* Include Declaration::         Signautre morphisms that are inclusions
+* Open Declarations::           How to open imported constants to avoid qualified names
 
 Logic Programming
 
@@ -299,6 +300,10 @@ in order to help diagnose subtle type errors or ambiguities.
  Twelf has been ported to be compliant with the Definition of Standard
 ML in its 1997 revision.  As a result, it now supports Poly/ML
 and MLton in addition to Standard ML of New Jersey (SML/NJ).
+
+@item Module System (@pxref{Module System})
+ A module system featuring signature, structure, and view declarations has been added.
+ Ma mdular signature is internally elaborated into a non-modular one, but the modular structure is remembered.
 @end table
 
 @node Quick Start,  , New Features, Introduction
@@ -379,7 +384,7 @@ The following table lists the reserved characters in Twelf.
     colon, constant declaration or ascription
 
 @item @samp{.}
-    period, terminates declarations
+    period, terminates declarations and separates parts of qualified names
 
 @item @samp{(} @samp{)}
     parentheses, for grouping terms
@@ -456,7 +461,7 @@ identifers which are not interpreted specially.
           the kind @math{type}
 @end table
 
-Constants have static scope, which means that they can be shadowed by
+Toplevel constants have static scope, which means that they can be shadowed by
 subsequent declarations.  A shadowed identifier (which can no longer be
 referred to in input) is printed as @code{%@var{id}%}.  The printer for
 terms renames bound variables so they do not shadow constants.
@@ -465,6 +470,10 @@ Free uppercase identifiers in declarations represent schematic
 variables.  In order to distinguish them from other kinds of variables
 and constants they are printed as @samp{'@var{id}} (backquote, followed
 by the identifer name) in error messages.
+
+Qualified names of the form s.c refer to the constant c of the struct s.
+Qualified names of the form S..c refer to the constant c of the included signature S.
+Qualifed names referring to blocks or structures are formed accordingly.
 
 @node Syntax, Term Reconstruction, Lexical Conventions, Top
 @chapter Syntax
@@ -493,6 +502,8 @@ In explanations and examples we will use letters following the
 mathematical conventions above to clarify the roles of various terms.
 We also use @math{U} and @math{V} to stand for arbitrary terms.
 
+The Twelf module system uses three layers as well: modules, declarations/instantiations, expressions. Modules are signatures and views, they occur on toplevel. Signatures consist of declarations, views consist of instantiations. Finally, expressions are objects, types, and kinds, which are treated uniformly as far as the module system in concerned.
+
 @menu
 * Grammar::                     The grammar of Twelf
 * Constructor Declaration::     Introducing types and object constructors
@@ -507,7 +518,7 @@ We also use @math{U} and @math{V} to stand for arbitrary terms.
 
 @cindex declarations
 
-The grammar below defines the non-terminals @code{sig}, @code{decl},
+The grammar below defines the non-terminals @code{sig}, @code{decls}, @code{decl},
 @code{term} and uses the terminal @code{id} which stands for identifers
 (@pxref{Identifiers}).  The comments show the meaning in LF@.  There are
 various special declarations @code{%@var{keyword}} such as @code{%infix}
@@ -523,8 +534,10 @@ appropriate sections.
 
 @example
 @group
-sig  ::=                       % @r{Empty signature}
-       | decl sig              % @r{Constant declaration}
+sig   ::= 
+        | %sig sigdecl         % @r{signature declaration}
+        | %view viewdecl       % @r{view declaration}
+        | decl sig             % @r{declaration in the toplevel signature} 
 
 decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
        | defn.                 % @r{definition, usually @math{d : A = M}}
@@ -533,6 +546,7 @@ decl ::= id : term.            % @r{@math{a : K}  or  @math{c : A}}
        | %prefix pxdecl.       % @r{operator declaration}
        | %postfix pxdecl.      % @r{operator declaration}
        | %name namepref.       % @r{name preference declaration}
+       | %struct strdecl       % @r{structure declaration}
        | %query qdecl.         % @r{query declaration}
        | %clause defn.         % @r{clause definition}
        | sdecl.                % @r{solve declaration}
@@ -1235,13 +1249,17 @@ the problem with reconstruction.
 
 @cindex module system
 
-To be written @emph{Some introductory remarks about the module system in general.}
+The module system is based on the two primitive concepts of signatures and signature morphisms. Intuitively, a signature is a named list of declarations. Signature morphisms have a domain and a codomain signature and a signature morphism from S to T maps all declarations of S to expressions over T. Such a mapping induces mappings of all S-expressions to T-expressions by homomorphic extension.
+
+Signature morphisms can be composed in the obvious way. The atomic signature morphisms are called links, and we distinguish two kinds of links: views and structures. A view from S to T is declared on toplevel and must have exactly one instantiation for every declaration of S. Views encode translations and representations. A structure from S to T is declared within T and has the effect of copying the declarations of S into T. It may have instantiations for some declarations of S, in which case the S declarations are not only copied but also translated. Structures encode inheritance and instantiation.
 
 @menu
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
 * View Declaration::            Signature morphism that translates one signature into another
 * Sample Elaboration::          An example of who one should think of modules semantically  
+* Include Declaration::         Signature morphisms that are inclusions
+* Open Declarations::           How to open imported constants to avoid qualified names
 @end menu
 
 @node Signature Declaration, Structure Declaration, Module System, Module System
@@ -1249,15 +1267,22 @@ To be written @emph{Some introductory remarks about the module system in general
 
 @cindex signature
 
-To be written @emph{Modularize the example from the previous section.}
+Signatures are lists of declarations. Signature declarations introduce a name for a signature.
 
 @example
 @group
+sigdecl ::= id = @{ decls @}.
+
+decls   ::= decls decl
+@end group
+@end example
+
+The following is an example of a signature declaration for the basic judgments of propositional logic. We will continue this example below.
+@example
+@group
 %sig JUDGMENTS = @{
-  %%% Propositions
   o : type.		    %name o A.
  
-  %%% Natural Deductions
   nd : o -> type.	    %name nd D.
 @}.
 @end group
@@ -1267,6 +1292,16 @@ To be written @emph{Modularize the example from the previous section.}
 @section Structure Declaration
 
 @cindex structure
+
+@example
+@group
+structdecl ::= id : id.
+             | id : id = @{ insts @}.
+             | id : id = morph.
+@end group
+@end example
+
+
 @example
 @group
 %sig IMPLICATION = @{
@@ -1324,7 +1359,6 @@ To be written @emph{Modularize the example from the previous section.}
 @section View Declaration
 
 @cindex view
-
 
 @example
 @group
