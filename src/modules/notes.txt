@@ -11,7 +11,7 @@ map constants to skolem constants
 
 separate compilation exists
 
-no %use in signatures
+%use in signatures is the same as an include. This also gives qualified names for the constants.
 
 shadowing on toplevel?
 
