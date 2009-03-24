@@ -289,7 +289,7 @@ struct
 	      | TypeCheck.Error (msg) => abort 0 ("Double-checking types fails: " ^ msg ^ "\n"
 						^ "This indicates a bug in Twelf.\n")
 	      | Abstract.Error (msg) => abortFileMsg chlev (fileName, msg)
-	      (* | Constraints.Error (cnstrL) => abortFileMsg (fileName, constraintsMsg cnstrL) *)
+	      | Constraints.Error (cnstrL) => abortFileMsg chlev (fileName, constraintsMsg cnstrL) (* put back in because it may be raised by the module system -fr Mar 09 *)
 	      | Total.Error (msg) => abort chlev (msg ^ "\n")	(* Total includes filename *)
 	      | Reduces.Error (msg) => abort chlev (msg ^ "\n") (* Reduces includes filename *)
               | Compile.Error (msg) => abortFileMsg chlev (fileName, msg)
@@ -1175,7 +1175,8 @@ struct
                             of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                              | ModSyn.ViewDec(_, d, c) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
-                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error *)
+                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
+                            
                val _ = Elab.checkSymInst(Inst)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(Inst)
