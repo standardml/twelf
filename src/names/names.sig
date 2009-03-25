@@ -47,9 +47,12 @@ sig
   (* map between global declaration ids and their local qualified names *)
   val installName : IDs.cid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
-  val nameLookupWithError : IDs.mid * string list -> IDs.cid   (* as above, but raise exception if undefined *)
-  val nameLookupC : string list -> IDs.cid option              (* lookup in the current target signature *)
-
+  val nameLookupWithError : IDs.mid * string list -> IDs.cid   (* convenience, as above but raises exception if undefined *)
+  val nameLookupC : string list -> IDs.cid option              (* convenience, lookup in the current target signature *)
+  (* shadowing of (only) toplevel constants must be allowed for backwards compatibility *)
+  (* true if shadowed by later symbol name; if a constant shadows a struct, the struct's components are not shadowed *)
+  val isShadowed : IDs.cid -> bool
+  
   (* maps global declaration id's to their fixities, Nonfix if undefined *)
   val installFixity : IDs.cid * Fixity.fixity -> unit
   val fixityLookup : IDs.cid -> Fixity.fixity

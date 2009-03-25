@@ -86,7 +86,12 @@ struct
              let
              	val rr = Paths.join(r,r')
              	val Con = nameLookupWithError CON (dom, names, r)
-             	val _ = if (IDs.midOf Con = dom) then () else error(r, "instantiation of included symbol not allowed")
+             	val _ = if (IDs.midOf Con = dom) then () else error(r,
+             	   "instantiation of included constant " ^ ModSyn.symFoldName Con ^ " not allowed")
+             	val _ = case ModSyn.constDefOpt Con
+                          of NONE => ()
+                           | _ => raise Error(
+                              "instantiation of defined constant " ^ ModSyn.symFoldName Con ^ " not allowed");
              	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
              	val expType =
              	  if ModSyn.inSignature()

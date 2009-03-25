@@ -35,13 +35,13 @@ struct
   (********************** Module level type checking **********************)
   
   (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
-  (* @FR: must use inclusion relation to determine composability *)
+  (* composibility is co-/contravariant with respect to inclusions *)
   fun reconMorph(M.MorComp(mor1,mor2)) =
         let
            val (d1,c1) = reconMorph mor1
            val (d2,c2) = reconMorph mor2
         in
-           if (c1 = d2)
+           if ModSyn.modInclCheck(c1,d2)
            then (d1,c2)
            else raise Error("morphisms not composable")
         end
@@ -54,12 +54,13 @@ struct
         in
            (dom, cod)
         end
-  (* checks the judgment |- mor : dom -> cod *)
-  (* @FR: must use inclusion relation *)
+  (* checks the judgment |- mor : dom -> cod (co-/contravariant with respect to inclusions) *)
   and checkMorph(mor, dom, cod) =
-     if reconMorph mor = (dom, cod)
-     then ()
-     else raise Error("morphism does not have expected type")
+     let val (d,c) = reconMorph mor
+     in if ModSyn.modInclCheck(dom,d) andalso ModSyn.modInclCheck(c,cod)
+        then ()
+        else raise Error("morphism does not have expected type")
+     end
   
   and checkSymInst(M.ConInst(con, term)) =
      let
@@ -223,7 +224,7 @@ struct
         (* apply morphism to constant *)
         and ACid(c) =
            if not(IDs.midOf c = dom)
-           then cidToExp c   (* included constants are mapped to themselves *)
+           then cidToExp c  (* included constants are mapped to themselves *)
            else case mor
              of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
               | M.MorView(m) => (

@@ -1,24 +1,24 @@
-Unrecognized exception UndefinedMorph
-  raised at: src\modules\elab.fun:209.57-209.76
-             src\frontend\twelf.fun:1204.83
-             src\frontend\twelf.fun:221.34-221.37
-             
-better error message for instantiation/definition clash
+to do
 
 implement parametrized views
-
-map constants to skolem constants
-
-separate compilation exists
-
-%use in signatures is the same as an include. This also gives qualified names for the constants.
-
-shadowing on toplevel?
-
+read assignments in structures separately
 implement isomorphism check
+print out with nicer names
 
-make symbols with fixity parsable separately
+better error message for instantiation/definition clash: tricky because no printer available
+
+--------
+done
 
 forbid instantiating defined constants
+shadowing on toplevel
 
-read assignments in structures separately
+--------
+mail to Carsten
+
+map constants to skolem constants
+separate compilation exists
+%use in signatures is the same as an include. This also gives qualified names for the constants.
+make symbols with fixity parsable separately
+
+

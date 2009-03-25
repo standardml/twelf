@@ -25,7 +25,7 @@ val implicit = ref (false)	        (* whether to print implicit arguments *)
 val printInfix = ref (false)		(* if implicit is ref true, whether to print infix ops when possible *)
 val printDepth = ref (NONE:int option)	(* limit on term depth to print *)
 val printLength = ref (NONE:int option)	(* limit on number of arguments to print *)
-val noShadow = ref (false)		(* if true, don't print shadowed constants as "%const%" *)
+val noShadow = ref (false)		(* if true, don't print shadowed constants as "%name%" *)
 
 local
   (* Shorthands *)
@@ -242,7 +242,9 @@ local
   *)
   (* auxiliary function used in fmtCom to get the module names as well if the constant is not local *)
   fun getNames(cid) =
-     let
+     if not(!noShadow) andalso Names.isShadowed cid
+     then (NONE, ["%" ^ ModSyn.symFoldName cid ^ "%"])
+     else let
      	 val m = IDs.midOf(cid)
          val mods = if m = ModSyn.currentTargetSig() then NONE else SOME (ModSyn.modName m)
      in  

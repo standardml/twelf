@@ -163,6 +163,9 @@ struct
 
     val nameTable : cid SH.Table = SH.new(4096)
     val modnameTable : mid MH.Table = MH.new(4096)
+
+    (* shadowTable(c') = c means that c' was shadowed by c *)
+    val shadowTable : cid CH.Table = CH.new(100)
     
     type namePref = (string list * string list) option
     val namePrefTable : namePref CH.Table = CH.new(4096)
@@ -171,7 +174,6 @@ struct
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
   in
 
-   (* this must be replaced with the parsing method for qualified names -fr *)
    fun parseQualifiedName (name : string) =
        String.fields (fn c => c = #".") name
    fun foldQualifiedName l = IDs.mkString(l,"",".","")
@@ -182,7 +184,6 @@ struct
       in  aux(nil, names)
       end
  
-
     fun installModname(m : mid, l : string list) =
        case MH.insertShadow modnameTable (l,m)
          of NONE => ()
@@ -190,14 +191,18 @@ struct
              MH.insert modnameTable e; (* roll back insertShadow *)
              raise Error("module name " ^ foldQualifiedName l ^ " already declared")
             )
-   (* @FR: currently shadowing is disallowed completely,
-      but for backwards compatibility symbol level shadowing in the toplevel signature is needed *)
+
     fun installName(c : cid, l : string list) =
        case SH.insertShadow nameTable ((ModSyn.currentMod(), l), c)
          of NONE => ()
-          | SOME e => (
-              SH.insert nameTable e; (* roll back insertShadow *)
-              raise Error("symbol name " ^ foldQualifiedName l ^ " already declared")
+          | SOME (e as (_, c')) => (
+             if ModSyn.onToplevel() andalso List.length l = 1
+             then 
+                CH.insert shadowTable (c', c)
+             else (
+               SH.insert nameTable e; (* roll back insertShadow *)
+               raise Error("symbol name " ^ foldQualifiedName l ^ " already declared")
+             )
             )
 
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
@@ -227,6 +232,8 @@ struct
     fun nameLookupWithError(m,q) = case nameLookup(m,q)
       of SOME c => c
        | NONE => raise Error("undeclared identifier " ^ foldQualifiedName q)
+
+    fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
    (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
@@ -275,7 +282,8 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear fixityTable; CH.clear namePrefTable)
+    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; 
+                    CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the
        counter associated with a name
