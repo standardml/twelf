@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 4. Term Reconstruction</title>
+
+<meta name="description" content="Twelf User's Guide: 4. Term Reconstruction">
+<meta name="keywords" content="Twelf User's Guide: 4. Term Reconstruction">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Term-Reconstruction"></a>
+<a name="SEC14"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_3.html#SEC13" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC15" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 4. Term Reconstruction </h1>
+
+
+<p>Representations of deductions in LF typically contain a lot of redundant
+information.  In order to make LF practical, Twelf gives the user the
+opportunity to omit redundant information in declarations and
+reconstructs it from context.  Unlike for functional languages, this
+requires recovering objects as well as types, so we refer to this phase
+as term reconstruction.
+</p>
+<p>There are criteria which guarantee that the term reconstruction problem
+is decidable, but unfortunately these criteria are either very
+complicated or still force much redundant information to be supplied.
+Therefore, the Twelf implementation employs a reconstruction algorithm
+which always terminates and gives one of three answers:
+</p>
+<ol>
+<li> yes, and here is the most general reconstruction;
+
+</li><li> no, and here is the problem; or
+
+</li><li> maybe.
+</li></ol>
+
+<p>The last characterizes the situations where there is insufficient
+information to guarantee a most general solution to the term reconstruction
+problem.  Because of the decidable nature of type-checking in LF, the user
+can always annotate the term further until it falls into one of the
+definitive categories.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC15">4.1 Implicit Quantifiers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Free variables in declarations
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC16">4.2 Implicit Arguments</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Omitted arguments to constants
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC17">4.3 Strict Occurrences</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          A sufficient condition for principal types
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC18">4.4 Strict Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Reconstruction on definitions
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC19">4.5 Type Ascription</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Disambiguating terms
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC20">4.6 Error Messages</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              When things go wrong
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC21">4.7 Tracing Reconstruction</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Seeing what happens during reconstruction
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Implicit-Quantifiers"></a>
+<a name="SEC15"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC14" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC16" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.1 Implicit Quantifiers </h2>
+
+
+<p>The model of term reconstruction employed by Twelf is
+straightforward, although it employs a relatively complex algorithm.
+The basic principle is a duality between quantifiers omitted in a
+constant declaration and implicit arguments where the constant is used.
+Recall some definitions in the signature defining natural deductions
+(see section <a href="twelf_3.html#SEC13">Sample Signature</a>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">o : type.
+and : o -&gt; o -&gt; o.   %infix right 10 and
+nd : o -&gt; type.
+andi : nd A -&gt; nd B -&gt; nd (A and B).
+</pre></td></tr></table>
+<p>The last declaration contains <code>A</code> and <code>B</code> as free variables.
+Type reconstruction infers most general types for the free variables in
+a constant declaration and adds implicit quantifiers.  In the example
+above, <code>A</code> and <code>B</code> must both be of type <code>o</code>.  The
+internal form of the constant thus has one of the following two forms.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">andi : {A:o} {B:o} nd A -&gt; nd B -&gt; nd (A and B).
+andi : {B:o} {A:o} nd A -&gt; nd B -&gt; nd (A and B).
+</pre></td></tr></table>
+<p>These forms are printed during type reconstruction, so the user can
+examine if the result of reconstruction matches his expectations.
+</p>
+<hr size="6">
+<a name="Implicit-Arguments"></a>
+<a name="SEC16"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC15" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC17" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.2 Implicit Arguments </h2>
+
+
+<p>The quantifiers on <code>A</code> and <code>B</code> in the declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">andi : nd A -&gt; nd B -&gt; nd (A and B).
+</pre></td></tr></table>
+
+<p>were implicit.  The corresponding arguments to <code>andi</code> are also
+implicit.  In fact, since the order of the reconstructed quantifiers is
+arbitrary, we cannot know in which order to supply the arguments, so
+they must always be omitted.  Thus a constant with <em>n</em> implicit
+quantifiers is supplied with <em>n</em> implicit arguments wherever it is
+seen.  These implicit arguments are existential variables whose value
+may be determined from context by unification.
+</p>
+<p>For example, using also
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">true : o.
+truei: nd (true).
+</pre></td></tr></table>
+
+<p>we have
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(andi truei truei) : nd (true and true).
+</pre></td></tr></table>
+<p>During parsing, the expression <code>(andi truei truei)</code> is interpreted
+as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(andi _ _ truei truei)
+</pre></td></tr></table>
+
+<p>where the two underscores stand for the implicit <code>A</code> and <code>B</code>
+arguments to <code>andi</code>.  They are replaced by existential variables whose
+value will be determined during type reconstruction.  We call them
+<code>A1</code> and <code>A2</code> and reason as follows.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">|- andi : {A:o} {B:o} nd A -&gt; nd B -&gt; nd (A and B)
+|- andi A1 : {B:o} nd A1 -&gt; nd B -&gt; nd (A1 and B)
+|- andi A1 A2 : nd A1 -&gt; nd A2 -&gt; nd (A1 and A2)
+</pre></td></tr></table>
+<p>At this point, we need a to infer the type of the application
+<code>(andi A1 A2) truei</code>.  This equates the actual type of the argument
+with the expected type of the argument.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">|- andi A1 A2 : nd A1 -&gt; nd A2 -&gt; nd (A1 and A2)
+|- truei : nd true
+------------------------------------------------
+|- andi A1 A2 truei : nd A2 -&gt; nd (A1 and A2)
+   where nd true = nd A1
+</pre></td></tr></table>
+<p>The equation can be solved by instantiating <code>A1</code> to <code>true</code> and
+we continue:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">|- andi true A2 truei : nd A2 -&gt; nd (true and A2)
+|- truei : nd true
+------------------------------------------------
+|- andi true A2 truei truei : nd (true and A2)
+   where nd true = nd A2
+|- andi true true truei truei : nd (true and true)
+</pre></td></tr></table>
+<p>The last line is the expected result.  In this way, term reconstruction
+can always be reduced to solving equations such that every solution to
+the set of equations leads to a valid typing and vice versa.
+</p>
+<hr size="6">
+<a name="Strict-Occurrences"></a>
+<a name="SEC17"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC16" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC18" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.3 Strict Occurrences </h2>
+
+
+<p>Both for type reconstruction and the operational semantics, Twelf must
+solve equations between objects and types.  Unfortunately, it is
+undecidable if a set of equations in the LF type theory has a solution.
+Worse yet, even if it has solutions, it may not have a most general
+solution.  Therefore, Twelf postpones difficult equations as constraints
+and solves only those within the pattern fragment (see <cite>Miller
+1991, Journal of Logic and Computation</cite> and <cite>Pfenning 1991, Logical
+Frameworks</cite>).  In this fragment, principal solutions always exist and
+can be computed efficiently.  If constraints remain after term
+reconstruction, the constant declaration is rejected as ambiguous which
+indicates that the user must supply more type information.  We
+illustrate this phenomenon and a typical solution in our natural
+deduction example.
+</p>
+<p>A central concept useful for understanding the finer details of type
+reconstruction is the notion of a <em>strict occurrence</em> of a free
+variable.  We call a position in a term <em>rigid</em> if it is not in the
+argument of a free variable.  We then call an occurrence of a free
+variable <em>strict</em> if the occurrence is in a rigid position and all
+its arguments (possibly none) are distinct bound variables.
+</p>
+<p>If all free variable occurrences in all declarations in a signature are
+strict, then term reconstruction will always either fail or succeed with
+a principal solution, provided no further terms are omitted (that is,
+replaced by an underscore).
+</p>
+<p>If a free variable in a declaration of a constant <code>c</code> has no strict
+occurrence at all, then its type can almost never be inferred and most uses of
+<code>c</code> will lead to a constraint.
+</p>
+<p>If a free variable has strict and non-strict occurrences then in most
+cases term reconstruction will provide a definitive answer, but there is
+no guarantee.  Mostly this is because most general answers simply do not
+exist, but sometimes because the algorithm generates, but cannot solve
+constraints with unique solutions.
+</p>
+<p>We use some advanced examples from the natural deduction signature to
+illustrate these concepts and ideas.  In the declarations
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">foralli : ({x:i} nd (A x)) -&gt; nd (forall A).
+foralle : nd (forall A) -&gt; {T:i} nd (A T).
+</pre></td></tr></table>
+
+<p>all free variables have a strict occurrence.  However, if we had
+decided to leave <code>T</code> as an implicit argument,
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">foralle : nd (forall A) -&gt; nd (A T).
+</pre></td></tr></table>
+
+<p>then <code>T</code> has no strict occurrence.  While this declaration is
+accepted as unambiguous (with <code>A:i -&gt; o</code> and <code>T:i</code>), any
+future use of <code>foralle</code> most likely leads to constraints on
+<code>T</code> which cannot be solved.
+</p>
+<hr size="6">
+<a name="Strict-Definitions"></a>
+<a name="SEC18"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC17" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC19" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.4 Strict Definitions </h2>
+
+
+<p>Definitions are currently restricted so that each argument to the
+defined constant, may it be implicit or explicit, must have at least one
+strict occurrence in the right-hand side.  For example, the definition
+of <code>not</code> in the signature for natural deduction (see section <a href="twelf_3.html#SEC13">Sample Signature</a>)
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">not : o -&gt; o = [A:o] A imp false.
+</pre></td></tr></table>
+
+<p>is strict since the only argument <code>A</code> has a strict occurrence in
+<code>A imp false</code>.  On the other hand, the definition
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">noti : ({p:o} nd A -&gt; nd p) -&gt; nd (not A)
+     = [D] impi ([u:nd A] D false u).
+</pre></td></tr></table>
+
+<p>which gives a possible derived introduction rule for negation is not
+strict: the argument <code>D</code> has only one occurrence, and this occurrence
+is not strict since the argument <code>false</code> is not a variable bound in
+the body, but a constant.
+</p>
+<p>However, the definitions
+</p><table><tr><td>&nbsp;</td><td><pre class="example">noti : (nd A -&gt; nd false) -&gt; nd (not A)
+     = [D:nd A -&gt; nd false] impi D.
+note : nd (not A) -&gt; nd A -&gt; nd false
+     = [D:nd (not A)] [E:nd A] impe D E.
+</pre></td></tr></table>
+
+<p>are both strict since arguments <code>D</code> and <code>E</code> both have strict
+occurrences.  Type-checking these definitions requires that the definition
+of <code>not A</code> is expanded to <code>A imp false</code>.
+</p>
+<p>Note that free variables in the type and the right-hand side of a
+definition are shared.  In the above example, <code>A</code> occurs both in
+the types and the right hand side and it should be thought of as the
+same <code>A</code>.  With the implicit quantifiers and abstractions restored,
+the definitions above have the following form.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">noti : {A:o} (nd A -&gt; nd false) -&gt; nd (not A)
+   = [A:o] [D:nd A -&gt; nd false] impi D.
+note : {A:o} nd (not A) -&gt; nd A -&gt; nd false
+   = [A:o] [D:nd (not A)] [E:nd A] impe D E.
+</pre></td></tr></table>
+
+<hr size="6">
+<a name="Type-Ascription"></a>
+<a name="SEC19"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC18" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC20" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.5 Type Ascription </h2>
+
+
+<p>In some circumstances it is useful to directly ascribe a type in order
+to disambiguate declarations.  For example, the term <code>ori1 truei</code>
+has principal type <code>nd (true or B)</code> for a free variable <code>B</code>.
+If we want to constrain this to a derivation of <code>nd (true or false)</code>
+we can write <code>ori1 truei : nd (true or false)</code>.
+</p>
+<p>Explicit type ascription sometimes helps when the source of a type error
+is particularly hard to discern: we can ascribe an expected type to a
+subterm, thus verifying our intuition about constituent terms in a
+declaration.
+</p>
+<hr size="6">
+<a name="Error-Messages"></a>
+<a name="SEC20"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC19" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC21" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.6 Error Messages </h2>
+
+
+<p>When term reconstruction fails, Twelf issues an error message with the
+location of the declaration in which the problem occurred and the
+disagreement encountered.  A typical message is
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">examples/nd/nd.elf:37.35-37.41 Error: Type mismatch
+Expected: o
+Found:    (i -&gt; o) -&gt; o
+Expression clash
+</pre></td></tr></table>
+
+<p>which points to an error in the file <tt>`examples/nd/nd.elf'</tt>, line 37,
+characters 35 through 41 where an argument to a function was expected to
+have type <code>o</code>, but was found to have type <code>(i -&gt; o) -&gt; o</code>.
+</p>
+<p>If constraints remain, the error location is the whole declaration
+with the message
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example"><var>filename</var>:<var>location</var> Error: Typing ambiguous -- unresolved constraints
+</pre></td></tr></table>
+<p>The <var>filename</var> and <var>location</var> information can be used by Emacs
+(see section <a href="twelf_14.html#SEC81">Emacs Interface</a>) to jump to the specified location in the given
+file for editing of the incorrect declaration for the constant <code>c</code>.
+The <var>location</var> has the form
+<code><var>line1</var>.<var>column1</var>-<var>line2</var>.<var>column2</var></code> and represent
+Twelf's best guess as to the source of the error.  Due to the
+propagation of non-trivial constraints the source of a type
+reconstruction failure can sometimes not be pinpointed very precisely.
+</p>
+<hr size="6">
+<a name="Tracing-Reconstruction"></a>
+<a name="SEC21"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC20" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC14" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 4.7 Tracing Reconstruction </h2>
+
+
+<p>Sometimes it is quite difficult to determine the real source of a type
+error.  On such occasion there are three standard techniques that
+sometimes help.  The first is to enable the printing of implicit
+arguments with <code>Twelf.Print.implicit := true</code> and try again.  The
+second is to insert explicit type annotations to limit the flexibility
+of reconstruction.  The third is to trace type reconstruction.
+</p>
+<p>Tracing of term reconstruction is enabled with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Recon.trace := true;
+</pre></td></tr></table>
+<p>It then prints, during reconstruction, the typing and kinding judgments
+it infers in the form <code>|- M : A</code> or <code>|- A : K</code>.
+</p>
+<p>There are two modes for tracing reconstruction that can be set
+with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Recon.traceMode := Twelf.Recon.Omniscient;
+Twelf.Recon.traceMode := Twelf.Recon.Progressive;
+</pre></td></tr></table>
+<p>where <code>Twelf.Recon.Omnisicient</code> is the default.  In omnisicent
+mode, it first solves all typing constraints, and then prints the typing
+judgments.  In progressive mode, it prints the typing judgments as they
+are encountered.  Both have their uses, depending on the form of
+the problem with reconstruction.
+</p>
+
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 6. Logic Programming</title>
+
+<meta name="description" content="Twelf User's Guide: 6. Logic Programming">
+<meta name="keywords" content="Twelf User's Guide: 6. Logic Programming">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Logic-Programming"></a>
+<a name="SEC29"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_5.html#SEC28" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC30" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_5.html#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 6. Logic Programming </h1>
+
+
+<p>Twelf gives an operational interpretation to signatures under the
+computation-as-proof-search paradigm.  The fundamental idea is to fix a
+simple search strategy and then search for a derivation of a query
+according to this strategy.  The result may be a substitution for the
+free variables in a query and a derivation, or explicit failure.  It is
+also possible that the computation does not terminate.
+</p>
+<p>A query can be posed in three different ways: as a <code>%query</code>
+declaration, as a <code>%solve</code> declaration, or interactively, using a
+top-level invoked from ML with <code>Twelf.top</code> which prompts with
+<samp>`?-'</samp> (see section <a href="#SEC32">Interactive Queries</a>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">query ::= id : term             % <em>X : A</em>, <em>X</em> a free variable
+        | term                  % <em>A</em>
+
+bound ::= nat                   % number of solutions
+        | *                     % unbounded number
+
+qdecl ::= bound bound query     % expected solutions, try limit, query
+
+qtdecl ::= bound bound query    % number of stages, query
+
+sdecl ::= %define binding sdecl % term binding
+        | %solve id : term      % solve with proof term
+        | %solve _ : term       % solve
+
+binding ::= id = id             % <em>c = X</em>, <em>X</em> a free variable
+          | id = id : term      % <em>c = X : A</em>
+
+decl ::= &hellip;
+       | %tabled id.            % <em>a</em>, table family <em>a</em>
+       | %query qdecl.          % execute query
+       | %querytabled qtdecl.   % execute query with tabled logic programming
+       | sdecl.                 % solve
+</pre></td></tr></table>
+<p>In all of these cases, the free variables in a query are interpreted
+existentially, which is in contrast to constant declarations where free
+variables are interpreted universally.  In particular, free variables
+might be instantiated during type reconstruction and during execution of
+the query.
+</p>
+
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC30">6.1 Query Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Checking expected numbers of solutions
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC31">6.2 Solve Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Naming proof terms found by search
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC32">6.3 Interactive Queries</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Twelf's interactive top-level
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC33">6.4 Sample Trace</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                An example how search works
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC34">6.5 Operational Semantics</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       How queries are executed in some detail
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC35">6.6 Sample Program</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Type inference for a lambda-calculus
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC36">6.7 Clause Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          How to use definitions for search
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC37">6.8 Deterministic Type Families</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  How to prune unwanted solutions 
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC38">6.9 Tabled Logic Programming</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    Executing queries with memo tables
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Query-Declaration"></a>
+<a name="SEC30"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC29" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC31" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.1 Query Declaration </h2>
+
+
+<p>The query form
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%query <var>expected</var> <var>try</var> A.
+</pre></td></tr></table>
+
+<p>will try to solve the query <code>A</code> and verify that it gives the
+<var>expected</var> number of solutions, but it will never try to find more
+than indicated by <var>try</var>.  It succeeds and prints a message, whose
+precise form depends on the value of <code>Twelf.chatter</code> if <code>A</code>
+has the expected number of solutions; otherwise it either fails with an
+error message or does not terminate.  <samp>`%query'</samp> has no other effect
+on the state of Twelf.  Here are some examples.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%query 1 * A.      % check that <code>A</code> has exactly one solution
+%query 1 1 A.      % check that <code>A</code> has at least one solution
+%query * 3 A.      % <code>A</code> has infinitely many solutions, check 3
+%query * * A.      % fails if <code>A</code> has finitely many solutions
+%query 1 0 A.      % skip this query
+</pre></td></tr></table>
+<hr size="6">
+<a name="Solve-Declaration"></a>
+<a name="SEC31"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC30" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC32" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.2 Solve Declaration </h2>
+
+
+<p>The query form
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%solve c : A.
+</pre></td></tr></table>
+
+<p>will search for the first solution <code>M</code> of <code>A</code> and then define
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">c : A = M.
+</pre></td></tr></table>
+<p>Optionally, it is possible to perform additional binding for the free
+variables in <code>A</code>. Let <code>X</code> a variable of type family <code>B</code>
+appearing in <code>A</code>, and let us assume that in the solution <code>M</code>
+this variable has been substituted with the term <code>N</code>; the query
+form
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%define d = X : B
+%solve c : A.
+</pre></td></tr></table>
+<p>will also define
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">d : B = N.
+</pre></td></tr></table>
+<p>If there are any free variables remaining in <code>M</code>, <code>N</code> or <code>A</code>
+after search, they will be implicitly quantified in the new definitions.
+</p>
+<p>This form of definition is particularly useful to compute and name inputs to
+future queries.  An example of this feature from the file
+<tt>`examples/nd/lam.elf'</tt> can be found in <a href="twelf_11.html#SEC69">Proof Realizations</a>.
+</p>
+<hr size="6">
+<a name="Interactive-Queries"></a>
+<a name="SEC32"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC31" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC33" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.3 Interactive Queries </h2>
+
+
+<p>An interactive top-level can be invoked using the SML expression
+<code>Twelf.top ();</code>.  The top-level prompts with <samp>`?- '</samp> and
+awaits the input of a query, terminated by a period <samp>`.'</samp> and
+a <kbd>RET</kbd>.
+</p>
+<p>After the query has been parsed, Twelf reconstructs implicit type
+information, issuing a warning if constraints remain.  The result is
+executed as a query.  At any point during the processing of a
+query the user may interrupt with <kbd>C-c</kbd> (that is, <kbd>CTRL</kbd> and
+<kbd>c</kbd>) to drop back into ML's interactive top-level.
+</p>
+<p>When Twelf has found a solution, it prints the <em>answer
+substitution</em> for all free variables in the query, including the proof
+term variable if one was given.  It also notes if there are remaining
+equational constraints, but currently does not print them.
+</p>
+<p>The top-level then waits for input, which is interpreted as
+follows
+</p>
+<dl compact="compact">
+<dt> <kbd>y</kbd>, <kbd>Y</kbd>, or <kbd>;</kbd></dt>
+<dd><p>      backtrack and search for another solution
+</p>
+</dd>
+<dt> <kbd>q</kbd> or <kbd>Q</kbd></dt>
+<dd><p>      quit Twelf's top-level and return to ML
+</p>
+</dd>
+<dt> <kbd>n</kbd>, <kbd>N</kbd>, or anything else</dt>
+<dd><p>      return to prompt for another query
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Sample-Trace"></a>
+<a name="SEC33"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC32" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC34" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.4 Sample Trace </h2>
+
+<p>As an example we consider lists of propositions and some simple
+operations on them, as they might be used when programming a theorem
+prover.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">list : type.
+nil  : list.
+cons : o -&gt; list -&gt; list.
+</pre></td></tr></table>
+<p>First, we want to write a program to append two lists to obtain
+their concatenation.  This is expressed as a relation between
+the three lists, which in turn is implemented as a type family
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">append  : list -&gt; list -&gt; list -&gt; type.
+
+appNil  : append nil K K.
+appCons : append (cons X L) K (cons X M)
+           &lt;- append L K M.
+</pre></td></tr></table>
+<p>Here, we use the synonym <code>A &lt;- B</code> for <code>B -&gt; A</code> to improve
+readability.  We say <em><code>A</code> if <code>B</code></em>.
+</p>
+<p>The first sample query concatenates the singleton lists containing
+<code>true</code> and <code>false</code>.  We proceed as if we had loaded the appropriate
+files and started a top-level with <code>Twelf.top ();</code>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- append (cons true nil) (cons false nil) L.
+</pre></td></tr></table>
+<p>Here, <code>L</code> is a free existential variable.  We search for an object
+<code>M : append (cons true nil) (cons false nil) L</code>, even though
+this object will not be shown in this form or query.  Each
+constant declaration in the signature is tried in turn, unifying
+the head with the goal above.  In this manner, we obtain the
+following sequence of goals and actions.  Note that the intermediate
+forms and comments are not printed when this is run.  They are added
+here to illustrate the behavior.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">% original goal after parsing and type reconstruction
+?- append (cons true nil) (cons false nil) L.
+[try appNil:
+     append nil K1 K1
+   = append (cons true nil) (cons false nil) L
+ unification fails with constant clash: nil &lt;&gt; cons
+]
+[try appCons:
+     append (cons X1 L1) K2 (cons X1 M1)
+   = append (cons true nil) (cons false nil) L
+ unification succeeds with
+ X1 = true, L1 = nil, K2 = cons false nil, L = cons true M1
+]
+% subgoal
+?- append nil (cons false nil) M1.
+[try appNil:
+     append nil K3 K3
+   = append nil (cons false nil) M1
+ unification and subgoal succeeds with
+ K3 = cons false nil, M1 = cons false nil
+]
+</pre></td></tr></table>
+<p>At this point the overall goal succeeds and we read off the
+answer substitution for the only free variable in the query,
+namely <code>L</code>.  It was first determined to be <code>cons true M1</code>
+and then <code>M1</code> was instantiated to <code>cons false nil</code>,
+leading to the instantiation
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">L = cons true (cons false nil).
+</pre></td></tr></table>
+<p>If instead we pose the query
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- X : append (cons true nil) (cons false nil) L.
+</pre></td></tr></table>
+
+<p>we also obtain the proof term
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">L = cons true (cons false nil);
+X = appCons appNil.
+</pre></td></tr></table>
+<p>As another example we consider a query with several solutions which are
+enumerated when we ask for further results.  This time we do not trace
+the steps of the execution, but show the interaction verbatim.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- append L K (cons true (cons false nil)).
+Solving...
+K = cons true (cons false nil);
+L = nil.
+More? <kbd>y</kbd>
+K = cons false nil;
+L = cons true nil.
+More? <kbd>y</kbd>
+K = nil;
+L = cons true (cons false nil).
+More? <kbd>y</kbd>
+No more solutions
+</pre></td></tr></table>
+<hr size="6">
+<a name="Operational-Semantics"></a>
+<a name="SEC34"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC33" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC35" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.5 Operational Semantics </h2>
+
+
+<p>The operational semantics of Twelf is a form of typed constraint logic
+programming.  We will use standard terminology from this area.  A type
+family which is used in a program or goal is called a <em>predicate</em>.
+A constant declaration in a signature which is available during search
+is called a <em>clause</em>.  A clause typically has the form <code>c : a
+M1 &hellip; Mm &lt;- A1 &lt;- &hellip; &lt;- An</code>, where <code>a M1 &hellip; Mm</code> is
+the <em>head of the clause</em> and <code>A1</code> through <code>An</code> are the
+<em>subgoals</em>.  A clause is used to reduce a goal to subgoals by a
+process called <em>backchaining</em>.  Backchaining unifies the head of
+the clause with the current goal to generate <em>subgoals</em>.  Next, we
+<em>select</em> one of the subgoals as a current goal and continue the
+search process.  Actually, instead of unification (which is undecidable
+in LF), Twelf employs <em>constraint simplification</em> and carries along
+equational constraints in a normal form.
+</p>
+<p>A hypothesis which is introduced during search is a <em>local
+assumption</em>; a parameter is a <em>local parameter</em>.  Parameters act
+like constants in unification, except that their occurrences might be
+restricted due to <em>parameter dependency</em>.
+</p>
+<p>Without going into a formal description, here are the central ideas of
+the operational semantics.
+</p>
+<dl compact="compact">
+<dt> Clause selection.</dt>
+<dd><p> The clauses are tried in the following order: from most recent to least
+recent local assumption, then from first to last clause in the global
+signature.
+</p>
+</dd>
+<dt> Subgoal selection.</dt>
+<dd><p> Subgoals are solved from the inside out.  For example, when a clause
+<code>c : A &lt;- B &lt;- C.</code>  is applied to solve the goal <code>?- A.</code> then the
+first subgoal is <code>B</code> and the second subgoal <code>C</code>.  Truly
+dependent variables will only be subject to unification and never
+give rise to a subgoal.  For example <code>c : {X:b} a X &lt;- a c</code> is
+a clause with head <code>a X</code>, subgoal <code>a c</code>, and existential variable
+<code>X</code>.
+</p>
+</dd>
+<dt> Unification.</dt>
+<dd><p> An atomic goal is unified with the clause head using higher-order
+pattern unification.  All equations outside this fragment are postponed
+and carried along as constraints.
+</p>
+</dd>
+<dt> Local assumptions.</dt>
+<dd><p> A goal of the form <code>?- A -&gt; B.</code> introduces a local assumption <code>A</code>
+and then solves <code>B</code> under this assumption.  To solve atomic goals,
+local assumptions are tried before global clauses, using the most
+recently made assumption first.  Note that this is different from
+Prolog <code>assert</code> in that <code>A</code> is available only for solving
+<code>B</code>.
+</p>
+</dd>
+<dt> Local parameters.</dt>
+<dd><p> Parameters are introduced into proof search by goals of the form
+<code>?- {x:A} B.</code> which generates a <em>new</em> parameter <code>a</code> and
+then solves the result of substituting <code>a</code> for <code>x</code> in
+<code>B</code>.  Parameters are also called <em>universal variables</em> since
+they are not subject to instantiation during unification.  Local
+parameters will never be used as local assumptions during search.
+</p></dd>
+</dl>
+
+<p>When a signature is read, some minimal amount of syntactic translation
+may be applied to it in order to speed up execution.  We refer to this
+process as <em>compilation</em>, in an abuse of the ordinary use of the term.
+Compilation will try to eliminate expensive appeals to unification
+with assignment where this optimization is sound.  This can be disabled
+by setting the parameter <code>Twelf.Compile.optimize</code> to <code>false</code>.
+</p>
+<hr size="6">
+<a name="Sample-Program"></a>
+<a name="SEC35"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC34" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC36" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.6 Sample Program </h2>
+
+
+<p>As an example, we consider simple type inference for the pure
+lambda-calculus.  An extension of this example to Mini-ML is given in
+the course notes <cite>Pfenning 1992, Computation and Deduction</cite>.  The
+code below can be found in the file <tt>`examples/guide/lam.elf'</tt>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">% Simple types
+tp : type.                              %name tp T.
+
+arrow : tp -&gt; tp -&gt; tp.                 % T1 =&gt; T2
+
+% Expressions
+exp : type.                             %name exp E.
+
+lam   : (exp -&gt; exp) -&gt; exp.            % lam x. E
+app   : exp -&gt; exp -&gt; exp.              % (E1 E2)
+
+% Type inference 
+% |- E : T  (expression E has type T)
+
+of : exp -&gt; tp -&gt; type.                 %name of P.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 =&gt; T2
+          &lt;- ({x:exp}                   % if  x:T1 |- E : T2.
+                of x T1 -&gt; of (E x) T2).
+
+tp_app : of (app E1 E2) T1              % |- E1 E2 : T1
+          &lt;- of E1 (arrow T2 T1)        % if  |- E1 : T2 =&gt; T1
+          &lt;- of E2 T2.                  % and |- E2 : T2.
+</pre></td></tr></table>
+<p>Again, we have used the notation <code>A &lt;- B</code> to emphasize
+the interpretation of constant declarations as clauses.  We now
+trace the query which infers the most general type of the identity
+function, represented as <code>lam [x:exp] x</code>.  We indicate the scope
+of hypotheses which are introduced during search by indentation.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">% original query, <code>T</code> free
+?- of (lam [x:exp] x) T.
+% use <code>tp_lam</code> with <code>E = ([x:exp] x)</code> and <code>T = arrow T1 T2</code>
+% subgoal
+?- {x:exp} of x T1 -&gt; of x T2.
+% introduce parameter <code>e</code>
+?- of e T1 -&gt; of e T2.
+% introduce hypothesis labeled <code>p</code>
+p:of e T1
+ ?- of e T2.
+ % succeed by hypothesis <code>p</code> with <code>T1 = T2</code>
+</pre></td></tr></table>
+<p>At this point the query succeeds and prints the answer substitution.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">T = arrow T1 T1.
+More? <kbd>y</kbd>
+No more solutions
+</pre></td></tr></table>
+<p>We requested more solution by typing <kbd>y</kbd>, but there are no further
+possibilities.  The free variable <code>T1</code> in the answer substitution
+means that every instance of <code>arrow T1 T1</code> provides a solution to
+the original query.  In other words, <code>lam [x:exp] x</code> has type
+<code>arrow T1 T1</code> for all types <code>T1</code>.
+</p>
+<p>As a second example we verify that self-application is not well-typed in
+the simply-typed lambda-calculus.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- of (lam [x:exp] app x x) T.
+% use <code>tp_lam</code> with <code>T = arrow T1 T2</code>
+% subgoal
+?- {x:exp} of x T1 -&gt; of (app x x) T2.
+% introduce parameter <code>e</code>
+?- of e T1 -&gt; of (app e e) T2.
+% introduce hypothesis <code>p:of a T1</code>
+p:of e T1
+ ?- of (app e e) T2.
+ % use <code>tp_app</code>
+ % first subgoal
+ ?- of e (arrow T3 T2).
+ % succeed by hypothesis <code>p</code> with <code>T1 = arrow T3 T2</code>
+ % second subgoal
+ ?- of e T3.
+ % fail, since <code>T3 = arrow T3 T2</code> has no solution
+</pre></td></tr></table>
+<p>At the point where the second subgoals fails we backtrack.  However, all
+other alternatives fail immediately, since the clause head does not
+unify with the goal and the overall query fails.
+</p>
+<hr size="6">
+<a name="Clause-Definitions"></a>
+<a name="SEC36"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC35" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC37" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.7 Clause Definitions </h2>
+
+
+<p>Definitions interact with the logic programming interpretation
+of signatures in two ways.
+</p>
+<p>At present family-level definitions are transparent for type-checking, but
+opaque for proof search.  This means, if <code><var>a</var> : type = <var>b</var></code>,
+the constants defining <var>a</var> and <var>b</var> are not mixed.
+</p>
+<p><strong>Disclaimer:</strong> This is use type-level definitions is still under
+consideration and is discouraged because it might change in future
+releases.  Moreover, type-level definitions at present do not interact
+correctly with coverage checking and can lead to unsoundness.
+</p>
+<p>The second interaction is that defined object-level constants are
+generally not used for the logic programming interpretation.  However,
+they can be forced to be used with a declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%clause <var>d</var> : <var>A</var> = <var>M</var>.
+</pre></td></tr></table>
+<p>For search, it will be treated exactly as if it were <code><var>d</var> :
+<var>A</var>.</code>  except that the resulting proof term will contain a defined
+constant instead of a declared constant.
+</p>
+<hr size="6">
+<a name="Deterministic-Type-Families"></a>
+<a name="SEC37"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC36" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC38" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.8 Deterministic Type Families </h2>
+<p>In general, a solvable goal may admit several (and possibly countably
+infinite) solutions. Through backtracking, Twelf will generate all of
+them. There are circumstances, however, where only the only one of
+them is correct, or interesting. Consider, for example, list membership:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">element : type. %name element X.
+
+a : element.
+b : element.
+c : element.
+
+list : type.    %name list L.
+
+nil : list.
+cons : element -&gt; list -&gt; list.
+
+member : element -&gt; list -&gt; type.
+
+member1 : member X (cons X L).
+member2 : member X (cons Y L) &lt;- member X L.
+</pre></td></tr></table>
+<p>the query
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- member a (cons a (cons b (cons a nil)))
+</pre></td></tr></table>
+<p>will succeed twice. Since all we are interested in is whether
+<code>a</code> is contained in the list or not, it may suffice for it to
+succeed once.
+</p>
+<p>Discarding unwanted solutions in Twelf is accomplished through the
+<code>%deterministic</code> directive. Declaring a type family deterministic
+will cause all queries involving it to succeed at most once: if there
+are several solutions, only the first one will be found. So for example
+declaring
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%deterministic member.
+</pre></td></tr></table>
+<p>will have the effect of preventing backtracking in any query involving
+the type family <code>member</code>, once one solution has been found:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- member a (cons a (cons b (cons a nil))).
+Solving...
+Empty Substitution.
+More? y
+No more solutions
+</pre></td></tr></table>
+<p>In other logic programming languages like Prolog, pruning of unwanted
+solutions is usually accomplished by using the extra-logical operator
+cut. In general, <code>%deterministic</code> is less powerful than cut: in
+a language with cut, a deterministic predicate can be modeled by
+adding a cut at the end of all of its clauses. However, in most
+practical uses the two are equivalent, and the semantics of
+<code>%deterministic</code> families is cleaner and better understood.
+</p>
+<hr size="6">
+<a name="Tabled-Logic-Programming"></a>
+<a name="SEC38"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC37" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC29" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 6.9 Tabled Logic Programming </h2>
+
+
+<p>Logic programming uses a simple depth-first search strategy to search
+for a proof of a given query.  This strategy is incomplete, that is,
+there are queries that are true, but the logic programming engine will
+not find a proof due to non-termination.  In addition, performance may
+be hampered by redundant computation.
+</p>
+<p>Tabled logic programming uses memoization to alleviate these problems by
+avoiding infinite and redundant paths of computation.  The central data
+structure is a table in which we store encountered subgoals and
+corresponding solutions.  When we solve a subgoal <code>G</code>, then we
+check whether <code>G</code> is in the table.  If it is not in the table, then
+it will be added.  If it is in the table and there are solutions
+available, then we can re-use them.  If it is in the table and no
+solutions are available, then we suspend the computation.  This basic
+idea is combined with global stages.  In each stage, a depth-first
+search strategy is used to derive answers from the program.  If no more
+answers can be derived, computation terminates.  It is important to note
+that for each answer only one proof is generated, although multiple
+different proofs may exist.
+</p>
+<p>Tabled and non-tabled execution can be freely mixed.  This is achieved
+by requiring an explicit declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%tabled a.
+</pre></td></tr></table>
+
+<p>for every type family <code>a</code> that is to be tabled.  In addition,
+at present tabling must be explicitly enabled by invoking
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%querytabled <var>expected</var> <var>stages</var> A.
+</pre></td></tr></table>
+<p>where <var>expected</var> is the expected number of answers and 
+<var>stages</var> bounds the number of stages to use before terminating
+while searching for a proof of <code>A</code>. If <var>expected</var> is <code>*</code>,
+it will find all distinct solutions. If there are finitely many solutions,
+search will terminate, after enumerating all of them. If <var>stages</var> is <code>*</code>,
+then arbitrarily many stages may be explored, which can lead to
+non-termination over infinite domains.
+</p>
+<p>To illustrate, here is a small simple example that computes
+reachability in a cyclic graph.  First we declare the nodes
+in the graph and the edge relation.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">node : type.
+
+a : node.
+b : node.
+c : node.
+d : node.
+
+edge: node -&gt; node -&gt; type.
+
+e_ab : edge a b.
+e_ac : edge a c.
+e_ba : edge b a.
+e_bd : edge b d.
+</pre></td></tr></table>
+<p>Next we declare the reachability relation and declare it tabled
+in order to avoid an infinite loop.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">reach: node -&gt; node -&gt; type.
+%tabled reach.
+
+r_refl: reach X X.
+
+r_cl  : reach X Y 
+         &lt;- edge X Z
+         &lt;- reach Z Y.
+
+%querytabled 4 * (reach a X).
+</pre></td></tr></table>
+<p>Note that, at present, tables will be completely ignored for ordinary
+queries, so that
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%query * * reach a X.
+</pre></td></tr></table>
+<p>will not terminate, despite the fact that <code>reach</code> has been
+declared as tabled.
+</p>
+<p>In the example above we can also give an explicit bound on the
+number of stages during tabled evaluation with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%querytabled 4 3 (reach a X).
+</pre></td></tr></table>
+<p>Additional examples using tabling can be found in
+the directory <tt>`examples/tabled/'</tt> of the distribution. 
+</p>
+<p>One key question in tabled search is how to detect that a subgoal is
+similar to another sub-goal which is already in the table. There are
+two critical parameters which influence table lookup during search. 
+</p>
+<p><code>Twelf.Table.strengthen</code> which defaults to <code>false</code>.
+If <code>true</code> it eliminates dependencies based on subordination
+during tabling.  This is more expensive, but can lead to increased
+re-use of prior subgoals in some cases.
+</p>
+
+<p><code>Twelf.Table.strategy</code> which defaults to <code>Twelf.Table.Variant</code>.
+When at its default setting, <code>Twelf.Table.Variant</code>, then subgoals are
+compared for equality modulo renaming of existential and bound variables.
+When set to <code>Twelf.Table.Subsumption</code>, then comparison
+of subgoals with table entries allows instantiation of the table
+entries.  This is slower, but may lead to increased sharing and
+better termination properties.
+</p>
+<p>It is also possible (in analogy with <code>Twelf.top ();</code>, explained
+in <a href="#SEC32">Interactive Queries</a>, to start an interactive top level that
+executes the tabling logic programming interpreter with the command
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Table.top ();
+</pre></td></tr></table>
+<p>Furthermore, it should be noted that tracing does <em>not</em> work for
+the tabled logic programming engine, and that other analyses such as
+termination checking do not take the tabling into account.  This is
+conservative, but means that many terminating tabled programs can at
+present not be verified.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

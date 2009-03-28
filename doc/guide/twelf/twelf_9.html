@@ -1,0 +1,584 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 9. Termination</title>
+
+<meta name="description" content="Twelf User's Guide: 9. Termination">
+<meta name="keywords" content="Twelf User's Guide: 9. Termination">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Termination"></a>
+<a name="SEC52"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_8.html#SEC51" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC53" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 9. Termination </h1>
+
+
+<p>Besides checking types and modes, Twelf can also verify if a given type
+family, when interpreted as a logic program, always terminates on
+well-moded goals.  In many cases this means that the program implements
+a decision procedure.  Of course, in general termination is undecidable,
+so we only check a simple sufficient condition.
+</p>
+<p>Checking termination presupposes that the program is well-typed and
+guarantees termination only when the arguments involved in the
+termination order are ground.  This will always be true for well-moded
+goals, since mode and termination declarations must be consistent.
+</p>
+<p>Termination is different from checking types and modes in that it is not
+checked incrementally as the signature is read.  Instead, termination of
+a predicate is a global property of the program once it has been read.
+Thus termination declarations came after the predicate has been fully
+defined; further extensions of the predicate are not checked and may
+invalidate termination.
+</p>
+<p>The termination checker is rather rudimentary in that it only allows
+lexicographic and simultaneous extensions of the subterm ordering.
+Moreover, it does not take into account if a result returned by a
+predicate is smaller than an input argument.  Nonetheless, for the style
+of programs written in Twelf, the termination of many decision
+procedures can be verified.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC53">9.1 Termination Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Checking termination
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC54">9.2 Reduction Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Checking outputs are smaller than inputs
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC55">9.3 Subterm Ordering</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Higher-order subterms
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC56">9.4 Lexicographic Orders</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Termination by nested induction
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC57">9.5 Simultaneous Orders</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Termination by simultaneous induction
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC58">9.6 Mutual Recursion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Termination of mutually recursive predicates
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Termination-Declaration"></a>
+<a name="SEC53"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC52" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC54" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.1 Termination Declaration </h2>
+
+
+<p>The termination orders we construct are lexicographic or simultaneous
+extensions of the subterm ordering explained in <a href="#SEC55">Subterm Ordering</a>.
+The termination declaration associates the termination order with
+argument positions of predicates via call patterns.
+</p>
+<p>The case of mutually recursive predicates is particularly complex
+and requires mutual call patterns and mutual arguments.
+Their syntax is given below; they are explained in <a href="#SEC58">Mutual Recursion</a>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">args ::=
+       | id args       % named argument
+       | _ args        % anonymous argument
+
+callpat ::= id args    % <em>a</em> <em>x1</em> &hellip; <em>xn</em>
+
+callpats ::= 
+           | (callpat) callpats
+                       % mutual call patterns
+
+ids ::=
+      | id ids         % argument name
+
+marg ::= id            % single argument
+       | ( ids )       % mutual arguments
+
+orders ::=
+         | order orders % component order
+
+order ::= marg         % subterm order
+        | { orders }   % lexicographic order
+        | [ orders ]   % simultaneous order
+
+tdecl ::= order callpats    % termination order
+
+decl ::= &hellip;
+       | %terminates tdecl. % termination declaration
+</pre></td></tr></table>
+<p>All identifiers in the order specification of a termination declaration
+must be upper case, must occur in the call patterns, and no variable may
+be repeated.  Furthermore, all arguments participating in the
+termination order must occur in the call patterns in input positions.
+</p>
+<p>The most frequent form of termination declaration is
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%terminates Xi (a X1 &hellip; Xn).
+</pre></td></tr></table>
+
+<p>which expresses that predicate <code>a</code> terminates because recursive
+calls decrease the input argument <code>Xi</code> according to the subterm
+ordering (see section <a href="#SEC55">Subterm Ordering</a>).
+</p>
+<p>As an example, we consider a proof that simple type inference
+(see section <a href="twelf_6.html#SEC35">Sample Program</a>) terminates.  Recall the relevant program
+fragment (see <tt>`examples/guide/lam.elf'</tt>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">of : exp -&gt; tp -&gt; type.                 %name of P.
+%mode of +E *T.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 =&gt; T2
+          &lt;- ({x:exp}                   % if  x:T1 |- E : T2.
+                of x T1 -&gt; of (E x) T2).
+
+tp_app : of (app E1 E2) T1              % |- E1 E2 : T1
+          &lt;- of E1 (arrow T2 T1)        % if  |- E1 : T2 =&gt; T1
+          &lt;- of E2 T2.                  % and |- E2 : T2.
+</pre></td></tr></table>
+<p>The typability of an expression is always reduced to the typability of
+its subexpressions.  Therefore any call to the <code>of</code> predicate with
+a ground expression should terminate.  In general, termination can only
+be checked for input arguments, and all calls must be well-moded
+(see section <a href="twelf_8.html#SEC51">Mode Checking</a>).  Twelf verifies termination with the
+declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%terminates E (of E T).
+</pre></td></tr></table>
+<p>Here, <code>E</code> specifies the decreasing argument, namely the first
+argument of the typing judgment as expressed in the call pattern
+<code>(of E T)</code>.
+</p>
+<p>A corresponding attempt to show that evaluation always terminates,
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%terminates E (eval E V).
+</pre></td></tr></table>
+
+<p>fails for the clause <code>ev_app</code> with the message
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">examples/guide/lam.elf:1053-1068 Error:
+Termination violation:
+(E1' V2) &lt; (app E1 E2)
+</pre></td></tr></table>
+
+<p>indicating that in a recursive call the term <code>E1' V2</code> could not be
+shown to be smaller than <code>app E1 E2</code>.  In our example, of course,
+evaluation need not terminate for precisely this reason.
+</p>
+<p>Termination checking plays a crucial role in checking meta-programs. The
+meta-program represents a proof that some relation about programs
+holds. The recursive calls in the meta-program correspond to
+applications of the induction hypothesis in the proof. Termination
+checking of meta-programs corresponds to checking that the application
+of the induction hypothesis is valid, i.e. we apply the induction
+hypothesis to a smaller argument.
+</p>
+<hr size="6">
+<a name="Reduction-Declaration"></a>
+<a name="SEC54"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC53" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC55" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.2 Reduction Declaration </h2>
+
+
+<p>A reduction predicate specifies a relation between input and output
+arguments of a program.  The reduction checker is rather restrictive and
+allows only relations based on subterm ordering.  For example, we cannot
+reason about the length of a list or term.  Moreover, reduction checking
+presupposes that the right side of the reduction predicate corresponds
+to the input arguments and the left side of the predicate corresponds to
+the output arguments.  The declaration <code>%reduces</code> checks if the
+specified reduction predicate holds for a given program.  To check
+whether the predicate also terminates, one needs to check termination of
+the predicate separately.  The syntax for <code>order</code> can be found in
+<a href="#SEC52">Termination</a>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">pdecl ::= order &lt; order     % strictly smaller than
+        | order &lt;= order    % smaller or equal than
+        | order = order     % equal
+
+rdecl ::= pdecl callpats    % reduction predicate
+
+decl ::= &hellip;
+       | %reduces rdecl.    % reduction declaration
+</pre></td></tr></table>
+<p>A <code>pdecl</code> requires that both orders specified are of the same
+variety.  For example, if one is lexicographic, the other one must be as
+well.
+</p>
+<p>For example,
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%reduces Z &lt;= X (minus X Y Z).
+</pre></td></tr></table>
+
+<p>expects <code>X</code> to be the input and <code>Z</code> to be the output of the goal
+<code>(minus X Y Z)</code>. The declaration checks whether the output argument <code>Z</code> is
+smaller than the input argument <code>X</code>, and if the program terminates in <code>X</code>.
+</p>
+<p>As a simple example of reduction checking we consider the greatest
+common divisor.  This is an excerpt from the signature for unary arithmetic
+in the file <tt>`example/guide/arith.elf'</tt>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">gcd: nat -&gt; nat -&gt; nat -&gt; type.          %name gcd G. 
+%mode gcd +X +Y -Z. 
+
+gcd_z1: gcd z Y Y. 
+gcd_z2: gcd X z X. 
+
+gcd_s1: gcd (s X) (s Y) Z 
+  &lt;- less (s X) (s Y) true 
+  &lt;- rminus (s Y) (s X) Y' 
+  &lt;- gcd (s X) Y' Z. 
+
+gcd_s1: gcd (s X) (s Y) Z 
+  &lt;- less  (s X)(s Y) false 
+  &lt;- rminus (s X) (s Y) X' 
+  &lt;- gcd X' (s Y)  Z. 
+
+rminus: nat -&gt; nat -&gt; nat -&gt; type.        %name rminus M. 
+%mode rminus +X +Y -Z. 
+rmin : rminus (s X) (s Y) Z 
+ &lt;- sub X Y Z. 
+
+%reduces Z &lt; X (rminus X Y Z). 
+%terminates [X Y] (gcd X Y _). 
+</pre></td></tr></table>
+<p>In order to verify that the definition of gcd terminates, we need to
+show that the arguments in the recursive call are decreasing, i.e. we
+need to show <code>Y' &lt; (s Y)</code> and <code>X' &lt; (s X)</code>. To check that
+these properties hold, we need the fact that the output argument
+<code>Y'</code> of <code>rminus (s Y) (s X) Y'</code> is always smaller than the
+input argument <code>(s Y)</code> (i.e.  <code>rminus (s Y) (s X) Y'</code> always
+satisfies the reduction predicate <code>Y' &lt; (s Y)</code>). We verify that
+<code>rminus (s Y) (s X) Y'</code> always reduces its output argument by
+checking the declaration <code>%reduces Z &lt; X (rminus X Y Z)</code>. While
+checking termination of <code>gcd</code> we use this information and prove
+<code>Y' &lt; (s Y)</code> (termination condition of <code>gcd</code>) under the
+assumption <code>Y' &lt; (s Y)</code> (reduction predicate of <code>rminus</code>).
+</p>
+<hr size="6">
+<a name="Subterm-Ordering"></a>
+<a name="SEC55"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC54" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC56" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.3 Subterm Ordering </h2>
+
+
+<p>On first-order terms, that is, terms not containing lambda-abstraction,
+the subterm ordering is familiar: <em>M &lt; N</em> if <em>M</em> is a strict
+subterm of <em>N</em>, that is, <em>M</em> is a subterm <em>N</em> and
+<em>M</em> is different from <em>N</em>.
+</p>
+<p>On higher-order terms, the relation is slightly more complicated because
+we must allow the substitution of parameters for bound variables without
+destroying the subterm relation.  Consider, for example, the case of the
+typing rule
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">of : exp -&gt; tp -&gt; type.                 %name of P.
+%mode of +E *T.
+
+tp_lam : of (lam E) (arrow T1 T2)       % |- lam x. E : T1 =&gt; T2
+          &lt;- ({x:exp}                   % if  x:T1 |- E : T2.
+                of x T1 -&gt; of (E x) T2).
+</pre></td></tr></table>
+
+<p>from the signature for type inference (see section <a href="twelf_6.html#SEC35">Sample Program</a>) in the
+file <tt>`example/guide/lam.elf'</tt>.  We must recognize that
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(E x) &lt; (lam E)
+</pre></td></tr></table>
+
+<p>according to the subterm ordering.  This is because <code>E</code> stands for
+a term <code>[y:exp] E'</code> and so <code>E x</code> has the same structure as
+<code>E'</code> except that <code>y</code> (a bound variable) has been replaced by
+<code>x</code> (a parameter).  This kind of pattern arises frequently in
+Twelf programs.
+</p>
+<p>On the other hand, the restriction to parameter arguments of functions
+is critical.  For example, the lax rule
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">tp_applam : of (app (lam E1) E2) T2
+             &lt;- of (E1 E2) T2.
+</pre></td></tr></table>
+
+<p>which applies <code>E1</code> to <code>E2</code> which is not a parameter, is indeed
+not terminating.  This can be seen from the query
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- of (app (lam [x:exp] app x x) (lam [y:exp] app y y)) T.
+</pre></td></tr></table>
+<p>The restriction of the arguments to parameters can be lifted when the
+type of the argument is not mutually recursive with the result type of
+the function.  For example, the signature for natural deduction
+(see section <a href="twelf_3.html#SEC13">Sample Signature</a>, contains no constructor which allows
+propositions to occur inside individual terms.  Therefore
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(A T) &lt; (forall A)
+</pre></td></tr></table>
+
+<p>where <code>A : i -&gt; o</code> and <code>T : i</code> is an arbitrary term (not just
+a parameter).  Intuitively, this is correct because the number of
+quantifiers and logical connectives is smaller on the left, since
+<code>T</code> cannot contain such quantifiers or connectives.
+</p>
+<p>This kind of precise analysis is important, for example, in the proof
+of cut elimination or the termination of polymorphic type
+reconstruction.
+</p>
+
+<hr size="6">
+<a name="Lexicographic-Orders"></a>
+<a name="SEC56"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC55" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC57" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.4 Lexicographic Orders </h2>
+
+
+<p>Lexicographic orders are specified as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">{<var>O1</var> &hellip; <var>On</var>}
+</pre></td></tr></table>
+<p>Using <em>vi</em> and <em>wi</em> for corresponding argument structures
+whose order is already defined, we compare them lexicographically as
+follows:
+</p>
+<dl compact="compact">
+<dt> <em>{v1</em> &hellip; <em>vn}</em> <em>&lt;</em> <em>{w1</em> &hellip; <em>wn}</em>, if</dt>
+<dd><dl compact="compact">
+<dt> <em>v1 &lt; w1</em>, or</dt>
+<dt> <em>v1 = w1</em> and <em>v2 &lt; w2</em>, or</dt>
+<dt> &hellip;</dt>
+<dt> <em>v1 = w1</em>, <em>v2 = w2</em>, &hellip;, and <em>vn &lt; wn</em>.</dt>
+</dl>
+</dd>
+</dl>
+
+<p>A lexicographic order is needed, for example, to show termination of
+Ackermann's function, defined in <tt>`examples/arith/arith.elf'</tt> with
+the termination declaration in <br><tt>`examples/arith/arith.thm'</tt>.
+</p>
+<hr size="6">
+<a name="Simultaneous-Orders"></a>
+<a name="SEC57"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC56" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC58" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.5 Simultaneous Orders </h2>
+
+
+<p>Simultaneous orders require that one of its elements decreases while all
+others remain the same.  This is strictly weaker than a lexicographic
+ordering built from the same components.  Technically speaking it is
+therefore is redundant for termination checking, since the corresponding
+lexicographic ordering could be used instead.  However, for inductive
+theorem proving it is quite useful, since the search space for
+simultaneous induction is much smaller than for lexicographic induction.
+</p>
+<p>Simultaneous orders are specified as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">[<var>O1</var> &hellip; <var>On</var>]
+</pre></td></tr></table>
+<p>Using <em>vi</em> and <em>wi</em> for corresponding argument structures
+whose order is already defined, we compare them simultaneously as
+follows:
+</p>
+<dl compact="compact">
+<dt> <em>[v1</em> &hellip; <em>vn]</em> <em>&lt;</em> <em>[w1</em> &hellip; <em>wn]</em>, if</dt>
+<dd><dl compact="compact">
+<dt> <em>v1 &lt; w1</em>, <em>v2 &lt;= w2</em>, &hellip;, and <em>vn &lt;= wn</em>, or</dt>
+<dt> <em>v1 &lt;= w1</em>, <em>v2 &lt; w2</em>, &hellip;, and <em>vn &lt;= wn</em>, or</dt>
+<dt> &hellip;</dt>
+<dt> <em>v1 &lt;= w1</em>, <em>v2 &lt;= w2</em>, &hellip;, and <em>vn &lt; wn</em>.</dt>
+</dl>
+</dd>
+</dl>
+
+<p>A combination of simultaneous and lexicographic order is used, for
+example, in the admissibility of cut found in
+<tt>`examples/cut-elim/int.thm'</tt>, where either the cut formula <em>A</em>
+gets smaller, or if <em>A</em> stays the same, either the derivation of
+the left or right premise get smaller while the other stays the same.
+</p>
+<hr size="6">
+<a name="Mutual-Recursion"></a>
+<a name="SEC58"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC57" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC52" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 9.6 Mutual Recursion </h2>
+
+
+<p>Mutually recursive predicates present a challenge to termination
+checking, since decreasing arguments might appear in different
+positions.  Moreover, mutually recursive predicates <code>a</code> and
+<code>a'</code> might be prioritized so that when <code>a</code> calls <code>a'</code> all
+termination arguments remain the same, but when <code>a'</code> calls <code>a</code>
+the arguments are smaller according to the termination order.
+</p>
+<p>To handle the association of related argument in mutually recursive
+predicates, so-called <em>mutual arguments</em> can be specified
+in a termination order.  They are given as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(X1 &hellip; Xn)
+</pre></td></tr></table>
+<p>The priority between predicates is indicated by the order of the
+call patterns.  If we analyze call patterns
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(a1 args1)
+(a2 args2)
+&hellip;
+(an argsn)
+</pre></td></tr></table>
+
+<p>then termination arguments must decrease when <code>ai</code> calls <code>aj</code>
+for <em>i &lt; j</em>, but calls of <code>ai</code> from <code>aj</code> may keep the
+termination arguments equal.
+</p>
+<p>Mutual arguments are used, for example, in the proofs of soundness (file
+<br><tt>`examples/lp-horn/uni-sound.thm'</tt>) and completeness (file
+<br><tt>`examples/lp-horn/uni-complete.thm'</tt>) of uniform derivations for
+Horn logic.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC52" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

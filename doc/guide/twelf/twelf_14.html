@@ -1,0 +1,1046 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 14. Emacs Interface</title>
+
+<meta name="description" content="Twelf User's Guide: 14. Emacs Interface">
+<meta name="keywords" content="Twelf User's Guide: 14. Emacs Interface">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Emacs-Interface"></a>
+<a name="SEC81"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_13.html#SEC80" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC82" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 14. Emacs Interface </h1>
+
+<p>The Twelf mode for Emacs provides some functions and utilities for
+editing Twelf source and for interacting with an inferior Twelf server
+process which can load configurations, files, and individual
+declarations and track the source location of errors.  It also provides
+an interface to the tags package which allows simple editing of groups
+of files, constant name completion, and locating of constant
+declarations within the files of a configuration.
+</p>
+<p>Note that in order to use the Emacs interface you need to include the
+line
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(load &quot;<var>directory</var>/emacs/twelf-init.el&quot;)
+</pre></td></tr></table>
+<p>in your <tt>`.emacs'</tt> file, where <var>directory</var> is the Twelf root
+directory.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC82">14.1 Twelf Mode</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                  Major mode for editing Twelf sources
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC83">14.2 Editing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Automatic indentation
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC84">14.3 Type Checking Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Checking declarations, files, configurations
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC85">14.4 Printing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Printing signatures
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC86">14.5 Tracing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Debugging tools
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC87">14.6 Error Tracking</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Jumping to error locations
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC88">14.7 Server State</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Changing server parameters
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC89">14.8 Info File</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                   Reading this documentation
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC90">14.9 Tags Files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                  Tagging Twelf sources
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC91">14.10 Twelf Timers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Obtaining runtime statistics from server
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC92">14.11 Twelf-SML Mode</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Running Twelf under SML in Emacs
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC93">14.12 Emacs Variables</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Customizing Twelf mode
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC94">14.13 Syntax Highlighting</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Using multiple fonts for Twelf code
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC95">14.14 Emacs Initialization</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        For the .emacs file
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC96">14.15 Command Summary</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Summary of Twelf mode commands
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Twelf-Mode"></a>
+<a name="SEC82"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC81" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC83" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.1 Twelf Mode </h2>
+
+
+<p>The Twelf mode in Emacs provides support for editing and indentation,
+syntax highlighting (including colors) (see section <a href="#SEC94">Syntax Highlighting</a>),
+and communication commands for interacting with a Twelf server running
+as an inferior process to Emacs.  It defines a menu which is added to
+the menu bar, usually at the top of each Emacs frame.
+</p>
+<p>Many commands apply to the current declaration, which is the declaration
+in which we find the Emacs cursor (not the cursor of the window system).
+If the cursor is between declarations, the declaration after point is
+considered current.  From the point of view of Emacs, single
+declarations never include consecutive blank lines, which provides some
+insulation against missing closing delimiters.
+</p>
+<p>Normally, Twelf mode is entered automatically when a Twelf source file
+is edited (see section <a href="#SEC95">Emacs Initialization</a>), but it can also be switched on or
+off directly with <kbd>M-x twelf-mode</kbd>.
+</p>
+<dl compact="compact">
+<dt> <kbd>M-x twelf-mode</kbd></dt>
+<dd><a name="IDX72"></a>
+<p> Toggle Twelf mode, the major mode for editing Twelf code.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Editing-Commands"></a>
+<a name="SEC83"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC82" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC84" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.2 Editing Commands </h2>
+
+<p>The editing commands in Twelf mode partially analyse the structure
+of the text at the cursor position as Twelf code and try to indent
+accordingly.  This is not always perfect.
+</p>
+<a name="IDX73"></a>
+<a name="IDX74"></a>
+
+<dl compact="compact">
+<dt> <kbd><kbd>TAB</kbd></kbd></dt>
+<dt> <kbd>M-x twelf-indent-line</kbd></dt>
+<dd><a name="IDX75"></a>
+<p>  Indent current line as Twelf code.
+This recognizes comments, matching delimiters, and standard infix operators.
+</p>
+</dd>
+<dt> <kbd><kbd>DEL</kbd></kbd></dt>
+<dt> <kbd>M-x backward-delete-char-untabify</kbd></dt>
+<dd><a name="IDX76"></a>
+<p> Delete character backward, changing tabs into spaces.
+</p>
+</dd>
+<dt> <kbd>M-C-q</kbd></dt>
+<dt> <kbd>M-x twelf-indent-decl</kbd></dt>
+<dd><a name="IDX77"></a>
+<p> Indent each line of the current declaration.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-indent-region</kbd></dt>
+<dd><a name="IDX78"></a>
+<p> Indent each line of the region as Twelf code.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Type-Checking-Commands"></a>
+<a name="SEC84"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC83" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC85" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.3 Type Checking Commands </h2>
+
+
+<p>The Twelf mode provides simple commands which cause the server to load
+or reload the current configuration, the file edited in the current
+buffer, or just the declaration at point.  Each of these command can be
+preceded by a prefix argument (for example, <kbd>C-u C-c C-c</kbd>) which
+will select the Twelf server buffer after completion of the command.
+The Twelf server buffer can also be forced to be shown with the <kbd>C-c
+C-u</kbd> Emacs command.
+</p>
+<dl compact="compact">
+<dt> <kbd>C-c C-c</kbd></dt>
+<dt> <kbd>M-x twelf-save-check-config</kbd></dt>
+<dd><a name="IDX79"></a>
+<p> Save its modified buffers and then check the current Twelf configuration.
+ With prefix argument also displays Twelf server buffer.
+ If necessary, this will start up an Twelf server process.
+</p>
+</dd>
+<dt> <kbd>C-c C-a</kbd></dt>
+<dt> <kbd>M-x twelf-save-append-config</kbd></dt>
+<dd><a name="IDX80"></a>
+<p> Save its modified buffers and then check the current Twelf configuration
+ without resetting or reloading files unmodified since the last check.
+ With prefix argument also displays Twelf server buffer.
+ If necessary, this will start up an Twelf server process.
+</p>
+</dd>
+<dt> <kbd>C-c C-s</kbd></dt>
+<dt> <kbd>M-x twelf-save-check-file</kbd></dt>
+<dd><a name="IDX81"></a>
+<p> Save buffer and then check it by giving a command to the Twelf server.
+ In Twelf Config minor mode, it reconfigures the server.
+ With prefix argument also displays Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>C-c C-d</kbd></dt>
+<dt> <kbd>M-x twelf-check-declaration</kbd></dt>
+<dd><a name="IDX82"></a>
+<p> Send the current declaration to the Twelf server process for checking.
+ With prefix argument also displays Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>C-c c</kbd></dt>
+<dt> <kbd>M-x twelf-type-const</kbd></dt>
+<dd><a name="IDX83"></a>
+<p> Display the type of the constant before point.
+ Note that the type of the constant will be `absolute' rather than the
+ type of the particular instance of the constant.
+</p>
+</dd>
+<dt> <kbd>C-c C-u</kbd></dt>
+<dt> <kbd>M-x twelf-server-display</kbd></dt>
+<dd><a name="IDX84"></a>
+<p> Display Twelf server buffer, moving to the end of output.
+ With prefix argument also selects the Twelf server buffer.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Printing-Command"></a>
+<a name="SEC85"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC84" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC86" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.4 Printing Commands </h2>
+
+
+<dl compact="compact">
+<dt> <kbd>M-x twelf-print-signature</kbd></dt>
+<dd><a name="IDX85"></a>
+<p> Prints the current signature in the Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-print-program</kbd></dt>
+<dd><a name="IDX86"></a>
+<p> Prints the current signature as a program in the Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-print-subord</kbd></dt>
+<dd><a name="IDX87"></a>
+<p> Prints the current subordination relation in the Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-print-tex-signature</kbd></dt>
+<dd><a name="IDX88"></a>
+<p> Prints the current signature in TeX style.
+ The output appears in the  Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-print-tex-program</kbd></dt>
+<dd><a name="IDX89"></a>
+<p> Prints the current signature as a program in TeX style.
+ The output appears in the Twelf server buffer.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Tracing-Commands"></a>
+<a name="SEC86"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC85" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC87" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.5 Tracing Commands </h2>
+
+
+<p>The Twelf Emacs mode provides a simple interface to the tracer.
+While tracing or breakpoints are on, you should be in the
+Emacs server buffer to type your input directly to the server
+as described in <a href="twelf_12.html#SEC75">Tracing and Breakpoints</a>.
+</p>
+<dl compact="compact">
+<dt> <kbd>M-x twelf-trace-trace</kbd></dt>
+<dd><a name="IDX90"></a>
+<p> Read list of constants and trace them.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-trace-all</kbd></dt>
+<dd><a name="IDX91"></a>
+<p>Trace all clauses and families.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-untrace</kbd></dt>
+<dd><a name="IDX92"></a>
+<p>Untrace all clauses and families.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-break</kbd></dt>
+<dd><a name="IDX93"></a>
+<p>Read list of constants and set breakpoints.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-break-all</kbd></dt>
+<dd><a name="IDX94"></a>
+<p>Set breakpoints on all clauses and families.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-unbreak</kbd></dt>
+<dd><a name="IDX95"></a>
+<p>Remove all breakpoints.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-trace-show</kbd></dt>
+<dd><a name="IDX96"></a>
+<p>Show tracing and breakpoint information.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Error-Tracking"></a>
+<a name="SEC87"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC86" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC88" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.6 Error Tracking </h2>
+
+
+<p>Error messages by the Twelf server are flagged with the filename and an
+educated guess as to the source of the error (see section <a href="twelf_4.html#SEC20">Error Messages</a>).
+These can be interpreted by Emacs to jump directly to the suspected
+site.
+</p>
+<p>Sometimes, the server buffer and the the server itself believe to have
+different working directories.  In that case, error tracking may not be
+able to find the file, and an explicit call to <code>OS.chDir</code>
+or <code>M-x cd</code> in the server buffer may be required.
+</p>
+<dl compact="compact">
+<dt> <kbd>C-c `</kbd></dt>
+<dt> <kbd>M-x twelf-next-error</kbd></dt>
+<dd><a name="IDX97"></a>
+<p> Find the next error by parsing the Twelf server or Twelf-SML buffer.
+ Move the error message on the top line of the window;
+ put the cursor at the beginning of the error source. If the
+ error message specifies a range, the mark is placed at the end.
+</p>
+</dd>
+<dt> <kbd>C-c =</kbd></dt>
+<dt> <kbd>M-x twelf-goto-error</kbd></dt>
+<dd><a name="IDX98"></a>
+<p> Go to the error reported on the current line or below.
+ Also updates the error cursor to the current line.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Server-State"></a>
+<a name="SEC88"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC87" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC89" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.7 Server State </h2>
+
+
+<p>The server state consists of the current configuration and a number of
+parameters described in <a href="twelf_13.html#SEC78">Twelf Server</a>.  The current configuration
+is often set implicitly, with the <kbd>C-c C-c</kbd> command in a
+configuration buffer, but it can also be set explicitly.
+</p>
+<dl compact="compact">
+<dt> <kbd>C-c &lt;</kbd></dt>
+<dt> <kbd>M-x twelf-set</kbd></dt>
+<dd><a name="IDX99"></a>
+<p> Sets the Twelf parameter PARM to VALUE.
+ When called interactively, prompts for parameter and value, supporting
+ completion.
+</p>
+</dd>
+<dt> <kbd>C-c &gt;</kbd></dt>
+<dt> <kbd>M-x twelf-get</kbd></dt>
+<dd><a name="IDX100"></a>
+<p> Prints the value of the Twelf parameter PARM.
+ When called interactively, prompts for parameter, supporting completion.
+</p>
+</dd>
+<dt> <kbd>C-c C-i</kbd></dt>
+<dt> <kbd>M-x twelf-server-interrupt</kbd></dt>
+<dd><a name="IDX101"></a>
+<p> Interrupt the Twelf server process.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-server</kbd></dt>
+<dd><a name="IDX102"></a>
+<p> Start an Twelf server process in a buffer named *twelf-server*.
+ Any previously existing process is deleted after confirmation.
+ Optional argument PROGRAM defaults to the value of the variable
+ twelf-server-program.
+ This locally re-binds `twelf-server-timeout' to 15 secs.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-server-configure</kbd></dt>
+<dd><a name="IDX103"></a>
+<p> Initializes the Twelf server configuration from CONFIG-FILE.
+ A configuration file is a list of relative file names in
+ dependency order.  Lines starting with % are treated as comments.
+ Starts a Twelf servers if necessary.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-reset</kbd></dt>
+<dd><a name="IDX104"></a>
+<p> Reset the global signature of Twelf maintained by the server.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-server-quit</kbd></dt>
+<dd><a name="IDX105"></a>
+<p> Kill the Twelf server process.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-server-restart</kbd></dt>
+<dd><a name="IDX106"></a>
+<p> Restarts server and re-initializes configuration.
+ This is primarily useful during debugging of the Twelf server code or
+ if the Twelf server is hopelessly wedged.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-server-send-command</kbd></dt>
+<dd><a name="IDX107"></a>
+<p> Restarts server and re-initializes configuration.
+ This is primarily useful during debugging of the Twelf server code or
+ if the Twelf server is hopelessly wedged.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Info-File"></a>
+<a name="SEC89"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC88" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC90" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.8 Info File </h2>
+
+<p>The content of this file in Info format can be visited directly
+and does not need to be tied into the Info tree.
+See the documentation for the Emacs info package for
+more info
+</p>
+<a name="IDX108"></a>
+<a name="IDX109"></a>
+
+<dl compact="compact">
+<dt> <kbd>C-c C-h</kbd></dt>
+<dt> <kbd>M-x twelf-info</kbd></dt>
+<dd><a name="IDX110"></a>
+<p> Visit the Twelf User's Guide in info format in Emacs.
+ With a prefix argument it prompts for the info file name, which
+ defaults to the value of the <code>twelf-info-file</code> variable.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Tags-Files"></a>
+<a name="SEC90"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC89" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC91" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.9 Tags Files </h2>
+
+<p>Tags files provide a convenient way to group files, such as
+Twelf configurations.  See the documentation for the Emacs etags
+package for more information.
+</p>
+<a name="IDX111"></a>
+<a name="IDX112"></a>
+
+<dl compact="compact">
+<dt> <kbd>M-x twelf-tag</kbd></dt>
+<dd><a name="IDX113"></a>
+<p> Create tags file for current configuration.
+ If the current configuration is sources.cfg, the tags file is TAGS.
+ If current configuration is named FILE.cfg, tags file will be named FILE.tag
+ Errors are displayed in the Twelf server buffer.
+</p>
+</dd>
+<dt> <kbd>M-.</kbd></dt>
+<dt> <kbd>M-x find-tag TAG</kbd></dt>
+<dd><a name="IDX114"></a>
+<p> Selects the buffer that the tag is contained in and puts point at
+ its definition.
+</p>
+</dd>
+<dt> <kbd>C-x 4 .</kbd></dt>
+<dt> <kbd>M-x find-tag-other-window TAG</kbd></dt>
+<dd><a name="IDX115"></a>
+<p> Selects the buffer that TAG is contained in in another window
+and puts point at its definition.
+</p>
+</dd>
+<dt> <kbd>C-c q</kbd></dt>
+<dt> <kbd>M-x tags-query-replace FROM TO</kbd></dt>
+<dd><a name="IDX116"></a>
+<p> Query-replace-regexp FROM with TO through all files listed in tags table.
+</p>
+</dd>
+<dt> <kbd>C-c s</kbd></dt>
+<dt> <kbd>M-x tags-search REGEXP</kbd></dt>
+<dd><a name="IDX117"></a>
+<p> Search through all files listed in tags table for match for REGEXP.
+</p>
+</dd>
+<dt> <kbd>M-,</kbd></dt>
+<dt> <kbd>M-x tags-loop-continue</kbd></dt>
+<dd><a name="IDX118"></a>
+<p> Continue last C-c s or C-c q command.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Twelf-Timers"></a>
+<a name="SEC91"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC90" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC92" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.10 Twelf Timers </h2>
+
+<p>The following commands obtain the runtime statistics of the
+the Twelf server.
+</p>
+<a name="IDX119"></a>
+
+<dl compact="compact">
+<dt> <kbd>M-x twelf-timers-reset</kbd></dt>
+<dd><a name="IDX120"></a>
+<p> Reset the Twelf timers.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-timers-show</kbd> </dt>
+<dd><a name="IDX121"></a>
+<p> Show and reset the Twelf timers.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-timers-check</kbd></dt>
+<dd><a name="IDX122"></a>
+<p> Show the Twelf timers without resetting them.
+</p>
+</dd>
+</dl>
+
+<hr size="6">
+<a name="Twelf_002dSML-Mode"></a>
+<a name="SEC92"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC91" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC93" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.11 Twelf-SML Mode </h2>
+
+
+<p>There is some support for interacting with Twelf, even when it is
+run within ML, rather than as a stand-alone server.  You can start
+an SML in which you intend to run Twelf with <code>M-x twelf-sml</code>;
+the buffer will then be in Twelf-SML mode.
+</p>
+<p>If you intend to send command to a buffer running Twelf in SML (rather
+than the Twelf server), you can switch to a minor mode 2Twelf-SML with
+<code>M-x twelf-to-twelf-sml</code>.
+</p>
+<dl compact="compact">
+<dt> <kbd>M-x twelf-sml</kbd></dt>
+<dd><a name="IDX123"></a>
+<p> Run an inferior Twelf-SML process in a buffer *twelf-sml*.
+ If there is a process already running in *twelf-sml*, just
+ switch to that buffer.  With argument, allows you to change the program
+ which defaults to the value of twelf-sml-program.  Runs the hooks from
+ twelf-sml-mode-hook (after the comint-mode-hook is run).
+</p>
+</dd>
+<dt> <kbd>M-x twelf-to-twelf-sml-mode</kbd></dt>
+<dd><a name="IDX124"></a>
+<p> Toggles minor mode for sending queries to Twelf-SML instead of Twelf server.
+</p>
+</dd>
+<dt> <kbd>C-c C-e</kbd></dt>
+<dt> <kbd>M-x twelf-sml-send-query</kbd></dt>
+<dd><a name="IDX125"></a>
+<p> Send the current declaration to the inferior Twelf-SML process as a query.
+ Prefix argument means switch-to-twelf-sml afterwards.
+</p>
+</dd>
+<dt> <kbd>C-c C-r</kbd></dt>
+<dt> <kbd>M-x twelf-sml-send-region</kbd> </dt>
+<dd><a name="IDX126"></a>
+<p> Send the current region to the inferior Twelf-SML process.
+ Prefix argument means switch-to-twelf-sml afterwards.
+</p>
+</dd>
+<dt> <kbd>C-c <kbd>RETURN</kbd></kbd></dt>
+<dt> <kbd>M-x twelf-sml-send-newline</kbd></dt>
+<dd><a name="IDX127"></a>
+<p> Send a newline to the inferior Twelf-SML process.
+ If a prefix argument is given, switches to Twelf-SML buffer afterwards.
+</p>
+</dd>
+<dt> <kbd>C-c ;</kbd></dt>
+<dt> <kbd>M-x twelf-sml-send-semicolon</kbd></dt>
+<dd><a name="IDX128"></a>
+<p> Send a semi-colon to the inferior Twelf-SML process.
+ If a prefix argument is given, switched to Twelf-SML buffer afterwards.
+</p>
+</dd>
+<dt> <kbd>C-c d</kbd></dt>
+<dt> <kbd>M-x twelf-sml-cd DIR</kbd></dt>
+<dd><a name="IDX129"></a>
+<p> Make DIR become the Twelf-SML process' buffer's default directory and
+ furthermore issue an appropriate command to the inferior Twelf-SML process.
+</p>
+</dd>
+<dt> <kbd>M-x twelf-sml-quit</kbd></dt>
+<dd><a name="IDX130"></a>
+<p> Kill the Twelf-SML process.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Emacs-Variables"></a>
+<a name="SEC93"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC92" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC94" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.12 Emacs Variables </h2>
+
+
+<p>A number of Emacs variables can be changed to customize the behavior of
+Twelf mode.  The list below is not complete; please refer to the Emacs
+Lisp sources in <code>emacs/twelf.el</code> for additional information.
+</p>
+<dl compact="compact">
+<dt> <code>twelf-indent</code> </dt>
+<dd><a name="IDX131"></a>
+<p> Indent for Twelf expressions.
+</p>
+</dd>
+<dt> <code>twelf-server-program</code></dt>
+<dd><a name="IDX132"></a>
+<p> Default Twelf server program.
+</p>
+</dd>
+<dt> <code>twelf-info-file</code></dt>
+<dd><a name="IDX133"></a>
+<p> Default Twelf info file.
+</p>
+</dd>
+<dt> <code>twelf-mode-hook</code></dt>
+<dd><a name="IDX134"></a>
+<p> List of hook functions to run when switching to Twelf mode.
+</p>
+</dd>
+<dt> <code>twelf-server-mode-hook</code></dt>
+<dd><a name="IDX135"></a>
+<p> List of hook functions to run when switching to Twelf Server mode.
+</p>
+</dd>
+<dt> <code>twelf-sml-program</code></dt>
+<dd><a name="IDX136"></a>
+<p> Default Twelf-SML program.
+</p>
+</dd>
+<dt> <code>twelf-sml-mode-hook</code></dt>
+<dd><a name="IDX137"></a>
+<p> List of hook functions for Twelf-SML mode.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Syntax-Highlighting"></a>
+<a name="SEC94"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC93" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC95" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.13 Syntax Highlighting </h2>
+
+
+<p>Twelf also provides syntax highlighting, which helps make Elf code more
+readable.  This highlighting can use different colors and faces.
+Unfortunately, the necessary libraries are at present not standardized
+between XEmacs and FSF Emacs, which means that highlighting support is
+less general and less portable than the plain Twelf mode.
+</p>
+<p>At present, highlighting has not been extensively tested in various
+versions of Emacs, but the font-lock mode provided in
+<tt>`emacs/twelf-font.el'</tt> seems to work at least in XEmacs version
+19.16 and FSF Emacs version 19.34.  The alternative highlight mode
+provided in <tt>`emacs/twelf-hilit'</tt> appears to work in FSF Emacs 19.34.
+</p>
+<p>Unlike other font-lock modes, Twelf's fontification is not `electric' in
+that it does not fontify as one types.  One has to explicitly issue a
+command to fontify the current Twelf declaration or current buffer,
+since single-line highlighting is too error-prone and multi-line
+immediate highlighting is not well supported in current versions of font
+lock mode.
+</p>
+<dl compact="compact">
+<dt> <kbd>C-c C-l</kbd></dt>
+<dt> <kbd>M-x twelf-font-fontify-decl</kbd></dt>
+<dd><a name="IDX138"></a>
+<p> Fontifies the current Twelf declaration.
+</p>
+</dd>
+<dt> <kbd>C-c l</kbd></dt>
+<dt> <kbd>M-x twelf-font-fontify-buffer</kbd></dt>
+<dd><a name="IDX139"></a>
+<p> Fontitifies the current buffer as Twelf code
+</p>
+</dd>
+<dt> <kbd>M-x twelf-font-unfontify</kbd></dt>
+<dd><a name="IDX140"></a>
+<p> Removes fontification from current buffer.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Emacs-Initialization"></a>
+<a name="SEC95"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC94" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC96" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.14 Emacs Initialization </h2>
+
+
+<p>If Twelf has been properly installed, you can use the Twelf's Emacs
+interface with the default settings simply by adding the line
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(load &quot;<var>directory</var>/emacs/twelf-init.el&quot;)
+</pre></td></tr></table>
+<p>to your <tt>`.emacs'</tt> file, where <var>directory</var> is the Twelf root
+directory.  In order to customize the behavior, you might copy
+the file <tt>`emacs/twelf-init.el'</tt> or its contents and change
+it as appropriate.
+</p>
+<hr size="6">
+<a name="Command-Summary"></a>
+<a name="SEC96"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC95" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC81" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 14.15 Command Summary </h2>
+
+
+<table><tr><td>&nbsp;</td><td><pre class="example">--- Editing Commands ---
+TAB          twelf-indent-line
+DEL          backward-delete-char-untabify
+M-C-q        twelf-indent-decl
+
+--- Type Checking ---
+C-c C-c      twelf-save-check-config
+C-c C-a      twelf-save-append-config
+C-c C-s      twelf-save-check-file
+C-c C-d      twelf-check-declaration
+C-c c        twelf-type-const
+C-c C-u      twelf-server-display
+
+--- Error Tracking ---
+C-c `        twelf-next-error
+C-c =        twelf-goto-error
+
+--- Syntax Highlighting ---
+C-c C-l      twelf-font-fontify-decl
+C-c l        twelf-font-fontify-buffer
+
+--- Server State ---
+C-c &lt;        twelf-set
+C-c &gt;        twelf-get
+C-c C-i      twelf-server-interrupt
+M-x twelf-server
+M-x twelf-server-configure
+M-x twelf-server-quit
+M-x twelf-server-restart
+M-x twelf-server-send-command
+
+--- Info ---
+C-c C-h      twelf-info
+
+--- Timers ---
+M-x twelf-timers-reset
+M-x twelf-timers-show
+M-x twelf-timers-check
+
+--- Tags (standard Emacs etags package) ---
+M-x twelf-tag
+M-.          find-tag (standard binding)
+C-x 4 .      find-tag-other-window (standard binding)
+C-c q        tags-query-replace (Twelf mode binding)
+C-c s        tags-search (Twelf mode binding)
+M-,          tags-loop-continue (standard binding)
+             visit-tags-table, list-tags, tags-apropos
+
+--- Communication with inferior Twelf-SML process (not Twelf Server) ---
+M-x twelf-sml
+C-c C-e      twelf-sml-send-query
+C-c C-r      twelf-sml-send-region
+C-c RET      twelf-sml-send-newline
+C-c ;        twelf-sml-send-semicolon
+C-c d        twelf-sml-cd
+M-x twelf-sml-quit
+
+--- Variables ---
+twelf-indent
+</pre></td></tr></table>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_15.html#SEC97" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

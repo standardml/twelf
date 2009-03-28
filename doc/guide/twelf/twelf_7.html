@@ -1,0 +1,696 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 7. Constraint Domains</title>
+
+<meta name="description" content="Twelf User's Guide: 7. Constraint Domains">
+<meta name="keywords" content="Twelf User's Guide: 7. Constraint Domains">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Constraint-Domains"></a>
+<a name="SEC39"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_6.html#SEC38" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC40" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 7. Constraint Domains </h1>
+
+
+<p>Constraints-based extensions are highly experimental and under active
+development.  Use of extensions other than the ones pertaining rational
+arithmetic is strongly discouraged.  We refer to extension by constraint
+domains as Twelf(X), where X refers different domains.
+</p>
+<p>Twelf(X) extensions allow Twelf to deal more efficiently with some
+specific domains (e.g. numbers). They do so by
+</p>
+<ol>
+<li> modifying type reconstruction to accommodate other equivalences beyond
+those entailed by traditional beta-eta-conversion;
+
+</li><li> defining special types, on which proof search is performed using ad-hoc
+decision procedures rather than traditional depth-first strategy;
+
+</li><li> adding countably many new symbols to the language, signifying all the
+elements of the domain.
+</li></ol>
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC40">7.1 Installing an Extension</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Making constraint domains available
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC41">7.2 Equalities over Rational Numbers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Rationals with equality
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC42">7.3 Inequalities over Rational Numbers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Rationals with equality and inequality
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC43">7.4 Integer Constraints</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Integers with equality and inequality
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC44">7.5 Equalities over Strings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Strings and concatenation
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC45">7.6 32-bit Integers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Integers representable as string of 32 bits
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC46">7.7 Sample Constraint Programs</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Some examples of use
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC47">7.8 Restrictions and Caveats</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    Alerts!
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Installing-an-Extension"></a>
+<a name="SEC40"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC39" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC41" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.1 Installing an Extension </h2>
+
+
+<p>Extensions are installed using the declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use <em>extension name</em>
+</pre></td></tr></table>
+<p>For example,
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/rationals.
+</pre></td></tr></table>
+
+<p>loads the extension dealing with equality over the rationals. Typically,
+an extension introduces new symbols in the signature. For example,
+<code>equality/rationals</code> adds a type for rational numbers:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">rational : type.
+</pre></td></tr></table>
+<p>In addition to these symbols, a countably infinite set of &quot;special&quot;
+ones may be also accepted by the system as the result of loading one
+extension. In our example, after loading <code>equality/rationals</code> the
+symbols
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">135  5/13  ~1/4
+</pre></td></tr></table>
+
+<p>become valid constants of type <code>rational</code>.
+</p>
+<p>Finally, it is possible for an extension to be built on top of others,
+and therefore to depend on them. Hence, loading an extension usually
+causes all the others it depends upon to be loaded as well, if they have
+not been already. For example, the extension <code>inequality/rationals</code>
+requires <code>equality/rationals</code>, and hence the declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use inequality/rationals.
+</pre></td></tr></table>
+
+<p>subsumes
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/rationals.
+</pre></td></tr></table>
+<p>Extensions must be installed prior to their use. For this reason, it is
+a safe practice to put all the <code>%use</code> declarations at the
+beginning of the program.
+</p>
+
+<hr size="6">
+<a name="Equalities-of-Rational-Numbers"></a>
+<a name="SEC41"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC40" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC42" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.2 Equalities over Rational Numbers </h2>
+
+<p>As mentioned before, the extension presiding equality over the rational
+numbers is called <code>equality/rationals</code>, and it is therefore installed
+by the declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/rationals.
+</pre></td></tr></table>
+<p>This causes the declarations
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">rational : type.
+
+~ : rational -&gt; rational.              %prefix 9999 ~.
++ : rational -&gt; rational -&gt; rational.  %infix left 9997 +.
+- : rational -&gt; rational -&gt; rational.  %infix left 9997 -.
+* : rational -&gt; rational -&gt; rational.  %infix left 9998 *.
+</pre></td></tr></table>
+
+<p>to be included in the current global signature. 
+</p>
+<p>Note that We do not add an equality predicate for rationals. This is
+unnecessary, since the extension modifies standard type checking so that
+arithmetic identities are taken into account. However, one can always
+define an equality predicate by declaring
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">     == : rational -&gt; rational -&gt; type.  %infix none 100 ==.
+     id : X == X.
+</pre></td></tr></table>
+<p>This extension is also responsible for defining special constants for
+all the rational numbers. These follow the syntax
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&lt;rational&gt; ::= ~&lt;unsigned&gt; | &lt;unsigned&gt;
+&lt;unsigned&gt; ::= &lt;digits&gt; | &lt;digits&gt;/&lt;digits&gt;
+&lt;digits&gt;   ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+             | &lt;digits&gt; &lt;digits&gt;
+</pre></td></tr></table>
+<p>It is important to notice the difference between <code>~ 10</code> and
+<code>~10</code>. The former is the object obtained applying the unary minus
+operator to the positive number <em>10</em>; the second stands for the number
+<em>-10</em>.  The difference is, however, just syntactical, since the former
+is automatically evaluated into the latter by Twelf(X). In general, one
+should keep in mind that Twelf(X) extensions do not modify the behavior
+of the lexer; hence, for example, multiplication of a variable <code>X</code>
+by two still needs to be written as <code>X * 2</code> (note the spaces
+preceding and following the multiplication symbol), while <code>X*2</code>
+will be interpreted by the system as a single variable named
+&quot;<code>X*2</code>&quot;.
+</p>
+<p>Unification of arithmetic expressions is done by Gaussian
+elimination. Thus, unification problems that can be reduced to linear
+equations over existentially quantified variables are immediately
+solved; other problems not falling in this class are likely to be
+delayed as unificational constraints.
+</p>
+<hr size="6">
+<a name="Inequalities-over-Rational-Numbers"></a>
+<a name="SEC42"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC41" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC43" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.3 Inequalities over Rational Numbers </h2>
+
+<p>Arithmetical inequalities are handled by the extension
+<code>inequality/rationals</code>. This relies on <code>equality/rationals</code>
+for the definition of rational number, so a declaration of
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use inequality/rationals.
+</pre></td></tr></table>
+
+<p>implicitly entails one of
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/rationals.
+</pre></td></tr></table>
+<p>This extension adds the following to the signature:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&gt;  : rational -&gt; rational -&gt; type.  %infix none 0 &gt;.
+&gt;= : rational -&gt; rational -&gt; type.  %infix none 0 &gt;=.
+
++&gt;  : {Z:rational} X &gt; Y -&gt; (X + Z) &gt; (Y + Z).
++&gt;= : {Z:rational} X &gt;= Y -&gt; (X + Z) &gt;= (Y + Z).
+
+&gt;&gt;=  : X &gt; Y -&gt; X &gt;= Y.
+0&gt;=0 : 0 &gt;= 0.
+</pre></td></tr></table>
+<p>It also adds countably many proof objects such as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">45&gt;0 : 45 &gt; 0.
+</pre></td></tr></table>
+
+<p>witnessing that positive numbers are greater than zero.
+</p>
+<p>Goals of the form
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">M &gt; N  or  M &gt;= N
+</pre></td></tr></table>
+
+<p>are evaluated using a modified version of the simplex algorithm, rather
+than the usual proof-search mechanism. This will incrementally collect
+inequalities, assigning them incomplete (i.e. partially instantiated)
+proof objects, until either an inconsistency is discovered (generating
+failure) or they can be shown to be satisfied a unique solution (causing
+the proof objects to be finally completed).
+</p>
+<hr size="6">
+<a name="Integer-Constraints"></a>
+<a name="SEC43"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC42" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC44" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.4 Integer Constraints </h2>
+
+<p>The extensions <code>equality/integers</code> and <code>inequality/integers</code>
+deal with equalities and inequalities over the ring of integer numbers,
+respectively. Since these two extensions are very similar to their
+rationals counterparts, we will limit ourselves to outlining the
+differences.
+</p>
+<p>The signature introduced by <code>equality/integers</code> resembles
+<code>equality/rationals</code>.  The only difference lies in the name of
+the main type:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">integer : type.
+
+~ : integer -&gt; integer.             %prefix 9999 ~.
++ : integer -&gt; integer -&gt; integer.  %infix left 9997 +.
+- : integer -&gt; integer -&gt; integer.  %infix left 9997 -.
+* : integer -&gt; integer -&gt; integer.  %infix left 9998 *.
+</pre></td></tr></table>
+<p>Like before, countably many special constants are added to the signature. They follow the syntax
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&lt;integer&gt; ::= ~&lt;digits&gt; | &lt;digits&gt;
+</pre></td></tr></table>
+<p>The extension <code>equality/integers</code> takes advantage of the fact that (unlike the rationals) the integers are not a dense ordering to considerably shorten the set of symbols needed:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&gt;= : integer -&gt; integer -&gt; type.  %infix none 0 &gt;=.
+
++&gt;= : {Z:integer} X &gt;= Y -&gt; (X + Z) &gt;= (Y + Z).
+</pre></td></tr></table>
+<p>It also declares countably many proof objects such as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">37&gt;=0 : 37 &gt;= 0.
+</pre></td></tr></table>
+
+<p>for all non-negative integers.
+</p>
+<p>Notice that strict inequality <code>&gt;</code> can be easily defined in this case:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&gt; : integer -&gt; integer -&gt; type.  %infix none 0 &gt;.
+
+&gt;=&gt; : X &gt;= (Y + 1) -&gt; X &gt; Y.
+</pre></td></tr></table>
+<p>For solving linear inequalities over the integers, we again use the
+simplex method, but we add special routines that implement
+branch-and-bound search. Specifically, inequalities are internally
+interpreted over rationals, and a check is performed regularly (whenever
+a new inequality is added) to ensure the rational solution space
+contains integral points.
+</p>
+<p>Note that all known methods for solving systems of integral linear
+inequations are notoriously inefficient. In the branch-and-bound method
+we adopted, the number of branches to consider is potentially
+exponential with respect to the size of the problem. We recommend using
+the <code>inequality/rationals</code> extension instead, whenever the situation
+allows the two to be used interchangeably.
+</p>
+<hr size="6">
+<a name="Equalities-over-Strings"></a>
+<a name="SEC44"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC43" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC45" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.5 Equalities over Strings </h2>
+
+<p>A third domain currently supported by the Twelf(X) extensions are
+strings of (printable) characters. The only operator provided is string
+concatenation. Installing
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/strings.
+</pre></td></tr></table>
+
+<p>causes the following signature to be loaded:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">string : type.
+
+++ : string -&gt; string -&gt; string.   %infix right ++ 9999.
+</pre></td></tr></table>
+<p>String constants are sequences of printable characters enclosed by double quotes:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&quot;foobar&quot; : string
+</pre></td></tr></table>
+<p>Under these conventions, strings cannot therefore contain the double
+quote character <code>&quot;</code>. Escape sequences, such as <code>&quot;\n&quot;</code> have no
+special meaning; moreover, we do not currently provide input/output
+primitives.
+</p>
+<p>Finally, it is required that string constants occupy a single line. The declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">mystring : string = &quot;foo
+                     bar&quot;.
+</pre></td></tr></table>
+
+<p>is not considered syntactically correct.
+</p>
+<hr size="6">
+<a name="g_t32_002dbit-Integers"></a>
+<a name="SEC45"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC44" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC46" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.6 32-bit Integers </h2>
+<p>Another supported domain are 32-bit integers. This domain is used mainly in
+Proof Carrying Code applications, and because of this, it has fairly different
+structure and features than the extension for (unrestricted) integers
+(see section <a href="#SEC43">Integer Constraints</a>). First of all, the algorithms used were kept short
+and simple, so that they can be easily read and verified to be correct. Secondly,
+the set of arithmetic operators provided has been kept to a minimum. Also, each of
+these is implemented as a type family instead of a function symbol, so that unification
+of arithmetic expressions follows the same rule as that of regular terms. Finally,
+for each arithmetic operator, we also provide a type family which, in addition to
+carry out the computation, also provides a proof object for it.
+</p>
+<p>Declaring
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%uses word32.
+</pre></td></tr></table>
+<p>causes the following signature to be loaded into the system:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">word32 : type.
++ : word32 -&gt; word32 -&gt; word32 -&gt; type.
+* : word32 -&gt; word32 -&gt; word32 -&gt; type.
+/ : word32 -&gt; word32 -&gt; word32 -&gt; type.
+prove+ : {X:word32} {Y:word32} {Z:word32} {P:+ X Y Z} type.
+proof+ : {X:word32} {Y:word32} {Z:word32} {P:+ X Y Z} prove+ X Y Z P.
+prove* : {X:word32} {Y:word32} {Z:word32} {P:* X Y Z} type.
+proof* : {X:word32} {Y:word32} {Z:word32} {P:* X Y Z} prove* X Y Z P.
+prove/ : {X:word32} {Y:word32} {Z:word32} {P:+ X Y Z} type.
+proof/ : {X:word32} {Y:word32} {Z:word32} {P:+ X Y Z} prove/ X Y Z P.
+</pre></td></tr></table>
+<p>Goals involving <code>+</code> and <code>*</code> are immediately solved if at least
+two of the arguments are ground objects (i.e. numbers), and delayed as
+constraints otherwise. In particular
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- + 3 X 9.
+</pre></td></tr></table>
+<p>is solved immediately and can be used to compute <em>9-3</em>.
+Goals involving <code>/</code> are delayed unless both the first and the second
+argument are known. The type families <code>prove+</code>, <code>prove*</code>,
+<code>prove/</code> can be used to obtain proof object for the arithmetic
+operation, and use them in the remaining part of the computation:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- P : + 3 X 9.
+Solving...
+X = 6.
+P = 3+6.
+More? n
+?- prove+ 3 X 9 P.
+Solving...
+P = 3+6;
+X = 6.
+More? n
+</pre></td></tr></table>
+<p>It is important to stress that the domain modeled here is not the ring
+of integers modulo 32 but rather the restriction of the integer ring to the
+interval <em>0</em>...<em>4294967295</em>, so that for example the query:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- + 1 X 0.
+</pre></td></tr></table>
+<p>will not admit a solution.
+</p>
+<hr size="6">
+<a name="Sample-Constraint-Programs"></a>
+<a name="SEC46"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC45" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC47" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.7 Sample Constraint Programs </h2>
+
+<p>Using Twelf(X), we can write a modified version of <code>append</code> that
+takes into account the size of the list involved:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use equality/rationals.
+
+item : type.
+list : rational -&gt; type.
+
+a : type.
+b : type.
+...
+
+nil  : list 0.
+cons : item -&gt; list N -&gt; list (N + 1).
+
+append : list M -&gt; list N -&gt; list (M + N).
+
+append_nil  : append nil L L.
+append_cons : append (cons X L1) L2 (cons X L3)
+                &lt;- append L1 L2 L3.
+</pre></td></tr></table>
+<p>Type checking the definition of <code>append</code> requires some algebraic manipulation. For example, validity of <code>append_nil</code> depends on the identity
+<em>0+M=M</em>.
+</p>
+<p>Most classic Constraint Logic Programming (CLP) examples found in the
+literature can be easily translated to Twelf(X). We present here a
+simple mortgage calculator:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%use inequality/rationals.
+
+%% equality
+== : rational -&gt; rational -&gt; type.  %infix none 1000 ==.
+id : X == X.
+
+%% mortgage payments
+mortgage : rational -&gt; rational -&gt; rational
+                    -&gt; rational -&gt; rational -&gt; type.
+
+m0 : mortgage P T I MP B
+       &lt;- T &gt; 0
+       &lt;- 1 &gt;= T
+       &lt;- Interest == T * P * I * 1/1200
+       &lt;- B == P + Interest - (T * MP).
+m1 : mortgage P T I MP B
+       &lt;- T &gt; 1
+       &lt;- MI == P * I * 1/1200
+       &lt;- mortgage (P + MI - MP) (T - 1) I MP B.
+</pre></td></tr></table>
+<p>This CLP program takes four parameters: the principal <code>P</code>, the life
+of the mortgage in months <code>T</code>, the annual interest rate (%)
+<code>I</code>, the monthly payment <code>MP</code>, and the outstanding balance
+<code>B</code>.
+</p>
+<p>Finally, we use the string extensions to write a simple parser. Consider
+the following syntax for simple arithmetic expressions:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&lt;expr&gt; ::= &lt;number&gt; | &lt;expr&gt;+&lt;expr&gt;
+                    | &lt;expr&gt;-&lt;expr&gt;
+                    | &lt;expr&gt;*&lt;expr&gt;
+                    | (&lt;expr&gt;)
+&lt;number&gt;     ::= &lt;digit&gt; | &lt;digit&gt;&lt;number&gt;
+&lt;digit&gt;      ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+</pre></td></tr></table>
+<p>This can be translated quite directly into Twelf by constructing parsing
+predicates <code>digit</code>, <code>number</code>, <code>expression</code> as follows:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">digit : string -&gt; type.
+
+d0 : digit &quot;0&quot;.
+d1 : digit &quot;1&quot;.
+d2 : digit &quot;2&quot;.
+d3 : digit &quot;3&quot;.
+d4 : digit &quot;4&quot;.
+d5 : digit &quot;5&quot;.
+d6 : digit &quot;6&quot;.
+d7 : digit &quot;7&quot;.
+d8 : digit &quot;8&quot;.
+d9 : digit &quot;9&quot;.
+
+number : string -&gt; type.
+
+nd  : number X
+        &lt;- digit X.
+n++ : number (X ++ Y)
+        &lt;- digit X
+        &lt;- number Y.
+
+expression : string -&gt; type.
+
+en : expression X
+       &lt;- number X.
+e* : expression (X ++ &quot;*&quot; ++ Y)
+       &lt;- expression X
+       &lt;- expression Y.
+e+ : expression (X ++ &quot;+&quot; ++ Y)
+       &lt;- expression X
+       &lt;- expression Y.
+e- : expression (X ++ &quot;-&quot; ++ Y)
+       &lt;- expression X
+       &lt;- expression Y.
+ep : expression (&quot;(&quot; ++ X ++ &quot;)&quot;)
+       &lt;- expression X.
+</pre></td></tr></table>
+<hr size="6">
+<a name="Restrictions-and-Caveats"></a>
+<a name="SEC47"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC46" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC39" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 7.8 Restrictions and Caveats </h2>
+
+<p>To ensure the consistency of the calculus, use of types defined by
+Twelf(X) extensions is restricted. Specifically, we do not allow them to
+be used as dynamic assumptions. This rules out meaningless (under the
+current operating semantics) goals like
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- 0 &gt; 1 -&gt; foo. 
+</pre></td></tr></table>
+
+<p>as well as meaningful, but intractable ones, such as
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">?- {X : rational} X * X &gt;= 0
+</pre></td></tr></table>
+<p>One important thing to keep in mind when using arithmetic is that this
+currently is defined over the rationals, rather than the integers or the
+set of natural numbers.  While in many applications this is of no
+consequence, it might generate in some cases surprising results. While
+it is certainly possible to define the characteristic function of the
+integer subset (see the content of <code>clp-examples/integers/</code> in the
+distribution) and use this to enforce all computations to take place in
+the intended domains, this introduces a big performance penalty and
+should in general be avoided.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_8.html#SEC48" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

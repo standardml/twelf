@@ -1,0 +1,511 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 3. Syntax</title>
+
+<meta name="description" content="Twelf User's Guide: 3. Syntax">
+<meta name="keywords" content="Twelf User's Guide: 3. Syntax">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Syntax"></a>
+<a name="SEC7"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_2.html#SEC6" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC8" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 3. Syntax </h1>
+
+
+<p>In LF, deductive systems are represented by signatures consisting of
+constant declarations.  Twelf implements declarations in a
+straightforward way and generalizes signatures by also allowing
+definitions, which are semantically transparent.  Twelf currently
+does not have module-level constructs so that, for example, signatures
+cannot be named.  Instead, multiple signatures can be manipulated in the
+programming environment using configurations (see section <a href="twelf_12.html#SEC71">Configurations</a>).
+</p>
+<p>The LF type theory which underlies LF is stratified into three levels:
+objects <em>M</em> and <em>N</em>, types <em>A</em> and <em>B</em>, and kinds
+<em>K</em>.  Twelf does not syntactically distinguish these levels and
+simply uses one syntactic category of term.  Similarly, object-level
+constants <em>c</em> and type-level constants <em>a</em> as well as
+variables share one name space of identifiers.
+</p>
+<p>In explanations and examples we will use letters following the
+mathematical conventions above to clarify the roles of various terms.
+We also use <em>U</em> and <em>V</em> to stand for arbitrary terms.
+</p>
+<p>The Twelf module system uses three layers as well: modules, declarations/instantiations, expressions. Modules are signatures and views, they occur on toplevel. Signatures consist of declarations, views consist of instantiations. Finally, expressions are objects, types, and kinds, which are treated uniformly as far as the module system in concerned.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC8">3.1 Grammar</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                     The grammar of Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC9">3.2 Constructor Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Introducing types and object constructors
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC10">3.3 Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Notational definitions and abbreviations
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC11">3.4 Operator Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Infix, prefix and postfix operators
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC12">3.5 Name Preferences</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Assigning names to anonymous variables
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC13">3.6 Sample Signature</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Example of First-Order Logic
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Grammar"></a>
+<a name="SEC8"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC7" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC9" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.1 Grammar </h2>
+
+
+<p>The grammar below defines the non-terminals <code>sig</code>, <code>decls</code>, <code>decl</code>,
+<code>term</code> and uses the terminal <code>id</code> which stands for identifers
+(see section <a href="twelf_2.html#SEC6">Identifiers</a>).  The comments show the meaning in LF.  There are
+various special declarations <code>%<var>keyword</var></code> such as <code>%infix</code>
+or <code>%theorem</code> which are omitted here and detailed in the
+appropriate sections.
+</p>
+<a name="IDX1"></a>
+<a name="IDX2"></a>
+<a name="IDX3"></a>
+
+
+<table><tr><td>&nbsp;</td><td><pre class="example">sig   ::= 
+        | %sig sigdecl         % signature declaration
+        | %view viewdecl       % view declaration
+        | decl sig             % declaration in the toplevel signature 
+
+decl ::= id : term.            % <em>a : K</em>  or  <em>c : A</em>
+       | defn.                 % definition, usually <em>d : A = M</em>
+       | %abbrev adecl.        % abbreviation
+       | %infix ixdecl.        % operator declaration
+       | %prefix pxdecl.       % operator declaration
+       | %postfix pxdecl.      % operator declaration
+       | %name namepref.       % name preference declaration
+       | %struct strdecl       % structure declaration
+       | %query qdecl.         % query declaration
+       | %clause defn.         % clause definition
+       | sdecl.                % solve declaration
+       | %tabled id.           % table declaration
+       | %querytabled qtdecl   % tabled query declaration
+       | %deterministic ddecl. % deterministic declaration
+       | %mode mdecl.          % mode declaration
+       | %terminates tdecl.    % termination declaration
+       | %reduces rdecl.       % reduction declaration
+       | %block id : bdecl.    % block declaration
+       | %worlds wdecl.        % worlds declaration
+       | %total tdecl.         % totality declaration
+       | %freeze ids.          % freeze declaration
+       | %theorem thdecl.      % theorem declaration
+       | %prove pdecl.         % prove declaration
+       | %establish pdecl.     % prove declaration, do not use as lemma later
+       | %assert callpats.     % assert theorem (requires <code>Twelf.unsafe</code>)
+       | %use domain.          % installs constraint domain
+
+defn ::= id : term = term      % <em>d : A = M</em> or <em>d : K = A</em>
+       | id = term             % <em>d = M</em> or <em>d = A</em>
+       | _ : term = term       % anonymous definition, for type-checking
+       | _ = term              % anonymous definition, for type-checking
+
+sdecl ::= %define binding sdecl % term binding
+        | %solve id : term      % solve with proof term
+        | %solve _ : term       % solve without proof term
+
+ids   ::=                      % empty sequence
+        | id ids               % identifier follwed by more
+
+term ::= type                  % <em>type</em>
+       | id                    % variable <em>x</em> or constant <em>a</em> or <em>c</em>
+       | term -&gt; term          % <em>A</em> <tt>-&gt;</tt> <em>B</em>
+       | term &lt;- term          % <em>A</em> <tt>&lt;-</tt> <em>B</em>, same as <em>B</em> <tt>-&gt;</tt> <em>A</em>
+       | {id : term} term    % <em>Pi x:A. K</em>  or  <em>Pi x:A. B</em>
+       | [id : term] term      % <em>lambda x:A. B</em>  or  <em>lambda x:A. M</em>
+       | term term             % <em>A M</em>  or  <em>M N</em>
+       | term : term           % explicit type ascription
+       | _                     % hole, to be filled by term reconstruction
+       | {id} term           % same as <code>{id:_}</code> term
+       | [id] term             % same as <code>[id:_]</code> term
+</pre></td></tr></table>
+<p>The constructs <code>{x:U} V</code> and <code>[x:U] V</code> bind the identifier
+<code>x</code> in <code>V</code>, which may shadow other constants or bound
+variables.  As usual in type theory, <code>U -&gt; V</code> is treated as an
+abbreviation for <code>{x:U} V</code> where <code>x</code> does not appear
+in <code>V</code>.  However, there is a subtlety in that the latter allows
+an implicit argument (see section <a href="twelf_4.html#SEC16">Implicit Arguments</a>) to depend on
+<code>x</code> while the former does not.
+</p>
+<p>In the order of precedence, we disambiguate the syntax as follows:
+</p>
+<ol>
+<li> Juxtaposition (application) is left associative and has highest precedence.
+
+</li><li> User declared infix, prefix, or postfix operators (see below).
+
+</li><li> <samp>`-&gt;'</samp> is right and <samp>`&lt;-'</samp> left associative with equal precedence.
+
+</li><li> <samp>`:'</samp>  is left associative.
+
+</li><li> <samp>`{}'</samp> and <samp>`[]'</samp> are weak prefix operators.
+</li></ol>
+
+<p>For example, the following are parsed identically:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">   d : a &lt;- b &lt;- {x} c x -&gt; p x.
+   d : ({x} c x -&gt; p x) -&gt; b -&gt; a.
+   d : ((a &lt;- b) &lt;- ({x:_} ((c x) -&gt; (p x)))).
+</pre></td></tr></table>
+<hr size="6">
+<a name="Constructor-Declaration"></a>
+<a name="SEC9"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC8" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC10" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.2 Constructor Declaration </h2>
+
+
+<p>New type families or object constructors can be introduced with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">condec ::= id : term.    % <em>a : K</em> or <em>c : A</em>
+</pre></td></tr></table>
+<p>Here <code>a</code> stands for a type family and <code>K</code> for its kind,
+whereas <code>c</code> is an objects constructor and <code>A</code> its type.
+Identifiers are resolved as follows:
+</p>
+<ol>
+<li> Any identifier <code>x</code> may be bound by the innermost enclosing binder
+for <code>x</code> of the form <code>{x:A}</code> or <code>[x:A]</code>.
+
+</li><li> Any identifer which is not explicitly bound may be a declared or
+defined constant.
+
+</li><li> Any uppercase identifier, that is, identifier
+starting with <samp>`_'</samp> (underscore) or an upper case letter, may be
+a free variable.  Free variables are interpreted universally and their
+type is inferred from their occurrences (see section <a href="twelf_4.html#SEC14">Term Reconstruction</a>).
+
+</li><li> Any other undeclared identifier is flagged as an error.
+</li></ol>
+
+<hr size="6">
+<a name="Definitions"></a>
+<a name="SEC10"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC9" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC11" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.3 Definitions </h2>
+
+
+<p>Twelf supports notational definitions and abbreviations.  Semantically,
+both are completely transparent, that is, both for type checking
+and the operational semantics, definitions may be expanded.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">adecl ::= id : term = term         % <em>d : A = M</em>
+        | id = term                % <em>d = M</em>
+
+defn ::= adecl.                    % definition
+       | %abbrev adecl.            % abbreviation
+</pre></td></tr></table>
+
+<p>where the second form of declaration is equivalent to <code>id : _ =
+term</code>.  Definitions or abbreviations at the level of type
+families are permitted, but are somewhat experimental in the
+present release.
+</p>
+<p>In order to avoid the expansion of defined constants as much as
+possible, declarations <code>id : term = term.</code> must be strict
+(see section <a href="twelf_4.html#SEC18">Strict Definitions</a>).  A definition of a constant <code>c</code> is
+strict if all arguments to <code>c</code> (implicit or explicit) have at least
+one strict occurrence (see section <a href="twelf_4.html#SEC17">Strict Occurrences</a>) in the right-hand
+side of the definition, and the right-hand side contains at least one
+constant.  In practice, most notational definitions are strict.  For
+some examples, see <a href="#SEC13">Sample Signature</a> and <a href="twelf_4.html#SEC18">Strict Definitions</a>.
+Twelf tries to preserve strict definitions as much as possible, instead
+of expanding them.
+</p>
+<p>The <code>%abbrev</code> declaration defines an <em>abbreviation</em>
+which need not be strict.  However, it will be expanded immediately
+upon parsing and will not be used in output.
+</p>
+<p>The power of definitions in Twelf, however, is severely limited by the
+lack of recursion.  It should only be thought of as notational
+definition, not as a computational mechanism.  Complex operations need
+to be defined as logic programs, taking advantage of the operational
+semantics assigned to signatures (see section <a href="twelf_6.html#SEC29">Logic Programming</a>).
+</p>
+<hr size="6">
+<a name="Operator-Declaration"></a>
+<a name="SEC11"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC10" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC12" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.4 Operator Declaration </h2>
+
+
+
+<p>The user may declare constants to be infix, prefix, or postfix
+operators.  Operator precedence properties are associated with
+constants, which must therefore already have been declared with a type
+or kind and a possible definition.  It is illegal to shadow an infix,
+prefix, or postfix operator with a bound variable.  We use
+<code>nat</code> for the terminal natural numbers.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">assoc ::= none   % not associative
+        | left   % left associative
+        | right  % right associative
+
+prec ::= nat     % 0 <tt>&lt;=</tt> <tt>prec</tt> <tt>&lt;</tt> 10000
+
+ixdecl ::= assoc prec id
+
+pxdecl ::= prec id
+
+decl ::= &hellip;
+       | %infix ixdecl.
+       | %prefix pxdecl.
+       | %postfix pxdecl.
+</pre></td></tr></table>
+<p>During parsing, ambiguous successive operators of identical precedence
+such as <code>a &lt;- b -&gt; c</code> are flagged as errors.  Note that it is not
+possible to declare an operator with equal or higher precedence than
+juxtaposition or equal or lower precedence than <samp>`-&gt;'</samp> and <samp>`&lt;-'</samp>.
+</p>
+<hr size="6">
+<a name="Name-Preferences"></a>
+<a name="SEC12"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC11" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC13" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.5 Name Preferences </h2>
+
+
+<p>During printing, Twelf frequently has to assign names to anonymous
+variables.  In order to improve readability, the user can declare a name
+preference for anonymous variables based on their type.  Thus name
+preferences are declared for type family constants.  Note that name
+preferences are not used to disambiguate the types of identifiers during
+parsing.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">namepref ::= id        % existential variables
+           | id id     % existential variables, parameters
+
+decl ::= &hellip;
+       | %name id namepref.
+</pre></td></tr></table>
+<p>Following our same conventions, a name preference declaration has the
+form <code>%name <var>a</var> <var>id</var></code>, that is, the first identifier must
+be a type family already declared and the second is the name preference
+for variables of type <var>a</var>.  The second identifier must be uppercase,
+that is, start with a letter from <samp>`A'</samp> through <samp>`Z'</samp> or an
+underscore <samp>`_'</samp>.  Anonymous variables will then be named
+<code><var>id</var><em>1</em></code>, <code><var>id</var><em>2</em></code>, etc.
+</p>
+<p>In the second form, we can give a separate name preference
+for free (existential) variables and parameters.  The second one
+will typically be lowercase, as in <code>%name exp E x</code>.
+</p>
+<hr size="6">
+<a name="Sample-Signature"></a>
+<a name="SEC13"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC12" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC7" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 3.6 Sample Signature </h2>
+
+
+<p>Below is a signature for intuitionistic first-order logic over an
+unspecified domain of individuals and atomic propositions.  It
+illustrates constant declarations and definitions and the use of
+operator precedence and name preference declarations.  It may be found
+in the file <tt>`examples/guide/nd.elf'</tt>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%%% Individuals
+i : type.                   %name i T
+
+%%% Propositions
+o : type.                   %name o A
+
+imp    : o -&gt; o -&gt; o.       %infix right 10 imp
+and    : o -&gt; o -&gt; o.       %infix right 11 and
+true   : o.
+or     : o -&gt; o -&gt; o.       %infix right 11 or
+false  : o.
+forall : (i -&gt; o) -&gt; o.
+exists : (i -&gt; o) -&gt; o.
+
+not : o -&gt; o = [A:o] A imp false.
+
+%%% Natural Deductions
+
+nd : o -&gt; type.             %name nd D
+
+impi    : (nd A -&gt; nd B) -&gt; nd (A imp B).
+impe    : nd (A imp B) -&gt; nd A -&gt; nd B.
+andi    : nd A -&gt; nd B -&gt; nd (A and B).
+ande1   : nd (A and B) -&gt; nd A.
+ande2   : nd (A and B) -&gt; nd B.
+truei   : nd (true).
+% no truee
+ori1    : nd A -&gt; nd (A or B).
+ori2    : nd B -&gt; nd (A or B).
+ore     : nd (A or B) -&gt; (nd A -&gt; nd C) -&gt; (nd B -&gt; nd C) -&gt; nd C.
+% no falsei
+falsee  : nd false -&gt; nd C.
+foralli : ({x:i} nd (A x)) -&gt; nd (forall A).
+foralle : nd (forall A) -&gt; {T:i} nd (A T).
+existsi : {T:i} nd (A T) -&gt; nd (exists A).
+existse : nd (exists A) -&gt; ({x:i} nd (A x) -&gt; nd C) -&gt; nd C.
+
+noti : (nd A -&gt; nd false) -&gt; nd (not A)
+     = [D:nd A -&gt; nd false] impi D.
+note : nd (not A) -&gt; nd A -&gt; nd false
+     = [D:nd (not A)] [E:nd A] impe D E.
+</pre></td></tr></table>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC7" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

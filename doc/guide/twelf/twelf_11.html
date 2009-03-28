@@ -1,0 +1,474 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 11. Theorem Prover</title>
+
+<meta name="description" content="Twelf User's Guide: 11. Theorem Prover">
+<meta name="keywords" content="Twelf User's Guide: 11. Theorem Prover">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Theorem-Prover"></a>
+<a name="SEC64"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_10.html#SEC63" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC65" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_10.html#SEC59" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 11. Theorem Prover </h1>
+
+
+
+<p><strong>Disclaimer:</strong> The theorem proving component of Twelf is in an
+even more experimental stage and currently under active development.
+</p>
+<p>Nonetheless, it can prove a number of interesting examples automatically
+which illustrate our approach the meta-theorem proving which is
+described in <cite>Schuermann and Pfenning 1998, CADE</cite>.  These examples
+include type preservation for Mini-ML, one direction of compiler
+correctness for different abstract machines, soundness and completeness
+for logic programming interpreters, and the deduction theorem for
+Hilbert's formulation of propositional logic.  These and other examples
+can be found in the example directories of the Twelf distribution
+(see section <a href="twelf_16.html#SEC98">Examples</a>).
+</p>
+<p>A <em>theorem</em> in Twelf is, properly speaking, a meta-theorem: it
+expresses a property of objects constructed over a fixed LF signature.
+Theorems are stated in the meta-logic M2 whose quantifiers range over LF
+objects.  In the simplest case, we may just be asserting the existence
+of an LF object of a given type.  This only requires direct search for a
+proof term, using methods inspired by logic programming.  More
+generally, we may claim and prove forall/exists statements which allow
+us to express meta-theorems which require structural induction, such as
+type preservation under evaluation in a simple functional language
+(see section <a href="twelf_6.html#SEC35">Sample Program</a>).
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC65">11.1 Theorem Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Declaring and proving theorems
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC66">11.2 Sample Theorems</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Two examples
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC67">11.3 Proof Steps</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Basic operations of the prover
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC68">11.4 Search Strategies</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           How Twelf searches
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC69">11.5 Proof Realizations</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Using automatically constructed proofs 
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Theorem-Declaration"></a>
+<a name="SEC65"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC64" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC66" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 11.1 Theorem Declaration </h2>
+
+
+<p>The theorem proving component of Twelf is in an experimental stage and
+currently under active development.  This documentation describes the
+present intermediate state.
+</p>
+<p>There are three forms of declarations related to the proving of theorems
+and meta-theorems.  The first, <code>%theorem</code>, states a theorem as a
+meta-formula (<code>mform</code>) in the meta-logic M2 defined below.  The
+second, <code>%prove</code>, gives a resource bound, a theorem, and an
+induction ordering and asks Twelf to search for a proof.  After a
+<code>%prove</code> declaration succeeds, the theorem will be made available
+as a lemma to subsequent proofs.  In order to avoid that, Twelf offers
+the form <code>%establish</code> which is like <code>%prove</code>, but the
+established theorem will never be used in subsequent proofs.
+</p>
+<p>Note that a well-typed <code>%theorem</code> declaration always succeeds,
+while the <code>%prove</code> and <code>%establish</code> declarations only succeed
+if Twelf can find a proof.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">dec ::= {id:term}         % <em>x:A</em>
+      | {id}              % <em>x</em>
+
+decs ::= dec
+       | dec decs
+
+ctx ::= some decs pi decs
+      | some decs pi decs | ctx
+
+mform ::= forallG ctx mform  % regular contexts
+        | forall* decs mform % implicit universal
+        | forall decs mform  % universal
+        | exists decs mform  % existential
+        | true               % truth
+
+thdecl ::= id : mform        % theorem name <em>a</em>, spec
+
+pdecl ::= nat order callpats % bound, induction order, theorems
+
+decl ::= &hellip;
+       | %theorem thdecl.  % theorem declaration
+       | %prove pdecl.     % prove declaration
+       | %establish pdecl.  % prove declaration, do not use as lemma later
+       | %assert callpats.  % assert theorem (requires <code>Twelf.unsafe</code>)
+</pre></td></tr></table>
+<p>The prover only accepts quantifier alternations of the form
+<code>forall* <var>decs</var> forall <var>decs</var> exists <var>decs</var> true</code>.
+Note that the implicit quantifiers (which will be suppressed when
+printing the proof terms) must all be collected in front, but
+after the specification of the regular contexts.
+</p>
+<p>The syntax and meaning of <code>order</code> and <code>callpats</code> are explained
+in <a href="twelf_9.html#SEC52">Termination</a>, since they are also critical notions in the
+simpler termination checker.
+</p>
+<hr size="6">
+<a name="Sample-Theorems"></a>
+<a name="SEC66"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC65" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC67" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 11.2 Sample Theorems </h2>
+
+<p>As a first example, we use the theorem prover to establish a simple
+theorem in first-order logic (namely that <em>A</em> implies <em>A</em> for
+any proposition <em>A</em>), using the signature for natural deduction
+(see section <a href="twelf_3.html#SEC13">Sample Signature</a>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%theorem
+trivI : exists {D:{A:o} nd (A imp A)}
+        true.
+
+%prove 2 {} (trivI D).
+</pre></td></tr></table>
+<p>The empty termination ordering <code>{}</code> instructs Twelf not to use
+induction to prove the theorem.  The declarations above succeed, and
+with the default setting of <code>3</code> for <code>Twelf.chatter</code> we see
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%theorem trivI : ({A:o} nd (A imp A)) -&gt; type.
+%prove 2 {} (trivI D).
+%QED
+%skolem trivI#2 : {A:o} nd (A imp A).
+</pre></td></tr></table>
+<p>The line starting with <code>%theorem</code> shows the way the theorem will be
+realized as a logic program predicate.  In earlier versions this
+was such a logic program was actually constructed; at present this feature
+has been disabled while the implementation has been improved to allow
+regular contexts.
+</p>
+<p>The second example is the type preservation theorem for evaluation in
+the lambda-calculus.  This is a continuation of the example in Section
+<a href="twelf_6.html#SEC35">Sample Program</a> in the file <tt>`examples/guide/lam.elf'</tt>.
+Type preservation states that if and expression <code>E</code> has type
+<code>T</code> and <code>E</code> evaluates to <code>V</code>, the <code>V</code> also has
+type <code>T</code>.  This is expressed as the following <code>%theorem</code>
+declaration.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%theorem
+tpsa : forall* {E:exp} {V:exp} {T:tp}
+       forall {D:eval E V} {P:of E T}
+       exists {Q:of V T}
+       true.
+</pre></td></tr></table>
+<p>The proof proceeds by structural induction on <code>D</code>, the evaluation
+from <code>E</code> to <code>V</code>.  Therefore we can search for the proof with
+the following declaration (where the size bound of <code>5</code> on proof
+term size is somewhat arbitrary).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%prove 5 D (tpsa D P Q).
+</pre></td></tr></table>
+<p>Twelf finds and displays the proof easily.  The resulting program is
+installed in the global signature and can then be used to apply type
+preservation in subsequent proofs (see section <a href="#SEC69">Proof Realizations</a>).
+</p>
+<p>The third example illustrates the use of regular contexts.
+We use the theorem prover to establish a simple
+theorem, namely that for every input to the copy predicate
+<code>cp</code> in <a href="twelf_10.html#SEC62">Totality</a> (see also file <tt>`examples/guide/lam.elf'</tt>)
+there exists a corresponding output.  This essentially is just
+a reformulation of the totality checking question for <code>cp</code>,
+except that we use the more heavyweight tool of the theorem
+prover.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%theorem cpt : forallG (pi {x:exp} {y:cp x x})
+               forall {D:exp}
+	       exists {F:exp} {C:cp E F}
+               true.
+%prove 5 E (cpt E _ _).
+</pre></td></tr></table>
+<p>The termination ordering <code>E</code> instructs Twelf to do induction
+over <code>E</code> to prove the theorem.  The <code>%prove</code> command executes
+the proof search.  In addition, if a proof has been found, the lemma is
+made accessible to the proof search evoked by subsequent theorems and
+lemmas, and which might slow it down accordingly. If a lemma is not used
+in subsequent proofs, the user can use <code>%establish</code> instead of
+<code>%prove</code> and it will not be made available.
+</p>
+<p>For certain theorems, the theorem prover will not be able to find a
+proof, even that it should.  This behavior could be caused by an
+incompleteness in the implementation (which still exist, but which
+should be removed in the next release of Twelf), or a enormously huge
+search space, which disallows the underlying LF theorem to construct a
+proof term.  In these situations, one can still try to prove
+subsequent theorem and lemmas by asserting the correctness of the
+lemma in question.  This is done by the <code>%assert</code> command.
+For the theorem above, one could
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%assert (cpt _ _ _).
+</pre></td></tr></table>
+<p>after the <code>Twelf.unsafe</code> mode has been activated.
+</p>
+<hr size="6">
+<a name="Proof-Steps"></a>
+<a name="SEC67"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC66" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC68" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 11.3 Proof Steps </h2>
+
+
+<p>We expect the proof search component of Twelf to undergo major changes
+in the near future, so we only briefly review the current state.
+</p>
+<p>Proving proceeds using three main kinds of steps:
+</p>
+<dl compact="compact">
+<dt> Filling</dt>
+<dd><p> Using iterative deepening, Twelf searches directly for objects to fill
+the existential quantifiers, given all the constants in the signature
+and the universally quantified variables in the theorem.  The number of
+constructors in the answer substitution for each existential quantifier
+is bounded by the size which is given as part of the <code>%prove</code>
+declaration, thus guaranteeing termination (in principle).
+</p>
+</dd>
+<dt> Recursion</dt>
+<dd><p> Based on the termination ordering, Twelf appeals to the induction
+hypothesis on smaller arguments.  If there are several ways to use the
+induction hypothesis, Twelf non-deterministically picks one which has
+not yet been used.  Since there may be infinitely many different ways to
+apply the induction hypothesis, the parameter
+<code>Twelf.Prover.maxRecurse</code> bounds the number of recursion steps in
+each case of the proof.
+</p>
+</dd>
+<dt> Splitting</dt>
+<dd><p> Based on the types of the universally quantified variables, Twelf
+distinguishes all possible cases by considering all constructors in
+the signatures.  It never splits a variable which appears as an
+index in an input argument, and if there are several possibilities
+it picks the one with fewest resulting cases.  Splitting can go on
+indefinitely, so the parameter <code>Twelf.Prover.maxSplit</code> bounds
+the number of times a variable may be split.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Search-Strategies"></a>
+<a name="SEC68"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC67" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC69" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 11.4 Search Strategies </h2>
+
+
+<p>The basic proof steps of filling, recursion, and splitting are
+sequentialized in a simple strategy which never backtracks.  First we
+attempt to fill all existential variables simultaneously.  If that fails
+we recurse by trying to find new ways to appeal to the induction
+hypothesis.  If this is not possible, we pick a variable to distinguish
+cases and then prove each subgoal in turn.  If none of the steps
+are possible we fail.
+</p>
+<p>This behavior can be changed with the parameter
+<code>Twelf.Prover.strategy</code> which defaults to <code>Twelf.Prover.FRS</code>
+(which means Filling-Recursion-Splitting).  When set to
+<code>Twelf.Prover.RFS</code> Twelf will first try recursion, then filling,
+followed by splitting.  This is often faster, but fails in some cases
+where the default strategy succeeds.
+</p>
+<hr size="6">
+<a name="Proof-Realizations"></a>
+<a name="SEC69"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC68" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC64" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 11.5 Proof Realizations </h2>
+
+
+<p>Proofs of meta-theorems can be realized as logic programs.  This is
+presently disabled.  We still describe the possibility below in
+anticipation of future versions.  On the other hand, theorems that
+have been proved will be skolemized and used in proof of subsequent
+theorems.  However, they will not be used for search.
+</p>
+<p>A logic program is a relational representation of the constructive proof
+and can be executed to generate witness terms for the existentials from
+given instances of the universal quantifiers.  As an example, we
+consider once more type preservation (see section <a href="#SEC66">Sample Theorems</a>).
+</p>
+<p>After the declarations,
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%theorem
+tpsa : forall* {E:exp} {V:exp} {T:tp}
+       forall {D:eval E V} {P:of E T}
+       exists {Q:of V T}
+       true.
+
+%prove 5 D (tpsa D P Q).
+</pre></td></tr></table>
+
+<p>Twelf answers
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">/tps/tp_lam/ev_lam/: 
+   tps ev_lam (tp_lam ([x:exp] [P2:of x T1] P1 x P2))
+      (tp_lam ([x:exp] [P3:of x T1] P1 x P3)).
+
+/tps/tp_app/ev_app/tp_lam/: 
+   tps (ev_app D1 D2 D3) (tp_app P1 P2) P6
+      &lt;- tps D3 P2 (tp_lam ([x:exp] [P4:of x T2] P3 x P4))
+      &lt;- tps D2 P1 P5
+      &lt;- tps D1 (P3 E5 P5) P6.
+</pre></td></tr></table>
+
+<p>which is the proof of type preservation expressed as a logic program
+with two clauses: one for evaluation of a lambda-abstraction, and one
+for application.  Using the <code>%solve</code> declaration (see section <a href="twelf_6.html#SEC31">Solve Declaration</a>) we can, for example, evaluate and type-check the identity
+applied to itself and then use type preservation to obtain a typing
+derivation for the resulting value.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">e0 = (app (lam [x] x) (lam [y] y)).
+%solve p0 : of e0 T.
+%solve d0 : eval e0 V.
+%solve tps0 : tps d0 p0 Q.
+</pre></td></tr></table>
+<p>Recall that <code>%solve c : V</code> executes the query <code>V</code> and defines
+the constant <code>c</code> to abbreviate the resulting proof term.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

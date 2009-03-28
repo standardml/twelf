@@ -1,0 +1,736 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 12. ML Interface</title>
+
+<meta name="description" content="Twelf User's Guide: 12. ML Interface">
+<meta name="keywords" content="Twelf User's Guide: 12. ML Interface">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="ML-Interface"></a>
+<a name="SEC70"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_11.html#SEC69" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC71" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_11.html#SEC64" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 12. ML Interface </h1>
+
+
+<p>The Twelf implementation defines a number of ML functions embedded in
+structures which can be called to load files, execute queries, and set
+environment parameters such as the verbosity level of the interaction.
+These functions and parameters are available in the <code>Twelf</code>
+structure.  If you open the <code>Twelf</code> structure with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">open Twelf
+</pre></td></tr></table>
+
+<p>after compiling and loading Twelf, you do not have to type the
+<samp>`Twelf.'</samp> to the functions shown below.
+</p>
+<p>Previous implementations of Elf offered a stand-alone command
+interpreter but this has not yet been ported.  To exit Twelf and
+ML call <code>Twelf.OS.exit ();</code>.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC71">12.1 Configurations</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Managing groups of Twelf files
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC72">12.2 Loading Files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               Loading individual files
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC73">12.3 Environment Parameters</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Controlling appearance and verbosity of Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC74">12.4 Signature Printing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Printing of signatures
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC75">12.5 Tracing and Breakpoints</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Debugging tools
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC76">12.6 Timing Statistics</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Gathering statistics
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC77">12.7 Twelf Signature</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             The top-level signature
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Configurations"></a>
+<a name="SEC71"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC70" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC72" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.1 Configurations </h2>
+
+
+<p>Groups of Twelf files are managed in <em>configurations</em>.  A
+configuration is defined by a file, by convention called
+<tt>`sources.cfg'</tt>, which resides in the same directory as the Twelf
+source files.  The configuration file must contain at most one
+Twelf source file per line, and the files must be listed in
+dependency order.  A configuration <var>config</var> can then be
+defined from the file by the ML declaration
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">val <var>config</var> = Twelf.Config.read &quot;sources.cfg&quot;;
+</pre></td></tr></table>
+<p>By convention, the filenames end in the extensions
+</p><dl compact="compact">
+<dt> <samp>`.elf'</samp></dt>
+<dd><p> for constant declarations and definitions or mixed files,
+</p></dd>
+<dt> <samp>`.quy'</samp></dt>
+<dd><p> for files which contain query declarations,
+</p></dd>
+<dt> <samp>`.thm'</samp></dt>
+<dd><p> for files which contain <code>%theorem</code> and <code>%proof</code> declarations.
+</p></dd>
+</dl>
+
+<p>File names may not contain whitespace.  They are interpreted relative to
+the current working directory of ML, but resolved into absolute path
+names when the configuration file is read.  To change the current
+working directory call
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.OS.getDir ();               (* get working directory *)
+Twelf.OS.chDir &quot;<var>directory</var>&quot;; (* change working directory *)
+</pre></td></tr></table>
+<p>As an example, we show how the Mini-ML configuration is defined and
+loaded, assuming your current working directory is the root directory of
+Twelf.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.make &quot;examples/mini-ml/sources.cfg&quot;;
+</pre></td></tr></table>
+<p>The call to <code>Twelf.make</code> returns either <code>Twelf.OK</code> or
+<code>Twelf.ABORT</code>.  It reads each file in turn, starting from an empty
+signature, printing the results of type reconstruction and search based
+on the value of the <code>Twelf.chatter</code> variable (see section <a href="#SEC73">Environment Parameters</a>).  If another configuration or file has previously been
+read, all the declarations will first be deleted so that
+<code>Twelf.make</code> always starts from the same state.
+</p>
+<p>To load a configuration, use <code>Twelf.Config.load <var>config</var></code>.
+This is will first reset the state and then load <var>config</var>.
+In order to avoid resetting the state, use
+<code>Twelf.Config.append <var>config</var></code> instead.
+</p>
+<p>Loading a configuration will stop at the first error encountered, issue
+an appropriate message and return <code>Twelf.ABORT</code>.  If there is an
+unexpected internal error (which indicates a bug in the Twelf
+implementation), it raises an uncaught exception instead and returns
+to the ML top-level.
+</p>
+<p>To explore the behavior of programs interactively, you may call the
+Twelf top-level with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.top ();
+</pre></td></tr></table>
+
+<p>which is explained in <a href="twelf_6.html#SEC32">Interactive Queries</a>.
+</p>
+<p>The default suffix for configuration files is <tt>`cfg'</tt>; it can
+be changed with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Config.suffix := &quot;<var>suffix</var>&quot;;
+</pre></td></tr></table>
+<p>although this may confuse the Twelf server.
+</p>
+<p>Twelf configurations can also be defined explicitly from a list of
+file names with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Config.define [&quot;<var>file1</var>, &hellip;, <var>filen</var>&quot;];
+</pre></td></tr></table>
+<hr size="6">
+<a name="Loading-Files"></a>
+<a name="SEC72"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC71" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC73" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.2 Loading Files </h2>
+
+
+<p>Twelf also allows direct management of the signature by loading
+individual files.  This is generally not recommended because successive
+declarations simply accumulate in the global signature which may lead to
+unexpected behavior.  The relevant function calls are
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.reset ();
+Twelf.loadFile &quot;<var>file</var>&quot;;
+</pre></td></tr></table>
+
+<p>where <code>Twelf.reset ()</code> resets the current global signature to
+be empty and <code>Twelf.readFile &quot;<var>file</var>&quot;</code> loads the given
+<var>file</var> whose name is interpreted relative to the current working
+directory.
+</p>
+<p><strong>Caution:</strong> Reading a file twice will not replace the declarations
+of the first pass by the second, but simply add them to the current
+signature.  If names are reused, old declarations will be shadowed, but
+they are still in the global signature and might be used in the search
+for a solution to a query or in theorem proving, leading to unexpected
+behavior.  When in doubt, use configurations (see section <a href="#SEC71">Configurations</a>) or
+call <code>Twelf.reset ()</code>.
+</p>
+<hr size="6">
+<a name="Environment-Parameters"></a>
+<a name="SEC73"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC72" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC74" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.3 Environment Parameters </h2>
+
+
+<p>Various flags and parameters can be used to modify the behavior of Twelf
+and the messages it issues.  They are given below with the assignment
+of the default value.
+</p>
+<dl compact="compact">
+<dt> <code>Twelf.chatter := 3;</code></dt>
+<dd><a name="IDX4"></a>
+<p>  Controls the detail of the information which is printed when signatures
+are read.
+</p><dl compact="compact">
+<dt> <code>0</code></dt>
+<dd><p> Nothing.
+</p></dd>
+<dt> <code>1</code></dt>
+<dd><p> Just file names.
+</p></dd>
+<dt> <code>2</code></dt>
+<dd><p> File names and number of query solutions.
+</p></dd>
+<dt> <code>3</code></dt>
+<dd><p> Each declarations after type reconstruction.
+</p></dd>
+<dt> <code>4</code></dt>
+<dd><p> Debug information.
+</p></dd>
+<dt> <code>5</code></dt>
+<dd><p> More debug information.
+</p></dd>
+<dt> <code>6</code></dt>
+<dd><p> Even more debug information.
+</p></dd>
+</dl>
+
+</dd>
+<dt> <code>Twelf.doubleCheck := false;</code></dt>
+<dd><a name="IDX5"></a>
+<p> If <code>true</code>, each declaration is checked again for type correctness
+after type reconstruction.  This is expensive and useful only for your
+peace of mind, since type checking is significantly simpler than
+type reconstruction.
+</p>
+</dd>
+<dt> <code>Twelf.unsafe := false;</code></dt>
+<dd><a name="IDX6"></a>
+<p> If <code>true</code> it will allow the <code>%assert</code> declaration to assert
+theorems without proof.
+</p>
+</dd>
+<dt> <code>Twelf.Print.implicit := false;</code></dt>
+<dd><a name="IDX7"></a>
+<p> If <code>true</code>, implicit arguments (normally elided) are printed.
+Sometimes this is useful to track particularly baffling errors.
+</p>
+</dd>
+<dt> <code>Twelf.Print.depth := NONE;</code></dt>
+<dd><a name="IDX8"></a>
+<p> If <code>SOME(d)</code> then terms deeper than level <code>d</code> are printed
+as <samp>`%%'</samp>.
+</p>
+</dd>
+<dt> <code>Twelf.Print.length := NONE;</code></dt>
+<dd><a name="IDX9"></a>
+<p> If <code>SOME(l)</code> then argument lists longer than <code>l</code> are truncated
+with <samp>`...'</samp>.
+</p>
+</dd>
+<dt> <code>Twelf.Print.indent := 3;</code></dt>
+<dd><a name="IDX10"></a>
+<p> Controls the amount of indentation for printing nested terms.
+</p>
+</dd>
+<dt> <code>Twelf.Print.width := 80;</code></dt>
+<dd><a name="IDX11"></a>
+<p> The value used to decide when to break lines during printing of terms.
+</p>
+</dd>
+<dt> <code>Twelf.Trace.detail := 1;</code></dt>
+<dd><a name="IDX12"></a>
+<p> Controls the detail in information during tracing.
+See <a href="#SEC75">Tracing and Breakpoints</a>
+</p>
+</dd>
+<dt> <code>Twelf.Compile.optimize := true;</code></dt>
+<dd><a name="IDX13"></a>
+<p> Determines whether a minimal amount of optimization during
+translation from signature to program is carried out.  If set to
+<code>false</code>, unification can be traced in more detail.
+</p>
+</dd>
+<dt> <code>Twelf.Prover.strategy := Twelf.Prover.FRS;</code></dt>
+<dd><a name="IDX14"></a>
+<p> Determines the strategy, where <code>F</code>=Filling, <code>R</code>=Recursion, and
+<code>S</code>=Splitting.  Can also be <code>Twelf.Prover.RFS</code>.
+</p>
+</dd>
+<dt> <code>Twelf.Prover.maxSplit := 2;</code></dt>
+<dd><a name="IDX15"></a>
+<p> The maximal number of generations of a variable introduced
+by splitting.  Setting is to <code>0</code> will prohibit proof by cases.
+</p>
+</dd>
+<dt> <code>Twelf.Prover.maxRecurse := 10;</code></dt>
+<dd><a name="IDX16"></a>
+<p> The maximal number of appeals to the induction hypothesis in any
+case during a proof.
+</p>
+</dd>
+<dt> <code>Twelf.Table.strategy := Twelf.Table.Variant;</code></dt>
+<dd><a name="IDX17"></a>
+<p> Determines the subsumption strategy for tabled logic programming which is
+either <code>Twelf.Table.Variant</code> or <code>Twelf.Table.Subsumption</code>.
+</p>
+</dd>
+<dt> <code>Twelf.Table.strengthen := false;</code></dt>
+<dd><a name="IDX18"></a>
+<p> Determines whether table entry lookup takes subordination into
+account or not.
+</p></dd>
+</dl>
+
+
+<hr size="6">
+<a name="Signature-Printing"></a>
+<a name="SEC74"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC73" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC75" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.4 Signature Printing </h2>
+
+
+<p>Twelf provides two ways to print the current global signature.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Print.sgn ();
+Twelf.Print.prog ();
+</pre></td></tr></table>
+<p>The first prints the signature, using only forward arrows <code>-&gt;</code>, the
+second will print the signature interpreted as a logic programming using
+backward arrows <code>&lt;-</code>.  Depending on your goals, one or the other
+might be easier to use.
+</p>
+<p>Output can also be generated in TeX format.  The necessary library
+files can be found in the <tt>`tex/'</tt> subdirectory of the distribution.
+To print the current signature using TeX format, use
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">Twelf.Print.TeX.sgn ();
+Twelf.Print.TeX.prog ();
+</pre></td></tr></table>
+
+<p>with the same interpretation as the plain text printing commands
+above.
+</p>
+<hr size="6">
+<a name="Tracing-and-Breakpoints"></a>
+<a name="SEC75"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC74" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC76" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.5 Tracing and Breakpoints </h2>
+
+<p>Twelf no incorporates some rudimentary tracing facilities for the logic
+programming interpreter of signatures.  This is best used within the
+Emacs server, but it is also available within the ML Interface.  It is
+not available with the tabled logic programming interpreter.  Also, when
+optimizations are enabled (<code>Twelf.Compile.optimize</code> is
+<code>true</code>), unification can not be traced.
+</p>
+<p>A tracing specification may be associated with constants in
+a signature.
+</p>
+<dl compact="compact">
+<dt> <code>Twelf.Trace.None</code></dt>
+<dd><a name="IDX19"></a>
+<p> Do not trace.
+</p></dd>
+<dt> <code>Twelf.Trace.Some [&quot;<em>c1</em>&quot;,...,&quot;<em>cn</em>&quot;]</code></dt>
+<dd><a name="IDX20"></a>
+<p> Trace clauses (object-level constants) or predicates (type families)
+named <em>c1</em> through <em>cn</em>.
+</p></dd>
+<dt> <code>Twelf.Trace.All</code></dt>
+<dd><a name="IDX21"></a>
+<p> Trace all clauses and predicates.
+</p></dd>
+</dl>
+
+<p>One can either suspend the execution when a specified clause or
+predicate is invoked, or simply trace goals
+</p>
+<dl compact="compact">
+<dt> <code>Twelf.Trace.trace <em>spec</em></code></dt>
+<dd><a name="IDX22"></a>
+</dd>
+<dt> <code>Twelf.Trace.break <em>spec</em></code></dt>
+<dd><a name="IDX23"></a>
+</dd>
+</dl>
+
+<p>When a breakpoint is set, execution will halt and ask for an action from
+the user.  This consists of a (possible empty) line of input followed by
+<kbd>RET</kbd>.  Current, the following actions are available.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">&lt;newline&gt; - continue --- execute with current settings
+n - next --- take a single step
+r - run --- remove all breakpoints and continue
+s - skip --- skip until current subgoals succeeds, is retried, or fails
+s n - skip to n --- skip until goal (n) is considered
+t - trace --- trace all events
+u - untrace --- trace no events
+d n - detail --- set trace detail to n (0, 1, or 2)
+h - hypotheses --- show current hypotheses
+g - goal --- show current goal
+i - instantiation --- show instantiation of variables in current goal
+v X1 ... Xn - variables --- show instantiation of X1 ... Xn
+? for help 
+</pre></td></tr></table>
+<p>The detail of the trace information can be set with the
+variable <code>Trace.detail := <em>n</em>;</code> to one of
+<a name="IDX24"></a>
+</p>
+<dl compact="compact">
+<dt> <code>0</code></dt>
+<dd><p> print no information
+</p></dd>
+<dt> <code>1</code></dt>
+<dd><p> print standard information
+</p></dd>
+<dt> <code>2</code></dt>
+<dd><p> print details of unification
+</p></dd>
+</dl>
+
+<p>Note that if <code>Twelf.Compile.optimize</code> is <code>true</code>, then details
+of unification cannot be shown.  It is possible to examine and reset the
+state of the currently traced predicates with
+</p>
+<dl compact="compact">
+<dt> <code>Twelf.Trace.show ();</code></dt>
+<dd><a name="IDX25"></a>
+</dd>
+<dt> <code>Twelf.Trace.reset ();</code></dt>
+<dd><a name="IDX26"></a>
+</dd>
+</dl>
+
+<hr size="6">
+<a name="Timing-Statistics"></a>
+<a name="SEC76"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC75" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC77" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.6 Timing Statistics </h2>
+
+
+<p>Twelf has a few utilities to collect run-time statistics which are
+useful mainly for the developers.  They are collected in the
+structure <code>Timers</code>.  Timing information is cumulative
+in an ML session.
+</p>
+<dl compact="compact">
+<dt> <code>Twelf.Timers.show ();</code></dt>
+<dd><a name="IDX27"></a>
+<p> Show the value of timers and reset them to zero.
+</p></dd>
+<dt> <code>Twelf.Timers.reset ();</code></dt>
+<dd><a name="IDX28"></a>
+<p> Simply reset all timers to zero.
+</p></dd>
+<dt> <code>Twelf.Timers.check ();</code></dt>
+<dd><a name="IDX29"></a>
+<p> Display the value of timers, but do not reset them.
+</p></dd>
+</dl>
+
+
+<p><strong>Caution:</strong> Normally, the various times are exclusive, except that
+the runtime includes the garbage collection time which is shown
+separately.  However, there is a problem the time for printing the
+answer substitution to a query is charged both to <code>Printing</code> and
+<code>Solving</code>.
+</p>
+<hr size="6">
+<a name="Twelf-Signature"></a>
+<a name="SEC77"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC76" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC70" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 12.7 Twelf Signature </h2>
+
+
+<p>For reference, here is the ML signature <code>TWELF</code> of the <code>Twelf</code>
+structure which defines most functions and flags relevant to loading
+and executing Twelf programs.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">signature TWELF =
+sig
+structure Print :
+sig
+  val implicit : bool ref           (* false, print implicit args *)
+  val depth : int option ref        (* NONE, limit print depth *)
+  val length : int option ref       (* NONE, limit argument length *)
+  val indent : int ref              (* 3, indentation of subterms *)
+  val width : int ref               (* 80, line width *)
+
+  val sgn : unit -&gt; unit            (* print signature *)
+  val prog : unit -&gt; unit           (* print signature as program *)
+  val subord : unit -&gt; unit         (* print subordination relation *)
+  val domains : unit -&gt; unit        (* list constraint domains *)
+
+  structure TeX :                   (* print in TeX format *)
+  sig
+    val sgn : unit -&gt; unit          (* print signature *)
+    val prog : unit -&gt; unit         (* print signature as program *)
+  end
+end
+
+structure Trace :
+sig 
+  datatype 'a Spec =                (* trace and breakpoint spec *)
+    None                            (* no tracing, default *)
+  | Some of 'a list                 (* list of clauses and families *)
+  | All                             (* trace all clauses and families *)
+
+  val trace : string Spec -&gt; unit   (* trace clauses and families *)
+  val break : string Spec -&gt; unit   (* break at clauses and families *)
+  val detail : int ref              (* 0=none, 1=default, 2=unify *)
+
+  val show : unit -&gt; unit           (* show trace, break, and detail *)
+  val reset : unit -&gt; unit          (* reset trace, break, and detail *)
+end
+
+structure Timers :
+sig
+  val show : unit -&gt; unit           (* show and reset timers *)
+  val reset : unit -&gt; unit          (* reset timers *)
+  val check : unit -&gt; unit          (* display, but not no reset *)
+end
+
+structure OS :
+sig
+  val chDir : string -&gt; unit        (* change working directory *)
+  val getDir : unit -&gt; string       (* get working directory *)
+  val exit : unit -&gt; unit           (* exit Twelf and ML *)
+end
+
+structure Compile :
+sig
+  val optimize : bool ref          (* true, optimize clauses *)
+end
+
+structure Table : 
+sig 
+  datatype Strategy = Variant | Subsumption
+
+  val strategy : Strategy ref      (* Variant, tabling strategy *)
+  val strengthen : bool ref        (* false, tabling optimization *)
+
+  val top : unit -&gt; unit           (* top-level for tabled queries *)
+end 
+
+structure Recon :
+sig
+  datatype TraceMode = Progressive | Omniscient
+  val trace : bool ref		   (* false, trace term reconstruction *)
+  val traceMode : TraceMode ref	   (* Omniscient, trace mode *)
+end
+
+structure Prover :
+sig
+  datatype Strategy = RFS | FRS    (* F=Fill, R=Recurse, S=Split *)
+  val strategy : Strategy ref      (* FRS, strategy used for %prove *)
+  val maxSplit : int ref           (* 2, bound on splitting  *)
+  val maxRecurse : int ref         (* 10, bound on recursion *)
+end
+
+val chatter : int ref               (* 3, chatter level *)
+val doubleCheck : bool ref          (* false, check internal types *)
+val unsafe : bool ref               (* false, allow %assert w/o proof *)
+
+datatype Status = OK | ABORT        (* return status *)
+
+val reset : unit -&gt; unit            (* reset global signature *)
+val loadFile : string -&gt; Status     (* load file *)
+val readDecl : unit -&gt; Status       (* read declaration interactively *)
+val decl : string -&gt; Status         (* print declaration of constant *)
+
+val top : unit -&gt; unit              (* top-level for queries *)
+
+structure Config :
+sig
+  type config                       (* configuration *)
+  val suffix : string ref           (* suffix of configuration files *)
+  val read : string -&gt; config       (* read config file *)
+  val load : config -&gt; Status       (* reset and load configuration *)
+  val append : config -&gt; Status     (* load configuration (w/o reset) *)
+  val define : string list -&gt; config (* define configuration *)
+end
+
+val make : string -&gt; Status         (* read and load configuration *)
+
+val version : string                (* Twelf version *)
+end;  (* signature TWELF *)
+</pre></td></tr></table>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_13.html#SEC78" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

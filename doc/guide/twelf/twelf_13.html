@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 13. Twelf Server</title>
+
+<meta name="description" content="Twelf User's Guide: 13. Twelf Server">
+<meta name="keywords" content="Twelf User's Guide: 13. Twelf Server">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Twelf-Server"></a>
+<a name="SEC78"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_12.html#SEC77" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC79" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_12.html#SEC70" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 13. Twelf Server </h1>
+
+
+<p>The Twelf server is a stand-alone command interpreter which provides the
+functionality of the <code>Twelf</code> structure in ML (see section <a href="twelf_12.html#SEC70">ML Interface</a>), but allows no ML definitions.  It is significantly smaller
+than Standard ML and is the recommended way to interact with Twelf
+except for developers.  Its behavior regarding configurations is
+slightly different in that the server maintains a current configuration,
+rather than allowing the binding of names to configurations.
+Configuration are defined with the <code>Config.read</code> command which
+takes a configuration filename as argument.
+</p>
+<p>In Emacs, the Twelf server typically runs in a process buffer
+called <code>*twelf-server*</code>.  The user can select this buffer
+and directly type commands to the Twelf server.  This style
+of interaction is inherited from the comint package for Emacs,
+but typically one works through advanced commands in Twelf
+mode (see section <a href="twelf_14.html#SEC82">Twelf Mode</a>).
+</p>
+<p>The Twelf server prompts with <code>%% OK %%</code> or <code>%% ABORT %%</code>
+depending on the success of failure of the previous operation.  It
+accepts commands and their arguments on one line, except that additional
+Twelf declarations which may be required are read separately, following
+the command line.  Reading declarations can be forcibly terminated
+with the end-of-file token <samp>`%.'</samp>.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC79">13.1 Server Types</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Server command argument types
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC80">13.2 Server Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             List of Twelf server commands
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Server-Types"></a>
+<a name="SEC79"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC78" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC80" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC78" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC78" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 13.1 Server Types </h2>
+
+
+<p>The server commands employ arguments of the following types.
+</p>
+<dl compact="compact">
+<dt> <code>file</code></dt>
+<dd><a name="IDX30"></a>
+<p> The name of a file, relative to the current working directory
+</p>
+</dd>
+<dt> <code>id</code></dt>
+<dd><a name="IDX31"></a>
+<p> A Twelf identifier
+</p>
+</dd>
+<dt> <code>reconTraceMode</code></dt>
+<dd><a name="IDX32"></a>
+<p> Either <code>Progressive</code> or <code>Omniscient</code> (see section <a href="twelf_4.html#SEC21">Tracing Reconstruction</a>)
+</p>
+</dd>
+<dt> <code>strategy</code></dt>
+<dd><a name="IDX33"></a>
+<p> Either <code>FRS</code> or <code>RFS</code> (see section <a href="twelf_11.html#SEC68">Search Strategies</a>)
+</p>
+</dd>
+<dt> <code>tableStrategy</code></dt>
+<dd><a name="IDX34"></a>
+<p> Either <code>Variant</code> or <code>Subsumption</code> (see section <a href="twelf_6.html#SEC38">Tabled Logic Programming</a>)
+</p>
+</dd>
+<dt> <code>bool</code></dt>
+<dd><a name="IDX35"></a>
+<p> Either <code>true</code> or <code>false</code>
+</p>
+</dd>
+<dt> <code>nat</code></dt>
+<dd><a name="IDX36"></a>
+<p> A natural number (starting at <code>0</code>)
+</p>
+</dd>
+<dt> <code>limit</code></dt>
+<dd><a name="IDX37"></a>
+<p> Either <code>*</code> (to indicate no limit) or a natural number
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Server-Commands"></a>
+<a name="SEC80"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC79" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC78" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC78" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 13.2 Server Commands </h2>
+
+
+<p>The Twelf server recognized the following commands.
+</p>
+<dl compact="compact">
+<dt> <code>set <var>parameter</var> <var>value</var></code></dt>
+<dd><a name="IDX38"></a>
+<p> Set <var>parameter</var> to <var>value</var>, where <var>parameter</var> is
+one of the following (explained in <a href="twelf_12.html#SEC73">Environment Parameters</a>).
+</p>
+<dl compact="compact">
+<dt> <code>chatter <var>nat</var></code></dt>
+<dt> <code>doubleCheck <var>bool</var></code></dt>
+<dt> <code>unsafe <var>bool</var></code></dt>
+<dt> <code>Print.implicit <var>bool</var></code></dt>
+<dt> <code>Print.depth <var>limit</var></code></dt>
+<dt> <code>Print.length <var>limit</var></code></dt>
+<dt> <code>Print.indent <var>nat</var></code></dt>
+<dt> <code>Print.width <var>nat</var></code></dt>
+<dt> <code>Trace.detail <var>nat</var></code></dt>
+<dt> <code>Compile.optimize <var>bool</var></code></dt>
+<dt> <code>Recon.trace <var>bool</var></code></dt>
+<dt> <code>Recon.traceMode <var>reconTraceMode</var></code></dt>
+<dt> <code>Prover.strategy <var>strategy</var></code></dt>
+<dt> <code>Prover.maxSplit <var>nat</var></code></dt>
+<dt> <code>Prover.maxRecurse <var>nat</var></code></dt>
+<dt> <code>Table.strategy <var>tableStrategy</var></code></dt>
+</dl>
+
+</dd>
+<dt> <code>get <var>parameter</var></code></dt>
+<dd><a name="IDX39"></a>
+<p> Print the current value of <var>parameter</var> (see table above).
+</p>
+</dd>
+<dt> <code>Trace.trace <var>id1</var> ... <var>idn</var></code></dt>
+<dd><a name="IDX40"></a>
+<p> Trace given constants.
+</p></dd>
+<dt> <code>Trace.traceAll</code></dt>
+<dd><a name="IDX41"></a>
+<p> Trace all constants.
+</p></dd>
+<dt> <code>Trace.untrace</code></dt>
+<dd><a name="IDX42"></a>
+<p> Untrace all constants.
+</p>
+</dd>
+<dt> <code>Trace.break <var>id1</var> ... <var>idn</var></code></dt>
+<dd><a name="IDX43"></a>
+<p> Set breakpoint for given constants.
+</p></dd>
+<dt> <code>Trace.breakAll</code></dt>
+<dd><a name="IDX44"></a>
+<p> Break on all constants.
+</p></dd>
+<dt> <code>Trace.unbreak</code></dt>
+<dd><a name="IDX45"></a>
+<p> Remove all breakpoints.
+</p>
+</dd>
+<dt> <code>Trace.show</code></dt>
+<dd><a name="IDX46"></a>
+<p> Show current trace and breakpoints.
+</p></dd>
+<dt> <code>Trace.reset</code></dt>
+<dd><a name="IDX47"></a>
+<p> Reset all tracing and breaking.
+</p>
+</dd>
+<dt> <code>Print.sgn</code></dt>
+<dd><a name="IDX48"></a>
+<p> Print current signature.
+</p></dd>
+<dt> <code>Print.prog</code></dt>
+<dd><a name="IDX49"></a>
+<p> Print current signature as program.
+</p></dd>
+<dt> <code>Print.subord</code></dt>
+<dd><a name="IDX50"></a>
+<p> Print current subordination relation.
+</p></dd>
+<dt> <code>Print.domains</code></dt>
+<dd><a name="IDX51"></a>
+<p> Print registered constraint domains.
+</p></dd>
+<dt> <code>Print.TeX.sgn</code></dt>
+<dd><a name="IDX52"></a>
+<p> Print current signature in TeX format.
+</p></dd>
+<dt> <code>Print.TeX.prog</code></dt>
+<dd><a name="IDX53"></a>
+<p> Print current signature in TeX format as program.
+</p>
+</dd>
+<dt> <code>Timers.show</code></dt>
+<dd><a name="IDX54"></a>
+<p> Print and reset timers.
+</p></dd>
+<dt> <code>Timers.reset</code></dt>
+<dd><a name="IDX55"></a>
+<p> Reset timers.
+</p></dd>
+<dt> <code>Timers.check</code></dt>
+<dd><a name="IDX56"></a>
+<p> Print, but do not reset timers.
+</p>
+</dd>
+<dt> <code>OS.chDir <var>file</var></code></dt>
+<dd><a name="IDX57"></a>
+<p> Change working directory to <var>file</var>.
+</p></dd>
+<dt> <code>OS.getDir</code></dt>
+<dd><a name="IDX58"></a>
+<p> Print current working directory.
+</p></dd>
+<dt> <code>OS.exit</code></dt>
+<dd><a name="IDX59"></a>
+<p> Exit Twelf server.
+</p></dd>
+<dt> <code>quit</code></dt>
+<dd><a name="IDX60"></a>
+<p> Quit Twelf server (same as exit).
+</p>
+</dd>
+<dt> <code>Config.read <var>file</var></code></dt>
+<dd><a name="IDX61"></a>
+<p> Read current configuration from <var>file</var>.
+</p></dd>
+<dt> <code>Config.load</code></dt>
+<dd><a name="IDX62"></a>
+<p> Load current configuration.
+</p></dd>
+<dt> <code>Config.append</code></dt>
+<dd><a name="IDX63"></a>
+<p> Load current configuration without prior reset.
+</p>
+</dd>
+<dt> <code>make <var>file</var></code></dt>
+<dd><a name="IDX64"></a>
+<p> Read and load current configuration from <var>file</var>.
+</p>
+</dd>
+<dt> <code>reset</code></dt>
+<dd><a name="IDX65"></a>
+<p> Reset global signature.
+</p></dd>
+<dt> <code>loadFile <var>file</var></code> </dt>
+<dd><a name="IDX66"></a>
+<p> Load Twelf file <var>file</var>.
+</p></dd>
+<dt> <code>decl <var>id</var></code></dt>
+<dd><a name="IDX67"></a>
+<p> Show constant declaration for <var>id</var>.
+</p>
+</dd>
+<dt> <code>top</code></dt>
+<dd><a name="IDX68"></a>
+<p> Enter interactive query loop (see section <a href="twelf_6.html#SEC32">Interactive Queries</a>).
+</p></dd>
+<dt> <code>Table.top</code></dt>
+<dd><a name="IDX69"></a>
+<p> Enter interactive loop for tables queries (see section <a href="twelf_6.html#SEC38">Tabled Logic Programming</a>).
+</p>
+</dd>
+<dt> <code>version</code></dt>
+<dd><a name="IDX70"></a>
+<p> Show server version.
+</p>
+</dd>
+<dt> <code>help</code></dt>
+<dd><a name="IDX71"></a>
+<p> Show available server commands, parameters, and server types.
+</p></dd>
+</dl>
+
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC78" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 5. Module System</title>
+
+<meta name="description" content="Twelf User's Guide: 5. Module System">
+<meta name="keywords" content="Twelf User's Guide: 5. Module System">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Module-System"></a>
+<a name="SEC22"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_4.html#SEC21" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC23" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_4.html#SEC14" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 5. Module System </h1>
+
+
+<p>The module system is based on the two primitive concepts of signatures and signature morphisms. Intuitively, a signature is a named list of declarations. Signature morphisms have a domain and a codomain signature and a signature morphism from S to T maps all declarations of S to expressions over T. Such a mapping induces mappings of all S-expressions to T-expressions by homomorphic extension.
+</p>
+<p>Signature morphisms can be composed in the obvious way. The atomic signature morphisms are called links, and we distinguish two kinds of links: views and structures. A view from S to T is declared on toplevel and must have exactly one instantiation for every declaration of S. Views encode translations and representations. A structure from S to T is declared within T and has the effect of copying the declarations of S into T. It may have instantiations for some declarations of S, in which case the S declarations are not only copied but also translated. Structures encode inheritance and instantiation.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC23">5.1 Signature Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Basic organization structure
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC24">5.2 Structure Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Signature morphism that copies one signature into another
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC25">5.3 View Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Signature morphism that translates one signature into another
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC26">5.4 Sample Elaboration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          An example of who one should think of modules semantically  
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC28">5.6 Include Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Signature morphisms that are inclusions
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC27">5.5 Open Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           How to open imported constants to avoid qualified names
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Signature-Declaration"></a>
+<a name="SEC23"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC22" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC24" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.1 Signature Declaration </h2>
+
+
+<p>Signatures are lists of declarations. Signature declarations introduce a name for a signature.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">sigdecl ::= id = { decls }.
+
+decls   ::= decls decl
+</pre></td></tr></table>
+<p>The following is an example of a signature declaration for the basic judgments of propositional logic. We will use this as our running example.
+</p><table><tr><td>&nbsp;</td><td><pre class="example">%sig JUDGMENTS = {
+  o : type.		    %name o A.
+ 
+  nd : o -&gt; type.	    %name nd D.
+}.
+</pre></td></tr></table>
+<hr size="6">
+<a name="Structure-Declaration"></a>
+<a name="SEC24"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC23" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC25" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.2 Structure Declaration </h2>
+
+
+<p>Structure declarations introduce copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">structdecl ::= id : id.
+             | id : id = { insts }.
+             | id : id = morph.
+
+insts      ::=
+             | insts id := U.
+             | insts %struct id := morph.
+</pre></td></tr></table>
+<p>We will only look at the first two productions here.
+</p>
+<p>The following signatures contain a structure that copies the signature JUDGMENTS and adds declarations for implication and negation, respectively.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%sig IMPLICATION = {
+  %struct J : JUDGMENTS.
+  imp    : J.o -&gt; J.o -&gt; J.o.	    %infix right 10 imp.
+  impi   : (J.nd A -&gt; J.nd B) -&gt; J.nd (A imp B).
+  impe   : J.nd (A imp B) -&gt; J.nd A -&gt; J.nd B.
+
+}.
+
+%sig NEGATION = {
+  %struct J : JUDGMENTS.
+  not : J.o -&gt; J.o.
+  noti : (J.nd A -&gt; {B} J.nd B) -&gt; J.nd (not A).
+  note : J.nd (not A) -&gt; J.nd A -&gt; {B} J.nd B.
+}.
+</pre></td></tr></table>
+<p>Twelf mirrors the structure declaration as well as the induced constant declarations. In the implication example, Twelf prints:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%struct J : JUDGMENTS = {}.
+%% induced: J.o : type.
+%% induced: J.nd : J.o -&gt; type.
+</pre></td></tr></table>
+<p>The above example also shows that a structure declaration of the form <code>s : S</code> just abbreviates one with an empty list of instantiations, i.e., <code>s : S = {}</code>. If instantiations are given, they induce defined constants. This can be used to represent parametric theories as in the following example.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%sig List = {
+  elem : type.
+  list : type.
+  nil  : list.
+  cons : elem -&gt; list -&gt; list.
+}.
+
+%sig Nat = {
+  nat  : type.
+  zero : nat.
+  succ : nat -&gt; nat.
+  %struct l : List = {elem := nat.}.
+  010  = l.cons zero (l.cons (succ zero) (l.cons zero l.nil)).
+}.
+</pre></td></tr></table>
+<p>Here the structure is mirrored by Twelf as:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%struct l : List = {elem := nat.}.
+%% induced: l.elem : type = nat.
+%% induced: l.list : type.
+%% induced: l.nil  : l.list.
+%% induced: l.cons : l.elem -&gt; l.list -&gt; l.list.
+</pre></td></tr></table>
+<p>Here <code>elem := nat</code> is called an instantiation. We say that the constant <code>elem</code> of <code>List</code> (the domain of the link) is instantiated with the object <code>nat</code> of <code>Nat</code> (the codomain of the link). Similarly, it is possible to instantiate a structure of the domain signature with a structure expression of the codomain signature. This is used in the following example, where <code>IMPLICATION</code> and <code>NEGATION</code> are combined into a signature <code>PL</code> sharing the common structure <code>J</code>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%sig PL = { 
+  %struct I : IMPLICATION.
+  %struct N : NEGATION = {%struct J := I.J.}.
+}.
+</pre></td></tr></table>
+<p>Here in <code>J := I.J</code>, <code>J</code> is the structure declared in <code>NEGATION</code>, and <code>I.J</code> is the structure <code>J</code> declared in <code>IMPLICATION</code> and then copied into <code>PL</code> by the structure <code>I</code>. The structure <code>N</code> leads to the following induced declarations:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%struct N : NEGATION = {%struct J := I.J.}.
+%% induced: %struct N.J = I.J.
+%% induced: %struct N.J.o = I.J.o.
+%% induced: %struct N.J.nd = I.J.nd.
+%% induced: N.not : N.J.o -&gt; N.J.o.
+%% induced: N.noti : (N.J.nd A -&gt; {B} N.J.nd B) -&gt; N.J.nd (N.not A).
+%% induced: N.note : N.J.nd (N.not A) -&gt; N.J.nd A -&gt; {B} N.J.nd B.
+</pre></td></tr></table>
+<p>Two things should be noted here: Firstly, all induced constants of <code>NEGATION</code> lead to induced constants in <code>PL</code>, e.g., <code>N.J.o</code>; these are generated in depth-first order. Secondly, just like structure declarations induce constant declaration, the structure instantiation <code>J := I.J</code> induces constant instantiations leading to, e.g., the definiens <code>I.J.o</code> of <code>N.J.o</code>.
+</p>
+<p>It is not necessary to instantiate structures; instead, the induced constants can be instantiated directly. Consider the structure <code>N</code> of <code>PL</code>: If we write
+<code>J.o := I.J.o. J.nd := I.J.nd</code> instead of <code>J := I.J</code>, we obtain the same induced constant declarations as above.
+</p>
+<hr size="6">
+<a name="View-Declaration"></a>
+<a name="SEC25"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC24" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC26" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.3 View Declaration </h2>
+
+
+<p>The syntax for views is similar to that of structures. The only difference is that the codomain signature is given explicitly.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">viewdecl ::= id : id -&gt; id = { insts }.
+           | id : id -&gt; id = morph.
+</pre></td></tr></table>
+<p>To give an example a view, let us assume a variant of <code>PL</code> that uses falsity instead of negation:
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%sig PL' = {
+  %struct I : IMPLICATION.
+  false : I.o.
+  falseE : I.nd false -&gt; {A} I.nd A.
+}.
+</pre></td></tr></table>
+<p>A view from <code>PL'</code> to <code>PL</code> expresses that negation can be represented in terms of falsity. Such a view must provide instantiations for all constants of the domain.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">%view v : PL -&gt; PL' = {
+  %struct I := I.
+  N.not  := [A] A I.imp false.
+  N.noti := [A] [D:I.J.nd A -&gt; {B} I.J.nd B] I.impi D false.
+  N.note := [A] [D:I.J.nd (A I.imp false)] [E:I.J.nd A] [B] falseE (impe D E) B.
+}.
+</pre></td></tr></table>
+<p>Note that implicit arguments, e.g., <code>A</code> of <code>N.noti</code> must be bound explicitly due to a restriction of the current implementation. They must be listed in the same order in which they occur in the declaration of the instantiated constant.
+</p>
+<p>Above the instantiation <code>%struct I := I.</code> induces constant instantiations <code>I.c := I.c.</code> for all constants <code>c</code> of <code>IMPLICATION</code>, including its induced constants. Alternatively, these instantiations could have been given separately. For example, the following instantiations have the same semantics as <code>%struct I := I.</code>
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">  %struct I.J := I.J.
+  I.imp  := [A][B] A I.imp B.
+  I.impi := [A][B][D] I.impi D.
+  I.impe := [A][B][D][E] I.impe D E.
+</pre></td></tr></table>
+<p>The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that <code>[A] [D:I.J.nd A -&gt; {B} I.J.nd B] I.impi D false.</code> must type check against the translation of <code>{A}{B}(N.J.nd A -&gt; {B} N.J.nd B) -&gt; N.J.nd (N.not A)</code> along <code>v</code>, which yields
+<code>{A}{B}(I.J.nd A -&gt; {B} I.J.nd B) -&gt; I.J.nd (A imp false)</code> after normalization. Note that this translation is only possible if the instantiation of <code>N.not</code> is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
+</p>
+
+<hr size="6">
+<a name="Sample-Elaboration"></a>
+<a name="SEC26"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC25" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC27" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.4 Sample Elaboration </h2>
+
+
+<hr size="6">
+<a name="Open-Declaration"></a>
+<a name="SEC27"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC26" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC28" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.5 Open Declaration </h2>
+
+
+<hr size="6">
+<a name="Include-Declaration"></a>
+<a name="SEC28"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC27" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC22" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 5.6 Include Declaration </h2>
+
+
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC22" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_6.html#SEC29" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

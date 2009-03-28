@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 1. Introduction</title>
+
+<meta name="description" content="Twelf User's Guide: 1. Introduction">
+<meta name="keywords" content="Twelf User's Guide: 1. Introduction">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Introduction"></a>
+<a name="SEC1"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf.html#Top" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC2" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[ &lt;&lt; ]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 1. Introduction </h1>
+
+
+<p>Twelf is the current version of a succession of implementations of
+the logical framework LF.  Previous systems include Elf (which
+provided type reconstruction and the operational semantics reimplemented
+in Twelf) and MLF (which implemented module-level constructs loosely
+based on the signatures and functors of ML still missing from Twelf).
+</p>
+<p>Twelf should be understood as research software. This means comments,
+suggestions, and bug reports are extremely welcome, but there are no
+guarantees regarding response times.  The same remark applies to these
+notes which constitute the only documentation on the present Twelf
+implementation.
+</p>
+<p>For current information including download instructions, publications,
+and mailing list, see the Twelf home page at
+<tt>http://www.cs.cmu.edu/~twelf/</tt>.  This User's Guide is published as
+</p><table><tr><td>&nbsp;</td><td><pre class="display"> Frank Pfenning and Carsten Schuermann
+ <em>Twelf User's Guide</em>
+ Technical Report CMU-CS-98-173, Department of Computer Science, 
+ Carnegie Mellon University, November 1998.
+</pre></td></tr></table>
+<p>&lt;UL&gt;
+ &lt;LI&gt; &lt;A HREF=&quot;http://www.cs.cmu.edu/~twelf/&quot;&gt;Twelf Home Page&lt;/A&gt; &lt;/LI&gt;
+&lt;/UL&gt;
+</p>
+<p>Below we state the typographic conventions in this manual.
+</p>
+<dl compact="compact">
+<dt> <code>code</code></dt>
+<dd><p>  for Twelf or ML code
+</p></dd>
+<dt> <samp>`samp'</samp></dt>
+<dd><p>  for characters and small code fragments
+</p></dd>
+<dt> <var>metavar</var></dt>
+<dd><p>  for placeholders in code
+</p></dd>
+<dt> <kbd>keyboard</kbd></dt>
+<dd><p>  for input in verbatim examples
+</p></dd>
+<dt> <kbd>key</kbd></dt>
+<dd><p>  for keystrokes
+</p></dd>
+<dt> <em>math</em></dt>
+<dd><p>  for mathematical expressions
+</p></dd>
+<dt> <em>emph</em></dt>
+<dd><p>  for emphasized phrases
+</p></dd>
+</dl>
+
+<p>File names for examples given in this guide are relative to the main
+directory of the Twelf installation.  For example
+<tt>`examples/guide/nd.elf'</tt> may be found in
+<br><tt>`/usr/local/twelf/examples/guide/nd.elf'</tt> if Twelf was installed
+into the <tt>`/usr/local/'</tt> directory.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC2">1.1 New Features</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Differences from Twelf 1.2
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC3">1.2 Quick Start</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Sample interaction with Twelf
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="New-Features"></a>
+<a name="SEC2"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC1" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC3" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC1" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC1" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 1.1 New Features </h2>
+
+<p>The current version 1.4 from December 27, 2002 incorporates
+the following major changes from Twelf 1.3 from September 13, 2000.
+</p>
+<dl compact="compact">
+<dt> World Checking (see section <a href="twelf_10.html#SEC60">Regular Worlds</a>).</dt>
+<dd><p> World checking verifies regularity of the parameters and hypothesis
+that can be introduced by terms in a signature.  The new declarations
+are <code>%block</code> and <code>%worlds</code>.  This formally checks part of the
+adequacy theorem that is usually left implicit in the encoding and is is
+used centrally by the coverage checker.
+</p>
+</dd>
+<dt> Coverage and Totality Checking (see section <a href="twelf_10.html#SEC59">Coverage</a>, see section <a href="twelf_10.html#SEC62">Totality</a>).</dt>
+<dd><p> Proofs of meta-theorems given in relational form can now be verified if
+they are of order 2 or less.  The new relevant declarations are
+<code>%covers</code> and <code>%total</code>.  The former can also be used to check
+that sets of patterns in the arguments of a type family are exhaustive.
+</p>
+</dd>
+<dt> Mode Checking (see section <a href="twelf_8.html#SEC48">Modes</a>)</dt>
+<dd><p> Mode checking has been extended so that multiple modes can be checked
+for the same predicate, even though not simultaneously.  This allows
+certain relations to serve as proofs for biconditional meta-theorems.
+Also, some predicates in constraint domains can have multiple modes
+simultaneously in effect.
+</p>
+</dd>
+<dt> Tabled Search (see section <a href="twelf_6.html#SEC38">Tabled Logic Programming</a>)</dt>
+<dd><p> An experimental logic programming engine for tabled logic programming
+is available in this release.  The corresponding declarations
+are <code>%tabled <var>a</var></code> (to declare a type family to be tabled)
+and <code>%querytabled</code> to start tabled search.
+</p>
+</dd>
+<dt> Deterministic Search (see section <a href="twelf_6.html#SEC37">Deterministic Type Families</a>)</dt>
+<dd><p> Type families can be declared deterministic for search, which means
+that after the first solution has been found, backtracking will
+not find any further solutions.  The relevant declaration is
+<code>%deterministic <var>a</var></code>.
+</p>
+</dd>
+<dt> Family-Level Definitions (see section <a href="twelf_6.html#SEC36">Clause Definitions</a>)</dt>
+<dd><p> Twelf now permits family-level definitions that are opaque to logic
+programming execution.  However, not all aspects of the present release
+handle them properly, so they should be considered an experimental
+feature.  Furthermore, defined constants will now be used for
+logic programming search when prefixed with <code>%clause</code>.
+</p>
+</dd>
+<dt> Tracing Term Reconstruction (see section <a href="twelf_4.html#SEC21">Tracing Reconstruction</a>)</dt>
+<dd><p> Term reconstruction can print each typing judgment it establishes
+in order to help diagnose subtle type errors or ambiguities.
+</p>
+</dd>
+<dt> Portability (see section <a href="twelf_15.html#SEC97">Installation</a>)</dt>
+<dd><p> Twelf has been ported to be compliant with the Definition of Standard
+ML in its 1997 revision.  As a result, it now supports Poly/ML
+and MLton in addition to Standard ML of New Jersey (SML/NJ).
+</p>
+</dd>
+<dt> Module System (see section <a href="twelf_5.html#SEC22">Module System</a>)</dt>
+<dd><p> A module system featuring signature, structure, and view declarations has been added.
+ Ma mdular signature is internally elaborated into a non-modular one, but the modular structure is remembered.
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Quick-Start"></a>
+<a name="SEC3"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC2" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC1" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC1" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 1.2 Quick Start </h2>
+
+<p>Assuming you are running on a Unix system with SML of New Jersey 110.0.3
+already installed (see section <a href="twelf_15.html#SEC97">Installation</a>) you can build Twelf as follows.  Here
+<samp>`%'</samp> is assumed to be the shell prompt.  You may need to edit the
+file <tt>`Makefile'</tt> to give the proper location for <code>sml</code>.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">% <kbd>gunzip twelf-1-4.tar.gz</kbd>
+% <kbd>tar -xf twelf-1-4.tar</kbd>
+% <kbd>cd twelf</kbd>
+% <kbd>make</kbd>
+% <kbd>bin/twelf-server</kbd>
+Twelf 1.4, Dec 27 2002
+%% OK %%
+</pre></td></tr></table>
+<p>For SML/NJ version 110.20 or greater, use <kbd>make -f smlnj/Makefile</kbd>.
+For Poly/ML use <kbd>make -f polyml/Makefile</kbd>.  For MLton use
+<kbd>make -f mlton/Makefile</kbd>.
+</p>
+<p>You can now load the examples used in this guide and pose an example
+query as shown below.  The prompt from the Twelf top-level is <samp>`?-'</samp>.
+To drop from the Twelf top-level to the ML top-level, type <kbd>C-c</kbd>
+(<kbd>CTRL</kbd> <kbd>c</kbd>).  To exit the Twelf server you may issue the
+<code>quit</code> command or type <kbd>C-d</kbd> (<kbd>CTRL</kbd> <kbd>c</kbd>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example"><kbd>make examples/guide/sources.cfg</kbd>
+<kbd>top</kbd>
+?- <kbd>of (lam [x] x) T.</kbd>
+Solving...
+T = arrow T1 T1.
+More? <kbd>y</kbd>
+No more solutions
+?- <kbd>C-c</kbd>
+interrupt
+%% OK %%
+<kbd>quit</kbd>
+%
+</pre></td></tr></table>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC1" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_2.html#SEC4" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 2. Lexical Conventions</title>
+
+<meta name="description" content="Twelf User's Guide: 2. Lexical Conventions">
+<meta name="keywords" content="Twelf User's Guide: 2. Lexical Conventions">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Lexical-Conventions"></a>
+<a name="SEC4"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_1.html#SEC3" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC5" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_1.html#SEC1" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 2. Lexical Conventions </h1>
+
+<p>Lexical analysis of Twelf has purposely been kept simple, with few
+reserved characters and identifiers.  As a result one may need to use
+more whitespace to separate identifiers than in other languages.  For
+example, <samp>`A-&gt;B'</samp> or <samp>`A+B'</samp> are single identifiers, while <samp>`A
+-&gt; B'</samp> and <samp>`A + B'</samp> both consist of 3 identifiers.
+</p>
+<p>During parsing, identifiers are resolved as reserved identifiers,
+constants, bound variables, or free variables, following the usual rules
+of static scoping in lambda-calculi.
+</p>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC5">2.1 Reserved Characters</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Characters separating identifiers
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC6">2.2 Identifiers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Interpretation of identifiers
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Reserved-Characters"></a>
+<a name="SEC5"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC4" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC6" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC4" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC4" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 2.1 Reserved Characters </h2>
+
+
+<p>The following table lists the reserved characters in Twelf.
+</p>
+<dl compact="compact">
+<dt> <samp>`:'</samp></dt>
+<dd><p>    colon, constant declaration or ascription
+</p>
+</dd>
+<dt> <samp>`.'</samp></dt>
+<dd><p>    period, terminates declarations and separates parts of qualified names
+</p>
+</dd>
+<dt> <samp>`('</samp> <samp>`)'</samp></dt>
+<dd><p>    parentheses, for grouping terms
+</p>
+</dd>
+<dt> <samp>`['</samp> <samp>`]'</samp></dt>
+<dd><p>    brackets, for lambda abstraction
+</p>
+</dd>
+<dt> <samp>`{'</samp> <samp>`}'</samp></dt>
+<dd><p>    braces, for quantification (dependent function types)
+</p>
+</dd>
+<dt> <var>whitespace</var></dt>
+<dd><p>    separates identifiers; one of space, newline, tab, carriage return,
+    vertical tab or formfeed
+</p>
+</dd>
+<dt> <samp>`%'</samp></dt>
+<dd><p>    introduces comments or special keyword declarations
+</p>
+<dl compact="compact">
+<dt> <samp>`%<var>whitespace</var>'</samp> <samp>`%%'</samp></dt>
+<dd><p>      comment terminated by the end of the line, may contain any characters
+</p>
+</dd>
+<dt> <samp>`%{'</samp> <samp>`}%'</samp></dt>
+<dd><p>      delimited comment, nested <samp>`%{'</samp> and <samp>`}%'</samp> must match
+</p>
+</dd>
+<dt> <samp>`%<var>keyword</var>'</samp></dt>
+<dd><p>      various declarations
+</p>
+</dd>
+<dt> <samp>`%.'</samp></dt>
+<dd><p>      end of input stream
+</p></dd>
+</dl>
+
+</dd>
+<dt> <samp>`&quot;'</samp></dt>
+<dd><p>    doublequote, disallowed
+</p>
+</dd>
+<dt> other printing characters</dt>
+<dd><p>    identifier constituents
+</p></dd>
+</dl>
+
+<hr size="6">
+<a name="Identifiers"></a>
+<a name="SEC6"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC5" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC4" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC4" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 2.2 Identifiers </h2>
+
+
+<p>All printing characters that are not reserved can be included in
+identifiers, which are separated by whitespace or reserved characters.
+In particular, <code>A-&gt;B</code> is an identifier, whereas <code>A -&gt; B</code>
+stands for the type of functions from <code>A</code> to <code>B</code>.
+</p>
+<p>An uppercase identifier is one which begins with an underscore <samp>`_'</samp> or
+a letter in the range <samp>`A'</samp> through <samp>`Z'</samp>.  A lowercase identifier
+begins with any other character except a reserved one.  Numbers also
+count as lowercase identifiers and are not interpreted specially.  Free
+variables in a declaration must be uppercase, bound variables and
+constants may be either uppercase or lowercase identifiers.
+</p>
+<p>There are also a small number of
+reserved identifiers with a predefined meaning which
+cannot be changed.  Keep in mind that these can be constituents of other
+identifers which are not interpreted specially.
+</p>
+<dl compact="compact">
+<dt> <samp>`-&gt;'</samp></dt>
+<dd><p>          function type
+</p></dd>
+<dt> <samp>`&lt;-'</samp></dt>
+<dd><p>          reverse function type
+</p></dd>
+<dt> <samp>`_'</samp></dt>
+<dd><p>          hole, to be filled by term reconstruction
+</p></dd>
+<dt> <samp>`='</samp></dt>
+<dd><p>          definition
+</p></dd>
+<dt> <samp>`type'</samp></dt>
+<dd><p>          the kind <em>type</em>
+</p></dd>
+</dl>
+
+<p>Toplevel constants have static scope, which means that they can be shadowed by
+subsequent declarations.  A shadowed identifier (which can no longer be
+referred to in input) is printed as <code>%<var>id</var>%</code>.  The printer for
+terms renames bound variables so they do not shadow constants.
+</p>
+<p>Free uppercase identifiers in declarations represent schematic
+variables.  In order to distinguish them from other kinds of variables
+and constants they are printed as <samp>`'<var>id</var>'</samp> (backquote, followed
+by the identifer name) in error messages.
+</p>
+<p>Qualified names of the form s.c refer to the constant c of the struct s.
+Qualified names of the form S..c refer to the constant c of the included signature S.
+Qualifed names referring to blocks or structures are formed accordingly.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC4" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_3.html#SEC7" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

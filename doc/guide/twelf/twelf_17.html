@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 17. History</title>
+
+<meta name="description" content="Twelf User's Guide: 17. History">
+<meta name="keywords" content="Twelf User's Guide: 17. History">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="History"></a>
+<a name="SEC99"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 17. History </h1>
+
+<p>While the underlying type theory has not changed, the Twelf
+implementation differs from older Elf implementation in a few ways.
+Mostly, these are simplifications and improvements.  The main feature
+which has not yet been ported is the Elf server interface to Emacs.
+Also, while the type checker is more efficient now, the operational
+semantics does not yet incorporate some of the optimizations of the
+older Elf implementations and is therefore slower.  The principal
+differences of Twelf 1.2 and the obsolete Elf 1.5 are given
+below, followed by the new features of Twelf 1.3.  New features
+in Twelf 1.4 are given in <a href="twelf_1.html#SEC2">New Features</a>.
+</p>
+<dl compact="compact">
+<dt> Syntax (see section <a href="twelf_3.html#SEC7">Syntax</a>)</dt>
+<dd><p>  The quote <samp>`''</samp> character is no longer a special character in the
+lexer, and <samp>`='</samp> (equality) is now a reserved identifier.  The syntax
+of <code>%name</code> declarations has changed by allowing only one preferred
+name to be specified.  Also, <code>%name</code>, <code>%infix</code>, <code>%prefix</code>
+and <code>%postfix</code> declarations must be terminated by a period <samp>`.'</samp>
+which previously was optional.  Further, single lines comments now must
+start with <samp>`%<var>whitespace</var>'</samp> or <samp>`%%'</samp> in order to avoid
+misspelled keywords of the form <samp>`%<var>keyword</var>'</samp> to be ignored.
+</p>
+</dd>
+<dt> Type theory</dt>
+<dd><p>  Elf 1.5 had two experimental features which are not available in
+Twelf: polymorphism and the classification of <em>type</em> as a type.
+</p>
+</dd>
+<dt> Definitions (see section <a href="twelf_3.html#SEC10">Definitions</a>)</dt>
+<dd><p>  Twelf offers definitions which were not available in Elf.
+</p>
+</dd>
+<dt> Searching for definitions (see section <a href="twelf_6.html#SEC31">Solve Declaration</a>)</dt>
+<dd><p>  Elf had a special top-level query form <code>sigma [x:A] B</code> which
+searched for a solution <code>M : A</code> and then solved the result of
+substituting <code>M</code> for <code>x</code> in <code>B</code>.  In Twelf this
+mechanism has been replaced by a declaration <code>%solve c : A</code> which
+searches for a solution <code>M : A</code> and then defines <code>c = M : A</code>,
+where the remaining free variables are implicitly universally
+quantified.
+</p>
+</dd>
+<dt> Query declarations (see section <a href="twelf_6.html#SEC30">Query Declaration</a>)</dt>
+<dd><p>  Twelf allows queries in ordinary Elf files as <samp>`%query'</samp>
+declarations.  Queries are specified with an expected number of
+solutions, and the number of solutions to search for, which can be used
+to test implementations.
+</p>
+</dd>
+<dt> Operational semantics (see section <a href="twelf_6.html#SEC34">Operational Semantics</a>)</dt>
+<dd><p>  Twelf eliminates the distinction between static and dynamic
+signatures.  Instead, dependent function types <code>{x:A} B</code>
+where <code>x</code> occurs in the normal form of <code>B</code> are treated
+statically, while non-dependent function type <code>A -&gt; B</code> or
+<code>B &lt;- A</code> or <code>{x:A} B</code> where <code>x</code> does not occur
+in <code>B</code> are treated dynamically.
+</p>
+</dd>
+<dt> Modes (see section <a href="twelf_8.html#SEC48">Modes</a>)</dt>
+<dd><p>  Twelf offers a mode checker which was only partially supported in Elf.
+</p>
+</dd>
+<dt> Termination (see section <a href="twelf_9.html#SEC52">Termination</a>)</dt>
+<dd><p>  Twelf offers a termination checker which can verify that certain
+programs represent decision procedures.
+</p>
+</dd>
+<dt> Theorem prover (see section <a href="twelf_11.html#SEC64">Theorem Prover</a>)</dt>
+<dd><p>  Although very limited at present, an experimental prover for theorems
+and meta-theorems (that is, properties of signatures) is now available.
+It does not yet support lemmas or meta-hypothetical reasoning, which
+are currently under development.
+</p>
+</dd>
+<dt> Emacs interface (see section <a href="twelf_14.html#SEC81">Emacs Interface</a>)</dt>
+<dd><p>  The Elf mode has remained basically unchanged, but the Elf server
+interface has not yet been ported.
+</p></dd>
+</dl>
+
+<p>The version 1.3 from September 13, 2000 incorporated
+the following major changes from Twelf 1.2 from August 27, 1998.
+</p>
+<dl compact="compact">
+<dt> Constraints (see section <a href="twelf_7.html#SEC39">Constraint Domains</a>).</dt>
+<dd><p> Type reconstruction and the logic programming engine (but not yet
+the theorem prover) allow various constraint domains in the style
+of constraint logic programming languages.  The main ones are
+equalities and inequalities over rationals and integers.
+</p>
+</dd>
+<dt> Tracing and Breakpoints (see section <a href="twelf_12.html#SEC75">Tracing and Breakpoints</a>)</dt>
+<dd><p> The logic programming engine now support tracing and setting
+of breakpoints for illustration and debugging purposes.
+</p>
+</dd>
+<dt> Theorem Prover (see section <a href="twelf_11.html#SEC64">Theorem Prover</a>)</dt>
+<dd><p> The theorem prover now allows quantification over regular context.  The
+theorem prover will also use previously proved theorems with
+<code>%prove</code>) and ignore those with <code>%establish</code>, which is
+otherwise equivalent.  In unsafe mode, <code>%assert</code> can be used to
+claim theorems.  However, at present no longer generates proof terms.
+</p>
+</dd>
+<dt> Reduction Checking (see section <a href="twelf_9.html#SEC54">Reduction Declaration</a>)</dt>
+<dd><p> The termination checker has been extended to verify if output
+arguments to a predicate are smaller than some inputs with
+the <code>%reduces</code> declaration.
+</p>
+</dd>
+<dt> Signature Printing (see section <a href="twelf_12.html#SEC74">Signature Printing</a>)</dt>
+<dd><p> Signatures can now be printed, also in TeX format.
+</p>
+</dd>
+<dt> Abbreviations (see section <a href="twelf_3.html#SEC10">Definitions</a>)</dt>
+<dd><p> Added abbreviations (<code>%abbrev</code>) which, unlike definition, do not
+need to be strict.
+</p>
+</dd>
+<dt> Name Preferences (see section <a href="twelf_3.html#SEC12">Name Preferences</a>)</dt>
+<dd><p> Name preference declarations (<code>%name</code>) now allow an optional
+second argument for naming of parameters.
+</p></dd>
+</dl>
+
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

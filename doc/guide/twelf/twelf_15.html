@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 15. Installation</title>
+
+<meta name="description" content="Twelf User's Guide: 15. Installation">
+<meta name="keywords" content="Twelf User's Guide: 15. Installation">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Installation"></a>
+<a name="SEC97"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_14.html#SEC96" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 15. Installation </h1>
+
+
+<p>At present, Twelf has been tested in SML of New Jersey (version 110 or
+higher), Poly/ML and MLton, all of which implement Standard ML
+(revised 1997) and the Standard ML Basis Library.  The instructions
+below apply to a Unix system.  For instructions for other architectures
+or updates please check the file <tt>`INSTALL'</tt> at the Twelf home page
+and in the Twelf root directory after unpacking the distribution.
+</p>
+<p>On a Unix system you unpack the sources with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">gunzip twelf-1-4.tar.gz
+tar -xf twelf-1-4.tar
+cd twelf
+make
+</pre></td></tr></table>
+<p>This builds the Twelf server (see section <a href="twelf_13.html#SEC78">Twelf Server</a>) for your current
+architecture and makes it accessible as <tt>`bin/twelf-server'</tt>.  The
+<code>make</code> command is different for SML/NJ versions 110.20 or higher,
+for PolyML, and for MLton; see the list below.  The <code>make</code> also
+installs the Twelf Emacs interface (see section <a href="twelf_14.html#SEC81">Emacs Interface</a>), but you
+must add a line
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">(load &quot;<var>directory</var>/emacs/twelf-init.el&quot;)
+</pre></td></tr></table>
+<p>to your <tt>`.emacs'</tt> file, where <var>directory</var> is the root directory
+into which you installed Twelf.  Note that the Twelf installation cannot
+be moved after it has been compiled with <code>make</code>, since absolute
+pathnames are built into the executable scripts.
+</p>
+<p>If you would like to use Twelf as a structure in SML, you can then call
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">make twelf-sml
+</pre></td></tr></table>
+<p>which creates <tt>`bin/twelf-sml'</tt> for the Twelf-SML mode
+(see section <a href="twelf_14.html#SEC92">Twelf-SML Mode</a>).  Calling <code>make clean</code> will remove
+temporary files created by the SML compiler, but not the
+executable file.
+</p>
+<dl compact="compact">
+<dt> SML of New Jersey</dt>
+<dd><p> See <tt>http://www.smlnj.org/</tt>
+</p>
+<p>&lt;UL&gt;
+ &lt;LI&gt; &lt;A HREF=&quot;http://www.smlnj.org/&quot;&gt;SML of New Jersey Home Page&lt;/A&gt; &lt;/LI&gt;
+&lt;/UL&gt;
+</p>
+<p>Because of minor incompatibilites between the officially released
+version 110.0.3 and newer versions (110.20 or higher) you have to
+compile Twelf for newer version of SML/NJ with with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">make -f smlnj/Makefile
+</pre></td></tr></table>
+</dd>
+<dt> Poly/ML</dt>
+<dd><p> See <tt>http://www.polyml.org/</tt>
+</p>
+<p>&lt;UL&gt;
+ &lt;LI&gt; &lt;A HREF=&quot;http://www.polyml.org/&quot;&gt;Poly/ML Home Page&lt;/A&gt; &lt;/LI&gt;
+&lt;/UL&gt;
+</p>
+<p>For Poly/ML you have to compile Twelf with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">make -f polyml/Makefile
+</pre></td></tr></table>
+</dd>
+<dt> MLton</dt>
+<dd><p> See <tt>http://www.mlton.org/</tt>
+</p>
+<p>&lt;UL&gt;
+ &lt;LI&gt; &lt;A HREF=&quot;http://www.mlton.org/&quot;&gt;MLton Home Page&lt;/A&gt; &lt;/LI&gt;
+&lt;/UL&gt;
+</p>
+<p>For MLton, you have to compile Twelf with
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">make -f mlton/Makefile
+</pre></td></tr></table>
+</dd>
+</dl>
+
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_14.html#SEC81" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_16.html#SEC98" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

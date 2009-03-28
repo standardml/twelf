@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: Top</title>
+
+<meta name="description" content="Twelf User's Guide: Top">
+<meta name="keywords" content="Twelf User's Guide: Top">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Top"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="settitle">Twelf User's Guide 
+</h1>
+
+
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="twelf_1.html#SEC1">1. Introduction</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Getting started
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_2.html#SEC4">2. Lexical Conventions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Reserved characters and identifiers
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC7">3. Syntax</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                      Grammar of signatures
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC14">4. Term Reconstruction</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Checking and inferring types 
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC22">5. Module System</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               How to structure Twelf source code
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC29">6. Logic Programming</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           How to interpret signatures as programs
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC39">7. Constraint Domains</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Using rationals and integers
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_8.html#SEC48">8. Modes</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                       Input/output behavior of relations
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC52">9. Termination</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Verifying termination of programs
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_10.html#SEC59">10. Coverage</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                    Checking that all cases are covered
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_11.html#SEC64">11. Theorem Prover</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Proving theorems and meta-theorems
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC70">12. ML Interface</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Running Twelf from ML
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_13.html#SEC78">13. Twelf Server</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                A stand-alone Twelf command interpreter
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC81">14. Emacs Interface</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Editing Twelf files
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_15.html#SEC97">15. Installation</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                How to install Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_16.html#SEC98">16. Examples</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                    Guide to standard examples
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_17.html#SEC99">17. History</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                     Differences between Elf 1.5 and Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_18.html#SEC100">Index</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                       Index to this guide
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+ --- The Detailed Node Listing ---
+
+Introduction
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_1.html#SEC2">1.1 New Features</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Differences from Twelf 1.2
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_1.html#SEC3">1.2 Quick Start</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Sample interaction with Twelf
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Lexical Conventions
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_2.html#SEC5">2.1 Reserved Characters</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Characters separating identifiers
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_2.html#SEC6">2.2 Identifiers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Interpretation of identifiers
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Syntax
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_3.html#SEC8">3.1 Grammar</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                     The grammar of Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC9">3.2 Constructor Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Introducing types and object constructors
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC10">3.3 Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Notational definitions and abbreviations
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC11">3.4 Operator Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Infix, prefix and postfix operators
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC12">3.5 Name Preferences</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Assigning names to anonymous variables
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_3.html#SEC13">3.6 Sample Signature</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Example of First-Order Logic
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Term Reconstruction
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_4.html#SEC15">4.1 Implicit Quantifiers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Free variables in declarations
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC16">4.2 Implicit Arguments</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Omitted arguments to constants
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC17">4.3 Strict Occurrences</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          A sufficient condition for principal types
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC18">4.4 Strict Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Reconstruction on definitions
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC19">4.5 Type Ascription</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Disambiguating terms
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC20">4.6 Error Messages</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              When things go wrong
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_4.html#SEC21">4.7 Tracing Reconstruction</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Seeing what happens during reconstruction
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Module System
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_5.html#SEC23">5.1 Signature Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Basic organization structure
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC24">5.2 Structure Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Signature morphism that copies one signature into another
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC25">5.3 View Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Signature morphism that translates one signature to another
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC26">5.4 Sample Elaboration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          An example of who one should think of modules semantically  
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC28">5.6 Include Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Signautre morphisms that are inclusions
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_5.html#SEC27">5.5 Open Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            How to open imported constants to avoid qualified names
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Logic Programming
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_6.html#SEC30">6.1 Query Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Checking expected numbers of solutions
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC31">6.2 Solve Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Naming proof terms found by search
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC32">6.3 Interactive Queries</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Twelf's interactive top-level
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC33">6.4 Sample Trace</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                An example how search works
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC34">6.5 Operational Semantics</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       How queries are executed in some detail
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC35">6.6 Sample Program</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Type inference for a lambda-calculus
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC36">6.7 Clause Definitions</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          How to use definitions for search
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC37">6.8 Deterministic Type Families</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  How to prune unwanted solutions 
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_6.html#SEC38">6.9 Tabled Logic Programming</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    Executing queries with memo tables
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Constraint Domains
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_7.html#SEC40">7.1 Installing an Extension</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Making constraint domains available
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC41">7.2 Equalities over Rational Numbers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Rationals with equality
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC42">7.3 Inequalities over Rational Numbers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Rationals with equality and inequality
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC43">7.4 Integer Constraints</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Integers with equality and inequality
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC44">7.5 Equalities over Strings</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Strings and concatenation
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC45">7.6 32-bit Integers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Integers representable as string of 32 bits
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC46">7.7 Sample Constraint Programs</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">  Some examples of use
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_7.html#SEC47">7.8 Restrictions and Caveats</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">    Alerts!
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Modes
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_8.html#SEC49">8.1 Short Mode Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Common form for modes
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_8.html#SEC50">8.2 Full Mode Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Fully explicit modes
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_8.html#SEC51">8.3 Mode Checking</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               Checking mode correctness
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Termination
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_9.html#SEC53">9.1 Termination Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Checking termination
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC54">9.2 Reduction Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Checking outputs are smaller than inputs
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC55">9.3 Subterm Ordering</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Higher-order subterms
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC56">9.4 Lexicographic Orders</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        Termination by nested induction
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC57">9.5 Simultaneous Orders</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Termination by simultaneous induction
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_9.html#SEC58">9.6 Mutual Recursion</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Termination of mutually recursive predicates
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Coverage
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_10.html#SEC60">10.1 Regular Worlds</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Characterizing parameters and hypotheses
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_10.html#SEC61">10.2 Input Coverage</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Checking if all cases have been covered
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_10.html#SEC62">10.3 Totality</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                    Verifying if a family is total in its input
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_10.html#SEC63">10.4 Subordination</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               How constants depend on each other
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Theorem Prover
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_11.html#SEC65">11.1 Theorem Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Declaring and proving theorems
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_11.html#SEC66">11.2 Sample Theorems</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Two examples
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_11.html#SEC67">11.3 Proof Steps</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                 Basic operations of the prover
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_11.html#SEC68">11.4 Search Strategies</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           How Twelf searches
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_11.html#SEC69">11.5 Proof Realizations</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Using automatically constructed proofs 
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+ML Interface
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_12.html#SEC71">12.1 Configurations</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Managing groups of Twelf files
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC72">12.2 Loading Files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               Loading individual files
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC73">12.3 Environment Parameters</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Controlling appearance and verbosity of Twelf
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC74">12.4 Signature Printing</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          Printing of signatures
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC75">12.5 Tracing and Breakpoints</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">     Debugging tools
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC76">12.6 Timing Statistics</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           Gathering statistics
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_12.html#SEC77">12.7 Twelf Signature</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             The top-level signature
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Twelf Server
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_13.html#SEC79">13.1 Server Types</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Server command argument types
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_13.html#SEC80">13.2 Server Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             List of Twelf server commands
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Emacs Interface
+
+</pre></th></tr><tr><td align="left" valign="top"><a href="twelf_14.html#SEC82">14.1 Twelf Mode</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                  Major mode for editing Twelf sources
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC83">14.2 Editing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Automatic indentation
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC84">14.3 Type Checking Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Checking declarations, files, configurations
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC85">14.4 Printing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Printing signatures
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC86">14.5 Tracing Commands</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Debugging tools
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC87">14.6 Error Tracking</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Jumping to error locations
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC88">14.7 Server State</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Changing server parameters
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC89">14.8 Info File</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                   Reading this documentation
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC90">14.9 Tags Files</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                  Tagging Twelf sources
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC91">14.10 Twelf Timers</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">                Obtaining runtime statistics from server
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC92">14.11 Twelf-SML Mode</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">              Running Twelf under SML in Emacs
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC93">14.12 Emacs Variables</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Customizing Twelf mode
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC94">14.13 Syntax Highlighting</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Using multiple fonts for Twelf code
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC95">14.14 Emacs Initialization</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">        For the .emacs file
+</td></tr>
+<tr><td align="left" valign="top"><a href="twelf_14.html#SEC96">14.15 Command Summary</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">             Summary of Twelf mode commands
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+</pre></th></tr></table>
+
+<hr size="1">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>

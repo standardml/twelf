@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<html>
+<!-- Created on March, 28 2009 by texi2html 1.76 -->
+<!--
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Many creative people <dev@texi2html.cvshome.org>
+Send bugs and suggestions to <users@texi2html.cvshome.org>
+
+-->
+<head>
+<title>Twelf User's Guide: 8. Modes</title>
+
+<meta name="description" content="Twelf User's Guide: 8. Modes">
+<meta name="keywords" content="Twelf User's Guide: 8. Modes">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2html 1.76">
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+pre.display {font-family: serif}
+pre.format {font-family: serif}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: serif; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: serif; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.sansserif {font-family:sans-serif; font-weight:normal;}
+ul.toc {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+
+<a name="Modes"></a>
+<a name="SEC48"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="twelf_7.html#SEC47" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC49" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf_7.html#SEC39" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h1 class="chapter"> 8. Modes </h1>
+
+
+<p>In most cases, the correctness of the algorithmic interpretation of a
+signature as a logic program depends on a restriction to queries of a
+certain form.  Often, this is a restriction of some arguments to
+<em>inputs</em> which must be given as <em>ground</em> objects, that is,
+objects not containing any existential variables.  In return, one often
+obtains <em>outputs</em> which will also be ground.  In the logic
+programming terminology, the information about which arguments to a
+predicate should be considered input and output is
+called <em>mode information</em>.
+</p>
+<p>Twelf supports a simple system of modes.  It checks explicit mode
+declarations by the programmer against the signature and signals errors
+if the prescribed information flow is violated.  Currently, queries are
+not checked against the mode declaration.
+</p>
+<p>Mode checking is useful to uncover certain types of errors which
+elude the type-checker.  It can also be used to generate more efficient
+code, although the compiler currently does not take advantage
+of mode information.
+</p>
+<p>There are two forms of mode declarations: a short form which is adequate
+and appropriate most of the time, and a long form which is sometimes
+necessary to ascribe the right modes to implicit arguments
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">mdecl ::= smdecl    % short mode declaration
+        | fmdecl    % full mode declaration
+
+decl ::= &hellip;
+       | %mode mdecl.
+</pre></td></tr></table>
+<table class="menu" border="0" cellspacing="0">
+<tr><td align="left" valign="top"><a href="#SEC49">8.1 Short Mode Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">      Common form for modes
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC50">8.2 Full Mode Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Fully explicit modes
+</td></tr>
+<tr><td align="left" valign="top"><a href="#SEC51">8.3 Mode Checking</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">               Checking mode correctness
+</td></tr>
+</table>
+
+<hr size="6">
+<a name="Short-Mode-Declaration"></a>
+<a name="SEC49"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC48" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC50" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 8.1 Short Mode Declaration </h2>
+
+
+<p>There are two forms of mode declarations: a short and a full form.
+The short form is an abbreviation which is expanded into the full
+form when it is unambiguous.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">mode ::= +       % input
+       | *       % unrestricted
+       | -       % output
+
+mid ::= mode id  % named mode identifier, one token
+
+smdecl ::= id          % type family <em>a</em>
+         | smdecl mid  % argument mode
+</pre></td></tr></table>
+<p>Mode declarations for a predicate <code>a</code> must come before any clauses
+defining <code>a</code>.  Note that the mode followed with the identifier must
+be one token, such as <samp>`+L'</samp> and not <samp>`+ L'</samp>.  The short form is
+most convenient in typical situations.  For example, we can declare that
+the <code>append</code> program (see section <a href="twelf_6.html#SEC33">Sample Trace</a>) takes the first two
+arguments as input and produces the the third as output.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">append  : list -&gt; list -&gt; list -&gt; type.
+%mode append +L +K -M.
+</pre></td></tr></table>
+<p>If we wanted to use <code>append</code> to split a list into two
+sublists, we would instead declare
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">append : list -&gt; list -&gt; list -&gt; type.
+%mode append -L -K +M.
+</pre></td></tr></table>
+
+<p>where the clauses <code>appNil</code> and <code>appCons</code> remain
+unchanged.
+</p>
+<p>In the lambda-calculus type checker (see section <a href="twelf_6.html#SEC35">Sample Program</a>), the type
+must be an unrestricted argument.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">of : exp -&gt; tp -&gt; type.
+%mode of +E *T.
+</pre></td></tr></table>
+<p>If we declare it as an input argument, <code>%mode of +E +T</code>,
+we obtain an error pointing to the first occurrence of <code>T2</code>
+in the clause <code>tp_app</code> reproduced below.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">examples/nd/lam.elf:27.20-27.22 Error: 
+Occurrence of variable T2 in input (+) argument not necessarily ground
+
+tp_app : of (app E1 E2) T1
+          &lt;- of E1 (arrow T2 T1)
+          &lt;- of E2 T2.
+</pre></td></tr></table>
+<p>If we declare it as an output argument, <code>%mode of +E -T</code>,
+we obtain an error pointing to the second occurrence of <code>T1</code>
+in the clause <code>tp_lam</code> reproduced below.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">examples/nd/lam.elf:25.8-25.10 Error: 
+Occurrence of variable T1 in output (-) argument not necessarily ground
+
+tp_lam : of (lam E) (arrow T1 T2)
+          &lt;- ({x:exp}
+                of x T1 -&gt; of (E x) T2).
+</pre></td></tr></table>
+<p>In general, for a mode declaration in short form the arguments are
+specified exactly as they would look in the program.  This means one
+cannot specify the modes of implicit arguments which are filled in by
+term reconstruction.  These modes are reconstructed as follows: each
+implicit argument which appears in the type of an input argument is
+considered input <samp>`+'</samp>, those among the remaining which appear in an
+output argument are considered output <samp>`-'</samp>, the rest are
+unrestricted.  The mode declaration is echoed in full form, so the user
+can verify the correctness of the modes assigned to implicit arguments.
+If the inferred full mode declaration is incorrect, or if one wants to
+be explicit about modes, one should use full mode declarations
+(see section <a href="#SEC50">Full Mode Declaration</a>).
+</p>
+<hr size="6">
+<a name="Full-Mode-Declaration"></a>
+<a name="SEC50"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC49" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC51" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 8.2 Full Mode Declaration </h2>
+
+
+<p>To specify modes for implicit arguments one must use the full form of
+mode declaration.  A <code>mode</code> can be one of <samp>`+'</samp>,
+<samp>`*'</samp>, or <samp>`-'</samp> (see section <a href="#SEC49">Short Mode Declaration</a>).
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">fmdecl ::= mode {id : term} fmdecl
+         | mode {id} fmdecl
+         | term
+</pre></td></tr></table>
+<p>The term following the mode prefix in a full mode declaration must
+always have the form <code><em>a</em> <em>x1</em> &hellip; <em>xn</em></code> where
+<em>x1</em> through <em>xn</em> are variables declared in the mode prefix.
+As an example, we give an alternative specification of the <code>append</code>
+predicate.
+</p>
+<table><tr><td>&nbsp;</td><td><pre class="example">append : list -&gt; list -&gt; list -&gt; type.
+%mode +{L:list} +{K:list} -{M:list} append L K M.
+</pre></td></tr></table>
+<hr size="6">
+<a name="Mode-Checking"></a>
+<a name="SEC51"></a>
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC50" title="Previous section in reading order"> &lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next section in reading order"> &gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="#SEC48" title="Up section"> Up </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<h2 class="section"> 8.3 Mode Checking </h2>
+
+
+<p>Mode checking for input, output, and unrestricted arguments examines
+each clause as it is encountered.  The algorithm performs a kind of
+abstract interpretation of the clause, keeping track of a list of the
+existential variables for which it knows that they will be ground.
+</p>
+<ol>
+<li> We assume each existential variable with a strict occurrence
+(see section <a href="twelf_4.html#SEC17">Strict Occurrences</a>) in an input argument to the clause head to
+be ground.
+
+</li><li> We traverse the subgoals in evaluation order (see section <a href="twelf_6.html#SEC34">Operational Semantics</a>).  For each subgoal we first verify that all input arguments
+will be ground, using the information about the existential variables
+collected so far.  If this check succeeds we add all variables which
+have a strict occurrence in an output argument of the subgoal to the
+list of variables with known ground instantiations.
+
+</li><li> After the last subgoal has been examined, we verify that the
+output arguments in the clause head are now also ground.
+</li></ol>
+
+<p>Arguments whose mode is unrestricted are ignored: they do no need to be
+checked, and they do not contribute any information about the
+instantiations of existential variables.
+</p>
+<hr size="6">
+<table cellpadding="1" cellspacing="1" border="0">
+<tr><td valign="middle" align="left">[<a href="#SEC48" title="Beginning of this chapter or previous chapter"> &lt;&lt; </a>]</td>
+<td valign="middle" align="left">[<a href="twelf_9.html#SEC52" title="Next chapter"> &gt;&gt; </a>]</td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left"> &nbsp; </td>
+<td valign="middle" align="left">[<a href="twelf.html#Top" title="Cover (top) of document">Top</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_toc.html#SEC_Contents" title="Table of contents">Contents</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_18.html#SEC100" title="Index">Index</a>]</td>
+<td valign="middle" align="left">[<a href="twelf_abt.html#SEC_About" title="About (help)"> ? </a>]</td>
+</tr></table>
+<p>
+ <font size="-1">
+  This document was generated by <em>Florian Rabe</em> on <em>March, 28 2009</em> using <a href="http://texi2html.cvshome.org/"><em>texi2html 1.76</em></a>.
+ </font>
+ <br>
+
+</p>
+</body>
+</html>
