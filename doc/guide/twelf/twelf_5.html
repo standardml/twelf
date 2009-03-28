@@ -70,13 +70,13 @@ ul.toc {list-style: none}
 </td></tr>
 <tr><td align="left" valign="top"><a href="#SEC24">5.2 Structure Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">       Signature morphism that copies one signature into another
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC25">5.3 View Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Signature morphism that translates one signature into another
+<tr><td align="left" valign="top"><a href="#SEC25">5.3 View Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            Signature morphism that translates one signature to another
 </td></tr>
 <tr><td align="left" valign="top"><a href="#SEC26">5.4 Sample Elaboration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">          An example of who one should think of modules semantically  
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC28">5.6 Include Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Signature morphisms that are inclusions
+<tr><td align="left" valign="top"><a href="#SEC28">5.6 Include Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">         Signautre morphisms that are inclusions
 </td></tr>
-<tr><td align="left" valign="top"><a href="#SEC27">5.5 Open Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">           How to open imported constants to avoid qualified names
+<tr><td align="left" valign="top"><a href="#SEC27">5.5 Open Declaration</a></td><td>&nbsp;&nbsp;</td><td align="left" valign="top">            How to open imported constants to avoid qualified names
 </td></tr>
 </table>
 
@@ -137,17 +137,17 @@ decls   ::= decls decl
 <h2 class="section"> 5.2 Structure Declaration </h2>
 
 
-<p>Structure declarations introduce copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
+<p>Structure declarations copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="example">structdecl ::= id : id.
+<table><tr><td>&nbsp;</td><td><pre class="example">strdecl ::= id : id.
              | id : id = { insts }.
              | id : id = morph.
 
-insts      ::=
+insts   ::=
              | insts id := U.
              | insts %struct id := morph.
 </pre></td></tr></table>
-<p>We will only look at the first two productions here.
+<p>We will only look at the first two productions of <code>strdecl</code> here.
 </p>
 <p>The following signatures contain a structure that copies the signature JUDGMENTS and adds declarations for implication and negation, respectively.
 </p>
