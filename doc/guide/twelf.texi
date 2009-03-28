@@ -1469,7 +1469,7 @@ The view is only well-formed if all instantiations type-check against the transl
 
 @cindex open
 
-@node Include Declaration, Logic Programming, Open Declaration, Module System
+@node Include Declaration, , Open Declaration, Module System
 @section Include Declaration
 
 @cindex include
