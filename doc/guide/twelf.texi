@@ -1324,8 +1324,8 @@ The following signatures contain a structure that copies the signature JUDGMENTS
 %sig NEGATION = @{
   %struct J : JUDGMENTS.
   not : J.o -> J.o.
-  noti : (J.nd A -> {B} J.nd B) -> J.nd (not A).
-  note : J.nd (not A) -> J.nd A -> {B} J.nd B.
+  noti : (J.nd A -> @{B@} J.nd B) -> J.nd (not A).
+  note : J.nd (not A) -> J.nd A -> @{B@} J.nd B.
 @}.
 @end group
 @end example
@@ -1334,7 +1334,7 @@ Twelf mirrors the structure declaration as well as the induced constant declarat
 
 @example
 @group
-%struct J : JUDGMENTS = {}.
+%struct J : JUDGMENTS = @{@}.
 %% induced: J.o : type.
 %% induced: J.nd : J.o -> type.
 @end group
@@ -1344,20 +1344,20 @@ The above example also shows that a structure declaration of the form @code{s : 
 
 @example
 @group
-%sig List = {
+%sig List = @{
   elem : type.
   list : type.
   nil  : list.
   cons : elem -> list -> list.
-}.
+@}.
 
-%sig Nat = {
+%sig Nat = @{
   nat  : type.
   zero : nat.
   succ : nat -> nat.
-  %struct l : List = {elem := nat.}.
+  %struct l : List = @{elem := nat.@}.
   010  = l.cons zero (l.cons (succ zero) (l.cons zero l.nil)).
-}.
+@}.
 @end group
 @end example
 
@@ -1365,7 +1365,7 @@ Here the structure is mirrored by Twelf as:
 
 @example
 @group
-%struct l : List = {elem := nat.}.
+%struct l : List = @{elem := nat.@}.
 %% induced: l.elem : type = nat.
 %% induced: l.list : type.
 %% induced: l.nil  : l.list.
@@ -1379,7 +1379,7 @@ Here @code{elem := nat} is called an instantiation. We say that the constant @co
 @group
 %sig PL = @{ 
   %struct I : IMPLICATION.
-  %struct N : NEGATION = @{%struct J := I.J.}.
+  %struct N : NEGATION = @{%struct J := I.J.@}.
 @}.
 @end group
 @end example
@@ -1388,13 +1388,13 @@ Here in @code{J := I.J}, @code{J} is the structure declared in @code{NEGATION}, 
 
 @example
 @group
-%struct N : NEGATION = @{%struct J := I.J.}.
+%struct N : NEGATION = @{%struct J := I.J.@}.
 %% induced: %struct N.J = I.J.
 %% induced: %struct N.J.o = I.J.o.
 %% induced: %struct N.J.nd = I.J.nd.
 %% induced: N.not : N.J.o -> N.J.o.
-%% induced: N.noti : (N.J.nd A -> {B} N.J.nd B) -> N.J.nd (N.not A).
-%% induced: N.note : N.J.nd (N.not A) -> N.J.nd A -> {B} N.J.nd B.
+%% induced: N.noti : (N.J.nd A -> @{B@} N.J.nd B) -> N.J.nd (N.not A).
+%% induced: N.note : N.J.nd (N.not A) -> N.J.nd A -> @{B@} N.J.nd B.
 @end group
 @end example
 
@@ -1424,7 +1424,7 @@ To give an example a view, let us assume a variant of @code{PL} that uses falsit
 %sig PL' = @{
   %struct I : IMPLICATION.
   false : I.o.
-  falseE : I.nd false -> {A} I.nd A.
+  falseE : I.nd false -> @{A@} I.nd A.
 @}.
 @end group
 @end example
@@ -1436,7 +1436,7 @@ A view from @code{PL'} to @code{PL} expresses that negation can be represented i
 %view v : PL -> PL' = @{
   %struct I := I.
   N.not  := [A] A I.imp false.
-  N.noti := [A] [D:I.J.nd A -> {B} I.J.nd B] I.impi D false.
+  N.noti := [A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false.
   N.note := [A] [D:I.J.nd (A I.imp false)] [E:I.J.nd A] [B] falseE (impe D E) B.
 @}.
 @end group
@@ -1452,12 +1452,11 @@ Above the instantiation @code{%struct I := I.} induces constant instantiations @
   I.imp  := [A][B] A I.imp B.
   I.impi := [A][B][D] I.impi D.
   I.impe := [A][B][D][E] I.impe D E.
-@}.
 @end group
 @end example
 
-The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that @code{[A] [D:I.J.nd A -> {B} I.J.nd B] I.impi D false.} must type check against the translation of @code{{A}{B}(N.J.nd A -> {B} N.J.nd B) -> N.J.nd (N.not A)} along @code{v}, which yields
-@code{{A}{B}(I.J.nd A -> {B} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
+The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that @code{[A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false.} must type check against the translation of @code{@{A@}@{B@}(N.J.nd A -> @{B@} N.J.nd B) -> N.J.nd (N.not A)} along @code{v}, which yields
+@code{@{A@}@{B@}(I.J.nd A -> @{B@} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
 
 
 @node Sample Elaboration, Logic Programming, View Declaration, Module System
