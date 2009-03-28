@@ -88,7 +88,7 @@ Module System
 * View Declaration::            Signature morphism that translates one signature to another
 * Sample Elaboration::          An example of who one should think of modules semantically  
 * Include Declaration::         Signautre morphisms that are inclusions
-* Open Declarations::           How to open imported constants to avoid qualified names
+* Open Declaration::            How to open imported constants to avoid qualified names
 
 Logic Programming
 
@@ -1464,13 +1464,13 @@ The view is only well-formed if all instantiations type-check against the transl
 
 @cindex elaboration
 
-@node Open Declarations, Include Declarations, Sample Elaboration, Module System
-@section Open Declarations
+@node Open Declaration, Include Declaration, Sample Elaboration, Module System
+@section Open Declaration
 
 @cindex open
 
-@node Include Declarations, Logic Programming, Open Declarations, Module System
-@section Include Declarations
+@node Include Declaration, Logic Programming, Open Declaration, Module System
+@section Include Declaration
 
 @cindex include
 
