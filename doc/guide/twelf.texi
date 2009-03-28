@@ -1259,7 +1259,7 @@ Signature morphisms can be composed in the obvious way. The atomic signature mor
 * View Declaration::            Signature morphism that translates one signature into another
 * Sample Elaboration::          An example of who one should think of modules semantically  
 * Include Declaration::         Signature morphisms that are inclusions
-* Open Declarations::           How to open imported constants to avoid qualified names
+* Open Declaration::           How to open imported constants to avoid qualified names
 @end menu
 
 @node Signature Declaration, Structure Declaration, Module System, Module System
@@ -1459,7 +1459,7 @@ The view is only well-formed if all instantiations type-check against the transl
 @code{@{A@}@{B@}(I.J.nd A -> @{B@} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
 
 
-@node Sample Elaboration, Open Declarations, View Declaration, Module System
+@node Sample Elaboration, Open Declaration, View Declaration, Module System
 @section Sample Elaboration
 
 @cindex elaboration
