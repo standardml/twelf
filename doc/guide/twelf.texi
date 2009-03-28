@@ -1256,10 +1256,10 @@ Signature morphisms can be composed in the obvious way. The atomic signature mor
 @menu
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
-* View Declaration::            Signature morphism that translates one signature into another
+* View Declaration::            Signature morphism that translates one signature to another
 * Sample Elaboration::          An example of who one should think of modules semantically  
-* Include Declaration::         Signature morphisms that are inclusions
-* Open Declaration::           How to open imported constants to avoid qualified names
+* Include Declaration::         Signautre morphisms that are inclusions
+* Open Declaration::            How to open imported constants to avoid qualified names
 @end menu
 
 @node Signature Declaration, Structure Declaration, Module System, Module System
@@ -1293,21 +1293,21 @@ The following is an example of a signature declaration for the basic judgments o
 
 @cindex structure
 
-Structure declarations introduce copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
+Structure declarations copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
 
 @example
 @group
-structdecl ::= id : id.
+strdecl ::= id : id.
              | id : id = @{ insts @}.
              | id : id = morph.
 
-insts      ::=
+insts   ::=
              | insts id := U.
              | insts %struct id := morph.
 @end group
 @end example
 
-We will only look at the first two productions here.
+We will only look at the first two productions of @code{strdecl} here.
 
 The following signatures contain a structure that copies the signature JUDGMENTS and adds declarations for implication and negation, respectively.
 
