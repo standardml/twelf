@@ -1340,7 +1340,7 @@ Twelf mirrors the structure declaration as well as the induced constant declarat
 @end group
 @end example
 
-The above example also shows that a structure declaration of the form @code{s : S@} just abbreviates one with an empty list of instantiations, i.e., @code{s : S = @{@}@}. If instantiations are given, they induce defined constants. This can be used to represent parametric theories as in the following example.
+The above example also shows that a structure declaration of the form @code{s : S} just abbreviates one with an empty list of instantiations, i.e., @code{s : S = @{@}}. If instantiations are given, they induce defined constants. This can be used to represent parametric theories as in the following example.
 
 @example
 @group
