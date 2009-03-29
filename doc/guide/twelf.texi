@@ -3,8 +3,10 @@
 @setfilename twelf.info
 @settitle Twelf User's Guide 
 @setchapternewpage odd
-@set VERSION 1.4
-@set UPDATED December 27, 2002
+@set VERSION 1.6
+@set UPDATED March 29, 2009
+@c @set VERSION 1.4
+@c @set UPDATED December 27, 2002
 @c @set VERSION 1.3
 @c @set UPDATED September 13, 2000
 @c @set VERSION 1.2
@@ -16,10 +18,11 @@
 @title Twelf User's Guide
 @subtitle Version @value{VERSION}
 @author Frank Pfenning and Carsten Schuermann
+@c atCS: Should I add myself as a nauthor somewhere?
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1998, 2000, 2002 Frank Pfenning and Carsten Schuermann
+Copyright @copyright{} 1998, 2000, 2002, 2009 Frank Pfenning and Carsten Schuermann
 @end titlepage
 
 @node Top, Introduction, (dir), (dir)
@@ -86,7 +89,6 @@ Module System
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
 * View Declaration::            Signature morphism that translates one signature to another
-* Sample Elaboration::          An example of who one should think of modules semantically  
 * Include Declaration::         Signautre morphisms that are inclusions
 * Open Declaration::            How to open imported constants to avoid qualified names
 
@@ -192,7 +194,7 @@ Twelf is the current version of a succession of implementations of
 the logical framework LF.  Previous systems include Elf (which
 provided type reconstruction and the operational semantics reimplemented
 in Twelf) and MLF (which implemented module-level constructs loosely
-based on the signatures and functors of ML still missing from Twelf).
+based on the signatures and functors of ML).
 
 Twelf should be understood as research software. This means comments,
 suggestions, and bug reports are extremely welcome, but there are no
@@ -202,6 +204,7 @@ implementation.
 
 For current information including download instructions, publications,
 and mailing list, see the Twelf home page at
+@c atCS: This should be updated.
 @t{http://www.cs.cmu.edu/~twelf/}.  This User's Guide is published as
 @display
  Frank Pfenning and Carsten Schuermann
@@ -303,7 +306,7 @@ and MLton in addition to Standard ML of New Jersey (SML/NJ).
 
 @item Module System (@pxref{Module System})
  A module system featuring signature, structure, and view declarations has been added.
- Ma mdular signature is internally elaborated into a non-modular one, but the modular structure is remembered.
+ The module system is conservative in the sense that a modular signature is internally elaborated into a non-modular one. However, the modular structure is remembered to allow for module level reasoning.
 @end table
 
 @node Quick Start,  , New Features, Introduction
@@ -314,6 +317,7 @@ already installed (@pxref{Installation}) you can build Twelf as follows.  Here
 @samp{%} is assumed to be the shell prompt.  You may need to edit the
 file @file{Makefile} to give the proper location for @code{sml}.
 
+@c atCS: change Twelf version below
 @example
 @group
 % @kbd{gunzip twelf-1-4.tar.gz}
@@ -393,7 +397,7 @@ The following table lists the reserved characters in Twelf.
     brackets, for lambda abstraction
 
 @item @samp{@{} @samp{@}}
-    braces, for quantification (dependent function types)
+    braces, for quantification (dependent function types), and as begin/end delimiters in module system expressions
 
 @item @var{whitespace}
     separates identifiers; one of space, newline, tab, carriage return,
@@ -471,7 +475,7 @@ variables.  In order to distinguish them from other kinds of variables
 and constants they are printed as @samp{'@var{id}} (backquote, followed
 by the identifer name) in error messages.
 
-Qualified names of the form s.c refer to the constant c of the struct s.
+Qualified names of the form s.c refer to the constant c of the structure s.
 Qualified names of the form S..c refer to the constant c of the included signature S.
 Qualifed names referring to blocks or structures are formed accordingly.
 
@@ -650,7 +654,7 @@ Identifiers are resolved as follows:
 for @code{x} of the form @code{@{x:A@}} or @code{[x:A]}.
 
 @item Any identifer which is not explicitly bound may be a declared or
-defined constant.
+defined constant or structure, a signature or a view. There are two separate, not necessarily disjoint namespaces: one for constants and structures, and one for modules and views.
 
 @item Any uppercase identifier, that is, identifier
 starting with @samp{_} (underscore) or an upper case letter, may be
@@ -1251,18 +1255,17 @@ the problem with reconstruction.
 
 The module system is based on the two primitive concepts of signatures and signature morphisms. Intuitively, a signature is a named list of declarations. Signature morphisms have a domain and a codomain signature and a signature morphism from S to T maps all declarations of S to expressions over T. Such a mapping induces mappings of all S-expressions to T-expressions by homomorphic extension.
 
-Signature morphisms can be composed in the obvious way. The atomic signature morphisms are called links, and we distinguish two kinds of links: views and structures. A view from S to T is declared on toplevel and must have exactly one instantiation for every declaration of S. Views encode translations and representations. A structure from S to T is declared within T and has the effect of copying the declarations of S into T. It may have instantiations for some declarations of S, in which case the S declarations are not only copied but also translated. Structures encode inheritance and instantiation.
+Signature morphisms can be composed in the obvious way. The atomic signature morphisms are called links, and we distinguish two kinds of links: views and structures. A view from @code{S} to @code{T} is declared on toplevel and must provide an instantiation for every declaration of @code{S}. Views encode translations and representations of signatures. A structure from @code{S} to @code{T} is declared within @code{T} and has the effect of copying the declarations of @code{S} into @code{T}. A structure may have instantiations for some declarations of @code{S}, in which case the @code{S}-declarations are not only copied but also translated. Structures encode inheritance and instantiation.
 
 @menu
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
 * View Declaration::            Signature morphism that translates one signature to another
-* Sample Elaboration::          An example of who one should think of modules semantically  
 * Include Declaration::         Signautre morphisms that are inclusions
 * Open Declaration::            How to open imported constants to avoid qualified names
 @end menu
 
-@node Signature Declaration, Structure Declaration, Module System, Module System
+@node Signature Declaration, Structure Declaration, , Module System
 @section Signature Declaration
 
 @cindex signature
@@ -1293,7 +1296,10 @@ The following is an example of a signature declaration for the basic judgments o
 
 @cindex structure
 
-Structure declarations copy and translate the declarations signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations.
+Structure declarations copy and translate the declarations of a signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations. A structure may be defined by a list of instantiations (If omitted, the empty list is assumed.) or by a morphism.
+
+An instantiation assigns an object to a constant identifier or a morphism to a structure identifier. A morphism is a list of link identifiers.
+
 
 @example
 @group
@@ -1304,10 +1310,10 @@ strdecl ::= id : id.
 insts   ::=
              | insts id := U.
              | insts %struct id := morph.
+
+morph   ::= morph id
 @end group
 @end example
-
-We will only look at the first two productions of @code{strdecl} here.
 
 The following signatures contain a structure that copies the signature JUDGMENTS and adds declarations for implication and negation, respectively.
 
@@ -1318,7 +1324,6 @@ The following signatures contain a structure that copies the signature JUDGMENTS
   imp    : J.o -> J.o -> J.o.	    %infix right 10 imp.
   impi   : (J.nd A -> J.nd B) -> J.nd (A imp B).
   impe   : J.nd (A imp B) -> J.nd A -> J.nd B.
-
 @}.
 
 %sig NEGATION = @{
@@ -1330,7 +1335,7 @@ The following signatures contain a structure that copies the signature JUDGMENTS
 @end group
 @end example
 
-Twelf mirrors the structure declaration as well as the induced constant declarations. In the implication example, Twelf prints:
+Twelf mirrors the structure declaration as well as the induced constant declarations. The mirrored declarations give the semantics of structure declarations in terms of non-modular declarations. In the implication example, Twelf prints:
 
 @example
 @group
@@ -1373,7 +1378,7 @@ Here the structure is mirrored by Twelf as:
 @end group
 @end example
 
-Here @code{elem := nat} is called an instantiation. We say that the constant @code{elem} of @code{List} (the domain of the link) is instantiated with the expression @code{nat} of @code{Nat} (the codomain of the link). Similarly, it is possible to instantiate a structure of the domain signature with a structure expression of the codomain signature. This is used in the following example, where @code{IMPLICATION} and @code{NEGATION} are combined into a signature @code{PL} sharing the common structure @code{J}.
+Here @code{elem := nat} is an instantiation of a constant. We say that the constant @code{elem} of @code{List} (the domain of the link) is instantiated with the expression @code{nat} of @code{Nat} (the codomain of the link). Similarly, it is possible to instantiate a structure of the domain signature with a structure expression of the codomain signature. This is used in the following example, where @code{IMPLICATION} and @code{NEGATION} are combined into a signature @code{PL} sharing the common structure @code{J}.
 
 @example
 @group
@@ -1398,17 +1403,17 @@ Here in @code{J := I.J}, @code{J} is the structure declared in @code{NEGATION}, 
 @end group
 @end example
 
-Two things should be noted here: Firstly, all induced constants of @code{NEGATION} lead to induced constants in @code{PL}, e.g., @code{N.J.o}; these are generated in depth-first order. Secondly, just like structure declarations induce constant declarations, the structure instantiation @code{J := I.J} induces constant instantiations leading to, e.g., the definiens @code{I.J.o} of @code{N.J.o}.
+Two things should be noted here: Firstly, all induced constants of @code{NEGATION} lead to induced constants in @code{PL}, e.g., @code{N.J.o}; these are generated in depth-first order (and thus can be looked up in constant time). Secondly, just like structure declarations induce constant declarations, the structure instantiation @code{J := I.J} induces constant instantiations leading to, e.g., the definiens @code{I.J.o} of @code{N.J.o}.
 
 It is not necessary to instantiate structures; instead, the induced constants can be instantiated directly. Consider the structure @code{N} of @code{PL}: If we write
 @code{J.o := I.J.o. J.nd := I.J.nd} instead of @code{J := I.J}, we obtain the same induced constant declarations as above.
 
-@node View Declaration, Sample Elaboration, Structure Declaration, Module System
+@node View Declaration, Include Declaration, Structure Declaration, Module System
 @section View Declaration
 
 @cindex view
 
-The syntax for views is similar to that of structures. The only difference is that the codomain signature is given explicitly.
+The syntax for views is similar to that of structures. The main difference is that the codomain signature is given explicitly.
 
 @example
 @group
@@ -1458,21 +1463,44 @@ Above the instantiation @code{%struct I := I.} induces constant instantiations @
 The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that @code{[A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false} must type check against the translation of @code{@{A@}@{B@}(N.J.nd A -> @{B@} N.J.nd B) -> N.J.nd (N.not A)} along @code{v}, which yields
 @code{@{A@}@{B@}(I.J.nd A -> @{B@} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
 
-
-@node Sample Elaboration, Open Declaration, View Declaration, Module System
-@section Sample Elaboration
-
-@cindex elaboration
-
-@node Open Declaration, Include Declaration, Sample Elaboration, Module System
-@section Open Declaration
-
-@cindex open
-
-@node Include Declaration, , Open Declaration, Module System
+@node Include Declaration, Open Declaration, View Declaration, Module System
 @section Include Declaration
 
 @cindex include
+
+A structure with domain @code{S} imports @code{S} in the sense that it creates a fresh copy of @code{S}. Multiple imports of the same signature are always distinguished, and the names of the structures are used to disambiguate them. This is not always the desired behavior. Consider the following fragmentary definitions of the basic algebraic hierarchy.
+
+@example
+@group
+%sig FOL = @{ 
+  i : type. %% terms
+  o : type. %% formulas
+@}.
+
+%sig Monoid = @{ 
+  %include FOL.
+  comp : FOL..i -> FOL..i -> FOL..i. %% composition
+  unit : FOL..i                      %% unit element
+@}.
+
+%sig CommutativeGroup = @{
+  %include FOL.
+  %struct mon : Monoid.
+  inv : FOL..i -> FOL..i.            %% inverse element
+@}.
+
+%sig Ring = @{
+  %include FOL.
+  %struct add : CommutativeGroupg.
+  inv : FOL..i -> FOL..i.            %% inverse element
+@}.
+@end example
+
+
+@node Open Declaration, , Include Declaration, Module System
+@section Open Declaration
+
+@cindex open
 
 @node Logic Programming, Constraint Domains, Module System, Top
 @chapter Logic Programming
