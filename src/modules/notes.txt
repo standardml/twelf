@@ -5,7 +5,7 @@ read assignments in structures separately
 implement isomorphism check
 print out with nicer names
 
-better error message for instantiation/definition clash: tricky because no printer available
+better error message for instantiation/definition clash: no printer available
 
 --------
 done
