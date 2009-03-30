@@ -89,7 +89,8 @@ Module System
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
 * View Declaration::            Signature morphism that translates one signature to another
-* Include Declaration::         Signautre morphisms that are inclusions
+* Include Declaration::         Signature morphism that is an inclusion
+* Morphisms::                   Composed signature morphisms
 * Open Declaration::            How to open imported constants to avoid qualified names
 
 Logic Programming
@@ -1261,7 +1262,8 @@ Signature morphisms can be composed in the obvious way. The atomic signature mor
 * Signature Declaration::       Basic organization structure
 * Structure Declaration::       Signature morphism that copies one signature into another
 * View Declaration::            Signature morphism that translates one signature to another
-* Include Declaration::         Signautre morphisms that are inclusions
+* Include Declaration::         Signature morphism that is an inclusion
+* Morphisms::                   Composed signature morphisms
 * Open Declaration::            How to open imported constants to avoid qualified names
 @end menu
 
@@ -1270,13 +1272,14 @@ Signature morphisms can be composed in the obvious way. The atomic signature mor
 
 @cindex signature
 
-Signatures are lists of declarations. Signature declarations introduce a name for a signature.
+Signatures are lists of declarations. Signature declarations introduce a name for a signature. Signatures may start with include declarations (see @pxref{Include Declaration}).
 
 @example
 @group
-sigdecl ::= id = @{ decls @}.
+sigdecl  ::= id = @{ includes decls @}.
 
-decls   ::= decls decl
+decls    ::= 
+           | decls decl
 @end group
 @end example
 
@@ -1296,22 +1299,19 @@ The following is an example of a signature declaration for the basic judgments o
 
 @cindex structure
 
-Structure declarations copy and translate the declarations of a signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations. A structure may be defined by a list of instantiations (If omitted, the empty list is assumed.) or by a morphism.
+Structure declarations copy and translate the declarations of a signature into the current signature. The structure has a name that is used to form qualified names for the copied declarations. A structure may be defined by a list of instantiations (If omitted, the empty list is assumed.) or by a morphism. An instantiation assigns an object to a constant identifier or a morphism to a structure identifier.
 
-An instantiation assigns an object to a constant identifier or a morphism to a structure identifier. A morphism is a list of link identifiers.
-
+A structure declaration may contain an open declaration (see @pxref{Open Declaration}).
 
 @example
 @group
-strdecl ::= id : id.
-             | id : id = @{ insts @}.
-             | id : id = morph.
+strdecl ::= id : id               open.
+          | id : id = @{ insts @} open.
+          | id : id = morph       open.
 
 insts   ::=
-             | insts id := U.
-             | insts %struct id := morph.
-
-morph   ::= morph id
+          | insts         id := term.
+          | insts %struct id := morph.
 @end group
 @end example
 
@@ -1438,7 +1438,7 @@ A view from @code{PL'} to @code{PL} expresses that negation can be represented i
 
 @example
 @group
-%view v : PL -> PL' = @{
+%view PL2PL' : PL -> PL' = @{
   %struct I := I.
   N.not  := [A] A I.imp false.
   N.noti := [A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false.
@@ -1468,19 +1468,20 @@ The view is only well-formed if all instantiations type-check against the transl
 
 @cindex include
 
-A structure with domain @code{S} imports @code{S} in the sense that it creates a fresh copy of @code{S}. Multiple imports of the same signature are always distinguished, and the names of the structures are used to disambiguate them. This is not always the desired behavior. Consider the following fragmentary definitions of the basic algebraic hierarchy.
+A structure with domain @code{S} imports @code{S} in the sense that it creates a fresh copy of @code{S}. Multiple imports of the same signature are always distinguished, and the names of the structures are used to disambiguate them. This is not always the desired behavior. Consider the following signatures for the basic algebraic hierarchy (where we omit the axioms).
 
 @example
 @group
 %sig FOL = @{ 
-  i : type. %% terms
-  o : type. %% formulas
+  i : type.        %% terms
+  o : type.        %% formulas
+  nd : o -> type. %% truth judgment
 @}.
 
 %sig Monoid = @{ 
   %include FOL.
   comp : FOL..i -> FOL..i -> FOL..i. %% composition
-  unit : FOL..i                      %% unit element
+  unit : FOL..i.                     %% unit element
 @}.
 
 %sig CommutativeGroup = @{
@@ -1491,16 +1492,88 @@ A structure with domain @code{S} imports @code{S} in the sense that it creates a
 
 %sig Ring = @{
   %include FOL.
-  %struct add : CommutativeGroupg.
-  inv : FOL..i -> FOL..i.            %% inverse element
+  %struct add : CommutativeGroupg.   %% additive operations
+  %struct mult : Ring                %% multiplicative operations
 @}.
+@end group
 @end example
 
+Here the signature @code{Monoid} is imported into @code{Ring} in two different ways: via @code{add.mon} and via @code{mult}. This results for example in the constants @code{add.mon.comp} (addition) and @code{mult.comp} (multiplication). However, the signature @code{FOL}, which is also imported in multiple ways, should be the same in all signatures. This is the role of include declarations.
 
-@node Open Declaration, , Include Declaration, Module System
+An include declaration creates an unnamed inclusion morphism into the current signature. Inclusions are transitive, and if the same signature is included in multiple ways, multiply included constants are identified. (Here two signatures are equal iff they have the same name.) References to included symbols are formed by prefixing the symbol name with the signature name using the separator @code{..}.
+
+An include declaration may contain an open declaration (see @pxref{Open Declaration}).
+
+@example
+@group
+includes ::= 
+           | includes %include id open.
+@end group
+@end example
+
+Due to a restriction of the current implementation, links cannot contain instantiations of included constants. Rather, the codomain of every link must include (possibly indirectly) all signatures that are included in the domain signature. For example, if the inclusion from @code{FOL} to @code{Ring} were removed, then the structures @code{add} and @code{mult} would be ill-formed.
+
+@node Morphisms, Open Declaration, Include Declaration, Module System
+@section Morphisms
+
+@cindex morphisms
+
+A morphism is a list of link identifiers. 
+
+@example
+@group
+morph   ::=
+          | morph id
+@end group
+@end example
+
+Iuxtaposition is composition of morphisms in diagram order, and with respect to inclusions morphism typing is co- and contravariant in the usual way of function types.
+
+More formally, let < be the reflexive-transitive closure of the is-included-into relation. Then a morphism of the form @code{l_1 ... l_n} where each @code{l_i} is a view or a structure (where the structure name must be prefixed with the name of the containing signature) from @code{S_i} to @code{T_i} is well-formed with domain @code{S} and @codomain{T} iff: @code{S}<@code{S_1}, @code{T_i}<@code{S_@{i+1@}} for i=1,...,n-1, and @code{T_n}<@code{T}.
+Morphisms translate included symbols to themselves.
+
+For example, we have that @code{IMPLICATION..J PL..I PL2PL'} is a morphism from @code{JUDGMENTS} to @code{PL'} in the logic example.
+
+Two morphisms are equal if they are identical after expanding defined links. For example, @code{CommutativeGroup..mon Ring..add} and @code{Ring..add.mon} are two equal morphisms from @code{Monoid} to @code{Ring} in the algebra example.
+
+@node Open Declaration, , Morphisms, Module System
 @section Open Declaration
 
 @cindex open
+
+Structure and include declarations may carry optional open declarations These permit to avoid qualified names.
+
+@example
+@group
+open ::= 
+       | %open ids.
+ids  ::=
+       | ids id
+@end group
+@end example
+
+The semantics of @code{%open i} is that the identifier @code{i} is resolved in the domain signature of the structure or inclusion, and @code{i} is installed as a short-cut to the resolution. @code{i} must be an available name in the signature containing the open declaration.
+
+For example, one would normally write the signatures @code{IMPLICATION} and @code{Monoid} from the examples above as
+
+@example
+@group
+%sig IMPLICATION = @{
+  %struct J : JUDGMENTS %open o nd.
+  imp    : o -> o -> o.	    %infix right 10 imp.
+  impi   : (nd A -> nd B) -> nd (A imp B).
+  impe   : nd (A imp B) -> nd A -> nd B.
+@}.
+
+%sig Monoid = @{ 
+  %include FOL %open i.
+  comp : i -> i -> i.
+  unit : i.
+@}.
+@end group
+@end example
+
+
 
 @node Logic Programming, Constraint Domains, Module System, Top
 @chapter Logic Programming
