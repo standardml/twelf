@@ -66,9 +66,9 @@ install : ;
 	@echo "---------- Copying ps.gz file"
 	gzip -c twelf.ps > twelf.ps.gz
 	@echo "---------- Copying pdf file"
-	cp -p twelf.pdf ../pdf/
+#	cp -p twelf.pdf ../pdf/
 	@echo "---------- Copying html files"
-	cp -p twelf_*.html ../html/
+	cp -p twelf/twelf_*.html ../html/
 	@echo "---------- Consider install-www for release of a new version"
 
 install-www : ;

@@ -65,7 +65,7 @@ ul.toc {list-style: none}
 the logical framework LF.  Previous systems include Elf (which
 provided type reconstruction and the operational semantics reimplemented
 in Twelf) and MLF (which implemented module-level constructs loosely
-based on the signatures and functors of ML still missing from Twelf).
+based on the signatures and functors of ML).
 </p>
 <p>Twelf should be understood as research software. This means comments,
 suggestions, and bug reports are extremely welcome, but there are no
@@ -145,7 +145,7 @@ into the <tt>`/usr/local/'</tt> directory.
 </tr></table>
 <h2 class="section"> 1.1 New Features </h2>
 
-<p>The current version 1.4 from December 27, 2002 incorporates
+<p>The current version 1.6 from March 29, 2009 incorporates
 the following major changes from Twelf 1.3 from September 13, 2000.
 </p>
 <dl compact="compact">
@@ -207,7 +207,7 @@ and MLton in addition to Standard ML of New Jersey (SML/NJ).
 </dd>
 <dt> Module System (see section <a href="twelf_5.html#SEC22">Module System</a>)</dt>
 <dd><p> A module system featuring signature, structure, and view declarations has been added.
- Ma mdular signature is internally elaborated into a non-modular one, but the modular structure is remembered.
+ The module system is conservative in the sense that a modular signature is internally elaborated into a non-modular one. However, the modular structure is remembered to allow for module level reasoning.
 </p></dd>
 </dl>
 
