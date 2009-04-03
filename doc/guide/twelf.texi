@@ -1463,7 +1463,7 @@ Above the instantiation @code{%struct I := I.} induces constant instantiations @
 The view is only well-formed if all instantiations type-check against the translated type. In the above example, this means that @code{[A] [D:I.J.nd A -> @{B@} I.J.nd B] I.impi D false} must type check against the translation of @code{@{A@}@{B@}(N.J.nd A -> @{B@} N.J.nd B) -> N.J.nd (N.not A)} along @code{v}, which yields
 @code{@{A@}@{B@}(I.J.nd A -> @{B@} I.J.nd B) -> I.J.nd (A imp false)} after normalization. Note that this translation is only possible if the instantiation of @code{N.not} is already known. Therefore, the order of instantiations in a view must respect the dependency order of the declarations in the domain.
 
-@node Include Declaration, Open Declaration, View Declaration, Module System
+@node Include Declaration, Morphisms, View Declaration, Module System
 @section Include Declaration
 
 @cindex include
@@ -1529,7 +1529,7 @@ morph   ::=
 
 Iuxtaposition is composition of morphisms in diagram order, and with respect to inclusions morphism typing is co- and contravariant in the usual way of function types.
 
-More formally, let < be the reflexive-transitive closure of the is-included-into relation. Then a morphism of the form @code{l_1 ... l_n} where each @code{l_i} is a view or a structure (where the structure name must be prefixed with the name of the containing signature) from @code{S_i} to @code{T_i} is well-formed with domain @code{S} and @codomain{T} iff: @code{S}<@code{S_1}, @code{T_i}<@code{S_@{i+1@}} for i=1,...,n-1, and @code{T_n}<@code{T}.
+More formally, let < be the reflexive-transitive closure of the is-included-into relation. Then a morphism of the form @code{l_1 ... l_n} where each @code{l_i} is a view or a structure (where the structure name must be prefixed with the name of the containing signature) from @code{S_i} to @code{T_i} is well-formed with domain @code{S} and codomain @code{T} iff: @code{S}<@code{S_1}, @code{T_i}<@code{S_@{i+1@}} for i=1,...,n-1, and @code{T_n}<@code{T}.
 Morphisms translate included symbols to themselves.
 
 For example, we have that @code{IMPLICATION..J PL..I PL2PL'} is a morphism from @code{JUDGMENTS} to @code{PL'} in the logic example.
