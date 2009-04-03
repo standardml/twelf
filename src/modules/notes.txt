@@ -5,6 +5,10 @@ read assignments in structures separately
 implement isomorphism check
 print out with nicer names
 
+scanner:
+- resolve MMT URIs in LF file (except for translations) without invoking Twelf
+- makes this also resolve comments       
+
 better error message for instantiation/definition clash: no printer available
 
 --------
