@@ -18,17 +18,18 @@ sig
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
 
+  (* inclusion of signatures into signatures and morphisms into link *)  
+  datatype modincl = sigincl of id * openids
+                   | viewincl of morph * Paths.region
+
   (* structure declarations *)
-  datatype strdec = strdec of string * id * (syminst list) * openids
+  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids
                   | strdef of string * (morph * Paths.region)
 
   (* begin of a module *)
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
 
-  (* inclusion of signatures into signatures and morphisms into view *)  
-  datatype modincl = sigincl of id * openids
-                   | viewincl of morph * Paths.region
 end;
 
 signature RECON_MODULE =

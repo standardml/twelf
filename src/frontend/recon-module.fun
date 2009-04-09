@@ -21,13 +21,13 @@ struct
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
 
-  datatype strdec = strdec of string * id * (syminst list) * openids
+  datatype modincl = sigincl of id * openids | viewincl of morph * Paths.region
+  
+  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids
                   | strdef of string * (morph * Paths.region)
 
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
-  
-  datatype modincl = sigincl of id * openids | viewincl of morph * Paths.region
   
 (* end MODEXTSYN *)
 
@@ -123,14 +123,31 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region), insts : syminst list, ids : openids), l) = 
+   fun modinclToModIncl(sigincl (sigid, openids)) =
+      let
+      	 val m = modnameLookupWithError SIG sigid
+	 val Openids = List.map (fn (cname,_) => cname) openids
+      in
+      	 ModSyn.SigIncl (m, Openids)
+      end
+    | modinclToModIncl(viewincl mor) =
+       let
+       	  val Cod = ModSyn.currentTargetSig()
+          val Mor = morphToMorph(Cod, mor)
+       in
+       	  ModSyn.ViewIncl(Mor)
+       end
+
+  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
+                            incls : modincl list, insts : syminst list, ids : openids), l) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
+    	val Incls = List.map (fn x => modinclToModIncl x) incls
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,l)) insts
 	val Ids = List.map (fn (cname,_) => cname) ids
     in
-    	ModSyn.StrDec([name], nil, Dom, Insts, Ids)
+    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Ids)
     end
     | strdecToStrDec(strdef(name : string, morr), l) =
        let
@@ -149,18 +166,4 @@ struct
             ModSyn.ViewDec ([name], Dom, Cod)
          end
 
-   fun modinclToModIncl(sigincl (sigid, openids)) =
-      let
-      	 val m = modnameLookupWithError SIG sigid
-	 val Openids = List.map (fn (cname,_) => cname) openids
-      in
-      	 ModSyn.SigIncl (m, Openids)
-      end
-    | modinclToModIncl(viewincl mor) =
-       let
-       	  val Cod = ModSyn.currentTargetSig()
-          val Mor = morphToMorph(Cod, mor)
-       in
-       	  ModSyn.ViewIncl(Mor)
-       end
 end (* end RECON_MODULE *)

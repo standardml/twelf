@@ -377,13 +377,16 @@ struct
        	  c
        end
 
-    (* auxiliary method shared by install1(StrDec _) and install1(ModIncl _) *)
-    fun installOpen(dom : IDs.mid, q : IDs.Qid, cont : (IDs.cid -> IDs.cid) option, r) =
+    (* auxiliary method shared by install1(StrDec _) (then byStr = SOME s) and install1(ModIncl _) (then byStr = NONE) *)
+    fun installOpen(dom : IDs.mid, q : IDs.Qid, byStr : IDs.cid option, r) =
        let
           val c = Names.nameLookupWithError(dom, q)
-	  val c' = case cont
-	     of NONE => c
-	      | SOME f => f c
+          val c' = case byStr
+             of NONE => c
+              | SOME s =>
+          	  if IDs.midOf c = dom
+          	  then valOf (ModSyn.structMapLookup(s,c))
+                  else raise Names.Error("cannot open included symbol " ^ IDs.mkString(q, "", ".", ""))
        in
           Names.installName(c', [List.last q])
        end
@@ -1165,8 +1168,10 @@ struct
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
             val _ = case strDec
-	       of ModSyn.StrDec(_,_,dom,_, openids) =>
-	           (List.map (fn q => installOpen(dom,q, SOME(fn c' => valOf (ModSyn.structMapLookup(c,c'))), r)) openids; ())
+	       of ModSyn.StrDec(_,_,dom,_, _, openids) => (
+	           List.map (fn q => installOpen(dom, q, SOME c, r)) openids;
+	           ()
+	          )
 	        | ModSyn.StrDef _ => ()
          in
             ()
@@ -1220,7 +1225,7 @@ struct
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
             val _ = case Incl
                of ModSyn.SigIncl (from, openids) => (
-		    List.map (fn q => installOpen(from,q, NONE, r)) openids;
+		    List.map (fn q => installOpen(from, q, NONE, r)) openids;
 		    Subordinate.installInclude from (* no exception should be possible *)
 		  )
 		| _ => ()

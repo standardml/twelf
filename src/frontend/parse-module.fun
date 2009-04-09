@@ -45,6 +45,15 @@ struct
        ((ids @ [id], Paths.join(r, r')), f')
     end
 
+  fun parseQualIdList'(f' as LS.Cons((L.DOT, _), _)) = (nil, f')
+    | parseQualIdList'(f') =
+       let
+          val (id, f') = parseQualId' f'
+	  val (ids, f') = parseQualIdList' f'
+       in
+          (id :: ids, f')
+       end
+
   fun parseMorphAux'(f' as LS.Cons ((L.ID _, _), _)) =
       let
           val (id, f') = parseQualId' f'
@@ -89,6 +98,30 @@ struct
     | parseStrInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `%struct', found token " ^ L.toString t)
 
+  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (nil, f')
+    | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) = parseQualIdList' (LS.expose s')
+    | parseOpen'(LS.Cons ((t, r), s')) =
+             Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
+
+  (* parses a %include declaration in a signature *)
+  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
+     let
+        val (id, f') = parseQualId'(LS.expose s')
+	val (ids, f') = parseOpen' f'
+     in
+       (E.sigincl (id, ids), f')
+     end 
+
+  (* parses a %include declaration in a link *)
+  fun parseIncludeView' (LS.Cons ((L.INCLUDE, r), s')) =
+     let
+        val (mor, f') = parseMorph'(LS.expose s')
+        val (r', f') = parseDot' (f')
+     in
+       (E.viewincl (mor, Paths.join(r,r')), f')
+     end 
+
+  (* parses a list of symbol instantiations (used for structures) *)
   fun parseInsts' (f as LS.Cons ((L.ID _, _), _)) =
       let
         val (inst, f') = parseConInst' (f)
@@ -107,11 +140,53 @@ struct
         (nil, LS.expose s')
     | parseInsts' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected identifier, `%struct', or `}', found token " ^ L.toString t)
-
+  
+  (* parses a list of %include declarations (used for structures) *)
+  fun parseIncls' (f as LS.Cons ((L.INCLUDE, _), _)) =
+      let
+        val (incl, f') = parseIncludeView' (f)
+        val (incls, f'') = parseIncls' (f')
+      in
+        (incl::incls, f'')
+      end
+    | parseIncls' (f) = (nil,f)
+  
+  (* parses the {...} part of a structure declaration *)
   fun parseInstantiate' (f as LS.Cons ((L.LBRACE, _), s')) =
-        parseInsts' (LS.expose s')
+      let val (incls, f') = parseIncls'(LS.expose s')
+          val (insts, f'') = parseInsts' f'
+      in  (incls, insts, f'')
+      end
     | parseInstantiate' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `{', found token " ^ L.toString t)
+
+  fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
+     case LS.expose s'
+        of LS.Cons ((L.ID (_, id), r1), s1') => (
+           case LS.expose s1'
+              of LS.Cons ((L.COLON, r2), s2') =>
+                 let
+                     val f' = LS.expose s2'
+                     val (dom,f') = parseQualId'(f')
+                     val (incls, insts, f') = case f'
+                         of LS.Cons((L.DOT,_),_) => (nil, nil, f')
+			  | LS.Cons((L.OPEN,_),_) => (nil, nil, f')
+                          | _ => parseInstantiate'(#2 (parseEqual' f'))
+	             val (ids, f') = parseOpen' f'
+                  in
+                     (E.strdec(id, dom, incls, insts, ids), f')
+                  end
+               | LS.Cons ((L.EQUAL, r2), s2') =>
+                 let
+                    val (mor, f' as LS.Cons((_,r3),_)) = parseMorph' (LS.expose s2')
+                 in
+                    ((E.strdef (id, (mor, Paths.join(r2,r3)))), f')
+                 end
+               | LS.Cons ((t, r), s') =>
+                 Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
+         )
+         | LS.Cons ((t, r), s') =>
+           Parsing.error (r, "Expected new identifier, found token " ^ L.toString t)
 
   fun parseSigBegin' (LS.Cons ((L.SIG, r), s')) =
      case LS.expose s'
@@ -143,61 +218,4 @@ struct
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
 
-  fun parseQualIdList'(f' as LS.Cons((L.DOT, _), _)) = (nil, f')
-    | parseQualIdList'(f') =
-       let
-          val (id, f') = parseQualId' f'
-	  val (ids, f') = parseQualIdList' f'
-       in
-          (id :: ids, f')
-       end
-
-  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (nil, f')
-    | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) = parseQualIdList' (LS.expose s')
-    | parseOpen'(LS.Cons ((t, r), s')) =
-             Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
-
-  fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
-     case LS.expose s'
-        of LS.Cons ((L.ID (_, id), r1), s1') => (
-           case LS.expose s1'
-              of LS.Cons ((L.COLON, r2), s2') =>
-                 let
-                     val f' = LS.expose s2'
-                     val (dom,f') = parseQualId'(f')
-                     val (insts, f') = case f'
-                         of LS.Cons((L.DOT,_),_) => (nil, f')
-			  | LS.Cons((L.OPEN,_),_) => (nil, f')
-                          | _ => parseInstantiate'(#2 (parseEqual' f'))
-	             val (ids, f') = parseOpen' f'
-                  in
-                     (E.strdec(id, dom, insts, ids), f')
-                  end
-               | LS.Cons ((L.EQUAL, r2), s2') =>
-                 let
-                    val (mor, f' as LS.Cons((_,r3),_)) = parseMorph' (LS.expose s2')
-                 in
-                    ((E.strdef (id, (mor, Paths.join(r2,r3)))), f')
-                 end
-               | LS.Cons ((t, r), s') =>
-                 Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
-         )
-         | LS.Cons ((t, r), s') =>
-           Parsing.error (r, "Expected new identifier, found token " ^ L.toString t)
-
-  fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
-     let
-        val (id, f') = parseQualId'(LS.expose s')
-	val (ids, f') = parseOpen' f'
-     in
-       (E.sigincl (id, ids), f')
-     end 
-
-  fun parseIncludeView' (LS.Cons ((L.INCLUDE, r), s')) =
-     let
-        val (mor, f') = parseMorph'(LS.expose s')
-        val (r', f') = parseDot' (f')
-     in
-       (E.viewincl (mor, Paths.join(r,r')), f')
-     end 
 end
