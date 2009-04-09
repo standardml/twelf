@@ -55,6 +55,7 @@
 %sig R' = {
   %include R.
   a' : type.
+  c' : R..a.
   %% no subordination between R.a and R'.a'
 }.
 
@@ -63,8 +64,35 @@
   f : R..a -> R'..a'.   %% creates subordination
 }.
 
-%% testing opens
 %sig X = {
+  k : type.
+  l : k.
+}.
+
+%sig X' = {
+  %include X.
+  k' : type.
+}.
+
+%view r : R -> X = {
+  a := k.
+  c := l.
+}.
+
+%view r' : R' -> X' = {
+  %include r.  %%i.e., R..a := X..k. R..c := X..l
+  a' := k'.
+  c' := X..l.
+}.
+
+%sig Y = {
+  a : type.
+  %struct r : R = {a := a.}.       %% R..a mapped to Y..a
+  %struct r' : R' = {%include r.}. %% r'(R'..c : R..a) = r(R'..c : R..a) = r'.c : r(R..a) = r'.c : a
+}.
+
+%% testing opens
+%sig Z = {
   %include R %open a c.
   d = c : a.
   %struct s : S %open a' b'.
