@@ -1083,7 +1083,7 @@ struct
            let
               (* @FR: actually the name should be qualified using the currently open signatures *)
                val dec = ReconModule.modbeginToModDec modBegin
-               val _ = Elab.checkModDec dec
+               val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val m = ModSyn.modOpen(dec)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
@@ -1099,12 +1099,14 @@ struct
         )
       | install1 (fileName, declr as (Parser.ModEnd, r)) =
           let
-             val cmod = ModSyn.modLookup (ModSyn.currentMod())
+             val m = ModSyn.currentMod()
+             val _ = Elab.checkModEnd m
+                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))             
           in
              ModSyn.modClose()
              handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg));
              if !Global.chatter >= 3
-	     then msg (Print.modEndToString(cmod) ^ "\n\n")
+	     then msg (Print.modEndToString(ModSyn.modLookup m) ^ "\n\n")
              else ()
           end
       | install1 (fileName, declr as (Parser.StrDec strdec, r)) =

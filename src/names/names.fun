@@ -221,7 +221,7 @@ struct
        	  else case fullNameLookup'(left, right)
        	         of NONE => NONE
        	          | SOME c => (case ModSyn.symLookup c
-       	                         of ModSyn.SymCon _ => if ModSyn.modInclCheck(IDs.midOf c, current)
+       	                         of ModSyn.SymCon _ => if ModSyn.sigInclCheck(IDs.midOf c, current)
        	                                               then SOME c
        	                                               else NONE
        	                          | ModSyn.SymStr _ => SOME c

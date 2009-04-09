@@ -144,8 +144,9 @@ sig
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
   val modParent  : IDs.mid -> IDs.mid option
-  val modInclLookup: IDs.mid -> IDs.mid list
-  val modInclCheck: IDs.mid * IDs.mid -> bool
+  val modInclLookup: IDs.mid -> ModIncl list
+  val sigInclCheck: IDs.mid * IDs.mid -> bool
+  val viewInclGet: IDs.mid * IDs.mid -> Morph option
   (* application of a method to all declarations of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit

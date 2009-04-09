@@ -1064,7 +1064,8 @@ struct
                    in
                      delayAmbiguous (G, U', r, "Omitted " ^
                        (case Apx.whnfUni L
-                          of Apx.Level 2 => "type"
+                          of Apx.Level 1 => "term" (* added this case, which can occur in views, FR Apr 09 *)
+                           | Apx.Level 2 => "type"
                            | Apx.Level 3 => "kind") ^ " is ambiguous");
                      U'
                    end

@@ -273,6 +273,13 @@ struct
 
   (* Printing module level declarations *)
   
+  fun expToString (G, U, imp) = fmtExp (G, (U, I.id), imp)  
+  
+  fun morphToString(ModSyn.MorStr(c)) = fmtCid c
+    | morphToString(ModSyn.MorView(m)) = OMS3("", ModSyn.modName m, nil)
+    | morphToString(ModSyn.MorComp(mor1,mor2)) =
+      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1), morphToString(mor2)])
+      
   fun docBeginToString() =
            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
            "<omdoc " ^
@@ -281,32 +288,26 @@ struct
            ">\n"
   fun docEndToString() = "</omdoc>"
   
-  fun modInclToString(m) = ElemEmpty("import", [Attr("from", mpath("", ModSyn.modName m))]) ^ nl()
+  fun modInclToString(ModSyn.SigIncl(m,_)) = ElemEmpty("import", [Attr("from", mpath("", ModSyn.modName m))]) ^ nl()
+    | modInclToString(ModSyn.ViewIncl(mor)) = ElemOpen("import", nil) ^ nl_ind() ^ morphToString(mor) ^ nl_unind() ^ "</import>"
   
   fun modBeginToString(ModSyn.SigDec name, incls) =
       let val (incls, meta) = case incls
                 of nil => (nil, mpath(baseLF, cdLF))
-                 | m :: tl => (tl, mpath("", ModSyn.modName m))
+                 | ModSyn.SigIncl(m,_) :: tl => (tl, mpath("", ModSyn.modName m))
       in
          ElemOpen("theory", [Attr("name", localPath name), Attr("meta", meta)]) ^ nl_ind() ^
          IDs.mkString(List.map (fn x => modInclToString x) incls, "", nl(), nl())
       end
-    | modBeginToString(ModSyn.ViewDec(name, dom, cod), _) =
+    | modBeginToString(ModSyn.ViewDec(name, dom, cod), incls) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", mpath("", ModSyn.modName dom)),
                           Attr("to", mpath("", ModSyn.modName cod))]
-        ) ^ nl_ind()
+        ) ^ nl_ind() ^ IDs.mkString(List.map modInclToString incls, "", nl(), nl())
                
   fun modEndToString(ModSyn.SigDec _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _) = nl_unind() ^ "</view>"
   
-  fun expToString (G, U, imp) = fmtExp (G, (U, I.id), imp)  
-  
-  fun morphToString(ModSyn.MorStr(c)) = fmtCid c
-    | morphToString(ModSyn.MorView(m)) = OMS3("", ModSyn.modName m, nil)
-    | morphToString(ModSyn.MorComp(mor1,mor2)) =
-      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1), morphToString(mor2)])
-      
   fun instToString(ModSyn.ConInst(c, U)) = 
          ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          fmtExpTop(I.Null, (U, I.id), 0) ^ nl_unind() ^ "</conass>"

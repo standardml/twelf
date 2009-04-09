@@ -5,7 +5,8 @@ sig
 
   (* type checking modular data types *)
   (* checks a ModDec *)
-  val checkModDec : ModSyn.ModDec -> unit
+  val checkModBegin : ModSyn.ModDec -> unit
+  val checkModEnd   : IDs.mid -> unit
   (* checks a SigIncl *)
   val checkModIncl: ModSyn.ModIncl -> unit
   (* checks a StrDec *)

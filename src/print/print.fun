@@ -930,7 +930,7 @@ in
        in " %open" ^ (doList l)
        end
   fun morphToString(ModSyn.MorStr(c)) =
-      ModSyn.modFoldName (IDs.midOf c) ^ "." ^ ModSyn.symFoldName c
+      ModSyn.modFoldName (IDs.midOf c) ^ Sep ^ ModSyn.symFoldName c
     | morphToString(ModSyn.MorView(m)) =
       ModSyn.modFoldName m
     | morphToString(ModSyn.MorComp(mor1,mor2)) =

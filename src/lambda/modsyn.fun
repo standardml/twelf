@@ -71,9 +71,13 @@ struct
    structMapTable contains for pairs (S,s') of structure ids, the id of the structure arising from applying S to s'.
   *)
 
-  (* maps mids to module declarations, sizes, containing module, and list of directly included modules
-     size is -1 if the module is still open *)
-  val modTable : (ModDec * int * (IDs.mid option) * (IDs.mid list)) MH.Table = MH.new(499)
+  (* maps mids to tuple of
+     - module declarations
+     - size (-1 if the module is still open)
+     - containing module (NONE only for the toplevel itself)
+     - list of includes
+  *)
+  val modTable : (ModDec * int * (IDs.mid option) * (ModIncl list)) MH.Table = MH.new(499)
   (* maps cids to constant and structure declarations and instantiations *)
   val symTable : SymLevelData CH.Table = CH.new(19999)
   (* maps pairs of (CID(S), CID(c')) of structure and structure/constant ids to the structure/constant id CID(S.c') *)
@@ -114,18 +118,6 @@ struct
                           of SigDec _ => true
                            | ViewDec _ => false
 
-  (* straight forward implementation of reflexive-transitive closure; no caching because presumably no efficiency bottleneck *)
-  fun modInclCheck(from, to) =
-     let
-     	val mids = modInclLookup to
-     in
-     	from = to
-     	orelse
-     	List.exists (fn m => m = from) mids
-     	orelse
-        List.exists (fn m => modInclCheck(from, m)) mids
-     end
-  
   fun symLookup(c : IDs.cid) = valOf (CH.lookup(symTable)(c))
                                handle Option => raise (UndefinedCid c)
 
@@ -153,7 +145,33 @@ struct
     of SymStrInst mor => mor
      | _ => raise (UndefinedCid c)
 
+  (* computes domain without checking composability *)
+  fun domain(mor : Morph) : IDs.mid = case mor
+    of MorView m => let val ViewDec(_, dom, _) = modLookup m in dom end
+     | MorStr s => strDecDom (structLookup s)
+     | MorComp(m,_) => domain m
 
+  (* straightforward implementation of reflexive-transitive closure; no caching because presumably no efficiency bottleneck *)
+  fun sigInclCheck(from, to) =
+     let
+     	val mids = List.map (fn SigIncl(m,_) => m) (modInclLookup to)
+     in
+     	from = to
+     	orelse
+     	List.exists (fn m => m = from) mids
+     	orelse
+        List.exists (fn m => sigInclCheck(from, m)) mids
+     end
+  
+  (* goes through included morphisms until one with domain from is found, then returns it *)
+  fun viewInclGet(v, from) =
+     let
+     	fun aux(nil) = NONE
+     	  | aux((ViewIncl mor)::incls) = if sigInclCheck(from, domain mor) then SOME mor else aux(incls)
+     in
+     	aux(modInclLookup v)
+     end
+  
   (********************** Convenience methods **********************)
   fun constDefOpt (d) =
       (case sgnLookup (d)
@@ -202,13 +220,13 @@ struct
   fun sgnAppI'(m : IDs.mid, f : IDs.cid -> unit, done : IDs.mid list) =
      let
      	fun isNotDone m' = not(List.exists (fn x => x = m') done)
-     	val incl = List.filter isNotDone (modInclLookup m)
+     	val incl = List.filter isNotDone (List.map (fn SigIncl(x,_) => x) (modInclLookup m))
      in
         List.map (fn m' => sgnAppI'(m', f, m :: done)) incl;
         sgnApp(m,f)
      end
   fun sgnAppI(m : IDs.mid, f : IDs.cid -> unit) = sgnAppI'(m,f,nil)
-
+  
   (********************** Effectful methods **********************)
   fun modOpen(dec) =
      let
@@ -228,41 +246,23 @@ struct
   fun modClose() =
      let
      	val _ = if onToplevel() then raise Error("no open module to close") else ()
-        val _ = if inSignature() then () else
-            (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
-            (* @CS what about block and skodec? *)
-            let
-               val m = currentMod()
-               val ViewDec(_,dom,_) = modLookup m
-               fun checkDefined(c' : IDs.cid) = case symLookup c'
-                  of SymCon (I.ConDec _) => ((symLookup(m, IDs.lidOf c') ; ())
-                                            handle UndefinedCid _ =>
-                                               raise Error("view not total: missing instatiation for " ^ symFoldName c'))
-                   | _ => ()
-                   
-            in
-               sgnApp(dom, checkDefined)
-            end
         val (m,l) = hd (! scope)
         val _ = scope := tl (! scope)
         val SOME (a,_,b,c) = MH.lookup modTable m
         val _ = MH.insert modTable (m, (a, l, b, c))
-        (* FR: check that no defined constants may be instantiated *)
       in
          ()
       end
 
-  fun inclAddC(SigIncl (from, _)) =
+  fun inclAddC(incl) =
      let
-        val _ = if inSignature() then () else raise Error("include only allowed in signature")
         val to = currentMod()
-        val _ = if modSize to = 0 then () else raise Error("include must occur at beginning of signature")
-        val SOME (a,b,c,incl) = MH.lookup modTable to
-        val _ = MH.insert modTable (to, (a,b,c, incl @ [from]))
+        val _ = if modSize to = 0 then () else raise Error("include must occur at beginning of module")
+        val SOME (a,b,c,incls) = MH.lookup modTable to
+        val _ = MH.insert modTable (to, (a,b,c, incls @ [incl]))
       in
          ()
       end
-    | inclAddC(ViewIncl mor) = () (* @FR: add case *)
   
   fun sgnAddC (conDec : I.ConDec) =
     let
@@ -296,8 +296,6 @@ struct
       val (m,l) :: scopetail = ! scope
       val c' = symInstCid inst
       val c = (m, IDs.lidOf c')
-      (* make sure there are no clashes, i.e., symLookup c must be undefined *)
-      val _ = (symLookup c; raise Error("instantiation for " ^ symFoldName c' ^ " already defined")) handle UndefinedCid _ => ()
     in
       (case inst
         of ConInst _ => CH.insert(symTable)(c, SymConInst inst)
