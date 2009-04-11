@@ -42,6 +42,11 @@ sig
   *)
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   
+  datatype ModIncl
+     = SigIncl of IDs.mid              (* included signature *)
+                * (IDs.Qid list)       (* constants in that signature that become available without qualification *)
+     | ViewIncl of Morph               (* morphism translating signature included into domain *)
+
   (*
      structure declarations
      a structure instantiates another signature, say S
@@ -54,6 +59,7 @@ sig
       string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)
     * IDs.mid                          (* domain (= instantiated signature) *)
+    * ModIncl list                     (* morphism includes *)
     * SymInst list                     (* instantiations *)
     * (IDs.Qid list)                   (* list of imported names that are available without qualification *)
   | StrDef of
@@ -83,12 +89,6 @@ sig
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
   
-  datatype ModIncl
-     = SigIncl of IDs.mid              (* included signature *)
-                * (IDs.Qid list)       (* constants in that signature that become available without qualification *)
-     | ViewIncl of Morph               (* morphism translating signature included into domain *)
-
-
   (* convenience methods to access components of declarations *)
   val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list
@@ -146,7 +146,6 @@ sig
   val modParent  : IDs.mid -> IDs.mid option
   val modInclLookup: IDs.mid -> ModIncl list
   val sigInclCheck: IDs.mid * IDs.mid -> bool
-  val viewInclGet: IDs.mid * IDs.mid -> Morph option
   (* application of a method to all declarations of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit

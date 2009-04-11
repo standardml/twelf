@@ -34,6 +34,12 @@ struct
 
   (********************** Module level type checking **********************)
   
+  (* computes domain without checking composability *)
+  fun domain(mor : M.Morph) : IDs.mid = case mor
+    of M.MorView m => let val M.ViewDec(_, dom, _) = M.modLookup m in dom end
+     | M.MorStr s => M.strDecDom (M.structLookup s)
+     | M.MorComp(m,_) => domain m
+  
   (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
   (* composibility is co-/contravariant with respect to inclusions *)
   fun reconMorph(M.MorComp(mor1,mor2)) =
@@ -49,7 +55,7 @@ struct
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
     | reconMorph(M.MorView(m)) =
         let
-           val M.ViewDec(_,dom, cod) = M.modLookup m
+           val M.ViewDec(_, dom, cod) = M.modLookup m
                                         handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
         in
            (dom, cod)
@@ -134,14 +140,41 @@ struct
       in
          ()
       end
-  (* includes of the domain that are not included into the codomain *)
-  and missingIncludes(dom : IDs.mid, cod : IDs.mid) : IDs.mid list =
+      
+  (* goes through morphism inclusion until one with domain "from" is found, then returns it *)
+  and linkInclGet(nil, from) = NONE
+    | linkInclGet((M.ViewIncl mor)::incls, from) =
+        if M.sigInclCheck(from, domain mor)
+        then SOME mor
+        else linkInclGet(incls, from)
+
+  (* all includes of the domain must be included or translated into the codomain *)
+  and checkIncludesOfDomain(dom : IDs.mid, cod : IDs.mid, incls : M.ModIncl list) =
+        List.map
+      	  (fn M.SigIncl(from,_) => 
+      	    case linkInclGet(incls, from)
+      	      of NONE => if M.sigInclCheck(from,cod)
+      	                 then ()
+      	                 else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
+                                          " but not into " ^ M.modFoldName cod)
+               | SOME _ => ()
+          )
+          (M.modInclLookup dom)
+
+   (* checks domain and codomain of a morphism included into a link from Dom to Cod *)
+   and checkIncludeInLink(Dom, Cod, mor) =
       let
-         val domincl = M.modInclLookup dom
+       	 val (dom, cod) = reconMorph mor
+         val _ = if M.sigInclCheck(dom, Dom)
+                 then ()
+                 else raise Error("included morphism has bad domain: " ^ M.modFoldName dom)
+         val _ = if M.sigInclCheck(cod, Cod)
+       	         then ()
+       	         else raise Error("included morphism has bad codomain: " ^ M.modFoldName cod)
       in
-      	 List.map (fn M.SigIncl(x,_) => x) (List.filter (fn M.SigIncl(x,_) => not(M.sigInclCheck(x,cod))) domincl)
+      	 ()
       end
-  
+
   (* checks well-typedness condition for includes *)
   and checkModIncl(M.SigIncl (m,_)) =
        if M.inSignature()
@@ -154,17 +187,11 @@ struct
        	     if M.inSignature()
        	     then raise Error("including morphisms only allowed in views")
        	     else M.modLookup v
+       	  val _ = checkIncludeInLink(Dom, Cod, mor)
        	  val incls = M.modInclLookup v
        	  val _ = if incls = nil
        	          then ()
-       	          else raise Error("implementation restriction: only one include allowed per view")
-       	  val (dom, cod) = reconMorph mor
-       	  val _ = if M.sigInclCheck(dom, Dom)
-       	          then ()
-       	          else raise Error("included morphism has bad domain: " ^ M.modFoldName dom)
-       	  val _ = if M.sigInclCheck(cod, Cod)
-       	          then ()
-       	          else raise Error("included morphism has bad codomain: " ^ M.modFoldName cod)
+       	          else raise Error("implementation restriction: only one include allowed per link")
        	in
        	   ()
        	end
@@ -177,37 +204,35 @@ struct
        will be checked during flattening
      postcondition: getInst yields all information that is needed to check the latter during flattening
   *)
-  and checkStrDec(M.StrDec(_,_, dom, insts, _)) = (
-        checkDomain(dom);
-        case missingIncludes(dom, M.currentMod())
-          of nil => ()
-           | x :: _ => raise Error("signature " ^ M.modFoldName x ^ " included into " ^ M.modFoldName dom ^
-                                       " but not into current signature");
-        case findClash insts
-          of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
-                                    M.symFoldName c ^ " in structure declaration")
-           | NONE => ();
-        List.map checkSymInst (List.filter (fn M.StrInst _ => true | _ => false) insts);
-        ()
-      )
+  and checkStrDec(M.StrDec(_, _, dom, incls, insts, _)) =
+       let val cod = M.currentMod()
+       in (
+          checkDomain(dom);
+          if (List.length incls <= 1) then ()
+             else raise Error("implementation restriction: only one include allowed per link");
+          List.map (fn M.ViewIncl mor => checkIncludeInLink(dom, cod, mor)) incls;
+          checkIncludesOfDomain(dom, cod, incls);
+          case findClash insts
+            of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
+                                      M.symFoldName c ^ " in structure declaration")
+             | NONE => ();
+          List.map checkSymInst (List.filter (fn M.StrInst _ => true | _ => false) insts);
+          ()
+          )
+       end
     | checkStrDec(M.StrDef(_,_, dom, mor)) = (
         checkDomain(dom);
         checkMorph(mor, dom, M.currentMod())
       )
 
-  (* checks well-typedness condition for modules (called at the beginning of the module *)
+  (* checks well-typedness conditions for modules (called at the beginning of the module *)
   and checkModBegin(_) = ()
-  (* checks well-typedness condition for modules (called at the end of the module *)
+  (* checks well-typedness conditions for modules (called at the end of the module *)
   and checkModEnd(m) =
        if M.inSignature() then () else
        let
           val M.ViewDec(_, dom, cod) = M.modLookup m
-          val _ = List.map
-             (fn x => case M.viewInclGet(m, x)
-                        of SOME _ => ()
-                         | NONE => raise Error("view not total: missing inclusion for signature " ^ M.modFoldName x)
-             )
-             (missingIncludes(dom, cod))
+          val _ = checkIncludesOfDomain(dom, cod, M.modInclLookup m)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
           (* @CS what about block and skodec? *)
           fun checkDefined(c' : IDs.cid) = case M.symLookup c'
@@ -271,25 +296,31 @@ struct
         (* apply morphism to constant *)
         and ACid(c) =
            let val m = IDs.midOf c
-           in if m = dom
-              then case mor (* apply morphism to symbol of domain signature *)
-                of M.MorStr(s) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-                 | M.MorView(v) => (
+           in
+              case (mor, m = dom)
+                (* apply morphism by applying structMapLookup *)
+                of (M.MorStr(s), true) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
+                (* apply morphism by looking up instantiation of view *)
+                 | (M.MorView(v), true) => (
                      let val ModSyn.ConInst(_, exp) = ModSyn.conInstLookup(v, IDs.lidOf(c))
                      in exp
                      end
                      handle ModSyn.UndefinedCid _ => raise UndefinedMorph(v,c)
                    )
-                 | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
-              else case mor
-                 (* included constants are mapped to themselves unless a view includes an applicable morphism *)
-                 of M.MorStr(s) => cidToExp c
-                  | M.MorComp(mor1, mor2) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
-              	  | M.MorView(v) => (
-              	     case M.viewInclGet(v, m)
-              	       of SOME mor => applyMorph(cidToExp(c), mor)
-              	        | NONE => cidToExp c
-              	     )
+                 (* apply composed morphisms separately *)
+                 | (M.MorComp(mor1, mor2), _) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
+                 (* included constants are mapped to themselves unless an applicable morphism is included *)
+                 | (link, false) =>
+                     let fun byIncludes(incls) = case linkInclGet(incls, m)
+              	             of SOME newmor => applyMorph(cidToExp(c), newmor)  (* apply included morphism *)
+              	              | NONE => cidToExp c                              (* default to identity *)
+                     in case link
+                          of M.MorView v => byIncludes(M.modInclLookup v)
+                           | M.MorStr s => (case M.structLookup s
+                               of M.StrDef(_, _, _, newmor) => applyMorph(cidToExp(c), newmor) (* expand link definition *) 
+                                | M.StrDec(_, _, _, incls, _, _) => byIncludes(incls)
+                             )
+              	     end
            end
      in
      	A U
@@ -317,7 +348,7 @@ struct
      this finds both explicit instantiations (c := e) and induced instantiations (s := mor in case c = s.c')
      in StrDefs, the instantiation is obtained by applying the definition of the structure to c
   *)
-  and getInst(M.StrDec(_,_,_,insts, _), c, q) = getInst'(insts, c, q)
+  and getInst(M.StrDec(_,_,_,_, insts, _), c, q) = getInst'(insts, c, q)
     | getInst(M.StrDef(_,_,_,mor), c, _) = SOME (applyMorph(cidToExp c, mor))
   
   (* flattens a structure by computing all generated declarations (the order is depth first declaration order)

@@ -943,9 +943,10 @@ in
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(ModSyn.StrInst(c, mor)) =
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, openids)) = (
+  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, openids)) = (
      "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
-     IDs.mkString(List.map instToString insts, "{", " ", "}") ^ (openToString openids) ^ "."
+     IDs.mkString(List.map modInclToString incls, "{", " ", "") ^
+     IDs.mkString(List.map instToString insts, "", " ", "}") ^ (openToString openids) ^ "."
     )
    | strDecToString(ModSyn.StrDef(name, _, dom, def)) = (
      "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^

@@ -315,14 +315,15 @@ struct
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          morphToString(mor) ^ nl_unind() ^ "</strass>"
 
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, _)) =
+  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _)) =
      let 
      	fun dolist(_, nil, _) = ""
            | dolist(f, hd::nil, nl) = f hd
            | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
      in
      	ElemOpen("structure", [Attr("name", localPath name), Attr("from", mpath("", ModSyn.modName dom))]) ^ (
-        case insts of nil => "" | _ => nl_ind() ^ dolist(instToString, insts, nl) ^ nl_unind()
+        case insts of nil => "" | _ => nl_ind() ^ dolist(instToString, insts, nl) ^ 
+        dolist(modInclToString, incls, nl) ^ nl_unind()
         ) ^ "</structure>"
      end
    | strDecToString(ModSyn.StrDef(name, _, dom, def)) =

@@ -1,15 +1,17 @@
 to do
 
 implement parametrized views
+implicit views
 read assignments in structures separately
 implement isomorphism check
 print out with nicer names
-implicit views
 alias declarations
 
 scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
 - makes this also resolve comments
+
+jEdit: unicode names by translating to ASCII names for the backend
 
 better error message for instantiation/definition clash: no printer available
 
@@ -18,6 +20,7 @@ done
 
 forbid instantiating defined constants
 shadowing on toplevel
+implement include in link, only one %include allowed in a link for now
 
 --------
 mail to Carsten
