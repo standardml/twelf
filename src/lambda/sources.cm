@@ -4,6 +4,7 @@ Library
   signature INTSYN
   structure IntSyn
   structure CidHashTable
+  structure MidHashTable
   structure MidRedBlackTree
   structure CidRedBlackTree
   structure MidCidRedBlackTree

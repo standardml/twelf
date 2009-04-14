@@ -158,14 +158,16 @@ struct
              val hash = StringHash.stringListHash
              val eq = (op =));
     structure CH = CidHashTable
+    structure MidH = MidHashTable
     type cid = IDs.cid
     type mid = IDs.mid
 
     val nameTable : cid SH.Table = SH.new(4096)
-    val modnameTable : mid MH.Table = MH.new(4096)
+    val modnameTable : mid MH.Table = MH.new(128)
+    val scopeTable : mid list MidH.Table = MidH.new(128)
 
     (* shadowTable(c') = c means that c' was shadowed by c *)
-    val shadowTable : cid CH.Table = CH.new(100)
+    val shadowTable : cid CH.Table = CH.new(128)
     
     type namePref = (string list * string list) option
     val namePrefTable : namePref CH.Table = CH.new(4096)
@@ -205,6 +207,15 @@ struct
              )
             )
 
+    fun installScopeC(m: mid) =
+       let
+       	  val curr = ModSyn.currentMod()
+       	  val mods = getOpt((MidH.lookup scopeTable curr), nil)
+       	  val _ = MidH.insert scopeTable (curr, mods @ [m])
+       in
+       	  ()
+       end
+      
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
     val nameLookup' : IDs.mid * string list -> cid option = SH.lookup nameTable
     fun fullNameLookup'(mods : string list, cons : string list) =
@@ -212,17 +223,28 @@ struct
          of NONE => NONE
           | SOME m => nameLookup'(m, cons)
 
+    (* For compatibility with non-modular code, qualified names (mods, cons) where both
+       mods and cons are lists of strings are represented as a single string list with "" separating
+       mods and cons.
+       splitName retrieves the components. *)
     fun nameLookup(current, names) =
        let
        	  val (left, right) = splitName names
+          fun lookupInMods(nil : mid list, ns) = NONE
+            | lookupInMods(hd :: tl, ns) = case nameLookup'(hd, ns)
+              of SOME c => SOME c
+               | NONE => lookupInMods(tl, ns)
        in
        	  if right = nil
-       	  then nameLookup'(current, left)
-       	  else case fullNameLookup'(left, right)
+       	  then case nameLookup'(current, left)
+                 of SOME c => SOME c              (* modname empty, so lookup in current signature *)
+                  | NONE => lookupInMods (getOpt((MidH.lookup scopeTable current), nil), left)
+                                                  (* maybe lookup in included signature *)
+       	  else case fullNameLookup'(left, right)  (* else lookup both modname and symname *)
        	         of NONE => NONE
        	          | SOME c => (case ModSyn.symLookup c
        	                         of ModSyn.SymCon _ => if ModSyn.sigInclCheck(IDs.midOf c, current)
-       	                                               then SOME c
+       	                                               then SOME c (* only constants from included signatures are visible *)
        	                                               else NONE
        	                          | ModSyn.SymStr _ => SOME c
        	                          | _ => NONE

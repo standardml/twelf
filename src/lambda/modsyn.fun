@@ -9,7 +9,7 @@ struct
   structure CCH = HashTable (type key' = IDs.cid * IDs.cid
              val hash = fn (x,y) => 100 * (IDs.cidhash x) + (IDs.cidhash y)
              val eq = (op =));
-  structure MH = IntHashTable
+  structure MH = MidHashTable
   structure I = IntSyn
 
   exception Error of string

@@ -43,6 +43,7 @@ structure CidHashTable =
   HashTable (type key' = IDs.cid
              val hash = IDs.cidhash
              val eq = (op =));
+structure MidHashTable = IntHashTable
 
 structure MidRedBlackTree = IntRedBlackTree
 

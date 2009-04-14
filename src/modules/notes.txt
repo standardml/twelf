@@ -21,6 +21,7 @@ done
 forbid instantiating defined constants
 shadowing on toplevel
 implement include in link, only one %include allowed in a link for now
+empty %open in include chains name lookups
 
 --------
 mail to Carsten
