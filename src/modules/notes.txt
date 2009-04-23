@@ -6,6 +6,7 @@ read assignments in structures separately
 implement isomorphism check
 print out with nicer names
 alias declarations
+hiding
 
 scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
