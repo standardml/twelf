@@ -23,6 +23,8 @@ forbid instantiating defined constants
 shadowing on toplevel
 implement include in link, only one %include allowed in a link for now
 empty %open in include chains name lookups
+signatures may refer to symbols of ancestor signatures (qualified or - if not shadowed - directly)
+views are only legal if no ancestor relation between domain and codomain and if all ancestors of domain are ancestors of codomain
 
 --------
 mail to Carsten
