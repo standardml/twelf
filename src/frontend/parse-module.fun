@@ -221,4 +221,10 @@ struct
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
 
+  fun parseRead' (f as LS.Cons ((L.READ, _), s')) =
+     case LS.expose s'
+        of LS.Cons ((L.STRING name, r), s') => (E.readfile name, LS.expose s')
+         | LS.Cons ((t, r1), s') =>
+           Parsing.error (r1, "Expected string, found token " ^ L.toString t)
+  
 end

@@ -150,6 +150,7 @@ functor Twelf
      sharing type ReconModule.syminst = Parser.ModExtSyn.syminst
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
      sharing type ReconModule.modincl = Parser.ModExtSyn.modincl
+     sharing type ReconModule.read = Parser.ModExtSyn.read
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
    (*! sharing FunSyn.IntSyn = IntSyn' !*)
@@ -1250,6 +1251,13 @@ struct
             val _ = if !Global.chatter >= 3
                     then msg (Print.modInclToString(Incl) ^ "\n")
                     else ()
+         in
+            ()
+         end
+
+      | install1 (fileName, declr as (Parser.Read read, r)) =
+         let
+            val Read = ReconModule.readToRead read
          in
             ()
          end

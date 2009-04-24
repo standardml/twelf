@@ -89,6 +89,8 @@ sig
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
   
+   datatype Read = ReadFile of string  (* file name *)
+   
   (* convenience methods to access components of declarations *)
   val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list

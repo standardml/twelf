@@ -1,4 +1,4 @@
-(* Syntax and semantics of the module system, also encapsulation of the state of modular LF *)
+	(* Syntax and semantics of the module system, also encapsulation of the state of modular LF *)
 (* Author: Florian Rabe *)
 
 (* The datatypes and interface methods are well-documented in the declaration of MODSYN. *)
@@ -22,6 +22,7 @@ struct
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (ModIncl list) * (SymInst list) * (IDs.Qid list)
                   | StrDef of string list * IDs.qid * IDs.mid * Morph
   datatype ModDec = SigDec of string list | ViewDec of string list * IDs.mid * IDs.mid
+  datatype Read = ReadFile of string
 
   (* unifies constant and structure declarations and instantiations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst

@@ -82,6 +82,7 @@ struct
     | StrDec of ModExtSyn.strdec
     | SymInst of ModExtSyn.syminst
     | Include of ModExtSyn.modincl
+    | Read of ModExtSyn.read
     | Use of string
     (* Further pragmas to be added later here *)
 
@@ -192,6 +193,7 @@ struct
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)(* -fr, module system *)
+      | parseStream' (f as LS.Cons ((L.READ, r), s'), sc) = parseRead' (f, sc)(* -fr *)
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =
@@ -440,6 +442,14 @@ struct
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((StrDec strDec, r), parseStream (stripDot f', sc))
+        end
+
+    and parseRead' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (read, f' as LS.Cons((_,r'),_)) = ParseModule.parseRead'(f)
+           val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((Read read, r), parseStream (stripDot f', sc))
         end
 
     and parseInViewConInst' (f as LS.Cons ((_, r0), _), sc) =

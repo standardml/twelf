@@ -116,3 +116,6 @@ a : type.
     d0 : L0..a.   %% a refers to L0..a
   }.
 }.
+
+%% testing reads
+%read "test2.elf".

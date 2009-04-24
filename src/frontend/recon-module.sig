@@ -29,6 +29,9 @@ sig
   (* begin of a module *)
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
+  
+  (* importing files *)
+  datatype read = readfile of string
 
 end;
 
@@ -46,4 +49,6 @@ sig
   val modbeginToModDec : modbegin -> ModSyn.ModDec
   (* reconstructs a module inclusion *)
   val modinclToModIncl : modincl -> ModSyn.ModIncl
+  (* reconstructs a read declaration *)
+  val readToRead : read -> ModSyn.Read
 end

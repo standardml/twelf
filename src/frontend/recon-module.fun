@@ -29,6 +29,8 @@ struct
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id
   
+  datatype read = readfile of string
+  
 (* end MODEXTSYN *)
 
 (* implementing the remaining declarations of RECON_MODULE *)
@@ -171,4 +173,6 @@ struct
             ModSyn.ViewDec ([name], Dom, Cod)
          end
 
+   fun readToRead(readfile name) = ModSyn.ReadFile name
+   
 end (* end RECON_MODULE *)

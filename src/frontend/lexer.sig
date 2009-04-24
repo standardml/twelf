@@ -60,6 +60,7 @@ sig
     | VIEW                              (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
+    | READ                              (* `%read' *) (* -fr Apr 09 *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)
 

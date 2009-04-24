@@ -67,6 +67,7 @@ struct
     | VIEW                              (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
+    | READ                              (* `%read' *)
     | USE                               (* `%use' *)
     | STRING of string                  (* string constants *)
 
@@ -262,6 +263,7 @@ struct
       | lexPragmaKey (ID(_, "view"), r) = (VIEW, r)
       | lexPragmaKey (ID(_, "include"), r) = (INCLUDE, r)
       | lexPragmaKey (ID(_, "open"), r) = (OPEN, r)
+      | lexPragmaKey (ID(_, "read"), r) = (READ, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
       | lexPragmaKey (ID(_, s), r) =
         error (r, "Unknown keyword %" ^ s ^ " (single line comment starts with `%<whitespace>' or `%%')")
