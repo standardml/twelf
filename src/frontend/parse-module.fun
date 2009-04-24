@@ -98,8 +98,11 @@ struct
     | parseStrInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `%struct', found token " ^ L.toString t)
 
-  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (nil, f')
-    | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) = parseQualIdList' (LS.expose s')
+  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (NONE, f')
+    | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) =
+        let val (ids, f') = parseQualIdList' (LS.expose s')
+        in  (SOME ids, f')
+        end
     | parseOpen'(LS.Cons ((t, r), s')) =
              Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
 

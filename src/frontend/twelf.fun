@@ -1085,15 +1085,32 @@ struct
         )
 
       (* cases for the module system *)
-      | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) = (
+      | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
               (* @FR: actually the name should be qualified using the currently open signatures *)
                val dec = ReconModule.modbeginToModDec modBegin
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+               val ancestors = ModSyn.getScope()
+               val parent = #1 (hd ancestors)
                val m = ModSyn.modOpen(dec)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-               val name = ModSyn.modDecName dec
+               val _ = case dec
+                  of ModSyn.ViewDec _ => ()
+                   | ModSyn.SigDec _ => (                                  (* for nested signatures, ... *)
+                       Subordinate.installInclude parent;                  (* - copy parent's subordination relation *)
+                       List.map
+                         (fn a => Names.installScopeC (#1 a, SOME (#2 a)))
+                         ancestors;                                        (* - open all ancestors *)
+                       List.map
+                         (fn a => List.map (fn ModSyn.SigIncl(m,_) => ModSyn.inclAddC (ModSyn.SigIncl(m, SOME nil))
+                                             | ModSyn.ViewIncl _ => ())
+                                           (ModSyn.modInclLookup (#1 a))
+                          ) ancestors;                                     (* - add includes of all ancestors *)
+                       ()
+                       (* no exceptions should be possible *)
+	             )
+	       val name = ModSyn.modDecName dec
                val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
                val _ = if !Global.chatter >= 3
@@ -1102,12 +1119,11 @@ struct
            in
              ()
            end
-        )
       | install1 (fileName, declr as (Parser.ModEnd, r)) =
           let
              val m = ModSyn.currentMod()
              val _ = Elab.checkModEnd m
-                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))             
+                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
           in
              ModSyn.modClose()
              handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg));
@@ -1225,9 +1241,9 @@ struct
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
             val _ = case Incl
                of ModSyn.SigIncl (from, openids) => (
-                    if openids = nil
-                    then Names.installScopeC from (* otherwise useless case openids = nil represents secondary scope *)
-                    else installOpen(from, openids, NONE, r);
+                    case openids
+                      of NONE => Names.installScopeC (from, NONE)
+                       | SOME openids => installOpen(from, openids, NONE, r);
 		    Subordinate.installInclude from (* no exception should be possible *)
 		  )
 		| _ => ()

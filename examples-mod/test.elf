@@ -59,9 +59,13 @@
   %% no subordination between R.a and R'.a'
 }.
 
+a : type.
+
 %sig R'' = {
   %include R'.
   f : R..a -> R'..a'.   %% creates subordination
+  c : a.                %% reference to a on toplevel
+  a : type.             %% toplevel name shadowed
 }.
 
 %sig X = {
@@ -99,4 +103,16 @@
   %struct s : S %open a' b'.
   e = b' : a'.
   k : r.a. %% failed lookup, retried in Y.
+}.
+
+%% testing subsignatures
+%sig L0 = {
+  c : a.          %% a refers to toplevel a
+  a : type.
+  %sig L1 = {
+    c : a.        %% a refers to L0..a
+    a : type.
+    d1 : a.       %% a refers to L1..a
+    d0 : L0..a.   %% a refers to L0..a
+  }.
 }.

@@ -44,7 +44,7 @@ sig
   
   datatype ModIncl
      = SigIncl of IDs.mid              (* included signature *)
-                * (IDs.Qid list)       (* constants in that signature that become available without qualification *)
+                * (IDs.Qid list option)(* constants in that signature that become available without qualification *)
      | ViewIncl of Morph               (* morphism translating signature included into domain *)
 
   (*
@@ -61,7 +61,7 @@ sig
     * IDs.mid                          (* domain (= instantiated signature) *)
     * ModIncl list                     (* morphism includes *)
     * SymInst list                     (* instantiations *)
-    * (IDs.Qid list)                   (* list of imported names that are available without qualification *)
+    * (IDs.Qid list)                   (* list of imported names that are available without qualification, NONE = all *)
   | StrDef of
       string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)
@@ -143,7 +143,7 @@ sig
 
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
-  val modParent  : IDs.mid -> IDs.mid option
+  val modParent  : IDs.mid -> (IDs.mid * IDs.lid) list
   val modInclLookup: IDs.mid -> ModIncl list
   val sigInclCheck: IDs.mid * IDs.mid -> bool
   (* application of a method to all declarations of a signature in declaration order *)
@@ -159,9 +159,8 @@ sig
   val inSignature: unit -> bool
   (* the current target signature: the current module if a signature, or its codomain if a view *)
   val currentTargetSig : unit -> IDs.mid
-  (* returns the list of currently open modules in declaration order *)
-  val getScope   : unit -> IDs.mid list 
-
+  (* returns the list of currently open modules in inverse declaration order and their next available lid *)
+  val getScope   : unit -> (IDs.mid * IDs.lid) list 
   val structMapLookup : IDs.cid * IDs.cid -> IDs.cid option
     
 

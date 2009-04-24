@@ -123,23 +123,6 @@ struct
      - s and s.c
   *)
   and findClash(insts) = findClash'(insts, nil, nil)
-
-  (* auxiliary functions of checkStrDec and checkSigIncl, checks whether the intended domain is permitted *)
-  and checkDomain(dom : IDs.mid) =
-      let
-      	 (* no ancestors may be instantiated *)
-      	 val scope = M.getScope()
-         val _ = if List.exists (fn x => x = dom) scope
-                 then raise Error("signature attempts to instantiate or include own ancestor")
-                 else ()
-         (* only children of ancestors may be instantiated *)
-         val par = valOf (M.modParent dom) (* NONE only if dom is toplevel, which is caught above *)
-         val _ = if not (List.exists (fn x => x = par) scope)
-                 then raise Error("signature attempts to instantiate or include unreachable signature")
-                 else ()
-      in
-         ()
-      end
       
   (* goes through morphism inclusion until one with domain "from" is found, then returns it *)
   and linkInclGet(nil, from) = NONE
@@ -147,6 +130,23 @@ struct
         if M.sigInclCheck(from, domain mor)
         then SOME mor
         else linkInclGet(incls, from)
+ 
+  (* auxiliary functions that checks whether the ancestors of a link (structure, view, or include) are compatible *)
+  and checkAncestors(dom, cod) =
+    let
+       val domPar = M.modParent dom
+       val codPar = M.modParent cod
+       val _ = if List.exists (fn (m,_) => m = dom) codPar orelse List.exists (fn (m,_) => m = cod) domPar
+               then raise Error("domain and codomain of a link may not be in ancestor relationship")
+               else ()
+       val _ = if List.all (fn (m,l) => List.exists (fn (m',l') => m = m' andalso l <= l') codPar) domPar
+               then ()
+               else raise Error("all ancestors of the domain of a link must be ancestors of the codomain")
+               (* The above condition implies that views between sister signatures
+                  are only permitted if the domain can access at most as many constants of the parent as the codomain. *)
+    in
+       ()
+    end
 
   (* all includes of the domain must be included or translated into the codomain *)
   and checkIncludesOfDomain(dom : IDs.mid, cod : IDs.mid, incls : M.ModIncl list) =
@@ -178,7 +178,7 @@ struct
   (* checks well-typedness condition for includes *)
   and checkModIncl(M.SigIncl (m,_)) =
        if M.inSignature()
-       then checkDomain m
+       then checkAncestors(m, M.currentMod())
        else raise Error("including signatures only allowed in signatures")
     | checkModIncl(M.ViewIncl mor) =
        let
@@ -207,7 +207,7 @@ struct
   and checkStrDec(M.StrDec(_, _, dom, incls, insts, _)) =
        let val cod = M.currentMod()
        in (
-          checkDomain(dom);
+          checkAncestors(dom, cod);
           if (List.length incls <= 1) then ()
              else raise Error("implementation restriction: only one include allowed per link");
           List.map (fn M.ViewIncl mor => checkIncludeInLink(dom, cod, mor)) incls;
@@ -220,10 +220,11 @@ struct
           ()
           )
        end
-    | checkStrDec(M.StrDef(_,_, dom, mor)) = (
-        checkDomain(dom);
-        checkMorph(mor, dom, M.currentMod())
-      )
+    | checkStrDec(M.StrDef(_,_, dom, mor)) =
+        let val cod = M.currentMod()
+        in checkAncestors(dom, cod);
+           checkMorph(mor, dom, cod)
+        end
 
   (* checks well-typedness conditions for modules (called at the beginning of the module *)
   and checkModBegin(_) = ()
@@ -232,6 +233,7 @@ struct
        if M.inSignature() then () else
        let
           val M.ViewDec(_, dom, cod) = M.modLookup m
+          val _ = checkAncestors(dom, cod)
           val _ = checkIncludesOfDomain(dom, cod, M.modInclLookup m)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
           (* @CS what about block and skodec? *)

@@ -14,7 +14,7 @@ struct
   structure ExtSyn = ReconTerm'
 
   type id = string list * Paths.region
-  type openids = id list
+  type openids = id list option
   
   type morph = id list
   datatype syminst =
@@ -123,12 +123,15 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-   fun modinclToModIncl(sigincl (sigid, openids)) =
+   fun modinclToModIncl(sigincl (sigid, ids)) =
       let
       	 val m = modnameLookupWithError SIG sigid
-	 val Openids = List.map (fn (cname,_) => cname) openids
+	 val Ids = case ids
+	   of NONE => SOME nil                                    (* no open at all *)
+	    | SOME nil => NONE                                    (* open by itself --> open all *)
+	    | SOME l => SOME (List.map (fn (cname,_) => cname) l) (* open with list of ids *)
       in
-      	 ModSyn.SigIncl (m, Openids)
+      	 ModSyn.SigIncl (m, Ids)
       end
     | modinclToModIncl(viewincl mor) =
        let
@@ -145,7 +148,9 @@ struct
     	val Cod = ModSyn.currentTargetSig()
     	val Incls = List.map (fn x => modinclToModIncl x) incls
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,l)) insts
-	val Ids = List.map (fn (cname,_) => cname) ids
+	val Ids = case ids
+	  of SOME l => List.map (fn (cname,_) => cname) l
+	   | NONE => nil
     in
     	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Ids)
     end

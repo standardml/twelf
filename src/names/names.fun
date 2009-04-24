@@ -160,11 +160,17 @@ struct
     structure CH = CidHashTable
     structure MidH = MidHashTable
     type cid = IDs.cid
+    type lid = IDs.lid
     type mid = IDs.mid
 
     val nameTable : cid SH.Table = SH.new(4096)
     val modnameTable : mid MH.Table = MH.new(128)
-    val scopeTable : mid list MidH.Table = MidH.new(128)
+    
+    (* scopeTable contains a list of included modules
+       (m,NONE): all symbols of m are visible (result of %include declarations)
+       (m,SOME l): all symbols of m with lid below l are visible (result of parent signature)
+    *)
+    val scopeTable : (mid * (lid option)) list MidH.Table = MidH.new(128)
 
     (* shadowTable(c') = c means that c' was shadowed by c *)
     val shadowTable : cid CH.Table = CH.new(128)
@@ -207,7 +213,7 @@ struct
              )
             )
 
-    fun installScopeC(m: mid) =
+    fun installScopeC(m: mid * (lid option)) =
        let
        	  val curr = ModSyn.currentMod()
        	  val mods = getOpt((MidH.lookup scopeTable curr), nil)
@@ -223,29 +229,38 @@ struct
          of NONE => NONE
           | SOME m => nameLookup'(m, cons)
 
-    (* For compatibility with non-modular code, qualified names (mods, cons) where both
-       mods and cons are lists of strings are represented as a single string list with "" separating
-       mods and cons.
-       splitName retrieves the components. *)
     fun nameLookup(current, names) =
        let
+          (* For compatibility with non-modular code, qualified names (mods, cons) where both
+             mods and cons are lists of strings are represented as a single string list with "" separating
+             mods and cons. splitName retrieves the components. *)
        	  val (left, right) = splitName names
-          fun lookupInMods(nil : mid list, ns) = NONE
-            | lookupInMods(hd :: tl, ns) = case nameLookup'(hd, ns)
-              of SOME c => SOME c
+       	  (* true iff c is visible for M *)
+       	  fun visible(M : mid, c : cid) : bool =
+       	    let val m = IDs.midOf c
+       	    in        ModSyn.sigInclCheck(m, M)
+       	       orelse List.exists (fn (m',l') => m' = m andalso IDs.lidOf c < l') (ModSyn.modParent M)
+       	       orelse m = M
+       	    end
+       	  (* looks up a name in a list of signatures and returns the first match *)
+          fun lookupInMods(nil : (mid * (lid option)) list, ns) = NONE
+            | lookupInMods((m,lOpt) :: tl, ns) = case nameLookup'(m, ns)
+              of SOME c => (
+                  case lOpt
+                    of NONE => SOME c
+                     | SOME l => if IDs.lidOf c < l then SOME c else NONE
+                 )
                | NONE => lookupInMods(tl, ns)
        in
        	  if right = nil
        	  then case nameLookup'(current, left)
-                 of SOME c => SOME c              (* modname empty, so lookup in current signature *)
+                 of SOME c => SOME c              (* module name empty, so lookup in current signature *)
                   | NONE => lookupInMods (getOpt((MidH.lookup scopeTable current), nil), left)
-                                                  (* maybe lookup in included signature *)
+                                                  (* lookup in parent or included signature *)
        	  else case fullNameLookup'(left, right)  (* else lookup both modname and symname *)
        	         of NONE => NONE
        	          | SOME c => (case ModSyn.symLookup c
-       	                         of ModSyn.SymCon _ => if ModSyn.sigInclCheck(IDs.midOf c, current)
-       	                                               then SOME c (* only constants from included signatures are visible *)
-       	                                               else NONE
+       	                         of ModSyn.SymCon _ => if visible(current, c) then SOME c else NONE
        	                          | ModSyn.SymStr _ => SOME c
        	                          | _ => NONE
        	                       )
