@@ -73,7 +73,7 @@ struct
      	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
             handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
-                                  val ModSyn.ViewDec(_,dom,_) = ModSyn.modLookup m
+                                  val ModSyn.ViewDec(_,_,dom,_) = ModSyn.modLookup m
                               in (ModSyn.MorView m, dom)
                               end
      in
@@ -125,7 +125,7 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-   fun modinclToModIncl(sigincl (sigid, ids)) =
+   fun modinclToModIncl(sigincl (sigid, ids), _) =
       let
       	 val m = modnameLookupWithError SIG sigid
 	 val Ids = case ids
@@ -135,7 +135,7 @@ struct
       in
       	 ModSyn.SigIncl (m, Ids)
       end
-    | modinclToModIncl(viewincl mor) =
+    | modinclToModIncl(viewincl mor, _) =
        let
        	  val Cod = ModSyn.currentTargetSig()
           val Mor = morphToMorph(Cod, mor)
@@ -144,12 +144,12 @@ struct
        end
 
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
-                            incls : modincl list, insts : syminst list, ids : openids), l) = 
+                            incls : modincl list, insts : syminst list, ids : openids), loc) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
-    	val Incls = List.map (fn x => modinclToModIncl x) incls
-    	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,l)) insts
+    	val Incls = List.map (fn x => modinclToModIncl(x,loc)) incls
+    	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
 	val Ids = case ids
 	  of SOME l => List.map (fn (cname,_) => cname) l
 	   | NONE => nil
@@ -164,15 +164,17 @@ struct
        	  ModSyn.StrDef([name], nil, Dom, Mor)
        end
     
-   fun modbeginToModDec(sigbegin name) = ModSyn.SigDec [name]
-     | modbeginToModDec(viewbegin(name, dom, cod)) =
+   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) = ModSyn.SigDec(fileName, [name])
+     | modbeginToModDec(viewbegin(name, dom, cod), Paths.Loc(fileName, _)) =
          let
             val Dom = modnameLookupWithError SIG dom
             val Cod = modnameLookupWithError SIG cod
          in
-            ModSyn.ViewDec ([name], Dom, Cod)
+            ModSyn.ViewDec (fileName, [name], Dom, Cod)
          end
 
-   fun readToRead(readfile name) = ModSyn.ReadFile name
-   
+   fun readToRead(readfile name, Paths.Loc(fileName, r)) =
+     if ModSyn.onToplevel()
+     then ModSyn.ReadFile (String.substring(name, 1, (String.size name) - 2)) (* remove "" *)
+     else error(r, "%read only legal on toplevel")
 end (* end RECON_MODULE *)

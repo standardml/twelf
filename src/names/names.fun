@@ -319,7 +319,7 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; 
+    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; MidH.clear scopeTable; 
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

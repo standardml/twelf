@@ -21,14 +21,16 @@ struct
   datatype ModIncl = SigIncl of IDs.mid * (IDs.Qid list option) | ViewIncl of Morph
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (ModIncl list) * (SymInst list) * (IDs.Qid list)
                   | StrDef of string list * IDs.qid * IDs.mid * Morph
-  datatype ModDec = SigDec of string list | ViewDec of string list * IDs.mid * IDs.mid
+  datatype ModDec = SigDec of string * string list | ViewDec of string * string list * IDs.mid * IDs.mid
   datatype Read = ReadFile of string
 
   (* unifies constant and structure declarations and instantiations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
 
-  fun modDecName (SigDec n) = n
-    | modDecName (ViewDec(n,_,_)) = n
+  fun modDecBase (SigDec(b,_)) = b
+    | modDecBase (ViewDec(b,_,_,_)) = b
+  fun modDecName (SigDec(_,n)) = n
+    | modDecName (ViewDec(_,n,_,_)) = n
   fun strDecName (StrDec(n, _, _, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _)) = n
   fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
@@ -112,7 +114,7 @@ struct
      let val m = currentMod()
      in case modLookup m
        of SigDec _ => m
-        | ViewDec(_,_,cod) => cod
+        | ViewDec(_,_,_,cod) => cod
      end
 
   fun getScope () = ! scope
@@ -225,10 +227,14 @@ struct
   (********************** Effectful methods **********************)
   fun modOpen(dec) =
      let
-     	val _ = case (modLookup (currentMod()), dec)
-     	          of (ViewDec _, _) => raise Error("modules may not occur inside views")
-     	           | (SigDec_, ViewDec _) => if onToplevel() then () else raise Error("views may not occur inside signatures")
-     	           | _ => ()
+     	val _ = if ! scope = nil
+     		then case dec
+     		    of SigDec _ => ()
+     		     | ViewDec _ => raise Error("toplevel must be signature")
+     		else case (inSignature(), dec)
+     	          of (false, _) => raise Error("modules may not occur inside views")
+     	           | (true, ViewDec _) => if onToplevel() then () else raise Error("views may not occur inside signatures")
+     	           | (true, SigDec _) => ()
         val m = ! nextMid
         val _ = nextMid := ! nextMid + 1
         val _ = MH.insert modTable (m, (dec, ~1, ! scope, nil))
@@ -303,9 +309,8 @@ struct
     CH.clear symTable;               (* clear tables *)
     MH.clear modTable;
     CCH.clear structMapTable;
-    nextMid := 1;                    (* initial mid *)
-    scope := [(0,0)];                (* toplevel with mid 0 and no parent is always open *)
-    MH.insert modTable (0, (SigDec ["toplevel"], ~1, nil, nil))  
+    nextMid := 0;                    (* initial mid *)
+    scope := nil
   )
  
   (********************** Convenience methods **********************)

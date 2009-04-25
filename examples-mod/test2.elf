@@ -1,0 +1,7 @@
+%sig R2 = {
+  %include R.
+  %struct r: R.
+  a : type.
+  c: R..a.
+  d: r.a.
+}.

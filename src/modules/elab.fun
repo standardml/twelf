@@ -36,7 +36,7 @@ struct
   
   (* computes domain without checking composability *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
-    of M.MorView m => let val M.ViewDec(_, dom, _) = M.modLookup m in dom end
+    of M.MorView m => let val M.ViewDec(_, _, dom, _) = M.modLookup m in dom end
      | M.MorStr s => M.strDecDom (M.structLookup s)
      | M.MorComp(m,_) => domain m
   
@@ -55,7 +55,7 @@ struct
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
     | reconMorph(M.MorView(m)) =
         let
-           val M.ViewDec(_, dom, cod) = M.modLookup m
+           val M.ViewDec(_, _, dom, cod) = M.modLookup m
                                         handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
         in
            (dom, cod)
@@ -183,7 +183,7 @@ struct
     | checkModIncl(M.ViewIncl mor) =
        let
        	  val v = M.currentMod()
-       	  val M.ViewDec(_, Dom, Cod) =
+       	  val M.ViewDec(_, _, Dom, Cod) =
        	     if M.inSignature()
        	     then raise Error("including morphisms only allowed in views")
        	     else M.modLookup v
@@ -232,7 +232,7 @@ struct
   and checkModEnd(m) =
        if M.inSignature() then () else
        let
-          val M.ViewDec(_, dom, cod) = M.modLookup m
+          val M.ViewDec(_, _, dom, cod) = M.modLookup m
           val _ = checkAncestors(dom, cod)
           val _ = checkIncludesOfDomain(dom, cod, M.modInclLookup m)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)

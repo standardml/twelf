@@ -46,9 +46,9 @@ sig
   (* reconstructs a structure declaration *)
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
   (* reconstructs the begin of a module declaration *)
-  val modbeginToModDec : modbegin -> ModSyn.ModDec
+  val modbeginToModDec : modbegin * Paths.location -> ModSyn.ModDec
   (* reconstructs a module inclusion *)
-  val modinclToModIncl : modincl -> ModSyn.ModIncl
+  val modinclToModIncl : modincl * Paths.location -> ModSyn.ModIncl
   (* reconstructs a read declaration *)
-  val readToRead : read -> ModSyn.Read
+  val readToRead : read * Paths.location -> ModSyn.Read
 end

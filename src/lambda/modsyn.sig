@@ -83,15 +83,19 @@ sig
      the instantiations of a view are stored separately and are not part of the ViewDec
   *)
   datatype ModDec
-     = SigDec of string list           (* qualified name *)
+     = SigDec of
+         string                        (* base, e.g., file name *)
+       * string list                   (* qualified name *)
      | ViewDec of
-         string list                   (* name *)
+         string                        (* base, e.g., file name *)
+       * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
   
    datatype Read = ReadFile of string  (* file name *)
    
   (* convenience methods to access components of declarations *)
+  val modDecBase : ModDec -> string
   val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list
   val strDecFoldName: StrDec -> string

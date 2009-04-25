@@ -1089,7 +1089,7 @@ struct
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
               (* @FR: actually the name should be qualified using the currently open signatures *)
-               val dec = ReconModule.modbeginToModDec modBegin
+               val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val ancestors = ModSyn.getScope()
@@ -1197,7 +1197,7 @@ struct
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
                             of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
-                             | ModSyn.ViewDec(_, d, c) => (d,c)
+                             | ModSyn.ViewDec(_, _, d, c) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
                             
@@ -1234,7 +1234,7 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl = ReconModule.modinclToModIncl incl
+            val Incl = ReconModule.modinclToModIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val _ = Elab.checkModIncl Incl
                        handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
@@ -1256,8 +1256,17 @@ struct
          end
 
       | install1 (fileName, declr as (Parser.Read read, r)) =
+         (* fileName: name of current elf file, possibly relative to working directory, in OS-specific syntax *)
          let
-            val Read = ReconModule.readToRead read
+            val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
+               handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
+            val dir = OS.Path.dir fileName (* base directory of current elf file *)
+            val _ = case Read
+                      of ModSyn.ReadFile name =>
+                        (* name must be in Unix syntax and relative to dir (absolute name doesn't work yet) *)
+                        let val readfile = OS.Path.concat(dir, OS.Path.fromUnixPath name)
+                        in loadFile readfile
+                        end
          in
             ()
          end
@@ -1267,7 +1276,7 @@ struct
        error messages and finally returning the status (either OK or
        ABORT).
     *)
-    fun loadFile (fileName) = 
+    and loadFile (fileName) = 
 	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
@@ -1575,8 +1584,15 @@ struct
          resets the global signature and then reads the files in config
          in order, stopping at the first error.
       *)
-      fun load (config as (_, sources)) =
-          (reset (); List.app ModFile.makeModified sources; append (config))
+      fun load (config as (pwdir, sources)) = (
+         reset ();
+         (* -fr: opening toplevel signature *)
+         let val fileName = case sources of nil => "" | hd :: _ => ModFile.fileName hd
+         in ModSyn.modOpen(ModSyn.SigDec(pwdir, [fileName]))
+         end;
+         List.app ModFile.makeModified sources;
+         append (config)
+      )
       (* append (config) = Status
          reads the files in config in order, beginning at the first
          modified file, stopping at the first error.

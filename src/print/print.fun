@@ -917,12 +917,12 @@ in
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
 
-  fun modBeginToString(ModSyn.SigDec name) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
-    | modBeginToString(ModSyn.ViewDec(name, dom, cod)) =
+  fun modBeginToString(ModSyn.SigDec(base,name)) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
+    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod)) =
         "%view " ^ (Names.foldQualifiedName name) ^ " : " ^
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
-  fun modEndToString(ModSyn.SigDec name) = "}. % end signature " ^ (Names.foldQualifiedName name)
-    | modEndToString(ModSyn.ViewDec(name, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
+  fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (Names.foldQualifiedName name)
+    | modEndToString(ModSyn.ViewDec(_,name, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
   fun openToString(NONE) = "%open"
     | openToString(SOME nil) = ""
     | openToString(SOME l) =

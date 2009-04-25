@@ -119,3 +119,13 @@ a : type.
 
 %% testing reads
 %read "test2.elf".
+
+%sig R3 = {
+  %include R.
+  %include R2.
+  %struct r : R2.
+  b : R..a.
+  c : R2..a.
+  d : r.a.
+  e : r.r.a.
+}.
