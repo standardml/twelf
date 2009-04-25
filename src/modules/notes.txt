@@ -25,6 +25,12 @@ implement include in link, only one %include allowed in a link for now
 empty %open in include chains name lookups
 signatures may refer to symbols of ancestor signatures (qualified or - if not shadowed - directly)
 views are only legal if no ancestor relation between domain and codomain and if all ancestors of domain are ancestors of codomain
+%read reads a file; cfg files are deprecated, only elf file needed from now on
+OMDoc export prints
+ - only modules of main file (if loaded by cfg file, then the first elf file in it)
+ - main file name is relative to pwd
+ - all references to other modules and files with proper MMT-URIs
+ - to do: nested signatures, toplevel signature
 
 --------
 mail to Carsten
