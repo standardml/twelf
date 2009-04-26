@@ -12,8 +12,6 @@ scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
 - makes this also resolve comments
 
-jEdit: unicode names by translating to ASCII names for the backend
-
 better error message for instantiation/definition clash: no printer available
 
 --------
@@ -35,9 +33,6 @@ OMDoc export prints
 --------
 mail to Carsten
 
-map constants to skolem constants
-separate compilation exists
-%use in signatures is the same as an include. This also gives qualified names for the constants.
 make symbols with fixity parsable separately
-
+hiding
 
