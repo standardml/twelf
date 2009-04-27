@@ -441,6 +441,7 @@ Maintained to present reasonable menus.")
   (define-key map "\C-c\C-s" 'twelf-save-check-file)
   (define-key map "\C-c\C-c" 'twelf-save-check-config)
   (define-key map "\C-c\C-a" 'twelf-save-append-config)
+  (define-key map "\C-c\C-f" 'twelf-save-reset-check-file)
   )
 
 (defvar twelf-mode-map nil
@@ -1329,6 +1330,12 @@ With prefix argument also displays Twelf server buffer."
        (lambda ()
 	 (twelf-server-send-command (concat "loadFile " check-file-os))
 	 (twelf-server-wait displayp))))))
+
+(defun twelf-save-reset-check-file (&optional displayp)
+  "Resets and loads the current file."
+   (interactive "P")
+   (twelf-reset)
+   (twelf-save-check-file))
 
 (defun twelf-buffer-substring (start end)
   "The substring of the current buffer between START and END.
@@ -2956,6 +2963,7 @@ This may be selected from the menubar.  In XEmacs, also bound to Button3."
    ["Check Configuration" twelf-save-check-config t]
    ["Check File" twelf-save-check-file t]
    ["Check Declaration" twelf-check-declaration t]
+   ["Reset, Check File" twelf-save-reset-check-file t]
    twelf-at-point-menu
    twelf-error-menu
    twelf-options-menu
