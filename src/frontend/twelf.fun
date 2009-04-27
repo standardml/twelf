@@ -1168,8 +1168,8 @@ struct
                              | SOME mode => ModeTable.installMode(c, mode)
                   (* print out generated declaration *)
                   val prefix = if (! Global.printFlat) then "" else "% induced: "
-                  val _ = (msg (prefix ^ (Print.conDecToString dn) ^ "\n"))
-                  val _ = if ! Global.chatter < 10 then () else
+                  val _ = if ! Global.chatter >= 3 then (msg (prefix ^ (Print.conDecToString dn) ^ "\n")) else ()
+                  val _ = if ! Global.chatter >= 10 then () else
                   	msg("% addressable as: " ^ qidToString(IntSyn.conDecQid dn) ^ "\n")
                in
                   c
@@ -1179,8 +1179,8 @@ struct
             fun callbackInstallStrDec(_, d : ModSyn.StrDec) =
                let
                	  val s = installStrDec(d, r)
-               	  val _ = msg ("% induced: " ^ (Print.strDecToString d) ^ "\n")
-                  val _ = if ! Global.chatter < 10 then () else
+               	  val _ = if ! Global.chatter >= 3 then msg ("% induced: " ^ (Print.strDecToString d) ^ "\n") else ()
+                  val _ = if ! Global.chatter >= 10 then () else
                   	msg("% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")
                in
                	  s
