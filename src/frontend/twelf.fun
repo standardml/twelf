@@ -1266,7 +1266,18 @@ struct
                       of ModSyn.ReadFile name =>
                         (* name must be in Unix syntax and relative to dir (absolute name doesn't work yet) *)
                         let val readfile = OS.Path.concat(dir, OS.Path.fromUnixPath name)
-                        in loadFile readfile
+                        in if List.exists (fn f => f = readfile) (ModSyn.getFileList())
+                           then (
+                             if !Global.chatter >= 3
+                             then msg("%read \"" ^ readfile ^ "\". %% already read, skipping\n")
+                             else ();
+                             OK
+                           ) else (
+                             if !Global.chatter >= 3
+                             then msg("%read \"" ^ readfile ^ "\".\n")
+                             else ();
+                             loadFile readfile
+                          )
                         end
          in
             ()
@@ -1288,9 +1299,10 @@ struct
 	        (* now done in installConDec *)
 	      | install' (S.Cons(decl, s')) =
 	        (install1 (fileName, decl); install s')
-	  in
+	  in (
+            ModSyn.addFile fileName;
 	    install (Parser.parseStream instream)
-	  end)
+	  ) end)
 
     (* loadString (str) = status
        reads and processes declarations from str, issuing
@@ -1587,10 +1599,6 @@ struct
       *)
       fun load (config as (pwdir, sources)) = (
          reset ();
-         (* -fr: opening toplevel signature *)
-         let val fileName = case sources of nil => "" | hd :: _ => ModFile.fileName hd
-         in ModSyn.modOpen(ModSyn.SigDec(pwdir, [fileName]))
-         end;
          List.app ModFile.makeModified sources;
          append (config)
       )

@@ -17,6 +17,7 @@ better error message for instantiation/definition clash: no printer available
 --------
 done
 
+added twelf-save-reset-check-file to emacs mode (works together with empty sources.cfg)
 forbid instantiating defined constants
 shadowing on toplevel
 implement include in link, only one %include allowed in a link for now

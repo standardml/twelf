@@ -90,7 +90,10 @@ struct
   val symTable : SymLevelData CH.Table = CH.new(19999)
   (* maps pairs of (CID(S), CID(c')) of structure and structure/constant ids to the structure/constant id CID(S.c') *)
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
-   
+  
+  (* fileList holds the list of files that have been read (in inverse read order) *)
+  val fileList : string list ref = ref nil
+  
   (* scope holds a list of the currently opened modules and their next available lid (in inverse declaration order) *)
   val scope : (IDs.mid * IDs.lid) list ref = ref nil
   (* the next available module id *)
@@ -116,6 +119,8 @@ struct
        of SigDec _ => m
         | ViewDec(_,_,_,cod) => cod
      end
+
+  fun getFileList() = ! fileList
 
   fun getScope () = ! scope
   fun onToplevel() = List.length (! scope) = 1
@@ -227,11 +232,7 @@ struct
   (********************** Effectful methods **********************)
   fun modOpen(dec) =
      let
-     	val _ = if ! scope = nil
-     		then case dec
-     		    of SigDec _ => ()
-     		     | ViewDec _ => raise Error("toplevel must be signature")
-     		else case (inSignature(), dec)
+     	val _ = case (inSignature(), dec)
      	          of (false, _) => raise Error("modules may not occur inside views")
      	           | (true, ViewDec _) => if onToplevel() then () else raise Error("views may not occur inside signatures")
      	           | (true, SigDec _) => ()
@@ -305,12 +306,21 @@ struct
       c 
     end
 
+  fun addFile(filename) = (
+    if !fileList = nil  (* first read file determines filename of toplevel declaration *)
+    then MH.insert modTable (0, (SigDec(filename, nil), ~1, nil, nil))
+    else ();
+    fileList := filename :: (! fileList)
+  )
+  
   fun reset () = (
     CH.clear symTable;               (* clear tables *)
     MH.clear modTable;
     CCH.clear structMapTable;
-    nextMid := 0;                    (* initial mid *)
-    scope := nil
+    nextMid := 1;                    (* initial mid *)
+    fileList := nil;
+    scope := [(0,0)];
+    MH.insert modTable (0, (SigDec("", nil), ~1, nil, nil)) (* opening toplevel signature *)
   )
  
   (********************** Convenience methods **********************)

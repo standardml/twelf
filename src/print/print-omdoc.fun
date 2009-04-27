@@ -370,8 +370,7 @@ struct
     
   fun printModule file m baseFile =
      let
-     	 fun print x = (TextIO.output(file, x);           TextIO.flushOut file
-)
+     	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
      	 val mdec = ModSyn.modLookup m
      	 val incls = ModSyn.modInclLookup m
      	 val params : Params = {baseFile = baseFile, current = m}
@@ -399,11 +398,11 @@ struct
 
   fun toFile filename =
      let val file = TextIO.openOut (filename)
-         val ModSyn.SigDec(d,f::nil) = ModSyn.modLookup(0)
+         val ModSyn.SigDec(f,_) = ModSyn.modLookup(0)
          val baseFile = #arcs (OS.Path.fromString f)
      in (
         ind_reset();
-        TextIO.output(file, docBeginToString(d ^ "/" ^ f));
+        TextIO.output(file, docBeginToString(f));
         ModSyn.modApp(fn m => printModule file m baseFile);
         TextIO.output(file, docEndToString());
         TextIO.closeOut file

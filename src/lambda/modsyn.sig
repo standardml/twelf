@@ -123,6 +123,8 @@ sig
   val structAddC : StrDec -> IDs.cid
   (* called to add an instantiation to the current module, which must be a view *)
   val instAddC   : SymInst -> IDs.cid
+  (* adds an entry to the list of read files *)
+  val addFile    : string -> unit
   (* called to reset the state *)
   val reset      : unit -> unit
 
@@ -165,6 +167,8 @@ sig
   val inSignature: unit -> bool
   (* the current target signature: the current module if a signature, or its codomain if a view *)
   val currentTargetSig : unit -> IDs.mid
+  (* returns the list of files that have been read *)
+  val getFileList : unit -> string list
   (* returns the list of currently open modules in inverse declaration order and their next available lid *)
   val getScope   : unit -> (IDs.mid * IDs.lid) list 
   val structMapLookup : IDs.cid * IDs.cid -> IDs.cid option
