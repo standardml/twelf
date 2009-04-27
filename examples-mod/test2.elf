@@ -1,3 +1,5 @@
+%read "test3.elf".
+
 %sig R2 = {
   %include R.
   %struct r: R.

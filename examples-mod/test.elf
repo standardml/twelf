@@ -118,6 +118,7 @@ a : type.
 }.
 
 %% testing reads
+%read "test3.elf".
 %read "test2.elf".
 
 %sig R3 = {
