@@ -101,7 +101,8 @@ struct
     let val m = IDs.midOf c
     	val dec = ModSyn.modLookup m
         val modname = if m = #current params then nil else ModSyn.modDecName dec
-    in OMS3(relDocName (ModSyn.modDecBase dec, #baseFile params), modname, ModSyn.symName c)
+        val docname = if m = 0 then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
+    in OMS3(docname, modname, ModSyn.symName c)
     end
 
   (* Printing expressions *)
@@ -369,7 +370,8 @@ struct
     
   fun printModule file m baseFile =
      let
-     	 fun print x = TextIO.output(file, x)
+     	 fun print x = (TextIO.output(file, x);           TextIO.flushOut file
+)
      	 val mdec = ModSyn.modLookup m
      	 val incls = ModSyn.modInclLookup m
      	 val params : Params = {baseFile = baseFile, current = m}
