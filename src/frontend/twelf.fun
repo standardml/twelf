@@ -167,7 +167,8 @@ functor Twelf
    (*! sharing PrintTeX.IntSyn = IntSyn' !*)
    structure ClausePrintTeX : CLAUSEPRINT
    (*! sharing ClausePrintTeX.IntSyn = IntSyn' !*)
-
+   structure PrintOMDoc : PRINTFILE
+   
    structure CSManager : CS_MANAGER
    (*! sharing CSManager.IntSyn = IntSyn' !*)
      sharing CSManager.Fixity = Names.Fixity
@@ -1651,6 +1652,7 @@ struct
 	  val sgn : unit -> unit	(* print signature *)
 	  val prog : unit -> unit	(* print signature as program *)
 	end
+	structure OMDoc : PRINTFILE     (* print in OMDoc format *)
       end
     =
     struct
@@ -1671,6 +1673,7 @@ struct
 	fun sgn () = printSgnTeX ()
 	fun prog () = printProgTeX ()
       end
+      structure OMDoc = PrintOMDoc
     end
 
     structure Trace :

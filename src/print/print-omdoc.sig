@@ -1,8 +1,8 @@
 (* Printing Signatures to OMDoc *)
 (* Author: Florian Rabe *)
 
-signature PRINT_OMDOC =
+signature PRINTFILE =
 sig
  (* argument: file name *)
- val printDoc : string -> unit
-end;  (* signature PRINT_OMDOC  *)
+ val toFile : string -> unit
+end;  (* signature PRINTFILE  *)

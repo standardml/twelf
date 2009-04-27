@@ -253,6 +253,7 @@ structure Twelf =
 
 	 structure PrintTeX = PrintTeX
 	 structure ClausePrintTeX = ClausePrintTeX
+	 structure PrintOMDoc = PrintOMDoc
 
          structure CSManager = CSManager
          structure CSInstaller = CSInstaller (* unused -- creates necessary CM dependency *)

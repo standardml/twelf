@@ -1,5 +1,6 @@
 Library
   signature PRINT
+  signature PRINTFILE
   structure Print
   signature CLAUSEPRINT
   structure ClausePrint

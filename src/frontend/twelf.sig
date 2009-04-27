@@ -24,6 +24,7 @@ sig
       val sgn : unit -> unit	       (* print signature *)
       val prog : unit -> unit	       (* print signature as program *)
     end
+    structure OMDoc : PRINTFILE        (* export to OMDoc *)
   end
 
   structure Trace :

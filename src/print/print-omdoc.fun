@@ -5,7 +5,7 @@ functor PrintOMDoc(
    structure Whnf : WHNF
    structure Names : NAMES
 )
-  : PRINT_OMDOC =
+  : PRINTFILE =
 struct
 
   structure I = IntSyn
@@ -395,7 +395,7 @@ struct
         ) else ()
      end
 
-  fun printDoc filename =
+  fun toFile filename =
      let val file = TextIO.openOut (filename)
          val ModSyn.SigDec(d,f::nil) = ModSyn.modLookup(0)
          val baseFile = #arcs (OS.Path.fromString f)
