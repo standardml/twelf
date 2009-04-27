@@ -1,0 +1,11 @@
+#!/bin/bash
+BIN=`dirname $0`
+if [ $1 = -chatter ]; then
+  CHATTER=$2; shift; shift
+else
+  CHATTER=3
+fi
+
+echo -e "$1" > ???temp???.cfg
+echo -e "set chatter $CHATTER\n make ???temp???.cfg\n $2\n OS.exit" | $BIN/twelf-server
+rm ???temp???.cfg
