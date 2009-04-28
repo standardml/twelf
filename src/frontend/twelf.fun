@@ -1115,11 +1115,8 @@ struct
 	       val name = ModSyn.modDecName dec
                val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
-               val _ = if !Global.chatter >= 3
-		       then msg (Print.modBeginToString(dec) ^ "\n")
-		       else ()
            in
-             ()
+             chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
       | install1 (fileName, declr as (Parser.ModEnd, r)) =
           let
@@ -1129,9 +1126,7 @@ struct
           in
              ModSyn.modClose()
              handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg));
-             if !Global.chatter >= 3
-	     then msg (Print.modEndToString(ModSyn.modLookup m) ^ "\n\n")
-             else ()
+             chmsg 3 (fn () => Print.modEndToString(ModSyn.modLookup m) ^ "\n\n")
           end
       | install1 (fileName, declr as (Parser.StrDec strdec, r)) =
          let
@@ -1168,10 +1163,8 @@ struct
                              | SOME mode => ModeTable.installMode(c, mode)
                   (* print out generated declaration *)
                   val prefix = if (! Global.printFlat) then "" else "% induced: "
-                  val _ = if ! Global.chatter >= 3 then (msg (prefix ^ (Print.conDecToString dn) ^ "\n")) else ()
-                  val _ = if ! Global.chatter >= 10 then 
-                  	    msg("% addressable as: " ^ qidToString(IntSyn.conDecQid dn) ^ "\n")
-                  	  else ()
+                  val _ = chmsg 3 (fn () => prefix ^ (Print.conDecToString dn) ^ "\n")
+                  val _ = chmsg 10 (fn () => "% addressable as: " ^ qidToString(IntSyn.conDecQid dn) ^ "\n")
                in
                   c
                end
@@ -1180,10 +1173,8 @@ struct
             fun callbackInstallStrDec(_, d : ModSyn.StrDec) =
                let
                	  val s = installStrDec(d, r)
-               	  val _ = if ! Global.chatter >= 3 then msg ("% induced: " ^ (Print.strDecToString d) ^ "\n") else ()
-                  val _ = if ! Global.chatter >= 10 then
-                  	    msg("% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")
-                  	  else ()
+               	  val _ = chmsg 3 (fn () => "% induced: " ^ (Print.strDecToString d) ^ "\n")
+                  val _ = chmsg 10 (fn () => "% addressable as: " ^ qidToString(ModSyn.strDecQid d) ^ "\n")
                in
                	  s
                end
@@ -1208,9 +1199,7 @@ struct
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(Inst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-               val _ = if !Global.chatter >= 3
-		       then msg (Print.instToString(Inst) ^ "\n")
-		       else ()
+               val _ = chmsg 3 (fn () => Print.instToString(Inst) ^ "\n")
 	       val _ = case Inst
 	           of ModSyn.ConInst _ => ()
 	            | ModSyn.StrInst _ =>
@@ -1251,11 +1240,8 @@ struct
 		    Subordinate.installInclude from (* no exception should be possible *)
 		  )
 		| _ => ()
-            val _ = if !Global.chatter >= 3
-                    then msg (Print.modInclToString(Incl) ^ "\n")
-                    else ()
          in
-            ()
+            chmsg 3 (fn () => Print.modInclToString(Incl) ^ "\n")
          end
 
       | install1 (fileName, declr as (Parser.Read read, r)) =
@@ -1264,25 +1250,21 @@ struct
             val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
                handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val dir = OS.Path.dir fileName (* base directory of current elf file *)
-            val _ = case Read
-                      of ModSyn.ReadFile name =>
-                        (* name must be in Unix syntax and relative to dir (absolute name doesn't work yet) *)
-                        let val readfile = OS.Path.concat(dir, OS.Path.fromUnixPath name)
-                        in if List.exists (fn f => f = readfile) (ModSyn.getFileList())
-                           then (
-                             if !Global.chatter >= 3
-                             then msg("%read \"" ^ readfile ^ "\". %% already read, skipping\n")
-                             else ();
-                             OK
-                           ) else (
-                             if !Global.chatter >= 3
-                             then msg("%read \"" ^ readfile ^ "\".\n")
-                             else ();
-                             loadFile readfile
-                          )
-                        end
          in
-            ()
+            case Read
+              of ModSyn.ReadFile name =>
+                (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
+                let val readfile = OS.Path.concat(dir, OS.Path.fromUnixPath name)
+                in case Origins.linesInfoLookup readfile
+                   of NONE => (
+                      chmsg 3 (fn () => "%read \"" ^ readfile ^ "\".\n");
+                      Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
+                      loadFile readfile;
+                      Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
+                   ) | SOME _ => (
+                      chmsg 3 (fn () => "%read \"" ^ readfile ^ "\". %% already read, skipping\n")
+                   )
+                end
          end
 
     (* loadFile (fileName) = status
@@ -1297,14 +1279,13 @@ struct
             val _ = ReconTerm.resetErrors fileName
 	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	    and install' (S.Empty) = OK
-	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
-	        (* now done in installConDec *)
 	      | install' (S.Cons(decl, s')) =
 	        (install1 (fileName, decl); install s')
-	  in (
-            ModSyn.addFile fileName;
+	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
+            val _ = ModSyn.newFile fileName                                    (* for name management -fr *)
+	  in
 	    install (Parser.parseStream instream)
-	  ) end)
+	  end)
 
     (* loadString (str) = status
        reads and processes declarations from str, issuing

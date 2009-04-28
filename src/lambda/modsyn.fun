@@ -90,10 +90,7 @@ struct
   val symTable : SymLevelData CH.Table = CH.new(19999)
   (* maps pairs of (CID(S), CID(c')) of structure and structure/constant ids to the structure/constant id CID(S.c') *)
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
-  
-  (* fileList holds the list of files that have been read (in inverse read order) *)
-  val fileList : string list ref = ref nil
-  
+    
   (* scope holds a list of the currently opened modules and their next available lid (in inverse declaration order) *)
   val scope : (IDs.mid * IDs.lid) list ref = ref nil
   (* the next available module id *)
@@ -119,8 +116,6 @@ struct
        of SigDec _ => m
         | ViewDec(_,_,_,cod) => cod
      end
-
-  fun getFileList() = ! fileList
 
   fun getScope () = ! scope
   fun onToplevel() = List.length (! scope) = 1
@@ -305,22 +300,17 @@ struct
       scope := (m, l+1) :: scopetail;
       c 
     end
+   
+  (* first file determines base of toplevel *)
+  fun newFile(s) = case modLookup 0 of SigDec("", _) => MH.insert modTable (0, (SigDec(s, nil), ~1, nil, nil)) | _ => ()
 
-  fun addFile(filename) = (
-    if !fileList = nil  (* first read file determines filename of toplevel declaration *)
-    then MH.insert modTable (0, (SigDec(filename, nil), ~1, nil, nil))
-    else ();
-    fileList := filename :: (! fileList)
-  )
-  
   fun reset () = (
     CH.clear symTable;               (* clear tables *)
     MH.clear modTable;
     CCH.clear structMapTable;
-    nextMid := 1;                    (* initial mid *)
-    fileList := nil;
+    nextMid := 1;                    (* initial mid and scope *)
     scope := [(0,0)];
-    MH.insert modTable (0, (SigDec("", nil), ~1, nil, nil)) (* opening toplevel signature *)
+    MH.insert modTable (0, (SigDec("", nil), ~1, nil, nil))  (* open toplevel signature *)
   )
  
   (********************** Convenience methods **********************)

@@ -12,6 +12,7 @@ sig
   val resetLines : unit -> unit         (* reset line numbering *)
   val newLine : int -> unit		(* new line starts at character i *)
   val getLinesInfo : unit -> linesInfo  (* get lines info for current file *)
+  val setLinesInfo : linesInfo -> unit  (* set lines info for current file *)
 
   val join : region * region -> region	(* join(r1,r2) = smallest region enclosing r1 and r2 *)
   val toString : region -> string	(* line1.col1-line2.col2, parsable by Emacs *)

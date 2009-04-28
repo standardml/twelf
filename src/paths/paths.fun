@@ -28,6 +28,7 @@ struct
     fun resetLines () = linePosList := nil
     fun newLine (i) = linePosList := i::(!linePosList)
     fun getLinesInfo () = !linePosList
+    fun setLinesInfo (linesInfo) = linePosList := linesInfo
     (* posToLineCol (i) = (line,column) for character position i *)
     fun posToLineCol (i) = posToLineCol' (!linePosList, i)
   end
