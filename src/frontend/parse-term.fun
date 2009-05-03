@@ -182,9 +182,7 @@ struct
 
     end  (* structure P *)
 
-    (* parseQualId' f = (ids, f')
-       pre: f begins with L.ID
-       Note: precondition for recursive call is enforced by the lexer. *)
+    (* parseQualId' f = (ids, f') *)
     fun parseQualId' (f as LS.Cons ((t as L.ID (_, id), r), s')) =
         (case LS.expose s'
            of LS.Cons ((L.PATHSEP, _), s'') =>
@@ -200,7 +198,9 @@ struct
      	       ((id :: [""] @ ids, (t,r)), f')
      	      end
             | f' => ((nil, (t, r)), f'))
-   
+      | parseQualId' (LS.Cons ((t, r), s')) =
+          Parsing.error (r, "Expected qualified identifier, found token " ^ L.toString t)
+
     fun stripBar (LS.Cons ((L.ID (_, "|"), r), s')) = (LS.expose s')
       | stripBar (f as LS.Cons ((L.RPAREN, r), s')) = f
       | stripBar (LS.Cons ((t, r), s')) =
