@@ -31,6 +31,7 @@ sig
     | DEFINE				(* `%define' *) (* -rv 8/27/01 *)
     | SOLVE				(* `%solve' *)
     | QUERY				(* `%query' *)
+    | IMOGEN				(* `%imogen' *)
     | FQUERY				(* `%fquery' *)
     | COMPILE                           (* '%compile' *) (* -ABP 4/4/03 *)
     | QUERYTABLED			(* `%querytabled' *)

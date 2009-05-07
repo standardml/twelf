@@ -77,6 +77,9 @@ is
   lexer.fun
   parsing.sig
   parsing.fun
+
+  imogen.sml
+
   recon-term.sig
   recon-term.fun
   recon-condec.sig

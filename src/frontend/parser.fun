@@ -47,6 +47,7 @@ struct
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
+    | Imogen of ImogenDec.dec 
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list
@@ -156,6 +157,8 @@ struct
           parseSolve' (f, sc)
       | parseStream' (f as LS.Cons((L.SOLVE, r), s'), sc) =
           parseSolve' (f, sc)
+      | parseStream' (f as LS.Cons((L.IMOGEN, r), s'), sc) =
+          parseImogen' (f, sc)
       | parseStream' (LS.Cons((L.QUERY, r0), s'), sc) =
         let
 	  val (expected, s1) = parseBound' (LS.expose s')
@@ -252,6 +255,16 @@ struct
           val r = Paths.join (r0, r')
         in
           Stream.Cons ((Solve defnssolve, r), parseStream (stripDot f', sc))
+        end
+
+    and parseImogen' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (msg, f' as LS.Cons ((_,r'),_)) = ParseImogen.parseImogen' (f)
+          val r = Paths.join (r0, r')
+          val _ = print ("You typed " ^ msg ^ "!")
+          val dec = ImogenDec.mkDec msg
+        in
+           Stream.Cons ((Imogen dec, r), parseStream (stripDot f', sc))
         end
 
     and parseMode' (f as LS.Cons ((_, r0), _), sc) =

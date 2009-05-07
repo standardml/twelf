@@ -39,6 +39,7 @@ struct
     | SOLVE				(* `%solve' *)
     | QUERY	  			(* `%query' *)
     | FQUERY	  			(* `%fquery' *)
+    | IMOGEN	  			(* `%imogen' *)
     | COMPILE                           (* '%compile' *) (* -ABP 4/4/03 *)
     | QUERYTABLED  			(* `%querytabled *)
     | MODE				(* `%mode' *)
@@ -248,6 +249,7 @@ struct
       | lexPragmaKey (ID(_, "define"), r) = (DEFINE, r) (* -rv 8/27/01 *)
       | lexPragmaKey (ID(_, "solve"), r) = (SOLVE, r)
       | lexPragmaKey (ID(_, "query"), r) = (QUERY, r)
+      | lexPragmaKey (ID(_, "imogen"), r) = (IMOGEN, r)
       | lexPragmaKey (ID(_, "fquery"), r) = (FQUERY, r)
       | lexPragmaKey (ID(_, "compile"), r) = (COMPILE, r) (* -ABP 4/4/03 *)
       | lexPragmaKey (ID(_, "querytabled"), r) = (QUERYTABLED, r)
@@ -362,6 +364,7 @@ struct
     | toString' (DEFINE) = "%define"    (* -rv 8/27/01 *)
     | toString' (SOLVE) = "%solve"
     | toString' (QUERY) = "%query"
+    | toString' (IMOGEN) = "%imogen"
     | toString' (FQUERY) = "%fquery"
     | toString' (COMPILE) = "%compile"  (* -ABP 4/4/03 *)
     | toString' (QUERYTABLED) = "%querytabled"

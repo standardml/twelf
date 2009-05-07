@@ -471,7 +471,8 @@ struct
 	 end
 	 handle Constraints.Error (eqns) =>
 	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
-
+      | install1 (fileName, (Parser.Imogen imodec, r)) =
+        print ("Imogen declaration!\n")
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
