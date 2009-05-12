@@ -16,7 +16,7 @@ sig
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
-    | Imogen of ImogenDec.dec 
+    | Imogen of Imogen.input
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list

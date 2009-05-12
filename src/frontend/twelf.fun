@@ -471,8 +471,22 @@ struct
 	 end
 	 handle Constraints.Error (eqns) =>
 	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
-      | install1 (fileName, (Parser.Imogen imodec, r)) =
-        print ("Imogen declaration!\n")
+      | install1 (fileName, (Parser.Imogen (Imogen.ConDec dec), r)) =
+        let 
+           val _ = 
+               let in 
+                  print (TwelfImogen.Twelf.message ^ "\n")
+                ; print "ConDec:\n"
+                ; print (Print.conDecToString dec)
+                ; print "\nExp:\n"
+               end
+           val exp = Imogen.conDecToExp dec
+           val _ = print (Print.expToString(IntSyn.Null, exp))
+           val _ = print "\nFormula:\n"
+           val preform = Imogen.expToFormula exp
+        in 
+           PP.pp(Formula.pp(PreFormula.formula preform))
+        end
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let

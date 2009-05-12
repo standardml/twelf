@@ -70,6 +70,12 @@ is
   ../prover/sources.cm
   ../flit/sources.cm
   ../msg/sources.cm
+  ../imogen/sources.cm
+
+  ../../../util/twelf/sources.cm
+  ../../../sml-ext/pp/sources.cm
+  ../../../fol/formulas/sources.cm
+
   unknownexn.sig
   unknownexn.fun
   unknownexn-smlnj.sml
@@ -78,7 +84,8 @@ is
   parsing.sig
   parsing.fun
 
-  imogen.sml
+  parse-imogen.sig
+  parse-imogen.fun
 
   recon-term.sig
   recon-term.fun

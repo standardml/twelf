@@ -95,6 +95,12 @@ structure ParseTerm =
 	     structure ExtSyn' = ReconTerm
 	     structure Names = Names);
 
+structure ParseImogen =
+  ParseImogenFn (struct 
+                    structure ParseTerm = ParseTerm
+                    structure ReconConDec = ReconConDec
+                 end);
+
 structure ParseConDec =
   ParseConDec ((*! structure Parsing' = Parsing !*)
 	       structure ExtConDec' = ReconConDec
@@ -145,6 +151,7 @@ structure Parser =
 	  structure ParseMode = ParseMode
 	  structure ParseThm = ParseThm
           structure ParseModule = ParseModule
+          structure ParseImogen = ParseImogen
           structure ParseTerm = ParseTerm);
 
 structure Solve =

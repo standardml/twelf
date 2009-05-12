@@ -31,7 +31,9 @@ functor Parser ((*! structure Parsing' : PARSING !*)
                   sharing ParseModule.ModExtSyn = ModExtSyn'
                 structure ParseTerm : PARSE_TERM 
 		(*! sharing ParseTerm.Lexer = Parsing'.Lexer !*)
-                  sharing ParseTerm.ExtSyn = ExtSyn')
+                  sharing ParseTerm.ExtSyn = ExtSyn'
+                structure ParseImogen : PARSE_IMOGEN
+)
   : PARSER =
 struct
 
@@ -47,7 +49,7 @@ struct
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
-    | Imogen of ImogenDec.dec 
+    | Imogen of Imogen.input
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list
@@ -259,12 +261,11 @@ struct
 
     and parseImogen' (f as LS.Cons ((_, r0), _), sc) =
         let
-          val (msg, f' as LS.Cons ((_,r'),_)) = ParseImogen.parseImogen' (f)
+          val (tm, f' as LS.Cons ((_,r'),_)) = ParseImogen.parseImogen' (f)
           val r = Paths.join (r0, r')
-          val _ = print ("You typed " ^ msg ^ "!")
-          val dec = ImogenDec.mkDec msg
+          val _ = print "Parsing imogen command...\n"
         in
-           Stream.Cons ((Imogen dec, r), parseStream (stripDot f', sc))
+           Stream.Cons ((Imogen tm, r), parseStream (stripDot f', sc))
         end
 
     and parseMode' (f as LS.Cons ((_, r0), _), sc) =

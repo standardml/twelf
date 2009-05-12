@@ -1,0 +1,19 @@
+
+group
+
+structure Imogen
+
+is
+
+$/basis.cm
+../lambda/sources.cm
+../../../fol/formulas/sources.cm
+../../../fol/proofterms/sources.cm
+../../../fol/sources.cm
+../../../util/sources.cm
+../../../framework/sources.cm
+
+imogen-util.sig
+imogen-util.sml
+imogen.sig
+imogen.sml
