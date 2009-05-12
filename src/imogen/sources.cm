@@ -1,12 +1,15 @@
 
-group
+Library 
 
 structure Imogen
 
 is
 
 $/basis.cm
+sml-ext.cm
 ../lambda/sources.cm
+../names/sources.cm
+
 ../../../fol/formulas/sources.cm
 ../../../fol/proofterms/sources.cm
 ../../../fol/sources.cm

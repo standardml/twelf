@@ -6,6 +6,8 @@ open ImogenUtil
 
 structure S = IntSyn
 structure F = PreFormula
+structure N = Names
+structure List = ListExt
 
 datatype input = ConDec of S.ConDec
 
@@ -135,12 +137,85 @@ val solve: PFormula.neg -> ND.nd option =
 (*  Natural deduction to IntSyn Exp                                           *)
 (* -------------------------------------------------------------------------- *)
 
-val rec introToExp: ND.intro -> S.Exp =
- fn 
+structure Ctx : 
+             sig
+                type t
+                val empty: t
+                val lookup: Label.t * t -> int
+                val extend: Label.t * t -> t
+             end =
+   struct 
+      type t = Label.t list
+      val empty = []
+      val extend = op::
+      fun lookup (x, l) = 
+          case ListExt.index (fn x' => Label.eq(x, x')) l of
+             NONE => raise Impossible 
+           | SOME k => k
+   end
 
-and elimToExp: ND.elim -> S.Exp =
- fn 
+val spineFromList: S.Exp list -> S.Spine =
+    foldr S.App S.Nil
 
-val ndToExp = introToExp
+val mkExp: S.Head * S.Exp list -> S.Exp =
+ fn (e, ts) => S.Root(e, spineFromList ts)
+
+val lookupCid: string -> S.Head =
+ fn s => case N.constLookup(N.Qid([], s)) of
+            NONE => raise Impossible 
+          | SOME cid => S.Const cid
+
+val rec introToExp: Ctx.t * ND.intro -> S.Exp =
+ fn (ctx, ND.Pair(a, b)) => 
+    let
+       val a' = introToExp(ctx, a)
+       val b' = introToExp(ctx, b)
+       val pair = lookupCid "pair"
+    in
+       mkExp(pair, [a', b'])
+    end
+  | (ctx, ND.Lam(x, a)) => 
+    let
+       val i = S.Root(lookupCid "i", S.Nil)
+       val lam = lookupCid "lam"
+       val dec = S.Dec(SOME (Label.toString x), i)
+       val exp = introToExp(Ctx.extend(x, ctx), a)
+    in
+       mkExp(lam, [S.Lam(dec, exp)])
+    end
+  | (ctx, ND.Inl a) => 
+    let
+       val inl = lookupCid "inl"
+       val a' = introToExp(ctx, a)
+    in
+       mkExp(inl, [a'])
+    end
+  | (ctx, ND.Inr a) => 
+    let
+       val inr = lookupCid "inr"
+       val a' = introToExp(ctx, a)
+    in
+       mkExp(inr, [a'])
+    end
+  | (ctx, ND.Case(e, (x, a), (y, b))) => 
+    let
+       val case' = lookupCid "case"
+       val e' = elimToExp(ctx, e)
+       val nd = lookupCid "nd"
+       val a' = introToExp(Ctx.extend(x, ctx), a)
+       val b' = introToExp(Ctx.extend(y, ctx), b)
+       val a'' = S.Lam(S.Dec(SOME (Label.toString x), mkExp(nd, [a'])))
+       val b'' = S.Lam(S.Dec(SOME (Label.toString y), mkExp(nd, [b'])))
+    in
+       S.Root(case', spineFromList[e', a'', b''])
+    end
+
+
+
+and elimToExp: Ctx.t * ND.elim -> S.Exp =
+ fn _ => raise Unimplemented 
+
+val ndToExp: ND.nd -> S.Exp =
+ fn nd => introToExp(Ctx.empty, nd)
 
 end
