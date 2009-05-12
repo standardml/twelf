@@ -12,7 +12,7 @@ val expToPFormula: IntSyn.Exp -> PFormula.neg
 
 val solve: PFormula.neg -> ND.nd option
 
-val ndToExp: ND.nd -> IntSyn.Exp
+val ndToExp: ND.nd * PFormula.neg -> IntSyn.Exp
 
 end
 

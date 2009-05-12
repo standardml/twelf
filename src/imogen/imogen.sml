@@ -6,6 +6,7 @@ open ImogenUtil
 
 structure S = IntSyn
 structure F = PreFormula
+structure P = PFormula
 structure N = Names
 structure List = ListExt
 
@@ -96,8 +97,8 @@ and spineToFormulas: Ctx.t * S.Spine -> F.formula list =
 val expToFormula: S.Exp -> Formula.formula =
  fn e => F.formula(expToPreFormula(Ctx.empty, e))
 
-val expToPFormula: S.Exp -> PFormula.neg =
-    PFormula.formulate o expToFormula
+val expToPFormula: S.Exp -> P.neg =
+    P.formulate o expToFormula
 
 (* -------------------------------------------------------------------------- *)
 (*  Solve                                                                     *)
@@ -106,7 +107,7 @@ val expToPFormula: S.Exp -> PFormula.neg =
 structure I = FolInstance
 structure O = I.Output
 
-val solve: PFormula.neg -> ND.nd option =
+val solve: P.neg -> ND.nd option =
  fn a : I.Type.t => 
     let
        val input = { typ = a
@@ -165,7 +166,7 @@ val lookupCid: string -> S.Head =
             NONE => raise Impossible 
           | SOME cid => S.Const cid
 
-val rec introToExp: Ctx.t * ND.intro -> S.Exp =
+val rec introToExp: Ctx.t * ND.intro * P.neg -> S.Exp =
  fn (ctx, ND.Pair(a, b)) => 
     let
        val a' = introToExp(ctx, a)
@@ -215,7 +216,7 @@ val rec introToExp: Ctx.t * ND.intro -> S.Exp =
 and elimToExp: Ctx.t * ND.elim -> S.Exp =
  fn _ => raise Unimplemented 
 
-val ndToExp: ND.nd -> S.Exp =
- fn nd => introToExp(Ctx.empty, nd)
+val ndToExp: ND.nd * P.neg -> S.Exp =
+ fn (nd, a) => introToExp(Ctx.empty, nd, a)
 
 end
