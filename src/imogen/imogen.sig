@@ -8,11 +8,11 @@ val conDecToExp: IntSyn.ConDec -> IntSyn.Exp
 
 val expToFormula: IntSyn.Exp -> Formula.formula
 
-val expToPFormula: IntSyn.Exp -> PFormula.neg
-
 val solve: PFormula.neg -> ND.nd option
 
-val ndToExp: ND.nd * PFormula.neg -> IntSyn.Exp
+val ndToExp: ND.nd * Formula.formula -> IntSyn.Exp
+
+val doit: input -> unit
 
 end
 

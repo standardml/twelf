@@ -55,7 +55,7 @@ is
   ../terminate/sources.cm 
   ../index/sources.cm
   ../thm/sources.cm
-(*  ../order/sources.cm *)
+(*   ../order/sources.cm *)
   ../m2/sources.cm
   ../compile/sources.cm
   ../opsem/sources.cm
@@ -72,7 +72,6 @@ is
   ../msg/sources.cm
   ../imogen/sources.cm
 
-  ../../../util/twelf/sources.cm
   ../../../sml-ext/pp/sources.cm
   ../../../fol/formulas/sources.cm
 

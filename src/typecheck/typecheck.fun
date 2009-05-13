@@ -53,7 +53,13 @@ struct
 	  val Us' = inferExp (G, Us)
 	in
 	  if Conv.conv (Us', Vs) then ()
-	  else raise Error ("Type mismatch")
+	  else 
+             let in 
+                print "Type mismatch: \n"
+              ; print ("Vs: " ^ Print.expToString(I.Null, #1 Vs) ^ "\n")
+              ; print ("Us': " ^ Print.expToString(I.Null, #1 Us') ^ "\n")
+              ; raise Error ("Type mismatch")
+             end
 	end
 
     and inferUni (I.Type) = I.Kind
