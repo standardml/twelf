@@ -5,6 +5,7 @@ structure GeneralExt
 structure ListExt
 structure PP
 structure Fun
+functor NameFn
 
 is
 

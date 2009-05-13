@@ -38,7 +38,7 @@ struct
 	insertA bucket
       end
 
-  fun insert h e = (insertShadow h e; ())
+  fun insert h e = (ignore (insertShadow h e); ())
 
   fun lookup (a,n) key =
       let
@@ -77,7 +77,7 @@ struct
 
   fun appBucket f (Nil) = ()
     | appBucket f (Cons(ref(_, e), br)) =
-        (f e; appBucket f (!br))
+        (ignore (f e); appBucket f (!br))
 
   fun app f (a,n) = Array.app (appBucket f) a
 end;  (* functor HashTable *)

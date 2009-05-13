@@ -1,0 +1,40 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../formatter/sources.mlb
+      symbol.sig
+      symbol.fun
+      print.sig
+      print.fun
+      clause-print.sig
+      clause-print.fun
+      traverse.sig
+      traverse.fun
+      print-twega.sig
+      print-twega.fun
+      print-xml.sig
+      print-xml.fun
+      print-omdoc.sig
+      print-omdoc.fun
+      print.sml
+   in
+      signature PRINT
+      structure Print
+      structure PrintTeX
+      signature CLAUSEPRINT
+      structure ClausePrint
+      structure ClausePrintTeX
+      structure PrintTwega
+      structure PrintXML
+      structure PrintTwega
+      structure PrintOMDoc
+      signature SYMBOL
+      structure SymbolAscii
+      structure SymbolTeX
+   end
+end

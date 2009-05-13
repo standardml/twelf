@@ -1,0 +1,23 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../lambda/sources.mlb
+      ../print/sources.mlb
+      ../paths/sources.mlb
+      ../names/sources.mlb
+      strict.sig
+      strict.fun
+      typecheck.sig
+      typecheck.fun 
+      typecheck.sml
+   in
+      signature TYPECHECK
+      structure TypeCheck
+      signature STRICT
+      structure Strict
+   end
+end
+

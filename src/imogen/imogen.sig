@@ -4,6 +4,8 @@ sig
 
 datatype input = ConDec of IntSyn.ConDec
 
+(* val parse: string -> IntSyn.Exp *)
+
 val conDecToExp: IntSyn.ConDec -> IntSyn.Exp
 
 val expToFormula: IntSyn.Exp -> Formula.formula

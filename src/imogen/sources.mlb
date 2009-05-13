@@ -1,0 +1,32 @@
+
+ann 
+   "forceUsed"
+in 
+   local 
+      $(SML_LIB)/basis/basis.mlb
+
+(*       ../../../sml-ext.mlb *)
+
+(*       ../../../sml-ext/basis/sources.mlb *)
+(*       ../../../sml-ext/pp/sources.mlb *)
+(*       ../../../sml-ext/util/sources.mlb *)
+
+      sml-ext.mlb
+
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../typecheck/sources.mlb
+      ../print/sources.mlb
+
+      ../../../fol/formulas/sources.mlb
+      ../../../fol/proofterms/sources.mlb
+      ../../../fol/sources.mlb
+      ../../../util/sources.mlb
+      ../../../framework/sources.mlb
+
+      imogen.sig
+      imogen.sml
+   in
+      structure Imogen
+   end
+end

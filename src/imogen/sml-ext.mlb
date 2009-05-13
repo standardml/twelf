@@ -1,0 +1,19 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      ../../../sml-ext/basis/sources.mlb
+      ../../../sml-ext/pp/sources.mlb
+      ../../../sml-ext/util/sources.mlb
+   in
+      structure GeneralExt
+      structure ListExt
+      structure PP
+      structure Fun
+      functor NameFn
+   end
+end
+
+
+

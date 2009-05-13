@@ -195,7 +195,7 @@ struct
                   | LESS => del (a, LEFTR(entry1, b, z))
                   | GREATER => del (b, RIGHTR(a, entry1, z)))
 	  in
-	    (del(t, TOP); true) handle NotFound => false
+	    (ignore (del(t, TOP)); true) handle NotFound => false
 	  end
     end (* local *)
 
@@ -229,7 +229,7 @@ struct
 	    | ap (Red tree) = ap' tree
 	    | ap (Black tree) = ap' tree
 	  and ap' (entry1, left, right) =
-	      (ap left; f entry1; ap right)
+	      (ignore(ap left); ignore(f entry1); ap right)
       in
 	ap dict
       end
@@ -245,7 +245,7 @@ struct
 	   (table := dict; oldEntry)
 	 end)
     val lookup = (fn table => fn key => lookup (!table) key)
-    val delete = (fn table => fn key => (delete (!table) key; ()))
+    val delete = (fn table => fn key => (ignore(delete (!table) key); ()))
     val clear = (fn table => (table := Empty))
     val app = (fn f => fn table => app f (!table))
   end

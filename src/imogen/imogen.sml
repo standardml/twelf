@@ -12,6 +12,7 @@ structure N = Names
 structure List = ListExt
 structure C = TypeCheck
 structure T = Term
+structure Sym = NameFn(val name = "X")
 
 datatype input = ConDec of S.ConDec
 
@@ -23,7 +24,7 @@ val conDecToExp: S.ConDec -> S.Exp =
 (*  Conversion to formulas                                                    *)
 (* -------------------------------------------------------------------------- *)
 
-(* local  *)
+local
 
    structure FCtx : 
                 sig
@@ -51,7 +52,7 @@ val conDecToExp: S.ConDec -> S.Exp =
           in 
              P.Fn (f', ts)
           end
-        | S.BVar n => P.Var(FCtx.lookup(n, ctx))
+        | S.BVar n => P.Var(FCtx.lookup(n-1, ctx))
         | S.FVar (x, _, _) => P.Var x
         | _ => raise Unimplemented 
 
@@ -77,6 +78,15 @@ val conDecToExp: S.ConDec -> S.Exp =
                     case spineToFormulas(ctx, spine) of
                        [a, b] => f(a, b)
                      | _ => raise Impossible 
+                fun quant f =
+                   let
+                      val x = Sym.toString(Sym.new())
+                      val ctx = FCtx.extend(x, ctx)
+                   in
+                      case spineToFormulas(ctx, spine) of
+                         [t] => f(x, t)
+                       | _ => raise Impossible 
+                   end
              in
                 case p' of
                    "nd" => 
@@ -90,6 +100,8 @@ val conDecToExp: S.ConDec -> S.Exp =
                  | "=>" => binop P.Imp
                  | "true" => P.Top
                  | "false" => P.Bot
+                 | "!" => quant P.All
+                 | "?" => quant P.Ex
                  | _ => 
                    let
                       val ts = spineToTerms(ctx, spine)
@@ -120,16 +132,19 @@ val conDecToExp: S.ConDec -> S.Exp =
                       P.Atom(p', Util.Neg, ts)
                    end
              end
-
            | _ => 
              let in 
                 PP.pp(%[$"Can't translate: ", $(Print.expToString(S.Null, exp))])
               ; raise Impossible 
              end
        end
-     | (ctx, exp as S.Redex _) => 
-       let in
-          printl "Redex!"
+     | (ctx, exp as S.Lam(S.Dec(_, exp1), exp2)) => 
+       let in 
+          expToPreFormula(ctx, exp2)
+       end
+     | (ctx, exp) => 
+       let in 
+          PP.pp(%[$"Can't translate: ", $(Print.expToString(S.Null, exp))])
         ; raise Impossible 
        end
 
@@ -139,12 +154,12 @@ val conDecToExp: S.ConDec -> S.Exp =
        expToPreFormula(ctx, exp) :: spineToFormulas(ctx, spine)
      | (_, S.SClo _) => raise Impossible 
 
-(* in  *)
+in
 
 val expToFormula: S.Exp -> Formula.formula =
  fn e => P.formula(expToPreFormula(FCtx.empty, e))
 
-(* end (\* local *\)  *)
+end (* local *)
 
 (* -------------------------------------------------------------------------- *)
 (*  Solve                                                                     *)
@@ -184,7 +199,7 @@ val solve: PFormula.neg -> ND.nd option =
 (*  Natural deduction to IntSyn Exp                                           *)
 (* -------------------------------------------------------------------------- *)
 
-(* local  *)
+local
 
    structure PCtx : 
                 sig
@@ -192,15 +207,25 @@ val solve: PFormula.neg -> ND.nd option =
                    val empty: t
                    val lookup: Label.t * t -> int * F.formula
                    val extend: (Label.t * F.formula) * t -> t
+                   val extendV: Var.t * t -> t
+                   val lookupV: Var.t * t -> int
                 end =
       struct 
-         type t = (Label.t * F.formula) list
+         datatype entry = Lab of Label.t * F.formula
+                        | Var of Var.t
+         type t = entry list
          val empty = []
-         val extend = op::
+         fun extend (lf, ctx) = Lab lf :: ctx
+         fun extendV (x, ctx) = Var x :: ctx
          fun lookup (x, l) = 
-             case List.index (fn (x', _) => Label.eq(x, x')) l of
+             case List.getIndex (fn Lab (x', _) => Label.eq(x, x') | _ => false) l of
                 NONE => raise Impossible 
-              | SOME k => (k, snd(List.nth(l, k)))
+              | SOME (k, Lab(_, f)) => (k, f)
+              | SOME _ => raise Impossible 
+         fun lookupV (x, l) = 
+             case List.index (fn Var x' => Var.eq(x, x') | _ => false) l of
+                NONE => raise Impossible 
+              | SOME k => k
       end
 
    val rec normalizeForm: F.formula -> F.formula =
@@ -234,7 +259,7 @@ val solve: PFormula.neg -> ND.nd option =
              | SOME cid => S.Const cid
 
    val rec termToExp: PCtx.t * T.term -> S.Exp =
-    fn (ctx, T.Var x) => raise Unimplemented 
+    fn (ctx, T.Var x) => mkExp(S.BVar(PCtx.lookupV(x, ctx) + 1), [])
      | (_, T.Param _) => raise Impossible 
      | (ctx, T.Fn(f, ts)) => 
        let
@@ -278,10 +303,17 @@ val solve: PFormula.neg -> ND.nd option =
    and quant = 
     fn (f, ctx, (x, a)) => 
        let
-          val lam = 
+          val i = lookupCid "i"
+          val dec = S.Dec(SOME (Var.toString x), mkExp(i, []))
+          val ctx = PCtx.extendV(x, ctx)
+          val lam = S.Lam(dec, formulaToExp(ctx, a))
        in
-          mkExp(lookupCid f, [formulaToExp(ctx, a)])
+          mkExp(lookupCid f, [lam])
        end
+
+   val rec spineToExps: S.Spine -> S.Exp list =
+    fn S.Nil => []
+     | S.App(e, s) => e :: spineToExps s
 
    (* Check a proof against a formula while creating the proofterm. *)
 
@@ -306,16 +338,10 @@ val solve: PFormula.neg -> ND.nd option =
           val nd = lookupCid "nd"
           val dec = S.Dec(SOME (Label.toString x), mkExp(nd, [a1']))
           val exp = checkIntro(PCtx.extend((x, a1), ctx), t, a2)
-(*           val ctx = ctxFromList [dec] *)
-(*           val _ = printl ("ctx: " ^ Print.ctxToString(S.Null, ctx)) *)
-(*           val _ = printl ("exp: " ^ Print.expToString(ctx, exp)) *)
           val lam = lookupCid "lam"
           val tlam = S.Lam(dec, exp)
-(*           val _ = printl ("tlam: " ^ Print.expToString(S.Null, tlam)) *)
-          val res = mkExp(lam, [a1', a2', tlam])
        in
-(*           printl ("res: " ^ Print.expToString(S.Null, res)) *)
-          res
+          mkExp(lam, [a1', a2', tlam])
        end
      | (ctx, ND.Unit, F.Top) => mkExp(lookupCid "unit", [])
      | (ctx, ND.Elim elim, f) => fst(synthElim(ctx, elim))
@@ -339,7 +365,6 @@ val solve: PFormula.neg -> ND.nd option =
        end
      | (ctx, ND.Case(e, (x1, t1), (x2, t2)), c) =>
        let
-          val case' = lookupCid "case"
           val (e', F.Or(a1, a2)) = synthElim(ctx, e)
           val nd = lookupCid "nd"
           val a1' = formulaToExp(ctx, a1)
@@ -350,7 +375,7 @@ val solve: PFormula.neg -> ND.nd option =
           val t1'' = S.Lam(S.Dec(SOME (Label.toString x1), mkExp(nd, [a1'])), t1')
           val t2'' = S.Lam(S.Dec(SOME (Label.toString x2), mkExp(nd, [a2'])), t2')
        in
-          S.Root(case', spineFromList[a1', a2', c', e', t1'', t2''])
+          mkExp(lookupCid "case", [a1', a2', c', e', t1'', t2''])
        end
      | (ctx, ND.Abort e, a) => 
        let
@@ -359,6 +384,28 @@ val solve: PFormula.neg -> ND.nd option =
           val a' = formulaToExp(ctx, a)
        in
           mkExp(abort, [a', e])
+       end
+     | (ctx, ND.QLam(x, t), a as F.All(x', b)) => 
+       let
+          val a = formulaToExp(ctx, a)
+          val f = case a of 
+                     S.Root(_, spine) => 
+                     let in 
+                        case spineToExps spine of
+                           [f] => f
+                         | _ => raise Impossible 
+                     end
+                   | _ => raise Impossible 
+          val x'' = Var.new()
+          val t' = ND.subst (Term.Var x'', x) t
+          val b' = F.subst (Term.Var x'', x') b
+          val ctx = PCtx.extendV(x'', ctx)
+          val t'' = checkIntro(ctx, t', b')
+          val i = lookupCid "i"
+          val dec = S.Dec(SOME (Var.toString x''), mkExp(i, []))
+          val t = S.Lam(dec, t'')
+       in
+          mkExp(lookupCid "qlam", [f, t])
        end
      | (_, nd, f) =>
        let in
@@ -407,13 +454,27 @@ val solve: PFormula.neg -> ND.nd option =
        in
           (mkExp(app, [a1', a2', e, i]), a2)
        end
+     | (ctx, ND.QApp(e, t)) =>
+       let
+          val app = lookupCid "qapp"
+          val i = lookupCid "i"
+          val (e, F.All(x, a)) = synthElim(ctx, e)
+          val ctx = PCtx.extendV(x, ctx)
+          val a' = formulaToExp(ctx, a)
+          val dec = S.Dec(SOME (Var.toString x), mkExp(i,[]))
+          val a'' = S.Lam(dec, a')
+          val t' = termToExp(ctx, t)
+          val tau = F.subst(t, x) a
+       in
+          (mkExp(app, [a'', e, t']), tau)
+       end
 
-(* in  *)
+in
 
 val ndToExp: ND.nd * F.formula -> S.Exp =
  fn (nd, a) => checkIntro(PCtx.empty, nd, normalizeForm a)
 
-(* end (\* local *\)  *)
+end (* local *)
 
 (* -------------------------------------------------------------------------- *)
 (*  Top                                                                       *)

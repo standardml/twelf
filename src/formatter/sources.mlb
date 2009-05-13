@@ -1,0 +1,14 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      formatter.sig
+      formatter.fun
+      formatter.sml
+   in
+      signature FORMATTER
+      structure Formatter
+   end
+end

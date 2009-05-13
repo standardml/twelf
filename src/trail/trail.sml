@@ -51,7 +51,7 @@ struct
             fun unwind' Nil = Nil
               | unwind' (Mark trail) = trail
               | unwind' (Cons (action, trail)) =
-                  (undo action ; unwind' trail)
+                  (ignore (undo action) ; unwind' trail)
           in
             trail := unwind' (!trail)
           end

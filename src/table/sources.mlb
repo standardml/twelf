@@ -1,0 +1,42 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+(*       ../compat/sources.mlb *)
+      table.sig
+      hash-table.sml
+      string-hash.sig
+      string-hash.sml
+      red-black-tree.fun
+      ring.sig
+      ring.sml
+      queue.sig
+      queue.sml
+      sparse-array.sig
+      sparse-array.fun
+      sparse-array2.sig
+      sparse-array2.fun 
+      red-black-set.sig
+      red-black-set.sml
+      table.sml
+   in
+      signature TABLE
+      structure StringHashTable
+      structure StringRedBlackTree
+      structure IntRedBlackTree
+      signature RBSET
+      structure RBSet
+      signature RING
+      structure Ring
+      signature QUEUE
+      structure Queue
+      signature SPARSE_ARRAY
+      structure SparseArray
+      signature SPARSE_ARRAY2
+      structure SparseArray2
+      functor HashTable
+   end
+end
+

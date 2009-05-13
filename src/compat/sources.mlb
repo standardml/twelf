@@ -1,0 +1,52 @@
+
+ann 
+   "forceUsed"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb
+      array.sig
+      vector.sig  
+      path.sig
+      substring.sig
+      text-io.sig
+      timer.sig
+      socket.sig
+      compat.sig
+      socket.sml
+      compat.fun
+      compat.sml
+      timer-97.sml
+      array-97.sml
+      vector-97.sml
+      path-97.sml
+      substring-97.sml
+      text-io-97.sml
+      socket-97.sml
+      compat-97.sml    
+      array-slice.sig
+      array-slice.sml
+      vector-slice.sig
+      vector-slice.sml
+      mono-array-slice.sig
+      word8-array-slice.sml
+      time-limit.sig
+      time-limit.sml
+   in
+      signature COMPAT_ARRAY
+      signature COMPAT_VECTOR
+      signature COMPAT_PATH
+      signature COMPAT_SUBSTRING
+      signature COMPAT_TEXT_IO
+      signature COMPAT_TIMER
+      signature COMPAT
+      structure Compat
+      signature TIME_LIMIT
+      structure TimeLimit
+      signature ARRAY_SLICE
+      structure ArraySlice
+      signature VECTOR_SLICE
+      structure VectorSlice
+      signature MONO_ARRAY_SLICE
+      structure Word8ArraySlice
+   end
+end

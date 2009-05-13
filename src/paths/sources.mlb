@@ -1,0 +1,21 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../lambda/sources.mlb
+      ../global/sources.mlb
+      ../table/sources.mlb
+      paths.sig
+      paths.fun
+      origins.sig
+      origins.fun
+      paths.sml
+   in
+      signature PATHS
+      structure Paths
+      signature ORIGINS
+      structure Origins
+   end
+end

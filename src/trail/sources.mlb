@@ -1,0 +1,16 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      trail.sig
+      trail.sml
+      notrail.sml
+   in
+      signature TRAIL
+      structure Trail
+      structure NoTrail
+   end
+end
+

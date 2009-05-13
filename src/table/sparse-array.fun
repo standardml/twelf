@@ -51,7 +51,7 @@ struct
                   if (i' < imax)
                   then
                     (
-                      f(i', unsafeSub (array, i'));
+                      ignore(f(i', unsafeSub (array, i')));
                       app' (i'+1)
                     )
                   else ()

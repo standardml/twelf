@@ -1,0 +1,13 @@
+
+ann 
+   "forceUsed"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb
+      global.sig
+      global.sml
+   in
+      signature GLOBAL
+      structure Global
+   end
+end

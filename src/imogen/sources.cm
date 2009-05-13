@@ -3,28 +3,6 @@ Library
 
 structure Imogen
 
-(* Debug *)
-structure IntSyn
-structure PreFormula
-structure Formula
-structure Names
-structure TypeCheck
-structure Term
-structure GeneralExt
-structure ListExt
-structure PP
-structure Util
-structure FolInstance
-structure ND
-structure PFormula
-structure DatabaseUtil
-structure ProverUtil
-structure Label
-structure Print
-structure Prop
-structure Rel
-structure Func
-
 is
 
 $/basis.cm

@@ -752,7 +752,7 @@ struct
     (* baseOf (name) = name',
        where name' is the prefix of name not containing a digit
     *)
-    fun baseOf (name) = Substring.string (takeNonDigits (Compat.Substring.full name))
+    fun baseOf (name) = Substring.string (takeNonDigits (Substring.full name))
 
     (* newEvarName (G, X) = name
        where name is the next unused name appropriate for X,

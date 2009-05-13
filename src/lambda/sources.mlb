@@ -1,0 +1,62 @@
+
+ann 
+   "forceUsed"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb
+      ../global/sources.mlb
+      ../trail/sources.mlb
+      fgnopn.sig
+      fgnopntable.fun
+      ../table/sources.mlb
+      intsyn.sig
+      intsyn.fun
+      order.sig
+      order.fun
+      order.sml
+      whnf.sig
+      whnf.fun
+      conv.sig
+      conv.fun 
+      constraints.sig
+      constraints.fun
+      unify.sig
+      unify.fun 
+      match.sig
+      match.fun 
+      tomega.sig
+      tomega.fun
+      tomega.sml
+      abstract.sig	
+      abstract.fun
+      approx.sig
+      approx.fun
+      (* normalize.sig
+      normalize.fun *)
+      lambda.sml
+   in
+      signature FGN_OPN
+      functor FgnOpnTable
+      signature INTSYN
+      structure IntSyn
+      signature WHNF
+      structure Whnf
+      signature CONV
+      structure Conv
+      signature TOMEGA
+      structure Tomega
+      signature CONSTRAINTS
+      structure Constraints
+      signature UNIFY
+      structure UnifyTrail
+      structure UnifyNoTrail
+      signature MATCH
+      structure Match
+      signature ABSTRACT
+      structure Abstract
+      signature APPROX
+      structure Approx
+      signature ORDER
+      structure Order
+   end
+end
