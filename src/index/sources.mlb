@@ -7,15 +7,16 @@ ann
 in
    local
       $(SML_LIB)/basis/basis.mlb
+      ../lambda/sources.mlb
       ../table/sources.mlb
       ../global/sources.mlb
-      ../lambda/sources.mlb
-      names.sig
-      names.fun
-      names.sml
+      index.sig	
+      index.fun
+      index-skolem.fun
+      index.sml
    in
-      signature FIXITY
-      signature NAMES
-      structure Names
+      signature INDEX
+      structure Index
+      structure IndexSkolem
    end
 end

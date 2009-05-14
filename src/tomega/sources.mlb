@@ -1,0 +1,59 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../global/sources.mlb
+      ../lambda/sources.mlb
+      ../worldcheck/sources.mlb
+      ../cover/sources.mlb
+      ../formatter/sources.mlb
+      ../names/sources.mlb
+      ../print/sources.mlb
+      ../typecheck/sources.mlb
+      ../subordinate/sources.mlb
+      ../meta/sources.mlb
+      ../modes/sources.mlb
+      ../trail/sources.mlb
+      tomegaprint.sig
+      tomegaprint.fun 
+      abstract.sig
+      abstract.fun
+      typecheck.sig
+      typecheck.fun
+      opsem.sig
+      opsem.fun 
+      redundant.sig
+      redundant.fun
+      converter.sig
+      converter.fun 
+      tomeganames.sig
+      tomeganames.fun
+      coverage.sig
+      coverage.fun
+      tomega.sml 
+   in
+      signature CONVERTER
+      structure Converter
+      signature TOMEGAPRINT
+      structure TomegaPrint
+      signature TOMEGACOVERAGE
+      structure TomegaCoverage
+      signature TOMEGATYPECHECK
+      structure TomegaTypeCheck
+      signature TOMEGAABSTRACT
+      structure TomegaAbstract
+      signature TOMEGANAMES
+      structure TomegaNames
+
+      signature REDUNDANT	
+      structure Redundant
+
+      signature OPSEM
+      structure Opsem
+   end
+end

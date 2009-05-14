@@ -1,0 +1,83 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../compat/sources.mlb
+      ../global/sources.mlb
+      ../trail/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../formatter/sources.mlb
+      ../print/sources.mlb
+      ../subordinate/sources.mlb
+      ../modes/sources.mlb
+      ../typecheck/sources.mlb
+      ../index/sources.mlb
+      ../opsem/sources.mlb
+      ../compile/sources.mlb
+      ../heuristic/sources.mlb
+      ../timing/sources.mlb
+      ../solvers/sources.mlb
+      ../m2/sources.mlb  
+      funsyn.sig
+      funsyn.fun
+      funnames.sig   
+      funnames.fun
+      statesyn.sig
+      statesyn.fun
+      weaken.sig     
+      weaken.fun     
+      funprint.sig
+      funprint.fun
+      funtypecheck.sig 
+      funtypecheck.fun
+      funweaken.sig
+      funweaken.fun
+      relfun.sig  
+      relfun.fun 
+      interpret.sig
+      abstract.sig
+      abstract.fun
+      global.sig 
+      global.fun
+      data.sig
+      data.fun
+      init.sig
+      init.fun
+      search.sig
+      search.fun 
+      filling.sig
+      filling.fun
+      print.sig
+      print.fun
+      recursion.sig
+      recursion.fun
+      uniquesearch.sig
+      uniquesearch.fun
+      splitting.sig
+      splitting.fun
+      inference.sig
+      inference.fun
+      strategy.sig
+      strategy.fun 
+      mpi.sig
+      mpi.fun
+      prover.fun
+      meta.sml 
+   in
+      signature FUNSYN
+      structure FunSyn
+      signature PROVER
+      structure CombiProver
+      signature WEAKEN
+      structure Weaken
+      signature MTPI
+      structure MTPi
+   end
+end

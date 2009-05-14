@@ -7,20 +7,19 @@ ann
 in
    local
       $(SML_LIB)/basis/basis.mlb
+      ../global/sources.mlb
+      ../table/sources.mlb
       ../lambda/sources.mlb
+      ../formatter/sources.mlb
       ../print/sources.mlb
+      ../names/sources.mlb	
       ../paths/sources.mlb
-      ../names/sources.mlb
-      strict.sig
-      strict.fun
-      typecheck.sig
-      typecheck.fun 
-      typecheck.sml
+      ../index/sources.mlb
+      style.sig
+      style.fun
+      style.sml
    in
-      signature TYPECHECK
-      structure TypeCheck
-      signature STRICT
-      structure Strict
+      signature STYLECHECK
+      structure StyleCheck
    end
 end
-

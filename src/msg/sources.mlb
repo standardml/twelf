@@ -1,0 +1,16 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb 
+      msg.sml
+   in
+      signature MSG
+      structure Msg
+   end
+end
+	

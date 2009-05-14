@@ -288,7 +288,7 @@ local
      | (ctx, F.Ex xa) => quant("?", ctx, xa)
      | (_, fm) => 
        let in 
-          PP.pp(%[$"Can't translate: ", F.pp fm])
+          PP.pp(%[$"Can't translate: ", (F.pp fm : PP.pp)])
         ; raise Impossible 
        end
 

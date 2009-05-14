@@ -1,0 +1,48 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../print/sources.mlb
+      ../formatter/sources.mlb  
+      ../index/sources.mlb
+      ../typecheck/sources.mlb
+      ../solvers/sources.mlb
+      ../subordinate/sources.mlb
+
+      compsyn.sig
+      compsyn.fun
+
+      cprint.sig
+      cprint.fun
+
+      subtree.sig
+      subtree.fun
+
+      assign.sig
+      assign.fun
+
+      compile.sig
+      compile.fun
+      compile.sml
+   in
+      signature COMPSYN
+      structure CompSyn
+      signature COMPILE
+      structure Compile
+      signature SUBTREE
+      structure SubTree
+      signature CPRINT
+      structure CPrint
+      signature ASSIGN
+      structure Assign
+   end
+end

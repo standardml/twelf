@@ -1,0 +1,24 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      intset.sml
+      subordinate.sig
+      subordinate.fun
+      subordinate.sml
+   in
+      signature SUBORDINATE
+      structure Subordinate
+      signature INTSET
+      structure IntSet
+   end
+end

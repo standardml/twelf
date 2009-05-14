@@ -1,0 +1,72 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../compat/sources.mlb
+      ../timing/sources.mlb
+      ../stream/sources.mlb
+      ../global/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../modes/sources.mlb 
+      ../paths/sources.mlb
+      ../formatter/sources.mlb
+      ../print/sources.mlb
+      ../typecheck/sources.mlb
+      ../terminate/sources.mlb
+      ../index/sources.mlb
+      ../thm/sources.mlb
+      ../opsem/sources.mlb
+      ../compile/sources.mlb
+      ../subordinate/sources.mlb
+      ../table/sources.mlb
+      ../timing/sources.mlb
+      ../solvers/sources.mlb
+      meta-global.sig
+      meta-global.sml
+      skolem.sig
+      skolem.fun
+      metasyn.sig
+      metasyn.fun
+      meta-abstract.sig
+      meta-abstract.fun
+      meta-print.sig
+      meta-print.fun 
+      init.sig
+      init.fun
+      search.sig
+      search.fun
+      lemma.sig
+      lemma.fun
+      splitting.sig
+      splitting.fun
+      filling.sig
+      filling.fun
+      qed.sig
+      qed.fun
+      recursion.sig
+      recursion.fun
+      strategy.sig
+      strategy.fun	
+      prover.sig
+      prover.fun
+      mpi.sig
+      mpi.fun
+      m2.sml
+   in
+      signature METAGLOBAL
+      structure MetaGlobal
+      signature SKOLEM
+      structure Skolem
+      structure Splitting
+      structure Filling
+      structure Recursion
+      signature PROVER
+      structure Prover
+   end
+end

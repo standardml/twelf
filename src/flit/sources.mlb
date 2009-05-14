@@ -1,0 +1,24 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../index/sources.mlb
+      ../paths/sources.mlb
+      ../print/sources.mlb
+      flit.sig
+      flit.fun
+      flit.sml
+   in
+      signature FLIT
+      structure Flit
+   end
+end

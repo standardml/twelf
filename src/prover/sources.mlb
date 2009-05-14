@@ -1,0 +1,52 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../tomega/sources.mlb
+      ../lambda/sources.mlb
+      ../global/sources.mlb
+      ../names/sources.mlb
+      ../print/sources.mlb
+      ../index/sources.mlb
+      ../modes/sources.mlb
+      ../typecheck/sources.mlb
+      ../table/sources.mlb
+      ../subordinate/sources.mlb
+      ../solvers/sources.mlb
+      ../opsem/sources.mlb
+      ../trail/sources.mlb
+      ../compile/sources.mlb
+      ../worldcheck/sources.mlb
+      ../formatter/sources.mlb
+      ../timing/sources.mlb
+      state.sig 
+      state.fun       
+      data.sig
+      data.fun
+      search.sig
+      search.fun	
+      fill.sig  
+      fill.fun
+      split.sig 
+      split.fun
+      fixedpoint.sig  
+      fixedpoint.fun 
+      introduce.sig
+      introduce.fun
+      elim.sig     
+      elim.fun
+      weaken.sig
+      weaken.fun
+      interactive.sig
+      interactive.fun
+      prover.sml
+   in
+      signature INTERACTIVE
+      structure Interactive
+   end
+end

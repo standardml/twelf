@@ -1,0 +1,16 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      heuristic.sig
+      heuristic.sum.fun
+   in
+      signature HEURISTIC
+      structure Heuristic
+   end
+end

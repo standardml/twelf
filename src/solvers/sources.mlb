@@ -1,0 +1,38 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in 
+   local
+      $(SML_LIB)/basis/basis.mlb 
+      ../trail/sources.mlb
+      ../global/sources.mlb
+      ../domains/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../modes/sources.mlb
+      ../table/sources.mlb
+      ../print/sources.mlb
+      ../formatter/sources.mlb
+      cs-manager.sig
+      cs-manager.fun
+      cs.sig
+      cs-eq-field.sig
+      cs-eq-field.fun
+      cs-ineq-field.fun
+      cs-eq-integers.sig
+      cs-eq-integers.fun
+      cs-ineq-integers.fun
+      cs-eq-strings.fun
+      cs-eq-bools.fun
+      cs-integers-word.fun
+      solvers.sml
+   in
+      signature CS_MANAGER
+      structure CSManager
+      signature CS_INSTALLER
+      structure CSInstaller
+   end
+end

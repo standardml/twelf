@@ -1,0 +1,42 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../formatter/sources.mlb
+      ../print/sources.mlb
+      ../names/sources.mlb	
+      ../paths/sources.mlb
+      ../index/sources.mlb
+      modesyn.sml
+      modetable.sig
+      modetable.fun
+      modedec.sig
+      modedec.fun
+      modecheck.sig
+      modecheck.fun 
+      modeprint.sig
+      modeprint.fun
+      modes.sml
+   in
+      signature MODESYN
+      structure ModeSyn
+      signature MODETABLE
+      functor ModeTable
+      structure ModeTable
+      signature MODEDEC
+      structure ModeDec
+      signature MODECHECK
+      functor ModeCheck
+      structure ModeCheck
+      signature MODEPRINT
+      structure ModePrint
+   end
+end

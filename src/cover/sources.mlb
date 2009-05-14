@@ -1,0 +1,39 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      ../global/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../paths/sources.mlb
+      ../table/sources.mlb
+      ../formatter/sources.mlb
+      ../print/sources.mlb
+      ../subordinate/sources.mlb
+      ../modes/sources.mlb
+      ../typecheck/sources.mlb
+      ../thm/sources.mlb
+      ../terminate/sources.mlb
+      ../index/sources.mlb
+      ../solvers/sources.mlb
+      ../worldcheck/sources.mlb
+      ../typecheck/sources.mlb
+      ../timing/sources.mlb
+      ../unique/sources.mlb
+      cover.sig
+      cover.fun
+      total.sig
+      total.fun
+      cover.sml
+   in
+      signature COVER
+      structure Cover
+      signature TOTAL
+      structure Total
+   end
+end

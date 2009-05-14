@@ -1,0 +1,23 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../paths/sources.mlb
+      ../typecheck/sources.mlb
+      modsyn.sig
+      modsyn.fun
+      modules.sml
+   in
+      signature MODSYN
+      structure ModSyn
+   end
+end

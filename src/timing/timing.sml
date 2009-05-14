@@ -74,8 +74,8 @@ struct
     *)
     fun checkCPUAndGCTimer timer =
 	let
-	    val {usr = usr, sys = sys} = Compat.Timer.checkCPUTimer timer
-	    val gc = Compat.Timer.checkGCTime timer
+	    val {usr = usr, sys = sys} = Timer.checkCPUTimer timer
+	    val gc = Timer.checkGCTime timer
 	in
           {usr = usr, sys = sys, gc = gc}
 	end

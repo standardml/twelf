@@ -3,13 +3,14 @@ ann
    "forceUsed"
    "warnUnused false"
    "sequenceNonUnit ignore"
-in
-   local 
+   "nonexhaustiveMatch ignore"
+in 
+   local
       $(SML_LIB)/basis/basis.mlb
-      global.sig
-      global.sml
-   in
-      signature GLOBAL
-      structure Global
+      stream.sml
+   in 
+      signature STREAM
+      structure Stream
    end
 end
+

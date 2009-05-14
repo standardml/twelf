@@ -16,7 +16,6 @@ functor CSIneqIntegers (structure Integers : INTEGERS
                           sharing CSEqIntegers.Integers = Integers
                           (*! sharing CSEqIntegers.IntSyn = IntSyn !*)
                           (*! sharing CSEqIntegers.CSManager = CSManager !*)
-			structure Compat : COMPAT
 			    )
   =
 struct
@@ -221,25 +220,25 @@ struct
 
     (* increase by f(j') all the elements (i, j'), with j <= j' < j+len *)
     fun incrArray2Row (array, i, (j, len), f) =
-          Compat.Vector.mapi
+          Vector.mapi
             (fn (j, value) => Array2.update (array, i, j, value + f(j)))
             (Array2.row (array, i, (j, len)))
 
     (* increase by f(i') all the elements (i', j), with i <= i' < i+len *)
     fun incrArray2Col (array, j, (i, len), f) =
-          Compat.Vector.mapi
+          Vector.mapi
             (fn (i, value) => Array2.update (array, i, j, value + f(i)))
             (Array2.column (array, j, (i, len)))
 
     (* set the given row to zero *)
     fun clearArray2Row (array, i, (j, len)) =
-          Compat.Vector.mapi
+          Vector.mapi
             (fn (j, value) => Array2.update (array, i, j, zero))
             (Array2.row (array, i, (j, len)))
 
     (* set the given column to zero *)
     fun clearArray2Col (array, j, (i, len)) =
-          Compat.Vector.mapi
+          Vector.mapi
             (fn (i, value) => Array2.update (array, i, j, zero))
             (Array2.column (array, j, (i, len)))
 
@@ -326,7 +325,7 @@ struct
                       if restricted (l) then print ">" else print "*";
                       if dead (l) then print "#" else print "";
                       print "\t";
-                      Compat.Vector.mapi printCol vec;
+                      Vector.mapi printCol vec;
                       print "\t";
                       print (toString (const (row)));
                       print "\n"

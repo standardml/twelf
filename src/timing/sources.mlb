@@ -7,11 +7,14 @@ ann
 in
    local
       $(SML_LIB)/basis/basis.mlb
-      formatter.sig
-      formatter.fun
-      formatter.sml
+      timing.sml
+      timers.sig
+      timers.fun
+      timers.sml
    in
-      signature FORMATTER
-      structure Formatter
+      signature TIMERS
+      structure Timers
+      signature TIMING
+      structure Timing
    end
 end

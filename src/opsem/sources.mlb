@@ -1,0 +1,73 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../print/sources.mlb
+      ../formatter/sources.mlb  
+      ../index/sources.mlb
+      ../typecheck/sources.mlb
+      ../solvers/sources.mlb
+      ../subordinate/sources.mlb
+      ../tabling/sources.mlb
+      ../compile/sources.mlb
+
+      table-param.sig
+      table-param.fun
+      table-param.sml
+
+      abstract.sig  
+      abstract.fun 
+
+      sw-subtree.sig
+      sw-subtree.fun
+
+      subtree.fun 
+      subtree-inst.fun  
+
+      tabled.sig
+      tabled.fun     
+      
+      absmachine.sig
+      absmachine.fun
+
+      absmachine-sbt.sig
+      absmachine-sbt.fun
+
+      ptrecon.sig
+      ptrecon.fun
+
+      trace.sig
+      trace.fun
+      tmachine.fun
+      swmachine.fun 
+      opsem.sml
+   in
+      signature ABSTRACTTABLED
+      structure AbstractTabled
+      signature TABLED
+      structure Tabled
+      signature TABLEPARAM
+      structure TableParam
+      signature ABSMACHINE
+      structure AbsMachine
+      signature ABSMACHINESBT
+      structure AbsMachineSbt
+      signature MEMOTABLE
+      structure MemoTable
+      signature PTRECON
+      structure PtRecon
+      signature TRACE
+      structure Trace
+      structure TMachine
+      structure SwMachine
+   end
+end

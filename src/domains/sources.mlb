@@ -1,0 +1,26 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      field.sig
+      ordered-field.sig
+      integers.sig
+      integers.fun
+      rationals.sig
+      rationals.fun
+      integers-mod.fun
+      domains.sml
+   in
+      signature FIELD
+      signature ORDERED_FIELD
+      signature INTEGERS
+      structure Integers
+      signature RATIONALS
+      structure Rationals
+   end
+end

@@ -1,0 +1,135 @@
+
+ann 
+   "forceUsed"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb
+      $(SML_LIB)/basis/sml-nj.mlb 
+
+      ../timing/sources.mlb
+      ../stream/sources.mlb
+      ../global/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../paths/sources.mlb
+      ../print/sources.mlb
+      ../typecheck/sources.mlb
+      ../style/sources.mlb
+      ../modes/sources.mlb 
+      ../tabling/sources.mlb 
+      ../terminate/sources.mlb 
+      ../index/sources.mlb
+      ../thm/sources.mlb
+      ../m2/sources.mlb
+      ../compile/sources.mlb
+      ../opsem/sources.mlb
+      ../subordinate/sources.mlb
+      ../modules/sources.mlb
+      ../meta/sources.mlb 
+      ../solvers/sources.mlb
+      ../worldcheck/sources.mlb
+      ../unique/sources.mlb
+      ../cover/sources.mlb
+      ../tomega/sources.mlb 
+      ../prover/sources.mlb
+      ../flit/sources.mlb
+      ../msg/sources.mlb
+
+      (* Imogen *)
+      ../imogen/sources.mlb
+      ../../../sml-ext.mlb
+      ../../../fol/formulas/sources.mlb
+
+      ann 
+         "warnUnused false"
+         "sequenceNonUnit ignore"
+         "nonexhaustiveMatch ignore"
+      in 
+         unknownexn.sig
+         unknownexn.fun
+         unknownexn-smlnj.sml
+         lexer.sig
+         lexer.fun
+         parsing.sig
+         parsing.fun
+         recon-term.sig
+         recon-term.fun
+         recon-condec.sig
+         recon-condec.fun
+         recon-query.sig
+         recon-query.fun
+         recon-mode.sig
+         recon-mode.fun
+         recon-thm.sig
+         recon-thm.fun
+         recon-module.sig
+         recon-module.fun
+         parse-term.sig
+         parse-term.fun
+         parse-condec.sig
+         parse-condec.fun
+         parse-query.sig
+         parse-query.fun
+         parse-fixity.sig
+         parse-fixity.fun
+         parse-mode.sig
+         parse-mode.fun 
+         parse-thm.sig
+         parse-thm.fun
+         parse-module.sig
+         parse-module.fun
+      end
+
+      (* Imogen *)
+      parse-imogen.sig
+      parse-imogen.fun
+
+      parser.sig
+      parser.fun
+      solve.sig
+      solve.fun
+      fquery.sig
+      fquery.fun
+      twelf.sig
+      twelf.fun
+      frontend.sml
+   in
+      signature TIMING
+      structure Timing
+      signature LEXER
+      structure Lexer
+      signature TWELF
+      structure Twelf
+      signature PARSING
+      structure Parsing
+      signature PARSER
+      structure Parser
+      signature EXTSYN
+      signature TOMEGA
+      structure Tomega
+      structure ParseTerm
+      structure ReconTerm
+      signature MTPI
+      structure MTPi
+      signature TYPECHECK
+      structure TypeCheck
+      signature CONVERTER
+      structure Converter
+      signature INTSYN
+      structure IntSyn
+      signature GLOBAL 
+      structure Global
+      structure PrintTwega
+      structure PrintXML
+      structure PrintOMDoc
+      structure Interactive
+      signature FLIT
+      structure Flit
+      structure Subordinate
+      signature STYLECHECK
+      structure StyleCheck
+      signature INTERACTIVE
+      structure Interactive
+   end
+end

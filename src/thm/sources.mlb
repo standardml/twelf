@@ -1,0 +1,32 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../formatter/sources.mlb
+      ../modes/sources.mlb
+      ../paths/sources.mlb
+      ../tabling/sources.mlb
+      thmsyn.sig
+      thmsyn.fun
+      thmprint.sig
+      thmprint.fun
+      thm.sig	 
+      thm.fun
+      thm.sml
+   in
+      signature THMSYN
+      structure ThmSyn
+      signature THMPRINT
+      structure ThmPrint
+      signature THM
+      structure Thm
+   end
+end

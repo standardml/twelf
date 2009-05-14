@@ -1,0 +1,37 @@
+
+ann 
+   "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
+in
+   local 
+      $(SML_LIB)/basis/basis.mlb 
+      ../global/sources.mlb
+      ../timing/sources.mlb
+      ../table/sources.mlb
+      ../lambda/sources.mlb
+      ../names/sources.mlb
+      ../paths/sources.mlb
+      ../formatter/sources.mlb
+      ../print/sources.mlb
+      ../index/sources.mlb
+      ../subordinate/sources.mlb
+      ../meta/sources.mlb 
+      ../solvers/sources.mlb
+      worldsyn.sig
+      worldsyn.fun
+      worldprint.sig
+      worldprint.fun
+      worldify.sig
+      worldify.fun
+      worldcheck.sml
+   in
+      signature WORLDSYN
+      structure WorldSyn
+      signature WORLDIFY
+      structure Worldify
+      signature WORLDPRINT
+      structure WorldPrint
+   end
+end

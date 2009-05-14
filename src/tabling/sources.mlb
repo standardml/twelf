@@ -8,14 +8,16 @@ in
    local
       $(SML_LIB)/basis/basis.mlb
       ../table/sources.mlb
-      ../global/sources.mlb
       ../lambda/sources.mlb
-      names.sig
-      names.fun
-      names.sml
+      ../print/sources.mlb
+      ../names/sources.mlb	
+      ../paths/sources.mlb
+      ../index/sources.mlb
+      tabledsyn.sig
+      tabledsyn.fun
+      tabled.sml
    in
-      signature FIXITY
-      signature NAMES
-      structure Names
+      signature TABLEDSYN
+      structure TabledSyn
    end
 end

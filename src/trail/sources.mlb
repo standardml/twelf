@@ -1,6 +1,9 @@
 
 ann 
    "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
 in
    local
       $(SML_LIB)/basis/basis.mlb

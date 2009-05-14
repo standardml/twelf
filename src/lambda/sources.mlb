@@ -1,6 +1,9 @@
 
 ann 
    "forceUsed"
+   "warnUnused false"
+   "sequenceNonUnit ignore"
+   "nonexhaustiveMatch ignore"
 in
    local 
       $(SML_LIB)/basis/basis.mlb
@@ -31,8 +34,6 @@ in
       abstract.fun
       approx.sig
       approx.fun
-      (* normalize.sig
-      normalize.fun *)
       lambda.sml
    in
       signature FGN_OPN

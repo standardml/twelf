@@ -5,13 +5,7 @@ in
    local 
       $(SML_LIB)/basis/basis.mlb
 
-(*       ../../../sml-ext.mlb *)
-
-(*       ../../../sml-ext/basis/sources.mlb *)
-(*       ../../../sml-ext/pp/sources.mlb *)
-(*       ../../../sml-ext/util/sources.mlb *)
-
-      sml-ext.mlb
+      ../../../sml-ext.mlb
 
       ../lambda/sources.mlb
       ../names/sources.mlb
