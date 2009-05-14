@@ -181,7 +181,6 @@ functor Twelf
    (*! sharing CSManager.ModeSyn = ModeSyn !*)
     
    structure CSInstaller : CS_INSTALLER
-   structure Compat : COMPAT
    structure UnknownExn : UNKNOWN_EXN
 
    structure Msg : MSG
@@ -1542,7 +1541,7 @@ struct
                               end
                         and parseStream (sources, configs) =
                             let
-                              val line = Compat.Substring.full (Compat.inputLine97 instream)
+                              val line = Substring.full (Compat.inputLine instream)
                             in
 	                      parseLine (sources, configs) line
                             end
@@ -1604,7 +1603,7 @@ struct
                   else fromFirstModified xs
 
             fun mkAbsolute p =
-                Compat.OS.Path.mkAbsolute {path=p, relativeTo=pwdir}
+                OS.Path.mkAbsolute {path=p, relativeTo=pwdir}
 
             val sources' = 
                 (* allow shorter messages if safe *)

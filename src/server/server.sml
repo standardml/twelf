@@ -22,12 +22,12 @@ struct
       let
         (* val line = TextIO.inputLine (TextIO.stdIn) *)
 	(* Fix for MLton, Fri Dec 20 21:50:22 2002 -sweeks (fp) *)
-	fun getLine () = Compat.inputLine97 (TextIO.stdIn)
+	fun getLine () = Compat.inputLine TextIO.stdIn
 	                 handle OS.SysErr (_, SOME _) => getLine ()
 	val line = getLine ()
         fun triml ss = Substring.dropl Char.isSpace ss
         fun trimr ss = Substring.dropr Char.isSpace ss
-        val line' = triml (trimr (Compat.Substring.full line))
+        val line' = triml (trimr (Substring.full line))
       in
 	if line = ""
 	  then ("OS.exit", "")

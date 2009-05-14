@@ -7,6 +7,7 @@ ann
 in
    local 
       $(SML_LIB)/basis/basis.mlb 
+      ../compat/sources.mlb
       ../global/sources.mlb
       ../table/sources.mlb
       ../lambda/sources.mlb

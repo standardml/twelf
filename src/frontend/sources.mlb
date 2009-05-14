@@ -6,6 +6,7 @@ in
       $(SML_LIB)/basis/basis.mlb
       $(SML_LIB)/basis/sml-nj.mlb 
 
+      ../compat/sources.mlb
       ../timing/sources.mlb
       ../stream/sources.mlb
       ../global/sources.mlb
@@ -35,11 +36,6 @@ in
       ../prover/sources.mlb
       ../flit/sources.mlb
       ../msg/sources.mlb
-
-      (* Imogen *)
-      ../imogen/sources.mlb
-      ../../../sml-ext.mlb
-      ../../../fol/formulas/sources.mlb
 
       ann 
          "warnUnused false"
@@ -82,18 +78,27 @@ in
       end
 
       (* Imogen *)
+      ../imogen/sources.mlb
+      ../../../sml-ext/pp/sources.mlb
+      ../../../fol/formulas/sources.mlb
       parse-imogen.sig
       parse-imogen.fun
 
-      parser.sig
-      parser.fun
-      solve.sig
-      solve.fun
-      fquery.sig
-      fquery.fun
-      twelf.sig
-      twelf.fun
-      frontend.sml
+      ann 
+         "warnUnused false"
+         "sequenceNonUnit ignore"
+         "nonexhaustiveMatch ignore"
+      in 
+         parser.sig
+         parser.fun
+         solve.sig
+         solve.fun
+         fquery.sig
+         fquery.fun
+         twelf.sig
+         twelf.fun
+         frontend.sml
+      end
    in
       signature TIMING
       structure Timing

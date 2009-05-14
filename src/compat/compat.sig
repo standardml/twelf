@@ -4,6 +4,7 @@
 signature COMPAT =
 sig
   val inputLine97 : TextIO.instream -> string
+  val inputLine : TextIO.instream -> string
   structure Array : COMPAT_ARRAY
   structure Vector : COMPAT_VECTOR
   structure OS :

@@ -7,8 +7,10 @@ in
       $(SML_LIB)/smlnj-lib/Util/time-limit.mlb
       time-limit.sig
       time-limit-mlton.sml
+      new-compat.sml
    in
       signature TIME_LIMIT
       structure TimeLimit
+      structure Compat
    end
 end

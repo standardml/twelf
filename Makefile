@@ -21,6 +21,41 @@ version = TWELFVERSION
 # You should not need to edit beyond this point
 # ---------------------------------------------------------------
 
+# MLton options
+
+DEFAULTS := \
+-default-ann 'allowFFI false' \
+-default-ann 'nonexhaustiveMatch warn' \
+-default-ann 'nonexhaustiveExnMatch default' \
+-default-ann 'redundantMatch error' \
+-default-ann 'sequenceNonUnit warn' \
+-default-ann 'warnUnused true' \
+-default-ann 'forceUsed'
+
+VERBOSE := -verbose 1
+
+.PHONY : check_profile
+check_profile : 
+ifneq ($(strip $(PROFILE)),)
+	@echo ""
+	@echo "!!! Warning: Profiling is ON !!! : " $(PROFILE)
+	@echo ""
+endif
+
+IMOGEN_HOME=..
+
+PROFILE := # -const 'Exn.keepHistory true' 
+
+MLB_PATH_MAP = -mlb-path-map $(PATH_MAP)
+
+PATH_MAP := $(IMOGEN_HOME)/imogen.map
+
+MLTON_DIR := $(dir $(shell which mlton))
+
+MLTON_OPTS = $(VERBOSE) $(PROFILE) $(DEF_USE) $(MLB_PATH_MAP) $(DEFAULTS) 
+
+MLTON = $(MLTON_DIR)mlton $(MLTON_OPTS) 
+
 default: ;
 	@echo "Options for building Twelf $(version):"
 	@echo "   make smlnj   Make Twelf with SML/NJ version >=110.20"
@@ -32,18 +67,24 @@ default: ;
 
 twelf-server-mlton: ; 
 	@echo "*************************************************"
-	@echo "Twelf $(version): Server"
+	@echo "Twelf Server"
 	@echo "*************************************************"
-	mltonversion=`$(mlton) 2>&1 | awk 'NR==1 { print 0+$$2 }'`;	\
-	if   [ $$mltonversion -ge 20041109 ]; then			\
-		cmfileid="twelf-server-mlton.cm";			\
-	elif [ $$mltonversion="MLTONVERSION" ]; then			\
-		cmfileid="twelf-server-mlton.cm";			\
-	else								\
-		echo; echo "Error: MLton >= 20041109 required";	echo;	\
-		exit 1;							\
-	fi;								\
-	$(mlton) -output bin/$(twelfserver) build/$${cmfileid}
+	$(MLTON) -output bin/$(twelfserver) build/twelf-server-mlton.mlb
+
+# twelf-server-mlton: ; 
+# 	@echo "*************************************************"
+# 	@echo "Twelf $(version): Server"
+# 	@echo "*************************************************"
+# 	mltonversion=`$(mlton) 2>&1 | awk 'NR==1 { print 0+$$2 }'`;	\
+# 	if   [ $$mltonversion -ge 20041109 ]; then			\
+# 		cmfileid="twelf-server-mlton.cm";			\
+# 	elif [ $$mltonversion="MLTONVERSION" ]; then			\
+# 		cmfileid="twelf-server-mlton.cm";			\
+# 	else								\
+# 		echo; echo "Error: MLton >= 20041109 required";	echo;	\
+# 		exit 1;							\
+# 	fi;								\
+# 	$(mlton) -output bin/$(twelfserver) build/$${cmfileid}
 
 
 twelf-server-smlnj: ;

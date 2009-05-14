@@ -335,13 +335,13 @@ struct
     lexContinue (0)
   end  (* fun lex (inputFun) = let ... in ... end *)
 
-  fun lexStream (instream) = lex (fn i => valOf(TextIO.inputLine (instream)))
+  fun lexStream (instream) = lex (fn i => Compat.inputLine instream)
 
   fun lexTerminal (prompt0, prompt1) =
         lex (fn 0 => (print (prompt0) ;
-		      valOf(TextIO.inputLine (TextIO.stdIn)))
+		      Compat.inputLine TextIO.stdIn)
 	      | i => (print (prompt1) ;
-		      valOf(TextIO.inputLine (TextIO.stdIn))))
+		      Compat.inputLine TextIO.stdIn))
 
   fun toString' (DOT) = "."
     | toString' (PATHSEP) = "."

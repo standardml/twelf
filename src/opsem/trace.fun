@@ -159,7 +159,7 @@ struct
     fun breakAction (G) =
         let
 	  val _ = print " "
-          val line = valOf (TextIO.inputLine(TextIO.stdIn))
+          val line = Compat.inputLine TextIO.stdIn
 (* 	  val line = Compat.inputLine97 (TextIO.stdIn) *)
 	in
 	  case String.sub (line, 0)

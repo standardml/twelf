@@ -23,4 +23,5 @@ struct
   structure Timer = Timer
   structure SocketIO = SocketIO
   fun inputLine97 instream = getOpt (TextIO.inputLine instream, "")
+  val inputLine = inputLine97
 end;
