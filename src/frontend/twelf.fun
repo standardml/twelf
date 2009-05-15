@@ -471,21 +471,27 @@ struct
 	 handle Constraints.Error (eqns) =>
 	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
       | install1 (fileName, (Parser.Imogen (input as Imogen.ConDec dec), r)) =
-        let 
-           val _ = 
-               let in 
-                  print "ConDec:\n"
-                ; print (Print.conDecToString dec)
-                ; print "\nExp:\n"
-               end
-           val exp = Imogen.conDecToExp dec
-           val _ = print (Print.expToString(IntSyn.Null, exp))
-           val _ = print "\nFormula:\n"
-           val preform = Imogen.expToFormula exp
-        in 
-           PP.pp(Formula.pp preform)
-         ; Imogen.doit input
+        let in 
+           case Imogen.tmpfile input of
+              SOME f => ignore (loadFile f)
+            | NONE => ()
         end
+(*       | install1 (fileName, (Parser.Imogen (input as Imogen.ConDec dec), r)) = *)
+(*         let  *)
+(*            val _ =  *)
+(*                let in  *)
+(*                   print "ConDec:\n" *)
+(*                 ; print (Print.conDecToString dec) *)
+(*                 ; print "\nExp:\n" *)
+(*                end *)
+(*            val exp = Imogen.conDecToExp dec *)
+(*            val _ = print (Print.expToString(IntSyn.Null, exp)) *)
+(*            val _ = print "\nFormula:\n" *)
+(*            val preform = Imogen.expToFormula exp *)
+(*         in  *)
+(*            PP.pp(Formula.pp preform) *)
+(*          ; Imogen.doit input *)
+(*         end *)
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
         (let
@@ -1212,7 +1218,29 @@ struct
           ()
         end
 
-    fun installSubsig (fileName, s) =
+    (* loadFile (fileName) = status
+       reads and processes declarations from fileName in order, issuing
+       error messages and finally returning the status (either OK or
+       ABORT).
+    *)
+    and loadFile (fileName) = 
+	handleExceptions 0 fileName (withOpenIn fileName)
+	 (fn instream =>
+	  let
+            val _ = ReconTerm.resetErrors fileName
+	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
+	    and install' (S.Empty) = OK
+	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
+	        (* now done in installConDec *)
+              | install' (S.Cons((Parser.BeginSubsig, _), s')) =
+                  install (installSubsig (fileName, s'))
+	      | install' (S.Cons(decl, s')) =
+	        (install1 (fileName, decl); install s')
+	  in
+	    install (Parser.parseStream instream)
+	  end)
+
+    and installSubsig (fileName, s) =
         let
           val namespace = Names.newNamespace ()
 
@@ -1268,28 +1296,6 @@ struct
                end
              | Exception exn => raise exn
         end
-
-    (* loadFile (fileName) = status
-       reads and processes declarations from fileName in order, issuing
-       error messages and finally returning the status (either OK or
-       ABORT).
-    *)
-    fun loadFile (fileName) = 
-	handleExceptions 0 fileName (withOpenIn fileName)
-	 (fn instream =>
-	  let
-            val _ = ReconTerm.resetErrors fileName
-	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-	    and install' (S.Empty) = OK
-	        (* Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) *)
-	        (* now done in installConDec *)
-              | install' (S.Cons((Parser.BeginSubsig, _), s')) =
-                  install (installSubsig (fileName, s'))
-	      | install' (S.Cons(decl, s')) =
-	        (install1 (fileName, decl); install s')
-	  in
-	    install (Parser.parseStream instream)
-	  end)
 
     (* loadString (str) = status
        reads and processes declarations from str, issuing

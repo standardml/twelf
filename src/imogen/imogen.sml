@@ -95,11 +95,11 @@ local
                          S.App(e, S.Nil) => expToPreFormula(ctx, e)
                        | _ => raise Impossible 
                    end
-                 | "/\\" => binop P.And
-                 | "\\/" => binop P.Or
+                 | "&" => binop P.And
+                 | "|" => binop P.Or
                  | "=>" => binop P.Imp
-                 | "true" => P.Top
-                 | "false" => P.Bot
+                 | "$true" => P.Top
+                 | "$false" => P.Bot
                  | "!" => quant P.All
                  | "?" => quant P.Ex
                  | _ => 
@@ -505,6 +505,40 @@ val doit: input -> unit =
            ; printl (Print.expToString(S.Null, e))
            ; C.check(e, exp)
            ; printl "Proofterm checked!"
+          end
+    end                             
+
+val rand = Random.rand(3892,32984729)
+
+fun ppProof (nd, f) =
+    &[ %[$"imogen : nd", PP.paren(Formula.ppTwelf f), $" = "]
+     , %[ND.ppTwelf nd, $"."]
+     ]
+
+val tmpfile: input -> string option =
+ fn ConDec dec => 
+    let
+       val exp = conDecToExp dec 
+       val form = expToFormula exp
+       val _ = PP.pp (%[$"Trying: ", Formula.pp form])
+       val pform = PFormula.formulate form
+       val tmpFile = "/tmp/imogen_" ^ Int.toString(Int.abs(Random.randInt rand))
+    in
+       case solve pform of
+          NONE =>
+          let in 
+             printl "Formula is not provable!"
+           ; NONE 
+          end
+        | SOME nd => 
+          let
+             val _ = printl "Solution found!"
+             val _ = printl "Translating Imogen natural deduction proofterm..."
+             val pp = ppProof(nd, form)
+             val _ = PP.writeFile(tmpFile, pp)
+          in
+             printl "File ready!"
+           ; SOME tmpFile
           end
     end                             
 

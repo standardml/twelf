@@ -6,6 +6,7 @@ structure Imogen
 is
 
 $/basis.cm
+$/smlnj-lib.cm
 sml-ext.cm
 ../lambda/sources.cm
 ../names/sources.cm

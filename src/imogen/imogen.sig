@@ -16,5 +16,7 @@ val ndToExp: ND.nd * Formula.formula -> IntSyn.Exp
 
 val doit: input -> unit
 
+val tmpfile: input -> string option
+
 end
 
