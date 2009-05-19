@@ -49,20 +49,101 @@ struct
 
     (* next section adapted from m2/metasyn.fun *)
 
-    (* weaken (G, a) = w'
-
-       Invariant:
-       If   a is a type family
-       then G |- w' : G'
-       and  forall x:A in G'  A subordinate to a
-     *)
+    (* original `weaken' code *)
     fun weaken (I.Null, a) = I.id
       | weaken (I.Decl (G', D as I.Dec (name, V)), a) =
 	let
-	  val w' = weaken (G', a)
+	    val w' = weaken (G', a)
 	in
 	  if Subordinate.belowEq (I.targetFam V, a) then I.dot1 w'
 	  else I.comp (w', I.shift)
+ 	end
+
+    (* debugging utility function *)
+    fun strjoin d [] = ""
+      | strjoin d [x] = x
+      | strjoin d (h::tl) = h ^ d ^ strjoin d tl
+
+    (* cantOccur : int list -> I.Exp -> bool *)
+    (* cantOccur (params, tp) *)
+    (* = true iff there is some param in the list params of deBruijn indices *)
+    (* that has no occurrence in tp. *)
+    fun cantOccur (params, tp) = List.exists (fn param => cantOccurOne param (tp, I.id)) params
+    and cantOccurOne param (V, s) = cantOccurOneW param (Whnf.whnf (V, s))
+    and cantOccurOneW param (I.Pi((I.Dec(_, A), dep), B), s) = cantOccurOne (param + 1) (B, I.dot1 s)
+      | cantOccurOneW param (I.Root(I.Const a, S), s) = I.hlfIsSubstructCid a andalso
+							I.noOccur (param, Whnf.normalizeWorldExp (spineLast (S, s)))
+      | cantOccurOneW _ _ = false
+
+    (* span : I.Exp -> int list *)
+    (* span V *)
+    (* Given a type, returns a list of deBruijn indices of parameters that are *)
+    (* certain to be in the world-label that any atomic term x (M1; ... Mn) is well-typed at, *) 
+    (* for any x : V. We approximate this pessimistically by just substituting *)
+    (* epsilon for every world argument. *)
+    and span V = span' 0 (V, I.id)
+    (* assume we have descended under n binders *)
+    and span' n (V, s) = spanW' n (Whnf.whnf (V, s))
+    and spanW' n (I.Pi(_, V), s) = span' (n + 1) (V, s)
+      | spanW' n (I.Root(I.Const a, S), s) = if I.hlfIsSubstructCid a
+					     then 
+						 let val parms = Whnf.normalizeWorldExp (spineLast (S, I.id))
+						     fun  go (I.Root(I.BVar n', _)::tl) = 
+							  (* exclude locally bound variables *)
+							  if n' > n 
+							  then (n' - n) :: go tl
+							  else go tl
+							| go _ = [] (* also don't include evars *)
+						 in
+						     go parms
+						 end
+					     else []
+      | spanW' n (V, s) = [] (* nil is conservative --- we won't strengthen anything with *no* paramaters *) 
+    and spineLast (I.App(x, I.Nil), s) = (x, s)
+      | spineLast (I.App(_, S), s) = spineLast (S, s)
+      | spineLast (I.SClo(S, s'), s) = spineLast (S, I.comp (s', s))
+
+    (* hlfWeaken (G, V) = w'
+
+       w' is a strengthening [sic!] substitution that trims
+       from G variables that cannot be used to produce anything
+       of type V.
+
+       Invariant:
+       then G |- w' : G'
+
+       G' is a subcontext of G after this strengthening has occurred.
+       Traditionally, we only used subordination information,
+       but here I'm doing some reasoning about worlds, too.
+     *)
+	
+    fun hlfWeaken (G, W) =
+	let
+	    fun tos x = I.expToString(Whnf.normalize(x, I.id))
+	    (* weak is given the current deBruijn index, and the type *)
+	    fun weak (n, I.Null) = I.id
+	      | weak (n, I.Decl (G', D as I.Dec (name, V))) =
+		let
+		    val a = I.targetFam W
+		    val w' = weak (n + 1, G')
+		    fun isWorld V = let val (V', s) = Whnf.whnf (V, I.id) in I.hlfIsWorldExp V' end
+		    fun hlfShouldWeaken () = (if isWorld W then false
+					      else 
+						  if isWorld V 
+						  then cantOccur ([n], W)
+						  else cantOccur (map (fn x => x + n) (* shift because we got them from the ctx *)
+								      (span V), W))
+		    val shouldWeaken = 
+			(not (Subordinate.belowEq (I.targetFam V, a)))
+			orelse
+			(!Global.hlf andalso hlfShouldWeaken())
+		in
+		    if not shouldWeaken 
+		    then I.dot1 w'
+		    else I.comp (w', I.shift)
+		end
+	in
+	    weak (1, G)
 	end
       (* added next case, probably should not arise *)
       (* Sun Dec 16 10:42:05 2001 -fp !!! *)
@@ -79,7 +160,7 @@ struct
     *)
     fun createEVar (G, V) =
         let (* G |- V : L *)
-	  val w = weaken (G, I.targetFam V)       (* G  |- w  : G'    *)
+	  val w = weaken (G, I.targetFam V)    (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)
 	  val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
@@ -316,6 +397,12 @@ struct
     fun unifiable (G, Us1, Us2) =
           Unify.unifiable (G, Us1, Us2)
 
+    fun unifiableDX (G, Us1, Us2) =
+	(print ("cxu unifiable? " ^ IntSyn.expToString (Whnf.normalize Us1) ^ " = " ^ IntSyn.expToString (Whnf.normalize Us2) ^ "\n");
+         if Unify.unifiable (G, Us1, Us2)
+	 then (print "yes!\n"; true)
+	 else (print "no!\n"; false))
+
     (* matchEqns (es) = true 
        iff  all equations in es can be simultaneously unified
 
@@ -346,6 +433,12 @@ struct
 	else Fail
       | resolveCands (Cands (ks)) = Cands (ks)
       | resolveCands (Fail) = Fail
+
+    fun resolveCandsDX (e as Eqns (es)) = 
+	( print "-- resolveCandsDX\n";
+(*	 app (fn x => print ((equationToString x handle Unprintable => "???") ^ "\n")) es;  *)
+	 resolveCands e)
+      | resolveCandsDX e = resolveCands e
 
     (* collectConstraints (Xs) = constrs
        collect all the constraints that may be attached to EVars Xs
@@ -378,9 +471,9 @@ struct
 	in
 	  case constrs
 	    of nil => Eqns (nil)
-	     | _ => Fail		(* constraints remained: Fail without candidates *)
+	     | eqns => (print ("DX cover.fun remaining constrants " ^ IntSyn.cnstrsToString eqns ^ "\n"); Fail)
+	(* constraints remained: Fail without candidates *)
 	end
-
     (* Candidate Lists *)
     (*
        Candidate lists record constructors and candidates for each
@@ -414,8 +507,11 @@ struct
     fun matchExp (G, d, Us1, Us2, cands) =
           matchExpW (G, d, Whnf.whnf Us1, Whnf.whnf Us2, cands)
 
-    and matchExpW (G, d, Us1 as (I.Root (H1, S1), s1), Us2 as (I.Root (H2, S2), s2), cands) =
-        (case (H1, H2)
+    and matchExpW (G, d, Us1 as (U1 as I.Root (H1, S1), s1), Us2 as (U2 as I.Root (H2, S2), s2), cands) =
+	if (I.hlfSpecialExp U1 orelse I.hlfSpecialExp U2)
+	then addEqn (Eqn (G, Us1, Us2), cands)
+        else
+	 (case (H1, H2)
 	   (* Note: I.Proj occurring here will always have the form
 	      I.Proj (I.Bidx (k), i) *)
 	   (* No skolem constants, foreign constants, FVars *)
@@ -633,7 +729,7 @@ struct
        NOTE: Simply use constant type for more robustness (see below)
     *)
     fun matchClause (G, ps', qs as (I.Root (_, _), s), ci) =
-          checkConstraints (G, qs, resolveCands (matchTop (G, 0, ps', qs, ci, Eqns (nil))))
+          checkConstraints (G, qs, resolveCandsDX (matchTop (G, 0, ps', qs, ci, Eqns (nil))))
       | matchClause (G, ps', (I.Pi ((I.Dec(_, V1), _), V2), s), ci) =
         let
 	  (* changed to use subordination and strengthening here *)
@@ -644,6 +740,14 @@ struct
 	  (* was: I.Null instead of G in line above Wed Nov 21 16:40:40 2001 *)
 	in
 	  matchClause (G, ps', (V2, I.Dot (I.Exp (X1), s)), ci)
+	end
+    fun matchClauseDX (G, psorig, ps, qs, ci) = 
+	let
+(*	    val _ = print ("- 1. coverage ctx " ^ I.ctxToString I.decToString G ^ "\n")
+	    val _ = print ("- 2. coverage goal " ^ Print.expToString(I.Null, Whnf.normalize (psorig, I.id)) ^ "\n") handle Bind => (print "???\n")
+	    val _ = print ("- 3. coverage clause " ^ Print.expToString(I.Null, Whnf.normalize qs) ^ "\n") handle Bind => (print "???\n") *)
+	in
+	    matchClause (G, ps, qs, ci)
 	end
 
     (* matchSig (G, (a @ S, s), ccs, ci, klist) = klist'
@@ -657,6 +761,17 @@ struct
        ci matches S
        klist <> Covered
     *)
+    fun matchSigDX (G, ps, ps', nil, ci, klist) = klist
+      | matchSigDX (G, ps, ps', V::ccs', ci, klist) =
+        let
+	  val cands = CSManager.trail
+	              (fn () => matchClauseDX (G, ps, ps', (V, I.id), ci))
+	in
+	    case addKs (cands, klist) of
+		Covered => ((* print "Immediately covered!\n";*) Covered)
+	      | klist' => ((* print "Not immediately covered...\n";*) matchSigDX (G, ps, ps', ccs', ci, klist'))
+	end
+
     fun matchSig (G, ps', nil, ci, klist) = klist
       | matchSig (G, ps', V::ccs', ci, klist) =
         let
@@ -759,12 +874,20 @@ struct
        G |- V : type
     *)
     fun match (G, V as I.Root (I.Const (a), S), 0, ci, Input(ccs)) =
-          matchCtx' (G, I.id, G, V, 1, ci,
-		     matchSig (G, (V, I.id), ccs, ci, CandList (nil)))
+        matchCtx' (G, I.id, G, V, 1, ci,
+		   matchSig (G, (V, I.id), ccs, ci, CandList (nil)))
       | match (G, V, 0, ci, Output (V', q)) =
-	  matchOut (G, V, ci, (V', I.Shift (I.ctxLength G)), q)
+	matchOut (G, V, ci, (V', I.Shift (I.ctxLength G)), q)
       | match (G, I.Pi ((D, _), V'), p, ci, ccs) =
-	  match (I.Decl (G, D), V', p-1, ci, ccs)
+	match (I.Decl (G, D), V', p-1, ci, ccs)
+
+    fun matchDX (G, Vorig, V as I.Root (I.Const (a), S), 0, ci, Input(ccs)) =
+        matchCtx' (G, I.id, G, V, 1, ci,
+		   matchSigDX (G, Vorig, (V, I.id), ccs, ci, CandList (nil)))
+      | matchDX (G, Vorig, V, 0, ci, Output (V', q)) =
+	matchOut (G, V, ci, (V', I.Shift (I.ctxLength G)), q)
+      | matchDX (G, Vorig, I.Pi ((D, _), V'), p, ci, ccs) =
+	matchDX (I.Decl (G, D), Vorig, V', p-1, ci, ccs)
 
     (************************************)
     (*** Selecting Splitting Variable ***)
@@ -922,6 +1045,7 @@ struct
     fun constCases (G, Vs, nil, sc) = ()
       | constCases (G, Vs, I.Const(c)::sgn', sc) =
         let
+	  val _ = chatter 6 (fn () => "Considering constant " ^ I.conDecName(I.sgnLookup c) ^ "\n")   (* XXX -jcreed *)
 	  val (U, Vs') = createAtomConst (G, I.Const c)
 	  val _ = CSManager.trail (fn () =>
 				   if Unify.unifiable (G, Vs, Vs')
@@ -1012,6 +1136,10 @@ struct
     fun lowerSplit (G, Vs, W, sc) = lowerSplitW (G, Whnf.whnf Vs, W, sc)
     and lowerSplitW (G, Vs as (I.Root (I.Const a, _), s), W, sc) =
         let
+	    (* XXX stopgap measure to refrain from splitting world variables -jcreed *)
+	    val _ = if I.hlfIsWorld a 
+		    then raise Constraints.Error []  
+		    else ()
 	  val _ = constCases (G, Vs, Index.lookup a, sc) (* will trail *)
 	  val _ = paramCases (G, Vs, I.ctxLength G, sc)	(* will trail *)
 	  val _ = worldCases (G, Vs, W, sc) (* will trail *)
@@ -1032,9 +1160,9 @@ struct
     *)
     fun splitEVar ((X as I.EVar (_, GX, V, _)), W, sc) = (* GX = I.Null *)
           lowerSplit (I.Null, (V, I.id), W,
-		      fn U => if Unify.unifiable (I.Null, (X, I.id), (U, I.id))
-				then sc ()
-			      else ())
+		      fn U =>  if Unify.unifiable (I.Null, (X, I.id), (U, I.id))
+			       then  sc ()
+			       else  ())
 
     (* abstract (V, s) = V'
        where V' = {{G}} Vs' and G abstracts over all EVars in V[s]
@@ -1051,6 +1179,139 @@ struct
 		  else ()
 	in
 	  (V', i)
+	end
+
+    (* building up towards hlfAbstract *)
+
+    fun hlfCreateEVar (G, V) =
+        let (* G |- V : L *)
+	    val Gstr = Print.ctxToString (I.Null, G)
+	    val Vstr = Print.expToString (G, V)
+	    val _ = print ("DX createEvar  " ^ Gstr ^ " |- " ^ Vstr ^ "\n") 
+	    val ow = weaken (G, I.targetFam V)              
+	    val w = hlfWeaken (G, V)              
+ 	    val _ = print ("DX <- " ^ I.subToString ow ^ "\n")
+	    val _ = print ("DX -> " ^ I.subToString w ^ "\n")
+	    val iw = Whnf.invert w 	          (* G' |- iw : G     *)
+	    val G' = Whnf.strengthen (iw, G)
+	    val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
+	    val X = I.EClo (X', w)	          (* G  |- X  : V     *)
+	in
+	    X
+	end
+
+    fun hlfCreateLoweredEVarW (G, (I.Pi ((D, _), V), s)) =
+        let
+          val D' = I.decSub (D, s)
+        in
+          I.Lam (D', hlfCreateLoweredEVar (I.Decl (G, D'), (V, I.dot1 s)))
+        end
+      | hlfCreateLoweredEVarW (G, Vs) = hlfCreateEVar (G, I.EClo Vs)
+
+    and hlfCreateLoweredEVar (G, Vs) = hlfCreateLoweredEVarW (G, Whnf.whnfExpandDef Vs)
+
+    fun hlfInstEVars (Vs, p, XsRev) = hlfInstEVarsW (Whnf.whnf Vs, p, XsRev)
+    and hlfInstEVarsW (Vs, 0, XsRev) = (Vs, XsRev)
+      | hlfInstEVarsW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), p, XsRev) =
+        let (* p > 0 *)
+	  val X1 = hlfCreateLoweredEVar (I.Null, (V1, s)) (* all EVars are global *)
+	in
+	  hlfInstEVars ((V2, I.Dot (I.Exp (X1), s)), p-1, SOME(X1)::XsRev)
+	end
+      | hlfInstEVarsW ((I.Pi ((I.BDec (_, (l, t)), _), V2), s), p, XsRev) =
+        (* G0 |- t : Gsome *)
+	(* . |- s : G0 *)
+	let (* p > 0 *)
+	  val L1 = I.newLVar (I.Shift(0), (l, I.comp(t, s)))
+	  (* new -fp Sun Dec  1 20:58:06 2002 *)
+	  (* new -cs  Sun Dec  1 06:27:57 2002 *)
+	in
+	  hlfInstEVars ((V2, I.Dot (I.Block (L1), s)), p-1, NONE::XsRev)
+	end
+
+    fun hlfAbstract (V, s) =
+	let val (V1, i) = abstract (V, s)
+	    val ((V2, s2), XsRev) = hlfInstEVars((V1, I.id), i, nil)
+	    val (V3, i3) = abstract (V2, s2)
+	in
+	    (V3, i3)
+	end
+
+    (* addFinitaryCases (V, s) Calls addCase for all cases that arise
+    from the post-unification coverage goal V[s], splitting along all
+    finitary case splits that can be discerned from the constraints
+    remaining in V[s].
+
+    If there are no remaining constraints at all, then we just add the
+    abstracted case (V,s)
+
+    The only finitary splits attempted for now are certain ones
+    arising from the HLF constraint domain. If there are still
+    constraints remaining after those, then (re)raise
+    Constraints.Error *)
+
+    (* raised when we get a constraint that is not known to be finitary *)
+    exception FinitaryCasesFailure
+
+    fun addFinitaryCases (V, s) = 
+	let
+
+	    val newCases : (IntSyn.Exp * int) list ref
+	      = ref []
+
+       (* consider cnstr k 
+          Splits over the (finite) solutions of cnstr, and calls
+          continuation k on each, within a trailing scope. 
+
+	  Raises exception if we don't know how to finitely split. *)
+
+	    fun consider cnstr k =
+		let
+		    fun carryOut [] k = ()
+		      | carryOut (h::tl) k =
+			let 
+			    (* cf. awakeCnstr in unify.fun *)
+			    fun awake (I.Eqn (G, U1, U2)) = 
+				(Unify.solveConstraint cnstr;
+				 Unify.unify (G, (U1, I.id), (U2, I.id))
+				 handle Unify.Unify _ => raise Error "unexpected Unify")
+			      | awake I.Solved = ()
+			      | awake (I.FgnCnstr _) = raise Error "unexpected FgnCnstr"
+			in
+			    CSManager.trail (fn () => (h(); awake (!cnstr); k()));
+			    carryOut tl k
+			end
+		in
+		    case Unify.finitaryConstraint cnstr of
+			SOME insts => carryOut insts k
+		      | NONE => raise FinitaryCasesFailure
+		end
+
+       (* addFinitaryCases cnstrs (V, s) 
+       cnstrs is remaining constraints *)
+
+	    fun addFinitaryCases' [] (V, s) = 
+		let
+		    val _ = print "[cover.fun] about to abstract...\n"
+		    val _ = print ("--- " ^ IntSyn.expToString (Whnf.normalize (V,s)) ^"\n")
+		    val c = hlfAbstract (V, s)
+		    val _ = print "...Succeeded at abstracting!\n"
+		in
+		    addCase c
+		end 
+	      (* The above line will *not* recurse and handle further
+	       solvable constraints - this is ok for now. Indeed I am
+	       a bit worried about whether termination would hold
+	       unless that recursion were done non-naively. -jcreed *)
+	      | addFinitaryCases' (h::tl) (V, s) = consider h (fn () => addFinitaryCases' tl (V, s))
+	in
+	    addCase (hlfAbstract (V, s))
+            handle (e as Constraints.Error (cnstrs)) =>
+		   ((chatter 1 (fn () => "[cover.fun] Splitting, got constraints: " ^ Print.cnstrsToString (cnstrs) ^ "\n");
+		     addFinitaryCases' cnstrs (V, s);
+		     print "[cover.fun] Ok, adding new cases.\n";
+		     app addCase (!newCases))
+		    handle FinitaryCasesFailure => (print "[cover.fun] couldn't fsplit...\n"; raise e))
 	end
 
     (* splitVar ({{G}} V, p, k, W) = SOME [{{G1}} V1 ,..., {{Gn}} Vn]
@@ -1075,7 +1336,7 @@ struct
           (* split on k'th variable, counting from innermost *)
 	  val SOME(X) = List.nth (XsRev, k-1)
 	  val _ = resetCases ()
-	  val _ = splitEVar (X, W, fn () => addCase (abstract (V1, s)))	(* may raise Constraints.Error *)
+	  val _ = splitEVar (X, W, fn () => addFinitaryCases (V1, s))	(* may raise Constraints.Error *)
 	in
 	  SOME (getCases ())
 	end
@@ -1507,7 +1768,7 @@ struct
 	  cover' (contract(V, p, ci, lab), wci, ccs, lab, missing) )
 
     and cover' (SOME(V, p), wci as (W, ci), ccs, lab, missing) =
-          split (V, p, selectCand (match (I.Null, V, p, ci, ccs)), wci, ccs, lab, missing) 
+          split (V, p, selectCand (matchDX (I.Null, V, V, p, ci, ccs)), wci, ccs, lab, missing) 
       | cover' (NONE, wci, ccs, lab, missing) =
 	(* V is covered by unique output inconsistency *)
 	( chatter 6 (fn () => "Covered\n");
@@ -1688,435 +1949,9 @@ struct
 	  ()
 	end
 
-    (**********************************************)
-    (* New code for coverage checking of Tomega   *)
-    (* Started Sun Nov 24 11:02:25 2002  -fp      *)
-    (* First version Tue Nov 26 19:29:12 2002 -fp *)
-    (**********************************************)
+(* XXX removed TOmega stuff temporarily since it was confusing my
+    searches with identically-named functions *)
 
-    (* cg = CGoal (G, S)  with G |- S : {{G'}} type *)
-    datatype CoverGoal =
-      CGoal of I.dctx * I.Spine
-
-    (* cc = CClause (Gi, Si) with  Gi |- Si : {{G}} type *)
-    datatype CoverClause =
-      CClause of I.dctx * I.Spine
-
-    fun formatCGoal (CGoal (G, S)) =
-        let
-	  val _ = N.varReset I.Null
-	in
-	  F.HVbox ([Print.formatCtx (I.Null, G), F.Break, F.Break, F.String "|-",
-		    F.Space] @ Print.formatSpine (G, S))
-	end
-
-    fun showPendingCGoal (CGoal (G, S), lab) =
-        F.makestring_fmt (F.Hbox [F.String(labToString(lab)), F.Space, F.String "?- ",
-				  formatCGoal (CGoal (G, S)), F.String "."])
-
-    fun showCClause (CClause (G, S)) =
-        let
-	  val _ = N.varReset I.Null
-	in
-	  F.makestring_fmt (F.HVbox ([F.String "!- "] @ Print.formatSpine (G, S)))
-	end
-
-    fun showSplitVar (CGoal (G, S), k) =
-        let
-	  val _ = N.varReset I.Null
-	  val I.Dec (SOME(x), _) = I.ctxLookup (G, k)
-	in
-	  "Split " ^ x ^ " in " ^ F.makestring_fmt (F.HVbox (Print.formatSpine (G, S)))
-	end
-
-    (* newEVarSubst (G, G') = s
-       Invariant:   If G = xn:Vn,...,x1:V1
-                  then s = X1...Xn.^k
-                     G |- s : G'
-    *)
-    fun newEVarSubst (G, I.Null) = I.Shift(I.ctxLength(G))
-      | newEVarSubst (G, I.Decl(G', D as I.Dec (_, V))) =
-        let
-	  val s' = newEVarSubst (G, G')
-	  val V' = I.EClo (V, s')
-	  val X = I.newEVar (G, V')
-	in 
-	  I.Dot (I.Exp (X), s')
-	end
-      | newEVarSubst (G, I.Decl(G', D as I.NDec _)) =
-	let
-	  val s' = newEVarSubst (G, G')
-	in
-	  I.Dot (I.Undef, s')
-	end
-      | newEVarSubst (G, I.Decl(G', D as I.BDec (_, (b, t)))) =
-	let
-	  val s' = newEVarSubst (G, G')
-	  val L1 = I.newLVar (I.Shift(0), (b, I.comp(t, s')))
-	  (* -fp Sun Dec  1 21:10:45 2002 *)
-	  (* --cs Sun Dec  1 06:31:23 2002 *)
-	in
-	  I.Dot (I.Block (L1), s')
-	end
-      (* ADec should be impossible *)
-
-    (* checkConstraints (G, Si[ti], cands) = cands'
-       failure if constraints remain in Q[s] which indicates only partial match
-       Q[s] is the clause head after matching the coverage goal.
-
-       Invariants: if cands = Eqns (es) then es = nil.
-    *)
-    (* This ignores LVars, because collectEVars does *)
-    (* Why is that OK?  Sun Dec 16 09:01:40 2001 -fp !!! *)
-    fun checkConstraints (G, (Si, ti), Cands (ks)) = Cands (ks)
-      | checkConstraints (G, (Si, ti), Fail) = Fail
-      | checkConstraints (G, (Si, ti), Eqns _) = (* _ = nil *)
-        let
-	  val Xs = Abstract.collectEVarsSpine (G, (Si, ti), nil)
-	  val constrs = collectConstraints Xs
-	in
-	  case constrs
-	    of nil => Eqns (nil)
-	     | _ => fail ("Remaining constraints") (* constraints remained: Fail without candidates *)
-	end
-
-    (* matchClause (cg, (Si, ti)) = klist
-       matching coverage goal cg against instantiated coverage clause Si[ti]
-       yields splitting candidates klist
-    *)
-    fun matchClause (CGoal (G, S), (Si, ti)) = 
-        let
-	  val cands1 = matchSpine (G, 0, (S, I.id), (Si, ti), Eqns (nil))
-	  val cands2 = resolveCands cands1
-	  val cands3 = checkConstraints (G, (Si, ti), cands2)
-	in
-	  cands3
-	end
-
-    (* matchClauses (cg, ccs, klist) = klist'
-       as in match, with accumulator argument klist
-    *)
-    fun matchClauses (cg, nil, klist) = klist
-      | matchClauses (cg as CGoal(G, S), (CClause (Gi, Si)::ccs), klist) =
-        let
-	  val ti = newEVarSubst (G, Gi) (* G |- ti : Gi *)
-	  val cands = CSManager.trail (fn () => matchClause (cg, (Si, ti)))
-	in
-	  matchClauses' (cg, ccs, addKs (cands, klist))
-	end
-    and matchClauses' (cg, ccs, Covered) = Covered
-      | matchClauses' (cg, ccs, klist as CandList _) =
-          matchClauses (cg, ccs, klist)
-
-    (* match (cg, ccs) = klist
-       matching coverage goal cg against coverage clauses ccs
-       yields candidates klist
-    *)
-    fun match (CGoal (G, S), ccs) =
-          matchClauses (CGoal (G, S), ccs, CandList (nil))
-
-    (* abstractSpine (S, s) = CGoal (G, S')
-       Invariant: G abstracts all EVars in S[s]
-       G |- S' : {{G'}}type
-    *)
-    fun abstractSpine (S, s) =
-        let
-	  val (G', S') = Abstract.abstractSpine (S, s)
-	  val namedG' = N.ctxName G' (* for printing purposes *)
-	  val _ = if !Global.doubleCheck
-		    then ( TypeCheck.typeCheckCtx (namedG')
-			  (* TypeCheck.typeCheckSpine (namedG', S') *)
-			  )
-		  else ()
-	in
-	  CGoal (namedG', S')
-	end
-
-    (* kthSub (X1...Xn.^0, k) = Xk
-       Invariant: 1 <= k <= n
-       Xi are either EVars or to be ignored
-    *)
-    fun kthSub (I.Dot (I.Exp(X), s), 1) = X
-      | kthSub (I.Dot (_, s), k) = kthSub (s, k-1)
-
-    (* subToXsRev (X1...Xn.^0) = [Xiopt,...,Xnopt]
-       Invariant: Xi are either EVars (translate to SOME(Xi))
-                  or not (translate to NONE)
-    *)
-    fun subToXsRev (I.Shift(0)) = nil (* n = 0 *)
-      | subToXsRev (I.Dot (I.Exp(X), s)) =
-          SOME(X)::subToXsRev (s)
-      | subToXsRev (I.Dot (_, s)) =  
-	  NONE::subToXsRev (s)
-
-    (* caseList is a list of possibilities for a variables
-       to be split.  Maintained as a mutable reference so it
-       can be updated in the success continuation.
-    *)
-    local 
-      val caseList : CoverGoal list ref = ref nil
-    in
-      fun resetCases () = (caseList := nil)
-      fun addCase cg = (caseList := cg :: !caseList)
-      fun getCases () = (!caseList)
-    end
-
-    (* splitVar (CGoal(G, S), k, w) = SOME [cg1,...,cgn]
-                                  or NONE
-       where cgi are new coverage goals obtained by
-       splitting kth variable in G, counting right-to-left.
-
-       returns NONE if splitting variable k fails because of constraints
-
-       w are the worlds defined for current predicate
-
-       Invariants:
-       k <= |G|
-       G |- S : {{G'}} type
-       cgi cover cg
-    *)
-    fun splitVar (cg as CGoal (G, S), k, w) =
-        let
-	  val _ = chatter 6 (fn () => showSplitVar (cg, k) ^ "\n")
-	  val s = newEVarSubst (I.Null, G) (* for splitting, EVars are always global *)
-	  (* G = xn:V1,...,x1:Vn *)
-	  (* s = X1....Xn.^0, where . |- s : G *)
-	  val X = kthSub (s, k) (* starts with k = 1 (a la deBruijn) *)
-	  val _ = resetCases ()
-	  val _ = splitEVar (X, w, fn () => addCase (abstractSpine (S, s)))
-	in
-	  SOME (getCases ())
-	end
-        (* Constraints.Error could be raised by abstract *)
-        handle Constraints.Error (constrs) =>
-	  (chatter 7 (fn () => "Inactive split:\n" ^ Print.cnstrsToString (constrs) ^ "\n");
-	   NONE)
-
-    (* finitary (CGoal (G, S), W) = [(k1,n1),...,(km,nm)]
-       where ki are indices of splittable variables in G with ni possibilities
-    *)
-    fun finitary (CGoal (G, S), w) =
-        let
-	  (* G = xn:Vn,...,x1:V1 *)
-	  val s = newEVarSubst (I.Null, G) (* for splitting, EVars are always global *)
-	  (* s = X1...Xn.^0,  . |- S : G *)
-	  val XsRev = subToXsRev (s)
-	  (* XsRev = [SOME(X1),...,SOME(Xn)] *)
-	in
-	  finitarySplits (XsRev, 1, w, fn () => abstractSpine (S, s), nil)
-	end
-
-    (***************)
-    (* Contraction *)
-    (***************)
-    (* for explanation, see contract and contractAll above *)
-
-    fun contractAll (CGoal(G,S), ucands) =
-        let
-	  val s = newEVarSubst (I.Null, G) (* for unif, EVars are always global *)
-	  val XsRev = subToXsRev (s)
-	in
-	  if unifyUOut (XsRev, ucands)
-	    then SOME (abstractSpine (S, s)) (* as in splitVar, may raise Constraints.Error *)
-	  else NONE
-	end
-
-    fun contract (cg as CGoal (G, S), lab) =
-        let
-	  val ucands = contractionCands (G, 1)
-	  val n = List.length ucands
-	  val _ = if n > 0
-		    then chatter 6 (fn () => "Found " ^ Int.toString n ^ " contraction "
-				    ^ pluralize (n, "candidate") ^ "\n")
-		  else ()
-	  val cgOpt' = if n > 0
-			 then (contractAll (cg, ucands)
-			       handle Constraints.Error _ =>
-				 ( chatter 6 (fn () => "Contraction failed due to constraints\n");
-				  SOME(cg) )) (* no progress if constraints remain *)
-		       else SOME(cg)	(* no candidates, no progress *)
-	  val _ = case cgOpt'
-	            of NONE => chatter 6 (fn () => "Case impossible: conflicting unique outputs\n")
-		     | SOME(cg') => chatter 6 (fn () => showPendingCGoal (cg', lab) ^ "\n")
-	in
-	  cgOpt'
-	end
-
-    (* cover (cg, w, ccs, lab, missing) = missing'
-       covers ([cg1,...,cgn], w, ccs, missing) = missing'
-
-       Check if cover goal cg (or [cg1,..,cgn]) are covered by
-       cover clauses ccs, adding missing cases to missing to yield missing'
-
-       cg = CGoal (G, S) where G contains the splittable variables
-       cci = CClause (Gi, Si) where Gi contains essentially existential variables
-
-       w are the worlds for the principal type family
-
-       lab is the label for the current goal for tracing purposes
-    *)
-    fun cover (cg, w, ccs,  lab, missing) =
-        ( chatter 6 (fn () => showPendingCGoal (cg, lab) ^ "\n");
-	  cover' (contract(cg, lab), w, ccs, lab, missing) )
-    and cover' (SOME(cg), w, ccs, lab, missing) =
-        let val cands = match (cg, ccs)	(* determine splitting candidates *)
-	    val cand = selectCand cands	(* select one candidate *)
-	in split (cg, cand, w, ccs, lab, missing) end
-      | cover' (NONE, w, ccs, lab, missing) =
-	(* cg is covered by unique output inconsistency *)
-	( chatter 6 (fn () => "Covered\n");
-	  missing )
-    and split (cg, NONE, w, ccs, lab, missing) =
-        (* cg is covered: return missing patterns from other cases *)
-        ( chatter 6 (fn () => "Covered\n");
-	  missing )
-      | split (cg, SOME(nil), w, ccs, lab, missing) =
-	(* no strong candidates: check for finitary splitting candidates *)
-	( chatter 6 (fn () => "No strong candidates --- calculating weak candidates\n");
-	  splitWeak (cg, finitary (cg, w), w, ccs, lab, missing) )
-      | split (cg, SOME((k,_)::ksn), w, ccs, lab, missing) =
-	(* some candidates: split first candidate, ignoring multiplicities *)
-	(* candidates are in reverse order, so non-index candidates are split first *)
-	(* splitVar shows splitting as it happens *)
-	( chatter 6 (fn () => "Splitting on " ^ Int.toString (k) ^ "\n");
-	  case splitVar (cg, k, w)
-	    of SOME(cases) => covers (cases, w, ccs, lab, missing)
-	     | NONE => 
-	      ( chatter 6 (fn () => "Splitting failed due to generated constraints\n");
-	        split (cg, SOME(ksn), w, ccs, lab, missing)))
-
-    and splitWeak (cg, nil, w, ccs, lab, missing) =
-        ( chatter 6 (fn () => "No weak candidates---case " ^ labToString(lab) ^ " not covered\n");
-	  cg::missing )
-      | splitWeak (cg, ksn, w, ccs, lab, missing) = (* ksn <> nil *)
-	  split (cg, SOME(findMin ksn::nil), w, ccs, lab, missing)
-
-    and covers (cases, w, ccs, lab, missing) =
-        ( chatter 6 (fn () => "Found " ^ Int.toString (List.length cases)
-		     ^ pluralize (List.length cases, " case") ^ "\n");
-	  covers' (cases, 1, w, ccs, lab, missing) )
-    and covers' (nil, n, w, ccs, lab, missing) =
-        ( chatter 6 (fn () => "All subcases of " ^ labToString(lab) ^ " considered\n");
-	  missing )
-      | covers' (cg::cases', n, w, ccs, lab, missing) =
-	let
-	  val missing1 = cover (cg, w, ccs, Child(lab, n), missing)
-	in
-	  covers' (cases', n+1, w, ccs, lab, missing1)
-	end
-
-    (* substToSpine' (s, G, T) = S @ T
-       If   G' |- s : G
-       then G' |- S : {{G}} a >> a  for arbitrary a
-       {{G}} erases void declarations in G
-    *)
-    fun substToSpine' (I.Shift(n), I.Null, T) = T
-      | substToSpine' (I.Shift(n), G as I.Decl _, T) =
-          substToSpine' (I.Dot (I.Idx (n+1), I.Shift(n+1)), G, T)
-      | substToSpine' (I.Dot(_, s), I.Decl(G, I.NDec _), T) =
-	  (* Skip over NDec's; must be either Undef or Idx [from eta-expansion] *)
-	  (* Unusable meta-decs are eliminated here *)
-          substToSpine' (s, G, T)
-      | substToSpine' (I.Dot(I.Exp(U),s), I.Decl(G,V), T) =
-	  substToSpine' (s, G, I.App(U, T))
-      | substToSpine' (I.Dot(I.Idx(n),s), I.Decl(G,I.Dec(_,V)), T) =
-	  (* Eta-expand *)
-	let
-	  val (Us,_) = Whnf.whnfEta ((I.Root (I.BVar(n), I.Nil), I.id), (V, I.id))
-	in
-	  substToSpine' (s, G, I.App(I.EClo Us, T))
-	end
-      | substToSpine' (I.Dot (_, s) , I.Decl (G, I.BDec (_, (L, t))), T) = 
-        (* was: I.Idx in previous line, Sun Jan  5 11:02:19 2003 -fp *)
-	(* Treat like I.NDec *)
-	  (* Attempted fix, didn't work because I don't know how you
-             computed splitting candidates for Blocks
-	     --cs Sat Jan  4 22:38:01 2003
-	  *)
-	substToSpine' (s, G, T)
-
-
-      (* I.Axp, I.Block(B) or other I.Undef impossible *)
-
-    (* substToSpine (s, G) = S
-       If   G' |- s : G
-       then G' |- S : {{G}} type
-
-       Note: {{G}} erases void declarations in G
-     *)
-    fun substToSpine (s, G) = substToSpine' (s, G, I.Nil)
-
-    (* purify' G = (G', s) where all NDec's have been erased from G
-       If    |- G ctx
-       then  |- G ctx and  G' |- s : G
-    *)
-    fun purify' (I.Null) = (I.Null, I.id)
-      | purify' (I.Decl (G, I.NDec _)) =
-        let val (G', s) = purify' G
-	  (* G' |- s : G *)
-	in
-	  (G', I.Dot (I.Undef, s))
-	  (* G' |- _.s : G,_ *)
-	end
-      | purify' (I.Decl (G, D as I.Dec _)) =
-        let val (G', s) = purify' G
-	  (* G' |- s : G *)
-	  (* G |- D : type *)
-	in
-	  (I.Decl (G', I.decSub(D, s)), I.dot1 s)
-	  (* G' |- D[s] : type *)
-	  (* G', D[s] |- 1 : D[s][^] *)
-	  (* G', D[s] |- s o ^ : G *)
-	  (* G', D[s] |- 1.s o ^ : G, D *)
-	end
-      (* added a new case to throw out blocks
-         -cs Sat Jan  4 22:55:12 2003 
-      *)
-      | purify' (I.Decl (G, D as I.BDec _)) =
-        let val (G', s) = purify' G
-	  (* G' |- s : G *)
-	in
-	  (G', I.Dot (I.Undef, s))
-	  (* G' |- _.s : G,_ *)
-	end
-
-    (* purify G = G' where all NDec's have been erased from G
-       If   |- G ctx
-       then |- G' ctx
-    *)
-    fun purify (G) = #1 (purify' G)
-
-    (* coverageCheckCases (W, Cs, G) = R
-     
-       Invariant:
-       If   Cs = [(G1, s1) .... (Gn, sn)] 
-       and  Gi |- si : G
-       and  for all worlds Phi
-       and  instantiations Phi |- s : G
-       there exists at least one index k and substitution   Phi |- t : Gk
-       s.t.  sk o t = s        
-    *)
-    fun coverageCheckCases (w, Cs, G) = 
-        let
-	  val _ = chatter 4 (fn () => "[Tomega coverage checker...")
-	  val _ = chatter 4 (fn () => "\n")
-	  val ccs = List.map (fn (Gi, si) => CClause (Gi, substToSpine (si, G))) Cs
-	  (* Question: are all the Gi's above named already? *)
-	  val _ = chatter 6 (fn () => "[Begin covering clauses]\n")
-	  val _ = List.app (fn cc => chatter 6 (fn () => showCClause cc ^ "\n")) ccs
-	  val _ = chatter 6 (fn () => "[End covering clauses]\n")
-	  val pureG = purify (G)
-	  val namedG = N.ctxLUName (pureG)
-	  val R0 = substToSpine (I.id, namedG)
-	  val cg0 = CGoal (namedG, R0)
-	  val missing = cover (cg0, w, ccs, Top, nil)
-	  val _ = case missing
-	            of nil => ()	(* all cases covered *)
-		     | _::_ => raise Error ("Coverage error")
-	  val _ = chatter 4 (fn () => "]\n")
-	in
-	  ()
-	end
-
+    fun coverageCheckCases (w, Cs, G) = ()
   end
-end;  (* functor Cover *)
+end; (* functor Cover *)

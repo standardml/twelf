@@ -52,4 +52,8 @@ sig
      success and SOME(msg) for failure *)
   val unifiable' : IntSyn.dctx * IntSyn.eclo * IntSyn.eclo -> string option
 
+  (* finitaryConstraint cnstr returns a list of instantiating functions 
+  to call if the solutions to cnstr can be split into a finite set of `local' MGUs. *)
+  val finitaryConstraint : IntSyn.cnstr -> (unit -> unit) list option
+
 end;  (* signature UNIFY *)

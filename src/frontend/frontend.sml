@@ -30,7 +30,9 @@ structure ReconTerm =
 	     structure Print = Print
              (*! structure CSManager = CSManager !*)
              structure StringTree = StringRedBlackTree
-             structure Msg = Msg);
+             structure Msg = Msg
+);
+
 
 structure ReconConDec =
   ReconConDec (structure Global = Global
@@ -89,6 +91,7 @@ structure ReconModule =
                structure ReconTerm' = ReconTerm
                structure ModSyn' = ModSyn
                structure IntTree = IntRedBlackTree);
+
 
 structure ParseTerm =
   ParseTerm ((*! structure Parsing' = Parsing !*)

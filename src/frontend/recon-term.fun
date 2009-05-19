@@ -24,7 +24,8 @@ functor ReconTerm ((*! structure IntSyn' : INTSYN !*)
                    (*! structure CSManager : CS_MANAGER !*)
 		   (*! sharing CSManager.IntSyn = IntSyn' !*)
                    structure StringTree : TABLE where type key = string
-                   structure Msg : MSG)
+                   structure Msg : MSG
+		   )
   : RECON_TERM =
 struct
 
@@ -1333,7 +1334,130 @@ struct
           j''
         end
 
-    fun recon (j) = (queryMode := false; recon' j)
+    local 
+	fun eps r = lcid([], "e", r)
+	val aeps = eps (Paths.Reg(0,0)) (* artifical eps because we didn't have a region handy *)
+	fun w r = lcid([], "w", r)
+	fun star (p1, p2) r = app(app(lcid([], "*", r), p1), p2)
+	val counter = ref 0
+    in
+
+    exception Unknown of term
+
+(*     fun penultWorld (Pi ((Dec (_, Root(Const 0 (* ICONST w *), _)), _), Uni Type)) = true
+      | penultWorld (Pi ((_, _), V)) = penultWorld V
+      | penultWorld _ = false *)
+
+    fun strip_dec (dec (s, t, r)) = dec (s, strip_class (eps r) t, r)
+    and strip_dec_at p (dec (s, t, r)) = dec (s, strip_class p t, r)
+
+    and atHead (lcid(ss, s, r)) = 
+	(case Names.constLookup(Names.Qid(ss, s)) of
+	     NONE => false (* might want to complain more loudly? *)
+(*	   | SOME x => (case sgnLookup(x) of
+			    ConDec (_, _, _, _, V, _) => penultWorld V
+			  | ConDef (_, _, _, _, V, _, _) => penultWorld V
+			  | AbbrevDef (_, _, _, _, V, _) => penultWorld V
+			  | _ => false (* might want to complain more loudly? *)
+	) *) 
+	   | SOME x => IntSyn.hlfIsSubstructCid x) 
+      | atHead (app (r, n)) = atHead r
+      | atHead _ = false
+    and strip_atom p x = 
+	if atHead x
+	then app (strip_exp x, p)
+	else strip_exp x
+
+    (* given a world and a classifier, yield the
+       (almost-)ordinary LF expression it encodes.
+       `Almost' in the sense that it still involves worlds.
+     *)
+    
+    and strip_class p (typ r) = typ r
+      | strip_class p (pi (d, t)) = do_pi p (d, t)
+      | strip_class p (arrow (t1, t2)) = arrow (strip_class aeps t1, strip_class p t2)
+      | strip_class p (app (t1, t2)) = do_app p (t1, t2)
+      | strip_class p (lcid ([], "@type", r)) = pi (dec(NONE, w r, r), typ r)
+      | strip_class p (x as lcid _) = strip_atom p x
+      | strip_class p (omitted r) = app (omitted r, p) (* XXX is this right? should I just rerturn omitted r instead? *)
+
+    and strip_exp (app (t1, t2)) = app (strip_exp t1, strip_exp t2)
+      | strip_exp (lam e) = do_lam e
+      | strip_exp (hastype (e1, e2)) = hastype (strip_exp e1, strip_class aeps e2)
+      | strip_exp (lcid ([], "^", r)) = omitted r
+      | strip_exp (x as lcid _) = x
+
+      | strip_exp (x as bvar _) = x
+      | strip_exp (x as constant _) = x
+      | strip_exp (x as fvar _) = x
+      | strip_exp (x as evar _) = x
+      | strip_exp (x as ucid _) = x
+      | strip_exp (x as quid _) = x
+      | strip_exp (x as omitted _) = x
+      | strip_exp (x as scon _) = x
+
+    | strip_exp (internal _) = (print "internal\n"; raise Match)
+    | strip_exp (mismatch _) = (print "mismatch\n"; raise Match)
+    | strip_exp (typ _) = (print "typ\n"; raise Match)
+    | strip_exp (arrow _) = (print "arrow\n"; raise Match)
+    | strip_exp (pi _) = (print "pi\n"; raise Match)
+
+    | strip_exp (omitapx _) = (print "omitapx\n"; raise Match)
+    | strip_exp (omitexact _) = (print "omitexact\n"; raise Match)
+
+    and newName() =
+	let
+	    val s = "_a" ^ Int.toString (!counter)
+	    val _ = counter := !counter + 1
+	in 
+	    s
+	end
+
+    and do_lam (dec(name, app (lcid ([], "^", r1), x), r2), body) = 
+	let 
+	    val s = newName() 
+	in
+	    lam (dec(SOME s, w r1, r1), 
+		 lam (strip_dec_at (lcid([], s, r1)) (dec(name, x, r2)),
+		      strip_exp body))
+	end
+      | do_lam (d as dec(name, lcid ([], "w", r), _), body) = lam (d, strip_exp body) 
+      | do_lam (d, body) = lam (strip_dec d, strip_exp body)
+			   
+    and do_pi p (dec(name, lcid ([], "here", r), _), body) = app (lam (dec(name, w r, r), body), p)
+      | do_pi p (d as dec(name, lcid ([], "w", r), _), body) = pi (d, strip_class p body)
+      | do_pi p (dec(name, app (lcid ([], "^", r1), x), r2), body) = raise Match (* dependent pi *)
+      | do_pi p (d as dec(_,_,r), body) = pi (strip_dec d, strip_class p body)
+    and make_arrow (a, b, p, r) = 
+	let
+	    val s = newName()
+	    val x = lcid([], s, r)
+	in
+	    pi (dec(SOME s, w r, r), arrow(strip_class x a,  
+					   strip_class (star (x, p) r) b))
+	end
+    and make_0arrow (a, b, p, r) = 
+	let
+	    val s = newName()
+	    val x = lcid([], s, r)
+	in
+	    pi (dec(SOME s, w r, r), arrow(strip_class x a,  
+					   strip_class p b))
+	end
+
+    and do_app p (app (lcid ([], "@", _), t), q) = strip_class q t (* correctly discards p *)
+      | do_app p (app (lcid ([], "-o", r), a), b) = make_arrow(a, b, p, r)
+      | do_app p (app (lcid ([], "-0", r), a), b) = make_0arrow(a, b, p, r)
+      | do_app p (app (lcid ([], "o-", r), a), b) = make_arrow(b, a, p, r)
+      | do_app p (app (lcid ([], "0-", r), a), b) = make_0arrow(b, a, p, r)
+      | do_app p e = strip_atom p (app e) (* some other base type *)
+
+    fun strip c = (counter := 0; strip_class (eps (Paths.Reg(0,0))) c)
+    end
+    fun lf_strip (jclass t) = jclass (strip t)
+      | lf_strip x = x
+
+    fun recon (j) = (queryMode := false; recon' (if !Global.hlf then lf_strip j else j))
     fun reconQuery (j) = (queryMode := true; recon' j)
 
     (* Invariant, G must be named! *)
@@ -1363,5 +1487,6 @@ struct
   fun externalInst x = raise Match
         
   end (* open IntSyn *)
+
 
 end; (* functor ReconTerm *)

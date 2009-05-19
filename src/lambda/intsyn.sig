@@ -93,7 +93,7 @@ sig
     Bidx of int				(* b ::= v                    *)
   | LVar of Block option ref * Sub * (cid * Sub)
                                         (*     | L(l[^k],t)           *)
-  | Inst of Exp list                    (*     | U1, ..., Un          *)
+  | Inst of Exp list			(*     | u1, ..., Un          *)
   (* It would be better to consider having projections count
      like substitutions, then we could have Inst of Sub here, 
      which would simplify a lot of things.  
@@ -281,4 +281,32 @@ sig
   (* Used in Flit *)
   val rename : cid * string -> unit
 
+  val rtostring : Exp option ref -> string
+  val expToString : Exp -> string
+  val spineToString : Spine -> string
+  val blockToString : Block -> string
+  val subToString : Sub -> string
+  val ctxToString : ('a -> string) -> 'a Ctx -> string
+  val decToString : Dec -> string
+  val cnstrrToString : Cnstr ref -> string
+  val cnstrsToString : Cnstr ref list -> string
+
+  val copyExp : Exp -> Exp
+  val copySub : Sub -> Sub
+  val copyDecCtx : Dec Ctx -> Dec Ctx
+  val diffExp : Exp * Exp -> bool
+  val diffSub : Sub * Sub -> bool
+  val diffCtx : ('a * 'a -> bool) -> 'a Ctx * 'a Ctx -> bool
+  val diffDec : Dec * Dec -> bool
+
+  val newMemo : unit -> unit
+  val hlfSpecial : cid -> bool
+  val hlfIsWorld : cid -> bool
+  val hlfSpecialExp : Exp -> bool
+  val hlfIsWorldExp : Exp -> bool
+  val hlfIsSubstructCid : cid -> bool
+  val noOccur : int * Exp list -> bool
+  val hlfFrontOccurrences : int * Front -> int
+  val hlfSubOccurrences : int * Sub -> int
+  val hlfOccurrences : int * Exp -> int
 end;  (* signature INTSYN *)

@@ -1115,6 +1115,19 @@ struct
           install1WithSig (fileName, NONE, declr)
       | install1 (fileName, declr as (Parser.Open _, _)) =
           install1WithSig (fileName, NONE, declr)
+      | install1 (fileName, declr as (Parser.Hlf, _)) = 
+	(let open Names open Fixity val v = Option.valOf in
+	     loadString ("w : type. %name w P. here : type. ^ : here. @ : here -> here -> type. " ^
+			 " * : w -> w -> w. -o : here -> here -> here. "
+			 ^ "-0 : here -> here -> here. o- : here -> here -> here. 0- : here -> here -> here. e : w.");
+	     Global.hlf := true;
+	     installFixity (v(constLookup(v(stringToQid "-0"))), Infix(dec minPrec, Right));
+	     installFixity (v(constLookup(v(stringToQid "-o"))), Infix(dec minPrec, Right));
+	     installFixity (v(constLookup(v(stringToQid "o-"))), Infix(dec minPrec, Left));
+	     installFixity (v(constLookup(v(stringToQid "0-"))), Infix(dec minPrec, Left));
+	     installFixity (v(constLookup(v(stringToQid "@"))), Infix(minPrec, None));
+	     installFixity (v(constLookup(v(stringToQid "*"))), Infix(inc minPrec, Left))
+	 end)
       | install1 (fileName, (Parser.Use name, r)) =
         (case !context
            of NONE => CSManager.useSolver (name)
@@ -1198,7 +1211,7 @@ struct
           ()
         end
 
-    fun installSubsig (fileName, s) =
+    and installSubsig (fileName, s) =
         let
           val namespace = Names.newNamespace ()
 
@@ -1255,6 +1268,24 @@ struct
              | Exception exn => raise exn
         end
 
+    (* loadString (str) = status
+       reads and processes declarations from str, issuing
+       error messages and finally returning the status (either OK or
+       ABORT).
+    *)
+    and loadString str = handleExceptions 0 "string"
+	(fn () =>
+	    let val _ = ReconTerm.resetErrors "string"
+		fun install s = install' ((Timers.time Timers.parsing S.expose) s)
+		and install' (S.Empty) = OK
+		  | install' (S.Cons((Parser.BeginSubsig, _), s')) =
+                    (installSubsig ("string", s'); install s')
+		  | install' (S.Cons (decl, s')) =
+	            (install1 ("string", decl); install s')
+	    in
+		install (Parser.parseStream (TextIO.openString str))
+	    end) ()
+
     (* loadFile (fileName) = status
        reads and processes declarations from fileName in order, issuing
        error messages and finally returning the status (either OK or
@@ -1277,23 +1308,6 @@ struct
 	    install (Parser.parseStream instream)
 	  end)
 
-    (* loadString (str) = status
-       reads and processes declarations from str, issuing
-       error messages and finally returning the status (either OK or
-       ABORT).
-    *)
-    fun loadString str = handleExceptions 0 "string"
-	(fn () =>
-	    let val _ = ReconTerm.resetErrors "string"
-		fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-		and install' (S.Empty) = OK
-		  | install' (S.Cons((Parser.BeginSubsig, _), s')) =
-                    (installSubsig ("string", s'); install s')
-		  | install' (S.Cons (decl, s')) =
-	            (install1 ("string", decl); install s')
-	    in
-		install (Parser.parseStream (TextIO.openString str))
-	    end) ()
 
     (* Interactive Query Top Level *)
 
@@ -1748,6 +1762,7 @@ struct
     val chatter : int ref = Global.chatter
     val doubleCheck : bool ref = Global.doubleCheck
     val unsafe : bool ref = Global.unsafe
+    val hlf : bool ref = Global.hlf
     val autoFreeze : bool ref = Global.autoFreeze
     val timeLimit : (Time.time option) ref = Global.timeLimit
 

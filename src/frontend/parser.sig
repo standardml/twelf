@@ -49,6 +49,7 @@ sig
     | Open of ModExtSyn.strexp
     | BeginSubsig | EndSubsig (* enter/leave a new context *)
     | Use of string
+    | Hlf
     (* Further declarations to be added here *)
 
   val parseStream: TextIO.instream -> (fileParseResult * Paths.region) Stream.stream

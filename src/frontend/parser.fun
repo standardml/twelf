@@ -80,6 +80,7 @@ struct
     | Open of ModExtSyn.strexp
     | BeginSubsig | EndSubsig (* enter/leave a new context *)
     | Use of string
+    | Hlf
     (* Further pragmas to be added later here *)
 
   local
@@ -208,6 +209,7 @@ struct
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)
       | parseStream' (f as LS.Cons ((L.OPEN, r), s'), sc) = parseOpen' (f, sc)
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
+      | parseStream' (f as LS.Cons ((L.HLF, r), s'), sc) = parseHlf' (r, LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (f as LS.Cons ((L.RBRACE, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =
@@ -460,6 +462,8 @@ struct
         end
       | parseUse' (LS.Cons ((_, r), _), sc) =
         Parsing.error (r, "Constraint solver name expected")
+
+    and parseHlf' (r, f, sc) = Stream.Cons ((Hlf, r), parseStream (stripDot f, sc))
 
     fun parseQ (s) = Stream.delay (fn () => parseQ' (LS.expose s))
     and parseQ' (f) =

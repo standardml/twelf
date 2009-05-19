@@ -237,6 +237,8 @@ struct
       | collectExpW (G, (I.FgnExp csfe, s), K) =
 	  I.FgnExpStd.fold csfe (fn (U, K) => collectExp (G, (U, s), K)) K
       (* No other cases can occur due to whnf invariant *)
+      | collectExpW (G, (e, s), K) = (print ("DX Fell off " ^ IntSyn.expToString(e) ^ "-" ^ IntSyn.subToString s ^ "\n"); raise Match)
+
 
     (* collectExp (G, (U, s), K) = K' 
        

@@ -9,7 +9,11 @@ functor ReconConDec (structure Global : GLOBAL
                      structure Abstract : ABSTRACT
 		     (*! sharing Abstract.IntSyn = IntSyn' !*)
                      (*! structure Paths' : PATHS !*)
+(*                     structure Hlf : HLF *)
+		     (*! sharing ReconTerm'.IntSyn = IntSyn' !*)
+		     (*! sharing ReconTerm'.Paths = Paths' !*)
                      structure ReconTerm' : RECON_TERM
+					(*	where type htp = Hlf.htp *)
 		     (*! sharing ReconTerm'.IntSyn = IntSyn' !*)
 		     (*! sharing ReconTerm'.Paths = Paths' !*)
 		     structure Constraints : CONSTRAINTS
@@ -57,18 +61,31 @@ struct
   fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset IntSyn.Null
+	val _ = IntSyn.newMemo()
+
 	val _ = ExtSyn.resetErrors fileName
         val ExtSyn.JClass ((V, oc), L) =
               (Timers.time Timers.recon ExtSyn.recon) (ExtSyn.jclass tm)
 	val _ = ExtSyn.checkErrors (r)
+
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
+
+	fun dprint s = ()
+				   
 	val cd = Names.nameConDec (IntSyn.ConDec (name, NONE, i, IntSyn.Normal, V', L))
 	val ocd = Paths.dec (i, oc)
+
+	val pcd = cd (* XXX want to postprocess to make it look nicer *)
+(*	val _ =  (case cd of 
+		      IntSyn.ConDec (_,_,_,_,V,_) =>
+		      print (" " ^ IntSyn.expToString(Whnf.normalize(V, IntSyn.id)) ^ "\n" )) *)
+
 	val _ = if !Global.chatter >= 3
-		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) cd ^ "\n")
+		  then Msg.message ((Timers.time Timers.printing Print.conDecToString) pcd ^ "\n")
 		else ()
+
 	val _ = if !Global.doubleCheck
 		  then (Timers.time Timers.checking TypeCheck.check) (V', IntSyn.Uni L)
 		else ()

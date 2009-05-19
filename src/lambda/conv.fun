@@ -18,6 +18,21 @@ struct
       | eqUni (Kind, Kind) = true
       | eqUni _ = false
       
+    (* convertibility mod acu in addition to beta-eta *)
+    fun hlfConv ([], []) = true
+      | hlfConv ([], h::tl) = false
+      | hlfConv (h::tl, e) = 
+	let
+	    fun search h (h'::tl) = if convExp ((h,id),(h',id)) then SOME tl
+				    else Option.map 
+					     (fn es => h' :: es)
+					     (search h tl)
+	      | search h [] = NONE
+	in
+	    case search h e of SOME e' => hlfConv (tl, e')
+			     | NONE => false
+	end
+
     (* convExpW ((U1, s1), (U2, s2)) = B
 
        Invariant: 
@@ -28,7 +43,7 @@ struct
 
        Effects: EVars may be lowered
     *)
-    fun convExpW ((Uni(L1), _), (Uni(L2), _)) =
+    and convExpW ((Uni(L1), _), (Uni(L2), _)) =
           eqUni (L1, L2)
 
       | convExpW (Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
@@ -38,7 +53,11 @@ struct
 	     (BVar(k1), BVar(k2)) => 
 	       (k1 = k2) andalso convSpine ((S1, s1), (S2, s2))
 	   | (Const(c1), Const(c2)) => 	  
-	       (c1 = c2) andalso convSpine ((S1, s1), (S2, s2))
+	     if hlfSpecial c1 orelse hlfSpecial c2 
+	     then (hlfConv(Whnf.normalizeWorldExp Us1, 
+			  Whnf.normalizeWorldExp Us2))
+	     else 
+		 ((c1 = c2) andalso convSpine ((S1, s1), (S2, s2)))
 	   | (Skonst c1, Skonst c2) =>
 	       (c1 = c2) andalso convSpine ((S1, s1), (S2, s2))
 	   | (Proj (Bidx v1, i1), Proj (Bidx v2, i2)) =>
@@ -89,7 +108,7 @@ struct
           FgnExpStd.EqualTo.apply csfe2 (EClo Us1)
 
       | convExpW ((EVar (r1, _, _, _), s1), (EVar(r2, _, _, _), s2)) = 
-	  (r1 = r2) andalso convSub (s1, s2)
+ 	  (r1 = r2) andalso convSub (s1, s2) 
 
       (* ABP -- 2/18/03 Added missing case*)
       (* Note that under Head, why is NSDef never used?? *)

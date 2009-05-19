@@ -61,6 +61,7 @@ sig
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | USE                               (* `%use'    *)
+    | HLF                               (* `%hlf'    *)
     | STRING of string                  (* string constants *)
 
   exception Error of string

@@ -316,7 +316,7 @@ struct
     fun sgnReset () = ((* Fri Dec 20 12:04:24 2002 -fp *)
 		       (* this circumvents a space leak *)
 		       sgnClean (0);
-		       nextCid := 0; nextMid := 0)
+		       nextCid := 0; nextMid := 0; Global.hlf := false)
     fun sgnSize () = (!nextCid, !nextMid)
 
     fun sgnAdd (conDec) = 
@@ -465,7 +465,7 @@ struct
     | blockSub (LVar (r as ref NONE, sk, (l, t)), s) = 
 	LVar (r, comp(sk, s), (l, comp (t, s)))
 	(* comp(^k, s) = ^k' for some k' by invariant *)
-    | blockSub (L as Inst ULs, s') = Inst (map (fn U => EClo (U, s')) ULs)
+    | blockSub (L as Inst ULs, s') = Inst (map (fn U => EClo (U, s')) ULs) 
     (* this should be right but somebody should verify *) 
 
   (* frontSub (Ft, s) = Ft'
@@ -657,8 +657,273 @@ struct
      as in targetFamOpt, except V must be a valid type
   *)
   fun targetFam (A) = valOf (targetFamOpt A)
-                      
+
+  (* debugging stuff -jcreed *)
+
+  fun eta_collapse (Dot(f, s)) = 
+      let val s' = eta_collapse s in
+	  case (f, s') of
+	      (Idx n, Shift m) => if m = n then Shift (m - 1) else Dot (f, s')
+	    | _ => Dot(f, s')
+      end
+    | eta_collapse x = x
+
+  fun ctxToString f (Decl(G, d)) = ctxToString f G ^ " , " ^ f d
+    | ctxToString f Null = "eoc"
+
+  fun rtostringFor r m =
+      let 
+	  fun go m (r'::tl) = if r = r' then SOME m else go (m+1) tl
+	    | go m [] = NONE
+	  val n = (case go 0 (!m) of
+		       SOME n => n
+		     | NONE => (length (!m) before m := !m @ [r]))
+	  val i = n div 26
+	  val j = n mod 26
+	  val is = if i = 0 then "" else Int.toString i
+	  val js = String.str(Char.chr(Char.ord #"A" + j))
+      in
+	  js ^ is
+      end
+
+  local
+    val memo : Exp option ref list ref =  ref []
+    val blockMemo : Block option ref list ref =  ref []
+
+  in
+
+  fun newMemo() = (memo := [] ; blockMemo := [] )
+		
+  fun rtostring r = rtostringFor r memo
+  fun blockrtostring r = rtostringFor r blockMemo
+
+  end (* local for memoization *)
+
+
+  fun maybeCnstrs recCnstr cnstr = if recCnstr andalso not (null cnstr)
+				   then  "{" ^  String.concat(map cnstrrToString cnstr) ^ "}" 
+				   else ""
+
+  and expToString' recCnstr (Uni x) = "?uni"
+    | expToString' recCnstr (Pi((Dec(_, V), No), e)) = "(" ^ expToString' recCnstr V ^ " -> " ^ expToString' recCnstr e ^ ")"
+    | expToString' recCnstr (Pi((dec, dep), e)) = "{" ^ decToString dec ^ "} " ^ expToString' recCnstr e 
+    | expToString' recCnstr (Root(h,Nil)) =  headToString h
+    | expToString' recCnstr (Root(h,sp)) =  "( " ^ headToString h ^ " . " ^ spineToString recCnstr sp ^ ")"
+    | expToString' recCnstr (Redex x) = "?redex"
+    | expToString' recCnstr (Lam(dec, e)) = "[" ^ decToString dec ^ "] " ^ expToString' recCnstr e 
+
+    | expToString' recCnstr (EVar(r as ref (SOME e), ctx, e', ref cnstr)) = rtostring r ^ "+" ^ Int.toString(ctxLength ctx) ^ " : " 
+								   ^ (* expToString' recCnstr e' ^ *) " :=  " ^ expToString' recCnstr e  ^ maybeCnstrs recCnstr cnstr
+    | expToString' recCnstr (EVar(e, ctx, e', ref cnstr)) = rtostring e ^ "+" ^ Int.toString(ctxLength ctx) ^ (* " : " ^ expToString' recCnstr e' ^ *) maybeCnstrs recCnstr cnstr
+    | expToString' recCnstr (EClo(e, s)) = "(" ^ expToString' recCnstr e ^ "[[" ^ subToString s ^ "]])"
+    | expToString' recCnstr (AVar x) = "?avar"
+    | expToString' recCnstr (NVar x) = "?nvar"		
+    | expToString' recCnstr (FgnExp x) =  "?fgnexp"
+
+  and expToString x = expToString' true x
+  and expToStringNoCnstr x = expToString' false x
+
+  and blockToString (Bidx n) = "bidx" ^ Int.toString n
+    | blockToString (LVar (boptr, s, (cid, s'))) = "LVar(" ^ cidName cid ^ ":" ^ blockrtostring boptr ^ "[[" ^ subToString s' ^ "]],[[" ^ subToString s ^ "]])"
+    | blockToString (Inst _) = "?inst" 
+
+  and cidName n = conDecName(sgnLookup n)
+
+  and headToString (BVar n) = "v" ^ Int.toString n
+    | headToString (Const n) = cidName n
+    | headToString (Proj (b,n)) = blockToString b ^ "." ^ Int.toString n
+    | headToString (Skonst n) = "s" ^ Int.toString n
+    | headToString (Def n) = "d" ^ Int.toString n
+    | headToString (NSDef n) = "n" ^ Int.toString n
+    | headToString (FVar (str, e, s)) = "(fvar " ^ str ^ " " ^ expToStringNoCnstr e ^ " [" ^ subToString s ^ "])"
+    | headToString (FgnConst x) = "?fgn"
+    
+  and spineToString recCnstr (Nil) = "()"
+    | spineToString recCnstr (App(e, Nil)) = expToString' recCnstr e
+    | spineToString recCnstr (App(e, s)) = expToString' recCnstr e ^ " ; " ^ spineToString recCnstr s
+    | spineToString recCnstr (SClo(sp, s)) = spineToString recCnstr sp ^ "[[" ^ subToString s ^ "]]"
+
+  and subToString' (Shift n) = "^" ^ Int.toString n
+    | subToString' (Dot(front, s)) =  frontToString(front) ^ "." ^ subToString' s
+
+  and subToString s = subToString' ((* eta_collapse *) s)
+
+  and frontToString (Idx n) = "i" ^ Int.toString n
+    | frontToString (Exp e) =  expToStringNoCnstr e
+    | frontToString (Axp _) = "?axp"			
+    | frontToString (Block b) = blockToString b
+    | frontToString (Undef) = "__"
+
+  and stringoptToString NONE = "_"
+    | stringoptToString (SOME x) = x
+
+  and decToString (Dec(nopt, e)) = stringoptToString nopt ^ ":" ^ expToStringNoCnstr e
+    | decToString (BDec(nopt, (cid, s))) = stringoptToString nopt ^ " : " ^ cidName cid ^ "[[" ^ subToString s ^ "]]" 
+    | decToString (ADec _) = "?adec"
+    | decToString (NDec _) = "?ndec"
+
+  and decCtxToString c = ctxToString decToString c
+
+  and cnstrToString Solved = "solved"
+    | cnstrToString (Eqn(g, e1, e2)) =  decCtxToString g ^ " |- " ^  expToStringNoCnstr e1 ^ " == " ^ expToStringNoCnstr e2 
+    | cnstrToString (FgnCnstr _) = "FgnCnstr"
+
+  and cnstrrToString (ref c) = cnstrToString c ^ ";"
+
+  fun cnstrsToString cs  = maybeCnstrs false cs
+
+  local
+  val f = spineToString 
+  in
+  fun spineToString x =  f false x
+  end
+
+local 
+
+  val look : (Exp option ref * Exp option ref) list ref = ref nil
+  val cnstr_list : (Cnstr ref list ref * Cnstr ref list ref) list ref = ref nil
+  val cnstr : (Cnstr ref * Cnstr ref) list ref = ref nil
+
+  fun init_list () = (look := nil; cnstr_list := nil; cnstr := nil)
+  fun lookup lr f x = 
+      let
+	  fun lookup' [] = let val y = ref (f(!x)) in lr := (x, y) :: !lr; y end
+	    | lookup' ((ha,hb)::tl) = if x = ha then hb else lookup' tl
+      in
+	  lookup' (!lr)
+      end
+
+  fun copyExp (Pi((dec, dep), e)) = Pi((copyDec dec, dep), copyExp e)
+    | copyExp (Root(h,sp)) =  Root(h, copySpine sp)
+    | copyExp (Redex (e, s)) = Redex(copyExp e, copySpine s)
+    | copyExp (Lam(dec, e)) = Lam(copyDec dec, copyExp e)
+    | copyExp (EVar(re, ctx, e', clr)) = EVar (lookup look (Option.map copyExp) re ,
+					       ctx,
+					       copyExp e', 
+					       lookup cnstr_list (map (lookup cnstr copyCnstr)) clr) 
+    | copyExp (EClo(e, s)) = EClo(copyExp e, copySub s)
+    | copyExp x = x
+
+  and copyCnstr x = x
+
+  and copySub (Dot(front, s)) = Dot(copyFront front, copySub s)
+    | copySub x = x
+ 
+  and copyFront (Exp e) = Exp(copyExp e)
+    | copyFront x = x
+
+  and copyDec (Dec(n, e)) = Dec(n, copyExp e)
+    | copyDec x = x
+
+  and copySpine (SClo(sp, s)) = SClo(copySpine sp, copySub s)
+    | copySpine (App(e, s)) = App(copyExp e, copySpine s)
+    | copySpine x = x
+
+  and copyCtx f (Decl(G, d)) = Decl(copyCtx f G, f d)
+    | copyCtx f Null = Null
+
+  val ce = copyExp
+  val cdc = copyCtx copyDec
+  val cs = copySub
+
+in
+
+fun copyExp x = (init_list(); ce x)
+fun copyDecCtx x  = (init_list(); cdc x)
+fun copySub x  = (init_list(); cs x)
+
+end
+  fun diffExp (e, e') = expToString e <> expToString e' orelse diffExp' (e, e')
+
+  and diffExp' (Lam (dec, e), Lam(dec', e')) = diffDec(dec, dec') orelse diffExp' (e, e')
+    | diffExp' (Lam _, _) = true
+    | diffExp' (_, Lam _) = true
+    | diffExp' (Root(h, s), Root(h', s')) = diffHead(h, h') orelse diffSpine (s, s')
+    | diffExp' (Root _, _) = true
+    | diffExp' (_, Root _) = true
+    | diffExp' (EVar(ref (SOME e), _, _, _), EVar(ref (SOME e'), _, _, _)) = diffExp' (e, e')
+(*    | diffExp' (EVar(ref (SOME _), _, _, _), EVar(ref NONE, _, _, _)) = true
+    | diffExp' (EVar(ref NONE, _, _, _), EVar(ref (SOME _), _, _, _)) = true *)
+    | diffExp' (_, _) = false
+
+
+  and diffHead (BVar n, BVar n') = n <> n'
+    | diffHead (BVar _, _) = true
+    | diffHead (_, BVar _) = true
+    | diffHead (Const n, Const n') = n <> n'
+    | diffHead (Const _, _) = true
+    | diffHead (_, Const _) = true
+    | diffHead (_, _) = false
+
+  and diffSub (Shift n, Shift n') = n <> n'
+    | diffSub (Shift _, _) = true
+    | diffSub (_, Shift _) = true
+    | diffSub (Dot(front, s), Dot(front', s')) = diffFront (front, front') orelse diffSub(s, s')
+
+  and diffFront (Idx n, Idx n') = n <> n'
+    | diffFront (Idx _, _) = true
+    | diffFront (_, Idx _) = true
+    | diffFront (Exp e, Exp e') = diffExp' (e, e')
+    | diffFront (Exp _, _) = true
+    | diffFront (_, Exp _) = true
+    | diffFront (_, _) = false
+
+  and diffDec (Dec(name, e), Dec(name', e')) = diffExp'(e, e')
+    | diffDec (Dec _, _) = true
+    | diffDec (_, Dec _) = true
+    | diffDec (_, _) = false
+
+  and diffSpine (App (e, s), App(e', s')) = diffExp'(e, e') orelse diffSpine(s, s')
+    | diffSpine (App _, _) = true
+    | diffSpine (_, App _) = true
+    | diffSpine (Nil, Nil) = false
+    | diffSpine (Nil, _) = true
+    | diffSpine (_, Nil) = true
+    | diffSpine (_, _) = false
+
+  and diffCtx f (Decl(G, d), Decl(G', d')) = diffCtx f (G, G') orelse f (d, d')
+    | diffCtx f (Decl _, _) = true
+    | diffCtx f (_, Decl _) = true
+    | diffCtx f (Null, Null) = false
+
+  fun hlfSpecial 4 (* ICONST * *) = true andalso !Global.hlf
+    | hlfSpecial 9 (* ICONST e *) = true andalso !Global.hlf
+    | hlfSpecial _ = false
+
+  fun hlfSpecialExp (Root(Const n, _)) = hlfSpecial n
+    | hlfSpecialExp _ = false
+
+  fun hlfIsWorld 0 (* ICONST w *) = true andalso !Global.hlf
+    | hlfIsWorld _ = false
+
+  fun hlfIsWorldExp (Root(Const n, _)) = hlfIsWorld n
+    | hlfIsWorldExp _ = false
+
+  (* kind of a hack for now, examining the kind to see if the last pi is on "world"... -jcreed *) 
+  fun hlfIsSubstruct (Pi((Dec(_, V), _), Uni _)) = hlfIsWorldExp V
+    | hlfIsSubstruct (Pi(_, V)) = hlfIsSubstruct V
+    | hlfIsSubstruct _ = false
+
+  fun hlfIsSubstructCid n = hlfIsSubstruct(conDecType(sgnLookup n))
+
+  (* Some utilities for tryNoOccur and tryUniqueOccur *)
+  fun hlfOccurrences (n1, Root(BVar n2, _)) = if n1 = n2 then 1 else 0 (* relying on e : w *)
+    | hlfOccurrences (n, EClo(EVar _, s)) = hlfSubOccurrences (n, s)
+    | hlfOccurrences (n, Root(Const 4 (* ICONST * *), x) ) = 
+      (print ("Got " ^ spineToString x ^ "\n"); raise Match) (* XXX still not actually doing the right thing *)
+    | hlfOccurrences _ = 0 (* XXX any other cases to worry about ?? *)
+  and hlfFrontOccurrences (n1, Idx n2) = if n1 = n2 then 1 else 0
+    | hlfFrontOccurrences (n, Exp e) = hlfOccurrences (n, e)
+    | hlfFrontOccurrences (n, _) = 0
+  and hlfSubOccurrences (n, Shift i) = if i < n then 1 else 0
+    | hlfSubOccurrences (n, Dot(f, s)) = hlfFrontOccurrences (n, f) + hlfSubOccurrences(n, s)
+				      
+  fun noOccur (n, e :: tl) = 
+      hlfOccurrences(n, e) = 0 andalso noOccur (n, tl)
+    | noOccur (n, []) = true
+
 end;  (* functor IntSyn *)
 
 structure IntSyn :> INTSYN =
   IntSyn (structure Global = Global);
+ 

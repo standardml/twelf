@@ -42,6 +42,7 @@ struct
     (* exception Undefined *)
 
     exception Eta
+    exception Hlf of string
 
     (* etaContract (U, s, n) = k'
 
@@ -124,6 +125,15 @@ struct
       | appendSpine ((SClo (S1, s1'), s1), Ss2) =
 	  appendSpine ((S1, comp(s1', s1)), Ss2)
 
+    (* Some HLF tools *)
+    val star = 4 (* ICONST * *)
+    val eps = 9 (* ICONST 9 *)
+
+    (* foldWorldExp takes a list of expressions and stars them all together *)
+    fun foldWorldExp [] = Root(Const eps, Nil)
+      | foldWorldExp [a] = a
+      | foldWorldExp (h::tl) = Root(Const star, App (h, App (foldWorldExp tl, Nil)))
+
     (* whnfRedex ((U, s1), (S, s2)) = (U', s')
 
        Invariant:
@@ -200,7 +210,6 @@ struct
         (* pre-Twelf 1.2 code walk, Fri May  8 11:05:08 1998 *)
         raise Error "Typing ambiguous -- constraint of functional type cannot be simplified"
 
-
     (* whnfRoot ((H, S), s) = (U', s')
 
        Invariant:
@@ -239,8 +248,85 @@ struct
 	 (Root (FVar (name, V, comp (s', s)), SClo (S, s)), id)
       | whnfRoot ((NSDef (d), S), s) =
 	  whnfRedex (whnf (IntSyn.constDef d, id), (S, s))  
+      | whnfRoot ((H as Const n, S), s) =
+	if !Global.hlf andalso n = star
+	then 
+	    let 
+		(*
+		val _ = print ("Before: " ^ IntSyn.expToString (EClo(Root(H, S), s)) ^ "\n")  *)
+		val nss = normalizeStarSpine (S, s)
+		val rv = foldWorldExp (nss)
+(*		val _ = print ("After: " ^ IntSyn.expToString rv ^ "\n") 
+		val _ = print ("Whnf: " ^ IntSyn.expToString (Root (H, SClo (S, s))) ^ "\n")   *)
+	    in
+		case rv of 
+		    (EClo(ec as (EVar _, s))) => ec
+		  | _ => (rv, id)
+	    end
+	else (Root (H, SClo (S, s)), id)
+  
       | whnfRoot ((H, S), s) =
 	 (Root (H, SClo (S, s)), id)
+
+    (* some utility functions for HLF *)
+
+    and ordelse (EQUAL, x) = x
+      | ordelse (x, _) = x
+    and headCompare (BVar n, BVar m) = Int.compare (n, m)
+      | headCompare (BVar _, _) = LESS
+      | headCompare (_, BVar _) = GREATER
+      | headCompare (Proj (Bidx n1, n2), Proj (Bidx m1, m2)) = ordelse (Int.compare(n1, m1), Int.compare(n2, m2))
+      | headCompare (Proj _, _) = LESS
+      | headCompare (_, Proj _) = GREATER
+      | headCompare (FVar (n1, _, _), FVar (n2, _, _)) = String.compare(n1, n2)
+      | headCompare (FVar _, _) = LESS
+      | headCompare (_, FVar _) = GREATER
+      | headCompare (_, _) = EQUAL
+
+    and normalizeStarSpineW (s as (App (a, App (b, Nil)))) = 
+	let
+	    fun compare (Root(h1, _), Root(h2, _)) = headCompare (h1, h2)
+	      | compare (Root _, EClo _) = LESS
+	      | compare (EClo _, Root _) = GREATER
+	      | compare (EClo _, EClo _) = EQUAL
+	      | compare (e1, e2) = (print ("Can't compare " ^ expToString e1 ^ " and " ^ expToString e2 ^ " in whnf\n"); raise Match)
+	    fun merge ([], a) = a
+	      | merge (a, []) = a
+	      | merge (h::tl, h'::tl') = 
+		(case compare (h, h') of
+		     LESS => h :: merge (tl, h'::tl')
+		   | EQUAL => h :: h' :: merge (tl, tl')
+		   | GREATER => h' :: merge (h::tl, tl'))
+
+	    (* val _ = print ("{normalizeStarSpineW " ^ expToString a ^ " + " ^ expToString b ^ "\n") *)
+	    val rv = merge (normalizeWorldExp (a, id), normalizeWorldExp (b, id))
+	    (* val _ = print (" returning => " ^ expToString(foldWorldExp rv) ^ "}\n") *)
+	in 
+	    rv
+	end
+      | normalizeStarSpineW _ = raise Hlf "* applied to spine of length not 2?"
+    and normalizeStarSpine (S, s) = normalizeStarSpineW (developSpine (S, s))
+    and normalizeWorldExpW (Root(Const 9, (* ICONST e *) _), s) =  []
+      | normalizeWorldExpW (Root(Const 4, (* ICONST * *) S), s) = normalizeStarSpine (S, s)
+      | normalizeWorldExpW (x as Root(BVar _, _), s) = [x] (* s = id by whnf invariant *)
+      | normalizeWorldExpW (x as Root(Proj _, _), s) = [x] (* s = id by whnf invariant *)
+      | normalizeWorldExpW (x as Root(FVar _, _), s) = [x] (* s = id by whnf invariant *)
+      | normalizeWorldExpW (x, s) = ((* print ("ignoring " ^ IntSyn.expToString x ^ "\n"); *)  [EClo(x,s)])
+    and normalizeWorldExp (x, s) = normalizeWorldExpW (whnf (x, s))
+    (* clear out all the SClo *)
+    and developSpine (Nil, s) = Nil 
+      | developSpine (App (U, S), s) =
+	let
+	    val wn = whnf (U, s)
+	    val new = case wn of (x, Shift 0) => x
+			       | _ => EClo(wn)
+(*	    val _ = print ("WHNF ... in developSpine old " ^ expToString (EClo(U, s)) ^ " new " ^ expToString new ^ "\n") *)
+(* REMEMBER to see what happens if I take the whnf out *)
+	in
+	    App(EClo(U, s), developSpine (S, s))
+	end
+
+      | developSpine (SClo (S, s'), s) = developSpine (S, comp (s', s))
 
     (* whnf (U, s) = (U', s')
 
@@ -648,5 +734,9 @@ struct
 
     val cloInv = cloInv
     val compInv = compInv
+
+    val normalizeWorldExp = normalizeWorldExp
+    val foldWorldExp = foldWorldExp
+    val headCompare = headCompare
   end
 end;  (* functor Whnf *)

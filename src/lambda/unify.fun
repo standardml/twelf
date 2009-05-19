@@ -12,6 +12,17 @@ struct
     
   exception Unify of string
   exception NotInvertible
+  type cont = unit -> unit
+  (* first arg: what to do if you are not handling finitary constraints *)
+  (*            (e.g. postpone it) *)
+  (* second arg: what to do if you are *)
+  (*             (e.g. SOME of a list of possible instantiations, *)
+  (*               or NONE meaning we failed to be able to split) *)
+  exception FinitaryConstraint of cont * cont list option
+  exception NoProgress (* raised in tryUniqueOccur below *)
+
+  fun udebtrace (x,s) = print ("d--> " ^ IntSyn.expToString x ^ " under [" ^ IntSyn.subToString s ^ "]\n")
+  fun udprint s = print s
   
   local
     open IntSyn
@@ -170,9 +181,10 @@ struct
       (* Instantiating EVars  *)
       fun instantiateEVar (refU, V, cnstrL) =
             (
-              refU := SOME(V);
-              Trail.log (globalTrail, Instantiate (refU));
-              awakenCnstrs := cnstrL @ !awakenCnstrs
+(*	     print ("DX instantiating " ^ IntSyn.rtostring refU ^ " := " ^ IntSyn.expToString V ^ "\n");  *)
+             refU := SOME(V);
+             Trail.log (globalTrail, Instantiate (refU));
+             awakenCnstrs := cnstrL @ !awakenCnstrs
             )
 
       (* Instantiating LVars  *)
@@ -390,9 +402,9 @@ struct
 		     let 
 		         (* val GY = Whnf.strengthen (ss, G) *)
                          (* shortcuts possible by invariants on G? *)
-                         val GY = pruneCtx (ss, G, rOccur) (* prune or invert??? *)
+                         val GY = pruneCtx (ss, G, rOccur) (* prune or invert?? *)
                          (* val V' = EClo (V, comp (s, ss)) *)
-		         val V' = pruneExp (G, (V, s), ss, rOccur) (* prune or invert??? *)
+		         val V' = pruneExp (G, (V, s), ss, rOccur) (* prune or invert?? *)
 		         val Y = newEVar (GY, V')
 		         val _ = addConstraint (cnstrs, ref (Eqn (G, EClo (X, s),
 							             EClo (Y, Whnf.invert ss))))
@@ -496,7 +508,11 @@ struct
        Other effects: EVars may be lowered
                       constraints may be added for non-patterns
     *)
-    fun unifyExpW (G, Us1 as (FgnExp csfe1, _), Us2) =
+    fun unifyExpW (G, Us1 as (U1, s1), Us2 as (U2, s2)) =
+	if hlfSpecialExp U1 orelse hlfSpecialExp U2
+	then hlfUnifyExpW (G, Us1, Us2)
+	else unifyExpW' (G, Us1, Us2)
+    and unifyExpW' (G, Us1 as (FgnExp csfe1, _), Us2) =
           (case (FgnExpStd.UnifyWith.apply csfe1 (G, EClo Us2))
              of (Succeed residualL) =>
                   let
@@ -513,7 +529,7 @@ struct
                   end
               | Fail => raise Unify "Foreign Expression Mismatch")
 
-      | unifyExpW (G, Us1, Us2 as (FgnExp csfe2, _)) =
+      | unifyExpW' (G, Us1, Us2 as (FgnExp csfe2, _)) =
           (case (FgnExpStd.UnifyWith.apply csfe2 (G, EClo Us1))
              of (Succeed opL) =>
                   let
@@ -529,12 +545,12 @@ struct
                   end
               | Fail => raise Unify "Foreign Expression Mismatch")
 
-      | unifyExpW (G, (Uni (L1), _), (Uni(L2), _)) =
+      | unifyExpW' (G, (Uni (L1), _), (Uni(L2), _)) =
           (* L1 = L2 = type, by invariant *)
           (* unifyUni (L1, L2) - removed Mon Aug 24 12:18:24 1998 -fp *)
           ()
 
-      | unifyExpW (G, Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
+      | unifyExpW' (G, Us1 as (Root (H1, S1), s1), Us2 as (Root (H2, S2), s2)) =
 	  (* s1 = s2 = id by whnf *)
           (* order of calls critical to establish unifySpine invariant *)
           (case (H1, H2) of 
@@ -590,34 +606,34 @@ struct
 	   | _ => raise Unify "Head mismatch")
 
 
-      | unifyExpW (G, (Pi ((D1, _), U1), s1), (Pi ((D2, _), U2), s2)) =         
+      | unifyExpW' (G, (Pi ((D1, _), U1), s1), (Pi ((D2, _), U2), s2)) =         
 	  (unifyDec (G, (D1, s1), (D2, s2)) ;
 	   unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1), (U2, dot1 s2)))
 
-      | unifyExpW (G, Us1 as (Pi (_, _), _), Us2 as (Root (Def _, _), _)) =
+      | unifyExpW' (G, Us1 as (Pi (_, _), _), Us2 as (Root (Def _, _), _)) =
 	  unifyExpW (G, Us1, Whnf.expandDef (Us2))
-      | unifyExpW (G, Us1 as  (Root (Def _, _), _), Us2 as (Pi (_, _), _)) =
+      | unifyExpW' (G, Us1 as  (Root (Def _, _), _), Us2 as (Pi (_, _), _)) =
 	  unifyExpW (G, Whnf.expandDef (Us1), Us2)
 
-      | unifyExpW (G, (Lam (D1, U1), s1), (Lam (D2, U2), s2)) =           
+      | unifyExpW' (G, (Lam (D1, U1), s1), (Lam (D2, U2), s2)) =           
           (* D1[s1] = D2[s2]  by invariant *)
 	  unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1),(U2, dot1 s2))
 
-      | unifyExpW (G, (Lam (D1, U1), s1), (U2, s2)) =	                   
+      | unifyExpW' (G, (Lam (D1, U1), s1), (U2, s2)) =	                   
 	  (* ETA: can't occur if eta expanded *)
 	  unifyExp (Decl (G, decSub (D1, s1)), (U1, dot1 s1), 
 		    (Redex (EClo (U2, shift), App (Root (BVar (1), Nil), Nil)), dot1 s2))
            (* for rhs:  (U2[s2])[^] 1 = U2 [s2 o ^] 1 = U2 [^ o (1. s2 o ^)] 1
                         = (U2 [^] 1) [1.s2 o ^] *)
 
-      | unifyExpW (G, (U1, s1), (Lam (D2, U2), s2)) =                     
+      | unifyExpW' (G, (U1, s1), (Lam (D2, U2), s2)) =                     
           (* Cannot occur if expressions are eta expanded *)
 	  unifyExp (Decl (G, decSub (D2, s2)), 
 		    (Redex (EClo (U1, shift), App (Root (BVar (1), Nil), Nil)), dot1 s1),
 		    (U2, dot1 s2))  
 	   (* same reasoning holds as above *)
 	
-      | unifyExpW (G, Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
+      | unifyExpW' (G, Us1 as (U1 as EVar(r1, G1, V1, cnstrs1), s1),
 		   Us2 as (U2 as EVar(r2, G2, V2, cnstrs2), s2)) =
 	  (* postpone, if s1 or s2 are not patsub *)
 	  if r1 = r2 then 
@@ -667,7 +683,7 @@ struct
                 addConstraint (cnstrs1, cnstr)
               end
 
-      | unifyExpW (G, Us1 as (EVar(r, GX, V, cnstrs), s), Us2 as (U2,s2)) =
+      | unifyExpW' (G, Us1 as (EVar(r, GX, V, cnstrs), s), Us2 as (U2,s2)) =
 	if Whnf.isPatSub(s) then
 	  let val ss = Whnf.invert s
 	      val U2' = pruneExp (G, Us2, ss, r)
@@ -679,7 +695,7 @@ struct
         else
           addConstraint (cnstrs, ref (Eqn (G, EClo Us1, EClo Us2)))
 
-      | unifyExpW (G, Us1 as (U1,s1), Us2 as (EVar (r, GX, V, cnstrs), s)) =
+      | unifyExpW' (G, Us1 as (U1,s1), Us2 as (EVar (r, GX, V, cnstrs), s)) =
 	if Whnf.isPatSub(s) then 
 	  let
 	    val ss = Whnf.invert s
@@ -692,7 +708,7 @@ struct
         else
           addConstraint (cnstrs, ref (Eqn (G, EClo Us1, EClo Us2)))
 
-      | unifyExpW (G, Us1, Us2) = 
+      | unifyExpW' (G, Us1, Us2) = 
         raise Unify ("Expression clash")
 
     (* covers most remaining cases *)
@@ -743,6 +759,296 @@ struct
         (unifyExp (G, (U1, s1), (U2, s2)) ; 
 	 unifySpine (G, (S1, s1), (S2, s2)))
       (* Nil/App or App/Nil cannot occur by typing invariants *)
+
+    and hlfUnifyExpW (G, w1, w2) = hlfUnifyExpWGeneralized (G, w1, w2)
+	handle FinitaryConstraint (k, _) => k() (* don't deal with finitary splits here *)
+
+    (* finitaryConstraint : IntSyn.cnstr -> (unit -> unit) list option *)
+    and finitaryConstraint c = 
+	(case !c of 
+	     Eqn (G, w1, w2) =>
+	     (let in
+		  hlfUnifyExpWGeneralized (G, (w1, id), (w2, id));
+		  SOME [fn () => ()] (* if the constraint is already directly solvable *)
+	      end
+	      (* XXX what if Unify is raised? Should filter out solutions, I guess *)
+	      handle FinitaryConstraint (_, ks) => ks)
+	   | Solved => SOME [fn () => ()]
+	   | (FgnCnstr _) => (print "unify.fun invariant violation, don't know how to do FgnCnstr"; 
+			      raise Match))
+
+    and hlfUnifyExpWGeneralized (G, w1 as (U1, s1), w2 as (U2, s2)) = 
+	let
+	    fun sameSub (Shift n, Shift n') = n = n'
+	      | sameSub (Dot(Idx n, s), Dot(Idx n', s')) = n = n' andalso sameSub(s, s')
+	      | sameSub (Dot(Idx n, s), Shift n') = n' = n + 1 andalso sameSub(s, Shift (n' + 1))
+	      | sameSub (Shift n', Dot(Idx n, s)) = n' = n + 1 andalso sameSub(s, Shift (n' + 1))
+	      | sameSub _ = false
+	    fun sameEVar (EClo(EVar(r, G, V, cnstr), s), EClo(EVar(r', G', V', cnstr'), s'))
+	      (* XXX G? V? cnstr? -jcreed *)
+	      = r = r' andalso sameSub(s, s')
+	      | sameEVar _ = false
+
+	    (* uniqueOccurSub' (m, n, s) *)
+	    (* assuming that s is a tail of a substitution beginning at position m, *)
+	    (* return SOME m' iff only the (m')th argument of s contains occurrence(s) of n *)
+	    (* NONE otherwise. *)
+	    fun uniqueOccurSub' (m, n, Shift i) = if i < n 
+						  then SOME (n - i + m - 1)
+						  else NONE
+	      | uniqueOccurSub' (m, n, Dot (f, s)) = if hlfFrontOccurrences (n, f) > 0
+							andalso hlfSubOccurrences (n, s) = 0
+						     then SOME m
+						     else uniqueOccurSub' (m+1, n, s)
+	    fun uniqueOccurSub (n, s) = uniqueOccurSub' (1, n, s)
+
+	    (* Similar to uniqueOccurSub, but searches through an entire rhs, *)
+	    (* returning SOME (e, pos) if n occurs in the pos'th argument of EVar e, and nowhere else *)
+	    fun uniqueOccurRight (n, e :: tl) =
+		if hlfOccurrences(n, e) = 0
+		then uniqueOccurRight (n, tl)
+		else (case e of (EClo(EVar ee, s)) => 
+				(case uniqueOccurSub (n, s) of 
+				     NONE => NONE
+				   | SOME position => if noOccur(n, tl) 
+							      then SOME (ee, position)
+						      else NONE)
+			      | _ => NONE)
+	      | uniqueOccurRight (n, []) = NONE
+
+	    (* Similar to uniqueOccurRight, but searches through an entire rhs, *)
+	    (* Returns SOME of a list of occurrences (e, pos), if n *)
+	    (* occurs at most once per evar. *)
+	    fun semiuniqueOccurRight (n, e :: tl) =
+		if hlfOccurrences(n, e) = 0
+		then semiuniqueOccurRight (n, tl)
+		else (case e of (EClo(EVar ee, s)) => 
+				(case uniqueOccurSub (n, s) of 
+				     NONE => NONE
+				   | SOME position => Option.map (fn occs => (ee, position) :: occs)
+								 (semiuniqueOccurRight (n, tl)))
+			      | _ => NONE)
+	      | semiuniqueOccurRight (n, []) = SOME []
+
+(*	    fun wstostring ws = IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws, id)) *)
+	    fun wstostring [] = ""
+	      | wstostring [x] = IntSyn.expToString (Whnf.normalize (x, id))
+	      | wstostring (h::tl) = IntSyn.expToString (Whnf.normalize (h, id)) ^ " * " ^ wstostring tl
+	    fun wsptostring (ws1, ws2) = wstostring ws1 ^ " == " ^ wstostring ws2
+
+	    fun renormalize ws = Whnf.normalizeWorldExp (Whnf.foldWorldExp ws, id)
+	    fun retry (ws1, ws2) = ((* print ("Retrying: " ^ wsptostring(renormalize ws1, renormalize ws2) ^ "\n"); *)
+				    unifyWorldList (renormalize ws1, renormalize ws2))
+
+	    (* unifyWorldList (ws1, ws2) *)
+	    (* First pass at unifying ws1 and ws2. Here we eliminate the cases *)
+	    (* where one side is epsilon, and when parameters can be eliminated *)
+	    (* from both sides, using the invariant that they are in sorted order *)
+			
+	    and goodHead (BVar _) = true
+	      | goodHead (Proj(Bidx _, _)) = true
+	      | goodHead (FVar _) = true
+	      | goodHead _ = false
+
+(*	    and equalHead (BVar n1, BVar n2) = n1 = n2
+	      | equalHead (Proj(Bidx n1, m1), Proj(Bidx n2, m2)) = n1 = n2 andalso m1 = m2
+	      | equalHead (FVar(s1, _, _), FVar(s2, _, _)) = s1 = s2
+	      | equalHead _ = false *)
+(* Obsoleted by Whnf.headCompare *)
+
+	    and coalesce (r, main) = rev r @ main
+	    and coalesce' (r, main) = rev r @ [Root(BVar 999, Nil)] @ main (* for debugging, to see where the division is *)
+	    and unifyWorldList' (ws, ([],[])) = unifyAgainstEpsilon (coalesce ws)
+	      | unifyWorldList' (([],[]), ws) = unifyAgainstEpsilon (coalesce ws)
+	      | unifyWorldList' (ws1 as (tl1rev, (r1 as Root(h1, _)) :: tl1), 
+                                 ws2 as (tl2rev, (r2 as Root(h2, _)) :: tl2)) = 
+		if goodHead h1 andalso goodHead h2 then
+		     case Whnf.headCompare (h1, h2) of
+		     EQUAL =>   unifyWorldList'' ((      tl1rev,       tl1), (      tl2rev,       tl2))
+		   | LESS =>    unifyWorldList'' ((r1 :: tl1rev,       tl1), (      tl2rev, r2 :: tl2))
+		   | GREATER => unifyWorldList'' ((      tl1rev, r1 :: tl1), (r2 :: tl2rev,       tl2))
+		else tryWorldWorld (([], coalesce ws1), coalesce ws2)
+	      | unifyWorldList' (ws1, ws2) = tryWorldWorld (([], coalesce ws1), coalesce ws2)
+	    and unifyWorldList'' (ws1, ws2) = ( (* print ("* unifyWorldList'' " ^ wsptostring (coalesce' ws1, coalesce' ws2) ^ "\n"); *)
+		unifyWorldList' (ws1, ws2)) 
+	    and unifyWorldList (ws1, ws2) = ((* print ("unifyWorldList " ^ wsptostring (ws1, ws2) ^ "\n");*) unifyWorldList' (([],ws1), ([],ws2)))
+
+	    and wsToString ws = String.concat (map (fn x => expToString x ^ ",") ws)
+
+	    (* tryWorldWorld ((ws1rev, ws1), ws2) *)
+	    (* Walks through ws1 (having already tried ws1rev) trying to find *)
+	    (* a world-EVar that also occurs identically in ws2 (i.e. under the *)
+	    (* same substitution) If this fails, move on to singleton heuristics. *)
+
+	    and tryWorldWorld ((ws1rev, []), ws2) = 
+		((*print ("uworldworld nil " ^ wsToString ws1 ^ " == " ^wsToString ws2 ^ "\n");*)
+		 trySingleton (rev ws1rev, ws2) )
+
+	      | tryWorldWorld ((ws1rev, h::tl), ws2) = 
+		let
+		    (* val _ =  print ("uworldworld cons " ^ wsToString ws1 ^ " @ " ^ wsToString (h::tl) ^ " == " ^wsToString ws2 ^ "\n") *)
+
+		    fun uwwDebug s = ( (* print ("DX uww " ^ expToString h ^ " in " ^ wsToString s ^ "\n"); *)
+				      uww s)
+		    and uww [] = NONE
+		      | uww (h'::tl') = if sameEVar(h, h')
+					then ((*print "yes!\n";*)
+					      SOME tl' )
+					else ((*print ("no! " ^ wsToString tl' ^ " \n");*) 
+					      Option.map (fn t => h' :: t) (uwwDebug tl'))
+		in
+		    case uwwDebug ws2 of NONE => tryWorldWorld ((h::ws1rev, tl), ws2)
+				 | SOME ws2' =>  unifyWorldList((rev ws1rev) @ tl, ws2')
+		end
+
+	    (* trySingleton (ws1, ws2) *)
+	    (* See if one side is just a single EVar. If it is, *)
+	    (* we can pass back to unifyExpW' to instantiate or trigger the occurs-check. *)
+	    (* The standard occurs-check is now vaguely reasonable (and at least sound *)
+	    (* as ever, though maybe not as complete as we might like) since we already *)
+	    (* did tryWorldWorld. *)
+	    (* If we do not have a singleton on one side, *)
+	    (* then try parameter unique-occurence heuristics, *)
+  	    (* then try parameter no-occurrence heuristics, *)
+  	    (* then try finitary constraint heuristics, *)
+	    (* then give up *)
+	    and trySingleton (ws, [EClo (w as (EVar _, _))]) = doSingleton(w, ws)
+	      | trySingleton ([EClo (w as (EVar _, _))], ws) = doSingleton(w, ws)
+	      | trySingleton (ws1, ws2) = 
+		(                     tryUniqueOccur(ws1, ws2)
+		 handle NoProgress => tryUniqueOccur(ws2, ws1)
+		 handle NoProgress => tryNoOccur(ws1, ws2)
+		 handle NoProgress => tryNoOccur(ws2, ws1)
+		 handle NoProgress => 
+			raise FinitaryConstraint 
+				  ((fn () => postponeWorldEq (ws1, ws2)), 
+				                        SOME (tryFinitaryConstraint(ws1, ws2))
+				   handle NoProgress => SOME (tryFinitaryConstraint(ws2, ws1))
+				   handle NoProgress => NONE))
+
+	    and findCnstrsIn [] = NONE
+	      | findCnstrsIn (EClo ((EVar (_, _, _, cnstrs), _)) :: _) = SOME cnstrs
+	      | findCnstrsIn (h :: tl) = findCnstrsIn tl
+
+	    and postponeWorldEq (wsp as (ws1, ws2)) = 
+		(case findCnstrsIn ws1 of
+		     SOME c => addWorldCnstr(wsp, c)
+		   | NONE => (case findCnstrsIn ws2 of
+				  SOME c => addWorldCnstr(wsp, c)
+				| NONE => print ("Don't know how to postpone:\n   " ^ wsptostring (ws1, ws2) ^ "\n")))
+
+	    and addWorldCnstr ((ws1, ws2), cnstrs) = 
+		(print ("adding World Constraint\n"); print (wsptostring (ws1, ws2) ^ "\n");
+		 addConstraint(cnstrs, ref (Eqn (G, Whnf.foldWorldExp ws1, Whnf.foldWorldExp ws2))))
+
+	    (* tryNoOccur (ws1, ws2) *)
+	    (* tries to find a parameter in ws1 that occurs not at all in ws2 *) 
+	    (* Otherwise raises NoProgress *)
+	    (* Uses the invariant that ws1 is in sorted order. *)
+	    and tryNoOccur (ws1, ws2) = 
+		let
+		    fun go ((Root(BVar n, _) :: tl)) = 
+			if noOccur (n, ws2) 
+			then raise Unify "one-sided parameter occurrence"
+			else go tl
+		      | go _ = raise NoProgress
+		in
+		    go ws1
+		end
+
+	    (* tryUniqueOccur (ws1, ws2) *)
+	    (* tries to find a parameter in ws1 that occurs only in one *) 
+	    (* argument of one evar in ws2, i.e. a situation like *)
+	    (*     a * p == q * X[M1,M2,..Mi,...Mn]               *)
+	    (* where a does not occur in p, q, M1, ... Mn except it does *)
+	    (* occur in Mi. In this event we are justified in instantiating *)
+	    (* X = i * X'[1,2,...,i-1,i+1,...n] *)
+	    (* Uses the invariant that ws1 is in sorted order. *)
+	    (* Otherwise raises NoProgress *)
+	    and tryUniqueOccur (ws1, ws2) = 
+		let
+
+		    fun succeed ((r, G, V, cnstrs), pos) =
+			let
+			    val _ =
+				print ("tryUniqueOccur succeeding " ^ IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws1, id))
+				       ^ " == " ^ IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws2, id)) ^ "\n ----> " ^
+				       IntSyn.rtostring r ^ " @ " ^ Int.toString pos ^ "\n")
+			    (* XXX should probably shift types around a bit *)
+			    fun unsafeShorten (Decl(tl, x)) = tl
+			      | unsafeShorten _ = raise Unify "invariant violated: pruning empty context"
+			    fun shorten n (G as Decl(tl, x)) = 
+				if n = 1 
+				then
+				    (print ("uniqueOccur pruning context " ^ ctxToString decToString G ^ "\n");
+				     unsafeShorten G)
+				else Decl(shorten (n-1) tl, x)
+			      | shorten _ _ = raise Unify "invariant violated: pruning empty context"
+			    val pruningSubst = foldr (fn (a, b) => Dot(Idx a, b))
+							 (Shift pos)
+							 (List.tabulate (pos - 1, (fn x => x + 1)))
+			    (* val _ = print ("DX pruning subst " ^ subToString pruningSubst ^ "\n") *)
+			    val X' = newEVar(shorten pos G, V)
+			    val idxTm = Root(BVar pos, Nil)
+			    val evarTm = EClo(X', pruningSubst)
+			    val starTm = Root(Const 4 (* ICONST * *), App (idxTm, App (evarTm, Nil)))
+			    val _ = instantiateEVar (r, starTm, !cnstrs) (* XXX do I really want to copy cnstrs here? *)
+			in
+			    retry (ws1, ws2) 
+			end
+
+		    fun go ((Root(BVar n, _) :: tl)) = 
+			(case (noOccur (n, tl), uniqueOccurRight (n, ws2)) of
+			     (true, SOME data) => succeed data
+			   | _ => go tl)
+		      | go _ = raise NoProgress
+		in
+		    go ws1
+		end
+
+	    and tryFinitaryConstraint (ws1, ws2) =
+		let
+		    fun succeed ((r, G, V, cnstrs), pos) = 
+			(fn () => 
+			    let
+				val X' = newEVar(G, V)
+				val idxTm = Root(BVar pos, Nil)
+				val evarTm = EClo(X', id) (* XXX ok to eta-contract? *)
+				val starTm  = Root(Const 4 (* ICONST * *), App (idxTm, App (evarTm, Nil)))
+			    in
+				instantiateEVar (r, starTm, !cnstrs)
+			    end)
+		    fun rightOccurrences (n, ws) = raise Match
+		    fun go ((Root(BVar n, _) :: tl)) = 
+			(case (noOccur (n, tl), semiuniqueOccurRight (n, ws2)) of
+			     (true, SOME occs) => map succeed occs
+			   | _ => go tl)
+		      | go _ = raise NoProgress
+		in
+		    go ws1
+		end
+
+	    and unifyAgainstEpsilon [] = ()
+	      | unifyAgainstEpsilon (Root(BVar n, _) :: tl) = raise Unify "parameter/epsilon clash"
+	      | unifyAgainstEpsilon (EClo(EVar(r, _, _, cnstr), _) :: tl) = (instantiateEVar (r, Whnf.foldWorldExp [], !cnstr);
+									     unifyAgainstEpsilon tl)
+	      (* ^^^ XXX bug!! should be checking that r is under a patsub -jcreed *)
+	      | unifyAgainstEpsilon (h::tl) = raise Unify (expToString h ^ "/epsilon clash")
+
+	    and doSingleton ((U, s), ws) = 
+		let
+		    (* val _ = print ("DX shipping off to singleton " ^ expToString (EClo(U, s)) ^ " == " ^ wstostring ws ^ "\n") *)
+		in
+		    unifyExpW'(G, (U, s), (Whnf.foldWorldExp ws, id))
+		end
+
+	    val ws1 = Whnf.normalizeWorldExp (U1, s1) (* XXX a little bit wasteful, for we're already in whnf *)
+	    val ws2 = Whnf.normalizeWorldExp (U2, s2) 
+
+	   (* val _ = print ("DX ENTRY hlfUnifyExpW " ^ wsptostring (ws1, ws2) ^ "\n")  *)
+	in
+	    unifyWorldList(ws1, ws2)		    
+	end
 
     and unifyDec (G, (Dec(_, V1), s1), (Dec (_, V2), s2)) =
           unifyExp (G, (V1, s1), (V2, s2))
@@ -879,8 +1185,13 @@ struct
 
     val intersection = intersection
 
-    val unifyW = unifyW     
-    val unify = unify
+    val unifyW = unifyW   
+    val unify_ = unify  
+    fun unify (G, Us1 as (U1, s1), Us2 as (U2, s2)) = 
+	let in
+	    unify_ (G, (U1, s1), (U2, s2));
+	    ()
+	end
     val unifySub = unifySub
     val unifyBlock = unifyBlock
 
@@ -898,5 +1209,7 @@ struct
     fun unifiable' (G, Us1, Us2) = 
           (unify (G, Us1, Us2); NONE)
           handle Unify(msg) => SOME(msg)
+
+    val finitaryConstraint = finitaryConstraint
   end
 end;  (* functor Unify *)

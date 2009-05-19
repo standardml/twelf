@@ -68,6 +68,7 @@ struct
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | USE                               (* `%use' *)
+    | HLF                               (* `%hlf' *)
     | STRING of string                  (* string constants *)
 
   exception Error of string
@@ -263,6 +264,7 @@ struct
       | lexPragmaKey (ID(_, "include"), r) = (INCLUDE, r)
       | lexPragmaKey (ID(_, "open"), r) = (OPEN, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
+      | lexPragmaKey (ID(_, "hlf"), r) = (HLF, r)
       | lexPragmaKey (ID(_, s), r) =
         error (r, "Unknown keyword %" ^ s ^ " (single line comment starts with `%<whitespace>' or `%%')")
       (* comments are now started by %<whitespace> *)
@@ -392,6 +394,7 @@ struct
     | toString' (INCLUDE) = "%include"
     | toString' (OPEN) = "%open"
     | toString' (USE) = "%use"
+    | toString' (HLF) = "%hlf"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"

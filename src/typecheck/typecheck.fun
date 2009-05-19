@@ -19,6 +19,10 @@ struct
   local 
     structure I = IntSyn
 
+(*    fun debtrace (x,s) = print ("typecheck.fun --> " ^ IntSyn.expToString x ^ " under [" ^ IntSyn.subToString s ^ "]\n") *)
+fun debtrace _ = ()
+fun dprint _ = ()
+
     (* for debugging purposes *)
     fun subToString (G, I.Dot (I.Idx (n), s)) =
           Int.toString (n) ^ "." ^ subToString (G, s)
@@ -50,6 +54,9 @@ struct
     *)
     fun checkExp (G, Us, Vs) =
 	let 
+	    val _ = dprint "checking\n"
+	    val _ = debtrace Us
+	    val _ = debtrace Vs
 	  val Us' = inferExp (G, Us)
 	in
 	  if Conv.conv (Us', Vs) then ()

@@ -90,6 +90,7 @@ sig
   val chatter : int ref		             (* 3, chatter level *)
   val doubleCheck : bool ref	             (* false, check after reconstruction *)
   val unsafe : bool ref		             (* false, allows %assert *)
+  val hlf : bool ref		             (* false, enables hlf features *)
   val autoFreeze : bool ref		(* false, freezes families in meta-theorems *)
   val timeLimit : (Time.time option) ref     (* NONEe, allows timeLimit in seconds *)
 

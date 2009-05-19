@@ -37,4 +37,11 @@ sig
 
   val cloInv : IntSyn.Exp * IntSyn.Sub -> IntSyn.Exp
   val compInv : IntSyn.Sub * IntSyn.Sub -> IntSyn.Sub
+
+  (* normalizing world expressions *)
+  (* returns a sorted list of bvars first, then a list of evars in arbitrary order *)
+  val normalizeWorldExp : IntSyn.Exp * IntSyn.Sub -> IntSyn.Exp list
+  val foldWorldExp : IntSyn.Exp list -> IntSyn.Exp
+  val headCompare : IntSyn.Head * IntSyn.Head -> order
+
 end; (* signature WHNF *)
