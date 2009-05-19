@@ -1,0 +1,45 @@
+%hlf.
+
+!nat : !type.
+s : !nat -> !nat.
+z : !nat.
+
+!plus : !nat -> !nat -> !nat -> !type.
+plus/z : !plus z N N.
+plus/s : !plus (s M) N (s P)
+	  <- !plus M N P.
+
+sow : !nat -> !nat -> type.
+reap : !nat -> type.
+seed : type.
+
+sow/z : sow z M o- reap M.
+sow/s : sow (s N) M o- (seed -o sow N M).
+reap/z : reap z.
+reap/s : reap (s N) o- seed o- reap N.
+
+!commute-succ : !plus M (s N) P -> !plus (s M) N P -> !type.
+!lemma2 : reap N @ A -> reap M @ A -> !plus z M N -> !type.
+
+!lemma : sow M P @ A -> reap N @ A -> !plus M N P -> !type.
+lemma/s : !lemma (sow/s ^ SOW) REAP PLUS''
+	   <- ({a:w} {x:seed @ a} 
+	      !lemma (SOW a x) (reap/s ^ REAP a x) PLUS)
+	   <- !commute-succ PLUS PLUS''.
+
+lemma/z : !lemma (sow/z ^ REAP1) REAP2 PLUS
+	   <- !lemma2 REAP1 REAP2 PLUS.
+
+%block b : block {a:w} {x:seed a}.
+%mode !lemma2 +REAP1 +REAP2 -PLUS.
+%mode !commute-succ +PLUS1 -PLUS2.
+%mode !lemma +SOW +REAP -PLUS.
+%worlds (b) (!lemma2 _ _ _).
+%worlds (b) (!commute-succ _ _).
+%worlds (b) (!lemma _ _ _).
+
+%trustme %total (M) (!commute-succ M _).
+%trustme %total (M) (!lemma2 M _ _).
+
+%total SOW (!lemma SOW _ _).
+

@@ -1,0 +1,44 @@
+% Linear Logic
+
+%hlf.
+
+o : type. %name o A.
+
+zero : o.
+top : o.
+conc : o -> @type. %name conc CONC.
+hyp : o -> @type. %name hyp HYP.
+
+%%% Inference Rules
+
+topr : {a:w} conc top @ a.
+axiom : hyp A -o conc A.
+zerol : {a:w} {b:w} hyp zero @ a -> conc C @ a * b.
+
+%%% Cut admissibility
+
+ca : {AA : w} {BB : w} {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB
+      -> type.
+
+%% Axiom Cases
+ca/axiom/l : ca ^ ^ A (axiom ^ H) E (E ^ H).
+ca/axiom/r : ca ^ ^ A D axiom D.
+
+%% D-Commutative Cases
+cad/zerol  : ca ^ ^ A (zerol ^ ^ H) E (zerol ^ ^ H).
+
+%% E-Commutative Right Cases
+cae/topr : {D:conc A @ P} ca ^ ^ A D ([a:w][h: (hyp A) @ a] topr (Q * a))
+	    (topr (Q * P)).
+
+%% E-Commutative Left Cases
+cae/zerol : ca ^ ^ A D ([h:^ (hyp A)] zerol ^ ^ H) (zerol ^ ^ H).
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +AA +BB +A +D +E -F).
+%worlds (b) (ca _ _ _ _ _ _).
+%total {A [D E]} (ca AA BB A D E _).

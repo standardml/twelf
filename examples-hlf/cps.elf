@@ -1,0 +1,27 @@
+%hlf.
+
+e : type.
+v : type.
+app : e -> e -> e.
+lam : (v -> e) -> v.
+inj : v -> e.
+
+ce : type.
+cv : type.
+co : type.
+capp : cv -> cv -> co -o ce.
+cth : co -o cv -> ce.
+cfn : (cv -> co -o ce) -> cv.
+clam : (cv -> ce) -o co.
+
+cps : v -> cv -> type.
+cpse : e -> (co -o ce) -> type.
+
+cps/lam : cps (lam E) (cfn E')
+  <- ({x:v}{x':cv} cps x x' -> cpse (E x) (E' x')).
+cpse/app : {E1' : co -o ce} {E2' : co -o ce} cpse (app E1 E2)
+                ([c :^ co] E1' ^ (clam ^ [w1] E2' ^ (clam ^ [w2] capp w1 w2 ^ c)))
+  <- cpse E1 E1'
+  <- cpse E2 E2'.
+cpse/inj : cpse (inj E) ([c :^ co] cth ^ c E')
+  <- cps E E'.

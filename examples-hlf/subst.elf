@@ -1,0 +1,25 @@
+%hlf.
+
+tm : type.
+name : type.
+
+lam : (name -0 tm) -> tm.
+var : name -0 tm.
+app : tm -> tm -> tm.
+
+#' : name -0 name -0 type. 
+# = [a] [b] #' ^ a ^ b.
+%infix none 5 #.
+
+subst : tm -> name -0 tm -> tm -> type.
+subst/app : {a:w} 
+	     subst E ^ N (app M1 M2) (app M1' M2') @ a
+	     <- subst E ^ N M1 M1' @ a 
+	     <- subst E ^ N M2 M2' @ a.
+
+subst/lam : subst E ^ N (lam M) (lam M') 
+	     o- ({n :^ name} subst E ^ N (M ^ n) (M' ^ n)). 
+
+subst/var/this : subst E ^ N (var ^ N) E.
+subst/var/that : subst E ^ N (var ^ N') (var ^ N')
+		  <- N # N'.

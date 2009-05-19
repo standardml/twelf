@@ -1,0 +1,61 @@
+%hlf.
+
+% Linear Logic
+
+o : type. %name o A.
+
+triv    : o -> o.  
+
+conc : o -> @type. %name conc CONC.
+hyp : o -> @type. %name hyp HYP.
+
+%% Inference Rules
+
+trivl : (hyp (triv A) -o conc C) o- (hyp A -o conc C).
+trivr : conc (triv A) o- conc A.
+
+axiom : hyp A -o conc A.
+
+%%% Cut admissibility
+
+ca : {AA : w} {BB: w} {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB
+      -> type.
+
+%% Principal Cuts
+
+ca_triv : ca ^ ^ (triv A) (trivr ^ D) 
+	   ([h:^ (hyp (triv A))] trivl ^ E ^ h) F
+	   <- ca ^ ^ A D E F.
+
+
+%% D-commutative left
+
+cad_trivl  : ca ^ ^ A (trivl ^ D1 ^ H) E (trivl ^ D1' ^ H)
+	      <- {a : w} {h1: hyp B1 @ a} ca ^ ^ A (D1 ^ h1) E (D1' ^ h1).
+
+%% E-commutative right
+
+cae_trivr : ca ^ ^ A D ([h:^ (hyp A)] trivr ^ (E ^ h)) (trivr ^ E')
+	    <- ca ^ ^ A D E E'.
+
+
+
+%% E-commutative left
+
+cae_trivl: ca ^ ^ A D ([a] [x:hyp A @ a] trivl ^ ([b] [y:hyp B @ b] E a x b y) ^ H) (trivl ^ F' ^ H)
+	    <- ({b} {y:hyp B @ b} ca ^ ^ A D ([x:^ (hyp A)] E ^ x ^ y) (F' ^ y)).
+
+%% Axiom cases
+
+ca_axiom_l : ca ^ ^ A (axiom ^ H) E (E ^ H).
+
+ca_axiom_r : ca ^ ^ A D axiom D.
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +AA +BB +A +D +E -F).
+%worlds (b) (ca _ _ _ _ _ _).
+%total {A [D E]} (ca AA BB A D E _).

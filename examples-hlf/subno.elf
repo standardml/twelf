@@ -1,0 +1,75 @@
+%hlf.
+
+name : type.
+val : type.
+inst : type.
+final : type.
+exp : type.
+
+% stores are name/val pair lists
+store : type.
+stnil : store.
+stcons : name -0 val -> store -> store.
+
+% some expressions and values
+ref  : exp -> exp.
+deref : exp -> exp.
+loc : name -0 val.
+
+% some instructions
+ev : exp -> inst. % evaluate
+return : val -> inst.
+ref1 : val -> inst. % suspended ref
+deref1 : val -> inst. % suspended deref
+
+% this is the same hack as in frank and iliano's thing,
+% to allow final states to be open
+new* : (name -0 final) -> final.
+
+% continuations are (val -> inst) lists
+cont : type.
+init : cont.
+;    : cont -> (val -> inst) -> cont.
+%infix none 3 ;.
+
+% exec taks a store as well
+exec  : store -> cont -> inst -> final -> type. 
+
+% lookup a name in the store
+lookup : store -> name -0 val -> type.
+
+% apartness
+#' : name -0 name -0 type. 
+# = [a] [b] #' ^ a ^ b.
+%infix none 5 #.
+
+irrefl: {l :^ name} {l' :^ name} {a:w} (l # l') @ a.
+
+% these are the easy ones that just push
+% something onto the stack
+ex_ref  : exec ST K (ev (ref E)) W
+	   o- exec ST (K ; ref1) (ev E) W.
+
+ex_deref  : exec ST K (ev (deref E)) W
+	   o- exec ST (K ; deref1) (ev E) W.
+
+% these are when we get back a value
+ex_ref1 : exec ST K (ref1 V) (new* W)
+	   o- ({n :^  name} 
+		  exec (stcons ^ n V ST) K (return (loc ^ n)) (W ^ n)).
+
+% ex_deref1 : exec ST K (deref1 (loc N)) W
+%	   o- (lookup ST N V & exec ST K (return V) W).
+
+ex_deref1 : {a : w} 
+	     exec ST K (deref1 (loc ^ N)) W @ a
+	     <- lookup ST ^ N V @ a 
+	     <- exec ST K (return V) W @ a.
+
+lookup/here : {a : w} lookup (stcons ^ N V S) ^ N V @ a.
+
+lookup/there : {a : w}
+		lookup (stcons ^ N' V' S) ^ N' V @ a
+		<- N # N' @ a
+		<-  lookup S ^ N V @ a.
+

@@ -1,0 +1,152 @@
+% XXX this is quite broken -- I'm equivocating
+% on whether ca takes world arguments explicitly
+% for one thing.
+
+% Linear Logic
+
+%hlf.
+
+o : type. %name o A.
+
+% Multiplicative connectives
+ten  : o -> o -> o.  %infix right 11 ten.
+lol  : o -> o -> o.  %infix right 10 lol.
+
+% Additive connectives
+and    : o -> o -> o.  %infix right 11 and.
+top    : o.
+
+conc : o -> @type.
+hyp : o -> @type.
+
+%%% Inference Rules
+
+tensorl : (hyp (A ten B) -o conc C) 
+	   o- (hyp A -o hyp B -o conc C).
+
+tensorr : conc (A ten B) 
+	   o- conc A
+	   o- conc B.
+
+loll : (hyp (A lol B) -o conc C) 
+	o- (hyp B -o conc C)
+	o- conc A.
+
+lolr : conc (A lol B) 
+	   o- (hyp A -o conc B).
+
+andl1 : (hyp (A and B) -o conc C)
+        o- (hyp A -o conc C).
+andl2 : (hyp (A and B) -o conc C)
+        o- (hyp B -o conc C).
+
+andr : {a : w} 
+	conc (A and B) @ a
+	<- conc B @ a
+	<- conc A @ a.
+
+% topL : ({a : w}{b : here} conc C @ a * b) -o (hyp top -o conc C).
+% = [x] [y] x.
+
+topr : {a : w} conc top @ a.
+
+axiom : hyp A -o conc A.
+
+
+%%% Cut admissibility
+
+ca : {a : w} {b : w} {A : o}
+      conc A @ a
+      -> (hyp A -o conc C) @ b
+      -> conc C @ a * b 
+      -> type.
+
+%% Axiom Conversions
+
+ca_axiom_l : ca ^ ^ A (axiom ^ H) E (E ^ H).
+
+ca_axiom_r : ca ^ ^ A D axiom D.
+
+%% Essential Conversions
+
+ca_and1 : ca ^ ^ (A1 and A2) (andr ^ D1 D2) 
+	   ([h:^ (hyp (A1 and A2))] andl1 ^ E ^ h) F
+	   <- ca ^ ^ A1 D1 E F.
+
+
+ca_and2 : ca ^ ^ (A1 and A2) (andr ^ D1 D2) 
+	   ([h :^ (hyp (A1 and A2))] andl2 ^ E ^ h) F
+	   <- ca ^ ^ A2 D2 E F.
+
+
+ca_lol  : ca ^ ^ (A1 lol A2) (lolr ^ D2)
+	   ([h:^ (hyp (A1 lol A2))] loll ^ E1 ^ E2 ^ h) F
+	   <- ca ^ ^ A1 E1 D2 D2'
+	   <- ca ^ ^ A2 D2' E2 F.
+
+
+%% Left Commutative Conversions
+
+cal_andl1  : ca ^ ^ A (andl1 ^ D1 ^ H) E (andl1 ^ D1' ^ H)
+	      <- {a : w} {h1: hyp B1 @ a} ca ^ ^ A (D1 ^ h1) E (D1' ^ h1).
+
+
+cal_andl2  : ca ^ ^ A (andl2 ^ D2 ^ H) E (andl2 ^ D2' ^ H)
+	      <- {a : w} {h2:hyp B2 @ a} ca ^ ^ A (D2 ^ h2) E (D2' ^ h2).
+
+cal_loll   : ca ^ ^ A (loll ^ D1 ^ D2 ^ H) E (loll ^ D1 ^ D2' ^ H)
+	      <- ({a : w} {h2:hyp B2 @ a} ca ^ ^ A (D2 ^ h2) E (D2' ^ h2)).
+
+
+%% Right Commutative Conversions
+
+% was commented out
+% car_axiom : ca ^ ^ A D ([h:^ (hyp A)] axiom ^ H1) (axiom ^ H1).
+% not needed (nor indeed correct as written) because of linearity!
+
+
+car_andr : ca ^ ^ A D ([h:^ (hyp A)] andr ^ (E1 ^ h) (E2 ^ h)) (andr ^ E1' E2')
+	    <- ca ^ ^ A D E1 E1'
+	    <- ca ^ ^ A D E2 E2'.
+
+car_andl1: {E1 : _ -> _}
+	    ca ^ ^ A D ([h:^(hyp A)] andl1 ^ (E1 ^ h) ^ H) (andl1 ^ E1' ^ H)
+	    <- ({a:w}{h1:hyp B1 @ a} ca ^ ^ A D ([h:^(hyp A)] E1 ^ h ^ h1) (E1' ^ h1)).
+
+car_andl2: {E2 : _ -> _}
+	    ca ^ ^ A D ([h:^(hyp A)] andl2 ^ (E2 ^ h) ^ H) (andl2 ^ E2' ^ H)
+	    <- ({a:w}{h2:hyp B2 @ a} ca ^ ^ A D ([h:^(hyp A)] E2 ^ h ^ h2) (E2' ^ h2)).
+
+car_lolr : {E2 : _ -> _} ca ^ ^ A D ([h:^(hyp A)] lolr ^ (E2 ^ h)) (lolr ^ E2')
+	    <- ({a:w}{h1:hyp B1 @ a} ca ^ ^ A D ([h:^(hyp A)] E2 ^ h ^ h1) (E2' ^ h1)).
+
+
+car_loll2 : {E2 : _ -> _} ca ^ ^ A D ([h:^ (hyp A)] loll ^ E1 ^ (E2 ^ h) ^ H) (loll ^ E1 ^ E2' ^ H)
+	    <- ({a : w}{h2:hyp B2 @ a} ca ^ ^ A D ([h:^(hyp A)] E2 ^ h ^ h2) (E2' ^ h2)).
+
+
+car_loll1 : ca ^ ^ A D ([h:^ (hyp A)] loll ^ (E1 ^ h) ^ E2 ^ H) (loll ^ E1' ^ E2 ^ H)
+	    <- ca ^ ^ A D E1 E1'.
+
+car_tensorr1 : ca ^ ^ A D 
+	       ([h :^ (hyp A)] tensorr ^ (E1 ^ h) ^ E2)
+	       (tensorr ^ E1' ^ E2)
+	       <- ca ^ ^ A D E1 E1'.
+
+car_tensorr2 : ca ^ ^ A D 
+	       ([h :^ (hyp A)] tensorr ^ E1 ^ (E2 ^ h))
+	       (tensorr ^ E1 ^ E2')
+	       <- ca ^ ^ A D E2 E2'.
+
+% tensorl : (hyp (A ten B) -o conc C) 
+% 	   o- (hyp A -o hyp B -o conc C).
+
+% tensorr : conc (A ten B) 
+% 	   o- conc A
+% 	   o- conc B.
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +A +D +E -F).
+%worlds (b) (ca _ _ _ _).
+%total {A [D E]} (ca A D E _).

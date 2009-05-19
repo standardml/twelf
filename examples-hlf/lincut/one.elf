@@ -1,0 +1,56 @@
+% Linear Logic
+
+%hlf.
+
+o : type. %name o A.
+
+% unit of multiplicative conjunction
+one : o.
+
+conc : o -> @type. %name conc CONC.
+hyp : o -> @type. %name hyp HYP.
+
+%%% Inference Rules
+
+oner : conc one.
+onel : (hyp one -o conc C) o- conc C.
+
+axiom : hyp A -o conc A.
+
+%%% Cut admissibility
+
+ca : {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB
+      -> type.
+
+%% Axiom Cases
+
+ca/axiom/l : ca A (axiom ^ H) E (E ^ H).
+
+ca/axiom/r : ca A D axiom D.
+
+%% Principal Cases
+
+ca/one : ca one oner ([a:w][h : hyp one @ a] onel ^ D ^ h) D.
+
+%% D-Commutative Left Cases
+
+cad/onel : ca A (onel ^ D ^ H) E (onel ^ F ^ H)
+	      <- ca A D E F.
+
+%% E-Commutative Right Cases
+
+% cae/oner cannot arise
+
+%% E-Commutative Left Cases
+
+cae/onel: ca A D ([a] [x:hyp A @ a] onel ^ (E a x) ^ H) (onel ^ F ^ H)
+	    <- ca A D E F.
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +A +D +E -F).
+%worlds (b) (ca _ _ _ _).
+%total {A [D E]} (ca A D E _).

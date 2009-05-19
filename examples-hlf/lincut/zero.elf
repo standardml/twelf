@@ -1,0 +1,47 @@
+% Linear Logic
+
+%hlf.
+
+o : type. %name o A.
+
+% unit of disjunction
+zero    : o.
+
+conc : o -> @type. %name conc CONC.
+hyp : o -> @type. %name hyp HYP.
+
+%%% Inference Rules
+
+zerol : {a:w} {b:w} hyp zero @ a -> conc C @ a * b.
+
+axiom : hyp A -o conc A.
+
+%%% Cut admissibility
+
+ca : {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB
+      -> type.
+
+%% Axiom Cases
+
+ca/axiom/l : ca A (axiom ^ H) E (E ^ H).
+
+ca/axiom/r : ca A D axiom D.
+
+%% Principal Cases
+
+%% D-Commutative Cases
+
+cad/zerol  : ca A (zerol ^ ^ H) E (zerol ^ ^ H).
+
+%% E-Commutative Cases
+
+cae/zerol : ca A D ([h:^ (hyp A)] zerol ^ ^ H) (zerol ^ ^ H).
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +A +D +E -F).
+%worlds (b) (ca _ _ _ _).
+%total {A [D E]} (ca A D E _).

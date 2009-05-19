@@ -1,0 +1,58 @@
+%hlf.
+
+tm : type.
+name : type.
+
+lam : (name -0 tm) -> tm.
+var : name -0 tm.
+app : tm -> tm -> tm.
+
+diseq : tm  -> tm -> type.
+
+#' : name -0 name -0 type. 
+%abbrev # = [a] [b] #' ^ a ^ b.
+%infix none 5 #.
+irrefl : {n1 :^ name} {n2 :^ name} {a : w} (n1 # n2) @ a.
+
+diseq/var/var : {a:w} A # B -o diseq (var ^ A) (var ^ B) @ a.
+diseq/app/app1 : diseq (app M N) (app M' N') o- diseq M M'.
+diseq/app/app2 : diseq (app M N) (app M' N') o- diseq N N'.
+diseq/lam/lam : diseq (lam M) (lam M') o- ({n :^ name} diseq (M ^ n) (M' ^ n)).
+
+diseq/var/app : {a:w} diseq (var ^ A) (app M N) @ a.
+diseq/app/var : {a:w} diseq (app M N) (var ^ A) @ a.
+
+diseq/lam/app : {a:w} diseq (lam M') (app M N) @ a.
+diseq/app/lam : {a:w} diseq (app M N) (lam M') @ a.
+
+diseq/lam/var : {a:w} diseq (lam M') (var ^ A) @ a.
+diseq/var/lam : {a:w} diseq (var ^ A) (lam M') @ a.
+
+diseq-sym : {a:w} diseq E2 E1 @ a -> diseq E1 E2 @ a -> type.
+apart-sym : {aA : w} {A : name @ aA} {aB : w} {B : name @ aB} {a : w} (A # B) @ a -> (B # A) @ a -> type.
+
+diseq-sym/app/app1 : diseq-sym ^ (diseq/app/app1 ^ DISEQ) (diseq/app/app1 ^ DISEQ')
+		     <- diseq-sym ^ DISEQ DISEQ'.
+diseq-sym/app/app2 : diseq-sym ^ (diseq/app/app2 ^ DISEQ) (diseq/app/app2 ^ DISEQ')
+		     <- diseq-sym ^ DISEQ DISEQ'.
+diseq-sym/lam/lam : diseq-sym ^ (diseq/lam/lam ^ DISEQ) (diseq/lam/lam ^ DISEQ')
+		     <- ({n :^ name} diseq-sym ^ (DISEQ ^ n) (DISEQ' ^ n)).
+diseq-sym/var/var :  % {p1:w} {p2:w} {n1:w} {N2:name @ n1} {N3:name @ p2} {APART:N2 # N3 @ p1} {APART':N3 # N2 @ p1} 
+      apart-sym ^ N2 ^ N3 ^ APART APART'
+         -> diseq-sym ^ (diseq/var/var ^ ^ APART) (diseq/var/var ^ ^ APART').
+
+% diseq-sym ^ (diseq/var/var ^ ^ APART) (diseq/var/var ^ ^ APART')
+%		     <- apart-sym ^ N1 ^ N2 ^ APART APART'.
+
+void : type.
+diseq-irrefl : {E:tm} {a:w} diseq E E @ a -> void -> type.
+apart-irrefl : {b : w} {N : name @ b} {a:w} (N # N) @ a -> void -> type.
+
+diseq-irrefl/app1 : diseq-irrefl (app M1 M2) ^ (diseq/app/app1 ^ DISEQ) V
+		     <- diseq-irrefl M1 ^ DISEQ V.
+diseq-irrefl/app2 : diseq-irrefl (app M1 M2) ^ (diseq/app/app2 ^ DISEQ) V
+		     <- diseq-irrefl M2 ^ DISEQ V.
+diseq-irrefl/lam : diseq-irrefl (lam M) ^ (diseq/lam/lam ^ DISEQ) V
+		     <- ({n :^ name} diseq-irrefl (M ^ n) ^ (DISEQ ^ n) V).
+diseq-irrefl/var : diseq-irrefl (var ^ N) ^ (diseq/var/var ^ ^ APART) V
+		     <- apart-irrefl ^ N ^ APART V.
