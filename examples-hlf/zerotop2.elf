@@ -1,0 +1,56 @@
+% Linear Logic
+
+%hlf.
+
+o : type. %name o A.
+
+zero : o.
+top : o.
+conc : o -> @type. %name conc CONC.
+hyp : o -> @type. %name hyp HYP.
+
+loc : w -> @type. %name loc LOC.
+loc/ : loc P @ P.
+
+%%% Inference Rules
+
+topr : {a:w} conc top @ a.
+axiom : hyp A -o conc A.
+zerol : {a:w} {b:w} {c:w} hyp zero @ a -> loc c @ (a * b) -> conc C @ c.
+
+%%% Cut admissibility
+
+ca : {AA : w} {BB : w} {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB
+      -> type.
+
+%% Axiom Cases
+ca/axiom/l : ca ^ ^ A (axiom ^ H) E (E ^ H).
+ca/axiom/r : ca ^ ^ A D axiom D.
+
+%% D-Commutative Cases
+cad/zerol  : ca ^ ^ A (zerol ^ ^ ^ H LOC) E (zerol ^ ^ ^ H LOC).
+
+%% E-Commutative Right Cases
+cae/topr : {D:conc A @ P} ca ^ ^ A D ([a:w][h: (hyp A) @ a] topr (Q * a))
+	    (topr (Q * P)).
+
+loc-lemma : ({p:w} loc (p * R) @ (p * Q)) -> (loc (R * QQ) @ (Q * QQ)) -> type.
+
+%% E-Commutative Left Cases
+cae/zerol : ca PP QQ A D ([a : w][h: (hyp A) @ a ] zerol P (Q * a) (R * a) H (LOC a))
+	     (zerol P (Q * QQ) (R * QQ) H LOC')
+	     <- loc-lemma LOC LOC'.
+
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (loc-lemma +A -B).
+%worlds (b) (loc-lemma _ _).
+%trustme %total A (loc-lemma A B).
+
+%mode (ca +AA +BB +A +D +E -F).
+%worlds (b) (ca _ _ _ _ _ _).
+%total {A [D E]} (ca AA BB A D E _).

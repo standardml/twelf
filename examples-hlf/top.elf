@@ -1,0 +1,15 @@
+%%% Connective
+
+top : o.
+
+%%% Inference Rules
+
+topr : {a:w} conc top @ a.
+
+%%% Principal Cases
+
+%%% D-Commutative Cases
+
+%%% E-Commutative Cases
+
+cae/topr : {D:conc A @ P} ca A D ([a:w][h: (hyp A) @ a] topr (Q * a)) (topr (Q * P)).

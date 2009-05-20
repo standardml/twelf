@@ -1,0 +1,49 @@
+%%% Connective
+
+plus : o -> o -> o. %infix right 11 plus.
+
+%%% Inference Rules
+
+plusl : {a:w} ((hyp A -o conc C) @ a) 
+	 -> ((hyp B -o conc C) @ a)
+	 -> ((hyp (A plus B) -o conc C) @ a).
+
+plusr1 : conc A -o conc (A plus B).
+plusr2 : conc B -o conc (A plus B).
+
+
+%%% Principal Cases
+
+ca/plus1 : ca (A1 plus A2) (plusr1 ^ D1) 
+	   ([h:^ (hyp (A1 plus A2))] plusl ^ E1 E2 ^ h) F
+	   <- ca A1 D1 E1 F.
+
+
+ca/plus2 : ca (A1 plus A2) (plusr2 ^ D2) 
+	   ([h:^ (hyp (A1 plus A2))] plusl ^ E1 E2 ^ h) F
+	   <- ca A2 D2 E2 F.
+
+%%% D-Commutative Cases
+
+cad/plusl  : ca A (plusl ^ D1 D2 ^ H)
+	      E
+	      (plusl ^ E1' E2' ^ H)
+	      <- ({a:w} {h:hyp A1 @ a} ca A (D1 ^ h) E (E1' ^ h))
+	      <- ({a:w} {h:hyp A2 @ a} ca A (D2 ^ h) E (E2' ^ h)).
+
+%%% E-Commutative Cases
+
+cae/plusl : 
+	     ca X D ([x:w][h: (hyp X) @ x] plusl ^ (E1 x h) (E2 x h) ^ H) 
+	     (plusl ^ E1' E2' ^ H)
+	     <- ({a:w}{ha : hyp A1 @ a} ca X D ([x:w][hx: (hyp X) @ x] E1 x hx a ha) (E1' a ha))
+	     <- ({a:w}{ha : hyp A2 @ a} ca X D ([x:w][hx: (hyp X) @ x] E2 x hx a ha) (E2' a ha)).
+
+cae/plusr1 : 
+	     ca X D ([x:w][h: (hyp X) @ x] plusr1 ^ (E x h)) (plusr1 ^ F)
+	      <- ca X D E F.
+
+cae/plusr2 : 
+	     ca X D ([x:w][h: (hyp X) @ x] plusr2 ^ (E x h)) (plusr2 ^ F)
+	      <- ca X D E F.
+

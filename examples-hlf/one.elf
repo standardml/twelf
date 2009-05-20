@@ -1,0 +1,22 @@
+%%% Connective
+
+one : o.
+
+%%% Inference Rules
+
+oner : conc one.
+onel : (hyp one -o conc C) o- conc C.
+
+%%% Principal Cases
+
+ca/one : ca one oner ([a:w][h : hyp one @ a] onel ^ D ^ h) D.
+
+%%% D-Commutative Cases
+
+cad/onel : ca A (onel ^ D ^ H) E (onel ^ F ^ H)
+	      <- ca A D E F.
+
+%%% E-Commutative Cases
+
+cae/onel: ca A D ([a] [x:hyp A @ a] onel ^ (E a x) ^ H) (onel ^ F ^ H)
+	    <- ca A D E F.

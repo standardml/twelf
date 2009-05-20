@@ -1,0 +1,18 @@
+%%% Connective
+
+zero : o.
+
+%%% Inference Rules
+
+zerol : {a:w} {b:w} hyp zero @ a -> conc C @ a * b.
+
+%%% Principal Cases
+
+%%% D-Commutative Cases
+
+cad/zerol  : ca A (zerol ^ ^ H) E (zerol ^ ^ H).
+
+%%% E-Commutative Cases
+
+cae/zerol : ca A D ([h:^ (hyp A)] zerol ^ ^ H) (zerol ^ ^ H).
+

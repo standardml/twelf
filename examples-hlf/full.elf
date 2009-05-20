@@ -1,0 +1,99 @@
+
+% Additive connectives
+tensor  : o -> o -> o.  %infix right 11 tensor.
+lol  : o -> o -> o.  %infix right 10 lol.
+
+
+%%% Inference Rules
+
+tensorl : (hyp (A tensor B) -o conc C) 
+	   o- (hyp A -o hyp B -o conc C).
+
+tensorr : conc (A tensor B) 
+	   o- conc A
+	   o- conc B.
+
+loll : (hyp (A lol B) -o conc C) 
+	o- (hyp B -o conc C)
+	o- conc A.
+
+lolr : conc (A lol B) 
+	   o- (hyp A -o conc B).
+
+axiom : hyp A -o conc A.
+
+%%% Cut admissibility
+
+ca : {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB 
+      -> type.
+
+%% Axiom Conversions
+
+ca_axiom_l : ca A (axiom ^ H) E (E ^ H).
+
+ca_axiom_r : ca A D axiom D.
+
+%% Essential Conversions
+
+ca_lol  : ca (A1 lol A2) (lolr ^ D2)
+	   ([h:^ (hyp (A1 lol A2))] loll ^ E1 ^ E2 ^ h) F
+	   <- ca A1 E1 D2 D2'
+	   <- ca A2 D2' E2 F.
+
+ca_tensor1 : ca (B1 tensor B2) (tensorr ^ D2 ^ D1) 
+	      ([h:^ (hyp (B1 tensor B2))] tensorl ^ E ^ h) F
+	      <- ({a2 : w}{h2 : hyp B2 @ a2} ca B1 D1 
+		    ([a1 : w][h1 : hyp B1 @ a1] E a1 h1 a2 h2) (E' a2 h2))
+	      <- ca B2 D2 ([a2 : w][h2 : hyp B2 @ a2] E' a2 h2) F.
+
+
+%% D-Commutative Conversions
+
+cad_loll   : ca A (loll ^ D1 ^ D2 ^ H) E (loll ^ D1 ^ D2' ^ H)
+	      <- ({a : w} {h2:hyp B2 @ a} ca A (D2 ^ h2) E (D2' ^ h2)).
+
+cad_tensorl  : ca A (tensorl ^ D ^ H) E (tensorl ^ D' ^ H)
+		<- ({a1 : w} {h1 : hyp _ @ a1}
+		    {a2 : w} {h2 : hyp _ @ a2}
+		      ca A (D a1 h1 a2 h2) E (D' a1 h1 a2 h2)).
+
+%% E-Commutative Conversions
+
+cae_lolr : ca A D ([h:^(hyp A)] lolr ^ (E2 ^ h)) (lolr ^ E2')
+	    <- ({a1:w}{h1:hyp B1 @ a1} ca A D ([a2:w][h2:hyp A @ a2] E2 a2 h2 a1 h1) (E2' a1 h1)).
+
+
+cae_loll2 : ca A D ([h:^ (hyp A)] loll ^ E1 ^ (E2 ^ h) ^ H) (loll ^ E1 ^ E2' ^ H)
+	    <- ({a2 : w}{h2:hyp B2 @ a2} ca A D ([a1:w][h1: hyp A @ a1] E2 a1 h1 a2 h2) (E2' a2 h2)).
+
+car_loll1 : ca A D ([h:^ (hyp A)] loll ^ (E1 ^ h) ^ E2 ^ H) (loll ^ E1' ^ E2 ^ H)
+	    <- ca A D E1 E1'.
+
+cae_tensorl  : ca A D 
+		([a : w] [h : hyp _ @ a] tensorl ^ (E a h) ^ H) 
+		(tensorl ^ E' ^ H)
+		<- ({a1 : w} {h1 : hyp _ @ a1}
+		    {a2 : w} {h2 : hyp _ @ a2}
+		      ca A D
+		      ([a : w] [h : hyp _ @ a] E a h a1 h1 a2 h2) 
+		      (E' a1 h1 a2 h2)).
+
+cae_tensorr1 : ca A D 
+	       ([h :^ (hyp A)] tensorr ^ (E1 ^ h) ^ E2)
+	       (tensorr ^ E1' ^ E2)
+	       <- ca A D E1 E1'.
+
+cae_tensorr2 : ca A D 
+	       ([h :^ (hyp A)] tensorr ^ E1 ^ (E2 ^ h))
+	       (tensorr ^ E1 ^ E2')
+	       <- ca A D E2 E2'.
+
+
+%block b : some {A : o} block {a : w} {x : hyp A a}.
+
+%mode (ca +A +D +E -F).
+%worlds (b) (ca _ _ _ _).
+%total {A [D E]} (ca A D E _).

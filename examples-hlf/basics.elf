@@ -1,0 +1,23 @@
+%hlf.
+
+o : type. %name o A.
+conc : o -> @type.
+hyp : o -> @type.
+
+%%% Cut admissibility
+
+ca : {A : o}
+      conc A @ AA
+      -> (hyp A -o conc C) @ BB
+      -> conc C @ AA * BB 
+      -> type.
+
+% Init rule
+
+axiom : hyp A -o conc A.
+
+%% Axiom Conversions
+
+ca_axiom_l : ca A (axiom ^ H) E (E ^ H).
+
+ca_axiom_r : ca A D axiom D.

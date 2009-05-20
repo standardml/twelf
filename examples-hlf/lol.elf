@@ -1,0 +1,36 @@
+%%% Connective
+
+lol  : o -> o -> o.  %infix right 10 lol.
+
+%%% Inference Rules
+
+loll : (hyp (A lol B) -o conc C) 
+	o- (hyp B -o conc C)
+	o- conc A.
+
+lolr : conc (A lol B) 
+	   o- (hyp A -o conc B).
+
+%%% Principal Cases
+
+ca/lol  : ca (A1 lol A2) (lolr ^ D2)
+	   ([h:^ (hyp (A1 lol A2))] loll ^ E1 ^ E2 ^ h) F
+	   <- ca A1 E1 D2 D2'
+	   <- ca A2 D2' E2 F.
+
+%%% D-Commutative Cases
+
+cad/loll   : ca A (loll ^ D1 ^ D2 ^ H) E (loll ^ D1 ^ D2' ^ H)
+	      <- ({a : w} {h2:hyp B2 @ a} ca A (D2 ^ h2) E (D2' ^ h2)).
+
+%%% E-Commutative Cases
+
+cae/lolr : ca A D ([h:^(hyp A)] lolr ^ (E2 ^ h)) (lolr ^ E2')
+	    <- ({a1:w}{h1:hyp B1 @ a1} ca A D ([a2:w][h2:hyp A @ a2] E2 a2 h2 a1 h1) (E2' a1 h1)).
+
+
+cae/loll2 : ca A D ([h:^ (hyp A)] loll ^ E1 ^ (E2 ^ h) ^ H) (loll ^ E1 ^ E2' ^ H)
+	    <- ({a2 : w}{h2:hyp B2 @ a2} ca A D ([a1:w][h1: hyp A @ a1] E2 a1 h1 a2 h2) (E2' a2 h2)).
+
+car/loll1 : ca A D ([h:^ (hyp A)] loll ^ (E1 ^ h) ^ E2 ^ H) (loll ^ E1' ^ E2 ^ H)
+	    <- ca A D E1 E1'.
