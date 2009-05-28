@@ -46,9 +46,9 @@ ofe_ref  : ofe (ref T E) (rf T)
 	    <- ofe E T.
 ofe_deref : ofe (deref E) T
   	     <- ofe E (rf T).
-% ofe_assign : ofe (assign E1 E2) 1
-% 	      <- ofe E1 (rf T)
-% 	      <- ofe E2 T.
+ofe_assign : ofe (assign E1 E2) 1
+ 	      <- ofe E1 (rf T)
+ 	      <- ofe E2 T.
 % ofe_seq : ofe (seq E1 E2) T2
 % 	   <- ofe E1 T1
 % 	   <- ofe E2 T2.
@@ -127,12 +127,12 @@ ofi_ref1 : ofi (ref1 T V) (rf T)
 	    <- ofv V T.
 ofi_deref1 : ofi (deref1 V) T
   	      <- ofv V (rf T).
-% ofi_assign1 : ofi (assign1 V1 E2) 1
-% 	       <- ofv V1 (rf T)
-% 	       <- ofe E2 T.
-% ofi_assign2 : ofi (assign2 V1 V2) 1
-% 	       <- ofv V1 (rf T)
-% 	       <- ofv V2 T.
+ofi_assign1 : ofi (assign1 V1 E2) 1
+ 	       <- ofv V1 (rf T)
+ 	       <- ofe E2 T.
+ofi_assign2 : ofi (assign2 V1 V2) 1
+ 	       <- ofv V1 (rf T)
+ 	       <- ofv V2 T.
 
 % ofi_let1 : ofi (let1 V1 E2) T2
 % 	    <- ofv V1 T1

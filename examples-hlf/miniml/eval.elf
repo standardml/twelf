@@ -83,15 +83,15 @@ ex_deref1 : {a:w}
   	     -> exec K (return V1) W @ a 
   	     -> exec K (deref1 (ref* C)) W @ a.
 	     
-% ex_assign : exec K (ev (assign E1 E2)) W
-% 	     o- exec (K ; [x1] assign1 x1 E2) (ev E1) W.
+ex_assign : exec K (ev (assign E1 E2)) W
+ 	     o- exec (K ; [x1] assign1 x1 E2) (ev E1) W.
 
-% ex_assign1 : exec K (assign1 V1 E2) W
-% 	      o- exec (K ; [x2] assign2 V1 x2) (ev E2) W.
+ex_assign1 : exec K (assign1 V1 E2) W
+ 	      o- exec (K ; [x2] assign2 V1 x2) (ev E2) W.
 
-% ex_assign2 : exec K (assign2 (ref* C1) V2) W
-% 	      o- contains C1 V1
-% 	      o- (contains C1 V2 -o exec K (return unit*) W).
+ex_assign2 : exec K (assign2 (ref* C1) V2) W
+ 	      o- contains C1 V1
+ 	      o- (contains C1 V2 -o exec K (return unit*) W).
 
 % ex_seq : exec K (ev (seq E1 E2)) W
 % 	  o- exec (K ; [x1] ev E2) (ev E1) W.

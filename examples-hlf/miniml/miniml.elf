@@ -40,7 +40,7 @@ app  : exp -> exp -> exp.
 % References
 ref  : tp -> exp -> exp.
 deref: exp -> exp.
-% assign: exp -> exp -> exp.
+assign: exp -> exp -> exp.
 % seq  : exp -> exp -> exp.
 
 % Let and Polymorphism
