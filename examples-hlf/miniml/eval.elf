@@ -1,6 +1,6 @@
 %%% Mini-ML with References
 %%% Continuation-Based Abstract Machine
-%%% Author: Frank Pfenning
+%%% Author: Frank Pfenning, Jason Reed
 
 exec	 : cont -> inst -> final -> @type. %name exec Ex.
 close	 : final -> final -> @type.	   %name close Ec.
@@ -54,18 +54,18 @@ ex_unit : exec K (ev (unit)) W
 % ex_snd1 : exec K (snd1 (pair* V1 V2)) W
 % 	    o- exec K (return V2) W.
 
-% % Functions
-% ex_lam : exec K (ev (lam E1)) W
-% 	   o- exec K (return (lam* E1)) W.
+% Functions
+ex_lam : exec K (ev (lam E1)) W
+	   o- exec K (return (lam* E1)) W.
 
-% ex_app : exec K (ev (app E1 E2)) W
-% 	   o- exec (K ; [x1] app1 x1 E2) (ev E1) W.
+ex_app : exec K (ev (app E1 E2)) W
+	   o- exec (K ; [x1] app1 x1 E2) (ev E1) W.
 
-% ex_app1 : exec K (app1 V1 E2) W
-% 	    o- exec (K ; [x2] app2 V1 x2) (ev E2) W.
+ex_app1 : exec K (app1 V1 E2) W
+	    o- exec (K ; [x2] app2 V1 x2) (ev E2) W.
 
-% ex_app2 : exec K (app2 (lam* E1) V2) W
-% 	    o- exec K (ev (E1 V2)) W.
+ex_app2 : exec K (app2 (lam* E1) V2) W
+	    o- exec K (ev (E1 V2)) W.
 
 % References
 ex_ref	: exec K (ev (ref E1)) W
@@ -76,11 +76,12 @@ ex_ref1 : exec K (ref1 V1) (new* W)
 		 -o exec K (return (ref* c)) (W c)).
 
 % ex_deref : exec K (ev (deref E1)) W
-% 	    o- exec (K ; [x1] deref1 x1) (ev E1) W.
+%  	    o- exec (K ; [x1] deref1 x1) (ev E1) W.
 
-% ex_deref1 : {a:w} read C V1 @ a
-% 	     -> exec K (return V1) W @ a 
-% 	     -> exec K (deref1 (ref* C)) W @ a.
+% ex_deref1 : {a:w} 
+% 	     read C V1 @ a
+%  	     -> exec K (return V1) W @ a 
+%  	     -> exec K (deref1 (ref* C)) W @ a.
 	     
 % ex_assign : exec K (ev (assign E1 E2)) W
 % 	     o- exec (K ; [x1] assign1 x1 E2) (ev E1) W.

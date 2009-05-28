@@ -11,8 +11,8 @@ return : val -> inst. % return value
 % pair1 : val -> exp -> inst.
 % fst1 : val -> inst.
 % snd1 : val -> inst.
-% app1 : val -> exp -> inst.
-% app2 : val -> val -> inst.
+app1 : val -> exp -> inst.
+app2 : val -> val -> inst.
 
 ref1 : val -> inst.
 % deref1 : val -> inst.

@@ -1,6 +1,18 @@
 %%% The Mini-ML Language with References
 %%% Typing rules
-%%% Author: Frank Pfenning
+%%% Author: Frank Pfenning, Jason Reed
+
+%% Types
+
+tp : type.  %name tp T.
+
+% nat   : tp.
+1     : tp.              % unit
+% **     : tp -> tp -> tp.  %infix right 10 **. % product 
+=>    : tp -> tp -> tp.  %infix right 9 =>. % function
+rf    : tp -> tp.        % cells
+
+%% Typing Judgments
 
 ofe : exp -> tp -> type.         %name ofe Oe.
 ofv : val -> tp -> type.         %name ofv Ov.
@@ -33,17 +45,17 @@ ofe_unit : ofe unit 1.
 % 	    <- ofe E (T1 ** T2).
 
 % % Functions
-% ofe_lam  : ofe (lam E) (T1 => T2)
-% 	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
-% ofe_app  : ofe (app E1 E2) T1
-% 	    <- ofe E1 (T2 => T1)
-% 	    <- ofe E2 T2.
+ofe_lam  : ofe (lam E) (T1 => T2)
+	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
+ofe_app  : ofe (app E1 E2) T1
+	    <- ofe E1 (T2 => T1)
+	    <- ofe E2 T2.
 
 % References
 ofe_ref  : ofe (ref E) (rf T)
 	    <- ofe E T.
 % ofe_deref : ofe (deref E) T
-% 	     <- ofe E (rf T).
+%  	     <- ofe E (rf T).
 % ofe_assign : ofe (assign E1 E2) 1
 % 	      <- ofe E1 (rf T)
 % 	      <- ofe E2 T.
@@ -76,8 +88,8 @@ ofv_unit : ofv (unit*) 1.
 % ofv_pair : ofv (pair* V1 V2) (T1 ** T2)
 % 	    <- ofv V1 T1
 % 	    <- ofv V2 T2.
-% ofv_lam  : ofv (lam* E) (T1 => T2)
-% 	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
+ofv_lam  : ofv (lam* E) (T1 => T2)
+ 	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
 
 ofv_ref  : ofv (ref* C) (rf T)
  	    <- ofc C T.
@@ -114,17 +126,17 @@ ofi_return : ofi (return V) T
 % ofi_snd1 : ofi (snd1 V) T2
 % 	    <- ofv V (T1 ** T2).
 
-% ofi_app1 : ofi (app1 V1 E2) T1
-% 	    <- ofv V1 (T2 => T1)
-% 	    <- ofe E2 T2.
-% ofi_app2 : ofi (app2 V1 V2) T1
-% 	    <- ofv V1 (T2 => T1)
-% 	    <- ofv V2 T2.
+ofi_app1 : ofi (app1 V1 E2) T1
+	    <- ofv V1 (T2 => T1)
+	    <- ofe E2 T2.
+ofi_app2 : ofi (app2 V1 V2) T1
+	    <- ofv V1 (T2 => T1)
+	    <- ofv V2 T2.
 
 ofi_ref1 : ofi (ref1 V) (rf T)
 	    <- ofv V T.
 % ofi_deref1 : ofi (deref1 V) T
-% 	      <- ofv V (rf T).
+%  	      <- ofv V (rf T).
 % ofi_assign1 : ofi (assign1 V1 E2) 1
 % 	       <- ofv V1 (rf T)
 % 	       <- ofe E2 T.

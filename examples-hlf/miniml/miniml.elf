@@ -1,18 +1,8 @@
-%hlf.
-
 %%% The Mini-ML Language with References
 %%% Polymorphic with value restriction
-%%% Author: Frank Pfenning
+%%% Author: Frank Pfenning, Jason Reed
 
-tp : type.  %name tp T.
-
-% nat   : tp.
-1     : tp.              % unit
-% **     : tp -> tp -> tp.  %infix right 10 **. % product 
-% =>    : tp -> tp -> tp.  %infix right 9 =>. % function
-rf    : tp -> tp.        % cells
-
-
+%hlf.
 
 exp  : type.  %name exp E.
 val  : type.  %name val V.
@@ -34,8 +24,8 @@ unit : exp.
 % snd  : exp -> exp.
 
 % Functions
-% lam  : (val -> exp) -> exp.
-% app  : exp -> exp -> exp.
+lam  : (val -> exp) -> exp.
+app  : exp -> exp -> exp.
 
 % References
 ref  : exp -> exp.
@@ -58,7 +48,7 @@ vl   : val -> exp.
 % s*   : val -> val.
 unit*: val.
 % pair*: val -> val -> val.
-% lam* : (val -> exp) -> val.
+lam* : (val -> exp) -> val.
 ref* : cell -> val.
 
 % %%% Final state

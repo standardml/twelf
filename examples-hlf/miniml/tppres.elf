@@ -1,6 +1,6 @@
 %%% Mini-ML with References
 %%% Type Preservation
-%%% Author: Frank Pfenning
+%%% Author: Frank Pfenning, Jason Reed
 
 %%% Four type preservation theorems
 %%% Mode declarations below indicate quantifiers
@@ -14,11 +14,11 @@ tprd : read C V @ P -> ofc C T -> ofv V T -> type.
 
 tpev : ceval E W @ P -> ofe E T -> off W T -> type.
 
-% %mode tpex +Ex +Ok +Oi -Of.
-% %mode tpcl +Ec +Of -Of'.
-% %mode tpct +Et -Oc -Ov.
-% %mode tprd +Ed -Oc -Ov.
-% %mode tpev +Ev +Oe -Of.
+%mode (tpex +P +Ex +Ok +Oi -Of).
+%mode (tpcl +Ec +Of -Of').
+%mode (tpct +Et -Oc -Ov).
+%mode (tprd +Ed -Oc -Ov).
+%mode (tpev +Ev +Oe -Of).
 
 %%% Reading the state without affecting it
 
@@ -79,24 +79,25 @@ tpex_unit : tpex ^ (ex_unit ^ Ex1) Ok (ofi_ev (ofe_unit)) Of
 % tpex_snd1 : tpex (ex_snd1 ^ Ex1) Ok (ofi_snd1 (ofv_pair Ov2 Ov1)) Of
 % 	     o- tpex Ex1 Ok (ofi_return Ov2) Of.
 
-% % Functions
-% tpex_lam : tpex (ex_lam ^ Ex1) Ok (ofi_ev (ofe_lam Oe1)) Of
-% 	    o- tpex Ex1 Ok (ofi_return (ofv_lam Oe1)) Of.
+% Functions
+tpex_lam : tpex ^ (ex_lam ^ Ex1) Ok (ofi_ev (ofe_lam Oe1)) Of
+ 	    <- tpex ^ Ex1 Ok (ofi_return (ofv_lam Oe1)) Of.
 
-% tpex_app : tpex (ex_app ^ Ex1) Ok (ofi_ev (ofe_app Oe2 Oe1)) Of
-% 	    o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T2 => T1)]
-% 				     ofi_app1 Oe2 ov1))
-% 	            (ofi_ev Oe1) Of.
+tpex_app : tpex ^ (ex_app ^ Ex1) Ok (ofi_ev (ofe_app Oe2 Oe1)) Of
+ 	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T2 => T1)]
+ 				     ofi_app1 Oe2 ov1))
+ 	            (ofi_ev Oe1) Of.
 
-% tpex_app1 : tpex (ex_app1 ^ Ex1) Ok (ofi_app1 Oe2 Ov1) Of
-% 	     o- tpex Ex1 (ofk_; Ok ([x2:val] [ov2:ofv x2 T2]
-% 				      ofi_app2 ov2 Ov1))
-% 		     (ofi_ev Oe2) Of.
+tpex_app1 : tpex ^ (ex_app1 ^ Ex1) Ok (ofi_app1 Oe2 Ov1) Of
+ 	     <- tpex ^ Ex1 (ofk_; Ok ([x2:val] [ov2:ofv x2 T2]
+ 				      ofi_app2 ov2 Ov1))
+ 		     (ofi_ev Oe2) Of.
 
-% tpex_app2 : tpex (ex_app2 ^ Ex1) Ok (ofi_app2 Ov2 (ofv_lam Oe1)) Of
-% 	     o- tpex Ex1 Ok (ofi_ev (Oe1 V2 Ov2)) Of.
+tpex_app2 : tpex ^ (ex_app2 ^ Ex1) Ok (ofi_app2 Ov2 (ofv_lam Oe1)) Of
+ 	     <- tpex ^ Ex1 Ok (ofi_ev (Oe1 V2 Ov2)) Of.
 
 % References
+
 tpex_ref : tpex ^ (ex_ref ^ Ex1) Ok (ofi_ev (ofe_ref Oe1)) Of
  	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 T1] ofi_ref1 ov1))
 	       (ofi_ev Oe1) Of.
@@ -107,21 +108,14 @@ tpex_ref1 : tpex ^ (ex_ref1 ^ Ex1) Ok (ofi_ref1 Ov1) (off_new Of)
  		   -> tpex ^ (Ex1 c ^ et) Ok (ofi_return (ofv_ref oc))
 		      (Of c oc)).
 
-% tpex_deref : tpex (ex_deref ^ Ex1) Ok (ofi_ev (ofe_deref Oe1)) Of
-% 	      o- tpex Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T1)]
-% 				       ofi_deref1 Ov1))
-% 		      (ofi_ev Oe1) Of.
+% tpex_deref : tpex ^ (ex_deref ^ Ex1) Ok (ofi_ev (ofe_deref Oe1)) Of
+%  	      <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T1)]
+%  				       ofi_deref1 Ov1))
+%  		      (ofi_ev Oe1) Of.
 
-% tpex_deref1 : tpex (ex_deref1 ^ (Rd1 , Ex1)) Ok (ofi_deref1 (ofv_ref Oc)) Of
-%                 o- tprd Rd1 Oc Ov1 & tpex Ex1 Ok (ofi_return Ov1) Of.
-
-% %{ or, multiplicatively:
-% tpex_deref1 : tpex (ex_deref1 ^ Ex2 ^ Et1) Ok (ofi_deref1 (ofv_ref Oc)) Of
-% 	       o- tpct Et1 Oc Ov1  % Oc is unique!
-% 	       o- ({et1:contains C1 V1}
-% 		      tpct et1 Oc Ov1
-% 		      -o tpex (Ex2 ^ et1) Ok (ofi_return Ov1) Of).
-% }%
+% tpex_deref1 : tpex ^ (ex_deref1 ^ Rd1 Ex1) Ok (ofi_deref1 (ofv_ref Oc)) Of
+%                <- tprd Rd1 Oc Ov1 
+%		 <- tpex ^ Ex1 Ok (ofi_return Ov1) Of.
 
 % tpex_assign : tpex (ex_assign ^ Ex1) Ok (ofi_ev (ofe_assign Oe2 Oe1)) Of
 % 	       o- tpex Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T)]
@@ -135,8 +129,8 @@ tpex_ref1 : tpex ^ (ex_ref1 ^ Ex1) Ok (ofi_ref1 Ov1) (off_new Of)
 
 % tpex_assign2 : tpex (ex_assign2 ^ Ex2 ^ Et1) Ok
 %                     (ofi_assign2 Ov2 (ofv_ref Oc)) Of
-% 		o- tpct Et1 Oc Ov1  % Oc is unique!
-% 		o- ({et2:contains C1 V2} 
+% 		<- tpct Et1 Oc Ov1  % Oc is unique!
+% 		<- ({et2:contains C1 V2} 
 % 		      tpct et2 Oc Ov2
 % 		      -o tpex (Ex2 ^ et2) Ok (ofi_return (ofv_unit)) Of).
 
@@ -185,3 +179,28 @@ tpcl_loc  : tpcl (close_loc ^ Ec2 ^ Et1) Of Of'
 
 tpev_cev : tpev (cev ^ Ex) Oe Of
 	    <- tpex ^ Ex (ofk_init) (ofi_ev Oe) Of.
+
+
+%block b : 
+some {V1 : val} {T1 : tp} {Ov1 : ofv V1 T1}
+block {c:cell} {a:w} {et : contains c V1 a} {oc:ofc c T1} {d : tpct et oc Ov1}.
+
+%mode (tpex +P +Ex +Ok +Oi -Of).
+%mode (tpcl +Ec +Of -Of').
+%mode (tpct +Et -Oc -Ov).
+%mode (tprd +Ed -Oc -Ov).
+%mode (tpev +Ev +Oe -Of).
+
+%worlds (b) 
+ (tpct _ _ _)
+ (tpcl _ _ _)
+ (tpex _ _ _ _ _)
+ (tprd _ _ _)
+ (tpev _ _ _).
+
+%total (Et Ec Ex Ed Ev) 
+ (tpct Et _ _)
+ (tpcl Ec _ _)
+ (tpex _ Ex _ _ _)
+ (tprd Ed _ _)
+ (tpev Ev _ _).
