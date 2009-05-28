@@ -8,9 +8,9 @@
 
 tp : type.  %name tp T.
 
-% nat   : tp.
+nat   : tp.
 1     : tp.              % unit
-% **     : tp -> tp -> tp.  %infix right 10 **. % product 
+**     : tp -> tp -> tp.  %infix right 10 **. % product 
 =>    : tp -> tp -> tp.  %infix right 9 =>. % function
 rf    : tp -> tp.        % cells
 
@@ -21,17 +21,17 @@ final: type.  %name final W.
 
 %%% Expressions
 % Natural Numbers
-% z    : exp.
-% s    : exp -> exp.
-% case : exp -> exp -> (val -> exp) -> exp.
+z    : exp.
+s    : exp -> exp.
+case : exp -> exp -> (val -> exp) -> exp.
 
 % Unit
 unit : exp.
 
 % Pairs
-% pair : exp -> exp -> exp.
-% fst  : exp -> exp.
-% snd  : exp -> exp.
+pair : exp -> exp -> exp.
+fst  : exp -> exp.
+snd  : exp -> exp.
 
 % Functions
 lam  : (val -> exp) -> exp.
@@ -41,27 +41,27 @@ app  : exp -> exp -> exp.
 ref  : tp -> exp -> exp.
 deref: exp -> exp.
 assign: exp -> exp -> exp.
-% seq  : exp -> exp -> exp.
+seq  : exp -> exp -> exp.
 
 % Let and Polymorphism
-% let  : exp -> (val -> exp) -> exp.
-% letv : val -> (val -> exp) -> exp.
+let  : exp -> (val -> exp) -> exp.
+letv : val -> (val -> exp) -> exp.
 
 % Recursion
-% fix  : (exp -> exp) -> exp.
+fix  : (exp -> exp) -> exp.
 
 % Values
 vl   : val -> exp.
 
 %%% Values
-% z*   : val.
-% s*   : val -> val.
+z*   : val.
+s*   : val -> val.
 unit*: val.
-% pair*: val -> val -> val.
+pair*: val -> val -> val.
 lam* : (val -> exp) -> val.
 ref* : cell T -> val.
 
-% %%% Final state
+%%% Final state
 val* : val -> final.
 new* : (cell T -> final) -> final.
 loc* : cell T -> val -> final -> final.

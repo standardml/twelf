@@ -7,10 +7,10 @@ inst : type.				%name inst I.
 ev : exp -> inst.     % evaluate expression
 return : val -> inst. % return value
 
-% case1 : val -> exp -> (val -> exp) -> inst.
-% pair1 : val -> exp -> inst.
-% fst1 : val -> inst.
-% snd1 : val -> inst.
+case1 : val -> exp -> (val -> exp) -> inst.
+pair1 : val -> exp -> inst.
+fst1 : val -> inst.
+snd1 : val -> inst.
 app1 : val -> exp -> inst.
 app2 : val -> val -> inst.
 
@@ -19,7 +19,7 @@ deref1 : val -> inst.
 assign1 : val -> exp -> inst.
 assign2 : val -> val -> inst.
 
-% let1 : val -> (val -> exp) -> inst.
+let1 : val -> (val -> exp) -> inst.
 
 %%% Continuations
 cont : type.				%name cont K.

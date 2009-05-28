@@ -25,56 +25,56 @@ tprd C (rd ^ ^ CONT) Ov
 
 %%% Execution
 
-% % Natural Numbers
-% tpex_z : tpex (ex_z ^ Ex1) Ok (ofi_ev (ofe_z)) Of
-% 	  o- tpex Ex1 Ok (ofi_return (ofv_z)) Of.
+% Natural Numbers
+tpex_z : tpex ^ (ex_z ^ Ex1) Ok (ofi_ev (ofe_z)) Of
+	  <- tpex ^ Ex1 Ok (ofi_return (ofv_z)) Of.
 
-% tpex_s : tpex (ex_s ^ Ex1) Ok (ofi_ev (ofe_s Oe1)) Of
-% 	  o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 nat]
-% 				   ofi_return (ofv_s ov1)))
-% 	          (ofi_ev Oe1) Of.
+tpex_s : tpex ^ (ex_s ^ Ex1) Ok (ofi_ev (ofe_s Oe1)) Of
+	  <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 nat]
+				   ofi_return (ofv_s ov1)))
+	          (ofi_ev Oe1) Of.
 			 
-% tpex_case : tpex (ex_case ^ Ex1) Ok (ofi_ev (ofe_case Oe3 Oe2 Oe1)) Of
-% 	     o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 nat]
-% 				      ofi_case1 Oe3 Oe2 ov1))
-% 		     (ofi_ev Oe1) Of.
+tpex_case : tpex ^ (ex_case ^ Ex1) Ok (ofi_ev (ofe_case Oe3 Oe2 Oe1)) Of
+	     <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 nat]
+				      ofi_case1 Oe3 Oe2 ov1))
+		     (ofi_ev Oe1) Of.
 
-% tpex_case1_z : tpex (ex_case1_z ^ Ex1) Ok (ofi_case1 Oe3 Oe2 (ofv_z)) Of
-% 		o- tpex Ex1 Ok (ofi_ev Oe2) Of.
+tpex_case1_z : tpex ^ (ex_case1_z ^ Ex1) Ok (ofi_case1 Oe3 Oe2 (ofv_z)) Of
+		<- tpex ^ Ex1 Ok (ofi_ev Oe2) Of.
 
-% tpex_case1_s : tpex (ex_case1_s ^ Ex1) Ok (ofi_case1 Oe3 Oe2 (ofv_s Ov1)) Of
-% 		o- tpex Ex1 Ok (ofi_ev (Oe3 V1 Ov1)) Of.
+tpex_case1_s : tpex ^ (ex_case1_s ^ Ex1) Ok (ofi_case1 Oe3 Oe2 (ofv_s Ov1)) Of
+		<- tpex ^ Ex1 Ok (ofi_ev (Oe3 V1 Ov1)) Of.
 
 % Unit
 tpex_unit : tpex ^ (ex_unit ^ Ex1) Ok (ofi_ev (ofe_unit)) Of
  	     <- tpex ^ Ex1 Ok (ofi_return (ofv_unit)) Of.
 
-% % Pairs
-% tpex_pair : tpex (ex_pair ^ Ex1) Ok (ofi_ev (ofe_pair Oe2 Oe1)) Of
-% 	     o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 T1]
-% 				      ofi_pair1 Oe2 ov1))
-% 		     (ofi_ev Oe1) Of.
+% Pairs
+tpex_pair : tpex ^ (ex_pair ^ Ex1) Ok (ofi_ev (ofe_pair Oe2 Oe1)) Of
+	     <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 T1]
+				      ofi_pair1 Oe2 ov1))
+		     (ofi_ev Oe1) Of.
 
-% tpex_pair1 : tpex (ex_pair1 ^ Ex1) Ok (ofi_pair1 Oe2 Ov1) Of
-% 	      o- tpex Ex1 (ofk_; Ok ([x2:val] [ov2:ofv x2 T2]
-% 				       ofi_return (ofv_pair ov2 Ov1)))
-% 		      (ofi_ev Oe2) Of.
+tpex_pair1 : tpex ^ (ex_pair1 ^ Ex1) Ok (ofi_pair1 Oe2 Ov1) Of
+	      <- tpex ^ Ex1 (ofk_; Ok ([x2:val] [ov2:ofv x2 T2]
+				       ofi_return (ofv_pair ov2 Ov1)))
+		      (ofi_ev Oe2) Of.
 
-% tpex_fst : tpex (ex_fst ^ Ex1) Ok (ofi_ev (ofe_fst Oe1)) Of
-% 	    o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T1 * T2)]
-% 				     ofi_fst1 ov1))
-% 	            (ofi_ev Oe1) Of.
+tpex_fst : tpex ^ (ex_fst ^ Ex1) Ok (ofi_ev (ofe_fst Oe1)) Of
+	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T1 ** T2)]
+				     ofi_fst1 ov1))
+	            (ofi_ev Oe1) Of.
 
-% tpex_fst1 : tpex (ex_fst1 ^ Ex1) Ok (ofi_fst1 (ofv_pair Ov2 Ov1)) Of
-% 	     o- tpex Ex1 Ok (ofi_return Ov1) Of.
+tpex_fst1 : tpex ^ (ex_fst1 ^ Ex1) Ok (ofi_fst1 (ofv_pair Ov2 Ov1)) Of
+	     <- tpex ^ Ex1 Ok (ofi_return Ov1) Of.
 
-% tpex_snd : tpex (ex_snd ^ Ex1) Ok (ofi_ev (ofe_snd Oe1)) Of
-% 	    o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T1 * T2)]
-% 				     ofi_snd1 ov1))
-% 	            (ofi_ev Oe1) Of.
+tpex_snd : tpex ^ (ex_snd ^ Ex1) Ok (ofi_ev (ofe_snd Oe1)) Of
+	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 (T1 ** T2)]
+				     ofi_snd1 ov1))
+	            (ofi_ev Oe1) Of.
 
-% tpex_snd1 : tpex (ex_snd1 ^ Ex1) Ok (ofi_snd1 (ofv_pair Ov2 Ov1)) Of
-% 	     o- tpex Ex1 Ok (ofi_return Ov2) Of.
+tpex_snd1 : tpex ^ (ex_snd1 ^ Ex1) Ok (ofi_snd1 (ofv_pair Ov2 Ov1)) Of
+	     <- tpex ^ Ex1 Ok (ofi_return Ov2) Of.
 
 % Functions
 tpex_lam : tpex ^ (ex_lam ^ Ex1) Ok (ofi_ev (ofe_lam Oe1)) Of
@@ -131,27 +131,27 @@ tpex_assign2 : tpex ^ (ex_assign2 ^ Ex2 ^ Et1) Ok
  		      tpct C et2 Ov2
  		      -> tpex ^ (Ex2 ^ et2) Ok (ofi_return (ofv_unit)) Of).
 
-% tpex_seq : tpex (ex_seq ^ Ex1) Ok (ofi_ev (ofe_seq Oe2 Oe1)) Of
-% 	    o- tpex Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 T1]
-% 				     ofi_ev Oe2))
-% 	            (ofi_ev Oe1) Of.
+tpex_seq : tpex ^ (ex_seq ^ Ex1) Ok (ofi_ev (ofe_seq Oe2 Oe1)) Of
+	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 T1]
+				     ofi_ev Oe2))
+	            (ofi_ev Oe1) Of.
 
-% % Let
-% tpex_let : tpex (ex_let ^ Ex1) Ok (ofi_ev (ofe_let Oe2 Oe1)) Of
-% 	    o- tpex Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 T1]
-% 				     ofi_let1 Oe2 ov1))
-% 	            (ofi_ev Oe1) Of.
+% Let
+tpex_let : tpex ^ (ex_let ^ Ex1) Ok (ofi_ev (ofe_let Oe2 Oe1)) Of
+	    <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [ov1:ofv x1 T1]
+				     ofi_let1 Oe2 ov1))
+	            (ofi_ev Oe1) Of.
 
-% tpex_let1 : tpex (ex_let1 ^ Ex2) Ok (ofi_let1 Oe2 Ov1) Of
-% 	     o- tpex Ex2 Ok (ofi_ev (Oe2 V1 Ov1)) Of.
+tpex_let1 : tpex ^ (ex_let1 ^ Ex2) Ok (ofi_let1 Oe2 Ov1) Of
+	     <- tpex ^ Ex2 Ok (ofi_ev (Oe2 V1 Ov1)) Of.
 
-% tpex_letv : tpex (ex_letv ^ Ex2) Ok (ofi_ev (ofe_letv Oe2)) Of
-% 	     o- tpex Ex2 Ok (ofi_ev Oe2) Of.
+tpex_letv : tpex ^ (ex_letv ^ Ex2) Ok (ofi_ev (ofe_letv Oe2)) Of
+	     <- tpex ^ Ex2 Ok (ofi_ev Oe2) Of.
 
-% % Recursion
-% tpex_fix  : % {Oe: {u:exp} ofe u T -> ofe (E u) T}
-% 	     tpex (ex_fix ^ Ex1) Ok (ofi_ev (ofe_fix Oe)) Of
-% 	     o- tpex Ex1 Ok (ofi_ev (Oe (fix E) (ofe_fix Oe))) Of.
+% Recursion
+tpex_fix  : % {Oe: {u:exp} ofe u T -> ofe (E u) T}
+	     tpex ^ (ex_fix ^ Ex1) Ok (ofi_ev (ofe_fix Oe)) Of
+	     <- tpex ^ Ex1 Ok (ofi_ev (Oe (fix E) (ofe_fix Oe))) Of.
 
 % Values
 tpex_vl   : tpex ^ (ex_vl ^ Ex1) Ok (ofi_ev (ofe_vl Ov)) Of

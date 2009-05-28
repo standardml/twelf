@@ -16,43 +16,43 @@ rd : {a:w} {b:w} (contains C V) @ b -> (read C V) @ (a * b).
 %%% Execution
 
 % Natural Numbers
-% ex_z : exec K (ev z) W
-% 	 o- exec K (return z*) W.
+ex_z : exec K (ev z) W
+	 o- exec K (return z*) W.
 
-% ex_s : exec K (ev (s E1)) W
-% 	 o- exec (K ; [x1] return (s* x1)) (ev E1) W.
+ex_s : exec K (ev (s E1)) W
+	 o- exec (K ; [x1] return (s* x1)) (ev E1) W.
 
-% ex_case : exec K (ev (case E1 E2 E3)) W
-% 	    o- exec (K ; [x1] case1 x1 E2 E3) (ev E1) W.
+ex_case : exec K (ev (case E1 E2 E3)) W
+	    o- exec (K ; [x1] case1 x1 E2 E3) (ev E1) W.
 
-% ex_case1_z : exec K (case1 z* E2 E3) W
-% 	       o- exec K (ev E2) W.
+ex_case1_z : exec K (case1 z* E2 E3) W
+	       o- exec K (ev E2) W.
 
-% ex_case1_s : exec K (case1 (s* V1) E2 E3) W
-% 	       o- exec K (ev (E3 V1)) W.
+ex_case1_s : exec K (case1 (s* V1) E2 E3) W
+	       o- exec K (ev (E3 V1)) W.
 
 % Unit
 ex_unit : exec K (ev (unit)) W
 	   o- exec K (return unit*) W.
 
-% % Pairs
-% ex_pair : exec K (ev (pair E1 E2)) W
-% 	    o- exec (K ; [x1] pair1 x1 E2) (ev E1) W.
+% Pairs
+ex_pair : exec K (ev (pair E1 E2)) W
+	    o- exec (K ; [x1] pair1 x1 E2) (ev E1) W.
 
-% ex_pair1 : exec K (pair1 V1 E2) W
-% 	     o- exec (K ; [x2] return (pair* V1 x2)) (ev E2) W.
+ex_pair1 : exec K (pair1 V1 E2) W
+	     o- exec (K ; [x2] return (pair* V1 x2)) (ev E2) W.
 
-% ex_fst : exec K (ev (fst E1)) W
-% 	   o- exec (K ; [x1] fst1 x1) (ev E1) W.
+ex_fst : exec K (ev (fst E1)) W
+	   o- exec (K ; [x1] fst1 x1) (ev E1) W.
 
-% ex_fst1 : exec K (fst1 (pair* V1 V2)) W
-% 	    o- exec K (return V1) W.
+ex_fst1 : exec K (fst1 (pair* V1 V2)) W
+	    o- exec K (return V1) W.
 
-% ex_snd : exec K (ev (snd E1)) W
-% 	   o- exec (K ; [x1] snd1 x1) (ev E1) W.
+ex_snd : exec K (ev (snd E1)) W
+	   o- exec (K ; [x1] snd1 x1) (ev E1) W.
 
-% ex_snd1 : exec K (snd1 (pair* V1 V2)) W
-% 	    o- exec K (return V2) W.
+ex_snd1 : exec K (snd1 (pair* V1 V2)) W
+	    o- exec K (return V2) W.
 
 % Functions
 ex_lam : exec K (ev (lam E1)) W
@@ -93,22 +93,22 @@ ex_assign2 : exec K (assign2 (ref* C1) V2) W
  	      o- contains C1 V1
  	      o- (contains C1 V2 -o exec K (return unit*) W).
 
-% ex_seq : exec K (ev (seq E1 E2)) W
-% 	  o- exec (K ; [x1] ev E2) (ev E1) W.
+ex_seq : exec K (ev (seq E1 E2)) W
+	  o- exec (K ; [x1] ev E2) (ev E1) W.
 
-% % Let
-% ex_let : exec K (ev (let E1 E2)) W
-% 	   o- exec (K ; [x1] let1 x1 E2) (ev E1) W.
+% Let
+ex_let : exec K (ev (let E1 E2)) W
+	   o- exec (K ; [x1] let1 x1 E2) (ev E1) W.
 
-% ex_let1 : exec K (let1 V1 E2) W
-% 	    o- exec K (ev (E2 V1)) W.
+ex_let1 : exec K (let1 V1 E2) W
+	    o- exec K (ev (E2 V1)) W.
 
-% ex_letv : exec K (ev (letv V1 E2)) W
-% 	   o- exec K (ev (E2 V1)) W.
+ex_letv : exec K (ev (letv V1 E2)) W
+	   o- exec K (ev (E2 V1)) W.
 
-% % Recursion
-% ex_fix : exec K (ev (fix E1)) W
-% 	   o- exec K (ev (E1 (fix E1))) W.
+% Recursion
+ex_fix : exec K (ev (fix E1)) W
+	   o- exec K (ev (E1 (fix E1))) W.
 
 % Values
 ex_vl : exec K (ev (vl V)) W
