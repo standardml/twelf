@@ -2,21 +2,11 @@
 %%% Typing rules
 %%% Author: Frank Pfenning, Jason Reed
 
-%% Types
-
-tp : type.  %name tp T.
-
-% nat   : tp.
-1     : tp.              % unit
-% **     : tp -> tp -> tp.  %infix right 10 **. % product 
-=>    : tp -> tp -> tp.  %infix right 9 =>. % function
-rf    : tp -> tp.        % cells
 
 %% Typing Judgments
 
 ofe : exp -> tp -> type.         %name ofe Oe.
 ofv : val -> tp -> type.         %name ofv Ov.
-ofc : cell -> tp -> type.        %name ofc Oc.
 off : final -> tp -> type.       %name off Of.
 ofi : inst -> tp -> type.        %name ofi Oi.
 ofk : cont -> tp -> tp -> type.  %name ofk Ok.
@@ -52,10 +42,10 @@ ofe_app  : ofe (app E1 E2) T1
 	    <- ofe E2 T2.
 
 % References
-ofe_ref  : ofe (ref E) (rf T)
+ofe_ref  : ofe (ref T E) (rf T)
 	    <- ofe E T.
-% ofe_deref : ofe (deref E) T
-%  	     <- ofe E (rf T).
+ofe_deref : ofe (deref E) T
+  	     <- ofe E (rf T).
 % ofe_assign : ofe (assign E1 E2) 1
 % 	      <- ofe E1 (rf T)
 % 	      <- ofe E2 T.
@@ -91,17 +81,17 @@ ofv_unit : ofv (unit*) 1.
 ofv_lam  : ofv (lam* E) (T1 => T2)
  	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
 
-ofv_ref  : ofv (ref* C) (rf T)
- 	    <- ofc C T.
+ofv_ref  : {C : cell T} ofv (ref* C) (rf T).
+
 
 %%% Final States
 
 off_val  : off (val* V) T
 	    <- ofv V T.
 off_new  : off (new* W) T2
-	    <- ({c:cell} ofc c T1 -> off (W c) T2).
-off_loc  : off (loc* C V W) T2
-	    <- ofc C T1
+	    <- ({c:cell T1} off (W c) T2).
+off_loc  : {C : cell T1}
+	    off (loc* C V W) T2
 	    <- ofv V T1
 	    <- off W T2.
 
@@ -133,10 +123,10 @@ ofi_app2 : ofi (app2 V1 V2) T1
 	    <- ofv V1 (T2 => T1)
 	    <- ofv V2 T2.
 
-ofi_ref1 : ofi (ref1 V) (rf T)
+ofi_ref1 : ofi (ref1 T V) (rf T)
 	    <- ofv V T.
-% ofi_deref1 : ofi (deref1 V) T
-%  	      <- ofv V (rf T).
+ofi_deref1 : ofi (deref1 V) T
+  	      <- ofv V (rf T).
 % ofi_assign1 : ofi (assign1 V1 E2) 1
 % 	       <- ofv V1 (rf T)
 % 	       <- ofe E2 T.

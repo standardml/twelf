@@ -14,8 +14,8 @@ return : val -> inst. % return value
 app1 : val -> exp -> inst.
 app2 : val -> val -> inst.
 
-ref1 : val -> inst.
-% deref1 : val -> inst.
+ref1 : tp -> val -> inst.
+deref1 : val -> inst.
 % assign1 : val -> exp -> inst.
 % assign2 : val -> val -> inst.
 

@@ -4,9 +4,19 @@
 
 %hlf.
 
+%% Types
+
+tp : type.  %name tp T.
+
+% nat   : tp.
+1     : tp.              % unit
+% **     : tp -> tp -> tp.  %infix right 10 **. % product 
+=>    : tp -> tp -> tp.  %infix right 9 =>. % function
+rf    : tp -> tp.        % cells
+
 exp  : type.  %name exp E.
 val  : type.  %name val V.
-cell : type.  %name cell C.
+cell : tp -> type.  %name cell C.
 final: type.  %name final W.
 
 %%% Expressions
@@ -28,8 +38,8 @@ lam  : (val -> exp) -> exp.
 app  : exp -> exp -> exp.
 
 % References
-ref  : exp -> exp.
-% deref: exp -> exp.
+ref  : tp -> exp -> exp.
+deref: exp -> exp.
 % assign: exp -> exp -> exp.
 % seq  : exp -> exp -> exp.
 
@@ -49,9 +59,9 @@ vl   : val -> exp.
 unit*: val.
 % pair*: val -> val -> val.
 lam* : (val -> exp) -> val.
-ref* : cell -> val.
+ref* : cell T -> val.
 
 % %%% Final state
 val* : val -> final.
-new* : (cell -> final) -> final.
-loc* : cell -> val -> final -> final.
+new* : (cell T -> final) -> final.
+loc* : cell T -> val -> final -> final.

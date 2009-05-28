@@ -9,21 +9,18 @@
 
 tpex : {P:w} exec K I W @ P -> ofk K T S -> ofi I T -> off W S -> type.
 tpcl : close W W' @ P -> off W T -> off W' T -> type.
-tpct : contains C V @ P -> ofc C T -> ofv V T -> type.
-tprd : read C V @ P -> ofc C T -> ofv V T -> type.
+tpct : {C : cell T} contains C V @ P -> ofv V T -> type.
+tprd : {C : cell T} read C V @ P -> ofv V T -> type.
 
 tpev : ceval E W @ P -> ofe E T -> off W T -> type.
 
-%mode (tpex +P +Ex +Ok +Oi -Of).
-%mode (tpcl +Ec +Of -Of').
-%mode (tpct +Et -Oc -Ov).
-%mode (tprd +Ed -Oc -Ov).
-%mode (tpev +Ev +Oe -Of).
 
 %%% Reading the state without affecting it
 
-tprd_rd : tprd (rd ^ ^ CONT) Oc Ov
-	   <- tpct CONT Oc Ov.
+
+tprd_rd :  
+tprd C (rd ^ ^ CONT) Ov
+ 	   <- tpct C CONT Ov.
 
 
 %%% Execution
@@ -103,19 +100,19 @@ tpex_ref : tpex ^ (ex_ref ^ Ex1) Ok (ofi_ev (ofe_ref Oe1)) Of
 	       (ofi_ev Oe1) Of.
 
 tpex_ref1 : tpex ^ (ex_ref1 ^ Ex1) Ok (ofi_ref1 Ov1) (off_new Of)
- 	     <- ({c:cell} {a:w} {et : contains c V1 @ a} {oc:ofc c T1}
- 		   tpct et oc Ov1
- 		   -> tpex ^ (Ex1 c ^ et) Ok (ofi_return (ofv_ref oc))
-		      (Of c oc)).
+ 	     <- ({c:cell T1} {a:w} {et : contains c V1 @ a} 
+ 		   tpct c et Ov1
+ 		   -> tpex ^ (Ex1 c ^ et) Ok (ofi_return (ofv_ref c))
+		      (Of c)).
 
-% tpex_deref : tpex ^ (ex_deref ^ Ex1) Ok (ofi_ev (ofe_deref Oe1)) Of
-%  	      <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T1)]
-%  				       ofi_deref1 Ov1))
-%  		      (ofi_ev Oe1) Of.
+tpex_deref : tpex ^ (ex_deref ^ Ex1) Ok (ofi_ev (ofe_deref Oe1)) Of
+  	      <- tpex ^ Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T1)]
+  				       ofi_deref1 Ov1))
+  		      (ofi_ev Oe1) Of.
 
-% tpex_deref1 : tpex ^ (ex_deref1 ^ Rd1 Ex1) Ok (ofi_deref1 (ofv_ref Oc)) Of
-%                <- tprd Rd1 Oc Ov1 
-%		 <- tpex ^ Ex1 Ok (ofi_return Ov1) Of.
+tpex_deref1 : tpex ^ (ex_deref1 ^ Rd1 Ex1) Ok (ofi_deref1 (ofv_ref C)) Of
+                <- tprd C Rd1 Ov1 
+		 <- tpex ^ Ex1 Ok (ofi_return Ov1) Of.
 
 % tpex_assign : tpex (ex_assign ^ Ex1) Ok (ofi_ev (ofe_assign Oe2 Oe1)) Of
 % 	       o- tpex Ex1 (ofk_; Ok ([x1:val] [Ov1:ofv x1 (rf T)]
@@ -172,24 +169,24 @@ tpex_init : tpex ^ (ex_init ^ Ec1) (ofk_init) (ofi_return Ov) Of
 tpcl_done : tpcl (close_done) Of Of.
 
 tpcl_loc  : tpcl (close_loc ^ Ec2 ^ Et1) Of Of'
-	     <- tpct Et1 Oc1 Ov1
-	     <- tpcl Ec2 (off_loc Of Ov1 Oc1) Of'.
+	     <- tpct C Et1 Ov1
+	     <- tpcl Ec2 (off_loc C Of Ov1) Of'.
 
 %%% Evaluation
 
 tpev_cev : tpev (cev ^ Ex) Oe Of
 	    <- tpex ^ Ex (ofk_init) (ofi_ev Oe) Of.
 
-
 %block b : 
 some {V1 : val} {T1 : tp} {Ov1 : ofv V1 T1}
-block {c:cell} {a:w} {et : contains c V1 a} {oc:ofc c T1} {d : tpct et oc Ov1}.
+block {c:cell T1} {a:w} {et : contains c V1 a}  {d : tpct c et Ov1}.
 
-%mode (tpex +P +Ex +Ok +Oi -Of).
-%mode (tpcl +Ec +Of -Of').
-%mode (tpct +Et -Oc -Ov).
-%mode (tprd +Ed -Oc -Ov).
-%mode (tpev +Ev +Oe -Of).
+%mode (tpex +P +Ex +Ok +Oi -Of)
+ (tpcl +Ec +Of -Of')
+ (tpct +C +Et -Ov)
+ (tprd +C +Ed -Ov)
+ (tpev +Ev +Oe -Of).
+
 
 %worlds (b) 
  (tpct _ _ _)

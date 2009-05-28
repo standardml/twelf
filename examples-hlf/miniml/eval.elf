@@ -4,8 +4,8 @@
 
 exec	 : cont -> inst -> final -> @type. %name exec Ex.
 close	 : final -> final -> @type.	   %name close Ec.
-contains : cell -> val -> @type.	   %name contains Et.
-read	 : cell -> val -> @type.	   %name read Ed.
+contains : cell T -> val -> @type.	   %name contains Et.
+read	 : cell T -> val -> @type.	   %name read Ed.
 
 ceval	 : exp -> final -> @type.	   %name ceval Ev.
 
@@ -68,20 +68,20 @@ ex_app2 : exec K (app2 (lam* E1) V2) W
 	    o- exec K (ev (E1 V2)) W.
 
 % References
-ex_ref	: exec K (ev (ref E1)) W
-	   o- exec (K ; [x1] ref1 x1) (ev E1) W.
+ex_ref	: exec K (ev (ref T E1)) W
+	   o- exec (K ; [x1] ref1 T x1) (ev E1) W.
 
-ex_ref1 : exec K (ref1 V1) (new* W)
-	   o- ({c:cell} contains c V1
+ex_ref1 : exec K (ref1 T V1) (new* W)
+	   o- ({c : cell T} contains c V1
 		 -o exec K (return (ref* c)) (W c)).
 
-% ex_deref : exec K (ev (deref E1)) W
-%  	    o- exec (K ; [x1] deref1 x1) (ev E1) W.
+ex_deref : exec K (ev (deref E1)) W
+  	    o- exec (K ; [x1] deref1 x1) (ev E1) W.
 
-% ex_deref1 : {a:w} 
-% 	     read C V1 @ a
-%  	     -> exec K (return V1) W @ a 
-%  	     -> exec K (deref1 (ref* C)) W @ a.
+ex_deref1 : {a:w} 
+ 	     read C V1 @ a
+  	     -> exec K (return V1) W @ a 
+  	     -> exec K (deref1 (ref* C)) W @ a.
 	     
 % ex_assign : exec K (ev (assign E1 E2)) W
 % 	     o- exec (K ; [x1] assign1 x1 E2) (ev E1) W.
