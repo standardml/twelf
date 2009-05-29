@@ -1,47 +1,15 @@
-% Linear Logic
+%%% Connective
 
-%hlf.
-
-o : type. %name o A.
-
-% unit of additive conjunction
 top : o.
-
-conc : o -> @type. %name conc CONC.
-hyp : o -> @type. %name hyp HYP.
 
 %%% Inference Rules
 
 topr : {a:w} conc top @ a.
 
-axiom : hyp A -o conc A.
+%%% Principal Cases
 
-%%% Cut admissibility
+%%% D-Commutative Cases
 
-ca : {A : o}
-      conc A @ AA
-      -> (hyp A -o conc C) @ BB
-      -> conc C @ AA * BB
-      -> type.
-
-%% Axiom Cases
-
-ca/axiom/l : ca A (axiom ^ H) E (E ^ H).
-
-ca/axiom/r : ca A D axiom D.
-
-%% Principal Cases
-
-%% D-Commutative Cases
-
-%% E-Commutative Right Cases
+%%% E-Commutative Cases
 
 cae/topr : {D:conc A @ P} ca A D ([a:w][h: (hyp A) @ a] topr (Q * a)) (topr (Q * P)).
-
-%% E-Commutative Left Cases
-
-%block b : some {A : o} block {a : w} {x : hyp A a}.
-
-%mode (ca +A +D +E -F).
-%worlds (b) (ca _ _ _ _).
-%total {A [D E]} (ca A D E _).

@@ -1,12 +1,6 @@
-%hlf.
+%%% Connective
 
-o : type. %name o A.
-
-% Additive connectives
 tensor  : o -> o -> o.  %infix right 11 tensor.
-
-conc : o -> @type.
-hyp : o -> @type.
 
 %%% Inference Rules
 
@@ -17,41 +11,25 @@ tensorr : conc (A tensor B)
 	   o- conc A
 	   o- conc B.
 
-axiom : hyp A -o conc A.
+%%% Principal Cases
 
-%%% Cut admissibility
-
-ca : {A : o}
-      conc A @ AA
-      -> (hyp A -o conc C) @ BB
-      -> conc C @ AA * BB 
-      -> type.
-
-%% Axiom Conversions
-
-ca_axiom_l : ca A (axiom ^ H) E (E ^ H).
-
-ca_axiom_r : ca A D axiom D.
-
-%% Essential Conversions
-
-ca_tensor1 : ca (B1 tensor B2) (tensorr ^ D2 ^ D1) 
+ca/tensor1 : ca (B1 tensor B2) (tensorr ^ D2 ^ D1) 
 	      ([h:^ (hyp (B1 tensor B2))] tensorl ^ E ^ h) F
 	      <- ({a2 : w}{h2 : hyp B2 @ a2} ca B1 D1 
 		    ([a1 : w][h1 : hyp B1 @ a1] E a1 h1 a2 h2) (E' a2 h2))
 	      <- ca B2 D2 ([a2 : w][h2 : hyp B2 @ a2] E' a2 h2) F.
 
 
-%% D-Commutative Conversions
+%%% D-Commutative Cases
 
-cad_tensorl  : ca A (tensorl ^ D ^ H) E (tensorl ^ D' ^ H)
+cad/tensorl  : ca A (tensorl ^ D ^ H) E (tensorl ^ D' ^ H)
 		<- ({a1 : w} {h1 : hyp _ @ a1}
 		    {a2 : w} {h2 : hyp _ @ a2}
 		      ca A (D a1 h1 a2 h2) E (D' a1 h1 a2 h2)).
 
-%% E-Commutative Conversions
+%%% E-Commutative Cases
 
-cae_tensorl  : ca A D 
+cae/tensorl  : ca A D 
 		([a : w] [h : hyp _ @ a] tensorl ^ (E a h) ^ H) 
 		(tensorl ^ E' ^ H)
 		<- ({a1 : w} {h1 : hyp _ @ a1}
@@ -60,19 +38,14 @@ cae_tensorl  : ca A D
 		      ([a : w] [h : hyp _ @ a] E a h a1 h1 a2 h2) 
 		      (E' a1 h1 a2 h2)).
 
-cae_tensorr1 : ca A D 
+cae/tensorr1 : ca A D 
 	       ([h :^ (hyp A)] tensorr ^ (E1 ^ h) ^ E2)
 	       (tensorr ^ E1' ^ E2)
 	       <- ca A D E1 E1'.
 
-cae_tensorr2 : ca A D 
+cae/tensorr2 : ca A D 
 	       ([h :^ (hyp A)] tensorr ^ E1 ^ (E2 ^ h))
 	       (tensorr ^ E1 ^ E2')
 	       <- ca A D E2 E2'.
 
 
-%block b : some {A : o} block {a : w} {x : hyp A a}.
-
-%mode (ca +A +D +E -F).
-%worlds (b) (ca _ _ _ _).
-%total {A [D E]} (ca A D E _).

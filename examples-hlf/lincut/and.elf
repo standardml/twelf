@@ -1,12 +1,6 @@
-%hlf.
+%%% Connective
 
-o : type. %name o A.
-
-% Additive connectives
 and    : o -> o -> o.  %infix right 11 and.
-
-conc : o -> @type.
-hyp : o -> @type.
 
 %%% Inference Rules
 
@@ -20,61 +14,39 @@ andr : {a : w}
 	<- conc B @ a
 	<- conc A @ a.
 
-axiom : hyp A -o conc A.
+%%% Principal Cases
 
-%%% Cut admissibility
-
-ca : {A : o}
-      conc A @ AA
-      -> (hyp A -o conc C) @ BB
-      -> conc C @ AA * BB 
-      -> type.
-
-%% Axiom Conversions
-
-ca_axiom_l : ca A (axiom ^ H) E (E ^ H).
-
-ca_axiom_r : ca A D axiom D.
-
-%% Essential Conversions
-
-ca_and1 : ca (A1 and A2) (andr ^ D1 D2) 
+ca/and1 : ca (A1 and A2) (andr ^ D1 D2) 
 	   ([h:^ (hyp (A1 and A2))] andl1 ^ E ^ h) F
 	   <- ca A1 D1 E F.
 
 
-ca_and2 : ca (A1 and A2) (andr ^ D1 D2) 
+ca/and2 : ca (A1 and A2) (andr ^ D1 D2) 
 	   ([h :^ (hyp (A1 and A2))] andl2 ^ E ^ h) F
 	   <- ca A2 D2 E F.
 
 
-%% D-Commutative Conversions
+%%% D-Commutative Cases
 
-cad_andl1  : ca A (andl1 ^ D1 ^ H) E (andl1 ^ D1' ^ H)
+cad/andl1  : ca A (andl1 ^ D1 ^ H) E (andl1 ^ D1' ^ H)
 	      <- {a : w} {h1: hyp B1 @ a} ca A (D1 ^ h1) E (D1' ^ h1).
 
 
-cad_andl2  : ca A (andl2 ^ D2 ^ H) E (andl2 ^ D2' ^ H)
+cad/andl2  : ca A (andl2 ^ D2 ^ H) E (andl2 ^ D2' ^ H)
 	      <- {a : w} {h2:hyp B2 @ a} ca A (D2 ^ h2) E (D2' ^ h2).
 
-%% E-Commutative Conversions
+%%% E-Commutative Cases
 
-cae_andr : ca A D ([h:^ (hyp A)] andr ^ (E1 ^ h) (E2 ^ h)) (andr ^ E1' E2')
+cae/andr : ca A D ([h:^ (hyp A)] andr ^ (E1 ^ h) (E2 ^ h)) (andr ^ E1' E2')
 	    <- ca A D E1 E1'
 	    <- ca A D E2 E2'.
 
-cae_andl1 : ca A D
+cae/andl1 : ca A D
          ([a0:w] [h:hyp A @ a0]
              andl1 ^ ([a1:w] [h1:hyp A3 @ a1] E1 ^ h ^ h1) HP H) (andl1 ^ E1' ^ H)
 	     <- ({a1:w}{h1 : hyp A3 @ a1} ca A D ([a0:w] [h:hyp A @ a0] E1 a0 h a1 h1) (E1' ^ h1)).
 
-cae_andl2 : ca A D
+cae/andl2 : ca A D
          ([a0:w] [h:hyp A @ a0]
              andl2 ^ ([a1:w] [h1:hyp A3 @ a1] E2 ^ h ^ h1) HP H) (andl2 ^ E2' ^ H)
 	     <- ({a1:w}{h1 : hyp A3 @ a1} ca A D ([a0:w] [h:hyp A @ a0] E2 a0 h a1 h1) (E2' ^ h1)).
-
-%block b : some {A : o} block {a : w} {x : hyp A a}.
-
-%mode (ca +A +D +E -F).
-%worlds (b) (ca _ _ _ _).
-%total {A [D E]} (ca A D E _).
