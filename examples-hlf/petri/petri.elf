@@ -1,0 +1,40 @@
+%hlf.
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+l0 : @type.
+l1 : @type.
+l2 : @type.
+# : nat -> @type.
+
+inv : @type.
+inv/0 : {a:w} (l0 -o inv) @ a.
+inv/1 : {a:w} (l1 -o inv) @ a.
+inv/2 : {a:w} (l2 -o inv) @ a.
+
+r0 : (l0 -o # (s N)) o- (l1 -o # N).
+r1 : (l1 -o # (s N)) o- (l2 -o # N).
+r2 : (l2 -o # (s N)) o- (l2 -o # N).
+stop : # z o- inv.
+
+live : # N @ P -> # (s N) @ P -> type.
+
+live/inv/0 : live (stop ^ (inv/0 ^ ^ L0)) (r0  ^ ([x :^ l1] (stop ^ (inv/1 ^ ^ x))) ^ L0).
+live/inv/1 : live (stop ^ (inv/1 ^ ^ L1)) (r1  ^ ([x :^ l2] (stop ^ (inv/2 ^ ^ x))) ^ L1).
+live/inv/2 : live (stop ^ (inv/2 ^ ^ L2)) (r2  ^ ([x :^ l2] (stop ^ (inv/2 ^ ^ x))) ^ L2).
+live/r/0 : live (r0 ^ TL1 ^ L0) (r0 ^ TL1' ^ L0)
+	    <- ({a:w} {x:l1 @ a} live (TL1 a x) (TL1' a x)).
+live/r/1 : live (r1 ^ TL2 ^ L1) (r1 ^ TL2' ^ L1)
+	    <- ({a:w} {x:l2 @ a} live (TL2 a x) (TL2' a x)).
+live/r/2 : live (r2 ^ TL2 ^ L2) (r2 ^ TL2' ^ L2)
+	    <- ({a:w} {x:l2 @ a} live (TL2 a x) (TL2' a x)).
+
+%block b0 : block {a:w} {x:l0 a}.
+%block b1 : block {a:w} {x:l1 a}.
+%block b2 : block {a:w} {x:l2 a}.
+
+%mode (live +T -T').
+%worlds (b0 | b1 | b2) (live _ _).
+%total T (live T T').
