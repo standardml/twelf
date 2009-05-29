@@ -11,6 +11,14 @@ loll : (hyp (A lol B) -o conc C)
 lolr : conc (A lol B) 
 	   o- (hyp A -o conc B).
 
+%%% Identity Case
+
+id/lol : id (A lol B) 
+	  ([hfunc:^(hyp (A lol B))] 
+	     lolr ^ ([harg:^(hyp A)] loll ^ (DA ^ harg) ^ DB ^ hfunc))
+	  <- id A DA
+	  <- id B DB.
+
 %%% Principal Cases
 
 ca/lol  : ca (A1 lol A2) (lolr ^ D2)

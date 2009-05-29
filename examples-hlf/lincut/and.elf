@@ -14,6 +14,13 @@ andr : {a : w}
 	<- conc B @ a
 	<- conc A @ a.
 
+%%% Identity Case
+
+id/and : id (A and B) ([h:^ (hyp (A and B))] 
+			 andr ^ (andl1 ^ DA ^ h) (andl2 ^ DB ^ h))
+	  <- id A DA
+	  <- id B DB.
+
 %%% Principal Cases
 
 ca/and1 : ca (A1 and A2) (andr ^ D1 D2) 

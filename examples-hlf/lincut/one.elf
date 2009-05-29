@@ -7,6 +7,10 @@ one : o.
 oner : conc one.
 onel : (hyp one -o conc C) o- conc C.
 
+%%% Identity Case
+
+id/one : id one ([hone:^(hyp one)] onel ^ oner ^ hone).
+
 %%% Principal Cases
 
 ca/one : ca one oner ([a:w][h : hyp one @ a] onel ^ D ^ h) D.

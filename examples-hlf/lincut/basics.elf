@@ -4,6 +4,11 @@ o : type. %name o A.
 conc : o -> @type.
 hyp : o -> @type.
 
+%%% Identity
+
+id : {A : o} (hyp A -o conc A)
+      -> type.
+
 %%% Cut admissibility
 
 ca : {A : o}
@@ -21,3 +26,4 @@ axiom : hyp A -o conc A.
 ca_axiom_l : ca A (axiom ^ H) E (E ^ H).
 
 ca_axiom_r : ca A D axiom D.
+

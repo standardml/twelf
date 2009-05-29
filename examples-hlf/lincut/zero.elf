@@ -6,6 +6,10 @@ zero : o.
 
 zerol : {a:w} {b:w} hyp zero @ a -> conc C @ a * b.
 
+%%% Identity Case
+
+id/zero : id zero ([hzero:^(hyp zero)] zerol ^ ^ hzero).
+
 %%% Principal Cases
 
 %%% D-Commutative Cases

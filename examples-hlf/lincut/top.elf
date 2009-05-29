@@ -6,6 +6,10 @@ top : o.
 
 topr : {a:w} conc top @ a.
 
+%%% Identity Case
+
+id/top : id top ([h:^ (hyp top)] topr ^).
+
 %%% Principal Cases
 
 %%% D-Commutative Cases

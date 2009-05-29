@@ -1,0 +1,7 @@
+%block bi : block {A : o} 
+	    {axiom : {a : w} hyp A a -> conc A a} 
+	    {id/axiom : id A ([a:w] [h:hyp A a] axiom a h)}.
+
+%mode (id +A -D).
+%worlds (bi) (id _ _).
+%total A (id A D).

@@ -11,6 +11,15 @@ plusl : {a:w} ((hyp A -o conc C) @ a)
 plusr1 : conc A -o conc (A plus B).
 plusr2 : conc B -o conc (A plus B).
 
+%%% Identity Case
+
+id/plus : id (A plus B) 
+	  ([hplus:^(hyp (A plus B))] 
+	     plusl ^ 
+	     ([h:^(hyp A)] plusr1 ^ (DA ^ h))
+	     ([h:^(hyp B)] plusr2 ^ (DB ^ h)) ^  hplus)
+	  <- id A DA
+	  <- id B DB.
 
 %%% Principal Cases
 

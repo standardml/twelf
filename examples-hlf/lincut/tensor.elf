@@ -11,6 +11,14 @@ tensorr : conc (A tensor B)
 	   o- conc A
 	   o- conc B.
 
+%%% Identity Case
+
+id/tensor : id (A tensor B) 
+	  ([hten:^(hyp (A tensor B))] 
+	     tensorl ^ ([h1:^(hyp A)][h2:^(hyp B)] tensorr ^ (DB ^ h2) ^ (DA ^ h1)) ^  hten)
+	  <- id A DA
+	  <- id B DB.
+
 %%% Principal Cases
 
 ca/tensor1 : ca (B1 tensor B2) (tensorr ^ D2 ^ D1) 
