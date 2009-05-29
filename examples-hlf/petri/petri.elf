@@ -1,40 +1,70 @@
 %hlf.
 
+%%% A simple petri-net example
+%%% Author: Jason Reed
+
+% Uncomment out the two XXX commented lines below and the check fails,
+% because we are not allowed to duplicate tokens.
+
+% Natural numbers
 nat : type.
 z : nat.
 s : nat -> nat.
 
+% Petri net locations
 l0 : @type.
 l1 : @type.
 l2 : @type.
+l3 : @type.
+
+% Step-indexed termination
 # : nat -> @type.
 
+% Liveness invariant
 inv : @type.
 inv/0 : {a:w} (l0 -o inv) @ a.
 inv/1 : {a:w} (l1 -o inv) @ a.
 inv/2 : {a:w} (l2 -o inv) @ a.
+% XXX 
+% inv/3 : {a:w} (l3 -o inv) @ a.
 
-r0 : (l0 -o # (s N)) o- (l1 -o # N).
-r1 : (l1 -o # (s N)) o- (l2 -o # N).
-r2 : (l2 -o # (s N)) o- (l2 -o # N).
+% Petri net transitions
+r0 : (l0 -o # (s N)) o- (l1 -o # N). % l0 -> l1
+r1 : (l1 -o # (s N)) o- (l2 -o # N). % l1 -> l2
+r2 : (l2 -o # (s N)) o- (l2 -o # N). % l2 -> l2
+r3 : (l3 -o l3 -o # (s N)) o- (l3 -o # N). %  l3, l3 -> l3
+
+% We are allowed to finish if the step-indexing timer runs out, and
+% the liveness invariant is still satisfied.
 stop : # z o- inv.
 
+% Theorem: any system satisfying the invariant can keep stepping
 live : # N @ P -> # (s N) @ P -> type.
 
+% These cases extend the transition sequence by one step
 live/inv/0 : live (stop ^ (inv/0 ^ ^ L0)) (r0  ^ ([x :^ l1] (stop ^ (inv/1 ^ ^ x))) ^ L0).
 live/inv/1 : live (stop ^ (inv/1 ^ ^ L1)) (r1  ^ ([x :^ l2] (stop ^ (inv/2 ^ ^ x))) ^ L1).
 live/inv/2 : live (stop ^ (inv/2 ^ ^ L2)) (r2  ^ ([x :^ l2] (stop ^ (inv/2 ^ ^ x))) ^ L2).
+% XXX
+% live/inv/3 : live (stop ^ (inv/3 ^ ^ L3)) (r3  ^ ([x :^ l3] (stop ^ (inv/3 ^ ^ x))) ^ L3 ^ L3).
+
+% These are essentially 'congruence' cases.
 live/r/0 : live (r0 ^ TL1 ^ L0) (r0 ^ TL1' ^ L0)
 	    <- ({a:w} {x:l1 @ a} live (TL1 a x) (TL1' a x)).
 live/r/1 : live (r1 ^ TL2 ^ L1) (r1 ^ TL2' ^ L1)
 	    <- ({a:w} {x:l2 @ a} live (TL2 a x) (TL2' a x)).
 live/r/2 : live (r2 ^ TL2 ^ L2) (r2 ^ TL2' ^ L2)
 	    <- ({a:w} {x:l2 @ a} live (TL2 a x) (TL2' a x)).
+live/r/3 : live (r3 ^ TL3 ^ L3 ^ L3') (r3 ^ TL3' ^ L3 ^ L3')
+	    <- ({a:w} {x:l3 @ a} live (TL3 a x) (TL3' a x)).
 
+% The petri net can have tokens at any location
 %block b0 : block {a:w} {x:l0 a}.
 %block b1 : block {a:w} {x:l1 a}.
 %block b2 : block {a:w} {x:l2 a}.
+%block b3 : block {a:w} {x:l3 a}.
 
+% Check the theorem
 %mode (live +T -T').
-%worlds (b0 | b1 | b2) (live _ _).
+%worlds (b0 | b1 | b2 | b3) (live _ _).
 %total T (live T T').
