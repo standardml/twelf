@@ -1,0 +1,113 @@
+%hlf.
+
+%%% A focused sequent calculus for negative propositional logic.
+%%% Author: Jason Reed
+
+%% Termination metric
+high : type.
+low : type.
+low/ : low.
+raise : low -> high.
+
+o : type. %name o A.
+a : type.
+
+and    : o -> o -> o.  %infix right 11 and.
+imp    : o -> o -> o.  %infix right 10 imp.
+true   : o.
+atom   : a -> o.
+
+hyp  : o -> type. %name hyp HYP.
+conc : a -> @type. %name conc CONC.
+inv  : o -> type. %name inv INV. % right inversion
+foc : o -> @type. %name foc FOC. % left focus
+
+axiom : foc (atom P) -o conc P.
+
+andr  : inv (A and B)
+	 <- inv B
+	 <- inv A.
+
+andl1 : (foc (A and B) -o conc P) <- (foc A -o conc P).
+andl2 : (foc (A and B) -o conc P) <- (foc B -o conc P).
+impr  :  inv (A imp B) <- (hyp A -> inv B).
+
+impl  : (foc (A imp B) -o conc P) 
+	 <- (foc B -o conc P) 
+	 <- inv A.
+
+truer : inv true.
+
+choose : (hyp A -> conc P)
+	  <- (foc A -o conc P).
+
+pause : inv (atom P)
+	 <- conc P.
+
+ca : {A : o} {M : low} inv A -> (foc A -o conc P) -> conc P -> type.
+caw : {A : o} {M : high} inv A -> (hyp A -> inv C) -> inv C -> type.
+cac : {A : o} {M : high} inv A -> (hyp A -> conc P) @ Q -> conc P @ Q -> type.
+
+% Focus cases
+% cac/choose/this is the single point where we duplicate derivations! (in this case, D)
+cac/choose/this : cac A (raise M) D ([x : hyp A] choose (E x) x) F
+		   <- ({a:w} {y:foc A @ a} cac A (raise M) D ([x : hyp A] E x ^ y) (E' a y))
+		   <- ca A M D E' F.
+
+cac/choose/that : cac A M D ([x : hyp A] choose (E x) H) (choose E' H)
+		   <- ({a:w} {y:foc B @ a} cac A M D ([x : hyp A] E x ^ y) (E' a y)).
+
+% E-Commutative Left Cases
+cac/axiom : cac A M D ([x : hyp A] axiom ^ FOC) (axiom ^ FOC).
+cac/andl1 : cac A M D ([x : hyp A] andl1 (E x) ^ FOC) (andl1 F ^ FOC)
+	     <- ({a:w} {y:foc B @ a} cac A M D ([x : hyp A] E x ^ y) (F a y)).
+cac/andl2 : cac A M D ([x : hyp A] andl2 (E x) ^ FOC) (andl2 F ^ FOC)
+	     <- ({a:w} {y:foc B @ a} cac A M D ([x : hyp A] E x ^ y) (F a y)).
+cac/impl : cac A M D ([x : hyp A] impl (E1 x) (E2 x) ^ FOC) (impl E1' E2' ^ FOC)
+	     <- caw A M D E1 E1'
+	     <- ({a:w} {y:foc B @ a} cac A M D ([x : hyp A] E2 x ^ y) (E2' a y)).
+
+% E-Commutative Right Cases
+caw/impr : caw A M D ([x : hyp A] impr (E0 x)) (impr F)
+	    <- ({y : hyp B} caw A M D ([x : hyp A] E0 x y) (F y)).
+
+caw/truer : caw A M D ([x : hyp A] truer) truer.
+caw/andr : caw A M D ([x : hyp A] andr (E1 x) (E2 x)) (andr F1 F2)
+	    <- caw A M D E1 F1
+	    <- caw A M D E2 F2.
+
+caw/pause : caw A M D ([x : hyp A] pause (E x)) (pause F)
+	     <- cac A M D E F.
+
+% Principal Cases
+ca/imp  : ca (A1 imp A2) M (impr D0) ([x:^ (foc(A1 imp A2))] impl E1 E2 ^ x) F
+	   <- caw A1 (raise M) E1 D0 F'
+	   <- ca A2 M F' E2 F.
+	   
+ca/and1  : ca (A1 and A2) M (andr D1 D2) ([x:^ (foc(A1 and A2))] andl1 E0 ^ x) F
+	    <- ca A1 M D1 E0 F.
+
+ca/and2  : ca (A1 and A2) M (andr D1 D2) ([x:^ (foc(A1 and A2))] andl2 E0 ^ x) F
+	    <- ca A2 M D2 E0 F.
+
+ca/atom : ca (atom P) M (pause D0) ([x:^ (foc (atom P))] axiom ^ x) D0.
+
+%mode 
+(ca +A +M +D +E -F) 
+(caw +A +M +D +E -F)
+(cac +A +M +D +E -F)
+.
+%block ba : block {p:a}.
+%block bx : some {A : o} block {y : hyp A}.
+%block bf : some {A : o} block {a:w} {y:foc A a}.
+%worlds (ba | bx | bf) 
+(ca _ _ _ _ _)
+(caw _ _ _ _ _)
+(cac _ _ _ _ _)
+.
+%total 
+{(A A' A'') (M M' M'') [(D D' D'') (E E' E'')]} 
+(caw A' M' D' E' F')
+(cac A'' M'' D'' E'' F'')
+(ca A M D E F)
+.
