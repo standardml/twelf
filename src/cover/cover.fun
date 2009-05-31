@@ -71,8 +71,9 @@ struct
     fun cantOccur (params, tp) = List.exists (fn param => cantOccurOne param (tp, I.id)) params
     and cantOccurOne param (V, s) = cantOccurOneW param (Whnf.whnf (V, s))
     and cantOccurOneW param (I.Pi((I.Dec(_, A), dep), B), s) = cantOccurOne (param + 1) (B, I.dot1 s)
-      | cantOccurOneW param (I.Root(I.Const a, S), s) = I.hlfIsSubstructCid a andalso
-							I.noOccur (param, Whnf.normalizeWorldExp (spineLast (S, s)))
+      | cantOccurOneW param (I.Root(I.Const a, S), s) = if I.hlfIsSubstructCid a 
+							then I.noOccur (param, Whnf.normalizeWorldExp (spineLast (S, s)))
+							else true (* *no* subtructural things can appear in an unrestricted type *)
       | cantOccurOneW _ _ = false
 
     (* span : I.Exp -> int list *)
@@ -435,7 +436,8 @@ struct
       | resolveCands (Fail) = Fail
 
     fun resolveCandsDX (e as Eqns (es)) = 
-	( print "-- resolveCandsDX\n";
+(
+(*	 print "-- resolveCandsDX\n"; *)
 (*	 app (fn x => print ((equationToString x handle Unprintable => "???") ^ "\n")) es;  *)
 	 resolveCands e)
       | resolveCandsDX e = resolveCands e
@@ -1187,11 +1189,11 @@ struct
         let (* G |- V : L *)
 	    val Gstr = Print.ctxToString (I.Null, G)
 	    val Vstr = Print.expToString (G, V)
-	    val _ = print ("DX createEvar  " ^ Gstr ^ " |- " ^ Vstr ^ "\n") 
+(*	    val _ = print ("DX createEvar  " ^ Gstr ^ " |- " ^ Vstr ^ "\n")  *)
 	    val ow = weaken (G, I.targetFam V)              
 	    val w = hlfWeaken (G, V)              
- 	    val _ = print ("DX <- " ^ I.subToString ow ^ "\n")
-	    val _ = print ("DX -> " ^ I.subToString w ^ "\n")
+(*  	    val _ = print ("DX <- " ^ I.subToString ow ^ "\n") *)
+(* 	    val _ = print ("DX -> " ^ I.subToString w ^ "\n") *)
 	    val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	    val G' = Whnf.strengthen (iw, G)
 	    val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
@@ -1292,10 +1294,10 @@ struct
 
 	    fun addFinitaryCases' [] (V, s) = 
 		let
-		    val _ = print "[cover.fun] about to abstract...\n"
-		    val _ = print ("--- " ^ IntSyn.expToString (Whnf.normalize (V,s)) ^"\n")
+(*		    val _ = print "[cover.fun] about to abstract...\n"
+		    val _ = print ("--- " ^ IntSyn.expToString (Whnf.normalize (V,s)) ^"\n") *)
 		    val c = hlfAbstract (V, s)
-		    val _ = print "...Succeeded at abstracting!\n"
+(* 		    val _ = print "...Succeeded at abstracting!\n" *)
 		in
 		    addCase c
 		end 
@@ -1918,7 +1920,7 @@ struct
 	  val missing = cover (V0, p, (W, cIn), Input(ccs), Top, nil)
 	  val _ = case missing
 	            of nil => ()	(* all cases covered *)
-		     | _::_ => raise Error ("Coverage error --- missing cases:\n"
+		     | _::_ => raise Error ("Coverage error --- " ^ Int.toString (length missing) ^ " missing case(s):\n"
 					    ^ missingToString (missing, ms) ^ "\n")
 	in
 	  ()
