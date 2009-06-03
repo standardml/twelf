@@ -44,7 +44,9 @@ popd >& /dev/null
 ##############################
 
 # Run regression script
-../TEST/regression.sh full >& $OUTPUT_DIR/new-regression-output
+pushd "../TEST" 
+./regression.sh full >& $OUTPUT_DIR/new-regression-output
+popd
 
 # Attach new output to old output
 pushd $OUTPUT_DIR > /dev/null
