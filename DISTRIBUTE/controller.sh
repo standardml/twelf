@@ -25,28 +25,29 @@ popd >& /dev/null
 # PART ONE: TWELF BUILD #
 #########################
 
-# # Run build script
-# ./build.sh $OUTPUT_DIR >& $OUTPUT_DIR/new-build-output
-# RETSTATUS=$?
+# Run build script
+./build.sh $OUTPUT_DIR >& $OUTPUT_DIR/new-build-output
+RETSTATUS=$?
 
-# # Attach new output to old output
-# pushd $OUTPUT_DIR >& /dev/null
-# touch build-output
-# mv build-output old-build-output
-# date | cat - new-build-output old-build-output > build-output
+# Attach new output to old output
+pushd $OUTPUT_DIR >& /dev/null
+touch build-output
+mv build-output old-build-output
+date | cat - new-build-output old-build-output > build-output
 
-# # Clean up
-# rm -f new-build-output
-# rm -f old-build-output
+# Clean up
+rm -f new-build-output
+rm -f old-build-output
+popd >& /dev/null
 
 ##############################
 # PART TWO: TWELF REGRESSION #
 ##############################
 
 # Run regression script
-pushd "../TEST" 
+pushd "../TEST" >& /dev/null
 ./regression.sh full >& $OUTPUT_DIR/new-regression-output
-popd
+popd >& /dev/null
 
 # Attach new output to old output
 pushd $OUTPUT_DIR > /dev/null
