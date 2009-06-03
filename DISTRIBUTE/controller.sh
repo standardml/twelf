@@ -7,6 +7,9 @@
 # output in the specifed directory (which is the current directory if no
 # directory is specified)
 
+# Change to my directory
+cd `dirname $0`
+
 # Parse destination directory
 OUTPUT_DIR=$1
 if [ -z "$OUTPUT_DIR" ] 
@@ -27,7 +30,7 @@ popd >& /dev/null
 RETSTATUS=$?
 
 # Attach new output to old output
-pushd $WEB_DIR >& /dev/null
+pushd $OUTPUT_DIR >& /dev/null
 touch build-output
 mv build-output old-build-output
 date | cat - new-build-output old-build-output > build-output
@@ -43,7 +46,7 @@ rm -f old-build-output
 # Run regression script
 pushd ../TEST >& /dev/null
 ./regression.sh full >& $OUTPUT_DIR/new-regression-output
-popd > /dev/null
+popd >& /dev/null
 
 
 # Attach new output to old output
