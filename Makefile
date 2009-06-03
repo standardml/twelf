@@ -69,10 +69,10 @@ twelf-emacs: ;
 polyml : ;
 	@echo "This makefile not yet working with PolyML."
 
-smlnj : twelf-emacs twelf-server-smlnj
+smlnj : twelf-server-smlnj twelf-emacs
 
 oldnj : ; # twelf-emacs twelf-server-smlnj-old
 	@echo "This makefile not yet working with old versions of SML/NJ."
 
-mlton : twelf-emacs twelf-server-mlton	
+mlton : twelf-server-mlton twelf-emacs 
 
