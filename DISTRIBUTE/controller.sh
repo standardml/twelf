@@ -35,7 +35,6 @@ date | cat - new-build-output old-build-output > build-output
 # Clean up
 rm -f new-build-output
 rm -f old-build-output
-popd >& /dev/null
 
 ##############################
 # PART TWO: TWELF REGRESSION #
