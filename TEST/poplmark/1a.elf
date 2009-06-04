@@ -1,0 +1,560 @@
+%%  The metatheory of algorithmic F-sub subtyping.
+%%  By Michael Ashley-Rollman, Karl Crary, and Robert Harper.
+
+
+%%%%%  Syntax  %%%%%
+
+tp : type.  %name tp T.
+
+top	: tp.
+arrow	: tp -> tp -> tp.
+forall	: tp -> (tp -> tp) -> tp.
+
+
+
+
+%%%%%  Semantics  %%%%%
+
+assm : tp -> tp -> type.  %% subtyping assumptions
+sub  : tp -> tp -> type.  %% subtyping judgement
+
+%{
+
+The object language (OL) context
+
+  x1 <: T1, ..., xn <: Tn
+
+is represented by
+
+  x1:tp, d1:assm x1 T1, ..., xn:tp, dn:assm xn Tn
+
+This is the only way an assm judgement can arise, so we can identify
+variables as those types T such that a judgement assm T _ is available.
+
+}%
+
+sub_top		: sub _ top.
+
+sub_refl	: sub X X
+		   <- assm X _.
+
+sub_trans	: sub X T
+		   <- assm X U
+		   <- sub U T.
+
+sub_arrow	: sub (arrow S1 S2) (arrow T1 T2)
+		   <- sub T1 S1
+		   <- sub S2 T2.
+
+sub_forall	: sub (forall S1 ([x] S2 x)) (forall T1 ([x] T2 x))
+		   <- sub T1 S1
+		   <- ({x} assm x T1 -> sub (S2 x) (T2 x)).
+
+
+
+
+%%%%%  Variables  %%%%%
+
+%{
+
+In the proof, it will be necessary to have a way to identify variables
+that does not become entangled with dependencies.  The assm judgement
+does become so entangled, because "assm X T" is dependent on T.  So we
+introduce a new judgement var, that mentions only the variable in
+question.
+
+}%
+
+var  : tp -> type.
+
+
+
+
+
+%%%%  Blocks  %%%%%
+
+%{
+
+In the proof, we will maintain the invariant that whenever we add a
+variable (x:tp) and its subtyping assumption (d:assm x t, for some t)
+to the context, we will also add a variable assumption (dv:var x).
+This will allow us to prove that whenever "assm X T" is present, so is
+"var X".  This lemma is called assm_var below.
+
+}%
+
+assm_var : assm T _ -> var T -> type.
+%mode assm_var +X1 -X2.
+
+
+%{
+
+Since the cases for assm_var depend on assumptions that are on only in
+scope once we extend the context, we must put those cases into the
+context with them.  Thus, in addition to adding var assumptions, we
+will also add assm_var assumptions.  Hence, we have the following
+block from which to build contexts:
+
+}%
+
+%block bind	: some {t:tp}
+		   block {x:tp} {dv:var x} {d:assm x t}
+		   {thm:assm_var d dv}.
+
+
+%{
+
+In addition to the bind block, we have (for highly technical reasons,
+explained later) two other blocks that arise:
+
+ - Vblock provides variables but not subtyping assumptions.  Since it
+   does not add an assm assumption, it need not add a case for
+   assm_var.  However, it does still provide a var assumption, so it
+   remains true that a var assumption is available for every variable.
+
+ - Ablock provides a subtyping assumption, but not the variable
+   itself.  The some portion of the block asserts that a var
+   assumption exists for the variable in question.  Since ablock adds
+   an assm assumption, it must also add a case for assm_var.
+
+}%
+
+%block vblock	: block {t:tp} {d:var t}.
+%block ablock	: some {x:tp} {dv:var x} {t:tp}
+		   block {d:assm x t}
+		   {thm:assm_var d dv}.
+
+
+%{
+
+Assm_var is true in any context made up from bind, vblock, and ablock
+blocks.
+
+}%
+
+%worlds (bind | vblock | ablock) (assm_var _ _).
+%total {} (assm_var _ _).
+
+
+
+
+%%%%%  Reductio ad absurdio  %%%%%
+
+%% The underivable judgement.
+
+false : type.
+
+
+
+%% False implies any subtyping judgement you like.
+
+raa_sub : false -> sub S T -> type.
+%mode +{S:tp} +{T:tp} +{X1:false} -{X2:sub S T} (raa_sub X1 X2).
+%worlds (bind | vblock | ablock) (raa_sub _ _).
+%total {} (raa_sub _ _).
+
+
+
+
+%%%%%  Various things are not variables  %%%%%
+
+%{
+
+In any world of interest (that is, any world made from bind, vblock,
+and ablock), we never add a var assumption for anything but a fresh
+variable.  In particular, we will never have a var assumption for any
+top, arrow, or forall type.
+
+Put more pithily: top, arrow, and forall are not variables.
+
+}%
+
+top_var_contra : var top -> false -> type.
+%mode top_var_contra +X1 -X2.
+%worlds (bind | vblock | ablock) (top_var_contra _ _).
+%total {} (top_var_contra _ _).
+
+
+arrow_var_contra : var (arrow T1 T2) -> false -> type.
+%mode arrow_var_contra +X1 -X2.
+%worlds (bind | vblock | ablock) (arrow_var_contra _ _).
+%total {} (arrow_var_contra _ _).
+
+
+forall_var_contra : var (forall T1 T2) -> false -> type.
+%mode forall_var_contra +X1 -X2.
+%worlds (bind | vblock | ablock) (forall_var_contra _ _).
+%total {} (forall_var_contra _ _).
+
+
+
+
+%%%%%  Natural numbers  %%%%%
+
+nat : type.  %name nat N.
+
+z : nat.
+s : nat -> nat.
+
+
+nat_eq : nat -> nat -> type.
+
+nat_eq_		: nat_eq N N.
+
+
+
+
+%%%%%  Transivity and Narrowing  %%%%%
+
+%{
+
+The main proof for transitivity and narrowing.  The proof is by
+induction on:
+
+  (1st) the type Q
+  (2nd) the clause, where we take trans* < narrow*
+        (that is, narrow* can always call trans* with no change in Q,
+	but when trans* calls narrow*, Q must decrease)
+  (3rd) in trans*, the derivation of sub S Q,
+        and in narrow*, the derivation of sub M N
+
+Twelf requires that induction arguments be explicit, hence the first
+two arguments to trans* and narrow*.  The third argument ensures that
+the clause number is correct for the clause.  (That is, the clause
+number is zero in trans* and one in narrow*).
+
+
+The statement of trans* is otherwise straightforward.  The statement
+of narrow* involves one additional subtlety:
+
+In narrow*, we must identify the variable with respect to which we are
+narrowing.  The most natural way to do so is to abstract over that
+variable; thus taking an argument of type:
+
+  {X:tp} var X -> assm X Q -> sub M N
+
+Unfortunately, we run afoul of a complication.  Obviously, the LF
+context may contain dependencies only on other things in the LF
+context.  If we abstract over the variable of interest, that variable
+is not in the context, and therefore nothing in the context may depend
+on it.  As a result, we effectively can narrow only with respect to
+the last variable.  However, this is not strong enough for the proof
+to go through, since we must descend inside forall types.
+
+Thus, when we are narrowing with respect to a variable X, we must find
+a way to move assumptions that depend on X to the left of it without
+violating scoping constraints.  If we maintain the context in its
+usual form:
+
+  t1:tp, dv1:var t1, d1:assm t1 T1, ..., dn:tp, dvn:var tn, dn:assm tn Tn
+
+then this is impossible.  However, we may weaken our context
+assumption to allow variables to appear apart from their typing
+assumptions.  To adhere to scoping constraints, we must keep
+dependencies to the right of the variables they depend on, but we need
+not keep them to the right of those variables typing assumptions.
+
+For example, suppose we encounter:
+
+  ..., ti:tp, dvi:var ti, di:assm ti Ti, tj:tp, dvj:var tj, dj:assm tj Tj(ti)
+
+and we wish to move tj out of the way.  Then we produce:
+
+  ..., ti:tp, dvi:var ti, tj:tp, dvj:var tj, dj:assm tj Tj(ti), di:assm ti Ti
+
+This keeps the subtyping assumption di last, and violates no scoping constraints.
+Thus, we identify the variable for narrowing not by abstracting over
+the entire variable, but only over its subtyping assumption.
+
+As a consequence of this, we must now deal with variables bereft of
+their subtyping assumptions (vblock), and with disembodied subtyping
+assumptions (ablock).  Note that disembodied subtyping assumptions are
+substantially at odds with our usual experience, and we must
+reconsider whether the proof works at all in their presence.
+
+Fortunately, with some minor modifications, the proof still works.
+The only issue that arises is that it now appears as though the refl
+and trans might apply to non-variable types, since those types might
+now have subtyping assumptions.  However, the assm_var lemma applies,
+and states that subtyping assumptions are available only for
+variables, so a contradiction arises in each case where we suppose a
+subtyping assumption for a non-variable.
+
+}%
+
+
+trans* : {Q:tp}
+	 {Ncase:nat}
+	 nat_eq Ncase z
+%%
+	 -> sub S Q
+	 -> sub Q T
+%%
+	 -> sub S T -> type.
+
+narrow* : {Q:tp}
+	  {Ncase:nat}
+	  nat_eq Ncase (s z)
+%%
+	  -> var X                    %{ We take this argument to maintain the invariant
+                                         that var X is available whenever assm X Q is.
+                                         Otherwise, the body of the next argument would not
+                                         enjoy that invariant. }%
+	  -> (assm X Q -> sub M N)
+	  -> sub P Q
+%%
+	  -> (assm X P -> sub M N) -> type.
+
+%mode trans* +Q +N +X1 +X2 +X3 -X4.
+%mode narrow* +Q +N +X1 +X2 +X3 +X4 -X5.
+
+-top	: trans* _ _ _ D sub_top sub_top.
+
+-refl	: trans* _ _ _ (sub_refl _) D D.
+
+-trans*	: trans* _ _ nat_eq_ (sub_trans D2 D1) D (sub_trans D' D1)
+	   <- trans* _ _ nat_eq_ D2 D D'.
+
+-arrow	: trans* _ _ nat_eq_ (sub_arrow D1b D1a) (sub_arrow D2b D2a) (sub_arrow Db Da)
+	   <- trans* _ _ nat_eq_ D2a D1a Da
+	   <- trans* _ _ nat_eq_ D1b D2b Db.
+
+-forall	: trans* _ _ _ (sub_forall D1b D1a) (sub_forall D2b D2a) (sub_forall Db Da)
+	   <- trans* _ _ nat_eq_ (D2a : sub T1 T2) D1a Da
+	   <- ({x} {dv:var x} narrow* _ _ nat_eq_ dv ([d] D1b x d) D2a ([d] D1b' x d))
+	   <- ({x} {dv:var x} {d:assm x T1}
+		 assm_var d dv
+		 -> trans* _ _ nat_eq_ (D1b' x d) (D2b x d) (Db x d)).
+
+%% Contradiction cases, for dealing with disembodied subtyping assumptions for non-variables.
+
+-	: trans* top _ _ _ (sub_refl Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- top_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+-	: trans* (arrow _ _) _ _ _ (sub_refl Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- arrow_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+-	: trans* (forall _ _) _ _ _ (sub_refl Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- forall_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+-	: trans* top _ _ _ (sub_trans _ Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- top_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+-	: trans* (arrow _ _) _ _ _ (sub_trans _ Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- arrow_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+-	: trans* (forall _ _) _ _ _ (sub_trans _ Dassm) D
+	   <- assm_var Dassm Dvar
+	   <- forall_var_contra Dvar Dfalse
+	   <- raa_sub Dfalse D.
+
+
+-closed	: narrow* _ _ _ Dvar ([d] D) _ ([d] D).
+
+-refl	: narrow* _ _ _ Dvar ([d] sub_refl d) _ ([d] sub_refl d).
+
+-trans	: narrow* _ _ nat_eq_ Dvar ([d] sub_trans (D d) Dassm) Dsub ([d] sub_trans (D' d) Dassm)
+	   <- narrow* _ _ nat_eq_ Dvar D Dsub D'.
+
+-trans	: narrow* _ _ nat_eq_ Dvar ([d] sub_trans (D d) d) Dsub ([d] sub_trans (D'' d) d)
+	   <- narrow* _ _ nat_eq_ Dvar D Dsub D'
+	   <- ({d:assm X Q}
+		 assm_var d Dvar
+		 -> trans* _ _ nat_eq_ Dsub (D' d) (D'' d)).
+
+-arrow	: narrow* _ _ nat_eq_ Dvar ([d] sub_arrow (D2 d) (D1 d)) Dsub ([d] sub_arrow (D2' d) (D1' d))
+	   <- narrow* _ _ nat_eq_ Dvar D1 Dsub D1'
+	   <- narrow* _ _ nat_eq_ Dvar D2 Dsub D2'.
+
+-forall	: narrow* _ _ nat_eq_ Dvar ([d] sub_forall (D2 d) (D1 d)) Dsub ([d] sub_forall (D2' d) (D1' d))
+	   <- narrow* _ _ nat_eq_ Dvar D1 Dsub D1'
+	   <- ({x'} {dv'} {d'}
+		 assm_var d' dv'
+		 -> narrow* _ _ nat_eq_ Dvar ([d] D2 d x' d') Dsub ([d] D2' d x' d')).
+
+%worlds (bind | vblock | ablock) (trans* _ _ _ _ _ _) (narrow* _ _ _ _ _ _ _).
+%total {(Q1 Q2) (N1 N2) (D1 D2)} (trans* Q1 N1 _ D1 _ _) (narrow* Q2 N2 _ _ D2 _ _).
+
+
+
+
+%%%%%  Peroration  %%%%%
+
+%{
+
+At this level we no longer need our context mangling, so trans and
+narrow are proven for worlds built from only bind.  We also can tidy
+away the extra stuff needed for the termination arguments for trans*
+and narrow*.
+
+}%
+
+trans : sub S Q -> sub Q T -> sub S T -> type.
+%mode trans +X1 +X2 -X3.
+
+-	: trans D1 D2 D3
+	   <- trans* _ _ nat_eq_ D1 D2 D3.
+
+%worlds (bind) (trans _ _ _).
+%total {} (trans _ _ _).
+
+
+
+narrow : ({x} assm x Q -> sub M N) -> sub P Q -> ({x} assm x P -> sub M N) -> type.
+%mode narrow +X1 +X2 -X3.
+
+-	: narrow D1 D2 D3
+	   <- ({x} {dv} narrow* _ _ nat_eq_ dv ([d] D1 x d) D2 ([d] D3 x d)).
+
+%worlds (bind) (narrow _ _ _).
+%total {} (narrow _ _ _).
+
+
+
+
+%%%%%  Reflexivity  %%%%%
+
+%{ 
+
+Reflexivity is easy, but when we add a variable to the context, we
+need to add its reflexivity case there, hence the reflx assumption in
+rblock and rbind.  Rblock exists for laziness purposes; since reflx
+never calls trans, we needn't bother to maintain trans's invariants.
+
+}%
+
+
+reflx : {T} sub T T -> type.
+%mode reflx +X1 -X2.
+
+%block rblock : some {t:tp}
+		 block {x:tp} {d:assm x t}
+		 {thm:reflx x (sub_refl d)}.
+%block rbind  : some {t:tp}
+		 block {x:tp} {dv:var x} {d:assm x t}
+		 {thm:assm_var d dv}
+		 {thm':reflx x (sub_refl d)}.
+
+-	: reflx top sub_top.
+
+-	: reflx (arrow T1 T2) (sub_arrow T2refl T1refl)
+	   <- reflx T1 T1refl
+	   <- reflx T2 T2refl.
+
+-	: reflx (forall T1 T2) (sub_forall T2refl T1refl)
+	   <- reflx T1 T1refl
+	   <- ({x} {d}
+		 reflx x (sub_refl d)
+		 -> reflx (T2 x) (T2refl x d)).
+
+%worlds (rblock | rbind) (reflx _ _).
+%total T (reflx T _).
+
+
+
+
+%%%%%  Declarative subtyping  %%%%%
+
+subtype : tp -> tp -> type.
+
+
+subtype_top    : subtype _ top.
+
+subtype_refl   : subtype T T.
+
+subtype_trans  : subtype T1 T3
+		 <- subtype T1 T2
+		 <- subtype T2 T3.
+
+subtype_arrow  : subtype (arrow S1 S2) (arrow T1 T2)
+		 <- subtype T1 S1
+		 <- subtype S2 T2.
+
+subtype_forall : subtype (forall S1 S2) (forall T1 T2)
+		 <- subtype T1 S1
+		 <- ({x} subtype x T1 -> subtype (S2 x) (T2 x)).
+
+
+
+
+%%%%%  Correctness of the algorithm  %%%%%
+
+assm_to_subtype : assm S T -> subtype S T -> type.
+%mode assm_to_subtype +X1 -X2.
+
+%block sbind    : some {t:tp}
+		   block {x:tp} {d:assm x t} {d':subtype x t}
+		   {thm:assm_to_subtype d d'}.
+
+%worlds (sbind) (assm_to_subtype _ _).
+%total {} (assm_to_subtype _ _).
+
+
+
+soundness : sub S T -> subtype S T -> type.
+%mode soundness +X1 -X2.
+
+-	: soundness sub_top subtype_top.
+
+-	: soundness (sub_refl _) subtype_refl.
+
+-	: soundness (sub_trans D2 D1) (subtype_trans D2' D1')
+	   <- assm_to_subtype D1 D1'
+	   <- soundness D2 D2'.
+
+-	: soundness (sub_arrow D2 D1) (subtype_arrow D2' D1')
+	   <- soundness D1 D1'
+	   <- soundness D2 D2'.
+
+-	: soundness (sub_forall D2 D1) (subtype_forall D2' D1')
+	   <- soundness D1 D1'
+	   <- ({x} {d:assm x T} {d':subtype x T}
+		 assm_to_subtype d d'
+		 -> soundness (D2 x d) (D2' x d')).
+
+%worlds (sbind) (soundness _ _).
+%total (D) (soundness D _).
+
+
+
+completeness : subtype S T -> sub S T -> type.
+%mode completeness +X1 -X2.
+
+%block cbind    : some {t:tp} {d_refl:sub t t}
+		   block {x:tp} {dv:var x} {d:assm x t}
+		   {thm1:assm_var d dv}
+		   {thm2:reflx x (sub_refl d)}
+		   {d':subtype x t}  %% put here due to weakness in world subsumption
+		   {thm3:completeness d' (sub_trans d_refl d)}.
+
+-	: completeness subtype_top sub_top.
+
+-	: completeness subtype_refl D
+	   <- reflx _ D.
+
+-	: completeness (subtype_trans D2 D1) D
+	   <- completeness D1 D1'
+	   <- completeness D2 D2'
+	   <- trans D1' D2' D.
+
+-	: completeness (subtype_arrow D2 D1) (sub_arrow D2' D1')
+	   <- completeness D1 D1'
+	   <- completeness D2 D2'.
+
+-	: completeness (subtype_forall D2 D1) (sub_forall D2' D1')
+	   <- completeness D1 D1'
+	   <- reflx _ Drefl
+	   <- ({x:tp} {dv:var x} {d:assm x T} 
+		 assm_var d dv
+		 -> reflx x (sub_refl d)
+		 -> {d':subtype x T}
+		    completeness d' (sub_trans Drefl d)
+		 -> completeness (D2 x d') (D2' x d)).
+
+%worlds (cbind) (completeness _ _).
+%total (D) (completeness D _).
