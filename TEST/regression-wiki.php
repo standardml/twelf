@@ -28,7 +28,7 @@ while($row = mysql_fetch_array($literatepages)) {
   if($page == "POPL Tutorial/Session 4 Live")               $ignore = true;
   if($page == "POPL Tutorial/Typed bracket abstraction")    $ignore = true;
   if($page == "Polarized PCF")                              $unsafe = true;
-  if($page == "User:Hdeyoung/monweakfoc")                   $unsafe = true;
+  if($page == "User:Hdeyoung/monweakfoc.elf")               $unsafe = true;
   if($page == "") $ignore = true;
   if($page == "") $ignore = true;
   if(substr($page,0,25) == "Computation and Deduction")     $ignore = true;
