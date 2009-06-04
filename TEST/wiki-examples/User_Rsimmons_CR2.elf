@@ -1,0 +1,129 @@
+%{ == Syntax == }%
+
+exp : type.  %name exp E.
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%{ 
+
+When we use this <tt>%block</tt>, it expresses that we can be working in a 
+context with arbitrary expression variables. 
+
+}%
+
+%block exps : block {x: exp}.
+%worlds (exps) (exp).
+
+%{ == Reduction == }%
+%{ 
+
+We can reduce under binders and 
+reduce both sides of an application "in parallel." If we have a β-redex 
+<tt>(λx.ea) eb</tt>, then after reducing <tt>ea</tt> (with <tt>x</tt> free) to 
+<tt>ea'</tt> (with <tt>x</tt> free) and reducing <tt>eb</tt> to <tt>eb'</tt>,
+we can return <tt>[eb'/x]ea'</tt>, the substitution of <tt>eb'</tt> into
+<tt>ea'</tt>. When we introduce a new variable, we always add in the fact 
+that it can evaluate to itself.
+
+The <tt>%block</tt> <tt>exps_id</tt> 
+explicitly states that we will be reducing in a setting 
+with free variables, with the invariant that every variable is added
+with the invariant that it can evaluate to itself.
+
+}%
+
+reduce : exp -> exp -> type.
+%mode reduce +E -E'.
+
+%block exps_id : block {x: exp}{d: reduce x x}.
+
+reduce/lam : reduce (lam E) (lam E')
+              <- ({x:exp} reduce x x -> reduce (E x) (E' x)).
+
+reduce/app : reduce (app E1 E2) (app E1' E2')
+              <- reduce E1 E1'
+              <- reduce E2 E2'.
+
+reduce/beta : reduce (app (lam E1) E2) (E1' E2')
+              <- ({x:exp} reduce x x -> reduce (E1 x) (E1' x))
+              <- reduce E2 E2'.
+
+%worlds (exps_id) (reduce _ _).
+%total E (reduce E _).
+
+%{ == Substitution == }%
+%{ 
+
+The substitution theorem says that if we have a term <tt>e</tt> with 
+<tt>x</tt> free that reduces to <tt>e'</tt> (with <tt>x</tt> still free)
+and <tt>e<sub>arg</sub></tt> reduces to <tt>e'<sub>arg</sub></tt>, 
+then <tt>[e<sub>arg</sub>/x]e</tt> reduces to <tt>[e'<sub>arg</sub>/x]e'</tt>. 
+
+The proof is by induction on the structure of the term with the free variable.
+
+}%
+
+substitute 
+   : ({x: exp} reduce x x -> reduce (E x) (E' x))
+      -> reduce Earg Earg'
+      -> reduce (E Earg) (E' Earg') -> type.
+%mode substitute +D +Darg -D'.
+
+%{ 
+
+We actually need to think about what block this theorem will take place in.
+The "variable case" of our lemma is one where the first argument is
+<tt>[x: exp] [idx: red x x] y</tt>, where <tt>y</tt> is ''not'' equal to
+<tt>x</tt>. In this case, we will need to insert into the context the lemma
+that, if 
+
+}%
+
+%block exp_subst 
+   : block {x: exp}{idx: reduce x x}
+      {subst
+         : {z: exp}{z': exp}{red: reduce z z'} substitute ([_][_] idx) red idx}.
+
+- : substitute
+     ([x] [idx: reduce x x] idx)
+     (D : reduce Earg Earg') D.
+
+- : substitute 
+     ([x] [idx: reduce x x] 
+        reduce/lam 
+        (D x idx : {y} reduce y y -> reduce (E x y) (E' x y)))            
+     (Darg: reduce Earg Earg')
+     (reduce/lam D'
+        : reduce (lam ([y] (E Earg) y)) (lam ([y] (E' Earg') y)))
+     <- ({y} {idy: reduce y y}
+           ({z}{z'}{red_z: reduce z z'} substitute ([_] [_] idy) red_z idy)
+           -> substitute ([x] [idx: reduce x x] D x idx y idy) Darg 
+              (D' y idy : reduce (E Earg y) (E' Earg' y))).
+
+- : substitute
+     ([x] [idx: reduce x x]
+        reduce/app
+        (Db x idx : reduce (Eb x) (Eb' x))
+        (Da x idx : reduce (Ea x) (Ea' x)))
+     (Darg: reduce Earg Earg')
+     (reduce/app Db' Da' 
+        : reduce (app (Ea Earg) (Eb Earg)) (app (Ea' Earg') (Eb' Earg')))
+     <- substitute Da Darg (Da': reduce (Ea Earg) (Ea' Earg'))
+     <- substitute Db Darg (Db': reduce (Eb Earg) (Eb' Earg')).
+
+- : substitute
+     ([x] [idx: reduce x x]
+        reduce/beta
+        (Db x idx : reduce (Eb x) (Eb' x))
+        (Da x idx : {y} reduce y y -> reduce (Ea x y) (Ea' x y)))
+     (Darg: reduce Earg Earg')
+     (reduce/beta Db' Da'
+        : reduce (app (lam (Ea Earg)) (Eb Earg)) ((Ea' Earg') (Eb' Earg')))
+     <- ({y} {idy: reduce y y}
+           ({z}{z'}{red_z: reduce z z'} substitute ([_] [_] idy) red_z idy)
+           -> substitute ([x] [idx: reduce x x] Da x idx y idy) Darg 
+              (Da' y idy : reduce (Ea Earg y) (Ea' Earg' y)))
+     <- substitute Db Darg (Db': reduce (Eb Earg) (Eb' Earg')).
+
+%worlds (exp_subst) (substitute _ _ _).
+%total D (substitute D _ _).

@@ -1,0 +1,319 @@
+%{ Alex Simpson's thesis shows how to encode a variety of constructive
+modal logics by making box and diamond into universal and existential
+quantifiers over accessible Kripke worlds and orthogonally allowing
+axiomatization of the accessibility relation.
+
+Here we encode and prove cut admissibility for a sequent calculus for
+a similar spectrum of logics. The difference is that uses of
+left rules are constrained  (`tethered') to only fire when the label on the 
+conclusion is the same as the label on the hypothesis.
+
+The conjecture is that Pfenning-Davies judgmental modal logic is
+exactly tethered modal logic where accessibiliy relation is
+axiomatized by reflexivity and transitivity.
+
+The standard litmus-test entailment that fails in this logic (and succeeds in Simpsons')
+is
+
+<math>\Diamond A \Rightarrow \square B \vdash \square (A \Rightarrow B)</math>
+
+(Author: Jason Reed, based on Pfenning's encoding of intuitionistic
+logic with cut admissibility)
+}%
+
+w : type.  % worlds
+%name w P.
+
+<= : w -> w -> type. % accessibility relation
+%infix none 3 <=.
+refl : P <= P.
+trans : P <= Q -> Q <= R -> P <= R.
+sym : P <= Q -> Q <= P.
+
+o : type.  % formulas
+%name o A.
+
+and    : o -> o -> o.  %infix right 11 and.
+imp    : o -> o -> o.  %infix right 10 imp.
+or     : o -> o -> o.  %infix right 11 or.
+true   : o.
+false  : o.
+box : o -> o.
+dia : o -> o.
+
+% Sequent Calculus
+
+hyp  : o -> w -> type.  % Hypotheses (left)
+ghyp  : o -> w -> type.  % Global-after-P Hypotheses (left)
+conc : o -> w -> type.  % Conclusion (right)
+
+%name hyp H.
+%name conc D.
+
+axiom : (hyp A P -> conc A P).
+
+andr  : conc A P
+	 -> conc B P
+	 -> conc (A and B) P.
+
+andl1 : (hyp A P -> conc C P)
+	 -> (hyp (A and B) P -> conc C P).
+
+andl2 : (hyp B P -> conc C P)
+	 -> (hyp (A and B) P -> conc C P).
+
+impr  : (hyp A P -> conc B P)
+	 -> conc (A imp B) P.
+
+impl  : conc A P
+	 -> (hyp B P -> conc C P)
+	 -> (hyp (A imp B) P -> conc C P).
+
+orr1  : conc A P
+	 -> conc (A or B) P.
+
+orr2  : conc B P
+	 -> conc (A or B) P.
+
+orl   : (hyp A P -> conc C P)
+	 -> (hyp B P -> conc C P)
+	 -> (hyp (A or B) P -> conc C P).
+
+truer : conc (true) P.
+
+falsel : (hyp (false) P -> conc C P).
+
+boxr : ({a:w} P <= a -> conc A a)
+	   -> conc (box A) P. 
+
+boxl : (ghyp A P -> conc C P)
+	   -> (hyp (box A) P -> conc C P). 
+
+% Can copy to any world after P regardless of conc
+copy : (hyp A Q -> conc C R)
+	-> P <= Q
+	-> (ghyp A P -> conc C R).
+
+diar : conc A Q
+	-> P <= Q
+	-> conc (dia A) P.
+
+dial : ({a:w} P <= a -> hyp A a -> conc C P)
+	-> (hyp (dia A) P -> conc C P).
+
+
+%%% Termination Metric
+
+little : type.
+big : type.
+little/ : little.
+big/ : little -> big.
+
+%%% Cut admissibility
+
+ca : {M:little} {A:o} conc A P -> (hyp A P -> conc C Q) -> conc C Q -> type.
+
+cag : {M:big} {A:o} ({a:w} Q <= a -> conc A a) -> (ghyp A Q -> conc C R) -> conc C R -> type.
+
+%% Axioms
+
+ca_axiom_d : ca M A (axiom H) E (E H).
+
+ca_axiom_e : ca M A D axiom D.
+
+%% Principal Cases
+
+ca_and1 : ca M (A1 and A2) (andr D1 D2)
+	   ([h] andl1 (E1 h) h) F
+	   <- ({h1}
+		 ca M (A1 and A2) (andr D1 D2)
+		 ([h] E1 h h1) (E1' h1))
+	   <- ca M A1 D1 E1' F.
+
+ca_and2 : ca M (A1 and A2) (andr D1 D2)
+	   ([h] andl2 (E2 h) h) F
+	   <- ({h2}
+		 ca M (A1 and A2) (andr D1 D2)
+		 ([h] E2 h h2) (E2' h2))
+	   <- ca M A2 D2 E2' F.
+
+ca_imp  : ca M (A1 imp A2) (impr D2)
+	   ([h] impl (E1 h) (E2 h) h) F
+	   <- ca M (A1 imp A2) (impr D2) E1 E1'
+	   <- ({h2}
+		 ca M (A1 imp A2) (impr D2)
+		 ([h] E2 h h2) (E2' h2))
+	   <- ca M A1 E1' D2 D2'
+	   <- ca M A2 D2' E2' F.
+
+ca_or1  : ca M (A1 or A2) (orr1 D1)
+	   ([h] orl (E1 h) (E2 h) h) F
+	   <- ({h1}
+		 ca M (A1 or A2) (orr1 D1)
+		 ([h] E1 h h1) (E1' h1))
+	   <- ca M A1 D1 E1' F.
+ca_or2  : ca M (A1 or A2) (orr2 D2)
+	   ([h] orl (E1 h) (E2 h) h) F
+	   <- ({h2}
+		 ca M (A1 or A2) (orr2 D2)
+		 ([h] E2 h h2) (E2' h2))
+	   <- ca M A2 D2 E2' F.
+
+ca_box : ca M (box A) (boxr D1) ([h] boxl (E1 h) h) F
+	  <- ({h2} ca M (box A) (boxr D1) ([h] E1 h h2) (F' h2))
+	  <- cag (big/ little/) A D1 F' F.
+
+ca_dia : ca M (dia A) (diar D1 ACC) ([h] dial (E1 h) h) F
+   <- ({a:w} {acc} {h2:hyp A a} ca M (dia A) (diar D1 ACC) ([h] E1 h a acc h2) (F' a acc h2))
+   <- ca M A D1 ([h2] F' _ ACC h2) F.
+
+%% D-Commutative Conversions
+
+cad_andl1  : ca M A (andl1 D1 H) E (andl1 D1' H)
+	      <- {h1} ca M A (D1 h1) E (D1' h1).
+
+cad_andl2  : ca M A (andl2 D2 H) E (andl2 D2' H)
+	      <- {h2} ca M A (D2 h2) E (D2' h2).
+
+cad_impl   : ca M A (impl D1 D2 H) E (impl D1 D2' H)
+	      <- ({h2} ca M A (D2 h2) E (D2' h2)).
+
+cad_orl    : ca M A (orl D1 D2 H) E (orl D1' D2' H)
+	      <- ({h1} ca M A (D1 h1) E (D1' h1))
+	      <- ({h2} ca M A (D2 h2) E (D2' h2)).
+
+cad_falsel  : ca M A (falsel H) E (falsel H).
+
+cad_boxl : ca M A (boxl D1 H) E (boxl D1' H)
+	       <- ({h} ca M A (D1 h) E (D1' h)).
+
+cad_dial : ca M A (dial D1 H) E (dial D1' H)
+	       <- ({a:w} {acc} {h:hyp B1 a}
+		     ca M A (D1 a acc h) E (D1' a acc h)).
+cad_copy : ca M A (copy D ACC H) E (copy D' ACC H)
+	    <- ({h} ca M A (D h) E (D' h)).
+
+%% E-Commutative Conversions
+
+cae_axiom : ca M A D ([h] axiom H1) (axiom H1).
+
+cae_andr : ca M A D ([h] andr (E1 h) (E2 h)) (andr E1' E2')
+	    <- ca M A D E1 E1'
+	    <- ca M A D E2 E2'.
+
+cae_andl1: ca M A D ([h] andl1 (E1 h) H) (andl1 E1' H)
+	    <- ({h1} ca M A D ([h] E1 h h1) (E1' h1)).
+
+cae_andl2: ca M A D ([h] andl2 (E2 h) H) (andl2 E2' H)
+	    <- ({h2} ca M A D ([h] E2 h h2) (E2' h2)).
+
+cae_impr : ca M A D ([h] impr (E2 h)) (impr E2')
+	    <- ({h1} ca M A D ([h] E2 h h1) (E2' h1)).
+
+cae_impl : ca M A D ([h] impl (E1 h) (E2 h) H) (impl E1' E2' H)
+	    <- ca M A D E1 E1'
+	    <- ({h2} ca M A D ([h] E2 h h2) (E2' h2)).
+
+cae_orr1 : ca M A D ([h] orr1 (E1 h)) (orr1 E1')
+	    <- ca M A D E1 E1'.
+
+cae_orr2 : ca M A D ([h] orr2 (E2 h)) (orr2 E2')
+	    <- ca M A D E2 E2'.
+
+cae_orl  : ca M A D ([h] orl (E1 h) (E2 h) H) (orl E1' E2' H)
+	    <- ({h1} ca M A D ([h] E1 h h1) (E1' h1))
+	    <- ({h2} ca M A D ([h] E2 h h2) (E2' h2)).
+
+cae_truer: ca M A D ([h] truer) (truer).
+
+cae_falsel : ca M A D ([h] falsel H) (falsel H).
+
+cae_boxr : ca M A D ([h] boxr (E1 h)) (boxr E1')
+	       <- ({a:w} {acc} ca M A D ([h] E1 h a acc) (E1' a acc)).
+
+
+cae_boxl: ca M A D ([h] boxl (E1 h) H) (boxl E1' H)
+	      <- ({gh1} ca M A D ([h] E1 h gh1) (E1' gh1)).
+
+cae_diar : ca M A D ([h] diar (E1 h) ACC) (diar E1' ACC)
+	       <- ca M A D E1 E1'.
+
+cae_dial : ca M A D ([h] dial (E1 h) H) (dial E1' H)
+	       <- ({a:w} {acc} {h1:hyp B1 a}
+		     ca M A D ([h] E1 h a acc h1) (E1' a acc h1)).
+
+cae_copy : ca M A D ([h] copy (E h) ACC H) (copy E' ACC H)
+	    <- ({h2} ca M A D ([h] E h h2) (E' h2)).
+
+%% E-Commutative Conversions for ca (global)
+
+cage_axiom : cag M A D ([h] axiom H1) (axiom H1).
+
+cage_andr : cag M A D ([h] andr (E1 h) (E2 h)) (andr E1' E2')
+	    <- cag M A D E1 E1'
+	    <- cag M A D E2 E2'.
+
+cage_andl1: cag M A D ([h] andl1 (E1 h) H) (andl1 E1' H)
+	    <- ({h1} cag M A D ([h] E1 h h1) (E1' h1)).
+
+cage_andl2: cag M A D ([h] andl2 (E2 h) H) (andl2 E2' H)
+	    <- ({h2} cag M A D ([h] E2 h h2) (E2' h2)).
+
+cage_impr : cag M A D ([h] impr (E2 h)) (impr E2')
+	    <- ({h1} cag M A D ([h] E2 h h1) (E2' h1)).
+
+cage_impl : cag M A D ([h] impl (E1 h) (E2 h) H) (impl E1' E2' H)
+	    <- cag M A D E1 E1'
+	    <- ({h2} cag M A D ([h] E2 h h2) (E2' h2)).
+
+cage_orr1 : cag M A D ([h] orr1 (E1 h)) (orr1 E1')
+	    <- cag M A D E1 E1'.
+
+cage_orr2 : cag M A D ([h] orr2 (E2 h)) (orr2 E2')
+	    <- cag M A D E2 E2'.
+
+cage_orl  : cag M A D ([h] orl (E1 h) (E2 h) H) (orl E1' E2' H)
+	    <- ({h1} cag M A D ([h] E1 h h1) (E1' h1))
+	    <- ({h2} cag M A D ([h] E2 h h2) (E2' h2)).
+
+cage_truer: cag M A D ([h] truer) (truer).
+
+cage_falsel : cag M A D ([h] falsel H) (falsel H).
+
+cage_boxr : cag M A D ([h] boxr (E1 h)) (boxr E1')
+	     <- ({a:w} {acc} cag M A D ([h] E1 h a acc) (E1' a acc)).
+
+
+cage_boxl: cag M A D ([h] boxl (E1 h) H) (boxl E1' H)
+	      <- ({gh1} cag M A D ([h] E1 h gh1) (E1' gh1)).
+
+cage_diar : cag M A D ([h] diar (E1 h) ACC) (diar E1' ACC)
+	       <- cag M A D E1 E1'.
+
+cage_dial : cag M A D ([h] dial (E1 h) H) (dial E1' H)
+	       <- ({a:w} {acc} {h1:hyp B1 a}
+		     cag M A D ([h] E1 h a acc h1) (E1' a acc h1)).
+
+
+cage_copy : cag M A D ([h] copy (E h) ACC H) (copy E' ACC H)
+	    <- ({h2} cag M A D ([h] E h h2) (E' h2)).
+
+% Single principal case for ca (global)
+
+cag_copy : cag (big/ M) A D ([h] copy (E h) ACC h) F
+	    <- ({h2} cag (big/ M) A D ([h] E h h2) (E' h2))
+	    <- ca M A (D _ ACC) E' F.
+
+%block bacc : some {Q:w} {P:w} block {d:P <= Q}.	    
+%block bhyp : some {A:o} {P:w} block {h:hyp A P}.
+%block bghyp : some {A:o} {P:w} block {h:ghyp A P}.
+%block bw : block {a:w}.
+%block bo : block {p:o}.
+%worlds (bhyp | bghyp | bw | bo | bacc) (ca M A D E F) (cag M A D E F).
+
+%mode (ca +M +A +D +E -F)
+      (cag +M +A +D +E -F).
+
+%total {(A' A) (M' M) [(D' D) (E' E)]} 
+       (cag M' A' D' E' _) 
+       (ca M A D E _).

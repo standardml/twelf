@@ -1,0 +1,736 @@
+%{ For my final project, I will prove a metatheorem relating
+subordination to strengthening.  Specifically, given the implicational
+fragment of the sequent calculus for intuitionistic propositional
+logic and a corresponding notion of subordination, <math>\trianglelefteq</math>, I will prove:
+
+* If there exists a derivation of Γ, A {{vdash}} C having size N, then either A <math>\trianglelefteq</math> C or there exists a derivation of Γ {{vdash}} C having size no larger than N.
+
+Note the inclusion of the sizes of the derivations.  This is necessary
+because some cases in the proof use induction on an output derivation
+of another induction.  We must therefore induct on the size of the
+given derivation.  In Twelf, this means that we will need a numeric
+termination metric, instead of the usual subterm metric. }%
+
+
+%{ == Arithmetic preliminaries == }%
+
+%{ First, the standard definition of [[natural numbers]]: }%
+
+nat : type.  %name nat N.
+
+z : nat.
+s : nat -> nat.
+
+
+%{ === Less-than-or-equal ordering === }%
+
+%{ Because our theorem will involve a numeric termination metric, we
+introduce the usual less-than-or-equal ordering on the natural
+numbers: }%
+
+leq : nat -> nat -> type.
+
+leq/z : leq z N2.
+leq/s : leq (s N1) (s N2)
+	  <- leq N1 N2.
+
+%worlds () (leq _ _).
+
+
+%{ ==== Uninteresting lemmas ==== }%
+
+%{ Now, we prove some uninteresting lemmas about <tt>leq</tt>:
+reflexivity, transitivity, and increment. }%
+
+leq-refl : {N} leq N N -> type. 
+%mode leq-refl +N -Dleq.
+
+- : leq-refl z (leq/z : leq z z).
+
+- : leq-refl (s N) (leq/s Dleq)
+     <- leq-refl N (Dleq : leq N N).
+
+%worlds () (leq-refl _ _).
+%total N (leq-refl N _).
+
+
+leq-trans : leq N1 N2 -> leq N2 N3 -> leq N1 N3 -> type. 
+%mode leq-trans +Dleq1 +Dleq2 -Dleq3.
+
+- : leq-trans (leq/z : leq z N2) _ (leq/z : leq z N3).
+
+- : leq-trans (leq/s (Dleq1 : leq N1 N2)) (leq/s (Dleq2 : leq N2 N3)) (leq/s Dleq3)
+     <- leq-trans Dleq1 Dleq2 (Dleq3 : leq N1 N3).
+
+%worlds () (leq-trans _ _ _).
+%total Dleq1 (leq-trans Dleq1 _ _).
+
+
+leq-inc : leq N1 N2 -> leq N1 (s N2) -> type.
+%mode leq-inc +Dleq -Dleq'.
+
+- : leq-inc (leq/z : leq z N2) (leq/z : leq z (s N2)).
+
+- : leq-inc (leq/s (Dleq : leq N1 N2)) (leq/s Dleq')
+     <- leq-inc Dleq (Dleq' : leq N1 (s N2)).
+
+%worlds () (leq-inc _ _).
+%total Dleq (leq-inc Dleq _).
+
+
+%{ ==== Reduces ==== }%
+
+%{ Next, we would like to use this <tt>leq</tt> information to
+convince Twelf of termination in the eventual proof of our
+strengthening metatheorem.  To this end, we would like to show that
+<tt>N1</tt> is a subterm of <tt>N2</tt> whenever <tt>leq N1 N2</tt>.
+Following the article on [[using nat-less with %reduces]], we
+introduce addition as an auxiliary concept.  (Admittedly, this seems
+convoluted, but I could not figure out how to convince Twelf of this
+directly.  Attempting a <tt>%reduces</tt> declaration on <tt>leq</tt>
+fails because Twelf doesn't believe <tt>z <= N</tt>.) }%
+
+plus : nat -> nat -> nat -> type. 
+%mode plus +N1 +N2 -N.
+
+plus/z : plus z N2 N2.
+
+plus/s : plus (s N1) N2 (s N)
+	  <- plus N1 N2 N.
+
+%worlds () (plus _ _ _).
+%total N1 (plus N1 _ _).
+
+
+%{ We first prove the right-hand versions of <tt>plus/z</tt> and
+<tt>plus/s</tt>. }%
+
+plus-rz : {N} plus N z N -> type.
+%mode plus-rz +N -Dplus.
+
+- : plus-rz z (plus/z : plus z z z).
+
+- : plus-rz (s N) (plus/s Dplus)
+     <- plus-rz N (Dplus : plus N z N).
+
+%worlds () (plus-rz _ _).
+%total N (plus-rz N _).
+
+
+plus-rs : plus N1 N2 N -> plus N1 (s N2) (s N) -> type.
+%mode plus-rs +Dplus -Dplus'.
+
+- : plus-rs (plus/z : plus z N2 N2) (plus/z : plus z (s N2) (s N2)).
+
+- : plus-rs (plus/s (Dplus : plus N1 N2 N)) (plus/s Dplus')
+     <- plus-rs Dplus (Dplus' : plus N1 (s N2) (s N)).
+
+%worlds () (plus-rs _ _).
+%total Dplus (plus-rs Dplus _).
+
+
+%{ Next, we show that, whenever <tt>plus N1 N2 N</tt>, <tt>N2</tt> is
+a subterm of <tt>N</tt>. }%
+
+plus-reduces : {N2} {N} plus N1 N2 N -> type.
+%mode plus-reduces +N2 +N +Dplus.
+
+- : plus-reduces N2 N2 (plus/z : plus z N2 N2).
+
+- : plus-reduces N2 (s N) (plus/s (Dplus : plus N1 N2 N))
+     <- plus-reduces N2 N Dplus.
+
+%worlds () (plus-reduces _ _ _).
+%total Dplus (plus-reduces _ _ Dplus).
+%reduces N2 <= N (plus-reduces N2 N _).
+
+
+%{ Next, we show that if <tt>leq N1 N2</tt> then there exists an
+<tt>N</tt> such that <tt>plus N N1 N2</tt>. }%
+
+leq-plus : leq N1 N2 -> plus N N1 N2 -> type.
+%mode leq-plus +Dleq -Dplus.
+
+- : leq-plus (leq/z : leq z N2) Dplus
+     <- plus-rz N2 (Dplus : plus N2 z N2).
+
+- : leq-plus (leq/s (Dleq : leq N1 N2)) Dplus'
+     <- leq-plus Dleq (Dplus : plus N N1 N2)
+     <- plus-rs Dplus (Dplus' : plus N (s N1) (s N2)).
+
+%worlds () (leq-plus _ _).
+%total Dleq (leq-plus Dleq _).
+
+
+%{ Because we can always express <tt>leq N1 N2</tt> as <tt>plus N N1
+N2</tt> (using <tt>leq-plus</tt>) and because the second addend is a
+subterm of the sum (using <tt>plus-reduces</tt>), we can establish the
+<tt>%reduces</tt> relationship that we originally wanted: <tt>N1</tt>
+is a subterm of <tt>N2</tt> whenever <tt>leq N1 N2</tt>. }%
+
+leq-reduces : {N1} {N2} leq N1 N2 -> type.
+%mode leq-reduces +N1 +N2 +Dleq.
+
+- : leq-reduces N1 N2 (Dleq : leq N1 N2)
+     <- leq-plus Dleq (Dplus : plus N N1 N2)
+     <- plus-reduces N1 N2 Dplus.
+
+%worlds () (leq-reduces _ _ _).
+%total {} (leq-reduces _ _ _).
+%reduces N1 <= N2 (leq-reduces N1 N2 _).
+
+
+
+%{ === Maximum of two natural numbers === }%
+
+%{ To define the size of a branched derivation, we choose to use the
+maximum function. }%
+
+max : nat -> nat -> nat -> type.
+%mode max +N1 +N2 -N3.
+
+max/z : max z N2 N2.
+max/sz : max (s N1) z (s N1).
+max/ss : max (s N1) (s N2) (s N)
+	  <- max N1 N2 N.
+
+%worlds () (max _ _ _).
+%total N1 (max N1 _ _).
+
+
+%{ ==== Uninteresting lemmas ==== }%
+
+%{ We will need various, rather uninteresting, lemmas about <tt>max</tt>.  First, an
+effectiveness lemma: }%
+
+can-max : {N1} {N2} max N1 N2 N -> type.
+%mode can-max +N1 +N2 -Dmax.
+
+- : can-max z N2 (max/z : max z N2 N2).
+
+- : can-max (s N1) z (max/sz : max (s N1) z (s N1)).
+
+- : can-max (s N1) (s N2) (max/ss Dmax)
+     <- can-max N1 N2 (Dmax : max N1 N2 N).
+
+%worlds () (can-max _ _ _).
+%total N1 (can-max N1 _ _).
+
+
+%{ It will also prove useful to know that the maximum of two natural
+numbers is at least as large as the two numbers. }%
+
+leq-max : max N1 N2 N -> leq N1 N -> leq N2 N -> type. 
+%mode leq-max +Dmax -Dleq1 -Dleq2.
+
+- : leq-max (max/z : max z N2 N2) (leq/z : leq z N2) Dleq2
+     <- leq-refl N2 (Dleq2 : leq N2 N2).
+
+- : leq-max (max/sz : max (s N1) z (s N1)) Dleq1 (leq/z : leq z (s N1))
+     <- leq-refl (s N1) (Dleq1 : leq (s N1) (s N1)).
+
+- : leq-max (max/ss (Dmax : max N1 N2 N)) (leq/s Dleq1) (leq/s Dleq2)
+     <- leq-max Dmax (Dleq1 : leq N1 N) (Dleq2 : leq N2 N).
+
+%worlds () (leq-max _ _ _).
+%total Dmax (leq-max Dmax _ _).
+
+
+%{ Finally, we will also need to know that the maximum is monotonic in its
+inputs. }%
+
+max-monotone : leq N1' N1
+		-> leq N2' N2 
+		-> max N1' N2' N' 
+		-> max N1 N2 N 
+		%%
+	        -> leq N' N -> type.
+%mode max-monotone +Dleq1 +Dleq2 +Dmax' +Dmax -Dleq.
+
+- : max-monotone 
+     (leq/z : leq z N1) 
+     (Dleq2 : leq N2' N2) 
+     (max/z : max z N2' N2') 
+     (Dmax : max N1 N2 N)
+     Dleq
+     <- leq-max Dmax _ (Dleq2' : leq N2 N)
+     <- leq-trans Dleq2 Dleq2' (Dleq : leq N2' N).
+
+- : max-monotone 
+     (leq/s (Dleq1 : leq N1' N1)) 
+     (leq/z : leq z N2) 
+     (max/sz : max (s N1') z (s N1')) 
+     (Dmax : max (s N1) N2 N) 
+     Dleq
+     <- leq-max Dmax (Dleq1' : leq (s N1) N) _ 
+     <- leq-trans (leq/s Dleq1) Dleq1' (Dleq : leq (s N1') N).
+
+- : max-monotone
+     (leq/s (Dleq1 : leq N1' N1)) 
+     (leq/s (Dleq2 : leq N2' N2)) 
+     (max/ss (Dmax' : max N1' N2' N')) 
+     (max/ss (Dmax : max N1 N2 N))
+     (leq/s Dleq)
+     <- max-monotone Dleq1 Dleq2 Dmax' Dmax (Dleq : leq N' N).
+
+%worlds () (max-monotone _ _ _ _ _).
+%total Dmax' (max-monotone _ _ Dmax' _ _).
+
+
+
+
+%{ == Sequent calculus and subordination == }%
+
+%{ We now present the encoding of the sequent calculus and rules for
+subordination. }%
+
+%{ === Sequent calculus === }%
+
+%{ ==== Syntax ==== }%
+
+%{ We assume a set of atoms <tt>P</tt>. }%
+
+atm : type.  %name atm P.
+
+%block atm-block : block {p : atm}.
+
+
+%{ Propositions <tt>A</tt> are then built from these atoms and the
+implication connective. }%
+
+prop : type.  %name prop A.
+
+atom : atm -> prop.
+imp : prop -> prop -> prop.
+
+
+
+%{ ==== Judgments ==== }%
+
+%{ We use the standard encoding of the 
+[[POPL Tutorial/Sequent vs Natural Deduction|intuitionistic sequent calculus]]
+in terms of hypothetical assumptions <tt>hyp A</tt> and 
+consequents <tt>true C</tt>. }%
+
+hyp : prop -> type.  %name hyp H h.
+
+%block hyp-block : some {A : prop} block {h : hyp A}.
+
+
+true : prop -> type.
+
+init : hyp (atom P) -> true (atom P).
+
+impR : true (imp A B)
+	<- (hyp A -> true B).
+
+impL : (hyp (imp A B) -> true C)
+	<- true A
+	<- (hyp B -> true C).
+
+
+%{ === Derivation sizes === }%
+
+%{ We introduce a new function <tt>size</tt> that relates sequent
+calculus derivations to the natural number for their size.  Each rule
+application contributes 1 to the size.  Since the left rule for
+implication, <tt>impL</tt>, has two premises, we use the
+<tt>max</tt> function to calculate the "combined" contribution of the
+premises to the size. }%
+
+size : true C -> nat -> type. 
+%mode size +D -N.
+
+size/init : size (init Hp) (s z).
+
+size/impR : size (impR ([hc1] D hc1)) (s N)
+	     <- ({hc1} size (D hc1) N).
+
+size/impL : size (impL ([hb2] D2 hb2) D1 _) (s N)
+	     <- size D1 N1
+	     <- ({hb2} size (D2 hb2) N2)
+	     <- max N1 N2 N.
+
+%worlds (atm-block | hyp-block) (size _ _).
+%total D (size D _).
+
+%{ Note the Π-bound hypotheses in the arguments to
+<tt>size/impR</tt> and <tt>size/impL</tt>.  These are necessary to
+make the inductive calls on subderivations that introduce hypotheses,
+but do not affect the output since <tt>hyp</tt> is not subordinate to
+<tt>nat</tt>. }%
+
+
+%{ === Subordination === }%
+
+%{ On paper, the subordination rules are: 
+
+<center>
+<math>
+\frac{}{p \trianglelefteq p}{\trianglelefteq}atom
+</math> 
+</center>
+
+<br/>
+
+<center>
+<math>
+\frac{A \trianglelefteq C_2}{A \trianglelefteq C_1 \supset C_2}{\trianglelefteq}{\supset}_R
+</math>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+<math>
+\frac{A_2 \trianglelefteq C}{A_1 \supset A_2 \trianglelefteq C}{\trianglelefteq}{\supset}_L
+</math>
+</center>
+
+<br/>
+
+<center>
+<math>
+\frac{A \trianglelefteq B_1  \qquad  B_1 \supset B_2 \trianglelefteq C}{A \trianglelefteq C}{\trianglelefteq}trans
+</math>
+</center>
+
+We encode these rules in a straightforward way: }%
+
+sub : prop -> prop -> type.
+
+sub/atom : sub (atom P) (atom P).
+
+sub/impR : sub A (imp C1 C2)
+	    <- sub A C2.
+
+sub/impL : sub (imp A1 A2) C
+	    <- sub A2 C.
+
+sub/trans : sub A C
+	     <- sub A B1
+	     <- sub (imp B1 B2) C.
+
+
+%{ == Relating subordination to strengthening == }%
+
+%{ The output of the goal metatheorem is "either A <math>\trianglelefteq</math> C or there exists a
+derivation of Γ {{vdash}} C of size no larger than N."  As usual,
+we translate this disjunction into a new type, <tt>sos A C N</tt>.
+Note that the unusual order of arguments to <tt>sos/streng</tt> was
+required by the Π-bound term <tt>D</tt> of type <tt>true C</tt>. }%
+
+sos : prop -> prop -> nat -> type.
+
+sos/sub : sos A C N
+	   <- sub A C.
+
+sos/streng : {D : true C} 
+	      size D N' 
+	      -> leq N' N
+	      -> sos A C N.
+
+
+%{ Given this, we can encode the goal theorem as: 
+
+<twelf discard=true>
+streng : {N} {D : hyp A -> true C} ({h : hyp A} size (D h) N) -> sos A C N -> type.
+</twelf>
+
+We will need to know that <tt>sos</tt> respects the <tt>leq</tt>
+ordering.  This essentially requires transitivity of <tt>leq</tt>. }%
+
+sos-resp-leq : sos A C N' -> leq N' N -> sos A C N -> type.
+%mode sos-resp-leq +Dsos +Dleq -Dsos'.
+
+- : sos-resp-leq (sos/sub (Dsub : sub A C)) _ (sos/sub Dsub).
+
+- : sos-resp-leq 
+     (sos/streng (D : true C) (Dsize : size D N'') (Dleq : leq N'' N')) 
+     (Dleq' : leq N' N)
+     (sos/streng D Dsize Dleq'')
+     <- leq-trans Dleq Dleq' (Dleq'' : leq N'' N).
+
+%worlds (atm-block | hyp-block) (sos-resp-leq _ _ _).
+%total {} (sos-resp-leq _ _ _).
+
+
+
+%{ === Output factoring lemmas === }%
+
+%{ As is typical for Twelf metatheorems that produce a disjunction as
+an output, we require several [[output factoring]] lemmas.  At this point,
+it is somewhat difficult to see why these lemmas are the necessary
+ones.  However, they become apparent during the proof of the
+<tt>streng</tt> metatheorem. }%
+
+streng-impR : (hyp C1 -> sos A C2 N) -> sos A (imp C1 C2) (s N) -> type.
+%mode streng-impR +Dsos1 -Dsos2.
+
+- : streng-impR 
+     ([hc1 : hyp C1] sos/sub (Dsub : sub A C2))
+     (sos/sub (sub/impR Dsub)).
+
+- : streng-impR 
+     ([hc1 : hyp C1] 
+	sos/streng 
+	  (D hc1 : true C2)
+	  (Dsize hc1 : size (D hc1) N')
+	  (Dleq : leq N' N)) 
+     (sos/streng (impR D) (size/impR Dsize) (leq/s Dleq)).
+
+%worlds (atm-block | hyp-block) (streng-impR _ _).
+%total {} (streng-impR _ _).
+
+
+streng-impL' : sub A B1 -> sos B2 C N -> sos A C N -> type.
+%mode streng-impL' +Dsub +Dsos -Dsos'.
+
+- : streng-impL'
+     (Dsub1 : sub A B1)
+     (sos/sub (Dsub2 : sub B2 C))
+     (sos/sub (sub/trans (sub/impL Dsub2) Dsub1)).
+
+- : streng-impL' 
+     (Dsub : sub A B1)
+     (sos/streng (D : true C) (Dsize : size D N') (Dleq : leq N' N))
+     (sos/streng D Dsize Dleq).
+
+%worlds (atm-block | hyp-block) (streng-impL' _ _ _).
+%total {} (streng-impL' _ _ _).
+
+
+streng-impL-principal' : sos A2 C N -> sos (imp A1 A2) C N -> type.
+%mode +{A1} +{A2} +{C} +{N} +{Dsos:sos A2 C N} 
+      -{Dsos':sos (imp A1 A2) C N} (streng-impL-principal' Dsos Dsos').
+
+- : streng-impL-principal'
+     (sos/sub (Dsub : sub A2 C))
+     (sos/sub (sub/impL Dsub)).
+
+- : streng-impL-principal'
+     (sos/streng (D : true C) (Dsize : size D N') (Dleq : leq N' N))
+     (sos/streng D Dsize Dleq).
+
+%worlds (atm-block | hyp-block) (streng-impL-principal' _ _).
+%total {} (streng-impL-principal' _ _).
+
+%{ Note the use of a long form <tt>%mode</tt> declaration for
+<tt>streng-impL-principal'</tt> to ensure that <tt>A1</tt> is
+considered an input. }%
+
+
+%{ === Metatheorem === }%
+
+%{ We are finally ready to state and prove the desired metatheorem. }%
+
+streng : {N} {D : hyp A -> true C} ({h : hyp A} size (D h) N) -> sos A C N -> type.
+%mode streng +N +D +Dsize -Dsos.
+
+%{ In addition to those already presented, we will need two more
+output factoring lemmas.  Because these lemmas call <tt>streng</tt>,
+they must be proved simultaneously with <tt>streng</tt>. }%
+
+streng-impL : {N2} sos A B1 N1 
+	       -> (hyp B2 -> sos A C N2) 
+	       -> max N1 N2 N
+	       %%
+	       -> (hyp (imp B1 B2) -> sos A C (s N)) -> type.
+%mode streng-impL +N2 +Dsos1 +Dsos2 +Dmax -Dsos3.
+streng-impL-principal : {N} (hyp A2 -> sos (imp A1 A2) C N) -> sos (imp A1 A2) C N -> type.
+%mode streng-impL-principal +N +Dsos1 -Dsos2. 
+
+%{ Now, we can give the cases for the <tt>streng</tt> metatheorem.
+
+First, there are two cases involving the <tt>init</tt> rule: a case
+where <tt>hyp A</tt> is the principal formula of the rule, and a
+non-principal case. In the principal case, we show subordination; in
+the non-principal case, we strengthen and remove <tt>hyp A</tt>. }%
+
+- : streng (s z)
+     ([h : hyp (atom P)] init h) 
+     ([h : hyp (atom P)] size/init) 
+     (sos/sub sub/atom).
+
+- : streng (s z) 
+     ([h : hyp A] init (Hp : hyp (atom P))) 
+     ([h : hyp A] size/init) 
+     (sos/streng (init Hp) size/init Dleq)
+     <- leq-refl (s z) (Dleq : leq (s z) (s z)).
+
+%{ Next, the case for the <tt>impR</tt> rule.  There is only one case
+because it is not a left rule, and therefore does not depend directly
+on <tt>hyp A</tt>.  We make an inductive call on the subderivation and
+appeal to the <tt>streng-impR</tt> output factoring lemma. }%
+
+- : streng (s N)
+     ([h : hyp A] impR ([hc1 : hyp C1] D h hc1)) 
+     ([h : hyp A] size/impR (Dsize h : {hc1} size (D h hc1) N))
+     Dsos'
+     <- ({hc1 : hyp C1} 
+	   streng N ([h] D h hc1) ([h] Dsize h hc1) (Dsos hc1 : sos A C2 N))
+     <- streng-impR Dsos (Dsos' : sos A (imp C1 C2) (s N)).
+
+%{ Next, we have the principal case for the <tt>impL</tt> rule. 
+
+<center>
+<math>
+\frac{\Gamma, A_1 \supset A_2 \vdash A_1  \qquad  \Gamma, A_1 \supset A_2, A_2 \vdash C}{\Gamma, A_1 \supset A_2 \vdash C}{\supset}_L
+</math>
+</center>
+
+On paper, we apply induction on the second premise to get the two cases:
+# A<sub>1</sub> &sup; A<sub>2</sub> <math>\trianglelefteq</math> C; or
+# &Gamma;, A<sub>2</sub> {{vdash}} C 
+
+If we get case 1, we have A<sub>1</sub> &sup; A<sub>2</sub> <math>\trianglelefteq</math> C.
+If we get case 2, we apply induction to the derivation of &Gamma;, A<sub>2</sub> {{vdash}} C, with 
+A<sub>2</sub> as the distinguished assumption.  This yields two subcases: 
+# A<sub>2</sub> <math>\trianglelefteq</math> C; or
+# &Gamma; {{vdash}} C
+If we get subcase 1, we use subordination rules to show A<sub>1</sub> &sup; A<sub>2</sub> <math>\trianglelefteq</math> C.
+If we get subcase 2, we immediately have &Gamma; {{vdash}} C.
+
+This structure is mimicked by the following case and its associated
+output factoring lemma, <tt>streng-impL-principal</tt>: }%
+
+- : streng (s N)
+     ([h : hyp (imp A1 A2)] 
+	impL
+	  ([ha2 : hyp A2] D2 h ha2 : true C) 
+          (D1 h : true A1) 
+          h) 
+     ([h : hyp (imp A1 A2)] 
+	size/impL 
+	  (Dmax : max N1 N2 N) 
+	  (Dsize2 h : {ha2} size (D2 h ha2) N2) 
+          (Dsize1 h : size (D1 h) N1))
+     Dsos''
+     <- leq-max Dmax _ (Dleq : leq N2 N)
+     <- leq-reduces N2 N Dleq
+     <- ({ha2 : hyp A2} 
+	   streng N2 ([h] D2 h ha2) ([h] Dsize2 h ha2) (Dsos2 ha2 : sos (imp A1 A2) C N2))
+     <- streng-impL-principal N2 Dsos2 (Dsos' : sos (imp A1 A2) C N2)
+     <- leq-inc Dleq (Dleq' : leq N2 (s N))
+     <- sos-resp-leq Dsos' Dleq' (Dsos'' : sos (imp A1 A2) C (s N)).
+
+
+- : streng-impL-principal
+     N
+     ([ha2 : hyp A2] sos/sub (Dsub : sub (imp A1 A2) C))
+     (sos/sub Dsub).
+
+- : streng-impL-principal
+     N
+     ([ha2 : hyp A2] 
+	sos/streng 
+	  (D ha2 : true C)
+	  (Dsize ha2 : size (D ha2) N')
+	  (Dleq : leq N' N))
+     Dsos''
+     <- leq-reduces N' N Dleq
+     <- streng N' D Dsize (Dsos : sos A2 C N')
+     <- streng-impL-principal' Dsos (Dsos' : sos (imp A1 A2) C N')
+     <- sos-resp-leq Dsos' Dleq (Dsos'' : sos (imp A1 A2) C N).
+
+%{ Note that <tt>streng-impL-principal</tt> makes an inductive call to
+<tt>streng</tt>, justifying the earlier claim that these must be
+proved simultaneously.  Also, note the use of <tt>leq-reduces</tt> to
+convince Twelf of the inductive calls' validities. }%
+
+
+%{ Finally, we have the non-principal case for the <tt>impL</tt> rule.
+
+<center>
+<math>
+\frac{\Gamma, B_1 \supset B_2, A \vdash B_1  \qquad  \Gamma, B_1 \supset B_2, A, B_2 \vdash C}{\Gamma, B_1 \supset B_2, A \vdash C}{\supset}_L
+</math>
+</center>
+
+On paper, we apply induction on the premises to get the four cases:
+# A <math>\trianglelefteq</math> B<sub>1</sub>  and  A <math>\trianglelefteq</math> C;
+# A <math>\trianglelefteq</math> B<sub>1</sub>  and  &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub>, B<sub>2</sub> {{vdash}} C; 
+# &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} B<sub>1</sub>  and  A <math>\trianglelefteq</math> C; or 
+# &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} B<sub>1</sub>  and  &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub>, B<sub>2</sub> {{vdash}} C
+
+If we get either case 1 or case 3, we have A <math>\trianglelefteq</math> C.  If we get case 4, we can
+apply the left rule for &sup; to get &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} C.
+
+If we get case 2, we have neither A <math>\trianglelefteq</math> C or &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} C directly. 
+So, we apply induction to the derivation of &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub>,
+B<sub>2</sub> {{vdash}} C, with B<sub>2</sub> as the distinguished assumption.  This yields two subcases: 
+# A <math>\trianglelefteq</math> B<sub>1</sub>  and  B<sub>2</sub> <math>\trianglelefteq</math> C; or
+# A <math>\trianglelefteq</math> B<sub>1</sub>  and  &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} C
+If we get subcase 1, we use subordination rules to show A <math>\trianglelefteq</math> C.  If we get subcase 2, we immediately have &Gamma;, B<sub>1</sub> &sup; B<sub>2</sub> {{vdash}} C. }%
+
+- : streng (s N)
+     ([h : hyp A]
+	impL 
+	  ([hb2 : hyp B2] D2 h hb2 : true C)
+	  (D1 h : true B1)
+	  (Hb : hyp (imp B1 B2)))
+     ([h : hyp A]
+	size/impL
+	  (Dmax : max N1 N2 N)
+	  (Dsize2 h : {hb2} size (D2 h hb2) N2) 
+	  (Dsize1 h : size (D1 h) N1))
+     (Dsos' Hb)
+     <- leq-max Dmax (Dleq1 : leq N1 N) (Dleq2 : leq N2 N)
+     <- leq-reduces N1 N Dleq1
+     <- leq-reduces N2 N Dleq2
+     <- streng N1 D1 Dsize1 (Dsos1 : sos A B1 N1)
+     <- ({hb2 : hyp B2}
+	   streng N2 ([h] D2 h hb2) ([h] Dsize2 h hb2) (Dsos2 hb2 : sos A C N2))
+     <- streng-impL N2 Dsos1 Dsos2 Dmax (Dsos' : hyp (imp B1 B2) -> sos A C (s N)).
+
+
+- : streng-impL
+     N2
+     (sos/streng (D1 : true B1) (Dsize1 : size D1 N1') (Dleq1 : leq N1' N1)) 
+     ([hb2 : hyp B2] 
+	sos/streng 
+	  (D2 hb2 : true C)
+	  (Dsize2 hb2 : size (D2 hb2) N2')
+	  (Dleq2 : leq N2' N2)) 
+     (Dmax : max N1 N2 N)
+     ([hb : hyp (imp B1 B2)] 
+	sos/streng (impL D2 D1 hb) (size/impL Dmax' Dsize2 Dsize1) (leq/s Dleq))
+     <- can-max N1' N2' (Dmax' : max N1' N2' N')
+     <- max-monotone Dleq1 Dleq2 Dmax' Dmax (Dleq : leq N' N).
+
+- : streng-impL 
+     N2
+     _
+     ([hb2 : hyp B2] sos/sub (Dsub : sub A C)) 
+     (Dmax : max N1 N2 N)
+     ([hb : hyp (imp B1 B2)] sos/sub Dsub).
+
+- : streng-impL 
+     N2
+     (sos/sub (Dsub1 : sub A B1))
+     ([hb2 : hyp B2] 
+	sos/streng 
+	  (D2 hb2 : true C) 
+	  (Dsize2 hb2 : size (D2 hb2) N2') 
+	  (Dleq2 : leq N2' N2)) 
+     (Dmax : max N1 N2 N)
+     ([hb : hyp (imp B1 B2)] Dsos'')
+     <- leq-reduces N2' N2 Dleq2
+     <- streng N2' D2 Dsize2 (Dsos : sos B2 C N2')
+     <- streng-impL' Dsub1 Dsos (Dsos' : sos A C N2')
+     <- leq-max Dmax _ (Dleq2' : leq N2 N)
+     <- leq-trans Dleq2 Dleq2' (Dleq : leq N2' N)
+     <- leq-inc Dleq (Dleq' : leq N2' (s N))
+     <- sos-resp-leq Dsos' Dleq' (Dsos'' : sos A C (s N)).
+
+%{ Again, note the use of <tt>leq-reduces</tt> to convince Twelf of
+the inductive calls' validities. }%
+
+
+%{ We can finally complete the proof with <tt>%worlds</tt> and
+<tt>%total</tt> declarations: }%
+
+%worlds (atm-block | hyp-block)
+        (streng _ _ _ _)
+        (streng-impL-principal _ _ _)
+        (streng-impL _ _ _ _ _).
+%total (N1 N2 N3) 
+        (streng N1 _ _ _) 
+        (streng-impL-principal N3 _ _)
+        (streng-impL N2 _ _ _ _).
