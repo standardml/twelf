@@ -9,6 +9,9 @@
 
 # Change to my directory
 cd `dirname $0`
+
+## These are some $PATH additions that are mainly relevant to the PLPARTY.ORG
+## server, but they shouldn't be problematic for others...
 export PATH=/usr/local/bin:$PATH:/opt/local/bin
 
 # Parse destination directory
