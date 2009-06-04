@@ -9,6 +9,7 @@
 
 # Change to my directory
 cd `dirname $0`
+export PATH=/usr/local/bin:$PATH:/opt/local/bin
 
 # Parse destination directory
 OUTPUT_DIR=$1
