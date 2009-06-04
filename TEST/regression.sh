@@ -22,6 +22,15 @@ echo ""
 echo "=== Running regression test in MLton ==="
 $TIME ./mlton-regression regression.txt
 
+echo ""
+echo "=== Running public code ==="
+$TIME ./mlton-regression regression-public.txt
+
+echo ""
+echo "=== Running Twelf Wiki literate examples ==="
+$TIME ./mlton-regression regression-wiki.txt
+
+
 ARG_ONE=$1
 if [ -z "$ARG_ONE" ] 
 then
@@ -34,10 +43,6 @@ else
   echo ""
   echo "=== Running TS-LF (Definition of Standard ML) ==="
   $TIME ./mlton-regression regression-tslf.txt
-
-  echo ""
-  echo "=== Running misc. public code ==="
-  $TIME ./mlton-regression regression-public.txt
 
   echo "==== Completed! ==="
 fi
