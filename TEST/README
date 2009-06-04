@@ -1,0 +1,23 @@
+Regression test suite
+Robert J. Simmons, June 2009
+
+The current incarnation of the regression test suite is aimed at being run
+with MLton (with a higher cost of compliation, but a drastically reduced
+time for running the examples, which seems to make it worth it). The regression
+suite is designed to be run on the plparty.org web server, where the results
+from a nightly test can be observed at
+
+http://twelf.plparty.org/builds
+
+However, for most public code examples (and an archived and occasionally 
+updated version of all Literate Twelf files on the wiki), the regression suite 
+can be run locally.
+
+== Method 1: Fully automatic run (linux) ==
+
+twelf$ cd TEST
+twelf/TEST$ ./regression.sh
+
+== Method 2: Build regression executable (MLton) == 
+
+twelf$ cd TEST

@@ -37,16 +37,17 @@ structure RegressionTest = struct
            | Twelf.ABORT => (reportError (file); Twelf.ABORT)
      end;
     
- val conclude : unit -> unit = 
+ val conclude : unit -> OS.Process.status = 
   fn () =>
-     case (!errors) of 
-	 0 => (print ("Test complete with no errors\n"); 
-	       OS.Process.exit OS.Process.success)
-       | 1 => (print ("Test complete with 1 error\n");
-	       OS.Process.exit OS.Process.failure)
+     let val err = !errors 
+     in
+       errors := 0;
+       case (err) of 
+	 0 => (print ("Test complete with no errors\n"); OS.Process.success)
+       | 1 => (print ("Test complete with 1 error\n"); OS.Process.failure)
        | n => (print ("Test complete with "^(Int.toString n)^" errors\n");
-	       OS.Process.exit OS.Process.failure);
-
+	       OS.Process.failure)
+     end
 
  fun process (filename) = 
      let 
@@ -79,6 +80,3 @@ structure RegressionTest = struct
 
 end (* structure RegressionTest *)
 
-val argv = CommandLine.arguments()
-
-val _ = RegressionTest.process(List.nth(argv,List.length(argv) - 1))
