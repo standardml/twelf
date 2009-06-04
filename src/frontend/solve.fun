@@ -523,42 +523,52 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	     Msg.message ("Remaining constraints:\n"
 		    ^ str ^ "\n")
        else ());
-       Msg.message "More solutions?\n";
+       (if !Global.chatter >= 1 then Msg.message "More solutions?\n" else ());
        case numSol of 
 	 NONE => ()
-       | SOME n => (if (!solutions = n) then 
-		      (Msg.message "Found enough solutions\n"; raise Done)
-		    else 
-		      ())
+       | SOME n => (if (!solutions = n) 
+                    then 
+		      ((if !Global.chatter >= 1 
+                        then Msg.message "Found enough solutions\n" 
+                        else ());
+                       raise Done)
+                    else ())
 	   )
 	
       (* loops -- scinit will raise exception Done *)
       fun loop () =  (if exceeds (SOME(!stages-1),try)
-			then (Msg.message ("\n ================= " ^
-				     " Number of tries exceeds stages " ^ 
-				     " ======================= \n");  
-			      status := false;
-			      raise Done)
-		      else ();								
-			Msg.message ("\n ====================== Stage " ^ 
-			       Int.toString(!stages) ^ " finished =================== \n");
-			if exceeds (SOME(!stages),try)
-			  then (Msg.message ("\n ================= " ^
+		      then ((if !Global.chatter >= 1
+                             then Msg.message 
+                                      ("\n ================= " ^
 				       " Number of tries exceeds stages " ^ 
-				       " ======================= \n");  
-				status := false;
-				raise Done)
-			else ();	
-			if Tabled.nextStage () then 
-			  (stages := (!stages) + 1;
-			   loop ())
-			else 
-			  (* table did not change, 
-			   * i.e. all solutions have been found 
-			   * we check for *all* solutions
-			   *)
-			  status := true;
-			  raise Done) 
+				       " ======================= \n")
+                             else ());  
+		            status := false;
+		            raise Done)
+                      else ();
+		      (if !Global.chatter >= 1
+                       then Msg.message 
+                                ("\n ====================== Stage " ^ 
+			         Int.toString(!stages) ^ 
+                                 " finished =================== \n")
+                       else ());
+		      if exceeds (SOME(!stages),try)
+		      then (Msg.message ("\n ================= " ^
+				         " Number of tries exceeds stages " ^ 
+				         " ======================= \n");  
+			    status := false;
+			    raise Done)
+		      else ();	
+		      if Tabled.nextStage () then 
+			(stages := (!stages) + 1;
+			 loop ())
+		      else 
+			(* table did not change, 
+			 * i.e. all solutions have been found 
+			 * we check for *all* solutions
+			 *)
+			status := true;
+		      raise Done) 
       val _ = Tabled.reset () 
       val _ = Tabled.fillTable ()
       fun tabledSearch () = 
@@ -634,7 +644,10 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	val g = (Timers.time Timers.compiling Compile.compileGoal) 
 	            (IntSyn.Null, A)
 	fun scInit M =
-	    (Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
+	    ((if !Global.chatter >= 1
+              then Msg.message ((Timers.time Timers.printing evarInstToString)
+                                    Xs ^ "\n")
+              else ());
 	     case optName
 	       of NONE => ()
 		| SOME(name) =>
@@ -678,7 +691,9 @@ or  %querytabled <expected solutions> <max stages tried>  X : A
 	            (IntSyn.Null, A)
 	val _ = Tabled.reset () 
 	fun scInit O =
-	    (Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n");
+	    ((if !Global.chatter >= 1
+              then Msg.message ((Timers.time Timers.printing evarInstToString) Xs ^ "\n")
+              else ());
 	     case optName
 	       of NONE => ()
 		| SOME(name) =>

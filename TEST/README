@@ -13,6 +13,9 @@ However, for most public code examples (and an archived and occasionally
 updated version of all Literate Twelf files on the wiki), the regression suite 
 can be run locally.
 
+Various other old regression tests are floating around this directory; these
+should eventually be incorporated into an automatic process...
+
 == Method 1: Fully automatic run (linux) ==
 
 twelf$ cd TEST
