@@ -77,7 +77,6 @@ test ../TEST/wiki-examples/The_Twelf_Project_Literate_Twelf_Sample_Page.cfg
 test ../TEST/wiki-examples/TwelfTag.cfg
 test ../TEST/wiki-examples/Typed_combinators_soundness_and_completeness.cfg
 test ../TEST/wiki-examples/User_Hdeyoung_modal.elf.cfg
-testUnsafe ../TEST/wiki-examples/User_Hdeyoung_monweakfoc.elf.cfg
 test ../TEST/wiki-examples/User_Hdeyoung_subord.elf.cfg
 test ../TEST/wiki-examples/User_Rsimmons_CR2.cfg
 test ../TEST/wiki-examples/User_Rsimmons_Fluid_binding.cfg
