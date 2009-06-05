@@ -253,26 +253,26 @@ struct
 
   fun fmtPresentation(cid) =
      let
+  	fun fixatt(s) = Attr("fixity", s)
+  	fun assocatt(s) = Attr("associativity", s)
+  	fun precatt(Names.Fixity.Strength p) = Attr("precedence", Int.toString p)
   	val imp = I.conDecImp (ModSyn.sgnLookup cid)
   	val fixity = Names.fixityLookup cid
-	val fixString = case fixity
-	       of Names.Fixity.Nonfix => "prefix"	(* case identified by @precedence = Names.Fixity.minPrefInt *)
-		| Names.Fixity.Infix(_, assoc) => (
+	val atts = case fixity
+	       of Names.Fixity.Nonfix => nil	(* case identified by @precedence = Names.Fixity.minPrefInt *)
+		| Names.Fixity.Infix(p, assoc) => [fixatt "in", assocatt (
 			case assoc of
-			  Names.Fixity.Left => "leftassoc"
-			| Names.Fixity.Right => "rightassoc"
-			| Names.Fixity.None => "infix"
-		)
-		| Names.Fixity.Prefix(_) => "prefix"
-		| Names.Fixity.Postfix(_) => "postfix"
-        val name = localPath (List.map escape (I.conDecName(ModSyn.sgnLookup cid)))
+			  Names.Fixity.Left => "left"
+			| Names.Fixity.Right => "right"
+			| Names.Fixity.None => "none"
+		), precatt p]
+		| Names.Fixity.Prefix(p) => [fixatt "prefix", precatt p]
+		| Names.Fixity.Postfix(p) => [fixatt "postfix", precatt p]
     in
-        ElemEmpty("notation",
-	  [Attr("for", name),
-	   Attr("precedence", Int.toString (Names.Fixity.precToIntAsc(fixity))),
-	   Attr("fixity", fixString),
-	   Attr("implicit", Int.toString imp)]
-        )
+    	if (fixity = Names.Fixity.Nonfix andalso imp = 0)
+    	then ""
+        else ElemEmpty("notation", [Attr("for", localPath (List.map escape (I.conDecName(ModSyn.sgnLookup cid)))),
+           Attr("role", "constant")] @ atts @ [Attr("implicit", Int.toString imp)])
     end
 
   (* fmtConDec (condec) = fmt
@@ -320,9 +320,9 @@ struct
   fun docEndToString() = "</omdoc>"
   
   fun modInclToString(ModSyn.SigIncl(m,_), params)
-      = ElemEmpty("import", [Attr("from", relModName(m, params))]) ^ nl()
+      = ElemEmpty("include", [Attr("from", relModName(m, params))]) ^ nl()
     | modInclToString(ModSyn.ViewIncl(mor), params)
-      = ElemOpen("import", nil) ^ nl_ind() ^ morphToString(mor, params) ^ nl_unind() ^ "</import>"
+      = ElemOpen("include", nil) ^ nl_ind() ^ morphToString(mor, params) ^ nl_unind() ^ "</include>"
   
   fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
       let val (incls, meta) = case incls

@@ -26,9 +26,6 @@ sig
 
   val prec : fixity -> precedence
   val toString : fixity -> string
-
-  (* returns integer for precedence such that lower values correspond to higher precedence, useful for exports *)
-  val precToIntAsc : fixity -> int
   
 end;  (* signature FIXITY *)
 
