@@ -7,8 +7,8 @@ sig
 
   (* module or symbol level identifier *)
   type id = string list * Paths.region
-  (* list of ids to be opened *)
-  type openids = id list option
+  (* list of ids to be opened and their new names *)
+  type openids = (id * (string * Paths.region)) list option
   
   (* morphisms *)
   type morph = id list

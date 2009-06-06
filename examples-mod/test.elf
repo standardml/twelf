@@ -98,8 +98,8 @@ a : type.
 %% testing opens
 %sig Z = {
   %include Y %open.
-  %include R %open a c.
-  d = c : a.
+  %include R %open a c %as c'.
+  d = c' : a.
   %struct s : S %open a' b'.
   e = b' : a'.
   k : r.a. %% failed lookup, retried in Y.

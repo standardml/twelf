@@ -14,7 +14,7 @@ struct
   structure ExtSyn = ReconTerm'
 
   type id = string list * Paths.region
-  type openids = id list option
+  type openids = (id * (string * Paths.region)) list option
   
   type morph = id list
   datatype syminst =
@@ -82,6 +82,8 @@ struct
         else ModSyn.MorComp(morphToMorph(nextCod, (init, r0)), link)
      end
 
+  fun openToOpen(l) = ModSyn.OpenDec (List.map (fn ((old,_),(new,_)) => (old,new)) l)
+
   fun syminstToSymInst(dom : IDs.mid, cod : IDs.mid, inst : syminst, l) =
      case inst
         of coninst((names, r), (term, r')) =>
@@ -125,15 +127,15 @@ struct
              	ModSyn.StrInst(Str, Mor)
              end
   
-   fun modinclToModIncl(sigincl (sigid, ids), _) =
+   fun modinclToModIncl(sigincl (sigid, opens), _) =
       let
       	 val m = modnameLookupWithError SIG sigid
-	 val Ids = case ids
-	   of NONE => SOME nil                                    (* no open at all *)
-	    | SOME nil => NONE                                    (* open by itself --> open all *)
-	    | SOME l => SOME (List.map (fn (cname,_) => cname) l) (* open with list of ids *)
+	 val Opens = case opens
+	   of NONE => ModSyn.OpenDec nil            (* no open at all *)
+	    | SOME nil => ModSyn.OpenAll            (* open by itself --> open all *)
+	    | SOME l => openToOpen l                (* open with list of ids *)
       in
-      	 ModSyn.SigIncl (m, Ids)
+      	 ModSyn.SigIncl (m, Opens)
       end
     | modinclToModIncl(viewincl mor, _) =
        let
@@ -144,17 +146,17 @@ struct
        end
 
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
-                            incls : modincl list, insts : syminst list, ids : openids), loc) = 
+                            incls : modincl list, insts : syminst list, opens : openids), loc) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
     	val Incls = List.map (fn x => modinclToModIncl(x,loc)) incls
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
-	val Ids = case ids
-	  of SOME l => List.map (fn (cname,_) => cname) l
-	   | NONE => nil
+	val Opens = case opens
+	  of SOME l => openToOpen l
+	   | NONE => ModSyn.OpenDec nil
     in
-    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Ids)
+    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Opens)
     end
     | strdecToStrDec(strdef(name : string, morr), l) =
        let

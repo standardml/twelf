@@ -380,8 +380,8 @@ struct
        end
 
     (* auxiliary method shared by install1(StrDec _) (then byStr = SOME s) and install1(ModIncl _) (then byStr = NONE) *)
-    fun installOpen(dom : IDs.mid, qs : IDs.Qid list, byStr : IDs.cid option, r) = (
-       	  List.map (fn q =>
+    fun installOpen(dom : IDs.mid, opens : (IDs.Qid * string) list, byStr : IDs.cid option, r) = (
+       	  List.map (fn (q,new) =>
              let
                 val c = Names.nameLookupWithError(dom, q)
                 val c' = case byStr
@@ -391,9 +391,9 @@ struct
           	     then valOf (ModSyn.structMapLookup(s,c))
                      else raise Names.Error("cannot open included symbol " ^ IDs.mkString(q, "", ".", ""))
              in
-                Names.installName(c', [List.last q])
+                Names.installName(c', [new])
              end
-          ) qs;
+          ) opens;
           ()
     ) handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,msg))
 
@@ -1105,7 +1105,7 @@ struct
                          (fn a => Names.installScopeC (#1 a, SOME (#2 a)))
                          ancestors;                                        (* - open all ancestors *)
                        List.map
-                         (fn a => List.map (fn ModSyn.SigIncl(m,_) => ModSyn.inclAddC (ModSyn.SigIncl(m, SOME nil))
+                         (fn a => List.map (fn ModSyn.SigIncl(m,_) => ModSyn.inclAddC (ModSyn.SigIncl(m, ModSyn.OpenDec nil))
                                              | ModSyn.ViewIncl _ => ())
                                            (ModSyn.modInclLookup (#1 a))
                           ) ancestors;                                     (* - add includes of all ancestors *)
@@ -1182,7 +1182,7 @@ struct
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
             val _ = case strDec
-	       of ModSyn.StrDec(_,_,dom,_, _, openids) => installOpen(dom, openids, SOME c, r)
+	       of ModSyn.StrDec(_,_,dom,_, _, ModSyn.OpenDec opens) => installOpen(dom, opens, SOME c, r) (* OpenAll impossible *)
 	        | ModSyn.StrDef _ => ()
          in
             ()
@@ -1233,10 +1233,10 @@ struct
             val _ = ModSyn.inclAddC(Incl)
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
             val _ = case Incl
-               of ModSyn.SigIncl (from, openids) => (
-                    case openids
-                      of NONE => Names.installScopeC (from, NONE)
-                       | SOME openids => installOpen(from, openids, NONE, r);
+               of ModSyn.SigIncl (from, opendec) => (
+                    case opendec
+                      of ModSyn.OpenAll => Names.installScopeC (from, NONE)
+                       | ModSyn.OpenDec(opens) => installOpen(from, opens, NONE, r);
 		    Subordinate.installInclude from (* no exception should be possible *)
 		  )
 		| _ => ()

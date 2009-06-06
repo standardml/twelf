@@ -23,6 +23,13 @@ sig
   (********************** Data types and related functions **********************)
   
   (*
+    open declarations occur as part of signature inclusions and structure declarations
+    They consists of a list of qualified names c of the domain signature and names n.
+    The semantics is that n becomes an abbreviation for c in the codomain signature.
+  *)
+  datatype OpenDec = OpenDec of (IDs.Qid * string) list | OpenAll
+
+  (*
      morphisms
      morphisms have a domain and a codomain signature
      a morphism from S to T can be regarded as a (structure) expression of type S over signature T
@@ -44,7 +51,7 @@ sig
   
   datatype ModIncl
      = SigIncl of IDs.mid              (* included signature *)
-                * (IDs.Qid list option)(* constants in that signature that become available without qualification *)
+                * OpenDec     (* opening and renaming of constants in the included signature *)
      | ViewIncl of Morph               (* morphism translating signature included into domain *)
 
   (*
@@ -61,7 +68,7 @@ sig
     * IDs.mid                          (* domain (= instantiated signature) *)
     * ModIncl list                     (* morphism includes *)
     * SymInst list                     (* instantiations *)
-    * (IDs.Qid list)                   (* list of imported names that are available without qualification, NONE = all *)
+    * OpenDec                          (* opened and renamed imported names *)
   | StrDef of
       string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)

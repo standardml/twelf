@@ -38,21 +38,16 @@ struct
   val parseColon' = parseSingleToken'(L.COLON, ":")
   val parseDot' = parseSingleToken'(L.DOT, ".")
   
+  fun parseId'(LS.Cons((L.ID(_,id),r), s')) = ((id,r), LS.expose s')
+    | parseId'(LS.Cons ((t, r), _)) =
+     	Parsing.error (r, "Expected unqualified identifier, found token " ^ L.toString t)
+
   fun parseQualId'(f') : ID * Front =
     let
        val ((ids, (L.ID (_, id), r)), f' as LS.Cons((_,r'),s')) = ParseTerm.parseQualId' (f')
     in
        ((ids @ [id], Paths.join(r, r')), f')
     end
-
-  fun parseQualIdList'(f' as LS.Cons((L.DOT, _), _)) = (nil, f')
-    | parseQualIdList'(f') =
-       let
-          val (id, f') = parseQualId' f'
-	  val (ids, f') = parseQualIdList' f'
-       in
-          (id :: ids, f')
-       end
 
   fun parseMorphAux'(f' as LS.Cons ((L.ID _, _), _)) =
       let
@@ -98,13 +93,29 @@ struct
     | parseStrInst' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `%struct', found token " ^ L.toString t)
 
+  fun parseOpenIds'(f' as LS.Cons((L.DOT,_),_)) = (nil,f')
+    | parseOpenIds'(f' as LS.Cons((L.ID(_,_),_),_)) =
+     let
+     	val (old as (oldl,oldr), f') = parseQualId' f'
+     	val (new, f') = case f'
+     	   of LS.Cons((L.AS, _), s') => parseId' (LS.expose s')
+     	    | LS.Cons((L.ID(_,_),_), _) => ((List.last oldl, oldr), f')
+     	    | LS.Cons((L.DOT,_), _) => ((List.last oldl, oldr), f')
+     	    | LS.Cons ((t, r), _) =>
+     	       Parsing.error (r, "Expected qualified identifier, found token " ^ L.toString t)
+     	val (rest, f') = parseOpenIds' f'
+      in
+      	 ((old, new) :: rest, f')
+      end
+    | parseOpenIds' (LS.Cons ((t, r), _)) =
+        Parsing.error (r, "Expected `.' or qualified identifier', found token " ^ L.toString t)
+
   fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (NONE, f')
     | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) =
-        let val (ids, f') = parseQualIdList' (LS.expose s')
-        in  (SOME ids, f')
+        let val (opens, f') = parseOpenIds' (LS.expose s')
+        in (SOME opens, f')
         end
-    | parseOpen'(LS.Cons ((t, r), s')) =
-             Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
+    | parseOpen'(LS.Cons ((t, r), s')) = Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
 
   (* parses a %include declaration in a signature *)
   fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
