@@ -303,27 +303,47 @@ struct
     | fmtConDec (I.BlockDec (name, _, _, _), _) =
       "<!-- Skipping block declaration constant " ^ localPath name ^ "-->"
 
-  (* Printing module level declarations *)
-  
   fun morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
     | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
     | morphToString(ModSyn.MorComp(mor1,mor2), params) =
       OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
+
+  (* Printing structural levels *)
   
-  fun docBeginToString(base) =
-     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
-     "<omdoc " ^           
-     "xmlns=\"http://omdoc.org/omdoc\" " ^
-     "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-     "base=\"" ^ base ^ "\"" ^
-     ">\n"
-  fun docEndToString() = "</omdoc>"
-  
-  fun modInclToString(ModSyn.SigIncl(m,_), params)
-      = ElemEmpty("include", [Attr("from", relModName(m, params))]) ^ nl()
+  fun openToString(ModSyn.OpenAll) = ElemEmpty("open",[])
+    | openToString(ModSyn.OpenDec ((old,new)::tl))
+        = ElemEmpty("open", [Attr("name", IDs.mkString(old,"",".","")), Attr("as", new)]) ^ (openToString(ModSyn.OpenDec tl))
+    
+  fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
+
+  fun instToString(ModSyn.ConInst(c, U), params) = 
+         ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
+         fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
+    | instToString(ModSyn.StrInst(c, mor), params) =
+         ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
+         morphToString(mor, params) ^ nl_unind() ^ "</strass>"
+
+  fun modInclToString(ModSyn.SigIncl(m,opendec), params)
+      = ElemOpen("include", [Attr("from", relModName(m, params))]) ^ (openToString opendec) ^ nl()
     | modInclToString(ModSyn.ViewIncl(mor), params)
       = ElemOpen("include", nil) ^ nl_ind() ^ morphToString(mor, params) ^ nl_unind() ^ "</include>"
   
+  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _), params) =
+     let 
+     	fun dolist(_, nil, _) = ""
+           | dolist(f, hd::nil, nl) = f hd
+           | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
+     in
+     	ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^ (
+        case insts of nil => "" | _ => nl_ind() ^ dolist(fn inst => instToString(inst, params), insts, nl) ^ 
+        dolist(fn incl => modInclToString(incl, params), incls, nl) ^ nl_unind()
+        ) ^ "</structure>"
+     end
+   | strDecToString(ModSyn.StrDef(name, _, dom, def), params) =
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
+     "<definition>" ^ nl_ind() ^ morphToString(def, params) ^ nl_unind() ^ "</definition>" ^
+     "</structure>"
+
   fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
       let val (incls, meta) = case incls
                 of nil => (nil, mpath(baseLF, cdLF))
@@ -341,31 +361,15 @@ struct
   fun modEndToString(ModSyn.SigDec _, _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _, _) = nl_unind() ^ "</view>"
   
-  fun instToString(ModSyn.ConInst(c, U), params) = 
-         ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
-    | instToString(ModSyn.StrInst(c, mor), params) =
-         ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         morphToString(mor, params) ^ nl_unind() ^ "</strass>"
-
-  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _), params) =
-     let 
-     	fun dolist(_, nil, _) = ""
-           | dolist(f, hd::nil, nl) = f hd
-           | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
-     in
-     	ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^ (
-        case insts of nil => "" | _ => nl_ind() ^ dolist(fn inst => instToString(inst, params), insts, nl) ^ 
-        dolist(fn incl => modInclToString(incl, params), incls, nl) ^ nl_unind()
-        ) ^ "</structure>"
-     end
-   | strDecToString(ModSyn.StrDef(name, _, dom, def), params) =
-     ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
-     "<definition>" ^ nl_ind() ^ morphToString(def, params) ^ nl_unind() ^ "</definition>" ^
-     "</structure>"
-
-  fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
-
+  fun docBeginToString(base) =
+     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
+     "<omdoc " ^           
+     "xmlns=\"http://omdoc.org/omdoc\" " ^
+     "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
+     "base=\"" ^ base ^ "\"" ^
+     ">\n"
+  fun docEndToString() = "</omdoc>"
+  
   (* Main interface methods *)
     
   fun printModule file m baseFile =
