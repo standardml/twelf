@@ -6,6 +6,7 @@ read assignments in structures separately
 implement isomorphism check
 print out with nicer names
 alias declarations
+use environment variable for default search path for files
 hiding
 
 scanner:
