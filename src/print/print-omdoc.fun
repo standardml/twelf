@@ -234,7 +234,7 @@ struct
   
   and fmtBinder(binder, name, typ, scope) = OMBIND(LFOMS([binder]), OM1BVAR(name, LFOMS(["oftype"]), typ), scope)
 
-  and morphToStringTop(m, params) = ElemOpen("om:OMMOR",nil) ^ (morphToString(m, params)) ^ "<om:OMMOR>"
+  and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
   and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
     | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
     | morphToString(ModSyn.MorComp(mor1,mor2), params) =
