@@ -233,6 +233,12 @@ struct
       = "<om:OMOBJ>" ^ nl_ind() ^ fmtExp (G, (U, s), imp, params) ^ nl_unind() ^ "</om:OMOBJ>"
   
   and fmtBinder(binder, name, typ, scope) = OMBIND(LFOMS([binder]), OM1BVAR(name, LFOMS(["oftype"]), typ), scope)
+
+  and morphToStringTop(m, params) = ElemOpen("om:OMMOR",nil) ^ (morphToString(m, params)) ^ "<om:OMMOR>"
+  and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
+    | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
+    | morphToString(ModSyn.MorComp(mor1,mor2), params) =
+      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
   
   (* Printing non-modular symbol level declarations *)
   
@@ -303,11 +309,6 @@ struct
     | fmtConDec (I.BlockDec (name, _, _, _), _) =
       "<!-- Skipping block declaration constant " ^ localPath name ^ "-->"
 
-  fun morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
-    | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
-    | morphToString(ModSyn.MorComp(mor1,mor2), params) =
-      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
-
   (* Printing structural levels *)
   
   fun openToString(ModSyn.OpenAll) = ElemEmpty("open",[])
@@ -321,12 +322,12 @@ struct
          fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
     | instToString(ModSyn.StrInst(c, mor), params) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         morphToString(mor, params) ^ nl_unind() ^ "</strass>"
+         morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
 
   fun modInclToString(ModSyn.SigIncl(m,opendec), params)
       = ElemOpen("include", [Attr("from", relModName(m, params))]) ^ (openToString opendec) ^ nl()
     | modInclToString(ModSyn.ViewIncl(mor), params)
-      = ElemOpen("include", nil) ^ nl_ind() ^ morphToString(mor, params) ^ nl_unind() ^ "</include>"
+      = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
   
   fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _), params) =
      let 
@@ -341,7 +342,7 @@ struct
      end
    | strDecToString(ModSyn.StrDef(name, _, dom, def), params) =
      ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
-     "<definition>" ^ nl_ind() ^ morphToString(def, params) ^ nl_unind() ^ "</definition>" ^
+     "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
   fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
