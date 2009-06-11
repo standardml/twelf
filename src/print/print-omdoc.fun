@@ -272,7 +272,7 @@ struct
     	if (fixity = Names.Fixity.Nonfix andalso imp = 0)
     	then ""
         else ElemEmpty("notation", [Attr("for", localPath (List.map escape (I.conDecName(ModSyn.sgnLookup cid)))),
-           Attr("role", "constant")] @ atts @ [Attr("implicit", Int.toString imp)])
+           Attr("role", "application")] @ atts @ [Attr("implicit", Int.toString imp)])
     end
 
   (* fmtConDec (condec) = fmt
