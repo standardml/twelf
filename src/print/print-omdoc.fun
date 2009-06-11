@@ -266,8 +266,8 @@ struct
 			| Names.Fixity.Right => "right"
 			| Names.Fixity.None => "none"
 		), precatt p]
-		| Names.Fixity.Prefix(p) => [fixatt "prefix", precatt p]
-		| Names.Fixity.Postfix(p) => [fixatt "postfix", precatt p]
+		| Names.Fixity.Prefix(p) => [fixatt "pre", precatt p]
+		| Names.Fixity.Postfix(p) => [fixatt "post", precatt p]
     in
     	if (fixity = Names.Fixity.Nonfix andalso imp = 0)
     	then ""
