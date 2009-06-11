@@ -44,8 +44,8 @@ struct
   end
   
   (* locations of meta theories *)
-  val baseMMT = "http://cds.omdoc.org/mmt"
-  val baseLF = "http://cds.omdoc.org/lf"
+  val baseMMT = "http://cds.omdoc.org/omdoc/mmt.omdoc"
+  val baseLF = "http://cds.omdoc.org/lf/lf.omdoc"
   val cdMMT = ["mmt"]
   val cdLF = ["lf"]
   val cdTwelf = "twelf"
