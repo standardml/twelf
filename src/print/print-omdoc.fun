@@ -364,7 +364,7 @@ struct
   fun docBeginToString(base) =
      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
      "<omdoc " ^           
-     "xmlns=\"http://omdoc.org/omdoc\" " ^
+     "xmlns=\"http://omdoc.org/ns\" " ^
      "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
      "base=\"" ^ base ^ "\"" ^
      ">\n"
