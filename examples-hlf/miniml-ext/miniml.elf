@@ -1,0 +1,67 @@
+%%% The Mini-ML Language with References
+%%% Polymorphic with value restriction
+%%% Author: Frank Pfenning, Jason Reed
+
+%hlf.
+
+%% Types
+
+tp : type.  %name tp T.
+
+nat   : tp.
+1     : tp.              % unit
+**     : tp -> tp -> tp.  %infix right 10 **. % product 
+=>    : tp -> tp -> tp.  %infix right 9 =>. % function
+rf    : tp -> tp.        % cells
+
+exp  : type.  %name exp E.
+val  : type.  %name val V.
+cell : type.  %name cell C.
+final: type.  %name final W.
+
+%%% Expressions
+% Natural Numbers
+z    : exp.
+s    : exp -> exp.
+case : exp -> exp -> (val -> exp) -> exp.
+
+% Unit
+unit : exp.
+
+% Pairs
+pair : exp -> exp -> exp.
+fst  : exp -> exp.
+snd  : exp -> exp.
+
+% Functions
+lam  : (val -> exp) -> exp.
+app  : exp -> exp -> exp.
+
+% References
+ref  : exp -> exp.
+deref: exp -> exp.
+assign: exp -> exp -> exp.
+seq  : exp -> exp -> exp.
+
+% Let and Polymorphism
+let  : exp -> (val -> exp) -> exp.
+letv : val -> (val -> exp) -> exp.
+
+% Recursion
+fix  : (exp -> exp) -> exp.
+
+% Values
+vl   : val -> exp.
+
+%%% Values
+z*   : val.
+s*   : val -> val.
+unit*: val.
+pair*: val -> val -> val.
+lam* : (val -> exp) -> val.
+ref* : cell -> val.
+
+%%% Final state
+val* : val -> final.
+new* : (cell -> final) -> final.
+loc* : cell -> val -> final -> final.

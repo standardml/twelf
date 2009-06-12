@@ -1,0 +1,146 @@
+%%% The Mini-ML Language with References
+%%% Typing rules
+%%% Author: Frank Pfenning, Jason Reed
+
+
+%% Typing Judgments
+
+ofc : cell -> tp -> type.        %name ofc Oc.
+ofe : exp -> tp -> type.         %name ofe Oe.
+ofv : val -> tp -> type.         %name ofv Ov.
+off : final -> tp -> type.       %name off Of.
+ofi : inst -> tp -> type.        %name ofi Oi.
+ofk : cont -> tp -> tp -> type.  %name ofk Ok.
+
+%%% Expressions
+
+% Natural Numbers
+ofe_z : ofe z nat.
+ofe_s : ofe (s E) nat
+	 <- ofe E nat.
+ofe_case: ofe (case E1 E2 E3) S
+	   <- ofe E1 nat
+	   <- ofe E2 S
+	   <- ({x:val} ofv x nat -> ofe (E3 x) S).
+
+% Unit
+ofe_unit : ofe unit 1.
+
+% Pairs
+ofe_pair : ofe (pair E1 E2) (T1 ** T2)
+	   <- ofe E1 T1
+	   <- ofe E2 T2.
+ofe_fst  : ofe (fst E) T1
+	    <- ofe E (T1 ** T2).
+ofe_snd  : ofe (snd E) T2
+	    <- ofe E (T1 ** T2).
+
+% Functions
+ofe_lam  : ofe (lam E) (T1 => T2)
+	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
+ofe_app  : ofe (app E1 E2) T1
+	    <- ofe E1 (T2 => T1)
+	    <- ofe E2 T2.
+
+% References
+ofe_ref  : ofe (ref E) (rf T)
+	    <- ofe E T.
+ofe_deref : ofe (deref E) T
+  	     <- ofe E (rf T).
+ofe_assign : ofe (assign E1 E2) 1
+ 	      <- ofe E1 (rf T)
+ 	      <- ofe E2 T.
+ofe_seq : ofe (seq E1 E2) T2
+	   <- ofe E1 T1
+	   <- ofe E2 T2.
+
+% Let
+ofe_let : ofe (let E1 E2) T2
+	   <- ofe E1 T1
+	   <- ({x:val} ofv x T1 -> ofe (E2 x) T2).
+
+ofe_letv : ofe (letv V1 E2) T2
+	    <- ofe (E2 V1) T2.
+
+% Recursion
+ofe_fix : ofe (fix E) T
+	   <- ({u:exp} ofe u T -> ofe (E u) T).
+
+% Values
+ofe_vl  : ofe (vl V) T
+	   <- ofv V T.
+
+%%% Values
+
+ofv_z   : ofv (z*) nat.
+ofv_s   : ofv (s* V) nat
+	   <- ofv V nat.
+ofv_unit : ofv (unit*) 1.
+ofv_pair : ofv (pair* V1 V2) (T1 ** T2)
+	    <- ofv V1 T1
+	    <- ofv V2 T2.
+ofv_lam  : ofv (lam* E) (T1 => T2)
+ 	    <- ({x:val} ofv x T1 -> ofe (E x) T2).
+
+ofv_ref  : ofv (ref* C) (rf T)
+	    <- ofc C T.
+
+%%% Final States
+
+off_val  : off (val* V) T
+	    <- ofv V T.
+off_new  : off (new* W) T2
+	    <- ({c:cell} {d:ofc c T} off (W c) T2).
+off_loc  : off (loc* C V W) T2
+	    <- ofc C T1
+	    <- ofv V T1
+	    <- off W T2.
+
+%%% Abstract Machine Instructions
+
+ofi_ev : ofi (ev E) T
+	  <- ofe E T.
+ofi_return : ofi (return V) T
+	      <- ofv V T.
+
+ofi_case1 : ofi (case1 V1 E2 E3) T
+	     <- ofv V1 nat
+	     <- ofe E2 T
+	     <- ({x:val} ofv x nat -> ofe (E3 x) T).
+
+ofi_pair1 : ofi (pair1 V1 E2) (T1 ** T2)
+	     <- ofv V1 T1
+	     <- ofe E2 T2.
+
+ofi_fst1 : ofi (fst1 V) T1
+	    <- ofv V (T1 ** T2).
+ofi_snd1 : ofi (snd1 V) T2
+	    <- ofv V (T1 ** T2).
+
+ofi_app1 : ofi (app1 V1 E2) T1
+	    <- ofv V1 (T2 => T1)
+	    <- ofe E2 T2.
+ofi_app2 : ofi (app2 V1 V2) T1
+	    <- ofv V1 (T2 => T1)
+	    <- ofv V2 T2.
+
+ofi_ref1 : ofi (ref1 V) (rf T)
+	    <- ofv V T.
+ofi_deref1 : ofi (deref1 V) T
+  	      <- ofv V (rf T).
+ofi_assign1 : ofi (assign1 V1 E2) 1
+ 	       <- ofv V1 (rf T)
+ 	       <- ofe E2 T.
+ofi_assign2 : ofi (assign2 V1 V2) 1
+ 	       <- ofv V1 (rf T)
+ 	       <- ofv V2 T.
+
+ofi_let1 : ofi (let1 V1 E2) T2
+	    <- ofv V1 T1
+	    <- ({x:val} ofv x T1 -> ofe (E2 x) T2).
+
+%%% Continuations
+ofk_init : ofk init T T.
+ofk_;    : ofk (K ; I) T1 T3
+	    <- ({x:val} ofv x T1 -> ofi (I x) T2)
+	    <- ofk K T2 T3.

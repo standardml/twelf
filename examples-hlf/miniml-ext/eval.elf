@@ -1,0 +1,137 @@
+%%% Mini-ML with References
+%%% Continuation-Based Abstract Machine
+%%% Author: Frank Pfenning, Jason Reed
+
+exec	 : cont -> inst -> final -> @type. %name exec Ex.
+close	 : final -> final -> @type.	   %name close Ec.
+contains : cell -> val -> @type.	   %name contains Et.
+read	 : cell -> val -> @type.	   %name read Ed.
+
+ceval	 : exp -> final -> @type.	   %name ceval Ev.
+
+%%% Reading a cell value without affecting the state
+
+rd : {a:w} {b:w} (contains C V) @ b -> (read C V) @ (a * b).
+
+%%% Execution
+
+% Natural Numbers
+ex_z : exec K (ev z) W
+	 o- exec K (return z*) W.
+
+ex_s : exec K (ev (s E1)) W
+	 o- exec (K ; [x1] return (s* x1)) (ev E1) W.
+
+ex_case : exec K (ev (case E1 E2 E3)) W
+	    o- exec (K ; [x1] case1 x1 E2 E3) (ev E1) W.
+
+ex_case1_z : exec K (case1 z* E2 E3) W
+	       o- exec K (ev E2) W.
+
+ex_case1_s : exec K (case1 (s* V1) E2 E3) W
+	       o- exec K (ev (E3 V1)) W.
+
+% Unit
+ex_unit : exec K (ev (unit)) W
+	   o- exec K (return unit*) W.
+
+% Pairs
+ex_pair : exec K (ev (pair E1 E2)) W
+	    o- exec (K ; [x1] pair1 x1 E2) (ev E1) W.
+
+ex_pair1 : exec K (pair1 V1 E2) W
+	     o- exec (K ; [x2] return (pair* V1 x2)) (ev E2) W.
+
+ex_fst : exec K (ev (fst E1)) W
+	   o- exec (K ; [x1] fst1 x1) (ev E1) W.
+
+ex_fst1 : exec K (fst1 (pair* V1 V2)) W
+	    o- exec K (return V1) W.
+
+ex_snd : exec K (ev (snd E1)) W
+	   o- exec (K ; [x1] snd1 x1) (ev E1) W.
+
+ex_snd1 : exec K (snd1 (pair* V1 V2)) W
+	    o- exec K (return V2) W.
+
+% Functions
+ex_lam : exec K (ev (lam E1)) W
+	   o- exec K (return (lam* E1)) W.
+
+ex_app : exec K (ev (app E1 E2)) W
+	   o- exec (K ; [x1] app1 x1 E2) (ev E1) W.
+
+ex_app1 : exec K (app1 V1 E2) W
+	    o- exec (K ; [x2] app2 V1 x2) (ev E2) W.
+
+ex_app2 : exec K (app2 (lam* E1) V2) W
+	    o- exec K (ev (E1 V2)) W.
+
+% References
+ex_ref	: exec K (ev (ref E1)) W
+	   o- exec (K ; [x1] ref1 x1) (ev E1) W.
+
+ex_ref1 : exec K (ref1 V1) (new* W)
+	   o- ({c : cell} contains c V1
+		 -o exec K (return (ref* c)) (W c)).
+
+ex_deref : exec K (ev (deref E1)) W
+  	    o- exec (K ; [x1] deref1 x1) (ev E1) W.
+
+ex_deref1 : {a:w} 
+	     read C V1 @ a
+ 	     -> exec K (return V1) W @ a 
+	     -> exec K (deref1 (ref* C)) W @ a.
+	     
+ex_assign : exec K (ev (assign E1 E2)) W
+ 	     o- exec (K ; [x1] assign1 x1 E2) (ev E1) W.
+
+ex_assign1 : exec K (assign1 V1 E2) W
+ 	      o- exec (K ; [x2] assign2 V1 x2) (ev E2) W.
+
+ex_assign2 : exec K (assign2 (ref* C1) V2) W
+ 	      o- contains C1 V1
+ 	      o- (contains C1 V2 -o exec K (return unit*) W).
+
+ex_seq : exec K (ev (seq E1 E2)) W
+	  o- exec (K ; [x1] ev E2) (ev E1) W.
+
+% Let
+ex_let : exec K (ev (let E1 E2)) W
+	   o- exec (K ; [x1] let1 x1 E2) (ev E1) W.
+
+ex_let1 : exec K (let1 V1 E2) W
+	    o- exec K (ev (E2 V1)) W.
+
+ex_letv : exec K (ev (letv V1 E2)) W
+	   o- exec K (ev (E2 V1)) W.
+
+% Recursion
+ex_fix : exec K (ev (fix E1)) W
+	   o- exec K (ev (E1 (fix E1))) W.
+
+% Values
+ex_vl : exec K (ev (vl V)) W
+	    o- exec K (return V) W.
+
+ex_return : exec (K ; C) (return V) W
+	    o- exec K (C V) W.
+
+ex_init : exec init (return V) W
+	   o- close (val* V) W.
+
+%%% Collecting the final state
+
+% In LLF close_done should come last and will only
+% succeed if there are no "contains" assumptions
+% left in the state.
+close_done : close W W.
+
+close_loc : close W1 W
+	     o- contains C1 V1
+	     o- close (loc* C1 V1 W1) W.
+
+%%% Top-level evaluation
+
+cev : ceval E V
+       o- exec init (ev E) V.
