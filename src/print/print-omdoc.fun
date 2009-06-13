@@ -76,6 +76,7 @@ struct
   
   (* Printing references *)
   
+  fun omdocExtension s = (if String.isSuffix ".elf" s then substring(s, 0, String.size s - 4) else s) ^ ".omdoc"
   fun diff(nil, nil) = nil
     | diff(hd::tl, hdf::tlf) =
       if hd = hdf
@@ -83,8 +84,13 @@ struct
       else (List.map (fn _ => "..") tl) @ (hdf :: tlf)
   (* compute document reference (URI) relative to ! baseFile *)
   fun relDocName(doc, baseFile) = 
-    let val arcs = #arcs (OS.Path.fromString doc)
-    in IDs.mkString(diff( baseFile, arcs), "", "/", "")
+    let
+       val arcs = #arcs (OS.Path.fromString doc)
+       val dif = case List.rev (diff(baseFile, arcs))
+         of nil => nil
+          | hd :: tl => List.rev ((omdocExtension hd) :: tl)
+    in
+       IDs.mkString(dif, "", "/", "")
     end
   (* compute module reference (URI) relative to ! baseFile *)
   fun relModName(m, params : Params) =
@@ -405,9 +411,10 @@ struct
      let val file = TextIO.openOut (filename)
          val ModSyn.SigDec(f,_) = ModSyn.modLookup(0)
          val baseFile = #arcs (OS.Path.fromString f)
+         val base = omdocExtension f
      in (
         ind_reset();
-        TextIO.output(file, docBeginToString(f));
+        TextIO.output(file, docBeginToString(base));
         ModSyn.modApp(fn m => printModule file m baseFile);
         TextIO.output(file, docEndToString());
         TextIO.closeOut file
