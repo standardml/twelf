@@ -1545,28 +1545,31 @@ Structure and include declarations may carry optional open declarations These pe
 
 @example
 @group
-open ::= 
-       | %open ids.
-ids  ::=
-       | ids id
+open  ::= 
+       | %open opens.
+opens ::=
+        | opens id
+        | opens id %as id
 @end group
 @end example
 
-The semantics of @code{%open i} is that the identifier @code{i} is resolved in the domain signature of the structure or inclusion, and @code{i} is installed as a short-cut to the resolution. @code{i} must be an available name in the signature containing the open declaration.
+The semantics of @code{%open i %as n} is that the identifier @code{i} is made accessible under the unqualified name @code{n}. More precisely, @code{i} is resolved in the domain signature of the structure or inclusion, and @code{n} is installed as a short-cut to the resolution. @code{n} must be an available name in the signature containing the open declaration. If @code{%as n} is omitted, @code{n} defaults to the unqualified name of @code{i}.
 
-For example, one would normally write the signatures @code{IMPLICATION} and @code{Monoid} from the examples above as
+If an include declaration has an empty open declaration, i.e., @code{%include S %open.}, the semantics is different: All identifiers of @code{S} become available without qualification unless their name is already declared in the including signature.
+
+For example, one could write the signatures @code{IMPLICATION} and @code{Monoid} from the examples above as
 
 @example
 @group
 %sig IMPLICATION = @{
-  %struct J : JUDGMENTS %open o nd.
+  %struct J : JUDGMENTS %open o nd %as ded.
   imp    : o -> o -> o.	    %infix right 10 imp.
-  impi   : (nd A -> nd B) -> nd (A imp B).
-  impe   : nd (A imp B) -> nd A -> nd B.
+  impi   : (ded A -> ded B) -> ded (A imp B).
+  impe   : ded (A imp B) -> ded A -> ded B.
 @}.
 
 %sig Monoid = @{ 
-  %include FOL %open i.
+  %include FOL %open.
   comp : i -> i -> i.
   unit : i.
 @}.
