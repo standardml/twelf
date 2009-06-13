@@ -1259,7 +1259,9 @@ struct
                    of NONE => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
-                      loadFile readfile;
+                      if (loadFile readfile) = ABORT
+                         then raise ModSyn.Error("Error in included file " ^ readfile)
+                      	 else ();
                       Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
                    ) | SOME _ => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\". %% already read, skipping\n")
