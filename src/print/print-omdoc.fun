@@ -387,6 +387,7 @@ struct
      	 val params : Params = {baseFile = baseFile, current = m}
      in
      	if #arcs (OS.Path.fromString (ModSyn.modDecBase mdec)) = baseFile (* only print modules from the base file *)
+     	  andalso not(m = 0 andalso ModSyn.modSize m = 0)
      	then (
           print(modBeginToString(mdec, incls, params));
           ModSyn.sgnApp(m, fn c =>

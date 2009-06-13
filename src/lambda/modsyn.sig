@@ -158,6 +158,7 @@ sig
 
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
+  val modSize    : IDs.mid -> int
   val modParent  : IDs.mid -> (IDs.mid * IDs.lid) list
   val modInclLookup: IDs.mid -> ModIncl list
   val sigInclCheck: IDs.mid * IDs.mid -> bool
