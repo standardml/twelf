@@ -1332,10 +1332,11 @@ With prefix argument also displays Twelf server buffer."
 	 (twelf-server-wait displayp))))))
 
 (defun twelf-save-reset-check-file (&optional displayp)
-  "Resets and loads the current file."
+  "Resets the server and loads the current file. With prefix argument also displays Twelf server buffer."
    (interactive "P")
    (twelf-reset)
-   (twelf-save-check-file))
+   (twelf-save-check-file)
+   (twelf-server-wait displayp))
 
 (defun twelf-buffer-substring (start end)
   "The substring of the current buffer between START and END.
@@ -2176,6 +2177,12 @@ The output appears in the Twelf server buffer."
   (twelf-server-send-command "Print.TeX.prog")
   (twelf-server-display t))
 
+(defun twelf-print-omdoc (file)
+  "Prints the current signature as an OMDoc file. The command asks for the output file name."
+  (interactive "FOutput file name")
+  (twelf-server-send-command (concat "Print.OMDoc.toFile " file))
+  (twelf-server-display t))
+
 (defun twelf-read-constants ()
   "Reads a list of constants from the mini-buffer, separated by whitespace.
 Right now this does not do any consistency checking."
@@ -2836,7 +2843,8 @@ Mode map
     ["Program" twelf-print-program t]
     ("TeX"
      ["Signature" twelf-print-tex-signature t]
-     ["Program" twelf-print-tex-program t]))
+     ["Program" twelf-print-tex-program t])
+     ["OMDoc" twelf-print-omdoc])
   "Menu for printing commands.")
 
 (defconst twelf-recon-menu
