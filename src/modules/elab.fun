@@ -26,12 +26,33 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (* pre: true; post: NAE, #1 is number of implicit arguments *) 
   fun abstract(U : I.Exp) : I.Exp = #2 (Abstract.abstractDecImp U)
   
+  fun printExp(U : I.Exp) : string = Print.expToString(I.Null, U)
+  
   exception Error of string                       (* raised on type-checking errors *)
   exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
   exception FixMe                                 (* raised for unimplemented cases *)
 
 
   (********************** Module level type checking **********************)
+
+  fun typingError(U, V, msg) =
+     let
+        val pU = printExp U
+        val pV = printExp V
+     in
+        raise Error(msg ^ "\nexpression: " ^ pU ^ "\nexpected type: " ^ pV)
+     end
+
+   fun defInstClash(defDom, defCod, defDomTrans, msg) =
+      let
+         val pdefDom = printExp defDom
+         val pdefCod = printExp defCod
+         val pdefDomTrans = printExp defDomTrans
+      in
+         raise Error(msg ^ "definition: " ^ pdefDom ^ "\ntranslation of definition: " ^ pdefDomTrans ^
+            "\ninstantiation: " ^ pdefCod)
+      end
+
   
   (* computes domain without checking composability *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
@@ -387,20 +408,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                        (* if existing definitions are overridden, equality must be checked *)
                        if checkEqual(defold, def)
                        then normalize def
-                          else let
-                             val pdef' = Print.expToString(I.Null, def')
-                             val pdef = Print.expToString(I.Null, def)
-                             val pdefold = Print.expToString(I.Null, defold)
-                          in
-                             raise Error("definition/instantiation clash for " ^ M.symFoldName c' ^
-                                       "\ndefinition: " ^ pdef' ^
-                                       "\ntranslation of definition: " ^ pdefold ^
-                                   	   "\ninstantiation: " ^ pdef)
-                          end
+                       else defInstClash(def', def, defold, "definition/instantiation clash for " ^ M.symFoldName c')
                     | NONE => normalize defold
                  val _ = if checkType(defnew, typ)
                          then ()
-                         else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
+                         else typingError(defnew, typ, "instantiation of " ^ M.symFoldName c' ^ " ill-typed\n")
                  val q = (S, c') :: (applyStructMap q')
               in 
                  if false (* not (anc'Opt = NONE) andalso uni' = I.Type andalso checkStrict(defnew, typ) *)
@@ -423,7 +435,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                        let val defn = normalize def
                        in if checkType(defn, typ)
                           then SOME(I.AbbrevDef(Name @ name', q, imp', defn, typ, uni')) (* @FR: can this be a ConDef? *)
-                          else raise Error("instantiation of " ^ M.symFoldName c' ^ " ill-typed")
+                          else typingError(defn, typ, "instantiation of " ^ M.symFoldName c' ^ " ill-typed\n")
                        end
                     | NONE =>
                       SOME(I.ConDec(Name @ name', q, imp', stat', typ, uni'))
@@ -481,16 +493,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                                  | SOME defDom =>
                                    if checkEqual(applyMorph(defDom, M.MorView viewID), defCod)
                                    then ()
-                                   else let
-                                   	   val defDomStr = Print.expToString(I.Null, defDom)
-                                   	   val defCodStr = Print.expToString(I.Null, defCod)
-                                   	   val defDomTransStr = Print.expToString(I.Null, applyMorph(defDom, M.MorView viewID))
-                                   	 in
-                                   	   raise Error("definition/instantiation clash for " ^ M.symFoldName c ^
-                                   	            "\ndefinition: " ^ defDomStr ^
-                                   	            "\ntranslation of definition: " ^ defDomTransStr ^
-                                   	            "\ninstantiation: " ^ defCodStr)
-                                   	 end
+                                   else defInstClash(defDom, defCod, applyMorph(defDom, M.MorView viewID),
+                                                     "definition/instantiation clash for " ^ M.symFoldName c)
                    in
                       installInst(M.ConInst(c, defCod))
                    end
