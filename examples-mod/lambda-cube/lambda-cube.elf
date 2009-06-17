@@ -57,10 +57,6 @@
 
   %% simple function kinds (type operators)
   %struct funkinds : SimpFun = {%struct level := KindsTypesTerms..kinds.}.
-
-  %% conversion rule
-  %% has_tp : star -> tm A -> o.
-  %% conv   : {A : tm B} {B' : star} true B === B' -> true (has_tp B' A).
 }.
 
 %% Barendregt's lambda P 2
