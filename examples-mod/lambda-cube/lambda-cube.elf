@@ -1,0 +1,97 @@
+%% The Lambda Cube
+%% Fulya Horozal, Florian Rabe
+
+%read "modules.elf".
+
+%% Barendregt's lambda arrow: simple type theory
+%sig LambdaArrow = {
+  %include TypesTerms   %open tp tm ==.
+ 
+  %% simple function types
+  %struct fun  : SimpFun = {%struct level := TypesTerms..types.}. 
+}.
+
+%% Barendregt's lambda 2: second order type theory, system F
+%sig Lambda2 = {
+  %include TypesTerms   %open tp tm ==.
+ 
+  %% simple function types
+  %struct fun  : SimpFun   = {%struct level := TypesTerms..types.}. 
+
+  %% universal types
+  %struct univ : Universal = {%struct level := TypesTerms..types.}.
+}.
+
+%% Barendregt's lambda P: dependent type theory (e.g., LF)
+%sig LambdaP = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+
+  %% dependent function types (terms occuring in types)
+  %struct deptypes : DepFun = {
+    %struct domain := KindsTypesTerms..types.
+    %struct scope  := KindsTypesTerms..types.
+  }.
+
+  %% dependent kinds (terms occuring in kinds)
+  %struct depkinds : DepFun = {
+    %struct domain := KindsTypesTerms..types.
+    %struct scope  := KindsTypesTerms..kinds.
+  }.
+}.
+
+%% inclusion of simple type theory into dependent type theory
+%view SimpToDep : SimpFun -> LambdaP = {
+  %struct level := KindsTypesTerms..types.
+  =>   := [A : tp][B : tp] A deptypes.=> B.
+  lam  := [A : tp][B : tp][f : tm A -> tm B] deptypes.lam ([x : tm A] f x).
+  @    := [A : tp][B : tp][f : tm deptypes.Pi [x : tm A] B][x : tm A] (f deptypes.@ x).
+  beta := [B][A][F][T : tm A] deptypes.beta.
+}.
+
+%% Barendregt's lambda weak omega
+%sig LambdaOmega_ = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+  
+  %% simple function types
+  %struct funtypes : SimpFun = {%struct level := KindsTypesTerms..types.}.
+
+  %% simple function kinds (type operators)
+  %struct funkinds : SimpFun = {%struct level := KindsTypesTerms..kinds.}.
+
+  %% conversion rule
+  %% has_tp : star -> tm A -> o.
+  %% conv   : {A : tm B} {B' : star} true B === B' -> true (has_tp B' A).
+}.
+
+%% Barendregt's lambda P 2
+%sig LambdaP2 = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+
+  %struct lp   : LambdaP.
+  %struct l2   : Lambda2 = {%include TypesToTypes. %struct fun := SimpToDep lp.}.
+}.
+
+%% Barendregt's lambda omega: system F omega
+%sig LambdaOmega = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+
+  %struct lw_  : LambdaOmega_.
+  %struct l2   : Lambda2 = {%include TypesToTypes. %struct fun := lw_.funtypes.}.
+}.
+
+%% Barendregt's lambda P weak omega
+%sig LambdaPOmega_ = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+
+  %struct lp   : LambdaP.
+  %struct lw_  : LambdaOmega_ = {%struct funtypes := SimpToDep lp.}.
+}.
+
+%% Barendregt's lambda P omega: calculus of constructions (e.g., Coq)
+%sig LambdaPomega = {
+  %include KindsTypesTerms   %open kd tf === tp tm ==.
+
+  %struct lp   : LambdaP.
+  %struct lw_  : LambdaOmega_ = {%struct funtypes := SimpToDep lp.}.
+  %struct l2   : Lambda2 = {%include TypesToTypes. %struct fun := SimpToDep lp.}.
+}.

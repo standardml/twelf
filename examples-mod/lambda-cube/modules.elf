@@ -1,0 +1,65 @@
+%% Some orthogonal features of type theories occurring in the lambda cube
+%% Fulya Horozal, Florian Rabe
+
+%read "base.elf".
+
+%% generalized simple abstraction
+%sig SimpFun = {
+  
+  %% the level at which abstraction occurs (e.g., type-level for simple function types)
+  %struct level : Level %open cl exp ==.
+
+  %% formation
+  =>   : cl -> cl -> cl.                        %infix right 100 =>.
+
+  %% introduction
+  lam  : (exp A -> exp B) -> exp A => B.
+
+  %% elimination
+  @    : exp A => B -> exp A -> exp B.          %infix left 100 @.
+
+  %% conversion
+  beta : (lam F) @ T == F T.
+}.
+
+%% generalized dependent abstraction
+%sig DepFun = {
+  %% the level of the bound variables (e.g., type-level for typed variables)
+  %struct domain : Level.
+  %% the level of the scope (e.g., types or kinds)
+  %struct scope : Level.
+
+  %% formation
+  Pi   : (domain.exp A -> scope.cl) -> scope.cl.                                         %prefix 100 Pi.
+
+  %% introduction 
+  lam  : ({x : domain.exp A} scope.exp B x) -> scope.exp Pi  [x : domain.exp A] B x.
+
+  %% elimination
+  @    : scope.exp (Pi  [x : domain.exp A] B x) -> {a : domain.exp A} scope.exp B a.     %infix left 100 @.
+    
+  %% conversion
+  beta : (lam F) @ T scope.== F T.
+
+  %% non-dependent formation
+  =>   : domain.cl -> scope.cl -> scope.cl = [A][B] Pi ([x : domain.exp A] B).           %infix right 50 =>.
+}.
+
+%% generalized universal types
+%sig Universal = {
+  
+  %% the level of the universal (e.g., type-level for universal types)
+  %struct level : Level %open cl exp ==.
+
+  %% formation
+  !   : (cl -> cl) -> cl.
+
+  %% introduction
+  lam : ({a : cl} exp A a) -> exp ! [a] A a. 
+
+  %% elimination
+  @   : exp ! ([a : cl] A a) -> {B : cl} exp A B.  %infix left 100 @.
+
+  %% conversion
+  beta : (lam F) @ T == F T.
+}.

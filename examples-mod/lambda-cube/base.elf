@@ -1,0 +1,45 @@
+%% Base signatures used for the Lambda Cube
+%% Fulya Horozal, Florian Rabe
+
+%% the base signature for a level of a type theory encoded using intrinsic typing
+%sig Level = {
+
+  %% classifiers
+  cl  : type.
+
+  %% expressions of a classifier
+  exp : cl -> type.               %prefix 0 exp.
+  
+  %% equality of expression
+  == : exp A -> exp A -> type.    %infix none 50 ==.
+}.
+
+%% two-levelled type theory: classifiers are types, expressions are terms
+%sig TypesTerms = {
+  %struct types  : Level  %open cl  %as tp
+                                exp %as tm
+                                ==.
+}.
+
+%% three-levelled type theory:
+%% - kind-level classifiers are kinds, expressions are type families
+%% - type-level classifiers are type families of kind tp', expressions are terms
+%sig KindsTypesTerms = {
+
+  %% kinds and type families
+  %struct kinds : Level  %open cl  %as kd
+                               exp %as tf
+                               == %as ===.
+  %% the kind of types
+  tp' : kd.
+  
+  %% types and terms
+  %struct types : Level = {cl := tf tp'.} %open cl  %as tp
+                                                exp %as tm
+                                                ==.
+}.
+
+%% the inclusion from two-levelled to three-levelled type theory
+%view TypesToTypes : TypesTerms -> KindsTypesTerms = {
+  %struct types := types.
+}.
