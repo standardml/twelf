@@ -1,5 +1,4 @@
-structure Elab : ELAB =
-struct
+functor Elab (structure Print : PRINT) : ELAB = struct
   structure I = IntSyn
   structure M = ModSyn
   
@@ -388,8 +387,16 @@ struct
                        (* if existing definitions are overridden, equality must be checked *)
                        if checkEqual(defold, def)
                        then normalize def
-                       else raise Error("clash between instantiation and translation of existing definiton for constant " ^
-                                         M.symFoldName c')
+                                   else let
+                                   	   val def'Str = Print.expToString(I.Null, def')
+                                   	   val defStr = Print.expToString(I.Null, def)
+                                   	   val defoldStr = Print.expToString(I.Null, defold)
+                                   	 in
+                                   	   raise Error("definition/instantiation clash for " ^ M.symFoldName c' ^
+                                   	            "\ndefinition: " ^ def'Str ^
+                                   	            "\ntranslation of definition: " ^ defoldStr ^
+                                   	            "\ninstantiation: " ^ defStr)
+                                   	 end
                     | NONE => normalize defold
                  val _ = if checkType(defnew, typ)
                          then ()
@@ -474,7 +481,16 @@ struct
                                  | SOME defDom =>
                                    if checkEqual(applyMorph(defDom, M.MorView viewID), defCod)
                                    then ()
-                                   else raise Error("clash between induced instantiation and translation of existing definition of " ^ M.symFoldName c)
+                                   else let
+                                   	   val defDomStr = Print.expToString(I.Null, defDom)
+                                   	   val defCodStr = Print.expToString(I.Null, defCod)
+                                   	   val defDomTransStr = Print.expToString(I.Null, applyMorph(defDom, M.MorView viewID))
+                                   	 in
+                                   	   raise Error("definition/instantiation clash for " ^ M.symFoldName c ^
+                                   	            "\ndefinition: " ^ defDomStr ^
+                                   	            "\ntranslation of definition: " ^ defDomTransStr ^
+                                   	            "\ninstantiation: " ^ defCodStr)
+                                   	 end
                    in
                       installInst(M.ConInst(c, defCod))
                    end

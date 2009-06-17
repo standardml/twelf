@@ -8,5 +8,7 @@ is
   ../global/sources.cm
   ../lambda/sources.cm
   ../typecheck/sources.cm
+  ../print/sources.cm
   elab.sig
   elab.fun
+  elab.sml
