@@ -387,16 +387,16 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                        (* if existing definitions are overridden, equality must be checked *)
                        if checkEqual(defold, def)
                        then normalize def
-                                   else let
-                                   	   val def'Str = Print.expToString(I.Null, def')
-                                   	   val defStr = Print.expToString(I.Null, def)
-                                   	   val defoldStr = Print.expToString(I.Null, defold)
-                                   	 in
-                                   	   raise Error("definition/instantiation clash for " ^ M.symFoldName c' ^
-                                   	            "\ndefinition: " ^ def'Str ^
-                                   	            "\ntranslation of definition: " ^ defoldStr ^
-                                   	            "\ninstantiation: " ^ defStr)
-                                   	 end
+                          else let
+                             val pdef' = Print.expToString(I.Null, def')
+                             val pdef = Print.expToString(I.Null, def)
+                             val pdefold = Print.expToString(I.Null, defold)
+                          in
+                             raise Error("definition/instantiation clash for " ^ M.symFoldName c' ^
+                                       "\ndefinition: " ^ pdef' ^
+                                       "\ntranslation of definition: " ^ pdefold ^
+                                   	   "\ninstantiation: " ^ pdef)
+                          end
                     | NONE => normalize defold
                  val _ = if checkType(defnew, typ)
                          then ()
