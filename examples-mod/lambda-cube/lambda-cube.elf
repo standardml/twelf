@@ -3,6 +3,9 @@
 
 %read "modules.elf".
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The base corner of the cube - simple function types are the only feature.
+
 %% Barendregt's lambda arrow: simple type theory
 %sig LambdaArrow = {
   %include TypesTerms   %open tp tm ==.
@@ -10,6 +13,9 @@
   %% simple function types
   %struct fun  : SimpFun = {%struct level := TypesTerms..types.}. 
 }.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The first triple of corners - extensions of the base corner.
 
 %% Barendregt's lambda 2: second order type theory, system F
 %sig Lambda2 = {
@@ -40,6 +46,7 @@
 }.
 
 %% inclusion of simple type theory into dependent type theory
+%% (proof that LambdaP implements SimpFun indirectly)
 %view SimpToDep : SimpFun -> LambdaP = {
   %struct level := KindsTypesTerms..types.
   =>   := [A : tp][B : tp] A deptypes.=> B.
@@ -58,6 +65,9 @@
   %% simple function kinds (type operators)
   %struct funkinds : SimpFun = {%struct level := KindsTypesTerms..kinds.}.
 }.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The second triple of corners - combinations of two other corners sharing SimpFun
 
 %% Barendregt's lambda P 2
 %sig LambdaP2 = {
@@ -82,6 +92,9 @@
   %struct lp   : LambdaP.
   %struct lw_  : LambdaOmega_ = {%struct funtypes := SimpToDep lp.}.
 }.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The last corner - combining all features
 
 %% Barendregt's lambda P omega: calculus of constructions (e.g., Coq)
 %sig LambdaPomega = {
