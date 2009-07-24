@@ -36,6 +36,7 @@ sig
     | COMPILE                           (* '%compile' *) (* -ABP 4/4/03 *)
     | QUERYTABLED			(* `%querytabled' *)
     | MODE				(* `%mode' *)
+    | SEARCH				(* `%search' *)
     | UNIQUE				(* `%unique' *) (* -fp 8/17/03 *)
     | COVERS				(* `%covers' *) (* -fp 3/7/01 *)
     | TOTAL				(* `%total' *) (* -fp 3/18/01 *)

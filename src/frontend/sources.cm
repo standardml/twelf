@@ -35,6 +35,10 @@ Library
   structure StyleCheck
   signature INTERACTIVE
   structure Interactive
+  (* STM *) 
+  structure ModeTable
+  structure ModeSyn
+  structure Print
 is
 #if defined(NEW_CM)
   $/basis.cm
