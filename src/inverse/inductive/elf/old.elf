@@ -1,0 +1,56 @@
+
+%theorem
+plus/ass : forall* {X : nat} {Y : nat}{Z : nat}
+           forall {D : {X}{Y}{Z} plus X Y Z -> plus Y X Z}
+            exists {D' : {X}{Y}{Z} plus X Y Z -> plus Y X Z}
+            true.
+%prove 2 D (plus/ass D _).
+
+pluszr : {X} plus X z X -> type.
+%mode pluszr +X -D.
+
+- : pluszr z (plus/z z).
+- : {X'}{IH} (pluszr (s X') (plus/s X' z X' IH)
+                <- pluszr X' IH).
+
+%worlds () (pluszr _ _).
+%total X (pluszr X _).
+
+% ------------------------------------------------------------------------------
+%  Reverse                                                                      
+% ------------------------------------------------------------------------------
+
+rev : list N -> list M -> list K -> plus N M K -> type.
+%mode rev +L1 +L2 -L3 -D.
+
+rev/nil : rev nil L L (plus/z _).
+rev/cons : rev (cons X (L1 : list N1)) (L2 : list N2) L3 D'
+            <- rev L1 (cons X L2 : list (s N2)) (L3 : list N3) (D : plus N1 (s N2) N3)
+            <- plus/ss D (D' : plus (s N1) N2 N3).
+
+rev/can : {L1}{L2} rev L1 L2 L3 D -> type.
+%mode rev/can +L1 +L2 -D.
+
+- : rev/can nil L2 rev/nil.
+- : rev/can 
+     (cons X (L1 : list N1)) 
+     (L2 : list N2) 
+     (rev/cons  E)
+%     (E : rev (cons X L1 : list (s N1)) L2 L3 (D' : plus (s N1) N2 N3))
+     <- rev/can L1 (cons X L2) (E : rev L1 (cons X L2) (L3 : list N3) 
+                                     (D : plus N1 (s N2) N3))
+     <- plus/ss D D'.
+
+% ------------------------------------------------------------------------------
+%  Append                                                                       
+% ------------------------------------------------------------------------------
+
+app : list N -> list M -> list K -> plus N M K -> type. 
+%mode app +L1 +L2 -L3 -D.
+
+app/nil : app nil L L (plus/z _).
+app/cons : app (cons X (L1 : list N1)) (L2 : list N2) (cons X L3) (plus/s D)  
+            <- app L1 L2 (L3 : list N3) D.
+
+%worlds () (app _ _ _ _).
+%total L1 (app L1 _ _ _).

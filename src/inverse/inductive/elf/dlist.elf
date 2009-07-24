@@ -1,0 +1,274 @@
+
+% ==============================================================================
+%  Lists                                                                         
+% ==============================================================================
+
+list : nat -> type.
+%name list L.
+
+nil : list z.
+cons : nat -> list N -> list (s N).
+
+% ------------------------------------------------------------------------------
+%  Equality                                                                     
+% ------------------------------------------------------------------------------
+
+eq : list N -> list N -> type.
+eq/refl : eq L L.
+
+eq/symm : eq L1 L2 -> eq L2 L1 -> type.
+%mode eq/symm +L1 -L2.
+
+- : eq/symm eq/refl eq/refl.
+
+%worlds () (eq/symm _ _).
+%total D (eq/symm D _).
+
+eq/trans : eq L1 L2 -> eq L2 L3 -> eq L1 L3 -> type.
+%mode eq/trans +L1 +L2 -L3.
+
+- : eq/trans eq/refl eq/refl eq/refl.
+
+%worlds () (eq/trans _ _ _).
+%total D (eq/trans D _ _).
+
+eq/cong : {E} eq L1 L2 -> eq (cons E L1) (cons E L2) -> type.
+%mode eq/cong +E +D1 -D2.
+
+- : eq/cong _ eq/refl eq/refl.
+
+%worlds () (eq/cong _ _ _).
+%total D (eq/cong _ D _).
+
+% ------------------------------------------------------------------------------
+%  Reverse                                                                      
+% ------------------------------------------------------------------------------
+
+rev : list N -> list M -> list K -> type.
+
+rev/nil : rev nil L L.
+rev/cons : rev (cons X L1) L2 L3
+            <- rev L1 (cons X L2) L3.
+
+rev/size : rev (L1 : list N1) (L2 : list N2) (L3 : list N3) -> plus N1 N2 N3 -> type.
+%mode rev/size +D -E.
+
+- : rev/size rev/nil (plus/z _).
+- : rev/size (rev/cons (D : rev L1 (cons X L2) L3)) E'
+     <- rev/size D (E : plus N1 (s N2) N3)
+     <- plus/ss E E'.
+
+%worlds () (rev/size _ _).
+%total D (rev/size D _).
+
+rev/can : {L1 : list N1}{L2 : list N2} plus N1 N2 N3 -> rev L1 L2 (L3 : list N3) -> type.
+%mode rev/can +L1 +L2 +P -D.
+
+- : rev/can nil L2 (plus/z N2) rev/nil.
+- : rev/can (cons X (L1 : list N1)) (L2 : list N2) (P : plus (s N1) N2 N3) (rev/cons D)
+     <- plus/ss' P P'
+     <- rev/can L1 (cons X L2) P' D.
+
+%worlds () (rev/can _ _ _ _).
+%total L1 (rev/can L1 _ _ _).
+
+rev/eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> rev L1 L3 L5 -> rev L2 L4 L6 -> type.
+%mode rev/eq +E1 +E2 +E3 +R1 -R2.
+
+- : rev/eq eq/refl eq/refl eq/refl R R.
+
+%worlds () (rev/eq _ _ _ _ _).
+%total {} (rev/eq _ _ _ _ _).
+
+rev-determ : rev Ls Ls' Ls3 -> rev Ls Ls' Ls4 -> eq Ls3 Ls4 -> type.
+%mode rev-determ +R +R' -Q.
+
+- : rev-determ rev/nil _ eq/refl.
+- : rev-determ (rev/cons R) (rev/cons R') Q
+         <- rev-determ R R' Q.
+
+%worlds () (rev-determ _ _ _).
+%freeze rev-determ.
+%total D (rev-determ D _ _).
+
+revrev-id-lem : rev Ls Ls' Ls'' -> rev Ls'' nil Ls4 -> rev Ls' Ls Ls6 -> eq Ls6 Ls4 -> type.
+%mode revrev-id-lem +R +R' +R'' -Q.
+
+- : revrev-id-lem rev/nil F F' Q
+     <- rev-determ F' F Q.
+- : revrev-id-lem (rev/cons R) R' R'' Q
+     <- revrev-id-lem R R' (rev/cons R'') Q.
+
+%worlds () (revrev-id-lem _ _ _ _).
+%freeze revrev-id-lem.
+%total D (revrev-id-lem D _ _ _).
+
+revrev-id : rev L1 nil L2 -> rev L2 nil L1 -> type.
+%mode revrev-id +R -R'.
+
+- : revrev-id (R : rev (L1 : list N1) nil (L2 : list N2)) (R' : rev L2 nil L1)
+     <- rev/size R (P : plus N1 z N2)
+     <- plus/sz P (P' : plus N2 z N1)
+     <- rev/can L2 nil P' (R1 : rev L2 nil (L3 : list N1))
+     <- revrev-id-lem R R1 rev/nil (E : eq L1 L3)
+     <- eq/symm E (E' : eq L3 L1)
+     <- rev/eq eq/refl eq/refl E' R1 R'.
+
+%worlds () (revrev-id _ _).
+%freeze revrev-id.
+%total {} (revrev-id _ _).
+
+rev-injective : rev Ls nil Ls' -> rev Ls'' nil Ls' -> eq Ls Ls'' -> type.
+%mode rev-injective +R +R' -Q.
+- : rev-injective (R : rev Ls nil Ls') R' Q
+      <- revrev-id R R1
+      <- revrev-id R' R1'
+      <- rev-determ R1 R1' Q.
+%worlds () (rev-injective _ _ _).
+%freeze rev-injective.
+%total D (rev-injective D _ _).
+
+% ------------------------------------------------------------------------------
+%  Append                                                                       
+% ------------------------------------------------------------------------------
+
+append : list N -> list M -> list K -> type.  
+%name append A.
+
+append/nil : append nil L L.
+append/cons : append (cons E L1) L2 (cons E L3)
+     <- append L1 L2 L3.
+
+% can-append : {L1 : list N1}{L2 : list N2} plus N1 N2 N3 -> append L1 L2 (L3 : list N3) -> type.
+% %mode can-append +L1 +L2 +P -A.
+
+% - : can-append nil L (plus/z N2) append/nil.
+
+% 
+% - : can-append (cons E L1) L2 (append/cons A)
+%      <- can-append L1 L2 A.
+
+% %worlds () (can-append _ _ _).
+% %total D (can-append D _ _).
+
+append-eq : eq L1 L2 -> eq L3 L4 -> eq L5 L6 -> append L1 L3 L5 -> append L2 L4 L6 -> type.
+%mode append-eq +E1 +E2 +E3 +A1 -A2.
+
+- : append-eq eq/refl eq/refl eq/refl A A.
+
+%worlds () (append-eq _ _ _ _ _).
+%total {} (append-eq _ _ _ _ _).
+
+append-eq-nil : {L1} append L1 nil L1 -> type.
+%mode append-eq-nil +L -A.
+
+- : append-eq-nil nil append/nil.
+- : append-eq-nil (cons E L) (append/cons A) 
+     <- append-eq-nil L A.
+
+%worlds () (append-eq-nil _ _).
+%total D (append-eq-nil D _).
+
+append-eq-nil : append L1 nil L2 -> eq L1 L2 -> type.
+%mode append-eq-nil +A -E.
+
+- : append-eq-nil append/nil eq/refl.
+- : append-eq-nil (append/cons A) E
+     <- append-eq-nil A E1
+     <- eq/cong _ E1 E.
+%worlds () (append-eq-nil _ _).
+%total D (append-eq-nil D _).
+
+append-determ : append L1 L2 L3 -> append L1 L2 L4 -> eq L3 L4 -> type.
+%mode append-determ +A1 +A2 -E.
+
+- : append-determ append/nil append/nil eq/refl.
+- : append-determ (append/cons A1) (append/cons A2) E
+       <- append-determ A1 A2 E2
+       <- eq/cong _ E2 E.
+
+%worlds () (append-determ _ _ _).
+%total D (append-determ D _ _).
+
+append-assoc1 : append L1 L2 L3
+                 -> append L3 L4 L5 
+                 -> append L2 L4 L6
+                 -> append L1 L6 L5 -> type.
+
+%mode append-assoc1 +A1 +A2 -A3 -A4.
+
+- : append-assoc1 append/nil A1 A1 append/nil.
+- : append-assoc1 (append/cons A1) (append/cons A2) A3 (append/cons A4)
+     <- append-assoc1 A1 A2 A3 A4.
+
+%worlds () (append-assoc1 _ _ _ _).
+%total D (append-assoc1 D _ _ _).
+
+% append-assoc2 : append L1 L2 L3 
+%                  -> append L3 L4 L5
+%                  -> append L2 L4 L6
+%                  -> append L1 L6 L7
+%                  -> eq L5 L7 -> type.
+
+% %mode append-assoc2 +A1 +A2 +A3 +A4 -E.
+
+% - : append-assoc2
+%      (A1 : append (L1 : list N1) (L2 : list N2) (L3 : list N3))
+%      (A2 : append L3 (L4 : list N4) (L5 : list N5))
+%      (A3 : append L2 L4 (L6 : list N6))
+%      (A4 : append L1 L6 (L7 : list N7))
+%      E
+%      <- append-assoc1 A1 A2 (A3' : append L2 L4 (L6' : list N6')) (A4' : append L1 L6' L5)
+%      <- append-determ A3 A3' (eq/refl : eq L6 L6')
+%      <- append-eq eq/refl E3 eq/refl A4 (A4'' : append L1 L6' L7)
+%      <- append-determ A4' A4'' (E : eq L5 L7).
+
+% %worlds () (append-assoc2 _ _ _ _ _).
+% %total {} (append-assoc2 _ _ _ _ _).
+
+append-rev1 : append L1 L2 L3 -> rev L1 L4 L5 -> rev L2 L5 L6 -> rev L3 L4 L6 -> type.
+%mode append-rev1 +A +R1 +R2 -R3.
+
+- : append-rev1 append/nil rev/nil R R.
+- : append-rev1 (append/cons A) (rev/cons R1) R3 (rev/cons R2) 
+ <- append-rev1 A R1 R3 R2.
+
+%worlds () (append-rev1 _ _ _ _).
+%total D (append-rev1 D _ _ _).
+
+append-rev2 : rev L1 L2 L3
+               -> append L2 L4 L5
+               -> append L3 L4 L6 
+               -> rev L1 L5 L6 -> type.
+
+%mode append-rev2 +R +A +A' -R'.
+
+- : append-rev2 rev/nil A1 A2 R
+  <- append-determ A1 A2 E
+  <- rev/eq eq/refl eq/refl E rev/nil R.
+
+- : append-rev2 (rev/cons R) A1 A2 (rev/cons R2)
+  <- append-rev2 R (append/cons A1) A2 R2.
+
+%worlds () (append-rev2 _ _ _ _).
+%total D (append-rev2 D _ _ _).
+
+%.
+
+append-rev : rev L1 L2 L3 -> rev LA LB LC -> append LC L3 LT -> rev L2 L1 L3' -> 
+             rev LB LA LC' -> append L3' LC' LT' -> rev LT' nil LT -> type.
+%mode append-rev +R1 +R2 +A1 +R3 +R4 +A2 -R3.
+
+- : append-rev R1 (rev/cons R2) A1 R3 R4 A2 R5
+    <- append-rev R1 R2 A1 R3 (rev/cons R4) A2 R5.
+
+- : append-rev (rev/cons R1) rev/nil A1 R2 R3 A2 R5
+    <- append-rev R1 rev/nil A1 (rev/cons R2) R3 A2 R5.
+
+- : append-rev rev/nil rev/nil A1 R3 R4 A2 R5
+  <- append-rev2 R3 append/nil A2 RC
+  <- append-rev1 A1 R4 RC RB 
+  <- revrev-id RB R5.
+
+%worlds () (append-rev _ _ _ _ _ _ _).
+%total [D E] (append-rev E D _ _ _ _ _).

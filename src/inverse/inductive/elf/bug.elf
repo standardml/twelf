@@ -1,0 +1,13 @@
+
+
+nat : type.
+%freeze nat.
+
+list : nat -> type.
+%freeze list.
+
+rev : {M} list N -> list M -> type.
+%freeze rev.
+
+rev/can : {L1 : list N}{L2 : list M} rev _ L1 L2 -> type.
+

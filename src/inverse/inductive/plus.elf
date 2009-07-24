@@ -1,0 +1,22 @@
+
+nat : type.
+%name nat N.
+
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+plus/z : {X} plus z X X.
+plus/s : plus X Y Z -> plus (s X) Y (s Z).
+
+plus-z : {X} plus X z X -> type.
+%mode plus-z +X -D.
+
+- : plus-z z (plus/z z).
+- : plus-z (s X) (plus/s D)
+     <- plus-z X D.
+
+%worlds () (plus-z _ _).
+%total X (plus-z X _).
+
+%.

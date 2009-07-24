@@ -1,0 +1,6 @@
+%theorem gt+ : 
+   forall* {X : nat}{Y : nat} 
+   forall {D : gt X Y} 
+   exists {Z : nat}{E : plus Y Z X} 
+   true. %prove 2 D (gt+ D _ _).  
+

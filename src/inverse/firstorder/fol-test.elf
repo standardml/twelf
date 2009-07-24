@@ -30,4 +30,5 @@ b : i.
 %imogen (nd (p <=> p)).
 %imogen (nd (! [X] $true)).
 %imogen (nd (! [X] (p1 X => p1 X))).
+%imogen (nd $false).
 

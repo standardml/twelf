@@ -1,0 +1,27 @@
+
+nat : type.
+
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+
+plus/z : {X : nat} plus z X X.
+plus/s : plus X Y Z -> plus (s X) Y (s Z).
+
+plus/z' : {X} plus X z X -> type.
+%mode plus/z' +X -D.
+%search X (plus/z' X _).
+
+plus/s' : plus X Y Z -> plus X (s Y) (s Z) -> type.
+%mode plus/s' +D1 -D2.
+%search D (plus/s' D _).
+
+plus/c : plus X Y Z -> plus Y X Z -> type
+%mode plus/c +D1 -D2.
+%search D (plus/s' D _) [plus/z' plus/s'].
+
+
+
+
+

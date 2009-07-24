@@ -1,0 +1,93 @@
+
+nat : type.
+%name nat N.
+
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+plus/z : {X} plus z X X.
+plus/s : plus X Y Z -> plus (s X) Y (s Z).
+
+plus-z : {X} plus X z X -> type.
+%mode plus-z +X -D.
+
+- : plus-z z (plus/z z).
+- : plus-z (s X) (plus/s D)
+     <- plus-z X D.
+
+%worlds () (plus-z _ _).
+%total X (plus-z X _).
+
+% plus/can : {X}{Y} plus X Y Z -> type.
+% %mode plus/can +X +Y -D.
+
+% - : plus/can z Y (plus/z Y).
+% - : plus/can (s X) Y (plus/s D)
+%      <- plus/can X Y D.
+
+% %worlds () (plus/can _ _ _).
+% %total X (plus/can X _ _).
+
+plus/can : {X}{Y}{Z} plus X Y Z -> type.
+%mode +{X:nat} +{Y:nat} -{Z:nat} -{D:plus X Y Z} (plus/can X Y Z D).
+
+% plus/can : {X}{Y} plus X Y Z -> type.
+% mode +{X:nat} +{Y:nat} -{Z:nat} -{D:plus X Y Z} (plus/can X Y D).
+
+
+plus/sr : plus X Y Z -> plus X (s Y) (s Z) -> type.
+%mode plus/sr +D1 -D2.
+
+- : plus/sr (plus/z N) (plus/z (s N)).
+- : plus/sr (plus/s D) (plus/s D') 
+     <- plus/sr D D'.
+
+%worlds () (plus/sr _ _).
+%total D (plus/sr D _).
+
+plus/c : plus X Y Z -> plus Y X Z -> type.
+%mode plus/c +D1 -D2.
+
+- : plus/c (plus/z X) D
+     <- (plus-z X D).
+- : plus/c (plus/s D) E'
+     <- plus/c D E
+     <- plus/sr E E'.
+
+%worlds () (plus/c _ _).
+%total D (plus/c D _).
+
+p : o.
+
+%imogen (nd (p => p)).
+
+%.
+plus/ss : plus N (s M) K -> plus (s N) M K -> type.
+%mode plus/ss +D1 -D2.
+
+- : plus/ss (plus/z (s M) : plus z (s M) (s M)) (plus/s (plus/z M)).
+- : plus/ss (plus/s (D : plus N (s M) K)) (plus/s D' : plus (s (s N)) M (s K))
+     <- plus/ss D (D' : plus (s N) M K).
+
+%worlds () (plus/ss _ _).
+%total D (plus/ss D _).
+
+plus/ss' : plus (s N) M K -> plus N (s M) K -> type.
+%mode plus/ss' +D1 -D2.
+
+- : plus/ss' (plus/s (D : plus N M K)) (D' : plus N (s M) (s K))
+     <- plus/sr D D'.
+
+%worlds () (plus/ss' _ _).
+%total D (plus/ss' D _).
+
+plus/sz : plus N z M -> plus M z N -> type.
+%mode plus/sz +D1 -D2.
+
+- : plus/sz (plus/z _) (plus/z _).
+- : plus/sz (plus/s D) (plus/s D') 
+     <- plus/sz D D'.
+
+%worlds () (plus/sz _ _).
+%total D (plus/sz D _).

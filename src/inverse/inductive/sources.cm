@@ -1,0 +1,23 @@
+
+Library 
+
+structure TwelfUtil
+structure Frame
+
+is 
+
+$/basis.cm
+sml-ext.cm
+../util/sources.cm
+../fol/formulas/sources.cm
+../fol/proofterms/sources.cm
+../twelf/sources.cm
+../framework/sources.cm
+../fol/sources.cm
+
+twelf-util.sig
+twelf-util.sml
+
+(* frame.sig *)
+(* frame.sml *)
+(* ind.sml *)

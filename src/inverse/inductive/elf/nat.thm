@@ -1,0 +1,55 @@
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+plus/z : {X} plus z X X.
+plus/s : plus X Y Z -> plus (s X) Y (s Z).
+
+gt : nat -> nat -> type.
+gt/z : {X} gt (s X) z.
+gt/s : gt X Y -> gt (s X) (s Y).
+
+%theorem
+pluszr : forall {X : nat}
+         exists {D : plus X z X}
+         true.
+%prove 2 X (pluszr X _).
+
+%theorem
+plus/eff : forall {X : nat} {Y : nat}
+            exists {Z : nat} {D : plus X Y Z}
+            true.
+%prove 2 X (plus/eff X _ _ _).
+
+%theorem
+plussr : forall* {X : nat}{Y : nat}{Z : nat}
+         forall {D : plus X Y Z}
+         exists {D' : plus X (s Y) (s Z)}
+         true.
+%prove 2 D (plussr D _).
+
+%theorem
+plusc : forall* {X : nat} {Y : nat}{Z : nat}
+        forall {D : plus X Y Z}
+        exists {D' : plus Y X Z}
+        true.
+%prove 2 D (plusc D _).
+
+%theorem 
+gt+ : forall* {X : nat}{Y : nat}
+      forall {D : gt X Y}
+      exists {Z : nat}{E : plus Y Z X}
+      true.
+%prove 2 D (gt+ D _ _).
+
+gt++ : gt X Y -> {Z} plus Y Z X -> type.
+%mode gt++ +D -Z -E.
+
+- : gt++ (gt/z X) (s X) (plus/z (s X)).
+- : gt++ (gt/s D) Z (plus/s E)
+     <- gt++ D Z E.
+
+%worlds () (gt++ _ _ _).
+%total D (gt++ D _ _).
