@@ -1,2 +1,3 @@
 
 imogen https://cvs.concert.cs.cmu.edu/self/invlf/trunk/src
+sml-ext -r 648 http://sml-ext.googlecode.com/svn/trunk
