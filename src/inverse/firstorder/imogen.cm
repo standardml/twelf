@@ -1,0 +1,21 @@
+
+Library 
+
+structure Twelf
+structure IntSyn
+structure Paths
+structure Parser
+structure Lexer
+structure Server
+
+structure Imogen
+
+is 
+
+$/basis.cm
+(* ../../twelf/sources.cm *)
+../../twelf/src/frontend/sources.cm
+../../twelf/src/paths/sources.cm
+../../twelf/src/server/sources.cm
+
+imogen.sml

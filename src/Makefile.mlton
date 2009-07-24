@@ -1,0 +1,51 @@
+# -*- Mode: Makefile -*-
+
+# Note: The calling Makefile should define TWELF_HOME
+
+# ------------------------------------------------------------------------------
+#  MLton                                                                        
+# ------------------------------------------------------------------------------
+
+# Home of mlton, mllex, mlyacc
+MLTON_DIR := $(dir $(shell which mlton))
+
+PATH_MAP := $(TWELF_HOME)/twelf.map
+
+# ------------------------------  MLton options  -------------------------------
+
+# Profiling
+PROFILE := # -const 'Exn.keepHistory true' 
+# -const 'Exn.keepHistory true' 
+# -profile count 
+# -profile alloc
+# -profile time -profile-stack true
+
+MLB_PATH_MAP = -mlb-path-map $(PATH_MAP)
+
+# Warn if profiling is on.  Profiling slows down the computations
+.PHONY : check_profile
+check_profile : 
+ifneq ($(strip $(PROFILE)),)
+	@echo ""
+	@echo "!!! Warning: Profiling is ON !!! : " $(PROFILE)
+	@echo ""
+endif
+
+DEF_USE := -show-def-use .mlton.du -prefer-abs-paths true 
+
+DEFAULTS := \
+-default-ann 'allowFFI false' \
+-default-ann 'nonexhaustiveMatch warn' \
+-default-ann 'nonexhaustiveExnMatch default' \
+-default-ann 'redundantMatch error' \
+-default-ann 'sequenceNonUnit warn' \
+-default-ann 'warnUnused true' \
+-default-ann 'forceUsed'
+
+# verbose
+VERBOSE := -verbose 1
+
+# MLton options
+MLTON_OPTS = $(VERBOSE) $(PROFILE) $(DEF_USE) $(MLB_PATH_MAP) $(DEFAULTS) 
+
+MLTON = $(MLTON_DIR)mlton $(MLTON_OPTS) 

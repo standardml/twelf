@@ -1,0 +1,43 @@
+
+nat : type.
+
+z : nat.
+s : nat -> nat.
+
+plus : nat -> nat -> nat -> type.
+plus/z : plus z X X.
+plus/s : plus X Y Z -> plus (s X) Y (s Z).
+
+pluszr : {N} plus N z N -> type.
+%mode pluszr +N -D.
+%imogen/prove N (pluszr N D).
+
+% - : pluszr z plus/z.
+% - : pluszr (s X) (plus/s D)
+%      <- pluszr X D.
+% %worlds () (pluszr _ _).
+% %total X (pluszr X _).
+
+plussr : plus X Y Z -> plus X (s Y) (s Z) -> type.
+%mode plussr +D -E.
+
+- : plussr plus/z plus/z.
+- : plussr (plus/s (D : plus X Y Z)) (plus/s E)
+     <- plussr D E.
+
+%worlds () (plussr _ _).
+%total X (plussr X _).
+
+plusC : plus X Y Z -> plus Y X Z -> type.
+%mode plusC +D -E.
+
+- : plusC plus/z D
+     <- pluszr _ D.
+- : plusC (plus/s (D : plus X Y Z)) E
+     <- plusC D D'
+     <- plussr D' E.
+
+%worlds () (plusC _ _).
+%total X (plusC X _).
+
+

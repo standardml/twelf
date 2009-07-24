@@ -1,9 +1,9 @@
 
 default : check
 
-IMOGEN_HOME = ../../..
+TWELF_HOME = ..
 
-include $(IMOGEN_HOME)/Makefile.global
+include $(TWELF_HOME)/Makefile.mlton
 
 check : sources.mlb
 	$(MLTON) -stop tc $<

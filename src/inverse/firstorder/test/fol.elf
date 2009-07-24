@@ -1,0 +1,37 @@
+
+i : type.
+o : type.
+nd : o -> type.
+
+$true : o.
+unit : nd $true.
+
+$false : o.
+abort : nd $false -> nd A.
+
+=> : o -> o -> o.  %infix right 9 =>.
+lam : (nd A -> nd B) -> nd (A => B).
+app : nd (A => B) -> nd A -> nd B.
+
+& : o -> o -> o.  %infix right 11 &.
+pair : nd A -> nd B -> nd (A & B).
+fst : nd (A & B) -> nd A.
+snd : nd (A & B) -> nd B.
+
+|  : o -> o -> o.  %infix right 10 |.
+inl : nd A -> nd (A | B).
+inr : nd B -> nd (A | B).
+case : nd (A | B) -> (nd A -> nd C) -> (nd B -> nd C) -> nd C.
+
+! : (i -> o) -> o. 
+qlam : ({i} nd (A i)) -> nd (! [X] A X).
+qapp : nd (! [X] A X) -> {i} nd (A i).
+
+? : (i -> o) -> o. 
+pack : {i} nd (A i) -> nd (? [X] A X).
+unpack : nd (? [X] A X) -> ({i} nd (A i) -> nd C) -> nd C.
+
+~ : o -> o = [A] A => $false.
+<=> : o -> o -> o = [A] [B] (A => B) & (B => A). %infix right 8 <=>.
+
+

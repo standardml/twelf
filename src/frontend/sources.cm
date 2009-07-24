@@ -74,10 +74,10 @@ is
   ../prover/sources.cm
   ../flit/sources.cm
   ../msg/sources.cm
-  ../imogen/sources.cm
 
-  ../../../sml-ext/pp/sources.cm
-  ../../../fol/formulas/sources.cm
+  ../inverse/firstorder/sources.cm
+  ../inverse/imogen/sml-ext/pp/sources.cm
+  ../inverse/imogen/fol/formulas/sources.cm
 
   unknownexn.sig
   unknownexn.fun

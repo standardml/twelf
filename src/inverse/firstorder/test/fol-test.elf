@@ -1,0 +1,40 @@
+
+p : o.
+p1 : i -> o.
+p2 : i -> i -> o.
+q : o.
+b : i.
+
+
+- : nd $true = unit.
+- : nd ($true => $true) = lam ([H: nd $true] H).
+- : nd (p2 b b => p2 b b) = lam ([H:nd (p2 b b)] H).
+- : nd (p | q => q | p) = 
+  lam ([H2:nd (p | q)] case H2 ([H3:nd p] inr H3) ([H4:nd q] inl H4)).
+- : nd ($true <=> $true) = pair (lam ([H] H)) (lam ([H] H)).
+- : nd (! [X] (p1 X => p1 X)) = qlam ([X: i] lam [H: nd (p1 X)] H).
+
+%imogen (nd (p => p)).
+%imogen (nd $true).
+
+%imogen (nd (( p | q ) => ( ~ p | q ) => ( p | ~ q ) => ~ ( ~ p | ~ q ))).
+%imogen (nd ((? [Y] ! [X] p2 X Y) => (! [X] ? [Y] p2 X Y))).
+
+
+%imogen (nd (p2 b b => p2 b b)).
+%imogen (nd (p & q => q & p)).
+%imogen (nd (p => p | $true)).
+%imogen (nd (p => q | p)).
+%imogen (nd (p | q => q | p)).
+%imogen (nd ($false => p)).
+%imogen (nd ((p => $false) => p => $false)).
+%imogen (nd (~ p => p => $false)).
+%imogen (nd ((p => $false) => ~ p)).
+%imogen (nd ($true <=> $true)).
+%imogen (nd (p <=> p)).
+%imogen (nd (! [X] $true)).
+
+%imogen (nd (! [X] (p1 X => p1 X))).
+
+
+% %imogen (nd ((? [Y] ! [X] p X Y) => (! [X] ? [Y] p X Y))).

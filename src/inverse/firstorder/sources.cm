@@ -8,16 +8,16 @@ is
 $/basis.cm
 $/smlnj-lib.cm
 sml-ext.cm
-../lambda/sources.cm
-../names/sources.cm
-../typecheck/sources.cm
-../print/sources.cm
+../../lambda/sources.cm
+../../names/sources.cm
+../../typecheck/sources.cm
+../../print/sources.cm
 
-../../../fol/formulas/sources.cm
-../../../fol/proofterms/sources.cm
-../../../fol/sources.cm
-../../../util/sources.cm
-../../../framework/sources.cm
+../imogen/fol/formulas/sources.cm
+../imogen/fol/proofterms/sources.cm
+../imogen/fol/sources.cm
+../imogen/util/sources.cm
+../imogen/framework/sources.cm
 
 imogen.sig
 imogen.sml
