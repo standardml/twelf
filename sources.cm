@@ -18,5 +18,9 @@ Library
   signature STYLECHECK
   structure StyleCheck
   structure Subordinate
+  (* STM 2009 *)
+  structure ModeTable
+  structure ModeSyn
+  structure Print
 is
   src/frontend/sources.cm

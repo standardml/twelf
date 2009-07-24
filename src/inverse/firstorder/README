@@ -1,0 +1,4 @@
+
+This adds the directive '%imogen' to Twelf.  Using the provided signature
+fol.elf, '%imogen' will search for proofs of 'nd P' where P is a formula in
+intuitionistic first order logic.  Examples are in fol-test.elf.

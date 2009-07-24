@@ -117,3 +117,5 @@ oldnj : ; # twelf-emacs twelf-server-smlnj-old
 
 mlton : twelf-emacs twelf-server-mlton	
 
+clean : 
+	find . -name .cm -exec rm -rf {} \;
