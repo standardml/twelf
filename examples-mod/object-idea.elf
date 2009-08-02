@@ -1,0 +1,41 @@
+Syntax: a toplevel declaration
+%object S(a1,...,an).b.
+where
+  S: signature name
+  a1, ..., an, b: names declared in S
+
+Semantics: For ground A1, ..., An, the use of List(A1,...,An) within an object O adds a structure
+%struct I : S = {a1 := A1. ... an := An.}.
+and then elaborates to
+I.list
+where I is a fresh (internal) name.
+If List(A1,...,An) occurs multiple times, only one structure is generated.
+
+Example:
+
+%sig List = {
+  a    : type.
+  list : type.
+  nil  : list.
+  cons : a -> list -> list.
+}.
+
+%sig Map = {
+  a   : type.
+  b   : type.
+  f   : a -> b -> type.
+  map : List(a) -> List(b) -> type.
+}.
+
+%sig Nat = {
+  nat  : type.
+  z    : nat.
+  succ : nat -> nat.
+  F    : nat -> nat -> type.
+}.
+
+%object List(a).list.
+%object Map(a,b,f).map.
+%object Nat.nat.
+
+%solve Map(Nat,Nat,F) (List(Nat).cons Nat.z List(Nat).nil) L.
