@@ -4,12 +4,12 @@ where
   S: signature name
   a1, ..., an, b: names declared in S
 
-Semantics: For ground A1, ..., An, the use of List(A1,...,An) within an object O adds a structure
+Semantics: For ground A1, ..., An, the use of S(A1,...,An) within an object O adds a structure
 %struct I : S = {a1 := A1. ... an := An.}.
 and then elaborates to
-I.list
+I.b
 where I is a fresh (internal) name.
-If List(A1,...,An) occurs multiple times, only one structure is generated.
+If S(A1,...,An) occurs multiple times, only one structure I is generated.
 
 Example:
 
@@ -39,3 +39,7 @@ Example:
 %object Nat.nat.
 
 %solve Map(Nat,Nat,F) (List(Nat).cons Nat.z List(Nat).nil) L.
+
+
+Possible improvement: inference of parameters
+%solve Map(Nat,Nat,F) (List.cons Nat.z List.nil) L.
