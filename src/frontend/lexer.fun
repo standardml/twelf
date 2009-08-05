@@ -67,6 +67,7 @@ struct
     | VIEW                              (* `%view' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
+    | IMPLICIT                          (* `%implicit' -fr Aug 09*)
     | AS                                (* `%as' -fr Jun 09*)
     | READ                              (* `%read' *)
     | USE                               (* `%use' *)
@@ -265,6 +266,7 @@ struct
       | lexPragmaKey (ID(_, "include"), r) = (INCLUDE, r)
       | lexPragmaKey (ID(_, "open"), r) = (OPEN, r)
       | lexPragmaKey (ID(_, "as"), r) = (AS, r)
+      | lexPragmaKey (ID(_, "implicit"), r) = (IMPLICIT, r)
       | lexPragmaKey (ID(_, "read"), r) = (READ, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
       | lexPragmaKey (ID(_, s), r) =

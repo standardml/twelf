@@ -1134,12 +1134,12 @@ struct
                only structural checking at this point, full type-checking only in Elab.flatten below *)
             val strDec = ReconModule.strdecToStrDec (strdec, Paths.Loc (fileName,r))
             val _ = ReconTerm.checkErrors(r)
-            val _ = Elab.checkStrDec(strDec)
+            val NewStrDec = Elab.checkStrDec(strDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-            val c = installStrDec (strDec, r)
+            val c = installStrDec (NewStrDec, r)
             (* print it *)
             val prefix = if (! Global.printFlat) then "% " else ""
-            val _ = if ! Global.chatter >= 3 then msg (prefix ^ Print.strDecToString strDec ^ "\n") else ()
+            val _ = if ! Global.chatter >= 3 then msg (prefix ^ Print.strDecToString NewStrDec ^ "\n") else ()
             (* auxiliary function for printing debug info *)
             fun qidToString(q : IDs.qid) = 
                IDs.mkString(List.map (fn (x,y) => "(" ^ ModSyn.symFoldName x ^ "," ^ ModSyn.symFoldName y ^ ")") q,
@@ -1181,8 +1181,8 @@ struct
             (* flatten the structure, i.e., generate all induced declarations, full type-checking of structure declaration done in this function *)
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-            val _ = case strDec
-	       of ModSyn.StrDec(_,_,dom,_, _, ModSyn.OpenDec opens) => installOpen(dom, opens, SOME c, r) (* OpenAll impossible *)
+            val _ = case NewStrDec
+	       of ModSyn.StrDec(_,_,dom,_, _, ModSyn.OpenDec opens, _) => installOpen(dom, opens, SOME c, r) (* OpenAll impossible *)
 	        | ModSyn.StrDef _ => ()
          in
             ()
@@ -1191,16 +1191,16 @@ struct
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
                             of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
-                             | ModSyn.ViewDec(_, _, d, c) => (d,c)
+                             | ModSyn.ViewDec(_, _, d, c, _) => (d,c)
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
                             
-               val _ = Elab.checkSymInst(Inst)
+               val NewInst = Elab.checkSymInst(Inst)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-               val c = ModSyn.instAddC(Inst)
+               val c = ModSyn.instAddC(NewInst)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-               val _ = chmsg 3 (fn () => Print.instToString(Inst) ^ "\n")
-	       val _ = case Inst
+               val _ = chmsg 3 (fn () => Print.instToString(NewInst) ^ "\n")
+	       val _ = case NewInst
 	           of ModSyn.ConInst _ => ()
 	            | ModSyn.StrInst _ =>
 	                let
@@ -1228,11 +1228,11 @@ struct
          let
             val Incl = ReconModule.modinclToModIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
-            val _ = Elab.checkModIncl Incl
+            val NewIncl = Elab.checkModIncl Incl
                        handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
-            val _ = ModSyn.inclAddC(Incl)
+            val _ = ModSyn.inclAddC(NewIncl)
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
-            val _ = case Incl
+            val _ = case NewIncl
                of ModSyn.SigIncl (from, opendec) => (
                     case opendec
                       of ModSyn.OpenAll => Names.installScopeC (from, NONE)
@@ -1241,7 +1241,7 @@ struct
 		  )
 		| _ => ()
          in
-            chmsg 3 (fn () => Print.modInclToString(Incl) ^ "\n")
+            chmsg 3 (fn () => Print.modInclToString(NewIncl) ^ "\n")
          end
 
       | install1 (fileName, declr as (Parser.Read read, r)) =

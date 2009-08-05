@@ -174,8 +174,13 @@ struct
     | parseInstantiate' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `{', found token " ^ L.toString t)
 
+  fun parseImplicit(LS.Cons ((L.IMPLICIT, _), s')) = (true, LS.expose s')
+    | parseImplicit(f') = (false, f')
   fun parseStrDec' (LS.Cons ((L.STRUCT, r0), s')) =
-     case LS.expose s'
+  let
+     val (implicit, f') = parseImplicit (LS.expose s')
+  in
+     case f'
         of LS.Cons ((L.ID (_, id), r1), s1') => (
            case LS.expose s1'
               of LS.Cons ((L.COLON, r2), s2') =>
@@ -188,19 +193,20 @@ struct
                           | _ => parseInstantiate'(#2 (parseEqual' f'))
 	             val (ids, f') = parseOpen' f'
                   in
-                     (E.strdec(id, dom, incls, insts, ids), f')
+                     (E.strdec(id, dom, incls, insts, ids, implicit), f')
                   end
                | LS.Cons ((L.EQUAL, r2), s2') =>
                  let
                     val (mor, f' as LS.Cons((_,r3),_)) = parseMorph' (LS.expose s2')
                  in
-                    ((E.strdef (id, (mor, Paths.join(r2,r3)))), f')
+                    ((E.strdef (id, (mor, Paths.join(r2,r3)), implicit)), f')
                  end
                | LS.Cons ((t, r), s') =>
                  Parsing.error (r, "Expected `:' or `=', found token " ^ L.toString t)
          )
          | LS.Cons ((t, r), s') =>
-           Parsing.error (r, "Expected new identifier, found token " ^ L.toString t)
+           Parsing.error (r, "Expected `%implicit' or new identifier, found token " ^ L.toString t)
+  end
 
   fun parseSigBegin' (LS.Cons ((L.SIG, r), s')) =
      case LS.expose s'
@@ -216,7 +222,10 @@ struct
 	  Parsing.error (r, "Expected new module identifier, found token " ^ L.toString t)
 
   fun parseViewBegin' (LS.Cons ((L.VIEW, r), s')) =
-     case LS.expose s'
+  let
+     val (implicit, f') = parseImplicit (LS.expose s')
+  in
+     case f'
        of LS.Cons ((L.ID (_, id), r1), s') =>
           let
              val f' = LS.expose s'
@@ -227,11 +236,12 @@ struct
              val (_, f') = parseEqual' (f')
              val (_, f') = parseLBrace' (f')
           in
-             (E.viewbegin(id, dom, cod), f')
+             (E.viewbegin(id, dom, cod, implicit), f')
           end 
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
-
+  end
+  
   fun parseRead' (f as LS.Cons ((L.READ, _), s')) =
      case LS.expose s'
         of LS.Cons ((L.STRING name, r), s') => (E.readfile name, LS.expose s')

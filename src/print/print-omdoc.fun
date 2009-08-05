@@ -335,7 +335,7 @@ struct
     | modInclToString(ModSyn.ViewIncl(mor), params)
       = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
   
-  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _), params) =
+  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, _, _), params) =
      let 
      	fun dolist(_, nil, _) = ""
            | dolist(f, hd::nil, nl) = f hd
@@ -346,7 +346,7 @@ struct
         dolist(fn incl => modInclToString(incl, params), incls, nl) ^ nl_unind()
         ) ^ "</structure>"
      end
-   | strDecToString(ModSyn.StrDef(name, _, dom, def), params) =
+   | strDecToString(ModSyn.StrDef(name, _, dom, def, _), params) =
      ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
      "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
@@ -359,7 +359,7 @@ struct
          ElemOpen("theory", [Attr("name", localPath name), Attr("meta", meta)]) ^ nl_ind() ^
          IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
       end
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod), incls, params) =
+    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), incls, params) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", relModName(dom, params)),
                           Attr("to", relModName(cod, params))]

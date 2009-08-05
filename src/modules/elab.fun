@@ -56,7 +56,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   
   (* computes domain without checking composability *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
-    of M.MorView m => let val M.ViewDec(_, _, dom, _) = M.modLookup m in dom end
+    of M.MorView m => let val M.ViewDec(_, _, dom, _, _) = M.modLookup m in dom end
      | M.MorStr s => M.strDecDom (M.structLookup s)
      | M.MorComp(m,_) => domain m
   
@@ -64,32 +64,44 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (* composibility is co-/contravariant with respect to inclusions *)
   fun reconMorph(M.MorComp(mor1,mor2)) =
         let
-           val (d1,c1) = reconMorph mor1
-           val (d2,c2) = reconMorph mor2
+           val (d1,c1,m1) = reconMorph mor1
+           val (d2,c2,m2) = reconMorph mor2
         in
-           if ModSyn.sigInclCheck(c1,d2)
-           then (d1,c2)
-           else raise Error("morphisms not composable")
+           if M.sigInclCheck(c1,d2)
+           then (d1,c2, M.MorComp(m1,m2))
+           else case M.implicitLookup(c1, d2)
+              of SOME m => (d1, c2, M.MorComp(m1, M.MorComp(m, m2)))
+               | NONE => raise Error("morphisms not composable")
         end
-    | reconMorph(M.MorStr(s)) = ((M.strDecDom (M.structLookup s), IDs.midOf(s))
+    | reconMorph(M.MorStr s) = ((M.strDecDom (M.structLookup s), IDs.midOf(s), M.MorStr s)
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
-    | reconMorph(M.MorView(m)) =
+    | reconMorph(M.MorView m) =
         let
-           val M.ViewDec(_, _, dom, cod) = M.modLookup m
+           val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
                                         handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
         in
-           (dom, cod)
+           (dom, cod, M.MorView m)
         end
+
   (* checks the judgment |- mor : dom -> cod (co-/contravariant with respect to inclusions) *)
   and checkMorph(mor, dom, cod) =
-     let val (d,c) = reconMorph mor
-     in if ModSyn.sigInclCheck(dom,d) andalso ModSyn.sigInclCheck(c,cod)
-        then ()
-        else raise Error("morphism does not have expected type")
+     let
+     	val (d,c, mor2) = reconMorph mor
+     	val inclBefore = M.sigInclCheck(dom,d)
+        val implBefore = if inclBefore then NONE else M.implicitLookup(dom, d)
+        val inclAfter  = M.sigInclCheck(c,cod)
+        val implAfter  = if inclAfter then NONE else M.implicitLookup(c, cod)
+     in
+     	case (inclBefore, implBefore, inclAfter, implAfter)
+     	  of (true, _, true, _) => mor
+     	   | (true, _, false, SOME m) => M.MorComp(mor, m)
+     	   | (false, SOME m, true, _) => M.MorComp(m, mor)
+     	   | (false, SOME m, false, SOME n) => M.MorComp(m, M.MorComp(mor, n))
+           | _ => raise Error("morphism does not have expected type")
      end
   
-  and checkSymInst(M.ConInst(con, term)) =
-     let
+  and checkSymInst(ci as M.ConInst(con, term)) =
+      let
      	val v = M.currentMod()
      	val typ = M.constType con
      	val expTyp = applyMorph(typ, M.MorView v)
@@ -99,14 +111,15 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                 ) handle M.UndefinedCid _ => ()
      in
      	if checkType(term, expTyp)
-     	then ()
+     	then ci
         else raise Error("type mismatch")
      end
     | checkSymInst(M.StrInst(str, mor)) =
      let
      	val expDom = M.strDecDom (M.structLookup str)
+     	val m = checkMorph(mor, expDom, M.currentTargetSig())
      in
-     	checkMorph(mor, expDom, M.currentTargetSig())
+     	M.StrInst(str, m)
      end
 
   (* auxiliary function of findClash
@@ -184,7 +197,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
    (* checks domain and codomain of a morphism included into a link from Dom to Cod *)
    and checkIncludeInLink(Dom, Cod, mor) =
       let
-       	 val (dom, cod) = reconMorph mor
+       	 val (dom, cod, newmor) = reconMorph mor
          val _ = if M.sigInclCheck(dom, Dom)
                  then ()
                  else raise Error("included morphism has bad domain: " ^ M.modFoldName dom)
@@ -192,28 +205,28 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        	         then ()
        	         else raise Error("included morphism has bad codomain: " ^ M.modFoldName cod)
       in
-      	 ()
+      	 newmor
       end
 
   (* checks well-typedness condition for includes *)
-  and checkModIncl(M.SigIncl (m,_)) =
+  and checkModIncl(si as M.SigIncl (m,_)) =
        if M.inSignature()
-       then checkAncestors(m, M.currentMod())
+       then (checkAncestors(m, M.currentMod()); si)
        else raise Error("including signatures only allowed in signatures")
     | checkModIncl(M.ViewIncl mor) =
        let
        	  val v = M.currentMod()
-       	  val M.ViewDec(_, _, Dom, Cod) =
+       	  val M.ViewDec(_, _, Dom, Cod, _) =
        	     if M.inSignature()
        	     then raise Error("including morphisms only allowed in views")
        	     else M.modLookup v
-       	  val _ = checkIncludeInLink(Dom, Cod, mor)
+       	  val newmor = checkIncludeInLink(Dom, Cod, mor)
        	  val incls = M.modInclLookup v
        	  val _ = if incls = nil
        	          then ()
        	          else raise Error("implementation restriction: only one include allowed per link")
        	in
-       	   ()
+       	   M.ViewIncl newmor
        	end
 
   (* checks simple well-typedness conditions for structure declarations
@@ -224,26 +237,28 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        will be checked during flattening
      postcondition: getInst yields all information that is needed to check the latter during flattening
   *)
-  and checkStrDec(M.StrDec(_, _, dom, incls, insts, _)) =
-       let val cod = M.currentMod()
-       in (
-          checkAncestors(dom, cod);
-          if (List.length incls <= 1) then ()
+  and checkStrDec(M.StrDec(n, q, dom, incls, insts, opens, impls)) =
+       let
+       	  val cod = M.currentMod()
+          val _ = checkAncestors(dom, cod);
+          val _ = if (List.length incls <= 1) then ()
              else raise Error("implementation restriction: only one include allowed per link");
-          List.map (fn M.ViewIncl mor => checkIncludeInLink(dom, cod, mor)) incls;
-          checkIncludesOfDomain(dom, cod, incls);
-          case findClash insts
+          val newincls = List.map (fn M.ViewIncl mor => ModSyn.ViewIncl(checkIncludeInLink(dom, cod, mor))) incls;
+          val _ = checkIncludesOfDomain(dom, cod, incls);
+          val _ = case findClash insts
             of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                       M.symFoldName c ^ " in structure declaration")
              | NONE => ();
-          List.map checkSymInst (List.filter (fn M.StrInst _ => true | _ => false) insts);
-          ()
-          )
+          val newinsts = List.map (fn si as M.StrInst _ => checkSymInst si | ci => ci) insts;
+       in
+          M.StrDec(n, q, dom, newincls, newinsts, opens, impls)
        end
-    | checkStrDec(M.StrDef(_,_, dom, mor)) =
+    | checkStrDec(M.StrDef(n, q, dom, mor, i)) =
         let val cod = M.currentMod()
-        in checkAncestors(dom, cod);
-           checkMorph(mor, dom, cod)
+            val _ = checkAncestors(dom, cod)
+            val newmor = checkMorph(mor, dom, cod)
+        in 
+           M.StrDef(n, q, dom, newmor, i)
         end
 
   (* checks well-typedness conditions for modules (called at the beginning of the module *)
@@ -252,7 +267,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   and checkModEnd(m) =
        if M.inSignature() then () else
        let
-          val M.ViewDec(_, _, dom, cod) = M.modLookup m
+          val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
           val _ = checkAncestors(dom, cod)
           val _ = checkIncludesOfDomain(dom, cod, M.modInclLookup m)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
@@ -274,11 +289,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
 		       | (I.ConDef _) => headToExp (I.Def c)
 		       | (I.AbbrevDef _) => headToExp (I.NSDef c))
   (* pre: U is well-formed term over the domain of mor
+     pre: mor is well-formed (all implicit coercions filled in)
      post: U is well-formed term over the codomain of mor
    *)
   and applyMorph(U, mor) =
      let
-     	val (dom, cod) = reconMorph mor
+     	val (dom, cod, _) = reconMorph mor
      	fun A(I.Uni L) = I.Uni L
      	  | A(I.Pi((D, P), V)) = I.Pi((ADec D, P), A V)
      	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
@@ -339,8 +355,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      in case link
                           of M.MorView v => byIncludes(M.modInclLookup v)
                            | M.MorStr s => (case M.structLookup s
-                               of M.StrDef(_, _, _, newmor) => applyMorph(cidToExp(c), newmor) (* expand link definition *) 
-                                | M.StrDec(_, _, _, incls, _, _) => byIncludes(incls)
+                               of M.StrDef(_, _, _, newmor, _) => applyMorph(cidToExp(c), newmor) (* expand link definition *) 
+                                | M.StrDec(_, _, _, incls, _, _, _) => byIncludes(incls)
                              )
               	     end
            end
@@ -370,8 +386,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      this finds both explicit instantiations (c := e) and induced instantiations (s := mor in case c = s.c')
      in StrDefs, the instantiation is obtained by applying the definition of the structure to c
   *)
-  and getInst(M.StrDec(_,_,_,_, insts, _), c, q) = getInst'(insts, c, q)
-    | getInst(M.StrDef(_,_,_,mor), c, _) = SOME (applyMorph(cidToExp c, mor))
+  and getInst(M.StrDec(_,_,_,_, insts, _, _), c, q) = getInst'(insts, c, q)
+    | getInst(M.StrDef(_,_,_,mor,_), c, _) = SOME (applyMorph(cidToExp c, mor))
   
   (* flattens a structure by computing all generated declarations (the order is depth first declaration order)
      - S: cid of the structure to be flattened
@@ -462,7 +478,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                    val q' = M.strDecQid str'
                    val dom' = M.strDecDom str'
                    val q = (S, s') :: (applyStructMap q')
-                   val s = installStrDec (s', M.StrDef(Name @ name', q, dom', M.MorComp(M.MorStr(s'), M.MorStr(S))))
+                   val s = installStrDec (s', M.StrDef(Name @ name', q, dom', M.MorComp(M.MorStr(s'), M.MorStr(S)), false))
                    val _ = structMap := (s',s) :: (! structMap)
                 in
                    ()
@@ -476,7 +492,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      let
         val viewID = IDs.midOf instID
         val M.SymStrInst(M.StrInst(s, mor)) = M.symLookup instID
-        val (dom, _) = reconMorph mor
+        val (dom, _, _) = reconMorph mor
         fun flatten1(c' : IDs.cid) =
            let 
               val c = valOf (M.structMapLookup(s,c'))

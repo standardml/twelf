@@ -23,11 +23,11 @@ struct
 
   datatype modincl = sigincl of id * openids | viewincl of morph * Paths.region
   
-  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids
-                  | strdef of string * (morph * Paths.region)
+  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids * bool
+                  | strdef of string * (morph * Paths.region) * bool
 
   datatype modbegin = sigbegin of string
-                    | viewbegin of string * id * id
+                    | viewbegin of string * id * id * bool
   
   datatype read = readfile of string
   
@@ -73,7 +73,7 @@ struct
      	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
             handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
-                                  val ModSyn.ViewDec(_,_,dom,_) = ModSyn.modLookup m
+                                  val ModSyn.ViewDec(_,_,dom,_,_) = ModSyn.modLookup m
                               in (ModSyn.MorView m, dom)
                               end
      in
@@ -146,7 +146,7 @@ struct
        end
 
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
-                            incls : modincl list, insts : syminst list, opens : openids), loc) = 
+                            incls : modincl list, insts : syminst list, opens : openids, implicit : bool), loc) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
@@ -156,23 +156,23 @@ struct
 	  of SOME l => openToOpen l
 	   | NONE => ModSyn.OpenDec nil
     in
-    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Opens)
+    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Opens, implicit)
     end
-    | strdecToStrDec(strdef(name : string, morr), l) =
+    | strdecToStrDec(strdef(name : string, morr, implicit : bool), l) =
        let
        	  val Mor = morphToMorph(ModSyn.currentTargetSig(), morr)
-       	  val (Dom, _) = Elab.reconMorph Mor (* @FR: taking domain of first link is enough here *)
+       	  val (Dom, _, _) = Elab.reconMorph Mor (* @FR: taking domain of first link is enough here *)
        in
-       	  ModSyn.StrDef([name], nil, Dom, Mor)
+       	  ModSyn.StrDef([name], nil, Dom, Mor, implicit)
        end
     
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) = ModSyn.SigDec(fileName, [name])
-     | modbeginToModDec(viewbegin(name, dom, cod), Paths.Loc(fileName, _)) =
+     | modbeginToModDec(viewbegin(name, dom, cod, implicit), Paths.Loc(fileName, _)) =
          let
             val Dom = modnameLookupWithError SIG dom
             val Cod = modnameLookupWithError SIG cod
          in
-            ModSyn.ViewDec (fileName, [name], Dom, Cod)
+            ModSyn.ViewDec (fileName, [name], Dom, Cod, implicit)
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =

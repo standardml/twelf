@@ -8,15 +8,15 @@ sig
   val checkModBegin : ModSyn.ModDec -> unit
   val checkModEnd   : IDs.mid -> unit
   (* checks a SigIncl *)
-  val checkModIncl: ModSyn.ModIncl -> unit
+  val checkModIncl: ModSyn.ModIncl -> ModSyn.ModIncl
   (* checks a StrDec *)
-  val checkStrDec : ModSyn.StrDec -> unit
+  val checkStrDec : ModSyn.StrDec -> ModSyn.StrDec
   (* checks a SymInst *)
-  val checkSymInst: ModSyn.SymInst -> unit
-  (* checks a morphism against domain and codomain signature *)
-  val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> unit
-  (* infers domain and codomain, raises Error if not composable *)
-  val reconMorph  : ModSyn.Morph -> IDs.mid * IDs.mid
+  val checkSymInst: ModSyn.SymInst -> ModSyn.SymInst
+  (* checks a morphism against domain and codomain signature, returns reconstructed morphism *)
+  val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> ModSyn.Morph
+  (* infers domain and codomain, fills in implicit coercions, raises Error if not composable *)
+  val reconMorph  : ModSyn.Morph -> IDs.mid * IDs.mid * ModSyn.Morph
 
   (* called to flatten a structure declaration
      - computes all declarations imported by the structure to the codomain signature (in the order declared in the domain)

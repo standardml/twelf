@@ -69,11 +69,13 @@ sig
     * ModIncl list                     (* morphism includes *)
     * SymInst list                     (* instantiations *)
     * OpenDec                          (* opened and renamed imported names *)
+    * bool                             (* implicit *)
   | StrDef of
       string list                      (* qualified name *)
     * IDs.qid                          (* list of structures via which it is imported *)
     * IDs.mid                          (* domain (= instantiated signature) *)
     * Morph                            (* definition *)    
+    * bool                             (* implicit *)
   (* unifies constant and structure declarations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
     
@@ -98,6 +100,7 @@ sig
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
+       * bool                          (* implicit *)
   
    datatype Read = ReadFile of string  (* file name *)
    
@@ -162,6 +165,8 @@ sig
   val modParent  : IDs.mid -> (IDs.mid * IDs.lid) list
   val modInclLookup: IDs.mid -> ModIncl list
   val sigInclCheck: IDs.mid * IDs.mid -> bool
+  (* implicitLookup(d,c) = SOME mor iff mor:d->c is implicit coercion *)
+  val implicitLookup: IDs.mid * IDs.mid -> Morph option
   (* application of a method to all declarations of a signature in declaration order *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
   val sgnAppC    : (IDs.cid -> unit) -> unit

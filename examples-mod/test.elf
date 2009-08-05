@@ -130,3 +130,17 @@ a : type.
   d : r.a.
   e : r.r.a.
 }.
+
+%% testing implicit morphisms
+%sig A = {}.
+%sig B = {
+  %struct %implicit x : X.
+}.
+%view %implicit c : A -> X = {}.
+%sig C = {
+  %struct a : A.
+}.
+%sig D = {
+  %struct b : B.
+  %struct c : C = {%struct a := b.}. %% b is coerced to c B..x b.
+}.

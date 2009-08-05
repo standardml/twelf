@@ -916,13 +916,15 @@ in
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
+  fun implicitToString true = "%implicit "
+    | implicitToString false = ""
 
   fun modBeginToString(ModSyn.SigDec(base,name)) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod)) =
-        "%view " ^ (Names.foldQualifiedName name) ^ " : " ^
+    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, impl)) =
+        "%view " ^ (implicitToString impl) ^ (Names.foldQualifiedName name) ^ " : " ^
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (Names.foldQualifiedName name)
-    | modEndToString(ModSyn.ViewDec(_,name, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
+    | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
   fun openToString(ModSyn.OpenAll) = " %open"
     | openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec l) =
@@ -945,13 +947,13 @@ in
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(ModSyn.StrInst(c, mor)) =
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, opendec)) = (
-     "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, opendec, impl)) = (
+     "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
      IDs.mkString(List.map modInclToString incls, "{", " ", "") ^
      IDs.mkString(List.map instToString insts, "", " ", "}") ^ (openToString (opendec)) ^ "."
     )
-   | strDecToString(ModSyn.StrDef(name, _, dom, def)) = (
-     "%struct " ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+   | strDecToString(ModSyn.StrDef(name, _, dom, def, impl)) = (
+     "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
      morphToString def ^ "."
     )
 

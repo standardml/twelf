@@ -20,25 +20,27 @@ struct
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
   datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
   datatype ModIncl = SigIncl of IDs.mid * OpenDec | ViewIncl of Morph
-  datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (ModIncl list) * (SymInst list) * OpenDec
-                  | StrDef of string list * IDs.qid * IDs.mid * Morph
-  datatype ModDec = SigDec of string * string list | ViewDec of string * string list * IDs.mid * IDs.mid
+  datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (ModIncl list) * (SymInst list) * OpenDec * bool
+                  | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
+  datatype ModDec = SigDec of string * string list | ViewDec of string * string list * IDs.mid * IDs.mid * bool
   datatype Read = ReadFile of string
 
   (* unifies constant and structure declarations and instantiations *)
   datatype SymLevelData = SymCon of I.ConDec | SymStr of StrDec | SymConInst of SymInst | SymStrInst of SymInst
 
   fun modDecBase (SigDec(b,_)) = b
-    | modDecBase (ViewDec(b,_,_,_)) = b
+    | modDecBase (ViewDec(b,_,_,_,_)) = b
   fun modDecName (SigDec(_,n)) = n
-    | modDecName (ViewDec(_,n,_,_)) = n
-  fun strDecName (StrDec(n, _, _, _, _, _)) = n
-    | strDecName (StrDef(n, _, _, _)) = n
+    | modDecName (ViewDec(_,n,_,_,_)) = n
+  fun strDecName (StrDec(n, _, _, _, _, _, _)) = n
+    | strDecName (StrDef(n, _, _, _, _)) = n
   fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
-  fun strDecQid (StrDec(_, q, _, _, _, _)) = q
-    | strDecQid (StrDef(_, q, _, _)) = q
-  fun strDecDom (StrDec(_, _, m, _, _, _)) = m
-    | strDecDom (StrDef(_, _, m, _)) = m
+  fun strDecQid (StrDec(_, q, _, _, _, _, _)) = q
+    | strDecQid (StrDef(_, q, _, _, _)) = q
+  fun strDecDom (StrDec(_, _, m, _, _, _, _)) = m
+    | strDecDom (StrDef(_, _, m, _, _)) = m
+  fun strDecImpl (StrDec(_, _, _, _, _, _, i)) = i
+    | strDecImpl (StrDef(_, _, _, _, i)) = i
 
   fun symInstCid(ConInst(c, _)) = c
     | symInstCid(StrInst(c, _)) = c
@@ -96,6 +98,11 @@ struct
   val scope : (IDs.mid * IDs.lid) list ref = ref nil
   (* the next available module id *)
   val nextMid : IDs.mid ref = ref 0
+  
+  (* implicit coercions: (T,m) in implicitOut(S) iff (S,m) in implicitIn(T) iff T can be coerced to S via m:S->T
+     chained coercions are precomputed *)
+  val implicitOut : (IDs.mid * Morph) list MH.Table = MH.new(50)
+  val implicitIn  : (IDs.mid * Morph) list MH.Table = MH.new(50)
 
   (********************** Effect-free (lookup) methods **********************)
   fun modLookup(m : IDs.mid) = #1 (valOf (MH.lookup modTable m))
@@ -115,7 +122,7 @@ struct
      let val m = currentMod()
      in case modLookup m
        of SigDec _ => m
-        | ViewDec(_,_,_,cod) => cod
+        | ViewDec(_,_,_,cod,_) => cod
      end
 
   fun getScope () = ! scope
@@ -165,6 +172,14 @@ struct
      	List.exists (fn m => m = from) mids (* base cases *)
      	orelse
         List.exists (fn m => sigInclCheck(from, m)) mids (* transitivity *)
+     end
+  fun implicitLookupOut(d) = case MH.lookup implicitOut d of SOME l => l | NONE => nil
+  fun implicitLookupIn(c)  = case MH.lookup implicitIn  c of SOME l => l | NONE => nil
+  fun implicitLookup(d,c)   =
+     let val outs = implicitLookupOut(d)
+     in case List.find (fn (m, _) => m = c) outs
+        of SOME(_, mor) => SOME mor
+        | NONE => NONE
      end
   
   (********************** Convenience methods **********************)
@@ -226,6 +241,38 @@ struct
   fun sgnAppI(m : IDs.mid, f : IDs.cid -> unit) = sgnAppI'(m,f,nil)
   
   (********************** Effectful methods **********************)
+  fun implicitAddOne(dom, cod, mor) =
+  let
+     val _ = if (sigInclCheck(dom, cod)) then
+     	raise Error("coercion from included signature not allowed") else ()
+     val outs = implicitLookupOut dom
+     val ins = implicitLookupIn cod
+     val _ = if (List.exists (fn (c,_) => c = cod) outs) then
+     	raise Error("multiple coercions from " ^ modFoldName dom ^ " to " ^ modFoldName cod) else ()
+     (* no check needed due to invariant *)
+   in (  
+     MH.insert implicitOut (dom, (cod, mor) :: outs);
+     MH.insert implicitIn  (cod, (dom, mor) :: ins)
+   ) end
+
+  fun implicitAdd(dom, cod, mor) =
+  let
+     val ins  = implicitLookupIn dom
+     val outs = implicitLookupOut cod
+  in (
+     (* add mor *)
+     implicitAddOne(dom, cod, mor);
+     (* prepend mor to coercions out of cod *)
+     List.map (fn (d, m) => implicitAddOne(d, cod, MorComp(m, mor))) ins;
+     (* append mor to coercions into dom *)
+     List.map (fn (c, m) => implicitAddOne(dom, c, MorComp(mor, m))) outs;
+     (* connect coercions into dom and out of cod via mor *)
+     List.map (fn (d, m) =>
+       List.map (fn (c, n) => implicitAddOne(d, c, MorComp(m, MorComp(mor, n)))) outs
+     ) ins;
+     ()
+  ) end
+  
   fun modOpen(dec) =
      let
      	val _ = case (inSignature(), dec)
@@ -247,6 +294,8 @@ struct
         val _ = scope := tl (! scope)
         val SOME (a,_,b,c) = MH.lookup modTable m
         val _ = MH.insert modTable (m, (a, l, b, c))
+        val _ = case a of ViewDec(_,_,dom,cod,true) => implicitAdd(dom, cod, MorView m)
+                        | _ => ()
       in
          ()
       end
@@ -283,6 +332,7 @@ struct
       (* q = [(s_1,c_1),...,(s_n,c_n)] where every s_i maps c_i to c *)
       val q = strDecQid strDec
       val _ = List.map (fn sc => CCH.insert structMapTable (sc, c)) q
+      val _ = if (strDecImpl strDec) then implicitAdd(strDecDom strDec, m, MorStr c) else ()
     in
       c
     end
@@ -309,6 +359,8 @@ struct
     CH.clear symTable;               (* clear tables *)
     MH.clear modTable;
     CCH.clear structMapTable;
+    MH.clear implicitOut;
+    MH.clear implicitIn;
     nextMid := 1;                    (* initial mid and scope *)
     scope := [(0,0)];
     MH.insert modTable (0, (SigDec("", nil), ~1, nil, nil))  (* open toplevel signature *)

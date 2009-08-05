@@ -61,6 +61,7 @@ sig
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | AS                                (* `%as' -fr Jun 09*)
+    | IMPLICIT                          (* `%implicit' -fr Aug 09*)
     | READ                              (* `%read' *) (* -fr Apr 09 *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)

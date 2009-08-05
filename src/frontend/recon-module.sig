@@ -23,12 +23,12 @@ sig
                    | viewincl of morph * Paths.region
 
   (* structure declarations *)
-  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids
-                  | strdef of string * (morph * Paths.region)
+  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids * bool
+                  | strdef of string * (morph * Paths.region) * bool
 
   (* begin of a module *)
   datatype modbegin = sigbegin of string
-                    | viewbegin of string * id * id
+                    | viewbegin of string * id * id * bool
   
   (* importing files *)
   datatype read = readfile of string
