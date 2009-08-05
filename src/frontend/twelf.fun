@@ -412,7 +412,27 @@ struct
 	  ()
 	end
 
-    (* install1 (decl) = ()
+    (* reset () = () clears all global tables, including the signature *)
+    fun reset () = (ModSyn.reset (); (* -fr *)
+                    Names.reset ();
+                    Origins.reset ();
+		    ModeTable.reset ();
+		    UniqueTable.reset (); (* -fp Wed Mar  9 20:24:45 2005 *)
+		    Index.reset (); 
+		    IndexSkolem.reset ();
+		    Subordinate.reset ();
+		    Total.reset ();	(* -fp *)
+		    WorldSyn.reset ();	(* -fp *)
+		    Reduces.reset ();	(* -bp *)
+		    TabledSyn.reset ();	(* -bp *)
+		    FunSyn.labelReset ();
+		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
+		    CompSyn.detTableReset (); (*  -bp *)
+		    Compile.sProgReset (); (* resetting substitution trees *)
+                    CSManager.resetSolvers ()
+		    )
+
+     (* install1 (decl) = ()
        Installs one declaration
        Effects: global state
                 may raise standard exceptions
@@ -1278,6 +1298,7 @@ struct
 	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
+	    val _= if (ModSyn.getScope() = nil) then reset() else () (* reset to initialize if nothing read yet *)
             val _ = ReconTerm.resetErrors fileName
 	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	    and install' (S.Empty) = OK
@@ -1341,30 +1362,12 @@ struct
 
     val _ = CSManager.setInstallFN (installCSMDec)
  
-    (* reset () = () clears all global tables, including the signature *)
-    fun reset () = (ModSyn.reset (); (* -fr *)
-                    Names.reset ();
-                    Origins.reset ();
-		    ModeTable.reset ();
-		    UniqueTable.reset (); (* -fp Wed Mar  9 20:24:45 2005 *)
-		    Index.reset (); 
-		    IndexSkolem.reset ();
-		    Subordinate.reset ();
-		    Total.reset ();	(* -fp *)
-		    WorldSyn.reset ();	(* -fp *)
-		    Reduces.reset ();	(* -bp *)
-		    TabledSyn.reset ();	(* -bp *)
-		    FunSyn.labelReset ();
-		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
-		    CompSyn.detTableReset (); (*  -bp *)
-		    Compile.sProgReset (); (* resetting substitution trees *)
-                    CSManager.resetSolvers ()
-		    )
-
     fun readDecl () =
         handleExceptions 0 "stdIn"
 	(fn () =>
-	 let val _ = ReconTerm.resetErrors "stdIn"
+	 let
+	     val _ = if ModSyn.getScope() = nil then reset () else () (* reset to initialize if nothing read yet *)
+	     val _ = ReconTerm.resetErrors "stdIn"
              fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	     and install' (S.Empty) = ABORT
 	       | install' (S.Cons (decl, s')) =
