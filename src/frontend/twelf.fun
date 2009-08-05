@@ -1254,14 +1254,14 @@ struct
             case Read
               of ModSyn.ReadFile name =>
                 (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-                let val readfile = OS.Path.concat(dir, OS.Path.fromUnixPath name)
+                let val readfile = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath name))
                 in case Origins.linesInfoLookup readfile
                    of NONE => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
                       if (loadFile readfile) = ABORT
                          then raise ModSyn.Error("Error in included file " ^ readfile)
-                      	 else ();
+                      	 else ReconTerm.resetErrors fileName; (* restore previous file name *)
                       Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
                    ) | SOME _ => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\". %% already read, skipping\n")

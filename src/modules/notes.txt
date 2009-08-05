@@ -31,6 +31,7 @@ OMDoc export prints
  - main file name is relative to pwd
  - all references to other modules and files with proper MMT-URIs
  - to do: nested signatures, toplevel signature
+%struct %implicit and %view %implicit for implicit coercions
 
 --------
 mail to Carsten
