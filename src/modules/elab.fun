@@ -169,10 +169,10 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     let
        val domPar = M.modParent dom
        val codPar = M.modParent cod
-       val _ = if List.exists (fn (m,_) => m = dom) codPar orelse List.exists (fn (m,_) => m = cod) domPar
-               then raise Error("domain and codomain of a link may not be in ancestor relationship")
+       val _ = if List.exists (fn (m,_) => m = dom) codPar
+               then raise Error("domain of link may not be ancestor of codomain")
                else ()
-       val _ = if List.all (fn (m,l) => List.exists (fn (m',l') => m = m' andalso l <= l') codPar) domPar
+       val _ = if List.all (fn (m,l) => m = cod orelse List.exists (fn (m',l') => m = m' andalso l <= l') codPar) domPar
                then ()
                else raise Error("all ancestors of the domain of a link must be ancestors of the codomain")
                (* The above condition implies that views between sister signatures

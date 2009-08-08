@@ -1,29 +1,52 @@
-%sig N = { 
+%sig Nat = {
   nat : type.
   z : nat.
-  s : nat -> nat. 
+  s : nat -> nat.
 }.
 
-%sig L = {
+%sig List = {
+  % the "parameter"
   elt : type.
+
   list: type.
   nil : list.
   cons : elt -> list -> list.
+
   append : list -> list -> list -> type.
   appnil : append nil L L.
   appcons: append (cons E L) M (cons E N)
         <- append L M N.
-  %block e : block {x : elt}.
-  %worlds (e) (append +L +M -N).
-  %total append +L +M -N.
+%  %block e : block {x : elt}.
+%  %worlds (e) (append L M N).
+  %mode (append +L +M -N).
 }.
 
-%sig NL = {
-  %struct N : N = {}. 
-  %struct L : L = {elt := N.nat.}.
+%sig MAP = {
+  a : type.
+  b : type.
+  f : a -> b -> type.
 
-  123 = L.cons (N.s N.z) (L.cons (N.s (N.s N.z)) (L.cons (N.s (N.s (N.s N.z))) L.nil)).
-  %solve d : L.append 123 123 X.
-
-  % %total L.append +L +M -N. preserved
+  %struct La : List = { elt := a. }.
+  %struct Lb : List = { elt := b. }.
+  map : La.list -> Lb.list -> type.
+  map/nil : map La.nil Lb.nil.
+  map/cons : map (La.cons H TL) (Lb.cons H' TL')
+            <- f H H'
+            <- map TL TL'.
 }.
+
+%struct N : Nat.
+%struct L : List = { elt := N.nat. }.
+
+inc : N.nat -> N.nat -> type.
+inc/ : inc X (N.s X).
+
+%struct M : MAP = {
+  a := N.nat.
+  b := N.nat.
+  f := inc.
+  %struct La := L.
+  %struct Lb := L.
+}.
+
+%query 1 1 M.map (L.cons (N.s N.z) (L.cons N.z L.nil)) X.
