@@ -452,7 +452,7 @@ struct
 
     fun installInclude(from) =
        let
-         (* for all type-level constant declarations with cid c declared, imported, or included in signature "from" ... *)
+         (* for all type-level constant declarations with cid c declared, imported by structure, or included in signature "from" ... *)
          fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
            of ModSyn.SymStr _ => ()
             | ModSyn.SymCon (IntSyn.BlockDec _) => ()
