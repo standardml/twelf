@@ -95,6 +95,20 @@ a : type.
   %struct r' : R' = {%include r.}. %% r'(R'..c : R..a) = r(R'..c : R..a) = r'.c : r(R..a) = r'.c : a
 }.
 
+%% multiple includes
+%sig S0  = {a : type. c: a.}.
+%sig S1  = {%include S0. c: S0..a.}.
+%sig S2  = {%include S0. c: S0..a.}.
+%sig S12 = {%include S1. %include S2. c: S0..a.}.  %% S12 includes S0 twice
+%sig SX  = {a : type. c : a.}.
+%view V0  : S0  -> SX = {a := a. c := c.}.
+%sig SY  = {%struct k: SX. %struct k' = V0 k.}.
+%view V1  : S1  -> SY = {%include V0 k. c := k.c.}.
+%view V2  : S2  -> SY = {%include k'. c := k'.c.}.
+%% V12 includes two views from S0 to SY: V0 SY..k and SY..k'
+%% they must be equal, which is seen after definition expansion
+%view V12 : S12 -> SY = {%include V1. %include V2. c := k.c.}.
+
 %% testing opens
 %sig Z = {
   %include Y %open.

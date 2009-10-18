@@ -35,6 +35,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
 
   (********************** Module level type checking **********************)
 
+  (* auxiliary function that raises exceptions *)
   fun typingError(U, V, msg) =
      let
         val pU = printExp U
@@ -43,6 +44,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         raise Error(msg ^ "\nexpression: " ^ pU ^ "\nexpected type: " ^ pV)
      end
 
+  (* auxiliary function that raises exceptions *)
    fun defInstClash(defDom, defCod, defDomTrans, msg) =
       let
          val pdefDom = printExp defDom
@@ -53,8 +55,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
             "\ninstantiation: " ^ pdefCod)
       end
 
-  
-  (* computes domain without checking composability *)
+  (* computes domain of a morphism without checking composability *)
   fun domain(mor : M.Morph) : IDs.mid = case mor
     of M.MorView m => let val M.ViewDec(_, _, dom, _, _) = M.modLookup m in dom end
      | M.MorStr s => M.strDecDom (M.structLookup s)
@@ -99,7 +100,36 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      	   | (false, SOME m, false, SOME n) => M.MorComp(m, M.MorComp(mor, n))
            | _ => raise Error("morphism does not have expected type")
      end
+
+  (* checks equality of two well-formed morphisms
+     approximated by identity modulo associativity and definition expansion *)
+  and equalMorph(mor1, mor2) = (toLinkList mor1) = (toLinkList mor2)
   
+  (* restricts a well-formed morphism mor to a signature that is included into its domain
+     pre: newdom included into domain(mor)
+     post: restrictMorph(toLinkList mor, newdom) equal to mor but has domain newdom
+   *)
+  and restrictMorph(hd :: tl, newdom) = if domain(hd) = newdom then fromLinkList(hd :: tl) else
+     let val incls = case hd
+                    of M.MorStr c => (fn M.StrDec(_,_,_,x,_,_,_) => x) (M.structLookup c)
+                     | M.MorView m => M.modInclLookup m
+     in case linkInclGet(incls, newdom)
+       of nil => restrictMorph(tl, newdom)
+        | m :: _ => restrictMorph((toLinkList m) @ tl, newdom)
+     end
+
+  (* turns a morphism into a list of links, i.e., references to ViewDec's and StrDec's
+     definitions are expanded *)
+  and toLinkList(M.MorComp(mor1,mor2)) = (toLinkList mor1) @ (toLinkList mor2)
+    | toLinkList(M.MorStr c) = (case M.structLookup c
+                              of M.StrDef(_,_,_,mor,_) => toLinkList mor
+                               | M.StrDec _ => M.MorStr c :: nil
+                            )
+    | toLinkList(M.MorView m) = M.MorView m :: nil
+  (* turns a list of links into a morphism *)
+  and fromLinkList(l :: nil) = l
+    | fromLinkList(hd :: tl) = M.MorComp(hd, fromLinkList tl)
+
   and checkSymInst(ci as M.ConInst(con, term)) =
       let
      	val v = M.currentMod()
@@ -157,12 +187,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   *)
   and findClash(insts) = findClash'(insts, nil, nil)
       
-  (* goes through morphism inclusion until one with domain "from" is found, then returns it *)
-  and linkInclGet(nil, from) = NONE
-    | linkInclGet((M.ViewIncl mor)::incls, from) =
-        if M.sigInclCheck(from, domain mor)
-        then SOME mor
-        else linkInclGet(incls, from)
+  (* goes through morphism inclusions, returns all with domain "from" *)
+  and linkInclGet(incls, from) =
+     List.mapPartial (fn M.ViewIncl mor => if M.sigInclCheck(from, domain mor) then SOME mor else NONE) incls
  
   (* auxiliary functions that checks whether the ancestors of a link (structure, view, or include) are compatible *)
   and checkAncestors(dom, cod) =
@@ -181,20 +208,27 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        ()
     end
 
-  (* all includes of the domain must be included or translated into the codomain *)
+  (* all includes of the domain must be included or translated into the codomain
+     if there are multiple translations, they must be equal *)
   and checkIncludesOfDomain(dom : IDs.mid, cod : IDs.mid, incls : M.ModIncl list) =
         List.map
-      	  (fn M.SigIncl(from,_) => 
+      	  (fn from =>
       	    case linkInclGet(incls, from)
-      	      of NONE => if M.sigInclCheck(from,cod)
+      	      of nil => if M.sigInclCheck(from,cod)
       	                 then ()
       	                 else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
                                           " but not into " ^ M.modFoldName cod)
-               | SOME _ => ()
+               | l => let val hd :: tl = List.map (fn x => restrictMorph(toLinkList x, from)) l
+                      in
+                      	case List.find (fn x => not(equalMorph(x, hd))) tl
+                      	  of NONE => ()
+                           | SOME mor => raise Error("conflicting translations for included signature " ^
+                               M.modFoldName (domain mor) ^ " (implementation restriction: equality of morphisms only checked up to associativity and definition expansion)")
+                      end
           )
-          (M.modInclLookup dom)
+          (M.sigInclLookupTrans dom)
 
-   (* checks domain and codomain of a morphism included into a link from Dom to Cod *)
+   (* checks domain and codomain of a morphism included into a link from Dom to Cod; returns reconstructed morphism *)
    and checkIncludeInLink(Dom, Cod, mor) =
       let
        	 val (dom, cod, newmor) = reconMorph mor
@@ -208,7 +242,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       	 newmor
       end
 
-  (* checks well-typedness condition for includes *)
+  (* checks simple well-typedness condition for includes; returns reconstructred include *)
   and checkModIncl(si as M.SigIncl (m,_)) =
        if M.inSignature()
        then (checkAncestors(m, M.currentMod()); si)
@@ -218,13 +252,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        	  val v = M.currentMod()
        	  val M.ViewDec(_, _, Dom, Cod, _) =
        	     if M.inSignature()
-       	     then raise Error("including morphisms only allowed in views")
+       	     then raise Error("including morphisms only allowed in links")
        	     else M.modLookup v
        	  val newmor = checkIncludeInLink(Dom, Cod, mor)
-       	  val incls = M.modInclLookup v
-       	  val _ = if incls = nil
-       	          then ()
-       	          else raise Error("implementation restriction: only one include allowed per link")
        	in
        	   M.ViewIncl newmor
        	end
@@ -241,10 +271,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        let
        	  val cod = M.currentMod()
           val _ = checkAncestors(dom, cod);
-          val _ = if (List.length incls <= 1) then ()
-             else raise Error("implementation restriction: only one include allowed per link");
-          val newincls = List.map (fn M.ViewIncl mor => ModSyn.ViewIncl(checkIncludeInLink(dom, cod, mor))) incls;
-          val _ = checkIncludesOfDomain(dom, cod, incls);
+          val newincls = List.map (fn M.ViewIncl mor => M.ViewIncl(checkIncludeInLink(dom, cod, mor))) incls;
+          val _ = checkIncludesOfDomain(dom, cod, newincls);
           val _ = case findClash insts
             of SOME c => raise Error("multiple (possibly induced) instantiations for " ^
                                       M.symFoldName c ^ " in structure declaration")
@@ -350,8 +378,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                  (* included constants are mapped to themselves unless an applicable morphism is included *)
                  | (link, false) =>
                      let fun byIncludes(incls) = case linkInclGet(incls, m)
-              	             of SOME newmor => applyMorph(cidToExp(c), newmor)  (* apply included morphism *)
-              	              | NONE => cidToExp c                              (* default to identity *)
+              	             of newmor :: _ => applyMorph(cidToExp(c), newmor)  (* apply included morphism *)
+              	              | nil => cidToExp c                               (* default to identity *)
                      in case link
                           of M.MorView v => byIncludes(M.modInclLookup v)
                            | M.MorStr s => (case M.structLookup s

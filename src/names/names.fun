@@ -238,7 +238,7 @@ struct
        	    end
        	  (* looks up a name in a list of signatures and returns the first match *)
           fun lookupInMods(nil : (mid * (lid option)) list, ns) = NONE
-            | lookupInMods((m,lOpt) :: tl, ns) = case nameLookup'(m, ns)
+            | lookupInMods((m,lOpt) :: tl, ns) = case nameLookup(m, ns)
               of SOME c => (
                   case lOpt
                     of NONE => SOME c

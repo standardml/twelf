@@ -161,9 +161,15 @@ sig
 
   val onToplevel : unit -> bool
   val modLookup  : IDs.mid -> ModDec
+  (* the number of symbol declarations in a module *)
   val modSize    : IDs.mid -> int
+  (* the parent, i.e., the containing module, of a module *)
   val modParent  : IDs.mid -> (IDs.mid * IDs.lid) list
+  (* direct includes of a module *)
   val modInclLookup: IDs.mid -> ModIncl list
+  (* direct and indirect includes of a signature *)
+  val sigInclLookupTrans: IDs.mid -> IDs.mid list
+  (* checks whether a signature is (in)directly included in another one *)
   val sigInclCheck: IDs.mid * IDs.mid -> bool
   (* implicitLookup(d,c) = SOME mor iff mor:d->c is implicit coercion *)
   val implicitLookup: IDs.mid * IDs.mid -> Morph option

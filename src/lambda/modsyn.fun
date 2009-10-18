@@ -117,6 +117,22 @@ struct
                                handle Option => raise UndefinedMid(m)
   fun modInclLookup(m : IDs.mid) = #4 (valOf (MH.lookup modTable m))
                                handle Option => raise UndefinedMid(m)
+  fun sigInclLookupTrans(m : IDs.mid) =
+  let
+     val found : IDs.mid list ref = ref nil
+     fun aux(n : IDs.mid) =
+     let
+     	val new = List.mapPartial
+     	         (fn SigIncl(x,_) => if List.exists (fn y => x = y) (! found) then NONE else SOME x)
+     	         (modInclLookup n)
+     in
+        found := new @ (! found);
+        List.map aux new;
+        ! found
+     end
+  in
+     aux(m)
+  end
 
   fun currentMod() = #1 (hd (! scope))
   fun currentTargetSig() =
