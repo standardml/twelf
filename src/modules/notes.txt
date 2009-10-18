@@ -13,11 +13,11 @@ scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
 - makes this also resolve comments
 
-better error message for instantiation/definition clash: no printer available
-
 --------
 done
 
+links can have multiple includes
+implicit links
 added twelf-save-reset-check-file to emacs mode (works together with empty sources.cfg)
 forbid instantiating defined constants
 shadowing on toplevel
