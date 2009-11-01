@@ -84,7 +84,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            (dom, cod, M.MorView m)
         end
 
-  (* checks the judgment |- mor : dom -> cod (co-/contravariant with respect to inclusions) *)
+  (* checks the judgment |- mor : dom -> cod (co-/contravariant with respect to inclusions)
+     returns reconstructed morphism *)
   and checkMorph(mor, dom, cod) =
      let
      	val (d,c, mor2) = reconMorph mor
@@ -94,10 +95,10 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         val implAfter  = if inclAfter then NONE else M.implicitLookup(c, cod)
      in
      	case (inclBefore, implBefore, inclAfter, implAfter)
-     	  of (true, _, true, _) => mor
-     	   | (true, _, false, SOME m) => M.MorComp(mor, m)
-     	   | (false, SOME m, true, _) => M.MorComp(m, mor)
-     	   | (false, SOME m, false, SOME n) => M.MorComp(m, M.MorComp(mor, n))
+     	  of (true, _, true, _) => mor2
+     	   | (true, _, false, SOME m) => M.MorComp(mor2, m)
+     	   | (false, SOME m, true, _) => M.MorComp(m, mor2)
+     	   | (false, SOME m, false, SOME n) => M.MorComp(m, M.MorComp(mor2, n))
            | _ => raise Error("morphism does not have expected type")
      end
 
