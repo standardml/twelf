@@ -318,6 +318,7 @@ struct
   (* Printing structural levels *)
   
   fun openToString(ModSyn.OpenAll) = ElemEmpty("open",[])
+    | openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec ((old,new)::tl))
         = ElemEmpty("open", [Attr("name", IDs.mkString(old,"",".","")), Attr("as", new)]) ^ (openToString(ModSyn.OpenDec tl))
     
