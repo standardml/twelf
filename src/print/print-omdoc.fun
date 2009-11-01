@@ -374,7 +374,7 @@ struct
      "<omdoc " ^           
      "xmlns=\"http://omdoc.org/ns\" " ^
      "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-     "uri=\"" ^ base ^ "\"" ^
+     "base=\"" ^ base ^ "\"" ^
      ">\n"
   fun docEndToString() = "</omdoc>"
   
