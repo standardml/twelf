@@ -320,7 +320,7 @@ struct
   fun openToString(ModSyn.OpenAll) = ElemEmpty("open",[])
     | openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec ((old,new)::tl))
-        = ElemEmpty("open", [Attr("name", IDs.mkString(old,"",".","")), Attr("as", new)]) ^ (openToString(ModSyn.OpenDec tl))
+        = ElemEmpty("alias", [Attr("name", IDs.mkString(old,"",".","")), Attr("for", new)]) ^ (openToString(ModSyn.OpenDec tl))
     
   fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
 
@@ -332,7 +332,7 @@ struct
          morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
 
   fun modInclToString(ModSyn.SigIncl(m,opendec), params)
-      = ElemOpen("include", [Attr("from", relModName(m, params))]) ^ (openToString opendec) ^ nl()
+      = ElemEmpty("include", [Attr("from", relModName(m, params))]) (* ^ (openToString opendec) *) ^ nl()
     | modInclToString(ModSyn.ViewIncl(mor), params)
       = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
   
