@@ -10,4 +10,4 @@ fi
 # "$@" expands to the list of command line parameters as a list of words
 # The working command should be exactly `find "@"`
 FILES=`find "$@"`
-$TWELFBIN/check $OMDOC `echo $FILES`
+$TWELFBIN/check-some $OMDOC `echo $FILES`
