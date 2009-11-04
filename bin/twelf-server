@@ -1,0 +1,4 @@
+#!/bin/csh
+TWELFBIN = `dirname $0`
+sml @SMLload=$TWELFBIN/.heap/twelf-server \
+     @SMLdebug=/dev/null
