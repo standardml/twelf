@@ -92,7 +92,7 @@ struct
          of nil => nil
           | hd :: tl => List.rev ((omdocExtension hd) :: tl)
     in
-       f ^ " " ^ OS.Path.toString baseFile ^ " " ^ IDs.mkString(dif, "", "/", "")
+       IDs.mkString(dif, "", "/", "")
     end
   (* compute module reference (URI) relative to ! baseFile *)
   fun relModName(m, params : Params) =
@@ -380,7 +380,6 @@ struct
      "<omdoc " ^           
      "xmlns=\"http://omdoc.org/ns\" " ^
      "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-     "base=\"" ^ base ^ "\"" ^
      ">\n"
   fun docEndToString() = "</omdoc>"
   

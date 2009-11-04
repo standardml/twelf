@@ -1305,7 +1305,7 @@ struct
 	      | install' (S.Cons(decl, s')) =
 	        (install1 (fileName, decl); install s')
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-            val _ = ModSyn.newFile fileName                                    (* for name management -fr *)
+            val _ = ModSyn.newFile (OS.Path.mkCanonical fileName)              (* for name management -fr *)
 	  in
 	    install (Parser.parseStream instream)
 	  end)

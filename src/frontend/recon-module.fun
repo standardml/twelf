@@ -166,13 +166,13 @@ struct
        	  ModSyn.StrDef([name], nil, Dom, Mor, implicit)
        end
     
-   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) = ModSyn.SigDec(fileName, [name])
+   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) = ModSyn.SigDec(OS.Path.mkCanonical fileName, [name])
      | modbeginToModDec(viewbegin(name, dom, cod, implicit), Paths.Loc(fileName, _)) =
          let
             val Dom = modnameLookupWithError SIG dom
             val Cod = modnameLookupWithError SIG cod
          in
-            ModSyn.ViewDec (fileName, [name], Dom, Cod, implicit)
+            ModSyn.ViewDec (OS.Path.mkCanonical fileName, [name], Dom, Cod, implicit)
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =
