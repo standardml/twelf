@@ -1,7 +1,7 @@
 @echo off
 rem checks a list of files; prints to omdoc if -omdoc DIR is supplied
 SET SML=sml
-SET BIN=%~dp0 
+SET BIN=%~dp0
 
 if %1==-omdoc (
   SET OMDOC=%2
@@ -33,7 +33,7 @@ SET COMMAND=Print.OMDoc.toFile %TARGET%.omdoc
 (
    echo loadFile %1
    if not "%COMMAND%"=="" echo %COMMAND%
-)  | %SML% @SMLload="%BIN%\.heap\twelf-server"
+)  | %SML% @SMLload="%BIN%.heap\twelf-server"
 shift
 goto loop
 
