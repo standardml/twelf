@@ -93,10 +93,10 @@ sig
   *)
   datatype ModDec
      = SigDec of
-         string                        (* base, e.g., file name *)
+         string                        (* base, file name in Unix syntax, relative to current directory *)
        * string list                   (* qualified name *)
      | ViewDec of
-         string                        (* base, e.g., file name *)
+         string                        (* base, file name in Unix syntax, relative to current directory *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
