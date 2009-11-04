@@ -1,6 +1,7 @@
 (* Printing to OMDoc *)
 (* Author: Florian Rabe, based on print.fun *)
-
+(* views print wrong assignments, see CartSL; views must change #current to codomain
+   relative module names must start with / *)
 functor PrintOMDoc(
    structure Whnf : WHNF
    structure Names : NAMES
@@ -45,7 +46,7 @@ struct
   
   (* locations of meta theories *)
   val baseMMT = "http://cds.omdoc.org/omdoc/mmt.omdoc"
-  val baseLF = "http://cds.omdoc.org/lf/lf.omdoc"
+  val baseLF = "http://cds.omdoc.org/foundations/lf/lf.omdoc"
   val cdMMT = ["mmt"]
   val cdLF = ["lf"]
   val cdTwelf = "twelf"
