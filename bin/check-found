@@ -1,0 +1,13 @@
+#!/bin/bash
+TWELFBIN=`dirname $0`
+
+if [ $1 = -omdoc ]; then
+  OMDOC="-omdoc $2"; shift; shift
+else
+  OMDOC=""
+fi
+
+# "$@" expands to the list of command line parameters as a list of words
+# The working command should be exactly `find "@"`
+FILES=`find "$@"`
+$TWELFBIN/check $OMDOC `echo $FILES`

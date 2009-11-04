@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# the twelf directory, must contain sudirectory bin
+TWELFBIN=`dirname $0`
+
+# if the first argument is -omdoc, all files are converted to OMDoc, otherwise only checked
+if [ $1 = -omdoc ]; then 
+  TARGDIR="$2"; shift; shift
+else
+  TARGDIR=""
+fi
+
+# $ERROR counts the number of files with errors
+ERROR=0
+# $ERRORFILE collects error messages
+ERRORFILE=""
+
+# iterate over all files (must be relative paths?) that are passed via the command line
+for file in $*
+do
+ 
+  # if requested, $COMMAND holds the command sent to Twelf for OMDoc conversion
+  if [ "$TARGDIR" != '' ]; then
+     # ".elf" is removed if present, ".omdoc" appended
+     COMMAND="Print.OMDoc.toFile $TARGDIR/${file%\.elf}.omdoc"
+  else
+    COMMAND=""
+  fi
+
+  # Twelf is called on the file with small verbosity, the output is printed and stored in $OUTPUT
+  echo -e "\n*******************************"
+  echo Processing $file
+  OUTPUT=`echo -e "set chatter 1\n loadFile $file\n $COMMAND\n OS.exit" | $TWELFBIN/twelf-server`
+  echo -e "$OUTPUT"
+
+  # if there was an error ("ABORT" in the output), ...
+  if echo -e "$OUTPUT" | grep "ABORT"; then
+    # ... append error line to output that can be grepped for
+    ERRORFILE="$ERRORFILE\n%% ERROR %% $file"
+    # ... count errors
+    ERROR=$(( $ERROR + 1))
+    # ... if applicable, remove omdoc file (OMDoc conversion is called even after finding an error)
+    if [ "$TARGDIR" != "" ]; then
+      rm $file.omdoc
+    fi
+  fi
+done
+
+# If there were errors, print errors and number of errors
+if [ $ERROR -gt 0 ]; then
+  echo -e "\n*******************************"
+  echo -e "$ERRORFILE"
+  echo "There were $ERROR errors."
+fi
+
+# exit code is number of errors
+exit $ERROR
