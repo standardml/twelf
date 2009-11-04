@@ -285,7 +285,7 @@ struct
     in
     	if (fixity = Names.Fixity.Nonfix andalso imp = 0)
     	then ""
-        else ElemEmpty("notation", [Attr("for", localPath (I.conDecName(ModSyn.sgnLookup cid))),
+        else ElemEmpty("notation", [Attr("for", "??" ^ localPath (I.conDecName(ModSyn.sgnLookup cid))),
            Attr("role", "application")] @ atts @ [Attr("implicit", Int.toString imp)])
     end
 
