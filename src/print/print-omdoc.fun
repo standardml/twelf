@@ -92,7 +92,7 @@ struct
          of nil => nil
           | hd :: tl => List.rev ((omdocExtension hd) :: tl)
     in
-       IDs.mkString(dif, "", "/", "")
+       f ^ " " ^ OS.Path.toString baseFile ^ " " ^ IDs.mkString(dif, "", "/", "")
     end
   (* compute module reference (URI) relative to ! baseFile *)
   fun relModName(m, params : Params) =
