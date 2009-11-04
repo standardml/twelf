@@ -251,7 +251,7 @@ struct
   (* Printing non-modular symbol level declarations *)
   
   fun fmtSymbol(name, V, Uopt, imp, params) =
-  	ElemOpen("constant", [Attr("name", escape name)]) ^ nl_ind() ^
+  	ElemOpen("constant", [Attr("name", name)]) ^ nl_ind() ^
   	   "<type>" ^ nl_ind() ^
   	      fmtExpTop (I.Null, (V, I.id), imp, params) ^ nl_unind() ^
   	   "</type>" ^
@@ -285,7 +285,7 @@ struct
     in
     	if (fixity = Names.Fixity.Nonfix andalso imp = 0)
     	then ""
-        else ElemEmpty("notation", [Attr("for", localPath (List.map escape (I.conDecName(ModSyn.sgnLookup cid)))),
+        else ElemEmpty("notation", [Attr("for", localPath (I.conDecName(ModSyn.sgnLookup cid))),
            Attr("role", "application")] @ atts @ [Attr("implicit", Int.toString imp)])
     end
 
