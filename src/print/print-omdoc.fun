@@ -108,8 +108,9 @@ struct
     end
   (* compute symbol reference (OMS) relative to params *)
   fun relSymOMS (c, params : Params) =
-    let val m = IDs.midOf c
-    	val dec = ModSyn.modLookup m
+    let
+        val m = IDs.midOf c
+    	  val dec = ModSyn.modLookup m
         val modname = if m = #current params then nil else ModSyn.modDecName dec
         val docname = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
     in OMS3(docname, modname, ModSyn.symName c)
