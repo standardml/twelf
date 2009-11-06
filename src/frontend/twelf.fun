@@ -1380,23 +1380,29 @@ struct
     fun decl (modname, name) =
        case Names.modnameLookup (Names.parseQualifiedName modname)
           of NONE => (msg (modname ^ " has not been declared\n"); ABORT)
-           | SOME m => (
-                case Names.nameLookup(m, Names.parseQualifiedName name)
-                   of NONE => (msg (name ^ " has not been declared\n"); ABORT)
-                  | SOME cid => decl' (cid)
-             )
-    and decl' (cid) =
-        let
-	  val conDec = ModSyn.sgnLookup (cid)
+           | SOME m =>
+                let
+                  val (dom, inSig) = case ModSyn.modLookup m
+                     of ModSyn.SigDec _ => (m, true)
+                      | ModSyn.ViewDec(_,_,d,_,_) => (d, false)
+                in
+                   case Names.nameLookup(dom, Names.parseQualifiedName name)
+                     of NONE => (msg (name ^ " has not been declared\n"); ABORT)
+                      | SOME c' => decl' (if inSig then c' else IDs.newcid(m, IDs.lidOf c'))
+                end
+    and decl' (cid) = (
 	  (* val fixity = Names.getFixity (cid) *)
 	  (* can't get name preference right now *)
 	  (* val mode = ModeTable.modeLookup (cid) *)
 	  (* can't get termination declaration *)
-	in
-	  msg (Print.conDecToString conDec ^ "\n");
-	  OK
-	end
-
+       (case ModSyn.symLookup cid
+	  of ModSyn.SymCon conDec => msg (Print.conDecToString conDec ^ "\n")
+	   | ModSyn.SymStr strDec => msg (Print.strDecToString strDec ^ "\n")
+	   | ModSyn.SymConInst conInst => msg (Print.instToString conInst ^ "\n")
+	   | ModSyn.SymStrInst strInst => msg (Print.instToString strInst ^ "\n")
+       ) handle ModSyn.UndefinedCid _ => msg ("no structure assignment provided\n");
+       OK
+    )
 
     (* Support tracking file modification times for smart re-appending. *)
     structure ModFile :

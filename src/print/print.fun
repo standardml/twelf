@@ -943,9 +943,9 @@ in
   fun modInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
     | modInclToString(ModSyn.ViewIncl mor) = "%include " ^ (morphToString mor) ^ "."
 
-  fun instToString(ModSyn.ConInst(c, U)) = 
+  fun instToString(ModSyn.ConInst(c, _, U)) = 
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
-    | instToString(ModSyn.StrInst(c, mor)) =
+    | instToString(ModSyn.StrInst(c, _, mor)) =
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
   fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, opendec, impl)) = (
      "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^

@@ -114,7 +114,7 @@ struct
 		val _ = if impl > 0 then error(r', "implicit arguments not allowed in instantiation") else ()
 		(* val expImpl = ModSyn.constImp Con *)
              in
-		ModSyn.ConInst(Con, Term)
+		ModSyn.ConInst(Con, NONE, Term)
 		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
 		                                                                         ", declaration " ^ Int.toString expImpl) *)
              end
@@ -124,7 +124,7 @@ struct
              	val Str = nameLookupWithError STRUC (dom, names, r)
              	val Mor = morphToMorph (cod, mor)
              in
-             	ModSyn.StrInst(Str, Mor)
+             	ModSyn.StrInst(Str, NONE, Mor)
              end
   
    fun modinclToModIncl(sigincl (sigid, opens), _) =

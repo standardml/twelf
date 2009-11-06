@@ -18,7 +18,7 @@ struct
 
   datatype OpenDec = OpenDec of (IDs.Qid * string) list | OpenAll
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
-  datatype SymInst = ConInst of IDs.cid * I.Exp | StrInst of IDs.cid * Morph
+  datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
   datatype ModIncl = SigIncl of IDs.mid * OpenDec | ViewIncl of Morph
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (ModIncl list) * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
@@ -42,8 +42,10 @@ struct
   fun strDecImpl (StrDec(_, _, _, _, _, _, i)) = i
     | strDecImpl (StrDef(_, _, _, _, i)) = i
 
-  fun symInstCid(ConInst(c, _)) = c
-    | symInstCid(StrInst(c, _)) = c
+  fun symInstCid(ConInst(c, _, _)) = c
+    | symInstCid(StrInst(c, _, _)) = c
+  fun symInstOrg(ConInst(_, O, _)) = O
+    | symInstOrg(StrInst(_, O, _)) = O
 
   (********************** Stateful data structures **********************)
 
@@ -240,9 +242,11 @@ struct
   (* changes state if f does *)
   fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
     let
-      val length = modSize m
+      val length = case modLookup m
+        of SigDec _ => modSize m
+         | ViewDec(_,_,dom,_,_) => modSize dom
       fun doRest(l) =
-	if l = length then () else (f (m,l); doRest(l+1))
+	if l = length then () else (f(m,l); doRest(l+1))
     in
       doRest(0)
     end

@@ -1,7 +1,6 @@
 (* Printing to OMDoc *)
 (* Author: Florian Rabe, based on print.fun *)
-(* views print wrong assignments, see CartSL; views must change #current to codomain
-   relative module names must start with / *)
+
 functor PrintOMDoc(
    structure Whnf : WHNF
    structure Names : NAMES
@@ -57,7 +56,7 @@ struct
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
   fun Attr(label, value) = label ^ "=\"" ^ value ^ "\""
   fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
-  fun mpath(doc, module) = doc ^ "?" ^ (localPath module)
+  fun mpath(doc, module) = doc ^ "?" ^ (if doc = "" then "/" else "") ^ (localPath module)
   fun OMS3(base, module, name) = let
      val baseA = if base = "" then nil else [Attr("base", base)]
      val modA = if module = nil then nil else [Attr("module", localPath module)]
@@ -85,7 +84,7 @@ struct
       then diff(tl, tlf)
       else (List.map (fn _ => "..") tl) @ (hdf :: tlf)
   fun pathToArcList(p: Path) = if #isAbs p andalso not(#vol p = "") then #vol p :: #arcs p else #arcs p
-  (* compute document reference (URI) relative to ! baseFile *)
+  (* compute document reference (URI) relative to params *)
   fun relDocName(f, baseFile) = 
     let
        val file = OS.Path.fromString f
@@ -95,22 +94,24 @@ struct
     in
        IDs.mkString(dif, "", "/", "")
     end
-  (* compute module reference (URI) relative to ! baseFile *)
+  (* compute module reference (URI) relative to params *)
   fun relModName(m, params : Params) =
     let val dec = ModSyn.modLookup m
     in mpath(relDocName (ModSyn.modDecBase dec, #baseFile params), ModSyn.modDecName dec)
     end
-  (* compute module reference (OMS) relative to ! baseFile *)
+  (* compute module reference (OMS) relative to params *)
   fun relModOMS (m, params : Params) =
     let val dec = ModSyn.modLookup m
-    in OMS3(relDocName (ModSyn.modDecBase dec, #baseFile params), ModSyn.modDecName dec, nil)
+        val doc = relDocName (ModSyn.modDecBase dec, #baseFile params)
+        val md = (if doc = "" then [""] else nil) @ ModSyn.modDecName dec
+    in OMS3(doc, md, nil)
     end
-  (* compute symbol reference (OMS) relative to ! baseFile *)
+  (* compute symbol reference (OMS) relative to params *)
   fun relSymOMS (c, params : Params) =
     let val m = IDs.midOf c
     	val dec = ModSyn.modLookup m
         val modname = if m = #current params then nil else ModSyn.modDecName dec
-        val docname = if m = 0 then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
+        val docname = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
     in OMS3(docname, modname, ModSyn.symName c)
     end
 
@@ -328,10 +329,10 @@ struct
     
   fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
 
-  fun instToString(ModSyn.ConInst(c, U), params) = 
+  fun instToString(ModSyn.ConInst(c, _, U), params) = 
          ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
-    | instToString(ModSyn.StrInst(c, mor), params) =
+    | instToString(ModSyn.StrInst(c, _, mor), params) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
 
@@ -390,25 +391,31 @@ struct
      let
      	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
      	 val mdec = ModSyn.modLookup m
+     	 val params : Params = case mdec
+     	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
+     	    | ModSyn.ViewDec(_,_,_,cod,_) => {baseFile = baseFile, current = cod}
      	 val incls = ModSyn.modInclLookup m
-     	 val params : Params = {baseFile = baseFile, current = m}
      in
      	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
      	  andalso not(m = 0 andalso ModSyn.modSize m = 0)
      	then (
           print(modBeginToString(mdec, incls, params));
-          ModSyn.sgnApp(m, fn c =>
-           (case ModSyn.symLookup c
+          ModSyn.sgnApp(m, fn c => (case ModSyn.symLookup c
              of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
                                  then print (conDecToString(c, params) ^ nl())
                                  else ()
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
                                  then print (strDecToString(strdec, params) ^ nl())
                                  else ()
-              | ModSyn.SymConInst inst => print (instToString(inst, params) ^ nl())
-              | ModSyn.SymStrInst inst => print (instToString(inst, params) ^ nl())
-           ) handle ModSyn.UndefinedCid _ => ()  (* in views not everything is defined *)
-          );
+              | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymStrInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params) ^ nl())
+                    | SOME _ => ()
+                )  (* in views not everything is defined *)
+          ) handle ModSyn.UndefinedCid c => print ("!!!" ^ IDs.cidToString c));
           print(modEndToString(mdec, params));
           print(nl() ^ nl());
           TextIO.flushOut file

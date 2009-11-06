@@ -221,7 +221,7 @@ struct
 \  make <file>                 - Read and load configuration from <file>\n\
 \  reset                       - Reset global signature.\n\
 \  loadFile <file>             - Load Twelf file <file>\n\
-\  decl <id>                   - Show constant declaration for <id>\n\
+\  decl <m> <c>                - Show constant declaration for <c> in module <m> \n\
 \  top                         - Enter interactive query loop\n\
 \  Table.top                   - Enter interactive loop for tables queries\n\
 \  version                     - Print Twelf server's version\n\

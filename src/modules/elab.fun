@@ -131,7 +131,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   and fromLinkList(l :: nil) = l
     | fromLinkList(hd :: tl) = M.MorComp(hd, fromLinkList tl)
 
-  and checkSymInst(ci as M.ConInst(con, term)) =
+  and checkSymInst(ci as M.ConInst(con, _, term)) =
       let
      	val v = M.currentMod()
      	val typ = M.constType con
@@ -145,12 +145,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      	then ci
         else raise Error("type mismatch")
      end
-    | checkSymInst(M.StrInst(str, mor)) =
+    | checkSymInst(M.StrInst(str, org, mor)) =
      let
      	val expDom = M.strDecDom (M.structLookup str)
      	val m = checkMorph(mor, expDom, M.currentTargetSig())
      in
-     	M.StrInst(str, m)
+     	M.StrInst(str, org, m)
      end
 
   (* auxiliary function of findClash
@@ -369,7 +369,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                 of (M.MorStr(s), true) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
                 (* apply morphism by looking up instantiation of view *)
                  | (M.MorView(v), true) => (
-                     let val ModSyn.ConInst(_, exp) = ModSyn.conInstLookup(v, IDs.lidOf(c))
+                     let val ModSyn.ConInst(_, _, exp) = ModSyn.conInstLookup(v, IDs.lidOf(c))
                      in exp
                      end
                      handle ModSyn.UndefinedCid _ => raise UndefinedMorph(v,c)
@@ -398,13 +398,13 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     | getInst'(inst :: insts, c, q) = (
         case inst
            (* if c is instantiated directly, return its instantiation *)
-           of M.ConInst(c', e) =>
+           of M.ConInst(c', _, e) =>
               if c' = c
               then SOME e
               else getInst'(insts, c, q)
            (* if c can be addressed as c' imported via s, and if s is instantiated with mor,
               return the application of mor to c' *)
-            | M.StrInst(s, mor) => (
+            | M.StrInst(s, _, mor) => (
                 case IDs.preimageFromQid(s, q)
                   of SOME c' => SOME (applyMorph(cidToExp c', mor))
                    (* otherwise, try next instantiation *)
@@ -520,7 +520,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   and flattenInst(instID : IDs.cid, installInst : M.SymInst -> IDs.cid) =
      let
         val viewID = IDs.midOf instID
-        val M.SymStrInst(M.StrInst(s, mor)) = M.symLookup instID
+        val M.SymStrInst(M.StrInst(s, _, mor)) = M.symLookup instID
         val (dom, _, _) = reconMorph mor
         fun flatten1(c' : IDs.cid) =
            let 
@@ -541,9 +541,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                                    else defInstClash(defDom, defCod, applyMorph(defDom, M.MorView viewID),
                                                      "definition/instantiation clash for " ^ M.symFoldName c)
                    in
-                      installInst(M.ConInst(c, defCod))
+                      installInst(M.ConInst(c, SOME instID, defCod))
                    end
-                  | M.SymStr _ => installInst(M.StrInst(c, M.MorComp(M.MorStr c', mor)))
+                  | M.SymStr _ => installInst(M.StrInst(c, SOME instID, M.MorComp(M.MorStr c', mor)))
            in
               () 
            end

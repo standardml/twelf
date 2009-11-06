@@ -1,17 +1,51 @@
+(* data types for IDs *)
+(* these types are the only part of the module system that must exist for intsyn *)
+(* Florian Rabe and Carsten Schürmann *)
+
+(* This signature was supposed to be used to make the id type definitions abstract,
+   but it turned out I can't enforce that with SMLNJ. So it's not used for now. -fr *)
+signature IDTYPES = sig
+   (* local id's of (declared or imported) declarations (= constants or structures) *)
+   eqtype lid
+   (* global id's of modules (= signatures or views) *)
+   eqtype mid
+   (* global id's of declarations, most reasonably cid = mid * lid  but left abstract for future extensions *)
+   eqtype cid
+   val newcid : mid * lid -> cid
+   val midOf : cid -> mid
+   val lidOf : cid -> lid
+   val invalidCid : cid
+   (* hashing cid's *)
+   val cidhash : cid -> int
+   (* comparing cid's *)
+   val cidcompare : cid * cid -> order
+   (* printing cid's *)
+   val cidToString : cid -> string
+end
+
 (* This structure encapsulates all data types and their methods pertaining to id's. *)
 structure IDs = struct
-   type lid = int                        (* local id's of (declared or imported) declarations *)
-   type mid = int                        (* global id's of modules (= signatures) *)
-   type cid = mid * lid                  (* global id's of declarations *)
-   type qid = (cid * cid) list           (* qualified local id, this gives the path along which a declaration was imported *)
-   fun cidhash(x,y) = 1000 * x + y       (* hashing cid's *)
-   fun cidcompare((x,y),(x',y')) =       (* comparing cid's *)
-      case Int.compare(x,x')
-        of LESS => LESS
-         | GREATER => GREATER
-         | EQUAL => Int.compare(y,y')
+   (* should be idtypes : IDTYPES, see above -fr *)
+   structure idtypes = struct
+      type lid = int
+      type mid = int                        
+      type cid = mid * lid                  
+      fun newcid(m,c) = (m,c)
+      fun midOf(m,_) = m
+      fun lidOf(_,l) = l
+      val invalidCid = (~1,~1)
+      fun cidhash(x,y) = 1000 * x + y
+      fun cidcompare((x,y),(x',y')) =       (* comparing cid's *)
+         case Int.compare(x,x')
+           of LESS => LESS
+            | GREATER => GREATER
+            | EQUAL => Int.compare(y,y')
+      fun cidToString(m,l) = "(" ^ (Int.toString m) ^ "," ^ (Int.toString l) ^ ")"
+   end
+   open idtypes
 
-   fun midcidcompare((x,y),(x',y')) =       (* comparing cid's *)
+   (* convenience methods *)
+   fun midcidcompare((x,y),(x',y')) =
       case Int.compare(x,x')
         of LESS => LESS
          | GREATER => GREATER
@@ -22,20 +56,15 @@ structure IDs = struct
          | GREATER => GREATER
          | EQUAL => cidcompare(y2,y2')
    
-   fun newcid(m,c) = (m,c)               (* constructor for cid's *)
-   fun midOf(m,_) = m                    (* cid field accessors *)
-   fun lidOf(_,l) = l
-   fun cidToString(m,l) = "(" ^ (Int.toString m) ^ "," ^ (Int.toString l) ^ ")"
-   val invalidCid = (~1,~1)
+   type qid = (cid * cid) list           (* qualified local id, this gives the path along which a declaration was imported *)
    fun preimageFromQid(s : cid, nil : qid) = NONE
-     | preimageFromQid(s,       (s',c) :: tl) = if s = s' then SOME c else preimageFromQid(s, tl)
+     | preimageFromQid(s,    (s',c) :: tl) = if s = s' then SOME c else preimageFromQid(s, tl)
 
 (* This stuff doesn't belong here, but I didn't know where else to put it. -fr *)
    type Qid = string list
    (* get a string from a list *)
    fun mkString(nil : string list, pre, mid, post) = pre ^ post
     | mkString(a :: l, pre, mid, post) = pre ^ (foldl (fn (x,y) => y ^ mid ^ x) a l) ^ post
-
 end
 
 (* These tables should be moved to the others *) 

@@ -1,3 +1,4 @@
 @echo off
-SET TWELFBIN=%~dp0
-sml @SMLload="%TWELFBIN%\.heap\twelf-server"
+SET SML=sml
+SET TWELFDIR=e:\other\twelf-mod\
+%SML% @SMLload="%TWELFDIR%bin\.heap\twelf-server"
