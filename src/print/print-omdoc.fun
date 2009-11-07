@@ -361,9 +361,12 @@ struct
      "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
-  fun modBeginToString(ModSyn.SigDec(base,name), incls, params) = 
-         ElemOpen("theory", [Attr("name", localPath name)]) ^ nl_ind() ^
+  fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
+      let val meta = if incls = nil then [Attr("meta", baseLF)] else nil
+      in
+         ElemOpen("theory", Attr("name", localPath name) :: meta) ^ nl_ind() ^
          IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
+      end
     | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), incls, params) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", relModName(dom, params)),
