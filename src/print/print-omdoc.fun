@@ -325,7 +325,7 @@ struct
   fun openToString(ModSyn.OpenAll, _) = "" (* ElemEmpty("open",[]) *)
     | openToString(ModSyn.OpenDec nil, _) = ""
     | openToString(ModSyn.OpenDec ((old,new)::tl), prefix) =
-           ElemEmpty("alias", [Attr("name", new), Attr("for", prefix ^ IDs.mkString(old,"",".",""))])
+           ElemEmpty("alias", [Attr("name", localPath [new]), Attr("for", prefix ^ localPath old)])
           ^ openToString(ModSyn.OpenDec tl, prefix)
     
   fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
@@ -361,14 +361,9 @@ struct
      "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
-  fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
-      let val (incls, meta) = case incls
-                of nil => (nil, mpath(baseLF, cdLF))
-                 | ModSyn.SigIncl(m,_) :: tl => (tl, relModName(m, params))
-      in
-         ElemOpen("theory", [Attr("name", localPath name), Attr("meta", meta)]) ^ nl_ind() ^
+  fun modBeginToString(ModSyn.SigDec(base,name), incls, params) = 
+         ElemOpen("theory", [Attr("name", localPath name)]) ^ nl_ind() ^
          IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
-      end
     | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), incls, params) =
         ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", relModName(dom, params)),
