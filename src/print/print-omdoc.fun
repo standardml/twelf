@@ -56,7 +56,7 @@ struct
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
   fun Attr(label, value) = label ^ "=\"" ^ value ^ "\""
   fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
-  fun mpath(doc, module) = doc ^ "?" ^ (if doc = "" then "/" else "") ^ (localPath module)
+  fun mpath(doc, module) = doc ^ "?" ^ (localPath module)
   fun OMS3(base, module, name) = let
      val baseA = if base = "" then nil else [Attr("base", base)]
      val modA = if module = nil then nil else [Attr("module", localPath module)]
@@ -103,7 +103,7 @@ struct
   fun relModOMS (m, params : Params) =
     let val dec = ModSyn.modLookup m
         val doc = relDocName (ModSyn.modDecBase dec, #baseFile params)
-        val md = (if doc = "" then [""] else nil) @ ModSyn.modDecName dec
+        val md = ModSyn.modDecName dec
     in OMS3(doc, md, nil)
     end
   (* compute symbol reference (URI) relative to params *)
