@@ -101,7 +101,7 @@ struct
      	   of LS.Cons((L.AS, _), s') => parseId' (LS.expose s')
      	    | LS.Cons((L.ID(_,_),_), _) => ((List.last oldl, oldr), f')
      	    | LS.Cons((L.DOT,_), _) => ((List.last oldl, oldr), f')
-     	    | LS.Cons ((t, r), _) =>
+     	    | LS.Cons((t, r), _) =>
      	       Parsing.error (r, "Expected qualified identifier, found token " ^ L.toString t)
      	val (rest, f') = parseOpenIds' f'
       in

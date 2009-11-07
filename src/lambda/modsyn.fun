@@ -16,7 +16,7 @@ struct
   exception UndefinedCid of IDs.cid
   exception UndefinedMid of IDs.mid
 
-  datatype OpenDec = OpenDec of (IDs.Qid * string) list | OpenAll
+  datatype OpenDec = OpenDec of (IDs.cid * string) list | OpenAll
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
   datatype ModIncl = SigIncl of IDs.mid * OpenDec | ViewIncl of Morph

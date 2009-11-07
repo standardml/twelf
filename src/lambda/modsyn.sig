@@ -27,7 +27,7 @@ sig
     They consists of a list of qualified names c of the domain signature and names n.
     The semantics is that n becomes an abbreviation for c in the codomain signature.
   *)
-  datatype OpenDec = OpenDec of (IDs.Qid * string) list | OpenAll
+  datatype OpenDec = OpenDec of (IDs.cid * string) list | OpenAll
 
   (*
      morphisms

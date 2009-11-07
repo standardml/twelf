@@ -106,11 +106,17 @@ struct
         val md = (if doc = "" then [""] else nil) @ ModSyn.modDecName dec
     in OMS3(doc, md, nil)
     end
+  (* compute symbol reference (URI) relative to params *)
+  fun relSymName (c, params : Params) =
+    let val dec = ModSyn.modLookup (IDs.midOf c)
+    in mpath(relDocName (ModSyn.modDecBase dec, #baseFile params), ModSyn.modDecName dec) ^ 
+             "?" ^ (localPath (ModSyn.symName c))
+    end
   (* compute symbol reference (OMS) relative to params *)
   fun relSymOMS (c, params : Params) =
     let
         val m = IDs.midOf c
-    	  val dec = ModSyn.modLookup m
+    	val dec = ModSyn.modLookup m
         val doc = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
         val md = if m = #current params then nil else (if doc = "" then [""] else nil) @ ModSyn.modDecName dec
     in OMS3(doc, md, ModSyn.symName c)
@@ -322,11 +328,15 @@ struct
 
   (* Printing structural levels *)
   
-  fun openToString(ModSyn.OpenAll, _) = "" (* ElemEmpty("open",[]) *)
-    | openToString(ModSyn.OpenDec nil, _) = ""
-    | openToString(ModSyn.OpenDec ((old,new)::tl), prefix) =
-           ElemEmpty("alias", [Attr("name", localPath [new]), Attr("for", prefix ^ localPath old)])
-          ^ openToString(ModSyn.OpenDec tl, prefix)
+  fun openToString(ModSyn.OpenAll, _, params) = "" (* ElemEmpty("open",[]) *)
+    | openToString(ModSyn.OpenDec nil, _, _) = ""
+    | openToString(ModSyn.OpenDec ((c,new)::tl), strOpt, params) =
+      let val old = case strOpt
+           of SOME s => "??" ^ localPath (s @ (ModSyn.symName c))
+            | NONE => relSymName(c, params)
+      in ElemEmpty("alias", [Attr("name", localPath [new]), Attr("for", old)])
+          ^ openToString(ModSyn.OpenDec tl, strOpt, params)
+      end
     
   fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
 
@@ -339,7 +349,7 @@ struct
 
   fun modInclToString(ModSyn.SigIncl(m,opendec), params) =
         let val from = relModName(m, params)
-        in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, from ^ "?")) ^ nl()
+        in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
         end
     | modInclToString(ModSyn.ViewIncl(mor), params)
       = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
@@ -354,7 +364,7 @@ struct
         case insts of nil => "" | _ => nl_ind() ^ dolist(fn inst => instToString(inst, params), insts, nl) ^ 
         dolist(fn incl => modInclToString(incl, params), incls, nl) ^ nl_unind()
         ) ^ "</structure>" ^
-        openToString(opendec, "??" ^ localPath name ^ "/")
+        openToString(opendec, SOME name, params)
      end
    | strDecToString(ModSyn.StrDef(name, _, dom, def, _), params) =
      ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^

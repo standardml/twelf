@@ -82,7 +82,13 @@ struct
         else ModSyn.MorComp(morphToMorph(nextCod, (init, r0)), link)
      end
 
-  fun openToOpen(l) = ModSyn.OpenDec (List.map (fn ((old,_),(new,_)) => (old,new)) l)
+  fun openToOpen(m,opens) = ModSyn.OpenDec (List.map
+     (fn ((old,r),(new,_)) =>
+       let val c = nameLookupWithError CON (m,old,r)
+       in (c, new)
+       end
+     )
+     opens)
 
   fun syminstToSymInst(dom : IDs.mid, cod : IDs.mid, inst : syminst, l) =
      case inst
@@ -133,7 +139,7 @@ struct
 	 val Opens = case opens
 	   of NONE => ModSyn.OpenDec nil            (* no open at all *)
 	    | SOME nil => ModSyn.OpenAll            (* open by itself --> open all *)
-	    | SOME l => openToOpen l                (* open with list of ids *)
+	    | SOME l => openToOpen (m,l)            (* open with list of ids *)
       in
       	 ModSyn.SigIncl (m, Opens)
       end
@@ -153,7 +159,7 @@ struct
     	val Incls = List.map (fn x => modinclToModIncl(x,loc)) incls
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
 	val Opens = case opens
-	  of SOME l => openToOpen l
+	  of SOME l => openToOpen (Dom,l)
 	   | NONE => ModSyn.OpenDec nil
     in
     	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Opens, implicit)

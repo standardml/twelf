@@ -929,8 +929,7 @@ in
     | openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec l) =
        let fun doList(nil) = ""
-             | doList((old,new) :: tl) = " " ^ (Names.foldQualifiedName old) ^
-                                         (if (List.last old = new) then "" else " %as " ^ new) ^ (doList tl)
+             | doList((old,new) :: tl) = " " ^ (ModSyn.symFoldName old) ^ " %as " ^ new ^ (doList tl)
        in " %open" ^ (doList l)
        end
   fun morphToString(ModSyn.MorStr(c)) =
