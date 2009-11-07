@@ -413,8 +413,8 @@ struct
               | ModSyn.SymStrInst inst => (case ModSyn.symInstOrg inst
                    of NONE => print (instToString(inst, params) ^ nl())
                     | SOME _ => ()
-                )  (* in views not everything is defined *)
-          ) handle ModSyn.UndefinedCid c => print ("!!!" ^ IDs.cidToString c));
+                )
+          ) handle ModSyn.UndefinedCid c => ()); (* in views not everything is defined *)
           print(modEndToString(mdec, params));
           print(nl() ^ nl());
           TextIO.flushOut file
