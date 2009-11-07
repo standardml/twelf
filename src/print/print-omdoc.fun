@@ -362,7 +362,7 @@ struct
      "</structure>"
 
   fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
-      let val meta = if incls = nil then [Attr("meta", baseLF)] else nil
+      let val meta = if incls = nil then [Attr("meta", baseLF ^ "?" ^ localPath cdLF)] else nil
       in
          ElemOpen("theory", Attr("name", localPath name) :: meta) ^ nl_ind() ^
          IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
