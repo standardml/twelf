@@ -118,7 +118,7 @@ struct
         val m = IDs.midOf c
     	val dec = ModSyn.modLookup m
         val doc = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
-        val md = if m = #current params then nil else (if doc = "" then [""] else nil) @ ModSyn.modDecName dec
+        val md = if m = #current params then nil else ModSyn.modDecName dec
     in OMS3(doc, md, ModSyn.symName c)
     end
 
