@@ -121,9 +121,9 @@ struct
     fun checkFreeze (c, a) =
         if fGet a
         then raise Error ("Freezing violation: constant "
-                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a)
+                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c)
                           ^ "\nextends type family "
-                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c))
+                          ^ IntSyn.conDecFoldName (ModSyn.sgnLookup a))
         else ()
 
     (* no longer needed since freeze is now transitive *)
