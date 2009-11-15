@@ -61,6 +61,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      | M.MorStr s => M.strDecDom (M.structLookup s)
      | M.MorComp(m,_) => domain m
   
+  (* computes codomain of a morphism without checking composability *)
+  fun codomain(mor : M.Morph) : IDs.mid = case mor
+    of M.MorView m => let val M.ViewDec(_, _, _, cod, _) = M.modLookup m in cod end
+     | M.MorStr s => IDs.midOf(s)
+     | M.MorComp(_,m) => codomain m
+  
   (* reconstructs the type, i.e., domain and codomain of a morphism and checks whether it is well-formed *)
   (* composibility is co-/contravariant with respect to inclusions *)
   fun reconMorph(M.MorComp(mor1,mor2)) =
@@ -102,34 +108,40 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            | _ => raise Error("morphism does not have expected type")
      end
 
-  (* checks equality of two well-formed morphisms
-     approximated by identity modulo associativity and definition expansion *)
-  and equalMorph(mor1, mor2) = (toLinkList mor1) = (toLinkList mor2)
+  (* checks equality of two paths in the signature graphs *)
+  and equalMorph(mor1, mor2) = (mor1 = mor2)
   
-  (* restricts a well-formed morphism mor to a signature that is included into its domain
-     pre: newdom included into domain(mor)
-     post: restrictMorph(toLinkList mor, newdom) equal to mor but has domain newdom
+  (* turns a morphism into a (possibly empty) path in the signature graph, i.e., a list of links, 
+     pre: mor is well-formed, newdom is included into domain(mor)
+     post: restrictMorph(mor, newdom) of type M.Morph list
+       is equal to mor and consists of only MorView _ or MorStr _ such that
+       - definitions are expanded
+       - the domain of the first is newdom
+       - the domain of each is the codomain of the predecessor (i.e., includes are expanded)
    *)
-  and restrictMorph(hd :: tl, newdom) = if domain(hd) = newdom then fromLinkList(hd :: tl) else
-     let val incls = case hd
+  and restrictMorph(M.MorComp(mor1,mor2), newdom) =
+      let val mor1l = restrictMorph(mor1, newdom)
+          val cod = if mor1l = nil then newdom else codomain(List.last mor1l)
+          val mor2l = restrictMorph(mor2, cod)
+      in
+      	  mor1l @ mor2l
+      end
+    | restrictMorph(M.MorStr c, newdom) = (case M.structLookup c
+                              of M.StrDef(_,_,_,mor,_) => restrictMorph (mor, newdom)
+                               | M.StrDec _ => restrictMorph1(M.MorStr c, newdom)
+                            )
+    | restrictMorph(M.MorView m, newdom) = restrictMorph1(M.MorView m, newdom)
+  (* as restrictMorph, but additionally
+     pre: mor is a declared link
+   *)
+  and restrictMorph1(mor, newdom) = if domain(mor) = newdom then [mor] else
+     let val incls = case mor
                     of M.MorStr c => (fn M.StrDec(_,_,_,x,_,_,_) => x) (M.structLookup c)
                      | M.MorView m => M.modInclLookup m
      in case linkInclGet(incls, newdom)
-       of nil => restrictMorph(tl, newdom)
-        | m :: _ => restrictMorph((toLinkList m) @ tl, newdom)
+       of nil => nil (* the identity path *)
+        | m :: _ => restrictMorph (m, newdom)
      end
-
-  (* turns a morphism into a list of links, i.e., references to ViewDec's and StrDec's
-     definitions are expanded *)
-  and toLinkList(M.MorComp(mor1,mor2)) = (toLinkList mor1) @ (toLinkList mor2)
-    | toLinkList(M.MorStr c) = (case M.structLookup c
-                              of M.StrDef(_,_,_,mor,_) => toLinkList mor
-                               | M.StrDec _ => M.MorStr c :: nil
-                            )
-    | toLinkList(M.MorView m) = M.MorView m :: nil
-  (* turns a list of links into a morphism *)
-  and fromLinkList(l :: nil) = l
-    | fromLinkList(hd :: tl) = M.MorComp(hd, fromLinkList tl)
 
   and checkSymInst(ci as M.ConInst(con, _, term)) =
       let
@@ -219,11 +231,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       	                 then ()
       	                 else raise Error("signature " ^ M.modFoldName from ^ " included into " ^ M.modFoldName dom ^
                                           " but not into " ^ M.modFoldName cod)
-               | l => let val hd :: tl = List.map (fn x => restrictMorph(toLinkList x, from)) l
+               | l => let val hd :: tl = List.map (fn x => restrictMorph(x, from)) l
                       in
                       	case List.find (fn x => not(equalMorph(x, hd))) tl
                       	  of NONE => ()
-                           | SOME mor => raise Error("conflicting translations for included signature " ^
+                           | SOME (mor :: _) => raise Error("conflicting translations for included signature " ^
                                M.modFoldName (domain mor) ^ " (implementation restriction: equality of morphisms only checked up to associativity and definition expansion)")
                       end
           )
