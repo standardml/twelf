@@ -1,6 +1,11 @@
 Regression tests obtained from Karl Crary's webpage 
 http://www.cs.cmu.edu/~crary/papers/
 
+explicit (obtained November 18, 2009)
+  Karl Crary. 
+  Explicit Contexts in LF. 
+  2008 Workshop on Logical Frameworks and Meta-Languages: Theory and Practice. 
+
 mldef-alpha (obtained November 18, 2009)
   Karl Crary and Robert Harper. 
   Mechanized Definition of Standard ML (alpha release). 2009. 
