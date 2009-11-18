@@ -44,6 +44,10 @@ else
   echo "=== Running TS-LF (Definition of Standard ML) ==="
   $TIME ./mlton-regression regression-tslf.txt
 
+  echo ""
+  echo "=== Running Princeton Foundational PCC ==="
+  $TIME ./mlton-regression regression-fpcc.txt
+
   echo "==== Completed! ==="
 fi
 
