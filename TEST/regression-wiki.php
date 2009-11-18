@@ -19,6 +19,7 @@ while($row = mysql_fetch_array($literatepages)) {
   $unsafe = false;
 
   if($page == "Double-negation translation")                $unsafe = true;
+  if($page == "MinMLToMinHaskell")                          $unsafe = true;
   if($page == "POPL Tutorial/Big step, small step")         $ignore = true;
   if($page == "POPL Tutorial/Exceptions-problem")           $ignore = true;
   if($page == "POPL Tutorial/MinML Preservation Theorem")   $ignore = true;
