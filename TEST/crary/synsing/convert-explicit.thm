@@ -1,0 +1,1517 @@
+
+%%%%%  Worlds  %%%%%
+
+%block fbind	: some {a:tp}
+		   block {x:atom} {d:vof x a} {ex:eterm} {xt:vtrans ex x}.
+
+%block fobind	: some {n:nat}
+		   block {x:atom} {d:isvar x n} {ex:eterm} {xt:vtrans ex x}.
+
+
+
+
+%%%%%  Context Regularity  %%%%%
+
+aconverte-context : aconverte G R A EM -> ordered G -> type.
+%mode aconverte-context +X1 -X2.
+
+converte-context : converte G M A EM -> ordered G -> type.
+%mode converte-context +X1 -X2.
+
+tconverte-context : tconverte G A EA -> ordered G -> type.
+%mode tconverte-context +X1 -X2.
+
+-const	: aconverte-context (aconverte/const D _ _) D'
+	   <- tconverte-context D D'.
+
+-var	: aconverte-context (aconverte/var _ _ Dlook) D
+	   <- lookup-context Dlook D.
+
+-vari	: aconverte-context (aconverte/vari _ Dconv _ _) D
+	   <- tconverte-context Dconv D.
+
+-app	: aconverte-context (aconverte/app _ _ Dconv) D
+	   <- aconverte-context Dconv D.
+
+-pi1	: aconverte-context (aconverte/pi1 Dconv) D
+	   <- aconverte-context Dconv D.
+
+-pi2	: aconverte-context (aconverte/pi2 Dconv) D
+	   <- aconverte-context Dconv D.
+
+
+-at	: converte-context (converte/at Dconv) D
+	   <- aconverte-context Dconv D.
+
+-lam	: converte-context (converte/lam _ Dconv) D
+	   <- tconverte-context Dconv D.
+
+-pair	: converte-context (converte/pair _ _ _ Dconv) D
+	   <- converte-context Dconv D.
+
+-star	: converte-context (converte/star D) D.
+
+-sing	: converte-context (converte/sing Dconv) D
+	   <- aconverte-context Dconv D.
+
+
+
+-t	: tconverte-context (tconverte/t D) D.
+
+-pi	: tconverte-context (tconverte/pi _ Dconv) D
+	   <- tconverte-context Dconv D.
+
+-sigma	: tconverte-context (tconverte/sigma _ Dconv) D
+	   <- tconverte-context Dconv D.
+
+-sing	: tconverte-context (tconverte/sing Dconv) D
+	   <- aconverte-context Dconv D.
+
+-one	: tconverte-context (tconverte/one D) D.
+
+%worlds (fbind | fobind | bind | ovar | obind | tbind | evar) (aconverte-context _ _) (converte-context _ _) (tconverte-context _ _).
+%total (D1 D2 D3) (aconverte-context D1 _) (converte-context D2 _) (tconverte-context D3 _).
+
+
+
+
+%%%%%  Conversion Metric  %%%%%
+
+mconvert	: convert M A _ -> mterm -> type.
+maconvert	: aconvert R A _ -> matom -> type.
+mtconvert	: tconvert A _ -> mtp -> type.
+
+mconvert/at	: mconvert (convert/at D) (mat X)
+		   <- maconvert D X.
+
+mconvert/lam	: mconvert (convert/lam D2 D1) (mlam X2 X1)
+		   <- mtconvert D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mconvert (D2 x d ex xt) X2).
+
+mconvert/pair	: mconvert (convert/pair _ D2 _ D1) (mpair mt X2 X1)
+		   <- mconvert D1 X1
+		   <- mconvert D2 X2.
+
+mconvert/sing	: mconvert (convert/sing D) (msingtm X)
+		   <- maconvert D X.
+
+mconvert/star	: mconvert convert/star mstar.
+
+
+
+maconvert/const	: maconvert (aconvert/const D _ _) (mvar X)
+		   <- mtconvert D X.
+
+maconvert/var	: maconvert (aconvert/var _ D _ _) (mvar X)
+		   <- mtconvert D X.
+
+maconvert/app	: maconvert (aconvert/app _ D2 D1) (mapp mt X2 X1)
+		   <- maconvert D1 X1
+		   <- mconvert D2 X2.
+
+maconvert/pi1	: maconvert (aconvert/pi1 D) (mpi1 X)
+		   <- maconvert D X.
+
+maconvert/pi2	: maconvert (aconvert/pi2 D) (mpi2 X)
+		   <- maconvert D X.
+
+
+
+mtconvert/t	: mtconvert tconvert/t mt.
+
+mtconvert/pi	: mtconvert (tconvert/pi D2 D1) (mpi X2 X1)
+		   <- mtconvert D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mtconvert (D2 x d ex xt) X2).
+
+mtconvert/sigma	: mtconvert (tconvert/sigma D2 D1) (msigma X2 X1)
+		   <- mtconvert D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mtconvert (D2 x d ex xt) X2).
+
+mtconvert/sing	: mtconvert (tconvert/sing D) (msing X)
+		   <- maconvert D X.
+
+mtconvert/one	: mtconvert tconvert/one mone.
+
+
+
+
+mconverte	: converte G M A _ -> mterm -> type.
+maconverte	: aconverte G R A _ -> matom -> type.
+mtconverte	: tconverte G A _ -> mtp -> type.
+
+mconverte/at	: mconverte (converte/at D) (mat X)
+		   <- maconverte D X.
+
+mconverte/lam	: mconverte (converte/lam D2 D1) (mlam X2 X1)
+		   <- mtconverte D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mconverte (D2 x d ex xt) X2).
+
+mconverte/pair	: mconverte (converte/pair _ D2 _ D1) (mpair mt X2 X1)
+		   <- mconverte D1 X1
+		   <- mconverte D2 X2.
+
+mconverte/sing	: mconverte (converte/sing D) (msingtm X)
+		   <- maconverte D X.
+
+mconverte/star	: mconverte (converte/star _) mstar.
+
+
+
+maconverte/const
+		: maconverte (aconverte/const D _ _) (mvar X)
+		   <- mtconverte D X.
+
+maconverte/var	: maconverte (aconverte/var _ D _) (mvar X)
+		   <- mtconverte D X.
+
+maconverte/vari	: maconverte (aconverte/vari _ D _ _) (mvar X)
+		   <- mtconverte D X.
+
+maconverte/app	: maconverte (aconverte/app _ D2 D1) (mapp mt X2 X1)
+		   <- maconverte D1 X1
+		   <- mconverte D2 X2.
+
+maconverte/pi1	: maconverte (aconverte/pi1 D) (mpi1 X)
+		   <- maconverte D X.
+
+maconverte/pi2	: maconverte (aconverte/pi2 D) (mpi2 X)
+		   <- maconverte D X.
+
+
+
+mtconverte/t	: mtconverte (tconverte/t _) mt.
+
+mtconverte/pi	: mtconverte (tconverte/pi D2 D1) (mpi X2 X1)
+		   <- mtconverte D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mtconverte (D2 x d ex xt) X2).
+
+mtconverte/sigma
+		: mtconverte (tconverte/sigma D2 D1) (msigma X2 X1)
+		   <- mtconverte D1 X1
+		   <- ({x} {d} {ex} {xt}
+			 mtconverte (D2 x d ex xt) X2).
+
+mtconverte/sing	: mtconverte (tconverte/sing D) (msing X)
+		   <- maconverte D X.
+
+mtconverte/one	: mtconverte (tconverte/one _) mone.
+
+
+
+can-mconvert	: {D:convert _ _ _} mconvert D Mm -> type.
+%mode can-mconvert +X1 -X2.
+
+can-maconvert	: {D:aconvert _ _ _} maconvert D Rm -> type.
+%mode can-maconvert +X1 -X2.
+
+can-mtconvert	: {D:tconvert _ _} mtconvert D Am -> type.
+%mode can-mtconvert +X1 -X2.
+
+-at	: can-mconvert (convert/at D) (mconvert/at D')
+	   <- can-maconvert D D'.
+
+-lam	: can-mconvert (convert/lam D2 D1) (mconvert/lam D2' D1')
+	   <- can-mtconvert D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mconvert (D2 x d ex xt) (D2' x d ex xt)).
+
+-pair	: can-mconvert (convert/pair _ D2 _ D1) (mconvert/pair D2' D1')
+	   <- can-mconvert D1 D1'
+	   <- can-mconvert D2 D2'.
+
+-sing	: can-mconvert (convert/sing D) (mconvert/sing D')
+	   <- can-maconvert D D'.
+
+-star	: can-mconvert convert/star mconvert/star.
+
+
+
+-const	: can-maconvert (aconvert/const D _ _) (maconvert/const D')
+	   <- can-mtconvert D D'.
+
+-var	: can-maconvert (aconvert/var _ D _ _) (maconvert/var D')
+	   <- can-mtconvert D D'.
+
+-app	: can-maconvert (aconvert/app _ D2 D1) (maconvert/app D2' D1')
+	   <- can-maconvert D1 D1'
+	   <- can-mconvert D2 D2'.
+
+-pi1	: can-maconvert (aconvert/pi1 D) (maconvert/pi1 D')
+	   <- can-maconvert D D'.
+
+-pi2	: can-maconvert (aconvert/pi2 D) (maconvert/pi2 D')
+	   <- can-maconvert D D'.
+
+
+
+-t	: can-mtconvert tconvert/t mtconvert/t.
+
+-pi	: can-mtconvert (tconvert/pi D2 D1) (mtconvert/pi D2' D1')
+	   <- can-mtconvert D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconvert (D2 x d ex xt) (D2' x d ex xt)).
+
+-sigma	: can-mtconvert (tconvert/sigma D2 D1) (mtconvert/sigma D2' D1')
+	   <- can-mtconvert D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconvert (D2 x d ex xt) (D2' x d ex xt)).
+
+-sing	: can-mtconvert (tconvert/sing D) (mtconvert/sing D')
+	   <- can-maconvert D D'.
+
+-one	: can-mtconvert tconvert/one mtconvert/one.
+
+%worlds (fbind | tbind | evar | bind | var) (can-mconvert _ _) (can-maconvert _ _) (can-mtconvert _ _).
+%total (D1 D2 D3) (can-mconvert D1 _) (can-maconvert D2 _) (can-mtconvert D3 _).
+
+
+
+can-mconverte	: {D:converte _ _ _ _} mconverte D Mm -> type.
+%mode can-mconverte +X1 -X2.
+
+can-maconverte	: {D:aconverte _ _ _ _} maconverte D Rm -> type.
+%mode can-maconverte +X1 -X2.
+
+can-mtconverte	: {D:tconverte _ _ _} mtconverte D Am -> type.
+%mode can-mtconverte +X1 -X2.
+
+-at	: can-mconverte (converte/at D) (mconverte/at D')
+	   <- can-maconverte D D'.
+
+-lam	: can-mconverte (converte/lam D2 D1) (mconverte/lam D2' D1')
+	   <- can-mtconverte D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mconverte (D2 x d ex xt) (D2' x d ex xt)).
+
+-pair	: can-mconverte (converte/pair _ D2 _ D1) (mconverte/pair D2' D1')
+	   <- can-mconverte D1 D1'
+	   <- can-mconverte D2 D2'.
+
+-sing	: can-mconverte (converte/sing D) (mconverte/sing D')
+	   <- can-maconverte D D'.
+
+-star	: can-mconverte (converte/star _) mconverte/star.
+
+
+
+-const	: can-maconverte (aconverte/const D _ _) (maconverte/const D')
+	   <- can-mtconverte D D'.
+
+-var	: can-maconverte (aconverte/var _ D _) (maconverte/var D')
+	   <- can-mtconverte D D'.
+
+-vari	: can-maconverte (aconverte/vari _ D _ _) (maconverte/vari D')
+	   <- can-mtconverte D D'.
+
+-app	: can-maconverte (aconverte/app _ D2 D1) (maconverte/app D2' D1')
+	   <- can-maconverte D1 D1'
+	   <- can-mconverte D2 D2'.
+
+-pi1	: can-maconverte (aconverte/pi1 D) (maconverte/pi1 D')
+	   <- can-maconverte D D'.
+
+-pi2	: can-maconverte (aconverte/pi2 D) (maconverte/pi2 D')
+	   <- can-maconverte D D'.
+
+
+
+-t	: can-mtconverte (tconverte/t _) mtconverte/t.
+
+-pi	: can-mtconverte (tconverte/pi D2 D1) (mtconverte/pi D2' D1')
+	   <- can-mtconverte D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconverte (D2 x d ex xt) (D2' x d ex xt)).
+
+-sigma	: can-mtconverte (tconverte/sigma D2 D1) (mtconverte/sigma D2' D1')
+	   <- can-mtconverte D1 D1'
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconverte (D2 x d ex xt) (D2' x d ex xt)).
+
+-sing	: can-mtconverte (tconverte/sing D) (mtconverte/sing D')
+	   <- can-maconverte D D'.
+
+-one	: can-mtconverte (tconverte/one _) mtconverte/one.
+
+%worlds (fbind | tbind | evar | bind | var | fobind | ovar) (can-mconverte _ _) (can-maconverte _ _) (can-mtconverte _ _).
+%total (D1 D2 D3) (can-mconverte D1 _) (can-maconverte D2 _) (can-mtconverte D3 _).
+
+
+
+
+%%%%%  Translation to Explicit Form  %%%%%
+
+cut-convert	: {Mm}
+		   {D:{x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex)}
+		   ({x} {d} {ex} {xt} mconvert (D x d ex xt) Mm)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (B x) (EM ex)}
+		      ({x} {d'} {ex} {xt} mconverte (D' x d' ex xt) Mm) -> type.
+%mode cut-convert +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-aconvert	: {Rm}
+		   {D:{x} vof x A -> {ex} vtrans ex x -> aconvert (R x) (B x) (EM ex)}
+		   ({x} {d} {ex} {xt} maconvert (D x d ex xt) Rm)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (B x) (EM ex)}
+		      ({x} {d'} {ex} {xt} maconverte (D' x d' ex xt) Rm) -> type.
+%mode cut-aconvert +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-tconvert	: {Am}
+		   {D:{x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex)}
+		   ({x} {d} {ex} {xt} mtconvert (D x d ex xt) Am)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> tconverte (G x) (B x) (EB ex)}
+		      ({x} {d'} {ex} {xt} mtconverte (D' x d' ex xt) Am) -> type.
+%mode cut-tconvert +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-converte	: {Mm}
+		   {D:{x} vof x A -> isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (B x) (EM ex)}
+		   ({x} {d} {d'} {ex} {xt} mconverte (D x d d' ex xt) Mm)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (B x) (EM ex)}
+		      ({x} {d'} {ex} {xt} mconverte (D' x d' ex xt) Mm) -> type.
+%mode cut-converte +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-aconverte	: {Rm}
+		   {D:{x} vof x A -> isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (B x) (EM ex)}
+		   ({x} {d} {d'} {ex} {xt} maconverte (D x d d' ex xt) Rm)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (B x) (EM ex)}
+		      ({x} {d'} {ex} {xt} maconverte (D' x d' ex xt) Rm) -> type.
+%mode cut-aconverte +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-tconverte	: {Am}
+		   {D:{x} vof x A -> isvar x I -> {ex} vtrans ex x -> tconverte (G x) (B x) (EM ex)}
+		   ({x} {d} {d'} {ex} {xt} mtconverte (D x d d' ex xt) Am)
+		   -> ({x} isvar x I -> lookup (G x) x A)
+		   -> {D':{x} isvar x I -> {ex} vtrans ex x -> tconverte (G x) (B x) (EM ex)}
+		      ({x} {d'} {ex} {xt} mtconverte (D' x d' ex xt) Am) -> type.
+%mode cut-tconverte +X1 +X2 +X3 +X4 -X5 -X6.
+
+-const	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/const (Dconv x d ex xt) (Dwf x d) (D x))
+	   ([x] [d] [ex] [xt] maconvert/const (X3 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/const (Dconv' x d' ex xt) (Dwf''' x) (D x))
+	   ([x] [d'] [ex] [xt] maconverte/const (X3' x d' ex xt))
+	   <- kof-strengthen D Deq
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- ({x} {d} wf-resp (Deq x) (Dwf x d) (Dwf' x d))
+	   <- strengthen-wf Dwf' Dwf''
+	   <- ({x} wf-resp (Deq' x) Dwf'' (Dwf''' x))
+	   <- cut-tconvert _ Dconv X3 Dlook Dconv' X3'.
+
+-varsam	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/var (D3 x ex xt) (D2 x d ex xt) (Dwf x d) d)
+	   ([x] [d] [ex] [xt] maconvert/var (X2 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/var (D3 x ex xt) (D2' x d' ex xt) (Dlook x d'))
+	   ([x] [d'] [ex] [xt] maconverte/var (X2' x d' ex xt))
+	   <- cut-tconvert _ D2 X2 Dlook D2' X2'.
+
+-varoth	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/var (D3 x ex xt) (D2 x d ex xt) (Dwf x d) D1)
+	   ([x] [d] [ex] [xt] maconvert/var (X2 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/vari (D3 x ex xt) (D2' x d' ex xt) Dwf' D1)
+	   ([x] [d'] [ex] [xt] maconverte/vari (X2' x d' ex xt))
+	   <- cut-tconvert _ D2 X2 Dlook D2' X2'
+	   <- strengthen-wf Dwf Dwf'.
+
+-app	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/app (D3 x) (D2 x d ex xt) (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] maconvert/app (X2 x d ex xt) (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/app (D3 x) (D2' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/app (X2' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'
+	   <- cut-convert _ D2 X2 Dlook D2' X2'.
+
+-pi1	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/pi1 (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] maconvert/pi1 (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/pi1 (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/pi1 (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'.
+
+-pi2	: cut-aconvert _
+	   ([x] [d] [ex] [xt] aconvert/pi2 (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] maconvert/pi2 (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/pi2 (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/pi2 (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'.
+
+
+%%%
+
+-at	: cut-convert _
+	   ([x] [d] [ex] [xt] convert/at (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconvert/at (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/at (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/at (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'.
+
+-lam	: cut-convert _
+	   ([x] [d] [ex] [xt] convert/lam (D2 x d ex xt) (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconvert/lam (X2 x d ex xt) (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/lam (D2'' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/lam (X2'' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconvert _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		 (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} {ex} {xt}
+		 cut-convert _
+		 ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] X2 x d ex xt y e ey yt)
+		 ([y] [e'] lookup/hit (Dbound x d' y e'))
+		 ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt)
+		 ([y] [e'] [ey] [yt] X2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-converte _ 
+		 ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2' x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2'' x d' ex xt y e' ey yt)).
+
+-pair	: cut-convert _
+	   ([x] [d] [ex] [xt] convert/pair (Dwf x d) (D3 x d ex xt) (D2 x) (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconvert/pair (X3 x d ex xt) (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/pair (Dwfe' x d') (D3' x d' ex xt) (D2 x) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/pair (X3' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-convert _ D1 X1 Dlook D1' X1'
+	   <- cut-convert _ D3 X3 Dlook D3' X3'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		 (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {y} {e}
+		 can-mwf (Dwf x d y e) (Dmwf x d y e))
+	   <- ({x} {d} {d'}
+		 cut-wf _ ([y] [e] Dwf x d y e) ([y] [e] Dmwf x d y e) ([y] [e'] lookup/hit (Dbound x d' y e'))
+		 ([y] [e'] Dwfe x d d' y e') ([y] [e'] Dmwfe x d d' y e'))
+	   <- ({y} {e'}
+		 cut-wfe _ ([x] [d] [d'] Dwfe x d d' y e') ([x] [d] [d'] Dmwfe x d d' y e') ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] Dwfe' x d' y e') _).
+
+-star	: cut-convert _
+	   ([x] [d] [ex] [xt] convert/star)
+	   ([x] [d] [ex] [xt] mconvert/star)
+	   Dlook 
+	   ([x] [d'] [ex] [xt] converte/star (Dord x d'))
+	   ([x] [d'] [ex] [xt] mconverte/star)
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d')).
+
+-sing	: cut-convert _
+	   ([x] [d] [ex] [xt] convert/sing (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconvert/sing (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/sing (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/sing (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'.
+
+
+%%%
+
+
+-t	: cut-tconvert _
+	   ([x] [d] [ex] [xt] tconvert/t)
+	   ([x] [d] [ex] [xt] mtconvert/t)
+	   Dlook 
+	   ([x] [d'] [ex] [xt] tconverte/t (Dord x d'))
+	   ([x] [d'] [ex] [xt] mtconverte/t)
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d')).
+
+-pi	: cut-tconvert _
+	   ([x] [d] [ex] [xt] tconvert/pi (D2 x d ex xt) (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mtconvert/pi (X2 x d ex xt) (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/pi (D2'' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/pi (X2'' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconvert _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		 (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} {ex} {xt}
+		 cut-tconvert _
+		 ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] X2 x d ex xt y e ey yt)
+		 ([y] [e'] lookup/hit (Dbound x d' y e'))
+		 ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt)
+		 ([y] [e'] [ey] [yt] X2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-tconverte _ 
+		 ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2' x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2'' x d' ex xt y e' ey yt)).
+
+-sigma	: cut-tconvert _
+	   ([x] [d] [ex] [xt] tconvert/sigma (D2 x d ex xt) (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mtconvert/sigma (X2 x d ex xt) (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/sigma (D2'' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/sigma (X2'' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconvert _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		 (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} {ex} {xt}
+		 cut-tconvert _
+		 ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] X2 x d ex xt y e ey yt)
+		 ([y] [e'] lookup/hit (Dbound x d' y e'))
+		 ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt)
+		 ([y] [e'] [ey] [yt] X2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-tconverte _ 
+		 ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2' x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2'' x d' ex xt y e' ey yt)).
+
+-sing	: cut-tconvert _
+	   ([x] [d] [ex] [xt] tconvert/sing (D1 x d ex xt))
+	   ([x] [d] [ex] [xt] mtconvert/sing (X1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/sing (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/sing (X1' x d' ex xt))
+	   <- cut-aconvert _ D1 X1 Dlook D1' X1'.
+
+-one	: cut-tconvert _
+	   ([x] [d] [ex] [xt] tconvert/one)
+	   ([x] [d] [ex] [xt] mtconvert/one)
+	   Dlook 
+	   ([x] [d'] [ex] [xt] tconverte/one (Dord x d'))
+	   ([x] [d'] [ex] [xt] mtconverte/one)
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d')).
+
+
+%%%
+
+
+-const	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/const (D2 x d d' ex xt) (Dwf x d) (D1 x))
+	   ([x] [d] [d'] [ex] [xt] maconverte/const (X2 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/const (D2' x d' ex xt) (Dwf''' x) (D1 x))
+	   ([x] [d'] [ex] [xt] maconverte/const (X2' x d' ex xt))
+	   <- kof-strengthen D1 Deq
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- ({x} {d} wf-resp (Deq x) (Dwf x d) (Dwf' x d))
+	   <- strengthen-wf Dwf' Dwf''
+	   <- ({x} wf-resp (Deq' x) Dwf'' (Dwf''' x))
+	   <- cut-tconverte _ D2 X2 Dlook D2' X2'.
+
+-var	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/var (D3 x ex xt) (D2 x d d' ex xt) (D1 x d'))
+	   ([x] [d] [d'] [ex] [xt] maconverte/var (X2 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/var (D3 x ex xt) (D2' x d' ex xt) (D1 x d'))
+	   ([x] [d'] [ex] [xt] maconverte/var (X2' x d' ex xt))
+	   <- cut-tconverte _ D2 X2 Dlook D2' X2'.
+
+-varsam	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/vari (D3 x ex xt) (D2 x d d' ex xt) (Dwf x d) d)
+	   ([x] [d] [d'] [ex] [xt] maconverte/vari (X2 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/var (D3 x ex xt) (D2' x d' ex xt) (Dlook x d'))
+	   ([x] [d'] [ex] [xt] maconverte/var (X2' x d' ex xt))
+	   <- cut-tconverte _ D2 X2 Dlook D2' X2'.
+
+-varoth	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/vari (D3 x ex xt) (D2 x d d' ex xt) (Dwf x d) D1)
+	   ([x] [d] [d'] [ex] [xt] maconverte/vari (X2 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/vari (D3 x ex xt) (D2' x d' ex xt) Dwf' D1)
+	   ([x] [d'] [ex] [xt] maconverte/vari (X2' x d' ex xt))
+	   <- cut-tconverte _ D2 X2 Dlook D2' X2'
+	   <- strengthen-wf Dwf Dwf'.
+
+-app	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/app (D3 x) (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] maconverte/app (X2 x d d' ex xt) (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/app (D3 x) (D2' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/app (X2' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'
+	   <- cut-converte _ D2 X2 Dlook D2' X2'.
+
+-pi1	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/pi1 (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] maconverte/pi1 (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/pi1 (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/pi1 (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'.
+
+-pi2	: cut-aconverte _
+	   ([x] [d] [d'] [ex] [xt] aconverte/pi2 (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] maconverte/pi2 (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] aconverte/pi2 (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] maconverte/pi2 (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'.
+
+
+%%%
+
+
+-at	: cut-converte _
+	   ([x] [d] [d'] [ex] [xt] converte/at (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mconverte/at (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/at (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/at (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'.
+
+-lam	: cut-converte _
+	   ([x] [d] [d'] [ex] [xt] converte/lam (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mconverte/lam (X2 x d d' ex xt) (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/lam (D2' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/lam (X2' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconverte _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d} {d'} {ex} {xt} 
+		 {y} {e'} {ey} {yt}
+		 converte-context (D2 x d d' ex xt y e' ey yt)
+		 (ordered/cons
+		    (Dbound x d' y e')))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-converte _ 
+		 ([x] [d] [d'] [ex] [xt] D2 x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2 x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2' x d' ex xt y e' ey yt)).
+
+-pair	: cut-converte _
+	   ([x] [d] [d'] [ex] [xt] converte/pair (Dwfe x d d') (D3 x d d' ex xt) (D2 x) (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mconverte/pair (X3 x d d' ex xt) (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/pair (Dwfe' x d') (D3' x d' ex xt) (D2 x) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/pair (X3' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-converte _ D1 X1 Dlook D1' X1'
+	   <- cut-converte _ D3 X3 Dlook D3' X3'
+	   <- ({x} {d} {d'} 
+		 {y} {e'} 
+		 wfe-context (Dwfe x d d' y e')
+		 (ordered/cons
+		    (Dbound x d' y e')))
+	   <- ({x} {d} {d'} {y} {e}
+		 can-mwfe (Dwfe x d d' y e) (Dmwfe x d d' y e : mwfe _ Mm))
+	   <- ({y} {e'}
+		 cut-wfe _ ([x] [d] [d'] Dwfe x d d' y e') ([x] [d] [d'] Dmwfe x d d' y e') ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] Dwfe' x d' y e') _).
+
+-star	: cut-converte _
+	   ([x] [d] [d'] [ex] [xt] converte/star (D1 x d'))
+	   ([x] [d] [d'] [ex] [xt] mconverte/star)
+	   _
+	   ([x] [d'] [ex] [xt] converte/star (D1 x d'))
+	   ([x] [d'] [ex] [xt] mconverte/star).
+
+-sing	: cut-converte _
+	   ([x] [d] [d'] [ex] [xt] converte/sing (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mconverte/sing (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] converte/sing (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mconverte/sing (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'.
+
+%%%
+
+-t	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/t (D1 x d'))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/t)
+	   _
+	   ([x] [d'] [ex] [xt] tconverte/t (D1 x d'))
+	   ([x] [d'] [ex] [xt] mtconverte/t).
+
+-pi	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/pi (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/pi (X2 x d d' ex xt) (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/pi (D2' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/pi (X2' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconverte _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d} {d'} {ex} {xt} 
+		 {y} {e'} {ey} {yt}
+		 tconverte-context (D2 x d d' ex xt y e' ey yt)
+		 (ordered/cons
+		    (Dbound x d' y e')))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-tconverte _ 
+		 ([x] [d] [d'] [ex] [xt] D2 x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2 x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2' x d' ex xt y e' ey yt)).
+
+-sigma	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/sigma (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/sigma (X2 x d d' ex xt) (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/sigma (D2' x d' ex xt) (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/sigma (X2' x d' ex xt) (X1' x d' ex xt))
+	   <- cut-tconverte _ D1 X1 Dlook D1' X1'
+	   <- ({x} {d} {d'} {ex} {xt} 
+		 {y} {e'} {ey} {yt}
+		 tconverte-context (D2 x d d' ex xt y e' ey yt)
+		 (ordered/cons
+		    (Dbound x d' y e')))
+	   <- ({y} {e'} {ey} {yt}
+		 cut-tconverte _ 
+		 ([x] [d] [d'] [ex] [xt] D2 x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] X2 x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		 ([x] [d'] [ex] [xt] D2' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] X2' x d' ex xt y e' ey yt)).
+
+-sing	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/sing (D1 x d d' ex xt))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/sing (X1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] tconverte/sing (D1' x d' ex xt))
+	   ([x] [d'] [ex] [xt] mtconverte/sing (X1' x d' ex xt))
+	   <- cut-aconverte _ D1 X1 Dlook D1' X1'.
+
+-one	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/one (D1 x d'))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/one)
+	   _
+	   ([x] [d'] [ex] [xt] tconverte/one (D1 x d'))
+	   ([x] [d'] [ex] [xt] mtconverte/one).
+
+-one	: cut-tconverte _
+	   ([x] [d] [d'] [ex] [xt] tconverte/one (D1 x d'))
+	   ([x] [d] [d'] [ex] [xt] mtconverte/one)
+	   _
+	   ([x] [d'] [ex] [xt] tconverte/one (D1 x d'))
+	   ([x] [d'] [ex] [xt] mtconverte/one).
+
+%worlds (fbind | ovar | obind | tbind | evar | bind) (cut-convert _ _ _ _ _ _) (cut-aconvert _ _ _ _ _ _) (cut-tconvert _ _ _ _ _ _) (cut-converte _ _ _ _ _ _) (cut-aconverte _ _ _ _ _ _) (cut-tconverte _ _ _ _ _ _).
+%total (X1 X2 X3 X4 X5 X6) (cut-aconvert X1 _ _ _ _ _) (cut-convert X2 _ _ _ _ _) (cut-tconvert X3 _ _ _ _ _) (cut-aconverte X4 _ _ _ _ _) (cut-converte X5 _ _ _ _ _) (cut-tconverte X6 _ _ _ _ _).
+
+
+
+convert1-to-converte	: {I}
+			   ({x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+			   -> ({x} isvar x I -> {ex} vtrans ex x -> converte (cons nil x A) (M x) (B x) (EM ex)) -> type.
+%mode convert1-to-converte +X1 +X2 -X3.
+
+-	: convert1-to-converte I Dconvert Dconverte
+	   <- ({x} {d} {ex} {xt}
+		 can-mconvert (Dconvert x d ex xt) (Dmconvert x d ex xt))
+	   <- cut-convert _ Dconvert Dmconvert ([x] [d] lookup/hit (bounded/nil d)) Dconverte _.
+
+%worlds (fbind | ovar | obind | tbind | evar | bind) (convert1-to-converte _ _ _).
+%total {} (convert1-to-converte _ _ _).
+
+
+
+aconvert1-to-aconverte	: {I}
+			   ({x} vof x A -> {ex} vtrans ex x -> aconvert (R x) (B x) (EM ex))
+			   -> ({x} isvar x I -> {ex} vtrans ex x -> aconverte (cons nil x A) (R x) (B x) (EM ex)) -> type.
+%mode aconvert1-to-aconverte +X1 +X2 -X3.
+
+-	: aconvert1-to-aconverte I Dconvert Dconverte
+	   <- ({x} {d} {ex} {xt}
+		 can-maconvert (Dconvert x d ex xt) (Dmconvert x d ex xt))
+	   <- cut-aconvert _ Dconvert Dmconvert ([x] [d] lookup/hit (bounded/nil d)) Dconverte _.
+
+%worlds (fbind | ovar | obind | tbind | evar | bind) (aconvert1-to-aconverte _ _ _).
+%total {} (aconvert1-to-aconverte _ _ _).
+
+
+
+tconvert1-to-tconverte	: {I}
+			   ({x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+			   -> ({x} isvar x I -> {ex} vtrans ex x -> tconverte (cons nil x A) (B x) (EB ex)) -> type.
+%mode tconvert1-to-tconverte +X1 +X2 -X3.
+
+-	: tconvert1-to-tconverte I Dconvert Dconverte
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconvert (Dconvert x d ex xt) (Dmconvert x d ex xt))
+	   <- cut-tconvert _ Dconvert Dmconvert ([x] [d] lookup/hit (bounded/nil d)) Dconverte _.
+
+%worlds (fbind | ovar | obind | tbind | evar | bind) (tconvert1-to-tconverte _ _ _).
+%total {} (tconvert1-to-tconverte _ _ _).
+
+
+
+convert2-to-converte : lt I J
+			-> ({x} vof x A 
+			      -> {ex} vtrans ex x
+			      -> {y} vof y (B x)
+			      -> {ey} vtrans ey y
+			      -> convert (M x y) (C x y) (EM ex ey))
+			-> ({x} isvar x I
+			      -> {ex} vtrans ex x
+			      -> {y} isvar y J
+			      -> {ey} vtrans ey y
+			      -> converte (cons (cons nil x A) y (B x)) (M x y) (C x y) (EM ex ey)) -> type.
+%mode convert2-to-converte +X1 +X2 -X3.
+
+-	: convert2-to-converte (Dlt : lt I J) Dconvert Dconvert''
+	   <- ({x} {d} {ex} {xt} {y} {e} {ey} {yt}
+		 can-mconvert (Dconvert x d ex xt y e ey yt) 
+		 (Dmconvert x d ex xt y e ey yt : mconvert _ Mm))
+	   <- ({x} {d} {d':isvar x I} {ex} {xt}
+		 cut-convert _ 
+		 ([y] [e] [ey] [yt] Dconvert x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] Dmconvert x d ex xt y e ey yt)
+		 ([y] [e'] lookup/hit (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		 ([y] [e'] [ey] [yt] Dconvert' x d d' ex xt y e' ey yt)
+		 ([y] [e'] [ey] [yt] Dmconvert' x d d' ex xt y e' ey yt))
+	   <- ({y} {e':isvar y J} {ey} {yt}
+		 cut-converte _
+		 ([x] [d] [d'] [ex] [xt] Dconvert' x d d' ex xt y e' ey yt)
+		 ([x] [d] [d'] [ex] [xt] Dmconvert' x d d' ex xt y e' ey yt)
+		 ([x] [d'] lookup/miss (lookup/hit (bounded/nil d')) (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		 ([x] [d'] [ex] [xt] Dconvert'' x d' ex xt y e' ey yt)
+		 ([x] [d'] [ex] [xt] Dmconvert'' x d' ex xt y e' ey yt)).
+		 
+%worlds (fbind | ovar | obind | tbind | evar | bind) (convert2-to-converte _ _ _).
+%total {} (convert2-to-converte _ _ _).
+
+
+
+convert-to-converte : convert M A EM -> converte nil M A EM -> type.
+%mode convert-to-converte +X1 -X2.
+
+aconvert-to-aconverte : aconvert R A EM -> aconverte nil R A EM -> type.
+%mode aconvert-to-aconverte +X1 -X2.
+
+tconvert-to-tconverte : tconvert A EA -> tconverte nil A EA -> type.
+%mode tconvert-to-tconverte +X1 -X2.
+
+-t	: tconvert-to-tconverte tconvert/t (tconverte/t ordered/nil).
+
+-pi	: tconvert-to-tconverte (tconvert/pi D2 D1) (tconverte/pi D2' D1')
+	   <- tconvert-to-tconverte D1 D1'
+	   <- tconvert1-to-tconverte 0 D2 D2'.
+
+-sigma	: tconvert-to-tconverte (tconvert/sigma D2 D1) (tconverte/sigma D2' D1')
+	   <- tconvert-to-tconverte D1 D1'
+	   <- tconvert1-to-tconverte 0 D2 D2'.
+
+-sing	: tconvert-to-tconverte (tconvert/sing D1) (tconverte/sing D1')
+	   <- aconvert-to-aconverte D1 D1'.
+
+-one	: tconvert-to-tconverte tconvert/one (tconverte/one ordered/nil).
+
+
+
+-at	: convert-to-converte (convert/at D1) (converte/at D1')
+	   <- aconvert-to-aconverte D1 D1'.
+
+-pi	: convert-to-converte (convert/lam D2 D1) (converte/lam D2' D1')
+	   <- tconvert-to-tconverte D1 D1'
+	   <- convert1-to-converte 0 D2 D2'.
+
+-pair	: convert-to-converte (convert/pair D4 D3 D2 D1) (converte/pair D4' D3' D2 D1')
+	   <- convert-to-converte D1 D1'
+	   <- convert-to-converte D3 D3'
+	   <- wf1-to-wfe 0 D4 D4'.
+
+-sing	: convert-to-converte (convert/sing D1) (converte/sing D1')
+	   <- aconvert-to-aconverte D1 D1'.
+
+-star	: convert-to-converte convert/star (converte/star ordered/nil).
+
+
+
+-const	: aconvert-to-aconverte (aconvert/const D3 D2 D1) (aconverte/const D3' D2 D1)
+	   <- tconvert-to-tconverte D3 D3'.
+
+-var	: aconvert-to-aconverte (aconvert/var D4 D3 D2 D1) (aconverte/vari D4 D3' D2 D1)
+	   <- tconvert-to-tconverte D3 D3'.
+
+-app	: aconvert-to-aconverte (aconvert/app D3 D2 D1) (aconverte/app D3 D2' D1')
+	   <- aconvert-to-aconverte D1 D1'
+	   <- convert-to-converte D2 D2'.
+
+-pi1	: aconvert-to-aconverte (aconvert/pi1 D1) (aconverte/pi1 D1')
+	   <- aconvert-to-aconverte D1 D1'.
+
+-pi2	: aconvert-to-aconverte (aconvert/pi2 D1) (aconverte/pi2 D1')
+	   <- aconvert-to-aconverte D1 D1'.
+
+%worlds (fbind | fobind | ovar | tbind | evar | bind) (convert-to-converte _ _) (aconvert-to-aconverte _ _) (tconvert-to-tconverte _ _).
+%total (D1 D2 D3) (convert-to-converte D1 _) (aconvert-to-aconverte D2 _) (tconvert-to-tconverte D3 _).
+
+
+
+
+%%%%%  Bump  %%%%%
+
+bump-converte-m	: {Mm}
+		   {D:{x} isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (A x) (EM ex)}
+		   ({x} {d} {ex} {xt} mconverte (D x d ex xt) Mm)
+		   -> ({x} isvar x I' -> ordered (G x))
+		   -> {D':{x} isvar x I' -> {ex} vtrans ex x -> converte (G x) (M x) (A x) (EM ex)}
+		      ({x} {d} {ex} {xt} mconverte (D' x d ex xt) Mm) -> type.
+%mode bump-converte-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+bump-aconverte-m : {Rm}
+		    {D:{x} isvar x I -> {ex} vtrans ex x -> aconverte (G x) (R x) (A x) (EM ex)}
+		    ({x} {d} {ex} {xt} maconverte (D x d ex xt) Rm)
+		    -> ({x} isvar x I' -> ordered (G x))
+		    -> {D':{x} isvar x I' -> {ex} vtrans ex x -> aconverte (G x) (R x) (A x) (EM ex)}
+		       ({x} {d} {ex} {xt} maconverte (D' x d ex xt) Rm) -> type.
+%mode bump-aconverte-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+bump-tconverte-m : {Am}
+		    {D:{x} isvar x I -> {ex} vtrans ex x -> tconverte (G x) (A x) (EA ex)}
+		    ({x} {d} {ex} {xt} mtconverte (D x d ex xt) Am)
+		    -> ({x} isvar x I' -> ordered (G x))
+		    -> {D':{x} isvar x I' -> {ex} vtrans ex x -> tconverte (G x) (A x) (EA ex)}
+		       ({x} {d} {ex} {xt} mtconverte (D' x d ex xt) Am) -> type.
+%mode bump-tconverte-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+-const	: bump-aconverte-m _ 
+	   ([x] [d] [ex] [xt] aconverte/const (Dconv x d ex xt) (Dwf x) (Dof x))
+	   ([x] [d] [ex] [xt] maconverte/const (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/const (Dconv' x d ex xt) (Dwf x) (Dof x))
+	   ([x] [d] [ex] [xt] maconverte/const (DM' x d ex xt))
+	   <- bump-tconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-var	: bump-aconverte-m _
+	   ([x] [d] [ex] [xt] aconverte/var (Dtrans x ex xt) (Dconv x d ex xt) (Dlook x d))
+	   ([x] [d] [ex] [xt] maconverte/var (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/var (Dtrans x ex xt) (Dconv' x d ex xt) (Dlook' x d))
+	   ([x] [d] [ex] [xt] maconverte/var (DM' x d ex xt))
+	   <- bump-lookup Dlook Dord Dlook'
+	   <- bump-tconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-vari	: bump-aconverte-m _
+	   ([x] [d] [ex] [xt] aconverte/vari (Dtrans x ex xt) (Dconv x d ex xt) (Dwf x) (Dvof x))
+	   ([x] [d] [ex] [xt] maconverte/vari (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/vari (Dtrans x ex xt) (Dconv' x d ex xt) (Dwf x) (Dvof x))
+	   ([x] [d] [ex] [xt] maconverte/vari (DM' x d ex xt))
+	   <- bump-tconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-app	: bump-aconverte-m _
+	   ([x] [d] [ex] [xt] aconverte/app (Dsub x) (Dconv2 x d ex xt) (Dconv1 x d ex xt))
+	   ([x] [d] [ex] [xt] maconverte/app (DM2 x d ex xt) (DM1 x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/app (Dsub x) (Dconv2' x d ex xt) (Dconv1' x d ex xt))
+	   ([x] [d] [ex] [xt] maconverte/app (DM2' x d ex xt) (DM1' x d ex xt))
+	   <- bump-aconverte-m _ Dconv1 DM1 Dord Dconv1' DM1'
+	   <- bump-converte-m _ Dconv2 DM2 Dord Dconv2' DM2'.
+
+-pi1	: bump-aconverte-m _
+	   ([x] [d] [ex] [xt] aconverte/pi1 (Dconv x d ex xt))
+	   ([x] [d] [ex] [xt] maconverte/pi1 (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/pi1 (Dconv' x d ex xt))
+	   ([x] [d] [ex] [xt] maconverte/pi1 (DM' x d ex xt))
+	   <- bump-aconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-pi2	: bump-aconverte-m _
+	   ([x] [d] [ex] [xt] aconverte/pi2 (Dconv x d ex xt : aconverte _ _ (sigma (A x) (B x)) _))
+	   ([x] [d] [ex] [xt] maconverte/pi2 (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] aconverte/pi2 (Dconv' x d ex xt))
+	   ([x] [d] [ex] [xt] maconverte/pi2 (DM' x d ex xt))
+	   <- bump-aconverte-m _ Dconv DM Dord Dconv' DM'.
+
+
+
+-at	: bump-converte-m _
+	   ([x] [d] [ex] [xt] converte/at (Dconv x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/at (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] converte/at (Dconv' x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/at (DM' x d ex xt))
+	   <- bump-aconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-lam	: bump-converte-m _
+	   ([x] [d] [ex] [xt] converte/lam (Dconv2 x d ex xt) (Dconv1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/lam (DM2 x d ex xt) (DM1 x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] converte/lam (Dconv2'' x d ex xt) (Dconv1' x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/lam (DM2'' x d ex xt) (DM1' x d ex xt))
+	   <- bump-tconverte-m _ Dconv1 DM1 Dord Dconv1' DM1'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 converte-context (Dconv2 x d ex xt y e ey yt) 
+		 (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d} {ex} {xt}
+		 bump-converte-m _
+		 ([y] [e] [ey] [yt] Dconv2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2 x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dconv2' x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2' x d ex xt y e ey yt))
+	   <- ({y} {e} {ey} {yt}
+		 bump-converte-m _
+		 ([x] [d] [ex] [xt] Dconv2' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dconv2'' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2'' x d ex xt y e ey yt)).
+
+-pair	: bump-converte-m _
+	   ([x] [d] [ex] [xt] converte/pair (Dwf x d) (Dconv2 x d ex xt) (Dsub x) (Dconv1 x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/pair (DM2 x d ex xt) (DM1 x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] converte/pair (Dwf' x d) (Dconv2' x d ex xt) (Dsub x) (Dconv1' x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/pair (DM2' x d ex xt) (DM1' x d ex xt))
+	   <- bump-converte-m _ Dconv1 DM1 Dord Dconv1' DM1'
+	   <- bump-converte-m _ Dconv2 DM2 Dord Dconv2' DM2'
+	   <- bump-wfe-under Dwf Dord Dwf'.
+
+-star	: bump-converte-m _ 
+	   ([x] [d] [ex] [xt] converte/star (Dord' x d))
+	   ([x] [d] [ex] [xt] mconverte/star)
+	   Dord
+	   ([x] [d] [ex] [xt] converte/star (Dord x d))
+	   ([x] [d] [ex] [xt] mconverte/star).
+
+-sing	: bump-converte-m _
+	   ([x] [d] [ex] [xt] converte/sing (Dconv x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/sing (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] converte/sing (Dconv' x d ex xt))
+	   ([x] [d] [ex] [xt] mconverte/sing (DM' x d ex xt))
+	   <- bump-aconverte-m _ Dconv DM Dord Dconv' DM'.
+
+
+
+-t	: bump-tconverte-m _ 
+	   ([x] [d] [ex] [xt] tconverte/t (Dord' x d))
+	   ([x] [d] [ex] [xt] mtconverte/t)
+	   Dord
+	   ([x] [d] [ex] [xt] tconverte/t (Dord x d))
+	   ([x] [d] [ex] [xt] mtconverte/t).
+
+-pi	: bump-tconverte-m _
+	   ([x] [d] [ex] [xt] tconverte/pi (Dconv2 x d ex xt) (Dconv1 x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/pi (DM2 x d ex xt) (DM1 x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] tconverte/pi (Dconv2'' x d ex xt) (Dconv1' x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/pi (DM2'' x d ex xt) (DM1' x d ex xt))
+	   <- bump-tconverte-m _ Dconv1 DM1 Dord Dconv1' DM1'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 tconverte-context (Dconv2 x d ex xt y e ey yt) 
+		 (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d} {ex} {xt}
+		 bump-tconverte-m _
+		 ([y] [e] [ey] [yt] Dconv2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2 x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dconv2' x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2' x d ex xt y e ey yt))
+	   <- ({y} {e} {ey} {yt}
+		 bump-tconverte-m _
+		 ([x] [d] [ex] [xt] Dconv2' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dconv2'' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2'' x d ex xt y e ey yt)).
+
+-sigma	: bump-tconverte-m _
+	   ([x] [d] [ex] [xt] tconverte/sigma (Dconv2 x d ex xt) (Dconv1 x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/sigma (DM2 x d ex xt) (DM1 x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] tconverte/sigma (Dconv2'' x d ex xt) (Dconv1' x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/sigma (DM2'' x d ex xt) (DM1' x d ex xt))
+	   <- bump-tconverte-m _ Dconv1 DM1 Dord Dconv1' DM1'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 tconverte-context (Dconv2 x d ex xt y e ey yt) 
+		 (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d} {ex} {xt}
+		 bump-tconverte-m _
+		 ([y] [e] [ey] [yt] Dconv2 x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2 x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dconv2' x d ex xt y e ey yt)
+		 ([y] [e] [ey] [yt] DM2' x d ex xt y e ey yt))
+	   <- ({y} {e} {ey} {yt}
+		 bump-tconverte-m _
+		 ([x] [d] [ex] [xt] Dconv2' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dconv2'' x d ex xt y e ey yt)
+		 ([x] [d] [ex] [xt] DM2'' x d ex xt y e ey yt)).
+
+-sing	: bump-tconverte-m _
+	   ([x] [d] [ex] [xt] tconverte/sing (Dconv x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/sing (DM x d ex xt))
+	   Dord
+	   ([x] [d] [ex] [xt] tconverte/sing (Dconv' x d ex xt))
+	   ([x] [d] [ex] [xt] mtconverte/sing (DM' x d ex xt))
+	   <- bump-aconverte-m _ Dconv DM Dord Dconv' DM'.
+
+-one	: bump-tconverte-m _ 
+	   ([x] [d] [ex] [xt] tconverte/one (Dord' x d))
+	   ([x] [d] [ex] [xt] mtconverte/one)
+	   Dord
+	   ([x] [d] [ex] [xt] tconverte/one (Dord x d))
+	   ([x] [d] [ex] [xt] mtconverte/one).
+
+%worlds (fbind | fobind | ovar | tbind | evar) (bump-aconverte-m _ _ _ _ _ _) (bump-converte-m _ _ _ _ _ _) (bump-tconverte-m _ _ _ _ _ _).
+%total (Rm Mm Am) (bump-aconverte-m Rm _ _ _ _ _) (bump-converte-m Am _ _ _ _ _) (bump-tconverte-m Mm _ _ _ _ _).
+
+
+
+bump-converte : ({x} isvar x I -> {ex} vtrans ex x -> converte (G x) (M x) (A x) (EM ex))
+		 -> ({x} isvar x I' -> ordered (G x))
+		 -> ({x} isvar x I' -> {ex} vtrans ex x -> converte (G x) (M x) (A x) (EM ex)) -> type.
+%mode bump-converte +X1 +X2 -X3.
+
+-	: bump-converte Dconv Dord Dconv'
+	   <- ({x} {d} {ex} {xt}
+		 can-mconverte (Dconv x d ex xt) (DM x d ex xt : mconverte _ Mm))
+	   <- bump-converte-m _ Dconv DM Dord Dconv' _.
+
+%worlds (fbind | fobind) (bump-converte _ _ _).
+%total {} (bump-converte _ _ _).
+
+
+
+bump-tconverte : ({x} isvar x I -> {ex} vtrans ex x -> tconverte (G x) (A x) (EA ex))
+		 -> ({x} isvar x I' -> ordered (G x))
+		 -> ({x} isvar x I' -> {ex} vtrans ex x -> tconverte (G x) (A x) (EA ex)) -> type.
+%mode bump-tconverte +X1 +X2 -X3.
+
+-	: bump-tconverte Dconv Dord Dconv'
+	   <- ({x} {d} {ex} {xt}
+		 can-mtconverte (Dconv x d ex xt) (DM x d ex xt : mtconverte _ Am))
+	   <- bump-tconverte-m _ Dconv DM Dord Dconv' _.
+
+%worlds (fbind | fobind) (bump-tconverte _ _ _).
+%total {} (bump-tconverte _ _ _).
+
+
+
+
+%%%%%  Weakening  %%%%%
+
+weakeng-aconverte : {Rm}
+		     append G1 G2 G
+		     -> append (cons G1 X B) G2 G'
+		     -> ordered G'
+		     -> {D:aconverte G R A EM}
+			maconverte D Rm
+		     -> aconverte G' R A EM -> type.
+%mode weakeng-aconverte +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+weakeng-converte : {Mm}
+		    append G1 G2 G
+		    -> append (cons G1 X B) G2 G'
+		    -> ordered G'
+		    -> {D:converte G M A EM}
+		       mconverte D Mm
+		    -> converte G' M A EM -> type.
+%mode weakeng-converte +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+weakeng-tconverte : {Am}
+		     append G1 G2 G
+		     -> append (cons G1 X B) G2 G'
+		     -> ordered G'
+		     -> {D:tconverte G A EA}
+			mtconverte D Am
+		     -> tconverte G' A EA -> type.
+%mode weakeng-tconverte +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-const	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/const Dconv Dwf Dcof) 
+	   (maconverte/const DM)
+	   (aconverte/const Dconv' Dwf Dcof)
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+	   
+-var	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/var Dtrans Dconv Dlook)
+	   (maconverte/var DM)
+	   (aconverte/var Dtrans Dconv' Dlook')
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv DM Dconv'
+	   <- weakeng-lookup Dappend Dappend' Dord Dlook Dlook'.
+
+-vari	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/vari Dtrans Dconv Dwf Dvof)
+	   (maconverte/vari DM)
+	   (aconverte/vari Dtrans Dconv' Dwf Dvof)
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+-app	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/app Dsub Dconv2 Dconv1)
+	   (maconverte/app DM2 DM1)
+	   (aconverte/app Dsub Dconv2' Dconv1')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv1 DM1 Dconv1'
+	   <- weakeng-converte _ Dappend Dappend' Dord Dconv2 DM2 Dconv2'.
+	   
+-pi1	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/pi1 Dconv)
+	   (maconverte/pi1 DM)
+	   (aconverte/pi1 Dconv')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+-pi2	: weakeng-aconverte _ Dappend Dappend' Dord
+	   (aconverte/pi2 Dconv)
+	   (maconverte/pi2 DM)
+	   (aconverte/pi2 Dconv')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+
+
+-at	: weakeng-converte _ Dappend Dappend' Dord
+	   (converte/at Dconv)
+	   (mconverte/at DM)
+	   (converte/at Dconv')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+-lam	: weakeng-converte _ Dappend Dappend' Dord
+	   (converte/lam Dconv2 Dconv1)
+	   (mconverte/lam DM2 DM1)
+	   (converte/lam Dconv2'' Dconv1')
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv1 DM1 Dconv1'
+	   <- ({y} {e:isvar y J1} {ey} {yt}
+		 converte-context (Dconv2 y e ey yt)
+		 (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-converte-m _ Dconv2 DM2
+	      ([y] [e] ordered/cons (Dbound1' y e))
+	      Dconv2' DM2'
+	   <- ({y} {e} {ey} {yt}
+		 weakeng-converte _ (append/cons Dappend) (append/cons Dappend')
+		 (ordered/cons (Dbound2' y e))
+		 (Dconv2' y e ey yt)
+		 (DM2' y e ey yt)
+		 (Dconv2'' y e ey yt)).
+
+-pair	: weakeng-converte _ Dappend Dappend' Dord
+	   (converte/pair Dwf Dconv2 Dsub Dconv1)
+	   (mconverte/pair DM2 DM1)
+	   (converte/pair Dwf'' Dconv2' Dsub Dconv1')
+	   <- weakeng-converte _ Dappend Dappend' Dord Dconv1 DM1 Dconv1'
+	   <- weakeng-converte _ Dappend Dappend' Dord Dconv2 DM2 Dconv2'
+	   <- extend-context Dord Dbound
+	   <- ({x} {d}
+		 bounded-drop Dappend' Dappend (Dbound x d) (Dbound' x d))
+	   <- bump-wfe Dwf ([x] [d] ordered/cons (Dbound' x d)) Dwf'
+	   <- ({x} {d}
+		 weakeng-wfe (append/cons Dappend) (append/cons Dappend') (ordered/cons (Dbound x d)) (Dwf' x d)
+		 (Dwf'' x d)).
+
+-star	: weakeng-converte _ Dappend Dappend' Dord
+	   (converte/star _)
+	   mconverte/star
+	   (converte/star Dord).
+
+-sing	: weakeng-converte _ Dappend Dappend' Dord
+	   (converte/sing Dconv)
+	   (mconverte/sing DM)
+	   (converte/sing Dconv')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+
+
+-t	: weakeng-tconverte _ Dappend Dappend' Dord
+	   (tconverte/t _)
+	   mtconverte/t
+	   (tconverte/t Dord).
+
+-pi	: weakeng-tconverte _ Dappend Dappend' Dord
+	   (tconverte/pi Dconv2 Dconv1)
+	   (mtconverte/pi DM2 DM1)
+	   (tconverte/pi Dconv2'' Dconv1')
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv1 DM1 Dconv1'
+	   <- ({y} {e:isvar y J1} {ey} {yt}
+		 tconverte-context (Dconv2 y e ey yt)
+		 (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-tconverte-m _ Dconv2 DM2
+	      ([y] [e] ordered/cons (Dbound1' y e))
+	      Dconv2' DM2'
+	   <- ({y} {e} {ey} {yt}
+		 weakeng-tconverte _ (append/cons Dappend) (append/cons Dappend')
+		 (ordered/cons (Dbound2' y e))
+		 (Dconv2' y e ey yt)
+		 (DM2' y e ey yt)
+		 (Dconv2'' y e ey yt)).
+
+-sigma	: weakeng-tconverte _ Dappend Dappend' Dord
+	   (tconverte/sigma Dconv2 Dconv1)
+	   (mtconverte/sigma DM2 DM1)
+	   (tconverte/sigma Dconv2'' Dconv1')
+	   <- weakeng-tconverte _ Dappend Dappend' Dord Dconv1 DM1 Dconv1'
+	   <- ({y} {e:isvar y J1} {ey} {yt}
+		 tconverte-context (Dconv2 y e ey yt)
+		 (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-tconverte-m _ Dconv2 DM2
+	      ([y] [e] ordered/cons (Dbound1' y e))
+	      Dconv2' DM2'
+	   <- ({y} {e} {ey} {yt}
+		 weakeng-tconverte _ (append/cons Dappend) (append/cons Dappend')
+		 (ordered/cons (Dbound2' y e))
+		 (Dconv2' y e ey yt)
+		 (DM2' y e ey yt)
+		 (Dconv2'' y e ey yt)).
+
+-sing	: weakeng-tconverte _ Dappend Dappend' Dord
+	   (tconverte/sing Dconv)
+	   (mtconverte/sing DM)
+	   (tconverte/sing Dconv')
+	   <- weakeng-aconverte _ Dappend Dappend' Dord Dconv DM Dconv'.
+
+-one	: weakeng-tconverte _ Dappend Dappend' Dord
+	   (tconverte/one _)
+	   mtconverte/one
+	   (tconverte/one Dord).
+
+%worlds (fbind | fobind | ovar | tbind | evar) (weakeng-aconverte _ _ _ _ _ _ _) (weakeng-converte _ _ _ _ _ _ _) (weakeng-tconverte _ _ _ _ _ _ _).
+%total (Rm Mm Am) (weakeng-aconverte Rm _ _ _ _ _ _) (weakeng-converte Mm _ _ _ _ _ _) (weakeng-tconverte Am _ _ _ _ _ _).
+
+
+
+weaken-converte : bounded G X -> converte G M A EM -> {B} converte (cons G X B) M A EM -> type.
+%mode weaken-converte +X1 +X2 +X3 -X4.
+
+-	: weaken-converte Dbound Dconv _ Dconv'
+	   <- can-mconverte Dconv DM
+	   <- weakeng-converte _ append/nil append/nil (ordered/cons Dbound) Dconv DM Dconv'.
+
+%worlds (fbind | fobind | ovar | tbind | evar) (weaken-converte _ _ _ _).
+%total {} (weaken-converte _ _ _ _).
+
+
+
+weaken-aconverte : bounded G X -> aconverte G M A EM -> {B} aconverte (cons G X B) M A EM -> type.
+%mode weaken-aconverte +X1 +X2 +X3 -X4.
+
+-	: weaken-aconverte Dbound Daconv _ Daconv'
+	   <- can-maconverte Daconv DM
+	   <- weakeng-aconverte _ append/nil append/nil (ordered/cons Dbound) Daconv DM Daconv'.
+
+%worlds (fbind | fobind | ovar | tbind | evar) (weaken-aconverte _ _ _ _).
+%total {} (weaken-aconverte _ _ _ _).
+
+
+
+weaken-converte' : append G1 G2 G -> ordered G -> converte G1 M A EM -> converte G M A EM -> type.
+%mode weaken-converte' +X1 +X2 +X3 -X4.
+
+weaken-converte'' : append G1 G2 G -> bounded G Z -> converte G1 M A EM -> converte G M A EM -> type.
+%mode weaken-converte'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-converte' append/nil _ D D.
+-cons	: weaken-converte' (append/cons Dapp) (ordered/cons Dbound) Dconv Dconv''
+	   <- weaken-converte'' Dapp Dbound Dconv Dconv'
+	   <- weaken-converte Dbound Dconv' _ Dconv''.
+
+-	: weaken-converte'' Dapp Dbound Dconv Dconv'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-converte' Dapp Dord Dconv Dconv'.
+
+%worlds (sbind | fobind | ovar | tbind | evar) (weaken-converte' _ _ _ _) (weaken-converte'' _ _ _ _).
+%total (D1 D2) (weaken-converte' D1 _ _ _) (weaken-converte'' D2 _ _ _).
+
+
+
+weaken-aconverte' : append G1 G2 G -> ordered G -> aconverte G1 M A EM -> aconverte G M A EM -> type.
+%mode weaken-aconverte' +X1 +X2 +X3 -X4.
+
+weaken-aconverte'' : append G1 G2 G -> bounded G Z -> aconverte G1 M A EM -> aconverte G M A EM -> type.
+%mode weaken-aconverte'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-aconverte' append/nil _ D D.
+-cons	: weaken-aconverte' (append/cons Dapp) (ordered/cons Dbound) Daconv Daconv''
+	   <- weaken-aconverte'' Dapp Dbound Daconv Daconv'
+	   <- weaken-aconverte Dbound Daconv' _ Daconv''.
+
+-	: weaken-aconverte'' Dapp Dbound Daconv Daconv'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-aconverte' Dapp Dord Daconv Daconv'.
+
+%worlds (sbind | fobind | ovar | tbind | evar) (weaken-aconverte' _ _ _ _) (weaken-aconverte'' _ _ _ _).
+%total (D1 D2) (weaken-aconverte' D1 _ _ _) (weaken-aconverte'' D2 _ _ _).

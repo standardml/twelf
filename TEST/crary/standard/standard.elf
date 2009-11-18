@@ -1,0 +1,1602 @@
+
+%%%%%  The call-by-value lambda calculus  %%%%%
+
+exp : type.  %name exp M.
+
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+
+
+value : exp -> type.
+
+value/lam	: value (lam ([x] M x)).
+
+-	: (value _ -> value _) -> type.
+
+
+
+nvalue : exp -> type.
+
+nvalue/app	: nvalue (app M N).
+
+
+
+step : exp -> exp -> type.
+
+step/app1	: step (app M N) (app M' N)
+		   <- step M M'.
+
+step/app2	: step (app M N) (app M N')
+		   <- value M
+		   <- step N N'.
+
+step/beta	: step (app (lam ([x] M x)) N) (M N)
+		   <- value N.
+
+
+
+reduce : exp -> exp -> type.
+
+reduce/ident	: reduce M M.
+
+reduce/lam	: reduce (lam ([x] M x)) (lam ([x] M' x))
+		   <- ({x} value x -> reduce (M x) (M' x)).
+
+reduce/app	: reduce (app M N) (app M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/beta	: reduce (app (lam ([x] M x)) N) (M' N')
+		   <- value N
+		   <- ({x} value x -> reduce (M x) (M' x))
+		   <- reduce N N'.
+
+
+
+mstep : exp -> exp -> type.
+
+mstep/z		: mstep M M.
+
+mstep/s		: mstep M O
+		   <- step M N
+		   <- mstep N O.
+
+
+
+mreduce : exp -> exp -> type.
+
+mreduce/z	: mreduce M M.
+
+mreduce/s	: mreduce M O
+		   <- reduce M N
+		   <- mreduce N O.
+
+
+
+halt : exp -> type.
+
+halt/i		: halt M
+		   <- mstep M N
+		   <- value N.
+
+
+
+
+%%%%%  Values  %%%%%
+
+val-or-not : exp -> type.
+
+val-or-not/yes	: val-or-not M
+		   <- value M.
+
+val-or-not/no	: val-or-not M
+		   <- nvalue M.
+
+
+
+decide-val : {M} val-or-not M -> type.
+%mode decide-val +X1 -X2.
+
+%block var : block {x:exp} {d:value x} {_:decide-val x (val-or-not/yes d)}.
+
+-	: decide-val (lam ([x] M x)) (val-or-not/yes value/lam).
+
+-	: decide-val (app M N) (val-or-not/no nvalue/app).
+
+%worlds (var) (decide-val _ _).
+%total M (decide-val M _).
+
+
+
+step-nvalue : step M N -> nvalue M -> type.
+%mode step-nvalue +X1 -X2.
+
+-	: step-nvalue _ nvalue/app.
+
+%worlds (var) (step-nvalue _ _).
+%total {} (step-nvalue _ _).
+
+
+
+
+%%%%%  Evaluation  %%%%%
+
+mstep-trans : mstep M N 
+	       -> mstep N O
+%%
+	       -> mstep M O
+	       -> type.
+%mode mstep-trans +X1 +X2 -X3.
+
+-	: mstep-trans mstep/z D D.
+
+-	: mstep-trans (mstep/s D2 D1) D3 (mstep/s D23 D1)
+	   <- mstep-trans D2 D3 D23.
+
+%worlds (var) (mstep-trans _ _ _).
+%total D (mstep-trans D _ _).
+
+
+
+
+%%%%%  Reduction  %%%%%
+
+step-implies-reduce : step M N -> reduce M N -> type.
+%mode step-implies-reduce +X1 -X2.
+
+-	: step-implies-reduce
+	   (step/app1
+	      (Dstep : step M M'))
+	   (reduce/app reduce/ident Dreduce)
+	   <- step-implies-reduce Dstep (Dreduce : reduce M M').
+
+-	: step-implies-reduce
+	   (step/app2
+	      (Dstep : step N N')
+	      (Dvalue : value M))
+	   (reduce/app Dreduce reduce/ident)
+	   <- step-implies-reduce Dstep (Dreduce : reduce N N').
+
+-	: step-implies-reduce
+	   (step/beta
+	      (Dvalue : value N))
+	   (reduce/beta reduce/ident ([_] [_] reduce/ident) Dvalue).
+
+%worlds (var) (step-implies-reduce _ _).
+%total D (step-implies-reduce D _).
+
+
+
+mstep-implies-mreduce : mstep M N -> mreduce M N -> type.
+%mode mstep-implies-mreduce +X1 -X2.
+
+-	: mstep-implies-mreduce mstep/z mreduce/z.
+
+-	: mstep-implies-mreduce (mstep/s D23 D12) (mreduce/s D23' D12')
+	   <- step-implies-reduce D12 D12'
+	   <- mstep-implies-mreduce D23 D23'.
+
+%worlds (var) (mstep-implies-mreduce _ _).
+%total D (mstep-implies-mreduce D _).
+
+
+
+reduce-val : reduce M N
+	      -> value M
+%%
+	      -> value N
+	      -> type.
+%mode reduce-val +X1 +X2 -X3.
+
+-	: reduce-val reduce/ident D D.
+
+-	: reduce-val (reduce/lam _) _ value/lam.
+
+%worlds (var) (reduce-val _ _ _).
+%total {} (reduce-val _ _ _).
+		 
+
+
+reduce-compat : {M : exp -> exp}
+		     reduce N N'
+%%
+		     -> reduce (M N) (M N')
+		     -> type.
+%mode reduce-compat +X1 +X2 -X3.
+
+-	: reduce-compat ([x] x) D D.
+
+-	: reduce-compat ([x] M) _ reduce/ident.
+
+-	: reduce-compat ([x] lam ([y] M x y))
+	   (DreduceN : reduce N N')
+	   %%
+	   (reduce/lam Dreduce)
+	   <- ({y} {e:value y}
+		 decide-val y (val-or-not/yes e)
+		 -> reduce-compat ([x] M x y) DreduceN
+		    (Dreduce y e : reduce (M N y) (M N' y))).
+
+-	: reduce-compat ([x] app (M x) (N x))
+	   (DreduceO : reduce O O')
+	   %%
+	   (reduce/app DreduceNO DreduceMO)
+	   <- reduce-compat M DreduceO
+	      (DreduceMO : reduce (M O) (M O'))
+	   <- reduce-compat N DreduceO
+	      (DreduceNO : reduce (N O) (N O')).
+
+%worlds (var) (reduce-compat _ _ _).
+%total M (reduce-compat M _ _).
+
+
+
+reduce-subst : ({x} value x -> reduce (M x) (M' x))
+		 -> reduce N N'
+		 -> value N
+%%
+		 -> reduce (M N) (M' N')
+		 -> type.
+%mode reduce-subst +X1 +X2 +X3 -X4.
+
+-	: reduce-subst
+	   ([x] [d:value x] reduce/ident : reduce (M x) (M x))
+	   (DreduceN : reduce N N')
+	   _
+	   %%
+	   Dreduce
+	   <- reduce-compat M DreduceN
+	      (Dreduce : reduce (M N) (M N')).
+
+-	: reduce-subst
+	   ([x] [d:value x] 
+	      reduce/lam
+	      (DreduceM x d : {y} value y -> reduce (M x y) (M' x y)))
+	   (DreduceN : reduce N N')
+	   (DvalueN : value N)
+	   %%
+	   (reduce/lam Dreduce)
+	   <- ({y} {e:value y}
+		 decide-val y (val-or-not/yes e)
+		 -> reduce-subst ([x] [d] DreduceM x d y e) DreduceN DvalueN
+		    (Dreduce y e : reduce (M N y) (M' N' y))).
+
+-	: reduce-subst
+	   ([x] [d:value x]
+	      reduce/app
+	      (DreduceN x d : reduce (N x) (N' x))
+	      (DreduceM x d : reduce (M x) (M' x)))
+	   (DreduceO : reduce O O')
+	   (DvalueO : value O)
+	   %%
+	   (reduce/app DreduceNO DreduceMO)
+	   <- reduce-subst DreduceM DreduceO DvalueO
+	      (DreduceMO : reduce (M O) (M' O'))
+	   <- reduce-subst DreduceN DreduceO DvalueO
+	      (DreduceNO : reduce (N O) (N' O')).
+
+-	: reduce-subst
+	   ([x] [d:value x]
+	      reduce/beta
+	      (DreduceN x d : reduce (N x) (N' x))
+	      (DreduceM x d : {y} value y -> reduce (M x y) (M' x y))
+	      (DvalueN x d : value (N x)))
+	   (DreduceO : reduce O O')
+	   (DvalueO : value O)
+	   %%
+	   (reduce/beta DreduceNO DreduceMO (DvalueN O DvalueO))
+	   <- ({y} {e:value y}
+		 decide-val y (val-or-not/yes e)
+		 -> reduce-subst ([x] [d] DreduceM x d y e) DreduceO DvalueO
+		    (DreduceMO y e : reduce (M O y) (M' O' y)))
+	   <- reduce-subst DreduceN DreduceO DvalueO
+	      (DreduceNO : reduce (N O) (N' O')).
+
+%worlds (var) (reduce-subst _ _ _ _).
+%total D (reduce-subst D _ _ _).
+
+
+
+
+%%%%  Internal reduction  %%%%%
+
+ireduce : exp -> exp -> type.
+
+ireduce/ident	: ireduce M M.
+
+ireduce/lam	: ireduce (lam ([x] M x)) (lam ([x] M' x))
+		   <- ({x} value x -> reduce (M x) (M' x)).
+
+ireduce/app1	: ireduce (app M N) (app M' N')
+		   <- nvalue M
+		   <- ireduce M M'
+		   <- reduce N N'.
+
+ireduce/app2	: ireduce (app M N) (app M' N')
+		   <- ireduce M M'
+		   <- ireduce N N'.
+
+
+
+mireduce : exp -> exp -> type.
+
+mireduce/z	: mireduce M M.
+
+mireduce/s	: mireduce M O
+		   <- ireduce M N
+		   <- mireduce N O.
+
+
+
+ireduce-nval : ireduce M N
+		-> nvalue M
+%%
+		-> nvalue N
+		-> type.
+%mode ireduce-nval +X1 +X2 -X3.
+
+-	: ireduce-nval _ nvalue/app nvalue/app.
+
+-	: (decide-val _ _ -> ireduce-nval _ _ _) -> type.
+
+%worlds (var) (ireduce-nval _ _ _).
+%total {} (ireduce-nval _ _ _).
+
+
+
+ireduce-inv-val : ireduce M N
+		   -> value N
+%%
+		   -> value M
+		   -> type.
+%mode ireduce-inv-val +X1 +X2 -X3.
+
+-	: ireduce-inv-val ireduce/ident D D.
+
+-	: ireduce-inv-val (ireduce/lam _) _ value/lam.
+
+%worlds (var) (ireduce-inv-val _ _ _).
+%total {} (ireduce-inv-val _ _ _).
+
+
+
+ireduce-inv-nval : ireduce M N
+		    -> nvalue N
+%%
+		    -> nvalue M
+		    -> type.
+%mode ireduce-inv-nval +X1 +X2 -X3.
+
+-	: ireduce-inv-nval _ nvalue/app nvalue/app.
+
+%worlds (var) (ireduce-inv-nval _ _ _).
+%total {} (ireduce-inv-nval _ _ _).
+
+
+
+mireduce-inv-val : mireduce M N
+		    -> value N
+%%
+		    -> value M
+		    -> type.
+%mode mireduce-inv-val +X1 +X2 -X3.
+
+-	: mireduce-inv-val mireduce/z D D.
+
+-	: mireduce-inv-val 
+	   (mireduce/s
+	      (Dmireduce : mireduce N O) 
+	      (Direduce : ireduce M N))
+	   (DvalueO : value O)
+	   %%
+	   DvalueM
+	   <- mireduce-inv-val Dmireduce DvalueO (DvalueN : value N)
+	   <- ireduce-inv-val Direduce DvalueN (DvalueM : value M).
+
+%worlds (var) (mireduce-inv-val _ _ _).
+%total D (mireduce-inv-val D _ _).
+
+
+
+ireduce-implies-reduce : ireduce M N -> reduce M N -> type.
+%mode ireduce-implies-reduce +X1 -X2.
+
+-	: ireduce-implies-reduce ireduce/ident reduce/ident.
+
+-	: ireduce-implies-reduce (ireduce/lam D) (reduce/lam D).
+
+-	: ireduce-implies-reduce (ireduce/app1 D2 D1 _) (reduce/app D2 D1')
+	   <- ireduce-implies-reduce D1 D1'.
+
+-	: ireduce-implies-reduce (ireduce/app2 D2 D1) (reduce/app D2' D1')
+	   <- ireduce-implies-reduce D1 D1'
+	   <- ireduce-implies-reduce D2 D2'.
+
+%worlds (var) (ireduce-implies-reduce _ _).
+%total D (ireduce-implies-reduce D _).
+
+
+
+%%%%%  Strong reduction  %%%%%
+
+sreduce : exp -> exp -> type.
+
+sreduce/z	: sreduce M N
+		   <- ireduce M N.
+
+sreduce/s	: sreduce M O
+		   <- reduce M O
+		   <- step M N
+		   <- sreduce N O.
+
+
+
+sreduce-implies-reduce : sreduce M N -> reduce M N -> type.
+%mode sreduce-implies-reduce +X1 -X2.
+
+-	: sreduce-implies-reduce (sreduce/z D) D'
+	   <- ireduce-implies-reduce D D'.
+
+-	: sreduce-implies-reduce (sreduce/s _ _ D) D.
+
+%worlds (var) (sreduce-implies-reduce _ _).
+%total {} (sreduce-implies-reduce _ _).
+
+
+
+sreduce-app-nval : sreduce M M' 
+		    -> reduce N N'
+		    -> nvalue M'
+%%
+		    -> sreduce (app M N) (app M' N') 
+		    -> type.
+%mode sreduce-app-nval +X1 +X2 +X3 -X4.
+
+-	: sreduce-app-nval
+	   (sreduce/z
+	      (DireduceM : ireduce M M'))
+	   (DreduceN : reduce N N')
+	   (DnvalueM' : nvalue M')
+	   %%
+	   (sreduce/z (ireduce/app1 DreduceN DireduceM DnvalueM))
+	   <- ireduce-inv-nval DireduceM DnvalueM'
+	      (DnvalueM : nvalue M).
+
+-	: sreduce-app-nval
+	   (sreduce/s
+	      (DsreduceM : sreduce M'' M')
+	      (Dstep : step M M'')
+	      (DreduceM : reduce M M'))
+	   (DreduceN : reduce N N')
+	   (DnvalueM' : nvalue M')
+	   %%
+	   (sreduce/s DsreduceMN (step/app1 Dstep) (reduce/app DreduceN DreduceM))
+	   <- sreduce-app-nval DsreduceM DreduceN DnvalueM'
+	      (DsreduceMN : sreduce (app M'' N) (app M' N')).
+
+%worlds (var) (sreduce-app-nval _ _ _ _).
+%total D (sreduce-app-nval D _ _ _).
+
+
+
+sreduce-app-val : sreduce M M'
+		   -> sreduce N N'
+		   -> value M'
+%%
+		   -> sreduce (app M N) (app M' N')
+		   -> type.
+%mode sreduce-app-val +X1 +X2 +X3 -X4.
+
+-	: sreduce-app-val 
+	   (sreduce/z
+	      (DireduceM : ireduce M M'))
+	   (sreduce/z
+	      (DireduceN : ireduce N N'))
+	   _
+	   %%
+	   (sreduce/z
+	      (ireduce/app2 DireduceN DireduceM)).
+
+-	: sreduce-app-val
+	   (sreduce/z
+	      (DireduceM : ireduce M M'))
+	   (sreduce/s
+	      (DsreduceN : sreduce N'' N')
+	      (DstepN : step N N'')
+	      (DreduceN : reduce N N'))
+	   (DvalueM' : value M')
+	   %%
+	   (sreduce/s DsreduceMN (step/app2 DstepN DvalueM) (reduce/app DreduceN DreduceM))
+	   <- sreduce-app-val (sreduce/z DireduceM) DsreduceN DvalueM'
+	      (DsreduceMN : sreduce (app M N'') (app M' N'))
+	   <- ireduce-inv-val DireduceM DvalueM'
+	      (DvalueM : value M)
+	   <- ireduce-implies-reduce DireduceM
+	      (DreduceM : reduce M M').
+
+-	: sreduce-app-val
+	   (sreduce/s
+	      (DsreduceM : sreduce M'' M')
+	      (DstepM : step M M'')
+	      (DreduceM : reduce M M'))
+	   (DsreduceN : sreduce N N')
+	   (DvalueM' : value M')
+	   %%
+	   (sreduce/s DsreduceMN (step/app1 DstepM) (reduce/app DreduceN DreduceM))
+	   <- sreduce-app-val DsreduceM DsreduceN DvalueM'
+	      (DsreduceMN : sreduce (app M'' N) (app M' N'))
+	   <- sreduce-implies-reduce DsreduceN
+	      (DreduceN : reduce N N').
+
+%worlds (var) (sreduce-app-val _ _ _ _).
+%total [D1 D2] (sreduce-app-val D1 D2 _ _).
+
+
+
+sreduce-app-val-or-not : sreduce M M' 
+			  -> sreduce N N'
+			  -> val-or-not M'
+%%
+			  -> sreduce (app M N) (app M' N') 
+			  -> type.
+%mode sreduce-app-val-or-not +X1 +X2 +X3 -X4.
+
+-	: sreduce-app-val-or-not
+	   (DsreduceM : sreduce M M')
+	   (DsreduceN : sreduce N N')
+	   (val-or-not/yes
+	      (Dvalue : value M'))
+	   %%
+	   DsreduceMN
+	   <- sreduce-app-val DsreduceM DsreduceN Dvalue
+	      (DsreduceMN : sreduce (app M N) (app M' N')).
+
+-	: sreduce-app-val-or-not
+	   (DsreduceM : sreduce M M')
+	   (DsreduceN : sreduce N N')
+	   (val-or-not/no
+	      (Dnvalue : nvalue M'))
+	   %%
+	   DsreduceMN
+	   <- sreduce-implies-reduce DsreduceN
+	      (DreduceN : reduce N N')
+	   <- sreduce-app-nval DsreduceM DreduceN Dnvalue
+	      (DsreduceMN : sreduce (app M N) (app M' N')).
+
+%worlds (var) (sreduce-app-val-or-not _ _ _ _).
+%total {} (sreduce-app-val-or-not _ _ _ _).
+
+
+
+sreduce-app : sreduce M M' 
+	       -> sreduce N N'
+%%
+	       -> sreduce (app M N) (app M' N') 
+	       -> type.
+%mode sreduce-app +X1 +X2 -X3.
+
+-	: sreduce-app
+	   (DsreduceM : sreduce M M')
+	   (DsreduceN : sreduce N N')
+	   %%
+	   DsreduceMN
+	   <- decide-val M' (Dvon : val-or-not M')
+	   <- sreduce-app-val-or-not DsreduceM DsreduceN Dvon
+	      (DsreduceMN : sreduce (app M N) (app M' N')).
+
+%worlds (var) (sreduce-app _ _ _).
+%total {} (sreduce-app _ _ _).
+
+
+
+sreduce-compat : {M : exp -> exp}
+		     sreduce N N'
+%%
+		     -> sreduce (M N) (M N')
+		     -> type.
+%mode sreduce-compat +X1 +X2 -X3.
+
+-	: sreduce-compat ([x] x) D D.
+
+-	: sreduce-compat ([x] M) _ (sreduce/z ireduce/ident).
+
+-	: sreduce-compat ([x] lam ([y] M x y))
+	   (DsreduceN : sreduce N N')
+	   (sreduce/z (ireduce/lam Dreduce))
+	   <- sreduce-implies-reduce DsreduceN
+	      (DreduceN : reduce N N')
+	   <- ({y} {e:value y}
+		 decide-val y (val-or-not/yes e)
+		 -> reduce-compat ([x] M x y) DreduceN
+		    (Dreduce y e : reduce (M N y) (M N' y))).
+
+-	: sreduce-compat ([x] app (M x) (N x))
+	   (DsreduceO : sreduce O O')
+	   Dsreduce
+	   <- sreduce-compat M DsreduceO
+	      (DsreduceMO : sreduce (M O) (M O'))
+	   <- sreduce-compat N DsreduceO
+	      (DsreduceNO : sreduce (N O) (N O'))
+	   <- sreduce-app DsreduceMO DsreduceNO
+	      (Dsreduce : sreduce (app (M O) (N O)) (app (M O') (N O'))).
+
+%worlds (var) (sreduce-compat _ _ _).
+%total M (sreduce-compat M _ _).
+
+
+
+ireduce-sreduce-subst : ({x} value x -> ireduce (M x) (M' x))
+			 -> sreduce N N'
+			 -> value N
+%%
+			 -> sreduce (M N) (M' N')
+			 -> type.
+%mode ireduce-sreduce-subst +X1 +X2 +X3 -X4.
+
+-	: ireduce-sreduce-subst
+	   ([x] [d:value x] ireduce/ident : ireduce (M x) (M x))
+	   (DsreduceN : sreduce N N')
+	   _
+	   %%
+	   DsreduceMN
+	   <- sreduce-compat M DsreduceN
+	      (DsreduceMN : sreduce (M N) (M N')).
+
+-	: ireduce-sreduce-subst
+	   ([x] [d:value x]
+	      ireduce/lam
+	      ([y] [e:value y]
+		 DreduceM x d y e : reduce (M x y) (M' x y)))
+	   (DsreduceN : sreduce N N')
+	   (DvalueN : value N)
+	   %%
+	   (sreduce/z (ireduce/lam DreduceMN))
+	   <- sreduce-implies-reduce DsreduceN
+	      (DreduceN : reduce N N')
+	   <- ({y} {e:value y}
+		 decide-val y (val-or-not/yes e)
+		 -> reduce-subst ([x] [d] DreduceM x d y e) DreduceN DvalueN
+		    (DreduceMN y e : reduce (M N y) (M' N' y))).
+
+-	: ireduce-sreduce-subst
+	   ([x] [d:value x]
+	      ireduce/app1
+	      (DreduceN x d : reduce (N x) (N' x))
+	      (DireduceM x d : ireduce (M x) (M' x))
+	      (DnvalueM x : nvalue (M x)))
+	   (DsreduceO : sreduce O O')
+	   (DvalueO : value O)
+	   %%
+	   Dsreduce
+	   <- ireduce-sreduce-subst DireduceM DsreduceO DvalueO
+	      (DsreduceMO : sreduce (M O) (M' O'))
+	   <- sreduce-implies-reduce DsreduceO
+	      (DreduceO : reduce O O')
+	   <- reduce-subst DreduceN DreduceO DvalueO
+	      (DreduceNO : reduce (N O) (N' O'))
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> ireduce-nval (DireduceM x d) (DnvalueM x)
+		    (DnvalueM' x : nvalue (M' x)))
+	   <- sreduce-app-nval DsreduceMO DreduceNO (DnvalueM' O')
+	      (Dsreduce : sreduce (app (M O) (N O)) (app (M' O') (N' O'))).
+
+-	: ireduce-sreduce-subst
+	   ([x] [d:value x]
+	      ireduce/app2
+	      (DireduceN x d : ireduce (N x) (N' x))
+	      (DireduceM x d : ireduce (M x) (M' x)))
+	   (DsreduceO : sreduce O O')
+	   (DvalueO : value O)
+	   %%
+	   Dsreduce
+	   <- ireduce-sreduce-subst DireduceM DsreduceO DvalueO
+	      (DsreduceMO : sreduce (M O) (M' O'))
+	   <- ireduce-sreduce-subst DireduceN DsreduceO DvalueO
+	      (DsreduceNO : sreduce (N O) (N' O'))
+	   <- sreduce-app DsreduceMO DsreduceNO
+	      (Dsreduce : sreduce (app (M O) (N O)) (app (M' O') (N' O'))).
+
+%worlds (var) (ireduce-sreduce-subst _ _ _ _).
+%total D (ireduce-sreduce-subst D _ _ _).
+
+
+
+sreduce-subst : ({x} value x -> sreduce (M x) (M' x))
+		 -> sreduce N N'
+		 -> value N
+%%
+		 -> sreduce (M N) (M' N')
+		 -> type.
+%mode sreduce-subst +X1 +X2 +X3 -X4.
+
+-	: sreduce-subst
+	   ([x] [d:value x]
+	      sreduce/z
+	      (DireduceM x d : ireduce (M x) (M' x)))
+	   (DsreduceN : sreduce N N')
+	   (DvalueN : value N)
+	   %%
+	   Dsreduce
+	   <- ireduce-sreduce-subst DireduceM DsreduceN DvalueN
+	      (Dsreduce : sreduce (M N) (M' N')).
+
+-	: sreduce-subst
+	   ([x] [d:value x]
+	      sreduce/s
+	      (DsreduceM x d : sreduce (M'' x) (M' x))
+	      (DstepM x d : step (M x) (M'' x))
+	      (DreduceM x d : reduce (M x) (M' x)))
+	   (DsreduceN : sreduce N N')
+	   (DvalueN : value N)
+	   %%
+	   (sreduce/s DsreduceMN (DstepM N DvalueN) DreduceMN)
+	   <- sreduce-subst DsreduceM DsreduceN DvalueN
+	      (DsreduceMN : sreduce (M'' N) (M' N'))
+	   <- sreduce-implies-reduce DsreduceN
+	      (DreduceN : reduce N N')
+	   <- reduce-subst DreduceM DreduceN DvalueN
+	      (DreduceMN : reduce (M N) (M' N')).
+
+%worlds (var) (sreduce-subst _ _ _ _).
+%total D (sreduce-subst D _ _ _).
+
+
+
+reduce-implies-sreduce : reduce M N -> sreduce M N -> type.
+%mode reduce-implies-sreduce +X1 -X2.
+
+-	: reduce-implies-sreduce reduce/ident (sreduce/z ireduce/ident).
+
+-	: reduce-implies-sreduce (reduce/lam D) (sreduce/z (ireduce/lam D)).
+
+-	: reduce-implies-sreduce
+	   (reduce/app
+	      (DreduceN : reduce N N')
+	      (DreduceM : reduce M M'))
+	   %%
+	   DsreduceMN
+	   <- reduce-implies-sreduce DreduceM (DsreduceM : sreduce M M')
+	   <- reduce-implies-sreduce DreduceN (DsreduceN : sreduce N N')
+	   <- sreduce-app DsreduceM DsreduceN
+	      (DsreduceMN : sreduce (app M N) (app M' N')).
+
+-	: reduce-implies-sreduce
+	   (reduce/beta
+	      (DreduceN : reduce N N')
+	      (DreduceM : {x} value x -> reduce (M x) (M' x))
+	      (DvalueN : value N))
+	   %%
+	   (sreduce/s
+	      Dsreduce
+	      (step/beta DvalueN)
+	      (reduce/beta DreduceN DreduceM DvalueN))
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> reduce-implies-sreduce (DreduceM x d)
+		    (DsreduceM x d : sreduce (M x) (M' x)))
+	   <- reduce-implies-sreduce DreduceN
+	      (DsreduceN : sreduce N N')
+	   <- sreduce-subst DsreduceM DsreduceN DvalueN
+	      (Dsreduce : sreduce (M N) (M' N')).
+
+%worlds (var) (reduce-implies-sreduce _ _).
+%total D (reduce-implies-sreduce D _).
+
+
+
+sreduce-implies-mstep-ireduce : sreduce M N
+%%
+				-> mstep M O
+				-> ireduce O N
+				-> type.
+%mode sreduce-implies-mstep-ireduce +X1 -X2 -X3.
+
+-	: sreduce-implies-mstep-ireduce 
+	   (sreduce/z 
+	      (Direduce : ireduce M N)) 
+	   %%
+	   mstep/z Direduce.
+
+-	: sreduce-implies-mstep-ireduce
+	   (sreduce/s
+	      (DsreduceON : sreduce O N)
+	      (DstepMN : step M O)
+	      _)
+	   %%
+	   (mstep/s DstepOP DstepMN) DireducePN
+	   <- sreduce-implies-mstep-ireduce DsreduceON
+	      (DstepOP : mstep O P)
+	      (DireducePN : ireduce P N).
+
+%worlds (var) (sreduce-implies-mstep-ireduce _ _ _).
+%total D (sreduce-implies-mstep-ireduce D _ _).
+
+
+
+reduce-implies-mstep-ireduce : reduce M N
+%%
+				-> mstep M O
+				-> ireduce O N
+				-> type.
+%mode reduce-implies-mstep-ireduce +X1 -X2 -X3.
+
+-	: reduce-implies-mstep-ireduce
+	   (DreduceMN : reduce M N)
+	   %%
+	   DstepMO DireduceON
+	   <- reduce-implies-sreduce DreduceMN
+	      (DsreduceMN : sreduce M N)
+	   <- sreduce-implies-mstep-ireduce DsreduceMN
+	      (DstepMO : mstep M O)
+	      (DireduceON : ireduce O N).
+
+%worlds (var) (reduce-implies-mstep-ireduce _ _ _).
+%total {} (reduce-implies-mstep-ireduce _ _ _).
+
+
+
+
+%%%%%  Postponement  %%%%%
+
+ireduce-step-implies-step-reduce : ireduce M N
+				    -> step N O
+%%
+				    -> step M N'
+				    -> reduce N' O
+				    -> type.
+%mode ireduce-step-implies-step-reduce +X1 +X2 -X3 -X4.
+
+-	: ireduce-step-implies-step-reduce
+	   ireduce/ident
+	   (Dstep : step M O)
+	   %%
+	   Dstep reduce/ident.
+
+-	: ireduce-step-implies-step-reduce
+	   (ireduce/app1
+	      (DreduceN : reduce N1 N2)
+	      (DireduceM : ireduce M1 M2)
+	      (DnvalueM : nvalue M1))
+	   (step/app1
+	      (DstepM : step M2 M3))
+	   %%
+	   (step/app1 DstepM')
+	   (reduce/app DreduceN DreduceM)
+	   <- ireduce-step-implies-step-reduce DireduceM DstepM
+	      (DstepM' : step M1 M2')
+	      (DreduceM : reduce M2' M3).
+
+-	: ireduce-step-implies-step-reduce
+	   (ireduce/app2
+	      (DireduceN : ireduce N1 N2)
+	      (DireduceM : ireduce M1 M2))
+	   (step/app1
+	      (DstepM : step M2 M3))
+	   %%
+	   (step/app1 DstepM')
+	   (reduce/app DreduceN DreduceM)
+	   <- ireduce-step-implies-step-reduce DireduceM DstepM
+	      (DstepM' : step M1 M2')
+	      (DreduceM : reduce M2' M3)
+	   <- ireduce-implies-reduce DireduceN
+	      (DreduceN : reduce N1 N2).
+	      
+-	: ireduce-step-implies-step-reduce
+	   (ireduce/app2
+	      (DireduceN : ireduce N1 N2)
+	      (DireduceM : ireduce M1 M2))
+	   (step/app2
+	      (DstepN : step N2 N3)
+	      (DvalueM2 : value M2))
+	   %%
+	   (step/app2 DstepN' DvalueM1)
+	   (reduce/app DreduceN DreduceM)
+	   <- ireduce-inv-val DireduceM DvalueM2
+	      (DvalueM1 : value M1)
+	   <- ireduce-step-implies-step-reduce DireduceN DstepN
+	      (DstepN' : step N1 N2')
+	      (DreduceN : reduce N2' N3)
+	   <- ireduce-implies-reduce DireduceM
+	      (DreduceM : reduce M1 M2).
+
+-	: ireduce-step-implies-step-reduce
+	   (ireduce/app2
+	      (DireduceN : ireduce N1 N2)
+	      (ireduce/lam
+		 (DreduceM : {x} value x -> reduce (M1 x) (M2 x))))
+	   (step/beta
+	      (DvalueN2 : value N2))
+	   %%
+	   (step/beta DvalueN1)
+	   Dreduce
+	   <- ireduce-inv-val DireduceN DvalueN2
+	      (DvalueN1 : value N1)
+	   <- ireduce-implies-reduce DireduceN
+	      (DreduceN : reduce N1 N2)
+	   <- reduce-subst DreduceM DreduceN DvalueN1
+	      (Dreduce : reduce (M1 N1) (M2 N2)).
+
+-	: ireduce-step-implies-step-reduce
+	   (ireduce/app2
+	      (DireduceN : ireduce N1 N2)
+	      (ireduce/ident : ireduce (lam ([x] M x)) (lam ([x] M x))))
+	   (step/beta
+	      (DvalueN2 : value N2))
+	   %%
+	   (step/beta DvalueN1)
+	   Dreduce
+	   <- ireduce-inv-val DireduceN DvalueN2
+	      (DvalueN1 : value N1)
+	   <- ireduce-implies-reduce DireduceN
+	      (DreduceN : reduce N1 N2)
+	   <- reduce-compat M DreduceN
+	      (Dreduce : reduce (M N1) (M N2)).
+
+%worlds (var) (ireduce-step-implies-step-reduce _ _ _ _).
+%total D (ireduce-step-implies-step-reduce D _ _ _).
+
+
+
+ireduce-step-implies-mstep-ireduce : ireduce M N
+				      -> step N O
+%%
+				      -> mstep M N'
+				      -> ireduce N' O
+				      -> type.
+%mode ireduce-step-implies-mstep-ireduce +X1 +X2 -X3 -X4.
+
+-	: ireduce-step-implies-mstep-ireduce
+	   (Direduce : ireduce M N)
+	   (Dstep : step N O)
+	   %%
+	   (mstep/s Dmstep Dstep')
+	   Direduce'
+	   <- ireduce-step-implies-step-reduce Direduce Dstep
+	      (Dstep' : step M N')
+	      (Dreduce : reduce N' O)
+	   <- reduce-implies-mstep-ireduce Dreduce
+	      (Dmstep : mstep N' P)
+	      (Direduce' : ireduce P O).
+
+%worlds (var) (ireduce-step-implies-mstep-ireduce _ _ _ _).
+%total {} (ireduce-step-implies-mstep-ireduce _ _ _ _).
+
+
+
+ireduce-mstep-implies-mstep-ireduce : ireduce M N
+				       -> mstep N O
+%%
+				       -> mstep M N'
+				       -> ireduce N' O
+				       -> type.
+%mode ireduce-mstep-implies-mstep-ireduce +X1 +X2 -X3 -X4.
+
+-	: ireduce-mstep-implies-mstep-ireduce
+	   (Direduce : ireduce M N)
+	   mstep/z
+	   %%
+	   mstep/z
+	   Direduce.
+
+-	: ireduce-mstep-implies-mstep-ireduce
+	   (DireduceMN : ireduce M N)
+	   (mstep/s
+	      (DmstepOP : mstep O P)
+	      (DstepNO : step N O))
+	   %%
+	   DmstepMR
+	   DireduceRP
+	   <- ireduce-step-implies-mstep-ireduce DireduceMN DstepNO
+	      (DmstepMQ : mstep M Q)
+	      (DireduceQO : ireduce Q O)
+	   <- ireduce-mstep-implies-mstep-ireduce DireduceQO DmstepOP
+	      (DmstepQR : mstep Q R)
+	      (DireduceRP : ireduce R P)
+	   <- mstep-trans DmstepMQ DmstepQR
+	      (DmstepMR : mstep M R).
+
+%worlds (var) (ireduce-mstep-implies-mstep-ireduce _ _ _ _).
+%total D (ireduce-mstep-implies-mstep-ireduce _ D _ _).
+
+
+
+
+%%%%%  Evaluation  %%%%%
+
+reduce-mstep-implies-mstep-ireduce : reduce M N
+				      -> mstep N O
+%%
+				      -> mstep M N'
+				      -> ireduce N' O 
+				      -> type.
+%mode reduce-mstep-implies-mstep-ireduce +X1 +X2 -X3 -X4.
+
+-	: reduce-mstep-implies-mstep-ireduce
+	   (DreduceMN : reduce M N)
+	   (DmstepNO : mstep N O)
+	   %%
+	   DmstepMQ
+	   DireduceQO
+	   <- reduce-implies-mstep-ireduce DreduceMN
+	      (DmstepMP : mstep M P)
+	      (DireducePN : ireduce P N)
+	   <- ireduce-mstep-implies-mstep-ireduce DireducePN DmstepNO
+	      (DmstepPQ : mstep P Q)
+	      (DireduceQO : ireduce Q O)
+	   <- mstep-trans DmstepMP DmstepPQ
+	      (DmstepMQ : mstep M Q).
+
+%worlds (var) (reduce-mstep-implies-mstep-ireduce _ _ _ _).
+%total {} (reduce-mstep-implies-mstep-ireduce _ _ _ _).
+
+
+
+mreduce-implies-mstep-mireduce : mreduce M N
+%%
+				  -> mstep M O
+				  -> mireduce O N
+				  -> type.
+%mode mreduce-implies-mstep-mireduce +X1 -X2 -X3.
+
+-	: mreduce-implies-mstep-mireduce mreduce/z mstep/z mireduce/z.
+	   
+-	: mreduce-implies-mstep-mireduce
+	   (mreduce/s
+	      (DmreduceNO : mreduce N O)
+	      (DreduceMN : reduce M N))
+	   %%
+	   DmstepMQ
+	   (mireduce/s DmireducePO DireduceQP)
+	   <- mreduce-implies-mstep-mireduce DmreduceNO
+	      (DmstepNP : mstep N P)
+	      (DmireducePO : mireduce P O)
+	   <- reduce-mstep-implies-mstep-ireduce DreduceMN DmstepNP
+	      (DmstepMQ : mstep M Q)
+	      (DireduceQP : ireduce Q P).
+
+%worlds (var) (mreduce-implies-mstep-mireduce _ _ _).
+%total D (mreduce-implies-mstep-mireduce D _ _).
+
+
+
+
+%%%%%  Confluence  %%%%%
+
+diamond : reduce M M1
+	   -> reduce M M2
+%%
+	   -> reduce M1 M'
+	   -> reduce M2 M'
+	   -> type.
+%mode diamond +X1 +X2 -X3 -X4.
+
+-	: diamond reduce/ident D D reduce/ident.
+
+-	: diamond D reduce/ident reduce/ident D.
+
+-	: diamond
+	   (reduce/lam
+	      (D1 : {x} value x -> reduce (M x) (M1 x)))
+	   (reduce/lam
+	      (D2 : {x} value x -> reduce (M x) (M2 x)))
+	   %%
+	   (reduce/lam D1')
+	   (reduce/lam D2')
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> diamond (D1 x d) (D2 x d)
+		    (D1' x d : reduce (M1 x) (M' x))
+		    (D2' x d : reduce (M2 x) (M' x))).
+
+-	: diamond
+	   (reduce/app
+	      (DN1 : reduce N N1)
+	      (DM1 : reduce M M1))
+	   (reduce/app
+	      (DN2 : reduce N N2)
+	      (DM2 : reduce M M2))
+	   %%
+	   (reduce/app DN1' DM1')
+	   (reduce/app DN2' DM2')
+	   <- diamond DM1 DM2
+	      (DM1' : reduce M1 M')
+	      (DM2' : reduce M2 M')
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N').
+
+-	: diamond
+	   (reduce/beta
+	      (DN1 : reduce N N1)
+	      (DM1 : {x} value x -> reduce (M x) (M1 x))
+	      (DvalueN : value N))
+	   (reduce/beta
+	      (DN2 : reduce N N2)
+	      (DM2 : {x} value x -> reduce (M x) (M2 x))
+	      _)
+	   %%
+	   D1'
+	   D2'
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> diamond (DM1 x d) (DM2 x d)
+		    (DM1' x d : reduce (M1 x) (M' x))
+		    (DM2' x d : reduce (M2 x) (M' x)))
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N')
+	   <- reduce-val DN1 DvalueN
+	      (DvalueN1 : value N1)
+	   <- reduce-val DN2 DvalueN
+	      (DvalueN2 : value N2)
+	   <- reduce-subst DM1' DN1' DvalueN1
+	      (D1' : reduce (M1 N1) (M' N'))
+	   <- reduce-subst DM2' DN2' DvalueN2
+	      (D2' : reduce (M2 N2) (M' N')).
+
+-	: diamond
+	   (reduce/beta
+	      (DN1 : reduce N N1)
+	      (DM1 : {x} value x -> reduce (M x) (M1 x))
+	      (DvalueN : value N))
+	   (reduce/app
+	      (DN2 : reduce N N2)
+	      (reduce/lam
+		 (DM2 : {x} value x -> reduce (M x) (M2 x))))
+	   %%
+	   D1'
+	   (reduce/beta DN2' DM2' DvalueN2)
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> diamond (DM1 x d) (DM2 x d)
+		    (DM1' x d : reduce (M1 x) (M' x))
+		    (DM2' x d : reduce (M2 x) (M' x)))
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N')
+	   <- reduce-val DN1 DvalueN
+	      (DvalueN1 : value N1)
+	   <- reduce-val DN2 DvalueN
+	      (DvalueN2 : value N2)
+	   <- reduce-subst DM1' DN1' DvalueN1
+	      (D1' : reduce (M1 N1) (M' N')).
+
+-	: diamond
+	   (reduce/beta
+	      (DN1 : reduce N N1)
+	      (DM1 : {x} value x -> reduce (M x) (M1 x))
+	      (DvalueN : value N))
+	   (reduce/app
+	      (DN2 : reduce N N2)
+	      reduce/ident)
+	   %%
+	   D1'
+	   (reduce/beta DN2' DM1 DvalueN2)
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N')
+	   <- reduce-val DN2 DvalueN
+	      (DvalueN2 : value N2)
+	   <- reduce-compat M1 DN1'
+	      (D1' : reduce (M1 N1) (M1 N')).
+		 
+-	: diamond
+	   (reduce/app
+	      (DN1 : reduce N N1)
+	      (reduce/lam
+		 (DM1 : {x} value x -> reduce (M x) (M1 x))))
+	   (reduce/beta
+	      (DN2 : reduce N N2)
+	      (DM2 : {x} value x -> reduce (M x) (M2 x))
+	      (DvalueN : value N))
+	   %%
+	   (reduce/beta DN1' DM1' DvalueN1)
+	   D2'
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> diamond (DM1 x d) (DM2 x d)
+		    (DM1' x d : reduce (M1 x) (M' x))
+		    (DM2' x d : reduce (M2 x) (M' x)))
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N')
+	   <- reduce-val DN1 DvalueN
+	      (DvalueN1 : value N1)
+	   <- reduce-val DN2 DvalueN
+	      (DvalueN2 : value N2)
+	   <- reduce-subst DM2' DN2' DvalueN2
+	      (D2' : reduce (M2 N2) (M' N')).
+
+-	: diamond
+	   (reduce/app
+	      (DN1 : reduce N N1)
+	      reduce/ident)
+	   (reduce/beta
+	      (DN2 : reduce N N2)
+	      (DM2 : {x} value x -> reduce (M x) (M2 x))
+	      (DvalueN : value N))
+	   %%
+	   (reduce/beta DN1' DM2 DvalueN1)
+	   D2'
+	   <- diamond DN1 DN2
+	      (DN1' : reduce N1 N')
+	      (DN2' : reduce N2 N')
+	   <- reduce-val DN1 DvalueN
+	      (DvalueN1 : value N1)
+	   <- reduce-compat M2 DN2'
+	      (D2' : reduce (M2 N2) (M2 N')).
+		 
+%worlds (var) (diamond _ _ _ _).
+%total D (diamond D _ _ _).
+
+
+
+strip : reduce M M1
+	 -> mreduce M M2
+%%
+	 -> mreduce M1 M'
+	 -> reduce M2 M'
+	 -> type.
+%mode strip +X1 +X2 -X3 -X4.
+
+-	: strip D mreduce/z mreduce/z D.
+
+-	: strip
+	   (DredM-M1 : reduce M M1)
+	   (mreduce/s
+	      (DredM2'-M2 : mreduce M2' M2)
+	      (DredM-M2' : reduce M M2'))
+	   %%
+	   (mreduce/s DredM'-M'' DredM1-M')
+	   DredM2-M''
+	   <- diamond DredM-M1 DredM-M2'
+	      (DredM1-M' : reduce M1 M')
+	      (DredM2'-M' : reduce M2' M')
+	   <- strip DredM2'-M' DredM2'-M2
+	      (DredM'-M'' : mreduce M' M'')
+	      (DredM2-M'' : reduce M2 M'').
+
+%worlds (var) (strip _ _ _ _).
+%total D (strip _ D _ _).
+
+
+
+confluence : mreduce M M1
+	      -> mreduce M M2
+%%
+	      -> mreduce M1 M'
+	      -> mreduce M2 M'
+	      -> type.
+%mode confluence +X1 +X2 -X3 -X4.
+
+-	: confluence mreduce/z D D mreduce/z.
+
+-	: confluence 
+	   (mreduce/s 
+	      (DredM1'-M1 : mreduce M1' M1)
+	      (DredM-M1' : reduce M M1'))
+	   (DredM-M2 : mreduce M M2)
+	   %%
+	   DredM1-M''
+	   (mreduce/s DredM'-M'' DredM2-M')
+	   <- strip DredM-M1' DredM-M2
+	      (DredM1'-M' : mreduce M1' M')
+	      (DredM2-M' : reduce M2 M')
+	   <- confluence DredM1'-M1 DredM1'-M'
+	      (DredM1-M'' : mreduce M1 M'')
+	      (DredM'-M'' : mreduce M' M'').
+
+%worlds (var) (confluence _ _ _ _).
+%total D (confluence D _ _ _).
+
+
+
+
+%%%%%  Termination is invariant under reduction  %%%%%
+
+rhalt-implies-halt : mreduce M N
+		      -> value N
+%%
+		      -> halt M
+		      -> type.
+%mode rhalt-implies-halt +X1 +X2 -X3.
+
+-	: rhalt-implies-halt
+	   (Dmreduce : mreduce M N)
+	   (DvalueN : value N)
+	   %%
+	   (halt/i DvalueO Dmstep)
+	   <- mreduce-implies-mstep-mireduce Dmreduce
+	      (Dmstep : mstep M O)
+	      (Dmireduce : mireduce O N)
+	   <- mireduce-inv-val Dmireduce DvalueN
+	      (DvalueO : value O).
+
+%worlds (var) (rhalt-implies-halt _ _ _).
+%total {} (rhalt-implies-halt _ _ _).
+
+
+
+reduce-inv-preserves-halt : reduce M N
+			     -> halt N
+%%
+			     -> halt M
+			     -> type.
+%mode reduce-inv-preserves-halt +X1 +X2 -X3.
+
+-	: reduce-inv-preserves-halt
+	   (Dreduce : reduce M N)
+	   (halt/i
+	      (DvalueO : value O)
+	      (Dmstep : mstep N O))
+	   %%
+	   Dhalt
+	   <- mstep-implies-mreduce Dmstep (Dmreduce : mreduce N O)
+	   <- rhalt-implies-halt (mreduce/s Dmreduce Dreduce) DvalueO
+	      (Dhalt : halt M).
+
+%worlds (var) (reduce-inv-preserves-halt _ _ _).
+%total {} (reduce-inv-preserves-halt _ _ _).
+
+
+
+reduce-preserves-halt : reduce M N
+			 -> halt M
+%%
+			 -> halt N
+			 -> type.
+%mode reduce-preserves-halt +X1 +X2 -X3.
+
+-	: reduce-preserves-halt
+	   (DreduceMN : reduce M N)
+	   (halt/i
+	      (DvalueO : value O)
+	      (DmstepMO : mstep M O))
+	   %%
+	   Dhalt
+	   <- mstep-implies-mreduce DmstepMO
+	      (DmreduceMO : mreduce M O)
+	   <- strip DreduceMN DmreduceMO
+	      (DmreduceNP : mreduce N P)
+	      (DreduceOP : reduce O P)
+	   <- reduce-val DreduceOP DvalueO
+	      (DvalueP : value P)
+	   <- rhalt-implies-halt DmreduceNP DvalueP
+	      (Dhalt : halt N).
+
+%worlds (var) (reduce-preserves-halt _ _ _).
+%total {} (reduce-preserves-halt _ _ _).
+
+
+
+
+%%%%%  Standardization  %%%%%
+
+%% Standard reduction
+treduce : exp -> exp -> type.
+
+%{
+
+I don't represent the standard reduction sequence explicitly; I just
+track its endpoints.  You can reconstruct the sequence easily by
+reading the treduce/app rule as taking (M N) to (M' N) to (M' N').
+
+}%
+
+treduce/z	: treduce M M.
+
+treduce/s	: treduce M O
+		   <- step M N
+		   <- treduce N O.
+
+treduce/lam	: treduce (lam ([x] M x)) (lam ([x] M' x))
+		   <- ({x} value x -> treduce (M x) (M' x)).
+
+treduce/app	: treduce (app M N) (app M' N')
+		   <- treduce M M'
+		   <- treduce N N'.
+
+
+
+mstep-treduce-trans : mstep M N
+		       -> treduce N O
+%%
+		       -> treduce M O
+		       -> type.
+%mode mstep-treduce-trans +X1 +X2 -X3.
+
+-	: mstep-treduce-trans mstep/z D D.
+
+-	: mstep-treduce-trans 
+	   (mstep/s 
+	      (Dmstep : mstep N O)
+	      (Dstep : step M N))
+	   (Dtreduce : treduce O P)
+	   %%
+	   (treduce/s Dtreduce' Dstep)
+	   <- mstep-treduce-trans Dmstep Dtreduce
+	      (Dtreduce' : treduce N P).
+
+%worlds (var) (mstep-treduce-trans _ _ _).
+%total D (mstep-treduce-trans D _ _).
+
+
+
+wmireduce : exp -> exp -> type.
+
+wmireduce/ident	: wmireduce M M.
+
+wmireduce/lam	: wmireduce (lam ([x] M x)) (lam ([x] M' x))
+		   <- ({x} value x -> mreduce (M x) (M' x)).
+
+wmireduce/app	: wmireduce (app M N) (app M' N')
+		   <- mreduce M M'
+		   <- mreduce N N'.
+
+
+
+ireduce-wmireduce-trans : ireduce M N
+			   -> wmireduce N O
+%%
+			   -> wmireduce M O
+			   -> type.
+%mode ireduce-wmireduce-trans +X1 +X2 -X3.
+
+-	: ireduce-wmireduce-trans ireduce/ident D D.
+
+-	: ireduce-wmireduce-trans
+	   (ireduce/lam 
+	      (D : {x} value x -> reduce (M x) (N x)))
+	   (wmireduce/lam
+	      (D' : {x} value x -> mreduce (N x) (O x)))
+	   %%
+	   (wmireduce/lam
+	      ([x] [d] mreduce/s (D' x d) (D x d))).
+
+-	: ireduce-wmireduce-trans
+	   (ireduce/lam 
+	      (D : {x} value x -> reduce (M x) (N x)))
+	   wmireduce/ident
+	   %%
+	   (wmireduce/lam
+	      ([x] [d] mreduce/s mreduce/z (D x d))).
+
+-	: ireduce-wmireduce-trans
+	   (ireduce/app1
+	      (D2 : reduce M' N')
+	      (Di1 : ireduce M N)
+	      _)
+	   (wmireduce/app
+	      (D2' : mreduce N' O')
+	      (D1' : mreduce N O))
+	   %%
+	   (wmireduce/app
+	      (mreduce/s D2' D2)
+	      (mreduce/s D1' D1))
+	   <- ireduce-implies-reduce Di1 D1.
+	   
+-	: ireduce-wmireduce-trans
+	   (ireduce/app1
+	      (D2 : reduce M' N')
+	      (Di1 : ireduce M N)
+	      _)
+	   wmireduce/ident
+	   %%
+	   (wmireduce/app
+	      (mreduce/s mreduce/z D2)
+	      (mreduce/s mreduce/z D1))
+	   <- ireduce-implies-reduce Di1 D1.
+	   
+-	: ireduce-wmireduce-trans
+	   (ireduce/app2
+	      (Di2 : ireduce M' N')
+	      (Di1 : ireduce M N))
+	   (wmireduce/app
+	      (D2' : mreduce N' O')
+	      (D1' : mreduce N O))
+	   %%
+	   (wmireduce/app
+	      (mreduce/s D2' D2)
+	      (mreduce/s D1' D1))
+	   <- ireduce-implies-reduce Di1 D1
+	   <- ireduce-implies-reduce Di2 D2.
+	   
+-	: ireduce-wmireduce-trans
+	   (ireduce/app2
+	      (Di2 : ireduce M' N')
+	      (Di1 : ireduce M N))
+	   wmireduce/ident
+	   %%
+	   (wmireduce/app
+	      (mreduce/s mreduce/z D2)
+	      (mreduce/s mreduce/z D1))
+	   <- ireduce-implies-reduce Di1 D1
+	   <- ireduce-implies-reduce Di2 D2.
+	   
+%worlds (var) (ireduce-wmireduce-trans _ _ _).
+%total {} (ireduce-wmireduce-trans _ _ _).
+
+
+
+mireduce-implies-wmireduce : mireduce M N -> wmireduce M N -> type.
+%mode mireduce-implies-wmireduce +X1 -X2.
+
+-	: mireduce-implies-wmireduce mireduce/z wmireduce/ident.
+
+-	: mireduce-implies-wmireduce (mireduce/s D2 D1) D
+	   <- mireduce-implies-wmireduce D2 D2'
+	   <- ireduce-wmireduce-trans D1 D2' D.
+
+%worlds (var) (mireduce-implies-wmireduce _ _).
+%total D (mireduce-implies-wmireduce D _).
+
+
+
+mreduce-implies-treduce* : {N}
+			    mreduce M N 
+%%
+			    -> treduce M N 
+			    -> type.
+%mode mreduce-implies-treduce* +X1 +X2 -X3.
+
+wmireduce-implies-treduce* : {N}
+			      wmireduce M N
+%%
+			      -> treduce M N
+			      -> type.
+%mode wmireduce-implies-treduce* +X1 +X2 -X3.
+
+-	: mreduce-implies-treduce* N
+	   (DreduceMN : mreduce M N)
+	   %%
+	   DtreduceMN
+	   <- mreduce-implies-mstep-mireduce DreduceMN
+	      (DmstepMO : mstep M O)
+	      (DmireduceON : mireduce O N)
+	   <- mireduce-implies-wmireduce DmireduceON
+	      (DwmireduceON : wmireduce O N)
+	   <- wmireduce-implies-treduce* N DwmireduceON
+	      (DtreduceON : treduce O N)
+	   <- mstep-treduce-trans DmstepMO DtreduceON
+	      (DtreduceMN : treduce M N).
+
+-	: wmireduce-implies-treduce* N
+	   wmireduce/ident
+	   treduce/z.
+
+-	: wmireduce-implies-treduce* (lam ([x] N x))
+	   (wmireduce/lam
+	      (Dreduce : {x} value x -> mreduce (M x) (N x)))
+	   %%
+	   (treduce/lam Dtreduce)
+	   <- ({x} {d:value x}
+		 decide-val x (val-or-not/yes d)
+		 -> mreduce-implies-treduce* (N x) (Dreduce x d)
+		    (Dtreduce x d : treduce (M x) (N x))).
+
+-	: wmireduce-implies-treduce* (app N1 N2)
+	   (wmireduce/app
+	      (Dmreduce2 : mreduce M2 N2)
+	      (Dmreduce1 : mreduce M1 N1))
+	   %%
+	   (treduce/app Dtreduce2 Dtreduce1)
+	   <- mreduce-implies-treduce* N1 Dmreduce1
+	      (Dtreduce1 : treduce M1 N1)
+	   <- mreduce-implies-treduce* N2 Dmreduce2
+	      (Dtreduce2 : treduce M2 N2).
+
+%worlds (var) (wmireduce-implies-treduce* _ _ _) (mreduce-implies-treduce* _ _ _).
+%total (N1 N2) (wmireduce-implies-treduce* N1 _ _) (mreduce-implies-treduce* N2 _ _).
+
+
+
+mreduce-implies-treduce : mreduce M N -> treduce M N -> type.
+%mode mreduce-implies-treduce +X1 -X2.
+
+-	: mreduce-implies-treduce Dmreduce Dtreduce
+	   <- mreduce-implies-treduce* _ Dmreduce Dtreduce.
+
+%worlds (var) (mreduce-implies-treduce _ _).
+%total {} (mreduce-implies-treduce _ _).

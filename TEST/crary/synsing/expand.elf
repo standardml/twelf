@@ -1,0 +1,19 @@
+
+%%%%%  Expansion  %%%%%
+
+expand : atom -> tp -> term -> type.
+%mode expand +R +A -M.
+
+expand/t	: expand R t (at R).
+
+expand/pi	: expand R (pi A B) (lam N)
+		   <- ({x} expand x A (M x))
+		   <- ({x} expand (app R (M x)) (B x) (N x)).
+
+expand/sigma	: expand R (sigma A B) (pair M N)
+		   <- expand (pi1 R) A M
+		   <- expand (pi2 R) (B (pi1 R)) N.
+
+expand/sing	: expand R (sing R') (at R').
+
+expand/one	: expand R one star.
