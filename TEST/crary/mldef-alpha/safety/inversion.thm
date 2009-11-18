@@ -1,0 +1,1114 @@
+
+%%%%%  Term Inversion  %%%%%
+
+inversion-tm/abort : tm-of F (tm/abort E T) T'
+%%
+		      -> tm-of F E void
+		      -> cn-equiv T T' t
+		      -> type.
+%mode inversion-tm/abort +X1 -X2 -X3.
+
+-	: inversion-tm/abort (tm-of/abort D2 D1) D1 (cn-equiv/refl D2).
+
+-	: inversion-tm/abort (tm-of/equiv Dequiv Dof) Dof' (cn-equiv/trans Dequiv Dequiv')
+	   <- inversion-tm/abort Dof Dof' Dequiv'.
+
+%worlds () (inversion-tm/abort _ _ _).
+%total D (inversion-tm/abort D _ _).
+
+
+
+inversion-tm/pair : tm-of F (tm/pair E1 E2) T
+%%
+		  -> cn-equiv (prod T1 T2) T t
+		  -> tm-of F E1 T1
+		  -> tm-of F E2 T2 -> type.
+%mode inversion-tm/pair +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/pair (tm-of/pair D2 D1) (cn-equiv/refl Dwf) D1 D2
+	   <- tm-of-reg (tm-of/pair D2 D1) Dwf.
+
+-	: inversion-tm/pair (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof1 Dof2
+	   <- inversion-tm/pair Dof Dequiv' Dof1 Dof2.
+
+%worlds () (inversion-tm/pair _ _ _ _).
+%total D (inversion-tm/pair D _ _ _).
+
+
+
+inversion-tm/pi1 : tm-of F (tm/pi1 E) T1
+%%
+		 -> tm-of F E (prod T1 T2) -> type.
+%mode inversion-tm/pi1 +X1 -X2.
+
+-	: inversion-tm/pi1 (tm-of/pi1 D) D.
+
+-	: inversion-tm/pi1 (tm-of/equiv Dequiv Dof) (tm-of/equiv (cn-equiv/prod (cn-equiv/refl Dwf2) Dequiv) Dof')
+	   <- inversion-tm/pi1 Dof Dof'
+	   <- tm-of-reg Dof' Dwf
+	   <- inversion-prod Dwf Dwf1 Dwf2.
+
+%worlds () (inversion-tm/pi1 _ _).
+%total D (inversion-tm/pi1 D _).
+
+
+
+inversion-tm/pi2 : tm-of F (tm/pi2 E) T2
+%%
+		 -> tm-of F E (prod T1 T2) -> type.
+%mode inversion-tm/pi2 +X1 -X2.
+
+-	: inversion-tm/pi2 (tm-of/pi2 D) D.
+
+-	: inversion-tm/pi2 (tm-of/equiv Dequiv Dof) (tm-of/equiv (cn-equiv/prod Dequiv (cn-equiv/refl Dwf1)) Dof')
+	   <- inversion-tm/pi2 Dof Dof'
+	   <- tm-of-reg Dof' Dwf
+	   <- inversion-prod Dwf Dwf1 Dwf2.
+
+%worlds () (inversion-tm/pi2 _ _).
+%total D (inversion-tm/pi2 D _).
+
+
+
+inversion-tm/in1 : tm-of F (tm/in1 E T2) T
+%%
+		    -> cn-equiv (plus T1 T2) T t 
+		    -> tm-of F E T1 
+		    -> cn-of T2 t -> type.
+%mode inversion-tm/in1 +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/in1 (tm-of/in1 Dwf2 Dof) (cn-equiv/refl (cn-of/plus Dwf2 Dwf1)) Dof Dwf2
+	   <- tm-of-reg Dof Dwf1.
+
+-	: inversion-tm/in1 (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof' Dwf
+	   <- inversion-tm/in1 Dof Dequiv' Dof' Dwf.
+
+%worlds () (inversion-tm/in1 _ _ _ _).
+%total D (inversion-tm/in1 D _ _ _).
+
+
+
+inversion-tm/in2 : tm-of F (tm/in2 E T1) T
+%%
+		    -> cn-equiv (plus T1 T2) T t 
+		    -> tm-of F E T2 
+		    -> cn-of T1 t -> type.
+%mode inversion-tm/in2 +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/in2 (tm-of/in2 Dwf1 Dof) (cn-equiv/refl (cn-of/plus Dwf2 Dwf1)) Dof Dwf1
+	   <- tm-of-reg Dof Dwf2.
+
+-	: inversion-tm/in2 (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof' Dwf
+	   <- inversion-tm/in2 Dof Dequiv' Dof' Dwf.
+
+%worlds () (inversion-tm/in2 _ _ _ _).
+%total D (inversion-tm/in2 D _ _ _).
+
+
+
+inversion-tm/case : tm-of F (tm/case E E1 E2) T
+%%
+		     -> tm-of F E (plus T1 T2)
+		     -> ({x} tm-assm x T1 -> tm-of F (E1 x) T)
+		     -> ({x} tm-assm x T2 -> tm-of F (E2 x) T) -> type.
+%mode inversion-tm/case +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/case (tm-of/case Dof2 Dof1 Dof) Dof Dof1 Dof2.
+
+-	: inversion-tm/case (tm-of/equiv Dequiv Dof) Dof' ([x] [d] tm-of/equiv Dequiv (Dof1 x d)) ([x] [d] tm-of/equiv Dequiv (Dof2 x d))
+	   <- inversion-tm/case Dof Dof' Dof1 Dof2.
+
+%worlds () (inversion-tm/case _ _ _ _).
+%total D (inversion-tm/case D _ _ _).
+
+
+
+inversion-tm/lam : tm-of F (tm/lam T1 ([x] E x)) T
+%%
+		    -> cn-equiv (arrow T1 T2) T t
+		    -> ({x} tm-assm x T1 -> tm-of F (E x) T2) -> type.
+%mode inversion-tm/lam +X1 -X2 -X3.
+
+-	: inversion-tm/lam (tm-of/lam Dof Dwf1) (cn-equiv/refl Dwf) Dof
+	   <- tm-of-reg (tm-of/lam Dof Dwf1) Dwf.
+
+-	: inversion-tm/lam (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof'
+	   <- inversion-tm/lam Dof Dequiv' Dof'.
+
+%worlds () (inversion-tm/lam _ _ _).
+%total D (inversion-tm/lam D _ _).
+
+
+
+inversion-tm/app : tm-of F (tm/app E1 E2) T
+%%
+		    -> tm-of F E1 (arrow T' T)
+		    -> tm-of F E2 T' -> type.
+%mode inversion-tm/app +X1 -X2 -X3.
+
+-	: inversion-tm/app (tm-of/app Dof2 Dof1) Dof1 Dof2.
+
+-	: inversion-tm/app (tm-of/equiv Dequiv Dof) (tm-of/equiv (cn-equiv/arrow Dequiv (cn-equiv/refl Dwf2)) Dof1) Dof2
+	   <- inversion-tm/app Dof Dof1 Dof2
+	   <- tm-of-reg Dof2 Dwf2.
+
+%worlds () (inversion-tm/app _ _ _).
+%total D (inversion-tm/app D _ _).
+
+
+
+inversion-tm/refloc : tm-of F (tm/refloc L) T
+%%
+		       -> cn-equiv (ref T') T t
+		       -> st-lookup F L (et/ref T')
+		       -> cn-of T' t -> type.
+%mode inversion-tm/refloc +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/refloc (tm-of/refloc Dwf Dlookup) (cn-equiv/refl (cn-of/ref Dwf)) Dlookup Dwf.
+
+-	: inversion-tm/refloc (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dlookup Dwf
+	   <- inversion-tm/refloc Dof Dequiv' Dlookup Dwf.
+
+%worlds () (inversion-tm/refloc _ _ _ _).
+%total D (inversion-tm/refloc D _ _ _).
+
+
+
+inversion-tm/ref : tm-of F (tm/ref E) T
+%%
+		    -> cn-equiv (ref T') T t
+		    -> tm-of F E T' -> type.
+%mode inversion-tm/ref +X1 -X2 -X3.
+
+-	: inversion-tm/ref (tm-of/ref D) (cn-equiv/refl Dwf) D
+	   <- tm-of-reg (tm-of/ref D) Dwf.
+
+-	: inversion-tm/ref (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof'
+	   <- inversion-tm/ref Dof Dequiv' Dof'.
+
+%worlds () (inversion-tm/ref _ _ _).
+%total D (inversion-tm/ref D _ _).
+
+
+
+inversion-tm/deref : tm-of F (tm/deref E) T
+%%
+		    -> tm-of F E (ref T) -> type.
+%mode inversion-tm/deref +X1 -X2.
+
+-	: inversion-tm/deref (tm-of/deref D) D.
+
+-	: inversion-tm/deref (tm-of/equiv Dequiv Dof) (tm-of/equiv (cn-equiv/ref Dequiv) Dof')
+	   <- inversion-tm/deref Dof Dof'.
+
+%worlds () (inversion-tm/deref _ _).
+%total D (inversion-tm/deref D _).
+
+
+
+inversion-tm/assign : tm-of F (tm/assign E1 E2) T
+%%
+		       -> cn-equiv unit T t
+		       -> tm-of F E1 (ref T')
+		       -> tm-of F E2 T' -> type.
+%mode inversion-tm/assign +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/assign (tm-of/assign D2 D1) cn-equiv/unit D1 D2
+	   <- tm-of-reg (tm-of/assign D2 D1) Dwf.
+
+-	: inversion-tm/assign (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof1 Dof2
+	   <- inversion-tm/assign Dof Dequiv' Dof1 Dof2.
+
+%worlds () (inversion-tm/assign _ _ _ _).
+%total D (inversion-tm/assign D _ _ _).
+
+
+
+inversion-tm/tagloc : tm-of F (tm/tagloc L) T
+%%
+		       -> cn-equiv (tag T') T t
+		       -> st-lookup F L (et/tag T')
+		       -> cn-of T' t -> type.
+%mode inversion-tm/tagloc +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/tagloc (tm-of/tagloc Dwf Dlookup) (cn-equiv/refl (cn-of/tag Dwf)) Dlookup Dwf.
+
+-	: inversion-tm/tagloc (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dlookup Dwf
+	   <- inversion-tm/tagloc Dof Dequiv' Dlookup Dwf.
+
+%worlds () (inversion-tm/tagloc _ _ _ _).
+%total D (inversion-tm/tagloc D _ _ _).
+
+
+
+inversion-tm/newtag : tm-of F (tm/newtag T') T
+%%
+		       -> cn-equiv (tag T') T t -> type.
+%mode inversion-tm/newtag +X1 -X2.
+
+-	: inversion-tm/newtag (tm-of/newtag Dwf) (cn-equiv/refl (cn-of/tag Dwf)).
+
+-	: inversion-tm/newtag (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv')
+	   <- inversion-tm/newtag Dof Dequiv'.
+
+%worlds () (inversion-tm/newtag _ _).
+%total D (inversion-tm/newtag D _).
+
+
+
+inversion-tm/tag : tm-of F (tm/tag E1 E2) T
+%%
+		    -> cn-equiv tagged T t
+		    -> tm-of F E1 (tag T')
+		    -> tm-of F E2 T' -> type.
+%mode inversion-tm/tag +X1 -X2 -X3 -X4.
+
+-	: inversion-tm/tag (tm-of/tag Dof2 Dof1) (cn-equiv/refl cn-of/tagged) Dof1 Dof2.
+
+-	: inversion-tm/tag (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof1 Dof2
+	   <- inversion-tm/tag Dof Dequiv' Dof1 Dof2.
+
+%worlds () (inversion-tm/tag _ _ _ _).
+%total D (inversion-tm/tag D _ _ _).
+
+
+
+inversion-tm/iftag : tm-of F (tm/iftag E1 E2 E3 E4) T
+%%
+		      -> tm-of F E1 tagged
+		      -> tm-of F E2 (tag T')
+		      -> ({x} tm-assm x T' -> tm-of F (E3 x) T)
+		      -> tm-of F E4 T -> type.
+%mode inversion-tm/iftag +X1 -X2 -X3 -X4 -X5.
+
+-	: inversion-tm/iftag (tm-of/iftag Dof4 Dof3 Dof2 Dof1) Dof1 Dof2 Dof3 Dof4.
+
+-	: inversion-tm/iftag (tm-of/equiv Dequiv Dof) Dof1 Dof2 ([x] [d] tm-of/equiv Dequiv (Dof3 x d)) (tm-of/equiv Dequiv Dof4)
+	   <- inversion-tm/iftag Dof Dof1 Dof2 Dof3 Dof4.
+
+%worlds () (inversion-tm/iftag _ _ _ _ _).
+%total D (inversion-tm/iftag D _ _ _ _).
+
+
+
+inversion-tm/roll : tm-of F (tm/roll E K C1 C2) T
+%%
+		     -> cn-equiv (rec K C1 C2) T t
+		     -> tm-of F E (C1 (lam K ([a] rec K C1 a)) C2)
+		     -> kd-wf K
+		     -> ({a} cn-of a (karrow K t) -> {b} cn-of b K -> cn-of (C1 a b) t)
+		     -> cn-of C2 K
+		     -> type.
+%mode inversion-tm/roll +X1 -X2 -X3 -X4 -X5 -X6.
+
+-	: inversion-tm/roll (tm-of/roll D3 D2 D1 Dof) (cn-equiv/refl (cn-of/rec D3 D2 D1)) Dof D1 D2 D3.
+
+-	: inversion-tm/roll (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof' D1 D2 D3
+	   <- inversion-tm/roll Dof Dequiv' Dof' D1 D2 D3.
+
+%worlds () (inversion-tm/roll _ _ _ _ _ _).
+%total D (inversion-tm/roll D _ _ _ _ _).
+
+
+
+inversion-tm/unroll : tm-of F (tm/unroll E) T
+%%
+		       -> cn-equiv (C1 (lam K ([a] rec K C1 a)) C2) T t
+		       -> tm-of F E (rec K C1 C2) -> type.
+%mode inversion-tm/unroll +X1 -X2 -X3.
+
+-	: inversion-tm/unroll (tm-of/unroll Dof) (cn-equiv/refl (DofC1 _ (cn-of/lam ([a] [d] cn-of/rec d DofC1 DwfK) DwfK) _ DofC2)) Dof
+	   <- tm-of-reg Dof Dwf
+	   <- inversion-rec Dwf DwfK DofC1 DofC2.
+
+-	: inversion-tm/unroll (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof'
+	   <- inversion-tm/unroll Dof Dequiv' Dof'.
+
+%worlds () (inversion-tm/unroll _ _ _).
+%total D (inversion-tm/unroll D _ _).
+
+
+
+inversion-tm/in : tm-of F (tm/in I E) T
+%%
+		   -> cn-equiv (labeled I T') T t
+		   -> tm-of F E T'
+		   -> type.
+%mode inversion-tm/in +X1 -X2 -X3.
+
+-	: inversion-tm/in (tm-of/in Dof) (cn-equiv/refl (cn-of/labeled Dwf)) Dof
+	   <- tm-of-reg Dof Dwf.
+
+-	: inversion-tm/in (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof'
+	   <- inversion-tm/in Dof Dequiv' Dof'.
+
+%worlds () (inversion-tm/in _ _ _).
+%total D (inversion-tm/in D _ _).
+
+
+
+inversion-tm/out : tm-of F (tm/out E) T
+		    -> tm-of F E (labeled L T)
+		    -> type.
+%mode +{F:sttp} +{E:term} +{T:con} -{L:label} +{X1:tm-of F (tm/out E) T}
+   -{X2:tm-of F E (labeled L T)} (inversion-tm/out X1 X2).
+
+-	: inversion-tm/out (tm-of/out Dof) Dof.
+
+-	: inversion-tm/out (tm-of/equiv Dequiv Dof) (tm-of/equiv (cn-equiv/labeled Dequiv) Dof')
+	   <- inversion-tm/out Dof Dof'.
+
+%worlds () (inversion-tm/out _ _).
+%total D (inversion-tm/out D _).
+
+
+
+inversion-tm/raise : tm-of F (tm/raise E T') T
+%%
+		      -> cn-equiv T' T t
+		      -> tm-of F E tagged -> type.
+%mode inversion-tm/raise +X1 -X2 -X3.
+
+-	: inversion-tm/raise (tm-of/raise Dwf Dof) (cn-equiv/refl Dwf) Dof.
+
+-	: inversion-tm/raise (tm-of/equiv Dequiv Dof) (cn-equiv/trans Dequiv Dequiv') Dof'
+	   <- inversion-tm/raise Dof Dequiv' Dof'.
+
+%worlds () (inversion-tm/raise _ _ _).
+%total D (inversion-tm/raise D _ _).
+
+
+
+inversion-tm/try : tm-of F (tm/try E1 E2) T
+%%
+		    -> tm-of F E1 T
+		    -> ({x} tm-assm x tagged -> tm-of F (E2 x) T) -> type.
+%mode inversion-tm/try +X1 -X2 -X3.
+
+-	: inversion-tm/try (tm-of/try Dof2 Dof1) Dof1 Dof2.
+
+-	: inversion-tm/try (tm-of/equiv Dequiv Dof) (tm-of/equiv Dequiv Dof1) ([x] [d] tm-of/equiv Dequiv (Dof2 x d))
+	   <- inversion-tm/try Dof Dof1 Dof2.
+
+%worlds () (inversion-tm/try _ _ _).
+%total D (inversion-tm/try D _ _).
+
+
+
+inversion-tm/lett : tm-of F (tm/lett E1 E2) T
+%%
+		    -> tm-of F E1 T1
+		    -> ({x} tm-assm x T1 -> tm-of F (E2 x) T)
+		    -> type.
+%mode inversion-tm/lett +X1 -X2 -X3.
+
+-	: inversion-tm/lett (tm-of/lett Dof2 Dof1) Dof1 Dof2.
+
+-	: inversion-tm/lett (tm-of/equiv Dequiv Dof) Dof1 ([x] [d] tm-of/equiv Dequiv (Dof2 x d))
+	   <- inversion-tm/lett Dof Dof1 Dof2.
+
+%worlds () (inversion-tm/lett _ _ _).
+%total D (inversion-tm/lett D _ _).
+
+
+
+inversion-tm/snd : tm-of F (tm/snd M) T
+%%
+		    -> md-of impure F M (sg/datom T)
+		    -> type.
+%mode inversion-tm/snd +X1 -X2.
+
+-	: inversion-tm/snd (tm-of/snd Dof) Dof'
+	   <- md-of-forget Dof Dof'.
+
+-	: inversion-tm/snd (tm-of/equiv Dequiv Dof) (md-of/equiv (sg-equiv/datom Dequiv) Dof')
+	   <- inversion-tm/snd Dof Dof'.
+
+%worlds () (inversion-tm/snd _ _).
+%total D (inversion-tm/snd D _).
+
+
+
+
+%%%%%  Module Inversion  %%%%%
+
+inversion-md/satom : md-of P F (md/satom C) S
+%%
+		      -> cn-of C K
+		      -> sg-sub (sg/satom K) S
+		      -> type.
+%mode inversion-md/satom +X1 -X2 -X3.
+
+-	: inversion-md/satom
+	   (Dof : md-of P F (md/satom C) S)
+	   Dof'
+	   Dsub
+	   <- md-ofp-complete Dof
+	      (md-ofp/satom
+		 (Dofp : cn-ofp C K))
+	      (Dsub : sg-sub (sg/satom K) S)
+	      _
+	   <- cn-ofp-sound Dofp
+	      (Dof' : cn-of C K).
+
+%worlds () (inversion-md/satom _ _ _).
+%total {} (inversion-md/satom _ _ _).
+
+
+
+inversion-md/datom : md-of P F (md/datom E T) S
+%%
+		      -> tm-of F E T
+		      -> sg-sub (sg/datom T) S
+		      -> type.
+%mode inversion-md/datom +X1 -X2 -X3.
+
+inversion-md/datom-invert : md-ofp P F (md/datom E T) S'
+			     -> sg-sub S' S
+%%
+			     -> tm-of F E T 
+			     -> sg-sub (sg/datom T) S
+			     -> type.
+%mode inversion-md/datom-invert +X1 +X2 -X3 -X4.
+
+-	: inversion-md/datom-invert (md-ofp/datom Dof) Dsub Dof Dsub.
+
+%worlds () (inversion-md/datom-invert _ _ _ _).
+%total {} (inversion-md/datom-invert _ _ _ _).
+
+-	: inversion-md/datom
+	   (Dof : md-of P F (md/datom E T) S)
+	   Dof'
+	   Dsub'
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F (md/datom E T) S')
+	      (Dsub : sg-sub S' S)
+	      _
+	   <- inversion-md/datom-invert Dofp Dsub
+	      (Dof' : tm-of F E T)
+	      (Dsub' : sg-sub (sg/datom T) S).
+
+%worlds () (inversion-md/datom _ _ _).
+%total {} (inversion-md/datom _ _ _).
+
+
+
+inversion-md/pair : md-of P F (md/pair M1 M2) S
+%%
+		     -> md-of P F M1 S1
+		     -> md-of P F M2 S2
+		     -> sg-sub (sg/sigma S1 ([_] S2)) S 
+		     -> type.
+%mode inversion-md/pair +X1 -X2 -X3 -X4.
+
+-	: inversion-md/pair
+	   (Dof : md-of P F (md/pair M1 M2) S)
+	   Dof1'
+	   Dof2'
+	   Dsub
+	   <- md-ofp-complete Dof
+	      (md-ofp/pair
+		 (Djoin : purity-join P1 P2 P')
+		 (Dofp2 : md-ofp P2 F M2 S2)
+		 (Dofp1 : md-ofp P1 F M1 S1))
+	      (Dsub : sg-sub (sg/sigma S1 ([_] S2)) S)
+	      (Dpsub : purity-sub P' P)
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of P1 F M1 S1)
+	   <- md-ofp-sound Dofp2
+	      (Dof2 : md-of P2 F M2 S2)
+	   <- purity-join-sub Djoin
+	      (Dpsub1 : purity-sub P1 P')
+	      (Dpsub2 : purity-sub P2 P')
+	   <- purity-sub-trans Dpsub1 Dpsub (Dpsub1' : purity-sub P1 P)
+	   <- purity-sub-trans Dpsub2 Dpsub (Dpsub2' : purity-sub P2 P)
+	   <- purity-subsume Dof1 Dpsub1'
+	      (Dof1' : md-of P F M1 S1)
+	   <- purity-subsume Dof2 Dpsub2'
+	      (Dof2' : md-of P F M2 S2).
+
+%worlds () (inversion-md/pair _ _ _ _).
+%total {} (inversion-md/pair _ _ _ _).
+
+
+
+inversion-md/dpair : md-of P F (md/dpair M1 M2) S
+%%
+		      -> md-of P F M1 S1
+		      -> sg-fst S1 K1
+		      -> ({a} cn-of a K1
+			    -> {m} md-assm m S1
+			    -> md-fst m a
+			    -> md-of P F (M2 a m) (S2 a))
+		      -> sg-sub (sg/sigma S1 S2) S
+		      -> type.
+%mode inversion-md/dpair +X1 -X2 -X3 -X4 -X5.
+
+inversion-md/dpair-ofp : md-ofp P F (md/dpair M1 M2) S
+%%
+			  -> md-of P F M1 S1
+			  -> sg-fst S1 K1
+			  -> ({a} cn-of a K1
+				-> {m} md-assm m S1
+				-> md-fst m a
+				-> md-of P F (M2 a m) (S2 a))
+			  -> sg-sub (sg/sigma S1 S2) S
+			  -> type.
+%mode inversion-md/dpair-ofp +X1 -X2 -X3 -X4 -X5.
+
+-	: inversion-md/dpair Dof Dof1' Dfst Dof2' (sg-sub/trans Dsub Dsub')
+	   <- md-ofp-complete Dof Dofp Dsub Dpsub
+	   <- inversion-md/dpair-ofp Dofp Dof1 Dfst Dof2 Dsub'
+	   <- purity-subsume Dof1 Dpsub Dof1'
+	   <- ({a} {da} {m} {dm} {dfst}
+		 purity-subsume (Dof2 a da m dm dfst) Dpsub (Dof2' a da m dm dfst)).
+
+-	: inversion-md/dpair-ofp
+	   (md-ofp/dpair-pure
+	      (Dofp2 : {a} cn-of a K1
+			-> {m} md-assm m S1
+			-> md-fst m a
+			-> cn-ofp a (K1s a)
+			-> md-ofp P F (M2 a m) (S2 a))
+	      (DsingK1 : single K1 K1s)
+	      (DfstM1 : md-fst M1 C1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 : md-ofp pure F M1 S1))
+	   %%
+	   Dof1'
+	   DfstS1
+	   Dof2
+	   (sg-sub/refl
+	      (sg-equiv/sigma
+		 ([a] [d:cn-of a K1] sg-equiv/symm (DequivS2 a d))
+		 DfstS1
+		 (sg-equiv/refl DwfS1)))
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of pure F M1 S1)
+	   <- md-of-forget' P Dof1
+	      (Dof1' : md-of P F M1 S1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst : md-of P F (M2 a m) (S2 a)))
+	   <- ({a} {da} {m} {dm} {dfst}
+		 md-of-forget (Dof2 a da m dm dfst) (Dof2' a da m dm dfst))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a)))
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- md-ofp-pure-fst Dofp1 DfstM1 DfstS1 DsingK1
+	      (DequivK1 : kd-equiv K1 (K1s C1))
+	   <- single-elim DsingK1 DwfK1
+	      (Dequiv : {a} cn-of a K1 -> {b} cn-of b (K1s a) -> cn-equiv a b K1)
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> functionality-sg DwfS2
+		    (Dequiv C1 DofC1 a (cn-of/equiv DequivK1 da) : cn-equiv C1 a K1)
+		    (DequivS2 a da : sg-equiv (S2 C1) (S2 a))).
+
+-	: inversion-md/dpair-ofp
+	   (md-ofp/dpair-impure
+	      (Dofp2 : {a} cn-of a K1
+			-> {m} md-assm m S1
+			-> md-fst m a
+			-> cn-ofp a (K1s a)
+			-> md-ofp P F (M2 a m) (S2 a))
+	      (DsingK1 : single K1 K1s)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dofp1 : md-ofp impure F M1 S1))
+	   %%
+	   Dof1
+	   DfstS1
+	   Dof2'
+	   (sg-sub/reflid (sg-wf/sigma DwfS2 DfstS1 DwfS1))
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of impure F M1 S1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst : md-of P F (M2 a m) (S2 a)))
+	   <- ({a} {da} {m} {dm} {dfst}
+		 md-of-forget (Dof2 a da m dm dfst) (Dof2' a da m dm dfst))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a))).
+
+%worlds () (inversion-md/dpair-ofp _ _ _ _ _).
+%total {} (inversion-md/dpair-ofp _ _ _ _ _).
+
+%worlds () (inversion-md/dpair _ _ _ _ _).
+%total {} (inversion-md/dpair _ _ _ _ _).
+
+
+
+inversion-md/pi1 : md-of P F (md/pi1 M) S1
+%%
+		    -> md-of pure F M (sg/sigma S1 ([_] S2))
+		    -> type.
+%mode inversion-md/pi1 +X1 -X2.
+
+-	: inversion-md/pi1
+	   (Dof : md-of P F (md/pi1 M) S)
+	   (md-of/subsume 
+	      (sg-sub/sigma
+		 ([_] [_] DwfS2 Cinh DofInh)
+		 DfstS
+		 ([_] [_] sg-sub/reflid (DwfS2 Cinh DofInh))
+		 DfstS1
+		 Dsub)
+	      Dof')
+	   <- md-ofp-complete Dof
+	      (md-ofp/pi1 
+		 (Dofp : md-ofp pure F M (sg/sigma S1 ([_] S2))))
+	      (Dsub : sg-sub S1 S)
+	      _
+	   <- md-ofp-sound Dofp
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- md-of-reg Dof'
+	      (sg-wf/sigma
+		 (DwfS2 : {a} cn-of a K1 -> sg-wf S2)
+		 (DfstS1 : sg-fst S1 K1)
+		 (DwfS1 : sg-wf S1))
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- inhabitation DwfK1
+	      (DofInh : cn-of Cinh K1)
+	   <- can-sg-fst S
+	      (DfstS : sg-fst S K).
+		 
+%worlds () (inversion-md/pi1 _ _).
+%total {} (inversion-md/pi1 _ _).
+
+
+
+inversion-md/pi2 : md-of P F (md/pi2 M) S2
+%%
+		    -> md-of pure F M (sg/sigma S1 ([_] S2))
+		    -> type.
+%mode inversion-md/pi2 +X1 -X2.
+
+-	: inversion-md/pi2
+	   (Dof : md-of P F (md/pi2 M) S)
+	   (md-of/subsume
+	      (sg-sub/sigma
+		 ([_] [_] DwfS)
+		 DfstS1
+		 ([_] [_] Dsub)
+		 DfstS1
+		 (sg-sub/reflid DwfS1))
+	      Dof')
+	   <- md-ofp-complete Dof
+	      (md-ofp/pi2
+		 (Dofp : md-ofp pure F M (sg/sigma S1 ([_] S2))))
+	      (Dsub : sg-sub S2 S)
+	      _
+	   <- md-ofp-sound Dofp
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- md-of-reg Dof'
+	      (sg-wf/sigma
+		 (DwfS2 : {a} cn-of a K1 -> sg-wf S2)
+		 (DfstS1 : sg-fst S1 K1)
+		 (DwfS1 : sg-wf S1))
+	   <- md-of-reg Dof
+	      (DwfS : sg-wf S).
+		 
+%worlds () (inversion-md/pi2 _ _).
+%total {} (inversion-md/pi2 _ _).
+
+
+
+inversion-md/lam : md-of P F (md/lam S1 M) S
+%%
+		    -> sg-wf S1
+		    -> sg-fst S1 K1
+		    -> ({a} cn-of a K1
+			  -> {m} md-assm m S1
+			  -> md-fst m a
+			  -> md-of impure F (M a m) (S2 a))
+		    -> sg-sub (sg/pi S1 S2) S
+		    -> type.
+%mode inversion-md/lam +X1 -X2 -X3 -X4 -X5.
+
+inversion-md/lam-invert : md-ofp P F (md/lam S1 M) S'
+			   -> sg-sub S' S
+%%
+			   -> sg-wf S1
+			   -> sg-fst S1 K1
+			   -> single K1 K1s
+			   -> ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> cn-ofp a (K1s a)
+				 -> md-ofp P' F (M a m) (S2 a))
+			   -> sg-sub (sg/pi S1 S2) S
+			   -> type.
+%mode inversion-md/lam-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: inversion-md/lam-invert (md-ofp/lam D4 D3 D2 D1) Dsub D1 D2 D3 D4 Dsub.
+
+%worlds () (inversion-md/lam-invert _ _ _ _ _ _ _).
+%total {} (inversion-md/lam-invert _ _ _ _ _ _ _).
+
+-	: inversion-md/lam
+	   (Dof : md-of P F (md/lam S1 M) S)
+	   DwfS1
+	   DfstS1
+	   Dof''
+	   Dsub'
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F (md/lam S1 M) S')
+	      (Dsub : sg-sub S' S)
+	      _
+	   <- inversion-md/lam-invert Dofp Dsub
+	      (DwfS1 : sg-wf S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (DsingK1 : single K1 K1s)
+	      (Dofp' : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> cn-ofp a (K1s a)
+		       -> md-ofp P'' F (M a m) (S2 a))
+	      (Dsub' : sg-sub (sg/pi S1 S2) S)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro DsingK1 DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp' a da m dm dfst dp)
+		    (Dof' a da m dm dfst : md-of P'' F (M a m) (S2 a)))
+	   <- ({a} {da} {m} {dm} {dfst}
+		 md-of-forget (Dof' a da m dm dfst)
+		 (Dof'' a da m dm dfst : md-of impure F (M a m) (S2 a))).
+	   
+%worlds () (inversion-md/lam _ _ _ _ _).
+%total {} (inversion-md/lam _ _ _ _ _).
+
+
+
+inversion-md/app : md-of P F (md/app M1 M2) S
+%%
+		    -> md-of impure F M1 (sg/pi S1 S2)
+		    -> md-of pure F M2 S1
+		    -> md-fst M2 C2
+		    -> sg-sub (S2 C2) S
+		    -> purity-sub impure P
+		    -> type.
+%mode inversion-md/app +X1 -X2 -X3 -X4 -X5 -X6.
+
+-	: inversion-md/app
+	   (Dof : md-of P F (md/app M1 M2) S)
+	   Dof1'
+	   Dof2
+	   Dfst
+	   Dsub
+	   Dpsub
+	   <- md-ofp-complete Dof
+	      (md-ofp/app
+		 (Dfst : md-fst M2 C2)
+		 (Dof2 : md-of pure F M2 S1)
+		 (Dofp1 : md-ofp P' F M1 (sg/pi S1 S2)))
+	      (Dsub : sg-sub (S2 C2) S)
+	      (Dpsub : purity-sub impure P)
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of P' F M1 (sg/pi S1 S2))
+	   <- md-of-forget Dof1
+	      (Dof1' : md-of impure F M1 (sg/pi S1 S2)).
+
+%worlds () (inversion-md/app _ _ _ _ _ _).
+%total {} (inversion-md/app _ _ _ _ _ _).
+
+
+
+inversion-md/in : md-of P F (md/in L M) S
+%%
+		   -> md-of P F M S'
+		   -> sg-sub (sg/named L S') S
+		   -> type.
+%mode inversion-md/in +X1 -X2 -X3.
+
+inversion-md/in-factor : md-ofp P F (md/in L M) S
+%%
+			  -> md-ofp P F M S'
+			  -> sg-eq S (sg/named L S')
+			  -> type.
+%mode inversion-md/in-factor +X1 -X2 -X3.
+
+-	: inversion-md/in
+	   (Dof : md-of P F (md/in L M) S)
+	   Dof''
+	   Dsub'
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F (md/in L M) S')
+	      (Dsub : sg-sub S' S)
+	      (Dpsub : purity-sub P' P)
+	   <- inversion-md/in-factor Dofp
+	      (Dofp' : md-ofp P' F M S'')
+	      (Deq : sg-eq S' (sg/named L S''))
+	   <- md-ofp-sound Dofp'
+	      (Dof' : md-of P' F M S'')
+	   <- purity-subsume Dof' Dpsub
+	      (Dof'' : md-of P F M S'')
+	   <- sg-sub-resp Deq sg-eq/i Dsub
+	      (Dsub' : sg-sub (sg/named L S'') S).
+
+-	: inversion-md/in-factor (md-ofp/in Dofp) Dofp sg-eq/i.
+
+%worlds () (inversion-md/in-factor _ _ _).
+%total {} (inversion-md/in-factor _ _ _).
+
+%worlds () (inversion-md/in _ _ _).
+%total {} (inversion-md/in _ _ _).
+
+
+
+inversion-md/out : md-of P F (md/out M) S
+		    -> md-of P F M (sg/named L S)
+		    -> type.
+%mode inversion-md/out +X1 -X2.
+
+-	: inversion-md/out
+	   (Dof : md-of P F (md/out M) S)
+	   (md-of/subsume (sg-sub/named Dsub) Dof'')
+	   <- md-ofp-complete Dof
+	      (md-ofp/out
+		 (Dofp : md-ofp P' F M (sg/named L S')))
+	      (Dsub : sg-sub S' S)
+	      (Dpsub : purity-sub P' P)
+	   <- md-ofp-sound Dofp
+	      (Dof' : md-of P' F M (sg/named L S'))
+	   <- purity-subsume Dof' Dpsub
+	      (Dof'' : md-of P F M (sg/named L S')).
+
+%worlds () (inversion-md/out _ _).
+%total {} (inversion-md/out _ _).
+
+
+
+inversion-md/let : md-of P F (md/let M1 M2 S) S'
+%%
+		    -> md-of impure F M1 S1
+		    -> sg-fst S1 K1
+		    -> ({a} cn-of a K1
+			  -> {m} md-assm m S1
+			  -> md-fst m a
+			  -> md-of impure F (M2 a m) S)
+		    -> sg-sub S S'
+		    -> purity-sub impure P
+		    -> type.
+%mode inversion-md/let +X1 -X2 -X3 -X4 -X5 -X6.
+
+inversion-md/let-invert : md-ofp P F (md/let M1 M2 S) S''
+			   -> sg-sub S'' S'
+%%
+			   -> md-of P1 F M1 S1
+			   -> sg-fst S1 K1
+			   -> ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> md-of P2 F (M2 a m) S)
+			   -> sg-sub S S'
+			   -> purity-sub impure P
+			   -> type.
+%mode inversion-md/let-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: inversion-md/let-invert (md-ofp/let D3 D2 D1) Dsub D1 D2 D3 Dsub purity-sub/refl.
+
+%worlds () (inversion-md/let-invert _ _ _ _ _ _ _).
+%total {} (inversion-md/let-invert _ _ _ _ _ _ _).
+
+-	: inversion-md/let
+	   (Dof : md-of P F (md/let M1 M2 S) S')
+	   Dof1'
+	   Dfst
+	   Dof2'
+	   Dsub'
+	   Dpsub''
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F (md/let M1 M2 S) S'')
+	      (Dsub : sg-sub S'' S')
+	      (Dpsub : purity-sub P' P)
+	   <- inversion-md/let-invert Dofp Dsub
+	      (Dof1 : md-of P1 F M1 S1)
+	      (Dfst : sg-fst S1 K1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of P2 F (M2 a m) S)
+	      (Dsub' : sg-sub S S')
+	      (Dpsub' : purity-sub impure P')
+	   <- md-of-forget Dof1
+	      (Dof1' : md-of impure F M1 S1)
+	   <- ({a} {da} {m} {dm} {dfst}
+		 md-of-forget (Dof2 a da m dm dfst)
+		 (Dof2' a da m dm dfst : md-of impure F (M2 a m) S))
+	   <- purity-sub-trans Dpsub' Dpsub
+	      (Dpsub'' : purity-sub impure P).
+
+%worlds () (inversion-md/let _ _ _ _ _ _).
+%total {} (inversion-md/let _ _ _ _ _ _).
+
+
+
+inversion-md/letp : md-of P F (md/letp M1 M2) S
+%%
+		     -> md-of pure F M1 S1
+		     -> sg-fst S1 K1
+		     -> md-fst M1 C1
+		     -> ({a} cn-of a K1
+			   -> {m} md-assm m S1
+			   -> md-fst m a
+			   -> md-of P F (M2 a m) (S2 a))
+		     -> sg-sub (S2 C1) S
+		     -> type.
+%mode inversion-md/letp +X1 -X2 -X3 -X4 -X5 -X6.
+
+-	: inversion-md/letp
+	   (Dof : md-of P F (md/letp M1 M2) S)
+	   Dof1
+	   DfstS1
+	   DfstM1
+	   Dof2'
+	   Dsub
+	   <- md-ofp-complete Dof
+	      (md-ofp/letp
+		 (Dofp2 : {a} cn-of a K1
+			   -> {m} md-assm m S1
+			   -> md-fst m a
+			   -> cn-ofp a (K1s a)
+			   -> md-ofp P' F (M2 a m) (S2 a))
+		 (Dsing : single K1 K1s)
+		 (DfstM1 : md-fst M1 C1)
+		 (DfstS1 : sg-fst S1 K1)
+		 (Dofp1 : md-ofp pure F M1 S1))
+	      (Dsub : sg-sub (S2 C1) S)
+	      (Dpsub : purity-sub P' P)
+	   <- md-ofp-sound Dofp1
+	      (Dof1 : md-of pure F M1 S1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- single-intro Dsing DwfK1
+	      (DofK1s : {a} cn-of a K1 -> cn-of a (K1s a))
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> {dp:cn-ofp a (K1s a)}
+		    cn-ofp-sound dp (DofK1s a da)
+		 -> md-ofp-sound (Dofp2 a da m dm dfst dp)
+		    (Dof2 a da m dm dfst : md-of P' F (M2 a m) (S2 a)))
+	   <- ({a} {da} {m} {dm} {dfst}
+		 purity-subsume (Dof2 a da m dm dfst) Dpsub
+		 (Dof2' a da m dm dfst : md-of P F (M2 a m) (S2 a))).
+
+%worlds () (inversion-md/letp _ _ _ _ _ _).
+%total {} (inversion-md/letp _ _ _ _ _ _).
+
+
+
+inversion-md/lete : md-of P F (md/lete E T M) S
+%%
+		     -> tm-of F E T
+		     -> ({x} tm-assm x T -> md-of P F (M x) S)
+		     -> type.
+%mode inversion-md/lete +X1 -X2 -X3.
+
+-	: inversion-md/lete
+	   (Dof : md-of P F (md/lete E T M) S)
+	   DofE
+	   ([x] [d:tm-assm x T] md-of/subsume Dsub (DofM' x d))
+	   <- md-ofp-complete Dof
+	      (md-ofp/lete
+		 (DofpM : {x} tm-assm x T -> md-ofp P' F (M x) S')
+		 (DofE : tm-of F E T))
+	      (Dsub : sg-sub S' S)
+	      (Dpsub : purity-sub P' P)
+	   <- tm-of-reg DofE (DwfT : cn-of T t)
+	   <- ({x} {d:tm-assm x T}
+		 tm-assm-reg d DwfT
+		 -> md-ofp-sound (DofpM x d) (DofM x d : md-of P' F (M x) S'))
+	   <- ({x} {d}
+		 purity-subsume (DofM x d) Dpsub (DofM' x d : md-of P F (M x) S')).
+
+%worlds () (inversion-md/lete _ _ _).
+%total {} (inversion-md/lete _ _ _).
+
+
+
+inversion-md/seal : md-of P F (md/seal M S) S'
+%%
+		     -> md-of impure F M S
+		     -> sg-sub S S'
+		     -> purity-sub impure P
+		     -> type.
+%mode inversion-md/seal +X1 -X2 -X3 -X4.
+
+inversion-md/seal-invert : md-ofp P F (md/seal M S) S''
+			    -> sg-sub S'' S'
+%%
+			    -> md-of P' F M S
+			    -> sg-sub S S'
+			    -> purity-sub impure P
+			    -> type.
+%mode inversion-md/seal-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: inversion-md/seal-invert (md-ofp/seal D) Dsub D Dsub purity-sub/refl.
+
+%worlds () (inversion-md/seal-invert _ _ _ _ _).
+%total {} (inversion-md/seal-invert _ _ _ _ _).
+
+-	: inversion-md/seal
+	   (Dof : md-of P F (md/seal M S) S')
+	   Dof''
+	   Dsub'
+	   Dpsub''
+	   <- md-ofp-complete Dof
+	      (Dofp : md-ofp P' F (md/seal M S) S'')
+	      (Dsub : sg-sub S'' S')
+	      (Dpsub : purity-sub P' P)
+	   <- inversion-md/seal-invert Dofp Dsub
+	      (Dof' : md-of P'' F M S)
+	      (Dsub' : sg-sub S S')
+	      (Dpsub' : purity-sub impure P')
+	   <- md-of-forget Dof'
+	      (Dof'' : md-of impure F M S)
+	   <- purity-sub-trans Dpsub' Dpsub
+	      (Dpsub'' : purity-sub impure P).
+
+%worlds () (inversion-md/seal _ _ _ _).
+%total {} (inversion-md/seal _ _ _ _).

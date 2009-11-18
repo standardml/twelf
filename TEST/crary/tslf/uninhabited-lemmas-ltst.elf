@@ -1,0 +1,40 @@
+%%%% lemmas that take the uninhabited judgment as input.
+%%%% when you are nowhere, anything is possible!
+
+
+
+uninhabited-oflt	: {S:st} {L:lt} {T:lt}
+			   uninhabited 
+			   -> oflt S L T
+			   -> type.
+%mode uninhabited-oflt +L +M +T +DU -DM.
+
+%worlds (ofsg-block | oftp-block | ofkd-block 
+	   | ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(uninhabited-oflt _ _ _ _ _).
+%total {} (uninhabited-oflt _ _ _ _ _).
+
+
+
+uninhabited-lt-sub	: {S1:lt} {S2:lt}
+			   uninhabited 
+			   -> lt-sub S1 S2
+			   -> type.
+%mode uninhabited-lt-sub +M +C +DU -DM.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(uninhabited-lt-sub _ _ _ _).
+%total {} (uninhabited-lt-sub _ _ _ _).
+
+
+
+uninhabited-st-wf	:  uninhabited 
+			   -> {L:lt} {E:st} {C:lt} {T:lt}
+			      st-wf L E C T
+			   -> type.
+%mode uninhabited-st-wf +L +M +S +T +DU -DM.
+
+%worlds (ofsg-block | oftp-block | ofkd-block 
+	   | ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(uninhabited-st-wf _ _ _ _ _ _).
+%total {} (uninhabited-st-wf _ _ _ _ _ _).

@@ -1,0 +1,56 @@
+%%%% theorems about sub-derivations
+
+subder/md/pj1	: ofsg L T Y (md/pj1 M) _
+		   -> ofsg L T Y' M  (sg/sgm _ _)
+		   -> pty-sub Y' Y
+		   -> type.
+
+%mode subder/md/pj1 +D1 -D2 -D3.
+
+-	: subder/md/pj1 (ofsg/md/pj1 D) D PS
+	   <- pty-sub-refl P PS.
+
+-	: subder/md/pj1 (ofsg/sgm-ext D1 D2) D4 pty-sub/pp
+	   <- subder/md/pj1 D1 D3 pty-sub/pp
+	   <- subder/md/pj1 D3 D4 pty-sub/pp.
+
+-	: subder/md/pj1 (ofsg/kd-ext D1 _ _) D1' pty-sub/pp
+	   <- subder/md/pj1 D1 D1' pty-sub/pp.
+
+-	: subder/md/pj1 (ofsg/sub (D1: ofsg _ _ Y2 _ _)
+			   _ (PS': pty-sub Y2 Y3)) D2 
+	   (PS'': pty-sub Y1 Y3)
+	   <- subder/md/pj1 D1 (D2: ofsg _ _ Y1 _ _) (PS: pty-sub Y1 Y2)
+	   <- pty-sub-trans PS PS' PS''.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(subder/md/pj1 _ _ _).
+%reduces D2 < D1 (subder/md/pj1 D1 D2 _).
+%total (D1) (subder/md/pj1 D1 _ _).
+
+
+
+subder/md/pj2	: ofsg L T Y (md/pj2 M) _
+		   -> ofsg L T Y' M  (sg/sgm _ _)
+		   -> pty-sub Y' Y
+		   -> type.
+
+%mode subder/md/pj2 +D1 -D2 -D3.
+
+-	: subder/md/pj2 (ofsg/md/pj2 D _) D pty-sub/pp.
+
+-	: subder/md/pj2 (ofsg/sgm-ext D1 D2) D4 pty-sub/pp
+	   <- subder/md/pj2 D2 D3 pty-sub/pp
+	   <- subder/md/pj2 D3 D4 pty-sub/pp.
+
+-	: subder/md/pj2 (ofsg/kd-ext D1 _ _) D1' pty-sub/pp
+	   <- subder/md/pj2 D1 D1' pty-sub/pp.
+
+-	: subder/md/pj2 (ofsg/sub D1 _ PS') D2 (PS'': pty-sub Y1 Y3)
+	   <- subder/md/pj2 D1 D2 (PS: pty-sub Y1 Y2)
+	   <- pty-sub-trans PS PS' PS''.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(subder/md/pj2 _ _ _).
+%reduces D2 < D1 (subder/md/pj2 D1 D2 _).
+%total (D1) (subder/md/pj2 D1 _ _).

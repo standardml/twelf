@@ -1,0 +1,143 @@
+
+%{
+Throughout, an elaboration context consists of a module and its signature.
+}%
+
+%{
+The {resolve} judgement resolves a name within a module and its signature.
+
+Input: IL module and signature; name to resolve.
+Output: resulting IL module and signature.
+
+The input module and signature are typically an elaboration context,
+but not necessarily.
+
+}% 
+
+resolve : module -> sg -> name -> module -> sg -> type.
+
+
+%{
+The {resolve-long} judgement resolves a long identifier within a
+module and its signature.  The namespace of the identifier is
+indicated by a function {identifier -> name}.
+
+Input: IL module and signature; namespace; longid to resolve.
+Output: resulting IL module and signature.
+
+The input module and signature are typically an elaboration context,
+but not necessarily.
+
+}% 
+
+resolve-long : module -> sg -> (identifier -> name) -> longid -> module -> sg -> type.
+
+
+%{
+The {resolve-in-basis} judgement resolves a name within the basis.
+
+Input: elaboration context; name to resolve; intended IL signature.
+Output: resulting IL module.
+
+}%
+
+resolve-in-basis : module -> sg -> name -> sg -> module -> type.
+
+
+%{
+The {instance} judgement non-deterministically choses an instance of a signature.
+
+Input:  IL signature.
+Output: IL module belonging to that signature.
+
+}%
+
+instance : sg -> module -> type.
+
+
+%{
+The {ty-elab} judgement elaborates an EL type expression.
+
+Input: elaboration context; EL type expression.
+Output: IL type expression.
+
+}%
+
+ty-elab		: module -> sg -> ty -> con -> type.
+
+
+%{
+The {expr-elab} judgement elaborates an EL expression.
+
+Input: elaboration context; EL expression.
+Output: IL term and type.
+
+}%
+
+expr-elab	: module -> sg -> expr -> term -> con -> type.
+
+
+%{
+The {match-elab} judgement elaborates an EL match.
+
+Input: elaboration context; EL match; tagged value to raise; discriminant; IL domain type.
+Output: IL term and IL codomain type.
+}%
+
+match-elab	: module -> sg -> match -> term -> term -> con -> term -> con -> type.
+
+
+%{
+The {pat-elab} judgement elaborates an EL pattern.
+
+Input: elaboration context; EL pattern; tagged value to raise; discriminant; pattern domain.
+Output: IL module and signature (containing bindings).
+
+The discriminant must be effect-free.
+
+The resulting module is pure and its signature is made up using sg/one, sg/prod, sg/named, and sg/datom.
+
+}%
+
+pat-elab	: module -> sg -> pat -> term -> term -> con -> module -> sg -> type.
+
+
+%{
+The {strdec-elab} judgement elaborates an EL declaration.
+
+Input: elaboration context; EL strdec.
+Output: IL module and signature (containing declarations).
+}%
+
+dec-elab	: module -> sg -> dec -> module -> sg -> type.
+
+
+%{
+The {strexp-elab} judgement elaborates an EL structure.
+
+Input: elaboration context; EL strexp.
+Output: IL module and signature.
+}%
+
+strexp-elab	: module -> sg -> strexp -> module -> sg -> type.
+
+
+%{
+The {spec-elab} judgement elaborates an EL spec.
+
+Input: elaboration context; EL spec.
+Output: IL signature (containing specifications).
+}%
+
+spec-elab	: module -> sg -> spec -> sg -> type.
+
+
+
+%{
+The {sigexp-elab} judgement elaborates an EL signature.
+
+Input: elaboration context; EL sigexp.
+Output: IL signature.
+}%
+
+sigexp-elab	: module -> sg -> sigexp -> sg -> type.

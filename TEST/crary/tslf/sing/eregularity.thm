@@ -1,0 +1,260 @@
+
+eof-reg : eof M A -> ewf A -> type.
+%mode eof-reg +X1 -X2.
+
+subtp-reg : subtp A B -> ewf A -> ewf B -> type.
+%mode subtp-reg +X1 -X2 -X3.
+
+tequiv-reg : tequiv A B -> ewf A -> ewf B -> type.
+%mode tequiv-reg +X1 -X2 -X3.
+
+equiv-reg : equiv M N A -> eof M A -> eof N A -> ewf A -> type.
+%mode equiv-reg +X1 -X2 -X3 -X4.
+
+-	: eof-reg (eof/var D _) D.
+
+-	: eof-reg (eof/const D _) D.
+
+-	: eof-reg (eof/forall D) (ewf/pi ([_] [_] ewf/t) (ewf/pi ([_] [_] ewf/t) D)).
+
+-	: eof-reg (eof/lam Dof DwfA) (ewf/pi DwfB DwfA)
+	   <- ({x} {d}
+		 eof-reg (Dof x d) (DwfB x d)).
+
+-	: eof-reg (eof/app DofN DofM) DwfBx
+	   <- eof-reg DofM (ewf/pi DwfB DwfA)
+	   <- esubst-wf DwfB DofN DwfBx.
+
+-	: eof-reg (eof/pair DwfB _ Dof) (ewf/sigma DwfB DwfA)
+	   <- eof-reg Dof DwfA.
+
+-	: eof-reg (eof/pi1 Dof) DwfA
+	   <- eof-reg Dof (ewf/sigma DwfB DwfA).
+
+-	: eof-reg (eof/pi2 Dof) DwfBx
+	   <- eof-reg Dof (ewf/sigma DwfB DwfA)
+	   <- esubst-wf DwfB (eof/pi1 Dof) DwfBx.
+
+-	: eof-reg (eof/sing Dof) (ewf/sing Dof).
+
+-	: eof-reg (eof/extpi Dof2 Dof1) (ewf/pi DwfB DwfA)
+	   <- eof-reg Dof1 (ewf/pi _ DwfA)
+	   <- ({x} {d}
+		 eof-reg (Dof2 x d) (DwfB x d)).
+
+-	: eof-reg (eof/extsigma DwfB _ Dof) (ewf/sigma DwfB DwfA)
+	   <- eof-reg Dof DwfA.
+
+-	: eof-reg (eof/subsume Dsub _) Dwf
+	   <- subtp-reg Dsub _ Dwf.
+
+
+
+-	: subtp-reg (subtp/reflex D) D1 D2
+	   <- tequiv-reg D D1 D2.
+
+-	: subtp-reg (subtp/trans D23 D12) D1 D3
+	   <- subtp-reg D12 D1 _
+	   <- subtp-reg D23 _ D3.
+
+-	: subtp-reg (subtp/sing_t Dof) (ewf/sing Dof) ewf/t.
+
+-	: subtp-reg (subtp/pi DwfB DsubB DsubA) (ewf/pi DwfB DwfA) (ewf/pi DwfB' DwfA')
+	   <- subtp-reg DsubA DwfA' DwfA
+	   <- ({x} {d}
+		 subtp-reg (DsubB x d) _ (DwfB' x d)).
+
+-	: subtp-reg (subtp/sigma DwfB' DsubB DsubA) (ewf/sigma DwfB DwfA) (ewf/sigma DwfB' DwfA')
+	   <- subtp-reg DsubA DwfA DwfA'
+	   <- ({x} {d}
+		 subtp-reg (DsubB x d) (DwfB x d) _).
+
+
+
+-	: tequiv-reg (tequiv/reflex D) D D.
+
+-	: tequiv-reg (tequiv/trans D23 D12) D1 D3
+	   <- tequiv-reg D12 D1 _
+	   <- tequiv-reg D23 _ D3.
+
+-	: tequiv-reg (tequiv/symm D) D1 D2
+	   <- tequiv-reg D D2 D1.
+
+-	: tequiv-reg (tequiv/pi DequivB DequivA) (ewf/pi DwfB DwfA) (ewf/pi DwfB'' DwfA')
+	   <- tequiv-reg DequivA DwfA DwfA'
+	   <- ({x} {d}
+		 tequiv-reg (DequivB x d) (DwfB x d) (DwfB' x d))
+	   <- ({x} {d}
+		 esubst-wf DwfB' (eof/equiv (tequiv/symm DequivA) (eof/var DwfA' d))
+		 (DwfB'' x d)).
+
+-	: tequiv-reg (tequiv/sigma DequivB DequivA) (ewf/sigma DwfB DwfA) (ewf/sigma DwfB'' DwfA')
+	   <- tequiv-reg DequivA DwfA DwfA'
+	   <- ({x} {d}
+		 tequiv-reg (DequivB x d) (DwfB x d) (DwfB' x d))
+	   <- ({x} {d}
+		 esubst-wf DwfB' (eof/equiv (tequiv/symm DequivA) (eof/var DwfA' d))
+		 (DwfB'' x d)).
+
+-	: tequiv-reg (tequiv/sing Dequiv) (ewf/sing D1) (ewf/sing D2)
+	   <- equiv-reg Dequiv D1 D2 _.
+
+
+
+-	: equiv-reg (equiv/reflex Dof) Dof Dof Dwf
+	   <- eof-reg Dof Dwf.
+
+-	: equiv-reg (equiv/symm Dequiv) Dof' Dof Dwf
+	   <- equiv-reg Dequiv Dof Dof' Dwf.
+
+-	: equiv-reg (equiv/trans D23 D12) D1 D3 Dwf
+	   <- equiv-reg D12 D1 _ Dwf
+	   <- equiv-reg D23 _ D3 _.
+
+-       : equiv-reg (equiv/forall D)
+	   (eof/forall D1) 
+	   (eof/equiv 
+	      (tequiv/pi ([_] [_] tequiv/t) (tequiv/pi ([_] [_] tequiv/t) (tequiv/symm D)))
+	      (eof/forall D2))
+	   (ewf/pi ([_] [_] ewf/t) (ewf/pi ([_] [_] ewf/t) D1))
+	   <- tequiv-reg D D1 D2.
+
+-	: equiv-reg (equiv/lam DequivM DequivA) 
+	   (eof/lam DofM DwfA) 
+	   (eof/equiv (tequiv/symm (tequiv/pi ([x] [d] tequiv/reflex (DwfB x d)) DequivA)) (eof/lam DofM'' DwfA'))
+	   (ewf/pi DwfB DwfA)
+	   <- tequiv-reg DequivA DwfA DwfA'
+	   <- ({x} {d}
+		 equiv-reg (DequivM x d) (DofM x d) (DofM' x d) (DwfB x d))
+	   <- ({x} {d}
+		 esubst DofM' (eof/equiv (tequiv/symm DequivA) (eof/var DwfA' d))
+		 (DofM'' x d)).
+
+-	: equiv-reg (equiv/app DequivN DequivM) (eof/app DofN DofM) (eof/equiv Dtequiv (eof/app DofN' DofM')) DwfBx
+	   <- equiv-reg DequivM DofM DofM' (ewf/pi DwfB DwfA)
+	   <- equiv-reg DequivN DofN DofN' _
+	   <- esubst-wf DwfB DofN DwfBx
+	   <- tfunctionality* DwfB (equiv/symm DequivN) DofN' Dtequiv.
+
+-	: equiv-reg (equiv/pair DwfB DequivN DequivM)
+	   (eof/pair DwfB DofN DofM)
+	   (eof/pair DwfB (eof/equiv Dtequiv DofN') DofM')
+	   (ewf/sigma DwfB DwfA)
+	   <- equiv-reg DequivM DofM DofM' DwfA
+	   <- equiv-reg DequivN DofN DofN' _
+	   <- tfunctionality* DwfB DequivM DofM Dtequiv.
+
+-	: equiv-reg (equiv/pi1 Dequiv) (eof/pi1 Dof) (eof/pi1 Dof') DwfA
+	   <- equiv-reg Dequiv Dof Dof' (ewf/sigma DwfB DwfA).
+
+-	: equiv-reg (equiv/pi2 Dequiv) (eof/pi2 Dof) (eof/equiv Dtequiv (eof/pi2 Dof')) DwfBx
+	   <- equiv-reg Dequiv Dof Dof' (ewf/sigma DwfB DwfA)
+	   <- esubst-wf DwfB (eof/pi1 Dof) DwfBx
+	   <- tfunctionality* DwfB (equiv/pi1 (equiv/symm Dequiv)) (eof/pi1 Dof') Dtequiv.
+
+-	: equiv-reg (equiv/sing Dequiv) 
+	   (eof/sing Dof)
+	   (eof/equiv (tequiv/symm (tequiv/sing Dequiv)) (eof/sing Dof')) 
+	   (ewf/sing Dof)
+	   <- equiv-reg Dequiv Dof Dof' _.
+
+-	: equiv-reg (equiv/singelim Dof) (eof/subsume (subtp/sing_t Dof') Dof) Dof' ewf/t
+	   <- eof-reg Dof (ewf/sing Dof').
+
+-	: equiv-reg (equiv/extpi Dequiv Dof' Dof) (eof/extpi DofApp Dof) (eof/extpi DofApp' Dof') (ewf/pi DwfB DwfA)
+	   <- eof-reg Dof (ewf/pi _ DwfA)
+	   <- ({x} {d}
+		 equiv-reg (Dequiv x d) (DofApp x d) (DofApp' x d) (DwfB x d)).
+
+-	: equiv-reg (equiv/extpiw Dequiv Dequiv') (eof/extpi DofApp Dof) (eof/extpi DofApp' Dof') (ewf/pi DwfB DwfA)
+	   <- equiv-reg Dequiv' Dof Dof' (ewf/pi _ DwfA)
+	   <- ({x} {d}
+		 equiv-reg (Dequiv x d) (DofApp x d) (DofApp' x d) (DwfB x d)).
+
+-	: equiv-reg (equiv/extsigma DwfB Dequiv2 Dequiv1)
+	   (eof/extsigma DwfB DofM2 DofM1)
+	   (eof/extsigma DwfB (eof/equiv Dtequiv DofN2) DofN1)
+	   (ewf/sigma DwfB DwfA)
+	   <- equiv-reg Dequiv1 DofM1 DofN1 DwfA
+	   <- equiv-reg Dequiv2 DofM2 DofN2 _
+	   <- tfunctionality* DwfB Dequiv1 DofM1 Dtequiv.
+
+-	: equiv-reg (equiv/subsume Dsub Dequiv) (eof/subsume Dsub Dof) (eof/subsume Dsub Dof') Dwf
+	   <- equiv-reg Dequiv Dof Dof' _
+	   <- subtp-reg Dsub _ Dwf.
+
+-	: equiv-reg (equiv/beta DofN DofM) (eof/app DofN (eof/lam DofM DwfA)) DofMx DwfBx
+	   <- ({x} {d}
+		 eof-reg (DofM x d)
+		 (DwfB x d))
+	   <- eof-reg DofN DwfA
+	   <- esubst-wf DwfB DofN DwfBx
+	   <- esubst DofM DofN DofMx.
+
+-	: equiv-reg (equiv/beta1 DofN DofM) (eof/pi1 (eof/pair ([_] [_] DwfB) DofN DofM)) DofM DwfA
+	   <- eof-reg DofM DwfA
+	   <- eof-reg DofN DwfB.
+
+-	: equiv-reg (equiv/beta2 DofN DofM) (eof/pi2 (eof/pair ([_] [_] DwfB) DofN DofM)) DofN DwfB
+	   <- eof-reg DofM DwfA
+	   <- eof-reg DofN DwfB.
+
+%worlds (nbind | ebind) (eof-reg _ _) (subtp-reg _ _ _) (tequiv-reg _ _ _) (equiv-reg _ _ _ _).
+%total (D1 D2 D3 D4) (eof-reg D1 _) (subtp-reg D2 _ _) (tequiv-reg D3 _ _) (equiv-reg D4 _ _ _).
+
+
+
+tfunctionality : ({x} evof x A -> ewf (B x)) -> equiv M N A -> tequiv (B M) (B N) -> type.
+%mode tfunctionality +X1 +X2 -X3.
+
+-	: tfunctionality Dwf Dequiv Dtequiv
+	   <- equiv-reg Dequiv Dof _ _
+	   <- tfunctionality* Dwf Dequiv Dof Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality _ _ _).
+%total {} (tfunctionality _ _ _).
+
+
+
+tequiv-functionality : ({x} evof x A -> tequiv (B x) (C x)) -> equiv M N A -> tequiv (B M) (C N) -> type.
+%mode tequiv-functionality +X1 +X2 -X3.
+
+-	: tequiv-functionality DequivBC DequivMN (tequiv/trans DequivCMCN DequivBMCM)
+	   <- equiv-reg DequivMN
+	      DofM _ _
+	   <- ({x} {d}
+		 tequiv-reg (DequivBC x d)
+		 (DwfB x d) (DwfC x d))
+	   <- esubst-tequiv DequivBC DofM DequivBMCM
+	   <- tfunctionality DwfC DequivMN DequivCMCN.
+
+%worlds (nbind | ebind) (tequiv-functionality _ _ _).
+%total {} (tequiv-functionality _ _ _).
+
+
+
+tfunctionality1 : ({x} evof x A -> {y} evof y (B x) -> ewf (C x y))
+		   -> equiv M N A
+		   -> ({y} evof y (B M) -> tequiv (C M y) (C N y)) -> type.
+%mode tfunctionality1 +X1 +X2 -X3.
+
+-	: tfunctionality1 Dwf Dequiv Dtequiv
+	   <- equiv-reg Dequiv Dof _ _
+	   <- tfunctionality1* Dwf Dequiv Dof Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality1 _ _ _).
+%total {} (tfunctionality1 _ _ _).
+
+
+
+tfunctionality2 : ({x} evof x A -> {y} evof y (B x) -> {z} evof z (C x y) -> ewf (D x y z))
+		   -> equiv M N A
+		   -> ({y} evof y (B M) -> {z} evof z (C M y) -> tequiv (D M y z) (D N y z)) -> type.
+%mode tfunctionality2 +X1 +X2 -X3.
+
+-	: tfunctionality2 Dwf Dequiv Dtequiv
+	   <- equiv-reg Dequiv Dof _ _
+	   <- tfunctionality2* Dwf Dequiv Dof Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality2 _ _ _).
+%total {} (tfunctionality2 _ _ _).

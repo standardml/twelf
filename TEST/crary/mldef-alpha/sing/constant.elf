@@ -1,0 +1,127 @@
+
+
+constant : type.  %name constant K.
+
+
+%%%%%  Constant Types  %%%%%
+
+ctp	: type.  %name ctp A.
+catom	: type.  %name catom R.
+cterm	: type.  %name cterm M.
+
+ct	: ctp.
+cpi	: ctp -> (catom -> ctp) -> ctp.
+csigma	: ctp -> (catom -> ctp) -> ctp.
+csing	: catom -> ctp.
+cone	: ctp.
+
+capp	: catom -> cterm -> catom.
+cpi1	: catom -> catom.
+cpi2	: catom -> catom.
+
+cat	: catom -> cterm.
+clam	: ctp -> (catom -> cterm) -> cterm.
+cpair   : cterm -> cterm -> cterm.
+cstar	: cterm.
+
+
+carrow  : ctp -> ctp -> ctp
+        = [a1] [a2] cpi a1 ([_] a2).
+
+cprod  : ctp -> ctp -> ctp
+        = [a1] [a2] csigma a1 ([_] a2).
+
+
+%block catomblock : block {xc:catom}.
+
+
+
+%%%%%  Skeletons  %%%%%
+
+skel : type.  %name skel A.
+
+kt	: skel.
+kpi	: skel -> skel -> skel.
+ksigma	: skel -> skel -> skel.
+ksing	: skel.
+kone	: skel.
+
+
+
+cexpand : catom -> ctp -> cterm -> type.
+%mode cexpand +R +A -M.
+
+cexpand/t	: cexpand R ct (cat R).
+
+cexpand/pi	: cexpand R (cpi A B) (clam A N)
+		   <- ({x} cexpand x A (M x))
+		   <- ({x} cexpand (capp R (M x)) (B x) (N x)).
+
+cexpand/sigma	: cexpand R (csigma A B) (cpair M N)
+		   <- cexpand (cpi1 R) A M
+		   <- cexpand (cpi2 R) (B (cpi1 R)) N.
+
+cexpand/sing	: cexpand R (csing R') (cat R').
+
+cexpand/one	: cexpand R cone cstar.
+
+
+
+cskof	: skel -> ctp -> (catom -> ctp) -> type.
+%mode cskof +K -A -B.
+
+cskof/t		: cskof kt cone ([_] ct).
+
+cskof/pi	: cskof (kpi As Bs) (csigma C ([y] cpi (A y) ([_] D))) ([w] cpi (A (cpi1 w)) ([x] B (capp (cpi2 w) (X (cpi1 w) x))))
+		   <- cskof As C ([y] A y)
+		   <- cskof Bs D ([z] B z)
+		   <- ({y} {x} cexpand x (A y) (X y x)).
+
+cskof/sigma	: cskof (ksigma As Bs) (csigma C ([y] cpi (A y) ([_] D))) ([w] csigma (A (cpi1 w)) ([x] B (capp (cpi2 w) (X (cpi1 w) x))))
+		   <- cskof As C ([y] A y)
+		   <- cskof Bs D ([z] B z)
+		   <- ({y} {x} cexpand x (A y) (X y x)).
+
+cskof/sing	: cskof ksing ct ([x] csing x).
+
+cskof/one	: cskof kone cone ([_] cone).
+
+
+
+
+%%%%%  Constants  %%%%%
+
+ckof	: constant -> ctp -> type.
+%mode ckof +K -A.
+
+const/arrow	: constant.
+ckof/arrow	: ckof const/arrow (carrow ct (carrow ct ct)).
+
+const/prod	: constant.
+ckof/prod	: ckof const/prod (carrow ct (carrow ct ct)).
+
+const/unit	: constant.
+ckof/unit	: ckof const/unit ct.
+
+const/void	: constant.
+ckof/void	: ckof const/void ct.
+
+const/ref	: constant.
+ckof/ref	: ckof const/ref (carrow ct ct).
+
+const/plus	: constant.
+ckof/plus	: ckof const/plus (carrow ct (carrow ct ct)).
+
+const/tag	: constant.
+ckof/tag	: ckof const/tag (carrow ct ct).
+
+const/tagged	: constant.
+ckof/tagged	: ckof const/tagged ct.
+
+const/rec	: skel -> constant.
+%%  In retrospect, I should have made this curried.
+ckof/rec	: ckof (const/rec SK) (carrow (csigma A ([x] cprod (carrow (carrow (B x) ct) (carrow (B x) ct)) (B x))) ct)
+		   <- cskof SK A B.
+
+const/labeled	: label -> constant.
+ckof/labeled	: ckof (const/labeled L) (carrow ct ct).

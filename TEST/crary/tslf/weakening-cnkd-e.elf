@@ -1,0 +1,2205 @@
+renum-cxt-lookup	: ({x} isvar x I -> cxt-ordered (G x))
+			   -> ({x} isvar x J -> cxt-lookup (G x) (C x) (K x))
+			   -> ({x} isvar x I -> cxt-lookup (G x) (C x) (K x))
+			   -> type.
+%mode renum-cxt-lookup +D1 +D2 -D3.
+
+
+-	: renum-cxt-lookup
+	   ([x][di] cxt-ordered/cons (DB x di))
+	   ([x][dj] cxt-lookup/hit (DB' x dj))
+	   ([x][di] cxt-lookup/hit (DB x di)).
+
+-	: renum-cxt-lookup
+	   ([x][di] cxt-ordered/cons
+	      (cxt-bounded/cons (DB x di) (DP x di)))
+	   ([x][dj]
+	      cxt-lookup/miss (DL x dj) (DPz x dj) (DB' x dj))
+	   ([x][di] 
+	      cxt-lookup/miss (DL' x di) (DP' x di) 
+	      (cxt-bounded/cons (DB x di) (DP x di)))
+	   <- renum-cxt-lookup
+	      ([x][di] cxt-ordered/cons (DB x di)) DL DL'
+	   <- ({x}{di: isvar x I}
+		 cxt-lookup-precedes 
+		 (DL' x di) 
+		 (cxt-bounded/cons (DB x di) (DP x di))
+		 (DP' x di)).
+
+%worlds (cn-block | ovar-block) (renum-cxt-lookup _ _ _).
+%total {D1} (renum-cxt-lookup _ D1 _).
+
+
+
+renum-ekd-wf	: {Mm: met}
+		   ({x} isvar x I -> cxt-ordered (G x))
+		   -> {D: {x} isvar x J -> ekd-wf (G x) (K' x)}
+		      ({x}{dx: isvar x J} mekd-wf (D x dx) Mm)
+		   -> {D' : {x} isvar x I -> ekd-wf (G x) (K' x)}
+		      ({x}{dx: isvar x I} mekd-wf (D' x dx) Mm)
+		   -> type.
+%mode renum-ekd-wf +Mm +DO +DW +DM -DW' -DM'. 
+
+renum-ekd-deq	: {Mm: met}
+		   ({x} isvar x I -> cxt-ordered (G x))
+		   -> {D: {x} isvar x J -> ekd-deq (G x) (K' x) (K'' x)}
+		      ({x}{dx: isvar x J} mekd-deq (D x dx) Mm)
+		   -> {D' : {x} isvar x I -> ekd-deq (G x) (K' x) (K'' x)}
+		      ({x}{dx: isvar x I} mekd-deq (D' x dx) Mm)
+		   -> type.
+%mode renum-ekd-deq +Mm +DO +DW +DM -DW' -DM'. 
+
+renum-ekd-sub	: {Mm: met}
+		   ({x} isvar x I -> cxt-ordered (G x))
+		   -> {D: {x} isvar x J -> ekd-sub (G x) (K' x) (K'' x)}
+		      ({x}{dx: isvar x J} mekd-sub (D x dx) Mm)
+		   -> {D' : {x} isvar x I -> ekd-sub (G x) (K' x) (K'' x)}
+		      ({x}{dx: isvar x I} mekd-sub (D' x dx) Mm)
+		   -> type.
+%mode renum-ekd-sub +Mm +DO +DW +DM -DW' -DM'. 
+
+renum-eofkd	: {Mm: met}
+		   ({x} isvar x I -> cxt-ordered (G x))
+		   -> {D: {x} isvar x J -> eofkd (G x) (C' x) (K' x)}
+		      ({x}{dx: isvar x J} meofkd (D x dx) Mm)
+		   -> {D' : {x} isvar x I -> eofkd (G x) (C' x) (K' x)}
+		      ({x}{dx: isvar x I} meofkd (D' x dx) Mm)
+		   -> type.
+%mode renum-eofkd +Mm +DO +DW +DM -DW' -DM'. 
+
+renum-ecn-deq	: {Mm: met}
+		   ({x} isvar x I -> cxt-ordered (G x))
+		   -> {D: {x} isvar x J -> ecn-deq (G x) (C' x) (C'' x)(K' x)}
+		      ({x}{dx: isvar x J} mecn-deq (D x dx) Mm)
+		   -> {D' : {x} isvar x I -> ecn-deq (G x) (C' x) (C'' x) (K' x)}
+		      ({x}{dx: isvar x I} mecn-deq (D' x dx) Mm)
+		   -> type.
+%mode renum-ecn-deq +Mm +DO +DW +DM -DW' -DM'. 
+
+-	: renum-ekd-wf _ DO ([x][di] ekd-wf/kd/unit _) _
+	   ([x][di] ekd-wf/kd/unit (DO x di))
+	   ([x][di] mekd-wf/kd/unit).
+
+-	: renum-ekd-wf _ DO ([x][di] ekd-wf/kd/type _) _
+	   ([x][di] ekd-wf/kd/type (DO x di))
+	   ([x][di] mekd-wf/kd/type).
+
+-	: renum-ekd-wf (met/sing M1) DO 
+	   ([x][di] ekd-wf/kd/sing (D1 x di))
+	   ([x][di] mekd-wf/kd/sing (D1m x di))
+	   ([x][dx] ekd-wf/kd/sing (D1' x dx))
+	   ([x][dx] mekd-wf/kd/sing (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ekd-wf (met/pair M1 M2) DO 
+	   ([x][di] ekd-wf/kd/sgm (D1 x di) ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mekd-wf/kd/sgm (D1m x di) (D2m x di))
+	   ([x][dx] ekd-wf/kd/sgm (D1' x dx) (D2'' x dx))
+	   ([x][dx] mekd-wf/kd/sgm (D1m' x dx) (D2m'' x dx))
+	   <- renum-ekd-wf M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-wf-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-wf M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-wf M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ekd-wf (met/pair M1 M2) DO 
+	   ([x][di] ekd-wf/kd/pi (D1 x di) ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mekd-wf/kd/pi (D1m x di) (D2m x di))
+	   ([x][dx] ekd-wf/kd/pi (D1' x dx) (D2'' x dx))
+	   ([x][dx] mekd-wf/kd/pi (D1m' x dx) (D2m'' x dx))
+	   <- renum-ekd-wf M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-wf-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-wf M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-wf M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+
+
+-	: renum-ekd-deq _ DO ([x][di] ekd-deq/kd/unit _) _
+	   ([x][di] ekd-deq/kd/unit (DO x di))
+	   ([x][di] mekd-deq/kd/unit).
+
+-	: renum-ekd-deq _ DO ([x][di] ekd-deq/kd/type _) _
+	   ([x][di] ekd-deq/kd/type (DO x di))
+	   ([x][di] mekd-deq/kd/type).
+
+-	: renum-ekd-deq (met/sing M1) DO 
+	   ([x][di] ekd-deq/kd/sing (D1 x di))
+	   ([x][di] mekd-deq/kd/sing (D1m x di))
+	   ([x][dx] ekd-deq/kd/sing (D1' x dx))
+	   ([x][dx] mekd-deq/kd/sing (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ekd-deq (met/pair M1 M2) DO 
+	   ([x][di] ekd-deq/kd/sgm (D1 x di) ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mekd-deq/kd/sgm (D1m x di) (D2m x di))
+	   ([x][dx] ekd-deq/kd/sgm (D1' x dx) (D2'' x dx))
+	   ([x][dx] mekd-deq/kd/sgm (D1m' x dx) (D2m'' x dx))
+	   <- renum-ekd-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ekd-deq (met/pair M1 M2) DO 
+	   ([x][di] ekd-deq/kd/pi (D1 x di) ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mekd-deq/kd/pi (D1m x di) (D2m x di))
+	   ([x][dx] ekd-deq/kd/pi (D1' x dx) (D2'' x dx))
+	   ([x][dx] mekd-deq/kd/pi (D1m' x dx) (D2m'' x dx))
+	   <- renum-ekd-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+
+
+
+-	: renum-ekd-sub _ DO ([x][di] ekd-sub/kd/unit _) _
+	   ([x][di] ekd-sub/kd/unit (DO x di))
+	   ([x][di] mekd-sub/kd/unit).
+
+-	: renum-ekd-sub _ DO ([x][di] ekd-sub/kd/type _) _
+	   ([x][di] ekd-sub/kd/type (DO x di))
+	   ([x][di] mekd-sub/kd/type).
+
+-	: renum-ekd-sub (met/sing M1) DO 
+	   ([x][di] ekd-sub/kd/sing-kd/sing (D1 x di))
+	   ([x][di] mekd-sub/kd/sing-kd/sing (D1m x di))
+	   ([x][dx] ekd-sub/kd/sing-kd/sing (D1' x dx))
+	   ([x][dx] mekd-sub/kd/sing-kd/sing (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ekd-sub (met/sing M1) DO 
+	   ([x][di] ekd-sub/kd/sing-kd/type (D1 x di))
+	   ([x][di] mekd-sub/kd/sing-kd/type (D1m x di))
+	   ([x][dx] ekd-sub/kd/sing-kd/type (D1' x dx))
+	   ([x][dx] mekd-sub/kd/sing-kd/type (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ekd-sub (met/pair M1 (met/pair M2 M3)) DO 
+	   ([x][di] ekd-sub/kd/sgm (D1 x di) ([y][dy: isvar y I] D2 x di y dy)
+	      (D3 x di))
+	   ([x][di] mekd-sub/kd/sgm (D1m x di) (D2m x di) (D3m x di))
+	   ([x][dx] ekd-sub/kd/sgm (D1' x dx) (D2'' x dx) (D3'' x dx))
+	   ([x][dx] mekd-sub/kd/sgm (D1m' x dx) (D2m'' x dx) (D3m'' x dx))
+	   <- renum-ekd-sub M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-sub-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-sub M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-sub M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy))
+	   <- ({x}{dx}
+		 renum-ekd-wf M3 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D3 x dx) (D3m x dx)
+		 (D3' x dx) (D3m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-wf M3 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D3' x dx y dy)
+		 ([x][dx] D3m' x dx y dy)
+		 ([x][dx] D3'' x dx y dy)
+		 ([x][dx] D3m'' x dx y dy)).
+
+-	: renum-ekd-sub (met/pair M1 (met/pair M2 M3)) DO 
+	   ([x][di] ekd-sub/kd/pi (D1 x di)([y][dy: isvar y I] D2 x di y dy)
+	      (D3 x di))
+	   ([x][di] mekd-sub/kd/pi (D1m x di) (D2m x di) (D3m x di))
+	   ([x][dx] ekd-sub/kd/pi (D1' x dx) (D2'' x dx) (D3'' x dx))
+	   ([x][dx] mekd-sub/kd/pi (D1m' x dx) (D2m'' x dx) (D3m'' x dx))
+	   <- renum-ekd-sub M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-sub-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ekd-sub M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-sub M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy))
+	   <- ({x}{dx}
+		 renum-ekd-wf M3 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D3 x dx) (D3m x dx)
+		 (D3' x dx) (D3m' x dx))
+	   <- ({y}{dy}
+		 renum-ekd-wf M3 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D3' x dx y dy)
+		 ([x][dx] D3m' x dx y dy)
+		 ([x][dx] D3'' x dx y dy)
+		 ([x][dx] D3m'' x dx y dy)).
+
+
+
+-	: renum-eofkd _ DO ([x][di] eofkd/var (DL x di)) _
+	   ([x][di] eofkd/var (DL' x di))
+	   ([x][di] meofkd/var)
+	   <- renum-cxt-lookup DO DL DL'.
+
+-	: renum-eofkd _ DO ([x][di] eofkd/closed (DC x) _)
+	   ([x][di] meofkd/closed (DCm x))
+	   ([x][di] eofkd/closed (DC x) (DO x di))
+	   ([x][di] meofkd/closed (DCm x)).
+
+-	: renum-eofkd _ DO ([x][di] eofkd/cn/unit _) _
+	   ([x][di] eofkd/cn/unit (DO x di))
+	   ([x][di] meofkd/cn/unit).
+
+-	: renum-eofkd _ DO ([x][di] eofkd/tp/unit _) _
+	   ([x][di] eofkd/tp/unit (DO x di))
+	   ([x][di] meofkd/tp/unit).
+
+-	: renum-eofkd _ DO ([x][di] eofkd/tp/tagged _) _
+	   ([x][di] eofkd/tp/tagged (DO x di))
+	   ([x][di] meofkd/tp/tagged).
+
+-	: renum-eofkd (met/sing M1) DO 
+	   ([x][di] eofkd/kd/sing (D1 x di))
+	   ([x][di] meofkd/kd/sing (D1m x di))
+	   ([x][dx] eofkd/kd/sing (D1' x dx))
+	   ([x][dx] meofkd/kd/sing (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-eofkd (met/sing M1) DO 
+	   ([x][di] eofkd/cn/pj1 (D1 x di))
+	   ([x][di] meofkd/cn/pj1 (D1m x di))
+	   ([x][dx] eofkd/cn/pj1 (D1' x dx))
+	   ([x][dx] meofkd/cn/pj1 (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-eofkd (met/sing M1) DO 
+	   ([x][di] eofkd/cn/pj2 (D1 x di))
+	   ([x][di] meofkd/cn/pj2 (D1m x di))
+	   ([x][dx] eofkd/cn/pj2 (D1' x dx))
+	   ([x][dx] meofkd/cn/pj2 (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-eofkd (met/sing M1) DO 
+	   ([x][di] eofkd/tp/ref (D1 x di))
+	   ([x][di] meofkd/tp/ref (D1m x di))
+	   ([x][dx] eofkd/tp/ref (D1' x dx))
+	   ([x][dx] meofkd/tp/ref (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-eofkd (met/sing M1) DO 
+	   ([x][di] eofkd/tp/tag (D1 x di))
+	   ([x][di] meofkd/tp/tag (D1m x di))
+	   ([x][dx] eofkd/tp/tag (D1' x dx))
+	   ([x][dx] meofkd/tp/tag (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/cn/pair (D1 x di) (D2 x di))
+	   ([x][di] meofkd/cn/pair (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/cn/pair (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/cn/pair (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/cn/app (D1 x di) (D2 x di))
+	   ([x][di] meofkd/cn/app (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/cn/app (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/cn/app (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/sgm-ext (D1 x di) (D2 x di))
+	   ([x][di] meofkd/sgm-ext (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/sgm-ext (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/sgm-ext (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/tp/cross (D1 x di) (D2 x di))
+	   ([x][di] meofkd/tp/cross (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/tp/cross (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/tp/cross (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/tp/arrow (D1 x di) (D2 x di))
+	   ([x][di] meofkd/tp/arrow (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/tp/arrow (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/tp/arrow (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/tp/sum (D1 x di) (D2 x di))
+	   ([x][di] meofkd/tp/sum (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/tp/sum (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/tp/sum (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/sub (D1 x di) (D2 x di))
+	   ([x][di] meofkd/sub (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/sub (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/sub (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-ekd-sub M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/deq (D1 x di) (D2 x di))
+	   ([x][di] meofkd/deq (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/deq (D1' x dx) (D2' x dx))
+	   ([x][dx] meofkd/deq (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-ekd-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-eofkd (met/pair M2 M1) DO 
+	   ([x][di] eofkd/cn/lam ([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] meofkd/cn/lam (D2m x di) (D1m x di))
+	   ([x][dx] eofkd/cn/lam (D2'' x dx) (D1' x dx))
+	   ([x][dx] meofkd/cn/lam (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-wf M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-wf-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-eofkd M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-eofkd M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-eofkd (met/pair M2 M1) DO 
+	   ([x][di] eofkd/cn/mu ([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] meofkd/cn/mu (D2m x di) (D1m x di))
+	   ([x][dx] eofkd/cn/mu (D2'' x dx) (D1' x dx))
+	   ([x][dx] meofkd/cn/mu (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-wf M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-wf-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-eofkd M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-eofkd M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-eofkd (met/pair M2 M1) DO 
+	   ([x][di] eofkd/tp/forall ([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] meofkd/tp/forall (D2m x di) (D1m x di))
+	   ([x][dx] eofkd/tp/forall (D2'' x dx) (D1' x dx))
+	   ([x][dx] meofkd/tp/forall (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-wf M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-wf-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-eofkd M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-eofkd M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-eofkd (met/pair M1 M2) DO 
+	   ([x][di] eofkd/pi-ext (D1 x di) ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] meofkd/pi-ext (D1m x di) (D2m x di))
+	   ([x][dx] eofkd/pi-ext (D1' x dx) (D2'' x dx))
+	   ([x][dx] meofkd/pi-ext (D1m' x dx) (D2m'' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 eofkd-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-eofkd M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-eofkd M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+
+
+
+
+-	: renum-ecn-deq _ DO ([x][di] ecn-deq/cn/unit _) _
+	   ([x][di] ecn-deq/cn/unit (DO x di))
+	   ([x][di] mecn-deq/cn/unit).
+
+-	: renum-ecn-deq _ DO ([x][di] ecn-deq/tp/unit _) _
+	   ([x][di] ecn-deq/tp/unit (DO x di))
+	   ([x][di] mecn-deq/tp/unit).
+
+-	: renum-ecn-deq _ DO ([x][di] ecn-deq/tp/tagged _) _
+	   ([x][di] ecn-deq/tp/tagged (DO x di))
+	   ([x][di] mecn-deq/tp/tagged).
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/kd/sing (D1 x di))
+	   ([x][di] mecn-deq/kd/sing (D1m x di))
+	   ([x][dx] ecn-deq/kd/sing (D1' x dx))
+	   ([x][dx] mecn-deq/kd/sing (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/refl (D1 x di))
+	   ([x][di] mecn-deq/refl (D1m x di))
+	   ([x][dx] ecn-deq/refl (D1' x dx))
+	   ([x][dx] mecn-deq/refl (D1m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/cn/pj1 (D1 x di))
+	   ([x][di] mecn-deq/cn/pj1 (D1m x di))
+	   ([x][dx] ecn-deq/cn/pj1 (D1' x dx))
+	   ([x][dx] mecn-deq/cn/pj1 (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/cn/pj2 (D1 x di))
+	   ([x][di] mecn-deq/cn/pj2 (D1m x di))
+	   ([x][dx] ecn-deq/cn/pj2 (D1' x dx))
+	   ([x][dx] mecn-deq/cn/pj2 (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/tp/ref (D1 x di))
+	   ([x][di] mecn-deq/tp/ref (D1m x di))
+	   ([x][dx] ecn-deq/tp/ref (D1' x dx))
+	   ([x][dx] mecn-deq/tp/ref (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/tp/tag (D1 x di))
+	   ([x][di] mecn-deq/tp/tag (D1m x di))
+	   ([x][dx] ecn-deq/tp/tag (D1' x dx))
+	   ([x][dx] mecn-deq/tp/tag (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/sing M1) DO 
+	   ([x][di] ecn-deq/sym (D1 x di))
+	   ([x][di] mecn-deq/sym (D1m x di))
+	   ([x][dx] ecn-deq/sym (D1' x dx))
+	   ([x][dx] mecn-deq/sym (D1m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/cn/pair (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/cn/pair (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/cn/pair (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/cn/pair (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/cn/app (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/cn/app (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/cn/app (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/cn/app (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/sgm-ext (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/sgm-ext (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/sgm-ext (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/sgm-ext (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/tp/cross (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/tp/cross (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/tp/cross (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/tp/cross (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/tp/arrow (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/tp/arrow (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/tp/arrow (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/tp/arrow (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/tp/sum (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/tp/sum (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/tp/sum (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/tp/sum (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/trans (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/trans (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/trans (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/trans (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ecn-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/kd/unit (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/kd/unit (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/kd/unit (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/kd/unit (D1m' x dx) (D2m' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/sub (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/sub (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/sub (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/sub (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ekd-sub M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/deq (D1 x di) (D2 x di))
+	   ([x][di] mecn-deq/deq (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/deq (D1' x dx) (D2' x dx))
+	   ([x][dx] mecn-deq/deq (D1m' x dx) (D2m' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- renum-ekd-deq M2 DO D2 D2m D2' D2m'.
+
+-	: renum-ecn-deq (met/pair M2 M1) DO 
+	   ([x][di] ecn-deq/cn/lam ([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] mecn-deq/cn/lam (D2m x di) (D1m x di))
+	   ([x][dx] ecn-deq/cn/lam (D2'' x dx) (D1' x dx))
+	   ([x][dx] mecn-deq/cn/lam (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ecn-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ecn-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ecn-deq (met/pair M2 M1) DO 
+	   ([x][di] ecn-deq/cn/mu ([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] mecn-deq/cn/mu (D2m x di) (D1m x di))
+	   ([x][dx] ecn-deq/cn/mu (D2'' x dx) (D1' x dx))
+	   ([x][dx] mecn-deq/cn/mu (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ecn-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ecn-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ecn-deq (met/pair M2 M1) DO 
+	   ([x][di] ecn-deq/tp/forall([y][dy: isvar y I] D2 x di y dy) (D1 x di))
+	   ([x][di] mecn-deq/tp/forall (D2m x di) (D1m x di))
+	   ([x][dx] ecn-deq/tp/forall (D2'' x dx) (D1' x dx))
+	   ([x][dx] mecn-deq/tp/forall (D2m'' x dx) (D1m' x dx))
+	   <- renum-ekd-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ekd-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ecn-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ecn-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ecn-deq (met/pair M1 (met/pair M3 M2)) DO 
+	   ([x][di] ecn-deq/pi-ext (D1 x di) (D3 x di)
+	      ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mecn-deq/pi-ext (D1m x di) (D3m x di) (D2m x di))
+	   ([x][dx] ecn-deq/pi-ext (D1' x dx) (D3' x dx) (D2'' x dx))
+	   ([x][dx] mecn-deq/pi-ext (D1m' x dx) (D3m' x dx) (D2m'' x dx))
+	   <- renum-eofkd M1 DO D1 D1m D1' D1m'
+	   <- renum-eofkd M3 DO D3 D3m D3' D3m'
+	   <- ({x}{dx}
+		 eofkd-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ecn-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ecn-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+-	: renum-ecn-deq (met/pair M1 M2) DO 
+	   ([x][di] ecn-deq/pi-ext-2 (D1 x di) 
+	      ([y][dy: isvar y I] D2 x di y dy))
+	   ([x][di] mecn-deq/pi-ext-2 (D1m x di) (D2m x di))
+	   ([x][dx] ecn-deq/pi-ext-2 (D1' x dx) (D2'' x dx))
+	   ([x][dx] mecn-deq/pi-ext-2 (D1m' x dx) (D2m'' x dx))
+	   <- renum-ecn-deq M1 DO D1 D1m D1' D1m'
+	   <- ({x}{dx}
+		 ecn-deq-ordered (D1 x dx) (DO' x dx))
+	   <- cxt-inc-2 DO' DO DOe' DOe
+	   <- ({x}{dx}
+		 renum-ecn-deq M2 ([y][dy] cxt-ordered/cons (DOe' x dx y dy))
+		 (D2 x dx) (D2m x dx)
+		 (D2' x dx) (D2m' x dx))
+	   <- ({y}{dy}
+		 renum-ecn-deq M2 ([x][dx] cxt-ordered/cons (DOe x dx y dy))
+		 ([x][dx] D2' x dx y dy)
+		 ([x][dx] D2m' x dx y dy)
+		 ([x][dx] D2'' x dx y dy)
+		 ([x][dx] D2m'' x dx y dy)).
+
+%worlds (cn-block | ovar-block | can-mofkd-block) 
+(renum-ekd-wf _ _ _ _ _ _)
+(renum-ekd-deq _ _ _ _ _ _)
+(renum-ekd-sub _ _ _ _ _ _)
+(renum-eofkd _ _ _ _ _ _)
+(renum-ecn-deq _ _ _ _ _ _).
+%total (D1 D2 D3 D4 D5) (renum-ekd-wf D1 _ _ _ _ _)
+(renum-ekd-deq D3 _ _ _ _ _)
+(renum-ekd-sub D5 _ _ _ _ _)
+(renum-eofkd D2 _ _ _ _ _)
+(renum-ecn-deq D4 _ _ _ _ _).
+
+
+
+
+wkn-cxt-bounded	: cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-bounded G3' C'
+		   -> cxt-bounded G3 C'
+		   -> type.
+%mode wkn-cxt-bounded +D1 +D2 +D3 -D4.
+
+-	: wkn-cxt-bounded cxt-append/nil cxt-append/nil
+	   (cxt-bounded/cons (cxt-bounded/nil D1)
+	      (cxt-precedes/i D1' D2 DL))
+	   (cxt-bounded/nil D2).
+
+-	: wkn-cxt-bounded cxt-append/nil cxt-append/nil
+	   (cxt-bounded/cons (cxt-bounded/cons DB DP) DP')
+	   (cxt-bounded/cons DB DP'')
+	   <- cxt-precedes-trans DP DP' DP''.
+
+-	: wkn-cxt-bounded (cxt-append/cons DA) 
+	   (cxt-append/cons DA')
+	   (cxt-bounded/cons (cxt-bounded/cons DB DP) DP')
+	   (cxt-bounded/cons DB' DP')
+	   <- wkn-cxt-bounded DA DA'
+	      (cxt-bounded/cons DB DP) DB'.
+
+
+%worlds (cn-block | ovar-block) (wkn-cxt-bounded _ _ _ _).
+%total (D1) (wkn-cxt-bounded D1 _ _ _).
+
+
+
+wkn-cxt-ordered	: cxt-append G1 G2 G3
+			   -> cxt-append (cxt/cons G1 C K) G2 G3'
+			   -> cxt-ordered G3'
+			   -> cxt-ordered G3
+			   -> type.
+%mode wkn-cxt-ordered +D1 +D2 +D3 -D4.
+
+
+-	: wkn-cxt-ordered cxt-append/nil cxt-append/nil
+	   (cxt-ordered/cons (cxt-bounded/nil _))
+	   cxt-ordered/nil.
+
+-	: wkn-cxt-ordered cxt-append/nil cxt-append/nil
+	   (cxt-ordered/cons (cxt-bounded/cons DB _)) 
+	   (cxt-ordered/cons DB).
+
+-	: wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+	   (cxt-ordered/cons DB)
+	   (cxt-ordered/cons DB')
+	   <- wkn-cxt-bounded DA DA' DB DB'.
+
+%worlds (cn-block | ovar-block) (wkn-cxt-ordered _ _ _ _).
+%total (D1) (wkn-cxt-ordered D1 _ _ _).
+
+
+
+
+wkn-cxt-lookup	: cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3'
+		   -> cxt-lookup G3 C' K'
+		   -> cxt-lookup G3' C' K'
+		   -> type.
+%mode wkn-cxt-lookup +D1 +D2 +D3 +D0 -D4.
+
+-	: wkn-cxt-lookup 
+	   cxt-append/nil cxt-append/nil
+	   (cxt-ordered/cons DB)
+	   DL
+	   (cxt-lookup/miss DL DP DB)
+	   <- cxt-lookup-precedes DL DB DP.
+
+-	: wkn-cxt-lookup
+	   (cxt-append/cons DA) (cxt-append/cons DA')
+	   (cxt-ordered/cons (cxt-bounded/cons DB DPb))
+	   (cxt-lookup/miss DL DP _)
+	   (cxt-lookup/miss DL' DP (cxt-bounded/cons DB DPb))
+	   <- wkn-cxt-lookup DA DA' (cxt-ordered/cons DB) DL DL'.
+
+-	: wkn-cxt-lookup
+	   (cxt-append/cons DA) (cxt-append/cons DA')
+	   (cxt-ordered/cons DB')
+	   (cxt-lookup/hit DB)
+	   (cxt-lookup/hit DB').
+
+%worlds (cn-block | ovar-block) (wkn-cxt-lookup _ _ _ _ _).
+%total (D1) (wkn-cxt-lookup D1 _ _ _ _).
+
+wkn-ekd-wf	: {Mm: met}
+		   cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3' 
+		   -> {D: ekd-wf G3 K'}
+		      mekd-wf D Mm
+		   -> {D' :ekd-wf G3' K'}
+		      mekd-wf D' Mm
+		   -> type.
+%mode wkn-ekd-wf +Mm +DA +DA' +DLB +DW +DM -DW' -DM'. 
+
+wkn-ekd-deq	: {Mm: met}
+		   cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3' 
+		   -> {D: ekd-deq G3 K' K''}
+		      mekd-deq D Mm
+		   -> {D' :ekd-deq G3' K' K''}
+		      mekd-deq D' Mm
+		   -> type.
+%mode wkn-ekd-deq +Mm +DA +DA' +DLB +DW +DM -DW' -DM'. 
+
+wkn-ekd-sub	: {Mm: met}
+		   cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3' 
+		   -> {D: ekd-sub G3 K' K''}
+		      mekd-sub D Mm
+		   -> {D' :ekd-sub G3' K' K''}
+		      mekd-sub D' Mm
+		   -> type.
+%mode wkn-ekd-sub +Mm +DA +DA' +DLB +DW +DM -DW' -DM'. 
+
+wkn-eofkd	: {Mm: met}
+		   cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3'
+		   -> {D: eofkd G3 C' K'}
+		      meofkd D Mm
+		   -> {D' :eofkd G3' C' K'}
+		      meofkd D' Mm
+		   -> type.
+%mode wkn-eofkd +Mm +DA +DA' +DB +DW +DM -DW' -DM'. 
+
+wkn-ecn-deq	: {Mm: met}
+		   cxt-append G1 G2 G3
+		   -> cxt-append (cxt/cons G1 C K) G2 G3'
+		   -> cxt-ordered G3'
+		   -> {D: ecn-deq G3 C' C'' K'}
+		      mecn-deq D Mm
+		   -> {D' :ecn-deq G3' C' C'' K'}
+		      mecn-deq D' Mm
+		   -> type.
+%mode wkn-ecn-deq +Mm +DA +DA' +DB +DW +DM -DW' -DM'. 
+
+
+-	: wkn-ekd-wf met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-wf/kd/unit (DO': cxt-ordered G))
+	   mekd-wf/kd/unit
+	   (ekd-wf/kd/unit DOg) mekd-wf/kd/unit.
+
+-	: wkn-ekd-wf met/unit
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-wf/kd/type (DO': cxt-ordered G))
+	   mekd-wf/kd/type
+	   (ekd-wf/kd/type DOg) mekd-wf/kd/type.
+
+-	: wkn-ekd-wf (met/sing Mm)
+	   DA DA' DOg
+	   (ekd-wf/kd/sing D1) (mekd-wf/kd/sing DM1)
+	   (ekd-wf/kd/sing D2) (mekd-wf/kd/sing DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ekd-wf (met/pair M1 M2)
+	   DA DA' DOg
+	   (ekd-wf/kd/sgm D1 D2) (mekd-wf/kd/sgm D1m D2m)
+	   (ekd-wf/kd/sgm D1' D2'') (mekd-wf/kd/sgm D1m' D2m'')
+	   <- wkn-ekd-wf M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-wf M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-wf M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ekd-wf (met/pair M1 M2)
+	   DA DA' DOg
+	   (ekd-wf/kd/pi D1 D2) (mekd-wf/kd/pi D1m D2m)
+	   (ekd-wf/kd/pi D1' D2'') (mekd-wf/kd/pi D1m' D2m'')
+	   <- wkn-ekd-wf M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-wf M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-wf M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+
+
+
+-	: wkn-ekd-deq met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-deq/kd/unit (DO': cxt-ordered G))
+	   mekd-deq/kd/unit
+	   (ekd-deq/kd/unit DOg) mekd-deq/kd/unit.
+
+-	: wkn-ekd-deq met/unit
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-deq/kd/type (DO': cxt-ordered G))
+	   mekd-deq/kd/type
+	   (ekd-deq/kd/type DOg) mekd-deq/kd/type.
+
+-	: wkn-ekd-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ekd-deq/kd/sing D1) (mekd-deq/kd/sing DM1)
+	   (ekd-deq/kd/sing D2) (mekd-deq/kd/sing DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ekd-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ekd-deq/kd/sgm D1 D2) (mekd-deq/kd/sgm D1m D2m)
+	   (ekd-deq/kd/sgm D1' D2'') (mekd-deq/kd/sgm D1m' D2m'')
+	   <- wkn-ekd-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ekd-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ekd-deq/kd/pi D1 D2) (mekd-deq/kd/pi D1m D2m)
+	   (ekd-deq/kd/pi D1' D2'') (mekd-deq/kd/pi D1m' D2m'')
+	   <- wkn-ekd-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+
+
+-	: wkn-ekd-sub met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-sub/kd/unit (DO': cxt-ordered G))
+	   mekd-sub/kd/unit
+	   (ekd-sub/kd/unit DOg) mekd-sub/kd/unit.
+
+-	: wkn-ekd-sub met/unit
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ekd-sub/kd/type (DO': cxt-ordered G))
+	   mekd-sub/kd/type
+	   (ekd-sub/kd/type DOg) mekd-sub/kd/type.
+
+-	: wkn-ekd-sub (met/sing Mm)
+	   DA DA' DOg
+	   (ekd-sub/kd/sing-kd/sing D1) (mekd-sub/kd/sing-kd/sing DM1)
+	   (ekd-sub/kd/sing-kd/sing D2) (mekd-sub/kd/sing-kd/sing DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ekd-sub (met/sing Mm)
+	   DA DA' DOg
+	   (ekd-sub/kd/sing-kd/type D1) (mekd-sub/kd/sing-kd/type DM1)
+	   (ekd-sub/kd/sing-kd/type D2) (mekd-sub/kd/sing-kd/type DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ekd-sub (met/pair M1 (met/pair M2 M3))
+	   DA DA' DOg
+	   (ekd-sub/kd/sgm D1 D2 D3) (mekd-sub/kd/sgm D1m D2m D3m)
+	   (ekd-sub/kd/sgm D1' D2'' D3'') (mekd-sub/kd/sgm D1m' D2m'' D3m'')
+	   <- wkn-ekd-sub M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc-duece _ _ DOg DOe DOe'
+	   <- ({x}{dx: isvar x I}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-sub M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-sub M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx))
+	   <- ({x}{dx: isvar x I}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe' x dx) (DOen' x dx))
+	   <- renum-ekd-wf M3 DOen' D3 D3m D3' D3m'
+	   <- ({x}{dx}
+		 wkn-ekd-wf M3 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe' x dx)
+		 (D3' x dx) (D3m' x dx)
+		 (D3'' x dx) (D3m'' x dx)).
+
+-	: wkn-ekd-sub (met/pair M1 (met/pair M2 M3))
+	   DA DA' DOg
+	   (ekd-sub/kd/pi D1 D2 D3) (mekd-sub/kd/pi D1m D2m D3m)
+	   (ekd-sub/kd/pi D1' D2'' D3'') (mekd-sub/kd/pi D1m' D2m'' D3m'')
+	   <- wkn-ekd-sub M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc-duece _ _ DOg DOe DOe'
+	   <- ({x}{dx: isvar x I}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ekd-sub M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ekd-sub M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx))
+	   <- ({x}{dx: isvar x I}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe' x dx) (DOen' x dx))
+	   <- renum-ekd-wf M3 DOen' D3 D3m D3' D3m'
+	   <- ({x}{dx}
+		 wkn-ekd-wf M3 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe' x dx)
+		 (D3' x dx) (D3m' x dx)
+		 (D3'' x dx) (D3m'' x dx)).
+
+
+
+
+-	: wkn-eofkd _
+	   DA 
+	   DA' DOg
+	   (eofkd/closed DC (DO': cxt-ordered G))
+	   (meofkd/closed DCm) 
+	   (eofkd/closed DC DOg) (meofkd/closed DCm).
+
+-	: wkn-eofkd _
+	   DA DA' DOg
+	   (eofkd/var D1) _
+	   (eofkd/var D2) meofkd/var
+	   <- wkn-cxt-lookup DA DA' DOg D1 D2.
+
+-	: wkn-eofkd met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (eofkd/cn/unit (DO': cxt-ordered G))
+	   meofkd/cn/unit
+	   (eofkd/cn/unit DOg) meofkd/cn/unit.
+
+-	: wkn-eofkd met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (eofkd/tp/unit (DO': cxt-ordered G))
+	   meofkd/tp/unit
+	   (eofkd/tp/unit DOg) meofkd/tp/unit.
+
+-	: wkn-eofkd met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (eofkd/tp/tagged (DO': cxt-ordered G))
+	   meofkd/tp/tagged
+	   (eofkd/tp/tagged DOg) meofkd/tp/tagged.
+
+-	: wkn-eofkd (met/sing Mm)
+	   DA DA' DOg
+	   (eofkd/kd/sing D1) (meofkd/kd/sing DM1)
+	   (eofkd/kd/sing D2) (meofkd/kd/sing DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-eofkd (met/sing Mm)
+	   DA DA' DOg
+	   (eofkd/cn/pj1 D1) (meofkd/cn/pj1 DM1)
+	   (eofkd/cn/pj1 D2) (meofkd/cn/pj1 DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-eofkd (met/sing Mm)
+	   DA DA' DOg
+	   (eofkd/cn/pj2 D1) (meofkd/cn/pj2 DM1)
+	   (eofkd/cn/pj2 D2) (meofkd/cn/pj2 DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-eofkd (met/sing Mm)
+	   DA DA' DOg
+	   (eofkd/tp/ref D1) (meofkd/tp/ref DM1)
+	   (eofkd/tp/ref D2) (meofkd/tp/ref DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-eofkd (met/sing Mm)
+	   DA DA' DOg
+	   (eofkd/tp/tag D1) (meofkd/tp/tag DM1)
+	   (eofkd/tp/tag D2) (meofkd/tp/tag DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/cn/pair D1 D2) (meofkd/cn/pair DM1 DM2)
+	   (eofkd/cn/pair D1' D2') (meofkd/cn/pair DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/cn/app D1 D2) (meofkd/cn/app DM1 DM2)
+	   (eofkd/cn/app D1' D2') (meofkd/cn/app DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/sgm-ext D1 D2) (meofkd/sgm-ext DM1 DM2)
+	   (eofkd/sgm-ext D1' D2') (meofkd/sgm-ext DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/tp/cross D1 D2) (meofkd/tp/cross DM1 DM2)
+	   (eofkd/tp/cross D1' D2') (meofkd/tp/cross DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/tp/arrow D1 D2) (meofkd/tp/arrow DM1 DM2)
+	   (eofkd/tp/arrow D1' D2') (meofkd/tp/arrow DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/tp/sum D1 D2) (meofkd/tp/sum DM1 DM2)
+	   (eofkd/tp/sum D1' D2') (meofkd/tp/sum DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/sub D1 D2) (meofkd/sub DM1 DM2)
+	   (eofkd/sub D1' D2') (meofkd/sub DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ekd-sub M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/deq D1 D2) (meofkd/deq DM1 DM2)
+	   (eofkd/deq D1' D2') (meofkd/deq DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ekd-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-eofkd (met/pair M2 M1)
+	   DA DA' DOg
+	   (eofkd/cn/lam D2 D1) (meofkd/cn/lam D2m D1m)
+	   (eofkd/cn/lam D2'' D1') (meofkd/cn/lam D2m'' D1m')
+	   <- wkn-ekd-wf M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-eofkd M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-eofkd M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-eofkd (met/pair M2 M1)
+	   DA DA' DOg
+	   (eofkd/tp/forall D2 D1) (meofkd/tp/forall D2m D1m)
+	   (eofkd/tp/forall D2'' D1') (meofkd/tp/forall D2m'' D1m')
+	   <- wkn-ekd-wf M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-eofkd M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-eofkd M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-eofkd (met/pair M2 M1)
+	   DA DA' DOg
+	   (eofkd/cn/mu D2 D1) (meofkd/cn/mu D2m D1m)
+	   (eofkd/cn/mu D2'' D1') (meofkd/cn/mu D2m'' D1m')
+	   <- wkn-ekd-wf M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-eofkd M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-eofkd M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-eofkd (met/pair M1 M2)
+	   DA DA' DOg
+	   (eofkd/pi-ext D1 D2) (meofkd/pi-ext D1m D2m)
+	   (eofkd/pi-ext D1' D2'') (meofkd/pi-ext D1m' D2m'')
+	   <- wkn-eofkd M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-eofkd M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-eofkd M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+
+
+
+-	: wkn-ecn-deq met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ecn-deq/cn/unit (DO': cxt-ordered G))
+	   mecn-deq/cn/unit
+	   (ecn-deq/cn/unit DOg) mecn-deq/cn/unit.
+
+-	: wkn-ecn-deq met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ecn-deq/tp/unit (DO': cxt-ordered G))
+	   mecn-deq/tp/unit
+	   (ecn-deq/tp/unit DOg) mecn-deq/tp/unit.
+
+-	: wkn-ecn-deq met/unit 
+	   (DA: cxt-append G1 G2 G) 
+	   (DA': cxt-append (cxt/cons G1 C1 K1) G2 G') DOg
+	   (ecn-deq/tp/tagged (DO': cxt-ordered G))
+	   mecn-deq/tp/tagged
+	   (ecn-deq/tp/tagged DOg) mecn-deq/tp/tagged.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/kd/sing D1) (mecn-deq/kd/sing DM1)
+	   (ecn-deq/kd/sing D2) (mecn-deq/kd/sing DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/refl D1) (mecn-deq/refl DM1)
+	   (ecn-deq/refl D2) (mecn-deq/refl DM2)
+	   <- wkn-eofkd Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/cn/pj1 D1) (mecn-deq/cn/pj1 DM1)
+	   (ecn-deq/cn/pj1 D2) (mecn-deq/cn/pj1 DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/cn/pj2 D1) (mecn-deq/cn/pj2 DM1)
+	   (ecn-deq/cn/pj2 D2) (mecn-deq/cn/pj2 DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/tp/ref D1) (mecn-deq/tp/ref DM1)
+	   (ecn-deq/tp/ref D2) (mecn-deq/tp/ref DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/tp/tag D1) (mecn-deq/tp/tag DM1)
+	   (ecn-deq/tp/tag D2) (mecn-deq/tp/tag DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/sing Mm)
+	   DA DA' DOg
+	   (ecn-deq/sym D1) (mecn-deq/sym DM1)
+	   (ecn-deq/sym D2) (mecn-deq/sym DM2)
+	   <- wkn-ecn-deq Mm DA DA' DOg D1 DM1 D2 DM2.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/cn/pair D1 D2) (mecn-deq/cn/pair DM1 DM2)
+	   (ecn-deq/cn/pair D1' D2') (mecn-deq/cn/pair DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/cn/app D1 D2) (mecn-deq/cn/app DM1 DM2)
+	   (ecn-deq/cn/app D1' D2') (mecn-deq/cn/app DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/sgm-ext D1 D2) (mecn-deq/sgm-ext DM1 DM2)
+	   (ecn-deq/sgm-ext D1' D2') (mecn-deq/sgm-ext DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/tp/cross D1 D2) (mecn-deq/tp/cross DM1 DM2)
+	   (ecn-deq/tp/cross D1' D2') (mecn-deq/tp/cross DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/tp/arrow D1 D2) (mecn-deq/tp/arrow DM1 DM2)
+	   (ecn-deq/tp/arrow D1' D2') (mecn-deq/tp/arrow DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/tp/sum D1 D2) (mecn-deq/tp/sum DM1 DM2)
+	   (ecn-deq/tp/sum D1' D2') (mecn-deq/tp/sum DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/trans D1 D2) (mecn-deq/trans DM1 DM2)
+	   (ecn-deq/trans D1' D2') (mecn-deq/trans DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ecn-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/kd/unit D1 D2) (mecn-deq/kd/unit DM1 DM2)
+	   (ecn-deq/kd/unit D1' D2') (mecn-deq/kd/unit DM1' DM2')
+	   <- wkn-eofkd M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-eofkd M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/sub D1 D2) (mecn-deq/sub DM1 DM2)
+	   (ecn-deq/sub D1' D2') (mecn-deq/sub DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ekd-sub M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/deq D1 D2) (mecn-deq/deq DM1 DM2)
+	   (ecn-deq/deq D1' D2') (mecn-deq/deq DM1' DM2')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 DM1 D1' DM1'
+	   <- wkn-ekd-deq M2 DA DA' DOg D2 DM2 D2' DM2'.
+
+-	: wkn-ecn-deq (met/pair M2 M1)
+	   DA DA' DOg
+	   (ecn-deq/cn/lam D2 D1) (mecn-deq/cn/lam D2m D1m)
+	   (ecn-deq/cn/lam D2'' D1') (mecn-deq/cn/lam D2m'' D1m')
+	   <- wkn-ekd-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ecn-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ecn-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ecn-deq (met/pair M2 M1)
+	   DA DA' DOg
+	   (ecn-deq/tp/forall D2 D1) (mecn-deq/tp/forall D2m D1m)
+	   (ecn-deq/tp/forall D2'' D1') (mecn-deq/tp/forall D2m'' D1m')
+	   <- wkn-ekd-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ecn-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ecn-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ecn-deq (met/pair M2 M1)
+	   DA DA' DOg
+	   (ecn-deq/cn/mu D2 D1) (mecn-deq/cn/mu D2m D1m)
+	   (ecn-deq/cn/mu D2'' D1') (mecn-deq/cn/mu D2m'' D1m')
+	   <- wkn-ekd-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ecn-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ecn-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ecn-deq (met/pair M1 (met/pair M3 M2))
+	   DA DA' DOg
+	   (ecn-deq/pi-ext D1 D3 D2) (mecn-deq/pi-ext D1m D3m D2m)
+	   (ecn-deq/pi-ext D1' D3' D2'') (mecn-deq/pi-ext D1m' D3m' D2m'')
+	   <- wkn-eofkd M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- wkn-eofkd M3 DA DA' DOg D3 D3m D3' D3m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ecn-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ecn-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+-	: wkn-ecn-deq (met/pair M1 M2)
+	   DA DA' DOg
+	   (ecn-deq/pi-ext-2 D1 D2) (mecn-deq/pi-ext-2 D1m D2m)
+	   (ecn-deq/pi-ext-2 D1' D2'') (mecn-deq/pi-ext-2 D1m' D2m'')
+	   <- wkn-ecn-deq M1 DA DA' DOg D1 D1m D1' D1m'
+	   <- cxt-inc _ DOg DOe
+	   <- ({x}{dx}
+		 wkn-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+		 (DOe x dx) (DOen x dx))
+	   <- renum-ecn-deq M2 DOen D2 D2m D2' D2m'
+	   <- ({x}{dx}
+		 wkn-ecn-deq M2 
+		 (cxt-append/cons DA) (cxt-append/cons DA') (DOe x dx)
+		 (D2' x dx) (D2m' x dx)
+		 (D2'' x dx) (D2m'' x dx)).
+
+%worlds (cn-block | ovar-block | can-mofkd-block) (wkn-ekd-wf _ _ _ _ _ _ _ _)
+(wkn-ekd-deq _ _ _ _ _ _ _ _)
+(wkn-ekd-sub _ _ _ _ _ _ _ _)
+(wkn-eofkd _ _ _ _ _ _ _ _)
+(wkn-ecn-deq _ _ _ _ _ _ _ _).
+%total (D1 D2 D3 D4 D5) (wkn-ekd-wf D1 _ _ _ _ _ _ _)
+(wkn-ekd-deq D3 _ _ _ _ _ _ _)
+(wkn-ekd-sub D5 _ _ _ _ _ _ _)
+(wkn-eofkd D2 _ _ _ _ _ _ _)
+(wkn-ecn-deq D4 _ _ _ _ _ _ _).
+
+
+
+
+cxt-ordered-pred	: cxt-ordered (cxt/cons G _ _)
+			   -> cxt-ordered G
+			   -> type.
+%mode cxt-ordered-pred +D1 -D2.
+
+-	: cxt-ordered-pred
+	   (cxt-ordered/cons (cxt-bounded/nil _))
+	   cxt-ordered/nil.
+
+-	: cxt-ordered-pred 
+	   (cxt-ordered/cons (cxt-bounded/cons DB _))
+	   (cxt-ordered/cons DB).
+
+%worlds (cn-block | ovar-block) (cxt-ordered-pred _ _).
+%total {} (cxt-ordered-pred _ _).
+
+
+
+wkn-eofkd-append	: eofkd G1 C K
+			   -> cxt-append-sub G1 _ _ G'
+			   -> cxt-ordered G'
+			   -> eofkd G' C K
+			   -> type.
+%mode wkn-eofkd-append +D1 +D2 +D3 -D4.
+
+-	: wkn-eofkd-append D1 cxt-append-sub/nil _ D1.
+
+-	: wkn-eofkd-append D1 (cxt-append-sub/cons DA) DO D1''
+	   <- cxt-ordered-pred DO DO'
+	   <- wkn-eofkd-append D1 DA DO' D1'
+	   <- can-meofkd D1' DM
+	   <- wkn-eofkd _ cxt-append/nil cxt-append/nil DO D1' DM D1'' _.
+
+%worlds (cn-block | ovar-block | can-mofkd-block) (wkn-eofkd-append _ _ _ _).
+%total {D1} (wkn-eofkd-append _ D1 _ _).
+
+
+
+wkn-ecn-deq-append	: ecn-deq G1 C CC K
+			   -> cxt-append-sub G1 _ _ G'
+			   -> cxt-ordered G'
+			   -> ecn-deq G' C CC K
+			   -> type.
+%mode wkn-ecn-deq-append +D1 +D2 +D3 -D4.
+
+-	: wkn-ecn-deq-append D1 cxt-append-sub/nil _ D1.
+
+-	: wkn-ecn-deq-append D1 (cxt-append-sub/cons DA) DO D1''
+	   <- cxt-ordered-pred DO DO'
+	   <- wkn-ecn-deq-append D1 DA DO' D1'
+	   <- can-mecn-deq D1' DM
+	   <- wkn-ecn-deq _ cxt-append/nil cxt-append/nil DO D1' DM D1'' _.
+
+%worlds (cn-block | ovar-block | can-mofkd-block) (wkn-ecn-deq-append _ _ _ _).
+%total {D1} (wkn-ecn-deq-append _ D1 _ _).
+
+
+
+wkn-ekd-deq-append	: ekd-deq G1 K K'
+			   -> cxt-append-sub G1 _ _ G'
+			   -> cxt-ordered G'
+			   -> ekd-deq G' K K'
+			   -> type.
+%mode wkn-ekd-deq-append +D1 +D2 +D3 -D4.
+
+-	: wkn-ekd-deq-append D1 cxt-append-sub/nil _ D1.
+
+-	: wkn-ekd-deq-append D1 (cxt-append-sub/cons DA) DO D1''
+	   <- cxt-ordered-pred DO DO'
+	   <- wkn-ekd-deq-append D1 DA DO' D1'
+	   <- can-mekd-deq D1' DM
+	   <- wkn-ekd-deq _ cxt-append/nil cxt-append/nil DO D1' DM D1'' _.
+
+%worlds (cn-block | ovar-block | can-mofkd-block) (wkn-ekd-deq-append _ _ _ _).
+%total {D1} (wkn-ekd-deq-append _ D1 _ _).
+
+
+
+wkn-deq-cxt-bounded	: cxt-append (cxt/cons G C K1) G2 G3
+			   -> cxt-append (cxt/cons G C K2) G2 G3'
+			   -> cxt-bounded G3 X
+			   -> cxt-bounded G3' X
+			   -> type.
+%mode wkn-deq-cxt-bounded +D1 +D2 +D3 -D4.
+
+-	: wkn-deq-cxt-bounded cxt-append/nil _
+	   (cxt-bounded/cons DB DP)
+	   (cxt-bounded/cons DB DP).
+
+-	: wkn-deq-cxt-bounded (cxt-append/cons DA)
+	   (cxt-append/cons DA')
+	   (cxt-bounded/cons DB DP)
+	   (cxt-bounded/cons DB' DP)
+	   <- wkn-deq-cxt-bounded DA DA' DB DB'.
+
+%worlds (cn-block | ovar-block) (wkn-deq-cxt-bounded _ _ _ _).
+%total {D1} (wkn-deq-cxt-bounded D1 _ _ _).
+
+
+wkn-deq-cxt-ordered	: cxt-append (cxt/cons G C K1) G2 G3
+			   -> cxt-append (cxt/cons G C K2) G2 G3'
+			   -> cxt-ordered G3
+			   -> cxt-ordered G3'
+			   -> type.
+%mode wkn-deq-cxt-ordered +D1 +D2 +D3 -D4.
+
+-	: wkn-deq-cxt-ordered cxt-append/nil _
+	   (cxt-ordered/cons DB)
+	   (cxt-ordered/cons DB).
+
+-	: wkn-deq-cxt-ordered (cxt-append/cons DA) (cxt-append/cons DA')
+	   (cxt-ordered/cons DB)
+	   (cxt-ordered/cons DB')
+	   <- wkn-deq-cxt-bounded DA DA' DB DB'.
+
+%worlds (cn-block | ovar-block) (wkn-deq-cxt-ordered _ _ _ _).
+%total {D1} (wkn-deq-cxt-ordered D1 _ _ _).
+
+
+
+wkn-deq-cxt-lookup: cxt-append (cxt/cons G C K1) G2 G3
+			   -> cxt-append (cxt/cons G C K2) G2 G3'
+			   -> ekd-deq G K2 K1
+			   -> cxt-lookup G3 C' K'
+			   -> eofkd G3' C' K'
+			   -> type.
+%mode wkn-deq-cxt-lookup +D1 +D2 +D3 +D4 -D5.
+
+
+
+-	: wkn-deq-cxt-lookup
+	   cxt-append/nil cxt-append/nil DQ
+	   (cxt-lookup/hit DB)
+	   (eofkd/deq (eofkd/var (cxt-lookup/hit DB)) DQ')
+	   <- wkn-ekd-deq-append DQ
+	      (cxt-append-sub/cons cxt-append-sub/nil
+		 : cxt-append-sub _ ([x] cxt/cons cxt/nil C K1) cn/unit 
+		    (cxt/cons G C K1))
+	      (cxt-ordered/cons DB)
+	      DQ'.
+
+-	: wkn-deq-cxt-lookup
+	   cxt-append/nil _ _
+	   (cxt-lookup/miss DL DP DB)
+	   (eofkd/var (cxt-lookup/miss DL DP DB)).
+
+
+-	: wkn-deq-cxt-lookup
+	   (cxt-append/cons DA)
+	   (cxt-append/cons DA') _
+	   (cxt-lookup/hit DB)
+	   (eofkd/var (cxt-lookup/hit DB'))
+	   <- wkn-deq-cxt-bounded DA DA' DB DB'.
+
+-	: wkn-deq-cxt-lookup
+	   (cxt-append/cons (DA: cxt-append _ _ G'))
+	   (cxt-append/cons (DA': cxt-append _ _ G)) DQ
+	   (cxt-lookup/miss DL _ DB) 
+	   DC'
+	   <- wkn-deq-cxt-lookup DA DA' DQ DL DC
+	   <- wkn-deq-cxt-bounded DA DA' DB DB'
+	   <- wkn-eofkd-append DC
+	      (cxt-append-sub/cons cxt-append-sub/nil
+		 : cxt-append-sub _ ([x] cxt/cons cxt/nil C K1) cn/unit 
+		    (cxt/cons G C K1))
+	      (cxt-ordered/cons DB')
+	      DC'.
+
+
+%worlds (cn-block | ovar-block | can-mofkd-block) 
+(wkn-deq-cxt-lookup _ _ _ _ _).
+%total {D1} (wkn-deq-cxt-lookup D1 _ _ _ _).
+
+
+
+wkn-deq-ekd-wf	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> ekd-wf (G3 x) (K' x))
+		   -> ({x} isvar x I -> ekd-wf (G3' x) (K' x))
+		   -> type.
+%mode wkn-deq-ekd-wf +D1 +D2 +D3 +D4 -D5.
+
+wkn-deq-ekd-deq	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> ekd-deq (G3 x) (K' x) (K'' x))
+		   -> ({x} isvar x I -> ekd-deq (G3' x) (K' x) (K'' x))
+		   -> type.
+%mode wkn-deq-ekd-deq +D1 +D2 +D3 +D4 -D5.
+
+wkn-deq-ekd-sub	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> ekd-sub (G3 x) (K' x) (K'' x))
+		   -> ({x} isvar x I -> ekd-sub (G3' x) (K' x) (K'' x))
+		   -> type.
+%mode wkn-deq-ekd-sub +D1 +D2 +D3 +D4 -D5.
+
+wkn-deq-eofkd	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> eofkd (G3 x) (C' x) (K' x))
+		   -> ({x} isvar x I -> eofkd (G3' x) (C' x) (K' x))
+		   -> type.
+%mode wkn-deq-eofkd +D1 +D2 +D3 +D4 -D5.
+
+wkn-deq-ecn-deq	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> ecn-deq (G3 x) (C' x) (C'' x) (K' x))
+		   -> ({x} isvar x I -> ecn-deq (G3' x) (C' x) (C'' x) (K' x))
+		   -> type.
+%mode wkn-deq-ecn-deq +D1 +D2 +D3 +D4 -D5.
+
+-	: wkn-deq-ekd-wf DA DA' _ 
+	   ([x][di] ekd-wf/kd/unit (DO x di))
+	   ([x][di] ekd-wf/kd/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-wf DA DA' _ 
+	   ([x][di] ekd-wf/kd/type (DO x di))
+	   ([x][di] ekd-wf/kd/type (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-wf DA DA' DQ
+	   ([x][di] ekd-wf/kd/sing (D1 x di))
+	   ([x][di] ekd-wf/kd/sing (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ekd-wf DA DA' DQ
+	   ([x][di] ekd-wf/kd/sgm (D1 x di) (D2 x di))
+	   ([x][di] ekd-wf/kd/sgm (D1' x di) (D2' x di))
+	   <- wkn-deq-ekd-wf DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ekd-wf DA DA' DQ
+	   ([x][di] ekd-wf/kd/pi (D1 x di) (D2 x di))
+	   ([x][di] ekd-wf/kd/pi (D1' x di) (D2' x di))
+	   <- wkn-deq-ekd-wf DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+
+
+-	: wkn-deq-ekd-deq DA DA' _ 
+	   ([x][di] ekd-deq/kd/unit (DO x di))
+	   ([x][di] ekd-deq/kd/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-deq DA DA' _ 
+	   ([x][di] ekd-deq/kd/type (DO x di))
+	   ([x][di] ekd-deq/kd/type (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-deq DA DA' DQ
+	   ([x][di] ekd-deq/kd/sing (D1 x di))
+	   ([x][di] ekd-deq/kd/sing (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ekd-deq DA DA' DQ
+	   ([x][di] ekd-deq/kd/sgm (D1 x di) (D2 x di))
+	   ([x][di] ekd-deq/kd/sgm (D1' x di) (D2' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ekd-deq DA DA' DQ
+	   ([x][di] ekd-deq/kd/pi (D1 x di) (D2 x di))
+	   ([x][di] ekd-deq/kd/pi (D1' x di) (D2' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+	   
+
+
+-	: wkn-deq-ekd-sub DA DA' _ 
+	   ([x][di] ekd-sub/kd/unit (DO x di))
+	   ([x][di] ekd-sub/kd/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-sub DA DA' _ 
+	   ([x][di] ekd-sub/kd/type (DO x di))
+	   ([x][di] ekd-sub/kd/type (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ekd-sub DA DA' DQ
+	   ([x][di] ekd-sub/kd/sing-kd/sing (D1 x di))
+	   ([x][di] ekd-sub/kd/sing-kd/sing (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ekd-sub DA DA' DQ
+	   ([x][di] ekd-sub/kd/sing-kd/type (D1 x di))
+	   ([x][di] ekd-sub/kd/sing-kd/type (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ekd-sub DA DA' DQ
+	   ([x][di] ekd-sub/kd/sgm (D1 x di) (D2 x di) (D3 x di))
+	   ([x][di] ekd-sub/kd/sgm (D1' x di) (D2' x di) (D3' x di))
+	   <- wkn-deq-ekd-sub DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-sub 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy))
+	   <- ({y}{dy}
+		 wkn-deq-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D3 x di y dy)
+		 ([x][di] D3' x di y dy)).
+
+-	: wkn-deq-ekd-sub DA DA' DQ
+	   ([x][di] ekd-sub/kd/pi (D1 x di) (D2 x di) (D3 x di))
+	   ([x][di] ekd-sub/kd/pi (D1' x di) (D2' x di) (D3' x di))
+	   <- wkn-deq-ekd-sub DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ekd-sub 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy))
+	   <- ({y}{dy}
+		 wkn-deq-ekd-wf 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D3 x di y dy)
+		 ([x][di] D3' x di y dy)).
+
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/var (DL x di))
+	   DC
+	   <- ({x}{di}
+		 wkn-deq-cxt-lookup (DA x) (DA' x) DQ (DL x di) (DC x di)).
+
+-	: wkn-deq-eofkd DA DA' _ 
+	   ([x][di] eofkd/closed (DC x) (DO x di))
+	   ([x][di] eofkd/closed (DC x) (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-eofkd DA DA' _ 
+	   ([x][di] eofkd/cn/unit (DO x di))
+	   ([x][di] eofkd/cn/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-eofkd DA DA' _ 
+	   ([x][di] eofkd/tp/unit (DO x di))
+	   ([x][di] eofkd/tp/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-eofkd DA DA' _ 
+	   ([x][di] eofkd/tp/tagged (DO x di))
+	   ([x][di] eofkd/tp/tagged (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/kd/sing (D1 x di))
+	   ([x][di] eofkd/kd/sing (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/pj1 (D1 x di))
+	   ([x][di] eofkd/cn/pj1 (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/pj2 (D1 x di))
+	   ([x][di] eofkd/cn/pj2 (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/ref (D1 x di))
+	   ([x][di] eofkd/tp/ref (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/tag (D1 x di))
+	   ([x][di] eofkd/tp/tag (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/pair (D1 x di) (D2 x di))
+	   ([x][di] eofkd/cn/pair (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/app (D1 x di) (D2 x di))
+	   ([x][di] eofkd/cn/app (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/sgm-ext (D1 x di) (D2 x di))
+	   ([x][di] eofkd/sgm-ext (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/cross (D1 x di) (D2 x di))
+	   ([x][di] eofkd/tp/cross (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/arrow (D1 x di) (D2 x di))
+	   ([x][di] eofkd/tp/arrow (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/sum (D1 x di) (D2 x di))
+	   ([x][di] eofkd/tp/sum (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/sub (D1 x di) (D2 x di))
+	   ([x][di] eofkd/sub (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-ekd-sub DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/deq (D1 x di) (D2 x di))
+	   ([x][di] eofkd/deq (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-ekd-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/lam (D2 x di) (D1 x di))
+	   ([x][di] eofkd/cn/lam (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-wf DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/tp/forall (D2 x di) (D1 x di))
+	   ([x][di] eofkd/tp/forall (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-wf DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/cn/mu (D2 x di) (D1 x di))
+	   ([x][di] eofkd/cn/mu (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-wf DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-eofkd DA DA' DQ
+	   ([x][di] eofkd/pi-ext (D1 x di) (D2 x di))
+	   ([x][di] eofkd/pi-ext (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-eofkd 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+
+
+
+-	: wkn-deq-ecn-deq DA DA' _ 
+	   ([x][di] ecn-deq/cn/unit (DO x di))
+	   ([x][di] ecn-deq/cn/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ecn-deq DA DA' _ 
+	   ([x][di] ecn-deq/tp/unit (DO x di))
+	   ([x][di] ecn-deq/tp/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ecn-deq DA DA' _ 
+	   ([x][di] ecn-deq/tp/tagged (DO x di))
+	   ([x][di] ecn-deq/tp/tagged (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/kd/sing (D1 x di))
+	   ([x][di] ecn-deq/kd/sing (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/refl (D1 x di))
+	   ([x][di] ecn-deq/refl (D1' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/sym (D1 x di))
+	   ([x][di] ecn-deq/sym (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/pj1 (D1 x di))
+	   ([x][di] ecn-deq/cn/pj1 (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/pj2 (D1 x di))
+	   ([x][di] ecn-deq/cn/pj2 (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/ref (D1 x di))
+	   ([x][di] ecn-deq/tp/ref (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/tag (D1 x di))
+	   ([x][di] ecn-deq/tp/tag (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/kd/unit (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/kd/unit (D1' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/trans (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/trans (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/pair (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/cn/pair (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/app (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/cn/app (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/sgm-ext (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/sgm-ext (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/cross (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/tp/cross (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/arrow (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/tp/arrow (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/sum (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/tp/sum (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ecn-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/sub (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/sub (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ekd-sub DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/deq (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/deq (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- wkn-deq-ekd-deq DA DA' DQ D2 D2'.
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/lam (D2 x di) (D1 x di))
+	   ([x][di] ecn-deq/cn/lam (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/tp/forall (D2 x di) (D1 x di))
+	   ([x][di] ecn-deq/tp/forall (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/cn/mu (D2 x di) (D1 x di))
+	   ([x][di] ecn-deq/cn/mu (D2' x di) (D1' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/pi-ext (D1 x di) (D3 x di) (D2 x di))
+	   ([x][di] ecn-deq/pi-ext (D1' x di) (D3' x di) (D2' x di))
+	   <- wkn-deq-eofkd DA DA' DQ D1 D1'
+	   <- wkn-deq-eofkd DA DA' DQ D3 D3'
+	   <- ({y}{dy}
+		 wkn-deq-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-ecn-deq DA DA' DQ
+	   ([x][di] ecn-deq/pi-ext-2 (D1 x di) (D2 x di))
+	   ([x][di] ecn-deq/pi-ext-2 (D1' x di) (D2' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-ecn-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+%worlds (cn-block | ovar-block | can-mofkd-block) 
+(wkn-deq-ekd-wf _ _ _ _ _)
+(wkn-deq-ekd-deq _ _ _ _ _)
+(wkn-deq-ekd-sub _ _ _ _ _)
+(wkn-deq-eofkd _ _ _ _ _)
+(wkn-deq-ecn-deq _ _ _ _ _).
+%total (D1 D2 D3 D4 D5) 
+(wkn-deq-ekd-wf _ _ _ D1 _)
+(wkn-deq-ekd-deq _ _ _ D3 _)
+(wkn-deq-ekd-sub _ _ _ D5 _)
+(wkn-deq-eofkd _ _ _ D2 _)
+(wkn-deq-ecn-deq _ _ _ D4 _).

@@ -1,0 +1,169 @@
+
+ekd-wf/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} isvar a I 
+			 -> ekd-wf (cxt/cons G a K1) (K3 a))
+		   -> ({a:cn} isvar a I
+			 -> ekd-wf (cxt/cons G a K2) (K3 a))
+		   -> type.
+
+%mode ekd-wf/seq-a +D1 +D2 -D3.
+
+-	: ekd-wf/seq-a seq/kd/refl D1 D1.
+
+%worlds (cn-block | ovar-block | ofkd-block) (ekd-wf/seq-a _ _ _).
+%total {} (ekd-wf/seq-a _ _ _).
+
+
+
+vdt/esg-wf : esg-wf G S1 -> fst-sg S1 K1 -> ekd-wf G K1 -> type.
+%mode vdt/esg-wf +D1 +D2 -D3.
+
+-	: vdt/esg-wf (esg-wf/sg/unit DO) fst-sg/unit (ekd-wf/kd/unit DO).
+
+-	: vdt/esg-wf (esg-wf/sg/kd DK) fst-sg/kd DK.
+
+-	: vdt/esg-wf (esg-wf/sg/cn DC) fst-sg/cn (ekd-wf/kd/unit DO)
+	   <- eofkd-ordered DC DO.
+
+-	: vdt/esg-wf (esg-wf/sg/sgm D1 D2 DFS') 
+	   (fst-sg/sgm DFS DFS2)
+	   (ekd-wf/kd/sgm DW DW2)
+	   <- fst-sg-seq DFS' DFS (DQ: seq/kd K3 K1)
+	   <- vdt/esg-wf D1 DFS DW
+	   <- vdt/esg-wf D1 DFS' DW'
+	   <- ({a:cn}{da}
+		 vdt/esg-wf (D2 a da) (DFS2 a) (DW2' a da))
+	   <- ekd-wf/seq-a DQ DW2' DW2.
+
+-	: vdt/esg-wf (esg-wf/sg/pi D1 _ _) fst-sg/pi (ekd-wf/kd/unit DO)
+	   <- esg-wf-ordered D1 DO.
+
+%worlds (cn-block | ovar-block | ofkd-block) (vdt/esg-wf _ _ _).
+%total D1 (vdt/esg-wf D1 _ _).
+
+
+
+wkn-deq-esg-deq	: ({x} cxt-append (cxt/cons G x K1) (G2 x) (G3 x))
+		   -> ({x} cxt-append (cxt/cons G x K2) (G2 x) (G3' x))
+		   -> ekd-deq G K2 K1
+		   -> ({x} isvar x I -> esg-deq (G3 x) (K' x) (K'' x))
+		   -> ({x} isvar x I -> esg-deq (G3' x) (K' x) (K'' x))
+		   -> type.
+%mode wkn-deq-esg-deq +D1 +D2 +D3 +D4 -D5.
+
+-	: wkn-deq-esg-deq DA DA' _ 
+	   ([x][di] esg-deq/sg/unit (DO x di))
+	   ([x][di] esg-deq/sg/unit (DO' x di))
+	   <- ({x}{di} wkn-deq-cxt-ordered 
+		 (DA x) (DA' x)
+		 (DO x di) (DO' x di)). 
+
+-	: wkn-deq-esg-deq DA DA' DQ
+	   ([x][di] esg-deq/sg/cn (D1 x di))
+	   ([x][di] esg-deq/sg/cn (D1' x di))
+	   <- wkn-deq-ecn-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-esg-deq DA DA' DQ
+	   ([x][di] esg-deq/sg/kd (D1 x di))
+	   ([x][di] esg-deq/sg/kd (D1' x di))
+	   <- wkn-deq-ekd-deq DA DA' DQ D1 D1'.
+
+-	: wkn-deq-esg-deq DA DA' DQ
+	   ([x][di] esg-deq/sg/sgm (D1 x di) (D2 x di) (DFS x))
+	   ([x][di] esg-deq/sg/sgm (D1' x di) (D2' x di) (DFS x))
+	   <- wkn-deq-esg-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-esg-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+-	: wkn-deq-esg-deq DA DA' DQ
+	   ([x][di] esg-deq/sg/pi (D1 x di) (D2 x di) (DFS x))
+	   ([x][di] esg-deq/sg/pi (D1' x di) (D2' x di) (DFS x))
+	   <- wkn-deq-esg-deq DA DA' DQ D1 D1'
+	   <- ({y}{dy}
+		 wkn-deq-esg-deq 
+		 ([x] cxt-append/cons (DA x))
+		 ([x] cxt-append/cons (DA' x))
+		 DQ
+		 ([x][di] D2 x di y dy)
+		 ([x][di] D2' x di y dy)).
+
+%worlds (cn-block | ovar-block | can-mofkd-block) 
+(wkn-deq-esg-deq _ _ _ _ _).
+%total (D1) (wkn-deq-esg-deq _ _ _ D1 _).
+
+
+funct-esg-wf	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> eofkd G1 CC K
+		   -> ecn-deq G1 C CC K
+		   -> ({x:cn} isvar x I -> esg-wf (G x) (K' x))
+		   -> esg-deq G' (K' C) (K' CC)
+		   -> esg-deq G' (K' CC) (K' C)
+		   -> type.
+%mode funct-esg-wf +D1 +D2 +D3 +D4 +D4' +D4'' -D5 -D5.
+
+
+-	: funct-esg-wf DA DA' DC DCC DQ 
+	   ([x][di] esg-wf/sg/unit (DO x di))
+	   (esg-deq/sg/unit DO')
+	   (esg-deq/sg/unit DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-esg-wf DA DA' DC DCCz DQ 
+	   ([x][di] esg-wf/sg/cn (DCC x di))
+	   (esg-deq/sg/cn DCQ)
+	   (esg-deq/sg/cn (ecn-deq/sym DCQ))
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-esg-wf DA DA' DC DCCz DQ 
+	   ([x][di] esg-wf/sg/kd (DCC x di))
+	   (esg-deq/sg/kd DQ1)
+	   (esg-deq/sg/kd DQ2)
+	   <- funct-ekd-wf DA DA' DC DCCz DQ DCC DQ1 DQ2.
+
+-	: funct-esg-wf DA DA' DC DCC (DQ: ecn-deq _ C1 C2 _)
+	   ([x][di] esg-wf/sg/sgm (D1 x di) (D2 x di) (DFS x))
+	   (esg-deq/sg/sgm D1' D2' (DFS C1))
+	   (esg-deq/sg/sgm D1'' D2''w (DFS C2))
+	   <- funct-esg-wf DA DA' DC DCC DQ D1 D1' D1''
+	   <- ({y}{dy}{_: isvar-fun dy dy seq/loc/refl}
+		 funct-esg-wf
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA')
+		 DC DCC DQ
+		 ([x][di] D2 x di y dy)
+		 (D2' y dy) (D2'' y dy))
+	   <- ({x}{di} vdt/esg-wf (D1 x di) (DFS x) (D1c x di))
+	   <- funct-ekd-wf DA DA' DC DCC DQ D1c _ D1k''
+	   <- wkn-deq-esg-deq 
+	      ([x] cxt-append/nil) ([x] cxt-append/nil)
+	      D1k'' D2'' D2''w.
+
+
+-	: funct-esg-wf DA DA' DC DCC (DQ: ecn-deq _ C1 C2 _)
+	   ([x][di] esg-wf/sg/pi (D1 x di) (D2 x di) (DFS x))
+	   (esg-deq/sg/pi D1'' D2'w (DFS C2))
+	   (esg-deq/sg/pi D1' D2'' (DFS C1))
+	   <- funct-esg-wf DA DA' DC DCC DQ D1 D1' D1''
+	   <- ({y}{dy}{_: isvar-fun dy dy seq/loc/refl}
+		 funct-esg-wf
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA')
+		 DC DCC DQ
+		 ([x][di] D2 x di y dy)
+		 (D2' y dy) (D2'' y dy))
+	   <- ({x}{di} vdt/esg-wf (D1 x di) (DFS x) (D1c x di))
+	   <- funct-ekd-wf DA DA' DC DCC DQ D1c _ D1k''
+	   <- wkn-deq-esg-deq 
+	      ([x] cxt-append/nil) ([x] cxt-append/nil)
+	      D1k'' D2' D2'w.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) 
+(funct-esg-wf _ _ _ _ _ _ _ _).
+%total (D1) (funct-esg-wf _ _ _ _ _ D1 _ _).

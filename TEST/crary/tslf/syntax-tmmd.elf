@@ -1,0 +1,51 @@
+%%%% Syntax for terms and modules %%%%
+
+tm		: type.			%name tm E.
+md		: type.			%name md M.
+tm/unit		: tm.
+tm/pair		: tm -> tm -> tm.
+tm/pj1		: tm -> tm.
+tm/pj2		: tm -> tm.
+tm/fun		: cn -> cn -> (tm -> tm -> tm) -> tm.
+tm/tmapp	: tm -> tm -> tm.
+tm/cnabs	: kd -> (cn -> tm) -> tm.
+tm/cnapp	: tm -> cn -> tm.
+tm/term		: md -> tm.
+tm/loc		: loc -> tm.
+tm/ref		: tm -> tm.
+tm/set		: tm -> tm -> tm.
+tm/get		: tm -> tm.
+tm/inl		: cn -> tm -> tm.
+tm/inr		: cn -> tm -> tm.
+tm/case		: tm -> (tm -> tm) -> (tm -> tm) -> tm.
+tm/raise	: tm -> tm.
+tm/try		: tm -> (tm -> tm) -> tm.
+tm/new-tag	: cn -> tm.
+tm/tagloc	: loc -> tm.
+tm/tag		: tm -> tm -> tm.
+tm/iftag	: tm -> tm -> (tm -> tm) -> tm -> tm.
+tm/roll		: cn -> tm -> tm.
+tm/unroll	: tm -> tm.
+
+md/unit		: md.
+md/cn		: cn -> md.
+md/tm		: tm -> md.
+md/pair		: md -> md -> md. 
+md/pj1		: md -> md.
+md/pj2		: md -> md.
+md/lam		: sg -> (cn -> sg) -> (md -> cn -> md) -> md.
+md/app		: md -> md -> md.
+md/let		: md -> (md -> cn -> md) -> sg -> md.
+md/seal		: md -> sg -> md.
+
+
+
+seq/tm		: tm -> tm -> type.
+
+seq/tm/refl	: seq/tm E E.
+
+
+
+seq/md		: md -> md -> type.
+
+seq/md/refl	: seq/md M1 M1.

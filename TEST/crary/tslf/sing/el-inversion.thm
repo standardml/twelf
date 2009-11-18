@@ -1,0 +1,1334 @@
+
+epair-invert : eof (epair M N) (esigma A B) -> eof M A -> eof N (B M) -> type.
+%mode epair-invert +X1 -X2 -X3.
+
+-	: epair-invert
+	   (DeofMN : eof (epair EM EN) (esigma EA EB))
+	   (eof/equiv
+	      (tequiv/symm DequivA)
+	      (eof/subsume
+		 DsubtpCA
+		 DeofM))
+	   (eof/subsume
+	      (subtp/trans
+		 (subtp/reflex
+		    (tequiv/trans
+		       (tequiv/symm Dequiv)
+		       (tequiv/symm DequivBx)))
+		 DsubtpDB)
+	      DeofN)
+	   <- of-comp
+	      DeofMN
+	      (ttrans/sigma
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (trans/pair
+		 (DtransN : trans EN D)
+		 (DtransM : trans EM C))
+	      (subtype/sigma
+		 (DsubtypeDB : {x} subtype D (B' x) (N' x))
+		 (DsubB' : {x} tsub B (M' x) (B' x))
+		 (DsubtypeCA : subtype C A M'))
+	   <- sound-trans DtransM
+	      (DconvC : tconvert C EC)
+	      (DeofM : eof EM EC)
+	   <- sound-trans DtransN
+	      (DconvD : tconvert D ED)
+	      (DeofN : eof EN ED)
+	   <- sound-ttrans DtransA
+	      _
+	      (DconvA : tconvert A EA')
+	      (DequivA : tequiv EA EA')
+	   <- convert-subtype' DsubtypeCA DconvC DconvA
+	      (DsubtpCA : subtp EC EA')
+	   <- ({x} {d:vof x A} {ex} {xt} {ed:evof ex EA'} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> sound-ttrans (DtransB x d ex xt)
+		    (DewfB ex ed : ewf (EB ex))
+		    (DconvB x d ex xt : tconvert (B x) (EB' ex))
+		    (DequivB ex ed : tequiv (EB ex) (EB' ex)))
+	   <- trans-subtype DtransM DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] M))
+	      (DeqM : {x} term-eq (M' x) M)
+	   <- trans-reg DtransM
+	      (DwfC : wf C)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- subtype-reg' DsubtypeCA' DwfC DwfA
+	      (DofM : of M A)
+	   <- ({x} {d} {ex} {xt}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (DeqM x) tp-eq/i (DsubB' x)
+		 (DsubB'' x : tsub B M (B' x)))
+	   <- ({x} 
+		 tsub-fun (DsubB'' x) DsubBx
+		 (DeqB x : tp-eq (B' x) Bx))
+	   <- ({x}
+		 subtype-resp tp-eq/i (DeqB x) ([_] term-eq/i) (DsubtypeDB x)
+		 (DsubtypeDB' x : subtype D Bx (N' x)))
+	   <- can-convert DofM
+	      (DconvM : convert M A EM')
+	   <- convert-subtype-equiv DsubtypeCA' DconvC DconvA DconvM DeofM
+	      (DequivM : equiv EM EM' EA')
+	   <- convert-tsub DconvB DconvM DsubBx
+	      (DconvBx : tconvert Bx EBx)
+	      (DequivBx : tequiv (EB' EM') EBx)
+	   <- convert-subtype' (DsubtypeDB' aca) DconvD DconvBx
+	      (DsubtpDB : subtp ED EBx)
+	   <- tequiv-functionality DequivB DequivM
+	      (Dequiv : tequiv (EB EM) (EB' EM')).
+
+%worlds (scbind) (epair-invert _ _ _).
+%total {} (epair-invert _ _ _).
+
+
+
+elam-equiv-invert : equiv (elam A1 M1) (elam A2 M2) (epi A B)
+		     -> subtp A A1
+		     -> subtp A A2
+		     -> ({x} evof x A -> equiv (M1 x) (M2 x) (B x)) -> type.
+%mode elam-equiv-invert +X1 -X2 -X3 -X4.
+
+-	: elam-equiv-invert 
+	   (Dequiv : equiv (elam EA1 EM1) (elam EA2 EM2) (epi EA EB))
+	   (subtp/trans
+	      (subtp/reflex
+		 (tequiv/symm DequivA1))
+	      (subtp/trans
+		 Dsubtp1
+		 (subtp/reflex DequivA)))
+	   (subtp/trans
+	      (subtp/reflex
+		 (tequiv/symm DequivA2))
+	      (subtp/trans
+		 Dsubtp2
+		 (subtp/reflex DequivA)))
+	   Dequiv'
+	   <- equiv-comp Dequiv
+	      (ttrans/pi
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (trans/lam
+		 (DtransM1 : {x} vof x A1 -> {ex} vtrans ex x -> trans (EM1 ex) (C1 x))
+		 (DtransA1 : ttrans EA1 A1))
+	      (trans/lam
+		 (DtransM2 : {x} vof x A2 -> {ex} vtrans ex x -> trans (EM2 ex) (C2 x))
+		 (DtransA2 : ttrans EA2 A2))
+	      (Dsubtype1 : subtype (pi A1 C1) (pi A B) O')
+	      (Dsubtype2 : subtype (pi A2 C2) (pi A B) O')
+	   <- subtype-pi-invert Dsubtype1
+	      (DsubtypeA1 : subtype A A1 N1)
+	      (DsubC1x : {x} tsub C1 (N1 x) (C1x x))
+	      (DsubtypeC1' : {x} subtype (C1x x) (B x) (O1 x))
+	      (DeqO1 : {f} term-eq (O' f) (lam ([x] O1 x (app f (N1 x)))))
+	   <- subtype-pi-invert Dsubtype2
+	      (DsubtypeA2 : subtype A A2 N2)
+	      (DsubC2x : {x} tsub C2 (N2 x) (C2x x))
+	      (DsubtypeC2' : {x} subtype (C2x x) (B x) (O2 x))
+	      (DeqO2 : {f} term-eq (O' f) (lam ([x] O2 x (app f (N2 x)))))
+	   %% clean up bogus dependency
+	   <- ({x} {d} {ex} {xt}
+		 trans-principal (DtransM1 x d ex xt)
+		 (DprinC1 x : principal (C1 x)))
+	   <- ({x}
+		 principal-sub DprinC1 (DsubC1x x)
+		 (DprinC1x x : principal (C1x x)))
+	   <- ({x}
+		 principal-subtype (DprinC1x x) (DsubtypeC1' x)
+		 (DeqO1' x : {y} term-eq (O1 x y) (O x)))
+	   <- ({f}
+		 lam-resp ([x] DeqO1' x (app f (N1 x)))
+		 (DeqLam1 f : term-eq (lam ([x] O1 x (app f (N1 x)))) (lam O)))
+	   <- ({x} {d} {ex} {xt}
+		 trans-principal (DtransM2 x d ex xt)
+		 (DprinC2 x : principal (C2 x)))
+	   <- ({x}
+		 principal-sub DprinC2 (DsubC2x x)
+		 (DprinC2x x : principal (C2x x)))
+	   <- ({x}
+		 principal-subtype (DprinC2x x) (DsubtypeC2' x)
+		 (DeqO2' x : {y} term-eq (O2 x y) (O2' x)))
+	   <- ({f}
+		 lam-resp ([x] DeqO2' x (app f (N2 x)))
+		 (DeqLam2 f : term-eq (lam ([x] O2 x (app f (N2 x)))) (lam O2')))
+	   <- ({f} term-eq-trans (DeqO1 f) (DeqLam1 f) (DeqLam1' f))
+	   <- ({f} term-eq-trans (DeqO2 f) (DeqLam2 f) (DeqLam2' f))
+	   <- ({f} term-eq-symm (DeqLam2' f) (DeqLam2'' f))
+	   <- ({f} term-eq-trans (DeqLam2'' f) (DeqLam1' f)
+		 (DeqLam f : term-eq (lam O2') (lam O)))
+	   <- term-eq-cdr-lam (DeqLam aca)
+	      (DeqO2'' : {x} term-eq (O2' x) (O x))
+	   <- ({x} {y} term-eq-trans (DeqO2' x y) (DeqO2'' x) (DeqO2''' x y))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO1' x) (DsubtypeC1' x)
+		 (DsubtypeC1 x : subtype (C1x x) (B x) ([_] O x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO2''' x) (DsubtypeC2' x)
+		 (DsubtypeC2 x : subtype (C2x x) (B x) ([_] O x)))
+	   %% now get started
+	   <- sound-ttrans DtransA
+	      _
+	      (DconvA : tconvert A EA')
+	      (DequivA : tequiv EA EA')
+	   <- tequiv-reg DequivA
+	      (DwfEA : ewf EA)
+	      (DwfEA' : ewf EA')
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> sound-ttrans (DtransB x d ex xt)
+		    (DewfB ex ed)
+		    (DconvB x d ex xt : tconvert (B x) (EB' ex))
+		    (DequivB ex ed : tequiv (EB ex) (EB' ex)))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-reg DtransA1
+	      (DwfA1 : wf A1)
+	   <- subtype-reg DsubtypeA1 DwfA DwfA1
+	      (DofN1 : {x} vof x A -> of (N1 x) A1)
+	   <- ({x} {d:vof x A1} {ex} {xt}
+		 trans-reg (DtransM1 x d ex xt)
+		 (DwfC1 x d : wf (C1 x)))
+	   <- ({x} {d:vof x A}
+		 tsubst (DsubC1x x) DwfC1 (DofN1 x d)
+		 (DwfC1x x d : wf (C1x x)))
+	   <- ({x} {d:vof x A} {ex} {xt}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- ({x} {d:vof x A}
+		 subtype-reg' (DsubtypeC1 x) (DwfC1x x d) (DwfB x d)
+		 (DofO x d : of (O x) (B x)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> can-convert (DofO x d)
+		    (DconvO x d ex xt : convert (O x) (B x) (EO ex)))
+	   %% work out EM1
+	   <- sound-ttrans DtransA1
+	      _
+	      (DconvA1 : tconvert A1 EA1')
+	      (DequivA1 : tequiv EA1 EA1')
+	   <- convert-subtype DsubtypeA1 DconvA DconvA1
+	      (Dsubtp1 : subtp EA' EA1')
+	      (DconvN1 : {x} vof x A -> {ex} vtrans ex x -> convert (N1 x) A1 (EN1 ex))
+	      (DequivN1 : {ex} evof ex EA' -> equiv ex (EN1 ex) EA1')
+	   <- ({x} {d:vof x A1}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA1'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA1 ed
+		 -> sound-trans (DtransM1 x d ex xt)
+		    (DconvC1 x d ex xt : tconvert (C1 x) (EC1 ex))
+		    (DeofM1 ex ed : eof (EM1 ex) (EC1 ex)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> convert-tsub DconvC1 (DconvN1 x d ex xt) (DsubC1x x)
+		    (DconvC1x x d ex xt : tconvert (C1x x) (EC1x ex))
+		    (DequivC1x ex ed : tequiv (EC1 (EN1 ex)) (EC1x ex)))
+	   <- ({ex} {ed:evof ex EA1'}
+		 eof-reg (DeofM1 ex ed)
+		 (DewfC1 ex ed : ewf (EC1 ex)))
+	   <- ({ex} {ed:evof ex EA'}
+		 tfunctionality DewfC1 (DequivN1 ex ed)
+		 (DequivC1 ex ed : tequiv (EC1 ex) (EC1 (EN1 ex))))
+	   <- ({ex} {ed:evof ex EA'}
+		 esubst DeofM1 (eof/subsume Dsubtp1 (eof/var DwfEA' ed))
+		 (DeofM1' ex ed : eof (EM1 ex) (EC1 ex)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> convert-subtype-equiv (DsubtypeC1 x) 
+		    (DconvC1x x d ex xt) (DconvB x d ex xt) (DconvO x d ex xt)
+		    (eof/equiv (DequivC1x ex ed)
+		       (eof/equiv (DequivC1 ex ed)
+			  (DeofM1' ex ed))
+		       : eof (EM1 ex) (EC1x ex))
+		    (Dequiv1 ex ed : equiv (EM1 ex) (EO ex) (EB' ex)))
+	   %% work out EM2
+	   <- sound-ttrans DtransA2
+	      _
+	      (DconvA2 : tconvert A2 EA2')
+	      (DequivA2 : tequiv EA2 EA2')
+	   <- convert-subtype DsubtypeA2 DconvA DconvA2
+	      (Dsubtp2 : subtp EA' EA2')
+	      (DconvN2 : {x} vof x A -> {ex} vtrans ex x -> convert (N2 x) A2 (EN2 ex))
+	      (DequivN2 : {ex} evof ex EA' -> equiv ex (EN2 ex) EA2')
+	   <- ({x} {d:vof x A2}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA2'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA2 ed
+		 -> sound-trans (DtransM2 x d ex xt)
+		    (DconvC2 x d ex xt : tconvert (C2 x) (EC2 ex))
+		    (DeofM2 ex ed : eof (EM2 ex) (EC2 ex)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> convert-tsub DconvC2 (DconvN2 x d ex xt) (DsubC2x x)
+		    (DconvC2x x d ex xt : tconvert (C2x x) (EC2x ex))
+		    (DequivC2x ex ed : tequiv (EC2 (EN2 ex)) (EC2x ex)))
+	   <- ({ex} {ed:evof ex EA2'}
+		 eof-reg (DeofM2 ex ed)
+		 (DewfC2 ex ed : ewf (EC2 ex)))
+	   <- ({ex} {ed:evof ex EA'}
+		 tfunctionality DewfC2 (DequivN2 ex ed)
+		 (DequivC2 ex ed : tequiv (EC2 ex) (EC2 (EN2 ex))))
+	   <- ({ex} {ed:evof ex EA'}
+		 esubst DeofM2 (eof/subsume Dsubtp2 (eof/var DwfEA' ed))
+		 (DeofM2' ex ed : eof (EM2 ex) (EC2 ex)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA'} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvA ed
+		 -> convert-subtype-equiv (DsubtypeC2 x) 
+		    (DconvC2x x d ex xt) (DconvB x d ex xt) (DconvO x d ex xt)
+		    (eof/equiv (DequivC2x ex ed)
+		       (eof/equiv (DequivC2 ex ed)
+			  (DeofM2' ex ed))
+		       : eof (EM2 ex) (EC2x ex))
+		    (Dequiv2 ex ed : equiv (EM2 ex) (EO ex) (EB' ex)))
+	   %% wrap up
+	   <- ({ex'} {ed':evof ex' EA}
+		 esubst-equiv
+		 ([ex] [ed:evof ex EA']
+		    equiv/equiv
+		    (tequiv/symm (DequivB ex ed))
+		    (equiv/trans
+		       (equiv/symm (Dequiv2 ex ed))
+		       (Dequiv1 ex ed))
+		    : equiv (EM1 ex) (EM2 ex) (EB ex))
+		 (eof/equiv DequivA (eof/var DwfEA ed')
+		    : eof ex' EA')
+		 (Dequiv' ex' ed' : equiv (EM1 ex') (EM2 ex') (EB ex'))).
+		    
+%worlds (scbind) (elam-equiv-invert _ _ _ _).
+%total {} (elam-equiv-invert _ _ _ _).
+
+
+
+nullary-trans : kof K t
+		 -> trans (econst K) B
+		 -> subtype B t ([_] N)
+%%
+		 -> term-eq N (at (const K)) -> type.
+%mode nullary-trans +X1 +X2 +X3 -X4.
+
+-	: nullary-trans
+	   (Dkof : kof K t)
+	   (DtransK : trans (econst K) B)
+	   (DsubtypeB : subtype B t ([_] N))
+	   (Deq aca)
+	   <- trans-fun DtransK
+	      (trans/const
+		 self/t
+		 expand/t
+		 wf/t
+		 Dkof
+		 : trans (econst K) (sing (const K)))
+	      (Deq1 : tp-eq B (sing (const K)))
+	   <- subtype-resp Deq1 tp-eq/i ([_] term-eq/i) DsubtypeB
+	      (DsubtypeB' : subtype (sing (const K)) t ([_] N))
+	   <- subtype-fun DsubtypeB' subtype/sing_t
+	      (Deq : {x} term-eq N (at (const K))).
+
+%worlds (bind | tbind) (nullary-trans _ _ _ _).
+%total {} (nullary-trans _ _ _ _).
+
+
+
+trans-kof-invert : trans (econst K) _
+		    -> kof K A
+		    -> wf A -> type.
+%mode trans-kof-invert +X1 +X2 -X3.
+
+-	: trans-kof-invert (trans/const _ _ Dwf Dkof) Dkof' Dwf'
+	   <- kof-fun Dkof Dkof' Deq
+	   <- wf-resp Deq Dwf Dwf'.
+
+%worlds (bind | tbind) (trans-kof-invert _ _ _).
+%total {} (trans-kof-invert _ _ _).
+
+
+
+unary-trans : kof K (pi A ([_] t))
+	       -> trans (eapp (econst K) EM) B
+	       -> subtype B t ([_] N)
+%%
+	       -> trans EM C
+	       -> subtype C A ([_] M)
+	       -> term-eq N (at (app (const K) M)) -> type.
+%mode unary-trans +X1 +X2 +X3 -X4 -X5 -X6.
+
+-	: unary-trans
+	   (Dkof : kof K (pi A ([_] t)))
+	   (trans/app
+	      (DsubBx : tsub B M Bx)
+	      (DsubtypeCA' : subtype C A' ([_] M))
+	      (DtransM : trans EM C)
+	      (DtransK : trans (econst K) (pi A' B)))
+	   (DsubtypeBx : subtype Bx t ([_] N))
+%%
+	   DtransM
+	   DsubtypeCA
+	   (Deq aca)
+	   <- ({x}
+		 can-expand x A (X x)
+		 (DexpandX x : expand x A (X x)))
+	   <- trans-kof-invert DtransK Dkof 
+	      (wf/pi
+		 _
+		 (DwfA : wf A))
+	   <- trans-fun DtransK
+	      (trans/const
+		 (self/pi ([_] self/t)
+		    : self _ (pi A ([_] t))
+		       (pi A ([x] sing (app (const K) (X x)))))
+		 (expand/pi ([_] expand/t) DexpandX
+		    : expand (const K) (pi A ([_] t))
+		       (lam ([x] at (app (const K) (X x)))))
+		 (wf/pi ([_] [_] wf/t) DwfA)
+		 Dkof
+		 : trans (econst K) (pi A ([x] sing (app (const K) (X x)))))
+	      (Deq1 : tp-eq (pi A' B) (pi A ([x] sing (app (const K) (X x)))))
+	   <- tp-eq-cdr-pi Deq1
+	      (DeqA : tp-eq A' A)
+	      (DeqB : {x} tp-eq (B x) (sing (app (const K) (X x))))
+	   <- subtype-resp tp-eq/i DeqA ([_] term-eq/i) DsubtypeCA'
+	      (DsubtypeCA : subtype C A ([_] M))
+	   <- trans-reg DtransM
+	      (DwfC : wf C)
+	   <- subtype-reg' DsubtypeCA DwfC DwfA 
+	      (DofM : of M A)
+	   <- sub-into-expand-var DexpandX DofM
+	      (Dsub : sub X M M)
+	   <- ({x}
+		 tp-eq-symm (DeqB x)
+		 (DeqB' x : tp-eq (sing (app (const K) (X x))) (B x)))
+	   <- tsub-resp DeqB' term-eq/i tp-eq/i
+	      (tsub/singa (aasub/app Dsub aasub/closed)
+		 : tsub ([x] sing (app (const K) (X x))) M (sing (app (const K) M)))
+	      (DsubBx' : tsub B M (sing (app (const K) M)))
+	   <- tsub-fun DsubBx DsubBx'
+	      (DeqBx : tp-eq Bx (sing (app (const K) M)))
+	   <- subtype-resp DeqBx tp-eq/i ([_] term-eq/i) DsubtypeBx
+	      (DsubtypeBx' : subtype (sing (app (const K) M)) t ([_] N))
+	   <- subtype-fun DsubtypeBx' subtype/sing_t
+	      (Deq : {x} term-eq N (at (app (const K) M))).
+
+%worlds (bind | tbind) (unary-trans _ _ _ _ _ _).
+%total {} (unary-trans _ _ _ _ _ _).
+
+
+
+trans-forall-invert : trans (eforall EA) _ -> ttrans EA _ -> type.
+%mode trans-forall-invert +X1 -X2.
+
+-	: trans-forall-invert (trans/forall _ _ Dtrans) Dtrans.
+
+%worlds (bind | tbind) (trans-forall-invert _ _).
+%total {} (trans-forall-invert _ _).
+
+
+
+forall-trans : trans (eapp (eforall EA) EM) B
+		-> subtype B t ([_] N)
+%%
+		-> ttrans EA A
+		-> trans EM C
+		-> subtype C (pi A ([_] t)) ([_] M)
+		-> term-eq N (at (app (forall A) M)) -> type.
+%mode forall-trans +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: forall-trans 
+	   (trans/app
+	      (DsubCx : tsub C M Cx)
+	      (DsubtypeDB : subtype D B ([_] M))
+	      (DtransM : trans EM D)
+	      (DtransQ : trans (eforall EA) (pi B C)))
+	   (DsubtypeCx : subtype Cx t ([_] N))
+%%
+	   DtransA
+	   DtransM
+	   DsubtypeDB'
+	   (DeqN aca)
+	   <- trans-forall-invert DtransQ
+	      (DtransA : ttrans EA A)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM
+	      (DwfD : wf D)
+	   <- ({f}
+		 can-expand f (pi A ([_] t)) (F f)
+		 (DexpandF f : expand f (pi A ([_] t)) (F f)))
+	   <- trans-fun DtransQ
+	      (trans/forall
+		 (self/pi
+		    ([f] self/t)
+		    : self _ (pi (pi A ([_] t)) ([_] t))
+		       (pi (pi A ([_] t)) ([f] sing (app (forall A) (F f)))))
+		 (expand/pi
+		    ([_] expand/t)
+		    DexpandF
+		    : expand (forall A) (pi (pi A ([_] t)) ([_] t)) 
+		       (lam ([f] at (app (forall A) (F f)))))
+		 DtransA)
+	      (DeqQ : tp-eq (pi B C) (pi (pi A ([_] t)) ([f] sing (app (forall A) (F f)))))
+	      <- tp-eq-cdr-pi DeqQ
+		 (DeqB : tp-eq B (pi A ([_] t)))
+		 (DeqC : {f} tp-eq (C f) (sing (app (forall A) (F f))))
+	      <- subtype-resp tp-eq/i DeqB ([_] term-eq/i) DsubtypeDB
+		 (DsubtypeDB' : subtype D (pi A ([_] t)) ([_] M))
+	      <- tsub-resp DeqC term-eq/i tp-eq/i DsubCx
+		 (DsubCx' : tsub ([f] sing (app (forall A) (F f))) M Cx)
+	      <- subtype-reg' DsubtypeDB' DwfD (wf/pi ([_] [_] wf/t) DwfA)
+		 (DofM : of M (pi A ([_] t)))
+	      <- sub-into-expand-var DexpandF DofM
+		 (DsubF : sub F M M)
+	      <- tsub-fun DsubCx'
+		 (tsub/singa (aasub/app DsubF aasub/closed))
+		 (DeqCx : tp-eq Cx (sing (app (forall A) M)))
+	      <- subtype-resp DeqCx tp-eq/i ([_] term-eq/i) DsubtypeCx
+		 (DsubtypeCx' : subtype (sing (app (forall A) M)) t ([_] N))
+	      <- subtype-fun DsubtypeCx' subtype/sing_t
+		 (DeqN : {x} term-eq N (at (app (forall A) M))).
+
+%worlds (bind | tbind) (forall-trans _ _ _ _ _ _).
+%total {} (forall-trans _ _ _ _ _ _).
+
+
+
+binary-trans : kof K (pi A ([x] pi (B x) ([_] t)))
+		-> trans (eapp (eapp (econst K) EM) EN) C
+		-> subtype C t ([_] O)
+%%
+		-> trans EM D
+		-> subtype D A ([_] M)
+		-> tsub B M Bx
+		-> trans EN E
+		-> subtype E Bx ([_] N)
+		-> term-eq O (at (app (app (const K) M) N)) -> type.
+%mode binary-trans +X1 +X2 +X3 -X4 -X5 -X6 -X7 -X8 -X9.
+
+-	: binary-trans
+	   (Dkof : kof K (pi A ([x] pi (B x) ([_] t))))
+	   (trans/app
+	      (DsubCxy : tsub Cx N Cxy)
+	      (DsubtypeEB' : subtype E Bx' ([_] N))
+	      (DtransN : trans EN E)
+	      (trans/app
+		 (DsubBCx : tsub BC M (pi Bx' Cx))
+		 (DsubtypeDA' : subtype D A' ([_] M))
+		 (DtransM : trans EM D)
+		 (DtransK : trans (econst K) (pi A' BC))))
+	   (DsubtypeCxy : subtype Cxy t ([_] O))
+%%
+	   DtransM
+	   DsubtypeDA
+	   DsubBx
+	   DtransN
+	   DsubtypeEB
+	   (Deq aca)
+	   <- ({x} can-expand x A (X x)
+		 (DexpandX x : expand x A (X x)))
+	   <- ({x} {y} can-expand y (B x) (Y x y)
+		 (DexpandY x y : expand y (B x) (Y x y)))
+	   <- trans-kof-invert DtransK Dkof
+	      (wf/pi
+		 ([x] [d:vof x A] wf/pi
+		    _
+		    (DwfB x d : wf (B x)))
+		 (DwfA : wf A))
+	   <- trans-fun DtransK
+	      (trans/const
+		 (self/pi ([x] self/pi ([y] self/t))
+		    : self _
+		       (pi A ([x] pi (B x) ([y] t)))
+		       (pi A ([x] pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y))))))
+		 (expand/pi
+		    ([x] expand/pi
+		       ([y] expand/t)
+		       ([y] DexpandY x y))
+		    DexpandX
+		    : expand
+		       (const K) (pi A ([x] pi (B x) ([_] t)))
+		       (lam ([x] lam ([y] at (app (app (const K) (X x)) (Y x y))))))
+		 (wf/pi ([x] [d] wf/pi ([_] [_] wf/t) (DwfB x d)) DwfA)
+		 Dkof
+		 : trans 
+		    (econst K)
+		    (pi A ([x] pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y))))))
+	      (Deq1 : tp-eq 
+		       (pi A' BC)
+		       (pi A ([x] pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y))))))
+	   <- tp-eq-cdr-pi Deq1
+	      (DeqA : tp-eq A' A)
+	      (DeqBC : {x} tp-eq (BC x) (pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y)))))
+	   <- subtype-resp tp-eq/i DeqA ([_] term-eq/i) DsubtypeDA'
+	      (DsubtypeDA : subtype D A ([_] M))
+	   <- trans-reg DtransM
+	      (DwfD : wf D)
+	   <- subtype-reg' DsubtypeDA DwfD DwfA
+	      (DofM : of M A)
+	   <- sub-into-expand-var DexpandX DofM
+	      (DsubX : sub X M M)
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ({y} can-expand y Bx (Y' y)
+		 (DexpandY' y : expand y Bx (Y' y)))
+	   <- expand-aasub1 DofM ([x] [d] [y] [e] aof/var (DwfB x d) e)
+	      DexpandY ([y] aasub/closed) ([_] DsubBx) DexpandY'
+	      (DsubY : {y} sub ([x] Y x y) M (Y' y))
+	   <- ({x} tp-eq-symm (DeqBC x)
+		 (DeqBC' x : tp-eq (pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y)))) (BC x)))
+	   <- tsub-resp DeqBC' term-eq/i tp-eq/i
+	      (tsub/pi
+		 ([y] 
+		    tsub/singa
+		    (aasub/app
+		       (DsubY y)
+		       (aasub/app
+			  DsubX
+			  aasub/closed)))
+		 DsubBx
+		 : tsub 
+		    ([x] pi (B x) ([y] sing (app (app (const K) (X x)) (Y x y))))
+		    M
+		    (pi Bx ([y] sing (app (app (const K) M) (Y' y)))))
+	      (DsubBCx' : tsub BC M (pi Bx ([y] sing (app (app (const K) M) (Y' y)))))
+	   <- tsub-fun DsubBCx DsubBCx'
+	      (Deq2 : tp-eq (pi Bx' Cx) (pi Bx ([y] sing (app (app (const K) M) (Y' y)))))
+	   <- tp-eq-cdr-pi Deq2
+	      (DeqBx : tp-eq Bx' Bx)
+	      (DeqCx : {y} tp-eq (Cx y) (sing (app (app (const K) M) (Y' y))))
+	   <- subtype-resp tp-eq/i DeqBx ([_] term-eq/i) DsubtypeEB'
+	      (DsubtypeEB : subtype E Bx ([_] N))
+	   <- trans-reg DtransN
+	      (DwfE : wf E)
+	   <- tsubst DsubBx DwfB DofM
+	      (DwfBx : wf Bx)
+	   <- subtype-reg' DsubtypeEB DwfE DwfBx
+	      (DofN : of N Bx)
+	   <- sub-into-expand-var DexpandY' DofN
+	      (DsubY' : sub Y' N N)
+	   <- ({y}
+		 tp-eq-symm (DeqCx y)
+		 (DeqCx' y : tp-eq (sing (app (app (const K) M) (Y' y))) (Cx y)))
+	   <- sub-absent M N
+	      (DsubMabs : sub ([_] M) N M)
+	   <- tsub-resp DeqCx' term-eq/i tp-eq/i
+	      (tsub/singa (aasub/app DsubY' (aasub/app DsubMabs aasub/closed))
+		 : tsub ([y] sing (app (app (const K) M) (Y' y))) N
+		    (sing (app (app (const K) M) N)))
+	      (DsubCxy' : tsub Cx N (sing (app (app (const K) M) N)))
+	   <- tsub-fun DsubCxy DsubCxy'
+	      (DeqCxy : tp-eq Cxy (sing (app (app (const K) M) N)))
+	   <- subtype-resp DeqCxy tp-eq/i ([_] term-eq/i) DsubtypeCxy
+	      (DsubtypeCxy' : subtype (sing (app (app (const K) M) N)) t ([_] O))
+	   <- subtype-fun DsubtypeCxy' subtype/sing_t
+	      (Deq : {x} term-eq O (at (app (app (const K) M) N))).
+
+%worlds (bind | tbind) (binary-trans _ _ _ _ _ _ _ _ _).
+%total {} (binary-trans _ _ _ _ _ _ _ _ _).
+
+
+
+eof-const-invert : ekof K A -> eof (econst K) _ -> ewf A -> type.
+%mode eof-const-invert +X1 +X2 -X3.
+
+-	: eof-const-invert Dkof Dof Dwf'
+	   <- check-eof-comp Dof
+	      (check-eof/i _ _
+		 (canonize/const _ Dkof'))
+	   <- ekof-reg Dkof' Dwf
+	   <- ekof-fun Dkof' Dkof Deq
+	   <- ewf-resp Deq Dwf Dwf'.
+
+%worlds (scbind) (eof-const-invert _ _ _).
+%total {} (eof-const-invert _ _ _).
+
+
+
+eof-app-subterms : eof (eapp M N) _ -> eof M _ -> eof N _ -> type.
+%mode eof-app-subterms +X1 -X2 -X3.
+
+-	: eof-app-subterms Dof DofM DofN
+	   <- check-eof-comp Dof
+	      (check-eof/i _ _
+		 (canonize/app _ _ DcanonN DcanonM))
+	   <- canonize-sound DcanonM DofM
+	   <- canonize-sound DcanonN DofN.
+
+%worlds (scbind) (eof-app-subterms _ _ _).
+%total {} (eof-app-subterms _ _ _).
+
+
+
+unary-equiv-inversion : ekof C (epi A ([_] et))
+			 -> equiv (eapp (econst C) M1) (eapp (econst C) M2) et
+			 -> equiv M1 M2 A -> type.
+%mode unary-equiv-inversion +X1 +X2 -X3.
+
+-	: unary-equiv-inversion
+	   (Dekof : ekof K (epi EA ([_] et)))
+	   (DequivApp : equiv (eapp (econst K) EM1) (eapp (econst K) EM2) et)
+	   DequivM
+	   <- equiv-reg DequivApp DofApp _ _
+	   <- eof-app-subterms DofApp DofConst _
+	   <- eof-const-invert Dekof DofConst
+	      (ewf/pi
+		 _
+		 (DewfA : ewf EA))
+	   <- wf-comp DewfA
+	      (DtransA : ttrans EA A)
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (econst K) EM1) B1)
+	      (DtransApp2 : trans (eapp (econst K) EM2) B2)
+	      (DsubtypeB1 : subtype B1 t ([_] N))
+	      (DsubtypeB2 : subtype B2 t ([_] N))
+	   <- kof-comp Dekof
+	      (ttrans/pi
+		 ([_] [_] [_] [_] ttrans/t)
+		 (DtransA : ttrans EA A))
+	      (Dkof : kof K (pi A ([_] t)))
+	   <- unary-trans Dkof DtransApp1 DsubtypeB1
+	      (DtransM1 : trans EM1 C1)
+	      (DsubtypeC1 : subtype C1 A ([_] M1))
+	      (DeqN1 : term-eq N (at (app (const K) M1)))
+	   <- unary-trans Dkof DtransApp2 DsubtypeB2
+	      (DtransM2 : trans EM2 C2)
+	      (DsubtypeC2 : subtype C2 A ([_] M2))
+	      (DeqN2 : term-eq N (at (app (const K) M2)))
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2
+	      (Deq : term-eq (at (app (const K) M1)) (at (app (const K) M2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (app (const K) M1) (app (const K) M2))
+	   <- atom-eq-cdr-app Deq'
+	      _
+	      (DeqM : term-eq M1 M2)
+	   <- subtype-resp tp-eq/i tp-eq/i ([_] DeqM) DsubtypeC1
+	      (DsubtypeC1' : subtype C1 A ([_] M2))
+	   <- il-soundness DtransM1 DtransM2 DtransA DsubtypeC1' DsubtypeC2
+	      (DequivM : equiv EM1 EM2 EA).
+
+%worlds (scbind) (unary-equiv-inversion _ _ _).
+%total {} (unary-equiv-inversion _ _ _).
+
+
+
+binary-equiv-inversion : ekof C (epi A ([x] epi (B x) ([_] et)))
+		    -> equiv (eapp (eapp (econst C) M1) N1) (eapp (eapp (econst C) M2) N2) et
+%%
+		    -> equiv M1 M2 A
+		    -> equiv N1 N2 (B M1) -> type.
+%mode binary-equiv-inversion +X1 +X2 -X3 -X4.
+
+-	: binary-equiv-inversion
+	   (Dekof : ekof K (epi EA ([ex] epi (EB ex) ([_] et))))
+	   (DequivApp : equiv (eapp (eapp (econst K) EM1) EN1) (eapp (eapp (econst K) EM2) EN2) et)
+	   DequivM
+	   DequivN
+	   <- equiv-reg DequivApp DofApp _ _
+	   <- eof-app-subterms DofApp DofApp' _
+	   <- eof-app-subterms DofApp' DofConst _
+	   <- eof-const-invert Dekof DofConst
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB ex ed : ewf (EB ex)))
+		 (DewfA : ewf EA))
+	   <- wf-comp DewfA
+	      (DtransA : ttrans EA A)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (eapp (econst K) EM1) EN1) C1)
+	      (DtransApp2 : trans (eapp (eapp (econst K) EM2) EN2) C2)
+	      (DsubtypeC1 : subtype C1 t ([_] O))
+	      (DsubtypeC2 : subtype C2 t ([_] O))
+	   <- kof-comp Dekof
+	      (ttrans/pi
+		 ([x] [d:vof x A] [ex] [xt]
+		    ttrans/pi
+		    ([_] [_] [_] [_] ttrans/t)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+		 (DtransA : ttrans EA A))
+	      (Dkof : kof K (pi A ([x] pi (B x) ([y] t))))
+	   <- binary-trans Dkof DtransApp1 DsubtypeC1
+	      (DtransM1 : trans EM1 D1)
+	      (DsubtypeD1 : subtype D1 A ([_] M1))
+	      (DsubBx1 : tsub B M1 Bx1)
+	      (DtransN1 : trans EN1 E1)
+	      (DsubtypeE1 : subtype E1 Bx1 ([_] N1))
+	      (DeqO1 : term-eq O (at (app (app (const K) M1) N1)))
+	   <- binary-trans Dkof DtransApp2 DsubtypeC2
+	      (DtransM2 : trans EM2 D2)
+	      (DsubtypeD2 : subtype D2 A ([_] M2))
+	      (DsubBx2 : tsub B M2 Bx2)
+	      (DtransN2 : trans EN2 E2)
+	      (DsubtypeE2 : subtype E2 Bx2 ([_] N2))
+	      (DeqO2 : term-eq O (at (app (app (const K) M2) N2)))
+	   <- term-eq-symm DeqO1 DeqO1'
+	   <- term-eq-trans DeqO1' DeqO2
+	      (Deq : term-eq (at (app (app (const K) M1) N1)) (at (app (app (const K) M2) N2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (app (app (const K) M1) N1) (app (app (const K) M2) N2))
+	   <- atom-eq-cdr-app Deq'
+	      (Deq'' : atom-eq (app (const K) M1) (app (const K) M2))
+	      (DeqN : term-eq N1 N2)
+	   <- atom-eq-cdr-app Deq''
+	      _
+	      (DeqM : term-eq M1 M2)
+	   <- subtype-resp tp-eq/i tp-eq/i ([_] DeqM) DsubtypeD1
+	      (DsubtypeD1' : subtype D1 A ([_] M2))
+	   <- il-soundness DtransM1 DtransM2 DtransA DsubtypeD1' DsubtypeD2
+	      (DequivM : equiv EM1 EM2 EA)
+	   <- tsub-resp ([_] tp-eq/i) DeqM tp-eq/i DsubBx1
+	      (DsubBx1' : tsub B M2 Bx1)
+	   <- tsub-fun DsubBx1' DsubBx2
+	      (DeqBx : tp-eq Bx1 Bx2)
+	   <- subtype-resp tp-eq/i DeqBx ([_] DeqN) DsubtypeE1
+	      (DsubtypeE1' : subtype E1 Bx2 ([_] N2))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-sub DtransB DtransM1 DwfA DsubtypeD1 DsubBx1
+	      (DtransBx : ttrans (EB EM1) Bx1)
+	   <- ttrans-resp etp-eq/i DeqBx DtransBx
+	      (DtransBx' : ttrans (EB EM1) Bx2)
+	   <- il-soundness DtransN1 DtransN2 DtransBx' DsubtypeE1' DsubtypeE2
+	      (DequivN : equiv EN1 EN2 (EB EM1)).
+
+%worlds (scbind) (binary-equiv-inversion _ _ _ _).
+%total {} (binary-equiv-inversion _ _ _ _).
+
+
+
+eof-forall-invert : eof (eforall A) _ -> ewf A -> type.
+%mode eof-forall-invert +X1 -X2.
+
+-	: eof-forall-invert Dof Dwf
+	   <- check-eof-comp Dof
+	      (check-eof/i _ _
+		 (canonize/forall _ Dcanon))
+	   <- tcanonize-sound Dcanon Dequiv
+	   <- tequiv-reg Dequiv Dwf _.
+
+%worlds (scbind) (eof-forall-invert _ _).
+%total {} (eof-forall-invert _ _).
+
+
+
+forall-equiv-inversion : equiv (eapp (eforall A1) M1) (eapp (eforall A2) M2) et
+			  -> tequiv A1 A2
+			  -> equiv M1 M2 (epi A1 ([_] et)) -> type.
+%mode forall-equiv-inversion +X1 -X2 -X3.
+
+-	: forall-equiv-inversion
+	   (DequivApp : equiv (eapp (eforall EA1) EM1) (eapp (eforall EA2) EM2) et)
+	   DequivA
+	   DequivM
+	   <- equiv-reg DequivApp DofApp _ _
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (eforall EA1) EM1) B1)
+	      (DtransApp2 : trans (eapp (eforall EA2) EM2) B2)
+	      (DsubtypeB1 : subtype B1 t ([_] N))
+	      (DsubtypeB2 : subtype B2 t ([_] N))
+	   <- forall-trans DtransApp1 DsubtypeB1
+	      (DtransA1 : ttrans EA1 A1)
+	      (DtransM1 : trans EM1 C1)
+	      (DsubtypeC1 : subtype C1 (pi A1 [_] t) ([_] M1))
+	      (DeqN1 : term-eq N (at (app (forall A1) M1)))
+	   <- forall-trans DtransApp2 DsubtypeB2
+	      (DtransA2 : ttrans EA2 A2)
+	      (DtransM2 : trans EM2 C2)
+	      (DsubtypeC2 : subtype C2 (pi A2 [_] t) ([_] M2))
+	      (DeqN2 : term-eq N (at (app (forall A2) M2)))
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2
+	      (Deq : term-eq (at (app (forall A1) M1)) (at (app (forall A2) M2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (app (forall A1) M1) (app (forall A2) M2))
+	   <- atom-eq-cdr-app Deq'
+	      (DeqQ : atom-eq (forall A1) (forall A2))
+	      (DeqM : term-eq M1 M2)
+	   <- atom-eq-cdr-forall DeqQ
+	      (DeqA : tp-eq A1 A2)
+	   <- term-eq-symm DeqM DeqM'
+	   <- tp-eq-symm DeqA DeqA'
+	   <- tp-resp-tp ([a] pi a [_] t) DeqA' DeqA''
+	   <- subtype-resp tp-eq/i DeqA'' ([_] DeqM') DsubtypeC2
+	      (DsubtypeC2' : subtype C2 (pi A1 [_] t) ([_] M1))
+	   <- il-soundness DtransM1 DtransM2 (ttrans/pi ([_] [_] [_] [_] ttrans/t) DtransA1) DsubtypeC1 DsubtypeC2'
+	      (DequivM : equiv EM1 EM2 (epi EA1 [_] et))
+	   <- ttrans-resp etp-eq/i DeqA DtransA1
+	      (DtransA1' : ttrans EA1 A2)
+	   <- il-soundness-tp DtransA1' DtransA2
+	      (DequivA : tequiv EA1 EA2).
+
+%worlds (scbind) (forall-equiv-inversion _ _ _).
+%total {} (forall-equiv-inversion _ _ _).
+
+
+
+nullary-equiv-head : ekof C et
+		      -> ekof C' et
+		      -> equiv (econst C) (econst C') et
+%%
+		      -> constant-eq C C' -> type.
+%mode nullary-equiv-head +X1 +X2 +X3 -X4.
+
+-	: nullary-equiv-head
+	   (Dekof1 : ekof K1 et)
+	   (Dekof2 : ekof K2 et)
+	   (DequivApp : equiv (econst K1) (econst K2) et)
+	   DeqK
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (econst K1) B1)
+	      (DtransApp2 : trans (econst K2) B2)
+	      (DsubtypeB1 : subtype B1 t ([_] N))
+	      (DsubtypeB2 : subtype B2 t ([_] N))
+	   <- kof-comp Dekof1
+	      ttrans/t
+	      (Dkof1 : kof K1 t)
+	   <- kof-comp Dekof2
+	      ttrans/t
+	      (Dkof2 : kof K2 t)
+	   <- nullary-trans Dkof1 DtransApp1 DsubtypeB1
+	      (DeqN1 : term-eq N (at (const K1)))
+	   <- nullary-trans Dkof2 DtransApp2 DsubtypeB2
+	      (DeqN2 : term-eq N (at (const K2)))
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2
+	      (Deq : term-eq (at (const K1)) (at (const K2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (const K1) (const K2))
+	   <- atom-eq-cdr-const Deq'
+	      (DeqK : constant-eq K1 K2).
+
+%worlds (scbind) (nullary-equiv-head _ _ _ _).
+%total {} (nullary-equiv-head _ _ _ _).
+
+
+
+unary-equiv-head : ekof C (epi A ([_] et))
+		    -> ekof C' (epi A' ([_] et))
+		    -> equiv (eapp (econst C) M) (eapp (econst C') M') et
+%%
+		    -> constant-eq C C' -> type.
+%mode unary-equiv-head +X1 +X2 +X3 -X4.
+
+-	: unary-equiv-head
+	   (Dekof1 : ekof K1 (epi EA1 ([_] et)))
+	   (Dekof2 : ekof K2 (epi EA2 ([_] et)))
+	   (DequivApp : equiv (eapp (econst K1) EM1) (eapp (econst K2) EM2) et)
+	   DeqK
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp1 DofConst1 _
+	   <- eof-const-invert Dekof1 DofConst1
+	      (ewf/pi
+		 _
+		 (DewfA1 : ewf EA1))
+	   <- wf-comp DewfA1
+	      (DtransA1 : ttrans EA1 A1)
+	   <- eof-app-subterms DofApp2 DofConst2 _
+	   <- eof-const-invert Dekof2 DofConst2
+	      (ewf/pi
+		 _
+		 (DewfA2 : ewf EA2))
+	   <- wf-comp DewfA2
+	      (DtransA2 : ttrans EA2 A2)
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (econst K1) EM1) B1)
+	      (DtransApp2 : trans (eapp (econst K2) EM2) B2)
+	      (DsubtypeB1 : subtype B1 t ([_] N))
+	      (DsubtypeB2 : subtype B2 t ([_] N))
+	   <- kof-comp Dekof1
+	      (ttrans/pi
+		 ([_] [_] [_] [_] ttrans/t)
+		 (DtransA1 : ttrans EA1 A1))
+	      (Dkof1 : kof K1 (pi A1 ([_] t)))
+	   <- kof-comp Dekof2
+	      (ttrans/pi
+		 ([_] [_] [_] [_] ttrans/t)
+		 (DtransA2 : ttrans EA2 A2))
+	      (Dkof2 : kof K2 (pi A2 ([_] t)))
+	   <- unary-trans Dkof1 DtransApp1 DsubtypeB1
+	      _ _
+	      (DeqN1 : term-eq N (at (app (const K1) M1)))
+	   <- unary-trans Dkof2 DtransApp2 DsubtypeB2
+	      _ _
+	      (DeqN2 : term-eq N (at (app (const K2) M2)))
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2
+	      (Deq : term-eq (at (app (const K1) M1)) (at (app (const K2) M2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (app (const K1) M1) (app (const K2) M2))
+	   <- atom-eq-cdr-app Deq'
+	      (Deq'' : atom-eq (const K1) (const K2))
+	      _
+	   <- atom-eq-cdr-const Deq''
+	      (DeqK : constant-eq K1 K2).
+
+%worlds (scbind) (unary-equiv-head _ _ _ _).
+%total {} (unary-equiv-head _ _ _ _).
+
+
+
+binary-equiv-head : ekof C (epi A ([x] epi (B x) ([_] et)))
+		     -> ekof C' (epi A' ([x] epi (B' x) ([_] et)))
+		     -> equiv (eapp (eapp (econst C) M) N) (eapp (eapp (econst C') M') N') et
+%%
+		     -> constant-eq C C' -> type.
+%mode binary-equiv-head +X1 +X2 +X3 -X4.
+
+-	: binary-equiv-head 
+	   (Dekof1 : ekof K1 (epi EA1 ([ex] epi (EB1 ex) ([_] et))))
+	   (Dekof2 : ekof K2 (epi EA2 ([ex] epi (EB2 ex) ([_] et))))
+	   (DequivApp : equiv (eapp (eapp (econst K1) EM1) EN1) (eapp (eapp (econst K2) EM2) EN2) et)
+	   DeqK
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp1 DofApp1' _
+	   <- eof-app-subterms DofApp1' DofConst1 _
+	   <- eof-const-invert Dekof1 DofConst1
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB1 ex ed : ewf (EB1 ex)))
+		 (DewfA1 : ewf EA1))
+	   <- wf-comp DewfA1
+	      (DtransA1 : ttrans EA1 A1)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA1 xt d
+		 -> wf-comp (DewfB1 ex ed)
+		    (DtransB1 x d ex xt : ttrans (EB1 ex) (B1 x)))
+	   <- eof-app-subterms DofApp2 DofApp2' _
+	   <- eof-app-subterms DofApp2' DofConst2 _
+	   <- eof-const-invert Dekof2 DofConst2
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB2 ex ed : ewf (EB2 ex)))
+		 (DewfA2 : ewf EA2))
+	   <- wf-comp DewfA2
+	      (DtransA2 : ttrans EA2 A2)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA2 xt d
+		 -> wf-comp (DewfB2 ex ed)
+		    (DtransB2 x d ex xt : ttrans (EB2 ex) (B2 x)))
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (eapp (econst K1) EM1) EN1) C1)
+	      (DtransApp2 : trans (eapp (eapp (econst K2) EM2) EN2) C2)
+	      (DsubtypeC1 : subtype C1 t ([_] O))
+	      (DsubtypeC2 : subtype C2 t ([_] O))
+	   <- kof-comp Dekof1
+	      (ttrans/pi
+		 ([x] [d:vof x A1] [ex] [xt]
+		    ttrans/pi
+		    ([_] [_] [_] [_] ttrans/t)
+		    (DtransB1 x d ex xt : ttrans (EB1 ex) (B1 x)))
+		 (DtransA1 : ttrans EA1 A1))
+	      (Dkof1 : kof K1 (pi A1 ([x] pi (B1 x) ([y] t))))
+	   <- kof-comp Dekof2
+	      (ttrans/pi
+		 ([x] [d:vof x A2] [ex] [xt]
+		    ttrans/pi
+		    ([_] [_] [_] [_] ttrans/t)
+		    (DtransB2 x d ex xt : ttrans (EB2 ex) (B2 x)))
+		 (DtransA2 : ttrans EA2 A2))
+	      (Dkof2 : kof K2 (pi A2 ([x] pi (B2 x) ([y] t))))
+	   <- binary-trans Dkof1 DtransApp1 DsubtypeC1
+	      _ _ _ _ _
+	      (DeqO1 : term-eq O (at (app (app (const K1) M1) N1)))
+	   <- binary-trans Dkof2 DtransApp2 DsubtypeC2
+	      _ _ _ _ _
+	      (DeqO2 : term-eq O (at (app (app (const K2) M2) N2)))
+	   <- term-eq-symm DeqO1 DeqO1'
+	   <- term-eq-trans DeqO1' DeqO2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- atom-eq-cdr-app Deq' Deq'' _
+	   <- atom-eq-cdr-app Deq'' Deq''' _
+	   <- atom-eq-cdr-const Deq''' DeqK.
+
+%worlds (scbind) (binary-equiv-head _ _ _ _).
+%total {} (binary-equiv-head _ _ _ _).
+
+
+
+eq-const-app-contra : atom-eq (const _) (app _ _) -> false -> type.
+%mode eq-const-app-contra +X1 -X2.
+%worlds (scbind) (eq-const-app-contra _ _).
+%total {} (eq-const-app-contra _ _).
+
+
+
+nullary-unary-equiv : ekof C et
+		       -> ekof C' (epi A' ([_] et))
+		       -> equiv (econst C) (eapp (econst C') M') et
+		       -> false -> type.
+%mode nullary-unary-equiv +X1 +X2 +X3 -X4.
+
+-	: nullary-unary-equiv Dekof1 Dekof2 DequivApp D
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp2 DofConst2 _
+	   <- eof-const-invert Dekof2 DofConst2
+	      (ewf/pi
+		 _
+		 (DewfA2 : ewf EA2))
+	   <- wf-comp DewfA2
+	      (DtransA2 : ttrans EA2 A2)
+	   <- equiv-comp' DequivApp
+	      ttrans/t DtransApp1 DtransApp2 Dsubtype1 Dsubtype2
+	   <- kof-comp Dekof1 ttrans/t Dkof1
+	   <- kof-comp Dekof2 (ttrans/pi ([_] [_] [_] [_] ttrans/t) DtransA2) Dkof2
+	   <- nullary-trans Dkof1 DtransApp1 Dsubtype1 DeqN1
+	   <- unary-trans Dkof2 DtransApp2 Dsubtype2
+	      _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- eq-const-app-contra Deq' D.
+
+%worlds (scbind) (nullary-unary-equiv _ _ _ _).
+%total {} (nullary-unary-equiv _ _ _ _).
+
+
+
+nullary-binary-equiv : ekof C et
+			-> ekof C' (epi A' ([x] epi (B' x) ([_] et)))
+			-> equiv (econst C) (eapp (eapp (econst C') M') N') et
+			-> false -> type.
+%mode nullary-binary-equiv +X1 +X2 +X3 -X4.
+
+-	: nullary-binary-equiv Dekof1 Dekof2 DequivApp D
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp2 DofApp2' _
+	   <- eof-app-subterms DofApp2' DofConst2 _
+	   <- eof-const-invert Dekof2 DofConst2
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB2 ex ed : ewf (EB2 ex)))
+		 (DewfA2 : ewf EA2))
+	   <- wf-comp DewfA2
+	      (DtransA2 : ttrans EA2 A2)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA2 xt d
+		 -> wf-comp (DewfB2 ex ed)
+		    (DtransB2 x d ex xt : ttrans (EB2 ex) (B2 x)))
+	   <- equiv-comp' DequivApp
+	      ttrans/t DtransApp1 DtransApp2 Dsubtype1 Dsubtype2
+	   <- kof-comp Dekof1 ttrans/t Dkof1
+	   <- kof-comp Dekof2 (ttrans/pi ([x] [d] [ex] [xt] ttrans/pi ([_] [_] [_] [_] ttrans/t) (DtransB2 x d ex xt)) DtransA2) Dkof2
+	   <- nullary-trans Dkof1 DtransApp1 Dsubtype1 DeqN1
+	   <- binary-trans Dkof2 DtransApp2 Dsubtype2
+	      _ _ _ _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- eq-const-app-contra Deq' D.
+
+%worlds (scbind) (nullary-binary-equiv _ _ _ _).
+%total {} (nullary-binary-equiv _ _ _ _).
+
+
+
+unary-binary-equiv : ekof C (epi A ([_] et))
+		      -> ekof C' (epi A' ([x] epi (B' x) ([_] et)))
+		      -> equiv (eapp (econst C) M) (eapp (eapp (econst C') M') N') et
+		      -> false -> type.
+%mode unary-binary-equiv +X1 +X2 +X3 -X4.
+
+-	: unary-binary-equiv Dekof1 Dekof2 DequivApp D
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp1 DofConst1 _
+	   <- eof-const-invert Dekof1 DofConst1
+	      (ewf/pi
+		 _
+		 (DewfA1 : ewf EA1))
+	   <- wf-comp DewfA1
+	      (DtransA1 : ttrans EA1 A1)
+	   <- eof-app-subterms DofApp2 DofApp2' _
+	   <- eof-app-subterms DofApp2' DofConst2 _
+	   <- eof-const-invert Dekof2 DofConst2
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB2 ex ed : ewf (EB2 ex)))
+		 (DewfA2 : ewf EA2))
+	   <- wf-comp DewfA2
+	      (DtransA2 : ttrans EA2 A2)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA2 xt d
+		 -> wf-comp (DewfB2 ex ed)
+		    (DtransB2 x d ex xt : ttrans (EB2 ex) (B2 x)))
+	   <- equiv-comp' DequivApp
+	      ttrans/t DtransApp1 DtransApp2 Dsubtype1 Dsubtype2
+	   <- kof-comp Dekof1 (ttrans/pi ([_] [_] [_] [_] ttrans/t) DtransA1) Dkof1
+	   <- kof-comp Dekof2 (ttrans/pi ([x] [d] [ex] [xt] ttrans/pi ([_] [_] [_] [_] ttrans/t) (DtransB2 x d ex xt)) DtransA2) Dkof2
+	   <- unary-trans Dkof1 DtransApp1 Dsubtype1 _ _ DeqN1
+	   <- binary-trans Dkof2 DtransApp2 Dsubtype2
+	      _ _ _ _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- atom-eq-cdr-app Deq' Deq'' _
+	   <- eq-const-app-contra Deq'' D.
+
+%worlds (scbind) (unary-binary-equiv _ _ _ _).
+%total {} (unary-binary-equiv _ _ _ _).
+
+
+
+nullary-forall-equiv : ekof C et
+		       -> equiv (econst C) (eapp (eforall A) M') et
+		       -> false -> type.
+%mode nullary-forall-equiv +X1 +X2 -X3.
+
+-	: nullary-forall-equiv Dekof1 DequivApp D
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp2 DofConst2 _
+	   <- equiv-comp' DequivApp
+	      ttrans/t DtransApp1 DtransApp2 Dsubtype1 Dsubtype2
+	   <- kof-comp Dekof1 ttrans/t Dkof1
+	   <- nullary-trans Dkof1 DtransApp1 Dsubtype1 DeqN1
+	   <- forall-trans DtransApp2 Dsubtype2
+	      _ _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- eq-const-app-contra Deq' D.
+
+%worlds (scbind) (nullary-forall-equiv _ _ _).
+%total {} (nullary-forall-equiv _ _ _).
+
+
+
+eq-const-forall-contra : atom-eq (const _) (forall _) -> false -> type.
+%mode eq-const-forall-contra +X1 -X2.
+%worlds (scbind) (eq-const-forall-contra _ _).
+%total {} (eq-const-forall-contra _ _).
+
+
+
+unary-forall-equiv : ekof C (epi A ([_] et))
+		    -> equiv (eapp (econst C) M) (eapp (eforall B) M') et
+%%
+		    -> false -> type.
+%mode unary-forall-equiv +X1 +X2 -X3.
+
+-	: unary-forall-equiv
+	   (Dekof1 : ekof K1 (epi EA1 ([_] et)))
+	   (DequivApp : equiv (eapp (econst K1) EM1) (eapp (eforall EQ) EM2) et)
+	   Dfalse
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp1 DofConst1 _
+	   <- eof-const-invert Dekof1 DofConst1
+	      (ewf/pi
+		 _
+		 (DewfA1 : ewf EA1))
+	   <- wf-comp DewfA1
+	      (DtransA1 : ttrans EA1 A1)
+	   <- equiv-comp' DequivApp
+	      ttrans/t
+	      (DtransApp1 : trans (eapp (econst K1) EM1) B1)
+	      (DtransApp2 : trans (eapp (eforall EQ) EM2) B2)
+	      (DsubtypeB1 : subtype B1 t ([_] N))
+	      (DsubtypeB2 : subtype B2 t ([_] N))
+	   <- kof-comp Dekof1
+	      (ttrans/pi
+		 ([_] [_] [_] [_] ttrans/t)
+		 (DtransA1 : ttrans EA1 A1))
+	      (Dkof1 : kof K1 (pi A1 ([_] t)))
+	   <- unary-trans Dkof1 DtransApp1 DsubtypeB1
+	      _ _
+	      (DeqN1 : term-eq N (at (app (const K1) M1)))
+	   <- forall-trans DtransApp2 DsubtypeB2
+	      _ _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2
+	      (Deq : term-eq (at (app (const K1) M1)) (at (app (forall Q) M2)))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq (app (const K1) M1) (app (forall Q) M2))
+	   <- atom-eq-cdr-app Deq'
+	      (Deq'' : atom-eq (const K1) (forall Q))
+	      _
+	   <- eq-const-forall-contra Deq'' Dfalse.
+
+%worlds (scbind) (unary-forall-equiv _ _ _).
+%total {} (unary-forall-equiv _ _ _).
+
+
+
+eq-app-forall-contra : atom-eq (app _ _) (forall _) -> false -> type.
+%mode eq-app-forall-contra +X1 -X2.
+%worlds (scbind) (eq-app-forall-contra _ _).
+%total {} (eq-app-forall-contra _ _).
+
+
+
+binary-forall-equiv : ekof C (epi A ([x] epi (B x) ([_] et)))
+		      -> equiv (eapp (eapp (econst C) M) N) (eapp (eforall D) M') et
+		      -> false -> type.
+%mode binary-forall-equiv +X1 +X2 -X3.
+
+-	: binary-forall-equiv Dekof1 DequivApp Dfalse
+	   <- equiv-reg DequivApp DofApp1 DofApp2 _
+	   <- eof-app-subterms DofApp1 DofApp1' _
+	   <- eof-app-subterms DofApp1' DofConst1 _
+	   <- eof-const-invert Dekof1 DofConst1
+	      (ewf/pi
+		 ([ex] [ed]
+		    ewf/pi
+		    _
+		    (DewfB1 ex ed : ewf (EB1 ex)))
+		 (DewfA1 : ewf EA1))
+	   <- wf-comp DewfA1
+	      (DtransA1 : ttrans EA1 A1)
+	   <- ({x} {d} {ex} {xt} {ed}
+		 vof-comp ed DtransA1 xt d
+		 -> wf-comp (DewfB1 ex ed)
+		    (DtransB1 x d ex xt : ttrans (EB1 ex) (B1 x)))
+	   <- equiv-comp' DequivApp
+	      ttrans/t DtransApp1 DtransApp2 Dsubtype1 Dsubtype2
+	   <- kof-comp Dekof1 (ttrans/pi ([x] [d] [ex] [xt] ttrans/pi ([_] [_] [_] [_] ttrans/t) (DtransB1 x d ex xt)) DtransA1) Dkof1
+	   <- binary-trans Dkof1 DtransApp1 Dsubtype1
+	      _ _ _ _ _
+	      DeqN1
+	   <- forall-trans DtransApp2 Dsubtype2
+	      _ _ _
+	      DeqN2
+	   <- term-eq-symm DeqN1 DeqN1'
+	   <- term-eq-trans DeqN1' DeqN2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- atom-eq-cdr-app Deq' Deq'' _
+	   <- eq-app-forall-contra Deq'' Dfalse.
+
+%worlds (scbind) (binary-forall-equiv _ _ _).
+%total {} (binary-forall-equiv _ _ _).

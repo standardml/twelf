@@ -1,0 +1,1823 @@
+
+%%%%%  Stores  %%%%%
+
+progress-lookup : store-of F1 ST F2
+		   -> st-lookup F2 L ET
+%%
+		   -> store-lookup ST L EN
+		   -> entry-of F1 EN ET -> type.
+%mode progress-lookup +X1 +X2 -X3 -X4.
+
+-	: progress-lookup
+	   (store-of/cons _ Dof _)
+	   st-lookup/hit
+	   store-lookup/hit
+	   Dof.
+
+-	: progress-lookup
+	   (store-of/cons _ _ Dstof)
+	   (st-lookup/miss Dlookup)
+	   (store-lookup/miss Dlookup')
+	   Dof
+	   <- progress-lookup Dstof Dlookup Dlookup' Dof.
+
+%worlds () (progress-lookup _ _ _ _).
+%total D (progress-lookup D _ _ _).
+
+
+
+progress-update : store-of F1 ST F2
+		   -> st-lookup F2 L ET
+%%
+		   -> store-update ST L EN ST' -> type.
+%mode +{F1:sttp} +{ST:store} +{F2:sttp} +{L:location} +{ET:entp} +{EN:entry} -{ST':store}
+   +{X1:store-of F1 ST F2} +{X2:st-lookup F2 L ET}
+   -{X3:store-update ST L EN ST'} (progress-update X1 X2 X3).
+
+-	: progress-update
+	   (store-of/cons _ _ _)
+	   st-lookup/hit
+	   store-update/hit.
+
+-	: progress-update
+	   (store-of/cons _ _ Dstof)
+	   (st-lookup/miss Dlookup)
+	   (store-update/miss Dupdate)
+	   <- progress-update Dstof Dlookup Dupdate.
+
+%worlds () (progress-update _ _ _).
+%total D (progress-update D _ _).
+
+
+
+progress-nextloc : {ST}
+%%
+		   nextloc ST L -> type.
+%mode progress-nextloc +X1 -X2.
+
+-	: progress-nextloc store/nil (nextloc/nil : nextloc store/nil location/0).
+
+-	: progress-nextloc (store/cons _ L _) (nextloc/cons Dsucc)
+	   <- can-loc-succ L (Dsucc : loc-succ L L').
+
+%worlds () (progress-nextloc _ _).
+%total {} (progress-nextloc _ _).
+
+
+
+
+%%%%%  Modules  %%%%%
+
+value-md-pure : md-of P F M S
+		 -> value-md M
+%%
+		 -> md-of pure F M S
+		 -> type.
+%mode value-md-pure +X1 +X2 -X3.
+
+-	: value-md-pure Dof _ Dof.
+
+-	: value-md-pure 
+	   (md-of/pair DofM2 DofM1) 
+	   (value-md/pair DvalueM2 DvalueM1)
+	   (md-of/pair DofM2' DofM1') 
+	   <- value-md-pure DofM1 DvalueM1 DofM1'
+	   <- value-md-pure DofM2 DvalueM2 DofM2'.
+
+-	: value-md-pure
+	   (md-of/in Dof)
+	   (value-md/in Dvalue)
+	   (md-of/in Dof')
+	   <- value-md-pure Dof Dvalue Dof'.
+
+-	: value-md-pure (md-of/forget Dof) _ Dof.
+
+-	: value-md-pure (md-of/subsume Dsub Dof) Dvalue (md-of/subsume Dsub Dof')
+	   <- value-md-pure Dof Dvalue Dof'.
+
+%worlds () (value-md-pure _ _ _).
+%total D (value-md-pure D _ _).
+
+
+
+
+%%%%%  Progress  %%%%%
+
+unstuck : store -> term -> type.
+
+unstuck/step		: unstuck ST E
+			   <- step ST E ST' E'.
+
+unstuck/raises		: unstuck ST E
+			   <- raises E V.
+
+unstuck/value		: unstuck ST E
+			   <- value E.
+
+
+
+unstuck-md : store -> module -> type.
+
+unstuck-md/step		: unstuck-md ST M
+			   <- step-md ST M ST' M'.
+
+unstuck-md/raises	: unstuck-md ST M
+			   <- raises-md M V.
+
+unstuck-md/value	: unstuck-md ST M
+			   <- value-md M.
+
+
+
+
+false-implies-unstuck : false -> unstuck ST E -> type.
+%mode +{ST:store} +{E:term} +{X1:false} -{X2:unstuck ST E}
+   (false-implies-unstuck X1 X2).
+%worlds () (false-implies-unstuck _ _).
+%total {} (false-implies-unstuck _ _).
+
+
+
+progress-tm/abort : tm-of F E void
+		     -> unstuck ST E
+		     -> unstuck ST (tm/abort E T)
+		     -> type.
+%mode +{F:sttp} +{E:term} +{ST:store} +{T:con} +{X1:tm-of F E void} +{X2:unstuck ST E}
+   -{X3:unstuck ST (tm/abort E T)} (progress-tm/abort X1 X2 X3).
+
+-	: progress-tm/abort _
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/abort Dstep : step ST (tm/abort E T2) ST' (tm/abort E' T2))).
+
+-	: progress-tm/abort _
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/abort Draises : raises (tm/abort E T2) V)).
+
+-	: progress-tm/abort 
+	   (Dof : tm-of F E void)
+	   (unstuck/value
+	      (Dvalue : value E))
+	   Dunstuck
+	   <- canonical-forms Dof Dvalue similar/void
+	      (cf/void
+		 (Dfalse : false))
+	   <- false-implies-unstuck Dfalse Dunstuck.
+
+%worlds () (progress-tm/abort _ _ _).
+%total {} (progress-tm/abort _ _ _).
+
+
+
+progress-tm/pair : unstuck ST E1 
+		    -> unstuck ST E2
+%%
+		    -> unstuck ST (tm/pair E1 E2) -> type.
+%mode progress-tm/pair +X1 +X2 -X3.
+
+-	: progress-tm/pair 
+	   (unstuck/step (Dstep1 : step ST E1 ST' E1')) 
+	   _ 
+	   (unstuck/step 
+	      (step/pair1 Dstep1 : step ST (tm/pair E1 E2) ST' (tm/pair E1' E2))).
+
+-	: progress-tm/pair 
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/step
+	      (Dstep2 : step ST E2 ST' E2'))
+	   (unstuck/step (step/pair2 Dstep2 Dvalue1)).
+
+-	: progress-tm/pair
+	   (unstuck/raises (Draises1 : raises E1 V))
+	   _
+	   (unstuck/raises
+	      (raises/pair1 Draises1 : raises (tm/pair E1 E2) V)).
+
+-	: progress-tm/pair 
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/raises
+	      (Draises2 : raises E2 V))
+	   (unstuck/raises 
+	      (raises/pair2 Draises2 Dvalue1 : raises (tm/pair E1 E2) V)).
+
+-	: progress-tm/pair 
+	   (unstuck/value 
+	      (Dvalue1 : value E1))
+	   (unstuck/value 
+	      (Dvalue2 : value E2))
+	   (unstuck/value 
+	      (value/pair Dvalue2 Dvalue1 : value (tm/pair E1 E2))).
+
+%worlds () (progress-tm/pair _ _ _).
+%total {} (progress-tm/pair _ _ _).
+
+
+
+progress-tm/pi1 : tm-of F E (prod T1 T2)
+		   -> unstuck ST E
+%%
+		   -> unstuck ST (tm/pi1 E) -> type.
+%mode progress-tm/pi1 +X1 +X2 -X3.
+
+-	: progress-tm/pi1 _ 
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/pi1 Dstep : step ST (tm/pi1 E) ST' (tm/pi1 E'))).
+
+-	: progress-tm/pi1 _ 
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/pi1 Draises : raises (tm/pi1 E) V)).
+
+-	: progress-tm/pi1 
+	   (Dof : tm-of F E (prod T1 T2))
+	   (unstuck/value 
+	      (Dvalue : value E)) 
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/prod
+	      (cf/prod
+		 (Deq : term-eq (tm/pair E1 E2) E))
+	   <- term-eq-symm Deq 
+	      (DeqR : term-eq E (tm/pair E1 E2))
+	   <- value-resp DeqR Dvalue 
+	      (value/pair
+		 (Dvalue2 : value E2)
+		 (Dvalue1 : value E1))
+	   <- term-resp-term tm/pi1 Deq 
+	      (Deq' : term-eq (tm/pi1 (tm/pair E1 E2)) (tm/pi1 E))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/pi1-beta Dvalue2 Dvalue1)
+	      (Dstep : step ST (tm/pi1 E) ST E1).
+
+%worlds () (progress-tm/pi1 _ _ _).
+%total {} (progress-tm/pi1 _ _ _).
+
+
+
+progress-tm/pi2 : tm-of F E (prod T1 T2)
+		   -> unstuck ST E
+%%
+		   -> unstuck ST (tm/pi2 E) -> type.
+%mode progress-tm/pi2 +X1 +X2 -X3.
+
+-	: progress-tm/pi2 _ 
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/pi2 Dstep : step ST (tm/pi2 E) ST' (tm/pi2 E'))).
+
+-	: progress-tm/pi2 _ 
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/pi2 Draises : raises (tm/pi2 E) V)).
+
+-	: progress-tm/pi2 
+	   (Dof : tm-of F E (prod T1 T2))
+	   (unstuck/value 
+	      (Dvalue : value E)) 
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/prod
+	      (cf/prod
+		 (Deq : term-eq (tm/pair E1 E2) E))
+	   <- term-eq-symm Deq 
+	      (DeqR : term-eq E (tm/pair E1 E2))
+	   <- value-resp DeqR Dvalue 
+	      (value/pair
+		 (Dvalue2 : value E2)
+		 (Dvalue1 : value E1))
+	   <- term-resp-term tm/pi2 Deq 
+	      (Deq' : term-eq (tm/pi2 (tm/pair E1 E2)) (tm/pi2 E))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/pi2-beta Dvalue2 Dvalue1)
+	      (Dstep : step ST (tm/pi2 E) ST E2).
+
+%worlds () (progress-tm/pi2 _ _ _).
+%total {} (progress-tm/pi2 _ _ _).
+
+
+
+progress-tm/app : tm-of F E1 (arrow T1 T2)
+		   -> unstuck ST E1
+		   -> unstuck ST E2
+%%
+		   -> unstuck ST (tm/app E1 E2) -> type.
+%mode progress-tm/app +X1 +X2 +X3 -X4.
+
+-	: progress-tm/app _ 
+	   (unstuck/step
+	      (Dstep1 : step ST E1 ST' E1'))
+	   _ 
+	   (unstuck/step 
+	      (step/app1 Dstep1 : step ST (tm/app E1 E2) ST' (tm/app E1' E2))).
+
+-	: progress-tm/app _ 
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/step 
+	      (Dstep2 : step ST E2 ST' E2'))
+	   (unstuck/step 
+	      (step/app2 Dstep2 Dvalue1 : step ST (tm/app E1 E2) ST' (tm/app E1 E2'))).
+
+-	: progress-tm/app _
+	   (unstuck/raises (Draises1 : raises E1 V))
+	   _
+	   (unstuck/raises
+	      (raises/app1 Draises1 : raises (tm/app E1 E2) V)).
+
+-	: progress-tm/app _
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/raises
+	      (Draises2 : raises E2 V))
+	   (unstuck/raises (raises/app2 Draises2 Dvalue1)).
+
+-	: progress-tm/app
+	   (Dof : tm-of F E1 (arrow T1 T2))
+	   (unstuck/value
+	      (Dvalue1 : value E1)) 
+	   (unstuck/value
+	      (Dvalue2 : value E2))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue1 similar/arrow
+	      (cf/arrow
+		 (Deq : term-eq (tm/lam T E) E1))
+	   <- term-resp-term ([e] tm/app e E2) Deq 
+	      (Deq' : term-eq (tm/app (tm/lam T E) E2) (tm/app E1 E2))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/app-beta Dvalue2) 
+	      (Dstep : step ST (tm/app E1 E2) ST (E E2)).
+
+%worlds () (progress-tm/app _ _ _ _).
+%total {} (progress-tm/app _ _ _ _).
+
+
+
+progress-tm/in1 : unstuck ST E
+%%
+		   -> unstuck ST (tm/in1 E T2) -> type.
+%mode +{ST:store} +{E:term} +{T2:con} +{X1:unstuck ST E}
+   -{X2:unstuck ST (tm/in1 E T2)} (progress-tm/in1 X1 X2).
+
+-	: progress-tm/in1
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/in1 Dstep : step ST (tm/in1 E T2) ST' (tm/in1 E' T2))).
+
+-	: progress-tm/in1
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/in1 Draises : raises (tm/in1 E T2) V)).
+
+-	: progress-tm/in1 
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/value
+	      (value/in1 Dvalue : value (tm/in1 E T2))).
+	   
+%worlds () (progress-tm/in1 _ _).
+%total {} (progress-tm/in1 _ _).
+
+
+
+progress-tm/in2 : unstuck ST E
+%%
+		   -> unstuck ST (tm/in2 E T2) -> type.
+%mode +{ST:store} +{E:term} +{T2:con} +{X1:unstuck ST E}
+   -{X2:unstuck ST (tm/in2 E T2)} (progress-tm/in2 X1 X2).
+
+-	: progress-tm/in2
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/in2 Dstep : step ST (tm/in2 E T1) ST' (tm/in2 E' T1))).
+
+-	: progress-tm/in2
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/in2 Draises : raises (tm/in2 E T1) V)).
+
+-	: progress-tm/in2 
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/value
+	      (value/in2 Dvalue : value (tm/in2 E T1))).
+	   
+%worlds () (progress-tm/in2 _ _).
+%total {} (progress-tm/in2 _ _).
+
+
+
+progress-tm/case-split : cf E (plus T1 T2)
+			  -> value E
+%%
+			  -> step ST (tm/case E E1 E2) ST E' -> type.
+%mode +{E:term} +{T1:con} +{T2:con} +{ST:store} +{E1:term -> term} +{E2:term -> term}
+   -{E':term} +{X1:cf E (plus T1 T2)} +{X2:value E}
+   -{X3:step ST (tm/case E ([e:term] E1 e) ([e:term] E2 e)) ST E'}
+   (progress-tm/case-split X1 X2 X3).
+
+-	: progress-tm/case-split (cf/plus1 term-eq/i) (value/in1 Dvalue) (step/case-beta1 Dvalue).
+
+-	: progress-tm/case-split (cf/plus2 term-eq/i) (value/in2 Dvalue) (step/case-beta2 Dvalue).
+
+%worlds () (progress-tm/case-split _ _ _).
+%total {} (progress-tm/case-split _ _ _).
+
+
+
+progress-tm/case : tm-of F E (plus T1 T2)
+		    -> unstuck ST E
+%%
+		    -> unstuck ST (tm/case E E1 E2) -> type.
+%mode +{F:sttp} +{E:term} +{T1:con} +{T2:con} +{ST:store} +{E1:term -> term}
+   +{E2:term -> term} +{X1:tm-of F E (plus T1 T2)} +{X2:unstuck ST E}
+   -{X3:unstuck ST (tm/case E ([e:term] E1 e) ([e:term] E2 e))}
+   (progress-tm/case X1 X2 X3).
+
+-	: progress-tm/case _
+	   (unstuck/step (Dstep : step ST E ST' E'))
+	   (unstuck/step
+	      (step/case Dstep : step ST (tm/case E E1 E2) ST' (tm/case E' E1 E2))).
+
+-	: progress-tm/case _
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/case Draises : raises (tm/case E E1 E2) V)).
+
+-	: progress-tm/case
+	   (Dof : tm-of F E (plus T1 T2))
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/plus
+	      (Dcf : cf E (plus T1 T2))
+	   <- progress-tm/case-split Dcf Dvalue
+	      (Dstep : step ST (tm/case E E1 E2) ST E').
+
+%worlds () (progress-tm/case _ _ _).
+%total {} (progress-tm/case _ _ _).
+
+
+
+progress-tm/ref : unstuck ST E
+%%
+		   -> unstuck ST (tm/ref E) -> type.
+%mode progress-tm/ref +X1 -X2.
+
+-	: progress-tm/ref
+	   (unstuck/step (Dstep : step ST E ST' E'))
+	   (unstuck/step
+	      (step/ref Dstep)).
+
+-	: progress-tm/ref
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/ref Draises : raises (tm/ref E) V)).
+
+-	: progress-tm/ref
+	   (unstuck/value (Dvalue : value E))
+	   (unstuck/step
+	      (step/ref-beta Dnextloc Dvalue))
+	   <- progress-nextloc _ (Dnextloc : nextloc ST L).
+
+%worlds () (progress-tm/ref _ _).
+%total {} (progress-tm/ref _ _).
+
+
+
+progress-tm/deref : tm-of F E (ref T)
+		     -> store-of F ST F
+		     -> unstuck ST E
+%%
+		     -> unstuck ST (tm/deref E) -> type.
+%mode progress-tm/deref +X1 +X2 +X3 -X4.
+
+-	: progress-tm/deref _ _
+	   (unstuck/step (Dstep : step ST E ST' E'))
+	   (unstuck/step
+	      (step/deref Dstep)).
+
+-	: progress-tm/deref _ _
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/deref Draises : raises (tm/deref E) V)).
+
+-	: progress-tm/deref
+	   (Dof : tm-of F E (ref T))
+	   (Dstof : store-of F ST F)
+	   (unstuck/value (Dvalue : value E))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/ref
+	      (cf/ref
+		 (Deq : term-eq (tm/refloc L) E))
+	   <- term-eq-symm Deq
+	      (DeqR : term-eq E (tm/refloc L))
+	   <- tm-of-resp sttp-eq/i DeqR con-eq/i Dof
+	      (Dof' : tm-of F (tm/refloc L) (ref T))
+	   <- inversion-tm/refloc Dof'
+	      _
+	      (Dlookup : st-lookup F L (et/ref T'))
+	      _
+	   <- progress-lookup Dstof Dlookup
+	      (Dlookup' : store-lookup ST L (entry/ref E'))
+	      (entry-of/ref _ _)
+	   <- term-resp-term tm/deref Deq
+	      (Deq' : term-eq (tm/deref (tm/refloc L)) (tm/deref E))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/deref-beta Dlookup')
+	      (Dstep : step ST (tm/deref E) ST E').
+
+%worlds () (progress-tm/deref _ _ _ _).
+%total {} (progress-tm/deref _ _ _ _).
+
+
+
+progress-tm/assign : tm-of F E1 (ref T)
+		     -> store-of F ST F
+		     -> unstuck ST E1
+		     -> unstuck ST E2
+%%
+		     -> unstuck ST (tm/assign E1 E2) -> type.
+%mode progress-tm/assign +X1 +X2 +X3 +X4 -X5.
+
+-	: progress-tm/assign _ _
+	   (unstuck/step (Dstep1 : step ST E1 ST' E1')) 
+	   _ 
+	   (unstuck/step 
+	      (step/assign1 Dstep1 : step ST (tm/assign E1 E2) ST' (tm/assign E1' E2))).
+
+-	: progress-tm/assign _ _
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/step
+	      (Dstep2 : step ST E2 ST' E2'))
+	   (unstuck/step (step/assign2 Dstep2 Dvalue1)).
+
+-	: progress-tm/assign _ _
+	   (unstuck/raises (Draises1 : raises E1 V))
+	   _
+	   (unstuck/raises
+	      (raises/assign1 Draises1 : raises (tm/assign E1 E2) V)).
+
+-	: progress-tm/assign _ _
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/raises
+	      (Draises2 : raises E2 V))
+	   (unstuck/raises 
+	      (raises/assign2 Draises2 Dvalue1 : raises (tm/assign E1 E2) V)).
+
+-	: progress-tm/assign 
+	   (Dof : tm-of F E1 (ref T))
+	   (Dstof : store-of F ST F)
+	   (unstuck/value (Dvalue1 : value E1))
+	   (unstuck/value (Dvalue2 : value E2))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue1 similar/ref
+	      (cf/ref
+		 (Deq : term-eq (tm/refloc L) E1))
+	   <- term-eq-symm Deq
+	      (DeqR : term-eq E1 (tm/refloc L))
+	   <- tm-of-resp sttp-eq/i DeqR con-eq/i Dof
+	      (Dof' : tm-of F (tm/refloc L) (ref T))
+	   <- inversion-tm/refloc Dof'
+	      _
+	      (Dlookup : st-lookup F L (et/ref T'))
+	      _
+	   <- progress-update Dstof Dlookup
+	      (Dupdate : store-update ST L (entry/ref E2) ST')
+	   <- term-resp-term ([e] tm/assign e E2) Deq
+	      (Deq' : term-eq (tm/assign (tm/refloc L) E2) (tm/assign E1 E2))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/assign-beta Dupdate Dvalue2)
+	      (Dstep : step ST (tm/assign E1 E2) ST' tm/unit).
+
+%worlds () (progress-tm/assign _ _ _ _ _).
+%total {} (progress-tm/assign _ _ _ _ _).
+
+
+
+progress-tm/tag : unstuck ST E1 
+		    -> unstuck ST E2
+%%
+		    -> unstuck ST (tm/tag E1 E2) -> type.
+%mode progress-tm/tag +X1 +X2 -X3.
+
+-	: progress-tm/tag 
+	   (unstuck/step (Dstep1 : step ST E1 ST' E1')) 
+	   _ 
+	   (unstuck/step 
+	      (step/tag1 Dstep1 : step ST (tm/tag E1 E2) ST' (tm/tag E1' E2))).
+
+-	: progress-tm/tag 
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/step
+	      (Dstep2 : step ST E2 ST' E2'))
+	   (unstuck/step (step/tag2 Dstep2 Dvalue1)).
+
+-	: progress-tm/tag
+	   (unstuck/raises (Draises1 : raises E1 V))
+	   _
+	   (unstuck/raises
+	      (raises/tag1 Draises1 : raises (tm/tag E1 E2) V)).
+
+-	: progress-tm/tag
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/raises
+	      (Draises2 : raises E2 V))
+	   (unstuck/raises 
+	      (raises/tag2 Draises2 Dvalue1 : raises (tm/tag E1 E2) V)).
+
+-	: progress-tm/tag 
+	   (unstuck/value 
+	      (Dvalue1 : value E1))
+	   (unstuck/value 
+	      (Dvalue2 : value E2))
+	   (unstuck/value (value/tag Dvalue2 Dvalue1)).
+
+%worlds () (progress-tm/tag _ _ _).
+%total {} (progress-tm/tag _ _ _).
+
+
+
+progress-tm/iftag : tm-of F E1 tagged
+		     -> tm-of F E2 (tag T)
+		     -> unstuck ST E1
+		     -> unstuck ST E2
+%%
+		     -> unstuck ST (tm/iftag E1 E2 E3 E4) -> type.
+%mode +{F:sttp} +{E1:term} +{E2:term} +{T:con} +{ST:store} +{E3:term -> term}
+   +{E4:term} +{X1:tm-of F E1 tagged} +{X2:tm-of F E2 (tag T)}
+   +{X3:unstuck ST E1} +{X4:unstuck ST E2}
+   -{X5:unstuck ST (tm/iftag E1 E2 ([e:term] E3 e) E4)}
+   (progress-tm/iftag X1 X2 X3 X4 X5).
+
+-	: progress-tm/iftag _ _
+	   (unstuck/step
+	      (Dstep1 : step ST E1 ST' E1'))
+	   _ 
+	   (unstuck/step 
+	      (step/iftag1 Dstep1 : step ST (tm/iftag E1 E2 E3 E4) ST' (tm/iftag E1' E2 E3 E4))).
+
+-	: progress-tm/iftag _ _
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/step 
+	      (Dstep2 : step ST E2 ST' E2'))
+	   (unstuck/step 
+	      (step/iftag2 Dstep2 Dvalue1 : step ST (tm/iftag E1 E2 E3 E4) ST' (tm/iftag E1 E2' E3 E4))).
+
+-	: progress-tm/iftag _ _
+	   (unstuck/raises (Draises1 : raises E1 V))
+	   _
+	   (unstuck/raises
+	      (raises/iftag1 Draises1 : raises (tm/iftag E1 E2 E3 E4) V)).
+
+-	: progress-tm/iftag _ _
+	   (unstuck/value 
+	      (Dvalue1 : value E1)) 
+	   (unstuck/raises
+	      (Draises2 : raises E2 V))
+	   (unstuck/raises 
+	      (raises/iftag2 Draises2 Dvalue1 : raises (tm/iftag E1 E2 E3 E4) V)).
+
+progress-tm/iftag-factor : compare-loc L1 L2
+			    -> value E1'
+%%
+			    -> step ST (tm/iftag (tm/tag (tm/tagloc L1) E1') (tm/tagloc L2) E3 E4) ST E -> type.
+%mode +{L1:location} +{L2:location} +{E1':term} +{ST:store} +{E3:term -> term} +{E4:term}
+   -{E:term} +{X1:compare-loc L1 L2} +{X2:value E1'}
+   -{X3:step ST
+           (tm/iftag (tm/tag (tm/tagloc L1) E1') (tm/tagloc L2) ([e:term] E3 e)
+               E4)
+           ST E}
+   (progress-tm/iftag-factor X1 X2 X3).
+
+-	: progress-tm/iftag
+	   (Dof1 : tm-of F E1 tagged)
+	   (Dof2 : tm-of F E2 (tag T))
+	   (unstuck/value
+	      (Dvalue1 : value E1)) 
+	   (unstuck/value
+	      (Dvalue2 : value E2))
+	   (unstuck/step Dstep')
+	   <- canonical-forms Dof1 Dvalue1 similar/tagged
+	      (cf/tagged
+		 (Deq1 : term-eq (tm/tag (tm/tagloc L1) E1') E1))
+	   <- term-eq-symm Deq1
+	      (Deq1R : term-eq E1 (tm/tag (tm/tagloc L1) E1'))
+	   <- value-resp Deq1R Dvalue1
+	      (value/tag
+		 (Dvalue1' : value E1')
+		 _)
+	   <- canonical-forms Dof2 Dvalue2 similar/tag
+	      (cf/tag
+		 (Deq2 : term-eq (tm/tagloc L2) E2))
+	   <- term-resp-term2 ([e1] [e2] tm/iftag e1 e2 E3 E4) Deq1 Deq2
+	      (Deq' : term-eq (tm/iftag (tm/tag (tm/tagloc L1) E1') (tm/tagloc L2) E3 E4) (tm/iftag E1 E2 E3 E4))
+	   <- dichotomy-loc L1 L2
+	      (Dcompare : compare-loc L1 L2)
+	   <- progress-tm/iftag-factor Dcompare Dvalue1' Dstep
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i Dstep
+	      (Dstep' : step ST (tm/iftag E1 E2 E3 E4) ST E).
+
+-	: progress-tm/iftag-factor compare-loc/eq Dvalue (step/iftag-beta1 Dvalue).
+
+-	: progress-tm/iftag-factor (compare-loc/neq Dneq) Dvalue (step/iftag-beta2 Dneq Dvalue).
+
+%worlds () (progress-tm/iftag-factor _ _ _).
+%total {} (progress-tm/iftag-factor _ _ _).
+
+%worlds () (progress-tm/iftag _ _ _ _ _).
+%total {} (progress-tm/iftag _ _ _ _ _).
+
+
+
+progress-tm/roll : unstuck ST E
+%%
+		   -> unstuck ST (tm/roll E K C1 C2) -> type.
+%mode +{ST:store} +{E:term} +{K:kind} +{C1:con -> con -> con} +{C2:con}
+   +{X1:unstuck ST E}
+   -{X2:unstuck ST (tm/roll E K ([c:con] [c1:con] C1 c c1) C2)}
+   (progress-tm/roll X1 X2).
+
+-	: progress-tm/roll
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/roll Dstep : step ST (tm/roll E K C1 C2) ST' (tm/roll E' K C1 C2))).
+
+-	: progress-tm/roll
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/roll Draises : raises (tm/roll E K C1 C2) V)).
+
+-	: progress-tm/roll 
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/value
+	      (value/roll Dvalue : value (tm/roll E K C1 C2))).
+	   
+%worlds () (progress-tm/roll _ _).
+%total {} (progress-tm/roll _ _).
+
+
+
+progress-tm/unroll : tm-of F E (rec K C1 C2)
+		   -> unstuck ST E
+%%
+		   -> unstuck ST (tm/unroll E) -> type.
+%mode progress-tm/unroll +X1 +X2 -X3.
+
+-	: progress-tm/unroll _ 
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/unroll Dstep : step ST (tm/unroll E) ST' (tm/unroll E'))).
+
+-	: progress-tm/unroll _ 
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/unroll Draises : raises (tm/unroll E) V)).
+
+-	: progress-tm/unroll 
+	   (Dof : tm-of F E (rec K C1 C2))
+	   (unstuck/value 
+	      (Dvalue : value E))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/rec
+	      (cf/rec
+		 (Deq : term-eq (tm/roll E' K' C1' C2') E))
+	   <- term-eq-symm Deq 
+	      (DeqR : term-eq E (tm/roll E' K' C1' C2'))
+	   <- value-resp DeqR Dvalue 
+	      (value/roll
+		 (Dvalue' : value E'))
+	   <- term-resp-term tm/unroll Deq 
+	      (Deq' : term-eq (tm/unroll (tm/roll E' K' C1' C2')) (tm/unroll E))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/unroll-beta Dvalue')
+	      (Dstep : step ST (tm/unroll E) ST E').
+
+%worlds () (progress-tm/unroll _ _ _).
+%total {} (progress-tm/unroll _ _ _).
+
+
+
+progress-tm/in : unstuck ST E
+		  -> unstuck ST (tm/in L E)
+		  -> type.
+%mode +{ST:store} +{E:term} +{L:label} +{X1:unstuck ST E}
+   -{X2:unstuck ST (tm/in L E)} (progress-tm/in X1 X2).
+
+-	: progress-tm/in
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E')) 
+	   (unstuck/step 
+	      (step/in Dstep : step ST (tm/in L E) ST' (tm/in L E'))).
+
+-	: progress-tm/in
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/in Draises : raises (tm/in L E) V)).
+
+-	: progress-tm/in 
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/value
+	      (value/in Dvalue : value (tm/in L E))).
+	   
+%worlds () (progress-tm/in _ _).
+%total {} (progress-tm/in _ _).
+
+
+
+progress-tm/out : tm-of F E (labeled L T)
+		   -> unstuck ST E
+%%
+		   -> unstuck ST (tm/out E)
+		   -> type.
+%mode progress-tm/out +X1 +X2 -X3.
+
+-	: progress-tm/out _
+	   (unstuck/step
+	      (Dstep : step ST E ST' E'))
+	   (unstuck/step
+	      (step/out Dstep)).
+	   
+-	: progress-tm/out _
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises
+	      (raises/out Draises : raises (tm/out E) V)).
+
+-	: progress-tm/out
+	   (Dof : tm-of F E (labeled L T))
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck/step Dstep)
+	   <- canonical-forms Dof Dvalue similar/labeled
+	      (cf/labeled
+		 (Deq : term-eq (tm/in L' E') E))
+	   <- term-eq-symm Deq
+	      (DeqR : term-eq E (tm/in L' E'))
+	   <- value-resp DeqR Dvalue
+	      (value/in
+		 (Dvalue' : value E'))
+	   <- term-resp-term tm/out Deq
+	      (Deq' : term-eq (tm/out (tm/in L' E')) (tm/out E))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i (step/out-beta Dvalue')
+	      (Dstep : step ST (tm/out E) ST E').
+
+%worlds () (progress-tm/out _ _ _).
+%total {} (progress-tm/out _ _ _).
+
+
+
+progress-tm/raise : unstuck ST E
+%%
+		     -> unstuck ST (tm/raise E T) -> type.
+%mode +{ST:store} +{E:term} +{T:con} +{X1:unstuck ST E}
+   -{X2:unstuck ST (tm/raise E T)} (progress-tm/raise X1 X2).
+
+-	: progress-tm/raise
+	   (unstuck/step 
+	      (Dstep : step ST E ST' E'))
+	   (unstuck/step
+	      (step/raise Dstep)).
+
+-	: progress-tm/raise
+	   (unstuck/raises 
+	      (Draises : raises E V))
+	   (unstuck/raises 
+	      (raises/raise1 Draises : raises (tm/raise E T) V)).
+
+-	: progress-tm/raise
+	   (unstuck/value (Dvalue : value E))
+	   (unstuck/raises 
+	      (raises/raise2 Dvalue : raises (tm/raise E T) E)).
+
+%worlds () (progress-tm/raise _ _).
+%total {} (progress-tm/raise _ _).
+
+
+
+progress-tm/try : unstuck ST E1
+%%
+		   -> unstuck ST (tm/try E1 E2) -> type.
+%mode +{ST:store} +{E1:term} +{E2:term -> term} +{X1:unstuck ST E1}
+   -{X2:unstuck ST (tm/try E1 ([e:term] E2 e))} (progress-tm/try X1 X2).
+
+-	: progress-tm/try
+	   (unstuck/step 
+	      (Dstep : step ST E1 ST' E1')) 
+	   (unstuck/step 
+	      (step/try Dstep : step ST (tm/try E1 E2) ST' (tm/try E1' E2))).
+
+-	: progress-tm/try
+	   (unstuck/raises 
+	      (Draises : raises E1 V))
+	   (unstuck/step
+	      (step/try-handle Draises : step ST (tm/try E1 E2) ST (E2 V))).
+
+-	: progress-tm/try
+	   (unstuck/value
+	      (Dvalue : value E1))
+	   (unstuck/step
+	      (step/try-done Dvalue : step ST (tm/try E1 E2) ST E1)).
+
+%worlds () (progress-tm/try _ _).
+%total {} (progress-tm/try _ _).
+
+
+
+progress-tm/lett : unstuck ST E1
+%%
+		    -> unstuck ST (tm/lett E1 E2)
+		    -> type.
+%mode +{ST:store} +{E1:term} +{E2:term -> term} +{X1:unstuck ST E1}
+   -{X2:unstuck ST (tm/lett E1 ([e:term] E2 e))} (progress-tm/lett X1 X2).
+
+-	: progress-tm/lett
+	   (unstuck/step
+	      (Dstep : step ST E1 ST' E1'))
+	   (unstuck/step 
+	      (step/lett1 Dstep : step ST (tm/lett E1 E2) ST' (tm/lett E1' E2))).
+
+-	: progress-tm/lett
+	   (unstuck/raises (Draises : raises E1 V))
+	   (unstuck/raises
+	      (raises/lett Draises : raises (tm/lett E1 E2) V)).
+
+-	: progress-tm/lett
+	   (unstuck/value
+	      (Dvalue : value E1))
+	   (unstuck/step
+	      (step/lett2 Dvalue)).
+
+%worlds () (progress-tm/lett _ _).
+%total {} (progress-tm/lett _ _).
+
+
+
+progress-tm/snd : md-of P F M (sg/datom T)
+		   -> unstuck-md ST M
+		   -> unstuck ST (tm/snd M)
+		   -> type.
+%mode progress-tm/snd +X1 +X2 -X3.
+
+-	: progress-tm/snd _
+	   (unstuck-md/step 
+	      (Dstep : step-md ST M ST' M'))
+	   (unstuck/step
+	      (step/snd Dstep)).
+
+-	: progress-tm/snd _
+	   (unstuck-md/raises 
+	      (Draises : raises-md M V))
+	   (unstuck/raises
+	      (raises/snd Draises)).
+
+-	: progress-tm/snd
+	   (Dof : md-of P F M (sg/datom T))
+	   (unstuck-md/value 
+	      (Dvalue : value-md M))
+	   (unstuck/step Dstep)
+	   <- canonical-forms-md Dof Dvalue
+	      (cf-md/datom
+		 (Deq : module-eq (md/datom E T') M))
+	   <- module-eq-symm Deq
+	      (DeqR : module-eq M (md/datom E T'))
+	   <- value-md-resp DeqR Dvalue
+	      (value-md/datom
+		 (Dvalue' : value E))
+	   <- term-resp-module tm/snd Deq
+	      (Deq' : term-eq (tm/snd (md/datom E T')) (tm/snd M))
+	   <- step-resp store-eq/i Deq' store-eq/i term-eq/i
+	      (step/snd-beta Dvalue')
+	      (Dstep : step ST (tm/snd M) ST E).
+
+%worlds () (progress-tm/snd _ _ _).
+%total {} (progress-tm/snd _ _ _).
+
+
+
+progress-md/datom : unstuck ST E
+		     -> unstuck-md ST (md/datom E T)
+		     -> type.
+%mode +{ST:store} +{E:term} +{T:con} +{X1:unstuck ST E}
+   -{X2:unstuck-md ST (md/datom E T)} (progress-md/datom X1 X2).
+
+-	: progress-md/datom
+	   (unstuck/step
+	      (Dstep : step ST E ST' E'))
+	   (unstuck-md/step
+	      (step-md/datom Dstep)).
+
+-	: progress-md/datom
+	   (unstuck/raises
+	      (Draises : raises E V))
+	   (unstuck-md/raises
+	      (raises-md/datom Draises)).
+
+-	: progress-md/datom
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck-md/value
+	      (value-md/datom Dvalue)).
+
+%worlds () (progress-md/datom _ _).
+%total {} (progress-md/datom _ _).
+
+
+
+progress-md/pair : unstuck-md ST M1
+		    -> unstuck-md ST M2
+%%
+		    -> unstuck-md ST (md/pair M1 M2)
+		    -> type.
+%mode progress-md/pair +X1 +X2 -X3.
+
+-	: progress-md/pair 
+	   (unstuck-md/step 
+	      (Dstep1 : step-md ST M1 ST' M1')) 
+	   _ 
+	   (unstuck-md/step 
+	      (step-md/pair1 Dstep1 : step-md ST (md/pair M1 M2) ST' (md/pair M1' M2))).
+
+-	: progress-md/pair 
+	   (unstuck-md/value 
+	      (Dvalue1 : value-md M1)) 
+	   (unstuck-md/step
+	      (Dstep2 : step-md ST M2 ST' M2'))
+	   (unstuck-md/step (step-md/pair2 Dstep2 Dvalue1)).
+
+-	: progress-md/pair
+	   (unstuck-md/raises 
+	      (Draises1 : raises-md M1 V))
+	   _
+	   (unstuck-md/raises
+	      (raises-md/pair1 Draises1 : raises-md (md/pair M1 M2) V)).
+
+-	: progress-md/pair 
+	   (unstuck-md/value 
+	      (Dvalue1 : value-md M1)) 
+	   (unstuck-md/raises
+	      (Draises2 : raises-md M2 V))
+	   (unstuck-md/raises 
+	      (raises-md/pair2 Draises2 Dvalue1 : raises-md (md/pair M1 M2) V)).
+
+-	: progress-md/pair 
+	   (unstuck-md/value 
+	      (Dvalue1 : value-md M1))
+	   (unstuck-md/value 
+	      (Dvalue2 : value-md M2))
+	   (unstuck-md/value 
+	      (value-md/pair Dvalue2 Dvalue1 : value-md (md/pair M1 M2))).
+
+%worlds () (progress-md/pair _ _ _).
+%total {} (progress-md/pair _ _ _).
+
+
+
+progress-md/dpair : md-of P F M1 S
+		    -> unstuck-md ST M1
+%%
+		    -> unstuck-md ST (md/dpair M1 M2)
+		    -> type.
+%mode +{P:purity} +{F:sttp}+{S:sg} +{ST:store} +{M1:module}
+   +{M2:con -> module -> module} +{X1:md-of P F M1 S} +{X2:unstuck-md ST M1}
+   -{X3:unstuck-md ST (md/dpair M1 ([c:con] [m:module] M2 c m))}
+   (progress-md/dpair X1 X2 X3).
+
+-	: progress-md/dpair
+	   _
+	   (unstuck-md/step
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (unstuck-md/step
+	      (step-md/dpair1 Dstep)).
+
+-	: progress-md/dpair
+	   _
+	   (unstuck-md/raises
+	      (Draises : raises-md M1 V))
+	   (unstuck-md/raises
+	      (raises-md/dpair Draises)).
+
+-	: progress-md/dpair
+	   (Dof : md-of P F M1 S)
+	   (unstuck-md/value
+	      (Dvalue : value-md M1))
+	   (unstuck-md/step
+	      (step-md/dpair2 Dfst Dvalue))
+	   <- value-md-pure Dof Dvalue
+	      (Dof' : md-of pure F M1 S)
+	   <- can-md-fst Dof'
+	      (Dfst : md-fst M1 C1).
+
+%worlds () (progress-md/dpair _ _ _).
+%total {} (progress-md/dpair _ _ _).
+
+
+
+progress-md/pi1 : md-of P F M (sg/sigma S1 S2)
+		   -> unstuck-md ST M
+%%
+		   -> unstuck-md ST (md/pi1 M) -> type.
+%mode progress-md/pi1 +X1 +X2 -X3.
+
+-	: progress-md/pi1 _ 
+	   (unstuck-md/step 
+	      (Dstep : step-md ST M ST' M')) 
+	   (unstuck-md/step 
+	      (step-md/pi1 Dstep : step-md ST (md/pi1 M) ST' (md/pi1 M'))).
+
+-	: progress-md/pi1 _ 
+	   (unstuck-md/raises 
+	      (Draises : raises-md M V))
+	   (unstuck-md/raises 
+	      (raises-md/pi1 Draises : raises-md (md/pi1 M) V)).
+
+-	: progress-md/pi1 
+	   (Dof : md-of P F M (sg/sigma S1 S2))
+	   (unstuck-md/value 
+	      (Dvalue : value-md M)) 
+	   (unstuck-md/step Dstep)
+	   <- canonical-forms-md Dof Dvalue
+	      (cf-md/sigma
+		 (Deq : module-eq (md/pair M1 M2) M))
+	   <- module-eq-symm Deq 
+	      (DeqR : module-eq M (md/pair M1 M2))
+	   <- value-md-resp DeqR Dvalue 
+	      (value-md/pair
+		 (Dvalue2 : value-md M2)
+		 (Dvalue1 : value-md M1))
+	   <- module-resp-module md/pi1 Deq 
+	      (Deq' : module-eq (md/pi1 (md/pair M1 M2)) (md/pi1 M))
+	   <- step-md-resp store-eq/i Deq' store-eq/i module-eq/i (step-md/pi1-beta Dvalue2 Dvalue1)
+	      (Dstep : step-md ST (md/pi1 M) ST M1).
+
+%worlds () (progress-md/pi1 _ _ _).
+%total {} (progress-md/pi1 _ _ _).
+
+
+
+progress-md/pi2 : md-of pure F M (sg/sigma S1 S2)
+		   -> unstuck-md ST M
+%%
+		   -> unstuck-md ST (md/pi2 M) -> type.
+%mode progress-md/pi2 +X1 +X2 -X3.
+
+-	: progress-md/pi2 _ 
+	   (unstuck-md/step 
+	      (Dstep : step-md ST M ST' M')) 
+	   (unstuck-md/step 
+	      (step-md/pi2 Dstep : step-md ST (md/pi2 M) ST' (md/pi2 M'))).
+
+-	: progress-md/pi2 _ 
+	   (unstuck-md/raises 
+	      (Draises : raises-md M V))
+	   (unstuck-md/raises 
+	      (raises-md/pi2 Draises : raises-md (md/pi2 M) V)).
+
+-	: progress-md/pi2 
+	   (Dof : md-of pure F M (sg/sigma S1 S2))
+	   (unstuck-md/value 
+	      (Dvalue : value-md M)) 
+	   (unstuck-md/step Dstep)
+	   <- canonical-forms-md Dof Dvalue
+	      (cf-md/sigma
+		 (Deq : module-eq (md/pair M1 M2) M))
+	   <- module-eq-symm Deq 
+	      (DeqR : module-eq M (md/pair M1 M2))
+	   <- value-md-resp DeqR Dvalue 
+	      (value-md/pair
+		 (Dvalue2 : value-md M2)
+		 (Dvalue1 : value-md M1))
+	   <- module-resp-module md/pi2 Deq 
+	      (Deq' : module-eq (md/pi2 (md/pair M1 M2)) (md/pi2 M))
+	   <- step-md-resp store-eq/i Deq' store-eq/i module-eq/i (step-md/pi2-beta Dvalue2 Dvalue1)
+	      (Dstep : step-md ST (md/pi2 M) ST M2).
+
+%worlds () (progress-md/pi2 _ _ _).
+%total {} (progress-md/pi2 _ _ _).
+
+
+
+progress-md/app : md-of P F M1 (sg/pi S1 S2)
+		   -> md-of pure F M2 S1
+		   -> unstuck-md ST M1
+		   -> unstuck-md ST M2
+%%
+		   -> unstuck-md ST (md/app M1 M2) -> type.
+%mode progress-md/app +X1 +X2 +X3 +X4 -X5.
+
+-	: progress-md/app _ _
+	   (unstuck-md/step
+	      (Dstep1 : step-md ST M1 ST' M1'))
+	   _ 
+	   (unstuck-md/step 
+	      (step-md/app1 Dstep1 : step-md ST (md/app M1 M2) ST' (md/app M1' M2))).
+
+-	: progress-md/app _ _
+	   (unstuck-md/value 
+	      (Dvalue1 : value-md M1)) 
+	   (unstuck-md/step 
+	      (Dstep2 : step-md ST M2 ST' M2'))
+	   (unstuck-md/step 
+	      (step-md/app2 Dstep2 Dvalue1 : step-md ST (md/app M1 M2) ST' (md/app M1 M2'))).
+
+-	: progress-md/app _ _
+	   (unstuck-md/raises (Draises1 : raises-md M1 V))
+	   _
+	   (unstuck-md/raises
+	      (raises-md/app1 Draises1 : raises-md (md/app M1 M2) V)).
+
+-	: progress-md/app _ _
+	   (unstuck-md/value
+	      (Dvalue1 : value-md M1)) 
+	   (unstuck-md/raises
+	      (Draises2 : raises-md M2 V))
+	   (unstuck-md/raises (raises-md/app2 Draises2 Dvalue1)).
+
+-	: progress-md/app
+	   (Dof1 : md-of P F M1 (sg/pi S1 S2))
+	   (Dof2 : md-of pure F M2 S1)
+	   (unstuck-md/value
+	      (Dvalue1 : value-md M1)) 
+	   (unstuck-md/value
+	      (Dvalue2 : value-md M2))
+	   (unstuck-md/step Dstep)
+	   <- canonical-forms-md Dof1 Dvalue1
+	      (cf-md/pi
+		 (Deq : module-eq (md/lam S M) M1))
+	   <- module-resp-module ([m] md/app m M2) Deq 
+	      (Deq' : module-eq (md/app (md/lam S M) M2) (md/app M1 M2))
+	   <- can-md-fst Dof2
+	      (Dfst : md-fst M2 C2)
+	   <- step-md-resp store-eq/i Deq' store-eq/i module-eq/i (step-md/app-beta Dfst Dvalue2) 
+	      (Dstep : step-md ST (md/app M1 M2) ST (M C2 M2)).
+
+%worlds () (progress-md/app _ _ _ _ _).
+%total {} (progress-md/app _ _ _ _ _).
+
+
+
+progress-md/in : unstuck-md ST M
+		  -> unstuck-md ST (md/in L M)
+		  -> type.
+%mode +{ST:store} +{M:module} +{L:name} +{X1:unstuck-md ST M}
+   -{X2:unstuck-md ST (md/in L M)} (progress-md/in X1 X2).
+
+-	: progress-md/in
+	   (unstuck-md/step 
+	      (Dstep : step-md ST M ST' M')) 
+	   (unstuck-md/step 
+	      (step-md/in Dstep : step-md ST (md/in L M) ST' (md/in L M'))).
+
+-	: progress-md/in
+	   (unstuck-md/raises 
+	      (Draises : raises-md M V))
+	   (unstuck-md/raises 
+	      (raises-md/in Draises : raises-md (md/in L M) V)).
+
+-	: progress-md/in 
+	   (unstuck-md/value
+	      (Dvalue : value-md M))
+	   (unstuck-md/value
+	      (value-md/in Dvalue : value-md (md/in L M))).
+	   
+%worlds () (progress-md/in _ _).
+%total {} (progress-md/in _ _).
+
+
+
+progress-md/out : md-of P F E (sg/named L S)
+		   -> unstuck-md ST E
+%%
+		   -> unstuck-md ST (md/out E)
+		   -> type.
+%mode progress-md/out +X1 +X2 -X3.
+
+-	: progress-md/out _
+	   (unstuck-md/step
+	      (Dstep : step-md ST E ST' E'))
+	   (unstuck-md/step
+	      (step-md/out Dstep)).
+	   
+-	: progress-md/out _
+	   (unstuck-md/raises 
+	      (Draises : raises-md M V))
+	   (unstuck-md/raises
+	      (raises-md/out Draises : raises-md (md/out M) V)).
+
+-	: progress-md/out
+	   (Dof : md-of P F M (sg/named L S))
+	   (unstuck-md/value
+	      (Dvalue : value-md M))
+	   (unstuck-md/step Dstep)
+	   <- canonical-forms-md Dof Dvalue
+	      (cf-md/named
+		 (Deq : module-eq (md/in L' M') M))
+	   <- module-eq-symm Deq
+	      (DeqR : module-eq M (md/in L' M'))
+	   <- value-md-resp DeqR Dvalue
+	      (value-md/in
+		 (Dvalue' : value-md M'))
+	   <- module-resp-module md/out Deq
+	      (Deq' : module-eq (md/out (md/in L' M')) (md/out M))
+	   <- step-md-resp store-eq/i Deq' store-eq/i module-eq/i (step-md/out-beta Dvalue')
+	      (Dstep : step-md ST (md/out M) ST M').
+
+%worlds () (progress-md/out _ _ _).
+%total {} (progress-md/out _ _ _).
+
+
+
+progress-md/let : md-of P F M1 S
+		   -> unstuck-md ST M1
+%%
+		   -> unstuck-md ST (md/let M1 M2 S') -> type.
+%mode +{P:purity} +{F:sttp} +{M1:module} +{S:sg} +{ST:store}
+   +{M2:con -> module -> module} +{S':sg} +{X1:md-of P F M1 S}
+   +{X2:unstuck-md ST M1}
+   -{X3:unstuck-md ST (md/let M1 ([c:con] [m:module] M2 c m) S')}
+   (progress-md/let X1 X2 X3).
+
+-	: progress-md/let _
+	   (unstuck-md/step
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (unstuck-md/step 
+	      (step-md/let1 Dstep : step-md ST (md/let M1 M2 S) ST' (md/let M1' M2 S))).
+
+-	: progress-md/let _
+	   (unstuck-md/raises (Draises : raises-md M1 V))
+	   (unstuck-md/raises
+	      (raises-md/let Draises : raises-md (md/let M1 M2 S) V)).
+
+-	: progress-md/let
+	   (Dof : md-of P F M1 S)
+	   (unstuck-md/value
+	      (Dvalue : value-md M1))
+	   (unstuck-md/step
+	      (step-md/let2 Dfst Dvalue))
+	   <- value-md-pure Dof Dvalue
+	      (Dof' : md-of pure F M1 S)
+	   <- can-md-fst Dof'
+	      (Dfst : md-fst M1 C1).
+
+%worlds () (progress-md/let _ _ _).
+%total {} (progress-md/let _ _ _).
+
+
+
+progress-md/letp : md-of P F M1 S
+		   -> unstuck-md ST M1
+%%
+		   -> unstuck-md ST (md/letp M1 M2) -> type.
+%mode +{P:purity} +{F:sttp} +{M1:module} +{S:sg} +{ST:store}
+   +{M2:con -> module -> module} +{X1:md-of P F M1 S} +{X2:unstuck-md ST M1}
+   -{X3:unstuck-md ST (md/letp M1 ([c:con] [m:module] M2 c m))}
+   (progress-md/letp X1 X2 X3).
+
+-	: progress-md/letp _
+	   (unstuck-md/step
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (unstuck-md/step 
+	      (step-md/letp1 Dstep : step-md ST (md/letp M1 M2) ST' (md/letp M1' M2))).
+
+-	: progress-md/letp _
+	   (unstuck-md/raises (Draises : raises-md M1 V))
+	   (unstuck-md/raises
+	      (raises-md/letp Draises : raises-md (md/letp M1 M2) V)).
+
+-	: progress-md/letp
+	   (Dof : md-of P F M1 S)
+	   (unstuck-md/value
+	      (Dvalue : value-md M1))
+	   (unstuck-md/step
+	      (step-md/letp2 Dfst Dvalue))
+	   <- value-md-pure Dof Dvalue
+	      (Dof' : md-of pure F M1 S)
+	   <- can-md-fst Dof'
+	      (Dfst : md-fst M1 C1).
+
+%worlds () (progress-md/letp _ _ _).
+%total {} (progress-md/letp _ _ _).
+
+
+
+progress-md/lete : unstuck ST E
+%%
+		   -> unstuck-md ST (md/lete E T M) -> type.
+%mode +{ST:store} +{E:term} +{T:con} +{M:term -> module} +{X1:unstuck ST E}
+   -{X2:unstuck-md ST (md/lete E T ([x:term] M x))} (progress-md/lete X1 X2).
+
+-	: progress-md/lete
+	   (unstuck/step
+	      (Dstep : step ST E ST' E'))
+	   (unstuck-md/step
+	      (step-md/lete1 Dstep)).
+
+-	: progress-md/lete
+	   (unstuck/raises
+	      (Draises : raises E V))
+	   (unstuck-md/raises
+	      (raises-md/lete Draises)).
+
+-	: progress-md/lete
+	   (unstuck/value
+	      (Dvalue : value E))
+	   (unstuck-md/step
+	      (step-md/lete2 Dvalue)).
+
+%worlds () (progress-md/lete _ _).
+%total {} (progress-md/lete _ _).
+
+
+
+progress-tm : tm-of F E T
+	       -> store-of F ST F
+%%
+	       -> unstuck ST E -> type.
+%mode progress-tm +X1 +X2 -X3.
+
+progress-md : md-of P F M S
+	       -> store-of F ST F
+%%
+	       -> unstuck-md ST M -> type.
+%mode progress-md +X1 +X2 -X3.
+
+-	: progress-tm tm-of/unit _ (unstuck/value value/unit).
+
+-	: progress-tm 
+	   (tm-of/abort _
+	      (Dof : tm-of F E void))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/abort Dof Dunstuck (Dunstuck' : unstuck ST (tm/abort E T)).
+
+-	: progress-tm 
+	   (tm-of/pair 
+	      (Dof2 : tm-of F E2 T2) 
+	      (Dof1 : tm-of F E1 T1))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof1 Dstof (Dunstuck1 : unstuck ST E1)
+	   <- progress-tm Dof2 Dstof (Dunstuck2 : unstuck ST E2)
+	   <- progress-tm/pair Dunstuck1 Dunstuck2 (Dunstuck : unstuck ST (tm/pair E1 E2)).
+
+-	: progress-tm 
+	   (tm-of/pi1 
+	      (Dof : tm-of F E (prod T1 T2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/pi1 Dof Dunstuck (Dunstuck' : unstuck ST (tm/pi1 E)).
+
+-	: progress-tm 
+	   (tm-of/pi2 
+	      (Dof : tm-of F E (prod T1 T2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/pi2 Dof Dunstuck (Dunstuck' : unstuck ST (tm/pi2 E)).
+
+-	: progress-tm (tm-of/lam _ _) _ (unstuck/value value/lam).
+
+-	: progress-tm 
+	   (tm-of/app
+	      (Dof2 : tm-of F E2 T')
+	      (Dof1 : tm-of F E1 (arrow T' T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof1 Dstof (Dunstuck1 : unstuck ST E1)
+	   <- progress-tm Dof2 Dstof (Dunstuck2 : unstuck ST E2)
+	   <- progress-tm/app Dof1 Dunstuck1 Dunstuck2 (Dunstuck : unstuck ST (tm/app E1 E2)).
+
+-	: progress-tm 
+	   (tm-of/in1
+	      _
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/in1 Dunstuck (Dunstuck' : unstuck ST (tm/in1 E T')).
+
+-	: progress-tm 
+	   (tm-of/in2
+	      _
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/in2 Dunstuck (Dunstuck' : unstuck ST (tm/in2 E T')).
+
+-	: progress-tm
+	   (tm-of/case
+	      (Dof2 : {x} tm-assm x T2 -> tm-of F (E2 x) T)
+	      (Dof1 : {x} tm-assm x T1 -> tm-of F (E1 x) T)
+	      (Dof : tm-of F E (plus T1 T2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/case Dof Dunstuck (Dunstuck' : unstuck ST (tm/case E E1 E2)).
+
+-	: progress-tm (tm-of/refloc _ _) _ (unstuck/value value/refloc).
+
+-	: progress-tm 
+	   (tm-of/ref
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/ref Dunstuck (Dunstuck' : unstuck ST (tm/ref E)).
+
+-	: progress-tm 
+	   (tm-of/deref
+	      (Dof : tm-of F E (ref T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/deref Dof Dstof Dunstuck (Dunstuck' : unstuck ST (tm/deref E)).
+
+-	: progress-tm 
+	   (tm-of/assign 
+	      (Dof2 : tm-of F E2 T) 
+	      (Dof1 : tm-of F E1 (ref T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof1 Dstof (Dunstuck1 : unstuck ST E1)
+	   <- progress-tm Dof2 Dstof (Dunstuck2 : unstuck ST E2)
+	   <- progress-tm/assign Dof1 Dstof Dunstuck1 Dunstuck2 
+	      (Dunstuck : unstuck ST (tm/assign E1 E2)).
+
+-	: progress-tm (tm-of/tagloc _ _) _ (unstuck/value value/tagloc).
+
+-	: progress-tm (tm-of/newtag _) _ (unstuck/step (step/newtag-beta Dnextloc))
+	   <- progress-nextloc _ (Dnextloc : nextloc ST L).
+
+-	: progress-tm 
+	   (tm-of/tag 
+	      (Dof2 : tm-of F E2 T) 
+	      (Dof1 : tm-of F E1 (tag T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof1 Dstof (Dunstuck1 : unstuck ST E1)
+	   <- progress-tm Dof2 Dstof (Dunstuck2 : unstuck ST E2)
+	   <- progress-tm/tag Dunstuck1 Dunstuck2 (Dunstuck : unstuck ST (tm/tag E1 E2)).
+
+-	: progress-tm
+	   (tm-of/iftag
+	      _ _
+	      (Dof2 : tm-of F E2 (tag T))
+	      (Dof1 : tm-of F E1 tagged))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof1 Dstof (Dunstuck1 : unstuck ST E1)
+	   <- progress-tm Dof2 Dstof (Dunstuck2 : unstuck ST E2)
+	   <- progress-tm/iftag Dof1 Dof2 Dunstuck1 Dunstuck2 (Dunstuck : unstuck ST (tm/iftag E1 E2 E3 E4)).
+
+-	: progress-tm
+	   (tm-of/roll
+	      _ _ _
+	      (Dof : tm-of F E (C1 (lam K ([a] rec K C1 a)) C2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/roll Dunstuck (Dunstuck' : unstuck ST (tm/roll E K C1 C2)).
+
+-	: progress-tm
+	   (tm-of/unroll
+	      (Dof : tm-of F E (rec K C1 C2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/unroll Dof Dunstuck (Dunstuck' : unstuck ST (tm/unroll E)).
+
+-	: progress-tm
+	   (tm-of/in
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/in Dunstuck (Dunstuck' : unstuck ST (tm/in L E)).
+
+-	: progress-tm
+	   (tm-of/out
+	      (Dof : tm-of F E (labeled L T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/out Dof Dunstuck (Dunstuck' : unstuck ST (tm/out E)).
+
+-	: progress-tm 
+	   (tm-of/raise
+	      _
+	      (Dof : tm-of F E tagged))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-tm/raise Dunstuck (Dunstuck' : unstuck ST (tm/raise E T)).
+
+-	: progress-tm
+	   (tm-of/try
+	      _
+	      (Dof1 : tm-of F E1 T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof1 Dstof (Dunstuck : unstuck ST E1)
+	   <- progress-tm/try Dunstuck (Dunstuck' : unstuck ST (tm/try E1 E2)).
+
+-	: progress-tm
+	   (tm-of/lett
+	      _
+	      (Dof1 : tm-of F E1 T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof1 Dstof (Dunstuck : unstuck ST E1)
+	   <- progress-tm/lett Dunstuck (Dunstuck' : unstuck ST (tm/lett E1 E2)).
+	   
+-	: progress-tm
+	   (tm-of/snd 
+	      (Dof : md-of P F M (sg/datom T)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M)
+	   <- progress-tm/snd Dof Dunstuck (Dunstuck' : unstuck ST (tm/snd M)).
+
+-	: progress-tm 
+	   (tm-of/equiv
+	      (Dequiv : cn-equiv T T' t)
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-tm Dof Dstof Dunstuck.
+
+
+
+-	: progress-md md-of/unit _ (unstuck-md/value value-md/unit).
+
+-	: progress-md (md-of/satom _) _ (unstuck-md/value value-md/satom).
+
+-	: progress-md (md-of/sgatom _) _ (unstuck-md/value value-md/sgatom).
+
+-	: progress-md
+	   (md-of/datom
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-md/datom Dunstuck (Dunstuck' : unstuck-md ST (md/datom E T)).
+
+-	: progress-md
+	   (md-of/pair
+	      (Dof2 : md-of P F M2 S2)
+	      (Dof1 : md-of P F M1 S1))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof1 Dstof (Dunstuck1 : unstuck-md ST M1)
+	   <- progress-md Dof2 Dstof (Dunstuck2 : unstuck-md ST M2)
+	   <- progress-md/pair Dunstuck1 Dunstuck2 (Dunstuck : unstuck-md ST (md/pair M1 M2)).
+
+-	: progress-md
+	   (md-of/dpair
+	      _ _
+	      (Dof1 : md-of P F M1 S1))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof1 Dstof (Dunstuck1 : unstuck-md ST M1)
+	   <- progress-md/dpair Dof1 Dunstuck1 (Dunstuck : unstuck-md ST (md/dpair M1 M2)).
+
+-	: progress-md
+	   (md-of/pi1
+	      (Dof : md-of pure F M (sg/sigma S1 S2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M)
+	   <- progress-md/pi1 Dof Dunstuck (Dunstuck' : unstuck-md ST (md/pi1 M)).
+
+-	: progress-md
+	   (md-of/pi2
+	      _
+	      (Dof : md-of pure F M (sg/sigma S1 S2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M)
+	   <- progress-md/pi2 Dof Dunstuck (Dunstuck' : unstuck-md ST (md/pi2 M)).
+
+-	: progress-md (md-of/lam _ _ _) _ (unstuck-md/value value-md/lam).
+
+-	: progress-md
+	   (md-of/app
+	      _
+	      (Dof2 : md-of pure F M2 S1)
+	      (Dof1 : md-of P F M1 (sg/pi S1 S2)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof1 Dstof (Dunstuck1 : unstuck-md ST M1)
+	   <- progress-md Dof2 Dstof (Dunstuck2 : unstuck-md ST M2)
+	   <- progress-md/app Dof1 Dof2 Dunstuck1 Dunstuck2 (Dunstuck : unstuck-md ST (md/app M1 M2)).
+
+-	: progress-md
+	   (md-of/in
+	      (Dof : md-of P F M S))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M)
+	   <- progress-md/in Dunstuck (Dunstuck' : unstuck-md ST (md/in L M)).
+
+-	: progress-md
+	   (md-of/out
+	      (Dof : md-of P F M (sg/named L S)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M)
+	   <- progress-md/out Dof Dunstuck (Dunstuck' : unstuck-md ST (md/out M)).
+
+-	: progress-md (md-of/seal _) _ (unstuck-md/step step-md/seal).
+
+-	: progress-md 
+	   (md-of/let
+	      _ _
+	      (Dof : md-of P F M1 S))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M1)
+	   <- progress-md/let Dof Dunstuck (Dunstuck' : unstuck-md ST (md/let M1 M2 S')).
+	   
+-	: progress-md 
+	   (md-of/letp
+	      _ _ _
+	      (Dof : md-of pure F M1 S))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M1)
+	   <- progress-md/letp Dof Dunstuck (Dunstuck' : unstuck-md ST (md/letp M1 M2)).
+	   
+-	: progress-md 
+	   (md-of/lete
+	      _
+	      (Dof : tm-of F E T))
+	   (Dstof : store-of F ST F)
+	   Dunstuck'
+	   <- progress-tm Dof Dstof (Dunstuck : unstuck ST E)
+	   <- progress-md/lete Dunstuck (Dunstuck' : unstuck-md ST (md/lete E T M)).
+	   
+-	: progress-md
+	   (md-of/self
+	      _ _
+	      (Dof : md-of pure F M (sg/satom K)))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof Dstof Dunstuck.
+
+-	: progress-md
+	   (md-of/extsigma
+	      _
+	      (Dof : md-of pure F (md/pi1 M) S1))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- md-of-appcontext (appcontext/pi1 appcontext/base) Dof
+	      (Dof' : md-of P F M S) _  %% Dof' <= Dof
+	   <- progress-md Dof' Dstof (Dunstuck : unstuck-md ST M).
+
+-	: progress-md
+	   (md-of/extnamed
+	      _
+	      (Dof : md-of pure F M (sg/named L S')))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof Dstof (Dunstuck : unstuck-md ST M).
+
+-	: progress-md
+	   (md-of/forget
+	      (Dof : md-of pure F M S))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof Dstof Dunstuck.
+
+-	: progress-md
+	   (md-of/subsume
+	      _
+	      (Dof : md-of P F M S))
+	   (Dstof : store-of F ST F)
+	   Dunstuck
+	   <- progress-md Dof Dstof Dunstuck.
+
+%worlds () (progress-tm _ _ _) (progress-md _ _ _).
+%total (D1 D2) (progress-tm D1 _ _) (progress-md D2 _ _).

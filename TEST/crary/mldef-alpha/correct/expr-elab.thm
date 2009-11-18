@@ -1,0 +1,239 @@
+
+
+%%%  LONGIDS
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/longid-mono
+	      (Dresolve : resolve-long Mec Sec name/val I M (sg/named L (sg/datom T))))
+	   %%
+	   (tm-of/snd (md-of/out DofM))
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofM : md-of pure st/nil M (sg/named L (sg/datom T))).
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/longid-poly
+	      (Dfst : md-fst Marg Carg)
+	      (Dinstance : instance Sarg Marg)
+	      (Dresolve : resolve-long Mec Sec name/val I M (sg/named L (sg/pi Sarg ([a] sg/datom (T a))))))
+	   %%
+	   (tm-of/snd (md-of/app Dfst DofMarg (md-of/out DofM)))
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofM : md-of pure st/nil M (sg/named L (sg/pi Sarg ([a] sg/datom (T a)))))
+	   <- instance-reg Dinstance
+	      (DofMarg : md-of pure st/nil Marg Sarg).
+
+
+
+
+%%%  RECORDS
+
+%% The inversion lemmas require an empty context, which we don't have,
+%% so record-insert-reg will employ a stronger invariant than mere typing.
+
+row-of : term -> con -> type.
+
+row-of/nil	: row-of tm/unit unit.
+
+row-of/cons	: row-of (tm/pair (tm/in L E) Etail) (prod (labeled L T) Ttail)
+		   <- tm-of st/nil E T
+		   <- row-of Etail Ttail.
+
+
+record-insert-reg : tm-of st/nil E1 T1
+		     -> row-of E2 T2
+		     -> record-insert L E1 T1 E2 T2 E T
+%%
+		     -> row-of E T
+		     -> type.
+%mode record-insert-reg +X1 +X2 +X3 -X4.
+
+-	: record-insert-reg Dof _ record-insert/nil (row-of/cons row-of/nil Dof).
+
+-	: record-insert-reg Dof1 Dof2 (record-insert/here _) (row-of/cons Dof2 Dof1).
+
+-	: record-insert-reg Dof1 (row-of/cons DofTail Dof2) (record-insert/later Dinsert _) (row-of/cons DofTail' Dof2)
+	   <- record-insert-reg Dof1 DofTail Dinsert DofTail'.
+
+%worlds (conbind | termbind | modbind) (record-insert-reg _ _ _ _).
+%total D (record-insert-reg _ _ D _).
+
+
+row-of-implies-tm-of : row-of E T -> tm-of st/nil E T -> type.
+%mode row-of-implies-tm-of +X1 -X2.
+
+-	: row-of-implies-tm-of row-of/nil tm-of/unit.
+
+-	: row-of-implies-tm-of (row-of/cons Dof2 Dof1) (tm-of/pair Dof2' (tm-of/in Dof1))
+	   <- row-of-implies-tm-of Dof2 Dof2'.
+
+%worlds (conbind | termbind | modbind) (row-of-implies-tm-of _ _).
+%total D (row-of-implies-tm-of D _).
+
+
+expr-row-elab-reg : md-of pure st/nil Mec Sec
+		     -> row-of Ein Tin
+		     -> expr-row-elab Mec Sec Ein Tin Ee E T
+%%
+		     -> tm-of st/nil E T
+		     -> type.
+%mode expr-row-elab-reg +X1 +X2 +X3 -X4.
+
+-	: expr-row-elab-reg _ Dof expr-row-elab/nil Dof'
+	   <- row-of-implies-tm-of Dof Dof'.
+
+-	: expr-row-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofEin : row-of Ein Tin)
+	   (expr-row-elab/cons 
+	      (Delab2 : {x} expr-row-elab Mec Sec (Eout x) Tout ERe (Efinal x) Tfinal)
+	      (Dinsert : {x} record-insert L x T Ein Tin (Eout x) Tout)
+	      (Delab1 : expr-elab Mec Sec Ee E T))
+	   %%
+	   (tm-of/lett DofFinal DofE)
+	   <- expr-elab-reg DofEC Delab1
+	      (DofE : tm-of st/nil E T)
+	   <- tm-of-reg DofE
+	      (DwfT : cn-of T t)
+	   <- ({x} {d:tm-assm x T}
+		 record-insert-reg (tm-of/var d) DofEin (Dinsert x)
+		 (DofOut x d : row-of (Eout x) Tout))
+	   <- ({x} {d:tm-assm x T}
+		 tm-assm-reg d DwfT
+		 -> expr-row-elab-reg DofEC (DofOut x d) (Delab2 x)
+		    (DofFinal x d : tm-of st/nil (Efinal x) Tfinal)).
+
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/record
+	      (Delab : expr-row-elab Mec Sec tm/unit unit ERe E T))
+	   %%
+	   Dof
+	   <- expr-row-elab-reg DofEC row-of/nil Delab
+	      (Dof : tm-of st/nil E T).
+
+
+
+%%% LET
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/let
+	      (Delab2 : {a} cn-of a K
+			 -> {m} md-assm m S 
+			 -> md-fst m a
+			 -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Ee (E a m) T)
+	      (DfstS : sg-fst S K)
+	      (Delab1 : dec-elab Mec Sec De M S))
+	   %%
+	   (tm-of/letm DofE DfstS DofM)
+	   <- dec-elab-reg DofEC Delab1
+	      (DofM : md-of impure st/nil M S)
+	   <- md-of-reg DofM
+	      (DwfS : sg-wf S)
+	   <- sg-fst-reg DwfS DfstS
+	      (DwfK : kd-wf K)
+	   <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a} {das:cn-assm da}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK
+		 -> md-assm-reg dm dfst DfstS da DwfS
+		 -> expr-elab-reg (md-of/pair (md-of/var dm) DofEC) (Delab2 a da m dm dfst)
+		    (DofE a da m dm dfst : tm-of st/nil (E a m) T)).
+
+
+
+%%% APP
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/app
+	      (Delab2 : expr-elab Mec Sec Ee2 E2 T2)
+	      (Delab1 : expr-elab Mec Sec Ee1 E1 (arrow T2 T)))
+	   %%
+	   (tm-of/app DofE2 DofE1)
+	   <- expr-elab-reg DofEC Delab1
+	      (DofE1 : tm-of st/nil E1 (arrow T2 T))
+	   <- expr-elab-reg DofEC Delab2
+	      (DofE2 : tm-of st/nil E2 T2).
+
+
+
+%%% CONSTRAINT
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/constraint
+	      (DelabE : expr-elab Mec Sec Ee E T)
+	      (DelabT : ty-elab Mec Sec Te T))
+	   %%
+	   DofE
+	   <- expr-elab-reg DofEC DelabE
+	      (DofE : tm-of st/nil E T).
+
+
+
+%%% HANDLE
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/handle
+	      (Delab2 : {x} match-elab Mec Sec Me x x tagged (E2 x) T)
+	      (Delab1 : expr-elab Mec Sec Ee E1 T))
+	   %%
+	   (tm-of/try DofE2 DofE1)
+	   <- expr-elab-reg DofEC Delab1
+	      (DofE1 : tm-of st/nil E1 T)
+	   <- ({x} {d:tm-assm x tagged}
+		 tm-assm-reg d cn-of/tagged
+		 -> match-elab-reg DofEC (tm-of/var d) (tm-of/var d) (Delab2 x)
+		    (DofE2 x d : tm-of st/nil (E2 x) T)).
+
+
+
+%%% RAISE
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/raise
+	      (DofT : cn-of T t)
+	      (Delab : expr-elab Mec Sec Ee E tagged))
+	   %%
+	   (tm-of/raise DofT DofE)
+	   <- expr-elab-reg DofEC Delab
+	      (DofE : tm-of st/nil E tagged).
+
+
+
+%%% FN
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/fn
+	      (Delab : {x} match-elab Mec Sec Me (tm/snd Mmatch) x T1 (E x) T2)
+	      (DofT1 : cn-of T1 t)
+	      (Dresolve : resolve-in-basis Mec Sec (name/val identifier/match) (sg/datom tagged) Mmatch))
+	   %%
+	   (tm-of/lam DofE DofT1)
+	   <- resolve-in-basis-reg DofEC Dresolve
+	      (DofMatch : md-of pure st/nil Mmatch (sg/datom tagged))
+	   <- ({x} {d:tm-assm x T1}
+		 tm-assm-reg d DofT1
+		 -> match-elab-reg DofEC (tm-of/snd DofMatch) (tm-of/var d) (Delab x)
+		    (DofE x d : tm-of st/nil (E x) T2)).
+
+
+
+%%% EQUIV
+
+-	: expr-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (expr-elab/equiv
+	      (Dequiv : cn-equiv T T' t)
+	      (Delab : expr-elab Mec Sec Ee E T))
+	   %%
+	   (tm-of/equiv Dequiv DofE)
+	   <- expr-elab-reg DofEC Delab 
+	      (DofE : tm-of st/nil E T).
+		    

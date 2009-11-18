@@ -1,0 +1,115 @@
+%%%% raises judgment
+
+raises/tm	: tm -> tm -> type.
+%mode raises/tm *E *EX.
+
+raises/md	: md -> tm -> type.
+%mode raises/md *E *EX.
+
+
+raises/tm/pair-1	: raises/tm (tm/pair E1 E2) EX
+			   <- raises/tm E1 EX.
+
+raises/tm/pair-2	: raises/tm (tm/pair E1 E2) EX
+			   <- raises/tm E2 EX
+			   <- val/tm E1.
+
+raises/tm/pj1		: raises/tm (tm/pj1 E) EX
+			   <- raises/tm E EX.
+
+raises/tm/pj2		: raises/tm (tm/pj2 E) EX
+			   <- raises/tm E EX.
+
+raises/tm/tmapp-1	: raises/tm (tm/tmapp E1 E2) EX
+			   <- raises/tm E1 EX.
+
+raises/tm/tmapp-2	: raises/tm (tm/tmapp E1 E2) EX
+			   <- raises/tm E2 EX
+			   <- val/tm E1.
+
+raises/tm/cnapp		: raises/tm (tm/cnapp E1 C) EX
+			   <- raises/tm E1 EX.
+
+raises/tm/term		: raises/tm (tm/term M) EX
+			   <- raises/md M EX.
+
+raises/tm/ref		: raises/tm (tm/ref E) EX
+			   <- raises/tm E EX.
+
+raises/tm/set-1		: raises/tm (tm/set E1 E2) EX
+			   <- raises/tm E1 EX.
+
+raises/tm/set-2		: raises/tm (tm/set E1 E2) EX
+			   <- raises/tm E2 EX
+			   <- val/tm E1.
+
+raises/tm/get		: raises/tm (tm/get E) EX
+			   <- raises/tm E EX.
+
+raises/tm/inl		: raises/tm (tm/inl (tp/sum C1 C2) E) EX 
+			   <- raises/tm E EX.
+
+raises/tm/inr		: raises/tm (tm/inr (tp/sum C1 C2) E) EX 
+			   <- raises/tm E EX.
+
+raises/tm/case		: raises/tm (tm/case E E1 E2) EX 
+			   <- raises/tm E EX.
+
+raises/tm/raise-1	: raises/tm (tm/raise E) E
+			   <- val/tm E.
+
+raises/tm/raise-2	: raises/tm (tm/raise E) V
+			   <- raises/tm E V.
+
+raises/tm/tag-1		: raises/tm (tm/tag E1 E2) EX
+			   <- raises/tm E1 EX.
+
+raises/tm/tag-2		: raises/tm (tm/tag E1 E2) EX
+			   <- raises/tm E2 EX
+			   <- val/tm E1.
+
+raises/tm/iftag-1	: raises/tm (tm/iftag E E1 E2 E3) EX 
+			   <- raises/tm E EX.
+
+raises/tm/iftag-2	: raises/tm (tm/iftag E E1 E2 E3) EX 
+			   <- raises/tm E1 EX
+			   <- val/tm E.
+
+raises/tm/roll		: raises/tm (tm/roll (cn/mu K1 C2) E) V
+			   <- raises/tm E V.
+
+raises/tm/unroll	: raises/tm (tm/unroll E) V
+			   <- raises/tm E V.
+
+
+raises/md/pair-1	: raises/md (md/pair M1 M2) M1'
+			   <- raises/md M1 M1'.
+
+raises/md/pair-2	: raises/md (md/pair M1 M2) M2'
+			   <- raises/md M2 M2'
+			   <- val/md M1.
+
+raises/md/pj1		: raises/md (md/pj1 M) M'
+			   <- raises/md M M'.
+
+raises/md/pj2		: raises/md (md/pj2 M) M'
+			   <- raises/md M M'.
+
+raises/md/app-1		: raises/md (md/app M1 M2) M1'
+			   <- raises/md M1 M1'.
+
+raises/md/app-2		: raises/md (md/app M1 M2) M2'
+			   <- raises/md M2 M2'
+			   <- val/md M1.
+
+raises/md/tm		: raises/md (md/tm E) E'
+			   <- raises/tm E E'.
+
+raises/md/seal		: raises/md (md/seal M S) M'
+			   <- raises/md M M'.
+
+raises/md/let		: raises/md (md/let M1 M2 S) M1'
+			   <- raises/md M1 M1'.
+
+
+

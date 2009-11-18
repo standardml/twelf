@@ -1,0 +1,1128 @@
+%%%% lemmas needed for implcate
+
+% "halfway" explicit semantics?
+
+ikd-wf	: cxt -> kd -> type.
+
+ikd-wf/nil	: ikd-wf cxt/nil K
+		   <- kd-wf K.
+
+ikd-wf/cons	: ikd-wf (cxt/cons G C K) K'
+		   <- (ofkd C K -> ikd-wf G K').
+
+
+
+iofkd	: cxt -> cn -> kd -> type.
+
+iofkd/nil	: iofkd cxt/nil C K
+		   <- ofkd C K.
+
+iofkd/cons	: iofkd (cxt/cons G C K) C' K'
+		   <- (ofkd C K -> iofkd G C' K').
+
+
+
+ikd-sub	: cxt -> kd -> kd -> type.
+
+ikd-sub/nil	: ikd-sub cxt/nil K K'
+		   <- kd-sub K K'.
+
+ikd-sub/cons	: ikd-sub (cxt/cons G C K) K1 K2
+		   <- (ofkd C K -> ikd-sub G K1 K2).
+
+
+
+ikd-deq	: cxt -> kd -> kd -> type.
+
+ikd-deq/nil	: ikd-deq cxt/nil K K'
+		   <- kd-deq K K'.
+
+ikd-deq/cons	: ikd-deq (cxt/cons G C K) K1 K2
+		   <- (ofkd C K -> ikd-deq G K1 K2).
+
+
+
+icn-deq	: cxt -> cn -> cn -> kd -> type.
+
+icn-deq/nil	: icn-deq cxt/nil C1 C2 K
+		   <- cn-deq C1 C2 K.
+
+icn-deq/cons	: icn-deq (cxt/cons G C K) C1 C2 K'
+		   <- (ofkd C K -> icn-deq G C1 C2 K').
+
+
+
+%block iofkd-block	: some {c:cn} {k:kd}
+			   block
+			   {d: ofkd c k}.
+
+
+
+kd-wf-to-ikd-wf	: {G:cxt} kd-wf K -> ikd-wf G K -> type.
+%mode kd-wf-to-ikd-wf +X1 +X2 -X3.
+
+-	: kd-wf-to-ikd-wf cxt/nil D (ikd-wf/nil D).
+
+-	: kd-wf-to-ikd-wf (cxt/cons G C K) D (ikd-wf/cons [d] D')
+	   <- kd-wf-to-ikd-wf G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (kd-wf-to-ikd-wf _ _ _).
+%total G (kd-wf-to-ikd-wf G _ _).
+
+
+
+ofkd-to-iofkd	: {G:cxt} ofkd C K -> iofkd G C K -> type.
+%mode ofkd-to-iofkd +X1 +X2 -X3.
+
+-	: ofkd-to-iofkd cxt/nil D (iofkd/nil D).
+
+-	: ofkd-to-iofkd (cxt/cons G C K) D (iofkd/cons [d] D')
+	   <- ofkd-to-iofkd G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ofkd-to-iofkd _ _ _).
+%total G (ofkd-to-iofkd G _ _).
+
+
+
+kd-sub-to-ikd-sub	: {G:cxt} kd-sub K K' -> ikd-sub G K K' -> type.
+%mode kd-sub-to-ikd-sub +X1 +X2 -X3.
+
+-	: kd-sub-to-ikd-sub cxt/nil D (ikd-sub/nil D).
+
+-	: kd-sub-to-ikd-sub (cxt/cons G C K) D (ikd-sub/cons [d] D')
+	   <- kd-sub-to-ikd-sub G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (kd-sub-to-ikd-sub _ _ _).
+%total G (kd-sub-to-ikd-sub G _ _).
+
+
+
+kd-deq-to-ikd-deq	: {G:cxt} kd-deq K K' -> ikd-deq G K K' -> type.
+%mode kd-deq-to-ikd-deq +X1 +X2 -X3.
+
+-	: kd-deq-to-ikd-deq cxt/nil D (ikd-deq/nil D).
+
+-	: kd-deq-to-ikd-deq (cxt/cons G C K) D (ikd-deq/cons [d] D')
+	   <- kd-deq-to-ikd-deq G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (kd-deq-to-ikd-deq _ _ _).
+%total G (kd-deq-to-ikd-deq G _ _).
+
+
+
+cn-deq-to-icn-deq	: {G:cxt} cn-deq C1 C2 K -> icn-deq G C1 C2 K -> type.
+%mode cn-deq-to-icn-deq +X1 +X2 -X3.
+
+-	: cn-deq-to-icn-deq cxt/nil D (icn-deq/nil D).
+
+-	: cn-deq-to-icn-deq (cxt/cons G C K) D (icn-deq/cons [d] D')
+	   <- cn-deq-to-icn-deq G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (cn-deq-to-icn-deq _ _ _).
+%total G (cn-deq-to-icn-deq G _ _).
+
+
+
+implicate-cxt-lookup	: cxt-lookup G C K -> iofkd G C K -> type.
+%mode implicate-cxt-lookup +D1 -D2.
+
+-	: implicate-cxt-lookup (cxt-lookup/hit _) (iofkd/cons D)
+	   <- ({d:ofkd C K}
+		 ofkd-to-iofkd G d (D d)).
+
+-	: implicate-cxt-lookup (cxt-lookup/miss D _ _) 
+	   (iofkd/cons ([d] D'))
+	   <- implicate-cxt-lookup D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (implicate-cxt-lookup _ _).
+%total D (implicate-cxt-lookup D _).
+
+
+
+ikd-wf/kd/unit	: {G:cxt} ikd-wf G kd/unit -> type.
+%mode ikd-wf/kd/unit +X1 -X2.
+
+
+ikd-wf/kd/sing	: iofkd G C1 kd/type -> ikd-wf G (kd/sing C1) -> type.
+%mode ikd-wf/kd/sing +D1 -D2.
+
+-	: ikd-wf/kd/sing (iofkd/nil D) (ikd-wf/nil (kd-wf/kd/sing D)).
+
+-	: ikd-wf/kd/sing (iofkd/cons D) (ikd-wf/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-wf/kd/sing (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-wf/kd/sing _ _).
+%total D (ikd-wf/kd/sing D _).
+
+
+
+ikd-wf/kd/sgm	: ikd-wf G K1 
+		   -> ({c:cn} ofkd c K1 -> ikd-wf G (K2 c))
+		   -> ikd-wf G (kd/sgm K1 K2) -> type.
+%mode ikd-wf/kd/sgm +D1 +D1' -D2.
+
+-	: ikd-wf/kd/sgm 
+	   (ikd-wf/nil D) 
+	   ([c] [d] ikd-wf/nil (D' c d))
+	   (ikd-wf/nil (kd-wf/kd/sgm D D')).
+
+-	: ikd-wf/kd/sgm 
+	   (ikd-wf/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-wf/cons ([d'] D2 c d d'))
+	   (ikd-wf/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-wf/kd/sgm (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-wf/kd/sgm _ _ _).
+%total D (ikd-wf/kd/sgm D _ _).
+
+
+
+ikd-wf/kd/pi	: ikd-wf G K1 
+		   -> ({c:cn} ofkd c K1 -> ikd-wf G (K2 c))
+		   -> ikd-wf G (kd/pi K1 K2) -> type.
+%mode ikd-wf/kd/pi +D1 +D1' -D2.
+
+-	: ikd-wf/kd/pi 
+	   (ikd-wf/nil D) 
+	   ([c] [d] ikd-wf/nil (D' c d))
+	   (ikd-wf/nil (kd-wf/kd/pi D D')).
+
+-	: ikd-wf/kd/pi 
+	   (ikd-wf/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-wf/cons ([d'] D2 c d d'))
+	   (ikd-wf/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-wf/kd/pi (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-wf/kd/pi _ _ _).
+%total D (ikd-wf/kd/pi D _ _).
+
+
+
+ikd-deq/kd/sing	: icn-deq G C1 C2 kd/type 
+		   -> ikd-deq G (kd/sing C1) (kd/sing C2)
+		   -> type.
+%mode ikd-deq/kd/sing +D1 -D2.
+
+-	: ikd-deq/kd/sing (icn-deq/nil D) (ikd-deq/nil (kd-deq/kd/sing D)).
+
+-	: ikd-deq/kd/sing (icn-deq/cons D) (ikd-deq/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-deq/kd/sing (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-deq/kd/sing _ _).
+%total D (ikd-deq/kd/sing D _).
+
+
+
+ikd-deq/kd/sgm	: ikd-deq G K1 K2
+		   -> ({c:cn} ofkd c K1 -> ikd-deq G (K3 c) (K4 c))
+		   -> ikd-deq G (kd/sgm K1 K3) (kd/sgm K2 K4)
+		   -> type.
+%mode ikd-deq/kd/sgm +D1 +D1' -D2.
+
+-	: ikd-deq/kd/sgm 
+	   (ikd-deq/nil D) 
+	   ([c] [d] ikd-deq/nil (D' c d))
+	   (ikd-deq/nil (kd-deq/kd/sgm D D')).
+
+-	: ikd-deq/kd/sgm 
+	   (ikd-deq/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-deq/cons ([d'] D2 c d d'))
+	   (ikd-deq/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-deq/kd/sgm (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-deq/kd/sgm _ _ _).
+%total D (ikd-deq/kd/sgm D _ _).
+
+
+
+ikd-deq/kd/pi	: ikd-deq G K2 K1
+		   -> ({c:cn} ofkd c K2 -> ikd-deq G (K3 c) (K4 c))
+		   -> ikd-deq G (kd/pi K1 K3) (kd/pi K2 K4) 
+		   -> type.
+%mode ikd-deq/kd/pi +D1 +D1' -D2.
+
+-	: ikd-deq/kd/pi 
+	   (ikd-deq/nil D) 
+	   ([c] [d] ikd-deq/nil (D' c d))
+	   (ikd-deq/nil (kd-deq/kd/pi D D')).
+
+-	: ikd-deq/kd/pi 
+	   (ikd-deq/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-deq/cons ([d'] D2 c d d'))
+	   (ikd-deq/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-deq/kd/pi (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-deq/kd/pi _ _ _).
+%total D (ikd-deq/kd/pi D _ _).
+
+
+
+ikd-sub/kd/sing-kd/sing	: icn-deq G C1 C2 kd/type 
+			   -> ikd-sub G (kd/sing C1) (kd/sing C2)
+			   -> type.
+%mode ikd-sub/kd/sing-kd/sing +D1 -D2.
+
+-	: ikd-sub/kd/sing-kd/sing (icn-deq/nil D) 
+	   (ikd-sub/nil (kd-sub/kd/sing-kd/sing D)).
+
+-	: ikd-sub/kd/sing-kd/sing (icn-deq/cons D) (ikd-sub/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-sub/kd/sing-kd/sing (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-sub/kd/sing-kd/sing _ _).
+%total D (ikd-sub/kd/sing-kd/sing D _).
+
+
+
+ikd-sub/kd/sing-kd/type	: iofkd G C1 kd/type 
+			   -> ikd-sub G (kd/sing C1) kd/type
+			   -> type.
+%mode ikd-sub/kd/sing-kd/type +D1 -D2.
+
+-	: ikd-sub/kd/sing-kd/type (iofkd/nil D) 
+	   (ikd-sub/nil (kd-sub/kd/sing-kd/type D)).
+
+-	: ikd-sub/kd/sing-kd/type (iofkd/cons D) (ikd-sub/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-sub/kd/sing-kd/type (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-sub/kd/sing-kd/type _ _).
+%total D (ikd-sub/kd/sing-kd/type D _).
+
+
+
+ikd-sub/kd/sgm	: ikd-sub G K1 K2
+		   -> ({c:cn} ofkd c K1 -> ikd-sub G (K3 c) (K4 c))
+		   -> ({c:cn} ofkd c K2 -> ikd-wf G (K4 c))
+		   -> ikd-sub G (kd/sgm K1 K3) (kd/sgm K2 K4)
+		   -> type.
+%mode ikd-sub/kd/sgm +D1 +D1' +D1'' -D2.
+
+-	: ikd-sub/kd/sgm 
+	   (ikd-sub/nil D) 
+	   ([c] [d] ikd-sub/nil (D' c d))
+	   ([c] [d] ikd-wf/nil (D'' c d))
+	   (ikd-sub/nil (kd-sub/kd/sgm D D' D'')).
+
+-	: ikd-sub/kd/sgm 
+	   (ikd-sub/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-sub/cons ([d'] D2 c d d'))
+	   ([c:cn] [d:ofkd c _] ikd-wf/cons ([d'] D3 c d d'))
+	   (ikd-sub/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-sub/kd/sgm 
+		 (D1 d) 
+		 ([c][d'] D2 c d' d) 
+		 ([c][d'] D3 c d' d) 
+		 (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-sub/kd/sgm _ _ _ _).
+%total D (ikd-sub/kd/sgm D _ _ _).
+
+
+
+ikd-sub/kd/pi	: ikd-sub G K2 K1
+		   -> ({c:cn} ofkd c K2 -> ikd-sub G (K3 c) (K4 c))
+		   -> ({c:cn} ofkd c K1 -> ikd-wf G (K3 c))
+		   -> ikd-sub G (kd/pi K1 K3) (kd/pi K2 K4)
+		   -> type.
+%mode ikd-sub/kd/pi +D1 +D1' +D1'' -D2.
+
+-	: ikd-sub/kd/pi 
+	   (ikd-sub/nil D) 
+	   ([c] [d] ikd-sub/nil (D' c d))
+	   ([c] [d] ikd-wf/nil (D'' c d))
+	   (ikd-sub/nil (kd-sub/kd/pi D D' D'')).
+
+-	: ikd-sub/kd/pi 
+	   (ikd-sub/cons D1)
+	   ([c:cn] [d:ofkd c _] ikd-sub/cons ([d'] D2 c d d'))
+	   ([c:cn] [d:ofkd c _] ikd-wf/cons ([d'] D3 c d d'))
+	   (ikd-sub/cons D')
+	   <- ({d: ofkd C K}
+		 ikd-sub/kd/pi 
+		 (D1 d) 
+		 ([c][d'] D2 c d' d) 
+		 ([c][d'] D3 c d' d) 
+		 (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (ikd-sub/kd/pi _ _ _ _).
+%total D (ikd-sub/kd/pi D _ _ _).
+
+
+
+
+iofkd/tp/cross	: iofkd G C1 kd/type 
+		   -> iofkd G C2 kd/type 
+		   -> iofkd G (tp/cross C1 C2) kd/type -> type.
+%mode iofkd/tp/cross +D1 +D1' -D2.
+
+-	: iofkd/tp/cross (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/tp/cross D D')).
+
+-	: iofkd/tp/cross (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/cross (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/cross _ _ _).
+%total D (iofkd/tp/cross D _ _).
+
+
+
+iofkd/tp/arrow	: iofkd G C1 kd/type 
+		   -> iofkd G C2 kd/type 
+		   -> iofkd G (tp/arrow C1 C2) kd/type -> type.
+%mode iofkd/tp/arrow +D1 +D1' -D2.
+
+-	: iofkd/tp/arrow (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/tp/arrow D D')).
+
+-	: iofkd/tp/arrow (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/arrow (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/arrow _ _ _).
+%total D (iofkd/tp/arrow D _ _).
+
+
+
+iofkd/tp/sum	: iofkd G C1 kd/type 
+		   -> iofkd G C2 kd/type 
+		   -> iofkd G (tp/sum C1 C2) kd/type -> type.
+%mode iofkd/tp/sum +D1 +D1' -D2.
+
+-	: iofkd/tp/sum (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/tp/sum D D')).
+
+-	: iofkd/tp/sum (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/sum (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/sum _ _ _).
+%total D (iofkd/tp/sum D _ _).
+
+
+
+iofkd/cn/pair	: iofkd G C1 K1 
+		   -> iofkd G C2 K2
+		   -> iofkd G (cn/pair C1 C2) (kd/sgm K1 ([c] K2)) 
+		   -> type.
+%mode iofkd/cn/pair +D1 +D1' -D2.
+
+-	: iofkd/cn/pair (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/cn/pair D D')).
+
+-	: iofkd/cn/pair (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/pair (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/pair _ _ _).
+%total D (iofkd/cn/pair D _ _).
+
+
+
+iofkd/cn/app	: iofkd G C1 (kd/pi K1 K2) 
+		   -> iofkd G C2 K1
+		   -> iofkd G (cn/app C1 C2) (K2 C2) 
+		   -> type.
+%mode iofkd/cn/app +D1 +D1' -D2.
+
+-	: iofkd/cn/app (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/cn/app D D')).
+
+-	: iofkd/cn/app (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/app (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/app _ _ _).
+%total D (iofkd/cn/app D _ _).
+
+
+
+iofkd/sgm-ext	: iofkd G (cn/pj1 C) K1
+		   -> iofkd G (cn/pj2 C) K2
+		   -> iofkd G C (kd/sgm K1 ([c] K2))
+		   -> type.
+%mode iofkd/sgm-ext +D1 +D1' -D2.
+
+-	: iofkd/sgm-ext (iofkd/nil D) (iofkd/nil D')
+	   (iofkd/nil (ofkd/sgm-ext D D')).
+
+-	: iofkd/sgm-ext (iofkd/cons D1) (iofkd/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/sgm-ext (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/sgm-ext _ _ _).
+%total D (iofkd/sgm-ext D _ _).
+
+
+
+iofkd/sub	: iofkd G C K1
+		   -> ikd-sub G K1 K2
+		   -> iofkd G C K2
+		   -> type.
+%mode iofkd/sub +D1 +D1' -D2.
+
+-	: iofkd/sub (iofkd/nil D) (ikd-sub/nil D')
+	   (iofkd/nil (ofkd/sub D D')).
+
+-	: iofkd/sub (iofkd/cons D1) (ikd-sub/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/sub (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/sub _ _ _).
+%total D (iofkd/sub D _ _).
+
+
+
+
+iofkd/deq	: iofkd G C K1
+		   -> ikd-deq G K1 K2
+		   -> iofkd G C K2
+		   -> type.
+%mode iofkd/deq +D1 +D1' -D2.
+
+-	: iofkd/deq (iofkd/nil D) (ikd-deq/nil D')
+	   (iofkd/nil (ofkd/deq D D')).
+
+-	: iofkd/deq (iofkd/cons D1) (ikd-deq/cons D2)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/deq (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/deq _ _ _).
+%total D (iofkd/deq D _ _).
+
+
+
+iofkd/tp/ref	: iofkd G C1 kd/type
+		   -> iofkd G (tp/ref C1) kd/type
+		   -> type.
+%mode iofkd/tp/ref +D1 -D2.
+
+-	: iofkd/tp/ref (iofkd/nil D)
+	   (iofkd/nil (ofkd/tp/ref D)).
+
+-	: iofkd/tp/ref (iofkd/cons D1) 
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/ref (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/ref _ _).
+%total D (iofkd/tp/ref D _).
+
+
+
+iofkd/tp/tag	: iofkd G C1 kd/type
+		   -> iofkd G (tp/tag C1) kd/type
+		   -> type.
+%mode iofkd/tp/tag +D1 -D2.
+
+-	: iofkd/tp/tag (iofkd/nil D)
+	   (iofkd/nil (ofkd/tp/tag D)).
+
+-	: iofkd/tp/tag (iofkd/cons D1) 
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/tag (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/tag _ _).
+%total D (iofkd/tp/tag D _).
+
+
+
+iofkd/cn/pj1	: iofkd G C1 (kd/sgm K1 _) 
+		   -> iofkd G (cn/pj1 C1) K1
+		   -> type.
+%mode iofkd/cn/pj1 +D1 -D2.
+
+-	: iofkd/cn/pj1 (iofkd/nil D)
+	   (iofkd/nil (ofkd/cn/pj1 D)).
+
+-	: iofkd/cn/pj1 (iofkd/cons D1) 
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/pj1 (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/pj1 _ _).
+%total D (iofkd/cn/pj1 D _).
+
+
+
+iofkd/cn/pj2	: iofkd G C1 (kd/sgm K1 K2) 
+		   -> iofkd G (cn/pj2 C1) (K2 (cn/pj1 C1))
+		   -> type.
+%mode iofkd/cn/pj2 +D1 -D2.
+
+-	: iofkd/cn/pj2 (iofkd/nil D)
+	   (iofkd/nil (ofkd/cn/pj2 D)).
+
+-	: iofkd/cn/pj2 (iofkd/cons D1) 
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/pj2 (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/pj2 _ _).
+%total D (iofkd/cn/pj2 D _).
+
+
+
+iofkd/kd/sing	: iofkd G C1 kd/type 
+		   -> iofkd G C1 (kd/sing C1)
+		   -> type.
+%mode iofkd/kd/sing +D1 -D2.
+
+-	: iofkd/kd/sing (iofkd/nil D)
+	   (iofkd/nil (ofkd/kd/sing D)).
+
+-	: iofkd/kd/sing (iofkd/cons D1) 
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/kd/sing (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/kd/sing _ _).
+%total D (iofkd/kd/sing D _).
+
+
+
+iofkd/tp/forall	: ({c:cn} ofkd c K1 -> iofkd G (C c) kd/type)
+		   -> ikd-wf G K1 
+		   -> iofkd G (tp/forall K1 C) kd/type -> type.
+%mode iofkd/tp/forall +D1 +D1' -D2.
+
+-	: iofkd/tp/forall 
+	   ([c] [d] iofkd/nil (D' c d))
+	   (ikd-wf/nil D) 
+	   (iofkd/nil (ofkd/tp/forall D' D)).
+
+-	: iofkd/tp/forall 
+	   ([c:cn] [d:ofkd c _] iofkd/cons ([d'] D2 c d d'))
+	   (ikd-wf/cons D1)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/tp/forall ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/tp/forall _ _ _).
+%total D (iofkd/tp/forall D _ _).
+
+
+
+iofkd/cn/lam	: ({c:cn} ofkd c K1 -> iofkd G (C c) (K2 c))
+		   -> ikd-wf G K1 
+		   -> iofkd G (cn/lam K1 C) (kd/pi K1 K2) -> type.
+%mode iofkd/cn/lam +D1 +D1' -D2.
+
+-	: iofkd/cn/lam 
+	   ([c] [d] iofkd/nil (D' c d))
+	   (ikd-wf/nil D) 
+	   (iofkd/nil (ofkd/cn/lam D' D)).
+
+-	: iofkd/cn/lam 
+	   ([c:cn] [d:ofkd c _] iofkd/cons ([d'] D2 c d d'))
+	   (ikd-wf/cons D1)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/lam ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/lam _ _ _).
+%total D (iofkd/cn/lam D _ _).
+
+
+
+iofkd/cn/mu	: ({c:cn} ofkd c kd/type -> iofkd G (C c) kd/type)
+		   -> ikd-wf G kd/type 
+		   -> iofkd G (cn/mu kd/type C) kd/type -> type.
+%mode iofkd/cn/mu +D1 +D1' -D2.
+
+-	: iofkd/cn/mu 
+	   ([c] [d] iofkd/nil (D' c d))
+	   (ikd-wf/nil D) 
+	   (iofkd/nil (ofkd/cn/mu D' D)).
+
+-	: iofkd/cn/mu 
+	   ([c:cn] [d:ofkd c _] iofkd/cons ([d'] D2 c d d'))
+	   (ikd-wf/cons D1)
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/cn/mu ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/cn/mu _ _ _).
+%total D (iofkd/cn/mu D _ _).
+
+
+
+iofkd/pi-ext	: iofkd G C (kd/pi K1 L) 
+		   -> ({c:cn} ofkd c K1 -> iofkd G (cn/app C c) (K2 c))
+		   -> iofkd G C (kd/pi K1 K2) -> type.
+%mode iofkd/pi-ext +D1 +D1' -D2.
+
+-	: iofkd/pi-ext 
+	   (iofkd/nil D) 
+	   ([c] [d] iofkd/nil (D' c d))
+	   (iofkd/nil (ofkd/pi-ext D D')).
+
+-	: iofkd/pi-ext 
+	   (iofkd/cons D1)
+	   ([c:cn] [d:ofkd c _] iofkd/cons ([d'] D2 c d d'))
+	   (iofkd/cons D')
+	   <- ({d: ofkd C K}
+		 iofkd/pi-ext (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (iofkd/pi-ext _ _ _).
+%total D (iofkd/pi-ext D _ _).
+
+
+
+
+icn-deq/tp/cross	: icn-deq G C1 C3 kd/type 
+			   -> icn-deq G C2 C4 kd/type 
+			   -> icn-deq G (tp/cross C1 C2) (tp/cross C3 C4) 
+			      kd/type 
+			   -> type.
+%mode icn-deq/tp/cross +D1 +D1' -D2.
+
+-	: icn-deq/tp/cross (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/tp/cross D D')).
+
+-	: icn-deq/tp/cross (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/cross (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/cross _ _ _).
+%total D (icn-deq/tp/cross D _ _).
+
+
+
+icn-deq/tp/arrow	: icn-deq G C1 C3 kd/type 
+			   -> icn-deq G C2 C4 kd/type 
+			   -> icn-deq G (tp/arrow C1 C2) (tp/arrow C3 C4) 
+			      kd/type 
+			   -> type.
+%mode icn-deq/tp/arrow +D1 +D1' -D2.
+
+-	: icn-deq/tp/arrow (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/tp/arrow D D')).
+
+-	: icn-deq/tp/arrow (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/arrow (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/arrow _ _ _).
+%total D (icn-deq/tp/arrow D _ _).
+
+
+
+
+icn-deq/tp/sum	: icn-deq G C1 C3 kd/type 
+		   -> icn-deq G C2 C4 kd/type 
+		   -> icn-deq G (tp/sum C1 C2) (tp/sum C3 C4) 
+		      kd/type 
+		   -> type.
+%mode icn-deq/tp/sum +D1 +D1' -D2.
+
+-	: icn-deq/tp/sum (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/tp/sum D D')).
+
+-	: icn-deq/tp/sum (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/sum (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/sum _ _ _).
+%total D (icn-deq/tp/sum D _ _).
+
+
+
+icn-deq/cn/pair	: icn-deq G C1 C3 K1
+		   -> icn-deq G C2 C4 K2
+		   -> icn-deq G (cn/pair C1 C2) (cn/pair C3 C4) 
+		      (kd/sgm K1 ([c] K2)) 
+		   -> type.
+%mode icn-deq/cn/pair +D1 +D1' -D2.
+
+-	: icn-deq/cn/pair (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/cn/pair D D')).
+
+-	: icn-deq/cn/pair (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/pair (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/pair _ _ _).
+%total D (icn-deq/cn/pair D _ _).
+
+
+
+icn-deq/cn/app	: icn-deq G C1 C3 (kd/pi K1 K2) 
+		   -> icn-deq G C2 C4 K1
+		   -> icn-deq G (cn/app C1 C2) (cn/app C3 C4) (K2 C2) 
+		   -> type.
+%mode icn-deq/cn/app +D1 +D1' -D2.
+
+-	: icn-deq/cn/app (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/cn/app D D')).
+
+-	: icn-deq/cn/app (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/app (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/app _ _ _).
+%total D (icn-deq/cn/app D _ _).
+
+
+
+icn-deq/sgm-ext	: icn-deq G (cn/pj1 C) (cn/pj1 C') K1
+		   -> icn-deq G (cn/pj2 C) (cn/pj2 C') K2
+		   -> icn-deq G C C' (kd/sgm K1 ([c] K2))
+		   -> type.
+%mode icn-deq/sgm-ext +D1 +D1' -D2.
+
+-	: icn-deq/sgm-ext (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/sgm-ext D D')).
+
+-	: icn-deq/sgm-ext (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/sgm-ext (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/sgm-ext _ _ _).
+%total D (icn-deq/sgm-ext D _ _).
+
+
+
+icn-deq/trans	: icn-deq G C1 C2 K1 
+		   -> icn-deq G C2 C3 K1
+		   -> icn-deq G C1 C3 K1
+		   -> type.
+%mode icn-deq/trans +D1 +D1' -D2.
+
+-	: icn-deq/trans (icn-deq/nil D) (icn-deq/nil D')
+	   (icn-deq/nil (cn-deq/trans D D')).
+
+-	: icn-deq/trans (icn-deq/cons D1) (icn-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/trans (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/trans _ _ _).
+%total D (icn-deq/trans D _ _).
+
+
+
+icn-deq/sub	: icn-deq G C C' K1
+		   -> ikd-sub G K1 K2
+		   -> icn-deq G C C' K2
+		   -> type.
+%mode icn-deq/sub +D1 +D1' -D2.
+
+-	: icn-deq/sub (icn-deq/nil D) (ikd-sub/nil D')
+	   (icn-deq/nil (cn-deq/sub D D')).
+
+-	: icn-deq/sub (icn-deq/cons D1) (ikd-sub/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/sub (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/sub _ _ _).
+%total D (icn-deq/sub D _ _).
+
+
+
+icn-deq/deq	: icn-deq G C C' K1
+		   -> ikd-deq G K1 K2
+		   -> icn-deq G C C' K2
+		   -> type.
+%mode icn-deq/deq +D1 +D1' -D2.
+
+-	: icn-deq/deq (icn-deq/nil D) (ikd-deq/nil D')
+	   (icn-deq/nil (cn-deq/deq D D')).
+
+-	: icn-deq/deq (icn-deq/cons D1) (ikd-deq/cons D2)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/deq (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/deq _ _ _).
+%total D (icn-deq/deq D _ _).
+
+
+
+icn-deq/tp/ref	: icn-deq G C1 C2 kd/type
+		   -> icn-deq G (tp/ref C1) (tp/ref C2) kd/type
+		   -> type.
+%mode icn-deq/tp/ref +D1 -D2.
+
+-	: icn-deq/tp/ref (icn-deq/nil D)
+	   (icn-deq/nil (cn-deq/tp/ref D)).
+
+-	: icn-deq/tp/ref (icn-deq/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/ref (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/ref _ _).
+%total D (icn-deq/tp/ref D _).
+
+
+
+icn-deq/tp/tag	: icn-deq G C1 C2 kd/type
+		   -> icn-deq G (tp/tag C1) (tp/tag C2) kd/type
+		   -> type.
+%mode icn-deq/tp/tag +D1 -D2.
+
+-	: icn-deq/tp/tag (icn-deq/nil D)
+	   (icn-deq/nil (cn-deq/tp/tag D)).
+
+-	: icn-deq/tp/tag (icn-deq/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/tag (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/tag _ _).
+%total D (icn-deq/tp/tag D _).
+
+
+
+icn-deq/cn/pj1	: icn-deq G C1 C2 (kd/sgm K1 _) 
+		   -> icn-deq G (cn/pj1 C1) (cn/pj1 C2) K1
+		   -> type.
+%mode icn-deq/cn/pj1 +D1 -D2.
+
+-	: icn-deq/cn/pj1 (icn-deq/nil D)
+	   (icn-deq/nil (cn-deq/cn/pj1 D)).
+
+-	: icn-deq/cn/pj1 (icn-deq/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/pj1 (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/pj1 _ _).
+%total D (icn-deq/cn/pj1 D _).
+
+
+
+icn-deq/cn/pj2	: icn-deq G C1 C2 (kd/sgm K1 K2) 
+		   -> icn-deq G (cn/pj2 C1) (cn/pj2 C2) (K2 (cn/pj1 C1))
+		   -> type.
+%mode icn-deq/cn/pj2 +D1 -D2.
+
+-	: icn-deq/cn/pj2 (icn-deq/nil D)
+	   (icn-deq/nil (cn-deq/cn/pj2 D)).
+
+-	: icn-deq/cn/pj2 (icn-deq/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/pj2 (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/pj2 _ _).
+%total D (icn-deq/cn/pj2 D _).
+
+
+
+icn-deq/kd/sing	: iofkd G C1 (kd/sing C)
+		   -> icn-deq G C1 C (kd/sing C)
+		   -> type.
+%mode icn-deq/kd/sing +D1 -D2.
+
+-	: icn-deq/kd/sing (iofkd/nil D)
+	   (icn-deq/nil (cn-deq/kd/sing D)).
+
+-	: icn-deq/kd/sing (iofkd/cons D1)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/kd/sing (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/kd/sing _ _).
+%total D (icn-deq/kd/sing D _).
+
+
+
+icn-deq/kd/unit	: iofkd G C1 kd/unit
+		   -> iofkd G C2 kd/unit
+		   -> icn-deq G C1 C2 kd/unit
+		   -> type.
+%mode icn-deq/kd/unit +D1 +D1' -D2.
+
+-	: icn-deq/kd/unit (iofkd/nil D) (iofkd/nil D')
+	   (icn-deq/nil (cn-deq/kd/unit D D')).
+
+-	: icn-deq/kd/unit (iofkd/cons D1) (iofkd/cons D2) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/kd/unit (D1 d) (D2 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/kd/unit _ _ _).
+%total D (icn-deq/kd/unit D _ _).
+
+
+
+icn-deq/refl	: iofkd G C1 K
+		   -> icn-deq G C1 C1 K
+		   -> type.
+%mode icn-deq/refl +D1 -D2.
+
+-	: icn-deq/refl (iofkd/nil D)
+	   (icn-deq/nil (cn-deq/refl D)).
+
+-	: icn-deq/refl (iofkd/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/refl (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/refl _ _).
+%total D (icn-deq/refl D _).
+
+
+
+icn-deq/sym	: icn-deq G C1 C2 K
+		   -> icn-deq G C2 C1 K
+		   -> type.
+%mode icn-deq/sym +D1 -D2.
+
+-	: icn-deq/sym (icn-deq/nil D)
+	   (icn-deq/nil (cn-deq/sym D)).
+
+-	: icn-deq/sym (icn-deq/cons D1) 
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/sym (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/sym _ _).
+%total D (icn-deq/sym D _).
+
+
+
+icn-deq/tp/forall	: ({c:cn} ofkd c K1 -> icn-deq G (C c) (C' c) kd/type)
+			   -> ikd-deq G K1 K2
+			   -> icn-deq G (tp/forall K1 C) (tp/forall K2 C')
+			      kd/type 
+			   -> type.
+%mode icn-deq/tp/forall +D1 +D1' -D2.
+
+-	: icn-deq/tp/forall 
+	   ([c] [d] icn-deq/nil (D' c d))
+	   (ikd-deq/nil D) 
+	   (icn-deq/nil (cn-deq/tp/forall D' D)).
+
+-	: icn-deq/tp/forall 
+	   ([c:cn] [d:ofkd c _] icn-deq/cons ([d'] D2 c d d'))
+	   (ikd-deq/cons D1)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/tp/forall ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/tp/forall _ _ _).
+%total D (icn-deq/tp/forall D _ _).
+
+
+
+icn-deq/cn/lam	: ({c:cn} ofkd c K1 -> icn-deq G (C c) (C' c) (K2 c))
+		   -> ikd-deq G K1 K3
+		   -> icn-deq G (cn/lam K1 C) (cn/lam K3 C') (kd/pi K1 K2) 
+		   -> type.
+%mode icn-deq/cn/lam +D1 +D1' -D2.
+
+-	: icn-deq/cn/lam 
+	   ([c] [d] icn-deq/nil (D' c d))
+	   (ikd-deq/nil D) 
+	   (icn-deq/nil (cn-deq/cn/lam D' D)).
+
+-	: icn-deq/cn/lam 
+	   ([c:cn] [d:ofkd c _] icn-deq/cons ([d'] D2 c d d'))
+	   (ikd-deq/cons D1)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/lam ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/lam _ _ _).
+%total D (icn-deq/cn/lam D _ _).
+
+
+
+icn-deq/cn/mu	: ({c:cn} ofkd c kd/type -> icn-deq G (C c) (C' c) kd/type)
+		   -> ikd-deq G kd/type kd/type
+		   -> icn-deq G (cn/mu kd/type C) (cn/mu kd/type C') kd/type
+		   -> type.
+%mode icn-deq/cn/mu +D1 +D1' -D2.
+
+-	: icn-deq/cn/mu 
+	   ([c] [d] icn-deq/nil (D' c d))
+	   (ikd-deq/nil D) 
+	   (icn-deq/nil (cn-deq/cn/mu D' D)).
+
+-	: icn-deq/cn/mu 
+	   ([c:cn] [d:ofkd c _] icn-deq/cons ([d'] D2 c d d'))
+	   (ikd-deq/cons D1)
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/cn/mu ([c][d'] D2 c d' d) (D1 d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/cn/mu _ _ _).
+%total D (icn-deq/cn/mu D _ _).
+
+
+
+icn-deq/pi-ext	: iofkd G C (kd/pi K1 L) 
+		   -> iofkd G C' (kd/pi K1 L') 
+		   -> ({c:cn} ofkd c K1 
+			 -> icn-deq G (cn/app C c) (cn/app C' c) (K2 c))
+		   -> icn-deq G C C' (kd/pi K1 K2) -> type.
+%mode icn-deq/pi-ext +D1 +D1' +D1'' -D2.
+
+-	: icn-deq/pi-ext 
+	   (iofkd/nil D) 
+	   (iofkd/nil D'') 
+	   ([c] [d] icn-deq/nil (D' c d))
+	   (icn-deq/nil (cn-deq/pi-ext D D'' D')).
+
+-	: icn-deq/pi-ext 
+	   (iofkd/cons D1)
+	   (iofkd/cons D1')
+	   ([c:cn] [d:ofkd c _] icn-deq/cons ([d'] D2 c d d'))
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/pi-ext (D1 d) (D1' d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/pi-ext _ _ _ _).
+%total D (icn-deq/pi-ext D _ _ _).
+
+
+
+icn-deq/pi-ext-2: icn-deq G C C' (kd/pi K1 L) 
+		   -> ({c:cn} ofkd c K1 
+			 -> icn-deq G (cn/app C c) (cn/app C' c) (K2 c))
+		   -> icn-deq G C C' (kd/pi K1 K2) -> type.
+%mode icn-deq/pi-ext-2 +D1 +D1' -D2.
+
+-	: icn-deq/pi-ext-2 
+	   (icn-deq/nil D) 
+	   ([c] [d] icn-deq/nil (D' c d))
+	   (icn-deq/nil (cn-deq/pi-ext-2 D D')).
+
+-	: icn-deq/pi-ext-2 
+	   (icn-deq/cons D1)
+	   ([c:cn] [d:ofkd c _] icn-deq/cons ([d'] D2 c d d'))
+	   (icn-deq/cons D')
+	   <- ({d: ofkd C K}
+		 icn-deq/pi-ext-2 (D1 d) ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (icn-deq/pi-ext-2 _ _ _).
+%total D (icn-deq/pi-ext-2 D _ _).
+
+

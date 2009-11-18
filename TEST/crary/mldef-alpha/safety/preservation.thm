@@ -1,0 +1,2766 @@
+
+%%%%%  Monotonicity  %%%%%
+
+extends : sttp -> sttp -> type.
+
+extends/nil	: extends F F.
+
+extends/cons	: extends F1 (st/cons F2 _ _)
+		   <- extends F1 F2.
+
+
+
+
+monotonicity-lookup : st-lookup F L ET
+		       -> extends F F'
+		       -> st-lookup F' L ET -> type.
+%mode monotonicity-lookup +X1 +X2 -X3.
+
+-	: monotonicity-lookup Dlookup extends/nil Dlookup.
+
+-	: monotonicity-lookup Dlookup (extends/cons Dextends) (st-lookup/miss Dlookup')
+	   <- monotonicity-lookup Dlookup Dextends Dlookup'.
+
+%worlds (conblock) (monotonicity-lookup _ _ _).
+%total D (monotonicity-lookup _ D _).
+
+
+
+monotonicity-tm : tm-of F E T
+		   -> extends F F'
+%%
+		   -> tm-of F' E T -> type.
+%mode monotonicity-tm +X1 +X2 -X3.
+
+monotonicity-md : md-of P F M S
+		   -> extends F F'
+%%
+		   -> md-of P F' M S -> type.
+%mode monotonicity-md +X1 +X2 -X3.
+
+-	: monotonicity-tm (tm-of/var D) _ (tm-of/var D).
+
+-	: monotonicity-tm tm-of/unit _ tm-of/unit.
+
+-	: monotonicity-tm (tm-of/abort Dwf Dof) Dextends (tm-of/abort Dwf Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/pair Dof2 Dof1) Dextends (tm-of/pair Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- monotonicity-tm Dof2 Dextends Dof2'.
+
+-	: monotonicity-tm (tm-of/pi1 Dof) Dextends (tm-of/pi1 Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/pi2 Dof) Dextends (tm-of/pi2 Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/lam Dof Dwf) Dextends (tm-of/lam Dof' Dwf)
+	   <- ({x} {d}
+		 monotonicity-tm (Dof x d) Dextends (Dof' x d)).
+
+-	: monotonicity-tm (tm-of/app Dof2 Dof1) Dextends (tm-of/app Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- monotonicity-tm Dof2 Dextends Dof2'.
+
+-	: monotonicity-tm (tm-of/in1 Dwf Dof) Dextends (tm-of/in1 Dwf Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/in2 Dwf Dof) Dextends (tm-of/in2 Dwf Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/case Dof2 Dof1 Dof) Dextends (tm-of/case Dof2' Dof1' Dof')
+	   <- monotonicity-tm Dof Dextends Dof'
+	   <- ({x} {d}
+		 monotonicity-tm (Dof1 x d) Dextends (Dof1' x d))
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends (Dof2' x d)).
+
+-	: monotonicity-tm (tm-of/refloc Dwf Dlookup) Dextends (tm-of/refloc Dwf Dlookup')
+	   <- monotonicity-lookup Dlookup Dextends Dlookup'.
+
+-	: monotonicity-tm (tm-of/ref Dof) Dextends (tm-of/ref Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/deref Dof) Dextends (tm-of/deref Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/assign Dof2 Dof1) Dextends (tm-of/assign Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- monotonicity-tm Dof2 Dextends Dof2'.
+
+-	: monotonicity-tm (tm-of/tagloc Dwf Dlookup) Dextends (tm-of/tagloc Dwf Dlookup')
+	   <- monotonicity-lookup Dlookup Dextends Dlookup'.
+
+-	: monotonicity-tm (tm-of/newtag Dwf) _ (tm-of/newtag Dwf).
+
+-	: monotonicity-tm (tm-of/tag Dof2 Dof1) Dextends (tm-of/tag Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- monotonicity-tm Dof2 Dextends Dof2'.
+
+-	: monotonicity-tm (tm-of/iftag Dof4 Dof3 Dof2 Dof1) Dextends (tm-of/iftag Dof4' Dof3' Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- monotonicity-tm Dof2 Dextends Dof2'
+	   <- ({x} {d}
+		 monotonicity-tm (Dof3 x d) Dextends (Dof3' x d))
+	   <- monotonicity-tm Dof4 Dextends Dof4'.
+
+-	: monotonicity-tm (tm-of/roll D3 D2 D1 Dof) Dextends (tm-of/roll D3 D2 D1 Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/unroll Dof) Dextends (tm-of/unroll Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/in Dof) Dextends (tm-of/in Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/out Dof) Dextends (tm-of/out Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/raise Dwf Dof) Dextends (tm-of/raise Dwf Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/try Dof2 Dof1) Dextends (tm-of/try Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends (Dof2' x d)).
+
+-	: monotonicity-tm (tm-of/lett Dof2 Dof1) Dextends (tm-of/lett Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends (Dof2' x d)).
+
+-	: monotonicity-tm (tm-of/snd Dof) Dextends (tm-of/snd Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-tm (tm-of/equiv Dequiv Dof) Dextends (tm-of/equiv Dequiv Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+
+
+-	: monotonicity-md (md-of/var D) _ (md-of/var D).
+
+-	: monotonicity-md md-of/unit _ md-of/unit.
+
+-	: monotonicity-md (md-of/satom Dof) _ (md-of/satom Dof).
+
+-	: monotonicity-md (md-of/datom Dof) Dextends (md-of/datom Dof')
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/sgatom Dwf) _ (md-of/sgatom Dwf).
+
+-	: monotonicity-md (md-of/pair Dof2 Dof1) Dextends (md-of/pair Dof2' Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- monotonicity-md Dof2 Dextends Dof2'.
+
+-	: monotonicity-md (md-of/dpair Dof2 Dfst Dof1) Dextends (md-of/dpair Dof2' Dfst Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- ({a} {da} {m} {dm} {dfst}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends (Dof2' a da m dm dfst)).
+
+-	: monotonicity-md (md-of/pi1 Dof) Dextends (md-of/pi1 Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/pi2 Dfst Dof) Dextends (md-of/pi2 Dfst Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/lam Dof Dfst Dwf) Dextends (md-of/lam Dof' Dfst Dwf)
+	   <- ({a} {da} {m} {dm} {dfst}
+		 monotonicity-md (Dof a da m dm dfst) Dextends (Dof' a da m dm dfst)).
+
+-	: monotonicity-md (md-of/app Dfst Dof2 Dof1) Dextends (md-of/app Dfst Dof2' Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- monotonicity-md Dof2 Dextends Dof2'.
+
+-	: monotonicity-md (md-of/in Dof) Dextends (md-of/in Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/out Dof) Dextends (md-of/out Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/seal Dof) Dextends (md-of/seal Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/let Dof2 Dfst Dof1) Dextends (md-of/let Dof2' Dfst Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- ({a} {da} {m} {dm} {dfst}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends (Dof2' a da m dm dfst)).
+
+-	: monotonicity-md (md-of/letp Dof2 DfstM Dfst Dof1) Dextends (md-of/letp Dof2' DfstM Dfst Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- ({a} {da} {m} {dm} {dfst}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends (Dof2' a da m dm dfst)).
+
+-	: monotonicity-md (md-of/lete Dof2 Dof1) Dextends (md-of/lete Dof2' Dof1')
+	   <- monotonicity-tm Dof1 Dextends Dof1'
+	   <- ({x} {dx}
+		 monotonicity-md (Dof2 x dx) Dextends (Dof2' x dx)).
+
+-	: monotonicity-md (md-of/self DofC Dfst Dof) Dextends (md-of/self DofC Dfst Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/extsigma Dof2 Dof1) Dextends (md-of/extsigma Dof2' Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- monotonicity-md Dof2 Dextends Dof2'.
+
+-	: monotonicity-md (md-of/extnamed Dof2 Dof1) Dextends (md-of/extnamed Dof2' Dof1')
+	   <- monotonicity-md Dof1 Dextends Dof1'
+	   <- monotonicity-md Dof2 Dextends Dof2'.
+
+-	: monotonicity-md (md-of/forget Dof) Dextends (md-of/forget Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+-	: monotonicity-md (md-of/subsume Dsub Dof) Dextends (md-of/subsume Dsub Dof')
+	   <- monotonicity-md Dof Dextends Dof'.
+
+%worlds (termbind | modbind) (monotonicity-tm _ _ _) (monotonicity-md _ _ _).
+%total (D1 D2) (monotonicity-tm D1 _ _) (monotonicity-md D2 _ _).
+
+
+
+monotonicity-entry : entry-of F EN ET
+		    -> extends F F'
+%%
+		    -> entry-of F' EN ET -> type.
+%mode monotonicity-entry +X1 +X2 -X3.
+
+-	: monotonicity-entry (entry-of/ref Dof Dvalue) Dextends (entry-of/ref Dof' Dvalue)
+	   <- monotonicity-tm Dof Dextends Dof'.
+
+-	: monotonicity-entry (entry-of/tag Dwf) Dextends (entry-of/tag Dwf).
+
+%worlds () (monotonicity-entry _ _ _).
+%total {} (monotonicity-entry _ _ _).
+
+
+
+monotonicity-store : store-of F1 ST F2
+		      -> extends F1 F1'
+%%
+		      -> store-of F1' ST F2 -> type.
+%mode monotonicity-store +X1 +X2 -X3.
+
+-	: monotonicity-store store-of/nil _ store-of/nil.
+
+-	: monotonicity-store (store-of/cons Dbounds Dof Dstof) Dextends (store-of/cons Dbounds Dof' Dstof')
+	   <- monotonicity-store Dstof Dextends Dstof'
+	   <- monotonicity-entry Dof Dextends Dof'.
+
+%worlds () (monotonicity-store _ _ _).
+%total D (monotonicity-store D _ _).
+
+
+
+
+%%%%%  Locations  %%%%%
+
+loc-lt-antisymm : loc-lt L L -> false -> type.
+%mode loc-lt-antisymm +X1 -X2.
+
+-	: loc-lt-antisymm (loc-lt/i D) Dfalse
+	   <- lt-antisymm D Dfalse.
+
+%worlds () (loc-lt-antisymm _ _).
+%total {} (loc-lt-antisymm _ _).
+
+
+
+loc-lt-trans : loc-lt L1 L2 -> loc-lt L2 L3 -> loc-lt L1 L3 -> type.
+%mode loc-lt-trans +X1 +X2 -X3.
+
+-	: loc-lt-trans (loc-lt/i Dlt12) (loc-lt/i Dlt23) (loc-lt/i Dlt13)
+	   <- lt-trans Dlt12 Dlt23 Dlt13.
+
+%worlds () (loc-lt-trans _ _ _).
+%total {} (loc-lt-trans _ _ _).
+
+
+
+loc-succ-lt : loc-succ L L' -> loc-lt L L' -> type.
+%mode loc-succ-lt +X1 -X2.
+
+-	: loc-succ-lt loc-succ/i (loc-lt/i Dlt)
+	   <- lt-succ _ Dlt.
+
+%worlds () (loc-succ-lt _ _).
+%total {} (loc-succ-lt _ _).
+
+
+
+
+%%%%%  Stores  %%%%%
+
+store-bounds-increase : store-bounds ST L
+			 -> loc-lt L L'
+%%
+			 -> store-bounds ST L' -> type.
+%mode store-bounds-increase +X1 +X2 -X3.
+
+-	: store-bounds-increase store-bounds/nil _ store-bounds/nil.
+
+-	: store-bounds-increase (store-bounds/cons Dlt12) Dlt23 (store-bounds/cons Dlt13)
+	   <- loc-lt-trans Dlt12 Dlt23 Dlt13.
+
+%worlds () (store-bounds-increase _ _ _).
+%total {} (store-bounds-increase _ _ _).
+
+
+
+sttp-lookup-bound : store-of _ ST F
+		     -> st-lookup F L _
+		     -> store-bounds ST L
+%%
+		     -> false -> type.
+%mode sttp-lookup-bound +X1 +X2 +X3 -X4.
+
+-	: sttp-lookup-bound (store-of/cons _ _ _) st-lookup/hit (store-bounds/cons Dlt) Dfalse
+	   <- loc-lt-antisymm Dlt Dfalse.
+
+-	: sttp-lookup-bound (store-of/cons Dbounds _ Dstof) (st-lookup/miss Dlookup) (store-bounds/cons Dlt) Dfalse
+	   <- store-bounds-increase Dbounds Dlt Dbounds'
+	   <- sttp-lookup-bound Dstof Dlookup Dbounds' Dfalse.
+
+%worlds () (sttp-lookup-bound _ _ _ _).
+%total D (sttp-lookup-bound D _ _ _).
+
+
+
+store-lookup-bound : store-of _ ST _
+		      -> store-lookup ST L _
+		      -> store-bounds ST L
+%%
+		      -> false -> type.
+%mode store-lookup-bound +X1 +X2 +X3 -X4.
+
+-	: store-lookup-bound (store-of/cons _ _ _) store-lookup/hit (store-bounds/cons Dlt) Dfalse
+	   <- loc-lt-antisymm Dlt Dfalse.
+
+-	: store-lookup-bound (store-of/cons Dbounds _ Dstof) (store-lookup/miss Dlookup) (store-bounds/cons Dlt) Dfalse
+	   <- store-bounds-increase Dbounds Dlt Dbounds'
+	   <- store-lookup-bound Dstof Dlookup Dbounds' Dfalse.
+
+%worlds () (store-lookup-bound _ _ _ _).
+%total D (store-lookup-bound D _ _ _).
+
+
+
+store-update-bound : store-of _ ST _
+		      -> store-update ST L _ _
+		      -> store-bounds ST L
+%%
+		      -> false -> type.
+%mode store-update-bound +X1 +X2 +X3 -X4.
+
+-	: store-update-bound (store-of/cons _ _ _) store-update/hit (store-bounds/cons Dlt) Dfalse
+	   <- loc-lt-antisymm Dlt Dfalse.
+
+-	: store-update-bound (store-of/cons Dbounds _ Dstof) (store-update/miss Dupdate) (store-bounds/cons Dlt) Dfalse
+	   <- store-bounds-increase Dbounds Dlt Dbounds'
+	   <- store-update-bound Dstof Dupdate Dbounds' Dfalse.
+
+%worlds () (store-update-bound _ _ _ _).
+%total D (store-update-bound D _ _ _).
+
+
+
+store-bounds-update : store-bounds ST L
+		       -> store-update ST _ _ ST'
+%
+		       -> store-bounds ST' L -> type.
+%mode store-bounds-update +X1 +X2 -X3.
+
+-	: store-bounds-update (store-bounds/cons Dlt) (store-update/miss _) (store-bounds/cons Dlt).
+
+-	: store-bounds-update (store-bounds/cons Dlt) store-update/hit (store-bounds/cons Dlt).
+
+%worlds () (store-bounds-update _ _ _).
+%total {} (store-bounds-update _ _ _).
+
+
+
+preservation-lookup : store-of F1 ST F2
+		       -> st-lookup F2 L ET
+		       -> store-lookup ST L EN
+%%
+		       -> entry-of F1 EN ET -> type.
+%mode preservation-lookup +X1 +X2 +X3 -X4.
+
+-	: preservation-lookup
+	   (store-of/cons _ Dof _)
+	   st-lookup/hit
+	   store-lookup/hit
+	   Dof.
+
+-	: preservation-lookup
+	   (store-of/cons _ _ Dstof)
+	   (st-lookup/miss Dlookup)
+	   (store-lookup/miss Dlookup')
+	   Dof
+	   <- preservation-lookup Dstof Dlookup Dlookup' Dof.
+
+-	: preservation-lookup
+	   (store-of/cons Dbounds _ Dstof)
+	   st-lookup/hit
+	   (store-lookup/miss Dlookup)
+	   Dof
+	   <- store-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entry-of Dfalse Dof.
+
+-	: preservation-lookup
+	   (store-of/cons Dbounds _ Dstof)
+	   (st-lookup/miss Dlookup)
+	   store-lookup/hit
+	   Dof
+	   <- sttp-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entry-of Dfalse Dof.
+
+%worlds () (preservation-lookup _ _ _ _).
+%total D (preservation-lookup D _ _ _).
+
+
+
+preservation-update : store-of F1 ST F2
+		       -> st-lookup F2 L ET
+		       -> store-update ST L EN ST'
+		       -> entry-of F1 EN ET 
+%%
+		       -> store-of F1 ST' F2 -> type.
+%mode preservation-update +X1 +X2 +X3 +X4 -X5.
+
+-	: preservation-update
+	   (store-of/cons Dbounds _ Dstof)
+	   st-lookup/hit
+	   store-update/hit
+	   Dof
+	   (store-of/cons Dbounds Dof Dstof).
+
+-	: preservation-update
+	   (store-of/cons Dbounds Dof Dstof)
+	   (st-lookup/miss Dlookup)
+	   (store-update/miss Dupdate)
+	   Dof'
+	   (store-of/cons Dbounds' Dof Dstof')
+	   <- preservation-update Dstof Dlookup Dupdate Dof' Dstof'
+	   <- store-bounds-update Dbounds Dupdate Dbounds'.
+
+-	: preservation-update
+	   (store-of/cons Dbounds _ Dstof)
+	   st-lookup/hit
+	   (store-update/miss Dupdate)
+	   _
+	   Dstof'
+	   <- store-update-bound Dstof Dupdate Dbounds Dfalse
+	   <- false-implies-store-of Dfalse Dstof'.
+
+-	: preservation-update
+	   (store-of/cons Dbounds _ Dstof)
+	   (st-lookup/miss Dlookup)
+	   store-update/hit
+	   _
+	   Dstof'
+	   <- sttp-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-store-of Dfalse Dstof'.
+
+%worlds () (preservation-update _ _ _ _ _).
+%total D (preservation-update D _ _ _ _).
+
+
+
+st-lookup-fun : store-of _ _ F
+		 -> st-lookup F L ET
+		 -> st-lookup F L ET'
+%%
+		 -> entp-eq ET ET' -> type.
+%mode st-lookup-fun +X1 +X2 +X3 -X4.
+
+-	: st-lookup-fun _ st-lookup/hit st-lookup/hit entp-eq/i.
+
+-	: st-lookup-fun (store-of/cons _ _ Dstof) (st-lookup/miss D1) (st-lookup/miss D2) Deq
+	   <- st-lookup-fun Dstof D1 D2 Deq.
+
+-	: st-lookup-fun (store-of/cons Dbounds _ Dstof) st-lookup/hit (st-lookup/miss Dlookup) Deq
+	   <- sttp-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entp-eq Dfalse Deq.
+
+-	: st-lookup-fun (store-of/cons Dbounds _ Dstof) (st-lookup/miss Dlookup) st-lookup/hit Deq
+	   <- sttp-lookup-bound Dstof Dlookup Dbounds Dfalse
+	   <- false-implies-entp-eq Dfalse Deq.
+
+%worlds () (st-lookup-fun _ _ _ _).
+%total D (st-lookup-fun D _ _ _).
+
+
+
+nextloc-bounds : nextloc ST L -> store-bounds ST L -> type.
+%mode nextloc-bounds +X1 -X2.
+
+-	: nextloc-bounds nextloc/nil store-bounds/nil.
+
+-	: nextloc-bounds (nextloc/cons Dsucc) (store-bounds/cons Dlt)
+	   <- loc-succ-lt Dsucc Dlt.
+
+%worlds () (nextloc-bounds _ _).
+%total {} (nextloc-bounds _ _).
+
+
+
+
+%%%%%  Fst Preservation  %%%%%
+
+preservation-fst : md-of pure F M S
+		    -> step-md ST M ST' M'
+		    -> sg-fst S K
+		    -> md-fst M C
+%%
+		    -> md-fst M' C'
+		    -> cn-equiv C C' K
+		    -> type.
+%mode preservation-fst +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/datom E T) S)
+	   (step-md/datom _)
+	   (DfstS : sg-fst S K)
+	   md-fst/datom
+	   %%
+	   md-fst/datom
+	   (cn-equiv/subsume Dsub' cn-equiv/star)
+	   <- inversion-md/datom Dof
+	      _
+	      (Dsub : sg-sub (sg/datom T) S)
+	   <- sg-sub-fst Dsub sg-fst/datom DfstS
+	      (Dsub' : kd-sub one K).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pair M1 M2) S)
+	   (step-md/pair1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/pair
+	      (DfstM2 : md-fst M2 C2)
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   (md-fst/pair DfstM2 DfstM1')
+	   (cn-equiv/subsume Dsub' (cn-equiv/pair ([_] [_] DwfK2) (cn-equiv/refl DofC2) Dequiv))
+	   <- inversion-md/pair Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (Dof2 : md-of pure F M2 S2)
+	      (Dsub : sg-sub (sg/sigma S1 ([_] S2)) S)
+	   <- can-sg-fst S1
+	      (DfstS1 : sg-fst S1 K1)
+	   <- can-sg-fst S2
+	      (DfstS2 : sg-fst S2 K2)
+	   <- sg-sub-fst Dsub (sg-fst/sigma ([_] DfstS2) DfstS1) DfstS
+	      (Dsub' : kd-sub (sigma K1 ([_] K2)) K)
+	   <- preservation-fst Dof1 Dstep DfstS1 DfstM1
+	      (DfstM1' : md-fst M1' C1')
+	      (Dequiv : cn-equiv C1 C1' K1)
+	   <- md-fst-reg Dof2 DfstM2 DfstS2
+	      (DofC2 : cn-of C2 K2)
+	   <- cn-of-reg DofC2
+	      (DwfK2 : kd-wf K2).
+	   
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pair M1 M2) S)
+	   (step-md/pair2
+	      (Dstep : step-md ST M2 ST' M2')
+	      _)
+	   (DfstS : sg-fst S K)
+	   (md-fst/pair
+	      (DfstM2 : md-fst M2 C2)
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   (md-fst/pair DfstM2' DfstM1)
+	   (cn-equiv/subsume Dsub' (cn-equiv/pair ([_] [_] DwfK2) Dequiv (cn-equiv/refl DofC1)))
+	   <- inversion-md/pair Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (Dof2 : md-of pure F M2 S2)
+	      (Dsub : sg-sub (sg/sigma S1 ([_] S2)) S)
+	   <- can-sg-fst S1
+	      (DfstS1 : sg-fst S1 K1)
+	   <- can-sg-fst S2
+	      (DfstS2 : sg-fst S2 K2)
+	   <- sg-sub-fst Dsub (sg-fst/sigma ([_] DfstS2) DfstS1) DfstS
+	      (Dsub' : kd-sub (sigma K1 ([_] K2)) K)
+	   <- preservation-fst Dof2 Dstep DfstS2 DfstM2
+	      (DfstM2' : md-fst M2' C2')
+	      (Dequiv : cn-equiv C2 C2' K2)
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- cn-equiv-reg Dequiv
+	      _ _ (DwfK2 : kd-wf K2).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/dpair M1 M2) S)
+	   (step-md/dpair1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/dpair
+	      (DfstM2 : {a} {m} md-fst m a -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   (md-fst/dpair DfstM2 DfstM1')
+	   (cn-equiv/subsume Dsub' (cn-equiv/pair DwfK2 DequivC2 Dequiv))
+	   <- inversion-md/dpair Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> md-of pure F (M2 a m) (S2 a)))
+	      (Dsub : sg-sub (sg/sigma S1 S2) S)
+	   <- ({a}
+		 can-sg-fst (S2 a) (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- sg-sub-fst Dsub (sg-fst/sigma DfstS2 DfstS1) DfstS
+	      (Dsub' : kd-sub (sigma K1 K2) K)
+	   <- preservation-fst Dof1 Dstep DfstS1 DfstM1
+	      (DfstM1' : md-fst M1' C1')
+	      (Dequiv : cn-equiv C1 C1' K1)
+	   <- cn-equiv-reg Dequiv
+	      _ _ (DwfK1 : kd-wf K1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-fst-reg (Dof2 a da m dm dfst) (DfstM2 a m dfst) (DfstS2 a)
+		    (DofC2 a da : cn-of (C2 a) (K2 a)))
+	   <- functionality-cn DofC2 Dequiv
+	      (DequivC2 : cn-equiv (C2 C1) (C2 C1') (K2 C1))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> cn-of-reg (DofC2 a da)
+		    (DwfK2 a da : kd-wf (K2 a))).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/dpair M1 M2) S)
+	   (step-md/dpair2
+	      (DfstM1' : md-fst M1 C1')
+	      _)
+	   (DfstS : sg-fst S K)
+	   (md-fst/dpair
+	      (DfstM2 : {a} {m} md-fst m a -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   (md-fst/pair (DfstM2 C1' M1 DfstM1') DfstM1)
+	   (cn-equiv/subsume Dsub' Dequiv)
+	   <- inversion-md/dpair Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> md-of pure F (M2 a m) (S2 a)))
+	      (Dsub : sg-sub (sg/sigma S1 S2) S)
+	   <- ({a}
+		 can-sg-fst (S2 a) (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- sg-sub-fst Dsub (sg-fst/sigma DfstS2 DfstS1) DfstS
+	      (Dsub' : kd-sub (sigma K1 K2) K)
+	   <- md-fst-fun DfstM1 DfstM1'
+	      (DeqC1 : con-eq C1 C1')
+	   <- con-resp-con ([m] pair C1 (C2 m)) DeqC1
+	      (Deq : con-eq (pair C1 (C2 C1)) (pair C1 (C2 C1')))
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- cn-of-reg DofC1
+	      (DwfK1 : kd-wf K1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-fst-reg (Dof2 a da m dm dfst) (DfstM2 a m dfst) (DfstS2 a)
+		    (DofC2 a da : cn-of (C2 a) (K2 a)))
+	   <- ({a} {da:cn-of a K1} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> cn-of-reg (DofC2 a da)
+		    (DwfK2 a da : kd-wf (K2 a)))
+	   <- cn-equiv-resp con-eq/i Deq kind-eq/i
+	      (cn-equiv/refl (cn-of/pair DwfK2 (DofC2 C1 DofC1) DofC1))
+	      Dequiv.
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pi1 M) S1)
+	   (step-md/pi1
+	      (Dstep : step-md ST M ST' M'))
+	   (DfstS1 : sg-fst S1 K1)
+	   (md-fst/pi1
+	      (DfstM : md-fst M C))
+	   %%
+	   (md-fst/pi1 DfstM')
+	   (cn-equiv/pi1 Dequiv)
+	   <- inversion-md/pi1 Dof
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- can-sg-fst S2
+	      (DfstS2 : sg-fst S2 K2)
+	   <- preservation-fst Dof' Dstep (sg-fst/sigma ([_] DfstS2) DfstS1) DfstM
+	      (DfstM' : md-fst M' C')
+	      (Dequiv : cn-equiv C C' (sigma K1 ([_] K2))).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pi1 (md/pair M1 M2)) S1)
+	   (step-md/pi1-beta _ _)
+	   (DfstS1 : sg-fst S1 K1)
+	   (md-fst/pi1
+	      (md-fst/pair
+		 (DfstM2 : md-fst M2 C2)
+		 (DfstM1 : md-fst M1 C1)))
+	   %%
+	   DfstM1
+	   (cn-equiv/subsume Dsub1' (cn-equiv/beta1 DofC2 DofC1))
+	   <- inversion-md/pi1 Dof
+	      (Dof' : md-of pure F (md/pair M1 M2) (sg/sigma S1 ([_] S2)))
+	   <- can-sg-fst S2
+	      (DfstS2 : sg-fst S2 K2)
+	   <- inversion-md/pair Dof'
+	      (Dof1 : md-of pure F M1 S1')
+	      (Dof2 : md-of pure F M2 S2')
+	      (Dsub : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 ([_] S2)))
+	   <- sg-sub-sigma-invert Dsub
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub S2' S2)
+	   <- can-sg-fst S2'
+	      (DfstS2' : sg-fst S2' K2')
+	   <- md-fst-reg Dof1 DfstM1 DfstS1'
+	      (DofC1 : cn-of C1 K1')
+	   <- md-fst-reg Dof2 DfstM2 DfstS2'
+	      (DofC2 : cn-of C2 K2')
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (Dsub1' : kd-sub K1' K1).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pi2 M) S2)
+	   (step-md/pi2
+	      (Dstep : step-md ST M ST' M'))
+	   (DfstS2 : sg-fst S2 K2)
+	   (md-fst/pi2
+	      (DfstM : md-fst M C))
+	   %%
+	   (md-fst/pi2 DfstM')
+	   (cn-equiv/pi2 Dequiv)
+	   <- inversion-md/pi2 Dof
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- can-sg-fst S1
+	      (DfstS1 : sg-fst S1 K1)
+	   <- preservation-fst Dof' Dstep (sg-fst/sigma ([_] DfstS2) DfstS1) DfstM
+	      (DfstM' : md-fst M' C')
+	      (Dequiv : cn-equiv C C' (sigma K1 ([_] K2))).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/pi2 (md/pair M1 M2)) S2)
+	   (step-md/pi2-beta _ _)
+	   (DfstS2 : sg-fst S2 K2)
+	   (md-fst/pi2
+	      (md-fst/pair
+		 (DfstM2 : md-fst M2 C2)
+		 (DfstM1 : md-fst M1 C1)))
+	   %%
+	   DfstM2
+	   (cn-equiv/subsume Dsub2' (cn-equiv/beta2 DofC2 DofC1))
+	   <- inversion-md/pi2 Dof
+	      (Dof' : md-of pure F (md/pair M1 M2) (sg/sigma S1 ([_] S2)))
+	   <- can-sg-fst S1
+	      (DfstS1 : sg-fst S1 K1)
+	   <- inversion-md/pair Dof'
+	      (Dof1 : md-of pure F M1 S1')
+	      (Dof2 : md-of pure F M2 S2')
+	      (Dsub : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 ([_] S2)))
+	   <- sg-sub-sigma-invert Dsub
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub S2' S2)
+	   <- can-sg-fst S2'
+	      (DfstS2' : sg-fst S2' K2')
+	   <- md-fst-reg Dof1 DfstM1 DfstS1'
+	      (DofC1 : cn-of C1 K1')
+	   <- md-fst-reg Dof2 DfstM2 DfstS2'
+	      (DofC2 : cn-of C2 K2')
+	   <- sg-sub-fst (Dsub2 C1 DofC1) DfstS2' DfstS2
+	      (Dsub2' : kd-sub K2' K2).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/in L M) S)
+	   (step-md/in
+	      (Dstep : step-md ST M ST' M'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/in
+	      (Dfst : md-fst M C))
+	   %%
+	   (md-fst/in Dfst')
+	   (cn-equiv/subsume Dsub' Dequiv)
+	   <- inversion-md/in Dof
+	      (Dof' : md-of pure F M S')
+	      (Dsub : sg-sub (sg/named L S') S)
+	   <- can-sg-fst S'
+	      (DfstS' : sg-fst S' K')
+	   <- preservation-fst Dof' Dstep DfstS' Dfst
+	      (Dfst' : md-fst M' C')
+	      (Dequiv : cn-equiv C C' K')
+	   <- sg-sub-fst Dsub (sg-fst/named DfstS') DfstS
+	      (Dsub' : kd-sub K' K).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/out M) S)
+	   (step-md/out
+	      (Dstep : step-md ST M ST' M'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/out
+	      (Dfst : md-fst M C))
+	   %%
+	   (md-fst/out Dfst')
+	   Dequiv
+	   <- inversion-md/out Dof
+	      (Dof' : md-of pure F M (sg/named L S))
+	   <- preservation-fst Dof' Dstep (sg-fst/named DfstS) Dfst
+	      (Dfst' : md-fst M' C')
+	      (Dequiv : cn-equiv C C' K).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/out (md/in L M)) S)
+	   (step-md/out-beta _)
+	   (DfstS : sg-fst S K)
+	   (md-fst/out
+	      (md-fst/in
+		 (Dfst : md-fst M C)))
+	   %%
+	   Dfst
+	   (cn-equiv/refl (cn-of/subsume Dsub'' DofC))
+	   <- inversion-md/out Dof
+	      (Dof' : md-of pure F (md/in L M) (sg/named L' S))
+	   <- inversion-md/in Dof'
+	      (Dof'' : md-of pure F M S')
+	      (Dsub : sg-sub (sg/named L S') (sg/named L' S))
+	   <- sg-sub-named-invert Dsub
+	      _
+	      (Dsub' : sg-sub S' S)
+	   <- can-sg-fst S'
+	      (DfstS' : sg-fst S' K')
+	   <- sg-sub-fst Dsub' DfstS' DfstS
+	      (Dsub'' : kd-sub K' K)
+	   <- md-fst-reg Dof'' Dfst DfstS'
+	      (DofC : cn-of C K').
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/letp M1 ([a] [m] M2 a m)) S)
+	   (step-md/letp1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/letp
+	      (DfstM2 : {a} {m}
+			 md-fst m a
+			 -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   (md-fst/letp DfstM2 DfstM1')
+	   (cn-equiv/subsume Dsub'' DequivC2)
+	   <- inversion-md/letp Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (DfstM1alt : md-fst M1 C1alt)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of pure F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (S2 C1alt) S)
+	   <- ({a}
+		 can-sg-fst (S2 a)
+		 (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- preservation-fst Dof1 Dstep DfstS1 DfstM1
+	      (DfstM1' : md-fst M1' C1')
+	      (Dequiv : cn-equiv C1 C1' K1)
+	   <- cn-equiv-reg Dequiv
+	      _ _ (DwfK1 : kd-wf K1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-fst-reg (Dof2 a da m dm dfst) (DfstM2 a m dfst) (DfstS2 a)
+		    (DofC2 a da : cn-of (C2 a) (K2 a)))
+	   <- functionality-cn DofC2 Dequiv
+	      (DequivC2 : cn-equiv (C2 C1) (C2 C1') (K2 C1))
+	   <- md-fst-fun DfstM1alt DfstM1
+	      (DeqC1 : con-eq C1alt C1)
+	   <- sg-resp-con S2 DeqC1
+	      (DeqS2C1 : sg-eq (S2 C1alt) (S2 C1))
+	   <- sg-sub-resp DeqS2C1 sg-eq/i Dsub
+	      (Dsub' : sg-sub (S2 C1) S)
+	   <- sg-sub-fst Dsub' (DfstS2 C1) DfstS
+	      (Dsub'' : kd-sub (K2 C1) K).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/letp M1 ([a] [m] M2 a m)) S)
+	   (step-md/letp2
+	      (DfstM1alt : md-fst M1 C1alt)
+	      _)
+	   (DfstS : sg-fst S K)
+	   (md-fst/letp
+	      (DfstM2 : {a} {m}
+			 md-fst m a
+			 -> md-fst (M2 a m) (C2 a))
+	      (DfstM1 : md-fst M1 C1))
+	   %%
+	   Dfst
+	   (cn-equiv/refl (cn-of/subsume Dsub'' (DofC2 C1 DofC1)))
+	   <- inversion-md/letp Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (DfstM1alt' : md-fst M1 C1alt')
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of pure F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (S2 C1alt') S)
+	   <- ({a}
+		 can-sg-fst (S2 a)
+		 (DfstS2 a : sg-fst (S2 a) (K2 a)))
+	   <- md-fst-fun DfstM1 DfstM1alt
+	      (DeqC1 : con-eq C1 C1alt)
+	   <- module-resp-con ([c] M2 c M1) DeqC1
+	      (DeqMod : module-eq (M2 C1 M1) (M2 C1alt M1))
+	   <- md-fst-resp DeqMod con-eq/i (DfstM2 C1 M1 DfstM1)
+	      (Dfst : md-fst (M2 C1alt M1) (C2 C1))
+	   <- md-fst-reg Dof1 DfstM1 DfstS1 
+	      (DofC1 : cn-of C1 K1)
+	   <- cn-of-reg DofC1
+	      (DwfK1 : kd-wf K1)
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a} {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-fst-reg (Dof2 a da m dm dfst) (DfstM2 a m dfst) (DfstS2 a)
+		    (DofC2 a da : cn-of (C2 a) (K2 a)))
+	   <- md-fst-fun DfstM1alt' DfstM1
+	      (DeqC1' : con-eq C1alt' C1)
+	   <- sg-resp-con S2 DeqC1'
+	      (DeqS2C1 : sg-eq (S2 C1alt') (S2 C1))
+	   <- sg-sub-resp DeqS2C1 sg-eq/i Dsub
+	      (Dsub' : sg-sub (S2 C1) S)
+	   <- sg-sub-fst Dsub' (DfstS2 C1) DfstS
+	      (Dsub'' : kd-sub (K2 C1) K).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/lete E T ([x] M x)) S)
+	   (step-md/lete1
+	      (Dstep : step ST E ST' E'))
+	   (DfstS : sg-fst S K)
+	   (md-fst/lete
+	      (DfstM : {x} md-fst (M x) C))
+	   %%
+	   (md-fst/lete DfstM)
+	   (cn-equiv/refl DofC)
+	   <- inversion-md/lete Dof
+	      (DofE : tm-of F E T)
+	      (DofM : {x} tm-assm x T -> md-of pure F (M x) S)
+	   <- tm-of-reg DofE (DwfT : cn-of T t)
+	   <- ({x} {dx:tm-assm x T}
+		 tm-assm-reg dx DwfT
+		 -> md-fst-reg (DofM x dx) (DfstM x) DfstS
+		    (DofC : cn-of C K)).
+
+-	: preservation-fst
+	   (Dof : md-of pure F (md/lete E T ([x] M x)) S)
+	   (step-md/lete2 _)
+	   (DfstS : sg-fst S K)
+	   (md-fst/lete
+	      (DfstM : {x} md-fst (M x) C))
+	   %%
+	   (DfstM E)
+	   (cn-equiv/refl DofC)
+	   <- inversion-md/lete Dof
+	      (DofE : tm-of F E T)
+	      (DofM : {x} tm-assm x T -> md-of pure F (M x) S)
+	   <- tm-of-reg DofE (DwfT : cn-of T t)
+	   <- ({x} {dx:tm-assm x T}
+		 tm-assm-reg dx DwfT
+		 -> md-fst-reg (DofM x dx) (DfstM x) DfstS
+		    (DofC : cn-of C K)).
+
+%worlds () (preservation-fst _ _ _ _ _ _).
+%total D (preservation-fst _ D _ _ _ _).
+
+
+
+
+%%%%%  Preservation  %%%%%
+
+preservation-raises-tm : tm-of F E T
+			  -> raises E V
+%%
+			  -> tm-of F V tagged
+			  -> type.
+%mode preservation-raises-tm +X1 +X2 -X3.
+
+preservation-raises-md : md-of P F M S
+			  -> raises-md M V
+%%
+			  -> tm-of F V tagged
+			  -> type.
+%mode preservation-raises-md +X1 +X2 -X3.
+
+-	: preservation-raises-tm
+	   (tm-of/abort _ Dof)
+	   (raises/abort Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/pair _ Dof)
+	   (raises/pair1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/pair Dof _)
+	   (raises/pair2 Draises _)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/pi1 Dof)
+	   (raises/pi1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/pi2 Dof)
+	   (raises/pi2 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/app _ Dof)
+	   (raises/app1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/app Dof _)
+	   (raises/app2 Draises _)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/in1 _ Dof)
+	   (raises/in1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/in2 _ Dof)
+	   (raises/in2 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/case _ _ Dof)
+	   (raises/case Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/ref Dof)
+	   (raises/ref Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/deref Dof)
+	   (raises/deref Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/assign _ Dof)
+	   (raises/assign1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/assign Dof _)
+	   (raises/assign2 Draises _)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/tag _ Dof)
+	   (raises/tag1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/tag Dof _)
+	   (raises/tag2 Draises _)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/iftag _ _ _ Dof)
+	   (raises/iftag1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/iftag _ _ Dof _)
+	   (raises/iftag2 Draises _)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/roll _ _ _ Dof)
+	   (raises/roll Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/unroll Dof)
+	   (raises/unroll Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/in Dof)
+	   (raises/in Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/out Dof)
+	   (raises/out Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/raise _ Dof)
+	   (raises/raise1 Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/raise _ Dof)
+	   (raises/raise2 _)
+	   Dof.
+
+-	: preservation-raises-tm
+	   (tm-of/lett _ Dof)
+	   (raises/lett Draises)
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/snd Dof)
+	   (raises/snd Draises)
+	   Dof'
+	   <- preservation-raises-md Dof Draises Dof'.
+
+-	: preservation-raises-tm
+	   (tm-of/equiv
+	      _
+	      (Dof : tm-of F E T'))
+	   Draises
+	   Dof'
+	   <- preservation-raises-tm Dof Draises Dof'.
+
+
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/datom Draises)
+	   Dof''
+	   <- inversion-md/datom Dof Dof' _
+	   <- preservation-raises-tm Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/pair1 Draises)
+	   Dof'
+	   <- inversion-md/pair Dof Dof1 Dof2 _
+	   <- preservation-raises-md Dof1 Draises Dof'.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/pair2 Draises _)
+	   Dof'
+	   <- inversion-md/pair Dof Dof1 Dof2 _
+	   <- preservation-raises-md Dof2 Draises Dof'.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/dpair Draises)
+	   Dof''
+	   <- inversion-md/dpair Dof Dof' _ _ _
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/pi1 Draises)
+	   Dof''
+	   <- inversion-md/pi1 Dof Dof'
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/pi2 Draises)
+	   Dof''
+	   <- inversion-md/pi2 Dof Dof'
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/app1 Draises)
+	   Dof'
+	   <- inversion-md/app Dof Dof1 Dof2 _ _ _
+	   <- preservation-raises-md Dof1 Draises Dof'.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/app2 Draises _)
+	   Dof'
+	   <- inversion-md/app Dof Dof1 Dof2 _ _ _
+	   <- preservation-raises-md Dof2 Draises Dof'.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/in Draises)
+	   Dof''
+	   <- inversion-md/in Dof Dof' _
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/out Draises)
+	   Dof''
+	   <- inversion-md/out Dof Dof'
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/let Draises)
+	   Dof''
+	   <- inversion-md/let Dof Dof' _ _ _ _
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/letp Draises)
+	   Dof''
+	   <- inversion-md/letp Dof Dof' _ _ _ _
+	   <- preservation-raises-md Dof' Draises Dof''.
+
+-	: preservation-raises-md
+	   Dof
+	   (raises-md/lete Draises)
+	   Dof''
+	   <- inversion-md/lete Dof Dof' _
+	   <- preservation-raises-tm Dof' Draises Dof''.
+
+%worlds () (preservation-raises-tm _ _ _) (preservation-raises-md _ _ _).
+%total {(D1 D2) (E1 E2)} (preservation-raises-tm E1 D1 _) (preservation-raises-md E2 D2 _).
+
+
+
+preservation-tm : tm-of F E T
+		   -> store-of F ST F
+		   -> step ST E ST' E'
+%%
+		   -> tm-of F' E' T
+		   -> store-of F' ST' F'
+		   -> extends F F'
+		   -> type.
+%mode preservation-tm +X1 +X2 +X3 -X4 -X5 -X6.
+
+preservation-md : md-of P F M S
+		   -> store-of F ST F
+		   -> step-md ST M ST' M'
+%%
+		   -> md-of P F' M' S
+		   -> store-of F' ST' F'
+		   -> extends F F'
+		   -> type.
+%mode preservation-md +X1 +X2 +X3 -X4 -X5 -X6.
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/abort E T) T')
+	   (Dstof : store-of F ST F)
+	   (step/abort 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/abort DofT Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/abort Dof 
+	      (Dof' : tm-of F E void)
+	      (Dequiv : cn-equiv T T' t)
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' void)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- cn-equiv-reg Dequiv
+	      (DofT : cn-of T t)
+	      _ _.
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/pair E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/pair1 
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/pair Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/pair Dof 
+	      (Dequiv : cn-equiv (prod T1 T2) T t)
+	      (Dof1 : tm-of F E1 T1)
+	      (Dof2 : tm-of F E2 T2)
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' T1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof2 Dextends
+	      (Dof2' : tm-of F' E2 T2).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/pair E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/pair2
+	      (Dstep : step ST E2 ST' E2')
+	      _)
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/pair Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/pair Dof 
+	      (Dequiv : cn-equiv (prod T1 T2) T t)
+	      (Dof1 : tm-of F E1 T1)
+	      (Dof2 : tm-of F E2 T2)
+	   <- preservation-tm Dof2 Dstof Dstep 
+	      (Dof2' : tm-of F' E2' T2)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof1 Dextends
+	      (Dof1' : tm-of F' E1 T1).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/pi1 E) T1)
+	   (Dstof : store-of F ST F)
+	   (step/pi1 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/pi1 Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/pi1 Dof (Dof' : tm-of F E (prod T1 T2))
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' (prod T1 T2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/pi1 (tm/pair E1 E2)) T1)
+	   (Dstof : store-of F ST F)
+	   (step/pi1-beta _ _)
+	   %%
+	   (tm-of/equiv Dequiv1 Dof1)
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/pi1 Dof (Dof' : tm-of F (tm/pair E1 E2) (prod T1 T2))
+	   <- inversion-tm/pair Dof'
+	      (Dequiv : cn-equiv (prod T1' T2') (prod T1 T2) t)
+	      (Dof1 : tm-of F E1 T1')
+	      (Dof2 : tm-of F E2 T2')
+	   <- injective-prod Dequiv
+	      (Dequiv1 : cn-equiv T1' T1 t)
+	      (Dequiv2 : cn-equiv T2' T2 t).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/pi2 E) T2)
+	   (Dstof : store-of F ST F)
+	   (step/pi2 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/pi2 Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/pi2 Dof (Dof' : tm-of F E (prod T1 T2))
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' (prod T1 T2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/pi2 (tm/pair E1 E2)) T2)
+	   (Dstof : store-of F ST F)
+	   (step/pi2-beta _ _)
+	   %%
+	   (tm-of/equiv Dequiv2 Dof2)
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/pi2 Dof (Dof' : tm-of F (tm/pair E1 E2) (prod T1 T2))
+	   <- inversion-tm/pair Dof'
+	      (Dequiv : cn-equiv (prod T1' T2') (prod T1 T2) t)
+	      (Dof1 : tm-of F E1 T1')
+	      (Dof2 : tm-of F E2 T2')
+	   <- injective-prod Dequiv
+	      (Dequiv1 : cn-equiv T1' T1 t)
+	      (Dequiv2 : cn-equiv T2' T2 t).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/app E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/app1
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/app Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/app Dof
+	      (Dof1 : tm-of F E1 (arrow T' T))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' (arrow T' T))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof2 Dextends
+	      (Dof2' : tm-of F' E2 T').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/app E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/app2
+	      (Dstep : step ST E2 ST' E2')
+	      _)
+	   %%
+	   (tm-of/app Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/app Dof
+	      (Dof1 : tm-of F E1 (arrow T' T))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof2 Dstof Dstep
+	      (Dof2' : tm-of F' E2' T')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof1 Dextends
+	      (Dof1' : tm-of F' E1 (arrow T' T)).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/app (tm/lam T1 E1) E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/app-beta _)
+	   %%
+	   (tm-of/equiv Dequiv2 Dof')
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/app Dof 
+	      (DofLam : tm-of F (tm/lam T1 E1) (arrow T' T))
+	      (Dof2 : tm-of F E2 T')
+	   <- inversion-tm/lam DofLam
+	      (Dequiv : cn-equiv (arrow T1 T2) (arrow T' T) t)
+	      (Dof1 : {x} tm-assm x T1 -> tm-of F (E1 x) T2)
+	   <- injective-arrow Dequiv
+	      (Dequiv1 : cn-equiv T1 T' t)
+	      (Dequiv2 : cn-equiv T2 T t)
+	   <- substitution-tm-tm (Dof1 E2) (tm-of/equiv (cn-equiv/symm Dequiv1) Dof2)
+	      (Dof' : tm-of F (E1 E2) T2).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/in1 E T2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/in1
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/in1 Dwf Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/in1 Dof 
+	      (Dequiv : cn-equiv (plus T1 T2) T t)
+	      (Dof' : tm-of F E T1)
+	      (Dwf : cn-of T2 t)
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' T1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/in2 E T1) T) 
+	   (Dstof : store-of F ST F)
+	   (step/in2
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/in2 Dwf Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/in2 Dof 
+	      (Dequiv : cn-equiv (plus T1 T2) T t)
+	      (Dof' : tm-of F E T2)
+	      (Dwf : cn-of T1 t)
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' T2)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/case E E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/case
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/case Dof2' Dof1' Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/case Dof
+	      (Dof' : tm-of F E (plus T1 T2))
+	      (Dof1 : {x} tm-assm x T1 -> tm-of F (E1 x) T)
+	      (Dof2 : {x} tm-assm x T2 -> tm-of F (E2 x) T)
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' (plus T1 T2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({x} {d}
+		 monotonicity-tm (Dof1 x d) Dextends
+		 (Dof1' x d : tm-of F' (E1 x) T))
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends
+		 (Dof2' x d : tm-of F' (E2 x) T)).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/case (tm/in1 E T2') E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/case-beta1 _)
+	   %%
+	   Dof'''
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/case Dof
+	      (Dof' : tm-of F (tm/in1 E T2') (plus T1 T2))
+	      (Dof1 : {x} tm-assm x T1 -> tm-of F (E1 x) T)
+	      (Dof2 : {x} tm-assm x T2 -> tm-of F (E2 x) T)
+	   <- inversion-tm/in1 Dof'
+	      (Dequiv : cn-equiv (plus T1' T2') (plus T1 T2) t)
+	      (Dof'' : tm-of F E T1')
+	      _
+	   <- injective-plus Dequiv
+	      (Dequiv1 : cn-equiv T1' T1 t)
+	      (Dequiv2 : cn-equiv T2' T2 t)
+	   <- substitution-tm-tm (Dof1 E) (tm-of/equiv Dequiv1 Dof'')
+	      (Dof''' : tm-of F (E1 E) T).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/case (tm/in2 E T1') E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/case-beta2 _)
+	   %%
+	   Dof'''
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/case Dof
+	      (Dof' : tm-of F (tm/in2 E T1') (plus T1 T2))
+	      (Dof1 : {x} tm-assm x T1 -> tm-of F (E1 x) T)
+	      (Dof2 : {x} tm-assm x T2 -> tm-of F (E2 x) T)
+	   <- inversion-tm/in2 Dof'
+	      (Dequiv : cn-equiv (plus T1' T2') (plus T1 T2) t)
+	      (Dof'' : tm-of F E T2')
+	      _
+	   <- injective-plus Dequiv
+	      (Dequiv1 : cn-equiv T1' T1 t)
+	      (Dequiv2 : cn-equiv T2' T2 t)
+	   <- substitution-tm-tm (Dof2 E) (tm-of/equiv Dequiv2 Dof'')
+	      (Dof''' : tm-of F (E2 E) T).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/ref E) T)
+	   (Dstof : store-of F ST F)
+	   (step/ref 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/ref Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/ref Dof 
+	      (Dequiv : cn-equiv (ref T') T t)
+	      (Dof' : tm-of F E T')
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' T')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/ref E) T)
+	   (Dstof : store-of F ST F)
+	   (step/ref-beta
+	      (Dnextloc : nextloc ST L)
+	      (Dvalue : value E))
+	   %%
+	   (tm-of/equiv
+	      Dequiv 
+	      (tm-of/refloc Dwf st-lookup/hit))
+	   (store-of/cons 
+	      Dbound 
+	      (entry-of/ref Dof'' Dvalue)
+	      Dstof')
+	   (extends/cons extends/nil)
+	   <- nextloc-bounds Dnextloc
+	      (Dbound : store-bounds ST L)
+	   <- inversion-tm/ref Dof
+	      (Dequiv : cn-equiv (ref T') T t)
+	      (Dof' : tm-of F E T')
+	   <- tm-of-reg Dof'
+	      (Dwf : cn-of T' t)
+	   <- monotonicity-tm Dof' (extends/cons extends/nil)
+	      (Dof'' : tm-of (st/cons F L (et/ref T')) E T')
+	   <- monotonicity-store Dstof (extends/cons extends/nil)
+	      (Dstof' : store-of (st/cons F L (et/ref T')) ST F).
+	      
+-	: preservation-tm
+	   (Dof : tm-of F (tm/deref E) T)
+	   (Dstof : store-of F ST F)
+	   (step/deref 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/deref Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/deref Dof (Dof' : tm-of F E (ref T))
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' (ref T))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/deref (tm/refloc L)) T)
+	   (Dstof : store-of F ST F)
+	   (step/deref-beta
+	      (Dlookup : store-lookup ST L (entry/ref E)))
+	   %%
+	   (tm-of/equiv Dequiv' Dof'')
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/deref Dof (Dof' : tm-of F (tm/refloc L) (ref T))
+	   <- inversion-tm/refloc Dof'
+	      (Dequiv : cn-equiv (ref T') (ref T) t)
+	      (Dlookup' : st-lookup F L (et/ref T'))
+	      _
+	   <- preservation-lookup Dstof Dlookup' Dlookup
+	      (entry-of/ref 
+		 (Dof'' : tm-of F E T')
+		 _)
+	   <- injective-ref Dequiv
+	      (Dequiv' : cn-equiv T' T t).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/assign E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/assign1
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/assign Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/assign Dof 
+	      (Dequiv : cn-equiv unit T t)
+	      (Dof1 : tm-of F E1 (ref T'))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' (ref T'))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof2 Dextends
+	      (Dof2' : tm-of F' E2 T').
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/assign E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/assign2
+	      (Dstep : step ST E2 ST' E2')
+	      _)
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/assign Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/assign Dof 
+	      (Dequiv : cn-equiv unit T t)
+	      (Dof1 : tm-of F E1 (ref T'))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof2 Dstof Dstep 
+	      (Dof2' : tm-of F' E2' T')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof1 Dextends
+	      (Dof1' : tm-of F' E1 (ref T')).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/assign (tm/refloc L) E) T)
+	   (Dstof : store-of F ST F)
+	   (step/assign-beta
+	      (Dupdate : store-update ST L (entry/ref E) ST')
+	      (Dvalue : value E))
+	   %%
+	   (tm-of/equiv DequivUnit tm-of/unit)
+	   Dstof'
+	   extends/nil
+	   <- inversion-tm/assign Dof 
+	      (DequivUnit : cn-equiv unit T t)
+	      (Dof1 : tm-of F (tm/refloc L) (ref T'))
+	      (Dof2 : tm-of F E T')
+	   <- inversion-tm/refloc Dof1
+	      (Dequiv : cn-equiv (ref T'') (ref T') t)
+	      (Dlookup : st-lookup F L (et/ref T''))
+	      _
+	   <- injective-ref Dequiv
+	      (Dequiv' : cn-equiv T'' T' t)
+	   <- preservation-update Dstof Dlookup Dupdate (entry-of/ref (tm-of/equiv (cn-equiv/symm Dequiv') Dof2) Dvalue)
+	      (Dstof' : store-of F ST' F).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/newtag T') T)
+	   (Dstof : store-of F ST F)
+	   (step/newtag-beta
+	      (Dnextloc : nextloc ST L))
+	   %%
+	   (tm-of/equiv
+	      Dequiv 
+	      (tm-of/tagloc Dwf' st-lookup/hit))
+	   (store-of/cons 
+	      Dbound 
+	      (entry-of/tag Dwf')
+	      Dstof')
+	   (extends/cons extends/nil)
+	   <- nextloc-bounds Dnextloc
+	      (Dbound : store-bounds ST L)
+	   <- inversion-tm/newtag Dof
+	      (Dequiv : cn-equiv (tag T') T t)
+	   <- cn-equiv-reg Dequiv
+	      (Dwf : cn-of (tag T') t) _ _
+	   <- inversion-tag Dwf
+	      (Dwf' : cn-of T' t)
+	   <- monotonicity-store Dstof (extends/cons extends/nil)
+	      (Dstof' : store-of (st/cons F L (et/tag T')) ST F).
+	      
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/tag E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/tag1 
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/tag Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/tag Dof 
+	      (Dequiv : cn-equiv tagged T t)
+	      (Dof1 : tm-of F E1 (tag T'))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' (tag T'))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof2 Dextends
+	      (Dof2' : tm-of F' E2 T').
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/tag E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/tag2
+	      (Dstep : step ST E2 ST' E2')
+	      _)
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/tag Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/tag Dof 
+	      (Dequiv : cn-equiv tagged T t)
+	      (Dof1 : tm-of F E1 (tag T'))
+	      (Dof2 : tm-of F E2 T')
+	   <- preservation-tm Dof2 Dstof Dstep 
+	      (Dof2' : tm-of F' E2' T')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof1 Dextends
+	      (Dof1' : tm-of F' E1 (tag T')).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/iftag E1 E2 E3 E4) T) 
+	   (Dstof : store-of F ST F)
+	   (step/iftag1 
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/iftag Dof4' Dof3' Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/iftag Dof 
+	      (Dof1 : tm-of F E1 tagged)
+	      (Dof2 : tm-of F E2 (tag T'))
+	      (Dof3 : {x} tm-assm x T' -> tm-of F (E3 x) T)
+	      (Dof4 : tm-of F E4 T)
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' tagged)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof2 Dextends
+	      (Dof2' : tm-of F' E2 (tag T'))
+	   <- ({x} {d}
+		 monotonicity-tm (Dof3 x d) Dextends
+		 (Dof3' x d : tm-of F' (E3 x) T))
+	   <- monotonicity-tm Dof4 Dextends
+	      (Dof4' : tm-of F' E4 T).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/iftag E1 E2 E3 E4) T) 
+	   (Dstof : store-of F ST F)
+	   (step/iftag2 
+	      (Dstep : step ST E2 ST' E2')
+	      _)
+	   %%
+	   (tm-of/iftag Dof4' Dof3' Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/iftag Dof 
+	      (Dof1 : tm-of F E1 tagged)
+	      (Dof2 : tm-of F E2 (tag T'))
+	      (Dof3 : {x} tm-assm x T' -> tm-of F (E3 x) T)
+	      (Dof4 : tm-of F E4 T)
+	   <- preservation-tm Dof2 Dstof Dstep
+	      (Dof2' : tm-of F' E2' (tag T'))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-tm Dof1 Dextends
+	      (Dof1' : tm-of F' E1 tagged)
+	   <- ({x} {d}
+		 monotonicity-tm (Dof3 x d) Dextends
+		 (Dof3' x d : tm-of F' (E3 x) T))
+	   <- monotonicity-tm Dof4 Dextends
+	      (Dof4' : tm-of F' E4 T).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/iftag (tm/tag (tm/tagloc L) E) (tm/tagloc L) E3 E4) T) 
+	   (Dstof : store-of F ST F)
+	   (step/iftag-beta1 _)
+	   %%
+	   Dof''
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/iftag Dof 
+	      (Dof1 : tm-of F (tm/tag (tm/tagloc L) E) tagged)
+	      (Dof2 : tm-of F (tm/tagloc L) (tag T'))
+	      (Dof3 : {x} tm-assm x T' -> tm-of F (E3 x) T)
+	      _
+	   <- inversion-tm/tag Dof1
+	      _
+	      (DofL1 : tm-of F (tm/tagloc L) (tag T''))
+	      (Dof' : tm-of F E T'')
+	   <- inversion-tm/tagloc DofL1
+	      (Dequiv1 : cn-equiv (tag T1) (tag T'') t)
+	      (Dlookup1 : st-lookup F L (et/tag T1))
+	      _
+	   <- inversion-tm/tagloc Dof2
+	      (Dequiv2 : cn-equiv (tag T2) (tag T') t)
+	      (Dlookup2 : st-lookup F L (et/tag T2))
+	      _
+	   <- injective-tag Dequiv1
+	      (Dequiv1' : cn-equiv T1 T'' t)
+	   <- injective-tag Dequiv2
+	      (Dequiv2' : cn-equiv T2 T' t)
+	   <- st-lookup-fun Dstof Dlookup1 Dlookup2
+	      (Deq : entp-eq (et/tag T1) (et/tag T2))
+	   <- entp-eq-invert-tag Deq
+	      (Deq' : con-eq T1 T2)
+	   <- cn-equiv-resp Deq' con-eq/i kind-eq/i Dequiv1'
+	      (Dequiv1'' : cn-equiv T2 T'' t)
+	   <- substitution-tm-tm (Dof3 E) (tm-of/equiv (cn-equiv/trans Dequiv2' (cn-equiv/symm Dequiv1'')) Dof')
+	      (Dof'' : tm-of F (E3 E) T).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/iftag (tm/tag (tm/tagloc L) E) (tm/tagloc L') E3 E4) T) 
+	   (Dstof : store-of F ST F)
+	   (step/iftag-beta2 _ _)
+	   %%
+	   Dof4
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/iftag Dof
+	      _ _ _
+	      (Dof4 : tm-of F E4 T).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/roll E K C1 C2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/roll
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/roll DofC2 DofC1 DwfK Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/roll Dof 
+	      (Dequiv : cn-equiv (rec K C1 C2) T t)
+	      (Dof' : tm-of F E (C1 (lam K ([a] rec K C1 a)) C2))
+	      DwfK DofC1 DofC2
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' (C1 (lam K ([a] rec K C1 a)) C2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/unroll E) T) 
+	   (Dstof : store-of F ST F)
+	   (step/unroll
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/unroll Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/unroll Dof 
+	      (Dequiv : cn-equiv (C1 (lam K ([a] rec K C1 a)) C2) T t)
+	      (Dof' : tm-of F E (rec K C1 C2))
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' (rec K C1 C2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/unroll (tm/roll E K C1 C2)) T)
+	   (Dstof : store-of F ST F)
+	   (step/unroll-beta _)
+	   %%
+	   (tm-of/equiv
+	      (cn-equiv/trans
+		 Dequiv2
+		 (cn-equiv/trans
+		    (cn-equiv/trans
+		       (DequivC1 
+			  _
+			  (cn-of/equiv
+			     (kd-equiv/pi
+				([_] [_] kd-equiv/t)
+				(kd-equiv/symm DequivK))
+			     (cn-of/lam ([a] [d] cn-of/rec d DofC1' DwfK') DwfK'))
+			  _
+			  (cn-of/equiv
+			     (kd-equiv/symm DequivK)
+			     DofC2'))
+		       DequivC1'')
+		    DequivC1'))
+	      Dof1)
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/unroll Dof
+	      (Dequiv2 : cn-equiv (C1' (lam K' ([a] rec K' C1' a)) C2') T t)
+	      (Dof2 : tm-of F (tm/roll E K C1 C2) (rec K' C1' C2'))
+	   <- inversion-tm/roll Dof2
+	      (DequivRec : cn-equiv (rec K C1 C2) (rec K' C1' C2') t)
+	      (Dof1 : tm-of F E (C1 (lam K ([a] rec K C1 a)) C2))
+	      (DwfK : kd-wf K)
+	      (DofC1 : {a} cn-of a (karrow K t) -> {b} cn-of b K -> cn-of (C1 a b) t)
+	      (DofC2 : cn-of C2 K)
+	   <- injective-rec DequivRec
+	      (DequivK : kd-equiv K K')
+	      (DequivC1 : {a} cn-of a (pi K ([_] t)) -> {b} cn-of b K -> cn-equiv (C1 a b) (C1' a b) t)
+	      (DequivC2 : cn-equiv C2 C2' K)
+	   <- functionality-cn 
+	      ([a] [d] DofC1 a d C2 DofC2)
+	      (cn-equiv/lam
+		 ([a] [d] cn-equiv/rec (cn-equiv/refl d) DequivC1 DequivK)
+		 DequivK)
+	      (DequivC1' : cn-equiv (C1 (lam K ([a] rec K C1 a)) C2) (C1 (lam K' ([a] rec K' C1' a)) C2) t)
+	   <- cn-equiv-reg DequivRec
+	      _ (DofRec' : cn-of (rec K' C1' C2') t) _
+	   <- inversion-rec DofRec'
+	      (DwfK' : kd-wf K')
+	      (DofC1' : {a} cn-of a (karrow K' t) -> {b} cn-of b K' -> cn-of (C1' a b) t)
+	      (DofC2' : cn-of C2' K')
+	   <- functionality-cn
+	      ([b] [e] 
+		 DofC1 
+		 (lam K' ([a] rec K' C1' a)) 
+		 (cn-of/equiv
+		    (kd-equiv/pi
+		       ([_] [_] kd-equiv/t)
+		       (kd-equiv/symm DequivK))
+		    (cn-of/lam ([a] [d] cn-of/rec d DofC1' DwfK') DwfK') )
+		 b
+		 e)
+	      DequivC2
+	      (DequivC1'' : cn-equiv (C1 (lam K' ([a] rec K' C1' a)) C2) (C1 (lam K' ([a] rec K' C1' a)) C2') t).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/raise E T') T)
+	   (Dstof : store-of F ST F)
+	   (step/raise 
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/raise Dwf Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/raise Dof 
+	      (Dequiv : cn-equiv T' T t)
+	      (Dof' : tm-of F E tagged)
+	   <- cn-equiv-reg Dequiv
+	      (Dwf : cn-of T' t) _ _
+	   <- preservation-tm Dof' Dstof Dstep 
+	      (Dof'' : tm-of F' E' tagged)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/in L E) T)
+	   (Dstof : store-of F ST F)
+	   (step/in
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/equiv Dequiv (tm-of/in Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/in Dof
+	      (Dequiv : cn-equiv (labeled L T') T t)
+	      (Dof' : tm-of F E T')
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' T')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/out E) T)
+	   (Dstof : store-of F ST F)
+	   (step/out
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (tm-of/out Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/out Dof
+	      (Dof' : tm-of F E (labeled L T))
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' (labeled L T))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/out (tm/in L E)) T)
+	   (Dstof : store-of F ST F)
+	   (step/out-beta _)
+	   %%
+	   (tm-of/equiv Dequiv' Dof'')
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/out Dof
+	      (Dof' : tm-of F (tm/in L E) (labeled L' T))
+	   <- inversion-tm/in Dof'
+	      (Dequiv : cn-equiv (labeled L T') (labeled L' T) t)
+	      (Dof'' : tm-of F E T')
+	   <- injective-labeled Dequiv
+	      _
+	      (Dequiv' : cn-equiv T' T t).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/try E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/try
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/try Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/try Dof 
+	      (Dof1 : tm-of F E1 T)
+	      (Dof2 : {x} tm-assm x tagged -> tm-of F (E2 x) T)
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' T)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends
+		 (Dof2' x d : tm-of F' (E2 x) T)).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/try E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/try-done _)
+	   %%
+	   Dof1
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/try Dof 
+	      (Dof1 : tm-of F E1 T)
+	      (Dof2 : {x} tm-assm x tagged -> tm-of F (E2 x) T).
+
+-	: preservation-tm 
+	   (Dof : tm-of F (tm/try E1 E2) T) 
+	   (Dstof : store-of F ST F)
+	   (step/try-handle
+	      (Draises : raises E1 V))
+	   %%
+	   Dof''
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/try Dof 
+	      (Dof1 : tm-of F E1 T)
+	      (Dof2 : {x} tm-assm x tagged -> tm-of F (E2 x) T)
+	   <- preservation-raises-tm Dof1 Draises
+	      (Dof' : tm-of F V tagged)
+	   <- substitution-tm-tm (Dof2 V) Dof'
+	      (Dof'' : tm-of F (E2 V) T).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/lett E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/lett1
+	      (Dstep : step ST E1 ST' E1'))
+	   %%
+	   (tm-of/lett Dof2' Dof1')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/lett Dof 
+	      (Dof1 : tm-of F E1 T1)
+	      (Dof2 : {x} tm-assm x T1 -> tm-of F (E2 x) T)
+	   <- preservation-tm Dof1 Dstof Dstep
+	      (Dof1' : tm-of F' E1' T1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({x} {d}
+		 monotonicity-tm (Dof2 x d) Dextends
+		 (Dof2' x d : tm-of F' (E2 x) T)).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/lett E1 E2) T)
+	   (Dstof : store-of F ST F)
+	   (step/lett2 _)
+	   %%
+	   Dof'
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/lett Dof 
+	      (Dof1 : tm-of F E1 T1)
+	      (Dof2 : {x} tm-assm x T1 -> tm-of F (E2 x) T)
+	   <- substitution-tm-tm (Dof2 E1) Dof1
+	      (Dof' : tm-of F (E2 E1) T).
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/snd M) T)
+	   (Dstof : store-of F ST F)
+	   (step/snd
+	      (Dstep : step-md ST M ST' M'))
+	   %%
+	   (tm-of/snd Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-tm/snd Dof
+	      (Dof' : md-of impure F M (sg/datom T))
+	   <- preservation-md Dof' Dstof Dstep 
+	      (Dof'' : md-of impure F' M' (sg/datom T))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-tm
+	   (Dof : tm-of F (tm/snd (md/datom E T')) T)
+	   (Dstof : store-of F ST F)
+	   (step/snd-beta _)
+	   %%
+	   (tm-of/equiv Dequiv Dof'')
+	   Dstof
+	   extends/nil
+	   <- inversion-tm/snd Dof
+	      (Dof' : md-of impure F (md/datom E T') (sg/datom T))
+	   <- inversion-md/datom Dof'
+	      (Dof'' : tm-of F E T')
+	      (Dsub : sg-sub (sg/datom T') (sg/datom T))
+	   <- sg-sub-datom-invert Dsub
+	      (Dequiv : cn-equiv T' T t).
+
+
+
+-	: preservation-md
+	   (Dof : md-of P F (md/datom E T) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/datom
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (md-of/subsume Dsub Dof''')
+	   Dstof'
+	   Dextends
+	   <- inversion-md/datom Dof
+	      (Dof' : tm-of F E T)
+	      (Dsub : sg-sub (sg/datom T) S)
+	   <- preservation-tm Dof' Dstof Dstep
+	      (Dof'' : tm-of F' E' T)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- md-of-forget' P (md-of/datom Dof'')
+	      (Dof''' : md-of P F' (md/datom E' T) (sg/datom T)).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/pair M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/pair1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   %%
+	   (md-of/subsume Dsub (md-of/pair Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-md/pair Dof
+	      (Dof1 : md-of P F M1 S1)
+	      (Dof2 : md-of P F M2 S2)
+	      (Dsub : sg-sub (sg/sigma S1 ([_] S2)) S)
+	   <- preservation-md Dof1 Dstof Dstep
+	      (Dof1' : md-of P F' M1' S1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-md Dof2 Dextends
+	      (Dof2' : md-of P F' M2 S2).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/pair M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/pair2
+	      (Dstep : step-md ST M2 ST' M2')
+	      _)
+	   %%
+	   (md-of/subsume Dsub (md-of/pair Dof2' Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-md/pair Dof
+	      (Dof1 : md-of P F M1 S1)
+	      (Dof2 : md-of P F M2 S2)
+	      (Dsub : sg-sub (sg/sigma S1 ([_] S2)) S)
+	   <- preservation-md Dof2 Dstof Dstep
+	      (Dof2' : md-of P F' M2' S2)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-md Dof1 Dextends
+	      (Dof1' : md-of P F' M1 S1).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/dpair M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/dpair1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   %%
+	   (md-of/subsume Dsub (md-of/dpair Dof2' DfstS1 Dof1'))
+	   Dstof'
+	   Dextends
+	   <- inversion-md/dpair Dof
+	      (Dof1 : md-of P F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (sg/sigma S1 S2) S)
+	   <- preservation-md Dof1 Dstof Dstep
+	      (Dof1' : md-of P F' M1' S1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends
+		 (Dof2' a da m dm dfst : md-of P F' (M2 a m) (S2 a))).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/dpair M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/dpair2
+	      (DfstM1 : md-fst M1 C1)
+	      (Dvalue : value-md M1))
+	   %%
+	   (md-of/subsume
+	      (sg-sub/trans 
+		 Dsub
+		 (sg-sub/sigma
+		    DwfS2
+		    DfstS1
+		    ([a] [da:cn-of a (K1s C1)] sg-sub/refl (DequivS2 a da))
+		    (DfstS1s C1)
+		    (DsubS1 C1 DofC1)))
+	      (md-of/pair Dof' Dof1'''))
+	   Dstof
+	   extends/nil
+	   <- inversion-md/dpair Dof
+	      (Dof1 : md-of P F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (sg/sigma S1 S2) S)
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- value-md-pure Dof1 Dvalue
+	      (Dof1' : md-of pure F M1 S1)
+	   <- substitution-md-md ([dm:md-assm M1 S1] Dof2 C1 DofC1 M1 dm DfstM1) Dof1'
+	      (Dof' : md-of P F (M2 C1 M1) (S2 C1))
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- can-single-sg S1
+	      (Dsing : single-sg S1 S1s)
+	   <- single-sg-intro Dsing Dof1' DfstM1
+	      (Dof1'' : md-of pure F M1 (S1s C1))
+	   <- md-of-forget' P Dof1''
+	      (Dof1''' : md-of P F M1 (S1s C1))
+	   <- single-sg-subsume Dsing DwfS1 DfstS1
+	      (DsubS1 : {a} cn-of a K1 -> sg-sub (S1s a) S1)
+	   <- single-sg-fst Dsing DfstS1
+	      (DsingK1 : single K1 K1s)
+	      (DfstS1s : {a} sg-fst (S1s a) (K1s a))
+	   <- cn-of-reg DofC1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a:con} {da:cn-of a K1} {m:module} {dm:md-assm m S1}
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a)))
+	   <- single-formation DsingK1 DwfK1
+	      (DwfK1s : {a} cn-of a K1 -> kd-wf (K1s a))
+	   <- single-elim DsingK1 DwfK1
+	      (Dequiv : {a} cn-of a K1 -> {b} cn-of b (K1s a) -> cn-equiv a b K1)
+	   <- ({a:con} {da:cn-of a (K1s C1)}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da (DwfK1s C1 DofC1)
+		 -> functionality-sg DwfS2 (Dequiv C1 DofC1 a da)
+		    (DequivS2 a da : sg-equiv (S2 C1) (S2 a))).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/pi1 M) S1)
+	   (Dstof : store-of F ST F)
+	   (step-md/pi1
+	      (Dstep : step-md ST M ST' M'))
+	   %%
+	   Dof'''
+	   Dstof'
+	   Dextends
+	   <- inversion-md/pi1 Dof
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- preservation-md Dof' Dstof Dstep
+	      (Dof'' : md-of pure F' M' (sg/sigma S1 ([_] S2)))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- md-of-forget' P (md-of/pi1 Dof'')
+	      (Dof''' : md-of P F' (md/pi1 M') S1).
+	      
+-	: preservation-md
+	   (Dof : md-of P F (md/pi1 (md/pair M1 M2)) S1)
+	   (Dstof : store-of F ST F)
+	   (step-md/pi1-beta _ _)
+	   %%
+	   (md-of/subsume Dsub1 Dof1')
+	   Dstof
+	   extends/nil
+	   <- inversion-md/pi1 Dof
+	      (Dof' : md-of pure F (md/pair M1 M2) (sg/sigma S1 ([_] S2)))
+	   <- inversion-md/pair Dof'
+	      (Dof1 : md-of pure F M1 S1')
+	      (Dof2 : md-of pure F M2 S2')
+	      (Dsub : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 ([_] S2)))
+	   <- sg-sub-sigma-invert Dsub
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub S2' S2)
+	   <- md-of-forget' P Dof1
+	      (Dof1' : md-of P F M1 S1').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/pi2 M) S2)
+	   (Dstof : store-of F ST F)
+	   (step-md/pi2
+	      (Dstep : step-md ST M ST' M'))
+	   %%
+	   Dof'''
+	   Dstof'
+	   Dextends
+	   <- inversion-md/pi2 Dof
+	      (Dof' : md-of pure F M (sg/sigma S1 ([_] S2)))
+	   <- preservation-md Dof' Dstof Dstep
+	      (Dof'' : md-of pure F' M' (sg/sigma S1 ([_] S2)))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- can-md-fst Dof''
+	      (DfstM' : md-fst M' C')
+	   <- md-of-forget' P (md-of/pi2 DfstM' Dof'')
+	      (Dof''' : md-of P F' (md/pi2 M') S2).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/pi2 (md/pair M1 M2)) S2)
+	   (Dstof : store-of F ST F)
+	   (step-md/pi2-beta _ _)
+	   %%
+	   (md-of/subsume (Dsub2 Cinh DofInh) Dof2')
+	   Dstof
+	   extends/nil
+	   <- inversion-md/pi2 Dof
+	      (Dof' : md-of pure F (md/pair M1 M2) (sg/sigma S1 ([_] S2)))
+	   <- inversion-md/pair Dof'
+	      (Dof1 : md-of pure F M1 S1')
+	      (Dof2 : md-of pure F M2 S2')
+	      (Dsub : sg-sub (sg/sigma S1' ([_] S2')) (sg/sigma S1 ([_] S2)))
+	   <- sg-sub-sigma-invert Dsub
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub S2' S2)
+	   <- md-of-forget' P Dof2
+	      (Dof2' : md-of P F M2 S2')
+	   <- sg-sub-reg Dsub1
+	      (DwfS1' : sg-wf S1') _
+	   <- sg-fst-reg DwfS1' DfstS1'
+	      (DwfK1' : kd-wf K1')
+	   <- inhabitation DwfK1'
+	      (DofInh : cn-of Cinh K1').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/app M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/app1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   %%
+	   Dof'
+	   Dstof'
+	   Dextends
+	   <- inversion-md/app Dof
+	      (Dof1 : md-of impure F M1 (sg/pi S1 S2))
+	      (Dof2 : md-of pure F M2 S1)
+	      (DfstM2 : md-fst M2 C2)
+	      (Dsub : sg-sub (S2 C2) S)
+	      (Dpsub : purity-sub impure P)
+	   <- preservation-md Dof1 Dstof Dstep
+	      (Dof1' : md-of impure F' M1' (sg/pi S1 S2))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- monotonicity-md Dof2 Dextends
+	      (Dof2' : md-of pure F' M2 S1)
+	   <- purity-subsume 
+	      (md-of/subsume Dsub (md-of/app DfstM2 Dof2' Dof1')
+		 : md-of impure F' (md/app M1' M2) S)
+	      Dpsub
+	      (Dof' : md-of P F' (md/app M1' M2) S).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/app M1 M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/app2
+	      (Dstep : step-md ST M2 ST' M2')
+	      _)
+	   %%
+	   Dof'
+	   Dstof'
+	   Dextends
+	   <- inversion-md/app Dof
+	      (Dof1 : md-of impure F M1 (sg/pi S1 S2))
+	      (Dof2 : md-of pure F M2 S1)
+	      (DfstM2 : md-fst M2 C2)
+	      (Dsub : sg-sub (S2 C2) S)
+	      (Dpsub : purity-sub impure P)
+	   <- preservation-md Dof2 Dstof Dstep
+	      (Dof2' : md-of pure F' M2' S1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- md-of-reg Dof1
+	      (sg-wf/pi
+		 (DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+		 (DfstS1 : sg-fst S1 K1)
+		 (DwfS1 : sg-wf S1))
+	   <- preservation-fst Dof2 Dstep DfstS1 DfstM2
+	      (DfstM2' : md-fst M2' C2')
+	      (Dequiv : cn-equiv C2 C2' K1)
+	   <- monotonicity-md Dof1 Dextends
+	      (Dof1' : md-of impure F' M1 (sg/pi S1 S2))
+	   <- functionality-sg DwfS2 Dequiv
+	      (DequivS2 : sg-equiv (S2 C2) (S2 C2'))
+	   <- purity-subsume
+	      (md-of/subsume
+		 (sg-sub/trans Dsub (sg-sub/refl (sg-equiv/symm DequivS2)))
+		 (md-of/app DfstM2' Dof2' Dof1')
+		 : md-of impure F' (md/app M1 M2') S)
+	      Dpsub
+	      (Dof' : md-of P F' (md/app M1 M2') S).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/app (md/lam S1 ([a] [m] M1 a m)) M2) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/app-beta
+	      (DfstM2 : md-fst M2 C2)
+	      _)
+	   %%
+	   Dof''
+	   Dstof
+	   extends/nil
+	   <- inversion-md/app Dof
+	      (Dof1 : md-of impure F (md/lam S1 ([a] [m] M1 a m)) (sg/pi S1' S2'))
+	      (Dof2 : md-of pure F M2 S1')
+	      (DfstM2' : md-fst M2 C2')
+	      (Dsub : sg-sub (S2' C2') S)
+	      (Dpsub : purity-sub impure P)
+	   <- inversion-md/lam Dof1
+	      (DwfS1 : sg-wf S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof1' : {a} cn-of a K1
+			-> {m} md-assm m S1
+			-> md-fst m a
+			-> md-of impure F (M1 a m) (S2 a))
+	      (Dsub' : sg-sub (sg/pi S1 S2) (sg/pi S1' S2'))
+	   <- sg-sub-pi-invert Dsub'
+	      (Dsub1 : sg-sub S1' S1)
+	      (DfstS1' : sg-fst S1' K1')
+	      (Dsub2 : {a} cn-of a K1' -> sg-sub (S2 a) (S2' a))
+	   <- md-fst-reg Dof2 DfstM2 DfstS1'
+	      (DofC2 : cn-of C2 K1')
+	   <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	      (DsubK1 : kd-sub K1' K1)
+	   <- substitution-md-md
+	      ([dm:md-assm M2 S1] Dof1' C2 (cn-of/subsume DsubK1 DofC2) M2 dm DfstM2)
+	      (md-of/subsume Dsub1 Dof2)
+	      (Dof' : md-of impure F (M1 C2 M2) (S2 C2))
+	   <- md-fst-fun DfstM2' DfstM2
+	      (DeqC2 : con-eq C2' C2)
+	   <- sg-resp-con S2' DeqC2
+	      (DeqS2' : sg-eq (S2' C2') (S2' C2))
+	   <- sg-sub-resp DeqS2' sg-eq/i Dsub
+	      (Dsub'' : sg-sub (S2' C2) S)
+	   <- purity-subsume
+	      (md-of/subsume
+		 (sg-sub/trans Dsub'' (Dsub2 C2 DofC2))
+		 Dof')
+	      Dpsub
+	      (Dof'' : md-of P F (M1 C2 M2) S).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/in L M) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/in
+	      (Dstep : step-md ST M ST' M'))
+	   %%
+	   (md-of/subsume Dsub (md-of/in Dof''))
+	   Dstof'
+	   Dextends
+	   <- inversion-md/in Dof
+	      (Dof' : md-of P F M S')
+	      (Dsub : sg-sub (sg/named L S') S)
+	   <- preservation-md Dof' Dstof Dstep
+	      (Dof'' : md-of P F' M' S')
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/out M) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/out
+	      (Dstep : step-md ST M ST' M'))
+	   %%
+	   (md-of/out Dof'')
+	   Dstof'
+	   Dextends
+	   <- inversion-md/out Dof
+	      (Dof' : md-of P F M (sg/named L S))
+	   <- preservation-md Dof' Dstof Dstep
+	      (Dof'' : md-of P F' M' (sg/named L S))
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/out (md/in L M)) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/out-beta _)
+	   %%
+	   (md-of/subsume Dsub' Dof'')
+	   Dstof
+	   extends/nil
+	   <- inversion-md/out Dof
+	      (Dof' : md-of P F (md/in L M) (sg/named L' S))
+	   <- inversion-md/in Dof'
+	      (Dof'' : md-of P F M S')
+	      (Dsub : sg-sub (sg/named L S') (sg/named L' S))
+	   <- sg-sub-named-invert Dsub
+	      _
+	      (Dsub' : sg-sub S' S).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/let M1 ([a] [m] M2 a m) S) S')
+	   (Dstof : store-of F ST F)
+	   (step-md/let1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   %%
+	   Dof'
+	   Dstof'
+	   Dextends
+	   <- inversion-md/let Dof
+	      (Dof1 : md-of impure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of impure F (M2 a m) S)
+	      (Dsub : sg-sub S S')
+	      (Dpsub : purity-sub impure P)
+	   <- preservation-md Dof1 Dstof Dstep
+	      (Dof1' : md-of impure F' M1' S1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends
+		 (Dof2' a da m dm dfst : md-of impure F' (M2 a m) S))
+	   <- purity-subsume (md-of/subsume Dsub (md-of/let Dof2' DfstS1 Dof1')) Dpsub
+	      (Dof' : md-of P F' (md/let M1' ([a] [m] M2 a m) S) S').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/let M1 ([a] [m] M2 a m) S) S')
+	   (Dstof : store-of F ST F)
+	   (step-md/let2
+	      (DfstM1 : md-fst M1 C1)
+	      (Dvalue : value-md M1))
+	   %%
+	   Dof''
+	   Dstof
+	   extends/nil
+	   <- inversion-md/let Dof
+	      (Dof1 : md-of impure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of impure F (M2 a m) S)
+	      (Dsub : sg-sub S S')
+	      (Dpsub : purity-sub impure P)
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- value-md-pure Dof1 Dvalue
+	      (Dof1' : md-of pure F M1 S1)
+	   <- substitution-md-md
+	      ([dm:md-assm M1 S1] Dof2 C1 DofC1 M1 dm DfstM1)
+	      Dof1'
+	      (Dof' : md-of impure F (M2 C1 M1) S)
+	   <- purity-subsume
+	      (md-of/subsume Dsub Dof')
+	      Dpsub
+	      (Dof'' : md-of P F (M2 C1 M1) S').
+
+-	: preservation-md
+	   (Dof : md-of P F (md/letp M1 ([a] [m] M2 a m)) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/letp1
+	      (Dstep : step-md ST M1 ST' M1'))
+	   %%
+	   (md-of/subsume
+	      (sg-sub/trans Dsub (sg-sub/refl (sg-equiv/symm Dequiv')))
+	      (md-of/letp Dof2' DfstM1' DfstS1 Dof1')) 
+	   Dstof'
+	   Dextends
+	   <- inversion-md/letp Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (DfstM1 : md-fst M1 C1)
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (S2 C1) S)
+	   <- preservation-md Dof1 Dstof Dstep
+	      (Dof1' : md-of pure F' M1' S1)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- preservation-fst Dof1 Dstep DfstS1 DfstM1
+	      (DfstM1' : md-fst M1' C1')
+	      (Dequiv : cn-equiv C1 C1' K1)
+	   <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+		 monotonicity-md (Dof2 a da m dm dfst) Dextends
+		 (Dof2' a da m dm dfst : md-of P F' (M2 a m) (S2 a)))
+	   <- md-of-reg Dof1
+	      (DwfS1 : sg-wf S1)
+	   <- sg-fst-reg DwfS1 DfstS1
+	      (DwfK1 : kd-wf K1)
+	   <- ({a:con} {da:cn-of a K1} {m:module} {dm:md-assm m S1}
+		 {dfst:md-fst m a}
+		 {das}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK1
+		 -> md-assm-reg dm dfst DfstS1 da DwfS1
+		 -> md-of-reg (Dof2 a da m dm dfst)
+		    (DwfS2 a da : sg-wf (S2 a)))
+	   <- functionality-sg DwfS2 Dequiv
+	      (Dequiv' : sg-equiv (S2 C1) (S2 C1')).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/letp M1 ([a] [m] M2 a m)) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/letp2
+	      (DfstM1 : md-fst M1 C1)
+	      _)
+	   %%
+	   (md-of/subsume
+	      Dsub'
+	      Dof')
+	   Dstof
+	   extends/nil
+	   <- inversion-md/letp Dof
+	      (Dof1 : md-of pure F M1 S1)
+	      (DfstS1 : sg-fst S1 K1)
+	      (DfstM1' : md-fst M1 C1')
+	      (Dof2 : {a} cn-of a K1
+		       -> {m} md-assm m S1
+		       -> md-fst m a
+		       -> md-of P F (M2 a m) (S2 a))
+	      (Dsub : sg-sub (S2 C1') S)
+	   <- md-fst-reg Dof1 DfstM1 DfstS1
+	      (DofC1 : cn-of C1 K1)
+	   <- md-fst-fun DfstM1' DfstM1
+	      (DeqC1 : con-eq C1' C1)
+	   <- sg-resp-con S2 DeqC1
+	      (DeqS2 : sg-eq (S2 C1') (S2 C1))
+	   <- sg-sub-resp DeqS2 sg-eq/i Dsub
+	      (Dsub' : sg-sub (S2 C1) S)
+	   <- substitution-md-md
+	      ([dm:md-assm M1 S1] Dof2 C1 DofC1 M1 dm DfstM1)
+	      Dof1
+	      (Dof' : md-of P F (M2 C1 M1) (S2 C1)).
+
+-	: preservation-md
+	   (Dof : md-of P F (md/lete E T ([x] M x)) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/lete1
+	      (Dstep : step ST E ST' E'))
+	   %%
+	   (md-of/lete DofM' DofE')
+	   Dstof' Dextends
+	   <- inversion-md/lete Dof
+	      (DofE : tm-of F E T)
+	      (DofM : {x} tm-assm x T -> md-of P F (M x) S)
+	   <- preservation-tm DofE Dstof Dstep
+	      (DofE' : tm-of F' E' T)
+	      (Dstof' : store-of F' ST' F')
+	      (Dextends : extends F F')
+	   <- ({x} {d:tm-assm x T}
+		 monotonicity-md (DofM x d) Dextends (DofM' x d : md-of P F' (M x) S)).
+	      
+-	: preservation-md
+	   (Dof : md-of P F (md/lete E T ([x] M x)) S)
+	   (Dstof : store-of F ST F)
+	   (step-md/lete2 _)
+	   %%
+	   DofME
+	   Dstof extends/nil
+	   <- inversion-md/lete Dof
+	      (DofE : tm-of F E T)
+	      (DofM : {x} tm-assm x T -> md-of P F (M x) S)
+	   <- substitution-tm-md ([d] DofM E d) DofE (DofME : md-of P F (M E) S).
+	      
+-	: preservation-md
+	   (Dof : md-of P F (md/seal M S) S')
+	   (Dstof : store-of F ST F)
+	   step-md/seal
+	   %%
+	   Dof''
+	   Dstof
+	   extends/nil
+	   <- inversion-md/seal Dof
+	      (Dof' : md-of impure F M S)
+	      (Dsub : sg-sub S S')
+	      (Dpsub : purity-sub impure P)
+	   <- purity-subsume (md-of/subsume Dsub Dof') Dpsub
+	      (Dof'' : md-of P F M S').
+
+%worlds () (preservation-tm _ _ _ _ _ _) (preservation-md _ _ _ _ _ _).
+%total (D1 D2) (preservation-tm _ _ D1 _ _ _) (preservation-md _ _ D2 _ _ _).

@@ -1,0 +1,27 @@
+%%%% projectible value lemma
+%%%% if a module is well-formed and an val/md, then it is projectible (pty/p)
+%%%% when we have an inversion lemma for pairs, this proof is simpler
+%%%% because we can induct over the derivation of val/md
+%%%% but since we don't, for now, we can induct over the typing derivation
+%%%% for a less elegant, but equally accurate proof. 
+%%%% Actually, this one isn't so bad. Just 2 more cases...
+
+val/md-pty/p	: val/md M
+		   -> ofsg L T _ M S
+		   -> ofsg L T pty/p M S
+		   -> type.
+
+%mode val/md-pty/p +D1 +D2 -D3.
+
+-	: val/md-pty/p V D1 D1.
+
+-	: val/md-pty/p (val/md/pair V1 V2) (ofsg/md/pair D1 D2) 
+	   (ofsg/md/pair D1' D2')
+	   <- val/md-pty/p V1 D1 D1'
+	   <- val/md-pty/p V2 D2 D2'.
+
+-	: val/md-pty/p V (ofsg/sub D1 DS _) (ofsg/sub D1' DS pty-sub/pp)
+	   <- val/md-pty/p V D1 D1'.
+
+%worlds () (val/md-pty/p _ _ _).
+%total D1 (val/md-pty/p _ D1 _).

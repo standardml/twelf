@@ -1,0 +1,367 @@
+
+%%%%%  Substitution  %%%%%
+
+%block modbind-detached
+   : some {C:con} {K:kind} {S:sg}
+      block {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m C}.
+
+%block md-assm-block
+   : some {M:module} {S:sg}
+      block {d:md-assm M S}.
+
+%block tm-of-block
+   : some {F:sttp} {E:term} {T:con}
+      block {d:tm-of F E T}.
+
+
+
+substitution-tm-tm : (tm-assm E1 T1 -> tm-of F E2 T2)
+		      -> tm-of F E1 T1
+		      -> tm-of F E2 T2 -> type.
+%mode substitution-tm-tm +X1 +X2 -X3.
+
+substitution-tm-md : (tm-assm E T -> md-of P F M S)
+		      -> tm-of F E T
+		      -> md-of P F M S -> type.
+%mode substitution-tm-md +X1 +X2 -X3.
+
+-	: substitution-tm-tm ([d] tm-of/var d) D D.
+
+-	: substitution-tm-tm ([_] D) _ D.
+
+-	: substitution-tm-tm ([d] tm-of/abort D2 (D1 d)) D (tm-of/abort D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/pair (D2 d) (D1 d)) D (tm-of/pair D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- substitution-tm-tm D2 D D2'.
+
+-	: substitution-tm-tm ([d] tm-of/pi1 (D1 d)) D (tm-of/pi1 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/pi2 (D1 d)) D (tm-of/pi2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/lam (D2 d) D1) D (tm-of/lam D2' D1)
+	   <- ({y} {e}
+		 substitution-tm-tm ([d] D2 d y e) D (D2' y e)).
+
+-	: substitution-tm-tm ([d] tm-of/app (D2 d) (D1 d)) D (tm-of/app D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- substitution-tm-tm D2 D D2'.
+
+-	: substitution-tm-tm ([d] tm-of/in1 D2 (D1 d)) D (tm-of/in1 D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/in2 D2 (D1 d)) D (tm-of/in2 D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/case (D3 d) (D2 d) (D1 d)) D (tm-of/case D3' D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- ({y} {e}
+		 substitution-tm-tm ([d] D2 d y e) D (D2' y e))
+	   <- ({y} {e}
+		 substitution-tm-tm ([d] D3 d y e) D (D3' y e)).
+
+-	: substitution-tm-tm ([d] tm-of/ref (D1 d)) D (tm-of/ref D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/deref (D1 d)) D (tm-of/deref D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/assign (D2 d) (D1 d)) D (tm-of/assign D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- substitution-tm-tm D2 D D2'.
+
+-	: substitution-tm-tm ([d] tm-of/tag (D2 d) (D1 d)) D (tm-of/tag D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- substitution-tm-tm D2 D D2'.
+
+-	: substitution-tm-tm ([d] tm-of/iftag (D4 d) (D3 d) (D2 d) (D1 d)) D (tm-of/iftag D4' D3' D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- substitution-tm-tm D2 D D2'
+	   <- ({y} {e}
+		 substitution-tm-tm ([d] D3 d y e) D (D3' y e))
+	   <- substitution-tm-tm D4 D D4'.
+
+-	: substitution-tm-tm ([d] tm-of/in (D1 d)) D (tm-of/in D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/out (D1 d)) D (tm-of/out D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/raise D2 (D1 d)) D (tm-of/raise D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/try (D2 d) (D1 d)) D (tm-of/try D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- ({y} {e}
+		 substitution-tm-tm ([d] D2 d y e) D (D2' y e)).
+
+-	: substitution-tm-tm ([d] tm-of/roll D4 D3 D2 (D1 d)) D (tm-of/roll D4 D3 D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/unroll (D1 d)) D (tm-of/unroll D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/lett (D2 d) (D1 d)) D (tm-of/lett D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- ({x} {e}
+		 substitution-tm-tm ([d] D2 d x e) D (D2' x e)).
+
+-	: substitution-tm-tm ([d] tm-of/snd (D1 d)) D (tm-of/snd D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-tm ([d] tm-of/equiv D2 (D1 d)) D (tm-of/equiv D2 D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+
+
+-	: substitution-tm-md ([d] D) _ D.
+
+-	: substitution-tm-md ([d] md-of/datom (D1 d)) D (md-of/datom D1')
+	   <- substitution-tm-tm D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/pair (D2 d) (D1 d)) D (md-of/pair D2' D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- substitution-tm-md D2 D D2'.
+
+-	: substitution-tm-md ([d] md-of/dpair (D2 d) Dfst (D1 d)) D (md-of/dpair D2' Dfst D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-tm-md ([d] D2 d a ea m em efst) D (D2' a ea m em efst)).
+
+-	: substitution-tm-md ([d] md-of/pi1 (D1 d)) D (md-of/pi1 D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/pi2 D2 (D1 d)) D (md-of/pi2 D2 D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/lam (D3 d) D2 D1) D (md-of/lam D3' D2 D1)
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-tm-md ([d] D3 d a ea m em efst) D (D3' a ea m em efst)).
+
+-	: substitution-tm-md ([d] md-of/app D3 (D2 d) (D1 d)) D (md-of/app D3 D2' D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- substitution-tm-md D2 D D2'.
+
+-	: substitution-tm-md ([d] md-of/in (D1 d)) D (md-of/in D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/out (D1 d)) D (md-of/out D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/seal (D1 d)) D (md-of/seal D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/let (D3 d) D2 (D1 d)) D (md-of/let D3' D2 D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-tm-md ([d] D3 d a ea m em efst) D (D3' a ea m em efst)).
+
+-	: substitution-tm-md ([d] md-of/letp (D4 d) D3 D2 (D1 d)) D (md-of/letp D4' D3 D2 D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-tm-md ([d] D4 d a ea m em efst) D (D4' a ea m em efst)).
+
+-	: substitution-tm-md ([d] md-of/lete (D2 d) (D1 d)) D (md-of/lete D2' D1')
+	   <- substitution-tm-tm D1 D D1'
+	   <- ({x} {dx}
+		 substitution-tm-md ([d] D2 d x dx) D (D2' x dx)).
+
+-	: substitution-tm-md ([d] md-of/self D3 D2 (D1 d)) D (md-of/self D3 D2 D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/extsigma (D2 d) (D1 d)) D (md-of/extsigma D2' D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- substitution-tm-md D2 D D2'.
+
+-	: substitution-tm-md ([d] md-of/extnamed (D2 d) (D1 d)) D (md-of/extnamed D2' D1')
+	   <- substitution-tm-md D1 D D1'
+	   <- substitution-tm-md D2 D D2'.
+
+-	: substitution-tm-md ([d] md-of/forget (D1 d)) D (md-of/forget D1')
+	   <- substitution-tm-md D1 D D1'.
+
+-	: substitution-tm-md ([d] md-of/subsume D2 (D1 d)) D (md-of/subsume D2 D1')
+	   <- substitution-tm-md D1 D D1'.
+
+%worlds (conbind | termbind | modbind | md-assm-block | termblock | tm-of-block) (substitution-tm-tm _ _ _) (substitution-tm-md _ _ _).
+%total (D1 D2) (substitution-tm-tm D1 _ _) (substitution-tm-md D2 _ _).
+
+
+
+substitution-md-tm : (md-assm M S -> tm-of F E T)
+		      -> md-of pure F M S
+		      -> tm-of F E T -> type.
+%mode substitution-md-tm +X1 +X2 -X3.
+
+substitution-md-md : (md-assm M1 S1 -> md-of P F M2 S2)
+		      -> md-of pure F M1 S1
+		      -> md-of P F M2 S2 -> type.
+%mode substitution-md-md +X1 +X2 -X3.
+
+-	: substitution-md-tm ([_] D) _ D.
+
+-	: substitution-md-tm ([d] tm-of/abort D2 (D1 d)) D (tm-of/abort D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/pair (D2 d) (D1 d)) D (tm-of/pair D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- substitution-md-tm D2 D D2'.
+
+-	: substitution-md-tm ([d] tm-of/pi1 (D1 d)) D (tm-of/pi1 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/pi2 (D1 d)) D (tm-of/pi2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/lam (D2 d) D1) D (tm-of/lam D2' D1)
+	   <- ({y} {e}
+		 substitution-md-tm ([d] D2 d y e) D (D2' y e)).
+
+-	: substitution-md-tm ([d] tm-of/app (D2 d) (D1 d)) D (tm-of/app D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- substitution-md-tm D2 D D2'.
+
+-	: substitution-md-tm ([d] tm-of/in1 D2 (D1 d)) D (tm-of/in1 D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/in2 D2 (D1 d)) D (tm-of/in2 D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/case (D3 d) (D2 d) (D1 d)) D (tm-of/case D3' D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- ({y} {e}
+		 substitution-md-tm ([d] D2 d y e) D (D2' y e))
+	   <- ({y} {e}
+		 substitution-md-tm ([d] D3 d y e) D (D3' y e)).
+
+-	: substitution-md-tm ([d] tm-of/ref (D1 d)) D (tm-of/ref D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/deref (D1 d)) D (tm-of/deref D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/assign (D2 d) (D1 d)) D (tm-of/assign D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- substitution-md-tm D2 D D2'.
+
+-	: substitution-md-tm ([d] tm-of/tag (D2 d) (D1 d)) D (tm-of/tag D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- substitution-md-tm D2 D D2'.
+
+-	: substitution-md-tm ([d] tm-of/iftag (D4 d) (D3 d) (D2 d) (D1 d)) D (tm-of/iftag D4' D3' D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- substitution-md-tm D2 D D2'
+	   <- ({y} {e}
+		 substitution-md-tm ([d] D3 d y e) D (D3' y e))
+	   <- substitution-md-tm D4 D D4'.
+
+-	: substitution-md-tm ([d] tm-of/in (D1 d)) D (tm-of/in D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/out (D1 d)) D (tm-of/out D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/raise D2 (D1 d)) D (tm-of/raise D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/try (D2 d) (D1 d)) D (tm-of/try D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- ({y} {e}
+		 substitution-md-tm ([d] D2 d y e) D (D2' y e)).
+
+-	: substitution-md-tm ([d] tm-of/roll D4 D3 D2 (D1 d)) D (tm-of/roll D4 D3 D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/unroll (D1 d)) D (tm-of/unroll D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/lett (D2 d) (D1 d)) D (tm-of/lett D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- ({x} {e}
+		 substitution-md-tm ([d] D2 d x e) D (D2' x e)).
+
+-	: substitution-md-tm ([d] tm-of/snd (D1 d)) D (tm-of/snd D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-tm ([d] tm-of/equiv D2 (D1 d)) D (tm-of/equiv D2 D1')
+	   <- substitution-md-tm D1 D D1'.
+
+
+
+-	: substitution-md-md ([d] md-of/var d) D D.
+
+-	: substitution-md-md ([d] D) _ D.
+
+-	: substitution-md-md ([d] md-of/datom (D1 d)) D (md-of/datom D1')
+	   <- substitution-md-tm D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/pair (D2 d) (D1 d)) D (md-of/pair D2' D1')
+	   <- substitution-md-md D1 D D1'
+	   <- substitution-md-md D2 D D2'.
+
+-	: substitution-md-md ([d] md-of/dpair (D2 d) Dfst (D1 d)) D (md-of/dpair D2' Dfst D1')
+	   <- substitution-md-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-md-md ([d] D2 d a ea m em efst) D (D2' a ea m em efst)).
+
+-	: substitution-md-md ([d] md-of/pi1 (D1 d)) D (md-of/pi1 D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/pi2 D2 (D1 d)) D (md-of/pi2 D2 D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/lam (D3 d) D2 D1) D (md-of/lam D3' D2 D1)
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-md-md ([d] D3 d a ea m em efst) D (D3' a ea m em efst)).
+
+-	: substitution-md-md ([d] md-of/app D3 (D2 d) (D1 d)) D (md-of/app D3 D2' D1')
+	   <- substitution-md-md D1 D D1'
+	   <- substitution-md-md D2 D D2'.
+
+-	: substitution-md-md ([d] md-of/in (D1 d)) D (md-of/in D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/out (D1 d)) D (md-of/out D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/seal (D1 d)) D (md-of/seal D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/let (D3 d) D2 (D1 d)) D (md-of/let D3' D2 D1')
+	   <- substitution-md-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-md-md ([d] D3 d a ea m em efst) D (D3' a ea m em efst)).
+
+-	: substitution-md-md ([d] md-of/letp (D4 d) D3 D2 (D1 d)) D (md-of/letp D4' D3 D2 D1')
+	   <- substitution-md-md D1 D D1'
+	   <- ({a} {ea} {m} {em} {efst}
+		 substitution-md-md ([d] D4 d a ea m em efst) D (D4' a ea m em efst)).
+
+-	: substitution-md-md ([d] md-of/lete (D2 d) (D1 d)) D (md-of/lete D2' D1')
+	   <- substitution-md-tm D1 D D1'
+	   <- ({x} {dx}
+		 substitution-md-md ([d] D2 d x dx) D (D2' x dx)).
+
+-	: substitution-md-md ([d] md-of/self D3 D2 (D1 d)) D (md-of/self D3 D2 D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/extsigma (D2 d) (D1 d)) D (md-of/extsigma D2' D1')
+	   <- substitution-md-md D1 D D1'
+	   <- substitution-md-md D2 D D2'.
+
+-	: substitution-md-md ([d] md-of/extnamed (D2 d) (D1 d)) D (md-of/extnamed D2' D1')
+	   <- substitution-md-md D1 D D1'
+	   <- substitution-md-md D2 D D2'.
+
+-	: substitution-md-md ([d] md-of/forget (D1 d)) D (md-of/forget D1')
+	   <- substitution-md-md D1 D D1'.
+
+-	: substitution-md-md ([d] md-of/subsume D2 (D1 d)) D (md-of/subsume D2 D1')
+	   <- substitution-md-md D1 D D1'.
+
+%worlds (termbind | modbind | conbind | modbind-detached | md-assm-block | termblock | tm-of-block) (substitution-md-tm _ _ _) (substitution-md-md _ _ _).
+%total (D1 D2) (substitution-md-tm D1 _ _) (substitution-md-md D2 _ _).

@@ -1,0 +1,15 @@
+Regression tests obtained from Karl Crary's webpage 
+http://www.cs.cmu.edu/~crary/papers/
+
+mldef-alpha (obtained November 18, 2009)
+  Karl Crary and Robert Harper. 
+  Mechanized Definition of Standard ML (alpha release). 2009. 
+
+substruct (obtained November 18, 2009)
+  Karl Crary. 
+  Higher-order Representation of Substructural Logics. Technical report, 2009. 
+
+tslf (obtained November 18, 2009)
+  Daniel K. Lee, Karl Crary, and Robert Harper.
+  Towards a Mechanized Metatheory of Standard ML. 
+  2007 Symposium on Principles of Programming Languages. 

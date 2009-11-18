@@ -1,0 +1,160 @@
+%%%% progress factoring lemmas for modules
+
+progress/md/pair	: notstuck/md M1 ST T
+			   -> notstuck/md M2 ST T
+			   -> notstuck/md (md/pair M1 M2) ST T
+			   -> type.
+
+%mode progress/md/pair +X1 +X2 -X3.
+
+-	: progress/md/pair (notstuck/md/step S) _ 
+	   (notstuck/md/step (step/md/pair-1 S)).
+
+-	: progress/md/pair (notstuck/md/val V) 
+	   (notstuck/md/step S)
+	   (notstuck/md/step (step/md/pair-2 V S)).
+
+-	: progress/md/pair (notstuck/md/raises S) _ 
+	   (notstuck/md/raises (raises/md/pair-1 S)).
+
+-	: progress/md/pair (notstuck/md/val V) 
+	   (notstuck/md/raises S)
+	   (notstuck/md/raises (raises/md/pair-2 V S)).
+
+-	: progress/md/pair (notstuck/md/val V1) 
+	   (notstuck/md/val V2)
+	   (notstuck/md/val (val/md/pair V1 V2)).
+
+%worlds ()  (progress/md/pair _ _ _).
+%total {} (progress/md/pair _ _ _).
+
+
+
+progress/md/pj1		: notstuck/md M ST T
+			   -> ofsg L T _ M (sg/sgm _ _)
+			   -> notstuck/md (md/pj1 M) ST T
+			   -> type.
+
+%mode progress/md/pj1 +X1 +X2 -X3.
+
+-	: progress/md/pj1 (notstuck/md/step S) _
+	   (notstuck/md/step (step/md/pj1 S)).
+
+-	: progress/md/pj1 (notstuck/md/raises S) _
+	   (notstuck/md/raises (raises/md/pj1 S)).
+
+-	: progress/md/pj1 ((notstuck/md/val V): notstuck/md _ ST1 _) D
+ 	   (notstuck/md/step S)
+	   <- cfl/md/pair V D SQ
+	   <- seq/md/pj1 SQ SQf
+	   <- seq/val/md SQ V V'
+	   <- step/md/seq SQf (step/md/pj1-beta ST1 V') S.
+
+%worlds ()  (progress/md/pj1 _ _ _).
+%total {} (progress/md/pj1  _ _ _).
+
+
+
+
+progress/md/pj2		: notstuck/md M ST T
+			   -> ofsg L T pty/p M (sg/sgm _ _)
+			   -> notstuck/md (md/pj2 M) ST T
+			   -> type.
+
+%mode progress/md/pj2 +X1 +X2 -X3.
+
+-	: progress/md/pj2 (notstuck/md/step S) _
+	   (notstuck/md/step (step/md/pj2 S)).
+
+-	: progress/md/pj2 (notstuck/md/raises S) _
+	   (notstuck/md/raises (raises/md/pj2 S)).
+
+-	: progress/md/pj2 ((notstuck/md/val V): notstuck/md _ ST1 _) D
+ 	   (notstuck/md/step S)
+	   <- cfl/md/pair V D SQ
+	   <- seq/md/pj2 SQ SQf
+	   <- seq/val/md SQ V V'
+	   <- step/md/seq SQf (step/md/pj2-beta ST1 V') S.
+
+%worlds ()  (progress/md/pj2 _ _ _).
+%total {} (progress/md/pj2  _ _ _).
+
+
+
+progress/md/app	:  notstuck/md M1 ST T
+		   -> notstuck/md M2 ST T
+		   -> ofsg L T _ M1 (sg/pi S S')
+		   -> fst-md M2 C 
+		   -> notstuck/md (md/app M1 M2) ST T
+		   -> type.
+
+%mode progress/md/app +X1 +X2 +X3 +X4 -X6.
+
+-	: progress/md/app (notstuck/md/step S) _ _ _
+	   (notstuck/md/step (step/md/app-1 S)).
+
+-	: progress/md/app (notstuck/md/val V) 
+	   (notstuck/md/step S) _ _
+	   (notstuck/md/step (step/md/app-2 V S)).
+
+-	: progress/md/app (notstuck/md/raises S) _ _ _
+	   (notstuck/md/raises (raises/md/app-1 S)).
+
+-	: progress/md/app (notstuck/md/val V) 
+	   (notstuck/md/raises S) _ _
+	   (notstuck/md/raises (raises/md/app-2 V S)).
+
+-	: progress/md/app (notstuck/md/val V1) 
+	   (notstuck/md/val V2) D1 DMF
+	   (notstuck/md/step S)
+	   <- cfl/sg/pi V1 D1 SQ
+	   <- seq/md/app _ SQ SQf
+	   <- seq/val/md SQ V1 V'
+	   <- step/md/seq SQf (step/md/app-beta ST V2 DMF) S.
+
+%worlds ()  (progress/md/app _ _ _ _ _).
+%total {} (progress/md/app _ _ _ _ _).
+
+
+
+progress/md/let	: {M2:md -> cn -> md} {S:sg}
+		   notstuck/md M1 ST T
+		   -> ofsg L T Y M1 S'
+		   -> notstuck/md (md/let M1 M2 S) ST T
+		   -> type.
+
+%mode progress/md/let +M +S +D1 +D2 -D3.
+
+-	: progress/md/let _ _ (notstuck/md/step S) _
+	   (notstuck/md/step (step/md/let S)).
+
+-	: progress/md/let _ _ (notstuck/md/raises S) _
+	   (notstuck/md/raises (raises/md/let S)).
+
+-	: progress/md/let _ _ (notstuck/md/val V) DM1
+	   (notstuck/md/step (step/md/let-beta ST V DC))
+	   <- val/md-pty/p V DM1 DM1'
+	   <- vdt/ofsg/p DM1' _ _ DC _.
+
+%worlds () (progress/md/let _ _ _ _ _).
+%total {} (progress/md/let _ _ _ _ _).
+
+
+progress/md/tm	: notstuck/tm E1 ST T
+		   -> notstuck/md (md/tm E1) ST T
+		   -> type. 
+
+%mode progress/md/tm +D1 -D2.
+
+-	: progress/md/tm (notstuck/tm/val V) (notstuck/md/val (val/md/tm V)).
+
+-	: progress/md/tm (notstuck/tm/step S) 
+	   (notstuck/md/step (step/md/tm S)).
+
+-	: progress/md/tm (notstuck/tm/raises S) 
+	   (notstuck/md/raises (raises/md/tm S)).
+
+%worlds () (progress/md/tm _ _).
+%total {} (progress/md/tm _ _).
+
+

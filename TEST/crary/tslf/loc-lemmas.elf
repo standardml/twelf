@@ -1,0 +1,131 @@
+%%%% lemmas about location judgments
+
+
+
+loc-less-pred	: loc-less (loc/s L) L'
+		   -> loc-less L L'
+		   -> type.
+%mode loc-less-pred +D1 -D2.
+
+-	: loc-less-pred _ loc-less/z.
+
+-	: loc-less-pred (loc-less/s LL) (loc-less/s LL')
+	   <- loc-less-pred LL LL'.
+
+%worlds () (loc-less-pred _ _).
+%total (D1) (loc-less-pred D1 _).
+
+
+
+loc-less-immsucc: {L:loc}
+		   loc-less L (loc/s L)
+		   -> type.
+%mode loc-less-immsucc +L -D2.
+
+-	: loc-less-immsucc _ loc-less/z.
+
+-	: loc-less-immsucc (loc/s L) (loc-less/s LL')
+	   <- loc-less-immsucc L LL'.
+
+%worlds () (loc-less-immsucc _ _).
+%total (D1) (loc-less-immsucc D1 _).
+
+
+
+loc-seq-or-neq-s	: loc-seq-or-neq L1 L2
+			   -> loc-seq-or-neq (loc/s L1) (loc/s L2)
+			   -> type.
+%mode loc-seq-or-neq-s +D1 -D2.
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/seq _) 
+	   (loc-seq-or-neq/seq seq/loc/refl).
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/neq (loc-neq/l LS))
+	   (loc-seq-or-neq/neq (loc-neq/l (loc-less/s LS))).
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/neq (loc-neq/r LS))
+	   (loc-seq-or-neq/neq (loc-neq/r (loc-less/s LS))).
+
+%worlds () (loc-seq-or-neq-s _ _).
+%total {} (loc-seq-or-neq-s _ _).
+
+
+
+loc-seq-or-neq-total	: {L1:loc}
+			  {L2:loc}
+			   loc-seq-or-neq L1 L2
+			   -> type.
+%mode loc-seq-or-neq-total +L1 +L2 -D1.
+
+-	: loc-seq-or-neq-total _ _ (loc-seq-or-neq/seq seq/loc/refl).
+
+-	: loc-seq-or-neq-total loc/z (loc/s _) 
+	   (loc-seq-or-neq/neq (loc-neq/l loc-less/z)).
+
+-	: loc-seq-or-neq-total (loc/s _) loc/z 
+	   (loc-seq-or-neq/neq (loc-neq/r loc-less/z)).
+
+-	: loc-seq-or-neq-total (loc/s LC1) (loc/s LC2) LCS'
+	   <- loc-seq-or-neq-total LC1 LC2 LCS
+	   <- loc-seq-or-neq-s LCS LCS'.
+
+%worlds () (loc-seq-or-neq-total _ _ _).
+%total (D1) (loc-seq-or-neq-total D1 _ _).
+
+
+
+loc-less-not-refl: loc-less LC LC
+		   -> uninhabited
+		   -> type.
+%mode loc-less-not-refl +D1 -D2.
+
+-	: loc-less-not-refl (loc-less/s LG) DU
+	   <- loc-less-not-refl LG DU. 
+
+%worlds () (loc-less-not-refl _ _).
+%total (D1) (loc-less-not-refl D1 _).
+
+
+
+loc-less-trans	: loc-less X Y
+		   -> loc-less Y Z
+		   -> loc-less X Z
+		   -> type.
+%mode loc-less-trans +D1 +D2 -D3.
+
+-	: loc-less-trans loc-less/z _ loc-less/z.
+
+-	: loc-less-trans (loc-less/s L1) (loc-less/s L2) (loc-less/s L3)
+	   <- loc-less-trans L1 L2 L3.
+
+%worlds () (loc-less-trans _ _ _).
+%total D1 (loc-less-trans D1 _ _).
+
+
+					
+
+loc-less-bound	: {I:loc}{J:loc} 
+		   loc-less I K
+		   -> loc-less J K
+		   -> type.
+%mode loc-less-bound +I +J -D1 -D2.
+
+-	: loc-less-bound loc/z loc/z
+	   (loc-less/z: loc-less loc/z (loc/s loc/z)) loc-less/z.
+
+-	: loc-less-bound loc/z (loc/s _)
+	   loc-less/z
+	   DL
+	   <- loc-less-immsucc _ DL.
+
+-	: loc-less-bound (loc/s _) loc/z
+	   DL
+	   loc-less/z
+	   <- loc-less-immsucc _ DL.
+
+-	: loc-less-bound (loc/s L1) (loc/s L2)
+	   (loc-less/s DL1) (loc-less/s DL2)
+	   <- loc-less-bound L1 L2 DL1 DL2.
+
+%worlds () (loc-less-bound _ _ _ _).
+%total {I} (loc-less-bound I _ _ _).

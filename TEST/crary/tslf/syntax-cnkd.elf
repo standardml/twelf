@@ -1,0 +1,46 @@
+%%%% Syntax for constructors and kinds %%%%
+
+cn 		: type.			%name cn C.
+kd 		: type.			%name kd K.
+
+cn/pair 	: cn -> cn -> cn.
+cn/pj1		: cn -> cn.
+cn/pj2		: cn -> cn.
+cn/lam		: kd -> (cn -> cn) -> cn.
+cn/app		: cn -> cn -> cn.
+cn/mu		: kd -> (cn -> cn) -> cn.
+
+tp/arrow 	: cn -> cn -> cn.
+tp/cross	: cn -> cn -> cn.
+tp/unit		: cn.
+tp/forall	: kd -> (cn -> cn) -> cn.
+tp/ref		: cn -> cn.
+tp/sum		: cn -> cn -> cn.
+tp/tag		: cn -> cn.
+tp/tagged	: cn.
+
+
+cn/unit 	: cn
+		= tp/unit.
+
+%%%%%
+
+kd/type		: kd.
+kd/sing		: cn -> kd.
+kd/sgm		: kd -> (cn -> kd) -> kd.
+kd/pi		: kd -> (cn -> kd) -> kd.
+
+kd/unit		: kd
+		= kd/sing (tp/unit).
+
+
+
+seq/cn		: cn -> cn -> type.
+
+seq/cn/refl	: seq/cn E E.
+
+
+
+seq/kd		: kd -> kd -> type.
+
+seq/kd/refl	: seq/kd K1 K1.

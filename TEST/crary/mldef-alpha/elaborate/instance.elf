@@ -1,0 +1,6 @@
+
+instance/nil		: instance sg/one md/unit.
+
+instance/cons		: instance (sg/sigma (sg/satom K) ([_] S)) (md/pair (md/satom C) M)
+			   <- cn-of C K
+			   <- instance S M.

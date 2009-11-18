@@ -1,0 +1,45 @@
+
+pty-sub-refl	: {P:pty} pty-sub P P -> type.
+%mode pty-sub-refl +P -PS.
+
+-	: pty-sub-refl pty/p pty-sub/pp.
+
+-	: pty-sub-refl pty/i pty-sub/ii.
+
+%worlds () (pty-sub-refl _ _).
+%total {} (pty-sub-refl _ _).
+
+
+
+
+pty-sub-trans	: pty-sub P P' 
+		   -> pty-sub P' P''
+		   -> pty-sub P P''
+		   -> type.
+%mode pty-sub-trans +P +P' -PS.
+
+-	: pty-sub-trans pty-sub/pp pty-sub/pp pty-sub/pp.
+
+-	: pty-sub-trans pty-sub/pp pty-sub/pi pty-sub/pi.
+
+-	: pty-sub-trans pty-sub/pi pty-sub/ii pty-sub/pi.
+
+-	: pty-sub-trans pty-sub/ii pty-sub/ii pty-sub/ii.
+
+%worlds () (pty-sub-trans _ _ _).
+%total {} (pty-sub-trans _ _ _).
+
+
+
+
+pty-sub-pty/i-top	: {P:pty}
+			   pty-sub P pty/i
+			   -> type.
+%mode pty-sub-pty/i-top +P -PS.
+
+-	: pty-sub-pty/i-top _ pty-sub/pi.
+
+-	: pty-sub-pty/i-top _ pty-sub/ii.
+
+%worlds () (pty-sub-pty/i-top _ _).
+%total {} (pty-sub-pty/i-top _ _).

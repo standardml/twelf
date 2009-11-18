@@ -1,0 +1,148 @@
+%{
+TYPE ELABORATION
+
+Elaborate EL type expressions into IL constructors.
+
+Input: elaboration context, EL type expression.
+Output: IL constructor of IL kind t.
+
+}%
+
+
+%{
+EXN
+
+Elaborate the EL type exn to the IL type tagged.
+
+}%
+
+ty-elab/exn		: ty-elab Mec Sec ty/exn tagged.
+
+
+
+
+%{
+TYPE IDENTIFIERS
+
+Elaborate EL type variables into IL constructors of kind t.
+
+Input: elaboration context, type identifier.
+Output: IL constructor of IL kind t.
+
+Type bindings from parameters never take arguments; type bindings from
+declarations always take arguments (perhaps trivially).
+
+}%
+
+ty-elab/longid-noarg	: ty-elab Mec Sec (ty/longid I) C
+			   <- resolve-long Mec Sec name/con I M S
+			   <- sg-sub S (sg/satom t)
+			   <- md-fst M C.
+
+ty-elab/longid-trivarg	: ty-elab Mec Sec (ty/longid I) (app C star)
+			   <- resolve-long Mec Sec name/con I M S
+			   <- sg-sub S (sg/satom (karrow one t))
+			   <- md-fst M C.
+
+
+%{
+RECORD TYPES
+
+Elaborate EL record type to an IL labeled product type.
+
+Relies on these auxiliary judgements:
+
+* {record-con-insert} inserts a labeled constructor into a labeled product type,
+  preserving linear ordering of labels.
+
+  Input: label and constructor to insert, labeled product type to insert into.
+  Output: labeled product type extended with specified component.
+
+* {ty-row-elab} elaborates an EL row of labeled EL types.
+
+  Input: elaboration context; IL con representing result so far; EL row.
+  Output: IL con extended with elaborated EL row.
+
+}%
+
+record-con-insert	: label -> con -> con -> con -> type.
+
+record-con-insert/nil	: record-con-insert L T unit
+			   (prod (labeled L T) unit).
+
+record-con-insert/here	: record-con-insert L T (prod (labeled L' T') Ttail)
+			   (prod (labeled L T) (prod (labeled L' T') Ttail))
+			   <- label-lt L L'.
+
+record-con-insert/later	: record-con-insert L T (prod (labeled L' T') Ttail)
+			   (prod (labeled L' T') Ttail')
+			   <- label-lt L' L
+			   <- record-con-insert L T Ttail Ttail'.
+
+
+
+ty-row-elab		: module -> sg -> con -> ty-row -> con -> type.
+
+ty-row-elab/nil		: ty-row-elab Mec Sec T ty-row/nil T.
+
+ty-row-elab/cons	: ty-row-elab Mec Sec Tin (ty-row/cons L Te TRe) Tfinal
+			   <- ty-elab Mec Sec Te T
+			   <- record-con-insert L T Tin Tout
+			   <- ty-row-elab Mec Sec Tout TRe Tfinal.
+
+
+
+ty-elab/record		: ty-elab Mec Sec (ty/record TRe) T
+			   <- ty-row-elab Mec Sec unit TRe T.
+
+
+%{
+APPLICATIONS OF TYPE CONSTRUCTORS
+
+Elaborate application of an EL type constructor applied to a list of EL
+arguments to obtain an IL constructor of IL kind t.
+
+  Input: elaboration context; EL long identifier and list of EL type arguments.
+  Output: IL constructor application.
+
+Auxiliary judgement:
+* {ty-list-elab} elaborates a list of EL types to an unlabeled IL product type.
+  Input: elaboration context; list of EL types.
+  Output: IL constructor and IL kind.
+  Invariant: IL kind is an unlabeled product kind.
+
+}%
+
+ty-list-elab		: module -> sg -> ty-list -> con -> kind -> type.
+
+ty-list-elab/nil	: ty-list-elab Mec Sec ty-list/nil
+			   star one.
+
+ty-list-elab/cons	: ty-list-elab Mec Sec (ty-list/cons Te TLe)
+			   (pair T C) (kprod t K)
+			   <- ty-elab Mec Sec Te T
+			   <- ty-list-elab Mec Sec TLe C K.
+			      
+
+
+ty-elab/longid-app	: ty-elab Mec Sec (ty/longid-app I TLe) (app C Carg)
+			   <- resolve-long Mec Sec name/con I M S
+			   <- ty-list-elab Mec Sec TLe Carg Karg
+			   <- sg-sub S (sg/satom (karrow Karg t))
+			   <- md-fst M C.
+
+
+%{
+FUNCTION TYPES
+
+Elaborate an IL function type into an EL function type.
+
+Input: elaboration context; EL arrow type.
+Output: IL arrow type.
+
+}%
+
+
+ty-elab/arrow		: ty-elab Mec Sec (ty/arrow Te1 Te2) (arrow T1 T2)
+			   <- ty-elab Mec Sec Te1 T1
+			   <- ty-elab Mec Sec Te2 T2.

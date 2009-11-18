@@ -1,0 +1,92 @@
+%%%% anti-symmetry of signatures
+ 
+sg-anti	: sg-deq S1 S2 
+		   -> fst-sg S1 K1
+		   -> fst-sg S2 K2
+		   -> sg-sub S1 S2 
+		   -> sg-sub S2 S1 
+		   -> kd-sub K1 K2
+		   -> kd-sub K2 K1
+		   -> type.
+
+%mode sg-anti +D1 +D2 +D3 -D4 -D5 -D6 -D7.
+
+-	: sg-anti sg-deq/sg/unit 
+	   fst-sg/unit fst-sg/unit 
+	   sg-sub/sg/unit sg-sub/sg/unit
+	   kd-sub/kd/unit kd-sub/kd/unit.
+
+-	: sg-anti (sg-deq/sg/cn D1) 
+	   fst-sg/cn fst-sg/cn
+	   (sg-sub/sg/cn D1) 
+	   (sg-sub/sg/cn (cn-deq/sym D1))
+	   kd-sub/kd/unit kd-sub/kd/unit.
+
+-	: sg-anti (sg-deq/sg/kd D1) 
+	   fst-sg/kd fst-sg/kd 
+	   (sg-sub/sg/kd DS1) (sg-sub/sg/kd DS2) DS1 DS2
+	   <- vdt/kd-deq D1 DK1 DK2
+	   <- kd-anti D1 DK1 DK2 DS1 DS2.
+
+-	: sg-anti (sg-deq/sg/sgm (D1: sg-deq S1 S2) 
+			 (D2: {a} ofkd a _ -> sg-deq (S3 a) (S4 a)) 
+			 (FSo: fst-sg S1 K))
+	   (fst-sg/sgm (FS1: fst-sg S1 K1) FS2) (fst-sg/sgm FS1' FS2') 
+	   (sg-sub/sg/sgm DS1 DS2o DWw FS1 FS1')
+	   (sg-sub/sg/sgm DS1' DS2'' DWo FS1' FS1)
+	   (kd-sub/kd/sgm DK1o DK1'o DKW')
+	   (kd-sub/kd/sgm DK2o DK2'' DW''o)
+	   <- fst-sg-seq FSo FS1 DQ
+	   <- sg-anti D1 FSo FS1' DS1 DS1' 
+	      (DK1: kd-sub K K2) (DK2: kd-sub K2 K)
+	   <- vdt/kd-sub DK1 Dwk1 _
+	   <- ({a:cn}{da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da Dwk1}
+		 sg-anti (D2 a da) (FS2 a) (FS2' a) 
+		 (DS2 a da) (DS2' a da) (DK1' a da) (DK2' a da))
+	   <- ({a:cn}{da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da Dwk1}
+		 vdt/sg-deq (D2 a da) (FS2 a) (FS2' a) (DW a da) (DW' a da) 
+		 (DKQ' a da))
+	   <- ({a:cn}{da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da Dwk1}
+		 vdt/kd-deq (DKQ' a da) (DW'' a da) (DKW a da))
+	   <- kd-wkn/kd-wf DKW DK2 DKW'
+	   <- kd-wkn/kd-sub DK2' DK2 DK2''
+	   <- kd-wkn/sg-wf DW' DK2 DWw
+	   <- kd-wkn/sg-sub DS2' DK2 DS2''
+	   <- kd-sub/seq-l DQ DK1 DK1o
+	   <- kd-sub/seq-r DQ DK2 DK2o
+	   <- kd-sub/seq-a DQ DK1' DK1'o
+	   <- kd-wf/seq-a DQ DW'' DW''o
+	   <- sg-sub/seq-a DQ DS2 DS2o
+	   <- sg-wf/seq-a DQ DW DWo.            % there are ways to make this
+                                                % simpler? probably
+
+
+-	: sg-anti (sg-deq/sg/pi D1 D2 FS)
+	   fst-sg/pi fst-sg/pi
+	   (sg-sub/sg/pi D1 D2 FS)
+	   (sg-sub/sg/pi D1' D2'' FS2)
+	   kd-sub/kd/unit kd-sub/kd/unit
+	   <- fst-sg-complete S2 FS2
+	   <- vdt/sg-deq D1 FS FS2 DW1 DW2 Dkeq
+	   <- vdt/kd-deq Dkeq DKW1 DKW2
+	   <- sg-sym D1 D1'
+	   <- ({a:cn}{da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DKW1}
+		 sg-sym (D2 a da) (D2' a da))
+	   <- kd-anti Dkeq DKW1 DKW2 _ Dks'
+	   <- kd-wkn/sg-deq D2' Dks' D2''.
+
+
+%worlds (ofkd+vdt-block) (sg-anti _ _ _ _ _ _ _).
+%total (D2) (sg-anti D2 _ _ _ _ _ _).
+
+
+
+

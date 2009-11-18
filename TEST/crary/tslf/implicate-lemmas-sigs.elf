@@ -1,0 +1,205 @@
+%%%% lemmas needed for implcate
+
+% "halfway" explicit semantics?
+
+isg-wf	: cxt -> sg -> type.
+
+isg-wf/nil	: isg-wf cxt/nil K
+		   <- sg-wf K.
+
+isg-wf/cons	: isg-wf (cxt/cons G C K) K'
+		   <- (ofkd C K -> isg-wf G K').
+
+
+
+isg-deq	: cxt -> sg -> sg -> type.
+
+isg-deq/nil	: isg-deq cxt/nil K K'
+		   <- sg-deq K K'.
+
+isg-deq/cons	: isg-deq (cxt/cons G C K) K1 K2
+		   <- (ofkd C K -> isg-deq G K1 K2).
+
+
+
+sg-wf-to-isg-wf	: {G:cxt} sg-wf K -> isg-wf G K -> type.
+%mode sg-wf-to-isg-wf +X1 +X2 -X3.
+
+-	: sg-wf-to-isg-wf cxt/nil D (isg-wf/nil D).
+
+-	: sg-wf-to-isg-wf (cxt/cons G C K) D (isg-wf/cons [d] D')
+	   <- sg-wf-to-isg-wf G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (sg-wf-to-isg-wf _ _ _).
+%total G (sg-wf-to-isg-wf G _ _).
+
+
+
+sg-deq-to-isg-deq	: {G:cxt} sg-deq K K' -> isg-deq G K K' -> type.
+%mode sg-deq-to-isg-deq +X1 +X2 -X3.
+
+-	: sg-deq-to-isg-deq cxt/nil D (isg-deq/nil D).
+
+-	: sg-deq-to-isg-deq (cxt/cons G C K) D (isg-deq/cons [d] D')
+	   <- sg-deq-to-isg-deq G D D'.
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (sg-deq-to-isg-deq _ _ _).
+%total G (sg-deq-to-isg-deq G _ _).
+
+
+
+isg-wf/sg/cn	: iofkd G C1 kd/type -> isg-wf G (sg/cn C1) -> type.
+%mode isg-wf/sg/cn +D1 -D2.
+
+-	: isg-wf/sg/cn (iofkd/nil D) (isg-wf/nil (sg-wf/sg/cn D)).
+
+-	: isg-wf/sg/cn (iofkd/cons D) (isg-wf/cons D')
+	   <- ({d: ofkd C K}
+		 isg-wf/sg/cn (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-wf/sg/cn _ _).
+%total D (isg-wf/sg/cn D _).
+
+
+
+isg-wf/sg/kd	: ikd-wf G C1 -> isg-wf G (sg/kd C1) -> type.
+%mode isg-wf/sg/kd +D1 -D2.
+
+-	: isg-wf/sg/kd (ikd-wf/nil D) (isg-wf/nil (sg-wf/sg/kd D)).
+
+-	: isg-wf/sg/kd (ikd-wf/cons D) (isg-wf/cons D')
+	   <- ({d: ofkd C K}
+		 isg-wf/sg/kd (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-wf/sg/kd _ _).
+%total D (isg-wf/sg/kd D _).
+
+
+
+isg-wf/sg/sgm	: isg-wf G S1 
+		   -> fst-sg S1 K1
+		   -> ({c:cn} ofkd c K1 -> isg-wf G (K2 c))
+		   -> isg-wf G (sg/sgm S1 K2) -> type.
+%mode isg-wf/sg/sgm +D1 +D1' +D1'' -D2.
+
+-	: isg-wf/sg/sgm 
+	   (isg-wf/nil D) DFS
+	   ([c] [d] isg-wf/nil (D' c d))
+	   (isg-wf/nil (sg-wf/sg/sgm D D' DFS)).
+
+-	: isg-wf/sg/sgm 
+	   (isg-wf/cons D1) DFS
+	   ([c:cn] [d:ofkd c _] isg-wf/cons ([d'] D2 c d d'))
+	   (isg-wf/cons D')
+	   <- ({d: ofkd C K}
+		 isg-wf/sg/sgm (D1 d) DFS ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-wf/sg/sgm _ _ _ _).
+%total D (isg-wf/sg/sgm D _ _ _).
+
+
+
+isg-wf/sg/pi	: isg-wf G S1 
+		   -> fst-sg S1 K1
+		   -> ({c:cn} ofkd c K1 -> isg-wf G (K2 c))
+		   -> isg-wf G (sg/pi S1 K2) -> type.
+%mode isg-wf/sg/pi +D1 +D1' +D1'' -D2.
+
+-	: isg-wf/sg/pi 
+	   (isg-wf/nil D) DFS
+	   ([c] [d] isg-wf/nil (D' c d))
+	   (isg-wf/nil (sg-wf/sg/pi D D' DFS)).
+
+-	: isg-wf/sg/pi 
+	   (isg-wf/cons D1) DFS
+	   ([c:cn] [d:ofkd c _] isg-wf/cons ([d'] D2 c d d'))
+	   (isg-wf/cons D')
+	   <- ({d: ofkd C K}
+		 isg-wf/sg/pi (D1 d) DFS ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-wf/sg/pi _ _ _ _).
+%total D (isg-wf/sg/pi D _ _ _).
+
+
+
+
+isg-deq/sg/cn	: icn-deq G C1 C2 kd/type 
+		   -> isg-deq G (sg/cn C1) (sg/cn C2)
+		   -> type.
+%mode isg-deq/sg/cn +D1 -D2.
+
+-	: isg-deq/sg/cn (icn-deq/nil D) (isg-deq/nil (sg-deq/sg/cn D)).
+
+-	: isg-deq/sg/cn (icn-deq/cons D) (isg-deq/cons D')
+	   <- ({d: ofkd C K}
+		 isg-deq/sg/cn (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-deq/sg/cn _ _).
+%total D (isg-deq/sg/cn D _).
+
+
+
+isg-deq/sg/kd	: ikd-deq G C1 C2
+		   -> isg-deq G (sg/kd C1) (sg/kd C2)
+		   -> type.
+%mode isg-deq/sg/kd +D1 -D2.
+
+-	: isg-deq/sg/kd (ikd-deq/nil D) (isg-deq/nil (sg-deq/sg/kd D)).
+
+-	: isg-deq/sg/kd (ikd-deq/cons D) (isg-deq/cons D')
+	   <- ({d: ofkd C K}
+		 isg-deq/sg/kd (D d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-deq/sg/kd _ _).
+%total D (isg-deq/sg/kd D _).
+
+
+
+isg-deq/sg/sgm	: isg-deq G S1 K2
+		   -> fst-sg S1 K1
+		   -> ({c:cn} ofkd c K1 -> isg-deq G (K3 c) (K4 c))
+		   -> isg-deq G (sg/sgm S1 K3) (sg/sgm K2 K4)
+		   -> type.
+%mode isg-deq/sg/sgm +D1 +D1' +D1'' -D2.
+
+-	: isg-deq/sg/sgm 
+	   (isg-deq/nil D) DFS
+	   ([c] [d] isg-deq/nil (D' c d))
+	   (isg-deq/nil (sg-deq/sg/sgm D D' DFS)).
+
+-	: isg-deq/sg/sgm 
+	   (isg-deq/cons D1) DFS
+	   ([c:cn] [d:ofkd c _] isg-deq/cons ([d'] D2 c d d'))
+	   (isg-deq/cons D')
+	   <- ({d: ofkd C K}
+		 isg-deq/sg/sgm (D1 d) DFS ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-deq/sg/sgm _ _ _ _).
+%total D (isg-deq/sg/sgm D _ _ _).
+
+
+
+isg-deq/sg/pi	: isg-deq G S2 K1
+		   -> fst-sg S2 K2 
+		   -> ({c:cn} ofkd c K2 -> isg-deq G (K3 c) (K4 c))
+		   -> isg-deq G (sg/pi K1 K3) (sg/pi S2 K4) 
+		   -> type.
+%mode isg-deq/sg/pi +D1 +D1' +D1'' -D2.
+
+-	: isg-deq/sg/pi 
+	   (isg-deq/nil D) DFS
+	   ([c] [d] isg-deq/nil (D' c d))
+	   (isg-deq/nil (sg-deq/sg/pi D D' DFS)).
+
+-	: isg-deq/sg/pi 
+	   (isg-deq/cons D1) DFS
+	   ([c:cn] [d:ofkd c _] isg-deq/cons ([d'] D2 c d d'))
+	   (isg-deq/cons D')
+	   <- ({d: ofkd C K}
+		 isg-deq/sg/pi (D1 d) DFS ([c][d'] D2 c d' d) (D' d)).
+
+%worlds (ovar-block | iofkd-block | ofkd-block) (isg-deq/sg/pi _ _ _ _).
+%total D (isg-deq/sg/pi D _ _ _).
+
+
+

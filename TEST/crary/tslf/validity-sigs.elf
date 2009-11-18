@@ -1,0 +1,180 @@
+%%%%% Validity signatures%%%%%
+
+
+vdt/sg-wf : sg-wf S1 -> fst-sg S1 K1 -> kd-wf K1 -> type.
+%mode vdt/sg-wf +D1 +D2 -D3.
+
+-	: vdt/sg-wf sg-wf/sg/unit fst-sg/unit kd-wf/kd/unit.
+
+-	: vdt/sg-wf (sg-wf/sg/kd DK) fst-sg/kd DK.
+
+-	: vdt/sg-wf (sg-wf/sg/cn DC) fst-sg/cn kd-wf/kd/unit.
+
+-	: vdt/sg-wf (sg-wf/sg/sgm D1 D2 (DFS': fst-sg S1 K3)) 
+	   (fst-sg/sgm (DFS: fst-sg S1 K1) (DFS2: ({a} fst-sg (S2 a) (K2 a))) )
+	   (kd-wf/kd/sgm DW DW2)
+	   <- fst-sg-seq DFS' DFS (DQ: seq/kd K3 K1)
+	   <- vdt/sg-wf D1 DFS (DW: kd-wf K1)
+	   <- vdt/sg-wf D1 DFS' (DW': kd-wf K3)
+	   <- ({a:cn}{da: ofkd a K3}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {va: vdt/ofkd da DW'}
+		 vdt/sg-wf (D2 a da) (DFS2 a) (DW2' a da))
+	   <- kd-wf/seq-a DQ DW2' DW2.
+
+-	: vdt/sg-wf (sg-wf/sg/pi _ _ _) fst-sg/pi kd-wf/kd/unit.
+
+%worlds (ofkd+vdt-block) (vdt/sg-wf _ _ _).
+%total D1 (vdt/sg-wf D1 _ _).
+
+
+
+vdt/sg-deq	: sg-deq S1 S2 
+		   -> fst-sg S1 K1
+		   -> fst-sg S2 K2
+		   -> sg-wf S1 
+		   -> sg-wf S2 
+		   -> kd-deq K1 K2
+		   -> type.
+%mode vdt/sg-deq +D1 +D2 +D3 -D4 -D5 -D6.
+
+
+-	: vdt/sg-deq sg-deq/sg/unit 
+	   fst-sg/unit fst-sg/unit 
+	   sg-wf/sg/unit sg-wf/sg/unit
+	   kd-deq/kd/unit.
+
+-	: vdt/sg-deq (sg-deq/sg/cn D) 
+	   fst-sg/cn fst-sg/cn 
+	   (sg-wf/sg/cn D1) (sg-wf/sg/cn D2) 
+	   kd-deq/kd/unit
+	   <- vdt/cn-deq D D1 D2 _.
+
+-	: vdt/sg-deq (sg-deq/sg/kd D) 
+	   fst-sg/kd fst-sg/kd 
+	   (sg-wf/sg/kd D1) (sg-wf/sg/kd D2) D
+	   <- vdt/kd-deq D D1 D2.
+
+-	: vdt/sg-deq (sg-deq/sg/sgm D1 D2 (FSo: fst-sg S1 K))
+	   (fst-sg/sgm (FS1: fst-sg S1 K1) FS1')
+	   (fst-sg/sgm FS2 FS2')
+	   (sg-wf/sg/sgm DW1 DW1'o FS1)
+	   (sg-wf/sg/sgm DW2 DW2'' FS2)
+	   (kd-deq/kd/sgm DK1o DK2o)
+	   <- vdt/sg-deq D1 FSo FS2 DW1 DW2 DK1
+	   <- vdt/kd-deq DK1 DKK1 DKK2 
+	   <- ({a:cn} {da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK1}
+		 vdt/sg-deq (D2 a da) (FS1' a) (FS2' a) 
+		 (DW1' a da) (DW2' a da) (DK2 a da))
+	   <- kd-anti DK1 DKK1 DKK2 _ DK21
+	   <- kd-wkn/sg-wf DW2' DK21 DW2''
+	   <- fst-sg-seq FSo FS1 DQ
+	   <- sg-wf/seq-a DQ DW1' DW1'o
+	   <- kd-deq/seq-l DQ DK1 DK1o
+	   <- kd-deq/seq-a DQ DK2 DK2o. 
+
+-	: vdt/sg-deq (sg-deq/sg/pi (D1: sg-deq S2 S1) D2 (FS2: fst-sg S2 K2))
+	   fst-sg/pi fst-sg/pi
+	   (sg-wf/sg/pi (DW1: sg-wf S1) DW1'' FS1)
+	   (sg-wf/sg/pi (DW2: sg-wf S2) DW2' FS2)
+	   kd-deq/kd/unit
+	   <- fst-sg-complete S1 (FS1: fst-sg S1 K1)
+	   <- ({a:cn} fst-sg-complete (S3 a) (FS1' a))
+	   <- ({a:cn} fst-sg-complete (S4 a) (FS2' a))
+	   <- vdt/sg-deq D1 FS2 FS1 DW2 DW1 DK1
+	   <- vdt/kd-deq DK1 DKK2 DKK1
+	   <- ({a:cn} {da:ofkd a K2}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK2}
+		 vdt/sg-deq (D2 a da) (FS1' a) (FS2' a) 
+		 (DW1' a da) (DW2' a da) (DK2 a da))
+	   <- kd-anti DK1 DKK2 DKK1 _ DK21
+	   <- kd-wkn/sg-wf DW1' DK21 DW1''. 
+
+%worlds (ofkd+vdt-block) (vdt/sg-deq _ _ _ _ _ _).
+%total (D1) (vdt/sg-deq D1 _ _ _ _ _).
+
+
+vdt/sg-sub	: sg-sub S1 S2 
+		   -> fst-sg S1 K1
+		   -> fst-sg S2 K2
+		   -> sg-wf S1 
+		   -> sg-wf S2 
+		   -> kd-sub K1 K2
+		   -> type.
+%mode vdt/sg-sub +D1 +D2 +D3 -D4 -D5 -D6.
+
+-	: vdt/sg-sub sg-sub/sg/unit 
+	   fst-sg/unit fst-sg/unit 
+	   sg-wf/sg/unit sg-wf/sg/unit
+	   kd-sub/kd/unit.
+
+-	: vdt/sg-sub (sg-sub/sg/cn D) 
+	   fst-sg/cn fst-sg/cn 
+	   (sg-wf/sg/cn D1) (sg-wf/sg/cn D2) 
+	   kd-sub/kd/unit
+	   <- vdt/cn-deq D D1 D2 _.
+
+-	: vdt/sg-sub (sg-sub/sg/kd D) 
+	   fst-sg/kd fst-sg/kd 
+	   (sg-wf/sg/kd D1) (sg-wf/sg/kd D2) D
+	   <- vdt/kd-sub D D1 D2.
+
+-	: vdt/sg-sub (sg-sub/sg/sgm (D1: sg-sub S1 S2) D2 DW'' 
+			(FSo: fst-sg S1 K) (FSt: fst-sg S2 K'))
+	   (fst-sg/sgm (FS1: fst-sg S1 K1) FS1')
+	   (fst-sg/sgm (FS2: fst-sg S2 K2) FS2')
+	   (sg-wf/sg/sgm DW1 DW1'o FS1)
+	   (sg-wf/sg/sgm DW2 DW''t FS2)
+	   (kd-sub/kd/sgm DK1ot DK2o DK2wt)
+	   <- vdt/sg-sub D1 FSo FSt DW1 DW2 DK1
+	   <- vdt/kd-sub DK1 DKK1 DKK2
+	   <- ({a:cn} {da:ofkd a K}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK1}
+		 vdt/sg-sub (D2 a da) (FS1' a) (FS2' a) 
+		 (DW1' a da) (DW2' a da) (DK2 a da))
+	   <- ({a:cn} {da:ofkd a K'}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK2}
+		 vdt/sg-wf (DW'' a da) (FS2' a) (DK2w a da))
+	   <- fst-sg-seq FSo FS1 DQ
+	   <- sg-wf/seq-a DQ DW1' DW1'o
+	   <- kd-sub/seq-l DQ DK1 DK1o
+	   <- kd-sub/seq-a DQ DK2 DK2o
+	   <- fst-sg-seq FSt FS2 DQ'
+	   <- sg-wf/seq-a DQ' DW'' DW''t
+	   <- kd-sub/seq-r DQ' DK1o DK1ot
+	   <- kd-wf/seq-a DQ' DK2w DK2wt.
+
+-	: vdt/sg-sub (sg-sub/sg/pi (D1: sg-deq S2 S1) D2 (FS2: fst-sg S2 K2))
+	   fst-sg/pi fst-sg/pi
+	   (sg-wf/sg/pi (DW1: sg-wf S1) DW1'' FS1)
+	   (sg-wf/sg/pi (DW2: sg-wf S2) DW2' FS2)
+	   kd-sub/kd/unit
+	   <- fst-sg-complete S1 (FS1: fst-sg S1 K1)
+	   <- ({a:cn} fst-sg-complete (S3 a) (FS1' a))
+	   <- ({a:cn} fst-sg-complete (S4 a) (FS2' a))
+	   <- vdt/sg-deq D1 FS2 FS1 DW2 DW1 DK1
+	   <- vdt/kd-deq DK1 DKK2 DKK1
+	   <- ({a:cn} {da:ofkd a K2}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DKK2}
+		 vdt/sg-deq (D2 a da) (FS1' a) (FS2' a) 
+		 (DW1' a da) (DW2' a da) (DK2 a da))
+	   <- kd-anti DK1 DKK2 DKK1 _ DK21
+	   <- kd-wkn/sg-wf DW1' DK21 DW1''. 
+
+
+
+%worlds (ofkd+vdt-block) 
+(vdt/sg-sub _ _ _ _ _ _).
+
+
+
+%total (D3) 
+(vdt/sg-sub D3 _ _ _ _ _).
+
+

@@ -1,0 +1,568 @@
+%%%% progress factoring lemmas
+
+progress/tm/pair	: notstuck/tm E1 S1 T
+			   -> notstuck/tm E2 S1 T
+			   -> notstuck/tm (tm/pair E1 E2) S1 T
+			   -> type.
+%mode progress/tm/pair +X1 +X2 -X3.
+
+-	: progress/tm/pair (notstuck/tm/step S) _ 
+	   (notstuck/tm/step (step/tm/pair-1 S)).
+
+-	: progress/tm/pair (notstuck/tm/val V) 
+	   (notstuck/tm/step S)
+	   (notstuck/tm/step (step/tm/pair-2 V S)).
+
+-	: progress/tm/pair (notstuck/tm/raises R) _
+	   (notstuck/tm/raises (raises/tm/pair-1 R)).
+
+-	: progress/tm/pair (notstuck/tm/val V)
+	   (notstuck/tm/raises R)
+	   (notstuck/tm/raises (raises/tm/pair-2 V R)).
+
+-	: progress/tm/pair (notstuck/tm/val V1) 
+	   (notstuck/tm/val V2)
+	   (notstuck/tm/val (val/tm/pair V1 V2)).
+
+%worlds ()  (progress/tm/pair _ _ _).
+%total {} (progress/tm/pair _ _ _).
+
+
+
+progress/tm/tag	: notstuck/tm E1 S1 T
+			   -> notstuck/tm E2 S1 T
+			   -> notstuck/tm (tm/tag E1 E2) S1 T
+			   -> type.
+%mode progress/tm/tag +X1 +X2 -X3.
+
+-	: progress/tm/tag (notstuck/tm/step S) _ 
+	   (notstuck/tm/step (step/tm/tag-1 S)).
+
+-	: progress/tm/tag (notstuck/tm/val V) 
+	   (notstuck/tm/step S)
+	   (notstuck/tm/step (step/tm/tag-2 V S)).
+
+-	: progress/tm/tag (notstuck/tm/raises R) _
+	   (notstuck/tm/raises (raises/tm/tag-1 R)).
+
+-	: progress/tm/tag (notstuck/tm/val V)
+	   (notstuck/tm/raises R)
+	   (notstuck/tm/raises (raises/tm/tag-2 V R)).
+
+-	: progress/tm/tag (notstuck/tm/val V1) 
+	   (notstuck/tm/val V2)
+	   (notstuck/tm/val (val/tm/tag V1 V2)).
+
+%worlds ()  (progress/tm/tag _ _ _).
+%total {} (progress/tm/tag _ _ _).
+
+
+progress/tm/pj1		: notstuck/tm E ST T
+			   -> oftp L T E (tp/cross C C2) 
+			   -> notstuck/tm (tm/pj1 E) ST T
+			   -> type.
+%mode progress/tm/pj1 +X1 +X2 -X3.
+
+-	: progress/tm/pj1 (notstuck/tm/step S) _ 
+	   (notstuck/tm/step (step/tm/pj1 S)).
+
+-	: progress/tm/pj1 (notstuck/tm/raises S) _ 
+	   (notstuck/tm/raises (raises/tm/pj1 S)).
+
+-	: progress/tm/pj1 (notstuck/tm/val V) D 
+ 	   (notstuck/tm/step (S: step/tm _ ST1 _ _ _ _))
+	   <- vdt/oftp D DC
+	   <- cfl/tp/cross V D (cn-deq/refl DC) SQ
+	   <- seq/tm/pj1 SQ SQf
+	   <- seq/val/tm SQ V V'
+	   <- step/tm/seq SQf (step/tm/pj1-beta ST1 V') S.
+
+%worlds ()  (progress/tm/pj1 _ _ _).
+%total {} (progress/tm/pj1  _ _ _).
+
+
+
+progress/tm/pj2		: notstuck/tm E ST T
+			   -> oftp L T E (tp/cross C1 C)
+			   -> notstuck/tm (tm/pj2 E) ST T
+			   -> type.
+
+%mode progress/tm/pj2 +X1 +X2 -X3.
+
+-	: progress/tm/pj2 (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/pj2 S)).
+
+-	: progress/tm/pj2 (notstuck/tm/raises S) _ 
+	   (notstuck/tm/raises (raises/tm/pj2 S)).
+
+-	: progress/tm/pj2 (notstuck/tm/val V) D 
+ 	   (notstuck/tm/step S)
+	   <- vdt/oftp D DC
+	   <- cfl/tp/cross V D (cn-deq/refl DC) SQ
+	   <- seq/tm/pj2 SQ SQf
+	   <- seq/val/tm SQ V V'
+	   <- step/tm/seq SQf (step/tm/pj2-beta ST1 V') S.
+
+%worlds ()  (progress/tm/pj2 _ _ _).
+%total {} (progress/tm/pj2  _ _ _).
+
+
+
+progress/tm/tmapp	: notstuck/tm E1 ST T
+			   -> notstuck/tm E2 ST T
+			   -> oftp L T E1 (tp/arrow C1 C2)
+			   -> notstuck/tm (tm/tmapp E1 E2) ST T
+			   -> type.
+%mode progress/tm/tmapp +X1 +X2 +Xx -X3.
+
+-	: progress/tm/tmapp (notstuck/tm/step S) _ _
+	   (notstuck/tm/step (step/tm/tmapp-1 S)).
+
+-	: progress/tm/tmapp (notstuck/tm/val V) 
+	   (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/tmapp-2 V S)).
+
+-	: progress/tm/tmapp (notstuck/tm/raises S) _ _
+	   (notstuck/tm/raises (raises/tm/tmapp-1 S)).
+
+-	: progress/tm/tmapp (notstuck/tm/val V) 
+	   (notstuck/tm/raises S) _
+	   (notstuck/tm/raises (raises/tm/tmapp-2 V S)).
+
+-	: progress/tm/tmapp ((notstuck/tm/val V1): notstuck/tm _ ST1 _)
+	   (notstuck/tm/val V2) D1
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D1 DC
+	   <- cfl/tp/arrow V1 D1 (cn-deq/refl DC) SQ
+	   <- seq/tm/tmapp _ SQ SQf
+	   <- seq/val/tm SQ V1 V'
+	   <- step/tm/seq SQf (step/tm/tmapp-beta ST1 V2) S.
+
+%worlds ()  (progress/tm/tmapp _ _ _ _).
+%total {} (progress/tm/tmapp _ _ _ _).
+
+
+
+progress/tm/cnapp	: {C':cn}
+			   notstuck/tm E1 ST T
+			   -> oftp L T E1 (tp/forall K C)
+			   -> notstuck/tm (tm/cnapp E1 C') ST T
+			   -> type.
+%mode progress/tm/cnapp +C +X1 +X2 -X3.
+
+-	: progress/tm/cnapp _ (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/cnapp S)).
+
+-	: progress/tm/cnapp _ (notstuck/tm/raises S) _
+	   (notstuck/tm/raises (raises/tm/cnapp S)).
+
+-	: progress/tm/cnapp _ ((notstuck/tm/val V1): notstuck/tm _ ST1 _) D1 
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D1 DC
+	   <- cfl/tp/forall V1 D1 (cn-deq/refl DC) SQ
+	   <- seq/tm/cnapp _ SQ SQf
+	   <- seq/val/tm SQ V1 V'
+	   <- step/tm/seq SQf (step/tm/cnapp-beta ST1) S.
+
+%worlds ()  (progress/tm/cnapp _ _ _ _).
+%total {} (progress/tm/cnapp _ _ _ _).
+
+
+progress/tm/term	: notstuck/md M ST T
+			   -> ofsg L T _ M (sg/cn C)
+			   -> notstuck/tm (tm/term M) ST T
+			   -> type.
+%mode progress/tm/term +X1 +X2 -X3.
+
+-	: progress/tm/term (notstuck/md/step S) _
+	   (notstuck/tm/step (step/tm/term S)).
+
+-	: progress/tm/term (notstuck/md/raises S) _
+	   (notstuck/tm/raises (raises/tm/term S)).
+
+-	: progress/tm/term ((notstuck/md/val Vt): notstuck/md _ ST1 _) D 
+	   (notstuck/tm/step S)
+	   <- cfl/md/tm Vt D DQ
+	   <- seq/val/md DQ Vt V'
+ 	   <- seq/tm/term DQ DQ'
+ 	   <- step/tm/seq DQ' (step/tm/term-beta ST1 V') S.
+
+
+%worlds () (progress/tm/term _ _ _).
+%total {} (progress/tm/term _ _ _).
+
+
+% lemma that states it is always possible to allocate new memory
+progress/st	: {ST: st} {E:tm} st-alloc ST E ST' LC
+		   -> type.
+%mode progress/st +ST +E -SA.
+
+-	: progress/st st/nil E st-alloc/nil.
+
+-	: progress/st (st/cons _ _ _) E st-alloc/cons.
+
+%worlds () (progress/st _ _ _).
+%total {} (progress/st _ _ _).
+
+
+
+progress/tm/ref	: notstuck/tm E1 ST T
+		   -> oftp L T E1 C 
+		   -> notstuck/tm (tm/ref E1) ST T
+		   -> type.
+%mode progress/tm/ref +D1 +D2 -D3.
+
+-	: progress/tm/ref (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/ref S)).
+
+-	: progress/tm/ref (notstuck/tm/raises S) _
+	   (notstuck/tm/raises (raises/tm/ref S)).
+
+-	: progress/tm/ref (notstuck/tm/val V)
+	   (D1: oftp L T E1 C)
+	   (notstuck/tm/step (step/tm/ref-beta V SA))
+	   <- progress/st ST E1 SA.
+
+%worlds () (progress/tm/ref _ _ _).
+%total {} (progress/tm/ref _ _ _).
+
+
+
+progress/st-look	: lt-look L LC C
+			   -> st-wf L ST L' T
+			   -> st-look ST LC E
+			   -> type.
+%mode progress/st-look +D1 +D2 -D3.
+
+-	: progress/st-look lt-look/hit (st-wf/cons _ _ _ _) st-look/hit.
+
+-	: progress/st-look (lt-look/miss LL) (st-wf/cons LCS _ _ _) 
+	   (st-look/miss LS)
+	   <- progress/st-look LL LCS LS.
+
+%worlds () (progress/st-look _ _ _).
+%total D1 (progress/st-look D1 _ _).
+
+
+
+progress/tm/get	: notstuck/tm E ST T
+		   -> oftp L T E (tp/ref C)
+		   -> oflt ST L T
+		   -> notstuck/tm (tm/get E) ST T
+		   -> type.
+%mode progress/tm/get +D1 +D2 +D3 -D4.
+
+-	: progress/tm/get (notstuck/tm/step S) _ _ 
+	   (notstuck/tm/step (step/tm/get S)).
+
+-	: progress/tm/get (notstuck/tm/raises S) _ _ 
+	   (notstuck/tm/raises (raises/tm/get S)).
+
+-	: progress/tm/get (notstuck/tm/val (V: val/tm E)) 
+	   (D: oftp L T E (tp/ref C)) (oflt/c LCS _)
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D DC
+	   <- cfl/tp/ref V D (cn-deq/refl DC) DQ
+	   <- seq/val/tm DQ V (V': val/tm (tm/loc LC))
+	   <- oftp/seq-t DQ D D'
+	   <- inv/oftp/tm/loc D' _ LL _
+	   <- progress/st-look LL LCS LS
+	   <- seq/tm/get DQ DQ'
+	   <- step/tm/seq DQ' (step/tm/get-beta V' LS) S. 
+
+%worlds () (progress/tm/get _ _ _ _).
+%total {} (progress/tm/get _ _ _ _).
+
+
+
+progress/st-update	: {E:tm}
+			   lt-look L LC C
+			   -> st-wf L ST L' T
+			   -> st-update ST LC E ST'
+			   -> type.
+%mode progress/st-update +D1 +D2 +D' -D3.
+
+-	: progress/st-update _ lt-look/hit (st-wf/cons _ _ _ _)
+	   st-update/hit.
+
+-	: progress/st-update E (lt-look/miss LL) (st-wf/cons LCS _ _ _) 
+	   (st-update/miss LS)
+	   <- progress/st-update E LL LCS LS.
+
+%worlds () (progress/st-update _ _ _ _).
+%total D1 (progress/st-update _ D1 _ _).
+
+
+
+progress/tm/set : notstuck/tm E1 S T
+		   -> notstuck/tm E2 S T
+		   -> oftp L T E1 (tp/ref C)
+		   -> oftp L T E2 C
+		   -> oflt S L T
+		   -> notstuck/tm (tm/set E1 E2) S T
+		   -> type.
+%mode progress/tm/set +D1 +D2 +D3 +D4 +D5 -D6.
+
+-	: progress/tm/set (notstuck/tm/step S) NS _ _ _ 
+	   (notstuck/tm/step (step/tm/set-1 S)).
+
+-	: progress/tm/set (notstuck/tm/val V) (notstuck/tm/step S) _ _ _
+	   (notstuck/tm/step (step/tm/set-2 V S)).
+
+-	: progress/tm/set (notstuck/tm/raises S) NS _ _ _ 
+	   (notstuck/tm/raises (raises/tm/set-1 S)).
+
+-	: progress/tm/set (notstuck/tm/val V) (notstuck/tm/raises S) _ _ _
+	   (notstuck/tm/raises (raises/tm/set-2 V S)).
+
+-	: progress/tm/set (notstuck/tm/val (V1: val/tm E1)) 
+	   (notstuck/tm/val (V2: val/tm E2))
+	   D1 D2 (oflt/c LCS _)
+	   (notstuck/tm/step S) 
+	   <- vdt/oftp D1 DC
+	   <- cfl/tp/ref V1 D1 (cn-deq/refl DC) DQ
+	   <- seq/val/tm DQ V1 V'
+	   <- oftp/seq-t DQ D1 D'
+	   <- inv/oftp/tm/loc D' _ LL _
+	   <- progress/st-update _ LL LCS SU
+	   <- seq/tm/set E2 DQ DQ'
+	   <- step/tm/seq DQ' (step/tm/set-beta V' V2 SU) S.
+
+%worlds () (progress/tm/set _ _ _ _ _ _).
+%total {} (progress/tm/set _ _ _ _ _ _).
+
+
+
+progress/tm/inl	: {C1:cn} {C2:cn} notstuck/tm E1 S1 T
+		   -> notstuck/tm (tm/inl (tp/sum C1 C2) E1) S1 T
+		   -> type.
+%mode progress/tm/inl +C +C' +X1 -X2.
+
+-	: progress/tm/inl _ _ (notstuck/tm/step S)  
+	   (notstuck/tm/step (step/tm/inl S)).
+
+-	: progress/tm/inl _ _ (notstuck/tm/raises S)  
+	   (notstuck/tm/raises (raises/tm/inl S)).
+
+-	: progress/tm/inl _ _ (notstuck/tm/val V1) 
+	   (notstuck/tm/val (val/tm/inl V1)).
+
+%worlds ()  (progress/tm/inl _ _ _ _).
+%total {} (progress/tm/inl _ _ _ _).
+
+
+
+progress/tm/inr	: {C1:cn} {C2:cn} notstuck/tm E1 S1 T
+		   -> notstuck/tm (tm/inr (tp/sum C1 C2) E1) S1 T
+		   -> type.
+%mode progress/tm/inr +C +C' +X1 -X2.
+
+-	: progress/tm/inr _ _ (notstuck/tm/step S)  
+	   (notstuck/tm/step (step/tm/inr S)).
+
+-	: progress/tm/inr _ _ (notstuck/tm/raises S)  
+	   (notstuck/tm/raises (raises/tm/inr S)).
+
+-	: progress/tm/inr _ _ (notstuck/tm/val V1) 
+	   (notstuck/tm/val (val/tm/inr V1)).
+
+%worlds ()  (progress/tm/inr _ _ _ _).
+%total {} (progress/tm/inr _ _ _ _).
+
+
+
+progress/tm/case-beta	: {E1:tm} {E2:tm -> tm} {E3:tm -> tm} 
+			   {ST:st} 
+			   {T: lt}
+			   {SQ: seq/tm E1 E'}
+			   val/tm E1
+			   -> seq-in E1 SQ
+			   -> step/tm (tm/case E1 E2 E3) ST T
+			      E'' ST T
+			   -> type.
+%mode progress/tm/case-beta +E1 +E2 +E3 +SQ +ST +T +V +SQ -S.
+
+-	: progress/tm/case-beta _ _ _ _ _ _ V seq-inl (step/tm/case-beta-l V).
+
+-	: progress/tm/case-beta _ _ _ _ _ _ V seq-inr (step/tm/case-beta-r V).
+
+
+%worlds () (progress/tm/case-beta _ _ _ _ _ _ _ _ _).
+%total {} (progress/tm/case-beta _ _ _ _ _ _ _ _ _).
+
+
+
+progress/tm/case	: {E2:tm -> tm} {E3:tm -> tm}
+			   notstuck/tm E1 S1 T
+			   -> oftp L T E1 (tp/sum C1 C2)
+			   -> notstuck/tm (tm/case E1 E2 E3) S1 T
+			   -> type.
+%mode progress/tm/case +E1 +E2 +D1 +D2 -D3.
+
+-	: progress/tm/case _ _ (notstuck/tm/step S) _ 
+	   (notstuck/tm/step (step/tm/case S)).
+
+-	: progress/tm/case _ _ (notstuck/tm/raises S) _ 
+	   (notstuck/tm/raises (raises/tm/case S)).
+
+-	: progress/tm/case _ _ (notstuck/tm/val V) D
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D DC
+	   <- cfl/tp/sum V D (cn-deq/refl DC) SQ
+	   <- progress/tm/case-beta _ _ _ _ _ _ V SQ S.
+
+%worlds () (progress/tm/case _ _ _ _ _).
+%total {} (progress/tm/case _ _ _ _ _).
+
+
+
+progress/tm/try	: {E2:tm -> tm}
+		   notstuck/tm E1 S1 T
+		   -> oftp L T (tm/try E1 E2) C
+		   -> notstuck/tm (tm/try E1 E2) S1 T
+		   -> type.
+%mode progress/tm/try +E +D1 +D2 -D3.
+
+-	: progress/tm/try _ (notstuck/tm/val V) _ 
+	   (notstuck/tm/step (step/tm/try-beta V)).
+
+-	: progress/tm/try _ (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/try S)).
+
+-	: progress/tm/try _ (notstuck/tm/raises R) _
+	   (notstuck/tm/step (step/tm/try-handle R)).
+
+%worlds () (progress/tm/try _ _ _ _).
+%total {} (progress/tm/try _ _ _ _).
+
+
+
+progress/tm/raise	: notstuck/tm E1 ST T
+			   -> oftp L T E1 C 
+			   -> notstuck/tm (tm/raise E1) ST T
+			   -> type.
+%mode progress/tm/raise +D1 +D2 -D3.
+
+-	: progress/tm/raise (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/raise S)).
+
+-	: progress/tm/raise (notstuck/tm/raises S) _
+	   (notstuck/tm/raises (raises/tm/raise-2 S)).
+
+-	: progress/tm/raise (notstuck/tm/val V) _
+	   (notstuck/tm/raises (raises/tm/raise-1 V)).
+
+%worlds () (progress/tm/raise _ _ _).
+%total {} (progress/tm/raise _ _ _).
+
+
+
+progress/tm/iftag-beta	: {E3:tm -> tm} {E4:tm}
+			   {ST:st} 
+			   {T: lt}
+			   val/tm EA
+			   -> seq/tm EA (tm/tag (tm/tagloc L) E1)
+			   -> seq/tm EB (tm/tagloc L') 
+			   -> loc-seq-or-neq L L'
+			   -> step/tm (tm/iftag EA EB E3 E4) ST T
+			      E'' ST T
+			   -> type.
+%mode progress/tm/iftag-beta +E3 +E4 +ST +T +V +S1 +S2 +SQ -S.
+
+-	: progress/tm/iftag-beta _ _ _ _ V seq/tm/refl seq/tm/refl
+	   (loc-seq-or-neq/seq seq/loc/refl)
+	   (step/tm/iftag-beta-1 V).
+
+-	: progress/tm/iftag-beta _ _ _ _ V seq/tm/refl seq/tm/refl
+	   (loc-seq-or-neq/neq N)
+	   (step/tm/iftag-beta-2 V N).
+
+
+%worlds () (progress/tm/iftag-beta _ _ _ _ _ _ _ _ _).
+%total {} (progress/tm/iftag-beta _ _ _ _ _ _ _ _ _).
+
+
+
+progress/tm/iftag	: {E3:tm -> tm} {E4:tm}
+			   notstuck/tm E1 S1 T
+			   -> notstuck/tm E2 S1 T
+			   -> oftp L T E1 tp/tagged
+			   -> oftp L T E2 (tp/tag C)
+			   -> notstuck/tm (tm/iftag E1 E2 E3 E4) S1 T
+			   -> type.
+%mode progress/tm/iftag +E1 +E2 +D1 +D2 +D2' +D2'' -D3.
+
+-	: progress/tm/iftag _ _ 
+	   (notstuck/tm/step S) _ _ _
+	   (notstuck/tm/step (step/tm/iftag-1 S)).
+
+-	: progress/tm/iftag _ _ (notstuck/tm/val V) 
+	   (notstuck/tm/step S) _ _
+	   (notstuck/tm/step (step/tm/iftag-2 V S)).
+
+-	: progress/tm/iftag _ _ 
+	   (notstuck/tm/raises S) _ _ _
+	   (notstuck/tm/raises (raises/tm/iftag-1 S)).
+
+-	: progress/tm/iftag _ _ (notstuck/tm/val V) 
+	   (notstuck/tm/raises S) _ _
+	   (notstuck/tm/raises (raises/tm/iftag-2 V S)).
+
+-	: progress/tm/iftag _ _ (notstuck/tm/val V1) 
+	   (notstuck/tm/val V2) D1 D2
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D1 DC1
+	   <- cfl/tp/tagged V1 D1 (cn-deq/refl DC1) SQ1
+	   <- vdt/oftp D2 DC2
+	   <- cfl/tp/tag V2 D2 (cn-deq/refl DC2) SQ2
+	   <- loc-seq-or-neq-total _ _ LS
+	   <- progress/tm/iftag-beta _ _ _ _ V1 SQ1 SQ2 LS S.
+
+%worlds () (progress/tm/iftag _ _ _ _ _ _ _).
+%total {} (progress/tm/iftag _ _ _ _ _ _ _).
+
+
+
+progress/tm/roll	: {K:kd} {C':cn -> cn}
+			   notstuck/tm E1 ST T
+			   -> notstuck/tm (tm/roll (cn/mu K C') E1) ST T
+			   -> type.
+%mode progress/tm/roll +K +C +D1 -D3.
+
+-	: progress/tm/roll _ _ (notstuck/tm/step S)
+	   (notstuck/tm/step (step/tm/roll S)).
+
+-	: progress/tm/roll _ _ (notstuck/tm/raises S)
+	   (notstuck/tm/raises (raises/tm/roll S)).
+
+-	: progress/tm/roll _ _ (notstuck/tm/val V)
+	   (notstuck/tm/val (val/tm/roll V)).
+
+%worlds () (progress/tm/roll _ _ _ _).
+%total {} (progress/tm/roll _ _ _ _).
+
+
+
+progress/tm/unroll	: notstuck/tm E1 ST T
+			   -> oftp L T E1 (cn/mu _ _) 
+			   -> notstuck/tm (tm/unroll E1) ST T
+			   -> type.
+%mode progress/tm/unroll +D1 +D2 -D3.
+
+-	: progress/tm/unroll (notstuck/tm/step S) _
+	   (notstuck/tm/step (step/tm/unroll S)).
+
+-	: progress/tm/unroll (notstuck/tm/raises S) _
+	   (notstuck/tm/raises (raises/tm/unroll S)).
+
+-	: progress/tm/unroll (notstuck/tm/val V)
+	   D1
+	   (notstuck/tm/step S)
+	   <- vdt/oftp D1 DC
+	   <- cfl/cn/mu V D1 (cn-deq/refl DC) DQ
+	   <- seq/val/tm DQ V V'
+	   <- seq/tm/unroll DQ DQ'
+	   <- step/tm/seq DQ' (step/tm/unroll-beta V') S.
+
+%worlds () (progress/tm/unroll _ _ _).
+%total {} (progress/tm/unroll _ _ _).

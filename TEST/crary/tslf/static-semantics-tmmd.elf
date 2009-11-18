@@ -1,0 +1,207 @@
+%%%%% Static Semantics for  mods + terms %%%%%%
+
+%abbrev tt = lt.  % abstract tag typings.
+%abbrev ht = lt.  % abstract heap typings.
+
+assm/tm		: tm -> cn -> type.
+%mode assm/tm *E *C.
+
+oftp		: ht -> tt -> tm -> cn -> type.
+%mode oftp *L *T *E *C.
+
+fst-md		: md -> cn -> type. 
+%mode fst-md *M *C.
+
+assm/md		: md -> sg -> type.
+%mode assm/md *M *S.
+
+ofsg		: ht -> tt -> pty -> md -> sg -> type.
+%mode ofsg *L *T *P *M *S.
+
+
+
+
+oftp/var	: oftp L T E C
+		   <- assm/tm E C.
+
+oftp/tm/unit	: oftp L T tm/unit tp/unit.
+
+oftp/tm/pair	: oftp L T (tm/pair E1 E2) (tp/cross C1 C2)
+		   <- oftp L T E2 C2
+		   <- oftp L T E1 C1.
+
+oftp/tm/pj1	: oftp L T (tm/pj1 E) C1
+		   <- oftp L T E (tp/cross C1 C2).
+
+oftp/tm/pj2	: oftp L T (tm/pj2 E) C2
+		   <- oftp L T E (tp/cross C1 C2).
+
+oftp/tm/fun	: oftp L T (tm/fun C1 C2 E) (tp/arrow C1 C2)
+		   <- ofkd (tp/arrow C1 C2) kd/type
+		   <- ({x: tm} {dx: assm/tm x C1}
+			 {f:tm} {df: assm/tm f (tp/arrow C1 C2)}
+			 oftp L T (E x f) C2).
+
+oftp/tm/tmapp	: oftp L T (tm/tmapp E1 E2) C2
+		   <- oftp L T E2 C1
+		   <- oftp L T E1 (tp/arrow C1 C2).
+
+oftp/tm/cnabs	: oftp L T (tm/cnabs K E) (tp/forall K C)
+		   <- kd-wf K
+		   <- ({a:cn} {da:ofkd a K}
+			 oftp L T (E a) (C a)).
+
+oftp/tm/cnapp	: oftp L T (tm/cnapp E C) (D C)
+		   <- ofkd C K
+		   <- oftp L T E (tp/forall K D).
+
+oftp/tm/term	: oftp L T (tm/term M) C
+		   <- ofsg L T _ M (sg/cn C).
+
+oftp/deq	: oftp L T E C
+		   <- cn-deq C' C kd/type
+		   <- oftp L T E C'.
+
+oftp/tm/loc	: oftp L T (tm/loc LC) (tp/ref C)
+		   <- ofkd C kd/type
+		   <- lt-look L LC C.
+
+oftp/tm/ref	: oftp L T (tm/ref E) (tp/ref C)
+		   <- oftp L T E C.
+
+oftp/tm/set	: oftp L T (tm/set E1 E2) tp/unit
+		   <- oftp L T E2 C
+		   <- oftp L T E1 (tp/ref C).
+
+oftp/tm/get	: oftp L T (tm/get E) C
+		   <- oftp L T E (tp/ref C).
+
+oftp/tm/inl	: oftp L T (tm/inl (tp/sum C1 C2) E) (tp/sum C1 C2)
+		   <- ofkd C2 kd/type
+		   <- oftp L T E C1.
+
+oftp/tm/inr	: oftp L T (tm/inr (tp/sum C1 C2) E) (tp/sum C1 C2)
+		   <- ofkd C1 kd/type
+		   <- oftp L T E C2.
+
+oftp/tm/case	: oftp L T (tm/case E E1 E2) C
+		   <- ({x: tm} {dx: assm/tm x C2}
+			 oftp L T (E2 x) C) 
+		   <- ({x: tm} {dx: assm/tm x C1}
+			 oftp L T (E1 x) C)
+		   <- oftp L T E (tp/sum C1 C2).
+
+oftp/tm/raise	: oftp L T (tm/raise E) C
+		   <- ofkd C kd/type
+		   <- oftp L T E tp/tagged.
+
+oftp/tm/try	: oftp L T (tm/try E1 E2) C
+		   <- ({x:tm}{dx: assm/tm x tp/tagged} 
+			 oftp L T (E2 x) C)
+		   <- oftp L T E1 C.	
+
+oftp/tm/new-tag	: oftp L T (tm/new-tag C) (tp/tag C)
+		   <- ofkd C kd/type.
+
+oftp/tm/tagloc	: oftp L T (tm/tagloc LC) (tp/tag C)
+		   <- ofkd C kd/type
+		   <- lt-look T LC C.
+
+oftp/tm/tag	: oftp L T (tm/tag E1 E2) tp/tagged
+		   <- oftp L T E2 C
+		   <- oftp L T E1 (tp/tag C).
+
+oftp/tm/iftag	: oftp L T (tm/iftag E1 E2 E3 E4) C
+		   <- oftp L T E4 C
+		   <- ({x}{dx: assm/tm x C'} oftp L T (E3 x) C)
+		   <- oftp L T E2 (tp/tag C')
+		   <- oftp L T E1 tp/tagged.
+
+oftp/tm/roll	: oftp L T (tm/roll (cn/mu K C') E) (cn/mu K C')
+		   <- ofkd (cn/mu K C') kd/type
+		   <- oftp L T E (C' (cn/mu K C')).
+
+oftp/tm/unroll	: oftp L T (tm/unroll E) (C' (cn/mu K C'))
+		   <- oftp L T E (cn/mu K C').
+
+
+
+fst-md/unit	: fst-md md/unit cn/unit.
+
+fst-md/cn	: fst-md (md/cn C) C.
+
+fst-md/tm	: fst-md (md/tm _) cn/unit.
+
+fst-md/pair	: fst-md (md/pair M1 M2) (cn/pair C1 C2)
+		   <- fst-md M2 C2
+		   <- fst-md M1 C1.
+
+fst-md/pj1	: fst-md (md/pj1 M) (cn/pj1 C)
+		   <- fst-md M C.
+
+fst-md/pj2	: fst-md (md/pj2 M) (cn/pj2 C)
+		   <- fst-md M C.
+
+fst-md/lam	: fst-md (md/lam _ _ _) cn/unit.
+
+
+ofsg/var	: ofsg L T pty/p M S
+		   <- assm/md M S.
+
+ofsg/md/unit	: ofsg L T pty/p md/unit sg/unit.
+
+ofsg/md/cn	: ofsg L T pty/p (md/cn C) (sg/kd K)
+		   <- ofkd C K.
+
+ofsg/md/tm	: ofsg L T pty/p (md/tm E) (sg/cn C)
+		   <- oftp L T E C.
+
+ofsg/md/pair	: ofsg L T Y (md/pair M1 M2) (sg/sgm S1 ([c:cn] S2))
+		   <- ofsg L T Y M2 S2
+		   <- ofsg L T Y M1 S1.
+
+ofsg/md/pj1	: ofsg L T Y (md/pj1 M) S1
+		   <- ofsg L T Y M (sg/sgm S1 _).
+
+ofsg/md/pj2	: ofsg L T pty/p (md/pj2 M) (S2 (cn/pj1 C))
+		   <- fst-md M C
+		   <- ofsg L T pty/p M (sg/sgm S1 S2).
+
+ofsg/md/lam	: ofsg L T pty/p (md/lam S1 S2 M') (sg/pi S1 S2)
+		   <- fst-sg S1 K1
+		   <- sg-wf S1
+		   <- ({s:md} {dm: assm/md s S1}
+			 {a:cn}{da: ofkd a K1}
+			 {dm: fst-md s a}
+			 ofsg L T Y (M' s a) (S2 a)).
+
+ofsg/md/app	: ofsg L T pty/i (md/app M1 M2) (S2 C)
+		   <- fst-md M2 C
+		   <- ofsg L T pty/p M2 S1
+		   <- ofsg L T Y M1 (sg/pi S1 S2).
+
+ofsg/md/let	: ofsg L T pty/i (md/let M1 M2 S) S
+		   <- fst-sg S1 K1
+		   <- sg-wf S
+		   <- ({s:md}{dm: assm/md s S1}
+			 {a:cn}{da: ofkd a K1}
+			 {dm: fst-md s a}
+			 ofsg L T Y (M2 s a) S)
+		   <- ofsg L T Y' M1 S1.
+
+ofsg/md/seal	: ofsg L T pty/i (md/seal M S) S
+		   <- ofsg L T _ M S.
+
+ofsg/sgm-ext	: ofsg L T pty/p M (sg/sgm S1 ([a:cn] S2))
+		   <- ofsg L T pty/p (md/pj2 M) S2
+		   <- ofsg L T pty/p (md/pj1 M) S1.
+
+ofsg/kd-ext	: ofsg L T pty/p M (sg/kd K)
+		   <- ofkd C K
+		   <- fst-md M C
+		   <- ofsg L T pty/p M (sg/kd K').
+
+ofsg/sub	: ofsg L T Y M S
+		   <- pty-sub Y' Y
+		   <- sg-sub S' S
+		   <- ofsg L T Y' M S'.

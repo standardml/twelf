@@ -1,0 +1,1164 @@
+
+%%%%%  Definitions  %%%%%
+
+%%%  We don't actually need expansion in skof, but we need to agree with cskof,
+%%%  which does expand.
+
+eexpand : eterm -> etp -> eterm -> type.
+
+eexpand/t	: eexpand R et R.
+
+eexpand/pi	: eexpand R (epi A B) (elam A N)
+		   <- ({x} eexpand x A (M x))
+		   <- ({x} eexpand (eapp R (M x)) (B x) (N x)).
+
+eexpand/sigma	: eexpand R (esigma A B) (epair M N)
+		   <- eexpand (epi1 R) A M
+		   <- eexpand (epi2 R) (B (epi1 R)) N.
+
+eexpand/sing	: eexpand R (esing R') R'.
+
+eexpand/one	: eexpand R eone estar.
+
+
+
+skof : skel -> etp -> (eterm -> etp) -> type.
+
+skof/t		: skof kt eone ([_] et).
+
+skof/pi		: skof (kpi As Bs) (esigma C ([y] epi (A y) ([_] D))) ([w] epi (A (epi1 w)) ([x] B (eapp (epi2 w) (X (epi1 w) x))))
+		   <- skof As C ([y] A y)
+		   <- skof Bs D ([z] B z)
+		   <- ({y} {x} eexpand x (A y) (X y x)).
+
+skof/sigma	: skof (ksigma As Bs) (esigma C ([y] epi (A y) ([_] D))) ([w] esigma (A (epi1 w)) ([x] B (eapp (epi2 w) (X (epi1 w) x))))
+		   <- skof As C ([y] A y)
+		   <- skof Bs D ([z] B z)
+		   <- ({y} {x} eexpand x (A y) (X y x)).
+
+skof/sing	: skof ksing et ([x] esing x).
+
+skof/one	: skof kone eone ([_] eone).
+
+
+
+flay : etp -> skel -> eterm -> type.
+
+flay/t		: flay et kt estar.
+
+flay/pi		: flay (epi A B) (kpi As Bs) (epair M (elam A ([x] N x)))
+		   <- flay A As M
+		   <- ({x} flay (B x) Bs (N x)).
+
+flay/sigma	: flay (esigma A B) (ksigma As Bs) (epair M (elam A ([x] N x)))
+		   <- flay A As M
+		   <- ({x} flay (B x) Bs (N x)).
+
+flay/sing	: flay (esing M) ksing M.
+
+flay/one	: flay eone kone estar.
+
+
+
+
+%%%%%  Equality  %%%%%
+
+eexpand-resp : eterm-eq R R' -> etp-eq A A' -> eterm-eq M M' -> eexpand R A M -> eexpand R' A' M' -> type.
+%mode eexpand-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: eexpand-resp _ _ _ D D.
+
+%worlds (evar) (eexpand-resp _ _ _ _ _).
+%total {} (eexpand-resp _ _ _ _ _).
+
+
+
+flay-resp : etp-eq A A' -> skel-eq K K' -> eterm-eq M M' -> flay A K M -> flay A' K' M' -> type.
+%mode flay-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: flay-resp etp-eq/i skel-eq/i eterm-eq/i D D.
+
+%worlds (evar) (flay-resp _ _ _ _ _).
+%total {} (flay-resp _ _ _ _ _).
+
+
+
+skof-resp : skel-eq K K' -> etp-eq C C' -> ({x} etp-eq (A x) (A' x)) -> skof K C A -> skof K' C' A' -> type.
+%mode skof-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: skof-resp skel-eq/i etp-eq/i ([_] etp-eq/i) D D.
+
+%worlds (evar) (skof-resp _ _ _ _ _).
+%total {} (skof-resp _ _ _ _ _).
+
+
+
+
+
+%%%%%  Eexpand Theorems  %%%%%
+
+esimp : etp -> stp -> type.
+
+esimp/t		: esimp et st.
+
+esimp/pi	: esimp (epi A B) (spi S T)
+		   <- esimp A S
+		   <- ({x} esimp (B x) T).
+
+esimp/sigma	: esimp (esigma A B) (ssigma S T)
+		   <- esimp A S
+		   <- ({x} esimp (B x) T).
+
+esimp/sing	: esimp (esing R) st.
+
+esimp/one	: esimp eone sone.
+
+
+
+can-esimp : {A} esimp A T -> type.
+%mode can-esimp +X1 -X2.
+
+-t	: can-esimp et esimp/t.
+
+-pi	: can-esimp (epi A B) (esimp/pi D2 D1)
+	   <- can-esimp A D1
+	   <- ({x} can-esimp (B x) (D2 x)).
+
+-sigma	: can-esimp (esigma A B) (esimp/sigma D2 D1)
+	   <- can-esimp A D1
+	   <- ({x} can-esimp (B x) (D2 x)).
+
+-sing	: can-esimp (esing R) esimp/sing.
+
+-one	: can-esimp eone esimp/one.
+
+%worlds (evar) (can-esimp _ _).
+%total A (can-esimp A _).
+
+
+
+can-eexpand* : {R} {T} esimp A T -> eexpand R A M -> type.
+%mode can-eexpand* +X1 +X2 +X3 -X4.
+
+-	: can-eexpand* _ _ _ eexpand/t.
+
+-	: can-eexpand* _ _ (esimp/pi Dsimp2 Dsimp1) (eexpand/pi D2 D1)
+	   <- ({x} can-eexpand* _ _ Dsimp1 (D1 x))
+	   <- ({x} can-eexpand* _ _ (Dsimp2 x) (D2 x)).
+
+-	: can-eexpand* _ _ (esimp/sigma (Dsimp2 : {x} esimp (B x) T) Dsimp1) (eexpand/sigma D2 D1)
+	   <- can-eexpand* _ _ Dsimp1 D1
+	   <- can-eexpand* _ _ (Dsimp2 _) D2.
+
+-	: can-eexpand* _ _ _ eexpand/sing.
+
+-	: can-eexpand* _ _ _ eexpand/one.
+
+%worlds (evar) (can-eexpand* _ _ _ _).
+%total T (can-eexpand* _ T _ _).
+
+
+
+can-eexpand : {R} {A} eexpand R A M -> type.
+%mode can-eexpand +X1 +X2 -X3.
+
+-	: can-eexpand R A Dexpand
+	   <- can-esimp A Dsimp
+	   <- can-eexpand* _ _ Dsimp Dexpand.
+
+%worlds (evar) (can-eexpand _ _ _).
+%total {} (can-eexpand _ _ _).
+
+
+
+eexpand-fun : eexpand R A M -> eexpand R A M' -> eterm-eq M M' -> type.
+%mode eexpand-fun +X1 +X2 -X3.
+
+-	: eexpand-fun eexpand/t eexpand/t eterm-eq/i.
+
+-	: eexpand-fun (eexpand/pi Deexpand2 Deexpand1) (eexpand/pi Deexpand2' Deexpand1') Deq
+	   <- ({x} eexpand-fun (Deexpand1 x) (Deexpand1' x) (Deq1 x))
+	   <- ({x} eterm-resp-eterm ([m] eapp R m) (Deq1 x) (Deq1' x))
+	   <- ({x} eexpand-resp (Deq1' x) etp-eq/i eterm-eq/i (Deexpand2 x) (Deexpand2'' x))
+	   <- ({x} eexpand-fun (Deexpand2'' x) (Deexpand2' x) (Deq2 x))
+	   <- elam-resp etp-eq/i Deq2 Deq.
+
+-	: eexpand-fun (eexpand/sigma Deexpand2 Deexpand1) (eexpand/sigma Deexpand2' Deexpand1') Deq
+	   <- eexpand-fun Deexpand1 Deexpand1' Deq1
+	   <- eexpand-fun Deexpand2 Deexpand2' Deq2
+	   <- epair-resp Deq1 Deq2 Deq.
+
+-	: eexpand-fun eexpand/sing eexpand/sing eterm-eq/i.
+
+-	: eexpand-fun eexpand/one eexpand/one eterm-eq/i.
+
+%worlds (evar) (eexpand-fun _ _ _).
+%total D (eexpand-fun _ D _).
+
+
+
+eexpand-equiv : eof R A -> eexpand R A M -> equiv R M A -> type.
+%mode eexpand-equiv +X1 +X2 -X3.
+
+-	: eexpand-equiv D eexpand/t (equiv/reflex D).
+
+-	: eexpand-equiv DofR (eexpand/pi Dexpand2 Dexpand1)
+	   (equiv/trans
+	      (equiv/lam
+		 ([x] [d]
+		    equiv/trans
+		    (DequivRX x d)
+		    (equiv/app
+		       (DequivX x d)
+		       (equiv/reflex DofR)))
+		 (tequiv/reflex DwfA))
+	      (equiv/etapi
+		 DwfA
+		 DofR))
+	   <- eof-reg DofR 
+	      (ewf/pi (DwfB : {x} evof x A -> ewf (B x)) DwfA)
+	   <- ({x} {d}
+		 eexpand-equiv (eof/var DwfA d) (Dexpand1 x)
+		 (DequivX x d))
+	   <- ({x} {d}
+		 equiv-reg (DequivX x d)
+		 _ (DofX x d) _)
+	   <- ({x} {d}
+		 tfunctionality DwfB (DequivX x d) (DequivBx x d))
+	   <- ({x} {d:evof x A}
+		 eexpand-equiv
+		 (eof/equiv
+		    (tequiv/symm (DequivBx x d))
+		    (eof/app (DofX x d) DofR))
+		 (Dexpand2 x)
+		 (DequivRX x d)).
+
+-	: eexpand-equiv DofR (eexpand/sigma Dexpand2 Dexpand1)
+	   (equiv/trans
+	      (equiv/pair
+		 DwfB
+		 Dequiv2
+		 Dequiv1)
+	      (equiv/etasigma
+		 DwfB
+		 DofR))
+	   <- eof-reg DofR 
+	      (ewf/sigma (DwfB : {x} evof x A -> ewf (B x)) DwfA)
+	   <- eexpand-equiv (eof/pi1 DofR) Dexpand1 Dequiv1
+	   <- eexpand-equiv (eof/pi2 DofR) Dexpand2 Dequiv2.
+
+-	: eexpand-equiv DofR eexpand/sing
+	   (equiv/symm
+	      (equiv/sing
+		 (equiv/symm
+		    (equiv/singelim DofR)))).
+
+-	: eexpand-equiv DofR eexpand/one
+	   (equiv/one
+	      eof/star
+	      DofR).
+
+%worlds (ebind | etopenblock) (eexpand-equiv _ _ _).
+%total D (eexpand-equiv _ D _).
+
+
+
+eexpand-reg : eof R A -> eexpand R A M -> eof M A -> type.
+%mode eexpand-reg +X1 +X2 -X3.
+
+-	: eexpand-reg Dof Dexpand Dof'
+	   <- eexpand-equiv Dof Dexpand Dequiv
+	   <- equiv-reg Dequiv _ Dof' _.
+
+%worlds (ebind | etopenblock) (eexpand-reg _ _ _).
+%total {} (eexpand-reg _ _ _).
+
+
+
+
+%%%%%  Skof Theorems  %%%%%
+
+can-skof : {K}
+	    skof K A B -> type.
+%mode can-skof +X1 -X2.
+
+-	: can-skof _ skof/t.
+
+-	: can-skof _ (skof/pi Dexp D2 D1)
+	   <- can-skof _ D1
+	   <- can-skof _ D2
+	   <- ({y} {x} can-eexpand _ _ (Dexp y x)).
+
+-	: can-skof _ (skof/sigma Dexp D2 D1)
+	   <- can-skof _ D1
+	   <- can-skof _ D2
+	   <- ({y} {x} can-eexpand _ _ (Dexp y x)).
+
+-	: can-skof _ skof/sing.
+
+-	: can-skof _ skof/one.
+
+%worlds (evar) (can-skof _ _).
+%total K (can-skof K _).
+
+
+
+skof-fun : skof K A B -> skof K A' B' -> etp-eq A A' -> ({x} etp-eq (B x) (B' x)) -> type.
+%mode skof-fun +X1 +X2 -X3 -X4.
+
+-	: skof-fun skof/t skof/t etp-eq/i ([_] etp-eq/i).
+
+skof-fun-eq : {F:etp -> (eterm -> etp) -> etp}
+		etp-eq C C'
+		-> etp-eq D D'
+		-> ({x} etp-eq (A x) (A' x))
+		-> ({x} etp-eq (B x) (B' x))
+		-> ({y} {x} eterm-eq (X y x) (X' y x))
+		-> etp-eq (esigma C ([y] epi (A y) ([_] D))) (esigma C' ([y] epi (A' y) ([_] D')))
+		-> ({w} etp-eq (F (A (epi1 w)) ([x] B (eapp (epi2 w) (X (epi1 w) x)))) (F (A' (epi1 w)) ([x] B' (eapp (epi2 w) (X' (epi1 w) x)))))
+		-> type.
+%mode skof-fun-eq +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-	: skof-fun-eq F _ _ (_ : {x} etp-eq (A x) (A x)) (_ : {x} etp-eq (B x) (B x)) (_ : {y} {x} eterm-eq (X y x) (X y x)) etp-eq/i ([_] etp-eq/i).
+
+%worlds (evar) (skof-fun-eq _ _ _ _ _ _ _ _).
+%total {} (skof-fun-eq _ _ _ _ _ _ _ _).
+
+-	: skof-fun (skof/pi Dexp Db Da) (skof/pi Dexp' Db' Da') Deq1 Deq2
+	   <- skof-fun Da Da' DeqC DeqA
+	   <- skof-fun Db Db' DeqD (DeqB : {x} etp-eq (B x) (B' x))
+	   <- ({y} {x} eexpand-resp eterm-eq/i (DeqA y) eterm-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} eexpand-fun (Dexp'' y x) (Dexp' y x) (DeqX y x : eterm-eq (X y x) (X' y x)))
+	   <- skof-fun-eq epi DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: skof-fun (skof/sigma Dexp Db Da) (skof/sigma Dexp' Db' Da') Deq1 Deq2
+	   <- skof-fun Da Da' DeqC DeqA
+	   <- skof-fun Db Db' DeqD (DeqB : {x} etp-eq (B x) (B' x))
+	   <- ({y} {x} eexpand-resp eterm-eq/i (DeqA y) eterm-eq/i (Dexp y x) (Dexp'' y x))
+	   <- ({y} {x} eexpand-fun (Dexp'' y x) (Dexp' y x) (DeqX y x : eterm-eq (X y x) (X' y x)))
+	   <- skof-fun-eq esigma DeqC DeqD DeqA DeqB DeqX Deq1 Deq2.
+
+-	: skof-fun skof/sing skof/sing etp-eq/i ([_] etp-eq/i).
+
+-	: skof-fun skof/one skof/one etp-eq/i ([_] etp-eq/i).
+
+%worlds (evar) (skof-fun _ _ _ _).
+%total D (skof-fun D _ _ _).
+
+
+
+skof-reg : skof K A B
+%%
+	    -> ewf A 
+	    -> ({x} evof x A -> ewf (B x)) -> type.
+%mode skof-reg +X1 -X2 -X3.
+
+-	: skof-reg skof/t ewf/one ([_] [_] ewf/t).
+
+-	: skof-reg (skof/pi Dexpand Dskof2 Dskof1) 
+	   (ewf/sigma 
+	      ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) 
+	      DwfC) 
+	   ([w] [d] 
+	      ewf/pi 
+	      ([x] [e] DwfBz w d x e)
+	      (DwfAy w d))
+	   <- skof-reg Dskof1 
+	      (DwfC : ewf C) 
+	      (DwfA : {y} evof y C -> ewf (A y))
+	   <- skof-reg Dskof2
+	      (DwfD : ewf D)
+	      (DwfB : {z} evof z D -> ewf (B z))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 esubst-wf 
+		 DwfA
+		 (eof/pi1 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d))
+		 (DwfAy w d))
+	   <- ({y} {dy} {x} {dx}
+		 eexpand-reg (eof/var (DwfA y dy) dx) (Dexpand y x)
+		 (DofX y dy x dx))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 {x} {e:evof x (A (epi1 w))}
+		 esubst2
+		 DofX 
+		 (eof/pi1 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d))
+		 (eof/var (DwfAy w d) e)
+		 (DofX' w d x e))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 {x} {e:evof x (A (epi1 w))}
+		 esubst-wf
+		 DwfB
+		 (eof/app
+		    (DofX' w d x e)
+		    (eof/pi2 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d)))
+		 (DwfBz w d x e)).
+
+-	: skof-reg (skof/sigma Dexpand Dskof2 Dskof1) 
+	   (ewf/sigma 
+	      ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) 
+	      DwfC) 
+	   ([w] [d] 
+	      ewf/sigma
+	      ([x] [e] DwfBz w d x e)
+	      (DwfAy w d))
+	   <- skof-reg Dskof1 
+	      (DwfC : ewf C) 
+	      (DwfA : {y} evof y C -> ewf (A y))
+	   <- skof-reg Dskof2
+	      (DwfD : ewf D)
+	      (DwfB : {z} evof z D -> ewf (B z))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 esubst-wf 
+		 DwfA
+		 (eof/pi1 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d))
+		 (DwfAy w d))
+	   <- ({y} {dy} {x} {dx}
+		 eexpand-reg (eof/var (DwfA y dy) dx) (Dexpand y x)
+		 (DofX y dy x dx))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 {x} {e:evof x (A (epi1 w))}
+		 esubst2
+		 DofX 
+		 (eof/pi1 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d))
+		 (eof/var (DwfAy w d) e)
+		 (DofX' w d x e))
+	   <- ({w} {d:evof w (esigma C ([y] epi (A y) ([_] D)))}
+		 {x} {e:evof x (A (epi1 w))}
+		 esubst-wf
+		 DwfB
+		 (eof/app
+		    (DofX' w d x e)
+		    (eof/pi2 (eof/var (ewf/sigma ([y] [d] ewf/pi ([_] [_] DwfD) (DwfA y d)) DwfC) d)))
+		 (DwfBz w d x e)).
+
+-	: skof-reg skof/sing ewf/t ([x] [d] ewf/sing (eof/var ewf/t d)).
+
+-	: skof-reg skof/one ewf/one ([_] [_] ewf/one).
+
+%worlds (ebind | etopenblock) (skof-reg _ _ _).
+%total D (skof-reg D _ _).
+
+
+
+
+%%%%%  Flay Theorems  %%%%%
+
+flay-sound : ewf A
+	      -> flay A K M 
+	      -> skof K B A'
+%%
+	      -> eof M B
+	      -> tequiv A (A' M) -> type.
+%mode flay-sound +X1 +X2 +X3 -X4 -X5.
+
+-	: flay-sound _ flay/t skof/t eof/star tequiv/t.
+
+-	: flay-sound 
+	   (ewf/pi
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DwfA : ewf A))
+	   (flay/pi
+	      (DflayB : {x} flay (B x) Bs (N x))
+	      (DflayA : flay A As M))
+	   (skof/pi
+	      (Dexpand : {y} {x} eexpand x (A' y) (X y x))
+	      (DskofB : skof Bs D ([z] B' z))
+	      (DskofA : skof As C ([y] A' y)))
+	   %%
+	   (eof/pair 
+	      ([y] [e]
+		 ewf/pi
+		 ([_] [_] DwfD)
+		 (DwfA' y e))
+	      (eof/equiv
+		 (tequiv/pi
+		    ([_] [_] tequiv/reflex DwfD)
+		    DequivA)
+		 (eof/lam
+		    DofN
+		    DwfA)) 
+	      DofM)
+	   (tequiv/pi 
+	      ([x] [d]
+		 tequiv/trans
+		 (DequivB' x d)
+		 (DequivB x d))
+	      (tequiv/trans
+		 DequivA'
+		 DequivA))
+	   <- flay-sound DwfA DflayA DskofA
+	      (DofM : eof M C)
+	      (DequivA : tequiv A (A' M))
+	   <- ({x} {d:evof x A}
+		 flay-sound (DwfB x d) (DflayB x) DskofB
+		 (DofN x d : eof (N x) D)
+		 (DequivB x d : tequiv (B x) (B' (N x))))
+	   <- skof-reg DskofA
+	      _
+	      (DwfA' : {y} evof y C -> ewf (A' y))
+	   <- skof-reg DskofB
+	      (DwfD : ewf D)
+	      (DwfB' : {z} evof z D -> ewf (B' z))
+	   <- tfunctionality DwfA'
+	      (equiv/symm (equiv/beta1 (eof/lam DofN DwfA) DofM))
+	      (DequivA' : tequiv (A' M) (A' (epi1 (epair M (elam A ([x] N x))))))
+	   <- ({y} {dy:evof y C} {x} {dx:evof x (A' y)}
+		 eexpand-equiv (eof/var (DwfA' y dy) dx) (Dexpand y x)
+		 (DequivX y dy x dx : equiv x (X y x) (A' y)))
+	   <- ({x} {d:evof x A}
+		 esubst2-equiv
+		 DequivX
+		 (eof/pi1
+		    (eof/pair
+		       ([_] [_] ewf/pi ([_] [_] DwfD) DwfA)
+		       (eof/lam DofN DwfA)
+		       DofM))
+		 (eof/equiv
+		    (tequiv/trans DequivA' DequivA)
+		    (eof/var DwfA d))
+		 (DequivX' x d : equiv x (X (epi1 (epair M (elam A N))) x) (A' (epi1 (epair M (elam A ([x] N x)))))))
+	   <- ({x} {d:evof x A}
+		 tfunctionality DwfB'
+		 (equiv/symm
+		    (equiv/trans
+		       (equiv/beta (eof/var DwfA d) DofN)
+		       (equiv/app
+			  (equiv/equiv
+			     (tequiv/symm (tequiv/trans DequivA' DequivA))
+			     (equiv/symm (DequivX' x d)))
+			  (equiv/beta2 (eof/lam DofN DwfA) DofM))))
+		 (DequivB' x d : tequiv 
+				  (B' (N x)) 
+				  (B' (eapp (epi2 (epair M (elam A ([x] N x)))) (X (epi1 (epair M _)) x))))).
+
+-	: flay-sound 
+	   (ewf/sigma
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DwfA : ewf A))
+	   (flay/sigma
+	      (DflayB : {x} flay (B x) Bs (N x))
+	      (DflayA : flay A As M))
+	   (skof/sigma
+	      (Dexpand : {y} {x} eexpand x (A' y) (X y x))
+	      (DskofB : skof Bs D ([z] B' z))
+	      (DskofA : skof As C ([y] A' y)))
+	   %%
+	   (eof/pair 
+	      ([y] [e]
+		 ewf/pi
+		 ([_] [_] DwfD)
+		 (DwfA' y e))
+	      (eof/equiv
+		 (tequiv/pi
+		    ([_] [_] tequiv/reflex DwfD)
+		    DequivA)
+		 (eof/lam
+		    DofN
+		    DwfA)) 
+	      DofM)
+	   (tequiv/sigma 
+	      ([x] [d]
+		 tequiv/trans
+		 (DequivB' x d)
+		 (DequivB x d))
+	      (tequiv/trans
+		 DequivA'
+		 DequivA))
+	   <- flay-sound DwfA DflayA DskofA
+	      (DofM : eof M C)
+	      (DequivA : tequiv A (A' M))
+	   <- ({x} {d:evof x A}
+		 flay-sound (DwfB x d) (DflayB x) DskofB
+		 (DofN x d : eof (N x) D)
+		 (DequivB x d : tequiv (B x) (B' (N x))))
+	   <- skof-reg DskofA
+	      _
+	      (DwfA' : {y} evof y C -> ewf (A' y))
+	   <- skof-reg DskofB
+	      (DwfD : ewf D)
+	      (DwfB' : {z} evof z D -> ewf (B' z))
+	   <- tfunctionality DwfA'
+	      (equiv/symm (equiv/beta1 (eof/lam DofN DwfA) DofM))
+	      (DequivA' : tequiv (A' M) (A' (epi1 (epair M (elam A ([x] N x))))))
+	   <- ({y} {dy:evof y C} {x} {dx:evof x (A' y)}
+		 eexpand-equiv (eof/var (DwfA' y dy) dx) (Dexpand y x)
+		 (DequivX y dy x dx : equiv x (X y x) (A' y)))
+	   <- ({x} {d:evof x A}
+		 esubst2-equiv
+		 DequivX
+		 (eof/pi1
+		    (eof/pair
+		       ([_] [_] ewf/pi ([_] [_] DwfD) DwfA)
+		       (eof/lam DofN DwfA)
+		       DofM))
+		 (eof/equiv
+		    (tequiv/trans DequivA' DequivA)
+		    (eof/var DwfA d))
+		 (DequivX' x d : equiv x (X (epi1 (epair M (elam A N))) x) (A' (epi1 (epair M (elam A ([x] N x)))))))
+	   <- ({x} {d:evof x A}
+		 tfunctionality DwfB'
+		 (equiv/symm
+		    (equiv/trans
+		       (equiv/beta (eof/var DwfA d) DofN)
+		       (equiv/app
+			  (equiv/equiv
+			     (tequiv/symm (tequiv/trans DequivA' DequivA))
+			     (equiv/symm (DequivX' x d)))
+			  (equiv/beta2 (eof/lam DofN DwfA) DofM))))
+		 (DequivB' x d : tequiv 
+				  (B' (N x)) 
+				  (B' (eapp (epi2 (epair M (elam A ([x] N x)))) (X (epi1 (epair M _)) x))))).
+
+-	: flay-sound (ewf/sing Dof) flay/sing skof/sing Dof (tequiv/reflex (ewf/sing Dof)).
+
+-	: flay-sound ewf/one flay/one skof/one eof/star tequiv/one.
+
+%worlds (ebind) (flay-sound _ _ _ _ _).
+%total D (flay-sound _ D _ _ _).
+
+
+
+can-flay : {A} flay A K M -> type.
+%mode can-flay +X1 -X2.
+
+-	: can-flay et flay/t.
+
+-	: can-flay (epi A B) (flay/pi DflayB DflayA)
+	   <- can-flay A DflayA
+	   <- ({x} 
+		 can-flay (B x) (DflayB x)).
+
+-	: can-flay (esigma A B) (flay/sigma DflayB DflayA)
+	   <- can-flay A DflayA
+	   <- ({x} 
+		 can-flay (B x) (DflayB x)).
+
+-	: can-flay (esing M) flay/sing.
+
+-	: can-flay eone flay/one.
+
+%worlds (evar) (can-flay _ _).
+%total A (can-flay A _).
+
+
+
+flay-fun : flay A K1 M1
+	    -> flay A K2 M2
+%%
+	    -> skel-eq K1 K2
+	    -> eterm-eq M1 M2 -> type.
+%mode flay-fun +X1 +X2 -X3 -X4.
+
+-	: flay-fun flay/t flay/t skel-eq/i eterm-eq/i.
+
+-	: flay-fun (flay/pi DflayB1 DflayA1) (flay/pi DflayB2 DflayA2) Deqsk Deq
+	   <- flay-fun DflayA1 DflayA2 DeqAs DeqM
+	   <- ({x}
+		 flay-fun (DflayB1 x) (DflayB2 x) DeqBs (DeqN x))
+	   <- skel-resp-skel2 kpi DeqAs DeqBs Deqsk
+	   <- elam-resp etp-eq/i DeqN DeqLam
+	   <- epair-resp DeqM DeqLam Deq.
+
+-	: flay-fun (flay/sigma DflayB1 DflayA1) (flay/sigma DflayB2 DflayA2) Deqsk Deq
+	   <- flay-fun DflayA1 DflayA2 DeqAs DeqM
+	   <- ({x}
+		 flay-fun (DflayB1 x) (DflayB2 x) DeqBs (DeqN x))
+	   <- skel-resp-skel2 ksigma DeqAs DeqBs Deqsk
+	   <- elam-resp etp-eq/i DeqN DeqLam
+	   <- epair-resp DeqM DeqLam Deq.
+
+-	: flay-fun flay/sing flay/sing skel-eq/i eterm-eq/i.
+
+-	: flay-fun flay/one flay/one skel-eq/i eterm-eq/i.
+
+%worlds (evar) (flay-fun _ _ _ _).
+%total D (flay-fun D _ _ _).
+
+
+
+flay-equiv1 : tequiv A1 A2
+	       -> flay A1 K1 _
+	       -> flay A2 K2 _
+%%
+	       -> skel-eq K1 K2 -> type.
+%mode flay-equiv1 +X1 +X2 +X3 -X4.
+
+-	: flay-equiv1 (tequiv/reflex _) D1 D2 Deq
+	   <- flay-fun D1 D2 Deq _.
+
+-	: flay-equiv1 (tequiv/symm D) D1 D2 Deq'
+	   <- flay-equiv1 D D2 D1 Deq
+	   <- skel-eq-symm Deq Deq'.
+
+-	: flay-equiv1 (tequiv/trans D23 D12) D1 D3 Deq13
+	   <- can-flay _ D2
+	   <- flay-equiv1 D12 D1 D2 Deq12
+	   <- flay-equiv1 D23 D2 D3 Deq23
+	   <- skel-eq-trans Deq12 Deq23 Deq13.
+
+-	: flay-equiv1 (tequiv/pi DequivB DequivA) (flay/pi DflayB1 DflayA1) (flay/pi DflayB2 DflayA2) Deqsk
+	   <- flay-equiv1 DequivA DflayA1 DflayA2 DeqAs
+	   <- ({x} {d}
+		 flay-equiv1 (DequivB x d) (DflayB1 x) (DflayB2 x) DeqBs)
+	   <- skel-resp-skel2 kpi DeqAs DeqBs Deqsk.
+
+-	: flay-equiv1 (tequiv/sigma DequivB DequivA) (flay/sigma DflayB1 DflayA1) (flay/sigma DflayB2 DflayA2) Deqsk
+	   <- flay-equiv1 DequivA DflayA1 DflayA2 DeqAs
+	   <- ({x} {d}
+		 flay-equiv1 (DequivB x d) (DflayB1 x) (DflayB2 x) DeqBs)
+	   <- skel-resp-skel2 ksigma DeqAs DeqBs Deqsk.
+
+-	: flay-equiv1 (tequiv/sing _) flay/sing flay/sing skel-eq/i.
+
+%worlds (ebind) (flay-equiv1 _ _ _ _).
+%total D (flay-equiv1 D _ _ _).
+
+
+
+flay-equiv2 : tequiv A1 A2
+	      -> flay A1 K M1
+	      -> flay A2 K M2
+	      -> skof K C _
+%%
+	      -> equiv M1 M2 C -> type.
+%mode flay-equiv2 +X1 +X2 +X3 +X4 -X5.
+
+-	: flay-equiv2 (tequiv/reflex Dwf) Dflay1 Dflay2 Dskof
+	   Dequiv
+	   <- flay-fun Dflay1 Dflay2 _ DeqM
+	   <- flay-sound Dwf Dflay1 Dskof DofM _
+	   <- equiv-resp eterm-eq/i DeqM etp-eq/i (equiv/reflex DofM) Dequiv.
+
+-	: flay-equiv2 (tequiv/symm Dtequiv) Dflay1 Dflay2 Dskof (equiv/symm Dequiv)
+	   <- flay-equiv2 Dtequiv Dflay2 Dflay1 Dskof Dequiv.
+
+-	: flay-equiv2 (tequiv/trans D23 D12) Dflay1 Dflay3 Dskof (equiv/trans Dequiv23 Dequiv12)
+	   <- can-flay _ Dflay2
+	   <- flay-equiv1 (tequiv/symm D12) Dflay2 Dflay1 DeqK
+	   <- flay-resp etp-eq/i DeqK eterm-eq/i Dflay2 Dflay2'
+	   <- flay-equiv2 D12 Dflay1 Dflay2' Dskof Dequiv12
+	   <- flay-equiv2 D23 Dflay2' Dflay3 Dskof Dequiv23.
+
+-	: flay-equiv2 
+	   (tequiv/pi
+	      (DequivB : {x} evof x A1 -> tequiv (B1 x) (B2 x))
+	      (DequivA : tequiv A1 A2)) 
+	   (flay/pi
+	      (DflayB1 : {x} flay (B1 x) Bs (N1 x))
+	      (DflayA1 : flay A1 As M1))
+	   (flay/pi
+	      (DflayB2 : {x} flay (B2 x) Bs (N2 x))
+	      (DflayA2 : flay A2 As M2))
+	   (skof/pi 
+	      (Dexpand : {y} {x} eexpand x (A' y) (X y x))
+	      (DskofB : skof Bs D ([z] B' z))
+	      (DskofA : skof As C ([y] A' y)))
+	   (equiv/pair 
+	      ([y] [e]
+		 ewf/pi
+		 ([_] [_] DwfD)
+		 (DwfA' y e))
+	      (equiv/equiv
+		 (tequiv/pi
+		    ([_] [_] tequiv/reflex DwfD)
+		    DequivA')
+		 (equiv/lam
+		    DequivN
+		    DequivA))
+	      DequivM)
+	   <- flay-equiv2 DequivA DflayA1 DflayA2 DskofA
+	      (DequivM : equiv M1 M2 C)
+	   <- ({x} {d:evof x A1}
+		 flay-equiv2 (DequivB x d) (DflayB1 x) (DflayB2 x) DskofB
+		 (DequivN x d : equiv (N1 x) (N2 x) D))
+	   <- tequiv-reg DequivA
+	      (DwfA1 : ewf A1) _
+	   <- flay-sound DwfA1 DflayA1 DskofA
+	      _
+	      (DequivA' : tequiv A1 (A' M1))
+	   <- skof-reg DskofA
+	      _ (DwfA' : {y} evof y C -> ewf (A' y))
+	   <- skof-reg DskofB
+	      (DwfD : ewf D) _.
+
+-	: flay-equiv2 
+	   (tequiv/sigma
+	      (DequivB : {x} evof x A1 -> tequiv (B1 x) (B2 x))
+	      (DequivA : tequiv A1 A2)) 
+	   (flay/sigma
+	      (DflayB1 : {x} flay (B1 x) Bs (N1 x))
+	      (DflayA1 : flay A1 As M1))
+	   (flay/sigma
+	      (DflayB2 : {x} flay (B2 x) Bs (N2 x))
+	      (DflayA2 : flay A2 As M2))
+	   (skof/sigma 
+	      (Dexpand : {y} {x} eexpand x (A' y) (X y x))
+	      (DskofB : skof Bs D ([z] B' z))
+	      (DskofA : skof As C ([y] A' y)))
+	   (equiv/pair 
+	      ([y] [e]
+		 ewf/pi
+		 ([_] [_] DwfD)
+		 (DwfA' y e))
+	      (equiv/equiv
+		 (tequiv/pi
+		    ([_] [_] tequiv/reflex DwfD)
+		    DequivA')
+		 (equiv/lam
+		    DequivN
+		    DequivA))
+	      DequivM)
+	   <- flay-equiv2 DequivA DflayA1 DflayA2 DskofA
+	      (DequivM : equiv M1 M2 C)
+	   <- ({x} {d:evof x A1}
+		 flay-equiv2 (DequivB x d) (DflayB1 x) (DflayB2 x) DskofB
+		 (DequivN x d : equiv (N1 x) (N2 x) D))
+	   <- tequiv-reg DequivA
+	      (DwfA1 : ewf A1) _
+	   <- flay-sound DwfA1 DflayA1 DskofA
+	      _
+	      (DequivA' : tequiv A1 (A' M1))
+	   <- skof-reg DskofA
+	      _ (DwfA' : {y} evof y C -> ewf (A' y))
+	   <- skof-reg DskofB
+	      (DwfD : ewf D) _.
+
+-	: flay-equiv2 (tequiv/sing Dequiv) flay/sing flay/sing skof/sing Dequiv.
+
+%worlds (ebind) (flay-equiv2 _ _ _ _ _).
+%total D (flay-equiv2 D _ _ _ _).
+
+
+
+flay-equiv : tequiv A1 A2
+	      -> flay A1 K1 M1
+	      -> flay A2 K2 M2
+	      -> skof K1 C _
+%%
+	      -> skel-eq K1 K2
+	      -> equiv M1 M2 C -> type.
+%mode flay-equiv +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: flay-equiv Dtequiv Dflay1 Dflay2 Dskof Deq Dequiv
+	   <- flay-equiv1 Dtequiv Dflay1 Dflay2 Deq
+	   <- flay-resp etp-eq/i Deq eterm-eq/i Dflay1 Dflay1'
+	   <- skof-resp Deq etp-eq/i ([_] etp-eq/i) Dskof Dskof'
+	   <- flay-equiv2 Dtequiv Dflay1' Dflay2 Dskof' Dequiv.
+
+%worlds (ebind) (flay-equiv _ _ _ _ _ _).
+%total {} (flay-equiv _ _ _ _ _ _).
+
+
+
+
+%%%%%  Constant Theorems  %%%%%
+
+cexpand-etopen : cexpand Rc Ac Mc 
+		  -> etopen Ac A
+		  -> etp-skel A As
+		  -> etopenr Rc As R 
+%%
+		  -> etopenm Mc As M
+		  -> eexpand R A M -> type.
+%mode cexpand-etopen +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: cexpand-etopen cexpand/t etopen/t etp-skel/t Dopen
+	   (etopenm/at Dopen) eexpand/t.
+
+-	: cexpand-etopen 
+	   (cexpand/pi Dexpand2 Dexpand1)
+	   (etopen/pi DopenB DskelA' DopenA)
+	   (etp-skel/pi DskelB DskelA)
+	   DopenR
+	   %%
+	   (etopenm/lam
+	      DopenRX
+	      DskelA
+	      DopenA)
+	   (eexpand/pi
+	      Dexpand2'
+	      Dexpand1')
+	   <- etp-skel-fun DskelA' DskelA DeqSK
+	   <- etopen-resp-underbind DeqSK DopenB DopenB'
+	   <- ({x} {xc} {do:etopenr xc As x}
+		 cexpand-etopen (Dexpand1 xc) DopenA DskelA do
+		 (DopenX xc x do)
+		 (Dexpand1' x))
+	   <- ({x} {xc} {do:etopenr xc As x}
+		 cexpand-etopen (Dexpand2 xc) (DopenB' xc x do) (DskelB x)
+		 (etopenr/app (DopenX xc x do) DopenR)
+		 (DopenRX xc x do)
+		 (Dexpand2' x)).
+
+-	: cexpand-etopen
+	   (cexpand/sigma Dexpand2 Dexpand1)
+	   (etopen/sigma DopenB DskelA' DopenA)
+	   (etp-skel/sigma (DskelB : {x} etp-skel (B x) Bs) DskelA)
+	   DopenR
+	   %%
+	   (etopenm/pair Dopen2 Dopen1)
+	   (eexpand/sigma Dexpand2' Dexpand1')
+	   <- etp-skel-fun DskelA' DskelA DeqSK
+	   <- etopen-resp-underbind DeqSK DopenB DopenB'
+	   <- cexpand-etopen Dexpand1 DopenA DskelA (etopenr/pi1 DopenR)
+	      Dopen1 Dexpand1'
+	   <- cexpand-etopen Dexpand2 (DopenB' _ _ (etopenr/pi1 DopenR)) (DskelB _) (etopenr/pi2 DopenR)
+	      Dopen2 Dexpand2'.
+
+-	: cexpand-etopen
+	   cexpand/sing
+	   (etopen/sing Dopen)
+	   etp-skel/sing
+	   _
+	   %%
+	   (etopenm/sing Dopen)
+	   eexpand/sing.
+
+-	: cexpand-etopen cexpand/one etopen/one etp-skel/one _
+	   etopenm/star eexpand/one.
+
+%worlds (evar | etopenblock) (cexpand-etopen _ _ _ _ _ _).
+%total D (cexpand-etopen D _ _ _ _ _).
+
+
+
+can-etp-skel : {A} etp-skel A As -> type.
+%mode can-etp-skel +X1 -X2.
+
+-	: can-etp-skel _ etp-skel/t.
+
+-	: can-etp-skel _ (etp-skel/pi D2 D1)
+	   <- can-etp-skel _ D1
+	   <- ({x}
+		 can-etp-skel _ (D2 x)).
+
+-	: can-etp-skel _ (etp-skel/sigma D2 D1)
+	   <- can-etp-skel _ D1
+	   <- ({x}
+		 can-etp-skel _ (D2 x)).
+
+-	: can-etp-skel _ etp-skel/sing.
+
+-	: can-etp-skel _ etp-skel/one.
+
+%worlds (evar) (can-etp-skel _ _).
+%total A (can-etp-skel A _).
+
+
+
+cskof-implies-skof : cskof SK Ac Bc
+%%
+		      -> etopen Ac A
+		      -> etp-skel A As
+		      -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+		      -> skof SK A B -> type.
+%mode cskof-implies-skof +X1 -X2 -X3 -X4 -X5.
+
+-	: cskof-implies-skof cskof/t
+	   etopen/one etp-skel/one ([_] [_] [_] etopen/t) skof/t.
+
+-	: cskof-implies-skof (cskof/pi (Dexpand : {y} {x} cexpand _ _ (Xc y x)) Dcskof2 Dcskof1)
+	   (etopen/sigma
+	      ([yc] [y] [doy]
+		 etopen/pi
+		 ([_] [_] [_] DopenD)
+		 (DskelA y)
+		 (DopenA yc y doy))
+	      DskelC
+	      DopenC)
+	   (etp-skel/sigma
+	      ([y] etp-skel/pi ([_] DskelD) (DskelA y))
+	      DskelC)
+	   ([wc] [w] [dow]
+	      etopen/pi
+	      ([xc] [x] [dox]
+		 DopenB
+		 (capp (cpi2 wc) (Xc (cpi1 wc) xc))
+		 (eapp (epi2 w) (X (epi1 w) x))
+		 (etopenr/app
+		    (DopenX (cpi1 wc) (epi1 w) (etopenr/pi1 dow) xc x dox)
+		    (etopenr/pi2 dow)))
+	      (DskelA (epi1 w))
+	      (DopenA (cpi1 wc) (epi1 w) (etopenr/pi1 dow)))
+	   (skof/pi Dexpand' Dskof2 Dskof1)
+	   <- cskof-implies-skof Dcskof1 DopenC DskelC DopenA Dskof1
+	   <- cskof-implies-skof Dcskof2 DopenD DskelD (DopenB : {xc} {x} etopenr xc Ds x -> etopen (Bc xc) (B x)) Dskof2
+	   <- ({y}
+		 can-etp-skel (A y) (DskelA y))
+	   <- ({y} {yc} {doy:etopenr yc Cs y} {x} {xc:catom} {dox:etopenr xc As x}
+		 cexpand-etopen (Dexpand yc xc) (DopenA yc y doy) (DskelA y) dox
+		 (DopenX yc y doy xc x dox : etopenm _ _ (X y x))
+		 (Dexpand' y x)).
+
+-	: cskof-implies-skof (cskof/sigma (Dexpand : {y} {x} cexpand _ _ (Xc y x)) Dcskof2 Dcskof1)
+	   (etopen/sigma
+	      ([yc] [y] [doy]
+		 etopen/pi
+		 ([_] [_] [_] DopenD)
+		 (DskelA y)
+		 (DopenA yc y doy))
+	      DskelC
+	      DopenC)
+	   (etp-skel/sigma
+	      ([y] etp-skel/pi ([_] DskelD) (DskelA y))
+	      DskelC)
+	   ([wc] [w] [dow]
+	      etopen/sigma
+	      ([xc] [x] [dox]
+		 DopenB
+		 (capp (cpi2 wc) (Xc (cpi1 wc) xc))
+		 (eapp (epi2 w) (X (epi1 w) x))
+		 (etopenr/app
+		    (DopenX (cpi1 wc) (epi1 w) (etopenr/pi1 dow) xc x dox)
+		    (etopenr/pi2 dow)))
+	      (DskelA (epi1 w))
+	      (DopenA (cpi1 wc) (epi1 w) (etopenr/pi1 dow)))
+	   (skof/sigma Dexpand' Dskof2 Dskof1)
+	   <- cskof-implies-skof Dcskof1 DopenC DskelC DopenA Dskof1
+	   <- cskof-implies-skof Dcskof2 DopenD DskelD (DopenB : {xc} {x} etopenr xc Ds x -> etopen (Bc xc) (B x)) Dskof2
+	   <- ({y}
+		 can-etp-skel (A y) (DskelA y))
+	   <- ({y} {yc} {doy:etopenr yc Cs y} {x} {xc:catom} {dox:etopenr xc As x}
+		 cexpand-etopen (Dexpand yc xc) (DopenA yc y doy) (DskelA y) dox
+		 (DopenX yc y doy xc x dox : etopenm _ _ (X y x))
+		 (Dexpand' y x)).
+
+-	: cskof-implies-skof cskof/sing
+	   etopen/t etp-skel/t ([_] [_] [d] etopen/sing d) skof/sing.
+
+-	: cskof-implies-skof cskof/one
+	   etopen/one etp-skel/one ([_] [_] [_] etopen/one) skof/one.
+
+%worlds (evar | etopenblock) (cskof-implies-skof _ _ _ _ _).
+%total D (cskof-implies-skof D _ _ _ _).
+
+
+
+
+cskof-implies-skof' : cskof SK Ac Bc
+		       -> etopen Ac A
+		       -> etp-skel A As
+		       -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+%%
+		       -> skof SK A B -> type.
+%mode cskof-implies-skof' +X1 +X2 +X3 +X4 -X5.
+
+-	: cskof-implies-skof' Dcskof DopenA DskelA DopenB Dskof'
+	   <- cskof-implies-skof Dcskof DopenA' DskelA' DopenB' Dskof
+	   <- etopen-fun DopenA' DopenA DeqA
+	   <- etp-skel-resp DeqA skel-eq/i DskelA' DskelA''
+	   <- etp-skel-fun DskelA'' DskelA DeqSK
+	   <- etopen-resp-underbind DeqSK DopenB' DopenB''
+	   <- ({x} {xc} {do}
+		 etopen-fun (DopenB'' xc x do) (DopenB xc x do) (DeqB x))
+	   <- skof-resp skel-eq/i DeqA DeqB Dskof Dskof'.
+
+%worlds (evar | etopenblock) (cskof-implies-skof' _ _ _ _ _).
+%total {} (cskof-implies-skof' _ _ _ _ _).
+
+
+
+
+cskof-skof-fun : cskof SK Ac Bc
+		  -> skof SK A B 
+%%
+		  -> etopen Ac A
+		  -> etp-skel A As
+		  -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+		  -> type.
+%mode cskof-skof-fun +X1 +X2 -X3 -X4 -X5.
+
+-	: cskof-skof-fun Dcskof Dskof 
+	   DopenA' DskelA' DopenB'
+	   <- cskof-implies-skof Dcskof DopenA DskelA DopenB Dskof'
+	   <- skof-fun Dskof' Dskof DeqA DeqB
+	   <- etopen-resp ctp-eq/i DeqA DopenA DopenA'
+	   <- etp-skel-resp DeqA skel-eq/i DskelA DskelA'
+	   <- ({x} {xc} {do}
+		 etopen-resp ctp-eq/i (DeqB x) (DopenB xc x do) (DopenB' xc x do)).
+
+%worlds (evar | etopenblock) (cskof-skof-fun _ _ _ _ _).
+%total {} (cskof-skof-fun _ _ _ _ _).
+
+
+
+cskof-etopen-reg : cskof SK Ac Bc
+%%
+		    -> etopen Ac A
+		    -> etp-skel A As
+		    -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+		    -> ewf A
+		    -> ({x} evof x A -> ewf (B x)) 
+		    -> type.
+%mode cskof-etopen-reg +X1 -X2 -X3 -X4 -X5 -X6.
+
+-	: cskof-etopen-reg Dcskof DopenA DskelA DopenB DwfA DwfB
+	   <- cskof-implies-skof Dcskof DopenA DskelA DopenB Dskof
+	   <- skof-reg Dskof DwfA DwfB.
+
+%worlds (ebind | etopenblock) (cskof-etopen-reg _ _ _ _ _ _).
+%total {} (cskof-etopen-reg _ _ _ _ _ _).
+
+
+
+skof-implies-cskof : skof SK A B
+%%
+		      -> cskof SK Ac Bc
+		      -> etopen Ac A
+		      -> etp-skel A As
+		      -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+		      -> type.
+%mode skof-implies-cskof +X1 -X2 -X3 -X4 -X5.
+
+-	: skof-implies-cskof Dskof 
+	   Dcskof DopenA' DskelA' DopenB'
+	   <- can-cskof _ Dcskof
+	   <- cskof-implies-skof Dcskof DopenA DskelA DopenB Dskof'
+	   <- skof-fun Dskof' Dskof DeqA DeqB
+	   <- etopen-resp ctp-eq/i DeqA DopenA DopenA'
+	   <- etp-skel-resp DeqA skel-eq/i DskelA DskelA'
+	   <- ({x} {xc} {do}
+		 etopen-resp ctp-eq/i (DeqB x) (DopenB xc x do) (DopenB' xc x do)).
+
+%worlds (evar | etopenblock) (skof-implies-cskof _ _ _ _ _).
+%total {} (skof-implies-cskof _ _ _ _ _).
+
+
+
+%define etp-rec = C
+%solve etopen-rec 
+   : {Ac} {A} {As} {Bc} {B} {Bs}
+      etopen Ac A
+      -> etp-skel A As
+      -> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+      -> ({x} etp-skel (B x) Bs)
+      -> etopen (carrow (csigma Ac ([x] cprod (carrow (carrow (Bc x) ct) (carrow (Bc x) ct)) (Bc x))) ct) (C A B).
+
+
+%solve ewf-rec 
+   : {A} {B}
+      ewf A
+      -> ({x} evof x A -> ewf (B x))
+      -> ewf (etp-rec A B).
+
+
+skof-implies-eof-rec : skof SK A B
+			-> eof 
+			   (econst (const/rec SK)) 
+			   (epi (esigma A ([x] esigma (epi (epi (B x) ([_] et)) ([_] epi (B x) ([_] et))) ([_] B x))) ([_] et))
+			-> type.
+%mode skof-implies-eof-rec +X1 -X2.
+
+-	: skof-implies-eof-rec Dskof 
+	   (eof/const
+	      (ewf-rec _ _ DwfA DwfB)
+	      (ekof/i
+		 (etopen-rec _ _ _ _ _ _ DopenA DskelA DopenB DskelB)
+		 (ckof/rec Dcskof)))
+	   <- skof-implies-cskof Dskof
+	      Dcskof DopenA DskelA DopenB
+	   <- skof-reg Dskof DwfA DwfB
+	   <- ({x} can-etp-skel _ (DskelB x)).
+
+%worlds (ebind) (skof-implies-eof-rec _ _).
+%total {} (skof-implies-eof-rec _ _).

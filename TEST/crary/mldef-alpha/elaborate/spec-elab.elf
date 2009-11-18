@@ -1,0 +1,344 @@
+
+%{
+NULL SPEC
+}%
+
+spec-elab/null		: spec-elab Mec Sec spec/null sg/one.
+
+
+
+%{
+VAL SPEC
+}%
+
+spec-elab/val		: spec-elab Mec Sec (spec/val TVLe I Te) 
+			   (sg/named (name/val I)
+			      (sg/named name/ordinary
+				 (sg/pi Sarg ([a] sg/datom (T a)))))
+			   <- tyargs-elab TVLe Sarg
+			   <- sg-fst Sarg Karg
+			   <- ({a} cn-of a Karg
+				 -> {m} md-assm m Sarg
+				 -> md-fst m a
+				 -> ty-elab (md/pair Mec m) (sg/prod Sec Sarg) Te (T a)).
+
+
+%{
+TYPE SPEC W/O DEFN
+}%
+
+spec-elab/type-none	: spec-elab Mec Sec (spec/type TVLe I ty-option/none)
+			   (sg/named (name/con I) (sg/satom (karrow Karg t)))
+			   <- tyargs-elab TVLe Sarg
+			   <- sg-fst Sarg Karg.
+
+
+
+%{
+TYPE SPEC W/ DEFN
+}%
+
+spec-elab/type-some	: spec-elab Mec Sec (spec/type TVLe I (ty-option/some Te))
+			   (sg/named (name/con I) (sg/satom (pi Karg ([a] sing (T a)))))
+			   <- tyargs-elab TVLe Sarg
+			   <- sg-fst Sarg Karg
+			   <- ({a} cn-of a Karg
+				 -> {m} md-assm m Sarg
+				 -> md-fst m a
+				 -> ty-elab (md/pair Mec m) (sg/prod Sec Sarg) Te (T a)).
+
+
+
+%{
+NULLARY EXCEPTION SPEC
+}%
+
+spec-elab/exn0		: spec-elab Mec Sec (spec/exn0 I) 
+			   (sg/named (name/ec I)
+			      (sg/prod
+				 (sg/datom (tag unit))
+				 (sg/named (name/val I)
+				    (sg/named name/econ0
+				       (sg/pi sg/one ([_] sg/datom tagged)))))).
+
+
+%{
+UNARY EXCEPTION SPEC
+}%
+
+spec-elab/exn1		: spec-elab Mec Sec (spec/exn1 I Te)
+			   (sg/named (name/ec I)
+			      (sg/prod
+				 (sg/datom (tag T))
+				 (sg/named (name/val I)
+				    (sg/named name/econ1
+				       (sg/pi sg/one ([_] sg/datom (arrow T tagged)))))))
+			   <- ty-elab Mec Sec Te T.
+			   
+
+
+%{
+DATATYPE SPEC
+}%
+
+spec-elab/datatype	: spec-elab Mec Sec (spec/datatype DBe)
+			   (sg/sigma Sfwd ([a] Sdt a)) 
+			   <- datbind-elab Mec Sec DBe Sfwd Sdt _ _.
+
+
+
+%{
+DATATYPE COPYING SPEC
+}%
+
+spec-elab/dtcopy	: spec-elab Mec Sec (spec/dtcopy Inew Iold)
+			   (sg/sigma
+			      (sg/named (name/con Inew) (sg/satom (pi K ([a] sing (app C a)))))
+			      ([_] sg/named (name/dtc Inew) S))
+			   <- resolve-long Mec Sec name/dtc Iold M S
+			   <- sg-sub S (sg/sigma (sg/satom (karrow K t)) ([_] _))
+			   <- md-fst (md/pi1 M) C.
+
+
+
+%{
+STRUCTURE SPEC
+}%
+
+spec-elab/structure	: spec-elab Mec Sec (spec/structure I Se)
+			   (sg/named (name/mod I) S)
+			   <- sigexp-elab Mec Sec Se S.
+
+
+
+%{
+FUNCTOR SPEC
+}%
+
+functorspec-elab	: module         %% Elaboration context
+			   -> sg
+			   -> name       %% Functor name
+			   -> name       %% Argument name
+			   -> sigexp     %% Argument signature
+			   -> sigexp     %% Functor codomain
+%%
+			   -> sg         %% Its signature
+			   -> type.
+
+functorspec-elab/i	: functorspec-elab Mec Sec Lfunc Larg Se1 Se2
+			   (sg/named Lfunc (sg/pi S1 ([a] S2 a)))
+			   <- sigexp-elab Mec Sec Se1 S1
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> sigexp-elab (md/pair Mec (md/in Larg m)) (sg/prod Sec (sg/named Larg S1))
+				    Se2 (S2 a)).
+
+
+
+spec-elab/functor	: spec-elab Mec Sec (spec/functor Ifunc Iarg Se1 Se2) S
+			   <- functorspec-elab Mec Sec (name/fun Ifunc) (name/mod Iarg) Se1 Se2 S.
+
+spec-elab/functor-anon	: spec-elab Mec Sec (spec/functor-anon Ifunc SPe1 Se2) S
+			   <- functorspec-elab Mec Sec (name/fun Ifunc) name/funcarg (sigexp/sig SPe1) Se2 S.
+
+
+
+
+%{
+INCLUDE
+}%
+
+spec-elab/include	: spec-elab Mec Sec (spec/include Se) S
+			   <- sigexp-elab Mec Sec Se S.
+
+
+
+%{
+SIGNATURE
+}%
+
+spec-elab/signature	: spec-elab Mec Sec (spec/signature I Se) (sg/named (name/sig I) (sg/sgatom S))
+			   <- sigexp-elab Mec Sec Se S.
+
+
+
+%{
+SEQ
+}%
+
+disjoint-sg		: sg -> sg -> type.
+
+disjoint-sg/unsearchable
+			: disjoint-sg (sg/named L S) Sother
+			   <- unsearchable L
+			   <- ({a} {m}
+				 md-fst m a
+				 -> noresolve m Sother L).
+
+disjoint-sg/searchable	: disjoint-sg (sg/named L S) Sother
+			   <- searchable L
+			   <- ({a} {m}
+				 md-fst m a
+				 -> noresolve m Sother L)
+			   <- disjoint-sg S Sother.
+
+disjoint-sg/sigma	: disjoint-sg (sg/sigma S1 ([a] S2 a)) Sother
+			   <- disjoint-sg S1 Sother
+			   <- ({a}
+				 disjoint-sg (S2 a) Sother).
+
+disjoint-sg/one		: disjoint-sg sg/one Sother.
+
+
+
+spec-elab/seq		: spec-elab Mec Sec (spec/seq Se1 Se2) (sg/sigma S1 ([a] S2 a))
+			   <- spec-elab Mec Sec Se1 S1
+			   <- sg-fst S1 K1
+			   <- ({a} cn-of a K1
+				 -> {m} md-assm m S1
+				 -> md-fst m a
+				 -> spec-elab (md/pair Mec m) (sg/prod Sec S1) Se2 (S2 a))
+			   <- ({a}
+				 disjoint-sg S1 (S2 a)).
+
+
+
+
+%{
+SHARING
+}%
+
+%% Gives a path in spinal form (ie, innermost elim first)
+
+path			: type.  %name path P.
+
+path/nil		: path.
+path/pi1		: path -> path.
+path/pi2		: path -> path.
+path/out		: path -> path.
+
+
+
+apply-path		: path -> module -> module -> type.
+
+apply-path/nil		: apply-path path/nil M M.
+
+apply-path/pi1		: apply-path (path/pi1 P) M M'
+			   <- apply-path P (md/pi1 M) M'.
+
+apply-path/pi2		: apply-path (path/pi2 P) M M'
+			   <- apply-path P (md/pi2 M) M'.
+
+apply-path/out		: apply-path (path/out P) M M'
+			   <- apply-path P (md/out M) M'.
+
+
+
+patch-sg		: path       %% path at which to patch
+			   -> sg     %% subject signature
+			   -> sg     %% signature with which to patch
+			   -> sg     %% resulting signature
+			   -> type.
+
+patch-sg/nil		: patch-sg path/nil _ S S.
+
+patch-sg/pi1		: patch-sg (path/pi1 P) (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1' ([a] S2 a))
+			   <- patch-sg P S1 Sp S1'.
+
+patch-sg/pi2		: patch-sg (path/pi2 P) (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1 ([a] S2' a))
+			   <- ({a}
+				 patch-sg P (S2 a) Sp (S2' a)).
+
+patch-sg/out		: patch-sg (path/out P) (sg/named L S) Sp (sg/named L S')
+			   <- patch-sg P S Sp S'.
+
+
+
+share			: path       %% path to share
+			   -> path   %% path to share
+			   -> sg     %% subject signature
+			   -> sg     %% signature at which to share
+			   -> sg     %% resulting signature
+			   -> path   %% path chosen as representative (one of the two inputs)
+			   -> type.
+
+share/nil		: share path/nil path/nil S S S path/nil.
+
+share/branch1		: share (path/pi1 P1) (path/pi2 P2) (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1 ([a] S2' a)) (path/pi1 P1)
+			   <- ({m}
+				 apply-path P1 m (M1 m))
+			   <- ({a} {m} 
+				 md-fst m a
+				 -> md-fst (M1 m) (C1 a))
+			   <- single-sg Sp ([b] Ssing b)
+			   <- ({a}
+				 patch-sg P2 (S2 a) (Ssing (C1 a)) (S2' a)).
+
+share/branch2		: share (path/pi2 P2) (path/pi1 P1) (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1 ([a] S2' a)) (path/pi1 P1)
+			   <- ({m}
+				 apply-path P1 m (M1 m))
+			   <- ({a} {m} 
+				 md-fst m a
+				 -> md-fst (M1 m) (C1 a))
+			   <- single-sg Sp ([b] Ssing b)
+			   <- ({a}
+				 patch-sg P2 (S2 a) (Ssing (C1 a)) (S2' a)).
+
+share/pi1		: share (path/pi1 P) (path/pi1 P') (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1' ([a] S2 a)) (path/pi1 P'')
+			   <- share P P' S1 Sp S1' P''.
+
+share/pi2		: share (path/pi2 P) (path/pi2 P') (sg/sigma S1 ([a] S2 a)) Sp
+			   (sg/sigma S1 ([a] S2' a)) (path/pi2 P'')
+			   <- ({a}
+				 share P P' (S2 a) Sp (S2' a) P'').
+
+share/out		: share (path/out P) (path/out P') (sg/named L S) Sp
+			   (sg/named L S') (path/out P'')
+			   <- share P P' S Sp S' P''.
+
+
+
+multi-share : (identifier -> name)  %% namespace in which to share
+	       -> longid-list       %% longids to share
+	       -> sg                %% subject signature
+	       -> sg                %% resulting signature
+	       -> path              %% path chosen as representative
+	       -> sg                %% signature at which sharing takes place
+	       -> type.
+
+multi-share/last	: multi-share F (longid-list/cons I longid-list/nil) S
+			   S P Sp
+			   <- ({a} {m}
+				 md-fst m a
+				 -> resolve-long m S F I (M m) Sp)
+			   <- ({m}
+				 apply-path P m (M m)).
+
+multi-share/cons	: multi-share F (longid-list/cons I IL) S1
+			   S3 P' Sp
+			   <- multi-share F IL S1 S2 P1 Sp
+			   <- ({a} {m}
+				 md-fst m a
+				 -> resolve-long m S2 F I (M2 m) Sp')
+			   <- ({m}
+				 apply-path P2 m (M2 m))
+			   <- sg-equiv Sp Sp'
+			   <- share P1 P2 S2 Sp S3 P'.
+
+
+
+spec-elab/sharing-type	: spec-elab Mec Sec (spec/sharing-type SPe IL) S'
+			   <- spec-elab Mec Sec SPe S
+			   <- multi-share name/con IL S S' _ _.
+
+spec-elab/sharing-structure
+			: spec-elab Mec Sec (spec/sharing-structure SPe IL) S'
+			   <- spec-elab Mec Sec SPe S
+			   <- multi-share name/mod IL S S' _ _.

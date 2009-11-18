@@ -1,0 +1,46 @@
+%%%% algorithmic equivalence for constructors a la SH
+
+aeq-complete	: cn-deq C1 C2 K
+		   -> cn-aeq C1 C2 K
+		   -> type.
+%mode aeq-complete +D1 -D2.
+
+%worlds (ofkd+vdt-block) (aeq-complete _ _).
+%trustme %total {} (aeq-complete _ _).
+
+
+cn-aeq-sound	: cn-aeq C1 C2 K
+		   -> cn-deq C1 C2 K
+		   -> type.
+%mode cn-aeq-sound +D1 -D2.
+
+%worlds (ofkd-block) (cn-aeq-sound _ _).
+%trustme %total {} (cn-aeq-sound _ _).
+
+
+
+kd-aeq-sound	: kd-aeq C1 C2
+		   -> kd-deq C1 C2
+		   -> type.
+%mode kd-aeq-sound +D1 -D2.
+
+-	: kd-aeq-sound kd-aeq/kd/unit kd-deq/kd/unit.
+
+-	: kd-aeq-sound kd-aeq/kd/type kd-deq/kd/type.
+
+-	: kd-aeq-sound (kd-aeq/kd/sing D1) (kd-deq/kd/sing D2)
+	   <- cn-aeq-sound D1 D2.
+
+-	: kd-aeq-sound (kd-aeq/kd/sgm D1 D2) (kd-deq/kd/sgm D1' D2')
+	   <- kd-aeq-sound D1 D1'
+	   <- ({a}{da}
+		 kd-aeq-sound (D2 a da) (D2' a da)).
+
+-	: kd-aeq-sound (kd-aeq/kd/pi D1 D2) (kd-deq/kd/pi D1' D2')
+	   <- kd-aeq-sound D1 D1'
+	   <- ({a}{da}
+		 kd-aeq-sound (D2 a da) (D2' a da)).
+
+%worlds (ofkd-block) (kd-aeq-sound _ _).
+%total D1 (kd-aeq-sound D1 _).
+

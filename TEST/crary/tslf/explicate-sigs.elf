@@ -1,0 +1,107 @@
+%%%% explicate
+
+
+
+explicate-open-sg-wf	: {I:loc}
+			   ({x} ofkd x A -> sg-wf (B x))
+			   -> ({x} isvar x I -> esg-wf (cxt/cons cxt/nil x A)
+						 (B x))
+			   -> type.
+%mode explicate-open-sg-wf +X1 +X2 -X3.
+
+-	: explicate-open-sg-wf I
+	   Dof
+	   Dofe
+	   <- ({x}{d: ofkd x A}{dm: mofkd d met/unit}
+		 {_: can-mofkd d dm}
+		 can-msg-wf (Dof x d) (Dmof x d dm: msg-wf _ Mm))
+	   <- ({x}{d':isvar x I}
+		 cut-sg-wf Mm ([d] Dof x d) ([d][dm] Dmof x d dm)
+		 (cxt-lookup/hit (cxt-bounded/nil d'))
+		 (Dofe x d') _).
+
+%worlds (can-mofkd-block | ovar-block) (explicate-open-sg-wf _ _ _).
+%total {}  (explicate-open-sg-wf _ _ _).
+
+
+
+explicate-open-sg-deq	: {I:loc}
+			   ({x} ofkd x A -> sg-deq (B x) (C x))
+			   -> ({x} isvar x I -> esg-deq (cxt/cons cxt/nil x A)
+						 (B x) (C x))
+			   -> type.
+%mode explicate-open-sg-deq +X1 +X2 -X3.
+
+-	: explicate-open-sg-deq I
+	   Dof
+	   Dofe
+	   <- ({x}{d: ofkd x A}{dm: mofkd d met/unit}
+		 {_: can-mofkd d dm}
+		 can-msg-deq (Dof x d) (Dmof x d dm: msg-deq _ Mm))
+	   <- ({x}{d':isvar x I}
+		 cut-sg-deq Mm ([d] Dof x d) ([d][dm] Dmof x d dm)
+		 (cxt-lookup/hit (cxt-bounded/nil d'))
+		 (Dofe x d') _).
+
+%worlds (can-mofkd-block | ovar-block) (explicate-open-sg-deq _ _ _).
+%total {}  (explicate-open-sg-deq _ _ _).
+
+
+
+explicate-closed-sg-wf	: sg-wf K -> esg-wf cxt/nil K -> type.
+%mode explicate-closed-sg-wf +D1 -D2.
+
+-	: explicate-closed-sg-wf sg-wf/sg/unit 
+	   (esg-wf/sg/unit cxt-ordered/nil).
+
+-	: explicate-closed-sg-wf (sg-wf/sg/cn D1)
+	   (esg-wf/sg/cn D1')
+	   <- explicate-closed-ofkd D1 D1'.
+
+-	: explicate-closed-sg-wf (sg-wf/sg/kd D1)
+	   (esg-wf/sg/kd D1')
+	   <- explicate-closed-kd-wf D1 D1'.
+
+-	: explicate-closed-sg-wf (sg-wf/sg/sgm D1 D2 DFS)
+	   (esg-wf/sg/sgm D1' D2' DFS)
+	   <- explicate-closed-sg-wf D1 D1'
+	   <- explicate-open-sg-wf loc/z D2 D2'.
+
+-	: explicate-closed-sg-wf (sg-wf/sg/pi D1 D2 DFS)
+	   (esg-wf/sg/pi D1' D2' DFS)
+	   <- explicate-closed-sg-wf D1 D1'
+	   <- explicate-open-sg-wf loc/z D2 D2'.
+
+%worlds (can-mofkd-block) (explicate-closed-sg-wf _ _).
+%total {D1} (explicate-closed-sg-wf D1 _).
+
+
+explicate-closed-sg-deq	: sg-deq K K' -> esg-deq cxt/nil K K' -> type.
+%mode explicate-closed-sg-deq +D1 -D2.
+
+
+-	: explicate-closed-sg-deq sg-deq/sg/unit 
+	   (esg-deq/sg/unit cxt-ordered/nil).
+
+-	: explicate-closed-sg-deq (sg-deq/sg/cn D1)
+	   (esg-deq/sg/cn D1')
+	   <- explicate-closed-cn-deq D1 D1'.
+
+-	: explicate-closed-sg-deq (sg-deq/sg/kd D1)
+	   (esg-deq/sg/kd D1')
+	   <- explicate-closed-kd-deq D1 D1'.
+
+-	: explicate-closed-sg-deq (sg-deq/sg/sgm D1 D2 DFS)
+	   (esg-deq/sg/sgm D1' D2' DFS)
+	   <- explicate-closed-sg-deq D1 D1'
+	   <- explicate-open-sg-deq loc/z D2 D2'.
+
+-	: explicate-closed-sg-deq (sg-deq/sg/pi D1 D2 DFS)
+	   (esg-deq/sg/pi D1' D2' DFS)
+	   <- explicate-closed-sg-deq D1 D1'
+	   <- explicate-open-sg-deq loc/z D2 D2'.
+
+
+
+%worlds (can-mofkd-block) (explicate-closed-sg-deq _ _).
+%total (D1) (explicate-closed-sg-deq D1 _).

@@ -1,0 +1,23 @@
+%%%% judgments for well-formed stores
+
+
+% the location typing covers the store in a well-typed manner
+st-wf	: lt -> st -> lt -> tt -> type.
+%mode st-wf *L *S *L' *T.
+
+st-wf/nil	: st-wf lt/nil st/nil _ _.
+
+st-wf/cons	: st-wf (lt/cons L LC C) (st/cons S LC E) L' T
+		   <- st-alloc S E (st/cons S LC E) LC
+		   <- lt-extend L C (lt/cons L LC C) LC
+		   <- oftp L' T E C
+		   <- st-wf L S L' T.
+
+
+
+oflt	: st -> ht -> tt -> type.
+%mode oflt *S *L +T.
+
+oflt/c	: oflt ST LT T
+	   <- lt-wf T
+	   <- st-wf LT ST LT T.

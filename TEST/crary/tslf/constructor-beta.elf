@@ -1,0 +1,188 @@
+
+
+psi-cn	: (cn -> cn) -> type.
+
+psi-cn/eps	: psi-cn ([a] a).
+
+psi-cn/pj1	: psi-cn ([a] cn/pj1 (PS a))
+		   <- psi-cn PS. 
+
+psi-cn/pj2	: psi-cn ([a] cn/pj2 (PS a))
+		   <- psi-cn PS. 
+
+psi-cn/app	: {C:cn} psi-cn ([a] cn/app (PS a) C)
+		   <- psi-cn PS.
+
+%%%% beta rules from SH
+
+inv/ofkd/cn/pair: ofkd (cn/pair C1 C2) (kd/sgm KA KB)
+		   -> ofkd C1 K1
+		   -> ofkd C2 K2
+		   -> kd-sub (kd/sgm K1 ([a] K2)) (kd/sgm KA KB)
+		   -> type.
+%mode inv/ofkd/cn/pair +D1 -D2 -D3 -D4.
+
+cn-beta-pj1	: psi-cn P
+		   -> ofkd (P (cn/pj1 (cn/pair C1 C2))) K
+		   -> cn-deq (P (cn/pj1 (cn/pair C1 C2))) (P C1) K
+		   -> type.
+%mode cn-beta-pj1 +P +D1 -D2.
+
+cn-beta-pj2	: psi-cn P
+		   -> ofkd (P (cn/pj2 (cn/pair C1 C2))) K
+		   -> cn-deq (P (cn/pj2 (cn/pair C1 C2))) (P C2) K
+		   -> type.
+%mode cn-beta-pj2 +P +D1 -D2.
+
+-	: inv/ofkd/cn/pair (ofkd/cn/pair D1 D2) D1 D2 DKS
+	   <- vdt/ofkd (ofkd/cn/pair D1 D2) DK
+	   <- kd-refl/sub DK DKS.
+
+-	: inv/ofkd/cn/pair (ofkd/sgm-ext D1 D2) D1' D2' DKS
+	   <- vdt/ofkd (ofkd/sgm-ext D1 D2) DK
+	   <- kd-refl/sub DK DKS
+	   <- cn-beta-pj1 psi-cn/eps D1 DQ1
+	   <- vdt/cn-deq DQ1 _ D1' _
+	   <- cn-beta-pj2 psi-cn/eps D2 DQ2
+	   <- vdt/cn-deq DQ2 _ D2' _.
+
+-	: inv/ofkd/cn/pair (ofkd/sub DP DS) D1 D2 DSS
+	   <- inv/ofkd/cn/pair DP D1 D2 DKS
+	   <- kd-trans/sub DKS DS DSS.
+
+-	: inv/ofkd/cn/pair (ofkd/deq DP DQ) D1 D2 DSS	
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- inv/ofkd/cn/pair DP D1 D2 DKS
+	   <- kd-trans/sub DKS DS DSS.
+
+
+
+-	: cn-beta-pj1 psi-cn/eps (ofkd/cn/pj1 DP)
+	   (cn-deq/sub DCQ DS1)
+	   <- inv/ofkd/cn/pair DP D1 D2 (kd-sub/kd/sgm DS1 DS2 _)
+	   <- stone-2/108 D1 D2 DCQ.
+
+-	: cn-beta-pj1 (PS: psi-cn P) ((ofkd/sgm-ext D1 D2)
+			    : ofkd (P (cn/pj1 (cn/pair C1 C2))) _)
+	   (cn-deq/sgm-ext DCQ1 DCQ2)
+	   <- cn-beta-pj1 (psi-cn/pj1 PS) D1 DCQ1
+	   <- cn-beta-pj1 (psi-cn/pj2 PS) D2 DCQ2.
+
+-	: cn-beta-pj1 (PS: psi-cn P) 
+	   (ofkd/sub (D1: ofkd (P (cn/pj1 (cn/pair C1 C2))) _) DS)
+	   (cn-deq/sub DCQ DS)
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+-	: cn-beta-pj1 (psi-cn/pj1 (PS: psi-cn P))
+	   (ofkd/cn/pj1 D1)
+	   (cn-deq/cn/pj1 DCQ)
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+-	: cn-beta-pj1 (psi-cn/pj2 (PS: psi-cn P))
+	   (ofkd/cn/pj2 D1)
+	   (cn-deq/cn/pj2 DCQ)
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+-	: cn-beta-pj1 (psi-cn/app _ (PS: psi-cn P))
+	   (ofkd/cn/app D1 D2)
+	   (cn-deq/cn/app DCQ (cn-deq/refl D2))
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+-	: cn-beta-pj1 (PS: psi-cn P) ((ofkd/pi-ext D1 D2)
+			    : ofkd (P (cn/pj1 (cn/pair C1 C2))) _)
+	   (cn-deq/pi-ext DCA DCB DCQ2)
+	   <- cn-beta-pj1 PS D1 DCQ1
+	   <- vdt/cn-deq DCQ1 DCA DCB (kd-wf/kd/pi DW _)
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DW}
+		 cn-beta-pj1 (psi-cn/app a PS) (D2 a da) (DCQ2 a da)).
+
+-	: cn-beta-pj1 (PS: psi-cn P) ((ofkd/kd/sing D1)
+			    : ofkd (P (cn/pj1 (cn/pair C1 C2))) _)
+	   DCQ1'
+	   <- cn-beta-pj1 PS D1 DCQ1
+	   <- stone-2/120 DCQ1 DCQ1'.
+
+-	: cn-beta-pj1 psi-cn/eps (ofkd/cn/pj1 DP)
+	   (cn-deq/sub DCQ DS1)
+	   <- inv/ofkd/cn/pair DP D1 D2 (kd-sub/kd/sgm DS1 DS2 _)
+	   <- stone-2/108 D1 D2 DCQ.
+
+-	: cn-beta-pj1 (PS: psi-cn P) ((ofkd/sgm-ext D1 D2)
+			    : ofkd (P (cn/pj1 (cn/pair C1 C2))) _)
+	   (cn-deq/sgm-ext DCQ1 DCQ2)
+	   <- cn-beta-pj1 (psi-cn/pj1 PS) D1 DCQ1
+	   <- cn-beta-pj1 (psi-cn/pj2 PS) D2 DCQ2.
+
+-	: cn-beta-pj1 (PS: psi-cn P) 
+	   (ofkd/sub (D1: ofkd (P (cn/pj1 (cn/pair C1 C2))) _) DS)
+	   (cn-deq/sub DCQ DS)
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+-	: cn-beta-pj1 (PS: psi-cn P) 
+	   (ofkd/deq (D1: ofkd (P (cn/pj1 (cn/pair C1 C2))) _) DS)
+	   (cn-deq/deq DCQ DS)
+	   <- cn-beta-pj1 PS D1 DCQ.
+
+
+-	: cn-beta-pj2 (psi-cn/pj1 (PS: psi-cn P))
+	   (ofkd/cn/pj1 D1)
+	   (cn-deq/cn/pj1 DCQ)
+	   <- cn-beta-pj2 PS D1 DCQ.
+
+-	: cn-beta-pj2 (psi-cn/pj2 (PS: psi-cn P))
+	   (ofkd/cn/pj2 D1)
+	   (cn-deq/cn/pj2 DCQ)
+	   <- cn-beta-pj2 PS D1 DCQ.
+
+-	: cn-beta-pj2 (psi-cn/app _ (PS: psi-cn P))
+	   (ofkd/cn/app D1 D2)
+	   (cn-deq/cn/app DCQ (cn-deq/refl D2))
+	   <- cn-beta-pj2 PS D1 DCQ.
+
+-	: cn-beta-pj2 (PS: psi-cn P) ((ofkd/pi-ext D1 D2)
+			    : ofkd (P (cn/pj2 (cn/pair C1 C2))) _)
+	   (cn-deq/pi-ext DCA DCB DCQ2)
+	   <- cn-beta-pj2 PS D1 DCQ1
+	   <- vdt/cn-deq DCQ1 DCA DCB (kd-wf/kd/pi DW _)
+	   <- ({a}{da}
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {_: vdt/ofkd da DW}
+		 cn-beta-pj2 (psi-cn/app a PS) (D2 a da) (DCQ2 a da)).
+
+
+-	: cn-beta-pj2 (PS: psi-cn P) ((ofkd/kd/sing D1)
+			    : ofkd (P (cn/pj2 (cn/pair C1 C2))) _)
+	   DCQ1'
+	   <- cn-beta-pj2 PS D1 DCQ1
+	   <- stone-2/120 DCQ1 DCQ1'.
+
+-	: cn-beta-pj2 psi-cn/eps (ofkd/cn/pj2 DP)
+	   (cn-deq/sub DCQ (DS2 _ (ofkd/cn/pj1 (ofkd/cn/pair D1 D2))))
+	   <- inv/ofkd/cn/pair DP D1 D2 (kd-sub/kd/sgm DS1 DS2 _)
+	   <- stone-2/109 D1 D2 DCQ.
+
+-	: cn-beta-pj2 (PS: psi-cn P) ((ofkd/sgm-ext D1 D2)
+			    : ofkd (P (cn/pj2 (cn/pair C1 C2))) _)
+	   (cn-deq/sgm-ext DCQ1 DCQ2)
+	   <- cn-beta-pj2 (psi-cn/pj1 PS) D1 DCQ1
+	   <- cn-beta-pj2 (psi-cn/pj2 PS) D2 DCQ2.
+
+-	: cn-beta-pj2 (PS: psi-cn P) 
+	   (ofkd/sub (D1: ofkd (P (cn/pj2 (cn/pair C1 C2))) _) DS)
+	   (cn-deq/sub DCQ DS)
+	   <- cn-beta-pj2 PS D1 DCQ.
+
+-	: cn-beta-pj2 (PS: psi-cn P) 
+	   (ofkd/deq (D1: ofkd (P (cn/pj2 (cn/pair C1 C2))) _) DS)
+	   (cn-deq/deq DCQ DS)
+	   <- cn-beta-pj2 PS D1 DCQ.
+
+%worlds (ofkd+vdt-block) (cn-beta-pj2 _ _ _) (cn-beta-pj1 _ _ _) 
+(inv/ofkd/cn/pair _ _ _ _) .
+%total (D1 D2 D3) (inv/ofkd/cn/pair D1 _ _ _) 
+(cn-beta-pj1 _ D3 _)
+(cn-beta-pj2 _ D2 _). 
+

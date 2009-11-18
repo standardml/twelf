@@ -1,0 +1,2499 @@
+
+%%%%%  Constant Completeness  %%%%%
+
+etp-skel-fun : etp-skel A As -> etp-skel A As' -> skel-eq As As' -> type.
+%mode etp-skel-fun +X1 +X2 -X3.
+
+-	: etp-skel-fun _ _ skel-eq/i.
+
+-	: etp-skel-fun (etp-skel/pi D2 D1) (etp-skel/pi D2' D1') Deq
+	   <- etp-skel-fun D1 D1' Deq1
+	   <- ({x} etp-skel-fun (D2 x) (D2' x) Deq2)
+	   <- skel-resp-skel2 kpi Deq1 Deq2 Deq.
+
+-	: etp-skel-fun (etp-skel/sigma D2 D1) (etp-skel/sigma D2' D1') Deq
+	   <- etp-skel-fun D1 D1' Deq1
+	   <- ({x} etp-skel-fun (D2 x) (D2' x) Deq2)
+	   <- skel-resp-skel2 ksigma Deq1 Deq2 Deq.
+
+%worlds (evar | etopenblock) (etp-skel-fun _ _ _).
+%total D (etp-skel-fun D _ _).
+
+
+
+etopen-fun : etopen Ac A -> etopen Ac A' -> etp-eq A A' -> type.
+%mode etopen-fun +X1 +X2 -X3.
+
+etopenr-fun : etopenr Rc As M -> etopenr Rc As' M' -> skel-eq As As' -> eterm-eq M M' -> type.
+%mode etopenr-fun +X1 +X2 -X3 -X4.
+
+etopenm-fun : etopenm Mc As M -> etopenm Mc As M' -> eterm-eq M M' -> type.
+%mode etopenm-fun +X1 +X2 -X3.
+
+-	: etopen-fun _ _ etp-eq/i.
+
+etopen-fun-underbind : skel-eq As As'
+			-> ({xc} {x} etopenr xc As x -> etopen (Bc xc) (B x))
+			-> ({xc} {x} etopenr xc As' x -> etopen (Bc xc) (B x))
+			-> type.
+%mode etopen-fun-underbind +X1 +X2 -X3.
+
+-	: etopen-fun-underbind skel-eq/i D D.
+
+%worlds (evar | etopenblock) (etopen-fun-underbind _ _ _).
+%total {} (etopen-fun-underbind _ _ _).
+%reduces D = D' (etopen-fun-underbind _ D D').
+
+-	: etopen-fun (etopen/pi D2 Dskel D1) (etopen/pi D2' Dskel' D1') Deq
+	   <- etopen-fun D1 D1' Deq1
+	   <- etp-skel-resp Deq1 skel-eq/i Dskel Dskel''
+	   <- etp-skel-fun Dskel'' Dskel' DeqSkel
+	   <- etopen-fun-underbind DeqSkel D2 D2''
+	   <- ({x} {xc} {do}
+		 etopen-fun (D2'' xc x do) (D2' xc x do) (Deq2 x))
+	   <- epi-resp Deq1 Deq2 Deq.
+
+-	: etopen-fun (etopen/sigma D2 Dskel D1) (etopen/sigma D2' Dskel' D1') Deq
+	   <- etopen-fun D1 D1' Deq1
+	   <- etp-skel-resp Deq1 skel-eq/i Dskel Dskel''
+	   <- etp-skel-fun Dskel'' Dskel' DeqSkel
+	   <- etopen-fun-underbind DeqSkel D2 D2''
+	   <- ({x} {xc} {do}
+		 etopen-fun (D2'' xc x do) (D2' xc x do) (Deq2 x))
+	   <- esigma-resp Deq1 Deq2 Deq.
+
+-	: etopen-fun (etopen/sing D) (etopen/sing D') Deq'
+	   <- etopenr-fun D D' _ Deq
+	   <- esing-resp Deq Deq'.
+
+
+-	: etopenr-fun D D skel-eq/i eterm-eq/i.
+
+-	: etopenr-fun (etopenr/app D2 D1) (etopenr/app D2' D1') DeqSkel2 Deq
+	   <- etopenr-fun D1 D1' DeqSkel Deq1
+	   <- skel-eq-cdr-pi DeqSkel DeqSkel1 DeqSkel2
+	   <- etopenm-resp cterm-eq/i DeqSkel1 eterm-eq/i D2 D2''
+	   <- etopenm-fun D2'' D2' Deq2
+	   <- eterm-resp-eterm2 eapp Deq1 Deq2 Deq.
+
+-	: etopenr-fun (etopenr/pi1 D) (etopenr/pi1 D') DeqSkel1 Deq'
+	   <- etopenr-fun D D' DeqSkel Deq
+	   <- skel-eq-cdr-sigma DeqSkel DeqSkel1 DeqSkel2
+	   <- eterm-resp-eterm epi1 Deq Deq'.
+
+-	: etopenr-fun (etopenr/pi2 D) (etopenr/pi2 D') DeqSkel2 Deq'
+	   <- etopenr-fun D D' DeqSkel Deq
+	   <- skel-eq-cdr-sigma DeqSkel DeqSkel1 DeqSkel2
+	   <- eterm-resp-eterm epi2 Deq Deq'.
+
+
+-	: etopenm-fun (etopenm/at D) (etopenm/at D') Deq
+	   <- etopenr-fun D D' _ Deq.
+
+-	: etopenm-fun (etopenm/sing D) (etopenm/sing D') Deq
+	   <- etopenr-fun D D' _ Deq.
+
+-	: etopenm-fun (etopenm/lam D2 Dskel D1) (etopenm/lam D2' Dskel' D1') Deq
+	   <- etopen-fun D1 D1' Deq1
+	   <- ({x} {xc} {do}
+		 etopenm-fun (D2 xc x do) (D2' xc x do) (Deq2 x))
+	   <- elam-resp Deq1 Deq2 Deq.
+
+-	: etopenm-fun (etopenm/pair D2 D1) (etopenm/pair D2' D1') Deq
+	   <- etopenm-fun D1 D1' Deq1
+	   <- etopenm-fun D2 D2' Deq2
+	   <- eterm-resp-eterm2 epair Deq1 Deq2 Deq.
+
+-	: etopenm-fun etopenm/star etopenm/star eterm-eq/i.
+
+%worlds (evar | etopenblock) (etopen-fun _ _ _) (etopenr-fun _ _ _ _) (etopenm-fun _ _ _).
+%total (D1 D2 D3) (etopen-fun D1 _ _) (etopenr-fun D2 _ _ _) (etopenm-fun D3 _ _).
+
+
+
+trans-skel : ttrans EA A
+	      -> etp-skel EA As
+	      -> tp-skel A As -> type.
+%mode trans-skel +X1 +X2 -X3.
+
+-	: trans-skel ttrans/t etp-skel/t tp-skel/t.
+
+-	: trans-skel (ttrans/pi D2 D1) (etp-skel/pi Dskel2 Dskel1) (tp-skel/pi Dskel2' Dskel1')
+	   <- trans-skel D1 Dskel1 Dskel1'
+	   <- ({x} {d} {ex} {xt}
+		 trans-skel (D2 x d ex xt) (Dskel2 ex) (Dskel2' x)).
+
+-	: trans-skel (ttrans/sigma D2 D1) (etp-skel/sigma Dskel2 Dskel1) (tp-skel/sigma Dskel2' Dskel1')
+	   <- trans-skel D1 Dskel1 Dskel1'
+	   <- ({x} {d} {ex} {xt}
+		 trans-skel (D2 x d ex xt) (Dskel2 ex) (Dskel2' x)).
+
+-	: trans-skel (ttrans/sing _) etp-skel/sing tp-skel/sing.
+
+-	: trans-skel ttrans/one etp-skel/one tp-skel/one.
+
+%worlds (bind | tbind | topenblock) (trans-skel _ _ _).
+%total D (trans-skel D _ _).
+
+
+
+trans-topen	: etopen Ac EA
+		   -> ttrans EA A
+		   -> topen Ac A -> type.
+%mode trans-topen +X1 +X2 -X3.
+
+trans-topenr-var
+		: etopenr Rc As EX
+		   -> vtrans EX X
+		   -> vof X A
+%%
+		   -> tp-skel A As
+		   -> topenr Rc A X -> type.
+%mode trans-topenr-var +X1 +X2 +X3 -X4 -X5.
+
+trans-topenr	: etopenr Rc As EM
+		   -> trans EM B
+%%
+		   -> tp-skel A As
+		   -> topenr Rc A R
+		   -> expand R A LR 
+		   -> self LR A B 
+		   -> aof R A -> type.
+%mode trans-topenr +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+trans-topenm	: etopenm Mc As EM
+		   -> trans EM B
+		   -> tp-skel A As
+		   -> subtype B A _
+		   -> wf A
+%%
+		   -> topenm Mc A M
+		   -> self M A B 
+		   -> of M A -> type.
+%mode trans-topenm +X1 +X2 +X3 +X4 +X5 -X6 -X7 -X8.
+
+%block trans-topen-block
+   : some {A:tp} {As:skel} {Dskel:tp-skel A As}
+      block {x:atom} {d:vof x A} {ex:eterm} {xt:vtrans ex x} {xc:catom} {do:topenr xc A x} {edo:etopenr xc As ex}
+      {thm:trans-topenr-var edo xt d Dskel do}.
+
+-	: trans-topen etopen/t ttrans/t topen/t.
+
+-	: trans-topen (etopen/pi DopenB Dskel DopenA) (ttrans/pi DtransB DtransA)
+	   (topen/pi DopenB' DopenA')
+	   <- trans-topen DopenA DtransA DopenA'
+	   <- trans-skel DtransA Dskel Dskel'
+	   <- ({x} {d:vof x A} {ex:eterm} {xt:vtrans ex x} {xc} {do:topenr xc A x} {edo:etopenr xc As ex}
+		 trans-topenr-var edo xt d Dskel' do
+		 -> trans-topen (DopenB xc ex edo) (DtransB x d ex xt)
+		    (DopenB' xc x do)).
+
+-	: trans-topen (etopen/sigma DopenB Dskel DopenA) (ttrans/sigma DtransB DtransA)
+	   (topen/sigma DopenB' DopenA')
+	   <- trans-topen DopenA DtransA DopenA'
+	   <- trans-skel DtransA Dskel Dskel'
+	   <- ({x} {d:vof x A} {ex:eterm} {xt:vtrans ex x} {xc} {do:topenr xc A x} {edo:etopenr xc As ex}
+		 trans-topenr-var edo xt d Dskel' do
+		 -> trans-topen (DopenB xc ex edo) (DtransB x d ex xt)
+		    (DopenB' xc x do)).
+
+-	: trans-topen (etopen/sing Dopen) (ttrans/sing Dtrans)
+	   (topen/sing Dopen'')
+	   <- trans-topenr Dopen Dtrans
+	      tp-skel/t Dopen' expand/t Dself _
+	   <- self-t-invert Dself Deq
+	   <- tp-eq-cdr-sing Deq Deq'
+	   <- atom-eq-symm Deq' Deq''
+	   <- topenr-resp catom-eq/i tp-eq/i Deq'' Dopen' Dopen''.
+
+-	: trans-topen etopen/one ttrans/one topen/one.
+
+
+
+-	: trans-topenr Dopen (trans/var Dself Dexpand Dwf Dvof Dvtrans)
+	   Dskel Dopen' Dexpand Dself (aof/var Dwf Dvof)
+	   <- trans-topenr-var Dopen Dvtrans Dvof Dskel Dopen'.
+
+-	: trans-topenr 
+	   (etopenr/app
+	      (DopenM : etopenm Mc As EM)
+	      (DopenR : etopenr Rc (kpi As Bs) ER))
+	   (trans/app 
+	      (DsubDN : tsub ([x] D x) N Dx)
+	      (DsubtypeEC : subtype E C ([_] N))
+	      (DtransM : trans EM E)
+	      (DtransR : trans ER (pi C D)))
+	   %%
+	   DskelBx
+	   (topenr/app DsubBM DopenM' DopenR')
+	   DexpandRM
+	   DselfLRM
+	   (aof/app DwfBx DsubBM DofM DaofR)
+	   <- trans-topenr DopenR DtransR
+	      (tp-skel/pi
+		 (DskelB : {x} tp-skel (B x) Bs)
+		 (DskelA : tp-skel A As))
+	      (DopenR' : topenr Rc (pi A B) R)
+	      (expand/pi
+		 (DexpandRX : {x} expand (app R (X x)) (B x) (LRX x))
+		 (DexpandX : {x} expand x A (X x))
+		 : expand R (pi A B) (lam LRX))
+	      (DselfR : self (lam LRX) (pi A B) (pi C D))
+	      (DaofR : aof R (pi A B))
+	   <- aof-reg DaofR 
+	      (wf/pi 
+		 (DwfB : {x} vof x A -> wf (B x))
+		 (DwfA : wf A))
+	   <- self-pi-invert DselfR
+	      (DeqAC : tp-eq A C)
+	      (DselfLRX : {x} self (LRX x) (B x) (D x))
+	   <- tp-eq-symm DeqAC DeqCA
+	   <- subtype-resp tp-eq/i DeqCA ([_] term-eq/i) DsubtypeEC
+	      (DsubtypeEA : subtype E A ([_] N))
+	   <- trans-topenm DopenM DtransM DskelA DsubtypeEA DwfA
+	      (DopenM' : topenm Mc A M)
+	      (DselfM : self M A E)
+	      (DofM : of M A)
+	   <- can-tsub DwfB DofM
+	      (DsubBM : tsub B M Bx)
+	   <- skel-sub DsubBM DskelB
+	      (DskelBx : tp-skel Bx Bs)
+	   <- sub-into-expand-var DexpandX DofM
+	      (DsubX : sub X M M)
+	   <- can-expand (app R M) Bx _
+	      (DexpandRM : expand (app R M) Bx LRM)
+	   <- ({x} {d}
+		 expand-reg (aof/var DwfA d) (DexpandX x)
+		 (DofX x d : of (X x) A))
+	   <- tsub-expand-var DwfA DwfB DexpandX
+	      (DsubBX : {x} tsub B (X x) (B x))
+	   <- aasub-absent R M
+	      (DsubR : aasub ([_] R) M R)
+	   <- expand-aasub DofM ([x] [d] aof/app (DwfB x d) (DsubBX x) (DofX x d) DaofR) 
+	      DexpandRX (aasub/app DsubX DsubR) DsubBM DexpandRM
+	      (DsubLRX : sub LRX M LRM)
+	   <- expand-reg DaofR (expand/pi DexpandRX DexpandX)
+	      (of/lam
+		 (DofLRX : {x} vof x A -> of (LRX x) (B x))
+		 _)
+	   <- self-reg DselfM DofM
+	      _
+	      (DsubtypeEA' : subtype E A ([_] M))
+	   <- subtype-fun DsubtypeEA DsubtypeEA'
+	      (DeqNM : {x} term-eq N M)
+	   <- tsub-resp ([_] tp-eq/i) (DeqNM aca) tp-eq/i DsubDN
+	      (DsubDM : tsub ([x] D x) M Dx)
+	   <- self-sub DofM DofLRX DselfLRX DsubLRX DsubBM DsubDM
+	      (DselfLRM : self LRM Bx Dx)
+	   <- tsubst DsubBM DwfB DofM
+	      (DwfBx : wf Bx).
+
+-	: trans-topenr (etopenr/pi1 Dopen) (trans/pi1 Dtrans)
+	   Dskel1 (topenr/pi1 Dopen') Dexpand1 Dself1 (aof/pi1 Daof)
+	   <- trans-topenr Dopen Dtrans
+	      (tp-skel/sigma Dskel2 Dskel1) 
+	      Dopen' 
+	      (expand/sigma Dexpand2 Dexpand1) 
+	      (self/sigma Dself2 Dsub Dself1)
+	      Daof.
+
+-	: trans-topenr (etopenr/pi2 Dopen) (trans/pi2 Dtrans)
+	   (Dskel2 _) (topenr/pi2 Dopen') Dexpand2 Dself2' (aof/pi2 Daof)
+	   <- trans-topenr Dopen Dtrans
+	      (tp-skel/sigma (Dskel2 : {x} tp-skel (B x) Bs)  Dskel1) 
+	      Dopen' 
+	      (expand/sigma Dexpand2 Dexpand1) 
+	      (self/sigma Dself2 Dsub Dself1)
+	      Daof
+	   <- aof-reg Daof (wf/sigma DwfB DwfA)
+	   <- tsub-expand (aof/pi1 Daof) DwfB Dexpand1 Dsub
+	      Deq
+	   <- self-resp term-eq/i Deq tp-eq/i Dself2
+	      Dself2'.
+
+-	: trans-topenm _ Dtrans tp-skel/t subtype/t _
+	   Dopen' Dself Dof
+	   <- trans-principal Dtrans Dprin
+	   <- principal-t Dprin Dfalse
+	   <- false-implies-topenm Dfalse (Dopen' : topenm _ _ star)
+	   <- false-implies-self Dfalse Dself
+	   <- false-implies-of Dfalse Dof.
+
+-	: trans-topenm (etopenm/at Dopen) Dtrans tp-skel/t subtype/sing_t _
+	   (topenm/at Dopen') Dself (of/at Daof)
+	   <- trans-topenr Dopen Dtrans
+	      tp-skel/t Dopen' expand/t Dself Daof.
+
+-	: trans-topenm (etopenm/sing Dopen) Dtrans tp-skel/sing subtype/sing _
+	   Dopen'' Dself' Dof'
+	   <- trans-topenr Dopen Dtrans
+	      tp-skel/t Dopen' expand/t Dself Daof
+	   <- self-t-invert Dself Deq
+	   <- tp-eq-symm Deq Deq'
+	   <- topenm-resp cterm-eq/i Deq' term-eq/i (topenm/sing Dopen') Dopen''
+	   <- self-resp term-eq/i Deq' Deq' self/sing Dself'
+	   <- of-resp term-eq/i Deq' (of/sing Daof) Dof'.
+
+trans-topenm-underbind : ({x} vof x C -> {ex} vtrans ex x -> trans (EM ex) (D x))
+			  -> tp-eq C A
+			  -> ({x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (D x)) -> type.
+%mode trans-topenm-underbind +X1 +X2 -X3.
+
+-	: trans-topenm-underbind D _ D.
+
+%worlds (bind | tbind | trans-topen-block) (trans-topenm-underbind _ _ _).
+%total {} (trans-topenm-underbind _ _ _).
+
+-	: trans-topenm 
+	   (etopenm/lam 
+	      (DopenM : {xc} {ex} etopenr xc As ex -> etopenm (Mc xc) Bs (EM ex))
+	      (DeskelA : etp-skel EA As)
+	      (DopenA : etopen Ac EA))
+	   (trans/lam
+	      (DtransM : {x} vof x C -> {ex} vtrans ex x -> trans (EM ex) (D x))
+	      (DtransA : ttrans EA C))
+	   (tp-skel/pi
+	      (DskelB : {x} tp-skel (B x) Bs)
+	      (DskelA : tp-skel A As))
+	   (subtype/pi
+	      (DsubtypeDB : {x} subtype (D' x) (B x) _)
+	      (Dsub : {x} tsub D (Nac x) (D' x))
+	      (DsubtypeAC : subtype A C Nac)
+	      : subtype (pi C D) (pi A B) _)
+	   (wf/pi
+	      (DwfB : {x} vof x A -> wf (B x))
+	      (DwfA : wf A))
+	   %%
+	   (topenm/lam DopenM' DopenA'')
+	   Dself
+	   (of/lam DofM' DwfA)
+	   <- trans-skel DtransA DeskelA
+	      (DskelC : tp-skel C As)
+	   <- ttrans-reg DtransA
+	      (DwfC : wf C)
+	   <- subtype-same-skel DsubtypeAC DskelA DskelC DwfA DwfC
+	      (DeqAC : tp-eq A C)
+	   <- tp-eq-symm DeqAC
+	      (DeqCA : tp-eq C A)
+	   <- trans-topen DopenA DtransA
+	      (DopenA' : topen Ac C)
+	   <- topen-resp ctp-eq/i DeqCA DopenA'
+	      (DopenA'' : topen Ac A)
+	   <- trans-topenm-underbind DtransM DeqCA
+	      (DtransM' : {x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (D x))
+	   <- subtype-resp tp-eq/i DeqCA ([_] term-eq/i) DsubtypeAC
+	      (DsubtypeAA : subtype A A Nac)
+	   <- subtype-refl' DwfA DsubtypeAA
+	      (DexpandNac : {x} expand x A (Nac x))
+	   <- ({x} {d:vof x C} {ex} {xt}
+		 trans-reg (DtransM x d ex xt)
+		 (DwfD x d : wf (D x)))
+	   <- wf-resp-underbind DeqCA DwfD
+	      (DwfD' : {x} vof x A -> wf (D x))
+	   <- ({x} {d:vof x A}
+		 tsub-expand (aof/var DwfA d) DwfD' (DexpandNac x) (Dsub x)
+		 (DeqD' x : tp-eq (D' x) (D x)))
+	   <- ({x}
+		 subtype-resp (DeqD' x) tp-eq/i ([_] term-eq/i) (DsubtypeDB x)
+		 (DsubtypeDB' x : subtype (D x) (B x) _))
+	   <- ({x} {d:vof x A} {ex:eterm} {xt:vtrans ex x} {xc} {do:topenr xc A x} {edo:etopenr xc As ex}
+		 trans-topenr-var edo xt d DskelA do
+		 -> trans-topenm (DopenM xc ex edo) (DtransM' x d ex xt) (DskelB x) (DsubtypeDB' x) (DwfB x d)
+		    (DopenM' xc x do : topenm (Mc xc) (B x) (M x))
+		    (DselfM x : self (M x) (B x) (D x))
+		    (DofM x d xc do : of (M x) (B x)))
+	   <- ({x} {d}
+		 of-cstrengthen ([xc] [do] DofM x d xc do)
+		 (DofM' x d : of (M x) (B x)))
+	   <- pi-resp DeqAC ([_] tp-eq/i)
+	      (DeqAD-CD : tp-eq (pi A D) (pi C D))
+	   <- self-resp term-eq/i tp-eq/i DeqAD-CD
+	      (self/pi DselfM)
+	      Dself.
+
+-	: trans-topenm
+	   (etopenm/pair
+	      (DopenN : etopenm Nc Bs EN)
+	      (DopenM : etopenm Mc As EM))
+	   (trans/pair 
+	      (DtransN : trans EN D)
+	      (DtransM : trans EM C))
+	   (tp-skel/sigma 
+	      (DskelB : {x} tp-skel (B x) Bs)
+	      (DskelA : tp-skel A As))
+	   (subtype/sigma 
+	      (DsubtypeDB : {x} subtype D (B' x) _)
+	      (Dsub : {x} tsub B (Nca x) (B' x))
+	      (DsubtypeCA : subtype C A Nca)
+	      : subtype (sigma C ([_] D)) (sigma A B) _)
+	   (wf/sigma
+	      (DwfB : {x} vof x A -> wf (B x))
+	      (DwfA : wf A))
+	   %%
+	   (topenm/pair DopenN' (Dsub'' aca) DopenM')
+	   (self/sigma DselfN (Dsub'' aca) DselfM)
+	   (of/pair DwfB DofN (Dsub'' aca) DofM)
+	   <- trans-topenm DopenM DtransM DskelA DsubtypeCA DwfA
+	      (DopenM' : topenm Mc A M)
+	      (DselfM : self M A C)
+	      (DofM : of M A)
+	   <- self-reg DselfM DofM 
+	      _
+	      (DsubtypeCA' : subtype C A ([_] M))
+	   <- subtype-fun DsubtypeCA DsubtypeCA'
+	      (DeqM : {x} term-eq (Nca x) M)
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (DeqM x) tp-eq/i (Dsub x)
+		 (Dsub' x : tsub B M (B' x)))
+	   <- tsub-closed Dsub'
+	      (Deq : {x} tp-eq (B' x) Bx)
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) term-eq/i (Deq x) (Dsub' x)
+		 (Dsub'' x : tsub B M Bx))
+	   <- skel-sub (Dsub'' aca) DskelB
+	      (DskelB' : tp-skel Bx Bs)
+	   <- ({x}
+		 subtype-resp tp-eq/i (Deq x) ([_] term-eq/i) (DsubtypeDB x)
+		 (DsubtypeDB' x : subtype D Bx _))
+	   <- tsubst (Dsub'' aca) DwfB DofM
+	      (DwfBx : wf Bx)
+	   <- trans-topenm DopenN DtransN DskelB' (DsubtypeDB' aca) DwfBx
+	      (DopenN' : topenm Nc Bx N)
+	      (DselfN : self N Bx D)
+	      (DofN : of N Bx).
+
+-	: trans-topenm etopenm/star trans/star tp-skel/one subtype/one _
+	   topenm/star self/one of/star.
+
+%worlds (bind | tbind | trans-topen-block) (trans-topen _ _ _) (trans-topenr-var _ _ _ _ _) (trans-topenr _ _ _ _ _ _ _) (trans-topenm _ _ _ _ _ _ _ _).
+%total (D1 D2 D3 D4) (trans-topen D1 _ _) (trans-topenr-var D2 _ _ _ _) (trans-topenr D3 _ _ _ _ _ _) (trans-topenm D4 _ _ _ _ _ _ _).
+
+
+
+
+%%%%%  Completeness  %%%%%
+
+kof-comp	: ekof C EA
+		   -> ttrans EA A
+		   -> kof C A -> type.
+%mode kof-comp +X1 +X2 -X3.
+
+-	: kof-comp
+	   (ekof/i 
+	      (Deopen : etopen As EA) 
+	      (Dckof : ckof K As))
+	   (Dtrans : ttrans EA A) 
+	   (kof/i Dopen Dckof)
+	   <- trans-topen Deopen Dtrans Dopen.
+
+%worlds (bind | tbind) (kof-comp _ _ _).
+%total {} (kof-comp _ _ _).
+
+
+
+
+vof-comp	: evof EM EA
+		   -> ttrans EA A
+		   -> vtrans EM X
+		   -> vof X A -> type.
+%mode vof-comp +X1 -X2 -X3 -X4.
+
+of-comp		: eof EM EA
+		   -> ttrans EA A
+		   -> trans EM B
+		   -> subtype B A _ -> type.
+%mode of-comp +X1 -X2 -X3 -X4.
+
+wf-comp		: ewf EA
+		   -> ttrans EA A -> type.
+%mode wf-comp +X1 -X2.
+
+subtp-comp	: subtp EA EB
+		   -> ttrans EA A
+		   -> ttrans EB B
+		   -> subtype A B _ -> type.
+%mode subtp-comp +X1 -X2 -X3 -X4.
+
+tequiv-comp	: tequiv EA EB
+		   -> ttrans EA A
+		   -> ttrans EB A -> type.
+%mode tequiv-comp +X1 -X2 -X3.
+
+equiv-comp	: equiv EM EN EA
+		   -> ttrans EA A
+		   -> trans EM B
+		   -> trans EN C
+		   -> subtype B A M
+		   -> subtype C A M -> type.
+%mode equiv-comp +X1 -X2 -X3 -X4 -X5 -X6.
+
+
+%block cbind	: some {x:atom} {a:tp} {ea:etp} {d_ttrans:ttrans ea a} {d_vof:vof x a}
+		   block {ex:eterm} {xt:vtrans ex x} {ed:evof ex ea}
+		   {thm1:vof-comp ed d_ttrans xt d_vof}.
+
+%% combine sbind & cbind
+%block scbind	: some {a:tp} {ea:etp} {d_tconvert:tconvert a ea} {d_ttrans:ttrans ea a} {d_wf:wf a}
+		   block {x:atom} {d:vof x a} {ex:eterm} {xt:vtrans ex x} {ed:evof ex ea} {dv:variable ex}
+		   {thm1:vtrans-variable xt dv}
+		   {thm2:vsound d xt d_tconvert ed}
+		   {thm3:vof-comp ed d_ttrans xt d}.
+
+
+
+-var	: of-comp
+	   (eof/var
+	      _
+	      (Devof : evof EX EA))
+	   DtransA
+	   (trans/var Dself Dexpand DwfA Dvof DtransX)
+	   Dsubtype
+	   <- vof-comp Devof
+	      (DtransA : ttrans EA A)
+	      (DtransX : vtrans EX X)
+	      (Dvof : vof X A)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- can-expand X A M
+	      (Dexpand : expand X A M)
+	   <- expand-reg (aof/var DwfA Dvof) Dexpand
+	      (DofM : of M A)
+	   <- can-self DofM
+	      (Dself : self M A B)
+	   <- self-reg Dself DofM
+	      (DofM' : of M B)
+	      (Dsubtype : subtype B A ([_] M)).
+
+-const	: of-comp
+	   (eof/const 
+	      (Dewf : ewf EA)
+	      (Dekof : ekof C EA))
+	   DtransA
+	   (trans/const
+	      Dself
+	      Dexpand
+	      DwfA
+	      Dkof)
+	   Dsubtype
+	   <- wf-comp Dewf
+	      (DtransA : ttrans EA A)
+	   <- kof-comp Dekof DtransA
+	      (Dkof : kof C A)
+	   <- can-expand (const C) A M
+	      (Dexpand : expand (const C) A M)
+	   <- ttrans-reg DtransA (DwfA : wf A)
+	   <- expand-reg (aof/const DwfA Dkof) Dexpand
+	      (DofM : of M A)
+	   <- can-self DofM
+	      (Dself : self M A A')
+	   <- self-reg Dself DofM
+	      _ 
+	      (Dsubtype : subtype A' A ([_] M)).
+
+-lam	: of-comp
+	   (eof/lam
+	      (Deof : {ex} evof ex EA -> eof (EM ex) (EB ex))
+	      (Dewf : ewf EA))
+	   (ttrans/pi DtransB DtransA)
+	   (trans/lam Dtrans DtransA)
+	   (subtype/pi
+	      DsubtypeB'
+	      Dtsub
+	      DsubtypeA)
+	   <- wf-comp Dewf
+	      (DtransA : ttrans EA A)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A}
+		 {ex} {tr:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA tr d
+		 -> of-comp (Deof ex ed)
+		    (DtransB x d ex tr : ttrans (EB ex) (B x))
+		    (Dtrans x d ex tr : trans (EM ex) (C x))
+		    (DsubtypeB' x : subtype (C x) (B x) _))
+	   <- ({x} {d:vof x A}
+		 {ex} {tr:vtrans ex x}
+		 trans-reg (Dtrans x d ex tr)
+		 (DwfC x d : wf (C x)))
+	   <- subtype-refl DwfA
+	      (DsubtypeA : subtype A A X)
+	      (Dexpand : {x} expand x A (X x))
+	   <- tsub-expand-var DwfA DwfC Dexpand
+	      (Dtsub : {x} tsub ([x] C x) (X x) (C x)).
+
+-app	: of-comp
+	   (eof/app
+	      (DeofN : eof EN EA)
+	      (DeofM : eof EM (epi EA EB)))
+	   DtransBN
+	   (trans/app
+	      DsubDx
+	      DsubtypeFC
+	      DtransN
+	      DtransM)
+	   DsubtypeDxBx
+	   <- of-comp DeofM
+	      (ttrans/pi
+		 (DtransB : {x} vof x A
+			     -> {ex} vtrans ex x
+			     -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM : trans EM (pi C D))
+	      (subtype/pi
+		 (DsubtypeEB : {x} subtype (E x) (B x) _)
+		 (DsubE : {x} tsub D (Lac x) (E x))
+		 (DsubtypeAC : subtype A C Lac))
+	   <- of-comp DeofN
+	      (DtransA' : ttrans EA A')
+	      (DtransN : trans EN F)
+	      (DsubtypeFA' : subtype F A' N')
+	   <- ttrans-fun DtransA' DtransA
+	      (DeqA : tp-eq A' A)
+	   <- trans-principal DtransN
+	      (DprincipalF : principal F)
+	   <- principal-subtype DprincipalF DsubtypeFA'
+	      (DeqN' : {y} term-eq (N' y) N)
+	   <- subtype-resp tp-eq/i DeqA DeqN' DsubtypeFA'
+	      (DsubtypeFA : subtype F A ([_] N))
+	   <- trans-reg DtransN
+	      (DwfF : wf F)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM
+	      (wf/pi
+		 (DwfD : {x} vof x C -> wf (D x))
+		 (DwfC : wf C))
+	   <- subtype-reg DsubtypeAC DwfA DwfC
+	      (DofLac : {x} vof x A -> of (Lac x) C)
+	   <- subtype-reg' DsubtypeFA DwfF DwfA
+	      (DofN : of N A)
+	   <- can-sub DofLac DofN
+	      (DsubO : sub Lac N O)
+	   <- subst' DsubO DofLac DofN 
+	      (DofO : of O C)
+	   <- subtype-trans DwfF DwfA DwfC DsubtypeFA DsubtypeAC ([_] DsubO)
+	      (DsubtypeFC : subtype F C ([_] O))
+	   <- can-tsub DwfD DofO
+	      (DsubDx : tsub D O Dx)
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- can-tsub DwfB DofN
+	      (DsubBx : tsub B N Bx)
+	   <- ttrans-sub DtransB DtransN DwfA DsubtypeFA DsubBx
+	      (DtransBN : ttrans (EB EN) Bx)
+	   <- ({x} {d:vof x A}
+		 tsubst (DsubE x) DwfD (DofLac x d)
+		 (DwfE x d : wf (E x)))
+	   <- can-tsub DwfE DofN
+	      (DsubEx : tsub E N Ex)
+	   <- subtype-sub DsubtypeEB DwfE DwfB DofN DsubEx DsubBx
+	      _
+	      (DsubtypeExBx : subtype Ex Bx _)
+	   <- ({y}
+		 tsub-absent (D y) N
+		 (DsubDabs y : tsub ([x] D y) N (D y)))
+	   <- tsub-permute DofN DofLac ([x] [d:vof x A] [y] [e:vof y C] DwfD y e)
+	      DsubDabs DsubO DsubDx DsubE DsubEx
+	      (Deq : tp-eq Dx Ex)
+	   <- tp-eq-symm Deq
+	      (Deq' : tp-eq Ex Dx)
+	   <- subtype-resp Deq' tp-eq/i ([_] term-eq/i) DsubtypeExBx
+	      (DsubtypeDxBx : subtype Dx Bx _).
+
+-pair	: of-comp
+	   (eof/pair
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (DeofN : eof EN (EB EM))
+	      (DeofM : eof EM EA))
+	   (ttrans/sigma DtransB DtransA)
+	   (trans/pair DtransN DtransM)
+	   (subtype/sigma
+	      ([_] DsubtypeDB)
+	      ([_] DsubBx)
+	      DsubtypeCA')
+	   <- of-comp DeofM
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM C)
+	      (DsubtypeCA : subtype C A Lca)
+	   <- of-comp DeofN
+	      (DtransE : ttrans (EB EM) E)
+	      (DtransN : trans EN D)
+	      (DsubtypeDE : subtype D E _)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- trans-principal DtransM
+	      (DprincipalC : principal C)
+	   <- principal-subtype DprincipalC DsubtypeCA
+	      (DeqLca : {x} term-eq (Lca x) M)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] M))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- trans-reg DtransM
+	      (DwfC : wf C)
+	   <- subtype-reg' DsubtypeCA' DwfC DwfA
+	      (DofM : of M A)
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB DtransM DwfA DsubtypeCA' DsubBx
+	      (DtransBx : ttrans (EB EM) Bx)
+	   <- ttrans-fun DtransE DtransBx
+	      (Deq : tp-eq E Bx)
+	   <- subtype-resp tp-eq/i Deq ([_] term-eq/i) DsubtypeDE
+	      (DsubtypeDB : subtype D Bx _).
+
+-pi1	: of-comp
+	   (eof/pi1
+	      (Deof : eof EM (esigma EA EB)))
+	   DtransA
+	   (trans/pi1 DtransM')
+	   DsubtypeCA
+	   <- of-comp Deof
+	      (ttrans/sigma
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM : trans EM CD)
+	      (DsubtypeCDAB : subtype CD (sigma A B) _)
+	   <- trans-principal DtransM
+	      (DprincipalCD : principal CD)
+	   <- principal-subtype-sigma-invert DprincipalCD DsubtypeCDAB
+	      (DeqCD : tp-eq CD (sigma C ([_] D)))
+	   <- trans-resp eterm-eq/i DeqCD DtransM
+	      (DtransM' : trans EM (sigma C ([_] D)))
+	   <- subtype-resp DeqCD tp-eq/i ([_] term-eq/i) DsubtypeCDAB
+	      (DsubtypeCDAB' : subtype (sigma C ([_] D)) (sigma A B) _)
+	   <- subtype-sigma-invert DsubtypeCDAB'
+	      (DsubtypeCA : subtype C A _)
+	      _ _ _.
+
+-pi2	: of-comp
+	   (eof/pi2
+	      (Deof : eof EM (esigma EA EB)))
+	   DtransBx
+	   (trans/pi2 DtransM')
+	   (DsubtypeDB aca)
+	   <- of-comp Deof
+	      (ttrans/sigma
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM : trans EM CD)
+	      (DsubtypeCDAB : subtype CD (sigma A B) _)
+	   <- trans-principal DtransM
+	      (DprincipalCD : principal CD)
+	   <- principal-subtype-sigma-invert DprincipalCD DsubtypeCDAB
+	      (DeqCD : tp-eq CD (sigma C ([_] D)))
+	   <- trans-resp eterm-eq/i DeqCD DtransM
+	      (DtransM' : trans EM (sigma C ([_] D)))
+	   <- subtype-resp DeqCD tp-eq/i ([_] term-eq/i) DsubtypeCDAB
+	      (DsubtypeCDAB' : subtype (sigma C ([_] D)) (sigma A B) _)
+	   <- subtype-sigma-invert DsubtypeCDAB'
+	      (DsubtypeCA : subtype C A Lca)
+	      (DsubE : {x} tsub B (Lca x) (E x))
+	      (DsubtypeDE : {x} subtype D (E x) _)
+	      _
+	   <- principal-resp DeqCD DprincipalCD
+	      (principal/sigma
+		 (DprincipalD : principal D)
+		 (DprincipalC : principal C))
+	   <- principal-subtype DprincipalC DsubtypeCA
+	      (DeqLca : {x} term-eq (Lca x) M)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] M))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM'
+	      (wf/sigma
+		 _
+		 (DwfC : wf C))
+	   <- subtype-reg' DsubtypeCA' DwfC DwfA
+	      (DofM : of M A)
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB (trans/pi1 DtransM') DwfA DsubtypeCA' DsubBx
+	      (DtransBx : ttrans (EB (epi1 EM)) Bx)
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (DeqLca x) tp-eq/i (DsubE x)
+		 (DsubE' x : tsub B M (E x)))
+	   <- ({x}
+		 tsub-fun (DsubE' x) DsubBx
+		 (DeqE x : tp-eq (E x) Bx))
+	   <- ({x}
+		 subtype-resp tp-eq/i (DeqE x) ([_] term-eq/i) (DsubtypeDE x)
+		 (DsubtypeDB x : subtype D Bx _)).
+
+-sing	: of-comp
+	   (eof/sing 
+	      (Deof : eof EM et))
+	   (ttrans/sing Dtrans')
+	   Dtrans'
+	   subtype/sing
+	   <- of-comp Deof
+	      ttrans/t
+	      (Dtrans : trans EM A)
+	      (Dsubtype : subtype A t _)
+	   <- trans-principal Dtrans
+	      (Dprincipal : principal A)
+	   <- principal-subtype-t-invert Dprincipal Dsubtype
+	      (Deq : tp-eq A (sing R)) _
+	   <- trans-resp eterm-eq/i Deq Dtrans
+	      (Dtrans' : trans EM (sing R)).
+
+-star	: of-comp
+	   eof/star
+	   ttrans/one
+	   trans/star
+	   subtype/one.
+
+-extpi	: of-comp
+	   (eof/extpi
+	      (Deof : {ex} evof ex EA -> eof (eapp EM ex) (EB ex))
+	      (DeofM : eof EM (epi EA EBoth)))
+	   (ttrans/pi DtransB DtransA)
+	   DtransM
+	   (subtype/pi
+	      DsubtypeDB
+	      DsubDx
+	      DsubtypeAC)
+	   <- of-comp DeofM
+	      (ttrans/pi
+		 (DtransH : {x} vof x A -> {ex} vtrans ex x -> ttrans (EBoth ex) (Both x))
+		 (DtransA : ttrans EA A))
+	      (DtransM : trans EM (pi C D))
+	      (subtype/pi
+		 (DsubtypeDBoth : {x} subtype (Dx x) (Both x) _)
+		 (DsubDx : {x} tsub D (Lac x) (Dx x))
+		 (DsubtypeAC : subtype A C Lac)
+		 : subtype (pi C D) (pi A Both) _)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> of-comp (Deof ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (trans/app
+		       (DsubFy x : tsub ([y] F x y) (M x) (Fy x))
+		       (DsubtypeHE x : subtype (H x) (E x) ([_] M x))
+		       (DtransX x d ex xt : trans ex (H x))
+		       (DtransM' x d ex xt : trans EM (pi (E x) ([y] F x y)))
+		       : trans (eapp EM ex) (Fy x))
+		    (DsubtypeFB x : subtype (Fy x) (B x) _))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 trans-fun (DtransM' x d ex xt) DtransM
+		 (DeqEFCD x : tp-eq (pi (E x) ([y] F x y)) (pi C D)))
+	   <- ({x}
+		 tp-eq-cdr-pi (DeqEFCD x)
+		 (DeqEC x : tp-eq (E x) C)
+		 (DeqFD x : {y} tp-eq (F x y) (D y)))
+	   <- ({x}
+		 can-expand x A (X x)
+		 (Dexpand x : expand x A (X x)))
+	   <- ({x} {d:vof x A}
+		 expand-reg (aof/var DwfA d) (Dexpand x)
+		 (DofX x d : of (X x) A))
+	   <- ({x} {d:vof x A}
+		 can-self (DofX x d)
+		 (Dself x : self (X x) A (As x)))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 trans-fun (DtransX x d ex xt) (trans/var (Dself x) (Dexpand x) DwfA d xt) 
+		 (DeqHAs x : tp-eq (H x) (As x)))
+	   <- ({x}
+		 subtype-resp (DeqHAs x) (DeqEC x) ([_] term-eq/i) (DsubtypeHE x)
+		 (DsubtypeAsC x : subtype (As x) C ([_] M x)))
+	   <- ({x} {d:vof x A}
+		 self-reg (Dself x) (DofX x d)
+		 (DofX' x d : of (X x) (As x))
+		 (DsubtypeAsA x : subtype (As x) A ([_] X x)))
+	   <- trans-reg DtransM
+	      (wf/pi
+		 (DwfD : {x} vof x C -> wf (D x))
+		 (DwfC : wf C))
+	   <- subtype-reg DsubtypeAC DwfA DwfC
+	      (DofLac : {x} vof x A -> of (Lac x) C)
+	   <- ({x} {d:vof x A}
+		 can-sub DofLac (DofX x d)
+		 (DsubX' x : sub Lac (X x) (X' x)))
+	   <- ({x} {d:vof x A}
+		 sub-expand (aof/var DwfA d) DofLac (Dexpand x) (DsubX' x)
+		 (DeqX x : term-eq (X' x) (Lac x)))
+	   <- ({x}
+		 sub-resp ([_] term-eq/i) term-eq/i (DeqX x) (DsubX' x)
+		 (DsubLac x : sub Lac (X x) (Lac x)))
+	   <- ({x} {d:vof x A}
+		 of-reg (DofX' x d)
+		 (DwfAs x d : wf (As x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfC (DsubtypeAsA x) DsubtypeAC ([_] DsubLac x)
+		 (DsubtypeAsC' x : subtype (As x) C ([_] Lac x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeAsC x) (DsubtypeAsC' x) 
+		 (DeqM x : {y} term-eq (M x) (Lac x)))
+	   <- ({x}
+		 tsub-resp ([y] DeqFD x y) (DeqM x aca) tp-eq/i (DsubFy x)
+		 (DsubFy' x : tsub ([y] D y) (Lac x) (Fy x)))
+	   <- ({x}
+		 tsub-fun (DsubFy' x) (DsubDx x)
+		 (DeqDx x : tp-eq (Fy x) (Dx x)))
+	   <- ({x}
+		 subtype-resp (DeqDx x) tp-eq/i ([_] term-eq/i) (DsubtypeFB x)
+		 (DsubtypeDB x : subtype (Dx x) (B x) _)).
+
+-extsig	: of-comp
+	   (eof/extsigma
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (Deof2 : eof (epi2 EM) (EB (epi1 EM)))
+	      (Deof1 : eof (epi1 EM) EA))
+	   (ttrans/sigma DtransB DtransA)
+	   DtransM
+	   (subtype/sigma
+	      ([_] DsubtypeDB)
+	      ([_] DsubBx)
+	      DsubtypeCA')
+	   <- of-comp Deof1
+	      (DtransA : ttrans EA A)
+	      (trans/pi1
+		 (DtransM : trans EM (sigma C ([_] D))))
+	      (DsubtypeCA : subtype C A Lca)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- trans-principal DtransM
+	      (principal/sigma
+		 (DprincipalD : principal D)
+		 (DprincipalC : principal C))
+	   <- principal-subtype DprincipalC DsubtypeCA
+	      (DeqLca : {x} term-eq (Lca x) M)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] M))
+	   <- ({x} {d:vof x A}
+		 {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- trans-reg DtransM
+	      (wf/sigma
+		 _
+		 (DwfC : wf C))
+	   <- subtype-reg' DsubtypeCA' DwfC DwfA
+	      (DofM : of M A)
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB (trans/pi1 DtransM) DwfA DsubtypeCA' DsubBx
+	      (DtransBx : ttrans (EB (epi1 EM)) Bx)
+	   <- of-comp Deof2
+	      (DtransH : ttrans (EB (epi1 EM)) H)
+	      (trans/pi2
+		 (DtransM' : trans EM (sigma E ([_] F))))
+	      (DsubtypeFH : subtype F H _)
+	   <- ttrans-fun DtransH DtransBx
+	      (DeqHB : tp-eq H Bx)
+	   <- trans-fun DtransM' DtransM
+	      (DeqEFCD : tp-eq (sigma E ([_] F)) (sigma C ([_] D)))
+	   <- tp-eq-cdr-sigma DeqEFCD _
+	      (DeqFD : {x} tp-eq F D)
+	   <- subtype-resp (DeqFD aca) DeqHB ([_] term-eq/i) DsubtypeFH
+	      (DsubtypeDB : subtype D Bx _).
+
+-sub	: of-comp
+	   (eof/subsume
+	      (Dsubtp : subtp EA EB)
+	      (Deof : eof EM EA))
+	   DtransB
+	   Dtrans
+	   DsubtypeCB
+	   <- of-comp Deof
+	      (DtransA : ttrans EA A)
+	      (Dtrans : trans EM C)
+	      (DsubtypeCA : subtype C A _)
+	   <- subtp-comp Dsubtp
+	      (DtransA' : ttrans EA A')
+	      (DtransB : ttrans EB B)
+	      (DsubtypeA'B : subtype A' B _)
+	   <- ttrans-fun DtransA' DtransA
+	      (Deq : tp-eq A' A)
+	   <- subtype-resp Deq tp-eq/i ([_] term-eq/i) DsubtypeA'B
+	      (DsubtypeAB : subtype A B _)
+	   <- trans-reg Dtrans
+	      (DwfC : wf C)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-reg DtransB
+	      (DwfB : wf B)
+	   <- subtype-trans' DwfC DwfA DwfB DsubtypeCA DsubtypeAB
+	      _
+	      (DsubtypeCB : subtype C B _).
+
+
+%%%
+
+
+-t	: wf-comp ewf/t ttrans/t.
+
+-pi	: wf-comp
+	   (ewf/pi
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (DewfA : ewf EA))
+	   (ttrans/pi DtransB DtransA)
+	   <- wf-comp DewfA (DtransA : ttrans EA A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed) 
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))).
+
+-sigma	: wf-comp
+	   (ewf/sigma
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (DewfA : ewf EA))
+	   (ttrans/sigma DtransB DtransA)
+	   <- wf-comp DewfA (DtransA : ttrans EA A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed) 
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))).
+
+-sing	: wf-comp
+	   (ewf/sing
+	      (DofM : eof EM et))
+	   (ttrans/sing Dtrans')
+	   <- of-comp DofM
+	      ttrans/t
+	      (Dtrans : trans EM A)
+	      (Dsubtype : subtype A t _)
+	   <- trans-principal Dtrans
+	      (Dprincipal : principal A)
+	   <- principal-subtype-t-invert Dprincipal Dsubtype
+	      (Deq : tp-eq A (sing R)) _
+	   <- trans-resp eterm-eq/i Deq Dtrans
+	      (Dtrans' : trans EM (sing R)).
+
+-one	: wf-comp ewf/one ttrans/one.
+
+
+%%%
+
+
+-reflex	: subtp-comp
+	   (subtp/reflex
+	      (Dequiv : tequiv EA EB))
+	   DtransA
+	   DtransB
+	   Dsubtype
+	   <- tequiv-comp Dequiv
+	      (DtransA : ttrans EA A)
+	      (DtransB : ttrans EB A)
+	   <- ttrans-reg DtransA
+	      (Dwf : wf A)
+	   <- subtype-refl Dwf
+	      (Dsubtype : subtype A A _)
+	      _.
+
+-trans	: subtp-comp
+	   (subtp/trans
+	      (DsubtpBC : subtp EB EC)
+	      (DsubtpAB : subtp EA EB))
+	   DtransA
+	   DtransC
+	   DsubtypeAC
+	   <- subtp-comp DsubtpAB
+	      (DtransA : ttrans EA A)
+	      (DtransB : ttrans EB B)
+	      (DsubtypeAB : subtype A B _)
+	   <- subtp-comp DsubtpBC
+	      (DtransB' : ttrans EB B')
+	      (DtransC : ttrans EC C)
+	      (DsubtypeBC : subtype B' C _)
+	   <- ttrans-fun DtransB' DtransB
+	      (Deq : tp-eq B' B)
+	   <- subtype-resp Deq tp-eq/i ([_] term-eq/i) DsubtypeBC
+	      (DsubtypeBC' : subtype B C _)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-reg DtransB
+	      (DwfB : wf B)
+	   <- ttrans-reg DtransC
+	      (DwfC : wf C)
+	   <- subtype-trans' DwfA DwfB DwfC DsubtypeAB DsubtypeBC'
+	      _
+	      (DsubtypeAC : subtype A C _).
+
+-sing_t	: subtp-comp
+	   (subtp/sing_t
+	      (Deof : eof EM et))
+	   (ttrans/sing Dtrans')
+	   ttrans/t
+	   subtype/sing_t
+	   <- of-comp Deof
+	      ttrans/t
+	      (Dtrans : trans EM A)
+	      (Dsubtype : subtype A t _)
+	   <- trans-principal Dtrans
+	      (Dprincipal : principal A)
+	   <- principal-subtype-t-invert Dprincipal Dsubtype
+	      (Deq : tp-eq A (sing R)) _
+	   <- trans-resp eterm-eq/i Deq Dtrans
+	      (Dtrans' : trans EM (sing R)).
+
+-pi	: subtp-comp
+	   (subtp/pi
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (DsubtpBD : {ex} evof ex EC -> subtp (EB ex) (ED ex))
+	      (DsubtpCA : subtp EC EA))
+	   (ttrans/pi DtransB DtransA)
+	   (ttrans/pi DtransD DtransC)
+	   (subtype/pi
+	      DsubtypeBD
+	      Dsub
+	      DsubtypeCA)
+	   <- subtp-comp DsubtpCA
+	      (DtransC : ttrans EC C)
+	      (DtransA : ttrans EA A)
+	      (DsubtypeCA : subtype C A M)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- ({x} {d:vof x C} {ex} {xt:vtrans ex x} {ed:evof ex EC}
+		 vof-comp ed DtransC xt d
+		 -> subtp-comp (DsubtpBD ex ed)
+		    (DtransB' x d ex xt : ttrans (EB ex) (B' x))
+		    (DtransD x d ex xt : ttrans (ED ex) (D x))
+		    (DsubtypeBD x : subtype (B' x) (D x) ([y] N x y)))
+	   <- trans-var-coerce DtransC DtransA DsubtypeCA DtransB' DtransB
+	      (Dsub : {x} tsub B (M x) (B' x)).
+
+-sigma	: subtp-comp
+	   (subtp/sigma
+	      (DewfD : {ex} evof ex EC -> ewf (ED ex))
+	      (DsubtpBD : {ex} evof ex EA -> subtp (EB ex) (ED ex))
+	      (DsubtpAC : subtp EA EC))
+	   (ttrans/sigma DtransB DtransA)
+	   (ttrans/sigma DtransD DtransC)
+	   (subtype/sigma
+	      DsubtypeBD
+	      Dsub
+	      DsubtypeAC)
+	   <- subtp-comp DsubtpAC
+	      (DtransA : ttrans EA A)
+	      (DtransC : ttrans EC C)
+	      (DsubtypeAC : subtype A C M)
+	   <- ({x} {d:vof x C} {ex} {xt:vtrans ex x} {ed:evof ex EC}
+		 vof-comp ed DtransC xt d
+		 -> wf-comp (DewfD ex ed)
+		    (DtransD x d ex xt : ttrans (ED ex) (D x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> subtp-comp (DsubtpBD ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (DtransD' x d ex xt : ttrans (ED ex) (D' x))
+		    (DsubtypeBD x : subtype (B x) (D' x) ([y] N x y)))
+	   <- trans-var-coerce DtransA DtransC DsubtypeAC DtransD' DtransD
+	      (Dsub : {x} tsub D (M x) (D' x)).
+
+
+%%%
+
+
+-refl	: tequiv-comp
+	   (tequiv/reflex
+	      (Dewf : ewf EA))
+	   DtransA
+	   DtransA
+	   <- wf-comp Dewf
+	      (DtransA : ttrans EA A).
+
+-symm	: tequiv-comp
+	   (tequiv/symm
+	      (Dequiv : tequiv EB EA))
+	   DtransA
+	   DtransB
+	   <- tequiv-comp Dequiv
+	      (DtransB : ttrans EB A)
+	      (DtransA : ttrans EA A).
+
+-trans	: tequiv-comp
+	   (tequiv/trans
+	      (DequivBC : tequiv EB EC)
+	      (DequivAB : tequiv EA EB))
+	   DtransA
+	   DtransC'
+	   <- tequiv-comp DequivAB
+	      (DtransA : ttrans EA A)
+	      (DtransB : ttrans EB A)
+	   <- tequiv-comp DequivBC
+	      (DtransB' : ttrans EB B)
+	      (DtransC : ttrans EC B)
+	   <- ttrans-fun DtransB' DtransB
+	      (Deq : tp-eq B A)
+	   <- ttrans-resp etp-eq/i Deq DtransC
+	      (DtransC' : ttrans EC A).
+
+-pi	: tequiv-comp
+	   (tequiv/pi
+	      (DequivB : {ex} evof ex EA -> tequiv (EB ex) (EB' ex))
+	      (DequivA : tequiv EA EA'))
+	   (ttrans/pi DtransB DtransA)
+	   (ttrans/pi DtransB' DtransA')
+	   <- tequiv-comp DequivA
+	      (DtransA : ttrans EA A)
+	      (DtransA' : ttrans EA' A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> tequiv-comp (DequivB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (DtransB' x d ex xt : ttrans (EB' ex) (B x))).
+
+-sigma	: tequiv-comp
+	   (tequiv/sigma
+	      (DequivB : {ex} evof ex EA -> tequiv (EB ex) (EB' ex))
+	      (DequivA : tequiv EA EA'))
+	   (ttrans/sigma DtransB DtransA)
+	   (ttrans/sigma DtransB' DtransA')
+	   <- tequiv-comp DequivA
+	      (DtransA : ttrans EA A)
+	      (DtransA' : ttrans EA' A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> tequiv-comp (DequivB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (DtransB' x d ex xt : ttrans (EB' ex) (B x))).
+
+-sing	: tequiv-comp
+	   (tequiv/sing
+	      (Dequiv : equiv EM EN et))
+	   (ttrans/sing DtransM')
+	   (ttrans/sing DtransN')
+	   <- equiv-comp Dequiv
+	      ttrans/t
+	      (DtransM : trans EM A)
+	      (DtransN : trans EN B)
+	      (DsubtypeA : subtype A t M)
+	      (DsubtypeB : subtype B t M)
+	   <- trans-principal DtransM
+	      (DprincipalA : principal A)
+	   <- trans-principal DtransN
+	      (DprincipalB : principal B)
+	   <- principal-subtype-t-invert DprincipalA DsubtypeA
+	      (DeqA : tp-eq A (sing R))
+	      (DeqM : {x} term-eq (M x) (at R))
+	   <- principal-subtype-t-invert' DprincipalB DsubtypeB DeqM
+	      (DeqB : tp-eq B (sing R))
+	   <- trans-resp eterm-eq/i DeqA DtransM
+	      (DtransM' : trans EM (sing R))
+	   <- trans-resp eterm-eq/i DeqB DtransN
+	      (DtransN' : trans EN (sing R)).
+
+
+%%%
+
+
+-refl	: equiv-comp
+	   (equiv/reflex
+	      (Deof : eof EM EA))
+	   DtransA
+	   DtransM
+	   DtransM
+	   Dsubtype
+	   Dsubtype
+	   <- of-comp Deof
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM B)
+	      (Dsubtype : subtype B A M).
+
+-symm	: equiv-comp
+	   (equiv/symm
+	      (Dequiv : equiv EN EM EA))
+	   DtransA
+	   DtransM
+	   DtransN
+	   DsubtypeBA
+	   DsubtypeCA
+	   <- equiv-comp Dequiv
+	      (DtransA : ttrans EA A)
+	      (DtransN : trans EN C)
+	      (DtransM : trans EM B)
+	      (DsubtypeCA : subtype C A N)
+	      (DsubtypeBA : subtype B A N).
+
+-trans	: equiv-comp
+	   (equiv/trans
+	      (DequivNO : equiv EN EO EA)
+	      (DequivMN : equiv EM EN EA))
+	   DtransA
+	   DtransM
+	   DtransO
+	   DsubtypeBA
+	   DsubtypeDA'
+	   <- equiv-comp DequivMN
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM B)
+	      (DtransN : trans EN C)
+	      (DsubtypeBA : subtype B A P)
+	      (DsubtypeCA : subtype C A P)
+	   <- equiv-comp DequivNO
+	      (DtransA' : ttrans EA A')
+	      (DtransN' : trans EN C')
+	      (DtransO : trans EO D)
+	      (DsubtypeCA' : subtype C' A' P')
+	      (DsubtypeDA : subtype D A' P')
+	   <- ttrans-fun DtransA' DtransA
+	      (DeqA : tp-eq A' A)
+	   <- trans-fun DtransN' DtransN
+	      (DeqC : tp-eq C' C)
+	   <- subtype-resp DeqC DeqA ([_] term-eq/i) DsubtypeCA'
+	      (DsubtypeCA'' : subtype C A P')
+	   <- subtype-fun DsubtypeCA'' DsubtypeCA
+	      (DeqP : {x} term-eq (P' x) (P x))
+	   <- subtype-resp tp-eq/i DeqA DeqP DsubtypeDA
+	      (DsubtypeDA' : subtype D A P).
+
+-app	: equiv-comp
+	   (equiv/app
+	      (DequivN : equiv EN1 EN2 EA)
+	      (DequivM : equiv EM1 EM2 (epi EA EB)))
+	   DtransBN
+	   (trans/app
+	      DsubD1x
+	      DsubtypeF1C1
+	      DtransN1
+	      DtransM1)
+	   (trans/app
+	      DsubD2x
+	      DsubtypeF2C2
+	      DtransN2
+	      DtransM2)
+	   DsubtypeD1xBx
+	   DsubtypeD2xBx
+	   <- equiv-comp DequivM
+	      (ttrans/pi
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM1 : trans EM1 (pi C1 D1))
+	      (DtransM2 : trans EM2 (pi C2 D2))
+	      (DsubtypeCD1 : subtype (pi C1 D1) (pi A B) M)
+	      (DsubtypeCD2 : subtype (pi C2 D2) (pi A B) M)
+	   <- equiv-comp DequivN
+	      (DtransA' : ttrans EA A')
+	      (DtransN1 : trans EN1 F1)
+	      (DtransN2 : trans EN2 F2)
+	      (DsubtypeF1A' : subtype F1 A' N')
+	      (DsubtypeF2A' : subtype F2 A' N')
+	   <- subtype-pi-invert DsubtypeCD1
+	      (DsubtypeAC1 : subtype A C1 Lac1)
+	      (DsubE1 : {x} tsub D1 (Lac1 x) (E1 x))
+	      (DsubtypeE1B : {x} subtype (E1 x) (B x) (Leb1 x))
+	      (DeqM1 : {f} term-eq (M f) (lam ([x] (Leb1 x (app f (Lac1 x))))))
+	   <- subtype-pi-invert DsubtypeCD2
+	      (DsubtypeAC2 : subtype A C2 Lac2)
+	      (DsubE2 : {x} tsub D2 (Lac2 x) (E2 x))
+	      (DsubtypeE2B : {x} subtype (E2 x) (B x) (Leb2 x))
+	      (DeqM2 : {f} term-eq (M f) (lam ([x] (Leb2 x (app f (Lac2 x))))))
+	   <- ttrans-fun DtransA' DtransA
+	      (DeqA : tp-eq A' A)
+	   <- trans-principal DtransN1
+	      (DprincipalF1 : principal F1)
+	   <- principal-subtype DprincipalF1 DsubtypeF1A'
+	      (DeqN' : {y} term-eq (N' y) N)
+	   <- subtype-resp tp-eq/i DeqA DeqN' DsubtypeF1A'
+	      (DsubtypeF1A : subtype F1 A ([_] N))
+	   <- subtype-resp tp-eq/i DeqA DeqN' DsubtypeF2A'
+	      (DsubtypeF2A : subtype F2 A ([_] N))
+	   <- trans-reg DtransN1
+	      (DwfF1 : wf F1)
+	   <- trans-reg DtransN2
+	      (DwfF2 : wf F2)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM1
+	      (wf/pi
+		 (DwfD1 : {x} vof x C1 -> wf (D1 x))
+		 (DwfC1 : wf C1))
+	   <- trans-reg DtransM2
+	      (wf/pi
+		 (DwfD2 : {x} vof x C2 -> wf (D2 x))
+		 (DwfC2 : wf C2))
+	   <- subtype-reg DsubtypeAC1 DwfA DwfC1
+	      (DofLac1 : {x} vof x A -> of (Lac1 x) C1)
+	   <- subtype-reg DsubtypeAC2 DwfA DwfC2
+	      (DofLac2 : {x} vof x A -> of (Lac2 x) C2)
+	   <- subtype-reg' DsubtypeF1A DwfF1 DwfA
+	      (DofN : of N A)
+	   <- can-sub DofLac1 DofN
+	      (DsubO1 : sub Lac1 N O1)
+	   <- can-sub DofLac2 DofN
+	      (DsubO2 : sub Lac2 N O2)
+	   <- subst' DsubO1 DofLac1 DofN
+	      (DofO1 : of O1 C1)
+	   <- subst' DsubO2 DofLac2 DofN
+	      (DofO2 : of O2 C2)
+	   <- subtype-trans DwfF1 DwfA DwfC1 DsubtypeF1A DsubtypeAC1 ([_] DsubO1)
+	      (DsubtypeF1C1 : subtype F1 C1 ([_] O1))
+	   <- subtype-trans DwfF2 DwfA DwfC2 DsubtypeF2A DsubtypeAC2 ([_] DsubO2)
+	      (DsubtypeF2C2 : subtype F2 C2 ([_] O2))
+	   <- can-tsub DwfD1 DofO1
+	      (DsubD1x : tsub D1 O1 D1x)
+	   <- can-tsub DwfD2 DofO2
+	      (DsubD2x : tsub D2 O2 D2x)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- can-tsub DwfB DofN
+	      (DsubBx : tsub B N Bx)
+	   <- ttrans-sub DtransB DtransN1 DwfA DsubtypeF1A DsubBx
+	      (DtransBN : ttrans (EB EN1) Bx)
+	   <- ({x} {d:vof x A}
+		 tsubst (DsubE1 x) DwfD1 (DofLac1 x d)
+		 (DwfE1 x d : wf (E1 x)))
+	   <- ({x} {d:vof x A}
+		 tsubst (DsubE2 x) DwfD2 (DofLac2 x d)
+		 (DwfE2 x d : wf (E2 x)))
+	   <- can-tsub DwfE1 DofN
+	      (DsubE1x : tsub E1 N E1x)
+	   <- can-tsub DwfE2 DofN
+	      (DsubE2x : tsub E2 N E2x)
+	   <- trans-principal DtransM1
+	      (principal/pi
+		 (DprincipalD1 : {x} principal (D1 x)))
+	   <- trans-principal DtransM2
+	      (principal/pi
+		 (DprincipalD2 : {x} principal (D2 x)))
+	   <- ({x}
+		 principal-sub DprincipalD1 (DsubE1 x)
+		 (DprincipalE1 x : principal (E1 x)))
+	   <- ({x}
+		 principal-sub DprincipalD2 (DsubE2 x)
+		 (DprincipalE2 x : principal (E2 x)))
+	   <- ({x}
+		 principal-subtype (DprincipalE1 x) (DsubtypeE1B x)
+		 (DeqLeb1 x : {y} term-eq (Leb1 x y) (P1 x)))
+	   <- ({x}
+		 principal-subtype (DprincipalE2 x) (DsubtypeE2B x)
+		 (DeqLeb2 x : {y} term-eq (Leb2 x y) (P2 x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqLeb1 x) (DsubtypeE1B x)
+		 (DsubtypeE1B' x : subtype (E1 x) (B x) ([_] P1 x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqLeb2 x) (DsubtypeE2B x)
+		 (DsubtypeE2B' x : subtype (E2 x) (B x) ([_] P2 x)))
+	   <- ({f}
+		 term-eq-symm (DeqM1 f)
+		 (DeqM1' f : term-eq (lam ([x] (Leb1 x (app f (Lac1 x))))) (M f)))
+	   <- ({f}
+		 term-eq-trans (DeqM1' f) (DeqM2 f)
+		 (DeqLam f : term-eq (lam ([x] (Leb1 x (app f (Lac1 x))))) (lam ([x] Leb2 x (app f (Lac2 x))))))
+	   <- ({f}
+		 term-eq-cdr-lam (DeqLam f)
+		 (DeqLeby f : {x} term-eq (Leb1 x (app f (Lac1 x))) (Leb2 x (app f (Lac2 x)))))
+	   <- ({x} {y}
+		 term-eq-symm (DeqLeb1 x y)
+		 (DeqLeb1' x y : term-eq (P1 x) (Leb1 x y)))
+	   <- ({f} {x}
+		 term-eq-trans (DeqLeb1' x _) (DeqLeby f x)
+		 (DeqLeby' f x : term-eq (P1 x) (Leb2 x (app f (Lac2 x)))))
+	   <- ({f} {x}
+		 term-eq-trans (DeqLeby' f x) (DeqLeb2 x _)
+		 (DeqP f x : term-eq (P1 x) (P2 x)))
+	   <- ({x} {d:vof x A}
+		 subtype-reg' (DsubtypeE1B' x) (DwfE1 x d) (DwfB x d)
+		 (DofP1 x d : of (P1 x) (B x)))
+	   <- can-sub DofP1 DofN
+	      (DsubP1x : sub P1 N Px)
+	   <- sub-resp ([x] DeqP aca x) term-eq/i term-eq/i DsubP1x
+	      (DsubP2x : sub P2 N Px)
+	   <- subtype-sub' DsubtypeE1B' DwfE1 DwfB DofN DsubE1x DsubBx
+	      ([y] DsubP1x : sub ([x] P1 x) N Px)
+	      (DsubtypeE1xBx : subtype E1x Bx ([_] Px))
+	   <- subtype-sub' DsubtypeE2B' DwfE2 DwfB DofN DsubE2x DsubBx
+	      ([y] DsubP2x : sub ([x] P2 x) N Px)
+	      (DsubtypeE2xBx : subtype E2x Bx ([_] Px))
+	   <- ({y}
+		 tsub-absent (D1 y) N
+		 (DsubD1abs y : tsub ([x] D1 y) N (D1 y)))
+	   <- ({y}
+		 tsub-absent (D2 y) N
+		 (DsubD2abs y : tsub ([x] D2 y) N (D2 y)))
+	   <- tsub-permute DofN DofLac1 ([x] [d:vof x A] [y] [e:vof y C1] DwfD1 y e)
+	      DsubD1abs DsubO1 DsubD1x DsubE1 DsubE1x
+	      (Deq1 : tp-eq D1x E1x)
+	   <- tp-eq-symm Deq1
+	      (Deq1' : tp-eq E1x D1x)
+	   <- tsub-permute DofN DofLac2 ([x] [d:vof x A] [y] [e:vof y C2] DwfD2 y e)
+	      DsubD2abs DsubO2 DsubD2x DsubE2 DsubE2x
+	      (Deq2 : tp-eq D2x E2x)
+	   <- tp-eq-symm Deq2
+	      (Deq2' : tp-eq E2x D2x)
+	   <- subtype-resp Deq1' tp-eq/i ([_] term-eq/i) DsubtypeE1xBx
+	      (DsubtypeD1xBx : subtype D1x Bx ([_] Px))
+	   <- subtype-resp Deq2' tp-eq/i ([_] term-eq/i) DsubtypeE2xBx
+	      (DsubtypeD2xBx : subtype D2x Bx ([_] Px)).
+
+-lam	: equiv-comp
+	   (equiv/lam
+	      (DequivM : {ex} evof ex EA1 -> equiv (EM1 ex) (EM2 ex) (EB ex))
+	      (DequivA : tequiv EA1 EA2))
+	   (ttrans/pi DtransB DtransA1)
+	   (trans/lam DtransM1 DtransA1)
+	   (trans/lam DtransM2 DtransA2)
+	   (subtype/pi DsubtypeC1B DsubC1 DsubtypeA)
+	   (subtype/pi DsubtypeC2B DsubC2 DsubtypeA)
+	   <- tequiv-comp DequivA
+	      (DtransA1 : ttrans EA1 A)
+	      (DtransA2 : ttrans EA2 A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA1}
+		 vof-comp ed DtransA1 xt d
+		 -> equiv-comp (DequivM ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (DtransM1 x d ex xt : trans (EM1 ex) (C1 x))
+		    (DtransM2 x d ex xt : trans (EM2 ex) (C2 x))
+		    (DsubtypeC1B x : subtype (C1 x) (B x) (M x))
+		    (DsubtypeC2B x : subtype (C2 x) (B x) (M x)))
+	   <- ttrans-reg DtransA1
+	      (DwfA : wf A)
+	   <- subtype-refl DwfA
+	      (DsubtypeA : subtype A A X)
+	      (Dexpand : {x} expand x A (X x))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-reg (DtransM1 x d ex xt)
+		 (DwfC1 x d : wf (C1 x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-reg (DtransM2 x d ex xt)
+		 (DwfC2 x d : wf (C2 x)))
+	   <- tsub-expand-var DwfA DwfC1 Dexpand
+	      (DsubC1 : {x} tsub C1 (X x) (C1 x))
+	   <- tsub-expand-var DwfA DwfC2 Dexpand
+	      (DsubC2 : {x} tsub C2 (X x) (C2 x)).
+
+-pair	: equiv-comp
+	   (equiv/pair
+	      (DewfB : {ex} evof ex EA -> ewf (EB ex))
+	      (DequivN : equiv EN1 EN2 (EB EM1))
+	      (DequivM : equiv EM1 EM2 EA))
+	   (ttrans/sigma DtransB DtransA)
+	   (trans/pair DtransN1 DtransM1)
+	   (trans/pair DtransN2 DtransM2)
+	   (subtype/sigma ([_] DsubtypeD1Bx) ([_] DsubBx) DsubtypeC1A')
+	   (subtype/sigma ([_] DsubtypeD2Bx) ([_] DsubBx) DsubtypeC2A')
+	   <- equiv-comp DequivM
+	      (DtransA : ttrans EA A)
+	      (DtransM1 : trans EM1 C1)
+	      (DtransM2 : trans EM2 C2)
+	      (DsubtypeC1A : subtype C1 A M')
+	      (DsubtypeC2A : subtype C2 A M')
+	   <- equiv-comp DequivN
+	      (DtransE : ttrans (EB EM1) E)
+	      (DtransN1 : trans EN1 D1)
+	      (DtransN2 : trans EN2 D2)
+	      (DsubtypeD1E : subtype D1 E N')
+	      (DsubtypeD2E : subtype D2 E N')
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (DewfB ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- trans-principal DtransM1
+	      (DprincipalC1 : principal C1)
+	   <- principal-subtype DprincipalC1 DsubtypeC1A
+	      (DeqM' : {x} term-eq (M' x) M)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqM' DsubtypeC1A
+	      (DsubtypeC1A' : subtype C1 A ([_] M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqM' DsubtypeC2A
+	      (DsubtypeC2A' : subtype C2 A ([_] M))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- trans-reg DtransM1
+	      (DwfC1 : wf C1)
+	   <- subtype-reg' DsubtypeC1A' DwfC1 DwfA
+	      (DofM : of M A)
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB DtransM1 DwfA DsubtypeC1A' DsubBx
+	      (DtransBx : ttrans (EB EM1) Bx)
+	   <- ttrans-fun DtransE DtransBx
+	      (DeqE : tp-eq E Bx)
+	   <- subtype-resp tp-eq/i DeqE ([_] term-eq/i) DsubtypeD1E
+	      (DsubtypeD1Bx : subtype D1 Bx N')
+	   <- subtype-resp tp-eq/i DeqE ([_] term-eq/i) DsubtypeD2E
+	      (DsubtypeD2Bx : subtype D2 Bx N').
+
+-pi1	: equiv-comp
+	   (equiv/pi1
+	      (Dequiv : equiv EM1 EM2 (esigma EA EB)))
+	   DtransA
+	   (trans/pi1 DtransM1')
+	   (trans/pi1 DtransM2')
+	   DsubtypeC1A'
+	   DsubtypeC2A'
+	   <- equiv-comp Dequiv
+	      (ttrans/sigma
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM1 : trans EM1 CD1)
+	      (DtransM2 : trans EM2 CD2)
+	      (DsubtypeCD1AB : subtype CD1 (sigma A B) O)
+	      (DsubtypeCD2AB : subtype CD2 (sigma A B) O)
+	   <- trans-principal DtransM1
+	      (DprincipalCD1 : principal CD1)
+	   <- trans-principal DtransM2
+	      (DprincipalCD2 : principal CD2)
+	   <- principal-subtype-sigma-invert DprincipalCD1 DsubtypeCD1AB
+	      (DeqCD1 : tp-eq CD1 (sigma C1 ([_] D1)))
+	   <- principal-subtype-sigma-invert DprincipalCD2 DsubtypeCD2AB
+	      (DeqCD2 : tp-eq CD2 (sigma C2 ([_] D2)))
+	   <- trans-resp eterm-eq/i DeqCD1 DtransM1
+	      (DtransM1' : trans EM1 (sigma C1 ([_] D1)))
+	   <- trans-resp eterm-eq/i DeqCD2 DtransM2
+	      (DtransM2' : trans EM2 (sigma C2 ([_] D2)))
+	   <- subtype-resp DeqCD1 tp-eq/i ([_] term-eq/i) DsubtypeCD1AB
+	      (DsubtypeCD1AB' : subtype (sigma C1 ([_] D1)) (sigma A B) O)
+	   <- subtype-resp DeqCD2 tp-eq/i ([_] term-eq/i) DsubtypeCD2AB
+	      (DsubtypeCD2AB' : subtype (sigma C2 ([_] D2)) (sigma A B) O)
+	   <- subtype-sigma-invert DsubtypeCD1AB'
+	      (DsubtypeC1A : subtype C1 A Lca1)
+	      (DsubE1 : {x} tsub B (Lca1 x) (E1 x))
+	      (DsubtypeD1E1 : {x} subtype D1 (E1 x) (Lde1 x))
+	      (DeqO1 : {p} term-eq (O p) (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))))
+	   <- subtype-sigma-invert DsubtypeCD2AB'
+	      (DsubtypeC2A : subtype C2 A Lca2)
+	      (DsubE2 : {x} tsub B (Lca2 x) (E2 x))
+	      (DsubtypeD2E2 : {x} subtype D2 (E2 x) (Lde2 x))
+	      (DeqO2 : {p} term-eq (O p) (pair (Lca2 (pi1 p)) (Lde2 (pi1 p) (pi2 p))))
+	   <- trans-principal DtransM1'
+	      (principal/sigma
+		 (DprincipalD1 : principal D1)
+		 (DprincipalC1 : principal C1))
+	   <- trans-principal DtransM2'
+	      (principal/sigma
+		 (DprincipalD2 : principal D2)
+		 (DprincipalC2 : principal C2))
+	   <- principal-subtype DprincipalC1 DsubtypeC1A 
+	      (DeqLca1 : {x} term-eq (Lca1 x) M)
+	   <- principal-subtype DprincipalC2 DsubtypeC2A 
+	      (DeqLca2 : {x} term-eq (Lca2 x) M')
+	   <- ({p}
+		 term-eq-symm (DeqO1 p)
+		 (DeqO1' p : term-eq (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))) (O p)))
+	   <- ({p}
+		 term-eq-trans (DeqO1' p) (DeqO2 p)
+		 (DeqPair p : term-eq (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))) (pair (Lca2 (pi1 p)) (Lde2 (pi1 p) (pi2 p)))))
+	   <- ({p}
+		 term-eq-cdr-pair (DeqPair p)
+		 (DeqLca p : term-eq (Lca1 (pi1 p)) (Lca2 (pi1 p)))
+		 (DeqLde p : term-eq (Lde1 (pi1 p) (pi2 p)) (Lde2 (pi1 p) (pi2 p))))
+	   <- ({x}
+		 term-eq-symm (DeqLca2 x)
+		 (DeqLca2' x : term-eq M' (Lca2 x)))
+	   <- ({p}
+		 term-eq-symm (DeqLca p)
+		 (DeqLca' p : term-eq (Lca2 (pi1 p)) (Lca1 (pi1 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLca2' (pi1 p)) (DeqLca' p)
+		 (DeqLcay p : term-eq M' (Lca1 (pi1 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLcay p) (DeqLca1 (pi1 p))
+		 (DeqM p : term-eq M' M))
+	   <- ({x}
+		 term-eq-trans (DeqLca2 x) (DeqM aca)
+		 (DeqLca2'' x : term-eq (Lca2 x) M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca1 DsubtypeC1A
+	      (DsubtypeC1A' : subtype C1 A ([_] M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca2'' DsubtypeC2A
+	      (DsubtypeC2A' : subtype C2 A ([_] M)).
+
+-pi2	: equiv-comp
+	   (equiv/pi2
+	      (Dequiv : equiv EM1 EM2 (esigma EA EB)))
+	   DtransBx
+	   (trans/pi2 DtransM1')
+	   (trans/pi2 DtransM2')
+	   (DsubtypeD1Bx' aca)
+	   (DsubtypeD2Bx' aca)
+	   <- equiv-comp Dequiv
+	      (ttrans/sigma
+		 (DtransB : {x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		 (DtransA : ttrans EA A))
+	      (DtransM1 : trans EM1 CD1)
+	      (DtransM2 : trans EM2 CD2)
+	      (DsubtypeCD1AB : subtype CD1 (sigma A B) O)
+	      (DsubtypeCD2AB : subtype CD2 (sigma A B) O)
+	   <- trans-principal DtransM1
+	      (DprincipalCD1 : principal CD1)
+	   <- trans-principal DtransM2
+	      (DprincipalCD2 : principal CD2)
+	   <- principal-subtype-sigma-invert DprincipalCD1 DsubtypeCD1AB
+	      (DeqCD1 : tp-eq CD1 (sigma C1 ([_] D1)))
+	   <- principal-subtype-sigma-invert DprincipalCD2 DsubtypeCD2AB
+	      (DeqCD2 : tp-eq CD2 (sigma C2 ([_] D2)))
+	   <- trans-resp eterm-eq/i DeqCD1 DtransM1
+	      (DtransM1' : trans EM1 (sigma C1 ([_] D1)))
+	   <- trans-resp eterm-eq/i DeqCD2 DtransM2
+	      (DtransM2' : trans EM2 (sigma C2 ([_] D2)))
+	   <- subtype-resp DeqCD1 tp-eq/i ([_] term-eq/i) DsubtypeCD1AB
+	      (DsubtypeCD1AB' : subtype (sigma C1 ([_] D1)) (sigma A B) O)
+	   <- subtype-resp DeqCD2 tp-eq/i ([_] term-eq/i) DsubtypeCD2AB
+	      (DsubtypeCD2AB' : subtype (sigma C2 ([_] D2)) (sigma A B) O)
+	   <- subtype-sigma-invert DsubtypeCD1AB'
+	      (DsubtypeC1A : subtype C1 A Lca1)
+	      (DsubE1 : {x} tsub B (Lca1 x) (E1 x))
+	      (DsubtypeD1E1 : {x} subtype D1 (E1 x) (Lde1 x))
+	      (DeqO1 : {p} term-eq (O p) (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))))
+	   <- subtype-sigma-invert DsubtypeCD2AB'
+	      (DsubtypeC2A : subtype C2 A Lca2)
+	      (DsubE2 : {x} tsub B (Lca2 x) (E2 x))
+	      (DsubtypeD2E2 : {x} subtype D2 (E2 x) (Lde2 x))
+	      (DeqO2 : {p} term-eq (O p) (pair (Lca2 (pi1 p)) (Lde2 (pi1 p) (pi2 p))))
+	   <- trans-principal DtransM1'
+	      (principal/sigma
+		 (DprincipalD1 : principal D1)
+		 (DprincipalC1 : principal C1))
+	   <- trans-principal DtransM2'
+	      (principal/sigma
+		 (DprincipalD2 : principal D2)
+		 (DprincipalC2 : principal C2))
+	   <- principal-subtype DprincipalC1 DsubtypeC1A 
+	      (DeqLca1 : {x} term-eq (Lca1 x) M)
+	   <- principal-subtype DprincipalC2 DsubtypeC2A 
+	      (DeqLca2 : {x} term-eq (Lca2 x) M')
+	   <- ({p}
+		 term-eq-symm (DeqO1 p)
+		 (DeqO1' p : term-eq (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))) (O p)))
+	   <- ({p}
+		 term-eq-trans (DeqO1' p) (DeqO2 p)
+		 (DeqPair p : term-eq (pair (Lca1 (pi1 p)) (Lde1 (pi1 p) (pi2 p))) (pair (Lca2 (pi1 p)) (Lde2 (pi1 p) (pi2 p)))))
+	   <- ({p}
+		 term-eq-cdr-pair (DeqPair p)
+		 (DeqLca p : term-eq (Lca1 (pi1 p)) (Lca2 (pi1 p)))
+		 (DeqLde p : term-eq (Lde1 (pi1 p) (pi2 p)) (Lde2 (pi1 p) (pi2 p))))
+	   <- ({x}
+		 term-eq-symm (DeqLca2 x)
+		 (DeqLca2' x : term-eq M' (Lca2 x)))
+	   <- ({p}
+		 term-eq-symm (DeqLca p)
+		 (DeqLca' p : term-eq (Lca2 (pi1 p)) (Lca1 (pi1 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLca2' (pi1 p)) (DeqLca' p)
+		 (DeqLcay p : term-eq M' (Lca1 (pi1 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLcay p) (DeqLca1 (pi1 p))
+		 (DeqM p : term-eq M' M))
+	   <- ({x}
+		 term-eq-trans (DeqLca2 x) (DeqM aca)
+		 (DeqLca2'' x : term-eq (Lca2 x) M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca1 DsubtypeC1A
+	      (DsubtypeC1A' : subtype C1 A ([_] M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca2'' DsubtypeC2A
+	      (DsubtypeC2A' : subtype C2 A ([_] M))
+	   <- trans-reg DtransM1'
+	      (wf/sigma
+		 (DwfD1 : {x} vof x C1 -> wf D1)
+		 (DwfC1 : wf C1))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- subtype-reg' DsubtypeC1A' DwfC1 DwfA
+	      (DofM : of M A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB (trans/pi1 DtransM1') DwfA DsubtypeC1A' DsubBx
+	      (DtransBx : ttrans (EB (epi1 EM1)) Bx)
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (DeqLca1 x) tp-eq/i (DsubE1 x)
+		 (DsubE1' x : tsub B M (E1 x)))
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (DeqLca2'' x) tp-eq/i (DsubE2 x)
+		 (DsubE2' x : tsub B M (E2 x)))
+	   <- ({x}
+		 tsub-fun (DsubE1' x) DsubBx
+		 (DeqE1 x : tp-eq (E1 x) Bx))
+	   <- ({x}
+		 tsub-fun (DsubE2' x) DsubBx
+		 (DeqE2 x : tp-eq (E2 x) Bx))
+	   <- ({x}
+		 subtype-resp tp-eq/i (DeqE1 x) ([_] term-eq/i) (DsubtypeD1E1 x)
+		 (DsubtypeD1Bx x : subtype D1 Bx (Lde1 x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i (DeqE2 x) ([_] term-eq/i) (DsubtypeD2E2 x)
+		 (DsubtypeD2Bx x : subtype D2 Bx (Lde2 x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeD1Bx x) (DsubtypeD1Bx aca)
+		 (DeqLde1x x : {y} term-eq (Lde1 x y) (Lde1 aca y)))
+	   <- ({x}
+		 subtype-fun (DsubtypeD2Bx x) (DsubtypeD2Bx aca)
+		 (DeqLde2x x : {y} term-eq (Lde2 x y) (Lde2 aca y)))
+	   <- principal-subtype DprincipalD1 (DsubtypeD1Bx aca)
+	      (DeqLde1y : {y} term-eq (Lde1 aca y) N)
+	   <- principal-subtype DprincipalD2 (DsubtypeD2Bx aca)
+	      (DeqLde2y : {y} term-eq (Lde2 aca y) N')
+	   <- ({x} {y}
+		 term-eq-trans (DeqLde1x x y) (DeqLde1y y)
+		 (DeqLde1 x y : term-eq (Lde1 x y) N))
+	   <- ({x} {y}
+		 term-eq-trans (DeqLde2x x y) (DeqLde2y y)
+		 (DeqLde2 x y : term-eq (Lde2 x y) N'))
+	   <- ({x} {y}
+		 term-eq-symm (DeqLde2 x y)
+		 (DeqLde2' x y : term-eq N' (Lde2 x y)))
+	   <- ({p}
+		 term-eq-symm (DeqLde p)
+		 (DeqLde' p : term-eq (Lde2 (pi1 p) (pi2 p)) (Lde1 (pi1 p) (pi2 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLde2' (pi1 p) (pi2 p)) (DeqLde' p)
+		 (DeqLdey p : term-eq N' (Lde1 (pi1 p) (pi2 p))))
+	   <- ({p}
+		 term-eq-trans (DeqLdey p) (DeqLde1 (pi1 p) (pi2 p))
+		 (DeqN p : term-eq N' N))
+	   <- ({x} {y}
+		 term-eq-trans (DeqLde2 x y) (DeqN aca)
+		 (DeqLde2'' x y : term-eq (Lde2 x y) N))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqLde1 x) (DsubtypeD1Bx x)
+		 (DsubtypeD1Bx' x : subtype D1 Bx ([_] N)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqLde2'' x) (DsubtypeD2Bx x)
+		 (DsubtypeD2Bx' x : subtype D2 Bx ([_] N))).
+
+-sing	: equiv-comp
+	   (equiv/sing
+	      (Dequiv : equiv EM EN et))
+	   (ttrans/sing DtransM')
+	   DtransM'
+	   DtransN'
+	   subtype/sing
+	   subtype/sing
+	   <- equiv-comp Dequiv
+	      ttrans/t
+	      (DtransM : trans EM A)
+	      (DtransN : trans EN B)
+	      (DsubtypeA : subtype A t M)
+	      (DsubtypeB : subtype B t M)
+	   <- trans-principal DtransM
+	      (DprincipalA : principal A)
+	   <- trans-principal DtransN
+	      (DprincipalB : principal B)
+	   <- principal-subtype-t-invert DprincipalA DsubtypeA
+	      (DeqA : tp-eq A (sing R))
+	      (DeqM : {x} term-eq (M x) (at R))
+	   <- principal-subtype-t-invert' DprincipalB DsubtypeB DeqM
+	      (DeqB : tp-eq B (sing R))
+	   <- trans-resp eterm-eq/i DeqA DtransM
+	      (DtransM' : trans EM (sing R))
+	   <- trans-resp eterm-eq/i DeqB DtransN
+	      (DtransN' : trans EN (sing R)).
+
+-singel	: equiv-comp
+	   (equiv/singelim
+	      (Deof : eof EM (esing EN)))
+	   ttrans/t
+	   DtransM
+	   DtransN
+	   subtype/sing_t
+	   subtype/sing_t
+	   <- of-comp Deof
+	      (ttrans/sing
+		 (DtransN : trans EN (sing R)))
+	      (DtransM : trans EM (sing R))
+	      subtype/sing.
+
+-one	: equiv-comp
+	   (equiv/one
+	      (Deof2 : eof EM2 eone)
+	      (Deof1 : eof EM1 eone))
+	   ttrans/one
+	   DtransM
+	   DtransN
+	   subtype/one
+	   subtype/one
+	   <- of-comp Deof1
+	      ttrans/one
+	      DtransM
+	      subtype/one
+	   <- of-comp Deof2
+	      ttrans/one
+	      DtransN
+	      subtype/one.
+
+-extpi	: equiv-comp
+	   (equiv/extpi
+	      (Dequiv : {ex} evof ex EA -> equiv (eapp EM1 ex) (eapp EM2 ex) (EB ex))
+	      (Deof2 : eof EM2 (epi EA EB2))
+	      (Deof1 : eof EM1 (epi EA EB1)))
+	   (ttrans/pi DtransB DtransA)
+	   Dtrans1
+	   Dtrans2
+	   (subtype/pi DsubtypeD1xB' DsubD1x DsubtypeAC1)
+	   (subtype/pi DsubtypeD2xB' DsubD2x DsubtypeAC2')
+	   <- of-comp Deof1
+	      (ttrans/pi
+		 _
+		 (DtransA : ttrans EA A))
+	      (Dtrans1 : trans EM1 (pi C1 D1))
+	      (subtype/pi
+		 _
+		 (DsubD1x : {x} tsub D1 (Lac1 x) (D1x x))
+		 (DsubtypeAC1 : subtype A C1 Lac1))
+	   <- of-comp Deof2
+	      (ttrans/pi
+		 _
+		 (DtransA' : ttrans EA A'))
+	      (Dtrans2 : trans EM2 (pi C2 D2))
+	      (subtype/pi
+		 _
+		 (DsubD2x : {x} tsub D2 (Lac2 x) (D2x x))
+		 (DsubtypeAC2 : subtype A' C2 Lac2))
+	   <- ttrans-fun DtransA' DtransA
+	      (DeqA : tp-eq A' A)
+	   <- subtype-resp DeqA tp-eq/i ([_] term-eq/i) DsubtypeAC2
+	      (DsubtypeAC2' : subtype A C2 Lac2)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> equiv-comp (Dequiv ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (trans/app
+		       (DsubF1y x : tsub ([y] F1 x y) (M1 x) (F1y x))
+		       (DsubtypeH1E1 x : subtype (H1 x) (E1 x) ([_] M1 x))
+		       (DtransH1 x d ex xt : trans ex (H1 x))
+		       (Dtrans1' x d ex xt : trans EM1 (pi (E1 x) ([y] F1 x y))))
+		    (trans/app
+		       (DsubF2y x : tsub ([y] F2 x y) (M2 x) (F2y x))
+		       (DsubtypeH2E2 x : subtype (H2 x) (E2 x) ([_] M2 x))
+		       (DtransH2 x d ex xt : trans ex (H2 x))
+		       (Dtrans2' x d ex xt : trans EM2 (pi (E2 x) ([y] F2 x y))))
+		    (DsubtypeF1yB x : subtype (F1y x) (B x) (O x))
+		    (DsubtypeF2yB x : subtype (F2y x) (B x) (O x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (Dtrans1' x d ex xt) Dtrans1
+		 (DeqEFCD1 x : tp-eq (pi (E1 x) (F1 x)) (pi C1 D1)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (Dtrans2' x d ex xt) Dtrans2
+		 (DeqEFCD2 x : tp-eq (pi (E2 x) (F2 x)) (pi C2 D2)))
+	   <- ({x}
+		 tp-eq-cdr-pi (DeqEFCD1 x)
+		 (DeqE1C1 x : tp-eq (E1 x) C1)
+		 (DeqF1D1 x : {y} tp-eq (F1 x y) (D1 y)))
+	   <- ({x}
+		 tp-eq-cdr-pi (DeqEFCD2 x)
+		 (DeqE2C2 x : tp-eq (E2 x) C2)
+		 (DeqF2D2 x : {y} tp-eq (F2 x y) (D2 y)))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x}
+		 can-expand x A (X x)
+		 (Dexpand x : expand x A (X x)))
+	   <- ({x} {d:vof x A}
+		 expand-reg (aof/var DwfA d) (Dexpand x)
+		 (DofX x d : of (X x) A))
+	   <- ({x} {d:vof x A}
+		 can-self (DofX x d)
+		 (Dself x : self (X x) A (As x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (DtransH1 x d ex xt) (trans/var (Dself x) (Dexpand x) DwfA d xt)
+		 (DeqH1 x : tp-eq (H1 x) (As x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (DtransH2 x d ex xt) (trans/var (Dself x) (Dexpand x) DwfA d xt)
+		 (DeqH2 x : tp-eq (H2 x) (As x)))
+	   <- ({x} 
+		 subtype-resp (DeqH1 x) (DeqE1C1 x) ([_] term-eq/i) (DsubtypeH1E1 x)
+		 (DsubtypeAsC1 x : subtype (As x) C1 ([_] M1 x)))
+	   <- ({x} 
+		 subtype-resp (DeqH2 x) (DeqE2C2 x) ([_] term-eq/i) (DsubtypeH2E2 x)
+		 (DsubtypeAsC2 x : subtype (As x) C2 ([_] M2 x)))
+	   <- ({x} {d:vof x A}
+		 self-reg (Dself x) (DofX x d)
+		 (DofX' x d : of (X x) (As x))
+		 (DsubtypeAsA x : subtype (As x) A ([_] X x)))
+	   <- trans-reg Dtrans1
+	      (wf/pi
+		 (DwfD1 : {x} vof x C1 -> wf (D1 x))
+		 (DwfC1 : wf C1))
+	   <- trans-reg Dtrans2
+	      (wf/pi
+		 (DwfD2 : {x} vof x C2 -> wf (D2 x))
+		 (DwfC2 : wf C2))
+	   <- subtype-reg DsubtypeAC1 DwfA DwfC1
+	      (DofLac1 : {x} vof x A -> of (Lac1 x) C1)
+	   <- subtype-reg DsubtypeAC2' DwfA DwfC2
+	      (DofLac2 : {x} vof x A -> of (Lac2 x) C2)
+	   <- sub-expand-var DwfA DofLac1 Dexpand
+	      (DsubLac1 : {x} sub Lac1 (X x) (Lac1 x))
+	   <- sub-expand-var DwfA DofLac2 Dexpand
+	      (DsubLac2 : {x} sub Lac2 (X x) (Lac2 x))
+	   <- ({x} {d:vof x A}
+		 of-reg (DofX' x d)
+		 (DwfAs x d : wf (As x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfC1 (DsubtypeAsA x) DsubtypeAC1 ([_] DsubLac1 x)
+		 (DsubtypeAsC1' x : subtype (As x) C1 ([_] Lac1 x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfC2 (DsubtypeAsA x) DsubtypeAC2' ([_] DsubLac2 x)
+		 (DsubtypeAsC2' x : subtype (As x) C2 ([_] Lac2 x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeAsC1 x) (DsubtypeAsC1' x)
+		 (DeqM1 x : {y} term-eq (M1 x) (Lac1 x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeAsC2 x) (DsubtypeAsC2' x)
+		 (DeqM2 x : {y} term-eq (M2 x) (Lac2 x)))
+	   <- ({x}
+		 tsub-resp ([y] DeqF1D1 x y) (DeqM1 x aca) tp-eq/i (DsubF1y x)
+		 (DsubF1y' x : tsub D1 (Lac1 x) (F1y x))) 
+	   <- ({x}
+		 tsub-resp ([y] DeqF2D2 x y) (DeqM2 x aca) tp-eq/i (DsubF2y x)
+		 (DsubF2y' x : tsub D2 (Lac2 x) (F2y x)))
+	   <- ({x}
+		 tsub-fun (DsubF1y' x) (DsubD1x x)
+		 (DeqD1x x : tp-eq (F1y x) (D1x x)))
+	   <- ({x}
+		 tsub-fun (DsubF2y' x) (DsubD2x x)
+		 (DeqD2x x : tp-eq (F2y x) (D2x x)))
+	   <- trans-principal Dtrans1
+	      (principal/pi
+		 (DprincipalD1 : {x} principal (D1 x)))
+	   <- ({x}
+		 principal-sub DprincipalD1 (DsubD1x x)
+		 (DprincipalD1x x : principal (D1x x)))
+	   <- ({x}
+		 subtype-resp (DeqD1x x) tp-eq/i ([_] term-eq/i) (DsubtypeF1yB x)
+		 (DsubtypeD1xB x : subtype (D1x x) (B x) (O x)))
+	   <- ({x}
+		 subtype-resp (DeqD2x x) tp-eq/i ([_] term-eq/i) (DsubtypeF2yB x)
+		 (DsubtypeD2xB x : subtype (D2x x) (B x) (O x)))
+	   <- ({x}
+		 principal-subtype (DprincipalD1x x) (DsubtypeD1xB x)
+		 (DeqO x : {y} term-eq (O x y) (O' x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO x) (DsubtypeD1xB x)
+		 (DsubtypeD1xB' x : subtype (D1x x) (B x) ([_] O' x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO x) (DsubtypeD2xB x)
+		 (DsubtypeD2xB' x : subtype (D2x x) (B x) ([_] O' x))).
+
+-extpiw	: equiv-comp
+	   (equiv/extpiw
+	      (Dequiv : {ex} evof ex EA -> equiv (eapp EM1 ex) (eapp EM2 ex) (EB ex))
+	      (Dequiv12 : equiv EM1 EM2 (epi EA EB1)))
+	   (ttrans/pi DtransB DtransA)
+	   Dtrans1
+	   Dtrans2
+	   (subtype/pi DsubtypeD1xB' DsubD1x DsubtypeAC1)
+	   (subtype/pi DsubtypeD2xB' DsubD2x DsubtypeAC2')
+	   <- equiv-comp Dequiv12
+	      (ttrans/pi
+		 _
+		 (DtransA : ttrans EA A))
+	      (Dtrans1 : trans EM1 (pi C1 D1))
+	      (Dtrans2 : trans EM2 (pi C2 D2))
+	      (DsubtypeCDAB1 : subtype (pi C1 D1) (pi A B') _)
+	      (DsubtypeCDAB2 : subtype (pi C2 D2) (pi A B') _)
+	   <- subtype-pi-invert DsubtypeCDAB1
+	      (DsubtypeAC1 : subtype A C1 Lac1)
+	      (DsubD1x : {x} tsub D1 (Lac1 x) (D1x x))
+	      _ _
+	   <- subtype-pi-invert DsubtypeCDAB2
+	      (DsubtypeAC2' : subtype A C2 Lac2)
+	      (DsubD2x : {x} tsub D2 (Lac2 x) (D2x x))
+	      _ _
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> equiv-comp (Dequiv ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (trans/app
+		       (DsubF1y x : tsub ([y] F1 x y) (M1 x) (F1y x))
+		       (DsubtypeH1E1 x : subtype (H1 x) (E1 x) ([_] M1 x))
+		       (DtransH1 x d ex xt : trans ex (H1 x))
+		       (Dtrans1' x d ex xt : trans EM1 (pi (E1 x) ([y] F1 x y))))
+		    (trans/app
+		       (DsubF2y x : tsub ([y] F2 x y) (M2 x) (F2y x))
+		       (DsubtypeH2E2 x : subtype (H2 x) (E2 x) ([_] M2 x))
+		       (DtransH2 x d ex xt : trans ex (H2 x))
+		       (Dtrans2' x d ex xt : trans EM2 (pi (E2 x) ([y] F2 x y))))
+		    (DsubtypeF1yB x : subtype (F1y x) (B x) (O x))
+		    (DsubtypeF2yB x : subtype (F2y x) (B x) (O x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (Dtrans1' x d ex xt) Dtrans1
+		 (DeqEFCD1 x : tp-eq (pi (E1 x) (F1 x)) (pi C1 D1)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (Dtrans2' x d ex xt) Dtrans2
+		 (DeqEFCD2 x : tp-eq (pi (E2 x) (F2 x)) (pi C2 D2)))
+	   <- ({x}
+		 tp-eq-cdr-pi (DeqEFCD1 x)
+		 (DeqE1C1 x : tp-eq (E1 x) C1)
+		 (DeqF1D1 x : {y} tp-eq (F1 x y) (D1 y)))
+	   <- ({x}
+		 tp-eq-cdr-pi (DeqEFCD2 x)
+		 (DeqE2C2 x : tp-eq (E2 x) C2)
+		 (DeqF2D2 x : {y} tp-eq (F2 x y) (D2 y)))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x}
+		 can-expand x A (X x)
+		 (Dexpand x : expand x A (X x)))
+	   <- ({x} {d:vof x A}
+		 expand-reg (aof/var DwfA d) (Dexpand x)
+		 (DofX x d : of (X x) A))
+	   <- ({x} {d:vof x A}
+		 can-self (DofX x d)
+		 (Dself x : self (X x) A (As x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (DtransH1 x d ex xt) (trans/var (Dself x) (Dexpand x) DwfA d xt)
+		 (DeqH1 x : tp-eq (H1 x) (As x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-fun (DtransH2 x d ex xt) (trans/var (Dself x) (Dexpand x) DwfA d xt)
+		 (DeqH2 x : tp-eq (H2 x) (As x)))
+	   <- ({x} 
+		 subtype-resp (DeqH1 x) (DeqE1C1 x) ([_] term-eq/i) (DsubtypeH1E1 x)
+		 (DsubtypeAsC1 x : subtype (As x) C1 ([_] M1 x)))
+	   <- ({x} 
+		 subtype-resp (DeqH2 x) (DeqE2C2 x) ([_] term-eq/i) (DsubtypeH2E2 x)
+		 (DsubtypeAsC2 x : subtype (As x) C2 ([_] M2 x)))
+	   <- ({x} {d:vof x A}
+		 self-reg (Dself x) (DofX x d)
+		 (DofX' x d : of (X x) (As x))
+		 (DsubtypeAsA x : subtype (As x) A ([_] X x)))
+	   <- trans-reg Dtrans1
+	      (wf/pi
+		 (DwfD1 : {x} vof x C1 -> wf (D1 x))
+		 (DwfC1 : wf C1))
+	   <- trans-reg Dtrans2
+	      (wf/pi
+		 (DwfD2 : {x} vof x C2 -> wf (D2 x))
+		 (DwfC2 : wf C2))
+	   <- subtype-reg DsubtypeAC1 DwfA DwfC1
+	      (DofLac1 : {x} vof x A -> of (Lac1 x) C1)
+	   <- subtype-reg DsubtypeAC2' DwfA DwfC2
+	      (DofLac2 : {x} vof x A -> of (Lac2 x) C2)
+	   <- sub-expand-var DwfA DofLac1 Dexpand
+	      (DsubLac1 : {x} sub Lac1 (X x) (Lac1 x))
+	   <- sub-expand-var DwfA DofLac2 Dexpand
+	      (DsubLac2 : {x} sub Lac2 (X x) (Lac2 x))
+	   <- ({x} {d:vof x A}
+		 of-reg (DofX' x d)
+		 (DwfAs x d : wf (As x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfC1 (DsubtypeAsA x) DsubtypeAC1 ([_] DsubLac1 x)
+		 (DsubtypeAsC1' x : subtype (As x) C1 ([_] Lac1 x)))
+	   <- ({x} {d:vof x A}
+		 subtype-trans (DwfAs x d) DwfA DwfC2 (DsubtypeAsA x) DsubtypeAC2' ([_] DsubLac2 x)
+		 (DsubtypeAsC2' x : subtype (As x) C2 ([_] Lac2 x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeAsC1 x) (DsubtypeAsC1' x)
+		 (DeqM1 x : {y} term-eq (M1 x) (Lac1 x)))
+	   <- ({x}
+		 subtype-fun (DsubtypeAsC2 x) (DsubtypeAsC2' x)
+		 (DeqM2 x : {y} term-eq (M2 x) (Lac2 x)))
+	   <- ({x}
+		 tsub-resp ([y] DeqF1D1 x y) (DeqM1 x aca) tp-eq/i (DsubF1y x)
+		 (DsubF1y' x : tsub D1 (Lac1 x) (F1y x))) 
+	   <- ({x}
+		 tsub-resp ([y] DeqF2D2 x y) (DeqM2 x aca) tp-eq/i (DsubF2y x)
+		 (DsubF2y' x : tsub D2 (Lac2 x) (F2y x)))
+	   <- ({x}
+		 tsub-fun (DsubF1y' x) (DsubD1x x)
+		 (DeqD1x x : tp-eq (F1y x) (D1x x)))
+	   <- ({x}
+		 tsub-fun (DsubF2y' x) (DsubD2x x)
+		 (DeqD2x x : tp-eq (F2y x) (D2x x)))
+	   <- trans-principal Dtrans1
+	      (principal/pi
+		 (DprincipalD1 : {x} principal (D1 x)))
+	   <- ({x}
+		 principal-sub DprincipalD1 (DsubD1x x)
+		 (DprincipalD1x x : principal (D1x x)))
+	   <- ({x}
+		 subtype-resp (DeqD1x x) tp-eq/i ([_] term-eq/i) (DsubtypeF1yB x)
+		 (DsubtypeD1xB x : subtype (D1x x) (B x) (O x)))
+	   <- ({x}
+		 subtype-resp (DeqD2x x) tp-eq/i ([_] term-eq/i) (DsubtypeF2yB x)
+		 (DsubtypeD2xB x : subtype (D2x x) (B x) (O x)))
+	   <- ({x}
+		 principal-subtype (DprincipalD1x x) (DsubtypeD1xB x)
+		 (DeqO x : {y} term-eq (O x y) (O' x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO x) (DsubtypeD1xB x)
+		 (DsubtypeD1xB' x : subtype (D1x x) (B x) ([_] O' x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqO x) (DsubtypeD2xB x)
+		 (DsubtypeD2xB' x : subtype (D2x x) (B x) ([_] O' x))).
+
+-extsig	: equiv-comp
+	   (equiv/extsigma
+	      (Dewf : {ex} evof ex EA -> ewf (EB ex))
+	      (Dequiv2 : equiv (epi2 EM1) (epi2 EM2) (EB (epi1 EM1)))
+	      (Dequiv1 : equiv (epi1 EM1) (epi1 EM2) EA))
+	   (ttrans/sigma DtransB DtransA)
+	   Dtrans1
+	   Dtrans2
+	   (subtype/sigma ([_] DsubtypeD1Bx') ([_] DsubBx) DsubtypeC1A')
+	   (subtype/sigma ([_] DsubtypeD2Bx') ([_] DsubBx) DsubtypeC2A')
+	   <- equiv-comp Dequiv1
+	      (DtransA : ttrans EA A)
+	      (trans/pi1
+		 (Dtrans1 : trans EM1 (sigma C1 ([_] D1))))
+	      (trans/pi1
+		 (Dtrans2 : trans EM2 (sigma C2 ([_] D2))))
+	      (DsubtypeC1A : subtype C1 A Lca)
+	      (DsubtypeC2A : subtype C2 A Lca)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> wf-comp (Dewf ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x)))
+	   <- trans-principal Dtrans1
+	      (principal/sigma
+		 (DprincipalD1 : principal D1)
+		 (DprincipalC1 : principal C1))
+	   <- principal-subtype DprincipalC1 DsubtypeC1A
+	      (DeqLca : {x} term-eq (Lca x) M)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeC1A
+	      (DsubtypeC1A' : subtype C1 A ([_] M))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeC2A
+	      (DsubtypeC2A' : subtype C2 A ([_] M))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- trans-reg Dtrans1
+	      (wf/sigma
+		 _
+		 (DwfC1 : wf C1))
+	   <- subtype-reg' DsubtypeC1A' DwfC1 DwfA
+	      (DofM : of M A)
+	   <- can-tsub DwfB DofM
+	      (DsubBx : tsub B M Bx)
+	   <- ttrans-sub DtransB (trans/pi1 Dtrans1) DwfA DsubtypeC1A' DsubBx
+	      (DtransBx : ttrans (EB (epi1 EM1)) Bx)
+	   <- equiv-comp Dequiv2
+	      (DtransBx' : ttrans (EB (epi1 EM1)) Bx')
+	      (trans/pi2
+		 (Dtrans1' : trans EM1 (sigma C1' ([_] D1'))))
+	      (trans/pi2
+		 (Dtrans2' : trans EM2 (sigma C2' ([_] D2'))))
+	      (DsubtypeD1'Bx' : subtype D1' Bx' Ldb)
+	      (DsubtypeD2'Bx' : subtype D2' Bx' Ldb)
+	   <- ttrans-fun DtransBx' DtransBx
+	      (DeqBx : tp-eq Bx' Bx)
+	   <- trans-fun Dtrans1' Dtrans1
+	      (DeqCD1 : tp-eq (sigma C1' ([_] D1')) (sigma C1 ([_] D1)))
+	   <- trans-fun Dtrans2' Dtrans2
+	      (DeqCD2 : tp-eq (sigma C2' ([_] D2')) (sigma C2 ([_] D2)))
+	   <- tp-eq-cdr-sigma DeqCD1 _
+	      (DeqD1 : {x} tp-eq D1' D1)
+	   <- tp-eq-cdr-sigma DeqCD2 _
+	      (DeqD2 : {x} tp-eq D2' D2)
+	   <- subtype-resp (DeqD1 aca) DeqBx ([_] term-eq/i) DsubtypeD1'Bx'
+	      (DsubtypeD1Bx : subtype D1 Bx Ldb)
+	   <- subtype-resp (DeqD2 aca) DeqBx ([_] term-eq/i) DsubtypeD2'Bx'
+	      (DsubtypeD2Bx : subtype D2 Bx Ldb)
+	   <- principal-subtype DprincipalD1 DsubtypeD1Bx
+	      (DeqLdb : {x} term-eq (Ldb x) N)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLdb DsubtypeD1Bx
+	      (DsubtypeD1Bx' : subtype D1 Bx ([_] N))
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLdb DsubtypeD2Bx
+	      (DsubtypeD2Bx' : subtype D2 Bx ([_] N)).
+
+-subsum	: equiv-comp
+	   (equiv/subsume
+	      (Dsubtp : subtp EA EB)
+	      (Dequiv : equiv EM EN EA))
+	   DtransB
+	   DtransM
+	   DtransN
+	   DsubtypeCB
+	   DsubtypeDB
+	   <- equiv-comp Dequiv
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM C)
+	      (DtransN : trans EN D)
+	      (DsubtypeCA : subtype C A O)
+	      (DsubtypeDA : subtype D A O)
+	   <- subtp-comp Dsubtp
+	      (DtransA' : ttrans EA A')
+	      (DtransB : ttrans EB B)
+	      (DsubtypeA'B : subtype A' B P)
+	   <- ttrans-fun DtransA' DtransA
+	      (DeqA : tp-eq A' A)
+	   <- subtype-resp DeqA tp-eq/i ([_] term-eq/i) DsubtypeA'B
+	      (DsubtypeAB : subtype A B P)
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ttrans-reg DtransB
+	      (DwfB : wf B)
+	   <- trans-reg DtransM
+	      (DwfC : wf C)
+	   <- trans-reg DtransN
+	      (DwfD : wf D)
+	   <- subtype-reg DsubtypeCA DwfC DwfA
+	      (DofO : {x} vof x C -> of (O x) A)
+	   <- subtype-reg DsubtypeAB DwfA DwfB
+	      (DofP : {x} vof x A -> of (P x) B)
+	   <- ({x} {d:vof x C}
+		 can-sub DofP (DofO x d)
+		 (DsubPx x : sub P (O x) (Px x)))
+	   <- subtype-trans DwfC DwfA DwfB DsubtypeCA DsubtypeAB DsubPx
+	      (DsubtypeCB : subtype C B Px)
+	   <- subtype-trans DwfD DwfA DwfB DsubtypeDA DsubtypeAB DsubPx
+	      (DsubtypeDB : subtype D B Px).
+
+-beta	: equiv-comp
+	   (equiv/beta
+	      (DeofN : eof EN EA)
+	      (DeofM : {ex} evof ex EA -> eof (EM ex) (EB ex)))
+	   DtransBx
+	   (trans/app DsubDx DsubtypeCA' DtransN (trans/lam DtransM DtransA))
+	   DtransMN
+	   DsubtypeDxBx
+	   DsubtypeEBx
+	   <- of-comp DeofN
+	      (DtransA : ttrans EA A)
+	      (DtransN : trans EN C)
+	      (DsubtypeCA : subtype C A Lca)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA}
+		 vof-comp ed DtransA xt d
+		 -> of-comp (DeofM ex ed)
+		    (DtransB x d ex xt : ttrans (EB ex) (B x))
+		    (DtransM x d ex xt : trans (EM ex) (D x))
+		    (DsubtypeDB x : subtype (D x) (B x) (Ldb x)))
+	   <- trans-principal DtransN
+	      (DprincipalC : principal C)
+	   <- principal-subtype DprincipalC DsubtypeCA
+	      (DeqLca : {x} term-eq (Lca x) N)
+	   <- subtype-resp tp-eq/i tp-eq/i DeqLca DsubtypeCA
+	      (DsubtypeCA' : subtype C A ([_] N))
+	   <- ttrans-reg DtransA
+	      (DwfA : wf A)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 ttrans-reg (DtransB x d ex xt)
+		 (DwfB x d : wf (B x)))
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-reg (DtransM x d ex xt)
+		 (DwfD x d : wf (D x)))
+	   <- trans-reg DtransN
+	      (DwfC : wf C)
+	   <- subtype-reg' DsubtypeCA' DwfC DwfA
+	      (DofN : of N A)
+	   <- can-tsub DwfB DofN
+	      (DsubBx : tsub B N Bx)
+	   <- can-tsub DwfD DofN
+	      (DsubDx : tsub D N Dx)
+	   <- ttrans-sub DtransB DtransN DwfA DsubtypeCA' DsubBx
+	      (DtransBx : ttrans (EB EN) Bx)
+	   <- trans-sub DtransM DtransN DwfA DsubtypeCA' DsubDx
+	      (DtransMN : trans (EM EN) E)
+	      (DsubtypeEDx : subtype E Dx Led)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x}
+		 trans-principal (DtransM x d ex xt)
+		 (DprincipalD x : principal (D x)))
+	   <- ({x}
+		 principal-subtype (DprincipalD x) (DsubtypeDB x)
+		 (DeqLdb x : {y} term-eq (Ldb x y) (M x)))
+	   <- ({x}
+		 subtype-resp tp-eq/i tp-eq/i (DeqLdb x) (DsubtypeDB x)
+		 (DsubtypeDB' x : subtype (D x) (B x) ([_] M x)))
+	   <- ({x} {d:vof x A}
+		 subtype-reg' (DsubtypeDB' x) (DwfD x d) (DwfB x d)
+		 (DofM x d : of (M x) (B x)))
+	   <- can-sub DofM DofN
+	      (DsubMx : sub M N Mx)
+	   <- subtype-sub' DsubtypeDB' DwfD DwfB DofN DsubDx DsubBx ([_] DsubMx)
+	      (DsubtypeDxBx : subtype Dx Bx ([_] Mx))
+	   <- ({x}
+		 sub-absent Mx (Led x) 
+		 (DsubMxabs x : sub ([_] Mx) (Led x) Mx))
+	   <- trans-reg DtransMN
+	      (DwfE : wf E)
+	   <- tsubst DsubDx DwfD DofN
+	      (DwfDx : wf Dx)
+	   <- tsubst DsubBx DwfB DofN
+	      (DwfBx : wf Bx)
+	   <- subtype-trans DwfE DwfDx DwfBx DsubtypeEDx DsubtypeDxBx DsubMxabs
+	      (DsubtypeEBx : subtype E Bx ([_] Mx)).
+
+-beta1	: equiv-comp
+	   (equiv/beta1
+	      (DeofN : eof EN EB)
+	      (DeofM : eof EM EA))
+	   DtransA
+	   (trans/pi1 (trans/pair DtransN DtransM))
+	   DtransM
+	   DsubtypeCA
+	   DsubtypeCA
+	   <- of-comp DeofM
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM C)
+	      (DsubtypeCA : subtype C A _)
+	   <- of-comp DeofN
+	      (DtransB : ttrans EB B)
+	      (DtransN : trans EN D)
+	      (DsubtypeDB : subtype D B _).
+
+-beta2	: equiv-comp
+	   (equiv/beta2
+	      (DeofN : eof EN EB)
+	      (DeofM : eof EM EA))
+	   DtransB
+	   (trans/pi2 (trans/pair DtransN DtransM))
+	   DtransN
+	   DsubtypeDB
+	   DsubtypeDB
+	   <- of-comp DeofM
+	      (DtransA : ttrans EA A)
+	      (DtransM : trans EM C)
+	      (DsubtypeCA : subtype C A _)
+	   <- of-comp DeofN
+	      (DtransB : ttrans EB B)
+	      (DtransN : trans EN D)
+	      (DsubtypeDB : subtype D B _).
+
+%worlds (bind | cbind | scbind) (vof-comp _ _ _ _) (of-comp _ _ _ _) (wf-comp _ _) (subtp-comp _ _ _ _) (tequiv-comp _ _ _) (equiv-comp _ _ _ _ _ _).
+%total (D0 D1 D2 D3 D4 D5) (vof-comp D0 _ _ _) (of-comp D1 _ _ _) (wf-comp D2 _) (subtp-comp D3 _ _ _) (tequiv-comp D4 _ _) (equiv-comp D5 _ _ _ _ _).
+
+
+
+of-comp'	: eof EM EA
+		   -> ttrans EA A
+		   -> trans EM B
+		   -> subtype B A ([_] M) -> type.
+%mode of-comp' +X1 -X2 -X3 -X4.
+
+-	: of-comp' Dof DtransA DtransM Dsubtype'
+	   <- of-comp Dof DtransA DtransM Dsubtype
+	   <- trans-subtype DtransM Dsubtype Dsubtype' _.
+
+%worlds (bind | cbind | scbind) (of-comp' _ _ _ _).
+%total {} (of-comp' _ _ _ _).
+
+
+
+equiv-comp'	: equiv EM EN EA
+		   -> ttrans EA A
+		   -> trans EM B
+		   -> trans EN C
+		   -> subtype B A ([_] M)
+		   -> subtype C A ([_] M) -> type.
+%mode equiv-comp' +X1 -X2 -X3 -X4 -X5 -X6.
+
+-	: equiv-comp' Dequiv DtransA DtransM DtransN DsubtypeBA' DsubtypeCA'
+	   <- equiv-comp Dequiv DtransA DtransM DtransN DsubtypeBA DsubtypeCA
+	   <- trans-subtype DtransM DsubtypeBA DsubtypeBA' Deq
+	   <- subtype-resp tp-eq/i tp-eq/i Deq DsubtypeCA DsubtypeCA'.
+
+%worlds (bind | cbind | scbind) (equiv-comp' _ _ _ _ _ _).
+%total {} (equiv-comp' _ _ _ _ _ _).

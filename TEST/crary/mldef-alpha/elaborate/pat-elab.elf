@@ -1,0 +1,290 @@
+
+%{
+The {pat-elab} judgement elaborates an EL pattern.
+
+Input: elaboration context; EL pattern; tagged value to raise; discriminant; pattern domain.
+Output: IL module and signature (containing bindings).
+
+NB: the discriminant is pure.
+}%
+
+pat-elab/wild		: pat-elab Mec Sec pat/wild Efail Ediscrim Tdom md/unit sg/one.
+
+pat-elab/constraint	: pat-elab Mec Sec (pat/constraint Pe Te) Efail Ediscrim Tdom
+			   Mbind Sbind
+			   <- ty-elab Mec Sec Te T
+			   <- cn-equiv T Tdom t
+			   <- pat-elab Mec Sec Pe Efail Ediscrim Tdom Mbind Sbind.
+
+pat-elab/bind		: pat-elab Mec Sec (pat/longid (longid/short I)) Efail Ediscrim Tdom
+			   (md/in (name/val I) (md/in name/ordinary (md/datom Ediscrim Tdom)))
+			   (sg/named (name/val I) (sg/named name/ordinary (sg/datom Tdom)))
+			   <- noresolve Mec Sec (name/val I).
+
+pat-elab/bind-shadow	: pat-elab Mec Sec (pat/longid (longid/short I)) Efail Ediscrim Tdom
+			   (md/in (name/val I) (md/in name/ordinary (md/datom Ediscrim Tdom)))
+			   (sg/named (name/val I) (sg/named name/ordinary (sg/datom Tdom)))
+			   <- resolve Mec Sec (name/val I) _ (sg/named name/ordinary _).
+
+
+%{
+NULLARY DATATYPE CONSTRUCTOR PATTERNS
+
+Elaborate a nullary datatype constructor pattern.  The rule uses two auxiliary
+judgements:
+
+* {expon-module} composes an LF {module -> module} function with itself the indicated
+  number of times.
+
+  Input: function to compose, natural number.
+  Output: resulting function.
+
+* {multi-apply} applies a function to the indicated argument the indicated number of times.
+  The argument must be a function, and is parameterized over its domain and codomain types.
+
+  Thus, if E has the type (T1 -> T1') -> ... -> (Tn -> Tn') -> T,
+  the term E Earg[T1,T1'] .. Earg[Tn,Tn'] is constructed.
+  The type of E must be written in a form that exposes the arrows.
+
+  Input:  IL term and its type; number of times to apply; argument to which to apply.
+  Output: resulting IL term and its type.
+
+Elaboration of a datatype constructor pattern proceeds as follows:
+
+* Resolve the constructor.  Its metadata indicates that it is the {N}th constructor out of {Nall}.
+
+* Peel back N+1 fields to find the package of the destructor and all constructors for the datatype.
+  (Peel back the one additional field because the destructor appears first.)
+
+* Obtain the destructor, and check that it has an appropriate type.  Obtain the types of its arms,
+  given by {Tarms}.
+
+* Calculate the number ({Nsuffix}) of constructors after the the constructor in question.
+
+* Apply the destructor to appropriate arguments to obtain the {N}th arm.  The {N}th argument is the 
+  identity function; all other arguments are filled with functions that raise {Efail}.
+
+* In the unary case, match the term thus obtained against the pattern argument.  In the nullary case,
+  evaluate it for side effects (failure if the constructor doesn't match), then set it aside.
+
+}%
+
+expon-module : (module -> module) -> nat -> (module -> module) -> type.
+
+expon-module/z		: expon-module F 0 ([m] m).
+
+expon-module/s		: expon-module F (s N) ([m] F (G m))
+			   <- expon-module F N G.
+
+
+multi-apply : term -> con -> nat -> (con -> con -> term) -> term -> con -> type.
+
+multi-apply/z		: multi-apply E T 0 Earg E T.
+
+multi-apply/s		: multi-apply E (arrow (arrow T Tresult) Trest) (s N) Earg
+			   Efinal Tfinal
+			   <- multi-apply (tm/app E (Earg T Tresult)) Trest N Earg Efinal Tfinal.
+
+
+
+pat-elab/dcon0		: pat-elab Mec Sec (pat/longid I) Efail Ediscrim Tdom
+			   (md/lete Ecase unit ([_] md/unit))
+			   sg/one
+			   <- resolve-long Mec Sec name/val I M (sg/named (name/dcon0 N Nall) (sg/pi S ([b] sg/datom (T b))))
+			   <- instance S Marg
+			   <- md-fst Marg Carg
+			   <- cn-equiv (T Carg) Tdom t
+			   <- expon-module md/pi2 N F
+			   <- module-eq M (md/out (md/pi1 (F (md/pi2 M'))))
+			   <- md-of pure st/nil (md/pi1 M')
+			      (sg/pi S ([b] sg/pi (sg/satom t) ([a] sg/datom (arrow (T b) (Tarms b a)))))
+			   <- sum (s N) Nsuffix Nall
+			   <- multi-apply
+			      (tm/app (tm/snd (md/app (md/app (md/pi1 M') Marg) (md/satom unit))) Ediscrim)
+			      (Tarms Carg unit)
+			      N
+			      ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			      Epartial (arrow (arrow unit unit) Tarms')
+			   <- multi-apply
+			      (tm/app Epartial (tm/lam unit ([x] x)))
+			      Tarms'
+			      Nsuffix
+			      ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			      Ecase unit.
+
+
+%{
+UNARY DATATYPE CONSTRUCTOR PATTERNS
+
+Elaborate a unary datatype constructor pattern.  As above.
+
+}%
+
+pat-elab/dcon1		: pat-elab Mec Sec (pat/app I Pe) Efail Ediscrim Tdom
+			   (md/lete Ecase (T1 Carg) ([x] Mresult x))
+			   Sresult
+			   <- resolve-long Mec Sec name/val I M (sg/named (name/dcon1 N Nall) (sg/pi S ([b] sg/datom (arrow (T1 b) (T2 b)))))
+			   <- instance S Marg
+			   <- md-fst Marg Carg
+			   <- cn-equiv (T2 Carg) Tdom t
+			   <- expon-module md/pi2 N F
+			   <- module-eq M (md/out (md/pi1 (F (md/pi2 M'))))
+			   <- md-of pure st/nil (md/pi1 M')
+			      (sg/pi S ([b] sg/pi (sg/satom t) ([a] sg/datom (arrow (T2 b) (Tarms b a)))))
+			   <- sum (s N) Nsuffix Nall
+			   <- multi-apply
+			      (tm/app (tm/snd (md/app (md/app (md/pi1 M') Marg) (md/satom (T1 Carg)))) Ediscrim)
+			      (Tarms Carg (T1 Carg))
+			      N
+			      ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			      Epartial (arrow (arrow (T1 Carg) (T1 Carg)) Tarms')
+			   <- multi-apply
+			      (tm/app Epartial (tm/lam (T1 Carg) ([x] x)))
+			      Tarms'
+			      Nsuffix
+			      ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			      Ecase (T1 Carg)
+			   <- ({x}
+				 pat-elab Mec Sec Pe Efail x (T1 Carg) (Mresult x) Sresult).
+
+
+%{
+NULLARY EXCEPTION CONSTRUCTOR PATTERNS
+
+Elaborate a nullary exception constructor pattern.
+
+Elaboration of an exception constructor pattern proceeds as follows:
+
+* Resolve the constructor.
+
+* Peel back to find the package of the tag and constructor for the exception.
+
+* Obtain the tag, and check that it has an appropriate type.
+
+* Match the discriminant against the tag, and obtain the argument if it matches, otherwise fail.
+
+* In the unary case, match the term thus obtained against the pattern argument.  In the nullary case,
+  evaluate it for side effects (failure if the constructor doesn't match), then set it aside.
+
+}%
+
+pat-elab/econ0		: pat-elab Mec Sec (pat/longid I) Efail Ediscrim Tdom
+			   (md/lete
+			      (tm/iftag Ediscrim (tm/snd (md/pi1 M')) ([x] x) (tm/raise Efail unit))
+			      unit
+			      ([_] md/unit))
+			   sg/one
+			   <- resolve-long Mec Sec name/val I M (sg/named name/econ0 (sg/pi sg/one ([_] sg/datom tagged)))
+			   <- cn-equiv tagged Tdom t
+			   <- module-eq M (md/out (md/pi2 M'))
+			   %% M' is the package of destructor and constructor for this exception.
+			   %% So the destructor is pi1 M'.
+			   <- md-of pure st/nil (md/pi1 M') (sg/datom (tag unit)).
+
+
+%{
+UNARY EXCEPTION CONSTRUCTOR PATTERNS
+
+Elaborate a unary exception constructor pattern.  As above.
+
+}%
+
+pat-elab/econ1		: pat-elab Mec Sec (pat/app I Pe) Efail Ediscrim Tdom
+			   (md/lete
+			      (tm/iftag Ediscrim (tm/snd (md/pi1 M')) ([x] x) (tm/raise Efail T))
+			      T
+			      ([x] Mresult x))
+			   Sresult
+			   <- resolve-long Mec Sec name/val I M (sg/named name/econ1 (sg/pi sg/one ([_] sg/datom (arrow T tagged))))
+			   <- cn-equiv tagged Tdom t
+			   <- module-eq M (md/out (md/pi2 M'))
+			   %% M' is the package of destructor and constructor for this exception.
+			   %% So the destructor is pi1 M'.
+			   <- md-of pure st/nil (md/pi1 M') (sg/datom (tag T))
+			   <- ({x}
+				 pat-elab Mec Sec Pe Efail x T (Mresult x) Sresult).
+
+
+%{
+CONJUNCTIVE PATTERNS
+
+}%
+
+pat-elab/as		: pat-elab Mec Sec (pat/as Pe1 Pe2) Efail Ediscrim Tdom
+			   (md/pair M1 M2)
+			   (sg/sigma S1 ([_] S2))
+			   <- pat-elab Mec Sec Pe1 Efail Ediscrim Tdom M1 S1
+			   <- pat-elab Mec Sec Pe2 Efail Ediscrim Tdom M2 S2.
+
+			 
+%{
+RECORD PATTERNS
+
+}%
+
+
+%% insert a field into a sorted non-flex pattern-row, returning a sorted non-flex pattern-row
+record-pat-insert	: label -> pat -> pat-row -> pat-row -> type.
+
+record-pat-insert/nil	: record-pat-insert L Pe pat-row/nil (pat-row/cons L Pe pat-row/nil).
+
+record-pat-insert/here	: record-pat-insert L Pe (pat-row/cons L' Pe' PRe)
+			   (pat-row/cons L Pe (pat-row/cons L' Pe' PRe))
+			   <- label-lt L L'.
+
+record-pat-insert/later	: record-pat-insert L Pe (pat-row/cons L' Pe' PRe)
+			   (pat-row/cons L' Pe' PRe')
+			   <- label-lt L' L
+			   <- record-pat-insert L Pe PRe PRe'.
+
+
+%% turn a pattern-row into a sorted non-flex pattern-row
+record-pat-sort		: pat-row -> pat-row -> type.
+
+record-pat-sort/nil	: record-pat-sort pat-row/nil pat-row/nil.
+
+record-pat-sort/flex-done
+			: record-pat-sort pat-row/flex pat-row/nil.
+
+%% guess label L nondeterministically (if not distinct from all others, record-pat-insert will fail)
+record-pat-sort/flex-another
+			: record-pat-sort pat-row/flex PRe'
+			   <- record-pat-sort pat-row/flex PRe
+			   <- record-pat-insert L pat/wild PRe PRe'.
+
+record-pat-sort/cons	: record-pat-sort (pat-row/cons L Pe PRe) PRe''
+			   <- record-pat-sort PRe PRe'
+			   <- record-pat-insert L Pe PRe' PRe''.
+
+
+%% It is an elaborator invariant that record types are sorted.
+
+pat-row-elab : module -> sg -> pat-row -> term -> term -> con -> module -> sg -> type.
+
+pat-row-elab/nil	: pat-row-elab Mec Sec pat-row/nil Efail Erow unit
+			   md/unit sg/one.
+
+pat-row-elab/cons	: pat-row-elab Mec Sec (pat-row/cons L Pe PRe) Efail Erow (prod (labeled L T) Ttail)
+			   (md/pair M1 M2) (sg/sigma S1 ([_] S2))
+			   <- pat-elab Mec Sec Pe Efail (tm/out (tm/pi1 Erow)) T M1 S1
+			   <- pat-row-elab Mec Sec PRe Efail (tm/pi2 Erow) Ttail M2 S2.
+
+
+pat-elab/record		: pat-elab Mec Sec (pat/record PRe) Efail Ediscrim T
+			   M S
+			   <- record-pat-sort PRe PRe'
+			   <- pat-row-elab Mec Sec PRe' Efail Ediscrim T M S.
+
+
+
+
+%{
+EQUIVALENCE
+
+Elaboration respects equivalence of IL types.
+
+}%
+
+pat-elab/equiv		: pat-elab Mec Sec Pe Efail Ediscrim T' Mresult Sresult
+			   <- pat-elab Mec Sec Pe Efail Ediscrim T Mresult Sresult
+			   <- cn-equiv T T' t.

@@ -1,0 +1,126 @@
+%%%% transitivity of kind equivalence
+
+
+kd-trans/deq* :  {K2:kd} kd-deq K1 K2 -> kd-deq K2 K3 -> kd-deq K1 K3 -> type.
+%mode kd-trans/deq* +K2 +D1 +D2 -D3.
+
+-	: kd-trans/deq* kd/unit
+	   kd-deq/kd/unit kd-deq/kd/unit kd-deq/kd/unit.
+
+-	: kd-trans/deq* kd/type 
+	   kd-deq/kd/type kd-deq/kd/type kd-deq/kd/type.
+
+-	: kd-trans/deq* (kd/sing _)
+	   (kd-deq/kd/sing D1) (kd-deq/kd/sing D2) 
+	   (kd-deq/kd/sing (cn-deq/trans D1 D2)).
+
+-	: kd-trans/deq* (kd/sgm SK2 SK2') 
+	   (kd-deq/kd/sgm D1 D1') 
+	   (kd-deq/kd/sgm D2 D2')
+	   (kd-deq/kd/sgm D3 D3')
+	   <- kd-trans/deq* SK2 D1 D2 D3
+	   <- vdt/kd-deq D1 Do Dt
+	   <- kd-anti D1 Do Dt DS _
+	   <- kd-wkn/kd-deq D2' DS D2''
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da Do}
+		 kd-trans/deq* (SK2' a) 
+		 (D1' a da) (D2'' a da) (D3' a da)).
+
+-	: kd-trans/deq* (kd/pi SK2 SK2') 
+	   (kd-deq/kd/pi D1 D1') 
+	   (kd-deq/kd/pi D2 D2')
+	   (kd-deq/kd/pi D3 D3')
+	   <- kd-trans/deq* SK2 D2 D1 D3
+	   <- vdt/kd-deq D2 Dt Dd
+	   <- kd-anti D2 Dt Dd DS _
+	   <- kd-wkn/kd-deq D1' DS D1''
+	   <- ({a:cn} {da: ofkd a K3} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da Dt}
+		 kd-trans/deq* (SK2' a)
+		 (D1'' a da) (D2' a da) (D3' a da)).
+
+%worlds (ofkd+vdt-block) (kd-trans/deq* _ _ _ _).
+%total {K2} (kd-trans/deq* K2 _ _ _).
+
+		
+kd-trans/deq	: kd-deq K1 K2 -> kd-deq K2 K3 -> kd-deq K1 K3 -> type.
+%mode kd-trans/deq +D1 +D2 -D3.
+
+-	: kd-trans/deq D1 D2 D3
+	   <- kd-trans/deq* _ D1 D2 D3.
+
+%worlds (ofkd+vdt-block) (kd-trans/deq _ _ _).
+%total {D1} (kd-trans/deq D1 _ _).
+
+%%%%
+
+kd-trans/sub*	: {K2: kd} kd-sub K1 K2 
+		   -> kd-sub K2 K3 
+		   -> kd-sub K1 K3 
+		   -> type.
+
+%mode kd-trans/sub* +K2 +D1 +D2 -D3.
+
+-	: kd-trans/sub* kd/unit 
+	   kd-sub/kd/unit kd-sub/kd/unit kd-sub/kd/unit.
+
+-	: kd-trans/sub* kd/type 
+	   kd-sub/kd/type kd-sub/kd/type kd-sub/kd/type.
+
+-	: kd-trans/sub* kd/type
+	   (kd-sub/kd/sing-kd/type D1) kd-sub/kd/type 
+	   (kd-sub/kd/sing-kd/type D1).
+
+-	: kd-trans/sub* (kd/sing _)
+	   (kd-sub/kd/sing-kd/sing D1) (kd-sub/kd/sing-kd/sing D2) 
+	   (kd-sub/kd/sing-kd/sing (cn-deq/trans D1 D2)).
+
+-	: kd-trans/sub* (kd/sing _)
+	   (kd-sub/kd/sing-kd/sing D1) (kd-sub/kd/sing-kd/type _) 
+	   (kd-sub/kd/sing-kd/type Di)
+	   <- vdt/cn-deq D1 Di _ _.
+
+-	: kd-trans/sub* (kd/sgm SK2 SK2') 
+	   (kd-sub/kd/sgm D1 D1' DK1) 
+	   (kd-sub/kd/sgm D2 D2' DK2)
+	   (kd-sub/kd/sgm D3 D3' DK2)
+	   <- kd-trans/sub* SK2 D1 D2 D3
+	   <- vdt/kd-sub D1 Do _
+	   <- kd-wkn/kd-sub D2' D1 D2''
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da Do}
+		 kd-trans/sub* (SK2' a) 
+		 (D1' a da) (D2'' a da) (D3' a da)).
+
+-	: kd-trans/sub* (kd/pi SK2 SK2') 
+	   (kd-sub/kd/pi D1 D1' DK1) 
+	   (kd-sub/kd/pi D2 D2' DK2)
+	   (kd-sub/kd/pi D3 D3' DK1)
+	   <- kd-trans/sub* SK2 D2 D1 D3
+	   <- vdt/kd-sub D2 Dt Dd
+	   <- kd-wkn/kd-sub D1' D2 D1''
+	   <- ({a:cn} {da: ofkd a K3} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da Dt}
+		 kd-trans/sub* (SK2' a)
+		 (D1'' a da) (D2' a da) (D3' a da)).
+
+%worlds (ofkd+vdt-block) (kd-trans/sub* _ _ _ _).
+%total (K2) (kd-trans/sub* K2 _ _ _).
+
+
+kd-trans/sub	: kd-sub K1 K2 
+		   -> kd-sub K2 K3 
+		   -> kd-sub K1 K3 
+		   -> type.
+%mode kd-trans/sub +D1 +D2 -D3.
+
+-	: kd-trans/sub D1 D2 D3
+	   <- kd-trans/sub* _ D1 D2 D3.
+
+%worlds (ofkd+vdt-block) (kd-trans/sub _ _ _).
+%total {D1} (kd-trans/sub D1 _ _).

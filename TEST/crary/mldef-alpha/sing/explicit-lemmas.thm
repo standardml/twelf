@@ -1,0 +1,4612 @@
+
+%%%%%  Ordered Variables  %%%%%
+
+isvar-fun : isvar X I -> isvar X J -> nat-eq I J -> type.
+%mode isvar-fun +X1 +X2 -X3.
+
+-	: isvar-fun D D nat-eq/i.
+
+%worlds (var | ovar | obind | topenblock) (isvar-fun _ _ _).
+%total {} (isvar-fun _ _ _).
+
+
+
+precedes-trans : precedes X Y -> precedes Y Z -> precedes X Z -> type.
+%mode precedes-trans +X1 +X2 -X3.
+
+-	: precedes-trans 
+	   (precedes/i DltIJ (DisvarY : isvar Y J) (DisvarX : isvar X I))
+	   (precedes/i DltJ'K (DisvarZ : isvar Z K) (DisvarY' : isvar Y J'))
+	      (precedes/i DltIK DisvarZ DisvarX)
+	   <- isvar-fun DisvarY DisvarY' (Deq : nat-eq J J')
+	   <- lt-resp nat-eq/i Deq DltIJ DltIJ'
+	   <- lt-trans DltIJ' DltJ'K DltIK.
+
+%worlds (var | ovar | topenblock) (precedes-trans _ _ _).
+%total {} (precedes-trans _ _ _).
+
+
+
+precedes-trans-abs : ({x} isvar x I -> {y} isvar y J -> precedes x y)
+		      -> ({y} isvar y J -> {z} isvar z K -> precedes y z)
+		      -> ({x} isvar x I -> {z} isvar z K -> precedes x z) -> type.
+%mode precedes-trans-abs +X1 +X2 -X3.
+
+-	: precedes-trans-abs
+	   ([x] [d] [y] [e] precedes/i DltIJ e d)
+	   ([y] [e] [z] [f] precedes/i DltJK f e)
+	   ([x] [d] [z] [f] precedes/i DltIK f d)
+	   <- lt-trans DltIJ DltJK DltIK.
+
+%worlds (var | ovar | topenblock) (precedes-trans-abs _ _ _).
+%total {} (precedes-trans-abs _ _ _).
+
+
+
+precedes-antisymm : precedes X X -> false -> type.
+%mode precedes-antisymm +X1 -X2.
+
+-	: precedes-antisymm (precedes/i (Dlt : lt I J) (Disvar' : isvar X J) (Disvar : isvar X I)) Dfalse
+	   <- isvar-fun Disvar Disvar' (Deq : nat-eq I J)
+	   <- lt-resp Deq nat-eq/i Dlt (Dlt' : lt J J)
+	   <- lt-antisymm Dlt' Dfalse.
+
+%worlds (var | ovar | topenblock) (precedes-antisymm _ _).
+%total {} (precedes-antisymm _ _).
+
+
+
+bounded-isvar : bounded G X -> isvar X I -> type.
+%mode bounded-isvar +X1 -X2.
+
+-	: bounded-isvar (bounded/nil D) D.
+-	: bounded-isvar (bounded/cons _ (precedes/i _ D _)) D.
+
+%worlds (var | ovar | topenblock) (bounded-isvar _ _).
+%total {} (bounded-isvar _ _).
+
+
+
+sbounded-isvar : sbounded G X -> isvar X I -> type.
+%mode sbounded-isvar +X1 -X2.
+
+-	: sbounded-isvar (sbounded/nil D) D.
+-	: sbounded-isvar (sbounded/cons _ (precedes/i _ D _)) D.
+
+%worlds (var | ovar | topenblock) (sbounded-isvar _ _).
+%total {} (sbounded-isvar _ _).
+
+
+
+lookup-isvar : lookup G X A -> isvar X I -> type.
+%mode lookup-isvar +X1 -X2.
+
+-	: lookup-isvar (lookup/hit D) D'
+	   <- bounded-isvar D D'.
+-	: lookup-isvar (lookup/miss D _) D'
+	   <- lookup-isvar D D'.
+
+%worlds (var | ovar | topenblock) (lookup-isvar _ _).
+%total D (lookup-isvar D _).
+
+
+
+slookup-isvar : slookup G X T -> isvar X I -> type.
+%mode slookup-isvar +X1 -X2.
+
+-	: slookup-isvar (slookup/hit D) D'
+	   <- sbounded-isvar D D'.
+-	: slookup-isvar (slookup/miss D _) D'
+	   <- slookup-isvar D D'.
+
+%worlds (var | ovar | topenblock) (slookup-isvar _ _).
+%total D (slookup-isvar D _).
+
+
+
+isvar-app-contra : isvar (app R M) _ -> false -> type.
+%mode isvar-app-contra +X1 -X2.
+%worlds (bind | ovar | var | topenblock) (isvar-app-contra _ _).
+%total {} (isvar-app-contra _ _).
+
+
+
+isvar-pi1-contra : isvar (pi1 R) _ -> false -> type.
+%mode isvar-pi1-contra +X1 -X2.
+%worlds (bind | ovar | var | topenblock) (isvar-pi1-contra _ _).
+%total {} (isvar-pi1-contra _ _).
+
+
+
+isvar-pi2-contra : isvar (pi2 R) _ -> false -> type.
+%mode isvar-pi2-contra +X1 -X2.
+%worlds (bind | ovar | var | topenblock) (isvar-pi2-contra _ _).
+%total {} (isvar-pi2-contra _ _).
+
+
+
+vof-isvar-contra : vof X _ -> isvar X _ -> false -> type.
+%mode vof-isvar-contra +X1 +X2 -X3.
+%worlds (var | bind | ovar | topenblock) (vof-isvar-contra _ _ _).
+%total {} (vof-isvar-contra _ _ _).
+
+
+
+
+%%%%%  Context Manipulation  %%%%%
+
+can-append : {G1} {G2} {G} append G1 G2 G -> type.
+%mode can-append +X1 +X2 -X3 -X4.
+
+-	: can-append _ _ _ append/nil.
+
+-	: can-append _ _ _ (append/cons D)
+	   <- can-append _ _ _ D.
+
+%worlds (var | topenblock) (can-append _ _ _ _).
+%total G (can-append _ G _ _).
+
+
+
+bounded-is-ordered : bounded G X -> ordered G -> type.
+%mode bounded-is-ordered +X1 -X2.
+
+-	: bounded-is-ordered (bounded/nil _) ordered/nil.
+-	: bounded-is-ordered (bounded/cons D _) (ordered/cons D).
+
+%worlds (var | bind | ovar | obind | topenblock) (bounded-is-ordered _ _).
+%total {} (bounded-is-ordered _ _).
+
+
+
+sbounded-is-sordered : sbounded G X -> sordered G -> type.
+%mode sbounded-is-sordered +X1 -X2.
+
+-	: sbounded-is-sordered (sbounded/nil _) sordered/nil.
+-	: sbounded-is-sordered (sbounded/cons D _) (sordered/cons D).
+
+%worlds (var | bind | ovar | obind | topenblock) (sbounded-is-sordered _ _).
+%total {} (sbounded-is-sordered _ _).
+
+
+
+bounded-increase-bound : bounded G X -> precedes X Y -> bounded G Y -> type.
+%mode bounded-increase-bound +X1 +X2 -X3.
+
+-	: bounded-increase-bound (bounded/nil _) (precedes/i _ D _) (bounded/nil D).
+-	: bounded-increase-bound (bounded/cons Dbounded Dprecedes) Dprecedes' (bounded/cons Dbounded Dprecedes'')
+	   <- precedes-trans Dprecedes Dprecedes' Dprecedes''.
+
+%worlds (bind | ovar | var | topenblock) (bounded-increase-bound _ _ _).
+%total {} (bounded-increase-bound _ _ _).
+
+
+
+sbounded-increase-bound : sbounded G X -> precedes X Y -> sbounded G Y -> type.
+%mode sbounded-increase-bound +X1 +X2 -X3.
+
+-	: sbounded-increase-bound (sbounded/nil _) (precedes/i _ D _) (sbounded/nil D).
+-	: sbounded-increase-bound (sbounded/cons Dbounded Dprecedes) Dprecedes' (sbounded/cons Dbounded Dprecedes'')
+	   <- precedes-trans Dprecedes Dprecedes' Dprecedes''.
+
+%worlds (bind | ovar | var | topenblock) (sbounded-increase-bound _ _ _).
+%total {} (sbounded-increase-bound _ _ _).
+
+
+
+append-bounded : append G1 G2 G -> bounded G X -> bounded G1 X -> type.
+%mode append-bounded +X1 +X2 -X3.
+
+-	: append-bounded (append/cons Dappend) (bounded/cons Dbounded Dprecedes) D
+	   <- bounded-increase-bound Dbounded Dprecedes Dbounded'
+	   <- append-bounded Dappend Dbounded' D.
+
+-	: append-bounded append/nil D D.
+
+%worlds (bind | ovar | var | topenblock) (append-bounded _ _ _).
+%total D (append-bounded D _ _).
+
+
+
+append-ordered : append G1 G2 G -> ordered G -> ordered G1 -> type.
+%mode append-ordered +X1 +X2 -X3.
+
+-	: append-ordered (append/cons Dappend) (ordered/cons Dbounded) D'
+	   <- append-bounded Dappend Dbounded D
+	   <- bounded-is-ordered D D'.
+
+-	: append-ordered append/nil D D.
+
+%worlds (var | bind | ovar | topenblock) (append-ordered _ _ _).
+%total {} (append-ordered _ _ _).
+
+
+
+%{
+sappend-sbounded : sappend G1 G2 G -> sbounded G X -> sbounded G1 X -> type.
+%mode sappend-sbounded +X1 +X2 -X3.
+
+-	: sappend-sbounded (sappend/cons Dsappend) (sbounded/cons Dsbounded Dprecedes) D
+	   <- sbounded-increase-bound Dsbounded Dprecedes Dsbounded'
+	   <- sappend-sbounded Dsappend Dsbounded' D.
+
+-	: sappend-sbounded sappend/nil D D.
+
+%worlds (bind | ovar | var | topenblock) (sappend-sbounded _ _ _).
+%total D (sappend-sbounded D _ _).
+
+
+
+sappend-sordered : sappend G1 G2 G -> sordered G -> sordered G1 -> type.
+%mode sappend-sordered +X1 +X2 -X3.
+
+-	: sappend-sordered (sappend/cons Dsappend) (sordered/cons Dsbounded) D'
+	   <- sappend-sbounded Dsappend Dsbounded D
+	   <- sbounded-is-sordered D D'.
+
+-	: sappend-sordered sappend/nil D D.
+
+%worlds (var | bind | ovar | topenblock) (sappend-sordered _ _ _).
+%total {} (sappend-sordered _ _ _).
+}%
+
+
+
+%{
+append-lookup-bounded : append (cons G1 X A) G2 G -> lookup G _ _ -> bounded G1 X -> type.
+%mode append-lookup-bounded +X1 +X2 -X3.
+
+-	: append-lookup-bounded Dappend Dlookup Dbounded
+	   <- lookup-context Dlookup Dordered
+	   <- append-ordered Dappend Dordered
+	      (ordered/cons Dbounded).
+
+%worlds (var | ovar | topenblock) (append-lookup-bounded _ _ _).
+%total {} (append-lookup-bounded _ _ _).
+}%
+
+
+
+%% this can be proved more elegantly using append-bounded
+append-bounded-contra : append (cons G1 X A) G2 G -> bounded G X -> false -> type.
+%mode append-bounded-contra +X1 +X2 -X3.
+
+-	: append-bounded-contra append/nil (bounded/cons _ Dprecedes) Dfalse
+	   <- precedes-antisymm Dprecedes Dfalse.
+-	: append-bounded-contra (append/cons Dapp) (bounded/cons Dbounded Dprecedes) Dfalse
+	   <- bounded-increase-bound Dbounded Dprecedes Dbounded'
+	   <- append-bounded-contra Dapp Dbounded' Dfalse.
+
+%worlds (bind | ovar | var | topenblock) (append-bounded-contra _ _ _).
+%total D (append-bounded-contra D _ _).
+
+
+
+strengthen-bounded : ({x} isvar x I -> bounded G Y) -> bounded G Y -> type.
+%mode strengthen-bounded +X1 -X2.
+
+-	: strengthen-bounded ([x] [d] bounded/nil D) (bounded/nil D).
+-	: strengthen-bounded 
+	   ([x] [d] bounded/cons (Dbound x d) Dprec)
+	   (bounded/cons Dbound' Dprec)
+	   <- strengthen-bounded Dbound Dbound'.
+
+%worlds (var | bind | ovar | obind | topenblock) (strengthen-bounded _ _).
+%total D (strengthen-bounded D _).
+
+
+
+strengthen-ordered : ({x} isvar x I -> ordered G) -> ordered G -> type.
+%mode strengthen-ordered +X1 -X2.
+
+-	: strengthen-ordered ([x] [d] ordered/nil) ordered/nil.
+
+-	: strengthen-ordered ([x] [d] ordered/cons (Dbound x d)) (ordered/cons Dbound')
+	   <- strengthen-bounded Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (strengthen-ordered _ _).
+%total {} (strengthen-ordered _ _).
+
+
+
+bounded-is-ordered-strengthen : ({x} isvar x I -> bounded G x) -> ordered G -> type.
+%mode bounded-is-ordered-strengthen +X1 -X2.
+
+-	: bounded-is-ordered-strengthen ([x] [d] bounded/nil d) ordered/nil.
+-	: bounded-is-ordered-strengthen ([x] [d] bounded/cons (D x d) (precedes/i Dlt d Disvar)) (ordered/cons D')
+	   <- strengthen-bounded D D'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bounded-is-ordered-strengthen _ _).
+%total {} (bounded-is-ordered-strengthen _ _).
+
+
+
+strengthen-sbounded : ({x} isvar x I -> sbounded G Y) -> sbounded G Y -> type.
+%mode strengthen-sbounded +X1 -X2.
+
+-	: strengthen-sbounded ([x] [d] sbounded/nil D) (sbounded/nil D).
+-	: strengthen-sbounded 
+	   ([x] [d] sbounded/cons (Dbound x d) Dprec)
+	   (sbounded/cons Dbound' Dprec)
+	   <- strengthen-sbounded Dbound Dbound'.
+
+%worlds (var | bind | ovar | obind | topenblock) (strengthen-sbounded _ _).
+%total D (strengthen-sbounded D _).
+
+
+
+strengthen-sordered : ({x} isvar x I -> sordered G) -> sordered G -> type.
+%mode strengthen-sordered +X1 -X2.
+
+-	: strengthen-sordered ([x] [d] sordered/nil) sordered/nil.
+
+-	: strengthen-sordered ([x] [d] sordered/cons (Dbound x d)) (sordered/cons Dbound')
+	   <- strengthen-sbounded Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (strengthen-sordered _ _).
+%total {} (strengthen-sordered _ _).
+
+
+
+sbounded-is-sordered-strengthen : ({x} isvar x I -> sbounded G x) -> sordered G -> type.
+%mode sbounded-is-sordered-strengthen +X1 -X2.
+
+-	: sbounded-is-sordered-strengthen ([x] [d] sbounded/nil d) sordered/nil.
+-	: sbounded-is-sordered-strengthen ([x] [d] sbounded/cons (D x d) (precedes/i Dlt d Disvar)) (sordered/cons D')
+	   <- strengthen-sbounded D D'.
+
+%worlds (var | bind | ovar | obind | topenblock) (sbounded-is-sordered-strengthen _ _).
+%total {} (sbounded-is-sordered-strengthen _ _).
+
+
+
+strengthen-lookup : ({x} isvar x I -> lookup G Y (A x)) -> lookup G Y A' -> ({x} tp-eq (A x) A') -> type.
+%mode strengthen-lookup +X1 -X2 -X3.
+
+-	: strengthen-lookup ([x] [d] lookup/hit (Dbounded x d))
+	   (lookup/hit Dbounded') ([_] tp-eq/i)
+	   <- strengthen-bounded Dbounded Dbounded'.
+
+-	: strengthen-lookup ([x] [d] lookup/miss (Dlookup x d) (Dbounded x d))
+	   (lookup/miss Dlookup' Dbounded') Deq
+	   <- strengthen-lookup Dlookup Dlookup' Deq
+	   <- strengthen-bounded Dbounded Dbounded'.
+
+%worlds (var | bind | ovar | topenblock) (strengthen-lookup _ _ _).
+%total D (strengthen-lookup D _ _).
+
+
+
+strengthen-slookup : ({x} isvar x I -> slookup G Y T) -> slookup G Y T -> type.
+%mode strengthen-slookup +X1 -X2.
+
+-	: strengthen-slookup ([x] [d] slookup/hit (Dbounded x d))
+	   (slookup/hit Dbounded')
+	   <- strengthen-sbounded Dbounded Dbounded'.
+
+-	: strengthen-slookup ([x] [d] slookup/miss (Dlookup x d) (Dbounded x d))
+	   (slookup/miss Dlookup' Dbounded')
+	   <- strengthen-slookup Dlookup Dlookup'
+	   <- strengthen-sbounded Dbounded Dbounded'.
+
+%worlds (var | bind | ovar | topenblock) (strengthen-slookup _ _).
+%total D (strengthen-slookup D _).
+
+
+
+bounded-increase-bound-abs : ({x} isvar x I -> {y} isvar y J -> precedes x y)
+			      -> ({x} isvar x I -> bounded G x)
+			      -> ({y} isvar y J -> bounded G y) -> type.
+%mode bounded-increase-bound-abs +X1 +X2 -X3.
+
+-	: bounded-increase-bound-abs Dprecedes D D''
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 bounded-increase-bound (D x d) (Dprecedes x d y e) (D' x d y e))
+	   <- ({y} {e:isvar y J}
+		 strengthen-bounded ([x] [d] D' x d y e) (D'' y e)).
+
+%worlds (var | bind | ovar | topenblock) (bounded-increase-bound-abs _ _ _).
+%total {} (bounded-increase-bound-abs _ _ _).
+
+
+
+strengthen-precedes : ({x} isvar x I -> precedes Y Z) -> precedes Y Z -> type.
+%mode strengthen-precedes +X1 -X2.
+
+-	: strengthen-precedes ([x] [d] precedes/i Dlt D1 D2) (precedes/i Dlt D1 D2).
+
+%worlds (var | bind | ovar | obind | topenblock) (strengthen-precedes _ _).
+%total {} (strengthen-precedes _ _).
+
+
+
+csub-bounded : ({x} isvar x I -> bounded (G x) Y) -> csub G M G' -> bounded G' Y -> type.
+%mode csub-bounded +X1 +X2 -X3.
+
+-	: csub-bounded ([x] [d] bounded/cons (Dbound x d) (Dprec x d)) csub/base Dbound''
+	   <- ({x} {d}
+		 bounded-increase-bound (Dbound x d) (Dprec x d) (Dbound' x d))
+	   <- strengthen-bounded Dbound' Dbound''.
+
+-	: csub-bounded ([x] [d] bounded/cons (Dbound x d) Dprec) (csub/cons Dsub Dcsub)
+	   (bounded/cons Dbound' Dprec)
+	   <- csub-bounded Dbound Dcsub Dbound'.
+
+%worlds (bind | ovar | var | topenblock) (csub-bounded _ _ _).
+%total D (csub-bounded D _ _).
+
+
+
+csub-ordered : ({x} isvar x I -> ordered (G x)) -> csub G M G' -> ordered G' -> type.
+%mode csub-ordered +X1 +X2 -X3.
+
+-	: csub-ordered ([x] [d] ordered/cons (Dbound x d)) csub/base Dord
+	   <- bounded-is-ordered-strengthen Dbound Dord.
+
+-	: csub-ordered ([x] [d] ordered/cons (Dbound x d)) (csub/cons Dsub Dcsub) (ordered/cons Dbound')
+	   <- csub-bounded Dbound Dcsub Dbound'.
+
+%worlds (bind | ovar | var | topenblock) (csub-ordered _ _ _).
+%total {} (csub-ordered _ _ _).
+
+
+
+scsub-bounded : ({x} append (cons G1 x A) (G2 x) (G x))
+		 -> append G1 (G2 R) G'
+		 -> ({x} isvar x I -> bounded (G x) Y)
+		 -> bounded G' Y -> type.
+%mode scsub-bounded +X1 +X2 +X3 -X4.
+
+-	: scsub-bounded 
+	   ([x] append/cons 
+	      (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   (append/cons Dappend')
+	   ([x] [d] bounded/cons (Dbounded x d) Dprecedes)
+	   (bounded/cons Dbounded' Dprecedes)
+	   <- scsub-bounded Dappend Dappend' Dbounded Dbounded'.
+
+-	: scsub-bounded ([x] append/nil) append/nil ([x] [d] bounded/cons (Dbounded x d) (Dprecedes x d)) 
+	   Dbounded''
+	   <- ({x} {d}
+		 bounded-increase-bound (Dbounded x d) (Dprecedes x d) (Dbounded' x d))
+	   <- strengthen-bounded Dbounded' Dbounded''.
+
+-	: scsub-bounded
+	   ([x] append/cons (Dappend x))
+	   (append/cons Dappend')
+	   ([x] [d] bounded/cons (Dbounded x d : bounded (G x) x) _)
+	   D
+	   <- ({x} {d} 
+		 append-bounded-contra (Dappend x) (Dbounded x d) Dfalse)
+	   <- false-implies-bounded Dfalse D.
+
+%worlds (bind | ovar | var | topenblock) (scsub-bounded _ _ _ _).
+%total D (scsub-bounded D _ _ _).
+
+
+
+scsub-ordered : ({x} append (cons G1 x A) (G2 x) (G x))
+		 -> append G1 (G2 R) G'
+		 -> ({x} isvar x I -> ordered (G x))
+		 -> ordered G' -> type.
+%mode scsub-ordered +X1 +X2 +X3 -X4.
+
+-	: scsub-ordered 
+	   ([x] append/cons (Dappend x : append (cons G1 x A) (G2 x) (G x)))
+	   (append/cons Dappend') ([x] [d] ordered/cons (Dbounded x d))
+	   (ordered/cons Dbounded')
+	   <- scsub-bounded Dappend Dappend' Dbounded Dbounded'.
+
+-	: scsub-ordered ([x] append/nil) append/nil ([x] [d] ordered/cons (Dbounded x d)) D
+	   <- bounded-is-ordered-strengthen Dbounded D.
+
+-	: scsub-ordered
+	   ([x] append/cons (Dappend x))
+	   (append/cons Dappend')
+	   ([x] [d] ordered/cons (Dbounded x d : bounded (G x) x))
+	   D
+	   <- ({x} {d} 
+		 append-bounded-contra (Dappend x) (Dbounded x d) Dfalse)
+	   <- false-implies-ordered Dfalse D.
+
+-	: scsub-ordered _ _ ([x] [d] ordered/cons (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-app-contra (Disvar x d) Dfalse)
+	   <- false-implies-ordered Dfalse D.
+
+-	: scsub-ordered _ _ ([x] [d] ordered/cons (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- false-implies-ordered Dfalse D.
+
+-	: scsub-ordered _ _ ([x] [d] ordered/cons (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- false-implies-ordered Dfalse D.
+
+%worlds (bind | ovar | var | topenblock) (scsub-ordered _ _ _ _).
+%total {} (scsub-ordered _ _ _ _).
+
+
+
+
+bounded-lookup : bounded G X -> lookup G Y _ -> precedes Y X -> type.
+%mode bounded-lookup +X1 +X2 -X3.
+
+-	: bounded-lookup (bounded/cons _ Dprecedes) (lookup/hit _) Dprecedes.
+
+-	: bounded-lookup (bounded/cons Dbounded Dprecedes) (lookup/miss Dlookup _) Dprecedes''
+	   <- bounded-lookup Dbounded Dlookup Dprecedes'
+	   <- precedes-trans Dprecedes' Dprecedes Dprecedes''.
+
+%worlds (var | ovar | bind | topenblock) (bounded-lookup _ _ _).
+%total D (bounded-lookup D _ _).
+
+
+
+sbounded-slookup : sbounded G X -> slookup G Y _ -> precedes Y X -> type.
+%mode sbounded-slookup +X1 +X2 -X3.
+
+-	: sbounded-slookup (sbounded/cons _ Dprecedes) (slookup/hit _) Dprecedes.
+
+-	: sbounded-slookup (sbounded/cons Dbounded Dprecedes) (slookup/miss Dlookup _) Dprecedes''
+	   <- sbounded-slookup Dbounded Dlookup Dprecedes'
+	   <- precedes-trans Dprecedes' Dprecedes Dprecedes''.
+
+%worlds (var | ovar | bind | topenblock) (sbounded-slookup _ _ _).
+%total D (sbounded-slookup D _ _).
+
+
+
+lookup-binder-fun : append (cons G1 X A) G2 G -> lookup G X B -> tp-eq A B -> type.
+%mode lookup-binder-fun +X1 +X2 -X3.
+
+-	: lookup-binder-fun (append/cons Dapp) (lookup/miss Dlook _) Deq
+	   <- lookup-binder-fun Dapp Dlook Deq.
+-	: lookup-binder-fun append/nil (lookup/hit _) tp-eq/i.
+
+-	: lookup-binder-fun (append/cons Dapp) (lookup/hit Dbounded) Deq
+	   <- append-bounded-contra Dapp Dbounded Dfalse
+	   <- false-implies-tp-eq Dfalse Deq.
+-	: lookup-binder-fun append/nil (lookup/miss Dlookup Dbounded) Deq
+	   <- bounded-lookup Dbounded Dlookup Dprecedes
+	   <- precedes-antisymm Dprecedes Dfalse
+	   <- false-implies-tp-eq Dfalse Deq.
+
+%worlds (bind | ovar | var | topenblock) (lookup-binder-fun _ _ _).
+%total D (lookup-binder-fun _ D _).
+
+
+
+append-all : {G} append nil G G -> type.
+%mode append-all +X1 -X2.
+
+-	: append-all _ append/nil.
+
+-	: append-all _ (append/cons D)
+	   <- append-all _ D.
+
+%worlds (var | topenblock) (append-all _ _).
+%total G (append-all G _).
+
+
+
+sappend-all : {G} sappend snil G G -> type.
+%mode sappend-all +X1 -X2.
+
+-	: sappend-all _ sappend/nil.
+
+-	: sappend-all _ (sappend/cons D)
+	   <- sappend-all _ D.
+
+%worlds (var | topenblock) (sappend-all _ _).
+%total G (sappend-all G _).
+
+
+
+csub-append : csub G M G' -> ({x} append (cons G1 x A) (G2 x) (G x)) -> append G1 G2' G' -> type.
+%mode csub-append +X1 +X2 -X3.
+
+-	: csub-append csub/base ([x] append/nil) append/nil.
+
+-	: csub-append (csub/cons _ Dsub) ([x] append/cons (Dappend x)) (append/cons Dappend')
+	   <- csub-append Dsub Dappend Dappend'.
+
+csub-append! : append (cons G1 X A) G2 G -> append G1 G' G -> type.
+%mode csub-append! +X1 -X2.
+
+-	: csub-append! append/nil (append/cons append/nil).
+
+-	: csub-append! (append/cons D) (append/cons D')
+	   <- csub-append! D D'.
+
+%worlds (var | ovar | topenblock) (csub-append! _ _).
+%total D (csub-append! D _).
+
+-	: csub-append csub/base ([x] append/cons (Dappend x)) D
+	   <- csub-append! (Dappend aca) D.
+
+%worlds (var | ovar | topenblock) (csub-append _ _ _).
+%total D (csub-append D _ _).
+
+
+
+csub-lookup : csub G M G' -> ({x} isvar x I -> lookup (G x) Y (A x)) -> tsub A M A' -> lookup G' Y A' -> type.
+%mode csub-lookup +X1 +X2 +X3 -X4.
+
+-	: csub-lookup (csub/cons Dtsub Dcsub) ([x] [d] lookup/hit (Dbounded x d)) Dtsub' 
+	   D
+	   <- tsub-fun Dtsub Dtsub' Deq
+	   <- csub-bounded Dbounded Dcsub Dbounded'
+	   <- lookup-resp ctx-eq/i atom-eq/i Deq (lookup/hit Dbounded')
+	      D.
+
+-	: csub-lookup (csub/cons _ Dcsub) ([x] [d] lookup/miss (Dlookup x d) (Dbounded x d)) Dtsub
+	   (lookup/miss Dlookup' Dbounded')
+	   <- csub-lookup Dcsub Dlookup Dtsub Dlookup'
+	   <- csub-bounded Dbounded Dcsub Dbounded'.
+
+-	: csub-lookup csub/base ([x] [d] lookup/miss (Dlookup x d) (Dbounded x d)) Dtsub
+	   Dlookup''
+	   <- strengthen-lookup Dlookup Dlookup' Deq
+	   <- tsub-resp Deq term-eq/i tp-eq/i Dtsub Dtsub'
+	   <- tsub-absent _ _ Dtsub''
+	   <- tsub-fun Dtsub'' Dtsub' Deq'
+	   <- lookup-resp ctx-eq/i atom-eq/i Deq' Dlookup' Dlookup''.
+
+%worlds (var | bind | ovar | topenblock) (csub-lookup _ _ _ _).
+%total D (csub-lookup _ D _ _).
+
+
+
+scsub-lookup : ({x} append (cons G1 x A) (G2 x) (G x))
+		-> append G1 (G2 R) G'
+		-> ({x} isvar x I -> lookup (G x) Y (B x))
+%%
+		-> lookup G' Y (B R) -> type.
+%mode scsub-lookup +X1 +X2 +X3 -X4.
+
+-	: scsub-lookup ([x] append/cons (Dappend x : append _ (G2 x) _)) (append/cons Dappend') ([x] [d] lookup/hit (Dbounded x d))
+	   (lookup/hit Dbounded')
+	   <- scsub-bounded Dappend Dappend' Dbounded Dbounded'.
+
+-	: scsub-lookup ([x] append/cons (Dappend x : append _ (G2 x) _)) (append/cons Dappend') ([x] [d] lookup/miss (Dlookup x d) (Dbounded x d))
+	   (lookup/miss Dlookup' Dbounded')
+	   <- scsub-lookup Dappend Dappend' Dlookup Dlookup'
+	   <- scsub-bounded Dappend Dappend' Dbounded Dbounded'.
+
+-	: scsub-lookup ([x] append/nil) append/nil ([x] [d] lookup/miss (Dlookup x d) (Dbounded x d))
+	   Dlookup''
+	   <- strengthen-lookup Dlookup Dlookup' (Deq : {x} tp-eq (A x) A')
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- lookup-resp ctx-eq/i atom-eq/i (Deq' R) Dlookup' Dlookup''.
+
+-	: scsub-lookup
+	   ([x] append/cons (Dappend x))
+	   (append/cons Dappend')
+	   ([x] [d] lookup/miss _ (Dbounded x d : bounded (G x) x))
+	   D
+	   <- ({x} {d} 
+		 append-bounded-contra (Dappend x) (Dbounded x d) Dfalse)
+	   <- false-implies-lookup Dfalse D.
+
+-	: scsub-lookup _ _ ([x] [d] lookup/miss _ (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-app-contra (Disvar x d) Dfalse)
+	   <- false-implies-lookup Dfalse D.
+
+-	: scsub-lookup _ _ ([x] [d] lookup/miss _ (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi1-contra (Disvar x d) Dfalse)
+	   <- false-implies-lookup Dfalse D.
+
+-	: scsub-lookup _ _ ([x] [d] lookup/miss _ (Dbounded x d)) D
+	   <- ({x} {d} bounded-isvar (Dbounded x d) (Disvar x d : isvar _ I))
+	   <- ({x} {d} isvar-pi2-contra (Disvar x d) Dfalse)
+	   <- false-implies-lookup Dfalse D.
+
+%worlds (var | bind | ovar | topenblock) (scsub-lookup _ _ _ _).
+%total D (scsub-lookup D _ _ _).
+
+
+
+lookup-bounded-contra : lookup G X T -> bounded G X -> false -> type.
+%mode lookup-bounded-contra +X1 +X2 -X3.
+
+-	: lookup-bounded-contra (lookup/hit _) (bounded/cons _ Dprec) Dfalse
+	   <- precedes-antisymm Dprec Dfalse.
+
+-	: lookup-bounded-contra (lookup/miss Dlook _) (bounded/cons Dbound Dprec) Dfalse
+	   <- bounded-increase-bound Dbound Dprec Dbound'
+	   <- lookup-bounded-contra Dlook Dbound' Dfalse.
+
+%worlds (var | ovar | topenblock) (lookup-bounded-contra _ _ _).
+%total D (lookup-bounded-contra D _ _).
+
+
+
+lookup-fun : lookup G X T -> lookup G X T' -> tp-eq T T' -> type.
+%mode lookup-fun +X1 +X2 -X3.
+
+-	: lookup-fun (lookup/hit _) (lookup/hit _) tp-eq/i.
+
+-	: lookup-fun (lookup/miss Dlook _) (lookup/miss Dlook' _) Deq
+	   <- lookup-fun Dlook Dlook' Deq.
+
+-	: lookup-fun (lookup/miss Dlook Dbound) (lookup/hit _) D
+	   <- lookup-bounded-contra Dlook Dbound Dfalse
+	   <- false-implies-tp-eq Dfalse D.
+
+-	: lookup-fun (lookup/hit _) (lookup/miss Dlook Dbound) D
+	   <- lookup-bounded-contra Dlook Dbound Dfalse
+	   <- false-implies-tp-eq Dfalse D.
+
+%worlds (var | ovar | topenblock) (lookup-fun _ _ _).
+%total D (lookup-fun D _ _).
+
+
+
+slookup-sbounded-contra : slookup G X T -> sbounded G X -> false -> type.
+%mode slookup-sbounded-contra +X1 +X2 -X3.
+
+-	: slookup-sbounded-contra (slookup/hit _) (sbounded/cons _ Dprec) Dfalse
+	   <- precedes-antisymm Dprec Dfalse.
+
+-	: slookup-sbounded-contra (slookup/miss Dlook _) (sbounded/cons Dbound Dprec) Dfalse
+	   <- sbounded-increase-bound Dbound Dprec Dbound'
+	   <- slookup-sbounded-contra Dlook Dbound' Dfalse.
+
+%worlds (var | ovar | topenblock) (slookup-sbounded-contra _ _ _).
+%total D (slookup-sbounded-contra D _ _).
+
+
+
+
+slookup-fun : slookup G X T -> slookup G X T' -> stp-eq T T' -> type.
+%mode slookup-fun +X1 +X2 -X3.
+
+-	: slookup-fun (slookup/hit _) (slookup/hit _) stp-eq/i.
+
+-	: slookup-fun (slookup/miss Dlook _) (slookup/miss Dlook' _) Deq
+	   <- slookup-fun Dlook Dlook' Deq.
+
+-	: slookup-fun (slookup/miss Dlook Dbound) (slookup/hit _) D
+	   <- slookup-sbounded-contra Dlook Dbound Dfalse
+	   <- false-implies-stp-eq Dfalse D.
+
+-	: slookup-fun (slookup/hit _) (slookup/miss Dlook Dbound) D
+	   <- slookup-sbounded-contra Dlook Dbound Dfalse
+	   <- false-implies-stp-eq Dfalse D.
+
+%worlds (var | ovar | topenblock) (slookup-fun _ _ _).
+%total D (slookup-fun D _ _).
+
+
+
+bounded-drop : append (cons G1 X T) G2 G -> append G1 G2 G' -> bounded G Y -> bounded G' Y -> type.
+%mode bounded-drop +X1 +X2 +X3 -X4.
+
+-	: bounded-drop append/nil append/nil (bounded/cons Dbound Dprec) Dbound'
+	   <- bounded-increase-bound Dbound Dprec Dbound'.
+
+-	: bounded-drop (append/cons Dapp) (append/cons Dapp') (bounded/cons Dbound Dprec) (bounded/cons Dbound' Dprec)
+	   <- bounded-drop Dapp Dapp' Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (bounded-drop _ _ _ _).
+%total D (bounded-drop D _ _ _).
+
+
+
+ordered-drop : append (cons G1 X T) G2 G -> append G1 G2 G' -> ordered G -> ordered G' -> type.
+%mode ordered-drop +X1 +X2 +X3 -X4.
+
+-	: ordered-drop append/nil append/nil (ordered/cons Dbound) Dord
+	   <- bounded-is-ordered Dbound Dord.
+
+-	: ordered-drop (append/cons Dapp) (append/cons Dapp') (ordered/cons Dbound) (ordered/cons Dbound')
+	   <- bounded-drop Dapp Dapp' Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (ordered-drop _ _ _ _).
+%total {} (ordered-drop _ _ _ _).
+
+
+
+sbounded-drop : sappend (scons G1 X T) G2 G -> sappend G1 G2 G' -> sbounded G Y -> sbounded G' Y -> type.
+%mode sbounded-drop +X1 +X2 +X3 -X4.
+
+-	: sbounded-drop sappend/nil sappend/nil (sbounded/cons Dbound Dprec) Dbound'
+	   <- sbounded-increase-bound Dbound Dprec Dbound'.
+
+-	: sbounded-drop (sappend/cons Dapp) (sappend/cons Dapp') (sbounded/cons Dbound Dprec) (sbounded/cons Dbound' Dprec)
+	   <- sbounded-drop Dapp Dapp' Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (sbounded-drop _ _ _ _).
+%total D (sbounded-drop D _ _ _).
+
+
+
+sordered-drop : sappend (scons G1 X T) G2 G -> sappend G1 G2 G' -> sordered G -> sordered G' -> type.
+%mode sordered-drop +X1 +X2 +X3 -X4.
+
+-	: sordered-drop sappend/nil sappend/nil (sordered/cons Dbound) Dord
+	   <- sbounded-is-sordered Dbound Dord.
+
+-	: sordered-drop (sappend/cons Dapp) (sappend/cons Dapp') (sordered/cons Dbound) (sordered/cons Dbound')
+	   <- sbounded-drop Dapp Dapp' Dbound Dbound'.
+
+%worlds (var | ovar | topenblock) (sordered-drop _ _ _ _).
+%total {} (sordered-drop _ _ _ _).
+
+
+
+slookup-drop : ({x} sappend (scons G1 x S) G2 (G x)) -> sappend G1 G2 G' -> ({x} isvar x I -> slookup (G x) Y T) -> slookup G' Y T -> type.
+%mode slookup-drop +X1 +X2 +X3 -X4.
+
+-	: slookup-drop ([x] sappend/cons (Dappend x)) (sappend/cons Dappend') ([x] [d] slookup/hit (Dbound x d)) (slookup/hit Dbound'')
+	   <- ({x} {d}
+		 sbounded-drop (Dappend x) Dappend' (Dbound x d) (Dbound' x d))
+	   <- strengthen-sbounded Dbound' Dbound''.
+
+-	: slookup-drop ([_] sappend/nil) sappend/nil ([x] [d] slookup/miss (Dlook x d) (Dprec x d)) Dlook'
+	   <- strengthen-slookup Dlook Dlook'.
+
+-	: slookup-drop ([x] sappend/cons (Dappend x)) (sappend/cons Dappend') ([x] [d] slookup/miss (Dlook x d) (Dbound x d)) (slookup/miss Dlook' Dbound'')
+	   <- slookup-drop Dappend Dappend' Dlook Dlook'
+	   <- ({x} {d}
+		 sbounded-drop (Dappend x) Dappend' (Dbound x d) (Dbound' x d))
+	   <- strengthen-sbounded Dbound' Dbound''.
+
+%worlds (var | ovar | topenblock) (slookup-drop _ _ _ _).
+%total D (slookup-drop D _ _ _).
+
+
+
+
+%%%%%  Context Regularity  %%%%%
+
+lookup-context : lookup G X A -> ordered G -> type.
+%mode lookup-context +X1 -X2.
+
+-	: lookup-context (lookup/hit D) (ordered/cons D).
+
+-	: lookup-context (lookup/miss _ D) (ordered/cons D).
+
+%worlds (bind | ovar | var | obind | topenblock) (lookup-context _ _).
+%total {} (lookup-context _ _).
+
+
+
+aofe-context : aofe G M T -> ordered G -> type.
+%mode aofe-context +X1 -X2.
+
+ofe-context : ofe G M T -> ordered G -> type.
+%mode ofe-context +X1 -X2.
+
+wfe-context : wfe G A -> ordered G -> type.
+%mode wfe-context +X1 -X2.
+
+-closed	: aofe-context (aofe/closed D _) D.
+
+-var	: aofe-context (aofe/var _ D) D'
+	   <- lookup-context D D'.
+
+-app	: aofe-context (aofe/app _ _ _ D) D'
+	   <- aofe-context D D'.
+
+-pi1	: aofe-context (aofe/pi1 D) D'
+	   <- aofe-context D D'.
+
+-pi2	: aofe-context (aofe/pi2 D) D'
+	   <- aofe-context D D'.
+
+
+
+-at	: ofe-context (ofe/at D) D'
+	   <- aofe-context D D'.
+
+-lam	: ofe-context (ofe/lam _ D) D'
+	   <- wfe-context D D'.
+
+-pair	: ofe-context (ofe/pair _ _ _ D) D'
+	   <- ofe-context D D'.
+
+-sing	: ofe-context (ofe/sing D) D'
+	   <- aofe-context D D'.
+
+-star	: ofe-context (ofe/star D) D.
+
+
+-t	: wfe-context (wfe/t D) D.
+
+-pi	: wfe-context (wfe/pi _ D) D'
+	   <- wfe-context D D'.
+
+-sigma	: wfe-context (wfe/sigma _ D) D'
+	   <- wfe-context D D'.
+
+-sing	: wfe-context (wfe/sing D) D'
+	   <- aofe-context D D'.
+
+-one	: wfe-context (wfe/one D) D.
+
+%worlds (bind | ovar | var | obind | topenblock) (aofe-context _ _) (ofe-context _ _) (wfe-context _ _).
+%total (D1 D2 D3) (aofe-context D1 _) (ofe-context D2 _) (wfe-context D3 _).
+
+
+
+ofe-context-precedes : ofe (cons (cons G X A) Y B) M C -> precedes X Y -> type.
+%mode ofe-context-precedes +X1 -X2.
+
+-	: ofe-context-precedes D D'
+	   <- ofe-context D (ordered/cons (bounded/cons _ D')).
+
+%worlds (bind | ovar | var | obind | topenblock) (ofe-context-precedes _ _).
+%total {} (ofe-context-precedes _ _).
+
+
+
+slookup-context : slookup G X A -> sordered G -> type.
+%mode slookup-context +X1 -X2.
+
+-	: slookup-context (slookup/hit D) (sordered/cons D).
+
+-	: slookup-context (slookup/miss _ D) (sordered/cons D).
+
+%worlds (bind | ovar | var | obind | topenblock) (slookup-context _ _).
+%total {} (slookup-context _ _).
+
+
+
+aofes-context : aofes G R T -> sordered G -> type.
+%mode aofes-context +X1 -X2.
+
+ofes-context : ofes G M T -> sordered G -> type.
+%mode ofes-context +X1 -X2.
+
+wfes-context : wfes G A -> sordered G -> type.
+%mode wfes-context +X1 -X2.
+
+-closed	: aofes-context (aofes/closed D _ _) D.
+
+-var	: aofes-context (aofes/var D) D'
+	   <- slookup-context D D'.
+
+-app	: aofes-context (aofes/app _ D) D'
+	   <- aofes-context D D'.
+
+-pi1	: aofes-context (aofes/pi1 D) D'
+	   <- aofes-context D D'.
+
+-pi2	: aofes-context (aofes/pi2 D) D'
+	   <- aofes-context D D'.
+
+
+
+-at	: ofes-context (ofes/at D) D'
+	   <- aofes-context D D'.
+
+-lam	: ofes-context (ofes/lam D) D''
+	   <- ({x} {d}
+		 ofes-context (D x d) 
+		 (sordered/cons (D' x d)))
+	   <- sbounded-is-sordered-strengthen D' D''.
+
+-pair	: ofes-context (ofes/pair _ D) D'
+	   <- ofes-context D D'.
+
+-star	: ofes-context (ofes/star D) D.
+
+
+-t	: wfes-context (wfes/t D) D.
+
+-pi	: wfes-context (wfes/pi _ _ D) D'
+	   <- wfes-context D D'.
+
+-sigma	: wfes-context (wfes/sigma _ _ D) D'
+	   <- wfes-context D D'.
+
+-sing	: wfes-context (wfes/sing D) D'
+	   <- aofes-context D D'.
+
+-one	: wfes-context (wfes/one D) D.
+
+%worlds (bind | ovar | var | topenblock) (aofes-context _ _) (ofes-context _ _) (wfes-context _ _).
+%total (D1 D2 D3) (aofes-context D1 _) (ofes-context D2 _) (wfes-context D3 _).
+
+
+
+
+%%%%%  Context Extension  %%%%%
+
+bound-isvar : bounded G X -> isvar X I -> type.
+%mode bound-isvar +X1 -X2.
+
+-	: bound-isvar (bounded/nil D) D.
+-	: bound-isvar (bounded/cons _ (precedes/i _ D _)) D.
+
+%worlds (var | bind | ovar | obind | topenblock) (bound-isvar _ _).
+%total {} (bound-isvar _ _).
+
+
+
+following-var : isvar X I -> ({y} isvar y J -> precedes X y) -> type.
+%mode following-var +X1 -X2.
+
+-	: following-var 
+	   (D : isvar X I)
+	   ([y] [e:isvar y (s I)] precedes/i Dlt e D)
+	   <- lt-succ I (Dlt : lt I (s I)).
+
+
+%worlds (var | bind | ovar | obind | topenblock) (following-var _ _).
+%total {} (following-var _ _).
+
+
+
+extend-context : ordered G -> ({x} isvar x I -> bounded G x) -> type.
+%mode extend-context +X1 -X2.
+
+-	: extend-context ordered/nil ([x] [d:isvar x 0] bounded/nil d).
+-	: extend-context
+	   (ordered/cons
+	      (Dbounded : bounded G Y)
+	      : ordered (cons G Y A))
+	   ([x] [d:isvar x J] bounded/cons Dbounded (Dprecedes x d))
+	   <- bound-isvar Dbounded (Disvar : isvar Y I)
+	   <- following-var Disvar (Dprecedes : {x} isvar x J -> precedes Y x).
+
+
+%worlds (var | bind | ovar | obind | topenblock) (extend-context _ _).
+%total {} (extend-context _ _).
+
+
+
+sbound-isvar : sbounded G X -> isvar X I -> type.
+%mode sbound-isvar +X1 -X2.
+
+-	: sbound-isvar (sbounded/nil D) D.
+-	: sbound-isvar (sbounded/cons _ (precedes/i _ D _)) D.
+
+%worlds (var | bind | ovar | obind | topenblock) (sbound-isvar _ _).
+%total {} (sbound-isvar _ _).
+
+
+
+extend-scontext : sordered G -> ({x} isvar x I -> sbounded G x) -> type.
+%mode extend-scontext +X1 -X2.
+
+-	: extend-scontext sordered/nil ([x] [d:isvar x 0] sbounded/nil d).
+-	: extend-scontext
+	   (sordered/cons
+	      (Dbounded : sbounded G Y)
+	      : sordered (scons G Y A))
+	   ([x] [d:isvar x (s I)] sbounded/cons Dbounded (precedes/i Dlt d Disvar))
+	   <- sbound-isvar Dbounded (Disvar : isvar Y I)
+	   <- lt-succ I (Dlt : lt I (s I)).
+
+%worlds (var | bind | ovar | topenblock) (extend-scontext _ _).
+%total {} (extend-scontext _ _).
+
+
+
+
+%%%%%  Metrics on typing derivations  %%%%%
+
+%%  The proof of the cut lemma needs to recurse on the domain of
+%%  a lambda, but the domain isn't written in the syntax.  Therefore,
+%%  we cannot use the term itself as the metric, we need a version
+%%  of the term that includes the domain for a lambda.  Thus, we use
+%%  the below syntax as the "digest" of a typing derivation, which
+%%  includes the needed lambda annotation.
+
+mtp	: type.
+matom	: type.
+mterm	: type.
+
+mt	: mtp.
+mpi	: mtp -> mtp -> mtp.
+msigma	: mtp -> mtp -> mtp.
+msing	: matom -> mtp.
+mone	: mtp.
+
+mconst	: matom.
+mvar	: mtp -> matom.
+mapp	: mtp -> mterm -> matom -> matom.
+mpi1	: matom -> matom.
+mpi2	: matom -> matom.
+
+mat	: matom -> mterm.
+mlam	: mterm -> mtp -> mterm.
+mpair	: mtp -> mterm -> mterm -> mterm.
+msingtm	: matom -> mterm.
+mstar	: mterm.
+
+
+
+mof	: of M A -> mterm -> type.
+maof	: aof R A -> matom -> type.
+mwf	: wf A -> mtp -> type.
+
+mof/at		: mof (of/at Daof) (mat Daof')
+		   <- maof Daof Daof'.
+
+mof/lam		: mof (of/lam Dof Dwf) (mlam Dof' Dwf')
+		   <- mwf Dwf Dwf'
+		   <- ({x} {d}
+			 mof (Dof x d) Dof').
+
+mof/pair	: mof (of/pair Dwf Dof2 _ Dof1) (mpair Dwf' Dof2' Dof1')
+		   <- mof Dof1 Dof1'
+		   <- mof Dof2 Dof2'
+		   <- ({x} {d}
+			 mwf (Dwf x d) Dwf').
+
+mof/sing	: mof (of/sing Daof) (msingtm Daof')
+		   <- maof Daof Daof'.
+
+mof/star	: mof of/star mstar.
+
+
+maof/const	: maof (aof/const Dwf _) (mvar Dwf')
+		   <- mwf Dwf Dwf'.
+
+maof/var	: maof (aof/var Dwf _) (mvar Dwf')
+		   <- mwf Dwf Dwf'.
+
+maof/app	: maof (aof/app Dwf _ Dof Daof) (mapp Dwf' Dof' Daof')
+		   <- maof Daof Daof'
+		   <- mof Dof Dof'
+		   <- mwf Dwf Dwf'. 
+
+maof/pi1	: maof (aof/pi1 Daof) (mpi1 Daof')
+		   <- maof Daof Daof'.
+
+maof/pi2	: maof (aof/pi2 Daof) (mpi2 Daof')
+		   <- maof Daof Daof'.
+
+
+mwf/t		: mwf wf/t mt.
+
+mwf/pi		: mwf (wf/pi Dwf2 Dwf1) (mpi Dwf2' Dwf1')
+		   <- mwf Dwf1 Dwf1'
+		   <- ({x} {d}
+			 mwf (Dwf2 x d) Dwf2').
+
+mwf/sigma	: mwf (wf/sigma Dwf2 Dwf1) (msigma Dwf2' Dwf1')
+		   <- mwf Dwf1 Dwf1'
+		   <- ({x} {d}
+			 mwf (Dwf2 x d) Dwf2').
+
+mwf/sing	: mwf (wf/sing Daof) (msing Daof')
+		   <- maof Daof Daof'.
+
+mwf/one		: mwf wf/one mone.
+
+
+
+mofe	: ofe G M A -> mterm -> type.
+maofe	: aofe G R A -> matom -> type.
+mwfe	: wfe G A -> mtp -> type.
+
+
+mofe/at		: mofe (ofe/at Daofe) (mat Daofe')
+		   <- maofe Daofe Daofe'.
+
+mofe/lam	: mofe (ofe/lam Dofe Dwfe) (mlam Dofe' Dwfe')
+		   <- mwfe Dwfe Dwfe'
+		   <- ({x} {d}
+			 mofe (Dofe x d) Dofe').
+
+mofe/pair	: mofe (ofe/pair Dwfe Dofe2 _ Dofe1) (mpair Dwfe' Dofe2' Dofe1')
+		   <- mofe Dofe1 Dofe1'
+		   <- mofe Dofe2 Dofe2'
+		   <- ({x} {d}
+			 mwfe (Dwfe x d) Dwfe').
+
+mofe/sing	: mofe (ofe/sing Daofe) (msingtm Daofe')
+		   <- maofe Daofe Daofe'.
+
+mofe/star	: mofe (ofe/star _) mstar.
+
+
+maofe/closed	: maofe (aofe/closed _ Daof) Daof'
+		   <- maof Daof Daof'.
+
+maofe/var	: maofe (aofe/var Dwf _) (mvar Dwf')
+		   <- mwfe Dwf Dwf'.
+
+maofe/app	: maofe (aofe/app Dwfe _ Dofe Daofe) (mapp Dwfe' Dofe' Daofe')
+		   <- maofe Daofe Daofe'
+		   <- mofe Dofe Dofe'
+		   <- mwfe Dwfe Dwfe'. 
+
+maofe/pi1	: maofe (aofe/pi1 Daofe) (mpi1 Daofe')
+		   <- maofe Daofe Daofe'.
+
+maofe/pi2	: maofe (aofe/pi2 Daofe) (mpi2 Daofe')
+		   <- maofe Daofe Daofe'.
+
+
+mwfe/t		: mwfe (wfe/t _) mt.
+
+mwfe/pi		: mwfe (wfe/pi Dwfe2 Dwfe1) (mpi Dwfe2' Dwfe1')
+		   <- mwfe Dwfe1 Dwfe1'
+		   <- ({x} {d}
+			 mwfe (Dwfe2 x d) Dwfe2').
+
+mwfe/sigma	: mwfe (wfe/sigma Dwfe2 Dwfe1) (msigma Dwfe2' Dwfe1')
+		   <- mwfe Dwfe1 Dwfe1'
+		   <- ({x} {d}
+			 mwfe (Dwfe2 x d) Dwfe2').
+
+mwfe/sing	: mwfe (wfe/sing Daofe) (msing Daofe')
+		   <- maofe Daofe Daofe'.
+
+mwfe/one	: mwfe (wfe/one _) mone.
+
+
+
+can-maof : {D:aof R A} maof D Rm -> type.
+%mode can-maof +X1 -X2.
+
+can-mof : {D:of M A} mof D Mm -> type.
+%mode can-mof +X1 -X2.
+
+can-mwf : {D:wf A} mwf D Am -> type.
+%mode can-mwf +X1 -X2.
+
+-	: can-maof (aof/const D _) (maof/const D')
+	   <- can-mwf D D'.
+
+-	: can-maof (aof/var D _) (maof/var D')
+	   <- can-mwf D D'.
+
+-	: can-maof (aof/app D3 _ D2 D1) (maof/app D3' D2' D1')
+	   <- can-maof D1 D1'
+	   <- can-mof D2 D2'
+	   <- can-mwf D3 D3'.
+
+-	: can-maof (aof/pi1 D) (maof/pi1 D')
+	   <- can-maof D D'.
+
+-	: can-maof (aof/pi2 D) (maof/pi2 D')
+	   <- can-maof D D'.
+
+
+-	: can-mof (of/at D) (mof/at D')
+	   <- can-maof D D'.
+
+-	: can-mof (of/lam D2 D1) (mof/lam D2' D1')
+	   <- can-mwf D1 D1'
+	   <- ({x} {d} can-mof (D2 x d) (D2' x d)).
+
+-	: can-mof (of/pair D3 D2 _ D1) (mof/pair D3' D2' D1')
+	   <- can-mof D1 D1'
+	   <- can-mof D2 D2'
+	   <- ({x} {d} can-mwf (D3 x d) (D3' x d)).
+
+-	: can-mof (of/sing D) (mof/sing D')
+	   <- can-maof D D'.
+
+-	: can-mof of/star mof/star.
+
+
+-	: can-mwf wf/t mwf/t.
+
+-	: can-mwf (wf/pi D2 D1) (mwf/pi D2' D1')
+	   <- can-mwf D1 D1'
+	   <- ({x} {d} can-mwf (D2 x d) (D2' x d)).
+
+-	: can-mwf (wf/sigma D2 D1) (mwf/sigma D2' D1')
+	   <- can-mwf D1 D1'
+	   <- ({x} {d} can-mwf (D2 x d) (D2' x d)).
+
+-	: can-mwf (wf/sing D) (mwf/sing D')
+	   <- can-maof D D'.
+
+-	: can-mwf wf/one mwf/one.
+
+%worlds (var | bind | ovar | obind | topenblock) (can-maof _ _) (can-mof _ _)  (can-mwf _ _).
+%total (D1 D2 D3) (can-maof D1 _) (can-mof D2 _) (can-mwf D3 _).
+
+
+
+can-maofe : {D:aofe G R A} maofe D Rm -> type.
+%mode can-maofe +X1 -X2.
+
+can-mofe : {D:ofe G M A} mofe D Mm -> type.
+%mode can-mofe +X1 -X2.
+
+can-mwfe : {D:wfe G A} mwfe D Am -> type.
+%mode can-mwfe +X1 -X2.
+
+-	: can-maofe (aofe/closed _ D) (maofe/closed D')
+	   <- can-maof D D'.
+
+-	: can-maofe (aofe/var D _) (maofe/var D')
+	   <- can-mwfe D D'.
+
+-	: can-maofe (aofe/app D3 _ D2 D1) (maofe/app D3' D2' D1')
+	   <- can-maofe D1 D1'
+	   <- can-mofe D2 D2'
+	   <- can-mwfe D3 D3'.
+
+-	: can-maofe (aofe/pi1 D) (maofe/pi1 D')
+	   <- can-maofe D D'.
+
+-	: can-maofe (aofe/pi2 D) (maofe/pi2 D')
+	   <- can-maofe D D'.
+
+
+-	: can-mofe (ofe/at D) (mofe/at D')
+	   <- can-maofe D D'.
+
+-	: can-mofe (ofe/lam D2 D1) (mofe/lam D2' D1')
+	   <- can-mwfe D1 D1'
+	   <- ({x} {d} can-mofe (D2 x d) (D2' x d)).
+
+-	: can-mofe (ofe/pair D3 D2 _ D1) (mofe/pair D3' D2' D1')
+	   <- can-mofe D1 D1'
+	   <- can-mofe D2 D2'
+	   <- ({x} {d} can-mwfe (D3 x d) (D3' x d)).
+
+-	: can-mofe (ofe/sing D) (mofe/sing D')
+	   <- can-maofe D D'.
+
+-	: can-mofe (ofe/star _) mofe/star.
+
+
+-	: can-mwfe (wfe/t _) mwfe/t. 
+
+-	: can-mwfe (wfe/pi D2 D1) (mwfe/pi D2' D1')
+	   <- can-mwfe D1 D1'
+	   <- ({x} {d} can-mwfe (D2 x d) (D2' x d)).
+
+-	: can-mwfe (wfe/sigma D2 D1) (mwfe/sigma D2' D1')
+	   <- can-mwfe D1 D1'
+	   <- ({x} {d} can-mwfe (D2 x d) (D2' x d)).
+
+-	: can-mwfe (wfe/sing D) (mwfe/sing D')
+	   <- can-maofe D D'.
+
+-	: can-mwfe (wfe/one _) mwfe/one.
+
+%worlds (var | bind | ovar | obind | topenblock) (can-maofe _ _) (can-mofe _ _)  (can-mwfe _ _).
+%total (D1 D2 D3) (can-maofe D1 _) (can-mofe D2 _) (can-mwfe D3 _).
+
+
+
+maof-resp : atom-eq R R' -> tp-eq A A' -> {D:aof R A} maof D Rm -> {D':aof R' A'} maof D' Rm -> type.
+%mode maof-resp +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: maof-resp atom-eq/i tp-eq/i D Dm D Dm.
+
+%worlds (var | bind | topenblock) (maof-resp _ _ _ _ _ _).
+%total {} (maof-resp _ _ _ _ _ _).
+
+
+
+mof-resp : term-eq M M' -> tp-eq A A' -> {D:of M A} mof D Mm -> {D':of M' A'} mof D' Mm -> type.
+%mode mof-resp +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: mof-resp term-eq/i tp-eq/i D Dm D Dm.
+
+%worlds (var | bind | topenblock) (mof-resp _ _ _ _ _ _).
+%total {} (mof-resp _ _ _ _ _ _).
+
+
+
+mwf-resp : tp-eq A A' -> {D:wf A} mwf D Am -> {D':wf A'} mwf D' Am -> type.
+%mode mwf-resp +X1 +X2 +X3 -X4 -X5.
+
+-	: mwf-resp tp-eq/i D Dm D Dm.
+
+%worlds (var | bind | topenblock) (mwf-resp _ _ _ _ _).
+%total {} (mwf-resp _ _ _ _ _).
+
+
+
+
+%%%%%  Bump Lemma  %%%%%
+
+bump-precedes : leq I I'
+		 -> ({x} isvar x I -> precedes Y x)
+		 -> ({x} isvar x I' -> precedes Y x) -> type.
+%mode bump-precedes +X1 +X2 -X3.
+
+-	: bump-precedes Dleq ([x] [d] precedes/i Dlt d Disvar) ([x] [d] precedes/i Dlt' d Disvar)
+	   <- lt-leq-trans Dlt Dleq Dlt'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-precedes _ _ _).
+%total {} (bump-precedes _ _ _).
+
+
+
+bump-bounded : leq I I'
+		-> ({x} isvar x I -> bounded G x)
+		-> ({x} isvar x I' -> bounded G x) -> type.
+%mode bump-bounded +X1 +X2 -X3.
+
+-	: bump-bounded _ ([x] [d] bounded/nil d) ([x] [d] bounded/nil d).
+
+-	: bump-bounded Dleq 
+	   ([x] [d]
+	      bounded/cons 
+	      (Dbound x d)
+	      (precedes/i Dlt d Disvar))
+	   ([x] [d]
+	      bounded/cons
+	      Dbound'
+	      (precedes/i Dlt' d Disvar))
+	   <- lt-leq-trans Dlt Dleq Dlt'
+	   <- strengthen-bounded Dbound Dbound'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-bounded _ _ _).
+%total {} (bump-bounded _ _ _).
+
+
+
+bump-lookup : ({x} isvar x I -> lookup (G x) (Y x) (A x))
+	       -> ({x} isvar x I' -> ordered (G x))
+	       -> ({x} isvar x I' -> lookup (G x) (Y x) (A x)) -> type.
+%mode bump-lookup +X1 +X2 -X3.
+
+-hit	: bump-lookup ([x] [d] lookup/hit _) ([x] [d] ordered/cons (Dbound x d))
+	   ([x] [d] lookup/hit (Dbound x d)).
+
+-miss	: bump-lookup ([x] [d] lookup/miss (Dlook x d) _) ([x] [d] ordered/cons (Dbound x d))
+	   ([x] [d] lookup/miss (Dlook' x d) (Dbound x d))
+	   <- ({x} {d}
+		 bounded-is-ordered (Dbound x d) (Dord x d))
+	   <- bump-lookup Dlook Dord Dlook'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-lookup _ _ _).
+%total D (bump-lookup D _ _).
+
+
+
+bump-aofe-m : {Rm}
+	       {D:{x} isvar x I -> aofe (G x) (R x) (A x)}
+	       ({x} {d} maofe (D x d) Rm)
+	     -> ({x} isvar x I' -> ordered (G x))
+	     -> {D':{x} isvar x I' -> aofe (G x) (R x) (A x)}
+		({x} {d} maofe (D' x d) Rm) -> type.
+%mode bump-aofe-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+bump-ofe-m : {Mm}
+	      {D:{x} isvar x I -> ofe (G x) (M x) (A x)}
+	      ({x} {d} mofe (D x d) Mm)
+	    -> ({x} isvar x I' -> ordered (G x))
+	    -> {D':{x} isvar x I' -> ofe (G x) (M x) (A x)}
+	       ({x} {d} mofe (D' x d) Mm) -> type.
+%mode bump-ofe-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+bump-wfe-m : {Am} 
+	      {D:{x} isvar x I -> wfe (G x) (A x)}
+	      ({x} {d} mwfe (D x d) Am)
+	    -> ({x} isvar x I' -> ordered (G x))
+	    -> {D':{x} isvar x I' -> wfe (G x) (A x)}
+		({x} {d} mwfe (D' x d) Am) -> type.
+%mode bump-wfe-m +X1 +X2 +X3 +X4 -X5 -X6.
+
+-closed	: bump-aofe-m _
+	   ([x] [d] aofe/closed _ (Daof x)) 
+	   ([x] [d] maofe/closed (Dmaof x))
+	   Dord
+	   ([x] [d] aofe/closed (Dord x d) (Daof x))
+	   ([x] [d] maofe/closed (Dmaof x)).
+
+-var	: bump-aofe-m _
+	   ([x] [d] aofe/var (Dwf x d) (Dlook x d))
+	   ([x] [d] maofe/var (Dmwf x d))
+	   Dord
+	   ([x] [d] aofe/var (Dwf' x d) (Dlook' x d))
+	   ([x] [d] maofe/var (Dmwf' x d))
+	   <- bump-wfe-m _ Dwf Dmwf Dord Dwf' Dmwf'
+	   <- bump-lookup Dlook Dord Dlook'.
+
+-app	: bump-aofe-m _
+	   ([x] [d] aofe/app (Dwf x d) (Dsub x) (Dof x d) (Daof x d))
+	   ([x] [d] maofe/app (Dmwf x d) (Dmof x d) (Dmaof x d))
+	   Dord
+	   ([x] [d] aofe/app (Dwf' x d) (Dsub x) (Dof' x d) (Daof' x d))
+	   ([x] [d] maofe/app (Dmwf' x d) (Dmof' x d) (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'
+	   <- bump-ofe-m _ Dof Dmof Dord Dof' Dmof'
+	   <- bump-wfe-m _ Dwf Dmwf Dord Dwf' Dmwf'.
+
+-pi1	: bump-aofe-m _
+	   ([x] [d] aofe/pi1 (Daof x d))
+	   ([x] [d] maofe/pi1 (Dmaof x d))
+	   Dord
+	   ([x] [d] aofe/pi1 (Daof' x d))
+	   ([x] [d] maofe/pi1 (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'.
+
+-pi2	: bump-aofe-m _
+	   ([x] [d] aofe/pi2 (Daof x d))
+	   ([x] [d] maofe/pi2 (Dmaof x d))
+	   Dord
+	   ([x] [d] aofe/pi2 (Daof' x d))
+	   ([x] [d] maofe/pi2 (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'.
+
+
+-at	: bump-ofe-m _
+	   ([x] [d] ofe/at (Daof x d))
+	   ([x] [d] mofe/at (Dmaof x d))
+	   Dord
+	   ([x] [d] ofe/at (Daof' x d))
+	   ([x] [d] mofe/at (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'.
+
+-lam	: bump-ofe-m _
+	   ([x] [d:isvar x I] 
+	      ofe/lam 
+	      (Dof x d : {y} isvar y J1 -> ofe (cons (G x) y (A x)) (M x y) (B x y))
+	      (Dwf x d : wfe (G x) (A x)))
+	   ([x] [d]
+	      mofe/lam 
+	      (Dmof x d : {y} {e} mofe (Dof x d y e) Mm)
+	      (Dmwf x d : mwfe (Dwf x d) Am))
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] ofe/lam (Dof'' x d) (Dwf' x d))
+	   ([x] [d] mofe/lam (Dmof'' x d) (Dmwf' x d))
+	   <- bump-wfe-m _ Dwf Dmwf Dord Dwf' Dmwf'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 ofe-context (Dof x d y e) 
+		 (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-ofe-m _ ([y] [e:isvar y J1] Dof x d y e) ([y] [e] Dmof x d y e)
+		    ([y] [e:isvar y J] ordered/cons (Dbound1' x d y e))
+		    ([y] [e:isvar y J] Dof' x d y e)
+		    ([y] [e:isvar y J] Dmof' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-ofe-m _ ([x] [d:isvar x I] Dof' x d y e) ([x] [d] Dmof' x d y e)
+		    ([x] [d:isvar x I'] ordered/cons (Dbound2' x d y e))
+		    ([x] [d:isvar x I'] Dof'' x d y e)
+		    ([x] [d:isvar x I'] Dmof'' x d y e)).
+
+-pair	: bump-ofe-m _
+	   ([x] [d:isvar x I]
+	      ofe/pair
+	      (Dwf x d : {y} isvar y J1 -> wfe (cons (G x) y (A x)) (B x y))
+	      (Dof2 x d : ofe (G x) (N x) (B' x))
+	      (Dsub x : tsub ([y] B x y) (M x) (B' x))
+	      (Dof1 x d : ofe (G x) (M x) (A x)))
+	   ([x] [d]
+	      mofe/pair
+	      (Dmwf x d : {y} {e} mwfe (Dwf x d y e) Bm)
+	      (Dmof2 x d : mofe (Dof2 x d) Nm)
+	      (Dmof1 x d : mofe (Dof1 x d) Mm))
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] ofe/pair (Dwf'' x d) (Dof2' x d) (Dsub x) (Dof1' x d))
+	   ([x] [d] mofe/pair (Dmwf'' x d) (Dmof2' x d) (Dmof1' x d))
+	   <- bump-ofe-m _ Dof1 Dmof1 Dord Dof1' Dmof1'
+	   <- bump-ofe-m _ Dof2 Dmof2 Dord Dof2' Dmof2'
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J1}
+		 wfe-context (Dwf x d y e) 
+		 (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		    ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		    ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe-m _ ([y] [e:isvar y J1] Dwf x d y e) ([y] [e] Dmwf x d y e)
+		    ([y] [e:isvar y J] ordered/cons (Dbound1' x d y e))
+		    ([y] [e:isvar y J] Dwf' x d y e)
+		    ([y] [e:isvar y J] Dmwf' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfe-m _ ([x] [d:isvar x I] Dwf' x d y e) ([x] [d] Dmwf' x d y e)
+		    ([x] [d:isvar x I'] ordered/cons (Dbound2' x d y e))
+		    ([x] [d:isvar x I'] Dwf'' x d y e)
+		    ([x] [d:isvar x I'] Dmwf'' x d y e)).
+
+-star	: bump-ofe-m _
+	   ([x] [d] ofe/star _)
+	   ([x] [d] mofe/star)
+	   Dord
+	   ([x] [d] ofe/star (Dord x d))
+	   ([x] [d] mofe/star).
+
+-sing	: bump-ofe-m _
+	   ([x] [d] ofe/sing (Daof x d))
+	   ([x] [d] mofe/sing (Dmaof x d))
+	   Dord
+	   ([x] [d] ofe/sing (Daof' x d))
+	   ([x] [d] mofe/sing (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'.
+
+
+-t	: bump-wfe-m _
+	   ([x] [d] wfe/t _)
+	   ([x] [d] mwfe/t)
+	   Dord
+	   ([x] [d] wfe/t (Dord x d))
+	   ([x] [d] mwfe/t).
+
+-pi	: bump-wfe-m _
+	   ([x] [d:isvar x I] 
+	      wfe/pi
+	      (Dwf2 x d : {y} isvar y J1 -> wfe (cons (G x) y (A x)) (B x y))
+	      (Dwf1 x d : wfe (G x) (A x)))
+	   ([x] [d]
+	      mwfe/pi
+	      (Dmwf2 x d : {y} {e} mwfe (Dwf2 x d y e) Bm)
+	      (Dmwf1 x d : mwfe (Dwf1 x d) Am))
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] wfe/pi (Dwf2'' x d) (Dwf1' x d))
+	   ([x] [d] mwfe/pi (Dmwf2'' x d) (Dmwf1' x d))
+	   <- bump-wfe-m _ Dwf1 Dmwf1 Dord Dwf1' Dmwf1'
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J1}
+		    wfe-context (Dwf2 x d y e) 
+		       (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		    (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		    ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		    ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe-m _ ([y] [e:isvar y J1] Dwf2 x d y e) ([y] [e] Dmwf2 x d y e)
+		    ([y] [e:isvar y J] ordered/cons (Dbound1' x d y e))
+		    ([y] [e:isvar y J] Dwf2' x d y e)
+		    ([y] [e:isvar y J] Dmwf2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfe-m _ ([x] [d:isvar x I] Dwf2' x d y e) ([x] [d] Dmwf2' x d y e)
+		    ([x] [d:isvar x I'] ordered/cons (Dbound2' x d y e))
+		    ([x] [d:isvar x I'] Dwf2'' x d y e)
+		    ([x] [d:isvar x I'] Dmwf2'' x d y e)).
+
+-sigma	: bump-wfe-m _
+	   ([x] [d:isvar x I] 
+	      wfe/sigma
+	      (Dwf2 x d : {y} isvar y J1 -> wfe (cons (G x) y (A x)) (B x y))
+	      (Dwf1 x d : wfe (G x) (A x)))
+	   ([x] [d]
+	      mwfe/sigma
+	      (Dmwf2 x d : {y} {e} mwfe (Dwf2 x d y e) Bm)
+	      (Dmwf1 x d : mwfe (Dwf1 x d) Am))
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] wfe/sigma (Dwf2'' x d) (Dwf1' x d))
+	   ([x] [d] mwfe/sigma (Dmwf2'' x d) (Dmwf1' x d))
+	   <- bump-wfe-m _ Dwf1 Dmwf1 Dord Dwf1' Dmwf1'
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J1}
+		    wfe-context (Dwf2 x d y e) 
+		       (ordered/cons (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		    (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		    ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		    ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe-m _ ([y] [e:isvar y J1] Dwf2 x d y e) ([y] [e] Dmwf2 x d y e)
+		    ([y] [e:isvar y J] ordered/cons (Dbound1' x d y e))
+		    ([y] [e:isvar y J] Dwf2' x d y e)
+		    ([y] [e:isvar y J] Dmwf2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfe-m _ ([x] [d:isvar x I] Dwf2' x d y e) ([x] [d] Dmwf2' x d y e)
+		    ([x] [d:isvar x I'] ordered/cons (Dbound2' x d y e))
+		    ([x] [d:isvar x I'] Dwf2'' x d y e)
+		    ([x] [d:isvar x I'] Dmwf2'' x d y e)).
+
+-sing	: bump-wfe-m _
+	   ([x] [d] wfe/sing (Daof x d))
+	   ([x] [d] mwfe/sing (Dmaof x d))
+	   Dord
+	   ([x] [d] wfe/sing (Daof' x d))
+	   ([x] [d] mwfe/sing (Dmaof' x d))
+	   <- bump-aofe-m _ Daof Dmaof Dord Daof' Dmaof'.
+
+-one	: bump-wfe-m _
+	   ([x] [d] wfe/one _)
+	   ([x] [d] mwfe/one)
+	   Dord
+	   ([x] [d] wfe/one (Dord x d))
+	   ([x] [d] mwfe/one).
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-aofe-m _ _ _ _ _ _) (bump-ofe-m _ _ _ _ _ _) (bump-wfe-m _ _ _ _ _ _).
+%total (Rm Mm Am) (bump-aofe-m Rm _ _ _ _ _) (bump-ofe-m Mm _ _ _ _ _) (bump-wfe-m Am _ _ _ _ _).
+
+
+
+bump-aofe : ({x} isvar x I -> aofe (G x) (M x) (A x))
+	     -> ({x} isvar x I' -> ordered (G x))
+%%
+	     -> ({x} isvar x I' -> aofe (G x) (M x) (A x)) -> type.
+%mode bump-aofe +X1 +X2 -X3.
+
+-	: bump-aofe Daof Dordered Daof'
+	   <- ({x} {d:isvar x I}
+		 can-maofe (Daof x d) (Dmaof x d))
+	   <- bump-aofe-m _ Daof Dmaof Dordered Daof' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-aofe _ _ _).
+%total {} (bump-aofe _ _ _).
+
+
+
+bump-ofe : ({x} isvar x I -> ofe (G x) (M x) (A x))
+	    -> ({x} isvar x I' -> ordered (G x))
+%%
+	    -> ({x} isvar x I' -> ofe (G x) (M x) (A x)) -> type.
+%mode bump-ofe +X1 +X2 -X3.
+
+-	: bump-ofe Dof Dordered Dof'
+	   <- ({x} {d:isvar x I}
+		 can-mofe (Dof x d) (Dmof x d))
+	   <- bump-ofe-m _ Dof Dmof Dordered Dof' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-ofe _ _ _).
+%total {} (bump-ofe _ _ _).
+
+
+
+bump-wfe : ({x} isvar x I -> wfe (G x) (A x))
+	    -> ({x} isvar x I' -> ordered (G x))
+%%
+	    -> ({x} isvar x I' -> wfe (G x) (A x)) -> type.
+%mode bump-wfe +X1 +X2 -X3.
+
+-	: bump-wfe Dwf Dordered Dwf'
+	   <- ({x} {d:isvar x I}
+		 can-mwfe (Dwf x d) (Dmwf x d))
+	   <- bump-wfe-m _ Dwf Dmwf Dordered Dwf' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-wfe _ _ _).
+%total {} (bump-wfe _ _ _).
+
+
+
+bump2-ofe : ({x} isvar x I -> {y} isvar y J -> ofe (G x y) (M x y) (A x y))
+	     -> ({x} isvar x I -> {y} isvar y J' -> ordered (G x y))
+	     -> ({x} isvar x I' -> {y} isvar y J' -> ordered (G x y))
+%%
+	     -> ({x} isvar x I' -> {y} isvar y J' -> ofe (G x y) (M x y) (A x y)) -> type.
+%mode bump2-ofe +X1 +X2 +X3 -X4.
+
+-	: bump2-ofe
+	   (Dof1 : {x} isvar x I -> {y} isvar y J -> ofe (G x y) (M x y) (A x y))
+	   (Dordered1 : {x} isvar x I -> {y} isvar y J' -> ordered (G x y))
+	   (Dordered2 : {x} isvar x I' -> {y} isvar y J' -> ordered (G x y))
+	   Dof3
+	   <- ({x} {d:isvar x I}
+		 bump-ofe ([y] [e] Dof1 x d y e) ([y] [e] Dordered1 x d y e)
+		    ([y] [e:isvar y J'] Dof2 x d y e : ofe (G x y) (M x y) (A x y)))
+	   <- ({y} {e:isvar y J'}
+		 bump-ofe ([x] [d] Dof2 x d y e) ([x] [d] Dordered2 x d y e)
+		    ([x] [d:isvar x I'] Dof3 x d y e : ofe (G x y) (M x y) (A x y))).
+
+%worlds (var | bind | ovar | obind | topenblock) (bump2-ofe _ _ _ _).
+%total {} (bump2-ofe _ _ _ _).
+
+
+
+bump2-wfe : ({x} isvar x I -> {y} isvar y J -> wfe (G x y) (A x y))
+	     -> ({x} isvar x I -> {y} isvar y J' -> ordered (G x y))
+	     -> ({x} isvar x I' -> {y} isvar y J' -> ordered (G x y))
+%%
+	     -> ({x} isvar x I' -> {y} isvar y J' -> wfe (G x y) (A x y)) -> type.
+%mode bump2-wfe +X1 +X2 +X3 -X4.
+
+-	: bump2-wfe
+	   (Dof1 : {x} isvar x I -> {y} isvar y J -> wfe (G x y) (A x y))
+	   (Dordered1 : {x} isvar x I -> {y} isvar y J' -> ordered (G x y))
+	   (Dordered2 : {x} isvar x I' -> {y} isvar y J' -> ordered (G x y))
+	   Dof3
+	   <- ({x} {d:isvar x I}
+		 bump-wfe ([y] [e] Dof1 x d y e) ([y] [e] Dordered1 x d y e)
+		    ([y] [e:isvar y J'] Dof2 x d y e : wfe (G x y) (A x y)))
+	   <- ({y} {e:isvar y J'}
+		 bump-wfe ([x] [d] Dof2 x d y e) ([x] [d] Dordered2 x d y e)
+		    ([x] [d:isvar x I'] Dof3 x d y e : wfe (G x y) (A x y))).
+
+%worlds (var | bind | ovar | obind | topenblock) (bump2-wfe _ _ _ _).
+%total {} (bump2-wfe _ _ _ _).
+
+
+
+bump-ofe-under : ({x} isvar x I -> {y} isvar y J -> ofe (cons (G x) y (A x)) (M x y) (B x y))
+		  -> ({x} isvar x I' -> ordered (G x))
+		  -> ({x} isvar x I' -> {y} isvar y J' -> ofe (cons (G x) y (A x)) (M x y) (B x y)) -> type.
+%mode bump-ofe-under +X1 +X2 -X3.
+
+-	: bump-ofe-under 
+	   (Dof : {x} isvar x I -> {y} isvar y J1 -> _)
+	   (Dord : {x} isvar x I' -> _)
+	   Dof'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 ofe-context (Dof x d y e)
+		 (ordered/cons
+		    (DboundJ1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (DboundJ2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J' (Dmax : max J1 J2 J')
+	   <- max-leq Dmax (Dleq1 : leq J1 J') (Dleq2 : leq J2 J')
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 (DboundJ1 x d)
+		 (DboundJ x d : {y} isvar y J' -> bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 (DboundJ2 x d)
+		 (DboundJ' x d : {y} isvar y J' -> bounded (G x) y))
+	   <- bump2-ofe Dof
+	      ([x] [d:isvar x I] [y] [e:isvar y J'] ordered/cons (DboundJ x d y e))
+	      ([x] [d:isvar x I'] [y] [e:isvar y J'] ordered/cons (DboundJ' x d y e))
+	      Dof'.
+
+%worlds (var | bind | ovar | topenblock) (bump-ofe-under _ _ _).
+%total {} (bump-ofe-under _ _ _).
+
+
+
+bump-wfe-under : ({x} isvar x I -> {y} isvar y J -> wfe (cons (G x) y (A x)) (B x y))
+		  -> ({x} isvar x I' -> ordered (G x))
+		  -> ({x} isvar x I' -> {y} isvar y J' -> wfe (cons (G x) y (A x)) (B x y)) -> type.
+%mode bump-wfe-under +X1 +X2 -X3.
+
+-	: bump-wfe-under 
+	   (Dof : {x} isvar x I -> {y} isvar y J1 -> _)
+	   (Dord : {x} isvar x I' -> _)
+	   Dof'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 wfe-context (Dof x d y e)
+		 (ordered/cons
+		    (DboundJ1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (DboundJ2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J' (Dmax : max J1 J2 J')
+	   <- max-leq Dmax (Dleq1 : leq J1 J') (Dleq2 : leq J2 J')
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 (DboundJ1 x d)
+		 (DboundJ x d : {y} isvar y J' -> bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 (DboundJ2 x d)
+		 (DboundJ' x d : {y} isvar y J' -> bounded (G x) y))
+	   <- bump2-wfe Dof
+	      ([x] [d:isvar x I] [y] [e:isvar y J'] ordered/cons (DboundJ x d y e))
+	      ([x] [d:isvar x I'] [y] [e:isvar y J'] ordered/cons (DboundJ' x d y e))
+	      Dof'.
+
+%worlds (var | bind | ovar | topenblock) (bump-wfe-under _ _ _).
+%total {} (bump-wfe-under _ _ _).
+
+
+
+
+%%%%%  Bump Lemma (Simple Types)  %%%%%
+
+bump-sbounded : leq I I'
+		-> ({x} isvar x I -> sbounded G x)
+		-> ({x} isvar x I' -> sbounded G x) -> type.
+%mode bump-sbounded +X1 +X2 -X3.
+
+-	: bump-sbounded _ ([x] [d] sbounded/nil d) ([x] [d] sbounded/nil d).
+
+-	: bump-sbounded Dleq 
+	   ([x] [d]
+	      sbounded/cons 
+	      (Dbound x d)
+	      (precedes/i Dlt d Disvar))
+	   ([x] [d]
+	      sbounded/cons
+	      Dbound'
+	      (precedes/i Dlt' d Disvar))
+	   <- lt-leq-trans Dlt Dleq Dlt'
+	   <- strengthen-sbounded Dbound Dbound'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-sbounded _ _ _).
+%total {} (bump-sbounded _ _ _).
+
+
+
+bump-slookup : ({x} isvar x I -> slookup (G x) (Y x) T)
+	       -> ({x} isvar x I' -> sordered (G x))
+	       -> ({x} isvar x I' -> slookup (G x) (Y x) T) -> type.
+%mode bump-slookup +X1 +X2 -X3.
+
+-hit	: bump-slookup ([x] [d] slookup/hit _) ([x] [d] sordered/cons (Dbound x d))
+	   ([x] [d] slookup/hit (Dbound x d)).
+
+-miss	: bump-slookup ([x] [d] slookup/miss (Dlook x d) _ : slookup (scons _ _ T) _ _) ([x] [d] sordered/cons (Dbound x d))
+	   ([x] [d] slookup/miss (Dlook' x d) (Dbound x d))
+	   <- ({x} {d}
+		 sbounded-is-sordered (Dbound x d) (Dord x d))
+	   <- bump-slookup Dlook Dord Dlook'.
+
+%worlds (var | bind | ovar | obind | topenblock) (bump-slookup _ _ _).
+%total D (bump-slookup D _ _).
+
+
+
+bump-aofes	: {R}
+		   ({x} isvar x I -> aofes (G x) (R x) T)
+		   -> ({x} isvar x I' -> sordered (G x))
+		   -> ({x} isvar x I' -> aofes (G x) (R x) T) -> type.
+%mode bump-aofes +X1 +X2 +X3 -X4.
+
+bump-ofes	: {M}
+		   ({x} isvar x I -> ofes (G x) (M x) T)
+		   -> ({x} isvar x I' -> sordered (G x))
+		   -> ({x} isvar x I' -> ofes (G x) (M x) T) -> type.
+%mode bump-ofes +X1 +X2 +X3 -X4.
+
+bump-wfes	: {A}
+		   ({x} isvar x I -> wfes (G x) (A x))
+		   -> ({x} isvar x I' -> sordered (G x))
+		   -> ({x} isvar x I' -> wfes (G x) (A x)) -> type.
+%mode bump-wfes +X1 +X2 +X3 -X4.
+
+-closed	: bump-aofes _ ([x] [d] aofes/closed _ (Dsimp x) (Daof x)) Dordered
+	   ([x] [d] aofes/closed (Dordered x d) (Dsimp x) (Daof x)).
+
+-var	: bump-aofes _ ([x] [d] aofes/var (Dlookup x d)) Dordered 
+	   ([x] [d] aofes/var (Dlookup' x d))
+	   <- bump-slookup Dlookup Dordered Dlookup'.
+
+-app	: bump-aofes _ ([x] [d] aofes/app (D2 x d) (D1 x d)) Dord ([x] [d] aofes/app (D2' x d) (D1' x d))
+	   <- bump-aofes _ D1 Dord D1'
+	   <- bump-ofes _ D2 Dord D2'.
+
+-pi1	: bump-aofes _ ([x] [d] aofes/pi1 (D x d)) Dord ([x] [d] aofes/pi1 (D' x d))
+	   <- bump-aofes _ D Dord D'.
+
+-pi2	: bump-aofes _ ([x] [d] aofes/pi2 (D x d)) Dord ([x] [d] aofes/pi2 (D' x d))
+	   <- bump-aofes _ D Dord D'.
+
+
+-at	: bump-ofes _ ([x] [d] ofes/at (D x d)) Dord ([x] [d] ofes/at (D' x d))
+	   <- bump-aofes _ D Dord D'.
+
+-lam	: bump-ofes _ 
+	   ([x] [d:isvar x I] 
+	      ofes/lam 
+	      (Dof x d : {y} isvar y J1 -> ofes (scons (G x) y S) (M x y) T))
+	   (Dord : {x} isvar x I' -> sordered (G x))
+	   ([x] [d] ofes/lam (Dof'' x d))
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 ofes-context (Dof x d y e)
+		 (sordered/cons 
+		    (Dbound1 x d y e : sbounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-scontext (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> sbounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-ofes _ ([y] [e:isvar y J1] Dof x d y e)
+		 ([y] [e:isvar y J] sordered/cons (Dbound1' x d y e))
+		 ([y] [e:isvar y J] Dof' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-ofes _ ([x] [d:isvar x I] Dof' x d y e)
+		 ([x] [d:isvar x I'] sordered/cons (Dbound2' x d y e))
+		 ([x] [d:isvar x I'] Dof'' x d y e)).
+
+-pair	: bump-ofes _ ([x] [d] ofes/pair (D2 x d) (D1 x d)) Dord ([x] [d] ofes/pair (D2' x d) (D1' x d))
+	   <- bump-ofes _ D1 Dord D1'
+	   <- bump-ofes _ D2 Dord D2'.
+
+-star	: bump-ofes _ ([x] [d] ofes/star _) Dord ([x] [d] ofes/star (Dord x d)).
+
+
+
+-t	: bump-wfes _ ([x] [d] wfes/t _) Dord ([x] [d] wfes/t (Dord x d)).
+
+-pi	: bump-wfes _ 
+	   ([x] [d:isvar x I] 
+	      wfes/pi
+	      (D2 x d : {y} isvar y J1 -> wfes (scons (G x) y S) (B x y))
+	      (Dsimp x : simp (A x) S)
+	      (D1 x d : wfes (G x) (A x)))
+	   (Dord : {x} isvar x I' -> sordered (G x))
+	   ([x] [d] wfes/pi (D2'' x d) (Dsimp x) (D1' x d))
+	   <- bump-wfes _ D1 Dord D1'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons 
+		    (Dbound1 x d y e : sbounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-scontext (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> sbounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfes _ ([y] [e:isvar y J1] D2 x d y e)
+		 ([y] [e:isvar y J] sordered/cons (Dbound1' x d y e))
+		 ([y] [e:isvar y J] D2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfes _ ([x] [d:isvar x I] D2' x d y e)
+		 ([x] [d:isvar x I'] sordered/cons (Dbound2' x d y e))
+		 ([x] [d:isvar x I'] D2'' x d y e)).
+
+-sigma	: bump-wfes _ 
+	   ([x] [d:isvar x I] 
+	      wfes/sigma
+	      (D2 x d : {y} isvar y J1 -> wfes (scons (G x) y S) (B x y))
+	      (Dsimp x : simp (A x) S)
+	      (D1 x d : wfes (G x) (A x)))
+	   (Dord : {x} isvar x I' -> sordered (G x))
+	   ([x] [d] wfes/sigma (D2'' x d) (Dsimp x) (D1' x d))
+	   <- bump-wfes _ D1 Dord D1'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons 
+		    (Dbound1 x d y e : sbounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-scontext (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> sbounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfes _ ([y] [e:isvar y J1] D2 x d y e)
+		 ([y] [e:isvar y J] sordered/cons (Dbound1' x d y e))
+		 ([y] [e:isvar y J] D2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfes _ ([x] [d:isvar x I] D2' x d y e)
+		 ([x] [d:isvar x I'] sordered/cons (Dbound2' x d y e))
+		 ([x] [d:isvar x I'] D2'' x d y e)).
+
+-sing	: bump-wfes _ ([x] [d] wfes/sing (D x d)) Dord ([x] [d] wfes/sing (D' x d))
+	   <- bump-aofes _ D Dord D'.
+
+-one	: bump-wfes _ ([x] [d] wfes/one _) Dord ([x] [d] wfes/one (Dord x d)).
+
+
+%worlds (var | bind | ovar | topenblock) (bump-aofes _ _ _ _) (bump-ofes _ _ _ _) (bump-wfes _ _ _ _).
+%total (R M A) (bump-aofes R _ _ _) (bump-ofes M _ _ _) (bump-wfes A _ _ _).
+
+
+
+bump-wfes	: {A}
+		   ({x} isvar x I -> wfes (G x) (A x))
+		   -> ({x} isvar x I' -> sordered (G x))
+		   -> ({x} isvar x I' -> wfes (G x) (A x)) -> type.
+%mode bump-wfes +X1 +X2 +X3 -X4.
+
+-t	: bump-wfes _ ([x] [d] wfes/t _) Dord ([x] [d] wfes/t (Dord x d)).
+
+-pi	: bump-wfes _ 
+	   ([x] [d:isvar x I] 
+	      wfes/pi
+	      (D2 x d : {y} isvar y J1 -> wfes (scons (G x) y S) (B x y))
+	      (Dsimp x : simp (A x) S)
+	      (D1 x d : wfes (G x) (A x)))
+	   (Dord : {x} isvar x I' -> sordered (G x))
+	   ([x] [d] wfes/pi (D2'' x d) (Dsimp x) (D1' x d))
+	   <- bump-wfes _ D1 Dord D1'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons 
+		    (Dbound1 x d y e : sbounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-scontext (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> sbounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfes _ ([y] [e:isvar y J1] D2 x d y e)
+		 ([y] [e:isvar y J] sordered/cons (Dbound1' x d y e))
+		 ([y] [e:isvar y J] D2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfes _ ([x] [d:isvar x I] D2' x d y e)
+		 ([x] [d:isvar x I'] sordered/cons (Dbound2' x d y e))
+		 ([x] [d:isvar x I'] D2'' x d y e)).
+
+-sigma	: bump-wfes _ 
+	   ([x] [d:isvar x I] 
+	      wfes/sigma
+	      (D2 x d : {y} isvar y J1 -> wfes (scons (G x) y S) (B x y))
+	      (Dsimp x : simp (A x) S)
+	      (D1 x d : wfes (G x) (A x)))
+	   (Dord : {x} isvar x I' -> sordered (G x))
+	   ([x] [d] wfes/sigma (D2'' x d) (Dsimp x) (D1' x d))
+	   <- bump-wfes _ D1 Dord D1'
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J1}
+		 wfes-context (D2 x d y e)
+		 (sordered/cons 
+		    (Dbound1 x d y e : sbounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-scontext (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> sbounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : sbounded (G x) y))
+	   <- ({x} {d:isvar x I}
+		 bump-wfes _ ([y] [e:isvar y J1] D2 x d y e)
+		 ([y] [e:isvar y J] sordered/cons (Dbound1' x d y e))
+		 ([y] [e:isvar y J] D2' x d y e))
+	   <- ({y} {e:isvar y J}
+		 bump-wfes _ ([x] [d:isvar x I] D2' x d y e)
+		 ([x] [d:isvar x I'] sordered/cons (Dbound2' x d y e))
+		 ([x] [d:isvar x I'] D2'' x d y e)).
+
+-sing	: bump-wfes _ ([x] [d] wfes/sing (D x d)) Dord ([x] [d] wfes/sing (D' x d))
+	   <- bump-aofes _ D Dord D'.
+
+-one	: bump-wfes _ ([x] [d] wfes/one _) Dord ([x] [d] wfes/one (Dord x d)).
+
+%worlds (var | bind | ovar | topenblock) (bump-wfes _ _ _ _).
+%total A (bump-wfes A _ _ _).
+
+
+
+
+%%%%%  Weakening  %%%%%
+
+weakeng-lookup : append G1 G2 G -> append (cons G1 X B) G2 G' -> ordered G' -> lookup G Y A -> lookup G' Y A -> type.
+%mode weakeng-lookup +X1 +X2 +X3 +X4 -X5.
+
+-hit	: weakeng-lookup (append/cons _) (append/cons _) (ordered/cons D) (lookup/hit _)
+	   (lookup/hit D).
+
+-miss	: weakeng-lookup (append/cons Dapp1) (append/cons Dapp2) (ordered/cons Dbound) (lookup/miss Dlook _)
+	   (lookup/miss Dlook' Dbound)
+	   <- bounded-is-ordered Dbound Dord
+	   <- weakeng-lookup Dapp1 Dapp2 Dord Dlook Dlook'.
+
+-nil	: weakeng-lookup append/nil append/nil (ordered/cons Dbound) Dlook
+	   (lookup/miss Dlook Dbound).
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-lookup _ _ _ _ _).
+%total D (weakeng-lookup _ _ _ D _).
+
+
+
+weakeng-aofe-m : {Rm} 
+		append G1 G2 G
+		-> append (cons G1 X B) G2 G'
+		-> ordered G' 
+		-> {D:aofe G R A} 
+		   maofe D Rm
+		-> {D':aofe G' R A}
+		   maofe D' Rm -> type.
+%mode weakeng-aofe-m +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+weakeng-ofe-m : {Mm} 
+	       append G1 G2 G
+	       -> append (cons G1 X B) G2 G'
+	       -> ordered G' 
+	       -> {D:ofe G M A} 
+		  mofe D Mm 
+	       -> {D':ofe G' M A}
+		  mofe D' Mm -> type.
+%mode weakeng-ofe-m +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+weakeng-wfe-m : {Am} 
+	       append G1 G2 G
+	       -> append (cons G1 X B) G2 G'
+	       -> ordered G' 
+	       -> {D:wfe G A} 
+		  mwfe D Am
+	       -> {D':wfe G' A}
+		  mwfe D' Am -> type.
+%mode weakeng-wfe-m +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+-closed	: weakeng-aofe-m _ Dapp Dapp' Dord
+	   (aofe/closed _ Daof) (maofe/closed Dmaof)
+	   (aofe/closed Dord Daof) (maofe/closed Dmaof).
+
+-var	: weakeng-aofe-m _ Dapp Dapp' Dord
+	   (aofe/var Dwf Dlook) (maofe/var Dmwf)
+	   (aofe/var Dwf' Dlook') (maofe/var Dmwf')
+	   <- weakeng-lookup Dapp Dapp' Dord Dlook Dlook'
+	   <- weakeng-wfe-m _ Dapp Dapp' Dord Dwf Dmwf Dwf' Dmwf'.
+
+-app	: weakeng-aofe-m _ Dapp Dapp' Dord
+	   (aofe/app Dwf Dsub Dof Daof) (maofe/app Dmwf Dmof Dmaof)
+	   (aofe/app Dwf' Dsub Dof' Daof') (maofe/app Dmwf' Dmof' Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'
+	   <- weakeng-ofe-m _ Dapp Dapp' Dord Dof Dmof Dof' Dmof'
+	   <- weakeng-wfe-m _ Dapp Dapp' Dord Dwf Dmwf Dwf' Dmwf'.
+
+-pi1	: weakeng-aofe-m _ Dapp Dapp' Dord
+	   (aofe/pi1 Daof) (maofe/pi1 Dmaof)
+	   (aofe/pi1 Daof') (maofe/pi1 Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'.
+
+-pi2	: weakeng-aofe-m _ Dapp Dapp' Dord
+	   (aofe/pi2 Daof) (maofe/pi2 Dmaof)
+	   (aofe/pi2 Daof') (maofe/pi2 Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'.
+
+
+-at	: weakeng-ofe-m _ Dapp Dapp' Dord
+	   (ofe/at Daof) (mofe/at Dmaof)
+	   (ofe/at Daof') (mofe/at Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'.
+
+-lam	: weakeng-ofe-m _
+	   (Dapp : append G1 G2 G)
+	   (Dapp' : append (cons G1 X B) G2 G')
+	   (Dord : ordered G')
+	   (ofe/lam
+	      (Dof : {y} isvar y J1 -> ofe (cons G y A) (M y) (C y))
+	      (Dwf : wfe G A))
+	   (mofe/lam
+	      (Dmof : {y} {e} mofe (Dof y e) Mm)
+	      (Dmwf : mwfe Dwf Am))
+	   (ofe/lam Dof'' Dwf')
+	   (mofe/lam Dmof'' Dmwf')
+	   <- weakeng-wfe-m _ Dapp Dapp' Dord Dwf Dmwf Dwf' Dmwf'
+	   <- ({y} {e:isvar y J1}
+		 ofe-context (Dof y e)
+		    (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-ofe-m _ Dof Dmof ([y] [e:isvar y J] ordered/cons (Dbound1' y e))
+	      (Dof' : {y} isvar y J -> ofe (cons G y A) (M y) (C y))
+	      (Dmof' : {y} {e} mofe (Dof' y e) Mm)
+	   <- ({y} {e:isvar y J}
+		 weakeng-ofe-m _ (append/cons Dapp) (append/cons Dapp') (ordered/cons (Dbound2' y e)) (Dof' y e) (Dmof' y e)
+		 (Dof'' y e : ofe (cons G' y A) (M y) (C y))
+		 (Dmof'' y e : mofe (Dof'' y e) Mm)).
+
+-pair	: weakeng-ofe-m _
+	   (Dapp : append G1 G2 G)
+	   (Dapp' : append (cons G1 X B) G2 G')
+	   (Dord : ordered G')
+	   (ofe/pair
+	      (Dwf : {y} isvar y J1 -> wfe (cons G y A) (C y))
+	      (Dof2 : ofe G N C')
+	      (Dsub : tsub C M C')
+	      (Dof1 : ofe G M A))
+	   (mofe/pair
+	      (Dmwf : {y} {e} mwfe (Dwf y e) Cm)
+	      (Dmof2 : mofe Dof2 Nm)
+	      (Dmof1 : mofe Dof1 Mm))
+	   (ofe/pair Dwf'' Dof2' Dsub Dof1')
+	   (mofe/pair Dmwf'' Dmof2' Dmof1')
+	   <- weakeng-ofe-m _ Dapp Dapp' Dord Dof1 Dmof1 Dof1' Dmof1'
+	   <- weakeng-ofe-m _ Dapp Dapp' Dord Dof2 Dmof2 Dof2' Dmof2'
+	   <- ({y} {e:isvar y J1}
+		 wfe-context (Dwf y e)
+		    (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-wfe-m _ Dwf Dmwf ([y] [e:isvar y J] ordered/cons (Dbound1' y e))
+	      (Dwf' : {y} isvar y J -> wfe (cons G y A) (C y))
+	      (Dmwf' : {y} {e} mwfe (Dwf' y e) Cm)
+	   <- ({y} {e:isvar y J}
+		 weakeng-wfe-m _ (append/cons Dapp) (append/cons Dapp') (ordered/cons (Dbound2' y e)) (Dwf' y e) (Dmwf' y e)
+		    (Dwf'' y e : wfe (cons G' y A) (C y))
+		    (Dmwf'' y e : mwfe (Dwf'' y e) Cm)).
+
+-star	: weakeng-ofe-m _ Dapp Dapp' Dord
+	   (ofe/star _) mofe/star
+	   (ofe/star Dord) mofe/star.
+
+-sing	: weakeng-ofe-m _ Dapp Dapp' Dord
+	   (ofe/sing Daof) (mofe/sing Dmaof)
+	   (ofe/sing Daof') (mofe/sing Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'.
+
+
+-t	: weakeng-wfe-m _ Dapp Dapp' Dord
+	   (wfe/t _) mwfe/t
+	   (wfe/t Dord) mwfe/t.
+
+-pi	: weakeng-wfe-m _
+	   (Dapp : append G1 G2 G)
+	   (Dapp' : append (cons G1 X B) G2 G')
+	   (Dord : ordered G')
+	   (wfe/pi
+	      (Dwf2 : {y} isvar y J1 -> wfe (cons G y A) (C y))
+	      (Dwf1 : wfe G A))
+	   (mwfe/pi
+	      (Dmwf2 : {y} {e} mwfe (Dwf2 y e) Cm)
+	      (Dmwf1 : mwfe Dwf1 Am))
+	   (wfe/pi Dwf2'' Dwf1')
+	   (mwfe/pi Dmwf2'' Dmwf1')
+	   <- weakeng-wfe-m _ Dapp Dapp' Dord Dwf1 Dmwf1 Dwf1' Dmwf1'
+	   <- ({y} {e:isvar y J1}
+		 wfe-context (Dwf2 y e)
+		    (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-wfe-m _ Dwf2 Dmwf2 ([y] [e:isvar y J] ordered/cons (Dbound1' y e))
+	      (Dwf2' : {y} isvar y J -> wfe (cons G y A) (C y))
+	      (Dmwf2' : {y} {e} mwfe (Dwf2' y e) Cm)
+	   <- ({y} {e:isvar y J}
+		 weakeng-wfe-m _ (append/cons Dapp) (append/cons Dapp') (ordered/cons (Dbound2' y e)) (Dwf2' y e) (Dmwf2' y e)
+		    (Dwf2'' y e : wfe (cons G' y A) (C y))
+		    (Dmwf2'' y e : mwfe (Dwf2'' y e) Cm)).
+
+-sigma	: weakeng-wfe-m _
+	   (Dapp : append G1 G2 G)
+	   (Dapp' : append (cons G1 X B) G2 G')
+	   (Dord : ordered G')
+	   (wfe/sigma
+	      (Dwf2 : {y} isvar y J1 -> wfe (cons G y A) (C y))
+	      (Dwf1 : wfe G A))
+	   (mwfe/sigma
+	      (Dmwf2 : {y} {e} mwfe (Dwf2 y e) Cm)
+	      (Dmwf1 : mwfe Dwf1 Am))
+	   (wfe/sigma Dwf2'' Dwf1')
+	   (mwfe/sigma Dmwf2'' Dmwf1')
+	   <- weakeng-wfe-m _ Dapp Dapp' Dord Dwf1 Dmwf1 Dwf1' Dmwf1'
+	   <- ({y} {e:isvar y J1}
+		 wfe-context (Dwf2 y e)
+		    (ordered/cons (Dbound1 y e : bounded G y)))
+	   <- extend-context Dord
+	      (Dbound2 : {y} isvar y J2 -> bounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : bounded G y)
+	   <- bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : bounded G' y)
+	   <- bump-wfe-m _ Dwf2 Dmwf2 ([y] [e:isvar y J] ordered/cons (Dbound1' y e))
+	      (Dwf2' : {y} isvar y J -> wfe (cons G y A) (C y))
+	      (Dmwf2' : {y} {e} mwfe (Dwf2' y e) Cm)
+	   <- ({y} {e:isvar y J}
+		 weakeng-wfe-m _ (append/cons Dapp) (append/cons Dapp') (ordered/cons (Dbound2' y e)) (Dwf2' y e) (Dmwf2' y e)
+		    (Dwf2'' y e : wfe (cons G' y A) (C y))
+		    (Dmwf2'' y e : mwfe (Dwf2'' y e) Cm)).
+
+-sing	: weakeng-wfe-m _ Dapp Dapp' Dord
+	   (wfe/sing Daof) (mwfe/sing Dmaof)
+	   (wfe/sing Daof') (mwfe/sing Dmaof')
+	   <- weakeng-aofe-m _ Dapp Dapp' Dord Daof Dmaof Daof' Dmaof'.
+
+-one	: weakeng-wfe-m _ Dapp Dapp' Dord
+	   (wfe/one _) mwfe/one
+	   (wfe/one Dord) mwfe/one.
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-aofe-m _ _ _ _ _ _ _ _) (weakeng-ofe-m _ _ _ _ _ _ _ _) (weakeng-wfe-m _ _ _ _ _ _ _ _).
+%total (Rm Mm Am) (weakeng-aofe-m Rm _ _ _ _ _ _ _) (weakeng-ofe-m Mm _ _ _ _ _ _ _) (weakeng-wfe-m Am _ _ _ _ _ _ _).
+
+
+
+weakeng-aofe : append G1 G2 G
+		-> append (cons G1 X B) G2 G'
+		-> ordered G' 
+		-> aofe G R A
+%%
+		-> aofe G' R A -> type.
+%mode weakeng-aofe +X1 +X2 +X3 +X4 -X5.
+
+-	: weakeng-aofe Dapp Dapp' Dordered Daof Daof'
+	   <- can-maofe Daof Dmaof
+	   <- weakeng-aofe-m _ Dapp Dapp' Dordered Daof Dmaof Daof' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-aofe _ _ _ _ _).
+%total {} (weakeng-aofe _ _ _ _ _).
+
+
+
+weakeng-ofe : append G1 G2 G
+		-> append (cons G1 X B) G2 G'
+		-> ordered G' 
+		-> ofe G M A
+%%
+		-> ofe G' M A -> type.
+%mode weakeng-ofe +X1 +X2 +X3 +X4 -X5.
+
+-	: weakeng-ofe Dapp Dapp' Dordered Dof Dof'
+	   <- can-mofe Dof Dmof
+	   <- weakeng-ofe-m _ Dapp Dapp' Dordered Dof Dmof Dof' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-ofe _ _ _ _ _).
+%total {} (weakeng-ofe _ _ _ _ _).
+
+
+
+weakeng-wfe : append G1 G2 G
+		-> append (cons G1 X B) G2 G'
+		-> ordered G' 
+		-> wfe G A
+%%
+		-> wfe G' A -> type.
+%mode weakeng-wfe +X1 +X2 +X3 +X4 -X5.
+
+-	: weakeng-wfe Dapp Dapp' Dordered Dwf Dwf'
+	   <- can-mwfe Dwf Dmwf
+	   <- weakeng-wfe-m _ Dapp Dapp' Dordered Dwf Dmwf Dwf' _.
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-wfe _ _ _ _ _).
+%total {} (weakeng-wfe _ _ _ _ _).
+
+
+
+weaken-lookup : bounded G X -> lookup G Y A -> {B} lookup (cons G X B) Y A -> type.
+%mode weaken-lookup +X1 +X2 +X3 -X4.
+
+-	: weaken-lookup Dbounded Dlook _ (lookup/miss Dlook Dbounded).
+
+%worlds (bind | ovar | var | obind | topenblock) (weaken-lookup _ _ _ _).
+%total {} (weaken-lookup _ _ _ _).
+
+
+
+weaken-ofe : bounded G X -> ofe G M A -> {B} ofe (cons G X B) M A -> type.
+%mode weaken-ofe +X1 +X2 +X3 -X4.
+
+-	: weaken-ofe Dbound Dofe _ Dofe'
+	   <- weakeng-ofe append/nil append/nil (ordered/cons Dbound) Dofe Dofe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-ofe _ _ _ _).
+%total {} (weaken-ofe _ _ _ _).
+
+
+
+weaken-aofe : bounded G X -> aofe G R A -> {B} aofe (cons G X B) R A -> type.
+%mode weaken-aofe +X1 +X2 +X3 -X4.
+
+-	: weaken-aofe Dbound Daofe _ Daofe'
+	   <- weakeng-aofe append/nil append/nil (ordered/cons Dbound) Daofe Daofe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-aofe _ _ _ _).
+%total {} (weaken-aofe _ _ _ _).
+
+
+
+weaken-wfe : bounded G X -> wfe G A -> {B} wfe (cons G X B) A -> type.
+%mode weaken-wfe +X1 +X2 +X3 -X4.
+
+-	: weaken-wfe Dbound Dwfe _ Dwfe'
+	   <- weakeng-wfe append/nil append/nil (ordered/cons Dbound) Dwfe Dwfe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-wfe _ _ _ _).
+%total {} (weaken-wfe _ _ _ _).
+
+
+
+weaken-ofe' : append G1 G2 G -> ordered G -> ofe G1 M A -> ofe G M A -> type.
+%mode weaken-ofe' +X1 +X2 +X3 -X4.
+
+weaken-ofe'' : append G1 G2 G -> bounded G Z -> ofe G1 M A -> ofe G M A -> type.
+%mode weaken-ofe'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-ofe' append/nil _ D D.
+-cons	: weaken-ofe' (append/cons Dapp) (ordered/cons Dbound) Dofe Dofe''
+	   <- weaken-ofe'' Dapp Dbound Dofe Dofe'
+	   <- weaken-ofe Dbound Dofe' _ Dofe''.
+
+-	: weaken-ofe'' Dapp Dbound Dofe Dofe'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-ofe' Dapp Dord Dofe Dofe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-ofe' _ _ _ _) (weaken-ofe'' _ _ _ _).
+%total (D1 D2) (weaken-ofe' D1 _ _ _) (weaken-ofe'' D2 _ _ _).
+
+
+
+weaken-aofe' : append G1 G2 G -> ordered G -> aofe G1 R A -> aofe G R A -> type.
+%mode weaken-aofe' +X1 +X2 +X3 -X4.
+
+weaken-aofe'' : append G1 G2 G -> bounded G Z -> aofe G1 R A -> aofe G R A -> type.
+%mode weaken-aofe'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-aofe' append/nil _ D D.
+-cons	: weaken-aofe' (append/cons Dapp) (ordered/cons Dbound) Dofe Dofe''
+	   <- weaken-aofe'' Dapp Dbound Dofe Dofe'
+	   <- weaken-aofe Dbound Dofe' _ Dofe''.
+
+-	: weaken-aofe'' Dapp Dbound Dofe Dofe'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-aofe' Dapp Dord Dofe Dofe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-aofe' _ _ _ _) (weaken-aofe'' _ _ _ _).
+%total (D1 D2) (weaken-aofe' D1 _ _ _) (weaken-aofe'' D2 _ _ _).
+
+
+
+weaken-wfe' : append G1 G2 G -> ordered G -> wfe G1 A -> wfe G A -> type.
+%mode weaken-wfe' +X1 +X2 +X3 -X4.
+
+weaken-wfe'' : append G1 G2 G -> bounded G Z -> wfe G1 A -> wfe G A -> type.
+%mode weaken-wfe'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-wfe' append/nil _ D D.
+-cons	: weaken-wfe' (append/cons Dapp) (ordered/cons Dbound) Dwfe Dwfe''
+	   <- weaken-wfe'' Dapp Dbound Dwfe Dwfe'
+	   <- weaken-wfe Dbound Dwfe' _ Dwfe''.
+
+-	: weaken-wfe'' Dapp Dbound Dwfe Dwfe'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-wfe' Dapp Dord Dwfe Dwfe'.
+
+%worlds (var | bind | ovar | obind | topenblock) (weaken-wfe' _ _ _ _) (weaken-wfe'' _ _ _ _).
+%total (D1 D2) (weaken-wfe' D1 _ _ _) (weaken-wfe'' D2 _ _ _).
+
+
+
+weaken-ofe-csub : ({x} append (cons G1 x A) (G2 x) (G x))
+		   -> ({x} isvar x I -> ordered (G x))
+		   -> csub G M G'
+		   -> ofe G1 M A
+		   -> ofe G' M A -> type.
+%mode weaken-ofe-csub +X1 +X2 +X3 +X4 -X5.
+
+-nil	: weaken-ofe-csub ([x] append/nil) _ csub/base D D.
+
+-cons	: weaken-ofe-csub ([x] append/cons (Dapp x)) ([x] [d] ordered/cons (Dbound x d)) (csub/cons _ Dsub) Dof Dof''
+	   <- ({x} {d:isvar x I}
+		 bounded-is-ordered (Dbound x d) (Dord x d))
+	   <- weaken-ofe-csub Dapp Dord Dsub Dof Dof'
+	   <- csub-bounded Dbound Dsub Dbound'
+	   <- weaken-ofe Dbound' Dof' _ Dof''.
+
+-bad	: weaken-ofe-csub ([x] append/cons (Dapp x)) ([x] [d] ordered/cons (Dbound x d)) csub/base _ D
+	   <- ({x} {d:isvar x I}
+		 append-bounded-contra (Dapp x) (Dbound x d) Dfalse)
+	   <- false-implies-ofe Dfalse D.
+
+%worlds (bind | ovar | var | topenblock) (weaken-ofe-csub _ _ _ _ _).
+%total D (weaken-ofe-csub D _ _ _ _).
+
+
+
+weaken-aofe-insert1 : ({y} isvar y J -> aofe (cons G y B) (R y) (C y))
+		     -> ({x} isvar x I -> bounded G x)
+		     -> {A}
+%%
+			({x} isvar x I -> {y} isvar y J' -> aofe (cons (cons G x A) y B) (R y) (C y)) -> type.
+%mode weaken-aofe-insert1 +X1 +X2 +X3 -X4.
+
+-	: weaken-aofe-insert1
+	   (Daof : {y} isvar y J1 -> aofe (cons G y B) (R y) (C y))
+	   (DboundX : {x} isvar x I -> bounded G x)
+	   A
+	   Daof''
+	   <- ({y} {e:isvar y J1}
+		 aofe-context (Daof y e)
+		    (ordered/cons
+		       (DboundY y e : bounded G y)))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		    (Dprec x d : {y} isvar y J2 -> precedes x y))
+	   %% oops, this isn't actually necessary, but no sense in rewriting the code now
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 DboundY
+	      (DboundY' : {y} isvar y J -> bounded G y)
+	   <- ({x} {d:isvar x I}
+		 bump-precedes Dleq2 (Dprec x d)
+		 (Dprec' x d : {y} isvar y J -> precedes x y))
+	   <- bump-aofe Daof ([y] [e:isvar y J] ordered/cons (DboundY' y e))
+	      (Daof' : {y} isvar y J -> aofe (cons G y B) (R y) (C y))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 weakeng-aofe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (DboundX x d) (Dprec' x d y e)))
+		    (Daof' y e)
+		    (Daof'' x d y e : aofe (cons (cons G x A) y B) (R y) (C y))).
+
+%worlds (var | bind | ovar | topenblock) (weaken-aofe-insert1 _ _ _ _).
+%total {} (weaken-aofe-insert1 _ _ _ _).
+
+
+
+weaken-ofe-insert1 : ({y} isvar y J -> ofe (cons G y B) (M y) (C y))
+		     -> ({x} isvar x I -> bounded G x)
+		     -> {A}
+%%
+			({x} isvar x I -> {y} isvar y J' -> ofe (cons (cons G x A) y B) (M y) (C y)) -> type.
+%mode weaken-ofe-insert1 +X1 +X2 +X3 -X4.
+
+-	: weaken-ofe-insert1
+	   (Dof : {y} isvar y J1 -> ofe (cons G y B) (M y) (C y))
+	   (DboundX : {x} isvar x I -> bounded G x)
+	   A
+	   Dof''
+	   <- ({y} {e:isvar y J1}
+		 ofe-context (Dof y e)
+		    (ordered/cons
+		       (DboundY y e : bounded G y)))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		    (Dprec x d : {y} isvar y J2 -> precedes x y))
+	   %% oops, this isn't actually necessary, but no sense in rewriting the code now
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 DboundY
+	      (DboundY' : {y} isvar y J -> bounded G y)
+	   <- ({x} {d:isvar x I}
+		 bump-precedes Dleq2 (Dprec x d)
+		 (Dprec' x d : {y} isvar y J -> precedes x y))
+	   <- bump-ofe Dof ([y] [e:isvar y J] ordered/cons (DboundY' y e))
+	      (Dof' : {y} isvar y J -> ofe (cons G y B) (M y) (C y))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 weakeng-ofe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (DboundX x d) (Dprec' x d y e)))
+		    (Dof' y e)
+		    (Dof'' x d y e : ofe (cons (cons G x A) y B) (M y) (C y))).
+
+%worlds (bind | ovar | var | topenblock) (weaken-ofe-insert1 _ _ _ _).
+%total {} (weaken-ofe-insert1 _ _ _ _).
+
+
+
+weaken-ofe-insert2 : ({y} isvar y J -> {z} isvar z K -> ofe (cons (cons G y B) z (C y)) (M y z) (D y z))
+		     -> ({x} isvar x I -> bounded G x)
+		     -> {A}
+%%
+			({x} isvar x I 
+			   -> {y} isvar y J'
+			   -> {z} isvar z K'
+			   -> ofe (cons (cons (cons G x A) y B) z (C y)) (M y z) (D y z)) -> type.
+%mode weaken-ofe-insert2 +X1 +X2 +X3 -X4.
+
+-	: weaken-ofe-insert2
+	   (Dof : {y} isvar y J -> {z} isvar z K1 -> ofe (cons (cons G y B) z (C y)) (M y z) (D y z))
+	   (DboundI : {x} isvar x I -> bounded G x)
+	   A
+	   Dof''
+	   <- ({y} {e:isvar y J} {z} {f:isvar z K1}
+		 ofe-context (Dof y e z f)
+		 (ordered/cons
+		    (bounded/cons
+		       (DboundJ_z y e z f : bounded G y)
+		       (DprecJK1 y e z f : precedes y z))))
+	   <- ({y} {e:isvar y J} 
+		 strengthen-bounded (DboundJ_z y e)
+		 (DboundJ y e : bounded G y))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		 (DprecIJ' x d : {y} isvar y J' -> precedes x y))
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J'}
+		 bounded-increase-bound (DboundI x d) (DprecIJ' x d y e)
+		 (DboundJ'_x x d y e : bounded G y))
+	   <- ({y} {e:isvar y J'}
+		 strengthen-bounded ([x] [d] DboundJ'_x x d y e)
+		 (DboundJ' y e : bounded G y))
+	   <- ({y} {e:isvar y J'}
+		 following-var e
+		 (DprecJ'K2 y e : {z} isvar z K2 -> precedes y z))
+	   <- can-max K1 K2 K' (Dmax : max K1 K2 K')
+	   <- max-leq Dmax (Dleq1 : leq K1 K') (Dleq2 : leq K2 K')
+	   <- ({y} {e:isvar y J}
+		 bump-precedes Dleq1 (DprecJK1 y e)
+		 (DprecJK' y e : {z} isvar z K' -> precedes y z))
+	   <- ({y} {e:isvar y J'}
+		 bump-precedes Dleq2 (DprecJ'K2 y e)
+		 (DprecJ'K' y e : {z} isvar z K' -> precedes y z))
+	   <- bump2-ofe Dof
+	      ([y] [e:isvar y J] [z] [f:isvar z K'] ordered/cons (bounded/cons (DboundJ y e) (DprecJK' y e z f)))
+	      ([y] [e:isvar y J'] [z] [f:isvar z K'] ordered/cons (bounded/cons (DboundJ' y e) (DprecJ'K' y e z f)))
+	      (Dof' : {y} isvar y J' -> {z} isvar z K' -> ofe (cons (cons G y B) z (C y)) (M y z) (D y z))
+	   <- ({x} {d:isvar x I} {y} {e:isvar y J'} {z} {f:isvar z K'}
+		 weakeng-ofe (append/cons (append/cons append/nil)) (append/cons (append/cons append/nil))
+		 (ordered/cons
+		    (bounded/cons
+		       (bounded/cons
+			  (DboundI x d)
+			  (DprecIJ' x d y e))
+		       (DprecJ'K' y e z f)))
+		 (Dof' y e z f)
+		 (Dof'' x d y e z f : ofe (cons (cons (cons G x A) y B) z (C y)) (M y z) (D y z))).
+
+%worlds (var | bind | ovar | topenblock) (weaken-ofe-insert2 _ _ _ _).
+%total {} (weaken-ofe-insert2 _ _ _ _).
+
+
+
+
+weaken-wfe-insert1 : ({y} isvar y J -> wfe (cons G y B) (C y))
+		     -> ({x} isvar x I -> bounded G x)
+		     -> {A}
+%%
+			({x} isvar x I -> {y} isvar y J' -> wfe (cons (cons G x A) y B) (C y)) -> type.
+%mode weaken-wfe-insert1 +X1 +X2 +X3 -X4.
+
+-	: weaken-wfe-insert1
+	   (Dwf : {y} isvar y J1 -> wfe (cons G y B) (C y))
+	   (DboundX : {x} isvar x I -> bounded G x)
+	   A
+	   Dwf''
+	   <- ({y} {e:isvar y J1}
+		 wfe-context (Dwf y e)
+		    (ordered/cons
+		       (DboundY y e : bounded G y)))
+	   <- ({x} {d:isvar x I}
+		 following-var d
+		    (Dprec x d : {y} isvar y J2 -> precedes x y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-bounded Dleq1 DboundY
+	      (DboundY' : {y} isvar y J -> bounded G y)
+	   <- ({x} {d:isvar x I}
+		 bump-precedes Dleq2 (Dprec x d)
+		    (Dprec' x d : {y} isvar y J -> precedes x y))
+	   <- bump-wfe Dwf ([y] [e:isvar y J] ordered/cons (DboundY' y e))
+	      (Dwf' : {y} isvar y J -> wfe (cons G y B) (C y))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 weakeng-wfe (append/cons append/nil) (append/cons append/nil)
+		 (ordered/cons (bounded/cons (DboundX x d) (Dprec' x d y e)))
+		 (Dwf' y e)
+		 (Dwf'' x d y e : wfe (cons (cons G x A) y B) (C y))).
+
+%worlds (var | bind | ovar | topenblock) (weaken-wfe-insert1 _ _ _ _).
+%total {} (weaken-wfe-insert1 _ _ _ _).
+
+
+
+weaken-ofe-insert1-bump : ({y} isvar y J -> ofe (cons G y B) (M y) (C y))
+			   -> ({x} isvar x I -> bounded G x)
+			   -> ({x} isvar x I -> {y} isvar y J' -> precedes x y)
+			   -> {A}
+%%
+			      ({x} isvar x I -> {y} isvar y J' -> ofe (cons (cons G x A) y B) (M y) (C y)) -> type.
+%mode weaken-ofe-insert1-bump +X1 +X2 +X3 +X4 -X5.
+
+-	: weaken-ofe-insert1-bump Dof Dbound Dprec A Dof''
+	   <- weaken-ofe-insert1 Dof Dbound A Dof'
+	   <- ({x} {d}
+		 bump-ofe (Dof' x d) ([y] [e] ordered/cons (bounded/cons (Dbound x d) (Dprec x d y e))) 
+		 (Dof'' x d)).
+
+%worlds (var | bind | ovar | topenblock) (weaken-ofe-insert1-bump _ _ _ _ _).
+%total {} (weaken-ofe-insert1-bump _ _ _ _ _).
+
+
+
+weaken-wfe-insert1-bump : ({y} isvar y J -> wfe (cons G y B) (C y))
+			   -> ({x} isvar x I -> bounded G x)
+			   -> ({x} isvar x I -> {y} isvar y J' -> precedes x y)
+			   -> {A}
+%%
+			      ({x} isvar x I -> {y} isvar y J' -> wfe (cons (cons G x A) y B) (C y)) -> type.
+%mode weaken-wfe-insert1-bump +X1 +X2 +X3 +X4 -X5.
+
+-	: weaken-wfe-insert1-bump Dwf Dbound Dprec A Dwf''
+	   <- weaken-wfe-insert1 Dwf Dbound A Dwf'
+	   <- ({x} {d}
+		 bump-wfe (Dwf' x d) ([y] [e] ordered/cons (bounded/cons (Dbound x d) (Dprec x d y e))) 
+		 (Dwf'' x d)).
+
+%worlds (var | bind | ovar | topenblock) (weaken-wfe-insert1-bump _ _ _ _ _).
+%total {} (weaken-wfe-insert1-bump _ _ _ _ _).
+
+
+
+
+%%%%%  Weakening for Simple Types  %%%%%
+
+weakeng-slookup : sappend G1 G2 G -> sappend (scons G1 X B) G2 G' -> sordered G' -> slookup G Y A -> slookup G' Y A -> type.
+%mode weakeng-slookup +X1 +X2 +X3 +X4 -X5.
+
+-hit	: weakeng-slookup (sappend/cons _) (sappend/cons _) (sordered/cons D) (slookup/hit _)
+	   (slookup/hit D).
+
+-miss	: weakeng-slookup (sappend/cons Dapp1) (sappend/cons Dapp2) (sordered/cons Dbound) (slookup/miss Dlook _)
+	   (slookup/miss Dlook' Dbound)
+	   <- sbounded-is-sordered Dbound Dord
+	   <- weakeng-slookup Dapp1 Dapp2 Dord Dlook Dlook'.
+
+-snil	: weakeng-slookup sappend/nil sappend/nil (sordered/cons Dbound) Dlook
+	   (slookup/miss Dlook Dbound).
+
+%worlds (var | bind | ovar | obind | topenblock) (weakeng-slookup _ _ _ _ _).
+%total D (weakeng-slookup _ _ _ D _).
+
+
+
+weakeng-aofes : {R}
+		 sappend G1 G2 G
+		 -> sappend (scons G1 X S) G2 G'
+		 -> sordered G'
+		 -> aofes G R T
+		 -> aofes G' R T -> type.
+%mode weakeng-aofes +X1 +X2 +X3 +X4 +X5 -X6.
+
+weakeng-ofes  : {M}
+		 sappend G1 G2 G
+		 -> sappend (scons G1 X S) G2 G'
+		 -> sordered G'
+		 -> ofes G M T
+		 -> ofes G' M T -> type.
+%mode weakeng-ofes +X1 +X2 +X3 +X4 +X5 -X6.
+
+weakeng-wfes  : {A}
+		 sappend G1 G2 G
+		 -> sappend (scons G1 X S) G2 G'
+		 -> sordered G'
+		 -> wfes G A
+		 -> wfes G' A -> type.
+%mode weakeng-wfes +X1 +X2 +X3 +X4 +X5 -X6.
+
+-closed	: weakeng-aofes _ _ _ Dord (aofes/closed _ Dsimp Daof) (aofes/closed Dord Dsimp Daof).
+
+-var	: weakeng-aofes _ Dappend Dappend' Dord
+	   (aofes/var Dlookup)
+	   (aofes/var Dlookup')
+	   <- weakeng-slookup Dappend Dappend' Dord Dlookup Dlookup'.
+
+-app	: weakeng-aofes _ Dappend Dappend' Dord (aofes/app D2 D1) (aofes/app D2' D1')
+	   <- weakeng-aofes _ Dappend Dappend' Dord D1 D1'
+	   <- weakeng-ofes _ Dappend Dappend' Dord D2 D2'.
+
+-pi1	: weakeng-aofes _ Dappend Dappend' Dord (aofes/pi1 D1) (aofes/pi1 D1')
+	   <- weakeng-aofes _ Dappend Dappend' Dord D1 D1'.
+
+-pi2	: weakeng-aofes _ Dappend Dappend' Dord (aofes/pi2 D1) (aofes/pi2 D1')
+	   <- weakeng-aofes _ Dappend Dappend' Dord D1 D1'.
+
+
+-at	: weakeng-ofes _ Dappend Dappend' Dord (ofes/at D1) (ofes/at D1')
+	   <- weakeng-aofes _ Dappend Dappend' Dord D1 D1'.
+
+-lam	: weakeng-ofes _ Dappend Dappend' Dord 
+	   (ofes/lam 
+	      (Dof : {y} isvar y J1 -> ofes (scons G y S) (M y) T))
+	   (ofes/lam Dof'')
+	   <- ({y} {e:isvar y J1}
+		 ofes-context (Dof y e)
+		 (sordered/cons (Dbound1 y e : sbounded G y)))
+	   <- extend-scontext Dord
+	      (Dbound2 : {y} isvar y J2 -> sbounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : sbounded G y)
+	   <- bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : sbounded G' y)
+	   <- bump-ofes _ Dof ([y] [e:isvar y J] sordered/cons (Dbound1' y e))
+	      (Dof' : {y} isvar y J -> ofes (scons G y S) (M y) T)
+	   <- ({y} {e:isvar y J}
+		 weakeng-ofes _ (sappend/cons Dappend) (sappend/cons Dappend') (sordered/cons (Dbound2' y e)) (Dof' y e)
+		 (Dof'' y e : ofes (scons G' y S) (M y) T)).
+
+-pair	: weakeng-ofes _ Dappend Dappend' Dord (ofes/pair D2 D1) (ofes/pair D2' D1')
+	   <- weakeng-ofes _ Dappend Dappend' Dord D1 D1'
+	   <- weakeng-ofes _ Dappend Dappend' Dord D2 D2'.
+
+-star	: weakeng-ofes _ _ _ Dord (ofes/star _) (ofes/star Dord).
+
+
+
+-t	: weakeng-wfes _ _ _ Dord (wfes/t _) (wfes/t Dord).
+
+-pi	: weakeng-wfes _ Dappend Dappend' Dord 
+	   (wfes/pi
+	      (D2 : {y} isvar y J1 -> wfes (scons G y S) (B y))
+	      (Dsimp : simp A S)
+	      (D1 : wfes G A))
+	   (wfes/pi D2'' Dsimp D1')
+	   <- weakeng-wfes _ Dappend Dappend' Dord D1 D1'
+	   <- ({y} {e:isvar y J1}
+		 wfes-context (D2 y e)
+		 (sordered/cons (Dbound1 y e : sbounded G y)))
+	   <- extend-scontext Dord
+	      (Dbound2 : {y} isvar y J2 -> sbounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : sbounded G y)
+	   <- bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : sbounded G' y)
+	   <- bump-wfes _ D2 ([y] [e:isvar y J] sordered/cons (Dbound1' y e))
+	      (D2' : {y} isvar y J -> wfes (scons G y S) (B y))
+	   <- ({y} {e:isvar y J}
+		 weakeng-wfes _ (sappend/cons Dappend) (sappend/cons Dappend') (sordered/cons (Dbound2' y e)) (D2' y e)
+		 (D2'' y e : wfes (scons G' y S) (B y))).
+
+-sigma	: weakeng-wfes _ Dappend Dappend' Dord 
+	   (wfes/sigma
+	      (D2 : {y} isvar y J1 -> wfes (scons G y S) (B y))
+	      (Dsimp : simp A S)
+	      (D1 : wfes G A))
+	   (wfes/sigma D2'' Dsimp D1')
+	   <- weakeng-wfes _ Dappend Dappend' Dord D1 D1'
+	   <- ({y} {e:isvar y J1}
+		 wfes-context (D2 y e)
+		 (sordered/cons (Dbound1 y e : sbounded G y)))
+	   <- extend-scontext Dord
+	      (Dbound2 : {y} isvar y J2 -> sbounded G' y)
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- bump-sbounded Dleq1 ([y] [e:isvar y J1] Dbound1 y e)
+	      ([y] [e:isvar y J] Dbound1' y e : sbounded G y)
+	   <- bump-sbounded Dleq2 ([y] [e:isvar y J2] Dbound2 y e)
+	      ([y] [e:isvar y J] Dbound2' y e : sbounded G' y)
+	   <- bump-wfes _ D2 ([y] [e:isvar y J] sordered/cons (Dbound1' y e))
+	      (D2' : {y} isvar y J -> wfes (scons G y S) (B y))
+	   <- ({y} {e:isvar y J}
+		 weakeng-wfes _ (sappend/cons Dappend) (sappend/cons Dappend') (sordered/cons (Dbound2' y e)) (D2' y e)
+		 (D2'' y e : wfes (scons G' y S) (B y))).
+
+-sing	: weakeng-wfes _ Dappend Dappend' Dord (wfes/sing D1) (wfes/sing D1')
+	   <- weakeng-aofes _ Dappend Dappend' Dord D1 D1'.
+
+-t	: weakeng-wfes _ _ _ Dord (wfes/one _) (wfes/one Dord).
+
+%worlds (var | bind | ovar | topenblock) (weakeng-aofes _ _ _ _ _ _) (weakeng-ofes _ _ _ _ _ _) (weakeng-wfes _ _ _ _ _ _).
+%total (R M A) (weakeng-aofes R _ _ _ _ _) (weakeng-ofes M _ _ _ _ _) (weakeng-wfes A _ _ _ _ _).
+
+
+
+weaken-slookup : sbounded G X -> slookup G Y T -> {S} slookup (scons G X S) Y T -> type.
+%mode weaken-slookup +X1 +X2 +X3 -X4.
+
+-	: weaken-slookup Dbounded Dlook _ (slookup/miss Dlook Dbounded).
+
+%worlds (bind | ovar | var | topenblock) (weaken-slookup _ _ _ _).
+%total {} (weaken-slookup _ _ _ _).
+
+
+
+weaken-aofes : sbounded G X -> aofes G R T -> {S} aofes (scons G X S) R T -> type.
+%mode weaken-aofes +X1 +X2 +X3 -X4.
+
+-	: weaken-aofes Dbound D _ D'
+	   <- weakeng-aofes _ sappend/nil sappend/nil (sordered/cons Dbound) D D'.
+
+%worlds (bind | var | ovar | topenblock) (weaken-aofes _ _ _ _).
+%total {} (weaken-aofes _ _ _ _).
+
+
+
+weaken-ofes : sbounded G X -> ofes G M T -> {S} ofes (scons G X S) M T -> type.
+%mode weaken-ofes +X1 +X2 +X3 -X4.
+
+-	: weaken-ofes Dbound D _ D'
+	   <- weakeng-ofes _ sappend/nil sappend/nil (sordered/cons Dbound) D D'.
+
+%worlds (bind | var | ovar | topenblock) (weaken-ofes _ _ _ _).
+%total {} (weaken-ofes _ _ _ _).
+
+
+
+weaken-wfes : sbounded G X -> wfes G A -> {S} wfes (scons G X S) A -> type.
+%mode weaken-wfes +X1 +X2 +X3 -X4.
+
+-	: weaken-wfes Dbound D _ D'
+	   <- weakeng-wfes _ sappend/nil sappend/nil (sordered/cons Dbound) D D'.
+
+%worlds (bind | var | ovar | topenblock) (weaken-wfes _ _ _ _).
+%total {} (weaken-wfes _ _ _ _).
+
+
+
+weaken-ofes' : sappend G1 G2 G -> sordered G -> ofes G1 M A -> ofes G M A -> type.
+%mode weaken-ofes' +X1 +X2 +X3 -X4.
+
+weaken-ofes'' : sappend G1 G2 G -> sbounded G Z -> ofes G1 M A -> ofes G M A -> type.
+%mode weaken-ofes'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-ofes' sappend/nil _ D D.
+-cons	: weaken-ofes' (sappend/cons Dapp) (sordered/cons Dbound) Dofes Dofes''
+	   <- weaken-ofes'' Dapp Dbound Dofes Dofes'
+	   <- weaken-ofes Dbound Dofes' _ Dofes''.
+
+-	: weaken-ofes'' Dapp Dbound Dofes Dofes'
+	   <- sbounded-is-sordered Dbound Dord
+	   <- weaken-ofes' Dapp Dord Dofes Dofes'.
+
+%worlds (var | bind | ovar | topenblock) (weaken-ofes' _ _ _ _) (weaken-ofes'' _ _ _ _).
+%total (D1 D2) (weaken-ofes' D1 _ _ _) (weaken-ofes'' D2 _ _ _).
+
+
+
+weaken-wfes' : sappend G1 G2 G -> sordered G -> wfes G1 A -> wfes G A -> type.
+%mode weaken-wfes' +X1 +X2 +X3 -X4.
+
+weaken-wfes'' : sappend G1 G2 G -> sbounded G Z -> wfes G1 A -> wfes G A -> type.
+%mode weaken-wfes'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-wfes' sappend/nil _ D D.
+-cons	: weaken-wfes' (sappend/cons Dapp) (sordered/cons Dbound) Dwfes Dwfes''
+	   <- weaken-wfes'' Dapp Dbound Dwfes Dwfes'
+	   <- weaken-wfes Dbound Dwfes' _ Dwfes''.
+
+-	: weaken-wfes'' Dapp Dbound Dwfes Dwfes'
+	   <- sbounded-is-sordered Dbound Dord
+	   <- weaken-wfes' Dapp Dord Dwfes Dwfes'.
+
+%worlds (var | bind | ovar | topenblock) (weaken-wfes' _ _ _ _) (weaken-wfes'' _ _ _ _).
+%total (D1 D2) (weaken-wfes' D1 _ _ _) (weaken-wfes'' D2 _ _ _).
+
+
+
+
+%%%%%  Translation to Implicit Form  %%%%%
+
+wfi	: ctx -> tp -> type.
+
+wfi/nil		: wfi nil A
+		   <- wf A.
+
+wfi/cons	: wfi (cons G X A) B
+		   <- (vof X A -> wfi G B).
+
+
+
+aofi	: ctx -> atom -> tp -> type.
+
+aofi/nil	: aofi nil R A
+		   <- aof R A.
+
+aofi/cons	: aofi (cons G X A) R B
+		   <- (vof X A -> aofi G R B).
+
+
+
+ofi	: ctx -> term -> tp -> type.
+
+ofi/nil		: ofi nil M A
+		   <- of M A.
+
+ofi/cons	: ofi (cons G X A) M B
+		   <- (vof X A -> ofi G M B).
+
+
+
+
+
+aof-to-aofi : {G} aof R A -> aofi G R A -> type.
+%mode aof-to-aofi +X1 +X2 -X3.
+
+-	: aof-to-aofi nil D (aofi/nil D).
+-	: aof-to-aofi (cons G X A) D (aofi/cons ([_] D'))
+	   <- aof-to-aofi G D D'.
+
+%worlds (bind | var | ovar | ofblock | topenblock) (aof-to-aofi _ _ _).
+%total G (aof-to-aofi G _ _).
+
+
+
+aofi-var : (wf A -> aof R A) -> wfi G A -> aofi G R A -> type.
+%mode aofi-var +X1 +X2 -X3.
+
+-	: aofi-var Daof (wfi/nil Dwf) (aofi/nil (Daof Dwf)).
+
+-	: aofi-var (Daof : wf A -> aof R A) (wfi/cons (Dwf : vof Y B -> wfi G A)) 
+	   (aofi/cons Daofi)
+	   <- ({d:vof Y B}
+		 aofi-var Daof (Dwf d)
+		 (Daofi d : aofi G R A)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (aofi-var _ _ _).
+%total D (aofi-var _ D _).
+
+
+
+aofi-lookup : lookup G X A -> wfi G A -> aofi G X A -> type.
+%mode aofi-lookup +X1 +X2 -X3.
+
+-	: aofi-lookup 
+	   (lookup/hit _
+	      : lookup (cons G X A) X A)
+	   (wfi/cons
+	      (Dwf : vof X A -> wfi G A)
+	      : wfi (cons G X A) A)
+	   (aofi/cons Daofi)
+	   <- ({d:vof X A}
+		 aofi-var ([d_wf] aof/var d_wf d) (Dwf d)
+		 (Daofi d : aofi G X A)).
+
+-	: aofi-lookup 
+	   (lookup/miss 
+	      (Dlook : lookup G X A)
+	      _
+	      : lookup (cons G Y B) X A)
+	   (wfi/cons
+	      (Dwf : vof Y B -> wfi G A)
+	      : wfi (cons G Y B) A)
+	   (aofi/cons D)
+	   <- ({d:vof Y B}
+		 aofi-lookup Dlook (Dwf d)
+		 (D d : aofi G X A)).
+
+%worlds (bind | var | ovar | ofblock | obind | topenblock) (aofi-lookup _ _ _).
+%total D (aofi-lookup D _ _).
+
+
+
+aofi-app : aofi G R (pi A B)
+	    -> ofi G M A
+	    -> tsub B M B'
+	    -> wfi G B'
+%%
+	    -> aofi G (app R M) B' -> type.
+%mode aofi-app +X1 +X2 +X3 +X4 -X5.
+
+-	: aofi-app (aofi/nil D1) (ofi/nil D2) D3 (wfi/nil D4) (aofi/nil (aof/app D4 D3 D2 D1)).
+-	: aofi-app (aofi/cons D1) (ofi/cons D2) D3 (wfi/cons D4) (aofi/cons D)
+	   <- ({d} aofi-app (D1 d) (D2 d) D3 (D4 d) (D d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (aofi-app _ _ _ _ _).
+%total D (aofi-app D _ _ _ _).
+
+
+
+aofi-pi1 : aofi G R (sigma A B) -> aofi G (pi1 R) A -> type.
+%mode aofi-pi1 +X1 -X2.
+
+-	: aofi-pi1 (aofi/nil D) (aofi/nil (aof/pi1 D)).
+-	: aofi-pi1 (aofi/cons D) (aofi/cons D')
+	   <- ({d} aofi-pi1 (D d) (D' d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (aofi-pi1 _ _).
+%total D (aofi-pi1 D _).
+
+
+
+aofi-pi2 : aofi G R (sigma A B) -> aofi G (pi2 R) (B (pi1 R)) -> type.
+%mode aofi-pi2 +X1 -X2.
+
+-	: aofi-pi2 (aofi/nil D) (aofi/nil (aof/pi2 D)).
+-	: aofi-pi2 (aofi/cons D) (aofi/cons D')
+	   <- ({d} aofi-pi2 (D d) (D' d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (aofi-pi2 _ _).
+%total D (aofi-pi2 D _).
+
+
+
+ofi-at : aofi G R t -> ofi G (at R) t -> type.
+%mode ofi-at +X1 -X2.
+
+-	: ofi-at (aofi/nil D) (ofi/nil (of/at D)).
+-	: ofi-at (aofi/cons D) (ofi/cons D')
+	   <- ({d} ofi-at (D d) (D' d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (ofi-at _ _).
+%total D (ofi-at D _).
+
+
+
+ofi-lam : wfi G A -> ({x} ofi (cons G x A) (M x) (B x)) -> ofi G (lam M) (pi A B) -> type.
+%mode ofi-lam +X1 +X2 -X3.
+
+-	: ofi-lam (wfi/nil D1) ([x] ofi/cons ([d] ofi/nil (D2 x d))) (ofi/nil (of/lam D2 D1)).
+
+-	: ofi-lam (wfi/cons D1) ([x] ofi/cons ([d] ofi/cons ([e] D2 x d e))) (ofi/cons D)
+	   <- ({e} ofi-lam (D1 e) ([x] ofi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (ofi-lam _ _ _).
+%total D (ofi-lam D _ _).
+
+
+
+ofi-pair : ofi G M A
+	    -> tsub B M B'
+	    -> ofi G N B'
+	    -> ({x} wfi (cons G x A) (B x))
+%%
+	    -> ofi G (pair M N) (sigma A B) -> type.
+%mode ofi-pair +X1 +X2 +X3 +X4 -X5.
+
+-	: ofi-pair (ofi/nil D1) D2 (ofi/nil D3) ([x] wfi/cons ([d] wfi/nil (D4 x d))) 
+	   (ofi/nil (of/pair D4 D3 D2 D1)).
+-	: ofi-pair (ofi/cons D1) D2 (ofi/cons D3) ([x] wfi/cons ([d] wfi/cons ([e] D4 x d e)))
+	   (ofi/cons D)
+	   <- ({e} ofi-pair (D1 e) D2 (D3 e) ([x] wfi/cons ([d] D4 x d e)) (D e)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (ofi-pair _ _ _ _ _).
+%total D (ofi-pair D _ _ _ _).
+
+
+
+ofi-sing : aofi G R t -> ofi G (at R) (sing R) -> type.
+%mode ofi-sing +X1 -X2.
+
+-	: ofi-sing (aofi/nil D) (ofi/nil (of/sing D)).
+-	: ofi-sing (aofi/cons D) (ofi/cons D')
+	   <- ({d} ofi-sing (D d) (D' d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (ofi-sing _ _).
+%total D (ofi-sing D _).
+
+
+
+ofi-star : {G} ofi G star one -> type.
+%mode ofi-star +X1 -X2.
+
+-	: ofi-star nil (ofi/nil of/star).
+-	: ofi-star (cons G X A) (ofi/cons D)
+	   <- ({d} ofi-star G (D d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (ofi-star _ _).
+%total G (ofi-star G _).
+
+
+
+wfi-t : {G} wfi G t -> type.
+%mode wfi-t +X1 -X2.
+
+-	: wfi-t nil (wfi/nil wf/t).
+-	: wfi-t (cons G X A) (wfi/cons D)
+	   <- ({d} wfi-t G (D d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (wfi-t _ _).
+%total G (wfi-t G _).
+
+
+
+wfi-pi : wfi G A -> ({x} wfi (cons G x A) (B x)) -> wfi G (pi A B) -> type.
+%mode wfi-pi +X1 +X2 -X3.
+
+-	: wfi-pi (wfi/nil D1) ([x] wfi/cons ([d] wfi/nil (D2 x d)))
+	   (wfi/nil (wf/pi D2 D1)).
+
+-	: wfi-pi (wfi/cons D1) ([x] wfi/cons ([d] wfi/cons ([e] D2 x d e)))
+	   (wfi/cons D)
+	   <- ({e} wfi-pi (D1 e) ([x] wfi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (wfi-pi _ _ _).
+%total D (wfi-pi D _ _).
+
+
+
+wfi-sigma : wfi G A -> ({x} wfi (cons G x A) (B x)) -> wfi G (sigma A B) -> type.
+%mode wfi-sigma +X1 +X2 -X3.
+
+-	: wfi-sigma (wfi/nil D1) ([x] wfi/cons ([d] wfi/nil (D2 x d)))
+	   (wfi/nil (wf/sigma D2 D1)).
+
+-	: wfi-sigma (wfi/cons D1) ([x] wfi/cons ([d] wfi/cons ([e] D2 x d e)))
+	   (wfi/cons D)
+	   <- ({e} wfi-sigma (D1 e) ([x] wfi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (wfi-sigma _ _ _).
+%total D (wfi-sigma D _ _).
+
+
+
+wfi-sing : aofi G R t -> wfi G (sing R) -> type.
+%mode wfi-sing +X1 -X2.
+
+-	: wfi-sing (aofi/nil D) (wfi/nil (wf/sing D)).
+-	: wfi-sing (aofi/cons D) (wfi/cons D')
+	   <- ({d} wfi-sing (D d) (D' d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (wfi-sing _ _).
+%total D (wfi-sing D _).
+
+
+
+wfi-one : {G} wfi G one -> type.
+%mode wfi-one +X1 -X2.
+
+-	: wfi-one nil (wfi/nil wf/one).
+-	: wfi-one (cons G X A) (wfi/cons D)
+	   <- ({d} wfi-one G (D d)).
+
+%worlds (bind | var | ovar | ofblock | topenblock) (wfi-one _ _).
+%total G (wfi-one G _).
+
+
+
+aofe-to-aofi : aofe G R A -> aofi G R A -> type.
+%mode aofe-to-aofi +X1 -X2.
+
+ofe-to-ofi : ofe G M A -> ofi G M A -> type.
+%mode ofe-to-ofi +X1 -X2.
+
+wfe-to-wfi : wfe G A -> wfi G A -> type.
+%mode wfe-to-wfi +X1 -X2.
+
+-closed	: aofe-to-aofi (aofe/closed _ D) D'
+	   <- aof-to-aofi _ D D'.
+
+-var	: aofe-to-aofi (aofe/var Dwfe Dlook) Daofi
+	   <- wfe-to-wfi Dwfe Dwfi
+	   <- aofi-lookup Dlook Dwfi Daofi.
+
+-app	: aofe-to-aofi (aofe/app Dwfe Dsub Dofe Daofe) D
+	   <- aofe-to-aofi Daofe Daofi
+	   <- ofe-to-ofi Dofe Dofi
+	   <- wfe-to-wfi Dwfe Dwfi
+	   <- aofi-app Daofi Dofi Dsub Dwfi D.
+
+-pi1	: aofe-to-aofi (aofe/pi1 D) D''
+	   <- aofe-to-aofi D D'
+	   <- aofi-pi1 D' D''.
+
+-pi2	: aofe-to-aofi (aofe/pi2 D) D''
+	   <- aofe-to-aofi D D'
+	   <- aofi-pi2 D' D''.
+
+
+-at	: ofe-to-ofi (ofe/at D) D''
+	   <- aofe-to-aofi D D'
+	   <- ofi-at D' D''.
+
+-lam	: ofe-to-ofi (ofe/lam ([x] [d] Dofe x d) Dwfe) D
+	   <- wfe-to-wfi Dwfe Dwfi
+	   <- ({x} {d:isvar x I}
+		 ofe-to-ofi (Dofe x d) (Dofi x))
+	   <- ofi-lam Dwfi Dofi D.
+
+-pair	: ofe-to-ofi (ofe/pair ([x] [d] Dwfe x d) Dofe2 Dsub Dofe1) D
+	   <- ofe-to-ofi Dofe1 Dofi1
+	   <- ofe-to-ofi Dofe2 Dofi2
+	   <- ({x} {d:isvar x I}
+		 wfe-to-wfi (Dwfe x d) (Dwfi x))
+	   <- ofi-pair Dofi1 Dsub Dofi2 Dwfi D.
+
+-sing	: ofe-to-ofi (ofe/sing Daofe) D
+	   <- aofe-to-aofi Daofe Daofi
+	   <- ofi-sing Daofi D.
+
+-star	: ofe-to-ofi (ofe/star _) D
+	   <- ofi-star _ D.
+
+
+-t	: wfe-to-wfi (wfe/t _) D
+	   <- wfi-t _ D.
+
+-pi	: wfe-to-wfi (wfe/pi ([x] [d] Dwfe2 x d) Dwfe1) D
+	   <- wfe-to-wfi Dwfe1 Dwfi1
+	   <- ({x} {d:isvar x I}
+		 wfe-to-wfi (Dwfe2 x d) (Dwfi2 x))
+	   <- wfi-pi Dwfi1 Dwfi2 D.
+
+-sigma	: wfe-to-wfi (wfe/sigma ([x] [d] Dwfe2 x d) Dwfe1) D
+	   <- wfe-to-wfi Dwfe1 Dwfi1
+	   <- ({x} {d:isvar x I}
+		 wfe-to-wfi (Dwfe2 x d) (Dwfi2 x))
+	   <- wfi-sigma Dwfi1 Dwfi2 D.
+
+-sing	: wfe-to-wfi (wfe/sing Daofe) D
+	   <- aofe-to-aofi Daofe Daofi
+	   <- wfi-sing Daofi D.
+
+-one	: wfe-to-wfi (wfe/one _) D
+	   <- wfi-one _ D.
+
+%worlds (var | bind | ovar | ofblock | obind | topenblock) (ofe-to-ofi _ _) (aofe-to-aofi _ _) (wfe-to-wfi _ _).
+%total (D1 D2 D3) (aofe-to-aofi D1 _) (ofe-to-ofi D2 _) (wfe-to-wfi D3 _).
+
+
+
+ofe-to-of : ofe nil M A -> of M A -> type.
+%mode ofe-to-of +X1 -X2.
+
+-	: ofe-to-of D D'
+	   <- ofe-to-ofi D (ofi/nil D').
+
+%worlds (var | bind | ovar | topenblock) (ofe-to-of _ _).
+%total {} (ofe-to-of _ _).
+
+
+
+aofe-to-aof : aofe nil M A -> aof M A -> type.
+%mode aofe-to-aof +X1 -X2.
+
+-	: aofe-to-aof D D'
+	   <- aofe-to-aofi D (aofi/nil D').
+
+%worlds (var | bind | ovar | topenblock) (aofe-to-aof _ _).
+%total {} (aofe-to-aof _ _).
+
+
+
+wfe-to-wf : wfe nil A -> wf A -> type.
+%mode wfe-to-wf +X1 -X2.
+
+-	: wfe-to-wf D D'
+	   <- wfe-to-wfi D (wfi/nil D').
+
+%worlds (var | bind | ovar | obind | topenblock) (wfe-to-wf _ _).
+%total {} (wfe-to-wf _ _).
+
+
+
+ofe-to-of1 : ({x} isvar x I -> ofe (cons nil x A) (M x) (B x)) -> ({x} vof x A -> of (M x) (B x)) -> type.
+%mode ofe-to-of1 +X1 -X2.
+
+-	: ofe-to-of1 Dofe Dof
+	   <- ({x} {d':isvar x I}
+		 ofe-to-ofi (Dofe x d') (ofi/cons ([d] ofi/nil (Dof x d)))).
+
+%worlds (var | bind | topenblock) (ofe-to-of1 _ _).
+%total {} (ofe-to-of1 _ _).
+
+
+
+wfe-to-wf1 : ({x} isvar x I -> wfe (cons nil x A) (B x)) -> ({x} vof x A -> wf (B x)) -> type.
+%mode wfe-to-wf1 +X1 -X2.
+
+-	: wfe-to-wf1 Dwfe Dof
+	   <- ({x} {d':isvar x I}
+		 wfe-to-wfi (Dwfe x d') (wfi/cons ([d] wfi/nil (Dof x d)))).
+
+%worlds (var | bind | topenblock) (wfe-to-wf1 _ _).
+%total {} (wfe-to-wf1 _ _).
+
+
+
+
+%%%%%  Regularity (Explicit Context Version)  %%%%%
+
+%%  We can't prove regularity of aofe until we've shown that wf implies wfe.
+
+ofe-reg : ofe G M A -> wfe G A -> type.
+%mode ofe-reg +X1 -X2.
+
+-at	: ofe-reg (ofe/at Daofe) (wfe/t Dordered)
+	   <- aofe-context Daofe Dordered.
+
+-lam	: ofe-reg (ofe/lam Dof Dwf1) (wfe/pi Dwf2 Dwf1)
+	   <- ({x} {d}
+		 ofe-reg (Dof x d) (Dwf2 x d)).
+
+-pair	: ofe-reg (ofe/pair Dwf2 _ _ Dof) (wfe/sigma Dwf2 Dwf1)
+	   <- ofe-reg Dof Dwf1.
+
+-sing	: ofe-reg (ofe/sing Daof) (wfe/sing Daof).
+
+-star	: ofe-reg (ofe/star D) (wfe/one D).
+
+%worlds (bind | ovar | var | obind | topenblock) (ofe-reg _ _).
+%total D (ofe-reg D _).
+
+
+
+
+%%%%%  Translation to Explicit Form  %%%%%
+
+strengthen-for-cut-aof : {Rm}
+			  {D:{x} vof x A -> aof R (B x)}
+			  ({x} {d} maof (D x d) Rm)
+			  -> ({x} tp-eq (B x) B')
+			  -> {D':aof R B'}
+			     maof D' Rm -> type.
+%mode strengthen-for-cut-aof +X1 +X2 +X3 -X4 -X5 -X6.
+
+strengthen-for-cut-of : {Mm}
+			 {D:{x} vof x A -> of M B}
+			 ({x} {d} mof (D x d) Mm)
+			 -> {D':of M B}
+			    mof D' Mm -> type.
+%mode strengthen-for-cut-of +X1 +X2 +X3 -X4 -X5.
+
+strengthen-for-cut-wf : {Am}
+			 {D:{x} vof x A -> wf B}
+			 ({x} {d} mwf (D x d) Am)
+			 -> {D':wf B}
+			    mwf D' Am -> type.
+
+%mode strengthen-for-cut-wf +X1 +X2 +X3 -X4 -X5.
+
+-const	: strengthen-for-cut-aof _ ([x] [d] aof/const (Dwf x d) (Dkof x)) ([x] [d] maof/const (Dmwf x d))
+	   Deq (aof/const Dwf'' (Dkof' aca)) (maof/const Dmwf'')
+	   <- kof-strengthen Dkof Deq
+	   <- ({x} kof-resp (Deq x) (Dkof x) (Dkof' x))
+	   <- ({x} {d} mwf-resp (Deq x) (Dwf x d) (Dmwf x d) (Dwf' x d) (Dmwf' x d))
+	   <- strengthen-for-cut-wf _ Dwf' Dmwf' Dwf'' Dmwf''.
+
+-var	: strengthen-for-cut-aof _ ([x] [d] aof/var (Dwf x d) Dvof) ([x] [d] maof/var (Dmwf x d))
+	   ([x] tp-eq/i) (aof/var Dwf' Dvof) (maof/var Dmwf')
+	   <- strengthen-for-cut-wf _ Dwf Dmwf Dwf' Dmwf'.
+
+-app	: strengthen-for-cut-aof _
+	   ([x] [d] aof/app (Dwf x d) (Dsub x) (Dof x d) (Daof x d))
+	   ([x] [d] maof/app (Dmwf x d) (Dmof x d) (Dmaof x d))
+	   DeqRes
+	   (aof/app Dwf'' (Dsub'' aca) Dof'' Daof'')
+	   (maof/app Dmwf''  Dmof'' Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof DeqPi Daof' Dmaof'
+	   <- tp-eq-pi-strengthen DeqPi DeqPi'
+	   <- ({x} tp-eq-trans (DeqPi x) DeqPi' (DeqPi'' x))
+	   <- ({x} tp-eq-cdr-pi (DeqPi'' x) (DeqDom x) (DeqCod x))
+	   <- maof-resp atom-eq/i DeqPi' Daof' Dmaof' Daof'' Dmaof''
+	   <- ({x} {d} mof-resp term-eq/i (DeqDom x) (Dof x d) (Dmof x d) (Dof' x d) (Dmof' x d))
+	   <- strengthen-for-cut-of _ Dof' Dmof' Dof'' Dmof''
+	   <- ({x} tsub-resp ([y] DeqCod x y) term-eq/i tp-eq/i (Dsub x) (Dsub' x))
+	   <- tsub-closed Dsub' DeqRes
+	   <- ({x} tsub-resp ([_] tp-eq/i) term-eq/i (DeqRes x) (Dsub' x) (Dsub'' x))
+	   <- ({x} {d} mwf-resp (DeqRes x) (Dwf x d) (Dmwf x d) (Dwf' x d) (Dmwf' x d))
+	   <- strengthen-for-cut-wf _ Dwf' Dmwf' Dwf'' Dmwf''.
+
+-pi1	: strengthen-for-cut-aof _
+	   ([x] [d] aof/pi1 (Daof x d))
+	   ([x] [d] maof/pi1 (Dmaof x d))
+	   Deq1
+   (aof/pi1 Daof'')
+	   (maof/pi1 Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof Deq Daof' Dmaof'
+	   <- tp-eq-sigma-strengthen Deq Deq'
+	   <- ({x} tp-eq-trans (Deq x) Deq' (Deq'' x))
+	   <- ({x} tp-eq-cdr-sigma (Deq'' x) (Deq1 x) (Deq2 x))
+	   <- maof-resp atom-eq/i Deq' Daof' Dmaof' Daof'' Dmaof''.
+
+-pi2	: strengthen-for-cut-aof _
+	   ([x] [d] aof/pi2 (Daof x d : aof R _))
+	   ([x] [d] maof/pi2 (Dmaof x d))
+	   ([x] Deq2 x (pi1 R))
+	   (aof/pi2 Daof'')
+	   (maof/pi2 Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof Deq Daof' Dmaof'
+	   <- tp-eq-sigma-strengthen Deq Deq'
+	   <- ({x} tp-eq-trans (Deq x) Deq' (Deq'' x))
+	   <- ({x} tp-eq-cdr-sigma (Deq'' x) (Deq1 x) (Deq2 x))
+	   <- maof-resp atom-eq/i Deq' Daof' Dmaof' Daof'' Dmaof''.
+
+-at	: strengthen-for-cut-of _
+	   ([x] [d] of/at (Daof x d))
+	   ([x] [d] mof/at (Dmaof x d))
+	   (of/at Daof'')
+	   (mof/at Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof Deq Daof' Dmaof'
+	   <- tp-eq-symm (Deq aca) Deq'
+	   <- maof-resp atom-eq/i Deq' Daof' Dmaof' Daof'' Dmaof''.
+
+-lam	: strengthen-for-cut-of _
+	   ([x] [d] of/lam (Dof x d) (Dwf x d))
+	   ([x] [d] mof/lam (Dmof x d) (Dmwf x d))
+	   (of/lam Dof' Dwf')
+	   (mof/lam Dmof' Dmwf')
+	   <- strengthen-for-cut-wf _ Dwf Dmwf Dwf' Dmwf'
+	   <- ({y} {e}
+		 strengthen-for-cut-of _ ([x] [d] Dof x d y e) ([x] [d] Dmof x d y e)
+		 (Dof' y e) (Dmof' y e)).
+
+-pair	: strengthen-for-cut-of _
+	   ([x] [d] of/pair (Dwf x d) (Dof2 x d) (Dsub x) (Dof1 x d))
+	   ([x] [d] mof/pair (Dmwf x d) (Dmof2 x d) (Dmof1 x d))
+	   (of/pair Dwf' Dof2'' (Dsub' aca) Dof1')
+	   (mof/pair Dmwf' Dmof2'' Dmof1')
+	   <- strengthen-for-cut-of _ Dof1 Dmof1 Dof1' Dmof1'
+	   <- tsub-closed Dsub Deq
+	   <- ({x} tsub-resp ([_] tp-eq/i) term-eq/i (Deq x) (Dsub x) (Dsub' x))
+	   <- ({x} {d} mof-resp term-eq/i (Deq x) (Dof2 x d) (Dmof2 x d) (Dof2' x d) (Dmof2' x d))
+	   <- strengthen-for-cut-of _ Dof2' Dmof2' Dof2'' Dmof2''
+	   <- ({y} {e}
+		 strengthen-for-cut-wf _ ([x] [d] Dwf x d y e) ([x] [d] Dmwf x d y e)
+		 (Dwf' y e) (Dmwf' y e)).
+
+-sing	: strengthen-for-cut-of _
+	   ([x] [d] of/sing (Daof x d))
+	   ([x] [d] mof/sing (Dmaof x d))
+	   (of/sing Daof'')
+	   (mof/sing Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof Deq Daof' Dmaof'
+	   <- tp-eq-symm (Deq aca) Deq'
+	   <- maof-resp atom-eq/i Deq' Daof' Dmaof' Daof'' Dmaof''.
+
+-star	: strengthen-for-cut-of _
+	   ([x] [d] of/star)
+	   ([x] [d] mof/star)
+	   of/star
+	   mof/star.
+
+-t	: strengthen-for-cut-wf _
+	   ([x] [d] wf/t)
+	   ([x] [d] mwf/t)
+	   wf/t
+	   mwf/t.
+
+-pi	: strengthen-for-cut-wf _
+	   ([x] [d] wf/pi (Dwf2 x d) (Dwf1 x d))
+	   ([x] [d] mwf/pi (Dmwf2 x d) (Dmwf1 x d))
+	   (wf/pi Dwf2' Dwf1')
+	   (mwf/pi Dmwf2' Dmwf1')
+	   <- strengthen-for-cut-wf _ Dwf1 Dmwf1 Dwf1' Dmwf1'
+	   <- ({y} {e}
+		 strengthen-for-cut-wf _ ([x] [d] Dwf2 x d y e) ([x] [d] Dmwf2 x d y e)
+		 (Dwf2' y e) (Dmwf2' y e)).
+
+-sigma	: strengthen-for-cut-wf _
+	   ([x] [d] wf/sigma (Dwf2 x d) (Dwf1 x d))
+	   ([x] [d] mwf/sigma (Dmwf2 x d) (Dmwf1 x d))
+	   (wf/sigma Dwf2' Dwf1')
+	   (mwf/sigma Dmwf2' Dmwf1')
+	   <- strengthen-for-cut-wf _ Dwf1 Dmwf1 Dwf1' Dmwf1'
+	   <- ({y} {e}
+		 strengthen-for-cut-wf _ ([x] [d] Dwf2 x d y e) ([x] [d] Dmwf2 x d y e)
+		 (Dwf2' y e) (Dmwf2' y e)).
+
+-sing	: strengthen-for-cut-wf _
+	   ([x] [d] wf/sing (Daof x d))
+	   ([x] [d] mwf/sing (Dmaof x d))
+	   (wf/sing Daof'')
+	   (mwf/sing Dmaof'')
+	   <- strengthen-for-cut-aof _ Daof Dmaof Deq Daof' Dmaof'
+	   <- tp-eq-symm (Deq aca) Deq'
+	   <- maof-resp atom-eq/i Deq' Daof' Dmaof' Daof'' Dmaof''.
+
+-one	: strengthen-for-cut-wf _
+	   ([x] [d] wf/one)
+	   ([x] [d] mwf/one)
+	   wf/one
+	   mwf/one.
+
+%worlds (var | bind | ovar | obind | topenblock) (strengthen-for-cut-aof _ _ _ _ _ _) (strengthen-for-cut-of _ _ _ _ _) (strengthen-for-cut-wf _ _ _ _ _).
+%total (M1 M2 M3) (strengthen-for-cut-aof M1 _ _ _ _ _) (strengthen-for-cut-of M2 _ _ _ _) (strengthen-for-cut-wf M3 _ _ _ _).
+
+
+
+strengthen-wf : ({x} vof x A -> wf B) -> wf B -> type.
+%mode strengthen-wf +X1 -X2.
+
+-	: strengthen-wf Dwf D
+	   <- ({x} {d} can-mwf (Dwf x d) (Dmwf x d))
+	   <- strengthen-for-cut-wf _ Dwf Dmwf D _.
+
+%worlds (var | bind | ovar | topenblock) (strengthen-wf _ _).
+%total {} (strengthen-wf _ _).
+
+
+
+cut-aof : {Rm}
+	   {D:{x} vof x A -> aof (R x) (B x)} 
+	   ({x} {d} maof (D x d) Rm)
+	   -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	   -> {D':{x} isvar x I -> aofe (G x) (R x) (B x)} 
+	      ({x} {d'} maofe (D' x d') Rm) -> type.
+%mode cut-aof +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-of : {Mm}
+	  {D:{x} vof x A -> of (M x) (B x)} 
+	  ({x} {d} mof (D x d) Mm)
+	  -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	  -> {D':{x} isvar x I -> ofe (G x) (M x) (B x)} 
+	     ({x} {d'} mofe (D' x d') Mm) -> type.
+%mode cut-of +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-wf : {Bm}
+	  {D:{x} vof x A -> wf (B x)}
+	  ({x} {d} mwf (D x d) Bm)
+	  -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	  -> {D':{x} isvar x I -> wfe (G x) (B x)}
+	     ({x} {d'} mwfe (D' x d') Bm) -> type.
+%mode cut-wf +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-aofe : {Rm}
+	    {D:{x} vof x A -> isvar x I -> aofe (G x) (R x) (B x)} 
+	    ({x} {d} {d'} maofe (D x d d') Rm)
+	    -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	    -> {D':{x} isvar x I -> aofe (G x) (R x) (B x)} 
+	       ({x} {d'} maofe (D' x d') Rm) -> type.
+%mode cut-aofe +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-ofe : {Mm}
+	   {D:{x} vof x A -> isvar x I -> ofe (G x) (M x) (B x)}
+	   ({x} {d} {d'} mofe (D x d d') Mm)
+	   -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	   -> {D':{x} isvar x I -> ofe (G x) (M x) (B x)}
+	      ({x} {d'} mofe (D' x d') Mm) -> type.
+%mode cut-ofe +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-wfe : {Bm}
+	   {D:{x} vof x A -> isvar x I -> wfe (G x) (B x)}
+	   ({x} {d} {d'} mwfe (D x d d') Bm)
+	   -> ({x} isvar x I -> lookup (G x) x A)
+%%
+	   -> {D':{x} isvar x I -> wfe (G x) (B x)}
+	      ({x} {d'} mwfe (D' x d') Bm) -> type.
+%mode cut-wfe +X1 +X2 +X3 +X4 -X5 -X6.
+
+-const	: cut-aof
+	   (mvar Am)
+	   ([x] [d:vof x A] aof/const (Dwf x d) (Dkof x : kof C (B x)))
+	   ([x] [d] maof/const (Dmwf x d))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/closed (Dordered x d') (aof/const (Dwf''' x) (Dkof x)))
+	   ([x] [d'] maofe/closed (maof/const (Dmwf''' x)))
+	   <- kof-strengthen Dkof Deq
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- ({x} {d} mwf-resp (Deq x) (Dwf x d) (Dmwf x d) (Dwf' x d) (Dmwf' x d))
+	   <- strengthen-for-cut-wf _ Dwf' Dmwf' Dwf'' Dmwf''
+	   <- ({x} mwf-resp (Deq' x) Dwf'' Dmwf'' (Dwf''' x) (Dmwf''' x))
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		 (Dordered x d' : ordered (G x))).
+
+-varsam	: cut-aof
+	   (mvar Am)
+	   ([x] [d:vof x A] 
+	      aof/var (Dwf x d : wf A) 
+	      d)
+	   ([x] [d]
+	      maof/var
+	      (Dmwf x d : mwf (Dwf x d) Am))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/var (Dwfe x d') (Dlookup x d'))
+	   ([x] [d'] maofe/var (Dmwfe x d'))
+	   <- cut-wf Am Dwf Dmwf Dlookup
+	      (Dwfe : {x} isvar x I -> wfe (G x) A)
+	      (Dmwfe : {x} {d} mwfe (Dwfe x d) Am).
+
+-varoth	: cut-aof
+	   (mvar Bm)
+	   ([x] [d:vof x A] 
+	      aof/var
+	      (Dwf x d : wf B)
+	      (Dvof : vof Y B))
+	   ([x] [d]
+	      maof/var
+	      (Dmwf x d : mwf (Dwf x d) Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/closed (Dordered x d') (aof/var Dwf' Dvof))
+	   ([x] [d'] maofe/closed (maof/var Dmwf'))
+	   <- strengthen-for-cut-wf _ Dwf Dmwf Dwf' Dmwf'
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x))).
+
+-app	: cut-aof
+	   (mapp Cm Mm Rm)
+	   ([x] [d:vof x A]
+	      aof/app
+	      (Dwf x d : wf (C' x))
+	      (Dsub x : tsub ([y] C x y) (M x) (C' x))
+	      (Dof x d : of (M x) (B x))
+	      (Daof x d : aof (R x) (pi (B x) ([y] C x y))))
+	   ([x] [d]
+	      maof/app
+	      (Dmwf x d : mwf (Dwf x d) Cm)
+	      (Dmof x d : mof (Dof x d) Mm)
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/app (Dwfe x d') (Dsub x) (Dofe x d') (Daofe x d'))
+	   ([x] [d'] maofe/app (Dmwfe x d') (Dmofe x d') (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) (pi (B x) ([y] C x y)))
+	      (Dmaofe : {x} {d} maofe (Daofe x d) Rm)
+	   <- cut-of Mm Dof Dmof Dlookup
+	      (Dofe : {x} isvar x I -> ofe (G x) (M x) (B x))
+	      (Dmofe : {x} {d} mofe (Dofe x d) Mm)
+	   <- cut-wf Cm Dwf Dmwf Dlookup
+	      (Dwfe : {x} isvar x I -> wfe (G x) (C' x))
+	      (Dmwfe : {x} {d'} mwfe (Dwfe x d') Cm).
+
+-pi1	: cut-aof
+	   (mpi1 Rm)
+	   ([x] [d:vof x A]
+	      aof/pi1
+	      (Daof x d : aof (R x) (sigma (B x) ([y] C x y))))
+	   ([x] [d]
+	      maof/pi1
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/pi1 (Daofe x d'))
+	   ([x] [d'] maofe/pi1 (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) (sigma (B x) ([y] C x y)))
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-pi2	: cut-aof
+	   (mpi2 Rm)
+	   ([x] [d:vof x A]
+	      aof/pi2
+	      (Daof x d : aof (R x) (sigma (B x) ([y] C x y))))
+	   ([x] [d]
+	      maof/pi2
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/pi2 (Daofe x d'))
+	   ([x] [d'] maofe/pi2 (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) (sigma (B x) ([y] C x y)))
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-at	: cut-of
+	   (mat Rm)
+	   ([x] [d:vof x A]
+	      of/at
+	      (Daof x d : aof (R x) t))
+	   ([x] [d]
+	      mof/at
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/at (Daofe x d'))
+	   ([x] [d'] mofe/at (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-lam	: cut-of
+	   (mlam Mm Bm)
+	   ([x] [d:vof x A]
+	      of/lam
+	      (Dof x d : {y} vof y (B x) -> of (M x y) (C x y))
+	      (Dwf x d : wf (B x)))
+	   ([x] [d]
+	      mof/lam
+	      (Dmof x d : {y} {e} mof (Dof x d y e) Mm)
+	      (Dmwf x d : mwf (Dwf x d) Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/lam (Dofe' x d') (Dwfe x d'))
+	   ([x] [d'] mofe/lam (Dmofe' x d') (Dmwfe x d'))
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x)))
+	   <- ({x} {d':isvar x I}
+		 extend-context (Dordered x d')
+		    (Dbounded x d' : {y} isvar y J -> bounded (G x) y))
+	   <- cut-wf Bm Dwf Dmwf Dlookup
+	      (Dwfe : {x} isvar x I -> wfe (G x) (B x))
+	      (Dmwfe : {x} {d'} mwfe (Dwfe x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-of Mm ([y] [e] Dof x d y e) ([y] [e] Dmof x d y e) ([y] [e'] lookup/hit (Dbounded x d' y e'))
+		    (Dofe x d d' : {y} isvar y J -> ofe (cons (G x) y (B x)) (M x y) (C x y))
+		    (Dmofe x d d' : {y} {e'} mofe (Dofe x d d' y e') Mm))
+	   <- ({y} {e':isvar y J}
+		 cut-ofe Mm ([x] [d] [d'] Dofe x d d' y e') ([x] [d] [d'] Dmofe x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] Dofe' x d' y e' : ofe (cons (G x) y (B x)) (M x y) (C x y))
+		    ([x] [d'] Dmofe' x d' y e' : mofe (Dofe' x d' y e') Mm)).
+
+-pair	: cut-of
+	   (mpair Cm Nm Mm)
+	   ([x] [d:vof x A]
+	      of/pair
+	      (Dwf x d : {y} vof y (B x) -> wf (C x y))
+	      (DofN x d : of (N x) (C' x))
+	      (Dsub x : tsub ([y] C x y) (M x) (C' x))
+	      (DofM x d : of (M x) (B x)))
+	   ([x] [d]
+	      mof/pair
+	      (Dmwf x d : {y} {e} mwf (Dwf x d y e) Cm)
+	      (DmofN x d : mof (DofN x d) Nm)
+	      (DmofM x d : mof (DofM x d) Mm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/pair (Dwfe' x d') (DofeN x d') (Dsub x) (DofeM x d'))
+	   ([x] [d'] mofe/pair (Dmwfe' x d') (DmofeN x d') (DmofeM x d'))
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x)))
+	   <- ({x} {d':isvar x I}
+		 extend-context (Dordered x d')
+		    (Dbounded x d' : {y} isvar y J -> bounded (G x) y))
+	   <- cut-of Mm DofM DmofM Dlookup
+	      (DofeM : {x} isvar x I -> ofe (G x) (M x) (B x))
+	      (DmofeM : {x} {d'} mofe (DofeM x d') Mm)
+	   <- ({x} {d':isvar x I}
+		 ofe-reg (DofeM x d') 
+		    (DwfeB x d' : wfe (G x) (B x)))
+	   <- cut-of Nm DofN DmofN Dlookup
+	      (DofeN : {x} isvar x I -> ofe (G x) (N x) (C' x))
+	      (DmofeN : {x} {d'} mofe (DofeN x d') Nm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-wf Cm ([y] [e] Dwf x d y e) ([y] [e] Dmwf x d y e) ([y] [e'] lookup/hit (Dbounded x d' y e'))
+		    ([y] [e'] Dwfe x d d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([y] [e'] Dmwfe x d d' y e' : mwfe (Dwfe x d d' y e') Cm))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] Dwfe x d d' y e') ([x] [d] [d'] Dmwfe x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] Dwfe' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] Dmwfe' x d' y e' : mwfe (Dwfe' x d' y e') Cm)).
+
+-star	: cut-of
+	   mstar
+	   ([x] [d:vof x A] of/star)
+	   ([x] [d] mof/star)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/star (Dordered x d'))
+	   ([x] [d'] mofe/star)
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x))).
+
+-sing	: cut-of
+	   (msingtm Rm)
+	   ([x] [d:vof x A]
+	      of/sing
+	      (Daof x d : aof (R x) t))
+	   ([x] [d]
+	      mof/sing
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/sing (Daofe x d'))
+	   ([x] [d'] mofe/sing (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-t	: cut-wf
+	   mt
+	   ([x] [d:vof x A] wf/t)
+	   ([x] [d] mwf/t)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/t (Dordered x d'))
+	   ([x] [d'] mwfe/t)
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x))).
+
+-pi	: cut-wf
+	   (mpi Cm Bm)
+	   ([x] [d:vof x A]
+	      wf/pi
+	      (DwfC x d : {y} vof y (B x) -> wf (C x y))
+	      (DwfB x d : wf (B x)))
+	   ([x] [d]
+	      mwf/pi
+	      (DmwfC x d : {y} {e} mwf (DwfC x d y e) Cm)
+	      (DmwfB x d : mwf (DwfB x d) Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/pi (DwfeC' x d') (DwfeB x d'))
+	   ([x] [d'] mwfe/pi (DmwfeC' x d') (DmwfeB x d'))
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x)))
+	   <- ({x} {d':isvar x I}
+		 extend-context (Dordered x d')
+		    (Dbounded x d' : {y} isvar y J -> bounded (G x) y))
+	   <- cut-wf Bm DwfB DmwfB Dlookup
+	      (DwfeB : {x} isvar x I -> wfe (G x) (B x))
+	      (DmwfeB : {x} {d'} mwfe (DwfeB x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-wf Cm ([y] [e] DwfC x d y e) ([y] [e] DmwfC x d y e) ([y] [e'] lookup/hit (Dbounded x d' y e'))
+		    ([y] [e'] DwfeC x d d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([y] [e'] DmwfeC x d d' y e' : mwfe (DwfeC x d d' y e') Cm))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] DwfeC x d d' y e') ([x] [d] [d'] DmwfeC x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] DwfeC' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] DmwfeC' x d' y e' : mwfe (DwfeC' x d' y e') Cm)).
+
+-sigma	: cut-wf
+	   (msigma Cm Bm)
+	   ([x] [d:vof x A]
+	      wf/sigma
+	      (DwfC x d : {y} vof y (B x) -> wf (C x y))
+	      (DwfB x d : wf (B x)))
+	   ([x] [d]
+	      mwf/sigma
+	      (DmwfC x d : {y} {e} mwf (DwfC x d y e) Cm)
+	      (DmwfB x d : mwf (DwfB x d) Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/sigma (DwfeC' x d') (DwfeB x d'))
+	   ([x] [d'] mwfe/sigma (DmwfeC' x d') (DmwfeB x d'))
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x)))
+	   <- ({x} {d':isvar x I}
+		 extend-context (Dordered x d')
+		    (Dbounded x d' : {y} isvar y J -> bounded (G x) y))
+	   <- cut-wf Bm DwfB DmwfB Dlookup
+	      (DwfeB : {x} isvar x I -> wfe (G x) (B x))
+	      (DmwfeB : {x} {d'} mwfe (DwfeB x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-wf Cm ([y] [e] DwfC x d y e) ([y] [e] DmwfC x d y e) ([y] [e'] lookup/hit (Dbounded x d' y e'))
+		    ([y] [e'] DwfeC x d d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([y] [e'] DmwfeC x d d' y e' : mwfe (DwfeC x d d' y e') Cm))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] DwfeC x d d' y e') ([x] [d] [d'] DmwfeC x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] DwfeC' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] DmwfeC' x d' y e' : mwfe (DwfeC' x d' y e') Cm)).
+
+-sing	: cut-wf
+	   (msing Rm)
+	   ([x] [d:vof x A]
+	      wf/sing
+	      (Daof x d : aof (R x) t))
+	   ([x] [d]
+	      mwf/sing
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/sing (Daofe x d'))
+	   ([x] [d'] mwfe/sing (Dmaofe x d'))
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-one	: cut-wf
+	   mone
+	   ([x] [d:vof x A] wf/one)
+	   ([x] [d] mwf/one)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/one (Dordered x d'))
+	   ([x] [d'] mwfe/one)
+	   <- ({x} {d':isvar x I}
+		 lookup-context (Dlookup x d')
+		    (Dordered x d' : ordered (G x))).
+
+-closed	: cut-aofe
+	   Rm
+	   ([x] [d:vof x A] [d':isvar x I]
+	      aofe/closed
+	      (Dordered x d' : ordered (G x))
+	      (Daof x d : aof (R x) (B x)))
+	   ([x] [d] [d']
+	      maofe/closed
+	      (Dmaof x d : maof (Daof x d) Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   Daofe
+	   Dmaofe
+	   <- cut-aof Rm Daof Dmaof Dlookup
+	      (Daofe : {x} isvar x I -> aofe (G x) (R x) (B x))
+	      (Dmaofe : {x} {d'} maofe (Daofe x d') Rm).
+
+-var	: cut-aofe
+	   (mvar Bm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      aofe/var
+	      (DwfeB x d d' : wfe (G x) (B x))
+	      (DlookupY x d' : lookup (G x) (Y x) (B x)))
+	   ([x] [d] [d'] 
+	      maofe/var
+	      (DmwfeB x d d' : mwfe (DwfeB x d d') Bm))
+	   (DlookupX : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/var (DwfeB' x d') (DlookupY x d'))
+	   ([x] [d'] maofe/var (DmwfeB' x d'))
+	   <- cut-wfe Bm DwfeB DmwfeB DlookupX
+	      (DwfeB' : {x} isvar x I -> wfe (G x) (B x))
+	      (DmwfeB' : {x} {d'} mwfe (DwfeB' x d') Bm).
+
+-app	: cut-aofe
+	   (mapp Cm Mm Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      aofe/app
+	      (Dwfe x d d' : wfe (G x) (C' x))
+	      (Dsub x : tsub ([y] C x y) (M x) (C' x))
+	      (Dofe x d d' : ofe (G x) (M x) (B x))
+	      (Daofe x d d' : aofe (G x) (R x) (pi (B x) ([y] C x y))))
+	   ([x] [d] [d']
+	      maofe/app
+	      (Dmwfe x d d' : mwfe (Dwfe x d d') Cm)
+	      (Dmofe x d d' : mofe (Dofe x d d') Mm)
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/app (Dwfe' x d') (Dsub x) (Dofe' x d') (Daofe' x d'))
+	   ([x] [d'] maofe/app (Dmwfe' x d') (Dmofe' x d') (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) (pi (B x) ([y] C x y)))
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm)
+	   <- cut-ofe Mm Dofe Dmofe Dlookup
+	      (Dofe' : {x} isvar x I -> ofe (G x) (M x) (B x))
+	      (Dmofe' : {x} {d'} mofe (Dofe' x d') Mm)
+	   <- cut-wfe Cm Dwfe Dmwfe Dlookup
+	      (Dwfe' : {x} isvar x I -> wfe (G x) (C' x))
+	      (Dmwfe' : {x} {d'} mwfe (Dwfe' x d') Cm).
+
+-pi1	: cut-aofe
+	   (mpi1 Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      aofe/pi1
+	      (Daofe x d d' : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   ([x] [d] [d']
+	      maofe/pi1
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/pi1 (Daofe' x d'))
+	   ([x] [d'] maofe/pi1 (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) (sigma (B x) ([y] C x y)))
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm).
+
+-pi2	: cut-aofe
+	   (mpi2 Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      aofe/pi2
+	      (Daofe x d d' : aofe (G x) (R x) (sigma (B x) ([y] C x y))))
+	   ([x] [d] [d']
+	      maofe/pi2
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] aofe/pi2 (Daofe' x d'))
+	   ([x] [d'] maofe/pi2 (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) (sigma (B x) ([y] C x y)))
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm).
+
+-at	: cut-ofe
+	   (mat Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      ofe/at
+	      (Daofe x d d' : aofe (G x) (R x) t))
+	   ([x] [d] [d']
+	      mofe/at
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/at (Daofe' x d'))
+	   ([x] [d'] mofe/at (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm).
+
+-lam	: cut-ofe
+	   (mlam Mm Bm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      ofe/lam
+	      (Dofe x d d' : {y} isvar y J -> ofe (cons (G x) y (B x)) (M x y) (C x y))
+	      (Dwfe x d d' : wfe (G x) (B x)))
+	   ([x] [d] [d']
+	      mofe/lam
+	      (Dmofe x d d' : {y} {e} mofe (Dofe x d d' y e) Mm)
+	      (Dmwfe x d d' : mwfe (Dwfe x d d') Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/lam (Dofe' x d') (Dwfe' x d'))
+	   ([x] [d'] mofe/lam (Dmofe' x d') (Dmwfe' x d'))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 ofe-context (Dofe x d d' y e') 
+		    (ordered/cons
+		       (Dbounded x d' y e' : bounded (G x) y)
+		       : ordered (cons (G x) y (B x))))
+	   <- cut-wfe Bm Dwfe Dmwfe Dlookup 
+	      (Dwfe' : {x} isvar x I -> wfe (G x) (B x))
+	      (Dmwfe' : {x} {d'} mwfe (Dwfe' x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({y} {e':isvar y J}
+		 cut-ofe Mm ([x] [d] [d'] Dofe x d d' y e') ([x] [d] [d'] Dmofe x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d':isvar x I] Dofe' x d' y e' : ofe (cons (G x) y (B x)) (M x y) (C x y))
+		    ([x] [d'] Dmofe' x d' y e' : mofe (Dofe' x d' y e') Mm)).
+
+-pair	: cut-ofe
+	   (mpair Cm Nm Mm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      ofe/pair
+	      (Dwfe x d d' : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+	      (DofeN x d d' : ofe (G x) (N x) (C' x))
+	      (Dsub x : tsub ([y] C x y) (M x) (C' x))
+	      (DofeM x d d' : ofe (G x) (M x) (B x)))
+	   ([x] [d] [d']
+	      mofe/pair
+	      (Dmwfe x d d' : {y} {e} mwfe (Dwfe x d d' y e) Cm)
+	      (DmofeN x d d' : mofe (DofeN x d d') Nm)
+	      (DmofeM x d d' : mofe (DofeM x d d') Mm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/pair (Dwfe' x d') (DofeN' x d') (Dsub x) (DofeM' x d'))
+	   ([x] [d'] mofe/pair (Dmwfe' x d') (DmofeN' x d') (DmofeM' x d'))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 wfe-context (Dwfe x d d' y e') 
+		    (ordered/cons
+		       (Dbounded x d' y e' : bounded (G x) y)
+		       : ordered (cons (G x) y (B x))))
+	   <- cut-ofe Mm DofeM DmofeM Dlookup
+	      (DofeM' : {x} isvar x I -> ofe (G x) (M x) (B x))
+	      (DmofeM' : {x} {d'} mofe (DofeM' x d') Mm)
+	   <- cut-ofe Nm DofeN DmofeN Dlookup
+	      (DofeN' : {x} isvar x I -> ofe (G x) (N x) (C' x))
+	      (DmofeN' : {x} {d'} mofe (DofeN' x d') Nm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] Dwfe x d d' y e') ([x] [d] [d'] Dmwfe x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] Dwfe' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] Dmwfe' x d' y e' : mwfe (Dwfe' x d' y e') Cm)).
+
+-star	: cut-ofe
+	   mstar
+	   ([x] [d:vof x A] [d':isvar x I]
+	      ofe/star
+	      (Dordered x d' : ordered (G x)))
+	   ([x] [d] [d'] mofe/star)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/star (Dordered x d'))
+	   ([x] [d'] mofe/star).
+
+-sing	: cut-ofe
+	   (msingtm Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      ofe/sing
+	      (Daofe x d d' : aofe (G x) (R x) t))
+	   ([x] [d] [d']
+	      mofe/sing
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] ofe/sing (Daofe' x d'))
+	   ([x] [d'] mofe/sing (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm).
+
+-t	: cut-wfe
+	   mt
+	   ([x] [d:vof x A] [d':isvar x I]
+	      wfe/t
+	      (Dordered x d' : ordered (G x)))
+	   ([x] [d] [d'] mwfe/t)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/t (Dordered x d'))
+	   ([x] [d'] mwfe/t).
+
+-pi	: cut-wfe
+	   (mpi Cm Bm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      wfe/pi
+	      (DwfeC x d d' : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+	      (DwfeB x d d' : wfe (G x) (B x)))
+	   ([x] [d] [d']
+	      mwfe/pi
+	      (DmwfeC x d d' : {y} {e'} mwfe (DwfeC x d d' y e') Cm)
+	      (DmwfeB x d d' : mwfe (DwfeB x d d') Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/pi (DwfeC' x d') (DwfeB' x d'))
+	   ([x] [d'] mwfe/pi (DmwfeC' x d') (DmwfeB' x d'))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 wfe-context (DwfeC x d d' y e') 
+		    (ordered/cons
+		       (Dbounded x d' y e' : bounded (G x) y)
+		       : ordered (cons (G x) y (B x))))
+	   <- cut-wfe Bm DwfeB DmwfeB Dlookup
+	      (DwfeB' : {x} isvar x I -> wfe (G x) (B x))
+	      (DmwfeB' : {x} {d'} mwfe (DwfeB' x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] DwfeC x d d' y e') ([x] [d] [d'] DmwfeC x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] DwfeC' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] DmwfeC' x d' y e' : mwfe (DwfeC' x d' y e') Cm)).
+
+-sigma	: cut-wfe
+	   (msigma Cm Bm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      wfe/sigma
+	      (DwfeC x d d' : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+	      (DwfeB x d d' : wfe (G x) (B x)))
+	   ([x] [d] [d']
+	      mwfe/sigma
+	      (DmwfeC x d d' : {y} {e'} mwfe (DwfeC x d d' y e') Cm)
+	      (DmwfeB x d d' : mwfe (DwfeB x d d') Bm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/sigma (DwfeC' x d') (DwfeB' x d'))
+	   ([x] [d'] mwfe/sigma (DmwfeC' x d') (DmwfeB' x d'))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 wfe-context (DwfeC x d d' y e') 
+		    (ordered/cons
+		       (Dbounded x d' y e' : bounded (G x) y)
+		       : ordered (cons (G x) y (B x))))
+	   <- cut-wfe Bm DwfeB DmwfeB Dlookup
+	      (DwfeB' : {x} isvar x I -> wfe (G x) (B x))
+	      (DmwfeB' : {x} {d'} mwfe (DwfeB' x d') Bm)
+	   <- ({x} {d':isvar x I}
+		 {y} {e':isvar y J}
+		 weaken-lookup (Dbounded x d' y e') (Dlookup x d') _
+		    (Dlookup' x d' y e' : lookup (cons (G x) y (B x)) x A))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] DwfeC x d d' y e') ([x] [d] [d'] DmwfeC x d d' y e') ([x] [d'] Dlookup' x d' y e')
+		    ([x] [d'] DwfeC' x d' y e' : wfe (cons (G x) y (B x)) (C x y))
+		    ([x] [d'] DmwfeC' x d' y e' : mwfe (DwfeC' x d' y e') Cm)).
+
+-sing	: cut-wfe
+	   (msing Rm)
+	   ([x] [d:vof x A] [d':isvar x I]
+	      wfe/sing
+	      (Daofe x d d' : aofe (G x) (R x) t))
+	   ([x] [d] [d']
+	      mwfe/sing
+	      (Dmaofe x d d' : maofe (Daofe x d d') Rm))
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/sing (Daofe' x d'))
+	   ([x] [d'] mwfe/sing (Dmaofe' x d'))
+	   <- cut-aofe Rm Daofe Dmaofe Dlookup
+	      (Daofe' : {x} isvar x I -> aofe (G x) (R x) t)
+	      (Dmaofe' : {x} {d'} maofe (Daofe' x d') Rm).
+
+-one	: cut-wfe
+	   mone
+	   ([x] [d:vof x A] [d':isvar x I]
+	      wfe/one
+	      (Dordered x d' : ordered (G x)))
+	   ([x] [d] [d'] mwfe/one)
+	   (Dlookup : {x} isvar x I -> lookup (G x) x A)
+%%
+	   ([x] [d'] wfe/one (Dordered x d'))
+	   ([x] [d'] mwfe/one).
+
+%worlds (var | bind | ovar | obind | topenblock) (cut-aof _ _ _ _ _ _) (cut-of _ _ _ _ _ _) (cut-wf _ _ _ _ _ _) (cut-aofe _ _ _ _ _ _) (cut-ofe _ _ _ _ _ _) (cut-wfe _ _ _ _ _ _).
+%total (M1 M2 M3 M4 M5 M6) (cut-aof M1 _ _ _ _ _) (cut-of M2 _ _ _ _ _) (cut-wf M3 _ _ _ _ _) (cut-aofe M4 _ _ _ _ _) (cut-ofe M5 _ _ _ _ _) (cut-wfe M6 _ _ _ _ _).
+
+
+
+of1-to-ofe : {I:nat}
+	      ({x} vof x A -> of (M x) (B x))
+	      -> ({x} isvar x I -> ofe (cons nil x A) (M x) (B x)) -> type.
+%mode of1-to-ofe +X1 +X2 -X3.
+
+-	: of1-to-ofe I
+	   (Dof : {x} vof x A -> of (M x) (B x))
+	   Dofe
+	   <- ({x} {d:vof x A}
+		 can-mof (Dof x d) (Dmof x d : mof (Dof x d) Mm))
+	   <- cut-of Mm Dof Dmof ([x] [d':isvar x I] lookup/hit (bounded/nil d'))
+	      (Dofe : {x} isvar x I -> ofe (cons nil x A) (M x) (B x))
+	      _.
+	   
+%worlds (var | bind | ovar | topenblock) (of1-to-ofe _ _ _).
+%total {} (of1-to-ofe _ _ _).
+
+
+
+aof1-to-aofe : {I:nat}
+		({x} vof x A -> aof (M x) (B x))
+		-> ({x} isvar x I -> aofe (cons nil x A) (M x) (B x)) -> type.
+%mode aof1-to-aofe +X1 +X2 -X3.
+
+-	: aof1-to-aofe I
+	   (Daof : {x} vof x A -> aof (M x) (B x))
+	   Daofe
+	   <- ({x} {d:vof x A}
+		 can-maof (Daof x d) (Dmaof x d : maof (Daof x d) Mm))
+	   <- cut-aof Mm Daof Dmaof ([x] [d'] lookup/hit (bounded/nil d'))
+	      (Daofe : {x} isvar x I -> aofe (cons nil x A) (M x) (B x))
+	      _.
+	   
+%worlds (var | bind | ovar | topenblock) (aof1-to-aofe _ _ _).
+%total {} (aof1-to-aofe _ _ _).
+
+
+
+wf1-to-wfe : {I:nat}
+	      ({x} vof x A -> wf (B x))
+	      -> ({x} isvar x I -> wfe (cons nil x A) (B x)) -> type.
+%mode wf1-to-wfe +X1 +X2 -X3.
+
+-	: wf1-to-wfe I
+	   (Dwf : {x} vof x A -> wf (B x))
+	   Dwfe
+	   <- ({x} {d:vof x A}
+		 can-mwf (Dwf x d) (Dmwf x d : mwf (Dwf x d) Bm))
+	   <- cut-wf Bm Dwf Dmwf ([x] [d'] lookup/hit (bounded/nil d'))
+	      (Dwfe : {x} isvar x I -> wfe (cons nil x A) (B x))
+	      _.
+	   
+%worlds (var | bind | ovar | topenblock) (wf1-to-wfe _ _ _).
+%total {} (wf1-to-wfe _ _ _).
+
+
+
+aof-to-aofe : aof R A -> aofe nil R A -> type.
+%mode aof-to-aofe +X1 -X2.
+
+-	: aof-to-aofe Daof (aofe/closed ordered/nil Daof).
+
+%worlds (var | bind | ovar | topenblock) (aof-to-aofe _ _).
+%total {} (aof-to-aofe _ _).
+
+
+
+wf-to-wfe : wf A -> wfe nil A -> type.
+%mode wf-to-wfe +X1 -X2.
+
+-t	: wf-to-wfe wf/t (wfe/t ordered/nil).
+
+-pi	: wf-to-wfe (wf/pi D2 D1) (wfe/pi D2' D1')
+	   <- wf-to-wfe D1 D1'
+	   <- wf1-to-wfe 0 D2 D2'.
+
+-sigma	: wf-to-wfe (wf/sigma D2 D1) (wfe/sigma D2' D1')
+	   <- wf-to-wfe D1 D1'
+	   <- wf1-to-wfe 0 D2 D2'.
+
+-sing	: wf-to-wfe (wf/sing D) (wfe/sing D')
+	   <- aof-to-aofe D D'.
+
+-one	: wf-to-wfe wf/one (wfe/one ordered/nil).
+
+%worlds (var | bind | ovar | topenblock) (wf-to-wfe _ _).
+%total D (wf-to-wfe D _).
+
+
+
+of-to-ofe : of M A -> ofe nil M A -> type.
+%mode of-to-ofe +X1 -X2.
+
+-at	: of-to-ofe (of/at Daof) (ofe/at (aofe/closed ordered/nil Daof)).
+
+-lam	: of-to-ofe (of/lam Dof Dwf) (ofe/lam Dofe Dwfe)
+	   <- of1-to-ofe 0 Dof Dofe
+	   <- wf-to-wfe Dwf Dwfe.
+
+-pair	: of-to-ofe (of/pair Dwf Dof2 Dsub Dof1) (ofe/pair Dwfe Dofe2 Dsub Dofe1)
+	   <- of-to-ofe Dof1 Dofe1
+	   <- of-to-ofe Dof2 Dofe2
+	   <- wf1-to-wfe 0 Dwf Dwfe.
+
+-sing	: of-to-ofe (of/sing Daof) (ofe/sing (aofe/closed ordered/nil Daof)).
+
+-star	: of-to-ofe of/star (ofe/star ordered/nil).
+
+%worlds (var | bind | ovar | topenblock) (of-to-ofe _ _).
+%total D (of-to-ofe D _).
+
+
+
+of2-to-ofe : lt I J
+	      -> ({x} vof x A -> {y} vof y (B x) -> of (M x y) (C x y))
+	      -> ({x} isvar x I -> {y} isvar y J -> ofe (cons (cons nil x A) y (B x)) (M x y) (C x y)) -> type.
+%mode of2-to-ofe +X1 +X2 -X3.
+
+-	: of2-to-ofe
+	   (Dlt : lt I J)
+	   (Dof : {x} vof x A -> {y} vof y (B x) -> of (M x y) (C x y))
+	   Dofe'
+	   <- ({x} {d:vof x A} {y} {e:vof y (B x)}
+		 can-mof (Dof x d y e) (Dmof x d y e : mof (Dof x d y e) Mm))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-of Mm ([y] [e] Dof x d y e) ([y] [e] Dmof x d y e) 
+		    ([y] [e'] lookup/hit (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([y] [e'] Dofe x d d' y e' : ofe (cons (cons nil x A) y (B x)) (M x y) (C x y))
+		    ([y] [e'] Dmofe x d d' y e' : mofe (Dofe x d d' y e') Mm))
+	   <- ({y} {e':isvar y J}
+		 cut-ofe Mm ([x] [d] [d'] Dofe x d d' y e') ([x] [d] [d'] Dmofe x d d' y e')
+		    ([x] [d'] lookup/miss (lookup/hit (bounded/nil d')) (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([x] [d'] Dofe' x d' y e' : ofe (cons (cons nil x A) y (B x)) (M x y) (C x y))
+		    _).
+	   
+%worlds (var | bind | ovar | topenblock) (of2-to-ofe _ _ _).
+%total {} (of2-to-ofe _ _ _).
+
+
+
+aof2-to-aofe : lt I J
+	      -> ({x} vof x A -> {y} vof y (B x) -> aof (R x y) (C x y))
+	      -> ({x} isvar x I -> {y} isvar y J -> aofe (cons (cons nil x A) y (B x)) (R x y) (C x y)) -> type.
+%mode aof2-to-aofe +X1 +X2 -X3.
+
+-	: aof2-to-aofe
+	   (Dlt : lt I J)
+	   (Daof : {x} vof x A -> {y} vof y (B x) -> aof (R x y) (C x y))
+	   Daofe'
+	   <- ({x} {d:vof x A} {y} {e:vof y (B x)}
+		 can-maof (Daof x d y e) (Dmaof x d y e : maof (Daof x d y e) Rm))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-aof Rm ([y] [e] Daof x d y e) ([y] [e] Dmaof x d y e) 
+		    ([y] [e'] lookup/hit (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([y] [e'] Daofe x d d' y e' : aofe (cons (cons nil x A) y (B x)) (R x y) (C x y))
+		    ([y] [e'] Dmaofe x d d' y e' : maofe (Daofe x d d' y e') Rm))
+	   <- ({y} {e':isvar y J}
+		 cut-aofe Rm ([x] [d] [d'] Daofe x d d' y e') ([x] [d] [d'] Dmaofe x d d' y e')
+		    ([x] [d'] lookup/miss (lookup/hit (bounded/nil d')) (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([x] [d'] Daofe' x d' y e' : aofe (cons (cons nil x A) y (B x)) (R x y) (C x y))
+		    _).
+	   
+%worlds (var | bind | ovar | topenblock) (aof2-to-aofe _ _ _).
+%total {} (aof2-to-aofe _ _ _).
+
+
+
+wf2-to-wfe : lt I J
+	      -> ({x} vof x A -> {y} vof y (B x) -> wf (C x y))
+	      -> ({x} isvar x I -> {y} isvar y J -> wfe (cons (cons nil x A) y (B x)) (C x y)) -> type.
+%mode wf2-to-wfe +X1 +X2 -X3.
+
+-	: wf2-to-wfe
+	   (Dlt : lt I J)
+	   (Dwf : {x} vof x A -> {y} vof y (B x) -> wf (C x y))
+	   Dwfe'
+	   <- ({x} {d:vof x A} {y} {e:vof y (B x)}
+		 can-mwf (Dwf x d y e) (Dmwf x d y e : mwf (Dwf x d y e) Cm))
+	   <- ({x} {d:vof x A} {d':isvar x I}
+		 cut-wf Cm ([y] [e] Dwf x d y e) ([y] [e] Dmwf x d y e) 
+		    ([y] [e'] lookup/hit (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([y] [e'] Dwfe x d d' y e' : wfe (cons (cons nil x A) y (B x)) (C x y))
+		    ([y] [e'] Dmwfe x d d' y e' : mwfe (Dwfe x d d' y e') Cm))
+	   <- ({y} {e':isvar y J}
+		 cut-wfe Cm ([x] [d] [d'] Dwfe x d d' y e') ([x] [d] [d'] Dmwfe x d d' y e')
+		    ([x] [d'] lookup/miss (lookup/hit (bounded/nil d')) (bounded/cons (bounded/nil d') (precedes/i Dlt e' d')))
+		    ([x] [d'] Dwfe' x d' y e' : wfe (cons (cons nil x A) y (B x)) (C x y))
+		    _).
+	   
+%worlds (var | bind | ovar | topenblock) (wf2-to-wfe _ _ _).
+%total {} (wf2-to-wfe _ _ _).

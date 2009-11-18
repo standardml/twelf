@@ -1,0 +1,146 @@
+
+%%%%%  Simple Types  %%%%%
+
+stp : type.  %name stp T.
+
+st	: stp.
+spi	: stp -> stp -> stp.
+ssigma	: stp -> stp -> stp.
+sone	: stp.
+
+
+
+simp : tp -> stp -> type.
+
+simp/t		: simp t st.
+simp/pi		: simp (pi A B) (spi S T)
+		   <- simp A S
+		   <- ({x} simp (B x) T).
+simp/sigma	: simp (sigma A B) (ssigma S T)
+		   <- simp A S
+		   <- ({x} simp (B x) T).
+simp/sing	: simp (sing R) st.
+simp/one	: simp one sone.
+
+
+
+stp-leq : stp -> stp -> type.
+
+stp-leq/eq	: stp-leq T T.
+stp-leq/pi1	: stp-leq S (spi T1 T2)
+		   <- stp-leq S T1.
+stp-leq/pi2	: stp-leq S (spi T1 T2)
+		   <- stp-leq S T2.
+stp-leq/sigma1	: stp-leq S (ssigma T1 T2)
+		   <- stp-leq S T1.
+stp-leq/sigma2	: stp-leq S (ssigma T1 T2)
+		   <- stp-leq S T2.
+
+
+
+
+%%%%%  Simple Contexts  %%%%%
+
+sctx : type.  %name sctx G.
+
+snil	: sctx.
+scons	: sctx -> atom -> stp -> sctx.
+
+
+
+sbounded : sctx -> atom -> type.
+
+sbounded/nil	: sbounded snil X
+		   <- isvar X _.
+sbounded/cons	: sbounded (scons G Y _) X
+		   <- precedes Y X
+		   <- sbounded G Y.
+
+
+
+sordered : sctx -> type.
+
+sordered/nil	: sordered snil.
+sordered/cons	: sordered (scons G X _)
+		   <- sbounded G X.
+
+
+
+slookup : sctx -> atom -> stp -> type.
+
+slookup/hit	: slookup (scons G X T) X T
+		   <- sbounded G X.
+slookup/miss	: slookup (scons G Y _) X T
+		   <- sbounded G Y
+		   <- slookup G X T.
+
+
+
+sappend : sctx -> sctx -> sctx -> type.
+
+sappend/nil	: sappend G snil G.
+sappend/cons	: sappend G1 (scons G2 X A) (scons G X A)
+		   <- sappend G1 G2 G.
+
+
+
+
+
+%%%%%  Simple Typing with Explicit Contexts  %%%%%
+
+wfes : sctx -> tp -> type.
+aofes : sctx -> atom -> stp -> type.
+ofes : sctx -> term -> stp -> type.
+
+aofes/closed	: aofes G R T
+		   <- aof R A
+		   <- simp A T
+		   <- sordered G.
+
+aofes/var	: aofes G X T
+		   <- slookup G X T.
+
+aofes/app	: aofes G (app R M) T
+		   <- aofes G R (spi S T)
+		   <- ofes G M S.
+
+aofes/pi1	: aofes G (pi1 R) S
+		   <- aofes G R (ssigma S T).
+
+aofes/pi2	: aofes G (pi2 R) T
+		   <- aofes G R (ssigma S T).
+
+
+
+ofes/at		: ofes G (at R) st
+		   <- aofes G R st.
+
+ofes/lam	: ofes G (lam M) (spi S T)
+		   <- ({x} isvar x I -> ofes (scons G x S) (M x) T).
+
+ofes/pair	: ofes G (pair M N) (ssigma S T)
+		   <- ofes G M S
+		   <- ofes G N T.
+
+ofes/star	: ofes G star sone
+		   <- sordered G.
+
+
+wfes/t		: wfes G t
+		   <- sordered G.
+
+wfes/pi		: wfes G (pi A B)
+		   <- wfes G A
+		   <- simp A T
+		   <- ({x} isvar x I -> wfes (scons G x T) (B x)).
+
+wfes/sigma	: wfes G (sigma A B)
+		   <- wfes G A
+		   <- simp A T
+		   <- ({x} isvar x I -> wfes (scons G x T) (B x)).
+
+wfes/sing	: wfes G (sing R)
+		   <- aofes G R st.
+
+wfes/one	: wfes G one
+		   <- sordered G.

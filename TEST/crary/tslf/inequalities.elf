@@ -1,0 +1,1242 @@
+
+
+neq/deq/arrow-unit 	: cn-deq (tp/arrow T1 T2) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-unit +D1 -D2.
+
+-	: neq/deq/arrow-unit Deq Dun
+	   <- map-equiv Deq (map/arrow _ _) map/unit tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/arrow-unit _ _).
+%total {} (neq/deq/arrow-unit _ _).
+
+
+
+neq/deq/cross-unit 	: cn-deq (tp/cross T1 T2) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-unit +D1 -D2.
+
+-	: neq/deq/cross-unit Deq Dun
+	   <- map-equiv Deq (map/cross _ _) map/unit tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/cross-unit _ _).
+%total {} (neq/deq/cross-unit _ _).
+
+
+
+neq/deq/forall-unit 	: cn-deq (tp/forall T1 T2) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-unit +D1 -D2.
+
+-	: neq/deq/forall-unit Deq Dun
+	   <- map-equiv Deq (map/forall _ _) map/unit tmap/t Deq'
+	   <- nullary-forall-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/forall-unit _ _).
+%total {} (neq/deq/forall-unit _ _).
+
+
+
+neq/deq/ref-unit 	: cn-deq (tp/ref T1) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-unit +D1 -D2.
+
+-	: neq/deq/ref-unit Deq Dun
+	   <- map-equiv Deq (map/ref _) map/unit tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-unit _ _).
+%total {} (neq/deq/ref-unit _ _).
+
+
+
+neq/deq/tag-unit 	: cn-deq (tp/tag T1) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-unit +D1 -D2.
+
+-	: neq/deq/tag-unit Deq Dun
+	   <- map-equiv Deq (map/tag _) map/unit tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-unit _ _).
+%total {} (neq/deq/tag-unit _ _).
+
+
+
+neq/deq/sum-unit 	: cn-deq (tp/sum T1 T2) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-unit +D1 -D2.
+
+-	: neq/deq/sum-unit Deq Dun
+	   <- map-equiv Deq (map/sum _ _) map/unit tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/sum-unit _ _).
+%total {} (neq/deq/sum-unit _ _).
+
+
+
+neq/deq/tagged-unit 	: cn-deq tp/tagged tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-unit +D1 -D2.
+
+neq/deq/tagged-unit! : constant-eq tagged unit -> uninhabited -> type.
+%mode neq/deq/tagged-unit! +X1 -X2.
+%worlds () (neq/deq/tagged-unit! _ _).
+%total {} (neq/deq/tagged-unit! _ _).
+
+-	: neq/deq/tagged-unit Deq Dun
+	   <- map-equiv Deq map/tagged map/unit tmap/t Deq'
+	   <- nullary-equiv-head
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i etopen/t ckof/unit) 
+	      Deq' D
+	   <- neq/deq/tagged-unit! D Dun.
+
+%worlds () (neq/deq/tagged-unit _ _).
+%total {} (neq/deq/tagged-unit _ _).
+
+
+
+
+neq/deq/mu-unit 	: cn-deq (cn/mu T1 T2) tp/unit kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-unit +D1 -D2.
+
+-	: neq/deq/mu-unit Deq Dun
+	   <- map-equiv Deq (map/mu _) map/unit tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/unit) 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-unit _ _).
+%total {} (neq/deq/mu-unit _ _).
+
+
+
+
+neq/deq/unit-arrow 	: cn-deq tp/unit (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-arrow +D1 -D2.
+
+-	: neq/deq/unit-arrow Deq Dun
+	   <- neq/deq/arrow-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-arrow _ _).
+%total {} (neq/deq/unit-arrow _ _).
+
+
+
+neq/deq/tagged-arrow 	: cn-deq tp/tagged (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-arrow +D1 -D2.
+
+-	: neq/deq/tagged-arrow Deq Dun
+	   <- map-equiv Deq map/tagged (map/arrow _ _) tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-arrow _ _).
+%total {} (neq/deq/tagged-arrow _ _).
+
+
+
+neq/deq/cross-arrow 	: cn-deq (tp/cross _ _) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-arrow +D1 -D2.
+
+
+neq/deq/cross-arrow! : constant-eq cross arrow -> uninhabited -> type.
+%mode neq/deq/cross-arrow! +X1 -X2.
+%worlds () (neq/deq/cross-arrow! _ _).
+%total {} (neq/deq/cross-arrow! _ _).
+
+-	: neq/deq/cross-arrow Deq Dun
+	   <- map-equiv Deq (map/cross _ _) (map/arrow _ _) tmap/t Deq'
+	   <- binary-equiv-head
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- neq/deq/cross-arrow! D Dun.
+
+%worlds () (neq/deq/cross-arrow _ _).
+%total {} (neq/deq/cross-arrow _ _).
+
+
+
+neq/deq/forall-arrow 	: cn-deq (tp/forall _ _) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-arrow +D1 -D2.
+
+-	: neq/deq/forall-arrow Deq Dun
+	   <- map-equiv Deq (map/forall _ _) (map/arrow _ _) tmap/t Deq'
+	   <- binary-forall-equiv 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/forall-arrow _ _).
+%total {} (neq/deq/forall-arrow _ _).
+
+
+
+neq/deq/ref-arrow 	: cn-deq (tp/ref T1) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-arrow +D1 -D2.
+
+-	: neq/deq/ref-arrow Deq Dun
+	   <- map-equiv Deq (map/ref _) (map/arrow _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-arrow _ _).
+%total {} (neq/deq/ref-arrow _ _).
+
+
+
+neq/deq/tag-arrow 	: cn-deq (tp/tag T1) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-arrow +D1 -D2.
+
+-	: neq/deq/tag-arrow Deq Dun
+	   <- map-equiv Deq (map/tag _) (map/arrow _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-arrow _ _).
+%total {} (neq/deq/tag-arrow _ _).
+
+
+
+neq/deq/sum-arrow 	: cn-deq (tp/sum _ _) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-arrow +D1 -D2.
+
+neq/deq/sum-arrow! : constant-eq dsum arrow -> uninhabited -> type.
+%mode neq/deq/sum-arrow! +X1 -X2.
+%worlds () (neq/deq/sum-arrow! _ _).
+%total {} (neq/deq/sum-arrow! _ _).
+
+-	: neq/deq/sum-arrow Deq Dun
+	   <- map-equiv Deq (map/sum _ _) (map/arrow _ _) tmap/t Deq'
+	   <- binary-equiv-head
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- neq/deq/sum-arrow! D Dun.
+
+%worlds () (neq/deq/sum-arrow _ _).
+%total {} (neq/deq/sum-arrow _ _).
+
+
+
+neq/deq/mu-arrow 	: cn-deq (cn/mu _ _) (tp/arrow _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-arrow +D1 -D2.
+
+-	: neq/deq/mu-arrow Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/arrow _ _) tmap/t Deq'
+	   <- unary-binary-equiv 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-arrow _ _).
+%total {} (neq/deq/mu-arrow _ _).
+
+
+
+neq/deq/unit-cross 	: cn-deq tp/unit (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-cross +D1 -D2.
+
+-	: neq/deq/unit-cross Deq Dun
+	   <- neq/deq/cross-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-cross _ _).
+%total {} (neq/deq/unit-cross _ _).
+
+
+
+neq/deq/tagged-cross 	: cn-deq tp/tagged (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-cross +D1 -D2.
+
+-	: neq/deq/tagged-cross Deq Dun
+	   <- map-equiv Deq map/tagged (map/cross _ _) tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-cross _ _).
+%total {} (neq/deq/tagged-cross _ _).
+
+
+
+neq/deq/arrow-cross 	: cn-deq (tp/arrow _ _) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-cross +D1 -D2.
+
+-	: neq/deq/arrow-cross Deq Dun
+	   <- neq/deq/cross-arrow (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/arrow-cross _ _).
+%total {} (neq/deq/arrow-cross _ _).
+
+
+
+neq/deq/forall-cross 	: cn-deq (tp/forall _ _) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-cross +D1 -D2.
+
+-	: neq/deq/forall-cross Deq Dun
+	   <- map-equiv Deq (map/forall _ _) (map/cross _ _) tmap/t Deq'
+	   <- binary-forall-equiv 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/forall-cross _ _).
+%total {} (neq/deq/forall-cross _ _).
+
+
+
+neq/deq/ref-cross 	: cn-deq (tp/ref T1) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-cross +D1 -D2.
+
+-	: neq/deq/ref-cross Deq Dun
+	   <- map-equiv Deq (map/ref _) (map/cross _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-cross _ _).
+%total {} (neq/deq/ref-cross _ _).
+
+
+
+neq/deq/tag-cross 	: cn-deq (tp/tag T1) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-cross +D1 -D2.
+
+-	: neq/deq/tag-cross Deq Dun
+	   <- map-equiv Deq (map/tag _) (map/cross _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-cross _ _).
+%total {} (neq/deq/tag-cross _ _).
+
+
+
+neq/deq/sum-cross 	: cn-deq (tp/sum _ _) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-cross +D1 -D2.
+
+neq/deq/sum-cross! : constant-eq dsum cross -> uninhabited -> type.
+%mode neq/deq/sum-cross! +X1 -X2.
+%worlds () (neq/deq/sum-cross! _ _).
+%total {} (neq/deq/sum-cross! _ _).
+
+-	: neq/deq/sum-cross Deq Dun
+	   <- map-equiv Deq (map/sum _ _) (map/cross _ _) tmap/t Deq'
+	   <- binary-equiv-head
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- neq/deq/sum-cross! D Dun.
+
+%worlds () (neq/deq/sum-cross _ _).
+%total {} (neq/deq/sum-cross _ _).
+
+
+
+
+neq/deq/mu-cross 	: cn-deq (cn/mu _ _) (tp/cross _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-cross +D1 -D2.
+
+-	: neq/deq/mu-cross Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/cross _ _) tmap/t Deq'
+	   <- unary-binary-equiv 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-cross _ _).
+%total {} (neq/deq/mu-cross _ _).
+
+
+
+neq/deq/unit-forall 	: cn-deq tp/unit (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-forall +D1 -D2.
+
+-	: neq/deq/unit-forall Deq Dun
+	   <- map-equiv Deq map/unit (map/forall _ _) tmap/t Deq'
+	   <- nullary-forall-equiv
+	      (ekof/i etopen/t ckof/unit) 
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/unit-forall _ _).
+%total {} (neq/deq/unit-forall _ _).
+
+
+
+neq/deq/tagged-forall 	: cn-deq tp/tagged (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-forall +D1 -D2.
+
+-	: neq/deq/tagged-forall Deq Dun
+	   <- map-equiv Deq map/tagged (map/forall _ _) tmap/t Deq'
+	   <- nullary-forall-equiv
+	      (ekof/i etopen/t ckof/tagged) 
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-forall _ _).
+%total {} (neq/deq/tagged-forall _ _).
+
+
+
+neq/deq/arrow-forall 	: cn-deq (tp/arrow _ _) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-forall +D1 -D2.
+
+-	: neq/deq/arrow-forall Deq Dun
+	   <- map-equiv Deq (map/arrow _ _) (map/forall _ _) tmap/t Deq'
+	   <- binary-forall-equiv
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/arrow-forall _ _).
+%total {} (neq/deq/arrow-forall _ _).
+
+
+
+neq/deq/cross-forall 	: cn-deq (tp/cross _ _) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-forall +D1 -D2.
+
+-	: neq/deq/cross-forall Deq Dun
+	   <- map-equiv Deq (map/cross _ _) (map/forall _ _) tmap/t Deq'
+	   <- binary-forall-equiv
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/cross-forall _ _).
+%total {} (neq/deq/cross-forall _ _).
+
+
+
+neq/deq/ref-forall 	: cn-deq (tp/ref T1) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-forall +D1 -D2.
+
+-	: neq/deq/ref-forall Deq Dun
+	   <- map-equiv Deq (map/ref _) (map/forall _ _) tmap/t Deq'
+	   <- unary-forall-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-forall _ _).
+%total {} (neq/deq/ref-forall _ _).
+
+
+
+neq/deq/tag-forall 	: cn-deq (tp/tag T1) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-forall +D1 -D2.
+
+-	: neq/deq/tag-forall Deq Dun
+	   <- map-equiv Deq (map/tag _) (map/forall _ _) tmap/t Deq'
+	   <- unary-forall-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-forall _ _).
+%total {} (neq/deq/tag-forall _ _).
+
+
+
+neq/deq/sum-forall 	: cn-deq (tp/sum _ _) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-forall +D1 -D2.
+
+-	: neq/deq/sum-forall Deq Dun
+	   <- map-equiv Deq (map/sum _ _) (map/forall _ _) tmap/t Deq'
+	   <- binary-forall-equiv
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/sum-forall _ _).
+%total {} (neq/deq/sum-forall _ _).
+
+
+
+neq/deq/mu-forall 	: cn-deq (cn/mu _ _) (tp/forall _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-forall +D1 -D2.
+
+-	: neq/deq/mu-forall Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/forall _ _) tmap/t Deq'
+	   <- unary-forall-equiv
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-forall _ _).
+%total {} (neq/deq/mu-forall _ _).
+
+
+
+neq/deq/unit-ref 	: cn-deq tp/unit (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-ref +D1 -D2.
+
+-	: neq/deq/unit-ref Deq Dun
+	   <- neq/deq/ref-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-ref _ _).
+%total {} (neq/deq/unit-ref _ _).
+
+
+
+neq/deq/tagged-ref 	: cn-deq tp/tagged (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-ref +D1 -D2.
+
+-	: neq/deq/tagged-ref Deq Dun
+	   <- map-equiv Deq (map/tagged) (map/ref _) tmap/t Deq'
+	   <- nullary-unary-equiv
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-ref _ _).
+%total {} (neq/deq/tagged-ref _ _).
+
+
+
+neq/deq/arrow-ref 	: cn-deq (tp/arrow _ _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-ref +D1 -D2.
+
+-	: neq/deq/arrow-ref Deq Dun
+	   <- map-equiv Deq (map/arrow _ _) (map/ref _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/arrow-ref _ _).
+%total {} (neq/deq/arrow-ref _ _).
+
+
+
+neq/deq/cross-ref 	: cn-deq (tp/cross _ _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-ref +D1 -D2.
+
+-	: neq/deq/cross-ref Deq Dun
+	   <- map-equiv Deq (map/cross _ _) (map/ref _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/cross-ref _ _).
+%total {} (neq/deq/cross-ref _ _).
+
+
+
+neq/deq/forall-ref 	: cn-deq (tp/forall _ _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-ref +D1 -D2.
+
+-	: neq/deq/forall-ref Deq Dun
+	   <- neq/deq/ref-forall (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/forall-ref _ _).
+%total {} (neq/deq/forall-ref _ _).
+
+
+
+neq/deq/sum-ref 	: cn-deq (tp/sum _ _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-ref +D1 -D2.
+
+-	: neq/deq/sum-ref Deq Dun
+	   <- map-equiv Deq (map/sum _ _) (map/ref _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/sum-ref _ _).
+%total {} (neq/deq/sum-ref _ _).
+
+
+
+neq/deq/mu-ref 	: cn-deq (cn/mu _ _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-ref +D1 -D2.
+
+
+neq/deq/mu-ref! : constant-eq mu ref -> uninhabited -> type.
+%mode neq/deq/mu-ref! +X1 -X2.
+%worlds () (neq/deq/mu-ref! _ _).
+%total {} (neq/deq/mu-ref! _ _).
+
+
+-	: neq/deq/mu-ref Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/ref _) tmap/t Deq'
+	   <- unary-equiv-head
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      Deq' D
+	   <- neq/deq/mu-ref! D Dun.
+
+%worlds () (neq/deq/mu-ref _ _).
+%total {} (neq/deq/mu-ref _ _).
+
+
+
+neq/deq/tag-ref 	: cn-deq (tp/tag _) (tp/ref _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-ref +D1 -D2.
+
+neq/deq/tag-ref! : constant-eq tag ref -> uninhabited -> type.
+%mode neq/deq/tag-ref! +X1 -X2.
+%worlds () (neq/deq/tag-ref! _ _).
+%total {} (neq/deq/tag-ref! _ _).
+
+-	: neq/deq/tag-ref Deq Dun
+	   <- map-equiv Deq (map/tag _) (map/ref _) tmap/t Deq'
+	   <- unary-equiv-head
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      Deq' D
+	   <- neq/deq/tag-ref! D Dun.
+
+%worlds () (neq/deq/tag-ref _ _).
+%total {} (neq/deq/tag-ref _ _).
+
+
+
+neq/deq/unit-tag 	: cn-deq tp/unit (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-tag +D1 -D2.
+
+-	: neq/deq/unit-tag Deq Dun
+	   <- neq/deq/tag-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-tag _ _).
+%total {} (neq/deq/unit-tag _ _).
+
+
+
+neq/deq/tagged-tag 	: cn-deq tp/tagged (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-tag +D1 -D2.
+
+-	: neq/deq/tagged-tag Deq Dun
+	   <- map-equiv Deq (map/tagged) (map/tag _) tmap/t Deq'
+	   <- nullary-unary-equiv
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-tag _ _).
+%total {} (neq/deq/tagged-tag _ _).
+
+
+
+neq/deq/arrow-tag 	: cn-deq (tp/arrow _ _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-tag +D1 -D2.
+
+-	: neq/deq/arrow-tag Deq Dun
+	   <- map-equiv Deq (map/arrow _ _) (map/tag _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/arrow-tag _ _).
+%total {} (neq/deq/arrow-tag _ _).
+
+
+
+neq/deq/cross-tag 	: cn-deq (tp/cross _ _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-tag +D1 -D2.
+
+-	: neq/deq/cross-tag Deq Dun
+	   <- map-equiv Deq (map/cross _ _) (map/tag _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/cross-tag _ _).
+%total {} (neq/deq/cross-tag _ _).
+
+
+
+neq/deq/forall-tag 	: cn-deq (tp/forall _ _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-tag +D1 -D2.
+
+-	: neq/deq/forall-tag Deq Dun
+	   <- neq/deq/tag-forall (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/forall-tag _ _).
+%total {} (neq/deq/forall-tag _ _).
+
+
+
+neq/deq/sum-tag 	: cn-deq (tp/sum _ _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-tag +D1 -D2.
+
+-	: neq/deq/sum-tag Deq Dun
+	   <- map-equiv Deq (map/sum _ _) (map/tag _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/sum-tag _ _).
+%total {} (neq/deq/sum-tag _ _).
+
+
+
+neq/deq/mu-tag 	: cn-deq (cn/mu _ _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-tag +D1 -D2.
+
+
+neq/deq/mu-tag! : constant-eq mu tag -> uninhabited -> type.
+%mode neq/deq/mu-tag! +X1 -X2.
+%worlds () (neq/deq/mu-tag! _ _).
+%total {} (neq/deq/mu-tag! _ _).
+
+
+-	: neq/deq/mu-tag Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/tag _) tmap/t Deq'
+	   <- unary-equiv-head
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      Deq' D
+	   <- neq/deq/mu-tag! D Dun.
+
+%worlds () (neq/deq/mu-tag _ _).
+%total {} (neq/deq/mu-tag _ _).
+
+
+
+neq/deq/ref-tag 	: cn-deq (tp/ref _) (tp/tag _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-tag +D1 -D2.
+
+-	: neq/deq/ref-tag Deq Dun
+	   <- neq/deq/tag-ref (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/ref-tag _ _).
+%total {} (neq/deq/ref-tag _ _).
+
+
+
+neq/deq/unit-sum 	: cn-deq tp/unit (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-sum +D1 -D2.
+
+-	: neq/deq/unit-sum Deq Dun
+	   <- neq/deq/sum-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-sum _ _).
+%total {} (neq/deq/unit-sum _ _).
+
+
+
+neq/deq/tagged-sum 	: cn-deq tp/tagged (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-sum +D1 -D2.
+
+-	: neq/deq/tagged-sum Deq Dun
+	   <- map-equiv Deq map/tagged (map/sum _ _) tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tagged-sum _ _).
+%total {} (neq/deq/tagged-sum _ _).
+
+
+
+neq/deq/cross-sum 	: cn-deq (tp/cross _ _) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-sum +D1 -D2.
+
+
+neq/deq/cross-sum! : constant-eq cross dsum -> uninhabited -> type.
+%mode neq/deq/cross-sum! +X1 -X2.
+%worlds () (neq/deq/cross-sum! _ _).
+%total {} (neq/deq/cross-sum! _ _).
+
+-	: neq/deq/cross-sum Deq Dun
+	   <- map-equiv Deq (map/cross _ _) (map/sum _ _) tmap/t Deq'
+	   <- binary-equiv-head
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- neq/deq/cross-sum! D Dun.
+
+%worlds () (neq/deq/cross-sum _ _).
+%total {} (neq/deq/cross-sum _ _).
+
+
+
+neq/deq/forall-sum 	: cn-deq (tp/forall _ _) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-sum +D1 -D2.
+
+-	: neq/deq/forall-sum Deq Dun
+	   <- map-equiv Deq (map/forall _ _) (map/sum _ _) tmap/t Deq'
+	   <- binary-forall-equiv 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/forall-sum _ _).
+%total {} (neq/deq/forall-sum _ _).
+
+
+
+neq/deq/ref-sum 	: cn-deq (tp/ref T1) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-sum +D1 -D2.
+
+-	: neq/deq/ref-sum Deq Dun
+	   <- map-equiv Deq (map/ref _) (map/sum _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-sum _ _).
+%total {} (neq/deq/ref-sum _ _).
+
+
+
+neq/deq/tag-sum 	: cn-deq (tp/tag T1) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-sum +D1 -D2.
+
+-	: neq/deq/tag-sum Deq Dun
+	   <- map-equiv Deq (map/tag _) (map/sum _ _) tmap/t Deq'
+	   <- unary-binary-equiv
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-sum _ _).
+%total {} (neq/deq/tag-sum _ _).
+
+
+
+neq/deq/arrow-sum 	: cn-deq (tp/arrow _ _) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-sum +D1 -D2.
+
+-	: neq/deq/arrow-sum Deq Dun
+	   <- neq/deq/sum-arrow (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/arrow-sum _ _).
+%total {} (neq/deq/arrow-sum _ _).
+
+
+
+neq/deq/mu-sum 	: cn-deq (cn/mu _ _) (tp/sum _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-sum +D1 -D2.
+
+-	: neq/deq/mu-sum Deq Dun
+	   <- map-equiv Deq (map/mu _) (map/sum _ _) tmap/t Deq'
+	   <- unary-binary-equiv 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      Deq' D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-sum _ _).
+%total {} (neq/deq/mu-sum _ _).
+
+
+
+neq/deq/arrow-tagged 	: cn-deq (tp/arrow T1 T2) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-tagged +D1 -D2.
+
+-	: neq/deq/arrow-tagged Deq Dun
+	   <- map-equiv Deq (map/arrow _ _) map/tagged tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/arrow)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/arrow-tagged _ _).
+%total {} (neq/deq/arrow-tagged _ _).
+
+
+
+neq/deq/cross-tagged 	: cn-deq (tp/cross T1 T2) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-tagged +D1 -D2.
+
+-	: neq/deq/cross-tagged Deq Dun
+	   <- map-equiv Deq (map/cross _ _) map/tagged tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/cross)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/cross-tagged _ _).
+%total {} (neq/deq/cross-tagged _ _).
+
+
+
+neq/deq/forall-tagged 	: cn-deq (tp/forall T1 T2) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-tagged +D1 -D2.
+
+-	: neq/deq/forall-tagged Deq Dun
+	   <- map-equiv Deq (map/forall _ _) map/tagged tmap/t Deq'
+	   <- nullary-forall-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/forall-tagged _ _).
+%total {} (neq/deq/forall-tagged _ _).
+
+
+
+neq/deq/ref-tagged 	: cn-deq (tp/ref T1) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-tagged +D1 -D2.
+
+-	: neq/deq/ref-tagged Deq Dun
+	   <- map-equiv Deq (map/ref _) map/tagged tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/ref)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/ref-tagged _ _).
+%total {} (neq/deq/ref-tagged _ _).
+
+
+
+neq/deq/tag-tagged 	: cn-deq (tp/tag T1) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-tagged +D1 -D2.
+
+-	: neq/deq/tag-tagged Deq Dun
+	   <- map-equiv Deq (map/tag _) map/tagged tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi etopen/t etopen/t) ckof/tag)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/tag-tagged _ _).
+%total {} (neq/deq/tag-tagged _ _).
+
+
+
+neq/deq/sum-tagged 	: cn-deq (tp/sum T1 T2) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-tagged +D1 -D2.
+
+-	: neq/deq/sum-tagged Deq Dun
+	   <- map-equiv Deq (map/sum _ _) map/tagged tmap/t Deq'
+	   <- nullary-binary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi (etopen/pi etopen/t etopen/t) etopen/t) ckof/dsum)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/sum-tagged _ _).
+%total {} (neq/deq/sum-tagged _ _).
+
+
+
+neq/deq/unit-tagged 	: cn-deq tp/unit tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-tagged +D1 -D2.
+
+-	: neq/deq/unit-tagged Deq Dun
+	   <- neq/deq/tagged-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-tagged _ _).
+%total {} (neq/deq/unit-tagged _ _).
+
+
+
+
+neq/deq/mu-tagged 	: cn-deq (cn/mu T1 T2) tp/tagged kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/mu-tagged +D1 -D2.
+
+-	: neq/deq/mu-tagged Deq Dun
+	   <- map-equiv Deq (map/mu _) map/tagged tmap/t Deq'
+	   <- nullary-unary-equiv 
+	      (ekof/i etopen/t ckof/tagged) 
+	      (ekof/i (etopen/pi etopen/t (etopen/pi etopen/t etopen/t)) ckof/mu)
+	      (equiv/symm Deq') D
+	   <- false-implies-uninhabited D Dun.
+
+%worlds () (neq/deq/mu-tagged _ _).
+%total {} (neq/deq/mu-tagged _ _).
+
+
+
+neq/deq/unit-mu 	: cn-deq tp/unit (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/unit-mu +D1 -D2.
+
+-	: neq/deq/unit-mu Deq Dun
+	   <- neq/deq/mu-unit (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/unit-mu _ _).
+%total {} (neq/deq/unit-mu _ _).
+
+
+
+neq/deq/tagged-mu 	: cn-deq tp/tagged (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tagged-mu +D1 -D2.
+
+-	: neq/deq/tagged-mu Deq Dun
+	   <- neq/deq/mu-tagged (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/tagged-mu _ _).
+%total {} (neq/deq/tagged-mu _ _).
+
+
+
+neq/deq/arrow-mu 	: cn-deq (tp/arrow _ _) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/arrow-mu +D1 -D2.
+
+-	: neq/deq/arrow-mu Deq Dun
+	   <- neq/deq/mu-arrow (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/arrow-mu _ _).
+%total {} (neq/deq/arrow-mu _ _).
+
+
+
+neq/deq/cross-mu 	: cn-deq (tp/cross _ _) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/cross-mu +D1 -D2.
+
+-	: neq/deq/cross-mu Deq Dun
+	   <- neq/deq/mu-cross (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/cross-mu _ _).
+%total {} (neq/deq/cross-mu _ _).
+
+
+
+neq/deq/ref-mu 	: cn-deq (tp/ref T1) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/ref-mu +D1 -D2.
+
+-	: neq/deq/ref-mu Deq Dun
+	   <- neq/deq/mu-ref (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/ref-mu _ _).
+%total {} (neq/deq/ref-mu _ _).
+
+
+
+neq/deq/tag-mu 	: cn-deq (tp/tag T1) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/tag-mu +D1 -D2.
+
+-	: neq/deq/tag-mu Deq Dun
+	   <- neq/deq/mu-tag (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/tag-mu _ _).
+%total {} (neq/deq/tag-mu _ _).
+
+
+
+neq/deq/sum-mu 	: cn-deq (tp/sum _ _) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/sum-mu +D1 -D2.
+
+-	: neq/deq/sum-mu Deq Dun
+	   <- neq/deq/mu-sum (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/sum-mu _ _).
+%total {} (neq/deq/sum-mu _ _).
+
+
+
+neq/deq/forall-mu 	: cn-deq (tp/forall _ _) (cn/mu _ _) kd/type
+			   -> uninhabited
+			   -> type.
+%mode neq/deq/forall-mu +D1 -D2.
+
+-	: neq/deq/forall-mu Deq Dun
+	   <- neq/deq/mu-forall (cn-deq/sym Deq) Dun.
+
+%worlds () (neq/deq/forall-mu _ _).
+%total {} (neq/deq/forall-mu _ _).
+
+
+
+
+

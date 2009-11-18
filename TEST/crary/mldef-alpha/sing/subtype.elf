@@ -1,0 +1,60 @@
+
+%%%%%  Subtyping and Coercions  %%%%%
+
+subtype : tp -> tp -> (atom -> term) -> type.
+%mode subtype +A1 +A2 -M.
+
+subtype/t	: subtype t t ([x] at x).
+
+subtype/pi	: subtype (pi A1 A2) (pi B1 B2) ([f] lam ([x] M2 x (app f (M1 x))))
+		   <- subtype B1 A1 ([x] M1 x)
+		   <- ({x} tsub A2 (M1 x) (A2' x))
+		   <- ({x} subtype (A2' x) (B2 x) ([y] M2 x y)).
+
+subtype/sigma	: subtype (sigma A1 A2) (sigma B1 B2) ([p] pair (M1 (pi1 p)) (M2 (pi1 p) (pi2 p)))
+		   <- subtype A1 B1 ([x] M1 x)
+		   <- ({x} tsub B2 (M1 x) (B2' x))
+		   <- ({x} subtype (A2 x) (B2' x) ([y] M2 x y)).
+
+subtype/sing_t	: subtype (sing R) t ([x] at R).
+
+subtype/sing	: subtype (sing R) (sing R) ([x] at R).
+
+subtype/one	: subtype one one ([x] star).
+
+
+
+
+%%%%%  Selfification  %%%%%
+
+self : term -> tp -> tp -> type.
+
+self/t		: self (at R) t (sing R).
+
+self/pi		: self (lam ([x] M x)) (pi A ([x] B x)) (pi A ([x] B' x))
+		   <- ({x} self (M x) (B x) (B' x)).
+
+self/sigma	: self (pair M N) (sigma A ([x] B x)) (sigma A' ([_] B''))
+		   <- self M A A'
+		   <- tsub B M B'
+		   <- self N B' B''.
+
+self/sing	: self (at R) (sing R) (sing R).
+
+self/one	: self star one one.
+
+
+
+principal : tp -> type.
+
+principal/sing	: principal (sing R).
+
+principal/pi	: principal (pi A B)
+		   <- ({x} principal (B x)).
+
+principal/sigma	: principal (sigma A ([_] B))
+		   <- principal A
+		   <- principal B.
+
+principal/one	: principal one.
+

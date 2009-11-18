@@ -1,0 +1,178 @@
+
+%%%  This signature defines identifiers, locations, and fixities.
+%%%  Except for the relations and lemmas given here, these should
+%%%  be taken as uninterpreted constants.
+
+
+
+%%%%%  Identifiers  %%%%%
+
+identifier : type.  %name identifier I.
+
+identifier/i		: nat -> identifier.  %% ordinary identifiers
+identifier/q		: nat -> identifier.  %% tyvars (ie, concretely rendered as 'a)
+
+
+
+identifier-eq : identifier -> identifier -> type.
+
+identifier-eq/i		: identifier-eq I I.
+
+
+
+identifier-lt : identifier -> identifier -> type.
+
+identifier-lt/i		: identifier-lt (identifier/i N) (identifier/i N')
+			   <- lt N N'.
+
+identifier-lt/q		: identifier-lt (identifier/q N) (identifier/q N')
+			   <- lt N N'.
+
+identifier-lt/i-q	: identifier-lt (identifier/i N) (identifier/q N').
+
+
+
+identifier-neq : identifier -> identifier -> type.
+
+identifier-neq/lt	: identifier-neq I I'
+			   <- identifier-lt I I'.
+
+identifier-neq/gt	: identifier-neq I I'
+			   <- identifier-lt I' I.
+
+
+
+tyvar-identifier : identifier -> type.
+
+tyvar-identifier/q	: tyvar-identifier (identifier/q N).
+
+
+
+non-tyvar-identifier : identifier -> type.
+
+non-tyvar-identifier/i	: non-tyvar-identifier (identifier/i N).
+
+
+
+%worlds () (identifier).
+
+
+
+
+%%%%%  Specific Identifiers  %%%%%
+
+identifier/match        : identifier = identifier/i 0.
+identifier/bind         : identifier = identifier/i 1.
+
+
+
+%%%%%  Labels  %%%%%
+
+label : type.  %name label L.
+
+label/number	: nat -> label.
+label/ident	: identifier -> label.
+
+
+
+label-eq : label -> label -> type.
+
+label-eq/i	: label-eq L L.
+
+
+
+label-lt : label -> label -> type.
+
+label-lt/number	: label-lt (label/number N) (label/number N')
+		   <- lt N N'.
+
+label-lt/ident	: label-lt (label/ident I) (label/ident I')
+		   <- identifier-lt I I'.
+
+label-lt/number-ident
+		: label-lt (label/number _) (label/ident _).
+
+
+
+%worlds () (label).
+
+
+
+
+%%%%%  Locations  %%%%%
+
+location : type.  %name location L.
+
+location/i	: nat -> location.
+
+
+
+loc-lt : location -> location -> type.
+
+loc-lt/i	: loc-lt (location/i N) (location/i N')
+		   <- lt N N'.
+
+
+
+loc-neq : location -> location -> type.
+
+loc-neq/lt	: loc-neq L L'
+		   <- loc-lt L L'.
+
+loc-neq/gt	: loc-neq L L'
+		   <- loc-lt L' L.
+
+
+
+location/0 : location = location/i 0.
+
+
+loc-succ : location -> location -> type.
+
+loc-succ/i	: loc-succ (location/i N) (location/i (s N)).
+
+
+
+
+%%%%%  Location lemmas  %%%%%
+
+compare-loc : location -> location -> type.
+
+compare-loc/eq	: compare-loc L L.
+
+compare-loc/neq	: compare-loc L L'
+		   <- loc-neq L L'.
+
+
+
+dichotomy-loc : {L} {L'} compare-loc L L' -> type.
+%mode dichotomy-loc +X1 +X2 -X3.
+
+dichotomy-loc-factor : compare N N' -> compare-loc (location/i N) (location/i N') -> type.
+%mode dichotomy-loc-factor +X1 -X2.
+
+-	: dichotomy-loc (location/i N) (location/i N') D'
+	   <- trichotomy-nat N N' D
+	   <- dichotomy-loc-factor D D'.
+
+-	: dichotomy-loc-factor (compare/lt Dlt) (compare-loc/neq (loc-neq/lt (loc-lt/i Dlt))).
+
+-	: dichotomy-loc-factor compare/eq compare-loc/eq.
+
+-	: dichotomy-loc-factor (compare/gt Dlt) (compare-loc/neq (loc-neq/gt (loc-lt/i Dlt))).
+
+%worlds () (dichotomy-loc-factor _ _).
+%total {} (dichotomy-loc-factor _ _).
+
+%worlds () (dichotomy-loc _ _ _).
+%total {} (dichotomy-loc _ _ _).
+
+
+
+can-loc-succ : {L} loc-succ L L' -> type.
+%mode can-loc-succ +X1 -X2.
+
+-	: can-loc-succ (location/i N) (loc-succ/i : loc-succ (location/i N) (location/i (s N))).
+
+%worlds () (can-loc-succ _ _).
+%total {} (can-loc-succ _ _).

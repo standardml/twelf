@@ -1,0 +1,22 @@
+%%%% projectibility. this is stricter than purity. 
+%%%% this is a slight divergence from Dreyer's thesis, where P and I 
+%%%% denoted purity and impurity, where all projectible modules were pure
+%%%% but not all pure modules were projectible
+%%%% for reference, projectible modules are denoted by the "translucent"
+%%%% type-face in Dreyer's thesis
+
+pty	: type.		%name pty P.
+pty/p	: pty.
+pty/i	: pty.
+
+pty-sub		: pty -> pty -> type.
+%mode pty-sub *Y1 *Y2.
+
+pty-sub/pp	: pty-sub pty/p pty/p.
+
+pty-sub/pi	: pty-sub pty/p pty/i.
+
+pty-sub/ii	: pty-sub pty/i pty/i.
+
+
+%worlds () (pty-sub _ _).

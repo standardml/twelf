@@ -1,0 +1,426 @@
+%%%% inversion lemmas for typing of terms
+
+inv/oftp/tm/pj1	: oftp L T (tm/pj1 E) C1
+		   -> oftp L T E (tp/cross C1 C2)
+		   -> type.
+%mode inv/oftp/tm/pj1 +D1 -D2.
+
+-	: inv/oftp/tm/pj1 (oftp/tm/pj1 D) D.
+
+-	: inv/oftp/tm/pj1 (oftp/deq DE DC) 
+	   (oftp/deq DE' (cn-deq/tp/cross DC (cn-deq/refl DC2)))
+	   <- inv/oftp/tm/pj1 DE DE'
+	   <- vdt/oftp DE' DC'
+	   <- inv/ofkd/tp/cross DC' kd-sub/kd/type DC1' DC2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/pj1 _ _).
+%total D (inv/oftp/tm/pj1 D _).
+ 
+
+inv/oftp/tm/pj2	: oftp L T (tm/pj2 E) C2
+		   -> oftp L T E (tp/cross C1 C2)
+		   -> type.
+%mode inv/oftp/tm/pj2 +D1 -D2.
+
+-	: inv/oftp/tm/pj2 (oftp/tm/pj2 D) D.
+
+-	: inv/oftp/tm/pj2 (oftp/deq DE DC) 
+	   (oftp/deq DE' (cn-deq/tp/cross (cn-deq/refl DC1') DC))
+	   <- inv/oftp/tm/pj2 DE DE'
+	   <- vdt/oftp DE' DC'
+	   <- inv/ofkd/tp/cross DC' kd-sub/kd/type DC1' DC2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/pj2 _ _).
+%total D (inv/oftp/tm/pj2 D _).
+ 
+
+
+inv/oftp/tm/pair	: oftp L T (tm/pair E1 E2) C
+			   -> cn-deq (tp/cross C1 C2) C kd/type
+			   -> oftp L T E1 C1
+			   -> oftp L T E2 C2
+			   -> type.
+%mode inv/oftp/tm/pair +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/pair (oftp/tm/pair D1 D2) (cn-deq/refl DC) D1 D2
+	   <- vdt/oftp (oftp/tm/pair D1 D2) DC.
+
+-	: inv/oftp/tm/pair (oftp/deq DE DC)
+	   (cn-deq/trans DC' DC)
+	   DE1 DE2
+	   <- inv/oftp/tm/pair DE DC' DE1 DE2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/pair _ _ _ _).
+%total D (inv/oftp/tm/pair D _ _ _).
+ 
+
+
+inv/oftp/tm/tmapp	: oftp L T (tm/tmapp E1 E2) C
+			   -> cn-deq C'' C kd/type
+			   -> oftp L T E1 (tp/arrow C' C'')
+			   -> oftp L T E2 C'
+			   -> type.
+%mode inv/oftp/tm/tmapp +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/tmapp (oftp/tm/tmapp D1 D2) (cn-deq/refl DC') D1 D2
+	   <- vdt/oftp D1 DC
+	   <- inv/ofkd/tp/arrow DC kd-sub/kd/type  _ DC'.
+
+-	: inv/oftp/tm/tmapp (oftp/deq DE DC)
+	   (cn-deq/trans DC' DC)
+	   DE1 DE2
+	   <- inv/oftp/tm/tmapp DE DC' DE1 DE2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/tmapp _ _ _ _).
+%total D (inv/oftp/tm/tmapp D _ _ _).
+ 
+
+
+inv/oftp/tm/cnapp	: oftp L T (tm/cnapp E1 C2) C
+			   -> cn-deq (C1 C2) C kd/type
+			   -> oftp L T E1 (tp/forall K C1)
+			   -> ofkd C2 K
+			   -> type.
+%mode inv/oftp/tm/cnapp +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/cnapp (oftp/tm/cnapp D1 D2) 
+	   (cn-deq/refl (DC' C2 D2)) D1 D2
+	   <- vdt/oftp D1 DC
+	   <- inv/ofkd/tp/forall DC kd-sub/kd/type  _ DC'.
+
+-	: inv/oftp/tm/cnapp (oftp/deq DE DC)
+	   (cn-deq/trans DC' DC)
+	   DE1 DE2
+	   <- inv/oftp/tm/cnapp DE DC' DE1 DE2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/cnapp _ _ _ _).
+%total D (inv/oftp/tm/cnapp D _ _ _).
+ 
+
+
+inv/oftp/tm/fun	: oftp L T (tm/fun C1 C2 E) C
+		   -> cn-deq (tp/arrow C1 C2) C kd/type
+		   -> ({x}{dx: assm/tm x C1} 
+			 {f}{df: assm/tm f (tp/arrow C1 C2)}
+			 oftp L T (E x f) C2)
+		   -> ofkd (tp/arrow C1 C2) kd/type
+		   -> type.
+%mode inv/oftp/tm/fun +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/fun (oftp/tm/fun D1 DC) (cn-deq/refl DC) D1 DC.
+
+-	: inv/oftp/tm/fun (oftp/deq DE DQ) (cn-deq/trans DQ' DQ) D1 DC
+	   <- inv/oftp/tm/fun DE DQ' D1 DC.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/fun _ _ _ _).
+%total D (inv/oftp/tm/fun D _ _ _).
+
+
+
+inv/oftp/tm/cnabs	: oftp L T (tm/cnabs K E) C
+			   -> cn-deq (tp/forall K C') C kd/type
+			   -> ({a}{da: ofkd a K}
+				 oftp L T (E a) (C' a))
+			   -> kd-wf K
+			   -> type.
+%mode inv/oftp/tm/cnabs +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/cnabs (oftp/tm/cnabs D1 DW) (cn-deq/refl DC) D1 DW
+	   <- vdt/oftp (oftp/tm/cnabs D1 DW) DC.
+
+-	: inv/oftp/tm/cnabs (oftp/deq DE DQ) (cn-deq/trans DQ' DQ) D1 DW
+	   <- inv/oftp/tm/cnabs DE DQ' D1 DW.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/cnabs _ _ _ _).
+%total D (inv/oftp/tm/cnabs D _ _ _).
+
+
+
+inv/oftp/tm/set	: oftp L T (tm/set E1 E2) C
+		   -> cn-deq tp/unit C kd/type
+		   -> oftp L T E1 (tp/ref C1)
+		   -> oftp L T E2 C1
+		   -> type.
+%mode inv/oftp/tm/set +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/set (oftp/tm/set D1 D2) (cn-deq/refl ofkd/tp/unit) D1 D2.
+
+-	: inv/oftp/tm/set (oftp/deq DE DC)
+	   (cn-deq/trans DC' DC) DE1 DE2
+	   <- inv/oftp/tm/set DE DC' DE1 DE2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/set _ _ _ _).
+%total D (inv/oftp/tm/set D _ _ _).
+ 
+
+
+inv/oftp/tm/get	: oftp L T (tm/get E1) C1
+		   -> oftp L T E1 (tp/ref C1)
+		   -> type.
+%mode inv/oftp/tm/get +D1 -D2.
+
+-	: inv/oftp/tm/get (oftp/tm/get D1) D1.
+
+-	: inv/oftp/tm/get (oftp/deq DE DC) (oftp/deq D1 (cn-deq/tp/ref DC))
+	   <- inv/oftp/tm/get DE D1.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/get _ _).
+%total D (inv/oftp/tm/get D _).
+ 
+
+
+inv/oftp/tm/ref	: oftp L T (tm/ref E1) C1
+		   -> cn-deq (tp/ref C) C1 kd/type
+		   -> oftp L T E1 C
+		   -> type.
+%mode inv/oftp/tm/ref +D1 -D2 -D3.
+
+-	: inv/oftp/tm/ref (oftp/tm/ref D1) (cn-deq/refl (ofkd/tp/ref DC)) D1
+	   <- vdt/oftp D1 DC.
+
+-	: inv/oftp/tm/ref (oftp/deq DE DC) 
+	   (cn-deq/trans DC' DC) D1
+	   <- inv/oftp/tm/ref DE DC' D1.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/ref _ _ _).
+%total D (inv/oftp/tm/ref D _ _).
+ 
+
+
+inv/oftp/tm/term	: oftp L T (tm/term M) C1
+			   -> ofsg L T Y M (sg/cn C1)
+			   -> type.
+%mode inv/oftp/tm/term +D1 -D2.
+
+-	: inv/oftp/tm/term (oftp/tm/term D) D.
+
+-	: inv/oftp/tm/term (oftp/deq DE DC)
+	  (ofsg/sub DM (sg-sub/sg/cn DC) P) 
+	   <- inv/oftp/tm/term DE DM
+	   <- pty-sub-refl _ P.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/term _ _).
+%total D (inv/oftp/tm/term D _).
+ 
+
+
+inv/oftp/tm/loc	: oftp L T (tm/loc LC) C
+		   -> cn-deq (tp/ref C') C  kd/type
+		   -> lt-look L LC C'
+		   -> ofkd C' kd/type
+		   -> type.
+%mode inv/oftp/tm/loc +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/loc (oftp/tm/loc LL DC) (cn-deq/refl (ofkd/tp/ref DC))
+	   LL DC.
+
+-	: inv/oftp/tm/loc (oftp/deq D1 DQ) (cn-deq/trans DQ' DQ) LL DC
+	   <- inv/oftp/tm/loc D1 DQ' LL DC. 
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/loc _ _ _ _).
+%total D1 (inv/oftp/tm/loc D1 _ _ _).
+
+
+
+inv/oftp/tm/inl	: oftp L T (tm/inl (tp/sum C1 C2) E) C'
+		   -> oftp L T E C1
+		   -> ofkd C2 kd/type
+		   -> cn-deq (tp/sum C1 C2) C' kd/type
+		   -> type.
+%mode inv/oftp/tm/inl +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/inl (oftp/tm/inl D1 DCR) D1 DCR
+	   (cn-deq/refl (ofkd/tp/sum DCL DCR))
+	   <- vdt/oftp D1 DCL.
+
+-	: inv/oftp/tm/inl (oftp/deq DE DQ) D1 DC (cn-deq/trans DQ' DQ)
+	   <- inv/oftp/tm/inl DE D1 DC DQ'.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/inl _ _ _ _).
+%total D1 (inv/oftp/tm/inl D1 _ _ _).
+
+
+
+inv/oftp/tm/inr	: oftp L T (tm/inr (tp/sum C1 C2) E) C'
+		   -> oftp L T E C2
+		   -> ofkd C1 kd/type
+		   -> cn-deq (tp/sum C1 C2) C' kd/type
+		   -> type.
+%mode inv/oftp/tm/inr +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/inr (oftp/tm/inr D1 DCL) D1 DCL
+	   (cn-deq/refl (ofkd/tp/sum DCL DCR))
+	   <- vdt/oftp D1 DCR.
+
+-	: inv/oftp/tm/inr (oftp/deq DE DQ) D1 DC (cn-deq/trans DQ' DQ)
+	   <- inv/oftp/tm/inr DE D1 DC DQ'.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/inr _ _ _ _).
+%total D1 (inv/oftp/tm/inr D1 _ _ _).
+
+
+
+inv/oftp/tm/case	: oftp L T (tm/case E1 E2 E3) C'
+			   -> oftp L T E1 (tp/sum C1 C2)
+			   -> ({x}{dx:assm/tm x C1} oftp L T (E2 x) C')
+			   -> ({x}{dx:assm/tm x C2} oftp L T (E3 x) C')
+			   -> type.
+%mode inv/oftp/tm/case +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/case (oftp/tm/case D1 D2 D3) D1 D2 D3.
+
+-	: inv/oftp/tm/case (oftp/deq DE DQ) D1 
+	   ([x][dx] oftp/deq (D2 x dx) DQ) ([x][dx] oftp/deq (D3 x dx) DQ)
+	   <- inv/oftp/tm/case DE D1 ([x][dx] D2 x dx) ([x][dx] D3 x dx).
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/case _ _ _ _).
+%total (D1) (inv/oftp/tm/case D1 _ _ _).
+
+
+
+inv/oftp/tm/try	: oftp L T (tm/try E1 E2) C
+			   -> oftp L T E1 C
+			   -> ({x}{dx:assm/tm x tp/tagged} oftp L T (E2 x) C)
+			   -> type.
+%mode inv/oftp/tm/try +D1 -D2 -D3.
+
+-	: inv/oftp/tm/try (oftp/tm/try D1 D2) D1 D2.
+
+-	: inv/oftp/tm/try (oftp/deq DE DQ) (oftp/deq D1 DQ) 
+	   ([x][dx] oftp/deq (D2 x dx) DQ)
+	   <- inv/oftp/tm/try DE D1 D2.
+
+%worlds () (inv/oftp/tm/try _ _ _).
+%total (D1) (inv/oftp/tm/try D1 _ _).
+ 
+
+
+inv/oftp/tm/new-tag	: oftp L T (tm/new-tag C) C1
+			   -> cn-deq (tp/tag C) C1 kd/type
+			   -> ofkd C kd/type
+			   -> type.
+%mode inv/oftp/tm/new-tag +D1 -D2 -D3.
+
+-	: inv/oftp/tm/new-tag (oftp/tm/new-tag DC) 
+	   (cn-deq/refl (ofkd/tp/tag DC)) DC.
+
+-	: inv/oftp/tm/new-tag (oftp/deq DE DC) 
+	   (cn-deq/trans DC' DC) D1
+	   <- inv/oftp/tm/new-tag DE DC' D1.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/new-tag _ _ _).
+%total D (inv/oftp/tm/new-tag D _ _).
+
+
+
+inv/oftp/tm/tag	: oftp L T (tm/tag E1 E2) C
+		   -> cn-deq tp/tagged C kd/type
+		   -> oftp L T E1 (tp/tag C1)
+		   -> oftp L T E2 C1
+		   -> type.
+%mode inv/oftp/tm/tag +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/tag (oftp/tm/tag D1 D2) (cn-deq/refl ofkd/tp/tagged) D1 D2.
+
+-	: inv/oftp/tm/tag (oftp/deq DE DC)
+	   (cn-deq/trans DC' DC) DE1 DE2
+	   <- inv/oftp/tm/tag DE DC' DE1 DE2.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/tag _ _ _ _).
+%total D (inv/oftp/tm/tag D _ _ _).
+ 
+
+
+inv/oftp/tm/raise	: oftp L T (tm/raise E1) C1
+			   -> oftp L T E1 tp/tagged
+			   -> type.
+%mode inv/oftp/tm/raise +D1 -D2.
+
+-	: inv/oftp/tm/raise (oftp/tm/raise D1 _) D1.
+
+-	: inv/oftp/tm/raise (oftp/deq DE DC)  D1
+	   <- inv/oftp/tm/raise DE D1.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/raise _ _).
+%total D (inv/oftp/tm/raise D _).
+ 
+
+
+
+inv/oftp/tm/iftag	: oftp L T (tm/iftag E1 E2 E3 E4) C'
+			   -> oftp L T E1 tp/tagged
+			   -> oftp L T E2 (tp/tag C1)
+			   -> ({x}{dx:assm/tm x C1} oftp L T (E3 x) C')
+			   -> oftp L T E4 C'
+			   -> type.
+%mode inv/oftp/tm/iftag +D1 -D2 -D3 -D4 -D5.
+
+-	: inv/oftp/tm/iftag (oftp/tm/iftag D1 D2 D3 D4) D1 D2 D3 D4.
+
+-	: inv/oftp/tm/iftag (oftp/deq DE DQ) D1 
+	   D2
+	   ([x][dx] oftp/deq (D3 x dx) DQ)
+	   (oftp/deq D4 DQ)
+	   <- inv/oftp/tm/iftag DE D1 D2 ([x][dx] D3 x dx) D4.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/iftag _ _ _ _ _).
+%total (D1) (inv/oftp/tm/iftag D1 _ _ _ _).
+
+
+
+inv/oftp/tm/tagloc	: oftp L T (tm/tagloc LC) C
+			   -> cn-deq (tp/tag C') C  kd/type
+			   -> lt-look T LC C'
+			   -> ofkd C' kd/type
+			   -> type.
+%mode inv/oftp/tm/tagloc +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/tagloc (oftp/tm/tagloc LL DC) (cn-deq/refl (ofkd/tp/tag DC))
+	   LL DC.
+
+-	: inv/oftp/tm/tagloc (oftp/deq D1 DQ) (cn-deq/trans DQ' DQ) LL DC
+	   <- inv/oftp/tm/tagloc D1 DQ' LL DC. 
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/tagloc _ _ _ _).
+%total D1 (inv/oftp/tm/tagloc D1 _ _ _).
+
+
+
+inv/oftp/tm/roll	: oftp L T (tm/roll (cn/mu K C) E1) C1
+			   -> cn-deq (cn/mu K C) C1 kd/type
+			   -> oftp L T E1 (C (cn/mu K C))
+			   -> ofkd (cn/mu K C) kd/type
+			   -> type.
+%mode inv/oftp/tm/roll +D1 -D2 -D3 -D4.
+
+-	: inv/oftp/tm/roll (oftp/tm/roll D1 DC) 
+	   (cn-deq/refl DC') D1 DC
+	   <- vdt/oftp (oftp/tm/roll D1 DC) DC'.
+
+-	: inv/oftp/tm/roll (oftp/deq DE DC) 
+	   (cn-deq/trans DC' DC) D1 DCC
+	   <- inv/oftp/tm/roll DE DC' D1 DCC.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/roll _ _ _ _).
+%total D (inv/oftp/tm/roll D _ _ _).
+
+
+
+inv/oftp/tm/unroll	: oftp L T (tm/unroll E1) C1
+			   -> cn-deq (C (cn/mu K C)) C1 kd/type
+			   -> oftp L T E1 (cn/mu K C)
+			   -> type.
+%mode inv/oftp/tm/unroll +D1 -D2 -D3.
+
+-	: inv/oftp/tm/unroll (oftp/tm/unroll D1) 
+	   (cn-deq/refl DC') D1
+	   <- vdt/oftp (oftp/tm/unroll D1) DC'.
+
+-	: inv/oftp/tm/unroll (oftp/deq DE DC) 
+	   (cn-deq/trans DC' DC) D1
+	   <- inv/oftp/tm/unroll DE DC' D1.
+
+%worlds (ofkd+vdt-block) (inv/oftp/tm/unroll _ _ _).
+%total D (inv/oftp/tm/unroll D _ _).
+
+

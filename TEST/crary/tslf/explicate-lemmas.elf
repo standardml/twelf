@@ -1,0 +1,1818 @@
+
+%block bind-block : some {c:cn}{k:kd}
+		     block
+		     {da: ofkd c k}{dm:mofkd da met/unit}.
+
+%block wbind-block : some {c:cn}{k:kd}
+		     block
+		     {da: ofkd c k}.
+
+ekd-wf-ordered	: ekd-wf G K
+		   -> cxt-ordered G
+		   -> type.
+%mode ekd-wf-ordered +D1 -D2.
+
+eofkd-ordered	: eofkd G C K
+		   -> cxt-ordered G
+		   -> type.
+%mode eofkd-ordered +D1 -D2.
+
+-	: ekd-wf-ordered (ekd-wf/kd/unit DO) DO.
+
+-	: ekd-wf-ordered (ekd-wf/kd/type DO) DO.
+
+-	: ekd-wf-ordered (ekd-wf/kd/sing D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ekd-wf-ordered (ekd-wf/kd/sgm D1 _) DO
+	   <- ekd-wf-ordered D1 DO.
+
+-	: ekd-wf-ordered (ekd-wf/kd/pi D1 _) DO
+	   <- ekd-wf-ordered D1 DO.
+
+
+
+-	: eofkd-ordered (eofkd/cn/unit DO) DO.
+
+-	: eofkd-ordered (eofkd/tp/unit DO) DO.
+
+-	: eofkd-ordered (eofkd/tp/tagged DO) DO.
+
+-	: eofkd-ordered (eofkd/tp/ref D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/tp/tag D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/pj1 D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/pj2 D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/kd/sing D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/pair D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/app D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/sgm-ext D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/pi-ext D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/tp/cross D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/tp/arrow D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/tp/sum D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/sub D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/deq D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/lam _ D1) DO
+	   <- ekd-wf-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/tp/forall _ D1) DO
+	   <- ekd-wf-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/cn/mu _ D1) DO
+	   <- ekd-wf-ordered D1 DO.
+
+-	: eofkd-ordered (eofkd/var DL) DO
+	   <- cxt-lookup-ordered DL DO.
+
+-	: eofkd-ordered (eofkd/closed _ DO) DO.
+
+%worlds (cn-block | ovar-block | bind-block | wbind-block | ofkd-block) 
+(ekd-wf-ordered _ _) (eofkd-ordered _ _).
+%total (D1 D2) (ekd-wf-ordered D1 _) (eofkd-ordered D2 _).
+
+
+
+ekd-deq-ordered	: ekd-deq G K K'
+		   -> cxt-ordered G
+		   -> type.
+%mode ekd-deq-ordered +D1 -D2.
+
+ecn-deq-ordered	: ecn-deq G C C' K''
+		   -> cxt-ordered G
+		   -> type.
+%mode ecn-deq-ordered +D1 -D2.
+
+-	: ekd-deq-ordered (ekd-deq/kd/unit DO) DO.
+
+-	: ekd-deq-ordered (ekd-deq/kd/type DO) DO.
+
+-	: ekd-deq-ordered (ekd-deq/kd/sing D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ekd-deq-ordered (ekd-deq/kd/sgm D1 _) DO
+	   <- ekd-deq-ordered D1 DO.
+
+-	: ekd-deq-ordered (ekd-deq/kd/pi D1 _) DO
+	   <- ekd-deq-ordered D1 DO.
+
+
+
+-	: ecn-deq-ordered (ecn-deq/cn/unit DO) DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/unit DO) DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/tagged DO) DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/ref D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/tag D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/pj1 D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/pj2 D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/sym D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/kd/sing D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/refl D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/trans D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/pair D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/app D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/sgm-ext D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/pi-ext D1 _ _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/pi-ext-2 D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/kd/unit D1 _) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/cross D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/arrow D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/sum D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/sub D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/deq D1 _) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/lam _ D1) DO
+	   <- ekd-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/tp/forall _ D1) DO
+	   <- ekd-deq-ordered D1 DO.
+
+-	: ecn-deq-ordered (ecn-deq/cn/mu _ D1) DO
+	   <- ekd-deq-ordered D1 DO.
+
+%worlds (cn-block | ovar-block | wbind-block | ofkd-block) (ekd-deq-ordered _ _) 
+(ecn-deq-ordered _ _).
+%total (D1 D2) (ekd-deq-ordered D1 _) (ecn-deq-ordered D2 _).
+
+
+
+ekd-sub-ordered	: ekd-sub G K K'
+		   -> cxt-ordered G
+		   -> type.
+%mode ekd-sub-ordered +D1 -D2.
+
+-	: ekd-sub-ordered (ekd-sub/kd/unit DO) DO.
+
+-	: ekd-sub-ordered (ekd-sub/kd/type DO) DO.
+
+-	: ekd-sub-ordered (ekd-sub/kd/sing-kd/sing D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: ekd-sub-ordered (ekd-sub/kd/sing-kd/type D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: ekd-sub-ordered (ekd-sub/kd/sgm D1 _ _) DO
+	   <- ekd-sub-ordered D1 DO.
+
+-	: ekd-sub-ordered (ekd-sub/kd/pi D1 _ _) DO
+	   <- ekd-sub-ordered D1 DO.
+
+%worlds (cn-block | ovar-block | wbind-block | ofkd-block) (ekd-sub-ordered _ _).
+%total (D1) (ekd-sub-ordered D1 _).
+
+
+
+cut-ofkd	: {Cm}
+		   {D: ofkd C K -> ofkd C' K'}
+		   ({d} mofkd d met/unit -> mofkd (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': eofkd G C' K'}
+		      meofkd D' Cm
+		   -> type.
+%mode cut-ofkd +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-kd-wf	: {Cm}
+		   {D: ofkd C K -> kd-wf K'}
+		   ({d} mofkd d met/unit -> mkd-wf (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-wf G K'}
+		      mekd-wf D' Cm
+		   -> type.
+%mode cut-kd-wf +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-kd-sub	: {Cm}
+		   {D: ofkd C K -> kd-sub K' K''}
+		   ({d} mofkd d met/unit -> mkd-sub (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-sub G K' K''}
+		      mekd-sub D' Cm
+		   -> type.
+%mode cut-kd-sub +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-kd-deq	: {Cm}
+		   {D: ofkd C K -> kd-deq K' K''}
+		   ({d} mofkd d met/unit -> mkd-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-deq G K' K''}
+		      mekd-deq D' Cm
+		   -> type.
+%mode cut-kd-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-cn-deq	: {Cm}
+		   {D: ofkd C K -> cn-deq C' C'' K'}
+		   ({d} mofkd d met/unit -> mcn-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ecn-deq G C' C'' K'}
+		      mecn-deq D' Cm
+		   -> type.
+%mode cut-cn-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-ekd-wf	: {Cm}
+		   {D: ofkd C K -> ekd-wf G K'}
+		   ({d} mofkd d met/unit -> mekd-wf (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-wf G K'}
+		      mekd-wf D' Cm
+		   -> type.
+%mode cut-ekd-wf +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-eofkd	: {Cm}
+		   {D: ofkd C K -> eofkd G C' K'}
+		   ({d} mofkd d met/unit -> meofkd (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': eofkd G C' K'}
+		      meofkd D' Cm
+		   -> type.
+%mode cut-eofkd +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-ekd-sub	: {Cm}
+		   {D: ofkd C K -> ekd-sub G K' K''}
+		   ({d} mofkd d met/unit -> mekd-sub (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-sub G K' K''}
+		      mekd-sub D' Cm
+		   -> type.
+%mode cut-ekd-sub +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-ekd-deq	: {Cm}
+		   {D: ofkd C K -> ekd-deq G K' K''}
+		   ({d} mofkd d met/unit -> mekd-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ekd-deq G K' K''}
+		      mekd-deq D' Cm
+		   -> type.
+%mode cut-ekd-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-ecn-deq	: {Cm}
+		   {D: ofkd C K -> ecn-deq G C' C'' K'}
+		   ({d} mofkd d met/unit -> mecn-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': ecn-deq G C' C'' K'}
+		      mecn-deq D' Cm
+		   -> type.
+%mode cut-ecn-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: cut-kd-wf _ ([d] kd-wf/kd/unit) ([d'][dm] mkd-wf/kd/unit) DL
+	   (ekd-wf/kd/unit DO) (mekd-wf/kd/unit)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-wf _ ([d] kd-wf/kd/type) ([d'][dm] mkd-wf/kd/type) DL
+	   (ekd-wf/kd/type DO) (mekd-wf/kd/type)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-wf (met/sing Mm) 
+	   ([d] kd-wf/kd/sing (D1 d))
+	   ([d'][dm] mkd-wf/kd/sing (D2 d' dm))
+	   DL
+	   (ekd-wf/kd/sing D1')
+	   (mekd-wf/kd/sing D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-kd-wf (met/pair M1 M2) 
+	   ([d] kd-wf/kd/sgm (D1 d) (D2 d))
+	   ([d'][dm] mkd-wf/kd/sgm (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ekd-wf/kd/sgm D1' D2'')
+	   (mekd-wf/kd/sgm D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-wf M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-wf M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e': ekd-wf (cxt/cons G y B) (C y))
+		 (D4' d dm y e': mekd-wf (D2' d y e') M2))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-wf M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+-	: cut-kd-wf (met/pair M1 M2) 
+	   ([d] kd-wf/kd/pi (D1 d) (D2 d))
+	   ([d'][dm] mkd-wf/kd/pi (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ekd-wf/kd/pi D1' D2'')
+	   (mekd-wf/kd/pi D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-wf M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-wf M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e': ekd-wf (cxt/cons G y B) (C y))
+		 (D4' d dm y e': mekd-wf (D2' d y e') M2))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-wf M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+
+
+-	: cut-ofkd _ ([d] ofkd/cn/unit) ([d'][dm] mofkd/cn/unit) DL
+	   (eofkd/cn/unit DO) (meofkd/cn/unit)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-ofkd _ ([d] ofkd/tp/unit) ([d'][dm] mofkd/tp/unit) DL
+	   (eofkd/tp/unit DO) (meofkd/tp/unit)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-ofkd _ ([d] ofkd/tp/tagged) ([d'][dm] mofkd/tp/tagged) DL
+	   (eofkd/tp/tagged DO) (meofkd/tp/tagged)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-ofkd (met/sing Mm) 
+	   ([d] ofkd/tp/ref (D1 d))
+	   ([d'][dm] mofkd/tp/ref (D2 d' dm))
+	   DL
+	   (eofkd/tp/ref D1')
+	   (meofkd/tp/ref D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ofkd (met/sing Mm) 
+	   ([d] ofkd/tp/tag (D1 d))
+	   ([d'][dm] mofkd/tp/tag (D2 d' dm))
+	   DL
+	   (eofkd/tp/tag D1')
+	   (meofkd/tp/tag D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ofkd (met/sing Mm) 
+	   ([d] ofkd/kd/sing (D1 d))
+	   ([d'][dm] mofkd/kd/sing (D2 d' dm))
+	   DL
+	   (eofkd/kd/sing D1')
+	   (meofkd/kd/sing D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ofkd (met/sing Mm) 
+	   ([d] ofkd/cn/pj1 (D1 d))
+	   ([d'][dm] mofkd/cn/pj1 (D2 d' dm))
+	   DL
+	   (eofkd/cn/pj1 D1')
+	   (meofkd/cn/pj1 D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ofkd (met/sing Mm) 
+	   ([d] ofkd/cn/pj2 (D1 d))
+	   ([d'][dm] mofkd/cn/pj2 (D2 d' dm))
+	   DL
+	   (eofkd/cn/pj2 D1')
+	   (meofkd/cn/pj2 D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/cn/pair (D1 d) (D3 d))
+	   ([d'][dm] mofkd/cn/pair (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/cn/pair D1' D3')
+	   (meofkd/cn/pair D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/tp/cross (D1 d) (D3 d))
+	   ([d'][dm] mofkd/tp/cross (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/tp/cross D1' D3')
+	   (meofkd/tp/cross D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/tp/arrow (D1 d) (D3 d))
+	   ([d'][dm] mofkd/tp/arrow (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/tp/arrow D1' D3')
+	   (meofkd/tp/arrow D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/tp/sum (D1 d) (D3 d))
+	   ([d'][dm] mofkd/tp/sum (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/tp/sum D1' D3')
+	   (meofkd/tp/sum D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/cn/app (D1 d) (D3 d))
+	   ([d'][dm] mofkd/cn/app (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/cn/app D1' D3')
+	   (meofkd/cn/app D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/sgm-ext (D1 d) (D3 d))
+	   ([d'][dm] mofkd/sgm-ext (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/sgm-ext D1' D3')
+	   (meofkd/sgm-ext D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/sub (D1 d) (D3 d))
+	   ([d'][dm] mofkd/sub (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/sub D1' D3')
+	   (meofkd/sub D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-kd-sub M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/deq (D1 d) (D3 d))
+	   ([d'][dm] mofkd/deq (D2 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/deq D1' D3')
+	   (meofkd/deq D2' D4')
+	   <- cut-ofkd M1 D1 D2 DL D1' D2'
+	   <- cut-kd-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/cn/lam (D1 d) (D2 d))
+	   ([d'][dm] mofkd/cn/lam (D3 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/cn/lam D1'' D2')
+	   (meofkd/cn/lam D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-wf M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-ofkd M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-eofkd M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/tp/forall (D1 d) (D2 d))
+	   ([d'][dm] mofkd/tp/forall (D3 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/tp/forall D1'' D2')
+	   (meofkd/tp/forall D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-wf M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-ofkd M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-eofkd M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/cn/mu (D1 d) (D2 d))
+	   ([d'][dm] mofkd/cn/mu (D3 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/cn/mu D1'' D2')
+	   (meofkd/cn/mu D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-wf M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-ofkd M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-eofkd M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-ofkd (met/pair M1 M2) 
+	   ([d] ofkd/pi-ext (D1 d) (D2 d))
+	   ([d'][dm] mofkd/pi-ext (D3 d' dm) (D4 d' dm))
+	   DL
+	   (eofkd/pi-ext D1' D2'')
+	   (meofkd/pi-ext D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-ofkd M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-ofkd M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-eofkd M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+-	: cut-ofkd met/unit
+	   ([d] D) ([d'][dm] DM) DL
+	   (eofkd/closed D DO)
+	   (meofkd/closed DM)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-ofkd met/unit
+	   ([d] d)
+	   ([d][dm] dm)
+	   DL
+	   (eofkd/var DL)
+	   meofkd/var.
+
+
+
+-	: cut-kd-deq _ ([d] kd-deq/kd/unit) ([d'][dm] mkd-deq/kd/unit) DL
+	   (ekd-deq/kd/unit DO) (mekd-deq/kd/unit)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-deq _ ([d] kd-deq/kd/type) ([d'][dm] mkd-deq/kd/type) DL
+	   (ekd-deq/kd/type DO) (mekd-deq/kd/type)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-deq (met/sing Mm) 
+	   ([d] kd-deq/kd/sing (D1 d))
+	   ([d'][dm] mkd-deq/kd/sing (D2 d' dm))
+	   DL
+	   (ekd-deq/kd/sing D1')
+	   (mekd-deq/kd/sing D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-kd-deq (met/pair M1 M2) 
+	   ([d] kd-deq/kd/sgm (D1 d) (D2 d))
+	   ([d'][dm] mkd-deq/kd/sgm (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ekd-deq/kd/sgm D1' D2'')
+	   (mekd-deq/kd/sgm D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-deq M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-deq M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-deq M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+-	: cut-kd-deq (met/pair M1 M2) 
+	   ([d] kd-deq/kd/pi (D1 d) (D2 d))
+	   ([d'][dm] mkd-deq/kd/pi (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ekd-deq/kd/pi D1' D2'')
+	   (mekd-deq/kd/pi D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-deq M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-deq M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-deq M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+
+
+-	: cut-kd-sub _ ([d] kd-sub/kd/unit) ([d'][dm] mkd-sub/kd/unit) DL
+	   (ekd-sub/kd/unit DO) (mekd-sub/kd/unit)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-sub _ ([d] kd-sub/kd/type) ([d'][dm] mkd-sub/kd/type) DL
+	   (ekd-sub/kd/type DO) (mekd-sub/kd/type)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-kd-sub (met/sing Mm) 
+	   ([d] kd-sub/kd/sing-kd/sing (D1 d))
+	   ([d'][dm] mkd-sub/kd/sing-kd/sing (D2 d' dm))
+	   DL
+	   (ekd-sub/kd/sing-kd/sing D1')
+	   (mekd-sub/kd/sing-kd/sing D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-kd-sub (met/sing Mm) 
+	   ([d] kd-sub/kd/sing-kd/type (D1 d))
+	   ([d'][dm] mkd-sub/kd/sing-kd/type (D2 d' dm))
+	   DL
+	   (ekd-sub/kd/sing-kd/type D1')
+	   (mekd-sub/kd/sing-kd/type D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-kd-sub (met/pair M1 (met/pair M2 M3)) 
+	   ([d] kd-sub/kd/sgm (D1 d) (D2 d) (D5 d))
+	   ([d'][dm] mkd-sub/kd/sgm (D3 d' dm) (D4 d' dm) (D6 d' dm))
+	   DL
+	   (ekd-sub/kd/sgm D1' D2'' D5'')
+	   (mekd-sub/kd/sgm D3' D4'' D6'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-sub M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd _ _}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-sub M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-sub M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e'))
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL'' y e'))
+	   <- ({d: ofkd _ _}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-wf M3 
+		 ([e] D5 d y e)
+		 ([e][em] D6 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D5' d y e')
+		 (D6' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-wf M3 
+		 ([d] D5' d y e')
+		 ([d] [dm] D6' d dm y e')
+		 (DL'' y e')
+		 (D5'' y e')
+		 (D6'' y e')).
+
+-	: cut-kd-sub (met/pair M1 (met/pair M2 M3)) 
+	   ([d] kd-sub/kd/pi (D1 d) (D2 d) (D5 d))
+	   ([d'][dm] mkd-sub/kd/pi (D3 d' dm) (D4 d' dm) (D6 d' dm))
+	   DL
+	   (ekd-sub/kd/pi D1' D2'' D5'')
+	   (mekd-sub/kd/pi D3' D4'' D6'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-sub M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd _ _}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-sub M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-sub M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e'))
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL'' y e'))
+	   <- ({d: ofkd _ _}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-kd-wf M3 
+		 ([e] D5 d y e)
+		 ([e][em] D6 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D5' d y e')
+		 (D6' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ekd-wf M3 
+		 ([d] D5' d y e')
+		 ([d] [dm] D6' d dm y e')
+		 (DL'' y e')
+		 (D5'' y e')
+		 (D6'' y e')).
+
+
+
+-	: cut-cn-deq _ ([d] cn-deq/cn/unit) ([d'][dm] mcn-deq/cn/unit) DL
+	   (ecn-deq/cn/unit DO) (mecn-deq/cn/unit)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-cn-deq _ ([d] cn-deq/tp/unit) ([d'][dm] mcn-deq/tp/unit) DL
+	   (ecn-deq/tp/unit DO) (mecn-deq/tp/unit)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-cn-deq _ ([d] cn-deq/tp/tagged) ([d'][dm] mcn-deq/tp/tagged) DL
+	   (ecn-deq/tp/tagged DO) (mecn-deq/tp/tagged)
+ 	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/tp/ref (D1 d))
+	   ([d'][dm] mcn-deq/tp/ref (D2 d' dm))
+	   DL
+	   (ecn-deq/tp/ref D1')
+	   (mecn-deq/tp/ref D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/tp/tag (D1 d))
+	   ([d'][dm] mcn-deq/tp/tag (D2 d' dm))
+	   DL
+	   (ecn-deq/tp/tag D1')
+	   (mecn-deq/tp/tag D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/pair Mm Mm') 
+	   ([d] cn-deq/kd/unit (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/kd/unit (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/kd/unit D1' D3')
+	   (mecn-deq/kd/unit D2' D4')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'
+	   <- cut-ofkd Mm' D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/kd/sing (D1 d))
+	   ([d'][dm] mcn-deq/kd/sing (D2 d' dm))
+	   DL
+	   (ecn-deq/kd/sing D1')
+	   (mecn-deq/kd/sing D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/refl (D1 d))
+	   ([d'][dm] mcn-deq/refl (D2 d' dm))
+	   DL
+	   (ecn-deq/refl D1')
+	   (mecn-deq/refl D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/sym (D1 d))
+	   ([d'][dm] mcn-deq/sym (D2 d' dm))
+	   DL
+	   (ecn-deq/sym D1')
+	   (mecn-deq/sym D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/cn/pj1 (D1 d))
+	   ([d'][dm] mcn-deq/cn/pj1 (D2 d' dm))
+	   DL
+	   (ecn-deq/cn/pj1 D1')
+	   (mecn-deq/cn/pj1 D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/sing Mm) 
+	   ([d] cn-deq/cn/pj2 (D1 d))
+	   ([d'][dm] mcn-deq/cn/pj2 (D2 d' dm))
+	   DL
+	   (ecn-deq/cn/pj2 D1')
+	   (mecn-deq/cn/pj2 D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/trans (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/trans (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/trans D1' D3')
+	   (mecn-deq/trans D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/cn/pair (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/cn/pair (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/cn/pair D1' D3')
+	   (mecn-deq/cn/pair D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/tp/cross (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/tp/cross (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/tp/cross D1' D3')
+	   (mecn-deq/tp/cross D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/tp/arrow (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/tp/arrow (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/tp/arrow D1' D3')
+	   (mecn-deq/tp/arrow D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/tp/sum (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/tp/sum (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/tp/sum D1' D3')
+	   (mecn-deq/tp/sum D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/cn/app (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/cn/app (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/cn/app D1' D3')
+	   (mecn-deq/cn/app D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/sgm-ext (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/sgm-ext (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/sgm-ext D1' D3')
+	   (mecn-deq/sgm-ext D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-cn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/sub (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/sub (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/sub D1' D3')
+	   (mecn-deq/sub D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-kd-sub M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/deq (D1 d) (D3 d))
+	   ([d'][dm] mcn-deq/deq (D2 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/deq D1' D3')
+	   (mecn-deq/deq D2' D4')
+	   <- cut-cn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-kd-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/cn/lam (D1 d) (D2 d))
+	   ([d'][dm] mcn-deq/cn/lam (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/cn/lam D1'' D2')
+	   (mecn-deq/cn/lam D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-deq M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-cn-deq M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ecn-deq M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/tp/forall (D1 d) (D2 d))
+	   ([d'][dm] mcn-deq/tp/forall (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/tp/forall D1'' D2')
+	   (mecn-deq/tp/forall D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-deq M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-cn-deq M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ecn-deq M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-cn-deq (met/pair M1 M2) 
+	   ([d] cn-deq/cn/mu (D1 d) (D2 d))
+	   ([d'][dm] mcn-deq/cn/mu (D3 d' dm) (D4 d' dm))
+	   DL
+	   (ecn-deq/cn/mu D1'' D2')
+	   (mecn-deq/cn/mu D3'' D4')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-kd-deq M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-cn-deq M1 
+		 ([e] D1 d y e)
+		 ([e][em] D3 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D1' d y e')
+		 (D3' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ecn-deq M1 
+		 ([d] D1' d y e')
+		 ([d] [dm] D3' d dm y e')
+		 (DL' y e')
+		 (D1'' y e')
+		 (D3'' y e')).
+
+-	: cut-cn-deq (met/pair M1 (met/pair M2 M3)) 
+	   ([d] cn-deq/pi-ext (D1 d) (D2 d) (D5 d))
+	   ([d'][dm] mcn-deq/pi-ext (D3 d' dm) (D4 d' dm) (D6 d' dm))
+	   DL
+	   (ecn-deq/pi-ext D1' D2' D5'')
+	   (mecn-deq/pi-ext D3' D4' D6'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-ofkd M1 D1 D3 DL D1' D3'
+	   <- cut-ofkd M2 D2 D4 DL D2' D4'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-cn-deq M3 
+		 ([e] D5 d y e)
+		 ([e][em] D6 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D5' d y e')
+		 (D6' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ecn-deq M3 
+		 ([d] D5' d y e')
+		 ([d] [dm] D6' d dm y e')
+		 (DL' y e')
+		 (D5'' y e')
+		 (D6'' y e')).
+
+-	: cut-cn-deq (met/pair M1 M3) 
+	   ([d] cn-deq/pi-ext-2 (D1 d) (D5 d))
+	   ([d'][dm] mcn-deq/pi-ext-2 (D3 d' dm) (D6 d' dm))
+	   DL
+	   (ecn-deq/pi-ext-2 D1' D5'')
+	   (mecn-deq/pi-ext-2 D3' D6'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-cn-deq M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-cn-deq M3 
+		 ([e] D5 d y e)
+		 ([e][em] D6 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D5' d y e')
+		 (D6' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-ecn-deq M3 
+		 ([d] D5' d y e')
+		 ([d] [dm] D6' d dm y e')
+		 (DL' y e')
+		 (D5'' y e')
+		 (D6'' y e')).
+
+
+
+-	: cut-ekd-wf met/unit
+	   ([d] ekd-wf/kd/unit DO)
+	   ([d][dm] mekd-wf/kd/unit)
+	   DL
+	   (ekd-wf/kd/unit DO)
+	   (mekd-wf/kd/unit).
+
+-	: cut-ekd-wf met/unit
+	   ([d] ekd-wf/kd/type DO)
+	   ([d][dm] mekd-wf/kd/type)
+	   DL
+	   (ekd-wf/kd/type DO)
+	   (mekd-wf/kd/type).
+
+-	: cut-ekd-wf (met/sing Mm)
+	   ([d] ekd-wf/kd/sing (D1 d))
+	   ([d][dm] mekd-wf/kd/sing (D2 d dm))
+	   DL
+	   (ekd-wf/kd/sing D1')
+	   (mekd-wf/kd/sing D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ekd-wf (met/pair M1 M2)
+	   ([d] ekd-wf/kd/sgm (D1 d) (D2 d))
+	   ([d][dm] mekd-wf/kd/sgm (D3 d dm) (D4 d dm))
+	   DL
+	   (ekd-wf/kd/sgm D1' D2')
+	   (mekd-wf/kd/sgm D3' D4')
+	   <- cut-ekd-wf M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-wf-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-wf M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+-	: cut-ekd-wf (met/pair M1 M2)
+	   ([d] ekd-wf/kd/pi (D1 d) (D2 d))
+	   ([d][dm] mekd-wf/kd/pi (D3 d dm) (D4 d dm))
+	   DL
+	   (ekd-wf/kd/pi D1' D2')
+	   (mekd-wf/kd/pi D3' D4')
+	   <- cut-ekd-wf M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-wf-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-wf M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+
+
+-	: cut-ekd-deq met/unit
+	   ([d] ekd-deq/kd/unit DO)
+	   ([d][dm] mekd-deq/kd/unit)
+	   DL
+	   (ekd-deq/kd/unit DO)
+	   (mekd-deq/kd/unit).
+
+-	: cut-ekd-deq met/unit
+	   ([d] ekd-deq/kd/type DO)
+	   ([d][dm] mekd-deq/kd/type)
+	   DL
+	   (ekd-deq/kd/type DO)
+	   (mekd-deq/kd/type).
+
+-	: cut-ekd-deq (met/sing Mm)
+	   ([d] ekd-deq/kd/sing (D1 d))
+	   ([d][dm] mekd-deq/kd/sing (D2 d dm))
+	   DL
+	   (ekd-deq/kd/sing D1')
+	   (mekd-deq/kd/sing D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ekd-deq (met/pair M1 M2)
+	   ([d] ekd-deq/kd/sgm (D1 d) (D2 d))
+	   ([d][dm] mekd-deq/kd/sgm (D3 d dm) (D4 d dm))
+	   DL
+	   (ekd-deq/kd/sgm D1' D2')
+	   (mekd-deq/kd/sgm D3' D4')
+	   <- cut-ekd-deq M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-deq-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-deq M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+-	: cut-ekd-deq (met/pair M1 M2)
+	   ([d] ekd-deq/kd/pi (D1 d) (D2 d))
+	   ([d][dm] mekd-deq/kd/pi (D3 d dm) (D4 d dm))
+	   DL
+	   (ekd-deq/kd/pi D1' D2')
+	   (mekd-deq/kd/pi D3' D4')
+	   <- cut-ekd-deq M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-deq-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-deq M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+
+
+-	: cut-ekd-sub met/unit
+	   ([d] ekd-sub/kd/unit DO)
+	   ([d][dm] mekd-sub/kd/unit)
+	   DL
+	   (ekd-sub/kd/unit DO)
+	   (mekd-sub/kd/unit).
+
+-	: cut-ekd-sub met/unit
+	   ([d] ekd-sub/kd/type DO)
+	   ([d][dm] mekd-sub/kd/type)
+	   DL
+	   (ekd-sub/kd/type DO)
+	   (mekd-sub/kd/type).
+
+-	: cut-ekd-sub (met/sing Mm)
+	   ([d] ekd-sub/kd/sing-kd/sing (D1 d))
+	   ([d][dm] mekd-sub/kd/sing-kd/sing (D2 d dm))
+	   DL
+	   (ekd-sub/kd/sing-kd/sing D1')
+	   (mekd-sub/kd/sing-kd/sing D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ekd-sub (met/sing Mm)
+	   ([d] ekd-sub/kd/sing-kd/type (D1 d))
+	   ([d][dm] mekd-sub/kd/sing-kd/type (D2 d dm))
+	   DL
+	   (ekd-sub/kd/sing-kd/type D1')
+	   (mekd-sub/kd/sing-kd/type D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ekd-sub (met/pair M1 (met/pair M2 M3))
+	   ([d] ekd-sub/kd/pi (D1 d) (D2 d) (D5 d))
+	   ([d][dm] mekd-sub/kd/pi (D3 d dm) (D4 d dm) (D6 d dm))
+	   DL
+	   (ekd-sub/kd/pi D1' D2' D5')
+	   (mekd-sub/kd/pi D3' D4' D6')
+	   <- cut-ekd-sub M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-sub-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-sub M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL'' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-wf M3 ([d] D5 d y e) ([d][dm] D6 d dm y e) (DL'' y e)
+		 (D5' y e) (D6' y e)).
+
+-	: cut-ekd-sub (met/pair M1 (met/pair M2 M3))
+	   ([d] ekd-sub/kd/sgm (D1 d) (D2 d) (D5 d))
+	   ([d][dm] mekd-sub/kd/sgm (D3 d dm) (D4 d dm) (D6 d dm))
+	   DL
+	   (ekd-sub/kd/sgm D1' D2' D5')
+	   (mekd-sub/kd/sgm D3' D4' D6')
+	   <- cut-ekd-sub M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ekd-sub-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-sub M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL'' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ekd-wf M3 ([d] D5 d y e) ([d][dm] D6 d dm y e) (DL'' y e)
+		 (D5' y e) (D6' y e)).
+
+
+
+-	: cut-eofkd met/unit
+	   ([d] eofkd/cn/unit DO)
+	   ([d][dm] meofkd/cn/unit)
+	   DL
+	   (eofkd/cn/unit DO)
+	   (meofkd/cn/unit).
+
+-	: cut-eofkd met/unit
+	   ([d] eofkd/tp/unit DO)
+	   ([d][dm] meofkd/tp/unit)
+	   DL
+	   (eofkd/tp/unit DO)
+	   (meofkd/tp/unit).
+
+-	: cut-eofkd met/unit
+	   ([d] eofkd/tp/tagged DO)
+	   ([d][dm] meofkd/tp/tagged)
+	   DL
+	   (eofkd/tp/tagged DO)
+	   (meofkd/tp/tagged).
+
+-	: cut-eofkd (met/sing Mm)
+	   ([d] eofkd/kd/sing (D1 d))
+	   ([d][dm] meofkd/kd/sing (D2 d dm))
+	   DL
+	   (eofkd/kd/sing D1')
+	   (meofkd/kd/sing D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-eofkd (met/sing Mm)
+	   ([d] eofkd/tp/ref (D1 d))
+	   ([d][dm] meofkd/tp/ref (D2 d dm))
+	   DL
+	   (eofkd/tp/ref D1')
+	   (meofkd/tp/ref D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-eofkd (met/sing Mm)
+	   ([d] eofkd/tp/tag (D1 d))
+	   ([d][dm] meofkd/tp/tag (D2 d dm))
+	   DL
+	   (eofkd/tp/tag D1')
+	   (meofkd/tp/tag D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-eofkd (met/sing Mm)
+	   ([d] eofkd/cn/pj1 (D1 d))
+	   ([d][dm] meofkd/cn/pj1 (D2 d dm))
+	   DL
+	   (eofkd/cn/pj1 D1')
+	   (meofkd/cn/pj1 D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-eofkd (met/sing Mm)
+	   ([d] eofkd/cn/pj2 (D1 d))
+	   ([d][dm] meofkd/cn/pj2 (D2 d dm))
+	   DL
+	   (eofkd/cn/pj2 D1')
+	   (meofkd/cn/pj2 D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/cn/pair (D1 d) (D3 d))
+	   ([d][dm] meofkd/cn/pair (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/cn/pair D1' D3')
+	   (meofkd/cn/pair D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/tp/cross (D1 d) (D3 d))
+	   ([d][dm] meofkd/tp/cross (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/tp/cross D1' D3')
+	   (meofkd/tp/cross D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/cn/app (D1 d) (D3 d))
+	   ([d][dm] meofkd/cn/app (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/cn/app D1' D3')
+	   (meofkd/cn/app D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/sgm-ext (D1 d) (D3 d))
+	   ([d][dm] meofkd/sgm-ext (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/sgm-ext D1' D3')
+	   (meofkd/sgm-ext D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/tp/arrow (D1 d) (D3 d))
+	   ([d][dm] meofkd/tp/arrow (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/tp/arrow D1' D3')
+	   (meofkd/tp/arrow D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/tp/sum (D1 d) (D3 d))
+	   ([d][dm] meofkd/tp/sum (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/tp/sum D1' D3')
+	   (meofkd/tp/sum D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/sub (D1 d) (D3 d))
+	   ([d][dm] meofkd/sub (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/sub D1' D3')
+	   (meofkd/sub D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ekd-sub M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/deq (D1 d) (D3 d))
+	   ([d][dm] meofkd/deq (D2 d dm) (D4 d dm))
+	   DL
+	   (eofkd/deq D1' D3')
+	   (meofkd/deq D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-ekd-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/cn/lam (D1 d) (D2 d))
+	   ([d][dm] meofkd/cn/lam (D3 d dm) (D4 d dm))
+	   DL
+	   (eofkd/cn/lam D1' D2')
+	   (meofkd/cn/lam D3' D4')
+	   <- cut-ekd-wf M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 eofkd-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-eofkd M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/tp/forall (D1 d) (D2 d))
+	   ([d][dm] meofkd/tp/forall (D3 d dm) (D4 d dm))
+	   DL
+	   (eofkd/tp/forall D1' D2')
+	   (meofkd/tp/forall D3' D4')
+	   <- cut-ekd-wf M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 eofkd-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-eofkd M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/cn/mu (D1 d) (D2 d))
+	   ([d][dm] meofkd/cn/mu (D3 d dm) (D4 d dm))
+	   DL
+	   (eofkd/cn/mu D1' D2')
+	   (meofkd/cn/mu D3' D4')
+	   <- cut-ekd-wf M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 eofkd-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-eofkd M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+-	: cut-eofkd (met/pair M1 M2)
+	   ([d] eofkd/pi-ext (D1 d) (D2 d))
+	   ([d][dm] meofkd/pi-ext (D3 d dm) (D4 d dm))
+	   DL
+	   (eofkd/pi-ext D1' D2')
+	   (meofkd/pi-ext D3' D4')
+	   <- cut-eofkd M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 eofkd-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-eofkd M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+-	: cut-eofkd met/unit
+	   ([d] eofkd/var DL)
+	   ([d][dm] meofkd/var)
+	   _
+	   (eofkd/var DL)
+	   (meofkd/var).
+
+-	: cut-eofkd Mm
+	   ([d] eofkd/closed (D1 d) DO)
+	   ([d][dm] meofkd/closed (D2 d dm))
+	   DL
+	   D1' 
+	   D2'
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+	   
+
+
+-	: cut-ecn-deq met/unit
+	   ([d] ecn-deq/cn/unit DO)
+	   ([d][dm] mecn-deq/cn/unit)
+	   DL
+	   (ecn-deq/cn/unit DO)
+	   (mecn-deq/cn/unit).
+
+-	: cut-ecn-deq met/unit
+	   ([d] ecn-deq/tp/unit DO)
+	   ([d][dm] mecn-deq/tp/unit)
+	   DL
+	   (ecn-deq/tp/unit DO)
+	   (mecn-deq/tp/unit).
+
+-	: cut-ecn-deq met/unit
+	   ([d] ecn-deq/tp/tagged DO)
+	   ([d][dm] mecn-deq/tp/tagged)
+	   DL
+	   (ecn-deq/tp/tagged DO)
+	   (mecn-deq/tp/tagged).
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/kd/sing (D1 d))
+	   ([d][dm] mecn-deq/kd/sing (D2 d dm))
+	   DL
+	   (ecn-deq/kd/sing D1')
+	   (mecn-deq/kd/sing D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/refl (D1 d))
+	   ([d][dm] mecn-deq/refl (D2 d dm))
+	   DL
+	   (ecn-deq/refl D1')
+	   (mecn-deq/refl D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/sym (D1 d))
+	   ([d][dm] mecn-deq/sym (D2 d dm))
+	   DL
+	   (ecn-deq/sym D1')
+	   (mecn-deq/sym D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/tp/ref (D1 d))
+	   ([d][dm] mecn-deq/tp/ref (D2 d dm))
+	   DL
+	   (ecn-deq/tp/ref D1')
+	   (mecn-deq/tp/ref D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/tp/tag (D1 d))
+	   ([d][dm] mecn-deq/tp/tag (D2 d dm))
+	   DL
+	   (ecn-deq/tp/tag D1')
+	   (mecn-deq/tp/tag D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/cn/pj1 (D1 d))
+	   ([d][dm] mecn-deq/cn/pj1 (D2 d dm))
+	   DL
+	   (ecn-deq/cn/pj1 D1')
+	   (mecn-deq/cn/pj1 D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/sing Mm)
+	   ([d] ecn-deq/cn/pj2 (D1 d))
+	   ([d][dm] mecn-deq/cn/pj2 (D2 d dm))
+	   DL
+	   (ecn-deq/cn/pj2 D1')
+	   (mecn-deq/cn/pj2 D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/kd/unit (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/kd/unit (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/kd/unit D1' D3')
+	   (mecn-deq/kd/unit D2' D4')
+	   <- cut-eofkd M1 D1 D2 DL D1' D2'
+	   <- cut-eofkd M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/trans (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/trans (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/trans D1' D3')
+	   (mecn-deq/trans D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/cn/pair (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/cn/pair (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/cn/pair D1' D3')
+	   (mecn-deq/cn/pair D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/tp/cross (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/tp/cross (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/tp/cross D1' D3')
+	   (mecn-deq/tp/cross D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/cn/app (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/cn/app (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/cn/app D1' D3')
+	   (mecn-deq/cn/app D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/sgm-ext (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/sgm-ext (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/sgm-ext D1' D3')
+	   (mecn-deq/sgm-ext D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/tp/arrow (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/tp/arrow (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/tp/arrow D1' D3')
+	   (mecn-deq/tp/arrow D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/tp/sum (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/tp/sum (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/tp/sum D1' D3')
+	   (mecn-deq/tp/sum D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ecn-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/sub (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/sub (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/sub D1' D3')
+	   (mecn-deq/sub D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ekd-sub M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/deq (D1 d) (D3 d))
+	   ([d][dm] mecn-deq/deq (D2 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/deq D1' D3')
+	   (mecn-deq/deq D2' D4')
+	   <- cut-ecn-deq M1 D1 D2 DL D1' D2'
+	   <- cut-ekd-deq M2 D3 D4 DL D3' D4'.
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/cn/lam (D1 d) (D2 d))
+	   ([d][dm] mecn-deq/cn/lam (D3 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/cn/lam D1' D2')
+	   (mecn-deq/cn/lam D3' D4')
+	   <- cut-ekd-deq M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ecn-deq-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ecn-deq M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/tp/forall (D1 d) (D2 d))
+	   ([d][dm] mecn-deq/tp/forall (D3 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/tp/forall D1' D2')
+	   (mecn-deq/tp/forall D3' D4')
+	   <- cut-ekd-deq M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ecn-deq-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ecn-deq M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+-	: cut-ecn-deq (met/pair M1 M2)
+	   ([d] ecn-deq/cn/mu (D1 d) (D2 d))
+	   ([d][dm] mecn-deq/cn/mu (D3 d dm) (D4 d dm))
+	   DL
+	   (ecn-deq/cn/mu D1' D2')
+	   (mecn-deq/cn/mu D3' D4')
+	   <- cut-ekd-deq M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ecn-deq-ordered (D1 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ecn-deq M1 ([d] D1 d y e) ([d][dm] D3 d dm y e) (DL' y e)
+		 (D1' y e) (D3' y e)).
+
+-	: cut-ecn-deq (met/pair M1 (met/pair M2 M3))
+	   ([d] ecn-deq/pi-ext (D1 d) (D2 d) (D5 d))
+	   ([d][dm] mecn-deq/pi-ext (D3 d dm) (D4 d dm) (D6 d dm))
+	   DL
+	   (ecn-deq/pi-ext D1' D2' D5')
+	   (mecn-deq/pi-ext D3' D4' D6')
+	   <- cut-eofkd M1 D1 D3 DL D1' D3'
+	   <- cut-eofkd M2 D2 D4 DL D2' D4'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ecn-deq-ordered (D5 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ecn-deq M3 ([d] D5 d y e) ([d][dm] D6 d dm y e) (DL' y e)
+		 (D5' y e) (D6' y e)).
+
+-	: cut-ecn-deq (met/pair M1 M3)
+	   ([d] ecn-deq/pi-ext-2 (D1 d) (D5 d))
+	   ([d][dm] mecn-deq/pi-ext-2 (D3 d dm) (D6 d dm))
+	   DL
+	   (ecn-deq/pi-ext-2 D1' D5')
+	   (mecn-deq/pi-ext-2 D3' D6')
+	   <- cut-ecn-deq M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 ecn-deq-ordered (D5 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-ecn-deq M3 ([d] D5 d y e) ([d][dm] D6 d dm y e) (DL' y e)
+		 (D5' y e) (D6' y e)).
+
+%worlds (can-mofkd-block | ofkd-block | ovar-block | bind-block | wbind-block)
+(cut-ofkd _ _ _ _ _ _)
+(cut-kd-wf _ _ _ _ _ _)
+(cut-kd-sub _ _ _ _ _ _)
+(cut-kd-deq _ _ _ _ _ _)
+(cut-ekd-wf _ _ _ _ _ _)
+(cut-eofkd _ _ _ _ _ _)
+(cut-cn-deq _ _ _ _ _ _)
+(cut-ecn-deq _ _ _ _ _ _)
+(cut-ekd-deq _ _ _ _ _ _)
+(cut-ekd-sub _ _ _ _ _ _).
+
+%total (M1 M2 M3 M4 M5 M6 M7 M8 M9 M10) 
+(cut-kd-wf M2 _ _ _ _ _)
+(cut-ofkd M1 _ _ _ _ _)
+(cut-kd-sub M4 _ _ _ _ _)
+(cut-kd-deq M9 _ _ _ _ _)
+(cut-cn-deq M6 _ _ _ _ _)
+(cut-ekd-wf M3 _ _ _ _ _)
+(cut-ekd-deq M10 _ _ _ _ _)
+(cut-ekd-sub M7 _ _ _ _ _)
+(cut-eofkd M5 _ _ _ _ _)
+(cut-ecn-deq M8 _ _ _ _ _).
+

@@ -1,0 +1,59 @@
+%%%% lemmas about location judgments
+
+
+lt-wf-look-sane	: lt-look (lt/cons L LC C) LC' _
+		   -> lt-wf (lt/cons L LC C)
+		   -> loc-less LC LC'
+		   -> uninhabited
+		   -> type.
+%mode lt-wf-look-sane +D1 +D2 +D3 -D4.
+
+-	: lt-wf-look-sane (lt-look/miss LL)
+	   (lt-wf/cons LCS _)
+	   LG 
+	   DU
+	   <- loc-less-pred LG LG'
+	   <- lt-wf-look-sane LL LCS LG' DU.
+
+-	: lt-wf-look-sane lt-look/hit
+	   (lt-wf/cons _ _)
+	   DG
+	   DU
+	   <- loc-less-not-refl DG DU.
+
+
+%worlds () (lt-wf-look-sane _ _ _ _).
+%total D1 (lt-wf-look-sane _ D1 _ _).
+
+
+
+lt-wf-look-unique	: lt-look L LC C
+			   -> lt-look L LC C'
+			   -> lt-wf L
+			   -> seq/cn C C'
+			   -> type.
+%mode lt-wf-look-unique +D1 +D2 +D3 -D4.
+
+-	: lt-wf-look-unique lt-look/hit lt-look/hit _ seq/cn/refl.
+
+-	: lt-wf-look-unique (lt-look/miss LL1) (lt-look/miss LL2) 
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- lt-wf-look-unique LL1 LL2 LW DQ.
+
+-	: lt-wf-look-unique lt-look/hit (lt-look/miss LL)
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- loc-less-immsucc _ LG
+	   <- lt-wf-look-sane LL LW LG DU
+	   <- uninhabited-seq/cn _ _ DU DQ.
+
+-	: lt-wf-look-unique (lt-look/miss LL) lt-look/hit 
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- loc-less-immsucc _ LG
+	   <- lt-wf-look-sane LL LW LG DU
+	   <- uninhabited-seq/cn _ _ DU DQ.
+
+%worlds () (lt-wf-look-unique _ _ _ _).
+%total D1 (lt-wf-look-unique _ _ D1 _).

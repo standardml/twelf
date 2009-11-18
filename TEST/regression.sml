@@ -6,7 +6,6 @@ structure RegressionTest = struct
 
  local
    val _ = Twelf.chatter := 0
-   val _ = Twelf.doubleCheck := true
    val errors = ref 0
    fun reportError(file) = 
 	 (errors := !errors + 1;
@@ -52,7 +51,7 @@ structure RegressionTest = struct
  fun process (filename) = 
      let 
 	 val file = TextIO.openIn filename
-	 fun readline (str : string) =
+	 fun runline (str : string) =
 	     if String.isPrefix "#" str 
 	     then NONE
 	     else if String.isPrefix "testUnsafe" str 
@@ -62,16 +61,25 @@ structure RegressionTest = struct
 	     then SOME(test(String.extract(str,5,SOME(String.size str - 6))))
 	     else NONE (* Ignore any non-standard line *)
 
-	 fun getstatus status = 
+         exception Aborted
+
+	 fun getstatus (status,msg) = 
 	     case status of 
 		 NONE => ()
-	       | SOME(Twelf.OK) => print "... OK.\n"
-	       | SOME(Twelf.ABORT) => print "... ABORT!\n"
+	       | SOME(Twelf.OK) => print ("..."^msg)
+	       | SOME(Twelf.ABORT) => print ("...ABORT!\n"; raise Aborted)
 
 	 fun readfile() = 
 	     case TextIO.inputLine file of
-		 NONE => conclude()
-	       | (SOME s) => (getstatus(readline s); readfile())
+		 NONE => (TextIO.closeIn file; conclude())
+	       | (SOME s) => 
+                 let in
+                   Twelf.doubleCheck := false;
+                   getstatus(runline s, "OK.\n"); 
+                   Twelf.doubleCheck := true;
+                   getstatus(runline s, "Double checked.\n");
+                   readfile()
+                 end handle Aborted => readfile()
      in
 	 readfile()
      end		     

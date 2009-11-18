@@ -1,0 +1,7 @@
+test crary/mldef-alpha/sources.cfg
+test crary/substruct/linear.cfg
+test crary/substruct/lineard.cfg
+test crary/substruct/modal.cfg
+test crary/tslf/sources.cfg
+
+

@@ -1,0 +1,851 @@
+
+%%%%%  Spurious worlds  %%%%%
+
+%worlds (conblock) (con) (kind).
+
+
+
+
+%%%%%  Equalities  %%%%%
+
+con-eq : con -> con -> type.
+con-eq/i : con-eq C C.
+
+entp-eq : entp -> entp -> type.
+entp-eq/i : entp-eq ET ET.
+
+entry-eq : entry -> entry -> type.
+entry-eq/i : entry-eq EN EN.
+
+kind-eq : kind -> kind -> type.
+kind-eq/i : kind-eq K K.
+
+module-eq : module -> module -> type.
+module-eq/i : module-eq M M.
+
+name-eq : name -> name -> type.
+name-eq/i : name-eq L L.
+
+purity-eq : purity -> purity -> type.
+purity-eq/i : purity-eq P P.
+
+sg-eq : sg -> sg -> type.
+sg-eq/i : sg-eq S S.
+
+store-eq : store -> store -> type.
+store-eq/i : store-eq ST ST.
+
+sttp-eq : sttp -> sttp -> type.
+sttp-eq/i : sttp-eq F F.
+
+term-eq : term -> term -> type.
+term-eq/i : term-eq E E.
+
+
+
+
+%%%%%  Vacuity  %%%%%
+
+false-implies-cn-of : false -> cn-of C K -> type.
+%mode +{C:con} +{K:kind} +{X1:false} -{X2:cn-of C K} (false-implies-cn-of X1 X2).
+%worlds (conblock) (false-implies-cn-of _ _).
+%total {} (false-implies-cn-of _ _).
+
+
+
+false-implies-kd-equiv : false -> kd-equiv K1 K2 -> type.
+%mode +{K1:kind} +{K2:kind} +{X1:false} -{X2:kd-equiv K1 K2}
+   (false-implies-kd-equiv X1 X2).
+%worlds (conbind) (false-implies-kd-equiv _ _).
+%total {} (false-implies-kd-equiv _ _).
+
+
+
+false-implies-kind-eq : false -> kind-eq K1 K2 -> type.
+%mode +{K1:kind} +{K2:kind} +{X1:false} -{X2:kind-eq K1 K2}
+   (false-implies-kind-eq X1 X2).
+%worlds (conblock) (false-implies-kind-eq _ _).
+%total {} (false-implies-kind-eq _ _).
+
+
+
+false-implies-entp-eq : false -> entp-eq ET ET' -> type.
+%mode +{ET:entp} +{ET':entp} +{X1:false} -{X2:entp-eq ET ET'}
+   (false-implies-entp-eq X1 X2).
+%worlds () (false-implies-entp-eq _ _).
+%total {} (false-implies-entp-eq _ _).
+
+
+
+false-implies-entry-eq : false -> entry-eq EN EN' -> type.
+%mode +{EN:entry} +{EN':entry} +{X1:false} -{X2:entry-eq EN EN'}
+   (false-implies-entry-eq X1 X2).
+%worlds () (false-implies-entry-eq _ _).
+%total {} (false-implies-entry-eq _ _).
+
+
+
+false-implies-entry-of : false -> entry-of F EN ET -> type.
+%mode +{F:sttp} +{EN:entry} +{ET:entp} +{X1:false} -{X2:entry-of F EN ET}
+   (false-implies-entry-of X1 X2).
+%worlds (conblock) (false-implies-entry-of _ _).
+%total {} (false-implies-entry-of _ _).
+
+
+
+false-implies-sg-sub : false -> sg-sub S S' -> type.
+%mode +{S:sg} +{S':sg} +{X1:false} -{X2:sg-sub S S'} (false-implies-sg-sub X1 X2).
+%worlds (conbind) (false-implies-sg-sub _ _).
+%total {} (false-implies-sg-sub _ _).
+
+
+
+false-implies-store-eq : false -> store-eq ST ST' -> type.
+%mode +{ST:store} +{ST':store} +{X1:false} -{X2:store-eq ST ST'}
+   (false-implies-store-eq X1 X2).
+%worlds () (false-implies-store-eq _ _).
+%total {} (false-implies-store-eq _ _).
+
+
+
+false-implies-store-of : false -> store-of F1 ST F2 -> type.
+%mode +{F1:sttp} +{ST:store} +{F2:sttp} +{X1:false} -{X2:store-of F1 ST F2}
+   (false-implies-store-of X1 X2).
+%worlds (conblock) (false-implies-store-of _ _).
+%total {} (false-implies-store-of _ _).
+
+
+
+false-implies-module-eq : false -> module-eq M M' -> type.
+%mode +{M:module} +{M':module} +{X1:false} -{X2:module-eq M M'}
+   (false-implies-module-eq X1 X2).
+%worlds () (false-implies-module-eq _ _).
+%total {} (false-implies-module-eq _ _).
+
+
+
+false-implies-purity-eq : false -> purity-eq P P' -> type.
+%mode +{P:purity} +{P':purity} +{X1:false} -{X2:purity-eq P P'}
+   (false-implies-purity-eq X1 X2).
+%worlds () (false-implies-purity-eq _ _).
+%total {} (false-implies-purity-eq _ _).
+
+
+
+false-implies-sg-eq : false -> sg-eq S S' -> type.
+%mode +{S:sg} +{S':sg} +{X1:false} -{X2:sg-eq S S'} (false-implies-sg-eq X1 X2).
+%worlds (conblock) (false-implies-sg-eq _ _).
+%total {} (false-implies-sg-eq _ _).
+
+
+
+false-implies-term-eq : false -> term-eq E E' -> type.
+%mode +{E:term} +{E':term} +{X1:false} -{X2:term-eq E E'}
+   (false-implies-term-eq X1 X2).
+%worlds () (false-implies-term-eq _ _).
+%total {} (false-implies-term-eq _ _).
+
+
+
+
+%%%%%  Symmetry  %%%%%
+
+con-eq-symm : con-eq C1 C2 -> con-eq C2 C1 -> type.
+%mode con-eq-symm +X1 -X2.
+
+-	: con-eq-symm D D.
+
+%worlds (conblock) (con-eq-symm _ _).
+%total {} (con-eq-symm _ _).
+
+
+
+kind-eq-symm : kind-eq K1 K2 -> kind-eq K2 K1 -> type.
+%mode kind-eq-symm +X1 -X2.
+
+-	: kind-eq-symm D D.
+
+%worlds (conblock) (kind-eq-symm _ _).
+%total {} (kind-eq-symm _ _).
+
+
+
+name-eq-symm : name-eq L1 L2 -> name-eq L2 L1 -> type.
+%mode name-eq-symm +X1 -X2.
+
+-	: name-eq-symm _ name-eq/i.
+
+%worlds () (name-eq-symm _ _).
+%total {} (name-eq-symm _ _).
+
+
+
+sg-eq-symm : sg-eq S1 S2 -> sg-eq S2 S1 -> type.
+%mode sg-eq-symm +X1 -X2.
+
+-	: sg-eq-symm D D.
+
+%worlds (conblock) (sg-eq-symm _ _).
+%total {} (sg-eq-symm _ _).
+
+
+
+term-eq-symm : term-eq E1 E2 -> term-eq E2 E1 -> type.
+%mode term-eq-symm +X1 -X2.
+
+-	: term-eq-symm D D.
+
+%worlds () (term-eq-symm _ _).
+%total {} (term-eq-symm _ _).
+
+
+
+module-eq-symm : module-eq M1 M2 -> module-eq M2 M1 -> type.
+%mode module-eq-symm +X1 -X2.
+
+-	: module-eq-symm _ module-eq/i.
+
+%worlds (conblock | modvar | termblock) (module-eq-symm _ _).
+%total {} (module-eq-symm _ _).
+
+
+
+
+%%%%%  Transitivity  %%%%%
+
+con-eq-trans : con-eq C1 C2 -> con-eq C2 C3 -> con-eq C1 C3 -> type.
+%mode con-eq-trans +X1 +X2 -X3.
+
+-	: con-eq-trans _ _ con-eq/i.
+
+%worlds (conblock) (con-eq-trans _ _ _).
+%total {} (con-eq-trans _ _ _).
+
+
+
+module-eq-trans : module-eq M1 M2 -> module-eq M2 M3 -> module-eq M1 M3 -> type.
+%mode module-eq-trans +X1 +X2 -X3.
+
+-	: module-eq-trans _ _ module-eq/i.
+
+%worlds (conblock | modvar | termblock) (module-eq-trans _ _ _).
+%total {} (module-eq-trans _ _ _).
+
+
+
+name-eq-trans : name-eq L1 L2 -> name-eq L2 L3 -> name-eq L1 L3 -> type.
+%mode name-eq-trans +X1 +X2 -X3.
+
+-	: name-eq-trans _ _ name-eq/i.
+
+%worlds () (name-eq-trans _ _ _).
+%total {} (name-eq-trans _ _ _).
+
+
+
+sg-eq-trans : sg-eq S1 S2 -> sg-eq S2 S3 -> sg-eq S1 S3 -> type.
+%mode sg-eq-trans +X1 +X2 -X3.
+
+-	: sg-eq-trans _ _ sg-eq/i.
+
+%worlds (conblock) (sg-eq-trans _ _ _).
+%total {} (sg-eq-trans _ _ _).
+
+
+
+
+%%%%%  Cons lemmas  %%%%%
+
+con-resp-con : {C:con -> con} con-eq C1 C1' -> con-eq (C C1) (C C1') -> type.
+%mode con-resp-con +X1 +X2 -X3.
+
+-	: con-resp-con _ con-eq/i con-eq/i.
+
+%worlds (conblock) (con-resp-con _ _ _).
+%total {} (con-resp-con _ _ _).
+
+
+
+con-resp-con2 : {C:con -> con -> con} con-eq C1 C1' -> con-eq C2 C2' -> con-eq (C C1 C2) (C C1' C2') -> type.
+%mode con-resp-con2 +X1 +X2 +X3 -X4.
+
+-	: con-resp-con2 _ con-eq/i con-eq/i con-eq/i.
+
+%worlds (conblock) (con-resp-con2 _ _ _ _).
+%total {} (con-resp-con2 _ _ _ _).
+
+
+
+con-resp-con-bind : {C:(con -> con) -> con} ({a} con-eq (C1 a) (C1' a)) -> con-eq (C C1) (C C1') -> type.
+%mode con-resp-con-bind +X1 +X2 -X3.
+
+-	: con-resp-con-bind _ ([_] con-eq/i) con-eq/i.
+
+%worlds (conblock) (con-resp-con-bind _ _ _).
+%total {} (con-resp-con-bind _ _ _).
+
+
+
+con-resp-kind : {C:kind -> con} kind-eq K K' -> con-eq (C K) (C K') -> type.
+%mode con-resp-kind +X1 +X2 -X3.
+
+-	: con-resp-kind _ kind-eq/i con-eq/i.
+
+%worlds (conblock) (con-resp-kind _ _ _).
+%total {} (con-resp-kind _ _ _).
+
+
+
+con-resp-kind2-bind : {C:kind -> (con -> kind) -> con} kind-eq K1 K1' -> ({a} kind-eq (K2 a) (K2' a)) -> con-eq (C K1 K2) (C K1' K2') -> type.
+%mode con-resp-kind2-bind +X1 +X2 +X3 -X4.
+
+-	: con-resp-kind2-bind _ (_ : kind-eq K1 K1) (_ : {a} kind-eq (K2 a) (K2 a)) con-eq/i.
+
+%worlds (conblock) (con-resp-kind2-bind _ _ _ _).
+%total {} (con-resp-kind2-bind _ _ _ _).
+
+
+
+kind-resp-con : {K:con -> kind} con-eq C C' -> kind-eq (K C) (K C') -> type.
+%mode kind-resp-con +X1 +X2 -X3.
+
+-	: kind-resp-con _ con-eq/i kind-eq/i.
+
+%worlds (conblock) (kind-resp-con _ _ _).
+%total {} (kind-resp-con _ _ _).
+
+
+
+kind-resp-kind : {K:kind -> kind} kind-eq K1 K1' -> kind-eq (K K1) (K K1') -> type.
+%mode kind-resp-kind +X1 +X2 -X3.
+
+-	: kind-resp-kind _ kind-eq/i kind-eq/i.
+
+%worlds (conblock) (kind-resp-kind _ _ _).
+%total {} (kind-resp-kind _ _ _).
+
+
+
+lam-resp : kind-eq K K' -> ({a} con-eq (C a) (C' a)) -> con-eq (lam K C) (lam K' C') -> type.
+%mode lam-resp +X1 +X2 -X3.
+
+-	: lam-resp kind-eq/i ([_] con-eq/i) con-eq/i.
+
+%worlds (conblock) (lam-resp _ _ _).
+%total {} (lam-resp _ _ _).
+
+
+
+module-resp-con : {M:con -> module} con-eq C1 C2 -> module-eq (M C1) (M C2) -> type.
+%mode module-resp-con +X1 +X2 -X3.
+
+-	: module-resp-con _ con-eq/i module-eq/i.
+
+%worlds (conblock | modblock) (module-resp-con _ _ _).
+%total {} (module-resp-con _ _ _).
+
+
+
+module-resp-module : {M:module -> module} module-eq M1 M2 -> module-eq (M M1) (M M2) -> type.
+%mode module-resp-module +X1 +X2 -X3.
+
+-	: module-resp-module _ module-eq/i module-eq/i.
+
+%worlds (conblock | termblock | modvar) (module-resp-module _ _ _).
+%total {} (module-resp-module _ _ _).
+
+
+
+module-resp-term : {M:term -> module} term-eq E E' -> module-eq (M E) (M E') -> type.
+%mode module-resp-term +X1 +X2 -X3.
+
+-	: module-resp-term _ term-eq/i module-eq/i.
+
+%worlds () (module-resp-term _ _ _).
+%total {} (module-resp-term _ _ _).
+
+
+
+pair-resp : con-eq C1 C1' -> con-eq C2 C2' -> con-eq (pair C1 C2) (pair C1' C2') -> type.
+%mode pair-resp +X1 +X2 -X3.
+
+-	: pair-resp _ _ con-eq/i.
+
+%worlds (conblock) (pair-resp _ _ _).
+%total {} (pair-resp _ _ _).
+
+
+
+pi-resp : kind-eq K1 K1' -> ({a:con} kind-eq (K2 a) (K2' a)) -> kind-eq (pi K1 K2) (pi K1' K2') -> type.
+%mode pi-resp +X1 +X2 -X3.
+
+-	: pi-resp kind-eq/i ([_] kind-eq/i) kind-eq/i.
+
+%worlds (conblock) (pi-resp _ _ _).
+%total {} (pi-resp _ _ _).
+
+
+
+sg-resp-con : {S:con -> sg} con-eq C C' -> sg-eq (S C) (S C') -> type.
+%mode sg-resp-con +X1 +X2 -X3.
+
+-	: sg-resp-con S _ sg-eq/i.
+
+%worlds (conblock) (sg-resp-con _ _ _).
+%total {} (sg-resp-con _ _ _).
+
+
+
+sg-resp-con-funct : ({a} sg-eq (S a) (S' a)) -> con-eq C C' -> sg-eq (S C) (S' C') -> type.
+%mode sg-resp-con-funct +X1 +X2 -X3.
+
+-	: sg-resp-con-funct ([_] sg-eq/i) con-eq/i sg-eq/i.
+
+%worlds (conblock) (sg-resp-con-funct _ _ _).
+%total {} (sg-resp-con-funct _ _ _).
+
+
+
+sg-resp-kind : {S:kind -> sg} kind-eq K K' -> sg-eq (S K) (S K') -> type.
+%mode sg-resp-kind +X1 +X2 -X3.
+
+-	: sg-resp-kind _ kind-eq/i sg-eq/i.
+
+%worlds (conblock) (sg-resp-kind _ _ _).
+%total {} (sg-resp-kind _ _ _).
+
+
+
+sg-resp-name : {S:name -> sg} name-eq L1 L2 -> sg-eq (S L1) (S L2) -> type.
+%mode sg-resp-name +X1 +X2 -X3.
+
+-	: sg-resp-name S _ sg-eq/i.
+
+%worlds (conblock) (sg-resp-name _ _ _).
+%total {} (sg-resp-name _ _ _).
+
+
+
+sg-resp-sg : {S:sg -> sg} sg-eq S1 S2 -> sg-eq (S S1) (S S2) -> type.
+%mode sg-resp-sg +X1 +X2 -X3.
+
+-	: sg-resp-sg _ sg-eq/i sg-eq/i.
+
+%worlds (conblock) (sg-resp-sg _ _ _).
+%total {} (sg-resp-sg _ _ _).
+
+
+
+sg/pi-resp : sg-eq S1 S1' -> ({a} sg-eq (S2 a) (S2' a)) -> sg-eq (sg/pi S1 S2) (sg/pi S1' S2') -> type.
+%mode sg/pi-resp +X1 +X2 -X3.
+
+-	: sg/pi-resp sg-eq/i ([_] sg-eq/i) sg-eq/i.
+
+%worlds (conblock) (sg/pi-resp _ _ _).
+%total {} (sg/pi-resp _ _ _).
+
+
+
+sg/sigma-resp : sg-eq S1 S1' -> ({a} sg-eq (S2 a) (S2' a)) -> sg-eq (sg/sigma S1 S2) (sg/sigma S1' S2') -> type.
+%mode sg/sigma-resp +X1 +X2 -X3.
+
+-	: sg/sigma-resp sg-eq/i ([_] sg-eq/i) sg-eq/i.
+
+%worlds (conblock) (sg/sigma-resp _ _ _).
+%total {} (sg/sigma-resp _ _ _).
+
+
+
+sigma-resp : kind-eq K1 K1' -> ({a:con} kind-eq (K2 a) (K2' a)) -> kind-eq (sigma K1 K2) (sigma K1' K2') -> type.
+%mode sigma-resp +X1 +X2 -X3.
+
+-	: sigma-resp kind-eq/i ([_] kind-eq/i) kind-eq/i.
+
+%worlds (conblock) (sigma-resp _ _ _).
+%total {} (sigma-resp _ _ _).
+
+
+
+store-resp-store : {ST:store -> store} store-eq ST1 ST1' -> store-eq (ST ST1) (ST ST1') -> type.
+%mode store-resp-store +X1 +X2 -X3.
+
+-	: store-resp-store _ store-eq/i store-eq/i.
+
+%worlds () (store-resp-store _ _ _).
+%total {} (store-resp-store _ _ _).
+
+
+
+term-resp-module : {E:module -> term} module-eq M M' -> term-eq (E M) (E M') -> type.
+%mode term-resp-module +X1 +X2 -X3.
+
+-	: term-resp-module _ module-eq/i term-eq/i.
+
+%worlds () (term-resp-module _ _ _).
+%total {} (term-resp-module _ _ _).
+
+
+
+term-resp-term : {E:term -> term} term-eq E1 E1' -> term-eq (E E1) (E E1') -> type.
+%mode term-resp-term +X1 +X2 -X3.
+
+-	: term-resp-term _ term-eq/i term-eq/i.
+
+%worlds () (term-resp-term _ _ _).
+%total {} (term-resp-term _ _ _).
+
+
+term-resp-term2 : {E:term -> term -> term} term-eq E1 E1' -> term-eq E2 E2' -> term-eq (E E1 E2) (E E1' E2') -> type.
+%mode term-resp-term2 +X1 +X2 +X3 -X4.
+
+-	: term-resp-term2 _ term-eq/i term-eq/i term-eq/i.
+
+%worlds () (term-resp-term2 _ _ _ _).
+%total {} (term-resp-term2 _ _ _ _).
+
+
+
+
+%%%%%  Cdr Lemmas  %%%%%
+
+entp-eq-invert-tag : entp-eq (et/tag T) (et/tag T') -> con-eq T T' -> type.
+%mode entp-eq-invert-tag +X1 -X2.
+
+-	: entp-eq-invert-tag entp-eq/i con-eq/i.
+
+%worlds () (entp-eq-invert-tag _ _).
+%total {} (entp-eq-invert-tag _ _).
+
+
+
+entry-eq-invert-ref : entry-eq (entry/ref E) (entry/ref E') -> term-eq E E' -> type.
+%mode entry-eq-invert-ref +X1 -X2.
+
+-	: entry-eq-invert-ref entry-eq/i term-eq/i.
+
+%worlds () (entry-eq-invert-ref _ _).
+%total {} (entry-eq-invert-ref _ _).
+
+
+
+kind-eq-pi-invert : kind-eq (pi K1 K2) (pi K1' K2') -> kind-eq K1 K1' -> ({a} kind-eq (K2 a) (K2' a)) -> type.
+%mode kind-eq-pi-invert +X1 -X2 -X3.
+
+-	: kind-eq-pi-invert _ kind-eq/i ([_] kind-eq/i).
+
+%worlds (conblock) (kind-eq-pi-invert _ _ _).
+%total {} (kind-eq-pi-invert _ _ _).
+
+
+
+kind-eq-sigma-invert : kind-eq (sigma K1 K2) (sigma K1' K2') -> kind-eq K1 K1' -> ({a} kind-eq (K2 a) (K2' a)) -> type.
+%mode kind-eq-sigma-invert +X1 -X2 -X3.
+
+-	: kind-eq-sigma-invert _ kind-eq/i ([_] kind-eq/i).
+
+%worlds (conblock) (kind-eq-sigma-invert _ _ _).
+%total {} (kind-eq-sigma-invert _ _ _).
+
+
+
+module-eq-pi1-invert : module-eq (md/pi1 M) (md/pi1 M') -> module-eq M M' -> type.
+%mode module-eq-pi1-invert +X1 -X2.
+
+-	: module-eq-pi1-invert _ module-eq/i.
+
+%worlds (conblock | modvar | termblock) (module-eq-pi1-invert _ _).
+%total {} (module-eq-pi1-invert _ _).
+
+
+
+module-eq-pi2-invert : module-eq (md/pi2 M) (md/pi2 M') -> module-eq M M' -> type.
+%mode module-eq-pi2-invert +X1 -X2.
+
+-	: module-eq-pi2-invert _ module-eq/i.
+
+%worlds (conblock | modvar | termblock) (module-eq-pi2-invert _ _).
+%total {} (module-eq-pi2-invert _ _).
+
+
+
+module-eq-out-invert : module-eq (md/out M) (md/out M') -> module-eq M M' -> type.
+%mode module-eq-out-invert +X1 -X2.
+
+-	: module-eq-out-invert _ module-eq/i.
+
+%worlds (conblock | modvar | termblock) (module-eq-out-invert _ _).
+%total {} (module-eq-out-invert _ _).
+
+
+
+sg-eq-named-invert : sg-eq (sg/named L S) (sg/named L' S') -> name-eq L L' -> sg-eq S S' -> type.
+%mode sg-eq-named-invert +X1 -X2 -X3.
+
+-	: sg-eq-named-invert _ name-eq/i sg-eq/i.
+
+%worlds (conblock) (sg-eq-named-invert _ _ _).
+%total {} (sg-eq-named-invert _ _ _).
+
+
+
+sg-eq-pi-invert : sg-eq (sg/pi S1 S2) (sg/pi S1' S2') -> sg-eq S1 S1' -> ({a} sg-eq (S2 a) (S2' a)) -> type.
+%mode sg-eq-pi-invert +X1 -X2 -X3.
+
+-	: sg-eq-pi-invert sg-eq/i sg-eq/i ([_] sg-eq/i).
+
+%worlds (conblock) (sg-eq-pi-invert _ _ _).
+%total {} (sg-eq-pi-invert _ _ _).
+
+
+
+sg-eq-sigma-invert : sg-eq (sg/sigma S1 S2) (sg/sigma S1' S2') -> sg-eq S1 S1' -> ({a} sg-eq (S2 a) (S2' a)) -> type.
+%mode sg-eq-sigma-invert +X1 -X2 -X3.
+
+-	: sg-eq-sigma-invert sg-eq/i sg-eq/i ([_] sg-eq/i).
+
+%worlds (conblock) (sg-eq-sigma-invert _ _ _).
+%total {} (sg-eq-sigma-invert _ _ _).
+
+
+
+
+%%%%%  Contradiction  %%%%%
+
+kind-eq-sigma-t : kind-eq (sigma _ _) t -> false -> type.
+%mode kind-eq-sigma-t +X1 -X2.
+%worlds (conblock) (kind-eq-sigma-t _ _).
+%total {} (kind-eq-sigma-t _ _).
+
+
+
+kind-eq-sigma-pi : kind-eq (sigma _ _) (pi _ _) -> false -> type.
+%mode kind-eq-sigma-pi +X1 -X2.
+%worlds (conblock) (kind-eq-sigma-pi _ _).
+%total {} (kind-eq-sigma-pi _ _).
+
+
+
+kind-eq-t-sing : kind-eq t (sing _) -> false -> type.
+%mode kind-eq-t-sing +X1 -X2.
+%worlds (conblock) (kind-eq-t-sing _ _).
+%total {} (kind-eq-t-sing _ _).
+
+
+
+
+%%%%%  Respects-Equality Lemmas  %%%%%
+
+cn-equiv-resp : con-eq C1 C1' -> con-eq C2 C2' -> kind-eq K K' -> cn-equiv C1 C2 K -> cn-equiv C1' C2' K' -> type.
+%mode cn-equiv-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: cn-equiv-resp con-eq/i con-eq/i kind-eq/i D D.
+
+%worlds (conbind) (cn-equiv-resp _ _ _ _ _).
+%total {} (cn-equiv-resp _ _ _ _ _).
+
+
+
+cn-of-resp : con-eq C C' -> kind-eq K K' -> cn-of C K -> cn-of C' K' -> type.
+%mode cn-of-resp +X1 +X2 +X3 -X4.
+
+-	: cn-of-resp con-eq/i kind-eq/i D D.
+
+%worlds (conbind) (cn-of-resp _ _ _ _).
+%total {} (cn-of-resp _ _ _ _).
+%reduces D = D' (cn-of-resp _ _ D D').
+
+
+
+cn-of-resp-underbind : kind-eq K1 K2 -> ({a} cn-of a K1 -> cn-of (C a) (K a)) -> ({a} cn-of a K2 -> cn-of (C a) (K a)) -> type.
+%mode cn-of-resp-underbind +X1 +X2 -X3.
+
+-	: cn-of-resp-underbind kind-eq/i D D.
+
+%worlds (conbind) (cn-of-resp-underbind _ _ _).
+%total {} (cn-of-resp-underbind _ _ _).
+
+
+
+kd-equiv-resp : kind-eq K1 K1' -> kind-eq K2 K2' -> kd-equiv K1 K2 -> kd-equiv K1' K2' -> type.
+%mode kd-equiv-resp +X1 +X2 +X3 -X4.
+
+-	: kd-equiv-resp kind-eq/i kind-eq/i D D.
+
+%worlds (conblock | conbind) (kd-equiv-resp _ _ _ _).
+%total {} (kd-equiv-resp _ _ _ _).
+%reduces D = D' (kd-equiv-resp _ _ D D').
+
+
+
+kd-sub-resp : kind-eq K1 K1' -> kind-eq K2 K2' -> kd-sub K1 K2 -> kd-sub K1' K2' -> type.
+%mode kd-sub-resp +X1 +X2 +X3 -X4.
+
+-	: kd-sub-resp kind-eq/i kind-eq/i D D.
+
+%worlds (conbind) (kd-sub-resp _ _ _ _).
+%total {} (kd-sub-resp _ _ _ _).
+%reduces D = D' (kd-sub-resp _ _ D D').
+
+
+
+kd-wf-resp : kind-eq K K' -> kd-wf K -> kd-wf K' -> type.
+%mode kd-wf-resp +X1 +X2 -X3.
+
+-	: kd-wf-resp kind-eq/i D D.
+
+%worlds (conbind) (kd-wf-resp _ _ _).
+%total {} (kd-wf-resp _ _ _).
+
+
+
+kd-wf-resp-underbind : kind-eq K1 K2 -> ({a} cn-of a K1 -> kd-wf (K a)) -> ({a} cn-of a K2 -> kd-wf (K a)) -> type.
+%mode kd-wf-resp-underbind +X1 +X2 -X3.
+
+-	: kd-wf-resp-underbind _ D D.
+
+%worlds (conbind) (kd-wf-resp-underbind _ _ _).
+%total {} (kd-wf-resp-underbind _ _ _).
+
+
+
+md-fst-resp : module-eq M1 M2 -> con-eq C1 C2 -> md-fst M1 C1 -> md-fst M2 C2 -> type.
+%mode md-fst-resp +X1 +X2 +X3 -X4.
+
+-	: md-fst-resp _ _ D D.
+
+%worlds (conblock | modblock | termblock) (md-fst-resp _ _ _ _).
+%total {} (md-fst-resp _ _ _ _).
+
+
+
+md-of-resp : purity-eq P P' -> sttp-eq F F' -> module-eq M M' -> sg-eq S S' -> md-of P F M S -> md-of P' F' M' S' -> type.
+%mode md-of-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: md-of-resp _ _ _ _ D D.
+
+%worlds (conbind | modbind | termbind) (md-of-resp _ _ _ _ _ _).
+%total {} (md-of-resp _ _ _ _ _ _).
+
+
+
+sg-equiv-resp : sg-eq S1 S1' -> sg-eq S2 S2' -> sg-equiv S1 S2 -> sg-equiv S1' S2' -> type.
+%mode sg-equiv-resp +X1 +X2 +X3 -X4.
+
+-	: sg-equiv-resp _ _ D D.
+
+%worlds (conbind) (sg-equiv-resp _ _ _ _).
+%total {} (sg-equiv-resp _ _ _ _).
+%reduces D = D' (sg-equiv-resp _ _ D D').
+
+
+
+sg-equiv-resp-underbind : kind-eq K K' -> ({a} cn-of a K -> sg-equiv (S1 a) (S2 a)) -> ({a} cn-of a K' -> sg-equiv (S1 a) (S2 a)) -> type.
+%mode sg-equiv-resp-underbind +X1 +X2 -X3.
+
+-	: sg-equiv-resp-underbind _ D D.
+
+%worlds (conbind) (sg-equiv-resp-underbind _ _ _).
+%total {} (sg-equiv-resp-underbind _ _ _).
+%reduces D = D' (sg-equiv-resp-underbind _ D D').
+
+
+
+sg-fst-resp : sg-eq S S' -> kind-eq K K' -> sg-fst S K -> sg-fst S' K' -> type.
+%mode sg-fst-resp +X1 +X2 +X3 -X4.
+
+-	: sg-fst-resp _ _ D D.
+
+%worlds (conblock) (sg-fst-resp _ _ _ _).
+%total {} (sg-fst-resp _ _ _ _).
+
+
+
+sg-sub-resp : sg-eq S1 S1' -> sg-eq S2 S2' -> sg-sub S1 S2 -> sg-sub S1' S2' -> type.
+%mode sg-sub-resp +X1 +X2 +X3 -X4.
+
+-	: sg-sub-resp _ _ D D.
+
+%worlds (conbind) (sg-sub-resp _ _ _ _).
+%total {} (sg-sub-resp _ _ _ _).
+%reduces D = D' (sg-sub-resp _ _ D D').
+
+
+
+sg-sub-resp-underbind : kind-eq K K' -> ({a} cn-of a K -> sg-sub (S1 a) (S2 a)) -> ({a} cn-of a K' -> sg-sub (S1 a) (S2 a)) -> type.
+%mode sg-sub-resp-underbind +X1 +X2 -X3.
+
+-	: sg-sub-resp-underbind _ D D.
+
+%worlds (conbind) (sg-sub-resp-underbind _ _ _).
+%total {} (sg-sub-resp-underbind _ _ _).
+%reduces D = D' (sg-sub-resp-underbind _ D D').
+
+
+
+sg-wf-resp : sg-eq S S' -> sg-wf S -> sg-wf S' -> type.
+%mode sg-wf-resp +X1 +X2 -X3.
+
+-	: sg-wf-resp _ D D.
+
+%worlds (conbind) (sg-wf-resp _ _ _).
+%total {} (sg-wf-resp _ _ _).
+
+
+
+sg-wf-resp-underbind : kind-eq K K' -> ({a} cn-of a K -> sg-wf (S a)) -> ({a} cn-of a K' -> sg-wf (S a)) -> type.
+%mode sg-wf-resp-underbind +X1 +X2 -X3.
+
+-	: sg-wf-resp-underbind _ D D.
+
+%worlds (conbind) (sg-wf-resp-underbind _ _ _).
+%total {} (sg-wf-resp-underbind _ _ _).
+
+
+
+step-resp : store-eq ST1 ST1' -> term-eq E1 E1' -> store-eq ST2 ST2' -> term-eq E2 E2' -> step ST1 E1 ST2 E2 -> step ST1' E1' ST2' E2' -> type.
+%mode step-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: step-resp store-eq/i term-eq/i store-eq/i term-eq/i D D.
+
+%worlds () (step-resp _ _ _ _ _ _).
+%total {} (step-resp _ _ _ _ _ _).
+
+
+
+step-md-resp : store-eq ST1 ST1' -> module-eq M1 M1' -> store-eq ST2 ST2' -> module-eq M2 M2' -> step-md ST1 M1 ST2 M2 -> step-md ST1' M1' ST2' M2' -> type.
+%mode step-md-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: step-md-resp _ _ _ _ D D.
+
+%worlds () (step-md-resp _ _ _ _ _ _).
+%total {} (step-md-resp _ _ _ _ _ _).
+
+
+
+tm-of-resp : sttp-eq F F' -> term-eq E E' -> con-eq T T' -> tm-of F E T -> tm-of F' E' T' -> type.
+%mode tm-of-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: tm-of-resp sttp-eq/i term-eq/i con-eq/i D D.
+
+%worlds () (tm-of-resp _ _ _ _ _).
+%total {} (tm-of-resp _ _ _ _ _).
+
+
+
+value-resp : term-eq E E' -> value E -> value E' -> type.
+%mode value-resp +X1 +X2 -X3.
+
+-	: value-resp term-eq/i D D.
+
+%worlds () (value-resp _ _ _).
+%total {} (value-resp _ _ _).
+
+
+
+value-md-resp : module-eq M M' -> value-md M -> value-md M' -> type.
+%mode value-md-resp +X1 +X2 -X3.
+
+-	: value-md-resp _ D D.
+
+%worlds () (value-md-resp _ _ _).
+%total {} (value-md-resp _ _ _).

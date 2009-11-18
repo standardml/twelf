@@ -1,0 +1,744 @@
+%%%% inversion lemmas for modules
+
+
+
+inv/ofsg/md/tm	: ofsg L T Y (md/tm E) (sg/cn C)
+		   -> oftp L T E C
+		   -> type.
+%mode inv/ofsg/md/tm +D1 -D2.
+
+-	: inv/ofsg/md/tm (ofsg/md/tm D1) D1.
+
+-	: inv/ofsg/md/tm (ofsg/sub D1  (sg-sub/sg/cn DQ) _) 
+	   (oftp/deq D1' DQ) 
+	   <- inv/ofsg/md/tm D1 D1'.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(inv/ofsg/md/tm _ _).
+%total D1 (inv/ofsg/md/tm D1 _).
+
+
+
+md/tm-not-sg/sgm	: ofsg L T pty/p (md/tm _) (sg/sgm _ _)
+			   -> uninhabited
+			   -> type.
+%mode md/tm-not-sg/sgm +D1 -D2.
+
+-	: md/tm-not-sg/sgm (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- md/tm-not-sg/sgm D1 DU.
+
+-	: md/tm-not-sg/sgm (ofsg/sgm-ext D1 _) DU
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- md/tm-not-sg/sgm D1' DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(md/tm-not-sg/sgm _ _).
+%total D1 (md/tm-not-sg/sgm D1 _).
+
+
+
+md/tm-not-sg/kd	: ofsg L T pty/p (md/tm _) (sg/kd _)
+			   -> uninhabited
+			   -> type.
+%mode md/tm-not-sg/kd +D1 -D2.
+
+-	: md/tm-not-sg/kd (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- md/tm-not-sg/kd D1 DU.
+
+-	: md/tm-not-sg/kd (ofsg/kd-ext D1 _ _) DU
+	   <- md/tm-not-sg/kd D1 DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(md/tm-not-sg/kd _ _).
+%total D1 (md/tm-not-sg/kd D1 _).
+
+
+
+
+inv/ofsg/md/tm	: ofsg L T Y (md/tm E) S
+		   -> oftp L T E C
+		   -> sg-sub (sg/cn C) S
+		   -> type.
+%mode inv/ofsg/md/tm +D1 -D2 -D3.
+
+-	: inv/ofsg/md/tm (ofsg/md/tm D1) D1 DS
+	   <- vdt/ofsg (ofsg/md/tm D1) DW
+	   <- sg-refl/sub DW DS.
+
+-	: inv/ofsg/md/tm (ofsg/sub D1 DS1 _) 
+	   D1' DS''
+	   <- inv/ofsg/md/tm D1 D1' DS
+	   <- sg-trans/sub DS DS1 DS''.
+
+-	: inv/ofsg/md/tm (ofsg/sgm-ext D1 D2) DE DS
+	   <- md/tm-not-sg/sgm (ofsg/sgm-ext D1 D2) (DU: uninhabited)
+	   <- uninhabited-oftp DU _ _ _ cn/unit DE
+	   <- uninhabited-sg-sub (sg/cn cn/unit) _ DU DS.
+
+-	: inv/ofsg/md/tm (ofsg/kd-ext D1 _ _) DE DS
+	   <- md/tm-not-sg/kd D1 (DU: uninhabited)
+	   <- uninhabited-oftp DU _ _ _ cn/unit DE
+	   <- uninhabited-sg-sub (sg/cn cn/unit) _ DU DS.
+
+%worlds () 
+(inv/ofsg/md/tm _ _ _).
+%total D1 (inv/ofsg/md/tm D1 _ _).
+
+
+
+inv/ofsg/md/pj1	: ofsg L T Y (md/pj1 M) S
+		   -> ofsg L T Y M (sg/sgm S' S'')
+		   -> sg-sub S' S
+		   -> type.
+%mode inv/ofsg/md/pj1 +D1 -D2 -D3.
+
+-	: inv/ofsg/md/pj1 (ofsg/md/pj1 D1) D1 DS
+	   <- vdt/ofsg (ofsg/md/pj1 D1) DW
+	   <- sg-refl/sub DW DS.
+
+-	: inv/ofsg/md/pj1 (ofsg/sub D1 (DS1: sg-sub S2 S3) DP) 
+	   (ofsg/sub D1' DR DP) DSS
+	   <- inv/ofsg/md/pj1 D1 D1' DS1'
+	   <- sg-trans/sub (DS1': sg-sub S1 S2) DS1 
+	      (DSS: sg-sub S1 S3)
+	   <- vdt/ofsg D1' DW
+	   <- sg-refl/sub DW DR.
+
+-	: inv/ofsg/md/pj1 (ofsg/sgm-ext D1 D2)
+	   (ofsg/sgm-ext (ofsg/sgm-ext D1 D2) (ofsg/md/pj2 D1'' DM)) DS
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- subder/md/pj1 D1' D1'' pty-sub/pp
+	   <- vdt/ofsg/p D1'' _ _ DM _
+	   <- vdt/ofsg (ofsg/sgm-ext D1 D2) DW
+	   <- sg-refl/sub DW DS.
+
+-	: inv/ofsg/md/pj1 (ofsg/kd-ext D1 (fst-md/pj1 DM) DC)
+	   (ofsg/sgm-ext (ofsg/kd-ext D1 (fst-md/pj1 DM) DC)
+	      (ofsg/md/pj2 D1' DM))
+	   DS
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- vdt/ofsg (ofsg/kd-ext D1 (fst-md/pj1 DM) DC) DW
+	   <- sg-refl/sub DW DS.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(inv/ofsg/md/pj1 _ _ _).
+%total D1 (inv/ofsg/md/pj1 D1 _ _).
+
+
+
+inv/ofsg/md/pj2	: ofsg L T Y (md/pj2 M) S
+		   -> ofsg L T pty/p M (sg/sgm S' S'')
+		   -> fst-md M C
+		   -> sg-sub (S'' (cn/pj1 C)) S
+		   -> pty-sub pty/p Y
+		   -> type.
+%mode inv/ofsg/md/pj2 +D1 -D2 -D3 -D4 -D5.
+
+-	: inv/ofsg/md/pj2 (ofsg/md/pj2 D1 DF) D1 DF DS pty-sub/pp
+	   <- vdt/ofsg (ofsg/md/pj2 D1 DF) DW
+	   <- sg-refl/sub DW DS.
+
+-	: inv/ofsg/md/pj2 (ofsg/sub D1 (DS1: sg-sub S2 S3) DP) 
+	   (ofsg/sub D1' DR pty-sub/pp) DM DSS DPt
+	   <- inv/ofsg/md/pj2 D1 D1' DM DS1' DPl
+	   <- sg-trans/sub (DS1': sg-sub _ S2) DS1 
+	      (DSS: sg-sub _ S3)
+	   <- vdt/ofsg D1' DW
+	   <- sg-refl/sub DW DR
+	   <- pty-sub-trans DPl DP DPt.
+
+-	: inv/ofsg/md/pj2 ((ofsg/sgm-ext D1 D2): ofsg _ _ _ _ _)
+	   (ofsg/sgm-ext (ofsg/md/pj1 D1'') (ofsg/sgm-ext D1 D2)) DM DS 
+	   pty-sub/pp
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- subder/md/pj2 D1' D1'' pty-sub/pp
+	   <- vdt/ofsg/p D1'' _ _ DM _
+	   <- vdt/ofsg (ofsg/sgm-ext D1 D2) DW2
+	   <- sg-refl/sub DW2 DS.
+
+
+-	: inv/ofsg/md/pj2 (ofsg/kd-ext D1 (fst-md/pj2 DM) DC)
+	   (ofsg/sgm-ext (ofsg/md/pj1 D1')
+	      (ofsg/kd-ext D1 (fst-md/pj2 DM) DC))
+	   DM
+	   DS
+	   pty-sub/pp
+	   <- subder/md/pj2 D1 D1' pty-sub/pp
+	   <- vdt/ofsg (ofsg/kd-ext D1 (fst-md/pj2 DM) DC) DW
+	   <- sg-refl/sub DW DS.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(inv/ofsg/md/pj2 _ _ _ _ _).
+%total D1 (inv/ofsg/md/pj2 D1 _ _ _ _).
+
+
+
+md/lam-not-sg/sgm	: ofsg L T pty/p (md/lam _ _ _) (sg/sgm _ _)
+			   -> uninhabited
+			   -> type.
+%mode md/lam-not-sg/sgm +D1 -D2.
+
+-	: md/lam-not-sg/sgm (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- md/lam-not-sg/sgm D1 DU.
+
+-	: md/lam-not-sg/sgm (ofsg/sgm-ext D1 _) DU
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- md/lam-not-sg/sgm D1' DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(md/lam-not-sg/sgm _ _).
+%total D1 (md/lam-not-sg/sgm D1 _).
+
+
+
+md/lam-not-sg/kd	: ofsg L T pty/p (md/lam _ _ _) (sg/kd _)
+			   -> uninhabited
+			   -> type.
+%mode md/lam-not-sg/kd +D1 -D2.
+
+-	: md/lam-not-sg/kd (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- md/lam-not-sg/kd D1 DU.
+
+-	: md/lam-not-sg/kd (ofsg/kd-ext D1 _ _) DU
+	   <- md/lam-not-sg/kd D1 DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(md/lam-not-sg/kd _ _).
+%total D1 (md/lam-not-sg/kd D1 _).
+
+
+
+inv/ofsg/md/lam	: ofsg L T Y (md/lam S1 S2 M) S
+		   -> ({s:md}{dm: assm/md s S1}
+			 {a:cn}{da: ofkd a K1}
+			 {dm: fst-md s a}
+			 ofsg L T Y' (M s a) (S2 a))
+		   -> sg-wf S1
+		   -> fst-sg S1 K1
+		   -> sg-sub (sg/pi S1 S2) S
+		   -> type.
+%mode inv/ofsg/md/lam +D1 -D2 -D3 -D4 -D5.
+
+-	: inv/ofsg/md/lam (ofsg/md/lam D1 DW DF) D1 DW DF Dsub
+	   <- vdt/ofsg (ofsg/md/lam D1 DW DF) DS
+	   <- sg-refl/sub DS Dsub.
+
+-	: inv/ofsg/md/lam (ofsg/sub D1 DSS1 _) D1' DW' DF DSS'
+	   <- inv/ofsg/md/lam D1 D1' DW' DF DSS2
+	   <- sg-trans/sub DSS2 DSS1 DSS'.
+
+-	: inv/ofsg/md/lam (ofsg/sgm-ext D1 D2) D2'' DW DF DSS
+	   <- md/lam-not-sg/sgm (ofsg/sgm-ext D1 D2) DU
+	   <- fst-sg-complete S1 (DF: fst-sg S1 K1)
+	   <- ({s:md}{dm: assm/md s S1}
+		 {a:cn}{da: ofkd a K1}
+		 {df: fst-md s a}
+		 uninhabited-ofsg L T pty/p (M s a) (S2 a) DU 
+		 (D2'' s dm a da df))
+	   <- uninhabited-sg-wf S1 DU DW
+	   <- uninhabited-sg-sub (sg/pi S1 S2) _ DU DSS.
+
+-	: inv/ofsg/md/lam (ofsg/kd-ext D1 _ _) D2'' DW DF DSS
+	   <- md/lam-not-sg/kd D1 DU
+	   <- fst-sg-complete S1 (DF: fst-sg S1 K1)
+	   <- ({s:md}{dm: assm/md s S1}
+		 {a:cn}{da: ofkd a K1}
+		 {df: fst-md s a}
+		 uninhabited-ofsg L T pty/p (M s a) (S2 a) DU 
+		 (D2'' s dm a da df))
+	   <- uninhabited-sg-wf S1 DU DW
+	   <- uninhabited-sg-sub (sg/pi S1 S2) _ DU DSS.
+
+%worlds () 
+(inv/ofsg/md/lam _ _ _ _ _).
+%total D1 (inv/ofsg/md/lam D1 _ _ _ _).
+
+
+
+ofsg/md/seal-pty/i	: ofsg L T pty/p (md/seal M S) S'
+			   -> uninhabited
+			   -> type.
+%mode ofsg/md/seal-pty/i +D1 -D2.
+
+-	: ofsg/md/seal-pty/i (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- ofsg/md/seal-pty/i D1 DU.
+
+-	: ofsg/md/seal-pty/i (ofsg/sgm-ext D1 _) DU
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- ofsg/md/seal-pty/i D1' DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(ofsg/md/seal-pty/i _ _).
+%total D1 (ofsg/md/seal-pty/i D1 _).
+
+
+
+inv/ofsg/md/seal : ofsg L T Y (md/seal M S') S
+		    -> ofsg L T Y M S
+		    -> type.
+%mode inv/ofsg/md/seal +D1 -D2.
+
+-	: inv/ofsg/md/seal (ofsg/md/seal D1) (ofsg/sub D1 DSub pty-sub/pi)
+	   <- vdt/ofsg D1 DS
+	   <- sg-refl/sub DS DSub.
+
+-	: inv/ofsg/md/seal (ofsg/md/seal D1) D1.
+
+-	: inv/ofsg/md/seal (ofsg/sub D1 DS DP) (ofsg/sub D1' DS DP)
+	   <- inv/ofsg/md/seal D1 D1'.
+
+-	: inv/ofsg/md/seal (ofsg/sub D1 DS (DP: pty-sub pty/p _)) D1'
+	   <- ofsg/md/seal-pty/i D1 DU
+	   <- uninhabited-ofsg _ _ _ _ _ DU D1'.
+
+-	: inv/ofsg/md/seal (ofsg/sgm-ext D1 D2) D1''
+	   <- ofsg/md/seal-pty/i (ofsg/sgm-ext D1 D2) DU
+	   <- uninhabited-ofsg _ _ _ _ _ DU D1''.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(inv/ofsg/md/seal _ _).
+%total D1 (inv/ofsg/md/seal D1 _).
+						  
+
+
+ofsg/md/let-pty/i	: ofsg L T pty/p (md/let M M' S) S'
+			   -> uninhabited
+			   -> type.
+%mode ofsg/md/let-pty/i +D1 -D2.
+
+-	: ofsg/md/let-pty/i (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- ofsg/md/let-pty/i D1 DU.
+
+-	: ofsg/md/let-pty/i (ofsg/sgm-ext D1 _) DU
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- ofsg/md/let-pty/i D1' DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(ofsg/md/let-pty/i _ _).
+%total D1 (ofsg/md/let-pty/i D1 _).
+
+
+
+inv/ofsg/md/let	: ofsg L T Y (md/let M M' S) S'
+		   -> ofsg L T Y'' M S''
+		   -> ({s:md}{dm: assm/md s S''}
+			 {a:cn}{da: ofkd a K1}
+			 {dm: fst-md s a}
+			 ofsg L T Y' (M' s a) S)
+		   -> sg-wf S
+		   -> fst-sg S'' K1
+		   -> sg-sub S S'
+		   -> type.
+%mode inv/ofsg/md/let +D1 -D2 -D3 -D4 -D5 -D6.
+
+-	: inv/ofsg/md/let (ofsg/md/let D1 D2 DW DF) D1 D2 DW DF DSS
+	   <- sg-refl/sub DW DSS.
+
+-	: inv/ofsg/md/let (ofsg/sub D1 DSS1 _) D1' D2' DW DF DSS'
+	   <- inv/ofsg/md/let D1 D1' D2' DW DF DSS2
+	   <- sg-trans/sub DSS2 DSS1 DSS'.
+
+
+-	: inv/ofsg/md/let ((ofsg/sgm-ext D1 D2): ofsg L T _ _ _)
+	   D1'' D2'' DW (fst-sg/unit) DSS
+	   <- ofsg/md/let-pty/i (ofsg/sgm-ext D1 D2) DU
+	   <- uninhabited-ofsg _ _ pty/i M1 sg/unit DU D1''
+	   <- ({s:md}{dm: assm/md s sg/unit}
+		 {a:cn}{da: ofkd a kd/unit}
+		 {df: fst-md s a}
+		 uninhabited-ofsg L T pty/p (M2 s a) S' DU (D2'' s dm a da df))
+	   <- uninhabited-sg-wf S' DU DW
+	   <- uninhabited-sg-sub S' _ DU DSS.
+
+
+%worlds () 
+(inv/ofsg/md/let _ _ _ _ _ _).
+%total D1 (inv/ofsg/md/let D1 _ _ _ _ _).
+
+
+
+ofsg/md/app-pty/i	: ofsg L T pty/p (md/app M M') S'
+			   -> uninhabited
+			   -> type.
+%mode ofsg/md/app-pty/i +D1 -D2.
+
+-	: ofsg/md/app-pty/i (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- ofsg/md/app-pty/i D1 DU.
+
+-	: ofsg/md/app-pty/i (ofsg/sgm-ext D1 _) DU
+	   <- subder/md/pj1 D1 D1' pty-sub/pp
+	   <- ofsg/md/app-pty/i D1' DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(ofsg/md/app-pty/i _ _).
+%total D1 (ofsg/md/app-pty/i D1 _).
+
+
+
+inv/ofsg/md/app	: ofsg L T Y (md/app M1 M2) S
+		   -> ofsg L T Y' M1 (sg/pi S1 S2)
+		   -> ofsg L T pty/p M2 S1
+		   -> fst-md M2 C2
+		   -> sg-sub (S2 C2) S
+		   -> type.
+%mode inv/ofsg/md/app +D1 -D2 -D3 -D4 -D5.
+
+-	: inv/ofsg/md/app (ofsg/md/app D1 D2 DM) D1 D2 DM DSS
+	   <- vdt/ofsg (ofsg/md/app D1 D2 DM) DS
+	   <- sg-refl/sub DS DSS.
+
+-	: inv/ofsg/md/app (ofsg/sub (D1: ofsg _ _ _ _ S) DSS1 _) D1' D2' DM DSS'
+	   <- inv/ofsg/md/app D1 D1' D2' DM DSS2
+	   <- sg-trans/sub DSS2 DSS1 DSS'.
+
+-	: inv/ofsg/md/app (ofsg/sgm-ext D1 D2) D1'' D2'' DM DSS
+	   <- ofsg/md/app-pty/i (ofsg/sgm-ext D1 D2) DU
+	   <- uninhabited-ofsg _ _ pty/p M1 (sg/pi sg/unit ([c] sg/unit)) DU D1''
+	   <- uninhabited-ofsg _ _ pty/p M2 sg/unit DU D2''
+    	   <- uninhabited-fst-md M2 cn/unit DU DM
+	   <- uninhabited-sg-sub sg/unit _ DU DSS.
+
+%worlds () 
+(inv/ofsg/md/app _ _ _ _ _).
+%total D1 (inv/ofsg/md/app D1 _ _ _ _).
+
+
+
+md/pair-not-sg/kd	: ofsg L T pty/p (md/pair _ _) (sg/kd _)
+			   -> uninhabited
+			   -> type.
+%mode md/pair-not-sg/kd +D1 -D2.
+
+-	: md/pair-not-sg/kd (ofsg/sub D1 _ pty-sub/pp) DU
+	   <- md/pair-not-sg/kd D1 DU.
+
+-	: md/pair-not-sg/kd (ofsg/kd-ext D1 _ _) DU
+	   <- md/pair-not-sg/kd D1 DU.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(md/pair-not-sg/kd _ _).
+%total D1 (md/pair-not-sg/kd D1 _).
+
+
+
+psi-md	: (md -> md) -> type.
+
+psi-md/eps	: psi-md ([a] a).
+
+psi-md/pj1	: psi-md ([a] md/pj1 (P a))
+		   <- psi-md P.
+
+psi-md/pj2	: psi-md ([a] md/pj2 (P a))
+		   <- psi-md P.
+
+
+
+psi-md-subder	: psi-md P
+		   -> ofsg L T Y (P M) _
+		   -> ofsg L T Y' M _
+		   -> pty-sub Y' Y
+		   -> type.
+
+%mode psi-md-subder +DP +D1 -D2 -D3.
+
+-	: psi-md-subder psi-md/eps D1 D1 P
+	   <- pty-sub-refl _ P.
+
+-	: psi-md-subder (psi-md/pj1 PC) D1 D1'' P''
+	   <- subder/md/pj1 D1 D1' P
+	   <- psi-md-subder PC D1' D1'' P'
+	   <- pty-sub-trans P' P P''.
+
+-	: psi-md-subder (psi-md/pj2 PC) D1 D1'' P''
+	   <- subder/md/pj2 D1 D1' P
+	   <- psi-md-subder PC D1' D1'' P'
+	   <- pty-sub-trans P' P P''.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block) 
+(psi-md-subder _ _ _ _).
+%reduces D2 <= D1 (psi-md-subder _ D1 D2 _).
+%total (D1) (psi-md-subder D1 _ _ _).
+
+
+
+psi-pj1-fst-beta	: ofsg _ _ pty/p M1 _
+			   -> ofsg _ _ pty/p M2 _
+			   -> psi-md P
+			   -> psi-cn PC
+			   -> fst-md (P (md/pj1 (md/pair M1 M2)))
+			      (PC (cn/pj1 (cn/pair C1 C2)))
+			   -> fst-md (P M1) (PC C1)
+			   -> type.
+%mode psi-pj1-fst-beta +M1 +M2 +P1 -P2 -D1 -D2.
+
+-	: psi-pj1-fst-beta D1 D2 psi-md/eps 
+	   psi-cn/eps (fst-md/pj1 (fst-md/pair DM1 DM2)) DM1
+	   <- vdt/ofsg/p D1 _ _ DM1 _
+	   <- vdt/ofsg/p D2 _ _ DM2 _.
+
+-	: psi-pj1-fst-beta D1 D2 (psi-md/pj1 (PM: psi-md PMC))
+	   (psi-cn/pj1 (PC: psi-cn PCC)) (fst-md/pj1 DM1) (fst-md/pj1 DM2)
+	   <- psi-pj1-fst-beta D1 D2 PM PC DM1 DM2.
+
+-	: psi-pj1-fst-beta D1 D2 (psi-md/pj2 (PM: psi-md PMC))
+	   (psi-cn/pj2 (PC: psi-cn PCC)) (fst-md/pj2 DM1) (fst-md/pj2 DM2)
+	   <- psi-pj1-fst-beta D1 D2 PM PC DM1 DM2.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block)
+(psi-pj1-fst-beta _ _ _ _ _ _).
+%total (D1) (psi-pj1-fst-beta _ _ D1 _ _ _).
+
+
+
+psi-pj2-fst-beta	: ofsg _ _ pty/p M1 _
+			   -> ofsg _ _ pty/p M2 _
+			   -> psi-md P
+			   -> psi-cn PC
+			   -> fst-md (P (md/pj2 (md/pair M1 M2)))
+			      (PC (cn/pj2 (cn/pair C1 C2)))
+			   -> fst-md (P M2) (PC C2)
+			   -> type.
+%mode psi-pj2-fst-beta +M1 +M2 +P1 -P2 -D1 -D2.
+
+-	: psi-pj2-fst-beta D1 D2 psi-md/eps 
+	   psi-cn/eps (fst-md/pj2 (fst-md/pair DM1 DM2)) DM2
+	   <- vdt/ofsg/p D1 _ _ DM1 _
+	   <- vdt/ofsg/p D2 _ _ DM2 _.
+
+-	: psi-pj2-fst-beta D1 D2 (psi-md/pj1 (PM: psi-md PMC))
+	   (psi-cn/pj1 (PC: psi-cn PCC)) (fst-md/pj1 DM1) (fst-md/pj1 DM2)
+	   <- psi-pj2-fst-beta D1 D2 PM PC DM1 DM2.
+
+-	: psi-pj2-fst-beta D1 D2 (psi-md/pj2 (PM: psi-md PMC))
+	   (psi-cn/pj2 (PC: psi-cn PCC)) (fst-md/pj2 DM1) (fst-md/pj2 DM2)
+	   <- psi-pj2-fst-beta D1 D2 PM PC DM1 DM2.
+
+%worlds (ofsg+vdt-block | oftp+vdt-block | ofkd+vdt-block)
+(psi-pj2-fst-beta _ _ _ _ _ _).
+%total (D1) (psi-pj2-fst-beta _ _ D1 _ _ _).
+
+
+
+inv/ofsg/md/pair	: ofsg L T Y (md/pair M1 M2) S
+			   -> ofsg L T Y M1 S1
+			   -> ofsg L T Y M2 S2
+			   -> sg-sub (sg/sgm S1 ([x] S2)) S
+			   -> type.
+%mode inv/ofsg/md/pair +D1 -D2 -D3 -D4.
+
+module-beta/pj1	: psi-md P
+		   -> ofsg L T Y (P (md/pj1(md/pair M1 M2))) S
+		   -> ofsg L T Y (P M1) S
+		   -> type.
+%mode module-beta/pj1 +D1 +D2 -D3.
+
+module-beta/pj2	: psi-md P
+		   -> ofsg L T Y (P (md/pj2(md/pair M1 M2))) S
+		   -> ofsg L T Y (P M2) S
+		   -> type.
+%mode module-beta/pj2 +D1 +D2 -D3.
+
+-	: inv/ofsg/md/pair (ofsg/md/pair D1 D2) D1 D2 DS
+	   <- vdt/ofsg (ofsg/md/pair D1 D2) DW
+	   <- sg-refl/sub DW DS.
+
+-	: inv/ofsg/md/pair (ofsg/sub DP DS P) 
+	   (ofsg/sub D1 DS1 P) (ofsg/sub D2 DS2 P) DSS
+	   <- inv/ofsg/md/pair DP D1 D2 DS'
+	   <- vdt/ofsg D1 DW1
+	   <- sg-refl/sub DW1 DS1
+	   <- vdt/ofsg D2 DW2
+	   <- sg-refl/sub DW2 DS2
+	   <- sg-trans/sub DS' DS DSS.
+
+-	: inv/ofsg/md/pair (ofsg/sgm-ext D1 D2) DA DB DS
+	   <- vdt/ofsg (ofsg/sgm-ext D1 D2) DW
+	   <- sg-refl/sub DW DS
+	   <- module-beta/pj1 psi-md/eps D1 DA
+	   <- module-beta/pj2 psi-md/eps D2 DB.
+
+-	: inv/ofsg/md/pair (ofsg/kd-ext D1 _ _) DL DR DS
+	   <- md/pair-not-sg/kd D1 DU
+	   <- uninhabited-ofsg _ _ _ _ _ DU DL
+	   <- uninhabited-ofsg _ _ _ _ _ DU DR
+	   <- uninhabited-sg-sub (sg/sgm sg/unit ([x] sg/unit)) _ DU DS.
+
+-	: module-beta/pj1 psi-md/eps (ofsg/md/pj1 DP) (ofsg/sub D1 DS1 P)
+	   <- inv/ofsg/md/pair DP D1 _ (sg-sub/sg/sgm DS1 _ _ _ _)
+	   <- pty-sub-refl _ P.
+
+-	: module-beta/pj1 (psi-md/pj1 (PS: psi-md P)) 
+	   (ofsg/md/pj1 DP)
+	   (ofsg/md/pj1 DP')
+	   <- module-beta/pj1 PS DP (DP': ofsg _ _ _ (P M1) _).
+
+-	: module-beta/pj1 (psi-md/pj2 (PS: psi-md P))
+	   (ofsg/md/pj2 (DP: ofsg _ _ _ (P (md/pj1 (md/pair M1 _))) 
+			      (sg/sgm _ S1)) 
+	      (DM1C: fst-md (P (md/pj1 (md/pair M1 _))) CC))
+	   (ofsg/sub (ofsg/md/pj2 D2 DM2) DSS pty-sub/pp)
+	   <- psi-md-subder PS DP DPP pty-sub/pp
+	   <- subder/md/pj1 DPP DPP' pty-sub/pp
+	   <- inv/ofsg/md/pair DPP' DL DR _
+	   <- psi-pj1-fst-beta DL DR 
+	      (PS: psi-md P) 
+	      (PC: psi-cn PCC)
+	      (DM1A: fst-md (P _) (PCC (cn/pj1 (cn/pair C1 _)))) 
+	      (DM2: fst-md (P M1) (PCC C1))
+	   <- module-beta/pj1 (PS: psi-md P) DP (D2: ofsg _ _ _ (P M1) _)
+	   <- vdt/ofsg/p DP (sg-wf/sg/sgm _ DWF DFS1G) 
+	      (fst-sg/sgm DFS1H DFS2H) 
+	      (DM1B: fst-md _ CB) 
+	      (DCB: ofkd CB _)
+	   <- fst-sg-seq DFS1H DFS1G DQKHG
+	   <- fst-md-seq DM1B DM1A 
+	      (DQMBA: seq/cn CB (PCC (cn/pj1 (cn/pair C1 _))))
+	   <- fst-md-seq 
+	      (DM1A: fst-md _ (PCC (cn/pj1 (cn/pair C1 _))))
+	      DM1C 
+	      (DQMAC: seq/cn (PCC (cn/pj1 (cn/pair C1 _))) CC)
+	   <- ofkd/seq-c DQMBA DCB 
+	      (DCA: ofkd (PCC (cn/pj1 (cn/pair C1 _))) _)
+	   <- cn-beta-pj1 PC DCA 
+	      (DCQA: cn-deq (PCC (cn/pj1 (cn/pair C1 _))) (PCC C1) _)
+	   <- cn-deq/seq-l DQMAC 
+	      (DCQA: cn-deq (PCC (cn/pj1 (cn/pair C1 _))) (PCC C1) _)
+	      (DCQC: cn-deq CC _ _)
+	   <- cn-deq/seq-k DQKHG (cn-deq/cn/pj1 DCQC) 
+	      (DCQCG: cn-deq (cn/pj1 CC) (cn/pj1 (PCC C1)) _)
+	   <- vdt/cn-deq DCQCG DC1 _ _
+	   <- funct/sg-wf DWF DCQCG DC1 DSQ
+	   <- fst-sg-complete _ DFF1
+	   <- fst-sg-complete _ DFF2
+	   <- sg-anti DSQ DFF1 DFF2 _ 
+	      (DSS: sg-sub (S1 (cn/pj1 (PCC C1)))
+			      (S1 (cn/pj1 CC))) _ _.
+
+-	: module-beta/pj1 (PS: psi-md P) (ofsg/sub D1 DS DPS)
+	   (ofsg/sub D1' DS DPS)
+	   <- module-beta/pj1 PS D1 D1'.
+
+-	: module-beta/pj1 (PS: psi-md P) (ofsg/sgm-ext D1 D2)
+	   (ofsg/sgm-ext DA DB)
+	   <- module-beta/pj1 (psi-md/pj1 PS) D1 DA
+	   <- module-beta/pj1 (psi-md/pj2 PS) D2 DB.
+
+-	: module-beta/pj1 (PS: psi-md P) 
+	   ((ofsg/kd-ext D1 DM DC): ofsg _ _ _ (P (md/pj1 (md/pair M1 _))) _)
+	   (ofsg/kd-ext D1' DM2 DC2)
+	   <- module-beta/pj1 PS D1 
+	      (D1': ofsg _ _ _ (P M1) _)
+	   <- psi-md-subder PS D1 D1p pty-sub/pp
+	   <- subder/md/pj1 D1p D1p' pty-sub/pp
+	   <- inv/ofsg/md/pair D1p' DL DR _
+	   <- psi-pj1-fst-beta DL DR PS 
+	      (PC: psi-cn PCC) DM1 (DM2: fst-md (P M1) (PCC C1))
+	   <- fst-md-seq DM DM1 DQM
+	   <- ofkd/seq-c DQM DC DC1
+	   <- cn-beta-pj1 PC DC1 DCQ
+	   <- vdt/cn-deq DCQ _ DC2 _.
+
+
+
+
+-	: module-beta/pj2 psi-md/eps (ofsg/md/pj2 D1 (fst-md/pair DMa' DMb')) 
+	   (ofsg/sub DB DS' pty-sub/pp)
+	   <- inv/ofsg/md/pair D1 
+	      (DA: ofsg _ _ _ MA SA)
+	      (DB: ofsg _ _ _ MB SB) 
+	      (sg-sub/sg/sgm DS1 
+		 (DS2: {a} {da} sg-sub _ (S1 a)) _ FSa' _)
+	   <- vdt/ofsg/p DA _ FSa DMa DCa
+	   <- vdt/ofsg/p DB _ _ (DMb: fst-md MB _) DCb
+	   <- fst-sg-seq FSa FSa' DQfa
+	   <- fst-md-seq DMa DMa' DQa
+	   <- fst-md-seq DMb DMb' DQb
+	   <- seq/cn/pair DQa DQb DQab
+	   <- seq/cn/pj1 DQab DQabp
+	   <- ofkd/seq-k DQfa (ofkd/cn/pj1 (ofkd/cn/pair DCa DCb)) DCP'
+	   <- seq/cn/sg-sub-o
+	      ([a] S1 a)
+	      DQabp
+	      (DS2 _ DCP') DS'.
+
+
+-	: module-beta/pj2 (psi-md/pj1 (PS: psi-md P)) 
+	   (ofsg/md/pj1 DP)
+	   (ofsg/md/pj1 DP')
+	   <- module-beta/pj2 PS DP (DP': ofsg _ _ _ (P M1) _).
+
+-	: module-beta/pj2 (psi-md/pj2 (PS: psi-md P))
+	   (ofsg/md/pj2 (DP: ofsg _ _ _ (P (md/pj2 (md/pair _ M2))) 
+			      (sg/sgm _ S1)) 
+	      (DM1C: fst-md (P (md/pj2 (md/pair M1 M2))) CC))
+	   (ofsg/sub (ofsg/md/pj2 D2 DM2) DSS pty-sub/pp)
+	   <- psi-md-subder PS DP DPP pty-sub/pp
+	   <- subder/md/pj2 DPP DPP' pty-sub/pp
+	   <- inv/ofsg/md/pair DPP' DL DR _
+	   <- psi-pj2-fst-beta DL DR 
+	      (PS: psi-md P) 
+	      (PC: psi-cn PCC)
+	      (DM1A: fst-md (P (md/pj2 (md/pair M1 M2)))
+			       (PCC (cn/pj2 (cn/pair C1 C2)))) 
+	      (DM2: fst-md (P M2) (PCC C2))
+	   <- module-beta/pj2 (PS: psi-md P) DP (D2: ofsg _ _ _ (P M2) _)
+	   <- vdt/ofsg/p DP (sg-wf/sg/sgm _ DWF DFS1G) 
+	      (fst-sg/sgm DFS1H DFS2H) 
+	      (DM1B: fst-md _ CB) 
+	      (DCB: ofkd CB _)
+	   <- fst-sg-seq DFS1H DFS1G DQKHG
+	   <- fst-md-seq DM1B DM1A 
+	      (DQMBA: seq/cn CB (PCC (cn/pj2 (cn/pair C1 C2))))
+	   <- fst-md-seq 
+	      (DM1A: fst-md _ (PCC (cn/pj2 (cn/pair C1 C2))))
+	      DM1C 
+	      (DQMAC: seq/cn (PCC (cn/pj2 (cn/pair C1 C2))) CC)
+	   <- ofkd/seq-c DQMBA DCB 
+	      (DCA: ofkd (PCC (cn/pj2 (cn/pair C1 C2))) _)
+	   <- cn-beta-pj2 PC DCA 
+	      (DCQA: cn-deq (PCC (cn/pj2 (cn/pair C1 C2))) (PCC C2) _)
+	   <- cn-deq/seq-l DQMAC 
+	      (DCQA: cn-deq (PCC (cn/pj2 (cn/pair C1 C2))) (PCC C2) _)
+	      (DCQC: cn-deq CC _ _)
+	   <- cn-deq/seq-k DQKHG (cn-deq/cn/pj1 DCQC) 
+	      (DCQCG: cn-deq (cn/pj1 CC) (cn/pj1 (PCC C2)) _)
+	   <- vdt/cn-deq DCQCG DC1 _ _
+	   <- funct/sg-wf DWF DCQCG DC1 DSQ
+	   <- fst-sg-complete _ DFF1
+	   <- fst-sg-complete _ DFF2
+	   <- sg-anti DSQ DFF1 DFF2 _ 
+	      (DSS: sg-sub (S1 (cn/pj1 (PCC C2)))
+			      (S1 (cn/pj1 CC))) _ _.
+
+-	: module-beta/pj2 (PS: psi-md P) (ofsg/sub D1 DS DPS)
+	   (ofsg/sub D1' DS DPS)
+	   <- module-beta/pj2 PS D1 D1'.
+
+-	: module-beta/pj2 (PS: psi-md P) (ofsg/sgm-ext D1 D2)
+	   (ofsg/sgm-ext DA DB)
+	   <- module-beta/pj2 (psi-md/pj1 PS) D1 DA
+	   <- module-beta/pj2 (psi-md/pj2 PS) D2 DB.
+
+-	: module-beta/pj2 (PS: psi-md P) 
+	   ((ofsg/kd-ext D1 DM DC): ofsg _ _ _ (P (md/pj2 (md/pair _ _))) _)
+	   (ofsg/kd-ext D1' DM2 DC2)
+	   <- module-beta/pj2 PS D1 
+	      (D1': ofsg _ _ _ (P M1) _)
+	   <- psi-md-subder PS D1 D1p pty-sub/pp
+	   <- subder/md/pj2 D1p D1p' pty-sub/pp
+	   <- inv/ofsg/md/pair D1p' DL DR _
+	   <- psi-pj2-fst-beta DL DR PS 
+	      (PC: psi-cn PCC) DM1 (DM2: fst-md (P M1) (PCC C1))
+	   <- fst-md-seq DM DM1 DQM
+	   <- ofkd/seq-c DQM DC DC1
+	   <- cn-beta-pj2 PC DC1 DCQ
+	   <- vdt/cn-deq DCQ _ DC2 _.
+
+%worlds () 
+(inv/ofsg/md/pair _ _ _ _) (module-beta/pj1 _ _ _)
+(module-beta/pj2 _ _ _).
+%total (D1 D2 D3) (inv/ofsg/md/pair D1 _ _ _)
+(module-beta/pj1 _ D2 _)
+(module-beta/pj2 _ D3 _).
+
+

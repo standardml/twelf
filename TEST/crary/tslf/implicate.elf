@@ -1,0 +1,384 @@
+%%%% implicate lemma.  explicit system to implicit system.
+
+implicate/kd-wf		: ekd-wf G K -> ikd-wf G K -> type.
+%mode implicate/kd-wf +D1 -D2.
+
+implicate/kd-deq	: ekd-deq G K1 K2 -> ikd-deq G K1 K2 -> type.
+%mode implicate/kd-deq +D1 -D2.
+
+implicate/kd-sub	: ekd-sub G K1 K2 -> ikd-sub G K1 K2 -> type.
+%mode implicate/kd-sub +D1 -D2.
+
+implicate/ofkd		: eofkd G C K -> iofkd G C K -> type.
+%mode implicate/ofkd +D1 -D2.
+
+implicate/cn-deq	: ecn-deq G C C' K -> icn-deq G C C' K -> type.
+%mode implicate/cn-deq +D1 -D2.
+
+-	: implicate/kd-wf (ekd-wf/kd/unit _) D
+	   <- kd-wf-to-ikd-wf G kd-wf/kd/unit D.
+
+-	: implicate/kd-wf (ekd-wf/kd/type _) D
+	   <- kd-wf-to-ikd-wf G kd-wf/kd/type D.
+
+-	: implicate/kd-wf (ekd-wf/kd/sing D) D''
+	   <- implicate/ofkd D D'
+	   <- ikd-wf/kd/sing D' D''.
+
+-	: implicate/kd-wf (ekd-wf/kd/sgm D1 D2) D''
+	   <- implicate/kd-wf D1 D1'
+	   <- ({c:cn} {d: isvar c I}
+		 implicate/kd-wf (D2 c d) (ikd-wf/cons (D2' c)))
+	   <- ikd-wf/kd/sgm D1' D2' D''.
+
+-	: implicate/kd-wf (ekd-wf/kd/pi D1 D2) D''
+	   <- implicate/kd-wf D1 D1'
+	   <- ({c:cn} {d: isvar c I}
+		 implicate/kd-wf (D2 c d) (ikd-wf/cons (D2' c)))
+	   <- ikd-wf/kd/pi D1' D2' D''.
+
+
+
+-	: implicate/kd-deq (ekd-deq/kd/unit _) D
+	   <- kd-deq-to-ikd-deq G kd-deq/kd/unit D.
+
+-	: implicate/kd-deq (ekd-deq/kd/type _) D
+	   <- kd-deq-to-ikd-deq G kd-deq/kd/type D.
+
+-	: implicate/kd-deq (ekd-deq/kd/sing D) D''
+	   <- implicate/cn-deq D D'
+	   <- ikd-deq/kd/sing D' D''.
+
+-	: implicate/kd-deq (ekd-deq/kd/sgm D1 D2) D''
+	   <- implicate/kd-deq D1 D1'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/kd-deq (D2 c d) (ikd-deq/cons (D2' c)))
+	   <- ikd-deq/kd/sgm D1' D2' D''.
+
+-	: implicate/kd-deq (ekd-deq/kd/pi D1 D2) D''
+	   <- implicate/kd-deq D1 D1'
+	   <- ({c:cn}  {d: isvar c I} 
+		 implicate/kd-deq (D2 c d) (ikd-deq/cons (D2' c)))
+	   <- ikd-deq/kd/pi D1' D2' D''.
+
+
+
+-	: implicate/kd-sub (ekd-sub/kd/unit _) D
+	   <- kd-sub-to-ikd-sub G kd-sub/kd/unit D.
+
+-	: implicate/kd-sub (ekd-sub/kd/type _) D
+	   <- kd-sub-to-ikd-sub G kd-sub/kd/type D.
+
+-	: implicate/kd-sub (ekd-sub/kd/sing-kd/sing D) D''
+	   <- implicate/cn-deq D D'
+	   <- ikd-sub/kd/sing-kd/sing D' D''.
+
+-	: implicate/kd-sub (ekd-sub/kd/sing-kd/type D) D''
+	   <- implicate/ofkd D D'
+	   <- ikd-sub/kd/sing-kd/type D' D''.
+
+-	: implicate/kd-sub (ekd-sub/kd/sgm D1 D2 D3) D''
+	   <- implicate/kd-sub D1 D1'
+	   <- ({c:cn}  {d: isvar c I} 
+		 implicate/kd-sub (D2 c d) (ikd-sub/cons (D2' c)))
+	   <- ({c:cn}  {d: isvar c I} 
+		 implicate/kd-wf (D3 c d) (ikd-wf/cons (D3' c)))
+	   <- ikd-sub/kd/sgm D1' D2' D3' D''.
+
+-	: implicate/kd-sub (ekd-sub/kd/pi D1 D2 D3) D''
+	   <- implicate/kd-sub D1 D1'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/kd-sub (D2 c d) (ikd-sub/cons (D2' c)))
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/kd-wf (D3 c d) (ikd-wf/cons (D3' c)))
+	   <- ikd-sub/kd/pi D1' D2' D3' D''.
+
+
+
+-	: implicate/ofkd (eofkd/cn/unit _) D
+	   <- ofkd-to-iofkd _ ofkd/cn/unit D.
+
+-	: implicate/ofkd (eofkd/tp/unit _) D
+	   <- ofkd-to-iofkd _ ofkd/tp/unit D.
+
+-	: implicate/ofkd (eofkd/tp/tagged _) D
+	   <- ofkd-to-iofkd _ ofkd/tp/tagged D.
+
+-	: implicate/ofkd (eofkd/tp/cross D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/tp/cross D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/tp/arrow D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/tp/arrow D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/tp/sum D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/tp/sum D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/tp/forall D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/ofkd (D1 c d) (iofkd/cons (D1' c)))
+	   <- implicate/kd-wf DW DW'
+	   <- iofkd/tp/forall D1' DW' D'.
+
+-	: implicate/ofkd (eofkd/tp/ref D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/tp/ref D1' D'.
+
+-	: implicate/ofkd (eofkd/tp/tag D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/tp/tag D1' D'.
+
+-	: implicate/ofkd (eofkd/cn/pair D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/cn/pair D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/cn/pj1 D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/cn/pj1 D1' D'.
+
+-	: implicate/ofkd (eofkd/cn/pj2 D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/cn/pj2 D1' D'.
+
+-	: implicate/ofkd (eofkd/cn/lam D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/ofkd (D1 c d) (iofkd/cons (D1' c)))
+	   <- implicate/kd-wf DW DW'
+	   <- iofkd/cn/lam D1' DW' D'.
+
+-	: implicate/ofkd (eofkd/cn/mu D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/ofkd (D1 c d) (iofkd/cons (D1' c)))
+	   <- implicate/kd-wf DW DW'
+	   <- iofkd/cn/mu D1' DW' D'.
+
+-	: implicate/ofkd (eofkd/cn/app D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/cn/app D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/kd/sing D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/kd/sing D1' D'.
+
+-	: implicate/ofkd (eofkd/sgm-ext D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- iofkd/sgm-ext D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/pi-ext D1 D2) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/ofkd (D2 c d) (iofkd/cons (D2' c)))
+	   <- implicate/ofkd D1 D1'
+	   <- iofkd/pi-ext D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/sub D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/kd-sub D2 D2'
+	   <- iofkd/sub D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/deq D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/kd-deq D2 D2'
+	   <- iofkd/deq D1' D2' D'.
+
+-	: implicate/ofkd (eofkd/var D) D'
+	   <- implicate-cxt-lookup D D'.
+
+-	: implicate/ofkd (eofkd/closed D _) D'
+	   <- ofkd-to-iofkd _ D D'.
+
+-	: implicate/cn-deq (ecn-deq/refl D) D''
+	   <- implicate/ofkd D D'
+	   <- icn-deq/refl D' D''.
+
+-	: implicate/cn-deq (ecn-deq/sym D) D''
+	   <- implicate/cn-deq D D'
+	   <- icn-deq/sym D' D''.
+
+-	: implicate/cn-deq (ecn-deq/trans D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/trans D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/unit _) D
+	   <- cn-deq-to-icn-deq _ cn-deq/cn/unit D.
+
+-	: implicate/cn-deq (ecn-deq/tp/unit _) D
+	   <- cn-deq-to-icn-deq _ cn-deq/tp/unit D.
+
+-	: implicate/cn-deq (ecn-deq/tp/tagged _) D
+	   <- cn-deq-to-icn-deq _ cn-deq/tp/tagged D.
+
+-	: implicate/cn-deq (ecn-deq/tp/cross D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/tp/cross D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/tp/arrow D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/tp/arrow D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/tp/sum D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/tp/sum D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/tp/forall D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/cn-deq (D1 c d) (icn-deq/cons (D1' c)))
+	   <- implicate/kd-deq DW DW'
+	   <- icn-deq/tp/forall D1' DW' D'.
+
+-	: implicate/cn-deq (ecn-deq/tp/ref D1) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- icn-deq/tp/ref D1' D'.
+
+-	: implicate/cn-deq (ecn-deq/tp/tag D1) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- icn-deq/tp/tag D1' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/pair D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/cn/pair D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/pj1 D1) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- icn-deq/cn/pj1 D1' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/pj2 D1) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- icn-deq/cn/pj2 D1' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/lam D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/cn-deq (D1 c d) (icn-deq/cons (D1' c)))
+	   <- implicate/kd-deq DW DW'
+	   <- icn-deq/cn/lam D1' DW' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/mu D1 DW) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/cn-deq (D1 c d) (icn-deq/cons (D1' c)))
+	   <- implicate/kd-deq DW DW'
+	   <- icn-deq/cn/mu D1' DW' D'.
+
+-	: implicate/cn-deq (ecn-deq/cn/app D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/cn/app D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/kd/unit D1 D2) D'
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D2 D2'
+	   <- icn-deq/kd/unit D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/kd/sing D1) D'
+	   <- implicate/ofkd D1 D1'
+	   <- icn-deq/kd/sing D1' D'.
+
+-	: implicate/cn-deq (ecn-deq/sgm-ext D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/cn-deq D2 D2'
+	   <- icn-deq/sgm-ext D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/pi-ext D1 D3 D2) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/cn-deq (D2 c d) (icn-deq/cons (D2' c)))
+	   <- implicate/ofkd D1 D1'
+	   <- implicate/ofkd D3 D3'
+	   <- icn-deq/pi-ext D1' D3' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/pi-ext-2 D1 D2) D'
+	   <- ({c:cn} {d: isvar c I} 
+		 implicate/cn-deq (D2 c d) (icn-deq/cons (D2' c)))
+	   <- implicate/cn-deq D1 D1'
+	   <- icn-deq/pi-ext-2 D1' D2' D'.
+
+
+-	: implicate/cn-deq (ecn-deq/sub D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/kd-sub D2 D2'
+	   <- icn-deq/sub D1' D2' D'.
+
+-	: implicate/cn-deq (ecn-deq/deq D1 D2) D'
+	   <- implicate/cn-deq D1 D1'
+	   <- implicate/kd-deq D2 D2'
+	   <- icn-deq/deq D1' D2' D'.
+
+%worlds (ovar-block | ofkd-block)
+(implicate/kd-wf _ _)
+(implicate/kd-deq _ _)
+(implicate/kd-sub _ _)
+(implicate/ofkd _ _)
+(implicate/cn-deq _ _).
+
+%total (D1 D2 D3 D4 D5)
+(implicate/kd-wf D1 _)
+(implicate/kd-deq D4 _)
+(implicate/kd-sub D3 _)
+(implicate/ofkd D2 _)
+(implicate/cn-deq D5 _).
+
+
+
+
+implicate-closed/kd-wf : ekd-wf cxt/nil K -> kd-wf K -> type.
+%mode implicate-closed/kd-wf +X1 -X2.
+
+-	: implicate-closed/kd-wf D D'
+	   <- implicate/kd-wf D (ikd-wf/nil D').
+
+%worlds (ofkd-block) (implicate-closed/kd-wf _ _).
+%total {} (implicate-closed/kd-wf _ _).
+
+
+
+implicate-closed/kd-deq : ekd-deq cxt/nil K1 K2 -> kd-deq K1 K2 -> type.
+%mode implicate-closed/kd-deq +X1 -X2.
+
+-	: implicate-closed/kd-deq D D'
+	   <- implicate/kd-deq D (ikd-deq/nil D').
+
+%worlds (ofkd-block) (implicate-closed/kd-deq _ _).
+%total {} (implicate-closed/kd-deq _ _).
+
+
+
+implicate-closed/kd-sub : ekd-sub cxt/nil K1 K2 -> kd-sub K1 K2 -> type.
+%mode implicate-closed/kd-sub +X1 -X2.
+
+-	: implicate-closed/kd-sub D D'
+	   <- implicate/kd-sub D (ikd-sub/nil D').
+
+%worlds (ofkd-block) (implicate-closed/kd-sub _ _).
+%total {} (implicate-closed/kd-sub _ _).
+
+
+
+implicate-closed/ofkd : eofkd cxt/nil C K -> ofkd C K -> type.
+%mode implicate-closed/ofkd +X1 -X2.
+
+-	: implicate-closed/ofkd D D'
+	   <- implicate/ofkd D (iofkd/nil D').
+
+%worlds (ofkd-block) (implicate-closed/ofkd _ _).
+%total {} (implicate-closed/ofkd _ _).
+
+
+
+implicate-closed/cn-deq : ecn-deq cxt/nil C1 C2 K -> cn-deq C1 C2 K -> type.
+%mode implicate-closed/cn-deq +X1 -X2.
+
+-	: implicate-closed/cn-deq D D'
+	   <- implicate/cn-deq D (icn-deq/nil D').
+
+%worlds (ofkd-block) (implicate-closed/cn-deq _ _).
+%total {} (implicate-closed/cn-deq _ _).

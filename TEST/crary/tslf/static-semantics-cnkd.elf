@@ -1,0 +1,299 @@
+
+
+%%%%% Static Semantics %%%%%%
+
+ofkd 		: cn -> kd -> type.
+%mode ofkd *C *K.
+kd-wf 		: kd -> type.
+%mode kd-wf *K.
+kd-deq		: kd -> kd -> type.
+%mode kd-deq *K1 *K2. 
+kd-sub		: kd -> kd -> type.
+%mode kd-sub *K1 *K2. 
+cn-deq		: cn -> cn -> kd -> type.
+%mode cn-deq *C1 *C2 *K.
+
+
+
+
+kd-wf/kd/type	: kd-wf kd/type.
+
+kd-wf/kd/sing	: kd-wf (kd/sing C1)
+		   <- ofkd C1 kd/type.
+
+kd-wf/kd/sgm	: kd-wf (kd/sgm K1 K2)
+		   <- ({a:cn} {da: ofkd a K1} 
+			 kd-wf (K2 a))
+		   <- kd-wf K1.
+
+kd-wf/kd/pi	: kd-wf (kd/pi K1 K2)
+		   <- ({a:cn} {da: ofkd a K1} 
+			 kd-wf (K2 a))
+		   <- kd-wf K1.
+
+
+
+
+
+kd-deq/kd/type	: kd-deq kd/type kd/type.
+
+kd-deq/kd/sing 	: kd-deq (kd/sing C1) (kd/sing C2)
+		   <- cn-deq C1 C2 kd/type.
+
+kd-deq/kd/sgm	: kd-deq (kd/sgm K1' K1'') (kd/sgm K2' K2'')
+		   <- ({a:cn} {da: ofkd a K1'} 
+			 kd-deq (K1'' a) (K2'' a))
+		   <- kd-deq K1' K2'.
+
+kd-deq/kd/pi	: kd-deq (kd/pi K1' K1'') (kd/pi K2' K2'')
+		   <- ({a:cn} {da: ofkd a K2'}
+			 kd-deq (K1'' a) (K2'' a))
+		   <- kd-deq K2' K1'.
+
+
+
+kd-sub/kd/type		: kd-sub kd/type kd/type.
+
+kd-sub/kd/sing-kd/sing 	: kd-sub (kd/sing C1) (kd/sing C2)
+			   <- cn-deq C1 C2 kd/type.
+
+kd-sub/kd/sing-kd/type	: kd-sub (kd/sing C1) kd/type
+			   <- ofkd C1 kd/type.
+
+kd-sub/kd/sgm		: kd-sub (kd/sgm K1' K1'') (kd/sgm K2' K2'')
+			   <- ({a:cn} {da: ofkd a K2'}
+				 kd-wf (K2'' a))
+			   <- ({b:cn} {db: ofkd b K1'} 
+				 kd-sub (K1'' b) (K2'' b))
+			   <- kd-sub K1' K2'.
+
+kd-sub/kd/pi		: kd-sub (kd/pi K1' K1'') (kd/pi K2' K2'')
+			   <- ({a:cn} {da: ofkd a K1'}
+				 kd-wf (K1'' a))
+			   <- ({a:cn} {da: ofkd a K2'} 
+				 kd-sub (K1'' a) (K2'' a))
+			   <- kd-sub K2' K1'.
+
+
+
+ofkd/tp/unit	: ofkd tp/unit kd/type.
+
+ofkd/tp/tagged	: ofkd tp/tagged kd/type.
+
+ofkd/tp/cross	: ofkd	(tp/cross T1 T2) kd/type
+		   <- ofkd T2 kd/type
+		   <- ofkd T1 kd/type.
+
+ofkd/tp/arrow	: ofkd	(tp/arrow T1 T2) kd/type
+		   <- ofkd T2 kd/type
+		   <- ofkd T1 kd/type.
+
+ofkd/tp/forall	: ofkd (tp/forall K1 C1) kd/type
+		   <- kd-wf K1
+		   <- ({a:cn} {da: ofkd a K1}
+			 ofkd (C1 a) kd/type).
+
+ofkd/tp/ref	: ofkd (tp/ref C1) kd/type
+		   <- ofkd C1 kd/type.
+
+ofkd/tp/sum	: ofkd (tp/sum T1 T2) kd/type
+		   <- ofkd T2 kd/type
+		   <- ofkd T1 kd/type.
+
+ofkd/tp/tag	: ofkd (tp/tag C1) kd/type
+		   <- ofkd C1 kd/type.
+
+ofkd/cn/mu	: ofkd (cn/mu kd/type C) kd/type
+		   <- kd-wf kd/type
+		   <- {a:cn} {da: ofkd a kd/type} 
+		      ofkd (C a) kd/type.
+
+ofkd/cn/pair	: ofkd (cn/pair C1 C2) (kd/sgm K1 ([a:cn] K2))
+		   <- ofkd C2 K2
+		   <- ofkd C1 K1.
+
+ofkd/cn/pj1	: ofkd (cn/pj1 C1) K1
+		   <- ofkd C1 (kd/sgm K1 K2).
+
+ofkd/cn/pj2	: ofkd (cn/pj2 C1) (K2 (cn/pj1 C1))
+		   <- ofkd C1 (kd/sgm K1 K2).
+
+ofkd/cn/lam	: ofkd	(cn/lam K1 C) (kd/pi K1 K2)
+		   <- kd-wf K1
+		   <- {a:cn} {da: ofkd a K1} 
+		      ofkd (C a) (K2 a).
+
+ofkd/cn/app	: ofkd (cn/app C1 C2) (K2 C2)
+		   <- ofkd C2 K1
+		   <- ofkd C1 (kd/pi K1 K2).
+
+ofkd/kd/sing	: ofkd C (kd/sing C)
+		   <- ofkd C kd/type.
+
+ofkd/sgm-ext	: ofkd C (kd/sgm K1 ([a:cn] K2))
+		   <- ofkd (cn/pj2 C) K2
+		   <- ofkd (cn/pj1 C) K1.
+
+ofkd/pi-ext	: ofkd C (kd/pi K1 K2)
+		   <- ({a:cn} {da: ofkd a K1} 
+			 ofkd (cn/app C a) (K2 a))
+		   <- ofkd C (kd/pi K1 L).
+
+ofkd/sub	: ofkd C K
+		   <- kd-sub K' K
+		   <- ofkd C K'.
+
+ofkd/deq	: ofkd C K
+		   <- kd-deq K' K
+		   <- ofkd C K'.
+
+
+
+cn-deq/refl		: cn-deq C C K
+			   <- ofkd C K.
+
+cn-deq/sym		: cn-deq C1 C2 K
+			   <- cn-deq C2 C1 K.
+
+cn-deq/trans		: cn-deq C1 C3 K
+			   <- cn-deq C2 C3 K
+			   <- cn-deq C1 C2 K.
+
+cn-deq/tp/unit		: cn-deq tp/unit tp/unit kd/type.
+
+cn-deq/tp/tagged	: cn-deq tp/tagged tp/tagged kd/type.
+
+cn-deq/tp/cross		: cn-deq (tp/cross C1' C1'') (tp/cross C2' C2'') kd/type
+			   <- cn-deq C1'' C2'' kd/type
+			   <- cn-deq C1' C2' kd/type.
+
+cn-deq/tp/arrow		: cn-deq (tp/arrow C1' C1'') (tp/arrow C2' C2'') kd/type
+			   <- cn-deq C1'' C2'' kd/type
+			   <- cn-deq C1' C2' kd/type.
+
+cn-deq/tp/forall	: cn-deq (tp/forall K1 C1) (tp/forall K2 C2) kd/type
+			   <- kd-deq K1 K2
+			   <- {a:cn} {da: ofkd a K1} 
+			      cn-deq (C1 a) (C2 a) kd/type.
+
+cn-deq/tp/ref		: cn-deq (tp/ref C1) (tp/ref C2) kd/type
+			   <- cn-deq C1 C2 kd/type.
+
+cn-deq/tp/sum		: cn-deq (tp/sum C1' C1'') (tp/sum C2' C2'') kd/type
+			   <- cn-deq C1'' C2'' kd/type
+			   <- cn-deq C1' C2' kd/type.
+
+cn-deq/tp/tag		: cn-deq (tp/tag C1) (tp/tag C2) kd/type
+			   <- cn-deq C1 C2 kd/type.
+
+cn-deq/cn/pair		: cn-deq (cn/pair C1' C1'') (cn/pair C2' C2'') 
+			   (kd/sgm K' ([a] K''))
+			   <- cn-deq C1'' C2'' K''
+			   <- cn-deq C1' C2' K'.
+
+cn-deq/cn/pj1		: cn-deq (cn/pj1 C1) (cn/pj1 C2) K'
+			   <- cn-deq C1 C2 (kd/sgm K' _).
+
+cn-deq/cn/pj2		: cn-deq (cn/pj2 C1) (cn/pj2 C2) (K'' (cn/pj1 C1))
+			   <- cn-deq C1 C2 (kd/sgm _ K'').
+
+cn-deq/cn/lam		: cn-deq (cn/lam K1 C1) (cn/lam K2 C2) (kd/pi K1 K'')
+			   <- kd-deq K1 K2
+			   <- {a:cn} {da: ofkd a K1} 
+			      cn-deq (C1 a) (C2 a) (K'' a).
+
+cn-deq/cn/mu		: cn-deq (cn/mu kd/type C1) (cn/mu kd/type C2) kd/type
+			   <- kd-deq kd/type kd/type
+			   <- {a:cn} {da: ofkd a kd/type} 
+			      cn-deq (C1 a) (C2 a) kd/type.
+
+cn-deq/cn/app		: cn-deq (cn/app C1 D1) (cn/app C2 D2) (K'' D1)
+			   <- cn-deq D1 D2 K'
+			   <- cn-deq C1 C2 (kd/pi K' K'').
+
+cn-deq/kd/sing		: cn-deq C1 C (kd/sing C)
+			   <- ofkd C1 (kd/sing C).
+
+cn-deq/sgm-ext		: cn-deq C1 C2 (kd/sgm K' ([a] K''))
+			   <- cn-deq (cn/pj2 C1) (cn/pj2 C2) K''
+			   <- cn-deq (cn/pj1 C1) (cn/pj1 C2) K'.
+
+cn-deq/pi-ext		: cn-deq C1 C2 (kd/pi K' K'')
+			   <- ({a:cn} {da:ofkd a K'}
+				 cn-deq (cn/app C1 a) (cn/app C2 a) (K'' a))
+			   <- ofkd C2 (kd/pi K' _)
+			   <- ofkd C1 (kd/pi K' _).
+
+cn-deq/pi-ext-2		: cn-deq C1 C2 (kd/pi K' K'')
+			   <- ({a:cn} {da:ofkd a K'}
+				 cn-deq (cn/app C1 a) (cn/app C2 a) (K'' a))
+			   <- cn-deq C1 C2 (kd/pi K' _).
+
+cn-deq/sub		: cn-deq C1 C2 K
+			   <- kd-sub K' K
+			   <- cn-deq C1 C2 K'.
+
+cn-deq/deq		: cn-deq C1 C2 K
+			   <- kd-deq K' K
+			   <- cn-deq C1 C2 K'.
+
+
+
+kd-wf/kd/unit		: kd-wf kd/unit
+			= kd-wf/kd/sing ofkd/tp/unit.
+
+ofkd/cn/unit		: ofkd cn/unit kd/unit
+			= ofkd/kd/sing ofkd/tp/unit.
+
+kd-deq/kd/unit		: kd-deq kd/unit kd/unit
+			= kd-deq/kd/sing cn-deq/tp/unit.
+
+kd-sub/kd/unit 		: kd-sub kd/unit kd/unit
+			= kd-sub/kd/sing-kd/sing cn-deq/tp/unit.
+
+cn-deq/cn/unit		: cn-deq cn/unit cn/unit kd/unit
+			= cn-deq/kd/sing (ofkd/kd/sing ofkd/tp/unit).
+
+cn-deq/kd/unit		: cn-deq C1 C2 kd/unit
+			   <- ofkd C2 kd/unit
+			   <- ofkd C1 kd/unit
+			= [d1] [d2]
+			   cn-deq/sub
+			   (cn-deq/kd/sing
+			      (ofkd/sub
+				 (ofkd/kd/sing 
+				    (ofkd/sub d1 (kd-sub/kd/sing-kd/type ofkd/tp/unit)))
+				 (kd-sub/kd/sing-kd/sing 
+				    (cn-deq/trans
+				       (cn-deq/sub
+					  (cn-deq/kd/sing d1)
+					  (kd-sub/kd/sing-kd/type ofkd/tp/unit))
+				       (cn-deq/sym
+					  (cn-deq/sub
+					     (cn-deq/kd/sing d2)
+					     (kd-sub/kd/sing-kd/type ofkd/tp/unit))
+)))))
+			   (kd-sub/kd/sing-kd/sing
+			      (cn-deq/sub
+				 (cn-deq/kd/sing d2)
+				 (kd-sub/kd/sing-kd/type ofkd/tp/unit))).
+
+cn-deq/kd/singelim	: cn-deq C1 C2 kd/type
+			   <- ofkd C1 (kd/sing C2)
+			   <- ofkd C2 kd/type
+			= [d2] [d1]
+			   cn-deq/sub
+			   (cn-deq/kd/sing d1)
+			   (kd-sub/kd/sing-kd/type d2).
+
+cn-deq/kd/sing2		: cn-deq C1 C2 (kd/sing C1)
+			   <- ofkd C2 kd/type
+			   <- cn-deq C1 C2 kd/type
+			= [d] [d2]
+			   (cn-deq/sym
+			      (cn-deq/kd/sing
+				 (ofkd/sub
+				    (ofkd/kd/sing d2)
+				    (kd-sub/kd/sing-kd/sing
+				       (cn-deq/sym
+					  d))))).

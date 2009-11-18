@@ -23,7 +23,11 @@ echo "=== Running regression test in MLton ==="
 $TIME ./mlton-regression regression.txt
 
 echo ""
-echo "=== Running public code ==="
+echo "=== Running Karl Crary's 'papers' page ==="
+$TIME ./mlton-regression regression-crary.txt
+
+echo ""
+echo "=== Running misc. public code ==="
 $TIME ./mlton-regression regression-public.txt
 
 echo ""
