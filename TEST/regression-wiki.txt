@@ -14,7 +14,9 @@ test ../TEST/wiki-examples/Focusing.cfg
 test ../TEST/wiki-examples/HOAS_nat_bijection.cfg
 test ../TEST/wiki-examples/Indexed_HOAS_nat_bijection.cfg
 test ../TEST/wiki-examples/Lax_logic.cfg
+test ../TEST/wiki-examples/Let*.cfg
 test ../TEST/wiki-examples/Letrec.cfg
+test ../TEST/wiki-examples/MinMLToMinHaskell.cfg
 test ../TEST/wiki-examples/Modes_of_use.cfg
 test ../TEST/wiki-examples/Mutable_state.cfg
 test ../TEST/wiki-examples/Natural_numbers_with_inequality.cfg
