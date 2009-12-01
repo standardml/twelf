@@ -73,6 +73,10 @@ struct
   fun OM1BVAR(name, key, value) = "<om:OMBVAR>" ^ nl_ind() ^ OM1ATTR(OMV(name), key, value) ^ nl_unind() ^ "</om:OMBVAR>"
   
   type Path = {isAbs : bool, vol : string, arcs : string list}
+  
+  (* arguments of the recursion: baseFile, current identify the module relative to which addresses are given
+     for theories the theory, for views (except for @from and @to) the codomain
+   *)
   type Params = {baseFile : Path, current : IDs.mid}
   
   (* Printing references *)
@@ -116,7 +120,7 @@ struct
   fun relSymOMS (c, params : Params) =
     let
         val m = IDs.midOf c
-    	val dec = ModSyn.modLookup m
+        val dec = ModSyn.modLookup m
         val doc = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
         val md = if m = #current params then nil else ModSyn.modDecName dec
     in OMS3(doc, md, ModSyn.symName c)
@@ -378,11 +382,15 @@ struct
          IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
       end
     | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), incls, params) =
-        ElemOpen("view", [Attr("name", localPath name),
-                          Attr("from", relModName(dom, params)),
-                          Attr("to", relModName(cod, params))]
-        ) ^ nl_ind() ^ IDs.mkString(List.map (fn incl => modInclToString(incl, params)) incls, "", nl(), nl())
-               
+        let
+           val headParams = {baseFile = OS.Path.fromString base, current = #current params}
+           (* from and to relative to basefile, rest of view relative to codomain *)
+        in
+           ElemOpen("view", [Attr("name", localPath name),
+                          Attr("from", relModName(dom, headParams)),
+                          Attr("to", relModName(cod, headParams))]
+           ) ^ nl_ind() ^ IDs.mkString(List.map (fn incl => modInclToString(incl, params)) incls, "", nl(), nl())
+        end    
   fun modEndToString(ModSyn.SigDec _, _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _, _) = nl_unind() ^ "</view>"
   
@@ -402,7 +410,8 @@ struct
      	 val mdec = ModSyn.modLookup m
      	 val params : Params = case mdec
      	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
-     	    | ModSyn.ViewDec(_,_,_,cod,_) => {baseFile = baseFile, current = cod}
+     	    | ModSyn.ViewDec(_,_,_,cod,_) =>
+     	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
      	 val incls = ModSyn.modInclLookup m
      in
      	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
