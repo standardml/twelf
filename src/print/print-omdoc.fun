@@ -364,11 +364,18 @@ struct
            | dolist(f, hd::nil, nl) = f hd
            | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
      in
-     	ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^ (
-        case insts of nil => "" | _ => nl_ind() ^ dolist(fn inst => instToString(inst, params), insts, nl) ^ 
-        dolist(fn incl => modInclToString(incl, params), incls, nl) ^ nl_unind()
-        ) ^ "</structure>" ^
-        openToString(opendec, SOME name, params)
+     	ElemOpen("structure",
+     	  [Attr("name", localPath name),
+     	   Attr("from", relModName(dom,params))]) ^ (
+           case (insts,incls) of (nil, nil) => ""
+           | _ =>
+             nl_ind() ^
+               dolist(fn inst => instToString(inst, params), insts, nl) ^ 
+               dolist(fn incl => modInclToString(incl, params), incls, nl) ^
+             nl_unind()
+         ) ^
+      "</structure>" ^
+      openToString(opendec, SOME name, params)
      end
    | strDecToString(ModSyn.StrDef(name, _, dom, def, _), params) =
      ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
