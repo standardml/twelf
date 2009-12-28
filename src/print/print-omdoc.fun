@@ -406,7 +406,8 @@ struct
      "<omdoc " ^           
      "xmlns=\"http://omdoc.org/ns\" " ^
      "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-     ">\n"
+     ">\n" ^
+     "<!-- generated from Twelf sources by Florian Rabe -->\n"
   fun docEndToString() = "</omdoc>"
   
   (* Main interface methods *)
