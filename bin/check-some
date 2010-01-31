@@ -3,7 +3,9 @@
 # the twelf directory, must contain sudirectory bin
 TWELFBIN=`dirname $0`
 
-# if the first argument is -omdoc, all files are converted to OMDoc, otherwise only checked
+# takes a list of file name arguments and checks the files, prints a report at the end
+# if the first two arguments are -omdoc DIR, all files are converted to OMDoc and stored in directory DIR
+# otherwise the files are only checked
 if [ $1 = -omdoc ]; then 
   TARGDIR="$2"; shift; shift
 else

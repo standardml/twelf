@@ -1,5 +1,11 @@
 #!/bin/bash
-TWELFBIN=`dirname $0`
+
+# the twelf directory, must contain sudirectory bin
+BIN=`dirname $0`
+
+# takes arguments like the find tool and checks the found files, prints a report at the end
+# if the first two arguments are -omdoc DIR, all files are converted to OMDoc and stored in directory DIR
+# otherwise the files are only checked
 
 if [ $1 = -omdoc ]; then
   OMDOC="-omdoc $2"; shift; shift
@@ -8,6 +14,6 @@ else
 fi
 
 # "$@" expands to the list of command line parameters as a list of words
-# The working command should be exactly `find "@"`
+# The working command should be exactly `find "$@"`
 FILES=`find "$@"`
-$TWELFBIN/check-some $OMDOC `echo $FILES`
+$BIN/check-some $OMDOC `echo $FILES`

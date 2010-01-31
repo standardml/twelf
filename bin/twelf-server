@@ -1,4 +1,5 @@
 #!/bin/bash
-TWELFBIN=`dirname $0`
-sml @SMLload=$TWELFBIN/.heap/twelf-server \
+BIN=`dirname $0`
+# runs the twelf server, server commands can be piped into this script
+sml @SMLload=$BIN/.heap/twelf-server \
      @SMLdebug=/dev/null
