@@ -1,5 +1,6 @@
 to do
 
+views including themselves lead to infinite loop
 implement parametrized views
 implicit views
 read assignments in structures separately
