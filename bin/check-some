@@ -24,7 +24,7 @@ do
   # if requested, $COMMAND holds the command sent to Twelf for OMDoc conversion
   if [ "$TARGDIR" != '' ]; then
      # ".elf" is removed if present, ".omdoc" appended
-     if [ "${TARGDIR:0:1}" = "/" ]; then
+     if [ "${file:0:1}" = "/" ]; then
        # if $file is absolute, only the base name is used
        NAME=`basename $file .elf`
        COMMAND="Print.OMDoc.toFile $TARGDIR/$NAME.omdoc"
