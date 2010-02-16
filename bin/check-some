@@ -23,8 +23,14 @@ do
  
   # if requested, $COMMAND holds the command sent to Twelf for OMDoc conversion
   if [ "$TARGDIR" != '' ]; then
-     # ".elf" is removed if present, ".omdoc" appended
-     COMMAND="Print.OMDoc.toFile $TARGDIR/${file%\.elf}.omdoc"
+     # ".elf" is removed if present, ".omdoc" appended;
+     if [ "$TARGDIR:0:1" -eq "/" ] then
+       NAME=`basename $file .elf`
+       COMMAND="Print.OMDoc.toFile $DIR/$NAME.omdoc"
+     else 
+       # if $file is relative, it is appended to $TARGDIR
+       COMMAND="Print.OMDoc.toFile $TARGDIR/${file%\.elf}.omdoc"
+     fi
   else
     COMMAND=""
   fi
