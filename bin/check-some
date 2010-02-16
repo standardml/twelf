@@ -25,8 +25,9 @@ do
   if [ "$TARGDIR" != '' ]; then
      # ".elf" is removed if present, ".omdoc" appended;
      if [ "$TARGDIR:0:1" -eq "/" ] then
+       # if $file is absolute, only the base name is used
        NAME=`basename $file .elf`
-       COMMAND="Print.OMDoc.toFile $DIR/$NAME.omdoc"
+       COMMAND="Print.OMDoc.toFile $TARGDIR/$NAME.omdoc"
      else 
        # if $file is relative, it is appended to $TARGDIR
        COMMAND="Print.OMDoc.toFile $TARGDIR/${file%\.elf}.omdoc"
