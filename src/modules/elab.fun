@@ -235,8 +235,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                       in
                       	case List.find (fn x => not(equalMorph(x, hd))) tl
                       	  of NONE => ()
-                           | SOME (mor :: _) => raise Error("conflicting translations for included signature " ^
-                               M.modFoldName (domain mor) ^ " (implementation restriction: equality of morphisms only checked up to associativity and definition expansion)")
+                           | SOME _ => raise Error("conflicting translations for included signature " ^
+                               M.modFoldName from ^ " (implementation restriction: equality of morphisms only checked up to associativity and definition expansion)")
                       end
           )
           (M.sigInclLookupTrans dom)
