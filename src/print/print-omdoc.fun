@@ -370,8 +370,8 @@ struct
            case (insts,incls) of (nil, nil) => ""
            | _ =>
              nl_ind() ^
-               dolist(fn inst => instToString(inst, params), insts, nl) ^ 
                dolist(fn incl => modInclToString(incl, params), incls, nl) ^
+               dolist(fn inst => instToString(inst, params), insts, nl) ^ 
              nl_unind()
          ) ^
       "</structure>" ^
