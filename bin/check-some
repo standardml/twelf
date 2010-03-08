@@ -27,11 +27,12 @@ do
      if [ "${file:0:1}" = "/" ]; then
        # if $file is absolute, only the base name is used
        NAME=`basename $file .elf`
-       COMMAND="Print.OMDoc.toFile $TARGDIR/$NAME.omdoc"
+       OFILE="$TARGDIR/$NAME.omdoc"
      else 
        # if $file is relative, it is appended to $TARGDIR
-       COMMAND="Print.OMDoc.toFile $TARGDIR/${file%\.elf}.omdoc"
+       OFILE="$TARGDIR/${file%\.elf}.omdoc"
      fi
+     COMMAND="Print.OMDoc.toFile $OFILE"
   else
     COMMAND=""
   fi
@@ -50,7 +51,7 @@ do
     ERROR=$(( $ERROR + 1))
     # ... if applicable, remove omdoc file (OMDoc conversion is called even after finding an error)
     if [ "$TARGDIR" != "" ]; then
-      rm $file.omdoc
+      rm $OFILE
     fi
   fi
 done
