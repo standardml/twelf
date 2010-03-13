@@ -10,6 +10,7 @@ alias declarations
 use environment variable for default search path for files
 hiding
 catch exceptions when file not found
+do not use include %open, always look for unqualified names in imported signatures, fail if non-unique
 
 scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
