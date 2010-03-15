@@ -16,6 +16,11 @@ scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
 - make this also resolve comments
 
+ideas
+%main in modules to allow reference to one symbol without qualificaion
+designated arguments in modules to allow unqualified instantiation
+if mode + - f f(a)=b instead of f a b
+
 --------
 done
 
