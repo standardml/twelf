@@ -65,6 +65,7 @@ struct
       ElemEmpty("om:OMS", baseA @ modA @ nameA)
    end
   fun LFOMS(name) = OMS3(baseLF, cdLF,name)
+  fun MMTOMS(name) = OMS3(baseMMT, cdMMT,name)
   fun OMV(name) = ElemEmpty("om:OMV", [Attr("name", escape name)])
   fun OMA(func, args) = "<om:OMA>" ^ nl_ind() ^ func ^ nl() ^ IDs.mkString(args, "", nl(), "") ^ nl_unind() ^ "</om:OMA>"
   fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "</om:OMBIND>"
@@ -253,13 +254,13 @@ struct
   and fmtExpTop (G, (U, s), imp, params)
       = "<om:OMOBJ>" ^ nl_ind() ^ fmtExp (G, (U, s), imp, params) ^ nl_unind() ^ "</om:OMOBJ>"
   
-  and fmtBinder(binder, name, typ, scope) = OMBIND(LFOMS([binder]), OM1BVAR(name, LFOMS(["oftype"]), typ), scope)
+  and fmtBinder(binder, name, typ, scope) = OMBIND(LFOMS([binder]), OM1BVAR(name, MMTOMS(["type"]), typ), scope)
 
   and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
   and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
     | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
     | morphToString(ModSyn.MorComp(mor1,mor2), params) =
-      OMA(OMS3(baseMMT, cdMMT, ["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
+      OMA(MMTOMS(["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
   
   (* Printing non-modular symbol level declarations *)
   
