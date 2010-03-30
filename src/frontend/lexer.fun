@@ -401,6 +401,7 @@ struct
     | toString' (INCLUDE) = "%include"
     | toString' (OPEN) = "%open"
     | toString' (USE) = "%use"
+    | toString' (AS) = "%as"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"
