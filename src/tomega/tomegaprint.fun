@@ -222,8 +222,8 @@ struct
         *)
 	fun psiName (Psi1, s, Psi2, l) =
 	  let 
-	    fun nameDec (D as I.Dec (SOME _, _), name) = D
-	      | nameDec (I.Dec (NONE, V), name) = I.Dec (SOME name, V)
+	    fun nameDec (D as I.Dec (I.VarInfo(SOME _,_,_,_), _), name) = D
+	      | nameDec (I.Dec (I.VarInfo(NONE,r,e,i), V), name) = I.Dec (I.VarInfo(SOME name, r, e, i), V)
 	      
 	    fun namePsi (I.Decl (Psi, T.UDec D), 1, name) = 
 	          I.Decl (Psi, T.UDec (nameDec (D, name)))
@@ -248,9 +248,9 @@ struct
 	          copyNames (T.Dot (T.Idx (n+1), T.Shift (n+1)), G) Psi1
 	      | copyNames (T.Dot (T.Exp _, s), I.Decl (G, _)) Psi1=
 		  copyNames (s, G) Psi1
-	      | copyNames (T.Dot (T.Idx k, s), I.Decl (G, T.UDec (I.Dec (NONE, _)))) Psi1 =
+	      | copyNames (T.Dot (T.Idx k, s), I.Decl (G, T.UDec (I.Dec (I.VarInfo(NONE, _,_,_), _)))) Psi1 =
 		  copyNames (s, G) Psi1
-	      | copyNames (T.Dot (T.Idx k, s), I.Decl (G, T.UDec (I.Dec (SOME name, _)))) Psi1 =
+	      | copyNames (T.Dot (T.Idx k, s), I.Decl (G, T.UDec (I.Dec (I.VarInfo(SOME name,_,_,_), _)))) Psi1 =
 		let
 		  val Psi1' = namePsi (Psi1, k, name)
 		in
@@ -800,7 +800,7 @@ struct
 			      Fmt.Break,
 			      Fmt.String "end"]) 
 	      
-	  | formatLet callname (Psi, R as (T.LetPairExp (D1 as I.Dec(SOME n1, _), D2 as T.PDec (SOME n2,F,_,_), P1, P2)), fmts) = 	
+	  | formatLet callname (Psi, R as (T.LetPairExp (D1 as I.Dec(I.VarInfo(SOME n1,_,_,_), _), D2 as T.PDec (SOME n2,F,_,_), P1, P2)), fmts) = 	
 	      Fmt.Vbox0 0 1 ([Fmt.String "let", Fmt.Break, Fmt.Spaces 2,
 			      Fmt.Vbox0 0 1 ([Fmt.String "(", Fmt.String n1, Fmt.String ",", Fmt.Space, Fmt.String n2,  Fmt.String ")", Fmt.Space,
 					      Fmt.String "=", Fmt.Space, formatPrg3 callname (Psi, P1)]),

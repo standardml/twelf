@@ -25,6 +25,14 @@ sig
   datatype 'a Ctx =			(* Contexts                   *)
     Null				(* G ::= .                    *)
   | Decl of 'a Ctx * 'a			(*     | G, D                 *)
+
+  type name = string
+  datatype VarInfo =                  (* optional, semantically irrelevant information about bound variables *)
+    VarInfo of name option            (* if SOME n, then n was the variable name *)
+             * bool                   (* if true, the type was omitted *)
+             * bool                   (* if true, the variable was introduced by eta-expansion, currently always false *)
+             * bool                   (* if true, the binder was implicit *)
+  val NoVarInfo : VarInfo
     
   val ctxPop : 'a Ctx -> 'a Ctx
   val ctxLookup: 'a Ctx * int -> 'a
@@ -85,7 +93,7 @@ sig
   | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
-    Dec of string option * Exp		(* D ::= x:V                  *)
+    Dec of VarInfo * Exp		(* D ::= x:V                  *)
   | BDec of string option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of string option * int	        (*     | v[^-d]               *)
   | NDec of string option 

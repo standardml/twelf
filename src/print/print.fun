@@ -212,8 +212,8 @@ local
 	val (Gsome, Gblock) = ModSyn.constBlock (cid)
       in
 	case parmDec (Gblock, i)
-	  of I.Dec (SOME(pname), _) => pname
-	   | I.Dec (NONE, _) => Int.toString i
+	  of I.Dec (I.VarInfo(SOME(pname),_,_,_), _) => pname
+	   | I.Dec (I.VarInfo(None,_,_,_), _) => Int.toString i
       end
 
   fun projName (G, I.Proj (I.Bidx(k), i)) =
@@ -697,7 +697,7 @@ local
      Invariants:
       G' |- D[s] decl
   *)
-  and fmtDec (G, d, (I.Dec (x, V), s)) =
+  and fmtDec (G, d, (I.Dec (I.VarInfo(x,_,_,_), V), s)) =
       F.HVbox [Str0 (Symbol.bvar (nameOf (x))), sym ":", fmtExp (G, d+1, noCtxt, (V,s))]
       (* alternative with more whitespace *)
       (* F.HVbox [Str0 (Symbol.bvar (nameOf (x))), F.Space, sym ":", F.Break,

@@ -232,8 +232,8 @@ struct
         *)
 	fun psiName (Psi1, s, Psi2, l) =
 	  let 
-	    fun nameDec (D as I.Dec (SOME _, _), name) = D
-	      | nameDec (I.Dec (NONE, V), name) = I.Dec (SOME name, V)
+	    fun nameDec (D as I.Dec (I.VarInfo(SOME _,_,_,_), _), name) = D
+	      | nameDec (I.Dec (I.VarInfo(NONE,r,e,i), V), name) = I.Dec (I.VarInfo(SOME name,r,e,i), V)
 	      
 	    fun namePsi (I.Decl (Psi, F.Prim D), 1, name) = 
 	          I.Decl (Psi, F.Prim (nameDec (D, name)))
@@ -265,9 +265,9 @@ struct
 	          copyNames (I.Dot (I.Idx (n+1), I.Shift (n+1)), G) Psi1
 	      | copyNames (I.Dot (I.Exp _, s), I.Decl (G, _)) Psi1=
 		  copyNames (s, G) Psi1
-	      | copyNames (I.Dot (I.Idx k, s), I.Decl (G, I.Dec (NONE, _))) Psi1 =
+	      | copyNames (I.Dot (I.Idx k, s), I.Decl (G, I.Dec (I.VarInfo(NONE,_,_,_), _))) Psi1 =
 		  copyNames (s, G) Psi1
-	      | copyNames (I.Dot (I.Idx k, s), I.Decl (G, I.Dec (SOME name, _))) Psi1 =
+	      | copyNames (I.Dot (I.Idx k, s), I.Decl (G, I.Dec (I.VarInfo(SOME name,_,_,_), _))) Psi1 =
 		let
 		  val Psi1' = namePsi (Psi1, k, name)
 		in
@@ -308,10 +308,10 @@ struct
 	    val G0 = F.makectx Psi
 	      
 	    fun formatCtx' (I.Null) = nil
-	      | formatCtx' (I.Decl (I.Null, I.Dec (SOME name, V))) = 
+	      | formatCtx' (I.Decl (I.Null, I.Dec (I.VarInfo(SOME name,_,_,_), V))) = 
 	          [Fmt.String name, Fmt.String ":",
 		   Print.formatExp (G0, V)]
-	      | formatCtx' (I.Decl (G, I.Dec (SOME name, V))) = 
+	      | formatCtx' (I.Decl (G, I.Dec (I.VarInfo(SOME name,_,_,_), V))) = 
 		  (formatCtx' G) @ 
 		  [Fmt.String ",", Fmt.Break, 
 		   Fmt.String name, Fmt.String ":",

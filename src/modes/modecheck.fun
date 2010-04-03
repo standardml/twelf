@@ -633,10 +633,10 @@ struct
        that have no mode information associated with them
        (occ used in error messages)
     *)
-    fun checkD1 (D, I.Pi ((I.Dec (name, _), I.Maybe), V), occ, k) =
+    fun checkD1 (D, I.Pi ((I.Dec (I.VarInfo(name,_,_,_), _), I.Maybe), V), occ, k) =
           checkD1 (I.Decl (D, Existential (Free, name)), V, P.body occ,
                    fn (I.Decl (D', m)) => ctxPush (m, k D'))
-      | checkD1 (D, I.Pi ((I.Dec (name, V1), I.No), V2), occ, k) =
+      | checkD1 (D, I.Pi ((I.Dec (I.VarInfo(name,_,_,_), V1), I.No), V2), occ, k) =
           checkD1 (I.Decl (D, Existential (Free, name)), V2, P.body occ,
                    fn (I.Decl (D', m)) => ctxPush (m, checkG1 (D', V1, P.label occ, k)))
       | checkD1 (D, I.Root (I.Const a, S), occ, k) =

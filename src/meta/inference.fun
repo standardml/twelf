@@ -130,7 +130,7 @@ struct
 		    val V'' = Whnf.normalize (V', w')
 					(* G' |- V'' : type *)
 		  in		
-		    sc' ((I.Decl (G', I.Dec (NONE, V'')), 
+		    sc' ((I.Decl (G', I.Dec (I.NoVarInfo, V'')), 
 			  I.Decl (B', S.Lemma (S.Splits (!MTPGlobal.maxSplit)))), I.comp (w', I.shift))
 		  end)
 	end

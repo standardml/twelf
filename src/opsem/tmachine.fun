@@ -77,7 +77,7 @@ struct
     fun goalToType (C.All (D, g), s) =
           I.Pi ((I.decSub (D,s), I.Maybe), goalToType (g, I.dot1 s))
       | goalToType (C.Impl (_, A, _, g), s) =
-	  I.Pi ((I.Dec (NONE, I.EClo (A, s)), I.No), goalToType (g, I.dot1 s))
+	  I.Pi ((I.Dec (I.NoVarInfo, I.EClo (A, s)), I.No), goalToType (g, I.dot1 s))
       | goalToType (C.Atom(p), s) =
 	  I.EClo (p, s)
 
@@ -95,7 +95,7 @@ struct
   fun solve' ((C.Atom(p), s), dp as C.DProg (G, dPool), sc) = matchAtom ((p,s), dp, sc)
     | solve' ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
-	val D' as I.Dec(SOME(x),_) = N.decUName (G, I.Dec(NONE, I.EClo(A,s)))
+	val D' as I.Dec(I.VarInfo(SOME(x),_,_,_),_) = N.decUName (G, I.Dec(I.NoVarInfo, I.EClo(A,s)))
 	val _ = T.signal (G, T.IntroHyp (Ha, D'))
       in
 	solve' ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec(r, s, Ha))),
@@ -104,7 +104,7 @@ struct
       end
     | solve' ((C.All(D, g), s), C.DProg (G, dPool), sc) =
       let
-	val D' as I.Dec(SOME(x),V) = N.decUName (G, I.decSub (D, s))
+	val D' as I.Dec(I.VarInfo(SOME(x),_,_,_),V) = N.decUName (G, I.decSub (D, s))
 	val Ha = I.targetHead V
 	val _ = T.signal (G, T.IntroParm (Ha, D'))
       in

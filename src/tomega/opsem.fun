@@ -426,7 +426,7 @@ and raisePrg (Psi, G, T.Unit) = T.Unit
 	  *)
 
 	  fun printLF (_, _, _) 0 = ()
-	    | printLF (G, I.Dot (I.Exp U, s'), I.Decl (G', I.Dec (SOME name, V))) k = 
+	    | printLF (G, I.Dot (I.Exp U, s'), I.Decl (G', I.Dec (I.VarInfo(SOME name,_,_,_), V))) k = 
 	      let
 		val _ = printLF (G, s', G') (k-1)
 	      in

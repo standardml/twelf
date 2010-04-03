@@ -85,7 +85,7 @@ struct
 		  val k = Whnf.etaContract U
 		          handle Whnf.Eta => 
 			    error (r, "Argument not a variable")  (* print U? -fp *)
-		  val I.Dec (name, _) = I.ctxLookup (G, k)
+		  val I.Dec (I.VarInfo(name,_,_,_), _) = I.ctxLookup (G, k)
 		  val mode = I.ctxLookup (D, k)
 		in
 		  M.Mapp (M.Marg (mode, name), convertSpine S)

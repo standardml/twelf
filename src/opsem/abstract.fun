@@ -863,7 +863,7 @@ struct
 	  val ( _,Vars', V'', _) = abstractExp (false, Gs, (0, 0),  Vars, I.Null, 0, 
 						(total - 1), (V', I.id),  TableParam.Trivial)
           val  DEVars' = makeEVarCtx (Gs, Vars', DEVars, K', total - 1) 
-	  val DEVars'' = I.Decl (DEVars', I.Dec (NONE, V''))
+	  val DEVars'' = I.Decl (DEVars', I.Dec (I.NoVarInfo, V''))
 	in
 	  DEVars'' 
 	end       

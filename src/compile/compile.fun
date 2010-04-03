@@ -383,7 +383,7 @@ struct
       let
 	val Ha1 = I.targetHead A1
         val R = compileDClauseN fromCS false (G, A1)
-	val goal = compileGoalN fromCS (I.Decl(G, I.Dec(NONE, A1)), A2)
+	val goal = compileGoalN fromCS (I.Decl(G, I.Dec(I.NoVarInfo, A1)), A2)
       in
 	(* A1 is used to build the proof term, Ha1 for indexing *)
 	(* never optimize when compiling local assumptions *)

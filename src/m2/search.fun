@@ -68,7 +68,7 @@ struct
   fun solve ((C.Atom p, s), dp, sc, acck) = matchAtom ((p,s), dp, sc, acck)
     | solve ((C.Impl (r, A, H, g), s), C.DProg(G, dPool), sc, acck) =
        let
-	 val D' = I.Dec (NONE, I.EClo (A, s))
+	 val D' = I.Dec (I.NoVarInfo, I.EClo (A, s))
        in
 	 solve ((g, I.dot1 s), 
 		C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec (r, s, H))),

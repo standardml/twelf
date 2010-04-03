@@ -116,7 +116,7 @@ struct
     fun theoremDecToModeSpine ((name,  ThDecl (GBs, G, MG, i)), r) = 
       let 
 	fun theoremToModeSpine' (I.Null, I.Null, mS) = mS
-	  | theoremToModeSpine' (I.Decl (G, I.Dec (x, _)), I.Decl (MG, m), mS) =
+	  | theoremToModeSpine' (I.Decl (G, I.Dec (I.VarInfo(x,_,_,_), _)), I.Decl (MG, m), mS) =
 	      theoremToModeSpine' (G, MG, M.Mapp (M.Marg (m, x), mS))
       in
         theoremToModeSpine' (G, MG, M.Mnil)

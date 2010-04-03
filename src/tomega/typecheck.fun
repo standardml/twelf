@@ -107,7 +107,7 @@ struct
 	  val V = TypeCheck.infer' (T.coerceCtx Psi, U)
 	  val F = inferPrg (Psi, P)
 	in
-	  T.Ex ((I.Dec (NONE, V), T.Explicit), F)
+	  T.Ex ((I.Dec (I.NoVarInfo, V), T.Explicit), F)
 	end
       | inferPrg (Psi, T.PairBlock (I.Bidx k, P)) =
         (* Blocks T.Inst, and T.LVar excluded for now *)

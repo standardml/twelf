@@ -196,7 +196,7 @@ struct
         let
 	  val _ = N.varReset I.Null
 	  val (G, V') = abbrevCGoal (I.Null, V, p, ci)
-	  val I.Dec (SOME(x), _) = I.ctxLookup (G, k)
+	  val I.Dec (I.VarInfo(SOME(x),_,_,_), _) = I.ctxLookup (G, k)
 	in
 	  "Split " ^ x ^ " in " ^ Print.expToString (G, V')
 	end
@@ -1724,7 +1724,7 @@ struct
     fun showSplitVar (CGoal (G, S), k) =
         let
 	  val _ = N.varReset I.Null
-	  val I.Dec (SOME(x), _) = I.ctxLookup (G, k)
+	  val I.Dec (I.VarInfo(SOME(x),_,_,_), _) = I.ctxLookup (G, k)
 	in
 	  "Split " ^ x ^ " in " ^ F.makestring_fmt (F.HVbox (Print.formatSpine (G, S)))
 	end

@@ -703,7 +703,7 @@ struct
 					(* F2  : GB, Ds |- {{G'[...]}} F2 : for *)
 	    val _ = if !Global.doubleCheck then FunTypeCheck.isFor (G, F2) else ()
 
-	    val D2 = I.Dec (NONE, V2)
+	    val D2 = I.Dec (I.NoVarInfo, V2)
 					(* D2  : GB, Ds |- D2 : type *)
 	    val T2 = (case F2
 			of F.All _ => S.Lemma (S.RL)

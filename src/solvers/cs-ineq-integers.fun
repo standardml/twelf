@@ -1297,8 +1297,8 @@ struct
       | solveGeq (G, S, n) = NONE
 
     (* constructors for higher-order types *)
-    fun pi (name, U, V) = Pi ((Dec (SOME(name), U), Maybe), V)
-    fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
+    fun pi (name, U, V) = Pi ((Dec (VarInfo(SOME(name),false,false,false), U), Maybe), V)
+    fun arrow (U, V) = Pi ((Dec (NoVarInfo, U), No), V)
 
     fun installFgnCnstrOps () = let
 	val csid = !myID

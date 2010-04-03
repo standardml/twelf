@@ -30,7 +30,7 @@ struct
       | goalToString t (G, Impl (p,A,_,g)) =
 	 t ^ "ASSUME  " ^ Print.expToString (G, A) ^ "\n" ^
 	 (clauseToString (t ^ "\t") (G, p)) ^
-	 goalToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), g) ^ "\n"
+	 goalToString t (IntSyn.Decl(G, IntSyn.Dec(IntSyn.VarInfo(NONE,false,false,false), A)), g) ^ "\n"
       | goalToString t (G, All(D,g)) =
 	 let
 	   val D' = Names.decLUName (G, D)
@@ -54,11 +54,11 @@ struct
 	 (t ^ "ASSIGN  " ^ (Print.expToString (G, p)  handle _ => "<exc>")
 	 ^ "\n" ^ (auxToString t (G, ga)))
       | clauseToString t (G, And(r, A, g)) =
-	 clauseToString t (IntSyn.Decl(G, IntSyn.Dec(NONE, A)), r) ^
+	 clauseToString t (IntSyn.Decl(G, IntSyn.Dec(IntSyn.NoVarInfo, A)), r) ^
 	 goalToString t (G, g)
       | clauseToString t (G, In(r, A, g)) =
          let
-           val D = Names.decEName (G, IntSyn.Dec (NONE, A))
+           val D = Names.decEName (G, IntSyn.Dec (IntSyn.NoVarInfo, A))
          in
            clauseToString t (IntSyn.Decl(G, D), r) ^
            t ^ "META    " ^ Print.decToString (G, D) ^ "\n" ^
@@ -84,7 +84,7 @@ struct
 
     fun subgoalsToString t (G, True) = t ^ "True "
       | subgoalsToString t (G, Conjunct(Goal, A, Sg)) = 
-        t  ^ goalToString t (IntSyn.Decl(G,IntSyn.Dec(NONE, A)), Goal) ^ " and " ^ subgoalsToString t (G, Sg)
+        t  ^ goalToString t (IntSyn.Decl(G,IntSyn.Dec(IntSyn.NoVarInfo, A)), Goal) ^ " and " ^ subgoalsToString t (G, Sg)
 
     (* conDecToString (c, clause) printed representation of static clause *)
     fun conDecToString (c, SClause(r)) = 
@@ -115,12 +115,12 @@ struct
        
     (* dProgToString (G, dProg) = printed representation of dynamic program *)
     fun dProgToString (DProg (IntSyn.Null, IntSyn.Null)) = ""
-      | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(SOME x,_)),
+      | dProgToString (DProg (IntSyn.Decl(G,IntSyn.Dec(IntSyn.VarInfo(SOME x,false,false,false),_)),
 		       IntSyn.Decl(dPool, CompSyn.Dec (r,_,_)))) =
           dProgToString (DProg (G,dPool))
 	  ^ "\nClause    " ^ x ^ ":\n"
 	  ^ clauseToString "\t" (G, r)
-      | dProgToString (DProg (IntSyn.Decl(G, IntSyn.Dec(SOME x,A)),
+      | dProgToString (DProg (IntSyn.Decl(G, IntSyn.Dec(IntSyn.VarInfo(SOME x,false,false,false),A)),
 		       IntSyn.Decl(dPool, CompSyn.Parameter))) =
 	 dProgToString (DProg (G, dPool))
 	 ^ "\nParameter " ^ x ^ ":\t"

@@ -250,7 +250,7 @@ struct
       (* also, does the name of the bound variable here matter? *)
       let
         val V1' = apxToClass (G, V1, Type, allowed)
-        val D = I.Dec (NONE, V1')
+        val D = I.Dec (I.VarInfo(NONE, false, false,false), V1')
         val V2' = apxToClass (I.Decl (G, D), V2, L, allowed)
       in
         I.Pi ((D, I.Maybe), V2')

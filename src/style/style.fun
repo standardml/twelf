@@ -73,14 +73,14 @@ struct
        If  D's name corresponds to the name choice for pol, 
        then I is Correct else Incorrect
     *)
-    fun checkVar (I.Dec (SOME n, V), pol) = 
+    fun checkVar (I.Dec (I.VarInfo(SOME n,_,_,_), V), pol) = 
         (case (Names.namePrefLookup (ModSyn.targetFam V)) 
 	   of NONE => Correct
 	    | SOME (prefENames, prefUNames) =>  
  	      (case pol 
 		 of Plus => checkVariablename (n, prefENames)
 	          | Minus => checkVariablename (n, prefUNames)))
-      | checkVar (I.Dec (NONE, V), pol) = Correct
+      | checkVar (I.Dec (I.VarInfo(None,_,_,_), V), pol) = Correct
 
     (* implicitHead H = k
        

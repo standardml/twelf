@@ -99,8 +99,8 @@ struct
     fun occToString (SOME(ocd), occ) = Paths.wrap (Paths.occToRegionDef1 ocd occ, "")
       | occToString (NONE, occ) = "Error: "
 
-    fun decToVarName (I.Dec (NONE, _)) = "implicit variable"
-      | decToVarName (I.Dec (SOME(x), _)) = "variable " ^ x
+    fun decToVarName (I.Dec (I.VarInfo(NONE,_,_,_), _)) = "implicit variable"
+      | decToVarName (I.Dec (I.VarInfo(SOME(x),_,_,_), _)) = "variable " ^ x
 
     (* strictTop ((U, V), ocdOpt) = ()
        

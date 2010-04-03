@@ -58,7 +58,7 @@ struct
 	  val (GM' as M.Prefix (G', M', B'), s') = createEVars GM
 	  val (U', Vs') = M.createAtomConst (G', I.Const a)  (* Vs' = type *) 
 	in
-	  A.abstract (M.State (name, GM', I.Pi ((I.Dec (NONE, U'), I.No), 
+	  A.abstract (M.State (name, GM', I.Pi ((I.Dec (I.NoVarInfo, U'), I.No), 
 						I.EClo (V, I.comp (s',I.shift)))))
 	end
     

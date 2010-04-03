@@ -179,7 +179,7 @@ struct
   fun getHypGoal (DProg, (C.Atom p, s)) = (DProg, (p,s))
     | getHypGoal (C.DProg(G, dPool), (C.Impl(r, A, Ha, g), s)) = 
     let
-      val D' = IntSyn.Dec(NONE, I.EClo(A,s))	   
+      val D' = IntSyn.Dec(IntSyn.NoVarInfo, I.EClo(A,s))	   
     in
       if (!TableParam.strengthen) 
 	then 
@@ -436,7 +436,7 @@ struct
     
      | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
        let
-	 val D' = I.Dec(NONE, I.EClo(A,s))	   
+	 val D' = I.Dec(I.NoVarInfo, I.EClo(A,s))	   
        in
 	 if (!TableParam.strengthen) 
 	   then 

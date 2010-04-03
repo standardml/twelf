@@ -682,7 +682,7 @@ struct
             val _ = if (!Global.doubleCheck) then typecheck (M.Prefix (G', M', B'), V'') 
 		    else ()
 
-	  in (M.Prefix (I.Decl (G', Names.decName (G', I.Dec (NONE, V''))), 
+	  in (M.Prefix (I.Decl (G', Names.decName (G', I.Dec (I.NoVarInfo, V''))), 
 			I.Decl (M', m),
 			I.Decl (B', case m of M.Top => !MetaGlobal.maxSplit | M.Bot => 0)),
 	      lG')

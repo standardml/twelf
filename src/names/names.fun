@@ -493,7 +493,7 @@ struct
     (* ctxDefined (G, name) = true iff `name' is declared in context G *)
     fun ctxDefined (G, name) =
         let fun cdfd (IntSyn.Null) = false
-	      | cdfd (IntSyn.Decl(G', IntSyn.Dec(SOME(name'),_))) =
+	      | cdfd (IntSyn.Decl(G', IntSyn.Dec(IntSyn.VarInfo(SOME(name'),_,_,_),_))) =
                   name = name' orelse cdfd G'
               | cdfd (IntSyn.Decl(G', IntSyn.BDec(SOME(name'),_))) =
 		  name = name' orelse cdfd G'
@@ -580,11 +580,11 @@ struct
        Invariant: 1 <= k <= |G|
                   G_k must assign a name
        If no name has been assigned, the context might be built the wrong
-       way---check decName below instread of IntSyn.Dec
+       way---check decName below instead of IntSyn.Dec
     *)
     fun bvarName (G, k) =
         case IntSyn.ctxLookup (G, k)
-	  of IntSyn.Dec(SOME(name), _) => name
+	  of IntSyn.Dec(IntSyn.VarInfo(SOME(name),_,_,_), _) => name
 	   | IntSyn.ADec(SOME(name), _) =>  name
 	   | IntSyn.NDec(SOME(name)) =>  name (* Evars can depend on NDec :-( *)
 	   | IntSyn.ADec(None, _) => "ADec_" 
@@ -597,16 +597,16 @@ struct
        If D does not assign a name, this picks, based on the name
        preference declaration.
     *)
-    fun decName' role (G, IntSyn.Dec (NONE, V)) =
+    fun decName' role (G, IntSyn.Dec (IntSyn.VarInfo(NONE,r,e,i), V)) =
         let
 	  val name = findName (G, namePrefOf (role, V), extent (role))
 	in
-	  IntSyn.Dec (SOME(name), V)
+	  IntSyn.Dec (IntSyn.VarInfo(SOME(name),r,e,i), V)
 	end
-      | decName' role (G, D as IntSyn.Dec (SOME(name), V)) =
+      | decName' role (G, D as IntSyn.Dec (IntSyn.VarInfo(SOME(name),r,e,i), V)) =
 	if varDefined name orelse conDefined name
 	  orelse ctxDefined (G, name)
-	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
+	  then IntSyn.Dec (IntSyn.VarInfo(SOME (tryNextName (G, baseOf name)),r,e,i), V)
 	else D
       | decName' role (G, D as IntSyn.BDec (NONE, b as (cid, t))) =
         (* use #l as base name preference for label l *)

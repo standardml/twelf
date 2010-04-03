@@ -87,7 +87,7 @@ struct
 
     | solve ((C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
-	val D' = I.Dec(NONE, I.EClo(A,s))
+	val D' = I.Dec(I.NoVarInfo, I.EClo(A,s))
       in
 	solve ((g, I.dot1 s), C.DProg (I.Decl(G, D'), I.Decl (dPool, C.Dec(r, s, Ha))),
 	        (fn M => sc (I.Lam (D', M))))

@@ -71,7 +71,7 @@ struct
   fun OMBIND(bind, vars, scope) = "<om:OMBIND>" ^ nl_ind() ^ bind ^ nl() ^ vars ^ nl() ^ scope ^ nl_unind() ^ "</om:OMBIND>"
   fun OM1ATTR(obj, key, value) = "<om:OMATTR><om:OMATP>" ^ nl_ind() ^ key ^ nl() ^ value ^ nl() ^ "</om:OMATP>" ^
                                  obj ^ nl_unind() ^ "</om:OMATTR>"
-  fun OM1BVAR(name, key, value) = "<om:OMBVAR>" ^ nl_ind() ^ OM1ATTR(OMV(name), key, value) ^ nl_unind() ^ "</om:OMBVAR>"
+  fun OM1BVAR(var, key, value) = "<om:OMBVAR>" ^ nl_ind() ^ OM1ATTR(var, key, value) ^ nl_unind() ^ "</om:OMBVAR>"
   
   type Path = {isAbs : bool, vol : string, arcs : string list}
   
@@ -136,7 +136,7 @@ struct
 
   fun fmtCon (G, I.BVar(x), params) = 
       let
-	val I.Dec (SOME n, _) = I.ctxDec (G, x)
+	val I.Dec (I.VarInfo(SOME n,_,_,_), _) = I.ctxDec (G, x)
       in 
 	OMV(n)
       end
@@ -157,11 +157,13 @@ struct
        G'' |- U : V   G' |- s : G''  (so  G' |- U[s] : V[s])
        (U,s) in whnf
   *)
+
+  (* argument imp could be removed; testing for implicit variables can be done using the VarInfo *)
   fun fmtExpW (G, (I.Uni(L), s), _, _) = fmtUni L
     | fmtExpW (G, (I.Pi((D as I.Dec(_,V1),P),V2), s), imp, params) =
       (case P (* if Pi is dependent but anonymous, invent name here *)
 	 of I.Maybe => let
-			 val (D' as I.Dec (SOME(name), V1')) = Names.decLUName (G, D) (* could sometimes be EName *)
+			 val (D' as I.Dec (I.VarInfo(SOME(name),r,e,i), V1')) = Names.decLUName (G, D) (* could sometimes be EName *)
 			 val G' = I.Decl (G, D')
 			 val _ = ind(1)  (* temporary indentation *)
 			 val fmtBody = fmtExp (G', (V2, I.dot1 s), Int.max(0,imp - 1), params)
@@ -170,7 +172,7 @@ struct
 			 val _ = unind(2)
 			 val pi = if (imp > 0) then "implicit_Pi" else "Pi"
 		       in
-				fmtBinder(pi, name, fmtType, fmtBody)
+				fmtBinder(pi, name, fmtType, r, fmtBody)
 		       end
 	  | I.No => let
 		       val G' = I.Decl (G, D)
@@ -214,7 +216,7 @@ struct
       end
     | fmtExpW (G, (I.Lam(D, U), s), imp, params) = 
       let
-	val (D' as I.Dec (SOME(name), V)) = Names.decLUName (G, D)
+	val (D' as I.Dec (I.VarInfo(SOME(name),r,e,i), V)) = Names.decLUName (G, D)
 	val G' = I.Decl (G, D')
 	val _ = ind(1)  (* temporary indentation *)
 	val fmtBody = fmtExp (G', (U, I.dot1 s), Int.max(0,imp - 1), params)
@@ -223,7 +225,7 @@ struct
 	val _ = unind(2)
 	val lam = if (imp > 0) then "implicit_lambda" else "lambda"
       in
-      	fmtBinder(lam, name, fmtType, fmtBody)
+      	fmtBinder(lam, name ^ (if e then "true" else "false"), fmtType, r, fmtBody)
       end
     | fmtExpW (G, (I.FgnExp (csid, F), s), 0, _) = "FgnExp" (* FIX -cs Fri Jan 28 17:45:43 2005 *)
 
@@ -254,7 +256,15 @@ struct
   and fmtExpTop (G, (U, s), imp, params)
       = "<om:OMOBJ>" ^ nl_ind() ^ fmtExp (G, (U, s), imp, params) ^ nl_unind() ^ "</om:OMOBJ>"
   
-  and fmtBinder(binder, name, typ, scope) = OMBIND(LFOMS([binder]), OM1BVAR(name, MMTOMS(["type"]), typ), scope)
+  and fmtBinder(binder, name, typ, recon, scope) =
+    let
+    	val _ = ind(2)
+    	val var = if recon then  OM1ATTR(OMV(name), LFOMS(["omittedtype"]), LFOMS(["omittedtype"]))
+		  else OMV(name)
+	val _ = unind(2)
+    in
+       OMBIND(LFOMS([binder]), OM1BVAR(var, MMTOMS(["type"]), typ), scope)
+    end
 
   and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
   and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)

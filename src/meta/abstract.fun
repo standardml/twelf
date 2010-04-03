@@ -448,7 +448,7 @@ struct
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	  val (G', B') = abstractCtx K'
-	  val D' = I.Dec (NONE, V'')
+	  val D' = I.Dec (I.NoVarInfo, V'')
 	in
 	  (I.Decl (G', D'), I.Decl (B', T))
 	end
@@ -457,7 +457,7 @@ struct
 	  val V'' = abstractExp (K', 0, (V', I.id))
 	  val _ = checkType V''
 	  val (G', B') = abstractCtx K'
-	  val D' = I.Dec (NONE, V'')
+	  val D' = I.Dec (I.NoVarInfo, V'')
 	in
 	  (I.Decl (G', D'), I.Decl (B', S.None))
 	end

@@ -576,7 +576,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V''	*)
 	in
-	  abstractKPi (K', I.Pi ((I.Dec(NONE, V''), I.Maybe), V))
+	  abstractKPi (K', I.Pi ((I.Dec(I.VarInfo(NONE,false,false,true), V''), I.Maybe), V))
 	end
       | abstractKPi (I.Decl (K', FV (name,V')), V) =
 	let
@@ -584,7 +584,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V'' *)
 	in
-	  abstractKPi (K', I.Pi ((I.Dec(SOME(name), V''), I.Maybe), V))
+	  abstractKPi (K', I.Pi ((I.Dec(I.VarInfo(SOME(name),false,false,true), V''), I.Maybe), V))
 	end
       | abstractKPi (I.Decl (K', LV (I.LVar (r, _, (l, t)))), V) =
 	let
@@ -610,10 +610,10 @@ struct
         let
 	  val V' = raiseType (GX, VX)
 	in
-          abstractKLam (K', I.Lam (I.Dec(NONE, abstractExp (K', 0, (V', I.id))), U))
+          abstractKLam (K', I.Lam (I.Dec(I.VarInfo(NONE,false,false,true), abstractExp (K', 0, (V', I.id))), U))
 	end
       | abstractKLam (I.Decl (K', FV (name,V')), U) =
- 	  abstractKLam (K', I.Lam (I.Dec(SOME(name), abstractExp (K', 0, (V', I.id))), U))
+ 	  abstractKLam (K', I.Lam (I.Dec(I.VarInfo(SOME(name),false,false,true), abstractExp (K', 0, (V', I.id))), U))
 
 
     fun abstractKCtx (I.Null) = I.Null
@@ -624,7 +624,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V''	*)
 	in
-	  I.Decl (abstractKCtx K', I.Dec (NONE, V''))
+	  I.Decl (abstractKCtx K', I.Dec (I.VarInfo(NONE, false,false,true), V''))
 	end
       | abstractKCtx (I.Decl (K', FV (name, V'))) =
 	let
@@ -632,7 +632,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V'' *)
 	in
-	  I.Decl (abstractKCtx K', I.Dec (SOME(name), V''))
+	  I.Decl (abstractKCtx K', I.Dec (I.VarInfo(SOME(name),false,false,true), V''))
 	end
       | abstractKCtx (I.Decl (K', LV (I.LVar (r, _, (l, t))))) =
 	let
@@ -855,7 +855,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V''	*)
 	in
-	  I.Decl (abstractPsi K', T.UDec (I.Dec (NONE, V'')))
+	  I.Decl (abstractPsi K', T.UDec (I.Dec (I.VarInfo(NONE,false,false,true), V'')))
 	end
       | abstractPsi (I.Decl (K', FV (name, V'))) =
 	let
@@ -863,7 +863,7 @@ struct
           (* enforced by reconstruction -kw
 	  val _ = checkType V'' *)
 	in
-	  I.Decl (abstractPsi K', T.UDec (I.Dec (SOME(name), V'')))
+	  I.Decl (abstractPsi K', T.UDec (I.Dec (I.VarInfo(SOME(name),false,false,true), V'')))
 	end
       | abstractPsi (I.Decl (K', LV (I.LVar (r, _, (l, t))))) =
 	let

@@ -17,7 +17,15 @@ struct
   datatype 'a Ctx =			(* Contexts                   *)
     Null				(* G ::= .                    *)
   | Decl of 'a Ctx * 'a			(*     | G, D                 *)
-
+  
+  (* optional information about declared variables *)
+  datatype VarInfo =
+    VarInfo of name option            (* name, if given *)
+             * bool                   (* true if the type was omitted *)
+             * bool                   (* true if the variable was not present and introduced by eta-expansion *)
+             * bool                   (* true if the binding was implicit *)
+  val NoVarInfo = VarInfo(NONE,false,false,false)
+  
   (* ctxPop (G) => G'
      Invariant: G = G',D
   *)
@@ -108,7 +116,7 @@ struct
   | Undef				(*     | _                    *)
 
   and Dec =				(* Declarations:              *)
-    Dec of name option * Exp		(* D ::= x:V                  *)
+    Dec of VarInfo * Exp		(* D ::= x:V                  *)
   | BDec of name option * (cid * Sub)	(*     | v:l[s]               *)
   | ADec of name option * int   	(*     | v[^-d]               *)
   | NDec of name option

@@ -597,7 +597,7 @@ struct
                   App (Root(BVar (n), Nil), makeParams (n-1))
             fun makeLam E 0 = E
               | makeLam E n = 
-                  Lam (Dec (NONE, string()), makeLam E (n-1))
+                  Lam (Dec (NoVarInfo, string()), makeLam E (n-1))
             fun expand ((Nil, s), arity) =
                   (makeParams arity, arity)
               | expand ((App (U, S), s), arity) =
@@ -618,7 +618,7 @@ struct
             fn (App (U1, App (U2, Nil))) =>
               opConcat (fromExp (U1, id), fromExp (U2, id)))
 
-    fun arrow (U, V) = Pi ((Dec (NONE, U), No), V)
+    fun arrow (U, V) = Pi ((Dec (NoVarInfo, U), No), V)
 
     (* init (cs, installFunction) = ()
        Initialize the constraint solver.

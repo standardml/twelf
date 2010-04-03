@@ -209,11 +209,11 @@ struct
    
     fun eventToString (G, IntroHyp (_, D)) =
         "% Introducing hypothesis\n" ^ decToString (G, D)
-      | eventToString (G, DischargeHyp (_, I.Dec (SOME(x), _))) =
+      | eventToString (G, DischargeHyp (_, I.Dec (I.VarInfo(SOME(x),_,_,_), _))) =
 	"% Discharging hypothesis " ^ x
       | eventToString (G, IntroParm (_, D)) =
 	"% Introducing parameter\n" ^ decToString (G, D)
-      | eventToString (G, DischargeParm (_, I.Dec (SOME(x), _))) =
+      | eventToString (G, DischargeParm (_, I.Dec (I.VarInfo(SOME(x),_,_,_), _))) =
 	"% Discharging parameter " ^ x
 
       | eventToString (G, Resolved (Hc, Ha)) =

@@ -620,7 +620,7 @@ struct
     fun ctxToApx IntSyn.Null = IntSyn.Null
       | ctxToApx (IntSyn.Decl (G, IntSyn.NDec x)) =
           IntSyn.Decl (ctxToApx G, NDec x)
-      | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (name, V))) = 
+      | ctxToApx (IntSyn.Decl (G, IntSyn.Dec (IntSyn.VarInfo(name,_,_,_), V))) = 
           let 
 	    val (V', _) = Apx.classToApx V
 	  in
@@ -921,7 +921,7 @@ struct
       | inferExactN (G, arrow (tm1, tm2)) =
         let
           val (tm1', B1, _ (* Uni Type *)) = inferExact (G, tm1)
-          val D = Dec (NONE, toIntro (B1, (Uni Type, id)))
+          val D = Dec (NoVarInfo, toIntro (B1, (Uni Type, id)))
           val (tm2', B2, L) = inferExact (G, tm2)
           val V2 = toIntro (B2, (L, id))
         in
@@ -1019,7 +1019,8 @@ struct
         let
           val (tm', B1, _ (* Uni Type *)) = inferExact (G, tm)
           val V1 = toIntro (B1, (Uni Type, id))
-          val D = Dec (name, V1)
+          val om = case tm of omitapx _ => true | _ => false
+          val D = Dec (VarInfo(name,om,false,false), V1)
         in
           (dec (name, tm', r), D)
         end
@@ -1029,7 +1030,8 @@ struct
           val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
-          val D = Dec (name, V1)
+          val om = case tm1 of omitapx _ => true | _ => false
+          val D = Dec (VarInfo(name,om, false, false), V1)
           val ((tm2', B2, V2), ok2) =
                 if ok1 then checkExact1 (Decl (G, D), tm2, (Vr, dot1 s))
                 else (inferExact (Decl (G, D), tm2), false)
@@ -1064,7 +1066,7 @@ struct
                    in
                      delayAmbiguous (G, U', r, "Omitted " ^
                        (case Apx.whnfUni L
-                          of Apx.Level 1 => "term" (* added this case, which can occur in views, FR Apr 09 *)
+                          of Apx.Level 1 => "term" (* added this case, which can occur in views, -fr Apr 09 *)
                            | Apx.Level 2 => "type"
                            | Apx.Level 3 => "kind") ^ " is ambiguous");
                      U'
@@ -1124,7 +1126,7 @@ struct
           val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
-          val D = Dec (NONE, V1)
+          val D = Dec (NoVarInfo, V1)
           val (tm2', B2, L) = inferExact (G, tm2)
           val V2 = toIntro (B2, (L, id))
         in
@@ -1136,7 +1138,8 @@ struct
           val (Pi ((Dec (_, Va), _), Vr), s) = Whnf.whnfExpandDef Vhs
           val ((tm1', B1, _ (* Uni Type *)), ok1) = unifyExact (G, tm1, (Va, s))
           val V1 = toIntro (B1, (Uni Type, id))
-          val D = Dec (name, V1)
+          val om = case tm1 of omitapx _ => true | _ => false
+          val D = Dec (VarInfo(name,om,false,false), V1)
           val ((tm2', B2, L), ok2) =
                 if ok1 then unifyExact (Decl (G, D), tm2, (Vr, dot1 s))
                 else (inferExact (Decl (G, D), tm2), false)

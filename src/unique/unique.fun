@@ -167,7 +167,7 @@ struct
        Invariant: V[s] = a @ S and ms is mode spine for a
     *)
     fun checkDiffBlocksInternal (G, Vs, (t, nil), (a, ms), bx) = ()
-      | checkDiffBlocksInternal (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (b, xOpt)) =
+      | checkDiffBlocksInternal (G, (V, s), (t, (D as I.Dec(I.VarInfo(yOpt,_,_,_), V'))::piDecs), (a, ms), (b, xOpt)) =
         let
 	  val a' = ModSyn.targetFam V'
 	  val _ = if (a = a')
@@ -187,7 +187,7 @@ struct
        Effect: raises Error(msg) otherwise
     *)
     fun checkUniqueBlockInternal' (G, (t, nil), (a, ms), b) = ()
-      | checkUniqueBlockInternal' (G, (t, (D as I.Dec(xOpt, V))::piDecs), (a, ms), b) =
+      | checkUniqueBlockInternal' (G, (t, (D as I.Dec(I.VarInfo(xOpt,_,_,_), V))::piDecs), (a, ms), b) =
         let
 	  val a' = ModSyn.targetFam V
 	  val _ = if (a = a')
@@ -240,7 +240,7 @@ struct
        Effect: raises Error(msg) otherwise
     *)
     fun checkUniqueBlockBlock (G, Vs, (t, nil), (a, ms), (bx, b')) = ()
-      | checkUniqueBlockBlock (G, (V, s), (t, (D as I.Dec(yOpt, V'))::piDecs), (a, ms), (bx, b')) =
+      | checkUniqueBlockBlock (G, (V, s), (t, (D as I.Dec(I.VarInfo(yOpt,_,_,_), V'))::piDecs), (a, ms), (bx, b')) =
         let
 	  val a' = ModSyn.targetFam V'
 	  val _ = if (a = a')
@@ -272,7 +272,7 @@ struct
        b is the block identifier in which piDecs occur for error messages
     *)
     fun checkUniqueBlock' (G, (t, nil), bs, cs, (a, ms), b) = ()
-      | checkUniqueBlock' (G, (t, (D as I.Dec(xOpt, V))::piDecs), bs, cs, (a, ms), b) =
+      | checkUniqueBlock' (G, (t, (D as I.Dec(I.VarInfo(xOpt,_,_,_), V))::piDecs), bs, cs, (a, ms), b) =
         let
 	  val a' = ModSyn.targetFam V
 	  val _ = if (a = a')

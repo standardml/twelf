@@ -86,7 +86,7 @@ struct
     matchAtom (O, (p,s), dp, sc)
     | solve' (O, (C.Impl(r, A, Ha, g), s), C.DProg (G, dPool), sc) =
       let
-	val D' = I.Dec(NONE, I.EClo(A,s))
+	val D' = I.Dec(I.NoVarInfo, I.EClo(A,s))
       in
 	 if (!TableParam.strengthen) 
 	   then 

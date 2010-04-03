@@ -25,7 +25,7 @@ struct
 
     fun argToString (M.Marg (m, _)) = modeToString m
 
-    fun nameDec (I.Dec (_, V) , M.Marg (_, name as SOME _)) = I.Dec (name, V)
+    fun nameDec (I.Dec (_, V) , M.Marg (_, name as SOME _)) = I.Dec (I.NoVarInfo, V)
       | nameDec (D, M.Marg (_, NONE)) = D
 
     fun makeSpine (G) =

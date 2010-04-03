@@ -159,10 +159,10 @@ struct
 	  inferSpine (ms, mode, S)
       | inferExp (ms, mode, I.Root (I.FgnConst (cs, conDec), S)) =
 	  inferSpine (ms, mode, S)
-      | inferExp (ms, mode, I.Lam (D as I.Dec (nameOpt, _), U)) =
+      | inferExp (ms, mode, I.Lam (D as I.Dec (I.VarInfo(nameOpt,_,_,_), _), U)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
 				      (M.Marg (mode, nameOpt), Local)), mode, U))
-      | inferExp (ms, mode, I.Pi ((D as I.Dec (nameOpt, _), _), V)) =
+      | inferExp (ms, mode, I.Pi ((D as I.Dec (I.VarInfo(nameOpt,_,_,_), _), _), V)) =
 	  I.ctxPop (inferExp (I.Decl (inferDec (ms, mode, D), 
 				      (M.Marg (mode, nameOpt), Local)), mode, V)) (* cannot make any assumptions on what is inside a foreign object *)
       | inferExp (ms, mode, I.FgnExp _) = ms
@@ -200,7 +200,7 @@ struct
     *)
     fun inferMode ((ms, I.Uni(I.Type)), M.Mnil) = ms
       | inferMode ((_, I.Uni(I.Type)), _) = raise Error "Too many modes specified"
-      | inferMode ((ms, I.Pi ((I.Dec (name, V1), _), V2)), M.Mapp (M.Marg (mode, _), mS)) =
+      | inferMode ((ms, I.Pi ((I.Dec (I.VarInfo(name,_,_,_), V1), _), V2)), M.Mapp (M.Marg (mode, _), mS)) =
           I.ctxPop (inferMode ((I.Decl (inferExp (ms, mode, V1), 
 					(M.Marg (mode, name), Explicit)), V2), mS))
       | inferMode ((ms, I.Root _), _) = 
