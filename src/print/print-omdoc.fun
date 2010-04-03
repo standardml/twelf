@@ -225,7 +225,7 @@ struct
 	val _ = unind(2)
 	val lam = if (imp > 0) then "implicit_lambda" else "lambda"
       in
-      	fmtBinder(lam, name ^ (if e then "true" else "false"), fmtType, r, fmtBody)
+      	fmtBinder(lam, name, fmtType, r, fmtBody)
       end
     | fmtExpW (G, (I.FgnExp (csid, F), s), 0, _) = "FgnExp" (* FIX -cs Fri Jan 28 17:45:43 2005 *)
 
@@ -259,11 +259,11 @@ struct
   and fmtBinder(binder, name, typ, recon, scope) =
     let
     	val _ = ind(2)
-    	val var = if recon then  OM1ATTR(OMV(name), LFOMS(["omittedtype"]), LFOMS(["omittedtype"]))
-		  else OMV(name)
+    	val typ' = if recon then OM1ATTR(typ, LFOMS(["omitted"]), LFOMS(["omitted"]))
+		  else typ
 	val _ = unind(2)
     in
-       OMBIND(LFOMS([binder]), OM1BVAR(var, MMTOMS(["type"]), typ), scope)
+       OMBIND(LFOMS([binder]), OM1BVAR(OMV(name), MMTOMS(["type"]), typ'), scope)
     end
 
   and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
