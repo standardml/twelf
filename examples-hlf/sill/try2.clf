@@ -1,0 +1,2780 @@
+% query A B C D 
+% A - bound on depth for search on the monad
+% B - required minimum of solutions
+% C - number of solutions to look for
+% D - numer of repeated attempts
+
+% formulas
+o : type.
+
+tensor : o -> o -> o.
+lolli : o -> o -> o.
+and : o -> o -> o.
+sum : o -> o -> o.
+one : o.
+bang : o -> o.
+
+left : o -> type.        % Linear Hyp.
+right : o -> type. 	 % Conclusions
+leftb : o -> type.
+
+% 1
+
+oneL : left one -o right C -o right C.     
+oneR : right one.
+
+% Lolli
+
+lolliL : left (lolli A B) -o right A -o (left B -o right C) -o right C.
+lolliR : (left A -o right B) -o right (lolli A B).
+
+% Tensor 
+
+tensL : (left (tensor A B)) -o (left A -o left B -o right C) -o right C.
+tensR : right A -o right B -o right (tensor A B).
+
+% Sum 
+
+sumR1 : right A -o right (sum A B).
+sumR2 : right B -o right (sum A B).
+sumL : left (sum A B) -o ((left A -o right C) & (left B -o right C)) -o right C.
+
+% And
+
+andL1 : left (and A B) -o (left A -o right C) -o right C.
+andL2 : left (and A B) -o (left B -o right C) -o right C.
+andR : ((right A) & (right B)) -o right (and A B).
+
+% Bang
+
+bangL : left (bang A) -o (!(leftb A) -o right C) -o right C.
+bangR : !(right A) -o right (bang A).
+
+% Cut
+
+cut :  right A -o (left A -o right C) -o right C.
+
+% Cut!
+
+cutB : !(right A) -o (leftb A -> right C) -o right C.
+
+% Copy
+
+copy : !leftb A -o (left A -o right C) -o right C.
+
+% Computational Conversions
+
+=> : (right A) -> (right A) -> type.
+
+cut/tensR/tensL : => (cut (tensR D1 D2) (\x:left (tensor A B).(tensL x (\y:(left A).\x:(left B). E y x)))) 
+		     (cut D1 (\y:(left A) .(cut D2 (\x:(left B).E y x)))).
+cut/lolliR/lolliL : => (cut (lolliR (\y.D y)) (\x.lolliL x E1 (\x.E2 x))) (cut (cut E1 (\y.D y)) (\x.E2 x)).
+cut/andR/andL1  : => (cut (andR <(D1),(D2)>) (\x.andL1 x (\x. E1 x))) (cut D1 (\x. E1 x)).
+cut/andR/andL2  : => (cut (andR <(D1),(D2)>) (\x.andL2 x (\x. E2 x))) (cut D2 (\x. E2 x)).
+cut/sumR1/sumL  : => (cut (sumR1 D1) (\x.sumL x <(\x.E1 x),(\x.E2 x)>)) (cut D1 (\x. E1 x)).
+cut/sumR2/sumL  : => (cut (sumR2 D2) (\x.sumL x <(\x.E1 x),(\x.E2 x)>)) (cut D2 (\x. E2 x)).
+cutB/-/copy     : => (cutB D (\!u.(copy !u (\y.E !u y)))) (cut D (\y.(cutB D (\!u. E !u y)))).
+
+cut_red_cong1 : => (cut D (\x. E x)) (cut D' (\x. E x))
+	      <- => D D'.
+cut_red_cong2 : => (cut D (\x. E x)) (cut D (\x. E' x))
+	      <- (Pi x.=> (E x) (E' x)).
+
+cutB_red_cong : => (cutB D (\!x. E !x)) (cutB D (\!x. E' !x))
+	      <- (Pi x.=> (E !x) (E' !x)).
+
+oneL_red_cong : => (oneL X D) (oneL X D')
+	      <- => D D'.
+
+bangL_red_cong : => (bangL X (\!u.D !u)) (bangL X (\!u.D' !u))
+	      <- (Pi x.=> (D !x) (D' !x)).
+
+
+
+% Structural Conversions - Cut Conversions.
+
+== : (right A) -> (right A) -> type.
+
+sconv_s : == (A) (B) -> == (B) (A).
+sconv_t : == A A' -> == A' B -> == A B.
+
+cut/-/cut1    : == (cut D (\x.cut (E x) (\y. F y))) (cut (cut D (\x. E x)) (\y. F y)).
+cut/-/cut2    : == (cut D (\x.cut E (\y. F x y))) (cut E (\y.cut D (\x. F x y))).
+cut/cutB/-    : == (cut (cutB D (\!u. E !u)) (\x. F x)) (cutB D (\!u. cut (E !u) (\x. F x))).
+cut/-/cutB    : == (cut D (\x.cutB E (\!u. F x !u))) (cutB E (\!u. cut D (\x.F x !u))).
+cut/oneR/oneL : == (cut oneR (\x. oneL x D)) D.
+cut/bR/bL     : == (cut (bangR D) (\x.bangL x (\!u.E !u))) (cutB D (\!u. E !u)). 
+
+% Structural Conversions - Commuting Conversions.
+
+cut/-/oneL   : == (cut D (\x.oneL Y (E x))) (oneL Y (cut D (\x.E x))).
+cut/-/bangL  : == (cut D (\x.bangL Y (\!u. E x !u))) (bangL Y (\!u.cut D (\x.E x !u))).
+cut/oneL/-   : == (cut (oneL Y D) (\x. F x)) (oneL Y (cut D (\x.F x))).
+cut/bangL/-  : == (cut (bangL Y (\!u. D !u)) (\x. F x)) (bangL Y (\!u.cut (D !u) (\x. F x))).
+cutB/-/oneL  : == (cutB D (\!u.oneL Y (E !u))) (oneL Y (cutB D (\!u. E !u))).
+cutB/-/bangL : == (cutB D (\!u. bangL Y (\!v. E !u !v))) (bangL Y (\!v.cutB D (\!u. E !u !v))).
+
+
+% Structural Conversions - Cut! Conversions.
+
+cutB/-/cut  : == (cutB D (\!u.cut (E !u) (\y. F !u y))) (cut (cutB D (\!u. E !u)) (\y.cutB D (\!u.F !u y))).
+cutB/-/cutB : == (cutB D (\!u.cutB (E !u) (\!v. F !u !v))) (cutB (cutB D (\!u. E !u)) (\!v.cutB D (\!u. F !u !v))).
+cutB/cutB/- : == (cutB (cutB D (\!u.E !u)) (\!v.F !v)) (cutB D (\!u.cutB (E !u) (\!v. F !v))).
+cutB/-/-    : == (cutB D (\!u. E)) E.
+
+
+
+
+% =>=
+
+=>= : right A -> right A -> type.
+
+clos1 : =>= (D1) (D2)
+     <- => D1 D2.
+
+clos2 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- => D1' D2.
+
+clos21 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- =>= D1' D2.
+
+clos3 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- => D1' D2'
+     <- == D2' D2.
+
+clos4 : =>= (D1) (D2)
+      <- => D1 D1'
+      <- == D1' D2.
+
+
+oneL/pre : => (oneL X D) (oneL X D')
+	 <- =>= D D'.
+
+bangL/pre : => (bangL X (\!u. D !u)) (bangL X (\!u. D' !u))
+	 <- (Pi U.=>= (D !U) (D' !U)).
+
+cut/pre1 : => (cut D1 (\x. D2 x)) (cut D1' (\x. D2 x))
+	 <- (=>= D1 D1').
+
+cut/pre2 : => (cut D1 (\x. D2 x)) (cut D1 (\x. D2' x))
+	 <- (Pi x.=>= (D2 x) (D2' x)).
+
+
+cutB/pre2 : => (cutB D1 (\!u. D2 !u)) (cutB D1 (\!u. D2' !u))
+	 <- (Pi u.=>= (D2 !u) (D2' !u)).	
+
+% Synchronous pi-calculus 
+
+ch : type.
+expr : type.
+
+zero : expr.
+par : expr -> expr -> expr.
+
+inp : ch -> (ch -> expr) -> expr.
+out : ch -> ch -> expr -> expr.
+rep : ch -> (ch -> expr) -> expr.
+
+new : (ch -> expr) -> expr.
+
+inl : ch -> expr -> expr.
+inr : ch -> expr -> expr.
+case : ch -> expr -> expr -> expr.
+
+% pi semantics
+
+% In this representation we have that if P -alpha-> Q then
+% pr P ... internal P ... pr Q.
+
+
+sc : expr -> expr -> type.
+sc_s : sc Q P 
+     <- sc P Q.
+sc_t : sc P Q' -> sc Q' Q -> sc P Q.
+    
+sc_r : sc P P.
+
+
+
+sc_zero : sc (par P zero) P.
+sc_par_com : sc (par P Q) (par Q P).
+sc_par_assoc : sc (par P (par Q R)) (par (par P Q) R).
+sc_new_zero : sc (new (\!z. zero)) zero.
+
+sc_new_scope : sc (par P (new (\!z. Q !z))) (new (\!z.par (P) (Q !z))).
+sc_new_swap : sc (new (\!x.new (\!y. P !x !y ))) (new (\!y.new (\!x. P !x !y ))).
+
+sc_cong_par : sc (par P Q) (par P' Q')
+	<- sc P P'
+	<- sc Q Q'.
+
+sc_cong_new : sc (new (\!x. P !x)) (new (\!x. P' !x))
+	<- (Pi x.sc (P !x) (P' !x)).
+
+
+sc_cong_inp : sc (inp X (\!y.P !y)) (inp X (\!y.P' !y))
+	<-  (Pi x.sc (P !x) (P' !x)).
+
+sc_cong_rep : sc (rep X (\!y.P !y)) (rep X (\!y.P' !y))
+	<-  (Pi x.sc (P !x) (P' !x)).
+
+sc_cong_out : sc (out X Y P) (out X Y P')
+	<-  sc P P'.
+
+sc_cong_inl : sc (inl X P) (inl X P')
+	<- sc P P'.
+
+sc_cong_inr : sc (inr X P) (inr X P')
+	<- sc P P'.
+
+sc_cong_case : sc (case X P Q) (case X P' Q')
+	<- sc P P'
+	<- sc Q Q'.
+
+
+%Reduction
+
+red : expr -> expr -> type.
+
+rc : red (par (out X Y Q ) (inp X (\!y. P !y))) (par Q (P !Y)).
+rbang : red (par (out X Y Q ) (rep X (\!y. P !y))) (par Q (par (P !Y) (rep X (\!y. P !y)))).
+rl : red (par (inl X P) (case X Q R)) (par P Q).
+rr : red (par (inr X P) (case X Q R)) (par P R).
+rp : red (par P Q) (par P Q')
+   <- red Q Q'.
+rnu : red (new (\!y. P !y)) (new (\!y. Q !y))
+   <- (Pi y. red (P !y) (Q !y)).
+
+% Labelled semantics
+
+internal : type.
+
+
+inter_in : ch -> (ch -> expr) -> internal.
+inter_out : ch -> ch -> expr -> internal.
+inter_inr : ch -> expr -> internal.
+inter_inl : ch -> expr -> internal.
+inter_case : ch -> expr -> expr -> internal.
+inter_rep : ch -> (ch -> expr) -> internal.
+
+pr : expr -> type.
+inter : internal -> type.
+
+pr_z : pr zero -o {1}.
+pr_par : pr (par P Q) -o {pr P * pr Q}.
+pr_inp : pr (inp S C) -o {inter (inter_in S C)}. 
+pr-out : pr (out S O P) -o {inter (inter_out S O P) }.
+pr-rep : pr (rep S C) -o {inter (inter_rep S C)}. 
+pr-new : pr (new P) -o {Exists u:ch.pr (P !u) }.
+
+pr-inl : pr (inl C P) -o {inter (inter_inl C P)}.
+pr-inr : pr (inr C P) -o {inter (inter_inr C P)}.
+pr-case : pr (case C P Q) -o {inter (inter_case C P Q)}. 
+
+int_choice1 : (inter (inter_inl C P) * inter (inter_case C Q1 Q2)) -o {pr P * pr Q1}.
+int_choice2 : (inter (inter_inr C P) * inter (inter_case C Q1 Q2)) -o {pr P * pr Q2}.
+int_sync : (inter (inter_in S C) * inter (inter_out S O P)) -o {pr (C !O) * pr P}.
+int_rep : (inter (inter_rep S C) * inter (inter_out S O P)) -o {pr (C !O) * pr P * pr (rep S C)}.
+
+
+
+% LTS that separates actions involving free name objects and actions involving bound name objects
+
+label : type.
+
+outLabel : ch -> ch -> label.
+inpLabel : ch -> ch -> label.
+bOutLabel : ch -> ch -> label.
+lOutLabel : ch -> label.
+rOutLabel : ch -> label.
+lInLabel : ch -> label.
+rInLabel : ch -> label.
+tau : label.
+
+lts-f : expr -> label -> expr -> type. %actions with free names
+lts-b : expr -> (ch -> label) -> (ch -> expr) -> type. %actions with bound names
+
+lts-f-in : lts-f (inp X (\!y. P !y)) (inpLabel !X !Y) (P !Y).
+lts-b-in : lts-b (inp X (\!y. P !y)) (\!Y.inpLabel !X !Y) (\!y. P !y).
+
+lts-f-out : lts-f (out X Y P) (outLabel !X !Y) P.
+
+lts-f-rep : lts-f (rep X (\!y. P !y)) (inpLabel !X !Y) (par (rep X (\!y. P !y)) (P !Y)).
+lts-b-rep : lts-b (rep X (\!y. P !y)) (\!y.inpLabel !X !y) (\!y.par (rep X (\!y.P !y)) (P !y)).
+
+lts-f-lout : lts-f (inl !X !P) (lOutLabel !X) P.
+lts-f-rout : lts-f (inr !X !P) (rOutLabel !X) P.
+lts-f-lin  : lts-f (case !X !P !Q) (lInLabel !X) P.
+lts-f-rin  : lts-f (case !X !P !Q) (rInLabel !X) Q.
+
+lts-f-par1 : lts-f (par P Q) Alpha (par P' Q)
+	  <- lts-f P Alpha P'.
+lts-f-par2 : lts-f (par P Q) Alpha (par P Q')
+	  <- lts-f Q Alpha Q'.
+lts-b-par1 : lts-b (par P Q) Alpha (\!x. par (P' !x) Q)
+	  <- lts-b P Alpha (\!x.P' !x).
+lts-b-par2 : lts-b (par P Q) Alpha (\!x. par P (Q' !x))
+	  <- lts-b Q Alpha (\!x.Q' !x).
+
+lts-f-res : lts-f (new (\!x. P !x)) Alpha (new (\!x. Q !x))
+	  <- (Pi x.lts-f (P !x) Alpha (Q !x)).
+lts-b-res : lts-b (new (\!x. P !x)) Alpha (\!y.new (\!x. Q !x !y))
+	  <- (Pi x.lts-b (P !x) Alpha (\!y.Q !x !y)).
+
+lts-b-open : lts-b (new (\!x. P !x)) (\!y.bOutLabel !X !y) (P')
+	  <- (Pi x.lts-f (P !x) (outLabel !X !x) (P' !x)).
+
+lts-f-close1 : lts-f (par P Q) tau (new (\!x. par (P' !x) (Q' !x)))
+	  <- lts-b P (\!y.bOutLabel !X !y) P'
+	  <- lts-b Q (\!y.inpLabel !X !y) Q'.
+lts-f-close2 : lts-f (par P Q) tau (new (\!x. par (P' !x) (Q' !x)))
+	  <- lts-b P (\!y.inpLabel !X !y) P'
+	  <- lts-b Q (\!y.bOutLabel !X !y) Q'.
+
+lts-f-io1 : lts-f (par P Q) tau (par P' Q')
+	  <- lts-f P (outLabel !X !Y) P'
+	  <- lts-f Q (inpLabel !X !Y) Q'.
+lts-f-io2 : lts-f (par P Q) tau (par P' Q')
+	  <- lts-f P (inpLabel !X !Y) P'
+	  <- lts-f Q (outLabel !X !Y) Q'.
+
+lts-f-choicel1 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (lOutLabel X) P'
+	    <- lts-f Q (lInLabel X) Q'.
+lts-f-choicel2 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (lInLabel X) P'
+	    <- lts-f Q (lOutLabel X) Q'.
+
+lts-f-choicer1 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (rOutLabel X) P'
+	    <- lts-f Q (rInLabel X) Q'.
+
+lts-f-choicer2 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (rInLabel X) P'
+	    <- lts-f Q (rOutLabel X) Q'.
+
+
+b_eq : expr -> expr -> type.
+
+b_eq_0 : b_eq zero zero.
+
+b_eq_1 : b_eq P Q
+       <- lts-f P Alpha P'
+       <- lts-f Q Alpha Q'
+       <- b_eq P' Q'.
+
+b_eq_2 : b_eq P Q
+       <- lts-b P (\!y.inpLabel !X !y) (\!y. P' !y)
+       <- lts-b Q (\!y.inpLabel !X !y) (\!y.Q' !y)
+       <- (Pi Y.b_eq (P' !Y) (Q' !Y)).
+
+b_eq_3 : b_eq P Q
+       <- lts-b P (\!y.bOutLabel !X !y) (\!y.P' !y)
+       <- lts-b Q (\!y.bOutLabel !X !y) (\!y.Q' !y)
+       <- (Pi Y.b_eq (P' !Y) (Q' !Y)).
+
+
+
+% Type System piDILL
+
+proc : (ch -> expr) -> o -> type. % proc (\!z.P !z) T - process P uses z has type T (only in conclusions).
+chan : ch -> o -> type. % chan C T - channel C has type T (only as linear assumptions).
+chanB : ch -> o -> type. % chan C T - channel C has type T (only as unrestricted assumptions)
+
+
+% Typing rules for One
+
+tOneR : proc (\!z. zero) one.
+tOneL : (proc (\!z. P !z) C) -o (Pi x:ch.chan x one -o proc (\!z. P !z) C).
+
+%Typing rules for lolli
+
+tLolliR : (Pi y.chan y A -o proc (\!x. P !y !x) B)
+          -o proc (\!x. inp !x (\!y. P !y !x)) (lolli A B).
+
+tLolliL : (proc (\!y.P !y) A) -o (Pi x.chan x B -o proc (\!z.Q !x !z) C) -o
+         (Pi x.chan x (lolli A B) -o proc (\!z.new (\!y. out !x !y (par (P !y) (Q !x !z)))) C).
+
+
+%Typing rules for Tensor
+
+tTensR : (proc (\!y.P !y) A) -o (proc (\!x.Q !x) B) -o
+         (proc (\!x.new (\!y. out !x !y (par (P !y) (Q !x)))) (tensor A B)).
+
+tTensL : (Pi y.chan y A -o Pi x.chan x B -o proc (\!z.P !y !x !z) C)
+         -o (Pi x.chan x (tensor A B) -o proc (\!z.inp !x (\!y. P !y !x !z)) C).
+
+%Typing rule cut
+
+tCut : (proc (\!x.P !x) A) -o (Pi x.chan x A -o proc (\!z.Q !x !z) C) -o
+       (proc (\!z.new (\!x.par (P !x) (Q !x !z))) C).
+
+%Typing rule cutB
+
+tCutB : (proc (\!y.P !y) A) -> (Pi u.chanB u A -> proc (\!z.Q !u !z) C) -o
+        (proc (\!z.new (\!u.par (rep !u (\!y.P !y)) (Q !u !z))) C).
+
+
+%Typing rule copy
+
+tCopy : (Pi y.chan y A -o proc (\!z.P !y !z) C) -o
+        (chanB U A -> proc (\!z.new (\!y. out !U !y (P !y !z))) C). 
+
+%Typing rules for Bang
+
+tBangR : (proc (\!y.Q !y) A) -> (proc (\!x.rep !x (\!u.Q !u)) (bang A)).
+tBangL : (Pi u.chanB u A -> proc (\!z.P !u !z) C) -o
+       	 (Pi x.chan x (bang A) -o proc (\!z.P !x !z) C).
+
+%Typing rules for and
+
+tAndL1 : (Pi x.chan x A -o proc (\!z.P !x !z) C) -o
+         (Pi x.chan x (and A B) -o proc (\!z.inl !x (P !x !z)) C).
+tAndL2 : (Pi x.chan x B -o proc (\!z.P !x !z) C) -o
+         (Pi x.chan x (and A B) -o proc (\!z.inr !x (P !x !z)) C).
+tAndR  : ((proc (\!x.P !x) A) & (proc (\!x.Q !x) B)) -o
+      	 (proc (\!x.case !x (P !x) (Q !x)) (and A B)).
+
+%Typing rules for sum
+
+tSumL  : ((Pi x.chan x A -o proc (\!z.P !x !z) C) & (Pi x.chan x B -o proc (\!z.Q !x !z) C)) -o
+      	 (Pi x.chan x (sum A B) -o proc (\!z.case !x (P !x !z) (Q !x !z)) C).
+tSumR1 : (proc (\!x.P !x) A) -o proc (\!x.inl !x (P !x)) (sum A B).
+tSumR2 : (proc (\!x.P !x) B) -o proc (\!x.inr !x (P !x)) (sum A B).
+
+% Typed Extraction
+
+extrR : right C -> proc (\!z. P !z) C -> type.
+extrL : left A -> Pi X:ch.chan X A -> type.
+extrLB: leftb A -> Pi U:ch.chanB U A -> type.
+
+
+% Typed Extraction cut
+
+extr_cut : extrR (cut D (\x. E x)) (tCut P (\!x'.\cx. Q !x' cx))
+	 <- extrR D P
+	 <- (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (Q !x' cx)). 
+
+
+% Typed Extraction for 1
+extr_oneR : extrR (oneR) (tOneR).
+extr_oneL : extrR (oneL X D) (tOneL P X' CX)
+	    <- extrR D P
+	    <- extrL X X' CX.
+
+% Typed Extraction for lolli
+
+extr_lolliR : extrR (lolliR (\y. D y)) (tLolliR (\!y'.\cy. P !y' cy))
+	   <- (Pi y.Pi y'.Pi cy. extrL y y' cy -> extrR (D y) (P !y' cy)).
+
+ 
+extr_lolliL : (extrR (lolliL X D (\x. E x)) (tLolliL P (\!y'.\cy. Q !y' cy) X' CX)
+	   <- extrR D P
+	   <- (Pi y.Pi y':ch.Pi cy.extrL y y' cy -> extrR (E y)  (Q !y' cy))
+	   <- extrL X X' CX).
+
+
+
+% Typed Extraction for Tensor
+
+extr_tensR : extrR (tensR D E) (tTensR P Q)
+	   <- extrR D (P)
+	   <- extrR E (Q).
+
+extr_tensL : (extrR (tensL X (\y.\x.D y x)) (tTensL (\!y.\cy.\!x.\cx. P !y cy !x cx) X' CX)
+	   <- extrL X X' CX
+	   <- (Pi y.Pi y'.Pi cy.Pi z.Pi z'.Pi cz.extrL y y' cy -> extrL z z' cz -> extrR (D y z) (P !y' cy !z' cz))).
+	   
+% Typed Extraction for and
+
+extr_andR : extrR (andR <(D),(E)>) (tAndR <(P),(Q)>)
+	  <- extrR D P
+	  <- extrR E Q.
+
+extr_andL1 : extrR (andL1 X (\x.D x)) (tAndL1 (\!x.\cx.P !x cx) X' CX)	
+	  <- extrL X X' CX
+	  <- (Pi y.Pi y'.Pi cy.extrL y y' cy -> extrR (D y) (P !y' cy)).
+
+extr_andL2 : extrR (andL2 X (\x.D x)) (tAndL2 (\!x.\cx.P !x cx) X' CX)	
+	  <- extrL X X' CX
+	  <- (Pi y.Pi y'.Pi cy.extrL y y' cy -> extrR (D y) (P !y' cy)).
+
+% Typed Extraction for sum
+
+extr_sumR1 : extrR (sumR1 D) (tSumR1 P)
+	   <- extrR D P.
+
+extr_sumR2 : extrR (sumR2 E) (tSumR2 Q)
+	   <- extrR E Q.
+
+extr_sumL : extrR (sumL X <(\x. D x),(\x. E x)>) (tSumL <(\!x.\cx. P !x cx),(\!x.\cx. Q !x cx)> X' CX)
+	  <- extrL X X' CX
+	  <- (Pi y.Pi y'.Pi cy.extrL y y' cy -> extrR (E y) (Q !y' cy))
+	  <- (Pi y.Pi y'.Pi cy.extrL y y' cy -> extrR (D y) (P !y' cy)).
+
+
+
+% Typed Extraction Bang
+
+extr_bangR : extrR (bangR D) (tBangR P)
+	   <- extrR D P.
+
+extr_bangL : extrR (bangL X (\!x. D !x)) (tBangL (\!u.\!cu. P !u !cu) X' CX)
+	   <- extrL X X' CX
+	   <- (Pi u.Pi u'. Pi cu.extrLB u u' cu -> extrR (D !u) (P !u' !cu)).
+
+
+
+
+
+% Typed Extraction copy
+
+extr_copy : extrR (copy U (\y. D y)) (tCopy (\!y'.\cy. P !y' cy) !CU)
+	  <- (Pi y.Pi y'.Pi cy. extrL y y' cy -> extrR (D y) (P !y' cy))
+	  <- extrLB U U' CU.
+
+
+% Typed Extraction cut!
+
+extr_cutB : extrR (cutB D (\!u. E !u)) (tCutB P (\!u.\!cu. Q !u !cu))
+	  <- extrR D P
+	  <- (Pi u.Pi u'.Pi cu.extrLB u u' cu -> extrR (E !u) (Q !u' !cu)).
+
+
+% -------- QUERIES ---------
+
+#query * 1 * 1 extrR (andR <(lolliR (\y:(left one).lolliR (\x:(left one). tensR (oneL y oneR) (oneL x oneR)))),
+       	       	     	    (lolliR (\y:(left one). tensR (oneL y oneR) oneR ))>) P.
+
+%Succeed without -ac 
+#query * 1 * 1 extrR (tensR (tensR oneR oneR) oneR) X. 
+#query * 1 * 1 extrR (andR <(oneR),(oneR)>) X.
+#query * 1 * 1 extrR (bangR oneR) X.
+#query * 1 * 1 extrR (sumR1 oneR) X.
+#query * 1 * 1 extrR (sumR2 oneR) X.	
+#query * 1 * 1 extrR (cutB oneR (\!u. oneR)) P.
+#query * 1 * 1 extrR (cut oneR (\y.(cutB oneR (\!u.oneL y oneR)))) P.
+#query * 1 * 1 extrR (cutB oneR (\!u.(copy !u (\y.oneL y oneR)))) P.
+#query * 1 * 1 extrR (cut oneR (\x. oneL x oneR)) P.
+#query * 1 * 1 extrR (tensR (lolliR (\y. oneL y oneR)) (lolliR (\y. oneL y oneR)) ) P.
+#query * 1 * 1 extrR (lolliR (\y. oneL y oneR)) P.
+#query * 1 * 1 extrR (lolliR (\y.lolliR (\x. oneL y (oneL x oneR)))) P.
+#query * 1 * 1 extrR (oneR) P.
+#query * 1 * 1 extrR (cut oneR (\y.(cutB oneR (\!u.oneL y oneR)))) P.
+#query * 1 * 1 extrR (andR <(lolliR (\y:(left one).lolliR (\x:(left one). tensR (oneL y oneR) (oneL x oneR)))),
+       	       	     	    (lolliR (\y:(left one). tensR (oneL y oneR) oneR ))>) P.
+
+#query * 1 * 1 extrR (cut (lolliR (\y. oneL y oneR)) (\y.lolliL y oneR (\x.oneL x oneR))) P.
+#query * 1 * 1 extrR (cut (bangR oneR) (\x.bangL x (\!u.oneR))) P.
+#query * 1 * 1 extrR (cut (bangR oneR) (\x.bangL x (\!u.copy !u (\y.oneL y oneR)))) P.
+#query * 1 * 1 extrR (lolliR (\y.tensL y (\y.\x.oneL y (oneL x oneR)))) P.
+#query * 1 * 1 extrR (cut (tensR oneR oneR) (\x. tensL x (\y.\z.oneL y (oneL z oneR)))) P.
+#query * 1 * 1 extrR (lolliR (\y.tensL y (\y.\x.oneL y (oneL x oneR)))) P.
+#query * 1 * 1 extrR (cut (lolliR (\y. oneL y oneR)) (\y.lolliL y oneR (\x.oneL x oneR))) P.
+#query * 1 * 1 extrR (cut (andR <(oneR),(oneR)>) (\x.andL1 x (\x. oneL x oneR))) P.
+#query * 1 * 1 extrR (cut (andR <(oneR),(oneR)>) (\x.andL2 x (\x. oneL x oneR))) P.
+#query * 1 * 1 extrR (cut (sumR1 oneR) (\x.sumL x <(\x.oneL x oneR),(\x.oneL x oneR)>)) P.
+#query * 1 * 1 extrR (cut oneR (\x.cut (oneL x oneR) (\y. oneL y oneR))) P.
+#query * 1 * 1 extrR (cut (cut oneR (\x. oneL x oneR)) (\y. oneL y oneR)) P.
+#query * 1 * 1 extrR (cut oneR (\x.cut oneR (\y. oneL x (oneL y oneR)))) P.
+#query * 1 * 1 extrR (cut (cutB oneR (\!u. oneR)) (\x. oneL x oneR)) P.
+#query * 1 * 1 extrR (cut (cut (lolliR (\y. oneL y oneR)) (\y.lolliL y oneR (\x.oneL x oneR))) (\x.oneL x oneR)) P.
+#query * 1 * 1 extrR (cut (lolliR (\y.tensL y (\y.\x.oneL y (oneL x oneR)))) (\y.lolliL y (tensR oneR oneR) (\x.oneL x oneR))) P.
+
+
+% Proof reductions and Pi reductions
+
+% Tensor lemma - done.
+
+tensLemma : Pi D : right (tensor A B). % (a)
+	    Pi E : left (tensor A B) -o right C. % (b)
+	    extrR D (TofP : proc (\!x'. P !x') (tensor A B)) -> 
+	    (Pi x.Pi x'.Pi cx.extrL x x' cx -> (extrR (E x) ((TofQ !x' cx) : proc (\!z. Q !x' !z) C)))
+	    -> (Pi x'.lts-b (P !x') (\!y.bOutLabel !x' !y) (\!y.P' !x' !y))
+	    -> (Pi x'.Pi z.lts-b (Q !x' !z) (\!y.inpLabel !x' !y) (\!y.Q' !x' !z !y)) ->
+	     %Then
+	    =>= (cut D (\x.E x)) F -> %(c)
+	    extrR F (TofR : proc (\!z. R !z) C) ->
+	   (Pi z.sc (R !z) (new (\!x'.new (\!y.par (P' !x' !y ) (Q' !x' !z !y ))))) %(d) 
+	    -> type.
+
+tensLemma_tens : tensLemma (tensR (D1 : right A) (D2 : right B))
+		  	     (\x.tensL x (\y.\x. D3 y x))
+			     (extr_tensR (TofD2 : extrR D2 PofD2) (TofD1 : extrR D1 PofD1))
+			     (\!x.\!x'.\!cx.\!extx. 
+			     extr_tensL (TofD3 : Pi y.Pi y'.Pi cy.Pi z.Pi z'.Pi cz. extrL y y' cy -> extrL z z' cz -> extrR (D3 y z) (PofD3 !y' cy !z' cz)) !extx)
+			     (\!x'.lts-b-open (\!y.lts-f-out))
+			     (\!x'.\!z.lts-b-in )
+			     (clos1 (cut/tensR/tensL))
+			     (extr_cut (\!x.\!x'.\!cx.\!extx. extr_cut (\!y.\!y'.\!cy.\!exty. TofD3 !x !x' !cx !y !y' !cy !extx !exty) (TofD2) ) 
+				       TofD1)
+			     (\!z.sc_t (sc_t (sc_cong_new (\!x. sc_new_scope)) (sc_cong_new (\!x. sc_cong_new (\!y.sc_par_assoc)))) (sc_new_swap)).
+
+tensLemma_oneL : tensLemma ((oneL (N : left one) D') : right (tensor A B)  )
+	       	 	   (\x. (E :left (tensor A B) -o right C) x)
+			   (extr_oneL (ExtN : extrL N N' CN) (TofD' : extrR D' PofD'))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)			   
+			   (\!x'.lts-b-open (\!y.lts-f-out))
+			   (\!x'.\!z'.lts-b-in)
+			   (clos2 (oneL/pre ProofRed) (cut/oneL/-)) %proof reduction
+			   (extr_oneL (ExtN) TofF') %typed extraction for F'
+			   (\!z.CongD''E' !z)
+		<- tensLemma D' (\x.E x) (TofD') (\!x.\!x'.\!cx.\!extx.TofE  !x !x' !cx !extx ) 
+		   	    (\!x'.lts-b-open (\!y.lts-f-out) ) (\!x'.\!z'.lts-b-in ) 
+			    (ProofRed : =>= (cut D' (\x. E x)) F') 
+		   	    (TofF' : extrR F' PofF') 
+			    (\!z.CongD''E' !z). 
+
+tensLemma_bangL : tensLemma ((bangL N  (\!u.D' !u)) : right (tensor A B))
+	       	 	   (\x. (E :left (tensor A B) -o right C) x)
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD' !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)			   
+			   (\!x'.lts-b-open (\!y.lts-f-out))
+			   (\!x'.\!z'.lts-b-in)
+			   (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-)) %proof reduction
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) (ExtN) ) %typed extraction for F'
+			   (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. tensLemma (D' !u) (\x.E x) (TofD' !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx.TofE  !x !x' !cx !extx ) 
+		   	    (\!x'.lts-b-open (\!y.lts-f-out) ) (\!x'.\!z'.lts-b-in ) 
+			    (ProofRed !u : =>= (cut (D' !u) (\x. E x)) (F' !u)) 
+		   	    (TofF' !u !u' !cu !extu : extrR (F' !u) (PofF' !u' !cu)) 
+			    (\!z. CongD''E' !z)). 
+
+tensLemma_cut : tensLemma (cut D1 (\n. D2 n))
+	      		  (\x. E x)
+			  (extr_cut (TofD2 : Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (D2 x) (PofD2 !x' cx)) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			  (\!x'.lts-b-res (\!n.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			  (\!x'.\!z'.lts-b-in)
+			  (clos2 (cut/pre2 (\!n.ProofRed !n) ) (sconv_s cut/-/cut1))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofD1)) 
+			  (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r))) 
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_cong_new (\!x.sc_cong_new (\!z. sc_new_scope))))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_new_swap)))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				    (sc_cong_new (\!x. sc_cong_new (\!y. sc_cong_new (\!z.sc_par_com)))))
+				    (sc_cong_new (\!x. sc_cong_new (\!y. sc_s sc_new_scope)))) 
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com)))) 
+		<-(Pi n.Pi n'.Pi cn.Pi extn. tensLemma (D2 n) (\x. E x) (TofD2 !n !n' !cn !extn) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-b-open (\!y.lts-f-out)) (\!x'.\!z'.lts-b-in)
+			   (ProofRed !n : =>= (cut (D2 n) (\x. E x)) (F2 n))
+			   (TofF2 !n !n' !cn !extn : extrR (F2 n) (PofF2 !n' cn))
+			   (\!z.CongP2'Q' !n' !z)).
+
+
+tensLemma_cutB : tensLemma (cutB D1 (\!u. D2 !u))
+	       	 	   (\x. E x)
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1 : extrR D1 PofD1))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			   (\!x'.lts-b-res (\!n.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			   (\!x'.\!z'.lts-b-in)
+			   (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/cutB/-))
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r))) 
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_cong_new (\!x.sc_cong_new (\!z. sc_new_scope))))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_new_swap)))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				    (sc_cong_new (\!x. sc_cong_new (\!y. sc_cong_new (\!z.sc_par_com)))))
+				    (sc_cong_new (\!x. sc_cong_new (\!y. sc_s sc_new_scope)))) 
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com)))) 
+		<-(Pi u.Pi u'.Pi cu.Pi extu. tensLemma (D2 !u) (\x. E x) (TofD2 !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-b-open (\!y.lts-f-out)) (\!x'.\!z'.lts-b-in)
+			   (ProofRed !u : =>= (cut (D2 !u) (\x. E x)) (F2 !u))
+			   (TofF2 !u !u' !cu !extu : extrR (F2 !u) (PofF2 !u' !cu))
+			   (\!z.CongP2'Q' !u' !z)).			
+
+tensLemma_oneLE : tensLemma D
+		  	    (\x. oneL N (E' x))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_oneL (ExtN) (TofE' !x !x' !cx !extx))
+			    (\!x'.lts-b-open (\!y.lts-f-out))
+			    (\!x'.\!z.lts-b-in)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    (\!z.CongD''E'' !z)
+		<- tensLemma D (\x. E' x) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx) 
+		   	    (\!x'.lts-b-open (\!y.lts-f-out) ) (\!x'.\!z'.lts-b-in ) 
+			    (ProofRed : =>= (cut D (\x. E' x)) F') 
+		   	    (TofF' : extrR F' PofF') 
+			    (\!z.CongD''E'' !z).
+
+tensLemma_bangLE : tensLemma D
+		   	     (\x. bangL N (\!u. E' x !u))
+			     (TofD : extrR D PofD)
+			     (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !x !x' !cx !extx !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			     (\!x'.lts-b-open (\!y.lts-f-out))
+			     (\!x'.\!z.lts-b-in)
+			     (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			     (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) ExtN)
+			     (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. tensLemma (D) (\x.E' x !u) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx !u !u' !cu !extu) 
+		   	    (\!x'.lts-b-open (\!y.lts-f-out) ) (\!x'.\!z'.lts-b-in ) 
+			    (ProofRed !u : =>= (cut (D) (\x. E' x !u)) (F' !u)) 
+		   	    (TofF' !u !u' !cu !extu : extrR (F' !u) (PofF' !u' !cu)) 
+			    (\!z.CongD''E' !z)). 			     			    
+
+tensLemma_cutBE : tensLemma D
+		  	    (\x.cutB E1 (\!u. E2 x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_cutB (\!u.\!u'.\!cu.\!extu.TofE2 !x !x' !cx !extx !u !u' !cu !extu) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-b-open (\!y.lts-f-out))
+			    (\!x'.\!z.lts-b-res (\!n.lts-b-par2 (lts-b-in)))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/-/cutB))
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc)))))
+				      (sc_new_swap))	
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope)))) 
+		<-(Pi u.Pi u'.Pi cu.Pi extu. tensLemma D (\x. E2 x !u) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !u !u' !cu !extu) 
+		      	   (\!x'.lts-b-open (\!y.lts-f-out)) (\!x'.\!z'.lts-b-in)
+			   (ProofRed !u : =>= (cut (D) (\x. E2 x !u)) (F2 !u))
+			   (TofF2 !u !u' !cu !extu : extrR (F2 !u) (PofF2 !u' !cu))
+			   (\!z.CongP'Q2' !u' !z)).	
+
+tensLemma_cutE1 : tensLemma D
+		  	    (\x.cut (E1 x) (\n. E2 n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !n !n' !cn !extn) (TofE1 !x !x' !cx !extx : extrR (E1 x) (PofE1 !x' cx)))
+			    (\!x'.lts-b-open (\!y.lts-f-out))
+			    (\!x'.\!z.lts-b-res (\!n.lts-b-par1 (lts-b-in)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx) (TofF1))
+			    (\!z.sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP'Q1' !z)))
+			    	      (sc_cong_new (\!x.sc_par_com)))
+				      (sc_cong_new (\!x.sc_new_scope)) )
+		<- tensLemma D (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx. TofE1 !x !x' !cx !extx ) 
+		      	   (\!x'.lts-b-open (\!y.lts-f-out)) (\!x'.\!z'.lts-b-in)
+			   (ProofRed : =>= (cut (D) (\x. E1 x)) (F1))
+			   (TofF1 : extrR (F1) (PofF1))
+			   (\!z.CongP'Q1' !z).
+
+tensLemma_cutE2 : tensLemma D
+		  	    (\x.cut E1 (\n. E2 x n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !x !x' !cx !extx !n !n' !cn !extn ) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-b-open (\!y.lts-f-out))
+			    (\!x'.\!z.lts-b-res (\!n.lts-b-par2 (lts-b-in)))
+			    (clos2 (cut/pre2 (\!n.ProofRed !n) ) (cut/-/cut2))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc)))))
+				      (sc_new_swap))	
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))	       
+		<-(Pi n.Pi n'.Pi cn.Pi extn. tensLemma D (\x. E2 x n) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !n !n' !cn !extn) 
+		      	   (\!x'.lts-b-open (\!y.lts-f-out)) (\!x'.\!z'.lts-b-in)
+			   (ProofRed !n : =>= (cut (D) (\x. E2 x n)) (F2 n))
+			   (TofF2 !n !n' !cn !extn : extrR (F2 n) (PofF2 !n' cn))
+			   (\!z.CongP'Q2' !n' !z)).
+
+#query * 1 * 1 tensLemma (tensR oneR oneR) (\x.tensL x (\y.\x.oneL y (oneL x oneR)))
+       	       		 (extr_tensR (extr_oneR) (extr_oneR))
+			 (\!x.\!x'.\!cx.\!extx. 
+			 	extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx)
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z. lts-b-in)
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (tensR oneR oneR)
+       	       		 (\x.oneL (N : left one) (tensL x (\y.\x.oneL y (oneL x oneR))))
+			 (extr_tensR (extr_oneR) (extr_oneR))
+			 (\!x.\!x'.\!cx.\!extx.extr_oneL (ExtN : extrL N N' CN) 
+			 			(extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx))
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z. lts-b-in)
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (tensR oneR oneR)
+       	       		 (\x.bangL U (\!u.tensL x (\y.\x.oneL y (oneL x oneR))))
+			 (extr_tensR extr_oneR extr_oneR)
+			 (\!x.\!x'.\!cx.\!extx.extr_bangL 
+			 		(\!u.\!u'.\!cu.\!extu.
+					extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx) (ExtU : extrL U U' CU))
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z. lts-b-in)
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (tensR oneR oneR)
+       	       		 (\x.cut (oneR) (\y.tensL x (\y'.\x.oneL y (oneL y' (oneL x oneR)))))
+			 (extr_tensR extr_oneR extr_oneR)
+			 (\!x.\!x'.\!cx.\!extx.extr_cut 
+			 	(\!y.\!y'.\!cy.\!exty.
+				extr_tensL (\!y'.\!y''.\!cy'.\!x.\!x'.\!cx.\!exty'.\!extx.extr_oneL !exty (extr_oneL !exty' (extr_oneL !extx extr_oneR))) !extx) (extr_oneR))
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z.lts-b-res (\!n.lts-b-par2 (lts-b-in)))
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (tensR oneR oneR)
+       	       		 (\x.cutB (oneR) (\!u.tensL x (\y'.\x.oneL y' (oneL x oneR))))
+			 (extr_tensR extr_oneR extr_oneR)
+			 (\!x.\!x'.\!cx.\!extx.extr_cutB 
+			 	(\!u.\!u'.\!cu.\!extu.extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx) (extr_oneR))
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z.lts-b-res (\!n.lts-b-par2 (lts-b-in)))
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (oneL N (tensR oneR oneR))
+       	       		 (\x.tensL x (\y.\x.oneL y (oneL x oneR)))
+			 (extr_oneL ExtN (extr_tensR extr_oneR extr_oneR))
+			 (\!x.\!x'.\!cx.\!extx.extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx)
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z. lts-b-in)
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+#query * 1 * 1 tensLemma (bangL U (\!u.tensR oneR oneR ))
+       	       		 (\x.tensL x (\y.\x.oneL y (oneL x oneR)))
+			 (extr_bangL (\!u.\!u'.\!cu.\!extu.extr_tensR extr_oneR extr_oneR) ExtU)
+			 (\!x.\!x'.\!cx.\!extx.extr_tensL (\!y.\!y'.\!cy.\!x.\!x'.\!cx.\!exty.\!extx.extr_oneL !exty (extr_oneL !extx extr_oneR)) !extx)
+			 (\!x'.lts-b-open (\!y.lts-f-out))
+			 (\!x'.\!z. lts-b-in)
+			 (PR)
+			 (Ext)
+			 (Cong).
+
+
+
+%CutB Lemma - done.
+
+cutBLemma : Pi D1 : right A.
+	    Pi D2 : (leftb A) -> right C.
+	    extrR D1 (PofD1 : proc (\!z. P !z) A) ->
+	    (Pi u.Pi u'.Pi cu.extrLB u u' cu -> extrR (D2 !u) (TofQ !u' !cu : proc (\!z. Q !u' !z) C)) ->
+	    (Pi u'.Pi z.lts-b (Q !u' !z) (\!y.bOutLabel !u' !y) (\!y.Q' !u' !z !y)) -> %then
+	    =>= (cutB D1 (\!u. D2 !u)) (cutB D1 (\!u. D !u)) ->
+	    (Pi u.Pi u'.Pi cu.extrLB u u' cu -> extrR (D !u) (TofR !u' !cu : proc (\!z. R !u' !z) C)) ->
+	    (Pi u'.Pi z.sc (R !u' !z) (new (\!y.par (P !y) (Q' !u' !z !y)))) ->
+	    type.
+%Induction on D2 - Cases 1L n D2', copy x (y.D2'), !L n (u.D2'), cut D2' (n. D2''), cutb D2' (n.D2'')
+
+cutBLemma_copy : cutBLemma (D1 : right A)
+	       	 	   (\!x.copy !x (\y. D2' y))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_copy !extu (\!y.\!y'.\!cy.\!exty.TofD2' !y !y' !cy !exty) )
+			   (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			   (clos4 (cut/-/cutB) (cutB/-/copy))
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!y.\!y'.\!cy.\!exty. TofD2' !y !y' !cy !exty ) (TofD1))
+			   (\!u'.\!z.sc_r ).
+
+
+
+cutBLemma_oneL : cutBLemma (D1 : right A)
+	       	 	   (\!x. oneL N (D2' !x))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_oneL (ExtN : extrL N N' CN) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			   (clos3 (sconv_s cutB/-/oneL) (oneL/pre ProofRed) (cutB/-/oneL))
+			   (\!u.\!u'.\!cu.\!extu.extr_oneL (ExtN) (TofDs !u !u' !cu !extu))
+			   (\!u'.\!z.CongP1P2' !u' !z)
+		<- cutBLemma (D1) (\!x.D2' !x) (TofD1) (\!u.\!u'.\!cu.\!extu.TofD2' !u !u' !cu !extu)
+		   	     (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed) (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu)
+			     (\!u'.\!z.CongP1P2' !u' !z).
+
+cutBLemma_bangL : cutBLemma (D1 : right A)
+		  	    (\!x:!(leftb A).bangL (N : left (bang B)) (\!u:!(leftb B). D2' !x !u))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!u.\!u'.\!cu.\!extu. extr_bangL (\!v.\!v'.\!cv.\!extv. TofD2' !u !u' !cu !extu !v !v' !cv !extv) (ExtN))
+			    (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos3 (sconv_s cutB/-/bangL) (bangL/pre (\!u.ProofRed !u)) (cutB/-/bangL))
+			    (\!u.\!u'.\!cu.\!extu.extr_bangL (\!v.\!v'.\!cv.\!extv.TofDs !u !u' !cu !extu !v !v' !cv !extv ) (ExtN))
+			    (\!u'.\!z.CongP1P2' !u' !z)
+		<- (Pi n:(leftb B).Pi n'.Pi cn.Pi extn.cutBLemma (D1) (\!x:!(leftb A).D2' !x !n)
+		       	    	  		       (TofD1) (\!u.\!u'.\!cu.\!extu. TofD2' !u !u' !cu !extu !n !n' !cn !extn)
+						       (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+						       (ProofRed !n)
+						       (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu !n !n' !cn !extn )
+						       (\!u'.\!z.CongP1P2' !u' !z)).
+
+cutBLemma_cut1 : cutBLemma (D1 : right A)
+	      		   (\!x.cut (D2' !x) (\n. D2'' !x n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par1 (lts-b-open (\!x.lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cut)) (cut/pre1 (ProofRed)) (cutB/-/cut))
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx. TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofDs !u !u' !cu !extu))
+			   (\!u'.\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP1'R1' !u' !z)))
+			   		  (sc_cong_new (\!x.sc_par_com)))
+					  (sc_cong_new (\!x.sc_new_scope)))
+					  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+					  (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+					  (sc_new_swap))
+					  (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- cutBLemma (D1) (\!x. D2' !x) (TofD1)
+		   	     (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx)
+			     (\!u'.\!z.lts-b-open (\!x.lts-f-out))
+			     (ProofRed)
+			     (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu)
+			     (\!u'.\!z.CongP1'R1' !u' !z).
+
+cutBLemma_cut2 : cutBLemma (D1 : right A)
+	      		   (\!x.cut ((D2': leftb A -> right B) !x ) (\n. D2'' !x n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cut)) (cut/pre2 (\!n.ProofRed !n)) (cutB/-/cut))
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx. TofDs !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R2' !u' !z !x) (sc_r)))
+			   		  (sc_cong_new (\!x.sc_new_scope)))
+					  (sc_new_swap))
+					  (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.cutBLemma (D1) (\!x. D2'' !x n) (TofD1)
+		   	     (\!u.\!u'.\!cu.\!extu.TofD2'' !u !u' !cu !extu !n !n' !cn !extn)
+			     (\!u'.\!z.lts-b-open (\!x.lts-f-out))
+			     (ProofRed !n)
+			     (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu !n !n' !cn !extn)
+			     (\!u'.\!z.CongP1'R2' !u' !z !n')).
+
+cutBLemma_cutB : cutBLemma (D1 : right A)
+	       	 	   (\!x.cutB (D2' !x) (\!n.D2'' !x !n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cutB (\!n.\!n'.\!cn.\!extn.TofD2'' !u !u' !cu !extu !n !n' !cn !extn) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cutB)) (cutB/pre2 (\!n.ProofRed !n)) (cutB/-/cutB))
+			   (\!u.\!u'.\!cu.\!extu.extr_cutB (\!n.\!n'.\!cn.\!extn.TofDs !u !u' !cu !extu !n !n' !cn !extn) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R2' !u' !z !x) (sc_r)))
+			   		  (sc_cong_new (\!x.sc_new_scope)))
+					  (sc_new_swap))
+					  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+					  (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+					  (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+					  (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.cutBLemma (D1) (\!x.D2'' !x !n) (TofD1)
+		       	   (\!u.\!u'.\!cu.\!extu.TofD2'' !u !u' !cu !extu !n !n' !cn !extn)
+			   (\!u'.\!z.lts-b-open (\!x.lts-f-out))
+			   (ProofRed !n)
+			   (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu !n !n' !cn !extn)
+			   (\!u'.\!z.CongP1'R2' !u' !z !n')).
+
+%CutB Corolary - done.
+
+
+cutBCor : Pi D1 : right A.
+	    Pi D2 : (leftb A) -> right C.
+	    extrR D1 (TofP : proc (\!z. P !z) A) ->
+	    (Pi u.Pi u'.Pi cu.extrLB u u' cu -> extrR (D2 !u) (TofQ !u' !cu : proc (\!z. Q !u' !z) C)) ->
+	    (Pi u'.Pi z.lts-b (Q !u' !z) (\!y.bOutLabel !u' !y) (\!y.Q' !u' !z !y)) -> %then
+	    =>= (cutB D1 (\!u. D2 !u)) (D) ->
+	    extrR D (PofR : proc (\!z. R !z) C) ->
+	    (Pi z.sc (R !z) (new (\!x.par (rep !x (\!u. P !u)) (new (\!y.par (P !y) (Q' !x !z !y)))))) ->
+	    type.
+
+cutBCor_copy : cutBCor (D1 : right A)
+	       	 	   (\!x.copy !x (\y. D2' y))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_copy !extu (\!y.\!y'.\!cy.\!exty.TofD2' !y !y' !cy !exty) )
+			   (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			   (ProofRed) %(clos4 (cut/-/cutB) (cutB/-/copy))
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_cong_new (\!x.sc_cong_par (Cong !x !z) (sc_r)) )
+		<- cutBLemma (D1) (\!x.copy !x (\y. D2' y)) (TofD1) 
+		   	     (\!u.\!u'.\!cu.\!extu.extr_copy !extu (\!y.\!y'.\!cy.\!exty.TofD2' !y !y' !cy !exty))
+			     (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed) (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu)
+			     (\!u'.\!z.Cong !u' !z).
+
+
+
+cutBCor_oneL : cutBCor (D1 : right A)
+	       	 	   (\!x. oneL N (D2' !x))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_oneL (ExtN : extrL N N' CN) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			   (ProofRed)
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_cong_new (\!x.sc_cong_par (Cong !x !z) (sc_r)))
+		<- cutBLemma (D1) (\!x. oneL N (D2' !x)) (TofD1) (\!u.\!u'.\!cu.\!extu.extr_oneL (ExtN : extrL N N' CN) (TofD2' !u !u' !cu !extu))
+		   	     (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed) (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu)
+			     (\!u'.\!z.Cong !u' !z).
+
+cutBCor_bangL : cutBCor (D1 : right A)
+		  	    (\!x.bangL N (\!u. D2' !x !u))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!u.\!u'.\!cu.\!extu. extr_bangL (\!v.\!v'.\!cv.\!extv. TofD2' !u !u' !cu !extu !v !v' !cv !extv) (ExtN))
+			    (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (bangL/pre (\!u.ProofRed !u)) (cutB/-/bangL))
+			    (extr_bangL (\!v.\!v'.\!cv.\!extv.TofDs !v !v' !cv !extv ) (ExtN))
+			    (\!z.CongP1P2' !z)
+		<- (Pi n:(leftb B).Pi n'.Pi cn.Pi extn.cutBCor (D1) (\!x:!(leftb A).D2' !x !n)
+		       	    	  		       (TofD1) (\!u.\!u'.\!cu.\!extu. TofD2' !u !u' !cu !extu !n !n' !cn !extn)
+						       (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+						       (ProofRed !n)
+						       (TofDs !n !n' !cn !extn )
+						       (\!z.CongP1P2' !z)).
+
+cutBCor_cut1 : cutBCor (D1 : right A)
+	      		   (\!x.cut (D2' !x) (\n. D2'' !x n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par1 (lts-b-open (\!x.lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofDs !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_cong_new (\!x.sc_cong_par (CongP'R' !x !z) (sc_r)))
+		<- cutBLemma (D1) (\!x.cut (D2' !x) (\n. D2'' !x n)) (TofD1)
+		   	     (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			     (\!u'.\!z.lts-b-res (\!x.lts-b-par1 (lts-b-open (\!x.lts-f-out))))
+			     (ProofRed)
+			     (\!x.\!x'.\!cx.\!extx.TofDs !x !x' !cx !extx)
+			     (\!u'.\!z.CongP'R' !u' !z).
+
+
+
+cutBCor_cut2 : cutBCor (D1 : right A)
+	      		   (\!x.cut (D2' !x ) (\n. D2'' !x n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB (\!x.\!x'.\!cx.\!extx.TofDs !x !x' !cx !extx) (TofD1))
+			   (\!z.sc_cong_new (\!x.sc_cong_par (CongP'R' !x !z) (sc_r)))
+		<- cutBLemma (D1) (\!x.cut (D2' !x) (\n. D2'' !x n)) (TofD1)
+		   	     (\!u.\!u'.\!cu.\!extu.extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			     (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			     (ProofRed)
+			     (\!x.\!x'.\!cx.\!extx.TofDs !x !x' !cx !extx)
+			     (\!u'.\!z.CongP'R' !u' !z).
+
+cutBCor_cutB : cutBCor (D1 : right A)
+	       	 	   (\!x.cutB (D2' !x) (\!n.D2'' !x !n))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!u.\!u'.\!cu.\!extu.extr_cutB (\!n.\!n'.\!cn.\!extn.TofD2'' !u !u' !cu !extu !n !n' !cn !extn) (TofD2' !u !u' !cu !extu))
+			   (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB (\!x.\!x'.\!cx.\!extx.TofDs !x !x' !cx !extx) (TofD1))
+			   (\!z.sc_cong_new (\!x.sc_cong_par (CongP'R' !x !z) (sc_r)))
+		<- cutBLemma (D1) (\!x.cutB (D2' !x) (\!n. D2'' !x !n)) (TofD1)
+		   	     (\!u.\!u'.\!cu.\!extu.extr_cutB (\!x.\!x'.\!cx.\!extx.TofD2'' !u !u' !cu !extu !x !x' !cx !extx) (TofD2' !u !u' !cu !extu))
+			     (\!u'.\!z.lts-b-res (\!x.lts-b-par2 (lts-b-open (\!x.lts-f-out))))
+			     (ProofRed)
+			     (\!x.\!x'.\!cx.\!extx.TofDs !x !x' !cx !extx)
+			     (\!u'.\!z.CongP'R' !u' !z).
+
+% Lolli lemma - done.
+
+lolliLemma : Pi D : right (lolli A B).
+	     Pi E : left (lolli A B) -o right C.
+	     extrR D (TofP : proc (\!z. P !z) (lolli A B)) ->
+	     (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z. Q !x' !z) C)) ->
+	     (Pi x'.lts-b (P !x') (\!y.inpLabel !x' !y) (\!y.P' !x' !y)) ->
+	     (Pi x'.Pi z.lts-b (Q !x' !z) (\!y.bOutLabel !x' !y) (\!y.Q' !x' !z !y)) ->
+	     =>= (cut D (\x. E x)) F ->
+	     extrR F (TofR : proc (\!z. R !z) C) ->
+	     (Pi z.sc (R !z) (new (\!x.new (\!y. par (P' !x !y) (Q' !x !z !y))))) ->
+	     type.
+
+lolliLemma_lolli : lolliLemma (lolliR (\y. D y))
+		   	      (\x.lolliL x E1 (\x. E2 x))
+			      (extr_lolliR (\!y.\!y'.\!cy.\!exty.TofD !y !y' !cy !exty))
+			      (\!x.\!x'.\!cx.\!extx.extr_lolliL !extx (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) (TofE1 : extrR E1 PofE1))
+			      (\!x'.lts-b-in)
+			      (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			      (clos1 (cut/lolliR/lolliL))
+			      (extr_cut (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) (extr_cut (\!y.\!y'.\!cy.\!exty.TofD !y !y' !cy !exty) (TofE1)))
+			      (\!z.sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (sc_cong_new (\!x.sc_par_com))))
+			      		(sc_cong_new (\!x.sc_par_com)))
+					(sc_cong_new (\!x.sc_new_scope)))
+					(sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+					(sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc)))).
+
+
+lolliLemma_bangL : lolliLemma (D1)
+		  	    (\x.bangL U (\!u. D2' x !u))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofD2' !x !x' !cx !extx !u !u' !cu !extu) (ExtU))
+			    (\!x'.lts-b-in)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			    (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD1D2' !u !u' !cu !extu) (ExtU))
+			    (\!z.CongP1'Q1' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		   lolliLemma D1 (\x. D2' x !u) (TofD1) 
+		       	     (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx !u !u' !cu !extu)
+			     (\!x'.lts-b-in)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed !u)
+			     (TofD1D2' !u !u' !cu !extu)
+			     (\!z.CongP1'Q1' !z)).
+
+
+lolliLemma_oneL1 : lolliLemma (oneL N D1')
+		  	    (\x. D2 x)
+			    (extr_oneL (ExtN) (TofD1' : extrR D1' PofD1'))
+			    (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			    (\!x'.lts-b-in)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/oneL/-))
+			    (extr_oneL (ExtN) (TofD1'D2))
+			    (\!z.CongP1'Q1' !z)
+		<- lolliLemma D1' (\x. D2 x) (TofD1') (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			     (\!x'.lts-b-in)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed)
+			     (TofD1'D2)
+			     (\!z.CongP1'Q1' !z).
+
+lolliLemma_oneL2 : lolliLemma (D1)
+		  	    (\x.oneL N (D2' x))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_oneL (ExtN) (TofD2' !x !x' !cx !extx))
+			    (\!x'.lts-b-in)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofD1D2'))
+			    (\!z.CongP1'Q1' !z)
+		<- lolliLemma D1 (\x.D2' x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx)
+		   	     (\!x'.lts-b-in)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))		   	     
+			     (ProofRed) (TofD1D2')
+			     (\!z.CongP1'Q1' !z).
+			    		   	 
+lolliLemma_cut1 : lolliLemma (cut D1' (\x. D1'' x))
+	       	 	   (\x. D2 x)
+			   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD1'' !x !x' !cx !extx) (TofD1' : extrR D1' PofD1'))
+			   (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			   (\!x'.lts-b-res (\!y.lts-b-par2 (lts-b-in)))
+			   (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			   (clos2 (cut/pre2 (\!x.ProofRed !x)) (sconv_s cut/-/cut1))
+			   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD1''D2 !x !x' !cx !extx) (TofD1'))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongR2'Q1' !x !z) (sc_r)))
+			   	     (sc_cong_new (\!x.sc_new_scope)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				     (sc_new_swap))
+				     (sc_cong_new (\!x.sc_new_swap)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))				     
+		<- (Pi x.Pi x'.Pi cx.Pi extx.
+		       lolliLemma (D1'' x) (\x.D2 x) (TofD1'' !x !x' !cx !extx)
+		       		 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+				 (\!x'.lts-b-in)
+				 (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed !x)
+				 (TofD1''D2 !x !x' !cx !extx)
+				 (\!z.CongR2'Q1' !x' !z) ).	
+
+lolliLemma_cut21 : lolliLemma (D1) %R1 -> R1'
+	       	 	   (\x.cut (D2' x) (\y.D2'' y))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!x.\!x'.\!cx.\!extx.extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !y !y' !cy !exty) (TofD2' !x !x' !cx !extx))
+			   (\!x'.lts-b-in)
+			   (\!x'.\!z.lts-b-res (\!y.lts-b-par1 (lts-b-open (\!z.lts-f-out))))
+			   (clos2 (cut/pre1 ProofRed) (cut/-/cut1))
+			   (extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !y !y' !cy !exty) (TofD1D2'))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP1'R1' !z)))
+			   	     (sc_cong_new (\!x.sc_par_com)))
+				     (sc_cong_new (\!x.sc_new_scope)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc )))))
+				     (sc_new_swap))
+				     (sc_cong_new (\!x.sc_new_swap)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))			     
+		<- lolliLemma (D1) (\x.D2' x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx)
+		       		 (\!x'.lts-b-in) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed)
+				 (TofD1D2')
+				 (\!z.CongP1'R1' !z).
+
+lolliLemma_cut22 : lolliLemma (D1) %R2 -> R2'
+		  	    (\x.cut D2' (\y.D2'' x y))
+		  	    (TofD1 : extrR D1 PofD1)
+		 	    (\!x.\!x'.\!cx.\!extx.extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !x !x' !cx !extx !y !y' !cy !exty) (TofD2'))
+		 	    (\!x'.lts-b-in)
+		  	    (\!x'.\!z.lts-b-res (\!y.lts-b-par2 (lts-b-open (\!z.lts-f-out))))
+		  	    (clos2 (cut/pre2 (\!n.ProofRed !n)) (cut/-/cut2))
+		  	    (extr_cut (\!y.\!y'.\!cy.\!exty.TofD1D2'' !y !y' !cy !exty) (TofD2'))
+		  	    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R1' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+		<- (Pi y.Pi y'.Pi cy.Pi exty.
+		       	    lolliLemma (D1) (\x.D2'' x y) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2'' !x !x' !cx !extx !y !y' !cy !exty)
+			    	      (\!x'.lts-b-in) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				      (ProofRed !y)
+				      (TofD1D2'' !y !y' !cy !exty)
+				      (\!z.CongP1'R1' !y' !z)).
+
+lolliLemma_cutB1 : lolliLemma (D1)
+	       	 	    (\x.cutB D2' (\!n.D2'' x !n))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_cutB (\!n.\!n'.\!cn.\!extn.TofD2'' !x !x' !cx !extx !n !n' !cn !extn) (TofD2'))
+			    (\!x'.lts-b-in)
+			    (\!x'.\!z.lts-b-res (\!y.lts-b-par2 (lts-b-open (\!z.lts-f-out))))
+			    (clos2 (cutB/pre2 (\!n.Proofred !n)) (cut/-/cutB))
+			    (extr_cutB (\!n.\!n'.\!cn.\!extn.TofD1D2'' !n !n' !cn !extn) (TofD2'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z. sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.
+		       lolliLemma (D1) (\x.D2'' x !n) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2'' !x !x' !cx !extx !n !n' !cn !extn)
+		       		 (\!x'.lts-b-in) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed !n)
+				 (TofD1D2'' !n !n' !cn !extn)
+				 (\!z.CongP1'R2' !n' !z)).
+
+lolliLemma_cutB2 : lolliLemma (cutB D1' (\!n.D1'' !n))
+		  	    (\x.D2 x)
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD1'' !u !u' !cu !extu) (TofD1'))
+			    (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			    (\!x'.lts-b-res (\!y.lts-b-par2 (lts-b-in)))
+			    (\!x'.\!z.lts-b-open (\!z.lts-f-out))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n)) (cut/cutB/-))
+			    (extr_cutB (\!n.\!n'.\!cn.\!extn.TofD1''D2 !n !n' !cn !extn) (TofD1'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongR2'Q1' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.
+		       	    lolliLemma (D1'' !n) (\x.D2 x) (TofD1'' !n !n' !cn !extn)
+			    	      (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+				      (\!x'.lts-b-in)
+				      (\!x'.\!z.lts-b-open (\!z.lts-f-out))
+				      (ProofRed !n)
+				      (TofD1''D2 !n !n' !cn !extn)
+				      (\!z. CongR2'Q1' !n' !z) ).
+
+
+
+%And1 Lemma - done.
+
+andLemma1 : Pi D : right (and A B).
+	   Pi E : left (and A B) -o right C.
+	   extrR D (TofP : proc (\!z. P !z) (and A B)) ->
+	   (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z. Q !x' !z) C)) ->
+	   (Pi x'.lts-f (P !x') (lInLabel !x') (P' !x')) ->
+	   (Pi x'.Pi z.lts-f (Q !x' !z) (lOutLabel !x') (Q' !x' !z)) ->
+	   =>= (cut D (\x. E x)) F ->
+	   extrR F (TofR : proc (\!z. R !z) C) ->
+	   (Pi z.sc (R !z) (new (\!x.par (P' !x) (Q' !x !z)))) ->
+	   type.
+
+andLemma1_and : andLemma1 (andR <(D1),(D2)>)
+	      		  (\x.andL1 x (\x. E1 x))
+			  (extr_andR (TofD2 : extrR D2 P2) (TofD1 : extrR D1 P1))
+			  (\!x.\!x'.\!cx.\!extx.extr_andL1 (\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx) 
+			  (\!x'.lts-f-lin)
+			  (\!x'.\!z.lts-f-lout)
+			  (clos1 (cut/andR/andL1))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD1))
+			  (\!z.sc_r).
+
+andLemma1_oneL : andLemma1 (oneL Y D1)
+	      		  (\x. E x)
+			  (extr_oneL (ExtY) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-lin)
+			  (\!x'.\!z.lts-f-lout)
+			  (clos2 (oneL/pre (ProofRed)) (cut/oneL/-))
+			  (extr_oneL (ExtY) (TofD1E'))
+			  (\!z.CongP'Q' !z)
+		<- andLemma1 D1 (\x.E x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+		   	     (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout) 
+			     (ProofRed)
+			     (TofD1E')
+			     (\!z.CongP'Q' !z).
+
+andLemma1_bangL : andLemma1 (bangL Y (\!u. D1 !u))
+	       	 	   (\x. E x)
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD1 !u !u' !cu !extu) (ExtY))
+			   (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			   (\!x'.lts-f-lin)
+			   (\!x'.\!z.lts-f-lout)
+			   (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-))
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD1'E' !u !u' !cu !extu) (ExtY))
+			   (\!z.CongP1'Q' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		       	   andLemma1 (D1 !u) (\x. E x) (TofD1 !u !u' !cu !extu)
+			   	     (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				     (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+				     (ProofRed !u)
+				     (TofD1'E' !u !u' !cu !extu)
+				     (\!z.CongP1'Q' !z)).
+
+andLemma1_cut : andLemma1 (cut D1 (\y. D2 y))
+	       		(\x. E x)
+			(extr_cut (\!y.\!y'.\!cy.\!exty.TofD2 !y !y' !cy !exty) (TofD1 : extrR D1 PofD1))
+			(\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			(\!x'.lts-f-res (\!x.lts-f-par2 lts-f-lin))
+			(\!x'.\!z.lts-f-lout)
+			(clos2 (cut/pre2 (\!x.ProofRed !x)) (sconv_s cut/-/cut1))
+			(extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'E' !x !x' !cx !extx) (TofD1))
+			(\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+				  (sc_cong_new (\!x.sc_new_scope)))
+				  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				  (sc_new_swap))
+				  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				  (sc_cong_new (\!x.sc_s sc_new_scope)))
+				  (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi x.Pi x'.Pi cx.Pi extx.
+		      	andLemma1 (D2 x) (\x. E x) (TofD2 !x !x' !cx !extx)
+				 (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				 (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+				 (ProofRed !x)
+				 (TofD2'E' !x !x' !cx !extx)
+				 (\!z.CongP2'Q' !x' !z)).
+
+andLemma1_cutB : andLemma1 (cutB D1 (\!u.D2 !u))	
+	      		  (\x. E x)
+			  (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-res (\!x.lts-f-par2 lts-f-lin))
+			  (\!x'.\!z.lts-f-lout)
+			  (clos2 (cutB/pre2 (\!u.ProofRed !u)) (cut/cutB/-))
+			  (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2'E' !u !u' !cu !extu) (TofD1))
+			  (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu.
+		      	  andLemma1 (D2 !u) (\x. E x) (TofD2 !u !u' !cu !extu)
+			  	    (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				    (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+				    (ProofRed !u)
+				    (TofD2'E' !u !u' !cu !extu)
+				    (\!z.CongP2'Q' !u' !z)).
+
+andLemma1_oneLE : andLemma1 (D)
+	       	 	   (\x.oneL X (E1 x))
+			   (TofD)
+			   (\!x.\!x'.\!cx.\!extx.extr_oneL (ExtX) (TofE1 !x !x' !cx !extx))
+			   (\!x'.lts-f-lin) 
+			   (\!x'.\!z.lts-f-lout)
+			   (clos2 (oneL/pre (ProofRed)) (cut/-/oneL))
+			   (extr_oneL (ExtX) (TofD'E1'))
+			   (\!z.CongP'Q' !z)
+		<- andLemma1 (D) (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx)
+			    (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+			    (ProofRed)
+			    (TofD'E1')
+			    (\!z.CongP'Q' !z).
+
+andLemma_bangLE : andLemma1 (D)
+		   	    (\x. bangL N (\!u. E' x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !x !x' !cx !extx !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			    (\!x'.lts-f-lin) 
+			    (\!x'.\!z.lts-f-lout)			    
+			    (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			    (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD'E'' !u !u' !cu !extu) ExtN)
+			    (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. andLemma1 (D) (\x.E' x !u) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx !u !u' !cu !extu) 
+		   	    (\!x'.lts-f-lin) 
+			    (\!x'.\!z.lts-f-lout) 
+			    (ProofRed !u) 
+		   	    (TofD'E'' !u !u' !cu !extu) 
+			    (\!z.CongD''E' !z)). 
+
+andLemma1_cutBE : andLemma1  (D)
+		  	    (\x.cutB E1 (\!u. E2 x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_cutB (\!u.\!u'.\!cu.\!extu.TofE2 !x !x' !cx !extx !u !u' !cu !extu) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-lin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-lout)))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/-/cutB))
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu. TofD'E2' !u !u' !cu !extu) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. andLemma1 D (\x. E2 x !u) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !u !u' !cu !extu) 
+		      	   (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout) 
+			   (ProofRed !u)
+			   (TofD'E2' !u !u' !cu !extu)
+			   (\!z.CongP'Q2' !u' !z)).	
+
+andLemma1_cutE1 : andLemma1  (D)
+		  	    (\x.cut (E1 x) (\n. E2 n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !n !n' !cn !extn) (TofE1 !x !x' !cx !extx))
+			    (\!x'.lts-f-lin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par1 (lts-f-lout)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx) (TofD'E1'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP'Q1' !z)))
+			    	      (sc_cong_new (\!x.sc_par_com)))
+				      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- andLemma1 D (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx. TofE1 !x !x' !cx !extx ) 
+		      	   (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+			   (ProofRed)
+			   (TofD'E1')
+			   (\!z.CongP'Q1' !z).
+
+andLemma1_cutE2 : andLemma1  (D)
+			    (\x.cut E1 (\n. E2 x n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !x !x' !cx !extx !n !n' !cn !extn ) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-lin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-lout)))
+			    (clos2 (cut/pre2 (\!n.ProofRed !n) ) (cut/-/cut2))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofD'E2' !x !x' !cx !extx) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi n.Pi n'.Pi cn.Pi extn. andLemma1 D (\x. E2 x n) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !n !n' !cn !extn) 
+		      	   (\!x'.lts-f-lin) (\!x'.\!z.lts-f-lout)
+			   (ProofRed !n)
+			   (TofD'E2' !n !n' !cn !extn)
+			   (\!z.CongP'Q2' !n' !z)).
+
+%And2 Lemma - done.
+
+andLemma2 : Pi D : right (and A B).
+	   Pi E : left (and A B) -o right C.
+	   extrR D (TofP : proc (\!z. P !z) (and A B)) ->
+	   (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z. Q !x' !z) C)) ->
+	   (Pi x'.lts-f (P !x') (rInLabel !x') (P' !x')) ->
+	   (Pi x'.Pi z.lts-f (Q !x' !z) (rOutLabel !x') (Q' !x' !z)) ->
+	   =>= (cut D (\x. E x)) F ->
+	   extrR F (TofR : proc (\!z. R !z) C) ->
+	   (Pi z.sc (R !z) (new (\!x.par (P' !x) (Q' !x !z)))) ->
+	   type.
+
+andLemma2_and : andLemma2 (andR <(D1),(D2)>)
+	      		  (\x.andL2 x (\x. E1 x))
+			  (extr_andR (TofD2 : extrR D2 P2) (TofD1 : extrR D1 P1))
+			  (\!x.\!x'.\!cx.\!extx.extr_andL2 (\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx) 
+			  (\!x'.lts-f-rin)
+			  (\!x'.\!z.lts-f-rout)
+			  (clos1 (cut/andR/andL2))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD2))
+			  (\!z.sc_r).
+
+andLemma2_oneL : andLemma2 (oneL Y D1)
+	      		  (\x. E x)
+			  (extr_oneL (ExtY) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-rin)
+			  (\!x'.\!z.lts-f-rout)
+			  (clos2 (oneL/pre (ProofRed)) (cut/oneL/-))
+			  (extr_oneL (ExtY) (TofD1E'))
+			  (\!z.CongP'Q' !z)
+		<- andLemma2 D1 (\x.E x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+		   	     (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout) 
+			     (ProofRed)
+			     (TofD1E')
+			     (\!z.CongP'Q' !z).
+
+andLemma2_bangL : andLemma2 (bangL Y (\!u. D1 !u))
+	       	 	   (\x. E x)
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD1 !u !u' !cu !extu) (ExtY))
+			   (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			   (\!x'.lts-f-rin)
+			   (\!x'.\!z.lts-f-rout)
+			   (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-))
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD1'E' !u !u' !cu !extu) (ExtY))
+			   (\!z.CongP1'Q' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		       	   andLemma2 (D1 !u) (\x. E x) (TofD1 !u !u' !cu !extu)
+			   	     (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				     (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+				     (ProofRed !u)
+				     (TofD1'E' !u !u' !cu !extu)
+				     (\!z.CongP1'Q' !z)).
+
+andLemma2_cut : andLemma2 (cut D1 (\y. D2 y))
+	       		(\x. E x)
+			(extr_cut (\!y.\!y'.\!cy.\!exty.TofD2 !y !y' !cy !exty) (TofD1 : extrR D1 PofD1))
+			(\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			(\!x'.lts-f-res (\!x.lts-f-par2 lts-f-rin))
+			(\!x'.\!z.lts-f-rout)
+			(clos2 (cut/pre2 (\!x.ProofRed !x)) (sconv_s cut/-/cut1))
+			(extr_cut (\!x.\!x'.\!cx.\!extx.TofD2'E' !x !x' !cx !extx) (TofD1))
+			(\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+				  (sc_cong_new (\!x.sc_new_scope)))
+				  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				  (sc_new_swap))
+				  (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				  (sc_cong_new (\!x.sc_s sc_new_scope)))
+				  (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi x.Pi x'.Pi cx.Pi extx.
+		      	andLemma2 (D2 x) (\x. E x) (TofD2 !x !x' !cx !extx)
+				 (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				 (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+				 (ProofRed !x)
+				 (TofD2'E' !x !x' !cx !extx)
+				 (\!z.CongP2'Q' !x' !z)).
+
+andLemma2_cutB : andLemma2 (cutB D1 (\!u.D2 !u))	
+	      		  (\x. E x)
+			  (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-res (\!x.lts-f-par2 lts-f-rin))
+			  (\!x'.\!z.lts-f-rout)
+			  (clos2 (cutB/pre2 (\!u.ProofRed !u)) (cut/cutB/-))
+			  (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2'E' !u !u' !cu !extu) (TofD1))
+			  (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu.
+		      	  andLemma2 (D2 !u) (\x. E x) (TofD2 !u !u' !cu !extu)
+			  	    (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx)
+				    (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+				    (ProofRed !u)
+				    (TofD2'E' !u !u' !cu !extu)
+				    (\!z.CongP2'Q' !u' !z)).
+
+andLemma2_oneLE : andLemma2 (D)
+	       	 	   (\x.oneL X (E1 x))
+			   (TofD)
+			   (\!x.\!x'.\!cx.\!extx.extr_oneL (ExtX) (TofE1 !x !x' !cx !extx))
+			   (\!x'.lts-f-rin) 
+			   (\!x'.\!z.lts-f-rout)
+			   (clos2 (oneL/pre (ProofRed)) (cut/-/oneL))
+			   (extr_oneL (ExtX) (TofD'E1'))
+			   (\!z.CongP'Q' !z)
+		<- andLemma2 (D) (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx)
+			    (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+			    (ProofRed)
+			    (TofD'E1')
+			    (\!z.CongP'Q' !z).
+
+andLemma2_bangLE : andLemma2 (D)
+		   	    (\x. bangL N (\!u. E' x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !x !x' !cx !extx !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			    (\!x'.lts-f-rin) 
+			    (\!x'.\!z.lts-f-rout)			    
+			    (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			    (extr_bangL (\!u.\!u'.\!cu.\!extu. TofD'E'' !u !u' !cu !extu) ExtN)
+			    (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. andLemma2 (D) (\x.E' x !u) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx !u !u' !cu !extu) 
+		   	    (\!x'.lts-f-rin) 
+			    (\!x'.\!z.lts-f-rout) 
+			    (ProofRed !u) 
+		   	    (TofD'E'' !u !u' !cu !extu) 
+			    (\!z.CongD''E' !z)). 
+
+andLemma2_cutBE : andLemma2  (D)
+		  	    (\x.cutB E1 (\!u. E2 x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_cutB (\!u.\!u'.\!cu.\!extu.TofE2 !x !x' !cx !extx !u !u' !cu !extu) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-rin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-rout)))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/-/cutB))
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu. TofD'E2' !u !u' !cu !extu) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. andLemma2 D (\x. E2 x !u) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !u !u' !cu !extu) 
+		      	   (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout) 
+			   (ProofRed !u)
+			   (TofD'E2' !u !u' !cu !extu)
+			   (\!z.CongP'Q2' !u' !z)).	
+
+andLemma2_cutE1 : andLemma2  (D)
+		  	    (\x.cut (E1 x) (\n. E2 n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !n !n' !cn !extn) (TofE1 !x !x' !cx !extx))
+			    (\!x'.lts-f-rin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par1 (lts-f-rout)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx) (TofD'E1'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP'Q1' !z)))
+			    	      (sc_cong_new (\!x.sc_par_com)))
+				      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- andLemma2 D (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx. TofE1 !x !x' !cx !extx ) 
+		      	   (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+			   (ProofRed)
+			   (TofD'E1')
+			   (\!z.CongP'Q1' !z).
+
+andLemma2_cutE2 : andLemma2  (D)
+			    (\x.cut E1 (\n. E2 x n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !x !x' !cx !extx !n !n' !cn !extn ) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-rin)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-rout)))
+			    (clos2 (cut/pre2 (\!n.ProofRed !n) ) (cut/-/cut2))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofD'E2' !x !x' !cx !extx) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi n.Pi n'.Pi cn.Pi extn. andLemma2 D (\x. E2 x n) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !n !n' !cn !extn) 
+		      	   (\!x'.lts-f-rin) (\!x'.\!z.lts-f-rout)
+			   (ProofRed !n)
+			   (TofD'E2' !n !n' !cn !extn)
+			   (\!z.CongP'Q2' !n' !z)).
+
+
+%Sum1 Lemma - done.
+
+sumLemma1 : Pi D : right (sum A B).
+	    Pi E : left (sum A B) -o right C.
+	    extrR D (TofP : proc (\!z. P !z) (sum A B)) ->
+ 	    (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z. Q !x' !z) C)) ->
+	    (Pi x'.lts-f (P !x') (lOutLabel !x') (P' !x')) ->
+	    (Pi x'.Pi z.lts-f (Q !x' !z) (lInLabel !x') (Q' !x' !z)) ->
+	    =>= (cut D (\x. E x)) F ->
+	    extrR F (TofR : proc (\!z. R !z) C) ->
+	    (Pi z.sc (R !z) (new (\!x.par (P' !x) (Q' !x !z)))) ->
+	    type.
+
+sumLemma1_sum : sumLemma1 (sumR1 (D : right A))
+	      		  (\x.sumL x <(\x. E1 x),(\y.E2 y)>)
+			  (extr_sumR1 (TofD : extrR D PofD))
+			  (\!x.\!x'.\!cx.\!extx.extr_sumL (\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty ) 
+			  				  (\!y.\!y'.\!cy.\!exty. TofE2 !y !y' !cy !exty )  !extx)
+			  (\!x'.lts-f-lout)
+			  (\!x'.\!z.lts-f-lin)
+			  (clos1 (cut/sumR1/sumL))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD))
+			  (\!z.sc_r).
+
+
+sumLemma1_oneL : sumLemma1 (oneL N D')
+	       	 	   (\x. E x)
+			   (extr_oneL (ExtN : extrL N N' CN) (TofD' : extrR D' PofD'))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)			   
+			   (\!x'.lts-f-lout)
+			   (\!x'.\!z.lts-f-lin)
+			   (clos2 (oneL/pre ProofRed) (cut/oneL/-)) %proof reduction
+			   (extr_oneL (ExtN) TofF')
+			   (\!z.CongD''E' !z)
+		<- sumLemma1 D' (\x.E x) (TofD') (\!x.\!x'.\!cx.\!extx.TofE  !x !x' !cx !extx ) 
+		   	    (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin) 
+			    (ProofRed) 
+		   	    (TofF') 
+			    (\!z.CongD''E' !z). 
+
+sumLemma1_bangL : sumLemma1 (bangL N  (\!u.D' !u))
+	       	 	   (\x. E x)
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD' !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)			   
+			   (\!x'.lts-f-lout)
+			   (\!x'.\!z.lts-f-lin)
+			   (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-)) %proof reduction
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) (ExtN) ) %typed extraction for F'
+			   (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. sumLemma1 (D' !u) (\x.E x) (TofD' !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx.TofE  !x !x' !cx !extx ) 
+		   	    (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			    (ProofRed !u) 
+		   	    (TofF' !u !u' !cu !extu) 
+			    (\!z. CongD''E' !z)). 
+
+sumLemma1_cut : sumLemma1 (cut D1 (\n. D2 n))
+	      		  (\x. E x)
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-res (\!n.lts-f-par2 (lts-f-lout)))
+			  (\!x'.\!z.lts-f-lin)
+			  (clos2 (cut/pre2 (\!n.ProofRed !n) ) (sconv_s cut/-/cut1))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofD1)) 
+			  (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com))) 
+		<-(Pi n.Pi n'.Pi cn.Pi extn. sumLemma1 (D2 n) (\x. E x) (TofD2 !n !n' !cn !extn) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			   (ProofRed !n)
+			   (TofF2 !n !n' !cn !extn )
+			   (\!z.CongP2'Q' !n' !z)).
+
+sumLemma1_cutB : sumLemma1 (cutB D1 (\!u. D2 !u))
+	       	 	   (\x. E x)
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1 : extrR D1 PofD1))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			   (\!x'.lts-f-res (\!n.lts-f-par2 (lts-f-lout)))
+			   (\!x'.\!z.lts-f-lin)
+			   (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/cutB/-))
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. sumLemma1 (D2 !u) (\x. E x) (TofD2 !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			   (ProofRed !u)
+			   (TofF2 !u !u' !cu !extu )
+			   (\!z.CongP2'Q' !u' !z)).
+			
+
+sumLemma1_oneLE : sumLemma1 D
+		  	    (\x. oneL N (E' x))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_oneL (ExtN) (TofE' !x !x' !cx !extx))
+			    (\!x'.lts-f-lout) 
+			    (\!x'.\!z.lts-f-lin)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    (\!z.CongD''E'' !z)
+		<- sumLemma1 D (\x. E' x) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx) 
+		   	    (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			    (ProofRed ) 
+		   	    (TofF' ) 
+			    (\!z.CongD''E'' !z).
+
+sumLemma1_bangLE : sumLemma1 D
+		   	     (\x. bangL N (\!u. E' x !u))
+			     (TofD : extrR D PofD)
+			     (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !x !x' !cx !extx !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			     (\!x'.lts-f-lout) 
+			     (\!x'.\!z.lts-f-lin)
+			     (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			     (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) ExtN)
+			     (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. sumLemma1 (D) (\x.E' x !u) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx !u !u' !cu !extu) 
+		   	    (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin) 
+			    (ProofRed !u ) 
+		   	    (TofF' !u !u' !cu !extu) 
+			    (\!z.CongD''E' !z)). 			     			    
+
+sumLemma1_cutBE : sumLemma1 D
+		  	    (\x.cutB E1 (\!u. E2 x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_cutB (\!u.\!u'.\!cu.\!extu.TofE2 !x !x' !cx !extx !u !u' !cu !extu) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-lout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-lin)))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/-/cutB))
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. sumLemma1 D (\x. E2 x !u) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !u !u' !cu !extu) 
+		      	   (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin) 
+			   (ProofRed !u)
+			   (TofF2 !u !u' !cu !extu )
+			   (\!z.CongP'Q2' !u' !z)).
+	
+
+sumLemma1_cutE1 : sumLemma1 D
+		  	    (\x.cut (E1 x) (\n. E2 n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !n !n' !cn !extn) (TofE1 !x !x' !cx !extx : extrR (E1 x) (PofE1 !x' cx)))
+			    (\!x'.lts-f-lout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par1 (lts-f-lin)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx) (TofF1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP'Q1' !x)))
+			    	      (sc_cong_new (\!x.sc_par_com)))
+				      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- sumLemma1 D (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx. TofE1 !x !x' !cx !extx ) 
+		      	   (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			   (ProofRed )
+			   (TofF1)
+			   (\!z.CongP'Q1' !z).
+
+sumLemma1_cutE2 : sumLemma1 D
+		  	    (\x.cut E1 (\n. E2 x n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !x !x' !cx !extx !n !n' !cn !extn ) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-lout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-lin)))
+			    (clos2 (cut/pre2 (\!n.ProofRed !n) ) (cut/-/cut2))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi n.Pi n'.Pi cn.Pi extn. sumLemma1 D (\x. E2 x n) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !n !n' !cn !extn) 
+		      	   (\!x'.lts-f-lout) (\!x'.\!z.lts-f-lin)
+			   (ProofRed !n )
+			   (TofF2 !n !n' !cn !extn)
+			   (\!z.CongP'Q2' !n' !z)).
+
+%Sum2 Lemma - done.
+sumLemma2 : Pi D : right (sum A B).
+	    Pi E : left (sum A B) -o right C.
+	    extrR D (TofP : proc (\!z. P !z) (sum A B)) ->
+ 	    (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z. Q !x' !z) C)) ->
+	    (Pi x'.lts-f (P !x') (rOutLabel !x') (P' !x')) ->
+	    (Pi x'.Pi z.lts-f (Q !x' !z) (rInLabel !x') (Q' !x' !z)) ->
+	    =>= (cut D (\x. E x)) F ->
+	    extrR F (TofR : proc (\!z. R !z) C) ->
+	    (Pi z.sc (R !z) (new (\!x.par (P' !x) (Q' !x !z)))) ->
+	    type.
+
+sumLemma2_sum : sumLemma2 (sumR2 (D : right A))
+	      		  (\x.sumL x <(\x. E1 x),(\y.E2 y)>)
+			  (extr_sumR2 (TofD : extrR D PofD))
+			  (\!x.\!x'.\!cx.\!extx.extr_sumL (\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty ) 
+			  				  (\!y.\!y'.\!cy.\!exty. TofE2 !y !y' !cy !exty )  !extx)
+			  (\!x'.lts-f-rout)
+			  (\!x'.\!z.lts-f-rin)
+			  (clos1 (cut/sumR2/sumL))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofE2 !x !x' !cx !extx) (TofD))
+			  (\!z.sc_r).
+
+sumLemma2_bangL : sumLemma2 (bangL N  (\!u.D' !u))
+	       	 	   (\x. E x)
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD' !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)			   
+			   (\!x'.lts-f-rout)
+			   (\!x'.\!z.lts-f-rin)
+			   (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-)) %proof reduction
+			   (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) (ExtN) ) %typed extraction for F'
+			   (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. sumLemma2 (D' !u) (\x.E x) (TofD' !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx.TofE  !x !x' !cx !extx ) 
+		   	    (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			    (ProofRed !u) 
+		   	    (TofF' !u !u' !cu !extu) 
+			    (\!z. CongD''E' !z)). 
+
+sumLemma2_cut : sumLemma2 (cut D1 (\n. D2 n))
+	      		  (\x. E x)
+			  (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1 : extrR D1 PofD1))
+			  (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			  (\!x'.lts-f-res (\!n.lts-f-par2 (lts-f-rout)))
+			  (\!x'.\!z.lts-f-rin)
+			  (clos2 (cut/pre2 (\!n.ProofRed !n) ) (sconv_s cut/-/cut1))
+			  (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofD1)) 
+			  (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com))) 
+		<-(Pi n.Pi n'.Pi cn.Pi extn. sumLemma2 (D2 n) (\x. E x) (TofD2 !n !n' !cn !extn) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			   (ProofRed !n)
+			   (TofF2 !n !n' !cn !extn )
+			   (\!z.CongP2'Q' !n' !z)).
+
+sumLemma2_cutB : sumLemma2 (cutB D1 (\!u. D2 !u))
+	       	 	   (\x. E x)
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1 : extrR D1 PofD1))
+			   (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx)
+			   (\!x'.lts-f-res (\!n.lts-f-par2 (lts-f-rout)))
+			   (\!x'.\!z.lts-f-rin)
+			   (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/cutB/-))
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofD1))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP2'Q' !x !z) (sc_r)))
+			  	    (sc_cong_new (\!x.sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				    (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				    (sc_cong_new (\!x.sc_s sc_new_scope)))
+				    (sc_cong_new (\!x.sc_par_com)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. sumLemma2 (D2 !u) (\x. E x) (TofD2 !u !u' !cu !extu) (\!x.\!x'.\!cx.\!extx. TofE !x !x' !cx !extx) 
+		      	   (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			   (ProofRed !u)
+			   (TofF2 !u !u' !cu !extu )
+			   (\!z.CongP2'Q' !u' !z)).
+			
+
+sumLemma2_oneLE : sumLemma2 D
+		  	    (\x. oneL N (E' x))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_oneL (ExtN) (TofE' !x !x' !cx !extx))
+			    (\!x'.lts-f-rout) 
+			    (\!x'.\!z.lts-f-rin)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    (\!z.CongD''E'' !z)
+		<- sumLemma2 D (\x. E' x) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx) 
+		   	    (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			    (ProofRed ) 
+		   	    (TofF' ) 
+			    (\!z.CongD''E'' !z).
+
+sumLemma2_bangLE : sumLemma2 D
+		   	     (\x. bangL N (\!u. E' x !u))
+			     (TofD : extrR D PofD)
+			     (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !x !x' !cx !extx !u !u' !cu !extu) (ExtN : extrL N N' CN))
+			     (\!x'.lts-f-rout) 
+			     (\!x'.\!z.lts-f-rin)
+			     (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			     (extr_bangL (\!u.\!u'.\!cu.\!extu. TofF' !u !u' !cu !extu) ExtN)
+			     (\!z.CongD''E' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu. sumLemma2 (D) (\x.E' x !u) (TofD) (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx !u !u' !cu !extu) 
+		   	    (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin) 
+			    (ProofRed !u ) 
+		   	    (TofF' !u !u' !cu !extu) 
+			    (\!z.CongD''E' !z)). 			     			    
+
+sumLemma2_cutBE : sumLemma2 D
+		  	    (\x.cutB E1 (\!u. E2 x !u))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx. extr_cutB (\!u.\!u'.\!cu.\!extu.TofE2 !x !x' !cx !extx !u !u' !cu !extu) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-rout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-rin)))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n) ) (cut/-/cutB))
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu. TofF2 !u !u' !cu !extu) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi u.Pi u'.Pi cu.Pi extu. sumLemma2 D (\x. E2 x !u) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !u !u' !cu !extu) 
+		      	   (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin) 
+			   (ProofRed !u)
+			   (TofF2 !u !u' !cu !extu )
+			   (\!z.CongP'Q2' !u' !z)).
+	
+
+sumLemma2_cutE1 : sumLemma2 D
+		  	    (\x.cut (E1 x) (\n. E2 n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !n !n' !cn !extn) (TofE1 !x !x' !cx !extx : extrR (E1 x) (PofE1 !x' cx)))
+			    (\!x'.lts-f-rout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par1 (lts-f-rin)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx) (TofF1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP'Q1' !x)))
+			    	      (sc_cong_new (\!x.sc_par_com)))
+				      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<- sumLemma2 D (\x. E1 x) (TofD) (\!x.\!x'.\!cx.\!extx. TofE1 !x !x' !cx !extx ) 
+		      	   (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			   (ProofRed )
+			   (TofF1)
+			   (\!z.CongP'Q1' !z).
+
+sumLemma2_cutE2 : sumLemma2 D
+		  	    (\x.cut E1 (\n. E2 x n))
+			    (TofD : extrR D PofD)
+			    (\!x.\!x'.\!cx.\!extx.extr_cut (\!n.\!n'.\!cn.\!extn.TofE2 !x !x' !cx !extx !n !n' !cn !extn ) (TofE1 : extrR E1 PofE1))
+			    (\!x'.lts-f-rout)
+			    (\!x'.\!z.lts-f-res (\!n.lts-f-par2 (lts-f-rin)))
+			    (clos2 (cut/pre2 (\!n.ProofRed !n) ) (cut/-/cut2))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx. TofF2 !x !x' !cx !extx) (TofE1))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP'Q2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_par_assoc))))
+				      (sc_cong_new (\!x.sc_s sc_new_scope)))
+		<-(Pi n.Pi n'.Pi cn.Pi extn. sumLemma2 D (\x. E2 x n) (TofD) (\!x.\!x'.\!cx.\!extx. TofE2 !x !x' !cx !extx !n !n' !cn !extn) 
+		      	   (\!x'.lts-f-rout) (\!x'.\!z.lts-f-rin)
+			   (ProofRed !n )
+			   (TofF2 !n !n' !cn !extn)
+			   (\!z.CongP'Q2' !n' !z)).
+
+%Bang Lemma - done.
+
+bangLemma : Pi D : right (bang A).
+	    Pi E : left (bang A) -o right C.
+	    extrR D (TofP : proc (\!z. P !z) (bang A)) ->
+	    (Pi x.Pi x'.Pi cx.extrL x x' cx -> extrR (E x) (TofQ !x' cx : proc (\!z.Q !x' !z) C)) ->
+	    (Pi x'.lts-b (P !x') (\!y.inpLabel !x' !y) (\!y.P' !x' !y)) ->
+	    (Pi x'.Pi z.lts-b (Q !x' !z) (\!y.bOutLabel !x' !y) (\!y.Q' !x' !z !y)) ->
+	    =>= (cut D (\x. E x)) F ->
+	    extrR F (TofR : proc (\!z. R !z) C) ->
+	    (Pi z.sc (R !z) (new (\!x.new (\!y.par (P' !x !y) (Q' !x !z !y))))) ->
+	    type.
+
+bangLemma_bang : bangLemma (bangR D1')
+	       	 	   (\x. bangL x (\!u. D2' !u))
+			   (extr_bangR (TofD1' : extrR D1' PofD1'))
+			   (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofD2' !u !u' !cu !extu) !extx)
+			   (\!x'.lts-b-rep)
+			   (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			   (clos21 (ProofRed) (cut/bR/bL))
+			   (extr_cutB (\!u.\!u'.\!cu.\!extu. TofDs !u !u' !cu !extu) (TofD1'))
+			   (\!z. sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongR1Q1' !x !z) (sc_r)))
+			   	     (sc_cong_new (\!x.sc_new_scope)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+		<- cutBLemma D1' (\!u. D2' !u) (TofD1') (\!u.\!u'.\!cu.\!extu.TofD2' !u !u' !cu !extu)
+		   	     (\!x'.\!z.lts-b-open (\!y.lts-f-out)) (ProofRed)
+			     (\!u.\!u'.\!cu.\!extu. TofDs !u !u' !cu !extu)
+			     (\!u'.\!z.CongR1Q1' !u' !z).
+
+
+bangLemma_bangL1 : bangLemma (D1)
+		  	    (\x.bangL U (\!u. D2' x !u))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_bangL (\!u.\!u'.\!cu.\!extu.TofD2' !x !x' !cx !extx !u !u' !cu !extu) (ExtU))
+			    (\!x'.lts-b-rep)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/-/bangL))
+			    (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD1D2' !u !u' !cu !extu) (ExtU))
+			    (\!z.CongP1'Q1' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		   bangLemma D1 (\x. D2' x !u) (TofD1) 
+		       	     (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx !u !u' !cu !extu)
+			     (\!x'.lts-b-rep)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed !u)
+			     (TofD1D2' !u !u' !cu !extu)
+			     (\!z.CongP1'Q1' !z)).
+
+
+bangLemma_bangL2 : bangLemma (bangL U (\!n. D1' !n))
+		   	     (\x. D2 x)
+			     (extr_bangL (\!n.\!n'.\!cn.\!extn.TofD1' !n !n' !cn !extn) (ExtU))
+			     (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			     (\!x'.lts-b-rep)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (clos2 (bangL/pre (\!u.ProofRed !u)) (cut/bangL/-))
+			     (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD1'D2 !u !u' !cu !extu) (ExtU))
+			     (\!z.CongP1'Q1' !z)
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		       	     bangLemma (D1' !u) (\x. D2 x) (TofD1' !u !u' !cu !extu) 
+			     (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			     (\!x'.lts-b-rep)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed !u)
+			     (TofD1'D2 !u !u' !cu !extu)
+			     (\!z.CongP1'Q1' !z)).
+
+bangLemma_oneL1 : bangLemma (oneL N D1')
+		  	    (\x. D2 x)
+			    (extr_oneL (ExtN) (TofD1' : extrR D1' PofD1'))
+			    (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			    (\!x'.lts-b-rep)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/oneL/-))
+			    (extr_oneL (ExtN) (TofD1'D2))
+			    (\!z.CongP1'Q1' !z)
+		<- bangLemma D1' (\x. D2 x) (TofD1') (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			     (\!x'.lts-b-rep)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			     (ProofRed)
+			     (TofD1'D2)
+			     (\!z.CongP1'Q1' !z).
+
+bangLemma_oneL2 : bangLemma (D1)
+		  	    (\x.oneL N (D2' x))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_oneL (ExtN) (TofD2' !x !x' !cx !extx))
+			    (\!x'.lts-b-rep)
+			    (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofD1D2'))
+			    (\!z.CongP1'Q1' !z)
+		<- bangLemma D1 (\x.D2' x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx)
+		   	     (\!x'.lts-b-rep)
+			     (\!x'.\!z.lts-b-open (\!y.lts-f-out))		   	     
+			     (ProofRed) (TofD1D2')
+			     (\!z.CongP1'Q1' !z).
+			    		   	 
+bangLemma_cut1 : bangLemma (cut D1' (\x. D1'' x))
+	       	 	   (\x. D2 x)
+			   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD1'' !x !x' !cx !extx) (TofD1' : extrR D1' PofD1'))
+			   (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			   (\!x'.lts-b-res (\!y.lts-b-par2 (lts-b-rep)))
+			   (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+			   (clos2 (cut/pre2 (\!x.ProofRed !x)) (sconv_s cut/-/cut1))
+			   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD1''D2 !x !x' !cx !extx) (TofD1'))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongR2'Q1' !x !z) (sc_r)))
+			   	     (sc_cong_new (\!x.sc_new_scope)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				     (sc_new_swap))
+				     (sc_cong_new (\!x.sc_new_swap)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))				     
+		<- (Pi x.Pi x'.Pi cx.Pi extx.
+		       bangLemma (D1'' x) (\x.D2 x) (TofD1'' !x !x' !cx !extx)
+		       		 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+				 (\!x'.lts-b-rep)
+				 (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed !x)
+				 (TofD1''D2 !x !x' !cx !extx)
+				 (\!z.CongR2'Q1' !x' !z)).	
+
+bangLemma_cut21 : bangLemma (D1) %R1 -> R1'
+	       	 	   (\x.cut (D2' x) (\y.D2'' y))
+			   (TofD1 : extrR D1 PofD1)
+			   (\!x.\!x'.\!cx.\!extx.extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !y !y' !cy !exty) (TofD2' !x !x' !cx !extx))
+			   (\!x'.lts-b-rep)
+			   (\!x'.\!z.lts-b-res (\!y.lts-b-par1 (lts-b-open (\!z.lts-f-out))))
+			   (clos2 (cut/pre1 ProofRed) (cut/-/cut1))
+			   (extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !y !y' !cy !exty) (TofD1D2'))
+			   (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (sc_r) (CongP1'R1' !x)))
+			   	     (sc_cong_new (\!x.sc_par_com)))
+				     (sc_cong_new (\!x.sc_new_scope)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc )))))
+				     (sc_new_swap))
+				     (sc_cong_new (\!x.sc_new_swap)))
+				     (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))			     
+		<- bangLemma (D1) (\x.D2' x) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2' !x !x' !cx !extx)
+		       		 (\!x'.lts-b-rep) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed)
+				 (TofD1D2')
+				 (\!z.CongP1'R1' !z).
+
+bangLemma_cut22 : bangLemma (D1) %R2 -> R2'
+		  	    (\x.cut D2' (\y.D2'' x y))
+		  	    (TofD1 : extrR D1 PofD1)
+		 	    (\!x.\!x'.\!cx.\!extx.extr_cut (\!y.\!y'.\!cy.\!exty.TofD2'' !x !x' !cx !extx !y !y' !cy !exty) (TofD2'))
+		 	    (\!x'.lts-b-rep)
+		  	    (\!x'.\!z.lts-b-res (\!y.lts-b-par2 (lts-b-open (\!z.lts-f-out))))
+		  	    (clos2 (cut/pre2 (\!n.ProofRed !n)) (cut/-/cut2))
+		  	    (extr_cut (\!y.\!y'.\!cy.\!exty.TofD1D2'' !y !y' !cy !exty) (TofD2'))
+		  	    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R1' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+		<- (Pi y.Pi y'.Pi cy.Pi exty.
+		       	    bangLemma (D1) (\x.D2'' x y) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2'' !x !x' !cx !extx !y !y' !cy !exty)
+			    	      (\!x'.lts-b-rep) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				      (ProofRed !y)
+				      (TofD1D2'' !y !y' !cy !exty)
+				      (\!z.CongP1'R1' !y' !z)).
+
+bangLemma_cutB1 : bangLemma (D1)
+	       	 	    (\x.cutB D2' (\!n.D2'' x !n))
+			    (TofD1 : extrR D1 PofD1)
+			    (\!x.\!x'.\!cx.\!extx.extr_cutB (\!n.\!n'.\!cn.\!extn.TofD2'' !x !x' !cx !extx !n !n' !cn !extn) (TofD2'))
+			    (\!x'.lts-b-rep)
+			    (\!x'.\!z.lts-b-res (\!y.lts-b-par2 (lts-b-open (\!z.lts-f-out))))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n)) (cut/-/cutB))
+			    (extr_cutB (\!n.\!n'.\!cn.\!extn.TofD1D2'' !n !n' !cn !extn) (TofD2'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongP1'R2' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z. sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.
+		       bangLemma (D1) (\x.D2'' x !n) (TofD1) (\!x.\!x'.\!cx.\!extx.TofD2'' !x !x' !cx !extx !n !n' !cn !extn)
+		       		 (\!x'.lts-b-rep) (\!x'.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed !n)
+				 (TofD1D2'' !n !n' !cn !extn)
+				 (\!z.CongP1'R2' !n' !z)).
+
+bangLemma_cutB2 : bangLemma (cutB D1' (\!n.D1'' !n))
+		  	    (\x.D2 x)
+			    (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD1'' !u !u' !cu !extu) (TofD1'))
+			    (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+			    (\!x'.lts-b-res (\!y.lts-b-par2 (lts-b-in)))
+			    (\!x'.\!z.lts-b-open (\!z.lts-f-out))
+			    (clos2 (cutB/pre2 (\!n.ProofRed !n)) (cut/cutB/-))
+			    (extr_cutB (\!n.\!n'.\!cn.\!extn.TofD1''D2 !n !n' !cn !extn) (TofD1'))
+			    (\!z.sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new (\!x.sc_cong_par (CongR2'Q1' !x !z) (sc_r)))
+			    	      (sc_cong_new (\!x.sc_new_scope)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new (\!x.sc_new_swap)))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_cong_new (\!z.sc_par_com)))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_s sc_new_scope))))
+				      (sc_cong_new (\!x.sc_cong_new (\!y.sc_par_com))))
+		<- (Pi n.Pi n'.Pi cn.Pi extn.
+		       	    bangLemma (D1'' !n) (\x.D2 x) (TofD1'' !n !n' !cn !extn)
+			    	      (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+				      (\!x'.lts-b-in)
+				      (\!x'.\!z.lts-b-open (\!z.lts-f-out))
+				      (ProofRed !n)
+				      (TofD1''D2 !n !n' !cn !extn)
+				      (\!z. CongR2'Q1' !n' !z) ).
+
+% End of Lemmas.
+
+%Reduction Theorem - done.
+
+reductionThrm : Pi D : right A.
+	       	 extrR D (PofD : proc (\!z. P !z) A) ->
+		 (Pi z.lts-f (P !z) (tau) (Q !z)) -> %Then
+		 =>= D E ->
+		 extrR E (PofE : proc (\!z. R !z) A) ->
+		 (Pi z.sc (R !z) (Q !z)) ->
+		 type.
+%Induction on D - cases are oneL, bangL, cut and cutB.
+
+redThrm_oneL : reductionThrm (oneL N D')
+	      		       (extr_oneL (ExtN) (TofD'))
+			       (\!z.Lts !z)
+			       (clos1 (oneL/pre (ProofRedD'E')))
+			       (extr_oneL (ExtN) (TofE'))
+			       (\!z. CongE'Q !z)
+	       	 <- reductionThrm D' TofD' (\!z.Lts !z)
+		    		   (ProofRedD'E')
+				   (TofE')
+				   (\!z. CongE'Q !z).
+
+redThrm_bangL : reductionThrm (bangL U (\!u.D' !u))
+	       	 		(extr_bangL (\!u.\!u'.\!cu.\!extu.TofD' !u !u' !cu !extu) (ExtU))
+				(\!z. Lts !z)
+				(clos1 (bangL/pre (\!u.ProofRedD'E' !u)))
+				(extr_bangL (\!u.\!u'.\!cu.\!extu.TofE' !u !u' !cu !extu) (ExtU) )
+				(\!z. CongE'Q !z)
+		 <- (Pi u.Pi u'.Pi cu.Pi extu.
+		    	reductionThrm (D' !u)
+				       (TofD' !u !u' !cu !extu)
+				       (\!z. Lts !z)
+				       (ProofRedD'E' !u)
+				       (TofE' !u !u' !cu !extu)
+				       (\!z. CongE'Q !z)).
+
+redThrm_cutB1 : reductionThrm (cutB D1 (\!u. D2 !u)) % P2 tau Q2
+	       		     (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1))
+			     (\!z.lts-f-res (\!x.lts-f-par2 (Lts !x !z)))
+			     (clos1 (cutB/pre2 (\!u.ProofRedD2E' !u)))
+			     (extr_cutB (\!u.\!u'.\!cu.\!extu.TofE' !u !u' !cu !extu) (TofD1))
+			     (\!z.sc_cong_new (\!x.sc_cong_par (CongE'Q !x !z) (sc_r)))
+		<- (Pi u.Pi u'.Pi cu.Pi extu.
+		       reductionThrm (D2 !u)
+		       		     (TofD2 !u !u' !cu !extu)
+				     (\!z. Lts !u' !z)
+				     (ProofRedD2E' !u)
+				     (TofE' !u !u' !cu !extu)
+				     (\!z. CongE'Q !u' !z)).
+				     
+redThrm_cutB2 : reductionThrm (cutB D1 (\!u. D2 !u)) %Sync
+	      		      (extr_cutB (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu) (TofD1))
+			      (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))
+			      (ProofRedD1D2E)
+			      (TofE)
+			      (\!z.sc_t (sc_t (Cong !z) 
+			      		(sc_cong_new (\!x.sc_new_scope)))
+					(sc_cong_new (\!x.sc_cong_new (\!y.sc_par_assoc))))
+		<- cutBCor (D1) (\!u.D2 !u) (TofD1) (\!u.\!u'.\!cu.\!extu.TofD2 !u !u' !cu !extu)
+		   	   (\!u'.\!z.lts-b-open (\!y.lts-f-out))
+			   (ProofRedD1D2E)
+			   (TofE)
+			   (\!z. Cong !z).
+
+
+redThrm_cut1 : reductionThrm (cut D1 (\x. D2 x)) %P1 -> Q1
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-par1 (Lts !x)))
+			    (clos1 (cut/pre1 (ProofRedD1E1)))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofE1))
+			    (\!z. sc_cong_new (\!x.sc_cong_par (sc_r) (CongE'Q !x)))
+		<- reductionThrm D1 (TofD1) (\!x.Lts !x)
+		   		 (ProofRedD1E1)
+				 (TofE1)
+				 (\!z. CongE'Q !z).
+	       		    
+redThrm_cut2 : reductionThrm (cut D1 (\x. D2 x)) %P2 -> Q2
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-par2 (Lts !x !z)))
+			    (clos1 (cut/pre2 (\!x.ProofRedD2E2 !x)))
+			    (extr_cut (\!x.\!x'.\!cx.\!extx.TofE2 !x !x' !cx !extx) (TofD1))
+			    (\!z.sc_cong_new (\!x.sc_cong_par (CongE'Q !x !z) (sc_r)))
+		<- (Pi x.Pi x'.Pi cx.Pi extx.
+		       reductionThrm (D2 x) (TofD2 !x !x' !cx !extx) (\!z.Lts !x' !z)
+		   		     (ProofRedD2E2 !x)
+				     (TofE2 !x !x' !cx !extx)
+				     (\!z. CongE'Q !x' !z)).
+
+%Sync where P1 inputs
+redThrm_cut3_and1 : reductionThrm (cut D1 (\x. D2 x)) %inl
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-choicel2 (lts-f-lout) (lts-f-lin)))
+			    (ProofRed)
+			    (TofE)
+			    (\!z.Cong !z)
+		<- andLemma1 D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	     (\!x'.lts-f-lin)
+			     (\!x'.\!z.lts-f-lout)
+			     (ProofRed)
+			     (TofE)
+			     (\!z.Cong !z).
+
+redThrm_cut3_and2 : reductionThrm (cut D1 (\x. D2 x)) %inr
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-choicer2 (lts-f-rout) (lts-f-rin)))
+			    (ProofRed)
+			    (TofE)
+			    (\!z.Cong !z)
+		<- andLemma2 D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	     (\!x'.lts-f-rin)
+			     (\!x'.\!z.lts-f-rout)
+			     (ProofRed)
+			     (TofE)
+			     (\!z.Cong !z).
+
+redThrm_cut3_lolli : reductionThrm (cut D1 (\x. D2 x)) %lolli
+		     		   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))		    
+				   (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-in)))
+				   (ProofRed)
+				   (TofE)
+				   (\!z.Cong !z)
+		<- lolliLemma D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	      	 (\!x.lts-b-in)
+				 (\!x.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed)
+				 (TofE)
+				 (\!z.Cong !z).
+
+redThrm_cut3_bang : reductionThrm (cut D1 (\x. D2 x)) %bang
+		     		   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))		    
+				   (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))
+				   (ProofRed)
+				   (TofE)
+				   (\!z.Cong !z)
+		<- bangLemma D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	      	 (\!x.lts-b-rep)
+				 (\!x.\!z.lts-b-open (\!y.lts-f-out))
+				 (ProofRed)
+				 (TofE)
+				 (\!z.Cong !z).
+
+%Sync where P2 inputs
+redThrm_cut4_sum1 : reductionThrm (cut D1 (\x. D2 x)) %inl
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-choicel1 (lts-f-lin) (lts-f-lout)))
+			    (ProofRed)
+			    (TofE)
+			    (\!z.Cong !z)
+		<- sumLemma1 D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	     (\!x'.lts-f-lout)
+			     (\!x'.\!z.lts-f-lin)
+			     (ProofRed)
+			     (TofE)
+			     (\!z.Cong !z).
+
+redThrm_cut4_sum2 : reductionThrm (cut D1 (\x. D2 x)) %inr
+	      		    (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))
+			    (\!z.lts-f-res (\!x.lts-f-choicer1 (lts-f-rin) (lts-f-rout)))
+			    (ProofRed)
+			    (TofE)
+			    (\!z.Cong !z)
+		<- sumLemma2 D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	     (\!x'.lts-f-rout)
+			     (\!x'.\!z.lts-f-rin)
+			     (ProofRed)
+			     (TofE)
+			     (\!z.Cong !z).
+			     
+redThrm_cut4_tens : reductionThrm (cut D1 (\x. D2 x)) %tens
+		     		   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx) (TofD1))		    
+				   (\!z.lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))
+				   (ProofRed)
+				   (TofE)
+				   (\!z.Cong !z)
+		<- tensLemma D1 (\x.D2 x) TofD1 (\!x.\!x'.\!cx.\!extx.TofD2 !x !x' !cx !extx)
+		   	      	 (\!x.lts-b-open (\!y.lts-f-out))
+				 (\!x.\!z.lts-b-in)
+				 (ProofRed)
+				 (TofE)
+				 (\!z.Cong !z).
+
+
+
+%End of RedThrm.
+
+% Proof Reduction Theorem
+
+proofRedThrm :   Pi D : right A.
+	       	 extrR D (PofD : proc (\!z. P !z) A) ->
+		 => D E -> %Then
+		 (Pi z.lts-f (P !z) (tau) (Q !z)) ->
+		 extrR E (PofE : proc (\!z. R !z) A) ->
+		 (Pi z.sc (R !z) (Q !z)) ->
+		 type.
+
+
+
+proofRed_cutTens : proofRedThrm (cut (tensR D1 D2) (\x.tensL x (\y.\x. E y x)))
+		   		(extr_cut (\!x.\!x'.\!cx.\!extx.extr_tensL 
+				(\!y.\!y'.\!cy.\!z.\!z'.\!cz.\!exty.\!extz.TofE !y !y' !cy !exty !z !z' !cz !extz) !extx) (extr_tensR TofD2 TofD1))
+				(cut/tensR/tensL)
+				(\!z.lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))
+				(extr_cut (\!x.\!x'.\!cx.\!extx.extr_cut 
+					  (\!y.\!y'.\!cy.\!exty.TofE !x !x' !cx !extx !y !y' !cy !exty) (TofD2)) (TofD1))
+				(\!z.Cong !z)
+			<- reductionThrm (cut (tensR D1 D2) (\x.tensL x (\y.\x. E y x)))
+			   		 (extr_cut (\!x.\!x'.\!cx.\!extx.extr_tensL 
+					 	   (\!y.\!y'.\!cy.\!z.\!z'.\!cz.\!exty.\!extz.TofE !y !y' !cy !exty !z !z' !cz !extz) !extx) (extr_tensR TofD2 TofD1))
+					 (\!z.lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))
+					 (PR)
+					 (Ext)
+					 (\!z.Cong !z).
+
+proofRed_cutLolli : proofRedThrm (cut (lolliR (\y.D y)) (\x.lolliL x E1 (\x.E2 x)))
+		    		 (extr_cut (\!x.\!x'.\!cx.\!extx. extr_lolliL !extx !(\!y.\!y'.\!cy.\!exty. TofE2 !y !y' !cy !exty) TofE1) 
+				 	   (extr_lolliR (\!y. \!y'. \!cy. \!exty. TofD !y !y' !cy !exty)))
+				 (cut/lolliR/lolliL)
+				 (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-in)))
+				 (extr_cut (\!x.\!x'.\!cx.\!extx.TofE2 !x !x' !cx !extx) 
+				 	   (extr_cut (\!x.\!x'.\!cx.\!extx.TofD !x !x' !cx !extx) (TofE1)))
+				 (\!z.Cong !z)
+			<- reductionThrm (cut (lolliR (\y.D y)) (\x.lolliL x E1 (\x.E2 x)))
+			   		 (extr_cut (\!x.\!x'.\!cx.\!extx. extr_lolliL !extx !(\!y.\!y'.\!cy.\!exty. TofE2 !y !y' !cy !exty) TofE1) 
+				 	   (extr_lolliR (\!y. \!y'. \!cy. \!exty. TofD !y !y' !cy !exty)))
+					 (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-in)))
+					 (PR)
+					 (Ext)
+					 (\!z. Cong !z).
+
+proofRed_cutAnd1 : proofRedThrm (cut (andR <(D1),(D2)>) (\x.andL1 x (\x. E1 x)))
+		  	       (extr_cut (\!x.\!x'.\!cx.\!extx.extr_andL1 
+					  		(\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx)
+							(extr_andR TofD2 TofD1))
+			       (cut/andR/andL1)
+			       (\!z.lts-f-res (\!x.lts-f-choicel2 (lts-f-lout) (lts-f-lin)))
+			       (extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD1))
+			       (\!z.Cong !z)
+			<- reductionThrm (cut (andR <(D1),(D2)>) (\x.andL1 x (\x. E1 x)))
+		  	       		 (extr_cut (\!x.\!x'.\!cx.\!extx.extr_andL1 
+					  		(\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx)
+							(extr_andR TofD2 TofD1))
+					 (\!z.lts-f-res (\!x.lts-f-choicel2 (lts-f-lout) (lts-f-lin)))
+					 (PR)
+					 (Ext)
+					 (\!z.Cong !z).
+
+proofRed_cutAnd2 : proofRedThrm (cut (andR <(D1),(D2)>) (\x.andL2 x (\x. E1 x)))
+		  	       (extr_cut (\!x.\!x'.\!cx.\!extx.extr_andL2 
+					  		(\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx)
+							(extr_andR TofD2 TofD1))
+			       (cut/andR/andL2)
+			       (\!z.lts-f-res (\!x.lts-f-choicer2 (lts-f-rout) (lts-f-rin)))
+			       (extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD2))
+			       (\!z.Cong !z)
+			<- reductionThrm (cut (andR <(D1),(D2)>) (\x.andL2 x (\x. E1 x)))
+		  	       		 (extr_cut (\!x.\!x'.\!cx.\!extx.extr_andL2 
+					  		(\!y.\!y'.\!cy.\!exty. TofE1 !y !y' !cy !exty) !extx)
+							(extr_andR TofD2 TofD1))
+					 (\!z.lts-f-res (\!x.lts-f-choicer2 (lts-f-rout) (lts-f-rin)))
+					 (PR)
+					 (Ext)
+					 (\!z.Cong !z).
+
+proofRed_cutSum1 : proofRedThrm (cut (sumR1 D1) (\x.sumL x <(\y.E1 y),(\y.E2 y)>))
+       	       		     	(extr_cut (\!x.\!x'.\!cx.\!extx.extr_sumL 
+					  (\!y.\!y'.\!cy.\!exty.TofE1 !y !y' !cy !exty) 
+					  (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) !extx) !(extr_sumR1 TofD1))
+				(cut/sumR1/sumL)
+				(\!z.lts-f-res (\!x.lts-f-choicel1 (lts-f-lin) (lts-f-lout)))
+				(extr_cut (\!x.\!x'.\!cx.\!extx.TofE1 !x !x' !cx !extx) (TofD1))
+				(\!z. Cong !z)
+			<- reductionThrm (cut (sumR1 D1) (\x.sumL x <(\y.E1 y),(\y.E2 y)>))
+			   		 (extr_cut (\!x.\!x'.\!cx.\!extx.extr_sumL 
+					  (\!y.\!y'.\!cy.\!exty.TofE1 !y !y' !cy !exty) 
+					  (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) !extx) (extr_sumR1 TofD1))
+					 (\!z.lts-f-res (\!x.lts-f-choicel1 (lts-f-lin) (lts-f-lout)))
+					 (PR)
+					 (Ext)
+					 (\!z. Cong !z).
+
+proofRed_cutSum2 : proofRedThrm (cut (sumR2 D1) (\x.sumL x <(\y.E1 y),(\y.E2 y)>))
+       	       		     	(extr_cut (\!x.\!x'.\!cx.\!extx.extr_sumL 
+					  (\!y.\!y'.\!cy.\!exty.TofE1 !y !y' !cy !exty) 
+					  (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) !extx) (extr_sumR2 TofD1))
+				(cut/sumR2/sumL)
+				(\!z.lts-f-res (\!x.lts-f-choicer1 (lts-f-rin) (lts-f-rout)))
+				(extr_cut (\!x.\!x'.\!cx.\!extx.TofE2 !x !x' !cx !extx) (TofD1))
+				(\!z. Cong !z)
+			<- reductionThrm (cut (sumR2 D1) (\x.sumL x <(\y.E1 y),(\y.E2 y)>))
+			   		 (extr_cut (\!x.\!x'.\!cx.\!extx.extr_sumL 
+					  (\!y.\!y'.\!cy.\!exty.TofE1 !y !y' !cy !exty) 
+					  (\!y.\!y'.\!cy.\!exty.TofE2 !y !y' !cy !exty) !extx) (extr_sumR2 TofD1))
+					 (\!z.lts-f-res (\!x.lts-f-choicer1 (lts-f-rin) (lts-f-rout)))
+					 (PR)
+					 (Ext)
+					 (\!z. Cong !z).
+
+proofRed_cutBcopy : proofRedThrm (cutB D (\!u.copy !u (\y. E !u y)))
+		    		 (extr_cutB (\!u.\!u'.\!cu.\!extu. extr_copy !extu (\!y.\!y'.\!cy.\!exty.TofE !u !u' !cu !extu !y !y' !cy !exty)) (TofD))
+				 (cutB/-/copy)
+				 (\!z. lts-f-res (\!x.lts-f-close2 (lts-b-open (\!x.lts-f-out)) (lts-b-rep)))
+				 (extr_cut (\!y.\!y'.\!cy.\!exty.extr_cutB (\!u.\!u'.\!cu.\!extu.TofE !u !u' !cu !extu !y !y' !cy !exty) (TofD)) (TofD))
+				 (\!z. Cong !z)
+			<- reductionThrm (cutB D (\!u.copy !u (\y. E !u y)))
+			   		 (extr_cutB (\!u.\!u'.\!cu.\!extu.extr_copy !extu (\!y.\!y'.\!cy.\!exty.TofE !u !u' !cu !extu !y !y' !cy !exty)) (TofD))
+					 (\!z. lts-f-res (\!x.lts-f-close2 (lts-b-open (\!x.lts-f-out)) (lts-b-rep)))
+					 (PR)
+					 (Ext)
+					 (\!z. Cong !z).
+
+proofRed_cutCong1 : proofRedThrm (cut D (\x. E x))
+		   		(extr_cut (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx) (TofD))
+				(cut_red_cong1 (ProofRed))
+				(\!z.lts-f-res (\!x.lts-f-par1 (Lts !x)))
+				(extr_cut (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx) (TofD'))
+				(\!z.sc_cong_new (\!x.sc_cong_par (sc_r) (Cong !x)))
+			<- proofRedThrm D TofD ProofRed (\!z.Lts !z) (TofD') (\!z.Cong !z).
+
+proofRed_cutCong2 : proofRedThrm (cut D (\x. E x))
+		   		(extr_cut (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx) (TofD))
+				(cut_red_cong2 (\!x.ProofRed !x))
+				(\!z.lts-f-res (\!x.lts-f-par2 (Lts !x !z)))
+				(extr_cut (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx) (TofD))
+				(\!z.sc_cong_new (\!x.sc_cong_par (Cong !x !z) (sc_r)))
+			<- (Pi x.Pi x'.Pi cx.Pi extx.
+			       proofRedThrm (E x) (TofE !x !x' !cx !extx) (ProofRed !x) 
+			       		    (\!z.Lts !x' !z) (TofE' !x !x' !cx !extx) (\!z.Cong !x' !z)).				
+				
+proofRed_cutBCong : proofRedThrm (cutB D (\!x. E !x))
+		   		(extr_cutB (\!x.\!x'.\!cx.\!extx.TofE !x !x' !cx !extx) (TofD))
+				(cutB_red_cong (\!x.ProofRed !x))
+				(\!z.lts-f-res (\!x.lts-f-par2 (Lts !x !z)))
+				(extr_cutB (\!x.\!x'.\!cx.\!extx.TofE' !x !x' !cx !extx) (TofD))
+				(\!z.sc_cong_new (\!x.sc_cong_par (Cong !x !z) (sc_r)))
+			<- (Pi x.Pi x'.Pi cx.Pi extx.
+			       proofRedThrm (E !x) (TofE !x !x' !cx !extx) (ProofRed !x) 
+			       		    (\!z.Lts !x' !z) (TofE' !x !x' !cx !extx) (\!z.Cong !x' !z)).
+
+proofRed_oneLCong : proofRedThrm (oneL X D)
+		    		 (extr_oneL (ExtX) (TofD))
+				 (oneL_red_cong ProofRed)
+				 (\!z.Lts !z)
+				 (extr_oneL (ExtX) (TofD'))
+				 (\!z.Cong !z)
+			<- proofRedThrm D TofD ProofRed (\!z.Lts !z) (TofD') (\!z.Cong !z).
+
+proofRed_bangLCong : proofRedThrm (bangL X (\!u. D !u))
+		    		 (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD !u !u' !cu !extu) (ExtX))
+				 (bangL_red_cong (\!x.ProofRed !x))
+				 (\!z.Lts !z)
+				 (extr_bangL (\!u.\!u'.\!cu.\!extu.TofD' !u !u' !cu !extu) (ExtX))
+				 (\!z.Cong !z)
+			<- (Pi u.Pi u'.Pi cu.Pi extu.proofRedThrm (D !u) (TofD !u !u' !cu !extu) (ProofRed !u) (\!z.Lts !z) (TofD' !u !u' !cu !extu) (\!z.Cong !z)).
+
+
+
+
+				 
+% Subject Reduction
+
+subjectReduction : proc (\!z. P !z) A ->
+		   (Pi z.lts-f (P !z) (tau) (Q !z)) ->
+		   proc (\!z. Q !z) A ->
+		   type.
+
+
+#query * 1 * 1 reductionThrm (cut (tensR oneR oneR) (\x.tensL x (\y.\x.oneL y (oneL x oneR))))
+	      		      (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_tensL !(\!y. \!y'. \!cy. \!z. \!z'. \!cz. \!X2. \!X3. extr_oneL !X2 !(extr_oneL !X3 !extr_oneR)) !X1) !(extr_tensR !extr_oneR !extr_oneR))
+			      (\!z.lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))
+			      (PR)
+			      (Extr)
+			      (Cong).
+
+
+
+#query * 1 * 1 reductionThrm (cut (lolliR (\x.oneL x oneR)) (\x.lolliL x (oneR) (\y.oneL y oneR)))
+      	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_lolliL !X1 !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR) !extr_oneR) !(extr_lolliR !(\!y. \!y'. \!cy. \!X1. extr_oneL !X1 !extr_oneR)))
+			     (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-in)))
+			     (PR)
+			     (Extr)
+			     (Cong).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\x.cut (oneL x (lolliR (\x.oneL x oneR))) (\x.lolliL x (oneR) (\y.oneL y oneR))))
+	      		      (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_lolliL !X2 !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR) !extr_oneR) !(extr_oneL !X1 !(extr_lolliR !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR)))) !extr_oneR)
+			      (\!z.lts-f-res (\!x.lts-f-par2 (lts-f-res (\!y.lts-f-close2 (lts-b-open (\!y'.lts-f-out)) (lts-b-in)))))
+			      (PR)
+			      (Extr)
+			      (Cong).
+			      
+
+#query * 1 * 1 extrR (cut (oneR) (\x.cut (oneL x (bangR oneR)) (\x.bangL x (\!u.copy !u (\y.oneL y oneR))))) P.
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\x.cut (oneL x (bangR oneR)) (\x.bangL x (\!u.copy !u (\y.oneL y oneR)))))
+       	       		    (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_bangL !(\!u. \!u'. \!cu. \!X3. extr_copy !X3 !(\!y. \!y'. \!cy. \!X4. extr_oneL !X4 !extr_oneR)) !X2) !(extr_oneL !X1 !(extr_bangR !extr_oneR))) !extr_oneR)
+			     (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y'.lts-f-out)) (lts-b-rep)))))
+			     (PR)
+			     (Extr)
+			     (Cong).
+
+
+#query * 1 * 1 reductionThrm (cutB oneR (\!u.copy !u (\y.oneL y oneR)))
+       	       		      (extr_cutB !(\!u. \!u'. \!cu. \!X1. extr_copy !X1 !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR)) !extr_oneR)
+			      (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))
+			      (PR)
+			      (Extr)
+			      (Cong).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\x.cutB oneR (\!u.oneL x (copy !u (\y.oneL y oneR)))))
+      	       		      (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cutB !(\!u. \!u'. \!cu. \!X2. extr_oneL !X1 !(extr_copy !X2 !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR))) !extr_oneR) !extr_oneR)
+			      (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y'.lts-f-out)) (lts-b-rep)))))
+			      (PR)
+			      (Extr)
+                     	      (Cong).
+
+#query * 1 * 1 reductionThrm (cutB (bangR oneR) (\!u.copy !u (\y.bangL y (\!v.copy !v (\x.oneL x oneR)))))
+       	       		     (extr_cutB !(\!u. \!u'. \!cu. \!X1. extr_copy !X1 !(\!y. \!y'. \!cy. \!X2. extr_bangL !(\!u_1. \!u'_1. \!cu_1. \!X3. extr_copy !X3 !(\!y_1. \!y'_1. \!cy_1. \!X4. extr_oneL !X4 !extr_oneR)) !X2)) !(extr_bangR !extr_oneR))
+			     (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))
+			     (PR)
+			     (Ext)
+			     (Cong).
+
+#query * 1 * 1 extrR (cut (sumR1 oneR) (\x.sumL x <(\y.oneL y oneR),(\y.oneL y oneR)>)) P.
+
+#query * 1 * 1 reductionThrm (cut (sumR1 oneR) (\x.sumL x <(\y.oneL y oneR),(\y.oneL y oneR)>))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_sumL !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR) !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR) !X1) !(extr_sumR1 !extr_oneR))
+			     (\!z.lts-f-res (\!x.lts-f-choicel1 (lts-f-lin) (lts-f-lout)))
+			     (PR)		 
+			     (Ext)
+			     (Cong).
+
+#query * 1 * 1 reductionThrm (cut (sumR2 oneR) (\x.sumL x <(\y.oneL y oneR),(\y.oneL y oneR)>))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_sumL !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR) !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR) !X1) !(extr_sumR2 !extr_oneR))
+			     (\!z.lts-f-res (\!x.lts-f-choicer1 (lts-f-rin) (lts-f-rout)))
+			     (PR)		 
+			     (Ext)
+			     (Cong).
+
+#query * 1 * 1 reductionThrm (cut (bangR oneR) (\z.cut (sumR1 oneR) (\x.bangL z (\!u.sumL x <(\y.oneL y oneR),(\y.oneL y oneR)>))))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_bangL !(\!u. \!u'. \!cu. \!X3. extr_sumL !(\!y. \!y'. \!cy. \!X4. extr_oneL !X4 !extr_oneR) !(\!y. \!y'. \!cy. \!X4. extr_oneL !X4 !extr_oneR) !X2) !X1) !(extr_sumR1 !extr_oneR)) !(extr_bangR !extr_oneR))
+			     (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-choicel1 (lts-f-lin) (lts-f-lout)))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+
+#query * 1 * 1 reductionThrm (cutB (oneR) (\!u.cut (sumR2 oneR) (\x.sumL x <(\y.oneL y oneR),(\y.oneL y oneR)>)))
+       	       		     (extr_cutB !(\!u. \!u'. \!cu. \!X1. extr_cut !(\!x. \!x'. \!cx. \!X2. extr_sumL !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR) !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR) !X2) !(extr_sumR2 !extr_oneR)) !extr_oneR)
+			     (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-choicer1 (lts-f-rin) (lts-f-rout)))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\x.oneL x (cut (lolliR (\z.oneL z oneR)) (\y.lolliL y oneR (\y.oneL y oneR))))) 
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_oneL !X1 !(extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_lolliL !X2 !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR) !extr_oneR) !(extr_lolliR !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR)))) !extr_oneR)
+			     (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-in)))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\x.oneL x (cut (tensR oneR oneR) (\y.tensL y (\y.\x.oneL y (oneL x oneR)))))) 
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_oneL !X1 !(extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_tensL !(\!y. \!y'. \!cy. \!z. \!z'. \!cz. \!X3. \!X4. extr_oneL !X3 !(extr_oneL !X4 !extr_oneR)) !X2) !(extr_tensR !extr_oneR !extr_oneR))) !extr_oneR)
+			     (\!z.lts-f-res (\!y.lts-f-par2 (lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (cut (tensR oneR oneR) (\x.tensL x (\y.\x.oneL y (oneL x oneR)))) (\x.oneL x oneR))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_oneL !X1 !extr_oneR) !(extr_cut !(\!x. \!x'. \!cx. \!X1. extr_tensL !(\!y. \!y'. \!cy. \!z. \!z'. \!cz. \!X2. \!X3. extr_oneL !X2 !(extr_oneL !X3 !extr_oneR)) !X1) !(extr_tensR !extr_oneR !extr_oneR)))
+			     (\!z.lts-f-res (\!y.lts-f-par1 (lts-f-res (\!x.lts-f-close1 (lts-b-in) (lts-b-open (\!y.lts-f-out))))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (bangR oneR) (\x.bangL x (\!u.copy !u (\y.oneL y oneR))))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_bangL !(\!u. \!u'. \!cu. \!X2. extr_copy !X2 !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !extr_oneR)) !X1) !(extr_bangR !extr_oneR))
+			     (\!z.lts-f-res (\!x.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\y.cut (oneL y (bangR oneR)) (\x.bangL x (\!u.copy !u (\y.oneL y oneR)))))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_bangL !(\!u. \!u'. \!cu. \!X3. extr_copy !X3 !(\!y. \!y'. \!cy. \!X4. extr_oneL !X4 !extr_oneR)) !X2) !(extr_oneL !X1 !(extr_bangR !extr_oneR))) !extr_oneR)
+			     (\!z.lts-f-res (\!x.lts-f-par2 (lts-f-res (\!x'.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+#query * 1 * 1 reductionThrm (cut (oneR) (\y.cut (bangR oneR) (\x.oneL y (bangL x (\!u.copy !u (\y.oneL y oneR))))))
+       	       		     (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_oneL !X1 !(extr_bangL !(\!u. \!u'. \!cu. \!X3. extr_copy !X3 !(\!y. \!y'. \!cy. \!X4. extr_oneL !X4 !extr_oneR)) !X2)) !(extr_bangR !extr_oneR)) !extr_oneR)
+			     (\!z.lts-f-res (\!x.lts-f-par2 (lts-f-res (\!x'.lts-f-close2 (lts-b-open (\!y.lts-f-out)) (lts-b-rep)))))
+			     (PR)
+			     (Ext)
+			     (C).
+
+
+#query * 1 * 1 proofRedThrm (cut (tensR oneR oneR) (\x.tensL x (\y.\x.oneL y (oneL x oneR))))
+       	       		    (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_tensL !(\!y. \!y'. \!cy. \!z. \!z'. \!cz. \!X2. \!X3. extr_oneL !X2 !(extr_oneL !X3 !extr_oneR)) !X1) !(extr_tensR !extr_oneR !extr_oneR))
+			    (cut/tensR/tensL)
+			    (Lts)
+			    (Extr)
+			    (Cong).
+
+#query * 1 * 1 proofRedThrm (cut (cut (tensR oneR oneR) (\x.tensL x (\y.\x.oneL y (oneL x oneR)))) (\x.oneL x oneR))
+       	       		    (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_oneL !X1 !extr_oneR) !(extr_cut !(\!x. \!x'. \!cx. \!X1. extr_tensL !(\!y. \!y'. \!cy. \!z. \!z'. \!cz. \!X2. \!X3. extr_oneL !X2 !(extr_oneL !X3 !extr_oneR)) !X1) !(extr_tensR !extr_oneR !extr_oneR)))
+			    (cut_red_cong1 cut/tensR/tensL)
+			    (Lts)
+			    (Extr)
+			    (Cong).
+
+#query * 1 * 1 proofRedThrm (cut (oneR) (\x.cut (lolliR (\y.oneL y oneR)) (\y.lolliL y oneR (\z.oneL z (oneL x oneR)))))
+       	       		    (extr_cut !(\!x. \!x'. \!cx. \!X1. extr_cut !(\!x_1. \!x'_1. \!cx_1. \!X2. extr_lolliL !X2 !(\!y. \!y'. \!cy. \!X3. extr_oneL !X3 !(extr_oneL !X1 !extr_oneR)) !extr_oneR) !(extr_lolliR !(\!y. \!y'. \!cy. \!X2. extr_oneL !X2 !extr_oneR))) !extr_oneR)
+			    (cut_red_cong2 (\!x.cut/lolliR/lolliL))
+			    (Lts)
+			    (Extr)
+			    (Cong).	
+
+			    

@@ -1,0 +1,109 @@
+%hlf.
+
+% formulas
+o : type.
+
+tensor : o -> o -> o.
+lolli : o -> o -> o.
+and : o -> o -> o.
+sum : o -> o -> o.
+one : o.
+bang : o -> o.
+
+left : o -> @type.        % Linear Hyp.
+right : o -> @type. 	 % Conclusions
+leftb : o -> @type.
+
+% 1
+
+oneL : left one -o right C -o right C.     
+oneR : right one.
+
+% Lolli
+
+lolliL : left (lolli A B) -o right A -o (left B -o right C) -o right C.
+lolliR : (left A -o right B) -o right (lolli A B).
+
+% Tensor 
+
+tensL : (left (tensor A B)) -o (left A -o left B -o right C) -o right C.
+tensR : right A -o right B -o right (tensor A B).
+
+% Sum 
+sumR1 : right A -o right (sum A B).
+sumR2 : right B -o right (sum A B).
+sumL : {b:w} left (sum A B) @ b -> {a:w} (left A -o right C) @ a -> (left B -o right C) @ a -o right C @ (a * b).
+
+% And
+
+andL1 : left (and A B) -o (left A -o right C) -o right C.
+andL2 : left (and A B) -o (left B -o right C) -o right C.
+andR : {a:w} (right A) @ a -> (right B) @ a -> right (and A B) @ a.
+
+% Bang
+
+bangL : left (bang A) -o (leftb A -> right C) -o right C.
+bangR : right A -> right (bang A).
+
+% Cut
+
+cut :  right A -o (left A -o right C) -o right C.
+
+% Cut!
+
+cutB : right A -> (leftb A -> right C) -o right C.
+
+% Copy
+
+copy : leftb A -> (left A -o right C) -o right C.
+
+% Computational Conversions
+
+=> : (right A) @ P -> (right A) @ P -> type.
+
+cut/tensR/tensL :
+{E:(left A -o left B -o right C) @ P}
+=> (cut ^ (tensR ^ D1 ^ D2) ^ ([x:^(left (tensor A B))](tensL ^ x ^ ([y:^(left A)][x:^(left B)] E ^ y ^ x))))
+ (cut ^ D1 ^ ([y:^(left A)] (cut ^ D2 ^ ([x:^(left B)] E ^ y ^ x)))).
+
+cut/tensR/tensL :
+% {E:(left A -o left B -o right C) @ P}
+=> (cut ^ (tensR ^ D1 ^ D2) ^ ([x:^(_)](tensL ^ x ^ ([y:^(_)][x:^(_)] (E ^ y ^ x) : (right _ @ P)))))
+ (cut ^ D1 ^ ([y:^(_)] (cut ^ D2 ^ ([x:^(_)] E ^ y ^ x)))).
+%.
+
+cut/lolliR/lolliL : => (cut (lolliR ([y]D y)) ([x]lolliL x E1 ([x]E2 x))) (cut (cut E1 ([y]D y)) ([x]E2 x)).
+cut/andR/andL1  : => (cut (andR <(D1),(D2)>) ([x]andL1 x ([x] E1 x))) (cut D1 ([x] E1 x)).
+cut/andR/andL2  : => (cut (andR <(D1),(D2)>) ([x]andL2 x ([x] E2 x))) (cut D2 ([x] E2 x)).
+cut/sumR1/sumL  : => (cut (sumR1 D1) ([x]sumL x <([x]E1 x),([x]E2 x)>)) (cut D1 ([x] E1 x)).
+cut/sumR2/sumL  : => (cut (sumR2 D2) ([x]sumL x <([x]E1 x),([x]E2 x)>)) (cut D2 ([x] E2 x)).
+cutB/-/copy     : => (cutB D ([!u](copy !u ([y]E !u y)))) (cut D ([y](cutB D ([!u] E !u y)))).
+
+
+% Structural Conversions - Cut Conversions.
+
+== : (right A) @ P -> (right A) @ P -> type.
+
+cut/-/cut1    : == (cut D ([x]cut (E x) ([y] F y))) (cut (cut D ([x] E x)) ([y] F y)).
+cut/-/cut2    : == (cut D ([x]cut E ([y] F x y))) (cut E ([y]cut D ([x] F x y))).
+cut/cutB/-    : == (cut (cutB D ([!u] E !u)) ([x] F x)) (cutB D ([!u] cut (E !u) ([x] F x))).
+cut/-/cutB    : == (cut D ([x]cutB E ([!u] F x !u))) (cutB E ([!u] cut D ([x]F x !u))).
+cut/oneR/oneL : == (cut oneR ([x] oneL x D)) D.
+cut/bR/bL     : == (cut (bangR D) ([x]bangL x ([!u]E !u))) (cutB D ([!u] E !u)). 
+
+% Structural Conversions - Commuting Conversions.
+
+cut/-/oneL   : == (cut D ([x]oneL Y (E x))) (oneL Y (cut D ([x]E x))).
+cut/-/bangL  : == (cut D ([x]bangL Y ([!u] E x !u))) (bangL Y ([!u]cut D ([x]E x !u))).
+cut/oneL/-   : == (cut (oneL Y D) ([x] F x)) (oneL Y (cut D ([x]F x))).
+cut/bangL/-  : == (cut (bangL Y ([!u] D !u)) ([x] F x)) (bangL Y ([!u]cut (D !u) ([x] F x))).
+cutB/-/oneL  : == (cutB D ([!u]oneL Y (E !u))) (oneL Y (cutB D ([!u] E !u))).
+cutB/-/bangL : == (cutB D ([!u] bangL Y ([!v] E !u !v))) (bangL Y ([!v]cutB D ([!u] E !u !v))).
+
+
+% Structural Conversions - Cut! Conversions.
+
+cutB/-/cut  : == (cutB D ([!u]cut (E !u) ([y] F !u y))) (cut (cutB D ([!u] E !u)) ([y]cutB D ([!u]F !u y))).
+cutB/-/cutB : == (cutB D ([!u]cutB (E !u) ([!v] F !u !v))) (cutB (cutB D ([!u] E !u)) ([!v]cutB D ([!u] F !u !v))).
+cutB/cutB/- : == (cutB (cutB D ([!u]E !u)) ([!v]F !v)) (cutB D ([!u]cutB (E !u) ([!v] F !v))).
+cutB/-/-    : == (cutB D ([!u] E)) E.
