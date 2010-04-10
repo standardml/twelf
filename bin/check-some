@@ -32,6 +32,7 @@ do
        # if $file is relative, it is appended to $TARGDIR
        OFILE="$TARGDIR/${file%\.elf}.omdoc"
      fi
+     mkdir -p `dirname $OFILE`
      COMMAND="Print.OMDoc.toFile $OFILE"
   else
     COMMAND=""
