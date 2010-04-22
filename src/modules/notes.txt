@@ -1,16 +1,21 @@
 to do
 
-views including themselves lead to infinite loop
-implement parametrized views
-read assignments in structures separately
-implement morphism equality check
-implement isomorphism check
-print out with nicer names
-alias declarations
-use environment variable for default search path for files
-hiding
-catch exceptions when file not found
 do not use include %open, always look for unqualified names in imported signatures, fail if non-unique
+views including themselves lead to infinite loop
+what about signatures including themselves? see Alin's email
+read assignments in structures separately
+print out with nicer names
+make symbols with fixity parsable separately
+catch exceptions when file not found
+
+filtering
+anonymous morphisms
+structure variables
+parametrized views, functors
+patterns
+pair types with proof irrelevance
+logical relations, morphism equality check, isomorphism check
+library infrastructure
 
 scanner:
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
@@ -19,7 +24,7 @@ scanner:
 ideas
 %main in modules to allow reference to one symbol without qualificaion
 designated arguments in modules to allow unqualified instantiation
-if mode + - f f(a)=b instead of f a b
+skolem constants
 
 --------
 done
@@ -40,10 +45,3 @@ OMDoc export prints
  - all references to other modules and files with proper MMT-URIs
  - to do: nested signatures, toplevel signature
 %struct %implicit and %view %implicit for implicit coercions
-
---------
-mail to Carsten
-
-make symbols with fixity parsable separately
-hiding
-
