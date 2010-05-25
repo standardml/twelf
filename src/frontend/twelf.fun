@@ -1775,7 +1775,7 @@ struct
     val make = make
 
 
-    val version = "Twelf version BUILT_FROM_SVN"
+    val version = "Twelf version TWELFVERSION"
 
     structure Table : 
       sig 

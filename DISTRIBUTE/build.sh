@@ -40,8 +40,11 @@ rm -Rf twelf/tools
 rm -Rf twelf/TODO
 rm -Rf twelf/exercises
 
-sed "s/BUILT_FROM_SVN/Auto (Subversion r$SVN_VERSION)/g" twelf/src/frontend/twelf.fun > twelf/src/frontend/twelf-backup.fun
+sed "s/TWELFVERSION/Auto (Subversion r$SVN_VERSION)/g" twelf/src/frontend/twelf.fun > twelf/src/frontend/twelf-backup.fun
 mv twelf/src/frontend/twelf-backup.fun twelf/src/frontend/twelf.fun
+
+sed "s/TWELFVERSION/Auto (Subversion r$SVN_VERSION)/g" twelf/Makefile > twelf/Makefile-backup
+mv twelf/Makefile-backup twelf/Makefile
 
 ###################################
 # PART THREE: CREATE OUTPUT FILES #
