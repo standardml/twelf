@@ -23,6 +23,12 @@ if [ -z "$DESTINATION" ]
 then DESTINATION=$PWD
 fi
 
+# Get version number
+SVN_VERSION="$(awk '{ print $2 }' < subversion-version)"
+
+echo "Version is"
+echo $SVN_VERSION
+
 #########################
 # PART TWO: EXPORT COPY #
 #########################
@@ -36,6 +42,9 @@ rm -Rf twelf/TEST
 rm -Rf twelf/tools
 rm -Rf twelf/TODO
 rm -Rf twelf/exercises
+
+sed "s/BUILT_FROM_SVN/Autobuild (Subversion r$SVN_VERSION)/g" twelf/src/twelf.fun > twelf/src/twelf-backup.fun
+mv twelf/src/twelf-backup.fun twelf/src/twelf.fun
 
 ###################################
 # PART THREE: CREATE OUTPUT FILES #
