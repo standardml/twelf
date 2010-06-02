@@ -11,7 +11,6 @@ Library
   structure PrintTeX
   structure ClausePrintTeX
   structure PrintTwega
-  structure PrintXML
 
 is
 #if defined(NEW_CM)
@@ -29,9 +28,5 @@ is
   print-omdoc.fun
   print-omdoc.sig
   print.sml
-(* outdated -fr
   print-twega.sig
   print-twega.fun
-  print-xml.sig
-  print-xml.fun
-*)

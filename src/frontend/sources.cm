@@ -25,10 +25,10 @@ Library
   signature GLOBAL 
   structure Global
   structure PrintTwega
-  structure PrintXML
   structure PrintOMDoc
   structure Interactive
-(* removed FLIT and Flit -fr Jan 09 *)
+  signature FLIT
+  structure Flit
   structure Subordinate
   signature STYLECHECK
   structure StyleCheck
@@ -68,7 +68,7 @@ is
   ../cover/sources.cm
   ../tomega/sources.cm 
   ../prover/sources.cm
-(*  removed ../flit/sources.cm  -fr Jan 09 *)
+  ../flit/sources.cm
   ../msg/sources.cm
   unknownexn.sig
   unknownexn.fun

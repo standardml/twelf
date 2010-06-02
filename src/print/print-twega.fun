@@ -35,8 +35,8 @@ local
      FVar's are printed with a preceding "`" (backquote) character
   *)
   fun fmtCon (G, I.BVar(n)) = sexp [Str "tw~bvar", F.Break, Integer n]
-    | fmtCon (G, I.Const(cid)) = sexp [Str "tw~const", F.Break, Integer cid]
-    | fmtCon (G, I.Def(cid)) = sexp [Str "tw~def", F.Break, Integer cid]
+    | fmtCon (G, I.Const(cid)) = sexp [Str "tw~const", F.Break, Integer (IDs.lidOf cid)]
+    | fmtCon (G, I.Def(cid)) = sexp [Str "tw~def", F.Break, Integer (IDs.lidOf cid)]
     (* I.Skonst, I.FVar cases should be impossible *)
 
   (* fmtUni (L) = "L" *)
@@ -95,9 +95,9 @@ local
 	 sexp [Str "tw~app", F.Break, fmtExp (G, (U, s)),
 	       F.Break, fmtSpine (G, (S, s))]
 
-  and fmtDec (G, (I.Dec (NONE, V), s)) =
+  and fmtDec (G, (I.Dec (I.VarInfo(NONE,_,_,_), V), s)) =
         sexp [Str "tw~decl", F.Break, Str "nil", F.Break, fmtExp (G, (V, s))]
-    | fmtDec (G, (I.Dec (SOME(x), V), s)) =
+    | fmtDec (G, (I.Dec (I.VarInfo(SOME(x),false,false,false), V), s)) =
 	sexp [Str "tw~decl", F.Break, Name x, F.Break, fmtExp (G, (V, s))]
 
   (* fmtConDec (condec) = fmt
@@ -109,17 +109,17 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
     | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
-      Str ("%% Skipping Skolem constant " ^ name ^ " %%")
+      Str ("%% Skipping Skolem constant " ^ Names.foldQualifiedName name ^ " %%")
     | fmtConDec (I.ConDef (name, parent, imp, U, V, L, _)) =
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
@@ -128,7 +128,7 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
@@ -164,16 +164,16 @@ in
   fun eqnToString (E) = F.makestring_fmt (formatEqn E)
 
   fun printSgn () =
-      ModSyn.sgnApp (fn (cid) => (print (F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
-				  print "\n"))
+      ModSyn.sgnApp (0, (fn (cid) => (print (F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
+				  print "\n")))
 
 
   fun printSgnToFile filename =
       let 
 	val file = TextIO.openOut filename
 
-	val _ =       ModSyn.sgnApp (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
-				  TextIO.output (file, "\n")))
+	val _ =       ModSyn.sgnApp (0, (fn (cid) => (TextIO.output (file, F.makestring_fmt (formatConDec (ModSyn.sgnLookup cid)));
+				  TextIO.output (file, "\n"))))
 	val _ = TextIO.closeOut file
 
       in

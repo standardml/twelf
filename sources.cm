@@ -9,10 +9,10 @@ Library
   structure Converter
   signature INTSYN
   structure IntSyn
-  structure PrintXML
   structure PrintOMDoc
   structure PrintTwega
-(* removed FLIT and Flit -fr Jan 09 *)
+  (* signature FLIT
+  structure Flit commented out because I could not adapt FLIT to the module system *)
   signature STYLECHECK
   structure StyleCheck
   structure Subordinate
