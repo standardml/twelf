@@ -86,9 +86,6 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
     | reconMorph(M.MorView m) =
         let
-           val _ = if List.exists (fn (m',_) => m' = m) (M.getScope())
-                   then raise Error("view " ^ M.modFoldName m ^ " can only be used when closed")
-                   else ()
            val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
                                         handle M.UndefinedMid _ => raise Error("non-view module reference in morphism")
         in
@@ -397,12 +394,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         and ACid(c) =
            let val m = IDs.midOf c
            in
-              case (mor, valOf (M.symVisible(c,m))) (* if NONE, U would be ill-formed *)
+              case (mor, valOf (M.symVisible(c,dom))) (* if NONE, U would be ill-formed *)
                 (* structure applied to local symbol: apply morphism by applying structMapLookup *)
                 of (M.MorStr(s), M.Self) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
                 (* view applied to local symbol: apply morphism by looking up instantiation of view *)
                  | (M.MorView(v), M.Self) => (
-                     let val ModSyn.ConInst(_, _, exp) = ModSyn.conInstLookup(v, IDs.lidOf(c))
+                     let val ModSyn.ConInst(_, _, exp) = ModSyn.conInstLookup(v, IDs.lidOf c)
                      in exp
                      end
                      handle ModSyn.UndefinedCid _ => raise UndefinedMorph(v,c)

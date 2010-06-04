@@ -68,6 +68,8 @@ a : type.
   a : type.             %% toplevel name shadowed
 }.
 
+%% include in a view
+
 %sig X = {
   k : type.
   l : k.
@@ -89,17 +91,24 @@ a : type.
   c' := X..l.
 }.
 
+%% include in a structure
 %sig Y = {
   a : type.
   %struct r : R = {a := a.}.       %% R..a mapped to Y..a
   %struct r' : R' = {%include r.}. %% r'(R'..c : R..a) = r(R'..c : R..a) = r'.c : r(R..a) = r'.c : a
 }.
 
-%% multiple includes
-%sig S0  = {a : type. c: a.}.
-%sig S1  = {%include S0. c: S0..a.}.
-%sig S2  = {%include S0. c: S0..a.}.
-%sig S12 = {%include S1. %include S2. c: S0..a.}.  %% S12 includes S0 twice
+%% multiple includes: %% S12 includes S0 twice
+%sig S0  = {a : type. c: a. a' = a.}.
+%sig S1  = {%include S0 %open a'. c: S0..a.}.
+%sig S2  = {%include S0.          c: S0..a.}.
+%sig S12 = {
+   %include S1.
+   %include S2.
+   %% c' = c.    %% reference to c would be ambiguous between S1..c and S2..c
+   c : a'.       %% reference to a' is inambiguously S0..a'
+   c' = c.       %% reference to c is resolved locally
+}.
 %sig SX  = {a : type. c : a.}.
 %view V0  : S0  -> SX = {a := a. c := c.}.
 %sig SY  = {%struct k: SX. %struct k' = V0 k.}.
@@ -111,7 +120,7 @@ a : type.
 
 %% testing opens
 %sig Z = {
-  %include Y %open.
+  %include Y.
   %include R %open a c %as c'.
   d = c' : a.
   %struct s : S %open a' b'.
@@ -123,6 +132,7 @@ a : type.
 %sig L0 = {
   c : a.          %% a refers to toplevel a
   a : type.
+  c' : a.         %% a refers to L0..a
   %sig L1 = {
     c : a.        %% a refers to L0..a
     a : type.

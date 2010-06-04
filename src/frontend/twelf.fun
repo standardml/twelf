@@ -1221,6 +1221,7 @@ struct
 	                    Elab.flattenInst(c, callbackInstallInst)
 	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
 	                 end
+	            | ModSyn.InclInst _ => ()
            in
              ()
            end

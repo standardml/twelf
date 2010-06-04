@@ -47,14 +47,14 @@ struct
     | expToString STRUC = "structure"
         
   fun nameLookupWithError expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
-     case Names.nameLookup (m,l)
-       of SOME c => (
-           case (expected, ModSyn.symLookup c)
-             of (CON, ModSyn.SymCon _ ) => c
-              | (STRUC, ModSyn.SymStr _) => c
-              | _ => error(r, "concept mismatch, expected " ^ expToString expected ^ ": " ^ Names.foldQualifiedName l)
-          )
-        | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
+     let val c = (Names.nameLookupWithError (m,l))
+                 handle Names.Error(s) => error(r,s)
+     in
+         case (expected, ModSyn.symLookup c)
+           of (CON, ModSyn.SymCon _ ) => c
+            | (STRUC, ModSyn.SymStr _) => c
+            | _ => error(r, "concept mismatch, expected " ^ expToString expected ^ ": " ^ Names.foldQualifiedName l)
+      end
 
   fun modnameLookupWithError expected (l : IDs.Qid, r : Paths.region) =
      case Names.modnameLookup l
@@ -75,6 +75,9 @@ struct
      	                      end
             handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
                                   val ModSyn.ViewDec(_,_,dom,_,_) = ModSyn.modLookup m
+                                  val _ = if List.exists (fn (m',_) => m' = m) (ModSyn.getScope())
+                                          then raise Error("view " ^ ModSyn.modFoldName m ^ " can only be used when closed")
+                                          else ()
                               in (ModSyn.MorView m, dom)
                               end
      in
@@ -98,7 +101,7 @@ struct
              	val rr = Paths.join(r,r')
              	val Con = nameLookupWithError CON (dom, names, r)
              	val _ = if (IDs.midOf Con = dom) then () else error(r,
-             	   "instantiation of included constant " ^ ModSyn.symFoldName Con ^ " not allowed")
+             	   "instantiation of included or inherited constant " ^ ModSyn.symFoldName Con ^ " not allowed")
              	val _ = case ModSyn.constDefOpt Con
                           of NONE => ()
                            | _ => raise Error(
@@ -109,7 +112,7 @@ struct
              	  then NONE                                                            (* instantiation in a structure *)
              	  else SOME (Elab.applyMorph(ModSyn.constType Con,
              	                             ModSyn.MorView(ModSyn.currentMod())))     (* instantiation in a view *)
-             	       handle Elab.UndefinedMorph(_,c) =>
+             	       handle Elab.UndefinedMorph(m,c) =>
              	          error(rr, "instantiation for " ^ ModSyn.symFoldName Con ^
              	          " must occur after (possibly induced) instantiation for " ^ ModSyn.symFoldName c)
              	val job = case expType

@@ -257,7 +257,7 @@ struct
     fun nameLookup(current, names) : IDs.cid option = case nameLookup''(current, names)
         of nil => NONE
        	 | hd :: tl => if List.exists (fn x => not(x = hd)) tl
-       	               then NONE
+       	               then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName names)
        	               else SOME hd
     fun nameLookupWithError(m,q) : IDs.cid = case nameLookup''(m,q)
       of hd :: tl => if List.exists (fn x => not(x = hd)) tl

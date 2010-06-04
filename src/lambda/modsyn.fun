@@ -135,8 +135,8 @@ struct
        | (_,rel) :: tl => if List.exists (fn (_, r) => r = AncIncluded) tl
                      then SOME AncIncluded
                      else SOME rel
-  fun symVisible(c, dom) = case sigRel(IDs.midOf c, dom)
-    of SOME (Ancestor p) => if p < IDs.lidOf c then SOME (Ancestor p) else NONE
+  fun symVisible(c, m) = case sigRel(IDs.midOf c, m)
+    of SOME (Ancestor p) => if IDs.lidOf c < p then SOME (Ancestor p) else NONE
      | r => r
   fun morphInclLookup(m : IDs.mid) = valOf (MH.lookup morphInclTable m)
                                      handle Option => raise UndefinedMid(m)
@@ -291,13 +291,13 @@ struct
         val _ = MH.insert modTable (m, (dec, ~1))
         val _ = case dec
           of SigDec _ =>
-             let val (p,l) = List.last (! scope)
+             let val (p,l) = List.hd (! scope)
                  val pincls = sigRelLookup p
                  fun rewrite(Self) = Ancestor(l)
-                   | rewrite(Ancestor a) = Ancestor a
+                   | rewrite(Ancestor p) = Ancestor p
                    | rewrite(Included _) = AncIncluded
                    | rewrite(AncIncluded) = AncIncluded
-                 val incls = List.map (fn (m,t) => (m, rewrite t)) pincls
+                 val incls = List.map (fn (d,r) => (d, rewrite r)) pincls
              in MH.insert sigRelTable (m, (m, Self) :: incls)
              end
           | ViewDec _ => MH.insert morphInclTable(m, nil)
@@ -361,7 +361,7 @@ struct
         | rewrite(m,Ancestor _) = NONE (* ancestors of dom must already be ancestors of cod *)
         | rewrite(m,AncIncluded) = NONE
       val incls = List.mapPartial rewrite domincls
-      val incls' = List.filter (fn x => List.exists (fn y => x = y) codincls) incls (* avoid duplicates *)
+      val incls' = List.filter (fn x => List.all (fn y => not(x = y)) codincls) incls (* avoid duplicates *)
       val _ = MH.insert sigRelTable (cod, codincls @ incls')
       in
          c
