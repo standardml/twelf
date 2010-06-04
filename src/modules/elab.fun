@@ -551,12 +551,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
         val viewID = IDs.midOf instID
         val M.SymStrInst(M.StrInst(s, _, mor)) = M.symLookup instID
         val (dom, _, _) = reconMorph mor
-        fun flatten1(c' : IDs.cid) =
-           let 
-              val c = valOf (M.structMapLookup(s,c'))
-              val _ = case M.symLookup c'
+        fun flatten1(c' : IDs.cid) = 
+            case M.symLookup c'
                  of M.SymCon _ =>
                    let
+                      val c = valOf (M.structMapLookup(s,c'))
                       val defCod = normalize (applyMorph(cidToExp c', mor))
                       val typDomTrans = normalize(applyMorph(M.constType c, M.MorView viewID))
                       val _ = if checkType(defCod, typDomTrans)
@@ -569,14 +568,18 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                                    then ()
                                    else defInstClash(defDom, defCod, applyMorph(defDom, M.MorView viewID),
                                                      "definition/instantiation clash for " ^ M.symFoldName c)
+                      val _ = installInst(M.ConInst(c, SOME instID, defCod))
                    in
-                      installInst(M.ConInst(c, SOME instID, defCod))
+                      ()
                    end
-                  | M.SymStr _ => installInst(M.StrInst(c, SOME instID, M.MorComp(M.MorStr c', mor)))
-                  | M.SymIncl _ => c' (* bogus value that is trown away anyway *) 
-           in
-              () 
-           end
+                  | M.SymStr _ =>
+                     let
+                     	val c = valOf (M.structMapLookup(s,c'))
+                     	val _ = installInst(M.StrInst(c, SOME instID, M.MorComp(M.MorStr c', mor)))
+                     in
+                     	()
+                     end
+                  | M.SymIncl _ => ()
      in
         M.sgnApp(dom, flatten1)
      end
