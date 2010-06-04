@@ -925,8 +925,7 @@ in
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (Names.foldQualifiedName name)
     | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
-  fun openToString(ModSyn.OpenAll) = " %open"
-    | openToString(ModSyn.OpenDec nil) = ""
+  fun openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec l) =
        let fun doList(nil) = ""
              | doList((old,new) :: tl) = " " ^ (ModSyn.symFoldName old) ^ " %as " ^ new ^ (doList tl)
@@ -939,17 +938,17 @@ in
     | morphToString(ModSyn.MorComp(mor1,mor2)) =
       morphToString(mor1) ^ " " ^ morphToString(mor2)
       
-  fun modInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
-    | modInclToString(ModSyn.ViewIncl mor) = "%include " ^ (morphToString mor) ^ "."
+  fun sigInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
 
   fun instToString(ModSyn.ConInst(c, _, U)) = 
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
     | instToString(ModSyn.StrInst(c, _, mor)) =
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, opendec, impl)) = (
+    | instToString(ModSyn.InclInst (_, _, mor)) = "%include " ^ (morphToString mor) ^ "."
+
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, impl)) = (
      "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
-     IDs.mkString(List.map modInclToString incls, "{", " ", "") ^
-     IDs.mkString(List.map instToString insts, "", " ", "}") ^ (openToString (opendec)) ^ "."
+     IDs.mkString(List.map instToString insts, "{", " ", "}") ^ (openToString (opendec)) ^ "."
     )
    | strDecToString(ModSyn.StrDef(name, _, dom, def, impl)) = (
      "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^

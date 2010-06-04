@@ -81,7 +81,7 @@ struct
     | ModEnd
     | StrDec of ModExtSyn.strdec
     | SymInst of ModExtSyn.syminst
-    | Include of ModExtSyn.modincl
+    | Include of ModExtSyn.sigincl
     | Read of ModExtSyn.read
     | Use of string
     (* Further pragmas to be added later here *)
@@ -473,7 +473,7 @@ struct
            val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseIncludeView'(f)
            val r = Paths.join (r0, r')
         in
-	  Stream.Cons ((Include incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
+	  Stream.Cons ((SymInst incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

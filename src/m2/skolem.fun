@@ -77,7 +77,7 @@ struct
 		    val sk = ModSyn.sgnAddC SD
 		    val H = I.Skonst sk
 		    val _ = IndexSkolem.install I.Ordinary H
-		    val _ = Names.installName(sk, [name'])
+		    val _ = Names.installName(sk, NONE, [name']) (* @FR: NONE could be replaced with the cid of the origin *)
 		    val _ = (Timers.time Timers.compiling Compile.install) I.Ordinary sk
 (*		    val CompSyn.SClause r = CompSyn.sProgLookup sk *)
 		    val S = spine d

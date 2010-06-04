@@ -343,8 +343,7 @@ struct
 
   (* Printing structural levels *)
   
-  fun openToString(ModSyn.OpenAll, _, params) = "" (* ElemEmpty("open",[]) *)
-    | openToString(ModSyn.OpenDec nil, _, _) = ""
+  fun openToString(ModSyn.OpenDec nil, _, _) = ""
     | openToString(ModSyn.OpenDec ((c,new)::tl), strOpt, params) =
       let val old = case strOpt
            of SOME s => "??" ^ localPath (s @ (ModSyn.symName c))
@@ -361,15 +360,15 @@ struct
     | instToString(ModSyn.StrInst(c, _, mor), params) =
          ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
          morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
+    | instToString(ModSyn.InclInst(_,_,mor), params)
+      = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
 
-  fun modInclToString(ModSyn.SigIncl(m,opendec), params) =
+  fun sigInclToString(ModSyn.SigIncl(m,opendec), params) =
         let val from = relModName(m, params)
         in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
         end
-    | modInclToString(ModSyn.ViewIncl(mor), params)
-      = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
   
-  fun strDecToString(ModSyn.StrDec(name, _, dom, incls, insts, opendec, _), params) =
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, _), params) =
      let 
      	fun dolist(_, nil, _) = ""
            | dolist(f, hd::nil, nl) = f hd
@@ -378,10 +377,9 @@ struct
      	ElemOpen("structure",
      	  [Attr("name", localPath name),
      	   Attr("from", relModName(dom,params))]) ^ (
-           case (insts,incls) of (nil, nil) => ""
+           case insts of nil => ""
            | _ =>
              nl_ind() ^
-               dolist(fn incl => modInclToString(incl, params), incls, nl) ^
                dolist(fn inst => instToString(inst, params), insts, nl) ^ 
              nl_unind()
          ) ^
@@ -393,13 +391,12 @@ struct
      "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
-  fun modBeginToString(ModSyn.SigDec(base,name), incls, params) =
-      let val meta = if incls = nil then [Attr("meta", baseLF ^ "?" ^ localPath cdLF)] else nil
+  fun modBeginToString(ModSyn.SigDec(base,name), params : Params) =
+      let val meta = [Attr("meta", baseLF ^ "?" ^ localPath cdLF)]
       in
-         ElemOpen("theory", Attr("name", localPath name) :: meta) ^ nl_ind() ^
-         IDs.mkString(List.map (fn x => modInclToString(x, params)) incls, "", nl(), nl())
+         ElemOpen("theory", Attr("name", localPath name) :: meta) ^ nl_ind()
       end
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), incls, params) =
+    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), params) =
         let
            val headParams = {baseFile = OS.Path.fromString base, current = #current params}
            (* from and to relative to basefile, rest of view relative to codomain *)
@@ -407,7 +404,7 @@ struct
            ElemOpen("view", [Attr("name", localPath name),
                           Attr("from", relModName(dom, headParams)),
                           Attr("to", relModName(cod, headParams))]
-           ) ^ nl_ind() ^ IDs.mkString(List.map (fn incl => modInclToString(incl, params)) incls, "", nl(), nl())
+           ) ^ nl_ind()
         end    
   fun modEndToString(ModSyn.SigDec _, _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _, _) = nl_unind() ^ "</view>"
@@ -431,12 +428,11 @@ struct
      	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
      	    | ModSyn.ViewDec(_,_,_,cod,_) =>
      	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
-     	 val incls = ModSyn.modInclLookup m
      in
      	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
      	  andalso not(m = 0 andalso ModSyn.modSize m = 0)
      	then (
-          print(modBeginToString(mdec, incls, params));
+          print(modBeginToString(mdec, params));
           ModSyn.sgnApp(m, fn c => (case ModSyn.symLookup c
              of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
                                  then print (conDecToString(c, params) ^ nl())
@@ -444,11 +440,17 @@ struct
               | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
                                  then print (strDecToString(strdec, params) ^ nl())
                                  else ()
+              | ModSyn.SymIncl sigincl =>
+                                 print (sigInclToString(sigincl, params) ^ nl())
               | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
                    of NONE => print (instToString(inst, params) ^ nl())
                     | SOME _ => ()
                 )
               | ModSyn.SymStrInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymInclInst inst => (case ModSyn.symInstOrg inst
                    of NONE => print (instToString(inst, params) ^ nl())
                     | SOME _ => ()
                 )

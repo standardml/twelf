@@ -50,7 +50,7 @@ sig
     | ModEnd                           (* -fr, module system *)
     | StrDec of ModExtSyn.strdec       (* -fr, module system *)
     | SymInst of ModExtSyn.syminst     (* -fr, module system *)
-    | Include of ModExtSyn.modincl     (* -fr, module system *)
+    | Include of ModExtSyn.sigincl     (* -fr, module system *)
     | Read of ModExtSyn.read           (* -fr, Apr 09 *)
 
     (* Further declarations to be added here *)

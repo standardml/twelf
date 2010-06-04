@@ -8,7 +8,7 @@ sig
   (* module or symbol level identifier *)
   type id = string list * Paths.region
   (* list of ids to be opened and their new names *)
-  type openids = (id * (string * Paths.region)) list option
+  type openids = (id * (string * Paths.region)) list
   
   (* morphisms *)
   type morph = id list
@@ -17,13 +17,13 @@ sig
   datatype syminst =
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
+   | inclinst of morph * Paths.region
 
   (* inclusion of signatures into signatures and morphisms into link *)  
-  datatype modincl = sigincl of id * openids
-                   | viewincl of morph * Paths.region
+  datatype sigincl = sigincl of id * openids
 
   (* structure declarations *)
-  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids * bool
+  datatype strdec = strdec of string * id * (syminst list) * openids * bool
                   | strdef of string * (morph * Paths.region) * bool
 
   (* begin of a module *)
@@ -47,8 +47,8 @@ sig
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
   (* reconstructs the begin of a module declaration *)
   val modbeginToModDec : modbegin * Paths.location -> ModSyn.ModDec
-  (* reconstructs a module inclusion *)
-  val modinclToModIncl : modincl * Paths.location -> ModSyn.ModIncl
+  (* reconstructs a signature inclusion *)
+  val siginclToSigIncl : sigincl * Paths.location -> ModSyn.SigIncl
   (* reconstructs a read declaration *)
   val readToRead : read * Paths.location -> ModSyn.Read
 end

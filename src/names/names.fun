@@ -157,14 +157,8 @@ struct
     type lid = IDs.lid
     type mid = IDs.mid
 
-    val nameTable : cid SH.Table = SH.new(4096)
+    val nameTable : (cid * IDs.cid option) SH.Table = SH.new(4096)
     val modnameTable : mid MH.Table = MH.new(128)
-    
-    (* scopeTable contains a list of included modules
-       (m,NONE): all symbols of m are visible (result of %include declarations)
-       (m,SOME l): all symbols of m with lid below l are visible (result of parent signature)
-    *)
-    val scopeTable : (mid * (lid option)) list MidH.Table = MidH.new(128)
 
     (* shadowTable(c') = c means that c' was shadowed by c *)
     val shadowTable : cid CH.Table = CH.new(128)
@@ -194,76 +188,84 @@ struct
              raise Error("module name " ^ foldQualifiedName l ^ " already declared")
             )
 
-    fun installName(c : cid, l : string list) =
-       case SH.insertShadow nameTable ((ModSyn.currentMod(), l), c)
+    fun installName(c : cid, origin : IDs.cid option, l : string list) =
+       case SH.insertShadow nameTable ((ModSyn.currentMod(), l), (c, origin))
          of NONE => ()
-          | SOME (e as (_, c')) => (
+          | SOME (e as (_, (c',_))) => (
              if ModSyn.onToplevel() andalso List.length l = 1
              then 
                 CH.insert shadowTable (c', c)
-             else (
-               SH.insert nameTable e; (* roll back insertShadow *)
+             else
                raise Error("symbol name " ^ foldQualifiedName l ^ " already declared")
-             )
             )
 
-    fun installScopeC(m: mid * (lid option)) =
-       let
-       	  val curr = ModSyn.currentMod()
-       	  val mods = getOpt((MidH.lookup scopeTable curr), nil)
-       	  val _ = MidH.insert scopeTable (curr, mods @ [m])
-       in
-       	  ()
-       end
-      
     val modnameLookup : string list -> mid option = MH.lookup modnameTable
-    val nameLookup' : IDs.mid * string list -> cid option = SH.lookup nameTable
+    fun declBefore(lOpt : IDs.lid option, l'Opt : IDs.lid option) = case (lOpt,l'Opt)
+          of (SOME l, SOME l') => l < l'
+           | _ => true
+    fun nameLookup'(m: IDs.mid, l: string list, limit: IDs.lid option) = case SH.lookup nameTable (m,l)
+      of SOME (c, org) => (case limit
+         of SOME l => if IDs.lidOf(getOpt(org, c)) < l then SOME c else NONE
+          | NONE => SOME c
+         )
+       | NONE => NONE
     fun fullNameLookup'(mods : string list, cons : string list) =
        case modnameLookup(mods)
          of NONE => NONE
-          | SOME m => nameLookup'(m, cons)
-
-    fun nameLookup(current, names) =
+          | SOME m => nameLookup'(m, cons, NONE)
+    (* returns list of possible resolutions *)
+    fun nameLookup''(current, names) : IDs.cid list =
        let
           (* For compatibility with non-modular code, qualified names (mods, cons) where both
              mods and cons are lists of strings are represented as a single string list with "" separating
              mods and cons. splitName retrieves the components. *)
        	  val (left, right) = splitName names
-       	  (* true iff c is visible for M *)
-       	  fun visible(M : mid, c : cid) : bool =
-       	    let val m = IDs.midOf c
-       	    in        ModSyn.sigInclCheck(m, M)
-       	       orelse List.exists (fn (m',l') => m' = m andalso IDs.lidOf c < l') (ModSyn.modParent M)
-       	       orelse m = M
-       	    end
-       	  (* looks up a name in a list of signatures and returns the first match *)
-          fun lookupInMods(nil : (mid * (lid option)) list, ns) = NONE
-            | lookupInMods((m,lOpt) :: tl, ns) = case nameLookup(m, ns)
-              of SOME c => (
-                  case lOpt
-                    of NONE => SOME c
-                     | SOME l => if IDs.lidOf c < l then SOME c else NONE
-                 )
-               | NONE => lookupInMods(tl, ns)
+       	  (* looks up a name in all signatures in sigRelLookup of a signature
+       	     if a resolution is found in Self or Ancestor _, it is returned by itself
+       	     otherwise, the list of resolutions in Include _ and AncInclude is returned
+       	     therefore, the order of sigRelLookup is relevant *)
+          fun lookupInIncls((d,ModSyn.Self)::tl, ns, _) = (
+                case nameLookup'(d, ns, NONE)
+                  of SOME c => [c]
+                   | NONE => lookupInIncls(tl, ns, nil)
+              )
+            | lookupInIncls((anc,ModSyn.Ancestor p)::tl, ns, _) = (
+                case nameLookup'(anc, ns, SOME p)
+                  of SOME c => [c]
+                   | NONE => lookupInIncls(tl, ns, nil)
+              )
+            | lookupInIncls((d,_)::tl, ns, res) =
+                let val res' = case nameLookup'(d, ns, NONE)
+                                 of SOME c => c :: res
+                                  | NONE => res
+                in lookupInIncls(tl, ns, res')
+                end
+            | lookupInIncls(nil, ns, res) = res
        in
        	  if right = nil
-       	  then case nameLookup'(current, left)
-                 of SOME c => SOME c              (* module name empty, so lookup in current signature *)
-                  | NONE => lookupInMods (getOpt((MidH.lookup scopeTable current), nil), left)
-                                                  (* lookup in parent or included signature *)
-       	  else case fullNameLookup'(left, right)  (* else lookup both modname and symname *)
-       	         of NONE => NONE
+       	  (* unqualified name - lookup in local signature, then ancestors inside->outside, then includes *)
+       	  then lookupInIncls(ModSyn.sigRelLookup current, left, nil)
+          (* qualified name - lookup both modname and symname *)
+       	  else case fullNameLookup'(left, right)
+       	         of NONE => nil
        	          | SOME c => (case ModSyn.symLookup c
-       	                         of ModSyn.SymCon _ => if visible(current, c) then SOME c else NONE
-       	                          | ModSyn.SymStr _ => SOME c
-       	                          | _ => NONE
+       	                         of ModSyn.SymCon _ => if isSome (ModSyn.symVisible(c, current)) then [c] else nil
+       	                          | ModSyn.SymStr _ => [c]
+       	                          | _ => nil
        	                       )
         end
-    fun nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
-    fun nameLookupWithError(m,q) = case nameLookup(m,q)
-      of SOME c => c
-       | NONE => raise Error("undeclared identifier " ^ foldQualifiedName q)
+    fun nameLookup(current, names) : IDs.cid option = case nameLookup''(current, names)
+        of nil => NONE
+       	 | hd :: tl => if List.exists (fn x => not(x = hd)) tl
+       	               then NONE
+       	               else SOME hd
+    fun nameLookupWithError(m,q) : IDs.cid = case nameLookup''(m,q)
+      of hd :: tl => if List.exists (fn x => not(x = hd)) tl
+       	             then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName q)
+       	             else hd
+       | nil => raise Error("undeclared identifier " ^ foldQualifiedName q)
 
+    fun nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
    (* installFixity (cid, fixity) = ()
@@ -313,7 +315,7 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; MidH.clear scopeTable; 
+    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; 
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

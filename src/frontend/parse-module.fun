@@ -110,10 +110,10 @@ struct
     | parseOpenIds' (LS.Cons ((t, r), _)) =
         Parsing.error (r, "Expected `.' or qualified identifier', found token " ^ L.toString t)
 
-  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (NONE, f')
+  fun parseOpen'(f' as LS.Cons((L.DOT,_),_)) = (nil, f')
     | parseOpen'(f' as LS.Cons((L.OPEN,_),s')) =
         let val (opens, f') = parseOpenIds' (LS.expose s')
-        in (SOME opens, f')
+        in (opens, f')
         end
     | parseOpen'(LS.Cons ((t, r), s')) = Parsing.error (r, "Expected `%open' or `.', found token " ^ L.toString t)
 
@@ -121,9 +121,9 @@ struct
   fun parseInclude' (LS.Cons ((L.INCLUDE, r), s')) =
      let
         val (id, f') = parseQualId'(LS.expose s')
-	val (ids, f') = parseOpen' f'
+	val (opdec, f') = parseOpen' f'
      in
-       (E.sigincl (id, ids), f')
+       (E.sigincl (id, opdec), f')
      end 
 
   (* parses a %include declaration in a link *)
@@ -132,7 +132,7 @@ struct
         val (mor, f') = parseMorph'(LS.expose s')
         val (r', f') = parseDot' (f')
      in
-       (E.viewincl (mor, Paths.join(r,r')), f')
+       (E.inclinst (mor, Paths.join(r,r')), f')
      end 
 
   (* parses a list of symbol instantiations (used for structures) *)
@@ -150,27 +150,20 @@ struct
       in
         (inst::insts, f'')
       end
+    | parseInsts' (f as LS.Cons ((L.INCLUDE, _), _)) =
+      let
+        val (inst, f') = parseIncludeView' (f)
+        val (insts, f'') = parseInsts' (f')
+      in
+        (inst::insts, f'')
+      end
     | parseInsts' (LS.Cons ((L.RBRACE, _), s')) =
         (nil, LS.expose s')
     | parseInsts' (LS.Cons ((t, r), s')) =
-        Parsing.error (r, "Expected identifier, `%struct', or `}', found token " ^ L.toString t)
-  
-  (* parses a list of %include declarations (used for structures) *)
-  fun parseIncls' (f as LS.Cons ((L.INCLUDE, _), _)) =
-      let
-        val (incl, f') = parseIncludeView' (f)
-        val (incls, f'') = parseIncls' (f')
-      in
-        (incl::incls, f'')
-      end
-    | parseIncls' (f) = (nil,f)
-  
+        Parsing.error (r, "Expected identifier, `%struct', `%include', or `}', found token " ^ L.toString t)
+    
   (* parses the {...} part of a structure declaration *)
-  fun parseInstantiate' (f as LS.Cons ((L.LBRACE, _), s')) =
-      let val (incls, f') = parseIncls'(LS.expose s')
-          val (insts, f'') = parseInsts' f'
-      in  (incls, insts, f'')
-      end
+  fun parseInstantiate' (f as LS.Cons ((L.LBRACE, _), s')) = parseInsts'(LS.expose s')
     | parseInstantiate' (LS.Cons ((t, r), s')) =
         Parsing.error (r, "Expected `{', found token " ^ L.toString t)
 
@@ -187,13 +180,13 @@ struct
                  let
                      val f' = LS.expose s2'
                      val (dom,f') = parseQualId'(f')
-                     val (incls, insts, f') = case f'
-                         of LS.Cons((L.DOT,_),_) => (nil, nil, f')
-			  | LS.Cons((L.OPEN,_),_) => (nil, nil, f')
+                     val (insts, f') = case f'
+                         of LS.Cons((L.DOT,_),_) => (nil, f')
+			  | LS.Cons((L.OPEN,_),_) => (nil, f')
                           | _ => parseInstantiate'(#2 (parseEqual' f'))
-	             val (ids, f') = parseOpen' f'
+	             val (opdec, f') = parseOpen' f'
                   in
-                     (E.strdec(id, dom, incls, insts, ids, implicit), f')
+                     (E.strdec(id, dom, insts, opdec, implicit), f')
                   end
                | LS.Cons ((L.EQUAL, r2), s2') =>
                  let

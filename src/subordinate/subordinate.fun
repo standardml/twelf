@@ -452,9 +452,10 @@ struct
 
     fun installInclude(from) =
        let
-         (* for all type-level constant declarations with cid c declared, imported by structure, or included in signature "from" ... *)
+         (* for all type-level constant declarations that are effectively local or included into "from" ... *)
          fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
            of ModSyn.SymStr _ => ()
+            | ModSyn.SymIncl _ => ()
             | ModSyn.SymCon (IntSyn.BlockDec _) => ()
             | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
                 of IntSyn.Kind => (
@@ -467,8 +468,15 @@ struct
                    )
                  | _ => ()
               )
+          (* obtain the signatures included into "from"
+             we do not need the ancestors because they must also be ancestors of the current signature
+       	     This could be imporved by also skipping all signatures that are already included into the current signature *)
+          val incls = List.mapPartial
+                      (fn (m, ModSyn.Included _) => SOME m | _ => NONE)
+                      (ModSyn.sigRelLookup from)
        in
-         ModSyn.sgnAppI(from, copyEntry)
+       	  (* copy subordination information from included signatures *)
+          List.app (fn x => ModSyn.sgnApp(x, copyEntry)) (from :: incls)
        end
       
     (* Respecting subordination *)

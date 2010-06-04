@@ -149,7 +149,7 @@ functor Twelf
      sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
      sharing type ReconModule.syminst = Parser.ModExtSyn.syminst
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
-     sharing type ReconModule.modincl = Parser.ModExtSyn.modincl
+     sharing type ReconModule.sigincl = Parser.ModExtSyn.sigincl
      sharing type ReconModule.read = Parser.ModExtSyn.read
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
@@ -347,7 +347,7 @@ struct
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = ModSyn.sgnAddC conDec
-	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
+	  val _ = Names.installName (cid, NONE, IntSyn.conDecName conDec)
 	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
@@ -360,7 +360,7 @@ struct
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val cid = ModSyn.sgnAddC conDec
-	  val _ = Names.installName (cid, IntSyn.conDecName conDec)
+	  val _ = Names.installName (cid, NONE, IntSyn.conDecName conDec)
 	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
 	  val _ = (Timers.time Timers.subordinate Subordinate.installBlock) cid
@@ -373,24 +373,23 @@ struct
     fun installStrDec(strDec, r) =
        let
           val c : IDs.cid = ModSyn.structAddC(strDec)
-          val _ = Names.installName(c, ModSyn.strDecName strDec)
+          val _ = Names.installName(c, NONE, ModSyn.strDecName strDec)
                   handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
        in
        	  c
        end
 
     (* auxiliary method shared by install1(StrDec _) (then byStr = SOME s) and install1(ModIncl _) (then byStr = NONE) *)
-    fun installOpen(dom : IDs.mid, opens : (IDs.cid * string) list, byStr : IDs.cid option, r) = (
+    fun installOpen(dom : IDs.mid, opens : (IDs.cid * string) list, origin : IDs.cid, r) = (
        	  List.map (fn (c,new) =>
              let
-                val c' = case byStr
-                  of NONE => c
-                   | SOME s =>
-                     if IDs.midOf c = dom
-          	     then valOf (ModSyn.structMapLookup(s,c))
+                val c' = case ModSyn.symLookup origin
+                  of ModSyn.SymStr _ => if IDs.midOf c = dom
+          	     then valOf (ModSyn.structMapLookup(origin,c))
                      else raise Names.Error("cannot open included symbol " ^ ModSyn.symFoldName c)
+                   | _ => c
              in
-                Names.installName(c', [new])
+                Names.installName(c', SOME origin, [new])
              end
           ) opens;
           ()
@@ -1108,7 +1107,7 @@ struct
       (* cases for the module system *)
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
-              (* @FR: actually the name should be qualified using the currently open signatures *)
+               (* @FR: actually the name should be qualified using the currently open signatures *)
                val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
@@ -1118,19 +1117,8 @@ struct
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                val _ = case dec
                   of ModSyn.ViewDec _ => ()
-                   | ModSyn.SigDec _ => (                                  (* for nested signatures, ... *)
-                       Subordinate.installInclude parent;                  (* - copy parent's subordination relation *)
-                       List.map
-                         (fn a => Names.installScopeC (#1 a, SOME (#2 a)))
-                         ancestors;                                        (* - open all ancestors *)
-                       List.map
-                         (fn a => List.map (fn ModSyn.SigIncl(m,_) => ModSyn.inclAddC (ModSyn.SigIncl(m, ModSyn.OpenDec nil))
-                                             | ModSyn.ViewIncl _ => ())
-                                           (ModSyn.modInclLookup (#1 a))
-                          ) ancestors;                                     (* - add includes of all ancestors *)
-                       ()
-                       (* no exceptions should be possible *)
-	             )
+                   | ModSyn.SigDec _ => Subordinate.installInclude parent
+                       (* copy parent's subordination relation, no exceptions should be possible *)
 	       val name = ModSyn.modDecName dec
                val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
@@ -1195,7 +1183,7 @@ struct
             val _ = Elab.flattenDec(c, callbackInstallConDec, callbackInstallStrDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
             val _ = case NewStrDec
-	       of ModSyn.StrDec(_,_,dom,_, _, ModSyn.OpenDec opens, _) => installOpen(dom, opens, SOME c, r) (* OpenAll impossible *)
+	       of ModSyn.StrDec(_,_,dom,_, ModSyn.OpenDec opens, _) => installOpen(dom, opens, c, r)
 	        | ModSyn.StrDef _ => ()
          in
             ()
@@ -1239,22 +1227,17 @@ struct
         )
       | install1 (fileName, declr as (Parser.Include incl, r)) =
          let
-            val Incl = ReconModule.modinclToModIncl(incl, Paths.Loc(fileName, r))
+            val Incl as ModSyn.SigIncl(from, opendec) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
-            val NewIncl = Elab.checkModIncl Incl
+            val _ = Elab.checkSigIncl Incl
                        handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
-            val _ = ModSyn.inclAddC(NewIncl)
+            val c = ModSyn.inclAddC(Incl)
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
-            val _ = case NewIncl
-               of ModSyn.SigIncl (from, opendec) => (
-                    case opendec
-                      of ModSyn.OpenAll => Names.installScopeC (from, NONE)
-                       | ModSyn.OpenDec(opens) => installOpen(from, opens, NONE, r);
+            val _ = (case opendec of ModSyn.OpenDec(opens) => installOpen(from, opens, c, r);
 		    Subordinate.installInclude from (* no exception should be possible *)
-		  )
-		| _ => ()
+		    )
          in
-            chmsg 3 (fn () => Print.modInclToString(NewIncl) ^ "\n")
+            chmsg 3 (fn () => Print.sigInclToString(Incl) ^ "\n")
          end
 
       | install1 (fileName, declr as (Parser.Read read, r)) =

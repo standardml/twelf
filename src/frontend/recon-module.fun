@@ -14,16 +14,17 @@ struct
   structure ExtSyn = ReconTerm'
 
   type id = string list * Paths.region
-  type openids = (id * (string * Paths.region)) list option
+  type openids = (id * (string * Paths.region)) list
   
   type morph = id list
   datatype syminst =
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
+   | inclinst of morph * Paths.region
 
-  datatype modincl = sigincl of id * openids | viewincl of morph * Paths.region
+  datatype sigincl = sigincl of id * openids
   
-  datatype strdec = strdec of string * id * (modincl list) * (syminst list) * openids * bool
+  datatype strdec = strdec of string * id * (syminst list) * openids * bool
                   | strdef of string * (morph * Paths.region) * bool
 
   datatype modbegin = sigbegin of string
@@ -124,7 +125,6 @@ struct
 		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
 		                                                                         ", declaration " ^ Int.toString expImpl) *)
              end
-        
          | strinst((names, r), mor) =>
              let
              	val Str = nameLookupWithError STRUC (dom, names, r)
@@ -132,37 +132,37 @@ struct
              in
              	ModSyn.StrInst(Str, NONE, Mor)
              end
+         | inclinst(mor, r) =>
+             let
+             	val Mor = morphToMorph (cod, (mor, r))
+             	val (d, _, Mor') = Elab.reconMorph Mor
+             	val cid = case List.find
+             	               (fn (m,ModSyn.Included (SOME _)) => m = d | _ => false)
+             	               (ModSyn.sigRelLookup dom)
+             	          of SOME (_, ModSyn.Included (SOME c)) => c
+             	           | NONE => raise Error("included morphism has domain " ^ ModSyn.modFoldName d ^
+             	                          " which is not included directly into " ^ ModSyn.modFoldName dom)
+             in
+             	ModSyn.InclInst(cid, NONE, Mor')
+             end
   
-   fun modinclToModIncl(sigincl (sigid, opens), _) =
+   fun siginclToSigIncl(sigincl (sigid, opens), _) =
       let
       	 val m = modnameLookupWithError SIG sigid
-	 val Opens = case opens
-	   of NONE => ModSyn.OpenDec nil            (* no open at all *)
-	    | SOME nil => ModSyn.OpenAll            (* open by itself --> open all *)
-	    | SOME l => openToOpen (m,l)            (* open with list of ids *)
+	 val Opens = openToOpen (m,opens)
       in
       	 ModSyn.SigIncl (m, Opens)
       end
-    | modinclToModIncl(viewincl mor, _) =
-       let
-       	  val Cod = ModSyn.currentTargetSig()
-          val Mor = morphToMorph(Cod, mor)
-       in
-       	  ModSyn.ViewIncl(Mor)
-       end
 
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
-                            incls : modincl list, insts : syminst list, opens : openids, implicit : bool), loc) = 
+                            insts : syminst list, opens : openids, implicit : bool), loc) = 
     let
     	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
-    	val Incls = List.map (fn x => modinclToModIncl(x,loc)) incls
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
-	val Opens = case opens
-	  of SOME l => openToOpen (Dom,l)
-	   | NONE => ModSyn.OpenDec nil
+	val Opens = openToOpen (Dom,opens)
     in
-    	ModSyn.StrDec([name], nil, Dom, Incls, Insts, Opens, implicit)
+    	ModSyn.StrDec([name], nil, Dom, Insts, Opens, implicit)
     end
     | strdecToStrDec(strdef(name : string, morr, implicit : bool), l) =
        let

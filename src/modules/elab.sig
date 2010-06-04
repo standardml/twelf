@@ -8,7 +8,7 @@ sig
   val checkModBegin : ModSyn.ModDec -> unit
   val checkModEnd   : IDs.mid -> unit
   (* checks a SigIncl *)
-  val checkModIncl: ModSyn.ModIncl -> ModSyn.ModIncl
+  val checkSigIncl: ModSyn.SigIncl -> unit
   (* checks a StrDec *)
   val checkStrDec : ModSyn.StrDec -> ModSyn.StrDec
   (* checks a SymInst *)
