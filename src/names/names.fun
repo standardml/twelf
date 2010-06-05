@@ -1,6 +1,7 @@
 (* Names of Constants and Variables *)
 (* Author: Frank Pfenning *)
 (* Modified: Jeff Polakow *)
+(* Modified: Florian Rabe, module system *)
 
 functor Names (structure Global : GLOBAL
 	       (*! structure IntSyn' : INTSYN !*)
@@ -13,6 +14,9 @@ struct
 
   (*! structure IntSyn = IntSyn' !*)
 
+  (*******************************************************)
+  (* exceptions *)
+  
   exception Error of string
 
   (*
@@ -23,10 +27,8 @@ struct
   *)
   exception Unprintable
 
-  (***********************)
-  (* Operator Precedence *)
-  (***********************)
-
+  (*******************************************************)
+  (* General data structures for Fixities and Operator Precedence *)
   structure Fixity :> FIXITY =
   struct
     (* Associativity ascribed to infix operators
@@ -118,31 +120,14 @@ struct
       if checkArgNumber (ModSyn.sgnLookup (cid), n) then ()
       else raise Error ("Constant " ^ (IntSyn.conDecFoldName (ModSyn.sgnLookup cid)) ^ " takes too few explicit arguments for given fixity")
 
-  (****************************************)
-  (* Constants Names and Name Preferences *)
-  (****************************************)
+  (*******************************************************)
+  (* General data strcutures for namespaces *)
+  
+  datatype Namespace = Namespace of string
+  datatype Import = Import of string * Namespace
 
-  (*
-     Names (strings) are associated with constants (cids) in two ways:
-     (1) There is an array nameArray mapping constants to print names (string),
-     (2) there is a hashtable sgnHashTable mapping identifiers (strings) to constants.
-
-     The mapping from constants to their print names must be maintained
-     separately from the global signature, since constants which have
-     been shadowed must be marked as such when printing.  Otherwise,
-     type checking can generate very strange error messages such as
-     "Constant clash: c <> c".
-
-     In the same table we also record the fixity property of constants,
-     since it is more a syntactic then semantic property which would
-     pollute the lambda-calculus core.
-
-     The mapping from identifers (strings) to constants is used during
-     parsing.
-
-     There are global invariants which state the mappings must be
-     consistent with each other.
-  *)
+  (*******************************************************)
+  (* Stateful data strcutures *)
 
   local
     structure SH = HashTable (type key' = (IDs.mid * string list)
@@ -152,24 +137,35 @@ struct
              val hash = StringHash.stringListHash
              val eq = (op =));
     structure CH = CidHashTable
-    structure MidH = MidHashTable
     type cid = IDs.cid
     type lid = IDs.lid
     type mid = IDs.mid
 
-    val nameTable : (cid * IDs.cid option) SH.Table = SH.new(4096)
+    (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
+       The resolution (c : cid, corg: cid option) consists of the constant id and an option origin,
+       the origin is the cid of a declaration that generated the name entry c (if different from the declaration of c).
+       If the declaration of c gives a name, that name resolves to c, and these two name mappings must alwasy be consistent.
+    *) 
+    val nameTable : (cid * cid option) SH.Table = SH.new(4096)
+
+    (* modnameTable maps module names to module ids *) 
     val modnameTable : mid MH.Table = MH.new(128)
 
     (* shadowTable(c') = c means that c' was shadowed by c *)
     val shadowTable : cid CH.Table = CH.new(128)
     
+    (* the table for name preferences *)
     type namePref = (string list * string list) option
     val namePrefTable : namePref CH.Table = CH.new(4096)
     val insertNamePref : cid * namePref -> unit = CH.insert namePrefTable
 
+    (* the table for fixities *)
     val fixityTable : Fixity.fixity CH.Table = CH.new(4096)
   in
 
+  (*******************************************************)
+  (* interface methods for names *)
+  
    fun parseQualifiedName (name : string) =
        String.fields (fn c => c = #".") name
    fun foldQualifiedName l = IDs.mkString(l,"",".","")
@@ -268,6 +264,10 @@ struct
     fun nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
+
+   (*******************************************************)
+   (* interface methods for fixities *)
+   
    (* installFixity (cid, fixity) = ()
        Effect: install fixity for constant cid,
                possibly print declaration depending on chatter level
@@ -287,7 +287,8 @@ struct
             | SOME fix => fix
         )
 
-    (* Name Preferences *)
+    (*******************************************************)
+    (* interface methods for name preferences *)
     (* ePref is the name preference for existential variables of given type *)
     (* uPref is the name preference for universal variables of given type *)
 
@@ -351,9 +352,9 @@ struct
 
   end  (* local ... *)
 
-  (******************)
+
+  (*******************************************************)
   (* Variable Names *)
-  (******************)
 
   (*
      Picking variable names is tricky, since we need to avoid capturing.

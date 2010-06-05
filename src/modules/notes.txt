@@ -1,11 +1,14 @@
+Carsten:
+make symbols with fixity parsable separately
+report lookup errors in recon-term
+preserve comments, line/column numbers
+install signature names after closing only? then no duplicate names or shadowing?
+
 to do
 
-do not use include %open, always look for unqualified names in imported signatures, fail if non-unique
-views including themselves lead to infinite loop
-what about signatures including themselves? see Alin's email
+anonymous constants
 read assignments in structures separately
 print out with nicer names
-make symbols with fixity parsable separately
 catch exceptions when file not found
 
 filtering
@@ -15,9 +18,9 @@ parametrized views, functors
 patterns
 pair types with proof irrelevance
 logical relations, morphism equality check, isomorphism check
-library infrastructure
 
-scanner:
+KM
+library infrastructure
 - resolve MMT URIs in LF file (except for translations) without invoking Twelf
 - make this also resolve comments
 
@@ -29,6 +32,7 @@ skolem constants
 --------
 done
 
+unqualified names are looked up in all parents first, first match is used; then in all included signatures, fail if non-unique
 links can have multiple includes
 implicit links
 added twelf-save-reset-check-file to emacs mode (works together with empty sources.cfg)

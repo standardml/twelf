@@ -1,0 +1,75 @@
+There are four ways to get a symbol into scope:
+ - declare it (with a local symbol declaration)
+ - instantiate it (with a structure declaration)
+ - include it (with an include declaration)
+ - inherit it (from an ancestor, i.e., a super-signature)
+All of these can be combined.
+
+We enforce the following invariants to simplify the situation.
+
+1. structure s from S to T
+   This induces a morphism s from S to T. All symbols available in S can be translated to T.
+   a) Local symbols of S are copied into T.
+      Morphism application of s maps local symbols to the corresponding copy.
+   b) Since all structures from R into S are elaborated, there are already copies of the symbols of R in S. These are treated like local symbols.
+   c) For inclusions from R_i into S, a morphism m_i: R_i -> T must be provided. No symbols from R_i are copied into T.
+      Morphism application of s maps symbols of R_i by applying m_i. 
+      (In the case of the diamond situation, the morphisms must agree.)
+   d) All ancestors R of S must be ancestors of T as well. (*)
+      Morphism application of s is the identity for symbols of R.
+
+(*) This could be loosened to permit included signatures.
+
+2. inclusion i from S to T
+   This induces an inclusion morphism from S to T (i.e. application is always the identity). All symbols available in S are also available in T.
+   a) Local symbols of S are available in T.
+   b) as for 1b
+   c) Inclusions are transitive - symbols included into S from R, are available in T and so on.
+   d) as for 1d
+
+3. ancestor S of T
+   All symbols available in S right before declaring T are also available in T. This is not a morphism from S to T because symbols declared in S after T are not available in T.
+   a) Local symbols of S are available in T iff they are declared before T.
+   b) Symbols arising from structures of S are available in T iff the structure is declared before T.
+   c) Symbols arising from inclusions into S are available in T iff the inclusion is declared before T.
+   d) The ancestor relation is transitive - symbols arising from ancestors of S are available in T as well.
+
+The same symbol may become available in different ways via different combinations of the cases 2 and 3. All these symbols are identified. (This is in contrast to a symbol imported via two different structures, which is elaborated into two different copies of the symbol.) To avoid disambiguities, it is forbidden to include R into T if R is already available in T via case 3d.
+
+Theorem: The symbols available in T can be classified as follows:
+1. Effectively local symbols: Symbols that are declared locally in R and moved into T via a list of structures s_0,...,s_{n-1} where
+   - s_i : S_i is declared in S_{i+1}
+   - S_0 = R and S_n = T
+   This includes local symbols if n = 0.
+   In the external syntax, effectively local symbols named c in R are identified by the name s_n.....s_1.c.
+   In the internal syntax, effectively local symbols have their own cid of the form ('T,'c) where 'T is mid of T.
+   If n > 0, these symbols are copies created by the elaboration.
+   
+2. Included symbols: Effectively local symbols of R that are moved into T via a list of inclusions where
+   - each inclusion includes S_i into S_{i+1} and is declared locally in S_{i+1}
+   - S_0 = R and S_n = T
+   In the external syntax, included symbols named C in R are identified by the name R..C in T.
+   In the internal syntax, they are identified with the cid ('R,'C) where 'R is the mid of R and 'C is the cid of C in R.
+   Using the case n=0, the included symbols subsume the effectively local ones. The names C and T..C are interchangeable within T.
+
+3. Inherited symbols: Certain included symbols of ancestors of T. R..s_m.....s_1.c is an inherited symbol of T if
+   - s_m.....s_1.c is an effectively local symbol of R.
+   - R..s_m.....s_1.c is an included symbol of S via n inclusions.
+   - S is an ancestor of T and one of the following holds:
+     3a. included inherited symbols:
+         - n != 0 and the last inclusion is declared in S but not after T.
+     3b. strictly inherited symbols:
+         - n = 0, m != 0 and the structure s_m is declared in S but not after T, or
+         - n = 0, m = 0, and c is declared in S but not after T.
+   In the internal and external syntax, inherited symbols are treated like included symbols.
+   If we include T among its ancestors, the inherited symbols subsume the included ones.
+
+
+Accordingly, we obtain the following mutually exclusive relations between two signatures cod and dom:
+1.  Identity: cod = dom (all symbols of cod are effectively local for dom).
+2.  Inclusion: cod is included into dom (all symbols of cod are included into dom).
+3a. Inclusion via ancestor: cod is included into an ancestor of dom (all symbols of cod are included into dom).
+3b. Ancestor: cod is an ancestor of dom (some symbols of cod are strictly inherited into dom, others are invisible)
+4.  Neither of the above (no symbol of cod is visible in dom)
+
+Recall that the case "cod is an ancestor of a signature included into dom" must be a special case of 3b.

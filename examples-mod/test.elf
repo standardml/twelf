@@ -128,7 +128,7 @@ a : type.
   k : r.a. %% failed lookup, retried in Y.
 }.
 
-%% testing subsignatures
+%% testing nested signatures and views
 %sig L0 = {
   c : a.          %% a refers to toplevel a
   a : type.
@@ -139,8 +139,20 @@ a : type.
     d1 : a.       %% a refers to L1..a
     d0 : L0..a.   %% a refers to L0..a
   }.
+  b : type.
+  %sig L2 = {
+     a : b.
+     %% c : L1..a.   %% fails, L1 invisible
+     %include L1.
+     c : L1..a.
+  }.
+  %view L1-2 : L1 -> L2 = {
+     c  := L1..c.
+     a  := b.
+     d1 := a.
+     d0 := L1..c.
+  }.
 }.
-
 %% testing reads
 %read "test3.elf".
 %read "test2.elf".
@@ -167,4 +179,23 @@ a : type.
 %sig D = {
   %struct b : B.
   %struct c : C = {%struct a := b.}. %% b is coerced to c B..x b.
+}.
+
+%% testing pre-functors
+%sig Domain = {
+   a : type.
+}.
+%sig Codomain = {
+   b : type.
+   c : b.
+}.
+%sig Functor = {
+   %sig Interface = {
+      %include Domain.
+      param : a.
+   }.
+   %view Body : Codomain -> Interface = {
+      b := a.
+      c := param.
+   }.
 }.
