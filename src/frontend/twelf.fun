@@ -1107,21 +1107,30 @@ struct
       (* cases for the module system *)
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
-               (* @FR: actually the name should be qualified using the currently open signatures *)
                val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-               val ancestors = ModSyn.getScope()
-               val parent = #1 (hd ancestors)
-               val m = ModSyn.modOpen(dec)
+               val ancmids = List.map #1 (ModSyn.getScope())
+               val parent = hd ancmids
+               val c = ModSyn.modOpen(dec)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+               (* copy parent's subordination relation, no exceptions should be possible *)
                val _ = case dec
                   of ModSyn.ViewDec _ => ()
                    | ModSyn.SigDec _ => Subordinate.installInclude parent
-                       (* copy parent's subordination relation, no exceptions should be possible *)
-	       val name = ModSyn.modDecName dec
-               val _ = Names.installModname(m, name) (* @FR: should name be installed at modClose? *)
-                       handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
+               (* new module has qualified name M_1.....M_n and cid c
+                  for i=1,...,n, name M_i.....M_n resolves to c in signature M_1.....M_{i-1}
+                     (M_1.....M_0 is toplevel signature)
+                     origin is given by cid of M_i in M_1.....M_{i-1}, no origin for i=n *)
+               fun origins(hd::nil) = nil
+                   origins(hd::tl) = (SOME (ModSyn.midToCid hd)) :: (origins tl)
+               fun doNames(mid::mids, org::orgs, c, names) =
+                   (Names.installName(mid, c, org, names)
+                    handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
+                    doNames(mids, orgs, c, tl names)
+                   )
+                 | doNames(nil,nil,c,nil) = ()
+               val _ = doNames(rev ancmids, rev (NONE :: origins(ancmids)), ModSyn.modDecName dec, c)
            in
              chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
