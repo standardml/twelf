@@ -53,18 +53,13 @@ struct
          case (expected, ModSyn.symLookup c)
            of (CON, ModSyn.SymCon _ ) => c
             | (STRUC, ModSyn.SymStr _) => c
+            | (SIG,  ModSyn.SymMod (_, ModSyn.SigDec _)) => c
+            | (VIEW, ModSyn.SymMod (_, ModSyn.ViewDec _)) => c
             | _ => error(r, "concept mismatch, expected " ^ expToString expected ^ ": " ^ Names.foldQualifiedName l)
       end
 
-  fun modnameLookupWithError expected (l : IDs.Qid, r : Paths.region) =
-     case Names.modnameLookup l
-       of SOME m => (
-           case (expected, ModSyn.modLookup m)
-             of (SIG, ModSyn.SigDec _ ) => m
-              | (VIEW, ModSyn.ViewDec _) => m
-              | _ => error(r, "concept mismatch, expected " ^ expToString expected ^ ": " ^ Names.foldQualifiedName l)
-          )
-        | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName l)
+  fun modNameLookupWithError expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
+      ModSyn.cidToMid (nameLookupWithError expected (m,l,r))
 
   fun morphToMorph(cod : IDs.mid, (mor, r0)) =
      let
@@ -73,7 +68,7 @@ struct
      	val (link, nextCod) = let val s = nameLookupWithError STRUC (cod, names, r)
      	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
-            handle Error _ => let val m = modnameLookupWithError VIEW (names, r)
+            handle Error _ => let val m = modNameLookupWithError VIEW (ModSyn.currentMod(), names, r)
                                   val ModSyn.ViewDec(_,_,dom,_,_) = ModSyn.modLookup m
                                   val _ = if List.exists (fn (m',_) => m' = m) (ModSyn.getScope())
                                           then raise Error("view " ^ ModSyn.modFoldName m ^ " can only be used when closed")
@@ -149,9 +144,9 @@ struct
              	ModSyn.InclInst(cid, NONE, Mor')
              end
   
-   fun siginclToSigIncl(sigincl (sigid, opens), _) =
+   fun siginclToSigIncl(sigincl ((name,r), opens), _) =
       let
-      	 val m = modnameLookupWithError SIG sigid
+      	 val m = modNameLookupWithError SIG (ModSyn.currentMod(), name, r)
 	 val Opens = openToOpen (m,opens)
       in
       	 ModSyn.SigIncl (m, Opens)
@@ -160,8 +155,8 @@ struct
   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
                             insts : syminst list, opens : openids, implicit : bool), loc) = 
     let
-    	val Dom : IDs.mid = modnameLookupWithError SIG (dom, r1)
     	val Cod = ModSyn.currentTargetSig()
+    	val Dom : IDs.mid = modNameLookupWithError SIG (Cod, dom, r1)
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
 	val Opens = openToOpen (Dom,opens)
     in
@@ -175,13 +170,18 @@ struct
        	  ModSyn.StrDef([name], nil, Dom, Mor, implicit)
        end
     
-   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) = ModSyn.SigDec(OS.Path.mkCanonical fileName, [name])
-     | modbeginToModDec(viewbegin(name, dom, cod, implicit), Paths.Loc(fileName, _)) =
+   fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
+       let val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
+       in  ModSyn.SigDec(OS.Path.mkCanonical fileName, parname @ [name])
+       end
+     | modbeginToModDec(viewbegin(name, (dom,rd), (cod,rc), implicit), Paths.Loc(fileName, _)) =
          let
-            val Dom = modnameLookupWithError SIG dom
-            val Cod = modnameLookupWithError SIG cod
+            val cur = ModSyn.currentMod()
+            val Dom = modNameLookupWithError SIG (cur, dom, rd)
+            val Cod = modNameLookupWithError SIG (cur, cod, rc)
+            val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
          in
-            ModSyn.ViewDec (OS.Path.mkCanonical fileName, [name], Dom, Cod, implicit)
+            ModSyn.ViewDec (OS.Path.mkCanonical fileName, parname @ [name], Dom, Cod, implicit)
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =

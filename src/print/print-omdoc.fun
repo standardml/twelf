@@ -430,7 +430,7 @@ struct
      	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
      in
      	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
-     	  andalso not(m = 0 andalso ModSyn.modSize m = 0)
+     	  andalso not(m = 0)
      	then (
           print(modBeginToString(mdec, params));
           ModSyn.sgnApp(m, fn c => (case ModSyn.symLookup c

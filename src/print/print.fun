@@ -198,6 +198,7 @@ local
      	fun fold l = foldl (fn (x,y) => y @ [sym sep, x]) (List.take(l,1)) (tl l)
      	val formattedMods = case mods
      	                      of NONE => nil
+     	                       | SOME nil => [sym Sep]
      	                       | SOME l => (fold (List.map (Str0 o Symbol.module) l)) @ [sym Sep]
      	val formattedNames = fold (List.map (Str0 o f) names)
      in
@@ -231,11 +232,6 @@ local
        "*"    (* to be fixed --cs *)
 
 
-  (* fun constQid (cid) = 
-      if !noShadow 
-      then Names.conDecQid (ModSyn.sgnLookup cid)
-      else Names.constQid cid
-	*) 		       
   (* fmtCon (c) = "c" where the name is assigned according the the Name table
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
@@ -246,7 +242,7 @@ local
      then (NONE, ["%" ^ ModSyn.symFoldName cid ^ "%"])
      else let
      	 val m = IDs.midOf(cid)
-         val mods = if m = ModSyn.currentTargetSig() orelse m = 0 then NONE else SOME (ModSyn.modName m)
+         val mods = if m = ModSyn.currentTargetSig() then NONE else SOME (ModSyn.modName m)
      in  
      	(mods, I.conDecName (ModSyn.sgnLookup cid))
      end

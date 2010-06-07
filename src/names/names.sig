@@ -38,15 +38,14 @@ sig
 
   structure Fixity : FIXITY
 
-  (* map between module ids and their qualified names *)
-  val installModname : IDs.mid * (string list) -> unit
-  val modnameLookup : string list -> IDs.mid option
   (* map between global declarations ids (IDs.cid) and their local qualified names (string list)
      optional argument of installName gives origin of name declaration if different from first argument *)
-  val installName : IDs.cid * (IDs.cid option) * string list -> unit
+  val installName  : IDs.mid * IDs.cid * (IDs.cid option) * string list -> unit
+  val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
+  val uninstallName: IDs.mid * string list -> unit
   val nameLookup : IDs.mid * string list -> IDs.cid option
   val nameLookupWithError : IDs.mid * string list -> IDs.cid   (* convenience, as above but raises exception if undefined *)
-  val nameLookupC : string list -> IDs.cid option              (* convenience, lookup in the current target signature *)
+  val nameLookupC : string list -> IDs.cid option
   (* shadowing of (only) toplevel constants must be allowed for backwards compatibility *)
   (* true if shadowed by later symbol name; if a constant shadows a struct, the struct's components are not shadowed *)
   val isShadowed : IDs.cid -> bool

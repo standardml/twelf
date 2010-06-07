@@ -226,18 +226,26 @@ functor Elab (structure Print : PRINT) : ELAB = struct
    *)
   and checkAncestors(dom, cod) =
     let
-       fun getAncs(m) =
-            List.mapPartial (fn (a, ModSyn.Ancestor p) => SOME (a,p) | _ => NONE) (ModSyn.sigRelLookup m)
-       val domAncs = getAncs dom
-       val codAncs = getAncs cod
        val _ = if List.exists (fn (m,_) => m = dom) (M.getScope())
                then raise Error("domain of link may not be open")
                else ()
-       val _ = if List.all (fn (m,l) => m = cod orelse
-                                        List.exists (fn (m',l') => m = m' andalso l <= l') codAncs)
-                           domAncs
+       val domCid = ModSyn.midToCid dom
+       val domPar = IDs.midOf domCid
+       val codAncs = List.mapPartial
+                     (fn (a, ModSyn.Ancestor p) => SOME (a, ModSyn.midToCid p) | _ => NONE)
+                     (ModSyn.sigRelLookup cod)
+       (* this is called with l < l' iff the morphism is a view whose domain is declared after the codomain
+        in that case there may only be module declarations between domain and codomain *)
+       fun onlyModsBetween(m, l, l') =
+          if l >= l' then true
+          else (case ModSyn.symLookup (IDs.newcid(m,l))
+                  of ModSyn.SymMod _ => true
+                   | _ => false
+                ) andalso onlyModsBetween(m, l + 1, l')
+       val _ = if domPar = cod orelse
+                  List.exists (fn (a,c) => domPar = a andalso onlyModsBetween(a, IDs.lidOf c, IDs.lidOf domCid)) codAncs
                then ()
-               else raise Error("all ancestors of the domain of a link must be ancestors of the codomain")
+               else raise Error("the parent of the domain of a morphism must be ancestors of the codomain")
     in
        ()
     end

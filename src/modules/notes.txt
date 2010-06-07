@@ -3,9 +3,13 @@ make symbols with fixity parsable separately
 report lookup errors in recon-term
 preserve comments, line/column numbers
 install signature names after closing only? then no duplicate names or shadowing?
+can readDecl be merged with loadFile, loadString
+long ZFC check
 
 to do
-
+make sigRelLookup unique by throwing away every include if a sigRel already exists
+remove argument of Included; use extra hash table modIncludes mapping mid to cid list
+morphisms should be allowed to include a morphism out of the ancestor, then all signatures are visible (inlcude only possible if ancestor already visible)
 anonymous constants
 read assignments in structures separately
 print out with nicer names

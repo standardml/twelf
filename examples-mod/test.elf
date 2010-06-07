@@ -147,12 +147,28 @@ a : type.
      c : L1..a.
   }.
   %view L1-2 : L1 -> L2 = {
-     c  := L1..c.
+     c  := L0.L1..c.
      a  := b.
      d1 := a.
      d0 := L1..c.
   }.
 }.
+
+%% testing implicit morphisms
+%% b : type. %% makes the "upward view" c below fail 
+%sig A = {}.
+%sig B = {
+  %struct %implicit x : X.
+}.
+%view %implicit c : A -> X = {}.
+%sig C = {
+  %struct a : A.
+}.
+%sig D = {
+  %struct b : B.
+  %struct c : C = {%struct a := b.}. %% b is coerced to c B..x b.
+}.
+
 %% testing reads
 %read "test3.elf".
 %read "test2.elf".
@@ -165,20 +181,6 @@ a : type.
   c : R2..a.
   d : r.a.
   e : r.r.a.
-}.
-
-%% testing implicit morphisms
-%sig A = {}.
-%sig B = {
-  %struct %implicit x : X.
-}.
-%view %implicit c : A -> X = {}.
-%sig C = {
-  %struct a : A.
-}.
-%sig D = {
-  %struct b : B.
-  %struct c : C = {%struct a := b.}. %% b is coerced to c B..x b.
 }.
 
 %% testing pre-functors

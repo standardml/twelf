@@ -27,7 +27,8 @@ struct
   datatype Read = ReadFile of string
 
   (* unifies all declarations that can occur in a module *)
-  datatype Declaration = SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
+  datatype Declaration = SymMod of IDs.mid * ModDec
+                       | SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
                        | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
 
   fun modDecBase (SigDec(b,_)) = b
@@ -89,14 +90,17 @@ struct
    The mapping of cids to Qids and its inverse are redundant but maintained for faster lookup.
   *)
 
-  (* modTable maps a mid m to a tuple of a module declaration (modLookup m) and its size (modSize m)
+  (* modTable maps a mid m to a tuple of the module's cid and its size
      (size is -1 if the module is still open) *)
-  val modTable : (ModDec * int) MH.Table = MH.new(499)
+  (* @FR: get rid of having to keep track of size *)
+  val modTable : (IDs.cid * IDs.lid) MH.Table = MH.new(499)
 
   (* declTable maps cids to symbol level declarations *)
   val declTable : Declaration CH.Table = CH.new(19999)
 
-  datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.lid | AncIncluded
+  (* sigRelTable stores all signatures visible in a module
+     currently, views do not see themselves *)
+  datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.mid | AncIncluded
   val sigRelTable : (IDs.mid * SigRelType) list MH.Table = MH.new(299)
 
   (* morphInclTable indexes all moprhisms included into a view - maintained for efficiency. *)
@@ -106,7 +110,10 @@ struct
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
     
   (* scope holds the list of the currently open modules and their next available lid (innermost to outermost) *)
-  val scope : (IDs.mid * IDs.lid) list ref = ref nil
+  type scopelist = (IDs.mid * IDs.lid) list 
+  val scope : scopelist ref = ref nil
+  (* savedScopes is a stack of scopes used in pushScope, popScope to temporarily switch back to the toplevel *)
+  val savedScopes : (scopelist * (Declaration option)) list ref = ref nil
   (* the next available module id *)
   val nextMid : IDs.mid ref = ref 0
   
@@ -116,13 +123,20 @@ struct
   val implicitIn  : (IDs.mid * Morph) list MH.Table = MH.new(50)
 
   (********************** Effect-free (lookup) methods **********************)
-  fun modLookup(m) = #1 (valOf (MH.lookup modTable m))
-                               handle Option => raise UndefinedMid(m)
+  fun getScope() = ! scope
+
+  fun midToCid m = case MH.lookup modTable m
+      of NONE => raise UndefinedMid m
+       | SOME (c,_) => c
   fun modSize(m) =
-     case List.find (fn (x,_) => x = m) (! scope)
-        of SOME (_,l) => l                             (* size of open module stored in scope *)
-         | NONE => #2 (valOf (MH.lookup modTable m))   (* size of closed module stored in modTable *)
-                   handle Option => raise UndefinedMid(m)
+     case List.find (fn (x,_) => x = m) (getScope())
+       of SOME (_,l) => l                             (* size of open module stored in scope *)
+        | NONE => #2 (valOf (MH.lookup modTable m))   (* size of closed module stored in modTable *)
+                  handle Option => raise UndefinedMid(m)
+  fun cidToMid c = case CH.lookup declTable c
+      of SOME (SymMod(m,_)) => m
+       | _ => raise UndefinedCid c
+     
   fun sigRelLookup(m) = valOf (MH.lookup sigRelTable m)
                                   handle Option => raise UndefinedMid(m)
   fun sigIncluded(dom, cod) = List.exists
@@ -135,40 +149,27 @@ struct
                      then SOME AncIncluded
                      else SOME rel
   fun symVisible(c, m) = case sigRel(IDs.midOf c, m)
-    of SOME (Ancestor p) => if IDs.lidOf c < p then SOME (Ancestor p) else NONE
+    of SOME (Ancestor p) => if IDs.lidOf c < IDs.lidOf (midToCid p) then SOME (Ancestor p) else NONE
      | r => r
   fun morphInclLookup(m : IDs.mid) = valOf (MH.lookup morphInclTable m)
                                      handle Option => raise UndefinedMid(m)
 
-  fun currentMod() = #1 (hd (! scope))
-  fun currentTargetSig() =
-     let val m = currentMod()
-     in case modLookup m
-       of SigDec _ => m
-        | ViewDec(_,_,_,cod,_) => cod
-     end
-
-  fun getScope() = ! scope
-  fun onToplevel() = List.length (! scope) = 1
-  fun inCurrent(l : IDs.lid) = IDs.newcid(currentMod(), l)
-
-  (* true: currentMod() is SigDec, false: currentMod() is ViewDec *)
-  fun inSignature() = case modLookup (currentMod())
-                          of SigDec _ => true
-                           | ViewDec _ => false
-
   fun symLookup(c : IDs.cid) = valOf (CH.lookup(declTable)(c))
                                handle Option => raise (UndefinedCid c)
+
+  fun modLookup(m) =
+    if m = 0 then SigDec("toplevel", nil)
+             else case symLookup (midToCid m)
+                    of SymMod (_,moddec) => moddec
+                     | _ => raise UndefinedMid m
 
   fun sgnLookup (c : IDs.cid) = case symLookup c
     of SymCon d => d
      | _ => raise (UndefinedCid c)
-  val sgnLookupC = sgnLookup o inCurrent
 
   fun structLookup(c : IDs.cid) = case symLookup c
     of SymStr d => d
   | _ => raise (UndefinedCid c)
-  val structLookupC = structLookup o inCurrent
 
   fun structMapLookup (S,s') = CCH.lookup structMapTable (S,s')
 
@@ -193,6 +194,19 @@ struct
         of SOME(_, mor) => SOME mor
         | NONE => NONE
      end
+
+  fun currentMod() = #1 (hd (getScope()))
+  fun currentTargetSig() =
+     let val m = currentMod()
+     in case modLookup m
+       of SigDec _ => m
+        | ViewDec(_,_,_,cod,_) => cod
+     end
+  fun onToplevel() = currentMod() = 0
+  (* true: currentMod() is SigDec, false: currentMod() is ViewDec *)
+  fun inSignature() = case modLookup (currentMod())
+                        of SigDec _ => true
+                         | ViewDec _ => false
 
   (********************** Convenience methods **********************)
   fun constDefOpt (d) =
@@ -278,42 +292,33 @@ struct
      ) ins;
      ()
   ) end
-  
-  fun modOpen(dec) =
-     let
-     	val _ = if inSignature() then () else raise Error("modules may not occur inside views")
-        val m = ! nextMid
-        val _ = nextMid := ! nextMid + 1
-        val _ = MH.insert modTable (m, (dec, ~1))
-        val _ = case dec
-          of SigDec _ =>
-             let val (p,l) = List.hd (! scope)
-                 val pincls = sigRelLookup p
-                 fun rewrite(Self) = Ancestor(l)
-                   | rewrite(Ancestor p) = Ancestor p
-                   | rewrite(Included _) = AncIncluded
-                   | rewrite(AncIncluded) = AncIncluded
-                 val incls = List.map (fn (d,r) => (d, rewrite r)) pincls
-             in MH.insert sigRelTable (m, (m, Self) :: incls)
-             end
-          | ViewDec _ => MH.insert morphInclTable(m, nil)
-        val _ = scope := (m,0) :: (! scope)
-     in
-     	m
-     end
 
-  fun modClose() =
-     let
-     	val _ = if onToplevel() then raise Error("no open module to close") else ()
-        val (m,l) = hd (! scope)
-        val _ = scope := tl (! scope)
-        val SOME (a,_) = MH.lookup modTable m
-        val _ = MH.insert modTable (m, (a, l))
-        val _ = case a of ViewDec(_,_,dom,cod,true) => implicitAdd(dom, cod, MorView m)
-                        | _ => ()
-      in
-         ()
-      end
+  fun pushScope() = let 
+     val (_,nextLid) :: saveMods = List.rev (getScope())
+     val saveModDecl = case saveMods
+       of nil => NONE
+        | (m,_) :: _ => (
+          scope := [(0,nextLid-1)];
+          MH.delete modTable m;
+          CH.lookup declTable (0,nextLid-1)
+        )
+     val _ = savedScopes := (saveMods, saveModDecl) :: (! savedScopes)
+  in () end
+
+  fun popScope() = let
+     val nextLid = case getScope() of (_,l) :: nil => l | _ => raise Error("not on toplevel")
+     val (savedMods, savedModDecl) :: tl = ! savedScopes
+     val _ = savedScopes := tl
+     val mid = #1 (List.hd savedMods)
+     val newCid = (0,nextLid)
+     val _ = case savedModDecl
+       of NONE => ()
+        | SOME dec => (
+            scope := List.rev ((0,nextLid + 1) :: savedMods);
+            MH.insert modTable (mid, (newCid, ~1));
+            CH.insert declTable (newCid, dec)
+          )
+  in newCid end
 
   fun declAddC(dec : Declaration) : I.cid = let
       val (c as (m,l)) :: scopetail = ! scope
@@ -321,6 +326,44 @@ struct
       val _ = scope := (m, l+1) :: scopetail
   in c
   end
+
+  fun modOpen(dec) =
+     let
+     	val _ = if inSignature() then () else raise Error("modules may not occur inside views")
+        val m = ! nextMid
+        val _ = nextMid := ! nextMid + 1
+        val c = declAddC (SymMod (m,dec))
+        val _ = MH.insert modTable (m, (c,~1))
+        val (p,l) = List.hd (! scope)
+        val pincls = sigRelLookup p
+        fun rewrite(Self) = Ancestor m
+          | rewrite(Ancestor a) = Ancestor a
+          | rewrite(Included _) = AncIncluded
+          | rewrite(AncIncluded) = AncIncluded
+        val incls = List.map (fn (d,r) => (d, rewrite r)) pincls
+        val _ = case dec
+          of SigDec _ => MH.insert sigRelTable (m, (m, Self) :: incls)
+          | ViewDec _ => (
+             MH.insert sigRelTable (m, incls);
+             MH.insert morphInclTable(m, nil)
+          )
+        val _ = scope := (m,0) :: (! scope)
+     in
+     	c
+     end
+
+  fun modClose() =
+     let
+     	val _ = if onToplevel() then raise Error("no open module to close") else ()
+        val (m,l) :: tl = getScope()
+        val _ = scope := tl
+        val _ = MH.insert modTable (m, (midToCid m, l))
+        val _ = case modLookup m
+                  of ViewDec(_,_,dom,cod,true) => implicitAdd(dom, cod, MorView m)
+                   | _ => ()
+      in
+         ()
+      end
 
   fun sgnAddC (conDec : I.ConDec) =
     let
@@ -385,9 +428,6 @@ struct
       scope := (m, l+1) :: scopetail;
       c 
     end
-   
-  (* first file determines base of toplevel *)
-  fun newFile(s) = case modLookup 0 of SigDec("", _) => MH.insert modTable (0, (SigDec(s, nil), ~1)) | _ => ()
 
   fun reset () = (
     CH.clear declTable;               (* clear tables *)
@@ -397,10 +437,14 @@ struct
     CCH.clear structMapTable;
     MH.clear implicitOut;
     MH.clear implicitIn;
-    nextMid := 1;                    (* initial mid *)
-    scope := [(0,0)];                (* open toplevel signature *)
-    MH.insert modTable (0, (SigDec("", nil), ~1));
+    savedScopes := nil;
+    nextMid := 1;                       (* initial mid *)
+    scope := [(0,0)];                 (* open toplevel signature *)
     MH.insert sigRelTable (0, [(0,Self)])
+    (* bogus entries for the toplevel signature, hopefully not needed anymore
+    MH.insert modTable (0, (0,~1), ~1);
+    MH.insert declTable((0,~1),(0, SymMod (0, SigDec("",nil))))
+    *)
   )
  
   (********************** Convenience methods **********************)

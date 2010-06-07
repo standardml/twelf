@@ -347,7 +347,7 @@ struct
 	let
 	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = ModSyn.sgnAddC conDec
-	  val _ = Names.installName (cid, NONE, IntSyn.conDecName conDec)
+	  val _ = Names.installNameC (cid, NONE, IntSyn.conDecName conDec)
 	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
@@ -360,7 +360,7 @@ struct
     fun installBlockDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
 	  val cid = ModSyn.sgnAddC conDec
-	  val _ = Names.installName (cid, NONE, IntSyn.conDecName conDec)
+	  val _ = Names.installNameC (cid, NONE, IntSyn.conDecName conDec)
 	          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
 	  (* val _ = Origins.installOrigin (cid, fileNameocOpt) *)
 	  val _ = (Timers.time Timers.subordinate Subordinate.installBlock) cid
@@ -373,7 +373,7 @@ struct
     fun installStrDec(strDec, r) =
        let
           val c : IDs.cid = ModSyn.structAddC(strDec)
-          val _ = Names.installName(c, NONE, ModSyn.strDecName strDec)
+          val _ = Names.installNameC(c, NONE, ModSyn.strDecName strDec)
                   handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
        in
        	  c
@@ -389,7 +389,7 @@ struct
                      else raise Names.Error("cannot open included symbol " ^ ModSyn.symFoldName c)
                    | _ => c
              in
-                Names.installName(c', SOME origin, [new])
+                Names.installNameC(c', SOME origin, [new])
              end
           ) opens;
           ()
@@ -430,12 +430,29 @@ struct
                     CSManager.resetSolvers ()
 		    )
 
-     (* install1 (decl) = ()
-       Installs one declaration
-       Effects: global state
-                may raise standard exceptions
-    *)
-    fun install1 (fileName, (Parser.ConDec condec, r)) =
+    exception MissingModule of string
+    (* install goes through a stream and calls install1 on every declarations *)
+    fun install(fileName, stream) = 
+      let fun install'(S.Empty) = OK
+            | install'(S.Cons (decl, s')) =
+              let val _ = tryInstall1 (fileName, decl)
+              in install (fileName, s')
+              end
+      in
+      	  install' ((Timers.time Timers.parsing S.expose) stream)
+      end
+     
+    and tryInstall1(fileName, dec) = (
+       install1(fileName, dec)
+       handle MissingModule(name) => (
+          (* remove all name entries M_1...M_i in toplevel signature (thus open signatures unreferencable)
+             pushScope; loadModule(name); popScope
+             add name entries in toplevel signatures for popped scope with updated cids *)   
+          tryInstall1(fileName, dec)
+       )
+    )
+    (* install1 installs one declaration, effects global state, may raise standard exceptions *)
+    and install1 (fileName, (Parser.ConDec condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
         (let
 	   val (optConDec, ocOpt) = ReconConDec.condecToConDec (condec, Paths.Loc (fileName,r), false)
@@ -1123,14 +1140,14 @@ struct
                      (M_1.....M_0 is toplevel signature)
                      origin is given by cid of M_i in M_1.....M_{i-1}, no origin for i=n *)
                fun origins(hd::nil) = nil
-                   origins(hd::tl) = (SOME (ModSyn.midToCid hd)) :: (origins tl)
-               fun doNames(mid::mids, org::orgs, c, names) =
+                 | origins(hd::tl) = (SOME (ModSyn.midToCid hd)) :: (origins tl)
+               fun doNames(mid::mids, names, c, org::orgs) =
                    (Names.installName(mid, c, org, names)
                     handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
-                    doNames(mids, orgs, c, tl names)
+                    doNames(mids, tl names, c, orgs)
                    )
                  | doNames(nil,nil,c,nil) = ()
-               val _ = doNames(rev ancmids, rev (NONE :: origins(ancmids)), ModSyn.modDecName dec, c)
+               val _ = doNames(rev ancmids, ModSyn.modDecName dec, c, rev (NONE :: origins(ancmids)))
            in
              chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
@@ -1286,14 +1303,10 @@ struct
 	  let
 	    val _= if (ModSyn.getScope() = nil) then reset() else () (* reset to initialize if nothing read yet *)
             val _ = ReconTerm.resetErrors fileName
-	    fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-	    and install' (S.Empty) = OK
-	      | install' (S.Cons(decl, s')) =
-	        (install1 (fileName, decl); install s')
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-            val _ = ModSyn.newFile (OS.Path.mkCanonical fileName)              (* for name management -fr *)
+            (* val _ = ModSyn.newFile (OS.Path.mkCanonical fileName)              (* for name management -fr *) *)
 	  in
-	    install (Parser.parseStream instream)
+	    install (fileName, Parser.parseStream instream)
 	  end)
 
     (* loadString (str) = status
@@ -1304,12 +1317,8 @@ struct
     fun loadString str = handleExceptions 0 "string"
 	(fn () =>
 	    let val _ = ReconTerm.resetErrors "string"
-		fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-		and install' (S.Empty) = OK
-		  | install' (S.Cons (decl, s')) =
-	            (install1 ("string", decl); install s')
 	    in
-		install (Parser.parseStream (TextIO.openString str))
+		install ("string", Parser.parseStream (TextIO.openString str))
 	    end) ()
 
     (* Interactive Query Top Level *)
@@ -1362,12 +1371,13 @@ struct
 	   install (Parser.parseStream TextIO.stdIn)
 	 end) ()
 
-    (* decl (name) = () prints declaration of constant id *)
+    (* decl (modname, symname) = () prints declaration of symbol *)
     fun decl (modname, name) =
-       case Names.modnameLookup (Names.parseQualifiedName modname)
+       case Names.nameLookupC (Names.parseQualifiedName modname)
           of NONE => (msg (modname ^ " has not been declared\n"); ABORT)
-           | SOME m =>
+           | SOME c =>
                 let
+                  val m = ModSyn.cidToMid c
                   val (dom, inSig) = case ModSyn.modLookup m
                      of ModSyn.SigDec _ => (m, true)
                       | ModSyn.ViewDec(_,_,d,_,_) => (d, false)

@@ -148,9 +148,6 @@ struct
     *) 
     val nameTable : (cid * cid option) SH.Table = SH.new(4096)
 
-    (* modnameTable maps module names to module ids *) 
-    val modnameTable : mid MH.Table = MH.new(128)
-
     (* shadowTable(c') = c means that c' was shadowed by c *)
     val shadowTable : cid CH.Table = CH.new(128)
     
@@ -169,6 +166,9 @@ struct
    fun parseQualifiedName (name : string) =
        String.fields (fn c => c = #".") name
    fun foldQualifiedName l = IDs.mkString(l,"",".","")
+   (* For compatibility with non-modular code, qualified names (mods, cons) where both
+      mods and cons are lists of strings are represented as a single string list with "" separating
+      mods and cons. splitName retrieves the components. *)
    fun splitName names =
       let fun aux(left, nil) = (left, nil)
             | aux(left, name :: names) =
@@ -176,45 +176,43 @@ struct
       in  aux(nil, names)
       end
  
-    fun installModname(m : mid, l : string list) =
-       case MH.insertShadow modnameTable (l,m)
-         of NONE => ()
-          | SOME e => (
-             MH.insert modnameTable e; (* roll back insertShadow *)
-             raise Error("module name " ^ foldQualifiedName l ^ " already declared")
-            )
-
-    fun installName(c : cid, origin : IDs.cid option, l : string list) =
-       case SH.insertShadow nameTable ((ModSyn.currentMod(), l), (c, origin))
+    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
+       case SH.insertShadow nameTable ((m, names), (c, origin))
          of NONE => ()
           | SOME (e as (_, (c',_))) => (
-             if ModSyn.onToplevel() andalso List.length l = 1
+             if ModSyn.onToplevel() andalso List.length names = 1
              then 
                 CH.insert shadowTable (c', c)
              else
-               raise Error("symbol name " ^ foldQualifiedName l ^ " already declared")
+               raise Error("name " ^ foldQualifiedName names ^ " already declared in " ^
+               (if m = 0 then "toplevel" else ModSyn.modFoldName m))
             )
-
-    val modnameLookup : string list -> mid option = MH.lookup modnameTable
-    fun declBefore(lOpt : IDs.lid option, l'Opt : IDs.lid option) = case (lOpt,l'Opt)
-          of (SOME l, SOME l') => l < l'
-           | _ => true
-    fun nameLookup'(m: IDs.mid, l: string list, limit: IDs.lid option) = case SH.lookup nameTable (m,l)
+    fun installNameC(c, origin, names) = installName(ModSyn.currentMod(), c, origin, names)
+    fun uninstallName(m, names) = SH.delete nameTable (m,names)
+    
+    fun nameLookup'(m: mid, l: string list, limit: mid option) = case SH.lookup nameTable (m,l)
       of SOME (c, org) => (case limit
-         of SOME l => if IDs.lidOf(getOpt(org, c)) < l then SOME c else NONE
+         (* using <= rather than < so that an ancestor signature is found *)
+         of SOME m => if IDs.lidOf(getOpt(org, c)) <= IDs.lidOf(ModSyn.midToCid m) then SOME c else NONE
           | NONE => SOME c
          )
        | NONE => NONE
-    fun fullNameLookup'(mods : string list, cons : string list) =
+
+    fun fullNameLookup(mods : string list, cons : string list) =
        case modnameLookup(mods)
          of NONE => NONE
           | SOME m => nameLookup'(m, cons, NONE)
+    and modnameLookup(names : string list) = 
+       case nameLookupC(names)
+         of SOME c => (
+              SOME (ModSyn.cidToMid c)
+              handle ModSyn.UndefinedMid _ => raise Error("not a module name: " ^ foldQualifiedName names)
+            )
+          | NONE => NONE
+    
     (* returns list of possible resolutions *)
-    fun nameLookup''(current, names) : IDs.cid list =
+    and symNameLookup(current, names) : IDs.cid list =
        let
-          (* For compatibility with non-modular code, qualified names (mods, cons) where both
-             mods and cons are lists of strings are represented as a single string list with "" separating
-             mods and cons. splitName retrieves the components. *)
        	  val (left, right) = splitName names
        	  (* looks up a name in all signatures in sigRelLookup of a signature
        	     if a resolution is found in Self or Ancestor _, it is returned by itself
@@ -242,7 +240,7 @@ struct
        	  (* unqualified name - lookup in local signature, then ancestors inside->outside, then includes *)
        	  then lookupInIncls(ModSyn.sigRelLookup current, left, nil)
           (* qualified name - lookup both modname and symname *)
-       	  else case fullNameLookup'(left, right)
+       	  else case fullNameLookup(left, right)
        	         of NONE => nil
        	          | SOME c => (case ModSyn.symLookup c
        	                         of ModSyn.SymCon _ => if isSome (ModSyn.symVisible(c, current)) then [c] else nil
@@ -250,18 +248,18 @@ struct
        	                          | _ => nil
        	                       )
         end
-    fun nameLookup(current, names) : IDs.cid option = case nameLookup''(current, names)
+    and nameLookup(current, names) : IDs.cid option = case symNameLookup(current, names)
         of nil => NONE
        	 | hd :: tl => if List.exists (fn x => not(x = hd)) tl
        	               then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName names)
        	               else SOME hd
-    fun nameLookupWithError(m,q) : IDs.cid = case nameLookup''(m,q)
+    and nameLookupWithError(m,q) : IDs.cid = case symNameLookup(m,q)
       of hd :: tl => if List.exists (fn x => not(x = hd)) tl
        	             then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName q)
        	             else hd
        | nil => raise Error("undeclared identifier " ^ foldQualifiedName q)
 
-    fun nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
+    and nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
 
@@ -316,7 +314,7 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (SH.clear nameTable; MH.clear modnameTable; CH.clear shadowTable; 
+    fun reset () = (SH.clear nameTable; CH.clear shadowTable; 
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

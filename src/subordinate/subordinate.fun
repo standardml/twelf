@@ -454,9 +454,7 @@ struct
        let
          (* for all type-level constant declarations that are effectively local or included into "from" ... *)
          fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
-           of ModSyn.SymStr _ => ()
-            | ModSyn.SymIncl _ => ()
-            | ModSyn.SymCon (IntSyn.BlockDec _) => ()
+           of ModSyn.SymCon (IntSyn.BlockDec _) => ()
             | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
                 of IntSyn.Kind => (
                      insertNewFam c;
@@ -468,6 +466,7 @@ struct
                    )
                  | _ => ()
               )
+             | _ => ()
           (* obtain the signatures included into "from"
              we do not need the ancestors because they must also be ancestors of the current signature
        	     This could be imporved by also skipping all signatures that are already included into the current signature *)

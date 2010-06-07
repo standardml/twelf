@@ -79,10 +79,6 @@ sig
     * Morph                            (* definition *)    
     * bool                             (* implicit *)
 
-  (* unifies all symbol level declarations *)
-  datatype Declaration = SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
-                       | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
-    
   (* module declarations
      * A signature is a list of symbol declarations.
      * A view from S to T provides instantiations for all symbols of S in terms of expressions over T
@@ -101,6 +97,11 @@ sig
        * IDs.mid                       (* codomain *)
        * bool                          (* implicit *)
   
+  (* unifies all symbol level declarations *)
+  datatype Declaration = SymMod of IDs.mid * ModDec
+                       | SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
+                       | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
+    
    datatype Read = ReadFile of string  (* file name *)
    
   (* convenience methods to access components of declarations *)
@@ -122,7 +123,7 @@ sig
   (********************** Interface methods that affect the state **********************)
   
   (* called at the beginning of a module *)
-  val modOpen    : ModDec -> IDs.mid
+  val modOpen    : ModDec -> IDs.cid
   (* called at the end of a module *)
   val modClose   : unit -> unit
   (* called to add an inclusion to the current module, which must be a signature *)
@@ -133,8 +134,6 @@ sig
   val structAddC : StrDec -> IDs.cid
   (* called to add an instantiation to the current module, which must be a view *)
   val instAddC   : SymInst -> IDs.cid
-  (* called after reset to set the base of the signature graph *)
-  val newFile    : string -> unit
   (* called to reset the state *)
   val reset      : unit -> unit
 
@@ -150,8 +149,8 @@ sig
 
   (* looks up a module declaration, raise UndefinedMid _ *)
   val modLookup  : IDs.mid -> ModDec
-  (* the number of symbol declarations in a module *)
-  val modSize    : IDs.mid -> int
+  val midToCid   : IDs.mid -> IDs.cid
+  val cidToMid   : IDs.cid -> IDs.mid
 
   (* sigRelType and sigRelLookup describe signatures visible to a signature m: 
      a) m itself: (m,Self)
