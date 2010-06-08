@@ -12,5 +12,7 @@ sig
   val parseStrInst'   : ModExtSyn.syminst Parsing.parser
   val parseInclude'   : ModExtSyn.sigincl Parsing.parser
   val parseIncludeView': ModExtSyn.syminst Parsing.parser
+  val parseIncludeRel': ModExtSyn.syminst Parsing.parser
+  val parseStrRel'    : ModExtSyn.syminst Parsing.parser
   val parseRead'      : ModExtSyn.read Parsing.parser
 end

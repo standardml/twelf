@@ -121,6 +121,7 @@ struct
     
     fun parseStream (s, sc) = Stream.delay (fn () => parseStream' (LS.expose s, sc))
     and parseStreamInView (s, sc) = Stream.delay (fn () => parseStreamInView' (LS.expose s, sc))
+    and parseStreamInRel (s, sc) = Stream.delay (fn () => parseStreamInRel' (LS.expose s, sc))
 
     (* parseStream' : lexResult front -> fileParseResult front *)
     (* parseStream' switches between various specialized parsers *)
@@ -190,6 +191,7 @@ struct
       | parseStream' (f as LS.Cons ((L.CLAUSE, r), s'), sc) = parseClause' (f, sc) (* -fp *)
       | parseStream' (f as LS.Cons ((L.SIG, r), s'), sc) = parseSigBegin' (f, sc)   (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.VIEW, r), s'), sc) = parseViewBegin' (f, sc) (* -fr, module system *)
+      | parseStream' (f as LS.Cons ((L.REL, r), s'), sc) = parseRelBegin' (f, sc)   (* -fr, logical relations *)
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)(* -fr, module system *)
@@ -199,14 +201,21 @@ struct
       | parseStream' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or pragma keyword, found " ^ L.toString t)
 
-    (* -fr, parsing in a view must split differently *)
-    and parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInViewStrInst' (f, sc)
-      | parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInViewConInst' (f, sc)
-      | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
+    (* -fr, parsing in view and logical relations splits differently *)
+    and parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInViewConInst' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInViewStrInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInViewInclude' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
-	  Parsing.error (r, "Expected constant name or %struct keyword, found "	^ L.toString t)
+	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
   
+    and parseStreamInRel' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInRelConInst' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInRelStrInst' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclude' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
+      | parseStreamInRel' (LS.Cons ((t,r), s'), sc) =
+	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
+
     and parseConDec' (f as LS.Cons ((_, r0), _), sc) =
         let
 	  val (conDec, f' as LS.Cons((_,r'),_)) = ParseConDec.parseConDec' (f)
@@ -424,6 +433,15 @@ struct
 	  Stream.Cons ((ModBegin ViewBegin, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
+    and parseRelBegin' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (RelBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseRelBegin' (f)
+	  val r = Paths.join (r0, r')
+        in
+          (* switching to inRel parser *)
+	  Stream.Cons ((ModBegin ViewBegin, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+        end
+
     and parseModEnd'(f as LS.Cons ((_, r0), s'), sc) =
        (* switching to normal parser *)
        Stream.Cons ((ModEnd, r0), parseStream (stripDot (LS.expose s'), sc))
@@ -474,6 +492,30 @@ struct
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((SymInst incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
+        end
+
+    and parseInRelConInst' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (conInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseConInst'(f)
+           val r = Paths.join (r0, r')
+        in
+	   Stream.Cons ((SymInst conInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+        end
+
+    and parseInRelStrInst' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (strInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrRel'(f)
+           val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((SymInst strInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+        end
+
+    and parseInRelInclude' (f as LS.Cons ((_, r0), _), sc) =
+        let
+           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseIncludeRel'(f)
+           val r = Paths.join (r0, r')
+        in
+	  Stream.Cons ((SymInst incl, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

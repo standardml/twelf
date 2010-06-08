@@ -29,6 +29,9 @@ sig
   *)
   datatype OpenDec = OpenDec of (IDs.cid * string) list
 
+  (* logical relations *)
+  datatype Rel = Rel of IDs.mid
+
   (*
      morphisms
      morphisms have a domain and a codomain signature
@@ -51,7 +54,11 @@ sig
   *)
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
                    | InclInst of IDs.cid * (IDs.cid option) * Morph
-  
+
+  (* symbol cases within a logical relations *)
+  datatype SymRel  = ConRel of IDs.cid * (IDs.cid option) * I.Exp | StrRel of IDs.cid * (IDs.cid option) * Rel
+                   | InclRel of IDs.cid * (IDs.cid option) * Rel
+
   (* inclusion declaration in a signature *)
   datatype SigIncl
      = SigIncl of IDs.mid     (* included signature *)
@@ -84,6 +91,7 @@ sig
      * A view from S to T provides instantiations for all symbols of S in terms of expressions over T
        It can be considered as an implementation of S in terms of the symbols of T.
        Thus a view from S to T can be seen as a functor from T to S.
+     * A logical relations between a list morphisms with the same domain and codomain.
      The symbol level declarations within a module are stored separately and are not part of the ModDec
   *)
   datatype ModDec
@@ -91,17 +99,24 @@ sig
          string                        (* base, file name in Unix syntax, relative to current directory *)
        * string list                   (* qualified name *)
      | ViewDec of
-         string                        (* base, file name in Unix syntax, relative to current directory *)
+         string                        (* base *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
        * bool                          (* implicit *)
+     | RelDec of
+         string                        (* base *)
+       * string list                   (* name *)
+       * IDs.mid                       (* domain *)
+       * IDs.mid                       (* codomain *)
+       * Morph list                    (* morphisms *)
   
   (* unifies all symbol level declarations *)
   datatype Declaration = SymMod of IDs.mid * ModDec
                        | SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
                        | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
-    
+                       | SymConRel of SymRel | SymStrRel of SymRel | SymInclRel of InclRel
+
    datatype Read = ReadFile of string  (* file name *)
    
   (* convenience methods to access components of declarations *)

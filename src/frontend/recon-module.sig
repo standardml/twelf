@@ -29,6 +29,7 @@ sig
   (* begin of a module *)
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id * bool
+                    | relbegin of string * (morph list)
   
   (* importing files *)
   datatype read = readfile of string
@@ -43,6 +44,8 @@ sig
   val morphToMorph : IDs.mid * (morph * Paths.location) -> ModSyn.Morph
   (* reconstructs an instantiation, first two arguments are domain and codomain mid *)
   val syminstToSymInst : IDs.mid * IDs.mid * syminst * Paths.location -> ModSyn.SymInst
+  (* reconstructs a case in a logical relation, first two arguments are domain and codomain mid *)
+  val symrelToSymRel : IDs.mid * IDs.mid * symrel * Paths.location -> ModSyn.SymRel
   (* reconstructs a structure declaration *)
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
   (* reconstructs the begin of a module declaration *)

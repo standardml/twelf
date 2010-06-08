@@ -328,10 +328,10 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        else raise Error("including signatures only allowed in signatures")
 
   (* checks well-typedness conditions for modules (called at the end of the module *)
-  and checkModEnd(m) =
-       if M.inSignature() then () else
-       let
-          val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
+  and checkModEnd(m) = case M.modLookup m
+     of M.SigDec => ()
+      | M.ViewDec(_, _, dom, cod, _) =>
+        let
           val _ = checkAncestors(dom, cod)
           val _ = checkIncludes(dom, cod, M.morphInclLookup m)
           (* check totality of view: every undefined constant id of dom must have an instantiation in m *)
@@ -340,9 +340,20 @@ functor Elab (structure Print : PRINT) : ELAB = struct
               of M.SymCon (I.ConDec _) => ((M.symLookup(m, IDs.lidOf c') ; ())
                  handle M.UndefinedCid _ => raise Error("view not total: missing instatiation for " ^ M.symFoldName c'))
                | _ => ()
-       in
+        in
           M.sgnApp(dom, checkDefined)
-       end
+        end
+      | M.RelDec(_,_,dom,_,_) =>
+        let
+          (* check totality of relation: every undefined constant id of dom must have an instantiation in m *)
+          fun checkDefined(c' : IDs.cid) = case M.symLookup c'
+              of M.SymCon (I.ConDec _) => ((M.symLookup(m, IDs.lidOf c') ; ())
+                 handle M.UndefinedCid _ => raise Error("logical relation not total: missing case for " ^ M.symFoldName c'))
+               | _ => ()
+        in
+          M.sgnApp(dom, checkDefined)
+        end
+         
   (* checks well-typedness conditions for modules (called at the beginning of the module *)
   and checkModBegin(_) = ()
 

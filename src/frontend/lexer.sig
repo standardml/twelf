@@ -58,6 +58,7 @@ sig
     | SIG                               (* `%sig' *)
     | STRUCT                            (* `%struct' *)
     | VIEW                              (* `%view' *)
+    | REL                               (* `%rel' *)
     | INCLUDE                           (* `%include' *)
     | OPEN                              (* `%open' *)
     | AS                                (* `%as' -fr Jun 09*)

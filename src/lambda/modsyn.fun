@@ -17,24 +17,33 @@ struct
   exception UndefinedMid of IDs.mid
 
   datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
+  datatype Rel = Rel of IDs.mid
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
                    | InclInst of IDs.cid * (IDs.cid option) * Morph
+  datatype SymRel  = ConRel of IDs.cid * (IDs.cid option) * I.Exp | StrRel of IDs.cid * (IDs.cid option) * Rel
+                   | InclRel of IDs.cid * (IDs.cid option) * Rel
   datatype OpenDec = OpenDec of (IDs.cid * string) list
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
   datatype SigIncl = SigIncl of IDs.mid * OpenDec
-  datatype ModDec = SigDec of string * string list | ViewDec of string * string list * IDs.mid * IDs.mid * bool
+  datatype ModDec = SigDec of string * string list
+                  | ViewDec of string * string list * IDs.mid * IDs.mid * bool
+                  | RelDec of string * string list * IDs.mid * IDs.mid * (Morph list)
+
   datatype Read = ReadFile of string
 
   (* unifies all declarations that can occur in a module *)
   datatype Declaration = SymMod of IDs.mid * ModDec
                        | SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
                        | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
+                       | SymConRel of SymRel | SymStrRel of SymRel | SymInclRel of InclRel
 
   fun modDecBase (SigDec(b,_)) = b
     | modDecBase (ViewDec(b,_,_,_,_)) = b
+    | modDecBase (RelDec(b,_,_,_,_)) = b
   fun modDecName (SigDec(_,n)) = n
     | modDecName (ViewDec(_,n,_,_,_)) = n
+    | modDecName (RelDec(_,n,_,_,_)) = n
   fun strDecName (StrDec(n, _, _, _, _, _)) = n
     | strDecName (StrDef(n, _, _, _, _)) = n
   fun strDecFoldName s =  IDs.mkString(strDecName s,"",".","")
@@ -59,12 +68,21 @@ struct
    - modLookup m is defined for all 0 <= m < ! nextMid (0 is the toplevel, which is defined during initialization)
    - if modLookup m = SigDec _, then symLookup(m,l) is defined for all 0 <= l < modSize(m)
    - if modLookup m = ViewDec(_,d,_), then symLookup(m,l) yields the instantiation for (d,l)
+   - if modLookup m = RelDec(_,d,_), then symLookup(m,l) yields the case for (d,l)
    
    symbol level declarations
    - if modLookup m = SigDec _, then symLookup(m,l) = SymCon _ or = SymStr _ or SymIncl _
    - if modLookup m = ViewDec(_,_,dom,cod,_), then
      * modLookup dom = SigDec _ and modLookup cod = SigDec _
      * symLookup (m,l) is defined for at most 0 <= l < modSize dom, and
+       + if symLookup(m,l) = SymConInst _,  then symLookup(dom,l) = SymCon _
+       + if symLookup(m,l) = SymStrInst _,  then symLookup(dom,l) = SymStr _
+       + if symLookup(m,l) = SymInclInst _, then symLookup(dom,l) = SymIncl _
+     * symLookup(m,l) does not have to be defined for all l even when m is total, e.g., if there are redundant includes
+   - if modLookup m = RelDec(_,_,dom,cod,mors), then
+     * modLookup dom = SigDec _ and modLookup cod = SigDec _
+     * all morphisms in mors are valid from dom to cod
+     * symLookup(m,l) is defined for at most 0 <= l < modSize dom, and
        + if symLookup(m,l) = SymConInst _,  then symLookup(dom,l) = SymCon _
        + if symLookup(m,l) = SymStrInst _,  then symLookup(dom,l) = SymStr _
        + if symLookup(m,l) = SymInclInst _, then symLookup(dom,l) = SymIncl _
@@ -201,12 +219,14 @@ struct
      in case modLookup m
        of SigDec _ => m
         | ViewDec(_,_,_,cod,_) => cod
+        | RelDec(_,_,_,cod,_) => cod
      end
   fun onToplevel() = currentMod() = 0
   (* true: currentMod() is SigDec, false: currentMod() is ViewDec *)
   fun inSignature() = case modLookup (currentMod())
                         of SigDec _ => true
                          | ViewDec _ => false
+                         | RelDec _ => false
 
   (********************** Convenience methods **********************)
   fun constDefOpt (d) =
@@ -329,7 +349,7 @@ struct
 
   fun modOpen(dec) =
      let
-     	val _ = if inSignature() then () else raise Error("modules may not occur inside views")
+     	val _ = if inSignature() then () else raise Error("modules may only occur inside signatures")
         val m = ! nextMid
         val _ = nextMid := ! nextMid + 1
         val c = declAddC (SymMod (m,dec))
@@ -347,6 +367,7 @@ struct
              MH.insert sigRelTable (m, incls);
              MH.insert morphInclTable(m, nil)
           )
+          | RelDec _ => MH.insert sigRelTable (m, incls)
         val _ = scope := (m,0) :: (! scope)
      in
      	c

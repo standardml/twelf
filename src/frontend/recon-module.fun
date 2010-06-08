@@ -29,6 +29,7 @@ struct
 
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id * bool
+                    | relbegin of string * (morph list)
   
   datatype read = readfile of string
   
@@ -61,11 +62,11 @@ struct
   fun modNameLookupWithError expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
       ModSyn.cidToMid (nameLookupWithError expected (m,l,r))
 
-  fun morphToMorph(cod : IDs.mid, (mor, r0)) =
+  fun morphToMorph(home : IDs.mid, (mor, r0)) =
      let
      	val (names, r) = List.last mor
      	val init = List.take (mor, (List.length mor) - 1)
-     	val (link, nextCod) = let val s = nameLookupWithError STRUC (cod, names, r)
+     	val (link, nextHome) = let val s = nameLookupWithError STRUC (home, names, r)
      	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
             handle Error _ => let val m = modNameLookupWithError VIEW (ModSyn.currentMod(), names, r)
@@ -78,7 +79,7 @@ struct
      in
      	if (init = nil)
      	then link
-        else ModSyn.MorComp(morphToMorph(nextCod, (init, r0)), link)
+        else ModSyn.MorComp(morphToMorph(nextHome, (init, r0)), link)
      end
 
   fun openToOpen(m,opens) = ModSyn.OpenDec (List.map
@@ -127,8 +128,9 @@ struct
              let
              	val Str = nameLookupWithError STRUC (dom, names, r)
              	val Mor = morphToMorph (cod, mor)
+             	val Mor' = Elab.reconMorph Mor
              in
-             	ModSyn.StrInst(Str, NONE, Mor)
+             	ModSyn.StrInst(Str, NONE, Mor')
              end
          | inclinst(mor, r) =>
              let
@@ -165,9 +167,9 @@ struct
     | strdecToStrDec(strdef(name : string, morr, implicit : bool), l) =
        let
        	  val Mor = morphToMorph(ModSyn.currentTargetSig(), morr)
-       	  val (Dom, _, _) = Elab.reconMorph Mor (* @FR: taking domain of first link is enough here *)
+       	  val (Dom, _, Mor') = Elab.reconMorph Mor (* @FR: taking domain of first link is enough here *)
        in
-       	  ModSyn.StrDef([name], nil, Dom, Mor, implicit)
+       	  ModSyn.StrDef([name], nil, Dom, Mor', implicit)
        end
     
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
@@ -182,6 +184,24 @@ struct
             val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
          in
             ModSyn.ViewDec (OS.Path.mkCanonical fileName, parname @ [name], Dom, Cod, implicit)
+         end
+     | modbeginToModDec(relbegin(name, mors), Paths.Loc(fileName, _)) =
+         let
+            val _ = if mors = nil then raise Error("logical relation must have at least one morphism") else ()
+            val Mors = List.map (fn x => morphToMorph(0, x)) mors
+            val (dom :: doms, cod :: cods, Mors') =
+                let val recmors = List.map Elab.reconMorph Mors
+                in (List.map #1 recmors, List.map #2 recmors, List.map #3 recmors)
+                end
+            val _ = if List.exists (fn x => not(x = dom)) doms
+                    then raise Error("morphisms do not have the same domain")
+                    else ()
+            val _ = if List.exists (fn x => not(x = cod)) cods
+                    then raise Error("morphisms do not have the same codomain")
+                    else ()
+            val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
+         in
+            ModSyn.RelDec (OS.Path.mkCanonical fileName, parname @ [name], dom, cod, Mors')
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =
