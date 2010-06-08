@@ -1,0 +1,29 @@
+%sig TT = {
+   tp : type.
+   tm : tp -> type.                 %prefix 0 tm.
+   o : tp.
+   ⇒ : tp -> tp -> tp.              %infix 5 right ⇒. 
+   @ : tm A ⇒ B -> tm A -> tm B.  %infix 5 left @.
+   λ : (tm A -> tm B) -> tm A ⇒ B.
+}.
+
+%sig MT
+   %include TT.
+   unit : type.
+   * : unit.
+   hc : tm A -> type.
+   ha : tm A -> type.
+   hc-⇒ : ({x} ha x -> hc (M @ x)) -> hc M.
+   hc-o : ha (M:tm o) -> hc M.
+   ha-@ : ha M -> hc N -> ha (M @ N).
+}.
+
+%rel normalization : id = {
+   tp := [t: tp] unit.
+   tm := [t: tp] [a: tm t] hc a.
+   o := *.
+   ⇒ := [t: tp][p: unit] [t': tp][p': unit] *.
+   @ := [f: tm A ⇒ B][p: hc f] [a: tm A][p': hc a] ??hc (f @ a)??
+   λ := [f: tm A -> tm B][p: {a: tm A}{q: hc a} hc (f a)]
+           hc-⇒ [a:tm A][q: ha a] ??hc ((λ f) @ a)??
+}.
