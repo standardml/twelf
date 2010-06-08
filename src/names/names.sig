@@ -43,8 +43,12 @@ sig
   val installName  : IDs.mid * IDs.cid * (IDs.cid option) * string list -> unit
   val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
   val uninstallName: IDs.mid * string list -> unit
-  val nameLookup : IDs.mid * string list -> IDs.cid option
-  val nameLookupWithError : IDs.mid * string list -> IDs.cid   (* convenience, as above but raises exception if undefined *)
+  
+  (* concepts a name may be refer to *)
+  datatype Concept = SIG | VIEW | REL | CON | STRUC
+  (* looks up a qualified name relative to a module, checks result against expected concepts *)
+  val nameLookup : Concept list -> IDs.mid * string list -> IDs.cid option
+  (* convenience for non-modular code: relative to current target signature, expect constants *)
   val nameLookupC : string list -> IDs.cid option
   (* shadowing of (only) toplevel constants must be allowed for backwards compatibility *)
   (* true if shadowed by later symbol name; if a constant shadows a struct, the struct's components are not shadowed *)

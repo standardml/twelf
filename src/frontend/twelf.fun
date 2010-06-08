@@ -1133,8 +1133,8 @@ struct
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                (* copy parent's subordination relation, no exceptions should be possible *)
                val _ = case dec
-                  of ModSyn.ViewDec _ => ()
-                   | ModSyn.SigDec _ => Subordinate.installInclude parent
+                  of ModSyn.SigDec _ => Subordinate.installInclude parent
+                     | _ =>  ()
                (* new module has qualified name M_1.....M_n and cid c
                   for i=1,...,n, name M_i.....M_n resolves to c in signature M_1.....M_{i-1}
                      (M_1.....M_0 is toplevel signature)
@@ -1217,8 +1217,8 @@ struct
       | install1 (fileName, declr as (Parser.SymInst inst, r)) = (
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
-                            of ModSyn.SigDec _ => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
-                             | ModSyn.ViewDec(_, _, d, c, _) => (d,c)
+                            of ModSyn.ViewDec(_, _, d, c, _) => (d,c)
+                               _  => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
                             
@@ -1248,6 +1248,43 @@ struct
 	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
 	                 end
 	            | ModSyn.InclInst _ => ()
+           in
+             ()
+           end
+        )
+      | install1 (fileName, declr as (Parser.SymRel rel, r)) = (
+           let
+               val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
+                            of ModSyn.RelDec(_, _, d, c, _) => (d,c)
+                             | _ => raise ModSyn.Error(Paths.wrap(r, "cases for logical relations only allowed in logical relation"))
+               val Rel = ReconModule.symrelToSymRel (dom, cod, inst, Paths.Loc(fileName,r))
+                          handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
+               val NewRel = Elab.checkSymRel(Rel)
+                       handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+               val c = ModSyn.symrelAddC(NewRel)
+                       handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+               val _ = chmsg 3 (fn () => Print.instToString(NewRel) ^ "\n")
+	       val _ = case NewRel
+	           of ModSyn.ConRel _ => ()
+	            | ModSyn.StrRel _ =>
+	                let
+	                   fun callbackInstallRel(rel) =
+	                      let
+	                      	 (* @FR: add double-checking here *)
+	                         val c = ModSyn.symrelAddC(rel)
+	                                 handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
+                                 val prefix = if (! Global.printFlat) then "" else "% induced: "
+                                 val _ = if !Global.chatter >= 3
+                                         then msg (prefix ^ Print.relToString(rel) ^ "\n")
+		                         else ()
+		               in
+		               	  c
+                               end
+	                 in
+	                    Elab.flattenRel(c, callbackInstallRel)
+	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
+	                 end
+	            | ModSyn.InclRel _ => ()
            in
              ()
            end

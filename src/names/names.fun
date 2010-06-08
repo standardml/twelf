@@ -190,30 +190,24 @@ struct
     fun installNameC(c, origin, names) = installName(ModSyn.currentMod(), c, origin, names)
     fun uninstallName(m, names) = SH.delete nameTable (m,names)
     
-    fun nameLookup'(m: mid, l: string list, limit: mid option) = case SH.lookup nameTable (m,l)
+    (* looks up a name once locally in m, returns result if visible: origin <= limit if given *)
+    fun nameLookup'(m: mid, names: string list, limit: mid option) : cid option = case SH.lookup nameTable (m,names)
       of SOME (c, org) => (case limit
-         (* using <= rather than < so that an ancestor signature is found *)
+         (* using <= rather than < so that an ancestor signatures are found *)
          of SOME m => if IDs.lidOf(getOpt(org, c)) <= IDs.lidOf(ModSyn.midToCid m) then SOME c else NONE
           | NONE => SOME c
          )
        | NONE => NONE
 
-    fun fullNameLookup(mods : string list, cons : string list) =
-       case modnameLookup(mods)
-         of NONE => NONE
-          | SOME m => nameLookup'(m, cons, NONE)
-    and modnameLookup(names : string list) = 
-       case nameLookupC(names)
-         of SOME c => (
-              SOME (ModSyn.cidToMid c)
-              handle ModSyn.UndefinedMid _ => raise Error("not a module name: " ^ foldQualifiedName names)
-            )
-          | NONE => NONE
-    
-    (* returns list of possible resolutions *)
-    and symNameLookup(current, names) : IDs.cid list =
+    (* looks up a symbol or module name relative to a module
+       on failure, lookup is continued in Ancestor modules (inner to outer)
+       on failure, lookup is continued in (Anc)Included
+          here no order, and success only if resolution is inambiguous, throws Names.Error otherwise
+       finally NONE if complete failure
+       This method succeeds if m itself or one of its ancestors are looked up.
+    *)
+    fun nameLookup1(m: mid, names: string list) : cid option =
        let
-       	  val (left, right) = splitName names
        	  (* looks up a name in all signatures in sigRelLookup of a signature
        	     if a resolution is found in Self or Ancestor _, it is returned by itself
        	     otherwise, the list of resolutions in Include _ and AncInclude is returned
@@ -235,31 +229,70 @@ struct
                 in lookupInIncls(tl, ns, res')
                 end
             | lookupInIncls(nil, ns, res) = res
+          val res = lookupInIncls(m, left, nil)
        in
-       	  if right = nil
-       	  (* unqualified name - lookup in local signature, then ancestors inside->outside, then includes *)
-       	  then lookupInIncls(ModSyn.sigRelLookup current, left, nil)
-          (* qualified name - lookup both modname and symname *)
-       	  else case fullNameLookup(left, right)
-       	         of NONE => nil
-       	          | SOME c => (case ModSyn.symLookup c
-       	                         of ModSyn.SymCon _ => if isSome (ModSyn.symVisible(c, current)) then [c] else nil
-       	                          | ModSyn.SymStr _ => [c]
-       	                          | _ => nil
-       	                       )
-        end
-    and nameLookup(current, names) : IDs.cid option = case symNameLookup(current, names)
-        of nil => NONE
-       	 | hd :: tl => if List.exists (fn x => not(x = hd)) tl
-       	               then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName names)
-       	               else SOME hd
-    and nameLookupWithError(m,q) : IDs.cid = case symNameLookup(m,q)
-      of hd :: tl => if List.exists (fn x => not(x = hd)) tl
-       	             then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName q)
-       	             else hd
-       | nil => raise Error("undeclared identifier " ^ foldQualifiedName q)
+       	  case res
+            of nil => NONE
+       	     | hd :: tl => if List.exists (fn x => not(x = hd)) tl
+       	                   then raise Error("identifier included from multiple signatures: " ^ foldQualifiedName names)
+       	                   else SOME hd
+       end
+    
+    (* nameLookup1 to ge a module, then nameLookup' in the returned module *)
+    fun nameLookup2(m: mid, mods: string list, cons: string list) cid option =
+        case nameLookup1(m, mods)
+          of NONE => raise Error("identifier " ^ foldQualifiedName mods ^ " not found")
+           | SOME c =>
+             let val m' = ModSyn.cidToMid c
+                          handle ModSyn.UndefinedMid _ => raise Error("not a module name: " ^ foldQualifiedName names)
+             in case nameLookup'(m', cons, NONE)
+                  of NONE => raise Error("name " ^ foldQualifiedName cons ^ " not declared in module " ^ foldQualifiedName mods)
+       	           | SOME c => if isSome (ModSyn.symVisible(m, c))
+       	                       then SOME c
+       	                       else raise Error("name " ^ foldQualifiedName cons ^ " not accessible in module " ^ foldQualifiedName mods)
+             end
 
-    and nameLookupC(names) = nameLookup(ModSyn.currentTargetSig(), names)
+    (* nameLookup2 if qualified name, nameLookup1 otherwise
+       returns NONE if nameLookup does *)
+    fun nameLookup12(m: mid, names: string list) cid option =
+        let
+           val (left, right) = splitName names
+       	in if right = nil
+       	   then nameLookup1(m, left)
+       	   else nameLookup2(m, left, right)
+       	end
+
+    datatype Concept = SIG | VIEW | REL | CON | STRUC
+    fun concToString SIG = "signature"
+      | concToString VIEW = "view"
+      | concToString REL = "logical relation"
+      | concToString CON = "constant"
+      | concToString STRUC = "structure"
+        
+    fun nameLookup expected (m: mid, names: string list) : cid option =
+      let val cOpt = nameLookup12(m, names)
+          val found = case ModSyn.symLookup c
+              of ModSyn.SymCon _  => CON
+               | ModSyn.SymStr _ => STRUC
+               | ModSyn.SymMod (_, ModSyn.SigDec _) => SIG
+               | ModSyn.SymMod (_, ModSyn.ViewDec _) => VIEW
+               | ModSyn.SymMod (_, ModSyn.RelDec _) => REL
+      in case cOpt
+         SOME c =>
+           if List.exists (fn e => e = found) expected
+     	   then SOME c
+           else Raise error("bad identifier " ^ foldQualifiedName names ^
+     	                    ": expected " ^ IDs.mkString(List.map expected expToString, "",", ", "") ^
+     	                    "; found " ^ expToString found)
+     	| NONE => NONE
+      end
+
+    fun modNameLookupExp expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
+        ModSyn.cidToMid (nameLookupWithError expected (m,l,r))
+
+    (* method called by legacy code: constant lookup in the current target signature *)
+    fun nameLookupC(names) = nameLookup [CON] (ModSyn.currentTargetSig(), names)
+
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
 

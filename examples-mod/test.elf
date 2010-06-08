@@ -183,6 +183,22 @@ a : type.
   e : r.r.a.
 }.
 
+%% testing logical relations
+
+%sig LS = {a: type. c : a.}.
+%sig LT = {
+   a1: type. c1 : a1.
+   a2: type. c2 : a2.
+   j : a1 -> a2 -> type.
+   p : j c1 c2.
+}.
+%view m1 : LS -> LT = {a := a1. c := c1.}.
+%view m2 : LS -> LT = {a := a2. c := c2.}.
+%rel LogRel : m1 x m2 = {
+   a := j.                    %% j : m1(a) -> m2(a) -> type.
+   c := p.                    %% p : j m1(c) m2(c)
+}.
+
 %% testing pre-functors
 %sig Domain = {
    a : type.

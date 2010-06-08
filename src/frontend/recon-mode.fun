@@ -54,7 +54,6 @@ struct
 	  in
             case Names.nameLookupC qid
               of NONE => error (r, "Undeclared identifier "
-              (* better: find shortest undefined prefix -fr *)
                                 ^ (Names.foldQualifiedName qid)
                                 ^ " in mode declaration")
                | SOME cid => ((cid, ModeDec.shortToFull (cid, mS, r)), r)

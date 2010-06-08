@@ -62,9 +62,6 @@ struct
     of (nil, _) => Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)
      | mf => mf
   
-  fun parseRel'(f' as LS.Cons ((t, r), _)) =
-     Parsing.error (r, "parsing of composed logical relations not implemented yet")
-  
   fun parseConInst' (f' as LS.Cons ((L.ID _, r0), _)) =
       let
          val (con, f') = parseQualId'(f')
@@ -130,7 +127,7 @@ struct
      end 
 
   (* parses a %include declaration in a link *)
-  fun parseIncludeView' (LS.Cons ((L.INCLUDE, r), s')) =
+  fun parseInclInst' (LS.Cons ((L.INCLUDE, r), s')) =
      let
         val (mor, f') = parseMorph'(LS.expose s')
         val (r', f') = parseDot' (f')
@@ -138,23 +135,40 @@ struct
        (E.inclinst (mor, Paths.join(r,r')), f')
      end 
 
-  (* parses a %include declaration in a logical relation *)
-  fun parseIncludeRel' (LS.Cons ((L.INCLUDE, r), s')) =
-     let
-        val (rel f') = parseRel'(LS.expose s')
-     in
-       raise Error("unfinished implementation: includes in logical relations")
-     end 
+  fun parseRel'(f' as LS.Cons ((t, r), _)) =
+     Parsing.error (r, "parsing of composed logical relations not implemented yet")
+  
+  fun parseConRel'(f' as LS.Cons ((L.ID _, r0), _)) =
+      let
+         val (con, f') = parseQualId'(f')
+         val (_, f') = parseColon'(f')
+         val (_, f') = parseEqual'(f')
+         val (tm, f') = ParseTerm.parseTerm'(f')
+         val (r2, f') = parseDot' (f')
+      in
+        (E.conrel (con, (tm, Paths.join (r0, r2))), f')
+      end
+
   (* parses a %struct case in a logical relation *)
   fun parseStrRel' (LS.Cons ((L.STRUCT, r), s')) =
      let
-        val (id, f'1) = parseQualId'(LS.expose s')
-        val (_,f'2) = parseColon' f'1
-        val (_,f'3) = parseEqual' f'2
-        val (rel, f'4) = parseRel' f'3
+        val (id, f') = parseQualId'(LS.expose s')
+        val (_,f') = parseColon' f'
+        val (_,f') = parseEqual' f'
+        val (rel, f') = parseRel' f'
+        val (r2, f') = parseDot' (f')
      in
-       raise Error("unfinished implementation: structures in logical relations")
+       (E.strrel (id, (rel, Paths.join (r, r2))), f')
      end
+
+  (* parses a %include declaration in a logical relation *)
+  fun parseInclRel' (LS.Cons ((L.INCLUDE, r), s')) =
+     let
+        val (rel f') = parseRel'(LS.expose s')
+        val (r', f') = parseDot' (f')
+     in
+       (E.inclrel (rel, Paths.join(r,r')), f')
+     end 
 
   (* parses a list of symbol instantiations (used for structures) *)
   fun parseInsts' (f as LS.Cons ((L.ID _, _), _)) =

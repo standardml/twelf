@@ -1,7 +1,7 @@
 signature ELAB =
 sig
   exception Error of string
-  exception UndefinedMorph of IDs.mid * IDs.cid    (* raised if partially defined views cannot be applied *)
+  exception MissingCase of IDs.mid * IDs.cid    (* raised if partially defined modules cannot be applied *)
 
   (* type checking modular data types *)
   (* checks a ModDec *)
@@ -11,14 +11,23 @@ sig
   val checkSigIncl: ModSyn.SigIncl -> unit
   (* checks a StrDec *)
   val checkStrDec : ModSyn.StrDec -> ModSyn.StrDec
-  (* checks a SymInst *)
+  
+  (* checks declarations in a view *)
   val checkSymInst: ModSyn.SymInst -> ModSyn.SymInst
   (* checks a morphism against domain and codomain signature, returns reconstructed morphism *)
   val checkMorph  : ModSyn.Morph * IDs.mid * IDs.mid -> ModSyn.Morph
   (* infers domain and codomain, fills in implicit coercions, raises Error if not composable *)
   val reconMorph  : ModSyn.Morph -> IDs.mid * IDs.mid * ModSyn.Morph
 
-  (* called to flatten a structure declaration
+  (* checks declarations in a logical relation *)
+  val checkSymRel : ModSyn.SymRel -> ModSyn.SymRel
+  (* checks a logical relation against domain, codomain, and morphisms, returns reconstructed morphism *)
+  val checkRel  : ModSyn.Morph * IDs.mid * IDs.mid * (ModSyn.Morph list) -> ModSyn.Rel
+  (* infers domain, codomain and morphisms of a logical relation *)
+  val reconRel  : ModSyn.Morph -> IDs.mid * IDs.mid * (ModSyn.Morph list) * ModSyn.Rel
+
+
+  (* called to flatten a structure declaration in a signature, view, or logical relation
      - computes all declarations imported by the structure to the codomain signature (in the order declared in the domain)
      - calls the functions passed as argument on the computed symbol declarations
   *)
@@ -29,7 +38,10 @@ sig
   *)
   val flattenDec    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
   val flattenInst   : IDs.cid * (ModSyn.SymInst -> IDs.cid) -> unit
+  val flattenRel    : IDs.cid * (ModSyn.SymRel -> IDs.cid) -> unit
   
   (* apply a morphism to a term *)
   val applyMorph : IntSyn.Exp * ModSyn.Morph -> IntSyn.Exp
+  (* apply a logical relation to a term *)
+  val applyRel   : IntSyn.Exp * ModSyn.Rel -> IntSyn.Exp
 end

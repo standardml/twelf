@@ -204,14 +204,14 @@ struct
     (* -fr, parsing in view and logical relations splits differently *)
     and parseStreamInView' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInViewConInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInViewStrInst' (f, sc)
-      | parseStreamInView' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInViewInclude' (f, sc)
+      | parseStreamInView' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInViewInclInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
   
-    and parseStreamInRel' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInRelConInst' (f, sc)
-      | parseStreamInRel' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInRelStrInst' (f, sc)
-      | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclude' (f, sc)
+    and parseStreamInRel' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInRelConRel' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInRelStrRel' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclRel' (f, sc)
       | parseStreamInRel' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInRel' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
@@ -486,23 +486,23 @@ struct
 	  Stream.Cons ((SymInst strInst, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
-    and parseInViewInclude' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInViewInclInst' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseIncludeView'(f)
+           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseInclInst'(f)
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((SymInst incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelConInst' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelConRel' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (conInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseConInst'(f)
+           val (conInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseConRel'(f)
            val r = Paths.join (r0, r')
         in
 	   Stream.Cons ((SymInst conInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelStrInst' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelStrRel' (f as LS.Cons ((_, r0), _), sc) =
         let
            val (strInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrRel'(f)
            val r = Paths.join (r0, r')
@@ -510,9 +510,9 @@ struct
 	  Stream.Cons ((SymInst strInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelInclude' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelInclRel' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseIncludeRel'(f)
+           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseInclRel'(f)
            val r = Paths.join (r0, r')
         in
 	  Stream.Cons ((SymInst incl, r), parseStreamInRel (LS.delay (fn () => f'), sc))

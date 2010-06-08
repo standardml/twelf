@@ -30,7 +30,7 @@ sig
   datatype OpenDec = OpenDec of (IDs.cid * string) list
 
   (* logical relations *)
-  datatype Rel = Rel of IDs.mid
+  datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
 
   (*
      morphisms
@@ -167,7 +167,7 @@ sig
   val midToCid   : IDs.mid -> IDs.cid
   val cidToMid   : IDs.cid -> IDs.mid
 
-  (* sigRelType and sigRelLookup describe signatures visible to a signature m: 
+  (* sigRelType describes signatures visible to a signature m: 
      a) m itself: (m,Self)
      b) every ancestor signature a: (a, Ancestor p) where p is the position within a where m occurs
      c) every signature d directly included via include declaration with cid: (d, Included SOME cid)
@@ -188,7 +188,12 @@ sig
        if cod can see the signatures for which the morphism must be the identity.
    *)
   datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.lid | AncIncluded
-  val sigRelLookup : IDs.mid -> (IDs.mid * SigRelType) list
+  (* ModLevObject is the type of composed expressions of module level concepts *)
+  datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
+  (* returns the list of objects included into a module
+     - for signatures M, this is the flattened list of ObjSig(m,r) where m is an include into M of type r
+     - for views and logical relations, this is the list of direct includes of ObjMor(mor) or ObjRel(rel), respectively *)
+  val modInclLookup: IDs.mid -> ModLevObject list
 
   (* convenience methods based on the above *)
   (* sigIncluded(dom,cod) iff dom is included into cod (Self, Included_, or AncIncluded) *)
@@ -208,8 +213,6 @@ sig
   (* application of a method to all modules in declaration order *)
   val modApp     : (IDs.mid -> unit) -> unit
   
-  (* index for efficiency: morphisms included into a view *)
-  val morphInclLookup: IDs.mid -> Morph list
   (* index for efficiency: application of a structure to a constant/structure *)
   val structMapLookup : IDs.cid * IDs.cid -> IDs.cid option
 

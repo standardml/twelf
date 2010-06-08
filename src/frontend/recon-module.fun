@@ -21,6 +21,11 @@ struct
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
    | inclinst of morph * Paths.region
+  type rel = id
+  datatype symrel =
+     conrel of id * (ExtSyn.term * Paths.region)
+   | strrel of id * (rel       * Paths.region)
+   | inclrel of rel * Paths.region
 
   datatype sigincl = sigincl of id * openids
   
@@ -32,7 +37,7 @@ struct
                     | relbegin of string * (morph list)
   
   datatype read = readfile of string
-  
+
 (* end MODEXTSYN *)
 
 (* implementing the remaining declarations of RECON_MODULE *)
@@ -40,40 +45,39 @@ struct
 
   (* local functions to handle errors *)
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
-  
-  datatype Expected = SIG | VIEW | CON | STRUC
-  fun expToString SIG = "signature"
-    | expToString VIEW = "view"
-    | expToString CON = "constant"
-    | expToString STRUC = "structure"
         
-  fun nameLookupWithError expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
-     let val c = (Names.nameLookupWithError (m,l))
-                 handle Names.Error(s) => error(r,s)
+  fun nameLookup expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
+     let val cOpt = (Names.nameLookup [expected] (m,names))
+                    handle Names.Error(s) => error(r,s)
      in
-         case (expected, ModSyn.symLookup c)
-           of (CON, ModSyn.SymCon _ ) => c
-            | (STRUC, ModSyn.SymStr _) => c
-            | (SIG,  ModSyn.SymMod (_, ModSyn.SigDec _)) => c
-            | (VIEW, ModSyn.SymMod (_, ModSyn.ViewDec _)) => c
-            | _ => error(r, "concept mismatch, expected " ^ expToString expected ^ ": " ^ Names.foldQualifiedName l)
+         case cOpt
+           of SOME c => c(expected, ModSyn.symLookup c)
+            | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName names)
       end
 
-  fun modNameLookupWithError expected (m : IDs.mid, l : IDs.Qid, r : Paths.region) =
-      ModSyn.cidToMid (nameLookupWithError expected (m,l,r))
+  fun modNameLookup' expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
+      ModSyn.cidToMid (nameLookup expected (m,names,r))
+      (* no exception possible in cidToMid if "expected" is a module level concept *)
+
+  (* as modNameLookup' but also checks that the module is closed
+     this is call for all modules except for the codomain of views and relations, which may be open *)
+  fun modNameLookup expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
+      let val m = modNameLookup' expected (m,names,r)
+      in
+        if List.exists (fn (m',_) => m' = m) (ModSyn.getScope())
+        then raise Error("module " ^ ModSyn.modFoldName m ^ " can only be used when closed")
+        else m
+      end
 
   fun morphToMorph(home : IDs.mid, (mor, r0)) =
      let
      	val (names, r) = List.last mor
      	val init = List.take (mor, (List.length mor) - 1)
-     	val (link, nextHome) = let val s = nameLookupWithError STRUC (home, names, r)
+     	val (link, nextHome) = let val s = nameLookup Names.STRUC (home, names, r)
      	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
      	                      end
-            handle Error _ => let val m = modNameLookupWithError VIEW (ModSyn.currentMod(), names, r)
+            handle Error _ => let val m = modNameLookup Names.VIEW (ModSyn.currentMod(), names, r)
                                   val ModSyn.ViewDec(_,_,dom,_,_) = ModSyn.modLookup m
-                                  val _ = if List.exists (fn (m',_) => m' = m) (ModSyn.getScope())
-                                          then raise Error("view " ^ ModSyn.modFoldName m ^ " can only be used when closed")
-                                          else ()
                               in (ModSyn.MorView m, dom)
                               end
      in
@@ -82,9 +86,16 @@ struct
         else ModSyn.MorComp(morphToMorph(nextHome, (init, r0)), link)
      end
 
+  fun relToRel(home : IDs.mid, ((names, r), r0)) = 
+     let
+     	val m = modNameLookup Names.REL (home, names, r)
+     in
+     	ModSyn.Rel m
+     end
+  
   fun openToOpen(m,opens) = ModSyn.OpenDec (List.map
      (fn ((old,r),(new,_)) =>
-       let val c = nameLookupWithError CON (m,old,r)
+       let val c = nameLookup Names.CON (m,old,r)
        in (c, new)
        end
      )
@@ -95,7 +106,7 @@ struct
         of coninst((names, r), (term, r')) =>
              let
              	val rr = Paths.join(r,r')
-             	val Con = nameLookupWithError CON (dom, names, r)
+             	val Con = nameLookup Names.CON (dom, names, r)
              	val _ = if (IDs.midOf Con = dom) then () else error(r,
              	   "instantiation of included or inherited constant " ^ ModSyn.symFoldName Con ^ " not allowed")
              	val _ = case ModSyn.constDefOpt Con
@@ -126,7 +137,7 @@ struct
              end
          | strinst((names, r), mor) =>
              let
-             	val Str = nameLookupWithError STRUC (dom, names, r)
+             	val Str = nameLookup Names.STRUC (dom, names, r)
              	val Mor = morphToMorph (cod, mor)
              	val Mor' = Elab.reconMorph Mor
              in
@@ -137,28 +148,77 @@ struct
              	val Mor = morphToMorph (cod, (mor, r))
              	val (d, _, Mor') = Elab.reconMorph Mor
              	val cid = case List.find
-             	               (fn (m,ModSyn.Included (SOME _)) => m = d | _ => false)
-             	               (ModSyn.sigRelLookup dom)
-             	          of SOME (_, ModSyn.Included (SOME c)) => c
+             	               (fn ModSyn.ObjSig(m,ModSyn.Included (SOME _)) => m = d | _ => false)
+             	               (ModSyn.modInclLookup dom)
+             	          of SOME ModSyn.ObjSig(_, ModSyn.Included (SOME c)) => c
              	           | NONE => raise Error("included morphism has domain " ^ ModSyn.modFoldName d ^
              	                          " which is not included directly into " ^ ModSyn.modFoldName dom)
              in
              	ModSyn.InclInst(cid, NONE, Mor')
              end
   
+  fun symrelToSymRel(dom : IDs.mid, cod : IDs.mid, rel : symrel, l) =
+     case rel
+        of conrel((names, r), (term, r')) =>
+             let
+             	val rr = Paths.join(r,r')
+             	val Con = nameLookup Names.CON (dom, names, r)
+             	val _ = if (IDs.midOf Con = dom) then () else error(r,
+             	   "case for included or inherited constant " ^ ModSyn.symFoldName Con ^ " not allowed")
+             	val _ = case ModSyn.constDefOpt Con
+                          of NONE => ()
+                           | _ => raise Error(
+                              "case for defined constant " ^ ModSyn.symFoldName Con ^ " not allowed");
+             	(* expected type to guide the term reconstruction *)
+             	val expType = Elab.applyRel(ModSyn.constType Con, ModSyn.MorRel(ModSyn.currentMod()))
+             	       handle Elab.MissingCase(m,c) =>
+             	          error(rr, "case for " ^ ModSyn.symFoldName Con ^
+             	          " must occur after (possibly induced) case for " ^ ModSyn.symFoldName c)
+		val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon (ExtSyn.jof'(term, expType))
+                val _ = ExtSyn.checkErrors(rr)
+		val (impl, Term) = Abstract.abstractDecImp U
+		val _ = if impl > 0 then error(r', "implicit arguments not allowed in logical relation") else ()
+		(* val expImpl = ModSyn.constImp Con *)
+		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
+		                                                                         ", declaration " ^ Int.toString expImpl) *)
+             in
+		ModSyn.ConRel(Con, NONE, Term)
+             end
+         | strrel((names, r), rel) =>
+             let
+             	val Str = nameLookup Names.STRUC(dom, names, r)
+             	val Rel = relToRel (cod, rel)
+             	val (_, _, _, Rel') = Elab.reconRel Rel
+             in
+             	ModSyn.StrRel(Str, NONE, Rel')
+             end
+         | inclrel(rel, r) =>
+             let
+             	val Rel = relToRel(cod, (rel, r))
+             	val (d, _, _, Rel') = Elab.reconRel Rel
+             	val cid = case List.find
+             	               (fn ModSyn.ObjSig(m,ModSyn.Included (SOME _)) => m = d | _ => false)
+             	               (ModSyn.sigRelLookup dom)
+             	          of SOME ModSyn.ObjSig(_, ModSyn.Included (SOME c)) => c
+             	           | NONE => raise Error("included logical relation has domain " ^ ModSyn.modFoldName d ^
+             	                          " which is not included directly into " ^ ModSyn.modFoldName dom)
+             in
+             	ModSyn.InclRel(cid, NONE, Rel')
+             end
+
    fun siginclToSigIncl(sigincl ((name,r), opens), _) =
       let
-      	 val m = modNameLookupWithError SIG (ModSyn.currentMod(), name, r)
+      	 val m = modNameLookup Names.SIG (ModSyn.currentMod(), name, r)
 	 val Opens = openToOpen (m,opens)
       in
       	 ModSyn.SigIncl (m, Opens)
       end
 
-  fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
+   fun strdecToStrDec(strdec(name : string, (dom : string list, r1 : Paths.region),
                             insts : syminst list, opens : openids, implicit : bool), loc) = 
     let
     	val Cod = ModSyn.currentTargetSig()
-    	val Dom : IDs.mid = modNameLookupWithError SIG (Cod, dom, r1)
+    	val Dom : IDs.mid = modNameLookup Names.SIG (Cod, dom, r1)
     	val Insts = List.map (fn x => syminstToSymInst(Dom, Cod, x,loc)) insts
 	val Opens = openToOpen (Dom,opens)
     in
@@ -179,8 +239,8 @@ struct
      | modbeginToModDec(viewbegin(name, (dom,rd), (cod,rc), implicit), Paths.Loc(fileName, _)) =
          let
             val cur = ModSyn.currentMod()
-            val Dom = modNameLookupWithError SIG (cur, dom, rd)
-            val Cod = modNameLookupWithError SIG (cur, cod, rc)
+            val Dom = modNameLookup Names.SIG (cur, dom, rd)
+            val Cod = modNameLookup' Names.SIG (cur, cod, rc)
             val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
          in
             ModSyn.ViewDec (OS.Path.mkCanonical fileName, parname @ [name], Dom, Cod, implicit)

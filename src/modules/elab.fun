@@ -29,7 +29,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   fun printExp(U : I.Exp) : string = Print.expToString(I.Null, U)
   
   exception Error of string                       (* raised on type-checking errors *)
-  exception UndefinedMorph of IDs.mid * IDs.cid   (* raised if partially defined view cannot be applied *)
+  exception MissingCase of IDs.mid * IDs.cid      (* raised if partially defined module cannot be applied *)
   exception FixMe                                 (* raised for unimplemented cases *)
 
   (* auxiliary function that raises exceptions *)
@@ -82,6 +82,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
               of SOME m => (d1, c2, M.MorComp(m1, M.MorComp(m, m2)))
                | NONE => raise Error("morphisms not composable")
         end
+    | reconMorph(M.MorId m) = (m,m, M.MorId m)
     | reconMorph(M.MorStr s) = ((M.strDecDom (M.structLookup s), IDs.midOf(s), M.MorStr s)
                               handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
     | reconMorph(M.MorView m) =
@@ -112,7 +113,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
 
   (* restricts a morphism to a domain, returns path in the signature graph, i.e., a list of links
      pre: mor is well-formed, newdom is included into domain(mor) (case 1,2,3a)
-     post: restrictMorph(mor, newdom) of type M.Morph list
+     post: restrictMorph(mor, newdom)
        is equal to mor and consists of only MorView _ or MorStr _ such that
        - definitions are expanded
        - the domain of the first link is newdom
@@ -120,17 +121,18 @@ functor Elab (structure Print : PRINT) : ELAB = struct
        - in particular, result is nil if the restriction of mor is the identity 
    *)
   and restrictMorph(M.MorComp(mor1,mor2), newdom) =
-      let val mor1l = restrictMorph(mor1, newdom)
-          val cod = if mor1l = nil then newdom else codomain(List.last mor1l)
-          val mor2l = restrictMorph(mor2, cod)
+      let val rmor1 = restrictMorph(mor1, newdom)
+          val cod = codomain rmor1
+          val rmor2 = restrictMorph(mor2, cod)
       in
-      	  mor1l @ mor2l
+      	  M.MorComp(rmor1, rmor2)
       end
+    | restrictMorph(M.MorId m, newdom) = M.MorId newdom
     | restrictMorph(M.MorStr c, newdom) = (
         case M.structLookup c
           of M.StrDef(_,_,_,mor,_) => restrictMorph (mor, newdom)
            | M.StrDec(_,_,dom, insts,_,_) =>
-              if dom = newdom then [M.MorStr c]
+              if dom = newdom then M.MorStr c
               else
               restrictFirst (List.mapPartial
                  (fn i => case i of M.InclInst(cid, _, mor) => SOME mor | _ => NONE)
@@ -140,15 +142,16 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       )
     | restrictMorph(M.MorView m, newdom) =
        let val M.ViewDec(_, _, dom, _, _) = M.modLookup m
-       in if dom = newdom then [M.MorView m]
-                          else restrictFirst(M.morphInclLookup m, newdom)
+       in if dom = newdom then M.MorView m
+                          else restrictFirst(M.modInclLookup m, newdom)
        end
   (* applies restrictMorph to the first restrictable morphism in a list of morphism *)
-  and restrictFirst(hd :: tl, newdom) =
-      if M.sigIncluded(newdom, domain(hd))
-      then restrictMorph(hd, newdom)
+  and restrictFirst(M.ObjMor mor :: tl, newdom) =
+      if M.sigIncluded(newdom, domain(mor))
+      then restrictMorph(mor, newdom)
       else restrictFirst(tl, newdom)
-    | restrictFirst(nil, newdom) = nil
+    | restrictFirst(_ :: tl, newdom) = restrictFirst(tl, newdom) (* list of includes may contain signatures *)
+    | restrictFirst(nil, newdom) = M.MorId newdom
   
   (********************** checking module level declarations **********************)
   
@@ -217,18 +220,13 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      This applies to inclusions, structures, and views.
      Any link dom -> cod must translate all symbols declared in ancestors of dom.
        By definition, morphism application is the identity for all symbols declared in ancestors of dom.
-     Therefore, 
-      - all ancestors of dom must also be ancestor_or_selfs of cod
-      - dom must not be currently open (This precludes inclusions/structures out of a direct ancestor_or_self.)
+     Therefore, all ancestors of dom must also be ancestor_or_selfs of cod,
      Equivalently, we can say that dom must be visible/accessible for cod.
      Note that ancestors are pairs of an mid and the smallest invisible lid.
        Thus sister signatures with intermediate declarations do not have the same ancestors.
    *)
   and checkAncestors(dom, cod) =
     let
-       val _ = if List.exists (fn (m,_) => m = dom) (M.getScope())
-               then raise Error("domain of link may not be open")
-               else ()
        val domCid = ModSyn.midToCid dom
        val domPar = IDs.midOf domCid
        val codAncs = List.mapPartial
@@ -321,7 +319,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            M.StrDef(n, q, dom, newmor, i)
         end
 
-  (* checks well-typedness condition for includes; returns reconstructed include *)
+  (* checks well-typedness condition for signature includes *)
   and checkSigIncl(si as M.SigIncl (m,_)) =
        if M.inSignature()
        then checkAncestors(m, M.currentMod())
@@ -387,8 +385,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
           | AHead(I.Const c) = ACid c            (* apply morphism to constant *)
           | AHead(I.Proj(b,k)) = headToExp(I.Proj (ABlock b, k))
           | AHead(I.Skonst c) = ACid c           (* apply morphism to constant *)
-          | AHead(I.Def d) = A (M.constDef d)    (* expand definition *)
-          | AHead(I.NSDef d) = A (M.constDef d)  (* expand definition *)
+          | AHead(I.Def d) = A (M.constDef d)
+          | AHead(I.NSDef d) = A (M.constDef d)
           | AHead(I.FVar(x, U, s)) = headToExp(I.FVar(x, A U, ASub s))
           | AHead(I.FgnConst(cs, condec)) = raise FixMe
         and ASpine(I.Nil) = I.Nil
@@ -421,19 +419,17 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      let val ModSyn.ConInst(_, _, exp) = ModSyn.conInstLookup(v, IDs.lidOf c)
                      in exp
                      end
-                     handle ModSyn.UndefinedCid _ => raise UndefinedMorph(v,c)
+                     handle ModSyn.UndefinedCid _ => raise MissingCase(v,c)
                    )
+                 (* identity morphism *)
+                 | (M.MorId _, _) => cidToExp c
                  (* composed morphism: apply components separately *)
                  | (M.MorComp(mor1, mor2), _) => applyMorph(applyMorph(cidToExp(c), mor1), mor2)
                  (* morphism applied to non-local symbol *)
                  | (_, M.Ancestor _) => cidToExp c (* symbol declared in ancestor: identity *)
                  | (_, M.AncIncluded) => cidToExp c (* symbol included into ancestor: identity *)
-                 | (link, M.Included _) => 
-                     (* symbol declared in included signature:
-                        restrict morphism to obtain included morphism (as a possibly empty list of links) and apply it *)
-                     let val links = restrictMorph(mor, m)
-                     in List.foldl (fn (m, x) => applyMorph(x,m)) (cidToExp c) links
-                     end
+                 | (mor, M.Included _) => applyMorph(cidToExp c, restrictMorph(mor, m))
+                     (* symbol declared in included signature: restrict morphism to obtain included morphism  *)
            end
      in
      	A U
@@ -577,7 +573,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                       val c = valOf (M.structMapLookup(s,c'))
                       val defCod = normalize (applyMorph(cidToExp c', mor))
                       val typDomTrans = normalize(applyMorph(M.constType c, M.MorView viewID))
-                      val _ = if checkType(defCod, typDomTrans)
+                      val _ = if checkType(defCod, typDomTrans) (* @FR: can this be skipped? *)
                               then ()
                               else raise Error("type mismatch in induced instantiation of " ^ M.symFoldName c)
                       val _ = case M.constDefOpt c
@@ -595,6 +591,181 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      let
                      	val c = valOf (M.structMapLookup(s,c'))
                      	val _ = installInst(M.StrInst(c, SOME instID, M.MorComp(M.MorStr c', mor)))
+                     in
+                     	()
+                     end
+                  | M.SymIncl _ => ()
+     in
+        M.sgnApp(dom, flatten1)
+     end
+(****************************** Logical Relations *******************************************)
+
+  (* computes domain of a relation without type-checking it *)
+  fun domainRel(M.Rel m) = let val M.RelDec(_, _, dom, _, _) = M.modLookup m in dom end
+    | domainRel(M.RelComp(mor,_) = domain(mor)
+  
+  (* computes codomain of a relation without type-checking it *)
+  fun codomainRel(M.Rel m) = let val M.RelDec(_, _, _, cod, _) = M.modLookup m in cod end
+    | codomainRel(M.RelComp(_,rel) = codomainRel(rel)
+
+  (* reconstructs a logical relation
+     returns (dom, cod, mors, reconrel); raises exception iff ill-formed *)
+  fun reconMorph(M.Rel m) =
+        let
+           val M.RelDec(_, _, dom, cod, mors) = M.modLookup m
+                                        handle M.UndefinedMid _ => raise Error("bad identifier in logical relation")
+        in
+           (dom, cod, mors, M.MorRel m)
+        end
+    | reconMorph(M.RelComp(mor, rel)) =
+       let
+       	 val (mdom, mcod, mrec) = reconMorph mor
+       	 val (rdom, rcod, rmors, rrec) = reconRel rel
+       	 val precomp
+           if M.sigIncluded(mcod,rdom)
+           then mrec
+           else case M.implicitLookup(mcod, rdom)
+             of SOME m => M.MorComp(mrec, m)
+              | NONE => raise Error("morphism and logical relation not composable")
+       in
+       	  (mdom, rcod, List.map (fn x => M.MorComp(precomp, x)) rmors, M.RelComp(precomp, rrec))
+       end
+
+  (* restricts a logical relation to a domain, returns path in the signature graph, i.e., a list of atomic relations
+     pre: rel is well-formed, newdom is included into the domain of rel (case 1,2,3a)
+     post: restrictRel(mor, newdom) of type M.Rel list
+       is equal to rel and consists of only MorRel such that
+       - the domain of the first atomic relation is newdom
+       - in particular, result is nil if the restriction of rel is the identity 
+   *)
+  and restrictRel(M.Rel m, newdom) =
+       let val M.RelDec(_, _, dom, _, _) = M.modLookup m
+       in if dom = newdom then [M.MorRel m]
+                          else restrictRelFirst(M.modInclLookup m, newdom)
+       end
+    | restrictRel(M.RelComp(mor,rel), newdom) =
+      let val rmor = restrictMorph(mor, newdom)
+          val cod = codomain rmor
+          val rrel = restrictRel(rel, cod)
+      in
+      	  M.RelComp(rmor, rrel)
+      end
+
+  (* applies restrictRel to the first restrictable relation in a list of relations *)
+  and restrictRelFirst(M.ObjRel rel :: tl, newdom) =
+      if M.sigIncluded(newdom, domainRel(rel))
+      then restrictRel(rel, newdom)
+      else restrictRelFirst(tl, newdom)
+    | restrictRelFirst(_ :: tl, newdom) = restrictRelFirst(tl, newdom) (* list of includes may contain signatures *)
+    | restrictRelFirst(nil, newdom) = raise FixMe (* should be the identity relation but that cannot be expressed in LF type theory *)
+  
+  (* logical relation application
+     pre: rel is a well-formed relation between a list of morphisms with domain dom and codomain cod
+     pre: U is well-formed term over dom
+     post: U is well-formed term over cod
+   *)
+  and applyRel(U, rel) =
+     let
+     	val (dom, cod, mors, _) = reconRel rel
+(*     	fun A(I.Uni L) = I.Uni L
+     	  | A(I.Pi((I.Dec(x,T), P), V)) = 
+     	    case ??level V
+     	      of Kind =>
+     	        let
+     	           val tps = List.map (fn m => I.Dec(I.NoVarInfo, ??shift i applyMorph(U, m))) mors
+     	           val vars = List.foldl (fn (i, rest) => I.Spine(I.BVar i, rest)) I.Nil (List.tabulate(0,n - 1))
+     	           val ass = I.Dec(I.NoVarInfo, ??shift n I.Redex(applyRel(rel, T), vars))
+     	           val rest = ??shift n+1 applyRel(V, rel)
+     	        in
+     	           List.foldl (fn (d, exp) => I.Pi((d, I.Maybe), exp)) (I.Pi((ass, I.Maybe), rest)) vars
+     	        end
+     	       | Type => I.Pi((ADec D, P), A V)
+     	  | A(I.Root(H, S)) = I.Redex(AHead H, ASpine S)  (* return Redex because AHead H need not be a Head again *)
+     	  | A(I.Redex(U, S)) = I.Redex(A U, ASpine S)
+     	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
+(*     	  | A(I.EVar(E, C, U, Constr)) = impossible by precondition *)
+          | A(I.EClo(U,s)) = I.EClo(A U, ASub s)
+(*          | A(I.AVar(I)) = impossible by precondition *)
+          | A(I.FgnExp(cs, F)) = raise FixMe
+          | A(I.NVar n) = I.NVar n
+        and AHead(I.BVar k) = headToExp(I.BVar k)
+          | AHead(I.Const c) = ACid c
+          | AHead(I.Proj(b,k)) = headToExp(I.Proj (ABlock b, k))
+          | AHead(I.Skonst c) = ACid c
+          | AHead(I.Def d) = A (M.constDef d)    (* expand definition *)
+          | AHead(I.NSDef d) = A (M.constDef d)  (* expand definition *)
+          | AHead(I.FVar(x, U, s)) = headToExp(I.FVar(x, A U, ASub s))
+          | AHead(I.FgnConst(cs, condec)) = raise FixMe
+        and ASpine(I.Nil) = I.Nil
+          | ASpine(I.App(U,S)) = I.App(A U, ASpine S)
+          | ASpine(I.SClo(S,s)) = I.SClo(ASpine S, ASub s)
+        and ASub(I.Shift n) = I.Shift n
+          | ASub(I.Dot(Ft,s)) = I.Dot(AFront Ft, ASub s)
+        and AFront(I.Idx k) = I.Idx k
+          | AFront(I.Exp U) = I.Exp (A U)
+          | AFront(I.Axp U) = I.Axp (A U)
+          | AFront(I.Block b) = I.Block (ABlock b)
+          | AFront(I.Undef) = I.Undef
+        and ADec(I.Dec(x,V)) = I.Dec(x, A V)
+(*          | ADec(I.BDec(v,(l,s))) = impossible by precondition *)
+          | ADec(I.ADec(v,d)) = I.ADec(v,d)
+          | ADec(I.NDec v) = I.NDec v
+        and ABlock(I.Bidx i) = I.Bidx i
+(*          | ABlock(I.LVar(b,s,(c,s'))) = impossible by precondition  *)
+          | ABlock(I.Inst l) = I.Inst (List.map A l)
+(*      and AConstr(_) = impossible by precondition  *)
+        (* apply relation to constant *)
+*)      fun ACid(c) =
+           let val m = IDs.midOf c
+           in
+              case (rel, valOf (M.symVisible(c,dom))) (* if NONE, U would be ill-formed *)
+                (* relation applied to local symbol: apply relation by looking up case *)
+                 | (M.MorRel(r), M.Self) => (
+                     let val ModSyn.ConRel(_, _, exp) = ModSyn.conRelLookup(r, IDs.lidOf c)
+                     in exp
+                     end
+                     handle ModSyn.UndefinedCid _ => raise MissingCase(r,c)
+                   )
+                 (* relation applied to non-local symbol *)
+                 | (_, M.Ancestor _) => raise FixMe  (* identity relation cannot be expressed in LF type theory *) 
+                 | (_, M.AncIncluded) => raise FixMe (* identity relation cannot be expressed in LF type theory *)
+                 | (rel, M.Included _) => applyRel(cidToExp c, restrictRel(rel, m))
+                     (* symbol declared in included signature: restrict relation to obtain included relation *)
+           end
+     in
+     	raise Fixme (* A U *)
+     end
+
+  and flattenRel(caseid : IDs.cid, installRel : M.SymRel -> IDs.cid) =
+     let
+        val relid = IDs.midOf caseid
+        val M.SymStrRel(M.StrRel(s, _, rel)) = M.symLookup caseid
+        val (dom, _, _, _) = reconRel rel
+        fun flatten1(c' : IDs.cid) = 
+            case M.symLookup c'
+                 of M.SymCon _ =>
+                   let
+                      val c = valOf (M.structMapLookup(s,c'))
+                      val defCod = normalize (applyRel(cidToExp c', rel))
+                      val typDomTrans = normalize(applyRel(M.constType c, M.MorRel relid))
+                      val _ = if checkType(defCod, typDomTrans) (* @FR: can this be skipped? *)
+                              then ()
+                              else raise Error("type mismatch in induced case of " ^ M.symFoldName c)
+                      val _ = case M.constDefOpt c
+                                of NONE => ()
+                                 | SOME defDom =>
+                                   if checkEqual(applyRel(defDom, M.MorRel relid), defCod)
+                                   then ()
+                                   else defInstClash(defDom, defCod, applyRel(defDom, M.MorRel relid),
+                                                     "definition/instantiation clash for " ^ M.symFoldName c)
+                      val _ = installInst(M.ConRel(c, SOME caseid, defCod))
+                   in
+                      ()
+                   end
+                  | M.SymStr _ =>
+                     let
+                     	val c = valOf (M.structMapLookup(s,c'))
+                     	val _ = installInst(M.StrRel(c, SOME caseid, M.RelComp(M.MorStr c', rel)))
                      in
                      	()
                      end

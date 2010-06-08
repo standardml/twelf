@@ -13,11 +13,19 @@ sig
   (* morphisms *)
   type morph = id list
 
-  (* symbol (= constant or structure) instantiations *)
+  (* symbol (= constant, structure, or inclusion) instantiations *)
   datatype syminst =
      coninst of id * (ExtSyn.term * Paths.region)
    | strinst of id * (morph       * Paths.region)
    | inclinst of morph * Paths.region
+
+  (* logical relation *)
+  type rel = id
+  (* cases in a logical relations *)
+  datatype symrel =
+     conrel of id * (ExtSyn.term * Paths.region)
+   | strrel of id * (rel       * Paths.region)
+   | inclrel of rel * Paths.region
 
   (* inclusion of signatures into signatures and morphisms into link *)  
   datatype sigincl = sigincl of id * openids

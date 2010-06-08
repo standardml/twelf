@@ -196,7 +196,7 @@ struct
               (case SOME(Names.parseQualifiedName name)
                  of NONE => raise Error ("Malformed qualified identifier " ^ name)
                   | SOME qname =>
-              (case Names.nameLookup(ModSyn.currentMod(), qname)
+              (case Names.nameLookupC(qname)
                  of NONE => raise Error ("Type family " ^ name ^ " not defined")
                   | SOME cid => cid :: (cids nL)))
 	in
@@ -256,7 +256,7 @@ struct
 	else 
 	  let 
 	    val S = current ()
-	    val S' = Lemma.apply (S, valOf (Names.nameLookup (ModSyn.currentMod(), Names.parseQualifiedName name)))
+	    val S' = Lemma.apply (S, valOf (Names.nameLookupC (Names.parseQualifiedName name)))
 	      handle Splitting.Error s => abort ("Splitting Error: " ^ s)
 		   | Filling.Error s => abort ("Filling Error: " ^ s)
 		   | Recursion.Error s => abort ("Recursion Error: " ^ s)

@@ -23,7 +23,7 @@
    tm := [t: tp] [a: tm t] hc a.
    o := *.
    ⇒ := [t: tp][p: unit] [t': tp][p': unit] *.
-   @ := [f: tm A ⇒ B][p: hc f] [a: tm A][p': hc a] ??hc (f @ a)??
+   @ := [f: tm A ⇒ B][p: hc f] [a: tm A][p': hc a] ??needed: hc (f @ a)??
    λ := [f: tm A -> tm B][p: {a: tm A}{q: hc a} hc (f a)]
-           hc-⇒ [a:tm A][q: ha a] ??hc ((λ f) @ a)??
+           hc-⇒ [a:tm A][q: ha a] ??needed: hc ((λ f) @ a)??
 }.

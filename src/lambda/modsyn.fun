@@ -16,8 +16,8 @@ struct
   exception UndefinedCid of IDs.cid
   exception UndefinedMid of IDs.mid
 
-  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
-  datatype Rel = Rel of IDs.mid
+  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
+  datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
   datatype SymInst = ConInst of IDs.cid * (IDs.cid option) * I.Exp | StrInst of IDs.cid * (IDs.cid option) * Morph
                    | InclInst of IDs.cid * (IDs.cid option) * Morph
   datatype SymRel  = ConRel of IDs.cid * (IDs.cid option) * I.Exp | StrRel of IDs.cid * (IDs.cid option) * Rel
@@ -60,6 +60,12 @@ struct
   fun symInstOrg(ConInst(_, O, _)) = O
     | symInstOrg(StrInst(_, O, _)) = O
     | symInstOrg(InclInst(_, O, _)) = O
+  fun symRelCid(ConRel(c, _, _)) = c
+    | symRelCid(StrRel(c, _, _)) = c
+    | symRelCid(InclRel(c, _, _)) = c
+  fun symRelOrg(ConRel(_, O, _)) = O
+    | symRelOrg(StrRel(_, O, _)) = O
+    | symRelOrg(InclRel(_, O, _)) = O
 
   (********************** Stateful data structures **********************)
 
@@ -116,13 +122,10 @@ struct
   (* declTable maps cids to symbol level declarations *)
   val declTable : Declaration CH.Table = CH.new(19999)
 
-  (* sigRelTable stores all signatures visible in a module
-     currently, views do not see themselves *)
+  (* inclTable is an index giving all module level objects included into a module *)
   datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.mid | AncIncluded
-  val sigRelTable : (IDs.mid * SigRelType) list MH.Table = MH.new(299)
-
-  (* morphInclTable indexes all moprhisms included into a view - maintained for efficiency. *)
-  val morphInclTable : (Morph list) MH.Table = MH.new(299)
+  datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
+  val inclTable : ModLevObject list MH.Table = MH.new(299)
   
   (* structMapTable maps pairs ('s, 'c) to 's.c (where 'x is the cid of the name of x) - maintained for efficiency *)
   val structMapTable : IDs.cid CCH.Table = CCH.new(1999)
@@ -155,22 +158,20 @@ struct
       of SOME (SymMod(m,_)) => m
        | _ => raise UndefinedCid c
      
-  fun sigRelLookup(m) = valOf (MH.lookup sigRelTable m)
-                                  handle Option => raise UndefinedMid(m)
+  fun modInclLookup(m) = valOf (MH.lookup sigRelTable m)
+                                handle Option => raise UndefinedMid(m)
   fun sigIncluded(dom, cod) = List.exists
-      (fn (d, Self) => d = dom | (d, Included _) => d = dom | (d, AncIncluded) => d = dom | _ => false)
-      (sigRelLookup cod)
+      (fn ObjSig(d, Self) => d = dom | ObjSig(d, Included _) => d = dom | ObjSig(d, AncIncluded) => d = dom | _ => false)
+      (modInclLookup cod)
   fun sigRel(dom,cod) =
-    case List.filter (fn (d, _) => dom = d) (sigRelLookup cod)
+    case List.filter (fn (d, _) => dom = d) (modInclLookup cod)
       of nil => NONE
-       | (_,rel) :: tl => if List.exists (fn (_, r) => r = AncIncluded) tl
+       | (_,rel) :: tl => if List.exists (fn SigObj(_, r) => r = AncIncluded | _ => false) tl
                      then SOME AncIncluded
                      else SOME rel
   fun symVisible(c, m) = case sigRel(IDs.midOf c, m)
     of SOME (Ancestor p) => if IDs.lidOf c < IDs.lidOf (midToCid p) then SOME (Ancestor p) else NONE
      | r => r
-  fun morphInclLookup(m : IDs.mid) = valOf (MH.lookup morphInclTable m)
-                                     handle Option => raise UndefinedMid(m)
 
   fun symLookup(c : IDs.cid) = valOf (CH.lookup(declTable)(c))
                                handle Option => raise (UndefinedCid c)
@@ -227,6 +228,14 @@ struct
                         of SigDec _ => true
                          | ViewDec _ => false
                          | RelDec _ => false
+  fun inView() = case modLookup (currentMod())
+                        of SigDec _ => false
+                         | ViewDec _ => true
+                         | RelDec _ => false
+  fun inRelation() = case modLookup (currentMod())
+                        of SigDec _ => false
+                         | ViewDec _ => false
+                         | RelDec _ => true
 
   (********************** Convenience methods **********************)
   fun constDefOpt (d) =
@@ -340,7 +349,7 @@ struct
           )
   in newCid end
 
-  fun declAddC(dec : Declaration) : I.cid = let
+  fun declAddC(dec : Declaration) : cid = let
       val (c as (m,l)) :: scopetail = ! scope
       val _ = CH.insert(declTable)(c, dec)
       val _ = scope := (m, l+1) :: scopetail
@@ -360,14 +369,11 @@ struct
           | rewrite(Ancestor a) = Ancestor a
           | rewrite(Included _) = AncIncluded
           | rewrite(AncIncluded) = AncIncluded
-        val incls = List.map (fn (d,r) => (d, rewrite r)) pincls
+        val incls = List.map (fn SigObj(d,r) => SigObj(d, rewrite r)) pincls (* no other cases possible in a signature *)
         val _ = case dec
-          of SigDec _ => MH.insert sigRelTable (m, (m, Self) :: incls)
-          | ViewDec _ => (
-             MH.insert sigRelTable (m, incls);
-             MH.insert morphInclTable(m, nil)
-          )
-          | RelDec _ => MH.insert sigRelTable (m, incls)
+          of SigDec _ => MH.insert modInclTable (m, (m, Self) :: incls)
+          | ViewDec _ => MH.insert modInclTable (m, incls)
+          | RelDec _ => MH.insert modInclTable (m, incls)
         val _ = scope := (m,0) :: (! scope)
      in
      	c
@@ -414,24 +420,25 @@ struct
       val _ = if inSignature() then () else raise Error("inclusion only allowed in signature")
       val cod = currentMod()
       val c = declAddC (SymIncl incl)
-      val codincls = sigRelLookup cod
-      val domincls = sigRelLookup dom
-      fun rewrite(m,Self) = SOME (m,Included(SOME c))
-        | rewrite(m,Included _) = SOME (m,Included NONE)
-        | rewrite(m,Ancestor _) = NONE (* ancestors of dom must already be ancestors of cod *)
-        | rewrite(m,AncIncluded) = NONE
+      val codincls = modInclLookup cod
+      val domincls = modInclLookup dom
+      fun rewrite ObjSig(m,Self) = SOME (ObjSig(m,Included(SOME c)))
+        | rewrite ObjSig(m,Included _) = SOME (ObjSig(m,Included NONE))
+        | rewrite ObjSig(m,Ancestor _) = NONE (* ancestors of dom must already be ancestors of cod *)
+        | rewrite ObjSig(m,AncIncluded) = NONE
+        (* no other case possible in a signature *)
       val incls = List.mapPartial rewrite domincls
       val incls' = List.filter (fn x => List.all (fn y => not(x = y)) codincls) incls (* avoid duplicates *)
-      val _ = MH.insert sigRelTable (cod, codincls @ incls')
+      val _ = MH.insert modInclTable (cod, codincls @ incls')
       in
          c
       end
   
   fun instAddC(inst : SymInst) =
     let
-      val _ = if inSignature() then raise Error("instantiations only allowed in view") else ()
+      val _ = if inView() then () else raise Error("instantiations only allowed in view")
       val (m,l) :: scopetail = ! scope
-      val c' = symInstCid inst
+      val c' = relInstCid inst
       val c = (m, IDs.lidOf c')
       (* make sure there are no clashes, i.e., symLookup must be undefined *)
       val _ = case CH.lookup declTable c
@@ -443,7 +450,30 @@ struct
          | StrInst _ => CH.insert declTable (c, SymStrInst inst)
          | InclInst(_,_,mor) => (
             CH.insert declTable (c, SymInclInst inst);
-            MH.insert morphInclTable (m, (morphInclLookup m) @ [mor])
+            MH.insert modInclTable (m, (morphInclLookup m) @ [ObjMor mor])
+          )
+      );
+      scope := (m, l+1) :: scopetail;
+      c 
+    end
+
+  fun relAddC(rel : SymRel) =
+    let
+      val _ = if inRelation() then () else raise Error("declaration only allowed in logical relation")
+      val (m,l) :: scopetail = ! scope
+      val c' = symRelCid rel
+      val c = (m, IDs.lidOf c')
+      (* make sure there are no clashes, i.e., symLookup must be undefined *)
+      val _ = case CH.lookup declTable c
+                of NONE => ()
+                 | _ => raise Error("case for this symbol or inclusion already defined")
+    in
+      (case inst
+        of ConRel _ => CH.insert declTable (c, SymConRel rel)
+         | StrRel _ => CH.insert declTable (c, SymStrRel rel)
+         | InclRel(_,_,rel) => (
+            CH.insert declTable (c, SymInclRel inst);
+            MH.insert modInclTable (m, (morphInclLookup m) @ [ObjRel rel])
           )
       );
       scope := (m, l+1) :: scopetail;
@@ -453,15 +483,14 @@ struct
   fun reset () = (
     CH.clear declTable;               (* clear tables *)
     MH.clear modTable;
-    MH.clear sigRelTable;
-    MH.clear morphInclTable;
+    MH.clear modInclTable;
     CCH.clear structMapTable;
     MH.clear implicitOut;
     MH.clear implicitIn;
     savedScopes := nil;
     nextMid := 1;                       (* initial mid *)
-    scope := [(0,0)];                 (* open toplevel signature *)
-    MH.insert sigRelTable (0, [(0,Self)])
+    scope := [(0,0)];                   (* open toplevel signature *)
+    MH.insert modInclTable (0, [(0,Self)])
     (* bogus entries for the toplevel signature, hopefully not needed anymore
     MH.insert modTable (0, (0,~1), ~1);
     MH.insert declTable((0,~1),(0, SymMod (0, SigDec("",nil))))
