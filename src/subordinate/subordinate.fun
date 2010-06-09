@@ -471,8 +471,8 @@ struct
              we do not need the ancestors because they must also be ancestors of the current signature
        	     This could be imporved by also skipping all signatures that are already included into the current signature *)
           val incls = List.mapPartial
-                      (fn (m, ModSyn.Included _) => SOME m | _ => NONE)
-                      (ModSyn.sigRelLookup from)
+                      (fn ModSyn.ObjSig(m, ModSyn.Included _) => SOME m | _ => NONE)
+                      (ModSyn.modInclLookup from)
        in
        	  (* copy subordination information from included signatures *)
           List.app (fn x => ModSyn.sgnApp(x, copyEntry)) (from :: incls)
@@ -532,7 +532,7 @@ struct
     fun showOne m = MCTable.app (fn ((m', a), bs) => if m = m' then showFam (a, bs) else ()) soGraph;
     fun show () = ModSyn.modApp (fn m => (case ModSyn.modLookup m 
 				           of ModSyn.SigDec (_,name) =>
-					      (print("signature " ^ Names.foldQualifiedName name ^ "\n");
+					      (print("signature " ^ IDs.foldQName name ^ "\n");
 					      showOne m;
 					      print("\n"))
 					    | _ => ()) )

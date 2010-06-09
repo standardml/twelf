@@ -22,10 +22,10 @@ struct
    | strinst of id * (morph       * Paths.region)
    | inclinst of morph * Paths.region
   type rel = id
-  datatype symrel =
-     conrel of id * (ExtSyn.term * Paths.region)
-   | strrel of id * (rel       * Paths.region)
-   | inclrel of rel * Paths.region
+  datatype symcase =
+     concase of id * (ExtSyn.term * Paths.region)
+   | strcase of id * (rel       * Paths.region)
+   | inclcase of rel * Paths.region
 
   datatype sigincl = sigincl of id * openids
   
@@ -34,7 +34,7 @@ struct
 
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id * bool
-                    | relbegin of string * (morph list)
+                    | relbegin of string * morph list * Paths.region
   
   datatype read = readfile of string
 
@@ -51,8 +51,8 @@ struct
                     handle Names.Error(s) => error(r,s)
      in
          case cOpt
-           of SOME c => c(expected, ModSyn.symLookup c)
-            | NONE => error(r, "undeclared identifier: " ^ Names.foldQualifiedName names)
+           of SOME c => c
+            | NONE => error(r, "undeclared identifier: " ^ IDs.foldQName names)
       end
 
   fun modNameLookup' expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
@@ -65,7 +65,7 @@ struct
       let val m = modNameLookup' expected (m,names,r)
       in
         if List.exists (fn (m',_) => m' = m) (ModSyn.getScope())
-        then raise Error("module " ^ ModSyn.modFoldName m ^ " can only be used when closed")
+        then error(r, "module " ^ ModSyn.modFoldName m ^ " can only be used when closed")
         else m
       end
 
@@ -74,8 +74,8 @@ struct
      	val (names, r) = List.last mor
      	val init = List.take (mor, (List.length mor) - 1)
      	val (link, nextHome) = let val s = nameLookup Names.STRUC (home, names, r)
-     	                      in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
-     	                      end
+     	                       in (ModSyn.MorStr s, ModSyn.strDecDom (ModSyn.structLookup s))
+     	                       end
             handle Error _ => let val m = modNameLookup Names.VIEW (ModSyn.currentMod(), names, r)
                                   val ModSyn.ViewDec(_,_,dom,_,_) = ModSyn.modLookup m
                               in (ModSyn.MorView m, dom)
@@ -111,7 +111,7 @@ struct
              	   "instantiation of included or inherited constant " ^ ModSyn.symFoldName Con ^ " not allowed")
              	val _ = case ModSyn.constDefOpt Con
                           of NONE => ()
-                           | _ => raise Error(
+                           | _ => error(r,
                               "instantiation of defined constant " ^ ModSyn.symFoldName Con ^ " not allowed");
              	(* if inferrable, expType holds the expected type to guide the term reconstruction *)
              	val expType =
@@ -119,7 +119,7 @@ struct
              	  then NONE                                                            (* instantiation in a structure *)
              	  else SOME (Elab.applyMorph(ModSyn.constType Con,
              	                             ModSyn.MorView(ModSyn.currentMod())))     (* instantiation in a view *)
-             	       handle Elab.UndefinedMorph(m,c) =>
+             	       handle Elab.MissingCase(m,c) =>
              	          error(rr, "instantiation for " ^ ModSyn.symFoldName Con ^
              	          " must occur after (possibly induced) instantiation for " ^ ModSyn.symFoldName c)
              	val job = case expType
@@ -139,7 +139,7 @@ struct
              let
              	val Str = nameLookup Names.STRUC (dom, names, r)
              	val Mor = morphToMorph (cod, mor)
-             	val Mor' = Elab.reconMorph Mor
+             	val (_, _, Mor') = Elab.reconMorph Mor
              in
              	ModSyn.StrInst(Str, NONE, Mor')
              end
@@ -147,19 +147,19 @@ struct
              let
              	val Mor = morphToMorph (cod, (mor, r))
              	val (d, _, Mor') = Elab.reconMorph Mor
-             	val cid = case List.find
-             	               (fn ModSyn.ObjSig(m,ModSyn.Included (SOME _)) => m = d | _ => false)
-             	               (ModSyn.modInclLookup dom)
-             	          of SOME ModSyn.ObjSig(_, ModSyn.Included (SOME c)) => c
-             	           | NONE => raise Error("included morphism has domain " ^ ModSyn.modFoldName d ^
+             	val incl = List.find (fn ModSyn.ObjSig(m,ModSyn.Included (SOME _)) => m = d | _ => false)
+             	                     (ModSyn.modInclLookup dom)
+             	val cid = case incl
+             	          of SOME (ModSyn.ObjSig(_, ModSyn.Included (SOME c))) => c
+             	           | NONE => error(r, "included morphism has domain " ^ ModSyn.modFoldName d ^
              	                          " which is not included directly into " ^ ModSyn.modFoldName dom)
              in
              	ModSyn.InclInst(cid, NONE, Mor')
              end
   
-  fun symrelToSymRel(dom : IDs.mid, cod : IDs.mid, rel : symrel, l) =
-     case rel
-        of conrel((names, r), (term, r')) =>
+  fun symcaseToSymCase(dom : IDs.mid, cod : IDs.mid, cas : symcase, l) =
+     case cas
+        of concase((names, r), (term, r')) =>
              let
              	val rr = Paths.join(r,r')
              	val Con = nameLookup Names.CON (dom, names, r)
@@ -167,10 +167,10 @@ struct
              	   "case for included or inherited constant " ^ ModSyn.symFoldName Con ^ " not allowed")
              	val _ = case ModSyn.constDefOpt Con
                           of NONE => ()
-                           | _ => raise Error(
+                           | _ => error(r,
                               "case for defined constant " ^ ModSyn.symFoldName Con ^ " not allowed");
              	(* expected type to guide the term reconstruction *)
-             	val expType = Elab.applyRel(ModSyn.constType Con, ModSyn.MorRel(ModSyn.currentMod()))
+             	val expType = Elab.applyRel(ModSyn.constType Con, ModSyn.Rel(ModSyn.currentMod()))
              	       handle Elab.MissingCase(m,c) =>
              	          error(rr, "case for " ^ ModSyn.symFoldName Con ^
              	          " must occur after (possibly induced) case for " ^ ModSyn.symFoldName c)
@@ -182,28 +182,28 @@ struct
 		(* error(rr, "mismatch in number of implicit arguments: instantiation " ^ Int.toString impl ^
 		                                                                         ", declaration " ^ Int.toString expImpl) *)
              in
-		ModSyn.ConRel(Con, NONE, Term)
+		ModSyn.ConCase(Con, NONE, Term)
              end
-         | strrel((names, r), rel) =>
+         | strcase((names, r), rel) =>
              let
              	val Str = nameLookup Names.STRUC(dom, names, r)
              	val Rel = relToRel (cod, rel)
              	val (_, _, _, Rel') = Elab.reconRel Rel
              in
-             	ModSyn.StrRel(Str, NONE, Rel')
+             	ModSyn.StrCase(Str, NONE, Rel')
              end
-         | inclrel(rel, r) =>
+         | inclcase(rel, r) =>
              let
              	val Rel = relToRel(cod, (rel, r))
              	val (d, _, _, Rel') = Elab.reconRel Rel
              	val cid = case List.find
              	               (fn ModSyn.ObjSig(m,ModSyn.Included (SOME _)) => m = d | _ => false)
-             	               (ModSyn.sigRelLookup dom)
-             	          of SOME ModSyn.ObjSig(_, ModSyn.Included (SOME c)) => c
-             	           | NONE => raise Error("included logical relation has domain " ^ ModSyn.modFoldName d ^
+             	               (ModSyn.modInclLookup dom)
+             	          of SOME (ModSyn.ObjSig(_, ModSyn.Included (SOME c))) => c
+             	           | NONE => raise error(r, "included logical relation has domain " ^ ModSyn.modFoldName d ^
              	                          " which is not included directly into " ^ ModSyn.modFoldName dom)
              in
-             	ModSyn.InclRel(cid, NONE, Rel')
+             	ModSyn.InclCase(cid, NONE, Rel')
              end
 
    fun siginclToSigIncl(sigincl ((name,r), opens), _) =
@@ -245,19 +245,19 @@ struct
          in
             ModSyn.ViewDec (OS.Path.mkCanonical fileName, parname @ [name], Dom, Cod, implicit)
          end
-     | modbeginToModDec(relbegin(name, mors), Paths.Loc(fileName, _)) =
+     | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
          let
-            val _ = if mors = nil then raise Error("logical relation must have at least one morphism") else ()
-            val Mors = List.map (fn x => morphToMorph(0, x)) mors
+            val _ = if mors = nil then error(r, "logical relation must have at least one morphism") else ()
+            val Mors = List.map (fn x => morphToMorph(0, (x, loc))) mors
             val (dom :: doms, cod :: cods, Mors') =
                 let val recmors = List.map Elab.reconMorph Mors
                 in (List.map #1 recmors, List.map #2 recmors, List.map #3 recmors)
                 end
             val _ = if List.exists (fn x => not(x = dom)) doms
-                    then raise Error("morphisms do not have the same domain")
+                    then error(r, "morphisms do not have the same domain")
                     else ()
             val _ = if List.exists (fn x => not(x = cod)) cods
-                    then raise Error("morphisms do not have the same codomain")
+                    then raise error(r, "morphisms do not have the same codomain")
                     else ()
             val parname = ModSyn.modDecName (ModSyn.modLookup (ModSyn.currentMod()))
          in

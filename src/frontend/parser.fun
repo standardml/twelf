@@ -80,8 +80,9 @@ struct
     | ModBegin of ModExtSyn.modbegin
     | ModEnd
     | StrDec of ModExtSyn.strdec
-    | SymInst of ModExtSyn.syminst
     | Include of ModExtSyn.sigincl
+    | SymInst of ModExtSyn.syminst
+    | SymCase of ModExtSyn.symcase
     | Read of ModExtSyn.read
     | Use of string
     (* Further pragmas to be added later here *)
@@ -209,9 +210,9 @@ struct
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
   
-    and parseStreamInRel' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInRelConRel' (f, sc)
-      | parseStreamInRel' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInRelStrRel' (f, sc)
-      | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclRel' (f, sc)
+    and parseStreamInRel' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseInRelConCase' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseInRelStrCase' (f, sc)
+      | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclCase' (f, sc)
       | parseStreamInRel' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInRel' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
@@ -426,20 +427,20 @@ struct
 
     and parseViewBegin' (f as LS.Cons ((_, r0), _), sc) =
         let
-          val (ViewBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseViewBegin' (f)
+          val (viewBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseViewBegin' (f)
 	  val r = Paths.join (r0, r')
         in
           (* switching to inView parser *)
-	  Stream.Cons ((ModBegin ViewBegin, r), parseStreamInView (LS.delay (fn () => f'), sc))
+	  Stream.Cons ((ModBegin viewBegin, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
     and parseRelBegin' (f as LS.Cons ((_, r0), _), sc) =
         let
-          val (RelBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseRelBegin' (f)
+          val (relBegin, f' as LS.Cons((_,r'),_)) = ParseModule.parseRelBegin' (f)
 	  val r = Paths.join (r0, r')
         in
           (* switching to inRel parser *)
-	  Stream.Cons ((ModBegin ViewBegin, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+	  Stream.Cons ((ModBegin relBegin, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
     and parseModEnd'(f as LS.Cons ((_, r0), s'), sc) =
@@ -494,28 +495,28 @@ struct
 	  Stream.Cons ((SymInst incl, r), parseStreamInView (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelConRel' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelConCase' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (conInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseConRel'(f)
+           val (conCase, f' as LS.Cons((_,r'),_)) = ParseModule.parseConCase'(f)
            val r = Paths.join (r0, r')
         in
-	   Stream.Cons ((SymInst conInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+	   Stream.Cons ((SymCase conCase, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelStrRel' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelStrCase' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (strInst, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrRel'(f)
+           val (strCase, f' as LS.Cons((_,r'),_)) = ParseModule.parseStrCase'(f)
            val r = Paths.join (r0, r')
         in
-	  Stream.Cons ((SymInst strInst, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+	  Stream.Cons ((SymCase strCase, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
-    and parseInRelInclRel' (f as LS.Cons ((_, r0), _), sc) =
+    and parseInRelInclCase' (f as LS.Cons ((_, r0), _), sc) =
         let
-           val (incl, f' as LS.Cons((_,r'),_)) = ParseModule.parseInclRel'(f)
+           val (inclCase, f' as LS.Cons((_,r'),_)) = ParseModule.parseInclCase'(f)
            val r = Paths.join (r0, r')
         in
-	  Stream.Cons ((SymInst incl, r), parseStreamInRel (LS.delay (fn () => f'), sc))
+	  Stream.Cons ((SymCase inclCase, r), parseStreamInRel (LS.delay (fn () => f'), sc))
         end
 
     and parseUse' (LS.Cons ((L.ID (_,name), r0), s), sc) =

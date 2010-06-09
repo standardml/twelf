@@ -194,7 +194,7 @@ a : type.
 }.
 %view m1 : LS -> LT = {a := a1. c := c1.}.
 %view m2 : LS -> LT = {a := a2. c := c2.}.
-%rel LogRel : m1 x m2 = {
+%rel LogRel : m1 -> m2 = {
    a := j.                    %% j : m1(a) -> m2(a) -> type.
    c := p.                    %% p : j m1(c) m2(c)
 }.

@@ -68,7 +68,7 @@ struct
 
     type callpats = (ThmSyn.Callpats * Paths.region list)
 
-    val foldName = Names.foldQualifiedName
+    val foldName = IDs.foldQName
     (* common error message *)
     fun undeclaredIdentifier(qid : IDs.Qid) =
        (* better: find shortest undeclared prefix of qid -fr Jan 09 *)

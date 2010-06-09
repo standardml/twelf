@@ -193,7 +193,7 @@ struct
 	let 
 	  fun cids nil = nil
 	    | cids (name :: nL) =
-              (case SOME(Names.parseQualifiedName name)
+              (case SOME(IDs.parseQName name)
                  of NONE => raise Error ("Malformed qualified identifier " ^ name)
                   | SOME qname =>
               (case Names.nameLookupC(qname)
@@ -256,7 +256,7 @@ struct
 	else 
 	  let 
 	    val S = current ()
-	    val S' = Lemma.apply (S, valOf (Names.nameLookupC (Names.parseQualifiedName name)))
+	    val S' = Lemma.apply (S, valOf (Names.nameLookupC (IDs.parseQName name)))
 	      handle Splitting.Error s => abort ("Splitting Error: " ^ s)
 		   | Filling.Error s => abort ("Filling Error: " ^ s)
 		   | Recursion.Error s => abort ("Recursion Error: " ^ s)

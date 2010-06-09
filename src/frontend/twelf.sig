@@ -101,7 +101,7 @@ sig
   val loadFile : string -> Status      (* load file *)
   val loadString : string -> Status    (* load string *)
   val readDecl : unit -> Status	       (* read declaration interactively *)
-  val decl : (string * string) -> Status (* print declaration of constant *)
+  val decl : string -> Status          (* print declaration of constant *)
 
   val top : unit -> unit	       (* top-level for interactive queries *)
 

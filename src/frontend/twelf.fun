@@ -148,6 +148,7 @@ functor Twelf
    structure ReconModule : RECON_MODULE
      sharing type ReconModule.strdec = Parser.ModExtSyn.strdec
      sharing type ReconModule.syminst = Parser.ModExtSyn.syminst
+     sharing type ReconModule.symcase = Parser.ModExtSyn.symcase
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
      sharing type ReconModule.sigincl = Parser.ModExtSyn.sigincl
      sharing type ReconModule.read = Parser.ModExtSyn.read
@@ -323,7 +324,7 @@ struct
 	      | exn => (abort 0 (UnknownExn.unknownExn exn); raise exn))
 
     (* better: lookup shortest undefined prefix -fr *)
-    fun undeclaredIdentifier qid = Names.foldQualifiedName qid
+    fun undeclaredIdentifier qid = IDs.foldQName qid
     
     fun installConst fromCS (cid, fileNameocOpt) =
         let
@@ -585,9 +586,8 @@ struct
         let
           fun toCid qid =
               case Names.nameLookupC qid
-                of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ undeclaredIdentifier qid
-                                              ^ " in subord declaration")
+                of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier " ^ undeclaredIdentifier qid ^
+                                              " in subord declaration"))
                  | SOME cid => cid
           val cidpairs = List.map (fn (qid1, qid2) => (toCid qid1, toCid qid2)) qidpairs
                      handle Names.Error (msg) =>
@@ -610,9 +610,8 @@ struct
         let
           fun toCid qid =
               case Names.nameLookupC qid
-                of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ undeclaredIdentifier qid
-                                              ^ " in freeze declaration")
+                of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+                                              ^ undeclaredIdentifier qid ^ " in freeze declaration"))
                  | SOME cid => cid
           val cids = List.map toCid qids
                      handle Names.Error (msg) =>
@@ -639,9 +638,8 @@ struct
 	          else ()
 	  fun toCid qid =
 	      case Names.nameLookupC qid
-		of NONE => raise Names.Error ("Undeclared identifier "
-					      ^ undeclaredIdentifier qid
-					      ^ " in thaw declaration")
+		of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+					      ^ undeclaredIdentifier qid ^ " in thaw declaration"))
 		 | SOME cid => cid
 	  val cids = List.map toCid qids
 	             handle Names.Error (msg) => raise Names.Error (Paths.wrap (r, msg))
@@ -672,9 +670,8 @@ struct
           fun toCid qid =
               case Names.nameLookupC qid
                 of NONE =>
-                    raise Names.Error ("Undeclared identifier "
-                                       ^ undeclaredIdentifier qid
-                                       ^ " in deterministic declaration")
+                    raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+                                       ^ undeclaredIdentifier qid ^ " in deterministic declaration"))
                  | SOME cid => cid
           fun insertCid cid = CompSyn.detTableInsert (cid, true)
           val cids = List.map toCid qids
@@ -694,9 +691,8 @@ struct
         let
           fun toCid qid =
               case Names.nameLookupC qid
-                of NONE => raise Names.Error ("Undeclared identifier "
-                                              ^ undeclaredIdentifier qid
-                                              ^ " in compile assertion")
+                of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+                                              ^ undeclaredIdentifier qid ^ " in compile assertion"))
                  | SOME cid => cid
           val cids = List.map toCid qids
                      handle Names.Error (msg) => raise Names.Error (Paths.wrap (r, msg))
@@ -740,9 +736,8 @@ struct
       (* Fixity declaration for operator precedence parsing *)
       | install1 (fileName, (Parser.FixDec ((qid,r),fixity), _)) =
         (case Names.nameLookupC qid
-           of NONE => raise Names.Error ("Undeclared identifier "
-                                         ^ undeclaredIdentifier qid
-                                         ^ " in fixity declaration")
+           of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+                                         ^ undeclaredIdentifier qid ^ " in fixity declaration"))
             | SOME cid => (Names.installFixity (cid, fixity);
                            if !Global.chatter >= 3
                              then msg ((if !Global.chatter >= 4 then "%" else "")
@@ -754,9 +749,8 @@ struct
       (* Name preference declaration for printing *)
       | install1 (fileName, (Parser.NamePref ((qid,r), namePref), _)) =
         (case Names.nameLookupC qid
-           of NONE => raise Names.Error ("Undeclared identifier "
-                                         ^ undeclaredIdentifier qid
-                                         ^ " in name preference")
+           of NONE => raise Names.Error (Paths.wrap (r, "Undeclared identifier "
+                                         ^ undeclaredIdentifier qid ^ " in name preference"))
             | SOME cid => Names.installNamePref (cid, namePref)
 	 handle Names.Error (msg) => raise Names.Error (Paths.wrap (r,msg)))
 
@@ -1218,7 +1212,7 @@ struct
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
                             of ModSyn.ViewDec(_, _, d, c, _) => (d,c)
-                               _  => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
+                             | _  => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
                             
@@ -1252,39 +1246,39 @@ struct
              ()
            end
         )
-      | install1 (fileName, declr as (Parser.SymRel rel, r)) = (
+      | install1 (fileName, declr as (Parser.SymCase cas, r)) = (
            let
                val (dom, cod) = case ModSyn.modLookup (ModSyn.currentMod())
                             of ModSyn.RelDec(_, _, d, c, _) => (d,c)
                              | _ => raise ModSyn.Error(Paths.wrap(r, "cases for logical relations only allowed in logical relation"))
-               val Rel = ReconModule.symrelToSymRel (dom, cod, inst, Paths.Loc(fileName,r))
+               val Cas = ReconModule.symcaseToSymCase (dom, cod, cas, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
-               val NewRel = Elab.checkSymRel(Rel)
+               val NewCas = Elab.checkSymCase(Cas)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
-               val c = ModSyn.symrelAddC(NewRel)
+               val c = ModSyn.caseAddC(NewCas)
                        handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
-               val _ = chmsg 3 (fn () => Print.instToString(NewRel) ^ "\n")
-	       val _ = case NewRel
-	           of ModSyn.ConRel _ => ()
-	            | ModSyn.StrRel _ =>
+               val _ = chmsg 3 (fn () => Print.caseToString(NewCas) ^ "\n")
+	       val _ = case NewCas
+	           of ModSyn.ConCase _ => ()
+	            | ModSyn.StrCase _ =>
 	                let
-	                   fun callbackInstallRel(rel) =
+	                   fun callbackInstallCas(cas) =
 	                      let
 	                      	 (* @FR: add double-checking here *)
-	                         val c = ModSyn.symrelAddC(rel)
+	                         val c = ModSyn.caseAddC(cas)
 	                                 handle ModSyn.Error msg => raise ModSyn.Error(Paths.wrap(r, msg))
                                  val prefix = if (! Global.printFlat) then "" else "% induced: "
                                  val _ = if !Global.chatter >= 3
-                                         then msg (prefix ^ Print.relToString(rel) ^ "\n")
+                                         then msg (prefix ^ Print.caseToString(cas) ^ "\n")
 		                         else ()
 		               in
 		               	  c
                                end
 	                 in
-	                    Elab.flattenRel(c, callbackInstallRel)
+	                    Elab.flattenCase(c, callbackInstallCas)
 	                    handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
 	                 end
-	            | ModSyn.InclRel _ => ()
+	            | ModSyn.InclCase _ => ()
            in
              ()
            end
@@ -1408,21 +1402,25 @@ struct
 	   install (Parser.parseStream TextIO.stdIn)
 	 end) ()
 
-    (* decl (modname, symname) = () prints declaration of symbol *)
-    fun decl (modname, name) =
-       case Names.nameLookupC (Names.parseQualifiedName modname)
-          of NONE => (msg (modname ^ " has not been declared\n"); ABORT)
+    (* prints declaration of symbol *)
+    fun decl(s) =
+       let val (modnames, names) = IDs.parseFQName s
+       in case Names.nameLookup' modnames
+          of NONE => (msg (IDs.foldQName modnames ^ " has not been declared\n"); ABORT)
            | SOME c =>
                 let
                   val m = ModSyn.cidToMid c
                   val (dom, inSig) = case ModSyn.modLookup m
                      of ModSyn.SigDec _ => (m, true)
                       | ModSyn.ViewDec(_,_,d,_,_) => (d, false)
+                      | ModSyn.RelDec(_,_,d,_,_) => (d, false)
                 in
-                   case Names.nameLookup(dom, Names.parseQualifiedName name)
-                     of NONE => (msg (name ^ " has not been declared\n"); ABORT)
+                   case Names.nameLookup [Names.CON,Names.STRUC] (dom, names)
+                     of NONE => (msg (IDs.foldQName names ^ " has not been declared\n"); ABORT)
                       | SOME c' => decl' (if inSig then c' else IDs.newcid(m, IDs.lidOf c'))
                 end
+        end
+        handle Names.Error(s) => (msg s; ABORT)
     and decl' (cid) = (
 	  (* val fixity = Names.getFixity (cid) *)
 	  (* can't get name preference right now *)
@@ -1433,7 +1431,9 @@ struct
 	   | ModSyn.SymStr strDec => msg (Print.strDecToString strDec ^ "\n")
 	   | ModSyn.SymConInst conInst => msg (Print.instToString conInst ^ "\n")
 	   | ModSyn.SymStrInst strInst => msg (Print.instToString strInst ^ "\n")
-       ) handle ModSyn.UndefinedCid _ => msg ("no structure assignment provided\n");
+	   | ModSyn.SymConCase conCase => msg (Print.caseToString conCase ^ "\n")
+	   | ModSyn.SymStrCase strCase => msg (Print.caseToString strCase ^ "\n")
+       ) handle ModSyn.UndefinedCid _ => msg ("no case provided\n");
        OK
     )
 

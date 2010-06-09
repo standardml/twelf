@@ -26,10 +26,12 @@ sig
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
   val modBeginToString : ModSyn.ModDec -> string
   val modEndToString : ModSyn.ModDec -> string
-  val sigInclToString : ModSyn.SigIncl -> string
   val conDecToString : IntSyn.ConDec -> string
   val strDecToString : ModSyn.StrDec -> string
+  val sigInclToString : ModSyn.SigIncl -> string
   val instToString : ModSyn.SymInst -> string
+  val caseToString : ModSyn.SymCase -> string
+
   val cnstrToString : IntSyn.Cnstr -> string
   val cnstrsToString : IntSyn.cnstr list -> string (* assigns names in contexts *)
   val ctxToString : IntSyn.dctx * IntSyn.dctx -> string

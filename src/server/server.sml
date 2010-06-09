@@ -71,12 +71,6 @@ struct
   fun getFile' ("") = error "Missing filename"
     | getFile' (fileName) = fileName
 
-  (* Identifiers, used as a constant *)
-  fun getTwoIds (id::id'::nil) = (id, id')
-    | getTwoIds (nil) = error "Missing identifier"
-    | getTwoIds (id :: nil) = error "Missing identifier"
-    | getTwoIds (ts) = error "Extraneous arguments"
-
   (* Identifiers, used as a trace specification *)
   fun getIds (ids) = ids
 
@@ -371,8 +365,7 @@ struct
     | serve' ("readDecl", args) =
       (checkEmpty args; serve (Twelf.readDecl ()))
     | serve' ("decl", args) =
-        (* takes two arguments now for module and symbol name -fr Jan 09 *)
-        serve (Twelf.decl (getTwoIds (tokenize args)))
+        (case tokenize args of arg :: nil => serve (Twelf.decl arg) | _ => error "extraneous arguments")
 
     | serve' ("top", args) =
       (checkEmpty args;

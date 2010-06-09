@@ -60,11 +60,26 @@ structure IDs = struct
    fun preimageFromQid(s : cid, nil : qid) = NONE
      | preimageFromQid(s,    (s',c) :: tl) = if s = s' then SOME c else preimageFromQid(s, tl)
 
-   type Qid = string list
-   (* This stuff doesn't belong here, but I didn't know where else to put it. -fr *)
+   (* methods for external IDs *)
    (* get a string from a list *)
    fun mkString(nil : string list, pre, mid, post) = pre ^ post
     | mkString(a :: l, pre, mid, post) = pre ^ (foldl (fn (x,y) => y ^ mid ^ x) a l) ^ post
+   (* Qualified names (m,l) are represented as string list with "" separating
+      m and l. This corresponds to using ".." as the separator. splitName retrieves the components. *)
+   fun splitName names =
+      let fun aux(left, nil) = (nil,left)
+            | aux(left, name :: names) =
+               if name = "" then (left, names) else aux(left @ [name], names)
+      in  aux(nil, names)
+      end
+   fun parseQName(name : string) = String.fields (fn c => c = #".") name
+   fun parseFQName(name : string) = splitName (parseQName name)
+   val sep = "."
+   val Sep = ".."
+   fun foldQName l = mkString(l,"",sep,"")
+   fun foldFQName(m, l) = foldQName m ^ Sep ^ foldQName l
+
+   type Qid = string list
 end
 
 (* These tables should be moved to the others *) 

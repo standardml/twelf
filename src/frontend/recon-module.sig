@@ -22,10 +22,10 @@ sig
   (* logical relation *)
   type rel = id
   (* cases in a logical relations *)
-  datatype symrel =
-     conrel of id * (ExtSyn.term * Paths.region)
-   | strrel of id * (rel       * Paths.region)
-   | inclrel of rel * Paths.region
+  datatype symcase =
+     concase of id * (ExtSyn.term * Paths.region)
+   | strcase of id * (rel       * Paths.region)
+   | inclcase of rel * Paths.region
 
   (* inclusion of signatures into signatures and morphisms into link *)  
   datatype sigincl = sigincl of id * openids
@@ -37,7 +37,7 @@ sig
   (* begin of a module *)
   datatype modbegin = sigbegin of string
                     | viewbegin of string * id * id * bool
-                    | relbegin of string * (morph list)
+                    | relbegin of string * morph list * Paths.region
   
   (* importing files *)
   datatype read = readfile of string
@@ -53,7 +53,7 @@ sig
   (* reconstructs an instantiation, first two arguments are domain and codomain mid *)
   val syminstToSymInst : IDs.mid * IDs.mid * syminst * Paths.location -> ModSyn.SymInst
   (* reconstructs a case in a logical relation, first two arguments are domain and codomain mid *)
-  val symrelToSymRel : IDs.mid * IDs.mid * symrel * Paths.location -> ModSyn.SymRel
+  val symcaseToSymCase : IDs.mid * IDs.mid * symcase * Paths.location -> ModSyn.SymCase
   (* reconstructs a structure declaration *)
   val strdecToStrDec : strdec * Paths.location -> ModSyn.StrDec
   (* reconstructs the begin of a module declaration *)

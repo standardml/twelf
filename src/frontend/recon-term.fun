@@ -353,7 +353,7 @@ struct
     fun findOmitted (G, qid, r) =
           (error (r, "Undeclared identifier "
           (* better: find shortest undefined prefix and print that instead of the whole qualified identifier -fr *)
-                     ^ (Names.foldQualifiedName qid));
+                     ^ (IDs.foldQName qid));
            omitted (r))
 
     fun findBVar' (Null, name, k) = NONE
@@ -375,7 +375,7 @@ struct
         )
 
     fun findConst fc (G, qid, r) =
-        (case Names.nameLookupC qid
+        (case Names.nameLookup' qid
            of NONE => fc (G, qid, r)
             | SOME cid =>
 	      (case ModSyn.symLookup cid
@@ -385,9 +385,10 @@ struct
 		  | ModSyn.SymCon (IntSyn.AbbrevDef _) => constant (IntSyn.NSDef cid, r)
 		  | _ => 
 		    (error (r, "Invalid identifier\n"
-			    ^ "Identifier `" ^ Names.foldQualifiedName qid
+			    ^ "Identifier `" ^ IDs.foldQName qid
 			    ^ "' is not a constant, definition or abbreviation");
 		     omitted (r))))
+          handle Names.Error(msg) => (error(r, msg); omitted r)
 
     fun findCSConst fc (G, qid, r) =
         (case qid

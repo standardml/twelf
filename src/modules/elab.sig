@@ -20,12 +20,11 @@ sig
   val reconMorph  : ModSyn.Morph -> IDs.mid * IDs.mid * ModSyn.Morph
 
   (* checks declarations in a logical relation *)
-  val checkSymRel : ModSyn.SymRel -> ModSyn.SymRel
+  val checkSymCase : ModSyn.SymCase -> ModSyn.SymCase
   (* checks a logical relation against domain, codomain, and morphisms, returns reconstructed morphism *)
-  val checkRel  : ModSyn.Morph * IDs.mid * IDs.mid * (ModSyn.Morph list) -> ModSyn.Rel
+  val checkRel  : ModSyn.Rel * IDs.mid * IDs.mid * (ModSyn.Morph list) -> ModSyn.Rel
   (* infers domain, codomain and morphisms of a logical relation *)
-  val reconRel  : ModSyn.Morph -> IDs.mid * IDs.mid * (ModSyn.Morph list) * ModSyn.Rel
-
+  val reconRel  : ModSyn.Rel -> IDs.mid * IDs.mid * (ModSyn.Morph list) * ModSyn.Rel
 
   (* called to flatten a structure declaration in a signature, view, or logical relation
      - computes all declarations imported by the structure to the codomain signature (in the order declared in the domain)
@@ -38,7 +37,7 @@ sig
   *)
   val flattenDec    : IDs.cid * (IDs.cid * IntSyn.ConDec -> IDs.cid) * (IDs.cid * ModSyn.StrDec -> IDs.cid) -> unit
   val flattenInst   : IDs.cid * (ModSyn.SymInst -> IDs.cid) -> unit
-  val flattenRel    : IDs.cid * (ModSyn.SymRel -> IDs.cid) -> unit
+  val flattenCase   : IDs.cid * (ModSyn.SymCase -> IDs.cid) -> unit
   
   (* apply a morphism to a term *)
   val applyMorph : IntSyn.Exp * ModSyn.Morph -> IntSyn.Exp

@@ -29,9 +29,6 @@ sig
   *)
   datatype OpenDec = OpenDec of (IDs.cid * string) list
 
-  (* logical relations *)
-  datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
-
   (*
      morphisms
      morphisms have a domain and a codomain signature
@@ -40,8 +37,11 @@ sig
      MorView(m) is the morphism induced by the view m
      MorComp(mor,mor') is the composition of mor and mor' in diagram order (i.e., mor' o mor)
   *)
-  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorComp of Morph * Morph
+  datatype Morph = MorStr of IDs.cid | MorView of IDs.mid | MorId of IDs.mid | MorComp of Morph * Morph
   
+  (* logical relations *)
+  datatype Rel = Rel of IDs.mid | RelComp of Morph * Rel
+
   (* symbol instantiations within a view or structure
      instantiations are the building blocks of structures and views, say from S to T
      * ConInst(c, O, t) instantiates the constant c of S with the expression t over T
@@ -56,8 +56,8 @@ sig
                    | InclInst of IDs.cid * (IDs.cid option) * Morph
 
   (* symbol cases within a logical relations *)
-  datatype SymRel  = ConRel of IDs.cid * (IDs.cid option) * I.Exp | StrRel of IDs.cid * (IDs.cid option) * Rel
-                   | InclRel of IDs.cid * (IDs.cid option) * Rel
+  datatype SymCase  = ConCase of IDs.cid * (IDs.cid option) * I.Exp | StrCase of IDs.cid * (IDs.cid option) * Rel
+                   | InclCase of IDs.cid * (IDs.cid option) * Rel
 
   (* inclusion declaration in a signature *)
   datatype SigIncl
@@ -115,7 +115,7 @@ sig
   datatype Declaration = SymMod of IDs.mid * ModDec
                        | SymCon of I.ConDec | SymStr of StrDec | SymIncl of SigIncl
                        | SymConInst of SymInst | SymStrInst of SymInst | SymInclInst of SymInst
-                       | SymConRel of SymRel | SymStrRel of SymRel | SymInclRel of InclRel
+                       | SymConCase of SymCase | SymStrCase of SymCase | SymInclCase of SymCase
 
    datatype Read = ReadFile of string  (* file name *)
    
@@ -149,6 +149,8 @@ sig
   val structAddC : StrDec -> IDs.cid
   (* called to add an instantiation to the current module, which must be a view *)
   val instAddC   : SymInst -> IDs.cid
+  (* called to add a case to the current module, which must be a logical relation *)
+  val caseAddC   : SymCase -> IDs.cid
   (* called to reset the state *)
   val reset      : unit -> unit
 
@@ -159,8 +161,6 @@ sig
   (* specialized lookups; these raise UndefinedCid _ if the cid is defined but returns the wrong data *)
   val sgnLookup     : IDs.cid -> I.ConDec          (* constant declarations *)
   val structLookup  : IDs.cid -> StrDec            (* structure declarations *)
-  val conInstLookup : IDs.cid -> SymInst           (* constant instantiations *)
-  val strInstLookup : IDs.cid -> SymInst           (* structure instantiations *)
 
   (* looks up a module declaration, raise UndefinedMid _ *)
   val modLookup  : IDs.mid -> ModDec

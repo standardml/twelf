@@ -44,12 +44,17 @@ sig
   val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
   val uninstallName: IDs.mid * string list -> unit
   
+  (* nameLookup and nameLookup' return NONE if a name without module component is undefined
+     on all other failures, they raise exceptions with specific error message *)
   (* concepts a name may be refer to *)
   datatype Concept = SIG | VIEW | REL | CON | STRUC
   (* looks up a qualified name relative to a module, checks result against expected concepts *)
-  val nameLookup : Concept list -> IDs.mid * string list -> IDs.cid option
-  (* convenience for non-modular code: relative to current target signature, expect constants *)
+  val nameLookup  : Concept list -> IDs.mid * string list -> IDs.cid option
+  (* convenience: relative to current target signature, expect anything *)
+  val nameLookup' : string list -> IDs.cid option
+  (* convenience for non-modular code: relative to current target signature, expect constants, raises no exceptions *)
   val nameLookupC : string list -> IDs.cid option
+
   (* shadowing of (only) toplevel constants must be allowed for backwards compatibility *)
   (* true if shadowed by later symbol name; if a constant shadows a struct, the struct's components are not shadowed *)
   val isShadowed : IDs.cid -> bool
@@ -62,9 +67,7 @@ sig
   val installNamePref : IDs.cid * (string list * string list) -> unit
   val namePrefLookup : IDs.cid -> (string list * string list) option
 
-  val parseQualifiedName : string -> string list (* temporary *)
-  val foldQualifiedName : string list -> string (* temporary *)
-  (* resets the above three mappings *)
+  (* resets the above mappings *)
   val reset : unit -> unit
 
   (* EVar and BVar name choices *)

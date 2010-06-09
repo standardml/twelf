@@ -135,10 +135,10 @@ struct
        (E.inclinst (mor, Paths.join(r,r')), f')
      end 
 
-  fun parseRel'(f' as LS.Cons ((t, r), _)) =
-     Parsing.error (r, "parsing of composed logical relations not implemented yet")
+  fun parseRel'(f' as LS.Cons ((L.ID _, r), _)) = parseQualId' f'
+  (* composition of morphism with relation omitted *)
   
-  fun parseConRel'(f' as LS.Cons ((L.ID _, r0), _)) =
+  fun parseConCase'(f' as LS.Cons ((L.ID _, r0), _)) =
       let
          val (con, f') = parseQualId'(f')
          val (_, f') = parseColon'(f')
@@ -146,11 +146,11 @@ struct
          val (tm, f') = ParseTerm.parseTerm'(f')
          val (r2, f') = parseDot' (f')
       in
-        (E.conrel (con, (tm, Paths.join (r0, r2))), f')
+        (E.concase (con, (tm, Paths.join (r0, r2))), f')
       end
 
   (* parses a %struct case in a logical relation *)
-  fun parseStrRel' (LS.Cons ((L.STRUCT, r), s')) =
+  fun parseStrCase' (LS.Cons ((L.STRUCT, r), s')) =
      let
         val (id, f') = parseQualId'(LS.expose s')
         val (_,f') = parseColon' f'
@@ -158,16 +158,16 @@ struct
         val (rel, f') = parseRel' f'
         val (r2, f') = parseDot' (f')
      in
-       (E.strrel (id, (rel, Paths.join (r, r2))), f')
+       (E.strcase (id, (rel, Paths.join (r, r2))), f')
      end
 
   (* parses a %include declaration in a logical relation *)
-  fun parseInclRel' (LS.Cons ((L.INCLUDE, r), s')) =
+  fun parseInclCase' (LS.Cons ((L.INCLUDE, r), s')) =
      let
-        val (rel f') = parseRel'(LS.expose s')
+        val (rel, f') = parseRel'(LS.expose s')
         val (r', f') = parseDot' (f')
      in
-       (E.inclrel (rel, Paths.join(r,r')), f')
+       (E.inclcase (rel, Paths.join(r,r')), f')
      end 
 
   (* parses a list of symbol instantiations (used for structures) *)
@@ -187,7 +187,7 @@ struct
       end
     | parseInsts' (f as LS.Cons ((L.INCLUDE, _), _)) =
       let
-        val (inst, f') = parseIncludeView' (f)
+        val (inst, f') = parseInclInst' (f)
         val (insts, f'') = parseInsts' (f')
       in
         (inst::insts, f'')
@@ -269,6 +269,31 @@ struct
         | LS.Cons ((t, r1), s') =>
 	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
   end
+  
+  fun parseRelBegin' (LS.Cons ((L.REL, r), s')) =
+     case LS.expose s'
+       of LS.Cons ((L.ID (_, id), _), s') =>
+          let
+             val f' = LS.expose s'
+             val (_, f') = parseColon' (f')
+             fun parseMorphs(f') =
+                   let val (mor, f') = parseMorph' f'
+                   in
+                       case f'
+                         of LS.Cons((L.ARROW,_),s') =>
+                            let val (mors, f') = parseMorphs (LS.expose s')
+                            in (mor::mors, f')
+                            end
+                          | _ => ([mor], f')
+                    end
+             val (mors, f') = parseMorphs (f')
+             val (r', f') = parseEqual' (f')
+             val (_, f') = parseLBrace' (f')
+          in
+             (E.relbegin(id, mors, Paths.join(r,r')), f')
+          end 
+        | LS.Cons ((t, r1), s') =>
+	  Parsing.error (r1, "Expected new module identifier, found token " ^ L.toString t)
   
   fun parseRead' (f as LS.Cons ((L.READ, _), s')) =
      case LS.expose s'

@@ -191,15 +191,13 @@ local
     | argNumber (FX.Postfix _) = 1
 
   (* formats a qualified name "names" as a "sep/Sep"-separated list, "f" formats the individual components of "names" -fr *)
-  val sep = "."
-  val Sep = ".."
   fun fmtConstPath (f : string -> (string * int), (mods : (string list) option, names : string list)) =
      let
-     	fun fold l = foldl (fn (x,y) => y @ [sym sep, x]) (List.take(l,1)) (tl l)
+     	fun fold l = foldl (fn (x,y) => y @ [sym IDs.sep, x]) (List.take(l,1)) (tl l)
      	val formattedMods = case mods
      	                      of NONE => nil
-     	                       | SOME nil => [sym Sep]
-     	                       | SOME l => (fold (List.map (Str0 o Symbol.module) l)) @ [sym Sep]
+     	                       | SOME nil => [sym IDs.Sep]
+     	                       | SOME l => (fold (List.map (Str0 o Symbol.module) l)) @ [sym IDs.Sep]
      	val formattedNames = fold (List.map (Str0 o f) names)
      in
         F.HVbox (formattedMods @ formattedNames)
@@ -915,12 +913,6 @@ in
   fun implicitToString true = "%implicit "
     | implicitToString false = ""
 
-  fun modBeginToString(ModSyn.SigDec(base,name)) = "%sig " ^ (Names.foldQualifiedName name) ^ " = {"
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, impl)) =
-        "%view " ^ (implicitToString impl) ^ (Names.foldQualifiedName name) ^ " : " ^
-         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
-  fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (Names.foldQualifiedName name)
-    | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (Names.foldQualifiedName name)
   fun openToString(ModSyn.OpenDec nil) = ""
     | openToString(ModSyn.OpenDec l) =
        let fun doList(nil) = ""
@@ -934,7 +926,10 @@ in
     | morphToString(ModSyn.MorComp(mor1,mor2)) =
       morphToString(mor1) ^ " " ^ morphToString(mor2)
       
-  fun sigInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
+  fun relToString(ModSyn.Rel m) =
+      ModSyn.modFoldName m
+    | relToString(ModSyn.RelComp(mor,rel)) =
+      morphToString(mor) ^ " " ^ relToString(rel)
 
   fun instToString(ModSyn.ConInst(c, _, U)) = 
          IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
@@ -942,14 +937,33 @@ in
         "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
     | instToString(ModSyn.InclInst (_, _, mor)) = "%include " ^ (morphToString mor) ^ "."
 
+  fun caseToString(ModSyn.ConCase(c, _, U)) = 
+         IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
+    | caseToString(ModSyn.StrCase(c, _, rel)) =
+        "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ relToString(rel) ^ "."
+    | caseToString(ModSyn.InclCase(_, _, rel)) = "%include " ^ (relToString rel) ^ "."
+
+  fun sigInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
+
   fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, impl)) = (
-     "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
      IDs.mkString(List.map instToString insts, "{", " ", "}") ^ (openToString (opendec)) ^ "."
     )
    | strDecToString(ModSyn.StrDef(name, _, dom, def, impl)) = (
-     "%struct " ^ (implicitToString impl) ^ Names.foldQualifiedName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
      morphToString def ^ "."
     )
+
+  fun modBeginToString(ModSyn.SigDec(base,name)) = "%sig " ^ (IDs.foldQName name) ^ " = {"
+    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, impl)) =
+        "%view " ^ (implicitToString impl) ^ (IDs.foldQName name) ^ " : " ^
+         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
+    | modBeginToString(ModSyn.RelDec(base, name, dom, cod, mors)) =
+        "%rel " ^ (IDs.foldQName name) ^ " : " ^
+         IDs.mkString(List.map morphToString mors, "", " -> ", "") ^ " : " ^
+         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
+  fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (IDs.foldQName name)
+    | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
 
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)

@@ -91,7 +91,7 @@ struct
 
     fun toCids (nil) = nil
       | toCids (name::names) =
-        (case N.nameLookupC (N.parseQualifiedName name)
+        (case N.nameLookupC (IDs.parseQName name)
            of NONE => (print ("Trace warning: ignoring undeclared constant " ^ name ^ "\n");
                        toCids names)
             | SOME cid => cid::toCids names

@@ -109,17 +109,17 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (IDs.foldQName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
       end
     | fmtConDec (I.SkoDec (name, parent, imp, V, L)) =
-      Str ("%% Skipping Skolem constant " ^ Names.foldQualifiedName name ^ " %%")
+      Str ("%% Skipping Skolem constant " ^ IDs.foldQName name ^ " %%")
     | fmtConDec (I.ConDef (name, parent, imp, U, V, L, _)) =
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (IDs.foldQName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
@@ -128,7 +128,7 @@ local
       let
 	val _ = Names.varReset IntSyn.Null
       in
-	sexp [Str "tw~defConst", F.Space, Name (Names.foldQualifiedName name), F.Break,
+	sexp [Str "tw~defConst", F.Space, Name (IDs.foldQName name), F.Break,
 	      Integer (imp), F.Break, fmtExp (I.Null, (U, I.id)),
 	      F.Break, fmtExp (I.Null, (V, I.id)),
 	      F.Break, fmtUni (L)]
