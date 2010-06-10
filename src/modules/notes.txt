@@ -1,5 +1,6 @@
 Carsten:
 make symbols with fixity parsable separately
+use condefs in flattening (ancestors?)
 preserve comments, line/column numbers
 can readDecl be merged with loadFile, loadString
 long ZFC check

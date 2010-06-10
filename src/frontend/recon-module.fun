@@ -170,10 +170,9 @@ struct
                            | _ => error(r,
                               "case for defined constant " ^ ModSyn.symFoldName Con ^ " not allowed");
              	(* expected type to guide the term reconstruction *)
-             	val expType = Elab.applyRel(ModSyn.constType Con, ModSyn.Rel(ModSyn.currentMod()))
-             	       handle Elab.MissingCase(m,c) =>
-             	          error(rr, "case for " ^ ModSyn.symFoldName Con ^
-             	          " must occur after (possibly induced) case for " ^ ModSyn.symFoldName c)
+             	val expType = Elab.expType(Con, ModSyn.Rel(ModSyn.currentMod()))
+             	              handle Elab.MissingCase(m,c) => error(rr, "case for " ^ ModSyn.symFoldName Con ^
+             	                 " must occur after (possibly induced) case for " ^ ModSyn.symFoldName c)
 		val ExtSyn.JTerm((U, _), _, _) = ExtSyn.recon (ExtSyn.jof'(term, expType))
                 val _ = ExtSyn.checkErrors(rr)
 		val (impl, Term) = Abstract.abstractDecImp U

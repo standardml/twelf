@@ -163,6 +163,10 @@ sig
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                          (* NONE means expands to {x:A}B *)
 
+  (* convenience methods to bind a whole context *)
+  val PPi  : (Dec Ctx * Depend) * Exp -> Exp
+  val LLam : Dec Ctx * Exp -> Exp
+
   (* Form of constant declaration *)
   datatype ConDecForm =
     FromCS				(* from constraint domain *)

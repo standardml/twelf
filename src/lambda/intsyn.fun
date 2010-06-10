@@ -170,6 +170,12 @@ struct
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
                                         (* NONE means expands to {x:A}B *)
 
+  (* convenience to bind a whole context *)
+  fun LLam(Null, U) = U
+    | LLam(Decl(ctx, dec), U) = LLam(ctx, Lam(dec, U))
+  fun PPi((Null, _), U) = U
+    | PPi((Decl(ctx, dec), dep), U) = PPi((ctx, dep), Pi((dec, dep), U))
+
   (* Form of constant declaration *)
   datatype ConDecForm =
     FromCS				(* from constraint domain *)
