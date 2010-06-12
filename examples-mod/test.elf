@@ -184,7 +184,6 @@ a : type.
 }.
 
 %% testing logical relations
-
 %sig LS = {a: type. c : a.}.
 %sig LT = {
    a1: type. c1 : a1.

@@ -38,7 +38,7 @@ struct
 
   fun ctxLookup (Decl (G', D), 1) = D
     | ctxLookup (Decl (G', _), k') = ctxLookup (G', k'-1)
-(*    | ctxLookup (Null, k') = (print ("Looking up k' = " ^ Int.toString k' ^ "\n"); raise Error "Out of Bounce\n")*)
+(*    | ctxLookup (Null, k') = (print ("Looking up k' = " ^ Int.toString k' ^ "\n"); raise Error "Out of Bounds\n")*)
     (* ctxLookup (Null, k')  should not occur by invariant *)
 
   (* ctxLength G = |G|, the number of declarations in G *)

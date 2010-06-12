@@ -964,6 +964,7 @@ in
          (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
   fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (IDs.foldQName name)
     | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
+    | modEndToString(ModSyn.RelDec(_,name, _, _, _)) = "}. % end logical relation " ^ (IDs.foldQName name)
 
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)

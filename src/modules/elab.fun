@@ -13,6 +13,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
   (* check whether n = U : V can be a strict definition
      (only needed as an optimization to return ConDefs if possible) *)
   fun checkStrict(U : I.Exp, V : I.Exp) : bool = (Strict.check((U,V), NONE); true) handle Strict.Error _ => false
+  (* pre: U is NAE, U is strict definies of some constant
+     post: result is ancestor info for ConDef *)
+  fun ancestor(U: I.Exp) : I.Ancestor = M.ancestor(U)
   (* check whether U has type/kind V *)
   (* pre: NAE *)
   fun checkType(U : I.Exp, V : I.Exp) : bool = (TypeCheck.check(U,V); true) handle TypeCheck.Error _ => false
@@ -180,7 +183,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      	  | A(I.Lam(D, U)) = I.Lam(ADec D, A U)
 (*     	  | A(I.EVar(E, C, U, Constr)) = impossible by precondition *)
           | A(I.EClo(U,s)) = I.EClo(A U, ASub s)
-(*          | A(I.AVar(I)) = impossible by precondition *)
+(*        | A(I.AVar(I)) = impossible by precondition *)
           | A(I.FgnExp(cs, F)) = raise UnimplementedCase
           | A(I.NVar n) = I.NVar n
         and AHead(I.BVar k) = headToExp(I.BVar k)
@@ -316,10 +319,6 @@ functor Elab (structure Print : PRINT) : ELAB = struct
     | restrictRelFirst(_ :: tl, newdom) = restrictRelFirst(tl, newdom) (* list of includes may contain signatures *)
     | restrictRelFirst(nil, newdom) = raise UnimplementedCase (* should be the identity relation but that cannot be expressed in LF type theory *)
   
-  fun mormap u mors = List.map (fn m => applyMorph(u,m)) mors
-  (* appy all morphisms to expression, return a spine *)
-  fun morspine u mors : I.Spine = List.foldr I.App I.Nil (mormap u mors)
-  
   (* logical relation application
      we write applyRel(U, SOME C, rel) as rel^C(U)
      pre: rel is a well-formed relation between a list of morphisms m_1, ..., m_n with domain dom and codomain cod
@@ -334,24 +333,34 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      let
      	val (dom, cod, mors, _) = reconRel rel
      	val n = List.length mors
+     	val l = ref 0 (* counter for the number of variables in the context; evil to use state here but it makes the code easier to read than with an additional argument in the recursive call *)
+        (* first apply all morphisms to u, then rename free variables *)
+        fun morsub u =
+          let val morsWithIndex = ListPair.zip(mors, (List.tabulate(n, fn j => j)))
+              val vars = List.tabulate(n, fn x => ! l - x)   (* [l,...,1] *)
+              fun subs j = List.foldl (fn (i,rest) => I.Dot(I.Idx (i * (n+1) - j), rest)) I.id vars
+          in List.map (fn (m,j) => I.EClo(applyMorph(u, m), subs j)) morsWithIndex
+          end
+        (* as morsub u but returns a context *)
+        fun MC u : I.Dec I.Ctx = List.foldl (fn (e,rest) => I.Decl(rest,I.Dec(I.NoVarInfo, e))) I.Null (morsub u)
         fun A u = A'(u,NONE)
-        (* as morspine u mors but returns a context *)
-        and MC u : I.Dec I.Ctx = List.foldl (fn (e,rest) => I.Decl(rest,I.Dec(I.NoVarInfo, e))) I.Null (mormap u mors)
      	and A'(I.Uni I.Kind, _) = I.Uni I.Kind
-     	  | A'(I.Uni I.Type, SOME C) = I.PPi((MC C, I.No), I.Uni I.Type) (* rel^C(type) = m_1(C) -> ... -> m_n(C) -> type *)
+     	  | A'(I.Uni I.Type, SOME C) = I.PPi((MC C, I.No), I.Uni I.Type)
+     	       (* rel^C(type) = m_1(C) -> m_n(C) -> type *)
      	  | A'(I.Pi((dec, dep), V), SOME C) = 
-              (* rel^C(Pi dec. K) = Pi rel(dec).rel^{shift(C) 0}(K) *)
-     	      let val newC = I.Redex(I.EClo(C, I.shift), I.App(BVar' 0, I.Nil))
+              (* rel^C(Pi dec. K) = Pi rel(dec).rel^{shift(C) 1}(K) *)
+     	      let val newC = I.Redex(I.EClo(C, I.shift), I.App(BVar' 1, I.Nil))
+     	          val _ = l := ! l + 1
      	      in I.PPi((ADec dec, I.Maybe), A'(V, SOME newC)) (* dep instead of I.Maybe? *)
      	      end
      	  | A'(P as I.Pi((dec, dep), V), _) =
      	      (* rel(Pi dec. V) = lam f_1:m_1(P). ... lam f_n:m_n(P). Pi rel(dec). (rel(V) (f_1 x_1) ... (f_n x_n)) *)
      	      let
-     	      	 val nto1 = List.tabulate(n, fn x => n - x)                                  (* [n,...,1] *)
-     	      	 val fx = List.map (fn i => I.Root(I.BVar(n+i), I.App(BVar' i, I.Nil))) nto1 (* [f_1 x_1, ..., f_n x_n] *)
+     	      	 val inds = List.tabulate(n, fn x => n + 1 - x)                              (* [n+1,...,2] *)
+     	      	 val fx = List.map (fn i => I.Root(I.BVar(n+i), I.App(BVar' i, I.Nil))) inds (* [f_1 x_1, ..., f_n x_n] *)
      	      in I.LLam(MC P, I.PPi((ADec dec, I.Maybe), I.Redex(A V, List.foldr I.App I.Nil fx)))
      	      end
-     	  | A'(I.Lam(dec, U), _) = I.LLam(ADec dec, A U)  (* both on type and on term level *)
+     	  | A'(I.Lam(dec, U), _) = (l := ! l + 1; I.LLam(ADec dec, A U))  (* both on type and on term level *)
      	  | A'(I.Redex(U, S), _) = I.Redex(A U, ASpine S)
      	  | A'(I.Root(H, S), _) = I.Redex(AHead H, ASpine S)
           | A'(I.EClo(U,s), _) = raise UnimplementedCase
@@ -359,16 +368,19 @@ functor Elab (structure Print : PRINT) : ELAB = struct
           | A'(I.NVar n, _) = raise UnimplementedCase
 (*        | A(I.AVar(I)) = impossible by precondition *)
 (*     	  | A'(I.EVar(E, C, U, Constr)) = impossible by precondition *)
-        and ADec(I.Dec(x,V)) : I.Dec I.Ctx = I.Decl(MC V, I.Dec(x,I.Redex(A V, morspine (BVar' 0) mors)))
+        and ADec(I.Dec(x,V)) : I.Dec I.Ctx =
+            let val vars = List.tabulate(n, fn x => BVar' (n - x))  (* [n,...,1] *)
+            in I.Decl(MC V, I.Dec(x,I.Redex(A V, List.foldr I.App I.Nil vars)))
+            end
             (* rel(x:A) =  x_1:m_1(A), ..., x_n:m_n(A), x:(rel(A) x_1 ... x_n) *)
 (*        | ADec(I.BDec(v,(l,s))) = impossible by precondition *)
           | ADec(I.ADec(v,d)) = raise UnimplementedCase
           | ADec(I.NDec v) = raise UnimplementedCase
         and ASpine(I.Nil) = I.Nil
-          | ASpine(I.App(U,S)) = List.foldr I.App (ASpine S) ((mormap U mors) @ [A U])
+          | ASpine(I.App(U,S)) = List.foldr I.App (ASpine S) ((morsub U) @ [A U])
               (* rel(t_1 ... t_r) = m_1(t_1) ... m(t_1) rel(t_1)   ...   m_1(t_r) ... m(t_r) rel(t_r) *)
           | ASpine(I.SClo(S,s)) = raise UnimplementedCase
-        and AHead(I.BVar k) = headToExp(I.BVar (k * (n+1)))
+        and AHead(I.BVar k) = BVar' (k * (n+1) - n)
           | AHead(I.Const c) = ACid c
           | AHead(I.Skonst c) = ACid c
           | AHead(I.Def d) = A (M.constDef d)
@@ -394,11 +406,11 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            in
               case (rel, valOf (M.symVisible(c,dom))) (* if NONE, U would be ill-formed *)
                 (* relation applied to local symbol: apply relation by looking up case *)
-                of (M.Rel(r), M.Self) => (
+                of (M.Rel r, M.Self) => (
                      let val M.SymConCase (M.ConCase(_, _, exp)) = M.symLookup(r, IDs.lidOf c)
                      in exp
                      end
-                     handle Bind => raise MissingCase(r,c)
+                     handle Bind => raise MissingCase(r,c) | UndefinedCid => raise MissingCase(r,c)
                    )
                  | (M.RelComp(mor, r), M.Self) => applyRel(applyMorph(cidToExp c, mor), NONE, r)
                  (* relation applied to non-local symbol *)
@@ -412,10 +424,17 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      end
 
   (* computes the expected type of rel(U) for U:V *)
-  fun expType(c, rel) = raise UnimplementedCase
-   (* case val V = M.constType c
-                        of => normalize (applyRel(V, SOME (cidToExp c), rel))
-                         | => normalize (I.Redex(applyRel(V, NONE, rel), morspine (cidToExp c) mors)) *)
+  fun expType(c, rel) =
+     let val dec = M.sgnLookup c
+         val V = I.conDecType dec
+         val (_,_,mors,rel') = reconRel rel
+     in case I.conDecUni dec
+          of I.Kind => normalize (applyRel(V, SOME (cidToExp c), rel'))
+           | I.Type =>
+            let val sp = List.foldr I.App I.Nil (List.map (fn m => applyMorph(cidToExp c,m)) mors)
+            in normalize (I.Redex(applyRel(V, NONE, rel), sp))
+            end
+     end
 
   (********************** checking module level declarations **********************)
   
@@ -428,7 +447,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      in
      	if checkType(term, expTyp)
      	then ci
-        else raise Error("type mismatch")
+        else raise Error("type mismatch") (* this check is probably not necessary if called on reconstructed input *)
      end
     | checkSymInst(M.StrInst(str, org, mor)) =
      let
@@ -453,7 +472,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       in
          if checkType(term, expTyp)
          then cc
-         else raise Error("type mismatch")
+         else raise Error("type mismatch") (* this check is probably not necessary if called on reconstructed input *)
       end
     | checkSymCase(M.StrCase(str, org, rel)) =
       let
@@ -714,9 +733,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                          else typingError(defnew, typ, "instantiation of " ^ M.symFoldName c' ^ " ill-typed\n")
                  val q = (S, c') :: (applyStructMap q')
               in 
-                 if false (* not (anc'Opt = NONE) andalso uni' = I.Type andalso checkStrict(defnew, typ) *)
+                 if uni' = I.Type andalso checkStrict(defnew, typ)
                  (* return a ConDef if the input was a term-level ConDef and strictness is preserved *)
-                 then I.ConDef(Name @ name', q, imp', defnew, typ, uni', valOf anc'Opt) (* @CS: ancestor wrong *)
+                 then I.ConDef(Name @ name', q, imp', defnew, typ, uni', ancestor defnew)
                  (* otherwise return AbbrevDef *)
                  else I.AbbrevDef(Name @ name', q, imp', defnew, typ, uni')
               end

@@ -379,7 +379,7 @@ struct
            of NONE => fc (G, qid, r)
             | SOME cid =>
 	      (case ModSyn.symLookup cid
-	         (* added "ModSyn.SymCon ..." since name lookup can now return a bunch of different things -fr Jan 09 *)
+	         (* name lookup is now more complex: multiple result types and exceptions possible -fr Jun 10 *)
 		 of ModSyn.SymCon (IntSyn.ConDec _) => constant (IntSyn.Const cid, r)
 	          | ModSyn.SymCon (IntSyn.ConDef _) => constant (IntSyn.Def cid, r)
 		  | ModSyn.SymCon (IntSyn.AbbrevDef _) => constant (IntSyn.NSDef cid, r)

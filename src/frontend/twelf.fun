@@ -306,9 +306,8 @@ struct
 	      | Lexer.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | IntSyn.Error (msg) => abort chlev ("Signature error: " ^ msg ^ "\n")
 	      | Names.Error (msg) => abortFileMsg chlev (fileName, msg)
-	      (* - Not supported in polyML ABP - 4/20/03 
- 	      * | IO.Io (ioError) => abortIO (fileName, ioError)
-	      *)
+	      (* - IO.Io not supported in polyML ABP - 4/20/03 -- assuming it's supported by now -fr 2010 *)
+ 	      | IO.Io (ioError) => abortIO (fileName, ioError)
 	      | Solve.AbortQuery (msg) => abortFileMsg chlev (fileName, msg)
 	      | ThmSyn.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | Prover.Error (msg) => abortFileMsg chlev (fileName, msg)
@@ -1336,8 +1335,11 @@ struct
             val _ = ReconTerm.resetErrors fileName
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
             (* val _ = ModSyn.newFile (OS.Path.mkCanonical fileName)              (* for name management -fr *) *)
+            val stat = install (fileName, Parser.parseStream instream)
 	  in
-	    install (fileName, Parser.parseStream instream)
+	    case stat
+	      of ABORT => ABORT
+	       | OK => if ModSyn.onToplevel() then OK else raise ModSyn.Error("expected declaration or `}', found end of input")
 	  end)
 
     (* loadString (str) = status

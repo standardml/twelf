@@ -1,11 +1,9 @@
 Carsten:
-make symbols with fixity parsable separately
-use condefs in flattening (ancestors?)
-preserve comments, line/column numbers
-can readDecl be merged with loadFile, loadString
-long ZFC check
-condef in flattening
-skolem constants?
+make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
+preserve comments, line/column numbers: have separate pragma %- and %%{  }%%, store line numbers for declarations
+can readDecl be merged with loadFile, loadString: probably not important
+long ZFC check: fix bug first
+catch exceptions when file not found: yes
 
 to do
 make sigRelLookup unique by throwing away every include if a sigRel already exists
@@ -13,7 +11,6 @@ try to remove argument of Included
 anonymous constants
 read assignments in structures separately
 print out with nicer names
-catch exceptions when file not found
 
 filtering
 anonymous morphisms

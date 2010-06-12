@@ -428,6 +428,8 @@ struct
      	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
      	    | ModSyn.ViewDec(_,_,_,cod,_) =>
      	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
+     	    | ModSyn.RelDec(_,_,_,cod,_) =>
+     	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
      in
      	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
      	  andalso not(m = 0)
@@ -454,6 +456,20 @@ struct
                    of NONE => print (instToString(inst, params) ^ nl())
                     | SOME _ => ()
                 )
+              | _ => ()
+(*              | ModSyn.SymConCase cas => (case ModSyn.symCaseOrg cas
+                   of NONE => print (caseToString(inst, params) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymStrCaset cas => (case ModSyn.symCaseOrg cas
+                   of NONE => print (caseToString(cas, params) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymInclCase cas => (case ModSyn.symCaseOrg cas
+                   of NONE => print (caseToString(cas, params) ^ nl())
+                    | SOME _ => ()
+                )
+*)
           ) handle ModSyn.UndefinedCid c => ()); (* in views not everything is defined *)
           print(modEndToString(mdec, params));
           print(nl() ^ nl());
@@ -463,9 +479,8 @@ struct
 
   fun toFile filename =
      let val file = TextIO.openOut filename
-         val f = if ModSyn.getScope() = nil then "" else
-         	    case ModSyn.modLookup(0) of
-                         ModSyn.SigDec(n,_) => n
+         val f = case ModSyn.modLookup(0) of
+                      ModSyn.SigDec(n,_) => n
          val baseFile = OS.Path.fromString f
          val base = omdocExtension f
      in (
