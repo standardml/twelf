@@ -201,7 +201,6 @@ a : type.
    *: u.
    eq: u -> u -> type.
    uniq : eq UU *.
-   %% k : {x1:a1}{y1:a1}{x2:a2}{y2:a2} j x1 x2 -> j y1 y2 -> [x:u][y:u -> u]{z:u} y z .
 }.
 %view m1 : LS -> LT = {
    a := a1. c := c1. f := [x] x.
