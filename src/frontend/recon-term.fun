@@ -384,9 +384,8 @@ struct
 	          | ModSyn.SymCon (IntSyn.ConDef _) => constant (IntSyn.Def cid, r)
 		  | ModSyn.SymCon (IntSyn.AbbrevDef _) => constant (IntSyn.NSDef cid, r)
 		  | _ => 
-		    (error (r, "Invalid identifier\n"
-			    ^ "Identifier `" ^ IDs.foldQName qid
-			    ^ "' is not a constant, definition or abbreviation");
+		    (error (r, "Identifier " ^ IDs.foldQName qid
+			    ^ " is valid but not a constant, definition, or abbreviation");
 		     omitted (r))))
           handle Names.Error(msg) => (error(r, msg); omitted r)
 

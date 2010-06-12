@@ -184,18 +184,39 @@ a : type.
 }.
 
 %% testing logical relations
-%sig LS = {a: type. c : a.}.
+%sig LS = {
+    a: type.
+    c : a.
+    f : a -> a.
+    b : a -> a -> type.
+    g : b XX (f XX). 
+}.
 %sig LT = {
-   a1: type. c1 : a1.
-   a2: type. c2 : a2.
+   a1: type. c1: a1.
+   a2: type. c2: a2.
    j : a1 -> a2 -> type.
    p : j c1 c2.
+   q : {f1}{f2} j XX XY -> j (f1 XX) (f2 XY).
+   u: type.
+   *: u.
+   eq: u -> u -> type.
+   uniq : eq UU *.
+   %% k : {x1:a1}{y1:a1}{x2:a2}{y2:a2} j x1 x2 -> j y1 y2 -> [x:u][y:u -> u]{z:u} y z .
 }.
-%view m1 : LS -> LT = {a := a1. c := c1.}.
-%view m2 : LS -> LT = {a := a2. c := c2.}.
-%rel LogRel : m1 -> m2 = {
+%view m1 : LS -> LT = {
+   a := a1. c := c1. f := [x] x.
+   b := [x][y] u. g := [XX] *.
+}.
+%view m2 : LS -> LT = {
+   a := a2. c := c2. f := [x] c2.
+   b := [x][y] (u -> u). g := [XX] ([x] x).
+}.
+%rel Rho : m1 -> m2 = {
    a := j.                    %% j : m1(a) -> m2(a) -> type.
    c := p.                    %% p : j m1(c) m2(c)
+   f := [x1][x2][v: j x1 x2] (q ([x]x) ([x]c2) v).
+   b := [x1][x2][v: j x1 x2][y1][y2][w: j y1 y2][b1][b2] {x:u} eq (b2 x) b1.
+   g := [x1][x2][v: j x1 x2] [x:u] uniq.
 }.
 
 %% testing pre-functors
