@@ -158,21 +158,6 @@ struct
       of SOME (SymMod(m,_)) => m
        | _ => raise UndefinedCid c
      
-  fun modInclLookup(m) = valOf (MH.lookup inclTable m)
-                                handle Option => raise UndefinedMid(m)
-  fun sigIncluded(dom, cod) = List.exists
-      (fn ObjSig(d, Self) => d = dom | ObjSig(d, Included _) => d = dom | ObjSig(d, AncIncluded) => d = dom | _ => false)
-      (modInclLookup cod)
-  fun sigRel(dom,cod) =
-    case List.filter (fn ObjSig(d, _) => dom = d | _ => false) (modInclLookup cod)
-      of nil => NONE
-       | ObjSig(_,rel) :: tl => if List.exists (fn ObjSig(_, r) => r = AncIncluded | _ => false) tl
-                                then SOME AncIncluded
-                                else SOME rel
-  fun symVisible(c, m) = case sigRel(IDs.midOf c, m)
-    of SOME (Ancestor p) => if IDs.lidOf c < IDs.lidOf (midToCid p) then SOME (Ancestor p) else NONE
-     | r => r
-
   fun symLookup(c : IDs.cid) = valOf (CH.lookup(declTable)(c))
                                handle Option => raise (UndefinedCid c)
 
@@ -191,6 +176,29 @@ struct
   | _ => raise (UndefinedCid c)
 
   fun structMapLookup (S,s') = CCH.lookup structMapTable (S,s')
+
+  fun modInclLookup(m) = valOf (MH.lookup inclTable m)
+                                handle Option => raise UndefinedMid(m)
+  fun sigIncluded(dom, cod) = List.exists
+      (fn ObjSig(d, Self) => d = dom | ObjSig(d, Included _) => d = dom | ObjSig(d, AncIncluded) => d = dom | _ => false)
+      (modInclLookup cod)
+  fun sigRel(dom,cod) =
+    case List.filter (fn ObjSig(d, _) => dom = d | _ => false) (modInclLookup cod)
+      of nil => NONE
+       | ObjSig(_,rel) :: tl => if List.exists (fn ObjSig(_, r) => r = AncIncluded | _ => false) tl
+                                then SOME AncIncluded
+                                else SOME rel
+  fun symVisible(c, m) =
+     case sigRel(IDs.midOf c, m)
+        of SOME (Ancestor p) =>
+           if IDs.lidOf c < IDs.lidOf (midToCid p)
+           then SOME (Ancestor p)
+           else NONE
+         | SOME r => SOME r
+         | NONE => (case symLookup c
+                      (* exception: structures are already visible if the containing signature is *)
+                      of SymStr _ => symVisible(midToCid (IDs.midOf c), m)
+                       | _ => NONE)
 
   fun symQid(c : IDs.cid) = case symLookup c
        of SymCon condec => I.conDecQid condec
@@ -245,12 +253,13 @@ struct
       (case sgnLookup (c)
 	 of I.ConDec (_, _, _, status, _, _) => status
           | _ => I.Normal)
+  fun modName m = modDecName (modLookup m)
   fun symName(c) =
      case symLookup(c)
        of SymCon condec => IntSyn.conDecName condec
         | SymStr strdec => strDecName strdec
-        (* should not be called for inclusions *)
-  fun modName m = modDecName (modLookup m)
+        | SymMod (_,moddec) => modDecName moddec
+        (* should not be called for inclusions, instantiations, cases *)
 
   fun symFoldName(c) = IDs.foldQName(symName c)
   fun modFoldName m = IDs.foldQName(modName m)

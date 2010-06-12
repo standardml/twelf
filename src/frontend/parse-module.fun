@@ -24,19 +24,19 @@ struct
   type ID = string list * Paths.region
   type Front = (L.Token * Paths.region) LS.front
 
-  fun parseSingleToken' (token, ascii) f' : Paths.region * Front =
+  fun parseSingleToken' token f' : Paths.region * Front =
      let
      	val LS.Cons ((t, r), s') = f'
      in 
      	if t = token
      	then (r, LS.expose s')
-        else Parsing.error (r, "Expected `" ^ ascii ^ "', found token " ^ L.toString t)
+        else Parsing.error (r, "Expected " ^ L.toString token ^ ", found token " ^ L.toString t)
      end
-  val parseLBrace' = parseSingleToken'(L.LBRACE, "{")
-  val parseArrow' = parseSingleToken'(L.ARROW, "->")
-  val parseEqual' = parseSingleToken'(L.EQUAL, "=")
-  val parseColon' = parseSingleToken'(L.COLON, ":")
-  val parseDot' = parseSingleToken'(L.DOT, ".")
+  val parseLBrace' = parseSingleToken'(L.LBRACE)
+  val parseArrow' = parseSingleToken'(L.ARROW)
+  val parseEqual' = parseSingleToken'(L.EQUAL)
+  val parseColon' = parseSingleToken'(L.COLON)
+  val parseDot' = parseSingleToken'(L.DOT)
   
   fun parseId'(LS.Cons((L.ID(_,id),r), s')) = ((id,r), LS.expose s')
     | parseId'(LS.Cons ((t, r), _)) =
@@ -49,19 +49,23 @@ struct
        ((ids @ [id], Paths.join(r, r')), f')
     end
 
-  fun parseMorphAux'(f' as LS.Cons ((L.ID _, _), _)) =
+  fun parseIDList'(f' as LS.Cons ((L.ID _, _), _)) =
       let
           val (id, f') = parseQualId' f'
-          val (rest, f') = parseMorphAux'(f')
+          val (rest, f') = parseIDList'(f')
       in
          (id :: rest, f')
       end
-    | parseMorphAux'(f') = (nil, f')
+    | parseIDList'(f') = (nil, f')
 
-  fun parseMorph'(f' as LS.Cons ((t, r), _)) = case parseMorphAux' f'
+  fun parseMorph'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
     of (nil, _) => Parsing.error (r, "Expected structure or view identifier, found token " ^ L.toString t)
      | mf => mf
   
+  fun parseRel'(f' as LS.Cons ((t, r), _)) = case parseIDList' f'
+    of (nil, _) => Parsing.error (r, "Expected identifier, found token " ^ L.toString t)
+     | mf => mf
+ 
   fun parseConInst' (f' as LS.Cons ((L.ID _, r0), _)) =
       let
          val (con, f') = parseQualId'(f')
@@ -134,9 +138,6 @@ struct
      in
        (E.inclinst (mor, Paths.join(r,r')), f')
      end 
-
-  fun parseRel'(f' as LS.Cons ((L.ID _, r), _)) = parseQualId' f'
-  (* composition of morphism with relation omitted *)
   
   fun parseConCase'(f' as LS.Cons ((L.ID _, r0), _)) =
       let

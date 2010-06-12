@@ -20,7 +20,7 @@ sig
    | inclinst of morph * Paths.region
 
   (* logical relation *)
-  type rel = id
+  type rel = id list
   (* cases in a logical relations *)
   datatype symcase =
      concase of id * (ExtSyn.term * Paths.region)

@@ -92,11 +92,12 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            then (d1,c2, M.MorComp(m1,m2))
            else case M.implicitLookup(c1, d2)
               of SOME m => (d1, c2, M.MorComp(m1, M.MorComp(m, m2)))
-               | NONE => raise Error("morphisms not composable")
+               | NONE => raise Error("morphism with codomain " ^ M.modFoldName c1 ^
+                                                   " and morphism with domain " ^ M.modFoldName d2 ^ " not composable")
         end
     | reconMorph(M.MorId m) = (m,m, M.MorId m)
     | reconMorph(M.MorStr s) = ((M.strDecDom (M.structLookup s), IDs.midOf(s), M.MorStr s)
-                              handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism"))
+                              handle M.UndefinedCid _ => raise Error("non-structure symbol reference in morphism "))
     | reconMorph(M.MorView m) =
         let
            val M.ViewDec(_, _, dom, cod, _) = M.modLookup m
@@ -268,7 +269,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
            then mrec
            else case M.implicitLookup(mcod, rdom)
              of SOME m => M.MorComp(mrec, m)
-              | NONE => raise Error("morphism and logical relation not composable")
+              | NONE => raise Error("morphism with codomain " ^ M.modFoldName mcod ^ 
+                                    " and logical relation with domain " ^ M.modFoldName rdom ^ " not composable")
        in
        	  (mdom, rcod, List.map (fn x => M.MorComp(precomp, x)) rmors, M.RelComp(precomp, rrec))
        end
@@ -280,7 +282,9 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      	 val rmors' = List.map (fn x => checkMorph(x, dom, cod)) mors
      	 val _ = if rmors = rmors' (* @FR: too strict - definitions are not expanded *)
      	         then ()
-     	         else raise Error("logical relation does not relate expected morphisms")
+     	         else raise Error("bad morphisms in logical relation: " ^
+     	           "expected " ^ IDs.mkString(List.map Print.morphToString rmors',"", " -> ","") ^
+     	           "; found " ^ IDs.mkString(List.map Print.morphToString rmors,"", " -> ",""))
          val inclBefore = M.sigIncluded(dom,rdom)
          val implBefore = if inclBefore then NONE else M.implicitLookup(dom, rdom)
          val inclAfter  = M.sigIncluded(rcod,cod)
@@ -486,7 +490,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
       let
          val M.RelDec(_,_,dom, cod, mors) = M.modLookup (M.currentMod())
       	 val M.SymIncl(M.SigIncl(expDom,_)) = M.symLookup cid
-     	 val newrel = checkRel(rel, expDom, cod, List.map (fn m => M.MorComp(M.MorStr cid, m)) mors)
+      	 (* expDom ins included into dom for cases that have passed through reconstruction *)
+     	 val newrel = checkRel(rel, expDom, cod, List.map(fn m => restrictMorph(m, expDom)) mors)
       in
          M.InclCase(cid, org, newrel)
       end

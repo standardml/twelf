@@ -398,12 +398,13 @@ struct
     | toString' (DETERMINISTIC) = "%deterministic"  (* -rv 11/27/01. *)
     | toString' (CLAUSE) = "%clause" (* -fp 08/09/02 *)
     | toString' (SIG) = "%sig"
-    | toString' (STRUCT) = "%struct"
     | toString' (VIEW) = "%view"
+    | toString' (REL) = "%rel"
+    | toString' (STRUCT) = "%struct"
     | toString' (INCLUDE) = "%include"
     | toString' (OPEN) = "%open"
-    | toString' (USE) = "%use"
     | toString' (AS) = "%as"
+    | toString' (USE) = "%use"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"

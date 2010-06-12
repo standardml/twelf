@@ -237,7 +237,8 @@ struct
                   of NONE => raise Error("name " ^ IDs.foldQName cons ^ " not declared in module " ^ IDs.foldQName mods)
        	           | SOME c => if isSome (M.symVisible(c,m))
        	                       then SOME c
-       	                       else raise Error("name " ^ IDs.foldQName cons ^ " not accessible in module " ^ IDs.foldQName mods)
+       	                       else raise Error("name " ^ IDs.foldQName cons ^ " exists in module " ^ IDs.foldQName mods ^
+       	                                        " but is not visible from " ^ M.modFoldName m)
              end
 
     (* nameLookup2 if qualified name, nameLookup1 otherwise
@@ -262,7 +263,7 @@ struct
       case nameLookup12(m, names)
         of SOME c =>
            let val found = case M.symLookup c
-                 of M.SymCon _  => CON
+                 of M.SymCon _ => CON
                   | M.SymStr _ => STRUC
                   | M.SymMod (_, M.SigDec _) => SIG
                   | M.SymMod (_, M.ViewDec _) => VIEW

@@ -187,15 +187,15 @@ struct
         (case LS.expose s'
            of LS.Cons ((L.PATHSEP, _), s'') =>
               let
-                val ((ids, (t, r)), f') = parseQualId' (LS.expose s'')
+                val ((ids, (t, r')), f') = parseQualId' (LS.expose s'')
               in
-                ((id::ids, (t, r)), f')
+                ((id::ids, (t, Paths.join(r,r'))), f')
               end
       	    | LS.Cons((L.NAMESEP, _), s'') =>
               let
-     	        val ((ids, (t,r)), f') = parseQualId' (LS.expose s'')
+     	        val ((ids, (t,r')), f') = parseQualId' (LS.expose s'')
      	      in
-     	       ((id :: [""] @ ids, (t,r)), f')
+     	       ((id :: [""] @ ids, (t,Paths.join(r,r'))), f')
      	      end
             | f' => ((nil, (t, r)), f'))
       | parseQualId' (LS.Cons ((t, r), s')) =

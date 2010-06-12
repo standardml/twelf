@@ -69,7 +69,6 @@ a : type.
 }.
 
 %% include in a view
-
 %sig X = {
   k : type.
   l : k.
@@ -216,6 +215,31 @@ a : type.
    f := [x1][x2][v: j x1 x2] (q ([x]x) ([x]c2) v).
    b := [x1][x2][v: j x1 x2][y1][y2][w: j y1 y2][b1][b2] {x:u} eq (b2 x) b1.
    g := [x1][x2][v: j x1 x2] [x:u] uniq.
+}.
+%% testing module system for logical relations
+%sig LS' = {
+   %include LS.
+   %struct ls : LS.
+   q : type.
+   c : q.
+}.
+%view m1' : LS' -> LT = {
+   %include m1.
+   %struct ls := m1.
+   q := u.
+   c := *.
+}.
+%view m2' : LS' -> LT = {
+   %include m2.
+   %struct ls := m1.
+   q := u.
+   c := *.
+}.
+%rel Rho' : m1' -> m2' = {
+   %include Rho.
+   %struct ls := Rho.  %% This would type-check if equality of morphisms were implemented better
+   q := [x][y] eq x y.
+   c := uniq.
 }.
 
 %% testing pre-functors
