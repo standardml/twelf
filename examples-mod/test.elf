@@ -212,11 +212,12 @@ a : type.
 %rel Rho : m1 -> m2 = {
    a := j.                    %% j : m1(a) -> m2(a) -> type.
    c := p.                    %% p : j m1(c) m2(c)
-   f := [x1][x2][v: j x1 x2] (q ([x]x) ([x]c2) v).
+   f := [x1][x2][v: j x1 x2] (q ([x]x) ([x]c2) v). %% f maps related arguments to related results
    b := [x1][x2][v: j x1 x2][y1][y2][w: j y1 y2][b1][b2] {x:u} eq (b2 x) b1.
-   g := [x1][x2][v: j x1 x2] [x:u] uniq.
+        %% b1:(m1(b) x1 y1) and b2:(m2(b) x2 y2) are related if b2 is the constant function returning b1 (still quite a trivial example)
+   g := [x1][x2][v: j x1 x2] [x:u] uniq.           %% g maps related arguments to related results
 }.
-%% testing module system for logical relations
+%% testing module system for logical relations: extend LS to LS', then adapt m1, m2, Rho accordingly
 %sig LS' = {
    %include LS.
    %struct ls : LS.
@@ -231,7 +232,7 @@ a : type.
 }.
 %view m2' : LS' -> LT = {
    %include m2.
-   %struct ls := m1.
+   %struct ls := m2.
    q := u.
    c := *.
 }.
