@@ -1,13 +1,10 @@
 Carsten:
-long ZFC check: fix bug first
+long ZFC check
+flit
 
 to do
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
-preserve comments, line/column numbers: have separate pragma %- and %%{  }%%, store line numbers for declarations
-can readDecl be merged with loadFile, loadString: probably not important
-catch exceptions when file not found: yes
-anonymous constants
-make sigRelLookup unique by throwing away every include if a sigRel already exists
+make sigRelLookup unique by throwing away every include if a sigRel already exists?
 try to remove argument of Included
 read assignments in structures separately
 print out with nicer names
@@ -18,7 +15,7 @@ structure variables
 parametrized views, functors
 patterns
 pair types with proof irrelevance
-logical relations, morphism equality check, isomorphism check
+morphism equality check, isomorphism check
 
 KM
 library infrastructure
@@ -33,6 +30,10 @@ skolem constants
 --------
 done
 
+comments via %* *% before a named declaration are preserved with their line/column position
+anonymous constants _ : t
+logical relations
+includes and subsignatures reimplemented, includes can occur anywhere in a signature and include subsignatures
 unqualified names are looked up in all parents first, first match is used; then in all included signatures, fail if non-unique
 links can have multiple includes
 implicit links

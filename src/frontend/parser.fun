@@ -84,6 +84,7 @@ struct
     | SymInst of ModExtSyn.syminst
     | SymCase of ModExtSyn.symcase
     | Read of ModExtSyn.read
+    | PComment of string * Paths.region
     | Use of string
     (* Further pragmas to be added later here *)
 
@@ -196,7 +197,9 @@ struct
       | parseStream' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.STRUCT, r), s'), sc) = parseStrDec' (f, sc)  (* -fr, module system *)
       | parseStream' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInclude' (f, sc)(* -fr, module system *)
-      | parseStream' (f as LS.Cons ((L.READ, r), s'), sc) = parseRead' (f, sc)(* -fr *)
+      | parseStream' (f as LS.Cons ((L.READ, r), s'), sc) = parseRead' (f, sc)      (* -fr *)
+      | parseStream' (f as LS.Cons ((L.PCOMMENT com, r as Paths.Reg(i,j)), s'), sc) =
+          Stream.Cons((PComment(com, Paths.Reg(i+2,j-2)), r), parseStream(s', sc))
       | parseStream' (f as LS.Cons ((L.USE, r), s'), sc) = parseUse' (LS.expose s', sc)
       | parseStream' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
       | parseStream' (LS.Cons ((t,r), s'), sc) =

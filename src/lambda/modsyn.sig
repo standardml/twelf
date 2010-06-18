@@ -244,4 +244,12 @@ sig
   val targetFamOpt: I.Exp -> IDs.cid option  (* target type family or NONE *)
   val targetFam   : I.Exp -> IDs.cid         (* target type family         *)
 
+  (* Comments are always associated with the succeeding declaration.
+     Therefore, it is convenient to store them inside the component that stores declarations. *)
+  structure Comments : sig
+     type comment = string * string  (* comment and position string as l.c-l.c *)
+     val push    : comment -> unit
+     val getCid  : IDs.cid -> comment option
+     val getMid  : IDs.mid -> comment option
+  end
 end (* signature MODSYN *)

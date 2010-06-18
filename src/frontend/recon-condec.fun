@@ -39,7 +39,7 @@ struct
 
   (* Constant declarations *)
   datatype condec =
-      condec of name * ExtSyn.term
+      condec of name option * ExtSyn.term
     | condef of name option * ExtSyn.term * ExtSyn.term option
     | blockdec of name * ExtSyn.dec list * ExtSyn.dec list
 
@@ -54,7 +54,7 @@ struct
   *)
   (* should printing of result be moved to frontend? *)
   (* Wed May 20 08:08:50 1998 -fp *)
-  fun condecToConDec (condec(name, tm), Paths.Loc (fileName, r), abbFlag) =
+  fun condecToConDec (condec(optName, tm), Paths.Loc (fileName, r), abbFlag) =
       let
 	val _ = Names.varReset IntSyn.Null
 	val _ = ExtSyn.resetErrors fileName
@@ -64,6 +64,8 @@ struct
         val (i, V') = (Timers.time Timers.abstract Abstract.abstractDecImp) V
 	                handle Abstract.Error (msg)
 			       => raise Abstract.Error (Paths.wrap (r, msg))
+        val name = case optName of NONE => "_" | SOME(name) => name
+        (* omitted names default to _, which can never be referred to in external syntax *)
 	val cd = Names.nameConDec (IntSyn.ConDec ([name], nil, i, IntSyn.Normal, V', L))
 	val ocd = Paths.dec (i, oc)
 	val _ = if !Global.chatter >= 3

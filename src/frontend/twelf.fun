@@ -1297,6 +1297,13 @@ struct
             chmsg 3 (fn () => Print.sigInclToString(Incl) ^ "\n")
          end
 
+      | install1 (fileName, (Parser.PComment(com, r), r')) = let
+         val reg = Paths.toString r
+         in 
+           (ModSyn.Comments.push (com,reg))
+           handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r', msg))
+         end
+
       | install1 (fileName, declr as (Parser.Read read, r)) =
          (* fileName: name of current elf file, possibly relative to working directory, in OS-specific syntax *)
          let

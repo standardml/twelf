@@ -53,6 +53,7 @@ sig
     | SymInst of ModExtSyn.syminst     (* -fr, module system *)
     | SymCase of ModExtSyn.symcase     (* -fr, logical relations *)
     | Read of ModExtSyn.read           (* -fr, Apr 09 *)
+    | PComment of string * Paths.region(* -fr, June 10 *)
 
     (* Further declarations to be added here *)
 

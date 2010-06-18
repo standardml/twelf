@@ -131,7 +131,7 @@ struct
   (* Stateful data strcutures *)
 
   local
-    structure SH = HashTable (type key' = (IDs.mid * string list)
+    structure MSH = HashTable (type key' = (IDs.mid * string list)
              val hash = fn (m,l) => 1000 * m + StringHash.stringListHash(l)
              val eq = (op =));
     structure MH = HashTable (type key' = string list
@@ -142,12 +142,17 @@ struct
     type lid = IDs.lid
     type mid = IDs.mid
 
+    (* prefixes contains pairs (prefix, namespace), the relation is functional but not necessarily injective *)
+    val prefixes : (string * string) list ref = ref nil
+    val currentNS : string ref = ref "toplevel"
+
     (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
-       The resolution (c : cid, corg: cid option) consists of the constant id and an option origin,
+       The resolution (c : cid, corg: cid option) consists of the constant id and an optional origin,
        the origin is the cid of a declaration that generated the name entry c (if different from the declaration of c).
        If the declaration of c gives a name, that name resolves to c, and these two name mappings must alwasy be consistent.
+       For toplevel names (m=0), name is prefixed with currentNS.
     *) 
-    val nameTable : (cid * cid option) SH.Table = SH.new(4096)
+    val nameTable : (cid * cid option) MSH.Table = MSH.new(4096)
 
     (* shadowTable(c') = c means that c' was shadowed by c *)
     val shadowTable : cid CH.Table = CH.new(128)
@@ -163,22 +168,35 @@ struct
 
   (*******************************************************)
   
-    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
-       case SH.insertShadow nameTable ((m, names), (c, origin))
+   fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (! prefixes)
+      of SOME (_,ns) => SOME ns
+       | NONE => NONE
+   fun getPrefix ns = case List.find (fn (_,ns') => ns' = ns) (! prefixes)
+      of SOME (p,_) => SOME p
+       | NONE => NONE
+   fun installPrefix(p, ns) = case lookupPrefix p
+      of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ ns)
+       | NONE => prefixes := (p,ns) :: (! prefixes)
+   fun getCurrentNS() = ! currentNS
+   fun setCurrentNS s = currentNS := s
+
+   fun installName(m : mid, c : cid, origin : cid option, names : string list) =
+       let val names' = if m = 0 then getCurrentNS() :: names else names
+       in case MSH.insertShadow nameTable ((m, names'), (c, origin))
          of NONE => ()
           | SOME (e as (_, (c',_))) => (
-             if M.onToplevel() andalso List.length names = 1
+             if m = 0 andalso List.length names = 1
              then 
                 CH.insert shadowTable (c', c)
              else
-               raise Error("name " ^ IDs.foldQName names ^ " already declared in " ^
-               (if m = 0 then "toplevel" else M.modFoldName m))
+               raise Error("name " ^ IDs.foldQName names ^ " already declared")
             )
+       end
     fun installNameC(c, origin, names) = installName(M.currentMod(), c, origin, names)
-    fun uninstallName(m, names) = SH.delete nameTable (m,names)
-    
-    (* looks up a name once locally in m, returns result if visible: origin <= limit if given *)
-    fun nameLookup'(m: mid, names: string list, limit: mid option) : cid option = case SH.lookup nameTable (m,names)
+    fun uninstallName(m, names) = MSH.delete nameTable (m,names)
+
+    (* level 0 lookup function: looks up a name once locally in m, returns result if visible: origin <= limit if given *)
+    fun nameLookup1'(m: mid, names: string list, limit: mid option) : cid option = case MSH.lookup nameTable (m,names)
       of SOME (c, org) => (case limit
          (* using <= rather than < so that an ancestor signatures are found *)
          of SOME m => if IDs.lidOf(getOpt(org, c)) <= IDs.lidOf(M.midToCid m) then SOME c else NONE
@@ -186,7 +204,7 @@ struct
          )
        | NONE => NONE
 
-    (* looks up a symbol or module name relative to a module
+    (* level 1 lookup function: looks up a symbol/module name relative to a module
        on failure, lookup is continued in Ancestor modules (inner to outer)
        on failure, lookup is continued in (Anc)Included
           here no order, and success only if resolution is inambiguous, throws Names.Error otherwise
@@ -200,17 +218,17 @@ struct
        	     otherwise, the list of resolutions in Include _ and AncInclude is returned
        	     therefore, the order of sigRelLookup is relevant *)
           fun lookupInIncls(M.ObjSig(d,M.Self)::tl, ns, _) = (
-                case nameLookup'(d, ns, NONE)
+                case nameLookup1'(d, ns, NONE)
                   of SOME c => [c]
                    | NONE => lookupInIncls(tl, ns, nil)
               )
             | lookupInIncls(M.ObjSig(anc,M.Ancestor p)::tl, ns, _) = (
-                case nameLookup'(anc, ns, SOME p)
+                case nameLookup1'(anc, ns, SOME p)
                   of SOME c => [c]
                    | NONE => lookupInIncls(tl, ns, nil)
               )
             | lookupInIncls(M.ObjSig(d,_)::tl, ns, res) =
-                let val res' = case nameLookup'(d, ns, NONE)
+                let val res' = case nameLookup1'(d, ns, NONE)
                                  of SOME c => c :: res
                                   | NONE => res
                 in lookupInIncls(tl, ns, res')
@@ -226,31 +244,50 @@ struct
        	                   else SOME hd
        end
     
-    (* nameLookup1 to ge a module, then nameLookup' in the returned module *)
-    fun nameLookup2(m: mid, mods: string list, cons: string list) : cid option =
-        case nameLookup1(m, mods)
-          of NONE => raise Error("identifier " ^ IDs.foldQName mods ^ " not found")
-           | SOME c =>
-             let val m' = M.cidToMid c
-                          handle M.UndefinedMid _ => raise Error("not a module name: " ^ IDs.foldQName mods)
-             in case nameLookup'(m', cons, NONE)
-                  of NONE => raise Error("name " ^ IDs.foldQName cons ^ " not declared in module " ^ IDs.foldQName mods)
-       	           | SOME c => if isSome (M.symVisible(c,m))
-       	                       then SOME c
-       	                       else raise Error("name " ^ IDs.foldQName cons ^ " exists in module " ^ IDs.foldQName mods ^
-       	                                        " but is not visible from " ^ M.modFoldName m)
-             end
+   (* level 1 lookup function: splits a name into the longest defined module name, then looks up the rest as a symbol name
+      pre: mod resolves to c in m
+      post: nameLookup2(m, mod, c, rest) = SOME c' iff
+        mod @ rest = mod' @ rest', mod' is the longest defined initial segment of mod @ rest, mod' resolves to c' in m *)
+   fun nameLookup2(m: mid, modname: string list, modCid: cid, symname as hd::tl : string list) = (
+      case nameLookup1(m, modname @ [hd])
+        of NONE =>
+           let val m' = M.cidToMid modCid
+               handle M.UndefinedMid _ => raise Error("not a module name: " ^ IDs.foldQName modname)
+           in case nameLookup1'(m', symname, NONE)
+                of NONE => raise Error("name " ^ IDs.foldQName symname ^ " not declared in module " ^ IDs.foldQName modname)
+       	         | SOME c => if isSome (M.symVisible(c,m))
+       	                     then SOME c
+       	                     else raise Error("name " ^ IDs.foldQName symname ^ " exists in module " ^ IDs.foldQName modname ^
+       	                                      " but is not visible from " ^ M.modFoldName m)
+           end
+         | SOME c => nameLookup2(m, modname @ [hd], c, tl)
+       )
+     | nameLookup2(m, modname, cid, nil) = SOME cid
 
-    (* nameLookup2 if qualified name, nameLookup1 otherwise
-       returns NONE if nameLookup does *)
-    fun nameLookup12(m: mid, names: string list) : cid option =
-        let
-           val (left, right) = IDs.splitName names
-       	in if left = nil
-       	   then nameLookup1(m, right)
-       	   else nameLookup2(m, left, right)
-       	end
-
+   (* level 2 lookup functions: take m:mid and names:string list and try different ways to interpret names in m
+       pre: names != nil *)
+   (* try names = symname *)
+   fun nameLookupS(m, names) = case nameLookup1(m, names)
+       of SOME c => SOME c
+        | NONE => if List.length names = 1
+                  then nameLookupNMS(m, getCurrentNS()::names) (* optimization to skip inapplicable cases *)
+                  else nameLookupMS(m, names)
+   (* if fail, try names = modname @ symname *)
+   and nameLookupMS(m, hd::tl) = case nameLookup1(m,[hd])
+       of SOME c => nameLookup2(m, [hd], c, tl)
+        | NONE => nameLookupPMS(m,hd::tl)
+   (* try names = prefix :: modname @ symname, default to prefix = getCurrentNS() *)
+   and nameLookupPMS(m, hd::tl) = case lookupPrefix hd
+       of SOME ns => nameLookupNMS(m, ns :: tl)
+        | NONE => nameLookupNMS(m, getCurrentNS()::hd::tl)
+   (* assume names = namespace :: modname @ symname, eventually fail *)
+   and nameLookupNMS(m, ns::hd::tl) = (case nameLookup1(m, [ns,hd])
+       of SOME c => nameLookup2(m, [ns,hd], c, tl)
+        | NONE => NONE
+       )
+     | nameLookupNMS(m, ns :: nil) = raise Error("namespace must be followed by identifier") 
+ 
+    (* level 3 lookup functions - visible to the outside *)
     datatype Concept = SIG | VIEW | REL | CON | STRUC
     val AnyConcept = [SIG,VIEW,REL,CON,STRUC]
     fun concToString SIG = "signature"
@@ -258,9 +295,9 @@ struct
       | concToString REL = "logical relation"
       | concToString CON = "constant"
       | concToString STRUC = "structure"
-        
+
     fun nameLookup expected (m: mid, names: string list) : cid option =
-      case nameLookup12(m, names)
+      case nameLookupS(m, names)
         of SOME c =>
            let val found = case M.symLookup c
                  of M.SymCon _ => CON
@@ -334,7 +371,7 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (SH.clear nameTable; CH.clear shadowTable; 
+    fun reset () = (MSH.clear nameTable; CH.clear shadowTable; 
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

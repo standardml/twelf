@@ -27,10 +27,8 @@ struct
     (* parseConDec2  "= U" | "" *)
     fun parseConDec2 (optName, (tm, LS.Cons((L.EQUAL, r), s'))) =
           parseConDec3 (optName, SOME(tm), s')
-      | parseConDec2 (SOME(name), (tm, f)) =
-	  (ExtConDec.condec (name, tm), f)
-      | parseConDec2 (NONE, (tm, LS.Cons((t,r),s'))) =
-	  Parsing.error (r, "Illegal anonymous declared constant")
+      | parseConDec2 (optName, (tm, f)) =
+	  (ExtConDec.condec (optName, tm), f)
 
     (* parseConDec1  ": V = U" | "= U" *)
     fun parseConDec1 (optName, LS.Cons ((L.COLON, r), s')) =
@@ -42,7 +40,6 @@ struct
    
 
    (* BlockDec parser *)
-
       
     fun parseBlock (LS.Cons ((L.ID (_, "block"), r), s')) =
           ParseTerm.parseCtx' (LS.expose s')

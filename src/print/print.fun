@@ -191,14 +191,15 @@ local
     | argNumber (FX.Postfix _) = 1
 
   (* formats a qualified name "names" as a "sep/Sep"-separated list, "f" formats the individual components of "names" -fr *)
-  fun fmtConstPath (f : string -> (string * int), (mods : (string list) option, names : string list)) =
+  fun fmtConstPath (f : string -> (string * int), (prefOpt, modnamesOpt, symnames)) =
      let
      	fun fold l = foldl (fn (x,y) => y @ [sym IDs.sep, x]) (List.take(l,1)) (tl l)
-     	val formattedMods = case mods
-     	                      of NONE => nil
-     	                       | SOME nil => [sym IDs.Sep]
-     	                       | SOME l => (fold (List.map (Str0 o Symbol.module) l)) @ [sym IDs.Sep]
-     	val formattedNames = fold (List.map (Str0 o f) names)
+     	val formattedMods = case (prefOpt, modnamesOpt)
+     	                      of (NONE,NONE) => nil
+     	                       | (NONE,SOME nil) => [sym IDs.Sep]
+     	                       | (NONE, SOME l) => (fold (List.map (Str0 o Symbol.module) l)) @ [sym IDs.Sep]
+     	                       | (SOME p, SOME l) => (fold (List.map (Str0 o Symbol.module) (p::l))) @ [sym IDs.Sep]
+     	val formattedNames = fold (List.map (Str0 o f) symnames)
      in
         F.HVbox (formattedMods @ formattedNames)
      end
@@ -237,12 +238,19 @@ local
   (* auxiliary function used in fmtCom to get the module names as well if the constant is not local *)
   fun getNames(cid) =
      if not(!noShadow) andalso Names.isShadowed cid
-     then (NONE, ["%" ^ ModSyn.symFoldName cid ^ "%"])
+     then (NONE, NONE, ["%" ^ ModSyn.symFoldName cid ^ "%"])
      else let
      	 val m = IDs.midOf(cid)
-         val mods = if m = ModSyn.currentTargetSig() then NONE else SOME (ModSyn.modName m)
+     	 val (mbase, mname) = let val dec = ModSyn.modLookup m in (ModSyn.modDecBase dec, ModSyn.modDecName dec) end
+     	 val current = ModSyn.currentTargetSig()
+         val (prefix, modname) =
+            if ModSyn.modDecBase (ModSyn.modLookup current) = mbase
+            then if current = m
+                 then (NONE, NONE)
+                 else (NONE, SOME mname)
+            else (Names.getPrefix mbase, SOME mname)
      in  
-     	(mods, I.conDecName (ModSyn.sgnLookup cid))
+     	(prefix, modname, I.conDecName (ModSyn.sgnLookup cid))
      end
   fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
     | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, getNames cid)
@@ -757,7 +765,7 @@ local
         val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.const, (NONE, names)), F.Space, sym ":", F.Break, Vfmt, sym "."]
+	F.HVbox [fmtConstPath (Symbol.const, (NONE, NONE, names)), F.Space, sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (hide, condec as I.SkoDec (names, _, imp, V, L)) =
       let
@@ -765,14 +773,14 @@ local
 	val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [sym "%skolem", F.Break, fmtConstPath (Symbol.skonst, (NONE, names)), F.Space,
+	F.HVbox [sym "%skolem", F.Break, fmtConstPath (Symbol.skonst, (NONE, NONE, names)), F.Space,
 		 sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (hide, condec as I.BlockDec (names, _, Gsome, Lblock)) =
       let 
 	val _ = Names.varReset IntSyn.Null
       in
-	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, (NONE, names)), F.Space,
+	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, (NONE, NONE, names)), F.Space,
 		 sym ":", F.Break] @ (fmtBlock (Gsome, Lblock))  @ [sym "."])
       end
     | fmtConDec (hide, condec as I.ConDef (names, _, imp, U, V, L, _)) =
@@ -784,7 +792,7 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.def, (NONE, names)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtConstPath (Symbol.def, (NONE, NONE, names)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]
@@ -805,7 +813,7 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.def, (NONE, names)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtConstPath (Symbol.def, (NONE, NONE, names)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]

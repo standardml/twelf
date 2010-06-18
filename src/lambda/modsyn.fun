@@ -288,6 +288,24 @@ struct
     end
   fun sgnAppC (f) = sgnApp(currentMod(), f)
   
+  (*************** methods for preserved comments ****************)
+  structure Comments = struct
+    type comment = string * string
+    val commTable : comment CH.Table = CH.new(500)
+    val current : comment option ref = ref NONE
+    fun push com = case ! current
+      of SOME _ => raise Error("only one preserved comment allowed per declaration")
+       | NONE => current := SOME com
+    fun install c = case ! current
+      of NONE => ()
+       | SOME s => (
+          CH.insert commTable(c, s);
+          current := NONE
+       )
+    fun getCid c = CH.lookup commTable c
+    fun getMid m = CH.lookup commTable (midToCid m)
+  end
+
   (********************** Effectful methods **********************)
   fun implicitAddOne(dom, cod, mor) =
   let
@@ -350,8 +368,9 @@ struct
 
   fun declAddC(dec : Declaration) : IDs.cid = let
       val (c as (m,l)) :: scopetail = ! scope
-      val _ = CH.insert(declTable)(c, dec)
+      val _ = CH.insert declTable (c, dec)
       val _ = scope := (m, l+1) :: scopetail
+      val _ = Comments.install c
   in c
   end
 
@@ -453,7 +472,8 @@ struct
           )
       );
       scope := (m, l+1) :: scopetail;
-      c 
+      Comments.install c;
+      c
     end
 
   fun caseAddC(rel : SymCase) =
@@ -540,7 +560,6 @@ struct
     CH.insert(declTable)(c, conDec)
    *)
 end (* functor ModSyn *)
-
 
 (* ModSyn is instantiated with IntSyn right away. Both are visible globally. *)
 structure ModSyn =

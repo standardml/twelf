@@ -66,6 +66,7 @@ sig
     | READ                              (* `%read' *) (* -fr Apr 09 *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)
+    | PCOMMENT of string                (* preserved comments -fr Jun 2010 *)
 
   exception Error of string
 

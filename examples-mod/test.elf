@@ -1,6 +1,9 @@
 %% testing basic syntax
+%* . and preserved
+comments *%
 %sig R = {
   a : type.
+  %* a constant declaration *% 
   c : a.
 }.
 
@@ -23,14 +26,14 @@
   %struct s'': S = {a' := b''. %struct r' := r''.}.
 }.
 
-%% testing a deep instantiation r''.c := f''', and a structure definition s''' = T..s'' t'''.
+%% testing a deep instantiation r''.c := f''', and a structure definition s''' = T.s'' t'''.
 %% also try removing the instantiation of a''
 %% note that the order of instantiations in a structure is not relevant
 %sig U = {
   a''' : type.
   f''' : a''' -> a'''.
   %struct t''' : T = {r''.c := f'''. a'' := a'''.}.
-  %struct s''' = T..s'' t'''.
+  %struct s''' = T.s'' t'''.
 }.
 
 %% testing views
@@ -55,7 +58,7 @@
 %sig R' = {
   %include R.
   a' : type.
-  c' : R..a.
+  c' : R.a.
   %% no subordination between R.a and R'.a'
 }.
 
@@ -63,7 +66,7 @@ a : type.
 
 %sig R'' = {
   %include R'.
-  f : R..a -> R'..a'.   %% creates subordination
+  f : R.a -> R'.a'.   %% creates subordination
   c : a.                %% reference to a on toplevel
   a : type.             %% toplevel name shadowed
 }.
@@ -85,27 +88,27 @@ a : type.
 }.
 
 %view r' : R' -> X' = {
-  %include r.  %%i.e., R..a := X..k. R..c := X..l
+  %include r.  %%i.e., R.a := X.k. R.c := X.l
   a' := k'.
-  c' := X..l.
+  c' := X.l.
 }.
 
 %% include in a structure
 %sig Y = {
   a : type.
-  %struct r : R = {a := a.}.       %% R..a mapped to Y..a
-  %struct r' : R' = {%include r.}. %% r'(R'..c : R..a) = r(R'..c : R..a) = r'.c : r(R..a) = r'.c : a
+  %struct r : R = {a := a.}.       %% R.a mapped to Y.a
+  %struct r' : R' = {%include r.}. %% r'(R'.c : R.a) = r(R'.c : R.a) = r'.c : r(R.a) = r'.c : a
 }.
 
 %% multiple includes: %% S12 includes S0 twice
 %sig S0  = {a : type. c: a. a' = a.}.
-%sig S1  = {%include S0 %open a'. c: S0..a.}.
-%sig S2  = {%include S0.          c: S0..a.}.
+%sig S1  = {%include S0 %open a'. c: S0.a.}.
+%sig S2  = {%include S0.          c: S0.a.}.
 %sig S12 = {
    %include S1.
    %include S2.
-   %% c' = c.    %% reference to c would be ambiguous between S1..c and S2..c
-   c : a'.       %% reference to a' is inambiguously S0..a'
+   %% c' = c.    %% reference to c would be ambiguous between S1.c and S2.c
+   c : a'.       %% reference to a' is inambiguously S0.a'
    c' = c.       %% reference to c is resolved locally
 }.
 %sig SX  = {a : type. c : a.}.
@@ -113,7 +116,7 @@ a : type.
 %sig SY  = {%struct k: SX. %struct k' = V0 k.}.
 %view V1  : S1  -> SY = {%include V0 k. c := k.c.}.
 %view V2  : S2  -> SY = {%include k'. c := k'.c.}.
-%% V12 includes two views from S0 to SY: V0 SY..k and SY..k'
+%% V12 includes two views from S0 to SY: V0 SY.k and SY.k'
 %% they must be equal, which is seen after definition expansion
 %view V12 : S12 -> SY = {%include V1. %include V2. c := k.c.}.
 
@@ -131,25 +134,25 @@ a : type.
 %sig L0 = {
   c : a.          %% a refers to toplevel a
   a : type.
-  c' : a.         %% a refers to L0..a
+  c' : a.         %% a refers to L0.a
   %sig L1 = {
-    c : a.        %% a refers to L0..a
+    c : a.        %% a refers to L0.a
     a : type.
-    d1 : a.       %% a refers to L1..a
-    d0 : L0..a.   %% a refers to L0..a
+    d1 : a.       %% a refers to L1.a
+    d0 : L0.a.   %% a refers to L0.a
   }.
   b : type.
   %sig L2 = {
      a : b.
-     %% c : L1..a.   %% fails, L1 invisible
+     %% c : L1.a.   %% fails, L1 invisible
      %include L1.
-     c : L1..a.
+     c : L1.a.
   }.
   %view L1-2 : L1 -> L2 = {
-     c  := L0.L1..c.
+     c  := L0.L1.c.
      a  := b.
      d1 := a.
-     d0 := L1..c.
+     d0 := L1.c.
   }.
 }.
 
@@ -165,7 +168,7 @@ a : type.
 }.
 %sig D = {
   %struct b : B.
-  %struct c : C = {%struct a := b.}. %% b is coerced to c B..x b.
+  %struct c : C = {%struct a := b.}. %% b is coerced to c B.x b.
 }.
 
 %% testing reads
@@ -176,8 +179,8 @@ a : type.
   %include R.
   %include R2.
   %struct r : R2.
-  b : R..a.
-  c : R2..a.
+  b : R.a.
+  c : R2.a.
   d : r.a.
   e : r.r.a.
 }.
@@ -211,7 +214,7 @@ a : type.
 }.
 %rel Rho : m1 -> m2 = {
    a := j.                    %% j : m1(a) -> m2(a) -> type.
-   c := p.                    %% p : j m1(c) m2(c)
+   c := p.                    %% p : Rho(a) m1(c) m2(c)
    f := [x1][x2][v: j x1 x2] (q ([x]x) ([x]c2) v). %% f maps related arguments to related results
    b := [x1][x2][v: j x1 x2][y1][y2][w: j y1 y2][b1][b2] {x:u} eq (b2 x) b1.
         %% b1:(m1(b) x1 y1) and b2:(m2(b) x2 y2) are related if b2 is the constant function returning b1 (still quite a trivial example)

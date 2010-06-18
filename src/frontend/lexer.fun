@@ -73,6 +73,7 @@ struct
     | READ                              (* `%read' *)
     | USE                               (* `%use' *)
     | STRING of string                  (* string constants *)
+    | PCOMMENT of string                (* preserved comments *)
 
   exception Error of string
 
@@ -225,6 +226,7 @@ struct
     and lexPercent (#".", i) = (EOF, P.Reg (i-2,i))
       | lexPercent (#"{", i) = lexPercentBrace (char(i), i+1)
       | lexPercent (#"%", i) = lexComment (#"%", i)
+      | lexPercent (#"*", i) = lexPDComment(char(i), "", P.Reg(i-2,i))
       | lexPercent (c, i) =
         if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1, i)))
 	else if Char.isSpace(c) then lexComment (c, i)
@@ -308,6 +310,17 @@ struct
     and lexDCommentRBrace (#"%", 1, i) = lexInitial (char(i), i+1)
       | lexDCommentRBrace (#"%", l, i) = lexDComment (char(i), l-1, i+1)
       | lexDCommentRBrace (c, l, i) = lexDComment (c, l, i)
+
+    (* preserved delimited comments (no nesting)
+       second argument: comment read so far, third argument: comment region (% at 1, next at j)
+       comment region excludes j *)
+    and lexPDComment (#"*", com, P.Reg(i,j)) = lexPDCommentStar(char(j), com, P.Reg(i,j+1))
+      | lexPDComment (#"\^D", _, P.Reg(i,j)) =
+          error (P.Reg (i,j-2), "Unclosed delimited comment at end of file")
+	  (* recover: (EOF, (i-1,i-1)) *)
+      | lexPDComment (c, com, P.Reg(i,j)) = lexPDComment (char(j), com ^ Char.toString c, P.Reg(i,j+1))
+    and lexPDCommentStar (#"%", com, P.Reg(i,j)) = (PCOMMENT com, P.Reg(i,j-1))
+      | lexPDCommentStar (c, com, r) = lexPDComment (c, com ^ "*", r)
 
     and lexString (P.Reg(i, j)) =
           (case char(j)
@@ -405,6 +418,7 @@ struct
     | toString' (OPEN) = "%open"
     | toString' (AS) = "%as"
     | toString' (USE) = "%use"
+    | toString' (PCOMMENT _) = "%*...*%"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"

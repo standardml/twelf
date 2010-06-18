@@ -4,6 +4,6 @@
   %include R.
   %struct r: R.
   a : type.
-  c: R..a.
+  c: R.a.
   d: r.a.
 }.

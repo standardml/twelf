@@ -43,6 +43,14 @@ sig
   val installName  : IDs.mid * IDs.cid * (IDs.cid option) * string list -> unit
   val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
   val uninstallName: IDs.mid * string list -> unit
+
+  (* map between namespace prefixes and namespace identifiers (URIs) *)
+  (* add (prefix,namespace) pair, prefix must be undeclared *)
+  val installPrefix: string * string -> unit
+  (* return namespace for a prefix *)
+  val lookupPrefix : string -> string option
+  (* return most recent prefix for a namespace *)
+  val getPrefix    : string -> string option
   
   (* nameLookup and nameLookup' return NONE if a name without module component is undefined
      on all other failures, they raise exceptions with specific error message *)

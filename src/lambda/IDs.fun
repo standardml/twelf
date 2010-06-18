@@ -75,7 +75,7 @@ structure IDs = struct
    fun parseQName(name : string) = String.fields (fn c => c = #".") name
    fun parseFQName(name : string) = splitName (parseQName name)
    val sep = "."
-   val Sep = ".."
+   val Sep = "."
    fun foldQName l = mkString(l,"",sep,"")
    fun foldFQName(m, l) = foldQName m ^ Sep ^ foldQName l
 
