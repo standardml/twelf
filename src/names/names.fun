@@ -27,7 +27,8 @@ struct
      bound variables [_] or {_} in the source.
   *)
   exception Unprintable
-
+  exception MissingModule of string * string * string
+  
   (*******************************************************)
   (* General data structures for Fixities and Operator Precedence *)
   structure Fixity :> FIXITY =
@@ -122,12 +123,6 @@ struct
       else raise Error ("Constant " ^ (IntSyn.conDecFoldName (M.sgnLookup cid)) ^ " takes too few explicit arguments for given fixity")
 
   (*******************************************************)
-  (* General data strcutures for namespaces *)
-  
-  datatype Namespace = Namespace of string
-  datatype Import = Import of string * Namespace
-
-  (*******************************************************)
   (* Stateful data strcutures *)
 
   local
@@ -142,9 +137,19 @@ struct
     type lid = IDs.lid
     type mid = IDs.mid
 
-    (* prefixes contains pairs (prefix, namespace), the relation is functional but not necessarily injective *)
-    val prefixes : (string * string) list ref = ref nil
-    val currentNS : string ref = ref "toplevel"
+    (* nsContext is the type of namespace contexts: triples (ps, os, c) where
+       - ps = [(p,ns),...] is a function from prefixes to namespaces (not necessarily injective),
+       - os = [ns,...] is the list of open namespaces (accessible without qualification, searched in order)
+       - c is the current namespace (accessible without qualification
+    *)
+    type nsContext = (string * string) list * (string list) * string
+    val nscontext0 = [(nil,nil,"toplevel")]
+    (* the state: one nsContext for each currently open file *)
+    val nscontext : nsContext list ref = ref nscontext0
+    fun currentContext() = List.hd (! nscontext)
+    fun prefixes()  = #1 (currentContext())
+    fun openNS()    = #2 (currentContext())
+    fun currentNS() = #3 (currentContext())
 
     (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
        The resolution (c : cid, corg: cid option) consists of the constant id and an optional origin,
@@ -168,21 +173,24 @@ struct
 
   (*******************************************************)
   
-   fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (! prefixes)
+   fun pushContext() = nscontext := (nil, nil, "_") :: (! nscontext)
+   fun popContext()  = nscontext := List.tl (! nscontext)
+
+   fun getCurrentNS() = currentNS()
+   fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (prefixes())
       of SOME (_,ns) => SOME ns
        | NONE => NONE
-   fun getPrefix ns = case List.find (fn (_,ns') => ns' = ns) (! prefixes)
+   fun getPrefix ns = case List.find (fn (_,ns') => ns' = ns) (prefixes())
       of SOME (p,_) => SOME p
        | NONE => NONE
    fun installPrefix(p, ns) = case lookupPrefix p
       of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ ns)
-       | NONE => prefixes := (p,ns) :: (! prefixes)
-   fun getCurrentNS() = ! currentNS
-   fun setCurrentNS s = currentNS := s
+       | NONE => let val (ps, os, c) :: tl = ! nscontext in nscontext := ((p,ns) :: ps, os, c) :: tl end
+   fun openNamespace ns = let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end
+   fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
 
    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
-       let val names' = if m = 0 then getCurrentNS() :: names else names
-       in case MSH.insertShadow nameTable ((m, names'), (c, origin))
+       case MSH.insertShadow nameTable ((m, names), (c, origin))
          of NONE => ()
           | SOME (e as (_, (c',_))) => (
              if m = 0 andalso List.length names = 1
@@ -191,10 +199,16 @@ struct
              else
                raise Error("name " ^ IDs.foldQName names ^ " already declared")
             )
-       end
-    fun installNameC(c, origin, names) = installName(M.currentMod(), c, origin, names)
-    fun uninstallName(m, names) = MSH.delete nameTable (m,names)
-
+    fun installNameC(c, origin, names) = 
+      let val names' = if ModSyn.onToplevel() then getCurrentNS() :: names else names
+      in installName(M.currentMod(), c, origin, names)
+      end
+    fun uninstallName(m, names) = let val c = MSH.lookup nameTable (m, names)
+                                      val _ = MSH.delete nameTable (m,names)
+                                  in case c
+                                       of SOME x => x
+                                        | _ => raise Error("cannot uninstall non-existing name " ^ IDs.foldQName names)
+                                  end
     (* level 0 lookup function: looks up a name once locally in m, returns result if visible: origin <= limit if given *)
     fun nameLookup1'(m: mid, names: string list, limit: mid option) : cid option = case MSH.lookup nameTable (m,names)
       of SOME (c, org) => (case limit
@@ -246,7 +260,7 @@ struct
     
    (* level 1 lookup function: splits a name into the longest defined module name, then looks up the rest as a symbol name
       pre: mod resolves to c in m
-      post: nameLookup2(m, mod, c, rest) = SOME c' iff
+      post: raises exception, or nameLookup2(m, mod, c, rest) = SOME c', and
         mod @ rest = mod' @ rest', mod' is the longest defined initial segment of mod @ rest, mod' resolves to c' in m *)
    fun nameLookup2(m: mid, modname: string list, modCid: cid, symname as hd::tl : string list) = (
       case nameLookup1(m, modname @ [hd])
@@ -270,22 +284,31 @@ struct
    fun nameLookupS(m, names) = case nameLookup1(m, names)
        of SOME c => SOME c
         | NONE => if List.length names = 1
-                  then nameLookupNMS(m, getCurrentNS()::names) (* optimization to skip inapplicable cases *)
+                  then nameLookupNMS(m, names, [getCurrentNS()]) (* optimization to skip inapplicable cases *)
                   else nameLookupMS(m, names)
    (* if fail, try names = modname @ symname *)
    and nameLookupMS(m, hd::tl) = case nameLookup1(m,[hd])
        of SOME c => nameLookup2(m, [hd], c, tl)
         | NONE => nameLookupPMS(m,hd::tl)
-   (* try names = prefix :: modname @ symname, default to prefix = getCurrentNS() *)
+   (* try names = prefix :: modname @ symname, recover by trying current and open namespaces *)
    and nameLookupPMS(m, hd::tl) = case lookupPrefix hd
-       of SOME ns => nameLookupNMS(m, ns :: tl)
-        | NONE => nameLookupNMS(m, getCurrentNS()::hd::tl)
-   (* assume names = namespace :: modname @ symname, eventually fail *)
-   and nameLookupNMS(m, ns::hd::tl) = (case nameLookup1(m, [ns,hd])
+       of SOME ns => (
+             case nameLookupNMS(m, tl, [ns])
+                of SOME c => SOME c
+                 (* special exception raised if toplevel declaration not found to permit on-demand loading of modules *)
+                 | NONE => let val modname = List.hd tl
+                               val msg = "missing module " ^ modname ^ " in namespace " ^ ns
+                           in raise MissingModule(ns, modname, msg)
+                           end
+             )
+        | NONE => nameLookupNMS(m, hd::tl, getCurrentNS() :: (openNS()))
+   (* try ns::names for a list of namespaces ns, return the first hit or fail eventually *)
+   and nameLookupNMS(m, hd::tl, ns::nss) = (case nameLookup1(m, [ns,hd])
        of SOME c => nameLookup2(m, [ns,hd], c, tl)
-        | NONE => NONE
+        | NONE => nameLookupNMS(m, hd::tl, nss)
        )
-     | nameLookupNMS(m, ns :: nil) = raise Error("namespace must be followed by identifier") 
+     | nameLookupNMS(m, nil, _) = raise Error("namespace prefix must be followed by identifier")
+     | nameLookupNMS(m, _, nil) = NONE
  
     (* level 3 lookup functions - visible to the outside *)
     datatype Concept = SIG | VIEW | REL | CON | STRUC
@@ -314,8 +337,10 @@ struct
      	   end
      	| NONE => NONE
 
-    fun nameLookup'(names) = nameLookup AnyConcept (M.currentTargetSig(), names)
-    fun nameLookupC(names) = (nameLookup [CON] (M.currentTargetSig(), names)) handle Error _ => NONE
+    fun nameLookup'(names) = (nameLookup AnyConcept (M.currentTargetSig(), names))
+                             handle MissingModule(_,_,msg) => raise Error(msg)
+    fun nameLookupC(names) = (nameLookup [CON] (M.currentTargetSig(), names))
+                             handle Error _ => NONE | MissingModule _ => NONE
 
     fun isShadowed(c : cid) : bool = case CH.lookup shadowTable c of NONE => false | _ => true
     
@@ -371,7 +396,8 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (MSH.clear nameTable; CH.clear shadowTable; 
+    fun reset () = (MSH.clear nameTable; CH.clear shadowTable;
+                    nscontext := nscontext0;
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

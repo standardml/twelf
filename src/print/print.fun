@@ -18,6 +18,7 @@ struct
 
   (*! structure IntSyn = IntSyn' !*)
 structure Formatter = Formatter'
+structure M = ModSyn
 
 (* Externally visible parameters *)
 
@@ -178,10 +179,10 @@ local
     | fixityCon _ = FX.Nonfix (* BVar, FVar *)
 
   (* impCon (c) = number of implicit arguments to c *)
-  fun impCon (I.Const(cid)) = ModSyn.constImp (cid)
-    | impCon (I.Skonst(cid)) = ModSyn.constImp (cid)
-    | impCon (I.Def(cid)) = ModSyn.constImp (cid)
-    | impCon (I.NSDef(cid)) = ModSyn.constImp (cid)
+  fun impCon (I.Const(cid)) = M.constImp (cid)
+    | impCon (I.Skonst(cid)) = M.constImp (cid)
+    | impCon (I.Def(cid)) = M.constImp (cid)
+    | impCon (I.NSDef(cid)) = M.constImp (cid)
     | impCon _ = 0			(* BVar, FVar *)
 
   (* argNumber (fixity) = number of required arguments to head with fixity *)
@@ -190,26 +191,12 @@ local
     | argNumber (FX.Prefix _) = 1
     | argNumber (FX.Postfix _) = 1
 
-  (* formats a qualified name "names" as a "sep/Sep"-separated list, "f" formats the individual components of "names" -fr *)
-  fun fmtConstPath (f : string -> (string * int), (prefOpt, modnamesOpt, symnames)) =
-     let
-     	fun fold l = foldl (fn (x,y) => y @ [sym IDs.sep, x]) (List.take(l,1)) (tl l)
-     	val formattedMods = case (prefOpt, modnamesOpt)
-     	                      of (NONE,NONE) => nil
-     	                       | (NONE,SOME nil) => [sym IDs.Sep]
-     	                       | (NONE, SOME l) => (fold (List.map (Str0 o Symbol.module) l)) @ [sym IDs.Sep]
-     	                       | (SOME p, SOME l) => (fold (List.map (Str0 o Symbol.module) (p::l))) @ [sym IDs.Sep]
-     	val formattedNames = fold (List.map (Str0 o f) symnames)
-     in
-        F.HVbox (formattedMods @ formattedNames)
-     end
-
   fun parmDec (D::L, 1) = D
     | parmDec (D::L, j) = parmDec (L, j-1)
 
   fun parmName (cid, i) =
       let
-	val (Gsome, Gblock) = ModSyn.constBlock (cid)
+	val (Gsome, Gblock) = M.constBlock (cid)
       in
 	case parmDec (Gblock, i)
 	  of I.Dec (I.VarInfo(SOME(pname),_,_,_), _) => pname
@@ -235,36 +222,69 @@ local
      maintained in the names module.
      FVar's are printed with a preceding "`" (backquote) character
   *)
-  (* auxiliary function used in fmtCom to get the module names as well if the constant is not local *)
-  fun getNames(cid) =
-     if not(!noShadow) andalso Names.isShadowed cid
-     then (NONE, NONE, ["%" ^ ModSyn.symFoldName cid ^ "%"])
-     else let
-     	 val m = IDs.midOf(cid)
-     	 val (mbase, mname) = let val dec = ModSyn.modLookup m in (ModSyn.modDecBase dec, ModSyn.modDecName dec) end
-     	 val current = ModSyn.currentTargetSig()
+  (* formats a qualified name as a "sep/Sep"-separated list, "f" formats the individual components of constant names" -fr *)
+  fun fmtPath (f : string -> (string * int), (prefOpt, modsOpt, symsOpt)) =
+     let
+     	fun fold nil = nil
+     	  | fold (hd::nil) = [hd]
+     	  | fold (hd :: tl) = [hd, sym IDs.sep] @ (fold tl)
+     	val fPrefOpt = case prefOpt
+     	  of SOME p => SOME (Str0 (Symbol.module p))
+     	   | NONE => NONE
+     	val fModsOpt = case modsOpt
+     	   of SOME l => SOME (fold (List.map (Str0 o Symbol.module) l))
+     	    | NONE => NONE
+     	val fSymsOpt = case symsOpt
+     	   of SOME l => SOME (fold (List.map (Str0 o f) l))
+     	    | NONE => NONE
+     	val fPath = case (fPrefOpt, fModsOpt, fSymsOpt)
+     	  of (NONE,SOME nil,SOME l) => (sym IDs.Sep) :: l (* extra case for toplevel symbols *)
+           | (NONE,NONE,NONE) => nil
+     	   | (NONE,NONE,SOME m) => m
+     	   | (NONE,SOME l,NONE) => l
+           | (NONE,SOME l,SOME m) => l @ (sym IDs.Sep) :: m
+     	   | (SOME p,SOME l,NONE) => p :: (sym IDs.Sep) :: l
+     	   | (SOME p,SOME l,SOME m) => p :: (sym IDs.Sep) :: l @ (sym IDs.Sep) :: m 
+     in
+        F.HVbox fPath
+     end
+
+  (* compute name of module relative to current module *)
+  fun relativeMidName m =
+     let
+     	 val (mbase, mname) = let val dec = M.modLookup m in (M.modDecBase dec, M.modDecName dec) end
+     	 val current = M.currentTargetSig()
          val (prefix, modname) =
-            if ModSyn.modDecBase (ModSyn.modLookup current) = mbase
+            if M.modDecBase (M.modLookup current) = mbase
             then if current = m
                  then (NONE, NONE)
                  else (NONE, SOME mname)
             else (Names.getPrefix mbase, SOME mname)
      in  
-     	(prefix, modname, I.conDecName (ModSyn.sgnLookup cid))
+     	(prefix, modname)
+     end
+  (* compute name of constant relative to current module *)
+  fun relativeCidName c =
+     if not(!noShadow) andalso Names.isShadowed c
+     then (NONE, NONE, SOME ["%" ^ M.symFoldName c ^ "%"])
+     else let
+     	 val (pref, modname) = relativeMidName (IDs.midOf c)
+     in  
+     	(pref, modname, SOME (I.conDecName (M.sgnLookup c)))
      end
   fun fmtCon (G, I.BVar(n)) = Str0 (Symbol.bvar (Names.bvarName(G, n)))
-    | fmtCon (G, I.Const(cid)) = fmtConstPath (Symbol.const, getNames cid)
-    | fmtCon (G, I.Skonst(cid)) = fmtConstPath (Symbol.skonst, getNames cid)
-    | fmtCon (G, I.Def(cid)) = fmtConstPath (Symbol.def, getNames cid)
-    | fmtCon (G, I.NSDef (cid)) = fmtConstPath (Symbol.def, getNames cid)
+    | fmtCon (G, I.Const(cid)) = fmtPath (Symbol.const, relativeCidName cid)
+    | fmtCon (G, I.Skonst(cid)) = fmtPath (Symbol.skonst, relativeCidName cid)
+    | fmtCon (G, I.Def(cid)) = fmtPath (Symbol.def, relativeCidName cid)
+    | fmtCon (G, I.NSDef (cid)) = fmtPath (Symbol.def, relativeCidName cid)
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
     | fmtCon (G, H as I.Proj (I.Bidx(k), i)) =
         Str0 (Symbol.const (projName (G, H)))
     | fmtCon (G, H as I.Proj (I.LVar(_, sk, (cid, t)), i)) =
       (* identity of LVars is obscured! *)
 					(* LVar fixed Sun Dec  1 11:36:55 2002 -cs *)
-      fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
-		    getNames cid)
+      fmtPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
+		    relativeCidName cid)
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
           val name = I.conDecFoldName conDec
@@ -707,7 +727,7 @@ local
       *)
     | fmtDec (G, d, (I.BDec (x, (cid, t)), s)) =
       let
-	val (Gsome, Gblock) = ModSyn.constBlock cid
+	val (Gsome, Gblock) = M.constBlock cid
       in
 	F.HVbox ([Str0 (Symbol.const (nameOf (x))), sym ":"]
 		 @ fmtDecList' (G, (Gblock, I.comp (t, s))))
@@ -765,7 +785,7 @@ local
         val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.const, (NONE, NONE, names)), F.Space, sym ":", F.Break, Vfmt, sym "."]
+	F.HVbox [fmtPath (Symbol.const, (NONE, NONE, SOME names)), F.Space, sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (hide, condec as I.SkoDec (names, _, imp, V, L)) =
       let
@@ -773,14 +793,14 @@ local
 	val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
 	val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
       in
-	F.HVbox [sym "%skolem", F.Break, fmtConstPath (Symbol.skonst, (NONE, NONE, names)), F.Space,
+	F.HVbox [sym "%skolem", F.Break, fmtPath (Symbol.skonst, (NONE, NONE, SOME names)), F.Space,
 		 sym ":", F.Break, Vfmt, sym "."]
       end
     | fmtConDec (hide, condec as I.BlockDec (names, _, Gsome, Lblock)) =
       let 
 	val _ = Names.varReset IntSyn.Null
       in
-	F.HVbox ([sym "%block", F.Break, fmtConstPath (Symbol.label, (NONE, NONE, names)), F.Space,
+	F.HVbox ([sym "%block", F.Break, fmtPath (Symbol.label, (NONE, NONE, SOME names)), F.Space,
 		 sym ":", F.Break] @ (fmtBlock (Gsome, Lblock))  @ [sym "."])
       end
     | fmtConDec (hide, condec as I.ConDef (names, _, imp, U, V, L, _)) =
@@ -792,7 +812,7 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.def, (NONE, NONE, names)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtPath (Symbol.def, (NONE, NONE, SOME names)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]
@@ -813,7 +833,7 @@ local
 	(* val _ = Names.varReset () *)
 	val Ufmt = fmtExp (G, 0, noCtxt, (U, I.id))
       in
-	F.HVbox [fmtConstPath (Symbol.def, (NONE, NONE, names)), F.Space, sym ":", F.Break,
+	F.HVbox [fmtPath (Symbol.def, (NONE, NONE, SOME names)), F.Space, sym ":", F.Break,
 			 Vfmt, F.Break,
 			 sym "=", F.Space,
 			 Ufmt, sym "."]
@@ -921,58 +941,70 @@ in
   fun implicitToString true = "%implicit "
     | implicitToString false = ""
 
-  fun openToString(ModSyn.OpenDec nil) = ""
-    | openToString(ModSyn.OpenDec l) =
+  fun fmtModName m =
+      let val (pOpt, nameOpt) = relativeMidName m
+      in F.makestring_fmt (fmtPath(fn x => (x, String.size x), (pOpt, nameOpt, NONE)))
+      end
+
+  fun openToString(M.OpenDec nil) = ""
+    | openToString(M.OpenDec l) =
        let fun doList(nil) = ""
-             | doList((old,new) :: tl) = " " ^ (ModSyn.symFoldName old) ^ " %as " ^ new ^ (doList tl)
+             | doList((old,new) :: tl) = " " ^ (M.symFoldName old) ^ " %as " ^ new ^ (doList tl)
        in " %open" ^ (doList l)
        end
-  fun morphToString(ModSyn.MorStr(c)) =
-      ModSyn.fullFoldName c
-    | morphToString(ModSyn.MorView(m)) =
-      ModSyn.modFoldName m
-    | morphToString(ModSyn.MorComp(mor1,mor2)) =
+  fun morphToString(M.MorStr(c)) =
+      let
+         val (pref, modname) = relativeMidName (IDs.midOf c)
+         val symname = SOME (M.strDecName (M.structLookup c))
+      in  
+         F.makestring_fmt (fmtPath (Symbol.const, (pref,modname,symname)))
+      end
+    | morphToString(M.MorView(m)) = fmtModName m
+    | morphToString(M.MorComp(mor1,mor2)) =
       morphToString(mor1) ^ " " ^ morphToString(mor2)
       
-  fun relToString(ModSyn.Rel m) =
-      ModSyn.modFoldName m
-    | relToString(ModSyn.RelComp(mor,rel)) =
+  fun relToString(M.Rel m) = fmtModName m
+    | relToString(M.RelComp(mor,rel)) =
       morphToString(mor) ^ " " ^ relToString(rel)
 
-  fun instToString(ModSyn.ConInst(c, _, U)) = 
-         IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
-    | instToString(ModSyn.StrInst(c, _, mor)) =
-        "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
-    | instToString(ModSyn.InclInst (_, _, mor)) = "%include " ^ (morphToString mor) ^ "."
+  fun instToString(M.ConInst(c, _, U)) = 
+         IntSyn.conDecFoldName (M.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
+    | instToString(M.StrInst(c, _, mor)) =
+        "%struct " ^ M.strDecFoldName (M.structLookup c) ^ " := " ^ morphToString(mor) ^ "."
+    | instToString(M.InclInst (_, _, mor)) = "%include " ^ (morphToString mor) ^ "."
 
-  fun caseToString(ModSyn.ConCase(c, _, U)) = 
-         IntSyn.conDecFoldName (ModSyn.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
-    | caseToString(ModSyn.StrCase(c, _, rel)) =
-        "%struct " ^ ModSyn.strDecFoldName (ModSyn.structLookup c) ^ " := " ^ relToString(rel) ^ "."
-    | caseToString(ModSyn.InclCase(_, _, rel)) = "%include " ^ (relToString rel) ^ "."
+  fun caseToString(M.ConCase(c, _, U)) = 
+         IntSyn.conDecFoldName (M.sgnLookup c) ^ " := " ^ expToString(IntSyn.Null, U) ^ "."
+    | caseToString(M.StrCase(c, _, rel)) =
+        "%struct " ^ M.strDecFoldName (M.structLookup c) ^ " := " ^ relToString(rel) ^ "."
+    | caseToString(M.InclCase(_, _, rel)) = "%include " ^ (relToString rel) ^ "."
 
-  fun sigInclToString(ModSyn.SigIncl (m, opens)) = "%include " ^ (ModSyn.modFoldName m) ^ (openToString opens) ^ "."
+  fun sigInclToString(M.SigIncl (m, opens)) = "%include " ^ (fmtModName m) ^ (openToString opens) ^ "."
 
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, impl)) = (
-     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+  fun strDecToString(M.StrDec(name, _, dom, insts, opendec, impl)) = (
+     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (fmtModName dom) ^ " = " ^
      IDs.mkString(List.map instToString insts, "{", " ", "}") ^ (openToString (opendec)) ^ "."
     )
-   | strDecToString(ModSyn.StrDef(name, _, dom, def, impl)) = (
-     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (ModSyn.modFoldName dom) ^ " = " ^
+   | strDecToString(M.StrDef(name, _, dom, def, impl)) = (
+     "%struct " ^ (implicitToString impl) ^ IDs.foldQName name ^ " : " ^ (fmtModName dom) ^ " = " ^
      morphToString def ^ "."
     )
 
-  fun modBeginToString(ModSyn.SigDec(base,name)) = "%sig " ^ (IDs.foldQName name) ^ " = {"
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, impl)) =
-        "%view " ^ (implicitToString impl) ^ (IDs.foldQName name) ^ " : " ^
-         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
-    | modBeginToString(ModSyn.RelDec(base, name, dom, cod, mors)) =
-        "%rel " ^ (IDs.foldQName name) ^ " : " ^
-         IDs.mkString(List.map morphToString mors, "", " -> ", "") ^ " : " ^
-         (ModSyn.modFoldName dom) ^ " -> " ^ (ModSyn.modFoldName cod) ^ " = {"
-  fun modEndToString(ModSyn.SigDec(_,name)) = "}. % end signature " ^ (IDs.foldQName name)
-    | modEndToString(ModSyn.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
-    | modEndToString(ModSyn.RelDec(_,name, _, _, _)) = "}. % end logical relation " ^ (IDs.foldQName name)
+  fun modBeginToString(M.SigDec(base,name)) =
+      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%sig " ^ (List.last name) ^ " = {"
+    | modBeginToString(M.ViewDec(base, name, dom, cod, impl)) =
+      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%view " ^ (implicitToString impl) ^ (List.last name) ^ " : " ^
+      (fmtModName dom) ^ " -> " ^ (fmtModName cod) ^ " = {"
+    | modBeginToString(M.RelDec(base, name, dom, cod, mors)) =
+      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%rel " ^ (List.last name) ^ " : " ^
+      IDs.mkString(List.map morphToString mors, "", " -> ", "") ^ " : " ^
+      (M.modFoldName dom) ^ " -> " ^ (M.modFoldName cod) ^ " = {"
+  fun modEndToString(M.SigDec(_,name)) = "}. % end signature " ^ (IDs.foldQName name)
+    | modEndToString(M.ViewDec(_,name, _, _, _)) = "}. % end view " ^ (IDs.foldQName name)
+    | modEndToString(M.RelDec(_,name, _, _, _)) = "}. % end logical relation " ^ (IDs.foldQName name)
 
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)
@@ -992,11 +1024,11 @@ in
       end
 
   fun printSingleSgn(mid) =
-      ModSyn.sgnApp (mid, fn (cid) => (print (F.makestring_fmt (formatConDecI (ModSyn.sgnLookup cid))); print "\n"))
+      M.sgnApp (mid, fn (cid) => (print (F.makestring_fmt (formatConDecI (M.sgnLookup cid))); print "\n"))
   (* the following is incomplete; it should wrap every call to printSingleSgn in %sig ... = {...} 
    -@FR *)
   fun printSgn() =
-      ModSyn.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
+      M.modApp (fn (mid) => (printSingleSgn mid; print "\n"))
 
 end  (* local ... *)
 

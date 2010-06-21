@@ -64,6 +64,7 @@ sig
     | AS                                (* `%as' -fr Jun 09*)
     | IMPLICIT                          (* `%implicit' -fr Aug 09*)
     | READ                              (* `%read' *) (* -fr Apr 09 *)
+    | NAMESPACE                         (* `%namespace' -fr Jun 10 *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)
     | PCOMMENT of string                (* preserved comments -fr Jun 2010 *)

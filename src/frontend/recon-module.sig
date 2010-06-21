@@ -41,7 +41,7 @@ sig
   
   (* importing files *)
   datatype read = readfile of string
-
+  datatype namespace = namespace of string option * string * Paths.region
 end;
 
 signature RECON_MODULE =

@@ -152,6 +152,7 @@ functor Twelf
      sharing type ReconModule.modbegin = Parser.ModExtSyn.modbegin
      sharing type ReconModule.sigincl = Parser.ModExtSyn.sigincl
      sharing type ReconModule.read = Parser.ModExtSyn.read
+     sharing type ReconModule.namespace = Parser.ModExtSyn.namespace
    structure MetaGlobal : METAGLOBAL
    (*! structure FunSyn : FUNSYN !*)
    (*! sharing FunSyn.IntSyn = IntSyn' !*)
@@ -306,6 +307,7 @@ struct
 	      | Lexer.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | IntSyn.Error (msg) => abort chlev ("Signature error: " ^ msg ^ "\n")
 	      | Names.Error (msg) => abortFileMsg chlev (fileName, msg)
+	      | Names.MissingModule(_,_,msg) => abortFileMsg chlev (fileName, msg) (* special case of Names.Error -fr *)
 	      (* - IO.Io not supported in polyML ABP - 4/20/03 -- assuming it's supported by now -fr 2010 *)
  	      | IO.Io (ioError) => abortIO (fileName, ioError)
 	      | Solve.AbortQuery (msg) => abortFileMsg chlev (fileName, msg)
@@ -395,6 +397,30 @@ struct
           ()
     ) handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,msg))
 
+    fun installCSMDec (conDec, optFixity, mdecL) = 
+	let
+	  val _ = ModeCheck.checkD (conDec, "%use", NONE)
+          (* put a more reasonable region here? -kw *)
+	  val cid = installConDec IntSyn.FromCS (conDec, ("", NONE), Paths.Reg (0,0))
+	  val _ = if !Global.chatter >= 3
+		  then msg (Print.conDecToString (conDec) ^ "\n")
+		  else ()
+	  val _ = (case optFixity
+		     of SOME(fixity) =>
+			  (Names.installFixity (cid, fixity);
+                           if !Global.chatter >= 3
+                             then msg ((if !Global.chatter >= 4 then "%" else "")
+                                         ^ Names.Fixity.toString fixity ^ " "
+                                         ^ IntSyn.conDecFoldName (ModSyn.sgnLookup cid) ^ ".\n")
+                           else ())
+		      | NONE => ())
+	  val _ = List.app (fn mdec => ModeTable.installMmode (cid, mdec)) mdecL
+	in
+	  cid
+	end
+
+    val _ = CSManager.setInstallFN (installCSMDec)
+ 
     fun cidToString a = IntSyn.conDecFoldName (ModSyn.sgnLookup a)
 
     fun invalidate uninstallFun cids msg =
@@ -430,27 +456,77 @@ struct
                     CSManager.resetSolvers ()
 		    )
 
-    exception MissingModule of string
+    (* like Names.MissingModule, used to load a module on demand
+       may be raised only by a case of install1 that has not changed the global state yet *)
+    exception GetModule of string * string * string
     (* install goes through a stream and calls install1 on every declarations *)
     fun install(fileName, stream) = 
-      let fun install'(S.Empty) = OK
-            | install'(S.Cons (decl, s')) =
-              let val _ = tryInstall1 (fileName, decl)
-              in install (fileName, s')
+      let fun inst s' = inst' ((Timers.time Timers.parsing S.expose) s')
+          and inst'(S.Empty) = OK
+            | inst'(S.Cons (decr, s')) =
+              let val _ = tryInstall1 (fileName, decr, nil)
+              in inst s'
               end
       in
-      	  install' ((Timers.time Timers.parsing S.expose) stream)
+      	  case inst stream
+	    of ABORT => ABORT
+	     | OK => if ModSyn.onToplevel()
+	             then OK else raise ModSyn.Error("expected declaration or `}', found end of input")
       end
-     
-    and tryInstall1(fileName, dec) = (
-       install1(fileName, dec)
-       handle MissingModule(name) => (
-          (* remove all name entries M_1...M_i in toplevel signature (thus open signatures unreferencable)
-             pushScope; loadModule(name); popScope
-             add name entries in toplevel signatures for popped scope with updated cids *)   
-          tryInstall1(fileName, dec)
-       )
-    )
+
+    and tryInstall1(fileName, decr as (_,r), missing) =
+       install1(fileName, decr)
+       handle GetModule(ns,modname,err) =>
+       case List.find (fn x => x = (ns,modname)) missing
+         of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ n ^
+                       " cannot be found (dependency cycle or faulty catalog entry)")
+          | _ => let
+          val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ ns ^ "\n")
+          val dir = OS.Path.dir fileName (* base directory of current elf file *)
+          (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
+          val url = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath ns))
+          (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
+             on the missing module, so their name entries are removed temporarily and saved *)
+          val cdec = ModSyn.modLookup(ModSyn.currentMod())
+          val cnames = (ModSyn.modDecBase cdec) :: (ModSyn.modDecName cdec)
+          fun init(hd::nil) = nil | init(hd::tl) = hd::(init tl)
+          fun saveEntries(ns::nil) = nil
+            | saveEntries(names) = (names, Names.uninstallName(0, names)) :: (saveEntries(init names))
+          val entries = saveEntries cnames (* entry of M1.....Mn first, entry of M1 last *)
+          (* save current context of ModSyn and Names *)
+          val _ = Names.pushContext()
+          val _ = ModSyn.pushContext()
+          (* save the current line info *)
+          val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
+          (* load the missing module - for now: assume it's a file and load the whole file
+             - all loaded modules are inserted into the toplevel signature right before M1 so that the mids are not in logical order anymore
+             - the cid of M1 is increased accordingly so that the cids are still in logical order
+          *)
+          val _ = chmsg 3 (fn () => "%% loading from " ^ url ^ "\n")
+          val stat = loadFile url
+          val _ = if stat = ABORT then raise ModSyn.Error("Error in dynamically loaded module " ^ ns) else ()
+          (* restore previous file name and line info *)
+          val _ = ReconTerm.resetErrors fileName;
+          val _ = Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
+          (* restore the context of ModSyn and Names, the former returns the new cid of M1 *)
+          val cnew = ModSyn.popContext()
+          val _ = Names.popContext()
+          (* restore the (updated) name entries for the modules M1.....Mi
+             update: cnew replaces the old cid of M1 (nil-case) and the old origins of M1....Mi for i>1 (tl-cases) *)
+          fun restoreEntries((names, _)::nil) = Names.installName(0, cnew, NONE, names)
+            | restoreEntries((names,(c,_))::tl) = (
+                Names.installName(0, c, SOME cnew, names);
+                restoreEntries tl
+              )
+          val _ = (restoreEntries entries)
+                  handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,
+                   "dynamically loaded modules were installed correctly, but one of them overwrote the name of a currently open module: " ^ msg))
+          val _ = chmsg 3 (fn () => "%% loaded missing module " ^ modname ^ " in namespace " ^ ns ^ "; retrying\n")
+       in
+          (* finally retry *)
+          tryInstall1(fileName, decr, (ns,modname) :: missing)
+       end
+
     (* install1 installs one declaration, effects global state, may raise standard exceptions *)
     and install1 (fileName, (Parser.ConDec condec, r)) =
         (* Constant declarations c : V, c : V = U plus variations *)
@@ -1118,6 +1194,7 @@ struct
       | install1 (fileName, declr as (Parser.ModBegin modBegin, r)) =
            let
                val dec = ReconModule.modbeginToModDec(modBegin, Paths.Loc(fileName, r))
+                         handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
                val _ = Elab.checkModBegin dec
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val ancmids = List.map #1 (ModSyn.getScope())
@@ -1130,17 +1207,18 @@ struct
                      | _ =>  ()
                (* new module has qualified name M_1.....M_n and cid c
                   for i=1,...,n, name M_i.....M_n resolves to c in signature M_1.....M_{i-1}
-                     (M_1.....M_0 is toplevel signature)
+                     (M_1.....M_0 means toplevel signature)
                      origin is given by cid of M_i in M_1.....M_{i-1}, no origin for i=n *)
-               fun origins(hd::nil) = nil
-                 | origins(hd::tl) = (SOME (ModSyn.midToCid hd)) :: (origins tl)
+               fun init(hd::nil) = nil | init(hd::tl) = hd::(init tl)
+               val origins = NONE :: (List.map (fn m => SOME (ModSyn.midToCid m)) (init ancmids))
                fun doNames(mid::mids, names, c, org::orgs) =
-                   (Names.installName(mid, c, org, names)
-                    handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
-                    doNames(mids, tl names, c, orgs)
-                   )
+                   let val names' = if mid = 0 then (ModSyn.modDecBase dec) :: names else names
+                   in (Names.installName(mid, c, org, names')
+                       handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
+                       doNames(mids, tl names, c, orgs)
+                   ) end
                  | doNames(nil,nil,c,nil) = ()
-               val _ = doNames(rev ancmids, ModSyn.modDecName dec, c, rev (NONE :: origins(ancmids)))
+               val _ = doNames(rev ancmids, ModSyn.modDecName dec, c, rev origins)
            in
              chmsg 3 (fn () => Print.modBeginToString(dec) ^ "\n")
            end
@@ -1159,6 +1237,7 @@ struct
             (* reconstruct, check, and install structure declaration
                only structural checking at this point, full type-checking only in Elab.flatten below *)
             val strDec = ReconModule.strdecToStrDec (strdec, Paths.Loc (fileName,r))
+                         handle Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
             val _ = ReconTerm.checkErrors(r)
             val NewStrDec = Elab.checkStrDec(strDec)
                     handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
@@ -1214,7 +1293,7 @@ struct
                              | _  => raise ModSyn.Error(Paths.wrap(r, "instantiations only allowed in view"))
                val Inst = ReconModule.syminstToSymInst (dom, cod, inst, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
-                            
+                               | Names.MissingModule(ns,m,s) => raise GetModule(ns,m,s)
                val NewInst = Elab.checkSymInst(Inst)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.instAddC(NewInst)
@@ -1252,6 +1331,7 @@ struct
                              | _ => raise ModSyn.Error(Paths.wrap(r, "cases for logical relations only allowed in logical relation"))
                val Cas = ReconModule.symcaseToSymCase (dom, cod, cas, Paths.Loc(fileName,r))
                           handle ReconModule.Error(msg) => raise ReconModule.Error(msg) (* might also raise ReconTerm.Error or Constraints.Error *)
+                               | Names.MissingModule args => raise GetModule args
                val NewCas = Elab.checkSymCase(Cas)
                        handle Elab.Error msg => raise Elab.Error(Paths.wrap(r, msg))
                val c = ModSyn.caseAddC(NewCas)
@@ -1286,6 +1366,7 @@ struct
          let
             val Incl as ModSyn.SigIncl(from, opendec) = ReconModule.siginclToSigIncl(incl, Paths.Loc(fileName, r))
                        handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
+                            | Names.MissingModule args => raise GetModule args
             val _ = Elab.checkSigIncl Incl
                        handle Elab.Error(msg) => raise Elab.Error(Paths.wrap(r,msg))
             val c = ModSyn.inclAddC(Incl)
@@ -1304,18 +1385,26 @@ struct
            handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r', msg))
          end
 
+      | install1 (fileName, declr as (Parser.Namespace nsdec, r)) =
+         let val ReconModule.namespace(pOpt, ns, _) = nsdec
+         in case pOpt
+            of SOME p => (Names.installPrefix(p,ns)
+                         handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
+                         )
+             | NONE => Names.setCurrentNS(ns)
+         end
       | install1 (fileName, declr as (Parser.Read read, r)) =
          (* fileName: name of current elf file, possibly relative to working directory, in OS-specific syntax *)
          let
             val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
                handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val dir = OS.Path.dir fileName (* base directory of current elf file *)
-         in
-            case Read
-              of ModSyn.ReadFile name =>
-                (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-                let val readfile = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath name))
-                in case Origins.linesInfoLookup readfile
+            val curNS = Names.getCurrentNS()
+            val ModSyn.ReadFile name = Read
+            (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
+            val readfile = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath name))
+          in
+             case Origins.linesInfoLookup readfile
                    of NONE => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
@@ -1326,7 +1415,6 @@ struct
                    ) | SOME _ => (
                       chmsg 3 (fn () => "%read \"" ^ readfile ^ "\". %% already read, skipping\n")
                    )
-                end
          end
 
     (* loadFile (fileName) = status
@@ -1338,15 +1426,11 @@ struct
 	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
-	    val _= if (ModSyn.getScope() = nil) then reset() else () (* reset to initialize if nothing read yet *)
-            val _ = ReconTerm.resetErrors fileName
+            val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-            (* val _ = ModSyn.newFile (OS.Path.mkCanonical fileName)              (* for name management -fr *) *)
-            val stat = install (fileName, Parser.parseStream instream)
+            val _ = Names.setCurrentNS(OS.Path.mkCanonical fileName)           (* default namespace -fr *)
 	  in
-	    case stat
-	      of ABORT => ABORT
-	       | OK => if ModSyn.onToplevel() then OK else raise ModSyn.Error("expected declaration or `}', found end of input")
+	    install (fileName, Parser.parseStream instream)
 	  end)
 
     (* loadString (str) = status
@@ -1361,6 +1445,19 @@ struct
 		install ("string", Parser.parseStream (TextIO.openString str))
 	    end) ()
 
+    fun readDecl () =
+        handleExceptions 0 "stdIn"
+	(fn () =>
+	 let
+	     val _ = ReconTerm.resetErrors "stdIn"
+             fun install s = install' ((Timers.time Timers.parsing S.expose) s)
+	     and install' (S.Empty) = ABORT
+	       | install' (S.Cons (decl, s')) =
+	           (install1 ("stdIn", decl); OK)
+	 in
+	   install (Parser.parseStream TextIO.stdIn)
+	 end) ()
+
     (* Interactive Query Top Level *)
 
     fun sLoop () = if Solve.qLoop () then OK else ABORT
@@ -1372,44 +1469,6 @@ struct
 
     (* top () = () starts interactive query loop *)
     fun top () = topLoop ()    
-
-    fun installCSMDec (conDec, optFixity, mdecL) = 
-	let
-	  val _ = ModeCheck.checkD (conDec, "%use", NONE)
-          (* put a more reasonable region here? -kw *)
-	  val cid = installConDec IntSyn.FromCS (conDec, ("", NONE), Paths.Reg (0,0))
-	  val _ = if !Global.chatter >= 3
-		  then msg (Print.conDecToString (conDec) ^ "\n")
-		  else ()
-	  val _ = (case optFixity
-		     of SOME(fixity) =>
-			  (Names.installFixity (cid, fixity);
-                           if !Global.chatter >= 3
-                             then msg ((if !Global.chatter >= 4 then "%" else "")
-                                         ^ Names.Fixity.toString fixity ^ " "
-                                         ^ IntSyn.conDecFoldName (ModSyn.sgnLookup cid) ^ ".\n")
-                           else ())
-		      | NONE => ())
-	  val _ = List.app (fn mdec => ModeTable.installMmode (cid, mdec)) mdecL
-	in
-	  cid
-	end
-
-    val _ = CSManager.setInstallFN (installCSMDec)
- 
-    fun readDecl () =
-        handleExceptions 0 "stdIn"
-	(fn () =>
-	 let
-	     val _ = if ModSyn.getScope() = nil then reset () else () (* reset to initialize if nothing read yet *)
-	     val _ = ReconTerm.resetErrors "stdIn"
-             fun install s = install' ((Timers.time Timers.parsing S.expose) s)
-	     and install' (S.Empty) = ABORT
-	       | install' (S.Cons (decl, s')) =
-	           (install1 ("stdIn", decl); OK)
-	 in
-	   install (Parser.parseStream TextIO.stdIn)
-	 end) ()
 
     (* prints declaration of symbol *)
     fun decl(s) =
@@ -1430,6 +1489,7 @@ struct
                 end
         end
         handle Names.Error(s) => (msg s; ABORT)
+             | Names.MissingModule(_,_,s) => (msg s; ABORT)
     and decl' (cid) = (
 	  (* val fixity = Names.getFixity (cid) *)
 	  (* can't get name preference right now *)
@@ -1499,16 +1559,16 @@ struct
       (* suffix of configuration files: "cfg" by default *)
       val suffix = ref "cfg"
 
-	    (* mkRel transforms a relative path into an absolute one
-               by adding the specified prefix. If the path is already
-               absolute, no prefix is added to it.
-            *)
-	    fun mkRel (prefix, path) =
-                OS.Path.mkCanonical
-                  (if OS.Path.isAbsolute path
-                   then path
-                   else OS.Path.concat (prefix, path))
-	       
+      (* mkRel transforms a relative path into an absolute one
+         by adding the specified prefix. If the path is already
+         absolute, no prefix is added to it.
+      *)
+      fun mkRel (prefix, path) =
+          OS.Path.mkCanonical
+            (if OS.Path.isAbsolute path
+             then path
+             else OS.Path.concat (prefix, path))
+
       (* more efficient recursive version  Sat 08/26/2002 -rv *)
       fun read config =
           let
@@ -1620,7 +1680,10 @@ struct
 
       fun loadAbort (mfile, OK) =
 	  let
-	    val status = loadFile (ModFile.fileName mfile)
+	    val file = ModFile.fileName mfile
+	    (* necessary for backwards compatibility: make top level declarations in file available unqualified *)
+	    val _ = Names.openNamespace file
+	    val status = loadFile file
 	  in
 	    case status
 	      of OK => ModFile.makeUnmodified mfile
@@ -1818,6 +1881,7 @@ struct
 
     datatype Status = datatype Status
     val reset = reset
+    (* reset if nothing read yet *)
     val loadFile = loadFile
     val loadString = loadString
     val readDecl = readDecl
@@ -1840,7 +1904,7 @@ struct
     val make = make
 
 
-    val version = "Twelf 1.5R3, Aug 30, 2005 (%trustme)"
+    val version = "Twelf 1.6beta, June 2010 (%trustme)"
 
     structure Table : 
       sig 

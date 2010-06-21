@@ -1,6 +1,8 @@
 Carsten:
 long ZFC check
 flit
+paper
+namespaces
 
 to do
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily

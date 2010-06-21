@@ -17,4 +17,5 @@ sig
   val parseInclCase'  : ModExtSyn.symcase Parsing.parser
   val parseStrCase'   : ModExtSyn.symcase Parsing.parser
   val parseRead'      : ModExtSyn.read Parsing.parser
+  val parseNamespace' : ModExtSyn.namespace Parsing.parser
 end

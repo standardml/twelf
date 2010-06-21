@@ -71,6 +71,7 @@ struct
     | IMPLICIT                          (* `%implicit' -fr Aug 09*)
     | AS                                (* `%as' -fr Jun 09*)
     | READ                              (* `%read' *)
+    | NAMESPACE                         (* `%namespace' *)
     | USE                               (* `%use' *)
     | STRING of string                  (* string constants *)
     | PCOMMENT of string                (* preserved comments *)
@@ -272,6 +273,7 @@ struct
       | lexPragmaKey (ID(_, "as"), r) = (AS, r)
       | lexPragmaKey (ID(_, "implicit"), r) = (IMPLICIT, r)
       | lexPragmaKey (ID(_, "read"), r) = (READ, r)
+      | lexPragmaKey (ID(_, "namespace"), r) = (NAMESPACE, r)
       | lexPragmaKey (ID(_, "use"), r) = (USE, r)
       | lexPragmaKey (ID(_, s), r) =
         error (r, "Unknown keyword %" ^ s ^ " (single line comment starts with `%<whitespace>' or `%%')")
@@ -418,6 +420,8 @@ struct
     | toString' (OPEN) = "%open"
     | toString' (AS) = "%as"
     | toString' (USE) = "%use"
+    | toString' (READ) = "%read"
+    | toString' (NAMESPACE) = "%namespace"
     | toString' (PCOMMENT _) = "%*...*%"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"

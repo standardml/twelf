@@ -35,14 +35,17 @@ sig
 
   exception Error of string
   exception Unprintable
-
+  (* special exception to recover from missing module: namespace, module name, and error message *)
+  exception MissingModule of string * string * string
+  
   structure Fixity : FIXITY
 
   (* map between global declarations ids (IDs.cid) and their local qualified names (string list)
      optional argument of installName gives origin of name declaration if different from first argument *)
   val installName  : IDs.mid * IDs.cid * (IDs.cid option) * string list -> unit
   val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
-  val uninstallName: IDs.mid * string list -> unit
+  (* uninstall name (must exist) and return its cid *)
+  val uninstallName: IDs.mid * string list -> IDs.cid * (IDs.cid option)
 
   (* map between namespace prefixes and namespace identifiers (URIs) *)
   (* add (prefix,namespace) pair, prefix must be undeclared *)
@@ -51,14 +54,24 @@ sig
   val lookupPrefix : string -> string option
   (* return most recent prefix for a namespace *)
   val getPrefix    : string -> string option
-  
+  (* we maintain a list of namespaces that are available without qualification,
+     searched in inverse addition order (called on every file of a configuration) *)
+  val openNamespace: string -> unit
+  (* get/set current namespace *)
+  val getCurrentNS : unit -> string
+  val setCurrentNS : string -> unit
+  (* push/pop the namespace context *)
+  val pushContext  : unit -> unit
+  val popContext   : unit -> unit
+
   (* nameLookup and nameLookup' return NONE if a name without module component is undefined
      on all other failures, they raise exceptions with specific error message *)
   (* concepts a name may be refer to *)
   datatype Concept = SIG | VIEW | REL | CON | STRUC
-  (* looks up a qualified name relative to a module, checks result against expected concepts *)
+  (* looks up a qualified name relative to a module, checks result against expected concepts
+     may raise Error or MissingModule *)
   val nameLookup  : Concept list -> IDs.mid * string list -> IDs.cid option
-  (* convenience: relative to current target signature, expect anything *)
+  (* convenience: relative to current target signature, expect anything, may raise Error *)
   val nameLookup' : string list -> IDs.cid option
   (* convenience for non-modular code: relative to current target signature, expect constants, raises no exceptions *)
   val nameLookupC : string list -> IDs.cid option

@@ -1,3 +1,7 @@
+%namespace "test.elf".
+%namespace t2 = "test2.elf".
+%namespace t3 = "test3.elf".
+
 %% testing basic syntax
 %* . and preserved
 comments *%
@@ -139,7 +143,7 @@ a : type.
     c : a.        %% a refers to L0.a
     a : type.
     d1 : a.       %% a refers to L1.a
-    d0 : L0.a.   %% a refers to L0.a
+    d0 : L0.a.    %% a refers to L0.a
   }.
   b : type.
   %sig L2 = {
@@ -171,18 +175,16 @@ a : type.
   %struct c : C = {%struct a := b.}. %% b is coerced to c B.x b.
 }.
 
-%% testing reads
-%read "test3.elf".
-%read "test2.elf".
-
+%% testing dynamic loading of modules   
 %sig R3 = {
   %include R.
-  %include R2.
-  %struct r : R2.
+  %include t2.R2.
+  %struct r : t2.R2.
   b : R.a.
-  c : R2.a.
+  c : t2.R2.a.
   d : r.a.
   e : r.r.a.
+  %include t3.ReadTwice.
 }.
 
 %% testing logical relations
@@ -238,7 +240,7 @@ a : type.
    %struct ls := m2.
    q := u.
    c := *.
-}.
+}.%.
 %rel Rho' : m1' -> m2' = {
    %include Rho.
    %struct ls := Rho.  %% This would type-check if equality of morphisms were implemented better

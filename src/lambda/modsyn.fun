@@ -143,6 +143,14 @@ struct
   val implicitOut : (IDs.mid * Morph) list MH.Table = MH.new(50)
   val implicitIn  : (IDs.mid * Morph) list MH.Table = MH.new(50)
 
+  (* initialization: open toplevel signature *)
+  fun init() = (
+    nextMid := 1;                       (* initial mid *)
+    scope := [(0,0)];                   (* open toplevel signature *)
+    MH.insert inclTable (0, [ObjSig(0,Self)])
+  )
+  val _ = init()
+
   (********************** Effect-free (lookup) methods **********************)
   fun getScope() = ! scope
 
@@ -339,20 +347,20 @@ struct
      ()
   ) end
 
-  fun pushScope() = let 
+  fun pushContext() = let 
      val (_,nextLid) :: saveMods = List.rev (getScope())
      val saveModDecl = case saveMods
        of nil => NONE
         | (m,_) :: _ => (
-          scope := [(0,nextLid-1)];
+          scope := [(0,nextLid - 1)];
           MH.delete modTable m;
-          CH.lookup declTable (0,nextLid-1)
+          CH.lookup declTable (0,nextLid - 1)
         )
      val _ = savedScopes := (saveMods, saveModDecl) :: (! savedScopes)
   in () end
 
-  fun popScope() = let
-     val nextLid = case getScope() of (_,l) :: nil => l | _ => raise Error("not on toplevel")
+  fun popContext() = let
+     val nextLid = case getScope() of (_,l) :: nil => l | _ => raise Error("can only pop context on toplevel")
      val (savedMods, savedModDecl) :: tl = ! savedScopes
      val _ = savedScopes := tl
      val mid = #1 (List.hd savedMods)
@@ -507,9 +515,7 @@ struct
     MH.clear implicitOut;
     MH.clear implicitIn;
     savedScopes := nil;
-    nextMid := 1;                       (* initial mid *)
-    scope := [(0,0)];                   (* open toplevel signature *)
-    MH.insert inclTable (0, [ObjSig(0,Self)])
+    init()
     (* bogus entries for the toplevel signature, hopefully not needed anymore
     MH.insert modTable (0, (0,~1), ~1);
     MH.insert declTable((0,~1),(0, SymMod (0, SigDec("",nil))))

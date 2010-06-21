@@ -1,9 +1,12 @@
-%read "test3.elf".
+%namespace "test2.elf".
+%namespace t1 = "test.elf".
+%namespace t3 = "test3.elf".
 
 %sig R2 = {
-  %include R.
-  %struct r: R.
+  %include t1.R.
+  %struct r: t1.R.
   a : type.
-  c: R.a.
+  c: t1.R.a.
   d: r.a.
+  %include t3.ReadTwice.
 }.

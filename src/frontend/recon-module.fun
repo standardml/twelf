@@ -38,30 +38,32 @@ struct
                     | relbegin of string * morph list * Paths.region
   
   datatype read = readfile of string
+  datatype namespace = namespace of string option * string * Paths.region
 
 (* end MODEXTSYN *)
 
 (* implementing the remaining declarations of RECON_MODULE *)
   exception Error of string
-
+  
   (* local functions to handle errors *)
   fun error (r, msg) = raise Error (Paths.wrap (r, msg))
         
   fun nameLookup expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
      let val cOpt = (Names.nameLookup [expected] (m,names))
                     handle Names.Error(s) => error(r,s)
+                         | Names.MissingModule(ns,modname, msg) => raise Names.MissingModule(ns,modname, Paths.wrap(r,msg))
      in
          case cOpt
            of SOME c => c
             | NONE => error(r, "undeclared identifier: " ^ IDs.foldQName names)
-      end
+     end
 
   fun modNameLookup' expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
       M.cidToMid (nameLookup expected (m,names,r))
       (* no exception possible in cidToMid if "expected" is a module level concept *)
 
   (* as modNameLookup' but also checks that the module is closed
-     this is call for all modules except for the codomain of views and relations, which may be open *)
+     this is called for all modules except for the codomain of views and relations, which may be open *)
   fun modNameLookup expected (m : IDs.mid, names : IDs.Qid, r : Paths.region) =
       let val m = modNameLookup' expected (m,names,r)
       in
@@ -251,7 +253,7 @@ struct
     
    fun modbeginToModDec(sigbegin name, Paths.Loc(fileName, _)) =
        let val parname = M.modDecName (M.modLookup (M.currentMod()))
-       in  M.SigDec(OS.Path.mkCanonical fileName, parname @ [name])
+       in  M.SigDec(Names.getCurrentNS(), parname @ [name]) (* was: OS.Path.mkCanonical fileName *)
        end
      | modbeginToModDec(viewbegin(name, (dom,rd), (cod,rc), implicit), Paths.Loc(fileName, _)) =
          let
@@ -260,7 +262,7 @@ struct
             val Cod = modNameLookup' Names.SIG (cur, cod, rc)
             val parname = M.modDecName (M.modLookup (M.currentMod()))
          in
-            M.ViewDec (OS.Path.mkCanonical fileName, parname @ [name], Dom, Cod, implicit)
+            M.ViewDec (Names.getCurrentNS(), parname @ [name], Dom, Cod, implicit)
          end
      | modbeginToModDec(relbegin(name, mors, r), loc as Paths.Loc(fileName, _)) =
          let
@@ -278,7 +280,7 @@ struct
                     else ()
             val parname = M.modDecName (M.modLookup (M.currentMod()))
          in
-            M.RelDec (OS.Path.mkCanonical fileName, parname @ [name], dom, cod, Mors')
+            M.RelDec (Names.getCurrentNS(), parname @ [name], dom, cod, Mors')
          end
 
    fun readToRead(readfile name, Paths.Loc(fileName, r)) =

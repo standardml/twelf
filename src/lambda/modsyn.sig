@@ -227,6 +227,9 @@ sig
   val onToplevel : unit -> bool
   (* the current target signature: the current module if a signature, its codomain if a view *)
   val currentTargetSig : unit -> IDs.mid
+  (* push/pop the current scope to permit context switching *)
+  val pushContext: unit -> unit
+  val popContext : unit -> IDs.cid
 
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d *)

@@ -301,5 +301,18 @@ struct
         of LS.Cons ((L.STRING name, r), s') => (E.readfile name, LS.expose s')
          | LS.Cons ((t, r1), s') =>
            Parsing.error (r1, "Expected string, found token " ^ L.toString t)
-  
+
+  fun parseNamespaceURI'(pOpt, r, LS.Cons ((L.STRING ns, r'), s')) =
+      let val ns' = String.substring(ns, 1, String.size ns - 2) (* remove quotes *)
+      in (E.namespace(pOpt, ns', Paths.join(r,r')), LS.expose s')
+      end
+    | parseNamespaceURI'(_, _, LS.Cons ((t, r), s')) = Parsing.error (r, "Expected string, found token " ^ L.toString t)
+  fun parseNamespace' (f as LS.Cons ((L.NAMESPACE, r), s')) =
+     case LS.expose s'
+        of f' as LS.Cons ((L.ID(_, id), _), s') =>
+           let val (_, f') = parseEqual' (LS.expose s')
+           in parseNamespaceURI'(SOME id, r, f')
+           end
+         | f' => parseNamespaceURI'(NONE, r, f')
+
 end

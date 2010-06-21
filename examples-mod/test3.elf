@@ -1,3 +1,4 @@
+%namespace "test3.elf".
 %sig ReadTwice = {
   a : type.
 }.
