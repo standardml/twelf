@@ -2,6 +2,7 @@ Library
   signature FIXITY
   signature NAMES
   structure Names
+  structure URI
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -13,3 +14,4 @@ is
   names.sig
   names.fun
   names.sml
+  uri.sml
