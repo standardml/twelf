@@ -1,5 +1,4 @@
 Carsten:
-long ZFC check
 paper
 
 to do
