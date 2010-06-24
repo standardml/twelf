@@ -275,7 +275,7 @@ struct
   fun apxToExactW (G, U, (I.Pi ((D, _), V), s), allowed) =
       let
         val D' = I.decSub (D, s)
-      in
+      in (* @FR: Carsten suspects this is where eta annotations could be added *)
         I.Lam (D', apxToExact (I.Decl (G, D'), U, (V, I.dot1 s), allowed))
       end
     | apxToExactW (G, U, (I.Uni L, s), allowed) =
