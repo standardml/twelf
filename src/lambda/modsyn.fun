@@ -26,9 +26,9 @@ struct
   datatype StrDec = StrDec of string list * IDs.qid * IDs.mid * (SymInst list) * OpenDec * bool
                   | StrDef of string list * IDs.qid * IDs.mid * Morph * bool
   datatype SigIncl = SigIncl of IDs.mid * OpenDec
-  datatype ModDec = SigDec of string * string list
-                  | ViewDec of string * string list * IDs.mid * IDs.mid * bool
-                  | RelDec of string * string list * IDs.mid * IDs.mid * (Morph list)
+  datatype ModDec = SigDec of URI.uri * string list
+                  | ViewDec of URI.uri * string list * IDs.mid * IDs.mid * bool
+                  | RelDec of URI.uri * string list * IDs.mid * IDs.mid * (Morph list)
 
   datatype Read = ReadFile of string
 
@@ -170,7 +170,7 @@ struct
                                handle Option => raise (UndefinedCid c)
 
   fun modLookup(m) =
-    if m = 0 then SigDec("toplevel", nil)
+    if m = 0 then SigDec(URI.parseURI "", nil)
              else case symLookup (midToCid m)
                     of SymMod (_,moddec) => moddec
                      | _ => raise UndefinedMid m

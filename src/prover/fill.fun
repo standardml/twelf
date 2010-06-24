@@ -142,11 +142,11 @@ struct
     *)
     fun menu (FillWithBVar (X as I.EVar (_, G, _, _), n)) =
         (case (I.ctxLookup (Names.ctxName G, n)) 
-	  of I.Dec (SOME x, _) => 
+	  of I.Dec (I.VarInfo(SOME x,_,_,_), _) => 
 	    ("Fill " ^ Names.evarName (G, X) ^ " with variable " ^ x))
 	   (* Invariant: Context is named  --cs Fri Mar  3 14:31:08 2006 *)
       | menu (FillWithConst (X as I.EVar (_, G, _, _), c)) = 
-	   ("Fill " ^ Names.evarName (G, X) ^ " with constant " ^ IntSyn.conDecName (ModSyn.sgnLookup c))
+	   ("Fill " ^ Names.evarName (G, X) ^ " with constant " ^ IntSyn.conDecFoldName (ModSyn.sgnLookup c))
       
   in
     val expand = expand

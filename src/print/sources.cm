@@ -19,6 +19,7 @@ is
   ../lambda/sources.cm
   ../names/sources.cm
   ../formatter/sources.cm
+  ../uri/sources.cm
   symbol.sig
   symbol.fun
   print.sig

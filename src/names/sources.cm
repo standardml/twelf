@@ -2,7 +2,6 @@ Library
   signature FIXITY
   signature NAMES
   structure Names
-  structure URI
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -11,7 +10,7 @@ is
   ../table/sources.cm
   ../global/sources.cm
   ../lambda/sources.cm
+  ../uri/sources.cm
   names.sig
   names.fun
   names.sml
-  uri.sml

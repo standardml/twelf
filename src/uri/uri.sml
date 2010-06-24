@@ -1,9 +1,30 @@
-structure URI = struct
+signature URISIG = sig
+   type uri
+   val resolve     : uri * uri -> uri
+   exception Error of string
+   val parseURI    : string -> uri
+   val uriToString : uri -> string
+   val uriToString : uri -> string
+   val makeFileURI : string -> uri
+end
+
+structure URI : URISIG = struct
    type authority = {userinfo: string option, host: string, port: int option}
+   val emptyAuth = {userinfo = NONE, host = "", port = NONE}
    (* note: the empty path is always relative *)
    type uri = {scheme: string option, authority: authority option, abs: bool, path: string list,
                query: string option, fragment: string option}
    fun makeURI(s,a,ab,p,q,f) : uri = {scheme = s, authority = a, abs = ab, path = p, query = q, fragment = f}
+   
+   fun makeFileURI(fileName) : uri = 
+      let
+   	 val path = OS.Path.fromString (OS.Path.mkCanonical fileName)
+      in
+	 {scheme = SOME "file", authority = SOME emptyAuth,
+	                    abs = #isAbs path,
+	                    path = if #vol path = "" then #arcs path else (#vol path) :: (#arcs path),
+	                    query = NONE, fragment = NONE}
+      end
    
    (* s from and including index n, starting at 0 *)
    fun from(s, n) = if n >= String.size s then "" else String.extract(s, n, NONE)
@@ -119,5 +140,4 @@ structure URI = struct
    (* prints a uri *)
    fun uriToString(uri: uri) = po("", #scheme uri, ":") ^ authToString(#authority uri) ^ pathToString (#path uri, #abs uri) ^
                          po("?", #query uri, "") ^ po("#", #fragment uri, "")
-   fun test s = uriToString(parseURI s)
 end

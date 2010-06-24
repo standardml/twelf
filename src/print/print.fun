@@ -991,14 +991,14 @@ in
     )
 
   fun modBeginToString(M.SigDec(base,name)) =
-      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%% " ^ URI.uriToString base ^ " " ^ IDs.foldQName name ^ "\n" ^
       "%sig " ^ (List.last name) ^ " = {"
     | modBeginToString(M.ViewDec(base, name, dom, cod, impl)) =
-      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%% " ^ URI.uriToString base ^ " " ^ IDs.foldQName name ^ "\n" ^
       "%view " ^ (implicitToString impl) ^ (List.last name) ^ " : " ^
       (fmtModName dom) ^ " -> " ^ (fmtModName cod) ^ " = {"
     | modBeginToString(M.RelDec(base, name, dom, cod, mors)) =
-      "%% " ^ base ^ " " ^ IDs.foldQName name ^ "\n" ^
+      "%% " ^ URI.uriToString base ^ " " ^ IDs.foldQName name ^ "\n" ^
       "%rel " ^ (List.last name) ^ " : " ^
       IDs.mkString(List.map morphToString mors, "", " -> ", "") ^ " : " ^
       (M.modFoldName dom) ^ " -> " ^ (M.modFoldName cod) ^ " = {"

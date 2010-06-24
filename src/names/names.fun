@@ -27,7 +27,7 @@ struct
      bound variables [_] or {_} in the source.
   *)
   exception Unprintable
-  exception MissingModule of string * string * string
+  exception MissingModule of URI.uri * string * string
   
   (*******************************************************)
   (* General data structures for Fixities and Operator Precedence *)
@@ -142,10 +142,10 @@ struct
        - os = [ns,...] is the list of open namespaces (accessible without qualification, searched in order)
        - c is the current namespace (accessible without qualification
     *)
-    type nsContext = (string * string) list * (string list) * string
-    val nscontext0 = [(nil,nil,"toplevel")]
+    type nsContext = (string * URI.uri) list * (URI.uri list) * URI.uri
+    val nscontext0 : nsContext = (nil,nil, URI.parseURI "")
     (* the state: one nsContext for each currently open file *)
-    val nscontext : nsContext list ref = ref nscontext0
+    val nscontext : nsContext list ref = ref [nscontext0]
     fun currentContext() = List.hd (! nscontext)
     fun prefixes()  = #1 (currentContext())
     fun openNS()    = #2 (currentContext())
@@ -173,7 +173,7 @@ struct
 
   (*******************************************************)
   
-   fun pushContext() = nscontext := (nil, nil, "_") :: (! nscontext)
+   fun pushContext() = nscontext := nscontext0 :: (! nscontext)
    fun popContext()  = nscontext := List.tl (! nscontext)
 
    fun getCurrentNS() = currentNS()
@@ -184,7 +184,7 @@ struct
       of SOME (p,_) => SOME p
        | NONE => NONE
    fun installPrefix(p, ns) = case lookupPrefix p
-      of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ ns)
+      of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ URI.uriToString ns)
        | NONE => let val (ps, os, c) :: tl = ! nscontext in nscontext := ((p,ns) :: ps, os, c) :: tl end
    fun openNamespace ns = let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end
    fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
@@ -200,7 +200,7 @@ struct
                raise Error("name " ^ IDs.foldQName names ^ " already declared")
             )
     fun installNameC(c, origin, names) = 
-      let val names' = if ModSyn.onToplevel() then getCurrentNS() :: names else names
+      let val names' = if ModSyn.onToplevel() then URI.uriToString (getCurrentNS()) :: names else names
       in installName(M.currentMod(), c, origin, names)
       end
     fun uninstallName(m, names) = let val c = MSH.lookup nameTable (m, names)
@@ -297,14 +297,14 @@ struct
                 of SOME c => SOME c
                  (* special exception raised if toplevel declaration not found to permit on-demand loading of modules *)
                  | NONE => let val modname = List.hd tl
-                               val msg = "missing module " ^ modname ^ " in namespace " ^ ns
+                               val msg = "missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns
                            in raise MissingModule(ns, modname, msg)
                            end
              )
         | NONE => nameLookupNMS(m, hd::tl, getCurrentNS() :: (openNS()))
    (* try ns::names for a list of namespaces ns, return the first hit or fail eventually *)
-   and nameLookupNMS(m, hd::tl, ns::nss) = (case nameLookup1(m, [ns,hd])
-       of SOME c => nameLookup2(m, [ns,hd], c, tl)
+   and nameLookupNMS(m, hd::tl, ns::nss) = (case nameLookup1(m, [URI.uriToString ns,hd])
+       of SOME c => nameLookup2(m, [URI.uriToString ns,hd], c, tl)
         | NONE => nameLookupNMS(m, hd::tl, nss)
        )
      | nameLookupNMS(m, nil, _) = raise Error("namespace prefix must be followed by identifier")
@@ -397,7 +397,7 @@ struct
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
     fun reset () = (MSH.clear nameTable; CH.clear shadowTable;
-                    nscontext := nscontext0;
+                    nscontext := [nscontext0];
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

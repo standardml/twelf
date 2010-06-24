@@ -303,7 +303,11 @@ struct
            Parsing.error (r1, "Expected string, found token " ^ L.toString t)
 
   fun parseNamespaceURI'(pOpt, r, LS.Cons ((L.STRING ns, r'), s')) =
-      let val ns' = String.substring(ns, 1, String.size ns - 2) (* remove quotes *)
+      let val ns' = URI.parseURI (String.substring(ns, 1, String.size ns - 2)) (* remove quotes *)
+          handle URI.Error(msg) => raise Parsing.error(r', msg)
+          val _ = if isSome (#query ns') orelse isSome (#fragment ns')
+                  then Parsing.error(r', "namespace URI may not have query (?) or fragment (#)")
+                  else ()
       in (E.namespace(pOpt, ns', Paths.join(r,r')), LS.expose s')
       end
     | parseNamespaceURI'(_, _, LS.Cons ((t, r), s')) = Parsing.error (r, "Expected string, found token " ^ L.toString t)

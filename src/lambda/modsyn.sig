@@ -96,16 +96,16 @@ sig
   *)
   datatype ModDec
      = SigDec of
-         string                        (* base, file name in Unix syntax, relative to current directory *)
+         URI.uri                       (* namespace *)
        * string list                   (* qualified name *)
      | ViewDec of
-         string                        (* base *)
+         URI.uri                       (* base *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
        * bool                          (* implicit *)
      | RelDec of
-         string                        (* base *)
+         URI.uri                       (* base *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
@@ -120,7 +120,7 @@ sig
    datatype Read = ReadFile of string  (* file name *)
    
   (* convenience methods to access components of declarations *)
-  val modDecBase : ModDec -> string
+  val modDecBase : ModDec -> URI.uri
   val modDecName : ModDec -> string list
   val strDecName : StrDec -> string list
   val strDecFoldName: StrDec -> string

@@ -323,7 +323,7 @@ struct
     fun init names = 
 	let 
 	  val _ = TomegaPrint.evarReset()
-	  val cL = map (fn x => valOf (Names.constLookup (valOf (Names.stringToQid x)))) names
+	  val cL = map (fn x => valOf (Names.nameLookupC (valOf (Names.stringToQid x)))) names
 	  val F = convertFor cL
 	  val Ws = map W.lookup cL
 	  fun select c = (Order.selLookup c handle _ => Order.Lex [])

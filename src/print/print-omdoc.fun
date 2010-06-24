@@ -78,7 +78,7 @@ struct
   (* arguments of the recursion: baseFile, current identify the module relative to which addresses are given
      for theories the theory, for views (except for @from and @to) the codomain
    *)
-  type Params = {baseFile : Path, current : IDs.mid}
+  type Params = {baseFile : URI.uri, current : IDs.mid}
   
   (* Printing references *)
   
@@ -92,8 +92,8 @@ struct
   (* compute document reference (URI) relative to params *)
   fun relDocName(f, baseFile) = 
     let
-       val file = OS.Path.fromString f
-       val dif = case List.rev (diff(pathToArcList baseFile, pathToArcList file))
+       val file = OS.Path.fromString (URI.uriToString f)
+       val dif = case List.rev (diff(pathToArcList (OS.Path.fromString (URI.uriToString baseFile)), pathToArcList file))
          of nil => nil
           | hd :: tl => List.rev ((omdocExtension hd) :: tl)
     in
@@ -398,7 +398,7 @@ struct
       end
     | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), params) =
         let
-           val headParams = {baseFile = OS.Path.fromString base, current = #current params}
+           val headParams = {baseFile = base, current = #current params}
            (* from and to relative to basefile, rest of view relative to codomain *)
         in
            ElemOpen("view", [Attr("name", localPath name),
@@ -427,11 +427,11 @@ struct
      	 val params : Params = case mdec
      	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
      	    | ModSyn.ViewDec(_,_,_,cod,_) =>
-     	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
+     	      {baseFile = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
      	    | ModSyn.RelDec(_,_,_,cod,_) =>
-     	      {baseFile = OS.Path.fromString (ModSyn.modDecBase (ModSyn.modLookup cod)), current = cod}
+     	      {baseFile = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
      in
-     	if OS.Path.fromString (ModSyn.modDecBase mdec) = baseFile (* only print modules from the base file *)
+     	if ModSyn.modDecBase mdec = baseFile (* only print modules from the base file *)
      	  andalso not(m = 0)
      	then (
           print(modBeginToString(mdec, params));
@@ -479,10 +479,9 @@ struct
 
   fun toFile filename =
      let val file = TextIO.openOut filename
-         val f = case ModSyn.modLookup(0) of
+         val baseFile = case ModSyn.modLookup(0) of
                       ModSyn.SigDec(n,_) => n
-         val baseFile = OS.Path.fromString f
-         val base = omdocExtension f
+         val base = omdocExtension (URI.uriToString baseFile)
      in (
         ind_reset();
         TextIO.output(file, docBeginToString(base));

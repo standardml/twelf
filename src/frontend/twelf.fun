@@ -458,7 +458,7 @@ struct
 
     (* like Names.MissingModule, used to load a module on demand
        may be raised only by a case of install1 that has not changed the global state yet *)
-    exception GetModule of string * string * string
+    exception GetModule of URI.uri * string * string
     (* install goes through a stream and calls install1 on every declarations *)
     fun install(fileName, stream) = 
       let fun inst s' = inst' ((Timers.time Timers.parsing S.expose) s')
@@ -478,17 +478,17 @@ struct
        install1(fileName, decr)
        handle GetModule(ns,modname,err) =>
        case List.find (fn x => x = (ns,modname)) missing
-         of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ n ^
+         of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ URI.uriToString n ^
                        " cannot be found (dependency cycle or faulty catalog entry)")
           | _ => let
-          val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ ns ^ "\n")
+          val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "\n")
           val dir = OS.Path.dir fileName (* base directory of current elf file *)
           (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-          val url = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath ns))
+          val url = OS.Path.fromUnixPath (URI.pathToString(#path ns))
           (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
              on the missing module, so their name entries are removed temporarily and saved *)
           val cdec = ModSyn.modLookup(ModSyn.currentMod())
-          val cnames = (ModSyn.modDecBase cdec) :: (ModSyn.modDecName cdec)
+          val cnames = (URI.uriToString (ModSyn.modDecBase cdec)) :: (ModSyn.modDecName cdec)
           fun init(hd::nil) = nil | init(hd::tl) = hd::(init tl)
           fun saveEntries(ns::nil) = nil
             | saveEntries(names) = (names, Names.uninstallName(0, names)) :: (saveEntries(init names))
@@ -504,7 +504,8 @@ struct
           *)
           val _ = chmsg 3 (fn () => "%% loading from " ^ url ^ "\n")
           val stat = loadFile url
-          val _ = if stat = ABORT then raise ModSyn.Error("Error in dynamically loaded module " ^ ns) else ()
+          val _ = if stat = ABORT
+                  then raise ModSyn.Error("Error in dynamically loaded module " ^ URI.uriToString ns) else ()
           (* restore previous file name and line info *)
           val _ = ReconTerm.resetErrors fileName;
           val _ = Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
@@ -521,7 +522,7 @@ struct
           val _ = (restoreEntries entries)
                   handle Names.Error(msg) => raise Names.Error(Paths.wrap(r,
                    "dynamically loaded modules were installed correctly, but one of them overwrote the name of a currently open module: " ^ msg))
-          val _ = chmsg 3 (fn () => "%% loaded missing module " ^ modname ^ " in namespace " ^ ns ^ "; retrying\n")
+          val _ = chmsg 3 (fn () => "%% loaded missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "; retrying\n")
        in
           (* finally retry *)
           tryInstall1(fileName, decr, (ns,modname) :: missing)
@@ -1212,7 +1213,7 @@ struct
                fun init(hd::nil) = nil | init(hd::tl) = hd::(init tl)
                val origins = NONE :: (List.map (fn m => SOME (ModSyn.midToCid m)) (init ancmids))
                fun doNames(mid::mids, names, c, org::orgs) =
-                   let val names' = if mid = 0 then (ModSyn.modDecBase dec) :: names else names
+                   let val names' = if mid = 0 then (URI.uriToString (ModSyn.modDecBase dec)) :: names else names
                    in (Names.installName(mid, c, org, names')
                        handle Names.Error msg => raise Names.Error(Paths.wrap(r, msg));
                        doNames(mids, tl names, c, orgs)
@@ -1386,7 +1387,8 @@ struct
          end
 
       | install1 (fileName, declr as (Parser.Namespace nsdec, r)) =
-         let val ReconModule.namespace(pOpt, ns, _) = nsdec
+         let val ReconModule.namespace(pOpt, ns', _) = nsdec
+             val ns = URI.resolve(Names.getCurrentNS(), ns')
          in case pOpt
             of SOME p => (Names.installPrefix(p,ns)
                          handle Names.Error(msg) => raise Names.Error(Paths.wrap(r, msg))
@@ -1428,7 +1430,7 @@ struct
 	  let
             val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-            val _ = Names.setCurrentNS(OS.Path.mkCanonical fileName)           (* default namespace -fr *)
+            val _ = Names.setCurrentNS(URI.makeFileURI fileName)               (* default namespace -fr *)
 	  in
 	    install (fileName, Parser.parseStream instream)
 	  end)
@@ -1682,7 +1684,7 @@ struct
 	  let
 	    val file = ModFile.fileName mfile
 	    (* necessary for backwards compatibility: make top level declarations in file available unqualified *)
-	    val _ = Names.openNamespace file
+	    val _ = Names.openNamespace (URI.makeFileURI file)
 	    val status = loadFile file
 	  in
 	    case status

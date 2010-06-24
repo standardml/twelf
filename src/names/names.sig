@@ -36,30 +36,31 @@ sig
   exception Error of string
   exception Unprintable
   (* special exception to recover from missing module: namespace, module name, and error message *)
-  exception MissingModule of string * string * string
+  exception MissingModule of URI.uri * string * string
   
   structure Fixity : FIXITY
 
   (* map between global declarations ids (IDs.cid) and their local qualified names (string list)
      optional argument of installName gives origin of name declaration if different from first argument *)
   val installName  : IDs.mid * IDs.cid * (IDs.cid option) * string list -> unit
+  (* current namespace, current signature *)
   val installNameC :           IDs.cid * (IDs.cid option) * string list -> unit
-  (* uninstall name (must exist) and return its cid *)
+  (* uninstall name (must exist) and return its entry *)
   val uninstallName: IDs.mid * string list -> IDs.cid * (IDs.cid option)
 
   (* map between namespace prefixes and namespace identifiers (URIs) *)
   (* add (prefix,namespace) pair, prefix must be undeclared *)
-  val installPrefix: string * string -> unit
+  val installPrefix: string * URI.uri -> unit
   (* return namespace for a prefix *)
-  val lookupPrefix : string -> string option
+  val lookupPrefix : string -> URI.uri option
   (* return most recent prefix for a namespace *)
-  val getPrefix    : string -> string option
+  val getPrefix    : URI.uri -> string option
   (* we maintain a list of namespaces that are available without qualification,
      searched in inverse addition order (called on every file of a configuration) *)
-  val openNamespace: string -> unit
+  val openNamespace: URI.uri -> unit
   (* get/set current namespace *)
-  val getCurrentNS : unit -> string
-  val setCurrentNS : string -> unit
+  val getCurrentNS : unit -> URI.uri
+  val setCurrentNS : URI.uri -> unit
   (* push/pop the namespace context *)
   val pushContext  : unit -> unit
   val popContext   : unit -> unit

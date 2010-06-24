@@ -38,7 +38,7 @@ struct
                     | relbegin of string * morph list * Paths.region
   
   datatype read = readfile of string
-  datatype namespace = namespace of string option * string * Paths.region
+  datatype namespace = namespace of string option * URI.uri * Paths.region
 
 (* end MODEXTSYN *)
 
