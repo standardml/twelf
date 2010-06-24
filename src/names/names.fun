@@ -148,7 +148,9 @@ struct
     val nscontext : nsContext list ref = ref [nscontext0]
     fun currentContext() = List.hd (! nscontext)
     fun prefixes()  = #1 (currentContext())
-    fun openNS()    = #2 (currentContext())
+    (* temporarily making open namespaces global *)
+    val openns : URI.uri list ref = ref nil
+    fun openNS()    = (! openns) (* #2 (currentContext()) *)
     fun currentNS() = #3 (currentContext())
 
     (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
@@ -186,7 +188,7 @@ struct
    fun installPrefix(p, ns) = case lookupPrefix p
       of SOME ns => raise Error("prefix " ^ p ^ " already bound to " ^ URI.uriToString ns)
        | NONE => let val (ps, os, c) :: tl = ! nscontext in nscontext := ((p,ns) :: ps, os, c) :: tl end
-   fun openNamespace ns = let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end
+   fun openNamespace ns = openns := ns :: (! openns) (* let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end *)
    fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
 
    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
@@ -284,7 +286,7 @@ struct
    fun nameLookupS(m, names) = case nameLookup1(m, names)
        of SOME c => SOME c
         | NONE => if List.length names = 1
-                  then nameLookupNMS(m, names, [getCurrentNS()]) (* optimization to skip inapplicable cases *)
+                  then nameLookupNMS(m, names, getCurrentNS() :: (openNS())) (* optimization to skip inapplicable cases *)
                   else nameLookupMS(m, names)
    (* if fail, try names = modname @ symname *)
    and nameLookupMS(m, hd::tl) = case nameLookup1(m,[hd])

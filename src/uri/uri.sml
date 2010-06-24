@@ -4,8 +4,8 @@ signature URISIG = sig
    exception Error of string
    val parseURI    : string -> uri
    val uriToString : uri -> string
-   val uriToString : uri -> string
    val makeFileURI : string -> uri
+   val toFilePath  : uri -> string
 end
 
 structure URI : URISIG = struct
@@ -15,8 +15,8 @@ structure URI : URISIG = struct
    type uri = {scheme: string option, authority: authority option, abs: bool, path: string list,
                query: string option, fragment: string option}
    fun makeURI(s,a,ab,p,q,f) : uri = {scheme = s, authority = a, abs = ab, path = p, query = q, fragment = f}
-   
-   fun makeFileURI(fileName) : uri = 
+
+   fun makeFileURI(fileName: string) : uri = 
       let
    	 val path = OS.Path.fromString (OS.Path.mkCanonical fileName)
       in
@@ -103,20 +103,29 @@ structure URI : URISIG = struct
    fun resolve(base : uri, uriref : uri) : uri =
       let val {scheme = bs, authority = ba, abs = babs, path = bp, query = bq, fragment = _} = base
           val {scheme = rs, authority = ra, abs = rabs, path = rp, query = rq, fragment = rf} = uriref
-          (* remove dot segments - not implemented yet *)
-          fun rem p = p
+          (* remove last, nil if nil *)
+          fun init'(hd::nil) = nil | init'(hd::tl) = hd :: (init' tl) | init' nil = nil
+          (* remove dot segments (cases refer to 5.2.4 in RFC 3986)
+             if the input path is absolute/relative, so is the output: result is /"" or nil if all segments are cancelled *)
+          fun rem'(nil, abs, outp) = outp
+            | rem'(hd::tl, abs, outp) =
+               if hd = "." then rem'(tl, abs, outp) (* . is dropped (cases ABD) *)
+               else if hd = ".."
+                    then if abs then rem'(if tl = nil then [""] else tl, true, init' outp) (* .. cancels previous if any (case C), possibly append "" to make sure path stays absolute *)
+                                else rem'(tl, false, outp)      (* .. at beginning of relative path is dropped (case AD) *)
+                    else rem'(tl, true, outp @ [hd])            (* normal segment (case E) *)
+          fun rem(inp, abs) = rem'(inp, abs, nil)
           (* merge paths *)
-          fun init(hd::nil) = nil | init(hd::tl) = hd :: (init tl)
           fun merge(nil,r) = r
-            | merge(b,r) = init b @ r
+            | merge(b,r) = init' b @ r
       in
-          if isSome rs then makeURI(rs, ra, rabs, rem rp, rq, rf)
-          else if isSome ra then makeURI(bs, ra, rabs, rem rp, rq, rf)
+          if isSome rs then makeURI(rs, ra, rabs, rem(rp, rabs), rq, rf)
+          else if isSome ra then makeURI(bs, ra, rabs, rem(rp,rabs), rq, rf)
           else if rp = nil
-               then if isSome rq then makeURI(bs, ba, babs, rem bp, rq, rf)
-                                 else makeURI(bs, ba, babs, rem bp, bq, rf)
-               else if rabs      then makeURI(bs, ba, rabs, rem rp, rq, rf)
-                                 else makeURI(bs, ba, babs, rem (merge(bp, rp)), rq, rf)
+               then if isSome rq then makeURI(bs, ba, babs, rem(bp, rabs), rq, rf)
+                                 else makeURI(bs, ba, babs, rem(bp, babs), bq, rf)
+               else if rabs      then makeURI(bs, ba, rabs, rem(rp, rabs), rq, rf)
+                                 else makeURI(bs, ba, babs, rem ((merge(bp, rp)), rabs), rq, rf)
       end
 
    (* prints optional string with delimiters, "" if NONE *)
@@ -140,4 +149,22 @@ structure URI : URISIG = struct
    (* prints a uri *)
    fun uriToString(uri: uri) = po("", #scheme uri, ":") ^ authToString(#authority uri) ^ pathToString (#path uri, #abs uri) ^
                          po("?", #query uri, "") ^ po("#", #fragment uri, "")
+
+   fun toFilePath(uri: uri) : string =
+     let
+        val _ = if #scheme uri = SOME "file" then () else raise Error("not a file URI: " ^ uriToString uri)
+        val _ = if #authority uri = SOME emptyAuth orelse #authority uri = NONE then ()
+                else raise Error("not a local file URI: " ^ uriToString uri)
+        val _ = if isSome (#query uri) orelse isSome (#fragment uri)
+                then raise Error("file URI with query or fragment cannot be converted to file path: " ^ uriToString uri)
+                else ()
+        (* seems to be the only way to check if the OS expects the first path segement to be a volume label *)
+        val p = #path uri
+        val path = if p = nil then {vol = "", isAbs = false, arcs = nil}
+                   else if #vol (OS.Path.fromString (List.hd p)) = ""
+                        then {vol = "", arcs = p, isAbs = #abs uri}
+                        else {vol = List.hd p, arcs = List.tl p, isAbs = #abs uri}
+     in OS.Path.mkCanonical (OS.Path.toString path)
+     end
+   
 end

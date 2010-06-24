@@ -484,7 +484,7 @@ struct
           val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "\n")
           val dir = OS.Path.dir fileName (* base directory of current elf file *)
           (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-          val url = OS.Path.fromUnixPath (URI.pathToString(#path ns))
+          val url = URI.toFilePath ns
           (* the currently open signatures, i.e., M1, M1.M2, ..., M1.....Mn depend
              on the missing module, so their name entries are removed temporarily and saved *)
           val cdec = ModSyn.modLookup(ModSyn.currentMod())
@@ -1400,22 +1400,24 @@ struct
          let
             val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
                handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
-            val dir = OS.Path.dir fileName (* base directory of current elf file *)
-            val curNS = Names.getCurrentNS()
-            val ModSyn.ReadFile name = Read
+            val ModSyn.ReadFile ns' = Read
+            val ns = URI.resolve(Names.getCurrentNS(), URI.parseURI ns')
+            val file = URI.toFilePath ns
             (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
-            val readfile = OS.Path.mkCanonical (OS.Path.concat(dir, OS.Path.fromUnixPath name))
           in
-             case Origins.linesInfoLookup readfile
+             case Origins.linesInfoLookup file
                    of NONE => (
-                      chmsg 3 (fn () => "%read \"" ^ readfile ^ "\".\n");
+                      chmsg 3 (fn () => "%read \"" ^ file ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
-                      if (loadFile readfile) = ABORT
-                         then raise ModSyn.Error("Error in included file " ^ readfile)
+                      Names.pushContext();
+                      if loadFile file = ABORT
+                         then raise ModSyn.Error("Error in included file " ^ file)
                       	 else ReconTerm.resetErrors fileName; (* restore previous file name *)
-                      Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
+                              Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName));
+                              Names.popContext();
+                              Names.openNamespace ns
                    ) | SOME _ => (
-                      chmsg 3 (fn () => "%read \"" ^ readfile ^ "\". %% already read, skipping\n")
+                      chmsg 3 (fn () => "%read \"" ^ file ^ "\". %% already read, skipping\n")
                    )
          end
 
