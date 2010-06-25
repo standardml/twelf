@@ -1,5 +1,2 @@
-#!/bin/bash
-BIN=`dirname $0`
-# runs the twelf server, server commands can be piped into this script
-sml @SMLload=$BIN/.heap/twelf-server \
-     @SMLdebug=/dev/null
+#! /bin/sh
+exec "sml" @SMLload="/import/home0/carsten/SVN/cvs.concert.cmu.edu/twelf-mod/bin/.heap/twelf-server" @SMLdebug=/dev/null
