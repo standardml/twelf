@@ -5,15 +5,16 @@
 (* This signature was supposed to be used to make the id type definitions abstract,
    but it turned out I can't enforce that with SMLNJ. So it's not used for now. -fr *)
 signature IDTYPES = sig
-   (* local id's of (declared or imported) declarations (= constants or structures) *)
+   (* local id's of declarations within a module *)
    eqtype lid
-   (* global id's of modules (= signatures or views) *)
+   (* global id's of modules *)
    eqtype mid
    (* global id's of declarations, most reasonably cid = mid * lid  but left abstract for future extensions *)
    eqtype cid
    val newcid : mid * lid -> cid
    val midOf : cid -> mid
    val lidOf : cid -> lid
+   (* needed in some legacy code *)
    val invalidCid : cid
    (* hashing cid's *)
    val cidhash : cid -> int

@@ -144,12 +144,14 @@ a : type.
     a : type.
     d1 : a.       %% a refers to L1.a
     d0 : L0.a.    %% a refers to L0.a
+    %sig L11 = {a:type.}.
   }.
   b : type.
   %sig L2 = {
      a : b.
      %% c : L1.a.   %% fails, L1 invisible
      %include L1.
+     %%struct l : L11. %% could be permitted if ancestors and included signatures were unified internally
      c : L1.a.
   }.
   %view L1-2 : L1 -> L2 = {
@@ -244,7 +246,7 @@ a : type.
 %rel Rho' : m1' -> m2' = {
    %include Rho.
    %struct ls := Rho.  %% This would type-check if equality of morphisms were implemented better
-   q := [x][y] eq x y.
+   q := [x][y] eq x y.                  
    c := uniq.
 }.
 

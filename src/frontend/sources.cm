@@ -27,8 +27,8 @@ Library
   structure PrintTwega
   structure PrintOMDoc
   structure Interactive
-  signature FLIT
-  structure Flit
+(*  signature FLIT
+  structure Flit *)
   structure Subordinate
   signature STYLECHECK
   structure StyleCheck
@@ -55,8 +55,6 @@ is
   ../terminate/sources.cm 
   ../index/sources.cm
   ../thm/sources.cm
-(*  ../order/sources.cm  This is commented out because the files are duplicated in lamdba/
-    order/ should be deleted -fr Wed Jan 14 12:49:32 2009 *)
   ../m2/sources.cm
   ../compile/sources.cm
   ../opsem/sources.cm
@@ -69,7 +67,7 @@ is
   ../cover/sources.cm
   ../tomega/sources.cm 
   ../prover/sources.cm
-  ../flit/sources.cm
+(*  ../flit/sources.cm FR: not clear what to do here - currently does not compile *)
   ../msg/sources.cm
   unknownexn.sig
   unknownexn.fun
