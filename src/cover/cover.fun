@@ -1254,8 +1254,15 @@ struct
     *)
     fun finitary (V, p, W, ci) =
         let
+	  val _ = print "["
+	  val _ = if !Global.doubleCheck
+		    then TypeCheck.typeCheck (I.Null, (V, I.Uni (I.Type)))
+		  else ()
+
 	  val ((V1, s), XsRev) = instEVarsSkip ((V, I.id), p, nil, ci)
 
+(*	  val _ = Whnf.normalize (V1, s) *)
+	  val _ = print "]"
 	in
 	  finitarySplits (XsRev, 1, W, fn () => abstract (V1, s), nil)
 	end

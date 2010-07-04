@@ -120,6 +120,7 @@ cag : {M:big} {A:o} ({a:w} Q <= a -> conc A a) -> (ghyp A Q -> conc C R) -> conc
 ca_axiom_d : ca M A (axiom H) E (E H).
 
 ca_axiom_e : ca M A D axiom D.
+%{
 
 %% Principal Cases
 
@@ -303,6 +304,7 @@ cage_copy : cag M A D ([h] copy (E h) ACC H) (copy E' ACC H)
 cag_copy : cag (big/ M) A D ([h] copy (E h) ACC h) F
 	    <- ({h2} cag (big/ M) A D ([h] E h h2) (E' h2))
 	    <- ca M A (D _ ACC) E' F.
+}% 
 
 %block bacc : some {Q:w} {P:w} block {d:P <= Q}.	    
 %block bhyp : some {A:o} {P:w} block {h:hyp A P}.
