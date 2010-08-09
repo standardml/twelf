@@ -113,6 +113,9 @@ struct
 	checkAtomic (name, V, i+n)
     | checkArgNumber (IntSyn.AbbrevDef (name, _, i, _, V, L), n) =
 	checkAtomic (name, V, i+n)
+    (* wjl 07-21-2010 *)
+    | checkArgNumber (IntSyn.LFRSortDec (name, _, i, V), n) =
+        checkAtomic (name, V, i+n)
 
   (* checkFixity (name, cidOpt, n) = ()
      if n = 0 (no requirement on arguments)
@@ -246,14 +249,45 @@ struct
        Effect: update mapping from identifiers
                to constants, taking into account shadowing
     *)
+    (* refinements complicate this a bit: we want to put LFRConDec's into a
+       different table, since they are not the first declaration for a given
+       constant. -wjl 08-16-2009
+
+       (really, once i implement LFRSubDec's, this function will not be very
+       much like a "name" installer for at least two cases.  perhaps some
+       things should be refactored.. -wjl 08-30-2009) *)
     fun installConstName cid =
         let
+          fun constName cid = IntSyn.conDecName (IntSyn.sgnLookup cid)
+          (* does dec introduce a new name?  -wjl, 10-04-2009*)
+          fun introduces (IntSyn.ConDec _) = true
+            | introduces (IntSyn.ConDef _) = true
+            | introduces (IntSyn.AbbrevDef _) = true
+            | introduces (IntSyn.BlockDec _) = true
+            | introduces (IntSyn.SkoDec _) = true
+            | introduces (IntSyn.LFRSortDec _) = true
+            (* refinement decls and subsorting decls do not: *)
+            | introduces (IntSyn.LFRConDec _) = false
+            | introduces (IntSyn.LFRSubDec _) = false
           val condec = IntSyn.sgnLookup cid
-          val id = IntSyn.conDecName condec
         in
-          case topInsert (id, cid)
-            of NONE => ()
-             | SOME (_, cid') => Array.update (shadowArray, cid, SOME cid')
+          (* if it introduces, insert name into name tables *)
+          if introduces condec then
+              let val id = IntSyn.conDecName condec
+              in
+                case topInsert (id, cid)
+                  of NONE => ()
+                   | SOME (_, cid') => Array.update (shadowArray, cid, SOME cid')
+              end
+          else ()
+          (* moved
+          (* take care of lfrcondec-specific processing  -wjl *)
+          case condec
+            of IntSyn.LFRConDec (constcid, _, _, _) => Refinements.addRefinement constcid cid
+            | IntSyn.LFRSortDec _ => Subsort.addSort cid
+            | IntSyn.LFRSubDec (cid1, cid2) => Subsort.addSubsort cid1 cid2
+            | _ => ()
+           *)
         end
 
     fun uninstallConst cid =

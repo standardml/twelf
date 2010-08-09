@@ -40,6 +40,8 @@ functor Twelf
    (*! sharing ReconConDec.IntSyn = IntSyn' !*)
    (*! sharing ReconConDec.Paths = Paths !*)
      sharing type ReconConDec.condec = Parser.ExtConDec.condec
+   structure ReconLFRDec : RECON_LFRDEC
+     sharing type ReconLFRDec.lfrdec = Parser.ExtLFRDec.lfrdec
    structure ReconQuery : RECON_QUERY
    structure ModeTable : MODETABLE
    (*! sharing ModeSyn.IntSyn = IntSyn' !*)
@@ -291,6 +293,7 @@ struct
 	(f x
 	 handle ReconTerm.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconConDec.Error (msg) => abortFileMsg chlev (fileName, msg)
+              | ReconLFRDec.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconQuery.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconMode.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | ReconThm.Error (msg) => abortFileMsg chlev (fileName, msg)
@@ -311,6 +314,11 @@ struct
 	      | Parsing.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | Lexer.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      | IntSyn.Error (msg) => abort chlev ("Signature error: " ^ msg ^ "\n")
+              (* wjl: *)
+              | Refinements.Error (msg) => abort chlev ("Refinement error: " ^ msg ^ "\n")
+              | Subsort.Error (msg) => abort chlev ("Subsort error: " ^ msg ^ "\n")
+              (* | SortCheck.Error (msg) => abort chlev ("SortCheck error: " ^ msg ^ "\n") *)
+              (* /wjl *)
 	      | Names.Error (msg) => abortFileMsg chlev (fileName, msg)
 	      (* - Not supported in polyML ABP - 4/20/03 
  	      * | IO.Io (ioError) => abortIO (fileName, ioError)
@@ -340,8 +348,16 @@ struct
           val _ = Index.install fromCS (IntSyn.Const cid)
           val _ = IndexSkolem.install fromCS (IntSyn.Const cid)
           val _ = (Timers.time Timers.compiling Compile.install) fromCS cid
+          (*
+          (* XXX disabled for LFR experimentation -wjl 08-16-2009
+             (the way i'm treating LFR constructs -- essentially as new
+             constants at the beginning of the LF signature -- foils a
+             bunch of invariants of the subordination code.  but we don't
+             really need it, since we're not doing any metatheory yet...)
+          *)
           val _ = (Timers.time Timers.subordinate Subordinate.install) cid
           val _ = (Timers.time Timers.subordinate Subordinate.installDef) cid
+          *)
         in
           ()
         end
@@ -354,7 +370,13 @@ struct
     *)
     fun installConDec fromCS (conDec, fileNameocOpt as (fileName, ocOpt), r) =
 	let
-	  val _ = (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
+	  val _ = case conDec of
+                    (* don't mode check subdecs -- doesn't make sense *)
+                    (* XXX alternatively, i could give them a conDecType,
+                       but what could it be?  both sorts accumulate classes
+                       as the signature is processed.. *)
+                    IntSyn.LFRSubDec _ => ()
+                  | _ => (Timers.time Timers.modes ModeCheck.checkD) (conDec, fileName, ocOpt)
 	  val cid = IntSyn.sgnAdd conDec
 	  val _ = (case (fromCS, !context)
 		     of (IntSyn.Ordinary, SOME namespace) => Names.insertConst (namespace, cid)
@@ -365,6 +387,13 @@ struct
 	  val _ = Names.installConstName cid
 	  val _ = installConst fromCS (cid, fileNameocOpt)
 	          handle Subordinate.Error (msg) => raise Subordinate.Error (Paths.wrap (r, msg))
+          (* take care of lfrcondec-specific processing  -wjl *)
+          val () =
+            case conDec
+              of IntSyn.LFRConDec (constcid, _, _, _) => Refinements.addRefinement constcid cid
+               | IntSyn.LFRSortDec _ => Subsort.addSort cid
+               | IntSyn.LFRSubDec (cid1, cid2) => Subsort.addSubsort cid1 cid2
+               | _ => ()
 	  val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
 	  val _ =  if !Global.style >= 1 then StyleCheck.checkConDec cid else ()
 	in 
@@ -471,6 +500,18 @@ struct
 	 end
 	 handle Constraints.Error (eqns) =>
 	        raise ReconTerm.Error (Paths.wrap (r, constraintsMsg eqns)))
+
+      | install1 (fileName, (Parser.LFRDec lfrdec, r)) =
+          (let
+            val (conDec, ocOpt) = ReconLFRDec.lfrdecToConDec (lfrdec, Paths.Loc (fileName, r))
+            val cid = installConDec IntSyn.Ordinary (conDec, (fileName, ocOpt), r)
+          in
+            ()
+          end
+          handle Refinements.Error (msg) =>
+                    raise ReconTerm.Error (Paths.wrap (r, msg)))
+          (* handle / re-raise any exceptions? *)
+          (* print ("skipping LFR declaration: " ^ ReconLFRDec.toString lfrdec ^ "\n") *)
 
       | install1 (fileName, (Parser.AbbrevDec condec, r)) =
         (* Abbreviations %abbrev c = U and %abbrev c : V = U *)
@@ -1331,6 +1372,56 @@ struct
 
     val _ = CSManager.setInstallFN (installCSMDec)
  
+    local
+        structure I = IntSyn
+        structure FX = Names.Fixity
+
+    in
+    (* initializeLFR () = () installs constants for LFR top and intersection *)
+    fun initializeLFR () =
+        let            val Type = I.Uni I.Type
+            fun Arrow (x, y) = I.Pi ((I.Dec (NONE, x), I.No), y)
+
+            fun iCD cd = installConDec
+                          I.Ordinary (* not from a constraint domain *)
+                          (cd,
+                           ("<LFR.global>", NONE) (* dummy filename, no loc *),
+                           Paths.Reg (0, 0) (* dummy region *))
+            fun CD (name, class, uni) =
+                    I.ConDec (name   (* constant name *),
+                              NONE   (* no module identifier *),
+                              0      (* no implicit parameters *),
+                              I.Normal (* neither constraint nor foreign *),
+                              class, (* constant classifier *)
+                              uni    (* classifier's level *))
+
+            (* "meta"-classifier for all LFR things *)
+            val lfrCid = iCD (CD ("(LFR)", Type, I.Kind))
+            val LFR = I.Root (I.Const lfrCid, I.Nil)
+
+            (* top "#" *)
+            val topCid = iCD (CD ("#", LFR, I.Type))
+            (* intersection "^" *)
+            val interCid = iCD (CD ("^", Arrow (LFR, Arrow (LFR, LFR)), I.Type))
+            (* intersection fixity (NB: also specified in parse-term.fun) *)
+            val interFix = FX.Infix (FX.dec (FX.dec FX.minPrec), FX.Right)
+            val () = Names.installFixity (interCid, interFix)
+          (* now a bonafide Uni
+            (* sort universe "sort" *)
+            val sortCid = iCD (CD ("sort", LFR, I.Type))
+          *)
+            (* sort introducer "S << A" *)
+            val stCid = iCD (CD ("<<", Arrow (LFR, Arrow (LFR, LFR)), I.Type))
+            (* sort introducer fixity (NB: SHOULD also be in parse-term.fun) *)
+            val stFix = FX.Infix (FX.dec (FX.dec (FX.dec FX.minPrec)), FX.Left)
+            val () = Names.installFixity (stCid, stFix)
+            (* unknown sort "?" *)
+            val unknownCid = iCD (CD ("?", LFR, I.Type))
+        in
+            ()
+        end
+    end (* local structure I ... structure FX ... *)
+
     (* reset () = () clears all global tables, including the signature *)
     fun reset () = (IntSyn.sgnReset (); Names.reset (); Origins.reset ();
 		    ModeTable.reset ();
@@ -1349,7 +1440,10 @@ struct
 
                     ModSyn.reset ();
                     CSManager.resetSolvers ();
-                    context := NONE
+                    Refinements.reset (); (* -wjl, 10-05-2009 *)
+                    Subsort.clear (); (* -wjl, 11-02-2009 *)
+                    context := NONE;
+                    initializeLFR ()
 		    )
 
     fun readDecl () =
@@ -1807,6 +1901,8 @@ struct
       end 
   end
 
+  (* added to make sure LFR bits are initialized -wjl, 08-30-2009 *)
+  val () = reset ()
 
   end  (* local *)
 end; (* functor Twelf *)

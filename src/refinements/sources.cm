@@ -1,0 +1,26 @@
+Library
+  signature REFINEMENTS
+  structure Refinements
+  signature SUBSORT
+  structure Subsort
+  signature SORTS
+  structure Sorts
+  signature SORTCHECK
+  structure SortCheck
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+  ../table/sources.cm
+  ../lambda/sources.cm
+  ../names/sources.cm
+  ../print/sources.cm
+  intset.sml
+  refinements.sig
+  refinements.sml
+  subsort.sig
+  subsort.sml
+  sorts.sig
+  sorts.sml
+  sortcheck.sig
+  sortcheck.sml

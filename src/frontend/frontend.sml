@@ -46,6 +46,9 @@ structure ReconConDec =
                structure Print = Print
 	       structure Msg = Msg);
                                                         
+structure ReconLFRDec =
+    ReconLFRDec (structure ReconTerm' = ReconTerm);
+
 structure ReconQuery =
   ReconQuery (structure Global = Global
               (*! structure IntSyn' = IntSyn !*)
@@ -100,6 +103,10 @@ structure ParseConDec =
 	       structure ExtConDec' = ReconConDec
 	       structure ParseTerm = ParseTerm);
 
+structure ParseLFRDec =
+  ParseLFRDec (structure ExtLFRDec' = ReconLFRDec
+               structure ParseTerm = ParseTerm);
+
 structure ParseQuery =
   ParseQuery ((*! structure Parsing' = Parsing !*)
 	      structure ExtQuery' = ReconQuery
@@ -135,11 +142,13 @@ structure Parser =
 	  structure ExtSyn' = ReconTerm
 	  structure Names' = Names
           structure ExtConDec' = ReconConDec
+          structure ExtLFRDec' = ReconLFRDec
           structure ExtQuery' = ReconQuery
 	  structure ExtModes' = ReconMode
 	  structure ThmExtSyn' = ReconThm
           structure ModExtSyn' = ReconModule
 	  structure ParseConDec = ParseConDec
+          structure ParseLFRDec = ParseLFRDec
 	  structure ParseQuery = ParseQuery
 	  structure ParseFixity = ParseFixity
 	  structure ParseMode = ParseMode
@@ -196,6 +205,7 @@ structure Twelf =
 	 structure Abstract = Abstract
 	 structure ReconTerm = ReconTerm
          structure ReconConDec = ReconConDec
+         structure ReconLFRDec = ReconLFRDec
          structure ReconQuery = ReconQuery
 
 	 structure ModeTable = ModeTable

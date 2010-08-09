@@ -6,6 +6,7 @@ signature INTSYN =
 sig
 
   type cid = int			(* Constant identifier        *)
+  type did = int                        (* Declaration identifier     *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
 
@@ -39,6 +40,8 @@ sig
   datatype Uni =			(* Universes:                 *)
     Kind				(* L ::= Kind                 *)
   | Type				(*     | Type                 *)
+  | Sort
+  | Class
 
   datatype Exp =			(* Expressions:               *)
     Uni   of Uni			(* U ::= L                    *)
@@ -144,6 +147,13 @@ sig
               * Dec Ctx * Dec list
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+  (* LFR ConDec's -wjl 6/15/2009 *)
+  | LFRConDec of cid * int * Exp * Uni  (* c :: S :: sort   or  *)
+                                        (* s :: L :: class      *)
+  | LFRSortDec of string * cid          (* s << a               *)
+               * int * Exp              (*  (where a : K)       *)
+  | LFRSubDec of cid * cid              (* s1 <: s2             *)
+            (* * int * Exp              (*  (where s1, s2 :: L  *) *)
 
   and Ancestor =			(* Ancestor of d or a         *)
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
@@ -228,6 +238,7 @@ sig
   val sgnStructAdd    : StrDec -> mid
   val sgnStructLookup : mid -> StrDec
 
+  val constName   : cid -> string       (* name of c  -wjl 08-30-2009 *)
   val constType   : cid -> Exp		(* type of c or d             *)
   val constDef    : cid -> Exp		(* definition of d            *)
   val constImp    : cid -> int

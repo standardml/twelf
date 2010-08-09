@@ -2,6 +2,7 @@ Library
   signature TABLE
   structure StringHashTable
   structure StringRedBlackTree
+  structure IntHashTable (* used in LFR type recon -wjl 08-24-2009 *)
   structure IntRedBlackTree
   signature RBSET
   structure RBSet

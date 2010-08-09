@@ -6,6 +6,7 @@ functor IntSyn (structure Global : GLOBAL) :> INTSYN =
 struct
 
   type cid = int			(* Constant identifier        *)
+  type did = int                        (* Declaration identifier     *)
   type name = string			(* Variable name              *)
   type mid = int                        (* Structure identifier       *)
   type csid = int                       (* CS module identifier       *)
@@ -61,6 +62,8 @@ struct
   datatype Uni =			(* Universes:                 *)
     Kind				(* L ::= Kind                 *)
   | Type				(*     | Type                 *)
+  | Sort
+  | Class
 
   datatype Exp =			(* Expressions:               *)
     Uni   of Uni			(* U ::= L                    *)
@@ -158,6 +161,13 @@ struct
               * Dec Ctx * Dec list
   | SkoDec of string * mid option * int	(* sa: K : kind  or           *)
               * Exp * Uni	        (* sc: A : type               *)
+  (* LFR ConDec's -wjl 6/15/2009 *)
+  | LFRConDec of cid * int * Exp * Uni  (* c :: S :: sort   or  *)
+                                        (* s :: L :: class      *)
+  | LFRSortDec of string * cid          (* s << a               *)
+               * int * Exp              (*  (where a : K)       *)
+  | LFRSubDec of cid * cid              (* s1 <: s2             *)
+            (* * int * Exp              (*  (where s1, s2 :: L  *) *)
 
   and Ancestor =			(* Ancestor of d or a         *)
     Anc of cid option * int * cid option (* head(expand(d)), height, head(expand[height](d)) *)
@@ -227,12 +237,18 @@ struct
     | conDecName (AbbrevDef (name, _, _, _, _, _)) = name
     | conDecName (SkoDec (name, _, _, _, _)) = name
     | conDecName (BlockDec (name, _, _, _)) = name
+    | conDecName (LFRSortDec (name, _, _, _)) = name
+    (* no cases for LFRConDec or LFRSubDec: they don't introduce names. -wjl *)
 
   fun conDecParent (ConDec (_, parent, _, _, _, _)) = parent
     | conDecParent (ConDef (_, parent, _, _, _, _, _)) = parent
     | conDecParent (AbbrevDef (_, parent, _, _, _, _)) = parent
     | conDecParent (SkoDec (_, parent, _, _, _)) = parent
     | conDecParent (BlockDec (_, parent, _, _)) = parent
+    (* ignoring the module system for LFR decs  -wjl 6/15/2009 *)
+    | conDecParent (LFRConDec _) = NONE
+    | conDecParent (LFRSortDec _) = NONE
+    | conDecParent (LFRSubDec _) = NONE
 
   (* conDecImp (CD) = k
 
@@ -246,6 +262,10 @@ struct
     | conDecImp (AbbrevDef (_, _, i, _, _, _)) = i
     | conDecImp (SkoDec (_, _, i, _, _)) = i
     | conDecImp (BlockDec (_, _,  _, _)) = 0   (* watch out -- carsten *)
+    | conDecImp (LFRConDec (_, i, _, _)) = i
+    (* not certain these make sense -- revisit?  XXX -wjl 09-25-2009 *)
+    | conDecImp (LFRSortDec (_, _, i, _)) = i
+    (* | conDecImp (LFRSubDec (_, _, i, _)) = i *)
 
   fun conDecStatus (ConDec (_, _, _, status, _, _)) = status
     | conDecStatus _ = Normal
@@ -261,6 +281,9 @@ struct
     | conDecType (ConDef (_, _, _, _, V, _, _)) = V
     | conDecType (AbbrevDef (_, _, _, _, V, _)) = V
     | conDecType (SkoDec (_, _, _, V, _)) = V
+    | conDecType (LFRConDec (_, _, V, _)) = V
+    (* return the kind of the refined type; see lfrdecToConDec -wjl *)
+    | conDecType (LFRSortDec (_, _, _, V)) = V
 
 
   (* conDecBlock (CD) =  (Gsome, Lpi)
@@ -283,6 +306,8 @@ struct
     | conDecUni (ConDef (_, _, _, _, _, L, _)) = L
     | conDecUni (AbbrevDef (_, _, _, _, _, L)) = L
     | conDecUni (SkoDec (_, _, _, _, L)) = L
+    | conDecUni (LFRConDec (_, _, _, L)) = L
+    | conDecUni (LFRSortDec _) = Class
 
 
   fun strDecName (StrDec (name, _)) = name
@@ -375,6 +400,7 @@ struct
 	 of ConDef(_, _, _, U,_, _, _) => U
 	  | AbbrevDef (_, _, _, U,_, _) => U)
 
+  fun constName (c) = conDecName (sgnLookup c)
   fun constType (c) = conDecType (sgnLookup c)
   fun constImp (c) = conDecImp (sgnLookup c)
   fun constUni (c) = conDecUni (sgnLookup c)

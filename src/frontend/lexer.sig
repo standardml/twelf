@@ -62,6 +62,13 @@ sig
     | OPEN                              (* `%open' *)
     | USE                               (* `%use'    *)
     | STRING of string                  (* string constants *)
+    (* LFR tokens -wjl *)
+    | TOP                               (* `#' *)
+    | INTERSECT                         (* `^' *)
+    | SORT                              (* `sort' *)
+    | COLONCOLON                        (* `::' *)
+    | REFINES                           (* `<<' *)
+    | SUBSORT                           (* `<:' *)
 
   exception Error of string
 

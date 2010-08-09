@@ -237,6 +237,11 @@ struct
 
       (* Phase 3 only *)
     | omitexact of IntSyn.Exp * IntSyn.Exp * Paths.region
+
+      (* LFR reconstruction only *)
+    | sort of Paths.region
+    | top of Paths.region
+    | intersect of term * term
                    
   and dec =
       dec of string option * term * Paths.region
@@ -280,6 +285,11 @@ struct
     | termRegion (scon (_, r)) = r
     | termRegion (omitapx (U, V, L, r)) = r
     | termRegion (omitexact (U, V, r)) = r
+    (* LFR: *)
+    | termRegion (sort r) = r
+    | termRegion (top r) = r
+    | termRegion (intersect (tm1, tm2)) =
+        Paths.join (termRegion tm1, termRegion tm2)
 
   and decRegion (dec (name, tm, r)) = r
 
@@ -380,6 +390,9 @@ struct
 		 of IntSyn.ConDec _ => constant (IntSyn.Const cid, r)
 	          | IntSyn.ConDef _ => constant (IntSyn.Def cid, r)
 		  | IntSyn.AbbrevDef _ => constant (IntSyn.NSDef cid, r)
+                  (* XXX am i breaking invariants here?  what other code
+                   * needs to have a case added for this? *)
+                  | IntSyn.LFRSortDec _ => constant (IntSyn.Const cid, r)
 		  | _ => 
 		    (error (r, "Invalid identifier\n"
 			    ^ "Identifier `" ^ Names.qidToString qid
@@ -626,6 +639,50 @@ struct
     fun inferApxJob' (G, t) =
         inferApxJob (ctxToApx G, t)
           
+    (* lfrResolve : Dec IntSyn.Ctx -> term -> term
+       LFR name resolution
+       (wjl, 08-21-2009) *)
+    fun lfrResolve G tm =
+      let fun res tm = lfrResolve G tm
+      in
+        case tm of
+           (* NB: no cases for constant, bvar, evar, fvar *)
+             typ r => typ r
+           | arrow (tm1, tm2) =>
+              let val tm1' = lfrResolve G tm1
+                  val tm2' = lfrResolve (Decl (G, Dec (NONE, Undefined))) tm2
+              in
+                  arrow (tm1', tm2')
+              end
+           (* Note: in the pi and lam cases, i had to use a Dec with Undefined
+              instead of an NDec to make sure that findLCID picks up the bound
+              variables.  i'm not sure why... -wjl 08-21-2009 *)
+           | pi (dec (x, tm1, r), tm2) =>
+              let val tm1' = lfrResolve G tm1
+                  val tm2' = lfrResolve (Decl (G, Dec (x, Undefined))) tm2
+              in
+                  pi (dec (x, tm1', r), tm2')
+              end
+           (* Note: see above re Undefined -wjl *)
+           | lam (dec (x, tm1, r), tm2) =>
+              let val tm1' = lfrResolve G tm1
+                  val tm2' = lfrResolve (Decl (G, Dec (x, Undefined))) tm2
+              in
+                lam (dec (x, tm1', r), tm2')
+              end
+           | app (tm1, tm2) => app (res tm1, res tm2)
+           | hastype (tm1, tm2) => hastype (res tm1, res tm2)
+           (* NB: no case for mismatch *)
+           | omitted r => omitted r
+           | lcid (ids, name, r) => findLCID (G, Names.Qid (ids, name), r)
+           | ucid (ids, name, r) => findUCID (G, Names.Qid (ids, name), r)
+           | quid (ids, name, r) => findQUID (G, Names.Qid (ids, name), r)
+           (* NB: no case for scon -- not supporting strings -wjl *)
+           (* NB: no cases for omitapx, omitexact *)
+           | sort r => sort r
+           | top r => top r
+           | intersect (tm1, tm2) => intersect (res tm1, res tm2)
+      end
   end (* open Apx *)
 
   local
@@ -1362,6 +1419,345 @@ struct
   fun internalInst x = raise Match
   fun externalInst x = raise Match
         
+
+  (*** here begins LFR code  -wjl ***)
+
+  (* auxiliary used below XXX probably wrong *)
+  fun occ x =
+    let val (oc, r) = occIntro x
+    in
+        oc
+    end
+
+  (* IDEA: split lfrRecon into something like recon and something like
+     inferApx / inferExact -- lfrRecon calls lfrInfer (Null, _) *)
+
+  (* IDEA: write by induction over U, the refined type/kind.
+        - if U = H . S, then reassociate tm to h . s, check h << H and s = S.
+        - if U = Pi (U, V), make sure tm = arrow (u, v) or pi (u, v), etc.
+        - what else?  what of top, intersection?
+        - implicit args handled how?
+  *)
+
+  exception Not_atomic
+
+  fun reassoc' (tm as constant _, s) = (tm, s)
+    | reassoc' (tm as bvar _, s) = (tm, s)
+    | reassoc' (tm as evar _, s) = (tm, s) (* XXX should i have this case? -wjl *)
+    | reassoc' (tm as fvar _, s) = (tm, s)
+    | reassoc' (tm as omitted _, s) = (tm, s) (* XXX this one, too? *)
+    | reassoc' (app (tm1, tm2), s) = reassoc' (tm1, tm2 :: s)
+    | reassoc' _ = raise Not_atomic
+    (* XXX have i covered all relevant cases? *)
+
+  fun reassoc tm = reassoc' (tm, [])
+
+  (* XXX this is now duplicated by Refinements.refinedType, but this one
+     might give a better error message since it has a region. *)
+  fun getRefined r scid =
+          (case IntSyn.sgnLookup scid
+             of IntSyn.LFRSortDec (_, acid, _, _) => acid
+              | cd => fatalError (r, "Identifier " ^ IntSyn.conDecName cd
+                                   ^ " is not a sort constant"))
+
+(*
+  fun refines r (Const scid, Const acid) =
+          (case IntSyn.sgnLookup scid
+            of IntSyn.LFRSortDec (_, acid', _, _, _) => acid = acid'
+             | cd => fatalError (r, "Identifier " ^ IntSyn.conDecName cd
+                                  ^ " is not a sort constant"))
+      (* XXX nonexhaustive -- what to do if the heads are not constants?
+        -wjl 08-16-2009 *)
+*)
+
+  exception Inconsistent of Paths.region * string
+  exception Too_many of Paths.region
+  exception Too_few of Paths.region
+
+  structure Renaming : sig
+                        type t
+                        val new : unit -> t
+                        val match : t -> string * int -> bool
+                        val shift : t -> t
+                       end =
+    struct
+      (* (tbl, offset):
+              tbl maps bvar indices to their fvar names,
+              offset indicates current binding level.
+
+          Invariants:
+              - tbl's mapping is with respect to the outermost scope
+              - tbl's domain is only implicit parameters
+      *)
+      type t = string IntHashTable.Table * int
+
+      fun new () = (IntHashTable.new 5, 0)
+
+      fun match (tbl, offset) (name, i) =
+          let val ioff = i - offset
+          in
+              (* XXX DEBUG *)
+              (* print (" \027[7m " ^ name ^ " = " ^ Int.toString ioff ^ " \027[m "); *)
+              case IntHashTable.lookup tbl ioff of
+                   NONE => (IntHashTable.insert tbl (ioff, name); 
+                            (* XXX DEBUG *)
+                            (* print "(new)\n"; *)
+                            true)
+                 | SOME name' => (
+                                  (* XXX DEBUG *)
+                                  (* print "(old)\n"; *)
+                                  name = name'
+                                 )
+          end
+
+      fun shift (tbl, offset) = (tbl, offset + 1)
+    end (* struct Renaming *)
+
+  local
+    fun check r b s = if b then () else raise Inconsistent (r, s)
+    fun error r s = raise Inconsistent (r, s)
+  in
+    (* tmShift (tm, n): up-shift all bvars greater or equal to n in tm *)
+    fun tmShift (bvar (k, r), n) = if k >= n
+                                   then bvar (k+1, r)
+                                   else bvar (k, r)
+      | tmShift (constant (h, r), n) = constant (h, r)
+      (* no evar case *)
+      | tmShift (fvar (s, r), n) = fvar (s, r)
+      | tmShift (typ r, n) = typ r
+      (* NB: arrow has its second argument shifted "less", since the way we
+         resolve names (in lfrResolve), its bvars are already shifted one
+         higher, just like in pi and lam. *)
+      | tmShift (arrow (t1, t2), n) = arrow (tmShift (t1, n), tmShift (t2, n+1))
+      | tmShift (pi (d, tm), n) = pi (decShift (d, n), tmShift (tm, n+1))
+      | tmShift (lam (d, tm), n) = lam (decShift (d, n), tmShift (tm, n+1))
+      | tmShift (app (t1, t2), n) = app (tmShift (t1, n), tmShift (t2, n))
+      | tmShift (hastype (t1, t2), n) = hastype (tmShift (t1, n), tmShift (t2, n))
+      (* no mismatch case *)
+      | tmShift (omitted r, n) = omitted r
+      | tmShift (sort r, n) = sort r
+      | tmShift (top r, n) = top r
+      | tmShift (intersect (t1, t2), n) = intersect (tmShift (t1, n), tmShift (t2, n))
+    and decShift (dec (so, tm, r), n) = dec (so, tmShift (tm, n), r)
+
+    (* in the functions consistent*, the parameter t is a Renaming.t, which
+       maps fvars to Bvars by maintaining a lookup table and an offset
+       representing the current binding level. *)
+
+    fun consistentHeads t (constant (Const cid, r), Const cid') =
+            check r (cid = cid') ("(heads differ: " ^ IntSyn.constName cid
+                                          ^ " vs. " ^ IntSyn.constName cid' ^ ")")
+                                (* XXX this is inefficient: always looks up
+                                   the names of cid and cid' -wjl 08-30-2009 *)
+      | consistentHeads t (bvar (k, r), BVar k') =
+            check r (k = k') ("(bvars differ: " ^ Int.toString k ^ " != "
+                                                ^ Int.toString k' ^ ")")
+      | consistentHeads t (fvar (x, r), BVar k) =
+            let in
+            (* XXX DEBUG *)
+            (*
+            print ("*** matching fvar " ^ x
+                        ^ " with BVar " ^ Int.toString k);
+            *)
+            check r (Renaming.match t (x, k)) "(bvar doesn't match fvar)"
+            end
+      | consistentHeads t (omitted _, _) = ()
+      | consistentHeads t (tm, _) =
+            error (termRegion tm) "(head fallthrough)"
+
+    (* NI = no implicit arguments *)
+    fun consistentSpinesNI t h (nil, Nil) = ()
+      | consistentSpinesNI t h (m::s, App (M, S)) =
+                                                (consistentTerms t (m, M);
+                                                 consistentSpinesNI t h (s, S))
+      | consistentSpinesNI t h (m::_, Nil) = raise Too_many (termRegion m)
+                                             (* XXX a better region might be
+                                                foldr1 Paths.join (m::_) *)
+      | consistentSpinesNI t h (nil, App (_, _)) = raise Too_few (termRegion h)
+
+    and consistentSpines t (h, H) (s, S) =
+        let fun dropImplicit 0 S = S
+              | dropImplicit i (App (_, S)) = dropImplicit (i - 1) S
+            fun headImp (IntSyn.Const c) = IntSyn.constImp c
+              | headImp _ = 0
+              (* XXX other constant cases? *)
+            val i = headImp H
+            val S' = dropImplicit i S
+        in
+            consistentSpinesNI t h (s, S')
+        end
+
+    and consistentTerms t (omitted _, _) = ()
+      | consistentTerms t (tm, Root (H, S)) =
+            let val (h, s) = reassoc tm
+                             handle Not_atomic => error (termRegion tm) "(root)"
+            in
+                consistentHeads t (h, H);
+                consistentSpines t (h, H) (s, S)
+            end
+      | consistentTerms t (lam (d, m), Lam (D, M)) =
+            let in
+                (* consistentDecs t (d, D); *)
+                consistentTerms (Renaming.shift t) (m, M)
+            end
+      | consistentTerms t (m, Lam (D, M)) =
+            (* if m is not already a lam, try checking it against a Lam by
+               first eta-expanding it.  note the two shifts: we must shift
+               all "free" bvars in the external term since we're notionally
+               adding an extra binder on the outside, and we must shift our
+               current renaming so the correspondence of fvars to Bvars is
+               maintained. *)
+            let val m' = app (tmShift (m, 1), bvar (1, Paths.Reg (0, 0)))
+            in
+                consistentTerms (Renaming.shift t) (m', M)
+            end
+      (* XXX does this case make sense? *)
+      | consistentTerms t (pi (d, m), Pi ((D, _), M)) =
+            let in
+                consistentDecs t (d, D);
+                consistentTerms (Renaming.shift t) (m, M)
+            end
+      | consistentTerms t (tm, _) =
+            error (termRegion tm) "(fallthrough)"
+      (* XXX not currently handling hastype *)
+
+    and consistentDecs t (dec (x, m, r), Dec (y, M)) = consistentTerms t (m, M)
+        (* other cases unnecessary?  BDec, ADec, NDec? *)
+  end (* local check, error *)
+
+  fun lfrCid name = valOf (Names.constLookup (Names.Qid (nil, name)))
+
+  (* lfrRecon G t (tm, i, U) = (V, oc)
+     check that tm plus i implicit arguments refines U, elaborating tm to V.
+     context G is just for printing.
+     renaming t is for matching Bvar's to fvar's in spine consistency. *)
+  fun lfrRecon' G t (tm, i, U) =
+    case (tm, i, U) of
+      (* break down intersections and top first *)
+        (top r, i, U) =>
+            let val Top = Root (Const (lfrCid "#"), Nil)
+            in
+                (Top, occ tm)
+            end
+      | (intersect (tm1, tm2), i, U) =>
+            let fun Inter (U1, U2) = Root (Const (lfrCid "^"),
+                                           App (U1, App (U2, Nil)))
+                val (V1, oc1) = lfrRecon' G t (tm1, i, U)
+                val (V2, oc2) = lfrRecon' G t (tm2, i, U)
+            in
+                (Inter (V1, V2), occ tm)
+                            (* XXX occurrence tree? *)
+            end
+      (* next, cases for when there are no implicit arguments remaining *)
+      | (omitted r, 0, U) =>
+            let val Unknown = Root (Const (lfrCid "?"), Nil)
+                fun St (U1, U2) = Root (Const (lfrCid "<<"),
+                                        App (U1, App (U2, Nil)))
+            in
+                (St (Unknown, U), occ tm)
+            end
+      | (sort r, 0, Uni Type) =>
+            (*
+            let val sortCid = valOf (Names.constLookup (Names.Qid (nil, "sort")))
+                val Sort = Root (Const sortCid, Nil)
+            in
+            *)
+                (Uni Sort, occ tm)
+            (* end *)
+      | (_, 0, Uni Type) => fatalError (termRegion tm,
+                            "Refinement restriction failure: expected `sort'")
+      | (tm, 0, Root (H, S)) =>
+            let fun error (r, s) = fatalError (r,
+                                    "Refinement restriction failure: " ^ s)
+                val (h, s) = reassoc tm
+                             handle Not_atomic =>
+                                error (termRegion tm, "Atomic sort expected")
+                val (scid, r) = case h of
+                                     constant (Const scid, r) => (scid, r)
+                                   | omitted _ => fatalError (termRegion h, "got here?")
+                                   | _ => error (termRegion h, "Sort constant expected")
+                val acid = case H of
+                                Const acid => acid
+                              | _ => error (r, "Type constant expected (bug?)")
+                val acid' = getRefined r scid
+                val () = if acid = acid' then ()
+                         else error (r,
+                                "\nExpected: " ^ IntSyn.constName scid ^ " << "
+                                               ^ IntSyn.constName acid ^
+                                "\nActually: " ^ IntSyn.constName scid ^ " << "
+                                               ^ IntSyn.constName acid' ^ "\n")
+                (* XXX debug *)
+                (*
+                val () = print "*** checking spine consistency: "
+                val () = print (Print.expToString (G, U) ^ "\n")
+                *)
+                (* / debug *)
+                val () = consistentSpines t (h, H) (s, S)
+                         handle Inconsistent (r, str) => error (r, "Inconsistent argument " ^ str)
+                              | Too_many r => error (r, "Extra argument(s)")
+                              | Too_few r => error (r, "Not enough arguments")
+            in
+                (Root (Const scid, S), occ tm)
+            end
+      | (arrow (tm1, tm2), 0, Pi ((D as (Dec (x, U1)), dep), U2)) =>
+            let val (V1, oc1) = lfrRecon' G t (tm1, 0, U1)
+                val (V2, oc2) = lfrRecon' (Decl (G, D))
+                                          (Renaming.shift t)
+                                          (tm2, 0, U2)
+                (* This St function adds the refined type to the left of a
+                   Pi or an arrow.  Seems like it shouldn't be necessary,
+                   but it's what we do in the type theory... -wjl, 01-18-2010 *)
+                fun St (U1, U2) = Root (Const (lfrCid "<<"),
+                                        App (U1, App (U2, Nil)))
+            in
+                (* (Pi ((Dec (x, V1), dep), V2), occ tm) *)
+                (Pi ((Dec (x, St (V1, U1)), dep), V2), occ tm)
+                                        (* XXX occ? *)
+            end
+      | (pi (dec (x, tm1, r), tm2), 0, Pi ((D as (Dec (y, U1)), dep), U2)) =>
+            let val (V1, oc1) = lfrRecon' G t (tm1, 0, U1)
+                val (V2, oc2) = lfrRecon' (Decl (G, D))
+                                          (Renaming.shift t)
+                                          (tm2, 0, U2)
+                (* see above re: St -wjl *)
+                fun St (U1, U2) = Root (Const (lfrCid "<<"),
+                                        App (U1, App (U2, Nil)))
+            in
+                (* XXX x vs y *)
+                (* (Pi ((Dec (x, V1), dep), V2), occ tm) *)
+                (Pi ((Dec (x, St (V1, U1)), dep), V2), occ tm)
+            end
+      (* XXX shouldn't happen: *)
+      | (pi (d, tm2), 0, U as Pi ((D, dep), U2)) =>
+            let val s = Print.expToString (G, U)
+            in
+                print s;
+                fatalError (termRegion tm, "failed to match!\n")
+            end
+      | (_, 0, Pi _) => fatalError (termRegion tm,
+                        "Refinement restriction failure: expected a Pi")
+      (* finally, cases where refined type has implicit arguments remaining *)
+      | (tm, i, Pi ((D as Dec (x, U1), dep), U2)) =>
+            let val (V2, oc) = lfrRecon' (Decl (G, D))
+                                         (Renaming.shift t)
+                                         (tm, i-1, U2)
+                val Unknown = Root (Const (lfrCid "?"), Nil)
+                (* see above re: St.  here, though, we may want the refined
+                   type for the purposes of sort reconstruction.  -wjl *)
+                fun St (U1, U2) = Root (Const (lfrCid "<<"),
+                                        App (U1, App (U2, Nil)))
+            in
+                (Pi ((Dec (x, St (Unknown, U1)), dep), V2), oc)
+            end
+
+    fun lfrRecon (tm, i, U) =
+        let val tm' = lfrResolve IntSyn.Null tm
+            val t = Renaming.new ()
+            val V = lfrRecon' IntSyn.Null t (tm', i, U)
+        in
+            V
+        end
+
   end (* open IntSyn *)
 
 end; (* functor ReconTerm *)

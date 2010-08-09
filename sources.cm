@@ -17,5 +17,12 @@ Library
   signature STYLECHECK
   structure StyleCheck
   structure Subordinate
+  (* wjl: *)
+  signature PARSER
+  structure Parser
+  signature SUBSORT
+  structure Subsort
+  signature SORTS
+  structure Sorts
 is
   src/frontend/sources.cm

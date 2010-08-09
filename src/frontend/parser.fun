@@ -7,6 +7,7 @@ functor Parser ((*! structure Parsing' : PARSING !*)
 		(*! sharing ExtSyn'.Paths = Parsing'.Lexer.Paths !*)
 		structure Names' : NAMES
                 structure ExtConDec' : EXTCONDEC
+                structure ExtLFRDec' : EXTLFRDEC
                 structure ExtQuery' : EXTQUERY
 		structure ExtModes' : EXTMODES
 		structure ThmExtSyn' : THMEXTSYN
@@ -14,6 +15,8 @@ functor Parser ((*! structure Parsing' : PARSING !*)
 		structure ParseConDec : PARSE_CONDEC
 		(*! sharing ParseConDec.Lexer = Parsing'.Lexer !*)
 		  sharing ParseConDec.ExtConDec = ExtConDec'
+                structure ParseLFRDec : PARSE_LFRDEC
+                  sharing ParseLFRDec.ExtLFRDec = ExtLFRDec'
 		structure ParseQuery : PARSE_QUERY
 		(*! sharing ParseQuery.Lexer = Parsing'.Lexer !*)
                   sharing ParseQuery.ExtQuery = ExtQuery'
@@ -40,6 +43,7 @@ struct
   structure ExtSyn = ExtSyn'
   structure Names = Names'
   structure ExtConDec = ExtConDec'
+  structure ExtLFRDec = ExtLFRDec'
   structure ExtQuery = ExtQuery'
   structure ExtModes = ExtModes'
   structure ThmExtSyn = ThmExtSyn'
@@ -47,6 +51,7 @@ struct
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
+    | LFRDec of ExtLFRDec.lfrdec (* -wjl 6/13/2009 *)
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list
@@ -68,7 +73,7 @@ struct
     | Querytabled of int option * int option * ExtQuery.query        (* numSol, try, A *)
     | Solve of ExtQuery.define list * ExtQuery.solve
     | AbbrevDec of ExtConDec.condec
-    | TrustMe of fileParseResult * Paths.region (* -fp *)    
+    | TrustMe of fileParseResult * Paths.region (* -fp *)
     | SubordDec of (Names.Qid * Names.Qid) list (* -gaw *)
     | FreezeDec of Names.Qid list
     | ThawDec of Names.Qid list
@@ -139,7 +144,7 @@ struct
 
     (* parseStream' : lexResult front -> fileParseResult front *)
     (* parseStream' switches between various specialized parsers *)
-    and parseStream' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseConDec' (f, sc)
+    and parseStream' (f as LS.Cons ((L.ID (idCase,name), r0), s'), sc) = parseConOrLFRDec' (f, sc)
       | parseStream' (f as LS.Cons ((L.ABBREV, r), s'), sc) = parseAbbrev' (f, sc)
       | parseStream' (f as LS.Cons ((L.UNDERSCORE, r), s'), sc) = parseConDec' (f, sc)
       | parseStream' (f as LS.Cons ((L.INFIX, r), s'), sc) = parseFixity' (f, sc)
@@ -213,6 +218,22 @@ struct
       | parseStream' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name or pragma keyword, found "
 			    ^ L.toString t)
+
+    (* decide between LF and LFR parsing based on next token -wjl 6/13/2009 *)
+    and parseConOrLFRDec' (f as LS.Cons (_, s'), sc) =
+        case LS.expose s' of
+            LS.Cons ((L.COLONCOLON, _), _) => parseLFRDec' (f, sc)
+          | LS.Cons ((L.REFINES, _), _) => parseLFRDec' (f, sc)
+          | LS.Cons ((L.SUBSORT, _), _) => parseLFRDec' (f, sc)
+          | _ => parseConDec' (f, sc)
+
+    and parseLFRDec' (f as LS.Cons ((_, r0), _), sc) =
+        let
+          val (lfrDec, f' as LS.Cons((_,r'),_)) = ParseLFRDec.parseLFRDec' (f)
+          val r = Paths.join (r0, r')
+        in
+          Stream.Cons ((LFRDec lfrDec, r), parseStream (stripDot f', sc))
+        end
 
     and parseConDec' (f as LS.Cons ((_, r0), _), sc) =
         let

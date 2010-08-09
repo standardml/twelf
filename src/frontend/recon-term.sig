@@ -32,6 +32,11 @@ sig
   val hastype : term * term -> term	(* tm : tm *)
   val omitted : Paths.region -> term	(* _ as object, region for "_" *)
 
+  (* LFR constructors -wjl 6/15/2009 *)
+  val sort : Paths.region -> term       (* sort, region for "sort" *)
+  val top : Paths.region -> term        (* #, region for "#" *)
+  val intersect : term * term -> term   (* tm ^ tm *)
+
   (* region for "{dec}" "[dec]" etc. *)
   val dec : string option * term * Paths.region -> dec (* id : tm | _ : tm *)
   val dec0 : string option * Paths.region -> dec (* id | _  (type omitted) *)
@@ -88,4 +93,5 @@ sig
   val internalInst : 'a -> 'b
   val externalInst : 'a -> 'b
 
+  val lfrRecon : term * int * IntSyn.Exp -> IntSyn.Exp * Paths.occExp
 end;  (* signature RECON_TERM *)

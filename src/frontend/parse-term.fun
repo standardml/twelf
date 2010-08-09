@@ -30,7 +30,10 @@ struct
     val juxOp = Infix ((FX.inc FX.maxPrec, FX.Left), ExtSyn.app) (* juxtaposition *)
     val arrowOp = Infix ((FX.dec FX.minPrec, FX.Right), ExtSyn.arrow)
     val backArrowOp = Infix ((FX.dec FX.minPrec, FX.Left), ExtSyn.backarrow)
-    val colonOp = Infix ((FX.dec (FX.dec FX.minPrec), FX.Left), ExtSyn.hastype)
+    val intersectOp = Infix ((FX.dec (FX.dec FX.minPrec), FX.Right), ExtSyn.intersect)
+    val colonOp = Infix ((FX.dec (FX.dec (FX.dec FX.minPrec)), FX.Left), ExtSyn.hastype)
+    (* XXX should add this *)
+    (* val colonColonOp = Infix ((FX.dec (FX.dec (FX.dec (FX.dec FX.minPrec))), FX.Left), ExtSyn.hassort) *)
 
     fun infixOp (infixity, tm) =
           Infix (infixity, (fn (tm1, tm2) => ExtSyn.app (ExtSyn.app (tm, tm1), tm2)))
@@ -330,12 +333,18 @@ struct
           parseExp (s, P.shiftAtom (ExtSyn.omitted r, p))
       | parseExp' (LS.Cons((L.TYPE,r), s), p) =
 	  parseExp (s, P.shiftAtom (ExtSyn.typ r, p))
+      | parseExp' (LS.Cons((L.SORT,r), s), p) =
+          parseExp (s, P.shiftAtom (ExtSyn.sort r, p))
+      | parseExp' (LS.Cons((L.TOP,r), s), p) =
+          parseExp (s, P.shiftAtom (ExtSyn.top r, p))
       | parseExp' (LS.Cons((L.COLON,r), s), p) =
 	  parseExp (s, P.resolve (r, colonOp, p))
       | parseExp' (LS.Cons((L.BACKARROW,r), s), p) =
 	  parseExp (s, P.resolve (r, backArrowOp, p))
       | parseExp' (LS.Cons((L.ARROW,r), s), p) =
           parseExp (s, P.resolve (r, arrowOp, p))
+      | parseExp' (LS.Cons((L.INTERSECT,r), s), p) =
+          parseExp (s, P.resolve (r, intersectOp, p))
       | parseExp' (LS.Cons((L.LPAREN,r), s), p) =
 	  decideRParen (r, parseExp (s, nil), p)
       | parseExp' (f as LS.Cons((L.RPAREN,r), s), p) =

@@ -25,6 +25,7 @@ sig
 
   val decToString : IntSyn.dctx * IntSyn.Dec -> string
   val expToString : IntSyn.dctx * IntSyn.Exp -> string
+  val spineToString : IntSyn.dctx * IntSyn.Spine -> string
   val conDecToString : IntSyn.ConDec -> string
   val cnstrToString : IntSyn.Cnstr -> string
   val cnstrsToString : IntSyn.cnstr list -> string (* assigns names in contexts *)

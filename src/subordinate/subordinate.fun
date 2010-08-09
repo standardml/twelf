@@ -33,7 +33,12 @@ struct
     *)
     val soGraph : (IntSet.intset) Table.Table = Table.new (32)
     val insert = Table.insert soGraph
-    fun adjNodes a = valOf (Table.lookup soGraph a)  (* must be defined! *)
+    fun adjNodes' a = valOf (Table.lookup soGraph a)  (* must be defined! *)
+    fun adjNodes a = (print ("&&& adjNodes " ^ Int.toString a
+                            ^ " (i.e. "
+                            ^ IntSyn.conDecName (IntSyn.sgnLookup a)
+                            ^ ")\n");
+                      adjNodes' a)
     fun insertNewFam a =
            Table.insert soGraph (a, IntSet.empty)
     val updateFam = Table.insert soGraph

@@ -69,6 +69,13 @@ struct
     | OPEN                              (* `%open' *)
     | USE                               (* `%use' *)
     | STRING of string                  (* string constants *)
+    (* LFR tokens -wjl *)
+    | TOP                               (* `#' *)
+    | INTERSECT                         (* `^' *)
+    | SORT                              (* `sort' *)
+    | COLONCOLON                        (* `::' *)
+    | REFINES                           (* `<<' *)
+    | SUBSORT                           (* `<:' *)
 
   exception Error of string
 
@@ -101,6 +108,9 @@ struct
     | stringToToken (Upper, "_", r) = (UNDERSCORE, r)
     | stringToToken (Lower, "=", r) = (EQUAL, r)
     | stringToToken (Lower, "type", r) = (TYPE, r)
+    | stringToToken (Lower, "sort", r) = (SORT, r)  (* -wjl 6/10/2009 *)
+    | stringToToken (Lower, "#", r) = (TOP, r)          (* -wjl 6/15/2009 *)
+    | stringToToken (Lower, "^", r) = (INTERSECT, r)    (* -wjl 6/15/2009 *)
     | stringToToken (idCase, s, r) = (ID(idCase,s), r)
 
   (* lex (inputFun) = (token, region) stream
@@ -177,7 +187,9 @@ struct
        Lexing errors are currently fatal---some error recovery code is
        indicated in comments.
     *)
-    fun lexInitial (#":", i) = (COLON, P.Reg (i-1,i))
+    fun (* lexInitial (#":", i) = (COLON, P.Reg (i-1,i)) *)
+        lexInitial (#":", i) = lexColon (char(i), i+1)
+      | lexInitial (#"<", i) = lexLessthan (char(i), i+1)
       | lexInitial (#".", i) = (DOT, P.Reg (i-1,i))
       | lexInitial (#"(", i) = (LPAREN, P.Reg (i-1,i))
       | lexInitial (#")", i) = (RPAREN, P.Reg (i-1,i))
@@ -199,6 +211,19 @@ struct
 	else if isUTF8(c) then lexID (Lower, P.Reg (i-1,i))
         else error (P.Reg (i-1,i), "Illegal character " ^ Char.toString (c))
         (* recover by ignoring: lexInitial (char(i), i+1) *)
+
+    and lexColon (#":", i) = (COLONCOLON, P.Reg (i-2, i))
+      | lexColon (_, i) = (COLON, P.Reg (i-2, i-1))
+
+    (* this is a little hacky: << and <: will always be preceeded by a
+       space -- since they'd otherwise be part of a continuing identifier --
+       but they're not required to have space after them.  they can't just
+       be parsed as identifiers, though, since `:' is not an id char. -wjl *)
+    and lexLessthan (#"<", i) = (REFINES, P.Reg (i-2, i))
+      | lexLessthan (#":", i) = (SUBSORT, P.Reg (i-2, i))
+      | lexLessthan (_, i) = lexID (Lower, P.Reg (i-2, i-1))
+                            (* worried this might not work if we're at a line
+                               boundary -wjl 6/11/2009 *)
 
     and lexID (idCase, P.Reg (i,j)) =
         let fun lexID' (j) =
@@ -225,6 +250,24 @@ struct
         if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1, i)))
 	else if Char.isSpace(c) then lexComment (c, i)
 	  else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
+
+  (*
+   (* XXX NJ bug if i uncomment this block *)
+    and lexPercent' (#".", i) = (EOF, P.Reg (i-2,i))
+      | lexPercent' (#"{", i) = lexPercentBrace (char(i), i+1)
+      | lexPercent' (#"%", i) = lexComment (#"%", i)
+      | lexPercent' (c, i) =
+        if isIdChar(c) then lexPragmaKey (lexID (Quoted, P.Reg (i-1, i)))
+	else if Char.isSpace(c) then lexComment (c, i)
+	  else error (P.Reg (i-1, i), "Comment character `%' not followed by white space")
+
+    and lexPercent (c, i) = ((*print ("DEBUG: lexPercent (#\""
+                                    ^ Char.toString c ^ "\", "
+                                    ^ Int.toString i ^ ")\n");*)
+                             (* oddly enough, if i comment out the above,
+                                NJ bugs out  -wjl 6/15/2009 *)
+                             lexPercent' (c, i))
+  *)
 
     and lexPragmaKey (ID(_, "infix"), r) = (INFIX, r)
       | lexPragmaKey (ID(_, "prefix"), r) = (PREFIX, r)
@@ -392,6 +435,13 @@ struct
     | toString' (INCLUDE) = "%include"
     | toString' (OPEN) = "%open"
     | toString' (USE) = "%use"
+    (* LFR tokens -wjl *)
+    | toString' (SORT) = "sort"
+    | toString' (TOP) = "#"
+    | toString' (INTERSECT) = "^"
+    | toString' (COLONCOLON) = "::"
+    | toString' (REFINES) = "<<"
+    | toString' (SUBSORT) = "<:"
 
  fun toString (ID(_,s)) = "identifier `" ^ s ^ "'"
    | toString (EOF) = "end of file or `%.'"

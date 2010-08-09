@@ -9,6 +9,7 @@ sig
   structure ExtSyn : EXTSYN
   structure Names : NAMES
   structure ExtConDec : EXTCONDEC
+  structure ExtLFRDec : EXTLFRDEC
   structure ExtQuery : EXTQUERY
   structure ExtModes : EXTMODES
   structure ThmExtSyn : THMEXTSYN
@@ -16,6 +17,7 @@ sig
 
   datatype fileParseResult =
       ConDec of ExtConDec.condec
+    | LFRDec of ExtLFRDec.lfrdec (* -wjl 6/13/2009 *)
     | FixDec of (Names.Qid * Paths.region) * Names.Fixity.fixity
     | NamePref of (Names.Qid * Paths.region) * (string list * string list)
     | ModeDec of ExtModes.modedec list

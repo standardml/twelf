@@ -35,6 +35,15 @@ Library
   structure StyleCheck
   signature INTERACTIVE
   structure Interactive
+  structure ReconLFRDec
+  structure ParseLFRDec
+  (* wjl: *)
+  signature REFINEMENTS
+  structure Refinements
+  signature SUBSORT
+  structure Subsort
+  signature SORTS
+  structure Sorts
 is
 #if defined(NEW_CM)
   $/basis.cm
@@ -45,7 +54,10 @@ is
   ../global/sources.cm
   ../table/sources.cm
   ../lambda/sources.cm
+  (* ../subsort/subsort.sig *)
+  (* ../subsort/subsort.sml *)
   ../names/sources.cm
+  ../refinements/sources.cm
   ../paths/sources.cm
   ../print/sources.cm
   ../typecheck/sources.cm
@@ -81,6 +93,8 @@ is
   recon-term.fun
   recon-condec.sig
   recon-condec.fun
+  recon-lfrdec.sig
+  recon-lfrdec.fun
   recon-query.sig
   recon-query.fun
   recon-mode.sig
@@ -93,6 +107,8 @@ is
   parse-term.fun
   parse-condec.sig
   parse-condec.fun
+  parse-lfrdec.sig
+  parse-lfrdec.fun
   parse-query.sig
   parse-query.fun
   parse-fixity.sig
@@ -112,4 +128,3 @@ is
   twelf.sig
   twelf.fun
   frontend.sml
-

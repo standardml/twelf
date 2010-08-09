@@ -334,6 +334,8 @@ local
   (* fmtUni (L) = "L" *)
   fun fmtUni (I.Type) = sym "type"
     | fmtUni (I.Kind) = sym "kind"   (* impossible, included for robustness *)
+    | fmtUni (I.Sort) = sym "sort"
+    | fmtUni (I.Class) = sym "class" (* ditto -wjl *)
 
   (* fmtExpW (G, d, ctx, (U, s)) = fmt
      
@@ -811,6 +813,37 @@ local
 		F.Break,
 		F.HVbox [sym "%nonstrict ", Str0 (Symbol.def (name)), sym "."]]
 *)      end
+    | fmtConDec (hide, condec as I.LFRSortDec (_, cid, imp, V)) =
+      let
+        val qid = Names.conDecQid condec
+	val _ = Names.varReset IntSyn.Null
+      in
+	F.HVbox [fmtConstPath (Symbol.const, qid), F.Space,
+                 (* NB: ignoring module-foo for refined type -wjl 6/18/2009 *)
+                 sym "<<", F.Space, fmtConstPath (Symbol.const, constQid cid),
+                 sym "."]
+      end
+    | fmtConDec (hide, condec as I.LFRSubDec (cid1, cid2)) =
+      let
+        val qid1 = Names.constQid cid1
+        val qid2 = Names.constQid cid2
+        val _ = Names.varReset IntSyn.Null
+      in
+        F.HVbox [fmtConstPath (Symbol.const, qid1),
+                 F.Space, sym "<:", F.Space,
+                 fmtConstPath (Symbol.const, qid2),
+                 sym "."]
+      end
+    | fmtConDec (hide, condec as I.LFRConDec (cid, imp, V, L)) =
+      let
+        val qid = constQid cid
+        val _ = Names.varReset IntSyn.Null
+        val (G, V) = if hide then skipI (imp, I.Null, V) else (I.Null, V)
+        val Vfmt = fmtExp (G, 0, noCtxt, (V, I.id))
+      in
+        F.HVbox [fmtConstPath (Symbol.const, qid), F.Space,
+                 sym "::", F.Break, Vfmt, sym "."]
+      end
 
   fun fmtCnstr (I.Solved) = [Str "Solved Constraint"]
     | fmtCnstr (I.Eqn (G, U1, U2)) =
@@ -905,6 +938,7 @@ in
 
   fun decToString (G, D) = F.makestring_fmt (formatDec (G, D))
   fun expToString (G, U) = F.makestring_fmt (formatExp (G, U))
+  fun spineToString (G, S) = "(" ^ String.concatWith "; " (map F.makestring_fmt (formatSpine (G, S))) ^ ")"
   fun conDecToString (condec) = F.makestring_fmt (formatConDec (condec))
   fun cnstrToString (Cnstr) = F.makestring_fmt (formatCnstr Cnstr)
   fun cnstrsToString (cnstrL) = F.makestring_fmt (formatCnstrs cnstrL)
