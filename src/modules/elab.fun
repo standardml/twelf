@@ -330,23 +330,34 @@ functor Elab (structure Print : PRINT) : ELAB = struct
      pre: if U is a kind, then tp is SOME C where C:U is the type family to which rel is applied
      post: if G |- U:K:kind over dom, then rel(G) |- rel(U):rel^C(K):kind over cod
      post: if G |- U:V:type over dom, then rel(G) |- rel(U):rel(V) m_1(V) ... m_n(V):type over cod
-     contexts/spines over dom of length m go to contexts/spines of length m*(n+1)
-        by applying the n morphism and the logical relation
+     contexts/spines over dom of length m go to contexts/spines of length m*(n+1) over cod
+        by applying the n morphisms and the logical relation
    *)
+  fun zipWithIndex l = ListPair.zip(l, (List.tabulate(List.length l, fn x => x))) (* [(l_0,0), ..., (l_{n-1}, n-1)] *)
   fun applyRel(U, COpt, rel) =
      let
      	val (dom, cod, mors, _) = reconRel rel
      	val n = List.length mors
-     	val l = ref 0 (* counter for the number of variables in the context; evil to use state here but it makes the code easier to read than with an additional argument in the recursive call *)
-        (* first apply all morphisms to u, then rename free variables *)
+     	val morsWithIndex = zipWithIndex mors
+        (* counter for the number of variables in the context;
+     	   evil to use state here but it makes the code easier to read than with an additional argument in the recursive calls *)
+     	val l = ref 0
+        (* morsub u = [m'_1(u), ..., m'_n(u)]
+           m'_j(-) is application of m_j followed by the substitution from [l,...,1] to rel([l,...,1])
+             which maps i to i*(n+1)-j *)
         fun morsub u =
-          let val morsWithIndex = ListPair.zip(mors, (List.tabulate(n, fn j => j)))
-              val vars = List.tabulate(n, fn x => ! l - x)   (* [l,...,1] *)
+          let val vars = List.tabulate(! l, fn x => ! l - x)   (* [l,...,1] *)
               fun subs j = List.foldl (fn (i,rest) => I.Dot(I.Idx (i * (n+1) - j), rest)) I.id vars
           in List.map (fn (m,j) => I.EClo(applyMorph(u, m), subs j)) morsWithIndex
           end
-        (* as morsub u but returns a context *)
-        fun MC u : I.Dec I.Ctx = List.foldl (fn (e,rest) => I.Decl(rest,I.Dec(I.NoVarInfo, e))) I.Null (morsub u)
+        (* similar to morsub u but returns the context m'_1(u), ..., m'_n(u) *)
+        fun MC u : I.Dec I.Ctx =
+           let
+              (* each m'_i(u) must be shifted i-1 times *)
+              val tps = List.map (fn (t,i) => I.EClo(t, I.Shift i)) (zipWithIndex (morsub u))
+           in List.foldl (fn (e,rest) => I.Decl(rest,I.Dec(I.NoVarInfo, e))) I.Null tps
+           end
+        (* applying to an expression *)
         fun A u = A'(u,NONE)
      	and A'(I.Uni I.Kind, _) = I.Uni I.Kind
      	  | A'(I.Uni I.Type, SOME C) = I.PPi((MC C, I.No), I.Uni I.Type)
@@ -372,6 +383,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
           | A'(I.NVar n, _) = raise UnimplementedCase
 (*        | A(I.AVar(I)) = impossible by precondition *)
 (*     	  | A'(I.EVar(E, C, U, Constr)) = impossible by precondition *)
+        (* applying to a declaration, returns context of length n+1 *)
         and ADec(I.Dec(x,V)) : I.Dec I.Ctx =
             let val vars = List.tabulate(n, fn x => BVar' (n - x))  (* [n,...,1] *)
             in I.Decl(MC V, I.Dec(x,I.Redex(A V, List.foldr I.App I.Nil vars)))
@@ -380,6 +392,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
 (*        | ADec(I.BDec(v,(l,s))) = impossible by precondition *)
           | ADec(I.ADec(v,d)) = raise UnimplementedCase
           | ADec(I.NDec v) = raise UnimplementedCase
+        (* applying to a spine, returns spine of length m(n+1) *)
         and ASpine(I.Nil) = I.Nil
           | ASpine(I.App(U,S)) = List.foldr I.App (ASpine S) ((morsub U) @ [A U])
               (* rel(t_1 ... t_r) = m_1(t_1) ... m(t_1) rel(t_1)   ...   m_1(t_r) ... m(t_r) rel(t_r) *)
