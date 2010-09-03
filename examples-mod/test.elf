@@ -1,4 +1,4 @@
-%%namespace "test.elf".
+%namespace "test.elf".
 %namespace t2 = "test2.elf".
 %namespace t3 = "test3.elf".
 
