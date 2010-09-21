@@ -1,0 +1,26 @@
+%hlf.
+
+polarity : type.
+pos : polarity.
+neg : polarity.
+
+atomic-prop : polarity -> type.
+
+%block bl_atmpos : block {qp : atomic-prop pos}.
+%block bl_atmneg : block {qn : atomic-prop neg}.
+
+pprop : polarity -> type.
+%abbrev prop⁺ = pprop pos.
+%abbrev prop⁻ = pprop neg.
+
+atom : atomic-prop S -> pprop S.
+↓ : prop⁻ -> prop⁺.
+⊕ : prop⁺ -> prop⁺ -> prop⁺.  %infix right 9 ⊕.
+0 : prop⁺.
+↑ : prop⁺ -> prop⁻.
+⊗ : prop⁺ -> prop⁺ -> prop⁺.  %infix right 9 ⊗.
+1 : prop⁺.
+& : prop⁻ -> prop⁻ -> prop⁻.  %infix right 9 &.
+⊤ : prop⁻.
+⊸ : prop⁺ -> prop⁻ -> prop⁻.  %infix right 8 ⊸.
+

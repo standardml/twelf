@@ -1,0 +1,206 @@
+hyp  : prop⁺ -> @type.
+lfoc : prop⁻ -> @type. 
+conclusion : type.
+conseq : conclusion -> @type.
+conc-infoc : prop⁺ -> conclusion.
+conc-unfoc : prop⁻ -> conclusion.
+%abbrev rfoc = [A⁺] conseq (conc-infoc A⁺).
+%abbrev conc = [A⁻] conseq (conc-unfoc A⁻).
+
+initR : hyp (atom Q⁺) -> rfoc (atom Q⁺).
+initL : lfoc (atom Q⁻) -o conc (atom Q⁻).
+
+↑R : rfoc A⁺ -o conc (↑ A⁺).
+↑L : (hyp A⁺ -> conc C⁻) 
+       -> (lfoc (↑ A⁺) -o conc C⁻).
+
+↓R : conc A⁻ 
+       -> rfoc (↓ A⁻).
+↓L : (lfoc A⁻ -o conc C⁻) 
+       -> (hyp (↓ A⁻) -> conc C⁻).
+
+⊸R : (hyp A⁺ -> conc B⁻)
+       -> conc (A⁺ ⊸ B⁻).
+⊸L : rfoc A⁺
+       -> (lfoc B⁻ -o conc C⁻)
+       -> (lfoc (A⁺ ⊸ B⁻) -o conc C⁻).
+
+&R : conc A⁻
+       -> conc B⁻
+       -> conc (A⁻ & B⁻).
+&L₁ : (lfoc A⁻ -o conc C⁻) 
+       -> (lfoc (A⁻ & B⁻) -o conc C⁻).
+&L₂ : (lfoc B⁻ -o conc C⁻)
+       -> (lfoc (A⁻ & B⁻) -o conc C⁻).
+
+⊤R : conc ⊤.
+
+⊕R₁ : rfoc A⁺
+       -> rfoc (A⁺ ⊕ B⁺).
+⊕R₂ : rfoc B⁺
+       -> rfoc (A⁺ ⊕ B⁺).
+⊕L : (hyp A⁺ -> conc C⁻)
+       -> (hyp B⁺ -> conc C⁻)
+       -> (hyp (A⁺ ⊕ B⁺) -> conc C⁻).
+
+0L : hyp 0 -> conc C.
+
+%block bl_hyp : some {A⁺ : prop⁺} block {h : hyp A⁺ e}.
+%block bl_lfoc : some {A⁻ : prop⁻} block {w : w}{h : lfoc A⁻ w}.
+
+% Oh this is annoying
+
+rfoc-remove : rfoc A⁺ @ W -> rfoc A⁺ @ e -> type.
+%mode rfoc-remove +D -E.
+
+- : rfoc-remove (initR D) (initR D).
+- : rfoc-remove (↓R D) (↓R D).
+- : rfoc-remove (⊕R₁ D) (⊕R₁ D).
+- : rfoc-remove (⊕R₂ D) (⊕R₂ D).
+
+%worlds (bl_atmpos | bl_atmneg | bl_hyp | bl_lfoc) (rfoc-remove _ _).
+%total {} (rfoc-remove _ _).
+
+rfoc-insert : rfoc A⁺ @ W -> conseq B⁺ @ e -> conseq B⁺ @ W -> type.
+%mode rfoc-insert +D +E -F.
+
+- : rfoc-insert (initR D) E E.
+- : rfoc-insert (↓R D) E E.
+- : rfoc-insert (⊕R₁ D) E E.
+- : rfoc-insert (⊕R₂ D) E E.
+
+%worlds (bl_atmpos | bl_atmneg | bl_hyp | bl_lfoc) (rfoc-insert _ _ _).
+%total {} (rfoc-insert _ _ _).
+
+lfoc-remove : (lfoc A⁻ -o conc C⁻) @ W -> (lfoc A⁻ -o conc C⁻) @ e -> type.
+%mode lfoc-remove +D -E.
+
+- : lfoc-remove initL initL.
+- : lfoc-remove (↑L D) (↑L D).
+- : lfoc-remove (⊸L D1 D2) (⊸L D1 D2).
+- : lfoc-remove (&L₁ D1) (&L₁ D1).
+- : lfoc-remove (&L₂ D1) (&L₂ D1).
+
+%worlds (bl_atmpos | bl_atmneg | bl_hyp | bl_lfoc) (lfoc-remove _ _).
+%total {} (lfoc-remove _ _).
+
+% Cut admissibility
+
+cut⁺ : {A⁺ : prop⁺} rfoc A⁺
+ -> (hyp A⁺ -> conseq J) @ W
+ -> conseq J @ W -> type.
+
+cut⁻ : {A⁻ : prop⁻} conc A⁻ @ W 
+ -> (lfoc A⁻ -o conc C⁻)
+ -> conc C⁻ @ W -> type.
+
+%mode cut⁺ +A +D +E -F.
+%mode cut⁻ +A +D +E -F.
+
+% Initial/principal
+
+- : cut⁺ (atom Q⁺) (initR H) ([h : hyp (atom Q⁺)] initR h) (initR H).
+- : cut⁻ (atom Q⁻) (initL W H) ([h :^ (lfoc (atom Q⁻))] initL ^ h) (initL W H).
+
+- : cut⁻ (↑ A⁺) (↑R ^ D1) ([h :^ (lfoc (↑ A⁺))] ↑L E1 ^ h) F
+     <- rfoc-remove D1 D1'
+     <- cut⁺ A⁺ D1' E1 F1
+     <- rfoc-insert D1 F1 F.
+
+- : cut⁺ (↓ A⁻) (↓R D1) ([h : hyp (↓ A⁻)] ↓L (E1 h) h) F
+     <- ({w}{h' : lfoc A⁻ @ w}
+           cut⁺ (↓ A⁻) (↓R D1) ([h : hyp (↓ A⁻)] E1 h w h') (F1 w h'))
+     <- cut⁻ A⁻ D1 ([h' :^ (lfoc A⁻)] F1 ^ h') F.
+
+- : cut⁻ (A⁺ ⊸ B⁻) (⊸R D1) ([h :^ (lfoc (A⁺ ⊸ B⁻))] ⊸L E1 E2 ^ h) F
+     <- cut⁺ A⁺ E1 D1 (F1 : conc B⁻)
+     <- cut⁻ B⁻ F1 ([h :^ (lfoc B⁻)] E2 ^ h) (F : conc C⁻).
+
+- : cut⁻ (A⁻ & B⁻) (&R D1 D2) ([h :^ (lfoc (A⁻ & B⁻))] &L₁ E1 ^ h) F
+     <- cut⁻ A⁻ D1 E1 F.
+
+- : cut⁻ (A⁻ & B⁻) (&R D1 D2) ([h :^ (lfoc (A⁻ & B⁻))] &L₂ E2 ^ h) F
+     <- cut⁻ B⁻ D2 E2 F.
+
+- : cut⁺ (A⁺ ⊕ B⁺) (⊕R₁ D1) ([h : hyp (A⁺ ⊕ B⁺)] ⊕L (E1 h) (E2 h) h) F
+     <- ({h' : hyp A⁺} 
+           cut⁺ (A⁺ ⊕ B⁺) (⊕R₁ D1) ([h : hyp (A⁺ ⊕ B⁺)] E1 h h') (F1 h'))
+     <- cut⁺ A⁺ D1 F1 F.
+
+- : cut⁺ (A⁺ ⊕ B⁺) (⊕R₂ D2) ([h : hyp (A⁺ ⊕ B⁺)] ⊕L (E1 h) (E2 h) h) F
+     <- ({h' : hyp B⁺} 
+           cut⁺ (A⁺ ⊕ B⁺) (⊕R₂ D2) ([h : hyp (A⁺ ⊕ B⁺)] E2 h h') (F2 h'))
+     <- cut⁺ B⁺ D2 F2 F.
+
+% Left commutative cut
+
+- : cut⁻ A⁻ (↑L (D1 : hyp B⁻ -> conc A⁻) W H) E (↑L F1 W H)
+     <- ({h : hyp B⁻} cut⁻ A⁻ (D1 h) E (F1 h)).
+
+- : cut⁻ A⁻ (↓L (D1 : lfoc B⁻ -o conc A⁻) H) E (↓L F1 H)
+     <- ({w}{h : lfoc B⁻ @ w} cut⁻ A⁻ (D1 w h) E (F1 w h)).
+
+- : cut⁻ A⁻ (⊸L D1 D2 ^ H) E (⊸L D1 F2 ^ H)
+     <- ({w}{h : lfoc B2⁻ @ w} cut⁻ A⁻ (D2 ^ h) E (F2 ^ h)).
+
+- : cut⁻ A⁻ (&L₁ D1 ^ H) E (&L₁ F1 ^ H)
+     <- ({w}{h : lfoc B1⁻ @ w} cut⁻ A⁻ (D1 w h) E (F1 w h)).
+- : cut⁻ A⁻ (&L₂ D2 ^ H) E (&L₂ F2 ^ H)
+     <- ({w}{h : lfoc B2⁻ @ w} cut⁻ A⁻ (D2 w h) E (F2 w h)).
+
+- : cut⁻ A⁻ (⊕L D1 D2 H) E (⊕L F1 F2 H)
+     <- ({h : hyp B1⁺} cut⁻ A⁻ (D1 h) E (F1 h))
+     <- ({h : hyp B2⁺} cut⁻ A⁻ (D2 h) E (F2 h)).
+
+- : cut⁻ A⁻ (0L H) E (0L H).
+
+% Right commutative cut
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] initR H) (initR H).
+- : cut⁺ A⁺ D ([h : hyp A⁺] initL W H) (initL W H).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] ↑R W' (E1 h)) (↑R W' F1)
+     <- cut⁺ A⁺ D ([h : hyp A⁺] E1 h) F1.
+- : cut⁺ A⁺ D ([h : hyp A⁺] ↑L ([h' : hyp C⁺] E h h') W H) (↑L F1 W H)
+     <- ({h' : hyp C⁺} cut⁺ A⁺ D ([h : hyp A⁺] E h h') (F1 h')).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] ↓R (E1 h)) (↓R F1)
+     <- cut⁺ A⁺ D E1 F1.
+- : cut⁺ A⁺ D ([h : hyp A⁺] ↓L (E1 h : lfoc B⁻ -o conc C⁻) H) (↓L F1 H)
+     <- ({w}{h' : lfoc B⁻ @ w} cut⁺ A⁺ D ([h : hyp A⁺] E1 h w h') (F1 w h')).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊸R (E1 h)) (⊸R F1)
+     <- ({h' : hyp B1⁺} cut⁺ A⁺ D ([h : hyp A⁺] E1 h h') (F1 h')).
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊸L (E1 h) (E2 h) ^ H) (⊸L F1 F2 ^ H)
+     <- cut⁺ A⁺ D ([h : hyp A⁺] E1 h) F1
+     <- ({w}{h : lfoc B2⁻ @ w} cut⁺ A⁺ D ([h' : hyp A⁺] E2 h' ^ h) (F2 ^ h)).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] &R (E1 h) (E2 h)) (&R F1 F2)
+     <- cut⁺ A⁺ D E1 F1
+     <- cut⁺ A⁺ D E2 F2.
+- : cut⁺ A⁺ D ([h : hyp A⁺] &L₁ (E1 h) ^ H) (&L₁ F1 ^ H)
+     <- ({w}{h : lfoc B1⁻ @ w} cut⁺ A⁺ D ([h' : hyp A⁺] E1 h' ^ h) (F1 ^ h)).
+- : cut⁺ A⁺ D ([h : hyp A⁺] &L₂ (E2 h) ^ H) (&L₂ F2 ^ H)
+     <- ({w}{h : lfoc B2⁻ @ w} cut⁺ A⁺ D ([h' : hyp A⁺] E2 h' ^ h) (F2 ^ h)).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊤R) ⊤R.
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊕R₁ (E1 h)) (⊕R₁ F1)
+     <- cut⁺ A⁺ D E1 F1.
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊕R₂ (E1 h)) (⊕R₂ F1)
+     <- cut⁺ A⁺ D E1 F1.
+- : cut⁺ A⁺ D ([h : hyp A⁺] ⊕L (E1 h) (E2 h) H) (⊕L F1 F2 H)
+     <- ({h' : hyp B1⁺} cut⁺ A⁺ D ([h : hyp A⁺] E1 h h') (F1 h'))
+     <- ({h' : hyp B2⁺} cut⁺ A⁺ D ([h : hyp A⁺] E2 h h') (F2 h')).
+
+- : cut⁺ A⁺ D ([h : hyp A⁺] 0L H) (0L H).
+
+%worlds (bl_atmpos | bl_atmneg | bl_hyp | bl_lfoc) 
+(cut⁺ _ _ _ _) 
+(cut⁻ _ _ _ _).
+
+%total { (A1 A2) [ (D1 D2) (E1 E2) ] }
+(cut⁺ A1 D1 E1 _)
+(cut⁻ A2 D2 E2 _).
+
+
