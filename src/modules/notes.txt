@@ -8,6 +8,7 @@ try to remove argument of Included
 read assignments in structures separately
 print out with nicer names
 are implicit arguments printed?
+exception when using non-existing field name of a struct
 
 filtering
 anonymous morphisms
