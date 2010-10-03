@@ -7,6 +7,7 @@ make sigRelLookup unique by throwing away every include if a sigRel already exis
 try to remove argument of Included
 read assignments in structures separately
 print out with nicer names
+are implicit arguments printed?
 
 filtering
 anonymous morphisms
