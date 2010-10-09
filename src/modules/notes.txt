@@ -9,6 +9,7 @@ read assignments in structures separately
 print out with nicer names
 are implicit arguments printed?
 exception when using non-existing field name of a struct
+it should be possible to include morphisms for signatures that are not directly included; defaulting to identity should work even if such an import is already present; use case: import FOL with a single instantiation for the universe
 
 filtering
 anonymous morphisms
