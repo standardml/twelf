@@ -268,7 +268,7 @@ struct
       case nameLookup1(m, modname @ [hd])
         of NONE =>
            let val m' = M.cidToMid modCid
-               handle M.UndefinedMid _ => raise Error("not a module name: " ^ IDs.foldQName modname)
+               handle M.UndefinedCid _ => raise Error("not a module name: " ^ IDs.foldQName modname)
            in case nameLookup1'(m', symname, NONE)
                 of NONE => raise Error("name " ^ IDs.foldQName symname ^ " not declared in module " ^ IDs.foldQName modname)
        	         | SOME c => if isSome (M.symVisible(c,m))
