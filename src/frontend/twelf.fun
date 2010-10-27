@@ -474,13 +474,20 @@ struct
 	             then OK else raise ModSyn.Error("expected declaration or `}', found end of input")
       end
 
+    (* tryInstall1(fileName, decr, missing)
+       repeatedly calls install1(fileName, decr) until the exception GetModule is not thrown anymore
+       if GetModule is thrown, it loads the missing module before retrying
+       missing is the list of all missing modules to detect cycles (the length of missing is one less than the number of currently active nested calls of tryInstall1)
+    *)
     and tryInstall1(fileName, decr as (_,r), missing) =
        install1(fileName, decr)
        handle GetModule(ns,modname,err) =>
        case List.find (fn x => x = (ns,modname)) missing
+         (* check for cycle *)
          of SOME (n,m) => raise Names.Error("missing module " ^ m ^ " in namespace " ^ URI.uriToString n ^
                        " cannot be found (dependency cycle or faulty catalog entry)")
           | _ => let
+          (* no cycle *)
           val _ = chmsg 3 (fn () => "%% loading missing module " ^ modname ^ " in namespace " ^ URI.uriToString ns ^ "\n")
           val dir = OS.Path.dir fileName (* base directory of current elf file *)
           (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
