@@ -213,6 +213,8 @@ struct
       | parseStreamInView' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInViewInclInst' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInView' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
+      | parseStreamInView' (f as LS.Cons ((L.PCOMMENT com, r as Paths.Reg(i,j)), s'), sc) =
+          Stream.Cons((PComment(com, Paths.Reg(i+2,j-2)), r), parseStreamInView(s', sc))
       | parseStreamInView' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
   
@@ -221,6 +223,8 @@ struct
       | parseStreamInRel' (f as LS.Cons ((L.INCLUDE, r), s'), sc) = parseInRelInclCase' (f, sc)
       | parseStreamInRel' (f as LS.Cons ((L.RBRACE, r), s'), sc) = parseModEnd' (f, sc)
       | parseStreamInRel' (f as LS.Cons ((L.EOF, _), _), sc) = sc f
+      | parseStreamInRel' (f as LS.Cons ((L.PCOMMENT com, r as Paths.Reg(i,j)), s'), sc) =
+          Stream.Cons((PComment(com, Paths.Reg(i+2,j-2)), r), parseStreamInRel(s', sc))
       | parseStreamInRel' (LS.Cons ((t,r), s'), sc) =
 	  Parsing.error (r, "Expected constant name, %struct, %include, or }, found " ^ L.toString t)
 
