@@ -2,6 +2,9 @@ Carsten:
 paper
 
 to do
+parametrized views and structures
+conservative symbol declarations: definiens of constant or structure is checked but dropped
+partial views default to identity; _ as module name; then %view %implicit _ : A -> B = {} to check definitional extensions.
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
 make sigRelLookup unique by throwing away every include if a sigRel already exists?
 try to remove argument of Included
@@ -14,7 +17,6 @@ it should be possible to include morphisms for signatures that are not directly 
 filtering
 anonymous morphisms
 structure variables
-parametrized views, functors
 patterns
 pair types with proof irrelevance
 morphism equality check, isomorphism check
@@ -33,7 +35,7 @@ skolem constants
 done
 
 using URIs to identify namespaces and to abstract from file systems
-finished dynamic loading of modules (%read deprecated)
+dynamic loading of modules (%read deprecated)
 eliminated .. qualifier, lookup now decides dynamically whether a name is a namespace prefix, a module name, or a list of symbol names
 all toplevel declarations are pairs of a namespace and a name, prefixes can be declared to access names in other namespaces, namespace defaults to current file, in configurations name lookup searches all namespaces to achieve backwards compatibility
 comments via %* *% before a named declaration are preserved with their line/column position
