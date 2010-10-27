@@ -191,7 +191,7 @@ sig
   (* ModLevObject is the type of composed expressions of module level concepts *)
   datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
   (* returns the list of objects included into a module
-     - for signatures M, this is the flattened list of ObjSig(m,r) where m is an include into M of type r
+     - for signatures M, this is the flattened list of ObjSig(m,r) where m is any kind of include into M of type r
      - for views and logical relations, this is the list of direct includes of ObjMor(mor) or ObjRel(rel), respectively *)
   val modInclLookup: IDs.mid -> ModLevObject list
 

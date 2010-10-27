@@ -10,6 +10,7 @@ make symbols with fixity parsable separately: look for corresponding error messa
 make sigRelLookup unique by throwing away every include if a sigRel already exists?
 try to remove argument of Included
 read assignments in structures separately
+%main c : A. in sig S; s : S used as constant defaults to s.c
 print out with nicer names
 are implicit arguments printed?
 exception when using non-existing field name of a struct
@@ -28,7 +29,6 @@ library infrastructure
 - make this also resolve comments
 
 ideas
-%main in modules to allow reference to one symbol without qualificaion
 designated arguments in modules to allow unqualified instantiation
 skolem constants
 

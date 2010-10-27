@@ -467,15 +467,11 @@ struct
                  | _ => ()
               )
              | _ => ()
-          (* obtain the signatures included into "from"
-             we do not need the ancestors because they must also be ancestors of the current signature
-       	     This could be imporved by also skipping all signatures that are already included into the current signature *)
-          val incls = List.mapPartial
-                      (fn ModSyn.ObjSig(m, ModSyn.Included _) => SOME m | _ => NONE)
-                      (ModSyn.modInclLookup from)
+          (* obtain the signatures included into "from" *)
+       	 val incls = List.map (fn ModSyn.ObjSig(m, _) => m) (ModSyn.modInclLookup from)
        in
        	  (* copy subordination information from included signatures *)
-          List.app (fn x => ModSyn.sgnApp(x, copyEntry)) (from :: incls)
+          List.app (fn x => ModSyn.sgnApp(x, copyEntry)) incls
        end
       
     (* Respecting subordination *)
