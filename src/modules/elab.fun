@@ -803,7 +803,8 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                 in
                    ()
                 end
-               | M.SymIncl _ => ()
+                | M.SymIncl _ => ()
+                | M.SymMod _ => ()
      in
      	(* calls flatten1 on all declarations of the instantiated signature (including generated ones) *)
      	M.sgnApp(Dom, flatten1)
@@ -843,6 +844,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      	()
                      end
                   | M.SymIncl _ => ()
+                  | M.SymMod _ => ()
      in
         M.sgnApp(dom, flatten1)
      end

@@ -77,7 +77,7 @@ struct
    - if modLookup m = RelDec(_,d,_), then symLookup(m,l) yields the case for (d,l)
    
    symbol level declarations
-   - if modLookup m = SigDec _, then symLookup(m,l) = SymCon _ or = SymStr _ or SymIncl _
+   - if modLookup m = SigDec _, then symLookup(m,l) = SymCon _ or = SymStr _ or SymIncl _ or SymMod _
    - if modLookup m = ViewDec(_,_,dom,cod,_), then
      * modLookup dom = SigDec _ and modLookup cod = SigDec _
      * symLookup (m,l) is defined for at most 0 <= l < modSize dom, and
