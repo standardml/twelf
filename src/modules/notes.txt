@@ -3,7 +3,8 @@ paper
 
 to do
 parametrized views and structures
-conservative symbol declarations: definiens of constant or structure is checked but dropped
+conservative symbol declarations: definiens of structure is checked but dropped
+  for declared structures this would also check totality
 partial views default to identity; _ as module name; then %view %implicit _ : A -> B = {} to check definitional extensions.
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
 make sigRelLookup unique by throwing away every include if a sigRel already exists?
