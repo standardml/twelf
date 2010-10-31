@@ -2,6 +2,7 @@ Carsten:
 paper
 
 to do
+hide/filter/remove definitions from a signature (%sig ADD = Add %filter definitions except +)
 parametrized views and structures
 conservative structure declarations: definiens of structure is checked but dropped
   for declared structures this would also check totality
