@@ -3,14 +3,14 @@ paper
 
 to do
 parametrized views and structures
-conservative symbol declarations: definiens of structure is checked but dropped
+conservative structure declarations: definiens of structure is checked but dropped
   for declared structures this would also check totality
 partial views default to identity; _ as module name; then %view %implicit _ : A -> B = {} to check definitional extensions.
 make symbols with fixity parsable separately: look for corresponding error message in parse-term.fun; see if it can be done easily
 make sigRelLookup unique by throwing away every include if a sigRel already exists?
 try to remove argument of Included
 read assignments in structures separately
-%main c : A. in sig S; s : S used as constant defaults to s.c
+%main c : A. in sig S; s : S used as constant defaults to s.c; same for included signatures
 print out with nicer names
 are implicit arguments printed?
 exception when using non-existing field name of a struct
