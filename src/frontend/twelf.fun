@@ -1437,9 +1437,9 @@ struct
 	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
-            val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
+       val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-            val _ = Names.setCurrentNS(URI.makeFileURI fileName)               (* default namespace -fr *)
+       val _ = Names.setCurrentNS(URI.makeFileURI fileName)               (* default namespace -fr *)
 	  in
 	    install (fileName, Parser.parseStream instream)
 	  end)
