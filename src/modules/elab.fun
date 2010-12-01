@@ -220,7 +220,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
               case (mor, valOf (M.symVisible(c,dom))) (* if NONE, U would be ill-formed *)
                 (* structure applied to local symbol: apply morphism by applying structMapLookup *)
                 of (M.MorStr(s), M.Self) => cidToExp(valOf(M.structMapLookup (s,c)))    (* get the cid to which s maps c *)
-                (* view applied to local symbol: apply morphism by looking up instantiation of view *)
+                (* view applied to local symbol: apply morphism by looking up instantiation in view *)
                  | (M.MorView(v), M.Self) => (
                      let val M.SymConInst (M.ConInst(_, _, exp)) = M.symLookup(v, IDs.lidOf c)
                      in exp
@@ -235,7 +235,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                  | (_, M.Ancestor _) => cidToExp c (* symbol declared in ancestor: identity *)
                  | (_, M.AncIncluded) => cidToExp c (* symbol included into ancestor: identity *)
                  | (mor, M.Included _) => applyMorph(cidToExp c, restrictMorph(mor, m))
-                     (* symbol declared in included signature: restrict morphism to obtain included morphism  *)
+                     (* symbol declared in included signature: apply restricted morphism *)
            end
      in
      	A U
