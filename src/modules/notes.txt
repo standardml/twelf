@@ -2,6 +2,7 @@ Carsten:
 paper
 
 to do
+bug: it's possible to change the fixity of a constant in an included signature
 functions that may not use their argument (as Jason did); this can be checked after normal type-checking if an attribution is added in I.Pi; find out where to skip the corresponding equality check
 intertwine view and logical relation: semantics: every type goes to a subtype, every function preserves the subtype relation; using the relation during the definition of the view corresponds to proofs-in-terms
 hide/filter/remove definitions from a signature (%sig ADD = Add %filter definitions except +)
