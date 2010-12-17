@@ -192,7 +192,9 @@ struct
    fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
 
    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
-       case MSH.insertShadow nameTable ((m, names), (c, origin))
+     if List.last names = "_"
+       then () (* _ is for anonymous objects *)
+       else case MSH.insertShadow nameTable ((m, names), (c, origin))
          of NONE => ()
           | SOME (e as (_, (c',_))) => (
              if m = 0 andalso List.length names = 1
