@@ -226,6 +226,7 @@ functor Elab (structure Print : PRINT) : ELAB = struct
                      in exp
                      end
                      handle Bind => raise MissingCase(v,c)
+                          | M.UndefinedCid _ => raise MissingCase(v,c)
                    )
                  (* identity morphism *)
                  | (M.MorId _, _) => cidToExp c
