@@ -34,7 +34,7 @@ struct
        Subordination is transitive, but not necessarily reflexive.
     *)
     val soGraph : (IntSet.intset) MCTable.Table = MCTable.new (32)
-    fun adjNodes (m,a) = valOf (MCTable.lookup soGraph (m, a))  (* must be defined! *)
+    fun adjNodes (m,a) = valOf (MCTable.lookup soGraph (m, a)) (* must be defined! *)
     fun adjNodesC a = adjNodes(ModSyn.currentMod(), a)
     fun insertNewFam a =
            MCTable.insert soGraph ((ModSyn.currentMod(), a), IntSet.empty)
@@ -468,10 +468,11 @@ struct
               )
              | _ => ()
           (* obtain the signatures included into "from" *)
-       	 val incls = List.map (fn ModSyn.ObjSig(m, _) => m) (ModSyn.modInclLookup from)
+       	 val incls = List.map (fn ModSyn.ObjSig(m, ModSyn.Ancestor l) => (m, SOME l)
+       	                        | ModSyn.ObjSig(m, _) => (m, NONE)) (ModSyn.modInclLookup from)
        in
        	  (* copy subordination information from included signatures *)
-          List.app (fn x => ModSyn.sgnApp(x, copyEntry)) incls
+          List.app (fn (m,lOpt) => ModSyn.sgnAppL(m, lOpt, copyEntry)) incls
        end
       
     (* Respecting subordination *)

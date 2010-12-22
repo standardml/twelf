@@ -209,7 +209,10 @@ sig
      if called for a signature, the function is applied to all possibly elaborated declarations in declaration order,
      if called for a view, the function is applied to all possibly undefined assignments for all symbols of the domain *)
   val sgnApp     : IDs.mid * (IDs.cid -> unit) -> unit
+  (* as sgnApp but for current signature *)
   val sgnAppC    : (IDs.cid -> unit) -> unit
+  (* as sgnApp but only the declaration up to and excluding a certain local declaration *)
+  val sgnAppL    : IDs.mid * IDs.lid option * (IDs.cid -> unit) -> unit
   (* application of a method to all modules in declaration order *)
   val modApp     : (IDs.mid -> unit) -> unit
   

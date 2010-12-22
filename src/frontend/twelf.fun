@@ -1380,8 +1380,8 @@ struct
             val c = ModSyn.inclAddC(Incl)
                        handle ModSyn.Error(msg) => raise ModSyn.Error(Paths.wrap(r,msg))
             val _ = (case opendec of ModSyn.OpenDec(opens) => installOpen(from, opens, c, r);
-		    Subordinate.installInclude from (* no exception should be possible *)
-		    )
+		               Subordinate.installInclude from (* no exception should be possible *)
+		      )
          in
             chmsg 3 (fn () => Print.sigInclToString(Incl) ^ "\n")
          end

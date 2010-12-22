@@ -283,17 +283,19 @@ struct
     end
   
   (* changes state if f does *)
-  fun sgnApp(m : IDs.mid, f : IDs.cid -> unit) =
+  fun sgnAppL(m : IDs.mid, lOpt : IDs.lid option, f : IDs.cid -> unit) = 
     let
-      val length = case modLookup m
-        of SigDec _ => modSize m
-         | ViewDec(_,_,dom,_,_) => modSize dom
-         | RelDec(_,_,dom,_,_) => modSize dom
-      fun doRest(l) =
-	if l = length then () else (f(m,l); doRest(l+1))
+      val limit =
+       case lOpt of SOME l => l
+               | NONE => case modLookup m
+                 of SigDec _ => modSize m
+                  | ViewDec(_,_,dom,_,_) => modSize dom
+                  | RelDec(_,_,dom,_,_) => modSize dom
+      fun doRest(l) = if l = limit then () else (f(m,l); doRest(l+1))
     in
       doRest(0)
     end
+  fun sgnApp(m,f) = sgnAppL(m, NONE, f)
   fun sgnAppC (f) = sgnApp(currentMod(), f)
   
   (*************** methods for preserved comments ****************)
