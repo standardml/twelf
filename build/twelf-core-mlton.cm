@@ -88,9 +88,7 @@ Group is
 ../src/formatter/formatter.fun
 ../src/formatter/formatter.sml
 ../src/print/print-omdoc.sig
-../src/print/print-xml.sig
 ../src/print/print-omdoc.fun
-../src/print/print-xml.fun
 ../src/print/print-twega.sig
 ../src/print/print-twega.fun
 ../src/print/symbol.sig
