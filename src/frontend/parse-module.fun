@@ -15,7 +15,7 @@ functor ParseModule
 struct
 
   (*! structure Parsing = Parsing' !*)
-  structure ModExtSyn = ModExtSyn'
+  structure ModExtSyn : MODEXTSYN = ModExtSyn'
 
   structure L = Lexer
   structure LS = Lexer.Stream  
