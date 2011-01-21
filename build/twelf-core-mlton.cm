@@ -22,13 +22,6 @@ Group is
 ../src/lambda/fgnopn.sig
 ../src/lambda/fgnopntable.fun
 ../src/uri/uri.sml
-../src/lambda/IDs.fun
-../src/lambda/intsyn.sig
-../src/lambda/intsyn.fun
-../src/lambda/whnf.sig
-../src/lambda/whnf.fun
-../src/lambda/conv.sig
-../src/lambda/conv.fun
 
 ../src/table/table.sig
 ../src/table/hash-table.sml
@@ -40,6 +33,14 @@ Group is
 ../src/table/sparse-array2.sig
 ../src/table/sparse-array2.fun
 ../src/table/table.sml
+
+../src/lambda/IDs.fun
+../src/lambda/intsyn.sig
+../src/lambda/intsyn.fun
+../src/lambda/whnf.sig
+../src/lambda/whnf.fun
+../src/lambda/conv.sig
+../src/lambda/conv.fun
 
 ../src/lambda/tomega.sig
 ../src/lambda/tomega.fun
