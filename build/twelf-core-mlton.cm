@@ -37,6 +37,8 @@ Group is
 ../src/lambda/IDs.fun
 ../src/lambda/intsyn.sig
 ../src/lambda/intsyn.fun
+../src/lambda/modsyn.sig
+../src/lambda/modsyn.fun
 ../src/lambda/whnf.sig
 ../src/lambda/whnf.fun
 ../src/lambda/conv.sig
