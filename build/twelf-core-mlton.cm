@@ -43,6 +43,9 @@ Group is
 ../src/lambda/whnf.fun
 ../src/lambda/conv.sig
 ../src/lambda/conv.fun
+../src/lambda/order.sig
+../src/lambda/order.fun
+../src/lambda/order.sml
 
 ../src/lambda/tomega.sig
 ../src/lambda/tomega.fun
