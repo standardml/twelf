@@ -39,10 +39,6 @@ Group is
 ../src/table/sparse-array2.fun
 ../src/table/table.sml
 
-../src/order/order.sig
-../src/order/order.fun
-../src/order/order.sml
-
 ../src/lambda/tomega.sig
 ../src/lambda/tomega.fun
 ../src/lambda/tomega.sml
@@ -222,9 +218,9 @@ Group is
 ../src/m2/skolem.sig
 ../src/m2/skolem.fun
 ../src/m2/m2.sml
-../src/modules/modsyn.sig
-../src/modules/modsyn.fun
-../src/modules/modules.sml
+../src/modules/elab.sig
+../src/modules/elab.fun
+../src/modules/elab.sml
 ../src/heuristic/heuristic.sig
 ../src/heuristic/heuristic.sum.fun
 ../src/meta/global.sig
