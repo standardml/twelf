@@ -84,7 +84,6 @@ Group is
 ../src/stream/stream.sml
 ../src/frontend/lexer.sig
 ../src/frontend/lexer.fun
-../src/frontend/twelf.sig
 ../src/formatter/formatter.sig
 ../src/formatter/formatter.fun
 ../src/formatter/formatter.sml
@@ -101,6 +100,7 @@ Group is
 ../src/print/clause-print.sig
 ../src/print/clause-print.fun
 ../src/print/print.sml
+../src/frontend/twelf.sig
 ../src/typecheck/strict.sig
 ../src/typecheck/strict.fun
 ../src/typecheck/typecheck.sig
