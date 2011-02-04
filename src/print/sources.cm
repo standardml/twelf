@@ -18,6 +18,8 @@ is
 #endif
   ../lambda/sources.cm
   ../names/sources.cm
+  ../comments/sources.cm
+  ../paths/sources.cm
   ../formatter/sources.cm
   ../uri/sources.cm
   symbol.sig

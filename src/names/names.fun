@@ -153,6 +153,9 @@ struct
     fun openNS()    = (! openns) (* #2 (currentContext()) *)
     fun currentNS() = #3 (currentContext())
 
+    (* maps file names to their first namespace declaration, if any *)
+    val docNSs : (string * URI.uri) list ref = ref nil 
+    
     (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
        The resolution (c : cid, corg: cid option) consists of the constant id and an optional origin,
        the origin is the cid of a declaration that generated the name entry c (if different from the declaration of c).
@@ -191,6 +194,13 @@ struct
    fun openNamespace ns = openns := ns :: (! openns) (* let val (ps, os, c) :: tl = ! nscontext in nscontext := (ps, ns :: os, c) :: tl end *)
    fun setCurrentNS ns  = let val (ps, os, _) :: tl = ! nscontext in nscontext := (ps, os, ns) :: tl end
 
+   fun getDocNS fileName = case List.find (fn (f,_) => f = fileName) (! docNSs)
+      of SOME (_, ns) => SOME ns
+       | NONE => NONE
+   fun setDocNS(fileName, ns) = case getDocNS fileName
+      of SOME _ => ()
+       | NONE => docNSs := (fileName, ns) :: (! docNSs) 
+   
    fun installName(m : mid, c : cid, origin : cid option, names : string list) =
      if List.last names = "_"
        then () (* _ is for anonymous objects *)

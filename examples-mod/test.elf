@@ -3,7 +3,7 @@
 %namespace t3 = "test3.elf".
 
 %% testing basic syntax
-%* . and preserved
+%* ... and preserved
 comments *%
 %sig R = {
   a : type.

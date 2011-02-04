@@ -201,7 +201,7 @@ struct
 \  Print.domains               - Print registered constraint domains\n\
 \  Print.TeX.sgn               - Print signature in TeX format\n\
 \  Print.TeX.prog              - Print signature in TeX format as program\n\
-\  Print.OMDoc.sgn             - Print signature in OMDoc format\n\
+\  Print.OMDoc.printDoc        - Print document in OMDoc format\n\
 \  Timers.show                 - Print and reset timers\n\
 \  Timers.reset                - Reset timers\n\
 \  Timers.check                - Print, but do not reset timers.\n\
@@ -280,8 +280,12 @@ struct
       (checkEmpty args; Twelf.Print.TeX.sgn (); serve (Twelf.OK))
     | serve' ("Print.TeX.prog", args) =
       (checkEmpty args; Twelf.Print.TeX.prog (); serve (Twelf.OK))
-    | serve' ("Print.OMDoc.toFile", args) =
-       (Twelf.Print.OMDoc.toFile args; serve (Twelf.OK))
+    | serve' ("Print.OMDoc.printDoc", args) = (
+        case tokenize args
+          of a :: nil => Twelf.Print.OMDoc.printDoc NONE a
+           | a :: b :: nil => Twelf.Print.OMDoc.printDoc (SOME a) b
+           | _ => error "One or two arguments needed";
+        serve (Twelf.OK))
     (*
       serve' ("toc", args) = error "NYI"
     | serve' ("list-program", args) = error "NYI"

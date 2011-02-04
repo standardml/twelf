@@ -1,6 +1,6 @@
 (* data types for IDs *)
 (* these types are the only part of the module system that must exist for intsyn *)
-(* Florian Rabe and Carsten Schürmann *)
+(* Florian Rabe and Carsten Schuermann *)
 
 (* This signature was supposed to be used to make the id type definitions abstract,
    but it turned out I can't enforce that with SMLNJ. So it's not used for now. -fr *)

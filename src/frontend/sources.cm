@@ -56,10 +56,11 @@ is
   ../index/sources.cm
   ../thm/sources.cm
   ../m2/sources.cm
-  ../compile/sources.cm
+  ../compile/sources.cm 
   ../opsem/sources.cm
   ../subordinate/sources.cm
-  ../modules/sources.cm 
+  ../modules/sources.cm
+  ../comments/sources.cm
   ../meta/sources.cm 
   ../solvers/sources.cm
   ../worldcheck/sources.cm

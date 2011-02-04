@@ -61,6 +61,10 @@ sig
   (* get/set current namespace *)
   val getCurrentNS : unit -> URI.uri
   val setCurrentNS : URI.uri -> unit
+  (* get/set base namespace of a document (file name) *)
+  val getDocNS : string -> URI.uri option
+  val setDocNS : string * URI.uri -> unit
+  
   (* push/pop the namespace context *)
   val pushContext  : unit -> unit
   val popContext   : unit -> unit

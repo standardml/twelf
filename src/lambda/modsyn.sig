@@ -93,19 +93,20 @@ sig
        Thus a view from S to T can be seen as a functor from T to S.
      * A logical relations between a list morphisms with the same domain and codomain.
      The symbol level declarations within a module are stored separately and are not part of the ModDec
+     Modules are identified by a pair of a namespace URI and a name. The name is the path of nested modules leading to the module.
   *)
   datatype ModDec
      = SigDec of
          URI.uri                       (* namespace *)
-       * string list                   (* qualified name *)
+       * string list                   (* name *)
      | ViewDec of
-         URI.uri                       (* base *)
+         URI.uri                       (* namespace *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
        * bool                          (* implicit *)
      | RelDec of
-         URI.uri                       (* base *)
+         URI.uri                       (* namespace *)
        * string list                   (* name *)
        * IDs.mid                       (* domain *)
        * IDs.mid                       (* codomain *)
@@ -133,6 +134,7 @@ sig
   val strDecDom  : StrDec -> IDs.mid
   val symInstCid : SymInst -> IDs.cid
   val symInstOrg : SymInst -> IDs.cid option
+  val symRelOrg  : SymCase -> IDs.cid option
   val symQid     : IDs.cid -> IDs.qid
 
   (********************** Interface methods that affect the state **********************)
@@ -152,6 +154,10 @@ sig
   (* called to add a case to the current module, which must be a logical relation *)
   val caseAddC   : SymCase -> IDs.cid
   (* called to reset the state *)
+  (* push the current scope to permit context switching *)
+  val pushContext: unit -> unit
+  (* pop the current scope to permit context switching *)
+  val popContext : unit -> IDs.cid
   val reset      : unit -> unit
 
   (********************** Interface methods that do not affect the state **********************)
@@ -230,9 +236,6 @@ sig
   val onToplevel : unit -> bool
   (* the current target signature: the current module if a signature, its codomain if a view *)
   val currentTargetSig : unit -> IDs.mid
-  (* push/pop the current scope to permit context switching *)
-  val pushContext: unit -> unit
-  val popContext : unit -> IDs.cid
 
   (* convenience methods to access components of an installed constant declaration *)
   val constType   : IDs.cid -> I.Exp		(* type of c or d *)
@@ -250,12 +253,4 @@ sig
   val targetFamOpt: I.Exp -> IDs.cid option  (* target type family or NONE *)
   val targetFam   : I.Exp -> IDs.cid         (* target type family         *)
 
-  (* Comments are always associated with the succeeding declaration.
-     Therefore, it is convenient to store them inside the component that stores declarations. *)
-  structure Comments : sig
-     type comment = string * string  (* comment and position string as l.c-l.c *)
-     val push    : comment -> unit
-     val getCid  : IDs.cid -> comment option
-     val getMid  : IDs.mid -> comment option
-  end
 end (* signature MODSYN *)

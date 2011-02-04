@@ -21,7 +21,9 @@ structure ClausePrint =
 
 structure PrintOMDoc =
   PrintOMDoc (structure Whnf = Whnf
-	      structure Names = Names);
+	      structure Names = Names
+	      structure Origins = Origins
+	      structure Comments = Comments);
 
 (* PrintTeX is outdated: It will not print modular LF correctly. *)
 structure PrintTeX =

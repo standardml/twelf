@@ -27,7 +27,7 @@ if %FILE%==%FILE2% (
    rem %1 contains :, i.e., is absolute, remove ".elf" (anywhere in the string)
    SET TARGET=%FILE:.elf=%
 )
-SET COMMAND=Print.OMDoc.toFile %TARGET%.omdoc
+SET COMMAND=Print.OMDoc.printDoc %1 %TARGET%.omdoc
 
 :twelf
 (

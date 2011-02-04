@@ -89,9 +89,9 @@ struct
      * modLookup dom = SigDec _ and modLookup cod = SigDec _
      * all morphisms in mors are valid from dom to cod
      * symLookup(m,l) is defined for at most 0 <= l < modSize dom, and
-       + if symLookup(m,l) = SymConInst _,  then symLookup(dom,l) = SymCon _
-       + if symLookup(m,l) = SymStrInst _,  then symLookup(dom,l) = SymStr _
-       + if symLookup(m,l) = SymInclInst _, then symLookup(dom,l) = SymIncl _
+       + if symLookup(m,l) = SymConCase _,  then symLookup(dom,l) = SymCon _
+       + if symLookup(m,l) = SymStrCase _,  then symLookup(dom,l) = SymStr _
+       + if symLookup(m,l) = SymInclCase _, then symLookup(dom,l) = SymIncl _
      * symLookup(m,l) does not have to be defined for all l even when m is total, e.g., if there are redundant includes
    - if symLookup c = SymCon d, then d is valid and in normal form
    - if symLookup c = SymCon (ConDef _), then the definition is strict in all its arguments
@@ -298,25 +298,7 @@ struct
   fun sgnApp(m,f) = sgnAppL(m, NONE, f)
   fun sgnAppC (f) = sgnApp(currentMod(), f)
   
-  (*************** methods for preserved comments ****************)
-  structure Comments = struct
-    type comment = string * string
-    val commTable : comment CH.Table = CH.new(500)
-    val current : comment option ref = ref NONE
-    fun push com = case ! current
-      of SOME _ => raise Error("only one preserved comment allowed per declaration")
-       | NONE => current := SOME com
-    fun install c = case ! current
-      of NONE => ()
-       | SOME s => (
-          CH.insert commTable(c, s);
-          current := NONE
-       )
-    fun getCid c = CH.lookup commTable c
-    fun getMid m = CH.lookup commTable (midToCid m)
-  end
-
-  (********************** Effectful methods **********************)
+  (********************** effectful methods **********************)
   fun implicitAddOne(dom, cod, mor) =
   let
      val _ = if (sigIncluded(dom, cod)) then
@@ -380,7 +362,6 @@ struct
       val (c as (m,l)) :: scopetail = ! scope
       val _ = CH.insert declTable (c, dec)
       val _ = scope := (m, l+1) :: scopetail
-      val _ = Comments.install c
   in c
   end
 
@@ -482,7 +463,6 @@ struct
           )
       );
       scope := (m, l+1) :: scopetail;
-      Comments.install c;
       c
     end
 
@@ -518,10 +498,6 @@ struct
     MH.clear implicitIn;
     savedScopes := nil;
     init()
-    (* bogus entries for the toplevel signature, hopefully not needed anymore
-    MH.insert modTable (0, (0,~1), ~1);
-    MH.insert declTable((0,~1),(0, SymMod (0, SigDec("",nil))))
-    *)
   )
  
   (********************** Convenience methods **********************)

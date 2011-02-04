@@ -453,7 +453,7 @@ struct
     fun installInclude(from) =
        let
          (* for all type-level constant declarations that are effectively local or included into "from" ... *)
-         fun copyEntry(c : IDs.cid) = case ModSyn.symLookup c
+         fun copyEntry(c : IDs.cid) = case (print (IDs.cidToString c); ModSyn.symLookup c)
            of ModSyn.SymCon (IntSyn.BlockDec _) => ()
             | ModSyn.SymCon condec => (case IntSyn.conDecUni condec
                 of IntSyn.Kind => (

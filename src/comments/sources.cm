@@ -1,0 +1,9 @@
+Library
+signature COMMENTS
+structure Comments
+is
+#if defined(NEW_CM)
+  $/basis.cm
+#endif
+../lambda/sources.cm
+comments.sml

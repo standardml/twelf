@@ -4,6 +4,8 @@
 functor PrintOMDoc(
    structure Whnf : WHNF
    structure Names : NAMES
+   structure Origins : ORIGINS
+   structure Comments : COMMENTS
 )
   : PRINTFILE =
 struct
@@ -51,8 +53,9 @@ struct
   val cdTwelf = "twelf"
   
   (* XML and OMDoc constructors, return string *)
-  fun ElemOpen'(label, attrs) = "<" ^ label ^ IDs.mkString(attrs, " ", " ", "")
+  fun ElemOpen'(label, attrs) = "<" ^ label ^ (if attrs = nil then "" else " " ) ^ IDs.mkString(attrs, "", " ", "")
   fun ElemOpen(label, attrs) = ElemOpen'(label, attrs) ^ ">"
+  fun ElemClose(label) = "</" ^ label ^ ">"
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
   fun Attr(label, value) = label ^ "=\"" ^ value ^ "\""
   fun localPath(comps) = IDs.mkString(List.map escape comps, "", "/", "")
@@ -75,10 +78,10 @@ struct
   
   type Path = {isAbs : bool, vol : string, arcs : string list}
   
-  (* arguments of the recursion: baseFile, current identify the module relative to which addresses are given
+  (* arguments of the recursion: baseNS, current identify the module relative to which addresses are given
      for theories the theory, for views (except for @from and @to) the codomain
    *)
-  type Params = {baseFile : URI.uri, current : IDs.mid}
+  type Params = {baseNS : URI.uri, current : IDs.mid}
   
   (* Printing references *)
   
@@ -90,10 +93,10 @@ struct
       else (List.map (fn _ => "..") tl) @ (hdf :: tlf)
   fun pathToArcList(p: Path) = if #isAbs p andalso not(#vol p = "") then #vol p :: #arcs p else #arcs p
   (* compute document reference (URI) relative to params *)
-  fun relDocName(f, baseFile) = 
+  fun relDocName(f, baseNS) = 
     let
        val file = OS.Path.fromString (URI.uriToString f)
-       val dif = case List.rev (diff(pathToArcList (OS.Path.fromString (URI.uriToString baseFile)), pathToArcList file))
+       val dif = case List.rev (diff(pathToArcList (OS.Path.fromString (URI.uriToString baseNS)), pathToArcList file))
          of nil => nil
           | hd :: tl => List.rev ((omdocExtension hd) :: tl)
     in
@@ -102,19 +105,19 @@ struct
   (* compute module reference (URI) relative to params *)
   fun relModName(m, params : Params) =
     let val dec = ModSyn.modLookup m
-    in mpath(relDocName (ModSyn.modDecBase dec, #baseFile params), ModSyn.modDecName dec)
+    in mpath(relDocName (ModSyn.modDecBase dec, #baseNS params), ModSyn.modDecName dec)
     end
   (* compute module reference (OMS) relative to params *)
   fun relModOMS (m, params : Params) =
     let val dec = ModSyn.modLookup m
-        val doc = relDocName (ModSyn.modDecBase dec, #baseFile params)
+        val doc = relDocName (ModSyn.modDecBase dec, #baseNS params)
         val md = ModSyn.modDecName dec
     in OMS3(doc, md, nil)
     end
   (* compute symbol reference (URI) relative to params *)
   fun relSymName (c, params : Params) =
     let val dec = ModSyn.modLookup (IDs.midOf c)
-    in mpath(relDocName (ModSyn.modDecBase dec, #baseFile params), ModSyn.modDecName dec) ^ 
+    in mpath(relDocName (ModSyn.modDecBase dec, #baseNS params), ModSyn.modDecName dec) ^ 
              "?" ^ (localPath (ModSyn.symName c))
     end
   (* compute symbol reference (OMS) relative to params *)
@@ -122,7 +125,7 @@ struct
     let
         val m = IDs.midOf c
         val dec = ModSyn.modLookup m
-        val doc = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseFile params)
+        val doc = if m = 0 orelse m = #current params then "" else relDocName (ModSyn.modDecBase dec, #baseNS params)
         val md = if m = #current params then nil else ModSyn.modDecName dec
     in OMS3(doc, md, ModSyn.symName c)
     end
@@ -266,16 +269,30 @@ struct
        OMBIND(LFOMS([binder]), OM1BVAR(OMV(name), MMTOMS(["type"]), typ'), scope)
     end
 
+  and sigToStringTop(m, params) = ElemOpen("OMTHY",nil) ^ (sigToString(m, params)) ^ "</OMTHY>"
+  and sigToString(m, params) = relModOMS (m, params)
   and morphToStringTop(m, params) = ElemOpen("OMMOR",nil) ^ (morphToString(m, params)) ^ "</OMMOR>"
   and morphToString(ModSyn.MorStr(c), params) = relSymOMS (c, params)
     | morphToString(ModSyn.MorView(m), params) = relModOMS (m, params)
     | morphToString(ModSyn.MorComp(mor1,mor2), params) =
       OMA(MMTOMS(["composition"]), [morphToString(mor1, params), morphToString(mor2, params)])
+    | morphToString(ModSyn.MorId(m), params) =
+      OMA(MMTOMS(["identity"]), [sigToStringTop(m, params)])
+  and relToStringTop(rel, params) = ElemOpen("OMREL",nil) ^ (relToString(rel, params)) ^ "</OMREL>"
+  and relToString(ModSyn.Rel(rel), params) = relModOMS (rel, params)
+    | relToString(ModSyn.RelComp(mor,rel), params) =
+      OMA(MMTOMS(["rel-mor-composition"]), [morphToString(mor, params), relToString(rel, params)])
   
   (* Printing non-modular symbol level declarations *)
   
-  fun fmtSymbol(name, V, Uopt, imp, params) =
-  	ElemOpen("constant", [Attr("name", name)]) ^ nl_ind() ^
+  fun metaDataToString(NONE) = ""
+    | metaDataToString(SOME (c,r)) = ElemOpen("metadata",nil) ^ nl_ind() ^
+        ElemOpen("metadatum", [Attr("key", "origin")]) ^ r ^ ElemClose("metadatum") ^
+        ElemOpen("metadatum", [Attr("key","comment")]) ^ c ^ ElemClose("metadatum") ^
+        ElemClose("metadata")
+  
+  fun fmtSymbol(name, V, Uopt, imp, params, md) =
+  	ElemOpen("constant", [Attr("name", name)]) ^ nl_ind() ^ metaDataToString md ^
   	   "<type>" ^ nl_ind() ^
   	      fmtExpTop (I.Null, (V, I.id), imp, params) ^ nl_unind() ^
   	   "</type>" ^
@@ -318,31 +335,36 @@ struct
      This function prints the quantifiers and abstractions only if hide = false.
   *)
   
-  fun fmtConDec (I.ConDec (name, _, imp, _, V, L), params) =
-      let
-	val _ = Names.varReset IntSyn.Null
-      in
-	fmtSymbol(localPath name, V, NONE, imp, params)
-      end
-    | fmtConDec (I.ConDef (name, _, imp, U, V, L, _), params) =
-      let
-	val _ = Names.varReset IntSyn.Null
-      in
-	fmtSymbol(localPath name, V, SOME U, imp, params)
-      end
-    | fmtConDec (I.AbbrevDef (name, parent, imp, U, V, L), params) =
-      let
-	val _ = Names.varReset IntSyn.Null
-      in
-	fmtSymbol(localPath name, V, SOME U, imp, params)
-      end
-    | fmtConDec (I.SkoDec (name, _, imp, V, L), _) =
+  fun fmtConDec (I.ConDec (name, _, imp, _, V, L), params, md) =
+  let
+    val _ = Names.varReset IntSyn.Null
+  in
+    fmtSymbol(localPath name, V, NONE, imp, params, md)
+  end
+  | fmtConDec (I.ConDef (name, _, imp, U, V, L, _), params, md) =
+  let
+    val _ = Names.varReset IntSyn.Null
+  in
+	 fmtSymbol(localPath name, V, SOME U, imp, params, md)
+  end
+  | fmtConDec (I.AbbrevDef (name, parent, imp, U, V, L), params, md) =
+  let
+    val _ = Names.varReset IntSyn.Null
+  in
+	 fmtSymbol(localPath name, V, SOME U, imp, params, md)
+  end
+  | fmtConDec (I.SkoDec (name, _, imp, V, L), _, _) =
       "<!-- Skipping Skolem constant " ^ localPath name ^ "-->"
-    | fmtConDec (I.BlockDec (name, _, _, _), _) =
+  | fmtConDec (I.BlockDec (name, _, _, _), _, _) =
       "<!-- Skipping block declaration constant " ^ localPath name ^ "-->"
 
   (* Printing structural levels *)
   
+  (* helper function to print lists *)
+  fun dolist(_, nil, _) = ""
+    | dolist(f, hd::nil, nl) = f hd
+    | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
+
   fun openToString(ModSyn.OpenDec nil, _, _) = ""
     | openToString(ModSyn.OpenDec ((c,new)::tl), strOpt, params) =
       let val old = case strOpt
@@ -352,140 +374,168 @@ struct
           ^ openToString(ModSyn.OpenDec tl, strOpt, params)
       end
     
-  fun conDecToString (cid, params) = fmtConDec (ModSyn.sgnLookup cid, params) ^ nl() ^ fmtPresentation(cid)
+  fun conDecToString (cid, params, md) = fmtConDec (ModSyn.sgnLookup cid, params, md) ^ nl() ^ fmtPresentation(cid)
 
-  fun instToString(ModSyn.ConInst(c, _, U), params) = 
-         ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
-    | instToString(ModSyn.StrInst(c, _, mor), params) =
-         ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^
-         morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
-    | instToString(ModSyn.InclInst(_,_,mor), params)
-      = ElemOpen("include", nil) ^ nl_ind() ^ morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
-
-  fun sigInclToString(ModSyn.SigIncl(m,opendec), params) =
+  fun sigInclToString(ModSyn.SigIncl(m,opendec), params, md) =
         let val from = relModName(m, params)
         in ElemEmpty("include", [Attr("from", from)]) ^ (openToString (opendec, NONE, params)) ^ nl()
         end
   
-  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, _), params) =
-     let 
-     	fun dolist(_, nil, _) = ""
-           | dolist(f, hd::nil, nl) = f hd
-           | dolist(f, hd::tl, nl) = (f hd) ^ nl() ^ dolist(f, tl,nl)
-     in
+  fun strDecToString(ModSyn.StrDec(name, _, dom, insts, opendec, _), params, md) =
      	ElemOpen("structure",
      	  [Attr("name", localPath name),
-     	   Attr("from", relModName(dom,params))]) ^ (
+     	   Attr("from", relModName(dom,params))]) ^ metaDataToString md ^ (
            case insts of nil => ""
            | _ =>
              nl_ind() ^
-               dolist(fn inst => instToString(inst, params), insts, nl) ^ 
+               dolist(fn inst => instToString(inst, params, NONE), insts, nl) ^ 
              nl_unind()
          ) ^
       "</structure>" ^
       openToString(opendec, SOME name, params)
-     end
-   | strDecToString(ModSyn.StrDef(name, _, dom, def, _), params) =
-     ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^
+   | strDecToString(ModSyn.StrDef(name, _, dom, def, _), params, md) =
+     ElemOpen("structure", [Attr("name", localPath name), Attr("from", relModName(dom,params))]) ^ metaDataToString md ^
      "<definition>" ^ nl_ind() ^ morphToStringTop(def, params) ^ nl_unind() ^ "</definition>" ^
      "</structure>"
 
-  fun modBeginToString(ModSyn.SigDec(base,name), params : Params) =
+  and instToString(ModSyn.ConInst(c, _, U), params, md) = 
+         ElemOpen("conass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^
+         fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</conass>"
+    | instToString(ModSyn.StrInst(c, _, mor), params, md) =
+         ElemOpen("strass", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^
+         morphToStringTop(mor, params) ^ nl_unind() ^ "</strass>"
+    | instToString(ModSyn.InclInst(_,_,mor), params, md) =
+         ElemOpen("include", nil) ^ nl_ind() ^ metaDataToString md ^
+         morphToStringTop(mor, params) ^ nl_unind() ^ "</include>"
+
+  fun caseToString(ModSyn.ConCase(c, _, U), params, md) = 
+         ElemOpen("concase", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^ 
+         fmtExpTop(I.Null, (U, I.id), 0, params) ^ nl_unind() ^ "</concase>"
+    | caseToString(ModSyn.StrCase(c, _, rel), params, md) =
+         ElemOpen("strcase", [Attr("name", localPath (ModSyn.symName c))]) ^ nl_ind() ^ metaDataToString md ^
+         relToStringTop(rel, params) ^ nl_unind() ^ "</strcase>"
+    | caseToString(ModSyn.InclCase(_,_,rel), params, md) =
+         ElemOpen("include", nil) ^ nl_ind() ^ metaDataToString md ^
+         relToStringTop(rel, params) ^ nl_unind() ^ "</include>"
+
+  fun modBeginToString(mb, params : Params, md) = let
+    val base = ModSyn.modDecBase mb
+    val nameattr = Attr("name", localPath (ModSyn.modDecName mb))
+    val nbattr = if #baseNS params = base then [nameattr] else [nameattr, Attr("base", relDocName(base, #baseNS params))]
+    (* to print, e.g., from and to relative to base rather than codomain *)
+    val headParams = {baseNS = base, current = #current params}
+  in case mb
+    of ModSyn.SigDec _ =>
       let val meta = [Attr("meta", baseLF ^ "?" ^ localPath cdLF)]
       in
-         ElemOpen("theory", Attr("name", localPath name) :: meta) ^ nl_ind()
+         ElemOpen("theory", nbattr @ meta) ^ nl_ind() ^ metaDataToString md 
       end
-    | modBeginToString(ModSyn.ViewDec(base, name, dom, cod, _), params) =
-        let
-           val headParams = {baseFile = base, current = #current params}
-           (* from and to relative to basefile, rest of view relative to codomain *)
-        in
-           ElemOpen("view", [Attr("name", localPath name),
-                          Attr("from", relModName(dom, headParams)),
+    | ModSyn.ViewDec(_, _, dom, cod, _) =>
+           ElemOpen("view", nbattr @ 
+                          [Attr("from", relModName(dom, headParams)),
                           Attr("to", relModName(cod, headParams))]
-           ) ^ nl_ind()
-        end    
+           ) ^ nl_ind() ^ metaDataToString md
+    | ModSyn.RelDec(_, _, dom, cod, mors) =>
+           ElemOpen("view", nbattr @
+                          [Attr("from", relModName(dom, headParams)),
+                          Attr("to", relModName(cod, headParams))]
+           ) ^ nl_ind() ^ metaDataToString md ^ 
+           ElemOpen("morphisms", []) ^ nl_ind() ^ dolist(fn m => morphToStringTop(m, params), mors, nl) ^ ElemClose("morphisms") ^ nl_unind()
+  end
   fun modEndToString(ModSyn.SigDec _, _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _, _) = nl_unind() ^ "</view>"
+    | modEndToString(ModSyn.RelDec _, _) = nl_unind() ^ "</rel>"
   
-  fun docBeginToString(base) =
+  fun docBeginToString(base: URI.uri, md) =
      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ^
-     "<omdoc " ^           
-     "xmlns=\"http://omdoc.org/ns\" " ^
-     "xmlns:om=\"http://www.openmath.org/OpenMath\" " ^
-     ">\n" ^
-     "<!-- generated from Twelf sources by Florian Rabe -->\n"
+     ElemOpen("omdoc", [Attr("xmlns", "http://omdoc.org/ns"), Attr("xmlns:om", "http://www.openmath.org/OpenMath"), Attr("base", URI.uriToString base)]) ^ nl() ^ metaDataToString md ^
+     "<!-- generated by Twelf -->\n"
   fun docEndToString() = "</omdoc>"
   
   (* Main interface methods *)
-    
-  fun printModule file m baseFile =
+  
+  fun printModuleBody file m params fileNameOpt =
+     let
+     	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
+     	 fun doSym c =
+     	    let val md = Comments.getCid c
+          in case ModSyn.symLookup c
+             of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
+                                 then print (conDecToString(c, params, md) ^ nl())
+                                 else ()
+              | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
+                                 then print (strDecToString(strdec, params, md) ^ nl())
+                                 else ()
+              | ModSyn.SymIncl sigincl =>
+                                 print (sigInclToString(sigincl, params, md) ^ nl())
+              | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymStrInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymInclInst inst => (case ModSyn.symInstOrg inst
+                   of NONE => print (instToString(inst, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymConCase cas => (case ModSyn.symRelOrg cas
+                   of NONE => print (caseToString(cas, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymStrCase cas => (case ModSyn.symRelOrg cas
+                   of NONE => print (caseToString(cas, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymInclCase cas => (case ModSyn.symRelOrg cas
+                   of NONE => print (caseToString(cas, params, md) ^ nl())
+                    | SOME _ => ()
+                )
+              | ModSyn.SymMod(m, mdec) => printModule file m fileNameOpt
+          end
+     in      
+          ModSyn.sgnApp(m, doSym)
+          handle ModSyn.UndefinedCid c => () (* in views not everything is defined *)
+     end
+
+  and printModule file m fileNameOpt =
      let
      	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
      	 val mdec = ModSyn.modLookup m
      	 val params : Params = case mdec
-     	   of ModSyn.SigDec _             => {baseFile = baseFile, current = m}
+     	   of ModSyn.SigDec(b,_) =>
+     	        {baseNS = b, current = m}
      	    | ModSyn.ViewDec(_,_,_,cod,_) =>
-     	      {baseFile = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
+     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
      	    | ModSyn.RelDec(_,_,_,cod,_) =>
-     	      {baseFile = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
+     	        {baseNS = ModSyn.modDecBase (ModSyn.modLookup cod), current = cod}
+     	 val (fN, _) = Origins.mOriginLookup m
+     	 val md = Comments.getMid m
      in
-     	if ModSyn.modDecBase mdec = baseFile (* only print modules from the base file *)
-     	  andalso not(m = 0)
+     	if fileNameOpt = SOME fN (* only print modules declared in fileName *)
      	then (
-          print(modBeginToString(mdec, params));
-          ModSyn.sgnApp(m, fn c => (case ModSyn.symLookup c
-             of ModSyn.SymCon condec => if IntSyn.conDecQid condec = nil
-                                 then print (conDecToString(c, params) ^ nl())
-                                 else ()
-              | ModSyn.SymStr strdec => if ModSyn.strDecQid strdec = nil
-                                 then print (strDecToString(strdec, params) ^ nl())
-                                 else ()
-              | ModSyn.SymIncl sigincl =>
-                                 print (sigInclToString(sigincl, params) ^ nl())
-              | ModSyn.SymConInst inst => (case ModSyn.symInstOrg inst
-                   of NONE => print (instToString(inst, params) ^ nl())
-                    | SOME _ => ()
-                )
-              | ModSyn.SymStrInst inst => (case ModSyn.symInstOrg inst
-                   of NONE => print (instToString(inst, params) ^ nl())
-                    | SOME _ => ()
-                )
-              | ModSyn.SymInclInst inst => (case ModSyn.symInstOrg inst
-                   of NONE => print (instToString(inst, params) ^ nl())
-                    | SOME _ => ()
-                )
-              | _ => ()
-(*              | ModSyn.SymConCase cas => (case ModSyn.symCaseOrg cas
-                   of NONE => print (caseToString(inst, params) ^ nl())
-                    | SOME _ => ()
-                )
-              | ModSyn.SymStrCaset cas => (case ModSyn.symCaseOrg cas
-                   of NONE => print (caseToString(cas, params) ^ nl())
-                    | SOME _ => ()
-                )
-              | ModSyn.SymInclCase cas => (case ModSyn.symCaseOrg cas
-                   of NONE => print (caseToString(cas, params) ^ nl())
-                    | SOME _ => ()
-                )
-*)
-          ) handle ModSyn.UndefinedCid c => ()); (* in views not everything is defined *)
+          print(modBeginToString(mdec, params, md));
+          printModuleBody file m params NONE;
           print(modEndToString(mdec, params));
           print(nl() ^ nl());
           TextIO.flushOut file
-        ) else ()
+      ) else ()
      end
-
-  fun toFile filename =
-     let val file = TextIO.openOut filename
-         val baseFile = case ModSyn.modLookup(0) of
-                      ModSyn.SigDec(n,_) => n
-         val base = omdocExtension (URI.uriToString baseFile)
+          
+  fun printDoc fileNameOpt outFile =
+     let val file = TextIO.openOut outFile
+         val base = case fileNameOpt
+             of NONE => URI.parseURI("http://www.twelf.org/temp")
+              | SOME fileName => Option.getOpt(Names.getDocNS fileName, URI.makeFileURI fileName)
+         val params = {baseNS = base, current = 0}
+         val md = case fileNameOpt 
+           of SOME fileName => Comments.getDoc fileName
+            | _ => NONE
      in (
         ind_reset();
-        TextIO.output(file, docBeginToString(base));
-        ModSyn.modApp(fn m => printModule file m baseFile);
+        TextIO.output(file, docBeginToString(base, md));
+        printModuleBody file 0 params fileNameOpt;
         TextIO.output(file, docEndToString());
         TextIO.closeOut file
      )

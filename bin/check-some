@@ -33,7 +33,7 @@ do
        OFILE="$TARGDIR/${file%\.elf}.omdoc"
      fi
      mkdir -p `dirname $OFILE`
-     COMMAND="Print.OMDoc.toFile $OFILE"
+     COMMAND="Print.OMDoc.printDoc $file $OFILE"
   else
     COMMAND=""
   fi
