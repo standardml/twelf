@@ -1,5 +1,5 @@
 (* Printing to OMDoc *)
-(* Author: Florian Rabe, based on print.fun *)
+(* Author: Florian Rabe, originally based on print.fun *)
 
 functor PrintOMDoc(
    structure Whnf : WHNF
@@ -30,7 +30,7 @@ struct
   
   (* XML and OMDoc escaping
      Among the printable non-whitespace ascii characters, the following are not URI pchars (RFC 3986): "#%&/<>?[\]^`{|}
-     We have to escape "&<> for XML and ?/% for OMDoc. The others must only be encoded in URI references.
+     We have to escape "&<> for XML and ?/% for OMDoc. The others must only be encoded when transferring URIs.
      These are actually possible in Twelf names: "#&/<>?\^`| *)
   fun escape s = let 
 	  fun escapelist nil = nil
@@ -96,9 +96,7 @@ struct
   fun relDocName(f, baseNS) = 
     let
        val file = OS.Path.fromString (URI.uriToString f)
-       val dif = case List.rev (diff(pathToArcList (OS.Path.fromString (URI.uriToString baseNS)), pathToArcList file))
-         of nil => nil
-          | hd :: tl => List.rev ((omdocExtension hd) :: tl)
+       val dif = diff(pathToArcList (OS.Path.fromString (URI.uriToString baseNS)), pathToArcList file)
     in
        IDs.mkString(dif, "", "/", "")
     end
