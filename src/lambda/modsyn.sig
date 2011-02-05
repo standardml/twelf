@@ -193,7 +193,7 @@ sig
        Consequently, an inclusion/structure/view from dom to cod is only legal
        if cod can see the signatures for which the morphism must be the identity.
    *)
-  datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.lid | AncIncluded
+  datatype SigRelType = Self | Included of IDs.cid option | Ancestor of IDs.mid | AncIncluded
   (* ModLevObject is the type of composed expressions of module level concepts *)
   datatype ModLevObject = ObjSig of IDs.mid * SigRelType | ObjMor of Morph | ObjRel of Rel
   (* returns the list of objects included into a module

@@ -44,7 +44,7 @@ using URIs to identify namespaces and to abstract from file systems
 dynamic loading of modules (%read deprecated)
 eliminated .. qualifier, lookup now decides dynamically whether a name is a namespace prefix, a module name, or a list of symbol names
 all toplevel declarations are pairs of a namespace and a name, prefixes can be declared to access names in other namespaces, namespace defaults to current file, in configurations name lookup searches all namespaces to achieve backwards compatibility
-comments via %* *% before a named declaration are preserved with their line/column position
+comments via %* *% before a named declaration are preserved with their line/column position, printed to OMDoc
 anonymous constants _ : t
 logical relations
 includes and subsignatures reimplemented, includes can occur anywhere in a signature and include subsignatures

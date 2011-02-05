@@ -287,9 +287,9 @@ struct
   
   fun metaDataToString(NONE) = ""
     | metaDataToString(SOME (c,r)) = ElemOpen("metadata",nil) ^ nl_ind() ^
-        ElemOpen("metadatum", [Attr("key", "origin")]) ^ r ^ ElemClose("metadatum") ^
-        ElemOpen("metadatum", [Attr("key","comment")]) ^ c ^ ElemClose("metadatum") ^
-        ElemClose("metadata")
+        (* ElemOpen("metadatum", [Attr("key", "origin")]) ^ r ^ ElemClose("metadatum") ^ nl() ^ *)
+        ElemOpen("metadatum", [Attr("key","comment")]) ^ (escape c) ^ ElemClose("metadatum") ^ nl_unind() ^
+        ElemClose("metadata") ^ nl()
   
   fun fmtSymbol(name, V, Uopt, imp, params, md) =
   	ElemOpen("constant", [Attr("name", name)]) ^ nl_ind() ^ metaDataToString md ^
@@ -436,11 +436,11 @@ struct
                           Attr("to", relModName(cod, headParams))]
            ) ^ nl_ind() ^ metaDataToString md
     | ModSyn.RelDec(_, _, dom, cod, mors) =>
-           ElemOpen("view", nbattr @
+           ElemOpen("rel", nbattr @
                           [Attr("from", relModName(dom, headParams)),
                           Attr("to", relModName(cod, headParams))]
            ) ^ nl_ind() ^ metaDataToString md ^ 
-           ElemOpen("morphisms", []) ^ nl_ind() ^ dolist(fn m => morphToStringTop(m, params), mors, nl) ^ ElemClose("morphisms") ^ nl_unind()
+           ElemOpen("morphisms", []) ^ nl_ind() ^ dolist(fn m => morphToStringTop(m, params), mors, nl) ^ nl_unind() ^ ElemClose("morphisms") ^ nl()
   end
   fun modEndToString(ModSyn.SigDec _, _) = nl_unind() ^ "</theory>"
     | modEndToString(ModSyn.ViewDec _, _) = nl_unind() ^ "</view>"
@@ -456,7 +456,7 @@ struct
   
   fun printModuleBody file m params fileNameOpt =
      let
-     	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
+     	 fun print x = TextIO.output(file, x)
      	 fun doSym c =
      	    let val md = Comments.getCid c
           in case ModSyn.symLookup c
@@ -492,18 +492,18 @@ struct
                    of NONE => print (caseToString(cas, params, md) ^ nl())
                     | SOME _ => ()
                 )
-              | ModSyn.SymMod(m, mdec) => printModule file m fileNameOpt
+              | ModSyn.SymMod(m, mdec) => printModule file m params fileNameOpt
           end
      in      
           ModSyn.sgnApp(m, doSym)
           handle ModSyn.UndefinedCid c => () (* in views not everything is defined *)
      end
 
-  and printModule file m fileNameOpt =
+  and printModule file m params fileNameOpt =
      let
-     	 fun print x = (TextIO.output(file, x); TextIO.flushOut file)
+     	 fun print x = TextIO.output(file, x)
      	 val mdec = ModSyn.modLookup m
-     	 val params : Params = case mdec
+     	 val bodyParams : Params = case mdec
      	   of ModSyn.SigDec(b,_) =>
      	        {baseNS = b, current = m}
      	    | ModSyn.ViewDec(_,_,_,cod,_) =>
@@ -516,7 +516,7 @@ struct
      	if fileNameOpt = SOME fN (* only print modules declared in fileName *)
      	then (
           print(modBeginToString(mdec, params, md));
-          printModuleBody file m params NONE;
+          printModuleBody file m bodyParams NONE;
           print(modEndToString(mdec, params));
           print(nl() ^ nl());
           TextIO.flushOut file
