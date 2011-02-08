@@ -1,5 +1,7 @@
 signature URISIG = sig
-   type uri
+   type authority = {userinfo: string option, host: string, port: int option}
+   type uri = {scheme: string option, authority: authority option, abs: bool, path: string list,
+               query: string option, fragment: string option}
    val resolve     : uri * uri -> uri
    exception Error of string
    val parseURI    : string -> uri
