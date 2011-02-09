@@ -8,6 +8,7 @@ signature URISIG = sig
    val uriToString : uri -> string
    val makeFileURI : string -> uri
    val toFilePath  : uri -> string
+   val relPathToString : string list -> string
 end
 
 structure URI : URISIG = struct

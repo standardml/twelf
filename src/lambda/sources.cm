@@ -44,7 +44,7 @@ is
   order.fun
   order.sml
   IDs.fun
-  ../uri/sources.cm
+  ../catalog/sources.cm
   modsyn.sig
   modsyn.fun	
   intsyn.sig

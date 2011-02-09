@@ -45,7 +45,7 @@ is
   ../table/sources.cm
   ../lambda/sources.cm
   ../names/sources.cm
-  ../uri/sources.cm
+  ../catalog/sources.cm
   ../paths/sources.cm
   ../print/sources.cm
   ../typecheck/sources.cm
