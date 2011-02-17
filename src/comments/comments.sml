@@ -11,6 +11,7 @@ signature COMMENTS = sig
      val getCid  : IDs.cid -> comment option
      val getMid  : IDs.mid -> comment option
      val getDoc  : string  -> comment option
+     val reset : unit -> unit
 end
 
 structure Comments : COMMENTS = struct
@@ -41,5 +42,10 @@ structure Comments : COMMENTS = struct
               docCommList := (fileName, s) :: ! docCommList;
               current := NONE
            ) | SOME _ => raise Error("only one preserved comment allowed per document")
+    fun reset() = (
+       CH.clear commTable;
+       docCommList := nil;
+       current := NONE
+    )
 end
 

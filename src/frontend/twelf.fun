@@ -454,7 +454,8 @@ struct
 		    CompSyn.sProgReset (); (* necessary? -fp; yes - bp*)
 		    CompSyn.detTableReset (); (*  -bp *)
 		    Compile.sProgReset (); (* resetting substitution trees *)
-                    CSManager.resetSolvers ()
+                    CSManager.resetSolvers ();
+                    Comments.reset() (* preserved comments -fr *)
 		    )
 
     (* like Names.MissingModule, used to load a module on demand
@@ -502,7 +503,7 @@ struct
             | saveEntries(names) = (names, Names.uninstallName(0, names)) :: (saveEntries(init names))
           val entries = saveEntries cnames (* entry of M1.....Mn first, entry of M1 last *)
           (* save current context of ModSyn and Names *)
-          val _ = Names.pushContext()
+          val _ = Names.pushContext() (* @FR: redundant *)
           val _ = ModSyn.pushContext()
           (* save the current line info *)
           val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ())
@@ -1419,9 +1420,9 @@ struct
             val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
                handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val ModSyn.ReadFile ns' = Read
-            val ns = URI.resolve(Names.getCurrentNS(), URI.parseURI ns')
+            (* ns' must be file URI relative to current file *)
+            val ns = URI.resolve(URI.makeFileURI(false, fileName), URI.parseURI ns')
             val file = URI.toFilePath ns
-            (* name must be in Unix syntax and relative to dir (absolute name not done yet) *)
           in
              case Origins.linesInfoLookup file
                    of NONE => (

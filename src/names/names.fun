@@ -182,7 +182,7 @@ struct
    fun pushContext() = nscontext := (nil,nil, URI.makeFileURI(true, OS.FileSys.getDir())) :: (! nscontext)
    fun pushContextIfNone() = if (! nscontext = nil) then pushContext() else ()
 
-   fun getCurrentNS() = currentNS() handle Option => raise Error("no current namespace defined")
+   fun getCurrentNS() = currentNS() handle Empty => raise Error("no current namespace defined")
    fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (prefixes())
       of SOME (_,ns) => SOME ns
        | NONE => NONE

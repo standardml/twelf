@@ -1,4 +1,4 @@
-%namespace "test2.elf".
+%namespace "file:/e:/other/twelf-mod/examples-mod/test2.elf".
 %namespace t1 = "test.elf".
 %namespace t3 = "test3.elf".
 

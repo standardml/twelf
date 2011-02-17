@@ -1,4 +1,4 @@
-%namespace "test3.elf".
+%namespace "file:/e:/other/twelf-mod/examples-mod/test3.elf".
 %sig ReadTwice = {
   a : type.
 }.

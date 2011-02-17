@@ -53,7 +53,7 @@ struct
   val cdTwelf = "twelf"
   
   (* XML and OMDoc constructors, return string *)
-  fun ElemOpen'(label, attrs) = "<" ^ label ^ (if attrs = nil then "" else " " ) ^ IDs.mkString(attrs, "", " ", "")
+  fun ElemOpen'(label, attrs) = "<" ^ label ^ (if attrs = nil then "" else " ") ^ IDs.mkString(attrs, "", " ", "")
   fun ElemOpen(label, attrs) = ElemOpen'(label, attrs) ^ ">"
   fun ElemClose(label) = "</" ^ label ^ ">"
   fun ElemEmpty(label, attrs) = ElemOpen'(label, attrs) ^ "/>"
@@ -454,7 +454,7 @@ struct
   
   fun printModuleBody file m params fileNameOpt =
      let
-     	 fun print x = TextIO.output(file, x)
+     	 fun print x = (TextIO.flushOut file; TextIO.output(file, x))
      	 fun doSym c =
      	    let val md = Comments.getCid c
           in case ModSyn.symLookup c
@@ -524,7 +524,7 @@ struct
   fun printDoc fileNameOpt outFile =
      let val file = TextIO.openOut outFile
          val base = case fileNameOpt
-             of NONE => URI.parseURI("http://www.twelf.org/temp")
+             of NONE => URI.makeFileURI(true, OS.FileSys.getDir())
               | SOME fileName => Option.getOpt(Names.getDocNS fileName, URI.makeFileURI(false,fileName))
          val params = {baseNS = base, current = 0}
          val md = case fileNameOpt 

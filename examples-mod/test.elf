@@ -1,7 +1,7 @@
 %* This is the standard regression test file for the module system.
    It contains example declarations for every implemented feature. *%
 
-%namespace "test.elf".
+%namespace "file:/e:/other/twelf-mod/examples-mod/test.elf".
 %namespace t2 = "test2.elf".
 %namespace t3 = "test3.elf".
 
