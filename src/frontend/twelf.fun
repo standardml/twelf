@@ -1420,9 +1420,16 @@ struct
             val Read = (ReconModule.readToRead(read, Paths.Loc(fileName, r)))
                handle ReconModule.Error(msg) => raise ReconModule.Error(msg)
             val ModSyn.ReadFile ns' = Read
-            (* ns' must be file URI relative to current file *)
-            val ns = URI.resolve(URI.makeFileURI(false, fileName), URI.parseURI ns')
-            val file = URI.toFilePath ns
+            (* ns' must be Unix file name relative to current file (which is itself relative to pwd
+	       result is relative to pwd again *)
+	    fun resolve(base, path) = let
+	      val b = OS.Path.fromString (OS.Path.getParent base)
+	      val p = OS.Path.fromString (OS.Path.fromUnixPath path)
+	      val r = if #isAbs p then p else
+	        {vol = #vol b, isAbs = #isAbs b, arcs = (#arcs b) @ (#arcs p)}
+            in OS.Path.mkCanonical (OS.Path.toString r)
+	    end
+            val file = resolve(fileName, ns')
           in
              case Origins.linesInfoLookup file
                    of NONE => (
