@@ -1,3 +1,3 @@
 @echo off
-SET SML=sml
-%SML% @SMLload="%TWELFDIR%bin\.heap\twelf-server"
+SET BIN=%~dp0
+%SML% @SMLload="%BIN%\.heap\twelf-server"

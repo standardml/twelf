@@ -6,7 +6,9 @@ signature URISIG = sig
    exception Error of string
    val parseURI    : string -> uri
    val uriToString : uri -> string
-   val makeFileURI : string -> uri
+   (* turns an OS-specific path into a file:/... URI; if the first argument is "true",
+      an empty path segment is appended (needed to make it a directory URI) *)
+   val makeFileURI : bool * string -> uri
    val toFilePath  : uri -> string
    val relPathToString : string list -> string
 end
@@ -19,13 +21,14 @@ structure URI : URISIG = struct
                query: string option, fragment: string option}
    fun makeURI(s,a,ab,p,q,f) : uri = {scheme = s, authority = a, abs = ab, path = p, query = q, fragment = f}
 
-   fun makeFileURI(fileName: string) : uri = 
+   fun makeFileURI(isDir : bool, fileName: string) : uri = 
       let
    	 val path = OS.Path.fromString (OS.Path.mkCanonical fileName)
+   	 val volarcs = if #vol path = "" then #arcs path else (#vol path) :: (#arcs path)
       in
 	 {scheme = SOME "file", authority = SOME emptyAuth,
 	                    abs = #isAbs path,
-	                    path = if #vol path = "" then #arcs path else (#vol path) :: (#arcs path),
+	                    path = if isDir then volarcs @ [""] else volarcs,
 	                    query = NONE, fragment = NONE}
       end
    

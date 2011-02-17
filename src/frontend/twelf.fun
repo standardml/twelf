@@ -1427,16 +1427,12 @@ struct
                    of NONE => (
                       chmsg 3 (fn () => "%read \"" ^ file ^ "\".\n");
                       Origins.installLinesInfo (fileName, Paths.getLinesInfo ());
-                      Names.pushContext();
                       if loadFile file = ABORT
-                         then raise ModSyn.Error("Error in included file " ^ file)
-                      	 else ReconTerm.resetErrors fileName; (* restore previous file name *)
-                              Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName));
-                              Names.popContext();
-                              Names.openNamespace ns
-                   ) | SOME _ => (
+                      then raise ModSyn.Error("Error in included file " ^ file)
+                      else ReconTerm.resetErrors fileName; (* restore previous file name *)
+                           Paths.setLinesInfo(valOf (Origins.linesInfoLookup fileName))
+                   ) | SOME _ =>
                       chmsg 3 (fn () => "%read \"" ^ file ^ "\". %% already read, skipping\n")
-                   )
          end
 
     (* loadFile (fileName) = status
@@ -1448,11 +1444,14 @@ struct
 	handleExceptions 0 fileName (withOpenIn fileName)
 	 (fn instream =>
 	  let
-       val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
+            val _ = ReconTerm.resetErrors fileName                             (* for error messages *)
+            val _ = Names.pushContext()                                        (* new namespace context *)
 	    val _ = Origins.installLinesInfo (fileName, Paths.getLinesInfo ()) (* initialize origins -fr *)
-       val _ = Names.setCurrentNS(URI.makeFileURI fileName)               (* default namespace -fr *)
+	    val res = install (fileName, Parser.parseStream instream)
+	              handle e => (Names.popContext(); raise e)
+	    val _ = Names.popContext()                                         (* remove the namespace context *)
 	  in
-	    install (fileName, Parser.parseStream instream)
+	    res
 	  end)
 
     (* loadString (str) = status
@@ -1463,6 +1462,7 @@ struct
     fun loadString str = handleExceptions 0 "string"
 	(fn () =>
 	    let val _ = ReconTerm.resetErrors "string"
+	        val _ = Names.pushContextIfNone()
 	    in
 		install ("string", Parser.parseStream (TextIO.openString str))
 	    end) ()
@@ -1472,6 +1472,7 @@ struct
 	(fn () =>
 	 let
 	     val _ = ReconTerm.resetErrors "stdIn"
+             val _ = Names.pushContextIfNone()
              fun install s = install' ((Timers.time Timers.parsing S.expose) s)
 	     and install' (S.Empty) = ABORT
 	       | install' (S.Cons (decl, s')) =
@@ -1704,7 +1705,7 @@ struct
 	  let
 	    val file = ModFile.fileName mfile
 	    (* necessary for backwards compatibility: make top level declarations in file available unqualified *)
-	    val _ = Names.openNamespace (URI.makeFileURI file)
+	    val _ = Names.openNamespace (URI.makeFileURI(false, file))
 	    val status = loadFile file
 	  in
 	    case status

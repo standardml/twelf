@@ -140,12 +140,11 @@ struct
     (* nsContext is the type of namespace contexts: triples (ps, os, c) where
        - ps = [(p,ns),...] is a function from prefixes to namespaces (not necessarily injective),
        - os = [ns,...] is the list of open namespaces (accessible without qualification, searched in order)
-       - c is the current namespace (accessible without qualification
+       - c is the current namespace (accessible without qualification)
     *)
     type nsContext = (string * URI.uri) list * (URI.uri list) * URI.uri
-    val nscontext0 : nsContext = (nil,nil, URI.parseURI "")
     (* the state: one nsContext for each currently open file *)
-    val nscontext : nsContext list ref = ref [nscontext0]
+    val nscontext : nsContext list ref = ref nil
     fun currentContext() = List.hd (! nscontext)
     fun prefixes()  = #1 (currentContext())
     (* temporarily making open namespaces global *)
@@ -154,7 +153,7 @@ struct
     fun currentNS() = #3 (currentContext())
 
     (* maps file names to their first namespace declaration, if any *)
-    val docNSs : (string * URI.uri) list ref = ref nil 
+    val docNSs : (string * URI.uri) list ref = ref nil
     
     (* nameTable maps pairs (m : mid, name : string list) to the resolution of name in module m.
        The resolution (c : cid, corg: cid option) consists of the constant id and an optional origin,
@@ -178,10 +177,12 @@ struct
 
   (*******************************************************)
   
-   fun pushContext() = nscontext := nscontext0 :: (! nscontext)
    fun popContext()  = nscontext := List.tl (! nscontext)
+   (* whenever a new context is created, the current namespace defaults to the current working directory *)
+   fun pushContext() = nscontext := (nil,nil, URI.makeFileURI(true, OS.FileSys.getDir())) :: (! nscontext)
+   fun pushContextIfNone() = if (! nscontext = nil) then pushContext() else ()
 
-   fun getCurrentNS() = currentNS()
+   fun getCurrentNS() = currentNS() handle Option => raise Error("no current namespace defined")
    fun lookupPrefix p = case List.find (fn (p',_) => p' = p) (prefixes())
       of SOME (_,ns) => SOME ns
        | NONE => NONE
@@ -410,8 +411,9 @@ struct
     end
     val namePrefLookup = Option.join o (CH.lookup namePrefTable)
 
-    fun reset () = (MSH.clear nameTable; CH.clear shadowTable;
-                    nscontext := [nscontext0];
+    (* the current namespace is initialized to the working directory so that file-based references can be resolved *)
+    fun reset() = (MSH.clear nameTable; CH.clear shadowTable;
+                    nscontext := nil;
                     CH.clear fixityTable; CH.clear namePrefTable)
 
     (* local names are more easily re-used: they don't increment the

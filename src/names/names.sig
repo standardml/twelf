@@ -68,6 +68,8 @@ sig
   (* push/pop the namespace context *)
   val pushContext  : unit -> unit
   val popContext   : unit -> unit
+  (* pushes once to create an initial namespace context *)
+  val pushContextIfNone : unit -> unit
 
   (* nameLookup and nameLookup' return NONE if a name without module component is undefined
      on all other failures, they raise exceptions with specific error message *)

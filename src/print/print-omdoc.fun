@@ -525,7 +525,7 @@ struct
      let val file = TextIO.openOut outFile
          val base = case fileNameOpt
              of NONE => URI.parseURI("http://www.twelf.org/temp")
-              | SOME fileName => Option.getOpt(Names.getDocNS fileName, URI.makeFileURI fileName)
+              | SOME fileName => Option.getOpt(Names.getDocNS fileName, URI.makeFileURI(false,fileName))
          val params = {baseNS = base, current = 0}
          val md = case fileNameOpt 
            of SOME fileName => Comments.getDoc fileName
