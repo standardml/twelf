@@ -28,10 +28,24 @@ val printLength = ref (NONE:int option)	(* limit on number of arguments to print
 val noShadow = ref (false)		(* if true, don't print shadowed constants as "%const%" *)
 
 local
+
   (* Shorthands *)
   structure I = IntSyn
   structure FX = Names.Fixity
   structure F = Formatter
+
+  (* Disambiguation of block logic variable names *)
+  val lvars : I.Block option ref list ref
+            = ref nil
+  fun lookuplvar (l) =
+      let 
+	val _ = if (List.exists (fn r => r = l) (!lvars)) then () else lvars := !lvars @ [l]   (* speed improvment possible Tue Mar  1 13:27:04 2011 --cs *)
+	fun find (r :: L) n =  if r = l then n else find L (n+1) 
+      in 
+	Int.toString (find (!lvars) 0)
+      end
+	
+
   val Str = F.String
   fun Str0 (s, n) = F.String0 n s
   fun sym (s) = Str0 (Symbol.sym s)
@@ -215,9 +229,10 @@ local
        in
 	 bname ^ "_" ^ parmName (cid, i)
        end
-    | projName (G, I.Proj (I.LVar(_, _, (cid, t)), i)) =
+    | projName (G, I.Proj (I.LVar(r, _, (cid, t)), i)) =
       (* note: this obscures LVar identity! *)
-       "_" ^ parmName (cid, i)
+      (* no longer Tue Mar  1 13:32:21 2011 -cs *)
+         "_"  ^ parmName (cid, i)
     | projName (G, I.Proj (I.Inst iota, i)) =
        "*"    (* to be fixed --cs *)
 
@@ -239,11 +254,14 @@ local
     | fmtCon (G, I.FVar (name, _, _)) = Str0 (Symbol.fvar (name))
     | fmtCon (G, H as I.Proj (I.Bidx(k), i)) =
         Str0 (Symbol.const (projName (G, H)))
-    | fmtCon (G, H as I.Proj (I.LVar(_, sk, (cid, t)), i)) =
-      (* identity of LVars is obscured! *)
-					(* LVar fixed Sun Dec  1 11:36:55 2002 -cs *)
-      fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ "]" ^ projName (G, H)), (* fix !!! *)
-		    constQid (cid))
+    | fmtCon (G, H as I.Proj (I.LVar(r as ref NONE, sk, (cid, t)), i)) =
+	let 
+	  val n = lookuplvar (r)
+	in
+	  (* LVar fixed Sun Dec  1 11:36:55 2002 -cs *)
+	  fmtConstPath (fn l0 => Symbol.const ("#[" ^ l0 ^ n ^ "]" ^ projName (G, H)), 
+			constQid (cid))
+	end
     | fmtCon (G, I.FgnConst (cs, conDec)) =
         let
           (* will need to be changed if qualified constraint constant
