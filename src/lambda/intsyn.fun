@@ -463,7 +463,11 @@ struct
     (* where is this needed? *)
     (* Thu Dec  6 20:30:26 2001 -fp !!! *)
     | blockSub (LVar (r as ref NONE, sk, (l, t)), s) = 
+        LVar(r, comp(sk, s), (l, t))
+      (* was:
 	LVar (r, comp(sk, s), (l, comp (t, s)))
+	July 22, 2010 -fp -cs
+       *)
 	(* comp(^k, s) = ^k' for some k' by invariant *)
     | blockSub (L as Inst ULs, s') = Inst (map (fn U => EClo (U, s')) ULs)
     (* this should be right but somebody should verify *) 
