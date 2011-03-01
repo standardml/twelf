@@ -93,14 +93,14 @@ actually appears three times here - if we use parenthesis to show the order in w
 tabled search connected paths, the path that is found is
 <tt>a</tt> - ((<tt>b</tt> - ((<tt>a</tt> - <tt>b</tt> - <tt>d</tt>) - <tt>f</tt>)) 
 - <tt>g</tt>).
-|check=decl noinclude=true}%
+|check=decl discard=true}%
 
 %querytabled * * D : path a g.
 
 %{
 We can also run a terminating search for a path that does not exist, 
 such as one from <tt>a</tt> to <tt>h</tt>.
-|check=decl noinclude=true}%
+|check=decl discard=true}%
 
 %querytabled * * D : path a h.
 

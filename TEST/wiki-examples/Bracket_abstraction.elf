@@ -44,7 +44,7 @@ Then we define reduction relations on both languages.  <tt>step</tt> is the
 single-step reduction relation on lambda terms; <tt>cstep</tt> is the
 single-step reduction relation on combinator terms.
 }%
-
+ 
 step : term -> term -> type.
 
 s-β : step (app (lam [x] M1 x) M2) (M1 M2).

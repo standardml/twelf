@@ -8,9 +8,9 @@ a similar spectrum of logics. The difference is that uses of
 left rules are constrained  (`tethered') to only fire when the label on the 
 conclusion is the same as the label on the hypothesis.
 
-The conjecture is that Pfenning-Davies judgmental modal logic is
-exactly tethered modal logic where accessibiliy relation is
-axiomatized by reflexivity and transitivity.
+The conjecture was that Pfenning-Davies judgmental modal logic is
+exactly tethered modal logic where accessibility relation is
+axiomatized by reflexivity and transitivity. However, this is refuted by considering <math>\Diamond\Diamond A \Rightarrow \Diamond A</math>, which is provable in Pfenning-Davies and (apparently?) not in the current system. The exact status of this logic relative to other constructive modal logics is still being determined.
 
 The standard litmus-test entailment that fails in this logic (and succeeds in Simpsons')
 is
