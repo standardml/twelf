@@ -1,9 +1,9 @@
 structure Version = 
 struct
 
-val current_version = "1.6"
+val current_version = "1.7"
 
-val current_version_revision = "1795"
+val current_version_revision = "1798"
 
 fun maybe true x = x
   | maybe false x = ""
