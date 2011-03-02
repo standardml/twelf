@@ -27,7 +27,13 @@ twelf$ cd TEST
 twelf/TEST$ mlton mlton-regression.cm
 twelf/TEST$ ./mlton-regression regression.txt
 twelf/TEST$ ./mlton-regression regression-public.txt
+twelf/TEST$ ./mlton-regression regression-crary.txt
 twelf/TEST$ ./mlton-regression regression-wiki.txt
+
+(private test suite)
+twelf/TEST$ ./mlton-regression regression-talt.txt
+twelf/TEST$ ./mlton-regression regression-tslf.txt
+twelf/TEST$ ./mlton-regression regression-fpcc.txt
 
 == Method 3: Run regression within SMLNJ == 
 
@@ -38,6 +44,7 @@ Standard ML of New Jersey...
 - use "regression.sml";
 - RegressionTest.process "regression.txt";
 - RegressionTest.process "regression-public.txt";
+- RegressionTest.process "regression-crary.txt";
 - RegressionTest.process "regression-wiki.txt";
 - RegressionTest.test "../examples/guide/sources.cfg";
 - RegressionTest.testUnsafe "../examples/lp/test.cfg";
