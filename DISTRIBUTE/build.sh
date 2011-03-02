@@ -43,13 +43,11 @@ rm -Rf twelf/exercises
 # PART THREE: CREATE OUTPUT FILES #
 ###################################
 
-# Get subversion version in source tree correctly
-../bin/buildid >twelf/src/frontend/buildid.sml
-
 # Build source tarball while copy is still clean
 tar -czf "$DESTINATION/twelf-src.tar.gz" twelf
 
 # Build binary
+../bin/buildid >twelf/src/frontend/buildid.sml
 make -s -C twelf twelf-server-mlton
 
 # Delete files that not needed for a binary release

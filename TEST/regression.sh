@@ -47,19 +47,18 @@ then
 else
   echo ""
   echo "=== Running TALT ==="
-  $TIME ./mlton-regression regression-talt.txt
+  $TIME ../bin/twelf-regression regression-talt.txt
 
   echo ""
   echo "=== Running TS-LF (Definition of Standard ML) ==="
-  $TIME ./mlton-regression regression-tslf.txt
+  $TIME ../bin/twelf-regression regression-tslf.txt
 
   echo ""
   echo "=== Running Princeton Foundational PCC ==="
-  $TIME ./mlton-regression regression-fpcc.txt
+  $TIME ../bin/twelf-regression regression-fpcc.txt
 
   echo "==== Completed! ==="
 fi
 
-rm -f ./mlton-regression
 
  
