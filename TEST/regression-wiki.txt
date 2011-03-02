@@ -12,7 +12,7 @@ testUnsafe ../TEST/wiki-examples/Double-negation_translation.cfg
 test ../TEST/wiki-examples/Evaluation_contexts.cfg
 test ../TEST/wiki-examples/Focusing.cfg
 test ../TEST/wiki-examples/HOAS_nat_bijection.cfg
-test ../TEST/wiki-examples/Hereditary_substitution_with_a_zipper.cfg
+testUnsafe ../TEST/wiki-examples/Hereditary_substitution_with_a_zipper.cfg
 test ../TEST/wiki-examples/Indexed_HOAS_nat_bijection.cfg
 test ../TEST/wiki-examples/Iterated_Let_Bindings.cfg
 test ../TEST/wiki-examples/Letrec.cfg
@@ -73,7 +73,6 @@ test ../TEST/wiki-examples/Summer_school_2008_Typed_arithmetic_expressions_(valu
 test ../TEST/wiki-examples/Summer_school_2008_Typed_arithmetic_expressions_with_pairs.cfg
 test ../TEST/wiki-examples/Summer_school_2008_Typed_arithmetic_expressions_with_sums.cfg
 test ../TEST/wiki-examples/Summer_school_2008_Typed_arithmetic_expressions_with_sums_2.cfg
-test ../TEST/wiki-examples/TAT_church.elf.cfg
 test ../TEST/wiki-examples/TAT_plus.elf.cfg
 test ../TEST/wiki-examples/Tabled_logic_programming.cfg
 test ../TEST/wiki-examples/Tactical_theorem_proving.cfg
@@ -93,6 +92,5 @@ test ../TEST/wiki-examples/User_Rsimmons_Lecture_23__Typed_Lambda_Calculus_in_Tw
 test ../TEST/wiki-examples/User_Rsimmons_Subtype.cfg
 test ../TEST/wiki-examples/User_Rsimmons_fillholes.elf.cfg
 test ../TEST/wiki-examples/Verifications_and_uses.cfg
-test ../TEST/wiki-examples/Verifications_and_uses_in_HLF.cfg
 test ../TEST/wiki-examples/Verifications_and_uses_with_zippers.cfg
 test ../TEST/wiki-examples/Weak_focusing.cfg

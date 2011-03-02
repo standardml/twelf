@@ -19,6 +19,7 @@ while($row = mysql_fetch_array($literatepages)) {
   $unsafe = false;
 
   if($page == "Double-negation translation")                $unsafe = true;
+  if($page == "Hereditary substitution with a zipper")      $unsafe = true;
   if($page == "MinMLToMinHaskell")                          $unsafe = true;
   if($page == "POPL Tutorial/Big step, small step")         $ignore = true;
   if($page == "POPL Tutorial/Exceptions-problem")           $ignore = true;
@@ -29,7 +30,9 @@ while($row = mysql_fetch_array($literatepages)) {
   if($page == "POPL Tutorial/Session 4 Live")               $ignore = true;
   if($page == "POPL Tutorial/Typed bracket abstraction")    $ignore = true;
   if($page == "Polarized PCF")                              $unsafe = true;
+  if($page == "TAT/church.elf")                             $ignore = true;
   if($page == "User:Hdeyoung/monweakfoc.elf")               $ignore = true;
+  if($page == "Verifications and uses in HLF")              $ignore = true;
   if($page == "") $ignore = true;
   if($page == "") $ignore = true;
   if(substr($page,0,25) == "Computation and Deduction")     $ignore = true;
