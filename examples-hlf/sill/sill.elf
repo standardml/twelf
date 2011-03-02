@@ -1,0 +1,2787 @@
+%hlf.
+
+% formulas
+o : type.
+
+tensor : o -> o -> o.
+lolli : o -> o -> o.
+and : o -> o -> o.
+sum : o -> o -> o.
+one : o.
+bang : o -> o.
+
+left : o -> @type.        % Linear Hyp.
+right : o -> @type. 	 % Conclusions
+leftb : o -> @type.
+
+% 1
+
+oneL : left (one) -o right C -o right C.     
+oneR : right (one).
+
+% Lolli
+
+lolliL : left (lolli A B) -o right A -o (left B -o right C) -o right C.
+lolliR : (left A -o right B) -o right (lolli A B).
+
+% Tensor 
+
+tensL : (left (tensor A B)) -o (left A -o left B -o right C) -o right C.
+tensR : right A -o right B -o right (tensor A B).
+
+% Sum 
+sumR1 : right A -o right (sum A B).
+sumR2 : right B -o right (sum A B).
+sumL : {b:w} left (sum A B) @ b -> {a:w} (left A -o right C) @ a -> (left B -o right C) @ a -> right C @ (a * b).
+
+% And
+
+andL1 : left (and A B) -o (left A -o right C) -o right C.
+andL2 : left (and A B) -o (left B -o right C) -o right C.
+andR : {a:w} (right A) @ a -> (right B) @ a -> right (and A B) @ a.
+
+% Bang
+
+bangL : left (bang A) -o (leftb A -> right C) -o right C.
+bangR : right A -> right (bang A).
+
+% Cut
+
+cut :  right A -o (left A -o right C) -o right C.
+
+% Cut!
+
+cutB : right A -> (leftb A -> right C) -o right C.
+
+% Copy
+
+copy : leftb A -> (left A -o right C) -o right C.
+
+% Computational Conversions
+
+=> : (right A) @ W -> (right A) @ W -> type.
+
+cut/tensR/tensL :
+=> (cut ^ (tensR ^ D1 ^ D2) ^ ([x:^(left (tensor A B))](tensL ^ x ^ ([y:^(left A)][x:^(left B)] 
+					     (E : (left A -o left B -o right C) @ P) ^ y ^ x))))
+ (cut ^ D1 ^ ([y:^(left A)] (cut ^ D2 ^ ([x:^(left B)] E ^ y ^ x)))).
+
+cut/lolliR/lolliL : 
+=> (cut ^ (lolliR ^ ([y:^(left A)](D:(left A -o right B) @ P) ^ y)) ^ 
+      ([x:^ (left (lolli A B))]lolliL ^ x ^ E1 ^ ([x:^(left B)](E2:(left B -o right C) @ P') ^ x))) 
+		    (cut ^ (cut ^ E1 ^ ([y:^(left A)]D ^ y)) ^ ([x:^(left B)]E2 ^ x)).
+
+cut/andR/andL1  : 
+=> (cut ^ (andR ^ (D1) (D2)) ^ ([x:^(left (and A B))]andL1 ^ x ^ ([x:^(left A)] (E1: (left A -o right C) @ P) ^ x))) (cut ^ D1 ^ ([x:^(left A)] E1 ^ x)).
+
+cut/andR/andL2  : 
+=> (cut ^ (andR ^ (D1) (D2)) ^ ([x:^(left (and A B))]andL2 ^ x ^ ([x:^(left B)] (E2: (left B -o right C) @ P) ^ x))) 
+		   (cut ^ D2 ^ ([x:^(left B)] E2 ^ x)).
+
+
+cut/sumR1/sumL  :
+=> (cut ^ (sumR1 ^ D1) ^ ([x:^(left (sum A B))]sumL ^ x ^ ([x:^(left A)](E1 : (left A -o right C) @ P) ^ x) 
+			    ([x:^(left B)](E2: (left B -o right C) @ P) ^ x) )) 
+   (cut ^ D1 ^ ([x:^(left A)] E1 ^ x)).
+
+cut/sumR2/sumL  :
+=> (cut ^ (sumR2 ^ D1) ^ ([x:^(left (sum A B))]sumL ^ x ^ ([x:^(left A)](E1 : (left A -o right C) @ P) ^ x) 
+			    ([x:^(left B)](E2: (left B -o right C) @ P) ^ x) )) 
+   (cut ^ D1 ^ ([x:^(left B)] E2 ^ x)).
+
+cutB/-/copy : 
+=> (cutB D ^ ([u:(leftb A)] copy u ^ ([y:^(left A)](E: (leftb A -> left A -o right C) @ P) u ^ y))) 
+   (cut ^ D ^ ([y:^(left A)]cutB D ^ ([u:(leftb A)] E u ^ y))).
+
+
+% Structural Conversions - Cut Conversions.
+
+== : (right A) @ P -> (right A) @ P -> type.
+
+sconv_s : == (A) (B) -> == (B) (A).
+sconv_t : == A A' -> == A' B -> == A B.
+
+cut/-/cut1 : 
+== (cut ^ D ^ ([x:^(left A)]cut ^ ((E:(left A -o right B) @ P) ^ x) ^ ([y:^(left B)] (F:(left B -o right C) @ P') ^ y))) 
+   (cut ^ (cut ^ D ^ ([x:^(left A)] E ^ x)) ^ ([y:^(left B)] F ^ y)).
+
+cut/-/cut2 : 
+== (cut ^ D ^ ([x:^(left A)]cut ^ E ^ ([y:^(left B)] (F:(left A -o left B -o right C) @ P) ^ x ^ y))) 
+	      (cut ^ E ^ ([y:^(left B)]cut ^ D ^ ([x:^(left A)] F ^ x ^ y))).
+
+cut/cutB/- : 
+== (cut ^ (cutB D ^ ([u:(leftb A)] (E: (leftb A -> right B) @ P) u)) ^ ([x:^(left B)] (F: (left B -o right C) @ P') ^ x)) 
+	      (cutB D ^ ([u:(leftb A)] cut ^ (E u) ^ ([x:^(left B)] F ^ x))).
+
+
+cut/-/cutB : 
+== (cut ^ D ^ ([x:^(left A)]cutB E ^ ([u:(leftb B)] (F: (left A -o leftb B -> right C) @ P) ^ x u))) 
+	      (cutB E ^ ([u:(leftb B)] cut ^ D ^ ([x:^(left A)]F ^ x u))).
+
+cut/oneR/oneL : 
+== (cut ^ oneR ^ ([x:^(left one)] oneL ^ x ^ D)) D.
+
+cut/bR/bL : 
+== (cut ^ (bangR D) ^ ([x:^(left (bang A))]bangL ^ x ^ ([u:(leftb A)](E: (leftb A -> right C) @ P) u))) 
+	     (cutB D ^ ([u:(leftb A)] E u)).
+
+% Structural Conversions - Commuting Conversions.
+
+cut/-/oneL   : 
+== (cut ^ D ^ ([x:^(left A)]oneL ^ Y ^ ((E : (left A -o right C) @ P) ^ x))) (oneL ^ Y ^ (cut ^ D ^ ([x:^(left A)]E ^ x))).
+
+cut/-/bangL  : 
+== (cut ^ D ^ ([x:^(left A)]bangL ^ Y ^ ([u:(leftb B)] (E : (left A -o leftb B -> right C) @ P) ^ x u))) 
+		(bangL ^ Y ^ ([u:(leftb B)]cut ^ D ^ ([x:^(left A)]E ^ x u))).
+
+cut/oneL/-   : == (cut ^ (oneL ^ Y ^ D) ^ ([x] F x)) (oneL ^ Y ^ (cut ^ D ^ ([x]F x))).
+cut/bangL/-  : == (cut ^ (bangL ^ Y ^ ([u:leftb A] D u)) ^ ([x:^(left B)] (F : (left B -o right C) @ P) ^ x)) (bangL ^ Y ^  ([u:leftb A]cut ^ (D u) ^ ([x:^(left B)] F ^ x))).
+
+cutB/-/oneL  : 
+== (cutB D ^ ([u:(leftb A)]oneL ^ Y ^ ((E: (leftb A -> right C) @ P) u))) (oneL ^ Y ^ (cutB D ^ ([u:(leftb A)] E u))).
+
+cutB/-/bangL : 
+== (cutB D ^ ([u:(leftb A)] bangL ^ Y ^ ([v:(leftb B)] (E: (leftb A -> leftb B -> right C) @ P) u v))) 
+		(bangL ^ Y ^ ([v:(leftb B)]cutB D ^ ([u:(leftb A)] E u v))).
+
+% Structural Conversions - Cut! Conversions.
+
+cutB/-/cut  : 
+== (cutB D ^ ([u:(leftb A)]cut ^ ((E : (leftb A -> right B)) u) ^ ([y:^(left B)] (F: (leftb A -> left B -o right C) @ P) u ^ y))) 
+   (cut ^ (cutB D ^ ([u:(leftb A)] E u)) ^ ([y:^(left B)]cutB D ^ ([u:(leftb A)]F u ^ y))).
+
+cutB/-/cutB : 
+== (cutB D ^ ([u:(leftb A)]cutB ((E: (leftb A -> right B) ) u) ^ ([v:(leftb B)] (F: (leftb A -> leftb B -> right C) @ P) u v))) 
+   (cutB (cutB D ^ ([u:(leftb A)] E u)) ^ ([v:(leftb B)]cutB D ^ ([u:(leftb A)] F u v))).
+
+cutB/cutB/- : 
+== (cutB (cutB D ^ ([u:(leftb A)](E: (leftb A -> right B)) u)) ^ ([v:(leftb B)](F: (leftb B -> right C) @ P) v)) 
+   (cutB D ^ ([u:(leftb A)]cutB (E u) ^ ([v:(leftb B)] F v))).
+
+cutB/-/-  : 
+== (cutB D ^ ([u:(leftb A)] E)) E.
+
+cut_red_cong1 : 
+=> (cut ^ D ^ ([x:^(left A)] E ^ x)) (cut ^ D' ^ ([x:^(left A)] (E : (left A -o right C) @ P) ^ x))
+	      <- => D D'.
+
+cut_red_cong2 : 
+=> (cut ^ D ^ ([x:^(left A)] (E : (left A -o right C) @ P) ^ x)) (cut ^ D ^ ([x:^(left A)] (E' : (left A -o right C) @ P) ^ x))
+	<- {a : w} {x:left A @ a} => (E ^ x) (E' ^ x).
+
+cutB_red_cong : 
+=> (cutB D ^ ([x:leftb A] (E : (leftb A -> right C)) x)) (cutB D ^ ([x:leftb A] E' x))
+	   <- {x:leftb A}=> (E x) (E' x).
+
+oneL_red_cong : => (oneL ^ X ^ D) (oneL ^ X ^ D')
+	      <- => D D'.
+
+bangL_red_cong : 
+=> (bangL ^ X ^ ([u:(leftb A)](D : (leftb A -> right C)) u)) (bangL ^ X ^ ([u:(leftb A)]D' u))
+	      <- {x:leftb A} => (D x) (D' x).
+
+% =>=
+
+=>= : right A @ W -> right A @ W -> type.
+
+clos1 : =>= (D1) (D2)
+     <- => D1 D2.
+
+clos2 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- => D1' D2.
+
+clos21 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- =>= D1' D2.
+
+clos3 : =>= (D1) (D2)
+     <- == D1 D1'
+     <- => D1' D2'
+     <- == D2' D2.
+
+clos4 : =>= (D1) (D2)
+      <- => D1 D1'
+      <- == D1' D2.
+
+oneL/pre : => (oneL ^ X ^ D) (oneL ^ X ^ D')
+	 <- =>= D D'.
+
+bangL/pre : => (bangL ^ X ^ ([u:(leftb A)] D u)) (bangL ^ X ^ ([u:leftb A] D' u))
+	 <- {u:leftb A}=>= (D u) (D' u).
+
+cut/pre1 : 
+=> (cut ^ D1 ^ ([x:^(left A)] (D2 : (left A -o right C) @ P) ^ x)) (cut ^ D1' ^ ([x:^(left A)] D2 ^ x))
+	 <- =>= D1 D1'.
+cut/pre2 : 
+=> (cut ^ D ^ ([x:^(left A)] (E1: (left A -o right C) @ P) ^ x)) (cut ^ D ^ ([x:^(left A)](E2: (left A -o right C) @ P) ^ x))
+	<- ({a:w}{x:(left A) @ a} =>= (E1 a x)  (E2 a x)).
+
+cutB/pre2 : 
+=> (cutB D1 ^ ([u:leftb A] (D2: leftb A -> right C) u)) (cutB D1 ^ ([u:leftb A] (D2' : leftb A -> right C) u))
+	 <- {u:leftb A} =>= (D2 u) (D2' u).
+
+% Pi calculus
+
+ch : type.
+expr : type.
+
+zero : expr.
+par : expr -> expr -> expr.
+
+inp : ch -> (ch -> expr) -> expr.
+out : ch -> ch -> expr -> expr.
+rep : ch -> (ch -> expr) -> expr.
+
+new : (ch -> expr) -> expr.
+
+inl : ch -> expr -> expr.
+inr : ch -> expr -> expr.
+case : ch -> expr -> expr -> expr.
+
+
+sc : expr -> expr -> type.
+
+
+sc_s : sc Q P 
+     <- sc P Q.
+sc_t : sc P Q' -> sc Q' Q -> sc P Q.
+    
+sc_r : sc P P.
+
+sc_zero : sc (par P zero) P.
+sc_par_com : sc (par P Q) (par Q P).
+sc_par_assoc : sc (par P (par Q R)) (par (par P Q) R).
+sc_new_zero : sc (new ([x:ch] zero)) zero.
+
+sc_new_scope : sc (par P (new ([z:ch] Q z))) (new ([z:ch] par (P) (Q z))).
+sc_new_swap : sc (new ([x:ch] new ([y:ch]  P x y ))) (new ([y:ch] new ([x:ch]  P x y ))).
+
+
+sc_cong_par : sc (par P Q) (par P' Q')
+	<- sc P P'
+	<- sc Q Q'.
+
+sc_cong_new : sc (new ([x:ch]P x)) (new ([x:ch] P' x))
+	<- ({x:ch}sc (P x) (P' x)).
+
+
+sc_cong_inp : sc (inp X ([y:ch]P y)) (inp X ([y:ch]P' y))
+	<-  ({x:ch}sc (P x) (P' x)).
+
+sc_cong_rep : sc (rep X ([y:ch]P y)) (rep X ([y:ch]P' y))
+	<-  ({x:ch}sc (P x) (P' x)).
+
+sc_cong_out : sc (out X Y P) (out X Y P')
+	<-  sc P P'.
+
+sc_cong_inl : sc (inl X P) (inl X P')
+	<- sc P P'.
+
+sc_cong_inr : sc (inr X P) (inr X P')
+	<- sc P P'.
+
+sc_cong_case : sc (case X P Q) (case X P' Q')
+	<- sc P P'
+	<- sc Q Q'.
+
+% LTS that separates actions involving free name objects and actions involving bound name objects
+
+label : type.
+
+outLabel : ch -> ch -> label.
+inpLabel : ch -> ch -> label.
+bOutLabel : ch -> ch -> label.
+lOutLabel : ch -> label.
+rOutLabel : ch -> label.
+lInLabel : ch -> label.
+rInLabel : ch -> label.
+tau : label.
+
+
+lts-f : expr -> label -> expr -> type. % actions with free names
+lts-b : expr -> (ch -> label) -> (ch -> expr) -> type. % actions with bound names
+
+lts-f-in : lts-f (inp X ([y] P y)) (inpLabel X Y) (P Y).
+lts-b-in : lts-b (inp X ([y] P y)) ([y]inpLabel X y) ([y] P y).
+
+lts-f-out : lts-f (out X Y P) (outLabel X Y) P.
+
+lts-f-rep : lts-f (rep X ([y] P y)) (inpLabel X Y) (par (rep X ([y] P y)) (P Y)).
+lts-b-rep : lts-b (rep X ([y] P y)) ([y]inpLabel X y) ([y]par (rep X ([y]P y)) (P y)).
+
+lts-f-lout : lts-f (inl X P) (lOutLabel X) P.
+lts-f-rout : lts-f (inr X P) (rOutLabel X) P.
+lts-f-lin  : lts-f (case X P Q) (lInLabel X) P.
+lts-f-rin  : lts-f (case X P Q) (rInLabel X) Q.
+
+lts-f-par1 : lts-f (par P Q) Alpha (par P' Q)
+	  <- lts-f P Alpha P'.
+lts-f-par2 : lts-f (par P Q) Alpha (par P Q')
+	  <- lts-f Q Alpha Q'.
+lts-b-par1 : lts-b (par P Q) Alpha ([x] par (P' x) Q)
+	  <- lts-b P Alpha ([x]P' x).
+lts-b-par2 : lts-b (par P Q) Alpha ([x]par P (Q' x))
+	  <- lts-b Q Alpha ([x]Q' x).
+
+lts-f-res : lts-f (new ([x] P x)) Alpha (new ([x] Q x))
+	  <- ({x}lts-f (P x) Alpha (Q x)).
+lts-b-res : lts-b (new ([x] P x)) Alpha ([y]new ([x] Q x y))
+	  <- ({x} lts-b (P x) Alpha ([y]Q x y)).
+
+lts-b-open : lts-b (new ([x] P x)) ([y]bOutLabel X y) (P')
+	  <- ({x}lts-f (P x) (outLabel X x) (P' x)).
+
+lts-f-close1 :
+lts-f (par P Q) tau (new ([x:ch] par (P' x) (Q' x)))
+	  <- lts-b P ([y]bOutLabel X y) ([x]P' x)
+	  <- lts-b Q ([y]inpLabel X y) ([x]Q' x).
+
+
+lts-f-close2 : lts-f (par P Q) tau (new ([x] par (P' x) (Q' x)))
+	  <- lts-b P ([y:ch]inpLabel X y) P'
+	  <- lts-b Q ([y:ch]bOutLabel X y) Q'.
+
+lts-f-io1 : lts-f (par P Q) tau (par P' Q')
+	  <- lts-f P (outLabel X Y) P'
+	  <- lts-f Q (inpLabel X Y) Q'.
+lts-f-io2 : lts-f (par P Q) tau (par P' Q')
+	  <- lts-f P (inpLabel X Y) P'
+	  <- lts-f Q (outLabel X Y) Q'.
+
+lts-f-choicel1 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (lOutLabel X) P'
+	    <- lts-f Q (lInLabel X) Q'.
+lts-f-choicel2 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (lInLabel X) P'
+	    <- lts-f Q (lOutLabel X) Q'.
+
+lts-f-choicer1 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (rOutLabel X) P'
+	    <- lts-f Q (rInLabel X) Q'.
+
+lts-f-choicer2 : lts-f (par P Q) tau (par P' Q')
+	    <- lts-f P (rInLabel X) P'
+	    <- lts-f Q (rOutLabel X) Q'.
+
+
+
+
+% Type System piDILL
+
+proc : (ch -> expr) -> o -> @type. % proc (\!z.P !z) T - process P uses z as type T (only in conclusions).
+chan : ch -> o -> @type. % chan C T - channel C has type T (only as linear assumptions).
+chanB : ch -> o -> @type. % chan C T - channel C has type T (only as unrestricted assumptions)
+
+% Typing rules for One
+
+tOneR : proc ([z:ch] zero) one.
+tOneL : (proc ([z:ch] P z) C) -o ({x:ch}chan x one -o proc ([z:ch] P z) C).
+
+% Typing rules for lolli
+
+tLolliR : ({y:ch}chan y A -o proc ([x:ch] P y x) B)
+          -o proc ([x:ch] inp x ([y:ch] P y x)) (lolli A B).
+
+tLolliL : (proc ([y:ch]P y) A) -o ({x:ch}chan x B -o proc ([z:ch]Q x z) C) -o
+         ({x:ch}chan x (lolli A B) -o proc ([z:ch]new ([y:ch] out x y (par (P y) (Q x z)))) C).
+
+% Typing rules for Tensor
+
+tTensR : (proc ([y:ch]P y) A) -o (proc ([x:ch]Q x) B) -o
+         (proc ([x:ch]new ([y:ch] out x y (par (P y) (Q x)))) (tensor A B)).
+
+tTensL : ({y:ch}chan y A -o {x:ch}chan x B -o proc ([z:ch]P y x z) C)
+         -o ({x:ch}chan x (tensor A B) -o proc ([z:ch]inp x ([y:ch] P y x z)) C).
+
+% Typing rule cut
+
+tCut : (proc ([x:ch]P x) A) -o ({x:ch}chan x A -o proc ([z:ch]Q x z) C) -o
+       (proc ([z:ch]new ([x:ch]par (P x) (Q x z))) C).
+
+% Typing rule cutB
+
+tCutB : (proc ([y:ch]P y) A) -> ({u:ch}chanB u A -> proc ([z:ch]Q u z) C) -o
+        (proc ([z:ch]new ([u:ch]par (rep u ([y:ch]P y)) (Q u z))) C).
+
+% Typing rule copy
+
+tCopy : ({y:ch}chan y A -o proc ([z:ch]P y z) C) -o
+        (chanB U A -> proc ([z:ch]new ([y:ch] out U y (P y z))) C). 
+
+% Typing rules for Bang
+
+tBangR : (proc ([y:ch]Q y) A) -> (proc ([x:ch]rep x ([u:ch]Q u)) (bang A)).
+tBangL : ({u:ch}chanB u A -> proc ([z:ch]P u z) C) -o
+       	 ({x:ch}chan x (bang A) -o proc ([z:ch]P x z) C).
+
+% Typing rules for and
+
+tAndL1 : ({x:ch}chan x A -o proc ([z:ch]P x z) C) -o
+         ({x:ch}chan x (and A B) -o proc ([z:ch]inl x (P x z)) C).
+tAndL2 : ({x:ch}chan x B -o proc ([z:ch]P x z) C) -o
+         ({x:ch}chan x (and A B) -o proc ([z:ch]inr x (P x z)) C).
+tAndR  : {a:w}(proc ([x:ch]P x) A) @ a -> (proc ([x:ch]Q x) B) @ a ->
+      	 (proc ([x:ch]case x (P x) (Q x)) (and A B)) @ a.
+
+% Typing rules for sum
+
+tSumL  : {a:w} ({x:ch}chan x A -o proc ([z:ch]P x z) C) @ a -> 
+	 ({x:ch}chan x B -o proc ([z:ch]Q x z) C) @ a ->
+      	 ({x:ch}chan x (sum A B) -o proc ([z:ch]case x (P x z) (Q x z)) C) @ a.
+tSumR1 : (proc ([x:ch]P x) A) -o proc ([x:ch]inl x (P x)) (sum A B).
+tSumR2 : (proc ([x:ch]P x) B) -o proc ([x:ch]inr x (P x)) (sum A B).
+
+% Typed Extraction
+
+extrR : (right C) @ W -> (proc ([z:ch] P z) C) @ W -> type.
+extrL : (left A) @ W -> {x:ch}chan x A @ W -> type.
+extrLB: (leftb A) @ W -> {u:ch}chanB u A @ W -> type.
+
+%mode (extrR +D -T).
+%mode (extrL +X -C -TC).
+%mode (extrLB +X -C -TC).
+
+
+ 
+
+% Typed Extraction for 1
+
+extr_oneR : extrR (oneR) (tOneR).
+extr_oneL : extrR (oneL ^ X ^ D) (tOneL ^ P X' ^ CX)
+	    <- extrR D P
+	    <- extrL X X' CX.
+
+
+% Typed Extraction for lolli
+
+extr_lolliR :
+ extrR (lolliR ^ ([y:^(left A)] (D : (left A -o right B) @ P) ^ y)) (tLolliR ^ ([y':ch][cy:^(chan y' A)] 
+							 (TofP : ({y':ch}chan y' A -o proc ([z:ch] Q y' z) B) @ P)  y' ^ cy))
+	   <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a} extrL y y' cy -> extrR (D ^ y) (TofP y' ^ cy)).
+
+ 
+extr_lolliL :
+extrR (lolliL ^ X ^ D ^ ([x:^(left A)](E : (left A -o right C) @ P) ^ x)) (tLolliL ^ TofP ^ ([y':ch][cy:^(chan y' A)] 
+							 (TofQ : ({y':ch}chan y' A -o proc ([z:ch] Q y' z) C) @ P) y' ^ cy) X' ^ CX)
+	   <- extrR D TofP
+	   <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a} extrL y y' cy -> extrR (E ^ y)  (TofQ y' ^ cy))
+	   <- extrL X X' CX.
+
+% Typed Extraction for Tensor
+
+extr_tensR : extrR (tensR ^ D ^ E) (tTensR ^ TofP ^ TofQ)
+	   <- extrR D (TofP)
+	   <- extrR E (TofQ).
+
+extr_tensL : 
+extrR (tensL ^ X ^ ([y:^(left A)][x:^(left B)](D : (left A -o left B -o right C) @ P) ^ y ^ x)) 
+      (tTensL ^ ([y':ch][cy:^(chan y' A)][x':ch][cx:^(chan x' B)] (TofP : 
+	 ({y':ch}chan y' A -o {x':ch}chan x' B -o proc ([z:ch] Q y' x' z) C) @ P ) y' ^ cy x' ^ cx) X' ^ CX)
+	   <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a}{_:extrL y y' cy}
+		{b:w}{z:(left B) @ b}{z':ch}{cz:(chan z' B) @ b}{_:extrL z z' cz}
+		  extrR (D ^ y ^ z) (TofP y' ^ cy z' ^ cz))
+	   <- extrL X X' CX.
+
+
+
+
+% Typed Extraction for and
+
+extr_andR : extrR (andR ^ D E ) (tAndR ^ TofP TofQ)
+	  <- extrR D TofP
+	  <- extrR E TofQ.
+
+extr_andL1 : 
+extrR (andL1 ^ X ^ ([x:^(left A)](D :  (left A -o right C) @ P) ^ x)) (tAndL1 ^ ([x':ch][cx:^(chan x' A)]
+						   (TofP : ({x':ch}chan x' A -o proc ([z:ch] Q x' z) C) @ P) x' ^ cx) X' ^ CX)	
+	  <- extrL X X' CX
+	  <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a} extrL y y' cy -> extrR (D ^ y) (TofP y' ^ cy)).
+
+extr_andL2 : 
+extrR (andL2 ^ X ^ ([x:^(left B)](D : (left B -o right C) @ P) ^ x)) (tAndL2 ^ ([x':ch][cx:^(chan x' B)] 
+					       (TofP : ({x':ch}chan x' B -o proc ([z:ch] Q x' z) C) @ P) x' ^ cx) X' ^ CX)	
+	  <- extrL X X' CX
+	  <- ({a:w}{y:(left B) @ a}{y':ch}{cy:(chan y' B) @ a} extrL y y' cy -> extrR (D ^ y) (TofP y' ^ cy)).
+
+% Typed Extraction for sum
+
+extr_sumR1 : extrR (sumR1 ^ D) (tSumR1 ^ TofP)
+	   <- extrR D TofP.
+
+extr_sumR2 : extrR (sumR2 ^ E) (tSumR2 ^ TofQ)
+	   <- extrR E TofQ.
+
+extr_sumL : 
+extrR (sumL ^ X ^ ([x:^(left A)](D : (left A -o right C) @ W) ^ x) ([x:^(left B)](E : (left B -o right C) @ W) ^ x)) 
+	          (tSumL ^ ([x':ch][cx:^(chan x' A)] 
+			 (TofP : ({x':ch}chan x' A -o proc ([z:ch] P x' z) C) @ W) x' ^ cx) 
+		           ([x':ch][cx:^(chan x' B)] 
+			 (TofQ : ({x':ch}chan x' B -o proc ([z:ch] Q x' z) C) @ W) x' ^ cx) X' ^ CX)
+	  <- extrL X X' CX
+	  <- ({a:w}{y:(left B) @ a}{y':ch}{cy:(chan y' B) @ a} extrL y y' cy -> extrR (E ^ y) (TofQ y' ^ cy))
+	  <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a} extrL y y' cy -> extrR (D ^ y) (TofP y' ^ cy)).
+
+
+
+% Typed Extraction Bang
+
+extr_bangR : extrR (bangR D) (tBangR TofP)
+	   <- extrR D TofP.
+
+extr_bangL : 
+extrR (bangL ^ X ^ ([x:(leftb A)] (D : (leftb A -> right C) @ P) x)) 
+	      (tBangL ^ ([u':ch][cu:(chanB u' A)] (TofP : ({u:ch}chanB u A -> proc ([z:ch] Q u z) C) @ P) u' cu) X' ^ CX)
+	   <- extrL X X' CX
+	   <- ({u:(leftb A)}{u':ch}{cu:(chanB u' A)}extrLB u u' cu -> extrR (D u) (TofP u' cu)).
+
+% Typed Extraction copy
+
+extr_copy : 
+extrR (copy U ^ ([y:^(left A)] (D : (left A -o right C) @ P) ^ y)) (tCopy ^ ([y':ch][cy:^(chan y' A)] 
+							      (TofP: ({y:ch} chan y A -o proc ([z:ch] Q y z) C) @ P) y'  ^ cy) CU)
+	  <- ({a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a} extrL y y' cy -> extrR (D ^ y) (TofP y' ^ cy))
+	  <- extrLB U U' CU.
+
+
+% Typed Extraction cut!
+
+extr_cutB : 
+extrR (cutB D ^ ([u:leftb A] (E:(leftb A -> right C) @ P) u)) (tCutB TofP ^ ([u':ch][cu:(chanB u' A)] 
+						         (TofQ: ({u:ch} chanB u A -> proc ([z:ch]Q u z) C) @ P ) u' cu))
+	  <- extrR D TofP
+	  <- ({u:(leftb A)}{u':ch}{cu:(chanB u' A)}extrLB u u' cu -> extrR (E u) (TofQ u' cu)).
+
+% Typed Extraction for Cut
+
+extr_cut : 
+extrR (cut ^ D ^ ([x:^(left A)] (E: (left A -o right C) @ P) ^ x)) (tCut ^ TofP ^ ([x':ch][cx:^(chan x' A)] 
+							  (TofQ: ({x':ch}chan x' A -o proc ([z:ch] Q x' z) C) @ P) x' ^ cx))
+	 <- extrR D TofP
+	 <- ({a:w}{x:(left A) @ a}{x':ch}{cx:(chan x' A) @ a} extrL x x' cx -> extrR (E ^ x) (TofQ x' ^ cx)).
+
+%block b : some {A : o} block {a : w}{x : left A a}{x':ch}{cx : chan x' A a}{_ : extrL x x' cx}.
+%block bu :  some {A : o} block {u : leftb A e}{u':ch}{cu:chanB u' A e}{_:extrLB u u' cu}.
+
+%worlds (b | bu) (extrLB _ _ _).
+%worlds (b | bu) (extrL _ _ _).
+%worlds (b | bu) (extrR _ _).
+
+%terminates {} (extrL _ _ _).
+%terminates {} (extrLB _ _ _).
+%terminates {D} (extrR D _).
+
+%total X (extrL X _ _).
+%total U (extrLB U _ _).
+%total D (extrR D _).
+
+% Theorems
+
+tensLemma : 
+{D : (right (tensor A B)) @ W}
+{E : (left (tensor A B) -o right C) @ W'}
+	     extrR D (TofP : (proc ([z:ch] P z) (tensor A B)) @ W) ->
+	     ({a:w}{x:(left (tensor A B)) @ a}{x':ch}{cx:(chan x' (tensor A B)) @ a} 
+		extrL x x' cx -> (extrR (E a x) ((TofQ : ({x:ch}chan x (tensor A B) -o proc ([z:ch] Q x z) C) @ W') x' a cx))) ->
+	     ({x':ch}lts-b (P x') ([y:ch]bOutLabel x' y) ([y:ch]P' x' y)) ->
+             ({x':ch}{z:ch} lts-b (Q x' z) ([y:ch]inpLabel x' y) ([y:ch]Q' x' z y)) ->
+             (=>= (cut ^ D ^ ([x:^(left (tensor A B))]E ^ x)) F) ->
+             extrR F (TofR : (proc ([z:ch] R z) C) @ (W * W')) ->
+             ({z:ch}sc (R z) (new ([x':ch]new ([y:ch]par (P' x' y ) (Q' x' z y ))))) -> type.
+
+%mode (tensLemma +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+tensLemma_tens : 
+tensLemma (tensR ^ (D1 : right A) ^ (D2 : right B))
+	   ([x:^(left (tensor A B))]tensL ^ x ^ ([y:^(left A)][x:^(left B)] 
+	   			     (D3 : (left A -o left B -o right C)) ^ y ^ x))
+	   (extr_tensR (TofD2 : extrR D2 TofP2) (TofD1 : extrR D1 TofP1))
+	   ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)] 
+	   extr_tensL (extx) (TofD3 : {a:w}{y:(left A) @ a}{y':ch}{cy:(chan y' A) @ a}{_:extrL y y' cy}
+				       {b:w}{z:(left B) @ b}{z':ch}{cz:(chan z' B) @ b}{_:extrL z z' cz}
+					extrR (D3 a y b z) 
+						 ((PofD3 : ({y:ch}chan y A -o {x:ch}chan x B -o proc ([z] Q y x z) C)) y' a cy z' b cz)))
+		     ([x']lts-b-open ([y']lts-f-out))
+		     ([x'][z]lts-b-in )
+		     (clos1 (cut/tensR/tensL))
+		     (extr_cut ([a:w][x:(left A) @ a][x':ch][cx:(chan x' A) @ a][extx:extrL x x' cx] 
+			  extr_cut ([b:w][y:(left B) @ b ][y':ch][cy:(chan y' B) @ b][exty:extrL y y' cy]
+				      TofD3 a x x' cx extx b y y' cy exty) (TofD2)) TofD1)
+		     ([z]sc_t (sc_t (sc_cong_new ([x] sc_new_scope)) 
+				 (sc_cong_new ([x] sc_cong_new ([y]sc_par_assoc)))) (sc_new_swap)).
+
+
+tensLemma_oneL : tensLemma (oneL ^ (N : left one) ^ (D' : right (tensor A B)))
+	       	 	   ([x:^(left (tensor A B))] (E :(left (tensor A B) -o right C) @ W') ^ x)
+			   (extr_oneL (ExtN : extrL N N' CN) (TofD' : extrR D' PofD'))
+			   ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			     TofE a x x' cx extx : extrR (E a x) (TofQ x' a cx) )	 
+			   ([x'] lts-b-open ([y] lts-f-out))
+			   ([x'][z'] lts-b-in)
+			   (clos2 (oneL/pre ProofRed) (cut/oneL/-)) 
+			   (extr_oneL ExtN TofF') 
+			   ([z]CongD''E' z)
+		<- tensLemma D' ([x:^(left (tensor A B))] E ^ x) (TofD') 
+		            ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x'  cx)]
+			       TofE a x x' cx extx ) 
+		   	    ([x']lts-b-open ([y]lts-f-out) ) ([x'][z']lts-b-in ) 
+			    (ProofRed : (=>= (cut ^ D' ^ ([x:^(left (tensor A B))] E ^ x)) F')) 
+		   	    (TofF' : extrR F' PofF') 
+			    ([z]CongD''E' z). 
+
+
+
+tensLemma_bangL : tensLemma ((bangL ^ (N : (left (bang A')) @ W) ^ ([u:leftb A'] (D' : leftb A' -> right (tensor A B)) u)) )
+	       	 	   ([x:^(left (tensor A B))] ((E : (left (tensor A B) -o right C) @ W') ^ x))
+			   (extr_bangL ([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu] TofD' u u' cu extu) (ExtN : extrL N N' CN))
+			   ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE a x x' cx extx : extrR (E a x) (TofQ x' a cx) )			   
+			   ([x']lts-b-open ([y]lts-f-out))
+			   ([x'][z']lts-b-in)
+			   (clos2 (bangL/pre ([u:(leftb A')] ProofRed u)) (cut/bangL/-)) 
+			   (extr_bangL ([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu] 
+					  TofF' u u' cu extu) (ExtN) ) 
+			   ([z]CongD''E' z)
+		<- {u:(leftb A')}{u':ch}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		      tensLemma (D' u) ([x:^(left (tensor A B))] E ^ x) (TofD' u u' cu extu) 
+		      ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+				TofE a x x' cx extx) 
+		   	    ([x']lts-b-open ([y]lts-f-out) ) ([x'][z']lts-b-in ) 
+			    (ProofRed u : (=>= (cut ^ (D' u) ^ ([x:^(left (tensor A B))] E ^ x)) (F' u))) 
+		   	    (TofF' u u' cu extu : extrR (F' u) (PofF' u' cu)) 
+			    ([z] CongD''E' z).
+
+tensLemma_cut : tensLemma (cut ^ (D1 : right A') ^ ([n:^(left A')] D2 ^ n))
+	      		  ([x:^(left (tensor A B))] E ^ x)
+			  (extr_cut (TofD2 : 
+				      {a:w}{x:(left A') @ a}{x':ch}{cx:(chan x' A') @ a} 
+					      extrL x x' cx -> extrR (D2 a x) (PofD2 x' a cx)) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			     TofE a x x' cx extx : extrR (E a x) (TofQ x' a cx))
+			  ([x']lts-b-res ([n]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			  ([x'][z']lts-b-in)
+			  (clos2 (cut/pre2 ([a:w][n:(left A') @ a]ProofRed a n) ) (sconv_s cut/-/cut1))
+			  (extr_cut ([a:w][x:(left A') @ a][x':ch][cx:(chan x' A') @ a][extx:extrL x x' cx] TofF2 a x x' cx extx) (TofD1)) 
+			  ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r))) 
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_cong_new ([x]sc_cong_new ([z] sc_new_scope))))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_new_swap)))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				    (sc_cong_new ([x] sc_cong_new ([y] sc_cong_new ([z]sc_par_com)))))
+				    (sc_cong_new ([x] sc_cong_new ([y] sc_s sc_new_scope)))) 
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com)))) 
+		<-({a:w}{n:(left A') @ a}{n':ch}{cn:(chan n' A') @ a}
+		     {extn:extrL n n' cn} tensLemma (D2 a n) ([x:^(left (tensor A B))] E ^ x) (TofD2 a n n' cn extn) 
+		           ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE a x x' cx extx) 
+		      	   ([x']lts-b-open ([y]lts-f-out)) ([x'][z']lts-b-in)
+			   (ProofRed a n : =>= (cut ^ (D2 a n) ^ ([x:^(left (tensor A B))] E ^ x)) (F2 a n))
+			   (TofF2 a n n' cn extn : extrR (F2 a n) (PofF2 n' a cn))
+			   ([z]CongP2'Q' n' z)).
+
+tensLemma_cutB : tensLemma (cutB (D1 : right A') ^ ([u:leftb A'] D2 u))
+	       	 	   ([x:^(left (tensor A B))] E ^ x)
+			   (extr_cutB ([u:leftb A'][u':ch][cu:chanB u' A'][extu:extrLB u u' cu]TofD2 u u' cu extu) (TofD1 : extrR D1 PofD1))
+			   ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)] 
+			      TofE a x x' cx extx : extrR (E a x) (TofQ x' a cx))
+			   ([x']lts-b-res ([n]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			   ([x'][z']lts-b-in)
+			   (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/cutB/-))
+			   (extr_cutB ([u:leftb A'][u':ch][cu:chanB u' A'][extu:extrLB u u' cu] 
+					 TofF2 u u' cu extu) (TofD1))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r))) 
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_cong_new ([x]sc_cong_new ([z] sc_new_scope))))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_new_swap)))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				    (sc_cong_new ([x] sc_cong_new ([y] sc_cong_new ([z]sc_par_com)))))
+				    (sc_cong_new ([x] sc_cong_new ([y] sc_s sc_new_scope)))) 
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com)))) 
+		<-({u:leftb A'}{u':ch}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		     tensLemma (D2 u) ([x:^(left (tensor A B))] E ^ x) (TofD2 u u' cu extu) 
+		           ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE a x x' cx extx) 
+		      	   ([x']lts-b-open ([y]lts-f-out)) ([x'][z']lts-b-in)
+			   (ProofRed u : =>= (cut ^ (D2 u) ^ ([x:^(left (tensor A B))] E ^ x)) (F2 u))
+			   (TofF2 u u' cu extu : extrR (F2 u) (PofF2 u' cu))
+			   ([z]CongP2'Q' u' z)).
+
+tensLemma_oneLE : tensLemma D
+		  	    ([x:^(left (tensor A B))] oneL ^ N ^ (E' ^ x))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			       extr_oneL (ExtN) (TofE' a x x' cx extx))
+			    ([x']lts-b-open ([y]lts-f-out))
+			    ([x'][z]lts-b-in)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    ([z]CongD''E'' z)
+		<- tensLemma D ([x:^(left (tensor A B))] (E' : (left (tensor A B) -o right C) @ W') ^ x) (TofD) 
+		   ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+						    TofE' a x x' cx extx) 
+		   	    ([x']lts-b-open ([y]lts-f-out) ) ([x'][z']lts-b-in ) 
+			    (ProofRed : =>= (cut ^ D ^ ([x:^(left (tensor A B))] E' ^ x)) F') 
+		   	    (TofF' : extrR F' PofF') 
+			    ([z]CongD''E'' z).
+
+tensLemma_bangLE : tensLemma D
+		   	     ([x:^(left (tensor A B))] bangL ^ N ^ ([u:(leftb A')] (E' : (left (tensor A B) -o leftb A' -> right C) @ W') ^ x u))
+			     (TofD : extrR D PofD)
+			     ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+				extr_bangL 
+				([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu]
+				   TofE' a x x' cx extx u u' cu extu) (ExtN : extrL N N' CN))
+			     ([x']lts-b-open ([y]lts-f-out))
+			     ([x'][z]lts-b-in)
+			     (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			     (extr_bangL ([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu]
+					    TofF' u u' cu extu) ExtN)
+			     ([z]CongD''E' z)
+		<- ({u:(leftb A')}{u':ch}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		      tensLemma (D) ([x:^(left (tensor A B))]E' ^ x u) (TofD) 
+		            ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			       TofE' a x x' cx extx u u' cu extu) 
+		   	    ([x']lts-b-open ([y]lts-f-out) ) ([x'][z']lts-b-in ) 
+			    (ProofRed u : =>= (cut ^ (D) ^ ([x:^(left (tensor A B))] E' ^ x u)) (F' u)) 
+		   	    (TofF' u u' cu extu : extrR (F' u) (PofF' u' cu)) 
+			    ([z]CongD''E' z)). 
+
+
+tensLemma_cutE1 : tensLemma D
+		  	    ([x:^(left (tensor A B))]cut ^ ((E1 : (left (tensor A B) -o right A') @ W) ^ x) ^ 
+			                                    ([n:^(left A')] (E2 : (left A' -o right C) @ W') ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			       extr_cut ([b:w][n:(left A') @ b][n':ch][cn:(chan n' A') @ b][extn:(extrL n n' cn)]
+					   TofE2 b n n' cn extn) (TofE1 a x x' cx extx : extrR (E1 a x) (PofE1 x' a cx)))
+			    ([x']lts-b-open ([y]lts-f-out))
+			    ([x'][z]lts-b-res ([n]lts-b-par1 (lts-b-in)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut ([a:w][x:(left A') @ a][x':ch][cx:(chan x' A') @ a][extx:(extrL x x' cx)]
+					 TofE2 a x x' cx extx) (TofF1))
+			    ([z]sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP'Q1' z)))
+			    	      (sc_cong_new ([x]sc_par_com)))
+				      (sc_cong_new ([x]sc_new_scope)) )
+		<- tensLemma D ([x:^(left (tensor A B))] E1 ^ x) (TofD) 
+		           ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE1 a x x' cx extx ) 
+		      	   ([x']lts-b-open ([y]lts-f-out)) ([x'][z']lts-b-in)
+			   (ProofRed : =>= (cut ^ (D) ^ ([x:^(left (tensor A B))] E1 ^ x)) (F1))
+			   (TofF1 )
+			   ([z]CongP'Q1' z).	
+
+tensLemma_cutE2 : tensLemma D
+		  	    ([x:^(left (tensor A B))]cut ^ E1 ^ ([n:^(left A')] E2 ^ x ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			       extr_cut ([b:w][n:(left A') @ b][n':ch][cn:(chan n' A') @ b][extn:(extrL n n' cn)]
+					   TofE2 a x x' cx extx b n n' cn extn ) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-b-open ([y]lts-f-out))
+			    ([x'][z]lts-b-res ([n]lts-b-par2 (lts-b-in)))
+			    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (cut/-/cut2))
+			    (extr_cut ([a:w][x:(left A') @ a][x':ch][cx:(chan x' A') @ a][extx:(extrL x x' cx)] 
+					 TofF2 a x x' cx extx) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc)))))
+				      (sc_new_swap))	
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))	       
+		<-({b:w}{n:(left A') @ b}{n':ch}{cn:(chan n' A') @ b}{extn:extrL n n' cn} 
+		     tensLemma D ([x:^(left (tensor A B))] (E2 : (left (tensor A B) -o left A' -o right C) @ W' ) ^ x ^ n) (TofD) 
+		           ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE2 a x x' cx extx b n n' cn extn) 
+		      	   ([x']lts-b-open ([y]lts-f-out)) ([x'][z']lts-b-in)
+			   (ProofRed b n : =>= (cut ^ (D) ^ ([x:^(left (tensor A B))] E2 ^ x b n)) (F2 b n))
+			   (TofF2 b n n' cn extn : extrR (F2 b n) (PofF2 n' b cn))
+			   ([z]CongP'Q2' n' z)).
+
+tensLemma_cutBE : tensLemma D
+		  	    ([x:^(left (tensor A B))]cutB E1 ^ ([u:(leftb A')] (E2 : (left (tensor A B) -o leftb A' -> right C)) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			       extr_cutB ([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu]
+					    TofE2 a x x' cx extx u u' cu extu) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-b-open ([y]lts-f-out))
+			    ([x'][z]lts-b-res ([n]lts-b-par2 (lts-b-in)))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/-/cutB))
+			    (extr_cutB ([u:(leftb A')][u':ch][cu:chanB u' A'][extu:extrLB u u' cu]
+					  TofF2 u u' cu extu) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc)))))
+				      (sc_new_swap))	
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope)))) 
+		<-({u:(leftb A')}{u':ch}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		     tensLemma D ([x:^(left (tensor A B))] E2 ^ x u) (TofD) 
+		           ([a:w][x:(left (tensor A B)) @ a][x':ch][cx:(chan x' (tensor A B)) @ a][extx:(extrL x x' cx)]
+			      TofE2 a x x' cx extx u u' cu extu) 
+		      	   ([x']lts-b-open ([y]lts-f-out)) ([x'][z']lts-b-in)
+			   (ProofRed u : =>= (cut ^ (D) ^ ([x:^(left (tensor A B))] E2 ^ x u)) (F2 u))
+			   (TofF2 u u' cu extu : extrR (F2 u) (PofF2 u' cu))
+			   ([z]CongP'Q2' u' z)).			     			    
+
+%worlds (b | bu) (tensLemma _ _ _ _ _ _ _ _ _).
+%terminates [D E] (tensLemma D E _ _ _ _ _ _ _).
+
+% total [D E] (tensLemma D E _ _ _ _ _ _ _).
+
+
+cutBLemma : 
+{D1 : (right A) }
+{D2 : ((leftb A) -> right C) @ W}
+	    extrR D1 (PofD1 : (proc ([z] P z) A)) ->
+	    ({u:leftb A}{u':ch}{cu:chanB u' A} extrLB u u' cu -> extrR (D2 u) (TofQ u' cu : (proc ([z] Q u' z) C) @ W)) ->
+	    ({u'}{z}lts-b (Q u' z) ([y]bOutLabel u' y) ([y]Q' u' z y)) -> % then
+	    =>= (cutB D1 ^ ([u:leftb A] D2 u)) (cutB D1 ^ ([u:leftb A] D u)) ->
+	    ({u:leftb A}{u':ch}{cu:chanB u' A} extrLB u u' cu -> extrR (D u) (TofR u' cu : (proc ([z] R u' z) C) @ W)) ->
+	    ({u'}{z} sc (R u' z) (new ([y] par (P y) (Q' u' z y)))) ->
+	    type.
+
+%mode (cutBLemma +D1 +D2 +ExtD1 +ExtD2 +Lts -PR -ExtR -Cong).
+
+cutBCor : 
+{D1 : right A}
+{D2 : (leftb A) -> right C}
+	    extrR D1 (TofP : proc ([z] P z) A) ->
+	    ({u:leftb A}{u':ch}{cu:chanB u' A} extrLB u u' cu -> extrR (D2 u) (TofQ u' cu : proc ([z] Q u' z) C)) ->
+	    ({u'}{z} lts-b (Q u' z) ([y]bOutLabel u' y) ([y]Q' u' z y)) -> % then
+	    =>= (cutB D1 ^ ([u:leftb A] D2 u)) (D) ->
+	    extrR D (PofR : proc ([z] R z) C) ->
+	    ({z}sc (R z) (new ([x]par (rep x ([u] P u)) (new ([y]par (P y) (Q' x z y)))))) ->
+	    type.
+
+%mode (cutBCor +D1 +D2 +ExtD1 +ExtD2 +Lts -PR -ExtR -Cong).
+
+lolliLemma : 
+{D : right (lolli A B) @ W }
+{E : (left (lolli A B) -o right C) @ W' }
+	     extrR D (TofP : (proc ([z] P z) (lolli A B)) @ W ) ->
+	     ({a:w}{x:left (lolli A B) @ a}{x':ch}{cx:(chan x' (lolli A B)) @ a} 
+		extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch}chan x' (lolli A B) -o (proc ([z] Q x' z) C)) @ W') x' ^ cx )) ->
+	     ({x'}lts-b (P x') ([y]inpLabel x' y) ([y]P' x' y)) ->
+	     ({x'}{z}lts-b (Q x' z) ([y]bOutLabel x' y) ([y]Q' x' z y)) ->
+	     =>= (cut ^ D ^ ([x:^(left (lolli A B))] E ^ x)) F ->
+	     extrR F (TofR : (proc ([z] R z) C) @ (W * W')) ->
+	     ({z}sc (R z) (new ([x]new ([y] par (P' x y) (Q' x z y))))) ->
+	     type.
+
+%mode (lolliLemma +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+
+
+andLemma1 : 
+{D : (right (and A B)) @ W}
+{E : (left (and A B) -o right C) @ W'}
+	   extrR D (TofP : (proc ([z] P z) (and A B)) @ W) ->
+	   ({a:w}{x:(left (and A B)) @ a}{x':ch}{cx:(chan x' (and A B)) @ a} 
+	      extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch}chan x' (and A B) -o proc ([z] Q x' z) C) @ W' ) x' ^ cx )) ->
+	   ({x'}lts-f (P x') (lInLabel x') (P' x')) ->
+	   ({x'}{z}lts-f (Q x' z) (lOutLabel x') (Q' x' z)) ->
+	   =>= (cut ^ D ^ ([x:^(left (and A B))] E ^ x)) F ->
+	   extrR F (TofR : (proc ([z] R z) C) @ (W * W')) ->
+	   ({z} sc (R z) (new ([x]par (P' x) (Q' x z)))) ->
+	   type.
+
+%mode (andLemma1 +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+andLemma2 : 
+{D : (right (and A B)) @ W}
+{E : (left (and A B) -o right C) @ W'}
+	   extrR D (TofP : (proc ([z] P z) (and A B)) @ W) ->
+	   ({a:w}{x:(left (and A B)) @ a}{x':ch}{cx:(chan x' (and A B)) @ a} 
+	      extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch}chan x' (and A B) -o proc ([z] Q x' z) C) @ W' ) x' ^ cx )) ->
+	   ({x'}lts-f (P x') (rInLabel x') (P' x')) ->
+	   ({x'}{z}lts-f (Q x' z) (rOutLabel x') (Q' x' z)) ->
+	   =>= (cut ^ D ^ ([x:^(left (and A B))] E ^ x)) F ->
+	   extrR F (TofR : (proc ([z] R z) C) @ (W * W')) ->
+	   ({z} sc (R z) (new ([x]par (P' x) (Q' x z)))) ->
+	   type.
+
+%mode (andLemma2 +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+sumLemma1 : 
+{D : (right (sum A B)) @ W}
+{E : (left (sum A B) -o right C) @ W'}
+	    extrR D (TofP : (proc ([z] P z) (sum A B)) @ W) ->
+ 	    ({a:w}{x:(left (sum A B)) @ a}{x':ch}{cx:(chan x' (sum A B)) @ a} 
+	       extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch}chan x' (sum A B) -o proc ([z] Q x' z) C) @ W') x' ^ cx )) ->
+	    ({x'}lts-f (P x') (lOutLabel x') (P' x')) ->
+	    ({x'}{z}lts-f (Q x' z) (lInLabel x') (Q' x' z)) ->
+	    =>= (cut ^ D ^ ([x:^(left (sum A B))] E ^ x)) F ->
+	    extrR F (TofR : (proc ([z] R z) C) @ (W * W' ) ) ->
+	    ({z} sc (R z) (new ([x]par (P' x) (Q' x z)))) ->
+	    type.
+
+%mode (sumLemma1 +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+sumLemma2 : 
+{D : (right (sum A B)) @ W}
+{E : (left (sum A B) -o right C) @ W'}
+	    extrR D (TofP : (proc ([z] P z) (sum A B)) @ W) ->
+ 	    ({a:w}{x:(left (sum A B)) @ a}{x':ch}{cx:(chan x' (sum A B)) @ a} 
+	       extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch}chan x' (sum A B) -o proc ([z] Q x' z) C) @ W') x' ^ cx )) ->
+	    ({x'}lts-f (P x') (rOutLabel x') (P' x')) ->
+	    ({x'}{z}lts-f (Q x' z) (rInLabel x') (Q' x' z)) ->
+	    =>= (cut ^ D ^ ([x:^(left (sum A B))] E ^ x)) F ->
+	    extrR F (TofR : (proc ([z] R z) C) @ (W * W' ) ) ->
+	    ({z} sc (R z) (new ([x]par (P' x) (Q' x z)))) ->
+	    type.
+
+%mode (sumLemma2 +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+bangLemma : 
+{D : right (bang A) @ W}
+{E : (left (bang A) -o right C) @ W'}
+	    extrR D (TofP : proc ([z] P z) (bang A) @ W) ->
+	    ({a:w}{x:(left (bang A)) @ a}{x':ch}{cx:(chan x' (bang A)) @ a}
+	       extrL x x' cx -> extrR (E ^ x) ((TofQ : ({x':ch} chan x' (bang A) -o  proc ([z] Q x' z) C) @ W') x' ^ cx)) ->
+	    ({x'}lts-b (P x') ([y]inpLabel x' y) ([y]P' x' y)) ->
+	    ({x'}{z}lts-b (Q x' z) ([y]bOutLabel x' y) ([y]Q' x' z y)) ->
+	    =>= (cut ^ D ^ ([x:^(left (bang A))] E ^ x)) F ->
+	    extrR F (TofR : (proc ([z] R z) C) @ (W * W')) ->
+	    ({z} sc (R z) (new ([x]new ([y]par (P' x y) (Q' x z y))))) ->
+	    type.
+
+%mode (bangLemma +D +E +ExtD +ExtE +LtsP +LtsQ -PR -ExtR -Cong).
+
+% End of theorem declarations 
+
+cutBLemma_copy : cutBLemma (D1 : right A)
+	       	 	   ([x:(leftb A)]copy x ^ ([y:^(left A)] (D2' : (left A -o right C) @ W) ^ y))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u':ch][cu:chanB u' A][extu:extrLB u u' cu]
+			      extr_copy extu ([a:w][y:(left A) @ a][y':ch][cy:(chan y' A) @ a][exty:extrL y y' cy] 
+						TofD2' a y y' cy exty ))
+			   ([u'][z]lts-b-open ([y]lts-f-out))
+			   (clos4 (cut/-/cutB) (cutB/-/copy))
+			   ([u:leftb A][u':ch][cu:chanB u' A][extu:extrLB u u' cu] 
+			      extr_cut ([a:w][y:(left A) @ a][y'][cy:(chan y' A) @ a][exty:extrL y y' cy] TofD2' a y y' cy exty ) (TofD1))
+			   ([u'][z] sc_r ).
+
+
+cutBLemma_oneL : cutBLemma (D1 : right A)
+	       	 	   ([x:(leftb A)] oneL ^ N ^ ((D2' : (leftb A -> right C)) x))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:extrLB u u' cu]
+			      extr_oneL (ExtN : extrL N N' CN) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-open ([y]lts-f-out))
+			   (clos3 (sconv_s cutB/-/oneL) (oneL/pre ProofRed) (cutB/-/oneL))
+			   ([u:(leftb A)][u':ch][cu:(chanB u' A)][extu:(extrLB u u' cu)]extr_oneL (ExtN) (TofDs u u' cu extu))
+			   ([u'][z]CongP1P2' u' z)
+		<- cutBLemma (D1) ([x:(leftb A)]D2' x) (TofD1) ([u:(leftb A)][u':ch][cu:(chanB u' A)][extu:extrLB u u' cu]
+								  TofD2' u u' cu extu)
+		   	     ([u'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed) ([u:(leftb A)][u':ch][cu:(chanB u' A)][extu:(extrLB u u' cu)]TofDs u u' cu extu)
+			     ([u'][z]CongP1P2' u' z).
+
+cutBLemma_bangL : cutBLemma (D1 : right A)
+		  	    ([x:(leftb A)]bangL ^ (N : left (bang B)) ^ ([u:(leftb B)] (D2' : leftb A -> leftb B -> right C) x u))
+			    (TofD1 : extrR D1 PofD1)
+			    ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)] 
+			       extr_bangL ([v:(leftb B)][v':ch][cv:(chanB v' B)][extv:(extrLB v v' cv)] 
+					     TofD2' u u' cu extu v v' cv extv) (ExtN))
+			    ([u'][z]lts-b-open ([y]lts-f-out))
+			    (clos3 (sconv_s cutB/-/bangL) (bangL/pre ([u:(leftb B)]ProofRed u)) (cutB/-/bangL))
+			    ([u:(leftb A)][u':ch][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			       extr_bangL ([v:(leftb B)][v':ch][cv:(chanB v' B)][extv:(extrLB v v' cv)]
+					     TofDs u u' cu extu v v' cv extv ) (ExtN))
+			    ([u'][z]CongP1P2' u' z)
+		<- ({n:(leftb B)}{n':ch}{cn:(chanB n' B)}{extn:(extrLB n n' cn)} 
+		      cutBLemma (D1) ([x:(leftb A)]D2' x n)
+ 		       (TofD1) ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)] 
+				  TofD2' u u' cu extu n n' cn extn)
+		       ([u'][z]lts-b-open ([y]lts-f-out))
+		       (ProofRed n)
+		       ([u:(leftb A)][u':ch][cu:(chanB u' A)][extu:(extrLB u u' cu)]TofDs u u' cu extu n n' cn extn )
+		       ([u'][z]CongP1P2' u' z)).
+
+cutBLemma_cut1 : cutBLemma (D1 : right A)
+	      		   ([x:(leftb A)]cut ^ ((D2' : leftb A -> right B) x) ^ ([n:^(left B)] 
+										   (D2'' : leftb A -> left B -o right C) x ^ n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)] 
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par1 (lts-b-open ([x]lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cut)) (cut/pre1 (ProofRed)) (cutB/-/cut))
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)] 
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofD2'' u u' cu extu a x x' cx extx) (TofDs u u' cu extu))
+			   ([u'][z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP1'R1' u' z)))
+			   		  (sc_cong_new ([x]sc_par_com)))
+					  (sc_cong_new ([x]sc_new_scope)))
+					  (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+					  (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+					  (sc_new_swap))
+					  (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- cutBLemma (D1) ([x:leftb A] D2' x) (TofD1)
+		   	     ([x:(leftb A)][x'][cx:(chanB x' A)][extx:(extrLB x x' cx)]TofD2' x x' cx extx)
+			     ([u'][z]lts-b-open ([x]lts-f-out))
+			     (ProofRed)
+			     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]TofDs u u' cu extu)
+			     ([u'][z]CongP1'R1' u' z).
+
+cutBLemma_cut2 : cutBLemma (D1 : right A)
+	      		   ([x:(leftb A)]cut ^ ((D2': leftb A -> right B) x ) ^ ([n:^(left B)] 
+										   (D2'' : leftb A -> left B -o right C) x ^ n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cut)) (cut/pre2 ([n:^(left B)]ProofRed ^ n)) (cutB/-/cut))
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofDs u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			   ([u'][z]sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R2' u' z x) (sc_r)))
+			   		  (sc_cong_new ([x]sc_new_scope)))
+					  (sc_new_swap))
+					  (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- ({a:w}{n:(left B) @ a}{n'}{cn:(chan n' B) @ a}{extn:extrL n n' cn}
+		      cutBLemma (D1) ([x:(leftb A)] D2'' x a n) (TofD1)
+		   	     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				TofD2'' u u' cu extu a n n' cn extn)
+			     ([u'][z]lts-b-open ([x]lts-f-out))
+			     (ProofRed a n)
+			     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				TofDs u u' cu extu a n n' cn extn)
+			     ([u'][z]CongP1'R2' u' z n')).
+
+cutBLemma_cutB : cutBLemma (D1 : right A)
+	       	 	   ([x:(leftb A)]cutB ((D2' : leftb A -> right B) x) ^ ([n:(leftb B)](D2'' : leftb A -> leftb B -> right C) x n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cutB ([n:(leftb B)][n'][cn:(chanB n' B)][extn:(extrLB n n' cn)]
+					   TofD2'' u u' cu extu n n' cn extn) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			   (clos3 (sconv_s (cutB/-/cutB)) (cutB/pre2 ([n:(leftb B)]ProofRed n)) (cutB/-/cutB))
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cutB ([n:(leftb B)][n'][cn:(chanB n' B)][extn:(extrLB n n' cn)]
+					   TofDs u u' cu extu n n' cn extn) (TofD2' u u' cu extu))
+			   ([u'][z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R2' u' z x) (sc_r)))
+			   		  (sc_cong_new ([x]sc_new_scope)))
+					  (sc_new_swap))
+					  (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+					  (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+					  (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+					  (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- ({n:(leftb B)}{n'}{cn:(chanB n' B)}{extn:extrLB n n' cn}
+		      cutBLemma (D1) ([x:(leftb A)]D2'' x n) (TofD1)
+		       	   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      TofD2'' u u' cu extu n n' cn extn)
+			   ([u'][z]lts-b-open ([x]lts-f-out))
+			   (ProofRed n)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      TofDs u u' cu extu n n' cn extn)
+			   ([u'][z]CongP1'R2' u' z n')).
+
+
+%worlds (b | bu) (cutBLemma _ _ _ _ _ _ _ _).
+%terminates [D E] (cutBLemma D E _ _ _ _ _ _).
+% total [D E] (cutBLemma D E _ _ _ _ _ _).
+
+cutBCor_copy : cutBCor (D1 : right A)
+	       	 	   ([x:(leftb A)]copy x ^ ([y:^(left A)] (D2' : (left A -o right C)) ^ y))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_copy extu ([a:w][y:(left A) @ a][y'][cy:(chan y' A) @ a][exty:(extrL y y' cy)]
+						TofD2' a y y' cy exty) )
+			   ([u'][z]lts-b-open ([y]lts-f-out))
+			   (ProofRed) 
+			   (extr_cutB ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					 TofDs u u' cu extu) (TofD1))
+			   ([z]sc_cong_new ([x]sc_cong_par (Cong x z) (sc_r)) )
+		<- cutBLemma (D1) ([x:(leftb A)]copy x ^ ([y:^(left A)] D2' ^ y)) (TofD1) 
+		   	     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				extr_copy extu ([a:w][y:(left A) @ a][y'][cy:(chan y' A) @ a][exty:(extrL y y' cy)]
+						  TofD2' a y y' cy exty))
+			     ([u'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed) ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					   TofDs u u' cu extu)
+			     ([u'][z]Cong u' z).
+
+cutBCor_oneL : cutBCor (D1 : right A)
+	       	 	   ([x:(leftb A)] oneL ^ N ^ ((D2' : leftb A -> right C) x))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_oneL (ExtN : extrL N N' CN) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-open ([y]lts-f-out))
+			   (ProofRed)
+			   (extr_cutB ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					 TofDs u u' cu extu) (TofD1))
+			   ([z]sc_cong_new ([x]sc_cong_par (Cong x z) (sc_r)))
+		<- cutBLemma (D1) ([x:(leftb A)] oneL ^ N ^ (D2' x)) (TofD1) 
+		   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+		      extr_oneL (ExtN : extrL N N' CN) (TofD2' u u' cu extu))
+		   	     ([u'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed) ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					   TofDs u u' cu extu)
+			     ([u'][z]Cong u' z).
+
+cutBCor_bangL : cutBCor (D1 : right A)
+		  	    ([x:leftb A]bangL ^ N ^ ([u:(leftb B)] (D2' : leftb A -> leftb B -> right C) x u))
+			    (TofD1 : extrR D1 PofD1)
+			    ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			       extr_bangL ([v:(leftb B)][v'][cv:(chanB v' B)][extv:(extrLB v v' cv)]
+					     TofD2' u u' cu extu v v' cv extv) (ExtN))
+			    ([u'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (bangL/pre ([u:leftb B]ProofRed u)) (cutB/-/bangL))
+			    (extr_bangL ([v:(leftb B)][v'][cv:(chanB v' B)][extv:(extrLB v v' cv)]
+					   TofDs v v' cv extv ) (ExtN))
+			    ([z]CongP1P2' z)
+		<- ({n:(leftb B)}{n'}{cn:(chanB n' B)}{extn:extrLB n n' cn}
+		      cutBCor (D1) ([x:(leftb A)]D2' x n)
+		       	    	  		       (TofD1) ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+								  TofD2' u u' cu extu n n' cn extn)
+						       ([u'][z]lts-b-open ([y]lts-f-out))
+						       (ProofRed n)
+						       (TofDs n n' cn extn )
+						       ([z]CongP1P2' z)).
+
+
+cutBCor_cut1 : cutBCor (D1 : right A)
+	      		   ([x:(leftb A)]cut ^ ((D2' : leftb A -> right B) x) ^ ([n:^(left B)] (D2'' : leftb A -> left B -o right C) x ^ n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par1 (lts-b-open ([x]lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					 TofDs u u' cu extu) (TofD1))
+			   ([z]sc_cong_new ([x]sc_cong_par (CongP'R' x z) (sc_r)))
+		<- cutBLemma (D1) ([x:(leftb A)]cut ^ (D2'  x) ^ ([n:^(left B)] D2'' x ^ n)) (TofD1)
+		   	     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					    TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			     ([u'][z]lts-b-res ([x]lts-b-par1 (lts-b-open ([x]lts-f-out))))
+			     (ProofRed)
+			     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]TofDs u u' cu extu)
+			     ([u'][z]CongP'R' u' z).
+
+cutBCor_cut2 : cutBCor (D1 : right A)
+	      		   ([x:(leftb A)]cut ^ ((D2' : leftb A -> right B) x ) ^ ([n:^(left B)](D2'' : leftb A -> left B -o right C) x ^ n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					  TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+					 TofDs u u' cu extu) (TofD1))
+			   ([z]sc_cong_new ([x]sc_cong_par (CongP'R' x z) (sc_r)))
+		<- cutBLemma (D1) ([x:(leftb A)]cut ^ (D2' x) ^ ([n:^(left B)] D2'' x ^ n)) (TofD1)
+		   	     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				extr_cut ([a:w][x:(left B) @ a][x':ch][cx:(chan x' B) @ a][extx:extrL x x' cx]
+					    TofD2'' u u' cu extu a x x' cx extx) (TofD2' u u' cu extu))
+			     ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			     (ProofRed)
+			     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				TofDs u u' cu extu)
+			     ([u'][z]CongP'R' u' z).
+
+cutBCor_cutB : cutBCor (D1 : right A)
+	       	 	   ([x:(leftb A)]cutB ((D2' : leftb A -> right B) x) ^ ([n:(leftb B)](D2'' : leftb A -> leftb B -> right C) x n))
+			   (TofD1 : extrR D1 PofD1)
+			   ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+			      extr_cutB ([n:(leftb B)][n'][cn:(chanB n' B)][extn:(extrLB n n' cn)]
+					   TofD2'' u u' cu extu n n' cn extn) (TofD2' u u' cu extu))
+			   ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			   (ProofRed)
+			   (extr_cutB ([n:(leftb A)][n'][cn:(chanB n' A)][extn:(extrLB n n' cn)]
+					 TofDs n n' cn extn) (TofD1))
+			   ([z]sc_cong_new ([x]sc_cong_par (CongP'R' x z) (sc_r)))
+		<- cutBLemma (D1) ([x:(leftb A)]cutB (D2' x) ^ ([n:(leftb B)] D2'' x n)) (TofD1)
+		   	     ([u:(leftb A)][u'][cu:(chanB u' A)][extu:(extrLB u u' cu)]
+				extr_cutB ([n:(leftb B)][n'][cn:(chanB n' B)][extn:(extrLB n n' cn)]
+					     TofD2'' u u' cu extu n n' cn extn) (TofD2' u u' cu extu))
+			     ([u'][z]lts-b-res ([x]lts-b-par2 (lts-b-open ([x]lts-f-out))))
+			     (ProofRed)
+			     ([n:(leftb A)][n'][cn:(chanB n' A)][extn:(extrLB n n' cn)]TofDs n n' cn extn)
+			     ([u'][z]CongP'R' u' z).
+
+
+%worlds (b | bu) (cutBCor _ _ _ _ _ _ _ _).
+%terminates [D E] (cutBCor D E _ _ _ _ _ _).
+% total [D E] (cutBCor D E _ _ _ _ _ _).
+
+lolliLemma_lolli : lolliLemma (lolliR ^ ([y:^(left A)] (D : left A -o right B) ^ y))
+		   	      ([x:^(left (lolli A B))]lolliL ^ x ^ E1 ^ ([x:^(left B)] (E2 : left B -o right C) ^ x))
+			      (extr_lolliR ([a:w][y:(left A) @ a][y'][cy:(chan y' A) @ a][exty:extrL y y' cy]TofD a y y' cy exty))
+			      ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+				 extr_lolliL extx ([a:w][y:(left B) @ a][y'][cy:(chan y' B) @ a][exty:extrL y y' cy]
+						     TofE2 a y y' cy exty) (TofE1 : extrR E1 PofE1))
+			      ([x']lts-b-in)
+			      ([x'][z]lts-b-open ([y]lts-f-out))
+			      (clos1 (cut/lolliR/lolliL))
+			      (extr_cut ([a:w][y:(left B) @ a][y'][cy:(chan y' B) @ a][exty:extrL y y' cy]
+					   TofE2 a y y' cy exty) (extr_cut ([a:w][y:(left A) @ a][y'][cy:(chan y' A) @ a][exty:extrL y y' cy]
+									      TofD a y y' cy exty) (TofE1)))
+			      ([z]sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (sc_cong_new ([x]sc_par_com))))
+			      		(sc_cong_new ([x]sc_par_com)))
+					(sc_cong_new ([x]sc_new_scope)))
+					(sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+					(sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc)))).
+
+lolliLemma_bangL : lolliLemma (D1)
+		  	    ([x:^(left (lolli A B))]bangL ^ U ^ ([u:(leftb A')] (D2' : left (lolli A B) -o leftb A' -> right C) ^ x u))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       extr_bangL ([u:(leftb A')][u'][cu:(chanB u' A')][extu:(extrLB u u' cu)]
+					     TofD2' a x x' cx extx u u' cu extu) (ExtU))
+			    ([x']lts-b-in)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			    (extr_bangL ([u:(leftb A')][u'][cu:(chanB u' A')][extu:(extrLB u u' cu)]
+					   TofD1D2' u u' cu extu) (ExtU))
+			    ([z]CongP1'Q1' z)
+		<- ({u:leftb A'}{u'}{cu:(chanB u' A')}{extu:extrLB u u' cu}
+		   lolliLemma D1 ([x:^(left (lolli A B))] D2' ^ x u) (TofD1) 
+		       	     ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+				TofD2' a x x' cx extx u u' cu extu)
+			     ([x']lts-b-in)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed u)
+			     (TofD1D2' u u' cu extu)
+			     ([z]CongP1'Q1' z)).
+
+lolliLemma_oneL1 : lolliLemma (oneL ^ N ^ D1')
+		  	    ([x:^(left (lolli A B))] (D2 : left (lolli A B) -o right C ) ^ x)
+			    (extr_oneL (ExtN) (TofD1' : extrR D1' PofD1'))
+			    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       TofD2 a x x' cx extx)
+			    ([x']lts-b-in)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/oneL/-))
+			    (extr_oneL (ExtN) (TofD1'D2))
+			    ([z]CongP1'Q1' z)
+		<- lolliLemma D1' ([x:^(left (lolli A B))] D2 ^ x) (TofD1') 
+		   ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+			     ([x']lts-b-in)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed)
+			     (TofD1'D2)
+			     ([z]CongP1'Q1' z).
+
+lolliLemma_oneL2 : lolliLemma (D1)
+		  	    ([x:^(left (lolli A B))]oneL ^ N ^ ((D2' : left (lolli A B) -o right C) ^ x))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       extr_oneL (ExtN) (TofD2' a x x' cx extx))
+			    ([x']lts-b-in)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofD1D2'))
+			    ([z]CongP1'Q1' z)
+		<- lolliLemma D1 ([x:^(left (lolli A B))]D2' ^ x) (TofD1) 
+		   ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]TofD2' a x x' cx extx)
+		   	     ([x']lts-b-in)
+			     ([x'][z]lts-b-open ([y]lts-f-out))		   	     
+			     (ProofRed) (TofD1D2')
+			     ([z]CongP1'Q1' z).
+
+lolliLemma_cut1 : lolliLemma (cut ^ D1' ^ ([x:^(left A')] (D1'' : left A' -o right (lolli A B)) ^ x))
+	       	 	   ([x:^(left (lolli A B))] (D2 : left (lolli A B) -o right C) ^ x)
+			   (extr_cut ([a:w][x:(left A') @ a][x'][cx:(chan x' A') @ a][extx:extrL x x' cx]
+					TofD1'' a x x' cx extx) (TofD1' : extrR D1' PofD1'))
+			   ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+			   ([x']lts-b-res ([y]lts-b-par2 (lts-b-in)))
+			   ([x'][z]lts-b-open ([y]lts-f-out))
+			   (clos2 (cut/pre2 ([x:^(left A')] ProofRed ^ x)) (sconv_s cut/-/cut1))
+			   (extr_cut ([a:w][x:(left A') @ a][x'][cx:(chan x' A') @ a][extx:extrL x x' cx]
+					TofD1''D2 a x x' cx extx) (TofD1'))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongR2'Q1' x z) (sc_r)))
+			   	     (sc_cong_new ([x]sc_new_scope)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				     (sc_new_swap))
+				     (sc_cong_new ([x]sc_new_swap)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))				     
+		<- ({a:w}{x:(left A') @ a}{x'}{cx:(chan x' A') @ a}{extx:extrL x x' cx}
+		       lolliLemma (D1'' ^ x) ([x:^(left (lolli A B))]D2 ^ x) (TofD1'' a x x' cx extx)
+		       		 ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+				    TofD2 a x x' cx extx)
+				 ([x']lts-b-in)
+				 ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed a x)
+				 (TofD1''D2 a x x' cx extx)
+				 ([z]CongR2'Q1' x' z)).
+
+lolliLemma_cut21 : lolliLemma (D1) 
+	       	 	   ([x:^(left (lolli A B))]cut ^ ((D2' : left (lolli A B) -o right A') ^ x) ^ 
+			      ([y:^(left A')](D2'' : left A' -o right C) ^ y))
+			   (TofD1 : extrR D1 PofD1)
+			   ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			      extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					  TofD2'' a y y' cy exty) (TofD2' a x x' cx extx))
+			   ([x']lts-b-in)
+			   ([x'][z]lts-b-res ([y]lts-b-par1 (lts-b-open ([z]lts-f-out))))
+			   (clos2 (cut/pre1 ProofRed) (cut/-/cut1))
+			   (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					TofD2'' a y y' cy exty) (TofD1D2'))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP1'R1' z)))
+			   	     (sc_cong_new ([x]sc_par_com)))
+				     (sc_cong_new ([x]sc_new_scope)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc )))))
+				     (sc_new_swap))
+				     (sc_cong_new ([x]sc_new_swap)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))			     
+		<- lolliLemma (D1) ([x:^(left (lolli A B))]D2' ^ x) (TofD1) 
+		           ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]TofD2' a x x' cx extx)
+		       		 ([x']lts-b-in) ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed)
+				 (TofD1D2')
+				 ([z]CongP1'R1' z).
+
+lolliLemma_cut22 : lolliLemma (D1) 
+		  	    ([x:^(left (lolli A B))]cut ^ D2' ^ ([y:^(left A')](D2'' : left (lolli A B) -o left A' -o right C) ^ x ^ y))
+		  	    (TofD1 : extrR D1 PofD1)
+		 	    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofD2'' a x x' cx extx b y y' cy exty) (TofD2'))
+		 	    ([x']lts-b-in)
+		  	    ([x'][z]lts-b-res ([y]lts-b-par2 (lts-b-open ([z]lts-f-out))))
+		  	    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n)) (cut/-/cut2))
+		  	    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofD1D2'' b y y' cy exty) (TofD2'))
+		  	    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R1' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+		<- ({a:w}{y:(left A') @ a}{y'}{cy:(chan y' A') @ a}{exty:extrL y y' cy}
+		       	    lolliLemma (D1) ([x:^(left (lolli A B))]D2'' ^ x a y) (TofD1) 
+		               ([b:w][x:(left (lolli A B)) @ b][x'][cx:(chan x' (lolli A B)) @ b][extx:extrL x x' cx]
+				  TofD2'' b x x' cx extx a y y' cy exty)
+			    	      ([x']lts-b-in) ([x'][z]lts-b-open ([y]lts-f-out))
+				      (ProofRed a y)
+				      (TofD1D2'' a y y' cy exty)
+				      ([z]CongP1'R1' y' z)).
+
+lolliLemma_cutB1 : lolliLemma (D1)
+	       	 	    ([x:^(left (lolli A B))]cutB D2' ^ ([n:(leftb A')](D2'' : left (lolli A B) -o leftb A' -> right C) ^ x n))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofD2'' a x x' cx extx n n' cn extn) (TofD2'))
+			    ([x']lts-b-in)
+			    ([x'][z]lts-b-res ([y]lts-b-par2 (lts-b-open ([z]lts-f-out))))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n)) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD1D2'' n n' cn extn) (TofD2'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z] sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		       lolliLemma (D1) ([x:^(left (lolli A B))]D2'' ^ x n) (TofD1) 
+		               ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+				  TofD2'' a x x' cx extx n n' cn extn)
+		       		 ([x']lts-b-in) ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed n)
+				 (TofD1D2'' n n' cn extn)
+				 ([z]CongP1'R2' n' z)).
+
+lolliLemma_cutB2 : lolliLemma (cutB D1' ^ ([n:(leftb A')](D1'' : leftb A' -> right (lolli A B)) n))
+		  	    ([x:^(left (lolli A B))](D2 : left (lolli A B) -o right C) ^ x)
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]TofD1'' n n' cn extn) (TofD1'))
+			    ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			       TofD2 a x x' cx extx)
+			    ([x']lts-b-res ([y]lts-b-par2 (lts-b-in)))
+			    ([x'][z]lts-b-open ([z]lts-f-out))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n)) (cut/cutB/-))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD1''D2 n n' cn extn) (TofD1'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongR2'Q1' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		       	    lolliLemma (D1'' n) ([x:^(left (lolli A B))]D2 ^ x) (TofD1'' n n' cn extn)
+			    	      ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx)
+				      ([x']lts-b-in)
+				      ([x'][z]lts-b-open ([z]lts-f-out))
+				      (ProofRed n)
+				      (TofD1''D2 n n' cn extn)
+				      ([z] CongR2'Q1' n' z)).
+
+%worlds (b | bu) (lolliLemma _ _ _ _ _ _ _ _ _).
+%terminates [D E] (lolliLemma D E _ _ _ _ _ _ _).
+% total [D E] (lolliLemma D E _ _ _ _ _ _ _).
+
+andLemma1_and : andLemma1 (andR ^ (D1) (D2))
+	      		  ([x:^(left (and A B))]andL1 ^ x ^ ([x:^(left A)] (E1 : left A -o right C) ^ x))
+			  (extr_andR (TofD2 : extrR D2 P2) (TofD1 : extrR D1 P1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			     extr_andL1 ([b:w][y:(left A) @ b][y'][cy:(chan y' A) @ b][exty:extrL y y' cy]
+					   TofE1 b y y' cy exty) extx) 
+			  ([x']lts-f-lin)
+			  ([x'][z]lts-f-lout)
+			  (clos1 (cut/andR/andL1))
+			  (extr_cut ([b:w][y:(left A) @ b][y'][cy:(chan y' A) @ b][exty:extrL y y' cy]
+				       TofE1 b y y' cy exty) (TofD1))
+			  ([z]sc_r).
+
+andLemma1_oneL : andLemma1 (oneL ^ Y ^ D1)
+	      		  ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			  (extr_oneL (ExtY) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			     TofE a x x' cx extx)
+			  ([x']lts-f-lin)
+			  ([x'][z]lts-f-lout)
+			  (clos2 (oneL/pre (ProofRed)) (cut/oneL/-))
+			  (extr_oneL (ExtY) (TofD1E'))
+			  ([z]CongP'Q' z)
+		<- andLemma1 D1 ([x:^(left (and A B))]E ^ x) (TofD1) 
+		   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+		   	     ([x']lts-f-lin) ([x'][z]lts-f-lout) 
+			     (ProofRed)
+			     (TofD1E')
+			     ([z]CongP'Q' z).
+
+andLemma1_bangL : andLemma1 (bangL ^ Y ^ ([u:(leftb A')] (D1 : leftb A' -> right (and A B)) u))
+	       	 	   ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD1 n n' cn extn) (ExtY))
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)
+			   ([x']lts-f-lin)
+			   ([x'][z]lts-f-lout)
+			   (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/bangL/-))
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD1'E' n n' cn extn) (ExtY))
+			   ([z]CongP1'Q' z)
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		       	   andLemma1 (D1 n) ([x:^(left (and A B))] E ^ x) (TofD1 n n' cn extn)
+			   	     ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+				     ([x']lts-f-lin) ([x'][z]lts-f-lout)
+				     (ProofRed n)
+				     (TofD1'E' n n' cn extn)
+				     ([z]CongP1'Q' z)).
+
+andLemma1_cut : andLemma1 (cut ^ D1 ^ ([y:^(left A')] (D2 : left A' -o right (and A B)) ^ y))
+	       		([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			(extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				     TofD2 a y y' cy exty) (TofD1 : extrR D1 PofD1))
+			([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+			([x']lts-f-res ([x]lts-f-par2 lts-f-lin))
+			([x'][z]lts-f-lout)
+			(clos2 (cut/pre2 ([x:^(left A')]ProofRed ^ x)) (sconv_s cut/-/cut1))
+			(extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]TofD2'E' a y y' cy exty) (TofD1))
+			([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+				  (sc_cong_new ([x]sc_new_scope)))
+				  (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				  (sc_new_swap))
+				  (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				  (sc_cong_new ([x]sc_s sc_new_scope)))
+				  (sc_cong_new ([x]sc_par_com)))
+		<-({b:w}{x:(left A') @ b}{x'}{cx:(chan x' A') @ b}{extx:extrL x x' cx}
+		      	andLemma1 (D2 b x) ([x:^(left (and A B))] E ^ x) (TofD2 b x x' cx extx)
+				 ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+				    TofE a x x' cx extx)
+				 ([x']lts-f-lin) ([x'][z]lts-f-lout)
+				 (ProofRed b x)
+				 (TofD2'E' b x x' cx extx)
+				 ([z]CongP2'Q' x' z)).
+
+andLemma1_cutB : andLemma1 (cutB D1 ^ ([u:(leftb A')](D2 : leftb A' -> right (and A B)) u))	
+	      		  ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			  (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					TofD2 n n' cn extn) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+			  ([x']lts-f-res ([x]lts-f-par2 lts-f-lin))
+			  ([x'][z]lts-f-lout)
+			  (clos2 (cutB/pre2 ([u:(leftb A')]ProofRed u)) (cut/cutB/-))
+			  (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]TofD2'E' n n' cn extn) (TofD1))
+			  ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com)))
+		<-({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		      	  andLemma1 (D2 n) ([x:^(left (and A B))] E ^ x) (TofD2 n n' cn extn)
+			  	    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+				    ([x']lts-f-lin) ([x'][z]lts-f-lout)
+				    (ProofRed n)
+				    (TofD2'E' n n' cn extn)
+				    ([z]CongP2'Q' n' z)).
+
+andLemma1_oneLE : andLemma1 (D)
+	       	 	   ([x:^(left (and A B))]oneL ^ X ^ ((E1 : left (and A B) -o right C) ^ x))
+			   (TofD)
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      extr_oneL (ExtX) (TofE1 a x x' cx extx))
+			   ([x']lts-f-lin) 
+			   ([x'][z]lts-f-lout)
+			   (clos2 (oneL/pre (ProofRed)) (cut/-/oneL))
+			   (extr_oneL (ExtX) (TofD'E1'))
+			   ([z]CongP'Q' z)
+		<- andLemma1 (D) ([x:^(left (and A B))] E1 ^ x) (TofD) 
+		            ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE1 a x x' cx extx)
+			    ([x']lts-f-lin) ([x'][z]lts-f-lout)
+			    (ProofRed)
+			    (TofD'E1')
+			    ([z]CongP'Q' z).
+
+
+andLemma_bangLE : andLemma1 (D)
+		   	    ([x:^(left (and A B))] bangL ^ N ^ ([u:(leftb A')] (E' : left (and A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					     TofE' a x x' cx extx n n' cn extn) (ExtN : extrL N N' CN))
+			    ([x']lts-f-lin) 
+			    ([x'][z]lts-f-lout)			    
+			    (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			    (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD'E'' n n' cn extn) ExtN)
+			    ([z]CongD''E' z)
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		      andLemma1 (D) ([x:^(left (and A B))]E' ^ x n) (TofD) 
+		          ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE' a x x' cx extx n n' cn extn) 
+		   	    ([x']lts-f-lin) 
+			    ([x'][z]lts-f-lout) 
+			    (ProofRed n) 
+		   	    (TofD'E'' n n' cn extn) 
+			    ([z]CongD''E' z)). 
+
+andLemma1_cutBE : andLemma1  (D)
+		  	    ([x:^(left (and A B))]cutB E1 ^ ([u:(leftb A')] (E2 : left (and A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofE2 a x x' cx extx n n' cn extn) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-lin)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-lout)))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD'E2' n n' cn extn) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		     andLemma1 D ([x:^(left (and A B))] E2 ^ x n) (TofD) 
+		     ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+							TofE2 a x x' cx extx n n' cn extn) 
+		      	   ([x']lts-f-lin) ([x'][z]lts-f-lout) 
+			   (ProofRed n)
+			   (TofD'E2' n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+andLemma1_cutE1 : andLemma1  (D)
+		  	    ([x:^(left (and A B))]cut ^ ((E1 : left (and A B) -o right A') ^ x) ^ 
+			       ([n:^(left A')](E2 : left A' -o right C) ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					   TofE2 a y y' cy exty) (TofE1 a x x' cx extx))
+			    ([x']lts-f-lin)
+			    ([x'][z]lts-f-res ([n]lts-f-par1 (lts-f-lout)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					 TofE2 a y y' cy exty) (TofD'E1'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP'Q1' z)))
+			    	      (sc_cong_new ([x]sc_par_com)))
+				      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- andLemma1 D ([x:^(left (and A B))] E1 ^ x) (TofD) 
+		           ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE1 a x x' cx extx ) 
+		      	   ([x']lts-f-lin) ([x'][z]lts-f-lout)
+			   (ProofRed)
+			   (TofD'E1')
+			   ([z]CongP'Q1' z).
+
+andLemma1_cutE2 : andLemma1  (D)
+			    ([x:^(left (and A B))]cut ^ E1 ^ ([n:^(left A')] (E2 : left (and A B) -o left A' -o right C) ^ x ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofE2 a x x' cx extx b y y' cy exty ) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-lin)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-lout)))
+			    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (cut/-/cut2))
+			    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofD'E2' b y y' cy exty) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     andLemma1 D ([x:^(left (and A B))] E2 ^ x b n) (TofD) 
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx b n n' cn extn) 
+		      	   ([x']lts-f-lin) ([x'][z]lts-f-lout)
+			   (ProofRed b n)
+			   (TofD'E2' b n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+%worlds (b | bu) (andLemma1 _ _ _ _ _ _ _ _ _).
+%terminates [D E] (andLemma1 D E _ _ _ _ _ _ _).
+% total [D E] (andLemma1 D E _ _ _ _ _ _ _).
+
+andLemma2_and : andLemma2 (andR ^ (D1) (D2))
+	      		  ([x:^(left (and A B))]andL2 ^ x ^ ([x:^(left B)] (E1 : left B -o right C) ^ x))
+			  (extr_andR (TofD2 : extrR D2 P2) (TofD1 : extrR D1 P1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			     extr_andL2 ([b:w][y:(left B) @ b][y'][cy:(chan y' B) @ b][exty:extrL y y' cy]
+					   TofE2 b y y' cy exty) extx) 
+			  ([x']lts-f-rin)
+			  ([x'][z]lts-f-rout)
+			  (clos1 (cut/andR/andL2))
+			  (extr_cut ([b:w][y:(left B) @ b][y'][cy:(chan y' B) @ b][exty:extrL y y' cy]
+				       TofE2 b y y' cy exty) (TofD2))
+			  ([z]sc_r).
+
+
+andLemma2_oneL : andLemma2 (oneL ^ Y ^ D1)
+	      		  ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			  (extr_oneL (ExtY) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			     TofE a x x' cx extx)
+			  ([x']lts-f-rin)
+			  ([x'][z]lts-f-rout)
+			  (clos2 (oneL/pre (ProofRed)) (cut/oneL/-))
+			  (extr_oneL (ExtY) (TofD1E'))
+			  ([z]CongP'Q' z)
+		<- andLemma2 D1 ([x:^(left (and A B))]E ^ x) (TofD1) 
+		   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+		   	     ([x']lts-f-rin) ([x'][z]lts-f-rout) 
+			     (ProofRed)
+			     (TofD1E')
+			     ([z]CongP'Q' z).
+
+andLemma2_bangL : andLemma2 (bangL ^ Y ^ ([u:(leftb A')] (D1 : leftb A' -> right (and A B)) u))
+	       	 	   ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD1 n n' cn extn) (ExtY))
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)
+			   ([x']lts-f-rin)
+			   ([x'][z]lts-f-rout)
+			   (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/bangL/-))
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD1'E' n n' cn extn) (ExtY))
+			   ([z]CongP1'Q' z)
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		       	   andLemma2 (D1 n) ([x:^(left (and A B))] E ^ x) (TofD1 n n' cn extn)
+			   	     ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+				     ([x']lts-f-rin) ([x'][z]lts-f-rout)
+				     (ProofRed n)
+				     (TofD1'E' n n' cn extn)
+				     ([z]CongP1'Q' z)).
+
+andLemma2_cut : andLemma2 (cut ^ D1 ^ ([y:^(left A')] (D2 : left A' -o right (and A B)) ^ y))
+	       		([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			(extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				     TofD2 a y y' cy exty) (TofD1 : extrR D1 PofD1))
+			([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+			([x']lts-f-res ([x]lts-f-par2 lts-f-rin))
+			([x'][z]lts-f-rout)
+			(clos2 (cut/pre2 ([x:^(left A')]ProofRed ^ x)) (sconv_s cut/-/cut1))
+			(extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]TofD2'E' a y y' cy exty) (TofD1))
+			([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+				  (sc_cong_new ([x]sc_new_scope)))
+				  (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				  (sc_new_swap))
+				  (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				  (sc_cong_new ([x]sc_s sc_new_scope)))
+				  (sc_cong_new ([x]sc_par_com)))
+		<-({b:w}{x:(left A') @ b}{x'}{cx:(chan x' A') @ b}{extx:extrL x x' cx}
+		      	andLemma2 (D2 b x) ([x:^(left (and A B))] E ^ x) (TofD2 b x x' cx extx)
+				 ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+				    TofE a x x' cx extx)
+				 ([x']lts-f-rin) ([x'][z]lts-f-rout)
+				 (ProofRed b x)
+				 (TofD2'E' b x x' cx extx)
+				 ([z]CongP2'Q' x' z)).
+
+andLemma2_cutB : andLemma2 (cutB D1 ^ ([u:(leftb A')](D2 : leftb A' -> right (and A B)) u))	
+	      		  ([x:^(left (and A B))] (E : left (and A B) -o right C) ^ x)
+			  (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					TofD2 n n' cn extn) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+			  ([x']lts-f-res ([x]lts-f-par2 lts-f-rin))
+			  ([x'][z]lts-f-rout)
+			  (clos2 (cutB/pre2 ([u:(leftb A')]ProofRed u)) (cut/cutB/-))
+			  (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]TofD2'E' n n' cn extn) (TofD1))
+			  ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com)))
+		<-({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		      	  andLemma2 (D2 n) ([x:^(left (and A B))] E ^ x) (TofD2 n n' cn extn)
+			  	    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE a x x' cx extx)
+				    ([x']lts-f-rin) ([x'][z]lts-f-rout)
+				    (ProofRed n)
+				    (TofD2'E' n n' cn extn)
+				    ([z]CongP2'Q' n' z)).
+
+andLemma2_oneLE : andLemma2 (D)
+	       	 	   ([x:^(left (and A B))]oneL ^ X ^ ((E1 : left (and A B) -o right C) ^ x))
+			   (TofD)
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      extr_oneL (ExtX) (TofE1 a x x' cx extx))
+			   ([x']lts-f-rin) 
+			   ([x'][z]lts-f-rout)
+			   (clos2 (oneL/pre (ProofRed)) (cut/-/oneL))
+			   (extr_oneL (ExtX) (TofD'E1'))
+			   ([z]CongP'Q' z)
+		<- andLemma2 (D) ([x:^(left (and A B))] E1 ^ x) (TofD) 
+		            ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE1 a x x' cx extx)
+			    ([x']lts-f-rin) ([x'][z]lts-f-rout)
+			    (ProofRed)
+			    (TofD'E1')
+			    ([z]CongP'Q' z).
+
+
+andLemma_bangLE : andLemma2 (D)
+		   	    ([x:^(left (and A B))] bangL ^ N ^ ([u:(leftb A')] (E' : left (and A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					     TofE' a x x' cx extx n n' cn extn) (ExtN : extrL N N' CN))
+			    ([x']lts-f-rin) 
+			    ([x'][z]lts-f-rout)			    
+			    (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			    (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD'E'' n n' cn extn) ExtN)
+			    ([z]CongD''E' z)
+		<- ({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		      andLemma2 (D) ([x:^(left (and A B))]E' ^ x n) (TofD) 
+		          ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofE' a x x' cx extx n n' cn extn) 
+		   	    ([x']lts-f-rin) 
+			    ([x'][z]lts-f-rout) 
+			    (ProofRed n) 
+		   	    (TofD'E'' n n' cn extn) 
+			    ([z]CongD''E' z)). 
+
+andLemma2_cutBE : andLemma2  (D)
+		  	    ([x:^(left (and A B))]cutB E1 ^ ([u:(leftb A')] (E2 : left (and A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofE2 a x x' cx extx n n' cn extn) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-rin)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-rout)))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofD'E2' n n' cn extn) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({n:(leftb A')}{n'}{cn:(chanB n' A')}{extn:extrLB n n' cn}
+		     andLemma2 D ([x:^(left (and A B))] E2 ^ x n) (TofD) 
+		     ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+							TofE2 a x x' cx extx n n' cn extn) 
+		      	   ([x']lts-f-rin) ([x'][z]lts-f-rout) 
+			   (ProofRed n)
+			   (TofD'E2' n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+andLemma2_cutE1 : andLemma2  (D)
+		  	    ([x:^(left (and A B))]cut ^ ((E1 : left (and A B) -o right A') ^ x) ^ 
+			       ([n:^(left A')](E2 : left A' -o right C) ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					   TofE2 a y y' cy exty) (TofE1 a x x' cx extx))
+			    ([x']lts-f-rin)
+			    ([x'][z]lts-f-res ([n]lts-f-par1 (lts-f-rout)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					 TofE2 a y y' cy exty) (TofD'E1'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP'Q1' z)))
+			    	      (sc_cong_new ([x]sc_par_com)))
+				      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- andLemma2 D ([x:^(left (and A B))] E1 ^ x) (TofD) 
+		           ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE1 a x x' cx extx ) 
+		      	   ([x']lts-f-rin) ([x'][z]lts-f-rout)
+			   (ProofRed)
+			   (TofD'E1')
+			   ([z]CongP'Q1' z).
+
+andLemma2_cutE2 : andLemma2  (D)
+			    ([x:^(left (and A B))]cut ^ E1 ^ ([n:^(left A')] (E2 : left (and A B) -o left A' -o right C) ^ x ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofE2 a x x' cx extx b y y' cy exty ) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-rin)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-rout)))
+			    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (cut/-/cut2))
+			    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofD'E2' b y y' cy exty) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     andLemma2 D ([x:^(left (and A B))] E2 ^ x b n) (TofD) 
+			   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx b n n' cn extn) 
+		      	   ([x']lts-f-rin) ([x'][z]lts-f-rout)
+			   (ProofRed b n)
+			   (TofD'E2' b n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+%worlds (b | bu) (andLemma2 _ _ _ _ _ _ _ _ _).
+%terminates [D E] (andLemma2 D E _ _ _ _ _ _ _).
+% total [D E] (andLemma2 D E _ _ _ _ _ _ _).
+
+sumLemma1_sum : sumLemma1 (sumR1 ^ D)
+	      		  ([x:^(left (sum A B))]sumL ^ x ^ ([x:^(left A)] (E1 : left A -o right C) ^ x) 
+			           ([y:^(left B)](E2 : left B -o right C) ^ y))
+			  (extr_sumR1 (TofD : extrR D PofD))
+			  ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			     extr_sumL ([b:w][y:(left A) @ b][y'][cy:(chan y' A) @ b][exty:extrL y y' cy]
+					  TofE1 b y y' cy exty) 
+			  	       ([b:w][y:(left B) @ b][y'][cy:(chan y' B) @ b][exty:extrL y y' cy] TofE2 b y y' cy exty) extx)
+			  ([x']lts-f-lout)
+			  ([x'][z]lts-f-lin)
+			  (clos1 (cut/sumR1/sumL))
+			  (extr_cut ([b:w][y:(left A) @ b][y'][cy:(chan y' A) @ b][exty:extrL y y' cy]TofE1 b y y' cy exty) (TofD))
+			  ([z]sc_r).
+
+sumLemma1_oneL : sumLemma1 (oneL ^ N ^ D')
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_oneL (ExtN : extrL N N' CN) (TofD' : extrR D' PofD'))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)			   
+			   ([x']lts-f-lout)
+			   ([x'][z]lts-f-lin)
+			   (clos2 (oneL/pre ProofRed) (cut/oneL/-)) 
+			   (extr_oneL (ExtN) TofF')
+			   ([z]CongD''E' z)
+		<- sumLemma1 D' ([x:^(left (sum A B))]E ^ x) (TofD') 
+		   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofE  a x x' cx extx ) 
+		   	    ([x']lts-f-lout) ([x'][z]lts-f-lin) 
+			    (ProofRed) 
+		   	    (TofF') 
+			    ([z]CongD''E' z). 
+
+sumLemma1_bangL : sumLemma1 (bangL ^ N ^ ([u:(leftb A')](D' : leftb A' -> right (sum A B)) u))
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD' n n' cn extn) (ExtN : extrL N N' CN))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)			   
+			   ([x']lts-f-lout)
+			   ([x'][z]lts-f-lin)
+			   (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/bangL/-)) 
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofF' n n' cn extn) (ExtN) ) 
+			   ([z]CongD''E' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		      sumLemma1 (D' u) ([x:^(left (sum A B))] E ^ x) (TofD' u u' cu extu) 
+		            ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       TofE a x x' cx extx ) 
+		   	    ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			    (ProofRed u) 
+		   	    (TofF' u u' cu extu) 
+			    ([z] CongD''E' z)). 
+
+sumLemma1_cut : sumLemma1 (cut ^ D1 ^ ([n:^(left A')] (D2 : left A' -o right (sum A B)) ^ n))
+	      		  ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			  (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				       TofD2 a y y' cy exty) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			     TofE a x x' cx extx)
+			  ([x']lts-f-res ([n]lts-f-par2 (lts-f-lout)))
+			  ([x'][z]lts-f-lin)
+			  (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (sconv_s cut/-/cut1))
+			  (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				       TofF2 a y y' cy exty) (TofD1)) 
+			  ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com))) 
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     sumLemma1 (D2 b n) ([x:^(left (sum A B))] E ^ x) (TofD2 b n n' cn extn) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx] TofE a x x' cx extx) 
+		      	   ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			   (ProofRed b n)
+			   (TofF2 b n n' cn extn )
+			   ([z]CongP2'Q' n' z)).
+
+sumLemma1_cutB : sumLemma1 (cutB D1 ^ ([u:(leftb A')] (D2 : leftb A' -> right (sum A B)) u))
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					 TofD2 n n' cn extn) (TofD1 : extrR D1 PofD1))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)
+			   ([x']lts-f-res ([n]lts-f-par2 (lts-f-lout)))
+			   ([x'][z]lts-f-lin)
+			   (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/cutB/-))
+			   (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					 TofF2 n n' cn extn) (TofD1))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com)))
+		<-({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		     sumLemma1 (D2 u) ([x:^(left (sum A B))] E ^ x) (TofD2 u u' cu extu) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx) 
+		      	   ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			   (ProofRed u)
+			   (TofF2 u u' cu extu )
+			   ([z]CongP2'Q' u' z)).
+
+sumLemma1_oneLE : sumLemma1 D
+		  	    ([x:^(left (sum A B))] oneL ^ N ^ ((E' : left (sum A B) -o right C) ^ x))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_oneL (ExtN) (TofE' a x x' cx extx))
+			    ([x']lts-f-lout) 
+			    ([x'][z]lts-f-lin)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    ([z]CongD''E'' z)
+		<- sumLemma1 D ([x:^(left (sum A B))] E' ^ x) (TofD) 
+		       ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofE' a x x' cx extx) 
+		   	    ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			    (ProofRed ) 
+		   	    (TofF' ) 
+			    ([z]CongD''E'' z).
+
+sumLemma1_bangLE : sumLemma1 D
+		   	     ([x:^(left (sum A B))] bangL ^ N ^ ([u:(leftb A')] (E' : left (sum A B) -o leftb A' -> right C) ^ x u))
+			     (TofD : extrR D PofD)
+			     ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+				extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					      TofE' a x x' cx extx n n' cn extn) (ExtN : extrL N N' CN))
+			     ([x']lts-f-lout) 
+			     ([x'][z]lts-f-lin)
+			     (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			     (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofF' n n' cn extn) ExtN)
+			     ([z]CongD''E' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		      sumLemma1 (D) ([x:^(left (sum A B))]E' ^ x u) (TofD) 
+		            ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       TofE' a x x' cx extx u u' cu extu) 
+		   	    ([x']lts-f-lout) ([x'][z]lts-f-lin) 
+			    (ProofRed u ) 
+		   	    (TofF' u u' cu extu) 
+			    ([z]CongD''E' z)).
+
+sumLemma1_cutBE : sumLemma1 D
+		  	    ([x:^(left (sum A B))]cutB E1 ^ ([u:(leftb A')] (E2 : left (sum A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofE2 a x x' cx extx n n' cn extn) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-lout)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-lin)))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofF2 n n' cn extn) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		     sumLemma1 D ([x:^(left (sum A B))] E2 ^ x u) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx u u' cu extu) 
+		      	   ([x']lts-f-lout) ([x'][z]lts-f-lin) 
+			   (ProofRed u)
+			   (TofF2 u u' cu extu )
+			   ([z]CongP'Q2' u' z)).
+
+sumLemma1_cutE1 : sumLemma1 D
+		  	    ([x:^(left (sum A B))]cut ^ ((E1 : left (sum A B) -o right A') ^ x) ^ 
+			       ([n:^(left A')] (E2 : left A' -o right C) ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					   TofE2 a y y' cy exty) (TofE1 a x x' cx extx))
+			    ([x']lts-f-lout)
+			    ([x'][z]lts-f-res ([n]lts-f-par1 (lts-f-lin)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					 TofE2 a y y' cy exty) (TofF1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP'Q1' x)))
+			    	      (sc_cong_new ([x]sc_par_com)))
+				      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- sumLemma1 D ([x:^(left (sum A B))] E1 ^ x) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE1 a x x' cx extx ) 
+		      	   ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			   (ProofRed )
+			   (TofF1)
+			   ([z]CongP'Q1' z).
+
+sumLemma1_cutE2 : sumLemma1 D
+		  	    ([x:^(left (sum A B))]cut ^ E1 ^ ([n:^(left A')] (E2 : left (sum A B) -o left A' -o right C) ^ x ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofE2 a x x' cx extx b y y' cy exty ) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-lout)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-lin)))
+			    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (cut/-/cut2))
+			    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofF2 b y y' cy exty) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     sumLemma1 D ([x:^(left (sum A B))] E2 ^ x b n) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx b n n' cn extn) 
+		      	   ([x']lts-f-lout) ([x'][z]lts-f-lin)
+			   (ProofRed b n )
+			   (TofF2 b n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+%worlds (b | bu) (sumLemma1 _ _ _ _ _ _ _ _ _).
+%terminates [D E] (sumLemma1 D E _ _ _ _ _ _ _).
+% total [D E] (sumLemma1 D E _ _ _ _ _ _ _).
+
+sumLemma2_sum : sumLemma2 (sumR2 ^ D)
+	      		  ([x:^(left (sum A B))]sumL ^ x ^ ([x:^(left A)] (E1 : left A -o right C) ^ x) 
+			           ([y:^(left B)](E2 : left B -o right C) ^ y))
+			  (extr_sumR2 (TofD : extrR D PofD))
+			  ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			     extr_sumL ([b:w][y:(left A) @ b][y'][cy:(chan y' A) @ b][exty:extrL y y' cy]
+					  TofE1 b y y' cy exty) 
+			  	       ([b:w][y:(left B) @ b][y'][cy:(chan y' B) @ b][exty:extrL y y' cy] TofE2 b y y' cy exty) extx)
+			  ([x']lts-f-rout)
+			  ([x'][z]lts-f-rin)
+			  (clos1 (cut/sumR2/sumL))
+			  (extr_cut ([b:w][y:(left B) @ b][y'][cy:(chan y' B) @ b][exty:extrL y y' cy]TofE2 b y y' cy exty) (TofD))
+			  ([z]sc_r).
+
+sumLemma2_oneL : sumLemma2 (oneL ^ N ^ D')
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_oneL (ExtN : extrL N N' CN) (TofD' : extrR D' PofD'))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)			   
+			   ([x']lts-f-rout)
+			   ([x'][z]lts-f-rin)
+			   (clos2 (oneL/pre ProofRed) (cut/oneL/-)) 
+			   (extr_oneL (ExtN) TofF')
+			   ([z]CongD''E' z)
+		<- sumLemma2 D' ([x:^(left (sum A B))]E ^ x) (TofD') 
+		   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofE  a x x' cx extx ) 
+		   	    ([x']lts-f-rout) ([x'][z]lts-f-rin) 
+			    (ProofRed) 
+		   	    (TofF') 
+			    ([z]CongD''E' z). 
+
+sumLemma2_bangL : sumLemma2 (bangL ^ N ^ ([u:(leftb A')](D' : leftb A' -> right (sum A B)) u))
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD' n n' cn extn) (ExtN : extrL N N' CN))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)			   
+			   ([x']lts-f-rout)
+			   ([x'][z]lts-f-rin)
+			   (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/bangL/-)) 
+			   (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn] TofF' n n' cn extn) (ExtN) ) 
+			   ([z]CongD''E' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		      sumLemma2 (D' u) ([x:^(left (sum A B))] E ^ x) (TofD' u u' cu extu) 
+		            ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       TofE a x x' cx extx ) 
+		   	    ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			    (ProofRed u) 
+		   	    (TofF' u u' cu extu) 
+			    ([z] CongD''E' z)). 
+
+sumLemma2_cut : sumLemma2 (cut ^ D1 ^ ([n:^(left A')] (D2 : left A' -o right (sum A B)) ^ n))
+	      		  ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			  (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				       TofD2 a y y' cy exty) (TofD1 : extrR D1 PofD1))
+			  ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			     TofE a x x' cx extx)
+			  ([x']lts-f-res ([n]lts-f-par2 (lts-f-rout)))
+			  ([x'][z]lts-f-rin)
+			  (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (sconv_s cut/-/cut1))
+			  (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+				       TofF2 a y y' cy exty) (TofD1)) 
+			  ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com))) 
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     sumLemma2 (D2 b n) ([x:^(left (sum A B))] E ^ x) (TofD2 b n n' cn extn) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx] TofE a x x' cx extx) 
+		      	   ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			   (ProofRed b n)
+			   (TofF2 b n n' cn extn )
+			   ([z]CongP2'Q' n' z)).
+
+sumLemma2_cutB : sumLemma2 (cutB D1 ^ ([u:(leftb A')] (D2 : leftb A' -> right (sum A B)) u))
+	       	 	   ([x:^(left (sum A B))] (E : left (sum A B) -o right C) ^ x)
+			   (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					 TofD2 n n' cn extn) (TofD1 : extrR D1 PofD1))
+			   ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx)
+			   ([x']lts-f-res ([n]lts-f-par2 (lts-f-rout)))
+			   ([x'][z]lts-f-rin)
+			   (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/cutB/-))
+			   (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					 TofF2 n n' cn extn) (TofD1))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP2'Q' x z) (sc_r)))
+			  	    (sc_cong_new ([x]sc_new_scope)))
+				    (sc_new_swap))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				    (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				    (sc_cong_new ([x]sc_s sc_new_scope)))
+				    (sc_cong_new ([x]sc_par_com)))
+		<-({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu} 
+		     sumLemma2 (D2 u) ([x:^(left (sum A B))] E ^ x) (TofD2 u u' cu extu) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE a x x' cx extx) 
+		      	   ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			   (ProofRed u)
+			   (TofF2 u u' cu extu )
+			   ([z]CongP2'Q' u' z)).
+
+sumLemma2_oneLE : sumLemma2 D
+		  	    ([x:^(left (sum A B))] oneL ^ N ^ ((E' : left (sum A B) -o right C) ^ x))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_oneL (ExtN) (TofE' a x x' cx extx))
+			    ([x']lts-f-rout) 
+			    ([x'][z]lts-f-rin)
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofF'))
+			    ([z]CongD''E'' z)
+		<- sumLemma2 D ([x:^(left (sum A B))] E' ^ x) (TofD) 
+		       ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofE' a x x' cx extx) 
+		   	    ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			    (ProofRed ) 
+		   	    (TofF' ) 
+			    ([z]CongD''E'' z).
+
+sumLemma2_bangLE : sumLemma2 D
+		   	     ([x:^(left (sum A B))] bangL ^ N ^ ([u:(leftb A')] (E' : left (sum A B) -o leftb A' -> right C) ^ x u))
+			     (TofD : extrR D PofD)
+			     ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+				extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					      TofE' a x x' cx extx n n' cn extn) (ExtN : extrL N N' CN))
+			     ([x']lts-f-rout) 
+			     ([x'][z]lts-f-rin)
+			     (clos2 (bangL/pre ([u:(leftb A')]ProofRed u)) (cut/-/bangL))
+			     (extr_bangL ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofF' n n' cn extn) ExtN)
+			     ([z]CongD''E' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		      sumLemma2 (D) ([x:^(left (sum A B))]E' ^ x u) (TofD) 
+		            ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       TofE' a x x' cx extx u u' cu extu) 
+		   	    ([x']lts-f-rout) ([x'][z]lts-f-rin) 
+			    (ProofRed u ) 
+		   	    (TofF' u u' cu extu) 
+			    ([z]CongD''E' z)).
+
+sumLemma2_cutBE : sumLemma2 D
+		  	    ([x:^(left (sum A B))]cutB E1 ^ ([u:(leftb A')] (E2 : left (sum A B) -o leftb A' -> right C) ^ x u))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofE2 a x x' cx extx n n' cn extn) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-rout)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-rin)))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n) ) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofF2 n n' cn extn) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		     sumLemma2 D ([x:^(left (sum A B))] E2 ^ x u) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx u u' cu extu) 
+		      	   ([x']lts-f-rout) ([x'][z]lts-f-rin) 
+			   (ProofRed u)
+			   (TofF2 u u' cu extu )
+			   ([z]CongP'Q2' u' z)).
+
+sumLemma2_cutE1 : sumLemma2 D
+		  	    ([x:^(left (sum A B))]cut ^ ((E1 : left (sum A B) -o right A') ^ x) ^ 
+			       ([n:^(left A')] (E2 : left A' -o right C) ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					   TofE2 a y y' cy exty) (TofE1 a x x' cx extx))
+			    ([x']lts-f-rout)
+			    ([x'][z]lts-f-res ([n]lts-f-par1 (lts-f-rin)))
+			    (clos2 (cut/pre1 (ProofRed) ) (cut/-/cut1))
+			    (extr_cut ([a:w][y:(left A') @ a][y'][cy:(chan y' A') @ a][exty:extrL y y' cy]
+					 TofE2 a y y' cy exty) (TofF1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP'Q1' x)))
+			    	      (sc_cong_new ([x]sc_par_com)))
+				      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<- sumLemma2 D ([x:^(left (sum A B))] E1 ^ x) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE1 a x x' cx extx ) 
+		      	   ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			   (ProofRed )
+			   (TofF1)
+			   ([z]CongP'Q1' z).
+
+sumLemma2_cutE2 : sumLemma2 D
+		  	    ([x:^(left (sum A B))]cut ^ E1 ^ ([n:^(left A')] (E2 : left (sum A B) -o left A' -o right C) ^ x ^ n))
+			    (TofD : extrR D PofD)
+			    ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofE2 a x x' cx extx b y y' cy exty ) (TofE1 : extrR E1 PofE1))
+			    ([x']lts-f-rout)
+			    ([x'][z]lts-f-res ([n]lts-f-par2 (lts-f-rin)))
+			    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n) ) (cut/-/cut2))
+			    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofF2 b y y' cy exty) (TofE1))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP'Q2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_par (sc_r) (sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_par_assoc))))
+				      (sc_cong_new ([x]sc_s sc_new_scope)))
+		<-({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		     sumLemma2 D ([x:^(left (sum A B))] E2 ^ x b n) (TofD) 
+		           ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+			      TofE2 a x x' cx extx b n n' cn extn) 
+		      	   ([x']lts-f-rout) ([x'][z]lts-f-rin)
+			   (ProofRed b n )
+			   (TofF2 b n n' cn extn)
+			   ([z]CongP'Q2' n' z)).
+
+%worlds (b | bu) (sumLemma2 _ _ _ _ _ _ _ _ _).
+%terminates [D E] (sumLemma2 D E _ _ _ _ _ _ _).
+% total [D E] (sumLemma2 D E _ _ _ _ _ _ _).
+
+bangLemma_bang : bangLemma (bangR D1')
+	       	 	   ([x:^(left (bang A))] bangL ^ x ^ ([u:(leftb A)] (D2' : leftb A -> right C) u))
+			   (extr_bangR (TofD1' : extrR D1' PofD1'))
+		  ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+		     extr_bangL ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]TofD2' u u' cu extu) extx)
+			   ([x']lts-b-rep)
+			   ([x'][z]lts-b-open ([y]lts-f-out))
+			   (clos21 (ProofRed) (cut/bR/bL))
+			   (extr_cutB ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu] TofDs u u' cu extu) (TofD1'))
+			   ([z] sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongR1Q1' x z) (sc_r)))
+			   	     (sc_cong_new ([x]sc_new_scope)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+		<- cutBLemma D1' ([u:(leftb A)] D2' u) (TofD1') ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]TofD2' u u' cu extu)
+		   	     ([x'][z]lts-b-open ([y]lts-f-out)) (ProofRed)
+			     ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu] TofDs u u' cu extu)
+			     ([u'][z]CongR1Q1' u' z).
+
+bangLemma_bangL1 : bangLemma (D1)
+		  	    ([x:^(left (bang A))]bangL ^ U ^ ([u:leftb A'] (D2' : left (bang A) -o leftb A' -> right C ) ^ x u))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       extr_bangL ([u:leftb A'][u'][cu:chanB u' A'][extu:extrLB u u' cu]
+					     TofD2' a x x' cx extx u u' cu extu) (ExtU))
+			    ([x']lts-b-rep)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (bangL/pre ([u:leftb A']ProofRed u)) (cut/-/bangL))
+			    (extr_bangL ([u:leftb A'][u'][cu:chanB u' A'][extu:extrLB u u' cu]
+					   TofD1D2' u u' cu extu) (ExtU))
+			    ([z]CongP1'Q1' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		   bangLemma D1 ([x:^(left (bang A))] D2' ^ x u) (TofD1) 
+		       	     ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				TofD2' a x x' cx extx u u' cu extu)
+			     ([x']lts-b-rep)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed u)
+			     (TofD1D2' u u' cu extu)
+			     ([z]CongP1'Q1' z)).
+
+bangLemma_bangL2 : bangLemma (bangL ^ U ^ ([n:leftb A'] D1' n))
+		   	     ([x:^(left (bang A))] (D2 : left (bang A) -o right C) ^ x)
+			     (extr_bangL ([u:leftb A'][u'][cu:chanB u' A'][extu:extrLB u u' cu]
+					    TofD1' u u' cu extu) (ExtU))
+			     ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				TofD2 a x x' cx extx)
+			     ([x']lts-b-rep)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (clos2 (bangL/pre ([u:leftb A']ProofRed u)) (cut/bangL/-))
+			     (extr_bangL ([u:leftb A'][u'][cu:chanB u' A'][extu:extrLB u u' cu]
+					    TofD1'D2 u u' cu extu) (ExtU))
+			     ([z]CongP1'Q1' z)
+		<- ({u:leftb A'}{u'}{cu:chanB u' A'}{extu:extrLB u u' cu}
+		       	     bangLemma (D1' u) ([x:^(left (bang A))] D2 ^ x) (TofD1' u u' cu extu) 
+			     ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				TofD2 a x x' cx extx)
+			     ([x']lts-b-rep)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed u)
+			     (TofD1'D2 u u' cu extu)
+			     ([z]CongP1'Q1' z)).
+
+bangLemma_oneL1 : bangLemma (oneL ^ N ^ D1')
+		  	    ([x:^(left (bang A))] (D2 : left (bang A) -o right C) ^ x)
+			    (extr_oneL (ExtN) (TofD1' : extrR D1' PofD1'))
+			    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       TofD2 a x x' cx extx)
+			    ([x']lts-b-rep)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/oneL/-))
+			    (extr_oneL (ExtN) (TofD1'D2))
+			    ([z]CongP1'Q1' z)
+		<- bangLemma D1' ([x:^(left (bang A))] (D2 : left (bang A) -o right C) ^ x) (TofD1') 
+		             ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				TofD2 a x x' cx extx)
+			     ([x']lts-b-rep)
+			     ([x'][z]lts-b-open ([y]lts-f-out))
+			     (ProofRed)
+			     (TofD1'D2)
+			     ([z]CongP1'Q1' z).
+
+bangLemma_oneL2 : bangLemma (D1)
+		  	    ([x:^(left (bang A))]oneL ^ N ^ ((D2' : left (bang A) -o right C) ^ x))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       extr_oneL (ExtN) (TofD2' a x x' cx extx))
+			    ([x']lts-b-rep)
+			    ([x'][z]lts-b-open ([y]lts-f-out))
+			    (clos2 (oneL/pre ProofRed) (cut/-/oneL))
+			    (extr_oneL (ExtN) (TofD1D2'))
+			    ([z]CongP1'Q1' z)
+		<- bangLemma D1 ([x:^(left (bang A))]D2' ^ x) (TofD1) 
+		             ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				TofD2' a x x' cx extx)
+		   	     ([x']lts-b-rep)
+			     ([x'][z]lts-b-open ([y]lts-f-out))		   	     
+			     (ProofRed) (TofD1D2')
+			     ([z]CongP1'Q1' z).
+
+bangLemma_cut1 : bangLemma (cut ^ (D1' : right A') ^ ([x:^(left A')] (E1 : (left (A') -o right (bang A)) @ e) ^ x))
+	       	 	   ([x:^(left (bang A))] (D2 : left (bang A) -o right C) ^ x)
+			   (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					TofE1 b y y' cy exty) (TofD1' : extrR D1' PofD1'))
+			   ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			      TofD2 a x x' cx extx)
+			   ([x']lts-b-res ([y]lts-b-par2 (lts-b-rep)))
+			   ([x'][z]lts-b-open ([y]lts-f-out))
+			   (clos2 (cut/pre2 ([x:^(left A')]ProofRed ^ x)) (sconv_s cut/-/cut1))
+			   (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					TofE1D2 b y y' cy exty) (TofD1'))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongR2'Q1' x z) (sc_r)))
+			   	     (sc_cong_new ([x]sc_new_scope)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				     (sc_new_swap))
+				     (sc_cong_new ([x]sc_new_swap)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))				     
+		<- ({b:w}{n:(left A') @ b}{n'}{cn:(chan n' A') @ b}{extn:extrL n n' cn}
+		       bangLemma (E1 b n) ([x:^(left (bang A))]D2 ^ x) (TofE1 b n n' cn extn)
+		       		 ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+				    TofD2 a x x' cx extx)
+				 ([x']lts-b-rep)
+				 ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed b n)
+				 (TofE1D2 b n n' cn extn)
+				 ([z]CongR2'Q1' n' z)).
+
+bangLemma_cut21 : bangLemma (D1)
+	       	 	   ([x:^(left (bang A))]cut ^ ((D2' : left (bang A) -o right A') ^ x) ^ ([y:^(left A')](D2'' : left A' -o right C) ^ y))
+			   (TofD1 : extrR D1 PofD1)
+			   ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			      extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					  TofD2'' b y y' cy exty) (TofD2' a x x' cx extx))
+			   ([x']lts-b-rep)
+			   ([x'][z]lts-b-res ([y]lts-b-par1 (lts-b-open ([z]lts-f-out))))
+			   (clos2 (cut/pre1 ProofRed) (cut/-/cut1))
+			   (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					TofD2'' b y y' cy exty) (TofD1D2'))
+			   ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (sc_r) (CongP1'R1' x)))
+			   	     (sc_cong_new ([x]sc_par_com)))
+				     (sc_cong_new ([x]sc_new_scope)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc )))))
+				     (sc_new_swap))
+				     (sc_cong_new ([x]sc_new_swap)))
+				     (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))			     
+		<- bangLemma (D1) ([x:^(left (bang A))]D2' ^ x) (TofD1) 
+		      ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			 TofD2' a x x' cx extx)
+		       		 ([x']lts-b-rep) ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed)
+				 (TofD1D2')
+				 ([z]CongP1'R1' z).
+
+bangLemma_cut22 : bangLemma (D1) 
+		  	    ([x:^(left (bang A))]cut ^ D2' ^ ([y:^(left A')](D2'' : left (bang A) -o left A' -o right C) ^ x ^ y))
+		  	    (TofD1 : extrR D1 PofD1)
+		 	    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					   TofD2'' a x x' cx extx b y y' cy exty) (TofD2'))
+		 	    ([x']lts-b-rep)
+		  	    ([x'][z]lts-b-res ([y]lts-b-par2 (lts-b-open ([z]lts-f-out))))
+		  	    (clos2 (cut/pre2 ([n:^(left A')]ProofRed ^ n)) (cut/-/cut2))
+		  	    (extr_cut ([b:w][y:(left A') @ b][y'][cy:(chan y' A') @ b][exty:extrL y y' cy]
+					 TofD1D2'' b y y' cy exty) (TofD2'))
+		  	    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R1' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+		<- ({a:w}{y:(left A') @ a}{y'}{cy:(chan y' A') @ a}{exty:extrL y y' cy}
+		       	    bangLemma (D1) ([x:^(left (bang A))]D2'' ^ x a y) (TofD1) 
+		      ([b:w][x:(left (bang A)) @ b][x'][cx:(chan x' (bang A)) @ b][extx:extrL x x' cx]
+			 TofD2'' b x x' cx extx a y y' cy exty)
+			    	      ([x']lts-b-rep) ([x'][z]lts-b-open ([y]lts-f-out))
+				      (ProofRed a y)
+				      (TofD1D2'' a y y' cy exty)
+				      ([z]CongP1'R1' y' z)).
+
+bangLemma_cutB1 : bangLemma (D1)
+	       	 	    ([x:^(left (bang A))]cutB D2' ^ ([n:leftb A'](D2'' : left (bang A) -o leftb A' -> right C) ^ x n))
+			    (TofD1 : extrR D1 PofD1)
+			    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					    TofD2'' a x x' cx extx n n' cn extn) (TofD2'))
+			    ([x']lts-b-rep)
+			    ([x'][z]lts-b-res ([y]lts-b-par2 (lts-b-open ([z]lts-f-out))))
+			    (clos2 (cutB/pre2 ([n:leftb A']ProofRed n)) (cut/-/cutB))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD1D2'' n n' cn extn) (TofD2'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongP1'R2' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_cong_par (sc_r) (sc_par_com))))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z] sc_s sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+		<- ({n:leftb A'}{n'}{cn:chanB n' A'}{extn:extrLB n n' cn}
+		       bangLemma (D1) ([x:^(left (bang A))]D2'' ^ x n) (TofD1) 
+		          ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			     TofD2'' a x x' cx extx n n' cn extn)
+		       		 ([x']lts-b-rep) ([x'][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed n)
+				 (TofD1D2'' n n' cn extn)
+				 ([z]CongP1'R2' n' z)).
+
+bangLemma_cutB2 : bangLemma (cutB D1' ^ ([n:leftb A'](D1'' : leftb A' -> right (bang A)) n))
+		  	    ([x:^(left (bang A))](D2 : left (bang A) -o right C) ^ x)
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD1'' n n' cn extn) (TofD1'))
+			    ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+			       TofD2 a x x' cx extx)
+			    ([x']lts-b-res ([y]lts-b-par2 (lts-b-in)))
+			    ([x'][z]lts-b-open ([z]lts-f-out))
+			    (clos2 (cutB/pre2 ([n:(leftb A')]ProofRed n)) (cut/cutB/-))
+			    (extr_cutB ([n:(leftb A')][n'][cn:(chanB n' A')][extn:extrLB n n' cn]
+					  TofD1''D2 n n' cn extn) (TofD1'))
+			    ([z]sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_t (sc_cong_new ([x]sc_cong_par (CongR2'Q1' x z) (sc_r)))
+			    	      (sc_cong_new ([x]sc_new_scope)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_assoc)))))
+				      (sc_new_swap))
+				      (sc_cong_new ([x]sc_new_swap)))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_cong_new ([z]sc_par_com)))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_s sc_new_scope))))
+				      (sc_cong_new ([x]sc_cong_new ([y]sc_par_com))))
+		<- ({n:leftb A'}{n'}{cn:chanB n' A'}{extn:extrLB n n' cn}
+		       	    bangLemma (D1'' n) ([x:^(left (bang A))]D2 ^ x) (TofD1'' n n' cn extn)
+			    	      ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx)
+				      ([x']lts-b-in)
+				      ([x'][z]lts-b-open ([z]lts-f-out))
+				      (ProofRed n)
+				      (TofD1''D2 n n' cn extn)
+				      ([z] CongR2'Q1' n' z) ).
+
+%worlds (b | bu) (bangLemma _ _ _ _ _ _ _ _ _).
+%terminates [D E] (bangLemma D E _ _ _ _ _ _ _).
+% total [D E] (bangLemma D E _ _ _ _ _ _ _).
+
+% Reduction Theorem - done.
+
+reductionThrm : {D : right A @ W}
+	       	 extrR D (PofD : (proc ([z] P z) A) @ W) ->
+		 ({z} lts-f (P z) (tau) (Q z)) -> % Then
+		 =>= D E ->
+		 extrR E (PofE : (proc ([z] R z) A) @ W) ->
+		 ({z} sc (R z) (Q z)) ->
+		 type.
+
+%mode (reductionThrm +D +Ext +Lts -Red -Ext -Sc).
+
+% Induction on D - cases are oneL, bangL, cut and cutB.
+
+redThrm_oneL : reductionThrm (oneL ^ N ^ D')
+	      		       (extr_oneL (ExtN) (TofD'))
+			       ([z] Lts z)
+			       (clos1 (oneL/pre (ProofRedD'E')))
+			       (extr_oneL (ExtN) (TofE'))
+			       ([z] CongE'Q z)
+	       	 <- reductionThrm D' TofD' ([z]Lts z)
+		    		   (ProofRedD'E')
+				   (TofE')
+				   ([z] CongE'Q z).
+
+redThrm_bangL : reductionThrm (bangL ^ U ^ ([u:leftb A]D' u))
+	       	 		(extr_bangL ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]TofD' u u' cu extu) (ExtU))
+				([z] Lts z)
+				(clos1 (bangL/pre ([u:leftb A]ProofRedD'E' u)))
+				(extr_bangL ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]TofE' u u' cu extu) (ExtU) )
+				([z] CongE'Q z)
+		 <- ({u:leftb A}{u'}{cu:chanB u' A}{extu:extrLB u u' cu}
+		    	reductionThrm (D' u)
+				       (TofD' u u' cu extu)
+				       ([z] Lts z)
+				       (ProofRedD'E' u)
+				       (TofE' u u' cu extu)
+				       ([z] CongE'Q z)).
+
+redThrm_cutB1 : reductionThrm (cutB D1 ^ ([u:leftb A] D2 u)) % P2 tau Q2
+	       		     (extr_cutB ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]
+					   TofD2 u u' cu extu) (TofD1))
+			     ([z]lts-f-res ([x]lts-f-par2 (Lts x z)))
+			     (clos1 (cutB/pre2 ([u:leftb A]ProofRedD2E' u)))
+			     (extr_cutB ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]
+					   TofE' u u' cu extu) (TofD1))
+			     ([z]sc_cong_new ([x]sc_cong_par (CongE'Q x z) (sc_r)))
+		<- ({u:leftb A}{u'}{cu:chanB u' A}{extu:extrLB u u' cu}
+		       reductionThrm (D2 u)
+		       		     (TofD2 u u' cu extu)
+				     ([z] Lts u' z)
+				     (ProofRedD2E' u)
+				     (TofE' u u' cu extu)
+				     ([z] CongE'Q u' z)).
+
+redThrm_cutB2 : reductionThrm (cutB D1 ^ ([u:leftb A] D2 u)) % Sync
+	      		      (extr_cutB ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]TofD2 u u' cu extu) (TofD1))
+			      ([z]lts-f-res ([x]lts-f-close2 (lts-b-open ([y]lts-f-out)) (lts-b-rep)))
+			      (ProofRedD1D2E)
+			      (TofE)
+			      ([z]sc_t (sc_t (Cong z) 
+			      		(sc_cong_new ([x]sc_new_scope)))
+					(sc_cong_new ([x]sc_cong_new ([y]sc_par_assoc))))
+		<- cutBCor (D1) ([u:leftb A]D2 u) (TofD1) ([u:leftb A][u'][cu:chanB u' A][extu:extrLB u u' cu]
+							     TofD2 u u' cu extu)
+		   	   ([u'][z]lts-b-open ([y]lts-f-out))
+			   (ProofRedD1D2E)
+			   (TofE)
+			   ([z] Cong z).
+
+redThrm_cut1 : reductionThrm (cut ^ D1 ^ ([x:^(left A)] (D2 : left A -o right C) ^ x)) % P1 -> Q1
+	      		    (extr_cut ([a:w][x:(left A) @ a][x'][cx:(chan x' A) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-par1 (Lts x)))
+			    (clos1 (cut/pre1 (ProofRedD1E1)))
+			    (extr_cut ([a:w][x:(left A) @ a][x'][cx:(chan x' A) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx) (TofE1))
+			    ([z] sc_cong_new ([x]sc_cong_par (sc_r) (CongE'Q x)))
+		<- reductionThrm D1 (TofD1) ([x]Lts x)
+		   		 (ProofRedD1E1)
+				 (TofE1)
+				 ([z] CongE'Q z).
+
+redThrm_cut2 : reductionThrm (cut ^ D1 ^ ([x:^(left A)] (D2 : left A -o right C) ^ x)) % P2 -> Q2
+	      		    (extr_cut ([a:w][x:(left A) @ a][x'][cx:(chan x' A) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-par2 (Lts x z)))
+			    (clos1 (cut/pre2 ([x:^(left A)]ProofRedD2E2 ^ x)))
+			    (extr_cut ([a:w][x:(left A) @ a][x'][cx:(chan x' A) @ a][extx:extrL x x' cx]TofE2 a x x' cx extx) (TofD1))
+			    ([z]sc_cong_new ([x]sc_cong_par (CongE'Q x z) (sc_r)))
+		<- ({a:w}{x:(left A) @ a}{x'}{cx:(chan x' A) @ a}{extx:extrL x x' cx}
+		       reductionThrm (D2 a x) (TofD2 a x x' cx extx) ([z]Lts x' z)
+		   		     (ProofRedD2E2 a x)
+				     (TofE2 a x x' cx extx)
+				     ([z] CongE'Q x' z)).
+
+% Sync where P1 inputs
+redThrm_cut3_and1 : reductionThrm (cut ^ D1 ^ ([x:^(left (and A B))] (D2 : left (and A B) -o right C) ^ x)) % inl
+	      		    (extr_cut ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-choicel2 (lts-f-lout) (lts-f-lin)))
+			    (ProofRed)
+			    (TofE)
+			    ([z]Cong z)
+		<- andLemma1 D1 ([x:^(left (and A B))]D2 ^ x) TofD1 
+		   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	     ([x']lts-f-lin)
+			     ([x'][z]lts-f-lout)
+			     (ProofRed)
+			     (TofE)
+			     ([z]Cong z).
+
+redThrm_cut3_and2 : reductionThrm (cut ^ D1 ^ ([x:^(left (and A B))] (D2 : left (and A B) -o right C) ^ x)) % inl
+	      		    (extr_cut ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-choicer2 (lts-f-rout) (lts-f-rin)))
+			    (ProofRed)
+			    (TofE)
+			    ([z]Cong z)
+		<- andLemma2 D1 ([x:^(left (and A B))]D2 ^ x) TofD1 
+		   ([a:w][x:(left (and A B)) @ a][x'][cx:(chan x' (and A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	     ([x']lts-f-rin)
+			     ([x'][z]lts-f-rout)
+			     (ProofRed)
+			     (TofE)
+			     ([z]Cong z).
+
+redThrm_cut3_lolli : reductionThrm (cut ^ D1 ^ ([x:^(left (lolli A B))] (D2 : left (lolli A B) -o right C) ^ x)) % lolli
+		     		   (extr_cut ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+						TofD2 a x x' cx extx) (TofD1))		    
+				   ([z]lts-f-res ([x]lts-f-close2 (lts-b-open ([y]lts-f-out)) (lts-b-in)))
+				   (ProofRed)
+				   (TofE)
+				   ([z]Cong z)
+		<- lolliLemma D1 ([x:^(left (lolli A B))]D2 ^ x) TofD1 
+		           ([a:w][x:(left (lolli A B)) @ a][x'][cx:(chan x' (lolli A B)) @ a][extx:extrL x x' cx]
+			      TofD2 a x x' cx extx)
+		   	      	 ([x]lts-b-in)
+				 ([x][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed)
+				 (TofE)
+				 ([z]Cong z).
+
+
+redThrm_cut3_bang : reductionThrm (cut ^ D1 ^ ([x:^(left (bang A))] (D2 : left (bang A) -o right C) ^ x)) % bang
+		     		   (extr_cut ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]
+						TofD2 a x x' cx extx) (TofD1))		    
+				   ([z]lts-f-res ([x]lts-f-close2 (lts-b-open ([y]lts-f-out)) (lts-b-rep)))
+				   (ProofRed)
+				   (TofE)
+				   ([z]Cong z)
+		<- bangLemma D1 ([x:^(left (bang A))]D2 ^ x) TofD1 
+		                ([a:w][x:(left (bang A)) @ a][x'][cx:(chan x' (bang A)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	      	 ([x]lts-b-rep)
+				 ([x][z]lts-b-open ([y]lts-f-out))
+				 (ProofRed)
+				 (TofE)
+				 ([z]Cong z).
+
+% Sync where P2 inputs
+redThrm_cut4_sum1 : reductionThrm (cut ^ D1 ^ ([x:^(left (sum A B))] (D2 : left (sum A B) -o right C) ^ x)) % inl
+	      		    (extr_cut ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-choicel1 (lts-f-lin) (lts-f-lout)))
+			    (ProofRed)
+			    (TofE)
+			    ([z]Cong z)
+		<- sumLemma1 D1 ([x:^(left (sum A B))]D2 ^ x) TofD1 
+		       ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	     ([x']lts-f-lout)
+			     ([x'][z]lts-f-lin)
+			     (ProofRed)
+			     (TofE)
+			     ([z]Cong z).
+
+redThrm_cut4_sum2 : reductionThrm (cut ^ D1 ^ ([x:^(left (sum A B))] (D2 : left (sum A B) -o right C) ^ x)) % inl
+	      		    (extr_cut ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]
+					 TofD2 a x x' cx extx) (TofD1))
+			    ([z]lts-f-res ([x]lts-f-choicer1 (lts-f-rin) (lts-f-rout)))
+			    (ProofRed)
+			    (TofE)
+			    ([z]Cong z)
+		<- sumLemma2 D1 ([x:^(left (sum A B))]D2 ^ x) TofD1 
+		       ([a:w][x:(left (sum A B)) @ a][x'][cx:(chan x' (sum A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	     ([x']lts-f-rout)
+			     ([x'][z]lts-f-rin)
+			     (ProofRed)
+			     (TofE)
+			     ([z]Cong z).
+
+redThrm_cut4_tens : reductionThrm (cut ^ D1 ^ ([x:^(left (tensor A B))] (D2 : left (tensor A B) -o right C) ^ x)) % tens
+		     		   (extr_cut ([a:w][x:(left (tensor A B)) @ a][x'][cx:(chan x' (tensor A B)) @ a][extx:extrL x x' cx]
+						TofD2 a x x' cx extx) (TofD1))		    
+				   ([z]lts-f-res ([x]lts-f-close1 (lts-b-in) (lts-b-open ([y]lts-f-out))))
+				   (ProofRed)
+				   (TofE)
+				   ([z]Cong z)
+		<- tensLemma D1 ([x:^(left (tensor A B))]D2 ^ x) TofD1 
+		   ([a:w][x:(left (tensor A B)) @ a][x'][cx:(chan x' (tensor A B)) @ a][extx:extrL x x' cx]TofD2 a x x' cx extx)
+		   	      	 ([x]lts-b-open ([y]lts-f-out))
+				 ([x][z]lts-b-in)
+				 (ProofRed)
+				 (TofE)
+				 ([z]Cong z).
+
+%worlds (b | bu) (reductionThrm _ _ _ _ _ _).
+%terminates [D] (reductionThrm D _ _ _ _ _).
+% total [D] (reductionThrm D _ _ _ _ _).
