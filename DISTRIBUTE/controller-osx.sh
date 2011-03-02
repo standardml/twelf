@@ -12,6 +12,9 @@
 # Change to my directory
 cd `dirname $0`
 
+# Set remote directory
+REMOTE_DIR=typesafety.net:/home/www/twelfwiki/builds
+
 OUTPUT_DIR=$1
 if [ -z "$OUTPUT_DIR" ] 
 then OUTPUT_DIR=$PWD
@@ -45,7 +48,8 @@ scp osx/Twelf.dmg $REMOTE_DIR/twelf-osx.dmg
 scp $OUTPUT_DIR/new-build-output $REMOTE_DIR/osx-build-output
 
 # Clean up
-rm -f twelf
+make -C osx clean >& /dev/null
+rm -Rf twelf
 rm -f new-build-output
 rm -f old-build-output
 popd >& /dev/null
