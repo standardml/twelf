@@ -47,7 +47,7 @@ rm -Rf twelf/exercises
 tar -czf "$DESTINATION/twelf-src.tar.gz" twelf
 
 # Build binary
-../bin/buildid >src/frontend/buildid.sml
+../bin/buildid >twelf/src/frontend/buildid.sml
 make -s -C twelf twelf-server-mlton
 
 # Delete files that not needed for a binary release

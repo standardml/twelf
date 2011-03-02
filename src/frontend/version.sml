@@ -3,9 +3,7 @@ struct
 
 val current_version = "1.6"
 
-val current_version_revision = "1794"
-
-val current_revision = 
+val current_version_revision = "1795"
 
 fun maybe true x = x
   | maybe false x = ""
