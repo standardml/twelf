@@ -54,11 +54,10 @@ pushd "../TEST" >& /dev/null
 popd >& /dev/null
 
 # Attach new output to old output
-pushd $OUTPUT_DIR > /dev/null
+pushd $OUTPUT_DIR >& /dev/null
 touch regression-output
 mv regression-output old-regression-output
 date | cat - new-regression-output old-regression-output > regression-output
-
 
 # Clean up
 rm -f new-regression-output

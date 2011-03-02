@@ -43,7 +43,7 @@ twelf-server-announce:
 	@echo "*************************************************"
 
 .PHONY: twelf-server-mlton
-twelf-server-mlton: buildid
+twelf-server-mlton:
 	mltonversion=`$(mlton) 2>&1 | awk 'NR==1 { print 0+$$2 }'`;	\
 	if   [ $$mltonversion -ge 20041109 ]; then			\
 		cmfileid="twelf-server-mlton.cm";			\
@@ -56,7 +56,7 @@ twelf-server-mlton: buildid
 	$(mlton) -output bin/$(twelfserver) build/$${cmfileid}
 
 .PHONY: twelf-server-smlnj
-twelf-server-smlnj: buildid
+twelf-server-smlnj:
 	$(smlnj) < build/twelf-server-smlnj.sml ;
 	bin/.mkexec "$(smlnj)" "$(twelfdir)" twelf-server "$(twelfserver)" ;
 
@@ -78,9 +78,9 @@ twelf-emacs: ;
 polyml : ;
 	@echo "This makefile not yet working with PolyML."
 
-smlnj : twelf-server-announce twelf-server-smlnj twelf-emacs
+smlnj : twelf-server-announce buildid twelf-server-smlnj twelf-emacs
 
-mlton : twelf-server-announce twelf-server-mlton twelf-emacs 
+mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs 
 
 .PHONY: check
 check :

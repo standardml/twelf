@@ -47,6 +47,7 @@ rm -Rf twelf/exercises
 tar -czf "$DESTINATION/twelf-src.tar.gz" twelf
 
 # Build binary
+../bin/buildid >src/frontend/buildid.sml
 make -s -C twelf twelf-server-mlton
 
 # Delete files that not needed for a binary release
@@ -63,7 +64,6 @@ tar -czf "$DESTINATION/twelf-compiled.tar.gz" twelf
 if [ -z "$2" ] 
 then
 rm -Rf twelf
-else
 fi
 
 echo "Build script complete; exiting"

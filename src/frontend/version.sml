@@ -3,13 +3,15 @@ struct
 
 val current_version = "1.6"
 
-val current_version_revision = "1792"
+val current_version_revision = "1794"
+
+val current_revision = 
 
 fun maybe true x = x
   | maybe false x = ""
   
 val official = BuildId.revision = current_version_revision
-val external = BuildId.revision = "external"
+val external = BuildId.revision = "exported"
 
 val version_string = 
    "Twelf " ^ current_version ^ maybe (not official) "+" ^ " ("
