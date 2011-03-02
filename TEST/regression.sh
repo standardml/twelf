@@ -20,23 +20,23 @@ else
 fi
 
 echo "=== Compiling regression test package in MLton ==="
-$TIME $MLTON -default-ann "nonexhaustiveMatch ignore" mlton-regression.cm
+make -C .. twelf-regression
 
 echo ""
 echo "=== Running regression test in MLton ==="
-$TIME ./mlton-regression regression.txt
+$TIME ../bin/twelf-regression regression.txt
 
 echo ""
 echo "=== Running Karl Crary's 'papers' page ==="
-$TIME ./mlton-regression regression-crary.txt
+$TIME ../bin/twelf-regression regression-crary.txt
 
 echo ""
 echo "=== Running misc. public code ==="
-$TIME ./mlton-regression regression-public.txt
+$TIME ../bin/twelf-regression regression-public.txt
 
 echo ""
 echo "=== Running Twelf Wiki literate examples ==="
-$TIME ./mlton-regression regression-wiki.txt
+$TIME ../bin/twelf-regression regression-wiki.txt
 
 
 ARG_ONE=$1

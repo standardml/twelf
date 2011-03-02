@@ -82,7 +82,9 @@ smlnj : twelf-server-announce buildid twelf-server-smlnj twelf-emacs
 
 mlton : twelf-server-announce buildid twelf-server-mlton twelf-emacs 
 
-.PHONY: check
-check :
+.PHONY: twelf-regression check
+twelf-regression: buildid
 	$(mlton) -output bin/twelf-regression TEST/mlton-regression.cm
+
+check : twelf-regression
 	$(make) -C TEST check
