@@ -1,0 +1,147 @@
+%{
+
+{{Summer school 2008
+   |noprevious = 
+   |next = Arithmetic expressions with let-binding
+   |nextname = Arithmetic expressions with let-binding
+}}
+
+== Rudimentary arithmetic ==
+
+In on-paper notation, the syntax of the natural numbers is given as follows:
+
+<math>n ::= \mathsf{z} \, | \, \mathsf{s}(n)</math>
+
+That is, <math>\mathsf{z}</math> is a natural number, and if <math>n</math> is a natural number, then <math>\mathsf{s}(n)</math> is as well.
+
+We represent natural numbers as an LF type <tt>nat</tt> with two constants generating LF terms of that type:
+
+}%
+
+nat : type.             %name nat M.
+z : nat.
+s : nat -> nat.
+
+%{
+
+The constant <tt>z</tt> constructs a <tt>nat</tt>; the constant <tt>s</tt> constructs a <tt>nat</tt> from a <tt>nat</tt>.
+
+=== Addition ===
+
+Next, we define addition as a judgement relating two natural numbers to their sum:
+
+<table style="margin-left:auto;margin-right:auto" cellpadding="24">
+<tr><td>
+<math>{\qquad} \over {\mathsf{add}(\mathsf{z},n,n)}
+</math>
+</td><td>
+<math>
+{\mathsf{add}(m,n,p)} \over
+{\mathsf{add}(\mathsf{s}(m), n, \mathsf{s}(p))}
+</math>
+</td></tr>
+</table>
+
+This judgement is represented in LF as follows:
+
+}%
+
+add : nat -> nat -> nat -> type.
+%mode add +M +N -P.
+
+add/z : add z N N.
+add/s : add (s M) N (s P) 
+         <- add M N P.
+
+%{
+
+The first line says that the type family <tt>add</tt> relates three natural numbers.  The second line says that the first two (the addends) determine the third (the sum).  The constants <tt>add/z</tt> and <tt>add/s</tt> correspond to the inference rules above.
+
+==== Totality ====
+
+Twelf verifies that addition is a total function on closed terms of type nat:
+
+}%
+
+%worlds () (add _ _ _).
+%total M (add M _ _).
+
+%{ 
+The declarations should be read as follows:
+* [[%mode]]: The two addends are inputs; the sum is an output.
+* [[%worlds]]: <tt>add</tt> is defined on closed LF terms
+* [[%total]]: For all <tt>M</tt> and <tt>N</tt>, there exists a <tt>P</tt> such that <tt>add M N P</tt> is derivable.
+
+This proves a [[totality assertion]] for <tt>add</tt>.
+}%
+
+%{
+
+== Simple arithmetic expressions ==
+
+}%
+
+exp : type.             %name exp E.
+num : nat -> exp.
+plus : exp -> exp -> exp.
+
+%{
+=== Evaluation ===
+
+First, we define a syntactic category of answers, which in this case is
+just natural numbers:
+
+}%
+
+ans : type.				%name ans A.
+anum : nat -> ans.
+
+%{ 
+Next, we define the evaluation judgement relating an expression to an answer.
+}%
+
+eval : exp -> ans -> type.		%name eval Deval.
+%mode eval +E1 -E2.
+
+eval/num
+   : eval (num N) (anum N).
+
+eval/plus
+   : eval (plus E1 E2) (anum N)
+      <- eval E1 (anum N1)
+      <- eval E2 (anum N2)
+      <- add N1 N2 N.
+
+%worlds () (eval _ _).
+%total E (eval E _).
+
+%{
+Twelf verifies that evaluation is total: 
+* the mode declaration says that the expression is an input, and the answer is an output.
+* the worlds declaration says that we're only considering closed expressions
+* the total declaration asks Twelf to verify that <tt>eval</tt> defines a total relation from closed expressions to closed answers.  
+}%
+
+%{ 
+=== Solving for derivations ===
+
+We can use logic programming to [[%solve|solve]] for derivations.  
+
+}%
+
+two : nat = (s (s z)).
+%solve _ : add two two N.
+
+two_exp : exp = num two.
+%solve _ : eval (plus two_exp two_exp) E.
+
+%{
+
+
+{{Summer school 2008
+   |noprevious = 
+   |next = Arithmetic expressions with let-binding
+   |nextname = Arithmetic expressions with let-binding
+}}
+
+}%

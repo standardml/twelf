@@ -1,0 +1,52 @@
+
+%%%%%  Defs  %%%%%
+
+nat : type.  %name nat N.
+
+0 : nat.
+s : nat -> nat.
+
+
+
+false : type.
+
+
+
+nat-eq : nat -> nat -> type.
+nat-eq/i : nat-eq N N.
+
+
+
+sum : nat -> nat -> nat -> type.
+
+sum/z		: sum 0 N N.
+sum/s		: sum (s N1) N2 (s N3)
+		   <- sum N1 N2 N3.
+
+
+
+leq : nat -> nat -> type.
+
+leq/z		: leq 0 _.
+leq/s		: leq (s N1) (s N2)
+		   <- leq N1 N2.
+
+
+
+lt : nat -> nat -> type.
+
+lt/z		: lt 0 (s _).
+lt/s		: lt (s N1) (s N2)
+		   <- lt N1 N2.
+
+%worlds () (lt _ _).
+
+
+
+max : nat -> nat -> nat -> type.
+
+max/z*		: max 0 N N.
+max/*z		: max N 0 N.
+max/s		: max (s N1) (s N2) (s N3)
+		   <- max N1 N2 N3.
+

@@ -1,0 +1,160 @@
+%%%% lemmas about location judgments
+
+lt-look-seq	: {L:lt} 
+		   lt-look L LC C
+		   -> lt-look L LC C'
+		   -> seq/cn C C'
+		   -> type.
+%mode lt-look-seq +D1 +D2 +D3 -D4.
+
+-	: lt-look-seq _ (lt-look/hit: lt-look (lt/cons L LC _) LC _) 
+	   (lt-look/hit: lt-look (lt/cons L LC _) LC _) seq/cn/refl.
+
+-	: lt-look-seq (lt/cons L _ _) (lt-look/miss L1) (lt-look/miss L2) DQ
+	   <- lt-look-seq L L1 L2 DQ.
+
+%worlds () (lt-look-seq _ _ _ _).
+% total {D1} (lt-look-seq D1 _ _ _).
+
+
+
+loc-less-pred	: loc-less (loc/s L) L'
+		   -> loc-less L L'
+		   -> type.
+%mode loc-less-pred +D1 -D2.
+
+-	: loc-less-pred _ loc-less/z.
+
+-	: loc-less-pred (loc-less/s LL) (loc-less/s LL')
+	   <- loc-less-pred LL LL'.
+
+%worlds () (loc-less-pred _ _).
+%total (D1) (loc-less-pred D1 _).
+
+
+
+loc-less-immsucc	: {L:loc}
+		   loc-less L (loc/s L)
+		   -> type.
+%mode loc-less-immsucc +L -D2.
+
+-	: loc-less-immsucc _ loc-less/z.
+
+-	: loc-less-immsucc (loc/s L) (loc-less/s LL')
+	   <- loc-less-immsucc L LL'.
+
+%worlds () (loc-less-immsucc _ _).
+%total (D1) (loc-less-immsucc D1 _).
+
+
+
+loc-seq-or-neq-s	: loc-seq-or-neq L1 L2
+			   -> loc-seq-or-neq (loc/s L1) (loc/s L2)
+			   -> type.
+%mode loc-seq-or-neq-s +D1 -D2.
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/seq _) 
+	   (loc-seq-or-neq/seq seq/loc/refl).
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/neq (loc-neq/l LS))
+	   (loc-seq-or-neq/neq (loc-neq/l (loc-less/s LS))).
+
+-	: loc-seq-or-neq-s (loc-seq-or-neq/neq (loc-neq/r LS))
+	   (loc-seq-or-neq/neq (loc-neq/r (loc-less/s LS))).
+
+%worlds () (loc-seq-or-neq-s _ _).
+%total {} (loc-seq-or-neq-s _ _).
+
+
+
+loc-seq-or-neq-total	: {L1:loc}
+			  {L2:loc}
+			   loc-seq-or-neq L1 L2
+			   -> type.
+%mode loc-seq-or-neq-total +L1 +L2 -D1.
+
+-	: loc-seq-or-neq-total _ _ (loc-seq-or-neq/seq seq/loc/refl).
+
+-	: loc-seq-or-neq-total loc/z (loc/s _) 
+	   (loc-seq-or-neq/neq (loc-neq/l loc-less/z)).
+
+-	: loc-seq-or-neq-total (loc/s _) loc/z 
+	   (loc-seq-or-neq/neq (loc-neq/r loc-less/z)).
+
+-	: loc-seq-or-neq-total (loc/s LC1) (loc/s LC2) LCS'
+	   <- loc-seq-or-neq-total LC1 LC2 LCS
+	   <- loc-seq-or-neq-s LCS LCS'.
+
+%worlds () (loc-seq-or-neq-total _ _ _).
+%total (D1) (loc-seq-or-neq-total D1 _ _).
+
+
+
+loc-less-not-refl: loc-less LC LC
+		   -> uninhabited
+		   -> type.
+%mode loc-less-not-refl +D1 -D2.
+
+-	: loc-less-not-refl (loc-less/s LG) DU
+	   <- loc-less-not-refl LG DU. 
+%worlds () (loc-less-not-refl _ _).
+%total (D1) (loc-less-not-refl D1 _).
+
+
+
+lt-wf-look-sane	: lt-look (lt/cons L LC C) LC' _
+		   -> lt-wf (lt/cons L LC C)
+		   -> loc-less LC LC'
+		   -> uninhabited
+		   -> type.
+%mode lt-wf-look-sane +D1 +D2 +D3 -D4.
+
+-	: lt-wf-look-sane (lt-look/miss LL)
+	   (lt-wf/cons LCS _)
+	   LG 
+	   DU
+	   <- loc-less-pred LG LG'
+	   <- lt-wf-look-sane LL LCS LG' DU.
+
+-	: lt-wf-look-sane lt-look/hit
+	   (lt-wf/cons _ _)
+	   DG
+	   DU
+	   <- loc-less-not-refl DG DU.
+
+
+%worlds () (lt-wf-look-sane _ _ _ _).
+%total D1 (lt-wf-look-sane _ D1 _ _).
+
+
+
+lt-wf-look-unique	: lt-look L LC C
+			   -> lt-look L LC C'
+			   -> lt-wf L
+			   -> seq/cn C C'
+			   -> type.
+%mode lt-wf-look-unique +D1 +D2 +D3 -D4.
+
+-	: lt-wf-look-unique lt-look/hit lt-look/hit _ seq/cn/refl.
+
+-	: lt-wf-look-unique (lt-look/miss LL1) (lt-look/miss LL2) 
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- lt-wf-look-unique LL1 LL2 LW DQ.
+
+-	: lt-wf-look-unique lt-look/hit (lt-look/miss LL)
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- loc-less-immsucc _ LG
+	   <- lt-wf-look-sane LL LW LG DU
+	   <- uninhabited-seq/cn _ _ DU DQ.
+
+-	: lt-wf-look-unique (lt-look/miss LL) lt-look/hit 
+	   (lt-wf/cons LW _)
+	   DQ
+	   <- loc-less-immsucc _ LG
+	   <- lt-wf-look-sane LL LW LG DU
+	   <- uninhabited-seq/cn _ _ DU DQ.
+
+%worlds () (lt-wf-look-unique _ _ _ _).
+%total D1 (lt-wf-look-unique _ _ D1 _).

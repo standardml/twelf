@@ -1,0 +1,405 @@
+
+%%%%%  Syntax  %%%%%
+
+etp		: type.  %name etp A.
+eterm		: type.  %name eterm M.
+
+
+et	: etp.
+epi	: etp -> (eterm -> etp) -> etp.
+esigma	: etp -> (eterm -> etp) -> etp.
+esing	: eterm -> etp.
+eone	: etp.
+
+
+econst	: constant -> eterm.
+eapp	: eterm -> eterm -> eterm.
+epi1	: eterm -> eterm.
+epi2	: eterm -> eterm.
+elam	: etp -> (eterm -> eterm) -> eterm.
+epair	: eterm -> eterm -> eterm.
+estar	: eterm.
+
+
+
+
+%%%%%  Rules  %%%%%
+
+ekof	: constant -> etp -> type.
+evof	: eterm -> etp -> type.
+ewf	: etp -> type.
+subtp	: etp -> etp -> type.
+eof	: eterm -> etp -> type.
+equiv	: eterm -> eterm -> etp -> type.
+tequiv	: etp -> etp -> type.
+
+
+%%%  type formation
+
+ewf/t		: ewf et.
+
+ewf/pi		: ewf (epi A B)
+		   <- ewf A
+		   <- ({x} evof x A -> ewf (B x)).
+
+ewf/sigma	: ewf (esigma A B)
+		   <- ewf A
+		   <- ({x} evof x A -> ewf (B x)).
+
+ewf/sing	: ewf (esing M)
+		   <- eof M et.
+
+ewf/one		: ewf eone.
+
+
+
+%%%  typing
+
+eof/var		: eof X A
+		   <- evof X A
+		   <- ewf A.
+
+eof/const	: eof (econst K) A
+		   <- ekof K A
+		   <- ewf A.
+
+qetp		: etp -> etp
+                = [a] (epi (epi a ([_] et)) ([_] et)).
+
+eof/lam		: eof (elam A M) (epi A B)
+		   <- ewf A
+		   <- ({x} evof x A -> eof (M x) (B x)).
+
+eof/app		: eof (eapp M N) (B N)
+		   <- eof M (epi A B)
+		   <- eof N A.
+
+eof/pair	: eof (epair M N) (esigma A B)
+		   <- eof M A
+		   <- eof N (B M)
+		   <- ({x} evof x A -> ewf (B x)).
+
+eof/pi1		: eof (epi1 M) A
+		   <- eof M (esigma A B).
+
+eof/pi2		: eof (epi2 M) (B (epi1 M))
+		   <- eof M (esigma A B).
+
+eof/sing	: eof M (esing M)
+		   <- eof M et.
+
+eof/star	: eof estar eone.
+
+eof/extpi	: eof M (epi A B)
+		   <- eof M (epi A B')
+		   <- ({x} evof x A -> eof (eapp M x) (B x)).
+
+eof/extsigma	: eof M (esigma A B)
+		   <- eof (epi1 M) A
+		   <- eof (epi2 M) (B (epi1 M))
+		   <- ({x} evof x A -> ewf (B x)).
+
+eof/subsume	: eof M A'
+		   <- eof M A
+		   <- subtp A A'.
+
+
+
+%%% term equivalence
+
+equiv/reflex	: equiv M M A
+		   <- eof M A.
+
+equiv/symm	: equiv M N A
+		   <- equiv N M A.
+
+equiv/trans	: equiv M P A
+		   <- equiv M N A
+		   <- equiv N P A.
+
+equiv/lam	: equiv (elam A M) (elam A' M') (epi A B)
+		   <- tequiv A A'
+		   <- ({x} evof x A -> equiv (M x) (M' x) (B x)).
+
+equiv/app	: equiv (eapp M N) (eapp M' N') (B N)
+		   <- equiv M M' (epi A B)
+		   <- equiv N N' A.
+
+equiv/pair	: equiv (epair M N) (epair M' N') (esigma A B)
+		   <- equiv M M' A
+		   <- equiv N N' (B M)
+		   <- ({x} evof x A -> ewf (B x)).
+
+equiv/pi1	: equiv (epi1 M) (epi1 M') A
+		   <- equiv M M' (esigma A B).
+
+equiv/pi2	: equiv (epi2 M) (epi2 M') (B (epi1 M))
+		   <- equiv M M' (esigma A B).
+
+equiv/sing	: equiv M N (esing M)
+		   <- equiv M N et.
+
+equiv/singelim	: equiv M N et
+		   <- eof M (esing N).
+
+equiv/extpi	: equiv M N (epi A B)
+		   <- eof M (epi A B')
+		   <- eof N (epi A B'')
+		   <- ({x} evof x A -> equiv (eapp M x) (eapp N x) (B x)).
+
+equiv/extpiw	: equiv M N (epi A B)
+		   <- equiv M N (epi A B')
+		   <- ({x} evof x A -> equiv (eapp M x) (eapp N x) (B x)).
+
+equiv/extsigma	: equiv M N (esigma A B)
+		   <- equiv (epi1 M) (epi1 N) A
+		   <- equiv (epi2 M) (epi2 N) (B (epi1 M))
+		   <- ({x} evof x A -> ewf (B x)).
+
+equiv/one	: equiv M N eone
+		   <- eof M eone
+		   <- eof N eone.
+
+equiv/subsume	: equiv M N B
+		   <- equiv M N A
+		   <- subtp A B.
+
+equiv/beta	: equiv (eapp (elam A M) N) (M N) (B N)
+		   <- ({x} evof x A -> eof (M x) (B x))
+		   <- eof N A.
+
+equiv/beta1	: equiv (epi1 (epair M N)) M A
+		   <- eof M A
+		   <- eof N B.
+
+equiv/beta2	: equiv (epi2 (epair M N)) N B
+		   <- eof M A
+		   <- eof N B.
+
+
+
+%%%  subtyping
+
+subtp/reflex	: subtp A B
+		   <- tequiv A B.
+
+subtp/trans	: subtp A C
+		   <- subtp A B
+		   <- subtp B C.
+
+subtp/sing_t	: subtp (esing M) et
+		   <- eof M et.
+
+subtp/pi	: subtp (epi A B) (epi A' B')
+		   <- subtp A' A
+		   <- ({x} evof x A' -> subtp (B x) (B' x))
+		   <- ({x} evof x A -> ewf (B x)).
+
+subtp/sigma	: subtp (esigma A B) (esigma A' B')
+		   <- subtp A A'
+		   <- ({x} evof x A -> subtp (B x) (B' x))
+		   <- ({x} evof x A' -> ewf (B' x)).
+
+
+
+%%% type equivalence
+
+tequiv/pi	: tequiv (epi A B) (epi A' B')
+		   <- tequiv A A'
+		   <- ({x} evof x A -> tequiv (B x) (B' x)).
+
+tequiv/sigma	: tequiv (esigma A B) (esigma A' B')
+		   <- tequiv A A'
+		   <- ({x} evof x A -> tequiv (B x) (B' x)).
+
+tequiv/sing	: tequiv (esing M) (esing M')
+		   <- equiv M M' et.
+
+tequiv/reflex	: tequiv A A
+		   <- ewf A.
+
+tequiv/symm	: tequiv A B
+		   <- tequiv B A.
+
+tequiv/trans	: tequiv A C
+		   <- tequiv A B
+		   <- tequiv B C.
+
+
+
+%%% derived rules
+
+eof/equiv       : eof M B
+		   <- eof M A
+		   <- tequiv A B
+		= [d2] [d1]
+		   eof/subsume (subtp/reflex d2) d1.
+
+equiv/etapi	: equiv M (elam A ([x] eapp M x)) (epi A B)
+		   <- eof M (epi A B)
+		   <- ewf A
+		= [DwfA] [DofM]
+		   equiv/extpi 
+		   ([x] [d] equiv/symm
+		      (equiv/beta 
+			 (eof/var DwfA d)
+			 ([x] [d] eof/app (eof/var DwfA d) DofM)))
+		   (eof/lam
+		      ([x] [d] eof/app (eof/var DwfA d) DofM)
+		      DwfA)
+		   DofM.
+
+equiv/etasigma	: equiv M (epair (epi1 M) (epi2 M)) (esigma A B)
+		   <- eof M (esigma A B)
+		   <- ({x} evof x A -> ewf (B x))
+		= [DwfB] [DofM]
+		   equiv/extsigma
+		   DwfB
+		   (equiv/symm (equiv/beta2 (eof/pi2 DofM) (eof/pi1 DofM)))
+		   (equiv/symm (equiv/beta1 (eof/pi2 DofM) (eof/pi1 DofM))).
+
+equiv/equiv	: equiv M N B
+		   <- equiv M N A
+		   <- tequiv A B
+		= [d2] [d1]
+		   equiv/subsume (subtp/reflex d2) d1.
+
+subtp/t		: subtp et et
+		= subtp/reflex (tequiv/reflex ewf/t).
+
+subtp/sing	: subtp (esing M) (esing M')
+		   <- equiv M M' et
+		= [d] subtp/reflex (tequiv/sing d).
+
+subtp/one	: subtp eone eone
+		= subtp/reflex (tequiv/reflex ewf/one).
+
+tequiv/t	: tequiv et et
+		= tequiv/reflex ewf/t.
+
+tequiv/one	: tequiv eone eone
+		= tequiv/reflex ewf/one.
+
+%% Non-dependent rules are better for type reconstruction.
+
+eof/app-nd	: eof (eapp M N) B
+		   <- eof M (epi A ([_] B))
+		   <- eof N A
+		= eof/app.
+
+equiv/app-nd	: equiv (eapp M N) (eapp M' N') B
+		   <- equiv M M' (epi A ([_] B))
+		   <- equiv N N' A
+		= equiv/app.
+
+equiv/beta-nd	: equiv (eapp (elam A M) N) (M N) B
+		   <- ({x} evof x A -> eof (M x) B)
+		   <- eof N A
+                = equiv/beta.
+
+
+
+
+%%%%%  Constants  %%%%%
+
+etp-skel : etp -> skel -> type.
+%mode etp-skel *A *As.
+
+etp-skel/t	: etp-skel et kt.
+
+etp-skel/pi	: etp-skel (epi A B) (kpi As Bs)
+		   <- etp-skel A As
+		   <- ({x} etp-skel (B x) Bs).
+
+etp-skel/sigma	: etp-skel (esigma A B) (ksigma As Bs)
+		   <- etp-skel A As
+		   <- ({x} etp-skel (B x) Bs).
+
+etp-skel/sing	: etp-skel (esing _) ksing.
+
+etp-skel/one	: etp-skel eone kone.
+
+
+
+etopen	: ctp -> etp -> type.
+%mode etopen +A -B.
+
+etopenr : catom -> skel -> eterm -> type.
+%mode etopenr +R *As -M.
+
+etopenm : cterm -> skel -> eterm -> type.
+%mode etopenm +M *As -N.
+
+etopen/t	: etopen ct et.
+
+etopen/pi	: etopen (cpi Ac Bc) (epi A B)
+		   <- etopen Ac A
+		   <- etp-skel A As
+		   <- ({xc} {x}
+			 etopenr xc As x
+			 -> etopen (Bc xc) (B x)).
+
+etopen/sigma	: etopen (csigma Ac Bc) (esigma A B)
+		   <- etopen Ac A
+		   <- etp-skel A As
+		   <- ({xc} {x}
+			 etopenr xc As x
+			 -> etopen (Bc xc) (B x)).
+
+etopen/sing	: etopen (csing Rc) (esing R)
+		   <- etopenr Rc kt R.
+
+etopen/one	: etopen cone eone.
+
+
+etopenr/app	: etopenr (capp Rc Mc) Bs (eapp R M)
+		   <- etopenr Rc (kpi As Bs) R
+		   <- etopenm Mc As M.
+
+etopenr/pi1	: etopenr (cpi1 Rc) As (epi1 R)
+		   <- etopenr Rc (ksigma As Bs) R.
+
+etopenr/pi2	: etopenr (cpi2 Rc) Bs (epi2 R) 
+		   <- etopenr Rc (ksigma As Bs) R.
+
+
+etopenm/at	: etopenm (cat Rc) kt R
+		   <- etopenr Rc kt R.
+
+etopenm/sing	: etopenm (cat Rc) ksing R
+		   <- etopenr Rc kt R.
+
+etopenm/lam	: etopenm (clam Ac Mc) (kpi As Bs) (elam A M)
+		   <- etopen Ac A
+		   <- etp-skel A As
+		   <- ({xc} {x}
+			 etopenr xc As x
+			 -> etopenm (Mc xc) Bs (M x)).
+
+etopenm/pair	: etopenm (cpair Mc Nc) (ksigma As Bs) (epair M N)
+		   <- etopenm Mc As M
+		   <- etopenm Nc Bs N.
+
+etopenm/star	: etopenm cstar kone estar.
+
+
+
+ekof/i	: ekof K A
+	   <- ckof K Ac
+	   <- etopen Ac A.
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block evar	: block {ex:eterm}.
+
+%block ebind	: some {ea:etp}
+		   block {ex:eterm} {ed:evof ex ea}.
+
+%block eofblock	: some {ex:eterm} {ea:etp}
+		   block {ed:evof ex ea}.
+
+%block etopenblock
+		: some {a:skel} {x:eterm} block {xc:catom} {d:etopenr xc a x}.

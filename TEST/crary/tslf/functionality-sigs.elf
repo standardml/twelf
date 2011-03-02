@@ -1,0 +1,25 @@
+
+
+funct/sg-wf : ({a:cn} {da: ofkd a K} sg-wf (S a)) 
+	      -> cn-deq C1 C2 K 
+	      -> ofkd C1 K     
+	      -> sg-deq (S C1) (S C2)
+	      -> type.
+%mode funct/sg-wf +D1 +D2 +D3 -D4.
+
+-	: funct/sg-wf DO DQ D1 DQI
+	   <- vdt/cn-deq DQ _ D2 _
+	   <- explicate-open-sg-wf loc/z DO DO'
+	   <- explicate-closed-cn-deq DQ DQ'
+	   <- explicate-closed-ofkd D1 D1'
+	   <- explicate-closed-ofkd D2 D2'
+	   <- funct-esg-wf
+	      ([x] cxt-append/nil)
+	      cxt-append-sub/nil
+	      D1' D2' DQ' DO' DQE _
+	   <- implicate-closed/sg-deq DQE DQI.
+
+%worlds (ofkd+vdt-block) (funct/sg-wf _ _ _ _).
+%total (D1) (funct/sg-wf D1 _ _ _).
+
+

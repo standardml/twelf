@@ -1,0 +1,1358 @@
+
+%%%%%  Strong Typing  %%%%%
+
+%%  No extensionality, and limited subsumption.
+
+ewfs	: etp -> type.
+eofs	: eterm -> etp -> type.
+
+ewfs/t		: ewfs et.
+
+ewfs/pi		: ewfs (epi A B)
+		   <- ewfs A
+		   <- ({x} evof x A -> ewfs (B x)).
+
+ewfs/sigma	: ewfs (esigma A B)
+		   <- ewfs A
+		   <- ({x} evof x A -> ewfs (B x)).
+
+ewfs/sing	: ewfs (esing M)
+		   <- eofs M et.
+
+
+
+eofs/var	: eofs X A
+		   <- evof X A
+		   <- ewf A.
+
+eofs/forall	: eofs (eforall A) (qetp A)
+		   <- ewfs A.
+
+eofs/const	: eofs (econst C) A
+		   <- ekof C A
+		   <- ewf A.
+
+eofs/lam	: eofs (elam A M) (epi A B)
+		   <- ewfs A
+		   <- ({x} evof x A -> eofs (M x) (B x)).
+
+eofs/app	: eofs (eapp M N) (B N)
+		   <- eofs M (epi A B)
+		   <- eofs N A.
+
+eofs/pair	: eofs (epair M N) (esigma A B)
+		   <- eofs M A
+		   <- eofs N (B M)
+		   <- ({x} evof x A -> ewf (B x)).
+
+eofs/pi1	: eofs (epi1 M) A
+		   <- eofs M (esigma A B).
+
+eofs/pi2	: eofs (epi2 M) (B (epi1 M))
+		   <- eofs M (esigma A B).
+
+eofs/sing	: eofs M (esing M)
+		   <- eofs M et.
+
+eofs/equiv	: eofs M B
+		   <- eofs M A
+		   <- tequiv A B.
+
+
+
+eofs-resp : eterm-eq M M' -> etp-eq A A' -> eofs M A -> eofs M' A' -> type.
+%mode eofs-resp +X1 +X2 +X3 -X4.
+
+-	: eofs-resp eterm-eq/i etp-eq/i D D.
+
+%worlds (evar | eofblock) (eofs-resp _ _ _ _).
+%total {} (eofs-resp _ _ _ _).
+%reduces D = D' (eofs-resp _ _  D D').
+
+
+
+ewfs-resp : etp-eq A A' -> ewfs A -> ewfs A' -> type.
+%mode ewfs-resp +X1 +X2 -X3.
+
+-	: ewfs-resp etp-eq/i D D.
+
+%worlds (evar | eofblock) (ewfs-resp _ _ _).
+%total {} (ewfs-resp _ _ _).
+
+
+
+
+%%%%%  Strong and Weak Typing  %%%%%
+
+eofs-to-eof : eofs M A -> eof M A -> type.
+%mode eofs-to-eof +X1 -X2.
+
+ewfs-to-ewf : ewfs A -> ewf A -> type.
+%mode ewfs-to-ewf +X1 -X2.
+
+-	: eofs-to-eof (eofs/var D2 D1) (eof/var D2 D1).
+
+-	: eofs-to-eof (eofs/forall D) (eof/forall D')
+	   <- ewfs-to-ewf D D'.
+
+-	: eofs-to-eof (eofs/const D2 D1) (eof/const D2 D1).
+
+-	: eofs-to-eof (eofs/lam D2 D1) (eof/lam D2' D1')
+	   <- ewfs-to-ewf D1 D1'
+	   <- ({x} {d}
+		 eofs-to-eof (D2 x d) (D2' x d)).
+
+-	: eofs-to-eof (eofs/app D2 D1) (eof/app D2' D1')
+	   <- eofs-to-eof D1 D1'
+	   <- eofs-to-eof D2 D2'.
+
+-	: eofs-to-eof (eofs/pair D3 D2 D1) (eof/pair D3 D2' D1')
+	   <- eofs-to-eof D1 D1'
+	   <- eofs-to-eof D2 D2'.
+
+-	: eofs-to-eof (eofs/pi1 D) (eof/pi1 D')
+	   <- eofs-to-eof D D'.
+
+-	: eofs-to-eof (eofs/pi2 D) (eof/pi2 D')
+	   <- eofs-to-eof D D'.
+
+-	: eofs-to-eof (eofs/sing D) (eof/sing D')
+	   <- eofs-to-eof D D'.
+
+-	: eofs-to-eof (eofs/equiv D2 D1) (eof/equiv D2 D1')
+	   <- eofs-to-eof D1 D1'.
+
+
+
+-	: ewfs-to-ewf ewfs/t ewf/t.
+
+-	: ewfs-to-ewf (ewfs/pi D2 D1) (ewf/pi D2' D1')
+	   <- ewfs-to-ewf D1 D1'
+	   <- ({x} {d}
+		 ewfs-to-ewf (D2 x d) (D2' x d)).
+
+-	: ewfs-to-ewf (ewfs/sigma D2 D1) (ewf/sigma D2' D1')
+	   <- ewfs-to-ewf D1 D1'
+	   <- ({x} {d}
+		 ewfs-to-ewf (D2 x d) (D2' x d)).
+
+-	: ewfs-to-ewf (ewfs/sing D) (ewf/sing D')
+	   <- eofs-to-eof D D'.
+
+%worlds (sbind | evar | eofblock | ebind) (eofs-to-eof _ _) (ewfs-to-ewf _ _).
+%total (D1 D2) (eofs-to-eof D1 _) (ewfs-to-ewf D2 _).
+
+
+
+
+%%%%%  Substitution, Strong Typing  %%%%%
+
+esubsts-of-gen	: (evof M A -> eofs N B)
+		   -> (eof M A -> eofs M A -> eofs N B) -> type.
+%mode esubsts-of-gen +X1 -X2.
+
+esubsts-wf-gen	: (evof M A -> ewfs B)
+		   -> (eof M A -> eofs M A -> ewfs B) -> type.
+%mode esubsts-wf-gen +X1 -X2.
+
+-varsam	: esubsts-of-gen ([d] eofs/var (D d) d) ([d] [d'] d').
+
+-varoth	: esubsts-of-gen ([d] eofs/var (D2 d) D) ([d] [d'] eofs/var (D2' d) D)
+	   <- esubst-wf-gen D2 D2'.
+
+-const	: esubsts-of-gen ([d] eofs/const (D2 d) D) ([d] [d'] eofs/const (D2' d) D)
+	   <- esubst-wf-gen D2 D2'.
+
+-forall	: esubsts-of-gen ([d] eofs/forall (D d)) ([d] [d'] eofs/forall (D' d d'))
+	   <- esubsts-wf-gen D D'.
+
+-lam	: esubsts-of-gen ([d] eofs/lam (D2 d) (D1 d)) ([d] [d'] eofs/lam (D2' d d') (D1' d d'))
+	   <- esubsts-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubsts-of-gen ([d] D2 d y e) ([d] [d'] D2' d d' y e)).
+
+-app	: esubsts-of-gen ([d] eofs/app (D2 d) (D1 d)) ([d] [d'] eofs/app (D2' d d') (D1' d d'))
+	   <- esubsts-of-gen D1 D1'
+	   <- esubsts-of-gen D2 D2'.
+
+-pair	: esubsts-of-gen ([d] eofs/pair (D3 d : {y} evof y A -> ewf (B y)) (D2 d) (D1 d)) ([d] [d'] eofs/pair (D3' d) (D2' d d') (D1' d d'))
+	   <- esubsts-of-gen D1 D1'
+	   <- esubsts-of-gen D2 D2'
+	   <- ({y} {e}
+		 esubst-wf-gen ([d] D3 d y e) ([d] D3' d y e)).
+
+-pi1	: esubsts-of-gen ([d] eofs/pi1 (D d)) ([d] [d'] eofs/pi1 (D' d d'))
+	   <- esubsts-of-gen D D'.
+
+-pi2	: esubsts-of-gen ([d] eofs/pi2 (D d)) ([d] [d'] eofs/pi2 (D' d d'))
+	   <- esubsts-of-gen D D'.
+
+-sing	: esubsts-of-gen ([d] eofs/sing (D d)) ([d] [d'] eofs/sing (D' d d'))
+	   <- esubsts-of-gen D D'.
+
+-subsum	: esubsts-of-gen ([d] eofs/equiv (D2 d) (D1 d)) ([d] [d'] eofs/equiv (D2' d) (D1' d d'))
+	   <- esubsts-of-gen D1 D1'
+	   <- esubst-tequiv-gen D2 D2'.
+
+
+
+-t	: esubsts-wf-gen ([d] ewfs/t) ([d] [d'] ewfs/t).
+
+-pi	: esubsts-wf-gen ([d] ewfs/pi (D2 d) (D1 d)) ([d] [d'] ewfs/pi (D2' d d') (D1' d d'))
+	   <- esubsts-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubsts-wf-gen ([d] D2 d y e) ([d] [d'] D2' d d' y e)).
+
+-sigma	: esubsts-wf-gen ([d] ewfs/sigma (D2 d) (D1 d)) ([d] [d'] ewfs/sigma (D2' d d') (D1' d d'))
+	   <- esubsts-wf-gen D1 D1'
+	   <- ({y} {e}
+		 esubsts-wf-gen ([d] D2 d y e) ([d] [d'] D2' d d' y e)).
+
+-sing	: esubsts-wf-gen ([d] ewfs/sing (D d)) ([d] [d'] ewfs/sing (D' d d'))
+	   <- esubsts-of-gen D D'.
+
+%worlds (sbind | evar | eofblock | ebind) (esubsts-of-gen _ _) (esubsts-wf-gen _ _).
+%total (D1 D2) (esubsts-of-gen D1 _) (esubsts-wf-gen D2 _).
+
+
+
+esubsts : ({x} evof x A -> eofs (M x) (B x))
+	   -> eofs N A
+	   -> eofs (M N) (B N) -> type.
+%mode esubsts +X1 +X2 -X3.
+
+-	: esubsts D1 D2 (D1' D2' D2)
+	   <- esubsts-of-gen (D1 _) D1'
+	   <- eofs-to-eof D2 D2'.
+
+%worlds (evar | eofblock | ebind) (esubsts _ _ _).
+%total {} (esubsts _ _ _).
+
+
+
+esubsts-wf : ({x} evof x A -> ewfs (B x))
+	      -> eofs N A
+	      -> ewfs (B N) -> type.
+%mode esubsts-wf +X1 +X2 -X3.
+
+-	: esubsts-wf D1 D2 (D1' D2' D2)
+	   <- esubsts-wf-gen (D1 _) D1'
+	   <- eofs-to-eof D2 D2'.
+
+%worlds (evar | eofblock | ebind) (esubsts-wf _ _ _).
+%total {} (esubsts-wf _ _ _).
+
+
+
+
+%%%%%  Reduction implies Equivalence  %%%%%
+
+tequiv-t-invert : tequiv C et -> etp-eq C et -> type.
+%mode tequiv-t-invert +X1 -X2.
+
+tequiv-t-invert' : tequiv et C -> etp-eq C et -> type.
+%mode tequiv-t-invert' +X1 -X2.
+
+-	: tequiv-t-invert (tequiv/reflex ewf/t) etp-eq/i.
+
+-	: tequiv-t-invert (tequiv/symm D) D1
+	   <- tequiv-t-invert' D D1.
+
+-	: tequiv-t-invert (tequiv/trans D2 D1) Deq'
+	   <- tequiv-t-invert D2 Deq
+	   <- tequiv-resp etp-eq/i Deq D1 D1'
+	   <- tequiv-t-invert D1' Deq'.
+
+-	: tequiv-t-invert tequiv/t etp-eq/i.
+
+
+
+
+-	: tequiv-t-invert' (tequiv/reflex ewf/t) etp-eq/i.
+
+-	: tequiv-t-invert' (tequiv/symm D) D1
+	   <- tequiv-t-invert D D1.
+
+-	: tequiv-t-invert' (tequiv/trans D2 D1) Deq'
+	   <- tequiv-t-invert' D1 Deq
+	   <- tequiv-resp Deq etp-eq/i D2 D2'
+	   <- tequiv-t-invert' D2' Deq'.
+
+-	: tequiv-t-invert' tequiv/t etp-eq/i.
+
+%worlds (ebind) (tequiv-t-invert _ _) (tequiv-t-invert' _ _).
+%total (D1 D2) (tequiv-t-invert D1 _) (tequiv-t-invert' D2 _).
+
+
+
+tequiv-sing-invert : tequiv C (esing M) -> etp-eq C (esing M') -> equiv M' M et -> type.
+%mode tequiv-sing-invert +X1 -X2 -X3.
+
+tequiv-sing-invert' : tequiv (esing M) C -> etp-eq C (esing M') -> equiv M' M et -> type.
+%mode tequiv-sing-invert' +X1 -X2 -X3.
+
+-	: tequiv-sing-invert (tequiv/reflex (ewf/sing D)) etp-eq/i (equiv/reflex D).
+
+-	: tequiv-sing-invert (tequiv/symm D) D1 D2
+	   <- tequiv-sing-invert' D D1 D2.
+
+-	: tequiv-sing-invert (tequiv/trans D2 D1) Deq' (equiv/trans Dequiv Dequiv')
+	   <- tequiv-sing-invert D2 Deq Dequiv
+	   <- tequiv-resp etp-eq/i Deq D1 D1'
+	   <- tequiv-sing-invert D1' Deq' Dequiv'.
+
+-	: tequiv-sing-invert (tequiv/sing D) etp-eq/i D.
+
+
+
+-	: tequiv-sing-invert' (tequiv/reflex (ewf/sing D)) etp-eq/i (equiv/reflex D).
+
+-	: tequiv-sing-invert' (tequiv/symm D) D1 D2
+	   <- tequiv-sing-invert D D1 D2.
+
+-	: tequiv-sing-invert' (tequiv/trans D2 D1) Deq' (equiv/trans Dequiv Dequiv')
+	   <- tequiv-sing-invert' D1 Deq Dequiv
+	   <- tequiv-resp Deq etp-eq/i D2 D2'
+	   <- tequiv-sing-invert' D2' Deq' Dequiv'.
+
+-	: tequiv-sing-invert' (tequiv/sing D) etp-eq/i (equiv/symm D).
+
+%worlds (ebind) (tequiv-sing-invert _ _ _) (tequiv-sing-invert' _ _ _).
+%total (D1 D2) (tequiv-sing-invert D1 _ _) (tequiv-sing-invert' D2 _ _).
+
+
+
+tequiv-pi-invert : tequiv C (epi A B) -> etp-eq C (epi A' B') -> tequiv A' A -> ({x} evof x A' -> tequiv (B' x) (B x)) -> type.
+%mode tequiv-pi-invert +X1 -X2 -X3 -X4.
+
+tequiv-pi-invert' : tequiv (epi A B) C -> etp-eq C (epi A' B') -> tequiv A' A -> ({x} evof x A' -> tequiv (B' x) (B x)) -> type.
+%mode tequiv-pi-invert' +X1 -X2 -X3 -X4.
+
+-	: tequiv-pi-invert (tequiv/reflex (ewf/pi DwfB DwfA))
+	   etp-eq/i (tequiv/reflex DwfA) ([x] [d] tequiv/reflex (DwfB x d)).
+
+-	: tequiv-pi-invert (tequiv/symm D) D1 D2 D3
+	   <- tequiv-pi-invert' D D1 D2 D3.
+
+-	: tequiv-pi-invert (tequiv/trans D2 D1) Deq' (tequiv/trans DequivA DequivA') ([x] [d] tequiv/trans (DequivB'' x d) (DequivB' x d))
+	   <- tequiv-pi-invert D2 Deq DequivA DequivB
+	   <- tequiv-resp etp-eq/i Deq D1 D1'
+	   <- tequiv-pi-invert D1' Deq' DequivA' DequivB'
+	   <- tequiv-reg DequivA' DwfA' _
+	   <- ({x} {d:evof x A'}
+		 esubst-tequiv DequivB (eof/equiv DequivA' (eof/var DwfA' d))
+		 (DequivB'' x d)).
+
+-	: tequiv-pi-invert (tequiv/pi D2 D1)
+	   etp-eq/i D1 D2.
+
+
+-	: tequiv-pi-invert' (tequiv/reflex (ewf/pi DwfB DwfA))
+	   etp-eq/i (tequiv/reflex DwfA) ([x] [d] tequiv/reflex (DwfB x d)).
+
+-	: tequiv-pi-invert' (tequiv/symm D) D1 D2 D3
+	   <- tequiv-pi-invert D D1 D2 D3.
+
+-	: tequiv-pi-invert' (tequiv/trans D2 D1) Deq' (tequiv/trans DequivA DequivA') ([x] [d] tequiv/trans (DequivB'' x d) (DequivB' x d))
+	   <- tequiv-pi-invert' D1 Deq DequivA DequivB
+	   <- tequiv-resp Deq etp-eq/i D2 D2'
+	   <- tequiv-pi-invert' D2' Deq' DequivA' DequivB'
+	   <- tequiv-reg DequivA' DwfA' _
+	   <- ({x} {d:evof x A'}
+		 esubst-tequiv DequivB (eof/equiv DequivA' (eof/var DwfA' d))
+		 (DequivB'' x d)).
+
+-	: tequiv-pi-invert' (tequiv/pi D2 D1)
+	   etp-eq/i (tequiv/symm D1) ([x] [d] tequiv/symm (D2' x d))
+	   <- tequiv-reg D1 _ Dwf
+	   <- ({x} {d:evof x A}
+		 esubst-tequiv D2 (eof/subsume (subtp/reflex (tequiv/symm D1)) (eof/var Dwf d))
+		 (D2' x d)).
+
+%worlds (sbind | ebind) (tequiv-pi-invert _ _ _ _) (tequiv-pi-invert' _ _ _ _).
+%total (D1 D2) (tequiv-pi-invert D1 _ _ _) (tequiv-pi-invert' D2 _ _ _).
+
+
+
+tequiv-sigma-invert : tequiv C (esigma A B) -> etp-eq C (esigma A' B') -> tequiv A' A -> ({x} evof x A' -> tequiv (B' x) (B x)) -> type.
+%mode tequiv-sigma-invert +X1 -X2 -X3 -X4.
+
+tequiv-sigma-invert' : tequiv (esigma A B) C -> etp-eq C (esigma A' B') -> tequiv A' A -> ({x} evof x A' -> tequiv (B' x) (B x)) -> type.
+%mode tequiv-sigma-invert' +X1 -X2 -X3 -X4.
+
+-	: tequiv-sigma-invert (tequiv/reflex (ewf/sigma DwfB DwfA))
+	   etp-eq/i (tequiv/reflex DwfA) ([x] [d] tequiv/reflex (DwfB x d)).
+
+-	: tequiv-sigma-invert (tequiv/symm D) D1 D2 D3
+	   <- tequiv-sigma-invert' D D1 D2 D3.
+
+-	: tequiv-sigma-invert (tequiv/trans D2 D1) Deq' (tequiv/trans DequivA DequivA') ([x] [d] tequiv/trans (DequivB'' x d) (DequivB' x d))
+	   <- tequiv-sigma-invert D2 Deq DequivA DequivB
+	   <- tequiv-resp etp-eq/i Deq D1 D1'
+	   <- tequiv-sigma-invert D1' Deq' DequivA' DequivB'
+	   <- tequiv-reg DequivA' DwfA' _
+	   <- ({x} {d:evof x A'}
+		 esubst-tequiv DequivB (eof/equiv DequivA' (eof/var DwfA' d))
+		 (DequivB'' x d)).
+
+-	: tequiv-sigma-invert (tequiv/sigma D2 D1)
+	   etp-eq/i D1 D2.
+
+
+-	: tequiv-sigma-invert' (tequiv/reflex (ewf/sigma DwfB DwfA))
+	   etp-eq/i (tequiv/reflex DwfA) ([x] [d] tequiv/reflex (DwfB x d)).
+
+-	: tequiv-sigma-invert' (tequiv/symm D) D1 D2 D3
+	   <- tequiv-sigma-invert D D1 D2 D3.
+
+-	: tequiv-sigma-invert' (tequiv/trans D2 D1) Deq' (tequiv/trans DequivA DequivA') ([x] [d] tequiv/trans (DequivB'' x d) (DequivB' x d))
+	   <- tequiv-sigma-invert' D1 Deq DequivA DequivB
+	   <- tequiv-resp Deq etp-eq/i D2 D2'
+	   <- tequiv-sigma-invert' D2' Deq' DequivA' DequivB'
+	   <- tequiv-reg DequivA' DwfA' _
+	   <- ({x} {d:evof x A'}
+		 esubst-tequiv DequivB (eof/equiv DequivA' (eof/var DwfA' d))
+		 (DequivB'' x d)).
+
+-	: tequiv-sigma-invert' (tequiv/sigma D2 D1)
+	   etp-eq/i (tequiv/symm D1) ([x] [d] tequiv/symm (D2' x d))
+	   <- tequiv-reg D1 _ Dwf
+	   <- ({x} {d:evof x A}
+		 esubst-tequiv D2 (eof/subsume (subtp/reflex (tequiv/symm D1)) (eof/var Dwf d))
+		 (D2' x d)).
+
+%worlds (sbind | ebind) (tequiv-sigma-invert _ _ _ _) (tequiv-sigma-invert' _ _ _ _).
+%total (D1 D2) (tequiv-sigma-invert D1 _ _ _) (tequiv-sigma-invert' D2 _ _ _).
+
+
+
+eofs-lam-invert : eofs (elam C M) (epi A B) -> tequiv A C -> ({x} evof x A -> eofs (M x) (B x)) -> type.
+%mode eofs-lam-invert +X1 -X2 -X3.
+
+-	: eofs-lam-invert (eofs/lam D2 D1) (tequiv/reflex D1') D2
+	   <- ewfs-to-ewf D1 D1'.
+
+-	: eofs-lam-invert 
+	   (eofs/equiv 
+	      (Dequiv : tequiv D (epi A B))
+	      (Deof : eofs (elam C M) D))
+	   (tequiv/trans DequivAC (tequiv/symm DequivA))
+	   ([x] [d] eofs/equiv (DequivB' x d) (DeofM' x d))
+	   <- tequiv-pi-invert Dequiv
+	      (Deq : etp-eq D (epi A' B'))
+	      (DequivA : tequiv A' A)
+	      (DequivB : {x} evof x A' -> tequiv (B' x) (B x))
+	   <- eofs-resp eterm-eq/i Deq Deof 
+	      (Deof' : eofs (elam C M) (epi A' B'))
+	   <- eofs-lam-invert Deof'
+	      (DequivAC : tequiv A' C)
+	      (DeofM : {x} evof x A' -> eofs (M x) (B' x))
+	   <- tequiv-reg DequivA _ (DwfA : ewf A)
+	   <- ({x} {d:evof x A}
+		 esubsts DeofM (eofs/equiv (tequiv/symm DequivA) (eofs/var DwfA d))
+		 (DeofM' x d : eofs (M x) (B' x)))
+	   <- ({x} {d:evof x A}
+		 esubst-tequiv DequivB (eof/subsume (subtp/reflex (tequiv/symm DequivA)) (eof/var DwfA d))
+		 (DequivB' x d : tequiv (B' x) (B x))).
+
+%worlds (sbind | ebind) (eofs-lam-invert _ _ _).
+%total D (eofs-lam-invert D _ _).
+
+
+
+eofs-pair-invert : eofs (epair M N) (esigma A B) -> eofs M A -> eofs N (B M) -> ({x} evof x A -> ewf (B x)) -> type.
+%mode eofs-pair-invert +X1 -X2 -X3 -X4.
+
+-	: eofs-pair-invert (eofs/pair D3 D2 D1) D1 D2 D3.
+
+-	: eofs-pair-invert 
+	   (eofs/equiv
+	      (Dequiv : tequiv D (esigma A B))
+	      (Deof : eofs (epair M N) D))
+	   (eofs/equiv DequivA DeofM)
+	   (eofs/equiv DequivBx DeofN)
+	   DwfB'
+	   <- tequiv-sigma-invert Dequiv
+	      (Deq : etp-eq D (esigma A' B'))
+	      (DequivA : tequiv A' A)
+	      (DequivB : {x} evof x A' -> tequiv (B' x) (B x))
+	   <- eofs-resp eterm-eq/i Deq Deof
+	      (Deof' : eofs (epair M N) (esigma A' B'))
+	   <- eofs-pair-invert Deof'
+	      (DeofM : eofs M A')
+	      (DeofN : eofs N (B' M))
+	      _
+	   <- eofs-to-eof DeofM
+	      (DeofM' : eof M A')
+	   <- esubst-tequiv DequivB DeofM'
+	      (DequivBx : tequiv (B' M) (B M))
+	   <- ({x} {d:evof x A'}
+		 tequiv-reg (DequivB x d)
+		 _
+		 (DwfB x d : ewf (B x)))
+	   <- tequiv-reg DequivA _ (DwfA : ewf A)
+	   <- ({x} {d:evof x A}
+		 esubst-wf DwfB (eof/equiv (tequiv/symm DequivA) (eof/var DwfA d))
+		 (DwfB' x d : ewf (B x))).
+
+%worlds (sbind | ebind) (eofs-pair-invert _ _ _ _).
+%total D (eofs-pair-invert D _ _ _).
+
+
+
+reduce-equiv	 : eofs M A -> reduce M N -> eofs N A -> equiv M N A -> type.
+%mode reduce-equiv +X1 +X2 -X3 -X4.
+
+treduce-equiv	 : ewfs A -> treduce A B -> ewfs B -> tequiv A B -> type.
+%mode treduce-equiv +X1 +X2 -X3 -X4.
+
+reduce-app-equiv : eofs M (epi A B) -> eofs N A -> reduce-app M N O -> eofs O (B N) -> equiv (eapp M N) O (B N) -> type.
+%mode reduce-app-equiv +X1 +X2 +X3 -X4 -X5.
+
+reduce-pi1-equiv : eofs M (esigma A B) -> reduce-pi1 M N -> eofs N A -> equiv (epi1 M) N A -> type.
+%mode reduce-pi1-equiv +X1 +X2 -X3 -X4.
+
+reduce-pi2-equiv : eofs M (esigma A B) -> reduce-pi2 M N -> eofs N (B (epi1 M)) -> equiv (epi2 M) N (B (epi1 M)) -> type.
+%mode reduce-pi2-equiv +X1 +X2 -X3 -X4.
+
+-sing	: reduce-equiv 
+	   (eofs/sing 
+	      (Deof : eofs M et))
+	   (Dreduce : reduce M N)
+	   (eofs/equiv (tequiv/sing (equiv/symm Dequiv)) (eofs/sing Deof')) 
+	   (equiv/sing Dequiv)
+	   <- reduce-equiv Deof Dreduce 
+	      (Deof' : eofs N et)
+	      (Dequiv : equiv M N et).
+
+-equiv	: reduce-equiv 
+	   (eofs/equiv 
+	      (Dtequiv : tequiv A B)
+	      (Deof : eofs M A))
+	   (Dreduce : reduce M N)
+	   (eofs/equiv Dtequiv Deof')
+	   (equiv/equiv Dtequiv Dequiv)
+	   <- reduce-equiv Deof Dreduce
+	      (Deof' : eofs N A)
+	      (Dequiv : equiv M N A).
+
+
+-const	: reduce-equiv D reduce/const D (equiv/reflex D')
+	   <- eofs-to-eof D D'.
+
+-forall	: reduce-equiv (eofs/forall Dwf) (reduce/forall Dreduce) 
+	   (eofs/equiv
+	      (tequiv/pi
+		 ([_] [_] tequiv/t)
+		 (tequiv/pi
+		    ([_] [_] tequiv/t)
+		    (tequiv/symm Dequiv)))
+	      (eofs/forall Dwf'))
+	   (equiv/forall Dequiv)
+	   <- treduce-equiv Dwf Dreduce Dwf' Dequiv.
+
+-var	: reduce-equiv D (reduce/var _) D (equiv/reflex D')
+	   <- eofs-to-eof D D'.
+
+-lam	: reduce-equiv
+	   (eofs/lam
+	      (Deofs : {x} evof x A -> eofs (M x) (B x))
+	      (Dewfs : ewfs A))
+	   (reduce/lam
+	      (DreduceM : {x} variable x -> reduce (M x) (M' x))
+	      (DreduceA : treduce A A'))
+	   (eofs/equiv 
+	      (tequiv/pi ([x] [d] tequiv/reflex (DwfB' x d)) (tequiv/symm DequivA))
+	      (eofs/lam Deofs'' Dewfs'))
+	   (equiv/lam DequivM DequivA)
+	   <- treduce-equiv Dewfs DreduceA 
+	      (Dewfs' : ewfs A')
+	      (DequivA : tequiv A A')
+	   <- ({x} {d:evof x A} {dv:variable x}
+		 reduce-equiv (Deofs x d) (DreduceM x dv)
+		 (Deofs' x d : eofs (M' x) (B x))
+		 (DequivM x d : equiv (M x) (M' x) (B x)))
+	   <- tequiv-reg DequivA _ (DwfA' : ewf A')
+	   <- ({x} {d:evof x A'}
+		 esubsts Deofs' (eofs/equiv (tequiv/symm DequivA) (eofs/var DwfA' d))
+		 (Deofs'' x d : eofs (M' x) (B x)))
+	   <- ({x} {d:evof x A}
+		 eofs-to-eof (Deofs x d)
+		 (Deof x d : eof (M x) (B x)))
+	   <- ({x} {d:evof x A}
+		 eof-reg (Deof x d)
+		 (DwfB x d : ewf (B x)))
+	   <- ({x} {d:evof x A'}
+		 esubst-wf DwfB (eof/equiv (tequiv/symm DequivA) (eof/var DwfA' d))
+		 (DwfB' x d : ewf (B x))).
+
+-app	: reduce-equiv
+	   (eofs/app
+	      (DeofsN : eofs N A)
+	      (DeofsM : eofs M (epi A B)))
+	   (reduce/app
+	      (DreduceApp : reduce-app M' N' O)
+	      (DreduceN : reduce N N')
+	      (DreduceM : reduce M M'))
+	   (eofs/equiv DequivBx DeofsO)
+	   (equiv/trans
+	      (equiv/equiv
+		 DequivBx
+		 Dequiv)
+	      (equiv/app DequivN DequivM))
+	   <- reduce-equiv DeofsM DreduceM 
+	      (DeofsM' : eofs M' (epi A B))
+	      (DequivM : equiv M M' (epi A B))
+	   <- reduce-equiv DeofsN DreduceN
+	      (DeofsN' : eofs N' A)
+	      (DequivN : equiv N N' A)
+	   <- reduce-app-equiv DeofsM' DeofsN' DreduceApp
+	      (DeofsO : eofs O (B N'))
+	      (Dequiv : equiv (eapp M' N') O (B N'))
+	   <- eofs-to-eof DeofsM'
+	      (DeofM' : eof M' (epi A B))
+	   <- eof-reg DeofM'
+	      (ewf/pi
+		 (DwfB : {x} evof x A -> ewf (B x))
+		 (DwfA : ewf A))
+	   <- tfunctionality DwfB (equiv/symm DequivN)
+	      (DequivBx : tequiv (B N') (B N)).
+
+-pair	: reduce-equiv
+	   (eofs/pair
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DeofsN : eofs N (B M))
+	      (DeofsM : eofs M A))
+	   (reduce/pair
+	      (DreduceN : reduce N N')
+	      (DreduceM : reduce M M'))
+	   (eofs/pair
+	      DwfB
+	      (eofs/equiv
+		 DequivBx
+		 DeofsN')
+	      DeofsM')
+	   (equiv/pair DwfB DequivN DequivM)
+	   <- reduce-equiv DeofsM DreduceM
+	      (DeofsM' : eofs M' A)
+	      (DequivM : equiv M M' A)
+	   <- reduce-equiv DeofsN DreduceN
+	      (DeofsN' : eofs N' (B M))
+	      (DequivN : equiv N N' (B M))
+	   <- tfunctionality DwfB DequivM
+	      (DequivBx : tequiv (B M) (B M')).
+
+-pi1	: reduce-equiv
+	   (eofs/pi1
+	      (Deofs : eofs M (esigma A B)))
+	   (reduce/pi1
+	      (DreducePi : reduce-pi1 M' N)
+	      (Dreduce : reduce M M'))
+	   DeofsN
+	   (equiv/trans
+	      Dequiv
+	      (equiv/pi1 DequivM))
+	   <- reduce-equiv Deofs Dreduce
+	      (Deofs' : eofs M' (esigma A B))
+	      (DequivM : equiv M M' (esigma A B))
+	   <- reduce-pi1-equiv Deofs' DreducePi
+	      (DeofsN : eofs N A)
+	      (Dequiv : equiv (epi1 M') N A).
+
+-pi2	: reduce-equiv
+	   (eofs/pi2
+	      (Deofs : eofs M (esigma A B)))
+	   (reduce/pi2
+	      (DreducePi : reduce-pi2 M' N)
+	      (Dreduce : reduce M M'))
+	   (eofs/equiv
+	      DequivBx
+	      DeofsN)
+	   (equiv/trans
+	      (equiv/equiv
+		 DequivBx
+		 Dequiv)
+	      (equiv/pi2 DequivM))
+	   <- reduce-equiv Deofs Dreduce
+	      (Deofs' : eofs M' (esigma A B))
+	      (DequivM : equiv M M' (esigma A B))
+	   <- reduce-pi2-equiv Deofs' DreducePi
+	      (DeofsN : eofs N (B (epi1 M')))
+	      (Dequiv : equiv (epi2 M') N (B (epi1 M')))
+	   <- eofs-to-eof Deofs
+	      (Deof : eof M (esigma A B))
+	   <- eof-reg Deof
+	      (ewf/sigma
+		 (DwfB : {x} evof x A -> ewf (B x))
+		 (DwfA : ewf A))
+	   <- tfunctionality DwfB (equiv/symm (equiv/pi1 DequivM))
+	      (DequivBx : tequiv (B (epi1 M')) (B (epi1 M))).
+
+
+
+-t	: treduce-equiv D treduce/t D (tequiv/reflex D')
+	   <- ewfs-to-ewf D D'.
+
+-pi	: treduce-equiv
+	   (ewfs/pi
+	      (DwfsB : {x} evof x A -> ewfs (B x))
+	      (DwfsA : ewfs A))
+	   (treduce/pi
+	      (DreduceB : {x} variable x -> treduce (B x) (B' x))
+	      (DreduceA : treduce A A'))
+	   (ewfs/pi DwfsB'' DwfsA')
+	   (tequiv/pi DequivB DequivA)
+	   <- treduce-equiv DwfsA DreduceA 
+	      (DwfsA' : ewfs A')
+	      (DequivA : tequiv A A')
+	   <- ({x} {d:evof x A} {dv:variable x}
+		 treduce-equiv (DwfsB x d) (DreduceB x dv)
+		 (DwfsB' x d : ewfs (B' x))
+		 (DequivB x d : tequiv (B x) (B' x)))
+	   <- tequiv-reg DequivA _ DwfA'
+	   <- ({x} {d:evof x A'}
+		 esubsts-wf DwfsB' (eofs/equiv (tequiv/symm DequivA) (eofs/var DwfA' d))
+		 (DwfsB'' x d : ewfs (B' x))).
+
+-sigma	: treduce-equiv
+	   (ewfs/sigma
+	      (DwfsB : {x} evof x A -> ewfs (B x))
+	      (DwfsA : ewfs A))
+	   (treduce/sigma
+	      (DreduceB : {x} variable x -> treduce (B x) (B' x))
+	      (DreduceA : treduce A A'))
+	   (ewfs/sigma DwfsB'' DwfsA')
+	   (tequiv/sigma DequivB DequivA)
+	   <- treduce-equiv DwfsA DreduceA 
+	      (DwfsA' : ewfs A')
+	      (DequivA : tequiv A A')
+	   <- ({x} {d:evof x A} {dv:variable x}
+		 treduce-equiv (DwfsB x d) (DreduceB x dv)
+		 (DwfsB' x d : ewfs (B' x))
+		 (DequivB x d : tequiv (B x) (B' x)))
+	   <- tequiv-reg DequivA _ DwfA'
+	   <- ({x} {d:evof x A'}
+		 esubsts-wf DwfsB' (eofs/equiv (tequiv/symm DequivA) (eofs/var DwfA' d))
+		 (DwfsB'' x d : ewfs (B' x))).
+
+-sing	: treduce-equiv
+	   (ewfs/sing
+	      (Deofs : eofs M et))
+	   (treduce/sing
+	      (Dreduce : reduce M M'))
+	   (ewfs/sing Deofs')
+	   (tequiv/sing Dequiv)
+	   <- reduce-equiv Deofs Dreduce
+	      (Deofs' : eofs M' et)
+	      (Dequiv : equiv M M' et).
+
+
+
+-equiv	: reduce-app-equiv
+	   (eofs/equiv
+	      (Dtequiv : tequiv C (epi A B))
+	      (DofsM : eofs M C))
+	   (DofsN : eofs N A)
+	   (Dreduce : reduce-app M N O)
+	   (eofs/equiv DequivBx DofsO)
+	   (equiv/equiv DequivBx Dequiv)
+	   <- tequiv-pi-invert Dtequiv
+	      (Deq : etp-eq C (epi A' B'))
+	      (DequivA : tequiv A' A)
+	      (DequivB : {x} evof x A' -> tequiv (B' x) (B x))
+	   <- eofs-resp eterm-eq/i Deq DofsM
+	      (DofsM' : eofs M (epi A' B'))
+	   <- reduce-app-equiv DofsM' (eofs/equiv (tequiv/symm DequivA) DofsN) Dreduce
+	      (DofsO : eofs O (B' N))
+	      (Dequiv : equiv (eapp M N) O (B' N))
+	   <- eofs-to-eof DofsN
+	      (DofN : eof N A)
+	   <- esubst-tequiv DequivB (eof/equiv (tequiv/symm DequivA) DofN)
+	      (DequivBx : tequiv (B' N) (B N)).
+
+-atom	: reduce-app-equiv
+	   (DeofsM : eofs M (epi A B))
+	   (DeofsN : eofs N A)
+	   (reduce-app/atom _)
+	   (eofs/app DeofsN DeofsM)
+	   (equiv/reflex D)
+	   <- eofs-to-eof (eofs/app DeofsN DeofsM) D.
+
+-beta	: reduce-app-equiv
+	   (eofs/lam
+	      (DeofsM : {x} evof x A -> eofs (M x) (B x))
+	      (DewfA : ewfs A))
+	   (DeofsN : eofs N A)
+	   (reduce-app/beta
+	      (Dreduce : reduce (M N) O))
+	   DeofsO
+	   (equiv/trans
+	      Dequiv
+	      (equiv/beta
+		 DeofN
+		 DeofM))
+	   <- esubsts DeofsM DeofsN
+	      (DeofsMx : eofs (M N) (B N))
+	   <- reduce-equiv DeofsMx Dreduce
+	      (DeofsO : eofs O (B N))
+	      (Dequiv : equiv (M N) O (B N))
+	   <- ({x} {d}
+		 eofs-to-eof (DeofsM x d)
+		 (DeofM x d : eof (M x) (B x)))
+	   <- eofs-to-eof DeofsN 
+	      (DeofN : eof N A).
+
+
+
+-equiv	: reduce-pi1-equiv
+	   (eofs/equiv
+	      (Dtequiv : tequiv C (esigma A B))
+	      (DofsM : eofs M C))
+	   (Dreduce : reduce-pi1 M N)
+	   (eofs/equiv DequivA DofsN)
+	   (equiv/equiv DequivA Dequiv)
+	   <- tequiv-sigma-invert Dtequiv
+	      (Deq : etp-eq C (esigma A' B'))
+	      (DequivA : tequiv A' A)
+	      (DequivB : {x} evof x A' -> tequiv (B' x) (B x))
+	   <- eofs-resp eterm-eq/i Deq DofsM
+	      (DofsM' : eofs M (esigma A' B'))
+	   <- reduce-pi1-equiv DofsM' Dreduce
+	      (DofsN : eofs N A')
+	      (Dequiv : equiv (epi1 M) N A').
+
+-atom	: reduce-pi1-equiv
+	   (DofsM : eofs M (esigma A B))
+	   (reduce-pi1/atom _)
+	   (eofs/pi1 DofsM)
+	   (equiv/reflex (eof/pi1 DofM))
+	   <- eofs-to-eof DofsM DofM.
+
+-beta	: reduce-pi1-equiv
+	   (eofs/pair
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DofsN : eofs N (B M))
+	      (DofsM : eofs M A))
+	   reduce-pi1/beta
+	   DofsM
+	   (equiv/beta1
+	      DofN
+	      DofM)
+	   <- eofs-to-eof DofsM DofM
+	   <- eofs-to-eof DofsN DofN.
+
+
+
+-equiv	: reduce-pi2-equiv
+	   (eofs/equiv
+	      (Dtequiv : tequiv C (esigma A B))
+	      (DofsM : eofs M C))
+	   (Dreduce : reduce-pi2 M N)
+	   (eofs/equiv DequivBx DofsN)
+	   (equiv/equiv DequivBx Dequiv)
+	   <- tequiv-sigma-invert Dtequiv
+	      (Deq : etp-eq C (esigma A' B'))
+	      (DequivA : tequiv A' A)
+	      (DequivB : {x} evof x A' -> tequiv (B' x) (B x))
+	   <- eofs-resp eterm-eq/i Deq DofsM
+	      (DofsM' : eofs M (esigma A' B'))
+	   <- reduce-pi2-equiv DofsM' Dreduce
+	      (DofsN : eofs N (B' (epi1 M)))
+	      (Dequiv : equiv (epi2 M) N (B' (epi1 M)))
+	   <- eofs-to-eof DofsM'
+	      (DofM : eof M (esigma A' B'))
+	   <- esubst-tequiv DequivB (eof/pi1 DofM)
+	      (DequivBx : tequiv (B' (epi1 M)) (B (epi1 M))).
+
+-atom	: reduce-pi2-equiv
+	   (DofsM : eofs M (esigma A B))
+	   (reduce-pi2/atom _)
+	   (eofs/pi2 DofsM)
+	   (equiv/reflex (eof/pi2 DofM))
+	   <- eofs-to-eof DofsM DofM.
+	   
+-beta	: reduce-pi2-equiv
+	   (eofs/pair
+	      (DwfB : {x} evof x A -> ewf (B x))
+	      (DofsN : eofs N (B M))
+	      (DofsM : eofs M A))
+	   reduce-pi2/beta
+	   (eofs/equiv
+	      (tequiv/symm Dtequiv)
+	      DofsN)
+	   (equiv/equiv
+	      (tequiv/symm Dtequiv)
+	      (equiv/beta2
+		 DofN
+		 DofM))
+	   <- eofs-to-eof DofsM DofM
+	   <- eofs-to-eof DofsN DofN
+	   <- tfunctionality DwfB (equiv/beta1 DofN DofM)
+	      (Dtequiv : tequiv (B (epi1 (epair M N))) (B M)).
+
+%worlds (sbind | ebind | evbind) (reduce-equiv _ _ _ _) (treduce-equiv _ _ _ _) (reduce-app-equiv _ _ _ _ _) (reduce-pi1-equiv _ _ _ _) (reduce-pi2-equiv _ _ _ _).
+%total {(D1 D2 D3 D4 D5) (E1 E2 E3 E4 E5)} (reduce-equiv E1 D1 _ _) (treduce-equiv E2 D2 _ _) (reduce-app-equiv E3 _ D3 _ _) (reduce-pi1-equiv E4 D4 _ _) (reduce-pi2-equiv E5 D5 _ _).
+
+
+
+
+%%%%%  Conversion Regularity, Strong  %%%%%
+
+convert-topen : topen Ac A -> tconvert A EA -> etopen Ac EA -> type.
+%mode convert-topen +X1 -X2 -X3.
+
+-	: convert-topen topen/t tconvert/t etopen/t.
+
+-	: convert-topen (topen/pi Dtopen2 Dtopen1)
+	   (tconvert/pi ([_] [_] [_] [_] Dconv2) Dconv1) (etopen/pi Detopen2 Detopen1)
+	   <- convert-topen Dtopen1 Dconv1 Detopen1
+	   <- convert-topen Dtopen2 Dconv2 Detopen2.
+
+%worlds (bind | tbind) (convert-topen _ _ _).
+%total D (convert-topen D _ _).
+
+
+
+convert-kof : kof K A -> tconvert A EA -> ekof K EA -> type.
+%mode convert-kof +X1 +X2 -X3.
+
+-	: convert-kof 
+	   (kof/i
+	      (Dopen : topen Ac A)
+	      (Dckof : ckof C Ac))
+	   (Dconvert : tconvert A EA)
+	   (ekof/i Deopen' Dckof)
+	   <- convert-topen Dopen
+	      (Dconvert' : tconvert A EA')
+	      (Deopen : etopen Ac EA')
+	   <- tconvert-fun Dconvert' Dconvert
+	      (Deq : etp-eq EA' EA)
+	   <- etopen-resp ctp-eq/i Deq Deopen
+	      (Deopen' : etopen Ac EA).
+
+%worlds (fbind) (convert-kof _ _ _).
+%total {} (convert-kof _ _ _).
+
+
+
+vconvert-fun : vtrans EX X -> vtrans EX' X -> eterm-eq EX EX' -> type.
+%mode vconvert-fun +X1 +X2 -X3.
+
+-	: vconvert-fun D D eterm-eq/i.
+
+%worlds (nbind) (vconvert-fun _ _ _).
+%total {} (vconvert-fun _ _ _).
+
+
+
+convert-reg-strong	: convert M A EM -> tconvert A EA -> ewfs EA -> eofs EM EA -> type.
+%mode convert-reg-strong +X1 +X2 +X3 -X4.
+
+aconvert-reg-strong	: aconvert R A EM -> tconvert A EA -> ewfs EA -> eofs EM EA -> type.
+%mode aconvert-reg-strong +X1 -X2 -X3 -X4.
+
+tconvert-reg-strong	: tconvert A EA -> ewfs EA -> type.
+%mode tconvert-reg-strong +X1 -X2.
+
+-t	: tconvert-reg-strong tconvert/t ewfs/t.
+
+-pi	: tconvert-reg-strong
+	   (tconvert/pi
+	      (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvertA : tconvert A EA))
+	   (ewfs/pi DwfB DwfA)
+	   <- tconvert-reg-strong DconvertA
+	      (DwfA : ewfs EA)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> tconvert-reg-strong (DconvertB x d ex xt)
+		    (DwfB ex ed : ewfs (EB ex))).
+
+-sigma	: tconvert-reg-strong
+	   (tconvert/sigma
+	      (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvertA : tconvert A EA))
+	   (ewfs/sigma DwfB DwfA)
+	   <- tconvert-reg-strong DconvertA
+	      (DwfA : ewfs EA)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> tconvert-reg-strong (DconvertB x d ex xt)
+		    (DwfB ex ed : ewfs (EB ex))).
+
+-sing	: tconvert-reg-strong
+	   (tconvert/sing
+	      (Dconvert : aconvert R t EM))
+	   (ewfs/sing Dof)
+	   <- aconvert-reg-strong Dconvert
+	      tconvert/t
+	      _
+	      (Dof : eofs EM et).
+
+
+
+-const	: aconvert-reg-strong
+	   (aconvert/const
+	      (Dconvert : tconvert A EA)
+	      _
+	      (Dkof : kof K A))
+	   Dconvert
+	   Dewfs
+	   (eofs/const Dewf Dekof)
+	   <- convert-kof Dkof Dconvert (Dekof : ekof K EA)
+	   <- tconvert-reg-strong Dconvert
+	      (Dewfs : ewfs EA)
+	   <- ewfs-to-ewf Dewfs Dewf.
+
+-forall	: aconvert-reg-strong
+	   (aconvert/forall
+	      (Dconv : tconvert A EA))
+	   (tconvert/pi
+	      ([_] [_] [_] [_] tconvert/t)
+	      (tconvert/pi
+		 ([_] [_] [_] [_] tconvert/t)
+		 Dconv))
+	   (ewfs/pi
+	      ([_] [_] ewfs/t)
+	      (ewfs/pi
+		 ([_] [_] ewfs/t)
+		 Dwf))
+	   (eofs/forall Dwf)
+	   <- tconvert-reg-strong Dconv Dwf.
+
+-var	: aconvert-reg-strong
+	   (aconvert/var
+	      (Dvtrans : vtrans EX X)
+	      (Dconvert' : tconvert A EA')
+	      _
+	      (Dvof : vof X A))
+	   Dconvert
+	   Dewf
+	   (eofs/var Dewf'' Devof')
+	   <- vsound Dvof
+	      (Dvtrans' : vtrans EX' X)
+	      (Dconvert : tconvert A EA)
+	      (Devof : evof EX' EA)
+	   <- vconvert-fun Dvtrans' Dvtrans
+	      (Deq : eterm-eq EX' EX)
+	   <- evof-resp Deq etp-eq/i Devof
+	      (Devof' : evof EX EA)
+	   <- tconvert-reg-strong Dconvert'
+	      (Dewf' : ewfs EA')
+	   <- tconvert-fun Dconvert' Dconvert
+	      (DeqA : etp-eq EA' EA)
+	   <- ewfs-resp DeqA Dewf'
+	      (Dewf : ewfs EA)
+	   <- ewfs-to-ewf Dewf (Dewf'' : ewf EA).
+
+-app	: aconvert-reg-strong
+	   (aconvert/app
+	      (DsubBx : tsub B N Bx)
+	      (DconvertN : convert N A EN)
+	      (DconvertM : aconvert R (pi A B) EM))
+	   DconvertBx
+	   DwfBx'
+	   (eofs/equiv Dequiv (eofs/app DeofN DeofM))
+	   <- aconvert-reg-strong DconvertM
+	      (tconvert/pi
+		 (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		 (DconvertA : tconvert A EA))
+	      (ewfs/pi
+		 (DwfB : {ex} evof ex EA -> ewfs (EB ex))
+		 (DwfA : ewfs EA))
+	      (DeofM : eofs EM (epi EA EB))
+	   <- convert-reg-strong DconvertN DconvertA DwfA
+	      (DeofN : eofs EN EA)
+	   <- convert-tsub-reduce DconvertB DconvertN DsubBx
+	      (DconvertBx : tconvert Bx EBx)
+	      (Dreduce : treduce (EB EN) EBx)
+	   <- esubsts-wf DwfB DeofN
+	      (DwfBx : ewfs (EB EN))
+	   <- treduce-equiv DwfBx Dreduce
+	      (DwfBx' : ewfs EBx)
+	      (Dequiv : tequiv (EB EN) EBx).
+
+-pi1	: aconvert-reg-strong
+	   (aconvert/pi1
+	      (DconvertM : aconvert R (sigma A B) EM))
+	   DconvertA
+	   DwfA
+	   (eofs/pi1 Dof)
+	   <- aconvert-reg-strong DconvertM
+	      (tconvert/sigma
+		 (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		 (DconvertA : tconvert A EA))
+	      (ewfs/sigma
+		 (DwfB : {ex} evof ex EA -> ewfs (EB ex))
+		 (DwfA : ewfs EA))
+	      (Dof : eofs EM (esigma EA EB)).
+
+-pi2	: aconvert-reg-strong
+	   (aconvert/pi2
+	      (DconvertM : aconvert R (sigma A B) EM))
+	   DconvertBx
+	   DwfBx
+	   (eofs/pi2 Dof)
+	   <- aconvert-reg-strong DconvertM
+	      (tconvert/sigma
+		 (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		 (DconvertA : tconvert A EA))
+	      (ewfs/sigma
+		 (DwfB : {ex} evof ex EA -> ewfs (EB ex))
+		 (DwfA : ewfs EA))
+	      (Dof : eofs EM (esigma EA EB))
+	   <- convert-stsub DconvertB (aconvert/pi1 DconvertM)
+	      (DconvertBx : tconvert (B (pi1 R)) (EB (epi1 EM)))
+	   <- esubsts-wf DwfB (eofs/pi1 Dof)
+	      (DwfBx : ewfs (EB (epi1 EM))).
+
+
+
+-at	: convert-reg-strong
+	   (convert/at
+	      (DconvertM : aconvert R t EM))
+	   tconvert/t
+	   ewfs/t
+	   Dof
+	   <- aconvert-reg-strong DconvertM
+	      tconvert/t
+	      _
+	      (Dof : eofs EM et).
+
+convert-reg-strong! : etp-eq EA' EA -> ({ex} evof ex EA' -> ewfs (EB ex)) -> ({ex} evof ex EA -> ewfs (EB ex)) -> type.
+%mode convert-reg-strong! +X1 +X2 -X3.
+
+-	: convert-reg-strong! etp-eq/i D D.
+
+%worlds (sbind) (convert-reg-strong! _ _ _).
+%total {} (convert-reg-strong! _ _ _).
+
+-lam	: convert-reg-strong
+	   (convert/lam
+	      (DconvertM : {x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+	      (DconvertA : tconvert A EA))
+	   (tconvert/pi
+	      (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvertA' : tconvert A EA'))
+	   (ewfs/pi
+	      (DwfB : {ex} evof ex EA' -> ewfs (EB ex))
+	      (DwfA' : ewfs EA'))
+	   Dof'
+	   <- tconvert-fun DconvertA DconvertA'
+	      (Deq : etp-eq EA EA')
+	   <- etp-eq-symm Deq
+	      (Deq' : etp-eq EA' EA)
+	   <- convert-reg-strong! Deq' DwfB
+	      (DwfB' : {ex} evof ex EA -> ewfs (EB ex))
+	   <- etp-resp-etp ([a] epi a EB) Deq
+	      (Deq'' : etp-eq (epi EA EB) (epi EA' EB))
+	   <- ewfs-resp Deq' DwfA'
+	      (DwfA : ewfs EA)
+	   <- ({x} {d:vof x A} {ex} {xt:vtrans ex x} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> convert-reg-strong (DconvertM x d ex xt) (DconvertB x d ex xt) (DwfB' ex ed)
+		    (Dof ex ed : eofs (EM ex) (EB ex)))
+	   <- eofs-resp eterm-eq/i Deq''
+	      (eofs/lam
+		 Dof
+		 DwfA
+		 : eofs (elam EA EM) (epi EA EB))
+	      (Dof' : eofs (elam EA EM) (epi EA' EB)).
+
+-pair	: convert-reg-strong
+	   (convert/pair
+	      (Dwf : {x} vof x A -> wf (B x))
+	      (DconvertN : convert N Bx EN)
+	      (DsubBx : tsub B M Bx)
+	      (DconvertM : convert M A EM))
+	   (tconvert/sigma
+	      (DconvertB : {x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+	      (DconvertA : tconvert A EA))
+	   (ewfs/sigma
+	      (DwfB : {ex} evof ex EA -> ewfs (EB ex))
+	      (DwfA : ewfs EA))
+	   (eofs/pair
+	      DwfB'
+	      (eofs/equiv
+		 (tequiv/symm Dequiv)
+		 DeofN)
+	      DeofM)
+	   <- convert-reg-strong DconvertM DconvertA DwfA
+	      (DeofM : eofs EM EA)
+	   <- esubsts-wf DwfB DeofM
+	      (DeofBM : ewfs (EB EM))
+	   <- convert-tsub-reduce DconvertB DconvertM DsubBx
+	      (DconvertBx : tconvert Bx EBx)
+	      (Dreduce : treduce (EB EM) EBx)
+	   <- treduce-equiv DeofBM Dreduce
+	      (DwfBx : ewfs EBx)
+	      (Dequiv : tequiv (EB EM) EBx)
+	   <- convert-reg-strong DconvertN DconvertBx DwfBx
+	      (DeofN : eofs EN EBx)
+	   <- ({ex} {ed:evof ex EA}
+		 ewfs-to-ewf (DwfB ex ed)
+		 (DwfB' ex ed : ewf (EB ex))).
+
+-at	: convert-reg-strong
+	   (convert/sing
+	      (DconvertM : aconvert R t EM))
+	   (tconvert/sing
+	      (DconvertM' : aconvert R t EM'))
+	   (ewfs/sing
+	      (Dof : eofs EM' et))
+	   Dof'
+	   <- aconvert-fun DconvertM' DconvertM _
+	      (Deq : eterm-eq EM' EM)
+	   <- eofs-resp Deq etp-eq/i (eofs/sing Dof)
+	      (Dof' : eofs EM (esing EM')).
+
+%worlds (sbind) (convert-reg-strong _ _ _ _) (aconvert-reg-strong _ _ _ _) (tconvert-reg-strong _ _).
+%total (D1 D2 D3) (aconvert-reg-strong D2 _ _ _) (tconvert-reg-strong D3 _) (convert-reg-strong D1 _ _ _).
+
+
+
+
+%%%%%  Conversion Regularity -- EL side  %%%%%
+
+tconvert-reg	: tconvert A EA -> ewf EA -> type.
+%mode tconvert-reg +X1 -X2.
+
+-	: tconvert-reg Dconvert Dwf
+	   <- tconvert-reg-strong Dconvert Dwfs
+	   <- ewfs-to-ewf Dwfs Dwf.
+
+%worlds (sbind) (tconvert-reg _ _).
+%total {} (tconvert-reg _ _).
+
+
+
+convert-reg	: convert M A EM -> tconvert A EA -> eof EM EA -> type.
+%mode convert-reg +X1 +X2 -X3.
+
+-	: convert-reg Dconvert Dtconvert Dof
+	   <- tconvert-reg-strong Dtconvert Dwfs
+	   <- convert-reg-strong Dconvert Dtconvert Dwfs Dofs
+	   <- eofs-to-eof Dofs Dof.
+
+%worlds (sbind) (convert-reg _ _ _).
+%total {} (convert-reg _ _ _).
+
+
+
+aconvert-reg	: aconvert R A EM -> tconvert A EA -> eof EM EA -> type.
+%mode aconvert-reg +X1 -X2 -X3.
+
+-	: aconvert-reg Dconvert Dtconvert Dof
+	   <- aconvert-reg-strong Dconvert Dtconvert _ Dofs
+	   <- eofs-to-eof Dofs Dof.
+
+%worlds (sbind) (aconvert-reg _ _ _).
+%total {} (aconvert-reg _ _ _).
+
+
+
+aconvert-reg'	: aconvert R A EM -> tconvert A EA -> eof EM EA -> type.
+%mode aconvert-reg' +X1 +X2 -X3.
+
+-	: aconvert-reg' Dconvert Dtconvert Dof
+	   <- aconvert-reg Dconvert Dtconvert' Dof'
+	   <- tconvert-fun Dtconvert' Dtconvert Deq
+	   <- eof-resp eterm-eq/i Deq Dof' Dof.
+
+%worlds (sbind) (aconvert-reg' _ _ _).
+%total {} (aconvert-reg' _ _ _).
+
+
+
+
+%%%%%  Subsitution Revisited  %%%%%
+
+convert-tsub	: ({x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EB ex))
+		   -> convert N A EN
+		   -> tsub B N Bx
+%%
+		   -> tconvert Bx EC
+		   -> tequiv (EB EN) EC -> type.
+%mode convert-tsub +X1 +X2 +X3 -X4 -X5.
+
+-	: convert-tsub DconvertB DconvertN Dsub DconvertBx Dequiv
+	   <- convert-tsub-reduce DconvertB DconvertN Dsub DconvertBx Dreduce
+	   <- convert-reg-il DconvertN DofN
+	   <- of-reg DofN DwfA
+	   <- can-tconvert DwfA DconvertA
+	   <- ({x} {d} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> tconvert-reg-strong (DconvertB x d ex xt)
+		    (DewfB ex ed))
+	   <- tconvert-reg-strong DconvertA DewfA
+	   <- convert-reg-strong DconvertN DconvertA DewfA DeofN
+	   <- esubsts-wf DewfB DeofN DewfBx
+	   <- treduce-equiv DewfBx Dreduce _ Dequiv.
+
+%worlds (sbind) (convert-tsub _ _ _ _ _).
+%total {} (convert-tsub _ _ _ _ _).
+
+
+
+convert-sub	: ({x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+		   -> convert N A EN
+		   -> sub M N Mx
+		   -> tsub B N Bx
+%%
+		   -> convert Mx Bx EO
+		   -> tconvert Bx EC
+		   -> equiv (EM EN) EO EC -> type.
+%mode convert-sub +X1 +X2 +X3 +X4 -X5 -X6 -X7.
+
+-	: convert-sub 
+	   (DconvertM : {x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex))
+	   (DconvertN : convert N A EN)
+	   (DsubM : sub M N Mx)
+	   (DsubB : tsub B N Bx)
+	   DconvertMx DconvertBx (equiv/equiv Dtequiv Dequiv)
+	   <- convert-reg-il DconvertN (DofN : of N A)
+	   <- of-reg DofN (DwfA : wf A)
+	   <- can-tconvert DwfA (DconvertA : tconvert A EA)
+	   <- ({x} {d} {ex} {xt}
+		 convert-reg-il (DconvertM x d ex xt)
+		 (DofM x d : of (M x) (B x)))
+	   <- ({x} {d}
+		 of-reg (DofM x d)
+		 (DwfB x d : wf (B x)))
+	   <- ({x} {d} {ex} {xt} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> can-tconvert (DwfB x d)
+		    (DconvertB x d ex xt : tconvert (B x) (EB ex)))
+	   <- convert-sub-reduce DconvertM DconvertN DsubM DsubB
+	      (DconvertMx : convert Mx Bx EO)
+	      (DreduceM : reduce (EM EN) EO)
+	   <- ({x} {d} {ex} {xt} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> tconvert-reg-strong (DconvertB x d ex xt)
+		    (DewfB ex ed : ewfs (EB ex)))
+	   <- ({x} {d} {ex} {xt} {ed:evof ex EA} {dv:variable ex}
+		 vtrans-variable xt dv
+		 -> vsound d xt DconvertA ed
+		 -> convert-reg-strong (DconvertM x d ex xt) (DconvertB x d ex xt) (DewfB ex ed)
+		    (DeofM ex ed : eofs (EM ex) (EB ex)))
+	   <- tconvert-reg-strong DconvertA 
+	      (DewfA : ewfs EA)
+	   <- convert-reg-strong DconvertN DconvertA DewfA 
+	      (DeofN : eofs EN EA)
+	   <- esubsts DeofM DeofN
+	      (DeofMx : eofs (EM EN) (EB EN))
+	   <- reduce-equiv DeofMx DreduceM
+	      (DeofO : eofs EO (EB EN))
+	      (Dequiv : equiv (EM EN) EO (EB EN))
+	   <- convert-tsub DconvertB DconvertN DsubB
+	      (DconvertBx : tconvert Bx EC)
+	      (Dtequiv : tequiv (EB EN) EC).
+
+%worlds (sbind) (convert-sub _ _ _ _ _ _ _).
+%total {} (convert-sub _ _ _ _ _ _ _).

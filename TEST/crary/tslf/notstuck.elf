@@ -1,0 +1,29 @@
+
+%%%% definition of not stuck
+
+notstuck/tm	: tm -> st -> lt -> type.
+%mode notstuck/tm *E *ST *TT.
+
+notstuck/tm/val		: notstuck/tm E ST TT
+			   <- val/tm E.
+
+notstuck/tm/step	: notstuck/tm E ST TT
+			   <- step/tm E ST TT E' ST' TT'.
+
+notstuck/tm/raises	: notstuck/tm E ST TT
+			   <- raises/tm E _.
+
+
+
+notstuck/md	: md -> st -> lt -> type.
+%mode notstuck/md *M *ST *TT.
+
+notstuck/md/val		: notstuck/md E ST TT
+			   <- val/md E.
+
+notstuck/md/step	: notstuck/md E ST TT
+			   <- step/md E ST TT E' ST' TT'.
+
+notstuck/md/raises	: notstuck/md M ST TT
+			   <- raises/md M _.
+

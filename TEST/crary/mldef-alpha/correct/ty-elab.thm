@@ -1,0 +1,178 @@
+
+ty-elab-reg : md-of pure st/nil Mec Sec
+	       -> ty-elab Mec Sec Te T
+%%
+	       -> cn-of T t
+	       -> type.
+%mode ty-elab-reg +X1 +X2 -X3.
+
+%%% EXN
+
+-	: ty-elab-reg _ ty-elab/exn cn-of/tagged.
+
+
+%%% IDENTIFIERS
+
+-	: ty-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-elab/longid-noarg
+	      (Dfst : md-fst M C)
+	      (Dsub : sg-sub S (sg/satom t))
+	      (Dresolve : resolve-long Mec Sec name/con I M S))
+	   %%
+	   DofC
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofM : md-of pure st/nil M S)
+	   <- md-fst-reg (md-of/subsume Dsub DofM) Dfst sg-fst/satom
+	      (DofC : cn-of C t).
+
+-	: ty-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-elab/longid-trivarg
+	      (Dfst : md-fst M C)
+	      (Dsub : sg-sub S (sg/satom (karrow one t)))
+	      (Dresolve : resolve-long Mec Sec name/con I M S))
+	   %%
+	   (cn-of/app cn-of/star DofC)
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofM : md-of pure st/nil M S)
+	   <- md-fst-reg (md-of/subsume Dsub DofM) Dfst sg-fst/satom
+	      (DofC : cn-of C (karrow one t)).
+
+
+%%% RECORDS
+
+record-con-insert-reg : cn-of T1 t
+			 -> cn-of T2 t
+			 -> record-con-insert L T1 T2 T
+%%
+			 -> cn-of T t
+			 -> type.
+%mode record-con-insert-reg +X1 +X2 +X3 -X4.
+
+-	: record-con-insert-reg Dof _ record-con-insert/nil (cn-of/prod cn-of/unit (cn-of/labeled Dof)).
+
+-	: record-con-insert-reg 
+	   (Dof1 : cn-of T1 t)
+	   (Dof23 : cn-of (prod (labeled L' T2) T3) t)
+	   (record-con-insert/here _)
+	   %%
+	   (cn-of/prod Dof23 (cn-of/labeled Dof1)).
+
+-	: record-con-insert-reg 
+	   (Dof1 : cn-of T1 t)
+	   (Dof23 : cn-of (prod (labeled L' T2) T3) t)
+	   (record-con-insert/later
+	      (Dinsert : record-con-insert L T1 T3 T)
+	      _)
+	   %%
+	   (cn-of/prod Dof Dof2)
+	   <- inversion-prod Dof23 
+	      (Dof2 : cn-of (labeled L' T2) t)
+	      (Dof3 : cn-of T3 t)
+	   <- record-con-insert-reg Dof1 Dof3 Dinsert
+	      (Dof : cn-of T t).
+
+%worlds (conbind) (record-con-insert-reg _ _ _ _).
+%total D (record-con-insert-reg _ _ D _).
+
+
+ty-row-elab-reg : md-of pure st/nil Mec Sec
+		   -> cn-of Tin t
+		   -> ty-row-elab Mec Sec Tin TRe T
+%%
+		   -> cn-of T t
+		   -> type.
+%mode ty-row-elab-reg +X1 +X2 +X3 -X4.
+
+-	: ty-row-elab-reg _ Dof ty-row-elab/nil Dof.
+
+-	: ty-row-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofTin : cn-of Tin t)
+	   (ty-row-elab/cons
+	      (DelabRow : ty-row-elab Mec Sec Tout TRe Tfinal)
+	      (Dinsert : record-con-insert L T Tin Tout)
+	      (Delab : ty-elab Mec Sec Te T))
+	   %%
+	   DofTfinal
+	   <- ty-elab-reg DofEC Delab
+	      (DofT : cn-of T t)
+	   <- record-con-insert-reg DofT DofTin Dinsert
+	      (DofTout : cn-of Tout t)
+	   <- ty-row-elab-reg DofEC DofTout DelabRow
+	      (DofTfinal : cn-of Tfinal t).
+
+
+-	: ty-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-elab/record
+	      (Delab : ty-row-elab Mec Sec unit TRe T))
+	   %%
+	   DofT
+	   <- ty-row-elab-reg DofEC cn-of/unit Delab
+	      (DofT : cn-of T t).
+
+
+%% APPLICATION
+
+ty-list-elab-reg : md-of pure st/nil Mec Sec
+		    -> ty-list-elab Mec Sec TLe C K
+%%
+		    -> cn-of C K
+		    -> type.
+%mode ty-list-elab-reg +X1 +X2 -X3.
+
+-	: ty-list-elab-reg _ ty-list-elab/nil cn-of/star.
+
+-	: ty-list-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-list-elab/cons
+	      (DelabTail : ty-list-elab Mec Sec TLe C K)
+	      (Delab : ty-elab Mec Sec Te T))
+	   %%
+	   (cn-of/pair ([_] [_] DwfK) DofC DofT)
+	   <- ty-elab-reg DofEC Delab (DofT : cn-of T t)
+	   <- ty-list-elab-reg DofEC DelabTail (DofC : cn-of C K)
+	   <- cn-of-reg DofC (DwfK : kd-wf K).
+
+
+-	: ty-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-elab/longid-app
+	      (Dfst : md-fst M C)
+	      (Dsub : sg-sub S (sg/satom (karrow Karg t)))
+	      (Delab : ty-list-elab Mec Sec TLe Carg Karg)
+	      (Dresolve : resolve-long Mec Sec name/con I M S))
+	   %%
+	   (cn-of/app DofCarg DofC)
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofM : md-of pure st/nil M S)
+	   <- ty-list-elab-reg DofEC Delab
+	      (DofCarg : cn-of Carg Karg)
+	   <- md-fst-reg (md-of/subsume Dsub DofM) Dfst sg-fst/satom
+	      (DofC : cn-of C (karrow Karg t)).
+
+
+%% ARROW
+
+-	: ty-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (ty-elab/arrow
+	      (Delab2 : ty-elab Mec Sec Te2 T2)
+	      (Delab1 : ty-elab Mec Sec Te1 T1))
+	   %%
+	   (cn-of/arrow Dof2 Dof1)
+	   <- ty-elab-reg DofEC Delab1 (Dof1 : cn-of T1 t)
+	   <- ty-elab-reg DofEC Delab2 (Dof2 : cn-of T2 t).
+
+%worlds 
+(conbind-reg | termbind-reg | modbind-reg) 
+(ty-row-elab-reg _ _ _ _)
+(ty-list-elab-reg _ _ _)
+(ty-elab-reg _ _ _).
+
+%total (D1 D2 D3)
+(ty-row-elab-reg _ _ D1 _)
+(ty-list-elab-reg _ D2 _)
+(ty-elab-reg _ D3 _).

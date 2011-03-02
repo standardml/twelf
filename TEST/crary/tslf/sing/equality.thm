@@ -1,0 +1,1423 @@
+
+%%%%%  Extra Worlds  %%%%%
+
+%worlds () (constant).
+%worlds (evar) (etp) (eterm).
+
+
+
+%%%%%  Equalities  %%%%%
+
+atom-eq : atom -> atom -> type.
+atom-eq/i : atom-eq R R.
+
+constant-eq : constant -> constant -> type.
+constant-eq/i : constant-eq C C.
+
+ctp-eq : ctp -> ctp -> type.
+ctp-eq/i : ctp-eq A A.
+
+ctx-eq : ctx -> ctx -> type.
+ctx-eq/i : ctx-eq G G.
+
+eterm-eq : eterm -> eterm -> type.
+eterm-eq/i : eterm-eq M M.
+
+etp-eq : etp -> etp -> type.
+etp-eq/i : etp-eq A A.
+
+sctx-eq : sctx -> sctx -> type.
+sctx-eq/i : sctx-eq G G.
+
+stp-eq : stp -> stp -> type.
+stp-eq/i : stp-eq T T.
+
+term-eq : term -> term -> type.
+term-eq/i : term-eq M M.
+
+tp-eq : tp -> tp -> type.
+tp-eq/i : tp-eq T T.
+
+
+
+
+%%%%%  A Closed Atom  %%%%%
+
+aca : atom = const unit.
+
+
+
+
+%%%%%  Symmetry  %%%%%
+
+atom-eq-symm : atom-eq R R' -> atom-eq R' R -> type.
+%mode atom-eq-symm +X1 -X2.
+
+-	: atom-eq-symm atom-eq/i atom-eq/i.
+
+%worlds (var) (atom-eq-symm _ _).
+%total {} (atom-eq-symm _ _).
+
+
+
+eterm-eq-symm : eterm-eq M N -> eterm-eq N M -> type.
+%mode eterm-eq-symm +X1 -X2.
+
+-	: eterm-eq-symm eterm-eq/i eterm-eq/i.
+
+%worlds (evar) (eterm-eq-symm _ _).
+%total {} (eterm-eq-symm _ _).
+
+
+
+etp-eq-symm : etp-eq A B -> etp-eq B A -> type.
+%mode etp-eq-symm +X1 -X2.
+
+-	: etp-eq-symm etp-eq/i etp-eq/i.
+
+%worlds (evar) (etp-eq-symm _ _).
+%total {} (etp-eq-symm _ _).
+
+
+
+term-eq-symm : term-eq M N -> term-eq N M -> type.
+%mode term-eq-symm +X1 -X2.
+
+-	: term-eq-symm term-eq/i term-eq/i.
+
+%worlds (var) (term-eq-symm _ _).
+%total {} (term-eq-symm _ _).
+
+
+
+tp-eq-symm : tp-eq A B -> tp-eq B A -> type.
+%mode tp-eq-symm +X1 -X2.
+
+-	: tp-eq-symm tp-eq/i tp-eq/i.
+
+%worlds (var) (tp-eq-symm _ _).
+%total {} (tp-eq-symm _ _).
+
+
+
+
+%%%%%  Transitivity  %%%%%
+
+atom-eq-trans : atom-eq R1 R2 -> atom-eq R2 R3 -> atom-eq R1 R3 -> type.
+%mode atom-eq-trans +X1 +X2 -X3.
+
+-	: atom-eq-trans atom-eq/i atom-eq/i atom-eq/i.
+
+%worlds (var) (atom-eq-trans _ _ _).
+%total {} (atom-eq-trans _ _ _).
+
+
+
+stp-eq-trans : stp-eq T1 T2 -> stp-eq T2 T3 -> stp-eq T1 T3 -> type.
+%mode stp-eq-trans +X1 +X2 -X3.
+
+-	: stp-eq-trans stp-eq/i stp-eq/i stp-eq/i.
+
+%worlds () (stp-eq-trans _ _ _).
+%total {} (stp-eq-trans _ _ _).
+
+
+
+term-eq-trans : term-eq M N -> term-eq N O -> term-eq M O -> type.
+%mode term-eq-trans +X1 +X2 -X3.
+
+-	: term-eq-trans term-eq/i term-eq/i term-eq/i.
+
+%worlds (var) (term-eq-trans _ _ _).
+%total {} (term-eq-trans _ _ _).
+
+
+
+tp-eq-trans : tp-eq A B -> tp-eq B C -> tp-eq A C -> type.
+%mode tp-eq-trans +X1 +X2 -X3.
+
+-	: tp-eq-trans tp-eq/i tp-eq/i tp-eq/i.
+
+%worlds (var) (tp-eq-trans _ _ _).
+%total {} (tp-eq-trans _ _ _).
+
+
+
+
+%%%%%  Cons Lemmas  %%%%%
+
+app-resp : atom-eq R R' -> term-eq M M' -> atom-eq (app R M) (app R' M') -> type.
+%mode app-resp +X1 +X2 -X3.
+
+-	: app-resp atom-eq/i term-eq/i atom-eq/i.
+
+%worlds (var) (app-resp _ _ _).
+%total {} (app-resp _ _ _).
+
+
+
+atom-resp-atom : {R:atom -> atom} atom-eq Q Q' -> atom-eq (R Q) (R Q') -> type.
+%mode atom-resp-atom +X1 +X2 -X3.
+
+-	: atom-resp-atom _ atom-eq/i atom-eq/i.
+
+%worlds (var) (atom-resp-atom _ _ _).
+%total {} (atom-resp-atom _ _ _).
+
+
+
+atom-resp-term : {R:term -> atom} term-eq M M' -> atom-eq (R M) (R M') -> type.
+%mode atom-resp-term +X1 +X2 -X3.
+
+-	: atom-resp-term _ term-eq/i atom-eq/i.
+
+%worlds (var) (atom-resp-term _ _ _).
+%total {} (atom-resp-term _ _ _).
+
+
+
+atom-resp-tp : {R:tp -> atom} tp-eq A A' -> atom-eq (R A) (R A') -> type.
+%mode atom-resp-tp +X1 +X2 -X3.
+
+-	: atom-resp-tp _ tp-eq/i atom-eq/i.
+
+%worlds (var) (atom-resp-tp _ _ _).
+%total {} (atom-resp-tp _ _ _).
+
+
+
+cons-resp : ctx-eq G G' -> atom-eq X X' -> tp-eq A A' -> ctx-eq (cons G X A) (cons G' X' A') -> type.
+%mode cons-resp +X1 +X2 +X3 -X4.
+
+-	: cons-resp ctx-eq/i atom-eq/i tp-eq/i ctx-eq/i.
+
+%worlds (var) (cons-resp _ _ _ _).
+%total {} (cons-resp _ _ _ _).
+
+
+
+elam-resp : etp-eq A A' -> ({x} eterm-eq (M x) (M' x)) -> eterm-eq (elam A M) (elam A' M') -> type.
+%mode elam-resp +X1 +X2 -X3.
+
+-	: elam-resp etp-eq/i ([_] eterm-eq/i) eterm-eq/i.
+
+%worlds (evar) (elam-resp _ _ _).
+%total {} (elam-resp _ _ _).
+
+
+
+epair-resp : eterm-eq M M' -> eterm-eq N N' -> eterm-eq (epair M N) (epair M' N') -> type.
+%mode epair-resp +X1 +X2 -X3.
+
+-	: epair-resp eterm-eq/i eterm-eq/i eterm-eq/i.
+
+%worlds (evar) (epair-resp _ _ _).
+%total {} (epair-resp _ _ _).
+
+
+
+epi-resp : etp-eq A A' -> ({x} etp-eq (B x) (B' x)) -> etp-eq (epi A B) (epi A' B') -> type.
+%mode epi-resp +X1 +X2 -X3.
+
+-	: epi-resp etp-eq/i ([_] etp-eq/i) etp-eq/i.
+
+%worlds (evar) (epi-resp _ _ _).
+%total {} (epi-resp _ _ _).
+
+
+
+equiv-resp : eterm-eq M M' -> eterm-eq N N' -> etp-eq A A' -> equiv M N A -> equiv M' N' A' -> type.
+%mode equiv-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: equiv-resp eterm-eq/i eterm-eq/i etp-eq/i D D.
+
+%worlds (evar | ebind | eofblock) (equiv-resp _ _ _ _ _).
+%total {} (equiv-resp _ _ _ _ _).
+
+
+
+esigma-resp : etp-eq A A' -> ({x} etp-eq (B x) (B' x)) -> etp-eq (esigma A B) (esigma A' B') -> type.
+%mode esigma-resp +X1 +X2 -X3.
+
+-	: esigma-resp etp-eq/i ([_] etp-eq/i) etp-eq/i.
+
+%worlds (evar) (esigma-resp _ _ _).
+%total {} (esigma-resp _ _ _).
+
+
+
+eterm-resp-bind : {M:etp -> (eterm -> eterm) -> eterm} etp-eq A A' -> ({x} eterm-eq (N x) (N' x)) -> eterm-eq (M A N) (M A' N') -> type.
+%mode eterm-resp-bind +X1 +X2 +X3 -X4.
+
+-	: eterm-resp-bind _ etp-eq/i ([_] eterm-eq/i) eterm-eq/i.
+
+%worlds (evar) (eterm-resp-bind _ _ _ _).
+%total {} (eterm-resp-bind _ _ _ _).
+
+
+
+eterm-resp-eterm : {M:eterm -> eterm} eterm-eq N N' -> eterm-eq (M N) (M N') -> type.
+%mode eterm-resp-eterm +X1 +X2 -X3.
+
+-	: eterm-resp-eterm _ eterm-eq/i eterm-eq/i.
+
+%worlds (evar) (eterm-resp-eterm _ _ _).
+%total {} (eterm-resp-eterm _ _ _).
+
+
+
+eterm-resp-eterm2 : {M:eterm -> eterm -> eterm} eterm-eq N N' -> eterm-eq O O' -> eterm-eq (M N O) (M N' O') -> type.
+%mode eterm-resp-eterm2 +X1 +X2 +X3 -X4.
+
+-	: eterm-resp-eterm2 _ eterm-eq/i eterm-eq/i eterm-eq/i.
+
+%worlds (evar) (eterm-resp-eterm2 _ _ _ _).
+%total {} (eterm-resp-eterm2 _ _ _ _).
+
+
+
+eterm-resp-eterm-fun : ({x} eterm-eq (M x) (M' x)) -> eterm-eq N N' -> eterm-eq (M N) (M' N') -> type.
+%mode eterm-resp-eterm-fun +X1 +X2 -X3.
+
+-	: eterm-resp-eterm-fun ([_] eterm-eq/i) eterm-eq/i eterm-eq/i.
+
+%worlds (evar) (eterm-resp-eterm-fun _ _ _).
+%total {} (eterm-resp-eterm-fun _ _ _).
+
+
+
+eterm-resp-etp : {M:etp -> eterm} etp-eq A A' -> eterm-eq (M A) (M A') -> type.
+%mode eterm-resp-etp +X1 +X2 -X3.
+
+-	: eterm-resp-etp _ etp-eq/i eterm-eq/i.
+
+%worlds (evar) (eterm-resp-etp _ _ _).
+%total {} (eterm-resp-etp _ _ _).
+
+
+
+eterm-resp-halfbind : {M:(eterm -> eterm) -> eterm} ({x} eterm-eq (N x) (N' x)) -> eterm-eq (M N) (M N') -> type.
+%mode eterm-resp-halfbind +X1 +X2 -X3.
+
+-	: eterm-resp-halfbind _ ([_] eterm-eq/i) eterm-eq/i.
+
+%worlds (evar) (eterm-resp-halfbind _ _ _).
+%total {} (eterm-resp-halfbind _ _ _).
+
+
+
+etp-resp-bind : {A:etp -> (eterm -> etp) -> etp} etp-eq B B' -> ({x} etp-eq (M x) (M' x)) -> etp-eq (A B M) (A B' M') -> type.
+%mode etp-resp-bind +X1 +X2 +X3 -X4.
+
+-	: etp-resp-bind _ etp-eq/i ([_] etp-eq/i) etp-eq/i.
+
+%worlds (evar) (etp-resp-bind _ _ _ _).
+%total {} (etp-resp-bind _ _ _ _).
+
+
+
+etp-resp-eterm : {A:eterm -> etp} eterm-eq M M' -> etp-eq (A M) (A M') -> type.
+%mode etp-resp-eterm +X1 +X2 -X3.
+
+-	: etp-resp-eterm _ eterm-eq/i etp-eq/i.
+
+%worlds (evar) (etp-resp-eterm _ _ _).
+%total {} (etp-resp-eterm _ _ _).
+
+
+
+etp-resp-eterm-fun : ({x} etp-eq (A x) (A' x)) -> eterm-eq M M' -> etp-eq (A M) (A' M') -> type.
+%mode etp-resp-eterm-fun +X1 +X2 -X3.
+
+-	: etp-resp-eterm-fun ([_] etp-eq/i) eterm-eq/i etp-eq/i.
+
+%worlds (evar) (etp-resp-eterm-fun _ _ _).
+%total {} (etp-resp-eterm-fun _ _ _).
+
+
+
+etp2-resp-eterm : {A:(eterm -> eterm) -> etp} ({x} eterm-eq (M x) (M' x)) -> etp-eq (A M) (A M') -> type.
+%mode etp2-resp-eterm +X1 +X2 -X3.
+
+-	: etp2-resp-eterm _ ([_] eterm-eq/i) etp-eq/i.
+
+%worlds (evar) (etp2-resp-eterm _ _ _).
+%total {} (etp2-resp-eterm _ _ _).
+
+
+
+etp-resp-etp : {A:etp -> etp} etp-eq B B' -> etp-eq (A B) (A B') -> type.
+%mode etp-resp-etp +X1 +X2 -X3.
+
+-	: etp-resp-etp _ etp-eq/i etp-eq/i.
+
+%worlds (evar) (etp-resp-etp _ _ _).
+%total {} (etp-resp-etp _ _ _).
+
+
+
+lam-resp : ({x} term-eq (M x) (M' x)) -> term-eq (lam M) (lam M') -> type.
+%mode lam-resp +X1 -X2.
+
+-	: lam-resp ([_] term-eq/i) term-eq/i.
+
+%worlds (var) (lam-resp _ _).
+%total {} (lam-resp _ _).
+
+
+
+pair-resp : term-eq M1 M1' -> term-eq M2 M2' -> term-eq (pair M1 M2) (pair M1' M2') -> type.
+%mode pair-resp +X1 +X2 -X3.
+
+-	: pair-resp term-eq/i term-eq/i term-eq/i.
+
+%worlds (var) (pair-resp _ _ _).
+%total {} (pair-resp _ _ _).
+
+
+
+pi-resp : tp-eq A A' -> ({x} tp-eq (B x) (B' x)) -> tp-eq (pi A B) (pi A' B') -> type.
+%mode pi-resp +X1 +X2 -X3.
+
+-	: pi-resp tp-eq/i ([_] tp-eq/i) tp-eq/i.
+
+%worlds (var) (pi-resp _ _ _).
+%total {} (pi-resp _ _ _).
+
+
+
+scons-resp : sctx-eq G G' -> atom-eq R R' -> stp-eq T T' -> sctx-eq (scons G R T) (scons G' R' T') -> type.
+%mode scons-resp +X1 +X2 +X3 -X4.
+
+-	: scons-resp sctx-eq/i atom-eq/i stp-eq/i sctx-eq/i.
+
+%worlds (var | ovar | bind) (scons-resp _ _ _ _).
+%total {} (scons-resp _ _ _ _).
+
+
+
+sigma-resp : tp-eq A A' -> ({x} tp-eq (B x) (B' x)) -> tp-eq (sigma A B) (sigma A' B') -> type.
+%mode sigma-resp +X1 +X2 -X3.
+
+-	: sigma-resp tp-eq/i ([_] tp-eq/i) tp-eq/i.
+
+%worlds (var) (sigma-resp _ _ _).
+%total {} (sigma-resp _ _ _).
+
+
+
+stp-resp-stp : {T:stp -> stp} stp-eq T1 T2 -> stp-eq (T T1) (T T2) -> type.
+%mode stp-resp-stp +X1 +X2 -X3.
+
+-	: stp-resp-stp _ stp-eq/i stp-eq/i.
+
+%worlds () (stp-resp-stp _ _ _).
+%total {} (stp-resp-stp _ _ _).
+
+
+
+term-resp-atom : {M:atom -> term} atom-eq R R' -> term-eq (M R) (M R') -> type.
+%mode term-resp-atom +X1 +X2 -X3.
+
+-	: term-resp-atom _ atom-eq/i term-eq/i.
+
+%worlds (var) (term-resp-atom _ _ _).
+%total {} (term-resp-atom _ _ _).
+
+
+
+term-resp-term : {M:term -> term} term-eq N N' -> term-eq (M N) (M N') -> type.
+%mode term-resp-term +X1 +X2 -X3.
+
+-	: term-resp-term _ term-eq/i term-eq/i.
+
+%worlds (var) (term-resp-term _ _ _).
+%total {} (term-resp-term _ _ _).
+
+
+
+topen-resp : ctp-eq Ac Ac' -> tp-eq A A' -> topen Ac A -> topen Ac' A' -> type.
+%mode topen-resp +X1 +X2 +X3 -X4.
+
+-	: topen-resp ctp-eq/i tp-eq/i D D.
+
+%worlds (var) (topen-resp _ _ _ _).
+%total {} (topen-resp _ _ _ _).
+
+
+
+tp-resp-atom : {A:atom -> tp} atom-eq R R' -> tp-eq (A R) (A R') -> type.
+%mode tp-resp-atom +X1 +X2 -X3.
+
+-	: tp-resp-atom _ atom-eq/i tp-eq/i.
+
+%worlds (var) (tp-resp-atom _ _ _).
+%total {} (tp-resp-atom _ _ _).
+
+
+
+tp-resp-term : {A:term -> tp} term-eq M M' -> tp-eq (A M) (A M') -> type.
+%mode tp-resp-term +X1 +X2 -X3.
+
+-	: tp-resp-term _ term-eq/i tp-eq/i.
+
+%worlds (var) (tp-resp-term _ _ _).
+%total {} (tp-resp-term _ _ _).
+
+
+
+tp-resp-tp : {A:tp -> tp} tp-eq B B' -> tp-eq (A B) (A B') -> type.
+%mode tp-resp-tp +X1 +X2 -X3.
+
+-	: tp-resp-tp _ tp-eq/i tp-eq/i.
+
+%worlds (var) (tp-resp-tp _ _ _).
+%total {} (tp-resp-tp _ _ _).
+
+
+tp-resp-atom-fun : ({x} tp-eq (A x) (A' x)) -> atom-eq R R' -> tp-eq (A R) (A' R') -> type.
+%mode tp-resp-atom-fun +X1 +X2 -X3.
+
+-	: tp-resp-atom-fun ([_] tp-eq/i) atom-eq/i tp-eq/i.
+
+%worlds (var) (tp-resp-atom-fun _ _ _).
+%total {} (tp-resp-atom-fun _ _ _).
+
+
+
+
+%%%%%  Cdr Lemmas  %%%%%
+
+atom-eq-cdr-app : atom-eq (app R M) (app R' M') -> atom-eq R R' -> term-eq M M' -> type.
+%mode atom-eq-cdr-app +X1 -X -X3.
+
+-	: atom-eq-cdr-app atom-eq/i atom-eq/i term-eq/i.
+
+%worlds (var) (atom-eq-cdr-app _ _ _).
+%total {} (atom-eq-cdr-app _ _ _).
+
+
+
+atom-eq-cdr-const : atom-eq (const C) (const C') -> constant-eq C C' -> type.
+%mode atom-eq-cdr-const +X1 -X2.
+
+-	: atom-eq-cdr-const atom-eq/i constant-eq/i.
+
+%worlds (var) (atom-eq-cdr-const _ _).
+%total {} (atom-eq-cdr-const _ _).
+
+
+
+atom-eq-cdr-forall : atom-eq (forall A) (forall A') -> tp-eq A A' -> type.
+%mode atom-eq-cdr-forall +X1 -X2.
+
+-	: atom-eq-cdr-forall atom-eq/i tp-eq/i.
+
+%worlds (var) (atom-eq-cdr-forall _ _).
+%total {} (atom-eq-cdr-forall _ _).
+
+
+
+etp-eq-cdr-epi : etp-eq (epi A B) (epi A' B') -> etp-eq A A' -> ({x} etp-eq (B x) (B' x)) -> type.
+%mode etp-eq-cdr-epi +X1 -X2 -X3.
+
+-	: etp-eq-cdr-epi etp-eq/i etp-eq/i ([_] etp-eq/i).
+
+%worlds (evar) (etp-eq-cdr-epi _ _ _).
+%total {} (etp-eq-cdr-epi _ _ _).
+
+
+
+etp-eq-cdr-esigma : etp-eq (esigma A B) (esigma A' B') -> etp-eq A A' -> ({x} etp-eq (B x) (B' x)) -> type.
+%mode etp-eq-cdr-esigma +X1 -X2 -X3.
+
+-	: etp-eq-cdr-esigma etp-eq/i etp-eq/i ([_] etp-eq/i).
+
+%worlds (evar) (etp-eq-cdr-esigma _ _ _).
+%total {} (etp-eq-cdr-esigma _ _ _).
+
+
+
+term-eq-cdr-at : term-eq (at R) (at R') -> atom-eq R R' -> type.
+%mode term-eq-cdr-at +X1 -X2.
+
+-	: term-eq-cdr-at term-eq/i atom-eq/i.
+
+%worlds (var) (term-eq-cdr-at _ _).
+%total {} (term-eq-cdr-at _ _).
+
+
+
+term-eq-cdr-lam : term-eq (lam M) (lam N) -> ({x} term-eq (M x) (N x)) -> type.
+%mode term-eq-cdr-lam +X1 -X2.
+
+-	: term-eq-cdr-lam term-eq/i ([_] term-eq/i).
+
+%worlds (var) (term-eq-cdr-lam _ _).
+%total {} (term-eq-cdr-lam _ _).
+
+
+
+term-eq-cdr-pair : term-eq (pair M1 M2) (pair N1 N2) -> term-eq M1 N1 -> term-eq M2 N2 -> type.
+%mode term-eq-cdr-pair +X1 -X2 -X3.
+
+-	: term-eq-cdr-pair term-eq/i term-eq/i term-eq/i.
+
+%worlds (var) (term-eq-cdr-pair _ _ _).
+%total {} (term-eq-cdr-pair _ _ _).
+
+
+
+tp-eq-cdr-pi : tp-eq (pi A B) (pi A' B') -> tp-eq A A' -> ({x} tp-eq (B x) (B' x)) -> type.
+%mode tp-eq-cdr-pi +X1 -X2 -X3.
+
+-	: tp-eq-cdr-pi tp-eq/i tp-eq/i ([_] tp-eq/i).
+
+%worlds (var) (tp-eq-cdr-pi _ _ _).
+%total {} (tp-eq-cdr-pi _ _ _).
+
+
+
+tp-eq-cdr-sigma : tp-eq (sigma A B) (sigma A' B') -> tp-eq A A' -> ({x} tp-eq (B x) (B' x)) -> type.
+%mode tp-eq-cdr-sigma +X1 -X2 -X3.
+
+-	: tp-eq-cdr-sigma tp-eq/i tp-eq/i ([_] tp-eq/i).
+
+%worlds (var) (tp-eq-cdr-sigma _ _ _).
+%total {} (tp-eq-cdr-sigma _ _ _).
+
+
+
+tp-eq-pi-strengthen : ({x:atom} tp-eq (pi (A x) ([y] B x y)) C) -> tp-eq C (pi A' B') -> type.
+%mode tp-eq-pi-strengthen +X1 -X2.
+
+-	: tp-eq-pi-strengthen ([x] tp-eq/i) tp-eq/i.
+
+%worlds (var) (tp-eq-pi-strengthen _ _).
+%total {} (tp-eq-pi-strengthen _ _).
+
+
+
+tp-eq-sigma-strengthen : ({x:atom} tp-eq (sigma (A x) ([y] B x y)) C) -> tp-eq C (sigma A' B') -> type.
+%mode tp-eq-sigma-strengthen +X1 -X2.
+
+-	: tp-eq-sigma-strengthen ([x] tp-eq/i) tp-eq/i.
+
+%worlds (var) (tp-eq-sigma-strengthen _ _).
+%total {} (tp-eq-sigma-strengthen _ _).
+
+
+
+
+%%%%%  Equality Respection  %%%%%
+
+aasub-resp : ({x} atom-eq (R x) (R' x)) -> term-eq M M' -> atom-eq S S' -> aasub R M S -> aasub R' M' S' -> type.
+%mode aasub-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: aasub-resp ([_] atom-eq/i) term-eq/i atom-eq/i D D.
+
+%worlds (var) (aasub-resp _ _ _ _ _).
+%total {} (aasub-resp _ _ _ _ _).
+
+
+
+aconvert-resp : atom-eq R R' -> tp-eq A A' -> eterm-eq EM EM' -> aconvert R A EM -> aconvert R' A' EM' -> type.
+%mode aconvert-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: aconvert-resp atom-eq/i tp-eq/i eterm-eq/i D D.
+
+%worlds (bind | tbind | var | ofblock) (aconvert-resp _ _ _ _ _).
+%total {} (aconvert-resp _ _ _ _ _).
+
+
+
+aconverte-resp : ctx-eq G G' -> atom-eq R R' -> tp-eq A A' -> eterm-eq EM EM' -> aconverte G R A EM -> aconverte G' R' A' EM' -> type.
+%mode aconverte-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: aconverte-resp ctx-eq/i atom-eq/i tp-eq/i eterm-eq/i D D.
+
+%worlds (var | bind | tbind | ovar | evar) (aconverte-resp _ _ _ _ _ _).
+%total {} (aconverte-resp _ _ _ _ _ _).
+
+
+
+aof-resp : atom-eq R R' -> tp-eq A A' -> aof R A -> aof R' A' -> type.
+%mode aof-resp +X1 +X2 +X3 -X4.
+
+-	: aof-resp atom-eq/i tp-eq/i D D.
+
+%worlds (var | bind) (aof-resp _ _ _ _).
+%total {} (aof-resp _ _ _ _).
+
+
+
+aofe-resp : ctx-eq G G' -> atom-eq R R' -> tp-eq A A' -> aofe G R A -> aofe G' R' A' -> type.
+%mode aofe-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: aofe-resp ctx-eq/i atom-eq/i tp-eq/i D D.
+
+%worlds (bind | ovar | var) (aofe-resp _ _ _ _ _).
+%total {} (aofe-resp _ _ _ _ _).
+
+
+
+aofes-resp : sctx-eq G G' -> atom-eq R R' -> stp-eq A A' -> aofes G R A -> aofes G' R' A' -> type.
+%mode aofes-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: aofes-resp sctx-eq/i atom-eq/i stp-eq/i D D.
+
+%worlds (var | bind | ovar) (aofes-resp _ _ _ _ _).
+%total {} (aofes-resp _ _ _ _ _).
+
+
+aosub-resp : ({x} atom-eq (R x) (R' x)) -> term-eq M M' -> term-eq N N' -> aosub R M N -> aosub R' M' N' -> type.
+%mode aosub-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: aosub-resp ([_] atom-eq/i) term-eq/i term-eq/i D D.
+
+%worlds (var) (aosub-resp _ _ _ _ _).
+%total {} (aosub-resp _ _ _ _ _).
+
+
+
+canonize-resp : eterm-eq M M' -> etp-eq A A' -> canonize M A -> canonize M' A' -> type.
+%mode canonize-resp +X1 +X2 +X3 -X4.
+
+-	: canonize-resp eterm-eq/i etp-eq/i D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | eofblock | evblock) (canonize-resp _ _ _ _).
+%total {} (canonize-resp _ _ _ _).
+
+
+
+canonize-resp-underbind : etp-eq A A' -> ({x} evof x A -> variable x -> canonize (M x) (B x)) -> ({x} evof x A' -> variable x -> canonize (M x) (B x)) -> type.
+%mode canonize-resp-underbind +X1 +X2 -X3.
+
+-	: canonize-resp-underbind etp-eq/i D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | eofblock | evblock) (canonize-resp-underbind _ _ _).
+%total {} (canonize-resp-underbind _ _ _).
+
+
+
+coerce-resp : etp-eq A A' -> etp-eq B B' -> ({x} eterm-eq (M x) (M' x)) -> coerce A B M -> coerce A' B' M' -> type.
+%mode coerce-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: coerce-resp etp-eq/i etp-eq/i ([_] eterm-eq/i) D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | eofblock | evblock) (coerce-resp _ _ _ _ _).
+%total {} (coerce-resp _ _ _ _ _).
+
+
+
+convert-resp : term-eq M M' -> tp-eq A A' -> eterm-eq EM EM' -> convert M A EM -> convert M' A' EM' -> type.
+%mode convert-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: convert-resp term-eq/i tp-eq/i eterm-eq/i D D.
+
+%worlds (bind | tbind) (convert-resp _ _ _ _ _).
+%total {} (convert-resp _ _ _ _ _).
+
+
+
+convert-resp-underbind : tp-eq A A' -> ({x} vof x A -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex)) -> ({x} vof x A' -> {ex} vtrans ex x -> convert (M x) (B x) (EM ex)) -> type.
+%mode convert-resp-underbind +X1 +X2 -X3.
+
+-	: convert-resp-underbind tp-eq/i D D.
+
+%worlds (bind | tbind) (convert-resp-underbind _ _ _).
+%total {} (convert-resp-underbind _ _ _).
+
+
+
+converte-resp : ctx-eq G G' -> term-eq M M' -> tp-eq A A' -> eterm-eq EM EM' -> converte G M A EM -> converte G' M' A' EM' -> type.
+%mode converte-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: converte-resp ctx-eq/i term-eq/i tp-eq/i eterm-eq/i D D.
+
+%worlds (var | bind | tbind | ovar | evar) (converte-resp _ _ _ _ _ _).
+%total {} (converte-resp _ _ _ _ _ _).
+
+
+
+ekof-resp : etp-eq A A' -> ekof C A -> ekof C A' -> type.
+%mode ekof-resp +X1 +X2 -X3.
+
+-	: ekof-resp etp-eq/i D D.
+
+%worlds (evar) (ekof-resp _ _ _).
+%total {} (ekof-resp _ _ _).
+
+
+
+eof-resp : eterm-eq EM EM' -> etp-eq EA EA' -> eof EM EA -> eof EM' EA' -> type.
+%mode eof-resp +X1 +X2 +X3 -X4.
+
+-	: eof-resp eterm-eq/i etp-eq/i D D.
+
+%worlds (evar | eofblock | ebind) (eof-resp _ _ _ _).
+%total {} (eof-resp _ _ _ _).
+
+
+
+etopen-resp : ctp-eq Ac Ac' -> etp-eq A A' -> etopen Ac A -> etopen Ac' A' -> type.
+%mode etopen-resp +X1 +X2 +X3 -X4.
+
+-	: etopen-resp ctp-eq/i etp-eq/i D D.
+
+%worlds (evar) (etopen-resp _ _ _ _).
+%total {} (etopen-resp _ _ _ _).
+
+
+
+evof-resp : eterm-eq EM EM' -> etp-eq EA EA' -> evof EM EA -> evof EM' EA' -> type.
+%mode evof-resp +X1 +X2 +X3 -X4.
+
+-	: evof-resp eterm-eq/i etp-eq/i D D.
+
+%worlds (evar | eofblock) (evof-resp _ _ _ _).
+%total {} (evof-resp _ _ _ _).
+
+
+
+ewf-resp : etp-eq A A' -> ewf A -> ewf A' -> type.
+%mode ewf-resp +X1 +X2 -X3.
+
+-	: ewf-resp etp-eq/i D D.
+
+%worlds (evar | eofblock) (ewf-resp _ _ _).
+%total {} (ewf-resp _ _ _).
+
+
+
+expand-resp : atom-eq R R' -> tp-eq A A' -> term-eq M M' -> expand R A M -> expand R' A' M' -> type.
+%mode expand-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: expand-resp atom-eq/i tp-eq/i term-eq/i D D.
+
+%worlds (var) (expand-resp _ _ _ _ _).
+%total {} (expand-resp _ _ _ _ _).
+%reduces D = D' (expand-resp _ _ _ D D').
+
+
+
+kof-resp : tp-eq A A' -> kof C A -> kof C A' -> type.
+%mode kof-resp +X1 +X2 -X3.
+
+-	: kof-resp tp-eq/i D D.
+
+%worlds (var) (kof-resp _ _ _).
+%total {} (kof-resp _ _ _).
+
+
+
+lookup-resp : ctx-eq G G' -> atom-eq X X' -> tp-eq A A' -> lookup G X A -> lookup G' X' A' -> type.
+%mode lookup-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: lookup-resp ctx-eq/i atom-eq/i tp-eq/i D D.
+
+%worlds (var | bind | ovar) (lookup-resp _ _ _ _ _).
+%total {} (lookup-resp _ _ _ _ _).
+
+
+
+of-resp : term-eq M M' -> tp-eq A A' -> of M A -> of M' A' -> type.
+%mode of-resp +X1 +X2 +X3 -X4.
+
+-	: of-resp term-eq/i tp-eq/i D D.
+
+%worlds (var | bind) (of-resp _ _ _ _).
+%total {} (of-resp _ _ _ _).
+
+
+
+of-bind-resp : tp-eq A A' -> ({x} vof x A -> of (M x) (B x)) -> ({x} vof x A' -> of (M x) (B x)) -> type.
+%mode of-bind-resp +X1 +X2 -X3.
+
+-	: of-bind-resp tp-eq/i D D.
+
+%worlds (var | bind) (of-bind-resp _ _ _).
+%total {} (of-bind-resp _ _ _).
+%reduces D = D' (of-bind-resp _ D D').
+
+
+
+of-bind-resp1 : ({y:atom} tp-eq (A y) (A' y)) -> ({y} {x} vof x (A y) -> of (M x y) (B x y)) -> ({y} {x} vof x (A' y) -> of (M x y) (B x y)) -> type.
+%mode of-bind-resp1 +X1 +X2 -X3.
+
+-	: of-bind-resp1 ([_] tp-eq/i) D D.
+
+%worlds (var | bind) (of-bind-resp1 _ _ _).
+%total {} (of-bind-resp1 _ _ _).
+%reduces D = D' (of-bind-resp1 _ D D').
+
+
+
+ofe-resp : ctx-eq G G' -> term-eq M M' -> tp-eq A A' -> ofe G M A -> ofe G' M' A' -> type.
+%mode ofe-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: ofe-resp ctx-eq/i term-eq/i tp-eq/i D D.
+
+%worlds (bind | ovar | var) (ofe-resp _ _ _ _ _).
+%total {} (ofe-resp _ _ _ _ _).
+
+
+
+ofes-resp : sctx-eq G G' -> term-eq M M' -> stp-eq T T' -> ofes G M T -> ofes G' M' T' -> type.
+%mode ofes-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: ofes-resp sctx-eq/i term-eq/i stp-eq/i D D.
+
+%worlds (var | ovar | bind) (ofes-resp _ _ _ _ _).
+%total {} (ofes-resp _ _ _ _ _).
+
+
+
+principal-resp : tp-eq A A' -> principal A -> principal A' -> type.
+%mode principal-resp +X1 +X2 -X3.
+
+-	: principal-resp tp-eq/i D D.
+
+%worlds (var) (principal-resp _ _ _).
+%total {} (principal-resp _ _ _).
+
+
+
+reduce-resp : eterm-eq M M' -> eterm-eq N N' -> reduce M N -> reduce M' N' -> type.
+%mode reduce-resp +X1 +X2 +X3 -X4.
+
+-	: reduce-resp eterm-eq/i eterm-eq/i D D.
+
+%worlds (bind | tbind | ovar | eofblock | evblock | evar) (reduce-resp _ _ _ _).
+%total {} (reduce-resp _ _ _ _).
+
+
+
+reduce-app-resp : eterm-eq M M' -> eterm-eq N N' -> eterm-eq O O' -> reduce-app M N O -> reduce-app M' N' O' -> type.
+%mode reduce-app-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: reduce-app-resp eterm-eq/i eterm-eq/i eterm-eq/i D D.
+
+%worlds (evvar | evbind | bind | tbind | evblock) (reduce-app-resp _ _ _ _ _).
+%total {} (reduce-app-resp _ _ _ _ _).
+
+
+
+reduce-pi1-resp : eterm-eq M M' -> eterm-eq N N' -> reduce-pi1 M N -> reduce-pi1 M' N' -> type.
+%mode reduce-pi1-resp +X1 +X2 +X3 -X4.
+
+-	: reduce-pi1-resp eterm-eq/i eterm-eq/i D D.
+
+%worlds (evvar | evbind | bind | tbind | evblock) (reduce-pi1-resp _ _ _ _).
+%total {} (reduce-pi1-resp _ _ _ _).
+
+
+
+reduce-pi2-resp : eterm-eq M M' -> eterm-eq N N' -> reduce-pi2 M N -> reduce-pi2 M' N' -> type.
+%mode reduce-pi2-resp +X1 +X2 +X3 -X4.
+
+-	: reduce-pi2-resp eterm-eq/i eterm-eq/i D D.
+
+%worlds (evvar | evbind | bind | tbind | evblock) (reduce-pi2-resp _ _ _ _).
+%total {} (reduce-pi2-resp _ _ _ _).
+
+
+
+self-resp : term-eq M M' -> tp-eq A A' -> tp-eq B B' -> self M A B -> self M' A' B' -> type.
+%mode self-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: self-resp term-eq/i tp-eq/i tp-eq/i D D.
+
+%worlds (var | bind) (self-resp _ _ _ _ _).
+%total {} (self-resp _ _ _ _ _).
+
+
+
+selfify-resp : eterm-eq M M' -> etp-eq A A' -> eterm-eq N N' -> etp-eq B B' -> selfify M A N B -> selfify M' A' N' B' -> type.
+%mode selfify-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: selfify-resp eterm-eq/i etp-eq/i eterm-eq/i etp-eq/i D D.
+
+%worlds (evar) (selfify-resp _ _ _ _ _ _).
+%total {} (selfify-resp _ _ _ _ _ _).
+
+
+
+simp-resp : tp-eq A A' -> stp-eq T T' -> simp A T -> simp A' T' -> type.
+%mode simp-resp +X1 +X2 +X3 -X4.
+
+-	: simp-resp tp-eq/i stp-eq/i D D.
+
+%worlds (var) (simp-resp _ _ _ _).
+%total {} (simp-resp _ _ _ _).
+
+
+
+slookup-resp : sctx-eq G G' -> atom-eq X X' -> stp-eq T T' -> slookup G X T -> slookup G' X' T' -> type.
+%mode slookup-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: slookup-resp sctx-eq/i atom-eq/i stp-eq/i D D.
+
+%worlds (var | ovar) (slookup-resp _ _ _ _ _).
+%total {} (slookup-resp _ _ _ _ _).
+
+
+
+stp-leq-resp : stp-eq S S' -> stp-eq T T' -> stp-leq S T -> stp-leq S' T' -> type.
+%mode stp-leq-resp +X1 +X2 +X3 -X4.
+
+-	: stp-leq-resp stp-eq/i stp-eq/i D D.
+
+%worlds () (stp-leq-resp _ _ _ _).
+%total {} (stp-leq-resp _ _ _ _).
+
+
+
+sub-resp : ({x} term-eq (O x) (O' x)) -> term-eq M M' -> term-eq N N' -> sub O M N -> sub O' M' N' -> type.
+%mode sub-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: sub-resp ([_] term-eq/i) term-eq/i term-eq/i D D.
+
+%worlds (var) (sub-resp _ _ _ _ _).
+%total {} (sub-resp _ _ _ _ _).
+%reduces D = D' (sub-resp _ _ _ D D').
+
+
+
+sub-resp1 : ({x:atom} {y} term-eq (O x y) (O' x y)) 
+	     -> ({x} term-eq (M x) (M' x)) 
+	     -> ({x} term-eq (N x) (N' x)) 
+	     -> ({x} sub (O x) (M x) (N x)) 
+	     -> ({x} sub (O' x) (M' x) (N' x)) -> type.
+%mode sub-resp1 +X1 +X2 +X3 +X4 -X5.
+
+-	: sub-resp1 ([_] [_] term-eq/i) ([_] term-eq/i) ([_] term-eq/i) D D.
+
+%worlds (var) (sub-resp1 _ _ _ _ _).
+%total {} (sub-resp1 _ _ _ _ _).
+%reduces D = D' (sub-resp1 _ _ _ D D').
+
+
+
+sub-resp-strengthen : ({y:atom} {x} term-eq (O x y) (O' x)) -> ({y} term-eq (M y) M') -> ({y} term-eq (N y) N') -> ({y} sub ([x] O x y) (M y) (N y)) -> sub O' M' N' -> type.
+%mode sub-resp-strengthen +X1 +X2 +X3 +X4 -X5.
+
+-	: sub-resp-strengthen ([_] [_] term-eq/i) ([_] term-eq/i) ([_] term-eq/i) Dsub (Dsub aca).
+
+%worlds (var) (sub-resp-strengthen _ _ _ _ _).
+%total {} (sub-resp-strengthen _ _ _ _ _).
+
+
+
+subtp-resp : etp-eq A A' -> etp-eq B B' -> subtp A B -> subtp A' B' -> type.
+%mode subtp-resp +X1 +X2 +X3 -X4.
+
+-	: subtp-resp etp-eq/i etp-eq/i D D.
+
+%worlds (evar | eofblock) (subtp-resp _ _ _ _).
+%total {} (subtp-resp _ _ _ _).
+
+
+
+subtype-resp : tp-eq A A' -> tp-eq B B' -> ({x} term-eq (M x) (M' x)) -> subtype A B M -> subtype A' B' M' -> type.
+%mode subtype-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: subtype-resp tp-eq/i tp-eq/i ([_] term-eq/i) D D.
+
+%worlds (var | bind | ovar) (subtype-resp _ _ _ _ _).
+%total {} (subtype-resp _ _ _ _ _).
+
+
+
+sum-resp : nat-eq N1 N1' -> nat-eq N2 N2' -> nat-eq N3 N3' -> sum N1 N2 N3 -> sum N1' N2' N3' -> type.
+%mode sum-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: sum-resp nat-eq/i nat-eq/i nat-eq/i D D.
+
+%worlds () (sum-resp _ _ _ _ _).
+%total {} (sum-resp _ _ _ _ _).
+
+
+
+tcanonize-resp : etp-eq A A' -> etp-eq B B' -> tcanonize A B -> tcanonize A' B' -> type.
+%mode tcanonize-resp +X1 +X2 +X3 -X4.
+
+-	: tcanonize-resp etp-eq/i etp-eq/i D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | eofblock | evblock) (tcanonize-resp _ _ _ _).
+%total {} (tcanonize-resp _ _ _ _).
+
+
+
+tcanonize-resp-underbind : etp-eq A A' -> ({x} evof x A -> variable x -> tcanonize (C x) (B x)) -> ({x} evof x A' -> variable x -> tcanonize (C x) (B x)) -> type.
+%mode tcanonize-resp-underbind +X1 +X2 -X3.
+
+-	: tcanonize-resp-underbind etp-eq/i D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | eofblock | evblock) (tcanonize-resp-underbind _ _ _).
+%total {} (tcanonize-resp-underbind _ _ _).
+
+
+
+tconvert-resp : tp-eq A A' -> etp-eq EA EA' -> tconvert A EA -> tconvert A' EA' -> type.
+%mode tconvert-resp +X1 +X2 +X3 -X4.
+
+-	: tconvert-resp tp-eq/i etp-eq/i D D.
+
+%worlds (bind | tbind) (tconvert-resp _ _ _ _).
+%total {} (tconvert-resp _ _ _ _).
+
+
+
+tconvert-resp-underbind : tp-eq A A' -> ({x} vof x A -> {ex} vtrans ex x -> tconvert (B x) (EM ex)) -> ({x} vof x A' -> {ex} vtrans ex x -> tconvert (B x) (EM ex)) -> type.
+%mode tconvert-resp-underbind +X1 +X2 -X3.
+
+-	: tconvert-resp-underbind tp-eq/i D D.
+
+%worlds (bind | tbind) (tconvert-resp-underbind _ _ _).
+%total {} (tconvert-resp-underbind _ _ _).
+
+
+
+tequiv-resp : etp-eq EA EA' -> etp-eq EB EB' -> tequiv EA EB -> tequiv EA' EB' -> type.
+%mode tequiv-resp +X1 +X2 +X3 -X4.
+
+-	: tequiv-resp etp-eq/i etp-eq/i D D.
+
+%worlds (evar | eofblock) (tequiv-resp _ _ _ _).
+%total {} (tequiv-resp _ _ _ _).
+%reduces D = D' (tequiv-resp _ _ D D').
+
+
+
+trans-resp : eterm-eq EM EM' -> tp-eq A A' -> trans EM A -> trans EM' A' -> type.
+%mode trans-resp +X1 +X2 +X3 -X4.
+
+-	: trans-resp eterm-eq/i tp-eq/i D D.
+
+%worlds (var | bind | ovar | tbind) (trans-resp _ _ _ _).
+%total {} (trans-resp _ _ _ _).
+
+
+
+trans-resp-underbind : tp-eq A A' -> ({x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (B x)) -> ({x} vof x A' -> {ex} vtrans ex x -> trans (EM ex) (B x)) -> type.
+%mode trans-resp-underbind +X1 +X2 -X3.
+
+-	: trans-resp-underbind tp-eq/i D D.
+
+%worlds (var | bind | tbind) (trans-resp-underbind _ _ _).
+%total {} (trans-resp-underbind _ _ _).
+
+
+
+transe-resp : ctx-eq G G' -> eterm-eq EM EM' -> tp-eq A A' -> transe G EM A -> transe G' EM' A' -> type.
+%mode transe-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: transe-resp ctx-eq/i eterm-eq/i tp-eq/i D D.
+
+%worlds (bind | ovar | tbind) (transe-resp _ _ _ _ _).
+%total {} (transe-resp _ _ _ _ _).
+
+
+
+treduce-resp : etp-eq A A' -> etp-eq B B' -> treduce A B -> treduce A' B' -> type.
+%mode treduce-resp +X1 +X2 +X3 -X4.
+
+-	: treduce-resp etp-eq/i etp-eq/i D D.
+
+%worlds (evar | evvar | evbind | bind | tbind | evblock) (treduce-resp _ _ _ _).
+%total {} (treduce-resp _ _ _ _).
+
+
+
+tsub-resp : ({x} tp-eq (A x) (A' x)) -> term-eq M M' -> tp-eq B B' -> tsub A M B -> tsub A' M' B' -> type.
+%mode tsub-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: tsub-resp ([_] tp-eq/i) term-eq/i tp-eq/i D D.
+
+%worlds (var) (tsub-resp _ _ _ _ _).
+%total {} (tsub-resp _ _ _ _ _).
+
+
+
+ttrans-resp : etp-eq EA EA' -> tp-eq A A' -> ttrans EA A -> ttrans EA' A' -> type.
+%mode ttrans-resp +X1 +X2 +X3 -X4.
+
+-	: ttrans-resp etp-eq/i tp-eq/i D D.
+
+%worlds (var | bind | tbind) (ttrans-resp _ _ _ _).
+%total {} (ttrans-resp _ _ _ _).
+
+
+
+ttrans-resp-underbind : tp-eq A A' -> ({x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x)) -> ({x} vof x A' -> {ex} vtrans ex x -> ttrans (EB ex) (B x)) -> type.
+%mode ttrans-resp-underbind +X1 +X2 -X3.
+
+-	: ttrans-resp-underbind tp-eq/i D D.
+
+%worlds (var | bind | tbind) (ttrans-resp-underbind _ _ _).
+%total {} (ttrans-resp-underbind _ _ _).
+
+
+
+vof-resp : atom-eq X X' -> tp-eq A A' -> vof X A -> vof X' A' -> type.
+%mode vof-resp +X1 +X2 +X3 -X4.
+
+-	: vof-resp atom-eq/i tp-eq/i D D.
+
+%worlds (var | bind) (vof-resp _ _ _ _).
+%total {} (vof-resp _ _ _ _).
+
+
+
+vtrans-resp : eterm-eq EX EX' -> atom-eq X X' -> vtrans EX X -> vtrans EX' X' -> type.
+%mode vtrans-resp +X1 +X2 +X3 -X4.
+
+-	: vtrans-resp eterm-eq/i atom-eq/i D D.
+
+%worlds (var | evar | tbind) (vtrans-resp _ _ _ _).
+%total {} (vtrans-resp _ _ _ _).
+
+
+
+wf-bind-resp1 : ({y:atom} tp-eq (A y) (A' y)) -> ({y} {x} vof x (A y) -> wf (B x y)) -> ({y} {x} vof x (A' y) -> wf (B x y)) -> type.
+%mode wf-bind-resp1 +X1 +X2 -X3.
+
+-	: wf-bind-resp1 ([_] tp-eq/i) D D.
+
+%worlds (var | bind) (wf-bind-resp1 _ _ _).
+%total {} (wf-bind-resp1 _ _ _).
+%reduces D = D' (wf-bind-resp1 _ D D').
+
+
+
+wf-resp : tp-eq A A' -> wf A -> wf A' -> type.
+%mode wf-resp +X1 +X2 -X3.
+
+-	: wf-resp tp-eq/i D D.
+
+%worlds (var | bind) (wf-resp _ _ _).
+%total {} (wf-resp _ _ _).
+%reduces D = D' (wf-resp _ D D').
+
+
+
+wfe-resp : ctx-eq G G' -> tp-eq A A' -> wfe G A -> wfe G' A' -> type.
+%mode wfe-resp +X1 +X2 +X3 -X4.
+
+-	: wfe-resp ctx-eq/i tp-eq/i D D.
+
+%worlds (var | bind | ovar) (wfe-resp _ _ _ _).
+%total {} (wfe-resp _ _ _ _).
+
+
+
+wfes-resp : sctx-eq G G' -> tp-eq A A' -> wfes G A -> wfes G' A' -> type.
+%mode wfes-resp +X1 +X2 +X3 -X4.
+
+-	: wfes-resp sctx-eq/i tp-eq/i D D.
+
+%worlds (var | ovar | bind) (wfes-resp _ _ _ _).
+%total {} (wfes-resp _ _ _ _).
+
+
+
+
+%%%%%  Reductio Ad Absurdio  %%%%%
+
+false-implies-aconverte : false -> aconverte G R A EM -> type.
+%mode +{G:ctx} +{R:atom} +{A:tp} +{EM:eterm} +{X1:false} -{X2:aconverte G R A EM}
+   (false-implies-aconverte X1 X2).
+%worlds (var | bind | tbind | ovar | evar) (false-implies-aconverte _ _).
+%total {} (false-implies-aconverte _ _).
+
+
+
+false-implies-aofe : false -> aofe G R A -> type.
+%mode +{G:ctx} +{R:atom} +{A:tp} +{X1:false} -{X2:aofe G R A} (false-implies-aofe X1 X2).
+%worlds (bind | ovar | var) (false-implies-aofe _ _).
+%total {} (false-implies-aofe _ _).
+
+
+
+false-implies-aofes : false -> aofes G R T -> type.
+%mode +{G:sctx} +{R:atom} +{T:stp} +{X1:false} -{X2:aofes G R T}
+   (false-implies-aofes X1 X2).
+%worlds (bind | ovar | var) (false-implies-aofes _ _).
+%total {} (false-implies-aofes _ _).
+
+
+
+false-implies-aosub : false -> aosub R M N -> type.
+%mode +{R:atom -> atom} +{M:term} +{N:term} +{X1:false} -{X2:aosub ([r:atom] R r) M N}
+   (false-implies-aosub X1 X2).
+%worlds (var | bind | ovar) (false-implies-aosub _ _).
+%total {} (false-implies-aosub _ _).
+
+
+
+false-implies-bounded : false -> bounded G X -> type.
+%mode +{G:ctx} +{X:atom} +{X1:false} -{X2:bounded G X} (false-implies-bounded X1 X2).
+%worlds (var | bind | ovar) (false-implies-bounded _ _).
+%total {} (false-implies-bounded _ _).
+
+
+
+false-implies-converte : false -> converte G M A EM -> type.
+%mode +{G:ctx} +{M:term} +{A:tp} +{EM:eterm} +{X1:false} -{X2:converte G M A EM}
+   (false-implies-converte X1 X2).
+%worlds (var | bind | tbind | ovar | evar) (false-implies-converte _ _).
+%total {} (false-implies-converte _ _).
+
+
+
+false-implies-eof : false -> eof EM EA -> type.
+%mode +{EM:eterm} +{EA:etp} +{X1:false} -{X2:eof EM EA} (false-implies-eof X1 X2).
+%worlds (evar | eofblock | ebind) (false-implies-eof _ _).
+%total {} (false-implies-eof _ _).
+
+
+
+false-implies-evof : false -> evof EM EA -> type.
+%mode +{EM:eterm} +{EA:etp} +{X1:false} -{X2:evof EM EA} (false-implies-evof X1 X2).
+%worlds (evar | eofblock | ebind) (false-implies-evof _ _).
+%total {} (false-implies-evof _ _).
+
+
+
+false-implies-eterm-eq : false -> eterm-eq EM EM' -> type.
+%mode +{EM:eterm} +{EM':eterm} +{X1:false} -{X2:eterm-eq EM EM'}
+   (false-implies-eterm-eq X1 X2).
+%worlds (evar) (false-implies-eterm-eq _ _).
+%total {} (false-implies-eterm-eq _ _).
+
+
+
+false-implies-lookup : false -> lookup G X A -> type.
+%mode +{G:ctx} +{X:atom} +{A:tp} +{X1:false} -{X2:lookup G X A}
+   (false-implies-lookup X1 X2).
+%worlds (var | bind | ovar) (false-implies-lookup _ _).
+%total {} (false-implies-lookup _ _).
+
+
+
+false-implies-ofe : false -> ofe G M A -> type.
+%mode +{G:ctx} +{M:term} +{A:tp} +{X1:false} -{X2:ofe G M A} (false-implies-ofe X1 X2).
+%worlds (bind | ovar | var) (false-implies-ofe _ _).
+%total {} (false-implies-ofe _ _).
+
+
+
+false-implies-ofes : false -> ofes G M T -> type.
+%mode +{G:sctx} +{M:term} +{T:stp} +{X1:false} -{X2:ofes G M T}
+   (false-implies-ofes X1 X2).
+%worlds (var | bind | ovar) (false-implies-ofes _ _).
+%total {} (false-implies-ofes _ _).
+
+
+
+false-implies-ordered : false -> ordered G -> type.
+%mode +{G:ctx} +{X1:false} -{X2:ordered G} (false-implies-ordered X1 X2).
+%worlds (var | bind | ovar) (false-implies-ordered _ _).
+%total {} (false-implies-ordered _ _).
+
+
+
+false-implies-reduce : false -> reduce M N -> type.
+%mode +{M:eterm} +{N:eterm} +{X1:false} -{X2:reduce M N} (false-implies-reduce X1 X2).
+%worlds (bind | tbind | ovar | eofblock | evblock | evar) (false-implies-reduce _ _).
+%total {} (false-implies-reduce _ _).
+
+
+
+false-implies-self : false -> self M A B -> type.
+%mode +{M:term} +{A:tp} +{B:tp} +{X1:false} -{X2:self M A B}
+   (false-implies-self X1 X2).
+%worlds (var) (false-implies-self _ _).
+%total {} (false-implies-self _ _).
+
+
+
+false-implies-simp : false -> simp A T -> type.
+%mode +{A:tp} +{T:stp} +{X1:false} -{X2:simp A T} (false-implies-simp X1 X2).
+%worlds (var) (false-implies-simp _ _).
+%total {} (false-implies-simp _ _).
+
+
+
+false-implies-stp-eq : false -> stp-eq T T' -> type.
+%mode +{T:stp} +{T':stp} +{X1:false} -{X2:stp-eq T T'} (false-implies-stp-eq X1 X2).
+%worlds () (false-implies-stp-eq _ _).
+%total {} (false-implies-stp-eq _ _).
+
+
+
+false-implies-stp-leq : false -> stp-leq T T' -> type.
+%mode +{T:stp} +{T':stp} +{X1:false} -{X2:stp-leq T T'} (false-implies-stp-leq X1 X2).
+%worlds () (false-implies-stp-leq _ _).
+%total {} (false-implies-stp-leq _ _).
+
+
+
+false-implies-sub : false -> sub M N O -> type.
+%mode +{M:atom -> term} +{N:term} +{O:term} +{X1:false} -{X2:sub ([r:atom] M r) N O}
+   (false-implies-sub X1 X2).
+%worlds (var) (false-implies-sub _ _).
+%total {} (false-implies-sub _ _).
+
+
+
+false-implies-subtype : false -> subtype A B O -> type.
+%mode +{A:tp} +{B:tp} +{O:atom -> term} +{X1:false} -{X2:subtype A B ([r:atom] O r)}
+   (false-implies-subtype X1 X2).
+%worlds (var) (false-implies-subtype _ _).
+%total {} (false-implies-subtype _ _).
+
+
+
+false-implies-tconvert : false -> tconvert A EA -> type.
+%mode +{A:tp} +{EA:etp} +{X1:false} -{X2:tconvert A EA} (false-implies-tconvert X1 X2).
+%worlds (bind | tbind) (false-implies-tconvert _ _).
+%total {} (false-implies-tconvert _ _).
+
+
+
+false-implies-term-eq : false -> term-eq M N -> type.
+%mode +{M:term} +{N:term} +{X1:false} -{X2:term-eq M N} (false-implies-term-eq X1 X2).
+%worlds (var) (false-implies-term-eq _ _).
+%total {} (false-implies-term-eq _ _).
+
+
+
+false-implies-tp-eq : false -> tp-eq A B -> type.
+%mode +{A:tp} +{B:tp} +{X1:false} -{X2:tp-eq A B} (false-implies-tp-eq X1 X2).
+%worlds (var) (false-implies-tp-eq _ _).
+%total {} (false-implies-tp-eq _ _).
+
+
+
+false-implies-tsub : false -> tsub A M B -> type.
+%mode +{A:atom -> tp} +{M:term} +{B:tp} +{X1:false} -{X2:tsub ([r:atom] A r) M B}
+   (false-implies-tsub X1 X2).
+%worlds (var) (false-implies-tsub _ _).
+%total {} (false-implies-tsub _ _).
+
+
+
+false-implies-vtrans : false -> vtrans EX X -> type.
+%mode +{EX:eterm} +{X:atom} +{X1:false} -{X2:vtrans EX X} (false-implies-vtrans X1 X2).
+%worlds (bind | tbind) (false-implies-vtrans _ _).
+%total {} (false-implies-vtrans _ _).
+
+
+
+false-implies-wfe : false -> wfe G A -> type.
+%mode +{G:ctx} +{A:tp} +{X1:false} -{X2:wfe G A} (false-implies-wfe X1 X2).
+%worlds (var | bind | ovar) (false-implies-wfe _ _).
+%total {} (false-implies-wfe _ _).
+
+
+false-implies-wfes : false -> wfes G A -> type.
+%mode +{G:sctx} +{A:tp} +{X1:false} -{X2:wfes G A} (false-implies-wfes X1 X2).
+%worlds (var | bind | ovar) (false-implies-wfes _ _).
+%total {} (false-implies-wfes _ _).

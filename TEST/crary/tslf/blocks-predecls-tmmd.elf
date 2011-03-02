@@ -1,0 +1,21 @@
+
+
+vdt/assm/tm :  assm/tm E C -> ofkd C kd/type -> type.
+
+%mode vdt/assm/tm +D1 -D2.
+
+vdt/assm/md	: assm/md M S	% Lemma F.2
+		   -> sg-wf S
+		   -> fst-sg S K
+		   -> fst-md M C
+		   -> ofkd C K
+		   -> type.
+
+%mode vdt/assm/md +D1 -DS -D2 -D3 -D4.
+
+fst-md-seq	: fst-md M C
+		   -> fst-md M C'
+		   -> seq/cn C C'
+		   -> type.
+
+%mode fst-md-seq +D1 +D2 -D3.

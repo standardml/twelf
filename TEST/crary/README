@@ -1,0 +1,30 @@
+Regression tests obtained from Karl Crary's webpage 
+http://www.cs.cmu.edu/~crary/papers/
+
+explicit (obtained November 18, 2009)
+  Karl Crary. 
+  Explicit Contexts in LF. 
+  2008 Workshop on Logical Frameworks and Meta-Languages: Theory and Practice. 
+
+mldef-alpha (obtained November 18, 2009)
+  Karl Crary and Robert Harper. 
+  Mechanized Definition of Standard ML (alpha release). 2009. 
+
+standard (obtained November 18, 2009)
+  Karl Crary. 
+  A Simple Proof of Call-by-Value Standardization. 
+  CMU Technical Report CMU-CS-09-137, 2009. 
+
+substruct (obtained November 18, 2009)
+  Karl Crary. 
+  Higher-order Representation of Substructural Logics. Technical report, 2009. 
+
+synsing (obtained November 18, 2009)
+  Karl Crary. 
+  A Syntactic Account of Singleton Types via Hereditary Substitution. 
+  2009 Workshop on Logical Frameworks and Meta-Languages: Theory and Practice. 
+
+tslf (obtained November 18, 2009)
+  Daniel K. Lee, Karl Crary, and Robert Harper.
+  Towards a Mechanized Metatheory of Standard ML. 
+  2007 Symposium on Principles of Programming Languages. 

@@ -1,0 +1,66 @@
+
+expr-elab-reg : md-of pure st/nil Mec Sec
+		 -> expr-elab Mec Sec Ee E T
+%%
+		 -> tm-of st/nil E T
+		 -> type.
+%mode expr-elab-reg +X1 +X2 -X3.
+
+match-elab-reg : md-of pure st/nil Mec Sec
+		  -> tm-of st/nil Efail tagged
+		  -> tm-of st/nil Edisc T1
+		  -> match-elab Mec Sec Me Efail Edisc T1 E T2
+%%
+		  -> tm-of st/nil E T2
+		  -> type.
+%mode match-elab-reg +X1 +X2 +X3 +X4 -X5.
+
+pat-elab-reg : md-of pure st/nil Mec Sec
+		  -> tm-of st/nil Efail tagged
+		  -> tm-of st/nil Edisc T
+		  -> pat-elab Mec Sec Pe Efail Edisc T M S
+%%
+		  -> md-of pure st/nil M S
+		  -> type.
+%mode pat-elab-reg +X1 +X2 +X3 +X4 -X5.
+
+dec-elab-reg : md-of pure st/nil Mec Sec
+		-> dec-elab Mec Sec De M S
+%%
+		-> md-of impure st/nil M S
+		-> type.
+%mode dec-elab-reg +X1 +X2 -X3.
+
+strexp-elab-reg : md-of pure st/nil Mec Sec
+		   -> strexp-elab Mec Sec Re M S
+%%
+		   -> md-of impure st/nil M S
+		   -> type.
+%mode strexp-elab-reg +X1 +X2 -X3.
+
+spec-elab-reg : md-of pure st/nil Mec Sec
+		 -> spec-elab Mec Sec SPe S
+%%
+		 -> sg-wf S
+		 -> type.
+%mode spec-elab-reg +X1 +X2 -X3.
+
+sigexp-elab-reg : md-of pure st/nil Mec Sec
+		   -> sigexp-elab Mec Sec Se S
+		   -> sg-wf S
+%%
+		   -> type.
+%mode sigexp-elab-reg +X1 +X2 -X3.
+
+
+%%  Expression elaboration in expr-elab.thm.
+%%  Match elaboraton in match-elab.thm.
+%%  Pattern elaboration in pat-elab.thm.
+%%  Dec elaboration in dec-elab.thm.
+%%  Strexp elaboration in strexp-elab.thm.
+%%  Specification elaboration in spec-elab.thm.
+%%  Sigexp elaboration in sigexp-elab.thm.
+
+
+
+%%  Worlds/total in denouement.thm.

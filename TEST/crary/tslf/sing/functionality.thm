@@ -1,0 +1,1633 @@
+
+%%%%%  Contexts  %%%%%
+
+eisvar : eterm -> type.
+
+
+%block eovar	: some {n:nat} block {x:eterm} {d:eisvar x}.
+
+
+
+ectx : type.  %name ectx G.
+
+enil	: ectx.
+econs	: ectx -> eterm -> etp -> ectx.
+
+
+
+clean : ectx -> type.
+
+clean/nil	: clean enil.
+
+clean/cons	: clean (econs G X A)
+		   <- clean G
+		   <- eisvar X.
+
+
+
+elookup : ectx -> eterm -> etp -> type.
+
+elookup/hit	: elookup (econs G X A) X A.
+
+elookup/miss	: elookup (econs G Y _) X A
+		   <- elookup G X A.
+
+
+
+
+%%%%%  Context Lemmas  %%%%%
+
+eisvar-closed : ({x:eterm} eisvar (Y x)) -> ({x} eterm-eq (Y x) Y') -> type.
+%mode eisvar-closed +X1 -X2.
+
+-	: eisvar-closed ([_] D) ([_] eterm-eq/i).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eisvar-closed _ _).
+%total {} (eisvar-closed _ _).
+
+
+
+lookup-clean : ({x:eterm} elookup (G x) (X x) (A x)) -> ({x} clean (G x)) -> ({x} eterm-eq (X x) X') -> type.
+%mode lookup-clean +X1 +X2 -X3.
+
+-	: lookup-clean ([x] elookup/hit) ([x] clean/cons (Disvar x) _) Deq
+	   <- eisvar-closed Disvar Deq.
+
+-	: lookup-clean ([x] elookup/miss (Dlook x)) ([x] clean/cons _ (Dclean x)) Deq
+	   <- lookup-clean Dlook Dclean Deq.
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (lookup-clean _ _ _).
+%total D (lookup-clean D _ _).
+
+
+
+
+%%%%%  Explicit/Implicit Context System  %%%%%
+
+ewfi	: ectx -> etp -> type.
+eofi	: ectx -> eterm -> etp -> type.
+subtpi	: ectx -> etp -> etp -> type.
+tequivi	: ectx -> etp -> etp -> type.
+equivi	: ectx -> eterm -> eterm -> etp -> type.
+
+
+ewfi/nil	: ewfi enil A
+		   <- ewf A.
+
+ewfi/cons	: ewfi (econs G X A) B
+		   <- (evof X A -> ewfi G B).
+
+
+eofi/nil	: eofi enil M A
+		   <- eof M A.
+
+eofi/cons	: eofi (econs G X A) M B
+		   <- (evof X A -> eofi G M B).
+
+
+subtpi/nil	: subtpi enil B C
+		   <- subtp B C.
+
+subtpi/cons	: subtpi (econs G X A) B C
+		   <- (evof X A -> subtpi G B C).
+
+
+tequivi/nil	: tequivi enil B C
+		   <- tequiv B C.
+
+tequivi/cons	: tequivi (econs G X A) B C
+		   <- (evof X A -> tequivi G B C).
+
+
+equivi/nil	: equivi enil M N B
+		   <- equiv M N B.
+
+equivi/cons	: equivi (econs G X A) M N B
+		   <- (evof X A -> equivi G M N B).
+
+
+
+
+%%%%%  Equality  %%%%%
+
+ectx-eq : ectx -> ectx -> type.
+
+ectx-eq/i : ectx-eq G G.
+
+
+
+eofi-resp : ectx-eq G G' -> eterm-eq M M' -> etp-eq A A' -> eofi G M A -> eofi G' M' A' -> type.
+%mode eofi-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: eofi-resp ectx-eq/i eterm-eq/i etp-eq/i D D.
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eofi-resp _ _ _ _ _).
+%total {} (eofi-resp _ _ _ _ _).
+
+
+
+equivi-resp : ectx-eq G G' -> eterm-eq M M' -> eterm-eq N N' -> etp-eq A A' -> equivi G M N A -> equivi G' M' N' A' -> type.
+%mode equivi-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: equivi-resp ectx-eq/i eterm-eq/i eterm-eq/i etp-eq/i D D.
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (equivi-resp _ _ _ _ _ _).
+%total {} (equivi-resp _ _ _ _ _ _).
+
+
+
+tequivi-resp : ectx-eq G G' -> etp-eq A A' -> etp-eq B B' -> tequivi G A B -> tequivi G' A' B' -> type.
+%mode tequivi-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: tequivi-resp ectx-eq/i etp-eq/i etp-eq/i D D.
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequivi-resp _ _ _ _ _).
+%total {} (tequivi-resp _ _ _ _ _).
+
+
+
+
+%%%%%  Proof Skeletons  %%%%%
+
+metp	: type.
+meterm	: type.
+
+metp/t		: metp.
+metp/pi		: metp -> metp -> metp.
+metp/sigma	: metp -> metp -> metp.
+metp/sing	: meterm -> metp.
+
+meterm/var	: meterm.
+meterm/const	: meterm.
+meterm/forall	: metp -> meterm.
+meterm/lam	: meterm -> metp -> meterm.
+meterm/app	: meterm -> meterm -> meterm.
+meterm/pair	: meterm -> meterm -> meterm.
+meterm/pi1	: meterm -> meterm.
+meterm/pi2	: meterm -> meterm.
+meterm/sing	: meterm -> meterm.
+meterm/extpi	: meterm -> meterm -> meterm.
+meterm/extsigma	: meterm -> meterm -> meterm.
+meterm/subsume	: meterm -> meterm.
+
+
+
+mewf	: ewf A -> metp -> type.
+meof	: eof M A -> meterm -> type.
+
+mewf/t		: mewf ewf/t metp/t.
+
+mewf/pi		: mewf (ewf/pi D2 D1) (metp/pi A2 A1)
+		   <- mewf D1 A1
+		   <- ({x} {d}
+			 mewf (D2 x d) A2).
+
+mewf/sigma	: mewf (ewf/sigma D2 D1) (metp/sigma A2 A1)
+		   <- mewf D1 A1
+		   <- ({x} {d}
+			 mewf (D2 x d) A2).
+
+mewf/sing	: mewf (ewf/sing D) (metp/sing M)
+		   <- meof D M.
+
+
+
+meof/var	: meof (eof/var _ _) meterm/var.
+
+meof/const	: meof (eof/const _ _) meterm/const.
+
+meof/forall	: meof (eof/forall D) (meterm/forall A)
+		   <- mewf D A.
+
+meof/lam	: meof (eof/lam D2 D1) (meterm/lam M A)
+		   <- mewf D1 A
+		   <- ({x} {d}
+			 meof (D2 x d) M).
+
+meof/app	: meof (eof/app D2 D1) (meterm/app M2 M1)
+		   <- meof D1 M1
+		   <- meof D2 M2.
+
+meof/pair	: meof (eof/pair _ D2 D1) (meterm/pair M2 M1)
+		   <- meof D1 M1
+		   <- meof D2 M2.
+
+meof/pi1	: meof (eof/pi1 D) (meterm/pi1 M)
+		   <- meof D M.
+		   
+meof/pi2	: meof (eof/pi2 D) (meterm/pi2 M)
+		   <- meof D M.
+
+meof/sing	: meof (eof/sing D) (meterm/sing M)
+		   <- meof D M.
+
+meof/extpi	: meof (eof/extpi D2 D1) (meterm/extpi M2 M1)
+		   <- meof D1 M1
+		   <- ({x} {d}
+			 meof (D2 x d) M2).
+
+meof/extsigma	: meof (eof/extsigma _ D2 D1) (meterm/extsigma M2 M1)
+		   <- meof D1 M1
+		   <- meof D2 M2.
+
+meof/subsume	: meof (eof/subsume _ D) (meterm/subsume M)
+		   <- meof D M.
+
+
+
+mewfi	: ewfi G A -> metp -> type.
+
+mewfi/nil	: mewfi (ewfi/nil D) M
+		   <- mewf D M.
+
+mewfi/cons	: mewfi (ewfi/cons D) M
+		   <- ({d} mewfi (D d) M).
+
+
+
+meofi	: eofi G M A -> meterm -> type.
+
+meofi/nil	: meofi (eofi/nil D) M
+		   <- meof D M.
+
+meofi/cons	: meofi (eofi/cons D) M
+		   <- ({d} meofi (D d) M).
+
+
+
+
+%%%%%  Substitution  %%%%%
+
+eofi-subst-gen : (evof M A -> eofi G N B)
+		  -> (eof M A -> eofi G N B) -> type.
+%mode eofi-subst-gen +X1 -X2.
+
+-	: eofi-subst-gen ([d] eofi/nil (D d)) ([d] eofi/nil (D' d))
+	   <- esubst-of-gen D D'.
+
+-	: eofi-subst-gen ([d] eofi/cons (D d)) ([d] eofi/cons (D' d))
+	   <- ({e}
+		 eofi-subst-gen ([d] D d e) ([d] D' d e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-subst-gen _ _).
+%total D (eofi-subst-gen D _).
+
+
+
+ewfi-subst-gen : (evof M A -> ewfi G B)
+		  -> (eof M A -> ewfi G B) -> type.
+%mode ewfi-subst-gen +X1 -X2.
+
+-	: ewfi-subst-gen ([d] ewfi/nil (D d)) ([d] ewfi/nil (D' d))
+	   <- esubst-wf-gen D D'.
+
+-	: ewfi-subst-gen ([d] ewfi/cons (D d)) ([d] ewfi/cons (D' d))
+	   <- ({e}
+		 ewfi-subst-gen ([d] D d e) ([d] D' d e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (ewfi-subst-gen _ _).
+%total D (ewfi-subst-gen D _).
+
+
+
+subtpi-subst-gen : (evof M A -> subtpi G B C)
+		    -> (eof M A -> subtpi G B C) -> type.
+%mode subtpi-subst-gen +X1 -X2.
+
+-	: subtpi-subst-gen ([d] subtpi/nil (D d)) ([d] subtpi/nil (D' d))
+	   <- esubst-subtp-gen D D'.
+
+-	: subtpi-subst-gen ([d] subtpi/cons (D d)) ([d] subtpi/cons (D' d))
+	   <- ({e}
+		 subtpi-subst-gen ([d] D d e) ([d] D' d e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (subtpi-subst-gen _ _).
+%total D (subtpi-subst-gen D _).
+
+
+
+eofi-subst : ({x} evof x A -> eofi (G x) (N x) (B x))
+	      -> eof M A
+	      -> eofi (G M) (N M) (B M) -> type.
+%mode eofi-subst +X1 +X2 -X3.
+
+-	: eofi-subst D1 D2 (D1' D2)
+	   <- eofi-subst-gen (D1 _) D1'.
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eofi-subst _ _ _).
+%total {} (eofi-subst _ _ _).
+
+
+
+ewfi-subst : ({x} evof x A -> ewfi (G x) (B x))
+	      -> eof M A
+	      -> ewfi (G M) (B M) -> type.
+%mode ewfi-subst +X1 +X2 -X3.
+
+-	: ewfi-subst D1 D2 (D1' D2)
+	   <- ewfi-subst-gen (D1 _) D1'.
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (ewfi-subst _ _ _).
+%total {} (ewfi-subst _ _ _).
+
+
+
+subtpi-subst : ({x} evof x A -> subtpi (G x) (B x) (C x))
+		-> eof M A
+		-> subtpi (G M) (B M) (C M) -> type.
+%mode subtpi-subst +X1 +X2 -X3.
+
+-	: subtpi-subst D1 D2 (D1' D2)
+	   <- subtpi-subst-gen (D1 _) D1'.
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (subtpi-subst _ _ _).
+%total {} (subtpi-subst _ _ _).
+
+
+
+
+%%%%%  Destructors  %%%%%
+
+elookup? : ectx -> eterm -> etp -> type.
+
+elookup?/look	: elookup? G X A
+		   <- elookup G X A.
+
+elookup?/not	: elookup? G X A
+		   <- evof X A.
+
+
+
+elookup?-cons : (evof X A -> elookup? G Y B) -> elookup? (econs G X A) Y B -> type.
+%mode elookup?-cons +X1 -X2.
+
+-	: elookup?-cons ([d] elookup?/look D) (elookup?/look (elookup/miss D)).
+
+-	: elookup?-cons ([d] elookup?/not D) (elookup?/not D).
+
+-	: elookup?-cons ([d] elookup?/not d) (elookup?/look elookup/hit).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (elookup?-cons _ _).
+%total {} (elookup?-cons _ _).
+
+
+
+eofi-var-invert : {D:eofi G M A} 
+		   meofi D meterm/var
+		   -> elookup? G M A
+		   -> ewfi G A -> type.
+%mode eofi-var-invert +X1 +X2 -X3 -X4.
+
+-	: eofi-var-invert (eofi/nil (eof/var Dwf Dvof)) (meofi/nil meof/var) (elookup?/not Dvof) (ewfi/nil Dwf).
+
+-	: eofi-var-invert (eofi/cons Dof) (meofi/cons Dmof) Dlookup?' (ewfi/cons Dewfi)
+	   <- ({d}
+		 eofi-var-invert (Dof d) (Dmof d) (Dlookup? d) (Dewfi d))
+	   <- elookup?-cons Dlookup? Dlookup?'.
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-var-invert _ _ _ _).
+%total D (eofi-var-invert D _ _ _).
+
+
+
+eofi-const-invert : {D:eofi G M A} meofi D meterm/const
+		     -> eterm-eq (econst C) M
+		     -> ekof C A 
+		     -> ewfi G A -> type.
+%mode eofi-const-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: eofi-const-invert (eofi/nil (eof/const D2 D1)) _ eterm-eq/i D1 (ewfi/nil D2).
+
+-	: eofi-const-invert (eofi/cons D) (meofi/cons Dm) Deq Dkof (ewfi/cons Dwf)
+	   <- ({d}
+		 eofi-const-invert (D d) (Dm d) Deq Dkof (Dwf d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-const-invert _ _ _ _ _).
+%total D (eofi-const-invert D _ _ _ _).
+
+
+
+eofi-forall-invert : {D:eofi G M C} meofi D (meterm/forall Am)
+		      -> eterm-eq (eforall A) M
+		      -> etp-eq (epi (epi A ([_] et)) ([_] et)) C
+		      -> {D':ewfi G A}
+			 mewfi D' Am -> type.
+%mode eofi-forall-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: eofi-forall-invert (eofi/nil (eof/forall D)) (meofi/nil (meof/forall DM))
+	   eterm-eq/i etp-eq/i (ewfi/nil D) (mewfi/nil DM).
+
+-	: eofi-forall-invert (eofi/cons D) (meofi/cons DM)
+	   Deq Deq'
+	   (ewfi/cons D1) (mewfi/cons DM1)
+	   <- ({d} 
+		 eofi-forall-invert (D d) (DM d) Deq Deq' (D1 d) (DM1 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-forall-invert _ _ _ _ _ _).
+%total D (eofi-forall-invert D _ _ _ _ _).
+
+
+
+eofi-lam-invert : {D:eofi G O C} meofi D (meterm/lam Mm Am)
+		   -> eterm-eq (elam A M) O
+		   -> etp-eq (epi A B) C
+		   -> {D1:ewfi G A}
+		      mewfi D1 Am
+		   -> {D2:{x} eofi (econs G x A) (M x) (B x)}
+		      ({x} meofi (D2 x) Mm) -> type.
+%mode eofi-lam-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: eofi-lam-invert (eofi/nil (eof/lam D2 D1)) (meofi/nil (meof/lam DM2 DM1))
+	   eterm-eq/i etp-eq/i
+	   (ewfi/nil D1) (mewfi/nil DM1) 
+	   ([x] eofi/cons ([d] eofi/nil (D2 x d))) ([x] meofi/cons ([d] meofi/nil (DM2 x d))).
+
+-	: eofi-lam-invert (eofi/cons D) (meofi/cons DM)
+	   Deq Deq'
+	   (ewfi/cons D1) (mewfi/cons DM1)
+	   ([y] eofi/cons ([e] eofi/cons ([d] D2 d y e)))
+	   ([y] meofi/cons ([e] meofi/cons ([d] DM2 d y e)))
+	   <- ({d} 
+		 eofi-lam-invert (D d) (DM d) Deq Deq' (D1 d) (DM1 d) 
+		 ([y] eofi/cons ([e] D2 d y e)) ([y] meofi/cons ([e] DM2 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-lam-invert _ _ _ _ _ _ _ _).
+%total D (eofi-lam-invert D _ _ _ _ _ _ _).
+
+
+
+eofi-app-invert : {D:eofi G O C} meofi D (meterm/app Nm Mm)
+		  -> eterm-eq (eapp M N) O
+		  -> etp-eq (B N) C
+		  -> {D1:eofi G M (epi A B)}
+		     meofi D1 Mm
+		  -> {D2:eofi G N A}
+		     meofi D2 Nm -> type.
+%mode eofi-app-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: eofi-app-invert (eofi/nil (eof/app D2 D1)) (meofi/nil (meof/app DM2 DM1))
+	   eterm-eq/i etp-eq/i
+	   (eofi/nil D1) (meofi/nil DM1) (eofi/nil D2) (meofi/nil DM2).
+
+-	: eofi-app-invert (eofi/cons D) (meofi/cons DM)
+	   Deq Deq'
+	   (eofi/cons D1) (meofi/cons DM1) (eofi/cons D2) (meofi/cons DM2)
+	   <- ({d}
+		 eofi-app-invert (D d) (DM d) Deq Deq'
+		 (D1 d) (DM1 d) (D2 d) (DM2 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-app-invert _ _ _ _ _ _ _ _).
+%total D (eofi-app-invert D _ _ _ _ _ _ _).
+
+
+
+eofi-pair-invert : {D:eofi G O C} meofi D (meterm/pair Nm Mm)
+		   -> eterm-eq (epair M N) O
+		   -> etp-eq (esigma A B) C
+		   -> {D1:eofi G M A}
+		      meofi D1 Mm
+		   -> {D2:eofi G N (B M)}
+		      meofi D2 Nm 
+		   -> ({x} ewfi (econs G x A) (B x)) -> type.
+%mode eofi-pair-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8 -X9.
+
+-	: eofi-pair-invert (eofi/nil (eof/pair D3 D2 D1)) (meofi/nil (meof/pair DM2 DM1))
+	   eterm-eq/i etp-eq/i
+	   (eofi/nil D1) (meofi/nil DM1) (eofi/nil D2) (meofi/nil DM2)
+	   ([x] ewfi/cons ([d] ewfi/nil (D3 x d))).
+
+-	: eofi-pair-invert (eofi/cons D) (meofi/cons DM)
+	   Deq Deq'
+	   (eofi/cons D1) (meofi/cons DM1) (eofi/cons D2) (meofi/cons DM2)
+	   ([y] ewfi/cons ([e] ewfi/cons ([d] D3 d y e)))
+	   <- ({d}
+		 eofi-pair-invert (D d) (DM d)
+		 Deq Deq'
+		 (D1 d) (DM1 d) (D2 d) (DM2 d) ([y] ewfi/cons ([e] D3 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-pair-invert _ _ _ _ _ _ _ _ _).
+%total D (eofi-pair-invert D _ _ _ _ _ _ _ _).
+
+
+
+eofi-pi1-invert : {D:eofi G O A} meofi D (meterm/pi1 Mm)
+		   -> eterm-eq (epi1 M) O
+		   -> {D1:eofi G M (esigma A B)}
+		      meofi D1 Mm -> type.
+%mode eofi-pi1-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: eofi-pi1-invert (eofi/nil (eof/pi1 D)) (meofi/nil (meof/pi1 DM))
+	   eterm-eq/i
+	   (eofi/nil D) (meofi/nil DM).
+
+-	: eofi-pi1-invert (eofi/cons D) (meofi/cons DM)
+	   Deq
+	   (eofi/cons D1) (meofi/cons DM1)
+	   <- ({d}
+		 eofi-pi1-invert (D d) (DM d)
+		 Deq
+		 (D1 d) (DM1 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-pi1-invert _ _ _ _ _).
+%total D (eofi-pi1-invert D _ _ _ _).
+
+
+
+eofi-pi2-invert : {D:eofi G O C} meofi D (meterm/pi2 Mm)
+		   -> eterm-eq (epi2 M) O
+		   -> etp-eq (B (epi1 M)) C
+		   -> {D1:eofi G M (esigma A B)}
+		      meofi D1 Mm -> type.
+%mode eofi-pi2-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: eofi-pi2-invert (eofi/nil (eof/pi2 D)) (meofi/nil (meof/pi2 DM))
+	   eterm-eq/i etp-eq/i
+	   (eofi/nil D) (meofi/nil DM).
+
+-	: eofi-pi2-invert (eofi/cons D) (meofi/cons DM)
+	   Deq Deq'
+	   (eofi/cons D1) (meofi/cons DM1)
+	   <- ({d}
+		 eofi-pi2-invert (D d) (DM d)
+		 Deq Deq'
+		 (D1 d) (DM1 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-pi2-invert _ _ _ _ _ _).
+%total D (eofi-pi2-invert D _ _ _ _ _).
+
+
+
+eofi-sing-invert : {D:eofi G M C} meofi D (meterm/sing Mm)
+		    -> etp-eq (esing M) C
+		    -> {D1:eofi G M et}
+		       meofi D1 Mm -> type.
+%mode eofi-sing-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: eofi-sing-invert (eofi/nil (eof/sing D)) (meofi/nil (meof/sing DM))
+	   etp-eq/i
+	   (eofi/nil D) (meofi/nil DM).
+
+-	: eofi-sing-invert (eofi/cons D) (meofi/cons DM)
+	   Deq
+	   (eofi/cons D1) (meofi/cons DM1)
+	   <- ({d}
+		 eofi-sing-invert (D d) (DM d)
+		 Deq
+		 (D1 d) (DM1 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-sing-invert _ _ _ _ _).
+%total D (eofi-sing-invert D _ _ _ _).
+
+
+
+eofi-extpi-invert : {D:eofi G M C} meofi D (meterm/extpi Nm Mm)
+		     -> etp-eq (epi A B) C
+		     -> {D1:eofi G M (epi A B')}
+			meofi D1 Mm
+		     -> {D2:{x} eofi (econs G x A) (eapp M x) (B x)}
+			({x} meofi (D2 x) Nm) -> type.
+%mode eofi-extpi-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: eofi-extpi-invert (eofi/nil (eof/extpi D2 D1)) (meofi/nil (meof/extpi DM2 DM1))
+	   etp-eq/i
+	   (eofi/nil D1) (meofi/nil DM1)
+	   ([x] eofi/cons ([d] eofi/nil (D2 x d))) ([x] meofi/cons ([d] meofi/nil (DM2 x d))).
+
+-	: eofi-extpi-invert (eofi/cons D) (meofi/cons DM)
+	   Deq
+	   (eofi/cons D1) (meofi/cons DM1)
+	   ([y] eofi/cons ([e] eofi/cons ([d] D2 d y e)))
+	   ([y] meofi/cons ([e] meofi/cons ([d] DM2 d y e)))
+	   <- ({d}
+		 eofi-extpi-invert (D d) (DM d) Deq
+		 (D1 d) (DM1 d)
+		 ([y] eofi/cons ([e] D2 d y e)) ([y] meofi/cons ([e] DM2 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-extpi-invert _ _ _ _ _ _ _).
+%total D (eofi-extpi-invert D _ _ _ _ _ _).
+
+
+
+eofi-extsigma-invert : {D:eofi G M C} meofi D (meterm/extsigma Nm Mm)
+			-> etp-eq (esigma A B) C
+			-> {D1:eofi G (epi1 M) A}
+			   meofi D1 Mm
+			-> {D2:eofi G (epi2 M) (B (epi1 M))}
+			   meofi D2 Nm
+			-> ({x} ewfi (econs G x A) (B x)) -> type.
+%mode eofi-extsigma-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: eofi-extsigma-invert (eofi/nil (eof/extsigma D3 D2 D1)) (meofi/nil (meof/extsigma DM2 DM1))
+	   etp-eq/i
+	   (eofi/nil D1) (meofi/nil DM1)
+	   (eofi/nil D2) (meofi/nil DM2)
+	   ([x] ewfi/cons ([d] ewfi/nil (D3 x d))).
+
+-	: eofi-extsigma-invert (eofi/cons D) (meofi/cons DM)
+	   Deq
+	   (eofi/cons D1) (meofi/cons DM1) (eofi/cons D2) (meofi/cons DM2)
+	   ([y] ewfi/cons ([e] ewfi/cons ([d] D3 d y e)))
+	   <- ({d}
+		 eofi-extsigma-invert (D d) (DM d) Deq (D1 d) (DM1 d) (D2 d) (DM2 d) ([y] ewfi/cons ([e] D3 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-extsigma-invert _ _ _ _ _ _ _ _).
+%total D (eofi-extsigma-invert D _ _ _ _ _ _ _).
+
+
+
+eofi-subsume-invert : {D:eofi G M A} meofi D (meterm/subsume Mm)
+		       -> {D1:eofi G M B}
+			  meofi D1 Mm
+		       -> subtpi G B A -> type.
+%mode eofi-subsume-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: eofi-subsume-invert (eofi/nil (eof/subsume D2 D1)) (meofi/nil (meof/subsume DM1))
+	   (eofi/nil D1) (meofi/nil DM1) (subtpi/nil D2).
+
+-	: eofi-subsume-invert (eofi/cons D) (meofi/cons DM)
+	   (eofi/cons D1) (meofi/cons DM1) (subtpi/cons D2)
+	   <- ({d}
+		 eofi-subsume-invert (D d) (DM d) (D1 d) (DM1 d) (D2 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (eofi-subsume-invert _ _ _ _ _).
+%total D (eofi-subsume-invert D _ _ _ _).
+
+
+
+ewfi-t-invert : {D:ewfi G C} mewfi D metp/t
+		 -> etp-eq et C -> type.
+%mode ewfi-t-invert +X1 +X2 -X3.
+
+-	: ewfi-t-invert (ewfi/nil ewf/t) _ etp-eq/i.
+
+-	: ewfi-t-invert (ewfi/cons D) (mewfi/cons DM) Deq
+	   <- ({d}
+		 ewfi-t-invert (D d) (DM d) Deq).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (ewfi-t-invert _ _ _).
+%total D (ewfi-t-invert D _ _).
+
+
+
+ewfi-pi-invert : {D:ewfi G C} mewfi D (metp/pi Bm Am)
+		  -> etp-eq (epi A B) C
+		  -> {D1:ewfi G A}
+		     mewfi D1 Am
+		  -> {D2:{x} ewfi (econs G x A) (B x)}
+		     ({x} mewfi (D2 x) Bm) -> type.
+%mode ewfi-pi-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: ewfi-pi-invert (ewfi/nil (ewf/pi D2 D1)) (mewfi/nil (mewf/pi DM2 DM1))
+	   etp-eq/i
+	   (ewfi/nil D1) (mewfi/nil DM1) 
+	   ([x] ewfi/cons ([d] ewfi/nil (D2 x d))) ([x] mewfi/cons ([d] mewfi/nil (DM2 x d))).
+
+-	: ewfi-pi-invert (ewfi/cons D) (mewfi/cons DM)
+	   Deq
+	   (ewfi/cons D1) (mewfi/cons DM1)
+	   ([y] ewfi/cons ([e] ewfi/cons ([d] D2 d y e)))
+	   ([y] mewfi/cons ([e] mewfi/cons ([d] DM2 d y e)))
+	   <- ({d} 
+		 ewfi-pi-invert (D d) (DM d) Deq (D1 d) (DM1 d) 
+		 ([y] ewfi/cons ([e] D2 d y e)) ([y] mewfi/cons ([e] DM2 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (ewfi-pi-invert _ _ _ _ _ _ _).
+%total D (ewfi-pi-invert D _ _ _ _ _ _).
+
+
+
+ewfi-sigma-invert : {D:ewfi G C} mewfi D (metp/sigma Bm Am)
+		  -> etp-eq (esigma A B) C
+		  -> {D1:ewfi G A}
+		     mewfi D1 Am
+		  -> {D2:{x} ewfi (econs G x A) (B x)}
+		     ({x} mewfi (D2 x) Bm) -> type.
+%mode ewfi-sigma-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: ewfi-sigma-invert (ewfi/nil (ewf/sigma D2 D1)) (mewfi/nil (mewf/sigma DM2 DM1))
+	   etp-eq/i
+	   (ewfi/nil D1) (mewfi/nil DM1) 
+	   ([x] ewfi/cons ([d] ewfi/nil (D2 x d))) ([x] mewfi/cons ([d] mewfi/nil (DM2 x d))).
+
+-	: ewfi-sigma-invert (ewfi/cons D) (mewfi/cons DM)
+	   Deq
+	   (ewfi/cons D1) (mewfi/cons DM1)
+	   ([y] ewfi/cons ([e] ewfi/cons ([d] D2 d y e)))
+	   ([y] mewfi/cons ([e] mewfi/cons ([d] DM2 d y e)))
+	   <- ({d} 
+		 ewfi-sigma-invert (D d) (DM d) Deq (D1 d) (DM1 d) 
+		 ([y] ewfi/cons ([e] D2 d y e)) ([y] mewfi/cons ([e] DM2 d y e))).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (ewfi-sigma-invert _ _ _ _ _ _ _).
+%total D (ewfi-sigma-invert D _ _ _ _ _ _).
+
+
+ewfi-sing-invert : {D:ewfi G C} mewfi D (metp/sing Mm)
+		    -> etp-eq (esing M) C
+		    -> {D1:eofi G M et}
+		       meofi D1 Mm -> type.
+%mode ewfi-sing-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: ewfi-sing-invert (ewfi/nil (ewf/sing D)) (mewfi/nil (mewf/sing DM))
+	   etp-eq/i
+	   (eofi/nil D) (meofi/nil DM).
+
+-	: ewfi-sing-invert (ewfi/cons D) (mewfi/cons DM)
+	   Deq
+	   (eofi/cons D1) (meofi/cons DM1)
+	   <- ({d}
+		 ewfi-sing-invert (D d) (DM d) Deq (D1 d) (DM1 d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (ewfi-sing-invert _ _ _ _ _).
+%total D (ewfi-sing-invert D _ _ _ _).
+
+
+
+
+%%%%%  Constructors  %%%%%
+
+equiv-to-equivi : {G} equiv M N A -> equivi G M N A -> type.
+%mode equiv-to-equivi +X1 +X2 -X3.
+
+-	: equiv-to-equivi enil D (equivi/nil D).
+
+-	: equiv-to-equivi (econs G X A) D (equivi/cons D')
+	   <- ({d} equiv-to-equivi G D (D' d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (equiv-to-equivi _ _ _).
+%total G (equiv-to-equivi G _ _).
+
+
+
+tequiv-to-tequivi : {G} tequiv A B -> tequivi G A B -> type.
+%mode tequiv-to-tequivi +X1 +X2 -X3.
+
+-	: tequiv-to-tequivi enil D (tequivi/nil D).
+
+-	: tequiv-to-tequivi (econs G X A) D (tequivi/cons D')
+	   <- ({d} tequiv-to-tequivi G D (D' d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequiv-to-tequivi _ _ _).
+%total G (tequiv-to-tequivi G _ _).
+
+
+
+eofi-evof : evof X A -> ewfi G A -> eofi G X A -> type.
+%mode eofi-evof +X1 +X2 -X3.
+
+-	: eofi-evof Dvof (ewfi/nil Dwf) (eofi/nil (eof/var Dwf Dvof)).
+
+-	: eofi-evof Dvof (ewfi/cons Dwf) (eofi/cons Dof)
+	   <- ({d}
+		 eofi-evof Dvof (Dwf d) (Dof d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eofi-evof _ _ _).
+%total D (eofi-evof _ D _).
+
+
+
+eofi-lookup : elookup G X A -> ewfi G A -> eofi G X A -> type.
+%mode eofi-lookup +X1 +X2 -X3.
+
+-	: eofi-lookup elookup/hit (ewfi/cons Dwf) (eofi/cons Dof)
+	   <- ({d}
+		 eofi-evof d (Dwf d) (Dof d)).
+
+-	: eofi-lookup (elookup/miss Dlook) (ewfi/cons Dwf) (eofi/cons Dof)
+	   <- ({d}
+		 eofi-lookup Dlook (Dwf d) (Dof d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eofi-lookup _ _ _).
+%total D (eofi-lookup D _ _).
+
+
+
+eofi-const : ekof K A -> ewfi G A -> eofi G (econst K) A -> type.
+%mode eofi-const +X1 +X2 -X3.
+
+-	: eofi-const Dkof (ewfi/nil Dwf) (eofi/nil (eof/const Dwf Dkof)).
+
+-	: eofi-const Dkof (ewfi/cons Dwf) (eofi/cons Dof)
+	   <- ({d}
+		 eofi-const Dkof (Dwf d) (Dof d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (eofi-const _ _ _).
+%total D (eofi-const _ D _).
+
+
+
+equivi-reflex : eofi G M A -> equivi G M M A -> type.
+%mode equivi-reflex +X1 -X2.
+
+-	: equivi-reflex (eofi/nil D) (equivi/nil (equiv/reflex D)).
+
+-	: equivi-reflex (eofi/cons D) (equivi/cons D')
+	   <- ({d}
+		 equivi-reflex (D d) (D' d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (equivi-reflex _ _).
+%total D (equivi-reflex D _).
+
+
+
+equivi-forall : tequivi G A A' -> equivi G (eforall A) (eforall A') (epi (epi A ([_] et)) ([_] et)) -> type.
+%mode equivi-forall +X1 -X2.
+
+-	: equivi-forall (tequivi/nil D) (equivi/nil (equiv/forall D)).
+
+-	: equivi-forall (tequivi/cons D) (equivi/cons D')
+	   <- ({d} equivi-forall (D d) (D' d)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (equivi-forall _ _).
+%total D (equivi-forall D _).
+
+
+
+equivi-lam : tequivi G A A' -> ({x} equivi (econs G x A) (M x) (M' x) (B x)) -> equivi G (elam A M) (elam A' M') (epi A B) -> type.
+%mode equivi-lam +X1 +X2 -X3.
+
+-	: equivi-lam (tequivi/nil D1) ([x] equivi/cons ([d] equivi/nil (D2 x d))) (equivi/nil (equiv/lam D2 D1)).
+
+-	: equivi-lam (tequivi/cons D1) ([x] equivi/cons ([d] equivi/cons ([e] D2 x d e))) (equivi/cons D)
+	   <- ({e}
+		 equivi-lam (D1 e) ([x] equivi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-lam _ _ _).
+%total D (equivi-lam D _ _).
+
+
+
+equivi-app : equivi G M M' (epi A B) -> equivi G N N' A -> equivi G (eapp M N) (eapp M' N') (B N) -> type.
+%mode equivi-app +X1 +X2 -X3.
+
+-	: equivi-app (equivi/nil D1) (equivi/nil D2) (equivi/nil (equiv/app D2 D1)).
+
+-	: equivi-app (equivi/cons D1) (equivi/cons D2) (equivi/cons D)
+	   <- ({d}
+		 equivi-app (D1 d) (D2 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-app _ _ _).
+%total D (equivi-app D _ _).
+
+
+
+equivi-pair : equivi G M M' A -> equivi G N N' (B M) -> ({x} ewfi (econs G x A) (B x)) -> equivi G (epair M N) (epair M' N') (esigma A B) -> type.
+%mode equivi-pair +X1 +X2 +X3 -X4.
+
+-	: equivi-pair (equivi/nil D1) (equivi/nil D2) ([x] ewfi/cons ([d] ewfi/nil (D3 x d))) (equivi/nil (equiv/pair D3 D2 D1)).
+
+-	: equivi-pair (equivi/cons D1) (equivi/cons D2) ([x] ewfi/cons ([d] ewfi/cons ([e] D3 x d e))) (equivi/cons D)
+	   <- ({e} equivi-pair (D1 e) (D2 e) ([x] ewfi/cons ([d] D3 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-pair _ _ _ _).
+%total D (equivi-pair D _ _ _).
+
+
+
+equivi-pi1 : equivi G M M' (esigma A B) -> equivi G (epi1 M) (epi1 M') A -> type.
+%mode equivi-pi1 +X1 -X2.
+
+-	: equivi-pi1 (equivi/nil D) (equivi/nil (equiv/pi1 D)).
+
+-	: equivi-pi1 (equivi/cons D1) (equivi/cons D)
+	   <- ({d}
+		 equivi-pi1 (D1 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-pi1 _ _).
+%total D (equivi-pi1 D _).
+
+
+
+equivi-pi2 : equivi G M M' (esigma A B) -> equivi G (epi2 M) (epi2 M') (B (epi1 M)) -> type.
+%mode equivi-pi2 +X1 -X2.
+
+-	: equivi-pi2 (equivi/nil D) (equivi/nil (equiv/pi2 D)).
+
+-	: equivi-pi2 (equivi/cons D1) (equivi/cons D)
+	   <- ({d}
+		 equivi-pi2 (D1 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-pi2 _ _).
+%total D (equivi-pi2 D _).
+
+
+
+equivi-sing : equivi G M M' et -> equivi G M M' (esing M) -> type.
+%mode equivi-sing +X1 -X2.
+
+-	: equivi-sing (equivi/nil D) (equivi/nil (equiv/sing D)).
+
+-	: equivi-sing (equivi/cons D1) (equivi/cons D)
+	   <- ({d}
+		 equivi-sing (D1 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-sing _ _).
+%total D (equivi-sing D _).
+
+
+
+equivi-extpiw : equivi G M N (epi A B') -> ({x} equivi (econs G x A) (eapp M x) (eapp N x) (B x)) -> equivi G M N (epi A B) -> type.
+%mode equivi-extpiw +X1 +X2 -X3.
+
+-	: equivi-extpiw (equivi/nil D1) ([x] equivi/cons ([d] equivi/nil (D2 x d))) (equivi/nil (equiv/extpiw D2 D1)).
+
+-	: equivi-extpiw (equivi/cons D1) ([x] equivi/cons ([d] equivi/cons ([e] D2 x d e))) (equivi/cons D)
+	   <- ({e}
+		 equivi-extpiw (D1 e) ([x] equivi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-extpiw _ _ _).
+%total D (equivi-extpiw D _ _).
+
+
+
+equivi-extsigma : equivi G (epi1 M) (epi1 N) A -> equivi G (epi2 M) (epi2 N) (B (epi1 M)) -> ({x} ewfi (econs G x A) (B x)) -> equivi G M N (esigma A B) -> type.
+%mode equivi-extsigma +X1 +X2 +X3 -X4.
+
+-	: equivi-extsigma (equivi/nil D1) (equivi/nil D2) ([x] ewfi/cons ([d] ewfi/nil (D3 x d))) (equivi/nil (equiv/extsigma D3 D2 D1)).
+
+-	: equivi-extsigma (equivi/cons D1) (equivi/cons D2) ([x] ewfi/cons ([d] ewfi/cons ([e] D3 x d e))) (equivi/cons D)
+	   <- ({e}
+		 equivi-extsigma (D1 e) (D2 e) ([x] ewfi/cons ([d] D3 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-extsigma _ _ _ _).
+%total D (equivi-extsigma D _ _ _).
+
+
+
+equivi-subsume : equivi G M N A -> subtpi G A B -> equivi G M N B -> type.
+%mode equivi-subsume +X1 +X2 -X3.
+
+-	: equivi-subsume (equivi/nil D1) (subtpi/nil D2) (equivi/nil (equiv/subsume D2 D1)).
+
+-	: equivi-subsume (equivi/cons D1) (subtpi/cons D2) (equivi/cons D)
+	   <- ({d}
+		 equivi-subsume (D1 d) (D2 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (equivi-subsume _ _ _).
+%total D (equivi-subsume D _ _).
+
+
+
+tequivi-pi : tequivi G A A' -> ({x} tequivi (econs G x A) (B x) (B' x)) -> tequivi G (epi A B) (epi A' B') -> type.
+%mode tequivi-pi +X1 +X2 -X3.
+
+-	: tequivi-pi (tequivi/nil D1) ([x] tequivi/cons ([d] tequivi/nil (D2 x d))) (tequivi/nil (tequiv/pi D2 D1)).
+
+-	: tequivi-pi (tequivi/cons D1) ([x] tequivi/cons ([d] tequivi/cons ([e] D2 x d e))) (tequivi/cons D)
+	   <- ({e}
+		 tequivi-pi (D1 e) ([x] tequivi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequivi-pi _ _ _).
+%total D (tequivi-pi D _ _).
+
+
+
+tequivi-sigma : tequivi G A A' -> ({x} tequivi (econs G x A) (B x) (B' x)) -> tequivi G (esigma A B) (esigma A' B') -> type.
+%mode tequivi-sigma +X1 +X2 -X3.
+
+-	: tequivi-sigma (tequivi/nil D1) ([x] tequivi/cons ([d] tequivi/nil (D2 x d))) (tequivi/nil (tequiv/sigma D2 D1)).
+
+-	: tequivi-sigma (tequivi/cons D1) ([x] tequivi/cons ([d] tequivi/cons ([e] D2 x d e))) (tequivi/cons D)
+	   <- ({e}
+		 tequivi-sigma (D1 e) ([x] tequivi/cons ([d] D2 x d e)) (D e)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequivi-sigma _ _ _).
+%total D (tequivi-sigma D _ _).
+
+
+
+tequivi-sing : equivi G M N et -> tequivi G (esing M) (esing N) -> type.
+%mode tequivi-sing +X1 -X2.
+
+-	: tequivi-sing (equivi/nil D1) (tequivi/nil (tequiv/sing D1)).
+
+-	: tequivi-sing (equivi/cons D1) (tequivi/cons D)
+	   <- ({d}
+		 tequivi-sing (D1 d) (D d)).
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequivi-sing _ _).
+%total D (tequivi-sing D _).
+
+
+
+
+%%%%%  Functionality (Explicit/Implicit Context)  %%%%%
+
+tfunctionality-e	: {Am}
+			   {D:{x} evof x A -> ewfi (G x) (B x)}
+			   ({x} {d} mewfi (D x d) Am)
+			   -> ({x} clean (G x))
+			   -> equiv M N A
+			   -> eof M A
+%%
+			   -> tequivi (G M) (B M) (B N) -> type.
+%mode tfunctionality-e +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+functionality-e		: {Mm}
+			   {D:{x} evof x A -> eofi (G x) (O x) (B x)}
+			   ({x} {d} meofi (D x d) Mm)
+			   -> ({x} clean (G x))
+			   -> equiv M N A
+			   -> eof M A
+%%
+			   -> equivi (G M) (O M) (O N) (B M) -> type.
+%mode functionality-e +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+functionality-e! : ({x} evof x A -> elookup? (G x) (X x) (B x))
+		    -> ({x} evof x A -> ewfi (G x) (B x))
+		    -> ({x} clean (G x))
+		    -> equiv M N A
+		    -> eof M A
+%%
+		    -> equivi (G M) (X M) (X N) (B M) -> type.
+%mode functionality-e! +X1 +X2 +X3 +X4 +X5 -X6.
+
+-var	: functionality-e _
+	   (Dof : {x} evof x A -> eofi (G x) (Y x) (B x))
+	   (Dmof : {x} {d} meofi (Dof x d) meterm/var)
+	   (Dclean : {x} clean (G x))
+	   (Dequiv : equiv M N A)
+	   (DofM : eof M A)
+	   D
+	   <- ({x} {d}
+		 eofi-var-invert (Dof x d) (Dmof x d)
+		 (Dlookup x d : elookup? (G x) (Y x) (B x))
+		 (Dwf x d : ewfi (G x) (B x)))
+	   <- functionality-e! Dlookup Dwf Dclean Dequiv DofM D.
+
+-varsam	: functionality-e!
+	   ([x] [d] elookup?/not d)
+	   (Dwf : {x} evof x A -> ewfi (G x) A)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : equiv M N A)
+	   (DofM : eof M A)
+	   Dequiv'
+	   <- equiv-to-equivi _ DequivMN Dequiv'.
+
+-varoth	: functionality-e!
+	   ([x] [d] elookup?/not (Dvof : evof X B))
+	   (Dwf : {x} evof x A -> ewfi (G x) B)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : equiv M N A)
+	   (DofM : eof M A)
+	   Dequiv
+	   <- ewfi-subst Dwf DofM
+	      (Dwf' : ewfi (G M) B)
+	   <- eofi-evof Dvof Dwf'
+	      (Dof : eofi (G M) X B)
+	   <- equivi-reflex Dof
+	      (Dequiv : equivi (G M) X X B).
+
+-varoth	: functionality-e! 
+	   ([x] [d] elookup?/look (Dlookup x : elookup (G x) (Y x) (B x)))
+	   (Dwf : {x} evof x A -> ewfi (G x) (B x))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : equiv M N A)
+	   (DofM : eof M A)
+	   Dequiv''
+	   <- lookup-clean Dlookup Dclean (Deq : {x} eterm-eq (Y x) Y')
+	   <- ({x}
+		 eterm-eq-symm (Deq x)
+		 (Deq' x : eterm-eq Y' (Y x)))
+	   <- ({x} {d} 
+		 eofi-lookup (Dlookup x) (Dwf x d)
+		 (Dof x d : eofi (G x) (Y x) (B x)))
+	   <- ({x} {d}
+		 eofi-resp ectx-eq/i (Deq x) etp-eq/i (Dof x d)
+		 (Dof' x d : eofi (G x) Y' (B x)))
+	   <- eofi-subst Dof' DofM
+	      (Dof'' : eofi (G M) Y' (B M))
+	   <- equivi-reflex Dof''
+	      (Dequiv' : equivi (G M) Y' Y' (B M))
+	   <- equivi-resp ectx-eq/i (Deq' M) (Deq' N) etp-eq/i Dequiv'
+	      (Dequiv'' : equivi (G M) (Y M) (Y N) (B M)).
+
+%worlds (nbind | ebind | evar | eovar | eofblock) (functionality-e! _ _ _ _ _ _).
+%total {} (functionality-e! _ _ _ _ _ _).
+
+-const	: functionality-e _
+	   (Dof : {x} evof x A -> eofi (G x) (O x) (B x))
+	   (Dmof : {x} {d} meofi (Dof x d) meterm/const)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : equiv M N A)
+	   (DofM : eof M A)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-const-invert (Dof x d) (Dmof x d) 
+		 (Deq x : eterm-eq (econst K) (O x))
+		 (Dkof x : ekof K (B x))
+		 (Dwf x d : ewfi (G x) (B x)))
+	   <- ewfi-subst Dwf DofM
+	      (Dwf' : ewfi (G M) (B M))
+	   <- eofi-const (Dkof M) Dwf' 
+	      (Dof' : eofi (G M) (econst K) (B M))
+	   <- equivi-reflex Dof' Dequiv
+	   <- equivi-resp ectx-eq/i (Deq M) (Deq N) etp-eq/i Dequiv Dequiv'.
+
+-forall	: functionality-e _
+	   (Dof : {x} evof x A -> eofi (G x) (O x) (B x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/forall Cm))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : equiv M N A)
+	   (DofM : eof M A)
+	   Dequiv''
+	   <- ({x} {d}
+		 eofi-forall-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (eforall (C x)) (O x))
+		 (DeqB x : etp-eq (epi (epi (C x) ([_] et)) ([_] et)) (B x))
+		 (DwfC x d : ewfi (G x) (C x))
+		 (DmwfC x d : mewfi (DwfC x d) Cm))
+	   <- tfunctionality-e _ DwfC DmwfC Dclean DequivMN DofM
+	      (Dequiv : tequivi (G M) (C M) (C N))
+	   <- equivi-forall Dequiv 
+	      (Dequiv' : equivi (G M) (eforall (C M)) (eforall (C N)) (epi (epi (C M) ([_] et)) ([_] et)))
+	   <- equivi-resp ectx-eq/i (DeqO M) (DeqO N) (DeqB M) Dequiv'
+	      Dequiv''.
+
+-lam	: functionality-e _
+	   (Dof : {x} evof x A -> eofi (G x) (O x) (B x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/lam Mm Cm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' A)
+	   (DofP : eof P A)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-lam-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (elam (C x) ([y] M x y)) (O x))
+		 (DeqB x : etp-eq (epi (C x) (D x)) (B x))
+		 (DwfC x d : ewfi (G x) (C x))
+		 (DmwfC x d : mewfi (DwfC x d) Cm)
+		 (DofM x d : {y} eofi (econs (G x) y (C x)) (M x y) (D x y))
+		 (DmofM x d : {y} meofi (DofM x d y) Mm))
+	   <- tfunctionality-e _
+	      DwfC DmwfC Dclean DequivP DofP
+	      (DequivC : tequivi (G P) (C P) (C P'))
+	   <- ({y} {e:eisvar y}
+		 functionality-e _
+		 ([x] [d] DofM x d y)
+		 ([x] [d] DmofM x d y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivM y : equivi (econs (G P) y (C P)) (M P y) (M P' y) (D P y)))
+	   <- equivi-lam DequivC DequivM
+	      (Dequiv : equivi (G P) (elam (C P) (M P)) (elam (C P') (M P')) (epi (C P) (D P)))
+	   <- equivi-resp ectx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv
+	      (Dequiv' : equivi (G P) (O P) (O P') (B P)).
+
+-app	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (O x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/app Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-app-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (eapp (M x) (N x)) (O x))
+		 (DeqC x : etp-eq (B x (N x)) (C x))
+		 (D1 x d : eofi (G x) (M x) (epi (A x) (B x)))
+		 (DM1 x d : meofi (D1 x d) Mm)
+		 (D2 x d : eofi (G x) (N x) (A x))
+		 (DM2 x d : meofi (D2 x d) Nm))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') (epi (A P) (B P)))
+	   <- functionality-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : equivi (G P) (N P) (N P') (A P))
+	   <- equivi-app DequivM DequivN
+	      (Dequiv : equivi (G P) (eapp (M P) (N P)) (eapp (M P') (N P')) (B P (N P)))
+	   <- equivi-resp ectx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (O P) (O P') (C P)).
+
+-pair	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (O x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/pair Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-pair-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (epair (M x) (N x)) (O x))
+		 (DeqC x : etp-eq (esigma (A x) (B x)) (C x))
+		 (D1 x d : eofi (G x) (M x) (A x))
+		 (DM1 x d : meofi (D1 x d) Mm)
+		 (D2 x d : eofi (G x) (N x) (B x (M x)))
+		 (DM2 x d : meofi (D2 x d) Nm)
+		 (D3 x d : {y} ewfi (econs (G x) y (A x)) (B x y)))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') (A P))
+	   <- functionality-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : equivi (G P) (N P) (N P') (B P (M P)))
+	   <- ({y}
+		 ewfi-subst-gen ([d] D3 P d y) 
+		 ([d:eof P D] D3' d y : ewfi (econs (G P) y (A P)) (B P y)))
+	   <- equivi-pair DequivM DequivN ([x] D3' DofP x) 
+	      (Dequiv : equivi (G P) (epair (M P) (N P)) (epair (M P') (N P')) (esigma (A P) (B P)))
+	   <- equivi-resp ectx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (O P) (O P') (C P)).
+
+-pi1	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (O x) (A x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/pi1 Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-pi1-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (epi1 (M x)) (O x))
+		 (D1 x d : eofi (G x) (M x) (esigma (A x) (B x)))
+		 (DM1 x d : meofi (D1 x d) Mm))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') (esigma (A P) (B P)))
+	   <- equivi-pi1 DequivM
+	      (Dequiv : equivi (G P) (epi1 (M P)) (epi1 (M P')) (A P))
+	   <- equivi-resp ectx-eq/i (DeqO P) (DeqO P') etp-eq/i Dequiv
+	      (Dequiv' : equivi (G P) (O P) (O P') (A P)).
+
+-pi2	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (O x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/pi2 Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-pi2-invert (Dof x d) (Dmof x d)
+		 (DeqO x : eterm-eq (epi2 (M x)) (O x))
+		 (DeqC x : etp-eq (B x (epi1 (M x))) (C x))
+		 (D1 x d : eofi (G x) (M x) (esigma (A x) (B x)))
+		 (DM1 x d : meofi (D1 x d) Mm))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') (esigma (A P) (B P)))
+	   <- equivi-pi2 DequivM
+	      (Dequiv : equivi (G P) (epi2 (M P)) (epi2 (M P')) (B P (epi1 (M P))))
+	   <- equivi-resp ectx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (O P) (O P') (C P)).
+
+-sing	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (M x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/sing Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-sing-invert (Dof x d) (Dmof x d)
+		 (DeqC x : etp-eq (esing (M x)) (C x))
+		 (D1 x d : eofi (G x) (M x) et)
+		 (DM1 x d : meofi (D1 x d) Mm))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') et)
+	   <- equivi-sing DequivM
+	      (Dequiv : equivi (G P) (M P) (M P') (esing (M P)))
+	   <- equivi-resp ectx-eq/i eterm-eq/i eterm-eq/i (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (M P) (M P') (C P)).
+
+-extpi	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (M x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/extpi Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-extpi-invert (Dof x d) (Dmof x d)
+		 (DeqC x : etp-eq (epi (A x) (B x)) (C x))
+		 (D1 x d : eofi (G x) (M x) (epi (A x) (B' x)))
+		 (DM1 x d : meofi (D1 x d) Mm)
+		 (D2 x d : {y} eofi (econs (G x) y (A x)) (eapp (M x) y) (B x y))
+		 (DM2 x d : {y} meofi (D2 x d y) Nm))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (Dequiv1 : equivi (G P) (M P) (M P') (epi (A P) (B' P)))
+	   <- ({y} {e:eisvar y}
+		 functionality-e _
+		 ([x] [d] D2 x d y)
+		 ([x] [d] DM2 x d y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP DofP
+		 (Dequiv2 y : equivi (econs (G P) y (A P)) (eapp (M P) y) (eapp (M P') y) (B P y)))
+	   <- equivi-extpiw Dequiv1 Dequiv2 
+	      (Dequiv : equivi (G P) (M P) (M P') (epi (A P) (B P)))
+	   <- equivi-resp ectx-eq/i eterm-eq/i eterm-eq/i (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (M P) (M P') (C P)).
+
+-extsig	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (M x) (C x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/extsigma Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-extsigma-invert (Dof x d) (Dmof x d)
+		 (DeqC x : etp-eq (esigma (A x) (B x)) (C x))
+		 (D1 x d : eofi (G x) (epi1 (M x)) (A x))
+		 (DM1 x d : meofi (D1 x d) Mm)
+		 (D2 x d : eofi (G x) (epi2 (M x)) (B x (epi1 (M x))))
+		 (DM2 x d : meofi (D2 x d) Nm)
+		 (Dwf x d : {y} ewfi (econs (G x) y (A x)) (B x y)))
+	   <- functionality-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (Dequiv1 : equivi (G P) (epi1 (M P)) (epi1 (M P')) (A P))
+	   <- functionality-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (Dequiv2 : equivi (G P) (epi2 (M P)) (epi2 (M P')) (B P (epi1 (M P))))
+	   <- ({y}
+		 ewfi-subst ([x] [d] Dwf x d y) DofP
+		 (Dwf' y : ewfi (econs (G P) y (A P)) (B P y)))
+	   <- equivi-extsigma Dequiv1 Dequiv2 Dwf' 
+	      (Dequiv : equivi (G P) (M P) (M P') (esigma (A P) (B P)))
+	   <- equivi-resp ectx-eq/i eterm-eq/i eterm-eq/i (DeqC P) Dequiv
+	      (Dequiv' : equivi (G P) (M P) (M P') (C P)).
+
+-subsum	: functionality-e _
+	   (Dof : {x} evof x D -> eofi (G x) (M x) (A x))
+	   (Dmof : {x} {d} meofi (Dof x d) (meterm/subsume Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 eofi-subsume-invert (Dof x d) (Dmof x d)
+		 (D1 x d : eofi (G x) (M x) (B x))
+		 (DM1 x d : meofi (D1 x d) Mm)
+		 (Dsub x d : subtpi (G x) (B x) (A x)))
+	   <- functionality-e _ D1 DM1 Dclean DequivP DofP
+	      (Dequiv : equivi (G P) (M P) (M P') (B P))
+	   <- subtpi-subst Dsub DofP
+	      (Dsub' : subtpi (G P) (B P) (A P))
+	   <- equivi-subsume Dequiv Dsub'
+	      (Dequiv' : equivi (G P) (M P) (M P') (A P)).
+
+
+
+-t	: tfunctionality-e _
+	   (Dwf : {x} evof x D -> ewfi (G x) (C x))
+	   (Dmwf : {x} {d} mewfi (Dwf x d) metp/t)
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 ewfi-t-invert (Dwf x d) (Dmwf x d)
+		 (DeqC x : etp-eq et (C x)))
+	   <- tequiv-to-tequivi (G P) (tequiv/reflex ewf/t)
+	      (Dequiv : tequivi (G P) et et)
+	   <- tequivi-resp ectx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : tequivi (G P) (C P) (C P')).
+
+-pi	: tfunctionality-e _
+	   (Dwf : {x} evof x D -> ewfi (G x) (C x))
+	   (Dmwf : {x} {d} mewfi (Dwf x d) (metp/pi Bm Am))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 ewfi-pi-invert (Dwf x d) (Dmwf x d)
+		 (DeqC x : etp-eq (epi (A x) (B x)) (C x))
+		 (DwfA x d : ewfi (G x) (A x))
+		 (DmwfA x d : mewfi (DwfA x d) Am)
+		 (DwfB x d : {y} ewfi (econs (G x) y (A x)) (B x y))
+		 (DmwfB x d : {y} mewfi (DwfB x d y) Bm))
+	   <- tfunctionality-e _
+	      DwfA DmwfA Dclean DequivP DofP
+	      (DequivA : tequivi (G P) (A P) (A P'))
+	   <- ({y} {e:eisvar y}
+		 tfunctionality-e _
+		 ([x] [d] DwfB x d y)
+		 ([x] [d] DmwfB x d y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivB y : tequivi (econs (G P) y (A P)) (B P y) (B P' y)))
+	   <- tequivi-pi DequivA DequivB
+	      (Dequiv : tequivi (G P) (epi (A P) (B P)) (epi (A P') (B P')))
+	   <- tequivi-resp ectx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : tequivi (G P) (C P) (C P')).
+
+-sigma	: tfunctionality-e _
+	   (Dwf : {x} evof x D -> ewfi (G x) (C x))
+	   (Dmwf : {x} {d} mewfi (Dwf x d) (metp/sigma Bm Am))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 ewfi-sigma-invert (Dwf x d) (Dmwf x d)
+		 (DeqC x : etp-eq (esigma (A x) (B x)) (C x))
+		 (DwfA x d : ewfi (G x) (A x))
+		 (DmwfA x d : mewfi (DwfA x d) Am)
+		 (DwfB x d : {y} ewfi (econs (G x) y (A x)) (B x y))
+		 (DmwfB x d : {y} mewfi (DwfB x d y) Bm))
+	   <- tfunctionality-e _
+	      DwfA DmwfA Dclean DequivP DofP
+	      (DequivA : tequivi (G P) (A P) (A P'))
+	   <- ({y} {e:eisvar y}
+		 tfunctionality-e _
+		 ([x] [d] DwfB x d y)
+		 ([x] [d] DmwfB x d y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivB y : tequivi (econs (G P) y (A P)) (B P y) (B P' y)))
+	   <- tequivi-sigma DequivA DequivB
+	      (Dequiv : tequivi (G P) (esigma (A P) (B P)) (esigma (A P') (B P')))
+	   <- tequivi-resp ectx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : tequivi (G P) (C P) (C P')).
+
+-sing	: tfunctionality-e _
+	   (Dwf : {x} evof x D -> ewfi (G x) (C x))
+	   (Dmwf : {x} {d} mewfi (Dwf x d) (metp/sing Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : equiv P P' D)
+	   (DofP : eof P D)
+	   Dequiv'
+	   <- ({x} {d}
+		 ewfi-sing-invert (Dwf x d) (Dmwf x d)
+		 (DeqC x : etp-eq (esing (M x)) (C x))
+		 (DofM x d : eofi (G x) (M x) et)
+		 (DmofM x d : meofi (DofM x d) Mm))
+	   <- functionality-e _
+	      DofM DmofM Dclean DequivP DofP
+	      (DequivM : equivi (G P) (M P) (M P') et)
+	   <- tequivi-sing DequivM
+	      (Dequiv : tequivi (G P) (esing (M P)) (esing (M P')))
+	   <- tequivi-resp ectx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : tequivi (G P) (C P) (C P')).
+
+%worlds (nbind | ebind | evar | eovar) (tfunctionality-e _ _ _ _ _ _ _) (functionality-e _ _ _ _ _ _ _).
+%total (D1 D2) (functionality-e D1 _ _ _ _ _ _) (tfunctionality-e D2 _ _ _ _ _ _).
+
+
+
+can-meof : {D:eof M A} meof D Mm -> type.
+%mode can-meof +X1 -X2.
+
+can-mewf : {D:ewf A} mewf D Am -> type.
+%mode can-mewf +X1 -X2.
+
+-	: can-meof (eof/var _ _) meof/var.
+
+-	: can-meof (eof/const _ _) meof/const.
+
+-	: can-meof (eof/forall D) (meof/forall D')
+	   <- can-mewf D D'.
+
+-	: can-meof (eof/lam D2 D1) (meof/lam D2' D1')
+	   <- can-mewf D1 D1'
+	   <- ({x} {d} can-meof (D2 x d) (D2' x d)).
+
+-	: can-meof (eof/app D2 D1) (meof/app D2' D1')
+	   <- can-meof D1 D1'
+	   <- can-meof D2 D2'.
+
+-	: can-meof (eof/pair _ D2 D1) (meof/pair D2' D1')
+	   <- can-meof D1 D1'
+	   <- can-meof D2 D2'.
+
+-	: can-meof (eof/pi1 D) (meof/pi1 D')
+	   <- can-meof D D'.
+
+-	: can-meof (eof/pi2 D) (meof/pi2 D')
+	   <- can-meof D D'.
+
+-	: can-meof (eof/sing D) (meof/sing D')
+	   <- can-meof D D'.
+
+-	: can-meof (eof/extpi D2 D1) (meof/extpi D2' D1')
+	   <- can-meof D1 D1'
+	   <- ({x} {d} can-meof (D2 x d) (D2' x d)).
+
+-	: can-meof (eof/extsigma _ D2 D1) (meof/extsigma D2' D1')
+	   <- can-meof D1 D1'
+	   <- can-meof D2 D2'.
+
+-	: can-meof (eof/subsume _ D) (meof/subsume D')
+	   <- can-meof D D'.
+
+
+
+-	: can-mewf ewf/t mewf/t.
+
+-	: can-mewf (ewf/pi D2 D1) (mewf/pi D2' D1')
+	   <- can-mewf D1 D1'
+	   <- ({x} {d} can-mewf (D2 x d) (D2' x d)).
+
+-	: can-mewf (ewf/sigma D2 D1) (mewf/sigma D2' D1')
+	   <- can-mewf D1 D1'
+	   <- ({x} {d} can-mewf (D2 x d) (D2' x d)).
+
+-	: can-mewf (ewf/sing D) (mewf/sing D')
+	   <- can-meof D D'.
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (can-meof _ _) (can-mewf _ _).
+%total (D1 D2) (can-meof D1 _) (can-mewf D2 _).
+
+
+
+
+%%%%%  Functionality (Implicit Context)  %%%%%
+
+tequivi-nil-invert : tequivi enil A B -> tequiv A B -> type.
+%mode tequivi-nil-invert +X1 -X2.
+
+-	: tequivi-nil-invert (tequivi/nil D) D.
+
+%worlds (nbind | ebind | evar | eofblock | eovar) (tequivi-nil-invert _ _).
+%total {} (tequivi-nil-invert _ _).
+
+
+
+tfunctionality* : ({x} evof x A -> ewf (B x)) -> equiv M N A -> eof M A -> tequiv (B M) (B N) -> type.
+%mode tfunctionality* +X1 +X2 +X3 -X4.
+
+-	: tfunctionality* Dwf Dequiv Dof Dtequiv
+	   <- ({x} {d}
+		 can-mewf (Dwf x d) (Dmwf x d))
+	   <- tfunctionality-e _ 
+	      ([x] [d] ewfi/nil (Dwf x d)) ([x] [d] mewfi/nil (Dmwf x d))
+	      ([x] clean/nil) Dequiv Dof
+	      Dtequivi
+	   <- tequivi-nil-invert Dtequivi Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality* _ _ _ _).
+%total {} (tfunctionality* _ _ _ _).
+
+
+
+tequivi-cons1-invert : ({x} tequivi (econs enil x A) (B x) (C x)) -> ({x} evof x A -> tequiv (B x) (C x)) -> type.
+%mode tequivi-cons1-invert +X1 -X2.
+
+-	: tequivi-cons1-invert ([x] tequivi/cons ([d] tequivi/nil (D x d))) D.
+
+%worlds (nbind | ebind) (tequivi-cons1-invert _ _).
+%total {} (tequivi-cons1-invert _ _).
+
+
+
+tfunctionality1* : ({x} evof x A -> {y} evof y (B x) -> ewf (C x y))
+		    -> equiv M N A
+		    -> eof M A
+		    -> ({y} evof y (B M) -> tequiv (C M y) (C N y)) -> type.
+%mode tfunctionality1* +X1 +X2 +X3 -X4.
+
+-	: tfunctionality1* Dwf Dequiv Dof Dtequiv
+	   <- ({x} {d} {y} {e}
+		 can-mewf (Dwf x d y e) (Dmwf x d y e : mewf _ Mm))
+	   <- ({y} {ev:eisvar y}
+		 tfunctionality-e _
+		 ([x] [d] ewfi/cons ([e] ewfi/nil (Dwf x d y e)))
+		 ([x] [d] mewfi/cons ([e] mewfi/nil (Dmwf x d y e)))
+		 ([x] clean/cons ev clean/nil) Dequiv Dof
+		 (Dtequivi y))
+	   <- tequivi-cons1-invert Dtequivi Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality1* _ _ _ _).
+%total {} (tfunctionality1* _ _ _ _).
+
+
+
+tequivi-cons2-invert : ({x} {y} tequivi (econs (econs enil x A) y (B x)) (C x y) (D x y))
+			-> ({x} evof x A -> {y} evof y (B x) -> tequiv (C x y) (D x y)) -> type.
+%mode tequivi-cons2-invert +X1 -X2.
+
+-	: tequivi-cons2-invert
+	   ([x] [y] tequivi/cons ([e] tequivi/cons ([d] tequivi/nil (D x d y e))))
+	   D.
+
+%worlds (nbind | ebind) (tequivi-cons2-invert _ _).
+%total {} (tequivi-cons2-invert _ _).
+
+
+
+tfunctionality2* : ({x} evof x A -> {y} evof y (B x) -> {z} evof z (C x y) -> ewf (D x y z))
+		    -> equiv M N A
+		    -> eof M A
+		    -> ({y} evof y (B M) -> {z} evof z (C M y) -> tequiv (D M y z) (D N y z)) -> type.
+%mode tfunctionality2* +X1 +X2 +X3 -X4.
+
+-	: tfunctionality2* Dwf Dequiv Dof Dtequiv
+	   <- ({x} {d} {y} {e} {z} {f}
+		 can-mewf (Dwf x d y e z f) (Dmwf x d y e z f : mewf _ Mm))
+	   <- ({y} {ev:eisvar y} {z} {fv:eisvar z}
+		 tfunctionality-e _
+		 ([x] [d] ewfi/cons ([f] ewfi/cons ([e] ewfi/nil (Dwf x d y e z f))))
+		 ([x] [d] mewfi/cons ([f] mewfi/cons ([e] mewfi/nil (Dmwf x d y e z f))))
+		 ([x] clean/cons fv (clean/cons ev clean/nil)) Dequiv Dof
+		 (Dtequivi y z))
+	   <- tequivi-cons2-invert Dtequivi
+	      Dtequiv.
+
+%worlds (nbind | ebind) (tfunctionality2* _ _ _ _).
+%total {} (tfunctionality2* _ _ _ _).

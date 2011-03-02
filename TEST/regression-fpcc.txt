@@ -1,0 +1,1 @@
+test ../../twelf-regression/princeton-pcc-20070723/sources.cfg

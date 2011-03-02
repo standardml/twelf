@@ -1,0 +1,37 @@
+
+constant : type.  %name constant K.
+
+
+ctp	: type.  %name ctp A.
+
+ct	: ctp.
+cpi	: ctp -> ctp -> ctp.
+
+
+
+ckof	: constant -> ctp -> type.
+%mode ckof +K -A.
+
+arrow		: constant.
+ckof/arrow	: ckof arrow (cpi ct (cpi ct ct)).
+
+cross		: constant.
+ckof/cross	: ckof cross (cpi ct (cpi ct ct)).
+
+unit		: constant.
+ckof/unit	: ckof unit ct.
+
+ref		: constant.
+ckof/ref	: ckof ref (cpi ct ct).
+
+dsum		: constant.
+ckof/dsum	: ckof dsum (cpi ct (cpi ct ct)).
+
+tag		: constant.
+ckof/tag	: ckof tag (cpi ct ct).
+
+tagged		: constant.
+ckof/tagged	: ckof tagged ct.
+
+mu		: constant.
+ckof/mu		: ckof mu (cpi (cpi ct ct) ct).

@@ -1,0 +1,1149 @@
+
+%%%%%  Judgements  %%%%%
+
+kd-wf		: kind -> type.
+kd-equiv	: kind -> kind -> type.
+kd-sub		: kind -> kind -> type.
+cn-of		: con -> kind -> type.
+cn-equiv	: con -> con -> kind -> type.
+
+tm-assm		: term -> con -> type.
+tm-of		: sttp -> term -> con -> type.
+
+st-lookup	: sttp -> location -> entp -> type.
+entry-of	: sttp -> entry -> entp -> type.
+store-of	: sttp -> store -> sttp -> type.
+store-bounds	: store -> location -> type.
+
+sg-wf		: sg -> type.
+sg-equiv	: sg -> sg -> type.
+sg-sub		: sg -> sg -> type.
+sg-fst		: sg -> kind -> type.
+
+md-assm		: module -> sg -> type.
+md-of		: purity -> sttp -> module -> sg -> type.
+md-fst		: module -> con -> type.
+
+
+
+
+%%%%%  Kind Formation  %%%%%
+
+kd-wf/t		: kd-wf t.
+
+kd-wf/sing	: kd-wf (sing C)
+		   <- cn-of C t.
+
+kd-wf/pi	: kd-wf (pi K1 K2)
+		   <- kd-wf K1
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+kd-wf/sigma	: kd-wf (sigma K1 K2)
+		   <- kd-wf K1
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+kd-wf/one	: kd-wf one.
+
+%% derived rules
+
+kd-wf/karrow	: kd-wf (karrow K1 K2)
+		   <- kd-wf K1
+		   <- kd-wf K2
+		= [D2] [D1] kd-wf/pi ([_] [_] D2) D1.
+
+kd-wf/kprod	: kd-wf (kprod K1 K2)
+		   <- kd-wf K1
+		   <- kd-wf K2
+		= [D2] [D1] kd-wf/sigma ([_] [_] D2) D1.
+
+
+
+
+%%%%%  Kind Equivalence  %%%%%
+
+kd-equiv/refl	: kd-equiv K K
+		   <- kd-wf K.
+
+kd-equiv/symm	: kd-equiv K1 K2
+		   <- kd-equiv K2 K1.
+
+kd-equiv/trans	: kd-equiv K1 K3
+		   <- kd-equiv K1 K2
+		   <- kd-equiv K2 K3.
+
+kd-equiv/sing	: kd-equiv (sing C1) (sing C2)
+		   <- cn-equiv C1 C2 t.
+
+kd-equiv/pi	: kd-equiv (pi K1 K2) (pi K1' K2')
+		   <- kd-equiv K1 K1'
+		   <- ({a} cn-of a K1 -> kd-equiv (K2 a) (K2' a)).
+
+kd-equiv/sigma	: kd-equiv (sigma K1 K2) (sigma K1' K2')
+		   <- kd-equiv K1 K1'
+		   <- ({a} cn-of a K1 -> kd-equiv (K2 a) (K2' a)).
+
+%% derived rules
+
+kd-equiv/t	: kd-equiv t t
+		= kd-equiv/refl kd-wf/t.
+
+kd-equiv/one	: kd-equiv one one
+		= kd-equiv/refl kd-wf/one.
+
+
+
+
+%%%%%  Subkind  %%%%%
+
+kd-sub/refl	: kd-sub K1 K2
+		   <- kd-equiv K1 K2.
+
+kd-sub/trans	: kd-sub K1 K3
+		   <- kd-sub K1 K2
+		   <- kd-sub K2 K3.
+
+kd-sub/sing-t	: kd-sub (sing C) t
+		   <- cn-of C t.
+
+kd-sub/pi	: kd-sub (pi K1 K2) (pi K1' K2')
+		   <- kd-sub K1' K1
+		   <- ({a} cn-of a K1' -> kd-sub (K2 a) (K2' a))
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+kd-sub/sigma	: kd-sub (sigma K1 K2) (sigma K1' K2')
+		   <- kd-sub K1 K1'
+		   <- ({a} cn-of a K1 -> kd-sub (K2 a) (K2' a))
+		   <- ({a} cn-of a K1' -> kd-wf (K2' a)).
+
+%% derived rules
+
+kd-sub/reflid	: kd-sub K K
+		   <- kd-wf K
+		= [d] kd-sub/refl (kd-equiv/refl d).
+
+kd-sub/t	: kd-sub t t
+		= kd-sub/refl kd-equiv/t.
+
+kd-sub/sing	: kd-sub (sing C) (sing C')
+		   <- cn-equiv C C' t
+		= [d] kd-sub/refl (kd-equiv/sing d).
+
+kd-sub/one	: kd-sub one one
+	        = kd-sub/refl kd-equiv/one.
+
+
+
+
+%%%%%  Constructor Formation  %%%%%
+
+cn-of/pair	: cn-of (pair C1 C2) (sigma K1 K2)
+		   <- cn-of C1 K1
+		   <- cn-of C2 (K2 C1)
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+cn-of/pi1	: cn-of (pi1 C) K1
+		   <- cn-of C (sigma K1 K2).
+
+cn-of/pi2	: cn-of (pi2 C) (K2 (pi1 C))
+		   <- cn-of C (sigma K1 K2).
+
+cn-of/lam	: cn-of (lam K1 C) (pi K1 K2)
+		   <- kd-wf K1
+		   <- ({a} cn-of a K1 -> cn-of (C a) (K2 a)).
+
+cn-of/app	: cn-of (app C1 C2) (K2 C2)
+		   <- cn-of C1 (pi K1 K2)
+		   <- cn-of C2 K1.
+
+cn-of/star	: cn-of star one.
+
+cn-of/unit	: cn-of unit t.
+
+cn-of/void	: cn-of void t.
+
+cn-of/prod	: cn-of (prod C1 C2) t
+		   <- cn-of C1 t
+		   <- cn-of C2 t.
+
+cn-of/arrow	: cn-of (arrow C1 C2) t
+		   <- cn-of C1 t
+		   <- cn-of C2 t.
+
+cn-of/plus	: cn-of (plus C1 C2) t
+		   <- cn-of C1 t
+		   <- cn-of C2 t.
+
+cn-of/ref	: cn-of (ref C) t
+		   <- cn-of C t.
+
+cn-of/tag	: cn-of (tag C) t
+		   <- cn-of C t.
+
+cn-of/tagged	: cn-of tagged t.
+
+cn-of/rec	: cn-of (rec K C1 C2) t
+		   <- kd-wf K
+		   <- ({a} cn-of a (pi K ([_] t)) -> {b} cn-of b K -> cn-of (C1 a b) t)
+		   <- cn-of C2 K.
+
+cn-of/labeled	: cn-of (labeled I C) t
+		   <- cn-of C t.
+
+cn-of/sing	: cn-of C (sing C)
+		   <- cn-of C t.
+
+cn-of/extpi	: cn-of C (pi K1 K2)
+		   <- cn-of C (pi K1 K2')
+		   <- ({a} cn-of a K1 -> cn-of (app C a) (K2 a)).
+
+cn-of/extsigma	: cn-of C (sigma K1 K2)
+		   <- cn-of (pi1 C) K1
+		   <- cn-of (pi2 C) (K2 (pi1 C))
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+cn-of/subsume	: cn-of C K'
+		   <- cn-of C K
+		   <- kd-sub K K'.
+
+%% derived rules
+
+cn-of/mu	: cn-of (mu C) t
+		   <- ({a} cn-of a t -> cn-of (C a) t)
+		= [Dof] 
+		   cn-of/rec 
+		   cn-of/star
+		   ([a] [d] [b] [e] cn-of/app (cn-of/app cn-of/star d) (cn-of/lam Dof kd-wf/t))
+		   kd-wf/one.
+
+cn-of/equiv	: cn-of C K'
+		   <- cn-of C K
+		   <- kd-equiv K K'
+                = [d_equiv] [d_of] cn-of/subsume (kd-sub/refl d_equiv) d_of.
+
+cn-of/pi2-nd	: cn-of (pi2 C) K2
+		   <- cn-of C (sigma K1 ([_] K2))
+		= cn-of/pi2.
+
+cn-of/app-nd	: cn-of (app C1 C2) K2
+		   <- cn-of C1 (pi K1 ([_] K2))
+		   <- cn-of C2 K1
+	        = cn-of/app.
+
+
+
+
+%%%%%  Constructor Equivalence  %%%%%
+
+cn-equiv/refl	: cn-equiv C C K
+		   <- cn-of C K.
+
+cn-equiv/symm	: cn-equiv C1 C2 K
+		   <- cn-equiv C2 C1 K.
+
+cn-equiv/trans	: cn-equiv C1 C3 K
+		   <- cn-equiv C1 C2 K
+		   <- cn-equiv C2 C3 K.
+
+cn-equiv/pair	: cn-equiv (pair C1 C2) (pair C1' C2') (sigma K1 K2)
+		   <- cn-equiv C1 C1' K1
+		   <- cn-equiv C2 C2' (K2 C1)
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+cn-equiv/pi1	: cn-equiv (pi1 C) (pi1 C') K1
+		   <- cn-equiv C C' (sigma K1 K2).
+
+cn-equiv/pi2	: cn-equiv (pi2 C) (pi2 C') (K2 (pi1 C))
+		   <- cn-equiv C C' (sigma K1 K2).
+
+cn-equiv/lam	: cn-equiv (lam K1 C) (lam K1' C') (pi K1 K2)
+		   <- kd-equiv K1 K1'
+		   <- ({a} cn-of a K1 -> cn-equiv (C a) (C' a) (K2 a)).
+
+cn-equiv/app	: cn-equiv (app C1 C2) (app C1' C2') (K2 C2)
+		   <- cn-equiv C1 C1' (pi K1 K2)
+		   <- cn-equiv C2 C2' K1.
+
+cn-equiv/prod	: cn-equiv (prod C1 C2) (prod C1' C2') t
+		   <- cn-equiv C1 C1' t
+		   <- cn-equiv C2 C2' t.
+
+cn-equiv/arrow	: cn-equiv (arrow C1 C2) (arrow C1' C2') t
+		   <- cn-equiv C1 C1' t
+		   <- cn-equiv C2 C2' t.
+
+cn-equiv/plus	: cn-equiv (plus C1 C2) (plus C1' C2') t
+		   <- cn-equiv C1 C1' t
+		   <- cn-equiv C2 C2' t.
+
+cn-equiv/ref	: cn-equiv (ref C) (ref C') t
+		   <- cn-equiv C C' t.
+
+cn-equiv/tag	: cn-equiv (tag C) (tag C') t
+		   <- cn-equiv C C' t.
+
+cn-equiv/rec	: cn-equiv (rec K C1 C2) (rec K' C1' C2') t
+		   <- kd-equiv K K'
+		   <- ({a} cn-of a (pi K ([_] t)) -> {b} cn-of b K -> cn-equiv (C1 a b) (C1' a b) t)
+		   <- cn-equiv C2 C2' K.
+
+cn-equiv/labeled
+		: cn-equiv (labeled I C) (labeled I C') t
+		   <- cn-equiv C C' t.
+
+cn-equiv/sing	: cn-equiv C C' (sing C)
+		   <- cn-equiv C C' t.
+
+cn-equiv/singelim
+		: cn-equiv C C' t
+		   <- cn-of C (sing C').
+
+cn-equiv/extpi	: cn-equiv C C' (pi K1 K2)
+		   <- cn-of C (pi K1 K2')
+		   <- cn-of C' (pi K1 K2'')
+		   <- ({a} cn-of a K1 -> cn-equiv (app C a) (app C' a) (K2 a)).
+
+cn-equiv/extpiw	: cn-equiv C C' (pi K1 K2)
+		   <- cn-equiv C C' (pi K1 K2')
+		   <- ({a} cn-of a K1 -> cn-equiv (app C a) (app C' a) (K2 a)).
+
+cn-equiv/extsigma
+		: cn-equiv C C' (sigma K1 K2)
+		   <- cn-equiv (pi1 C) (pi1 C') K1
+		   <- cn-equiv (pi2 C) (pi2 C') (K2 (pi1 C))
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a)).
+
+cn-equiv/one	: cn-equiv C C' one
+		   <- cn-of C one
+		   <- cn-of C' one.
+
+cn-equiv/subsume
+		: cn-equiv C C' K'
+		   <- cn-equiv C C' K
+		   <- kd-sub K K'.
+
+cn-equiv/beta	: cn-equiv (app (lam K1 C2) C1) (C2 C1) (K2 C1)
+		   <- ({a} cn-of a K1 -> cn-of (C2 a) (K2 a))
+		   <- cn-of C1 K1.
+
+cn-equiv/beta1	: cn-equiv (pi1 (pair C1 C2)) C1 K1
+		   <- cn-of C1 K1
+		   <- cn-of C2 K2.
+
+cn-equiv/beta2	: cn-equiv (pi2 (pair C1 C2)) C2 K2
+		   <- cn-of C1 K1
+		   <- cn-of C2 K2.
+
+%% derived rules
+
+cn-equiv/unit	: cn-equiv unit unit t
+		= cn-equiv/refl cn-of/unit.
+
+cn-equiv/void	: cn-equiv void void t
+		= cn-equiv/refl cn-of/void.
+
+cn-equiv/tagged	: cn-equiv tagged tagged t
+		= cn-equiv/refl cn-of/tagged.
+
+cn-equiv/star	: cn-equiv star star one
+		= cn-equiv/refl cn-of/star.
+
+cn-equiv/mu	: cn-equiv (mu C) (mu C') t
+		   <- ({a} cn-of a t -> cn-equiv (C a) (C' a) t)
+		= [Dequiv]
+		   cn-equiv/rec
+		   cn-equiv/star
+		   ([a] [d] [b] [e] cn-equiv/app (cn-equiv/refl (cn-of/app cn-of/star d)) (cn-equiv/lam Dequiv kd-equiv/t))
+		   kd-equiv/one.
+
+cn-equiv/equiv	: cn-equiv C1 C2 K'
+		   <- cn-equiv C1 C2 K
+		   <- kd-equiv K K'
+		= [d_kd] [d_cn] cn-equiv/subsume (kd-sub/refl d_kd) d_cn.
+
+cn-equiv/etapi	: cn-equiv C (lam K ([a] app C a)) (pi K L)
+		   <- cn-of C (pi K L)
+		   <- kd-wf K
+		= [DwfK] [DofC]
+		   cn-equiv/extpi 
+		   ([a] [d] cn-equiv/symm
+		      (cn-equiv/beta 
+			 d
+			 ([a] [d] cn-of/app d DofC)))
+		   (cn-of/lam
+		      ([a] [d] cn-of/app d DofC)
+		      DwfK)
+		   DofC.
+
+cn-equiv/etasigma	
+		: cn-equiv C (pair (pi1 C) (pi2 C)) (sigma K L)
+		   <- cn-of C (sigma K L)
+		   <- ({a} cn-of a K -> kd-wf (L a))
+		= [DwfL] [DofC]
+		   cn-equiv/extsigma
+		   DwfL
+		   (cn-equiv/symm (cn-equiv/beta2 (cn-of/pi2 DofC) (cn-of/pi1 DofC)))
+		   (cn-equiv/symm (cn-equiv/beta1 (cn-of/pi2 DofC) (cn-of/pi1 DofC))).
+
+cn-equiv/extpibeta
+		: cn-equiv C (lam K1 ([a] C' a)) (pi K1 K2)
+		   <- kd-wf K1
+		   <- cn-of C (pi K1 K2)
+		   <- ({a} cn-of a K1 -> cn-of (C' a) (K2 a))
+		   <- ({a} cn-of a K1 -> cn-equiv (app C a) (C' a) (K2 a))
+		= [Dequiv] [DofC'] [DofC] [DwfK1]
+		   cn-equiv/extpi
+		   ([a] [d] cn-equiv/symm (cn-equiv/trans (cn-equiv/symm (Dequiv a d)) (cn-equiv/beta d DofC')))
+		   (cn-of/lam
+		      DofC'
+		      DwfK1)
+		   DofC.
+
+cn-equiv/extsigmabeta
+		: cn-equiv C (pair C1 C2) (sigma K1 K2)
+		   <- cn-of C1 K1
+		   <- cn-of C2 (K2 (pi1 C))
+		   <- cn-equiv (pi1 C) C1 K1
+		   <- cn-equiv (pi2 C) C2 (K2 (pi1 C))
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a))
+		= [DwfK2] [Dequiv2] [Dequiv1] [DofC2] [DofC1]
+		   cn-equiv/extsigma
+		   DwfK2
+		   (cn-equiv/symm
+		      (cn-equiv/trans
+			 (cn-equiv/symm Dequiv2)
+			 (cn-equiv/beta2
+			    DofC2
+			    DofC1)))
+		   (cn-equiv/symm
+		      (cn-equiv/trans
+			 (cn-equiv/symm Dequiv1)
+			 (cn-equiv/beta1
+			    DofC2
+			    DofC1))).
+
+cn-equiv/app-nd	: cn-equiv (app C1 C2) (app C1' C2') K2
+		   <- cn-equiv C1 C1' (pi K1 ([_] K2))
+		   <- cn-equiv C2 C2' K1
+		= cn-equiv/app.
+
+cn-equiv/pi2-nd	: cn-equiv (pi2 C) (pi2 C') K2
+		   <- cn-equiv C C' (sigma K1 ([_] K2))
+		= cn-equiv/pi2.
+
+cn-equiv/beta-nd
+		: cn-equiv (app (lam K1 C2) C1) (C2 C1) K2
+		   <- ({a} cn-of a K1 -> cn-of (C2 a) K2)
+		   <- cn-of C1 K1
+		= cn-equiv/beta.
+
+cn-equiv/extpibeta-nd
+		: cn-equiv C (lam K1 ([a] C' a)) (pi K1 ([_] K2))
+		   <- kd-wf K1
+		   <- cn-of C (pi K1 ([_] K2))
+		   <- ({a} cn-of a K1 -> cn-of (C' a) K2)
+		   <- ({a} cn-of a K1 -> cn-equiv (app C a) (C' a) K2)
+		= cn-equiv/extpibeta.
+
+cn-equiv/beta-beta
+		: cn-equiv (app (app (lam K1 ([a1] lam (K2 a1) ([a2] C a1 a2))) C1) C2) (C C1 C2) (K C1 C2)
+		   <- ({a1} cn-of a1 K1 -> {a2} cn-of a2 (K2 a1) -> cn-of (C a1 a2) (K a1 a2))
+		   <- cn-of C1 K1
+		   <- cn-of C2 (K2 C1)
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a))
+	        = [DwfK2] [Dof2] [Dof1] [Dof]
+		   cn-equiv/trans
+		   (cn-equiv/beta
+		      Dof2
+		      ([a2] [da2] Dof C1 Dof1 a2 da2))
+		   (cn-equiv/app
+		      (cn-equiv/refl Dof2)
+		      (cn-equiv/beta
+			 Dof1
+			 ([a1] [da1] cn-of/lam ([a2] [da2] Dof a1 da1 a2 da2) (DwfK2 a1 da1)))).
+
+cn-equiv/funct	: cn-equiv (C C1) (C C2) K'
+		   <- kd-wf K
+		   <- ({a} cn-of a K -> cn-of (C a) K')
+		   <- cn-of C1 K
+		   <- cn-of C2 K
+		   <- cn-equiv C1 C2 K
+		= [Dequiv] [DofC2] [DofC1] [DofC] [DwfK]
+		   (cn-equiv/trans
+		      (cn-equiv/trans
+			 (cn-equiv/beta-nd
+			    DofC2
+			    DofC)
+			 (cn-equiv/app-nd
+			    Dequiv
+			    (cn-equiv/refl
+			       (cn-of/lam
+				  DofC
+				  DwfK))))
+		      (cn-equiv/symm
+			 (cn-equiv/beta-nd
+			    DofC1
+			    DofC))).
+
+cn-equiv/funct2	: cn-equiv (C C1 C2) (C C1' C2') K
+		   <- kd-wf K1
+		   <- ({a} cn-of a K1 -> kd-wf (K2 a))
+		   <- ({a1} cn-of a1 K1 -> {a2} cn-of a2 (K2 a1) -> cn-of (C a1 a2) K)
+		   <- cn-equiv C1 C1' K1
+		   <- cn-equiv C2 C2' (K2 C1)
+		   <- cn-of C1 K1
+		   <- cn-of C2 (K2 C1)
+		   <- cn-of C1' K1
+		   <- cn-of C2' (K2 C1')
+		= [DofC2'] [DofC1'] [DofC2] [DofC1] [Dequiv2] [Dequiv1] [DofC] [DwfK2] [DwfK1]
+		   (cn-equiv/trans
+		      (cn-equiv/trans
+			 (cn-equiv/beta-beta
+			    DwfK2
+			    DofC2'
+			    DofC1'
+			    DofC)
+			 (cn-equiv/app
+			    Dequiv2
+			    (cn-equiv/app
+			       Dequiv1
+			       (cn-equiv/refl
+				  (cn-of/lam
+				     ([a1] [da1] cn-of/lam ([a2] [da2] DofC a1 da1 a2 da2) (DwfK2 a1 da1))
+				     DwfK1)))
+			    : cn-equiv
+			       (app (app (lam K1 ([a1] lam (K2 a1) ([a2] C a1 a2))) C1) C2)
+			       (app (app (lam K1 ([a1] lam (K2 a1) ([a2] C a1 a2))) C1') C2')
+			       K))
+		      (cn-equiv/symm
+			 (cn-equiv/beta-beta
+			    DwfK2
+			    DofC2
+			    DofC1
+			    DofC))).
+
+cn-equiv/funct2-nd
+		: cn-equiv (C C1 C2) (C C1' C2') K
+		   <- kd-wf K1
+		   <- kd-wf K2
+		   <- ({a1} cn-of a1 K1 -> {a2} cn-of a2 K2 -> cn-of (C a1 a2) K)
+		   <- cn-equiv C1 C1' K1
+		   <- cn-equiv C2 C2' K2
+		   <- cn-of C1 K1
+		   <- cn-of C2 K2
+		   <- cn-of C1' K1
+		   <- cn-of C2' K2
+		= [DofC2'] [DofC1'] [DofC2] [DofC1] [Dequiv2] [Dequiv1] [DofC] [DwfK2] [DwfK1]
+		   cn-equiv/funct2 DofC2' DofC1' DofC2 DofC1 Dequiv2 Dequiv1 DofC ([_] [_] DwfK2) DwfK1.
+
+
+
+
+%%%%%  Term Formation  %%%%%
+
+tm-of/var	: tm-of F X T
+		   <- tm-assm X T.
+
+tm-of/unit	: tm-of F tm/unit unit.
+
+tm-of/abort	: tm-of F (tm/abort E T) T
+		   <- tm-of F E void
+		   <- cn-of T t.
+
+tm-of/pair	: tm-of F (tm/pair E1 E2) (prod T1 T2)
+		   <- tm-of F E1 T1
+		   <- tm-of F E2 T2.
+
+tm-of/pi1	: tm-of F (tm/pi1 E) T1
+		   <- tm-of F E (prod T1 T2).
+
+tm-of/pi2	: tm-of F (tm/pi2 E) T2
+		   <- tm-of F E (prod T1 T2).
+
+tm-of/lam	: tm-of F (tm/lam T1 ([x] E x)) (arrow T1 T2)
+		   <- cn-of T1 t
+		   <- ({x} tm-assm x T1 -> tm-of F (E x) T2).
+
+tm-of/app	: tm-of F (tm/app E1 E2) T2
+		   <- tm-of F E1 (arrow T1 T2)
+		   <- tm-of F E2 T1.
+
+tm-of/in1	: tm-of F (tm/in1 E T2) (plus T1 T2)
+		   <- tm-of F E T1
+		   <- cn-of T2 t.
+
+tm-of/in2	: tm-of F (tm/in2 E T1) (plus T1 T2)
+		   <- tm-of F E T2
+		   <- cn-of T1 t.
+
+tm-of/case	: tm-of F (tm/case E E1 E2) T
+		   <- tm-of F E (plus T1 T2)
+		   <- ({x} tm-assm x T1 -> tm-of F (E1 x) T)
+		   <- ({x} tm-assm x T2 -> tm-of F (E2 x) T).
+
+tm-of/refloc	: tm-of F (tm/refloc L) (ref T)
+		   <- st-lookup F L (et/ref T)
+		   <- cn-of T t.
+
+tm-of/ref	: tm-of F (tm/ref E) (ref T)
+		   <- tm-of F E T.
+
+tm-of/deref	: tm-of F (tm/deref E) T
+		   <- tm-of F E (ref T).
+
+tm-of/assign	: tm-of F (tm/assign E1 E2) unit
+		   <- tm-of F E1 (ref T)
+		   <- tm-of F E2 T.
+
+tm-of/tagloc	: tm-of F (tm/tagloc L) (tag T)
+		   <- st-lookup F L (et/tag T)
+		   <- cn-of T t.
+
+tm-of/newtag	: tm-of F (tm/newtag T) (tag T)
+		   <- cn-of T t.
+
+tm-of/tag	: tm-of F (tm/tag E1 E2) tagged
+		   <- tm-of F E1 (tag T)
+		   <- tm-of F E2 T.
+
+tm-of/iftag	: tm-of F (tm/iftag E1 E2 E3 E4) T
+		   <- tm-of F E1 tagged
+		   <- tm-of F E2 (tag T')
+		   <- ({x} tm-assm x T' -> tm-of F (E3 x) T)
+		   <- tm-of F E4 T.
+
+tm-of/roll	: tm-of F (tm/roll E K C1 C2) (rec K C1 C2)
+		   <- tm-of F E (C1 (lam K ([a] rec K C1 a)) C2)
+		   <- kd-wf K
+		   <- ({a} cn-of a (karrow K t) -> {b} cn-of b K -> cn-of (C1 a b) t)
+		   <- cn-of C2 K.
+
+tm-of/unroll	: tm-of F (tm/unroll E) (C1 (lam K ([a] rec K C1 a)) C2)
+		   <- tm-of F E (rec K C1 C2).
+
+tm-of/in	: tm-of F (tm/in I E) (labeled I T)
+		   <- tm-of F E T.
+
+tm-of/out	: tm-of F (tm/out E) T
+		   <- tm-of F E (labeled I T).
+
+tm-of/raise	: tm-of F (tm/raise E T) T
+		   <- tm-of F E tagged
+		   <- cn-of T t.
+
+tm-of/try	: tm-of F (tm/try E1 ([x] E2 x)) T
+		   <- tm-of F E1 T
+		   <- ({x} tm-assm x tagged -> tm-of F (E2 x) T).
+
+tm-of/lett	: tm-of F (tm/lett E1 ([x] E2 x)) T2
+		   <- tm-of F E1 T1
+		   <- ({x} tm-assm x T1 -> tm-of F (E2 x) T2).
+
+tm-of/snd	: tm-of F (tm/snd M) T
+		   <- md-of P F M (sg/datom T).
+
+tm-of/equiv	: tm-of F E T2
+		   <- tm-of F E T1
+		   <- cn-equiv T1 T2 t.
+
+%%% derived rules
+
+tm-of/rollmu	: tm-of F (tm/rollmu E C) (mu C)
+		   <- tm-of F E (C (mu C))
+		   <- ({a} cn-of a t -> cn-of (C a) t)
+		= [DofC] [DofE]
+		   (tm-of/roll
+		      cn-of/star
+		      ([a] [d] [b] [e] cn-of/app (cn-of/app cn-of/star d) (cn-of/lam DofC kd-wf/t))
+		      kd-wf/one
+		      (tm-of/equiv
+			 (cn-equiv/symm
+			    (cn-equiv/trans
+			       (cn-equiv/beta-nd
+				  (cn-of/mu DofC)
+				  DofC)
+			       (cn-equiv/app-nd
+				  (cn-equiv/beta-nd
+				     cn-of/star
+				     ([a] [d] cn-of/rec
+					d
+					([a] [d] [b] [e] cn-of/app-nd (cn-of/app-nd cn-of/star d) (cn-of/lam DofC kd-wf/t))
+					kd-wf/one))
+				  (cn-equiv/refl
+				     (cn-of/lam
+					DofC
+					kd-wf/t)))))
+			 DofE)).
+
+tm-of/unrollmu	: tm-of F (tm/unroll E) (C (mu C))
+		   <- tm-of F E (mu C)
+		   <- ({a} cn-of a t -> cn-of (C a) t)
+		= [DofC] [DofE]
+		   (tm-of/equiv
+		      (cn-equiv/trans
+			 (cn-equiv/beta-nd
+			    (cn-of/mu DofC)
+			    DofC)
+			 (cn-equiv/app-nd
+			    (cn-equiv/beta-nd
+			       cn-of/star
+			       ([a] [d] cn-of/rec
+				  d
+				  ([a] [d] [b] [e] cn-of/app-nd (cn-of/app-nd cn-of/star d) (cn-of/lam DofC kd-wf/t))
+				  kd-wf/one))
+			    (cn-equiv/refl
+			       (cn-of/lam
+				  DofC
+				  kd-wf/t))))
+		      (tm-of/unroll DofE)).
+
+tm-of/theta	: tm-of F (tm/theta T) (arrow (arrow (arrow unit T) T) T)
+		   <- cn-of T t
+		= [DofT]
+		   tm-of/app
+		   (tm-of/rollmu
+		      ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da)
+		      (tm-of/lam
+			 ([z] [dz:tm-assm z (mu ([a] arrow a (arrow (arrow (arrow unit T) T) T)))]
+			    tm-of/lam
+			    ([f] [df:tm-assm f (arrow (arrow unit T) T)]
+			       tm-of/app
+			       (tm-of/lam
+				  ([_] [_]
+				     tm-of/app 
+				     (tm-of/var df)
+				     (tm-of/app
+					(tm-of/var dz)
+					(tm-of/unrollmu
+					   ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da)
+					   (tm-of/var dz))))
+				  cn-of/unit)
+			       (tm-of/var df))
+			    (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit)))
+			 (cn-of/mu ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da))))
+		   (tm-of/unrollmu
+		      ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da)
+		      (tm-of/rollmu
+			 ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da)
+			 (tm-of/lam
+			    ([z] [dz:tm-assm z (mu ([a] arrow a (arrow (arrow (arrow unit T) T) T)))]
+			       tm-of/lam
+			       ([f] [df:tm-assm f (arrow (arrow unit T) T)]
+				  tm-of/app
+				  (tm-of/lam
+				     ([_] [_]
+					tm-of/app 
+					(tm-of/var df)
+					(tm-of/app
+					   (tm-of/var dz)
+					   (tm-of/unrollmu
+					      ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da)
+					      (tm-of/var dz))))
+				     cn-of/unit)
+				  (tm-of/var df))
+			       (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit)))
+			    (cn-of/mu ([a] [da:cn-of a t] cn-of/arrow (cn-of/arrow DofT (cn-of/arrow DofT (cn-of/arrow DofT cn-of/unit))) da))))).
+
+%abbrev
+tm-of/fix	: tm-of F (tm/fix T ([x] E x)) T
+		   <- cn-of T t
+		   <- ({x} tm-of F x T -> tm-of F (E x) T)
+		= [DofE] [DofT]
+		   tm-of/app
+		   tm-of/unit
+		   (tm-of/lam
+		      ([_] [_] 
+			 tm-of/app
+			 (tm-of/lam
+			    ([x] [dx:tm-assm x (arrow unit T)]
+			       DofE (tm/app x tm/unit) (tm-of/app tm-of/unit (tm-of/var dx)))
+			    (cn-of/arrow DofT cn-of/unit))
+			 (tm-of/theta DofT))
+		      cn-of/unit).
+
+
+
+
+%%%%%  Signature Formation  %%%%%
+
+sg-wf/one	: sg-wf sg/one.
+
+sg-wf/satom	: sg-wf (sg/satom K)
+		   <- kd-wf K.
+
+sg-wf/datom	: sg-wf (sg/datom T)
+		   <- cn-of T t.
+
+sg-wf/sgatom	: sg-wf (sg/sgatom S)
+		   <- sg-wf S.
+
+sg-wf/pi	: sg-wf (sg/pi S1 S2)
+		   <- sg-wf S1
+		   <- sg-fst S1 K
+		   <- ({a} cn-of a K -> sg-wf (S2 a)).
+
+sg-wf/sigma	: sg-wf (sg/sigma S1 S2)
+		   <- sg-wf S1
+		   <- sg-fst S1 K
+		   <- ({a} cn-of a K -> sg-wf (S2 a)).
+
+sg-wf/named	: sg-wf (sg/named L S)
+		   <- sg-wf S.
+
+
+
+
+%%%%%  Signature Equivalence  %%%%%
+
+sg-equiv/refl	: sg-equiv S S
+		   <- sg-wf S.
+
+sg-equiv/symm	: sg-equiv S1 S2
+		   <- sg-equiv S2 S1.
+
+sg-equiv/trans	: sg-equiv S1 S3
+		   <- sg-equiv S1 S2
+		   <- sg-equiv S2 S3.
+
+sg-equiv/satom	: sg-equiv (sg/satom K1) (sg/satom K2)
+		   <- kd-equiv K1 K2.
+
+sg-equiv/datom	: sg-equiv (sg/datom T1) (sg/datom T2)
+		   <- cn-equiv T1 T2 t.
+
+sg-equiv/sgatom	: sg-equiv (sg/sgatom S1) (sg/sgatom S2)
+		   <- sg-equiv S1 S2.
+
+sg-equiv/pi	: sg-equiv (sg/pi S1 S2) (sg/pi S1' S2')
+		   <- sg-equiv S1 S1'
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 -> sg-equiv (S2 a) (S2' a)).
+
+sg-equiv/sigma	: sg-equiv (sg/sigma S1 S2) (sg/sigma S1' S2')
+		   <- sg-equiv S1 S1'
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 -> sg-equiv (S2 a) (S2' a)).
+
+sg-equiv/named	: sg-equiv (sg/named L S) (sg/named L S')
+		   <- sg-equiv S S'.
+
+%% derived rules
+
+sg-equiv/one	: sg-equiv sg/one sg/one
+		= sg-equiv/refl sg-wf/one.
+
+
+
+
+%%%%%  Subsignatures  %%%%%
+
+sg-sub/refl	: sg-sub S1 S2
+		   <- sg-equiv S1 S2.
+
+sg-sub/trans	: sg-sub S1 S3
+		   <- sg-sub S1 S2
+		   <- sg-sub S2 S3.
+
+sg-sub/satom	: sg-sub (sg/satom K1) (sg/satom K2)
+		   <- kd-sub K1 K2.
+
+sg-sub/pi	: sg-sub (sg/pi S1 S2) (sg/pi S1' S2')
+		   <- sg-sub S1' S1
+		   <- sg-fst S1' K1'
+		   <- ({a} cn-of a K1' -> sg-sub (S2 a) (S2' a))
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 -> sg-wf (S2 a)). 
+
+sg-sub/sigma	: sg-sub (sg/sigma S1 S2) (sg/sigma S1' S2')
+		   <- sg-sub S1 S1'
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 -> sg-sub (S2 a) (S2' a))
+		   <- sg-fst S1' K1'
+		   <- ({a} cn-of a K1' -> sg-wf (S2' a)).
+
+sg-sub/named	: sg-sub (sg/named L S) (sg/named L S')
+		   <- sg-sub S S'.
+
+%% derived rules
+
+sg-sub/reflid   : sg-sub S S
+		   <- sg-wf S
+		= [d] sg-sub/refl (sg-equiv/refl d).
+
+sg-sub/one	: sg-sub sg/one sg/one
+		= sg-sub/refl sg-equiv/one.
+
+sg-sub/datom	: sg-sub (sg/datom T1) (sg/datom T2)
+		   <- cn-equiv T1 T2 t
+	        = [d] sg-sub/refl (sg-equiv/datom d).
+
+sg-sub/sgatom	: sg-sub (sg/sgatom S1) (sg/sgatom S2)
+		   <- sg-equiv S1 S2
+		= [d] sg-sub/refl (sg-equiv/sgatom d).
+
+
+
+
+%%%%%  Signature Fst  %%%%%
+
+sg-fst/one	: sg-fst sg/one one.
+
+sg-fst/satom	: sg-fst (sg/satom K) K.
+
+sg-fst/datom	: sg-fst (sg/datom C) one.
+
+sg-fst/sgatom	: sg-fst (sg/sgatom S) one.
+
+sg-fst/pi	: sg-fst (sg/pi S1 S2) one.
+
+sg-fst/sigma	: sg-fst (sg/sigma S1 S2) (sigma K1 K2)
+		   <- sg-fst S1 K1
+		   <- ({a} sg-fst (S2 a) (K2 a)).
+
+sg-fst/named	: sg-fst (sg/named L S) K
+		   <- sg-fst S K.
+
+
+
+
+%%%%%  Module Formation  %%%%%
+
+md-of/var	: md-of pure F X S
+		   <- md-assm X S.
+
+md-of/unit	: md-of pure F md/unit sg/one.
+
+md-of/satom	: md-of pure F (md/satom C) (sg/satom K)
+		   <- cn-of C K.
+
+md-of/sgatom	: md-of pure F (md/sgatom S) (sg/sgatom S)
+		   <- sg-wf S.
+
+%%  Ascribed in order to separate principal signature inference
+%%  from type inference.
+md-of/datom	: md-of pure F (md/datom E T) (sg/datom T)
+		   <- tm-of F E T.
+
+md-of/pair	: md-of P F (md/pair M1 M2) (sg/sigma S1 ([_] S2))
+		   <- md-of P F M1 S1
+		   <- md-of P F M2 S2.
+
+md-of/dpair	: md-of P F (md/dpair M1 ([a] [m] M2 a m)) (sg/sigma S1 S2)
+		   <- md-of P F M1 S1
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> md-of P F (M2 a m) (S2 a)).
+
+%% Don't absolutely need to restrict to pure modules (unlike pi2),
+%% but allowing pi1 from impure wouldn't be useful, and this
+%% permits a better inversion principle.
+md-of/pi1	: md-of pure F (md/pi1 M) S1
+		   <- md-of pure F M (sg/sigma S1 S2).
+
+md-of/pi2	: md-of pure F (md/pi2 M) (S2 (pi1 C))
+		   <- md-of pure F M (sg/sigma S1 S2)
+		   <- md-fst M C.
+
+md-of/lam	: md-of pure F (md/lam S1 M) (sg/pi S1 S2)
+		   <- sg-wf S1
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 
+			 -> {m} md-assm m S1
+			 -> md-fst m a
+			 -> md-of P F (M a m) (S2 a)).
+
+md-of/app	: md-of impure F (md/app M1 M2) (S2 C2)
+		   <- md-of P F M1 (sg/pi S1 S2)
+		   <- md-of pure F M2 S1
+		   <- md-fst M2 C2.
+
+md-of/in	: md-of P F (md/in L M) (sg/named L S)
+		   <- md-of P F M S.
+
+md-of/out	: md-of P F (md/out M) S
+		   <- md-of P F M (sg/named L S).
+
+%%  Needs to be impure, because if fst is defined it must commute with
+%%  principal kind/signatures, which doesn't happen (easily) for ascribed
+%%  constructs like let.  This is no limitation, since the unascribed letp
+%%  can be used in the pure case.
+md-of/let	: md-of impure F (md/let M1 M2 S) S
+		   <- md-of P1 F M1 S1
+		   <- sg-fst S1 K1
+		   <- ({a} cn-of a K1 
+			 -> {m} md-assm m S1 
+			 -> md-fst m a
+			 -> md-of P2 F (M2 a m) S).
+
+md-of/letp	: md-of P F (md/letp M1 M2) (S2 C1)
+		   <- md-of pure F M1 S1
+		   <- sg-fst S1 K1
+		   <- md-fst M1 C1
+		   <- ({a} cn-of a K1 
+			 -> {m} md-assm m S1 
+			 -> md-fst m a
+			 -> md-of P F (M2 a m) (S2 a)).
+
+%%  Although lete is definable in term of letp, we make it primitive because
+%%  the defined version's typing rule is only admissible, not derivable,
+%%  because it relies on substitution.
+md-of/lete	: md-of P F (md/lete E T ([x] M x)) S
+		   <- tm-of F E T
+		   <- ({x} tm-assm x T
+			 -> md-of P F (M x) S).
+
+md-of/seal	: md-of impure F (md/seal M S) S
+		   <- md-of P F M S.
+
+md-of/self	: md-of pure F M (sg/satom K)
+		   <- md-of pure F M (sg/satom K')
+		   <- md-fst M C
+		   <- cn-of C K.
+
+md-of/extsigma	: md-of pure F M (sg/sigma S1 ([_] S2))
+		   <- md-of pure F (md/pi1 M) S1
+		   <- md-of pure F (md/pi2 M) S2.
+
+md-of/extnamed	: md-of pure F M (sg/named L S)
+		   <- md-of pure F M (sg/named L S')
+		   <- md-of pure F (md/out M) S.
+
+md-of/forget	: md-of impure F M S
+		   <- md-of pure F M S.
+
+md-of/subsume	: md-of P F M S'
+		   <- md-of P F M S
+		   <- sg-sub S S'.
+
+%% derived rules
+
+md-of/equiv	: md-of P F M S'
+		   <- md-of P F M S
+		   <- sg-equiv S S'
+		= [Dequiv] [Dof] md-of/subsume (sg-sub/refl Dequiv) Dof.
+
+tm-of/letm	: tm-of F (tm/letm M ([a] [m] E a m) T) T
+		   <- md-of P F M S
+		   <- sg-fst S K
+		   <- ({a} cn-of a K
+			 -> {m} md-assm m S
+			 -> md-fst m a
+			 -> tm-of F (E a m) T)
+	        = [DofE] [Dfst] [DofM]
+		   tm-of/snd
+		   (md-of/let ([a] [da] [m] [dm] [dfst] md-of/datom (DofE a da m dm dfst)) Dfst DofM).
+
+
+
+
+%%%%%  Module Fst  %%%%%
+
+md-fst/unit	: md-fst md/unit star.
+
+md-fst/satom	: md-fst (md/satom C) C.
+
+md-fst/datom	: md-fst (md/datom E _) star.
+
+md-fst/sgatom	: md-fst (md/sgatom S) star.
+
+md-fst/pair	: md-fst (md/pair M1 M2) (pair C1 C2)
+		   <- md-fst M1 C1
+		   <- md-fst M2 C2.
+
+md-fst/dpair	: md-fst (md/dpair M1 ([a] [m] M2 a m)) (pair C1 (C2 C1))
+		   <- md-fst M1 C1
+		   <- ({a} {m}
+			 md-fst m a
+			 -> md-fst (M2 a m) (C2 a)).
+
+md-fst/pi1	: md-fst (md/pi1 M) (pi1 C)
+		   <- md-fst M C.
+
+md-fst/pi2	: md-fst (md/pi2 M) (pi2 C)
+		   <- md-fst M C.
+
+md-fst/lam	: md-fst (md/lam S ([a] [m] M a m)) star.
+
+md-fst/in	: md-fst (md/in L M) C
+		   <- md-fst M C.
+
+md-fst/out	: md-fst (md/out M) C
+		   <- md-fst M C.
+
+md-fst/letp	: md-fst (md/letp M1 ([a] [m] M2 a m)) (C2 C1)
+		   <- md-fst M1 C1
+		   <- ({a} {m}
+			 md-fst m a
+			 -> md-fst (M2 a m) (C2 a)).
+
+md-fst/lete	: md-fst (md/lete E T ([x] M x)) C
+		   <- ({x}
+			 md-fst (M x) C).
+
+
+
+
+%%%%%  Store Type Lookup  %%%%%
+
+st-lookup/hit	: st-lookup (st/cons _ L ET) L ET.
+
+st-lookup/miss
+		: st-lookup (st/cons F _ _) L ET
+		   <- st-lookup F L ET.
+
+
+
+
+%%%%%  Entry Typing  %%%%%
+
+entry-of/ref	: entry-of F (entry/ref E) (et/ref T)
+		   <- value E
+		   <- tm-of F E T.
+
+entry-of/tag	: entry-of F (entry/tag T) (et/tag T)
+		   <- cn-of T t.
+
+
+
+
+%%%%%  Store Typing  %%%%%
+
+store-bounds/nil
+		: store-bounds store/nil L.
+
+store-bounds/cons
+		: store-bounds (store/cons _ L _) L'
+		   <- loc-lt L L'.
+		
+
+
+store-of/nil	: store-of F store/nil st/nil.
+
+store-of/cons	: store-of F (store/cons ST L EN) (st/cons F' L ET)
+		   <- store-of F ST F'
+		   <- entry-of F EN ET
+		   <- store-bounds ST L.
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block conblock : block {a:con}.
+
+%block conbind  : some {K:kind} block {a:con} {d:cn-of a K}.
+
+%block termblock
+		: block {x:term}.
+
+%block termbind	: some {T:con} block {x:term} {d:tm-assm x T}.
+
+%block modblock : block {a:con} {m:module} {dfst:md-fst m a}.
+
+%block modvar   : block {m:module}.
+
+%block modbind
+   : some {K:kind} {S:sg}
+      block {a:con} {da:cn-of a K} {m:module} {dm:md-assm m S} 
+      {dfst:md-fst m a}.

@@ -1,3 +1,3 @@
-test /home/home/rjsimmon/regression/poplmark/sources.cfg
-test /home/home/rjsimmon/regression/wikithings/linearlogic.cfg
-test /home/home/rjsimmon/regression/wikithings/lily.cfg
+test ../TEST/poplmark/sources.cfg
+test ../TEST/wiki-misc/linearlogic.cfg
+test ../TEST/wiki-misc/lily.cfg

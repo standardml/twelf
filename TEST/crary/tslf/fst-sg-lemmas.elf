@@ -1,0 +1,51 @@
+
+%%%% lemmas about fst (it turns out much of what I had to prove about
+%%%% fst on paper were part of validity.
+
+%%%%% first on signatures
+
+fst-sg-complete : {S:sg} fst-sg S K -> type. 
+%mode fst-sg-complete +S1 -D2.
+
+-	: fst-sg-complete _ fst-sg/unit.
+
+-	: fst-sg-complete _ fst-sg/kd.
+
+-	: fst-sg-complete _ fst-sg/cn.
+
+-	: fst-sg-complete (sg/sgm S1 S2) (fst-sg/sgm D1 D2)
+	   <- fst-sg-complete S1 D1
+	   <- ({a:cn} 
+		 fst-sg-complete (S2 a) (D2 a)).
+
+-	: fst-sg-complete _ fst-sg/pi.
+
+
+
+%worlds (cn-block) (fst-sg-complete _ _).
+%total {S} (fst-sg-complete S _).
+
+
+fst-sg-seq	: fst-sg S K
+		   -> fst-sg S K'
+		   -> seq/kd K K'
+		   -> type.
+
+%mode fst-sg-seq +D1 +D2 -D3.
+
+
+-	: fst-sg-seq fst-sg/unit fst-sg/unit seq/kd/refl.
+
+-	: fst-sg-seq fst-sg/kd fst-sg/kd seq/kd/refl.
+
+-	: fst-sg-seq fst-sg/cn fst-sg/cn seq/kd/refl.
+
+-	: fst-sg-seq (fst-sg/sgm D1 D2) (fst-sg/sgm D3 D4) D7
+	   <- fst-sg-seq D1 D3 D5
+	   <- ({a:cn} fst-sg-seq (D2 a) (D4 a) (D6 a))
+	   <- seq/kd/sgm D5 D6 D7.
+
+-	: fst-sg-seq fst-sg/pi fst-sg/pi seq/kd/refl.
+
+%worlds (cn-block) (fst-sg-seq _ _ _).
+%total {D1 D2} (fst-sg-seq D1 D2 _).

@@ -1,0 +1,206 @@
+%%%% dynamic semantics for terms
+
+step/tm		: tm -> st -> tt -> tm -> st -> tt -> type.
+%mode step/tm *E1 *S1 *T1 *E2 *S2 *T2.
+
+step/md		: md -> st -> tt -> md -> st -> tt -> type.
+%mode step/md *M1 *S1 *T1 *M2 *S2 *T2.
+
+step/tm/pair-1		: step/tm (tm/pair E1 E2) S1 T1 (tm/pair E1' E2) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2.
+
+step/tm/pair-2		: step/tm (tm/pair E1 E2) S1 T1 (tm/pair E1 E2') S2 T2
+			   <- step/tm E2 S1 T1 E2' S2 T2
+			   <- val/tm E1.
+
+step/tm/pj1		: step/tm (tm/pj1 E) S1 T1 (tm/pj1 E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/pj1-beta	: {S1: st} step/tm (tm/pj1 (tm/pair E1 E2)) S1 T1 
+			   E1 S1 T1
+			   <- val/tm (tm/pair E1 E2).
+
+step/tm/pj2		: step/tm (tm/pj2 E) S1 T1 (tm/pj2 E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/pj2-beta	: {S1: st} step/tm (tm/pj2 (tm/pair E1 E2)) S1 T1 
+			   E2 S1 T1
+			   <- val/tm (tm/pair E1 E2).
+
+step/tm/tmapp-1		: step/tm (tm/tmapp E1 E2) S1 T1 (tm/tmapp E1' E2) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2.
+
+step/tm/tmapp-2		: step/tm (tm/tmapp E1 E2) S1 T1 (tm/tmapp E1 E2') S2 T2
+			   <- step/tm E2 S1 T1 E2' S2 T2
+			   <- val/tm E1.
+
+step/tm/tmapp-beta	: {S1: st} step/tm (tm/tmapp (tm/fun C1 C2 E) E') S1 T1 
+			   (E E' (tm/fun C1 C2 E)) S1 T1
+			   <- val/tm E'.
+
+step/tm/cnapp		: step/tm (tm/cnapp E1 C) S1 T1 (tm/cnapp E1' C) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2.
+
+step/tm/cnapp-beta	: {S1: st} step/tm (tm/cnapp (tm/cnabs K E) C) S1 T1 
+			   (E C) S1 T1.
+
+step/tm/term		: step/tm (tm/term M) S1 T1 (tm/term M') S2 T2
+			   <- step/md M S1 T1 M' S2 T2.
+
+step/tm/term-beta	: {S1: st} step/tm (tm/term (md/tm E)) S1 T1 E S1 T1
+			   <- val/md (md/tm E).
+
+step/tm/ref		: step/tm (tm/ref E) S T1 (tm/ref E') S' T2
+			   <- step/tm E S T1 E' S' T2.
+
+step/tm/ref-beta	: step/tm (tm/ref E) S T1 (tm/loc LC) S' T1
+			   <- st-alloc S E S' LC
+			   <- val/tm E.
+
+step/tm/set-1		: step/tm (tm/set E1 E2) S T1 (tm/set E1' E2) S' T2
+			   <- step/tm E1 S T1 E1' S' T2.
+
+step/tm/set-2		: step/tm (tm/set E1 E2) S T1 (tm/set E1 E2') S' T2
+			   <- step/tm E2 S T1 E2' S' T2
+			   <- val/tm E1.
+
+step/tm/set-beta	: step/tm (tm/set (tm/loc L) E2) S T1 tm/unit S' T1
+			   <- st-update S L E2 S'
+			   <- val/tm E2
+			   <- val/tm (tm/loc L).
+
+step/tm/get		: step/tm (tm/get E) S T1 (tm/get E') S' T2
+			   <- step/tm E S T1 E' S' T2.
+
+step/tm/get-beta	: step/tm (tm/get (tm/loc L)) S T E S T
+			   <- st-look S L E
+			   <- val/tm (tm/loc L).
+
+step/tm/inl		: step/tm (tm/inl (tp/sum C1 C2) E) S1 T1 
+			   (tm/inl (tp/sum C1 C2) E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/inr		: step/tm (tm/inr (tp/sum C1 C2) E) S1 T1 
+			   (tm/inr (tp/sum C1 C2) E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/case		: step/tm (tm/case E E1 E2) S1 T1 
+			   (tm/case E' E1 E2) S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/case-beta-l	: step/tm (tm/case 
+				     (tm/inl (tp/sum C1 C2) E) E1 E2) S1 T1 
+			   (E1 E) S1 T1
+			   <- val/tm (tm/inl (tp/sum C1 C2) E).
+
+step/tm/case-beta-r	: step/tm (tm/case 
+				     (tm/inr (tp/sum C1 C2) E) E1 E2) S1 T1 
+			   (E2 E) S1 T1
+			   <- val/tm (tm/inr (tp/sum C1 C2) E).
+
+step/tm/try		: step/tm (tm/try E1 E2) S1 T1 (tm/try E1' E2) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2.
+
+step/tm/try-beta	: step/tm (tm/try E1 E2) S1 T1 E1 S1 T1
+			   <- val/tm E1.
+
+step/tm/try-handle	: step/tm (tm/try E1 E2) S1 T1 (E2 V) S1 T1
+			   <- raises/tm E1 V.
+
+step/tm/new-tag-beta	: step/tm (tm/new-tag C1) S1 T1 (tm/tagloc LC) S1 T1'
+			   <- lt-extend T1 C1 T1' LC.
+
+step/tm/raise		: step/tm (tm/raise E) S T1 (tm/raise E') S' T2
+			   <- step/tm E S T1 E' S' T2.
+
+step/tm/tag-1		: step/tm (tm/tag E1 E2) S1 T1 (tm/tag E1' E2) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2.
+
+step/tm/tag-2		: step/tm (tm/tag E1 E2) S1 T1 (tm/tag E1 E2') S2 T2
+			   <- step/tm E2 S1 T1 E2' S2 T2
+			   <- val/tm E1.
+
+step/tm/iftag-1		: step/tm (tm/iftag E E1 E2 E3) S1 T1 
+			   (tm/iftag E' E1 E2 E3) S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/iftag-2		: step/tm (tm/iftag E E1 E2 E3) S1 T1 
+			   (tm/iftag E E1' E2 E3) S2 T2
+			   <- step/tm E1 S1 T1 E1' S2 T2
+			   <- val/tm E.
+
+step/tm/iftag-beta-1	: step/tm (tm/iftag 
+				     (tm/tag (tm/tagloc L) E) (tm/tagloc L)
+				     E2 E3) S1 T1 
+			   (E2 E) S1 T1
+			   <- val/tm (tm/tag (tm/tagloc L) E).
+
+step/tm/iftag-beta-2	: step/tm (tm/iftag 
+				     (tm/tag (tm/tagloc L) E) 
+				     (tm/tagloc L') E2 E3) S1 T1 
+			   E3 S1 T1
+			   <- loc-neq L L'
+			   <- val/tm (tm/tag (tm/tagloc L) E).
+
+step/tm/roll		: step/tm (tm/roll (cn/mu K1 C2) E) S1 T1 
+			   (tm/roll (cn/mu K1 C2) E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/unroll		: step/tm (tm/unroll E) S1 T1 
+			   (tm/unroll E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/tm/unroll-beta	: step/tm (tm/unroll (tm/roll C E)) S1 T1 
+			   E S1 T1
+			   <- val/tm (tm/roll C E).
+
+
+
+step/md/pair-1		: step/md (md/pair M1 M2) S1 T1 (md/pair M1' M2) S2 T2
+			   <- step/md M1 S1 T1 M1' S2 T2.
+
+step/md/pair-2		: step/md (md/pair M1 M2) S1 T1 (md/pair M1 M2') S2 T2
+			   <- step/md M2 S1 T1 M2' S2 T2
+			   <- val/md M1.
+
+step/md/pj1		: step/md (md/pj1 M) S1 T1 (md/pj1 M') S2 T2
+			   <- step/md M S1 T1 M' S2 T2.
+
+step/md/pj1-beta	: {S1: st} step/md (md/pj1 (md/pair M1 M2)) S1 T1 
+			   M1 S1 T1
+			   <- val/md (md/pair M1 M2).
+
+step/md/pj2		: step/md (md/pj2 M) S1 T1 (md/pj2 M') S2 T2
+			   <- step/md M S1 T1 M' S2 T2.
+
+step/md/pj2-beta	: {S1: st} step/md (md/pj2 (md/pair M1 M2)) S1 T1 
+			   M2 S1 T1
+			   <- val/md (md/pair M1 M2).
+
+step/md/app-1		: step/md (md/app M1 M2) S1 T1 (md/app M1' M2) S2 T2
+			   <- step/md M1 S1 T1 M1' S2 T2.
+
+step/md/app-2		: step/md (md/app M1 M2) S1 T1 (md/app M1 M2') S2 T2
+			   <- step/md M2 S1 T1 M2' S2 T2
+			   <- val/md M1.
+
+step/md/app-beta	: {ST: st} step/md (md/app (md/lam S1 S2 M) M') ST TT
+			   (M M' C) ST TT
+			   <- fst-md M' C
+			   <- val/md M'.
+
+step/md/tm		: step/md (md/tm E) S1 T1 (md/tm E') S2 T2
+			   <- step/tm E S1 T1 E' S2 T2.
+
+step/md/seal-beta	: {S1: st} step/md (md/seal M S) S1 T1 M S1 T1.
+
+step/md/let		: step/md (md/let M1 M2 S) S1 T1 (md/let M1' M2 S) S2 T2
+			   <- step/md M1 S1 T1 M1' S2 T2.
+
+step/md/let-beta	: {S1: st} step/md (md/let M1 M2 S) S1 T1 
+			   (M2 M1 C) S1 T1
+			   <- fst-md M1 C
+			   <- val/md M1.
+
+
+

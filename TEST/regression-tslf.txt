@@ -1,2 +1,2 @@
-test /home/home/rjsimmon/regression/ts-lf/sources.cfg
+test ../../twelf-regression/ts-lf/sources.cfg
 

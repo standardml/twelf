@@ -1,0 +1,53 @@
+
+%{
+MATCH ELABORATION
+
+Input:  elaboration context; EL match; tagged value to raise; discriminant; IL domain type.
+Output: IL term and IL codomain type.
+
+}%
+
+%{
+MATCH-SPINE ELABORATION
+
+Input:  elaboration context; EL match; inner failure tag; outer failure tagged; discriminant; IL domain type.
+Output: IL term and IL codomain type.
+
+The inner failure is passed as a tag whose associated value is trivial (the null tuple).
+
+The outer failure is a tagged value, because when elaborating an EL exception
+handler you must re-raise the raised exception without knowing its tag.
+
+The discriminant is assumed to be pure.
+}%
+
+match-spine-elab	: module -> sg -> match -> term -> term -> term -> con -> term -> con -> type.
+
+match-spine-elab/nil	: match-spine-elab Mec Sec match/nil Einnerfail Eouterfail Ediscrim Tdom
+			   (tm/raise Eouterfail Tcod)
+			   Tcod
+			   <- cn-of Tcod t.
+
+match-spine-elab/cons	: match-spine-elab Mec Sec (match/cons Pe Ee Me) Einnerfail Eouterfail Ediscrim Tdom
+			   (tm/try
+			      (tm/letm
+				 Mbind
+				 ([a] [m] Earm a m)
+				 Tcod)
+			      ([exn] 
+				 tm/iftag exn Einnerfail ([_] Ematch) (tm/raise exn Tcod)))
+			   Tcod
+			   <- pat-elab Mec Sec Pe (tm/tag Einnerfail tm/unit) Ediscrim Tdom Mbind Sbind
+			   <- sg-fst Sbind Kbind
+			   <- ({a} cn-of a Kbind
+				 -> {m} md-assm m Sbind
+				 -> md-fst m a 
+				 -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] Sbind)) Ee (Earm a m) Tcod)
+			   <- match-spine-elab Mec Sec Me Einnerfail Eouterfail Ediscrim Tdom Ematch Tcod.
+
+
+match-elab/i		: match-elab Mec Sec Me Eouterfail Ediscrim Tdom
+			   (tm/lett (tm/newtag unit) ([innerfail] Ematch innerfail))
+			   Tcod
+			   <- ({innerfail:term} tm-assm innerfail (tag unit)
+				 -> match-spine-elab Mec Sec Me innerfail Eouterfail Ediscrim Tdom (Ematch innerfail) Tcod).

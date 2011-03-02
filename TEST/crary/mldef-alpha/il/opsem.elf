@@ -1,0 +1,423 @@
+
+%%%%%  Stores  %%%%%
+
+store-lookup : store -> location -> entry -> type.
+
+store-lookup/hit
+		: store-lookup (store/cons _ L EN) L EN.
+
+store-lookup/miss
+		: store-lookup (store/cons ST _ _) L EN
+		   <- store-lookup ST L EN.
+
+
+
+store-update : store -> location -> entry -> store -> type.
+
+store-update/hit
+		: store-update (store/cons ST L _) L EN (store/cons ST L EN).
+
+store-update/miss
+		: store-update (store/cons ST L EN) L' EN' (store/cons ST' L EN)
+		   <- store-update ST L' EN' ST'.
+
+
+
+nextloc : store -> location -> type.
+
+nextloc/nil	: nextloc store/nil location/0.
+
+nextloc/cons	: nextloc (store/cons _ L _) L'
+		   <- loc-succ L L'.
+
+
+
+
+%%%%%  Evaluation  %%%%%
+
+step : store -> term -> store -> term -> type.
+step-md : store -> module -> store -> module -> type.
+
+raises : term -> term -> type.
+raises-md : module -> term -> type.
+
+
+step/abort	: step ST (tm/abort E T) ST' (tm/abort E' T)
+		   <- step ST E ST' E'.
+
+step/pair1	: step ST (tm/pair E1 E2) ST' (tm/pair E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/pair2	: step ST (tm/pair E1 E2) ST' (tm/pair E1 E2')
+		   <- value E1
+		   <- step ST E2 ST' E2'.
+
+step/pi1	: step ST (tm/pi1 E) ST' (tm/pi1 E')
+		   <- step ST E ST' E'.
+
+step/pi1-beta	: step ST (tm/pi1 (tm/pair E1 E2)) ST E1
+		   <- value E1
+		   <- value E2.
+
+step/pi2	: step ST (tm/pi2 E) ST' (tm/pi2 E')
+		   <- step ST E ST' E'.
+
+step/pi2-beta	: step ST (tm/pi2 (tm/pair E1 E2)) ST E2
+		   <- value E1
+		   <- value E2.
+
+step/app1	: step ST (tm/app E1 E2) ST' (tm/app E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/app2	: step ST (tm/app E1 E2) ST' (tm/app E1 E2')
+		   <- value E1
+		   <- step ST E2 ST' E2'.
+
+step/app-beta	: step ST (tm/app (tm/lam T ([x] E1 x)) E2) ST (E1 E2)
+		   <- value E2.
+
+step/in1	: step ST (tm/in1 E T) ST' (tm/in1 E' T)
+		   <- step ST E ST' E'.
+
+step/in2	: step ST (tm/in2 E T) ST' (tm/in2 E' T)
+		   <- step ST E ST' E'.
+
+step/case	: step ST (tm/case E E1 E2) ST' (tm/case E' E1 E2)
+		   <- step ST E ST' E'.
+
+step/case-beta1	: step ST (tm/case (tm/in1 E _) E1 E2) ST (E1 E)
+		   <- value E.
+
+step/case-beta2	: step ST (tm/case (tm/in2 E _) E1 E2) ST (E2 E)
+		   <- value E.
+
+step/ref	: step ST (tm/ref E) ST' (tm/ref E')
+		   <- step ST E ST' E'.
+
+step/ref-beta	: step ST (tm/ref E) (store/cons ST L (entry/ref E)) (tm/refloc L)
+		   <- value E
+		   <- nextloc ST L.
+
+step/deref	: step ST (tm/deref E) ST' (tm/deref E')
+		   <- step ST E ST' E'.
+
+step/deref-beta	: step ST (tm/deref (tm/refloc L)) ST E
+		   <- store-lookup ST L (entry/ref E).
+
+step/assign1	: step ST (tm/assign E1 E2) ST' (tm/assign E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/assign2	: step ST (tm/assign E1 E2) ST' (tm/assign E1 E2')
+		   <- value E1
+		   <- step ST E2 ST' E2'.
+
+step/assign-beta
+		: step ST (tm/assign (tm/refloc L) E) ST' tm/unit
+		   <- value E
+		   <- store-update ST L (entry/ref E) ST'.
+
+step/newtag-beta
+		: step ST (tm/newtag T) (store/cons ST L (entry/tag T)) (tm/tagloc L)
+		   <- nextloc ST L.
+
+step/tag1	: step ST (tm/tag E1 E2) ST' (tm/tag E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/tag2	: step ST (tm/tag E1 E2) ST' (tm/tag E1 E2')
+		   <- value E1
+		   <- step ST E2 ST' E2'.
+
+step/iftag1	: step ST (tm/iftag E1 E2 E3 E4) ST' (tm/iftag E1' E2 E3 E4)
+		   <- step ST E1 ST' E1'.
+
+step/iftag2	: step ST (tm/iftag E1 E2 E3 E4) ST' (tm/iftag E1 E2' E3 E4)
+		   <- value E1
+		   <- step ST E2 ST' E2'.
+
+step/iftag-beta1
+		: step ST (tm/iftag (tm/tag (tm/tagloc L) E) (tm/tagloc L) E3 E4) ST (E3 E)
+		   <- value E.
+
+step/iftag-beta2
+		: step ST (tm/iftag (tm/tag (tm/tagloc L) E) (tm/tagloc L') E3 E4) ST E4
+		   <- value E
+		   <- loc-neq L L'.
+
+step/roll	: step ST (tm/roll E K C1 C2) ST' (tm/roll E' K C1 C2)
+		   <- step ST E ST' E'.
+
+step/unroll	: step ST (tm/unroll E) ST' (tm/unroll E')
+		   <- step ST E ST' E'.
+
+step/unroll-beta
+		: step ST (tm/unroll (tm/roll E _ _ _)) ST E
+		   <- value E.
+
+step/in		: step ST (tm/in I E) ST' (tm/in I E')
+		   <- step ST E ST' E'.
+
+step/out	: step ST (tm/out E) ST' (tm/out E')
+		   <- step ST E ST' E'.
+
+step/out-beta	: step ST (tm/out (tm/in I E)) ST E
+		   <- value E.
+
+step/raise	: step ST (tm/raise E T) ST' (tm/raise E' T)
+		   <- step ST E ST' E'.
+
+step/try	: step ST (tm/try E1 E2) ST' (tm/try E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/try-done	: step ST (tm/try E1 E2) ST E1
+		   <- value E1.
+
+step/try-handle	: step ST (tm/try E1 E2) ST (E2 V)
+		   <- raises E1 V.
+
+step/lett1	: step ST (tm/lett E1 E2) ST' (tm/lett E1' E2)
+		   <- step ST E1 ST' E1'.
+
+step/lett2	: step ST (tm/lett E1 E2) ST (E2 E1)
+		   <- value E1.
+
+step/snd	: step ST (tm/snd M) ST' (tm/snd M')
+		   <- step-md ST M ST' M'.
+
+step/snd-beta	: step ST (tm/snd (md/datom E T)) ST E
+		   <- value E.
+
+
+
+step-md/datom	: step-md ST (md/datom E T) ST' (md/datom E' T)
+		   <- step ST E ST' E'.
+
+step-md/pair1	: step-md ST (md/pair M1 M2) ST' (md/pair M1' M2)
+		   <- step-md ST M1 ST' M1'.
+
+step-md/pair2	: step-md ST (md/pair M1 M2) ST' (md/pair M1 M2')
+		   <- value-md M1
+		   <- step-md ST M2 ST' M2'.
+
+step-md/dpair1	: step-md ST (md/dpair M1 ([a] [m] M2 a m)) ST' (md/dpair M1' ([a] [m] M2 a m))
+		   <- step-md ST M1 ST' M1'.
+
+%%  We can see here why it's necessary to have dependent and non-dependent pairs as
+%%  separate constructs.  If we tried to make non-dependent pairs a degenerate case
+%%  of dependent pairs, then the step-md/dpair2 rule and the dpair analog of the
+%%  step-md/pair2 rule could both be enabled, making the operational semantics
+%%  non-deterministic.  Fixes (such as checking to make sure the dependency is unused
+%%  before allowing step-md/pair2) would be clumsy.  Besides, this is more faithful
+%%  to what the implementation will actually do anyway.
+
+step-md/dpair2	: step-md ST (md/dpair M1 ([a] [m] M2 a m)) ST (md/pair M1 (M2 C1 M1))
+		   <- value-md M1
+		   <- md-fst M1 C1.
+
+step-md/pi1	: step-md ST (md/pi1 M) ST' (md/pi1 M')
+		   <- step-md ST M ST' M'.
+
+step-md/pi1-beta
+		: step-md ST (md/pi1 (md/pair M1 M2)) ST M1
+		   <- value-md M1
+		   <- value-md M2.
+
+step-md/pi2	: step-md ST (md/pi2 M) ST' (md/pi2 M')
+		   <- step-md ST M ST' M'.
+
+step-md/pi2-beta
+		: step-md ST (md/pi2 (md/pair M1 M2)) ST M2
+		   <- value-md M1
+		   <- value-md M2.
+
+step-md/app1	: step-md ST (md/app M1 M2) ST' (md/app M1' M2)
+		   <- step-md ST M1 ST' M1'.
+
+step-md/app2	: step-md ST (md/app M1 M2) ST' (md/app M1 M2')
+		   <- value-md M1
+		   <- step-md ST M2 ST' M2'.
+
+step-md/app-beta
+		: step-md ST (md/app (md/lam S ([a] [m] M1 a m)) M2) ST (M1 C2 M2)
+		   <- value-md M2
+		   <- md-fst M2 C2.
+
+step-md/in	: step-md ST (md/in L M) ST' (md/in L M')
+		   <- step-md ST M ST' M'.
+
+step-md/out	: step-md ST (md/out M) ST' (md/out M')
+		   <- step-md ST M ST' M'.
+
+step-md/out-beta
+		: step-md ST (md/out (md/in L M)) ST M
+		   <- value-md M.
+
+step-md/let1	: step-md ST (md/let M1 ([a] [m] M2 a m) S) ST' (md/let M1' ([a] [m] M2 a m) S)
+		   <- step-md ST M1 ST' M1'.
+
+step-md/let2	: step-md ST (md/let M1 ([a] [m] M2 a m) S) ST (M2 C1 M1)
+		   <- value-md M1
+		   <- md-fst M1 C1.
+
+step-md/letp1	: step-md ST (md/letp M1 ([a] [m] M2 a m)) ST' (md/letp M1' ([a] [m] M2 a m))
+		   <- step-md ST M1 ST' M1'.
+
+step-md/letp2	: step-md ST (md/letp M1 ([a] [m] M2 a m)) ST (M2 C1 M1)
+		   <- value-md M1
+		   <- md-fst M1 C1.
+
+step-md/lete1	: step-md ST (md/lete E T ([x] M x)) ST' (md/lete E' T ([x] M x))
+		   <- step ST E ST' E'.
+
+step-md/lete2	: step-md ST (md/lete E T ([x] M x)) ST (M E)
+		   <- value E.
+
+step-md/seal	: step-md ST (md/seal M S) ST M.
+
+
+
+raises/abort	: raises (tm/abort E T) V
+		   <- raises E V.
+
+raises/pair1	: raises (tm/pair E1 E2) V
+		   <- raises E1 V.
+
+raises/pair2	: raises (tm/pair E1 E2) V
+		   <- value E1
+		   <- raises E2 V.
+
+raises/pi1	: raises (tm/pi1 E) V
+		   <- raises E V.
+
+raises/pi2	: raises (tm/pi2 E) V
+		   <- raises E V.
+
+raises/app1	: raises (tm/app E1 E2) V
+		   <- raises E1 V.
+
+raises/app2	: raises (tm/app E1 E2) V
+		   <- value E1
+		   <- raises E2 V.
+
+raises/in1	: raises (tm/in1 E T) V
+		   <- raises E V.
+
+raises/in2	: raises (tm/in2 E T) V
+		   <- raises E V.
+
+raises/case	: raises (tm/case E E1 E2) V
+		   <- raises E V.
+
+raises/ref	: raises (tm/ref E) V
+		   <- raises E V.
+
+raises/deref	: raises (tm/deref E) V
+		   <- raises E V.
+
+raises/assign1	: raises (tm/assign E1 E2) V
+		   <- raises E1 V.
+
+raises/assign2	: raises (tm/assign E1 E2) V
+		   <- value E1
+		   <- raises E2 V.
+
+raises/tag1	: raises (tm/tag E1 E2) V
+		   <- raises E1 V.
+
+raises/tag2	: raises (tm/tag E1 E2) V
+		   <- value E1
+		   <- raises E2 V.
+
+raises/iftag1	: raises (tm/iftag E1 E2 E3 E4) V
+		   <- raises E1 V.
+
+raises/iftag2	: raises (tm/iftag E1 E2 E3 E4) V
+		   <- value E1
+		   <- raises E2 V.
+
+raises/roll	: raises (tm/roll E _ _ _) V
+		   <- raises E V.
+
+raises/unroll	: raises (tm/unroll E) V
+		   <- raises E V.
+
+raises/in	: raises (tm/in I E) V
+		   <- raises E V.
+
+raises/out	: raises (tm/out E) V
+		   <- raises E V.
+
+raises/raise1	: raises (tm/raise E T) V
+		   <- raises E V.
+
+raises/raise2	: raises (tm/raise E T) E
+		   <- value E.
+
+raises/lett	: raises (tm/lett E1 E2) V
+		   <- raises E1 V.
+
+raises/snd	: raises (tm/snd M) V
+		   <- raises-md M V.
+
+
+
+raises-md/datom : raises-md (md/datom E T) V
+		   <- raises E V.
+
+raises-md/pair1	: raises-md (md/pair M1 M2) V
+		   <- raises-md M1 V.
+
+raises-md/pair2	: raises-md (md/pair M1 M2) V
+		   <- value-md M1
+		   <- raises-md M2 V.
+
+raises-md/dpair	: raises-md (md/dpair M1 ([a] [m] M2 a m)) V
+		   <- raises-md M1 V.
+
+raises-md/pi1	: raises-md (md/pi1 M) V
+		   <- raises-md M V.
+
+raises-md/pi2	: raises-md (md/pi2 M) V
+		   <- raises-md M V.
+
+raises-md/app1	: raises-md (md/app M1 M2) V
+		   <- raises-md M1 V.
+
+raises-md/app2	: raises-md (md/app M1 M2) V
+		   <- value-md M1
+		   <- raises-md M2 V.
+
+raises-md/in	: raises-md (md/in L M) V
+		   <- raises-md M V.
+
+raises-md/out	: raises-md (md/out M) V
+		   <- raises-md M V.
+
+raises-md/let	: raises-md (md/let M1 ([a] [m] M2 a m) S) V
+		   <- raises-md M1 V.
+
+raises-md/letp	: raises-md (md/letp M1 ([a] [m] M2 a m)) V
+		   <- raises-md M1 V.
+
+raises-md/lete	: raises-md (md/lete E T ([x] M x)) V
+		   <- raises E V.
+
+
+
+
+%%%%%  Derived Forms  %%%%%
+
+%{
+%define tm/fix1 : con -> (term -> term) -> term = E
+%solve step/fix : {t} {e} step ST (tm/fix t e) ST (E t e).
+
+%define tm/fix2 : con -> (term -> term) -> term = E
+%solve step/fix1 : {t} {e} step ST (tm/fix1 t e) ST (E t e).
+
+%define tm/fix3 : con -> (term -> term) -> term = E
+%solve step/fix2 : {t} {e} step ST (tm/fix2 t e) ST (E t e).
+
+%define tm/fix4 : con -> (term -> term) -> term = E
+%solve step/fix3 : {t} {e} step ST (tm/fix3 t e) ST (E t e).
+
+%solve step/fix4 : {t} {e} step ST (tm/fix4 t e) ST (e (tm/fix t e)).
+}%

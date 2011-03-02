@@ -1,0 +1,513 @@
+%%%% canonical forms lemmas
+
+cfl/tp/unit	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C tp/unit kd/type
+		   -> seq/tm E tm/unit
+		   -> type.
+
+%mode cfl/tp/unit +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/unit _ (oftp/tm/unit) _ seq/tm/refl.
+
+-	: cfl/tp/unit V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/unit V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/unit (val/tm/pair _ _) (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit val/tm/fun (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-unit Deq Dun
+	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-unit Deq Dun
+	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit val/tm/loc (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit (val/tm/inl _) (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit (val/tm/inr _) (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit val/tm/tagloc (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+-	: cfl/tp/unit _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-unit Deq Dun
+ 	   <- uninhabited-seq/tm _ _ Dun Dseq.
+
+%worlds () (cfl/tp/unit _ _ _ _).
+%total D1 (cfl/tp/unit _ D1 _ _ ).
+
+
+
+cfl/tp/arrow	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/arrow C1 C2) kd/type
+		   -> seq/tm E (tm/fun _ _ _)
+		   -> type.
+
+%mode cfl/tp/arrow +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/arrow _ (oftp/tm/fun _ _) _ seq/tm/refl.
+
+-	: cfl/tp/arrow V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/arrow V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-arrow Deq Dun
+	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-arrow Deq Dun
+	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-arrow Deq Dun
+	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow (val/tm/inl _) (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow (val/tm/inr _) (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow (val/tm/tagloc) (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+-	: cfl/tp/arrow _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-arrow Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/fun tp/unit tp/unit ([x:tm] [f:tm] x)) Dun Dseq.
+
+%worlds () (cfl/tp/arrow _ _ _ _).
+%total D1 (cfl/tp/arrow _ D1 _ _ ).
+
+
+
+cfl/tp/cross	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/cross C1 C2) kd/type
+		   -> seq/tm E (tm/pair _ _)
+		   -> type.
+
+%mode cfl/tp/cross +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/cross _ (oftp/tm/pair _ _) _ seq/tm/refl.
+
+-	: cfl/tp/cross V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/cross V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-cross Deq Dun
+	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-cross Deq Dun
+	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-cross Deq Dun
+	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+-	: cfl/tp/cross _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-cross Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/pair tm/unit tm/unit) Dun Dseq.
+
+
+%worlds () (cfl/tp/cross _ _ _ _).
+%total D1 (cfl/tp/cross _ D1 _ _ ).
+
+
+
+cfl/tp/forall	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/forall C1 C2) kd/type
+		   -> seq/tm E (tm/cnabs _ _)
+		   -> type.
+
+%mode cfl/tp/forall +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/forall _ (oftp/tm/cnabs _ _) _ seq/tm/refl.
+
+-	: cfl/tp/forall V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/forall V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-forall Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+-	: cfl/tp/forall _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-forall Deq Dun
+	   <- uninhabited-seq/tm _ (tm/cnabs kd/type ([a:cn] tm/unit)) Dun Dseq.
+
+%worlds () (cfl/tp/forall _ _ _ _).
+%total D1 (cfl/tp/forall _ D1 _ _ ).
+
+
+
+
+cfl/tp/ref	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/ref C1) kd/type
+		   -> seq/tm E (tm/loc _)
+		   -> type.
+
+%mode cfl/tp/ref +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/ref _ (oftp/tm/loc _ _) _ seq/tm/refl.
+
+-	: cfl/tp/ref V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/ref V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-ref Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/ref _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-ref Deq Dun
+	   <- uninhabited-seq/tm _ (tm/loc (loc/z)) Dun Dseq.
+
+
+%worlds () (cfl/tp/ref _ _ _ _).
+%total D1 (cfl/tp/ref _ D1 _ _ ).
+
+
+
+seq-in	: {E:tm} seq/tm E E' -> type.
+
+seq-inl	: seq-in (tm/inl C E) seq/tm/refl.
+seq-inr	: seq-in (tm/inr C E) seq/tm/refl.
+
+
+
+cfl-neq-seq-in	: {E1:tm} uninhabited -> seq-in E1 _ -> type.
+%mode cfl-neq-seq-in +E1 +D1 -D2.
+
+%worlds (ofkd+vdt-block) (cfl-neq-seq-in _ _ _).
+%total {} (cfl-neq-seq-in _ _ _).
+
+
+
+cfl/tp/sum	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/sum C1 C2) kd/type
+		   -> seq-in E S
+		   -> type.
+%mode cfl/tp/sum +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/sum _ (oftp/tm/inl _ _) _ seq-inl.
+
+-	: cfl/tp/sum _ (oftp/tm/inr _ _) _ seq-inr.
+
+-	: cfl/tp/sum V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/sum V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-sum Deq Dun
+ 	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+-	: cfl/tp/sum _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-sum Deq Dun
+	   <- cfl-neq-seq-in _ Dun Dseq.
+
+
+
+%worlds () (cfl/tp/sum _ _ _ _).
+%total D1 (cfl/tp/sum _ D1 _ _ ).
+
+
+
+
+cfl/tp/tag	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (tp/tag C1) kd/type
+		   -> seq/tm E (tm/tagloc _)
+		   -> type.
+
+%mode cfl/tp/tag +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/tag _ (oftp/tm/tagloc _ _) _ seq/tm/refl.
+
+-	: cfl/tp/tag V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/tag V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-tag Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+-	: cfl/tp/tag _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-tag Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tagloc (loc/z)) Dun Dseq.
+
+
+%worlds () (cfl/tp/tag _ _ _ _).
+%total D1 (cfl/tp/tag _ D1 _ _ ).
+
+
+
+cfl/tp/tagged	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C tp/tagged kd/type
+		   -> seq/tm E (tm/tag (tm/tagloc _) _)
+		   -> type.
+
+%mode cfl/tp/tagged +D1 +D2 +D3 -D4.
+
+-	: cfl/tp/tagged (val/tm/tag V _) (oftp/tm/tag D1 _) _ DQ'
+	   <- vdt/oftp D1 DC
+	   <- cfl/tp/tag V D1 (cn-deq/refl DC) DQ
+	   <- seq/tm/tag _ DQ DQ'.
+
+-	: cfl/tp/tagged V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/tp/tagged V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-tagged Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-tagged Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-tagged Deq Dun
+	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+-	: cfl/tp/tagged _ (oftp/tm/roll _ _) Deq Dseq
+	   <- neq/deq/mu-tagged Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/tag (tm/tagloc loc/z) tm/unit) Dun Dseq.
+
+
+%worlds () (cfl/tp/tagged _ _ _ _).
+%total D1 (cfl/tp/tagged _ D1 _ _ ).
+
+
+
+
+cfl/cn/mu	: val/tm E
+		   -> oftp L T E C
+		   -> cn-deq C (cn/mu C1 C2) kd/type
+		   -> seq/tm E (tm/roll _ _)
+		   -> type.
+
+%mode cfl/cn/mu +D1 +D2 +D3 -D4.
+
+-	: cfl/cn/mu _ (oftp/tm/roll _ _) _ seq/tm/refl.
+
+-	: cfl/cn/mu V (oftp/deq DofE Deq) Deq' Dseq
+	   <- cfl/cn/mu V DofE (cn-deq/trans Deq Deq') Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/fun _ _) Deq Dseq
+	   <- neq/deq/arrow-mu Deq Dun
+ 	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/unit) Deq Dseq
+	   <- neq/deq/unit-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/pair _ _) Deq Dseq
+	   <- neq/deq/cross-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/loc _ _) Deq Dseq
+	   <- neq/deq/ref-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/inl _ _) Deq Dseq
+	   <- neq/deq/sum-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/inr _ _) Deq Dseq
+	   <- neq/deq/sum-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/tagloc _ _) Deq Dseq
+	   <- neq/deq/tag-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/tag _ _) Deq Dseq
+	   <- neq/deq/tagged-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+-	: cfl/cn/mu _ (oftp/tm/cnabs _ _) Deq Dseq
+	   <- neq/deq/forall-mu Deq Dun
+	   <- uninhabited-seq/tm _ (tm/roll tp/unit tm/unit) Dun Dseq.
+
+%worlds () (cfl/cn/mu _ _ _ _).
+%total D1 (cfl/cn/mu _ D1 _ _ ).
+
+
+
+

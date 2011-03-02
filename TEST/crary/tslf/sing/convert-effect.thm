@@ -1,0 +1,130 @@
+
+%%%%%  Converting Variables and Worlds  %%%%%
+
+eaca : eterm = econst unit.
+
+
+vof-const-contra : vof (const _) _ -> false -> type.
+%mode vof-const-contra +X1 -X2.
+%worlds (bind) (vof-const-contra _ _).
+%total {} (vof-const-contra _ _).
+
+
+
+vsound : vof X A -> vtrans EX X -> tconvert A EA -> evof EX EA -> type.
+%mode vsound +X1 -X2 -X3 -X4.
+
+
+vtrans-variable : vtrans EX X -> variable EX -> type.
+%mode vtrans-variable +X1 -X2.
+
+
+%block sbind	: some {a:tp} {ea:etp} {d_tconvert:tconvert a ea}
+		   block {x:atom} {d:vof x a} {ex:eterm} {xt:vtrans ex x} {ed:evof ex ea} {dv:variable ex}
+		   {thm1:vtrans-variable xt dv}
+		   {thm2:vsound d xt d_tconvert ed}.
+
+%% Without the d_tconvert assumption, Twelf will split this.
+%block sbind'	: some {a:tp} {ea:etp}
+		   block {x:atom} {d:vof x a} {ex:eterm} {xt:vtrans ex x} {ed:evof ex ea} {dv:variable ex}
+		   {thm1:vtrans-variable xt dv}.
+
+%block tvbind	: some {r:atom}
+		   block {ex:eterm} {tr:vtrans ex r} {dv:variable ex}
+		   {thm:vtrans-variable tr dv}.
+
+%worlds (sbind' | ovar | tvbind | evar) (vtrans-variable _ _).
+%total {} (vtrans-variable _ _).
+
+
+
+
+%% force Twelf to split X
+-	: vsound (Dvof : vof aca _) D1 D2 D3
+	   <- vof-const-contra Dvof Dfalse
+	   <- false-implies-vtrans Dfalse D1
+	   <- false-implies-tconvert Dfalse D2
+	   <- false-implies-evof Dfalse (D3 : evof eaca et).
+
+%worlds (sbind) (vsound _ _ _ _).
+%total {} (vsound _ _ _ _).
+
+
+
+
+%%%%%  Conversion Effectiveness  %%%%%
+
+can-tconvert : wf A -> tconvert A EA -> type.
+%mode can-tconvert +X1 -X2.
+
+can-convert : of M A -> convert M A EM -> type.
+%mode can-convert +X1 -X2.
+
+can-aconvert : aof R A -> aconvert R A EM -> type.
+%mode can-aconvert +X1 -X2.
+
+-const	: can-aconvert (aof/const Dwf Dcof) (aconvert/const Dconv Dwf Dcof)
+	   <- can-tconvert Dwf Dconv.
+
+-forall	: can-aconvert (aof/forall Dwf) (aconvert/forall Dconv)
+	   <- can-tconvert Dwf Dconv.
+
+-var	: can-aconvert (aof/var Dwf Dvof) (aconvert/var Dvtrans Dconvert Dwf Dvof)
+	   <- vsound Dvof Dvtrans _ _
+	   <- can-tconvert Dwf Dconvert.
+
+-app	: can-aconvert (aof/app _ Dsub DofM DofR) (aconvert/app Dsub DconvM DconvR)
+	   <- can-aconvert DofR DconvR
+	   <- can-convert DofM DconvM.
+
+-pi1	: can-aconvert (aof/pi1 Dof) (aconvert/pi1 Dconv)
+	   <- can-aconvert Dof Dconv.
+
+-pi2	: can-aconvert (aof/pi2 Dof) (aconvert/pi2 Dconv)
+	   <- can-aconvert Dof Dconv.
+
+
+
+-at	: can-convert (of/at Dof) (convert/at Dconv)
+	   <- can-aconvert Dof Dconv.
+
+-lam	: can-convert (of/lam Dof Dwf) (convert/lam Dconv Dtconv)
+	   <- can-tconvert Dwf Dtconv
+	   <- ({x} {d} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt Dtconv ed
+		 -> can-convert (Dof x d) (Dconv x d ex xt)).
+
+-pair	: can-convert (of/pair Dwf Dof2 Dsub Dof1) (convert/pair Dwf Dconv2 Dsub Dconv1)
+	   <- can-convert Dof1 Dconv1
+	   <- can-convert Dof2 Dconv2.
+
+-at	: can-convert (of/sing Dof) (convert/sing Dconv)
+	   <- can-aconvert Dof Dconv.
+
+
+
+
+-t	: can-tconvert wf/t tconvert/t.
+
+-pi	: can-tconvert (wf/pi Dwf' Dwf) (tconvert/pi Dtconv' Dtconv)
+	   <- can-tconvert Dwf Dtconv
+	   <- ({x} {d} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt Dtconv ed
+		 -> can-tconvert (Dwf' x d) (Dtconv' x d ex xt)).
+
+-sigma	: can-tconvert (wf/sigma Dwf' Dwf) (tconvert/sigma Dtconv' Dtconv)
+	   <- can-tconvert Dwf Dtconv
+	   <- ({x} {d} {ex} {xt} {ed} {dv}
+		 vtrans-variable xt dv
+		 -> vsound d xt Dtconv ed
+		 -> can-tconvert (Dwf' x d) (Dtconv' x d ex xt)).
+
+-sing	: can-tconvert (wf/sing Dof) (tconvert/sing Dconv)
+	   <- can-aconvert Dof Dconv.
+
+-	: (vsound _ _ _ _ -> can-convert _ _) -> type.
+
+%worlds (sbind) (can-aconvert _ _) (can-convert _ _) (can-tconvert _ _).
+%total (D1 D2 D3) (can-aconvert D1 _) (can-convert D2 _) (can-tconvert D3 _).

@@ -1,0 +1,226 @@
+%%%% lemmas about syntactic equality
+%%%% this file could benefit from better organization. perhaps splitting it
+%%%% into different files, etc..
+
+seq/tm/pj1	: seq/tm E1 E2
+		   -> seq/tm (tm/pj1 E1) (tm/pj1 E2)
+		   -> type.
+
+%mode seq/tm/pj1 +D1 -D2.
+
+-	: seq/tm/pj1 _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/pj1 _ _).
+%total {} (seq/tm/pj1 _ _).
+
+
+
+seq/tm/pj2	: seq/tm E1 E2
+		   -> seq/tm (tm/pj2 E1) (tm/pj2 E2)
+		   -> type.
+
+%mode seq/tm/pj2 +D1 -D2.
+
+-	: seq/tm/pj2 _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/pj2 _ _).
+%total {} (seq/tm/pj2 _ _).
+
+
+
+seq/tm/tmapp	: {E3:tm}
+		   seq/tm E1 E2
+		   -> seq/tm (tm/tmapp E1 E3) (tm/tmapp E2 E3)
+		   -> type.
+
+%mode seq/tm/tmapp +E +D1 -D2.
+
+-	: seq/tm/tmapp _ _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/tmapp _ _ _).
+%total {} (seq/tm/tmapp _ _ _).
+
+
+
+seq/tm/tag	: {E3:tm}
+		   seq/tm E1 E2
+		   -> seq/tm (tm/tag E1 E3) (tm/tag E2 E3)
+		   -> type.
+
+%mode seq/tm/tag +E +D1 -D2.
+
+-	: seq/tm/tag _ _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/tag _ _ _).
+%total {} (seq/tm/tag _ _ _).
+
+
+
+seq/tm/cnapp	: {E3:cn}
+		   seq/tm E1 E2
+		   -> seq/tm (tm/cnapp E1 E3) (tm/cnapp E2 E3)
+		   -> type.
+
+%mode seq/tm/cnapp +E +D1 -D2.
+
+-	: seq/tm/cnapp _ _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/cnapp _ _ _).
+%total {} (seq/tm/cnapp _ _ _).
+
+
+
+
+seq/tm/term	: seq/md M1 M2
+		   -> seq/tm (tm/term M1) (tm/term M2)
+		   -> type.
+
+%mode seq/tm/term +D1 -D2.
+
+-	: seq/tm/term _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/term _ _).
+%total {} (seq/tm/term _ _).
+
+
+
+seq/tm/unroll	: seq/tm E1 E2
+		   -> seq/tm (tm/unroll E1) (tm/unroll E2)
+		   -> type.
+
+%mode seq/tm/unroll +D1 -D2.
+
+-	: seq/tm/unroll _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/unroll _ _).
+%total {} (seq/tm/unroll _ _).
+
+
+
+
+seq/tm/sym	: seq/tm E1 E2
+		   -> seq/tm E2 E1
+		   -> type.
+
+%mode seq/tm/sym +D0 -D2.
+
+-	: seq/tm/sym _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/sym _ _).
+%total {} (seq/tm/sym _ _).
+
+
+
+seq/tm/term-a	: seq/tm E1 E2
+		   -> seq/md (md/tm E1) (md/tm E2)
+		   -> type.
+
+%mode seq/tm/term-a +D0 -D2.
+
+-	: seq/tm/term-a _ seq/md/refl.
+
+%worlds (ofkd+vdt-block | ofsg+vdt-block) (seq/tm/term-a _ _).
+%total {} (seq/tm/term-a _ _).
+
+
+
+
+seq/md/app	: {M3:md}
+		   seq/md M1 M2
+		   -> seq/md (md/app M1 M3) (md/app M2 M3)
+		   -> type.
+
+%mode seq/md/app +M +D1 -D2.
+
+-	: seq/md/app _ _ seq/md/refl.
+
+%worlds (ofkd+vdt-block) (seq/md/app _ _ _).
+%total {} (seq/md/app _ _ _).
+
+
+
+
+fst-md/seq-m	: seq/md M1 M2
+		   -> (fst-md M1 C)
+		   -> (fst-md M2 C)
+		   -> type.
+
+%mode fst-md/seq-m +D1 +D2 -D3.
+
+-	: fst-md/seq-m seq/md/refl D1 D1.
+
+%worlds (ofkd+vdt-block | ofsg+vdt-block) (fst-md/seq-m _ _ _).
+%total {} (fst-md/seq-m _ _ _).
+
+
+
+
+seq/md/pj1	: seq/md E1 E2
+		   -> seq/md (md/pj1 E1) (md/pj1 E2)
+		   -> type.
+
+%mode seq/md/pj1 +D1 -D2.
+
+-	: seq/md/pj1 _ seq/md/refl.
+
+%worlds (ofkd+vdt-block) (seq/md/pj1 _ _).
+%total {} (seq/md/pj1 _ _).
+
+
+
+seq/md/pj2	: seq/md E1 E2
+		   -> seq/md (md/pj2 E1) (md/pj2 E2)
+		   -> type.
+
+%mode seq/md/pj2 +D1 -D2.
+
+-	: seq/md/pj2 _ seq/md/refl.
+
+%worlds (ofkd+vdt-block) (seq/md/pj2 _ _).
+%total {} (seq/md/pj2 _ _).
+
+
+
+
+oftp/seq-t	: seq/tm E1 E2
+		   -> oftp L T E1 C
+		   -> oftp L T E2 C
+		   -> type.
+
+%mode oftp/seq-t +D1 +D2 -D3.
+
+-	: oftp/seq-t seq/tm/refl D1 D1.
+
+%worlds (ofkd+vdt-block | ofsg+vdt-block) (oftp/seq-t _ _ _).
+%total {} (oftp/seq-t _ _ _).
+
+
+
+seq/tm/get	: seq/tm E1 E2
+		   -> seq/tm (tm/get E1) (tm/get E2)
+		   -> type.
+
+%mode seq/tm/get +D1 -D2.
+
+-	: seq/tm/get _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/get _ _).
+%total {} (seq/tm/get _ _).
+
+
+
+
+seq/tm/set	: {E3:tm}
+		   seq/tm E1 E2
+		   -> seq/tm (tm/set E1 E3) (tm/set E2 E3)
+		   -> type.
+
+%mode seq/tm/set +E +D1 -D2.
+
+-	: seq/tm/set _ _ seq/tm/refl.
+
+%worlds (ofkd+vdt-block) (seq/tm/set _ _ _).
+%total {} (seq/tm/set _ _ _).
+
+
+

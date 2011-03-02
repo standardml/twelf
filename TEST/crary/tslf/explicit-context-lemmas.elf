@@ -1,0 +1,545 @@
+
+cxt-append-complete : {G1} {G2} {G3} (cxt-append G1 G2 G3) -> type.
+%mode cxt-append-complete +G1 +G2 -G3 -D.
+
+-	: cxt-append-complete G cxt/nil G cxt-append/nil.
+
+-	: cxt-append-complete G (cxt/cons G' C K) 
+	   (cxt/cons G'' C K) (cxt-append/cons D)
+	   <- cxt-append-complete G G' G'' D.
+
+%worlds (cn-block) (cxt-append-complete _ _ _ _).
+%total G (cxt-append-complete _ G _ _).
+
+
+
+cxt-precedes-trans	: cxt-precedes X Y
+			   -> cxt-precedes Y Z
+			   -> cxt-precedes X Z
+			   -> type.
+%mode cxt-precedes-trans +D1 +D2 -D3.
+
+-	: cxt-precedes-trans 
+	   (cxt-precedes/i DX _ DL1)
+	   (cxt-precedes/i _ DZ DL2)
+	   (cxt-precedes/i DX DZ DL3)
+	   <- loc-less-trans DL1 DL2 DL3.
+
+%worlds (cn-block  | ovar-block) (cxt-precedes-trans _ _ _).
+%total {} (cxt-precedes-trans _ _ _).
+
+
+
+cxt-lookup-ordered	: cxt-lookup G _ _ 
+			   -> cxt-ordered G 
+			   -> type.
+%mode cxt-lookup-ordered +D1 -D2.
+
+-	: cxt-lookup-ordered 
+	   (cxt-lookup/hit (DB: cxt-bounded G1 C2)) 
+	   (cxt-ordered/cons DB: cxt-ordered (cxt/cons G1 C2 K1)).
+
+-	: cxt-lookup-ordered 
+	   (cxt-lookup/miss
+	      (DL: cxt-lookup (cxt/cons G1 C1 K1) CA K3)
+	      (DP: cxt-precedes CA C2)
+	      DB)
+	   (cxt-ordered/cons DB).
+
+%worlds (ofkd-block | ovar-block | cn-block) (cxt-lookup-ordered _ _).
+%total D1 (cxt-lookup-ordered D1 _).
+
+
+
+cxt-bounded-isvar	: cxt-bounded G X
+			   -> isvar X I
+			   -> type.
+%mode cxt-bounded-isvar +D1 -D2.
+
+-	: cxt-bounded-isvar (cxt-bounded/nil D) D.
+
+-	: cxt-bounded-isvar (cxt-bounded/cons _ (cxt-precedes/i _ D _)) D.
+
+%worlds (ofkd-block | ovar-block | cn-block) (cxt-bounded-isvar _ _).
+%total {} (cxt-bounded-isvar _ _).
+
+
+
+cxt-extend-ordered	: cxt-ordered G
+			   -> ({x:cn} (isvar x I) -> cxt-bounded G x)
+			   -> type.
+%mode cxt-extend-ordered +D1 -D2.
+
+-	: cxt-extend-ordered cxt-ordered/nil ([x][d: isvar x loc/z] 
+						cxt-bounded/nil d).
+
+-	: cxt-extend-ordered (cxt-ordered/cons DB)
+	   ([x][d:isvar x (loc/s I)] cxt-bounded/cons DB 
+	      (cxt-precedes/i Disvar d Dlt))
+	      <- cxt-bounded-isvar DB Disvar
+	      <- loc-less-immsucc I Dlt.
+
+%worlds (cn-block | ovar-block) (cxt-extend-ordered _ _).
+%total {} (cxt-extend-ordered _ _).
+
+
+cxt-bounded-lookup	: cxt-bounded G X 
+			   -> cxt-lookup G Y _ 
+			   -> cxt-precedes Y X -> type.
+%mode cxt-bounded-lookup +D1 +D2 -D3.
+
+-	: cxt-bounded-lookup 
+	   (cxt-bounded/cons _ DP)
+	   (cxt-lookup/hit _)
+	   DP.
+
+-	: cxt-bounded-lookup
+	   (cxt-bounded/cons DB DP)
+	   (cxt-lookup/miss DL _ _)
+	   DP''
+	   <- cxt-bounded-lookup DB DL DP'
+	   <- cxt-precedes-trans DP' DP DP''.
+
+
+%worlds (cn-block | ovar-block) (cxt-bounded-lookup _ _ _).
+%total {DB} (cxt-bounded-lookup DB _ _).
+
+
+
+cxt-weaken-lookup : cxt-bounded G X
+		     -> cxt-lookup G Y T
+		     -> {S} cxt-lookup (cxt/cons G X S) Y T
+		     -> type.
+%mode cxt-weaken-lookup +D1 +D2 +D3 -D4.
+
+-	: cxt-weaken-lookup DB DL _ (cxt-lookup/miss DL DP DB)
+	   <- cxt-bounded-lookup DB DL DP.
+
+%worlds (cn-block | ovar-block) (cxt-weaken-lookup _ _ _ _).
+%total {} (cxt-weaken-lookup _ _ _ _).
+
+
+
+id-or-cl	: (cn -> cn) -> (cn -> kd) -> type.
+
+id-or-cl/id	: id-or-cl ([x] x) ([x] K).
+id-or-cl/cl	: id-or-cl ([x] C) _.
+
+cxt-lookup-ioc-c: ({x} isvar x I 
+			 -> cxt-lookup G' (C' x) (K' x))
+		   -> id-or-cl C' K'
+		   -> type.
+%mode cxt-lookup-ioc-c +D3 -D4.
+
+-	: cxt-lookup-ioc-c ([x][di] cxt-lookup/hit _) id-or-cl/cl.
+
+-	: cxt-lookup-ioc-c
+	   ([x][di] cxt-lookup/miss (DL x di) _ _) IOC
+	   <- cxt-lookup-ioc-c DL IOC.
+
+%worlds (cn-block | ovar-block) (cxt-lookup-ioc-c _ _).
+%total D1 (cxt-lookup-ioc-c D1 _).
+
+
+
+cxt-append-precedes	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> ({x} isvar x I
+				 -> cxt-bounded (G x) (X x))
+			   -> ({x} isvar x I
+				 -> cxt-precedes x (X x))
+			   -> type.
+%mode cxt-append-precedes +D1 +D2 -D3.
+
+-	: cxt-append-precedes 
+	   ([x] cxt-append/nil)
+	   ([x][di] cxt-bounded/cons _ (DP x di) : cxt-bounded _ (X x))
+	   (DP: {x} isvar x I -> cxt-precedes x (X x)).
+
+-	: cxt-append-precedes
+	   ([x] cxt-append/cons (DA x))
+	   ([x][di] cxt-bounded/cons (DB x di) (DP x di)) DP''
+	   <- cxt-append-precedes DA DB DP'
+	   <- ({x}{di: isvar x I}
+		 cxt-precedes-trans (DP' x di) (DP x di) (DP'' x di)).
+	   
+%worlds (cn-block | ovar-block) (cxt-append-precedes _ _ _).
+%total D1 (cxt-append-precedes D1 _ _).
+
+
+
+cxt-precedes-not-refl	: ({x:cn} isvar x I -> cxt-precedes x x)
+			   -> uninhabited
+			   -> type.
+%mode cxt-precedes-not-refl +D1 -D2.
+
+-	: cxt-precedes-not-refl ([x][di] cxt-precedes/i di di D11)
+	   DU
+	   <- loc-less-not-refl D11 DU.
+
+%worlds (cn-block | ovar-block) (cxt-precedes-not-refl _ _).
+%total {} (cxt-precedes-not-refl _ _).
+
+
+
+isvar-fun	: isvar X I -> isvar X J -> seq/loc I J -> type.
+%mode isvar-fun +D1 +D2 -D3.
+
+
+
+
+%block isvar-fun-block	: some {n:loc} 
+			   block {x:cn} {d:isvar x n} 
+			   {thm:isvar-fun d d seq/loc/refl}.
+
+%worlds (cn-block | isvar-fun-block) (isvar-fun _ _ _).
+%total {} (isvar-fun _ _ _).
+	
+
+
+
+seq/loc/less-r	: loc-less L1 L2
+		   -> seq/loc L2 L3
+		   -> loc-less L1 L3
+		   -> type.
+%mode seq/loc/less-r +D1 +D2 -D3.
+
+-	: seq/loc/less-r DL seq/loc/refl DL.
+
+%worlds () (seq/loc/less-r _ _ _).
+%total {} (seq/loc/less-r _ _ _).
+
+
+
+cxt-bounded-strengthen : {G:cxt}
+			   ({x:cn}{di: isvar x I} 
+			     cxt-bounded G x)
+			   -> (cxt-ordered G)
+			   -> type.
+%mode cxt-bounded-strengthen +G +D1 -D4.
+
+-	: cxt-bounded-strengthen 
+	   cxt/nil
+	   ([x][di] cxt-bounded/nil di)
+	   cxt-ordered/nil.
+
+-	: cxt-bounded-strengthen
+	   (cxt/cons cxt/nil _ _)
+	   ([x][di] cxt-bounded/cons (cxt-bounded/nil D1) 
+	      (cxt-precedes/i D1 di DL))
+	   (cxt-ordered/cons (cxt-bounded/nil D1)).
+
+-	: cxt-bounded-strengthen
+	   (cxt/cons (cxt/cons G C K) _ _)
+	   ([x][di] cxt-bounded/cons 
+	      (cxt-bounded/cons (DB x di) (cxt-precedes/i D1 D2 DL12)) 
+	      (cxt-precedes/i D2' di DL2'3))
+	   (cxt-ordered/cons 
+	      (cxt-bounded/cons DB' (cxt-precedes/i D1 D2 DL12)))
+	   <- isvar-fun D2 D2' DQ
+	   <- seq/loc/less-r DL12 DQ DL12'
+	   <- loc-less-trans DL12' DL2'3 DL13
+	   <- cxt-bounded-strengthen (cxt/cons G C K) 
+	      ([x][di] cxt-bounded/cons (DB x di) 
+		 (cxt-precedes/i D1 di DL13)) (cxt-ordered/cons DB').
+	      
+
+%worlds (cn-block | isvar-fun-block) (cxt-bounded-strengthen _ _ _).
+%total G (cxt-bounded-strengthen G _ _).
+
+
+
+cxt-bounded-strengthen-c : ({x:cn}{di: isvar x I} 
+			     cxt-bounded G X)
+			   -> cxt-bounded G X
+			   -> type.
+%mode cxt-bounded-strengthen-c +D1 -D4.
+
+-	: cxt-bounded-strengthen-c 
+	   ([x][di] cxt-bounded/nil DI)
+	   (cxt-bounded/nil DI).
+
+-	: cxt-bounded-strengthen-c 
+	   ([x][di] cxt-bounded/cons (DB x di) DP)
+	   (cxt-bounded/cons DB' DP)
+	   <- cxt-bounded-strengthen-c DB DB'.
+
+%worlds (cn-block | isvar-fun-block) (cxt-bounded-strengthen-c _ _).
+%total G (cxt-bounded-strengthen-c G _).
+
+
+cxt-lookup-strengthen : {C':cn}
+			 ({x:cn}{di: isvar x I} 
+			     cxt-lookup G C (K x))
+			   -> cxt-lookup G C (K C')
+			   -> type.
+%mode cxt-lookup-strengthen +C +D1 -D4.
+
+-	: cxt-lookup-strengthen _
+	   ([x][di] cxt-lookup/hit (DB x di))
+	   (cxt-lookup/hit DB')
+	   <- cxt-bounded-strengthen-c DB DB'.
+
+-	: cxt-lookup-strengthen C
+	   ([x][di] cxt-lookup/miss (DL x di) DP (DB x di))
+	   (cxt-lookup/miss DL' DP DB')
+	   <- cxt-lookup-strengthen C DL DL'
+	   <- cxt-bounded-strengthen-c DB DB'.
+
+%worlds (cn-block | isvar-fun-block) (cxt-lookup-strengthen _ _ _).
+%total G (cxt-lookup-strengthen _ G _).
+
+
+
+uninhabited-seq/kd	: {S1:kd} {S2:kd}
+			   uninhabited 
+			   -> seq/kd S1 S2
+			   -> type.
+%mode uninhabited-seq/kd +M +C +DU -DM.
+
+%worlds (cn-block | isvar-fun-block)
+(uninhabited-seq/kd _ _ _ _).
+%total {} (uninhabited-seq/kd _ _ _ _).
+
+
+
+
+
+
+cxt-lookup-unique	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> ({x} isvar x I 
+				 -> cxt-lookup (G x) x K')
+			   -> seq/kd K K'
+			   -> type.
+%mode cxt-lookup-unique +D1 +D2 -D3.
+
+-	: cxt-lookup-unique
+	   ([x] cxt-append/nil) _ seq/kd/refl.
+
+-	: cxt-lookup-unique
+	   ([x] cxt-append/nil)
+	   ([x][di] cxt-lookup/miss _ (cxt-precedes/i di di D11) _) DQ
+	   <- loc-less-not-refl D11 DU
+	   <- uninhabited-seq/kd _ _ DU DQ.
+
+-	: cxt-lookup-unique 
+	   ([x] cxt-append/cons (DA x)) 
+	   ([x][di] cxt-lookup/miss (DL x di) _ _) DQ
+	   <- cxt-lookup-unique DA DL DQ.
+
+-	: cxt-lookup-unique 
+	   ([x] cxt-append/cons (DA x)) 
+	   ([x][di: isvar x I] cxt-lookup/hit (DB x di)) DQ
+	   <- cxt-append-precedes DA DB DP
+	   <- cxt-precedes-not-refl DP DU
+	   <- uninhabited-seq/kd _ _ DU DQ.
+
+%worlds (cn-block | ovar-block) (cxt-lookup-unique _ _ _).
+%total D1 (cxt-lookup-unique D1 _ _).
+
+cxt-inc	: {K: kd}
+	   (cxt-ordered G)
+	   -> ({y} isvar y J 
+		 -> cxt-ordered (cxt/cons G y K))
+	   -> type.
+%mode cxt-inc +K +D1 -D2.
+
+-	: cxt-inc _ DO ([x][di] cxt-ordered/cons (DB x di))
+	   <- cxt-extend-ordered DO DB.
+
+%worlds (cn-block | ovar-block) (cxt-inc _ _ _).
+%total {} (cxt-inc _ _ _).
+
+					
+
+cxt-inc-duece	: {K: kd} {K': kd}
+		   (cxt-ordered G)
+		   -> ({y} isvar y J 
+			 -> cxt-ordered (cxt/cons G y K))
+		   -> ({y} isvar y J 
+			 -> cxt-ordered (cxt/cons G y K'))
+		   -> type.
+%mode cxt-inc-duece +K +K' +D1 -D2 -D3.
+
+-	: cxt-inc-duece _ _ cxt-ordered/nil 
+	   ([y][dy: isvar y loc/z] cxt-ordered/cons (cxt-bounded/nil dy))
+	   ([y][dy: isvar y loc/z] cxt-ordered/cons (cxt-bounded/nil dy)).
+
+-	: cxt-inc-duece _ _ (cxt-ordered/cons (cxt-bounded/nil DI))
+	   ([x][dx]cxt-ordered/cons 
+	      (cxt-bounded/cons (cxt-bounded/nil DI) 
+		 (cxt-precedes/i DI dx DL)))
+	   ([x][dx]cxt-ordered/cons 
+	      (cxt-bounded/cons (cxt-bounded/nil DI) 
+		 (cxt-precedes/i DI dx DL)))
+	   <- loc-less-immsucc _ DL.
+
+-	: cxt-inc-duece _ _ (cxt-ordered/cons 
+		       (cxt-bounded/cons DB 
+			  (cxt-precedes/i D1 D2 D12)))
+	   ([x][dx] cxt-ordered/cons
+	      (cxt-bounded/cons 
+		 (cxt-bounded/cons DB
+                          (cxt-precedes/i D1 D2 D12))
+		 (cxt-precedes/i D2 dx DL)))
+	   ([x][dx] cxt-ordered/cons
+	      (cxt-bounded/cons 
+		 (cxt-bounded/cons DB
+                          (cxt-precedes/i D1 D2 D12))
+		 (cxt-precedes/i D2 dx DL)))
+	   <- loc-less-immsucc _ DL.
+
+%worlds (cn-block | ovar-block) (cxt-inc-duece _ _ _ _ _).
+%total {} (cxt-inc-duece _ _ _ _ _).
+
+
+
+cxt-inc-precedes	: ({x} isvar x I -> cxt-precedes (C x) (C' x))
+			   -> ({x} isvar x J -> cxt-precedes (C x) (C' x))
+			   -> ({x} isvar x I 
+				 -> {y} isvar y L
+				 -> cxt-precedes (C' x) y)
+			   -> ({x} isvar x J 
+				 -> {y} isvar y L
+				 -> cxt-precedes (C' x) y)
+			   -> type.
+%mode cxt-inc-precedes +D1 +D2 -D3 -D4.
+
+-	: cxt-inc-precedes 
+	   ([x][di] cxt-precedes/i di di Di)
+	   ([x][di] cxt-precedes/i di di Dj)
+	   ([x][di][y][dy] cxt-precedes/i di dy DL1)
+	   ([x][di][y][dy] cxt-precedes/i di dy DL2)
+	   <- loc-less-bound _ _ DL1 DL2.
+
+-	: cxt-inc-precedes 
+	   ([x][di] cxt-precedes/i (DI x) di Di)
+	   ([x][di] cxt-precedes/i (DJ x) di Dj)
+	   ([x][di][y][dy] cxt-precedes/i di dy DL1)
+	   ([x][di][y][dy] cxt-precedes/i di dy DL2)
+	   <- loc-less-bound _ _ DL1 DL2.
+
+-	: cxt-inc-precedes 
+	   ([x][di] cxt-precedes/i di (DI x) Di)
+	   ([x][di] cxt-precedes/i di (DJ x) Dj)
+	   ([x][di][y][dy] cxt-precedes/i (DI x) dy DL1)
+	   ([x][di][y][dy] cxt-precedes/i (DJ x) dy DL2)
+	   <- loc-less-bound _ _ DL1 DL2.
+
+
+-	: cxt-inc-precedes 
+	   ([x][di] cxt-precedes/i (DI' x) (DI x) Di)
+	   ([x][di] cxt-precedes/i (DJ' x) (DJ x) Dj)
+	   ([x][di][y][dy] cxt-precedes/i (DI x) dy DL1)
+	   ([x][di][y][dy] cxt-precedes/i (DJ x) dy DL2)
+	   <- loc-less-bound _ _ DL1 DL2.
+
+%worlds (cn-block | ovar-block) (cxt-inc-precedes _ _ _ _).
+%total {} (cxt-inc-precedes _ _ _ _).
+
+
+
+cxt-inc-2-b	: {K: cn -> kd}
+		   ({x} isvar x I -> cxt-bounded (G x) (C x))
+		   -> ({x} isvar x J -> cxt-bounded (G x) (C x))
+		   -> ({x} isvar x I 
+			 -> {y} isvar y L 
+			 -> cxt-bounded (cxt/cons (G x) (C x) (K x)) y)
+		   -> ({x} isvar x J  
+			 -> {y} isvar y L 
+			 -> cxt-bounded (cxt/cons (G x) (C x) (K x)) y)
+		   -> type.
+%mode cxt-inc-2-b +K +D1 +D2 -D3 -D4.
+
+-	: cxt-inc-2-b _ 
+	   ([x][di] cxt-bounded/nil di)
+	   ([x][di] cxt-bounded/nil di)
+	   ([x][di][y][dy]
+	      cxt-bounded/cons (cxt-bounded/nil di)
+	      (cxt-precedes/i di dy DL1))
+	   ([x][di][y][dy]
+	      cxt-bounded/cons (cxt-bounded/nil di)
+	      (cxt-precedes/i di dy DL2))
+	   <- loc-less-bound _ _ DL1 DL2.
+
+-	: cxt-inc-2-b _ 
+	   ([x][di] cxt-bounded/nil (D1 x))
+	   ([x][di] cxt-bounded/nil (D2 x))
+	   ([x][di][y][dy]
+	      cxt-bounded/cons (cxt-bounded/nil (D1 x))
+	      (cxt-precedes/i (D1 x) dy DL1))
+	   ([x][di][y][dy]
+	      cxt-bounded/cons (cxt-bounded/nil (D2 x))
+	      (cxt-precedes/i (D2 x) dy DL2))
+	   <- loc-less-bound _ _ DL1 DL2.
+
+-	: cxt-inc-2-b _
+	   ([x][di] cxt-bounded/cons (DB1 x di) (DP1 x di))
+	   ([x][di] cxt-bounded/cons (DB2 x di) (DP2 x di))
+	   ([x][di][y][dy]
+	      cxt-bounded/cons
+	      (cxt-bounded/cons (DB1 x di) (DP1 x di))
+	      (DP1' x di y dy))
+	   ([x][di][y][dy]
+	      cxt-bounded/cons
+	      (cxt-bounded/cons (DB2 x di) (DP2 x di))
+	      (DP2' x di y dy))
+	   <- cxt-inc-precedes DP1 DP2 DP1' DP2'.
+	   
+%worlds (cn-block | ovar-block) (cxt-inc-2-b _ _ _ _ _).
+%total {} (cxt-inc-2-b _ _ _ _ _).
+
+
+cxt-inc-2 : ({x} isvar x I -> cxt-ordered (G x))
+	   -> ({x} isvar x J -> cxt-ordered (G x))
+	   -> ({x} isvar x I 
+		 -> {y} isvar y K 
+		 -> cxt-bounded (G x) y)
+	   -> ({x} isvar x J  
+		 -> {y} isvar y K 
+		 -> cxt-bounded (G x) y)
+	   -> type.
+%mode cxt-inc-2 +D1 +D2 -D3 -D4.
+
+-	: cxt-inc-2 ([x][di] cxt-ordered/nil) _
+	   ([x][di][y][dy: isvar y loc/z]
+	      (cxt-bounded/nil dy))
+	   ([x][di][y][dy: isvar y loc/z]
+	      (cxt-bounded/nil dy)).
+
+-	: cxt-inc-2
+	   ([x][dx] cxt-ordered/cons (DB1 x dx))
+	   ([x][dx] cxt-ordered/cons (DB2 x dx))
+	   DB1' DB2'
+	   <- cxt-inc-2-b _ DB1 DB2 DB1' DB2'.
+
+%worlds (cn-block | ovar-block) (cxt-inc-2 _ _ _ _).
+%total {} (cxt-inc-2 _ _ _ _).
+
+
+
+cxt-lookup-precedes	: cxt-lookup G C K
+			   -> cxt-bounded G C'
+			   -> cxt-precedes C C'
+			   -> type.
+%mode cxt-lookup-precedes  +D1 +D2 -D3.
+
+-	: cxt-lookup-precedes 
+	   (cxt-lookup/hit _)
+	   (cxt-bounded/cons _ DP)
+	   DP.
+
+-	: cxt-lookup-precedes 
+	   (cxt-lookup/miss _ DP _)
+	   (cxt-bounded/cons _ DP')
+	   DP''
+	   <- cxt-precedes-trans DP DP' DP''.
+
+%worlds (cn-block | ovar-block) (cxt-lookup-precedes _ _ _).
+%total {} (cxt-lookup-precedes _ _ _).
+
+
+
+
+
+
+

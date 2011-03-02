@@ -1,0 +1,799 @@
+
+%%%%%  Syntax  %%%%%
+
+atom		: type.  %name atom C.
+tp		: type.  %name tp A.
+term		: type.  %name term M x.
+exp		: type.  %name exp E.
+
+
+atomic		: atom -> tp.
+arrow		: tp -> tp -> tp.
+box		: tp -> tp.
+diamond		: tp -> tp.
+
+
+
+lam		: (term -> term) -> term.
+app		: term -> term -> term.
+
+bx		: term -> term.
+letbx		: term -> (term -> term) -> term.
+
+di		: exp -> term.
+
+
+
+here		: term -> exp.
+eletbx		: term -> (term -> exp) -> exp.
+letdi		: term -> (term -> exp) -> exp.
+
+
+
+a		: atom.
+b		: atom.
+
+
+
+
+%%%%%  Locality  %%%%%
+
+local		: (term -> term) -> type.
+elocal		: (term -> exp) -> type.
+
+local/var	: local ([x] x).
+
+local/closed	: local ([x] M).
+
+local/lam	: local ([x] lam ([y] M x y))
+		   <- ({y} local ([x] M x y)).
+
+local/app	: local ([x] app (M x) (N x))
+		   <- local ([x] M x)
+		   <- local ([x] N x).
+
+local/bx	: local ([x] bx M)
+                = local/closed.
+
+local/letbx	: local ([x] letbx (M x) ([y] N x y))
+		   <- local ([x] M x)
+		   <- ({y} local ([x] N x y)).
+
+local/di	: local ([x] di (E x))
+		   <- elocal ([x] E x).
+
+
+
+local/here	: elocal ([x] here (M x))
+		   <- local ([x] M x).
+
+local/eletbx	: elocal ([x] eletbx (M x) ([y] E x y))
+		   <- local ([x] M x)
+		   <- ({y} elocal ([x] E x y)).
+
+local/letdi	: elocal ([x] letdi (M x) ([y] E y))
+		   <- local ([x] M x).
+
+
+
+
+
+%%%%%  Typing  %%%%%
+
+of		: term -> tp -> type.
+eof		: exp -> tp -> type.
+
+of/lam		: of (lam ([x] M x)) (arrow A B)
+		   <- ({x} of x A -> of (M x) B)
+		   <- local ([x] M x).
+
+of/app		: of (app M N) B
+		   <- of M (arrow A B)
+		   <- of N A.
+
+of/bx		: of (bx M) (box A)
+		   <- of M A.
+
+of/letbx	: of (letbx M ([x] N x)) B
+		   <- of M (box A)
+		   <- ({x} of x A -> of (N x) B).
+
+of/di		: of (di E) (diamond A)
+		   <- eof E A.
+
+
+
+of/here		: eof (here M) A
+		   <- of M A.
+
+of/eletbx	: eof (eletbx M ([x] E x)) B
+		   <- of M (box A)
+		   <- ({x} of x A -> eof (E x) B).
+
+of/letdi	: eof (letdi M ([x] E x)) B
+		   <- of M (diamond A)
+		   <- ({x} of x A -> eof (E x) B)
+		   <- elocal ([x] E x).
+
+
+%block var : block {x:term}.
+
+%block bind : some {A:tp} block {x:term} {d:of x A}.
+
+
+
+
+%%%%%  Expression Substitution  %%%%%
+
+sub		: exp -> (term -> exp) -> exp -> type.
+
+sub/here	: sub (here M) ([x] E x) (E M).
+
+sub/eletbx	: sub (eletbx M ([y] F y)) ([x] E x) (eletbx M ([y] E' y))
+		   <- ({y} sub (F y) ([x] E x) (E' y)).
+
+sub/letdi	: sub (letdi M ([y] F y)) ([x] E x) (letdi M ([y] E' y))
+		   <- ({y} sub (F y) ([x] E x) (E' y)).
+
+
+
+
+%%%%%  Reduction  %%%%%
+
+reduce		: term -> term -> type.
+ereduce		: exp -> exp -> type.
+
+reduce/beta	: reduce (app (lam ([x] M x)) N) (M N).
+
+reduce/betabx	: reduce (letbx (bx M) ([x] N x)) (N M).
+
+reduce/lam	: reduce (lam ([x] M x)) (lam ([x] M' x))
+		   <- ({x} reduce (M x) (M' x)).
+
+reduce/app1	: reduce (app M N) (app M' N)
+		   <- reduce M M'.
+
+reduce/app2	: reduce (app M N) (app M N')
+		   <- reduce N N'.
+
+reduce/bx	: reduce (bx M) (bx M')
+		   <- reduce M M'.
+
+reduce/letbx1	: reduce (letbx M ([x] N x)) (letbx M' ([x] N x))
+		   <- reduce M M'.
+
+reduce/letbx2	: reduce (letbx M ([x] N x)) (letbx M ([x] N' x))
+		   <- ({x} reduce (N x) (N' x)).
+
+reduce/di	: reduce (di E) (di E')
+		   <- ereduce E E'.
+
+
+
+reduce/betaebx	: ereduce (eletbx (bx M) ([x] E x)) (E M).
+
+reduce/betadi	: ereduce (letdi (di E) ([x] F x)) F'
+		   <- sub E ([x] F x) F'.
+
+reduce/here	: ereduce (here M) (here M')
+		   <- reduce M M'.
+
+reduce/eletbx1	: ereduce (eletbx M ([x] E x)) (eletbx M' ([x] E x))
+		   <- reduce M M'.
+
+reduce/eletbx2	: ereduce (eletbx M ([x] E x)) (eletbx M ([x] E' x))
+		   <- ({x} ereduce (E x) (E' x)).
+
+reduce/letdi1	: ereduce (letdi M ([x] E x)) (letdi M' ([x] E x))
+		   <- reduce M M'.
+
+reduce/letdi2	: ereduce (letdi M ([x] E x)) (letdi M ([x] E' x))
+		   <- ({x} ereduce (E x) (E' x)).
+
+
+
+
+%%%%%  Equality  %%%%%
+
+term-eq		: term -> term -> type.
+term-eq/i	: term-eq M M.
+
+exp-eq		: exp -> exp -> type.
+exp-eq/i	: exp-eq E E.
+
+
+eletbx-resp : term-eq M M' -> ({x} exp-eq (E x) (E' x)) -> exp-eq (eletbx M E) (eletbx M' E') -> type.
+%mode eletbx-resp +X1 +X2 -X3.
+
+-	: eletbx-resp _ _ exp-eq/i.
+
+%worlds (var) (eletbx-resp _ _ _).
+%total {} (eletbx-resp _ _ _).
+
+
+
+elocal-resp : ({x} exp-eq (E x) (E' x)) -> elocal E -> elocal E' -> type.
+%mode elocal-resp +X1 +X2 -X3.
+
+-	: elocal-resp _ D D.
+
+%worlds (var) (elocal-resp _ _ _).
+%total {} (elocal-resp _ _ _).
+
+
+
+exp-resp-exp : {E:exp -> exp} exp-eq F F' -> exp-eq (E F) (E F') -> type.
+%mode exp-resp-exp +X1 +X2 -X3.
+
+-	: exp-resp-exp E _ exp-eq/i.
+
+%worlds (var) (exp-resp-exp _ _ _).
+%total {} (exp-resp-exp _ _ _).
+
+
+
+exp-resp-term : {E:term -> exp} term-eq M M' -> exp-eq (E M) (E M') -> type.
+%mode exp-resp-term +X1 +X2 -X3.
+
+-	: exp-resp-term E _ exp-eq/i.
+
+%worlds (var) (exp-resp-term _ _ _).
+%total {} (exp-resp-term _ _ _).
+
+
+
+lam-resp : ({x} term-eq (M x) (M' x)) -> term-eq (lam M) (lam M') -> type.
+%mode lam-resp +X1 -X2.
+
+-	: lam-resp _ term-eq/i.
+
+%worlds (var) (lam-resp _ _).
+%total {} (lam-resp _ _).
+
+
+
+letbx-resp : term-eq M M' -> ({x} term-eq (N x) (N' x)) -> term-eq (letbx M N) (letbx M' N') -> type.
+%mode letbx-resp +X1 +X2 -X3.
+
+-	: letbx-resp _ _ term-eq/i.
+
+%worlds (var) (letbx-resp _ _ _).
+%total {} (letbx-resp _ _ _).
+
+
+
+letdi-resp : term-eq M M' -> ({x} exp-eq (E x) (E' x)) -> exp-eq (letdi M E) (letdi M' E') -> type.
+%mode letdi-resp +X1 +X2 -X3.
+
+-	: letdi-resp _ _ exp-eq/i.
+
+%worlds (var) (letdi-resp _ _ _).
+%total {} (letdi-resp _ _ _).
+
+
+
+local-resp : ({x} term-eq (M x) (M' x)) -> local M -> local M' -> type.
+%mode local-resp +X1 +X2 -X3.
+
+-	: local-resp _ D D.
+
+%worlds (var) (local-resp _ _ _).
+%total {} (local-resp _ _ _).
+
+
+
+term-resp-exp : {M:exp -> term} exp-eq E E' -> term-eq (M E) (M E') -> type.
+%mode term-resp-exp +X1 +X2 -X3.
+
+-	: term-resp-exp M _ term-eq/i.
+
+%worlds (var) (term-resp-exp _ _ _).
+%total {} (term-resp-exp _ _ _).
+
+
+
+term-resp-term : {M:term -> term} term-eq N N' -> term-eq (M N) (M N') -> type.
+%mode term-resp-term +X1 +X2 -X3.
+
+-	: term-resp-term M _ term-eq/i.
+
+%worlds (var) (term-resp-term _ _ _).
+%total {} (term-resp-term _ _ _).
+
+
+
+
+%%%%%  Subject Reduction  %%%%%
+
+sub-closed : ({x:term} sub E1 ([x] E2 x) (F x)) -> ({x} exp-eq F' (F x)) -> type.
+%mode sub-closed +X1 -X2.
+
+-	: sub-closed ([x] sub/here) ([_] exp-eq/i).
+
+-	: sub-closed ([x] sub/eletbx ([y] Dsub x y)) Deq'
+	   <- ({y} sub-closed ([x] Dsub x y) ([x] Deq x y))
+	   <- ({x} eletbx-resp term-eq/i ([y] Deq x y) (Deq' x)).
+
+-	: sub-closed ([x] sub/letdi ([y] Dsub x y)) Deq'
+	   <- ({y} sub-closed ([x] Dsub x y) ([x] Deq x y))
+	   <- ({x} letdi-resp term-eq/i ([y] Deq x y) (Deq' x)).
+
+%worlds (var) (sub-closed _ _).
+%total D (sub-closed D _).
+
+
+
+reduce-closed : ({x:term} reduce M (N x)) -> ({x} term-eq N' (N x)) -> type.
+%mode reduce-closed +X1 -X2.
+
+ereduce-closed : ({x:term} ereduce E (F x)) -> ({x} exp-eq F' (F x)) -> type.
+%mode ereduce-closed +X1 -X2.
+
+-	: reduce-closed ([x] reduce/beta) ([_] term-eq/i).
+
+-	: reduce-closed ([x] reduce/betabx) ([_] term-eq/i).
+
+-	: reduce-closed ([x] reduce/lam ([y] Dred x y)) Deq'
+	   <- ({y} reduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} lam-resp ([y] Deq x y) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/app1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term ([y] app y N) (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/app2 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term ([y] app N y) (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/bx (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term bx (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/letbx1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} term-resp-term ([y] letbx y N) (Deq x) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/letbx2 ([y] Dred x y)) Deq'
+	   <- ({y} reduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} letbx-resp term-eq/i ([y] Deq x y) (Deq' x)).
+
+-	: reduce-closed ([x] reduce/di (Dred x)) Deq'
+	   <- ereduce-closed Dred Deq
+	   <- ({x} term-resp-exp di (Deq x) (Deq' x)).
+
+
+
+-	: ereduce-closed ([x] reduce/betaebx) ([_] exp-eq/i).
+
+-	: ereduce-closed ([x] reduce/betadi (Dsub x)) Deq
+	   <- sub-closed Dsub Deq.
+
+-	: ereduce-closed ([x] reduce/here (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} exp-resp-term here (Deq x) (Deq' x)).
+
+-	: ereduce-closed ([x] reduce/eletbx1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} exp-resp-term ([y] eletbx y E) (Deq x) (Deq' x)).
+
+-	: ereduce-closed ([x] reduce/eletbx2 ([y] Dred x y)) Deq'
+	   <- ({y} ereduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} eletbx-resp term-eq/i ([y] Deq x y) (Deq' x)).
+
+-	: ereduce-closed ([x] reduce/letdi1 (Dred x)) Deq'
+	   <- reduce-closed Dred Deq
+	   <- ({x} exp-resp-term ([y] letdi y E) (Deq x) (Deq' x)).
+
+-	: ereduce-closed ([x] reduce/letdi2 ([y] Dred x y)) Deq'
+	   <- ({y} ereduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} letdi-resp term-eq/i ([y] Deq x y) (Deq' x)).
+
+%worlds (var) (reduce-closed _ _) (ereduce-closed _ _).
+%total (D1 D2) (reduce-closed D1 _) (ereduce-closed D2 _).
+
+
+
+elocal-closed : {E:exp} elocal ([_] E) -> type.
+%mode elocal-closed +X1 -X2.
+
+-	: elocal-closed (here M) (local/here local/closed).
+
+-	: elocal-closed (eletbx M ([x] E x)) (local/eletbx Dlocal local/closed)
+	   <- ({x} elocal-closed (E x) (Dlocal x)).
+
+-	: elocal-closed (letdi M ([x] E x)) (local/letdi local/closed).
+
+%worlds (var) (elocal-closed _ _).
+%total E (elocal-closed E _).
+
+
+
+compose-local : ({y} local ([x] M x y))
+		 -> ({x} local ([y] M x y))
+		 -> local ([x] N x)
+%%
+		 -> local ([x] M x (N x))
+		 -> type.
+%mode compose-local +X1 +X2 +X3 -X4.
+
+compose-elocal : ({y} elocal ([x] E x y))
+		  -> ({x} elocal ([y] E x y))
+		  -> local ([x] N x)
+%%
+		  -> elocal ([x] E x (N x))
+		  -> type.
+%mode compose-elocal +X1 +X2 +X3 -X4.
+
+-	: compose-local DMx ([x] local/var) DN DN.
+
+-	: compose-local DMx ([x] local/closed) DN (DMx (lam ([x] x))).
+
+-	: compose-local ([y] local/lam ([z] DMx y z)) ([x] local/lam ([z] DMy x z)) DN (local/lam D)
+	   <- ({z} compose-local ([y] DMx y z) ([x] DMy x z) DN (D z)).
+
+-	: compose-local ([y] local/closed) ([x] local/lam ([z] DMy x z)) DN (local/lam D)
+	   <- ({z} compose-local ([y] local/closed) ([x] DMy x z) DN (D z)).
+
+-	: compose-local 
+	   ([y] local/app (D2x y) (D1x y))
+	   ([x] local/app (D2y x) (D1y x))
+	   DN
+	   (local/app D2 D1)
+	   <- compose-local D1x D1y DN D1
+	   <- compose-local D2x D2y DN D2.
+
+-	: compose-local 
+	   ([y] local/closed)
+	   ([x] local/app (D2y x) (D1y x))
+	   DN
+	   (local/app D2 D1)
+	   <- compose-local ([y] local/closed) D1y DN D1
+	   <- compose-local ([y] local/closed) D2y DN D2.
+
+-	: compose-local
+	   ([y] local/letbx ([z] D2x y z) (D1x y))
+	   ([x] local/letbx ([z] D2y x z) (D1y x))
+	   DN
+	   (local/letbx D2 D1)
+	   <- compose-local D1x D1y DN D1
+	   <- ({z} compose-local ([y] D2x y z) ([x] D2y x z) DN (D2 z)).
+
+-	: compose-local
+	   ([y] local/closed)
+	   ([x] local/letbx ([z] D2y x z) (D1y x))
+	   DN
+	   (local/letbx D2 D1)
+	   <- compose-local ([y] local/closed) D1y DN D1
+	   <- ({z} compose-local ([y] local/closed) ([x] D2y x z) DN (D2 z)).
+
+-	: compose-local 
+	   ([y] local/di (D1x y))
+	   ([x] local/di (D1y x))
+	   DN
+	   (local/di D1)
+	   <- compose-elocal D1x D1y DN D1.
+
+-	: compose-local 
+	   ([y] local/closed)
+	   ([x] local/di (D1y x))
+	   DN
+	   (local/di D1)
+	   <- ({y} elocal-closed _ (D1x y))
+	   <- compose-elocal D1x D1y DN D1.
+
+
+-	: compose-elocal 
+	   ([y] local/here (D1x y))
+	   ([x] local/here (D1y x))
+	   DN
+	   (local/here D1)
+	   <- compose-local D1x D1y DN D1.
+
+-	: compose-elocal
+	   ([y] local/eletbx ([z] D2x y z) (D1x y))
+	   ([x] local/eletbx ([z] D2y x z) (D1y x))
+	   DN
+	   (local/eletbx D2 D1)
+	   <- compose-local D1x D1y DN D1
+	   <- ({z} compose-elocal ([y] D2x y z) ([x] D2y x z) DN (D2 z)).
+
+-	: compose-elocal
+	   ([y] local/letdi (D1x y))
+	   ([x] local/letdi (D1y x))
+	   DN
+	   (local/letdi D1)
+	   <- compose-local D1x D1y DN D1.
+
+%worlds (var) (compose-local _ _ _ _) (compose-elocal _ _ _ _).
+%total (D1 D2) (compose-local _ D1 _ _) (compose-elocal _ D2 _ _).
+
+
+
+sub-local : elocal E
+	     -> elocal F
+	     -> ({x} sub (E x) ([y] F y) (G x))
+%%
+	     -> elocal G
+	     -> type.
+%mode sub-local +X1 +X2 +X3 -X4.
+
+-	: sub-local (local/here Dlocal1) Dlocal2 ([x] sub/here) Dlocal
+	   <- ({y} elocal-closed _ (Dlocal2' y))
+	   <- compose-elocal Dlocal2' ([_] Dlocal2) Dlocal1 Dlocal.
+
+-	: sub-local (local/eletbx ([y] Dlocal1b y) Dlocal1a) Dlocal2 ([x] sub/eletbx ([y] Dsub x y))
+	   (local/eletbx Dlocal Dlocal1a)
+	   <- ({y} sub-local (Dlocal1b y) Dlocal2 ([x] Dsub x y) (Dlocal y)).
+
+-	: sub-local (local/letdi Dlocal1) Dlocal2 ([x] sub/letdi ([y] Dsub x y))
+	   Dlocal
+	   <- ({y} sub-closed ([x] Dsub x y) ([x] Deq x y))
+	   <- ({x} letdi-resp term-eq/i ([y] Deq x y) (Deq' x))
+	   <- elocal-resp Deq' (local/letdi Dlocal1) Dlocal.
+
+%worlds (var) (sub-local _ _ _ _).
+%total D (sub-local _ _ D _).
+
+
+
+sr-local : ({x} reduce (M x) (M' x))
+	    -> ({x} of x A -> of (M x) B)
+	    -> local M
+%%
+	    -> local M'
+	    -> type.
+%mode sr-local +X1 +X2 +X3 -X4.
+
+sr-elocal : ({x} ereduce (E x) (E' x))
+	     -> ({x} of x A -> eof (E x) B)
+	     -> elocal E
+%%
+	     -> elocal E'
+	     -> type.
+%mode sr-elocal +X1 +X2 +X3 -X4.
+
+-	: sr-local
+	   Dred
+	   _
+	   local/closed
+	   Dlocal
+	   <- reduce-closed Dred Deq
+	   <- local-resp Deq local/closed Dlocal.
+
+-	: sr-local 
+	   ([x] reduce/beta)
+	   ([x] [d] of/app _ (of/lam (Dlocalbody x : local ([y] M x y)) _ : of _ (arrow B C)))
+	   (local/app 
+	      (Dlocal2 : local ([x] N x))
+	      (local/lam 
+		 ([y] Dlocal1 y : local ([x] M x y))))
+	   Dlocal
+	   <- compose-local Dlocal1 Dlocalbody Dlocal2 
+	      (Dlocal : local ([x] M x (N x))).
+
+-	: sr-local 
+	   ([x] reduce/beta)
+	   ([x] [d] of/app _ (of/lam (Dlocalbody x : local ([y] M y)) _ : of _ (arrow B C)))
+	   (local/app 
+	      (Dlocal2 : local ([x] N x))
+	      local/closed)
+	   Dlocal
+	   <- compose-local ([_] local/closed) Dlocalbody Dlocal2
+	      (Dlocal : local ([x] M (N x))).
+
+-	: sr-local
+	   ([x] reduce/betabx : reduce (letbx (bx M) _) _)
+	   _
+	   (local/letbx Dlocal local/closed)
+	   (Dlocal M).
+
+-	: sr-local
+	   ([x] reduce/lam ([y] Dred x y))
+	   ([x] [d] of/lam (Dlocalbody x) ([y] [e] Dof x d y e))
+	   (local/lam ([y] Dlocal y))
+	   (local/lam Dlocal')
+	   <- ({y} {e}
+		 sr-local ([x] Dred x y) ([x] [d] Dof x d y e) (Dlocal y)
+		 (Dlocal' y)).
+
+-	: sr-local
+	   ([x] reduce/app1 (Dred x))
+	   ([x] [d] of/app (Dof2 x d) (Dof1 x d))
+	   (local/app Dlocal2 Dlocal1)
+	   (local/app Dlocal2 Dlocal1')
+	   <- sr-local Dred Dof1 Dlocal1 Dlocal1'.
+
+-	: sr-local
+	   ([x] reduce/app2 (Dred x))
+	   ([x] [d] of/app (Dof2 x d) (Dof1 x d))
+	   (local/app Dlocal2 Dlocal1)
+	   (local/app Dlocal2' Dlocal1)
+	   <- sr-local Dred Dof2 Dlocal2 Dlocal2'.
+
+-	: sr-local
+	   ([x] reduce/letbx1 (Dred x))
+	   ([x] [d] of/letbx _ (Dof x d : of _ (box B)))
+	   (local/letbx Dlocal2 Dlocal1)
+	   (local/letbx Dlocal2 Dlocal1')
+	   <- sr-local Dred Dof Dlocal1 Dlocal1'.
+
+-	: sr-local
+	   ([x] reduce/letbx2 ([y] Dred x y))
+	   ([x] [d] of/letbx ([y] [e] Dof x d y e) (_ : of _ (box B)))
+	   (local/letbx Dlocal2 Dlocal1)
+	   (local/letbx Dlocal2' Dlocal1)
+	   <- ({y} {e}
+		 sr-local ([x] Dred x y) ([x] [d] Dof x d y e) (Dlocal2 y) (Dlocal2' y)).
+
+-	: sr-local
+	   ([x] reduce/di (Dred x))
+	   ([x] [d] of/di (Dof x d))
+	   (local/di Dlocal)
+	   (local/di Dlocal')
+	   <- sr-elocal Dred Dof Dlocal Dlocal'.
+
+
+
+-	: sr-elocal
+	   ([x] reduce/betaebx : ereduce (eletbx (bx M) _) _)
+	   _
+	   (local/eletbx Dlocal local/closed)
+	   (Dlocal M).
+
+-	: sr-elocal
+	   ([x] reduce/betadi (Dsub x))
+	   ([x] [d] of/letdi (Dlocalbody x : elocal E) _ (_ : of _ (diamond B)))
+	   (local/letdi (local/di Dlocal))
+	   Dlocal'
+	   <- sub-local Dlocal (Dlocalbody (lam ([z] z))) Dsub Dlocal'.
+
+-	: sr-elocal
+	   ([x] reduce/betadi (Dsub x))
+	   ([x] [d] of/letdi (Dlocalbody x : elocal E) _ (_ : of _ (diamond B)))
+	   (local/letdi local/closed)
+	   Dlocal'
+	   <- elocal-closed _ Dlocal
+	   <- sub-local Dlocal (Dlocalbody (lam ([z] z))) Dsub Dlocal'.
+
+-	: sr-elocal
+	   ([x] reduce/here (Dred x))
+	   ([x] [d] of/here (Dof x d))
+	   (local/here Dlocal)
+	   (local/here Dlocal')
+	   <- sr-local Dred Dof Dlocal Dlocal'.
+
+-	: sr-elocal
+	   ([x] reduce/eletbx1 (Dred x))
+	   ([x] [d] of/eletbx _ (Dof x d : of _ (box B)))
+	   (local/eletbx Dlocal2 Dlocal1)
+	   (local/eletbx Dlocal2 Dlocal1')
+	   <- sr-local Dred Dof Dlocal1 Dlocal1'.
+
+-	: sr-elocal
+	   ([x] reduce/eletbx2 ([y] Dred x y))
+	   ([x] [d] of/eletbx ([y] [e] Dof x d y e) (_ : of _ (box B)))
+	   (local/eletbx Dlocal2 Dlocal1)
+	   (local/eletbx Dlocal2' Dlocal1)
+	   <- ({y} {e}
+		 sr-elocal ([x] Dred x y) ([x] [d] Dof x d y e) (Dlocal2 y) (Dlocal2' y)).
+
+-	: sr-elocal
+	   ([x] reduce/letdi1 (Dred x))
+	   ([x] [d] of/letdi (Dlocalbody x) _ (Dof x d : of _ (diamond B)))
+	   (local/letdi Dlocal)
+	   (local/letdi Dlocal')
+	   <- sr-local Dred Dof Dlocal Dlocal'.
+
+-	: sr-elocal
+	   ([x] reduce/letdi2 ([y] Dred x y))
+	   _
+	   (local/letdi Dlocal)
+	   Dlocal'
+	   <- ({y} ereduce-closed ([x] Dred x y) ([x] Deq x y))
+	   <- ({x} letdi-resp term-eq/i ([y] Deq x y) (Deq' x))
+	   <- elocal-resp Deq' (local/letdi Dlocal) Dlocal'.
+
+%worlds (bind) (sr-local _ _ _ _) (sr-elocal _ _ _ _).
+%total (D1 D2) (sr-local D1 _ _ _) (sr-elocal D2 _ _ _).
+
+
+
+sub-of : eof E A
+	  -> ({x} of x A -> eof (F x) B)
+	  -> elocal F
+	  -> sub E ([x] F x) G
+%%
+	  -> eof G B
+	  -> type.
+%mode sub-of +X1 +X2 +X3 +X4 -X5.
+
+-	: sub-of (of/here Dof1) Dof2 _ sub/here (Dof2 _ Dof1).
+
+-	: sub-of (of/eletbx Dof2 Dof1) Dof Dlocal (sub/eletbx Dsub)
+	   (of/eletbx Dof' Dof1)
+	   <- ({y} {e}
+		 sub-of (Dof2 y e) Dof Dlocal (Dsub y) (Dof' y e)).
+
+-	: sub-of (of/letdi DlocalE Dof2 Dof1) Dof DlocalF (sub/letdi Dsub)
+	   (of/letdi Dlocal Dof' Dof1)
+	   <- ({y} {e}
+		 sub-of (Dof2 y e) Dof DlocalF (Dsub y) (Dof' y e))
+	   <- sub-local DlocalE DlocalF Dsub Dlocal.
+
+%worlds (bind) (sub-of _ _ _ _ _).
+%total D (sub-of _ _ _ D _).
+
+
+
+sr-of : reduce M M'
+	 -> of M A
+%%
+	 -> of M' A
+	 -> type.
+%mode sr-of +X1 +X2 -X3.
+
+sr-eof : ereduce E E'
+	  -> eof E A
+%%
+	  -> eof E' A
+	  -> type.
+%mode sr-eof +X1 +X2 -X3.
+
+-	: sr-of reduce/beta (of/app Dof2 (of/lam Dlocal ([x] [d] Dof1 x d)))
+	   (Dof1 _ Dof2).
+
+-	: sr-of reduce/betabx (of/letbx Dof2 (of/bx Dof1))
+	   (Dof2 _ Dof1).
+
+-	: sr-of (reduce/lam ([x] Dred x)) (of/lam Dlocal ([x] [d] Dof x d))
+	   (of/lam Dlocal' Dof')
+	   <- ({x} {d}
+		 sr-of (Dred x) (Dof x d) (Dof' x d))
+	   <- sr-local Dred Dof Dlocal Dlocal'.
+
+-	: sr-of (reduce/app1 Dred) (of/app Dof2 Dof1) (of/app Dof2 Dof1')
+	   <- sr-of Dred Dof1 Dof1'.
+
+-	: sr-of (reduce/app2 Dred) (of/app Dof2 Dof1) (of/app Dof2' Dof1)
+	   <- sr-of Dred Dof2 Dof2'.
+
+-	: sr-of (reduce/bx Dred) (of/bx Dof) (of/bx Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-of (reduce/letbx1 Dred) (of/letbx Dof2 Dof1) (of/letbx Dof2 Dof1')
+	   <- sr-of Dred Dof1 Dof1'.
+
+-	: sr-of (reduce/letbx2 Dred) (of/letbx Dof2 Dof1) (of/letbx Dof2' Dof1)
+	   <- ({x} {d}
+		 sr-of (Dred x) (Dof2 x d) (Dof2' x d)).
+
+-	: sr-of (reduce/di Dred) (of/di Dof) (of/di Dof')
+	   <- sr-eof Dred Dof Dof'.
+
+
+
+-	: sr-eof reduce/betaebx (of/eletbx Dof2 (of/bx Dof1)) (Dof2 _ Dof1).
+
+-	: sr-eof (reduce/betadi Dsub) (of/letdi Dlocal Dof2 (of/di Dof1)) Dof
+	   <- sub-of Dof1 Dof2 Dlocal Dsub Dof.
+
+-	: sr-eof (reduce/here Dred) (of/here Dof) (of/here Dof')
+	   <- sr-of Dred Dof Dof'.
+
+-	: sr-eof (reduce/eletbx1 Dred) (of/eletbx Dof2 Dof1) (of/eletbx Dof2 Dof1')
+	   <- sr-of Dred Dof1 Dof1'.
+
+-	: sr-eof (reduce/eletbx2 Dred) (of/eletbx Dof2 Dof1) (of/eletbx Dof2' Dof1)
+	   <- ({x} {d}
+		 sr-eof (Dred x) (Dof2 x d) (Dof2' x d)).
+
+-	: sr-eof (reduce/letdi1 Dred) (of/letdi Dlocal Dof2 Dof1) (of/letdi Dlocal Dof2 Dof1')
+	   <- sr-of Dred Dof1 Dof1'.
+
+-	: sr-eof (reduce/letdi2 Dred) (of/letdi Dlocal Dof2 Dof1) (of/letdi Dlocal' Dof2' Dof1)
+	   <- ({x} {d}
+		 sr-eof (Dred x) (Dof2 x d) (Dof2' x d))
+	   <- sr-elocal Dred Dof2 Dlocal Dlocal'.
+
+%worlds (bind) (sr-of _ _ _) (sr-eof _ _ _).
+%total (D1 D2) (sr-of D1 _ _) (sr-eof D2 _ _).

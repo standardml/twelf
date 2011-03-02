@@ -1,0 +1,464 @@
+
+%%% SIGNATURE COERCION
+
+coerce-reg : md-of pure st/nil M Sfrom
+	      -> sg-wf Sto
+	      -> coerce M Sfrom Sto M' S'
+%%
+	      -> md-of pure st/nil M' S'
+	      -> sg-sub S' Sto
+	      -> type.
+%mode coerce-reg +X1 +X2 +X3 -X4 -X5.
+
+coerce-field-reg : md-of pure st/nil M Sfrom
+		    -> sg-wf Sto
+		    -> coerce-field _ M Sfrom Sto M' S'
+%%
+		    -> md-of pure st/nil M' S'
+		    -> sg-sub S' Sto
+		    -> type.
+%mode coerce-field-reg +X1 +X2 +X3 -X4 -X5.
+
+- : coerce-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (sg-wf/named
+	(DwfSto : sg-wf Sto))
+     (coerce/named
+	(Dcoerce : coerce-field L M' S' Sto M'' S'')
+	(Dresolve : resolve M Sfrom L M' S'))
+     %%
+     (md-of/in DofM'')
+     (sg-sub/named Dsub)
+     <- resolve-reg DofM Dresolve
+	(DofM' : md-of pure st/nil M' S')
+     <- coerce-field-reg DofM' DwfSto Dcoerce
+	(DofM'' : md-of pure st/nil M'' S'')
+	(Dsub : sg-sub S'' Sto).
+
+- : coerce-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (sg-wf/sigma
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	(DfstS1 : sg-fst S1 K1)
+	(DwfS1 : sg-wf S1))
+     (coerce/sigma
+	(Dcoerce2 : {a} cn-of a K1'
+		     -> {m} md-assm m S1'
+		     -> md-fst m a
+		     -> coerce M Sfrom (S2 a) (M2 a m) (S2' a))
+	(DfstS1' : sg-fst S1' K1')
+	(Dcoerce1 : coerce M Sfrom S1 M1 S1'))
+     %%
+     (md-of/dpair DofM2 DfstS1' DofM1)
+     (sg-sub/sigma
+	DwfS2
+	DfstS1
+	Dsub2
+	DfstS1'
+	Dsub1)
+     <- coerce-reg DofM DwfS1 Dcoerce1
+	(DofM1 : md-of pure st/nil M1 S1')
+	(Dsub1 : sg-sub S1' S1)
+     <- md-of-reg DofM1
+	(DwfS1' : sg-wf S1')
+     <- sg-fst-reg DwfS1' DfstS1'
+	(DwfK1' : kd-wf K1')
+     <- sg-sub-fst Dsub1 DfstS1' DfstS1
+	(DsubK1 : kd-sub K1' K1)
+     <- ({a} {da:cn-of a K1'} {m} {dm:md-assm m S1'} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1'
+	   -> md-assm-reg dm dfst DfstS1' da DwfS1'
+	   -> coerce-reg DofM (DwfS2 a (cn-of/subsume DsubK1 da)) (Dcoerce2 a da m dm dfst)
+	      (DofM2 a da m dm dfst : md-of pure st/nil (M2 a m) (S2' a))
+	      (Dsub2 a da : sg-sub (S2' a) (S2 a))).
+
+- : coerce-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     sg-wf/one
+     coerce/one
+     %%
+     md-of/unit
+     sg-sub/one.
+
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M (sg/named L (sg/pi Sfrom ([a] sg/datom (Tfrom a)))))
+     (sg-wf/named
+	(DwfPi : sg-wf (sg/pi S ([a] sg/datom (T a)))))
+     (coerce-field/val
+	(Dequiv : {a} cn-of a K
+		   -> cn-equiv (Tfrom (Carg a)) (T a) t)
+	(DfstMarg : {a} {m} md-fst m a
+		     -> md-fst (Marg a m) (Carg a))
+	(Dinstance : {a} cn-of a K
+		      -> {m} md-assm m S
+		      -> md-fst m a
+		      -> instance Sfrom (Marg a m))
+	(DfstS : sg-fst S K))
+     %%
+     (md-of/in
+	(md-of/lam
+	   ([a] [da:cn-of a K] [m] [dm:md-assm m S] [dfst:md-fst m a]
+	      md-of/equiv
+	      (sg-equiv/datom
+		 (Dequiv a da))
+	      (md-of/app
+		 (DfstMarg a m dfst)
+		 (DofMarg a da m dm dfst)
+		 (md-of/out DofM)))
+	   DfstS
+	   DwfS))
+     (sg-sub/reflid
+	(sg-wf/named DwfPi))
+     <- sg-wf-pi-invert DwfPi DfstS
+	(DwfS : sg-wf S)
+	([a] [da:cn-of a K]
+	   sg-wf/datom
+	   (DofT a da : cn-of (T a) t))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   instance-reg (Dinstance a da m dm dfst)
+	   (DofMarg a da m dm dfst : md-of pure st/nil (Marg a m) Sfrom)).
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M (sg/satom Kfrom))
+     (sg-wf/satom
+	(DwfK : kd-wf K))
+     (coerce-field/con
+	(Dsub : kd-sub Kfrom K))
+     %%
+     DofM
+     (sg-sub/satom Dsub).
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (DwfS : sg-wf S)
+     (coerce-field/mod
+	(Dcoerce : coerce M Sfrom S M' S'))
+     %%
+     DofM'
+     Dsub
+     <- coerce-reg DofM DwfS Dcoerce
+	(DofM' : md-of pure st/nil M' S')
+	(Dsub : sg-sub S' S).
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M (sg/pi Sfrom1 ([a] Sfrom2 a)))
+     (DwfPi : sg-wf (sg/pi S1 ([a] S2 a)))
+     (coerce-field/fun
+	(Dcoerce2 : {a} cn-of a K1
+		     -> {b} cn-of b (Kfrom2 (C1 a))
+		     -> {n} md-assm n (Sfrom2 (C1 a))
+		     -> md-fst n b
+		     -> coerce n (Sfrom2 (C1 a)) (S2 a) (M2 a b n) (S2' a b))
+	(DfstSfrom2 : {a} sg-fst (Sfrom2 a) (Kfrom2 a))
+	(DfstM1 : {a} {m}
+		   md-fst m a
+		   -> md-fst (M1 a m) (C1 a))
+	(Dcoerce1 : {a} cn-of a K1
+		     -> {m} md-assm m S1
+		     -> md-fst m a
+		     -> coerce m S1 Sfrom1 (M1 a m) (S1' a))
+	(DfstS1 : sg-fst S1 K1))
+     %%
+     (md-of/lam
+	([a] [da:cn-of a K1] [m] [dm:md-assm m S1] [dfst:md-fst m a]
+	   md-of/let
+	   ([b] [db:cn-of b (Kfrom2 (C1 a))] [n] [dn:md-assm n (Sfrom2 (C1 a))] [dfstn:md-fst n b]
+	      md-of/subsume
+	      (Dsub2 a da b db)
+	      (DofM2 a da b db n dn dfstn))
+	   (DfstSfrom2 (C1 a))
+	   (md-of/app
+	      (DfstM1 a m dfst)
+	      (md-of/subsume
+		 (Dsub1 a da)
+		 (DofM1 a da m dm dfst))
+	      DofM))
+	DfstS1
+	DwfS1)
+     (sg-sub/reflid DwfPi)
+     <- sg-wf-pi-invert DwfPi DfstS1
+	(DwfS1 : sg-wf S1)
+	(DwfS2 : {a} cn-of a K1 -> sg-wf (S2 a))
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- md-of-reg DofM
+	(sg-wf/pi
+	   (DwfSfrom2 : {a} cn-of a Kfrom1 -> sg-wf (Sfrom2 a))
+	   (DfstSfrom1 : sg-fst Sfrom1 Kfrom1)
+	   (DwfSfrom1 : sg-wf Sfrom1))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> coerce-reg (md-of/var dm) DwfSfrom1 (Dcoerce1 a da m dm dfst)
+	      (DofM1 a da m dm dfst : md-of pure st/nil (M1 a m) (S1' a))
+	      (Dsub1 a da : sg-sub (S1' a) Sfrom1))
+     <- ({a}
+	   can-sg-fst (S1' a)
+	   (DfstS1' a : sg-fst (S1' a) (K1' a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> md-fst-reg (DofM1 a da m dm dfst) (DfstM1 a m dfst) (DfstS1' a) 
+	      (DofC1 a da : cn-of (C1 a) (K1' a)))
+     <- ({a} {da:cn-of a K1}
+	   sg-sub-fst (Dsub1 a da) (DfstS1' a) DfstSfrom1
+	   (DsubK1 a da : kd-sub (K1' a) Kfrom1))
+     <- ({a} {da:cn-of a Kfrom1}
+	   sg-fst-reg (DwfSfrom2 a da) (DfstSfrom2 a)
+	   (DwfKfrom2 a da : kd-wf (Kfrom2 a)))
+     <- ({a} {da:cn-of a K1}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> {b} {db:cn-of b (Kfrom2 (C1 a))} {n} {dn:md-assm n (Sfrom2 (C1 a))} {dfstn:md-fst n b}
+	      {dbs:cn-assm db}
+	      mcn-assm db dbs
+	   -> cn-of-reg db (DwfKfrom2 (C1 a) (cn-of/subsume (DsubK1 a da) (DofC1 a da)))
+	   -> md-assm-reg dn dfstn (DfstSfrom2 (C1 a)) db (DwfSfrom2 (C1 a) (cn-of/subsume (DsubK1 a da) (DofC1 a da)))
+	   -> coerce-reg (md-of/var dn) (DwfS2 a da) (Dcoerce2 a da b db n dn dfstn)
+	      (DofM2 a da b db n dn dfstn : md-of pure st/nil (M2 a b n) (S2' a b))
+	      (Dsub2 a da b db : sg-sub (S2' a b) (S2 a))).
+	      
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (DwfS : sg-wf S)
+     (coerce-field/sig
+	(Dequiv : sg-equiv Sfrom S))
+     %%
+     (md-of/equiv Dequiv DofM)
+     (sg-sub/reflid DwfS).
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (DwfS : sg-wf S)
+     (coerce-field/dtc
+	(Dequiv : sg-equiv Sfrom S))
+     %%
+     (md-of/equiv Dequiv DofM)
+     (sg-sub/reflid DwfS).
+
+- : coerce-field-reg
+     (DofM : md-of pure st/nil M Sfrom)
+     (DwfS : sg-wf S)
+     (coerce-field/ec
+	(Dequiv : sg-equiv Sfrom S))
+     %%
+     (md-of/equiv Dequiv DofM)
+     (sg-sub/reflid DwfS).
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (coerce-reg _ _ _ _ _) (coerce-field-reg _ _ _ _ _).
+%total (D1 D2) (coerce-reg _ _ D1 _ _) (coerce-field-reg _ _ D2 _ _).
+
+
+
+
+%%% IDENTIFIERS
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/longid
+	(DfstM : md-fst M C)
+	(Dsing : single-sg S Ssing)
+	(Dresolve : resolve-long Mec Sec name/mod I M S))
+     (md-of/forget DofM')
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M S)
+     <- single-sg-intro Dsing DofM DfstM
+	(DofM' : md-of pure st/nil M (Ssing C)).
+
+
+
+%%% STRUCT
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/struct
+	(Delab : dec-elab Mec Sec De M S))
+     Dof
+     <- dec-elab-reg DofEC Delab (Dof : md-of impure st/nil M S).
+
+
+
+%%% APPLICATION
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/app
+	(DfstMarg : {a} {m}
+		     md-fst m a
+		     -> md-fst (Marg a m) (Carg a))
+	(Dcoerce : {a} cn-of a K
+		    -> {m} md-assm m S
+		    -> md-fst m a
+		    -> coerce m S Sdom (Marg a m) (Sarg a))
+	(DfstS : sg-fst S K)
+	(Delab : strexp-elab Mec Sec Re M S)
+	(Dresolve : resolve-long Mec Sec name/fun I Mfun (sg/pi Sdom ([a] Scod a))))
+     (md-of/dpair
+	([a] [da:cn-of a K] [m] [dm:md-assm m (sg/named name/hide S)] [dfst:md-fst m a]
+	   md-of/app
+	   (DfstMarg a (md/out m) (md-fst/out dfst))
+	   (md-of/subsume
+	      (Dsub a da)
+	      (DofMarg' a da m dm dfst))
+	   DofMfun)
+	(sg-fst/named DfstS)
+	(md-of/in DofM))
+     <- resolve-long-reg DofEC Dresolve
+	(DofMfun : md-of pure st/nil Mfun (sg/pi Sdom ([a] Scod a)))
+     <- md-of-reg DofMfun
+	(sg-wf/pi
+	   _
+	   (DfstSdom : sg-fst Sdom Kdom)
+	   (DwfSdom : sg-wf Sdom))
+     <- strexp-elab-reg DofEC Delab
+	(DofM : md-of impure st/nil M S)
+     <- md-of-reg DofM
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> coerce-reg (md-of/var dm) DwfSdom (Dcoerce a da m dm dfst)
+	      (DofMarg a da m dm dfst : md-of pure st/nil (Marg a m) (Sarg a))
+	      (Dsub a da : sg-sub (Sarg a) Sdom))
+     <- ({a}
+	   can-sg-fst (Sarg a)
+	   (DfstSarg a : sg-fst (Sarg a) (Karg a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> md-fst-reg (DofMarg a da m dm dfst) (DfstMarg a m dfst) (DfstSarg a)
+	      (DofCarg a da : cn-of (Carg a) (Karg a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m (sg/named name/hide S)} {dfst:md-fst m a}
+	   substitution-md-md 
+	   ([dm':md-assm (md/out m) S] DofMarg a da (md/out m) dm' (md-fst/out dfst))
+	   (md-of/out (md-of/var dm))
+	   (DofMarg' a da m dm dfst : md-of pure st/nil (Marg a (md/out m)) (Sarg a))).
+
+
+
+%%% TRANSPARENT ASCRIPTION
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/ascribe
+	(Dcoerce : {a} cn-of a K
+		    -> {m} md-assm m S
+		    -> md-fst m a
+		    -> coerce m S S' (M' a m) (S'' a))
+	(DfstS : sg-fst S K)
+	(DelabS' : sigexp-elab Mec Sec Se S')
+	(DelabM : strexp-elab Mec Sec Re M S))
+     (md-of/dpair
+	([a] [da] [m] [dm] [dfst] md-of/forget (DofM'' a da m dm dfst))
+	(sg-fst/named DfstS)
+	(md-of/in DofM))
+     <- strexp-elab-reg DofEC DelabM
+	(DofM : md-of impure st/nil M S)
+     <- sigexp-elab-reg DofEC DelabS'
+	(DwfS' : sg-wf S')
+     <- md-of-reg DofM
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> coerce-reg (md-of/var dm) DwfS' (Dcoerce a da m dm dfst)
+	      (DofM' a da m dm dfst : md-of pure st/nil (M' a m) (S'' a))
+	      (Dsub a da : sg-sub (S'' a) S'))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m (sg/named name/hide S)} {dfst:md-fst m a}
+	   substitution-md-md 
+	   ([dm':md-assm (md/out m) S] DofM' a da (md/out m) dm' (md-fst/out dfst))
+	   (md-of/out (md-of/var dm))
+	   (DofM'' a da m dm dfst : md-of pure st/nil (M' a (md/out m)) (S'' a))).
+
+
+
+%%% SEALING
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/seal
+	(Dcoerce : {a} cn-of a K
+		    -> {m} md-assm m S
+		    -> md-fst m a
+		    -> coerce m S S' (M' a m) (S'' a))
+	(DfstS : sg-fst S K)
+	(DelabS' : sigexp-elab Mec Sec Se S')
+	(DelabM : strexp-elab Mec Sec Re M S))
+     (md-of/let
+	([a] [da] [m] [dm] [dfst]
+	   md-of/subsume
+	   (Dsub a da)
+	   (DofM' a da m dm dfst))
+	DfstS
+	DofM)
+     <- strexp-elab-reg DofEC DelabM
+	(DofM : md-of impure st/nil M S)
+     <- sigexp-elab-reg DofEC DelabS'
+	(DwfS' : sg-wf S')
+     <- md-of-reg DofM
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> coerce-reg (md-of/var dm) DwfS' (Dcoerce a da m dm dfst)
+	      (DofM' a da m dm dfst : md-of pure st/nil (M' a m) (S'' a))
+	      (Dsub a da : sg-sub (S'' a) S')).
+
+
+
+
+%%% LET
+
+- : strexp-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (strexp-elab/let
+	(Delab2 : {a} cn-of a K1
+		   -> {m} md-assm m S1
+		   -> md-fst m a
+		   -> strexp-elab (md/pair Mec m) (sg/prod Sec S1) Re (M2 a m) (S2 a))
+	(Dfst : sg-fst S1 K1)
+	(Delab1 : dec-elab Mec Sec De M1 S1))
+     (md-of/dpair
+	DofM2'
+	(sg-fst/named Dfst)
+	(md-of/in DofM1))
+     <- dec-elab-reg DofEC Delab1
+	(DofM1 : md-of impure st/nil M1 S1)
+     <- md-of-reg DofM1
+	(DwfS1 : sg-wf S1)
+     <- sg-fst-reg DwfS1 Dfst
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst Dfst da DwfS1
+	   -> strexp-elab-reg (md-of/pair (md-of/var dm) DofEC) (Delab2 a da m dm dfst)
+	      (DofM2 a da m dm dfst : md-of impure st/nil (M2 a m) (S2 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m (sg/named name/hide S1)} {dfst:md-fst m a}
+	   substitution-md-md 
+	   ([dm':md-assm (md/out m) S1] DofM2 a da (md/out m) dm' (md-fst/out dfst))
+	   (md-of/out (md-of/var dm))
+	   (DofM2' a da m dm dfst : md-of impure st/nil (M2 a (md/out m)) (S2 a))).

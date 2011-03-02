@@ -1,0 +1,41 @@
+%%%% weakening lemma for kinds. 
+
+
+
+kd-wkn/sg-wf : ({a:cn} {da: ofkd a K2} sg-wf (S a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} sg-wf (S a))
+	       -> type.    
+%mode kd-wkn/sg-wf +D1 +D2 -D4.
+
+- : kd-wkn/sg-wf DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/sg-wf _ _ _).
+%total {} (kd-wkn/sg-wf _ _ _).
+
+
+
+kd-wkn/sg-sub : ({a:cn} {da: ofkd a K2} sg-sub (S' a) (S'' a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} sg-sub (S' a) (S'' a))
+	       -> type. 			   
+%mode kd-wkn/sg-sub +D1 +D2 -D4.
+
+- : kd-wkn/sg-sub DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/sg-sub _ _ _).
+%total {} (kd-wkn/sg-sub _ _ _).
+
+
+
+
+kd-wkn/sg-deq : ({a:cn} {da: ofkd a K2} sg-deq (S' a) (S'' a)) 
+	       -> kd-sub K1 K2
+	       -> ({a:cn} {da: ofkd a K1} sg-deq (S' a) (S'' a))
+	       -> type. 						   
+%mode kd-wkn/sg-deq +D1 +D2 -D4.
+
+- : kd-wkn/sg-deq DI DS ([a] [da] (DI a (ofkd/sub da DS))).
+
+%worlds (ofkd-block) (kd-wkn/sg-deq _ _ _).
+%total {} (kd-wkn/sg-deq _ _ _).

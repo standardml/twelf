@@ -1,0 +1,33 @@
+%%%% stores for terms
+
+st	: type. %name st ST.
+
+st/nil	: st.
+st/cons	: st -> loc -> tm -> st.
+
+st-look	: st -> loc -> tm -> type.
+%mode st-look *L *LC *V.
+
+st-look/hit	: st-look (st/cons _ LC V) LC V.
+
+st-look/miss	: st-look (st/cons S _ _) LC V
+		   <- st-look S LC V.
+
+
+st-alloc : st -> tm -> st -> loc -> type.
+%mode st-alloc *S *T *S' *L.
+
+st-alloc/nil	: st-alloc st/nil E (st/cons st/nil loc/z E) loc/z.
+
+st-alloc/cons	: st-alloc (st/cons ST LC E') E
+		   (st/cons (st/cons ST LC E') (loc/s LC) E) (loc/s LC). 
+
+
+
+st-update : st -> loc -> tm -> st -> type.
+%mode st-update *S *L *T *S'.
+
+st-update/hit	: st-update (st/cons S LC _) LC E (st/cons S LC E).
+
+st-update/miss	: st-update (st/cons S LC' E') LC E (st/cons S' LC' E')
+		   <- st-update S LC E S'. 

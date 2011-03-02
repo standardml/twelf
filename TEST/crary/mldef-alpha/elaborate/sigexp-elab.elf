@@ -1,0 +1,58 @@
+
+%{
+IDENTIFIERS
+}%
+
+sigexp-elab/longid	: sigexp-elab Mec Sec (sigexp/longid I) S
+			   <- resolve-long Mec Sec name/sig I _ (sg/sgatom S).
+
+
+
+%{
+BASIC SIGNATURES
+}%
+
+sigexp-elab/sig		: sigexp-elab Mec Sec (sigexp/sig SPe) S
+			   <- spec-elab Mec Sec SPe S.
+
+
+
+%{
+WHERE TYPE
+}%
+
+sigexp-elab/where-type	: sigexp-elab Mec Sec (sigexp/where-type Se TVLe I Te) S'
+			   <- sigexp-elab Mec Sec Se S
+			   <- tyargs-elab TVLe Sarg
+			   <- sg-fst Sarg Karg
+			   <- ({a} cn-of a Karg
+				 -> {m} md-assm m Sarg
+				 -> md-fst m a
+				 -> ty-elab (md/pair Mec m) (sg/sigma Sec ([_] Sarg)) Te (T a))
+			   <- ({b} {n}
+				 md-fst n b
+				 -> resolve-long n S name/con I (M n) (sg/satom Kresolved))
+			   <- ({n}
+				 apply-path P n (M n))
+			   <- kd-sub (pi Karg ([a] sing (T a))) Kresolved
+			   <- patch-sg P S (sg/satom (pi Karg ([a] sing (T a)))) S'.
+
+
+
+%{
+WHERE STRUCTURE
+}%
+
+sigexp-elab/where-structure
+			: sigexp-elab Mec Sec (sigexp/where-structure Se I I') S'
+			   <- sigexp-elab Mec Sec Se S
+			   <- resolve-long Mec Sec name/mod Inew Mnew Snew
+			   <- md-fst Mnew Cnew
+			   <- single-sg Snew ([a] Snewsing a)
+			   <- ({b} {n}
+				 md-fst n b
+				 -> resolve-long n S name/con I (M n) Sresolved)
+			   <- ({n}
+				 apply-path P n (M n))
+			   <- sg-sub (Snewsing Cnew) Sresolved
+			   <- patch-sg P S (Snewsing Cnew) S'.

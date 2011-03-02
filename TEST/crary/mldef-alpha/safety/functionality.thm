@@ -1,0 +1,2712 @@
+
+%%%%%  Contexts  %%%%%
+
+isvar : con -> type.
+
+
+
+ctx : type.  %name ctx G.
+
+nil	: ctx.
+cons	: ctx -> con -> kind -> ctx.
+
+
+
+clean : ctx -> type.
+
+clean/nil	: clean nil.
+
+clean/cons	: clean (cons G X A)
+		   <- clean G
+		   <- isvar X.
+
+
+
+ctx-lookup : ctx -> con -> kind -> type.
+
+ctx-lookup/hit	: ctx-lookup (cons G X A) X A.
+
+ctx-lookup/miss	: ctx-lookup (cons G Y _) X A
+		   <- ctx-lookup G X A.
+
+
+
+
+%%%%%  Explicit/Implicit Context System  %%%%%
+
+kd-wf-i		: ctx -> kind -> type.
+cn-of-i		: ctx -> con -> kind -> type.
+kd-sub-i	: ctx -> kind -> kind -> type.
+kd-equiv-i	: ctx -> kind -> kind -> type.
+cn-equiv-i	: ctx -> con -> con -> kind -> type.
+sg-wf-i		: ctx -> sg -> type.
+sg-equiv-i	: ctx -> sg -> sg -> type.
+
+
+kd-wf-i/nil	: kd-wf-i nil A
+		   <- kd-wf A.
+
+kd-wf-i/cons	: kd-wf-i (cons G X A) B
+		   <- (cn-of X A -> kd-wf-i G B).
+
+
+cn-of-i/nil	: cn-of-i nil M A
+		   <- cn-of M A.
+
+cn-of-i/cons	: cn-of-i (cons G X A) M B
+		   <- (cn-of X A -> cn-of-i G M B).
+
+
+kd-sub-i/nil	: kd-sub-i nil B C
+		   <- kd-sub B C.
+
+kd-sub-i/cons	: kd-sub-i (cons G X A) B C
+		   <- (cn-of X A -> kd-sub-i G B C).
+
+
+kd-equiv-i/nil	: kd-equiv-i nil B C
+		   <- kd-equiv B C.
+
+kd-equiv-i/cons	: kd-equiv-i (cons G X A) B C
+		   <- (cn-of X A -> kd-equiv-i G B C).
+
+
+cn-equiv-i/nil	: cn-equiv-i nil M N B
+		   <- cn-equiv M N B.
+
+cn-equiv-i/cons	: cn-equiv-i (cons G X A) M N B
+		   <- (cn-of X A -> cn-equiv-i G M N B).
+
+
+sg-wf-i/nil	: sg-wf-i nil A
+		   <- sg-wf A.
+
+sg-wf-i/cons	: sg-wf-i (cons G X A) B
+		   <- (cn-of X A -> sg-wf-i G B).
+
+
+sg-equiv-i/nil	: sg-equiv-i nil B C
+		   <- sg-equiv B C.
+
+sg-equiv-i/cons	: sg-equiv-i (cons G X A) B C
+		   <- (cn-of X A -> sg-equiv-i G B C).
+
+
+
+
+%%%%%  Proof Skeletons  %%%%%
+
+cn-assm : cn-of C K -> type.
+
+
+mkind	: type.
+mcon	: type.
+
+mkind/t		: mkind.
+mkind/pi	: mkind -> mkind -> mkind.
+mkind/sigma	: mkind -> mkind -> mkind.
+mkind/sing	: mcon -> mkind.
+mkind/one	: mkind.
+
+mcon/var	: mcon.
+mcon/lam	: mcon -> mkind -> mcon.
+mcon/app	: mcon -> mcon -> mcon.
+mcon/pair	: mcon -> mcon -> mcon.
+mcon/pi1	: mcon -> mcon.
+mcon/pi2	: mcon -> mcon.
+mcon/sing	: mcon -> mcon.
+mcon/extpi	: mcon -> mcon -> mcon.
+mcon/extsigma	: mcon -> mcon -> mcon.
+mcon/star	: mcon.
+mcon/subsume	: mcon -> mcon.
+mcon/unit	: mcon.
+mcon/void	: mcon.
+mcon/prod	: mcon -> mcon -> mcon.
+mcon/arrow	: mcon -> mcon -> mcon.
+mcon/plus	: mcon -> mcon -> mcon.
+mcon/ref	: mcon -> mcon.
+mcon/tag	: mcon -> mcon.
+mcon/tagged	: mcon.
+mcon/rec	: mcon -> mcon -> mkind -> mcon.
+mcon/labeled	: mcon -> mcon.
+
+
+mkd-wf	: kd-wf A -> mkind -> type.
+mcn-of	: cn-of M A -> mcon -> type.
+
+mkd-wf/t	: mkd-wf kd-wf/t mkind/t.
+
+mkd-wf/pi	: mkd-wf (kd-wf/pi D2 D1) (mkind/pi A2 A1)
+		   <- mkd-wf D1 A1
+		   <- ({x} {d}
+			 cn-assm d
+			 -> mkd-wf (D2 x d) A2).
+
+mkd-wf/sigma	: mkd-wf (kd-wf/sigma D2 D1) (mkind/sigma A2 A1)
+		   <- mkd-wf D1 A1
+		   <- ({x} {d}
+			 cn-assm d
+			 -> mkd-wf (D2 x d) A2).
+
+mkd-wf/sing	: mkd-wf (kd-wf/sing D) (mkind/sing M)
+		   <- mcn-of D M.
+
+mkd-wf/one	: mkd-wf kd-wf/one mkind/one.
+
+
+
+mcn-of/var	: mcn-of D mcon/var
+		   <- cn-assm D.
+
+mcn-of/lam	: mcn-of (cn-of/lam D2 D1) (mcon/lam M A)
+		   <- mkd-wf D1 A
+		   <- ({x} {d}
+			 cn-assm d
+			 -> mcn-of (D2 x d) M).
+
+mcn-of/app	: mcn-of (cn-of/app D2 D1) (mcon/app M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/pair	: mcn-of (cn-of/pair _ D2 D1) (mcon/pair M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/pi1	: mcn-of (cn-of/pi1 D) (mcon/pi1 M)
+		   <- mcn-of D M.
+		   
+mcn-of/pi2	: mcn-of (cn-of/pi2 D) (mcon/pi2 M)
+		   <- mcn-of D M.
+
+mcn-of/sing	: mcn-of (cn-of/sing D) (mcon/sing M)
+		   <- mcn-of D M.
+
+mcn-of/extpi	: mcn-of (cn-of/extpi D2 D1) (mcon/extpi M2 M1)
+		   <- mcn-of D1 M1
+		   <- ({x} {d}
+			 cn-assm d
+			 -> mcn-of (D2 x d) M2).
+
+mcn-of/extsigma	: mcn-of (cn-of/extsigma _ D2 D1) (mcon/extsigma M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/star	: mcn-of cn-of/star mcon/star.
+
+mcn-of/subsume	: mcn-of (cn-of/subsume _ D) (mcon/subsume M)
+		   <- mcn-of D M.
+
+mcn-of/unit	: mcn-of cn-of/unit mcon/unit.
+
+mcn-of/void	: mcn-of cn-of/void mcon/void.
+
+mcn-of/prod	: mcn-of (cn-of/prod D2 D1) (mcon/prod M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/arrow	: mcn-of (cn-of/arrow D2 D1) (mcon/arrow M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/plus	: mcn-of (cn-of/plus D2 D1) (mcon/plus M2 M1)
+		   <- mcn-of D1 M1
+		   <- mcn-of D2 M2.
+
+mcn-of/ref	: mcn-of (cn-of/ref D) (mcon/ref M)
+		   <- mcn-of D M.
+
+mcn-of/tag	: mcn-of (cn-of/tag D) (mcon/tag M)
+		   <- mcn-of D M.
+
+mcn-of/tagged	: mcn-of cn-of/tagged mcon/tagged.
+
+mcn-of/rec	: mcn-of (cn-of/rec D3 D2 D1) (mcon/rec M3 M2 A)
+		   <- mkd-wf D1 A
+		   <- ({x} {d}
+			 cn-assm d
+			 -> {y} {e}
+			    cn-assm e
+			 -> mcn-of (D2 x d y e) M2)
+		   <- mcn-of D3 M3.
+
+mcn-of/labeled	: mcn-of (cn-of/labeled D) (mcon/labeled DM)
+		   <- mcn-of D DM.
+
+
+
+mkd-wf-i	: kd-wf-i G A -> mkind -> type.
+
+mkd-wf-i/nil	: mkd-wf-i (kd-wf-i/nil D) M
+		   <- mkd-wf D M.
+
+mkd-wf-i/cons	: mkd-wf-i (kd-wf-i/cons D) M
+		   <- ({d} 
+			 cn-assm d
+			 -> mkd-wf-i (D d) M).
+
+
+
+mcn-of-i	: cn-of-i G M A -> mcon -> type.
+
+mcn-of-i/nil	: mcn-of-i (cn-of-i/nil D) M
+		   <- mcn-of D M.
+
+mcn-of-i/cons	: mcn-of-i (cn-of-i/cons D) M
+		   <- ({d}
+			 cn-assm d
+			 -> mcn-of-i (D d) M).
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block oblock : block {x:con} {d:isvar x}.
+
+%block ofblock
+   : some {c:con} {k:kind}
+      block {d:cn-of c k}.
+
+%block ofblock-m
+   : some {c:con} {k:kind}
+      block {d:cn-of c k} {ds:cn-assm d}.
+
+
+
+
+%%%%%  Equality  %%%%%
+
+ctx-eq : ctx -> ctx -> type.
+
+ctx-eq/i : ctx-eq G G.
+
+
+
+cn-of-i-resp : ctx-eq G G' -> con-eq M M' -> kind-eq A A' -> cn-of-i G M A -> cn-of-i G' M' A' -> type.
+%mode cn-of-i-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: cn-of-i-resp ctx-eq/i con-eq/i kind-eq/i D D.
+
+%worlds (conblock | oblock | ofblock) (cn-of-i-resp _ _ _ _ _).
+%total {} (cn-of-i-resp _ _ _ _ _).
+
+
+
+cn-equiv-i-resp : ctx-eq G G' -> con-eq M M' -> con-eq N N' -> kind-eq A A' -> cn-equiv-i G M N A -> cn-equiv-i G' M' N' A' -> type.
+%mode cn-equiv-i-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: cn-equiv-i-resp ctx-eq/i con-eq/i con-eq/i kind-eq/i D D.
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-resp _ _ _ _ _ _).
+%total {} (cn-equiv-i-resp _ _ _ _ _ _).
+
+
+
+kd-equiv-i-resp : ctx-eq G G' -> kind-eq A A' -> kind-eq B B' -> kd-equiv-i G A B -> kd-equiv-i G' A' B' -> type.
+%mode kd-equiv-i-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: kd-equiv-i-resp ctx-eq/i kind-eq/i kind-eq/i D D.
+
+%worlds (conblock | oblock | ofblock) (kd-equiv-i-resp _ _ _ _ _).
+%total {} (kd-equiv-i-resp _ _ _ _ _).
+
+
+
+
+%%%%%  Context Lemmas  %%%%%
+
+isvar-closed : ({x:con} isvar (Y x)) -> ({x} con-eq (Y x) Y') -> type.
+%mode isvar-closed +X1 -X2.
+
+-	: isvar-closed ([_] D) ([_] con-eq/i).
+
+%worlds (conblock | oblock | ofblock) (isvar-closed _ _).
+%total {} (isvar-closed _ _).
+
+
+
+ctx-lookup-clean : ({x:con} ctx-lookup (G x) (X x) (A x)) -> ({x} clean (G x)) -> ({x} con-eq (X x) X') -> type.
+%mode ctx-lookup-clean +X1 +X2 -X3.
+
+-	: ctx-lookup-clean ([x] ctx-lookup/hit) ([x] clean/cons (Disvar x) _) Deq
+	   <- isvar-closed Disvar Deq.
+
+-	: ctx-lookup-clean ([x] ctx-lookup/miss (Dlook x)) ([x] clean/cons _ (Dclean x)) Deq
+	   <- ctx-lookup-clean Dlook Dclean Deq.
+
+%worlds (conblock | oblock | ofblock) (ctx-lookup-clean _ _ _).
+%total D (ctx-lookup-clean D _ _).
+
+
+
+
+
+%%%%%  Destructors  %%%%%
+
+ctx-lookup? : ctx -> con -> kind -> type.
+
+ctx-lookup?/look	: ctx-lookup? G X A
+			   <- ctx-lookup G X A.
+
+ctx-lookup?/not		: {D:cn-of X A} cn-assm D -> ctx-lookup? G X A.
+
+
+
+ctx-lookup?-cons : ({D:cn-of X A} cn-assm D -> ctx-lookup? G Y B) -> ctx-lookup? (cons G X A) Y B -> type.
+%mode ctx-lookup?-cons +X1 -X2.
+
+-	: ctx-lookup?-cons ([d] [dm] ctx-lookup?/look D) (ctx-lookup?/look (ctx-lookup/miss D)).
+
+-	: ctx-lookup?-cons ([d] [dm] ctx-lookup?/not D DM) (ctx-lookup?/not D DM).
+
+-	: ctx-lookup?-cons ([d] [dm] ctx-lookup?/not d dm) (ctx-lookup?/look ctx-lookup/hit).
+
+%worlds (conblock | oblock | ofblock-m) (ctx-lookup?-cons _ _).
+%total {} (ctx-lookup?-cons _ _).
+
+
+
+cn-of-i-var-invert : {D:cn-of-i G M A} 
+		      mcn-of-i D mcon/var
+		      -> ctx-lookup? G M A -> type.
+%mode cn-of-i-var-invert +X1 +X2 -X3.
+
+-	: cn-of-i-var-invert (cn-of-i/nil Dof) (mcn-of-i/nil (mcn-of/var DM)) (ctx-lookup?/not Dof DM).
+
+-	: cn-of-i-var-invert (cn-of-i/cons Dof) (mcn-of-i/cons Dmof) Dlookup?'
+	   <- ({d} {dm}
+		 cn-of-i-var-invert (Dof d) (Dmof d dm) (Dlookup? d dm))
+	   <- ctx-lookup?-cons Dlookup? Dlookup?'.
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-var-invert _ _ _).
+%total D (cn-of-i-var-invert D _ _).
+
+
+
+cn-of-i-lam-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/lam Mm Am)
+		   -> con-eq (lam A M) O
+		   -> kind-eq (pi A B) C
+		   -> {D1:kd-wf-i G A}
+		      mkd-wf-i D1 Am
+		   -> {D2:{x} cn-of-i (cons G x A) (M x) (B x)}
+		      ({x} mcn-of-i (D2 x) Mm) -> type.
+%mode cn-of-i-lam-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-lam-invert (cn-of-i/nil (cn-of/lam D2 D1)) (mcn-of-i/nil (mcn-of/lam DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (kd-wf-i/nil D1) (mkd-wf-i/nil DM1) 
+	   ([x] cn-of-i/cons ([d] cn-of-i/nil (D2 x d))) ([x] mcn-of-i/cons ([d] [dm] mcn-of-i/nil (DM2 x d dm))).
+
+-	: cn-of-i-lam-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (kd-wf-i/cons D1) (mkd-wf-i/cons DM1)
+	   ([y] cn-of-i/cons ([e] cn-of-i/cons ([d] D2 d y e)))
+	   ([y] mcn-of-i/cons ([e] [em] mcn-of-i/cons ([d] [dm] DM2 d dm y e em)))
+	   <- ({d} {dm}
+		 cn-of-i-lam-invert (D d) (DM d dm) Deq Deq' (D1 d) (DM1 d dm) 
+		 ([y] cn-of-i/cons ([e] D2 d y e)) ([y] mcn-of-i/cons ([e] [em] DM2 d dm y e em))).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-lam-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-lam-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-app-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/app Nm Mm)
+		  -> con-eq (app M N) O
+		  -> kind-eq (B N) C
+		  -> {D1:cn-of-i G M (pi A B)}
+		     mcn-of-i D1 Mm
+		  -> {D2:cn-of-i G N A}
+		     mcn-of-i D2 Nm -> type.
+%mode cn-of-i-app-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-app-invert (cn-of-i/nil (cn-of/app D2 D1)) (mcn-of-i/nil (mcn-of/app DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (cn-of-i/nil D2) (mcn-of-i/nil DM2).
+
+-	: cn-of-i-app-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   <- ({d} {dm}
+		 cn-of-i-app-invert (D d) (DM d dm) Deq Deq'
+		 (D1 d) (DM1 d dm) (D2 d) (DM2 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-app-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-app-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-pair-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/pair Nm Mm)
+		   -> con-eq (pair M N) O
+		   -> kind-eq (sigma A B) C
+		   -> {D1:cn-of-i G M A}
+		      mcn-of-i D1 Mm
+		   -> {D2:cn-of-i G N (B M)}
+		      mcn-of-i D2 Nm 
+		   -> ({x} kd-wf-i (cons G x A) (B x)) -> type.
+%mode cn-of-i-pair-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8 -X9.
+
+-	: cn-of-i-pair-invert (cn-of-i/nil (cn-of/pair D3 D2 D1)) (mcn-of-i/nil (mcn-of/pair DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (cn-of-i/nil D2) (mcn-of-i/nil DM2)
+	   ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D3 x d))).
+
+-	: cn-of-i-pair-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   ([y] kd-wf-i/cons ([e] kd-wf-i/cons ([d] D3 d y e)))
+	   <- ({d} {dm}
+		 cn-of-i-pair-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D1 d) (DM1 d dm) (D2 d) (DM2 d dm) ([y] kd-wf-i/cons ([e] D3 d y e))).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-pair-invert _ _ _ _ _ _ _ _ _).
+%total D (cn-of-i-pair-invert D _ _ _ _ _ _ _ _).
+
+
+
+cn-of-i-pi1-invert : {D:cn-of-i G O A} mcn-of-i D (mcon/pi1 Mm)
+		   -> con-eq (pi1 M) O
+		   -> {D1:cn-of-i G M (sigma A B)}
+		      mcn-of-i D1 Mm -> type.
+%mode cn-of-i-pi1-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: cn-of-i-pi1-invert (cn-of-i/nil (cn-of/pi1 D)) (mcn-of-i/nil (mcn-of/pi1 DM))
+	   con-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-pi1-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1)
+	   <- ({d} {dm}
+		 cn-of-i-pi1-invert (D d) (DM d dm)
+		 Deq
+		 (D1 d) (DM1 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-pi1-invert _ _ _ _ _).
+%total D (cn-of-i-pi1-invert D _ _ _ _).
+
+
+
+cn-of-i-pi2-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/pi2 Mm)
+		   -> con-eq (pi2 M) O
+		   -> kind-eq (B (pi1 M)) C
+		   -> {D1:cn-of-i G M (sigma A B)}
+		      mcn-of-i D1 Mm -> type.
+%mode cn-of-i-pi2-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: cn-of-i-pi2-invert (cn-of-i/nil (cn-of/pi2 D)) (mcn-of-i/nil (mcn-of/pi2 DM))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-pi2-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1)
+	   <- ({d} {dm}
+		 cn-of-i-pi2-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D1 d) (DM1 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-pi2-invert _ _ _ _ _ _).
+%total D (cn-of-i-pi2-invert D _ _ _ _ _).
+
+
+
+cn-of-i-sing-invert : {D:cn-of-i G M C} mcn-of-i D (mcon/sing Mm)
+		    -> kind-eq (sing M) C
+		    -> {D1:cn-of-i G M t}
+		       mcn-of-i D1 Mm -> type.
+%mode cn-of-i-sing-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: cn-of-i-sing-invert (cn-of-i/nil (cn-of/sing D)) (mcn-of-i/nil (mcn-of/sing DM))
+	   kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-sing-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1)
+	   <- ({d} {dm}
+		 cn-of-i-sing-invert (D d) (DM d dm)
+		 Deq
+		 (D1 d) (DM1 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-sing-invert _ _ _ _ _).
+%total D (cn-of-i-sing-invert D _ _ _ _).
+
+
+
+cn-of-i-extpi-invert : {D:cn-of-i G M C} mcn-of-i D (mcon/extpi Nm Mm)
+		     -> kind-eq (pi A B) C
+		     -> {D1:cn-of-i G M (pi A B')}
+			mcn-of-i D1 Mm
+		     -> {D2:{x} cn-of-i (cons G x A) (app M x) (B x)}
+			({x} mcn-of-i (D2 x) Nm) -> type.
+%mode cn-of-i-extpi-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: cn-of-i-extpi-invert (cn-of-i/nil (cn-of/extpi D2 D1)) (mcn-of-i/nil (mcn-of/extpi DM2 DM1))
+	   kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1)
+	   ([x] cn-of-i/cons ([d] cn-of-i/nil (D2 x d))) ([x] mcn-of-i/cons ([d] [dm] mcn-of-i/nil (DM2 x d dm))).
+
+-	: cn-of-i-extpi-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1)
+	   ([y] cn-of-i/cons ([e] cn-of-i/cons ([d] D2 d y e)))
+	   ([y] mcn-of-i/cons ([e] [em] mcn-of-i/cons ([d] [dm] DM2 d dm y e em)))
+	   <- ({d} {dm}
+		 cn-of-i-extpi-invert (D d) (DM d dm) Deq
+		 (D1 d) (DM1 d dm)
+		 ([y] cn-of-i/cons ([e] D2 d y e)) ([y] mcn-of-i/cons ([e] [em] DM2 d dm y e em))).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-extpi-invert _ _ _ _ _ _ _).
+%total D (cn-of-i-extpi-invert D _ _ _ _ _ _).
+
+
+
+cn-of-i-extsigma-invert : {D:cn-of-i G M C} mcn-of-i D (mcon/extsigma Nm Mm)
+			-> kind-eq (sigma A B) C
+			-> {D1:cn-of-i G (pi1 M) A}
+			   mcn-of-i D1 Mm
+			-> {D2:cn-of-i G (pi2 M) (B (pi1 M))}
+			   mcn-of-i D2 Nm
+			-> ({x} kd-wf-i (cons G x A) (B x)) -> type.
+%mode cn-of-i-extsigma-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-extsigma-invert (cn-of-i/nil (cn-of/extsigma D3 D2 D1)) (mcn-of-i/nil (mcn-of/extsigma DM2 DM1))
+	   kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1)
+	   (cn-of-i/nil D2) (mcn-of-i/nil DM2)
+	   ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D3 x d))).
+
+-	: cn-of-i-extsigma-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   ([y] kd-wf-i/cons ([e] kd-wf-i/cons ([d] D3 d y e)))
+	   <- ({d} {dm}
+		 cn-of-i-extsigma-invert (D d) (DM d dm) Deq (D1 d) (DM1 d dm) (D2 d) (DM2 d dm) ([y] kd-wf-i/cons ([e] D3 d y e))).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-extsigma-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-extsigma-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-star-invert : {D:cn-of-i G M A} mcn-of-i D mcon/star
+		      -> con-eq star M
+		      -> kind-eq one A -> type.
+%mode cn-of-i-star-invert +X1 +X2 -X3 -X4.
+
+-	: cn-of-i-star-invert (cn-of-i/nil cn-of/star) _ con-eq/i kind-eq/i.
+
+-	: cn-of-i-star-invert (cn-of-i/cons D) (mcn-of-i/cons DM) DeqC DeqK
+	   <- ({d} {dm}
+		 cn-of-i-star-invert (D d) (DM d dm) DeqC DeqK).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-star-invert _ _ _ _).
+%total D (cn-of-i-star-invert D _ _ _).
+
+
+
+cn-of-i-subsume-invert : {D:cn-of-i G M A} mcn-of-i D (mcon/subsume Mm)
+		       -> {D1:cn-of-i G M B}
+			  mcn-of-i D1 Mm
+		       -> kd-sub-i G B A -> type.
+%mode cn-of-i-subsume-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: cn-of-i-subsume-invert (cn-of-i/nil (cn-of/subsume D2 D1)) (mcn-of-i/nil (mcn-of/subsume DM1))
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (kd-sub-i/nil D2).
+
+-	: cn-of-i-subsume-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (kd-sub-i/cons D2)
+	   <- ({d} {dm}
+		 cn-of-i-subsume-invert (D d) (DM d dm) (D1 d) (DM1 d dm) (D2 d)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-subsume-invert _ _ _ _ _).
+%total D (cn-of-i-subsume-invert D _ _ _ _).
+
+
+
+cn-of-i-unit-invert : {D:cn-of-i G M A} mcn-of-i D mcon/unit
+		      -> con-eq unit M
+		      -> kind-eq t A -> type.
+%mode cn-of-i-unit-invert +X1 +X2 -X3 -X4.
+
+-	: cn-of-i-unit-invert (cn-of-i/nil cn-of/unit) _ con-eq/i kind-eq/i.
+
+-	: cn-of-i-unit-invert (cn-of-i/cons D) (mcn-of-i/cons DM) DeqC DeqK
+	   <- ({d} {dm}
+		 cn-of-i-unit-invert (D d) (DM d dm) DeqC DeqK).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-unit-invert _ _ _ _).
+%total D (cn-of-i-unit-invert D _ _ _).
+
+
+
+cn-of-i-void-invert : {D:cn-of-i G M A} mcn-of-i D mcon/void
+		      -> con-eq void M
+		      -> kind-eq t A -> type.
+%mode cn-of-i-void-invert +X1 +X2 -X3 -X4.
+
+-	: cn-of-i-void-invert (cn-of-i/nil cn-of/void) _ con-eq/i kind-eq/i.
+
+-	: cn-of-i-void-invert (cn-of-i/cons D) (mcn-of-i/cons DM) DeqC DeqK
+	   <- ({d} {dm}
+		 cn-of-i-void-invert (D d) (DM d dm) DeqC DeqK).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-void-invert _ _ _ _).
+%total D (cn-of-i-void-invert D _ _ _).
+
+
+
+cn-of-i-prod-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/prod Nm Mm)
+		      -> con-eq (prod M N) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm
+		      -> {D2:cn-of-i G N t}
+			 mcn-of-i D2 Nm -> type.
+%mode cn-of-i-prod-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-prod-invert (cn-of-i/nil (cn-of/prod D2 D1)) (mcn-of-i/nil (mcn-of/prod DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (cn-of-i/nil D2) (mcn-of-i/nil DM2).
+
+-	: cn-of-i-prod-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   <- ({d} {dm}
+		 cn-of-i-prod-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D1 d) (DM1 d dm) (D2 d) (DM2 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-prod-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-prod-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-arrow-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/arrow Nm Mm)
+		      -> con-eq (arrow M N) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm
+		      -> {D2:cn-of-i G N t}
+			 mcn-of-i D2 Nm -> type.
+%mode cn-of-i-arrow-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-arrow-invert (cn-of-i/nil (cn-of/arrow D2 D1)) (mcn-of-i/nil (mcn-of/arrow DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (cn-of-i/nil D2) (mcn-of-i/nil DM2).
+
+-	: cn-of-i-arrow-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   <- ({d} {dm}
+		 cn-of-i-arrow-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D1 d) (DM1 d dm) (D2 d) (DM2 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-arrow-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-arrow-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-plus-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/plus Nm Mm)
+		      -> con-eq (plus M N) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm
+		      -> {D2:cn-of-i G N t}
+			 mcn-of-i D2 Nm -> type.
+%mode cn-of-i-plus-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: cn-of-i-plus-invert (cn-of-i/nil (cn-of/plus D2 D1)) (mcn-of-i/nil (mcn-of/plus DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D1) (mcn-of-i/nil DM1) (cn-of-i/nil D2) (mcn-of-i/nil DM2).
+
+-	: cn-of-i-plus-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1) (cn-of-i/cons D2) (mcn-of-i/cons DM2)
+	   <- ({d} {dm}
+		 cn-of-i-plus-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D1 d) (DM1 d dm) (D2 d) (DM2 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-plus-invert _ _ _ _ _ _ _ _).
+%total D (cn-of-i-plus-invert D _ _ _ _ _ _ _).
+
+
+
+cn-of-i-ref-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/ref Mm)
+		      -> con-eq (ref M) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm -> type.
+%mode cn-of-i-ref-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: cn-of-i-ref-invert (cn-of-i/nil (cn-of/ref D)) (mcn-of-i/nil (mcn-of/ref DM))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-ref-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D') (mcn-of-i/cons DM')
+	   <- ({d} {dm}
+		 cn-of-i-ref-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D' d) (DM' d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-ref-invert _ _ _ _ _ _).
+%total D (cn-of-i-ref-invert D _ _ _ _ _).
+
+
+
+cn-of-i-tag-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/tag Mm)
+		      -> con-eq (tag M) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm -> type.
+%mode cn-of-i-tag-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: cn-of-i-tag-invert (cn-of-i/nil (cn-of/tag D)) (mcn-of-i/nil (mcn-of/tag DM))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-tag-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D') (mcn-of-i/cons DM')
+	   <- ({d} {dm}
+		 cn-of-i-tag-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D' d) (DM' d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-tag-invert _ _ _ _ _ _).
+%total D (cn-of-i-tag-invert D _ _ _ _ _).
+
+
+
+cn-of-i-tagged-invert : {D:cn-of-i G M A} mcn-of-i D mcon/tagged
+		      -> con-eq tagged M
+		      -> kind-eq t A -> type.
+%mode cn-of-i-tagged-invert +X1 +X2 -X3 -X4.
+
+-	: cn-of-i-tagged-invert (cn-of-i/nil cn-of/tagged) _ con-eq/i kind-eq/i.
+
+-	: cn-of-i-tagged-invert (cn-of-i/cons D) (mcn-of-i/cons DM) DeqC DeqK
+	   <- ({d} {dm}
+		 cn-of-i-tagged-invert (D d) (DM d dm) DeqC DeqK).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-tagged-invert _ _ _ _).
+%total D (cn-of-i-tagged-invert D _ _ _).
+
+
+
+cn-of-i-rec-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/rec M2 M1 A)
+		      -> con-eq (rec K C1 C2) O
+		      -> kind-eq t C
+		      -> {D1:kd-wf-i G K}
+			 mkd-wf-i D1 A
+		      -> {D2:{x} {y} cn-of-i (cons (cons G x (pi K ([_] t))) y K) (C1 x y) t}
+			 ({x} {y} mcn-of-i (D2 x y) M1)
+		      -> {D3:cn-of-i G C2 K}
+			 mcn-of-i D3 M2 -> type.
+%mode cn-of-i-rec-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7 -X8 -X9 -X10.
+
+-	: cn-of-i-rec-invert (cn-of-i/nil (cn-of/rec D3 D2 D1)) (mcn-of-i/nil (mcn-of/rec DM3 DM2 DM1))
+	   con-eq/i kind-eq/i
+	   (kd-wf-i/nil D1) (mkd-wf-i/nil DM1)
+	   ([x] [y] cn-of-i/cons ([e] cn-of-i/cons ([d] cn-of-i/nil (D2 x d y e))))
+	   ([x] [y] mcn-of-i/cons ([e] [em] mcn-of-i/cons ([d] [dm] mcn-of-i/nil (DM2 x d dm y e em))))
+	   (cn-of-i/nil D3) (mcn-of-i/nil DM3).
+
+-	: cn-of-i-rec-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (kd-wf-i/cons D1) (mkd-wf-i/cons DM1)
+	   ([y] [z] cn-of-i/cons ([f] cn-of-i/cons ([e] cn-of-i/cons ([d] D2 d y e z f))))
+	   ([y] [z] mcn-of-i/cons ([f] [fm] mcn-of-i/cons ([e] [em] mcn-of-i/cons ([d] [dm] DM2 d dm y e em z f fm))))
+	   (cn-of-i/cons D3) (mcn-of-i/cons DM3)
+	   <- ({d} {dm}
+		 cn-of-i-rec-invert (D d) (DM d dm) Deq Deq'
+		 (D1 d) (DM1 d dm)
+		 ([y] [z] cn-of-i/cons ([f] cn-of-i/cons ([e] D2 d y e z f)))
+		 ([y] [z] mcn-of-i/cons ([f] [fm] mcn-of-i/cons ([e] [em] DM2 d dm y e em z f fm)))
+		 (D3 d) (DM3 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-rec-invert _ _ _ _ _ _ _ _ _ _).
+%total D (cn-of-i-rec-invert D _ _ _ _ _ _ _ _ _).
+
+
+
+cn-of-i-labeled-invert : {D:cn-of-i G O C} mcn-of-i D (mcon/labeled Mm)
+		      -> con-eq (labeled I M) O
+		      -> kind-eq t C
+		      -> {D1:cn-of-i G M t}
+			 mcn-of-i D1 Mm -> type.
+%mode cn-of-i-labeled-invert +X1 +X2 -X3 -X4 -X5 -X6.
+
+-	: cn-of-i-labeled-invert (cn-of-i/nil (cn-of/labeled D)) (mcn-of-i/nil (mcn-of/labeled DM))
+	   con-eq/i kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: cn-of-i-labeled-invert (cn-of-i/cons D) (mcn-of-i/cons DM)
+	   Deq Deq'
+	   (cn-of-i/cons D') (mcn-of-i/cons DM')
+	   <- ({d} {dm}
+		 cn-of-i-labeled-invert (D d) (DM d dm)
+		 Deq Deq'
+		 (D' d) (DM' d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (cn-of-i-labeled-invert _ _ _ _ _ _).
+%total D (cn-of-i-labeled-invert D _ _ _ _ _).
+
+
+
+
+kd-wf-i-t-invert : {D:kd-wf-i G C} mkd-wf-i D mkind/t
+		 -> kind-eq t C -> type.
+%mode kd-wf-i-t-invert +X1 +X2 -X3.
+
+-	: kd-wf-i-t-invert (kd-wf-i/nil kd-wf/t) _ kind-eq/i.
+
+-	: kd-wf-i-t-invert (kd-wf-i/cons D) (mkd-wf-i/cons DM) Deq
+	   <- ({d} {dm}
+		 kd-wf-i-t-invert (D d) (DM d dm) Deq).
+
+%worlds (conblock | oblock | ofblock-m) (kd-wf-i-t-invert _ _ _).
+%total D (kd-wf-i-t-invert D _ _).
+
+
+
+kd-wf-i-one-invert : {D:kd-wf-i G C} mkd-wf-i D mkind/one
+		 -> kind-eq one C -> type.
+%mode kd-wf-i-one-invert +X1 +X2 -X3.
+
+-	: kd-wf-i-one-invert (kd-wf-i/nil kd-wf/one) _ kind-eq/i.
+
+-	: kd-wf-i-one-invert (kd-wf-i/cons D) (mkd-wf-i/cons DM) Deq
+	   <- ({d} {dm}
+		 kd-wf-i-one-invert (D d) (DM d dm) Deq).
+
+%worlds (conblock | oblock | ofblock-m) (kd-wf-i-one-invert _ _ _).
+%total D (kd-wf-i-one-invert D _ _).
+
+
+
+kd-wf-i-pi-invert : {D:kd-wf-i G C} mkd-wf-i D (mkind/pi Bm Am)
+		  -> kind-eq (pi A B) C
+		  -> {D1:kd-wf-i G A}
+		     mkd-wf-i D1 Am
+		  -> {D2:{x} kd-wf-i (cons G x A) (B x)}
+		     ({x} mkd-wf-i (D2 x) Bm) -> type.
+%mode kd-wf-i-pi-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: kd-wf-i-pi-invert (kd-wf-i/nil (kd-wf/pi D2 D1)) (mkd-wf-i/nil (mkd-wf/pi DM2 DM1))
+	   kind-eq/i
+	   (kd-wf-i/nil D1) (mkd-wf-i/nil DM1) 
+	   ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D2 x d))) ([x] mkd-wf-i/cons ([d] [dm] mkd-wf-i/nil (DM2 x d dm))).
+
+-	: kd-wf-i-pi-invert (kd-wf-i/cons D) (mkd-wf-i/cons DM)
+	   Deq
+	   (kd-wf-i/cons D1) (mkd-wf-i/cons DM1)
+	   ([y] kd-wf-i/cons ([e] kd-wf-i/cons ([d] D2 d y e)))
+	   ([y] mkd-wf-i/cons ([e] [em] mkd-wf-i/cons ([d] [dm] DM2 d dm y e em)))
+	   <- ({d} {dm}
+		 kd-wf-i-pi-invert (D d) (DM d dm) Deq (D1 d) (DM1 d dm) 
+		 ([y] kd-wf-i/cons ([e] D2 d y e)) ([y] mkd-wf-i/cons ([e] [em] DM2 d dm y e em))).
+
+%worlds (conblock | oblock | ofblock-m) (kd-wf-i-pi-invert _ _ _ _ _ _ _).
+%total D (kd-wf-i-pi-invert D _ _ _ _ _ _).
+
+
+
+kd-wf-i-sigma-invert : {D:kd-wf-i G C} mkd-wf-i D (mkind/sigma Bm Am)
+		  -> kind-eq (sigma A B) C
+		  -> {D1:kd-wf-i G A}
+		     mkd-wf-i D1 Am
+		  -> {D2:{x} kd-wf-i (cons G x A) (B x)}
+		     ({x} mkd-wf-i (D2 x) Bm) -> type.
+%mode kd-wf-i-sigma-invert +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: kd-wf-i-sigma-invert (kd-wf-i/nil (kd-wf/sigma D2 D1)) (mkd-wf-i/nil (mkd-wf/sigma DM2 DM1))
+	   kind-eq/i
+	   (kd-wf-i/nil D1) (mkd-wf-i/nil DM1) 
+	   ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D2 x d))) ([x] mkd-wf-i/cons ([d] [dm] mkd-wf-i/nil (DM2 x d dm))).
+
+-	: kd-wf-i-sigma-invert (kd-wf-i/cons D) (mkd-wf-i/cons DM)
+	   Deq
+	   (kd-wf-i/cons D1) (mkd-wf-i/cons DM1)
+	   ([y] kd-wf-i/cons ([e] kd-wf-i/cons ([d] D2 d y e)))
+	   ([y] mkd-wf-i/cons ([e] [em] mkd-wf-i/cons ([d] [dm] DM2 d dm y e em)))
+	   <- ({d} {dm}
+		 kd-wf-i-sigma-invert (D d) (DM d dm) Deq (D1 d) (DM1 d dm) 
+		 ([y] kd-wf-i/cons ([e] D2 d y e)) ([y] mkd-wf-i/cons ([e] [em] DM2 d dm y e em))).
+
+%worlds (conblock | oblock | ofblock-m) (kd-wf-i-sigma-invert _ _ _ _ _ _ _).
+%total D (kd-wf-i-sigma-invert D _ _ _ _ _ _).
+
+
+
+kd-wf-i-sing-invert : {D:kd-wf-i G C} mkd-wf-i D (mkind/sing Mm)
+		    -> kind-eq (sing M) C
+		    -> {D1:cn-of-i G M t}
+		       mcn-of-i D1 Mm -> type.
+%mode kd-wf-i-sing-invert +X1 +X2 -X3 -X4 -X5.
+
+-	: kd-wf-i-sing-invert (kd-wf-i/nil (kd-wf/sing D)) (mkd-wf-i/nil (mkd-wf/sing DM))
+	   kind-eq/i
+	   (cn-of-i/nil D) (mcn-of-i/nil DM).
+
+-	: kd-wf-i-sing-invert (kd-wf-i/cons D) (mkd-wf-i/cons DM)
+	   Deq
+	   (cn-of-i/cons D1) (mcn-of-i/cons DM1)
+	   <- ({d} {dm}
+		 kd-wf-i-sing-invert (D d) (DM d dm) Deq (D1 d) (DM1 d dm)).
+
+%worlds (conblock | oblock | ofblock-m) (kd-wf-i-sing-invert _ _ _ _ _).
+%total D (kd-wf-i-sing-invert D _ _ _ _).
+
+
+
+sg-wf-i-satom-invert : sg-wf-i G (sg/satom K)
+%%
+			-> kd-wf-i G K
+			-> type.
+%mode sg-wf-i-satom-invert +X1 -X2.
+
+-	: sg-wf-i-satom-invert (sg-wf-i/nil (sg-wf/satom D)) (kd-wf-i/nil D).
+
+-	: sg-wf-i-satom-invert (sg-wf-i/cons D) (kd-wf-i/cons D')
+	   <- ({d}
+		 sg-wf-i-satom-invert (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-satom-invert _ _).
+%total D (sg-wf-i-satom-invert D _).
+
+
+
+sg-wf-i-datom-invert : sg-wf-i G (sg/datom T)
+%%
+			-> cn-of-i G T t
+			-> type.
+%mode sg-wf-i-datom-invert +X1 -X2.
+
+-	: sg-wf-i-datom-invert (sg-wf-i/nil (sg-wf/datom D)) (cn-of-i/nil D).
+
+-	: sg-wf-i-datom-invert (sg-wf-i/cons D) (cn-of-i/cons D')
+	   <- ({d}
+		 sg-wf-i-datom-invert (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-datom-invert _ _).
+%total D (sg-wf-i-datom-invert D _).
+
+
+
+sg-wf-i-sgatom-invert : sg-wf-i G (sg/sgatom S)
+%%
+			 -> sg-wf-i G S
+			 -> type.
+%mode sg-wf-i-sgatom-invert +X1 -X2.
+
+-	: sg-wf-i-sgatom-invert (sg-wf-i/nil (sg-wf/sgatom D)) (sg-wf-i/nil D).
+
+-	: sg-wf-i-sgatom-invert (sg-wf-i/cons D) (sg-wf-i/cons D')
+	   <- ({d}
+		 sg-wf-i-sgatom-invert (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-sgatom-invert _ _).
+%total D (sg-wf-i-sgatom-invert D _).
+
+
+
+sg-wf-i-pi-invert : sg-wf-i G (sg/pi S1 S2)
+%%
+	      -> sg-wf-i G S1
+	      -> sg-fst S1 K1
+	      -> ({x} sg-wf-i (cons G x K1) (S2 x))
+	      -> type.
+%mode sg-wf-i-pi-invert +X1 -X2 -X3 -X4.
+
+-	: sg-wf-i-pi-invert (sg-wf-i/nil (sg-wf/pi D2 Dfst D1)) 
+	   (sg-wf-i/nil D1) 
+	   Dfst
+	   ([x] sg-wf-i/cons ([d] sg-wf-i/nil (D2 x d))).
+
+-	: sg-wf-i-pi-invert (sg-wf-i/cons D)
+	   (sg-wf-i/cons D1) 
+	   Dfst 
+	   ([y] sg-wf-i/cons ([e] sg-wf-i/cons ([d] D2 d y e)))
+	   <- ({d}
+		 sg-wf-i-pi-invert (D d) (D1 d) Dfst ([y] sg-wf-i/cons ([e] D2 d y e))).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-pi-invert _ _ _ _).
+%total D (sg-wf-i-pi-invert D _ _ _).
+
+
+
+sg-wf-i-sigma-invert : sg-wf-i G (sg/sigma S1 S2)
+%%
+	      -> sg-wf-i G S1
+	      -> sg-fst S1 K1
+	      -> ({x} sg-wf-i (cons G x K1) (S2 x))
+	      -> type.
+%mode sg-wf-i-sigma-invert +X1 -X2 -X3 -X4.
+
+-	: sg-wf-i-sigma-invert (sg-wf-i/nil (sg-wf/sigma D2 Dfst D1)) 
+	   (sg-wf-i/nil D1) 
+	   Dfst
+	   ([x] sg-wf-i/cons ([d] sg-wf-i/nil (D2 x d))).
+
+-	: sg-wf-i-sigma-invert (sg-wf-i/cons D)
+	   (sg-wf-i/cons D1) 
+	   Dfst 
+	   ([y] sg-wf-i/cons ([e] sg-wf-i/cons ([d] D2 d y e)))
+	   <- ({d}
+		 sg-wf-i-sigma-invert (D d) (D1 d) Dfst ([y] sg-wf-i/cons ([e] D2 d y e))).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-sigma-invert _ _ _ _).
+%total D (sg-wf-i-sigma-invert D _ _ _).
+
+
+
+sg-wf-i-named-invert : sg-wf-i G (sg/named L S)
+%%
+			 -> sg-wf-i G S
+			 -> type.
+%mode sg-wf-i-named-invert +X1 -X2.
+
+-	: sg-wf-i-named-invert (sg-wf-i/nil (sg-wf/named D)) (sg-wf-i/nil D).
+
+-	: sg-wf-i-named-invert (sg-wf-i/cons D) (sg-wf-i/cons D')
+	   <- ({d}
+		 sg-wf-i-named-invert (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock-m | ofblock) (sg-wf-i-named-invert _ _).
+%total D (sg-wf-i-named-invert D _).
+
+
+
+
+%%%%%  Constructors  %%%%%
+
+cn-equiv-to-cn-equiv-i : {G} cn-equiv M N A -> cn-equiv-i G M N A -> type.
+%mode cn-equiv-to-cn-equiv-i +X1 +X2 -X3.
+
+-	: cn-equiv-to-cn-equiv-i nil D (cn-equiv-i/nil D).
+
+-	: cn-equiv-to-cn-equiv-i (cons G X A) D (cn-equiv-i/cons D')
+	   <- ({d} cn-equiv-to-cn-equiv-i G D (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-to-cn-equiv-i _ _ _).
+%total G (cn-equiv-to-cn-equiv-i G _ _).
+
+
+
+kd-equiv-to-kd-equiv-i : {G} kd-equiv A B -> kd-equiv-i G A B -> type.
+%mode kd-equiv-to-kd-equiv-i +X1 +X2 -X3.
+
+-	: kd-equiv-to-kd-equiv-i nil D (kd-equiv-i/nil D).
+
+-	: kd-equiv-to-kd-equiv-i (cons G X A) D (kd-equiv-i/cons D')
+	   <- ({d} kd-equiv-to-kd-equiv-i G D (D' d)).
+
+%worlds (conblock | oblock | ofblock) (kd-equiv-to-kd-equiv-i _ _ _).
+%total G (kd-equiv-to-kd-equiv-i G _ _).
+
+
+
+cn-of-to-cn-of-i : {G} cn-of A B -> cn-of-i G A B -> type.
+%mode cn-of-to-cn-of-i +X1 +X2 -X3.
+
+-	: cn-of-to-cn-of-i nil D (cn-of-i/nil D).
+
+-	: cn-of-to-cn-of-i (cons G X A) D (cn-of-i/cons D')
+	   <- ({d} cn-of-to-cn-of-i G D (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-of-to-cn-of-i _ _ _).
+%total G (cn-of-to-cn-of-i G _ _).
+
+
+
+
+cn-of-i-ctx-lookup : ctx-lookup G X A -> cn-of-i G X A -> type.
+%mode cn-of-i-ctx-lookup +X1 -X2.
+
+-	: cn-of-i-ctx-lookup ctx-lookup/hit (cn-of-i/cons Dof)
+	   <- ({d}
+		 cn-of-to-cn-of-i _ d (Dof d)).
+
+-	: cn-of-i-ctx-lookup (ctx-lookup/miss Dlook) (cn-of-i/cons Dof)
+	   <- ({d}
+		 cn-of-i-ctx-lookup Dlook (Dof d)).
+
+%worlds (conblock | oblock | ofblock) (cn-of-i-ctx-lookup _ _).
+%total D (cn-of-i-ctx-lookup D _).
+
+
+
+cn-equiv-i-refl : cn-of-i G M A -> cn-equiv-i G M M A -> type.
+%mode cn-equiv-i-refl +X1 -X2.
+
+-	: cn-equiv-i-refl (cn-of-i/nil D) (cn-equiv-i/nil (cn-equiv/refl D)).
+
+-	: cn-equiv-i-refl (cn-of-i/cons D) (cn-equiv-i/cons D')
+	   <- ({d}
+		 cn-equiv-i-refl (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-refl _ _).
+%total D (cn-equiv-i-refl D _).
+
+
+
+cn-equiv-i-lam : kd-equiv-i G A A' -> ({x} cn-equiv-i (cons G x A) (M x) (M' x) (B x)) -> cn-equiv-i G (lam A M) (lam A' M') (pi A B) -> type.
+%mode cn-equiv-i-lam +X1 +X2 -X3.
+
+-	: cn-equiv-i-lam (kd-equiv-i/nil D1) ([x] cn-equiv-i/cons ([d] cn-equiv-i/nil (D2 x d))) (cn-equiv-i/nil (cn-equiv/lam D2 D1)).
+
+-	: cn-equiv-i-lam (kd-equiv-i/cons D1) ([x] cn-equiv-i/cons ([d] cn-equiv-i/cons ([e] D2 x d e))) (cn-equiv-i/cons D)
+	   <- ({e}
+		 cn-equiv-i-lam (D1 e) ([x] cn-equiv-i/cons ([d] D2 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-lam _ _ _).
+%total D (cn-equiv-i-lam D _ _).
+
+
+
+cn-equiv-i-app : cn-equiv-i G M M' (pi A B) -> cn-equiv-i G N N' A -> cn-equiv-i G (app M N) (app M' N') (B N) -> type.
+%mode cn-equiv-i-app +X1 +X2 -X3.
+
+-	: cn-equiv-i-app (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) (cn-equiv-i/nil (cn-equiv/app D2 D1)).
+
+-	: cn-equiv-i-app (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-app (D1 d) (D2 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-app _ _ _).
+%total D (cn-equiv-i-app D _ _).
+
+
+
+cn-equiv-i-pair : cn-equiv-i G M M' A -> cn-equiv-i G N N' (B M) -> ({x} kd-wf-i (cons G x A) (B x)) -> cn-equiv-i G (pair M N) (pair M' N') (sigma A B) -> type.
+%mode cn-equiv-i-pair +X1 +X2 +X3 -X4.
+
+-	: cn-equiv-i-pair (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D3 x d))) (cn-equiv-i/nil (cn-equiv/pair D3 D2 D1)).
+
+-	: cn-equiv-i-pair (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) ([x] kd-wf-i/cons ([d] kd-wf-i/cons ([e] D3 x d e))) (cn-equiv-i/cons D)
+	   <- ({e} cn-equiv-i-pair (D1 e) (D2 e) ([x] kd-wf-i/cons ([d] D3 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-pair _ _ _ _).
+%total D (cn-equiv-i-pair D _ _ _).
+
+
+
+cn-equiv-i-pi1 : cn-equiv-i G M M' (sigma A B) -> cn-equiv-i G (pi1 M) (pi1 M') A -> type.
+%mode cn-equiv-i-pi1 +X1 -X2.
+
+-	: cn-equiv-i-pi1 (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/pi1 D)).
+
+-	: cn-equiv-i-pi1 (cn-equiv-i/cons D1) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-pi1 (D1 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-pi1 _ _).
+%total D (cn-equiv-i-pi1 D _).
+
+
+
+cn-equiv-i-pi2 : cn-equiv-i G M M' (sigma A B) -> cn-equiv-i G (pi2 M) (pi2 M') (B (pi1 M)) -> type.
+%mode cn-equiv-i-pi2 +X1 -X2.
+
+-	: cn-equiv-i-pi2 (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/pi2 D)).
+
+-	: cn-equiv-i-pi2 (cn-equiv-i/cons D1) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-pi2 (D1 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-pi2 _ _).
+%total D (cn-equiv-i-pi2 D _).
+
+
+
+cn-equiv-i-sing : cn-equiv-i G M M' t -> cn-equiv-i G M M' (sing M) -> type.
+%mode cn-equiv-i-sing +X1 -X2.
+
+-	: cn-equiv-i-sing (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/sing D)).
+
+-	: cn-equiv-i-sing (cn-equiv-i/cons D1) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-sing (D1 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-sing _ _).
+%total D (cn-equiv-i-sing D _).
+
+
+
+cn-equiv-i-extpi : cn-of-i G M (pi A B') -> cn-of-i G N (pi A B'') -> ({x} cn-equiv-i (cons G x A) (app M x) (app N x) (B x)) -> cn-equiv-i G M N (pi A B) -> type.
+%mode cn-equiv-i-extpi +X1 +X2 +X3 -X4.
+
+-	: cn-equiv-i-extpi (cn-of-i/nil D1) (cn-of-i/nil D2) ([x] cn-equiv-i/cons ([d] cn-equiv-i/nil (D3 x d))) (cn-equiv-i/nil (cn-equiv/extpi D3 D2 D1)).
+
+-	: cn-equiv-i-extpi (cn-of-i/cons D1) (cn-of-i/cons D2) ([x] cn-equiv-i/cons ([d] cn-equiv-i/cons ([e] D3 x d e))) (cn-equiv-i/cons D)
+	   <- ({e}
+		 cn-equiv-i-extpi (D1 e) (D2 e) ([x] cn-equiv-i/cons ([d] D3 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-extpi _ _ _ _).
+%total D (cn-equiv-i-extpi D _ _ _).
+
+
+
+cn-equiv-i-extpiw : cn-equiv-i G M N (pi A B') -> ({x} cn-equiv-i (cons G x A) (app M x) (app N x) (B x)) -> cn-equiv-i G M N (pi A B) -> type.
+%mode cn-equiv-i-extpiw +X1 +X2 -X3.
+
+-	: cn-equiv-i-extpiw (cn-equiv-i/nil D1) ([x] cn-equiv-i/cons ([d] cn-equiv-i/nil (D2 x d))) (cn-equiv-i/nil (cn-equiv/extpiw D2 D1)).
+
+-	: cn-equiv-i-extpiw (cn-equiv-i/cons D1) ([x] cn-equiv-i/cons ([d] cn-equiv-i/cons ([e] D2 x d e))) (cn-equiv-i/cons D)
+	   <- ({e}
+		 cn-equiv-i-extpiw (D1 e) ([x] cn-equiv-i/cons ([d] D2 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-extpiw _ _ _).
+%total D (cn-equiv-i-extpiw D _ _).
+
+
+
+cn-equiv-i-extsigma : cn-equiv-i G (pi1 M) (pi1 N) A -> cn-equiv-i G (pi2 M) (pi2 N) (B (pi1 M)) -> ({x} kd-wf-i (cons G x A) (B x)) -> cn-equiv-i G M N (sigma A B) -> type.
+%mode cn-equiv-i-extsigma +X1 +X2 +X3 -X4.
+
+-	: cn-equiv-i-extsigma (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) ([x] kd-wf-i/cons ([d] kd-wf-i/nil (D3 x d))) (cn-equiv-i/nil (cn-equiv/extsigma D3 D2 D1)).
+
+-	: cn-equiv-i-extsigma (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) ([x] kd-wf-i/cons ([d] kd-wf-i/cons ([e] D3 x d e))) (cn-equiv-i/cons D)
+	   <- ({e}
+		 cn-equiv-i-extsigma (D1 e) (D2 e) ([x] kd-wf-i/cons ([d] D3 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-extsigma _ _ _ _).
+%total D (cn-equiv-i-extsigma D _ _ _).
+
+
+
+cn-equiv-i-subsume : cn-equiv-i G M N A -> kd-sub-i G A B -> cn-equiv-i G M N B -> type.
+%mode cn-equiv-i-subsume +X1 +X2 -X3.
+
+-	: cn-equiv-i-subsume (cn-equiv-i/nil D1) (kd-sub-i/nil D2) (cn-equiv-i/nil (cn-equiv/subsume D2 D1)).
+
+-	: cn-equiv-i-subsume (cn-equiv-i/cons D1) (kd-sub-i/cons D2) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-subsume (D1 d) (D2 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-subsume _ _ _).
+%total D (cn-equiv-i-subsume D _ _).
+
+
+
+cn-equiv-i-prod : cn-equiv-i G M M' t -> cn-equiv-i G N N' t -> cn-equiv-i G (prod M N) (prod M' N') t -> type.
+%mode cn-equiv-i-prod +X1 +X2 -X3.
+
+-	: cn-equiv-i-prod (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) (cn-equiv-i/nil (cn-equiv/prod D2 D1)).
+
+-	: cn-equiv-i-prod (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-prod (D1 d) (D2 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-prod _ _ _).
+%total D (cn-equiv-i-prod D _ _).
+
+
+
+cn-equiv-i-arrow : cn-equiv-i G M M' t -> cn-equiv-i G N N' t -> cn-equiv-i G (arrow M N) (arrow M' N') t -> type.
+%mode cn-equiv-i-arrow +X1 +X2 -X3.
+
+-	: cn-equiv-i-arrow (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) (cn-equiv-i/nil (cn-equiv/arrow D2 D1)).
+
+-	: cn-equiv-i-arrow (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-arrow (D1 d) (D2 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-arrow _ _ _).
+%total D (cn-equiv-i-arrow D _ _).
+
+
+
+cn-equiv-i-plus : cn-equiv-i G M M' t -> cn-equiv-i G N N' t -> cn-equiv-i G (plus M N) (plus M' N') t -> type.
+%mode cn-equiv-i-plus +X1 +X2 -X3.
+
+-	: cn-equiv-i-plus (cn-equiv-i/nil D1) (cn-equiv-i/nil D2) (cn-equiv-i/nil (cn-equiv/plus D2 D1)).
+
+-	: cn-equiv-i-plus (cn-equiv-i/cons D1) (cn-equiv-i/cons D2) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-plus (D1 d) (D2 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-plus _ _ _).
+%total D (cn-equiv-i-plus D _ _).
+
+
+
+cn-equiv-i-ref : cn-equiv-i G M M' t -> cn-equiv-i G (ref M) (ref M') t -> type.
+%mode cn-equiv-i-ref +X1 -X2.
+
+-	: cn-equiv-i-ref (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/ref D)).
+
+-	: cn-equiv-i-ref (cn-equiv-i/cons D) (cn-equiv-i/cons D')
+	   <- ({d}
+		 cn-equiv-i-ref (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-ref _ _).
+%total D (cn-equiv-i-ref D _).
+
+
+
+cn-equiv-i-tag : cn-equiv-i G M M' t -> cn-equiv-i G (tag M) (tag M') t -> type.
+%mode cn-equiv-i-tag +X1 -X2.
+
+-	: cn-equiv-i-tag (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/tag D)).
+
+-	: cn-equiv-i-tag (cn-equiv-i/cons D) (cn-equiv-i/cons D')
+	   <- ({d}
+		 cn-equiv-i-tag (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-tag _ _).
+%total D (cn-equiv-i-tag D _).
+
+
+
+cn-equiv-i-rec : {G} kd-equiv-i G K K' -> ({x} {y} cn-equiv-i (cons (cons G x (pi K ([_] t))) y K) (C1 x y) (C1' x y) t) -> cn-equiv-i G C2 C2' K -> cn-equiv-i G (rec K C1 C2) (rec K' C1' C2') t -> type.
+%mode cn-equiv-i-rec +X1 +X2 +X3 +X4 -X5.
+
+-	: cn-equiv-i-rec _ (kd-equiv-i/nil D1) ([x] [y] cn-equiv-i/cons ([e] cn-equiv-i/cons ([d] cn-equiv-i/nil (D2 x d y e)))) (cn-equiv-i/nil D3) (cn-equiv-i/nil (cn-equiv/rec D3 D2 D1)).
+
+-	: cn-equiv-i-rec _ (kd-equiv-i/cons D1) ([y] [z] cn-equiv-i/cons ([f] cn-equiv-i/cons ([e] cn-equiv-i/cons ([d] D2 y e z f d)))) (cn-equiv-i/cons D3) (cn-equiv-i/cons D)
+	   <- ({d}
+		 cn-equiv-i-rec _ (D1 d)
+		 ([y] [z] cn-equiv-i/cons ([f] cn-equiv-i/cons ([e] D2 y e z f d)))
+		 (D3 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-rec _ _ _ _ _).
+%total G (cn-equiv-i-rec G _ _ _ _).
+
+
+
+cn-equiv-i-labeled : cn-equiv-i G M M' t -> cn-equiv-i G (labeled I M) (labeled I M') t -> type.
+%mode +{G:ctx} +{M:con} +{M':con} +{L:label} +{X1:cn-equiv-i G M M' t}
+   -{X2:cn-equiv-i G (labeled L M) (labeled L M') t} (cn-equiv-i-labeled X1 X2).
+
+-	: cn-equiv-i-labeled (cn-equiv-i/nil D) (cn-equiv-i/nil (cn-equiv/labeled D)).
+
+-	: cn-equiv-i-labeled (cn-equiv-i/cons D) (cn-equiv-i/cons D')
+	   <- ({d}
+		 cn-equiv-i-labeled (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (cn-equiv-i-labeled _ _).
+%total D (cn-equiv-i-labeled D _).
+
+
+
+kd-equiv-i-pi : kd-equiv-i G A A' -> ({x} kd-equiv-i (cons G x A) (B x) (B' x)) -> kd-equiv-i G (pi A B) (pi A' B') -> type.
+%mode kd-equiv-i-pi +X1 +X2 -X3.
+
+-	: kd-equiv-i-pi (kd-equiv-i/nil D1) ([x] kd-equiv-i/cons ([d] kd-equiv-i/nil (D2 x d))) (kd-equiv-i/nil (kd-equiv/pi D2 D1)).
+
+-	: kd-equiv-i-pi (kd-equiv-i/cons D1) ([x] kd-equiv-i/cons ([d] kd-equiv-i/cons ([e] D2 x d e))) (kd-equiv-i/cons D)
+	   <- ({e}
+		 kd-equiv-i-pi (D1 e) ([x] kd-equiv-i/cons ([d] D2 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (kd-equiv-i-pi _ _ _).
+%total D (kd-equiv-i-pi D _ _).
+
+
+
+kd-equiv-i-sigma : kd-equiv-i G A A' -> ({x} kd-equiv-i (cons G x A) (B x) (B' x)) -> kd-equiv-i G (sigma A B) (sigma A' B') -> type.
+%mode kd-equiv-i-sigma +X1 +X2 -X3.
+
+-	: kd-equiv-i-sigma (kd-equiv-i/nil D1) ([x] kd-equiv-i/cons ([d] kd-equiv-i/nil (D2 x d))) (kd-equiv-i/nil (kd-equiv/sigma D2 D1)).
+
+-	: kd-equiv-i-sigma (kd-equiv-i/cons D1) ([x] kd-equiv-i/cons ([d] kd-equiv-i/cons ([e] D2 x d e))) (kd-equiv-i/cons D)
+	   <- ({e}
+		 kd-equiv-i-sigma (D1 e) ([x] kd-equiv-i/cons ([d] D2 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (kd-equiv-i-sigma _ _ _).
+%total D (kd-equiv-i-sigma D _ _).
+
+
+
+kd-equiv-i-sing : cn-equiv-i G M N t -> kd-equiv-i G (sing M) (sing N) -> type.
+%mode kd-equiv-i-sing +X1 -X2.
+
+-	: kd-equiv-i-sing (cn-equiv-i/nil D1) (kd-equiv-i/nil (kd-equiv/sing D1)).
+
+-	: kd-equiv-i-sing (cn-equiv-i/cons D1) (kd-equiv-i/cons D)
+	   <- ({d}
+		 kd-equiv-i-sing (D1 d) (D d)).
+
+%worlds (conblock | oblock | ofblock) (kd-equiv-i-sing _ _).
+%total D (kd-equiv-i-sing D _).
+
+
+
+sg-equiv-to-sg-equiv-i : {G} sg-equiv S1 S2 -> sg-equiv-i G S1 S2 -> type.
+%mode sg-equiv-to-sg-equiv-i +X1 +X2 -X3.
+
+-	: sg-equiv-to-sg-equiv-i nil D (sg-equiv-i/nil D).
+
+-	: sg-equiv-to-sg-equiv-i (cons G X A) D (sg-equiv-i/cons D')
+	   <- ({d}
+		 sg-equiv-to-sg-equiv-i G D (D' d)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-to-sg-equiv-i _ _ _).
+%total G (sg-equiv-to-sg-equiv-i G _ _).
+
+
+
+sg-equiv-i-satom : kd-equiv-i G K L -> sg-equiv-i G (sg/satom K) (sg/satom L) -> type.
+%mode sg-equiv-i-satom +X1 -X2.
+
+-	: sg-equiv-i-satom (kd-equiv-i/nil D) (sg-equiv-i/nil (sg-equiv/satom D)).
+
+-	: sg-equiv-i-satom (kd-equiv-i/cons D) (sg-equiv-i/cons D')
+	   <- ({d}
+		 sg-equiv-i-satom (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-satom _ _).
+%total D (sg-equiv-i-satom D _).
+
+
+
+sg-equiv-i-datom : cn-equiv-i G M N t -> sg-equiv-i G (sg/datom M) (sg/datom N) -> type.
+%mode sg-equiv-i-datom +X1 -X2.
+
+-	: sg-equiv-i-datom (cn-equiv-i/nil D) (sg-equiv-i/nil (sg-equiv/datom D)).
+
+-	: sg-equiv-i-datom (cn-equiv-i/cons D) (sg-equiv-i/cons D')
+	   <- ({d}
+		 sg-equiv-i-datom (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-datom _ _).
+%total D (sg-equiv-i-datom D _).
+
+
+
+sg-equiv-i-sgatom : sg-equiv-i G S S' -> sg-equiv-i G (sg/sgatom S) (sg/sgatom S') -> type.
+%mode sg-equiv-i-sgatom +X1 -X2.
+
+-	: sg-equiv-i-sgatom (sg-equiv-i/nil D) (sg-equiv-i/nil (sg-equiv/sgatom D)).
+
+-	: sg-equiv-i-sgatom (sg-equiv-i/cons D) (sg-equiv-i/cons D')
+	   <- ({d}
+		 sg-equiv-i-sgatom (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-sgatom _ _).
+%total D (sg-equiv-i-sgatom D _).
+
+
+
+sg-equiv-i-pi : sg-equiv-i G S1 S1' -> sg-fst S1 K1 -> ({x} sg-equiv-i (cons G x K1) (S2 x) (S2' x)) -> sg-equiv-i G (sg/pi S1 S2) (sg/pi S1' S2') -> type.
+%mode sg-equiv-i-pi +X1 +X2 +X3 -X4.
+
+-	: sg-equiv-i-pi (sg-equiv-i/nil D1) D2 ([x] sg-equiv-i/cons ([d] sg-equiv-i/nil (D3 x d))) (sg-equiv-i/nil (sg-equiv/pi D3 D2 D1)).
+
+-	: sg-equiv-i-pi (sg-equiv-i/cons D1) D2 ([x] sg-equiv-i/cons ([d] sg-equiv-i/cons ([e] D3 x d e))) (sg-equiv-i/cons D)
+	   <- ({e}
+		 sg-equiv-i-pi (D1 e) D2 ([x] sg-equiv-i/cons ([d] D3 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-pi _ _ _ _).
+%total D (sg-equiv-i-pi D _ _ _).
+
+
+
+sg-equiv-i-sigma : sg-equiv-i G S1 S1' -> sg-fst S1 K1 -> ({x} sg-equiv-i (cons G x K1) (S2 x) (S2' x)) -> sg-equiv-i G (sg/sigma S1 S2) (sg/sigma S1' S2') -> type.
+%mode sg-equiv-i-sigma +X1 +X2 +X3 -X4.
+
+-	: sg-equiv-i-sigma (sg-equiv-i/nil D1) D2 ([x] sg-equiv-i/cons ([d] sg-equiv-i/nil (D3 x d))) (sg-equiv-i/nil (sg-equiv/sigma D3 D2 D1)).
+
+-	: sg-equiv-i-sigma (sg-equiv-i/cons D1) D2 ([x] sg-equiv-i/cons ([d] sg-equiv-i/cons ([e] D3 x d e))) (sg-equiv-i/cons D)
+	   <- ({e}
+		 sg-equiv-i-sigma (D1 e) D2 ([x] sg-equiv-i/cons ([d] D3 x d e)) (D e)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-sigma _ _ _ _).
+%total D (sg-equiv-i-sigma D _ _ _).
+
+
+
+sg-equiv-i-named : sg-equiv-i G S S' -> sg-equiv-i G (sg/named L S) (sg/named L S') -> type.
+%mode +{G:ctx} +{S:sg} +{S':sg} +{L:name} +{X1:sg-equiv-i G S S'}
+   -{X2:sg-equiv-i G (sg/named L S) (sg/named L S')} (sg-equiv-i-named X1 X2).
+
+-	: sg-equiv-i-named (sg-equiv-i/nil D) (sg-equiv-i/nil (sg-equiv/named D)).
+
+-	: sg-equiv-i-named (sg-equiv-i/cons D) (sg-equiv-i/cons D')
+	   <- ({d}
+		 sg-equiv-i-named (D d) (D' d)).
+
+%worlds (conblock | oblock | ofblock) (sg-equiv-i-named _ _).
+%total D (sg-equiv-i-named D _).
+
+
+
+
+%%%%%  Functionality (Explicit/Implicit Context)  %%%%%
+
+functionality-kd-e	: {Am}
+			   {D:{x} cn-of x A -> kd-wf-i (G x) (B x)}
+			   ({x} {d} cn-assm d -> mkd-wf-i (D x d) Am)
+			   -> ({x} clean (G x))
+			   -> cn-equiv M N A
+			   -> cn-of M A
+%%
+			   -> kd-equiv-i (G M) (B M) (B N) -> type.
+%mode functionality-kd-e +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+functionality-cn-e	: {Mm}
+			   {D:{x} cn-of x A -> cn-of-i (G x) (O x) (B x)}
+			   ({x} {d} cn-assm d -> mcn-of-i (D x d) Mm)
+			   -> ({x} clean (G x))
+			   -> cn-equiv M N A
+			   -> cn-of M A
+%%
+			   -> cn-equiv-i (G M) (O M) (O N) (B M) -> type.
+%mode functionality-cn-e +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+functionality-cn-var : ({x} {d:cn-of x A} cn-assm d -> ctx-lookup? (G x) (X x) (B x))
+		    -> ({x} clean (G x))
+		    -> cn-equiv M N A
+		    -> cn-of M A
+%%
+		    -> cn-equiv-i (G M) (X M) (X N) (B M) -> type.
+%mode functionality-cn-var +X1 +X2 +X3 +X4 -X5.
+
+-var	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (Y x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) mcon/var)
+	   (Dclean : {x} clean (G x))
+	   (Dequiv : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D
+	   <- ({x} {d} {dm}
+		 cn-of-i-var-invert (Dof x d) (Dmof x d dm)
+		 (Dlookup x d dm : ctx-lookup? (G x) (Y x) (B x)))
+	   <- functionality-cn-var Dlookup Dclean Dequiv DofM D.
+
+-varsam	: functionality-cn-var
+	   ([x] [d] [dm] ctx-lookup?/not d dm)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv'
+	   <- cn-equiv-to-cn-equiv-i _ DequivMN Dequiv'.
+
+-varoth	: functionality-cn-var
+	   ([x] [d] [dm] ctx-lookup?/not (Dvof : cn-of X B) (DDD x d))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv
+	   <- cn-of-to-cn-of-i (G M) Dvof
+	      (Dof : cn-of-i (G M) X B)
+	   <- cn-equiv-i-refl Dof
+	      (Dequiv : cn-equiv-i (G M) X X B).
+
+-varoth	: functionality-cn-var 
+	   ([x] [d] [dm] ctx-lookup?/look (Dlookup x : ctx-lookup (G x) (Y x) (B x)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv''
+	   <- ctx-lookup-clean Dlookup Dclean (Deq : {x} con-eq (Y x) Y')
+	   <- ({x}
+		 con-eq-symm (Deq x)
+		 (Deq' x : con-eq Y' (Y x)))
+	   <- ({x}
+		 cn-of-i-ctx-lookup (Dlookup x)
+		 (Dof x : cn-of-i (G x) (Y x) (B x)))
+	   <- ({x}
+		 cn-of-i-resp ctx-eq/i (Deq x) kind-eq/i (Dof x)
+		 (Dof' x : cn-of-i (G x) Y' (B x)))
+	   <- cn-equiv-i-refl (Dof' M)
+	      (Dequiv' : cn-equiv-i (G M) Y' Y' (B M))
+	   <- cn-equiv-i-resp ctx-eq/i (Deq' M) (Deq' N) kind-eq/i Dequiv'
+	      (Dequiv'' : cn-equiv-i (G M) (Y M) (Y N) (B M)).
+
+%worlds (conblock | oblock | ofblock-m) (functionality-cn-var _ _ _ _ _).
+%total {} (functionality-cn-var _ _ _ _ _).
+
+-lam	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/lam Mm Cm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-lam-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (lam (C x) ([y] M x y)) (O x))
+		 (DeqB x : kind-eq (pi (C x) (D x)) (B x))
+		 (DwfC x d : kd-wf-i (G x) (C x))
+		 (DmwfC x d dm : mkd-wf-i (DwfC x d) Cm)
+		 (DofM x d : {y} cn-of-i (cons (G x) y (C x)) (M x y) (D x y))
+		 (DmofM x d dm : {y} mcn-of-i (DofM x d y) Mm))
+	   <- functionality-kd-e _
+	      DwfC DmwfC Dclean DequivP DofP
+	      (DequivC : kd-equiv-i (G P) (C P) (C P'))
+	   <- ({y} {e:isvar y}
+		 functionality-cn-e _
+		 ([x] [d] DofM x d y)
+		 ([x] [d] [dm] DmofM x d dm y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivM y : cn-equiv-i (cons (G P) y (C P)) (M P y) (M P' y) (D P y)))
+	   <- cn-equiv-i-lam DequivC DequivM
+	      (Dequiv : cn-equiv-i (G P) (lam (C P) (M P)) (lam (C P') (M P')) (pi (C P) (D P)))
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (B P)).
+
+-app	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (O x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/app Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-app-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (app (M x) (N x)) (O x))
+		 (DeqC x : kind-eq (B x (N x)) (C x))
+		 (D1 x d : cn-of-i (G x) (M x) (pi (A x) (B x)))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (N x) (A x))
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') (pi (A P) (B P)))
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : cn-equiv-i (G P) (N P) (N P') (A P))
+	   <- cn-equiv-i-app DequivM DequivN
+	      (Dequiv : cn-equiv-i (G P) (app (M P) (N P)) (app (M P') (N P')) (B P (N P)))
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (C P)).
+
+-pair	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (O x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/pair Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-pair-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (pair (M x) (N x)) (O x))
+		 (DeqC x : kind-eq (sigma (A x) (B x)) (C x))
+		 (D1 x d : cn-of-i (G x) (M x) (A x))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (N x) (B x (M x)))
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm)
+		 (D3 x d : {y} kd-wf-i (cons (G x) y (A x)) (B x y)))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') (A P))
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : cn-equiv-i (G P) (N P) (N P') (B P (M P)))
+	   <- cn-equiv-i-pair DequivM DequivN ([x] D3 P (DofP : cn-of P D) x)
+	      (Dequiv : cn-equiv-i (G P) (pair (M P) (N P)) (pair (M P') (N P')) (sigma (A P) (B P)))
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (C P)).
+
+-pi1	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (O x) (A x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/pi1 Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-pi1-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (pi1 (M x)) (O x))
+		 (D1 x d : cn-of-i (G x) (M x) (sigma (A x) (B x)))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') (sigma (A P) (B P)))
+	   <- cn-equiv-i-pi1 DequivM
+	      (Dequiv : cn-equiv-i (G P) (pi1 (M P)) (pi1 (M P')) (A P))
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') kind-eq/i Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (A P)).
+
+-pi2	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (O x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/pi2 Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-pi2-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (pi2 (M x)) (O x))
+		 (DeqC x : kind-eq (B x (pi1 (M x))) (C x))
+		 (D1 x d : cn-of-i (G x) (M x) (sigma (A x) (B x)))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') (sigma (A P) (B P)))
+	   <- cn-equiv-i-pi2 DequivM
+	      (Dequiv : cn-equiv-i (G P) (pi2 (M P)) (pi2 (M P')) (B P (pi1 (M P))))
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (C P)).
+
+-sing	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (M x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/sing Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-sing-invert (Dof x d) (Dmof x d dm)
+		 (DeqC x : kind-eq (sing (M x)) (C x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- cn-equiv-i-sing DequivM
+	      (Dequiv : cn-equiv-i (G P) (M P) (M P') (sing (M P)))
+	   <- cn-equiv-i-resp ctx-eq/i con-eq/i con-eq/i (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (M P) (M P') (C P)).
+
+-extpi	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (M x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/extpi Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-extpi-invert (Dof x d) (Dmof x d dm)
+		 (DeqC x : kind-eq (pi (A x) (B x)) (C x))
+		 (D1 x d : cn-of-i (G x) (M x) (pi (A x) (B' x)))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : {y} cn-of-i (cons (G x) y (A x)) (app (M x) y) (B x y))
+		 (DM2 x d dm : {y} mcn-of-i (D2 x d y) Nm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (Dequiv1 : cn-equiv-i (G P) (M P) (M P') (pi (A P) (B' P)))
+	   <- ({y} {e:isvar y}
+		 functionality-cn-e _
+		 ([x] [d] D2 x d y)
+		 ([x] [d] [dm] DM2 x d dm y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP DofP
+		 (Dequiv2 y : cn-equiv-i (cons (G P) y (A P)) (app (M P) y) (app (M P') y) (B P y)))
+	   <- cn-equiv-i-extpiw Dequiv1 Dequiv2 
+	      (Dequiv : cn-equiv-i (G P) (M P) (M P') (pi (A P) (B P)))
+	   <- cn-equiv-i-resp ctx-eq/i con-eq/i con-eq/i (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (M P) (M P') (C P)).
+
+-extsig	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (M x) (C x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/extsigma Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-extsigma-invert (Dof x d) (Dmof x d dm)
+		 (DeqC x : kind-eq (sigma (A x) (B x)) (C x))
+		 (D1 x d : cn-of-i (G x) (pi1 (M x)) (A x))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (pi2 (M x)) (B x (pi1 (M x))))
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm)
+		 (Dwf x d : {y} kd-wf-i (cons (G x) y (A x)) (B x y)))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (Dequiv1 : cn-equiv-i (G P) (pi1 (M P)) (pi1 (M P')) (A P))
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (Dequiv2 : cn-equiv-i (G P) (pi2 (M P)) (pi2 (M P')) (B P (pi1 (M P))))
+	   <- cn-equiv-i-extsigma Dequiv1 Dequiv2 ([y] Dwf P (DofP : cn-of P D) y)
+	      (Dequiv : cn-equiv-i (G P) (M P) (M P') (sigma (A P) (B P)))
+	   <- cn-equiv-i-resp ctx-eq/i con-eq/i con-eq/i (DeqC P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (M P) (M P') (C P)).
+
+-star	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) mcon/star)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-star-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq star (O x)) (DeqB x : kind-eq one (B x)))
+	   <- cn-equiv-to-cn-equiv-i (G M) (cn-equiv/refl cn-of/star)
+	      (Dequiv : cn-equiv-i (G M) star star one)
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO M) (DeqO N) (DeqB M) Dequiv
+	      Dequiv'.
+
+-subsum	: functionality-cn-e _
+	   (Dof : {x} cn-of x D -> cn-of-i (G x) (M x) (A x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/subsume Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-subsume-invert (Dof x d) (Dmof x d dm)
+		 (D1 x d : cn-of-i (G x) (M x) (B x))
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (Dsub x d : kd-sub-i (G x) (B x) (A x)))
+	   <- functionality-cn-e _ D1 DM1 Dclean DequivP DofP
+	      (Dequiv : cn-equiv-i (G P) (M P) (M P') (B P))
+	   <- cn-equiv-i-subsume Dequiv (Dsub P (DofP : cn-of P D))
+	      (Dequiv' : cn-equiv-i (G P) (M P) (M P') (A P)).
+
+-unit	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) mcon/unit)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-unit-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq unit (O x)) (DeqB x : kind-eq t (B x)))
+	   <- cn-equiv-to-cn-equiv-i (G M) (cn-equiv/refl cn-of/unit)
+	      (Dequiv : cn-equiv-i (G M) unit unit t)
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO M) (DeqO N) (DeqB M) Dequiv
+	      Dequiv'.
+
+-void	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) mcon/void)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-void-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq void (O x)) (DeqB x : kind-eq t (B x)))
+	   <- cn-equiv-to-cn-equiv-i (G M) (cn-equiv/refl cn-of/void)
+	      (Dequiv : cn-equiv-i (G M) void void t)
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO M) (DeqO N) (DeqB M) Dequiv
+	      Dequiv'.
+
+-prod	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/prod Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-prod-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (prod (M x) (N x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (N x) t)
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : cn-equiv-i (G P) (N P) (N P') t)
+	   <- cn-equiv-i-prod DequivM DequivN Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-arrow	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/arrow Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-arrow-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (arrow (M x) (N x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (N x) t)
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : cn-equiv-i (G P) (N P) (N P') t)
+	   <- cn-equiv-i-arrow DequivM DequivN Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-plus	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/plus Nm Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-plus-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (plus (M x) (N x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm)
+		 (D2 x d : cn-of-i (G x) (N x) t)
+		 (DM2 x d dm : mcn-of-i (D2 x d) Nm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- functionality-cn-e _
+	      D2 DM2 Dclean DequivP DofP
+	      (DequivN : cn-equiv-i (G P) (N P) (N P') t)
+	   <- cn-equiv-i-plus DequivM DequivN Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-ref	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/ref Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-ref-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (ref (M x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- cn-equiv-i-ref DequivM Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-tag	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/tag Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-tag-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (tag (M x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- cn-equiv-i-tag DequivM Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-tagged	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) mcon/tagged)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-tagged-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq tagged (O x)) (DeqB x : kind-eq t (B x)))
+	   <- cn-equiv-to-cn-equiv-i (G M) (cn-equiv/refl cn-of/tagged)
+	      (Dequiv : cn-equiv-i (G M) tagged tagged t)
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO M) (DeqO N) (DeqB M) Dequiv
+	      Dequiv'.
+
+-rec	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/rec C2m C1m Km))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-rec-invert (Dof x d) (Dmof x d dm)
+		 (DeqO x : con-eq (rec (K x) ([y] [z] C1 x y z) (C2 x)) (O x))
+		 (DeqB x : kind-eq t (B x))
+		 (DwfK x d : kd-wf-i (G x) (K x))
+		 (DmwfK x d dm : mkd-wf-i (DwfK x d) Km)
+		 (DofC1 x d : {y} {z} cn-of-i (cons (cons (G x) y (pi (K x) ([_] t))) z (K x)) (C1 x y z) t)
+		 (DmofC1 x d dm : {y} {z} mcn-of-i (DofC1 x d y z) C1m)
+		 (DofC2 x d : cn-of-i (G x) (C2 x) (K x))
+		 (DmofC2 x d dm : mcn-of-i (DofC2 x d) C2m))
+	   <- functionality-kd-e _
+	      DwfK DmwfK Dclean DequivP DofP
+	      (DequivK : kd-equiv-i (G P) (K P) (K P'))
+	   <- ({y} {e:isvar y} {z} {f:isvar z}
+		 functionality-cn-e _
+		 ([x] [d] DofC1 x d y z)
+		 ([x] [d] [dm] DmofC1 x d dm y z)
+		 ([x] clean/cons f (clean/cons e (Dclean x)))
+		 DequivP
+		 DofP
+		 (DequivC1 y z : cn-equiv-i (cons (cons (G P) y (pi (K P) ([_] t))) z (K P)) (C1 P y z) (C1 P' y z) t))
+	   <- functionality-cn-e _
+	      DofC2 DmofC2 Dclean DequivP DofP
+	      (DequivC2 : cn-equiv-i (G P) (C2 P) (C2 P') (K P))
+	   <- cn-equiv-i-rec _ DequivK DequivC1 DequivC2
+	      (Dequiv : cn-equiv-i (G P) (rec (K P) ([y] [z] C1 P y z) (C2 P)) (rec (K P') ([y] [z] C1 P' y z) (C2 P')) t)
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv
+	      (Dequiv' : cn-equiv-i (G P) (O P) (O P') (B P)).
+
+-lab	: functionality-cn-e _
+	   (Dof : {x} cn-of x A -> cn-of-i (G x) (O x) (B x))
+	   (Dmof : {x} {d} cn-assm d -> mcn-of-i (Dof x d) (mcon/labeled Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' A)
+	   (DofP : cn-of P A)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 cn-of-i-labeled-invert (Dof x d) (Dmof x d dm) 
+		 (DeqO x : con-eq (labeled I (M x)) (O x)) (DeqB x : kind-eq t (B x))
+		 (D1 x d : cn-of-i (G x) (M x) t)
+		 (DM1 x d dm : mcn-of-i (D1 x d) Mm))
+	   <- functionality-cn-e _
+	      D1 DM1 Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- cn-equiv-i-labeled DequivM Dequiv
+	   <- cn-equiv-i-resp ctx-eq/i (DeqO P) (DeqO P') (DeqB P) Dequiv Dequiv'.
+
+-t	: functionality-kd-e _
+	   (Dwf : {x} cn-of x D -> kd-wf-i (G x) (C x))
+	   (Dmwf : {x} {d} cn-assm d -> mkd-wf-i (Dwf x d) mkind/t)
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 kd-wf-i-t-invert (Dwf x d) (Dmwf x d dm)
+		 (DeqC x : kind-eq t (C x)))
+	   <- kd-equiv-to-kd-equiv-i (G P) (kd-equiv/refl kd-wf/t)
+	      (Dequiv : kd-equiv-i (G P) t t)
+	   <- kd-equiv-i-resp ctx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : kd-equiv-i (G P) (C P) (C P')).
+
+-pi	: functionality-kd-e _
+	   (Dwf : {x} cn-of x D -> kd-wf-i (G x) (C x))
+	   (Dmwf : {x} {d} cn-assm d -> mkd-wf-i (Dwf x d) (mkind/pi Bm Am))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 kd-wf-i-pi-invert (Dwf x d) (Dmwf x d dm)
+		 (DeqC x : kind-eq (pi (A x) (B x)) (C x))
+		 (DwfA x d : kd-wf-i (G x) (A x))
+		 (DmwfA x d dm : mkd-wf-i (DwfA x d) Am)
+		 (DwfB x d : {y} kd-wf-i (cons (G x) y (A x)) (B x y))
+		 (DmwfB x d dm : {y} mkd-wf-i (DwfB x d y) Bm))
+	   <- functionality-kd-e _
+	      DwfA DmwfA Dclean DequivP DofP
+	      (DequivA : kd-equiv-i (G P) (A P) (A P'))
+	   <- ({y} {e:isvar y}
+		 functionality-kd-e _
+		 ([x] [d] DwfB x d y)
+		 ([x] [d] [dm] DmwfB x d dm y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivB y : kd-equiv-i (cons (G P) y (A P)) (B P y) (B P' y)))
+	   <- kd-equiv-i-pi DequivA DequivB
+	      (Dequiv : kd-equiv-i (G P) (pi (A P) (B P)) (pi (A P') (B P')))
+	   <- kd-equiv-i-resp ctx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : kd-equiv-i (G P) (C P) (C P')).
+
+-sigma	: functionality-kd-e _
+	   (Dwf : {x} cn-of x D -> kd-wf-i (G x) (C x))
+	   (Dmwf : {x} {d} cn-assm d -> mkd-wf-i (Dwf x d) (mkind/sigma Bm Am))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 kd-wf-i-sigma-invert (Dwf x d) (Dmwf x d dm)
+		 (DeqC x : kind-eq (sigma (A x) (B x)) (C x))
+		 (DwfA x d : kd-wf-i (G x) (A x))
+		 (DmwfA x d dm : mkd-wf-i (DwfA x d) Am)
+		 (DwfB x d : {y} kd-wf-i (cons (G x) y (A x)) (B x y))
+		 (DmwfB x d dm : {y} mkd-wf-i (DwfB x d y) Bm))
+	   <- functionality-kd-e _
+	      DwfA DmwfA Dclean DequivP DofP
+	      (DequivA : kd-equiv-i (G P) (A P) (A P'))
+	   <- ({y} {e:isvar y}
+		 functionality-kd-e _
+		 ([x] [d] DwfB x d y)
+		 ([x] [d] [dm] DmwfB x d dm y)
+		 ([x] clean/cons e (Dclean x))
+		 DequivP
+		 DofP
+		 (DequivB y : kd-equiv-i (cons (G P) y (A P)) (B P y) (B P' y)))
+	   <- kd-equiv-i-sigma DequivA DequivB
+	      (Dequiv : kd-equiv-i (G P) (sigma (A P) (B P)) (sigma (A P') (B P')))
+	   <- kd-equiv-i-resp ctx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : kd-equiv-i (G P) (C P) (C P')).
+
+-sing	: functionality-kd-e _
+	   (Dwf : {x} cn-of x D -> kd-wf-i (G x) (C x))
+	   (Dmwf : {x} {d} cn-assm d -> mkd-wf-i (Dwf x d) (mkind/sing Mm))
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 kd-wf-i-sing-invert (Dwf x d) (Dmwf x d dm)
+		 (DeqC x : kind-eq (sing (M x)) (C x))
+		 (DofM x d : cn-of-i (G x) (M x) t)
+		 (DmofM x d dm : mcn-of-i (DofM x d) Mm))
+	   <- functionality-cn-e _
+	      DofM DmofM Dclean DequivP DofP
+	      (DequivM : cn-equiv-i (G P) (M P) (M P') t)
+	   <- kd-equiv-i-sing DequivM
+	      (Dequiv : kd-equiv-i (G P) (sing (M P)) (sing (M P')))
+	   <- kd-equiv-i-resp ctx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : kd-equiv-i (G P) (C P) (C P')).
+
+-one	: functionality-kd-e _
+	   (Dwf : {x} cn-of x D -> kd-wf-i (G x) (C x))
+	   (Dmwf : {x} {d} cn-assm d -> mkd-wf-i (Dwf x d) mkind/one)
+	   (Dclean : {x} clean (G x))
+	   (DequivP : cn-equiv P P' D)
+	   (DofP : cn-of P D)
+	   Dequiv'
+	   <- ({x} {d} {dm}
+		 kd-wf-i-one-invert (Dwf x d) (Dmwf x d dm)
+		 (DeqC x : kind-eq one (C x)))
+	   <- kd-equiv-to-kd-equiv-i (G P) (kd-equiv/refl kd-wf/one)
+	      (Dequiv : kd-equiv-i (G P) one one)
+	   <- kd-equiv-i-resp ctx-eq/i (DeqC P) (DeqC P') Dequiv
+	      (Dequiv' : kd-equiv-i (G P) (C P) (C P')).
+
+%worlds (conblock | oblock | ofblock-m) (functionality-kd-e _ _ _ _ _ _ _) (functionality-cn-e _ _ _ _ _ _ _).
+%total (D1 D2) (functionality-cn-e D1 _ _ _ _ _ _) (functionality-kd-e D2 _ _ _ _ _ _).
+
+
+
+can-mcn-of : {D:cn-of M A} mcn-of D Mm -> type.
+%mode can-mcn-of +X1 -X2.
+
+can-mkd-wf : {D:kd-wf A} mkd-wf D Am -> type.
+%mode can-mkd-wf +X1 -X2.
+
+%abbrev
+mcn-assm : {D:cn-of C K} cn-assm D -> type
+   = [d] [ds] can-mcn-of d (mcn-of/var ds).
+
+%block conbind-func
+   : some {k:kind}
+      block {a:con} {d:cn-of a k}
+      {ds:cn-assm d}
+      {_:mcn-assm d ds}.
+
+%block ofblock-m-func
+   : some {c:con} {k:kind}
+      block {d:cn-of c k} {ds:cn-assm d}
+      {_:mcn-assm d ds}.
+
+-	: can-mcn-of (cn-of/lam D2 D1) (mcn-of/lam D2' D1')
+	   <- can-mkd-wf D1 D1'
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mcn-of (D2 x d) (D2' x d ds)).
+
+-	: can-mcn-of (cn-of/app D2 D1) (mcn-of/app D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of (cn-of/pair _ D2 D1) (mcn-of/pair D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of (cn-of/pi1 D) (mcn-of/pi1 D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of (cn-of/pi2 D) (mcn-of/pi2 D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of (cn-of/sing D) (mcn-of/sing D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of (cn-of/extpi D2 D1) (mcn-of/extpi D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mcn-of (D2 x d) (D2' x d ds)).
+
+-	: can-mcn-of (cn-of/extsigma _ D2 D1) (mcn-of/extsigma D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of cn-of/star mcn-of/star.
+
+-	: can-mcn-of (cn-of/subsume _ D) (mcn-of/subsume D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of cn-of/unit mcn-of/unit.
+
+-	: can-mcn-of cn-of/void mcn-of/void.
+
+-	: can-mcn-of (cn-of/prod D2 D1) (mcn-of/prod D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of (cn-of/arrow D2 D1) (mcn-of/arrow D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of (cn-of/plus D2 D1) (mcn-of/plus D2' D1')
+	   <- can-mcn-of D1 D1'
+	   <- can-mcn-of D2 D2'.
+
+-	: can-mcn-of (cn-of/ref D) (mcn-of/ref D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of (cn-of/tag D) (mcn-of/tag D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of cn-of/tagged mcn-of/tagged.
+
+-	: can-mcn-of (cn-of/labeled D) (mcn-of/labeled D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of (cn-of/rec D3 D2 D1) (mcn-of/rec D3' D2' D1')
+	   <- can-mkd-wf D1 D1'
+	   <- ({x} {d} {ds} 
+		 mcn-assm d ds
+		 -> {y} {e} {es}
+		    mcn-assm e es
+		    -> can-mcn-of (D2 x d y e) (D2' x d ds y e es) )
+	   <- can-mcn-of D3 D3'.
+
+
+
+-	: can-mkd-wf kd-wf/t mkd-wf/t.
+
+-	: can-mkd-wf (kd-wf/pi D2 D1) (mkd-wf/pi D2' D1')
+	   <- can-mkd-wf D1 D1'
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mkd-wf (D2 x d) (D2' x d ds)).
+
+-	: can-mkd-wf (kd-wf/sigma D2 D1) (mkd-wf/sigma D2' D1')
+	   <- can-mkd-wf D1 D1'
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mkd-wf (D2 x d) (D2' x d ds)).
+
+-	: can-mkd-wf (kd-wf/sing D) (mkd-wf/sing D')
+	   <- can-mcn-of D D'.
+
+-	: can-mkd-wf kd-wf/one mkd-wf/one.
+
+%worlds (conblock | conbind-func | ofblock-m-func) (can-mcn-of _ _) (can-mkd-wf _ _).
+%total (D1 D2) (can-mcn-of D1 _) (can-mkd-wf D2 _).
+
+
+
+can-mcn-of-i : {D:cn-of-i G M A} mcn-of-i D Dm -> type.
+%mode can-mcn-of-i +X1 -X2.
+
+-	: can-mcn-of-i (cn-of-i/nil D) (mcn-of-i/nil D')
+	   <- can-mcn-of D D'.
+
+-	: can-mcn-of-i (cn-of-i/cons D) (mcn-of-i/cons D')
+	   <- ({d} {ds}
+		 mcn-assm d ds
+		 -> can-mcn-of-i (D d) (D' d ds)).
+
+%worlds (conblock | conbind-func | ofblock-m-func) (can-mcn-of-i _ _).
+%total D (can-mcn-of-i D _).
+
+
+
+can-mkd-wf-i : {D:kd-wf-i G A} mkd-wf-i D Dm -> type.
+%mode can-mkd-wf-i +X1 -X2.
+
+-	: can-mkd-wf-i (kd-wf-i/nil D) (mkd-wf-i/nil D')
+	   <- can-mkd-wf D D'.
+
+-	: can-mkd-wf-i (kd-wf-i/cons D) (mkd-wf-i/cons D')
+	   <- ({d} {ds}
+		 mcn-assm d ds
+		 -> can-mkd-wf-i (D d) (D' d ds)).
+
+%worlds (conblock | conbind-func | ofblock-m-func) (can-mkd-wf-i _ _).
+%total D (can-mkd-wf-i D _).
+
+
+
+functionality-sg-e	: {S}
+			   ({x} cn-of x A -> sg-wf-i (G x) (S x))
+			   -> ({x} clean (G x))
+			   -> cn-equiv M N A
+			   -> cn-of M A
+%%
+			   -> sg-equiv-i (G M) (S M) (S N)
+			   -> type.
+%mode functionality-sg-e +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: functionality-sg-e 
+	   ([_] sg/one)
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) sg/one)
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D
+	   <- sg-equiv-to-sg-equiv-i (G M) sg-equiv/one D.
+
+-	: functionality-sg-e 
+	   ([x] sg/satom (K x))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/satom (K x)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D'
+	   <- ({x} {d}
+		 sg-wf-i-satom-invert (Dwf x d) 
+		 (DwfK x d : kd-wf-i (G x) (K x)))
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mkd-wf-i (DwfK x d) (DmwfK x d ds : mkd-wf-i (DwfK x d) Km))
+	   <- functionality-kd-e Km DwfK DmwfK Dclean DequivMN DofM 
+	      (D : kd-equiv-i (G M) (K M) (K N))
+	   <- sg-equiv-i-satom D 
+	      (D' : sg-equiv-i (G M) (sg/satom (K M)) (sg/satom (K N))).
+
+-	: functionality-sg-e 
+	   ([x] sg/datom (C x))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/datom (C x)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D'
+	   <- ({x} {d}
+		 sg-wf-i-datom-invert (Dwf x d) 
+		 (DofC x d : cn-of-i (G x) (C x) t))
+	   <- ({x} {d} {ds}
+		 mcn-assm d ds
+		 -> can-mcn-of-i (DofC x d) (DmofC x d ds : mcn-of-i (DofC x d) Cm))
+	   <- functionality-cn-e Cm DofC DmofC Dclean DequivMN DofM 
+	      (D : cn-equiv-i (G M) (C M) (C N) t)
+	   <- sg-equiv-i-datom D 
+	      (D' : sg-equiv-i (G M) (sg/datom (C M)) (sg/datom (C N))).
+
+-	: functionality-sg-e 
+	   ([x] sg/sgatom (S x))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/sgatom (S x)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D'
+	   <- ({x} {d}
+		 sg-wf-i-sgatom-invert (Dwf x d) 
+		 (DwfS x d : sg-wf-i (G x) (S x)))
+	   <- functionality-sg-e S DwfS Dclean DequivMN DofM 
+	      (D : sg-equiv-i (G M) (S M) (S N))
+	   <- sg-equiv-i-sgatom D 
+	      (D' : sg-equiv-i (G M) (sg/sgatom (S M)) (sg/sgatom (S N))).
+
+-	: functionality-sg-e
+	   ([x] sg/pi (S1 x) ([y] S2 x y))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/pi (S1 x) ([y] S2 x y)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv
+	   <- ({x} {d}
+		 sg-wf-i-pi-invert (Dwf x d)
+		 (Dwf1 x d : sg-wf-i (G x) (S1 x))
+		 (Dfst x : sg-fst (S1 x) (K1 x))
+		 (Dwf2 x d : {y} sg-wf-i (cons (G x) y (K1 x)) (S2 x y)))
+	   <- functionality-sg-e S1 Dwf1 Dclean DequivMN DofM
+	      (Dequiv1 : sg-equiv-i (G M) (S1 M) (S1 N))
+	   <- ({y} {e:isvar y}
+		 functionality-sg-e ([x] S2 x y) ([x] [d] Dwf2 x d y) ([x] clean/cons e (Dclean x)) DequivMN DofM
+		 (Dequiv2 y : sg-equiv-i (cons (G M) y (K1 M)) (S2 M y) (S2 N y)))
+	   <- sg-equiv-i-pi Dequiv1 (Dfst M) Dequiv2
+	      (Dequiv : sg-equiv-i (G M) (sg/pi (S1 M) ([y] S2 M y)) (sg/pi (S1 N) ([y] S2 N y))).
+
+-	: functionality-sg-e
+	   ([x] sg/sigma (S1 x) ([y] S2 x y))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/sigma (S1 x) ([y] S2 x y)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   Dequiv
+	   <- ({x} {d}
+		 sg-wf-i-sigma-invert (Dwf x d)
+		 (Dwf1 x d : sg-wf-i (G x) (S1 x))
+		 (Dfst x : sg-fst (S1 x) (K1 x))
+		 (Dwf2 x d : {y} sg-wf-i (cons (G x) y (K1 x)) (S2 x y)))
+	   <- functionality-sg-e S1 Dwf1 Dclean DequivMN DofM
+	      (Dequiv1 : sg-equiv-i (G M) (S1 M) (S1 N))
+	   <- ({y} {e:isvar y}
+		 functionality-sg-e ([x] S2 x y) ([x] [d] Dwf2 x d y) ([x] clean/cons e (Dclean x)) DequivMN DofM
+		 (Dequiv2 y : sg-equiv-i (cons (G M) y (K1 M)) (S2 M y) (S2 N y)))
+	   <- sg-equiv-i-sigma Dequiv1 (Dfst M) Dequiv2
+	      (Dequiv : sg-equiv-i (G M) (sg/sigma (S1 M) ([y] S2 M y)) (sg/sigma (S1 N) ([y] S2 N y))).
+
+-	: functionality-sg-e 
+	   ([x] sg/named L (S x))
+	   (Dwf : {x} cn-of x A -> sg-wf-i (G x) (sg/named L (S x)))
+	   (Dclean : {x} clean (G x))
+	   (DequivMN : cn-equiv M N A)
+	   (DofM : cn-of M A)
+	   D'
+	   <- ({x} {d}
+		 sg-wf-i-named-invert (Dwf x d) 
+		 (DwfS x d : sg-wf-i (G x) (S x)))
+	   <- functionality-sg-e S DwfS Dclean DequivMN DofM 
+	      (D : sg-equiv-i (G M) (S M) (S N))
+	   <- sg-equiv-i-named D 
+	      (D' : sg-equiv-i (G M) (sg/named L (S M)) (sg/named L (S N))).
+
+%worlds (conblock | conbind-func | oblock | ofblock-m-func) (functionality-sg-e _ _ _ _ _ _).
+%total S (functionality-sg-e S _ _ _ _ _).
+
+
+
+
+%%%%%  Functionality (Implicit Context)  %%%%%
+
+kd-equiv-i-nil-invert : kd-equiv-i nil K1 K2 -> kd-equiv K1 K2 -> type.
+%mode kd-equiv-i-nil-invert +X1 -X2.
+
+-	: kd-equiv-i-nil-invert (kd-equiv-i/nil D) D.
+
+%worlds (conbind) (kd-equiv-i-nil-invert _ _).
+%total {} (kd-equiv-i-nil-invert _ _).
+
+
+
+kd-equiv-i-cons-invert : kd-equiv-i (cons G X K) K1 K2 -> (cn-of X K -> kd-equiv-i G K1 K2) -> type.
+%mode kd-equiv-i-cons-invert +X1 -X2.
+
+-	: kd-equiv-i-cons-invert (kd-equiv-i/cons D) D.
+
+%worlds (conblock | ofblock) (kd-equiv-i-cons-invert _ _).
+%total {} (kd-equiv-i-cons-invert _ _).
+
+
+
+functionality-kd-reg : ({a} cn-of a K -> kd-wf (K' a))
+			-> cn-equiv C1 C2 K
+			-> cn-of C1 K
+%%
+			-> kd-equiv (K' C1) (K' C2) -> type.
+%mode functionality-kd-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-kd-reg
+	   (Dwf : {a} cn-of a K -> kd-wf (K' a))
+	   (Dequiv : cn-equiv C1 C2 K)
+	   (Dof1 : cn-of C1 K)
+	   %%
+	   Dequiv'
+	   <- ({a} {d:cn-of a K} {ds}
+		 mcn-assm d ds
+		 -> can-mkd-wf (Dwf a d) (Dmwf a d ds : mkd-wf (Dwf a d) Km))
+	   <- functionality-kd-e Km
+	      ([a] [d:cn-of a K] kd-wf-i/nil (Dwf a d))
+	      ([a] [d] [ds] mkd-wf-i/nil (Dmwf a d ds))
+	      ([a] clean/nil)
+	      Dequiv
+	      Dof1
+	      %%
+	      (Dequivi : kd-equiv-i nil (K' C1) (K' C2))
+	   <- kd-equiv-i-nil-invert Dequivi Dequiv'.
+
+%worlds (conbind-func) (functionality-kd-reg _ _ _ _).
+%total {} (functionality-kd-reg _ _ _ _).
+
+
+
+functionality-kd-under-reg : ({a} cn-of a K1 -> {b} cn-of b (K2 a) -> kd-wf (K a b))
+			      -> cn-equiv C C' K1
+			      -> cn-of C K1
+%%
+			      -> ({b} cn-of b (K2 C) -> kd-equiv (K C b) (K C' b))
+			      -> type.
+%mode functionality-kd-under-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-kd-under-reg
+	   (Dwf : {a} cn-of a K1 -> {b} cn-of b (K2 a) -> kd-wf (K a b))
+	   (Dequiv : cn-equiv C C' K1)
+	   (Dof : cn-of C K1)
+	   %%
+	   Dequiv'
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> {b} {e:cn-of b (K2 a)} {es}
+		    mcn-assm e es
+		 -> can-mkd-wf (Dwf a d b e) (Dmwf a d ds b e es : mkd-wf (Dwf a d b e) Km))
+	   <- ({b} {bv:isvar b}
+		 functionality-kd-e Km
+		 ([a] [d] kd-wf-i/cons ([e] kd-wf-i/nil (Dwf a d b e)))
+		 ([a] [d] [ds] mkd-wf-i/cons ([e] [em] mkd-wf-i/nil (Dmwf a d ds b e em)))
+		 ([a] clean/cons bv clean/nil)
+		 Dequiv
+		 Dof
+		 %%
+		 (Dequivi b : kd-equiv-i (cons nil b (K2 C)) (K C b) (K C' b)))
+	   <- ({b}
+		 kd-equiv-i-cons-invert (Dequivi b)
+		 (Dequivi' b : cn-of b (K2 C) -> kd-equiv-i nil (K C b) (K C' b)))
+	   <- ({b} {e:cn-of b (K2 C)}
+		 kd-equiv-i-nil-invert (Dequivi' b e)
+		 (Dequiv' b e : kd-equiv (K C b) (K C' b))).
+
+%worlds (conbind-func) (functionality-kd-under-reg _ _ _ _).
+%total {} (functionality-kd-under-reg _ _ _ _).
+
+
+
+cn-equiv-i-nil-invert : cn-equiv-i nil C1 C2 K -> cn-equiv C1 C2 K -> type.
+%mode cn-equiv-i-nil-invert +X1 -X2.
+
+-	: cn-equiv-i-nil-invert (cn-equiv-i/nil D) D.
+
+%worlds (conbind) (cn-equiv-i-nil-invert _ _).
+%total {} (cn-equiv-i-nil-invert _ _).
+
+
+
+cn-equiv-i-cons-invert : cn-equiv-i (cons G X K) C1 C2 K' -> (cn-of X K -> cn-equiv-i G C1 C2 K') -> type.
+%mode cn-equiv-i-cons-invert +X1 -X2.
+
+-	: cn-equiv-i-cons-invert (cn-equiv-i/cons D) D.
+
+%worlds (conblock | ofblock) (cn-equiv-i-cons-invert _ _).
+%total {} (cn-equiv-i-cons-invert _ _).
+
+
+
+functionality-cn-reg : ({a} cn-of a K -> cn-of (C a) (K' a))
+			-> cn-equiv C1 C2 K
+			-> cn-of C1 K
+%%
+			-> cn-equiv (C C1) (C C2) (K' C1) -> type.
+%mode functionality-cn-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-cn-reg
+	   (Dof : {a} cn-of a K -> cn-of (C a) (K' a))
+	   (Dequiv : cn-equiv C1 C2 K)
+	   (Dof1 : cn-of C1 K)
+	   %%
+	   Dequiv'
+	   <- ({a} {d:cn-of a K} {ds}
+		 mcn-assm d ds
+		 -> can-mcn-of (Dof a d) (Dmof a d ds : mcn-of (Dof a d) Mm))
+	   <- functionality-cn-e Mm
+	      ([a] [d:cn-of a K] cn-of-i/nil (Dof a d))
+	      ([a] [d] [ds] mcn-of-i/nil (Dmof a d ds))
+	      ([a] clean/nil)
+	      Dequiv
+	      Dof1
+	      %%
+	      (Dequivi : cn-equiv-i nil (C C1) (C C2) (K' C1))
+	   <- cn-equiv-i-nil-invert Dequivi Dequiv'.
+
+%worlds (conbind-func) (functionality-cn-reg _ _ _ _).
+%total {} (functionality-cn-reg _ _ _ _).
+
+
+
+functionality-cn-under-reg : ({a} cn-of a K1 -> {b} cn-of b (K2 a) -> cn-of (D a b) (K a b))
+			      -> cn-equiv C C' K1
+			      -> cn-of C K1
+%%
+			      -> ({b} cn-of b (K2 C) -> cn-equiv (D C b) (D C' b) (K C b))
+			      -> type.
+%mode functionality-cn-under-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-cn-under-reg
+	   (DofD : {a} cn-of a K1 -> {b} cn-of b (K2 a) -> cn-of (D a b) (K a b))
+	   (Dequiv : cn-equiv C C' K1)
+	   (Dof : cn-of C K1)
+	   %%
+	   Dequiv'
+	   <- ({a} {d:cn-of a K1} {ds}
+		 mcn-assm d ds
+		 -> {b} {e:cn-of b (K2 a)} {es}
+		    mcn-assm e es
+		 -> can-mcn-of (DofD a d b e) (Dmof a d ds b e es : mcn-of (DofD a d b e) Dm))
+	   <- ({b} {bv:isvar b}
+		 functionality-cn-e Dm
+		 ([a] [d] cn-of-i/cons ([e] cn-of-i/nil (DofD a d b e)))
+		 ([a] [d] [ds] mcn-of-i/cons ([e] [em] mcn-of-i/nil (Dmof a d ds b e em)))
+		 ([a] clean/cons bv clean/nil)
+		 Dequiv
+		 Dof
+		 %%
+		 (Dequivi b : cn-equiv-i (cons nil b (K2 C)) (D C b) (D C' b) (K C b)))
+	   <- ({b}
+		 cn-equiv-i-cons-invert (Dequivi b)
+		 (Dequivi' b : cn-of b (K2 C) -> cn-equiv-i nil (D C b) (D C' b) (K C b)))
+	   <- ({b} {e:cn-of b (K2 C)}
+		 cn-equiv-i-nil-invert (Dequivi' b e)
+		 (Dequiv' b e : cn-equiv (D C b) (D C' b) (K C b))).
+
+%worlds (conbind-func) (functionality-cn-under-reg _ _ _ _).
+%total {} (functionality-cn-under-reg _ _ _ _).
+
+
+
+sg-equiv-i-nil-invert : sg-equiv-i nil S1 S2 -> sg-equiv S1 S2 -> type.
+%mode sg-equiv-i-nil-invert +X1 -X2.
+
+-	: sg-equiv-i-nil-invert (sg-equiv-i/nil D) D.
+
+%worlds (conblock | ofblock) (sg-equiv-i-nil-invert _ _).
+%total {} (sg-equiv-i-nil-invert _ _).
+
+
+
+sg-equiv-i-cons-invert : sg-equiv-i (cons G X K) K1 K2 -> (cn-of X K -> sg-equiv-i G K1 K2) -> type.
+%mode sg-equiv-i-cons-invert +X1 -X2.
+
+-	: sg-equiv-i-cons-invert (sg-equiv-i/cons D) D.
+
+%worlds (conblock | ofblock) (sg-equiv-i-cons-invert _ _).
+%total {} (sg-equiv-i-cons-invert _ _).
+
+
+
+functionality-sg-reg : ({a} cn-of a K -> sg-wf (S a))
+			-> cn-equiv C1 C2 K
+			-> cn-of C1 K
+%%
+			-> sg-equiv (S C1) (S C2) -> type.
+%mode functionality-sg-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-sg-reg Dwf Dequiv Dof1 Dequiv''
+	   <- functionality-sg-e _ ([a] [d] sg-wf-i/nil (Dwf a d)) ([_] clean/nil) Dequiv Dof1
+	      Dequiv'
+	   <- sg-equiv-i-nil-invert Dequiv' Dequiv''.
+
+%worlds (conbind-func) (functionality-sg-reg _ _ _ _).
+%total {} (functionality-sg-reg _ _ _ _).
+
+
+
+functionality-sg-under-reg : ({a} cn-of a K1 -> {b} cn-of b (K2 a) -> sg-wf (S a b))
+			      -> cn-equiv C C' K1
+			      -> cn-of C K1
+%%
+			      -> ({b} cn-of b (K2 C) -> sg-equiv (S C b) (S C' b))
+			      -> type.
+%mode functionality-sg-under-reg +X1 +X2 +X3 -X4.
+
+-	: functionality-sg-under-reg
+	   (Dwf : {a} cn-of a K1 -> {b} cn-of b (K2 a) -> sg-wf (S a b))
+	   (Dequiv : cn-equiv C C' K1)
+	   (Dof : cn-of C K1)
+	   %%
+	   Dequiv'
+	   <- ({b} {bv:isvar b}
+		 functionality-sg-e ([a] S a b)
+		 ([a] [d] sg-wf-i/cons ([e] sg-wf-i/nil (Dwf a d b e)))
+		 ([a] clean/cons bv clean/nil)
+		 Dequiv
+		 Dof
+		 %%
+		 (Dequivi b : sg-equiv-i (cons nil b (K2 C)) (S C b) (S C' b)))
+	   <- ({b}
+		 sg-equiv-i-cons-invert (Dequivi b)
+		 (Dequivi' b : cn-of b (K2 C) -> sg-equiv-i nil (S C b) (S C' b)))
+	   <- ({b} {e:cn-of b (K2 C)}
+		 sg-equiv-i-nil-invert (Dequivi' b e)
+		 (Dequiv' b e : sg-equiv (S C b) (S C' b))).
+
+%worlds (conbind-func) (functionality-sg-under-reg _ _ _ _).
+%total {} (functionality-sg-under-reg _ _ _ _).

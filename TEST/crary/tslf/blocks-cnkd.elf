@@ -1,0 +1,33 @@
+
+%block cn-block			: block {a : cn}.
+
+%block ofkd-block		: some 
+				   {k : kd}
+				   block
+				   {a : cn} {da : ofkd a k}.
+
+%block can-mofkd-block : some {k:kd}
+			  block 
+			  {a} {da: ofkd a k} 
+			  {dm: mofkd da met/unit}
+			  {_: can-mofkd da dm}.
+
+%{
+%block ofkd+vdt-block		:  some
+				   {k : kd} {kwf : kd-wf k}
+				   block
+				   {a : cn} {da : ofkd a k}
+				   {_ : vdt/ofkd da kwf}.
+}%
+
+
+%block ofkd+vdt-block		:  some
+				   {k : kd} {kwf : kd-wf k}
+				   block
+				   {a : cn} {da : ofkd a k}
+				   {dm: mofkd da met/unit}
+				   {_: can-mofkd da dm}
+				   {_ : vdt/ofkd da kwf}.
+
+
+

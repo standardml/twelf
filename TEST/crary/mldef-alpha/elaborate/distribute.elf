@@ -1,0 +1,34 @@
+
+distribute-sg : sg -> (con -> sg) -> sg -> type.
+
+distribute-sg/one	: distribute-sg S ([a] sg/one) sg/one.
+
+distribute-sg/sigma	: distribute-sg S ([a] sg/prod (S1 a) (S2 a))
+			   (sg/prod S1' S2')
+			   <- distribute-sg S ([a] S1 a) S1'
+			   <- distribute-sg S ([a] S2 a) S2'.
+
+distribute-sg/named	: distribute-sg S ([a] sg/named L (S' a))
+			   (sg/named L S'')
+			   <- distribute-sg S ([a] S' a) S''.
+
+distribute-sg/datom	: distribute-sg S ([a] sg/datom (T a))
+			   (sg/pi S ([a] sg/datom (T a))).
+
+
+
+distribute-md : sg -> (con -> sg) -> (con -> module -> module) -> module -> type.
+
+distribute-md/one	: distribute-md S ([a] sg/one) _ md/unit.
+
+distribute-md/sigma	: distribute-md S ([a] sg/prod (S1 a) (S2 a)) ([a] [m] M a m)
+			   (md/pair M1 M2) 
+			   <- distribute-md S ([a] S1 a) ([a] [m] md/pi1 (M a m)) M1
+			   <- distribute-md S ([a] S2 a) ([a] [m] md/pi2 (M a m)) M2.
+
+distribute-md/named	: distribute-md S ([a] sg/named L (S' a)) ([a] [m] M a m) 
+			   (md/in L M') 
+			   <- distribute-md S ([a] S' a) ([a] [m] md/out (M a m)) M'.
+
+distribute-md/datom	: distribute-md S ([a] sg/datom (T a)) ([a] [m] M a m) 
+			   (md/lam S ([a] [m] M a m)).

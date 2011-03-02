@@ -1,0 +1,1692 @@
+
+%% NULL
+
+- : dec-elab-reg 
+     (DofEC : md-of pure st/nil Mec Sec)
+     dec-elab/null
+     (md-of/forget md-of/unit).
+
+%% MONOMORPHIC VAL BINDINGS
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/val-mono
+	(Ddistribute : {a} {m}
+			md-fst m a
+			-> distribute-md sg/one ([_] S) ([_] [_] m) (M' a m))
+	(DdistributeS : distribute-sg sg/one ([_] S) S')
+	(DelabPat : {x} tm-assm x T
+		     -> pat-elab Mec Sec Pe (tm/snd Mbind) x T (M x) S)
+	(DelabExpr : expr-elab Mec Sec Ee E T)
+	(Dresolve : resolve-in-basis Mec Sec (name/val identifier/bind) (sg/datom tagged) Mbind))
+     %%
+     (md-of/forget
+	(md-of/lete
+	   ([x] [dx:tm-assm x T]
+	      md-of/letp
+	      ([a] [da] [m] [dm] [dfst] DofM' a da m dm dfst)
+	      (DfstM x)
+	      DfstS
+	      (DofM x dx))
+	   DofE))
+     <- resolve-in-basis-reg DofEC Dresolve
+	(DofBind : md-of pure st/nil Mbind (sg/datom tagged))
+     <- expr-elab-reg DofEC DelabExpr
+	(DofE : tm-of st/nil E T)
+     <- tm-of-reg DofE
+	(DofT : cn-of T t)
+     <- ({x} {dx:tm-assm x T}
+	   tm-assm-reg dx DofT
+	   -> pat-elab-reg DofEC (tm-of/snd DofBind) (tm-of/var dx) (DelabPat x dx)
+	      (DofM x dx : md-of pure st/nil (M x) S))
+     <- ({x} {dx:tm-assm x T}
+	   tm-assm-reg dx DofT
+	   -> can-md-fst (DofM x dx)
+	      (DfstM x : md-fst (M x) C))
+     <- ({x} {dx:tm-assm x T}
+	   tm-assm-reg dx DofT
+	   -> md-of-reg (DofM x dx)
+	      (DwfS : sg-wf S))
+     <- distribute-sg-reg sg-wf/one sg-fst/one ([_] [_] DwfS) DdistributeS
+	(DwfS' : sg-wf S')
+     <- can-sg-fst S (DfstS : sg-fst S K)
+     <- sg-fst-reg DwfS DfstS (DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> distribute-md-reg sg-wf/one sg-fst/one ([_] [_] [_] [_] [_] md-of/var dm) DdistributeS (Ddistribute a m dfst)
+	      (DofM' a da m dm dfst : md-of pure st/nil (M' a m) S')).
+
+
+
+%% POLYMORPHIC VAL BINDINGS
+
+polyargs-elab-reg : polyargs-elab TVLe S
+		       -> sg-wf S
+		       -> type.
+%mode polyargs-elab-reg +X1 -X2.
+
+- : polyargs-elab-reg polyargs-elab/nil-done sg-wf/one.
+
+- : polyargs-elab-reg
+     (polyargs-elab/nil-another Delab) 
+     (sg-wf/sigma ([_] [_] Dwf) sg-fst/satom (sg-wf/satom kd-wf/t))
+     <- polyargs-elab-reg Delab (Dwf : sg-wf S).
+
+- : polyargs-elab-reg 
+     (polyargs-elab/cons (Delab : polyargs-elab TVLe S))
+     (sg-wf/sigma ([_] [_] Dwf) (sg-fst/named sg-fst/satom) (sg-wf/named (sg-wf/satom kd-wf/t)))
+     <- polyargs-elab-reg Delab (Dwf : sg-wf S).
+
+%worlds (conbind) (polyargs-elab-reg _ _).
+%total D (polyargs-elab-reg D _).
+
+
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/val-poly
+	(DdistributeM : distribute-md
+			 S Spat
+			 ([a] [m]
+			    md/letp 
+			    (md/lam S ([a'] [m'] md/datom (E a' m') (T a')))
+			    ([_] [f] Mpat a m (tm/snd (md/app f m))))
+			 Mdist)
+	(DdistributeS : distribute-sg S Spat Sdist)
+	(DelabPat : {a} cn-of a K
+		     -> {m} md-assm m S
+		     -> md-fst m a
+		     -> {x} tm-assm x (T a)
+		     -> pat-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Pe (tm/snd Mbind) x (T a) (Mpat a m x) (Spat a))
+	(DelabExpr : {a} cn-of a K
+		      -> {m} md-assm m S
+		      -> md-fst m a
+		      -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Ee (E a m) (T a))
+	(DfstS : sg-fst S K)
+	(DelabTyvars : polyargs-elab TVLe S)
+	_ _
+	(Dresolve : resolve-in-basis Mec Sec (name/val identifier/bind) (sg/datom tagged) Mbind))
+     %%
+     (md-of/forget DofMdist)
+     <- resolve-in-basis-reg DofEC Dresolve
+	(DofBind : md-of pure st/nil Mbind (sg/datom tagged))
+     <- polyargs-elab-reg DelabTyvars
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> expr-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabExpr a da m dm dfst)
+	      (DofE a da m dm dfst : tm-of st/nil (E a m) (T a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> tm-of-reg (DofE a da m dm dfst)
+	      (DofT a da : cn-of (T a) t))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> {x} {dx:tm-assm x (T a)}
+	      tm-assm-reg dx (DofT a da)
+	   -> pat-elab-reg 
+	      (md-of/pair (md-of/var dm) DofEC) 
+	      (tm-of/snd DofBind)
+	      (tm-of/var dx) 
+	      (DelabPat a da m dm dfst x dx)
+	      %%
+	      (DofMpat a da m dm dfst x dx : md-of pure st/nil (Mpat a m x) (Spat a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfstM:md-fst m a}
+	   {b} {db:cn-of b one} {f} {df:md-assm f (sg/pi S ([a] sg/datom (T a)))} {dfstF:md-fst f b}
+	   substitution-tm-md
+	   ([dx:tm-assm (tm/snd (md/app f m)) (T a)] DofMpat a da m dm dfstM (tm/snd (md/app f m)) dx)
+	   (tm-of/snd (md-of/app dfstM (md-of/var dm) (md-of/var df)))
+	   (DofMpat' a da m dm dfstM b db f df dfstF 
+	      : md-of pure st/nil (Mpat a m (tm/snd (md/app f m))) (Spat a)))
+     <- distribute-md-reg DwfS DfstS 
+	([a] [da:cn-of a K] [m] [dm:md-assm m S] [dfstM:md-fst m a]
+	   md-of/letp
+	   ([b] [db:cn-of b one] [f] [df:md-assm f (sg/pi S ([a'] sg/datom (T a')))] [dfstF:md-fst f b]
+	      DofMpat' a da m dm dfstM b db f df dfstF)
+	   md-fst/lam
+	   sg-fst/pi
+	   (md-of/lam 
+	      ([a'] [da'] [m'] [dm'] [dfstm'] md-of/datom (DofE a' da' m' dm' dfstm')) 
+	      DfstS
+	      DwfS))
+	DdistributeS DdistributeM
+	(DofMdist : md-of pure st/nil Mdist Sdist).
+
+
+
+%% FUN BINDINGS
+
+funbind-fwd-reg : funbind-fwd FBe T S M
+%%
+		    -> cn-of T t
+		    -> sg-wf S
+		    -> ({x} tm-assm x T -> md-of pure st/nil (M x) S)
+		    -> type.
+%mode funbind-fwd-reg +X1 -X2 -X3 -X4.
+
+-	: funbind-fwd-reg funbind-fwd/nil cn-of/unit sg-wf/one ([_] [_] md-of/unit).
+
+-	: funbind-fwd-reg
+	   (funbind-fwd/cons
+	      (DofT : cn-of T t)
+	      (Dfwd : funbind-fwd FBe Tprefix Sprefix Mprefix))
+	   (cn-of/prod DofT DofTprefix)
+	   (sg-wf/sigma ([_] [_] sg-wf/named (sg-wf/named (sg-wf/datom DofT))) DfstSprefix DwfSprefix)
+	   ([x] [dx:tm-assm x (prod Tprefix T)]
+	      md-of/pair
+	      (md-of/in (md-of/in (md-of/datom (tm-of/pi2 (tm-of/var dx)))))
+	      (DofMprefix' x dx))
+	   <- funbind-fwd-reg Dfwd
+	      (DofTprefix : cn-of Tprefix t)
+	      (DwfSprefix : sg-wf Sprefix)
+	      (DofMprefix : {x} tm-assm x Tprefix -> md-of pure st/nil (Mprefix x) Sprefix)
+	   <- can-sg-fst Sprefix 
+	      (DfstSprefix : sg-fst Sprefix _)
+	   <- ({x} {dx:tm-assm x (prod Tprefix T)}
+		 substitution-tm-md (DofMprefix (tm/pi1 x)) (tm-of/pi1 (tm-of/var dx))
+		 (DofMprefix' x dx : md-of pure st/nil (Mprefix (tm/pi1 x)) Sprefix)).
+
+%worlds (conbind | modbind | termbind) (funbind-fwd-reg _ _ _ _).
+%total D (funbind-fwd-reg D _ _ _).
+
+
+curry-funbind-reg : curry-funbind N T Eargs Targs E Tdom Tcod
+		     -> cn-of T t
+		     -> tm-of st/nil Eargs Targs
+%%
+		     -> cn-of Tdom t
+		     -> cn-of Tcod t
+		     -> ({f} tm-assm f (arrow Tdom Tcod) -> tm-of st/nil (E f) T)
+		     -> type.
+%mode curry-funbind-reg +X1 +X2 +X3 -X4 -X5 -X6.
+
+-	: curry-funbind-reg
+	   curry-funbind/nil
+	   (DofT : cn-of T t)
+	   (DofEargs : tm-of st/nil Eargs Targs)
+	   %%
+	   DofTargs
+	   DofT
+	   ([f] [df:tm-assm f (arrow Targs T)] tm-of/app DofEargs (tm-of/var df))
+	   <- tm-of-reg DofEargs (DofTargs : cn-of Targs t).
+
+-	: curry-funbind-reg
+	   (curry-funbind/cons
+	      (Dcurry : {x} curry-funbind N Trest (tm/elpair Eargs x) (elprod Targs T1) ([f] Efun f x) Tdom Tcod))
+	   (DofArrow : cn-of (arrow T1 Trest) t)
+	   (DofEargs : tm-of st/nil Eargs Targs)
+	   %%
+	   DofTdom DofTcod
+	   ([f] [df:tm-assm f (arrow Tdom Tcod)]
+	      tm-of/lam ([x] [dx] DofEfun x dx f df) DofT1)
+	   <- inversion-arrow DofArrow
+	      (DofT1 : cn-of T1 t)
+	      (DofTrest : cn-of Trest t)
+	   <- ({x} {dx:tm-assm x T1}
+		 tm-assm-reg dx DofT1
+		 -> curry-funbind-reg (Dcurry x) DofTrest 
+		    (tm-of/pair (tm-of/pair tm-of/unit (tm-of/in (tm-of/var dx))) (tm-of/in DofEargs))
+		    %%
+		    (DofTdom : cn-of Tdom t)
+		    (DofTcod : cn-of Tcod t)
+		    (DofEfun x dx : {f} tm-assm f (arrow Tdom Tcod)
+				     -> tm-of st/nil (Efun f x) Trest)).
+
+%worlds (conbind-reg | modbind-reg | termbind-reg) (curry-funbind-reg _ _ _ _ _ _).
+%total D (curry-funbind-reg D _ _ _ _ _).
+
+
+funbind-elab-reg : md-of pure st/nil Mec Sec
+		     -> tm-of st/nil Ematch tagged
+		     -> cn-of T t
+		     -> funbind-elab Mec Sec Ematch FBe T E
+%%
+		     -> tm-of st/nil E T
+		     -> type.
+%mode funbind-elab-reg +X1 +X2 +X3 +X4 -X5.
+
+- : funbind-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (DofEmatch : tm-of st/nil Ematch tagged)
+     _
+     funbind-elab/nil
+     %%
+     tm-of/unit.
+
+- : funbind-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (DofEmatch : tm-of st/nil Ematch tagged)
+     (DofProd : cn-of (prod T Ttail) t)
+     (funbind-elab/cons
+	(DelabMatch : {x} match-elab Mec Sec Me Ematch x Tdom (Ebody x) Tcod)
+	(Dmatchify : matchify MAe Me)
+	_
+	(Dcurry : curry-funbind (s N) T tm/unit unit ([f] Efun f) Tdom Tcod)
+	(Delab : funbind-elab Mec Sec Ematch FBe Ttail Etail))
+     %%
+     (tm-of/pair DofEtail DofEfun')
+     <- inversion-prod DofProd
+	(DofT : cn-of T t)
+	(DofTtail : cn-of Ttail t)
+     <- funbind-elab-reg DofEC DofEmatch DofTtail Delab
+	(DofEtail : tm-of st/nil Etail Ttail)
+     <- curry-funbind-reg Dcurry DofT tm-of/unit
+	(DofTdom : cn-of Tdom t)
+	(DofTcod : cn-of Tcod t)
+	(DofEfun : {f} tm-assm f (arrow Tdom Tcod) -> tm-of st/nil (Efun f) T)
+     <- ({x} {dx:tm-assm x Tdom}
+	   tm-assm-reg dx DofTdom
+	   -> match-elab-reg DofEC DofEmatch (tm-of/var dx) (DelabMatch x)
+	      (DofEbody x dx : tm-of st/nil (Ebody x) Tcod))
+     <- substitution-tm-tm ([df] DofEfun (tm/lam Tdom Ebody) df) 
+	(tm-of/lam DofEbody DofTdom)
+	(DofEfun' : tm-of st/nil (Efun (tm/lam Tdom Ebody)) T).
+
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/fun
+	(DdistributeM : distribute-md
+			 S Sfwd
+			 ([a] [m]
+			    md/lete
+			    (tm/fix (Tfwd a)
+			       ([this] E a m this))
+			    (Tfwd a)
+			    ([this] Mfwd a m this))
+			 Mdist)
+	(DdistributeS : distribute-sg S Sfwd Sdist)
+	(Delab : {a} cn-of a K
+		  -> {m} md-assm m S
+		  -> md-fst m a
+		  -> {this} tm-assm this (Tfwd a)
+		  -> funbind-elab 
+		     (md/pair (md/pair Mec m) (Mfwd a m this))
+		     (sg/sigma (sg/sigma Sec ([_] S)) ([_] Sfwd a))
+		     (tm/snd Mmatch)
+		     FBe
+		     (Tfwd a)
+		     (E a m this))
+	(Dfwd : {a} cn-of a K
+		 -> {m} md-assm m S
+		 -> md-fst m a
+		 -> funbind-fwd FBe (Tfwd a) (Sfwd a) ([this] Mfwd a m this))
+	(DfstS : sg-fst S K)
+	(DelabTyvars : polyargs-elab TVLe S)
+	(Dresolve : resolve-in-basis Mec Sec (name/val identifier/match) (sg/datom tagged) Mmatch))
+     %%
+     (md-of/forget DofMdist)
+     <- resolve-in-basis-reg DofEC Dresolve
+	(DofMmatch : md-of pure st/nil Mmatch (sg/datom tagged))
+     <- polyargs-elab-reg DelabTyvars
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   funbind-fwd-reg (Dfwd a da m dm dfst) 
+	   (DofTfwd a da : cn-of (Tfwd a) t)
+	   (DwfSfwd a da : sg-wf (Sfwd a))
+	   (DofMfwd a da m dm dfst : {this} tm-assm this (Tfwd a) -> md-of pure st/nil (Mfwd a m this) (Sfwd a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK 
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> {this} {dthis:tm-assm this (Tfwd a)}
+	      tm-assm-reg dthis (DofTfwd a da)
+	   -> funbind-elab-reg
+	      (md-of/pair
+		 (DofMfwd a da m dm dfst this dthis)
+		 (md-of/pair
+		    (md-of/var dm)
+		    DofEC))
+	      (tm-of/snd DofMmatch)
+	      (DofTfwd a da)
+	      (Delab a da m dm dfst this dthis)
+	      (DofE a da m dm dfst this dthis : tm-of st/nil (E a m this) (Tfwd a)))
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a} {this} {dofthis:tm-of st/nil this (Tfwd a)}
+	   substitution-tm-tm
+	   ([dthis] DofE a da m dm dfst this dthis)
+	   dofthis
+	   (DofE' a da m dm dfst this dofthis : tm-of st/nil (E a m this) (Tfwd a)))
+     <- distribute-md-reg DwfS DfstS
+	([a] [da:cn-of a K] [m] [dm:md-assm m S] [dfst:md-fst m a]
+	   md-of/lete
+	   ([this] [dthis:tm-assm this (Tfwd a)] DofMfwd a da m dm dfst this dthis)
+	   (tm-of/fix
+	      ([this] [dofthis:tm-of st/nil this (Tfwd a)] DofE' a da m dm dfst this dofthis)
+	      (DofTfwd a da)))
+	DdistributeS DdistributeM
+	(DofMdist : md-of pure st/nil Mdist Sdist).
+
+
+%%% OPEN
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/open
+	(Dresolve : resolve-long Mec Sec name/mod I M S))
+     %%
+     (md-of/forget DofM)
+     <- resolve-long-reg DofEC Dresolve 
+	(DofM : md-of pure st/nil M S).
+
+
+
+%%% NULLARY EXCEPTIONS
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     dec-elab/exn0
+     %%
+     (md-of/forget
+	(md-of/lete
+	   ([x] [dx:tm-assm x (tag unit)]
+	      md-of/in
+	      (md-of/pair
+		 (md-of/in
+		    (md-of/in
+		       (md-of/lam
+			  ([_] [_] [_] [_] [_]
+			     md-of/datom
+			     (tm-of/tag
+				tm-of/unit
+				(tm-of/var dx)))
+			  sg-fst/one
+			  sg-wf/one)))
+		 (md-of/datom (tm-of/var dx))))
+	   (tm-of/newtag cn-of/unit))).
+
+
+
+%%% UNARY EXCEPTIONS
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/exn1
+	(Delab : ty-elab Mec Sec Te T))
+     %%
+     (md-of/forget
+	(md-of/lete
+	   ([x] [dx:tm-assm x (tag T)]
+	      md-of/in
+	      (md-of/pair
+		 (md-of/in
+		    (md-of/in
+		       (md-of/lam
+			  ([_] [_] [_] [_] [_]
+			     md-of/datom
+			     (tm-of/lam 
+				([y] [dy:tm-assm y T]
+				   tm-of/tag
+				   (tm-of/var dy)
+				   (tm-of/var dx))
+				DofT))
+			  sg-fst/one
+			  sg-wf/one)))
+		    (md-of/datom (tm-of/var dx))))
+	   (tm-of/newtag DofT)))
+     <- ty-elab-reg DofEC Delab
+	(DofT : cn-of T t).
+
+
+
+%%% NULLARY EXCEPTION COPYING
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/exncopy0
+	(Dresolve : resolve-long Mec Sec name/ec Iold M
+		     (sg/prod
+			(sg/datom (tag unit))
+			(sg/named (name/val _)
+			   (sg/named name/econ0
+			      (sg/pi sg/one ([_] sg/datom tagged)))))))
+     (md-of/forget
+	(md-of/in
+	   (md-of/pair
+	      (md-of/in (md-of/out (md-of/pi2 DfstM DofM)))
+	      (md-of/pi1 DofM))))
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M (sg/prod
+				       (sg/datom (tag unit))
+				       (sg/named (name/val _)
+					  (sg/named name/econ0
+					     (sg/pi sg/one ([_] sg/datom tagged))))))
+     <- can-md-fst DofM
+	(DfstM : md-fst M C).
+
+
+%%% UNARY EXCEPTION COPYING
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/exncopy1
+	(Dresolve : resolve-long Mec Sec name/ec Iold M
+		     (sg/prod
+			(sg/datom (tag T))
+			(sg/named (name/val _)
+			   (sg/named name/econ1
+			      (sg/pi sg/one ([_] sg/datom (arrow T tagged))))))))
+     (md-of/forget
+	(md-of/in
+	   (md-of/pair
+	      (md-of/in (md-of/out (md-of/pi2 DfstM DofM)))
+	      (md-of/pi1 DofM))))
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M (sg/prod
+				       (sg/datom (tag T))
+				       (sg/named (name/val _)
+					  (sg/named name/econ1
+					     (sg/pi sg/one ([_] sg/datom (arrow T tagged)))))))
+     <- can-md-fst DofM
+	(DfstM : md-fst M C).
+
+
+
+%%% TYPE BINDINGS
+
+tyargs-elab-reg : tyargs-elab TVLe S
+		       -> sg-wf S
+		       -> type.
+%mode tyargs-elab-reg +X1 -X2.
+
+- : tyargs-elab-reg tyargs-elab/nil sg-wf/one.
+
+- : tyargs-elab-reg 
+     (tyargs-elab/cons (Delab : tyargs-elab TVLe S))
+     (sg-wf/sigma ([_] [_] Dwf) (sg-fst/named sg-fst/satom) (sg-wf/named (sg-wf/satom kd-wf/t)))
+     <- tyargs-elab-reg Delab (Dwf : sg-wf S).
+
+%worlds (conbind) (tyargs-elab-reg _ _).
+%total D (tyargs-elab-reg D _).
+
+
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/type
+	(DelabTe : {a} cn-of a K
+		    -> {m} md-assm m S
+		    -> md-fst m a
+		    -> ty-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Te (T a))
+	(DfstS : sg-fst S K)
+	(DelabTVLe : tyargs-elab TVLe S))
+     %%
+     (md-of/in 
+	(md-of/forget 
+	   (md-of/satom
+	      (cn-of/lam
+		 ([a] [da:cn-of a K] cn-of/sing (DofT a da))
+		 DwfK))))
+     <- tyargs-elab-reg DelabTVLe
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> ty-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabTe a da m dm dfst)
+	      (DofT a da : cn-of (T a) t)).
+
+
+
+%%% DATATYPES
+
+bypass-function-reg : ({res} cn-of res t -> cn-of (T res) t)
+		       -> bypass-function ([res] T res) ([res] [x] E res x)
+%%
+		       -> ({res} cn-of res t -> {x} tm-assm x res -> tm-of st/nil (E res x) (T res))
+		       -> type.
+%mode bypass-function-reg +X1 +X2 -X3.
+
+-	: bypass-function-reg _ bypass-function/nil ([_] [_] [x] [dx] tm-of/var dx).
+
+-	: bypass-function-reg
+	   ([res] [dres:cn-of res t]
+	      (Dof res dres : cn-of (arrow (T1 res) (T2 res)) t))
+	   (bypass-function/cons
+	      (Dbypass : bypass-function T2 ([res] [x] E res x)))
+	   ([res] [dres:cn-of res t] [x] [dx:tm-assm x res]
+	      tm-of/lam
+	      ([_] [_] DofE res dres x dx)
+	      (Dof1 res dres))
+	   <- ({res} {dres:cn-of res t}
+		 inversion-arrow (Dof res dres)
+		 (Dof1 res dres : cn-of (T1 res) t)
+		 (Dof2 res dres : cn-of (T2 res) t))
+	   <- bypass-function-reg Dof2 Dbypass 
+	      (DofE : {res} cn-of res t -> {x} tm-assm x res -> tm-of st/nil (E res x) (T2 res)).
+
+%worlds (conbind | termbind | modbind) (bypass-function-reg _ _ _).
+%total D (bypass-function-reg _ D _).
+
+
+
+dconbind-elab-reg : md-of pure st/nil Mec Sec
+		     -> cn-of Tult t
+		     -> dconbind-elab Mec Sec Tult N CBe Ntotal T Mcon Scon Edest Tdest
+%%
+		     -> cn-of T t
+		     -> ({inj} tm-assm inj (arrow T Tult)
+			   -> md-of pure st/nil (Mcon inj) Scon)
+		     -> sg-wf Scon
+		     -> ({res} cn-of res t
+			   -> {x} tm-assm x T
+			   -> tm-of st/nil (Edest res x) (Tdest res))
+		     -> ({res} cn-of res t
+			   -> cn-of (Tdest res) t)
+		     -> type.
+%mode dconbind-elab-reg +X1 +X2 +X3 -X4 -X5 -X6 -X7 -X8.
+
+-	: dconbind-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofTult : cn-of Tult t)
+	   dconbind-elab/nil
+	   %%
+	   cn-of/void
+	   ([_] [_] md-of/unit)
+	   sg-wf/one
+	   ([res] [dres:cn-of res t] [x] [dx]
+	      tm-of/abort dres (tm-of/var dx))
+	   ([res] [dres:cn-of res t] dres).
+
+-	: dconbind-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofTult : cn-of Tult t)
+	   (dconbind-elab/nullary
+	      (Dbypass : bypass-function ([res] Tdest res) ([res] [x] Ebypass res x))
+	      (DelabCBe : dconbind-elab Mec Sec Tult (s N) CBe
+			Ntotal T Mcon Scon Edest Tdest))
+	   %%
+	   (cn-of/plus DofT cn-of/unit)
+	   ([inj] [dinj:tm-assm inj (arrow (plus unit T) Tult)]
+	      md-of/pair
+	      (DofMcon' inj dinj)
+	      (md-of/in
+		 (md-of/in
+		    (md-of/datom
+		       (tm-of/app
+			  (tm-of/in1
+			     DofT
+			     tm-of/unit)
+			  (tm-of/var dinj))))))
+	   (sg-wf/sigma
+	      ([_] [_] DwfScon)
+	      (sg-fst/named (sg-fst/named sg-fst/datom))
+	      (sg-wf/named (sg-wf/named (sg-wf/datom DofTult))))
+	   ([res] [dres:cn-of res t] [x] [dx:tm-assm x (plus unit T)]
+	      tm-of/lam
+	      ([f1] [df1:tm-assm f1 (arrow unit res)]
+		 tm-of/case
+		 ([y] [dy:tm-assm y T] DofEdest res dres y dy)
+		 ([y] [dy:tm-assm y unit]
+		    tm-of/lett
+		    ([z] [dz:tm-assm z res] DofEbypass res dres z dz)
+		    (tm-of/app (tm-of/var dy) (tm-of/var df1)))
+		 (tm-of/var dx))
+	      (cn-of/arrow dres cn-of/unit))
+	   ([res] [dres:cn-of res t] cn-of/arrow (DofTdest res dres) (cn-of/arrow dres cn-of/unit))
+	   <- dconbind-elab-reg DofEC DofTult DelabCBe
+	      (DofT : cn-of T t)
+	      (DofMcon : {inj} tm-assm inj (arrow T Tult)
+			  -> md-of pure st/nil (Mcon inj) Scon)
+	      (DwfScon : sg-wf Scon)
+	      (DofEdest : {res} cn-of res t
+			   -> {x} tm-assm x T
+			   -> tm-of st/nil (Edest res x) (Tdest res))
+	      (DofTdest : {res} cn-of res t -> cn-of (Tdest res) t)
+	   <- ({inj} {dinj:tm-assm inj (arrow (plus unit T) Tult)}
+		 substitution-tm-md 
+		 ([d] DofMcon (tm/lam T ([x] tm/app inj (tm/in2 x unit))) d)
+		 (tm-of/lam 
+		    ([x] [dx:tm-assm x T] tm-of/app (tm-of/in2 cn-of/unit (tm-of/var dx)) (tm-of/var dinj))
+		    DofT)
+		 (DofMcon' inj dinj : md-of pure st/nil (Mcon (tm/lam T ([x] tm/app inj (tm/in2 x unit)))) Scon))
+	   <- bypass-function-reg DofTdest Dbypass
+	      (DofEbypass : {res} cn-of res t 
+			     -> {z} tm-assm z res
+			     -> tm-of st/nil (Ebypass res z) (Tdest res)).
+
+-	: dconbind-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofTult : cn-of Tult t)
+	   (dconbind-elab/unary
+	      (Dbypass : bypass-function ([res] Tdest res) ([res] [x] Ebypass res x))
+	      (DelabCBe : dconbind-elab Mec Sec Tult (s N) CBe
+			Ntotal T Mcon Scon Edest Tdest)
+	      (DelabTe : ty-elab Mec Sec Te T1))
+	   %%
+	   (cn-of/plus DofT DofT1)
+	   ([inj] [dinj:tm-assm inj (arrow (plus T1 T) Tult)]
+	      md-of/pair
+	      (DofMcon' inj dinj)
+	      (md-of/in
+		 (md-of/in
+		    (md-of/datom
+		       (tm-of/lam
+			  ([x] [dx:tm-assm x T1] tm-of/app
+			     (tm-of/in1
+				DofT
+				(tm-of/var dx))
+			     (tm-of/var dinj))
+			  DofT1)))))
+	   (sg-wf/sigma
+	      ([_] [_] DwfScon)
+	      (sg-fst/named (sg-fst/named sg-fst/datom))
+	      (sg-wf/named (sg-wf/named (sg-wf/datom (cn-of/arrow DofTult DofT1)))))
+	   ([res] [dres:cn-of res t] [x] [dx:tm-assm x (plus T1 T)]
+	      tm-of/lam
+	      ([f1] [df1:tm-assm f1 (arrow T1 res)]
+		 tm-of/case
+		 ([y] [dy:tm-assm y T] DofEdest res dres y dy)
+		 ([y] [dy:tm-assm y T1]
+		    tm-of/lett
+		    ([z] [dz:tm-assm z res] DofEbypass res dres z dz)
+		    (tm-of/app (tm-of/var dy) (tm-of/var df1)))
+		 (tm-of/var dx))
+	      (cn-of/arrow dres DofT1))
+	   ([res] [dres:cn-of res t] cn-of/arrow (DofTdest res dres) (cn-of/arrow dres DofT1))
+	   <- ty-elab-reg DofEC DelabTe
+	      (DofT1 : cn-of T1 t)
+	   <- dconbind-elab-reg DofEC DofTult DelabCBe
+	      (DofT : cn-of T t)
+	      (DofMcon : {inj} tm-assm inj (arrow T Tult)
+			  -> md-of pure st/nil (Mcon inj) Scon)
+	      (DwfScon : sg-wf Scon)
+	      (DofEdest : {res} cn-of res t
+			   -> {x} tm-assm x T
+			   -> tm-of st/nil (Edest res x) (Tdest res))
+	      (DofTdest : {res} cn-of res t -> cn-of (Tdest res) t)
+	   <- ({inj} {dinj:tm-assm inj (arrow (plus T1 T) Tult)}
+		 substitution-tm-md 
+		 ([d] DofMcon (tm/lam T ([x] tm/app inj (tm/in2 x T1))) d)
+		 (tm-of/lam 
+		    ([x] [dx:tm-assm x T] tm-of/app (tm-of/in2 DofT1 (tm-of/var dx)) (tm-of/var dinj))
+		    DofT)
+		 (DofMcon' inj dinj : md-of pure st/nil (Mcon (tm/lam T ([x] tm/app inj (tm/in2 x T1)))) Scon))
+	   <- bypass-function-reg DofTdest Dbypass
+	      (DofEbypass : {res} cn-of res t 
+			     -> {z} tm-assm z res
+			     -> tm-of st/nil (Ebypass res z) (Tdest res)).
+
+%worlds (conbind-reg | termbind-reg | modbind-reg) (dconbind-elab-reg _ _ _ _ _ _ _ _).
+%total D (dconbind-elab-reg _ _ D _ _ _ _ _).
+
+
+
+datbind-elab-reg : md-of pure st/nil Mec Sec
+		    -> datbind-elab Mec Sec DBe Sfwd Sdt Mfwd Mdt
+%%
+		    -> md-of pure st/nil Mfwd Sfwd
+		    -> sg-fst Sfwd Kfwd
+		    -> md-fst Mfwd Cfwd
+		    -> ({b} cn-of b Kfwd -> sg-wf (Sdt b))
+		    -> md-of pure st/nil Mdt (Sdt Cfwd)
+		    -> type.
+%mode datbind-elab-reg +X1 +X2 -X3 -X4 -X5 -X6 -X7.
+
+-	: datbind-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   datbind-elab/nil
+	   %%
+	   md-of/unit
+	   sg-fst/one
+	   md-fst/unit
+	   ([_] [_] sg-wf/one)
+	   md-of/unit.
+
+-	: datbind-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (datbind-elab/data
+	      (DdistMcon : distribute-md
+			    S 
+			    ([a] 
+			       Scon 
+			       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			       (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			       a)
+			    ([a] [ma] 
+			       Mcon
+			       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			       (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			       (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			       a ma
+			       (tm/lam 
+				  (T 
+				     (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+				     (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				     a)
+				  ([x] tm/roll x K ([this] [a] T this (Cfwd this) a) a)))
+			    Mcon')
+	      (DdistScon : {this} {latter}
+			    distribute-sg S ([a] Scon this latter a) (Scon' this latter))
+	      (DelabCBe : {this} cn-of this (karrow K t)
+			   -> {latter} cn-of latter (Kfwd this)
+			   -> {mlatter} md-assm mlatter (Sfwd this)
+			   -> md-fst mlatter latter
+			   -> {a} cn-of a K
+			   -> {ma} md-assm ma S
+			   -> md-fst ma a
+			   -> dconbind-elab
+				    (md/pair
+				       Mec
+				       (md/pair
+					  (md/in (name/con I) (md/satom this))
+					  (md/pair
+					     (Mfwd this)
+					     ma)))
+				    (sg/prod
+				       Sec
+				       (sg/prod
+					  (sg/named (name/con I) (sg/satom (pi K ([a] sing (app this a)))))
+					  (sg/prod
+					     (Sfwd this)
+					     S)))
+			      (app this a) 0 CBe
+			      _ (T this latter a) ([inj] Mcon this latter mlatter a ma inj) (Scon this latter a) ([res] [x] Edest this latter mlatter a ma res x) ([res] Tdest this latter a res))
+	      (DfstMfwd : {this} md-fst (Mfwd this) (Cfwd this))
+	      (DfstSfwd : {this} sg-fst (Sfwd this) (Kfwd this))
+	      (DelabDBe: {this} cn-of this (karrow K t)
+			  -> datbind-elab 
+			     (md/pair Mec (md/in (name/con I) (md/satom this)))
+			     (sg/sigma Sec ([_] sg/named (name/con I) (sg/satom (karrow K t))))
+			     DBe
+			     (Sfwd this) ([b] Sdt this b) (Mfwd this) (Mdt this))
+	      (DfstS : sg-fst S K)
+	      (DelabTVLe : tyargs-elab TVLe S))
+	   %%
+	   (DofPair
+	      (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+	      (cn-of/lam
+		 ([a] [da:cn-of a K]
+		    cn-of/rec
+		    da
+		    ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+		       DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+		    DwfK)
+		 DwfK))
+	   (sg-fst/sigma
+	      ([this] DfstSfwd this)
+	      (sg-fst/named sg-fst/satom))
+	   (md-fst/pair
+	      (DfstMfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+	      (md-fst/in md-fst/satom))
+	   ([b] [db:cn-of b (sigma (karrow K t) ([this] Kfwd this))]
+	      sg-wf/sigma
+	      ([_] [_] DwfSdt (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+	      (sg-fst/named (sg-fst/sigma ([_] sg-fst/sigma ([_] DfstScon' (pi1 b) (pi2 b)) sg-fst/pi) sg-fst/satom))
+	      (sg-wf/named
+		 (sg-wf/sigma
+		    ([_] [_]
+		       sg-wf/sigma
+		       ([_] [_] DwfScon' (pi1 b) (cn-of/pi1 db) (pi2 b) (cn-of/pi2 db))
+		       sg-fst/pi
+		       (sg-wf/pi
+			  ([a] [da:cn-of a K]
+			     sg-wf/pi
+			     ([res] [dres:cn-of res t]
+				sg-wf/datom
+				(cn-of/arrow
+				   (DofTdest
+				      (pi1 b) (cn-of/pi1 db) 
+				      (pi2 b) (cn-of/pi2 db)
+				      a da res dres)
+				   (cn-of/app da (cn-of/pi1 db))))
+			     sg-fst/satom
+			     (sg-wf/satom kd-wf/t))
+			  DfstS
+			  DwfS))
+		    sg-fst/satom
+		    (sg-wf/satom
+		       (kd-wf/pi
+			  ([a] [da:cn-of a K]
+			     kd-wf/sing
+			     (cn-of/app da (cn-of/pi1 db)))
+			  DwfK)))))
+	   (md-of/pair
+	      (md-of/equiv
+		 DequivSdtSub
+		 (DofMdt 
+		    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)))
+	      (md-of/in
+		 (md-of/pair
+		    (md-of/pair
+		       (md-of/equiv
+			  DequivScon'Sub
+			  DofMcon')
+		       (md-of/lam
+			  ([a] [da:cn-of a K] [ma] [dma:md-assm ma S] [dfst:md-fst ma a]
+			     md-of/lam
+			     ([res] [dres:cn-of res t] [_] [_] [_]
+				md-of/equiv
+				(sg-equiv/datom
+				   (cn-equiv/arrow
+				      (DequivTdestSub a da res dres)
+				      (cn-equiv/symm
+					 (cn-equiv/trans
+					    (cn-equiv/beta
+					       da
+					       ([a] [da:cn-of a K]
+						  cn-of/rec
+						  da
+						  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+						     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+						  DwfK))
+					    (cn-equiv/app
+					       (cn-equiv/refl da)
+					       (cn-equiv/beta1
+						  (DofCfwd _
+						     (cn-of/lam
+							([a] [da:cn-of a K]
+							   cn-of/rec
+							   da
+							   ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+							      DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+							   DwfK)
+							DwfK))
+						  (cn-of/lam
+						     ([a] [da:cn-of a K]
+							cn-of/rec
+							da
+							([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+							   DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+							DwfK)
+						     DwfK)))))))
+				(md-of/datom
+				   (tm-of/lam
+				      ([x] [dx:tm-assm x (rec K ([this] [a] T this (Cfwd this) a) a)]
+					 DofEdestSubSub a da ma dma dfst res dres x dx)
+				      (cn-of/rec
+					 da
+					 ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+					    DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+					 DwfK))))
+			     sg-fst/satom
+			     (sg-wf/satom kd-wf/t))
+			  DfstS
+			  DwfS))
+		    (md-of/satom
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/equiv
+			     (kd-equiv/sing
+				(cn-equiv/symm
+				   (cn-equiv/trans
+				      (cn-equiv/beta
+					 da
+					 ([a] [da:cn-of a K]
+					    cn-of/rec
+					    da
+					    ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+					       DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+					    DwfK))
+				      (cn-equiv/app
+					 (cn-equiv/refl da)
+					 (cn-equiv/beta1
+					    (DofCfwd _
+					       (cn-of/lam
+						  ([a] [da:cn-of a K]
+						     cn-of/rec
+						     da
+						     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+							DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+						     DwfK)
+						  DwfK))
+					    (cn-of/lam
+					       ([a] [da:cn-of a K]
+						  cn-of/rec
+						  da
+						  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+						     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+						  DwfK)
+					       DwfK))))))
+			     (cn-of/sing
+				(cn-of/rec
+				   da
+				   ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				      DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				   DwfK)))
+			  DwfK)))))
+	   <- tyargs-elab-reg DelabTVLe 
+	      (DwfS : sg-wf S)
+	   <- sg-fst-reg DwfS DfstS
+	      (DwfK : kd-wf K)
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {dsthis:cn-assm dthis}
+		 mcn-assm dthis dsthis
+		 -> cn-of-reg dthis (kd-wf/pi ([_] [_] kd-wf/t) DwfK)
+		 -> datbind-elab-reg
+		    (md-of/pair
+		       (md-of/in (md-of/satom dthis))
+		       DofEC)
+		    (DelabDBe this dthis)
+		    %%
+		    (DofMfwd this dthis : md-of pure st/nil (Mfwd this) (Sfwd this))
+		    (DfstSfwd' this : sg-fst (Sfwd this) (Kfwd' this))
+		    (DfstMfwd' this : md-fst (Mfwd this) (Cfwd' this))
+		    (DwfSdt' this dthis : {b} cn-of b (Kfwd' this) -> sg-wf (Sdt this b))
+		    (DofMdt' this dthis : md-of pure st/nil (Mdt this) (Sdt this (Cfwd' this))))
+	   <- ({this}
+		 sg-fst-fun (DfstSfwd' this) (DfstSfwd this)
+		 (DeqKfwd this : kind-eq (Kfwd' this) (Kfwd this)))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 sg-wf-resp-underbind (DeqKfwd this) (DwfSdt' this dthis)
+		 (DwfSdt this dthis : {b} cn-of b (Kfwd this) -> sg-wf (Sdt this b)))
+	   <- ({this}
+		 md-fst-fun (DfstMfwd' this) (DfstMfwd this)
+		 (DeqCfwd this : con-eq (Cfwd' this) (Cfwd this)))
+	   <- ({this}
+		 sg-resp-con ([e] Sdt this e) (DeqCfwd this)
+		 (DeqSdtCfwd this : sg-eq (Sdt this (Cfwd' this)) (Sdt this (Cfwd this))))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 md-of-resp purity-eq/i sttp-eq/i module-eq/i (DeqSdtCfwd this) (DofMdt' this dthis)
+		 (DofMdt this dthis : md-of pure st/nil (Mdt this) (Sdt this (Cfwd this))))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {dsthis:cn-assm dthis}
+		 mcn-assm dthis dsthis
+		 -> cn-of-reg dthis (kd-wf/pi ([_] [_] kd-wf/t) DwfK)
+		 -> md-of-reg (DofMfwd this dthis)
+		    (DwfSfwd this dthis : sg-wf (Sfwd this)))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 sg-fst-reg (DwfSfwd this dthis) (DfstSfwd this)
+		 (DwfKfwd this dthis : kd-wf (Kfwd this)))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {dsthis:cn-assm dthis}
+		 mcn-assm dthis dsthis
+		 -> cn-of-reg dthis (kd-wf/pi ([_] [_] kd-wf/t) DwfK)
+		 -> md-fst-reg (DofMfwd this dthis) (DfstMfwd this) (DfstSfwd this)
+		    (DofCfwd this dthis : cn-of (Cfwd this) (Kfwd this)))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {dsthis:cn-assm dthis}
+		 mcn-assm dthis dsthis
+		 -> cn-of-reg dthis (kd-wf/pi ([_] [_] kd-wf/t) DwfK)
+		 -> {latter} {dlatter:cn-of latter (Kfwd this)}
+		    {mlatter} {dmlatter:md-assm mlatter (Sfwd this)}
+		    {dfstlatter:md-fst mlatter latter}
+		    {dlatters:cn-assm dlatter}
+		    mcn-assm dlatter dlatters
+		 -> cn-of-reg dlatter (DwfKfwd this dthis)
+		 -> md-assm-reg dmlatter dfstlatter (DfstSfwd this) dlatter (DwfSfwd this dthis)
+		 -> {a} {da:cn-of a K} {ma} {dma:md-assm ma S} {dfst:md-fst ma a} 
+		    {das:cn-assm da}
+		    mcn-assm da das
+		 -> cn-of-reg da DwfK
+		 -> md-assm-reg dma dfst DfstS da DwfS
+		 -> dconbind-elab-reg
+		    (md-of/pair
+		       (md-of/pair
+			  (md-of/pair
+			     (md-of/var dma)
+			     (DofMfwd this dthis))
+			  (md-of/in (md-of/satom (cn-of/extpi ([a] [da:cn-of a K] cn-of/sing (cn-of/app da dthis)) dthis))))
+		       DofEC)
+		    (cn-of/app da dthis)
+		    (DelabCBe this dthis latter dlatter mlatter dmlatter dfstlatter a da ma dma dfst)
+		    %%
+		    (DofT this dthis latter dlatter a da : cn-of (T this latter a) t)
+		    (DofMcon this dthis latter dlatter mlatter dmlatter dfstlatter a da ma dma dfst 
+		       : {inj} tm-assm inj (arrow (T this latter a) (app this a))
+			  -> md-of pure st/nil (Mcon this latter mlatter a ma inj) (Scon this latter a))
+		    (DwfScon this dthis latter dlatter a da : sg-wf (Scon this latter a))
+		    (DofEdest this dthis latter dlatter mlatter dmlatter dfstlatter a da ma dma dfst
+		       : {res} cn-of res t
+			  -> {x} tm-assm x (T this latter a)
+			  -> tm-of st/nil (Edest this latter mlatter a ma res x) (Tdest this latter a res))
+		    (DofTdest this dthis latter dlatter a da 
+		       : {res} cn-of res t
+			  -> cn-of (Tdest this latter a res) t))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {dsthis:cn-assm dthis}
+		 mcn-assm dthis dsthis
+		 -> cn-of-reg dthis (kd-wf/pi ([_] [_] kd-wf/t) DwfK)
+		 -> sg/sigma-dep-intro 
+		    (md-of/in (md-of/satom dthis))
+		    (sg-fst/named sg-fst/satom)
+		    (md-fst/in md-fst/satom)
+		    (DofMfwd this dthis)
+		    DwfSfwd
+		    %%
+		    (DofPair this dthis : md-of pure st/nil
+					   (md/pair (md/in (name/con I) (md/satom this)) (Mfwd this))
+					   (sg/sigma (sg/named (name/con I) (sg/satom (karrow K t))) ([this] Sfwd this))))
+	   <- ({this} {dthis:cn-of this (karrow K t)}
+		 {latter} {dlatter:cn-of latter (Kfwd this)}
+		 distribute-sg-reg DwfS DfstS ([a] [da:cn-of a K] DwfScon this dthis latter dlatter a da) (DdistScon this latter)
+		    (DwfScon' this dthis latter dlatter : sg-wf (Scon' this latter)))
+	   <- ({this} {latter}
+		 can-sg-fst (Scon' this latter)
+		 (DfstScon' this latter : sg-fst (Scon' this latter) (Kcon' this latter)))
+	   <- ({a} {da:cn-of a K} {ma} {dma:md-assm ma S} {dfst:md-fst ma a}
+		 {inj} {dinj}
+		 substitution-md-md
+		 ([dmlatter]
+		    DofMcon
+		    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)
+		    (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    (DofCfwd
+		       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    dmlatter
+		    (DfstMfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    a da ma dma dfst inj dinj)
+		 (DofMfwd 
+		    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK))
+		 (DofMconSub a da ma dma dfst inj dinj 
+		    : md-of pure st/nil
+		       (Mcon
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a ma inj)
+		       (Scon 
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a)))
+	   <- ({a} {da:cn-of a K} {ma} {dma:md-assm ma S} {dfst:md-fst ma a}
+		 substitution-tm-md
+		 ([dinj] 
+		    DofMconSub
+		    a da ma dma dfst
+		    (tm/lam 
+		       (T 
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a)
+		       ([x] tm/roll x K ([this] [a] T this (Cfwd this) a) a))
+		    dinj)
+		 (tm-of/lam
+		    ([x] [dx:tm-assm x (T 
+					  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+					  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+					  a)]
+		       tm-of/equiv
+		       (cn-equiv/symm
+			  (cn-equiv/beta
+			     da
+			     ([a] [da:cn-of a K]
+				cn-of/rec
+				da
+				([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				   DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				DwfK)))
+		       (tm-of/roll
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK
+			  (tm-of/var dx)))
+		    (DofT
+		       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK)
+		       (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		       (DofCfwd
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (cn-of/lam
+			     ([a] [da:cn-of a K]
+				cn-of/rec
+				da
+				([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				   DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				DwfK)
+			     DwfK))
+		       a da))
+		 (DofMconSubSub a da ma dma dfst
+		    : md-of pure st/nil
+		       (Mcon
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a ma
+			  (tm/lam 
+			     (T 
+				(lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+				(Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				a)
+			     ([x] tm/roll x K ([this] [a] T this (Cfwd this) a) a)))
+		       (Scon 
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a)))
+	   <- distribute-md-reg DwfS DfstS DofMconSubSub
+	      (DdistScon 
+		 (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+		 (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+	      DdistMcon
+	      (DofMcon' : md-of pure st/nil Mcon' 
+			   (Scon'
+			      (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)) 
+			      (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))))
+	   <- ({a} {da:cn-of a K} {ma} {dma:md-assm ma S} {dfst:md-fst ma a}
+		 {res} {dres:cn-of res t}
+		 {x} {dx:tm-assm x (T 
+				      (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+				      (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+				      a)}
+		 substitution-md-tm
+		 ([dmlatter]
+		    DofEdest
+		    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)
+		    (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    (DofCfwd
+		       (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    dmlatter
+		    (DfstMfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+		    a da ma dma dfst res dres x dx)
+		 (DofMfwd 
+		    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK))
+		 (DofEdestSub a da ma dma dfst res dres x dx
+		    : tm-of st/nil
+		       (Edest
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a ma res x)
+		       (Tdest
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a res)))
+	   <- ({a} {da:cn-of a K} {ma} {dma:md-assm ma S} {dfst:md-fst ma a}
+		 {res} {dres:cn-of res t}
+		 {x} {dx:tm-assm x (rec K ([this] [a] T this (Cfwd this) a) a)}
+		 substitution-tm-tm
+		 ([dz] DofEdestSub a da ma dma dfst res dres (tm/unroll x) dz)
+		 (tm-of/unroll (tm-of/var dx))
+		 (DofEdestSubSub a da ma dma dfst res dres x dx
+		    : tm-of st/nil
+		       (Edest
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  (Mfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a ma res (tm/unroll x))
+		       (Tdest
+			  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			  a res)))
+	   <- ({a} {da:cn-of a K}
+		 {das:cn-assm da}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK
+		 -> {res} {dres:cn-of res t}
+		    {dress:cn-assm dres}
+		    mcn-assm dres dress
+		 -> cn-of-reg dres kd-wf/t
+		 -> functionality-cn2
+		    DwfKfwd
+		    ([this] [dthis:cn-of this (karrow K t)] [latter] [dlatter:cn-of latter (Kfwd this)]
+		       DofTdest this dthis latter dlatter a da res dres)
+		    (cn-equiv/symm
+		       (cn-equiv/beta1
+			  (DofCfwd _
+			     (cn-of/lam
+				([a] [da:cn-of a K]
+				   cn-of/rec
+				   da
+				   ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				      DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				   DwfK)
+				DwfK))
+			  (cn-of/lam
+			     ([a] [da:cn-of a K]
+				cn-of/rec
+				da
+				([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				   DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				DwfK)
+			     DwfK)))
+		    (cn-equiv/symm
+		       (cn-equiv/beta2
+			  (DofCfwd _
+			     (cn-of/lam
+				([a] [da:cn-of a K]
+				   cn-of/rec
+				   da
+				   ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				      DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				   DwfK)
+				DwfK))
+			  (cn-of/lam
+			     ([a] [da:cn-of a K]
+				cn-of/rec
+				da
+				([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				   DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+				DwfK)
+			     DwfK)))
+		    (DequivTdestSub a da res dres
+		       : cn-equiv
+			  (Tdest
+			     (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+			     (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a)))
+			     a res)
+			  (Tdest _ _ a res)
+			  t))
+	   <- functionality-sg2 DwfScon'
+	      (cn-equiv/symm
+		 (cn-equiv/beta1
+		    (DofCfwd _
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)))
+	      (cn-equiv/symm
+		 (cn-equiv/beta2
+		    (DofCfwd _
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)))
+	      (DequivScon'Sub : sg-equiv
+				 (Scon' 
+				    (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+				    (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+				 (Scon' _ _))
+	   <- functionality-sg2 DwfSdt
+	      (cn-equiv/symm
+		 (cn-equiv/beta1
+		    (DofCfwd _
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)))
+	      (cn-equiv/symm
+		 (cn-equiv/beta2
+		    (DofCfwd _
+		       (cn-of/lam
+			  ([a] [da:cn-of a K]
+			     cn-of/rec
+			     da
+			     ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+				DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			     DwfK)
+			  DwfK))
+		    (cn-of/lam
+		       ([a] [da:cn-of a K]
+			  cn-of/rec
+			  da
+			  ([this] [dthis:cn-of this (karrow K t)] [a] [da:cn-of a K] 
+			     DofT this dthis (Cfwd this) (DofCfwd this dthis) a da)
+			  DwfK)
+		       DwfK)))
+	      (DequivSdtSub : sg-equiv
+			       (Sdt
+				  (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))
+				  (Cfwd (lam K ([a] rec K ([this] [a] T this (Cfwd this) a) a))))
+			       (Sdt _ _)).
+
+-	: datbind-elab-reg 
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (datbind-elab/with
+	      (DelabDBe: datbind-elab Mec Sec DBe
+			  Sfwd ([b] Sdt b) Mfwd Mdt)
+	      (DelabTe : {a} cn-of a K
+			  -> {ma} md-assm ma S
+			  -> md-fst ma a
+			  -> ty-elab (md/pair Mec ma) (sg/sigma Sec ([_] S)) Te (T a))
+	      (DfstS : sg-fst S K)
+	      (DelabTVLe : tyargs-elab TVLe S))
+	   %%
+	   (md-of/pair DofMfwd (md-of/in (md-of/satom (cn-of/lam ([a] [da:cn-of a K] (cn-of/sing (DofT a da))) DwfK))))
+	   (sg-fst/sigma ([_] DfstSfwd) (sg-fst/named sg-fst/satom))
+	   (md-fst/pair DfstMfwd (md-fst/in md-fst/satom))
+	   ([b] [db:cn-of b (kprod (pi K ([a] sing (T a))) Kfwd)] DwfSdt (pi2 b) (cn-of/pi2 db))
+	   (md-of/equiv
+	      DequivSdt
+	      DofMdt)
+	   <- tyargs-elab-reg DelabTVLe 
+	      (DwfS : sg-wf S)
+	   <- sg-fst-reg DwfS DfstS
+	      (DwfK : kd-wf K)
+	   <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+		 {das:cn-assm da}
+		 mcn-assm da das
+		 -> cn-of-reg da DwfK
+		 -> md-assm-reg dm dfst DfstS da DwfS
+		 -> ty-elab-reg (md-of/pair (md-of/var dm) DofEC) (DelabTe a da m dm dfst)
+		    (DofT a da : cn-of (T a) t))
+	   <- datbind-elab-reg DofEC DelabDBe
+	      %%
+	      (DofMfwd : md-of pure st/nil Mfwd Sfwd)
+	      (DfstSfwd : sg-fst Sfwd Kfwd)
+	      (DfstMfwd : md-fst Mfwd Cfwd)
+	      (DwfSdt : {b} cn-of b Kfwd -> sg-wf (Sdt b))
+	      (DofMdt : md-of pure st/nil Mdt (Sdt Cfwd))
+	   <- md-fst-reg DofMfwd DfstMfwd DfstSfwd
+	      (DofCfwd : cn-of Cfwd Kfwd)
+	   <- functionality-sg DwfSdt 
+	      (cn-equiv/symm (cn-equiv/beta2 DofCfwd (cn-of/lam DofT DwfK)))
+	      (DequivSdt : sg-equiv (Sdt Cfwd) (Sdt (pi2 (pair (lam K ([a] T a)) Cfwd)))).
+
+%worlds (conbind-reg | termbind-reg | modbind-reg) (datbind-elab-reg _ _ _ _ _ _ _).
+%total D (datbind-elab-reg _ D _ _ _ _ _).
+
+
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/datatype
+	(Delab : datbind-elab Mec Sec DBe Sfwd Sdt Mfwd Mdt))
+     %%
+     (md-of/seal Dof)
+     <- datbind-elab-reg DofEC Delab
+	(DofMfwd : md-of pure st/nil Mfwd Sfwd)
+	(DfstSfwd : sg-fst Sfwd Kfwd)
+	(DfstMfwd : md-fst Mfwd Cfwd)
+	(DwfSdt : {b} cn-of b Kfwd -> sg-wf (Sdt b))
+	(DofMdt : md-of pure st/nil Mdt (Sdt Cfwd))
+     <- sg/sigma-dep-intro DofMfwd DfstSfwd DfstMfwd DofMdt DwfSdt
+	(Dof : md-of pure st/nil (md/pair Mfwd Mdt) (sg/sigma Sfwd ([b] Sdt b))).
+
+
+
+%%% DATATYPE COPYING
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/dtcopy
+	(Dfst : md-fst (md/pi1 M) C)
+	(Dsub : sg-sub S (sg/sigma (sg/satom (karrow K t)) ([_] _)))
+	(Dresolve : resolve-long Mec Sec name/dtc Iold M S))
+     %%
+     (md-of/forget
+	(md-of/pair
+	   (md-of/in DofM)
+	   (md-of/in
+	      (md-of/self
+		 (cn-of/extpi
+		    ([a] [da:cn-of a K]
+		       cn-of/sing
+		       (cn-of/app da DofC))
+		    DofC)
+		 Dfst
+		 (md-of/pi1 (md-of/subsume Dsub DofM))))))
+     <- resolve-long-reg DofEC Dresolve
+	(DofM : md-of pure st/nil M S)
+     <- md-fst-reg (md-of/pi1 (md-of/subsume Dsub DofM)) Dfst sg-fst/satom
+	(DofC : cn-of C (karrow K t))
+     <- cn-of-reg DofC
+	(kd-wf/pi
+	   _
+	   (DwfK : kd-wf K)).
+
+
+
+%%% FUNCTORS
+
+functorbind-elab-reg : md-of pure st/nil Mec Sec
+		    -> functorbind-elab Mec Sec Lfunc Larg Se Re M S
+%%
+		    -> md-of impure st/nil M S
+		    -> type.
+%mode functorbind-elab-reg +X1 +X2 -X3.
+
+- : functorbind-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (functorbind-elab/i
+	(DelabRe : {a} cn-of a K
+		    -> {m} md-assm m S
+		    -> md-fst m a
+		    -> strexp-elab
+		       (md/pair Mec (md/in Larg m))
+		       (sg/prod Sec (sg/named Larg S))
+		       Re
+		       (Mbody a m) (Sbody a))
+	(DfstS : sg-fst S K)
+	(DelabSe : sigexp-elab Mec Sec Se S))
+     %%
+     (md-of/forget
+	(md-of/in
+	   (md-of/lam
+	      DofMbody
+	      DfstS
+	      DwfS)))
+     <- sigexp-elab-reg DofEC DelabSe
+	(DwfS : sg-wf S)
+     <- sg-fst-reg DwfS DfstS
+	(DwfK : kd-wf K)
+     <- ({a} {da:cn-of a K} {m} {dm:md-assm m S} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK
+	   -> md-assm-reg dm dfst DfstS da DwfS
+	   -> strexp-elab-reg (md-of/pair (md-of/in (md-of/var dm)) DofEC) (DelabRe a da m dm dfst)
+	      (DofMbody a da m dm dfst : md-of impure st/nil (Mbody a m) (Sbody a))).
+
+- : dec-elab-reg 
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/functor Delab)
+     Dof
+     <- functorbind-elab-reg DofEC Delab Dof.
+
+- : dec-elab-reg 
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/functor-anon Delab)
+     Dof
+     <- functorbind-elab-reg DofEC Delab Dof.
+
+
+
+%%% STRUCTURE
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/structure
+	(Delab : strexp-elab Mec Sec Re M S))
+     (md-of/in DofM)
+     <- strexp-elab-reg DofEC Delab (DofM : md-of impure st/nil M S).
+
+
+
+%%% SIGNATURE
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/signature
+	(Delab : sigexp-elab Mec Sec Se S))
+     (md-of/forget (md-of/in (md-of/sgatom DwfS)))
+     <- sigexp-elab-reg DofEC Delab (DwfS : sg-wf S).
+
+
+
+%%% LOCAL
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/local
+	(Delab2 : {a} cn-of a K1
+		   -> {m} md-assm m S1
+		   -> md-fst m a
+		   -> dec-elab (md/pair Mec m) (sg/sigma Sec ([_] S1)) De2 (M2 a m) (S2 a))
+	(DfstS1 : sg-fst S1 K1)
+	(Delab1 : dec-elab Mec Sec De1 M1 S1))
+     %%
+     (md-of/dpair
+	DofM2Sub
+	(sg-fst/named DfstS1)
+	(md-of/in DofM1))
+     <- dec-elab-reg DofEC Delab1
+	(DofM1 : md-of impure st/nil M1 S1)
+     <- md-of-reg DofM1
+	(DwfS1 : sg-wf S1)
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> dec-elab-reg
+	      (md-of/pair (md-of/var dm) DofEC)
+	      (Delab2 a da m dm dfst)
+	      (DofM2 a da m dm dfst : md-of impure st/nil (M2 a m) (S2 a)))
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m (sg/named name/hide S1)} {dfst:md-fst m a}
+	   substitution-md-md
+	   ([dm'] DofM2 a da (md/out m) dm' (md-fst/out dfst))
+	   (md-of/out (md-of/var dm))
+	   (DofM2Sub a da m dm dfst : md-of impure st/nil (M2 a (md/out m)) (S2 a))).
+
+
+
+%%% SEQ
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/seq
+	(Delab2 : {a} cn-of a K1
+		   -> {m} md-assm m S1
+		   -> md-fst m a
+		   -> dec-elab (md/pair Mec m) (sg/sigma Sec ([_] S1)) De2 (M2 a m) (S2 a))
+	(DfstS1 : sg-fst S1 K1)
+	(Delab1 : dec-elab Mec Sec De1 M1 S1))
+     %%
+     (md-of/dpair
+	DofM2
+	DfstS1
+	DofM1)
+     <- dec-elab-reg DofEC Delab1
+	(DofM1 : md-of impure st/nil M1 S1)
+     <- md-of-reg DofM1
+	(DwfS1 : sg-wf S1)
+     <- sg-fst-reg DwfS1 DfstS1
+	(DwfK1 : kd-wf K1)
+     <- ({a} {da:cn-of a K1} {m} {dm:md-assm m S1} {dfst:md-fst m a}
+	   {das:cn-assm da}
+	   mcn-assm da das
+	   -> cn-of-reg da DwfK1
+	   -> md-assm-reg dm dfst DfstS1 da DwfS1
+	   -> dec-elab-reg
+	      (md-of/pair (md-of/var dm) DofEC)
+	      (Delab2 a da m dm dfst)
+	      (DofM2 a da m dm dfst : md-of impure st/nil (M2 a m) (S2 a))).
+
+
+
+%%% PAR
+
+- : dec-elab-reg
+     (DofEC : md-of pure st/nil Mec Sec)
+     (dec-elab/par
+	(Delab2 : dec-elab Mec Sec De2 M2 S2)
+	(Delab1 : dec-elab Mec Sec De1 M1 S1))
+     %%
+     (md-of/pair DofM2 DofM1)
+     <- dec-elab-reg DofEC Delab1
+	(DofM1 : md-of impure st/nil M1 S1)
+     <- dec-elab-reg DofEC Delab2
+	(DofM2 : md-of impure st/nil M2 S2).

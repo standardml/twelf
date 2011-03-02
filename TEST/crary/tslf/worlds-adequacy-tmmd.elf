@@ -1,0 +1,10 @@
+%% syntax:
+
+%worlds (tm-block | cn-block | md-block) (tm) (md).
+
+
+%% static semantics
+
+%worlds(oftp-block | ofkd-block | ofsg-block)
+(oftp _ _ _ _) (assm/tm _ _) 
+(ofsg _ _ _ _ _) (fst-md _ _) (assm/md _ _).

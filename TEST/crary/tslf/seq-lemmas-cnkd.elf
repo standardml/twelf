@@ -1,0 +1,298 @@
+
+seq/cn/sym	: seq/cn E1 E2
+		   -> seq/cn E2 E1
+		   -> type.
+
+%mode seq/cn/sym +D0 -D2.
+
+-	: seq/cn/sym _ seq/cn/refl.
+
+%worlds (cn-block) (seq/cn/sym _ _).
+%total {} (seq/cn/sym _ _).
+
+
+
+seq/cn/pair	: seq/cn C1 C2
+		   -> seq/cn C3 C4
+		   -> seq/cn (cn/pair C1 C3) (cn/pair C2 C4)
+		   -> type.
+
+%mode seq/cn/pair +D0 +D0' -D2.
+
+-	: seq/cn/pair _ _ seq/cn/refl.
+
+%worlds (cn-block) (seq/cn/pair _ _ _).
+%total {} (seq/cn/pair _ _ _).
+
+
+
+seq/cn/pj1	: seq/cn C1 C2
+		   -> seq/cn (cn/pj1 C1) (cn/pj1 C2)
+		   -> type.
+
+%mode seq/cn/pj1 +D0 -D2.
+
+-	: seq/cn/pj1 _ seq/cn/refl.
+
+%worlds (cn-block) (seq/cn/pj1 _ _).
+%total {} (seq/cn/pj1 _ _).
+
+
+
+seq/cn/pj2	: seq/cn C1 C2
+		   -> seq/cn (cn/pj2 C1) (cn/pj2 C2)
+		   -> type.
+
+%mode seq/cn/pj2 +D0 -D2.
+
+-	: seq/cn/pj2 _ seq/cn/refl.
+
+%worlds (cn-block) (seq/cn/pj2 _ _).
+%total {} (seq/cn/pj2 _ _).
+
+
+
+seq/cn/tag	: seq/cn C1 C2
+		   -> seq/cn (tp/tag C1) (tp/tag C2)
+		   -> type.
+
+%mode seq/cn/tag +D0 -D2.
+
+-	: seq/cn/tag _ seq/cn/refl.
+
+%worlds (cn-block) (seq/cn/tag _ _).
+%total {} (seq/cn/tag _ _).
+
+
+
+ofkd/seq-k	: seq/kd K1 K2
+		   -> ofkd C K1
+		   -> ofkd C K2
+		   -> type.
+
+%mode ofkd/seq-k +D1 +D2 -D3.
+
+-	: ofkd/seq-k seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (ofkd/seq-k _ _ _).
+%total {} (ofkd/seq-k _ _ _).
+
+
+
+ofkd/seq-k-pi-l	: seq/kd K1 K2
+		   -> ofkd C (kd/pi K1 L)
+		   -> ofkd C (kd/pi K2 L)
+		   -> type.
+
+%mode ofkd/seq-k-pi-l +D1 +D2 -D3.
+
+-	: ofkd/seq-k-pi-l seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (ofkd/seq-k-pi-l _ _ _).
+%total {} (ofkd/seq-k-pi-l _ _ _).
+
+
+ofkd/seq-c	: seq/cn C1 C2
+		   -> ofkd C1 K
+		   -> ofkd C2 K
+		   -> type.
+
+%mode ofkd/seq-c +D1 +D2 -D3.
+
+-	: ofkd/seq-c seq/cn/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (ofkd/seq-c _ _ _).
+%total {} (ofkd/seq-c _ _ _).
+
+
+
+kd-wf/seq	: seq/kd K1 K2
+		   -> kd-wf K1
+		   -> kd-wf K2
+		   -> type.
+
+%mode kd-wf/seq +D1 +D2 -D3.
+
+-	: kd-wf/seq seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-wf/seq _ _ _).
+%total {} (kd-wf/seq _ _ _).
+
+
+seq/kd/sgm	: seq/kd K1 K2
+		   -> ({a:cn} seq/kd (K3 a) (K4 a))
+		   -> seq/kd (kd/sgm K1 K3) (kd/sgm K2 K4)
+		   -> type.
+
+%mode seq/kd/sgm +D0 +D0' -D2.
+
+-	: seq/kd/sgm _ _ seq/kd/refl.
+
+%worlds (cn-block | cn-block) (seq/kd/sgm _ _ _).
+%total {} (seq/kd/sgm _ _ _).
+
+
+kd-wf/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} {da:ofkd a K1} kd-wf (K3 a))
+		   -> ({a:cn} {da:ofkd a K2} kd-wf (K3 a))
+		   -> type.
+
+%mode kd-wf/seq-a +D1 +D2 -D3.
+
+-	: kd-wf/seq-a seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd+vdt-block | ofkd-block) (kd-wf/seq-a _ _ _).
+%total {} (kd-wf/seq-a _ _ _).
+
+
+
+kd-sub/seq-l	: seq/kd K1 K2
+		   -> (kd-sub K1 K4)
+		   -> (kd-sub K2 K4)
+		   -> type.
+
+%mode kd-sub/seq-l +D1 +D2 -D3.
+
+-	: kd-sub/seq-l seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-sub/seq-l _ _ _).
+%total {} (kd-sub/seq-l _ _ _).
+
+
+
+kd-sub/seq-r	: seq/kd K1 K2
+		   -> (kd-sub K3 K1)
+		   -> (kd-sub K3 K2)
+		   -> type.
+
+%mode kd-sub/seq-r +D1 +D2 -D3.
+
+-	: kd-sub/seq-r seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-sub/seq-r _ _ _).
+%total {} (kd-sub/seq-r _ _ _).
+
+
+kd-sub/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} {da:ofkd a K1} kd-sub (K3 a) (K4 a))
+		   -> ({a:cn} {da:ofkd a K2} kd-sub (K3 a) (K4 a))
+		   -> type.
+
+%mode kd-sub/seq-a +D1 +D2 -D3.
+
+-	: kd-sub/seq-a seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-sub/seq-a _ _ _).
+%total {} (kd-sub/seq-a _ _ _).
+
+
+
+kd-deq/seq-l	: seq/kd K1 K2
+		   -> (kd-deq K1 K4)
+		   -> (kd-deq K2 K4)
+		   -> type.
+
+%mode kd-deq/seq-l +D1 +D2 -D3.
+
+-	: kd-deq/seq-l seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-deq/seq-l _ _ _).
+%total {} (kd-deq/seq-l _ _ _).
+
+
+
+kd-deq/seq-r	: seq/kd K1 K2
+		   -> (kd-deq K4 K1)
+		   -> (kd-deq K4 K2)
+		   -> type.
+
+%mode kd-deq/seq-r +D1 +D2 -D3.
+
+-	: kd-deq/seq-r seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-deq/seq-r _ _ _).
+%total {} (kd-deq/seq-r _ _ _).
+
+
+
+kd-deq/seq-a	: seq/kd K1 K2
+		   -> ({a:cn} {da:ofkd a K1} kd-deq (K3 a) (K4 a))
+		   -> ({a:cn} {da:ofkd a K2} kd-deq (K3 a) (K4 a))
+		   -> type.
+
+%mode kd-deq/seq-a +D1 +D2 -D3.
+
+-	: kd-deq/seq-a seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (kd-deq/seq-a _ _ _).
+%total {} (kd-deq/seq-a _ _ _).
+
+
+
+seq/cn/beta-pj1	: seq/cn C1 C2
+		   -> seq/cn C3 C4
+		   -> cn-deq (cn/pj1 (cn/pair C1 C3)) C1 K
+		   -> cn-deq (cn/pj1 (cn/pair C2 C4)) C2 K
+		   -> type.
+%mode seq/cn/beta-pj1 +S +S2 +D1 -D2.
+
+-	: seq/cn/beta-pj1 seq/cn/refl seq/cn/refl D1 D1.
+
+%worlds () (seq/cn/beta-pj1 _ _ _ _).
+%total {} (seq/cn/beta-pj1 _ _ _ _).
+
+
+
+seq/cn/beta-pj2	: seq/cn C1 C2
+		   -> seq/cn C3 C4
+		   -> cn-deq (cn/pj2 (cn/pair C3 C1)) C1 K
+		   -> cn-deq (cn/pj2 (cn/pair C4 C2)) C2 K
+		   -> type.
+%mode seq/cn/beta-pj2 +S +S1 +D1 -D2.
+
+-	: seq/cn/beta-pj2 seq/cn/refl seq/cn/refl D1 D1.
+
+%worlds () (seq/cn/beta-pj2 _ _ _ _).
+%total {} (seq/cn/beta-pj2 _ _ _ _).
+
+
+
+cn-deq/seq-l	: seq/cn K1 K2
+		   -> (cn-deq K1 K4 K)
+		   -> (cn-deq K2 K4 K)
+		   -> type.
+
+%mode cn-deq/seq-l +D1 +D2 -D3.
+
+-	: cn-deq/seq-l seq/cn/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (cn-deq/seq-l _ _ _).
+%total {} (cn-deq/seq-l _ _ _).
+
+
+
+cn-deq/seq-r	: seq/cn K1 K2
+		   -> (cn-deq K4 K1 K)
+		   -> (cn-deq K4 K2 K)
+		   -> type.
+
+%mode cn-deq/seq-r +D1 +D2 -D3.
+
+-	: cn-deq/seq-r seq/cn/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (cn-deq/seq-r _ _ _).
+%total {} (cn-deq/seq-r _ _ _).
+
+
+
+cn-deq/seq-k	: seq/kd K1 K2
+		   -> (cn-deq K K4 K1)
+		   -> (cn-deq K K4 K2)
+		   -> type.
+
+%mode cn-deq/seq-k +D1 +D2 -D3.
+
+-	: cn-deq/seq-k seq/kd/refl D1 D1.
+
+%worlds (cn-block | ofkd-block) (cn-deq/seq-k _ _ _).
+%total {} (cn-deq/seq-k _ _ _).

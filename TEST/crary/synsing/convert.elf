@@ -1,0 +1,151 @@
+
+tconvert : tp -> etp -> type.
+convert : term -> tp -> eterm -> type.
+aconvert : atom -> tp -> eterm -> type.
+
+tconvert/t	: tconvert t et.
+
+tconvert/pi	: tconvert (pi A B) (epi EA EB)
+		   <- tconvert A EA
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> tconvert (B x) (EB ex)).
+
+tconvert/sigma	: tconvert (sigma A B) (esigma EA EB)
+		   <- tconvert A EA
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> tconvert (B x) (EB ex)).
+
+tconvert/sing	: tconvert (sing R) (esing EM)
+		   <- aconvert R t EM.
+
+tconvert/one	: tconvert one eone.
+
+
+
+convert/at	: convert (at R) t EM
+		   <- aconvert R t EM.
+
+convert/lam	: convert (lam M) (pi A B) (elam EA EM)
+		   <- tconvert A EA
+		   <- ({x} vof x A
+			 -> {ex} vtrans ex x
+			 -> convert (M x) (B x) (EM ex)).
+
+convert/pair	: convert (pair M N) (sigma A B) (epair EM EN)
+		   <- convert M A EM
+		   <- tsub B M Bx
+		   <- convert N Bx EN
+		   <- ({x} vof x A -> wf (B x)).
+
+convert/sing	: convert (at R) (sing R) EM
+		   <- aconvert R t EM.
+
+convert/star	: convert star one estar.
+
+
+
+aconvert/const	: aconvert (const C) A (econst C)
+		   <- kof C A
+		   <- wf A
+		   <- tconvert A _.
+
+aconvert/var	: aconvert X A EX
+		   <- vof X A
+		   <- wf A
+		   <- tconvert A _
+		   <- vtrans EX X.
+
+aconvert/app	: aconvert (app R N) Bx (eapp EM EN)
+		   <- aconvert R (pi A B) EM
+		   <- convert N A EN
+		   <- tsub B N Bx.
+
+aconvert/pi1	: aconvert (pi1 R) A (epi1 EM)
+		   <- aconvert R (sigma A B) EM.
+
+aconvert/pi2	: aconvert (pi2 R) (B (pi1 R)) (epi2 EM)
+		   <- aconvert R (sigma A B) EM.
+
+
+
+
+%%%%%  Explicit Contexts  %%%%%
+
+tconverte : ctx -> tp -> etp -> type.
+converte : ctx -> term -> tp -> eterm -> type.
+aconverte : ctx -> atom -> tp -> eterm -> type.
+
+tconverte/t	: tconverte G t et
+		   <- ordered G.
+
+tconverte/pi	: tconverte G (pi A B) (epi EA EB)
+		   <- tconverte G A EA
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> tconverte (cons G x A) (B x) (EB ex)).
+
+tconverte/sigma	: tconverte G (sigma A B) (esigma EA EB)
+		   <- tconverte G A EA
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> tconverte (cons G x A) (B x) (EB ex)).
+
+tconverte/sing	: tconverte G (sing R) (esing EM)
+		   <- aconverte G R t EM.
+
+tconverte/one	: tconverte G one eone
+		   <- ordered G.
+
+
+
+converte/at	: converte G (at R) t EM
+		   <- aconverte G R t EM.
+
+converte/lam	: converte G (lam M) (pi A B) (elam EA EM)
+		   <- tconverte G A EA
+		   <- ({x} isvar x I
+			 -> {ex} vtrans ex x
+			 -> converte (cons G x A) (M x) (B x) (EM ex)).
+
+converte/pair	: converte G (pair M N) (sigma A B) (epair EM EN)
+		   <- converte G M A EM
+		   <- tsub B M Bx
+		   <- converte G N Bx EN
+		   <- ({x} isvar x I -> wfe (cons G x A) (B x)).
+
+converte/sing	: converte G (at R) (sing R) EM
+		   <- aconverte G R t EM.
+
+converte/star	: converte G star one estar
+		   <- ordered G.
+
+
+
+aconverte/const	: aconverte G (const C) A (econst C)
+		   <- kof C A
+		   <- wf A
+		   <- tconverte G A _.
+
+aconverte/var	: aconverte G X A EX
+		   <- lookup G X A
+		   <- tconverte G A _
+		   <- vtrans EX X.
+
+aconverte/vari	: aconverte G X A EX
+		   <- vof X A
+		   <- wf A
+		   <- tconverte G A _
+		   <- vtrans EX X.
+
+aconverte/app	: aconverte G (app R N) Bx (eapp EM EN)
+		   <- aconverte G R (pi A B) EM
+		   <- converte G N A EN
+		   <- tsub B N Bx.
+
+aconverte/pi1	: aconverte G (pi1 R) A (epi1 EM)
+		   <- aconverte G R (sigma A B) EM.
+
+aconverte/pi2	: aconverte G (pi2 R) (B (pi1 R)) (epi2 EM)
+		   <- aconverte G R (sigma A B) EM.

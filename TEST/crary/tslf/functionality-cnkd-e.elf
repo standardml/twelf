@@ -1,0 +1,304 @@
+%
+
+ecn-deq/seq/kd	: seq/kd K1 K2
+		   -> ecn-deq G C CC K1
+		   -> ecn-deq G C CC K2
+		   -> type.
+%mode ecn-deq/seq/kd +D1 +D2 -D3.
+
+-	: ecn-deq/seq/kd seq/kd/refl D1 D1.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (ecn-deq/seq/kd _ _ _).
+%total D1 (ecn-deq/seq/kd D1 _ _).
+
+
+
+
+
+funct-cxt-lookup	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+			   -> cxt-append-sub G1 G2 C G'
+			   -> ecn-deq G1 C CC K
+			   -> ({x} isvar x I 
+				 -> cxt-lookup (G x) (C' x) (K' x))
+			   -> id-or-cl C' K'
+			   -> ecn-deq G' (C' C) (C' CC) (K' C)
+			   -> type.
+%mode funct-cxt-lookup +D1 +D2 +D3 +DC +DO -D4.
+ 
+-	: funct-cxt-lookup DA DA' DC DL id-or-cl/cl
+	   (ecn-deq/refl (eofkd/var DL'))
+	   <- subst-cxt-lookup-c DA DA' DL DL'.
+
+-	: funct-cxt-lookup
+	   DA DA' DC DL id-or-cl/id DC''
+	   <- cxt-lookup-unique DA DL DQ
+	   <- ({x}{di: isvar x I}
+		 cxt-lookup-ordered (DL x di) (DO x di))
+	   <- subst-cxt-ordered DA DA' DO DO'
+	   <- wkn-ecn-deq-append DC DA' DO' DC'
+	   <- ecn-deq/seq/kd DQ DC' DC''.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (funct-cxt-lookup _ _ _ _ _ _).
+%total D1 (funct-cxt-lookup _ _ _ _ D1 _).
+
+
+funct-closed-ofkd^ : {C1:cn} {C2:cn}
+		     (ofkd C' K')
+		     -> closed-cn C C'
+		     -> closed-kd K K'
+		     -> cxt-ordered G
+		     -> ecn-deq G (C C1) (C C2) (K C1)
+		     -> type.
+%mode funct-closed-ofkd^ +C1 +C2 +D1 +D2 +D3 +D3' -D4.
+
+-	: funct-closed-ofkd^ _ _ D1 closed-cn/i closed-kd/i DO 
+	   (ecn-deq/refl (eofkd/closed D1 DO)).
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (funct-closed-ofkd^ _ _ _ _ _ _ _).
+%total {} (funct-closed-ofkd^ _ _ _ _ _ _ _).
+
+
+
+funct-closed-ofkd : {C1:cn} {C2:cn}
+		     ({x:cn} ofkd (C x) (K x))
+		     -> cxt-ordered G
+		     -> ecn-deq G (C C1) (C C2) (K C1)
+		     -> type.
+%mode funct-closed-ofkd +C1 +C2 +D1 +D2 -D4.
+
+-	: funct-closed-ofkd C1 C2 D1 DO DQ
+	   <- strengthen-ofkd D1 DC1 DC2 D1'
+	   <- funct-closed-ofkd^ C1 C2 D1' DC1 DC2 DO DQ.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) (funct-closed-ofkd _ _ _ _ _).
+%total {} (funct-closed-ofkd _ _ _ _ _).
+
+
+
+
+funct-eofkd	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> eofkd G1 CC K
+		   -> ecn-deq G1 C CC K
+		   -> ({x:cn} isvar x I -> eofkd (G x) (C' x) (K' x))
+		   -> ecn-deq G' (C' C) (C' CC) (K' C)
+		   -> type.
+%mode funct-eofkd +D1 +D2 +D3 +D4 +D4' +D4'' -D5.
+
+funct-ekd-wf	: ({x:cn} cxt-append (cxt/cons G1 x K) (G2 x) (G x))
+ 		   -> cxt-append-sub G1 G2 C G'
+		   -> eofkd G1 C K
+		   -> eofkd G1 CC K
+		   -> ecn-deq G1 C CC K
+		   -> ({x:cn} isvar x I -> ekd-wf (G x) (K' x))
+		   -> ekd-deq G' (K' C) (K' CC)
+		   -> ekd-deq G' (K' CC) (K' C)
+		   -> type.
+%mode funct-ekd-wf +D1 +D2 +D3 +D4 +D4' +D4'' -D5 -D5.
+
+
+-	: funct-ekd-wf DA DA' DC DCC DQ 
+	   ([x][di] ekd-wf/kd/unit (DO x di))
+	   (ekd-deq/kd/unit DO')
+	   (ekd-deq/kd/unit DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-ekd-wf DA DA' DC DCC DQ 
+	   ([x][di] ekd-wf/kd/type (DO x di))
+	   (ekd-deq/kd/type DO')
+	   (ekd-deq/kd/type DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-ekd-wf DA DA' DC DCCz DQ 
+	   ([x][di] ekd-wf/kd/sing (DCC x di))
+	   (ekd-deq/kd/sing DCQ)
+	   (ekd-deq/kd/sing (ecn-deq/sym DCQ))
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-ekd-wf DA DA' DC DCC DQ
+	   ([x][di] ekd-wf/kd/sgm (D1 x di) (D2 x di))
+	   (ekd-deq/kd/sgm D1' D2')
+	   (ekd-deq/kd/sgm D1'' D2''w)
+	   <- funct-ekd-wf DA DA' DC DCC DQ D1 D1' D1''
+	   <- ({y}{dy}{_: isvar-fun dy dy seq/loc/refl}
+		 funct-ekd-wf
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA')
+		 DC DCC DQ
+		 ([x][di] D2 x di y dy)
+		 (D2' y dy) (D2'' y dy))
+	   <- wkn-deq-ekd-deq 
+	      ([x] cxt-append/nil) ([x] cxt-append/nil)
+	      D1'' D2'' D2''w.
+
+-	: funct-ekd-wf DA DA' DC DCC DQ
+	   ([x][di] ekd-wf/kd/pi (D1 x di) (D2 x di))
+	   (ekd-deq/kd/pi D1'' D2'w)
+	   (ekd-deq/kd/pi D1' D2'')
+	   <- funct-ekd-wf DA DA' DC DCC DQ D1 D1' D1''
+	   <- ({y}{dy}{_: isvar-fun dy dy seq/loc/refl}
+		 funct-ekd-wf
+		 ([x] cxt-append/cons (DA x))
+		 (cxt-append-sub/cons DA')
+		 DC DCC DQ
+		 ([x][di] D2 x di y dy)
+		 (D2' y dy) (D2'' y dy))
+	   <- wkn-deq-ekd-deq 
+	      ([x] cxt-append/nil) ([x] cxt-append/nil)
+	      D1'' D2' D2'w.
+
+
+-	: funct-eofkd DA DA' DC DCC DQ 
+	   ([x][di] eofkd/cn/unit (DO x di))
+	   (ecn-deq/cn/unit DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-eofkd DA DA' DC DCC DQ 
+	   ([x][di] eofkd/tp/unit (DO x di))
+	   (ecn-deq/tp/unit DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-eofkd DA DA' DC DCC DQ 
+	   ([x][di] eofkd/tp/tagged (DO x di))
+	   (ecn-deq/tp/tagged DO')
+	   <- subst-cxt-ordered DA DA' DO DO'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/ref (DCC x di))
+	   (ecn-deq/tp/ref DCQ)
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/tag (DCC x di))
+	   (ecn-deq/tp/tag DCQ)
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/pj1 (DCC x di))
+	   (ecn-deq/cn/pj1 DCQ)
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/pj2 (DCC x di))
+	   (ecn-deq/cn/pj2 DCQ)
+	   <- funct-eofkd DA DA' DC DCCz DQ DCC DCQ.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/kd/sing (D1 x di))
+	   (ecn-deq/sub
+	      (ecn-deq/kd/sing 
+		 (eofkd/sub (eofkd/kd/sing D1s)
+		    (ekd-sub/kd/sing-kd/sing D1Q)))
+	      (ekd-sub/kd/sing-kd/sing 
+		  (ecn-deq/sym D1Q)))
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1Q
+	   <- subst-eofkd DA DA' DC D1 D1s.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/pair (D1 x di) (D2 x di))
+	   (ecn-deq/cn/pair D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/app (D1 x di) (D2 x di))
+	   (ecn-deq/cn/app D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/sgm-ext (D1 x di) (D2 x di))
+	   (ecn-deq/sgm-ext D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/cross (D1 x di) (D2 x di))
+	   (ecn-deq/tp/cross D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/arrow (D1 x di) (D2 x di))
+	   (ecn-deq/tp/arrow D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/sum (D1 x di) (D2 x di))
+	   (ecn-deq/tp/sum D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/sub (D1 x di) (D2 x di))
+	   (ecn-deq/sub D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- subst-ekd-sub DA DA' DC D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/deq (D1 x di) (D2 x di))
+	   (ecn-deq/deq D1' D2')
+	   <- funct-eofkd DA DA' DC DCCz DQ D1 D1'
+	   <- subst-ekd-deq DA DA' DC D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/lam (D1 x di) (D2 x di))
+	   (ecn-deq/cn/lam D1' D2')
+	   <- ({y} {dy} {_: isvar-fun dy dy seq/loc/refl}
+		 funct-eofkd 
+		    ([x] cxt-append/cons (DA x))
+		     (cxt-append-sub/cons DA') DC DCCz DQ 
+		    ([x][di] (D1 x di y dy)) (D1' y dy))
+	   <- funct-ekd-wf DA DA' DC DCCz DQ D2 D2' _.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/tp/forall (D1 x di) (D2 x di))
+	   (ecn-deq/tp/forall D1' D2')
+	   <- ({y} {dy} {_: isvar-fun dy dy seq/loc/refl}
+		 funct-eofkd 
+		    ([x] cxt-append/cons (DA x))
+		     (cxt-append-sub/cons DA') DC DCCz DQ 
+		    ([x][di] (D1 x di y dy)) (D1' y dy))
+	   <- funct-ekd-wf DA DA' DC DCCz DQ D2 D2' _.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/cn/mu (D1 x di) (D2 x di))
+	   (ecn-deq/cn/mu D1' D2')
+	   <- ({y} {dy} {_: isvar-fun dy dy seq/loc/refl}
+		 funct-eofkd 
+		    ([x] cxt-append/cons (DA x))
+		     (cxt-append-sub/cons DA') DC DCCz DQ 
+		    ([x][di] (D1 x di y dy)) (D1' y dy))
+	   <- funct-ekd-wf DA DA' DC DCCz DQ D2 D2' _.
+
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/pi-ext (D2 x di) (D1 x di))
+	   (ecn-deq/pi-ext-2 D2' D1')
+	   <- ({y} {dy} {_: isvar-fun dy dy seq/loc/refl}
+		 funct-eofkd 
+		    ([x] cxt-append/cons (DA x))
+		     (cxt-append-sub/cons DA') DC DCCz DQ 
+		    ([x][di] (D1 x di y dy)) (D1' y dy))
+	   <- funct-eofkd DA DA' DC DCCz DQ D2 D2'.
+
+-	: funct-eofkd DA DA' DC DCCz DQ 
+	   ([x][di] eofkd/var (DL x di))
+	   DC'
+	   <- cxt-lookup-ioc DA DA' DL IOC
+	   <- funct-cxt-lookup DA DA' DQ DL IOC DC'.
+
+-	: funct-eofkd DA DA' _ _ (_ : ecn-deq _ C1 C2 _)
+	   ([x][di] eofkd/closed (DC x) (DO x di))
+	   DQ
+	   <- subst-cxt-ordered DA DA' DO DO'
+	   <- funct-closed-ofkd C1 C2 DC DO' DQ.
+
+%worlds (cn-block | isvar-fun-block | can-mofkd-block) 
+(funct-ekd-wf _ _ _ _ _ _ _ _) 
+(funct-eofkd _ _ _ _ _ _ _).
+%total (D1 D3) (funct-ekd-wf _ _ _ _ _ D1 _ _) (funct-eofkd _ _ _ _ _ D3 _).
+
+

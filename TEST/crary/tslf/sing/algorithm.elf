@@ -1,0 +1,261 @@
+
+%%%%%  Variable Identification  %%%%%
+
+variable : eterm -> type.
+%mode variable +M.
+
+
+%block evvar	: block {x:eterm} {dv:variable x}.
+%block evbind	: some {a:etp} block {x:eterm} {d:evof x a} {dv:variable x}.
+%block evblock	: some {x:eterm} block {dv:variable x}.
+
+
+
+
+%%%%%  Beta Normalization  %%%%%
+
+oa : eterm -> type.  %% outermost atomic
+%mode oa +M.
+
+oa/const	: oa (econst C).
+
+oa/forall	: oa (eforall A).
+
+oa/var		: oa X
+		   <- variable X.
+
+oa/app		: oa (eapp M N).
+
+oa/pi1		: oa (epi1 M).
+
+oa/pi2		: oa (epi2 M).
+
+
+
+reduce	: eterm -> eterm -> type.
+%mode reduce +M -N.
+
+treduce	: etp -> etp -> type.
+%mode treduce +A -B.
+
+reduce-app : eterm -> eterm -> eterm -> type.
+%mode reduce-app +M +N -O.
+
+reduce-pi1 : eterm -> eterm -> type.
+%mode reduce-pi1 +M -N.
+
+reduce-pi2 : eterm -> eterm -> type.
+%mode reduce-pi2 +M -N.
+
+
+reduce/const	: reduce (econst C) (econst C).
+
+reduce/forall	: reduce (eforall A) (eforall A')
+		   <- treduce A A'.
+
+reduce/var	: reduce X X
+		   <- variable X.
+
+reduce/lam	: reduce (elam A M) (elam A' M')
+		   <- treduce A A'
+		   <- ({x} variable x -> reduce (M x) (M' x)).
+
+reduce/app	: reduce (eapp M N) O
+		   <- reduce M M'
+		   <- reduce N N'
+		   <- reduce-app M' N' O.
+
+reduce-app/atom	: reduce-app M N (eapp M N)
+		   <- oa M.
+
+reduce-app/beta	: reduce-app (elam A M) N O
+		   <- reduce (M N) O.
+
+reduce/pair	: reduce (epair M N) (epair M' N')
+		   <- reduce M M'
+		   <- reduce N N'.
+
+reduce/pi1	: reduce (epi1 M) N
+		   <- reduce M M'
+		   <- reduce-pi1 M' N.
+
+reduce-pi1/atom	: reduce-pi1 M (epi1 M)
+		   <- oa M.
+
+reduce-pi1/beta	: reduce-pi1 (epair M N) M.
+
+reduce/pi2	: reduce (epi2 M) N
+		   <- reduce M M'
+		   <- reduce-pi2 M' N.
+
+reduce-pi2/atom	: reduce-pi2 M (epi2 M)
+		   <- oa M.
+
+reduce-pi2/beta	: reduce-pi2 (epair M N) N.
+
+
+
+
+treduce/t	: treduce et et.
+
+treduce/pi	: treduce (epi A B) (epi A' B')
+		   <- treduce A A'
+		   <- ({x} variable x -> treduce (B x) (B' x)).
+
+treduce/sigma	: treduce (esigma A B) (esigma A' B')
+		   <- treduce A A'
+		   <- ({x} variable x -> treduce (B x) (B' x)).
+
+treduce/sing	: treduce (esing M) (esing M')
+		   <- reduce M M'.
+
+
+
+
+%%%%%  Eta Expansion  %%%%%
+
+selfify	: eterm -> etp -> eterm -> etp -> type.
+%mode selfify +M +A -N -B.
+
+selfify/t	: selfify M et M (esing M).
+
+selfify/pi	: selfify M (epi A B) (elam A O) (epi A Bs)
+		   <- ({x} selfify x A (N x) _)
+		   <- ({x} selfify (eapp M (N x)) (B x) (O x) (Bs x)).
+
+selfify/sigma	: selfify M (esigma A B) (epair N O) (esigma As ([_] Bs))
+		   <- selfify (epi1 M) A N As
+		   <- selfify (epi2 M) (B (epi1 M)) O Bs.
+
+selfify/sing	: selfify M (esing N) N (esing N).
+
+
+
+
+%%%%%  Coercion  %%%%%
+
+coerce : etp -> etp -> (eterm -> eterm) -> type.
+%mode coerce +A +B -N.
+
+coerce/t	: coerce et et ([x] x).
+
+coerce/pi	: coerce (epi A1 A2) (epi B1 B2) ([f] elam B1 ([x] M2 x (eapp f (M1 x))))
+		   <- coerce B1 A1 ([x] M1 x)
+		   <- ({x} variable x -> treduce (A2 (M1 x)) (A2' x))
+		   <- ({x} variable x -> coerce (A2' x) (B2 x) ([y] M2 x y)).
+
+coerce/sigma	: coerce (esigma A1 A2) (esigma B1 B2) ([p] epair (M1 (epi1 p)) (M2 (epi1 p) (epi2 p)))
+		   <- coerce A1 B1 ([x] M1 x)
+		   <- ({x} variable x -> treduce (B2 (M1 x)) (B2' x))
+		   <- ({x} variable x -> coerce (A2 x) (B2' x) ([y] M2 x y)).
+
+coerce/sing_t	: coerce (esing M) et ([x] M).
+
+coerce/sing	: coerce (esing M) (esing M) ([x] M).
+
+
+
+
+%%%%%  Canonization  %%%%%
+
+canonize  : eterm -> etp -> type.
+tcanonize : etp -> etp -> type.
+
+%mode ekof +K -A.
+%mode evof +X -A.
+%mode canonize +M -A.
+%mode tcanonize +A -B.
+
+canonize/const	: canonize (econst K) As
+		   <- ekof K A
+		   <- selfify (econst K) A M As.
+
+canonize/forall	: canonize (eforall A) B
+		   <- tcanonize A A'
+		   <- selfify (eforall A') (qetp A') M B.
+
+canonize/var	: canonize X As
+		   <- evof X A
+		   <- selfify X A M As.
+
+canonize/app	: canonize (eapp M N) D
+		   <- canonize M (epi A B)
+		   <- canonize N C
+		   <- coerce C A ([_] N')
+		   <- treduce (B N') D.
+
+canonize/pi1	: canonize (epi1 M) A
+		   <- canonize M (esigma A ([_] B)).
+
+canonize/pi2	: canonize (epi2 M) B
+		   <- canonize M (esigma A ([_] B)).
+
+canonize/lam	: canonize (elam A M) (epi A' B)
+		   <- tcanonize A A'
+		   <- ({x} evof x A' -> variable x -> canonize (M x) (B x)).
+
+canonize/pair	: canonize (epair M N) (esigma A ([_] B))
+		   <- canonize M A
+		   <- canonize N B.
+
+
+
+tcanonize/t	: tcanonize et et.
+
+tcanonize/pi	: tcanonize (epi A B) (epi A' B')
+		   <- tcanonize A A'
+		   <- ({x} evof x A' -> variable x -> tcanonize (B x) (B' x)).
+
+tcanonize/sigma	: tcanonize (esigma A B) (esigma A' B')
+		   <- tcanonize A A'
+		   <- ({x} evof x A' -> variable x -> tcanonize (B x) (B' x)).
+
+tcanonize/sing	: tcanonize (esing M) (esing M')
+		   <- canonize M (esing M').
+
+
+
+
+%%%%%  Entry Points  %%%%%
+
+check-eof : eterm -> etp -> type.
+
+check-eof/i	: check-eof M A
+		   <- canonize M B
+		   <- tcanonize A A'
+		   <- coerce B A' _.
+
+
+
+check-equiv : eterm -> eterm -> etp -> type.
+
+check-equiv/i	: check-equiv M N C
+		   <- canonize M A
+		   <- canonize N B
+		   <- tcanonize C C'
+		   <- coerce A C' ([_] O)
+		   <- coerce B C' ([_] O).
+
+
+
+check-ewf : etp -> type.
+
+check-ewf/i	: check-ewf A
+		   <- tcanonize A _.
+
+
+
+check-subtp : etp -> etp -> type.
+
+check-subtp/i	: check-subtp A B
+		   <- tcanonize A A'
+		   <- tcanonize B B'
+		   <- coerce A' B' _.
+
+
+
+check-tequiv : etp -> etp -> type.
+
+check-tequiv/i	: check-tequiv A B
+		   <- tcanonize A C
+		   <- tcanonize B C.

@@ -1,0 +1,207 @@
+
+%{
+EXPR ELABORATION
+
+Input: elaboration context; EL expression.
+Output: IL term and IL type.
+
+}%
+
+
+
+%{
+IDENTIFIERS
+
+Elaborate a long identifier with possibly polymorphic type.
+
+Expression identifiers are given an extra name to indicate whether
+they are datatype/exception constructors.  That information is used in
+pattern matching, and is discarded in this case.
+
+All values are polymorphic (perhaps trivially so), and thus are
+written as functors.  We non-deterministically "guess" an instance of
+the polymorphic argument and apply the functor.
+
+Input: IL module and signature
+Output: resulting IL term and type.
+
+Bindings from matches are never polymorphic; bindings from declarations
+are always polymorphic (perhaps trivially so).
+
+}%
+
+
+expr-elab/longid-mono	: expr-elab Mec Sec (expr/longid I) (tm/snd (md/out M)) T
+			   <- resolve-long Mec Sec name/val I M (sg/named _ (sg/datom T)).
+
+expr-elab/longid-poly	: expr-elab Mec Sec (expr/longid I) (tm/snd (md/app (md/out M) Marg)) (T Carg)
+			   <- resolve-long Mec Sec name/val I M (sg/named _ (sg/pi Sarg ([a] sg/datom (T a))))
+			   <- instance Sarg Marg
+			   <- md-fst Marg Carg.
+
+
+
+
+%{
+RECORD EXPRESSIONS
+
+Elaborate a record expression.  The rule uses two auxiliary judgements:
+
+* {record-insert} inserts a labeled IL term and type into an IL record
+  term and IL record type in (strictly) ascending order.
+
+  Input: label; IL term and type to insert; IL term and type to insert into.
+  Output: resulting IL term and type.
+
+* {expr-row-elab} elaborates an EL expression row given an IL record
+  term and IL record type.  The given term/type represent the
+  already-elaborated portion of the EL expression row.
+
+  Input: elaboration context; IL term and type (already elaborated); EL expression row.
+  Output: resulting IL term and type.
+
+}%
+
+record-insert		: label -> term -> con -> term -> con -> term -> con -> type.
+
+record-insert/nil	: record-insert L E T tm/unit unit 
+			   (tm/pair (tm/in L E) tm/unit)
+			   (prod (labeled L T) unit).
+
+record-insert/here	: record-insert L E T (tm/pair (tm/in L' E') Etail) (prod (labeled L' T') Ttail)
+			   (tm/pair (tm/in L E) (tm/pair (tm/in L' E') Etail))
+			   (prod (labeled L T) (prod (labeled L' T') Ttail))
+			   <- label-lt L L'.
+
+record-insert/later	: record-insert L E T (tm/pair (tm/in L' E') Etail) (prod (labeled L' T') Ttail)
+			   (tm/pair (tm/in L' E') Etail')
+			   (prod (labeled L' T') Ttail')
+			   <- label-lt L' L
+			   <- record-insert L E T Etail Ttail Etail' Ttail'.
+
+
+
+expr-row-elab		: module -> sg -> term -> con -> expr-row -> term -> con -> type.
+
+expr-row-elab/nil	: expr-row-elab Mec Sec E T expr-row/nil
+			   E T.
+
+expr-row-elab/cons	: expr-row-elab Mec Sec Ein Tin (expr-row/cons L Ee ERe)
+			   (tm/lett E ([x] Efinal x)) Tfinal
+			   <- expr-elab Mec Sec Ee E T
+			   <- ({x:term}
+				 record-insert L x T Ein Tin (Eout x) Tout)
+			   <- ({x:term}
+				 expr-row-elab Mec Sec (Eout x) Tout ERe (Efinal x) Tfinal).
+
+
+
+expr-elab/record	: expr-elab Mec Sec (expr/record ERe) E T
+			   <- expr-row-elab Mec Sec tm/unit unit ERe E T.
+
+
+
+
+%{
+LET
+
+Elaborate an EL let expression.  The result type of a let must not
+involve bound variables.  The body is elaborated relative to enriched
+elaboration context in which a variable is bound to the module
+representing the declaration, twinned with a constructor variable
+representing its static part.
+
+}%
+
+expr-elab/let		: expr-elab Mec Sec
+			   (expr/let De Ee)
+			   (tm/letm M ([a] [m] E a m) T) T
+			   <- dec-elab Mec Sec De M S
+			   <- sg-fst S K
+			   <- ({a:con} cn-of a K
+				 -> {m:module} md-assm m S
+				 -> md-fst m a
+				 -> expr-elab (md/pair Mec m) (sg/sigma Sec ([_] S)) Ee (E a m) T).
+
+
+
+%{
+FUNCTION APPLICATION
+
+}%
+expr-elab/app		: expr-elab Mec Sec (expr/app Ee1 Ee2) (tm/app E1 E2) T
+			   <- expr-elab Mec Sec Ee1 E1 (arrow T2 T)
+			   <- expr-elab Mec Sec Ee2 E2 T2.
+
+
+
+
+%{
+TYPE CONSTRAINT
+
+}%
+
+expr-elab/constraint	: expr-elab Mec Sec (expr/constraint Ee Te) E T
+			   <- ty-elab Mec Sec Te T
+			   <- expr-elab Mec Sec Ee E T.
+
+
+
+%{
+HANDLE
+
+Elaborate a handle expression.  The rule passes the raised exception as both
+the failure exception and the discriminant to match.
+
+}%
+
+expr-elab/handle	: expr-elab Mec Sec 
+			   (expr/handle Ee Me)
+			   (tm/try E1 ([x] E2 x))
+			   T
+			   <- expr-elab Mec Sec Ee E1 T
+			   <- ({x:term}
+				 match-elab Mec Sec Me x x tagged (E2 x) T).
+
+
+
+%{
+RAISE
+
+The result type is chosen nondeterministically.
+
+}%
+
+expr-elab/raise		: expr-elab Mec Sec (expr/raise Ee) (tm/raise E T) T
+			   <- expr-elab Mec Sec Ee E tagged
+			   <- cn-of T t.
+
+
+
+%{
+FUNCTION EXPRESSION
+
+Elaborate a {fn} expression.  The domain type is chosen
+nondeterminstically.  The body raises Match from the standard basis on
+failure.
+
+}%
+
+expr-elab/fn		: expr-elab Mec Sec (expr/fn Me) (tm/lam T1 ([x] E x)) (arrow T1 T2)
+			   <- resolve-in-basis Mec Sec (name/val identifier/match) (sg/datom tagged) Mmatch
+			   <- cn-of T1 t
+			   <- ({x}
+				 match-elab Mec Sec Me (tm/snd Mmatch) x T1 (E x) T2).
+
+
+
+%{
+EQUIVALENCE
+
+Elaboration respects equivalence of IL types.
+
+}%
+
+expr-elab/equiv		: expr-elab Mec Sec Ee E T'
+			   <- expr-elab Mec Sec Ee E T
+			   <- cn-equiv T T' t.

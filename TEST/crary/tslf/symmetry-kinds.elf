@@ -1,0 +1,33 @@
+%%%% description here
+
+kd-sym : kd-deq K1 K2 -> kd-deq K2 K1 -> type. 
+%mode kd-sym +D1 -D2.
+
+- : kd-sym kd-deq/kd/unit kd-deq/kd/unit.
+
+- : kd-sym kd-deq/kd/type kd-deq/kd/type.
+
+- : kd-sym (kd-deq/kd/sing D1) (kd-deq/kd/sing (cn-deq/sym D1)).
+
+- : kd-sym (kd-deq/kd/sgm D1 D2) (kd-deq/kd/sgm D3 D4')
+     <- kd-sym D1 D3
+     <- vdt/kd-deq D1 Do Dt
+     <- ({a:cn} {da: ofkd a K1'}
+	   {dm: mofkd da met/unit} {_: can-mofkd da dm}
+	   {vd: vdt/ofkd da Do}
+	   kd-sym (D2 a da) (D4 a da))
+     <- kd-anti D1 Do Dt _ DS
+     <- kd-wkn/kd-deq D4 DS D4'.
+
+- : kd-sym (kd-deq/kd/pi D1 D2) (kd-deq/kd/pi D3 D4')
+     <- kd-sym D1 D3
+     <- vdt/kd-deq D1 Do Dt
+     <- ({a:cn} {da: ofkd a K1'} 
+	   {dm: mofkd da met/unit} {_: can-mofkd da dm}
+	   {vd: vdt/ofkd da Do}
+	   kd-sym (D2 a da) (D4 a da))
+     <- kd-anti D1 Do Dt _ DS
+     <- kd-wkn/kd-deq D4 DS D4'.
+
+%worlds (ofkd+vdt-block) (kd-sym _ _).
+%total (D1) (kd-sym D1 _).

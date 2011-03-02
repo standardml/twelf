@@ -181,16 +181,14 @@ struct
       (* Instantiating EVars  *)
       fun instantiateEVar (refU, V, cnstrL) =
             (
-(*	     print ("DX instantiating " ^ IntSyn.rtostring refU ^ " := " ^ IntSyn.expToString V ^ "\n");  *)
-             refU := SOME(V);
-             Trail.log (globalTrail, Instantiate (refU));
-             awakenCnstrs := cnstrL @ !awakenCnstrs
+	      refU := SOME(V);
+              Trail.log (globalTrail, Instantiate (refU));
+              awakenCnstrs := cnstrL @ !awakenCnstrs
             )
 
       (* Instantiating LVars  *)
       fun instantiateLVar (refB, B) =
-            (
-              refB := SOME(B);
+            ( refB := SOME(B);
               Trail.log (globalTrail, InstantiateBlock (refB))
             )
     end  (* local *)
@@ -938,7 +936,7 @@ struct
 				| NONE => print ("Don't know how to postpone:\n   " ^ wsptostring (ws1, ws2) ^ "\n")))
 
 	    and addWorldCnstr ((ws1, ws2), cnstrs) = 
-		(print ("adding World Constraint\n"); print (wsptostring (ws1, ws2) ^ "\n");
+		((* print ("adding World Constraint\n"); print (wsptostring (ws1, ws2) ^ "\n");*)
 		 addConstraint(cnstrs, ref (Eqn (G, Whnf.foldWorldExp ws1, Whnf.foldWorldExp ws2))))
 
 	    (* tryNoOccur (ws1, ws2) *)
@@ -970,17 +968,17 @@ struct
 
 		    fun succeed ((r, G, V, cnstrs), pos) =
 			let
-			    val _ =
-				print ("tryUniqueOccur succeeding " ^ IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws1, id))
+		(*	    val _ =
+				 print ("tryUniqueOccur succeeding " ^ IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws1, id))
 				       ^ " == " ^ IntSyn.expToString (Whnf.normalize (Whnf.foldWorldExp ws2, id)) ^ "\n ----> " ^
-				       IntSyn.rtostring r ^ " @ " ^ Int.toString pos ^ "\n")
+				       IntSyn.rtostring r ^ " @ " ^ Int.toString pos ^ "\n") *)
 			    (* XXX should probably shift types around a bit *)
 			    fun unsafeShorten (Decl(tl, x)) = tl
 			      | unsafeShorten _ = raise Unify "invariant violated: pruning empty context"
 			    fun shorten n (G as Decl(tl, x)) = 
 				if n = 1 
 				then
-				    (print ("uniqueOccur pruning context " ^ ctxToString decToString G ^ "\n");
+				    ((* print ("uniqueOccur pruning context " ^ ctxToString decToString G ^ "\n"); *)
 				     unsafeShorten G)
 				else Decl(shorten (n-1) tl, x)
 			      | shorten _ _ = raise Unify "invariant violated: pruning empty context"
@@ -1090,33 +1088,24 @@ struct
       | unifyBlock (G, B1, LVar (ref (SOME(B2)), s, _)) = unifyBlock (G, B1, blockSub (B2, s))
       | unifyBlock (G, B1, B2) = unifyBlockW (G, B1, B2)
 
-    and unifyBlockW (G, LVar (r1, Shift(k1), (l1, t1)), LVar (r2, Shift(k2), (l2, t2))) = 
+    and unifyBlockW (G, LVar (r1, s1 as Shift(k1), (l1, t1)), LVar (r2, s2 as Shift(k2), (l2, t2))) = 
         if l1 <> l2 then
   	  raise Unify "Label clash"
         else
 	  if r1 = r2
 	    then ()
 	  else
-	    ( unifySub (G, t1, t2) ; (* Sat Dec  7 22:04:31 2002 -fp *)
-	      (* invariant? always k1 = k2? *)
-	      (* prune t2? Sat Dec  7 22:09:53 2002 *)
-	      if k1 <> k2 then raise Bind else () ;
-	      (*
+	    ( unifySub (G, comp(t1,s1), comp(t2,s2)) ; (* Sat Dec  7 22:04:31 2002 -fp *)
+	      (* was: unifySub (G, t1, t2)  Jul 22 2010 *)
 	      if k1 < k2 then instantiateLVar (r1, LVar(r2, Shift(k2-k1), (l2, t2)))
 		else instantiateLVar (r2, LVar(r1, Shift (k1-k2), (l1, t1)))
-	      *)
-	      let
-		val ss = Whnf.invert (Shift(k1))
-		val t2' = pruneSub (G, t2, ss, ref NONE) (* hack! *)
-	      in
-		instantiateLVar (r1, LVar(r2, Shift(0), (l2, t2'))) (* 0 = k2-k1 *)
-	      end )
+	    )
 
       | unifyBlockW (G, LVar (r1, s1, (l1, t1)),  B2) = 
-	    (r1 := SOME (blockSub (B2, Whnf.invert s1)) ; ()) (* -- ABP *)
+	    instantiateLVar(r1, blockSub (B2, Whnf.invert s1)) (* -- ABP *)
 	    
       | unifyBlockW (G,  B1, LVar (r2, s2, (l2, t2))) = 
-	    (r2 := SOME (blockSub (B1, Whnf.invert s2)) ; ()) (* -- ABP *)
+	    instantiateLVar(r2, blockSub (B1, Whnf.invert s2)) (* -- ABP *)
 
 (*      | unifyBlockW (G, LVar (r1, Shift(k1), (l1, t1)), Bidx i2) = 
 	    (r1 := SOME (Bidx (i2 -k1)) ; ()) (* -- ABP *)

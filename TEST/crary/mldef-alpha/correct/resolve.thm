@@ -1,0 +1,1635 @@
+
+%%%%%  General resolution  %%%%%
+
+noresolve-resp : module-eq M1 M1' -> sg-eq S1 S1' -> name-eq L L' -> noresolve M1 S1 L -> noresolve M1' S1' L' -> type.
+%mode noresolve-resp +X1 +X2 +X3 +X4 -X5.
+
+- : noresolve-resp _ _ _ D D.
+
+%worlds (conblock | modblock | termblock) (noresolve-resp _ _ _ _ _).
+%total {} (noresolve-resp _ _ _ _ _).
+%reduces D = D' (noresolve-resp _ _ _ D D').
+
+
+
+resolve-resp : module-eq M1 M1' -> sg-eq S1 S1' -> name-eq L L' -> module-eq M2 M2' -> sg-eq S2 S2' -> resolve M1 S1 L M2 S2 -> resolve M1' S1' L' M2' S2' -> type.
+%mode resolve-resp +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+- : resolve-resp _ _ _ _ _ D D.
+
+%worlds (conblock | modblock | termblock) (resolve-resp _ _ _ _ _ _ _).
+%total {} (resolve-resp _ _ _ _ _ _ _).
+%reduces D = D' (resolve-resp _ _ _ _ _ D D').
+
+
+
+resolve-long-resp : module-eq M1 M1' -> sg-eq S1 S1' -> module-eq M2 M2' -> sg-eq S2 S2' -> resolve-long M1 S1 F I M2 S2 -> resolve-long M1' S1' F I M2' S2' -> type.
+%mode resolve-long-resp +X1 +X2 +X3 +X4 +X5 -X6.
+
+- : resolve-long-resp _ _ _ _ D D.
+
+%worlds (conblock | modblock | termblock) (resolve-long-resp _ _ _ _ _ _).
+%total {} (resolve-long-resp _ _ _ _ _ _).
+%reduces D = D' (resolve-long-resp _ _ _ _ D D').
+
+
+
+resolve-reg : md-of pure F M S
+	       -> resolve M S L M' S'
+%%
+	       -> md-of pure F M' S'
+	       -> type.
+%mode resolve-reg +X1 +X2 -X3.
+
+-	: resolve-reg
+	   (Dof : md-of pure F M (sg/named L S))
+	   resolve/hit
+	   %%
+	   (md-of/out Dof).
+
+-	: resolve-reg
+	   (Dof : md-of pure F M (sg/named L' S))
+	   (resolve/searchable
+	      (Dresolve : resolve (md/out M) S L M' S')
+	      _ _)
+	   %%
+	   Dof'
+	   <- resolve-reg (md-of/out Dof) Dresolve
+	      (Dof' : md-of pure F M' S').
+
+-	: resolve-reg
+	   (Dof : md-of pure F M (sg/sigma S1 S2))
+	   (resolve/pi2
+	      (Dresolve : resolve (md/pi2 M) (S2 (pi1 C)) L M' S')
+	      (Dfst : md-fst M C))
+	   %%
+	   Dof'
+	   <- resolve-reg (md-of/pi2 Dfst Dof) Dresolve
+	      (Dof' : md-of pure F M' S').
+
+-	: resolve-reg
+	   (Dof : md-of pure F M (sg/sigma S1 S2))
+	   (resolve/pi1
+	      (Dresolve : resolve (md/pi1 M) S1 L M' S')
+	      _ _)
+	   %%
+	   Dof'
+	   <- resolve-reg (md-of/pi1 Dof) Dresolve
+	      (Dof' : md-of pure F M' S').
+
+%worlds (conbind | termbind | modbind) (resolve-reg _ _ _).
+%total D (resolve-reg _ D _).
+
+
+
+resolve-long-reg : md-of pure F M S
+		    -> resolve-long M S G I M' S'
+%%
+		    -> md-of pure F M' S'
+		    -> type.
+%mode resolve-long-reg +X1 +X2 -X3.
+
+-	: resolve-long-reg
+	   (Dof : md-of pure F M S)
+	   (resolve-long/short
+	      (Dresolve : resolve M S _ M' S'))
+	   %%
+	   Dof'
+	   <- resolve-reg Dof Dresolve
+	      (Dof' : md-of pure F M' S').
+
+-	: resolve-long-reg
+	   (Dof : md-of pure F M S)
+	   (resolve-long/cons
+	      (Dresolve2 : resolve-long M' S' _ _ M'' S'')
+	      (Dresolve1 : resolve M S _ M' S'))
+	   %%
+	   Dof''
+	   <- resolve-reg Dof Dresolve1
+	      (Dof' : md-of pure F M' S')
+	   <- resolve-long-reg Dof' Dresolve2
+	      (Dof'' : md-of pure F M'' S'').
+
+%worlds (conbind | termbind | modbind) (resolve-long-reg _ _ _).
+%total D (resolve-long-reg _ D _).
+
+
+
+resolve-in-basis-reg : md-of pure F Mec Sec
+			-> resolve-in-basis Mec Sec L S M
+%%
+			-> md-of pure F M S
+			-> type.
+%mode resolve-in-basis-reg +X1 +X2 -X3.
+
+-	: resolve-in-basis-reg
+	   (DofEC : md-of pure F Mec Sec)
+	   (resolve-in-basis/i
+	      (Dsub : sg-sub S' S)
+	      (Dresolve : resolve Mbasis Sbasis L M S')
+	      (DresolveBasis : resolve Mec Sec name/basis Mbasis Sbasis))
+	   %%
+	   (md-of/subsume Dsub Dof)
+	   <- resolve-reg DofEC DresolveBasis
+	      (DofBasis : md-of pure F Mbasis Sbasis)
+	   <- resolve-reg DofBasis Dresolve
+	      (Dof : md-of pure F M S').
+
+%worlds (conbind | termbind | modbind) (resolve-in-basis-reg _ _ _).
+%total {} (resolve-in-basis-reg _ _ _).
+
+
+
+
+%%%%%  Sharing/Where stuff  %%%%%
+
+%%  All this is in support of resolve-long-proj', which turns out to be much more
+%%  complicated to prove than you might expect.
+
+path-eq		: path -> path -> type.
+
+path-eq/i	: path-eq P P.
+
+
+
+path-resp-path : {P:path -> path} path-eq P1 P2 -> path-eq (P P1) (P P2) -> type.
+%mode path-resp-path +X1 +X2 -X3.
+
+-	: path-resp-path P _ path-eq/i.
+
+%worlds () (path-resp-path _ _ _).
+%total {} (path-resp-path _ _ _).
+
+
+
+apply-path-resp : path-eq P P' -> module-eq M1 M1' -> module-eq M2 M2' -> apply-path P M1 M2 -> apply-path P' M1' M2' -> type.
+%mode apply-path-resp +X1 +X2 +X3 +X4 -X5.
+
+- : apply-path-resp _ _ _ D D.
+
+%worlds (conblock | modvar | termblock) (apply-path-resp _ _ _ _ _).
+%total {} (apply-path-resp _ _ _ _ _).
+
+
+
+false-implies-path-eq : false -> path-eq P P' -> type.
+%mode +{P:path} +{P':path} +{X1:false} -{X2:path-eq P P'}
+   (false-implies-path-eq X1 X2).
+%worlds () (false-implies-path-eq _ _).
+%total {} (false-implies-path-eq _ _).
+
+
+
+%{
+In order to show that apply-path is injective, we must first show that
+a module cannot contain itself.  This requires a lengthy digression.
+}%
+
+
+
+mcontext : (module -> module) -> type.
+
+mcontext/var	: mcontext ([m] m).
+
+mcontext/pi1	: mcontext ([m] md/pi1 (M m))
+		   <- mcontext M.
+
+mcontext/pi2	: mcontext ([m] md/pi2 (M m))
+		   <- mcontext M.
+
+mcontext/out	: mcontext ([m] md/out (M m))
+		   <- mcontext M.
+
+
+
+nvar : (module -> module) -> type.
+
+nvar/pi1	: nvar ([m] md/pi1 (M m)).
+
+nvar/pi2	: nvar ([m] md/pi2 (M m)).
+
+nvar/out	: nvar ([m] md/out (M m)).
+
+
+
+invoke-module-eq : {M} {N} module-eq M N -> type.
+%mode invoke-module-eq +X1 +X2 +X3.
+
+- : invoke-module-eq M M module-eq/i.
+
+%worlds (conblock | termblock | modvar) (invoke-module-eq _ _ _).
+%total {} (invoke-module-eq _ _ _).
+%reduces M = N (invoke-module-eq M N _).
+
+
+
+mcontext-loop : {M}
+		 module-eq M (S N)
+		 -> mcontext S
+		 -> module-eq N (S' N)
+		 -> mcontext S'
+		 -> nvar S'
+%%
+		 -> false
+		 -> type.
+%mode mcontext-loop +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+- : mcontext-loop N
+     module-eq/i
+     mcontext/var
+     (DeqLoop : module-eq N (md/pi1 (S' N)))
+     (mcontext/pi1
+	(Dcon : mcontext S'))
+     nvar/pi1
+     Dfalse
+     <- invoke-module-eq N (md/pi1 (S' N)) DeqLoop
+     <- mcontext-loop (S' N) module-eq/i Dcon DeqLoop (mcontext/pi1 Dcon) nvar/pi1 Dfalse.
+
+- : mcontext-loop N
+     module-eq/i
+     mcontext/var
+     (DeqLoop : module-eq N (md/pi2 (S' N)))
+     (mcontext/pi2
+	(Dcon : mcontext S'))
+     nvar/pi2
+     Dfalse
+     <- invoke-module-eq N (md/pi2 (S' N)) DeqLoop
+     <- mcontext-loop (S' N) module-eq/i Dcon DeqLoop (mcontext/pi2 Dcon) nvar/pi2 Dfalse.
+
+- : mcontext-loop N
+     module-eq/i
+     mcontext/var
+     (DeqLoop : module-eq N (md/out (S' N)))
+     (mcontext/out
+	(Dcon : mcontext S'))
+     nvar/out
+     Dfalse
+     <- invoke-module-eq N (md/out (S' N)) DeqLoop
+     <- mcontext-loop (S' N) module-eq/i Dcon DeqLoop (mcontext/out Dcon) nvar/out Dfalse.
+
+- : mcontext-loop (md/pi1 (S N))
+     module-eq/i
+     (mcontext/pi1
+	(Dcon : mcontext S))
+     (DeqLoop : module-eq N (S' N))
+     (DconLoop : mcontext S')
+     (Dnvar : nvar S')
+     Dfalse
+     <- mcontext-loop (S N) module-eq/i Dcon DeqLoop DconLoop Dnvar Dfalse.
+
+- : mcontext-loop (md/pi2 (S N))
+     module-eq/i
+     (mcontext/pi2
+	(Dcon : mcontext S))
+     (DeqLoop : module-eq N (S' N))
+     (DconLoop : mcontext S')
+     (Dnvar : nvar S')
+     Dfalse
+     <- mcontext-loop (S N) module-eq/i Dcon DeqLoop DconLoop Dnvar Dfalse.
+
+- : mcontext-loop (md/out (S N))
+     module-eq/i
+     (mcontext/out
+	(Dcon : mcontext S))
+     (DeqLoop : module-eq N (S' N))
+     (DconLoop : mcontext S')
+     (Dnvar : nvar S')
+     Dfalse
+     <- mcontext-loop (S N) module-eq/i Dcon DeqLoop DconLoop Dnvar Dfalse.
+
+%worlds (conblock | modvar | termblock) (mcontext-loop _ _ _ _ _ _ _).
+%total M (mcontext-loop M _ _ _ _ _ _).
+
+
+
+diffconatom : (module -> module) -> (module -> module) -> type.
+
+diffconatom/pi1-pi2	: diffconatom md/pi1 md/pi2.
+
+diffconatom/pi1-out	: diffconatom md/pi1 md/out.
+
+diffconatom/pi2-out	: diffconatom md/pi2 md/out.
+
+
+
+mcontext-loop2 : mcontext S1
+		  -> mcontext S2
+		  -> diffconatom S1' S2'
+		  -> module-eq (S1 (S1' M)) (S2 (S2' M))
+%%
+		  -> false 
+		  -> type.
+%mode mcontext-loop2 +X1 +X2 +X3 +X4 -X5.
+
+- : mcontext-loop2 
+     (mcontext/pi1 (Dcon1 : mcontext S1)) 
+     (mcontext/pi1 (Dcon2 : mcontext S2))
+     (Ddca : diffconatom S1' S2') 
+     (Deq : module-eq (md/pi1 (S1 (S1' M))) (md/pi1 (S2 (S2' M))))
+     Dfalse
+     <- module-eq-pi1-invert Deq
+	(Deq' : module-eq (S1 (S1' M)) (S2 (S2' M)))
+     <- mcontext-loop2 Dcon1 Dcon2 Ddca Deq' Dfalse.
+
+- : mcontext-loop2 
+     (mcontext/pi2 (Dcon1 : mcontext S1)) 
+     (mcontext/pi2 (Dcon2 : mcontext S2))
+     (Ddca : diffconatom S1' S2') 
+     (Deq : module-eq (md/pi2 (S1 (S1' M))) (md/pi2 (S2 (S2' M))))
+     Dfalse
+     <- module-eq-pi2-invert Deq
+	(Deq' : module-eq (S1 (S1' M)) (S2 (S2' M)))
+     <- mcontext-loop2 Dcon1 Dcon2 Ddca Deq' Dfalse.
+
+- : mcontext-loop2 
+     (mcontext/out (Dcon1 : mcontext S1)) 
+     (mcontext/out (Dcon2 : mcontext S2))
+     (Ddca : diffconatom S1' S2') 
+     (Deq : module-eq (md/out (S1 (S1' M))) (md/out (S2 (S2' M))))
+     Dfalse
+     <- module-eq-out-invert Deq
+	(Deq' : module-eq (S1 (S1' M)) (S2 (S2' M)))
+     <- mcontext-loop2 Dcon1 Dcon2 Ddca Deq' Dfalse.
+
+- : mcontext-loop2
+     mcontext/var
+     (mcontext/pi1
+	(Dcon : mcontext S))
+     diffconatom/pi1-pi2
+     (Deq : module-eq (md/pi1 M) (md/pi1 (S (md/pi2 M))))
+     Dfalse
+     <- module-eq-pi1-invert Deq
+	(Deq' : module-eq M (S (md/pi2 M)))
+     <- module-resp-module md/pi2 Deq'
+	(Deq'' : module-eq (md/pi2 M) (md/pi2 (S (md/pi2 M))))
+     <- mcontext-loop (md/pi2 M) Deq'' (mcontext/pi2 Dcon) Deq'' (mcontext/pi2 Dcon) nvar/pi2 Dfalse.
+
+- : mcontext-loop2
+     mcontext/var
+     (mcontext/pi1
+	(Dcon : mcontext S))
+     diffconatom/pi1-out
+     (Deq : module-eq (md/pi1 M) (md/pi1 (S (md/out M))))
+     Dfalse
+     <- module-eq-pi1-invert Deq
+	(Deq' : module-eq M (S (md/out M)))
+     <- module-resp-module md/out Deq'
+	(Deq'' : module-eq (md/out M) (md/out (S (md/out M))))
+     <- mcontext-loop (md/out M) Deq'' (mcontext/out Dcon) Deq'' (mcontext/out Dcon) nvar/out Dfalse.
+
+- : mcontext-loop2
+     mcontext/var
+     (mcontext/pi2
+	(Dcon : mcontext S))
+     diffconatom/pi2-out
+     (Deq : module-eq (md/pi2 M) (md/pi2 (S (md/out M))))
+     Dfalse
+     <- module-eq-pi2-invert Deq
+	(Deq' : module-eq M (S (md/out M)))
+     <- module-resp-module md/out Deq'
+	(Deq'' : module-eq (md/out M) (md/out (S (md/out M))))
+     <- mcontext-loop (md/out M) Deq'' (mcontext/out Dcon) Deq'' (mcontext/out Dcon) nvar/out Dfalse.
+
+- : mcontext-loop2
+     (mcontext/pi2
+	(Dcon : mcontext S))
+     mcontext/var
+     diffconatom/pi1-pi2
+     (Deq : module-eq (md/pi2 (S (md/pi1 M))) (md/pi2 M))
+     Dfalse
+     <- module-eq-pi2-invert Deq
+	(Deq' : module-eq (S (md/pi1 M)) M)
+     <- module-resp-module md/pi1 Deq'
+	(Deq'' : module-eq (md/pi1 (S (md/pi1 M))) (md/pi1 M))
+     <- module-eq-symm Deq''
+	(Deq''' : module-eq (md/pi1 M) (md/pi1 (S (md/pi1 M))))
+     <- mcontext-loop (md/pi1 M) Deq''' (mcontext/pi1 Dcon) Deq''' (mcontext/pi1 Dcon) nvar/pi1 Dfalse.
+
+- : mcontext-loop2
+     (mcontext/out
+	(Dcon : mcontext S))
+     mcontext/var
+     diffconatom/pi1-out
+     (Deq : module-eq (md/out (S (md/pi1 M))) (md/out M))
+     Dfalse
+     <- module-eq-out-invert Deq
+	(Deq' : module-eq (S (md/pi1 M)) M)
+     <- module-resp-module md/pi1 Deq'
+	(Deq'' : module-eq (md/pi1 (S (md/pi1 M))) (md/pi1 M))
+     <- module-eq-symm Deq''
+	(Deq''' : module-eq (md/pi1 M) (md/pi1 (S (md/pi1 M))))
+     <- mcontext-loop (md/pi1 M) Deq''' (mcontext/pi1 Dcon) Deq''' (mcontext/pi1 Dcon) nvar/pi1 Dfalse.
+
+- : mcontext-loop2
+     (mcontext/out
+	(Dcon : mcontext S))
+     mcontext/var
+     diffconatom/pi2-out
+     (Deq : module-eq (md/out (S (md/pi2 M))) (md/out M))
+     Dfalse
+     <- module-eq-out-invert Deq
+	(Deq' : module-eq (S (md/pi2 M)) M)
+     <- module-resp-module md/pi2 Deq'
+	(Deq'' : module-eq (md/pi2 (S (md/pi2 M))) (md/pi2 M))
+     <- module-eq-symm Deq''
+	(Deq''' : module-eq (md/pi2 M) (md/pi2 (S (md/pi2 M))))
+     <- mcontext-loop (md/pi2 M) Deq''' (mcontext/pi2 Dcon) Deq''' (mcontext/pi2 Dcon) nvar/pi2 Dfalse.
+
+%worlds (conblock | modvar | termblock) (mcontext-loop2 _ _ _ _ _).
+%total D (mcontext-loop2 D _ _ _ _).
+
+
+
+compose-mcontext : mcontext S1
+		    -> mcontext S2
+		    -> mcontext ([m] S1 (S2 m))
+		    -> type.
+%mode compose-mcontext +X1 +X2 -X3.
+
+- : compose-mcontext mcontext/var D D.
+
+- : compose-mcontext (mcontext/pi1 D1) D2 (mcontext/pi1 D3)
+     <- compose-mcontext D1 D2 D3.
+
+- : compose-mcontext (mcontext/pi2 D1) D2 (mcontext/pi2 D3)
+     <- compose-mcontext D1 D2 D3.
+
+- : compose-mcontext (mcontext/out D1) D2 (mcontext/out D3)
+     <- compose-mcontext D1 D2 D3.
+
+%worlds (conblock | modvar | termblock) (compose-mcontext _ _ _).
+%total D (compose-mcontext D _ _).
+
+
+
+apply-path-mcontext : apply-path P M1 M2
+%%
+		       -> module-eq M2 (S M1)
+		       -> mcontext S
+		       -> type.
+%mode apply-path-mcontext +X1 -X2 -X3.
+
+- : apply-path-mcontext apply-path/nil module-eq/i mcontext/var.
+
+- : apply-path-mcontext (apply-path/pi1 Dapply) Deq Dcon'
+     <- apply-path-mcontext Dapply (Deq : module-eq M1 (S (md/pi1 M2))) (Dcon : mcontext S)
+     <- compose-mcontext Dcon (mcontext/pi1 mcontext/var) Dcon'.
+
+- : apply-path-mcontext (apply-path/pi2 Dapply) Deq Dcon'
+     <- apply-path-mcontext Dapply (Deq : module-eq M1 (S (md/pi2 M2))) (Dcon : mcontext S)
+     <- compose-mcontext Dcon (mcontext/pi2 mcontext/var) Dcon'.
+
+- : apply-path-mcontext (apply-path/out Dapply) Deq Dcon'
+     <- apply-path-mcontext Dapply (Deq : module-eq M1 (S (md/out M2))) (Dcon : mcontext S)
+     <- compose-mcontext Dcon (mcontext/out mcontext/var) Dcon'.
+
+%worlds (conblock | modvar | termblock) (apply-path-mcontext _ _ _).
+%total D (apply-path-mcontext D _ _).
+
+
+
+apply-path-injective : apply-path P1 M M'
+			-> apply-path P2 M M'
+%%
+			-> path-eq P1 P2
+			-> type.
+%mode apply-path-injective +X1 +X2 -X3.
+
+- : apply-path-injective apply-path/nil apply-path/nil path-eq/i.
+
+- : apply-path-injective (apply-path/pi1 D1) (apply-path/pi1 D2) Deq'
+     <- apply-path-injective D1 D2 Deq
+     <- path-resp-path path/pi1 Deq Deq'.
+
+- : apply-path-injective (apply-path/pi2 D1) (apply-path/pi2 D2) Deq'
+     <- apply-path-injective D1 D2 Deq
+     <- path-resp-path path/pi2 Deq Deq'.
+
+- : apply-path-injective (apply-path/out D1) (apply-path/out D2) Deq'
+     <- apply-path-injective D1 D2 Deq
+     <- path-resp-path path/out Deq Deq'.
+
+- : apply-path-injective apply-path/nil 
+     (apply-path/pi1 
+	(Dapply : apply-path P (md/pi1 M) M))
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/pi1 M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/pi1 Deq
+	(Deq' : module-eq (md/pi1 M) (md/pi1 (S (md/pi1 M))))
+     <- mcontext-loop (md/pi1 M) Deq' (mcontext/pi1 Dcon) Deq' (mcontext/pi1 Dcon) nvar/pi1 Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective apply-path/nil 
+     (apply-path/pi2 
+	(Dapply : apply-path P (md/pi2 M) M))
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/pi2 M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/pi2 Deq
+	(Deq' : module-eq (md/pi2 M) (md/pi2 (S (md/pi2 M))))
+     <- mcontext-loop (md/pi2 M) Deq' (mcontext/pi2 Dcon) Deq' (mcontext/pi2 Dcon) nvar/pi2 Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective apply-path/nil 
+     (apply-path/out 
+	(Dapply : apply-path P (md/out M) M))
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/out M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/out Deq
+	(Deq' : module-eq (md/out M) (md/out (S (md/out M))))
+     <- mcontext-loop (md/out M) Deq' (mcontext/out Dcon) Deq' (mcontext/out Dcon) nvar/out Dfalse
+     <- false-implies-path-eq Dfalse D.
+	
+- : apply-path-injective
+     (apply-path/pi1 
+	(Dapply : apply-path P (md/pi1 M) M))
+     apply-path/nil 
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/pi1 M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/pi1 Deq
+	(Deq' : module-eq (md/pi1 M) (md/pi1 (S (md/pi1 M))))
+     <- mcontext-loop (md/pi1 M) Deq' (mcontext/pi1 Dcon) Deq' (mcontext/pi1 Dcon) nvar/pi1 Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective
+     (apply-path/pi2 
+	(Dapply : apply-path P (md/pi2 M) M))
+     apply-path/nil 
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/pi2 M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/pi2 Deq
+	(Deq' : module-eq (md/pi2 M) (md/pi2 (S (md/pi2 M))))
+     <- mcontext-loop (md/pi2 M) Deq' (mcontext/pi2 Dcon) Deq' (mcontext/pi2 Dcon) nvar/pi2 Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective
+     (apply-path/out 
+	(Dapply : apply-path P (md/out M) M))
+     apply-path/nil 
+     D
+     <- apply-path-mcontext Dapply
+	(Deq : module-eq M (S (md/out M)))
+	(Dcon : mcontext S)
+     <- module-resp-module md/out Deq
+	(Deq' : module-eq (md/out M) (md/out (S (md/out M))))
+     <- mcontext-loop (md/out M) Deq' (mcontext/out Dcon) Deq' (mcontext/out Dcon) nvar/out Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/pi1
+	(Dapply1 : apply-path P1 (md/pi1 M) M'))
+     (apply-path/pi2
+	(Dapply2 : apply-path P2 (md/pi2 M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi1 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/pi2 M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi1 M)) (S2 (md/pi2 M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi1-pi2 Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/pi2
+	(Dapply2 : apply-path P2 (md/pi2 M) M'))
+     (apply-path/pi1
+	(Dapply1 : apply-path P1 (md/pi1 M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi1 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/pi2 M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi1 M)) (S2 (md/pi2 M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi1-pi2 Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/pi1
+	(Dapply1 : apply-path P1 (md/pi1 M) M'))
+     (apply-path/out
+	(Dapply2 : apply-path P2 (md/out M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi1 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/out M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi1 M)) (S2 (md/out M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi1-out Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/out
+	(Dapply2 : apply-path P2 (md/out M) M'))
+     (apply-path/pi1
+	(Dapply1 : apply-path P1 (md/pi1 M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi1 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/out M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi1 M)) (S2 (md/out M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi1-out Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/pi2
+	(Dapply1 : apply-path P1 (md/pi2 M) M'))
+     (apply-path/out
+	(Dapply2 : apply-path P2 (md/out M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi2 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/out M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi2 M)) (S2 (md/out M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi2-out Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+- : apply-path-injective 
+     (apply-path/out
+	(Dapply2 : apply-path P2 (md/out M) M'))
+     (apply-path/pi2
+	(Dapply1 : apply-path P1 (md/pi2 M) M'))
+     D
+     <- apply-path-mcontext Dapply1
+	(Deq1 : module-eq M' (S1 (md/pi2 M)))
+	(Dcon1 : mcontext S1)
+     <- apply-path-mcontext Dapply2
+	(Deq2 : module-eq M' (S2 (md/out M)))
+	(Dcon2 : mcontext S2)
+     <- module-eq-symm Deq1 Deq1'
+     <- module-eq-trans Deq1' Deq2
+	(Deq : module-eq (S1 (md/pi2 M)) (S2 (md/out M)))
+     <- mcontext-loop2 Dcon1 Dcon2 diffconatom/pi2-out Deq Dfalse
+     <- false-implies-path-eq Dfalse D.
+
+%worlds (conblock | modvar | termblock) (apply-path-injective _ _ _).
+%total D (apply-path-injective D _ _).
+
+
+
+can-apply-path : {P} {M}
+		  apply-path P M M'
+		  -> type.
+%mode can-apply-path +X1 +X2 -X3.
+
+- : can-apply-path path/nil _ apply-path/nil.
+
+- : can-apply-path (path/pi1 P) M (apply-path/pi1 D)
+     <- can-apply-path P _ D.
+
+- : can-apply-path (path/pi2 P) M (apply-path/pi2 D)
+     <- can-apply-path P _ D.
+
+- : can-apply-path (path/out P) M (apply-path/out D)
+     <- can-apply-path P _ D.
+
+%worlds (conblock | modvar | termblock) (can-apply-path _ _ _).
+%total D (can-apply-path D _ _).
+
+
+
+apply-path-fun : apply-path P M M1
+		  -> apply-path P M M2
+%%
+		  -> module-eq M1 M2
+		  -> type.
+%mode apply-path-fun +X1 +X2 -X3.
+
+- : apply-path-fun apply-path/nil apply-path/nil module-eq/i.
+
+- : apply-path-fun (apply-path/pi1 D1) (apply-path/pi1 D2) Deq
+     <- apply-path-fun D1 D2 Deq.
+
+- : apply-path-fun (apply-path/pi2 D1) (apply-path/pi2 D2) Deq
+     <- apply-path-fun D1 D2 Deq.
+
+- : apply-path-fun (apply-path/out D1) (apply-path/out D2) Deq
+     <- apply-path-fun D1 D2 Deq.
+
+%worlds (conblock | modvar | termblock) (apply-path-fun _ _ _).
+%total D (apply-path-fun D _ _).
+
+
+
+resolve-depend : ({a} {m} md-fst m a -> resolve (M1 m) (S1 a) L (M2 a m) (S2 a))
+		  -> ({a} {m} module-eq (M2 a m) (M2' m))
+		  -> type.
+%mode resolve-depend +X1 -X2.
+
+- : resolve-depend ([a] [m] [d] resolve/hit) ([_] [_] module-eq/i).
+
+- : resolve-depend 
+     ([a] [m] [d]
+	resolve/searchable
+	(Dresolve a m d : resolve (md/out (M1 m)) (S1 a) L (M2 a m) (S2 a))
+	(Dsearchable : searchable L')
+	(Dneq : name-neq L L'))
+     Deq
+     <- resolve-depend Dresolve Deq.
+
+- : resolve-depend 
+     ([a] [m] [d]
+	resolve/pi2
+	(Dresolve a m d : resolve (md/pi2 (M1 m)) (S1 a (pi1 (C a))) L (M2 a m) (S2 a))
+	(Dfst a m d : md-fst (M1 m) (C a))
+	: resolve _ (sg/sigma (S1l a) ([b] S1 a b)) _ _ _)
+     Deq
+     <- resolve-depend Dresolve Deq.
+
+- : resolve-depend 
+     ([a] [m] [d]
+	resolve/pi1
+	(Dresolve a m d : resolve (md/pi1 (M1 m)) (S1 a) L (M2 a m) (S2 a))
+	(Dnoresolve a m d : noresolve (md/pi2 (M1 m)) (S1r a (pi1 (C a))) L)
+	(Dfst a m d : md-fst (M1 m) (C a))
+	: resolve _ (sg/sigma (S1 a) ([b] S1r a b)) _ _ _)
+     Deq
+     <- resolve-depend Dresolve Deq.
+
+%worlds (conblock | modblock | termblock) (resolve-depend _ _).
+%total D (resolve-depend D _).
+
+
+
+apply-path-fst : apply-path P M M'
+		  -> md-fst M C
+%%
+		  -> md-fst M' C'
+		  -> type.
+%mode apply-path-fst +X1 +X2 -X3.
+
+- : apply-path-fst apply-path/nil D D.
+
+- : apply-path-fst (apply-path/pi1 D) Dfst Dfst'
+     <- apply-path-fst D (md-fst/pi1 Dfst) Dfst'.
+
+- : apply-path-fst (apply-path/pi2 D) Dfst Dfst'
+     <- apply-path-fst D (md-fst/pi2 Dfst) Dfst'.
+
+- : apply-path-fst (apply-path/out D) Dfst Dfst'
+     <- apply-path-fst D (md-fst/out Dfst) Dfst'.
+
+%worlds (conblock | modblock | termblock) (apply-path-fst _ _ _).
+%total D (apply-path-fst D _ _).
+
+
+
+resolve-fst : resolve M S L M' S'
+	       -> md-fst M C
+%%
+	       -> md-fst M' C'
+	       -> type.
+%mode resolve-fst +X1 +X2 -X3.
+
+- : resolve-fst resolve/hit D (md-fst/out D).
+
+- : resolve-fst (resolve/searchable D _ _) Dfst Dfst'
+     <- resolve-fst D (md-fst/out Dfst) Dfst'.
+
+- : resolve-fst (resolve/pi2 D _) Dfst Dfst'
+     <- resolve-fst D (md-fst/pi2 Dfst) Dfst'.
+
+- : resolve-fst (resolve/pi1 D _ _) Dfst Dfst'
+     <- resolve-fst D (md-fst/pi1 Dfst) Dfst'.
+
+%worlds (conblock | modblock | termblock) (resolve-fst _ _ _).
+%total D (resolve-fst D _ _).
+
+
+
+sg-proj : path -> sg -> (con -> sg) -> type.
+
+sg-proj/nil	: sg-proj path/nil S ([_] S).
+
+sg-proj/pi1	: sg-proj (path/pi1 P) (sg/sigma S1 ([a] S2 a)) ([c] S (pi1 c))
+		   <- sg-proj P S1 ([a] S a).
+
+sg-proj/pi2	: sg-proj (path/pi2 P) (sg/sigma S1 ([a] S2 a)) ([c] S (pi1 c) (pi2 c))
+		   <- ({a} sg-proj P (S2 a) ([b] S a b)).
+
+sg-proj/out	: sg-proj (path/out P) (sg/named L S) ([c] S' c)
+		   <- sg-proj P S ([c] S' c).
+
+
+
+sg-proj-resp : path-eq P P' -> sg-eq S1 S1' -> ({a} sg-eq (S2 a) (S2' a)) -> sg-proj P S1 S2 -> sg-proj P' S1' S2' -> type.
+%mode sg-proj-resp +X1 +X2 +X3 +X4 -X5.
+
+- : sg-proj-resp _ _ _ D D.
+
+%worlds (conblock) (sg-proj-resp _ _ _ _ _).
+%total {} (sg-proj-resp _ _ _ _ _).
+
+
+
+sg-proj-fun : sg-proj P S ([a] S1 a)
+	       -> sg-proj P S ([a] S2 a)
+%%
+	       -> ({a} sg-eq (S1 a) (S2 a))
+	       -> type.
+%mode sg-proj-fun +X1 +X2 -X3.
+
+- : sg-proj-fun sg-proj/nil sg-proj/nil ([_] sg-eq/i).
+
+- : sg-proj-fun (sg-proj/pi1 D1) (sg-proj/pi1 D2) ([a] Deq (pi1 a))
+     <- sg-proj-fun D1 D2 Deq.
+
+- : sg-proj-fun (sg-proj/pi2 D1) (sg-proj/pi2 D2) ([a] Deq (pi1 a) (pi2 a))
+     <- ({a} sg-proj-fun (D1 a) (D2 a) ([b] Deq a b)).
+
+- : sg-proj-fun (sg-proj/out D1) (sg-proj/out D2) Deq
+     <- sg-proj-fun D1 D2 Deq.
+
+%worlds (conblock) (sg-proj-fun _ _ _).
+%total D (sg-proj-fun D _ _).
+
+
+
+generalize-noresolve : {M1} {S1}
+			noresolve (M1 M) (S1 C) L
+			-> ({a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+			-> md-fst M C
+%%
+			-> ({a} {m} md-fst m a -> noresolve (M1 m) (S1 a) L)
+			-> type.
+%mode generalize-noresolve +X1 +X2 +X3 +X4 +X5 -X6.
+
+- : generalize-noresolve M1 ([a] sg/named L' (S1 a))
+     (noresolve/named1
+	(Dnoresolve : noresolve (md/out (M1 M)) (S1 C) L)
+	(Dneq : name-neq L L'))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d]
+	noresolve/named1
+	(Dnoresolve' a m d)
+	Dneq)
+     <- generalize-noresolve ([m] md/out (M1 m)) ([a] S1 a)
+	Dnoresolve
+	([a] [m] [d:md-fst m a] md-fst/out (DfstM1 a m d))
+	DfstM
+	%%
+	(Dnoresolve' : {a} {m} md-fst m a
+			-> noresolve (md/out (M1 m)) (S1 a) L).
+
+- : generalize-noresolve M1 ([a] sg/named L' (S1 a))
+     (noresolve/named2
+	(Dunsearchable : unsearchable L')
+	(Dneq : name-neq L L'))
+     _
+     _
+     %%
+     ([_] [_] [_] noresolve/named2 Dunsearchable Dneq).
+
+- : generalize-noresolve M1 ([a] sg/sigma (S1 a) ([b] S2 a b))
+     (noresolve/sigma
+	(Dnoresolve1 : noresolve (md/pi1 (M1 M)) (S1 C) L)
+	(Dnoresolve2 : noresolve (md/pi2 (M1 M)) (S2 C (pi1 C1m)) L)
+	(DfstM1m : md-fst (M1 M) C1m))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d:md-fst m a]
+	noresolve/sigma
+	(Dnoresolve1' a m d)
+	(Dnoresolve2'' a m d)
+	(DfstM1 a m d))
+     <- md-fst-fun DfstM1m (DfstM1 _ _ DfstM)
+	(DeqC1m : con-eq C1m (C1 C))
+     <- sg-resp-con ([a] S2 C (pi1 a)) DeqC1m
+	(DeqS2m : sg-eq (S2 C (pi1 C1m)) (S2 C (pi1 (C1 C))))
+     <- noresolve-resp module-eq/i DeqS2m name-eq/i Dnoresolve2
+	(Dnoresolve2' : noresolve (md/pi2 (M1 M)) (S2 C (pi1 (C1 C))) L)
+     <- generalize-noresolve 
+	([m] md/pi2 (M1 m)) ([a] S2 a (pi1 (C1 a))) 
+	Dnoresolve2'
+	([a] [m] [d:md-fst m a] md-fst/pi2 (DfstM1 a m d))
+	DfstM
+	%%
+	(Dnoresolve2'' : {a} {m} md-fst m a
+			 -> noresolve (md/pi2 (M1 m)) (S2 a (pi1 (C1 a))) L)
+     <- generalize-noresolve
+	([m] md/pi1 (M1 m)) ([a] S1 a)
+	Dnoresolve1
+	([a] [m] [d:md-fst m a] md-fst/pi1 (DfstM1 a m d))
+	DfstM
+	%%
+	(Dnoresolve1' : {a} {m} md-fst m a
+			 -> noresolve (md/pi1 (M1 m)) (S1 a) L).
+
+- : generalize-noresolve M1 ([a] sg/one) noresolve/one _ _
+     ([_] [_] [_] noresolve/one).
+
+%worlds (conblock | modblock | termblock) (generalize-noresolve _ _ _ _ _ _).
+%total D (generalize-noresolve _ _ D _ _ _).
+
+
+
+generalize-resolve : {M1} {S1}
+		      resolve (M1 M) (S1 C) L M2 S2
+		      -> ({a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+		      -> md-fst M C
+%%
+		      -> ({a} {m} md-fst m a -> resolve (M1 m) (S1 a) L (M2' m) (S2' a))
+		      -> module-eq (M2' M) M2
+		      -> sg-eq (S2' C) S2
+		      -> type.
+%mode generalize-resolve +X1 +X2 +X3 +X4 +X5 -X6 -X7 -X8.
+
+- : generalize-resolve M1 ([a] sg/named L (S1 a)) resolve/hit _ Dfst
+     ([a] [m] [d] resolve/hit)
+     module-eq/i
+     sg-eq/i.
+
+- : generalize-resolve M1 ([a] sg/named L' (S1 a))
+     (resolve/searchable
+	(Dresolve : resolve (md/out (M1 M)) (S1 C) L M' S')
+	(Dsearchable : searchable L')
+	(Dneq : name-neq L L'))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d:md-fst m a]
+	resolve/searchable
+	(Dresolve' a m d)
+	Dsearchable
+	Dneq)
+     DeqM
+     DeqS
+     <- generalize-resolve ([m] md/out (M1 m)) ([a] S1 a)
+	Dresolve
+	([a] [m] [d:md-fst m a] md-fst/out (DfstM1 a m d))
+	DfstM
+	%%
+	(Dresolve' : {a} {m} md-fst m a
+		      -> resolve (md/out (M1 m)) (S1 a) L (M2' m) (S2' a))
+	(DeqM : module-eq (M2' M) M')
+	(DeqS : sg-eq (S2' C) S').
+
+- : generalize-resolve M1 ([a] sg/sigma (S1 a) ([b] S2 a b))
+     (resolve/pi1
+	(Dresolve : resolve (md/pi1 (M1 M)) (S1 C) L M' S')
+	(Dnoresolve : noresolve (md/pi2 (M1 M)) (S2 C (pi1 C1m)) L)
+	(DfstM1m : md-fst (M1 M) C1m))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d:md-fst m a]
+	resolve/pi1
+	(Dresolve' a m d)
+	(Dnoresolve'' a m d)
+	(DfstM1 a m d))
+     DeqM
+     DeqS
+     <- md-fst-fun DfstM1m (DfstM1 _ _ DfstM)
+	(DeqC1m : con-eq C1m (C1 C))
+     <- sg-resp-con ([a] S2 C (pi1 a)) DeqC1m
+	(DeqS2m : sg-eq (S2 C (pi1 C1m)) (S2 C (pi1 (C1 C))))
+     <- noresolve-resp module-eq/i DeqS2m name-eq/i Dnoresolve
+	(Dnoresolve' : noresolve (md/pi2 (M1 M)) (S2 C (pi1 (C1 C))) L)
+     <- generalize-noresolve 
+	([m] md/pi2 (M1 m)) ([a] S2 a (pi1 (C1 a))) 
+	Dnoresolve'
+	([a] [m] [d:md-fst m a] md-fst/pi2 (DfstM1 a m d))
+	DfstM
+	%%
+	(Dnoresolve'' : {a} {m} md-fst m a
+			 -> noresolve (md/pi2 (M1 m)) (S2 a (pi1 (C1 a))) L)
+     <- generalize-resolve
+	([m] md/pi1 (M1 m)) ([a] S1 a)
+	Dresolve
+	([a] [m] [d:md-fst m a] md-fst/pi1 (DfstM1 a m d))
+	DfstM
+	%%
+	(Dresolve' : {a} {m} md-fst m a
+		      -> resolve (md/pi1 (M1 m)) (S1 a) L (M2' m) (S2' a))
+	(DeqM : module-eq (M2' M) M')
+	(DeqS : sg-eq (S2' C) S').
+
+- : generalize-resolve M1 ([a] sg/sigma (S1 a) ([b] S2 a b))
+     (resolve/pi2
+	(Dresolve : resolve (md/pi2 (M1 M)) (S2 C (pi1 C1m)) L M' S')
+	(DfstM1m : md-fst (M1 M) C1m))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d:md-fst m a] 
+	resolve/pi2
+	(Dresolve'' a m d)
+	(DfstM1 a m d))
+     DeqM
+     DeqS
+     <- md-fst-fun DfstM1m (DfstM1 _ _ DfstM)
+	(DeqC1m : con-eq C1m (C1 C))
+     <- sg-resp-con ([a] S2 C (pi1 a)) DeqC1m
+	(DeqS2m : sg-eq (S2 C (pi1 C1m)) (S2 C (pi1 (C1 C))))
+     <- resolve-resp module-eq/i DeqS2m name-eq/i module-eq/i sg-eq/i Dresolve
+	(Dresolve' : resolve (md/pi2 (M1 M)) (S2 C (pi1 (C1 C))) L M' S')
+     <- generalize-resolve 
+	([m] md/pi2 (M1 m)) ([a] S2 a (pi1 (C1 a))) 
+	Dresolve'
+	([a] [m] [d:md-fst m a] md-fst/pi2 (DfstM1 a m d))
+	DfstM
+	%%
+	(Dresolve'' : {a} {m} md-fst m a
+		       -> resolve (md/pi2 (M1 m)) (S2 a (pi1 (C1 a))) L (M2' m) (S2' a))
+	(DeqM : module-eq (M2' M) M')
+	(DeqS : sg-eq (S2' C) S').
+
+%worlds (conblock | modblock | termblock) (generalize-resolve _ _ _ _ _ _ _ _).
+%total D (generalize-resolve _ _ D _ _ _ _ _).
+
+
+
+generalize-resolve-long : {M1} {S1}
+			   resolve-long (M1 M) (S1 C) F I M2 S2
+			   -> ({a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+			   -> md-fst M C
+%%
+			   -> ({a} {m} md-fst m a -> resolve-long (M1 m) (S1 a) F I (M2' m) (S2' a))
+			   -> module-eq (M2' M) M2
+			   -> sg-eq (S2' C) S2
+			   -> type.
+%mode generalize-resolve-long +X1 +X2 +X3 +X4 +X5 -X6 -X7 -X8.
+
+- : generalize-resolve-long M1 S1
+     (resolve-long/short
+	(Dresolve : resolve (M1 M) (S1 C) (F I) M2 S2)
+	: resolve-long (M1 M) (S1 C) F (longid/short I) M2 S2)
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d] resolve-long/short (Dresolve' a m d))
+     DeqM
+     DeqS
+     <- generalize-resolve M1 S1 Dresolve DfstM1 DfstM
+	(Dresolve' : {a} {m} md-fst m a -> resolve (M1 m) (S1 a) (F I) (M2' m) (S2' a))
+	(DeqM : module-eq (M2' M) M2)
+	(DeqS : sg-eq (S2' C) S2).
+
+- : generalize-resolve-long M1 S1
+     (resolve-long/cons
+	(Dresolve2 : resolve-long M2 S2 F Is M3 S3)
+	(Dresolve1 : resolve (M1 M) (S1 C) (name/mod I) M2 S2))
+     (DfstM1 : {a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+     (DfstM : md-fst M C)
+     %%
+     ([a] [m] [d] resolve-long/cons (Dresolve2'' a m d) (Dresolve1' a m d))
+     DeqM3 DeqS3
+     <- generalize-resolve M1 S1 Dresolve1 DfstM1 DfstM
+	(Dresolve1' : {a} {m} md-fst m a -> resolve (M1 m) (S1 a) (name/mod I) (M2' m) (S2' a))
+	(DeqM2 : module-eq (M2' M) M2)
+	(DeqS2 : sg-eq (S2' C) S2)
+     <- module-eq-symm DeqM2
+	(DeqM2' : module-eq M2 (M2' M))
+     <- sg-eq-symm DeqS2
+	(DeqS2' : sg-eq S2 (S2' C))
+     <- resolve-long-resp DeqM2' DeqS2' module-eq/i sg-eq/i Dresolve2
+	(Dresolve2' : resolve-long (M2' M) (S2' C) F Is M3 S3)
+     <- ({a} {m} {d}
+	   resolve-fst (Dresolve1' a m d) (DfstM1 a m d)
+	   (DfstM2' a m d : md-fst (M2' m) (C2 a)))
+     <- generalize-resolve-long M2' S2' Dresolve2' DfstM2' DfstM
+	(Dresolve2'' : {a} {m} md-fst m a -> resolve-long (M2' m) (S2' a) F Is (M3' m) (S3' a))
+	(DeqM3 : module-eq (M3' M) M3)
+	(DeqS3 : sg-eq (S3' C) S3).
+
+%worlds (conblock | modblock | termblock) (generalize-resolve-long _ _ _ _ _ _ _ _).
+%total D (generalize-resolve-long _ _ D _ _ _ _ _).
+
+
+
+generalize-sg-proj : {S1:con -> sg} {C}
+		      sg-proj P (S1 C) ([b] S2 b)
+%%
+		      -> ({a} sg-proj P (S1 a) ([b] S2' a b))
+		      -> ({b} sg-eq (S2' C b) (S2 b))
+		      -> type.
+%mode generalize-sg-proj +X1 +X2 +X3 -X4 -X5.
+
+- : generalize-sg-proj _ _ sg-proj/nil
+     ([_] sg-proj/nil) ([_] sg-eq/i).
+
+- : generalize-sg-proj ([c] sg/sigma (S1 c) ([a1] S1r c a1)) C
+     (sg-proj/pi1
+	(Dproj : sg-proj P (S1 C) ([a1] S2 a1))
+	: sg-proj (path/pi1 P) (sg/sigma (S1 C) ([a1] S1r C a1)) ([a] S2 (pi1 a)))
+     ([c] sg-proj/pi1 (Dproj' c))
+     ([a] Deq (pi1 a))
+     <- generalize-sg-proj S1 C Dproj 
+	(Dproj' : {c} sg-proj P (S1 c) ([a1] S2' c a1))
+	(Deq : {a1} sg-eq (S2' C a1) (S2 a1)).
+
+- : generalize-sg-proj ([c] sg/sigma (S1l c) ([a1] S1 c a1)) C
+     (sg-proj/pi2
+	(Dproj : {a1} sg-proj P (S1 C a1) ([a2] S2 a1 a2))
+	: sg-proj (path/pi2 P) (sg/sigma (S1l C) ([a1] S1 C a1)) ([a] S2 (pi1 a) (pi2 a)))
+     ([c] sg-proj/pi2 ([a1] Dproj' c a1))
+     ([a] Deq (pi1 a) (pi2 a))
+     <- ({a1}
+	   generalize-sg-proj ([c] S1 c a1) C (Dproj a1)
+	   ([c] Dproj' c a1 : sg-proj P (S1 c a1) ([a2] S2' c a1 a2))
+	   (Deq a1 : {a2} sg-eq (S2' C a1 a2) (S2 a1 a2))).
+
+- : generalize-sg-proj ([c] sg/named L (S1 c)) C
+     (sg-proj/out
+	(Dproj : sg-proj P (S1 C) ([a] S2 a))
+	: sg-proj (path/out P) (sg/named L (S1 C)) ([a] S2 a))
+     ([c] sg-proj/out (Dproj' c))
+     ([a] Deq a)
+     <- generalize-sg-proj S1 C Dproj 
+	(Dproj' : {c} sg-proj P (S1 c) ([a1] S2' c a1))
+	(Deq : {a1} sg-eq (S2' C a1) (S2 a1)).
+
+%worlds (conblock) (generalize-sg-proj _ _ _ _ _).
+%total D (generalize-sg-proj _ _ D _ _).
+
+
+
+resolve-proj : {S} 
+		({a} {m} md-fst m a -> resolve m S L (M' m) (S' a))
+%%
+		-> ({m} apply-path P m (M' m))
+		-> sg-proj P S ([a] S' a)
+		-> type.
+%mode resolve-proj +X1 +X2 -X3 -X4.
+
+- : resolve-proj _
+     ([a] [m] [d] resolve/hit)
+     ([m] apply-path/out apply-path/nil)
+     (sg-proj/out sg-proj/nil).
+
+- : resolve-proj
+     (sg/named L' S1)
+     ([a] [m] [d:md-fst m a]
+	resolve/searchable
+	(Dresolve a m d : resolve (md/out m) S1 L (M m) (S a))
+	Dsearchable Dneq
+	: resolve m (sg/named L' S1) L (M m) (S a))
+     ([m] apply-path/out (Dapply' star m))
+     Dproj'
+     <- ({a} {m} {d:md-fst m a}
+	   generalize-resolve ([m1] m1) ([_] S1)
+	   (Dresolve a m d)
+	   ([a] [m] [d] d)
+	   (md-fst/out d)
+	   %%
+	   (Dresolve' a m d
+	      : {a1} {m1} md-fst m1 a1
+		 -> resolve m1 S1 L (M' a m m1) (S' a a1))
+	   (DeqM a m : module-eq (M' a m (md/out m)) (M m))
+	   (DeqS' a : sg-eq (S' a a) (S a)))
+     <- ({a} {m} {d:md-fst m a}
+	   resolve-proj S1 (Dresolve' a m d)
+	   (Dapply a m : {m1} apply-path P m1 (M' a m m1))
+	   (Dproj a : sg-proj P S1 ([a1] S' a a1)))
+     <- ({a} {m}
+	   apply-path-resp path-eq/i module-eq/i (DeqM a m) (Dapply a m (md/out m))
+	   (Dapply' a m : apply-path P (md/out m) (M m)))
+     <- ({a}
+	   sg-proj-fun (Dproj star) (Dproj a)
+	   (DeqS'' a : {a1} sg-eq (S' star a1) (S' a a1)))
+     <- ({a}
+	   sg-eq-trans (DeqS'' a a) (DeqS' a)
+	   (DeqS a : sg-eq (S' star a) (S a)))
+     <- sg-proj-resp path-eq/i sg-eq/i DeqS (sg-proj/out (Dproj star))
+	(Dproj' : sg-proj (path/out P) (sg/named L' S1) ([a] S a)).
+     
+- : resolve-proj
+     (sg/sigma S1 S2)
+     ([a] [m] [d:md-fst m a]
+	resolve/pi1
+	(Dresolve a m d : resolve (md/pi1 m) S1 L (M m) (S a))
+	_ d
+	: resolve m (sg/sigma S1 S2) L (M m) (S a))
+     ([m] apply-path/pi1 (Dapply' star m))
+     Dproj'
+     <- ({a} {m} {d:md-fst m a}
+	   generalize-resolve ([m1] m1) ([_] S1)
+	   (Dresolve a m d)
+	   ([a] [m] [d] d)
+	   (md-fst/pi1 d)
+	   %%
+	   (Dresolve' a m d
+	      : {a1} {m1} md-fst m1 a1
+		 -> resolve m1 S1 L (M' a m m1) (S' a a1))
+	   (DeqM a m : module-eq (M' a m (md/pi1 m)) (M m))
+	   (DeqS' a : sg-eq (S' a (pi1 a)) (S a)))
+     <- ({a} {m} {d:md-fst m a}
+	   resolve-proj S1 (Dresolve' a m d)
+	   (Dapply a m : {m1} apply-path P m1 (M' a m m1))
+	   (Dproj a : sg-proj P S1 ([a1] S' a a1)))
+     <- ({a} {m}
+	   apply-path-resp path-eq/i module-eq/i (DeqM a m) (Dapply a m (md/pi1 m))
+	   (Dapply' a m : apply-path P (md/pi1 m) (M m)))
+     <- ({a}
+	   sg-proj-fun (Dproj star) (Dproj a)
+	   (DeqS'' a : {a1} sg-eq (S' star a1) (S' a a1)))
+     <- ({a}
+	   sg-eq-trans (DeqS'' a (pi1 a)) (DeqS' a)
+	   (DeqS a : sg-eq (S' star (pi1 a)) (S a)))
+     <- sg-proj-resp path-eq/i sg-eq/i DeqS (sg-proj/pi1 (Dproj star))
+	(Dproj' : sg-proj (path/pi1 P) (sg/sigma S1 S2) ([a] S a)).
+     
+- : resolve-proj
+     (sg/sigma S1 S2)
+     ([a] [m] [d:md-fst m a]
+	resolve/pi2
+	(Dresolve a m d : resolve (md/pi2 m) (S2 (pi1 a)) L (M m) (S a))
+	d
+	: resolve m (sg/sigma S1 S2) L (M m) (S a))
+     ([m] apply-path/pi2 (Dapply' star m))
+     Dproj'
+     <- ({a} {m} {d:md-fst m a}
+	   generalize-resolve ([_] md/pi2 m) S2
+	   (Dresolve a m d)
+	   ([_] [_] [_] md-fst/pi2 d)
+	   (md-fst/pi1 d)
+	   %%
+	   (Dresolve' a m d 
+	      : {a1} {m1} md-fst m1 a1
+		 -> resolve (md/pi2 m) (S2 a1) L (M' a m m1) (S' a a1))
+	   (DeqM' a m : module-eq (M' a m (md/pi1 m)) (M m))
+	   (DeqS' a : sg-eq (S' a (pi1 a)) (S a)))
+     <- ({a} {m} {d:md-fst m a} {a1} {m1} {d1:md-fst m1 a1}
+	   generalize-resolve ([m2] m2) ([_] S2 a1)
+	   (Dresolve' a m d a1 m1 d1)
+	   ([a] [m] [d] d)
+	   (md-fst/pi2 d)
+	   %%
+	   (Dresolve'' a m d a1 m1 d1
+	      : {a2} {m2} md-fst m2 a2
+		 -> resolve m2 (S2 a1) L (M'' a m a1 m1 m2) (S'' a a1 a2))
+	   (DeqM'' a m a1 m1 : module-eq (M'' a m a1 m1 (md/pi2 m)) (M' a m m1))
+	   (DeqS'' a a1 : sg-eq (S'' a a1 (pi2 a)) (S' a a1)))
+     <- ({a} {m} {d:md-fst m a} {a1} {m1} {d1:md-fst m1 a1}
+	   resolve-proj (S2 a1) (Dresolve'' a m d a1 m1 d1)
+	   (Dapply a m a1 m1 : {m2} apply-path P m2 (M'' a m a1 m1 m2))
+	   (Dproj a a1 : sg-proj P (S2 a1) ([a2] S'' a a1 a2)))
+     <- ({a} {m}
+	   module-eq-trans (DeqM'' a m (pi1 a) (md/pi1 m)) (DeqM' a m)
+	   (DeqM a m : module-eq (M'' a m (pi1 a) (md/pi1 m) (md/pi2 m)) (M m)))
+     <- ({a} {m}
+	   apply-path-resp path-eq/i module-eq/i (DeqM a m) (Dapply a m (pi1 a) (md/pi1 m) (md/pi2 m))
+	   (Dapply' a m : apply-path P (md/pi2 m) (M m)))
+     <- ({a}
+	   sg-eq-trans (DeqS'' a (pi1 a)) (DeqS' a)
+	   (DeqS a : sg-eq (S'' a (pi1 a) (pi2 a)) (S a)))
+     <- ({a} {a1}
+	   sg-proj-fun (Dproj star a1) (Dproj a a1)
+	   (DeqSstar a a1 : {a2} sg-eq (S'' star a1 a2) (S'' a a1 a2)))
+     <- ({a}
+	   sg-eq-trans (DeqSstar a (pi1 a) (pi2 a)) (DeqS a)
+	   (DeqSstar' a : sg-eq (S'' star (pi1 a) (pi2 a)) (S a)))
+     <- sg-proj-resp path-eq/i sg-eq/i DeqSstar' (sg-proj/pi2 ([a1] Dproj star a1))
+	(Dproj' : sg-proj (path/pi2 P) (sg/sigma S1 S2) ([a] S a)).
+
+%worlds (conblock | modblock | termblock) (resolve-proj _ _ _ _).
+%total S (resolve-proj S _ _ _).
+
+
+
+append-path : path -> path -> path -> type.
+
+append-path/nil		: append-path path/nil P P.
+
+append-path/pi1		: append-path (path/pi1 P1) P2 (path/pi1 P)
+			   <- append-path P1 P2 P.
+
+append-path/pi2		: append-path (path/pi2 P1) P2 (path/pi2 P)
+			   <- append-path P1 P2 P.
+
+append-path/out		: append-path (path/out P1) P2 (path/out P)
+			   <- append-path P1 P2 P.
+
+
+
+can-append-path : {P1} {P2} append-path P1 P2 P -> type.
+%mode can-append-path +X1 +X2 -X3.
+
+- : can-append-path path/nil _ append-path/nil.
+
+- : can-append-path (path/pi1 P1) P2 (append-path/pi1 D)
+     <- can-append-path P1 P2 D.
+
+- : can-append-path (path/pi2 P1) P2 (append-path/pi2 D)
+     <- can-append-path P1 P2 D.
+
+- : can-append-path (path/out P1) P2 (append-path/out D)
+     <- can-append-path P1 P2 D.
+
+%worlds () (can-append-path _ _ _).
+%total P (can-append-path P _ _).
+
+
+
+apply-path-append : apply-path P1 M1 M2 
+		     -> apply-path P2 M2 M3
+		     -> append-path P1 P2 P 
+%%
+		     -> apply-path P M1 M3
+		     -> type.
+%mode apply-path-append +X1 +X2 +X3 -X4.
+
+- : apply-path-append apply-path/nil D append-path/nil D.
+
+- : apply-path-append (apply-path/pi1 D1) D2 (append-path/pi1 Dapp) (apply-path/pi1 D)
+     <- apply-path-append D1 D2 Dapp D.
+
+- : apply-path-append (apply-path/pi2 D1) D2 (append-path/pi2 Dapp) (apply-path/pi2 D)
+     <- apply-path-append D1 D2 Dapp D.
+
+- : apply-path-append (apply-path/out D1) D2 (append-path/out Dapp) (apply-path/out D)
+     <- apply-path-append D1 D2 Dapp D.
+
+%worlds (conblock | modvar | termblock) (apply-path-append _ _ _ _).
+%total D (apply-path-append D _ _ _).
+
+
+
+sg-proj-append : {P1}
+		  sg-proj P1 S1 ([a] S2 a)
+		  -> ({a} sg-proj P2 (S2 a) ([b] S3 a b))
+		  -> ({m} apply-path P1 m (M1 m))
+		  -> ({a} {m} md-fst m a -> md-fst (M1 m) (C1 a))
+		  -> append-path P1 P2 P
+%%
+		  -> sg-proj P S1 ([a] S3 a (C1 a))
+		  -> type.
+%mode sg-proj-append +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+- : sg-proj-append path/nil sg-proj/nil
+     (Dproj : {a} sg-proj P S1 ([b] S2 a b))
+     ([_] apply-path/nil)
+     ([a] [m] [d] d)
+     append-path/nil
+     %%
+     Dproj'
+     <- ({a}
+	   sg-proj-fun (Dproj star) (Dproj a)
+	   (Deq a : {b} sg-eq (S2 star b) (S2 a b)))
+     <- sg-proj-resp path-eq/i sg-eq/i ([a] Deq a a) (Dproj star)
+	(Dproj' : sg-proj P S1 ([a] S2 a a)).
+
+- : sg-proj-append (path/pi1 P1)
+     (sg-proj/pi1
+	(Dproj1 : sg-proj P1 S1 ([a1] S2 a1))
+	: sg-proj (path/pi1 P1) (sg/sigma S1 S1r) ([a] S2 (pi1 a)))
+     (Dproj2 : {a} sg-proj P2 (S2 (pi1 a)) ([b] S3 a b))
+     ([m]
+	apply-path/pi1
+	(DapplyPi1 m : apply-path P1 (md/pi1 m) (Mp m)))
+     (DfstPi1 : {a} {m} md-fst m a -> md-fst (Mp m) (Cp a))
+     (append-path/pi1
+	(Dappend : append-path P1 P2 P))
+     %%
+     Dproj'
+     <- ({m}
+	   can-apply-path P1 m
+	   (Dapply m : apply-path P1 m (M m)))
+     <- ({a} {m} {d:md-fst m a}
+	   apply-path-fst (Dapply m) d
+	   (Dfst a m d : md-fst (M m) (C a)))
+     <- ({a}
+	   generalize-sg-proj ([a1] S2 a1) (pi1 a) (Dproj2 a)
+	   (Dproj2' a : {a1} sg-proj P2 (S2 a1) ([b] S3' a a1 b))
+	   (DeqS3' a : {b} sg-eq (S3' a (pi1 a) b) (S3 a b)))
+     <- ({a}
+	   sg-proj-append P1 Dproj1 (Dproj2' a) Dapply Dfst Dappend
+	   (Dproj a : sg-proj P S1 ([a1] S3' a a1 (C a1))))
+     <- ({a}
+	   sg-proj-fun (Dproj star) (Dproj a)
+	   (DeqStar a : {a1} sg-eq (S3' star a1 (C a1)) (S3' a a1 (C a1))))
+     <- ({a}
+	   sg-eq-trans (DeqStar a (pi1 a)) (DeqS3' a (C (pi1 a)))
+	   (DeqS3 a : sg-eq (S3' star (pi1 a) (C (pi1 a))) (S3 a (C (pi1 a)))))
+     <- ({m}
+	   apply-path-fun (Dapply (md/pi1 m)) (DapplyPi1 m)
+	   (DeqMp m : module-eq (M (md/pi1 m)) (Mp m)))
+     <- ({a} {m} {d}
+	   md-fst-resp (DeqMp m) con-eq/i (Dfst (pi1 a) (md/pi1 m) (md-fst/pi1 d))
+	   (Dfst' a m d : md-fst (Mp m) (C (pi1 a))))
+     <- ({a} {m} {d}
+	   md-fst-fun (Dfst' a m d) (DfstPi1 a m d)
+	   (DeqCp a : con-eq (C (pi1 a)) (Cp a)))
+     <- ({a}
+	   sg-resp-con ([b] S3 a b) (DeqCp a)
+	   (DeqSCp a : sg-eq (S3 a (C (pi1 a))) (S3 a (Cp a))))
+     <- ({a}
+	   sg-eq-trans (DeqS3 a) (DeqSCp a)
+	   (Deq a : sg-eq (S3' star (pi1 a) (C (pi1 a))) (S3 a (Cp a))))
+     <- sg-proj-resp path-eq/i sg-eq/i Deq (sg-proj/pi1 (Dproj star))
+	(Dproj' : sg-proj (path/pi1 P) (sg/sigma S1 S1r) ([a] S3 a (Cp a))).
+
+- : sg-proj-append (path/pi2 P1)
+     (sg-proj/pi2
+	(Dproj1 : {a1} sg-proj P1 (S1 a1) ([a2] S2 a1 a2))
+	: sg-proj (path/pi2 P1) (sg/sigma S1l ([a1] S1 a1)) ([a] S2 (pi1 a) (pi2 a)))
+     (Dproj2 : {a} sg-proj P2 (S2 (pi1 a) (pi2 a)) ([b] S3 a b))
+     ([m]
+	apply-path/pi2
+	(DapplyPi2 m : apply-path P1 (md/pi2 m) (Mp m)))
+     (DfstPi2 : {a} {m} md-fst m a -> md-fst (Mp m) (Cp a))
+     (append-path/pi2
+	(Dappend : append-path P1 P2 P))
+     %%
+     Dproj'
+     <- ({m}
+	   can-apply-path P1 m
+	   (Dapply m : apply-path P1 m (M m)))
+     <- ({a} {m} {d:md-fst m a}
+	   apply-path-fst (Dapply m) d
+	   (Dfst a m d : md-fst (M m) (C a)))
+     <- ({a}
+	   generalize-sg-proj ([a1] S2 a1 (pi2 a)) (pi1 a) (Dproj2 a)
+	   (Dproj2' a : {a1} sg-proj P2 (S2 a1 (pi2 a)) ([b] S3' a a1 b))
+	   (DeqS3' a : {b} sg-eq (S3' a (pi1 a) b) (S3 a b)))
+     <- ({a} {a1}
+	   generalize-sg-proj ([a2] S2 a1 a2) (pi2 a) (Dproj2' a a1)
+	   (Dproj2'' a a1 : {a2} sg-proj P2 (S2 a1 a2) ([b] S3'' a a1 a2 b))
+	   (DeqS3'' a a1 : {b} sg-eq (S3'' a a1 (pi2 a) b) (S3' a a1 b)))
+     <- ({a} {a1}
+	   sg-proj-append P1 (Dproj1 a1) (Dproj2'' a a1) Dapply Dfst Dappend
+	   (Dproj a a1 : sg-proj P (S1 a1) ([a2] S3'' a a1 a2 (C a2))))
+     <- ({a} {b}
+	   sg-eq-trans (DeqS3'' a (pi1 a) b) (DeqS3' a b)
+	   (DeqS3 a b : sg-eq (S3'' a (pi1 a) (pi2 a) b) (S3 a b)))
+     <- ({a} {a1}
+	   sg-proj-fun (Dproj star a1) (Dproj a a1)
+	   (DeqSstar a a1 : {a2} sg-eq (S3'' star a1 a2 (C a2)) (S3'' a a1 a2 (C a2))))
+     <- ({a}
+	   sg-eq-trans (DeqSstar a (pi1 a) (pi2 a)) (DeqS3 a (C (pi2 a)))
+	   (DeqSstar' a : sg-eq (S3'' star (pi1 a) (pi2 a) (C (pi2 a))) (S3 a (C (pi2 a)))))
+     <- ({m}
+	   apply-path-fun (Dapply (md/pi2 m)) (DapplyPi2 m)
+	   (DeqMp m : module-eq (M (md/pi2 m)) (Mp m)))
+     <- ({a} {m} {d}
+	   md-fst-resp (DeqMp m) con-eq/i (Dfst (pi2 a) (md/pi2 m) (md-fst/pi2 d))
+	   (Dfst' a m d : md-fst (Mp m) (C (pi2 a))))
+     <- ({a} {m} {d}
+	   md-fst-fun (Dfst' a m d) (DfstPi2 a m d)
+	   (DeqCp a : con-eq (C (pi2 a)) (Cp a)))
+     <- ({a}
+	   sg-resp-con ([b] S3 a b) (DeqCp a)
+	   (DeqSCp a : sg-eq (S3 a (C (pi2 a))) (S3 a (Cp a))))
+     <- ({a}
+	   sg-eq-trans (DeqSstar' a) (DeqSCp a)
+	   (Deq a : sg-eq (S3'' star (pi1 a) (pi2 a) (C (pi2 a))) (S3 a (Cp a))))
+     <- sg-proj-resp path-eq/i sg-eq/i Deq (sg-proj/pi2 (Dproj star))
+	(Dproj' : sg-proj (path/pi2 P) (sg/sigma S1l S1) ([a] S3 a (Cp a))).
+
+- : sg-proj-append (path/out P1)
+     (sg-proj/out
+	(Dproj1 : sg-proj P1 S1 ([a1] S2 a1))
+	: sg-proj (path/out P1) (sg/named L S1) ([a] S2 a))
+     (Dproj2 : {a} sg-proj P2 (S2 a) ([b] S3 a b))
+     ([m]
+	apply-path/out
+	(DapplyOut m : apply-path P1 (md/out m) (Mp m)))
+     (DfstOut : {a} {m} md-fst m a -> md-fst (Mp m) (Cp a))
+     (append-path/out
+	(Dappend : append-path P1 P2 P))
+     %%
+     (sg-proj/out Dproj)
+     <- ({m}
+	   can-apply-path P1 m
+	   (Dapply m : apply-path P1 m (M m)))
+     <- ({a} {m} {d:md-fst m a}
+	   apply-path-fst (Dapply m) d
+	   (Dfst a m d : md-fst (M m) (C a)))
+     <- ({m}
+	   apply-path-fun (Dapply (md/out m)) (DapplyOut m)
+	   (DeqMp m : module-eq (M (md/out m)) (Mp m)))
+     <- ({a} {m} {d}
+	   md-fst-resp (DeqMp m) con-eq/i (Dfst a (md/out m) (md-fst/out d))
+	   (Dfst' a m d : md-fst (Mp m) (C a)))
+     <- ({a} {m} {d}
+	   md-fst-fun (Dfst' a m d) (DfstOut a m d)
+	   (DeqCp a : con-eq (C a) (Cp a)))
+     <- ({a} {m} {d}
+	   md-fst-resp module-eq/i (DeqCp a) (Dfst a m d)
+	   (Dfst'' a m d : md-fst (M m) (Cp a)))
+     <- sg-proj-append P1 Dproj1 Dproj2 Dapply Dfst'' Dappend
+	(Dproj : sg-proj P S1 ([a] S3 a (Cp a))).
+
+%worlds (conblock | modblock | termblock) (sg-proj-append _ _ _ _ _ _ _).
+%total P (sg-proj-append P _ _ _ _ _ _).
+
+
+
+resolve-long-proj : {I}
+		     ({a} {m} md-fst m a -> resolve-long m S F I (M' m) (S' a))
+%%
+		     -> ({m} apply-path P m (M' m))
+		     -> sg-proj P S ([a] S' a)
+		     -> type.
+%mode resolve-long-proj +X1 +X2 -X3 -X4.
+
+- : resolve-long-proj _ ([a] [m] [d] resolve-long/short (Dresolve a m d))
+     Dapply Dproj
+     <- resolve-proj _ Dresolve Dapply Dproj.
+
+- : resolve-long-proj (longid/cons I Is)
+     ([a] [m] [d:md-fst m a]
+	resolve-long/cons
+	(Dresolve2 a m d : resolve-long (M1 a m) (S1 a) F Is (M2 m) (S2 a))
+	(Dresolve1 a m d : resolve m S (name/mod I) (M1 a m) (S1 a)))
+     Dapply
+     Dproj'
+     <- resolve-depend Dresolve1 (DeqM1 : {a} {m} module-eq (M1 a m) (M1' m))
+     <- ({a} {m} {d}
+	   resolve-resp module-eq/i sg-eq/i name-eq/i (DeqM1 a m) sg-eq/i (Dresolve1 a m d)
+	   (Dresolve1' a m d : resolve m S (name/mod I) (M1' m) (S1 a)))
+     <- ({a} {m} {d}
+	   resolve-long-resp (DeqM1 a m) sg-eq/i module-eq/i sg-eq/i (Dresolve2 a m d)
+	   (Dresolve2' a m d : resolve-long (M1' m) (S1 a) F Is (M2 m) (S2 a)))
+     <- resolve-proj S Dresolve1'
+	(Dapply1 : {m} apply-path P1 m (M1' m))
+	(Dproj1 : sg-proj P1 S ([a] S1 a))
+     <- ({a} {m} {d:md-fst m a}
+	   apply-path-fst (Dapply1 m) d
+	   (DfstM1' a m d : md-fst (M1' m) (C1 a)))
+     <- ({a} {m} {d:md-fst m a}
+	   generalize-resolve-long ([m] m) ([_] S1 a) (Dresolve2' a m d)
+	   ([a'] [m'] [d'] d')
+	   (DfstM1' a m d)
+	   %%
+	   (Dresolve2'' a m d : {a'} {m'} md-fst m' a'
+				 -> resolve-long m' (S1 a) F Is (M2' a m m') (S2' a a'))
+	   (DeqM2 a m : module-eq (M2' a m (M1' m)) (M2 m))
+	   (DeqS2 a : sg-eq (S2' a (C1 a)) (S2 a)))
+     <- ({a} {m} {d:md-fst m a} 
+	   resolve-long-proj Is (Dresolve2'' a m d)
+	   (Dapply2 a m : {m'} apply-path P2 m' (M2' a m m'))
+	   (Dproj2 a : sg-proj P2 (S1 a) ([a'] S2' a a')))
+     <- ({a} {m}
+	   apply-path-resp path-eq/i module-eq/i (DeqM2 a m) (Dapply2 a m (M1' m))
+	   (Dapply2' a m : apply-path P2 (M1' m) (M2 m)))
+     <- can-append-path P1 P2
+	(Dappend : append-path P1 P2 P)
+     <- ({m} 
+	   apply-path-append (Dapply1 m) (Dapply2' star m) Dappend
+	   (Dapply m : apply-path P m (M2 m)))
+     <- sg-proj-append P1 Dproj1 ([a] Dproj2 a) Dapply1 DfstM1' Dappend
+	(Dproj : sg-proj P S ([a] S2' a (C1 a)))
+     <- sg-proj-resp path-eq/i sg-eq/i DeqS2 Dproj
+	(Dproj' : sg-proj P S ([a] S2 a)).
+
+%worlds (conblock | modblock | termblock) (resolve-long-proj _ _ _ _).
+%total I (resolve-long-proj I _ _ _).
+
+
+
+resolve-long-proj' : ({a} {m} md-fst m a -> resolve-long m S F I (M' m) (S' a))
+		     -> ({m} apply-path P m (M' m))
+%%
+		     -> sg-proj P S ([a] S' a)
+		     -> type.
+%mode resolve-long-proj' +X1 +X2 -X3.
+
+- : resolve-long-proj'
+     (Dresolve : {a} {m} md-fst m a -> resolve-long m S F I (M' m) (S' a))
+     (Dapply : {m} apply-path P m (M' m))
+     Dproj'
+     <- resolve-long-proj I Dresolve
+	(Dapply' : {m} apply-path P' m (M' m))
+	(Dproj : sg-proj P' S ([a] S' a))
+     <- ({m}
+	   apply-path-injective (Dapply' m) (Dapply m)
+	   (Deq : path-eq P' P))
+     <- sg-proj-resp Deq sg-eq/i ([_] sg-eq/i) Dproj
+	(Dproj' : sg-proj P S ([a] S' a)).
+
+%worlds (conblock | modblock | termblock) (resolve-long-proj' _ _ _).
+%total {} (resolve-long-proj' _ _ _).

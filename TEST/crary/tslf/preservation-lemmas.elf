@@ -1,0 +1,145 @@
+%%%% preservation lemmas for terms and modules
+
+
+
+st-wf-can-look	: {SL: st-look ST LC E}
+			   {LL: lt-look L LC C}
+			   st-wf L ST L' T
+			   -> oftp L' T E C   
+			   -> type.
+%mode st-wf-can-look +D1 +D2 +D3 -D4.
+
+-	: st-wf-can-look st-look/hit lt-look/hit
+	   (st-wf/cons _ DC _ _) DC.
+
+-	: st-wf-can-look (st-look/miss LS) (lt-look/miss LL)
+	   (st-wf/cons LCS _ _ _) DC
+	   <- st-wf-can-look LS LL LCS DC.
+
+-	: st-wf-can-look 
+	   st-look/hit
+	   (lt-look/miss LL)
+	   (st-wf/cons LCS _ _ _) 
+	   DC
+	   <- loc-less-immsucc _ LG
+	   <- lt-look-wf LL LCS LG DU
+	   <- uninhabited-oftp (DU: uninhabited) _ _ _ _ DC.
+
+-	: st-wf-can-look 
+	   (st-look/miss LS)
+	   lt-look/hit
+	   (st-wf/cons LCS _ _ _) 
+	   DC
+	   <- loc-less-immsucc _ LG
+	   <- st-look-wf LS LCS LG DU
+	   <- uninhabited-oftp (DU: uninhabited) _ _ _ _ DC.
+
+%worlds () (st-wf-can-look _ _ _ _).
+%total D1 (st-wf-can-look _ _ D1 _).
+
+
+
+lt-wkn/st-wf	: st-wf L1 ST L T
+				   -> lt-extend L C L' LC
+				   -> st-wf L1 ST L' T
+				   -> type.
+%mode lt-wkn/st-wf +D1 +D2 -D5.
+
+-	: lt-wkn/st-wf st-wf/nil _ st-wf/nil.
+
+-	: lt-wkn/st-wf (st-wf/cons DV DE DG DSG) DX
+	   (st-wf/cons DV' DE' DG DSG)
+	   <- lt-wkn/st-wf DV DX DV'
+	   <- lt-wkn/oftp DX DE DE'.
+
+%worlds () (lt-wkn/st-wf _ _ _).
+%total D1 (lt-wkn/st-wf D1 _ _).
+
+
+
+
+tt-wkn/st-wf	: st-wf L1 ST L T
+				   -> lt-extend T C T' LC
+				   -> st-wf L1 ST L T'
+				   -> type.
+%mode tt-wkn/st-wf +D1 +D2 -D5.
+
+-	: tt-wkn/st-wf st-wf/nil _ st-wf/nil.
+
+-	: tt-wkn/st-wf (st-wf/cons DV DE DG DSG) DX
+	   (st-wf/cons DV' DE' DG DSG)
+	   <- tt-wkn/st-wf DV DX DV'
+	   <- tt-wkn/oftp DX DE DE'.
+
+%worlds () (tt-wkn/st-wf _ _ _).
+%total D1 (tt-wkn/st-wf D1 _ _).
+
+
+
+preserve/st-alloc	: oftp L T E C
+			   -> st-alloc ST E ST' LC
+			   -> st-wf L ST L T
+			   -> lt-extend L C L' LC
+			   -> st-wf L' ST' L' T
+			   -> type.
+%mode preserve/st-alloc +D1 +D2 +D3 +D4 -D5.
+
+-	: preserve/st-alloc DE DA DCVR DX 
+	   (st-wf/cons DCVR' DE' lt-extend/nil st-alloc/nil)
+	   <- lt-wkn/oftp DX DE DE'
+	   <- lt-wkn/st-wf DCVR DX DCVR'.
+
+-	: preserve/st-alloc DE DA DCVR DX 
+	   (st-wf/cons DCVR' DE' lt-extend/cons st-alloc/cons)
+	   <- lt-wkn/oftp DX DE DE'
+	   <- lt-wkn/st-wf DCVR DX DCVR'.
+
+%worlds () (preserve/st-alloc _ _ _ _ _).
+%total D1 (preserve/st-alloc _ D1 _ _ _).
+
+
+
+preserve/st-update	: st-update ST LC E ST'
+			   -> lt-look L LC C
+			   -> oftp L' T E C
+			   -> st-wf L ST L' T
+			   -> st-wf L ST' L' T
+			   -> type.
+%mode preserve/st-update +DS +DL +D1 +D2 -D5.
+
+-	: preserve/st-update st-update/hit lt-look/hit DE
+	   (st-wf/cons LCS DE' DG DSG)
+	   (st-wf/cons LCS DE DG st-alloc/nil).
+
+-	: preserve/st-update st-update/hit lt-look/hit DE
+	   (st-wf/cons LCS DE' DG DSG)
+	   (st-wf/cons LCS DE DG st-alloc/cons).
+
+-	: preserve/st-update st-update/hit (lt-look/miss LL) DE
+	   (st-wf/cons LCS DE' DG DSG)
+	   LCS'
+	   <- loc-less-immsucc _ LG
+	   <- lt-look-wf LL LCS LG DU
+	   <- uninhabited-st-wf (DU: uninhabited) _ _ _ _ LCS'.
+
+-	: preserve/st-update (st-update/miss LS) lt-look/hit DE
+	   (st-wf/cons LCS DE' DG DSG)
+	   LCS'
+	   <- loc-less-immsucc _ LG
+	   <- st-update-wf LS LCS LG DU
+	   <- uninhabited-st-wf (DU: uninhabited) _ _ _ _ LCS'.
+
+-	: preserve/st-update (st-update/miss st-update/hit) 
+	   (lt-look/miss LL) DE
+	   (st-wf/cons LCS DE' DG DSG)	   
+	   (st-wf/cons LCS' DE' DG st-alloc/cons)
+	   <- preserve/st-update st-update/hit LL DE LCS LCS'.
+
+-	: preserve/st-update (st-update/miss (st-update/miss LS)) 
+	   (lt-look/miss LL) DE
+	   (st-wf/cons LCS DE' DG DSG)	   
+	   (st-wf/cons LCS' DE' DG st-alloc/cons)
+	   <- preserve/st-update (st-update/miss LS) LL DE LCS LCS'.
+
+%worlds () (preserve/st-update _ _ _ _ _).
+%total D1 (preserve/st-update _ _ _ D1 _).

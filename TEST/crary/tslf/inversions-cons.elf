@@ -1,0 +1,186 @@
+%%%% simple inversion lemmas
+
+inv/ofkd/tp/cross	: ofkd (tp/cross C1 C2) K
+			   -> kd-sub K kd/type
+			   -> ofkd C1 kd/type
+			   -> ofkd C2 kd/type
+			   -> type.
+%mode inv/ofkd/tp/cross +K +D1 -D2 -D3.
+
+-	: inv/ofkd/tp/cross (ofkd/tp/cross D1 D2) _ D1 D2.
+
+-	: inv/ofkd/tp/cross (ofkd/kd/sing DC) _ D1 D2
+	   <- inv/ofkd/tp/cross DC kd-sub/kd/type D1 D2.
+
+-	: inv/ofkd/tp/cross (ofkd/sub DC DS) KS D1 D2
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/cross DC DS' D1 D2.
+
+-	: inv/ofkd/tp/cross (ofkd/deq DC DQ) KS D1 D2
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/cross DC DS' D1 D2.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/cross _ _ _ _).
+%total D1 (inv/ofkd/tp/cross D1 _ _ _).
+
+
+
+inv/ofkd/tp/arrow	: ofkd (tp/arrow C1 C2) K
+			   -> kd-sub K kd/type
+			   -> ofkd C1 kd/type
+			   -> ofkd C2 kd/type
+			   -> type.
+%mode inv/ofkd/tp/arrow +K +D1 -D2 -D3.
+
+-	: inv/ofkd/tp/arrow (ofkd/tp/arrow D1 D2) _ D1 D2.
+
+-	: inv/ofkd/tp/arrow (ofkd/kd/sing DC) _ D1 D2
+	   <- inv/ofkd/tp/arrow DC kd-sub/kd/type D1 D2.
+
+-	: inv/ofkd/tp/arrow (ofkd/sub DC DS) KS D1 D2
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/arrow DC DS' D1 D2.
+
+-	: inv/ofkd/tp/arrow (ofkd/deq DC DQ) KS D1 D2
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/arrow DC DS' D1 D2.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/arrow _ _ _ _).
+%total D1 (inv/ofkd/tp/arrow D1 _ _ _).
+
+
+
+inv/ofkd/tp/sum	: ofkd (tp/sum C1 C2) K
+		   -> kd-sub K kd/type
+		   -> ofkd C1 kd/type
+		   -> ofkd C2 kd/type
+		   -> type.
+%mode inv/ofkd/tp/sum +K +D1 -D2 -D3.
+
+-	: inv/ofkd/tp/sum (ofkd/tp/sum D1 D2) _ D1 D2.
+
+-	: inv/ofkd/tp/sum (ofkd/kd/sing DC) _ D1 D2
+	   <- inv/ofkd/tp/sum DC kd-sub/kd/type D1 D2.
+
+-	: inv/ofkd/tp/sum (ofkd/sub DC DS) KS D1 D2
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/sum DC DS' D1 D2.
+
+-	: inv/ofkd/tp/sum (ofkd/deq DC DQ) KS D1 D2
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/sum DC DS' D1 D2.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/sum _ _ _ _).
+%total D1 (inv/ofkd/tp/sum D1 _ _ _).
+
+
+inv/ofkd/tp/forall	: ofkd (tp/forall K' C) K
+			   -> kd-sub K kd/type
+			   -> kd-wf K'
+			   -> ({a} {da: ofkd a K'} ofkd (C a) kd/type)
+			   -> type.
+%mode inv/ofkd/tp/forall +K +D1 -D2 -D3.
+
+-	: inv/ofkd/tp/forall (ofkd/tp/forall D2 D1) _ D1 D2.
+
+-	: inv/ofkd/tp/forall (ofkd/kd/sing DC) _ D1 D2
+	   <- inv/ofkd/tp/forall DC kd-sub/kd/type D1 D2.
+
+-	: inv/ofkd/tp/forall (ofkd/sub DC DS) KS D1 D2
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/forall DC DS' D1 D2.
+
+-	: inv/ofkd/tp/forall (ofkd/deq DC DQ) KS D1 D2
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/forall DC DS' D1 D2.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/forall _ _ _ _).
+%total D1 (inv/ofkd/tp/forall D1 _ _ _).
+
+
+
+inv/ofkd/tp/ref	: ofkd (tp/ref C1) K
+			   -> kd-sub K kd/type
+			   -> ofkd C1 kd/type
+			   -> type.
+%mode inv/ofkd/tp/ref +K +D1 -D2.
+
+-	: inv/ofkd/tp/ref (ofkd/tp/ref D1) _ D1.
+
+-	: inv/ofkd/tp/ref (ofkd/kd/sing DC) _ D1
+	   <- inv/ofkd/tp/ref DC kd-sub/kd/type D1.
+
+-	: inv/ofkd/tp/ref (ofkd/sub DC DS) KS D1
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/ref DC DS' D1.
+
+-	: inv/ofkd/tp/ref (ofkd/deq DC DQ) KS D1
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/ref DC DS' D1.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/ref _ _ _).
+%total D1 (inv/ofkd/tp/ref D1 _ _).
+
+
+
+inv/ofkd/tp/tag	: ofkd (tp/tag C1) K
+			   -> kd-sub K kd/type
+			   -> ofkd C1 kd/type
+			   -> type.
+%mode inv/ofkd/tp/tag +K +D1 -D2.
+
+-	: inv/ofkd/tp/tag (ofkd/tp/tag D1) _ D1.
+
+-	: inv/ofkd/tp/tag (ofkd/kd/sing DC) _ D1
+	   <- inv/ofkd/tp/tag DC kd-sub/kd/type D1.
+
+-	: inv/ofkd/tp/tag (ofkd/sub DC DS) KS D1
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/tag DC DS' D1.
+
+-	: inv/ofkd/tp/tag (ofkd/deq DC DQ) KS D1
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS KS DS'
+	   <- inv/ofkd/tp/tag DC DS' D1.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/tp/tag _ _ _).
+%total D1 (inv/ofkd/tp/tag D1 _ _).
+
+
+
+
+inv/ofkd/cn/mu	: ofkd (cn/mu K1 C1) K
+		   -> kd-sub K kd/type
+		   -> ({a}{da: ofkd a kd/type} ofkd (C1 a) kd/type)
+		   -> type.
+%mode inv/ofkd/cn/mu +D1 +D1' -D2.
+
+-	: inv/ofkd/cn/mu (ofkd/cn/mu D1 D2) DS D1'
+	   <- kd-wkn/ofkd D1 DS D1'.
+
+-	: inv/ofkd/cn/mu (ofkd/kd/sing DC) DS D1
+	   <- inv/ofkd/cn/mu DC kd-sub/kd/type D1.
+
+-	: inv/ofkd/cn/mu (ofkd/sub DC DS) DS' D1
+	   <- kd-trans/sub DS DS' DS''
+	   <- inv/ofkd/cn/mu DC DS'' D1.
+
+-	: inv/ofkd/cn/mu (ofkd/deq DC DQ) DS' D1
+	   <- vdt/kd-deq DQ DQ1 DQ2
+	   <- kd-anti DQ DQ1 DQ2 DS _
+	   <- kd-trans/sub DS DS' DS''
+	   <- inv/ofkd/cn/mu DC DS'' D1.
+
+%worlds (ofkd+vdt-block) (inv/ofkd/cn/mu _ _ _).
+%total D1 (inv/ofkd/cn/mu D1 _ _).

@@ -1,0 +1,164 @@
+%%%% Progress Theorem
+
+progress/tm	: oftp L T E C
+		   -> oflt ST L T
+		   -> notstuck/tm E ST T
+		   -> type.
+
+%mode progress/tm +D1 +D2 -D3.
+
+progress/md	: ofsg L T _ M S
+		   -> oflt ST L T
+		   -> notstuck/md M ST T
+		   -> type.
+
+%mode progress/md +D1 +D2 -D3.
+
+
+
+-	: progress/tm oftp/tm/unit _ (notstuck/tm/val val/tm/unit).
+
+-	: progress/tm (oftp/tm/pair D1 D2) DS NS3
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm D2 DS NS2
+	   <- progress/tm/pair NS1 NS2 NS3. 
+
+-	: progress/tm (oftp/tm/tag D1 D2) DS NS3
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm D2 DS NS2
+	   <- progress/tm/tag NS1 NS2 NS3. 
+
+-	: progress/tm (oftp/tm/pj1 D1) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/pj1 NS1 D1 NS2.
+
+-	: progress/tm (oftp/tm/pj2 D1) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/pj2 NS1 D1 NS2.
+
+-	: progress/tm (oftp/tm/fun _ _) _ (notstuck/tm/val val/tm/fun).
+
+-	: progress/tm (oftp/tm/tmapp D1 D2) DS NS3
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm D2 DS NS2 
+	   <- progress/tm/tmapp NS1 NS2 D1 NS3.
+
+-	: progress/tm (oftp/tm/cnabs _ _) _ (notstuck/tm/val val/tm/cnabs).
+
+-	: progress/tm (oftp/tm/cnapp D1 DC) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/cnapp _ NS1 D1 NS2.
+
+-	: progress/tm (oftp/deq D1 DC) DS NS
+	   <- progress/tm D1 DS NS.
+
+-	: progress/tm (oftp/tm/term D1) DS NS
+	   <- progress/md D1 DS NSM
+	   <- progress/tm/term NSM D1 NS.
+
+-	: progress/tm (oftp/tm/loc _ _) _ (notstuck/tm/val val/tm/loc).
+
+-	: progress/tm (oftp/tm/ref D1) DS NS'
+	   <- progress/tm D1 DS NS
+	   <- progress/tm/ref NS D1 NS'.
+
+-	: progress/tm (oftp/tm/set D1 D2) DS NS'
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm D2 DS NS2
+	   <- progress/tm/set NS1 NS2 D1 D2 DS NS'.
+
+-	: progress/tm (oftp/tm/get D1) DS NS'
+	   <- progress/tm D1 DS NS
+	   <- progress/tm/get NS D1 DS NS'.
+
+-	: progress/tm (oftp/tm/inl D1 _) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/inl _ _ NS1 NS2.
+
+-	: progress/tm (oftp/tm/inr D1 _) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/inr _ _ NS1 NS2.
+
+-	: progress/tm (oftp/tm/case D1 _ _) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/case _ _ NS1 D1 NS2.
+
+-	: progress/tm (oftp/tm/raise D1 _) DS NS'
+	   <- progress/tm D1 DS NS
+	   <- progress/tm/raise NS D1 NS'.
+
+-	: progress/tm (oftp/tm/try D1 D2) DS NS2
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm/try _ NS1 (oftp/tm/try D1 D2) NS2.
+
+-	: progress/tm (oftp/tm/tagloc _ _) DS (notstuck/tm/val val/tm/tagloc).
+
+-	: progress/tm (oftp/tm/new-tag _) DS 
+	   (notstuck/tm/step (step/tm/new-tag-beta lt-extend/nil)).
+
+-	: progress/tm (oftp/tm/new-tag _) DS 
+	   (notstuck/tm/step (step/tm/new-tag-beta lt-extend/cons)).
+
+-	: progress/tm (oftp/tm/iftag D1 D2 _ _) DS NS'
+	   <- progress/tm D1 DS NS1
+	   <- progress/tm D2 DS NS2
+	   <- progress/tm/iftag _ _ NS1 NS2 D1 D2 NS'.
+
+-	: progress/tm (oftp/tm/roll D1 _) DS NS'
+	   <- progress/tm D1 DS NS
+	   <- progress/tm/roll _ _ NS NS'.
+
+-	: progress/tm (oftp/tm/unroll D1) DS NS'
+	   <- progress/tm D1 DS NS
+	   <- progress/tm/unroll NS D1 NS'.
+
+
+
+
+-	: progress/md ofsg/md/unit DS (notstuck/md/val val/md/unit).
+
+-	: progress/md (ofsg/md/cn _) DS (notstuck/md/val val/md/cn).
+
+-	: progress/md (ofsg/md/tm D) DS NS'
+	   <- progress/tm D DS NS
+	   <- progress/md/tm NS NS'.
+
+-	: progress/md (ofsg/md/pair D1 D2) DS NS
+	   <- progress/md D1 DS NS1
+	   <- progress/md D2 DS NS2
+	   <- progress/md/pair NS1 NS2 NS.
+
+-	: progress/md (ofsg/md/pj1 D1) DS NS'
+	   <- progress/md D1 DS NS
+	   <- progress/md/pj1 NS D1 NS'.
+
+-	: progress/md (ofsg/md/pj2 D1 DC) DS NS'
+	   <- progress/md D1 DS NS
+	   <- progress/md/pj2 NS D1 NS'.
+
+-	: progress/md (ofsg/md/lam _ _ _) _ (notstuck/md/val val/md/lam).
+
+-	: progress/md (ofsg/md/app D1 D2 DC) DS NS'
+	   <- progress/md D1 DS NS1
+	   <- progress/md D2 DS NS2
+	   <- progress/md/app NS1 NS2 D1 DC NS'.
+
+-	: progress/md (ofsg/md/let D1 D2 DW _) DS NS'
+	   <- progress/md D1 DS NS
+	   <- progress/md/let _ _ NS D1 NS'.
+
+-	: progress/md (ofsg/md/seal D1) (DS: oflt ST _ _)
+	   (notstuck/md/step (step/md/seal-beta ST)).
+
+-	: progress/md (ofsg/sgm-ext D1 _) DS NS
+	   <- subder/md/pj1 D1 D1' _
+	   <- progress/md D1' DS NS.
+
+-	: progress/md (ofsg/kd-ext D1 _ _) DS NS
+	   <- progress/md D1 DS NS.
+
+-	: progress/md (ofsg/sub D1 _ _) DS NS
+	   <- progress/md D1 DS NS.
+
+%worlds () (progress/tm _ _ _) (progress/md _ _ _).
+%total (D1 D2)(progress/tm D1 _ _) (progress/md D2 _ _).

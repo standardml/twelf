@@ -1,0 +1,9 @@
+%%%% Syntax for signatures %%%%
+
+sg		: type.			%name sg S.
+
+sg/unit		: sg.
+sg/kd		: kd -> sg.
+sg/cn		: cn -> sg.
+sg/pi		: sg -> (cn -> sg) -> sg.
+sg/sgm		: sg -> (cn -> sg) -> sg.

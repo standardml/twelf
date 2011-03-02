@@ -43,6 +43,7 @@ struct
     structure F = Print.Formatter
     structure N = Names
 
+
     (*****************)
     (* Strengthening *)
     (*****************)
@@ -164,7 +165,8 @@ struct
 	  val w = weaken (G, I.targetFam V)    (* G  |- w  : G'    *)
 	  val iw = Whnf.invert w 	          (* G' |- iw : G     *)
 	  val G' = Whnf.strengthen (iw, G)
-	  val X' = I.newEVar (G', I.EClo (V, iw)) (* G' |- X' : V[iw] *)
+	  val X' = Whnf.newLoweredEVar (G', (V, iw)) (* G' |- X' : V[iw] *)
+	  (* was I.newEvar (G', I.EClo (V, iw))  Mon Feb 28 14:30:36 2011 --cs *)
 	  val X = I.EClo (X', w)	          (* G  |- X  : V     *)
 	in
 	  X
@@ -399,10 +401,11 @@ struct
           Unify.unifiable (G, Us1, Us2)
 
     fun unifiableDX (G, Us1, Us2) =
-	(print ("cxu unifiable? " ^ IntSyn.expToString (Whnf.normalize Us1) ^ " = " ^ IntSyn.expToString (Whnf.normalize Us2) ^ "\n");
+        Unify.unifiable (G, Us1, Us2)
+    (* print ("cxu unifiable? " ^ IntSyn.expToString (Whnf.normalize Us1) ^ " = " ^ IntSyn.expToString (Whnf.normalize Us2) ^ "\n"); 
          if Unify.unifiable (G, Us1, Us2)
 	 then (print "yes!\n"; true)
-	 else (print "no!\n"; false))
+	 else (print "no!\n"; false) *) 
 
     (* matchEqns (es) = true 
        iff  all equations in es can be simultaneously unified
@@ -473,7 +476,8 @@ struct
 	in
 	  case constrs
 	    of nil => Eqns (nil)
-	     | eqns => (print ("DX cover.fun remaining constrants " ^ IntSyn.cnstrsToString eqns ^ "\n"); Fail)
+	     | eqns => Fail 
+(* (print ("DX cover.fun remaining constrants " ^ IntSyn.cnstrsToString eqns ^ "\n"); Fail) *)
 	(* constraints remained: Fail without candidates *)
 	end
     (* Candidate Lists *)
@@ -548,7 +552,8 @@ struct
 	      in
 		if l1 <> l2 orelse i1 <> i2
 		  then fail ("block index / block variable clash")
-		else let val cands2 = matchSub (G, d, t1, t2, cands)
+		else let val cands2 = matchSub (G, d, t1, I.comp(t2,I.Shift(k2)), cands)
+			 (* was: t2 in prev line, July 22, 2010 -fp -cs *)
 		         (* instantiate instead of postponing because LVars are *)
 		         (* only instantiated to Bidx which are rigid *)
 		         (* Sun Jan  5 12:03:13 2003 -fp *)
@@ -738,7 +743,8 @@ struct
 	  (* Sun Dec 16 10:39:34 2001 -fp *)
 	  (* val X1 = createEVar (G, I.EClo (V1, s)) *)
 	  (* changed back --- no effect *)
-	  val X1 = I.newEVar (G, I.EClo (V1, s))
+	  val X1 = Whnf.newLoweredEVar (G, (V1, s))
+          (* was val X1 = I.newEVar (G, I.EClo (V1, s)) Mon Feb 28 14:37:22 2011 -cs *)
 	  (* was: I.Null instead of G in line above Wed Nov 21 16:40:40 2001 *)
 	in
 	  matchClause (G, ps', (V2, I.Dot (I.Exp (X1), s)), ci)
@@ -861,7 +867,8 @@ struct
 	end
       | matchOut (G, V, ci, (V' as I.Pi ((I.Dec(_, V1'), _), V2'), s'), p) = (* p > 0 *)
 	let
-	  val X1 = I.newEVar (G, I.EClo (V1', s'))
+	  val X1 = Whnf.newLoweredEVar (G, (V1', s'))
+	(* was val X1 = I.newEVar (G, I.EClo (V1', s')) Mon Feb 28 14:38:21 2011 -cs *)
 	in
 	  matchOut (G, V, ci, (V2', I.Dot (I.Exp (X1), s')), p-1)
 	end
@@ -946,7 +953,9 @@ struct
     and instEVarsW (Vs, 0, XsRev) = (Vs, XsRev)
       | instEVarsW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), p, XsRev) =
         let (* p > 0 *)
-	  val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
+	  val X1 = Whnf.newLoweredEVar (I.Null, (V1, s)) (* all EVars are global *)
+          (* was  val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
+             Mon Feb 28 14:39:15 2011 -cs *)
 	in
 	  instEVars ((V2, I.Dot (I.Exp (X1), s)), p-1, SOME(X1)::XsRev)
 	end
@@ -980,7 +989,7 @@ struct
        and  G1, V1 .. Vn |- W atomic  
        then G |- s' : G2  and  G2 |- V' : L
        and  S = X1; ...; Xn; Nil
-       and  G |- W [1.2...n. s o ^n] = V' [s']
+       and  G |- W [1.2...n. s o ^n] = V' [sjfh']
        and  G |- S : V [s] >  V' [s']
     *)
     (* changed to use createEVar? *)
@@ -1081,8 +1090,9 @@ struct
       | createEVarSub (I.Decl(G', D as I.Dec (_, V))) =
         let
 	  val s = createEVarSub G'
-	  val V' = I.EClo (V, s)
-	  val X = I.newEVar (I.Null, V')
+	  val X = Whnf.newLoweredEVar (I.Null, (V, s))
+          (* was   val V' = I.EClo (V, s) 
+                   val X = I.newEVar (I.Null, V') Mon Feb 28 15:32:09 2011 --cs *)
 	in
 	  I.Dot (I.Exp X, s)
 	end
@@ -1104,7 +1114,8 @@ struct
 	  (* . |- t : Gsome *)
 	  val sk = I.Shift (I.ctxLength(G))
 	  val t' = I.comp (t, sk)
-	  val lvar = I.newLVar (sk, (cid, t'))
+	  (* was: the above, using t' for t below *)
+	  val lvar = I.newLVar (sk, (cid, t))
 	             (*  BUG. Breach in the invariant:
                          G |- sk : .
 			 . |- t: Gsome
@@ -1135,36 +1146,31 @@ struct
           ( blockCases (G, Vs, cid, I.constBlock cid, sc) ;
 	    worldCases (G, Vs, T.Worlds (cids), sc) )
 
-    fun lowerSplit (G, Vs, W, sc) = lowerSplitW (G, Whnf.whnf Vs, W, sc)
-    and lowerSplitW (G, Vs as (I.Root (I.Const a, _), s), W, sc) =
+    fun lowerSplitW (X as I.EVar (_, G, V, _), W, sc) =
         let
 	    (* XXX stopgap measure to refrain from splitting world variables -jcreed *)
-	    val _ = if I.hlfIsWorld a 
+	  val _ = if I.hlfIsWorld (I.targetFam V)
 		    then raise Constraints.Error []  
 		    else ()
-	  val _ = constCases (G, Vs, Index.lookup a, sc) (* will trail *)
-	  val _ = paramCases (G, Vs, I.ctxLength G, sc)	(* will trail *)
-	  val _ = worldCases (G, Vs, W, sc) (* will trail *)
+	  val sc' = fn U =>  if Unify.unifiable (G, (X, I.id), (U, I.id))
+				then sc ()
+			      else ()
+	  val _ = paramCases (G, (V, I.id), I.ctxLength G, sc')	(* will trail *)
+	  val _ = worldCases (G, (V, I.id), W, sc') (* will trail *) 
+	  val _ = constCases (G, (V, I.id), Index.lookup (I.targetFam V), sc') (* will trail *)
 	in
 	  ()
 	end
-      | lowerSplitW (G, (I.Pi ((D, P), V), s), W, sc) =
-	let
-	  val D' = I.decSub (D, s)
-	in
-	  lowerSplit (I.Decl (G, D'), (V, I.dot1 s), W, fn U => sc (I.Lam (D', U)))
-	end
+      | lowerSplitW (I.Lam (D, U), W, sc) =
+	  lowerSplitW (U, W, sc)
 
     (* splitEVar (X, W, sc) = ()
 
        calls sc () for all cases, after instantiation of X
        W are the currently possible worlds
     *)
-    fun splitEVar ((X as I.EVar (_, GX, V, _)), W, sc) = (* GX = I.Null *)
-          lowerSplit (I.Null, (V, I.id), W,
-		      fn U =>  if Unify.unifiable (I.Null, (X, I.id), (U, I.id))
-			       then  sc ()
-			       else  ())
+    fun splitEVar (X, W, sc) = lowerSplitW (X, W, sc) 
+
 
     (* abstract (V, s) = V'
        where V' = {{G}} Vs' and G abstracts over all EVars in V[s]
@@ -1309,11 +1315,11 @@ struct
 	in
 	    addCase (hlfAbstract (V, s))
             handle (e as Constraints.Error (cnstrs)) =>
-		   ((chatter 1 (fn () => "[cover.fun] Splitting, got constraints: " ^ Print.cnstrsToString (cnstrs) ^ "\n");
+		   ((chatter 7 (fn () => "[cover.fun] Splitting, got constraints: " ^ Print.cnstrsToString (cnstrs) ^ "\n");
 		     addFinitaryCases' cnstrs (V, s);
-		     print "[cover.fun] Ok, adding new cases.\n";
+		     (* print "[cover.fun] Ok, adding new cases.\n"; *)
 		     app addCase (!newCases))
-		    handle FinitaryCasesFailure => (print "[cover.fun] couldn't fsplit...\n"; raise e))
+		    handle FinitaryCasesFailure => ( (*print "[cover.fun] couldn't fsplit...\n"; *) raise e))
 	end
 
     (* splitVar ({{G}} V, p, k, W) = SOME [{{G1}} V1 ,..., {{Gn}} Vn]
@@ -1407,7 +1413,9 @@ struct
     and InstEVarsSkipW (Vs, 0, XsRev, ci) = (Vs, XsRev)
       | InstEVarsSkipW ((I.Pi ((I.Dec (xOpt, V1), _), V2), s), p, XsRev, ci) =
         let (* p > 0 *)
-	  val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
+	  val X1 = Whnf.newLoweredEVar (I.Null, (V1, s)) (* all EVars are global *)
+          (* was val X1 = I.newEVar (I.Null, I.EClo (V1, s)) (* all EVars are global *)
+	     Mon Feb 28 15:25:42 2011 --cs *)
 	  val EVarOpt = if occursInMatchPos (1, V2, ci)
 			  then SOME(X1)
 			else NONE
@@ -1449,6 +1457,7 @@ struct
 	in
 	  recp
 	end
+      | recursive (I.Lam (D, U)) = recursive U
 
     local
       val counter = ref 0
@@ -1482,14 +1491,15 @@ struct
         Counterexample due to Andrzej.  Fix due to Adam.
 	Mon Oct 15 15:08:25 2007 --cs 
     *)
-    fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, f, cands) =
-        ( resetCount () ;
+    fun finitary1 (X, k, W, f, cands) =
+        ( resetCount () ; 
 	  chatter 7 (fn () => "Trying " ^ Print.expToString (I.Null, X) ^ " : "
-		     ^ Print.expToString (I.Null, VX) ^ ".\n") ;
+		     ^ ".\n") ;
 	  ( splitEVar (X, W, fn () => (f (); if recursive X
 					then raise NotFinitary
 				      else incCount ())) ;
 	    chatter 7 (fn () => "Finitary with " ^ Int.toString (getCount ()) ^ " candidates.\n");
+
 	    (k, getCount ())::cands )
            handle NotFinitary => ( chatter 7 (fn () => "Not finitary.\n");
 				   cands )
@@ -1497,6 +1507,26 @@ struct
 	                         ( chatter 7 (fn () => "Inactive finitary split.\n");
 				   cands )
 	)
+
+    (* was Mon Feb 28 15:29:36 2011 -cs 
+    fun finitary1 (X as I.EVar(r, I.Null, VX, _), k, W, f, cands, print) =
+        ( resetCount () ;
+	  chatter 7 (fn () => "Trying " ^ Print.expToString (I.Null, X) ^ " : "
+		     ^ Print.expToString (I.Null, VX) ^ ".\n") ;
+	  ( splitEVar (X, W, fn () => (f (); if recursive X
+					then raise NotFinitary
+				      else incCount ()), print) ;
+	    chatter 7 (fn () => "Finitary with " ^ Int.toString (getCount ()) ^ " candidates.\n");
+
+	    (k, getCount ())::cands )
+           handle NotFinitary => ( chatter 7 (fn () => "Not finitary.\n");
+				   cands )
+	         | Constraints.Error (constrs) =>
+	                         ( chatter 7 (fn () => "Inactive finitary split.\n");
+				   cands )
+	)
+    *)
+
 
     (* finitarySplits (XsRev, k, W, cands) = [(k1,n1),...,(km,nm)]@cands
        where all ki are finitary with ni possibilities for X(i+k)
@@ -1506,21 +1536,23 @@ struct
         (* parameter blocks can never be split *)
           finitarySplits (Xs, k+1, W, f, cands)
       | finitarySplits (SOME(X)::Xs, k, W, f, cands) =
-          finitarySplits (Xs, k+1, W, f,
-			  CSManager.trail (fn () => finitary1 (X, k, W, f,cands)))
-
+          finitarySplits (Xs, k+1, W, f, CSManager.trail (fn () =>  finitary1 (X, k, W, f,cands)))
 
     (* finitary ({{G}} V, p, W) = [(k1,n1),...,(km,nm)]
        where ki are indices of splittable variables in G with ni possibilities
        and |G| = p
        and ci are the coverage instructions for the target type of V
     *)
+
     fun finitary (V, p, W, ci) =
         let
-	  val ((V1, s), XsRev) = instEVarsSkip ((V, I.id), p, nil, ci)
+	  val _ = if !Global.doubleCheck
+		    then TypeCheck.typeCheck (I.Null, (V, I.Uni (I.Type)))
+		  else ()
 
+	  val ((V1, s), XsRev) = instEVarsSkip ((V, I.id), p, nil, ci)
 	in
-	  finitarySplits (XsRev, 1, W, fn () => abstract (V1, s), nil)
+	  finitarySplits (XsRev, 1, W, fn () => (abstract (V1, s)), nil)
 	end
 
 
@@ -1862,7 +1894,8 @@ struct
 	end
       | createCoverGoalW (G, (I.Pi ((D as I.Dec (_, V1), _), V2), s), p, ms) =
         let (* p > 0, G = I.Null *)
-	  val X = I.newEVar (G, I.EClo (V1, s))
+	  val X = Whnf.newLoweredEVar (G, (V1, s))
+	  (* was  val X = I.newEVar (G, I.EClo (V1, s))  Mon Feb 28 15:33:52 2011 -cs *)
 	in
 	  createCoverGoal (G, (V2, I.Dot (I.Exp (X), s)), p-1, ms)
 	end

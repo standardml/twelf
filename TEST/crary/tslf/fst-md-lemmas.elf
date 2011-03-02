@@ -1,0 +1,36 @@
+
+%%%% lemmas about fst (it turns out much of what I had to prove about
+%%%% fst on paper were part of validity.
+
+%{ fst-md-seq	: fst-md M C
+		   -> fst-md M C'
+		   -> seq/cn C C'
+		   -> type.
+
+%mode fst-md-seq +D1 +D2 -D3. }%
+
+-	: fst-md-seq fst-md/unit fst-md/unit seq/cn/refl.
+
+-	: fst-md-seq fst-md/cn fst-md/cn seq/cn/refl.
+
+-	: fst-md-seq fst-md/tm fst-md/tm seq/cn/refl.
+
+-	: fst-md-seq (fst-md/pair D1 D2) (fst-md/pair D3 D4) DQ
+	   <- fst-md-seq D1 D3 DQ1
+	   <- fst-md-seq D2 D4 DQ2
+	   <- seq/cn/pair DQ1 DQ2 DQ.
+
+-	: fst-md-seq (fst-md/pj1 D1) (fst-md/pj1 D2) DQ'
+	   <- fst-md-seq D1 D2 DQ
+	   <- seq/cn/pj1 DQ DQ'.
+
+-	: fst-md-seq (fst-md/pj2 D1) (fst-md/pj2 D2) DQ'
+	   <- fst-md-seq D1 D2 DQ
+	   <- seq/cn/pj2 DQ DQ'.
+
+-	: fst-md-seq fst-md/lam fst-md/lam seq/cn/refl.
+
+%worlds (ofkd+vdt-block | ofsg+vdt-block | oftp+vdt-block) (fst-md-seq _ _ _).
+%total {D1 D2} (fst-md-seq D1 D2 _).
+
+

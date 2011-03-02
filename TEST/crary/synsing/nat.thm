@@ -1,0 +1,562 @@
+
+%%%%%  Equality  %%%%%
+
+lt-resp : nat-eq N1 N1' -> nat-eq N2 N2' -> lt N1 N2 -> lt N1' N2' -> type.
+%mode lt-resp +D1 +D2 +D3 -D.
+
+-	: lt-resp nat-eq/i nat-eq/i D D.
+
+%worlds () (lt-resp _ _ _ _).
+%total {} (lt-resp _ _ _ _).
+
+
+
+leq-resp : nat-eq N1 N1' -> nat-eq N2 N2' -> leq N1 N2 -> leq N1' N2' -> type.
+%mode leq-resp +X1 +X2 +X3 -X4.
+
+-	: leq-resp nat-eq/i nat-eq/i D D.
+
+%worlds () (leq-resp _ _ _ _).
+%total {} (leq-resp _ _ _ _).
+
+
+
+sum-resp : nat-eq N1 N1' -> nat-eq N2 N2' -> nat-eq N3 N3' -> sum N1 N2 N3 -> sum N1' N2' N3' -> type.
+%mode sum-resp +X1 +X2 +X3 +X4 -X5.
+
+-	: sum-resp nat-eq/i nat-eq/i nat-eq/i D D.
+
+%worlds () (sum-resp _ _ _ _ _).
+%total {} (sum-resp _ _ _ _ _).
+
+
+
+nat-resp : {N:nat -> nat} nat-eq N1 N2 -> nat-eq (N N1) (N N2) -> type.
+%mode nat-resp +X1 +X2 -X3.
+
+-	: nat-resp _ nat-eq/i nat-eq/i.
+
+%worlds () (nat-resp _ _ _).
+%total {} (nat-resp _ _ _).
+
+
+
+nat-eq-inc : nat-eq N1 N2 -> nat-eq (s N1) (s N2) -> type.
+%mode nat-eq-inc +D1 -D2.
+
+-	: nat-eq-inc nat-eq/i nat-eq/i.
+
+%worlds () (nat-eq-inc _ _).
+%total {} (nat-eq-inc _ _).
+
+
+
+
+%%%%%  Sum  %%%%%
+
+sum-ident : {N:nat} sum N 0 N -> type.
+%mode sum-ident +N -E.
+
+-	: sum-ident 0 sum/z.
+-	: sum-ident (s N) (sum/s D)
+	   <- sum-ident N D.
+
+%worlds () (sum-ident _ _).
+%total N (sum-ident N _).
+
+
+
+sum-inc : sum N1 N2 N3 -> sum N1 (s N2) (s N3) -> type.
+%mode sum-inc +D1 -D2.
+
+-	: sum-inc sum/z sum/z.
+-	: sum-inc (sum/s D) (sum/s D')
+	   <- sum-inc D D'.
+
+%worlds () (sum-inc _ _).
+%total D (sum-inc D _).
+
+
+
+sum-commute : sum N1 N2 N3 -> sum N2 N1 N3 -> type.
+%mode sum-commute +D1 -D2.
+
+-	: sum-commute (sum/z : sum 0 N N) D
+	   <- sum-ident N D.
+-	: sum-commute (sum/s D : sum (s N1) N2 (s N3)) D''
+	   <- sum-commute D (D' : sum N2 N1 N3)
+	   <- sum-inc D' D''.
+
+%worlds () (sum-commute _ _).
+%total D (sum-commute D _).
+
+
+
+sum-assoc : sum N1 N2 N12 -> sum N12 N3 N -> sum N2 N3 N23 -> sum N1 N23 N -> type.
+%mode sum-assoc +D1 +D2 -D3 -D4.
+
+-	: sum-assoc sum/z D D sum/z.
+-	: sum-assoc (sum/s D12) (sum/s D12_3) D23 (sum/s D1_23)
+	   <- sum-assoc D12 D12_3 D23 D1_23.
+
+%worlds () (sum-assoc _ _ _ _).
+%total D (sum-assoc D _ _ _).
+
+
+
+%% same as above but different mode
+sum-assoc' : sum N1 N2 N12 -> sum N12 N3 N -> sum N2 N3 N23 -> sum N1 N23 N -> type.
+%mode sum-assoc' -D1 -D2 +D3 +D4.
+
+-	: sum-assoc' sum/z D D sum/z.
+-	: sum-assoc' (sum/s D12) (sum/s D12-3) D23 (sum/s D1-23)
+	   <- sum-assoc' D12 D12-3 D23 D1-23.
+
+%worlds () (sum-assoc' _ _ _ _).
+%total D (sum-assoc' _ _ _ D).
+
+
+
+
+can-sum : {N1:nat} {N2:nat} {N3:nat} sum N1 N2 N3 -> type.
+%mode can-sum +N1 +N2 -N3 -D.
+
+-	: can-sum 0 N N sum/z.
+-	: can-sum (s N1) N2 (s N3) (sum/s D)
+	   <- can-sum N1 N2 N3 D.
+
+%worlds () (can-sum _ _ _ _).
+%total N (can-sum N _ _ _).
+
+
+
+sum-fun2 : sum N1 N2 N3 -> sum N1 N2' N3 -> nat-eq N2 N2' -> type.
+%mode sum-fun2 +D1 +D2 -D3.
+
+-	: sum-fun2 sum/z sum/z nat-eq/i.
+-	: sum-fun2 (sum/s D1) (sum/s D2) D3
+	   <- sum-fun2 D1 D2 D3.
+
+%worlds () (sum-fun2 _ _ _).
+%total D (sum-fun2 D _ _).
+
+
+
+sum-fun1 : sum N1 N2 N3 -> sum N1' N2 N3 -> nat-eq N1 N1' -> type.
+%mode sum-fun1 +D1 +D2 -D3.
+
+-	: sum-fun1 D1 D2 D
+	   <- sum-commute D1 D1'
+	   <- sum-commute D2 D2'
+	   <- sum-fun2 D1' D2' D.
+
+%worlds () (sum-fun1 _ _ _).
+%total D (sum-fun1 D _ _).
+
+
+
+sum-fun3 : sum N1 N2 N3 -> sum N1 N2 N3' -> nat-eq N3 N3' -> type.
+%mode sum-fun3 +D1 +D2 -D3.
+
+-	: sum-fun3 sum/z sum/z nat-eq/i.
+-	: sum-fun3 (sum/s D1) (sum/s D2) D'
+	   <- sum-fun3 D1 D2 D
+	   <- nat-eq-inc D D'.
+
+%worlds () (sum-fun3 _ _ _).
+%total D (sum-fun3 D _ _).
+
+
+
+
+%%%%%  Leq  %%%%%
+
+leq-trans : leq N1 N2 -> leq N2 N3 -> leq N1 N3 -> type.
+%mode leq-trans +D1 +D2 -D3.
+
+-	: leq-trans leq/z _ leq/z.
+-	: leq-trans (leq/s D1) (leq/s D2) (leq/s D3)
+	   <- leq-trans D1 D2 D3.
+
+%worlds () (leq-trans _ _ _).
+%total D (leq-trans D _ _).
+
+
+
+leq-reflex : {N:nat} leq N N -> type.
+%mode leq-reflex +N -D.
+
+-	: leq-reflex 0 leq/z.
+-	: leq-reflex (s N) (leq/s D)
+	   <- leq-reflex N D.
+
+%worlds () (leq-reflex _ _).
+%total N (leq-reflex N _).
+
+
+
+leq-reflex' : nat-eq N1 N2 -> leq N1 N2 -> type.
+%mode leq-reflex' +X1 -X2.
+
+-	: leq-reflex' nat-eq/i D
+	   <- leq-reflex _ D.
+
+%worlds () (leq-reflex' _ _).
+%total {} (leq-reflex' _ _).
+
+
+
+sum-implies-leq : sum N1 N2 N3 -> leq N1 N3 -> type.
+%mode sum-implies-leq +D -D'.
+
+-	: sum-implies-leq sum/z leq/z.
+-	: sum-implies-leq (sum/s D) (leq/s D')
+	   <- sum-implies-leq D D'.
+
+%worlds () (sum-implies-leq _ _).
+%total D (sum-implies-leq D _).
+
+
+
+sum-implies-leq' : sum N1 N2 N3 -> leq N2 N3 -> type.
+%mode sum-implies-leq' +D -D'.
+
+-	: sum-implies-leq' Dsum Dleq
+	   <- sum-commute Dsum Dsum'
+	   <- sum-implies-leq Dsum' Dleq.
+
+%worlds () (sum-implies-leq' _ _).
+%total {} (sum-implies-leq' _ _).
+
+
+
+leq-implies-sum : leq N1 N3 -> sum N1 N2 N3 -> type.
+%mode leq-implies-sum +X1 -X2.
+
+-	: leq-implies-sum leq/z sum/z.
+-	: leq-implies-sum (leq/s D) (sum/s D') 
+	   <- leq-implies-sum D D'.
+
+%worlds () (leq-implies-sum _ _).
+%total D (leq-implies-sum D _).
+
+
+
+sum-leq : sum N1 N2 N3 -> sum N1' N2' N3' -> leq N1 N1' -> leq N2 N2' -> leq N3 N3' -> type.
+%mode sum-leq +X1 +X2 +X3 +X4 -X5.
+
+-	: sum-leq Dsum Dsum' Dleq1 Dleq2 Dleq3
+	   <- leq-implies-sum Dleq1 (Dsum1 : sum N1 N1'' N1')
+	   <- leq-implies-sum Dleq2 (Dsum2 : sum N2 N2'' N2')
+	   <- sum-assoc Dsum1 Dsum' (Dsum4 : sum N1'' N2' N4) (Dsum5 : sum N1 N4 N3')
+	   <- sum-commute Dsum4 (Dsum6 : sum N2' N1'' N4)
+	   <- sum-assoc Dsum2 Dsum6 (Dsum7 : sum N2'' N1'' N5) (Dsum8 : sum N2 N5 N4)
+	   <- sum-assoc' (Dsum9 : sum N1 N2 N6) (Dsum10 : sum N6 N5 N3') Dsum8 Dsum5
+	   <- sum-fun3 Dsum9 Dsum (Deq : nat-eq N6 N3)
+	   <- sum-resp Deq nat-eq/i nat-eq/i Dsum10 (Dsum3 : sum N3 N5 N3')
+	   <- sum-implies-leq Dsum3 Dleq3.
+
+%worlds () (sum-leq _ _ _ _ _).
+%total {} (sum-leq _ _ _ _ _).
+
+
+
+
+%%%%%  Lt  %%%%%
+
+leq-lt-trans : leq N1 N2 -> lt N2 N3 -> lt N1 N3 -> type.
+%mode leq-lt-trans +D1 +D2 -D3.
+
+-	: leq-lt-trans leq/z lt/z lt/z.
+-	: leq-lt-trans leq/z (lt/s _) lt/z.
+-	: leq-lt-trans (leq/s D1) (lt/s D2) (lt/s D3)
+	   <- leq-lt-trans D1 D2 D3.
+
+%worlds () (leq-lt-trans _ _ _).
+%total D (leq-lt-trans D _ _).
+
+
+
+lt-leq-trans : lt N1 N2 -> leq N2 N3 -> lt N1 N3 -> type.
+%mode lt-leq-trans +D1 +D2 -D3.
+
+-	: lt-leq-trans lt/z (leq/s _) lt/z.
+-	: lt-leq-trans (lt/s D1) (leq/s D2) (lt/s D3)
+	   <- lt-leq-trans D1 D2 D3.
+
+%worlds () (lt-leq-trans _ _ _).
+%total D (lt-leq-trans D _ _).
+
+
+
+lt-trans : lt N1 N2 -> lt N2 N3 -> lt N1 N3 -> type.
+%mode lt-trans +D1 +D2 -D3.
+
+-	: lt-trans lt/z (lt/s _) lt/z.
+-	: lt-trans (lt/s D1) (lt/s D2) (lt/s D3)
+	   <- lt-trans D1 D2 D3.
+
+%worlds () (lt-trans _ _ _).
+%total D (lt-trans D _ _).
+
+
+
+lt-antisymm : lt N N -> false -> type.
+%mode lt-antisymm +X1 -X2.
+
+-	: lt-antisymm (lt/s D) D'
+	   <- lt-antisymm D D'.
+
+%worlds () (lt-antisymm _ _).
+%total D (lt-antisymm D _).
+
+
+
+sum-implies-lt : sum N1 N2 N3 -> lt 0 N2 -> lt N1 N3 -> type.
+%mode sum-implies-lt +X1 +X2 -X3.
+
+-	: sum-implies-lt sum/z lt/z lt/z.
+-	: sum-implies-lt (sum/s D) Dlt (lt/s D')
+	   <- sum-implies-lt D Dlt D'.
+
+%worlds () (sum-implies-lt _ _ _).
+%total D (sum-implies-lt D _ _).
+
+
+
+sum-implies-lt' : sum N1 N2 N3 -> lt 0 N1 -> lt N2 N3 -> type.
+%mode sum-implies-lt' +X1 +X2 -X3.
+
+-	: sum-implies-lt' Dsum Dlt Dlt'
+	   <- sum-commute Dsum Dsum'
+	   <- sum-implies-lt Dsum' Dlt Dlt'.
+
+%worlds () (sum-implies-lt' _ _ _).
+%total {} (sum-implies-lt' _ _ _).
+
+
+
+lt-succ : {N} lt N (s N) -> type.
+%mode lt-succ +X1 -X2.
+
+-	: lt-succ N Dlt
+	   <- sum-implies-lt' (sum/s sum/z) lt/z Dlt.
+
+%worlds () (lt-succ _ _).
+%total {} (lt-succ _ _).
+
+
+
+lt-implies-sum : lt N1 N3 -> sum N1 (s N2) N3 -> type.
+%mode lt-implies-sum +X1 -X2.
+
+-z	: lt-implies-sum lt/z sum/z.
+-s	: lt-implies-sum (lt/s D) (sum/s D')
+	   <- lt-implies-sum D D'.
+
+%worlds () (lt-implies-sum _ _).
+%total D (lt-implies-sum D _).
+
+
+
+sum-leq-lt : sum N1 N2 N3 -> sum N1' N2' N3' -> leq N1 N1' -> lt N2 N2' -> lt N3 N3' -> type.
+%mode sum-leq-lt +X1 +X2 +X3 +X4 -X5.
+
+-	: sum-leq-lt (Dsum : sum N1 N2 N3) (Dsum' : sum N1' N2' N3') (Dleq : leq N1 N1') (Dlt : lt N2 N2') D
+	   <- leq-implies-sum Dleq (Dsum1 : sum N1 N1'' N1')
+	   <- lt-implies-sum Dlt (Dsum2 : sum N2 (s N2'') N2')
+	   <- sum-assoc Dsum1 Dsum' (Dsum4 : sum N1'' N2' N4) (Dsum5 : sum N1 N4 N3')
+	   <- sum-commute Dsum4 (Dsum6 : sum N2' N1'' N4)
+	   <- sum-assoc Dsum2 Dsum6 (sum/s (Dsum7 : sum N2'' N1'' N5)) (Dsum8 : sum N2 (s N5) N4)
+	   <- sum-assoc' (Dsum9 : sum N1 N2 N6) (Dsum10 : sum N6 (s N5) N3') Dsum8 Dsum5
+	   <- sum-fun3 Dsum9 Dsum (Deq : nat-eq N6 N3)
+	   <- sum-resp Deq nat-eq/i nat-eq/i Dsum10 (Dsum3 : sum N3 (s N5) N3')
+	   <- sum-implies-lt Dsum3 lt/z D.
+
+%worlds () (sum-leq-lt _ _ _ _ _).
+%total {} (sum-leq-lt _ _ _ _ _).
+
+
+
+sum-lt-leq : sum N1 N2 N3 -> sum N1' N2' N3' -> lt N1 N1' -> leq N2 N2' -> lt N3 N3' -> type.
+%mode sum-lt-leq +X1 +X2 +X3 +X4 -X5.
+
+-	: sum-lt-leq DsumA DsumB Dlt Dleq D
+	   <- sum-commute DsumA DsumA'
+	   <- sum-commute DsumB DsumB'
+	   <- sum-leq-lt DsumA' DsumB' Dleq Dlt D.
+
+%worlds () (sum-lt-leq _ _ _ _ _).
+%total {} (sum-lt-leq _ _ _ _ _).
+
+
+
+
+%%%%%  Maximum  %%%%%
+
+can-max : {N1} {N2} {N3} max N1 N2 N3 -> type.
+%mode can-max +X1 +X2 -X3 -X4.
+
+-	: can-max 0 N N max/z*.
+-	: can-max N 0 N max/*z.
+-	: can-max (s N1) (s N2) (s N3) (max/s D)
+	   <- can-max N1 N2 N3 D.
+
+%worlds () (can-max _ _ _ _).
+%total N (can-max N _ _ _).
+
+
+
+max-lt : max N1 N2 N3 -> lt N N1 -> lt N N2 -> lt N N3 -> type.
+%mode max-lt +X1 +X2 +X3 -X4.
+
+-	: max-lt max/z* _ D D.
+-	: max-lt max/*z D _ D.
+-	: max-lt (max/s D) lt/z lt/z lt/z.
+-	: max-lt (max/s D) (lt/s D1) (lt/s D2) (lt/s D')
+	   <- max-lt D D1 D2 D'.
+
+%worlds () (max-lt _ _ _ _).
+%total D (max-lt D _ _ _).
+
+
+
+max-leq : max N1 N2 N3 -> leq N1 N3 -> leq N2 N3 -> type.
+%mode max-leq +X1 -X2 -X3.
+
+-	: max-leq max/z* leq/z D
+	   <- leq-reflex _ D.
+-	: max-leq max/*z D leq/z
+	   <- leq-reflex _ D.
+-	: max-leq (max/s D) (leq/s D1) (leq/s D2)
+	   <- max-leq D D1 D2.
+
+%worlds () (max-leq _ _ _).
+%total D (max-leq D _ _).
+
+
+
+
+%%%%%  Subterm Ordering  %%%%%
+
+sum-subterm2 : {N1} {N2} {N3} sum N1 N2 N3 -> type.
+%mode sum-subterm2 +X1 +X2 +X3 +X4.
+
+-	: sum-subterm2 _ _ _ sum/z.
+-	: sum-subterm2 _ _ _ (sum/s D)
+	   <- sum-subterm2 _ _ _ D.
+
+%worlds () (sum-subterm2 _ _ _ _).
+%total D (sum-subterm2 _ _ _ D).
+%reduces N2 <= N3 (sum-subterm2 _ N2 N3 _).
+
+
+
+sum-subterm1 : {N1} {N2} {N3} sum N1 N2 N3 -> type.
+%mode sum-subterm1 +X1 +X2 +X3 +X4.
+
+-	: sum-subterm1 _ _ _ D
+	   <- sum-commute D D'
+	   <- sum-subterm2 _ _ _ D'.
+
+%worlds () (sum-subterm1 _ _ _ _).
+%total D (sum-subterm1 _ _ _ D).
+%reduces N1 <= N3 (sum-subterm1 N1 _ N3 _).
+
+
+
+sum-subterm2' : {N1} {N2} {N3} sum (s N1) N2 N3 -> type.
+%mode sum-subterm2' +X1 +X2 +X3 +X4.
+
+-	: sum-subterm2' _ _ _ (sum/s sum/z).
+-	: sum-subterm2' _ _ _ (sum/s D)
+	   <- sum-subterm2' _ _ _ D.
+
+%worlds () (sum-subterm2' _ _ _ _).
+%total D (sum-subterm2' _ _ _ D).
+%reduces N2 < N3 (sum-subterm2' _ N2 N3 _).
+
+
+
+sum-subterm1' : {N1} {N2} {N3} sum N1 (s N2) N3 -> type.
+%mode sum-subterm1' +X1 +X2 +X3 +X4.
+
+-	: sum-subterm1' _ _ _ D
+	   <- sum-commute D D'
+	   <- sum-subterm2' _ _ _ D'.
+
+%worlds () (sum-subterm1' _ _ _ _).
+%total D (sum-subterm1' _ _ _ D).
+%reduces N1 < N3 (sum-subterm1' N1 _ N3 _).
+
+
+
+leq-subterm : {N1} {N2} leq N1 N2 -> type.
+%mode leq-subterm +X1 +X2 +X3.
+
+-	: leq-subterm _ _ Dleq
+	   <- leq-implies-sum Dleq Dsum
+	   <- sum-subterm1 _ _ _ Dsum.
+
+%worlds () (leq-subterm _ _ _).
+%total {} (leq-subterm _ _ _).
+%reduces N1 <= N2 (leq-subterm N1 N2 _).
+
+
+
+lt-subterm : {N1} {N2} lt N1 N2 -> type.
+%mode lt-subterm +X1 +X2 +X3.
+
+-	: lt-subterm _ _ Dlt
+	   <- lt-implies-sum Dlt Dsum
+	   <- sum-subterm1' _ _ _ Dsum.
+
+%worlds () (lt-subterm _ _ _).
+%total {} (lt-subterm _ _ _).
+%reduces N1 < N2 (lt-subterm N1 N2 _).
+
+
+
+%%%%%  Compare  %%%%%
+
+compare : nat -> nat -> type.
+
+compare/lt	: compare N N'
+		   <- lt N N'.
+
+compare/eq	: compare N N.
+
+compare/gt	: compare N N'
+		   <- lt N' N.
+
+
+
+compare-succ : compare N N' -> compare (s N) (s N') -> type.
+%mode compare-succ +X1 -X2.
+
+-	: compare-succ (compare/lt D) (compare/lt (lt/s D)).
+
+-	: compare-succ compare/eq compare/eq.
+
+-	: compare-succ (compare/gt D) (compare/gt (lt/s D)).
+
+%worlds () (compare-succ _ _).
+%total {} (compare-succ _ _).
+
+
+
+trichotomy-nat : {N} {N'} compare N N' -> type.
+%mode trichotomy-nat +X1 +X2 -X3.
+
+-	: trichotomy-nat 0 0 compare/eq.
+
+-	: trichotomy-nat 0 (s _) (compare/lt lt/z).
+
+-	: trichotomy-nat (s _) 0 (compare/gt lt/z).
+
+-	: trichotomy-nat (s N) (s N') D'
+	   <- trichotomy-nat N N' D
+	   <- compare-succ D D'.
+
+%worlds () (trichotomy-nat _ _ _).
+%total N (trichotomy-nat N _ _).

@@ -1,0 +1,188 @@
+%{ == Syntax == }%
+%{
+
+We have a programming language that we started last time that we want to represent in Twelf. First the types "on paper:"
+ 
+ τ ::= unit | τ → τ
+
+... and then, we can see those types in Twelf:
+
+}%
+
+tp : type.
+
+unit : tp.
+arrow : tp -> tp -> tp.
+
+%{
+
+Next, the terms "on paper:"
+
+ e ::= x | * | λx:τ.e | e e
+
+... and in Twelf:
+
+}%
+
+exp : type.
+
+* : exp.
+lam : tp -> (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+
+%{
+
+Note that there is no case for "variables" <tt>x</tt>. 
+
+}%
+
+%{ == Static semantics (typing rules) == }%
+%{
+
+The old judgment for typing was <tt>e : τ</tt> - in other words, it was a two-place relation that took an expression and a type. We will describe this in Twelf as <tt>of</tt>.
+
+}%
+
+of : exp -> tp -> type.
+
+%{
+
+Okay - now we need to describe this rule:
+
+ -------- of/star
+ * : unit
+
+}%
+
+of/star : of * unit.
+
+
+%{
+
+Next we describe the more interesting rule for application:
+
+ e<sub>1</sub> : τ → τ'
+ e<sub>2</sub> : τ
+ ------------ of/app
+ e<sub>1</sub> e<sub>2</sub> : τ'
+}%
+
+of/app : of (app E1 E2) T
+  <- of E1 (arrow T T')
+  <- of E2 T.
+
+%{ 
+
+The rule for abstractions uses a hypothetical! We're going to pull this off by using a Pi-binding (represented in Twelf as <tt>{x: exp}</tt> to create a ''fresh'' variable, and then using an LF arrow <tt>-></tt> to say that you are proving <tt>of (E x) T'</tt> under the ''hypothetical assumption'' that <tt>of x T</tt>, which matches exactly with how we've been using assumptions all semester.
+
+ x : τ |- e : τ'
+ --------------- of/lam
+ λx:τ.e : τ → τ'
+
+}%
+
+of/lam : of (lam T ([x] E x)) (arrow T T')
+  <- ({x: exp} of x T -> of (E x) T').
+
+
+%{ === Example derivation === }%
+%{ On paper: 
+
+ -------------------- hyp
+ x : unit |- e : unit
+ ----------------------- of/lam
+ λx:unit.e : unit → unit
+
+In Twelf:
+
+| check=decl }%
+
+_ = of/lam (_) : of (lam unit ([x] x)) (arrow unit unit).
+
+%{ Okay, it looks like we need something (<tt>X1</tt>) of type <tt>{x:exp} of x unit -> of x unit</tt>, in other words, something of type <tt>Πx:exp. of x unit -> of x unit</tt> - this is the type of a (dependent) function that takes a term with type <tt>exp</tt> (call it <tt>x</tt>), and returns a (not dependent) function that takes a term with type <tt>of x unit</tt> and then returns a term with type <tt>of x unit</tt>. In other words, take an expression and then give me the identity function!
+
+You guys should know what to do from here (it's just like what you were doing in Homework 5, but for LF instead of System F!). We want <tt>λx:exp. λd:of x unit. d</tt>.
+| check=decl }%
+
+_ = of/lam ([x: exp] [d: of x unit] d) : of (lam unit ([x] x)) (arrow unit unit).
+
+%{ The absolutely correct observation made about this in class was that '''Hypotheticals in the object language are represented as functions in the metalanguage.''' }%
+
+
+%{ == Dynamic semantics (evaluation rules) == }%
+%{
+
+First, values <tt>e value</tt>:
+
+ ------------ value/star
+ * value
+
+ ------------ value/lam
+ λx:τ.e value
+
+}%
+
+value : exp -> type.
+
+value/star : value *.
+
+value/lam : value (lam T ([x] E x)).
+
+%{
+
+Next, evaluation rules <tt>e -> e</tt>
+
+ e<sub>1</sub> -> e'<sub>1</sub>
+ --------------------- step/app1
+ e<sub>1</sub> e<sub>2</sub> -> e'<sub>1</sub> e<sub>2</sub>
+
+ e<sub>1</sub> value
+ e<sub>2</sub> -> e'<sub>2</sub>
+ --------------------- step/app2
+ e<sub>1</sub> e<sub>2</sub> -> e<sub>1</sub> e'<sub>2</sub>
+
+ e<sub>2</sub> value
+ --------------------- step/applam
+ (λx:τ.e) e<sub>2</sub> -> e<sub>1</sub> e'<sub>2</sub>
+
+}%
+
+step : exp -> exp -> type.
+
+step/app1 : step (app E1 E2) (app E1' E2)
+  <- step E1 E1'.
+
+step/app2 : step (app E1 E2) (app E1 E2')
+  <- value E1
+  <- step E2 E2'.
+
+step/applam : step (app (lam T ([x] E x)) E2) (E E2)
+  <- value E2.
+
+
+%{ == Coda: Type Safety == }%
+%{
+
+[[User:Rsimmons/Lecture 22: Proofs In Twelf| Last time]], we used the commutativity of addition to write a logic program that took in a term of type <tt>sum N1 N2 N3</tT> and produced a term of type <tt>sum N2 N1 N3</tt>. In other words, we proved this theorem:
+
+'''''Sum commutes''''': if <tt>sum(n<sub>1</sub>, n<sub>2</sub>, n<sub>3</sub>)</tt> then <tt>sum(n<sub>1</sub>, n<sub>1</sub>, n<sub>1</sub>)</tt>
+
+...by writing this in Twelf and proving it to be a total relation: 
+
+<twelf>
+sum-commutes : sum N1 N2 N3 -> sum N2 N1 N3 -> type.
+%mode sum-commutes +D1 -D2.
+</twelf>
+
+So we an prove this theorem:
+
+'''''Preservation''''': if <tt>e : τ</tt> and <tt>e -> e'</tt>, then <tt>e' : τ</tt>
+
+...by writing this in Twelf and proving it to be a total relation:
+
+}%
+
+preservation : of E T -> step E E' -> of E' T -> type.
+%mode preservation +D1 +D2 -D2.
+
+%{ Thus ends today's lesson. }%

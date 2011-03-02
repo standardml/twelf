@@ -1,0 +1,12 @@
+%% syntax:
+
+%worlds (cn-block) (sg).
+
+%% static semantics
+
+%worlds (cn-block) (fst-sg _ _).
+
+%worlds (ofkd-block)
+(sg-wf _)
+(sg-sub _ _)
+(sg-deq _ _).

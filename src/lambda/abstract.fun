@@ -211,7 +211,13 @@ struct
 	  then collectSpine (G, (S, s), K)
 	else (* s' = ^|G| *)
 	  collectSpine (G, (S, s), I.Decl (collectExp (I.Null, (V, I.id), K), FV (name, V)))
-      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, _, (l, t)), i), S), s), K) =
+      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (ref NONE, sk, (l, t)), i), S), s), K) = 
+          collectSpine (G, (S, s), collectBlock (G, I.blockSub (L, s), K))
+	  (* BUG : We forget to deref L.  use collectBlock instead
+	     FPCHECK
+	     -cs Sat Jul 24 18:48:59 2010 
+            was:
+      | collectExpW (G, (I.Root (I.Proj (L as I.LVar (r, sk, (l, t)), i), S), s), K) = 
 	if exists (eqLVar L) K
 	  (* note: don't collect t again below *)
 	  (* was: collectSpine (G, (S, s), collectSub (I.Null, t, K)) *)
@@ -219,8 +225,14 @@ struct
 	  then collectSpine (G, (S, s), K)
 	else 
 	  (* -fp Sun Dec  1 21:12:12 2002 *)
-	  collectSpine (G, (S, s), I.Decl (collectSub (G, I.comp(t,s), K), LV L))
-      | collectExpW (G, (I.Root (_ , S), s), K) =
+	(* collectSpine (G, (S, s), I.Decl (collectSub (G, I.comp(t,s), K), LV L)) *)
+	(* was :
+	 collectSpine (G, (S, s), collectSub (G, I.comp(t,s), I.Decl (K, LV L)))
+	 July 22, 2010 -fp -cs
+	 *)
+	    collectSpine (G, (S, s), collectSub (G, I.comp(t,I.comp(sk,s)),
+						 I.Decl (K, LV L)))
+*)      | collectExpW (G, (I.Root (_ , S), s), K) =
 	  collectSpine (G, (S, s), K)
       | collectExpW (G, (I.Lam (D, U), s), K) =
 	  collectExp (I.Decl (G, I.decSub (D, s)), (U, I.dot1 s), collectDec (G, (D, s), K))
@@ -271,7 +283,8 @@ struct
       | collectDec (G, (I.BDec (_, (_, t)), s), K) =
 	  (* . |- t : Gsome, so do not compose with s *)
 	  (* Sat Dec  8 13:28:15 2001 -fp *)
-	  collectSub (I.Null, t, K)
+	  (* was: collectSub (I.Null, t, K) *)
+	  collectSub (G, I.comp(t,s), K)
       | collectDec (G, (I.NDec _, s), K) = K
 
     (* collectSub (G, s, K) = K' 
@@ -300,8 +313,9 @@ struct
           (* correct?? -fp Sun Dec  1 21:15:33 2002 *)
       | collectBlock (G, L as I.LVar (_, sk, (l, t)), K) = 
         if exists (eqLVar L) K
-	  then collectSub (G, t, K)
-	else I.Decl (collectSub (G, t, K), LV L)
+	  then collectSub (G, I.comp(t,sk), K)
+	else I.Decl (collectSub (G, I.comp(t,sk), K), LV L)
+    (* was: t in the two lines above, July 22, 2010, -fp -cs *)
     (* | collectBlock (G, I.Bidx _, K) = K *)
     (* should be impossible: Fronts of substitutions are never Bidx *)
     (* Sat Dec  8 13:30:43 2001 -fp *)

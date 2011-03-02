@@ -1,0 +1,11 @@
+test crary/explicit/excon.cfg
+test crary/explicit/excon-rev.cfg
+test crary/mldef-alpha/sources.cfg
+test crary/standard/standard.cfg
+test crary/substruct/linear.cfg
+test crary/substruct/lineard.cfg
+test crary/substruct/modal.cfg
+test crary/synsing/sources.cfg
+test crary/tslf/sources.cfg
+
+

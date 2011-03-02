@@ -1,0 +1,1036 @@
+%%%% metrics on typing derivations for the explicit system
+
+
+
+
+mkd-wf	: kd-wf K -> met -> type.
+%mode mkd-wf *D *M.
+
+mkd-sub : kd-sub K1 K2 -> met -> type.
+%mode mkd-sub *D *M.
+
+mkd-deq : kd-deq K1 K2 -> met -> type.
+%mode mkd-deq *D *M.
+
+mcn-deq	: cn-deq C1 C2 K -> met -> type.
+%mode mcn-deq *D *M.
+
+mofkd/cn/unit	: mofkd (ofkd/cn/unit) met/unit.
+
+mofkd/tp/unit	: mofkd (ofkd/tp/unit) met/unit.
+
+mofkd/tp/tagged : mofkd (ofkd/tp/tagged) met/unit.
+
+mofkd/tp/ref	: mofkd (ofkd/tp/ref D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mofkd/tp/tag	: mofkd (ofkd/tp/tag D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mofkd/cn/pj1	: mofkd (ofkd/cn/pj1 D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mofkd/cn/pj2	: mofkd (ofkd/cn/pj2 D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mofkd/kd/sing	: mofkd (ofkd/kd/sing D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mofkd/tp/cross	: mofkd (ofkd/tp/cross D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/tp/arrow	: mofkd (ofkd/tp/arrow D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/tp/sum	: mofkd (ofkd/tp/sum D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/cn/pair	: mofkd (ofkd/cn/pair D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/cn/app	: mofkd (ofkd/cn/app D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/sgm-ext	: mofkd (ofkd/sgm-ext D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mofkd/tp/forall	: mofkd (ofkd/tp/forall D1 D2) (met/pair D1' D2')
+		   <- mkd-wf D2 D2'
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mofkd (D1 a da) D1').
+
+mofkd/cn/mu	: mofkd (ofkd/cn/mu D1 D2) (met/pair D1' D2')
+		   <- mkd-wf D2 D2'
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mofkd (D1 a da) D1').
+
+mofkd/cn/lam	: mofkd (ofkd/cn/lam D1 D2) (met/pair D1' D2')
+		   <- mkd-wf D2 D2'
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mofkd (D1 a da) D1').
+
+mofkd/pi-ext	: mofkd (ofkd/pi-ext D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mofkd (D2 a da) D2')
+		   <- mofkd D1 D1'.
+
+mofkd/sub	: mofkd (ofkd/sub D1 DS) (met/pair D1' DS')
+		   <- mkd-sub DS DS'
+		   <- mofkd D1 D1'.
+
+mofkd/deq	: mofkd (ofkd/deq D1 DS) (met/pair D1' DS')
+		   <- mkd-deq DS DS'
+		   <- mofkd D1 D1'.
+
+
+mkd-wf/kd/unit	: mkd-wf (kd-wf/kd/unit) met/unit.
+
+mkd-wf/kd/type	: mkd-wf (kd-wf/kd/type) met/unit.
+
+mkd-wf/kd/sing	: mkd-wf (kd-wf/kd/sing D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mkd-wf/kd/sgm	: mkd-wf (kd-wf/kd/sgm D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 mkd-wf (D2 a da) D2')
+		   <- mkd-wf D1 D1'.
+
+mkd-wf/kd/pi	: mkd-wf (kd-wf/kd/pi D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 mkd-wf (D2 a da) D2')
+		   <- mkd-wf D1 D1'.
+
+
+
+mkd-deq/kd/unit	: mkd-deq (kd-deq/kd/unit) met/unit.
+
+mkd-deq/kd/type	: mkd-deq (kd-deq/kd/type) met/unit.
+
+mkd-deq/kd/sing	: mkd-deq (kd-deq/kd/sing D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mkd-deq/kd/sgm	: mkd-deq (kd-deq/kd/sgm D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 mkd-deq (D2 a da) D2')
+		   <- mkd-deq D1 D1'.
+
+mkd-deq/kd/pi	: mkd-deq (kd-deq/kd/pi D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}{dm:mofkd da met/unit}
+			 mkd-deq (D2 a da) D2')
+		   <- mkd-deq D1 D1'.
+
+
+
+mkd-sub/kd/unit		: mkd-sub (kd-sub/kd/unit) met/unit.
+
+mkd-sub/kd/type		: mkd-sub (kd-sub/kd/type) met/unit.
+
+mkd-sub/kd/sing-kd/sing	: mkd-sub (kd-sub/kd/sing-kd/sing D1) (met/sing D1')
+			   <- mcn-deq D1 D1'.
+
+mkd-sub/kd/sing-kd/type	: mkd-sub (kd-sub/kd/sing-kd/type D1) (met/sing D1')
+			   <- mofkd D1 D1'.
+  
+mkd-sub/kd/sgm		: mkd-sub (kd-sub/kd/sgm D1 D2 D3) 
+			   (met/pair D1' (met/pair D2' D3'))
+			   <- ({a}{da}{dm:mofkd da met/unit} 
+				 mkd-wf (D3 a da) D3')
+			   <- ({a}{da}{dm:mofkd da met/unit}
+				 mkd-sub (D2 a da) D2')
+			   <- mkd-sub D1 D1'.
+
+mkd-sub/kd/pi		: mkd-sub (kd-sub/kd/pi D1 D2 D3)
+			   (met/pair D1' (met/pair D2' D3'))
+			   <- ({a}{da}{dm:mofkd da met/unit} 
+				 mkd-wf (D3 a da) D3')
+			   <- ({a}{da}{dm:mofkd da met/unit}
+				 mkd-sub (D2 a da) D2')
+			   <- mkd-sub D1 D1'.
+
+
+mcn-deq/refl	: mcn-deq (cn-deq/refl D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mcn-deq/sym	: mcn-deq (cn-deq/sym D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/trans	: mcn-deq (cn-deq/trans D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/cn/unit	: mcn-deq (cn-deq/cn/unit) met/unit.
+
+mcn-deq/tp/unit	: mcn-deq (cn-deq/tp/unit) met/unit.
+
+mcn-deq/tp/tagged : mcn-deq (cn-deq/tp/tagged) met/unit.
+
+mcn-deq/tp/ref	: mcn-deq (cn-deq/tp/ref D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/tp/tag	: mcn-deq (cn-deq/tp/tag D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/cn/pj1	: mcn-deq (cn-deq/cn/pj1 D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/cn/pj2	: mcn-deq (cn-deq/cn/pj2 D1) (met/sing D1')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/kd/sing	: mcn-deq (cn-deq/kd/sing D1) (met/sing D1')
+		   <- mofkd D1 D1'.
+
+mcn-deq/tp/cross	: mcn-deq (cn-deq/tp/cross D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/tp/arrow	: mcn-deq (cn-deq/tp/arrow D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/tp/sum	: mcn-deq (cn-deq/tp/sum D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/cn/pair	: mcn-deq (cn-deq/cn/pair D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/cn/app	: mcn-deq (cn-deq/cn/app D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/sgm-ext	: mcn-deq (cn-deq/sgm-ext D1 D2) (met/pair D1' D2')
+		   <- mcn-deq D2 D2'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/kd/unit	: mcn-deq (cn-deq/kd/unit D1 D2) (met/pair D1' D2')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mcn-deq/tp/forall	: mcn-deq (cn-deq/tp/forall D1 D2) (met/pair D1' D2')
+			   <- mkd-deq D2 D2'
+			   <- ({a}{da}{dm: mofkd da met/unit}
+				 mcn-deq (D1 a da) D1').
+
+mcn-deq/cn/mu	: mcn-deq (cn-deq/cn/mu D1 D2) (met/pair D1' D2')
+		   <- mkd-deq D2 D2'
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mcn-deq (D1 a da) D1').
+
+mcn-deq/cn/lam	: mcn-deq (cn-deq/cn/lam D1 D2) (met/pair D1' D2')
+		   <- mkd-deq D2 D2'
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mcn-deq (D1 a da) D1').
+
+mcn-deq/pi-ext	: mcn-deq (cn-deq/pi-ext D1 D2 D3) 
+		   (met/pair D1' (met/pair D2' D3'))
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mcn-deq (D3 a da) D3')
+		   <- mofkd D2 D2'
+		   <- mofkd D1 D1'.
+
+mcn-deq/pi-ext-2: mcn-deq (cn-deq/pi-ext-2 D1 D3) 
+		   (met/pair D1' D3')
+		   <- ({a}{da}{dm: mofkd da met/unit}
+			 mcn-deq (D3 a da) D3')
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/sub	: mcn-deq (cn-deq/sub D1 DS) (met/pair D1' DS')
+		   <- mkd-sub DS DS'
+		   <- mcn-deq D1 D1'.
+
+mcn-deq/deq	: mcn-deq (cn-deq/deq D1 DS) (met/pair D1' DS')
+		   <- mkd-deq DS DS'
+		   <- mcn-deq D1 D1'.
+
+
+
+
+
+
+
+can-mkd-wf	: {D: kd-wf K} mkd-wf D Km -> type.
+%mode can-mkd-wf +D1 -D2.
+
+can-mkd-sub	: {D: kd-sub K K'} mkd-sub D Km -> type.
+%mode can-mkd-sub +D1 -D2.
+
+can-mkd-deq	: {D: kd-deq K K'} mkd-deq D Km -> type.
+%mode can-mkd-deq +D1 -D2.
+
+can-mcn-deq	: {D: cn-deq C C' K'} mcn-deq D Km -> type.
+%mode can-mcn-deq +D1 -D2.
+
+-	: can-mofkd ofkd/cn/unit mofkd/cn/unit.
+
+-	: can-mofkd ofkd/tp/unit mofkd/tp/unit.
+
+-	: can-mofkd ofkd/tp/tagged mofkd/tp/tagged.
+
+-	: can-mofkd (ofkd/tp/ref D1) (mofkd/tp/ref D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mofkd (ofkd/tp/tag D1) (mofkd/tp/tag D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mofkd (ofkd/kd/sing D1) (mofkd/kd/sing D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mofkd (ofkd/cn/pj1 D1) (mofkd/cn/pj1 D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mofkd (ofkd/cn/pj2 D1) (mofkd/cn/pj2 D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mofkd (ofkd/cn/pair D1 D2) (mofkd/cn/pair D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/tp/cross D1 D2) (mofkd/tp/cross D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/tp/arrow D1 D2) (mofkd/tp/arrow D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/tp/sum D1 D2) (mofkd/tp/sum D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/sgm-ext D1 D2) (mofkd/sgm-ext D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/cn/app D1 D2) (mofkd/cn/app D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mofkd (ofkd/pi-ext D1 D2) (mofkd/pi-ext D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mofkd (D2 a da) (D2' a da dm)).
+
+-	: can-mofkd (ofkd/cn/lam D1 D2) (mofkd/cn/lam D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mofkd (D1 a da) (D1' a da dm))
+	   <- can-mkd-wf D2 D2'.
+
+-	: can-mofkd (ofkd/tp/forall D1 D2) (mofkd/tp/forall D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mofkd (D1 a da) (D1' a da dm))
+	   <- can-mkd-wf D2 D2'.
+
+-	: can-mofkd (ofkd/cn/mu D1 D2) (mofkd/cn/mu D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mofkd (D1 a da) (D1' a da dm))
+	   <- can-mkd-wf D2 D2'.
+
+-	: can-mofkd (ofkd/sub D1 DS) (mofkd/sub D1' DS')
+	   <- can-mofkd D1 D1'
+	   <- can-mkd-sub DS DS'.
+
+-	: can-mofkd (ofkd/deq D1 DS) (mofkd/deq D1' DS')
+	   <- can-mofkd D1 D1'
+	   <- can-mkd-deq DS DS'.
+
+
+
+-	: can-mkd-wf kd-wf/kd/unit mkd-wf/kd/unit.
+
+-	: can-mkd-wf kd-wf/kd/type mkd-wf/kd/type.
+
+-	: can-mkd-wf (kd-wf/kd/sing D1) (mkd-wf/kd/sing D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mkd-wf (kd-wf/kd/sgm D1 D2) (mkd-wf/kd/sgm D1' D2')
+	   <- can-mkd-wf D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-wf (D2 a da) (D2' a da dm)).
+
+-	: can-mkd-wf (kd-wf/kd/pi D1 D2) (mkd-wf/kd/pi D1' D2')
+	   <- can-mkd-wf D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-wf (D2 a da) (D2' a da dm)).
+
+
+
+-	: can-mkd-deq kd-deq/kd/unit mkd-deq/kd/unit.
+
+-	: can-mkd-deq kd-deq/kd/type mkd-deq/kd/type.
+
+-	: can-mkd-deq (kd-deq/kd/sing D1) (mkd-deq/kd/sing D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mkd-deq (kd-deq/kd/sgm D1 D2) (mkd-deq/kd/sgm D1' D2')
+	   <- can-mkd-deq D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-deq (D2 a da) (D2' a da dm)).
+
+-	: can-mkd-deq (kd-deq/kd/pi D1 D2) (mkd-deq/kd/pi D1' D2')
+	   <- can-mkd-deq D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-deq (D2 a da) (D2' a da dm)).
+
+
+
+-	: can-mkd-sub kd-sub/kd/unit mkd-sub/kd/unit.
+
+-	: can-mkd-sub kd-sub/kd/type mkd-sub/kd/type.
+
+-	: can-mkd-sub (kd-sub/kd/sing-kd/sing D1) 
+	   (mkd-sub/kd/sing-kd/sing D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mkd-sub (kd-sub/kd/sing-kd/type D1) 
+	   (mkd-sub/kd/sing-kd/type D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mkd-sub (kd-sub/kd/sgm D1 D2 D3) (mkd-sub/kd/sgm D1' D2' D3')
+	   <- can-mkd-sub D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-sub (D2 a da) (D2' a da dm))
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-wf (D3 a da) (D3' a da dm)).
+
+-	: can-mkd-sub (kd-sub/kd/pi D1 D2 D3) (mkd-sub/kd/pi D1' D2' D3')
+	   <- can-mkd-sub D1 D1'
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-sub (D2 a da) (D2' a da dm))
+	   <- ({a}{da}{dm: mofkd da _}{dcm: can-mofkd da dm}
+		 can-mkd-wf (D3 a da) (D3' a da dm)).
+
+
+
+
+-	: can-mcn-deq cn-deq/cn/unit mcn-deq/cn/unit.
+
+-	: can-mcn-deq cn-deq/tp/unit mcn-deq/tp/unit.
+
+-	: can-mcn-deq cn-deq/tp/tagged mcn-deq/tp/tagged.
+
+-	: can-mcn-deq (cn-deq/sym D1) (mcn-deq/sym D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mcn-deq (cn-deq/tp/ref D1) (mcn-deq/tp/ref D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mcn-deq (cn-deq/tp/tag D1) (mcn-deq/tp/tag D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mcn-deq (cn-deq/kd/sing D1) (mcn-deq/kd/sing D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mcn-deq (cn-deq/refl D1) (mcn-deq/refl D1')
+	   <- can-mofkd D1 D1'.
+
+-	: can-mcn-deq (cn-deq/cn/pj1 D1) (mcn-deq/cn/pj1 D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mcn-deq (cn-deq/cn/pj2 D1) (mcn-deq/cn/pj2 D1')
+	   <- can-mcn-deq D1 D1'.
+
+-	: can-mcn-deq (cn-deq/kd/unit D1 D2) (mcn-deq/kd/unit D1' D2')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'.
+
+-	: can-mcn-deq (cn-deq/trans D1 D2) (mcn-deq/trans D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/cn/pair D1 D2) (mcn-deq/cn/pair D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/tp/cross D1 D2) (mcn-deq/tp/cross D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/tp/arrow D1 D2) (mcn-deq/tp/arrow D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/tp/sum D1 D2) (mcn-deq/tp/sum D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/sgm-ext D1 D2) (mcn-deq/sgm-ext D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/cn/app D1 D2) (mcn-deq/cn/app D1' D2')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mcn-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/pi-ext D1 D2 D3) (mcn-deq/pi-ext D1' D2' D3')
+	   <- can-mofkd D1 D1'
+	   <- can-mofkd D2 D2'
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mcn-deq (D3 a da) (D3' a da dm)).
+
+-	: can-mcn-deq (cn-deq/pi-ext-2 D1 D3) (mcn-deq/pi-ext-2 D1' D3')
+	   <- can-mcn-deq D1 D1'
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mcn-deq (D3 a da) (D3' a da dm)).
+
+-	: can-mcn-deq (cn-deq/cn/lam D1 D2) (mcn-deq/cn/lam D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mcn-deq (D1 a da) (D1' a da dm))
+	   <- can-mkd-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/tp/forall D1 D2) (mcn-deq/tp/forall D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mcn-deq (D1 a da) (D1' a da dm))
+	   <- can-mkd-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/cn/mu D1 D2) (mcn-deq/cn/mu D1' D2')
+	   <- ({a}{da}{dm: mofkd da met/unit}{dcm: can-mofkd da dm}
+		 can-mcn-deq (D1 a da) (D1' a da dm))
+	   <- can-mkd-deq D2 D2'.
+
+-	: can-mcn-deq (cn-deq/sub D1 DS) (mcn-deq/sub D1' DS')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mkd-sub DS DS'.
+
+-	: can-mcn-deq (cn-deq/deq D1 DS) (mcn-deq/deq D1' DS')
+	   <- can-mcn-deq D1 D1'
+	   <- can-mkd-deq DS DS'.
+
+%worlds (cn-block | can-mofkd-block | ovar-block) (can-mofkd _ _) 
+(can-mkd-wf _ _) (can-mkd-deq _ _) (can-mkd-sub _ _)
+(can-mcn-deq _ _).
+%total (D1 D2 D3 D4 D5) 
+(can-mofkd D1 _) (can-mkd-wf D2 _) 
+(can-mkd-deq D4 _) (can-mkd-sub D3 _) 
+(can-mcn-deq D5 _).
+
+
+
+meofkd		: eofkd G C K -> met -> type.
+mekd-wf		: ekd-wf G K -> met -> type.
+mekd-sub	: ekd-sub G K1 K2 -> met -> type.
+mekd-deq	: ekd-deq G K1 K2 -> met -> type.
+mecn-deq	: ecn-deq G C1 C2 K -> met -> type.
+
+
+
+
+mekd-wf/kd/unit	: mekd-wf (ekd-wf/kd/unit _) met/unit.
+
+mekd-wf/kd/type	: mekd-wf (ekd-wf/kd/type _) met/unit.
+
+mekd-wf/kd/sing	: mekd-wf (ekd-wf/kd/sing D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+mekd-wf/kd/sgm	: mekd-wf (ekd-wf/kd/sgm D1 D2) (met/pair D1' D2')
+		   <- ({a} {da}
+			 mekd-wf (D2 a da) D2')
+		   <- mekd-wf D1 D1'.
+
+mekd-wf/kd/pi	: mekd-wf (ekd-wf/kd/pi D1 D2) (met/pair D1' D2')
+		   <- ({a} {da}
+			 mekd-wf (D2 a da) D2')
+		   <- mekd-wf D1 D1'.
+
+
+
+
+
+meofkd/cn/unit	: meofkd (eofkd/cn/unit _) met/unit.
+
+meofkd/tp/unit	: meofkd (eofkd/tp/unit _) met/unit.
+
+meofkd/tp/tagged : meofkd (eofkd/tp/tagged _) met/unit.
+
+meofkd/tp/ref	: meofkd (eofkd/tp/ref D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+meofkd/tp/tag	: meofkd (eofkd/tp/tag D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+meofkd/cn/pj1	: meofkd (eofkd/cn/pj1 D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+meofkd/cn/pj2	: meofkd (eofkd/cn/pj2 D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+meofkd/kd/sing	: meofkd (eofkd/kd/sing D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+meofkd/tp/cross	: meofkd (eofkd/tp/cross D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/tp/arrow	: meofkd (eofkd/tp/arrow D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/tp/sum	: meofkd (eofkd/tp/sum D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/cn/pair	: meofkd (eofkd/cn/pair D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/cn/app	: meofkd (eofkd/cn/app D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/sgm-ext	: meofkd (eofkd/sgm-ext D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+meofkd/tp/forall	: meofkd (eofkd/tp/forall D1 D2) (met/pair D1' D2')
+		   <- mekd-wf D2 D2'
+		   <- ({a}{da}
+			 meofkd (D1 a da) D1').
+
+meofkd/cn/mu	: meofkd (eofkd/cn/mu D1 D2) (met/pair D1' D2')
+		   <- mekd-wf D2 D2'
+		   <- ({a}{da}
+			 meofkd (D1 a da) D1').
+
+meofkd/cn/lam	: meofkd (eofkd/cn/lam D1 D2) (met/pair D1' D2')
+		   <- mekd-wf D2 D2'
+		   <- ({a}{da}
+			 meofkd (D1 a da) D1').
+
+meofkd/pi-ext	: meofkd (eofkd/pi-ext D1 D2) (met/pair D1' D2')
+		   <- ({a}{da}
+			 meofkd (D2 a da) D2')
+		   <- meofkd D1 D1'.
+
+meofkd/sub	: meofkd (eofkd/sub D1 DS) (met/pair D1' DS')
+		   <- mekd-sub DS DS'
+		   <- meofkd D1 D1'.
+
+meofkd/deq	: meofkd (eofkd/deq D1 DS) (met/pair D1' DS')
+		   <- mekd-deq DS DS'
+		   <- meofkd D1 D1'.
+
+meofkd/var	: meofkd (eofkd/var _) met/unit.
+
+meofkd/closed	: meofkd (eofkd/closed D1 _) DM
+		   <- mofkd D1 DM.
+
+
+
+mekd-deq/kd/unit	: mekd-deq (ekd-deq/kd/unit _) met/unit.
+
+mekd-deq/kd/type	: mekd-deq (ekd-deq/kd/type _) met/unit.
+
+mekd-deq/kd/sing	: mekd-deq (ekd-deq/kd/sing D1) (met/sing D1')
+			   <- mecn-deq D1 D1'.
+
+mekd-deq/kd/sgm		: mekd-deq (ekd-deq/kd/sgm D1 D2) (met/pair D1' D2')
+			   <- ({a}{da}
+				 mekd-deq (D2 a da) D2')
+			   <- mekd-deq D1 D1'.
+
+mekd-deq/kd/pi		: mekd-deq (ekd-deq/kd/pi D1 D2) (met/pair D1' D2')
+			   <- ({a}{da}
+				 mekd-deq (D2 a da) D2')
+			   <- mekd-deq D1 D1'.
+
+
+mekd-sub/kd/unit		: mekd-sub (ekd-sub/kd/unit _) met/unit.
+
+mekd-sub/kd/type		: mekd-sub (ekd-sub/kd/type _) met/unit.
+
+mekd-sub/kd/sing-kd/sing	: mekd-sub (ekd-sub/kd/sing-kd/sing D1) 
+				   (met/sing D1')
+				   <- mecn-deq D1 D1'.
+
+mekd-sub/kd/sing-kd/type	: mekd-sub (ekd-sub/kd/sing-kd/type D1) 
+				   (met/sing D1')
+				   <- meofkd D1 D1'.
+
+mekd-sub/kd/sgm			: mekd-sub (ekd-sub/kd/sgm D1 D2 D3) 
+				   (met/pair D1' (met/pair D2' D3'))
+				   <- ({a}{da}
+					 mekd-wf (D3 a da) D3')
+				   <- ({a}{da}
+					 mekd-sub (D2 a da) D2')
+				   <- mekd-sub D1 D1'.
+
+mekd-sub/kd/pi			: mekd-sub (ekd-sub/kd/pi D1 D2 D3)
+				   (met/pair D1' (met/pair D2' D3'))
+				   <- ({a}{da}
+					 mekd-wf (D3 a da) D3')
+				   <- ({a}{da}
+					 mekd-sub (D2 a da) D2')
+				   <- mekd-sub D1 D1'.
+
+
+
+
+
+mecn-deq/refl	: mecn-deq (ecn-deq/refl D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+mecn-deq/sym	: mecn-deq (ecn-deq/sym D1) (met/sing D1')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/trans	: mecn-deq (ecn-deq/trans D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/cn/unit	: mecn-deq (ecn-deq/cn/unit _) met/unit.
+
+mecn-deq/tp/unit	: mecn-deq (ecn-deq/tp/unit _) met/unit.
+
+mecn-deq/tp/tagged : mecn-deq (ecn-deq/tp/tagged _) met/unit.
+
+mecn-deq/tp/ref	: mecn-deq (ecn-deq/tp/ref D1) (met/sing D1')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/tp/tag	: mecn-deq (ecn-deq/tp/tag D1) (met/sing D1')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/cn/pj1	: mecn-deq (ecn-deq/cn/pj1 D1) (met/sing D1')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/cn/pj2	: mecn-deq (ecn-deq/cn/pj2 D1) (met/sing D1')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/kd/sing	: mecn-deq (ecn-deq/kd/sing D1) (met/sing D1')
+		   <- meofkd D1 D1'.
+
+mecn-deq/tp/cross	: mecn-deq (ecn-deq/tp/cross D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/tp/arrow	: mecn-deq (ecn-deq/tp/arrow D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/tp/sum	: mecn-deq (ecn-deq/tp/sum D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/cn/pair	: mecn-deq (ecn-deq/cn/pair D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/cn/app	: mecn-deq (ecn-deq/cn/app D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/sgm-ext	: mecn-deq (ecn-deq/sgm-ext D1 D2) (met/pair D1' D2')
+		   <- mecn-deq D2 D2'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/kd/unit	: mecn-deq (ecn-deq/kd/unit D1 D2) (met/pair D1' D2')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+mecn-deq/tp/forall	: mecn-deq (ecn-deq/tp/forall D1 D2) (met/pair D1' D2')
+			   <- mekd-deq D2 D2'
+			   <- ({a}{da}
+				 mecn-deq (D1 a da) D1').
+
+mecn-deq/cn/mu	: mecn-deq (ecn-deq/cn/mu D1 D2) (met/pair D1' D2')
+		   <- mekd-deq D2 D2'
+		   <- ({a}{da}
+			 mecn-deq (D1 a da) D1').
+
+mecn-deq/cn/lam	: mecn-deq (ecn-deq/cn/lam D1 D2) (met/pair D1' D2')
+		   <- mekd-deq D2 D2'
+		   <- ({a}{da}
+			 mecn-deq (D1 a da) D1').
+
+mecn-deq/pi-ext	: mecn-deq (ecn-deq/pi-ext D1 D2 D3) 
+		   (met/pair D1' (met/pair D2' D3'))
+		   <- ({a}{da}
+			 mecn-deq (D3 a da) D3')
+		   <- meofkd D2 D2'
+		   <- meofkd D1 D1'.
+
+mecn-deq/pi-ext-2: mecn-deq (ecn-deq/pi-ext-2 D1 D3) 
+		   (met/pair D1' D3')
+		   <- ({a}{da}
+			 mecn-deq (D3 a da) D3')
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/sub	: mecn-deq (ecn-deq/sub D1 DS) (met/pair D1' DS')
+		   <- mekd-sub DS DS'
+		   <- mecn-deq D1 D1'.
+
+mecn-deq/deq	: mecn-deq (ecn-deq/deq D1 DS) (met/pair D1' DS')
+		   <- mekd-deq DS DS'
+		   <- mecn-deq D1 D1'.
+
+
+
+can-mekd-wf	: {D: ekd-wf G K} mekd-wf D Km -> type.
+%mode can-mekd-wf +D1 -D2.
+
+can-mekd-sub	: {D: ekd-sub G K K'} mekd-sub D Km -> type.
+%mode can-mekd-sub +D1 -D2.
+
+can-mekd-deq	: {D: ekd-deq G K K'} mekd-deq D Km -> type.
+%mode can-mekd-deq +D1 -D2.
+
+can-mecn-deq	: {D: ecn-deq G C1 C2 K} mecn-deq D Cm -> type.
+%mode can-mecn-deq +D1 -D2.
+
+can-meofkd	: {D: eofkd G C2 K} meofkd D Cm -> type.
+%mode can-meofkd +D1 -D2.
+
+-	: can-meofkd (eofkd/cn/unit _) meofkd/cn/unit.
+
+-	: can-meofkd (eofkd/tp/unit _) meofkd/tp/unit.
+
+-	: can-meofkd (eofkd/tp/tagged _) meofkd/tp/tagged.
+
+-	: can-meofkd (eofkd/tp/ref D1) (meofkd/tp/ref D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-meofkd (eofkd/tp/tag D1) (meofkd/tp/tag D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-meofkd (eofkd/kd/sing D1) (meofkd/kd/sing D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-meofkd (eofkd/cn/pj1 D1) (meofkd/cn/pj1 D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-meofkd (eofkd/cn/pj2 D1) (meofkd/cn/pj2 D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-meofkd (eofkd/cn/pair D1 D2) (meofkd/cn/pair D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/tp/cross D1 D2) (meofkd/tp/cross D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/tp/arrow D1 D2) (meofkd/tp/arrow D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/tp/sum D1 D2) (meofkd/tp/sum D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/sgm-ext D1 D2) (meofkd/sgm-ext D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/cn/app D1 D2) (meofkd/cn/app D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-meofkd (eofkd/pi-ext D1 D2) (meofkd/pi-ext D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- ({a}{da}
+		 can-meofkd (D2 a da) (D2' a da)).
+
+-	: can-meofkd (eofkd/cn/lam D1 D2) (meofkd/cn/lam D1' D2')
+	   <- ({a}{da}
+		 can-meofkd (D1 a da) (D1' a da))
+	   <- can-mekd-wf D2 D2'.
+
+-	: can-meofkd (eofkd/tp/forall D1 D2) (meofkd/tp/forall D1' D2')
+	   <- ({a}{da}
+		 can-meofkd (D1 a da) (D1' a da))
+	   <- can-mekd-wf D2 D2'.
+
+-	: can-meofkd (eofkd/cn/mu D1 D2) (meofkd/cn/mu D1' D2')
+	   <- ({a}{da}
+		 can-meofkd (D1 a da) (D1' a da))
+	   <- can-mekd-wf D2 D2'.
+
+-	: can-meofkd (eofkd/sub D1 DS) (meofkd/sub D1' DS')
+	   <- can-meofkd D1 D1'
+	   <- can-mekd-sub DS DS'.
+
+-	: can-meofkd (eofkd/deq D1 DS) (meofkd/deq D1' DS')
+	   <- can-meofkd D1 D1'
+	   <- can-mekd-deq DS DS'.
+
+-	: can-meofkd (eofkd/var _) meofkd/var.
+
+-	: can-meofkd (eofkd/closed DC _) (meofkd/closed DM)
+	   <- can-mofkd DC DM.
+
+
+
+-	: can-mekd-wf (ekd-wf/kd/unit _) mekd-wf/kd/unit.
+
+-	: can-mekd-wf (ekd-wf/kd/type _) mekd-wf/kd/type.
+
+-	: can-mekd-wf (ekd-wf/kd/sing D1) (mekd-wf/kd/sing D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-mekd-wf (ekd-wf/kd/sgm D1 D2) (mekd-wf/kd/sgm D1' D2')
+	   <- can-mekd-wf D1 D1'
+	   <- ({a}{da}
+		 can-mekd-wf (D2 a da) (D2' a da)).
+
+-	: can-mekd-wf (ekd-wf/kd/pi D1 D2) (mekd-wf/kd/pi D1' D2')
+	   <- can-mekd-wf D1 D1'
+	   <- ({a}{da}
+		 can-mekd-wf (D2 a da) (D2' a da)).
+
+
+
+-	: can-mekd-deq (ekd-deq/kd/unit _) mekd-deq/kd/unit.
+
+-	: can-mekd-deq (ekd-deq/kd/type _) mekd-deq/kd/type.
+
+-	: can-mekd-deq (ekd-deq/kd/sing D1) (mekd-deq/kd/sing D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mekd-deq (ekd-deq/kd/sgm D1 D2) (mekd-deq/kd/sgm D1' D2')
+	   <- can-mekd-deq D1 D1'
+	   <- ({a}{da}
+		 can-mekd-deq (D2 a da) (D2' a da)).
+
+-	: can-mekd-deq (ekd-deq/kd/pi D1 D2) (mekd-deq/kd/pi D1' D2')
+	   <- can-mekd-deq D1 D1'
+	   <- ({a}{da}
+		 can-mekd-deq (D2 a da) (D2' a da)).
+
+
+
+-	: can-mekd-sub (ekd-sub/kd/unit _) mekd-sub/kd/unit.
+
+-	: can-mekd-sub (ekd-sub/kd/type _) mekd-sub/kd/type.
+
+-	: can-mekd-sub (ekd-sub/kd/sing-kd/sing D1) 
+	   (mekd-sub/kd/sing-kd/sing D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mekd-sub (ekd-sub/kd/sing-kd/type D1) 
+	   (mekd-sub/kd/sing-kd/type D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-mekd-sub (ekd-sub/kd/sgm D1 D2 D3) (mekd-sub/kd/sgm D1' D2' D3')
+	   <- can-mekd-sub D1 D1'
+	   <- ({a}{da}
+		 can-mekd-sub (D2 a da) (D2' a da))
+	   <- ({a}{da}
+		 can-mekd-wf (D3 a da) (D3' a da)).
+
+-	: can-mekd-sub (ekd-sub/kd/pi D1 D2 D3) (mekd-sub/kd/pi D1' D2' D3')
+	   <- can-mekd-sub D1 D1'
+	   <- ({a}{da}
+		 can-mekd-sub (D2 a da) (D2' a da))
+	   <- ({a}{da}
+		 can-mekd-wf (D3 a da) (D3' a da)).
+
+
+
+
+-	: can-mecn-deq (ecn-deq/cn/unit _) mecn-deq/cn/unit.
+
+-	: can-mecn-deq (ecn-deq/tp/unit _) mecn-deq/tp/unit.
+
+-	: can-mecn-deq (ecn-deq/tp/tagged _) mecn-deq/tp/tagged.
+
+-	: can-mecn-deq (ecn-deq/sym D1) (mecn-deq/sym D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/tp/ref D1) (mecn-deq/tp/ref D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/tp/tag D1) (mecn-deq/tp/tag D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/kd/sing D1) (mecn-deq/kd/sing D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/refl D1) (mecn-deq/refl D1')
+	   <- can-meofkd D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/cn/pj1 D1) (mecn-deq/cn/pj1 D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/cn/pj2 D1) (mecn-deq/cn/pj2 D1')
+	   <- can-mecn-deq D1 D1'.
+
+-	: can-mecn-deq (ecn-deq/kd/unit D1 D2) (mecn-deq/kd/unit D1' D2')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/trans D1 D2) (mecn-deq/trans D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/cn/pair D1 D2) (mecn-deq/cn/pair D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/tp/cross D1 D2) (mecn-deq/tp/cross D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/tp/arrow D1 D2) (mecn-deq/tp/arrow D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/tp/sum D1 D2) (mecn-deq/tp/sum D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/sgm-ext D1 D2) (mecn-deq/sgm-ext D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/cn/app D1 D2) (mecn-deq/cn/app D1' D2')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mecn-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/pi-ext D1 D2 D3) (mecn-deq/pi-ext D1' D2' D3')
+	   <- can-meofkd D1 D1'
+	   <- can-meofkd D2 D2'
+	   <- ({a}{da}
+		 can-mecn-deq (D3 a da) (D3' a da)).
+
+-	: can-mecn-deq (ecn-deq/pi-ext-2 D1 D3) (mecn-deq/pi-ext-2 D1' D3')
+	   <- can-mecn-deq D1 D1'
+	   <- ({a}{da}
+		 can-mecn-deq (D3 a da) (D3' a da)).
+
+-	: can-mecn-deq (ecn-deq/cn/lam D1 D2) (mecn-deq/cn/lam D1' D2')
+	   <- ({a}{da}
+		 can-mecn-deq (D1 a da) (D1' a da))
+	   <- can-mekd-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/tp/forall D1 D2) (mecn-deq/tp/forall D1' D2')
+	   <- ({a}{da}
+		 can-mecn-deq (D1 a da) (D1' a da))
+	   <- can-mekd-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/cn/mu D1 D2) (mecn-deq/cn/mu D1' D2')
+	   <- ({a}{da}
+		 can-mecn-deq (D1 a da) (D1' a da))
+	   <- can-mekd-deq D2 D2'.
+
+-	: can-mecn-deq (ecn-deq/sub D1 DS) (mecn-deq/sub D1' DS')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mekd-sub DS DS'.
+
+-	: can-mecn-deq (ecn-deq/deq D1 DS) (mecn-deq/deq D1' DS')
+	   <- can-mecn-deq D1 D1'
+	   <- can-mekd-deq DS DS'.
+
+%worlds (cn-block | can-mofkd-block | ovar-block) (can-meofkd _ _) 
+(can-mekd-wf _ _) (can-mekd-deq _ _) (can-mekd-sub _ _)
+(can-mecn-deq _ _).
+%total (D1 D2 D3 D4 D5) 
+(can-meofkd D1 _) (can-mekd-wf D2 _) 
+(can-mekd-deq D4 _) (can-mekd-sub D3 _) 
+(can-mecn-deq D5 _).
+
+
+

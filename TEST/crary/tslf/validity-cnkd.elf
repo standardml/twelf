@@ -1,0 +1,272 @@
+%%%%% Validity %%%%%
+
+% vdt/ofkd : ofkd C1 K -> kd-wf K -> type.
+% %mode vdt/ofkd +D1 -D2.
+
+vdt/kd-sub : kd-sub K1 K2 -> kd-wf K1 -> kd-wf K2 -> type.
+%mode vdt/kd-sub +D1 -D2 -D3.
+
+vdt/kd-deq : kd-deq K1 K2 -> kd-wf K1 -> kd-wf K2 -> type.
+%mode vdt/kd-deq +D1 -D2 -D3.
+
+vdt/cn-deq : cn-deq C1 C2 K -> ofkd C1 K -> ofkd C2 K -> kd-wf K -> type.
+%mode vdt/cn-deq +D1 -D2 -D3 -D4.
+
+
+
+-	: vdt/ofkd ofkd/cn/unit kd-wf/kd/unit.
+
+-	: vdt/ofkd _ kd-wf/kd/type.
+
+-	: vdt/ofkd (ofkd/cn/pair D1 D2) 
+	   (kd-wf/kd/sgm D3 ([a:cn] [da: ofkd a K1] D4))
+	   <- vdt/ofkd D1 D3
+	   <- vdt/ofkd D2 D4.
+
+-	: vdt/ofkd (ofkd/cn/pj1 D) DK1
+	   <- vdt/ofkd D (kd-wf/kd/sgm DK1 DK2).
+
+-	: vdt/ofkd (ofkd/cn/pj2 D) (DK2 (cn/pj1 C) (ofkd/cn/pj1 D))
+	   <- vdt/ofkd D (kd-wf/kd/sgm DK1 DK2).
+
+-	: vdt/ofkd (ofkd/cn/lam DofC DKwf) (kd-wf/kd/pi DKwf DK2)
+	   <- {a:cn} {da: ofkd a K1} 
+	      {dm: mofkd da met/unit} {_: can-mofkd da dm}
+	      {vd: vdt/ofkd da DKwf}
+	      vdt/ofkd (DofC a da) (DK2 a da).
+
+-	: vdt/ofkd (ofkd/cn/mu _ DKwf) DKwf.
+
+-	: vdt/ofkd (ofkd/cn/app DofC1 DofC2) (DK2 C2 DofC2)
+	   <- vdt/ofkd DofC1 (kd-wf/kd/pi DK1 DK2)
+	   <- vdt/ofkd DofC2 D4.
+
+-	: vdt/ofkd (ofkd/kd/sing D1) (kd-wf/kd/sing D1).
+
+-	: vdt/ofkd (ofkd/sgm-ext D1 D2) 
+	   (kd-wf/kd/sgm DK1 ([a:cn] [da: ofkd a K1] DK2))
+	   <- vdt/ofkd D1 DK1
+	   <- vdt/ofkd D2 DK2.
+
+-	: vdt/ofkd (ofkd/pi-ext DofC Dext) (kd-wf/kd/pi DK1 DK2)
+	   <- vdt/ofkd DofC (kd-wf/kd/pi DK1 DL)
+	   <- {a:cn} {da: ofkd a K1} 
+	      {dm: mofkd da met/unit} {_: can-mofkd da dm}
+	      {vd: vdt/ofkd da DK1}
+	      vdt/ofkd (Dext a da) (DK2 a da).
+
+-	: vdt/ofkd (ofkd/sub _ DKs) D2
+	   <- vdt/kd-sub DKs D1 D2. 
+
+-	: vdt/ofkd (ofkd/deq _ DKs) D2
+	   <- vdt/kd-deq DKs D1 D2. 
+
+
+
+-	: vdt/kd-deq kd-deq/kd/unit kd-wf/kd/unit kd-wf/kd/unit.
+
+-	: vdt/kd-deq kd-deq/kd/type kd-wf/kd/type kd-wf/kd/type.
+
+-	: vdt/kd-deq (kd-deq/kd/sing D1) (kd-wf/kd/sing D2) 
+	   (kd-wf/kd/sing D3) 
+	   <- vdt/cn-deq D1 D2 D3 _.
+
+-	: vdt/kd-deq (kd-deq/kd/sgm Ddeq' Ddeq'') (kd-wf/kd/sgm D1 D3) 
+	   (kd-wf/kd/sgm D2 D4')
+	   <- vdt/kd-deq Ddeq' D1 D2
+	   <- ({a:cn} {da: ofkd a K1'} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da D1}
+		 vdt/kd-deq (Ddeq'' a da) (D3 a da) (D4 a da))
+	   <- kd-anti Ddeq' D1 D2 _ DS'
+	   <- kd-wkn/kd-wf D4 DS' D4'.
+
+-	: vdt/kd-deq (kd-deq/kd/pi Ddeq' Ddeq'') (kd-wf/kd/pi D1 D3') 
+	   (kd-wf/kd/pi D2 D4)
+	   <- vdt/kd-deq Ddeq' D2 D1
+	   <- ({a:cn} {da: ofkd a K2'} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da D2}
+		 vdt/kd-deq (Ddeq'' a da) (D3 a da) (D4 a da))
+	   <- kd-anti Ddeq' D2 D1 _ DS'
+	   <- kd-wkn/kd-wf D3 DS' D3'.
+
+
+
+-	: vdt/kd-sub kd-sub/kd/unit kd-wf/kd/unit kd-wf/kd/unit.
+
+-	: vdt/kd-sub kd-sub/kd/type kd-wf/kd/type kd-wf/kd/type.
+
+-	: vdt/kd-sub (kd-sub/kd/sing-kd/sing D1) (kd-wf/kd/sing D2) 
+	   (kd-wf/kd/sing D3) 
+	   <- vdt/cn-deq D1 D2 D3 _.
+
+-	: vdt/kd-sub (kd-sub/kd/sing-kd/type D1) (kd-wf/kd/sing D1) kd-wf/kd/type.
+
+-	: vdt/kd-sub (kd-sub/kd/sgm Dsub' Dsub'' Dkwf) (kd-wf/kd/sgm D1 D3) 
+	   (kd-wf/kd/sgm D2 Dkwf)
+	   <- vdt/kd-sub Dsub' D1 D2
+	   <- ({a:cn} {da: ofkd a K1'} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da D1}
+		 vdt/kd-sub (Dsub'' a da) (D3 a da) (D4 a da)).
+
+-	: vdt/kd-sub (kd-sub/kd/pi Dsub' Dsub'' Dkwf) (kd-wf/kd/pi D1 Dkwf) 
+	   (kd-wf/kd/pi D2 D4)
+	   <- vdt/kd-sub Dsub' D2 D1
+	   <- ({a:cn} {da: ofkd a K2'} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da D2}
+		 vdt/kd-sub (Dsub'' a da) (D3 a da) (D4 a da)).
+
+
+
+-	: vdt/cn-deq (cn-deq/refl D1) D1 D1 D2
+	   <- vdt/ofkd D1 D2.
+
+-	: vdt/cn-deq (cn-deq/sym D1) DA DB DK
+	   <- vdt/cn-deq D1 DB DA DK.
+
+-	: vdt/cn-deq (cn-deq/trans D1 D2) DA DB DK
+	   <- vdt/cn-deq D1 DA _ DK
+	   <- vdt/cn-deq D2 _ DB _.
+
+-	: vdt/cn-deq cn-deq/cn/unit ofkd/cn/unit ofkd/cn/unit kd-wf/kd/unit.
+
+-	: vdt/cn-deq cn-deq/tp/unit ofkd/tp/unit ofkd/tp/unit kd-wf/kd/type.
+
+-	: vdt/cn-deq cn-deq/tp/tagged ofkd/tp/tagged ofkd/tp/tagged kd-wf/kd/type.
+
+-	: vdt/cn-deq (cn-deq/tp/cross D2 D1) (ofkd/tp/cross DA2 DA1)
+	   (ofkd/tp/cross DB2 DB1) kd-wf/kd/type
+	   <- vdt/cn-deq D1 DA1 DB1 _ 
+	   <- vdt/cn-deq D2 DA2 DB2 _.
+
+-	: vdt/cn-deq (cn-deq/tp/arrow D1 D2) (ofkd/tp/arrow DA1 DA2)
+	   (ofkd/tp/arrow DB1 DB2) kd-wf/kd/type
+	   <- vdt/cn-deq D1 DA1 DB1 _ 
+	   <- vdt/cn-deq D2 DA2 DB2 _.
+
+-	: vdt/cn-deq (cn-deq/tp/sum D1 D2) (ofkd/tp/sum DA1 DA2)
+	   (ofkd/tp/sum DB1 DB2) kd-wf/kd/type
+	   <- vdt/cn-deq D1 DA1 DB1 _ 
+	   <- vdt/cn-deq D2 DA2 DB2 _.
+
+ -	: vdt/cn-deq (cn-deq/tp/forall Deq DKeq) (ofkd/tp/forall DofC1 DK1)
+	   (ofkd/tp/forall DofC2' DK2) kd-wf/kd/type
+	   <- vdt/kd-deq DKeq DK1 DK2
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DK1}
+		 vdt/cn-deq (Deq a da) (DofC1 a da) (DofC2 a da) kd-wf/kd/type)
+	   <- kd-anti DKeq DK1 DK2 _ DS
+	   <- kd-wkn/ofkd DofC2 DS DofC2'.
+
+-	: vdt/cn-deq (cn-deq/tp/ref D1) (ofkd/tp/ref DL) (ofkd/tp/ref DR) 
+	   kd-wf/kd/type
+	   <- vdt/cn-deq D1 DL DR _.
+
+-	: vdt/cn-deq (cn-deq/tp/tag D1) (ofkd/tp/tag DL) (ofkd/tp/tag DR) 
+	   kd-wf/kd/type
+	   <- vdt/cn-deq D1 DL DR _.
+
+-	: vdt/cn-deq (cn-deq/cn/pair D1 D2) 
+	   (ofkd/cn/pair DA1 DA2)
+	   (ofkd/cn/pair DB1 DB2)
+	   (kd-wf/kd/sgm DK1 ([a:cn] [da: ofkd a K] DK2))
+	   <- vdt/cn-deq D1 DA1 DB1 DK1
+	   <- vdt/cn-deq D2 DA2 DB2 DK2.
+
+-	: vdt/cn-deq (cn-deq/cn/pj1 D) (ofkd/cn/pj1 D1) (ofkd/cn/pj1 D2) DK1
+	   <- vdt/cn-deq D D1 D2 (kd-wf/kd/sgm DK1 DK2).
+
+-	: vdt/cn-deq (cn-deq/cn/pj2 D) 
+	   (ofkd/cn/pj2 D1) 
+	   (ofkd/deq (ofkd/cn/pj2 D2) DS)
+	   (DK2 (cn/pj1 C1) (ofkd/cn/pj1 D1))
+	   <- vdt/cn-deq D D1 D2 (kd-wf/kd/sgm DK1 DK2)
+	   <- funct/kd-wf DK2 (cn-deq/cn/pj1 (cn-deq/sym D)) (ofkd/cn/pj1 D2) (ofkd/cn/pj1 D1) DS.
+
+-	: vdt/cn-deq (cn-deq/cn/lam Deq DKeq) 
+	   (ofkd/cn/lam DofC1 DK1)
+	   (ofkd/sub (ofkd/cn/lam DofC2' DK2) (kd-sub/kd/pi DDS DS' DK1''))
+	   (kd-wf/kd/pi DK1 DK1')
+	   <- vdt/kd-deq DKeq DK1 DK2
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DK1}
+		 vdt/cn-deq (Deq a da) (DofC1 a da) (DofC2 a da) (DK1' a da))
+	   <- kd-anti DKeq DK1 DK2 DDS DS
+	   <- kd-wkn/ofkd DofC2 DS DofC2'
+	   <- ({a:cn} {da: ofkd a K1}
+		 kd-refl/sub (DK1' a da) (DS' a da))
+	   <- kd-wkn/kd-wf DK1' DS DK1''.
+
+-	: vdt/cn-deq (cn-deq/cn/mu Deq DKeq)
+	   (ofkd/cn/mu DofC1 DK1)
+	   ((ofkd/sub (ofkd/cn/mu DofC2' DK2) DS): ofkd (cn/mu _ C2) _)
+	   DK1
+	   <- vdt/kd-deq DKeq DK1 DK2
+	   <- ({a:cn} {da: ofkd a _} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DK1}
+		 vdt/cn-deq (Deq a da) (DofC1 a da) (DofC2 a da) (DK1' a da))
+	   <- kd-anti DKeq DK1 DK2 DDS DS
+	   <- kd-wkn/ofkd ([a][da] ofkd/sub (DofC2 a da) DDS) DS DofC2'.
+
+-	: vdt/cn-deq (cn-deq/cn/app D1 D2) 
+	   (ofkd/cn/app DA1 DA2) 
+	   (ofkd/deq (ofkd/cn/app DB1 DB2) DS)
+	   (DK2 C1 DA2)
+	   <- vdt/cn-deq D1 DA1 DB1 (kd-wf/kd/pi DK1 DK2)
+	   <- vdt/cn-deq D2 DA2 DB2 _
+	   <- funct/kd-wf DK2 (cn-deq/sym D2) DB2 DA2 DS. 
+
+-	: vdt/cn-deq (cn-deq/kd/unit D1 D2) D1 D2 kd-wf/kd/unit.
+
+-	: vdt/cn-deq (cn-deq/kd/sing D1) D1 (ofkd/kd/sing D2) 
+	   (kd-wf/kd/sing D2)
+	   <- vdt/ofkd D1 (kd-wf/kd/sing D2).
+
+-	: vdt/cn-deq (cn-deq/sgm-ext D1 D2)
+	   (ofkd/sgm-ext DA1 DA2)
+	   (ofkd/sgm-ext DB1 DB2)
+	   (kd-wf/kd/sgm DK1 ([a:cn] [da] DK2))
+	   <- vdt/cn-deq D1 DA1 DB1 DK1
+	   <- vdt/cn-deq D2 DA2 DB2 DK2.
+
+-	: vdt/cn-deq (cn-deq/pi-ext D1 D2 D3)
+	   (ofkd/pi-ext D1 D1')
+	   (ofkd/pi-ext D2 D2')
+	   (kd-wf/kd/pi DK DK')
+	   <- vdt/ofkd D1 (kd-wf/kd/pi DK _)
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DK}
+		 vdt/cn-deq (D3 a da) (D1' a da) (D2' a da) (DK' a da)).
+
+-	: vdt/cn-deq (cn-deq/pi-ext-2 D0 D3)
+	   (ofkd/pi-ext D1 D1')
+	   (ofkd/pi-ext D2 D2')
+	   (kd-wf/kd/pi DK DK')
+	   <- vdt/cn-deq D0 D1 D2 (kd-wf/kd/pi DK _)
+	   <- ({a:cn} {da: ofkd a K1} 
+		 {dm: mofkd da met/unit} {_: can-mofkd da dm}
+		 {vd: vdt/ofkd da DK}
+		 vdt/cn-deq (D3 a da) (D1' a da) (D2' a da) (DK' a da)).
+
+-	: vdt/cn-deq (cn-deq/sub Deq Dsub) (ofkd/sub D1 Dsub) (ofkd/sub D2 Dsub) DK'
+	   <- vdt/cn-deq Deq D1 D2 DK
+	   <- vdt/kd-sub Dsub _ DK'.
+
+-	: vdt/cn-deq (cn-deq/deq Deq Ddeq) (ofkd/deq D1 Ddeq) (ofkd/deq D2 Ddeq) DK'
+	   <- vdt/cn-deq Deq D1 D2 DK
+	   <- vdt/kd-deq Ddeq _ DK'.
+
+
+%worlds (ofkd+vdt-block) 
+(vdt/ofkd _ _) (vdt/kd-sub _ _ _) 
+(vdt/kd-deq _ _ _) (vdt/cn-deq _ _ _ _).
+%total (D1 D2 D3 D4)
+(vdt/kd-sub D2 _ _) (vdt/cn-deq D3 _ _ _)   
+(vdt/kd-deq D4 _ _) (vdt/ofkd D1 _) .

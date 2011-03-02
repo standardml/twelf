@@ -1,0 +1,893 @@
+%%%% strengthening
+
+
+closed-cn	: (cn -> cn) -> cn -> type.
+closed-cn/i	: closed-cn ([x] C) C.
+
+
+
+closed-kd	: (cn -> kd) -> kd -> type.
+closed-kd/i	: closed-kd ([x] K) K.
+
+
+
+closed-cn-seq/cn	: closed-cn C C1
+			   -> closed-cn C C2
+			   -> seq/cn C1 C2
+			   -> type.
+%mode closed-cn-seq/cn +D1 +D2 -D3.
+
+-	: closed-cn-seq/cn closed-cn/i closed-cn/i seq/cn/refl.
+
+%worlds (cn-block) (closed-cn-seq/cn _ _ _).
+%total {} (closed-cn-seq/cn _ _ _).
+
+
+closed-kd-seq/kd	: closed-kd C C1
+			   -> closed-kd C C2
+			   -> seq/kd C1 C2
+			   -> type.
+%mode closed-kd-seq/kd +D1 +D2 -D3.
+
+-	: closed-kd-seq/kd closed-kd/i closed-kd/i seq/kd/refl.
+
+%worlds (cn-block) (closed-kd-seq/kd _ _ _).
+%total {} (closed-kd-seq/kd _ _ _).
+
+
+closed-cn-cn/pj1	: closed-cn C1 C
+			   -> closed-cn ([x] cn/pj1 (C1 x)) (cn/pj1 C)
+			   -> type.
+%mode closed-cn-cn/pj1 +D1 -D2.
+
+-	: closed-cn-cn/pj1 closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/pj1 _ _).
+%total {} (closed-cn-cn/pj1 _ _).
+
+
+
+closed-cn-cn/pj1-e	:   closed-cn ([x] cn/pj1 (C1 x)) (cn/pj1 C)
+			   -> closed-cn C1 C
+			   -> type.
+%mode closed-cn-cn/pj1-e +D1 -D2.
+
+-	: closed-cn-cn/pj1-e closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/pj1-e _ _).
+%total {} (closed-cn-cn/pj1-e _ _).
+
+
+
+closed-cn-cn/pj2-e	:   closed-cn ([x] cn/pj2 (C1 x)) Cpj2
+			   -> closed-cn C1 C
+			   -> seq/cn Cpj2 (cn/pj2 C)
+			   -> type.
+%mode closed-cn-cn/pj2-e +D1 -D2 -D3.
+
+-	: closed-cn-cn/pj2-e closed-cn/i closed-cn/i seq/cn/refl.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/pj2-e _ _ _).
+%total {} (closed-cn-cn/pj2-e _ _ _).
+
+
+
+closed-cn-cn/pj2	: closed-cn C1 C
+			   -> closed-cn ([x] cn/pj2 (C1 x)) (cn/pj2 C)
+			   -> type.
+%mode closed-cn-cn/pj2 +D1 -D2.
+
+-	: closed-cn-cn/pj2 closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/pj2 _ _).
+%total {} (closed-cn-cn/pj2 _ _).
+
+
+
+closed-cn-tp/ref	: closed-cn C1 C
+			   -> closed-cn ([x] tp/ref (C1 x)) (tp/ref C)
+			   -> type.
+%mode closed-cn-tp/ref +D1 -D2.
+
+-	: closed-cn-tp/ref closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/ref _ _).
+%total {} (closed-cn-tp/ref _ _).
+
+
+
+closed-cn-tp/tag	: closed-cn C1 C
+			   -> closed-cn ([x] tp/tag (C1 x)) (tp/tag C)
+			   -> type.
+%mode closed-cn-tp/tag +D1 -D2.
+
+-	: closed-cn-tp/tag closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/tag _ _).
+%total {} (closed-cn-tp/tag _ _).
+
+
+
+closed-cn-cn/pair	: closed-cn C1 C
+			   -> closed-cn C2 C'
+			   -> closed-cn ([x] cn/pair (C1 x) (C2 x)) 
+			      (cn/pair C C')
+			   -> type.
+%mode closed-cn-cn/pair +D1 +D2 -D3.
+
+-	: closed-cn-cn/pair closed-cn/i closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/pair _ _ _).
+%total {} (closed-cn-cn/pair _ _ _).
+
+
+
+closed-cn-cn/app	: closed-cn C1 C
+			   -> closed-cn C2 C'
+			   -> closed-cn ([x] cn/app (C1 x) (C2 x))
+			      (cn/app C C')
+			   -> type.
+%mode closed-cn-cn/app +D1 +D2 -D3.
+
+-	: closed-cn-cn/app closed-cn/i closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/app _ _ _).
+%total {} (closed-cn-cn/app _ _ _).
+
+
+closed-cn-tp/cross	: closed-cn C1 C
+			   -> closed-cn C2 C'
+			   -> closed-cn ([x] tp/cross (C1 x) (C2 x))
+			      (tp/cross C C')
+			   -> type.
+%mode closed-cn-tp/cross +D1 +D2 -D3.
+
+-	: closed-cn-tp/cross closed-cn/i closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/cross _ _ _).
+%total {} (closed-cn-tp/cross _ _ _).
+
+
+
+closed-cn-tp/arrow	: closed-cn C1 C
+			   -> closed-cn C2 C'
+			   -> closed-cn ([x] tp/arrow (C1 x) (C2 x))
+			      (tp/arrow C C')
+			   -> type.
+%mode closed-cn-tp/arrow +D1 +D2 -D3.
+
+-	: closed-cn-tp/arrow closed-cn/i closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/arrow _ _ _).
+%total {} (closed-cn-tp/arrow _ _ _).
+
+
+
+closed-cn-tp/sum	: closed-cn C1 C
+			   -> closed-cn C2 C'
+			   -> closed-cn ([x] tp/sum (C1 x) (C2 x))
+			      (tp/sum C C')
+			   -> type.
+%mode closed-cn-tp/sum +D1 +D2 -D3.
+
+-	: closed-cn-tp/sum closed-cn/i closed-cn/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/sum _ _ _).
+%total {} (closed-cn-tp/sum _ _ _).
+
+
+
+closed-cn-cn/lam	: closed-kd ([x] K1 x) K
+			   -> ({y} closed-cn ([x] C2 x y) (C y))
+			   -> closed-cn ([x] cn/lam (K1 x) ([y] C2 x y))
+			      (cn/lam K C)
+			   -> type.
+%mode closed-cn-cn/lam +D1 +D2 -D3.
+
+-	: closed-cn-cn/lam 
+	   (closed-kd/i : closed-kd ([x] K) K) 
+	   ([y] closed-cn/i : closed-cn ([x] C y) _) 
+	   (closed-cn/i : closed-cn ([x] cn/lam K ([y] C y)) _).
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/lam _ _ _).
+%total {} (closed-cn-cn/lam _ _ _).
+
+
+
+closed-cn-cn/mu	: closed-kd K1 K
+			   -> ({y} closed-cn ([x] C2 x y) (C y))
+			   -> closed-cn ([x] cn/mu (K1 x) ([y] C2 x y))
+			      (cn/mu K C)
+			   -> type.
+%mode closed-cn-cn/mu +D1 +D2 -D3.
+
+-	: closed-cn-cn/mu 
+	   (closed-kd/i : closed-kd ([x] K) K) 
+	   ([y] closed-cn/i : closed-cn ([x] C y) _) 
+	   (closed-cn/i : closed-cn ([x] cn/mu K ([y] C y)) _).
+
+%worlds (cn-block | ofkd-block) (closed-cn-cn/mu _ _ _).
+%total {} (closed-cn-cn/mu _ _ _).
+
+
+
+closed-cn-tp/forall	: closed-kd K1 K
+			   -> ({y} closed-cn ([x] C2 x y) (C y))
+			   -> closed-cn ([x] tp/forall (K1 x) ([y] C2 x y))
+			      (tp/forall K C)
+			   -> type.
+%mode closed-cn-tp/forall +D1 +D2 -D3.
+
+-	: closed-cn-tp/forall 
+	   (closed-kd/i : closed-kd ([x] K) K) 
+	   ([y] closed-cn/i : closed-cn ([x] C y) _) 
+	   (closed-cn/i : closed-cn ([x] tp/forall K ([y] C y)) _).
+
+%worlds (cn-block | ofkd-block) (closed-cn-tp/forall _ _ _).
+%total {} (closed-cn-tp/forall _ _ _).
+
+
+
+closed-kd-kd/sing	: closed-cn C C'
+			   -> closed-kd ([x] kd/sing (C x))
+			      (kd/sing C')
+			   -> type.
+%mode closed-kd-kd/sing +D1 -D2.
+
+-	: closed-kd-kd/sing closed-cn/i closed-kd/i.
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/sing _ _).
+%total {} (closed-kd-kd/sing _ _).
+
+
+
+
+closed-cn-kd/sing-e	: closed-kd ([x] kd/sing (C x))
+			      (kd/sing C')
+			   -> closed-cn C C'
+			   -> type.
+%mode closed-cn-kd/sing-e +D1 -D2.
+
+-	: closed-cn-kd/sing-e closed-kd/i closed-cn/i.
+
+%worlds (cn-block | ofkd-block) (closed-cn-kd/sing-e _ _).
+%total {} (closed-cn-kd/sing-e _ _).
+
+
+
+closed-kd-kd/sgm	: closed-kd K1 K
+			   -> ({y} closed-kd ([x] K2 x y) (K' y)) 
+			   -> closed-kd ([x] kd/sgm (K1 x) ([y] K2 x y))
+			      (kd/sgm K K')
+			   -> type.
+%mode closed-kd-kd/sgm +D1 +D2 -D3.
+
+-	: closed-kd-kd/sgm 
+	   (closed-kd/i : closed-kd ([x] K) _) 
+	   ([y] closed-kd/i : closed-kd ([x] K' y) _) 
+	   (closed-kd/i : closed-kd ([x] kd/sgm K ([y] K' y)) _).
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/sgm _ _ _).
+%total {} (closed-kd-kd/sgm _ _ _).
+
+
+
+closed-kd-kd/pi	: closed-kd K1 K
+			   -> ({y} closed-kd ([x] K2 x y) (K' y))
+			   -> closed-kd ([x] kd/pi (K1 x) ([y] K2 x y))
+			      (kd/pi K K')
+			   -> type.
+%mode closed-kd-kd/pi +D1 +D2 -D3.
+
+-	: closed-kd-kd/pi 
+	   (closed-kd/i : closed-kd ([x] K) _) 
+	   ([y] closed-kd/i : closed-kd ([x] K' y) _) 
+	   (closed-kd/i : closed-kd ([x] kd/pi K ([y] K' y)) _).
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/pi _ _ _).
+%total {} (closed-kd-kd/pi _ _ _).
+
+
+
+closed-kd-kd/sgm-el	: closed-kd ([x] kd/sgm (K1 x) (K2 x))
+			   (kd/sgm K K')
+			   -> closed-kd K1 K
+			   -> type.
+%mode closed-kd-kd/sgm-el +D1 -D2.
+
+-	: closed-kd-kd/sgm-el closed-kd/i closed-kd/i. 
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/sgm-el _ _).
+%total {} (closed-kd-kd/sgm-el _ _).
+
+
+
+closed-kd-kd/pi-el	: closed-kd ([x] kd/pi (K1 x) (K2 x))
+			   (kd/pi K K')
+			   -> closed-kd K1 K
+			   -> type.
+%mode closed-kd-kd/pi-el +D1 -D2.
+
+-	: closed-kd-kd/pi-el closed-kd/i closed-kd/i. 
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/pi-el _ _).
+%total {} (closed-kd-kd/pi-el _ _).
+
+
+
+closed-kd-kd/sgm-er	: closed-cn C C'
+			   -> closed-kd ([x] kd/sgm (K1 x) ([y] K2 x y))
+			      (kd/sgm K K')
+			   -> closed-kd ([x] K2 x (C x)) (K' C')
+			   -> type.
+%mode closed-kd-kd/sgm-er +C +D1 -D2.
+
+-	: closed-kd-kd/sgm-er closed-cn/i closed-kd/i closed-kd/i. 
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/sgm-er _ _ _).
+%total {} (closed-kd-kd/sgm-er _ _ _).
+
+
+
+closed-kd-kd/pi-er	: closed-cn C C'
+			   -> closed-kd ([x] kd/pi (K1 x) ([y] K2 x y))
+			      (kd/pi K K')
+			   -> closed-kd ([x] K2 x (C x)) (K' C')
+			   -> type.
+%mode closed-kd-kd/pi-er +C +D1 -D2.
+
+-	: closed-kd-kd/pi-er closed-cn/i closed-kd/i closed-kd/i. 
+
+%worlds (cn-block | ofkd-block) (closed-kd-kd/pi-er _ _ _).
+%total {} (closed-kd-kd/pi-er _ _ _).
+
+
+
+
+strengthen-ofkd	: ({x} ofkd (C x) (K x))
+		   -> closed-cn C C'
+		   -> closed-kd K K'
+		   -> ofkd C' K'
+		   -> type.
+%mode strengthen-ofkd +D1 -D2 -D3 -D4.
+
+strengthen-cn-deq: ({x} cn-deq (C x) (CC x) (K x))
+		   -> closed-cn C C'
+		   -> closed-cn CC CC'
+		   -> closed-kd K K'
+		   -> cn-deq C' CC' K'
+		   -> type.
+%mode strengthen-cn-deq +D1 -D2 -D3 -D4 -D5.
+
+strengthen-cn-deq-o: ({x}{y} ofkd y (Ky x) 
+		      -> cn-deq (C x y) (CC x y) (K x y))
+		    -> closed-kd Ky Ky'
+		    -> ({y} closed-cn ([x] C x y) (C' y))
+		    -> ({y} closed-cn ([x] CC x y) (CC' y))
+		    -> ({y} closed-kd ([x] K x y) (K' y))
+		    -> ({y} ofkd y Ky' -> cn-deq (C' y) (CC' y) (K' y))
+		    -> type.
+%mode strengthen-cn-deq-o +D1 +DK -D2 -D3 -D4 -D5.
+
+strengthen-kd-deq	: ({x} kd-deq (C x) (K x))
+		   -> closed-kd C C'
+		   -> closed-kd K K'
+		   -> kd-deq C' K'
+		   -> type.
+%mode strengthen-kd-deq +D1 -D2 -D3 -D4.
+
+strengthen-kd-deq-o: ({x}{y} ofkd y (Ky x) 
+		      -> kd-deq (C x y) (K x y))
+		    -> closed-kd Ky Ky'
+		    -> ({y} closed-kd ([x] C x y) (C' y))
+		    -> ({y} closed-kd ([x] K x y) (K' y))
+		    -> ({y} ofkd y Ky' -> kd-deq (C' y) (K' y))
+		    -> type.
+%mode strengthen-kd-deq-o +D1 +DK -D2 -D3 -D4.
+
+strengthen-kd-sub	: ({x} kd-sub (C x) (K x))
+		   -> closed-kd C C'
+		   -> closed-kd K K'
+		   -> kd-sub C' K'
+		   -> type.
+%mode strengthen-kd-sub +D1 -D2 -D3 -D4.
+
+strengthen-kd-sub-o: ({x}{y} ofkd y (Ky x) 
+		      -> kd-sub (C x y) (K x y))
+		    -> closed-kd Ky Ky'
+		    -> ({y} closed-kd ([x] C x y) (C' y))
+		    -> ({y} closed-kd ([x] K x y) (K' y))
+		    -> ({y} ofkd y Ky' -> kd-sub (C' y) (K' y))
+		    -> type.
+%mode strengthen-kd-sub-o +D1 +DK -D2 -D3 -D4.
+
+strengthen-ofkd-o: ({x}{y} ofkd y (Ky x) 
+		      -> ofkd (C x y) (K x y))
+		    -> closed-kd Ky Ky'
+		    -> ({y} closed-cn ([x] C x y) (C' y))
+		    -> ({y} closed-kd ([x] K x y) (K' y))
+		    -> ({y} ofkd y Ky' -> ofkd (C' y) (K' y))
+		    -> type.
+%mode strengthen-ofkd-o +D1 +DK -D2 -D3 -D4.
+
+strengthen-kd-wf: ({x} kd-wf (K x))
+		   -> closed-kd K K'
+		   -> kd-wf K'
+		   -> type.
+%mode strengthen-kd-wf +D1 -D3 -D4.
+
+strengthen-kd-wf-o: ({x}{y} ofkd y (Ky x) 
+		      -> kd-wf (K x y))
+		    -> closed-kd Ky Ky'
+		    -> ({y} closed-kd ([x] K x y) (K' y))
+		    -> ({y} ofkd y Ky' -> kd-wf (K' y))
+		    -> type.
+%mode strengthen-kd-wf-o +D1 +DK -D2 -D3.
+
+
+-	: strengthen-ofkd-o D1 closed-kd/i DC DK D1'
+	   <- ({y}{dy} strengthen-ofkd ([x] D1 x y dy) (DC y) (DK y)
+		 (D1' y dy)).
+
+-	: strengthen-kd-wf-o D1 closed-kd/i DK D1'
+	   <- ({y}{dy} strengthen-kd-wf ([x] D1 x y dy) (DK y) (D1' y dy)).
+
+-	: strengthen-kd-deq-o D1 closed-kd/i DC DK D1'
+	   <- ({y}{dy} strengthen-kd-deq ([x] D1 x y dy) (DC y) (DK y)
+		 (D1' y dy)).
+
+-	: strengthen-kd-sub-o D1 closed-kd/i DC DK D1'
+	   <- ({y}{dy} strengthen-kd-sub ([x] D1 x y dy) (DC y) (DK y)
+		 (D1' y dy)).
+
+-	: strengthen-cn-deq-o D1 closed-kd/i DC DK DK' D1'
+	   <- ({y}{dy} strengthen-cn-deq ([x] D1 x y dy) (DC y) (DK y) (DK' y)
+		 (D1' y dy)).
+
+
+
+-	: strengthen-ofkd ([x] D1) closed-cn/i closed-kd/i D1.
+ 
+-	: strengthen-ofkd ([x] ofkd/tp/ref (D1 x)) DC1' DK (ofkd/tp/ref D1')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- closed-cn-tp/ref DC1 DC1'.
+ 
+-	: strengthen-ofkd ([x] ofkd/tp/tag (D1 x)) DC1' DK (ofkd/tp/tag D1')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- closed-cn-tp/tag DC1 DC1'.
+
+-	: strengthen-ofkd ([x] ofkd/tp/cross (D1 x) (D2 x)) DC1' DK
+	   (ofkd/tp/cross D1' D2')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- strengthen-ofkd D2 DC2 _ D2'
+	   <- closed-cn-tp/cross DC1 DC2 DC1'.
+
+-	: strengthen-ofkd ([x] ofkd/tp/arrow (D1 x) (D2 x)) DC1' DK
+	   (ofkd/tp/arrow D1' D2')
+	   <- strengthen-ofkd D1 DC1 DK D1' 
+	   <- strengthen-ofkd D2 DC2 _ D2'
+	   <- closed-cn-tp/arrow DC1 DC2 DC1'.
+
+-	: strengthen-ofkd ([x] ofkd/tp/sum (D1 x) (D2 x)) DC1' DK
+	   (ofkd/tp/sum D1' D2')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- strengthen-ofkd D2 DC2 _ D2'
+	   <- closed-cn-tp/sum DC1 DC2 DC1'.
+
+-	: strengthen-ofkd ([x] ofkd/cn/pair (D1 x) (D2 x)) DC1' DK'
+	   (ofkd/cn/pair D1' D2')
+	   <- strengthen-ofkd D1 DC1 DK1 D1'
+	   <- strengthen-ofkd D2 DC2 DK2 D2'
+	   <- closed-cn-cn/pair DC1 DC2 DC1'
+	   <- closed-kd-kd/sgm DK1 ([x] DK2) DK'.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/cn/lam (D1 x) (D2 x)) DC1' DK'
+	   (ofkd/cn/lam D1' D2')
+	   <- strengthen-kd-wf D2 (DK2) (D2')
+	   <- strengthen-ofkd-o D1 DK2 DC1 DK1 D1'
+	   <- closed-cn-cn/lam DK2 DC1 DC1'
+	   <- closed-kd-kd/pi DK2 DK1 DK'.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/kd/sing (D1 x)) DC1 DK1
+	   (ofkd/kd/sing D1')
+	   <- strengthen-ofkd D1 DC1 _ D1'
+	   <- closed-kd-kd/sing DC1 DK1.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/sub (D1 x) (D2 x)) DC1 DK1
+	   (ofkd/sub D1'' D2')
+	   <- strengthen-ofkd D1 DC1 DK2 D1'
+	   <- strengthen-kd-sub D2 DK2a DK1 D2'
+	   <- closed-kd-seq/kd DK2 DK2a DQ
+	   <- ofkd/seq-k DQ D1' D1''.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/deq (D1 x) (D2 x)) DC1 DK1
+	   (ofkd/deq D1'' D2')
+	   <- strengthen-ofkd D1 DC1 DK2 D1'
+	   <- strengthen-kd-deq D2 DK2a DK1 D2'
+	   <- closed-kd-seq/kd DK2 DK2a DQ
+	   <- ofkd/seq-k DQ D1' D1''.
+
+-	: strengthen-ofkd ([x] ofkd/sgm-ext (D1 x) (D2 x)) DC2' DK'
+	   (ofkd/sgm-ext D1'' D2'')
+	   <- strengthen-ofkd D1 DC1 DK1 D1'
+	   <- strengthen-ofkd D2 DC2 DK2 D2'
+	   <- closed-cn-cn/pj2-e DC2 DC2' DQm
+	   <- ofkd/seq-c DQm D2' D2''
+	   <- closed-cn-cn/pj1 DC2' DC1''
+	   <- closed-cn-seq/cn DC1 DC1'' DQ 
+	   <- ofkd/seq-c DQ D1' D1''
+	   <- closed-kd-kd/sgm DK1 ([x] DK2) DK'.
+ 
+-	: strengthen-ofkd ([x] ofkd/cn/pj2 (D1 x)) DC1' DK' (ofkd/cn/pj2 D1')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- closed-cn-cn/pj2 DC1 DC1'
+	   <- closed-cn-cn/pj1 DC1 DC1''
+	   <- closed-kd-kd/sgm-er DC1'' DK DK'.
+
+-	: strengthen-ofkd ([x] ofkd/cn/pj1 (D1 x)) DC1' DK' (ofkd/cn/pj1 D1')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- closed-cn-cn/pj1 DC1 DC1'
+	   <- closed-kd-kd/sgm-el DK DK'.
+
+-	: strengthen-ofkd ([x] ofkd/cn/app (D1 x) (D2 x)) DC1' DK'
+	   (ofkd/cn/app D1' D2'')
+	   <- strengthen-ofkd D1 DC1 DK1 D1'
+	   <- strengthen-ofkd D2 DC2 DK2 D2'
+	   <- closed-cn-cn/app DC1 DC2 DC1'
+	   <- closed-kd-kd/pi-er DC2 DK1 DK'
+	   <- closed-kd-kd/pi-el DK1 DK1l
+	   <- closed-kd-seq/kd DK2 DK1l DQ
+	   <- ofkd/seq-k DQ D2' D2''.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/cn/mu (D1 x) (D2 x) : ofkd _ kd/type) DC1' closed-kd/i
+	   (ofkd/cn/mu D1' D2')
+	   <- strengthen-kd-wf D2 DK2 D2'
+	   <- strengthen-ofkd-o D1 DK2 DC1 DK1 D1'
+	   <- closed-cn-cn/mu DK2 DC1 DC1'.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/tp/forall (D1 x) (D2 x) : ofkd _ kd/type) DC1' closed-kd/i
+	   (ofkd/tp/forall D1' D2')
+	   <- strengthen-kd-wf D2 DK2 D2'
+	   <- strengthen-ofkd-o D1 DK2 DC1 DK1 D1'
+	   <- closed-cn-tp/forall DK2 DC1 DC1'.
+
+-	: strengthen-ofkd 
+	   ([x] ofkd/pi-ext (D2 x) (D1 x)) DC1 DK
+	   (ofkd/pi-ext D2' D1'')
+	   <- strengthen-ofkd D2 DC1 DK2 D2'
+	   <- closed-kd-kd/pi-el DK2 DK2'
+	   <- strengthen-ofkd-o D1 DK2' DC2 DK1 D1'
+	   <- closed-kd-kd/pi DK2' DK1 DK
+	   <- ({x} closed-cn-cn/app DC1 (closed-cn/i : closed-cn _ x)
+		 (DC2o x))
+	   <- ({x} closed-cn-seq/cn (DC2 x) (DC2o x) (DQ x))
+	   <- ({x}{dx}
+		 ofkd/seq-c (DQ x) (D1' x dx) (D1'' x dx)).
+
+
+
+
+-	: strengthen-kd-wf ([x] D1) closed-kd/i D1.
+
+-	: strengthen-kd-wf 
+	   ([x] kd-wf/kd/sing (D1 x))
+	   DK
+	   (kd-wf/kd/sing D1')
+	   <- strengthen-ofkd D1 DC _ D1'
+	   <- closed-kd-kd/sing DC DK.
+
+-	: strengthen-kd-wf 
+	   ([x] kd-wf/kd/sgm (D1 x) (D2 x)) DK'
+	   (kd-wf/kd/sgm D1' D2')
+	   <- strengthen-kd-wf D1 DK1 D1'
+	   <- strengthen-kd-wf-o D2 DK1 DK2 D2'
+	   <- closed-kd-kd/sgm DK1 DK2 DK'.
+
+-	: strengthen-kd-wf 
+	   ([x] kd-wf/kd/pi (D1 x) (D2 x)) DK'
+	   (kd-wf/kd/pi D1' D2')
+	   <- strengthen-kd-wf D1 DK1 D1'
+	   <- strengthen-kd-wf-o D2 DK1 DK2 D2'
+	   <- closed-kd-kd/pi DK1 DK2 DK'.
+
+
+
+-	: strengthen-kd-deq ([x] D1) closed-kd/i closed-kd/i D1.
+
+-	: strengthen-kd-deq 
+	   ([x] kd-deq/kd/sing (D1 x))
+	   DK1 DK2
+	   (kd-deq/kd/sing D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 _ D1'
+	   <- closed-kd-kd/sing DC1 DK1
+	   <- closed-kd-kd/sing DC2 DK2.
+
+-	: strengthen-kd-deq 
+	   ([x] kd-deq/kd/sgm (D1 x) (D2 x)) 
+	   DKL DKR
+	   (kd-deq/kd/sgm D1' D2')
+	   <- strengthen-kd-deq D1 DK1l DK1r D1'
+	   <- strengthen-kd-deq-o D2 DK1l DK2l DK2r D2'
+	   <- closed-kd-kd/sgm DK1l DK2l DKL
+	   <- closed-kd-kd/sgm DK1r DK2r DKR.
+
+-	: strengthen-kd-deq 
+	   ([x] kd-deq/kd/pi (D1 x) (D2 x)) 
+	   DKL DKR
+	   (kd-deq/kd/pi D1' D2')
+	   <- strengthen-kd-deq D1 DK1l DK1r D1'
+	   <- strengthen-kd-deq-o D2 DK1l DK2l DK2r D2'
+	   <- closed-kd-kd/pi DK1r DK2l DKL
+	   <- closed-kd-kd/pi DK1l DK2r DKR.
+
+
+
+
+-	: strengthen-kd-sub ([x] D1) closed-kd/i closed-kd/i D1.
+
+-	: strengthen-kd-sub 
+	   ([x] kd-sub/kd/sing-kd/sing (D1 x))
+	   DK1 DK2
+	   (kd-sub/kd/sing-kd/sing D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 _ D1'
+	   <- closed-kd-kd/sing DC1 DK1
+	   <- closed-kd-kd/sing DC2 DK2.
+
+-	: strengthen-kd-sub 
+	   ([x] kd-sub/kd/sing-kd/type(D1 x))
+	   DK1 closed-kd/i
+	   (kd-sub/kd/sing-kd/type D1')
+	   <- strengthen-ofkd D1 DC1 _ D1'
+	   <- closed-kd-kd/sing DC1 DK1.
+
+-	: strengthen-kd-sub 
+	   ([x] kd-sub/kd/sgm (D1 x) (D2 x) (D3 x)) 
+	   DKL DKR
+	   (kd-sub/kd/sgm D1' D2' D3'')
+	   <- strengthen-kd-sub D1 DK1l DK1r D1'
+	   <- strengthen-kd-sub-o D2 DK1l DK2l DK2r D2'
+	   <- closed-kd-kd/sgm DK1l DK2l DKL
+	   <- closed-kd-kd/sgm DK1r DK2r DKR
+	   <- strengthen-kd-wf-o D3 DK1r DK2r' D3'
+	   <- ({x} closed-kd-seq/kd (DK2r' x) (DK2r x) (DQ x))
+	   <- ({x}{dx}
+		 kd-wf/seq (DQ x) (D3' x dx) (D3'' x dx)).
+
+-	: strengthen-kd-sub 
+	   ([x] kd-sub/kd/pi (D1 x) (D2 x) (D3 x)) 
+	   DKL DKR
+	   (kd-sub/kd/pi D1' D2' D3'')
+	   <- strengthen-kd-sub D1 DK1l DK1r D1'
+	   <- strengthen-kd-sub-o D2 DK1l DK2l DK2r D2'
+	   <- closed-kd-kd/pi DK1r DK2l DKL
+	   <- closed-kd-kd/pi DK1l DK2r DKR
+	   <- strengthen-kd-wf-o D3 DK1r DK2l' D3'
+	   <- ({x} closed-kd-seq/kd (DK2l' x) (DK2l x) (DQ x))
+	   <- ({x}{dx}
+		 kd-wf/seq (DQ x) (D3' x dx) (D3'' x dx)).
+
+
+
+-	: strengthen-cn-deq ([x] D1) closed-cn/i closed-cn/i closed-kd/i D1.
+
+-	: strengthen-cn-deq ([x] cn-deq/refl (D1 x)) DC1 DC1 DK 
+	   (cn-deq/refl D1')
+	   <- strengthen-ofkd D1 DC1 DK D1'.
+
+-	: strengthen-cn-deq ([x] cn-deq/sym (D1 x)) DC2 DC1 DK 
+	   (cn-deq/sym D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK D1'.
+  
+-	: strengthen-cn-deq ([x] cn-deq/tp/tag (D1 x)) DC1' DC2' DK 
+	   (cn-deq/tp/tag D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK D1'
+	   <- closed-cn-tp/tag DC1 DC1'
+	   <- closed-cn-tp/tag DC2 DC2'.
+ 
+-	: strengthen-cn-deq ([x] cn-deq/tp/ref (D1 x)) DC1' DC2' DK 
+	   (cn-deq/tp/ref D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK D1'
+	   <- closed-cn-tp/ref DC1 DC1'
+	   <- closed-cn-tp/ref DC2 DC2'.
+
+-	: strengthen-cn-deq ([x] cn-deq/tp/cross (D1 x) (D2 x)) DC1' DC2' DK 
+	   (cn-deq/tp/cross D1' D2')
+	   <- strengthen-cn-deq D1 DC1l DC1r DK D1'
+	   <- strengthen-cn-deq D2 DC2l DC2r _ D2'
+	   <- closed-cn-tp/cross DC1l DC2l DC1'
+	   <- closed-cn-tp/cross DC1r DC2r DC2'.
+
+-	: strengthen-cn-deq ([x] cn-deq/tp/arrow (D1 x) (D2 x)) DC1' DC2' DK 
+	   (cn-deq/tp/arrow D1' D2')
+	   <- strengthen-cn-deq D1 DC1l DC1r DK D1'
+	   <- strengthen-cn-deq D2 DC2l DC2r _ D2'
+	   <- closed-cn-tp/arrow DC1l DC2l DC1'
+	   <- closed-cn-tp/arrow DC1r DC2r DC2'.
+
+-	: strengthen-cn-deq ([x] cn-deq/tp/sum (D1 x) (D2 x)) DC1' DC2' DK 
+	   (cn-deq/tp/sum D1' D2')
+	   <- strengthen-cn-deq D1 DC1l DC1r DK D1'
+	   <- strengthen-cn-deq D2 DC2l DC2r _ D2'
+	   <- closed-cn-tp/sum DC1l DC2l DC1'
+	   <- closed-cn-tp/sum DC1r DC2r DC2'.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/cn/lam (D1 x) (D2 x)) DC1' DC2' DK'
+	   (cn-deq/cn/lam D1' D2')
+	   <- strengthen-kd-deq D2 DK2l DK2r D2'
+	   <- strengthen-cn-deq-o D1 DK2l DC1l DC1r DK1 D1'
+	   <- closed-cn-cn/lam DK2l DC1l DC1'
+	   <- closed-cn-cn/lam DK2r DC1r DC2'
+	   <- closed-kd-kd/pi DK2l DK1 DK'.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/tp/forall (D1 x) (D2 x)) DC1' DC2' closed-kd/i
+	   (cn-deq/tp/forall D1' D2')
+	   <- strengthen-kd-deq D2 DK2l DK2r D2'
+	   <- strengthen-cn-deq-o D1 DK2l DC1l DC1r DK1 D1'
+	   <- closed-cn-tp/forall DK2l DC1l DC1'
+	   <- closed-cn-tp/forall DK2r DC1r DC2'.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/cn/mu (D1 x) (D2 x)) DC1' DC2' closed-kd/i
+	   (cn-deq/cn/mu D1' D2')
+	   <- strengthen-kd-deq D2 DK2l DK2r D2'
+	   <- strengthen-cn-deq-o D1 DK2l DC1l DC1r DK1 D1'
+	   <- closed-cn-cn/mu DK2l DC1l DC1'
+	   <- closed-cn-cn/mu DK2r DC1r DC2'.
+
+-	: strengthen-cn-deq ([x] cn-deq/cn/pair (D1 x) (D2 x)) DC1' DC2' DK'
+	   (cn-deq/cn/pair D1' D2')
+	   <- strengthen-cn-deq D1 DC1l DC1r DK D1'
+	   <- strengthen-cn-deq D2 DC2l DC2r DKK D2'
+	   <- closed-cn-cn/pair DC1l DC2l DC1'
+	   <- closed-cn-cn/pair DC1r DC2r DC2'
+	   <- closed-kd-kd/sgm DK ([x] DKK) DK'.
+
+-	: strengthen-cn-deq ([x] cn-deq/cn/pj1 (D1 x)) DC1' DC2' DK' 
+	   (cn-deq/cn/pj1 D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK D1'
+	   <- closed-cn-cn/pj1 DC1 DC1'
+	   <- closed-cn-cn/pj1 DC2 DC2'
+	   <- closed-kd-kd/sgm-el DK DK'.
+
+-	: strengthen-cn-deq ([x] cn-deq/cn/pj2 (D1 x)) DC1' DC2' DK' 
+	   (cn-deq/cn/pj2 D1')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK D1'
+	   <- closed-cn-cn/pj2 DC1 DC1'
+	   <- closed-cn-cn/pj2 DC2 DC2'
+	   <- closed-cn-cn/pj1 DC1 DC1''
+	   <- closed-kd-kd/sgm-er DC1'' DK DK'.
+
+-	: strengthen-cn-deq ([x] cn-deq/kd/unit (D1 x) (D2 x)) DC1 DC2 DK
+	   (cn-deq/kd/unit D1' D2')
+	   <- strengthen-ofkd D1 DC1 DK D1'
+	   <- strengthen-ofkd D2 DC2 _ D2'.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/sub (D1 x) (D2 x)) DC1 DC2 DK1
+	   (cn-deq/sub D1'' D2')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK2 D1'
+	   <- strengthen-kd-sub D2 DK2a DK1 D2'
+	   <- closed-kd-seq/kd DK2 DK2a DQ
+	   <- cn-deq/seq-k DQ D1' D1''.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/deq (D1 x) (D2 x)) DC1 DC2 DK1
+	   (cn-deq/deq D1'' D2')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK2 D1'
+	   <- strengthen-kd-deq D2 DK2a DK1 D2'
+	   <- closed-kd-seq/kd DK2 DK2a DQ
+	   <- cn-deq/seq-k DQ D1' D1''.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/trans (D1 x) (D2 x)) DC1 DC3 DK2
+	   (cn-deq/trans D1''' D2')
+	   <- strengthen-cn-deq D1 DC1 DC2 DK1 D1'
+	   <- strengthen-cn-deq D2 DC2a DC3 DK2 D2'
+	   <- closed-cn-seq/cn DC2 DC2a DQ
+	   <- cn-deq/seq-r DQ D1' D1''
+	   <- closed-kd-seq/kd DK1 DK2 DQK
+	   <- cn-deq/seq-k DQK D1'' D1'''.
+
+-	: strengthen-cn-deq ([x] cn-deq/cn/app (D1 x) (D2 x)) DC1' DC2' DK'
+	   (cn-deq/cn/app D1' D2'')
+	   <- strengthen-cn-deq D1 DC1l DC1r DK1 D1'
+	   <- strengthen-cn-deq D2 DC2l DC2r DK2 D2'
+	   <- closed-cn-cn/app DC1l DC2l DC1'
+	   <- closed-cn-cn/app DC1r DC2r DC2'
+	   <- closed-kd-kd/pi-er DC2l DK1 DK'
+	   <- closed-kd-kd/pi-el DK1 DK1l
+	   <- closed-kd-seq/kd DK2 DK1l DQ
+	   <- cn-deq/seq-k DQ D2' D2''.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/kd/sing (D1 x)) DC1 DC2 DK1
+	   (cn-deq/kd/sing D1')
+	   <- strengthen-ofkd D1 DC1 DK1 D1'
+	   <- closed-cn-kd/sing-e DK1 DC2.
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/pi-ext-2 (D2 x) (D1 x)) DC1 DCR DK
+	   (cn-deq/pi-ext-2 D2' D1''')
+	   <- strengthen-cn-deq D2 DC1 DCR DK2 D2'
+	   <- closed-kd-kd/pi-el DK2 DK2'
+	   <- strengthen-cn-deq-o D1 DK2' DC2 DCR' DK1 D1'
+	   <- closed-kd-kd/pi DK2' DK1 DK
+	   <- ({x} closed-cn-cn/app DC1 (closed-cn/i : closed-cn _ x)
+		 (DC2o x))
+	   <- ({x} closed-cn-seq/cn (DC2 x) (DC2o x) (DQ x))
+	   <- ({x}{dx}
+		 cn-deq/seq-l (DQ x) (D1' x dx) (D1'' x dx))
+	   <- ({x} closed-cn-cn/app DCR (closed-cn/i : closed-cn _ x)
+		 (DCRo x))
+	   <- ({x} closed-cn-seq/cn (DCR' x) (DCRo x) (DQr x))
+	   <- ({x}{dx}
+		 cn-deq/seq-r (DQr x) (D1'' x dx) (D1''' x dx)).
+
+-	: strengthen-cn-deq 
+	   ([x] cn-deq/pi-ext (D2 x) (D3 x) (D1 x)) DC1 DCR DK
+	   (cn-deq/pi-ext D2' D3'' D1''')
+	   <- strengthen-ofkd D2 DC1 DK2 D2'
+	   <- strengthen-ofkd D3 DCR DK2r D3'
+	   <- closed-kd-kd/pi-el DK2 DK2'
+	   <- closed-kd-kd/pi-el DK2r DK2r'
+	   <- closed-kd-seq/kd DK2r' DK2' DQK2
+	   <- ofkd/seq-k-pi-l DQK2 D3' D3''
+	   <- strengthen-cn-deq-o D1 DK2' DC2 DCR' DK1 D1'
+	   <- closed-kd-kd/pi DK2' DK1 DK
+	   <- ({x} closed-cn-cn/app DC1 (closed-cn/i : closed-cn _ x)
+		 (DC2o x))
+	   <- ({x} closed-cn-seq/cn (DC2 x) (DC2o x) (DQ x))
+	   <- ({x}{dx}
+		 cn-deq/seq-l (DQ x) (D1' x dx) (D1'' x dx))
+	   <- ({x} closed-cn-cn/app DCR (closed-cn/i : closed-cn _ x)
+		 (DCRo x))
+	   <- ({x} closed-cn-seq/cn (DCR' x) (DCRo x) (DQr x))
+	   <- ({x}{dx}
+		 cn-deq/seq-r (DQr x) (D1'' x dx) (D1''' x dx)).
+
+-	: strengthen-cn-deq ([x] cn-deq/sgm-ext (D1 x) (D2 x)) DC2' DC2r' DK'
+	   (cn-deq/sgm-ext D1''' D2''')
+	   <- strengthen-cn-deq D1 DC1 DC1r DK1 D1'
+	   <- strengthen-cn-deq D2 DC2 DC2r DK2 D2'
+	   <- closed-cn-cn/pj2-e DC2 DC2' DQ2m
+	   <- cn-deq/seq-l DQ2m D2' D2''
+	   <- closed-cn-cn/pj1 DC2' DC1''
+	   <- closed-cn-seq/cn DC1 DC1'' DQ 
+	   <- cn-deq/seq-l DQ D1' D1''
+	   <- closed-kd-kd/sgm DK1 ([x] DK2) DK'
+	   <- closed-cn-cn/pj2-e DC2r DC2r' DQ2rm
+	   <- cn-deq/seq-r DQ2rm D2'' D2'''
+	   <- closed-cn-cn/pj1 DC2r' DC1r'
+	   <- closed-cn-seq/cn DC1r DC1r' DQr
+	   <- cn-deq/seq-r DQr D1'' D1'''.
+
+%worlds (cn-block | ofkd-block) 
+(strengthen-ofkd _ _ _ _) 
+(strengthen-kd-deq _ _ _ _) 
+(strengthen-kd-deq-o _ _ _ _ _) 
+(strengthen-kd-sub _ _ _ _) 
+(strengthen-kd-sub-o _ _ _ _ _) 
+(strengthen-ofkd-o _ _ _ _ _) 
+(strengthen-kd-wf _ _ _)
+(strengthen-kd-wf-o _ _ _ _)
+(strengthen-cn-deq _ _ _ _ _)
+(strengthen-cn-deq-o _ _ _ _ _ _).
+%total (D1 D2 D3 D4 D5 D6 D7 D8 D9 D10) 
+(strengthen-ofkd D1 _ _ _) 
+(strengthen-ofkd-o D3 _ _ _ _)
+(strengthen-kd-wf D2 _ _)
+(strengthen-kd-wf-o D6 _ _ _)
+(strengthen-kd-deq D4 _ _ _) 
+(strengthen-kd-deq-o D8 _ _ _ _)
+(strengthen-kd-sub D5 _ _ _) 
+(strengthen-kd-sub-o D9 _ _ _ _)
+(strengthen-cn-deq D7 _ _ _ _)
+(strengthen-cn-deq-o D10 _ _ _ _ _).

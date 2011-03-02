@@ -1,0 +1,3125 @@
+
+% Lily meta theory
+% By Carsten Varming 2006
+tp : type. %name tp Tp.
+
+func : tp -> tp -> tp.
+all : (tp -> tp) -> tp.
+bang : tp -> tp.
+i : tp.
+tensor : tp -> tp -> tp.
+%freeze tp.
+
+term : type. %name term M.
+
+lam : tp -> (term -> term) -> term.
+app : term -> term -> term.
+tlam : (tp -> term) -> term.
+tapp : term -> tp -> term.
+thunk : tp -> (term -> term) -> term.
+letb : term -> (term -> term) -> term.
+unit : term.
+letu : term -> term -> term.
+tens : term -> term -> term.
+lett : term -> (term -> term -> term) -> term.
+%freeze term.
+
+value : term -> type.
+%mode value +V.
+
+val_lam : value (lam _ _).
+val_tlam : value (tlam _).
+val_thunk : value (thunk _ _).
+val_unit : value unit.
+val_tens : value (tens _ _).
+
+%worlds () (value _).
+%terminates {} (value _).
+%freeze value.
+
+\n/ : term -> term -> type.
+%mode \n/ +M -V.
+%name \n/ EV.
+%infix none 500 \n/.
+
+ev_lam : lam T M  \n/ lam T M.
+ev_tlam : tlam M  \n/ tlam M.
+ev_thunk : thunk T M  \n/ thunk T M.
+ev_unit : unit \n/ unit.
+ev_tens : tens M N \n/ tens M N.
+ev_app : app M N \n/ V
+       <- M \n/ lam _ M'
+       <- M' N \n/ V.
+ev_tapp : tapp M T \n/ V
+       <- M \n/ tlam M'
+       <- M' T \n/ V.
+ev_letb : letb M N \n/ V
+       <- M \n/ thunk T M'
+       <- N (letb (thunk T M') M') \n/ V.
+ev_letu : letu M N \n/ V
+       <- M \n/ unit
+       <- N \n/ V.
+ev_lett : lett M N \n/ V
+       <- M \n/ tens M' M''
+       <- (N M' M'') \n/ V.
+%worlds () (\n/ _ _).
+%covers \n/ +M -V.
+%freeze \n/.
+
+\/ : term -> type.
+%postfix 500 \/.
+%mode \/ +M.
+terminate : M \/
+         <- M \n/ V.
+%freeze \/.
+
+\s/ : term -> term -> type.
+%mode \s/ +M -V.
+%name \s/ EV.
+%infix none 500 \s/.
+
+evs_lam : lam T M  \s/ lam T M.
+evs_tlam : tlam M  \s/ tlam M.
+evs_thunk : thunk T M  \s/ thunk T M.
+evs_unit : unit \s/ unit.
+evs_tens : tens M N \s/ tens M N.
+evs_app : app M N \s/ V
+       <- M \s/ lam _ M'
+       <- N \s/ V'
+       <- M' V' \s/ V.
+evs_tapp : tapp M T \s/ V
+       <- M \s/ tlam M'
+       <- M' T \s/ V.
+evs_letb : letb M N \s/ V
+       <- M \s/ thunk T M'
+       <- N (letb (thunk T M') M') \s/ V.
+evs_letu : letu M N \s/ V
+       <- M \s/ unit
+       <- N \s/ V.
+evs_lett : lett M N \s/ V
+       <- M \s/ tens M' M''
+       <- (N M' M'') \s/ V.
+%worlds () (\s/ _ _).
+%covers \s/ +M -V.
+%freeze \s/.
+
+value_soundness : M \n/ V -> value V -> type.
+%mode value_soundness +D -V.
+
+vs_lam : value_soundness ev_lam val_lam.
+vs_tlam : value_soundness ev_tlam val_tlam.
+vs_thunk : value_soundness ev_thunk val_thunk.
+vs_unit : value_soundness ev_unit val_unit.
+vs_tens : value_soundness ev_tens val_tens.
+vs_app : value_soundness (ev_app D' _) V
+            <- value_soundness D' V.
+vs_tapp : value_soundness (ev_tapp D' _) V
+            <- value_soundness D' V.
+vs_letb : value_soundness (ev_letb D' _) V
+            <- value_soundness D' V.
+vs_letu : value_soundness (ev_letu D' _) V
+            <- value_soundness D' V.
+vs_lett : value_soundness (ev_lett D' _) V
+            <- value_soundness D' V.
+
+%worlds () (value_soundness _ _).
+%freeze value_soundness.
+%total D (value_soundness D _).
+
+value_soundness_s : M \s/ V -> value V -> type.
+%mode value_soundness_s +D -V.
+
+vs_lam : value_soundness_s evs_lam val_lam.
+vs_tlam : value_soundness_s evs_tlam val_tlam.
+vs_thunk : value_soundness_s evs_thunk val_thunk.
+vs_unit : value_soundness_s evs_unit val_unit.
+vs_tens : value_soundness_s evs_tens val_tens.
+vs_app : value_soundness_s (evs_app D' _ _) V
+            <- value_soundness_s D' V.
+vs_tapp : value_soundness_s (evs_tapp D' _) V
+            <- value_soundness_s D' V.
+vs_letb : value_soundness_s (evs_letb D' _) V
+            <- value_soundness_s D' V.
+vs_letu : value_soundness_s (evs_letu D' _) V
+            <- value_soundness_s D' V.
+vs_lett : value_soundness_s (evs_lett D' _) V
+            <- value_soundness_s D' V.
+
+%worlds () (value_soundness_s _ _).
+%freeze value_soundness_s.
+%total D (value_soundness_s D _).
+
+selfeval : value V -> (V \n/ V) -> type.
+%mode selfeval +V -E.
+
+selfeval_lam : selfeval val_lam ev_lam.
+selfeval_tlam : selfeval val_tlam ev_tlam.
+selfeval_thunk : selfeval val_thunk ev_thunk.
+selfeval_tens : selfeval val_tens ev_tens.
+selfeval_unit : selfeval val_unit ev_unit.
+
+%worlds () (selfeval _ _).
+%freeze selfeval.
+%total V (selfeval V _).
+
+selfevals : value V -> (V \s/ V) -> type.
+%mode selfevals +V -E.
+
+selfevals_lam : selfevals val_lam evs_lam.
+selfevals_tlam : selfevals val_tlam evs_tlam.
+selfevals_thunk : selfevals val_thunk evs_thunk.
+selfevals_tens : selfevals val_tens evs_tens.
+selfevals_unit : selfevals val_unit evs_unit.
+
+%worlds () (selfevals _ _).
+%freeze selfevals.
+%total V (selfevals V _).
+
+eqt : tp -> tp -> type.
+%mode eqt +T -T'.
+eqt_ref : eqt T T.
+%worlds () (eqt _ _).
+%freeze eqt.
+%total D (eqt D _).
+
+eqt_symm : eqt T T' -> eqt T' T -> type.
+%mode eqt_symm +Q -Q'.
+eqt_symm_rule : eqt_symm eqt_ref eqt_ref.
+%worlds () (eqt_symm _ _).
+%freeze eqt_symm.
+%total {} (eqt_symm _ _).
+
+eqt_ctx : eqt T T' -> {C : tp -> tp} eqt (C T) (C T') -> type.
+%mode eqt_ctx +E +C -E'.
+eqt_ctx_ref : eqt_ctx eqt_ref _ eqt_ref.
+%worlds () (eqt_ctx _ _ _).
+%freeze eqt_ctx.
+%total D (eqt_ctx D _ _).
+
+eqt_ctx2 : eqt T T' -> eqt T2 T2' -> {C : tp -> tp -> tp} eqt (C T T2) (C T' T2') -> type.
+%mode eqt_ctx2 +E +E' +C -E''.
+eqt_ctx2_ref : eqt_ctx2 eqt_ref eqt_ref _ eqt_ref.
+%worlds () (eqt_ctx2 _ _ _ _).
+%freeze eqt_ctx2.
+%total {} (eqt_ctx2 _ _ _ _).
+
+eq : term -> term -> type.
+%mode eq +M -M'.
+eq_ref : eq M M.
+%worlds () (eq _ _).
+%freeze eq.
+%total D (eq D _).
+
+eq_ctx : eq M M' -> {C : term -> term} eq (C M) (C M') -> type.
+%mode eq_ctx +Q +C -Q'.
+eq_ctx_ref : eq_ctx eq_ref _ eq_ref.
+%worlds () (eq_ctx _ _ _).
+%freeze eq_ctx.
+%total D (eq_ctx D _ _).
+
+eq_ctx2 : eq M M' -> eq M2 M2' -> {C : term -> term -> term} eq (C M M2) (C M' M2') -> type.
+%mode eq_ctx2 +Q +Q2 +C -Q'.
+eq_ctx2_ref : eq_ctx2 eq_ref eq_ref _ eq_ref.
+%worlds () (eq_ctx2 _ _ _ _).
+%freeze eq_ctx2.
+%total D (eq_ctx2 D _ _ _).
+
+eq_eval : eq M M' -> (M \n/ V) -> (M' \n/ V) -> type.
+%mode eq_eval +Q +E -E'.
+eq_eval_rule : eq_eval eq_ref E E.
+%worlds () (eq_eval _ _ _).
+%freeze eq_eval.
+%total D (eq_eval D _ _).
+
+eq_eval2 : eq V V' -> (M \n/ V) -> (M \n/ V') -> type.
+%mode eq_eval2 +Q +E -E'.
+eq_eval2_rule : eq_eval2 eq_ref E E.
+%worlds () (eq_eval2 _ _ _).
+%freeze eq_eval2.
+%total D (eq_eval2 D _ _).
+
+eq_res_s : eq V V' -> M \s/ V -> M \s/ V' -> type.
+%mode eq_res_s +Q +E -E.
+eq_res_s_rile : eq_res_s eq_ref E E.
+%worlds () (eq_res_s _ _ _).
+%freeze eq_res_s.
+%total {} (eq_res_s _ _ _).
+
+eq_evaluations : (M \n/ V) -> (M' \n/ V') -> type.
+%mode eq_evaluations +EV -EV'.
+eq_evaluations_ref : eq_evaluations E E.
+%worlds () (eq_evaluations _ _).
+%freeze eq_evaluations.
+%total D (eq_evaluations D _).
+
+eq_tens : eq (tens M1 M2) (tens M1' M2') -> eq M1 M1' -> eq M2 M2' -> type.
+%mode eq_tens +EQ1 -EQ2 -EQ3.
+eq_tens_rule : eq_tens eq_ref eq_ref eq_ref.
+%worlds () (eq_tens _ _ _).
+%freeze eq_tens.
+%total D (eq_tens D _ _).
+
+eq_thunk : eq (thunk T E) (thunk T' E') -> eq (letb (thunk T E) E) (letb (thunk T' E') E') -> type.
+%mode eq_thunk +EQ -EQ'.
+eq_thunk_rule : eq_thunk eq_ref eq_ref.
+%worlds () (eq_thunk _ _).
+%freeze eq_thunk.
+%total D (eq_thunk D _).
+
+eq_lam : eq (lam T E) (lam T' E') -> eq X X' -> eq (E X) (E' X') -> type.
+%mode eq_lam +E +E' -E''.
+eq_lam_rule : eq_lam eq_ref eq_ref eq_ref.
+%worlds () (eq_lam _ _ _).
+%freeze eq_lam.
+%total D (eq_lam D _ _).
+
+eq_tlam : eq (tlam E) (tlam E') -> eqt X X' -> eq (E X) (E' X') -> type.
+%mode eq_tlam +E +E' -E''.
+eq_tlam_rule : eq_tlam eq_ref eqt_ref eq_ref.
+%worlds () (eq_tlam _ _ _).
+%freeze eq_tlam.
+%total D (eq_tlam D _ _).
+
+eq_sym : eq A B -> eq B A -> type.
+%mode eq_sym +E -Q.
+eq_sym_rule : eq_sym eq_ref eq_ref.
+%worlds () (eq_sym _ _).
+%freeze eq_sym.
+%total D (eq_sym D _).
+
+eval_determ : M \n/ V -> M \n/ V' -> eq V V' -> type.
+%mode eval_determ +E +E' -Q.
+
+eval_determ_unit : eval_determ ev_unit ev_unit eq_ref.
+eval_determ_tens : eval_determ ev_tens ev_tens eq_ref.
+eval_determ_tlam : eval_determ ev_tlam ev_tlam eq_ref.
+eval_determ_lam : eval_determ ev_lam ev_lam eq_ref.
+eval_determ_thunk : eval_determ ev_thunk ev_thunk eq_ref.
+eval_determ_app : eval_determ ((ev_app EV2 EV1) : (app M1 M2) \n/ V)
+                              ((ev_app EV2' EV1') : (app M1 M2 \n/ V')) Q
+         <- eval_determ EV1 EV1' Q1
+         <- eq_lam Q1 (eq_ref : eq M2 M2) Q3
+         <- eq_sym Q3 Q4
+         <- eq_eval Q4 EV2' EV2s
+         <- eval_determ EV2 EV2s Q.
+
+eval_determ_tapp : eval_determ ((ev_tapp EV2 EV1) : (tapp M1 T2) \n/ V)
+                               ((ev_tapp EV2' EV1') : (tapp M1 T2 \n/ V')) Q
+         <- eval_determ EV1 EV1' Q1
+         <- eq_tlam Q1 (eqt_ref : eqt T2 T2) Q3
+         <- eq_sym Q3 Q4
+         <- eq_eval Q4 EV2' EV2s
+         <- eval_determ EV2 EV2s Q.
+
+eval_determ_letb : eval_determ ((ev_letb EV2 EV1) : (letb M1 M2) \n/ V)
+                               ((ev_letb EV2' EV1') : (letb M1 M2 \n/ V')) Q
+         <- eval_determ EV1 EV1' Q1
+         <- eq_thunk Q1 Q2
+         <- eq_ctx Q2 M2 Q3
+         <- eq_sym Q3 Q4
+         <- eq_eval Q4 EV2' EV2s
+         <- eval_determ EV2 EV2s Q.
+
+eval_determ_letu : eval_determ ((ev_letu EV2 EV1) : (letu M1 M2) \n/ V)
+                               ((ev_letu EV2' EV1') : (letu M1 M2 \n/ V')) Q
+         <- eval_determ EV2 EV2' Q.
+
+eval_determ_lett : eval_determ ((ev_lett EV2 EV1) : (lett M1 M2) \n/ V)
+                               ((ev_lett EV2' EV1') : (lett M1 M2 \n/ V')) Q
+         <- eval_determ EV1 EV1' Q1
+         <- eq_tens Q1 Q2 Q3
+         <- eq_ctx2 Q2 Q3 M2 Q4
+         <- eq_sym Q4 Q4'
+         <- eq_eval Q4' EV2' EV2s
+         <- eval_determ EV2 EV2s Q.
+
+%worlds () (eval_determ _ _ _).
+%freeze eval_determ.
+%total D (eval_determ D _ _).
+
+eval_trans : M \n/ V -> V \n/ V' -> M \n/ V' -> type.
+%mode eval_trans +EV +EV' -EV''.
+
+eval_trans_rule : eval_trans EV EV' EV''
+                   <- value_soundness EV Vv
+                   <- selfeval Vv EVv'
+                   <- eval_determ EVv' EV' Q
+                   <- eq_eval2 Q EV EV''.
+
+%worlds () (eval_trans _ _ _).
+%total {} (eval_trans _ _ _).
+
+eq_val : eq M M' -> value M -> value M' -> type.
+%mode eq_val +Q +V -V'.
+eq_val_rule : eq_val eq_ref V V.
+%worlds () (eq_val _ _ _).
+%freeze eval_trans.
+%total {} (eq_val _ _ _).
+
+
+frame : (term -> term) -> type. %name frame F.
+
+fletb : {M} frame [a] letb a M.
+fapp :  {M} frame [a] app a M.
+ftapp : {T} frame [a] tapp a T.
+fletu : {M} frame [a] letu a M.
+flett : {M} frame [a] lett a M.
+%freeze frame.
+
+frameapp : frame F -> term -> term -> type.
+%mode frameapp +F +M -M'.
+
+frameapp_app : % {F : frame F'} 
+         frameapp (F : frame F') M (F' M).
+
+%worlds () (frameapp _ _ _).
+%freeze frameapp.
+%total D (frameapp D _ _).
+
+frameapp_exists : {F}{M} (frameapp F M M') -> type.
+%mode frameapp_exists +F +M -FM.
+frameapp_exists_rule : frameapp_exists F M frameapp_app.
+%worlds () (frameapp_exists _ _ _).
+%freeze frameapp_exists.
+%total D (frameapp_exists D _ _).
+
+framestack : type. %name framestack Fs.
+
+cons : frame F -> framestack -> framestack.
+nil : framestack. %freeze framestack.
+
+frameapply : framestack -> term -> term -> type.
+%mode frameapply +FS +M -M'.
+
+frameapply_nil : frameapply nil M M.
+frameapply_cons : frameapply (cons F Fs) M M'
+                  <- frameapp F M M''
+                  <- frameapply Fs M'' M'.
+
+%worlds () (frameapply _ _ _).
+%freeze frameapply.
+%total D (frameapply D _ _).
+
+%block blam : block {y:term}.
+
+eqf : framestack -> framestack -> type.
+%mode eqf +Fs -Fs'.
+eqf_ref : eqf Fs Fs.
+%freeze eqf.
+
+eqf_symm : eqf Fs Fs' -> eqf Fs' Fs -> type.
+%mode eqf_symm +Q -Q'.
+eqf_symm_rule : eqf_symm eqf_ref eqf_ref.
+%worlds (blam) (eqf_symm _ _).
+%freeze eqf_symm.
+%total {} (eqf_symm _ _).
+
+eqf_trans : eqf Fs Fs' -> eqf Fs' Fs'' -> eqf Fs Fs'' -> type.
+%mode eqf_trans +Q +Q' -Q''.
+eqf_trans_rule : eqf_trans eqf_ref eqf_ref eqf_ref.
+%worlds (blam) (eqf_trans _ _ _).
+%freeze eqf_trans.
+%total {} (eqf_trans _ _ _).
+
+eqf_extend : {F} eqf Fs Fs' -> eqf (cons F Fs) (cons F Fs') -> type.
+%mode eqf_extend +F +Q -Q'.
+eqf_extend_rule : eqf_extend _ eqf_ref eqf_ref.
+%worlds (blam) (eqf_extend _ _ _).
+%freeze eqf_extend.
+%total {} (eqf_extend _ _ _).
+
+frameapply_eq : eqf Fs Fs' -> frameapply Fs M FsM -> frameapply Fs' M FsM -> type.
+%mode frameapply_eq +Q +FA -FA.
+frameapply_eq_rule : frameapply_eq eqf_ref FA FA.
+%worlds (blam) (frameapply_eq _ _ _).
+%freeze frameapply_eq.
+%total {} (frameapply_eq _ _ _).
+
+frameapply_nil_eq : frameapply nil M M' -> eq M M' -> type.
+%mode frameapply_nil_eq +F -Q.
+frameapply_nil_eq_rule : frameapply_nil_eq frameapply_nil eq_ref.
+%worlds (blam) (frameapply_nil_eq _ _).
+%freeze frameapply_nil_eq.
+%total {} (frameapply_nil_eq _ _).
+
+frameapply_exists : {Fs}{M} (frameapply Fs M M') -> type.
+%mode frameapply_exists +Fs +M -A.
+frameapply_exists_nil : frameapply_exists nil M frameapply_nil.
+frameapply_exists_cons_letu : frameapply_exists (cons (fletu N) Fs) M
+                                                (frameapply_cons FsA frameapp_app)
+         <- frameapply_exists Fs (letu M N) FsA.
+frameapply_exists_cons_letb : frameapply_exists (cons (fletb N) Fs) M 
+                                                (frameapply_cons FsA frameapp_app)
+         <- frameapply_exists Fs (letb M N) FsA.
+frameapply_exists_cons_lett : frameapply_exists (cons (flett N) Fs) M
+                                                (frameapply_cons FsA frameapp_app)
+         <- frameapply_exists Fs (lett M N) FsA.
+frameapply_exists_cons_app : frameapply_exists (cons (fapp N) Fs) M
+                                                (frameapply_cons FsA frameapp_app)
+         <- frameapply_exists Fs (app M N) FsA.
+frameapply_exists_cons_tapp : frameapply_exists (cons (ftapp N) Fs) M
+                                               (frameapply_cons FsA frameapp_app)
+         <- frameapply_exists Fs (tapp M N) FsA.
+%worlds () (frameapply_exists _ _ _).
+%freeze frameapply_exists.
+%total D (frameapply_exists D _ _).
+
+--> : framestack -> term -> framestack -> term -> type.
+%mode --> +Fs +M -Fs' -M'.
+
+evfs_letu : --> Fs (letu M N) (cons (fletu N) Fs) M.
+evfs_letb : --> Fs (letb M N) (cons (fletb N) Fs) M.
+evfs_lett : --> Fs (lett M N) (cons (flett N) Fs) M.
+evfs_app  : --> Fs (app M N) (cons (fapp N) Fs) M.
+evfs_tapp : --> Fs (tapp M T) (cons (ftapp T) Fs) M.
+
+evfs_lam : --> (cons (fapp N) Fs) (lam _ M') Fs (M' N).
+evfs_tlam : --> (cons (ftapp T) Fs) (tlam M') Fs (M' T).
+evfs_unit : --> (cons (fletu N) Fs) unit Fs N.
+evfs_tens : --> (cons (flett N) Fs) (tens M1 M2) Fs (N M1 M2).
+evfs_thunk : --> (cons (fletb N) Fs) (thunk T M) Fs (N (letb (thunk T M) M)).
+
+%worlds () (--> _ _ _ _).
+%covers --> -Fs +M -Fs' -M'.
+%freeze -->.
+
+eq_step : eq M M' -> --> Fs M Fs1 M1 -> --> Fs M' Fs1 M1 -> type.
+%mode eq_step +Q +S -S'.
+eq_step_rule : eq_step eq_ref S S.
+%worlds () (eq_step _ _ _).
+%total {} (eq_step _ _ _).
+
+-->* : framestack -> term -> framestack -> term -> type.
+
+-->*_ref : -->* Fs M Fs M.
+-->*_step : -->* Fs M Fs' M' 
+        <- --> Fs'' M'' Fs' M'
+        <- -->* Fs M Fs'' M''.
+%freeze -->*.
+
+concat-->* : (-->* Fs M Fs'' M'') -> (-->* Fs'' M'' Fs' M') -> (-->* Fs M Fs' M') -> type.
+%mode concat-->* +S1 +S2 -S.
+
+concatref : concat-->* S -->*_ref S.
+concatstep : concat-->* S' (-->*_step Ss S) (-->*_step Sc S)
+       <- concat-->* S' Ss Sc.
+
+%worlds () (concat-->* _ _ _).
+%freeze concat-->*.
+%total D (concat-->* _ D _).
+
+-->*_impossible : --> nil V Fs M -> value V -> -->* Fs' M' Fs'' M'' -> type.
+%mode +{V:term} +{Fs:framestack} +{M:term} +{Fs':framestack} +{M':term}
+   +{Fs'':framestack} +{M'':term} +{S:--> nil V Fs M} +{V1:value V}
+      -{R:-->* Fs' M' Fs'' M''} (-->*_impossible S V1 R).
+%worlds () (-->*_impossible _ _ _).
+%freeze -->*_impossible.
+%total {} (-->*_impossible _ _ _).
+
+lemma44 : {Fs : framestack} {M} frameapply Fs M FsM -> (-->* nil FsM Fs M) -> type.
+%mode lemma44 +Fs +M +FA -E.
+
+lemma44_nil : lemma44 nil M frameapply_nil -->*_ref.
+lemma44_cons_letu : lemma44 (cons (fletu N) Fs) M
+                            (frameapply_cons FA frameapp_app) (-->*_step MS evfs_letu)
+             <- lemma44 Fs (letu M N) FA MS.
+lemma44_cons_letb : lemma44 (cons (fletb N) Fs) M
+                            (frameapply_cons FA frameapp_app) (-->*_step MS evfs_letb)
+             <- lemma44 Fs (letb M N) FA MS.
+lemma44_cons_lett : lemma44 (cons (flett N) Fs) M
+                            (frameapply_cons FA frameapp_app) (-->*_step MS evfs_lett)
+             <- lemma44 Fs (lett M N) FA MS.
+lemma44_cons_app : lemma44 (cons (fapp N) Fs) M
+                           (frameapply_cons FA frameapp_app) (-->*_step MS evfs_app)
+             <- lemma44 Fs (app M N) FA MS.
+lemma44_cons_tapp : lemma44 (cons (ftapp N) Fs) M
+                            (frameapply_cons FA frameapp_app) (-->*_step MS evfs_tapp)
+             <- lemma44 Fs (tapp M N) FA MS.
+%worlds () (lemma44 _ _ _ _).
+%freeze lemma44.
+%total D (lemma44 D _ _ _).
+
+frameApplyUnique : (frameapply Fs M FsM) -> (frameapply Fs M FsM') -> (eq FsM FsM') -> type.
+%mode frameApplyUnique +FA1 +FA2 -Q.
+
+frameApplyUnique_nil : frameApplyUnique frameapply_nil frameapply_nil eq_ref.
+frameApplyUnique_cons : frameApplyUnique (frameapply_cons FsA frameapp_app)
+                                         (frameapply_cons FsA' frameapp_app) Q
+                  <- frameApplyUnique FsA FsA' Q.
+
+%worlds () (frameApplyUnique _ _ _).
+%freeze frameApplyUnique.
+%total D (frameApplyUnique D _ _).
+
+lemma48 : {Fs} {M} (M \n/ V) -> (-->* Fs M Fs V) -> type.
+%mode lemma48 +Fs +M +E -Ss.
+
+lemma48_lam : lemma48 _ _ ev_lam -->*_ref.
+lemma48_tens : lemma48 _ _ ev_tens -->*_ref.
+lemma48_thunk : lemma48 _ _ ev_thunk -->*_ref.
+lemma48_tlam : lemma48 _ _ ev_tlam -->*_ref.
+lemma48_unit : lemma48 _ _ ev_unit -->*_ref.
+
+lemma48_app : lemma48 Fs (app M1 M2) (ev_app EM' EM1) Sr
+        <- lemma48 (cons (fapp M2) Fs) M1 (EM1 : M1 \n/ (lam _ M')) SM1
+        <- lemma48  Fs (M' M2) (EM' : (M' M2) \n/ V) SM'
+        <- concat-->* (-->*_step SM1 evfs_lam) SM' S
+        <- concat-->* (-->*_step -->*_ref evfs_app) S Sr.
+
+lemma48_tapp : lemma48 Fs (tapp M1 T) (ev_tapp EM' EM1) Sr
+        <- lemma48 (cons (ftapp T) Fs) M1 (EM1 : M1 \n/ (tlam M')) SM1
+        <- lemma48  Fs (M' T) (EM' : (M' T) \n/ V) SM'
+        <- concat-->* (-->*_step SM1 evfs_tlam) SM' S
+        <- concat-->* (-->*_step -->*_ref evfs_tapp) S Sr.
+
+lemma48_letu : lemma48 Fs (letu M1 M2) (ev_letu EM' EM1) Sr
+        <- lemma48 (cons (fletu M2) Fs) M1 (EM1 : M1 \n/ unit) SM1
+        <- lemma48  Fs M2 (EM' : M2 \n/ V) SM'
+        <- concat-->* (-->*_step SM1 evfs_unit) SM' S
+        <- concat-->* (-->*_step -->*_ref evfs_letu) S Sr.
+
+lemma48_letb : lemma48 Fs (letb M1 M2) (ev_letb EM' EM1) Sr
+        <- lemma48 (cons (fletb M2) Fs) M1 (EM1 : M1 \n/ (thunk T M')) SM1
+        <- lemma48  Fs (M2 (letb (thunk T M') M')) (EM' : (M2 (letb (thunk T M') M')) \n/ V) SM'
+        <- concat-->* (-->*_step SM1 evfs_thunk) SM' S
+        <- concat-->* (-->*_step -->*_ref evfs_letb) S Sr.
+
+lemma48_lett : lemma48 Fs (lett M1 M2) (ev_lett EM' EM1) Sr
+        <- lemma48 (cons (flett M2) Fs) M1 (EM1 : M1 \n/ (tens M' M'')) SM1
+        <- lemma48  Fs (M2 M' M'') (EM' : (M2 M' M'') \n/ V) SM'
+        <- concat-->* (-->*_step SM1 evfs_tens) SM' S
+        <- concat-->* (-->*_step -->*_ref evfs_lett) S Sr.
+
+%worlds () (lemma48 _ _ _ _).
+%freeze lemma48.
+%total D (lemma48 _ _ D _).
+
+lemma46a : {Fs : framestack} (M' \n/ V) -> (frameapply Fs M M') ->
+                             (frameapply Fs V' N) -> (M \n/ V') -> (N \n/ V) -> type.
+lemma46b : {Fs : framestack} (M \n/ V') -> (N \n/ V) -> (frameapply Fs M M') ->
+                             (frameapply Fs V' N) -> (M' \n/ V) -> type.
+%mode lemma46a +Fs +As +FaM -FV' -Res1 -Res2.
+%mode lemma46b +Fs +As1 +As2 +FaM +FV' -Res1.
+
+lemma46a_nil : lemma46a nil E frameapply_nil frameapply_nil E EV
+        <- (value_soundness E Vv)
+        <- (selfeval Vv EV).
+
+lemma46a_letu : lemma46a (cons (fletu N) Fs) (E : M' \n/ V) (frameapply_cons FA frameapp_app)
+                         (frameapply_cons FAu frameapp_app) RM E' 
+        <- lemma46a Fs E FA FA' (ev_letu (RN : N \n/ V') RM) (R2 : _ \n/ V)
+        <- frameapply_exists Fs (letu unit N) FAu
+        <- lemma46b Fs (ev_letu RN ev_unit : letu unit N \n/ V') R2 FAu FA' E'.
+
+lemma46a_app : lemma46a (cons (fapp N) Fs) (E : M' \n/ V) (frameapply_cons FA frameapp_app)
+                        (frameapply_cons FAu frameapp_app) RM E' 
+        <- lemma46a Fs E FA FA' (ev_app RN (RM : M \n/ (lam T M1))) R2
+        <- frameapply_exists Fs (app (lam T M1) N) FAu
+        <- lemma46b Fs (ev_app RN ev_lam) R2 FAu FA' E'.
+lemma46a_tapp : lemma46a (cons (ftapp N) Fs) (E : M' \n/ V) (frameapply_cons FA frameapp_app)
+                         (frameapply_cons FAu frameapp_app) RM E' 
+        <- lemma46a Fs E FA FA' (ev_tapp RN (RM : M \n/ (tlam T))) R2
+        <- frameapply_exists Fs (tapp (tlam T) N) FAu
+        <- lemma46b Fs (ev_tapp RN ev_tlam) R2 FAu FA' E'.
+
+lemma46a_letb : lemma46a (cons (fletb N) Fs) (E : M' \n/ V) (frameapply_cons FA frameapp_app)
+                         (frameapply_cons FAu frameapp_app) RM E' 
+        <- lemma46a Fs E FA FA' (ev_letb RN (RM : M \n/ (thunk T M1))) R2
+        <- frameapply_exists Fs (letb (thunk T M1) N) FAu
+        <- lemma46b Fs (ev_letb RN ev_thunk) R2 FAu FA' E'.
+
+lemma46a_lett : lemma46a (cons (flett N) Fs) (E : M' \n/ V) (frameapply_cons FA frameapp_app)
+                         (frameapply_cons FAu frameapp_app) RM E' 
+        <- lemma46a Fs E FA FA' (ev_lett RN (RM : M \n/ (tens M1 M2))) R2
+        <- frameapply_exists Fs (lett (tens M1 M2) N) FAu
+        <- lemma46b Fs (ev_lett RN ev_tens) R2 FAu FA' E'.
+
+lemma46b_nil : lemma46b nil (E : M1 \n/ M2) E' frameapply_nil frameapply_nil E''
+        <- value_soundness E V
+        <- selfeval V EV
+        <- eval_determ EV E' Q
+        <- eq_eval2 Q E E''.
+
+lemma46b_letu : lemma46b (cons (fletu M6) Fs1) E1 E2 (frameapply_cons X1 frameapp_app)
+                         (frameapply_cons X2 frameapp_app) E3
+        <- lemma46a Fs1 E2 X2 X3 (ev_letu EM6 EM2) EN
+        <- eval_trans E1 EM2 EM1
+        <- lemma46b Fs1 (ev_letu EM6 EM1) EN X1 X3 E3.
+
+lemma46b_lett : lemma46b (cons (flett M6) Fs1) E1 E2 (frameapply_cons X1 frameapp_app)
+                         (frameapply_cons X2 frameapp_app) E3
+        <- lemma46a Fs1 E2 X2 X3 (ev_lett EM6 EM2) EN
+        <- eval_trans E1 EM2 EM1
+        <- lemma46b Fs1 (ev_lett EM6 EM1) EN X1 X3 E3.
+
+lemma46b_app : lemma46b (cons (fapp M6) Fs1) E1 E2 (frameapply_cons X1 frameapp_app)
+                        (frameapply_cons X2 frameapp_app) E3
+        <- lemma46a Fs1 E2 X2 X3 (ev_app EM6 EM2) EN
+        <- eval_trans E1 EM2 EM1
+        <- lemma46b Fs1 (ev_app EM6 EM1) EN X1 X3 E3.
+
+lemma46b_tapp : lemma46b (cons (ftapp M6) Fs1) E1 E2 (frameapply_cons X1 frameapp_app)
+                         (frameapply_cons X2 frameapp_app) E3
+        <- lemma46a Fs1 E2 X2 X3 (ev_tapp EM6 EM2) EN
+        <- eval_trans E1 EM2 EM1
+        <- lemma46b Fs1 (ev_tapp EM6 EM1) EN X1 X3 E3.
+
+lemma46b_letb : lemma46b (cons (fletb M6) Fs1) E1 E2 (frameapply_cons X1 frameapp_app)
+                         (frameapply_cons X2 frameapp_app) E3
+        <- lemma46a Fs1 E2 X2 X3 (ev_letb EM6 EM2) EN
+        <- eval_trans E1 EM2 EM1
+        <- lemma46b Fs1 (ev_letb EM6 EM1) EN X1 X3 E3.
+
+%worlds () (lemma46a _ _ _ _ _ _) (lemma46b _ _ _ _ _ _).
+%freeze lemma46b lemma46a.
+%total (D E) (lemma46a D _ _ _ _ _) (lemma46b E _ _ _ _ _).
+
+lemma47 : (--> Fs M Fs' M') -> (frameapply Fs' M' FsM') -> (frameapply Fs M FsM) ->
+                               (FsM' \n/ V) -> (FsM \n/ V) -> type.
+%mode lemma47 +S +FA' -FA +EV' -EV.
+
+lemma47_letu : lemma47 evfs_letu (frameapply_cons X1 frameapp_app) X1 EV' EV'.
+lemma47_letb : lemma47 evfs_letb (frameapply_cons X1 frameapp_app) X1 EV' EV'.
+lemma47_lett : lemma47 evfs_lett (frameapply_cons X1 frameapp_app) X1 EV' EV'.
+lemma47_app : lemma47 evfs_app (frameapply_cons X1 frameapp_app) X1 EV' EV'.
+lemma47_tapp : lemma47 evfs_tapp (frameapply_cons X1 frameapp_app) X1 EV' EV'.
+
+lemma47_unit : lemma47 evfs_unit X1 (frameapply_cons X3 frameapp_app) EV' EV
+         <- lemma46a Fs EV' X1 X2 (EM2 : M2 \n/ V') EN
+         <- frameapply_exists Fs (letu unit M2) X3
+         <- lemma46b Fs (ev_letu EM2 ev_unit) EN X3 X2 EV.
+
+lemma47_tens : lemma47 evfs_tens X1 (frameapply_cons X3 frameapp_app) EV' EV
+         <- lemma46a Fs EV' X1 X2 EM2  EN
+         <- frameapply_exists Fs (lett (tens M3 M4) M2) X3
+         <- lemma46b Fs (ev_lett EM2 ev_tens) EN X3 X2 EV.
+
+lemma47_thunk : lemma47 evfs_thunk X1 (frameapply_cons X3 frameapp_app) EV' EV
+         <- lemma46a Fs EV' X1 X2 EM2  EN
+         <- frameapply_exists Fs (letb (thunk T M4) M2) X3
+         <- lemma46b Fs (ev_letb EM2 ev_thunk) EN X3 X2 EV.
+
+lemma47_lam : lemma47 evfs_lam X1 (frameapply_cons X3 frameapp_app) EV' EV
+         <- lemma46a Fs EV' X1 X2 EM2  EN
+         <- frameapply_exists Fs (app (lam T M4) M2) X3
+         <- lemma46b Fs (ev_app EM2 ev_lam) EN X3 X2 EV.
+
+lemma47_tlam : lemma47 evfs_tlam X1 (frameapply_cons X3 frameapp_app) EV' EV
+         <- lemma46a Fs EV' X1 X2 EM2  EN
+         <- frameapply_exists Fs (tapp (tlam M4) M2) X3
+         <- lemma46b Fs (ev_tapp EM2 ev_tlam) EN X3 X2 EV.
+
+%worlds () (lemma47 _ _ _ _ _).
+%freeze lemma47.
+%total S (lemma47 S _ _ _ _).
+
+-->r* : framestack -> term -> framestack -> term -> type.
+
+-->r*_ref : -->r* Fs M Fs M.
+-->r*_step : -->r* Fs M Fs' M' 
+        <- --> Fs M Fs'' M''
+        <- -->r* Fs'' M'' Fs' M'.
+%freeze -->r*.
+
+concat-->r* : -->r* Fs M Fs' M' -> -->r* Fs' M' Fs'' M'' -> -->r* Fs M Fs'' M'' -> type.
+%mode concat-->r* +A +B -C.
+
+concat-->r*_ref : concat-->r* -->r*_ref D D.
+concat-->r*_step : concat-->r* (-->r*_step R S) D (-->r*_step D' S)
+              <- concat-->r* R D D'.
+
+%worlds () (concat-->r* _ _ _).
+%freeze concat-->r*.
+%total D (concat-->r* D _ _).
+
+-->r*_impossible : --> nil V Fs M -> value V -> -->r* Fs' M' Fs'' M'' -> type.
+%mode +{V:term} +{Fs:framestack} +{M:term} +{Fs':framestack} +{M':term}
+   +{Fs'':framestack} +{M'':term} +{S:--> nil V Fs M} +{V1:value V}
+      -{R:-->r* Fs' M' Fs'' M''} (-->r*_impossible S V1 R).
+%worlds () (-->r*_impossible _ _ _).
+%freeze -->r*_impossible.
+%total {} (-->r*_impossible _ _ _).
+
+concat-->r*_exists :  {R : -->r* F1 M1 Fs M} 
+                      {S : -->r* (Fs : framestack) (M : term) (Fs2 : framestack) (M2 : term)}
+                      (concat-->r* R S RS) -> type.
+%mode concat-->r*_exists +R +S -P.
+
+concat-->r*_exists_ref : concat-->r*_exists -->r*_ref _ concat-->r*_ref.
+concat-->r*_exists_step : concat-->r*_exists (-->r*_step R S) B (concat-->r*_step E)
+            <- concat-->r*_exists R B E.
+
+%worlds () (concat-->r*_exists _ _ _).
+%freeze concat-->r*_exists.
+%total D (concat-->r*_exists D _ _).
+
+-->*_to_-->r*_lem : -->* Fs M Fs' M' -> -->r* Fs M Fs' M' -> type.
+%mode -->*_to_-->r*_lem +F -R.
+
+-->*_to_-->r*_lem_ref : -->*_to_-->r*_lem -->*_ref -->r*_ref.
+
+-->*_to_-->r*_lem_step : -->*_to_-->r*_lem (-->*_step R S) R''
+            <- -->*_to_-->r*_lem R R'
+            <- concat-->r* R' (-->r*_step -->r*_ref S) R''.
+
+%worlds () (-->*_to_-->r*_lem _ _).
+%freeze -->*_to_-->r*_lem.
+%total D (-->*_to_-->r*_lem D _).
+
+-->r*_to_-->*_lem : -->r* Fs M Fs' M' -> -->* Fs M Fs' M' -> type.
+%mode -->r*_to_-->*_lem +F -R.
+
+-->r*_to_-->*_lem_ref : -->r*_to_-->*_lem -->r*_ref -->*_ref.
+
+-->r*_to_-->*_lem_step : -->r*_to_-->*_lem (-->r*_step R S) R''
+            <- -->r*_to_-->*_lem R R'
+            <- concat-->* (-->*_step -->*_ref S) R' R''.
+
+%worlds () (-->r*_to_-->*_lem _ _).
+%freeze -->r*_to_-->*_lem.
+%total D (-->r*_to_-->*_lem D _).
+
+-->r*_add_step : (--> Fs M Fs' M') -> (-->r* Fs M nil V) -> (value V) ->
+                                      (-->r* Fs' M' nil V) -> type.
+%mode -->r*_add_step +S +R +V -R'.
+
+-->r*_add_step_ref : -->r*_add_step S -->r*_ref V R
+          <- -->r*_impossible S V R.
+
+-->r*_add_step_step : -->r*_add_step S (-->r*_step Rr S) V Rr.
+
+%worlds () (-->r*_add_step _ _ _ _).
+%freeze -->r*_add_step.
+%total {} (-->r*_add_step _ _ _ _).
+
+-->*_add_step : (--> Fs M Fs' M') -> (-->* Fs M nil V) -> (value V) ->
+                                     (-->* Fs' M' nil V) -> type.
+%mode -->*_add_step +S +R +V -R'.
+
+-->*_add_step_rule : -->*_add_step S R V R'
+            <- -->*_to_-->r*_lem R Rr
+            <- -->r*_add_step S Rr V R'r
+            <- -->r*_to_-->*_lem R'r R'.
+
+%worlds () (-->*_add_step _ _ _ _).
+%freeze -->*_add_step.
+%total {} (-->*_add_step _ _ _ _).
+
+-->*_to_-->r*_lem_exists : {S : -->* _ _ _ _} -->*_to_-->r*_lem S R -> type.
+%mode -->*_to_-->r*_lem_exists +S -P.
+
+-->*_to_-->r*_lem_exists_ref : -->*_to_-->r*_lem_exists -->*_ref -->*_to_-->r*_lem_ref.
+
+-->*_to_-->r*_lem_exists_step : -->*_to_-->r*_lem_exists (-->*_step R S) (-->*_to_-->r*_lem_step R'' R')
+         <- -->*_to_-->r*_lem_exists R (R' : -->*_to_-->r*_lem R Rr)
+         <- concat-->r*_exists Rr (-->r*_step -->r*_ref S) R''.
+
+%worlds () (-->*_to_-->r*_lem_exists _ _).
+%freeze -->*_to_-->r*_lem_exists.
+%total D (-->*_to_-->r*_lem_exists D _).
+
+eq_frame_eval_lemma : -->r* Fs M nil V -> value V -> frameapply Fs M FsM -> FsM \n/ V -> type.
+%mode eq_frame_eval_lemma +V +L -FA -EV.
+
+eq_frame_eval_lemma_z : eq_frame_eval_lemma -->r*_ref V frameapply_nil EV
+             <- selfeval V EV.
+
+eq_frame_eval_lemma_s : eq_frame_eval_lemma (-->r*_step R S) V FA EV
+             <- eq_frame_eval_lemma R V FA' EV'
+             <- lemma47 S FA' FA EV' EV.
+
+%worlds () (eq_frame_eval_lemma _ _ _ _) .
+%freeze eq_frame_eval_lemma.
+%total D (eq_frame_eval_lemma D _ _ _).
+
+eq_frame_eval : -->* Fs M nil V -> value V -> frameapply Fs M FsM -> FsM \n/ V -> type.
+%mode eq_frame_eval +V +L -FA -EV.
+
+eq_frame_eval_rule : eq_frame_eval FE V FA E
+        <- -->*_to_-->r*_lem FE R
+        <- eq_frame_eval_lemma R V FA E.
+
+%worlds () (eq_frame_eval _ _ _ _).
+%freeze eq_frame_eval.
+%total D (eq_frame_eval D _ _ _).
+
+-->*_skew : -->* Fs M nil V -> (value V) -> (-->* Fs M Fs' M') -> (-->* Fs' M' nil V) -> type.
+%mode -->*_skew +R +V +R' -R''.
+
+-->*_skew_ref : -->*_skew R V -->*_ref R.
+
+-->*_skew_step : -->*_skew R V (-->*_step Rest S) RI
+       <- -->*_skew R V Rest RI'
+       <- -->*_add_step S RI' V RI.
+
+%worlds () (-->*_skew _ _ _ _) .
+%freeze -->*_skew.
+%total D (-->*_skew _ _ D _).
+
+eq_eval_frame : (frameapply Fs M FsM) -> (FsM \n/ V) -> (-->* Fs M nil V) -> type.
+%mode eq_eval_frame +FA +EV -R.
+
+eq_eval_frame_rule : eq_eval_frame (FA : frameapply Fs M FsM) EV R
+            <- lemma44 Fs M FA R''
+            <- lemma48 nil FsM EV R'
+            <- value_soundness EV V
+            <- -->*_skew R' V R'' R.
+
+%worlds () (eq_eval_frame _ _ _).
+%freeze eq_eval_frame.
+%total {} (eq_eval_frame _ _ _).
+
+frameterm : framestack -> term -> type.
+
+frameterm_val : frameterm nil V <- value V. 
+frameterm_app : frameterm Fs (app M1 M2) <- frameterm (cons (fapp M2) Fs) M1.
+frameterm_tapp : frameterm Fs (tapp M T) <- frameterm (cons (ftapp T) Fs) M.
+frameterm_letu : frameterm Fs (letu M1 M2) <- frameterm (cons (fletu M2) Fs) M1.
+frameterm_letb : frameterm Fs (letb M1 M2) <- frameterm (cons (fletb M2) Fs) M1.
+frameterm_lett : frameterm Fs (lett M1 M2) <- frameterm (cons (flett M2) Fs) M1.
+frameterm_lam : frameterm (cons (fapp M2) Fs) (lam T M1) <- frameterm Fs (M1 M2).
+frameterm_tlam : frameterm (cons (ftapp T) Fs) (tlam M1) <- frameterm Fs (M1 T).
+frameterm_tens : frameterm (cons (flett M3) Fs) (tens M1 M2) <- frameterm Fs (M3 M1 M2).
+frameterm_thunk : frameterm (cons (fletb M2) Fs) (thunk T M1) <- frameterm Fs (M2 (letb (thunk T M1) M1)).
+frameterm_unit : frameterm (cons (fletu M3) Fs) unit <- frameterm Fs M3.
+%freeze frameterm.
+
+frameterm_eq_frames : eqf Fs Fs' -> eq M M' -> frameterm Fs M -> frameterm Fs' M' -> type.
+%mode frameterm_eq_frames +Q +Q' +Ft -Ft.
+frameterm_eq_frames_rule : frameterm_eq_frames eqf_ref eq_ref Ft Ft.
+%worlds () (frameterm_eq_frames _ _ _ _).
+%freeze frameterm_eq_frames.
+%total {} (frameterm_eq_frames _ _ _ _).
+
+eq_frameterms : frameterm Fs M -> frameterm Fs M -> type.
+%mode eq_frameterms +FT -FT'.
+eq_frameterms_ref : eq_frameterms F F.
+%worlds () (eq_frameterms _ _).
+%freeze eq_frameterms.
+%total {} (eq_frameterms _ _).
+
+inverse_ft_app : frameterm Fs (app M1 M2) -> frameterm (cons (fapp M2) Fs) M1 -> type.
+%mode inverse_ft_app +Ft -Ft'.
+inverse_ft_app_rule : inverse_ft_app (frameterm_app Ft) Ft.
+%worlds () (inverse_ft_app _ _).
+%reduces D < E (inverse_ft_app E D).
+%total {} (inverse_ft_app _ _).
+
+inverse_ft_tapp : frameterm Fs (tapp M1 M2) -> frameterm (cons (ftapp M2) Fs) M1 -> type.
+%mode inverse_ft_tapp +Ft -Ft'.
+inverse_ft_tapp_rule : inverse_ft_tapp (frameterm_tapp Ft) Ft.
+%worlds () (inverse_ft_tapp _ _).
+%reduces D < E (inverse_ft_tapp E D).
+%total {} (inverse_ft_tapp _ _).
+
+inverse_ft_letu : frameterm Fs (letu M1 M2) -> frameterm (cons (fletu M2) Fs) M1 -> type.
+%mode inverse_ft_letu +Ft -Ft'.
+inverse_ft_letu_rule : inverse_ft_letu (frameterm_letu Ft) Ft.
+%worlds () (inverse_ft_letu _ _).
+%reduces D < E (inverse_ft_letu E D).
+%total {} (inverse_ft_letu _ _).
+
+inverse_ft_lett : frameterm Fs (lett M1 M2) -> frameterm (cons (flett M2) Fs) M1 -> type.
+%mode inverse_ft_lett +Ft -Ft'.
+inverse_ft_lett_rule : inverse_ft_lett (frameterm_lett Ft) Ft.
+%worlds () (inverse_ft_lett _ _).
+%reduces D < E (inverse_ft_lett E D).
+%total {} (inverse_ft_lett _ _).
+
+inverse_ft_letb : frameterm Fs (letb M1 M2) -> frameterm (cons (fletb M2) Fs) M1 -> type.
+%mode inverse_ft_letb +Ft -Ft'.
+inverse_ft_letb_rule : inverse_ft_letb (frameterm_letb Ft) Ft.
+%worlds () (inverse_ft_letb _ _).
+%reduces D < E (inverse_ft_letb E D).
+%total {} (inverse_ft_letb _ _).
+
+frameterm_eq_f : frameterm Fs M -> -->r* Fs M nil V -> value V -> type.
+%mode frameterm_eq_f +FT -R -V.
+
+frameterm_eq_f_val : frameterm_eq_f (frameterm_val V) -->r*_ref V.
+frameterm_eq_f_app : frameterm_eq_f (frameterm_app FT) (-->r*_step R evfs_app) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_tapp : frameterm_eq_f (frameterm_tapp FT) (-->r*_step R evfs_tapp) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_letu : frameterm_eq_f (frameterm_letu FT) (-->r*_step R evfs_letu) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_letb : frameterm_eq_f (frameterm_letb FT) (-->r*_step R evfs_letb) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_lett : frameterm_eq_f (frameterm_lett FT) (-->r*_step R evfs_lett) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_lam : frameterm_eq_f (frameterm_lam FT) (-->r*_step R evfs_lam) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_tlam : frameterm_eq_f (frameterm_tlam FT) (-->r*_step R evfs_tlam) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_tens : frameterm_eq_f (frameterm_tens FT) (-->r*_step R evfs_tens) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_unit : frameterm_eq_f (frameterm_unit FT) (-->r*_step R evfs_unit) V
+        <- frameterm_eq_f FT R V.
+frameterm_eq_f_thunk : frameterm_eq_f (frameterm_thunk FT) (-->r*_step R evfs_thunk) V
+        <- frameterm_eq_f FT R V.
+
+%worlds () (frameterm_eq_f _ _ _).
+%freeze frameterm_eq_f.
+%total D (frameterm_eq_f D _ _).
+
+frameterm_eq1 : frameterm Fs M -> -->* Fs M nil V -> value V -> type.
+%mode frameterm_eq1 +FT -R -V.
+frameterm_eq1_rule : frameterm_eq1 FT R V
+         <- frameterm_eq_f FT R' V
+         <- -->r*_to_-->*_lem R' R.
+%worlds () (frameterm_eq1 _ _ _).
+%freeze frameterm_eq1.
+%total {} (frameterm_eq1 _ _ _).
+
+frameterm_eq2_r : -->r* Fs M nil V -> value V -> frameterm Fs M -> type.
+%mode frameterm_eq2_r +R +V -FT.
+
+frameterm_eq2_r_ref : frameterm_eq2_r -->r*_ref V (frameterm_val V).
+frameterm_eq2_r_app : frameterm_eq2_r (-->r*_step R evfs_app) V (frameterm_app F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_tapp : frameterm_eq2_r (-->r*_step R evfs_tapp) V (frameterm_tapp F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_letu : frameterm_eq2_r (-->r*_step R evfs_letu) V (frameterm_letu F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_letb : frameterm_eq2_r (-->r*_step R evfs_letb) V (frameterm_letb F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_lett : frameterm_eq2_r (-->r*_step R evfs_lett) V (frameterm_lett F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_lam : frameterm_eq2_r (-->r*_step R evfs_lam) V (frameterm_lam F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_tlam : frameterm_eq2_r (-->r*_step R evfs_tlam) V (frameterm_tlam F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_tens : frameterm_eq2_r (-->r*_step R evfs_tens) V (frameterm_tens F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_unit : frameterm_eq2_r (-->r*_step R evfs_unit) V (frameterm_unit F)
+              <- frameterm_eq2_r R V F.
+frameterm_eq2_r_thunk : frameterm_eq2_r (-->r*_step R evfs_thunk) V (frameterm_thunk F)
+              <- frameterm_eq2_r R V F.
+
+%worlds () (frameterm_eq2_r _ _ _).
+%freeze frameterm_eq2_r.
+%total D (frameterm_eq2_r D _ _).
+
+frameterm_eq2 : -->* Fs M nil V -> value V -> frameterm Fs M -> type.
+%mode frameterm_eq2 +R +V -FT.
+frameterm_eq2_rule : frameterm_eq2 R V F
+            <- -->*_to_-->r*_lem R R'
+            <- frameterm_eq2_r R' V F.
+%worlds () (frameterm_eq2 _ _ _).
+%freeze frameterm_eq2.
+%total {} (frameterm_eq2 _ _ _).
+
+eval_frameterm : M \n/ V -> frameterm nil M -> type.
+%mode eval_frameterm +EV -FT.
+eval_frameterm_rule : eval_frameterm EV FT
+           <- value_soundness EV Vv
+           <- eq_eval_frame frameapply_nil EV R
+           <- frameterm_eq2 R Vv FT.
+%worlds () (eval_frameterm _ _).
+%freeze eval_frameterm.
+%total {} (eval_frameterm _ _).
+
+frameterm_eval : frameterm nil M -> M \n/ V -> type.
+%mode frameterm_eval +FT -EV.
+frameterm_eval_rule : frameterm_eval FT EV
+      <- frameterm_eq1 FT R V
+      <- eq_frame_eval R V FA EV'
+      <- frameapply_nil_eq FA Q
+      <- eq_sym Q Q'
+      <- eq_eval Q' EV' EV.
+%worlds () (frameterm_eval _ _).
+%freeze frameterm_eval.
+%total {} (frameterm_eval _ _).
+
+lemma413a : -->* Fs M Fs' M' -> frameterm Fs M -> frameterm Fs' M' -> type.
+%mode lemma413a +R +FT -FT'.
+
+lemma413a_ref : lemma413a -->*_ref FT FT.
+lemma413a_thunk : lemma413a (-->*_step R evfs_thunk) FT FT'
+        <- lemma413a R FT (frameterm_thunk FT').
+lemma413a_app : lemma413a (-->*_step R evfs_app) FT FT'
+        <- lemma413a R FT (frameterm_app FT').
+lemma413a_tapp : lemma413a (-->*_step R evfs_tapp) FT FT'
+        <- lemma413a R FT (frameterm_tapp FT').
+lemma413a_letu : lemma413a (-->*_step R evfs_letu) FT FT'
+        <- lemma413a R FT (frameterm_letu FT').
+lemma413a_letb : lemma413a (-->*_step R evfs_letb) FT FT'
+        <- lemma413a R FT (frameterm_letb FT').
+lemma413a_lett : lemma413a (-->*_step R evfs_lett) FT FT'
+        <- lemma413a R FT (frameterm_lett FT').
+lemma413a_lam : lemma413a (-->*_step R evfs_lam) FT FT'
+        <- lemma413a R FT (frameterm_lam FT').
+lemma413a_tlam : lemma413a (-->*_step R evfs_tlam) FT FT'
+        <- lemma413a R FT (frameterm_tlam FT').
+lemma413a_tens : lemma413a (-->*_step R evfs_tens) FT FT'
+        <- lemma413a R FT (frameterm_tens FT').
+lemma413a_unit : lemma413a (-->*_step R evfs_unit) FT FT'
+        <- lemma413a R FT (frameterm_unit FT').
+
+%worlds () (lemma413a _ _ _).
+%freeze lemma413a.
+%total D (lemma413a D _ _).
+
+lemma413b : -->r* Fs M Fs' M' -> frameterm Fs' M' -> frameterm Fs M -> type.
+%mode lemma413b +R +FT -FT'.
+
+lemma413b_ref : lemma413b -->r*_ref FT FT.
+lemma413b_thunk : lemma413b (-->r*_step R evfs_thunk) FT (frameterm_thunk FT')
+        <- lemma413b R FT FT'.
+lemma413b_app : lemma413b (-->r*_step R evfs_app) FT (frameterm_app FT')
+        <- lemma413b R FT FT'.
+lemma413b_tapp : lemma413b (-->r*_step R evfs_tapp) FT (frameterm_tapp FT')
+        <- lemma413b R FT FT'.
+lemma413b_letu : lemma413b (-->r*_step R evfs_letu) FT (frameterm_letu FT')
+        <- lemma413b R FT FT'.
+lemma413b_letb : lemma413b (-->r*_step R evfs_letb) FT (frameterm_letb FT')
+        <- lemma413b R FT FT'.
+lemma413b_lett : lemma413b (-->r*_step R evfs_lett) FT (frameterm_lett FT')
+        <- lemma413b R FT FT'.
+lemma413b_lam : lemma413b (-->r*_step R evfs_lam) FT (frameterm_lam FT')
+        <- lemma413b R FT FT'.
+lemma413b_tlam : lemma413b (-->r*_step R evfs_tlam) FT (frameterm_tlam FT')
+        <- lemma413b R FT FT'.
+lemma413b_tens : lemma413b (-->r*_step R evfs_tens) FT (frameterm_tens FT')
+        <- lemma413b R FT FT'.
+lemma413b_unit : lemma413b (-->r*_step R evfs_unit) FT (frameterm_unit FT')
+        <- lemma413b R FT FT'.
+
+%worlds () (lemma413b _ _ _).
+%freeze lemma413b.
+%total D (lemma413b D _ _).
+
+lemma413c : -->* Fs M Fs' M' -> frameterm Fs' M' -> frameterm Fs M -> type.
+%mode lemma413c +R +FT -FT'.
+
+lemma413b_rule : lemma413c R FT FT'
+        <- -->*_to_-->r*_lem R R'
+        <- lemma413b R' FT FT'.
+
+%worlds () (lemma413c _ _ _).
+%freeze lemma413c.
+%total {} (lemma413c _ _ _).
+
+linear : (term -> term) -> type.
+%name linear L.
+% mode linear +E.
+
+linear_id : linear ([x] x).
+
+linear_app1 : linear ([x] app (E1 x) E2)
+         <- linear E1.
+
+linear_app2 : linear ([x] app E1 (E2 x))
+         <- linear E2.
+
+linear_lam : linear ([x] (lam T ([y] E x y)))
+         <- ({y} linear ([x] E x y)).
+
+linear_tlam : linear  ([x] (tlam ([y] F x y)))
+         <- ({t : tp} linear ([z] (F z t))).
+
+linear_tapp : linear ([x] tapp (E x) T)
+         <- linear [y] E y.
+
+% linear_thunk : No Rule as thunks have no free linear variables.
+
+linear_letb1 : linear ([x] letb (E1 x) E2)
+          <- linear E1.
+
+linear_letb2 : linear ([x] letb E1 ([y] E2 x y))
+          <- {y} linear ([x] E2 x y).
+
+% linear_unit : No Rule as units has no free linear variables.
+
+linear_letu1 : linear ([x] letu (E1 x) E2)
+          <- linear [x] E1 x.
+
+linear_letu2 : linear ([x] letu E1 (E2 x))
+          <- linear [x] E2 x.
+
+linear_tens1 : linear ([x] tens (E1 x) E2)
+          <- linear [x] E1 x.
+
+linear_tens2 : linear ([x] tens E1 (E2 x))
+          <- linear [x] E2 x.
+
+linear_lett1 : linear ([x] lett (E x) F)
+          <- linear [x] E x.
+
+linear_lett2 : linear ([x] lett E ([y] [z] F x y z))
+          <- ({y} {z} linear [x] F x y z).
+
+%block btlam : block {t:tp}.
+%worlds (blam | btlam) (linear _).
+%freeze linear.
+
+sub_linear : linear M1 -> linear M2 -> linear ([x] M1 (M2 x)) -> type.
+%mode sub_linear +L1 +L2 -L3.
+
+sub_linear_id : sub_linear linear_id L2 L2.
+sub_linear_app1 : sub_linear (linear_app1 L1) L2 (linear_app1 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_app2 : sub_linear (linear_app2 L1) L2 (linear_app2 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_lam : sub_linear (linear_lam L1) L2 (linear_lam [y] L3 y)
+       <- {y} sub_linear (L1 y) L2 (L3 y).
+sub_linear_tlam : sub_linear (linear_tlam L1) L2 (linear_tlam [t] L3 t)
+       <- ({t} sub_linear (L1 t) L2 (L3 t)).
+sub_linear_tapp : sub_linear (linear_tapp L1) L2 (linear_tapp L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_letb1 : sub_linear (linear_letb1 L1) L2 (linear_letb1 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_letb2 : sub_linear (linear_letb2 L1) L2 (linear_letb2 L3)
+       <- ({y} sub_linear (L1 y) L2 (L3 y)).
+sub_linear_letu1 : sub_linear (linear_letu1 L1) L2 (linear_letu1 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_letu2 : sub_linear (linear_letu2 L1) L2 (linear_letu2 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_lett1 : sub_linear (linear_lett1 L1) L2 (linear_lett1 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_lett2 : sub_linear (linear_lett2 L1) L2 (linear_lett2 L3)
+       <- ({y}{z} sub_linear (L1 y z) L2 (L3 y z)).
+sub_linear_tens1 : sub_linear (linear_tens1 L1) L2 (linear_tens1 L3)
+       <- sub_linear L1 L2 L3.
+sub_linear_tens2 : sub_linear (linear_tens2 L1) L2 (linear_tens2 L3)
+       <- sub_linear L1 L2 L3.
+
+%block bsub_linear_lam1 : block {y:term}.
+%block bsub_linear_lam2 : block {y:tp}.
+%worlds (bsub_linear_lam1 | bsub_linear_lam2) (sub_linear _ _ _).
+%freeze sub_linear.
+%total D (sub_linear D _ _).
+
+relavant : (term -> term) -> type.
+%name relavant R.
+%mode relavant +E.
+
+relavant_id : relavant ([x] x).
+relavant_app1 : relavant ([x] app (E1 x) (E2 x))
+        <- relavant E1.
+relavant_app2 : relavant ([x] app (E1 x) (E2 x))
+        <- relavant E2.
+relavant_lam : relavant ([x] (lam T ([y] F x y))) 
+        <- ({y} relavant ([x] F x y)).
+relavant_tlam : relavant ([x] (tlam ([y] F x y)))
+        <- ({t:tp} relavant ([z] (F z t))).
+relavant_tapp : relavant ([x] tapp (E x) T)
+        <- relavant E.
+relavant_letb1 : relavant ([x] letb (E1 x) ([y] E2 x y))
+        <- relavant E1.
+relavant_letb2 : relavant ([x] letb (E1 x) ([y] E2 x y))
+        <- ({y} relavant [x] E2 x y).
+% linear_unit : No Rule as units has no free variables.
+
+relavant_thunk : relavant ([x] thunk T ([y] E x y)) 
+        <- ({y} relavant ([x] E x y)).
+relavant_letu1 : relavant ([x] letu (E1 x) (E2 x))
+        <- relavant E1.
+relavant_letu2 : relavant ([x] letu (E1 x) (E2 x))
+        <- relavant ([x] E2 x).
+relavant_tens1 : relavant ([x] tens (E1 x) (E2 x))
+        <- relavant E1.
+relavant_tens2 : relavant ([x] tens (E1 x) (E2 x))
+        <- relavant E2.
+relavant_lett1 : relavant ([x] lett (E1 x) ([y][z] E2 x y z))
+        <- relavant E1.
+relavant_lett2 : relavant ([x] lett (E1 x) ([y][z] E2 x y z))
+        <- ({y}{z} relavant ([x] E2 x y z)).
+
+%worlds (blam | btlam) (relavant _).
+%freeze relavant.
+
+linear_relavant : linear L -> relavant L -> type.
+%mode linear_relavant +L' -R.
+linear_relavant_id : linear_relavant linear_id relavant_id.
+linear_relavant_app1 : linear_relavant (linear_app1 L) (relavant_app1 R)
+          <- linear_relavant L R.
+linear_relavant_app2 : linear_relavant (linear_app2 L) (relavant_app2 R)
+          <- linear_relavant L R.
+linear_relavant_lam : linear_relavant (linear_lam L) (relavant_lam R)
+          <- {y} linear_relavant (L y) (R y).
+linear_relavant_tlam : linear_relavant (linear_tlam L) (relavant_tlam R)
+          <- {y} linear_relavant (L y) (R y).
+linear_relavant_tapp : linear_relavant (linear_tapp L) (relavant_tapp R)
+          <- linear_relavant L R.
+linear_relavant_letu1 : linear_relavant (linear_letu1 L) (relavant_letu1 R)
+          <- linear_relavant L R.
+linear_relavant_letu2 : linear_relavant (linear_letu2 L) (relavant_letu2 R)
+          <- linear_relavant L R.
+linear_relavant_letb1 : linear_relavant (linear_letb1 L) (relavant_letb1 R)
+          <- linear_relavant L R.
+linear_relavant_letb2 : linear_relavant (linear_letb2 L) (relavant_letb2 R)
+          <- {y} linear_relavant (L y) (R y).
+linear_relavant_tens1 : linear_relavant (linear_tens1 L) (relavant_tens1 R)
+          <- linear_relavant L R.
+linear_relavant_tens2 : linear_relavant (linear_tens2 L) (relavant_tens2 R)
+          <- linear_relavant L R.
+linear_relavant_lett1 : linear_relavant (linear_lett1 L) (relavant_lett1 R)
+          <- linear_relavant L R.
+linear_relavant_lett2 : linear_relavant (linear_lett2 L) (relavant_lett2 R)
+          <- {y}{z} linear_relavant (L y z) (R y z).
+%worlds (blam | btlam) (linear_relavant _ _).
+%freeze linear_relavant.
+%total D (linear_relavant D _).
+
+eq_relavant : ({m} eq (R m) (R' m)) -> relavant R -> relavant R' -> type.
+%mode eq_relavant +EQ +R -R'.
+eq_relavant_rule : eq_relavant ([m] eq_ref) R R.
+%worlds (blam) (eq_relavant _ _ _).
+%freeze eq_relavant.
+%total {} (eq_relavant _ _ _).
+
+eq_linear : ({m} eq (R m) (R' m)) -> linear R -> linear R' -> type.
+%mode eq_linear +EQ +R -R'.
+eq_linear_rule : eq_linear ([m] eq_ref) R R.
+%worlds (blam) (eq_linear _ _ _).
+%freeze eq_linear.
+%total {} (eq_linear _ _ _).
+
+? : term -> tp -> type.
+% mode ? +M -T.
+%name ? D.
+%infix none 500 ?.
+
+of_lam : lam T ([x] M x) ? func T T'
+        <- ({x:term} x ? T -> (M x) ? T')
+        <- linear M.
+
+of_app : app M1 M2 ? T
+        <- M1 ? func T' T
+        <- M2 ? T'.
+
+of_tlam : tlam M ? all T
+        <- ({t:tp} (M t) ? T t).
+
+of_tapp : {t:tp} (tapp M t ? T t
+                    <- M ? all T).
+
+of_thunk : thunk T M ? bang T
+        <- ({x} x ? T -> (M x) ? T).
+
+of_letb : letb M N ? T'
+        <- M ? bang T
+        <- ({x} x ? T -> (N x) ? T').
+
+of_unit : unit ? i.
+
+of_letu : letu M N ? T
+        <- M ? i
+        <- N ? T.
+
+of_tens : tens M N ? tensor T T'
+        <- M ? T
+        <- N ? T'.
+
+of_lett : lett M N ? T''
+        <- M ? tensor T T'
+        <- ({x} x ? T -> {y} y ? T' -> (N x y) ? T'')
+        <- ({y} linear ([x] N x y))
+        <- ({x} linear ([y] N x y)).
+
+%block blam_t : some {T : tp} block {x : term} {u : x ? T}.
+%block btlam_t : block {t : tp}.
+%worlds (blam_t | btlam_t) (? _ _).
+%covers ? +M -T.
+%freeze ?.
+
+tpres : M ? T -> M \n/ V -> V ? T -> type.
+%mode tpres +D +E -E'.
+
+tpres_lam : tpres (of_lam L D) ev_lam (of_lam L D).
+tpres_tlam : tpres (of_tlam D) ev_tlam (of_tlam D).
+tpres_thunk : tpres (of_thunk D) ev_thunk (of_thunk D).
+tpres_unit : tpres of_unit ev_unit of_unit.
+tpres_tens : tpres (of_tens D' D) ev_tens (of_tens D' D).
+
+tpres_app_aux : lam T1 M ? func T3 T2 -> ({M'} M' ? T3 -> M M' ? T2) -> type.
+%mode tpres_app_aux +D -F.
+
+tpres_app_aux_rule : tpres_app_aux (of_lam _ F) F.
+%worlds () (tpres_app_aux _ _).
+%freeze tpres_app_aux.
+%total D (tpres_app_aux D _).
+
+tpres_app : tpres (of_app D2 D1) (ev_app E' E) D
+           <- tpres D1 E D'
+           <- tpres_app_aux D' F
+           <- tpres (F _ D2) E' D.
+tpres_tapp : {D'' : {t : tp} M t ? T t}
+             tpres (of_tapp _ D') (ev_tapp E' E) D
+           <- tpres D' E (of_tlam D'')
+           <- tpres (D'' _) E' D.
+
+tpres_letb_aux : thunk T3 M ? bang T1 -> ({M'} M' ? T1 -> M M' ? T1) -> type.
+%mode tpres_letb_aux +D -F.
+tpres_letb_aux_rule : tpres_letb_aux (of_thunk F) F.
+
+%worlds () (tpres_letb_aux _ _).
+%freeze tpres_letb_aux.
+%total D (tpres_letb_aux D _).
+
+tpres_letb : tpres (of_letb D' D) (ev_letb E' E) D''
+           <- tpres D E DT
+           <- tpres_letb_aux DT Dt
+           <- tpres (D' _ (of_letb Dt DT)) E' D''.
+
+tpres_letu : tpres (of_letu D' _) (ev_letu E' _) D''
+           <- tpres D' E' D''.
+
+tpres_lett : tpres (of_lett _ _ D' D) (ev_lett E' E) D''
+           <- tpres D E (of_tens Dn Dm)
+           <- tpres (D' _ Dm _ Dn) E' D''.
+
+%worlds () (tpres _ _ _).
+%freeze tpres.
+%total D (tpres _ D _).
+
+tpres_s : M ? T -> M \s/ V -> V ? T -> type.
+%mode tpres_s +D +E -E'.
+
+tpres_s_lam : tpres_s (of_lam L D) evs_lam (of_lam L D).
+tpres_s_tlam : tpres_s (of_tlam D) evs_tlam (of_tlam D).
+tpres_s_thunk : tpres_s (of_thunk D) evs_thunk (of_thunk D).
+tpres_s_unit : tpres_s of_unit evs_unit of_unit.
+tpres_s_tens : tpres_s (of_tens D' D) evs_tens (of_tens D' D).
+
+tpres_s_app_aux : lam T1 M ? func T3 T2 -> ({M'} M' ? T3 -> M M' ? T2) -> type.
+%mode tpres_s_app_aux +D -F.
+
+tpres_s_app_aux_rule : tpres_s_app_aux (of_lam _ F) F.
+%worlds () (tpres_s_app_aux _ _).
+%freeze tpres_s_app_aux.
+%total D (tpres_s_app_aux D _).
+
+tpres_s_app : tpres_s (of_app D2 D1) (evs_app E3 E2 E1) D
+           <- tpres_s D1 E1 D'
+           <- tpres_s_app_aux D' F
+           <- tpres_s D2 E2 D4
+           <- tpres_s (F _ D4) E3 D.
+
+tpres_s_tapp : {D'' : {t : tp} M t ? T t}
+             tpres_s (of_tapp _ D') (evs_tapp E' E) D
+           <- tpres_s D' E (of_tlam D'')
+           <- tpres_s (D'' _) E' D.
+
+tpres_s_letb_aux : thunk T3 M ? bang T1 -> ({M'} M' ? T1 -> M M' ? T1) -> type.
+%mode tpres_s_letb_aux +D -F.
+tpres_s_letb_aux_rule : tpres_s_letb_aux (of_thunk F) F.
+
+%worlds () (tpres_s_letb_aux _ _).
+%freeze tpres_s_letb_aux.
+%total D (tpres_s_letb_aux D _).
+
+tpres_s_letb : tpres_s (of_letb D' D) (evs_letb E' E) D''
+           <- tpres_s D E DT
+           <- tpres_s_letb_aux DT Dt
+           <- tpres_s (D' _ (of_letb Dt DT)) E' D''.
+
+tpres_s_letu : tpres_s (of_letu D' _) (evs_letu E' _) D''
+           <- tpres_s D' E' D''.
+
+tpres_s_lett : % {D' : {x : term} {y : term} x ? T -> y ? T' -> N x y ? T''}
+             tpres_s (of_lett _ _ D' D) (evs_lett E' E) D''
+           <- tpres_s D E (of_tens Dn Dm)
+           <- tpres_s (D' _ Dm _ Dn) E' D''.
+
+%worlds () (tpres_s _ _ _).
+%freeze tpres_s.
+%total D (tpres_s _ D _).
+
+%block bts_tlam : block {t:tp}.
+eq_typings : M ? T -> M ? T -> type.
+%mode eq_typings +D -D'.
+eq_typings_ref : eq_typings D D.
+%worlds (blam | bts_tlam) (eq_typings _ _).
+%freeze eq_typings.
+%total D (eq_typings D _).
+
+eq_type : eq M M' -> M ? T -> M' ? T -> type.
+%mode eq_type +Q +D -D.
+eq_typing_rule : eq_type eq_ref D D.
+%worlds () (eq_type _ _ _).
+%freeze eq_type.
+%total {} (eq_type _ _ _).
+
+eq_type1 : eqt T1 T2 -> M ? T1 -> M ? T2 -> type.
+%mode eq_type1 +Q +D -D'.
+eq_type1_rule : eq_type1 eqt_ref D D.
+%worlds () (eq_type1 _ _ _).
+%freeze eq_type1.
+%total {} (eq_type1 _ _ _).
+
+inverse_lam : lam T M ? func T1 T2 -> ({a} a ? T1 -> (M a) ? T2) -> linear M -> type.
+%mode inverse_lam +D -D' -L.
+inverse_lam_rule : inverse_lam (of_lam L D) D L.
+%worlds () (inverse_lam _ _ _).
+%total {} (inverse_lam _ _ _).
+
+inverse_tapp : tapp M T ? T' -> M ? all T1 -> type.
+%mode inverse_tapp +D -D'.
+inverse_tapp_rule : inverse_tapp (of_tapp T D) D.
+%worlds () (inverse_tapp _ _).
+%total {} (inverse_tapp _ _).
+
+eq_thunk_type : thunk T M ? bang T' -> eqt T T' -> type.
+%mode eq_thunk_type +D -Q.
+eq_thunk_type_rule : eq_thunk_type (of_thunk _) eqt_ref.
+%worlds () (eq_thunk_type _ _).
+%freeze eq_thunk_type.
+%total {} (eq_thunk_type _ _).
+
+eq_val_funs : value M -> M ? func T1 T2 -> eq M (lam T1 M') -> type.
+%mode eq_val_funs +V +D -Q.
+eq_val_funs_rule : eq_val_funs val_lam (of_lam _ _) eq_ref.
+%worlds () (eq_val_funs _ _ _).
+%freeze eq_val_funs.
+%total {} (eq_val_funs _ _ _).
+
+eq_val_all : value M -> M ? all T1 -> eq M (tlam M') -> type.
+%mode eq_val_all +V +D -Q.
+eq_val_all_rule : eq_val_all val_tlam (of_tlam _) eq_ref.
+%worlds () (eq_val_all _ _ _).
+%freeze eq_val_all.
+%total {} (eq_val_all _ _ _).
+
+eq_val_unit : value M -> M ? i -> eq M unit -> type.
+%mode eq_val_unit +V +D -Q.
+eq_val_unit_rule : eq_val_unit val_unit of_unit eq_ref.
+%worlds () (eq_val_unit _ _ _).
+%freeze eq_val_unit.
+%total {} (eq_val_unit _ _ _).
+
+eq_val_tensor : value M -> M ? tensor _ _ -> eq M (tens M1 M2) -> type.
+%mode eq_val_tensor +V +D -Q.
+eq_val_tensor_rule : eq_val_tensor val_tens (of_tens _ _) eq_ref.
+%worlds () (eq_val_tensor _ _ _).
+%freeze eq_val_tensor.
+%total {} (eq_val_tensor _ _ _).
+
+eq_val_bang : value M -> M ? bang _ -> eq M (thunk T M') -> type.
+%mode eq_val_bang +V +D -Q.
+eq_val_bang_rule : eq_val_bang val_thunk (of_thunk _) eq_ref.
+%worlds () (eq_val_bang _ _ _).
+%freeze eq_val_bang.
+%total {} (eq_val_bang _ _ _).
+
+fstp : framestack -> tp -> tp -> type.
+% mode fstp +FST +T -T'.
+%name fstp FsT.
+
+ftp_nil : fstp nil T T.
+ftp_cons : fstp (cons (F : frame F') Fs) T T'
+            <- ({a} a ? T -> (F' a) ? T'')
+            <- fstp Fs T'' T'.
+
+%worlds () (fstp _ _ _).
+%covers fstp +FST +T -T'.
+%freeze fstp.
+
+eqf_fstp : eqf Fs Fs' -> fstp Fs T T' -> fstp Fs' T T' -> type.
+%mode eqf_fstp +Q +Ft -Ft.
+eqf_fstp_rule : eqf_fstp eqf_ref F F.
+%worlds (blam) (eqf_fstp _ _ _).
+%freeze eqf_fstp.
+%total {} (eqf_fstp _ _ _).
+
+applysound : {Fs : framestack} (fstp Fs T T') -> M ? T -> (frameapply Fs M M') -> M' ? T' -> type.
+%mode applysound +Fs +F +D +A -D'.
+
+as_ftp_nil : applysound nil ftp_nil D frameapply_nil D.
+as_ftp_cons_letb :
+           applysound (cons (fletb N) Fs)
+         (ftp_cons FsT (Ft : {m:term} m ? T -> letb m N ? T'')) D1 (frameapply_cons Fap frameapp_app) D2
+             <- applysound Fs FsT (Ft M D1) Fap D2.
+
+as_ftp_cons_app :
+           applysound (cons (fapp N) Fs)
+         (ftp_cons FsT (Ft : {m:term} m ? T -> app m N ? T'')) D1 (frameapply_cons Fap frameapp_app) D2
+             <- applysound Fs FsT (Ft M D1) Fap D2.
+
+as_ftp_cons_fletu :
+           applysound (cons (fletu N) Fs)
+         (ftp_cons FsT (Ft : {m:term} m ? T -> letu m N ? T'')) D1 (frameapply_cons Fap frameapp_app) D2
+             <- applysound Fs FsT (Ft M D1) Fap D2.
+
+as_ftp_cons_flett :
+           applysound (cons (flett N) Fs)
+         (ftp_cons FsT (Ft : {m:term} m ? T -> lett m N ? T'')) D1 (frameapply_cons Fap frameapp_app) D2
+             <- applysound Fs FsT (Ft M D1) Fap D2.
+
+as_ftp_cons_ftapp :
+           applysound (cons (ftapp T3) Fs)
+         (ftp_cons FsT (Ft : {m:term} m ? T1 -> tapp m T3 ? T4)) D1 (frameapply_cons Fap frameapp_app) D2
+             <- applysound Fs FsT (Ft M D1) Fap D2.
+
+%worlds () (applysound _ _ _ _ _).
+%freeze applysound.
+%total D (applysound D _ _ _ _).
+eqt_tapp : (tapp M T) ? T' -> M ? all T1 -> eqt (T1 T) T' -> type.
+%mode eqt_tapp +D -D' -Q.
+eqt_tapp_rule : eqt_tapp (of_tapp T D) D eqt_ref.
+%worlds () (eqt_tapp _ _ _).
+%freeze eqt_tapp.
+%total {} (eqt_tapp _ _ _).
+
+
+typed_step : (fstp Fs T T') -> M ? T -> --> Fs M Fs' M' -> (fstp Fs' T'' T') -> M' ? T'' -> type.
+%mode typed_step +FsT +D +S -FsT' -D'.
+
+typed_step_letu : typed_step FsT (of_letu DN Di) evfs_letu (ftp_cons FsT [a][da] of_letu DN da) Di.
+typed_step_letb : typed_step FsT (of_letb DN DM) evfs_letb (ftp_cons FsT [a][da] of_letb DN da) DM.
+typed_step_lett : typed_step FsT (of_lett L1 L2 DN DM) evfs_lett (ftp_cons FsT [a][da] of_lett L1 L2 DN da) DM.
+typed_step_fapp : typed_step FsT (of_app DN DM) evfs_app (ftp_cons FsT [a][da] of_app DN da) DM.
+typed_step_ftapp : typed_step FsT (of_tapp T DM) evfs_tapp (ftp_cons FsT [a][da] of_tapp T da) DM.
+
+typed_step_unit : typed_step (ftp_cons FsT Ft) of_unit evfs_unit FsT D
+          <- eq_typings (Ft unit of_unit) (of_letu D _).
+
+typed_step_lam : typed_step (ftp_cons FsT Ft) D1 evfs_lam FsT (D2 _ D)
+          <- eq_typings (Ft _ D1) (of_app D (of_lam _ D2)).
+
+typed_step_thunk : typed_step (ftp_cons FsT Ft) (of_thunk D1) evfs_thunk FsT (DN _ (of_letb DT (of_thunk DT)))
+          <- eq_typings (Ft _ (of_thunk D1)) (of_letb DN (of_thunk DT)).
+
+typed_step_tlam : 
+           typed_step (ftp_cons FsT Ft) D1 (evfs_tlam : --> (cons (ftapp T1) Fs) _ _ _) FsT D5
+           <- eqt_tapp (Ft (tlam M1) D1) (of_tlam F) Q
+           <- eq_type1 Q (F T1) D5.
+
+typed_step_tens : typed_step (ftp_cons FsT Ft) (of_tens D2 D1) evfs_tens FsT (D' M1 D1ss M2 D2ss)
+          <- eq_typings (Ft (tens M1 M2) (of_tens D2 D1)) (of_lett L1 L2 D' (of_tens D2ss D1ss)).
+
+%worlds () (typed_step _ _ _ _ _) .
+%freeze typed_step.
+%total {} (typed_step _ _ _ _ _).
+
+frame_pres_lem : -->r* Fs M Fs' M' -> fstp Fs T Te -> M ? T -> fstp Fs' T' Te -> M' ? T' -> type.
+%mode frame_pres_lem +Ss +FsTp +D -FsTp' -D'.
+
+frame_pres_lem_ref : frame_pres_lem -->r*_ref FsTp D FsTp D.
+frame_pres_lem_step : frame_pres_lem (-->r*_step Ss S) FsTp D FsTp' D'
+                   <- typed_step FsTp D S FsTp'' D''
+                   <- frame_pres_lem Ss FsTp'' D'' FsTp' D'.
+
+%worlds () (frame_pres_lem _ _ _ _ _).
+%total Ss (frame_pres_lem Ss _ _ _ _).
+
+frame_pres : -->* Fs M Fs' M' -> fstp Fs T Te -> M ? T -> fstp Fs' T' Te -> M' ? T' -> type.
+%mode frame_pres +Ss +FsTp +D -FsTp' -D'.
+
+frame_pres_rule : frame_pres Ss FsTp D FsTp' D'
+              <- -->*_to_-->r*_lem Ss Ss'
+              <- frame_pres_lem Ss' FsTp D FsTp' D'.
+
+%worlds () (frame_pres _ _ _ _ _).
+%total Ss (frame_pres Ss _ _ _ _).
+
+progress_good : framestack -> term -> type.
+%mode progress_good +Fs +M.
+progress_good_v : progress_good nil V <- value V.
+progress_good_s : progress_good Fs M <- --> Fs M Fs' M'.
+%freeze progress_good.
+
+frame_progress : {F' : frame F} {Fs} (F V) ? T -> value V -> --> (cons F' Fs) V Fs M -> type.
+%mode frame_progress +Fr +Fs +D +V -S.
+
+frame_progress_app : frame_progress (fapp M2) Fs (of_app D2 D1) V S
+       <- eq_val_funs V D1 Q
+       <- eq_sym Q Q'
+       <- eq_step Q' evfs_lam S.
+
+frame_progress_tapp : frame_progress (ftapp T) Fs (of_tapp T D1) V S
+       <- eq_val_all V D1 Q
+       <- eq_sym Q Q'
+       <- eq_step Q' evfs_tlam S.
+
+frame_progress_lett : frame_progress (flett M2) Fs (of_lett _ _ _ D1) V S
+       <- eq_val_tensor V D1 Q
+       <- eq_sym Q Q'
+       <- eq_step Q' evfs_tens S.
+
+frame_progress_letb : frame_progress (fletb M2) Fs (of_letb _ D1) V S
+       <- eq_val_bang V D1 Q
+       <- eq_sym Q Q'
+       <- eq_step Q' evfs_thunk S.
+
+frame_progress_letu : frame_progress (fletu M2) Fs (of_letu _ D1) V S
+       <- eq_val_unit V D1 Q
+       <- eq_sym Q Q'
+       <- eq_step Q' evfs_unit S.
+
+%worlds () (frame_progress _ _ _ _ _).
+%total {} (frame_progress _ _ _ _ _).
+
+progress_val : fstp Fs T T' -> M ? T -> value M -> progress_good Fs M -> type.
+%mode progress_val +Ft +D +V -G.
+
+progress_nil_val : progress_val ftp_nil D V (progress_good_v V).
+
+progress_cons_rule : progress_val (ftp_cons FsTp Ftp : fstp (cons F Fs) _ _) D V (progress_good_s S)
+                   <- frame_progress F Fs (Ftp _ D) V S.
+
+%worlds () (progress_val _ _ _ _).
+%total {} (progress_val _ _ _ _).
+
+progress : fstp Fs T T' -> M ? T -> progress_good Fs M -> type.
+%mode progress +Ft +D -G.
+progress_lam : progress FsTp D G
+                  <- progress_val FsTp D val_lam G.
+progress_tlam : progress FsTp D G
+                  <- progress_val FsTp D val_tlam G.
+progress_thunk : progress FsTp D G
+                  <- progress_val FsTp D val_thunk G.
+progress_tens : progress FsTp D G
+                  <- progress_val FsTp D val_tens G.
+progress_unit : progress FsTp D G
+                  <- progress_val FsTp D val_unit G.
+progress_app : progress _ _ (progress_good_s evfs_app).
+progress_tapp : progress _ _ (progress_good_s evfs_tapp).
+progress_letu : progress _ _ (progress_good_s evfs_letu).
+progress_letb : progress _ _ (progress_good_s evfs_letb).
+progress_lett : progress _ _ (progress_good_s evfs_lett).
+
+%worlds () (progress _ _ _).
+%total {} (progress _ _ _).
+
+frameapply' : framestack -> term -> term -> type.
+%mode frameapply' +Fs +M -M'.
+frameapply'_nil : frameapply' nil M M.
+frameapply'_cons : frameapply' (cons F Fs') M M'
+           <- frameapply' Fs' M M''
+           <- frameapp F M'' M'.
+%worlds () (frameapply' _ _ _).
+%freeze frameapply'.
+%total D (frameapply' D _ _).
+
+frameapply'_exists : {Fs} {M} (frameapply' Fs M M') -> type.
+%mode frameapply'_exists +Fs +M -A.
+frameapply'_exists_nil : frameapply'_exists nil M frameapply'_nil.
+frameapply'_exists_cons_letu : frameapply'_exists (cons (fletu N) Fs) M
+                     (frameapply'_cons frameapp_app FsA)
+         <- frameapply'_exists Fs M FsA.
+frameapply'_exists_cons_letb : frameapply'_exists (cons (fletb N) Fs) M
+                     (frameapply'_cons frameapp_app FsA)
+         <- frameapply'_exists Fs M FsA.
+frameapply'_exists_cons_lett : frameapply'_exists (cons (flett N) Fs) M
+                     (frameapply'_cons frameapp_app FsA)
+         <- frameapply'_exists Fs M FsA.
+frameapply'_exists_cons_app : frameapply'_exists (cons (fapp N) Fs) M
+                     (frameapply'_cons frameapp_app FsA)
+         <- frameapply'_exists Fs M FsA.
+frameapply'_exists_cons_tapp : frameapply'_exists (cons (ftapp N) Fs) M
+                     (frameapply'_cons frameapp_app FsA)
+         <- frameapply'_exists Fs M FsA.
+%worlds (blam) (frameapply'_exists _ _ _).
+%freeze frameapply'_exists.
+%total D (frameapply'_exists D _ _).
+
+frameapply'_eq : eqf Fs Fs' -> frameapply' Fs M FsM -> frameapply' Fs' M FsM -> type.
+%mode frameapply'_eq +Q +FA -FA.
+frameapply'_eq_rule : frameapply'_eq eqf_ref FA FA.
+%worlds (blam) (frameapply'_eq _ _ _).
+%freeze frameapply'_eq.
+%total {} (frameapply'_eq _ _ _).
+
+frameapply'_nil_eq : frameapply' nil M M' -> eq M M' -> type.
+%mode frameapply'_nil_eq +F -Q.
+frameapply'_nil_eq_rule : frameapply'_nil_eq frameapply'_nil eq_ref.
+%worlds (blam) (frameapply'_nil_eq _ _).
+%freeze frameapply'_nil_eq.
+%total {} (frameapply'_nil_eq _ _).
+
+revFs : framestack -> framestack -> framestack -> type.
+%mode revFs +Fs +Fs'' -Fs'.
+revFs_nil : revFs nil Fs' Fs'.
+revFs_cons : revFs (cons F Fs) Fs'' Fs'
+               <- revFs Fs (cons F Fs'') Fs'.
+%worlds () (revFs _ _ _).
+%freeze revFs.
+%total D (revFs D _ _).
+
+revFs_exists : {Fs} {Fs'} revFs Fs Fs' Fs'' -> type.
+%mode revFs_exists +Fs +Fs' -R.
+revFs_exists_nil : revFs_exists nil _ revFs_nil.
+revFs_exists_cons : revFs_exists (cons F Fs) Fs' (revFs_cons Fs'')
+            <- revFs_exists Fs (cons F Fs') Fs''.
+%worlds (blam) (revFs_exists _ _ _).
+%freeze revFs_exists.
+%total D (revFs_exists D _ _).
+
+revDet : revFs Fs Fs' Fs3 -> revFs Fs Fs' Fs4 -> eqf Fs3 Fs4 -> type.
+%mode revDet +R +R' -Q.
+revDet_nil : revDet revFs_nil _ eqf_ref.
+revDet_cons : revDet (revFs_cons R) (revFs_cons R') Q
+         <- revDet R R' Q.
+%worlds (blam) (revDet _ _ _).
+%freeze revDet.
+%total D (revDet D _ _).
+
+revrev_id_lem : revFs Fs Fs' Fs'' -> revFs Fs'' nil Fs4 -> revFs Fs' Fs Fs6 -> eqf Fs6 Fs4 -> type.
+%mode revrev_id_lem +R +R' +R'' -Q.
+
+revrev_id_lem_nil : revrev_id_lem revFs_nil F F' Q
+          <- revDet F' F Q. 
+revrev_id_lem_cons : revrev_id_lem (revFs_cons R) R' R'' Q
+          <- revrev_id_lem R R' (revFs_cons R'') Q.
+
+%worlds (blam) (revrev_id_lem _ _ _ _).
+%freeze revrev_id_lem.
+%total D (revrev_id_lem D _ _ _).
+
+revrev_id : revFs Fs nil Fs' -> revFs Fs' nil Fs'' -> eqf Fs Fs'' -> type.
+%mode revrev_id +R +R' -Q.
+revrev_id_rule : revrev_id R R' Q 
+      <- revrev_id_lem R R' revFs_nil Q.
+%worlds (blam) (revrev_id _ _ _).
+%freeze revrev_id.
+%total {} (revrev_id _ _ _).
+
+rev_injective : revFs Fs nil Fs' -> revFs Fs'' nil Fs' -> eqf Fs Fs'' -> type.
+%mode rev_injective +R +R' -Q.
+rev_injective_rule : rev_injective (R : revFs Fs nil Fs') R' Q
+      <- revFs_exists Fs' nil Rev
+      <- revrev_id R Rev Q'
+      <- eqf_symm Q' Q'''
+      <- revrev_id R' Rev Q''
+      <- eqf_trans Q'' Q''' Q1
+      <- eqf_symm Q1 Q.
+%worlds (blam) (rev_injective _ _ _).
+%freeze rev_injective.
+%total D (rev_injective D _ _).
+
+rev_eq1 : eqf Fs Fs' -> revFs Fs F1 F2 -> revFs Fs' F1 F2 -> type.
+%mode rev_eq1 +Q +R -R.
+rev_eq1_rule : rev_eq1 eqf_ref R R.
+%worlds (blam) (rev_eq1 _ _ _).
+%freeze rev_eq1.
+%total {} (rev_eq1 _ _ _).
+
+rev_eq2 : eqf Fs Fs' -> revFs F1 F2 Fs -> revFs F1 F2 Fs' -> type.
+%mode rev_eq2 +Q +R -R.
+rev_eq2_rule : rev_eq2 eqf_ref R R.
+%worlds (blam) (rev_eq2 _ _ _).
+%freeze rev_eq2.
+%total {} (rev_eq2 _ _ _).
+
+frameapply_e : revFs Fs Fs' Fs'' -> frameapply' Fs' M M'' -> frameapply Fs M'' M' ->
+               frameapply' Fs'' M M' -> type.
+%mode frameapply_e +R +FA +FA'' -FA'.
+
+frameapply_e_nil : frameapply_e revFs_nil FA frameapply_nil FA.
+frameapply_e_cons : frameapply_e (revFs_cons R) FA' (frameapply_cons FA frameapp_app) FA''
+             <- frameapply_e R (frameapply'_cons frameapp_app FA') FA FA''.
+
+%worlds (blam) (frameapply_e _ _ _ _).
+%freeze frameapply_e.
+%total D (frameapply_e _ _ D _).
+
+frameapply_e2 : revFs Fs nil Fs' -> frameapply Fs M M' -> frameapply' Fs' M M' -> type.
+%mode frameapply_e2 +R +FA' -FA.
+frameapply_e2_rule : frameapply_e2 R FA' FA
+         <- frameapply_e R frameapply'_nil FA' FA.
+%worlds (blam) (frameapply_e2 _ _ _).
+%freeze frameapply_e2.
+%total {} (frameapply_e2 _ _ _).
+
+frameapply'_e : revFs Fs Fs' Fs''' -> revFs Fs''' nil Fs'' -> frameapply' Fs' M M'' ->
+                frameapply Fs M'' M' -> frameapply Fs'' M M' -> type.
+%mode frameapply'_e +R +R' +FA +FA'' -FA'.
+
+frameapply'_e_nil : frameapply'_e R R' frameapply'_nil FA FA'
+        <- revrev_id R R' Q
+        <- frameapply_eq Q FA FA'.
+frameapply'_e_cons : frameapply'_e R R' (frameapply'_cons frameapp_app FA') FA FA''
+             <- frameapply'_e (revFs_cons R) R' FA' (frameapply_cons FA frameapp_app) FA''.
+
+%worlds (blam) (frameapply'_e _ _ _ _ _).
+%freeze frameapply'_e.
+%total D (frameapply'_e _ _ D _ _).
+
+frameapply_e1 : revFs Fs nil Fs' -> frameapply' Fs M M' -> frameapply Fs' M M' -> type.
+%mode frameapply_e1 +R +FA' -FA.
+frameapply_e1_rule : frameapply_e1 R FA' FA
+         <- frameapply'_e revFs_nil R FA' (frameapply_nil) FA.
+%worlds (blam) (frameapply_e1 _ _ _).
+%freeze frameapply_e1.
+%total {} (frameapply_e1 _ _ _).
+
+lem45 : {M:term -> term} ({m:term} frameapply' (Fs m) (N m) R) ->
+                         ({m:term} frameapply' (Fs m) (M (N m)) R') -> type.
+%mode lem45 +M +FA -FA'.
+
+lem45_nil : lem45 _ ([m] frameapply'_nil) ([m] frameapply'_nil) .
+lem45_app : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (fapp (_)) _ _)
+                    (FA m)) ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem45 M FA FA'.
+lem45_tapp : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (ftapp (_)) _ _)
+                     (FA m)) ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem45 M FA FA'.
+lem45_letb : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (fletb (_)) _ _)
+                     (FA m)) ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem45 M FA FA'.
+lem45_lett : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (flett (_)) _ _)
+                     (FA m)) ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem45 M FA FA'.
+lem45_letu : lem45 M ([m] frameapply'_cons (frameapp_app : frameapp (fletu (_)) _ _)
+                     (FA m)) ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem45 M FA FA'.
+%worlds (blam) (lem45 _ _ _).
+%freeze lem45.
+%total D (lem45 _ D _).
+
+redex : term -> term -> type. %name redex R.
+% mode redex +M +M'.
+redex_app  : redex (app (lam T M1) M2) (M1 M2).
+redex_tapp : redex (tapp (tlam M) T) (M T).
+redex_lett : redex (lett (tens M1 M2) M3) (M3 M1 M2).
+redex_letu : redex (letu unit M) M.
+redex_letb : redex (letb (thunk T M1) M2) (M2 (letb (thunk T M1) M1)).
+%freeze redex.
+
+ctp : type.
+ctp_0 : ctp.
+ctp_1 : linear M -> ctp.
+ctp_2 : ({m:term} linear ([n:term] M n m)) -> ({m:term} linear ([n:term] M m n)) -> ctp.
+%freeze ctp.
+
+redex_tp : ({m:term} redex (M m) (M' m)) -> ctp -> type.
+redex_tp_app : {L:linear (M N)} redex_tp ([m:term] redex_app : redex (app (lam T (M m)) (M2 m)) _)
+                                (ctp_1 L).
+redex_tp_tapp : redex_tp ([m] redex_tapp : (redex (tapp (tlam (M m)) T) (M m T))) ctp_0.
+redex_tp_lett : {L1 : {m:term} linear ([n:term] M3 N n m)}
+                {L2 : {m:term} linear ([n:term] M3 N m n)}
+                  redex_tp ([m:term] redex_lett : redex (lett (tens (M1 m) (M2 m)) (M3 m)) _)
+                           (ctp_2 L1 L2).
+redex_tp_letu : redex_tp ([m] redex_letu) ctp_0.
+redex_tp_letb : redex_tp ([m] redex_letb : redex (letb (thunk T (M1 m)) (M2 m)) (M2 m (letb (thunk T (M1 m)) (M1 m)))) ctp_0.
+%freeze redex_tp.
+
+lem33 : ({m:term} redex (M m) (M' m)) -> ({m:term} frameapply' (Fs m) (M m) R) ->
+                                         ({m:term} frameapply' (Fs m) (M' m) R') -> type.
+%mode lem33 +C +FA -FA.
+lem33_nil : lem33 C ([m] frameapply'_nil) ([m] frameapply'_nil) .
+lem33_app : lem33 C ([m] frameapply'_cons (frameapp_app : frameapp (fapp (_)) _ _) (FA m))
+                                          ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem33 C FA FA'.
+lem33_tapp : lem33 C ([m] frameapply'_cons (frameapp_app : frameapp (ftapp (_)) _ _) (FA m))
+                                           ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem33 C FA FA'.
+lem33_letb : lem33 C ([m] frameapply'_cons (frameapp_app : frameapp (fletb (_)) _ _) (FA m))
+                                           ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem33 C FA FA'.
+lem33_lett : lem33 C ([m] frameapply'_cons (frameapp_app : frameapp (flett (_)) _ _) (FA m))
+                                           ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem33 C FA FA'.
+lem33_letu : lem33 C ([m] frameapply'_cons (frameapp_app : frameapp (fletu (_)) _ _) (FA m))
+                                           ([m] frameapply'_cons (frameapp_app) (FA' m))
+             <- lem33 C FA FA'.
+%worlds (blam) (lem33 _ _ _).
+%total D (lem33 _ D _).
+
+lem31 : ({m:term} value (M m)) -> ({a:term} frameapply' (Fs a) (N a) (M a)) ->
+                                  ({a} eq (N a) (M a)) -> type.
+%mode lem31 +V +FA -Q.
+lem31_rule : lem31 _ ([m] frameapply'_nil) ([m] eq_ref).
+%worlds (blam) (lem31 _ _ _).
+%total {} (lem31 _ _ _).
+
+lem32 : {Fs}{M} ({m} value (B m)) -> ({m:term} redex (N1 m) (N2 m)) -> ({m:term} eq (N1 m) (B m)) -> 
+            ({m:term} frameapply' (Fs m) (N2 m) (M m)) -> type.
+%mode lem32 +Fs +M +V +C +Q -FA.
+%worlds (blam) (lem32 _ _ _ _ _ _).
+%total {} (lem32 _ _ _ _ _ _).
+
+lem34 :  ({a:term} frameapply' (Fs a) (N a) a) -> ({a} eqf (Fs a) nil) -> type.
+%mode lem34 +FA -Q.
+lem34_rule : lem34 ([m] frameapply'_nil) ([m] eqf_ref).
+%worlds (blam) (lem34 _ _).
+%total {} (lem34 _ _).
+
+lem35 : {Fs}{M} ({m:term} redex (N1 m) (N2 m)) -> ({m:term} eq (N1 m) m) -> 
+            ({m:term} frameapply' (Fs m) (N2 m) (M m)) -> type.
+%mode lem35 +Fs +M +C +Q -FA.
+%worlds (blam) (lem35 _ _ _ _ _).
+%total {} (lem35 _ _ _ _ _).
+
+frame_linear_lem2 : 
+                    redex_tp (C : {m:term} redex (M m) (M' m)) Ct ->
+                   ({m:term} frameapply' (Fs m) (M m) (R m)) -> linear R ->
+                   ({m} frameapply' (Fs m) (M' m) (R' m)) -> linear R' -> type.
+%mode frame_linear_lem2 +C +FA +L -FA' -L'.
+
+frame_linear_lem2_nil1 : frame_linear_lem2 _ ([m] frameapply'_nil : frameapply' _ (app _ M2) _) 
+                                              (linear_app1 (linear_lam L)) ([m] frameapply'_nil) (L M2).
+
+frame_linear_lem2_nil2 : frame_linear_lem2 (redex_tp_app L2)
+                                                   ([m] frameapply'_nil : frameapply' _ (app _ (M' m)) _)
+                                                   (linear_app2 L) ([m] frameapply'_nil) L'
+                      <- sub_linear L2 L L'.
+
+frame_linear_tens_lem2_nil1 : frame_linear_lem2 (redex_tp_lett L1 L2)
+                                           ([m] frameapply'_nil : frameapply' _ (lett (tens _ M2) M3) _)
+                                           (linear_lett1 (linear_tens1 L)) ([m] frameapply'_nil) L'
+                                            <- sub_linear (L1 M2) L L'.
+
+frame_linear_tens_lem2_nil2 : frame_linear_lem2 (redex_tp_lett L1 L2)
+                                           ([m] frameapply'_nil : frameapply' _ (lett (tens M1 _) M3) _)
+                                           (linear_lett1 (linear_tens2 L)) ([m] frameapply'_nil) L'
+                                            <- sub_linear (L2 M1) L L'.
+
+frame_linear_tens_lem2_nil3 : frame_linear_lem2 C
+                                 ([m] frameapply'_nil : frameapply' _ (lett (tens M1 M2) (M3 m)) _)
+                                 (linear_lett2 L) ([m] frameapply'_nil) (L M1 M2).
+
+frame_linear_unit_lem_nil2 : frame_linear_lem2 C
+                                 ([m] frameapply'_nil : frameapply' _ (letu unit (M3 m)) _)
+                                 (linear_letu2 L) ([m] frameapply'_nil) L.
+
+frame_linear_thunk_lem_nil2 : frame_linear_lem2 C
+                                 ([m] frameapply'_nil : frameapply' _ (letb (thunk T M1) (M2 m)) _)
+                                 (linear_letb2 L) ([m] frameapply'_nil) (L (letb (thunk T M1) M1)).
+
+frame_linear_tlam_lem_nil1 : frame_linear_lem2 C
+                                 ([m] frameapply'_nil : frameapply' _ (tapp _ T) _)
+                                 (linear_tapp (linear_tlam L)) ([m] frameapply'_nil) (L T).
+
+frame_linear_cons_app1 : frame_linear_lem2 C 
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fapp M2) (M1 m) _) (FA m))
+                             (linear_app1 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_app1 L')
+                      <- frame_linear_lem2 C FA L FA' L'.
+
+frame_linear_cons_tapp1 : frame_linear_lem2 C
+                             ([m] frameapply'_cons (frameapp_app : frameapp (ftapp T) (M1 m) _) (FA m))
+                             (linear_tapp L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_tapp L')
+                      <- frame_linear_lem2 C FA L FA' L'.
+
+frame_linear_cons_letu1 : frame_linear_lem2 C
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fletu T) (M1 m) _) (FA m))
+                             (linear_letu1 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_letu1 L')
+                      <- frame_linear_lem2 C FA L FA' L'.
+
+frame_linear_cons_letb1 : frame_linear_lem2 C
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fletb T) (M1 m) _) (FA m))
+                             (linear_letb1 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_letb1 L')
+                      <- frame_linear_lem2 C FA L FA' L'.
+
+frame_linear_cons_lett1 : frame_linear_lem2 C
+                             ([m] frameapply'_cons (frameapp_app : frameapp (flett T) (M1 m) _) (FA m))
+                             (linear_lett1 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_lett1 L')
+                      <- frame_linear_lem2 C FA L FA' L'.
+
+frame_linear_cons_letu2 : frame_linear_lem2 (C : redex_tp C' _)
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fletu (M2 m)) M1 _) (FA m))
+                             (linear_letu2 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_letu2 L)
+                      <- lem33 C' FA FA'.
+
+frame_linear_cons_letb2 : frame_linear_lem2 (C : redex_tp C' _)
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fletb (M2 m)) M1 _) (FA m))
+                             (linear_letb2 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_letb2 L)
+                      <- lem33 C' FA FA'.
+
+frame_linear_cons_lett2 : frame_linear_lem2 (C : redex_tp C' _)
+                             ([m] frameapply'_cons (frameapp_app : frameapp (flett (M2 m)) M1 _) (FA m))
+                             (linear_lett2 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_lett2 L)
+                      <- lem33 C' FA FA'.
+
+frame_linear_cons_app2 : frame_linear_lem2 (C : redex_tp C' _)
+                             ([m] frameapply'_cons (frameapp_app : frameapp (fapp (M2 m)) M1 _) (FA m))
+                             (linear_app2 L) ([m] frameapply'_cons frameapp_app (FA' m)) (linear_app2 L)
+                      <- lem33 C' FA FA'.
+
+frame_linear_cons_tens1 : frame_linear_lem2 (C : redex_tp C' _)
+                              (FA:{m} frameapply' (Fs m) (M1 m) (tens (M3 m) M4))
+                              (linear_tens1 L) FA' (linear_tens1 L)
+                      <- lem31 ([m] val_tens) FA Q
+                      <- lem32 Fs ([m] tens (M3 m) M4) ([m] val_tens) C' Q FA'.
+
+frame_linear_cons_tens2 : frame_linear_lem2 (C : redex_tp C' _)
+                              (FA:{m} frameapply' (Fs m) (M1 m) (tens M3 (M4 m)))
+                              (linear_tens2 L) FA' (linear_tens2 L)
+                      <- lem31 ([m] val_tens) FA Q
+                      <- lem32 Fs ([m] tens M3 (M4 m)) ([m] val_tens) C' Q FA'.
+
+frame_linear_cons_tlam : frame_linear_lem2 (C : redex_tp C' _)
+                              (FA:{m} frameapply' (Fs m) (M1 m) (tlam (M4 m)))
+                              (linear_tlam L) FA' (linear_tlam L)
+                      <- lem31 ([m] val_tlam) FA Q
+                      <- lem32 Fs ([m] tlam (M4 m)) ([m] val_tlam) C' Q FA'.
+
+frame_linear_cons_lam_lem2 : frame_linear_lem2 (C : redex_tp C' _)
+                              (FA:{m:term} frameapply' (Fs m) (M1 m) (lam T1 (M4 m)))
+                              (linear_lam L) FA' (linear_lam L)
+                      <- lem31 ([m] val_lam) FA Q
+                      <- lem32 Fs ([m] lam T1 (M4 m)) ([m] val_lam) C' Q FA'.
+
+frame_linear_lam_lem2_id : frame_linear_lem2 (C : redex_tp C' _)
+                              (FA:{m} frameapply' (Fs m) (M1 m) m) linear_id FA' linear_id
+                      <- lem34 FA Q
+                      <- ({m} frameapply'_eq (Q m) (FA m) (FA'' m))
+                      <- ({m} frameapply'_nil_eq (FA'' m) (Q' m))
+                      <- lem35 Fs ([m] m) C' Q' FA'.
+
+%worlds (blam) (frame_linear_lem2 _ _ _ _ _).
+%total FA (frame_linear_lem2 _ FA _ _ _).
+
+frame_linear_lem1 :
+               redex_tp (C : {m:term} redex (M m) (M' m)) Ct ->
+               ({m:term} frameapply (Fs m) (M m) (R m)) -> linear R ->
+               ({m} frameapply (Fs m) (M' m) (R' m)) -> linear R' -> type.
+               
+%mode frame_linear_lem1 +C +FA +L -FA' -L'.
+
+frame_linear_lem1_rule : frame_linear_lem1 C (FA : {m} frameapply (Fs m) _ _) LR FA' LR'
+               <- ({m} revFs_exists (Fs m) nil (Rev m : revFs (Fs m) nil (Fs' m)))
+               <- ({m} frameapply_e2 (Rev m) (FA m) (FA'' m))
+               <- frame_linear_lem2 C FA'' LR FA3 LR'
+               <- ({m} revFs_exists (Fs' m) nil (Rev' m))
+               <- ({m} revrev_id (Rev m) (Rev' m) (Q m))
+               <- ({m} frameapply_e1 (Rev' m) (FA3 m) (FA4 m))
+               <- ({m} eqf_symm (Q m) (Q' m))
+               <- ({m} frameapply_eq (Q' m) (FA4 m) (FA' m)).
+
+%worlds (blam) (frame_linear_lem1 _ _ _ _ _).
+%total {} (frame_linear_lem1 _ _ _ _ _).
+
+frame_linear : ({m} redex (M m) (M' m)) -> (M A) ? T ->
+                ({m:term} frameapply (Fs m) (M m) (R m)) -> linear R -> 
+                ({m} frameapply (Fs m) (M' m) (R' m)) -> linear R' -> type.
+%mode frame_linear +R +D +FA +L -FA' -L'.
+
+frame_linear_app : frame_linear ([m] redex_app) (of_app D2 (of_lam LM _)) FA LR FA' LR'
+                <- frame_linear_lem1 (redex_tp_app LM
+                                  : redex_tp ([m:term] (redex_app : redex (app (lam T (M1 m)) _) _)) _)
+                      FA LR FA' LR'.
+
+frame_linear_lett : frame_linear ([m] redex_lett) (of_lett L1 L2 _ _) FA LR FA' LR'
+                <- frame_linear_lem1 (redex_tp_lett L2 L1
+                      : redex_tp ([m:term] (redex_lett : redex (lett (tens (M1 m) (M2 m)) (M3 m)) _)) _)
+                      FA LR FA' LR'.
+
+frame_linear_letu : frame_linear ([m] redex_letu) _ FA LR FA' LR'
+                <- frame_linear_lem1 redex_tp_letu FA LR FA' LR'.
+
+frame_linear_letb : frame_linear ([m] redex_letb) _ FA LR FA' LR'
+                <- frame_linear_lem1 redex_tp_letb FA LR FA' LR'.
+
+frame_linear_tapp : frame_linear ([m] redex_tapp) _ FA LR FA' LR'
+                <- frame_linear_lem1 redex_tp_tapp FA LR FA' LR'.
+
+%worlds () (frame_linear _ _ _ _ _ _).
+%total {} (frame_linear _ _ _ _ _ _).
+
+add_redex_steps : redex M M' -> frameterm Fs M' -> frameterm Fs M -> type.
+%mode add_redex_steps +R +Ft -Ft'.
+add_redex_steps_app : add_redex_steps redex_app Ft (frameterm_app (frameterm_lam Ft)).
+add_redex_steps_tapp : add_redex_steps redex_tapp Ft (frameterm_tapp (frameterm_tlam Ft)).
+add_redex_steps_lett : add_redex_steps redex_lett Ft (frameterm_lett (frameterm_tens Ft)).
+add_redex_steps_letu : add_redex_steps redex_letu Ft (frameterm_letu (frameterm_unit Ft)).
+add_redex_steps_letb : add_redex_steps redex_letb Ft (frameterm_letb (frameterm_thunk Ft)).
+%worlds () (add_redex_steps _ _ _).
+%total {} (add_redex_steps _ _ _).
+
+lem42 : {Fs} {N} redex M M' -> frameterm (Fs M') (N M') -> frameterm (Fs M) (N M) -> type.
+%mode lem42 +Fs +N +R +Ft -Ft'.
+
+lem42_val : lem42 ([a] nil) ([a] a) R (frameterm_val V) Ft
+                <- add_redex_steps R (frameterm_val V) Ft.
+
+lem42_base1 : lem42 ([a:term] nil) ([a] (lam T _))   _ (frameterm_val _) (frameterm_val val_lam).
+lem42_base2 : lem42 ([a:term] nil) ([a] (tlam _))    _ (frameterm_val _) (frameterm_val val_tlam).
+lem42_base3 : lem42 ([a:term] nil) ([a] (tens _ _))  _ (frameterm_val _) (frameterm_val val_tens).
+lem42_base4 : lem42 ([a:term] nil) ([a] (thunk T _)) _ (frameterm_val _) (frameterm_val val_thunk).
+lem42_base5 : lem42 ([a:term] nil) ([a] unit)        _ (frameterm_val _) (frameterm_val val_unit).
+
+lem42_app : lem42 Fs ([a] a) R (frameterm_app Ft) Ft'
+                 <- lem42 ([a] cons (fapp M2) (Fs a)) ([a] M1) R Ft Ft''
+                 <- add_redex_steps R (frameterm_app Ft'') Ft'.
+
+lem42_tapp : lem42 Fs ([a] a) R (frameterm_tapp Ft) Ft'
+                 <- lem42 ([a] cons (ftapp T) (Fs a)) ([a] M1) R Ft Ft''
+                 <- add_redex_steps R (frameterm_tapp Ft'') Ft'.
+
+lem42_lett : lem42 Fs ([a] a) R (frameterm_lett Ft) Ft'
+                 <- lem42 ([a] cons (flett T) (Fs a)) ([a] M1) R Ft Ft''
+                 <- add_redex_steps R (frameterm_lett Ft'') Ft'.
+
+lem42_letu : lem42 Fs ([a] a) R (frameterm_letu Ft) Ft'
+                 <- lem42 ([a] cons (fletu T) (Fs a)) ([a] M1) R Ft Ft''
+                 <- add_redex_steps R (frameterm_letu Ft'') Ft'.
+
+lem42_letb : lem42 Fs ([a] a) R (frameterm_letb Ft) Ft'
+                 <- lem42 ([a] cons (fletb T) (Fs a)) ([a] M1) R Ft Ft''
+                 <- add_redex_steps R (frameterm_letb Ft'') Ft'.
+
+lem42_unit : lem42 ([a] cons (fletu (M2 a)) (Fs a)) ([a] a) R (frameterm_unit Ft) Ft'
+                 <- lem42 Fs ([a] M2 a) R Ft Ft''
+                 <- add_redex_steps R (frameterm_unit Ft'') Ft'.
+
+lem42_tlam : lem42 ([a] cons (ftapp T) (Fs a)) ([a] a) R
+                   (frameterm_tlam Ft : frameterm _ (tlam M)) Ft'
+                 <- lem42 Fs ([a] M T) R Ft Ft''
+                 <- add_redex_steps R (frameterm_tlam Ft'') Ft'.
+
+lem42_lam : lem42 ([a] cons (fapp (M2 a)) (Fs a)) ([a] a) R
+                  (frameterm_lam Ft : frameterm _ (lam T M1')) Ft'
+                 <- lem42 Fs ([a] M1' (M2 a)) R Ft Ft''
+                 <- add_redex_steps R (frameterm_lam Ft'') Ft'.
+
+lem42_tens : lem42 ([a] cons (flett (M3 a)) (Fs a)) ([a] a) R
+                   (frameterm_tens Ft : frameterm _ (tens M1 M2)) Ft'
+                 <- lem42 Fs ([a] M3 a M1 M2) R Ft Ft''
+                 <- add_redex_steps R (frameterm_tens Ft'') Ft'.
+
+lem42_thunk : lem42 ([a] cons (fletb (M2 a)) (Fs a)) ([a] a) R
+                    (frameterm_thunk Ft : frameterm _ (thunk T M1)) Ft'
+                 <- lem42 Fs ([a] M2 a (letb (thunk T M1) M1)) R Ft Ft''
+                 <- add_redex_steps R (frameterm_thunk Ft'') Ft'.
+
+lem42_lam2 : lem42 ([a] cons (fapp (M2 a)) (Fs a)) ([a] lam T (M1' a)) R
+                   (frameterm_lam Ft) (frameterm_lam Ft')
+               <- lem42 Fs ([a] M1' a (M2 a)) R Ft Ft'.
+
+lem42_tens2 : lem42 ([a] cons (flett (M3 a)) (Fs a)) ([a] tens (M1 a) (M2 a)) R
+                    (frameterm_tens Ft) (frameterm_tens Ft')
+               <- lem42 Fs ([a] M3 a (M1 a) (M2 a)) R Ft Ft'.
+
+lem42_tlam2 : lem42 ([a] cons (ftapp T) (Fs a)) ([a] tlam (M1' a)) R
+                    (frameterm_tlam Ft) (frameterm_tlam Ft')
+               <- lem42 Fs ([a] M1' a T) R Ft Ft'.
+
+lem42_unit2 : lem42 ([a] cons (fletu (M2 a)) (Fs a)) ([a] unit) R
+                    (frameterm_unit Ft) (frameterm_unit Ft')
+               <- lem42 Fs ([a] (M2 a)) R Ft Ft'.
+
+lem42_thunk2 : lem42 ([a] cons (fletb (M2 a)) (Fs a)) ([a] thunk T (M1 a)) R
+                     (frameterm_thunk Ft) (frameterm_thunk Ft')
+               <- lem42 Fs ([a] (M2 a (letb (thunk T (M1 a)) (M1 a)))) R Ft Ft'.
+
+lem42_app2 : lem42 Fs ([a] app (M1 a) (M2 a)) R Ft (frameterm_app Ft')
+               <- inverse_ft_app Ft Ft2
+               <- lem42 ([a] cons (fapp (M2 a)) (Fs a)) M1 R Ft2 Ft'.
+
+lem42_tapp2 : lem42 Fs ([a] tapp (M1 a) T) R Ft (frameterm_tapp Ft')
+               <- inverse_ft_tapp Ft Ft2
+               <- lem42 ([a] cons (ftapp T) (Fs a)) M1 R Ft2 Ft'.
+
+lem42_letu2 : lem42 Fs ([a] letu (M1 a) (M2 a)) R Ft (frameterm_letu Ft')
+               <- inverse_ft_letu Ft Ft2
+               <- lem42 ([a] cons (fletu (M2 a)) (Fs a)) M1 R Ft2 Ft'.
+
+lem42_letb2 : lem42 Fs ([a] letb (M1 a) (M2 a)) R Ft (frameterm_letb Ft')
+               <- inverse_ft_letb Ft Ft2
+               <- lem42 ([a] cons (fletb (M2 a)) (Fs a)) M1 R Ft2 Ft'.
+
+lem42_lett2 : lem42 Fs ([a] lett (M1 a) (M2 a)) R Ft (frameterm_lett Ft')
+               <- inverse_ft_lett Ft Ft2
+               <- lem42 ([a] cons (flett (M2 a)) (Fs a)) M1 R Ft2 Ft'.
+
+%worlds () (lem42 _ _ _ _ _).
+%total D (lem42 _ _ _ D _).
+
+lem20 : {M:term}{M':term} ({a:term} value (B a)) -> ({a} frameapply' (Fs a) (N a) (B a)) ->
+                          eqf (Fs M) (Fs M') -> type.
+%mode lem20 +M +M' +V +FA -Q.
+lem20_rule : lem20 M M' _ ([a] frameapply'_nil) eqf_ref.
+%worlds (blam) (lem20 _ _ _ _ _).
+%freeze lem20.
+%total {} (lem20 _ _ _ _ _).
+
+lem26 : {F1}{F2} ({m} frameapp (F m) m M1) -> eqf F1 F2 -> type.
+%mode lem26 +F +F' +FA -Q.
+%worlds (blam) (lem26 _ _ _ _).
+%freeze lem26.
+%total {} (lem26 _ _ _ _).
+
+lem27 : relavant ([m] N) -> {Fs}{Fs'} eqf Fs Fs' -> type.
+%mode lem27 +R +Fs +Fs' -Q.
+lem27_app1 : lem27 (relavant_app1 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_app2 : lem27 (relavant_app2 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_lam : lem27 (relavant_lam R) M M' Q
+       <- lem27 (R unit) M M' Q.
+lem27_tlam : lem27 (relavant_tlam R) M M' Q
+       <- lem27 (R i) M M' Q.
+lem27_tapp : lem27 (relavant_tapp R) M M' Q
+       <- lem27 R M M' Q.
+lem27_letb1 : lem27 (relavant_letb1 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_leb2 : lem27 (relavant_letb2 R) M M' Q
+       <- lem27 (R unit) M M' Q.
+lem27_thunk : lem27 (relavant_thunk R) M M' Q
+       <- lem27 (R unit) M M' Q.
+lem27_letu1 : lem27 (relavant_letu1 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_letu2 : lem27 (relavant_letu2 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_tens1 : lem27 (relavant_tens1 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_tens2 : lem27 (relavant_tens2 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_lett1 : lem27 (relavant_lett1 R) M M' Q
+       <- lem27 R M M' Q.
+lem27_lett2 : lem27 (relavant_lett2 R) M M' Q
+       <- lem27 (R unit unit) M M' Q.
+%worlds (blam) (lem27 _ _ _ _).
+%freeze lem27.
+%total D (lem27 D _ _ _).
+
+lem28 : {Fs'}{Fs''} ({m:term} frameapply (Fs m) (N m) M1) -> relavant N -> eqf Fs' Fs'' -> type.
+%mode lem28 +Fs' +Fs'' +FA +R -Q.
+lem28_id : lem28 Fs' Fs'' ([m] frameapply_cons _ (F m)) _ Q
+         <- lem26 _ _ F Q.
+lem28_app1 : lem28 Fs' Fs'' ([m] frameapply_cons (FA m)
+                   (frameapp_app : frameapp (fapp (N m)) (M3 m) (app (M3 m) (N m)))) R Q
+         <- lem28 Fs' Fs'' FA (relavant_app1 R) Q.
+lem28_tapp : lem28 Fs' Fs'' ([m] frameapply_cons (FA m)
+                   (frameapp_app : frameapp (ftapp T) (M3 m) (tapp (M3 m) T))) R Q
+         <- lem28 Fs' Fs'' FA (relavant_tapp R) Q.
+lem28_letb : lem28 Fs' Fs'' ([m] frameapply_cons (FA m)
+                   (frameapp_app : frameapp (fletb (N m)) (M3 m) (letb (M3 m) (N m)))) R Q
+         <- lem28 Fs' Fs'' FA (relavant_letb1 R) Q.
+lem28_lett : lem28 Fs' Fs'' ([m] frameapply_cons (FA m)
+                   (frameapp_app : frameapp (flett (N m)) (M3 m) (lett (M3 m) (N m)))) R Q
+         <- lem28 Fs' Fs'' FA (relavant_lett1 R) Q.
+lem28_letu : lem28 Fs' Fs'' ([m] frameapply_cons (FA m)
+                   (frameapp_app : frameapp (fletu (N m)) (M3 m) (letu (M3 m) (N m)))) R Q
+         <- lem28 Fs' Fs'' FA (relavant_letu1 R) Q.
+lem28_nil : lem28 Fs' Fs'' ([m:term] (FA m) : frameapply nil (N2 m) N1) R Q
+         <- ({m} frameapply_nil_eq (FA m) (Q' m))
+         <- eq_relavant Q' R R'
+         <- lem27 R' Fs' Fs'' Q.
+%worlds (blam) (lem28 _ _ _ _ _).
+%freeze lem28.
+%total D (lem28 _ _ D _ _).
+
+lem19 : {M':term}{M:term} ({a} frameapply' (Fs a) a (R a)) -> linear R ->
+                           eqf (Fs M') (Fs M) -> type.
+%mode lem19 +M +M' +FA +L -Q.
+
+lem19_nil : lem19 M M' ([a] frameapply'_nil) L eqf_ref.
+
+lem19_app1 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fapp N2) _ _)
+                        (FA a)) (linear_app1 L) Q
+             <- lem19 M M' FA L Q'
+             <- eqf_extend (fapp N2) Q' Q.
+
+lem19_letu1 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fletu N2) _ _)
+                         (FA a)) (linear_letu1 L) Q
+             <- lem19 M M' FA L Q'
+             <- eqf_extend (fletu N2) Q' Q.
+
+lem19_lett1 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (flett N2) _ _)
+                         (FA a)) (linear_lett1 L) Q
+             <- lem19 M M' FA L Q'
+             <- eqf_extend (flett N2) Q' Q.
+
+lem19_letb1 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fletb N2) _ _)
+                         (FA a)) (linear_letb1 L) Q
+             <- lem19 M M' FA L Q'
+             <- eqf_extend (fletb N2) Q' Q.
+
+lem19_tapp : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (ftapp N2) _ _) 
+                        (FA a)) (linear_tapp L) Q
+             <- lem19 M M' FA L Q'
+             <- eqf_extend (ftapp N2) Q' Q.
+
+lem19_tens1 : lem19 M M' FA (linear_tens1 L) Q
+             <- lem20 M M' ([a] val_tens) FA Q.
+
+lem19_tens2 : lem19 M M' FA (linear_tens2 L) Q
+             <- lem20 M M' ([a] val_tens) FA Q.
+
+lem19_lam : lem19 M M' FA (linear_lam L) Q
+             <- lem20 M M' ([a] val_lam) FA Q.
+
+lem19_tlam : lem19 M M' FA (linear_tlam L) Q
+             <- lem20 M M' ([a] val_tlam) FA Q.
+
+lem19_app2 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fapp (N2 a)) _ _)
+                        (FA a : frameapply' (Fs a) a M1)) (linear_app2 L) Q
+            <- ({y:term} revFs_exists (Fs y) nil (Rev y))
+            <- ({y:term} frameapply_e1 (Rev y) (FA y) (FA' y))
+            <- lem28 _ _ FA' relavant_id Q.
+
+lem19_letb2 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fletb (N2 a)) _ _)
+                         (FA a : frameapply' (Fs a) a M1)) (linear_letb2 L) Q
+            <- ({y:term} revFs_exists (Fs y) nil (Rev y))
+            <- ({y:term} frameapply_e1 (Rev y) (FA y) (FA' y))
+            <- lem28 _ _ FA' relavant_id Q.
+
+lem19_letu2 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (fletu (N2 a)) _ _)
+                         (FA a : frameapply' (Fs a) a M1)) (linear_letu2 L) Q
+            <- ({y:term} revFs_exists (Fs y) nil (Rev y))
+            <- ({y:term} frameapply_e1 (Rev y) (FA y) (FA' y))
+            <- lem28 _ _ FA' relavant_id Q.
+
+lem19_lett2 : lem19 M M' ([a] frameapply'_cons (frameapp_app : frameapp (flett (N2 a)) _ _)
+                         (FA a : frameapply' (Fs a) a M1)) (linear_lett2 L) Q
+            <- ({y:term} revFs_exists (Fs y) nil (Rev y))
+            <- ({y:term} frameapply_e1 (Rev y) (FA y) (FA' y))
+            <- lem28 _ _ FA' relavant_id Q.
+
+%worlds (blam) (lem19 _ _ _ _ _).
+%total D (lem19 _ _ _ D _).
+
+lem18 : {M':term}{M:term} ({a} frameapply (Fs a) a (R a)) -> linear R -> eqf (Fs M') (Fs M) -> type.
+%mode lem18 +M +M' +FA +L -Q.
+
+lem18_rule : lem18 M M' (FA : {a} frameapply (Fs a) _ _) L Q
+        <- ({a} revFs_exists (Fs a) nil (Rev a))
+        <- ({a} frameapply_e2 (Rev a) (FA a) (FA' a))
+        <- lem19 M M' FA' L Q'
+        <- rev_eq2 Q' (Rev M) R
+        <- rev_injective R (Rev M') Q.
+
+%worlds (blam) (lem18 _ _ _ _ _).
+%total {} (lem18 _ _ _ _ _).
+
+apply_linear : linear M -> linear N -> linear R -> ({a} frameapply' (Fs a) (N a) (R a)) ->
+                      ({a} frameapply' (Fs a) (M (N a)) (R' a)) -> linear R' -> type.
+%mode apply_linear +LM +LN +LR +FA -FA' -LR'.
+
+apply_linear_nil : apply_linear LM LN LR ([a:term] frameapply'_nil) ([a:term] frameapply'_nil) LR'
+                       <- sub_linear LM LN LR'.
+
+apply_linear_app1 : apply_linear LM LN (linear_app1 L)
+                                 ([a:term] frameapply'_cons (frameapp_app : frameapp (fapp M2) _ _)
+                                                            (FA a))
+                                 ([a:term] frameapply'_cons (frameapp_app) (FA' a))
+                                 (linear_app1 LR')
+                          <- apply_linear LM LN L FA FA' LR'.
+
+apply_linear_tapp1 : apply_linear LM LN (linear_tapp L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (ftapp M2) _ _)
+                                                             (FA a))
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a))
+                                  (linear_tapp LR')
+                          <- apply_linear LM LN L FA FA' LR'.
+
+apply_linear_letu1 : apply_linear LM LN (linear_letu1 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (fletu M2) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_letu1 LR')
+                          <- apply_linear LM LN L FA FA' LR'.
+
+apply_linear_letb1 : apply_linear LM LN (linear_letb1 L) 
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (fletb M2) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_letb1 LR')
+                          <- apply_linear LM LN L FA FA' LR'.
+
+apply_linear_lett1 : apply_linear LM LN (linear_lett1 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (flett M2) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_lett1 LR')
+                          <- apply_linear LM LN L FA FA' LR'.
+
+apply_linear_app2 : apply_linear (LM : linear M) LN (linear_app2 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (fapp _) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_app2 L)
+                          <- lem45 M FA FA'.
+
+apply_linear_letu2 : apply_linear (LM : linear M) LN (linear_letu2 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (fletu _) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_letu2 L)
+                          <- lem45 M FA FA'.
+
+apply_linear_letb2 : apply_linear (LM : linear M) LN (linear_letb2 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (fletb _) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_letb2 L)
+                          <- lem45 M FA FA'.
+
+apply_linear_lett2 : apply_linear (LM : linear M) LN (linear_lett2 L)
+                                  ([a:term] frameapply'_cons (frameapp_app : frameapp (flett _) _ _)
+                                                             (FA a)) 
+                                  ([a:term] frameapply'_cons (frameapp_app) (FA' a)) (linear_lett2 L)
+                          <- lem45 M FA FA'.
+
+%worlds () (apply_linear _ _ _ _ _ _).
+%freeze apply_linear.
+%total D (apply_linear _ _ _ D _ _).
+
+apply_lin : linear M -> linear N -> linear R -> ({a} frameapply (Fs a) (N a) (R a)) ->
+                      ({a} frameapply (Fs a) (M (N a)) (R' a)) -> linear R' -> type.
+%mode apply_lin +LM +LN +LR +FA -FA' -LR'.
+
+apply_lin_rule : apply_lin LM LN LR (FA : {m} frameapply (Fs m) (N m) _) FA4 L2
+          <- ({m} revFs_exists (Fs m) nil (Rev m : revFs (Fs m) nil (Fs' m)))
+          <- ({m} frameapply_e2 (Rev m) (FA m) (FA' m))
+          <- apply_linear LM LN LR FA' FA2 L2
+          <- ({m} revFs_exists (Fs' m) nil (Rev' m))
+          <- ({m} frameapply_e1 (Rev' m) (FA2 m) (FA3 m))
+          <- ({m} revrev_id (Rev m) (Rev' m) (Q m))
+          <- ({m} eqf_symm (Q m) (Q' m))
+          <- ({m} frameapply_eq (Q' m) (FA3 m) (FA4 m)).
+
+%worlds () (apply_lin _ _ _ _ _ _).
+%freeze apply_lin.
+%total D (apply_lin _ _ _ D _ _).
+
+add_frame : {F} ({m:term} frameapply (Fs m) m (R m)) -> linear R -> 
+            ({m:term} frameapply (cons F (Fs m)) m (R' m)) -> linear R' -> type.
+%mode add_frame +M +FA +L -FA' -L'.
+
+add_frame_app : add_frame (fapp M) FA LR ([m] frameapply_cons (FA' m) frameapp_app) L'
+              <- apply_lin (linear_app1 linear_id : linear ([a] app a M)) linear_id LR FA FA' L'.
+
+add_frame_tapp : add_frame (ftapp T) FA LR ([m] frameapply_cons (FA' m) frameapp_app) L'
+              <- apply_lin (linear_tapp linear_id : linear ([a] tapp a T)) linear_id LR FA FA' L'.
+
+add_frame_lett : add_frame (flett M) FA LR ([m] frameapply_cons (FA' m) frameapp_app) L'
+              <- apply_lin (linear_lett1 linear_id : linear ([a] lett a M)) linear_id LR FA FA' L'.
+
+add_frame_letb : add_frame (fletb M) FA LR ([m] frameapply_cons (FA' m) frameapp_app) L'
+              <- apply_lin (linear_letb1 linear_id : linear ([a] letb a M)) linear_id LR FA FA' L'.
+
+add_frame_letu : add_frame (fletu M) FA LR ([m] frameapply_cons (FA' m) frameapp_app) L'
+              <- apply_lin (linear_letu1 linear_id : linear ([a] letu a M)) linear_id LR FA FA' L'.
+
+%worlds () (add_frame _ _ _ _ _).
+%freeze add_frame.
+%total {} (add_frame _ _ _ _ _).
+
+nat : type.
+
+zero : nat.
+succ : nat -> nat.
+
+height_ok : frameterm _ _ -> nat -> type.
+height_ok_bot : height_ok (frameterm_val _) N.
+height_ok_app : height_ok (frameterm_app F)     ((succ N)) <- height_ok F (N).
+height_ok_tapp : height_ok (frameterm_tapp F)   ((succ N)) <- height_ok F (N).
+height_ok_letu : height_ok (frameterm_letu F)   ((succ N)) <- height_ok F (N).
+height_ok_lett : height_ok (frameterm_lett F)   ((succ N)) <- height_ok F (N).
+height_ok_letb : height_ok (frameterm_letb F)   ((succ N)) <- height_ok F (N).
+height_ok_lam : height_ok (frameterm_lam F)     ((succ N)) <- height_ok F (N).
+height_ok_tlam : height_ok (frameterm_tlam F)   ((succ N)) <- height_ok F (N).
+height_ok_unit : height_ok (frameterm_unit F)   ((succ N)) <- height_ok F (N).
+height_ok_tens : height_ok (frameterm_tens F)   ((succ N)) <- height_ok F (N).
+height_ok_thunk : height_ok (frameterm_thunk F) ((succ N)) <- height_ok F (N).
+
+height_ok_exists : {ft:frameterm Fs M} height_ok ft N -> type.
+%mode height_ok_exists +FT -H.
+height_ok_exists_bot : height_ok_exists (frameterm_val _) (height_ok_bot : height_ok _ zero).
+height_ok_exists_app : height_ok_exists (frameterm_app Ft) (height_ok_app H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_tapp : height_ok_exists (frameterm_tapp Ft) (height_ok_tapp H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_letu : height_ok_exists (frameterm_letu Ft) (height_ok_letu H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_lett : height_ok_exists (frameterm_lett Ft) (height_ok_lett H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_letb : height_ok_exists (frameterm_letb Ft) (height_ok_letb H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_lam : height_ok_exists (frameterm_lam Ft) (height_ok_lam H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_tlam : height_ok_exists (frameterm_tlam Ft) (height_ok_tlam H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_unit : height_ok_exists (frameterm_unit Ft) (height_ok_unit H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_tens : height_ok_exists (frameterm_tens Ft) (height_ok_tens H)
+                          <- height_ok_exists Ft H.
+height_ok_exists_thunk : height_ok_exists (frameterm_thunk Ft) (height_ok_thunk H)
+                          <- height_ok_exists Ft H.
+%worlds () (height_ok_exists _ _).
+%total D (height_ok_exists D _).
+
+succ_height_ok : height_ok Ft N -> height_ok Ft (succ N) -> type.
+%mode succ_height_ok +H -H'.
+succ_height_ok_bot : succ_height_ok height_ok_bot height_ok_bot.
+succ_height_ok_app : succ_height_ok (height_ok_app H) (height_ok_app H')
+                         <- succ_height_ok H H'.
+succ_height_ok_tapp : succ_height_ok (height_ok_tapp H) (height_ok_tapp H')
+                         <- succ_height_ok H H'.
+succ_height_ok_letu : succ_height_ok (height_ok_letu H) (height_ok_letu H')
+                         <- succ_height_ok H H'.
+succ_height_ok_lett : succ_height_ok (height_ok_lett H) (height_ok_lett H')
+                         <- succ_height_ok H H'.
+succ_height_ok_letb : succ_height_ok (height_ok_letb H) (height_ok_letb H')
+                         <- succ_height_ok H H'.
+succ_height_ok_lam : succ_height_ok (height_ok_lam H) (height_ok_lam H')
+                         <- succ_height_ok H H'.
+succ_height_ok_tlam : succ_height_ok (height_ok_tlam H) (height_ok_tlam H')
+                         <- succ_height_ok H H'.
+succ_height_ok_unit : succ_height_ok (height_ok_unit H) (height_ok_unit H')
+                         <- succ_height_ok H H'.
+succ_height_ok_tens : succ_height_ok (height_ok_tens H) (height_ok_tens H')
+                         <- succ_height_ok H H'.
+succ_height_ok_thunk : succ_height_ok (height_ok_thunk H) (height_ok_thunk H')
+                         <- succ_height_ok H H'.
+%worlds () (succ_height_ok _ _).
+%total D (succ_height_ok D _).
+
+frameterm_eq_framesNum : eqf Fs Fs' -> eq M M' -> {Ft : frameterm Fs M} height_ok Ft Num ->
+                                                  {Ft':frameterm Fs' M'} height_ok Ft' Num -> type.
+%mode frameterm_eq_framesNum +Q +Q' +Ft +H -Ft' -H'.
+frameterm_eq_framesNum_rule : frameterm_eq_framesNum eqf_ref eq_ref Ft H Ft H.
+%worlds () (frameterm_eq_framesNum _ _ _ _ _ _).
+%total {} (frameterm_eq_framesNum _ _ _ _ _ _).
+
+up_app : {ft:frameterm Fs (app M1 M2)} height_ok ft (succ N) ->
+         {ft':frameterm (cons (fapp M2) Fs) M1} height_ok ft' N -> type.
+%mode up_app +FT +H -FT' -H'.
+up_app_rule : up_app (frameterm_app F) (height_ok_app H) F H.
+%worlds () (up_app _ _ _ _).
+%total D (up_app D _ _ _).
+
+up_tapp : {ft:frameterm Fs (tapp M T)} height_ok ft (succ N) -> 
+          {ft':frameterm (cons (ftapp T) Fs) M} height_ok ft' N -> type.
+%mode up_tapp +FT +H -FT' -H'.
+up_tapp_rule : up_tapp (frameterm_tapp F) (height_ok_tapp H) F H.
+%worlds () (up_tapp _ _ _ _).
+%total D (up_tapp D _ _ _).
+
+up_lett : {ft:frameterm Fs (lett M1 M2)} height_ok ft (succ N) ->
+          {ft':frameterm (cons (flett M2) Fs) M1} height_ok ft' N -> type.
+%mode up_lett +FT +H -FT' -H'.
+up_lett_rule : up_lett (frameterm_lett F) (height_ok_lett H) F H.
+%worlds () (up_lett _ _ _ _).
+%total D (up_lett D _ _ _).
+
+up_letu : {ft:frameterm Fs (letu M1 M2)} height_ok ft (succ N) ->
+          {ft':frameterm (cons (fletu M2) Fs) M1} height_ok ft' N -> type.
+%mode up_letu +FT +H -FT' -H'.
+up_letu_rule : up_letu (frameterm_letu F) (height_ok_letu H) F H.
+%worlds () (up_letu _ _ _ _).
+%total D (up_letu D _ _ _).
+
+up_letb : {ft:frameterm Fs (letb M1 M2)} height_ok ft (succ N) ->
+          {ft':frameterm (cons (fletb M2) Fs) M1} height_ok ft' N -> type.
+%mode up_letb +FT +H -FT' -H'.
+up_letb_rule : up_letb (frameterm_letb F) (height_ok_letb H) F H.
+%worlds () (up_letb _ _ _ _).
+%total D (up_letb D _ _ _).
+
+up_lam : {ft:frameterm (cons (fapp M2) Fs) (lam T M1')} height_ok ft (succ N) ->
+         {ft':frameterm Fs (M1' M2 )} height_ok ft' N -> type.
+%mode up_lam +FT +H -FT' -H'.
+up_lam_rule : up_lam (frameterm_lam F) (height_ok_lam H) F H.
+%worlds () (up_lam _ _ _ _).
+%total D (up_lam D _ _ _).
+
+up_tlam : {ft:frameterm (cons (ftapp T) Fs) (tlam M)} height_ok ft (succ N) ->
+          {ft':frameterm Fs (M T)} height_ok ft' N -> type.
+%mode up_tlam +FT +H -FT' -H'.
+up_tlam_rule : up_tlam (frameterm_tlam F) (height_ok_tlam H) F H.
+%worlds () (up_tlam _ _ _ _).
+%total D (up_tlam D _ _ _).
+
+up_tens : {ft:frameterm (cons (flett M3) Fs) (tens M1 M2)} height_ok ft (succ N) ->
+          {ft':frameterm Fs (M3 M1 M2)} height_ok ft' N -> type.
+%mode up_tens +FT +H -FT' -H'.
+up_tens_rule : up_tens (frameterm_tens F) (height_ok_tens H) F H.
+%worlds () (up_tens _ _ _ _).
+%total D (up_tens D _ _ _).
+
+up_unit : {ft:frameterm (cons (fletu M) Fs) unit} height_ok ft (succ N) ->
+          {ft':frameterm Fs M} height_ok ft' N -> type.
+%mode up_unit +FT +H -FT' -H'.
+up_unit_rule : up_unit (frameterm_unit F) (height_ok_unit H) F H.
+%worlds () (up_unit _ _ _ _).
+%total D (up_unit D _ _ _).
+
+up_thunk : {ft:frameterm (cons (fletb M2) Fs) (thunk T M1)} height_ok ft (succ N) ->
+           {ft':frameterm Fs (M2 (letb (thunk T M1) M1))} height_ok ft' N -> type.
+%mode up_thunk +FT +H -FT' -H'.
+up_thunk_rule : up_thunk (frameterm_thunk F) (height_ok_thunk H) F H.
+%worlds () (up_thunk _ _ _ _).
+%total D (up_thunk D _ _ _).
+
+types_pres_app1_s : M \s/ V -> app M N ? T -> app V N ? T -> type.
+%mode types_pres_app1_s +E +D -D'.
+types_pres_app1_s_rule : types_pres_app1_s E (of_app D2 D1) (of_app D2 D1')
+          <- tpres_s D1 E D1'.
+%worlds () (types_pres_app1_s _ _ _).
+%total {} (types_pres_app1_s _ _ _).
+
+types_pres_app2_s : M \s/ V -> app N M ? T -> app N V ? T -> type.
+%mode types_pres_app2_s +E +D -D'.
+types_pres_app2_s_rule : types_pres_app2_s E (of_app D2 D1) (of_app D2' D1)
+          <- tpres_s D2 E D2'.
+%worlds () (types_pres_app2_s _ _ _).
+%total {} (types_pres_app2_s _ _ _).
+
+types_pres_tapp_s :M \s/ V -> tapp M T ? T' -> tapp V T ? T' -> type.
+%mode types_pres_tapp_s +E +D -D'.
+types_pres_tapp_s_rule : types_pres_tapp_s E (of_tapp T D1) (of_tapp T D1')
+                    <- tpres_s D1 E D1'.
+%worlds () (types_pres_tapp_s _ _ _).
+%total {} (types_pres_tapp_s _ _ _).
+
+types_pres_letu_s : M \s/ V -> letu M N ? T -> letu V N ? T -> type.
+%mode types_pres_letu_s +E +D -D'.
+types_pres_letu_s_rule : types_pres_letu_s E (of_letu D2 D1) (of_letu D2 D1')
+          <- tpres_s D1 E D1'.
+%worlds () (types_pres_letu_s _ _ _).
+%total {} (types_pres_letu_s _ _ _).
+
+types_pres_lett_s : M \s/ V -> lett M N ? T -> lett V N ? T -> type.
+%mode types_pres_lett_s +E +D -D'.
+types_pres_lett_s_rule : types_pres_lett_s E (of_lett L1 L2 D2 D1) (of_lett L1 L2 D2 D1')
+          <- tpres_s D1 E D1'.
+%worlds () (types_pres_lett_s _ _ _).
+%total {} (types_pres_lett_s _ _ _).
+
+types_pres_letb_s : M \s/ V -> letb M N ? T -> letb V N ? T -> type.
+%mode types_pres_letb_s +E +D -D'.
+types_pres_letb_s_rule : types_pres_letb_s E (of_letb D2 D1) (of_letb D2 D1')
+          <- tpres_s D1 E D1'.
+%worlds () (types_pres_letb_s _ _ _).
+%freeze types_pres_letb_s.
+%total {} (types_pres_letb_s _ _ _).
+
+redex_rev_type : redex M M' -> M ? T -> M' ? T -> type.
+%mode redex_rev_type +R +D -D'.
+
+redex_rev_type_app : redex_rev_type redex_app (of_app D2 D1) (D1' _ D2)
+         <- inverse_lam D1 D1' _.
+
+redex_rev_type_tapp : redex_rev_type redex_tapp (of_tapp T (of_tlam D1)) (D1 T).
+
+redex_rev_type_letu : redex_rev_type redex_letu (of_letu D2 D1) D2.
+
+redex_rev_type_lett : redex_rev_type redex_lett (of_lett _ _ D3 (of_tens D2 D1)) (D3 _ D1 _ D2).
+
+redex_rev_type_letb : redex_rev_type redex_letb (of_letb D2 (of_thunk D1)) (D2 _ (of_letb D1 (of_thunk D1))).
+
+%worlds () (redex_rev_type _ _ _).
+%total {} (redex_rev_type _ _ _).
+
+strictness_base : {N}{M} (N M) ? bang T -> linear N -> value (N M) -> value M -> type.
+%mode strictness_base +N +M +D +L +V -V'.
+strictness_base_rule : strictness_base _ _ _ linear_id V V.
+%worlds () (strictness_base _ _ _ _ _ _).
+%total {} (strictness_base _ _ _ _ _ _).
+
+strictness_lem1 :
+      % Assumptions:
+             {N} {Fs} {Num : nat} {Ft:frameterm (Fs M) (N M)} height_ok Ft Num -> 
+             ({a} frameapply (Fs a) (N a) (FsN a)) -> linear FsN ->
+             fstp (Fs M) T1 (bang T2) -> N M ? T1 -> % frameterm (Fs M) (N M) -> 
+      % Conclusion:
+             {Ft2 : frameterm (Fs V) (N V)}  M \s/ V -> 
+             height_ok Ft2 Num -> type.
+
+%mode strictness_lem1 +N +Fs +Num +FtM +H +FA +L +FsT +DNM -FtV -EVs -H2.
+
+strictness_lem1_base : strictness_lem1 N ([a] nil) Num (frameterm_val V) H FA L FsTp DNM 
+                                       (frameterm_val V) Evs H
+         <- frameapply_nil_eq (FA M) Q
+         <- eq_val Q V V'
+         <- applysound nil FsTp DNM (FA M) DNMB
+         <- strictness_base _ M DNMB L V' VM
+         <- selfevals VM Evs.
+
+strictness_lem1_app2 : strictness_lem1 ([a] a) Fs _ (frameterm_app Ft) (height_ok_app H)
+                                        FA L FsTp
+                                        D3 Ft6 (evs_app EvM12 EvM2 EvM1') H7
+                <- lem18 (app M1 M2) M1 FA L Q
+                <- frameterm_eq_framesNum Q eq_ref (frameterm_app Ft) (height_ok_app H) Ft1 H1
+                <- up_app Ft1 H1 Ft2 H2
+                <- eqf_fstp Q FsTp FsTp1
+                <- typed_step FsTp1 D3 evfs_app FsTp' D3'
+                <- add_frame (fapp M2) FA L FA' L'
+                <- eq_typings D3 (of_app _ D1)
+                <- strictness_lem1 ([a] a) ([a] cons (fapp M2) (Fs a)) _ Ft2 H2 FA' L' FsTp' D3' 
+                                    Ft2' (EvM1 : M1 \s/ V1) H2'
+                <- tpres_s D1 EvM1 D1'
+                <- value_soundness_s EvM1 Val1
+                <- eq_val_funs Val1 D1' Q1
+                <- eq_type Q1 D1' D1''
+                <- eq_typings D1'' (of_lam (L1 : linear M1') D1''')
+                <- succ_height_ok H2' H2''
+                <- frameterm_eq_framesNum eqf_ref Q1 Ft2' H2'' Ft3 H3
+                <- up_lam Ft3 H3 Ft3' H3'
+                <- lem18 V1 M2 FA L Q2
+                <- frameterm_eq_framesNum Q2 eq_ref Ft3' H3' Ft4 H4
+                <- apply_lin L1 linear_id L FA FA2 L2
+                <- types_pres_app1_s EvM1 D3 D3''
+                <- eq_ctx Q1 ([a] app a M2) Q1'
+                <- eq_type Q1' D3'' D4
+                <- redex_rev_type redex_app D4 D4'
+                <- lem18 (app M1 M2) M2 FA L Q3
+                <- eqf_fstp Q3 FsTp FsTp2
+                <- strictness_lem1 M1' Fs _ Ft4 H4 FA2 L2 FsTp2 D4' Ft4' (EvM2 : M2 \s/ V2) H4'
+                <- lem18 V2 (M1' V2) FA L Q5
+                <- frameterm_eq_framesNum Q5 eq_ref Ft4' H4' Ft5 H5
+                <- types_pres_app2_s EvM2 D4 D5
+                <- redex_rev_type redex_app D5 D5'
+                <- lem18 M2 (M1' V2) FA L Q6
+                <- eqf_fstp Q6 FsTp2 FsTp3
+                <- strictness_lem1 ([a] a) Fs _ Ft5 H5 FA L FsTp3 D5' Ft6 EvM12 H6
+                <- eq_res_s Q1 EvM1 EvM1'
+                <- succ_height_ok H6 H7.
+
+strictness_lem1_tapp2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2
+                                         Ft4' (evs_tapp EvM1'T EvM1') H5
+                <- lem18 (tapp M1 T1) M1 FA L Q
+                <- frameterm_eq_framesNum Q eq_ref Ft H Ft1 H1
+                <- up_tapp Ft1 H1 Ft2 H2
+                <- eqf_fstp Q FsTp FsTp1
+                <- inverse_tapp D2 D1
+                <- typed_step FsTp1 D2 evfs_tapp FsTp' D2'
+                <- add_frame (ftapp T1) FA L FA' L'
+                <- strictness_lem1 ([a] a) ([a] cons (ftapp T1) (Fs a)) _ Ft2 H2 FA' L' FsTp' D2'
+                                    Ft2' (EvM1 : M1 \s/ V1) H2'
+                <- tpres_s D1 EvM1 D1'
+                <- value_soundness_s EvM1 Val1
+                <- eq_val_all Val1 D1' Q1
+                <- eq_type Q1 D1' D1''
+                <- eq_typings D1'' (of_tlam (D1''' : {t:tp} M1' t ? _))
+                <- succ_height_ok H2' H2''
+                <- frameterm_eq_framesNum eqf_ref Q1 Ft2' H2'' Ft2'' H2'''
+                <- up_tlam Ft2'' H2''' Ft3 H3
+                <- types_pres_tapp_s EvM1 D2 D3
+                <- eq_ctx Q1 ([a] tapp a T1) Q1'
+                <- eq_type Q1' D3 D4
+                <- redex_rev_type redex_tapp D4 D4'
+                <- lem18 M1 (M1' T1) FA L Q2
+                <- eqf_fstp Q2 FsTp1 FsTp1'
+                <- lem18 V1 (M1' T1) FA L Q3
+                <- frameterm_eq_framesNum Q3 eq_ref Ft3 H3 Ft4 H4
+                <- strictness_lem1 ([a] a) Fs _ Ft4 H4 FA L FsTp1' D4' Ft4' EvM1'T H4'
+                <- eq_res_s Q1 EvM1 EvM1'
+                <- succ_height_ok H4' H5.
+
+strictness_lem1_lett2 : strictness_lem1 ([a] a) Fs _ Ft H
+                        FA L FsTp D3 Ft4' (evs_lett EvM2 EvM1') H5
+                <- lem18 (lett M1 M2) M1 FA L Q
+                <- frameterm_eq_framesNum Q eq_ref Ft H Ft1 H1
+                <- up_lett Ft1 H1 Ft2 H2
+                <- eqf_fstp Q FsTp FsTp1
+                <- typed_step FsTp1 D3 evfs_lett FsTp' D3'
+                <- add_frame (flett M2) FA L FA' L'
+                <- strictness_lem1 ([a] a) ([a] cons (flett M2) (Fs a)) _ Ft2 H2 FA' L' FsTp' D3'
+                                    Ft2' (EvM1 : M1 \s/ V1) H2'
+                <- eq_typings D3 (of_lett _ _ _ D1)
+                <- tpres_s D1 EvM1 D1'
+                <- value_soundness_s EvM1 Val1
+                <- eq_val_tensor Val1 D1' Q1
+                <- eq_type Q1 D1' D1''
+                <- eq_typings D1'' (of_tens (Dt2 : Mt2 ? _) (Dt1 : Mt1 ? _))
+                <- succ_height_ok H2' H2''
+                <- frameterm_eq_framesNum eqf_ref Q1 Ft2' H2'' Ft3 H3
+                <- up_tens Ft3 H3 Ft3' H3'
+                <- types_pres_lett_s EvM1 D3 D4
+                <- eq_ctx Q1 ([a] lett a M2) Q1'
+                <- eq_type Q1' D4 D4''
+                <- redex_rev_type redex_lett D4'' D4'
+                <- lem18 M1 (M2 Mt1 Mt2) FA L Q2
+                <- eqf_fstp Q2 FsTp1 FsTp1'
+                <- lem18 V1 (M2 Mt1 Mt2) FA L Q3
+                <- frameterm_eq_framesNum Q3 eq_ref Ft3' H3' Ft4 H4
+                <- strictness_lem1 ([a] a) Fs _ Ft4 H4 FA L FsTp1' D4' Ft4' EvM2 H4'
+                <- eq_res_s Q1 EvM1 EvM1'
+                <- succ_height_ok H4' H5.
+
+strictness_lem1_letu2 : strictness_lem1 ([a] a) Fs _ Ft H 
+                                        FA L FsTp D3 Ft4' (evs_letu EvM2 EvM1') H5
+                <- lem18 (letu M1 M2) M1 FA L Q
+                <- frameterm_eq_framesNum Q eq_ref Ft H Ft1 H1
+                <- up_letu Ft1 H1 Ft2 H2
+                <- eqf_fstp Q FsTp FsTp1
+                <- typed_step FsTp1 D3 evfs_letu FsTp' D3'
+                <- add_frame (fletu M2) FA L FA' L'
+                <- strictness_lem1 ([a] a) ([a] cons (fletu M2) (Fs a)) _ Ft2 H2 FA' L' FsTp' D3' Ft2'
+                                   (EvM1: M1 \s/ V1) H2'
+                <- eq_typings D3 (of_letu _ D1)
+                <- tpres_s D1 EvM1 D1'
+                <- value_soundness_s EvM1 Val1
+                <- eq_val_unit Val1 D1' Q1
+                <- succ_height_ok H2' H2''
+                <- frameterm_eq_framesNum eqf_ref Q1 Ft2' H2'' Ft3 H3
+                <- up_unit Ft3 H3 Ft3' H3'
+                <- lem18 V1 M2 FA L Q2
+                <- lem18 M1 M2 FA L Q2'
+                <- frameterm_eq_framesNum Q2 eq_ref Ft3' H3' Ft4 H4
+                <- eqf_fstp Q2' FsTp1 FsTp1'
+                <- types_pres_letu_s EvM1 D3 D3''
+                <- eq_ctx Q1 ([a] letu a M2) Q3
+                <- eq_type Q3 D3'' D4
+                <- redex_rev_type redex_letu D4 D4'
+                <- strictness_lem1 ([a] a) Fs _ Ft4 H4 FA L FsTp1' D4' Ft4' EvM2 H4'
+                <- succ_height_ok H4' H5
+                <- eq_res_s Q1 EvM1 EvM1'.
+
+strictness_lem1_letb2 : strictness_lem1 ([a] a) Fs _ Ft H 
+                                        FA L FsTp D3 Ft4' (evs_letb EvM2 EvM1') H5
+                <- lem18 (letb M1 M2) M1 FA L Q
+                <- frameterm_eq_framesNum Q eq_ref Ft H Ft1 H1
+                <- up_letb Ft1 H1 Ft2 H2
+                <- eqf_fstp Q FsTp FsTp1
+                <- typed_step FsTp1 D3 evfs_letb FsTp' D3'
+                <- add_frame (fletb M2) FA L FA' L'
+                <- strictness_lem1 ([a] a) ([a] cons (fletb M2) (Fs a)) _ Ft2 H2 FA' L' FsTp' D3' Ft2'
+                                   (EvM1 : M1 \s/ V1) H2'
+                <- eq_typings D3 (of_letb _ D1)
+                <- tpres_s D1 EvM1 D1'
+                <- value_soundness_s EvM1 Val1
+                <- eq_val_bang Val1 D1' Q1
+                <- eq_type Q1 D1' D1''
+                <- eq_thunk_type D1'' Q'
+                <- eqt_symm Q' Q''
+                <- eqt_ctx Q'' ([t] bang t) Q'''
+                <- eq_type1 Q''' D1'' D1'''
+                <- eq_typings D1''' (of_thunk (Dt1 : {m:term}{d:m ? _} (Mt1 m) ? _) : thunk Ty _ ? _)
+                <- succ_height_ok H2' H2''
+                <- frameterm_eq_framesNum eqf_ref Q1 Ft2' H2'' Ft3 H3
+                <- up_thunk Ft3 H3 Ft3' H3'
+                <- types_pres_letb_s EvM1 D3 D4
+                <- eq_ctx Q1 ([a] letb a M2) Q1'
+                <- eq_type Q1' D4 D4''
+                <- redex_rev_type redex_letb D4'' D4'
+                <- lem18 M1 (M2 (letb (thunk Ty Mt1) Mt1)) FA L Q2
+                <- eqf_fstp Q2 FsTp1 FsTp1'
+                <- lem18 V1 (M2 (letb (thunk Ty Mt1) Mt1)) FA L Q3
+                <- frameterm_eq_framesNum Q3 eq_ref Ft3' H3' Ft4 H4
+                <- strictness_lem1 ([a] a) Fs _ Ft4 H4 FA L FsTp1' D4' Ft4' EvM2 H4'
+                <- succ_height_ok H4' H5
+                <- eq_res_s Q1 EvM1 EvM1'.
+
+strictness_lem1_app1 : strictness_lem1 ([a] app (N1 a) (N2 a)) Fs _ (frameterm_app Ft)
+                                       (height_ok_app H) FA L FsTp (of_app DN2 DN1)
+                                       (frameterm_app Ft') Evs (height_ok_app H')
+         <- strictness_lem1 N1 ([a] cons (fapp (N2 a)) (Fs a)) _ Ft H 
+                            ([a] frameapply_cons (FA a) (frameapp_app : frameapp _ _ _))
+                            L (ftp_cons FsTp [a][da] of_app DN2 da) DN1 Ft' Evs H'.
+
+strictness_lem1_tapp1 : strictness_lem1 ([a] tapp (N1 a) T) Fs _ (frameterm_tapp Ft)
+                                        (height_ok_tapp H) FA L FsTp (of_tapp _ DN1)
+                                        (frameterm_tapp Ft') Evs (height_ok_tapp H')
+         <- strictness_lem1 N1 ([a] cons (ftapp T) (Fs a)) _ Ft H 
+                               ([a] frameapply_cons (FA a) (frameapp_app : frameapp _ _ _))
+                               L (ftp_cons FsTp [a][da] of_tapp _ da) DN1 Ft' Evs H'.
+
+strictness_lem1_letu1 : strictness_lem1 ([a] letu (N1 a) (N2 a)) Fs _ (frameterm_letu Ft)
+                                        (height_ok_letu H) FA L FsTp (of_letu DN2 DN1)
+                                        (frameterm_letu Ft') Evs (height_ok_letu H')
+         <- strictness_lem1 N1 ([a] cons (fletu (N2 a)) (Fs a)) _ Ft H 
+                           ([a] frameapply_cons (FA a) (frameapp_app : frameapp _ _ _))
+                           L (ftp_cons FsTp [a][da] of_letu DN2 da) DN1 Ft' Evs H'.
+
+strictness_lem1_letb1 : strictness_lem1 ([a] letb (N1 a) (N2 a)) Fs _ (frameterm_letb Ft)
+                                        (height_ok_letb H) FA L FsTp (of_letb DN2 DN1)
+                                        (frameterm_letb Ft') Evs (height_ok_letb H')
+         <- strictness_lem1 N1 ([a] cons (fletb (N2 a)) (Fs a)) _ Ft H 
+                               ([a] frameapply_cons (FA a) (frameapp_app : frameapp _ _ _))
+                               L (ftp_cons FsTp [a][da] of_letb DN2 da) DN1 Ft' Evs H'.
+
+strictness_lem1_lett1 : strictness_lem1 ([a] lett (N1 a) (N2 a)) Fs _ (frameterm_lett Ft)
+                                        (height_ok_lett H) FA L FsTp (of_lett L1 L2 DN2 DN1)
+                                        (frameterm_lett Ft') Evs (height_ok_lett H')
+         <- strictness_lem1 N1 ([a] cons (flett (N2 a)) (Fs a)) _ Ft H 
+                            ([a] frameapply_cons (FA a) (frameapp_app : frameapp _ _ _))
+                            L (ftp_cons FsTp [a][da] of_lett L1 L2 DN2 da) DN1 Ft' Evs H'.
+
+strictness_lem1_lam : strictness_lem1 ([a] lam T (M4 a)) ([a] cons (fapp (M5 a)) (Fs a))
+                                      _ (frameterm_lam Ft) (height_ok_lam H)
+                         ([a] frameapply_cons (FA a) (frameapp_app : frameapp (fapp (M5 a)) _ _))
+                          L (ftp_cons FsTp FTp) D2 (frameterm_lam Ft') Evs (height_ok_lam H')
+                <- eq_typings ((FTp : {m} m ? func _ _ -> app m _ ? T2) _ D2) D1
+                <- redex_rev_type redex_app D1 D'
+                <- frame_linear ([m] redex_app) D1 FA L FA1 L1
+                <- strictness_lem1 ([a] M4 a (M5 a)) Fs _ Ft H FA1 L1 FsTp D' Ft' Evs H'.
+
+strictness_lem1_tens : strictness_lem1 ([a] tens (M3 a) (M4 a)) ([a] cons (flett (M5 a)) 
+                           (Fs a)) _ (frameterm_tens Ft) (height_ok_tens H) 
+                           ([a] frameapply_cons (FA a) (frameapp_app : frameapp (flett (M5 a)) _ _))
+                            L (ftp_cons FsTp FTp) D2 (frameterm_tens Ft') Evs (height_ok_tens H')
+                <- eq_typings ((FTp : {m} m ? tensor _ _ -> lett m _ ? T2) _ D2) Dt
+                <- redex_rev_type redex_lett Dt D'
+                <- frame_linear ([m] redex_lett) Dt FA L FA1 L'
+                <- strictness_lem1 ([a] M5 a (M3 a) (M4 a)) Fs _ Ft H FA1 L' FsTp D' Ft' Evs H'.
+
+strictness_lem1_unit : strictness_lem1 ([a] unit) ([a] cons (fletu (M5 a)) (Fs a)) _
+                           (frameterm_unit Ft) (height_ok_unit H) 
+                           ([a] frameapply_cons (FA a) (frameapp_app : frameapp (fletu (M5 a)) _ _))
+                            L (ftp_cons FsTp FTp) D2 (frameterm_unit Ft') Evs (height_ok_unit H')
+                <- eq_typings ((FTp : {m} m ? i -> letu m _ ? T2) _ D2) Dt
+                <- redex_rev_type redex_letu Dt D'
+                <- frame_linear ([m] redex_letu) Dt FA L FA1 L'
+                <- strictness_lem1 ([a] M5 a) Fs _ Ft H FA1 L' FsTp D' Ft' Evs H'.
+
+strictness_lem1_thunk : strictness_lem1 ([a] thunk T (M4 a)) ([a] cons (fletb (M5 a)) (Fs a))
+                           _ (frameterm_thunk Ft) (height_ok_thunk H) 
+                           ([a] frameapply_cons (FA a) (frameapp_app : frameapp (fletb (M5 a)) _ _))
+                           L (ftp_cons FsTp FTp) D2 (frameterm_thunk Ft') Evs (height_ok_thunk H')
+                <- eq_typings ((FTp : {m} m ? bang _ -> letb m _ ? T2) _ D2) Dt
+                <- redex_rev_type redex_letb Dt D'
+                <- frame_linear ([m] redex_letb) Dt FA L FA1 L'
+                <- strictness_lem1 ([a] M5 a (letb (thunk T (M4 a)) (M4 a))) Fs _ Ft H FA1 L'
+                                    FsTp D' Ft' Evs H'.
+
+strictness_lem1_tlam : strictness_lem1 ([a] tlam (M4 a)) ([a] cons (ftapp T) (Fs a))
+                           _ (frameterm_tlam Ft) (height_ok_tlam H) 
+                           ([a] frameapply_cons (FA a) (frameapp_app : frameapp (ftapp T) _ _))
+                           L (ftp_cons FsTp FTp) D2 (frameterm_tlam Ft') Evs (height_ok_tlam H')
+                <- eq_typings ((FTp : {m} m ? all _ -> tapp m _ ? T2) _ D2) D1
+                <- redex_rev_type redex_tapp D1 D'
+                <- frame_linear ([m] redex_tapp) D1 FA L FA1 L1
+                <- strictness_lem1 ([a] M4 a T) Fs _ Ft H FA1 L1 FsTp D' Ft' Evs H'.
+
+strictness_lem1_unit2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2 Ft Evs H
+                <- selfevals val_unit Evs.
+
+strictness_lem1_lam2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2 Ft Evs H
+                <- selfevals val_lam Evs.
+
+strictness_lem1_tlam2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2 Ft Evs H
+                <- selfevals val_tlam Evs.
+
+strictness_lem1_tens2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2 Ft Evs H
+                <- selfevals val_tens Evs.
+
+strictness_lem1_thunk2 : strictness_lem1 ([a] a) Fs _ Ft H FA L FsTp D2 Ft Evs H
+                <- selfevals val_thunk Evs.
+
+%worlds () (strictness_lem1 _ _ _ _ _ _ _ _ _ _ _ _).
+% covers strictness_lem1 +N +Fs +Num +FtM +H +FA +L +FD +FsT -FtV -EVs -H'. 
+% terminates D (strictness_lem1 _ _ D _ _ _ _ _ _ _ _ _).
+%total D (strictness_lem1 _ _ D _ _ _ _ _ _ _ _ _).
+
+strictness1 : (N M) ? bang T' -> linear N -> 
+              (N M) \/ -> M \s/ V' -> (N V') \/ -> type.
+%mode strictness1 +D +L +Ev -S -Term.
+strictness1_rule : strictness1 D1 L (terminate Ev) Evs (terminate Ev')
+           <- eval_frameterm Ev Ft
+           <- height_ok_exists Ft (H : height_ok _ Num)
+           <- strictness_lem1 N ([a:term] nil) Num Ft H ([a] frameapply_nil) L ftp_nil D1 Ft' Evs H'
+           <- frameterm_eval Ft' Ev'.
+%worlds () (strictness1 _ _ _ _ _).
+% covers strictness1 +D +L +Ev -S -Term.
+%total {} (strictness1 _ _ _ _ _).
+
+frameterm_eq_frames : eqf Fs Fs' -> eq M M' -> frameterm Fs M ->
+                                               frameterm Fs' M' -> type.
+%mode frameterm_eq_frames +Q +Q' +Ft -Ft'.
+frameterm_eq_frames_rule : frameterm_eq_frames eqf_ref eq_ref Ft Ft.
+%worlds () (frameterm_eq_frames _ _ _ _).
+%total {} (frameterm_eq_frames _ _ _ _).
+
+strictness2_lem1 :
+      % Assumptions:
+             {N} {Fs} frameterm (Fs V) (N V) -> M \s/ V -> 
+      % Conclusion:
+             frameterm (Fs M) (N M) -> type.
+             
+
+%mode strictness2_lem1 +N +Fs +FtV +EVs -FtM.
+
+strictness2_lem1_tens_val  : strictness2_lem1 ([a] tens _ _) ([a] nil) (frameterm_val _) _
+                                              (frameterm_val val_tens).
+
+strictness2_lem1_unit_val  : strictness2_lem1 ([a] unit) ([a] nil)  (frameterm_val _) _
+                                              (frameterm_val val_unit).
+
+strictness2_lem1_lam_val   : strictness2_lem1 ([a] lam T _) ([a] nil) (frameterm_val _) _
+                                              (frameterm_val val_lam).
+
+strictness2_lem1_tlam_val  : strictness2_lem1 ([a] tlam _) ([a] nil) (frameterm_val _) _
+                                              (frameterm_val val_tlam).
+
+strictness2_lem1_thunk_val : strictness2_lem1 ([a] thunk T _) ([a] nil) (frameterm_val _) _ 
+                                              (frameterm_val val_thunk).
+
+strictness2_lem1_unit2 : strictness2_lem1 ([a] a) Fs Ft evs_unit Ft.
+
+strictness2_lem1_lam2 : strictness2_lem1 ([a] a) Fs Ft evs_lam Ft.
+
+strictness2_lem1_tlam2 : strictness2_lem1 ([a] a) Fs Ft evs_tlam Ft.
+
+strictness2_lem1_tens2 : strictness2_lem1 ([a] a) Fs Ft evs_tens Ft. 
+
+strictness2_lem1_thunk2 : strictness2_lem1 ([a] a) Fs Ft evs_thunk Ft.
+
+strictness2_lem1_app1 : strictness2_lem1 ([a] app (N1 a) (N2 a)) Fs (frameterm_app Ft) Evs 
+                                         (frameterm_app Ft') 
+         <- strictness2_lem1 N1 ([a] cons (fapp (N2 a)) (Fs a)) Ft Evs Ft'.
+
+strictness2_lem1_tapp1 : strictness2_lem1 ([a] tapp (N1 a) T) Fs (frameterm_tapp Ft) Evs 
+                                          (frameterm_tapp Ft')
+         <- strictness2_lem1 N1 ([a] cons (ftapp T) (Fs a)) Ft Evs Ft'.
+
+strictness2_lem1_letu1 : strictness2_lem1 ([a] letu (N1 a) (N2 a)) Fs (frameterm_letu Ft) Evs 
+                                          (frameterm_letu Ft') 
+         <- strictness2_lem1 N1 ([a] cons (fletu (N2 a)) (Fs a)) Ft Evs Ft'.
+
+strictness2_lem1_letb1 : strictness2_lem1 ([a] letb (N1 a) (N2 a)) Fs (frameterm_letb Ft) Evs
+                                          (frameterm_letb Ft')
+         <- strictness2_lem1 N1 ([a] cons (fletb (N2 a)) (Fs a)) Ft Evs Ft'.
+
+strictness2_lem1_lett1 : strictness2_lem1 ([a] lett (N1 a) (N2 a)) Fs (frameterm_lett Ft) Evs
+                                          (frameterm_lett Ft')
+         <- strictness2_lem1 N1 ([a] cons (flett (N2 a)) (Fs a)) Ft Evs Ft'.
+
+strictness2_lem1_lam : strictness2_lem1 ([a] lam T (M4 a)) ([a] cons (fapp (M5 a)) (Fs a))
+                                        (frameterm_lam Ft) Evs (frameterm_lam Ft') 
+                <- strictness2_lem1 ([a] M4 a (M5 a)) Fs Ft Evs Ft'.
+
+strictness2_lem1_tens : strictness2_lem1 ([a] tens (M3 a) (M4 a)) ([a] cons (flett (M5 a)) (Fs a))
+                                         (frameterm_tens Ft) Evs (frameterm_tens Ft')
+                <- strictness2_lem1 ([a] M5 a (M3 a) (M4 a)) Fs Ft Evs Ft'.
+
+strictness2_lem1_unit : strictness2_lem1 ([a] unit) ([a] cons (fletu (M5 a)) (Fs a))
+                                         (frameterm_unit Ft) Evs (frameterm_unit Ft')
+                <- strictness2_lem1 ([a] M5 a) Fs Ft Evs Ft'.
+
+strictness2_lem1_thunk : strictness2_lem1 ([a] thunk T (M4 a)) ([a] cons (fletb (M5 a)) (Fs a))
+                                          (frameterm_thunk Ft) Evs (frameterm_thunk Ft')
+                <- strictness2_lem1 ([a] M5 a (letb (thunk T (M4 a)) (M4 a))) Fs Ft Evs Ft'.
+
+strictness2_lem1_tlam : strictness2_lem1 ([a] tlam (M4 a)) ([a] cons (ftapp T) (Fs a))
+                                         (frameterm_tlam Ft) Evs (frameterm_tlam Ft')
+                <- strictness2_lem1 ([a] M4 a T) Fs Ft Evs Ft'.
+
+strictness2_lem1_app2 : strictness2_lem1 ([a] a) Fs Ft1 (evs_app EvM12 EvM2 EvM1) (frameterm_app Ft7)
+                <- strictness2_lem1 ([a] a) Fs Ft1 EvM12 Ft2 
+                <- strictness2_lem1 ([a] M1' a) ([a] (Fs (M1' a))) Ft2 EvM2 Ft4 
+                <- lem42 ([a] Fs a) ([a] a) (redex_app : redex (app (lam T M1') M2) _) Ft4 Ft5
+                <- inverse_ft_app Ft5 Ft6
+                <- strictness2_lem1 ([a] a) ([a] cons (fapp M2) (Fs (app a M2))) Ft6 EvM1 Ft7.
+
+strictness2_lem1_tapp2 : strictness2_lem1 ([a] a) Fs Ft1 (evs_tapp EvM12 EvM1) (frameterm_tapp Ft5)
+                <- strictness2_lem1 ([a] a) Fs Ft1 EvM12 Ft2 
+                <- lem42 ([a] Fs a) ([a] a) (redex_tapp : redex (tapp (tlam M1') T) _) Ft2 Ft3
+                <- inverse_ft_tapp Ft3 Ft4
+                <- strictness2_lem1 ([a] a) ([a] cons (ftapp T) (Fs (tapp a T))) Ft4 EvM1 Ft5.
+
+strictness2_lem1_letu2 : strictness2_lem1 ([a] a) Fs Ft1 (evs_letu EvM2 EvM1) (frameterm_letu Ft5)
+                <- strictness2_lem1 ([a] a) Fs Ft1 EvM2 Ft2 
+                <- lem42 ([a] Fs a) ([a] a) (redex_letu : redex (letu unit M2) _) Ft2 Ft3
+                <- inverse_ft_letu Ft3 Ft4
+                <- strictness2_lem1 ([a] a) ([a] cons (fletu M2) (Fs (letu a M2))) Ft4 EvM1 Ft5.
+
+strictness2_lem1_lett2 : strictness2_lem1 ([a] a) Fs Ft1 (evs_lett EvM2 EvM1) (frameterm_lett Ft5)
+                <- strictness2_lem1 ([a] a) Fs Ft1 EvM2 Ft2 
+                <- lem42 ([a] Fs a) ([a] a) (redex_lett : redex (lett (tens M1 M2) M3) _) Ft2 Ft3
+                <- inverse_ft_lett Ft3 Ft4
+                <- strictness2_lem1 ([a] a) ([a] cons (flett M3) (Fs (lett a M3))) Ft4 EvM1 Ft5.
+
+strictness2_lem1_letb2 : strictness2_lem1 ([a] a) Fs Ft1 (evs_letb EvM2 EvM1) (frameterm_letb Ft5)
+                <- strictness2_lem1 ([a] a) Fs Ft1 EvM2 Ft2 
+                <- lem42 ([a] Fs a) ([a] a) (redex_letb : redex (letb (thunk T M1) M2) _) Ft2 Ft3
+                <- inverse_ft_letb Ft3 Ft4
+                <- strictness2_lem1 ([a] a) ([a] cons (fletb M2) (Fs (letb a M2))) Ft4 EvM1 Ft5.
+
+%worlds () (strictness2_lem1 _ _ _ _ _).
+% covers strictness2_lem1 +N +Fs +FtV +EVs -FtM. 
+% terminates {E D} (strictness2_lem1 _ _ D E _).
+%total {E D} (strictness2_lem1 _ _ D E _).
+
+strictness21 : {N} (N V) \/ -> M \s/ V -> (N M) \/ -> type.
+%mode strictness21 +N +Term +Ev -Term'.
+strictness21_rule : strictness21 N (terminate Ev) Evs (terminate Ev')
+           <- eval_frameterm Ev Ft
+           <- strictness2_lem1 N ([a:term] nil) Ft Evs Ft'
+           <- frameterm_eval Ft' Ev'.
+%worlds () (strictness21 _ _ _ _).
+% covers strictness21 +N +Ev -S -Term.
+%total {} (strictness21 _ _ _ _).
+ 
+

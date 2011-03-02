@@ -1,0 +1,371 @@
+
+esg-wf-ordered	: esg-wf G K
+		   -> cxt-ordered G
+		   -> type.
+%mode esg-wf-ordered +D1 -D2.
+
+-	: esg-wf-ordered (esg-wf/sg/unit DO) DO.
+
+-	: esg-wf-ordered (esg-wf/sg/cn D1) DO
+	   <- eofkd-ordered D1 DO.
+
+-	: esg-wf-ordered (esg-wf/sg/kd D1) DO
+	   <- ekd-wf-ordered D1 DO.
+
+-	: esg-wf-ordered (esg-wf/sg/sgm D1 _ _) DO
+	   <- esg-wf-ordered D1 DO.
+
+-	: esg-wf-ordered (esg-wf/sg/pi D1 _ _) DO
+	   <- esg-wf-ordered D1 DO.
+
+
+%worlds (cn-block | ovar-block | bind-block | wbind-block | ofkd-block) 
+(esg-wf-ordered _ _).
+%total (D1) (esg-wf-ordered D1 _).
+
+
+
+esg-deq-ordered	: esg-deq G K K'
+		   -> cxt-ordered G
+		   -> type.
+%mode esg-deq-ordered +D1 -D2.
+
+-	: esg-deq-ordered (esg-deq/sg/unit DO) DO.
+
+-	: esg-deq-ordered (esg-deq/sg/cn D1) DO
+	   <- ecn-deq-ordered D1 DO.
+
+-	: esg-deq-ordered (esg-deq/sg/kd D1) DO
+	   <- ekd-deq-ordered D1 DO.
+
+-	: esg-deq-ordered (esg-deq/sg/sgm D1 _ _) DO
+	   <- esg-deq-ordered D1 DO.
+
+-	: esg-deq-ordered (esg-deq/sg/pi D1 _ _) DO
+	   <- esg-deq-ordered D1 DO.
+
+
+%worlds (cn-block | ovar-block | wbind-block | ofkd-block) (esg-deq-ordered _ _).
+%total (D1) (esg-deq-ordered D1 _).
+
+
+cut-sg-wf	: {Cm}
+		   {D: ofkd C K -> sg-wf K'}
+		   ({d} mofkd d met/unit -> msg-wf (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': esg-wf G K'}
+		      mesg-wf D' Cm
+		   -> type.
+%mode cut-sg-wf +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-sg-deq	: {Cm}
+		   {D: ofkd C K -> sg-deq K' K''}
+		   ({d} mofkd d met/unit -> msg-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': esg-deq G K' K''}
+		      mesg-deq D' Cm
+		   -> type.
+%mode cut-sg-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-esg-wf	: {Cm}
+		   {D: ofkd C K -> esg-wf G K'}
+		   ({d} mofkd d met/unit -> mesg-wf (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': esg-wf G K'}
+		      mesg-wf D' Cm
+		   -> type.
+%mode cut-esg-wf +X1 +X2 +X3 +X4 -X5 -X6.
+
+cut-esg-deq	: {Cm}
+		   {D: ofkd C K -> esg-deq G K' K''}
+		   ({d} mofkd d met/unit -> mesg-deq (D d) Cm)
+		   -> cxt-lookup G C K
+		   -> {D': esg-deq G K' K''}
+		      mesg-deq D' Cm
+		   -> type.
+%mode cut-esg-deq +X1 +X2 +X3 +X4 -X5 -X6.
+
+-	: cut-sg-wf _ ([d] sg-wf/sg/unit) ([d'][dm] msg-wf/sg/unit) DL
+	   (esg-wf/sg/unit DO) (mesg-wf/sg/unit)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-sg-wf (met/sing Mm) 
+	   ([d] sg-wf/sg/cn (D1 d))
+	   ([d'][dm] msg-wf/sg/cn (D2 d' dm))
+	   DL
+	   (esg-wf/sg/cn D1')
+	   (mesg-wf/sg/cn D2')
+	   <- cut-ofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-sg-wf (met/sing Mm) 
+	   ([d] sg-wf/sg/kd (D1 d))
+	   ([d'][dm] msg-wf/sg/kd (D2 d' dm))
+	   DL
+	   (esg-wf/sg/kd D1')
+	   (mesg-wf/sg/kd D2')
+	   <- cut-kd-wf Mm D1 D2 DL D1' D2'.
+
+-	: cut-sg-wf (met/pair M1 M2) 
+	   ([d] sg-wf/sg/sgm (D1 d) (D2 d) DFS)
+	   ([d'][dm] msg-wf/sg/sgm (D3 d' dm) (D4 d' dm))
+	   DL
+	   (esg-wf/sg/sgm D1' D2'' DFS)
+	   (mesg-wf/sg/sgm D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-sg-wf M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-sg-wf M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e': esg-wf (cxt/cons G y B) (C y))
+		 (D4' d dm y e': mesg-wf (D2' d y e') M2))
+	   <- ({y}{e':isvar y J}
+		 cut-esg-wf M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+-	: cut-sg-wf (met/pair M1 M2) 
+	   ([d] sg-wf/sg/pi (D1 d) (D2 d) DFS)
+	   ([d'][dm] msg-wf/sg/pi (D3 d' dm) (D4 d' dm))
+	   DL
+	   (esg-wf/sg/pi D1' D2'' DFS)
+	   (mesg-wf/sg/pi D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-sg-wf M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'
+		    : cxt-lookup (cxt/cons G y B) X A))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-sg-wf M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e': esg-wf (cxt/cons G y B) (C y))
+		 (D4' d dm y e': mesg-wf (D2' d y e') M2))
+	   <- ({y}{e':isvar y J}
+		 cut-esg-wf M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+
+-	: cut-sg-deq _ ([d] sg-deq/sg/unit) ([d'][dm] msg-deq/sg/unit) DL
+	   (esg-deq/sg/unit DO) (mesg-deq/sg/unit)
+	   <- cxt-lookup-ordered DL DO.
+
+-	: cut-sg-deq (met/sing Mm) 
+	   ([d] sg-deq/sg/cn (D1 d))
+	   ([d'][dm] msg-deq/sg/cn (D2 d' dm))
+	   DL
+	   (esg-deq/sg/cn D1')
+	   (mesg-deq/sg/cn D2')
+	   <- cut-cn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-sg-deq (met/sing Mm) 
+	   ([d] sg-deq/sg/kd (D1 d))
+	   ([d'][dm] msg-deq/sg/kd (D2 d' dm))
+	   DL
+	   (esg-deq/sg/kd D1')
+	   (mesg-deq/sg/kd D2')
+	   <- cut-kd-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-sg-deq (met/pair M1 M2) 
+	   ([d] sg-deq/sg/sgm (D1 d) (D2 d) DFS)
+	   ([d'][dm] msg-deq/sg/sgm (D3 d' dm) (D4 d' dm))
+	   DL
+	   (esg-deq/sg/sgm D1' D2'' DFS)
+	   (mesg-deq/sg/sgm D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-sg-deq M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-sg-deq M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-esg-deq M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+-	: cut-sg-deq (met/pair M1 M2) 
+	   ([d] sg-deq/sg/pi (D1 d) (D2 d) DFS)
+	   ([d'][dm] msg-deq/sg/pi (D3 d' dm) (D4 d' dm))
+	   DL
+	   (esg-deq/sg/pi D1' D2'' DFS)
+	   (mesg-deq/sg/pi D3' D4'')
+	   <- cxt-lookup-ordered DL DO
+	   <- cxt-extend-ordered DO DB
+	   <- cut-sg-deq M1 D1 D3 DL D1' D3'
+	   <- ({y}{e': isvar y J}
+		 cxt-weaken-lookup (DB y e') DL _ 
+		 (DL' y e'))
+	   <- ({d: ofkd X A}{dm: mofkd d met/unit}
+		 {y} {e':isvar y J}
+		 cut-sg-deq M2 
+		 ([e] D2 d y e)
+		 ([e][em] D4 d dm y e em)
+		 (cxt-lookup/hit (DB y e'))
+		 (D2' d y e')
+		 (D4' d dm y e'))
+	   <- ({y}{e':isvar y J}
+		 cut-esg-deq M2 
+		 ([d] D2' d y e')
+		 ([d] [dm] D4' d dm y e')
+		 (DL' y e')
+		 (D2'' y e')
+		 (D4'' y e')).
+
+
+
+-	: cut-esg-wf met/unit
+	   ([d] esg-wf/sg/unit DO)
+	   ([d][dm] mesg-wf/sg/unit)
+	   DL
+	   (esg-wf/sg/unit DO)
+	   (mesg-wf/sg/unit).
+
+-	: cut-esg-wf (met/sing Mm)
+	   ([d] esg-wf/sg/cn (D1 d))
+	   ([d][dm] mesg-wf/sg/cn (D2 d dm))
+	   DL
+	   (esg-wf/sg/cn D1')
+	   (mesg-wf/sg/cn D2')
+	   <- cut-eofkd Mm D1 D2 DL D1' D2'.
+
+-	: cut-esg-wf (met/sing Mm)
+	   ([d] esg-wf/sg/kd (D1 d))
+	   ([d][dm] mesg-wf/sg/kd (D2 d dm))
+	   DL
+	   (esg-wf/sg/kd D1')
+	   (mesg-wf/sg/kd D2')
+	   <- cut-ekd-wf Mm D1 D2 DL D1' D2'.
+
+-	: cut-esg-wf (met/pair M1 M2)
+	   ([d] esg-wf/sg/sgm (D1 d) (D2 d) DFS)
+	   ([d][dm] mesg-wf/sg/sgm (D3 d dm) (D4 d dm))
+	   DL
+	   (esg-wf/sg/sgm D1' D2' DFS)
+	   (mesg-wf/sg/sgm D3' D4')
+	   <- cut-esg-wf M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 esg-wf-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-esg-wf M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+-	: cut-esg-wf (met/pair M1 M2)
+	   ([d] esg-wf/sg/pi (D1 d) (D2 d) DFS)
+	   ([d][dm] mesg-wf/sg/pi (D3 d dm) (D4 d dm))
+	   DL
+	   (esg-wf/sg/pi D1' D2' DFS)
+	   (mesg-wf/sg/pi D3' D4')
+	   <- cut-esg-wf M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 esg-wf-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-esg-wf M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+
+
+-	: cut-esg-deq met/unit
+	   ([d] esg-deq/sg/unit DO)
+	   ([d][dm] mesg-deq/sg/unit)
+	   DL
+	   (esg-deq/sg/unit DO)
+	   (mesg-deq/sg/unit).
+
+-	: cut-esg-deq (met/sing Mm)
+	   ([d] esg-deq/sg/cn (D1 d))
+	   ([d][dm] mesg-deq/sg/cn (D2 d dm))
+	   DL
+	   (esg-deq/sg/cn D1')
+	   (mesg-deq/sg/cn D2')
+	   <- cut-ecn-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-esg-deq (met/sing Mm)
+	   ([d] esg-deq/sg/kd (D1 d))
+	   ([d][dm] mesg-deq/sg/kd (D2 d dm))
+	   DL
+	   (esg-deq/sg/kd D1')
+	   (mesg-deq/sg/kd D2')
+	   <- cut-ekd-deq Mm D1 D2 DL D1' D2'.
+
+-	: cut-esg-deq (met/pair M1 M2)
+	   ([d] esg-deq/sg/sgm (D1 d) (D2 d) DFS)
+	   ([d][dm] mesg-deq/sg/sgm (D3 d dm) (D4 d dm))
+	   DL
+	   (esg-deq/sg/sgm D1' D2' DFS)
+	   (mesg-deq/sg/sgm D3' D4')
+	   <- cut-esg-deq M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 esg-deq-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-esg-deq M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+-	: cut-esg-deq (met/pair M1 M2)
+	   ([d] esg-deq/sg/pi (D1 d) (D2 d) DFS)
+	   ([d][dm] mesg-deq/sg/pi (D3 d dm) (D4 d dm))
+	   DL
+	   (esg-deq/sg/pi D1' D2' DFS)
+	   (mesg-deq/sg/pi D3' D4')
+	   <- cut-esg-deq M1 D1 D3 DL D1' D3'
+	   <- ({d:ofkd _ _}
+		 {y}{e:isvar y J}
+		 esg-deq-ordered (D2 d y e) (cxt-ordered/cons (DB y e)))
+	   <- ({y}{e:isvar y J}
+		 cxt-weaken-lookup (DB y e) DL _ (DL' y e))
+	   <- ({y}{e:isvar y J}
+		 cut-esg-deq M2 ([d] D2 d y e) ([d][dm] D4 d dm y e) (DL' y e)
+		 (D2' y e) (D4' y e)).
+
+
+
+
+%worlds (can-mofkd-block | ofkd-block | ovar-block | bind-block | wbind-block)
+(cut-sg-wf _ _ _ _ _ _)
+(cut-sg-deq _ _ _ _ _ _)
+(cut-esg-wf _ _ _ _ _ _)
+(cut-esg-deq _ _ _ _ _ _).
+
+%total (M1 M2 M3 M4)
+(cut-sg-wf M1 _ _ _ _ _)
+(cut-sg-deq M2 _ _ _ _ _)
+(cut-esg-wf M3 _ _ _ _ _)
+(cut-esg-deq M4 _ _ _ _ _).
+

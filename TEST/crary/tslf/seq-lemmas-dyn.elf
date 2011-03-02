@@ -1,0 +1,60 @@
+%%%% lemmas about syntactic equality
+%%%% this file could benefit from better organization. perhaps splitting it
+%%%% into different files, etc..
+
+
+
+seq/val/tm	: seq/tm E1 E2
+		   -> val/tm E1
+		   -> val/tm E2
+		   -> type.
+
+%mode seq/val/tm +D0 +D1 -D2.
+
+-	: seq/val/tm seq/tm/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (seq/val/tm _ _ _).
+%total {} (seq/val/tm _ _ _).
+
+
+
+seq/val/md	: seq/md M1 M2
+		   -> val/md M1
+		   -> val/md M2
+		   -> type.
+
+%mode seq/val/md +D0 +D1 -D2.
+
+-	: seq/val/md seq/md/refl D1 D1.
+
+%worlds (ofkd+vdt-block) (seq/val/md _ _ _).
+%total {} (seq/val/md _ _ _).
+
+
+
+step/tm/seq	: seq/tm T2 T1
+		   -> step/tm T1 S1 TT1 T3 S2 TT2
+		   -> step/tm T2 S1 TT1 T3 S2 TT2
+		   -> type.
+
+%mode step/tm/seq +D1 +D2 -D3.
+
+-	: step/tm/seq seq/tm/refl S1 S1.
+
+%worlds () (step/tm/seq _ _ _).
+%total {} (step/tm/seq _ _ _).
+
+
+
+
+step/md/seq	: seq/md M2 M1
+		   -> step/md M1 S1 T1 M3 S2 T2
+		   -> step/md M2 S1 T1 M3 S2 T2
+		   -> type.
+
+%mode step/md/seq +D1 +D2 -D3.
+
+-	: step/md/seq seq/md/refl S1 S1.
+
+%worlds () (step/md/seq _ _ _).
+%total {} (step/md/seq _ _ _).

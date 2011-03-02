@@ -1,0 +1,38 @@
+%%%% kd-anti
+
+kd-anti : kd-deq K1 K2 
+	   -> kd-wf K1 
+	   -> kd-wf K2 
+	   -> kd-sub K1 K2 
+	   -> kd-sub K2 K1 
+	   -> type.
+%mode kd-anti +D1 +D1' +D1'' -D2 -D3.
+
+- : kd-anti kd-deq/kd/unit _ _ kd-sub/kd/unit kd-sub/kd/unit.
+
+- : kd-anti kd-deq/kd/type _ _ kd-sub/kd/type kd-sub/kd/type.
+
+- : kd-anti (kd-deq/kd/sing D1) _ _
+     (kd-sub/kd/sing-kd/sing D1)
+     (kd-sub/kd/sing-kd/sing (cn-deq/sym D1)).
+
+- : kd-anti (kd-deq/kd/sgm D1 D2) (kd-wf/kd/sgm Do DL) (kd-wf/kd/sgm Dt DK)
+     (kd-sub/kd/sgm D3 D4 DK)
+     (kd-sub/kd/sgm D3' D4'' DL)
+     <- kd-anti D1 Do Dt D3 D3'
+     <- kd-wkn/kd-wf DK D3 DKK
+     <- ({a:cn} {da: ofkd a K1}
+	   kd-anti (D2 a da) (DL a da) (DKK a da) (D4 a da) (D4' a da))
+     <- kd-wkn/kd-sub D4' D3' D4''.
+
+- : kd-anti (kd-deq/kd/pi D1 D2) (kd-wf/kd/pi Do DL) (kd-wf/kd/pi Dt DK)
+     (kd-sub/kd/pi D3 D4 DL)
+     (kd-sub/kd/pi D3' D4'' DK)
+     <- kd-anti D1 Dt Do D3 D3'
+     <- kd-wkn/kd-wf DL D3 DKK
+     <- ({a:cn} {da: ofkd a K2}
+	   kd-anti (D2 a da) (DKK a da) (DK a da) (D4 a da) (D4' a da))
+     <- kd-wkn/kd-sub D4' D3' D4''.
+
+%worlds (ofkd-block | can-mofkd-block | ofkd+vdt-block) (kd-anti _ _ _ _ _).
+%total (D5)  (kd-anti D5 _ _ _ _).

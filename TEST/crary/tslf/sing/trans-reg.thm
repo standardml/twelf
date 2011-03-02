@@ -1,0 +1,1238 @@
+
+%%%%%  Translation Regularity (Implicit Context)  %%%%%
+
+transe-context : transe G EA A
+		  -> ordered G -> type.
+%mode transe-context +X1 -X2.
+
+ttranse-context : ttranse G EA A
+		   -> ordered G -> type.
+%mode ttranse-context +X1 -X2.
+
+-t	: ttranse-context (ttranse/t D) D.
+
+-pi	: ttranse-context (ttranse/pi _ D) D'
+	   <- ttranse-context D D'.
+
+-sigma	: ttranse-context (ttranse/sigma _ D) D'
+	   <- ttranse-context D D'.
+
+-sing	: ttranse-context (ttranse/sing D) D'
+	   <- transe-context D D'.
+
+
+
+-const	: transe-context (transe/const D _ _ _ _) D.
+
+-forall	: transe-context (transe/forall _ _ D) D'
+	   <- ttranse-context D D'.
+
+-var	: transe-context (transe/var _ _ _ D _) D'
+	   <- lookup-context D D'.
+
+-vari	: transe-context (transe/vari D _ _ _ _ _) D.
+
+-app	: transe-context (transe/app _ _ _ D) D'
+	   <- transe-context D D'.
+
+-pi1	: transe-context (transe/pi1 D) D'
+	   <- transe-context D D'.
+
+-pi2	: transe-context (transe/pi2 D) D'
+	   <- transe-context D D'.
+
+-lam	: transe-context (transe/lam _ D) D'
+	   <- ttranse-context D D'.
+
+-pair	: transe-context (transe/pair _ D) D'
+	   <- transe-context D D'.
+
+%worlds (var | bind | ovar | obind | tbind) (ttranse-context _ _) (transe-context _ _).
+%total (D1 D2) (ttranse-context D1 _) (transe-context D2 _).
+
+
+
+%%%%%  Translation to Explicit Form  %%%%%
+
+cut-ttrans : {EB}
+	     ({x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+	     -> ({x} isvar x I -> lookup (G x) x A)
+	     -> ({x} isvar x I -> {ex} vtrans ex x -> ttranse (G x) (EB ex) (B x)) -> type.
+%mode cut-ttrans +X1 +X2 +X3 -X4.
+
+cut-trans : {EM}
+	     ({x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (B x))
+	     -> ({x} isvar x I -> lookup (G x) x A)
+	     -> ({x} isvar x I -> {ex} vtrans ex x -> transe (G x) (EM ex) (B x)) -> type.
+%mode cut-trans +X1 +X2 +X3 -X4.
+
+cut-ttranse : {EB}
+	       ({x} vof x A -> isvar x I -> {ex} vtrans ex x -> ttranse (G x) (EB ex) (B x))
+	       -> ({x} isvar x I -> lookup (G x) x A)
+	       -> ({x} isvar x I -> {ex} vtrans ex x -> ttranse (G x) (EB ex) (B x)) -> type.
+%mode cut-ttranse +X1 +X2 +X3 -X4.
+
+cut-transe : {EM}
+	      ({x} vof x A -> isvar x I -> {ex} vtrans ex x -> transe (G x) (EM ex) (B x))
+	      -> ({x} isvar x I -> lookup (G x) x A)
+	      -> ({x} isvar x I -> {ex} vtrans ex x -> transe (G x) (EM ex) (B x)) -> type.
+%mode cut-transe +X1 +X2 +X3 -X4.
+
+-t	: cut-ttrans _
+	   ([x] [d] [ex] [xt] ttrans/t)
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/t (Dord x d'))
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		    (Dord x d')).
+
+-pi	: cut-ttrans _ 
+	   ([x] [d] [ex] [xt] ttrans/pi (D2 x d ex xt) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/pi (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttrans _ D1 Dlook D1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		    (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		    (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-ttrans _
+		    ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-ttranse _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-sigma	: cut-ttrans _ 
+	   ([x] [d] [ex] [xt] ttrans/sigma (D2 x d ex xt) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/sigma (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttrans _ D1 Dlook D1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		    (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		    (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-ttrans _
+		    ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-ttranse _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-sing	: cut-ttrans _ 
+	   ([x] [d] [ex] [xt] ttrans/sing (D1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/sing (D1' x d' ex xt))
+	   <- cut-trans _ D1 Dlook D1'.
+
+%%%
+
+-const	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/const (D3 x) (D2 x) (Dwf x d) (D1 x))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/const (Dord x d') (D3 x) (D2 x) (Dwf''' x)(D1 x))
+	   <- kof-strengthen D1 Deq
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- ({x} {d} wf-resp (Deq x) (Dwf x d) (Dwf' x d))
+	   <- strengthen-wf Dwf' Dwf''
+	   <- ({x} wf-resp (Deq' x) Dwf'' (Dwf''' x))
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d')).
+
+-forall	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/forall (D3 x) (D2 x) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/forall (D3 x) (D2 x) (D1' x d' ex xt))
+	   <- cut-ttrans _ D1 Dlook D1'.
+
+-varsam	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/var (D5 x) (D4 x) (Dwf x d) d (D1 x ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/var (D5 x) (D4 x) (Dwfe x d') (Dlook x d') (D1 x ex xt))
+	   <- ({x} {d}
+		 can-mwf (Dwf x d) (Dmwf x d))
+	   <- cut-wf _ Dwf Dmwf Dlook Dwfe _.
+
+-varoth	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/var (D5 x) (D4 x) (Dwf x d) D2 D1)
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/vari (Dord x d') (D5 x) (D4 x) Dwf' D2 D1)
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		    (Dord x d'))
+	   <- ({x} {d}
+		 can-mwf (Dwf x d) (Dmwf x d))
+	   <- strengthen-for-cut-wf _ Dwf Dmwf Dwf' _.
+
+-lam	: cut-trans _ 
+	   ([x] [d] [ex] [xt] trans/lam (D2 x d ex xt) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/lam (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttrans _ D1 Dlook D1'
+	   <- ({x} {d'}
+		 lookup-context (Dlook x d')
+		 (Dord x d'))
+	   <- ({x} {d'}
+		 extend-context (Dord x d')
+		 (Dbound x d' : {y} isvar y J -> bounded (G x) y))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-trans _
+		    ([y] [e] [ey] [yt] D2 x d ex xt y e ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-transe _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-app	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/app (D4 x) (D3 x) (D2 x d ex xt) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d] [ex] [xt] transe/app (D4 x) (D3 x) (D2' x d ex xt) (D1' x d ex xt))
+	   <- cut-trans _ D1 Dlook D1'
+	   <- cut-trans _ D2 Dlook D2'.
+
+-pi1	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/pi1 (D1 x d ex xt))
+	   Dlook
+	   ([x] [d] [ex] [xt] transe/pi1 (D1' x d ex xt))
+	   <- cut-trans _ D1 Dlook D1'.
+
+-pi2	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/pi2 (D1 x d ex xt))
+	   Dlook
+	   ([x] [d] [ex] [xt] transe/pi2 (D1' x d ex xt))
+	   <- cut-trans _ D1 Dlook D1'.
+
+-pair	: cut-trans _
+	   ([x] [d] [ex] [xt] trans/pair (D2 x d ex xt) (D1 x d ex xt))
+	   Dlook
+	   ([x] [d] [ex] [xt] transe/pair (D2' x d ex xt) (D1' x d ex xt))
+	   <- cut-trans _ D1 Dlook D1'
+	   <- cut-trans _ D2 Dlook D2'.
+
+%%%
+
+-t	: cut-ttranse _
+	   ([x] [d] [d'] [ex] [xt] ttranse/t (Dord x d'))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/t (Dord x d')).
+
+-pi	: cut-ttranse _ 
+	   ([x] [d] [d'] [ex] [xt] ttranse/pi (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/pi (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttranse _ D1 Dlook D1'
+	   <- ({x} {d} {d'}
+		 {ex} {xt}
+		    {y} {e'}
+		 {ey} {yt} 
+		    ttranse-context (D2 x d d' ex xt y e' ey yt)
+		    (ordered/cons
+		       (Dbound x d' y e')))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-ttranse _
+		    ([y] [e] [e'] [ey] [yt] D2 x d d' ex xt y e' ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-ttranse _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-sigma	: cut-ttranse _ 
+	   ([x] [d] [d'] [ex] [xt] ttranse/sigma (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/sigma (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttranse _ D1 Dlook D1'
+	   <- ({x} {d} {d'}
+		 {ex} {xt}
+		    {y} {e'}
+		 {ey} {yt} 
+		    ttranse-context (D2 x d d' ex xt y e' ey yt)
+		    (ordered/cons
+		       (Dbound x d' y e')))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-ttranse _
+		    ([y] [e] [e'] [ey] [yt] D2 x d d' ex xt y e' ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-ttranse _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-sing	: cut-ttranse _ 
+	   ([x] [d] [d'] [ex] [xt] ttranse/sing (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] ttranse/sing (D1' x d' ex xt))
+	   <- cut-transe _ D1 Dlook D1'.
+
+%%%
+
+-const	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/const (Dord x d') (D3 x) (D2 x) (Dwf x d) (D1 x))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/const (Dord x d') (D3 x) (D2 x) (Dwf''' x) (D1 x))
+	   <- kof-strengthen D1 Deq
+	   <- ({x} tp-eq-symm (Deq x) (Deq' x))
+	   <- ({x} {d} wf-resp (Deq x) (Dwf x d) (Dwf' x d))
+	   <- strengthen-wf Dwf' Dwf''
+	   <- ({x} wf-resp (Deq' x) Dwf'' (Dwf''' x)).
+
+-var	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/var (D5 x) (D4 x) (Dwfe x d d') (D2 x d') (D1 x ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/var (D5 x) (D4 x) (Dwfe' x d') (D2 x d') (D1 x ex xt))
+	   <- ({x} {d} {d'}
+		 can-mwfe (Dwfe x d d') (Dmwfe x d d'))
+	   <- cut-wfe _ Dwfe Dmwfe Dlook Dwfe' _.
+
+-forall	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/forall (D3 x) (D2 x) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/forall (D3 x) (D2 x) (D1' x d' ex xt))
+	   <- cut-ttranse _ D1 Dlook D1'.
+
+-varsam	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/vari (D6 x d') (D5 x) (D4 x) (Dwf x d) d (D1 x ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/var (D5 x) (D4 x) (Dwfe x d') (Dlook x d') (D1 x ex xt))
+	   <- ({x} {d}
+		 can-mwf (Dwf x d) (Dmwf x d))
+	   <- cut-wf _ Dwf Dmwf Dlook Dwfe _.
+
+-varoth	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/vari (D6 x d') (D5 x) (D4 x) (Dwf x d) D2 D1)
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/vari (D6 x d') (D5 x) (D4 x) Dwf' D2 D1)
+	   <- ({x} {d}
+		 can-mwf (Dwf x d) (Dmwf x d))
+	   <- strengthen-for-cut-wf _ Dwf Dmwf Dwf' _.
+
+-lam	: cut-transe _ 
+	   ([x] [d] [d'] [ex] [xt] transe/lam (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/lam (D2'' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-ttranse _ D1 Dlook D1'
+	   <- ({x} {d} {d'}
+		 {ex} {xt}
+		    {y} {e'}
+		 {ey} {yt} 
+		    transe-context (D2 x d d' ex xt y e' ey yt)
+		    (ordered/cons
+		       (Dbound x d' y e')))
+	   <- ({x} {d} {d'} 
+		 {ex} {xt}
+		    cut-transe _
+		    ([y] [e] [e'] [ey] [yt] D2 x d d' ex xt y e' ey yt)
+		    ([y] [e'] lookup/hit (Dbound x d' y e'))
+		    ([y] [e'] [ey] [yt] D2' x d d' ex xt y e' ey yt))
+	   <- ({y} {e'}
+		 {ey} {yt}
+		    cut-transe _ 
+		    ([x] [d] [d'] [ex] [xt] D2' x d d' ex xt y e' ey yt)
+		    ([x] [d'] lookup/miss (Dlook x d') (Dbound x d' y e'))
+		    ([x] [d'] [ex] [xt] D2'' x d' ex xt y e' ey yt)).
+
+-app	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/app (D4 x) (D3 x) (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/app (D4 x) (D3 x) (D2' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-transe _ D1 Dlook D1'
+	   <- cut-transe _ D2 Dlook D2'.
+
+-pi1	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/pi1 (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/pi1 (D1' x d' ex xt))
+	   <- cut-transe _ D1 Dlook D1'.
+
+-pi2	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/pi2 (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/pi2 (D1' x d' ex xt))
+	   <- cut-transe _ D1 Dlook D1'.
+
+-pair	: cut-transe _
+	   ([x] [d] [d'] [ex] [xt] transe/pair (D2 x d d' ex xt) (D1 x d d' ex xt))
+	   Dlook
+	   ([x] [d'] [ex] [xt] transe/pair (D2' x d' ex xt) (D1' x d' ex xt))
+	   <- cut-transe _ D1 Dlook D1'
+	   <- cut-transe _ D2 Dlook D2'.
+
+%worlds (var | bind | ovar | obind | tbind) (cut-ttrans _ _ _ _) (cut-trans _ _ _ _) (cut-transe _ _ _ _) (cut-ttranse _ _ _ _).
+%total (A1 M1 A2 M2) (cut-ttrans A1 _ _ _) (cut-trans M1 _ _ _) (cut-transe A2 _ _ _) (cut-ttranse M2 _ _ _).
+
+
+
+trans1-to-transe : {I}
+		    ({x} vof x A -> {ex} vtrans ex x -> trans (EM ex) (B x))
+		    -> ({x} isvar x I -> {ex} vtrans ex x -> transe (cons nil x A) (EM ex) (B x)) -> type.
+%mode trans1-to-transe +X1 +X2 -X3.
+
+-	: trans1-to-transe I Dtrans Dtranse
+	   <- cut-trans EM Dtrans ([x] [d] lookup/hit (bounded/nil d)) Dtranse.
+
+%worlds (var | bind | ovar | obind | tbind) (trans1-to-transe _ _ _).
+%total {} (trans1-to-transe _ _ _).
+		    
+
+
+ttrans1-to-ttranse : {I}
+		      ({x} vof x A -> {ex} vtrans ex x -> ttrans (EB ex) (B x))
+		      -> ({x} isvar x I -> {ex} vtrans ex x -> ttranse (cons nil x A) (EB ex) (B x)) -> type.
+%mode ttrans1-to-ttranse +X1 +X2 -X3.
+
+-	: ttrans1-to-ttranse I Dtrans Dtranse
+	   <- cut-ttrans EM Dtrans ([x] [d] lookup/hit (bounded/nil d)) Dtranse.
+
+%worlds (var | bind | ovar | obind | tbind) (ttrans1-to-ttranse _ _ _).
+%total {} (ttrans1-to-ttranse _ _ _).
+
+
+
+trans-to-transe : trans EM A
+		   -> transe nil EM A -> type.
+%mode trans-to-transe +X1 -X2.
+
+ttrans-to-ttranse : ttrans EA A
+		   -> ttranse nil EA A -> type.
+%mode ttrans-to-ttranse +X1 -X2.
+
+-t	: ttrans-to-ttranse ttrans/t (ttranse/t ordered/nil).
+
+-pi	: ttrans-to-ttranse (ttrans/pi D2 D1) (ttranse/pi D2' D1')
+	   <- ttrans-to-ttranse D1 D1'
+	   <- ttrans1-to-ttranse 0 D2 D2'.
+
+-sigma	: ttrans-to-ttranse (ttrans/sigma D2 D1) (ttranse/sigma D2' D1')
+	   <- ttrans-to-ttranse D1 D1'
+	   <- ttrans1-to-ttranse 0 D2 D2'.
+
+-sing	: ttrans-to-ttranse (ttrans/sing D) (ttranse/sing D')
+	   <- trans-to-transe D D'.
+
+
+-const	: trans-to-transe (trans/const D4 D3 D2 D1) (transe/const ordered/nil D4 D3 D2 D1).
+
+-forall	: trans-to-transe (trans/forall D3 D2 D1) (transe/forall D3 D2 D1')
+	   <- ttrans-to-ttranse D1 D1'.
+
+-var	: trans-to-transe (trans/var D5 D4 D3 D2 D1) (transe/vari ordered/nil D5 D4 D3 D2 D1).
+
+-app	: trans-to-transe (trans/app D4 D3 D2 D1) (transe/app D4 D3 D2' D1')
+	   <- trans-to-transe D1 D1'
+	   <- trans-to-transe D2 D2'.
+
+-pi1	: trans-to-transe (trans/pi1 D) (transe/pi1 D')
+	   <- trans-to-transe D D'.
+
+-pi2	: trans-to-transe (trans/pi2 D) (transe/pi2 D')
+	   <- trans-to-transe D D'.
+
+-lam	: trans-to-transe (trans/lam D2 D1) (transe/lam D2' D1')
+	   <- ttrans-to-ttranse D1 D1'
+	   <- trans1-to-transe 0 D2 D2'.
+
+-pair	: trans-to-transe (trans/pair D2 D1) (transe/pair D2' D1')
+	   <- trans-to-transe D1 D1'
+	   <- trans-to-transe D2 D2'.
+
+%worlds (var | bind | ovar | tbind) (trans-to-transe _ _) (ttrans-to-ttranse _ _).
+%total (D1 D2) (trans-to-transe D1 _) (ttrans-to-ttranse D2 _).
+
+
+
+
+%%%%%  Translation to Implicit Form  %%%%%
+
+transi	: ctx -> eterm -> tp -> type.
+
+transi/nil	: transi nil EM B
+		   <- trans EM B.
+
+transi/cons	: transi (cons G X A) EM B
+		   <- (vof X A -> transi G EM B).
+
+
+
+ttransi	: ctx -> etp -> tp -> type.
+
+ttransi/nil	: ttransi nil EB B
+		   <- ttrans EB B.
+
+ttransi/cons	: ttransi (cons G X A) EB B
+		   <- (vof X A -> ttransi G EB B).
+
+
+
+ttransi-t : {G} ttransi G et t -> type.
+%mode ttransi-t +X1 -X2.
+
+-	: ttransi-t nil (ttransi/nil ttrans/t).
+-	: ttransi-t (cons G X A) (ttransi/cons D)
+	   <- ({d} ttransi-t G (D d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (ttransi-t _ _).
+%total G (ttransi-t G _).
+
+
+
+ttransi-pi : ttransi G EA A -> ({x} {ex} vtrans ex x -> ttransi (cons G x A) (EB ex) (B x)) -> ttransi G (epi EA EB) (pi A B) -> type.
+%mode ttransi-pi +X1 +X2 -X3.
+
+-	: ttransi-pi (ttransi/nil D1) ([x] [ex] [xt] ttransi/cons ([d] ttransi/nil (D2 x d ex xt)))
+	   (ttransi/nil (ttrans/pi D2 D1)).
+
+-	: ttransi-pi (ttransi/cons D1) ([x] [ex] [xt] ttransi/cons ([d] ttransi/cons ([e] D2 x d ex xt e)))
+	   (ttransi/cons D)
+	   <- ({e} ttransi-pi (D1 e) ([x] [ex] [xt] ttransi/cons ([d] D2 x d ex xt e)) (D e)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (ttransi-pi _ _ _).
+%total D (ttransi-pi D _ _).
+
+
+
+ttransi-sigma : ttransi G EA A -> ({x} {ex} vtrans ex x -> ttransi (cons G x A) (EB ex) (B x)) -> ttransi G (esigma EA EB) (sigma A B) -> type.
+%mode ttransi-sigma +X1 +X2 -X3.
+
+-	: ttransi-sigma (ttransi/nil D1) ([x] [ex] [xt] ttransi/cons ([d] ttransi/nil (D2 x d ex xt)))
+	   (ttransi/nil (ttrans/sigma D2 D1)).
+
+-	: ttransi-sigma (ttransi/cons D1) ([x] [ex] [xt] ttransi/cons ([d] ttransi/cons ([e] D2 x d ex xt e)))
+	   (ttransi/cons D)
+	   <- ({e} ttransi-sigma (D1 e) ([x] [ex] [xt] ttransi/cons ([d] D2 x d ex xt e)) (D e)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (ttransi-sigma _ _ _).
+%total D (ttransi-sigma D _ _).
+
+
+
+ttransi-sing : transi G EM (sing R) -> ttransi G (esing EM) (sing R) -> type.
+%mode ttransi-sing +X1 -X2.
+
+-	: ttransi-sing (transi/nil D) (ttransi/nil (ttrans/sing D)).
+
+-	: ttransi-sing (transi/cons D) (ttransi/cons D')
+	   <- ({d} ttransi-sing (D d) (D' d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (ttransi-sing _ _).
+%total D (ttransi-sing D _).
+
+
+
+transi-forall : ttransi G EA A -> expand (forall A) (qtp A) M -> self M (qtp A) B -> transi G (eforall EA) B -> type.
+%mode transi-forall +X1 +X2 +X3 -X4.
+
+-	: transi-forall (ttransi/nil D1) D2 D3 (transi/nil (trans/forall D3 D2 D1)).
+
+-	: transi-forall (ttransi/cons D1) D2 D3 (transi/cons D)
+	   <- ({d} transi-forall (D1 d) D2 D3 (D d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-forall _ _ _ _).
+%total D (transi-forall D _ _ _).
+
+
+
+transi-app : transi G EM (pi A B) -> transi G EN C -> subtype C A ([_] N) -> tsub ([x] B x) N Bx -> transi G (eapp EM EN) Bx -> type.
+%mode transi-app +X1 +X2 +X3 +X4 -X5.
+
+-	: transi-app (transi/nil D1) (transi/nil D2) D3 D4 (transi/nil (trans/app D4 D3 D2 D1)).
+
+-	: transi-app (transi/cons D1) (transi/cons D2) D3 D4 (transi/cons D)
+	   <- ({d} transi-app (D1 d) (D2 d) D3 D4 (D d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-app _ _ _ _ _).
+%total D (transi-app D _ _ _ _).
+
+
+
+transi-pi1 : transi G EM (sigma A ([_] B)) -> transi G (epi1 EM) A -> type.
+%mode transi-pi1 +X1 -X2.
+
+-	: transi-pi1 (transi/nil D) (transi/nil (trans/pi1 D)).
+
+-	: transi-pi1 (transi/cons D) (transi/cons D')
+	   <- ({d} transi-pi1 (D d) (D' d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-pi1 _ _).
+%total D (transi-pi1 D _).
+
+
+
+transi-pi2 : transi G EM (sigma A ([_] B)) -> transi G (epi2 EM) B -> type.
+%mode transi-pi2 +X1 -X2.
+
+-	: transi-pi2 (transi/nil D) (transi/nil (trans/pi2 D)).
+
+-	: transi-pi2 (transi/cons D) (transi/cons D')
+	   <- ({d} transi-pi2 (D d) (D' d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-pi2 _ _).
+%total D (transi-pi2 D _).
+
+
+
+transi-lam : ttransi G EA A -> ({x} {ex} vtrans ex x -> transi (cons G x A) (EM ex) (B x)) -> transi G (elam EA EM) (pi A B) -> type.
+%mode transi-lam +X1 +X2 -X3.
+
+-	: transi-lam (ttransi/nil D1) ([x] [ex] [xt] transi/cons ([d] transi/nil (D2 x d ex xt)))
+	   (transi/nil (trans/lam D2 D1)).
+
+-	: transi-lam (ttransi/cons D1) ([x] [ex] [xt] transi/cons ([d] transi/cons ([e] D2 x d ex xt e)))
+	   (transi/cons D)
+	   <- ({e} transi-lam (D1 e) ([x] [ex] [xt] transi/cons ([d] D2 x d ex xt e)) (D e)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-lam _ _ _).
+%total D (transi-lam D _ _).
+
+
+
+transi-pair : transi G EM A -> transi G EN B -> transi G (epair EM EN) (sigma A ([_] B)) -> type.
+%mode transi-pair +X1 +X2 -X3.
+
+-	: transi-pair (transi/nil D1) (transi/nil D2) (transi/nil (trans/pair D2 D1)).
+
+-	: transi-pair (transi/cons D1) (transi/cons D2) (transi/cons D)
+	   <- ({d} transi-pair (D1 d) (D2 d) (D d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-pair _ _ _).
+%total D (transi-pair D _ _).
+
+
+
+transi-var* : (wf A -> trans EM A') -> wfi G A -> transi G EM A' -> type.
+%mode transi-var* +X1 +X2 -X3.
+
+-	: transi-var* D (wfi/nil D') (transi/nil (D D')).
+
+-	: transi-var* D (wfi/cons D') (transi/cons D'')
+	   <- ({d} transi-var* D (D' d) (D'' d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-var* _ _ _).
+%total D (transi-var* _ D _).
+
+
+
+transi-var : vtrans EM X -> lookup G X A -> wfi G A -> expand X A M -> self M A A' -> transi G EM A' -> type.
+%mode transi-var +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: transi-var Dvtrans (lookup/hit _) (wfi/cons Dwfi) Dexpand Dself (transi/cons D)
+	   <- ({d}
+		 transi-var* ([d_wf] trans/var Dself Dexpand d_wf d Dvtrans) (Dwfi d) (D d)).
+
+-	: transi-var D1 (lookup/miss D2 _) (wfi/cons D3) D4 D5 (transi/cons D)
+	   <- ({d} transi-var D1 D2 (D3 d) D4 D5 (D d)).
+
+%worlds (bind | var | ovar | tbind | ofblock) (transi-var _ _ _ _ _ _).
+%total D (transi-var _ D _ _ _ _).
+
+
+
+trans-to-transi : {G} trans EM A -> transi G EM A -> type.
+%mode trans-to-transi +X1 +X2 -X3.
+
+-	: trans-to-transi _ D (transi/nil D).
+
+-	: trans-to-transi _ D (transi/cons ([d] D'))
+	   <- trans-to-transi _ D D'.
+
+%worlds (bind | var | ovar | tbind | ofblock) (trans-to-transi _ _ _).
+%total G (trans-to-transi G _ _).
+
+
+
+transe-to-transi : transe G EM A -> transi G EM A -> type.
+%mode transe-to-transi +X1 -X2.
+
+ttranse-to-ttransi : ttranse G EA A -> ttransi G EA A -> type.
+%mode ttranse-to-ttransi +X1 -X2.
+
+-const	: transe-to-transi (transe/const _ D4 D3 D2 D1) D
+	   <- trans-to-transi _ (trans/const D4 D3 D2 D1) D.
+
+-forall	: transe-to-transi (transe/forall D3 D2 D1) D
+	   <- ttranse-to-ttransi D1 D1'
+	   <- transi-forall D1' D2 D3 D.
+
+-var	: transe-to-transi (transe/var D5 D4 D3 D2 D1) D
+	   <- wfe-to-wfi D3 D3'
+	   <- transi-var D1 D2 D3' D4 D5 D.
+
+-vari	: transe-to-transi (transe/vari _ D5 D4 D3 D2 D1) D
+	   <- trans-to-transi _ (trans/var D5 D4 D3 D2 D1) D.
+
+-app	: transe-to-transi (transe/app D4 D3 D2 D1) D
+	   <- transe-to-transi D1 D1'
+	   <- transe-to-transi D2 D2'
+	   <- transi-app D1' D2' D3 D4 D.
+
+-pi1	: transe-to-transi (transe/pi1 D1) D
+	   <- transe-to-transi D1 D1'
+	   <- transi-pi1 D1' D.
+
+-pi2	: transe-to-transi (transe/pi2 D1) D
+	   <- transe-to-transi D1 D1'
+	   <- transi-pi2 D1' D.
+
+-lam	: transe-to-transi (transe/lam D2 D1) D
+	   <- ttranse-to-ttransi D1 D1'
+	   <- ({x} {d}
+		 {ex} {xt}
+		    transe-to-transi (D2 x d ex xt) (D2' x ex xt))
+	   <- transi-lam D1' D2' D.
+
+-pair	: transe-to-transi (transe/pair D2 D1) D
+	   <- transe-to-transi D1 D1'
+	   <- transe-to-transi D2 D2'
+	   <- transi-pair D1' D2' D.
+
+
+-t	: ttranse-to-ttransi (ttranse/t _) D
+	   <- ttransi-t _ D.
+
+-pi	: ttranse-to-ttransi (ttranse/pi D2 D1) D
+	   <- ttranse-to-ttransi D1 D1'
+	   <- ({x} {d}
+		 {ex} {xt}
+		    ttranse-to-ttransi (D2 x d ex xt) (D2' x ex xt))
+	   <- ttransi-pi D1' D2' D.
+
+-sigma	: ttranse-to-ttransi (ttranse/sigma D2 D1) D
+	   <- ttranse-to-ttransi D1 D1'
+	   <- ({x} {d}
+		 {ex} {xt}
+		    ttranse-to-ttransi (D2 x d ex xt) (D2' x ex xt))
+	   <- ttransi-sigma D1' D2' D.
+
+-sing	: ttranse-to-ttransi (ttranse/sing D1) D
+	   <- transe-to-transi D1 D1'
+	   <- ttransi-sing D1' D.
+
+%worlds (bind | var | ovar | tbind | ofblock) (transe-to-transi _ _) (ttranse-to-ttransi _ _).
+%total (D1 D2) (transe-to-transi D1 _) (ttranse-to-ttransi D2 _).
+
+
+
+ttranse-to-ttrans : ttranse nil EA A -> ttrans EA A -> type.
+%mode ttranse-to-ttrans +X1 -X2.
+
+-	: ttranse-to-ttrans D D'
+	   <- ttranse-to-ttransi D (ttransi/nil D').
+
+%worlds (var | bind | ovar | tbind) (ttranse-to-ttrans _ _).
+%total {} (ttranse-to-ttrans _ _).
+
+
+transe-to-trans : transe nil EM A -> trans EM A -> type.
+%mode transe-to-trans +X1 -X2.
+
+-	: transe-to-trans D D'
+	   <- transe-to-transi D (transi/nil D').
+
+%worlds (var | bind | ovar | tbind) (transe-to-trans _ _).
+%total {} (transe-to-trans _ _).
+
+
+
+
+%%%%%  Translation Weakening  %%%%%
+
+bump-transe : {EM}
+	       ({x} isvar x I -> {ex} vtrans ex x -> transe (G x) (EM ex) (A x))
+	       -> ({x} isvar x I' -> ordered (G x))
+	       -> ({x} isvar x I' -> {ex} vtrans ex x -> transe (G x) (EM ex) (A x)) -> type.
+%mode bump-transe +X1 +X2 +X3 -X4.
+
+bump-ttranse : {EA}
+		({x} isvar x I -> {ex} vtrans ex x -> ttranse (G x) (EA ex) (A x))
+		-> ({x} isvar x I' -> ordered (G x))
+		-> ({x} isvar x I' -> {ex} vtrans ex x -> ttranse (G x) (EA ex) (A x)) -> type.
+%mode bump-ttranse +X1 +X2 +X3 -X4.
+
+-const	: bump-transe _ ([x] [d] [ex] [xt] transe/const (Dord' x d) (Dself x) (Dexpand x) (Dwf x) (Dkof x)) Dord 
+	   ([x] [d] [ex] [xt] transe/const (Dord x d) (Dself x) (Dexpand x) (Dwf x) (Dkof x)).
+
+-forall	: bump-transe _ ([x] [d] [ex] [xt] transe/forall (D3 x) (D2 x) (D1 x d ex xt)) Dord
+	   ([x] [d] [ex] [xt] transe/forall (D3 x) (D2 x) (D1' x d ex xt))
+	   <- bump-ttranse _ D1 Dord D1'.
+
+-var	: bump-transe _ ([x] [d] [ex] [xt] transe/var (Dself x) (Dexpand x) (Dwf x d) (Dlookup x d) (Dvtrans x ex xt)) Dord
+	   ([x] [d] [ex] [xt] transe/var (Dself x) (Dexpand x) (Dwf' x d) (Dlookup' x d) (Dvtrans x ex xt))
+	   <- bump-wfe Dwf Dord Dwf'
+	   <- bump-lookup Dlookup Dord Dlookup'.
+
+-vari	: bump-transe _ ([x] [d] [ex] [xt] transe/vari (Dord' x d) (Dself x) (Dexpand x) (Dwf x) (Dvof x) (Dvtrans x ex xt)) Dord
+	   ([x] [d] [ex] [xt] transe/vari (Dord x d) (Dself x) (Dexpand x) (Dwf x) (Dvof x) (Dvtrans x ex xt)).
+
+-app	: bump-transe _ ([x] [d] [ex] [xt] transe/app (Dsub x) (Dsubtype x) (DtransN x d ex xt) (DtransM x d ex xt)) Dord
+	    ([x] [d] [ex] [xt] transe/app (Dsub x) (Dsubtype x) (DtransN' x d ex xt) (DtransM' x d ex xt))
+	   <- bump-transe _ DtransM Dord DtransM'
+	   <- bump-transe _ DtransN Dord DtransN'.
+
+-pi1	: bump-transe _ ([x] [d] [ex] [xt] transe/pi1 (Dtrans x d ex xt)) Dord
+	   ([x] [d] [ex] [xt] transe/pi1 (Dtrans' x d ex xt))
+	   <- bump-transe _ Dtrans Dord Dtrans'.
+
+-pi2	: bump-transe _ ([x] [d] [ex] [xt] transe/pi2 (Dtrans x d ex xt)) Dord
+	   ([x] [d] [ex] [xt] transe/pi2 (Dtrans' x d ex xt))
+	   <- bump-transe _ Dtrans Dord Dtrans'.
+
+-lam	: bump-transe _ 
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      transe/lam 
+	      (Dtrans x d ex xt)
+	      (Dttrans x d ex xt)) 
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] [ex] [xt] transe/lam (Dtrans'' x d ex xt) (Dttrans' x d ex xt))
+	   <- bump-ttranse _ Dttrans Dord Dttrans'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 transe-context (Dtrans x d ex xt y e ey yt)
+		 (ordered/cons
+		    (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I} {ex} {xt}
+		 bump-transe _
+		 ([y] [e] [ey] [yt] Dtrans x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dtrans' x d ex xt y e ey yt))
+	   <- ({y} {e:isvar y J} {ey} {yt}
+		 bump-transe _
+		 ([x] [d] [ex] [xt] Dtrans' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dtrans'' x d ex xt y e ey yt)).
+
+-pair	: bump-transe _ ([x] [d] [ex] [xt] transe/pair (DtransN x d ex xt) (DtransM x d ex xt)) Dord
+	    ([x] [d] [ex] [xt] transe/pair (DtransN' x d ex xt) (DtransM' x d ex xt))
+	   <- bump-transe _ DtransM Dord DtransM'
+	   <- bump-transe _ DtransN Dord DtransN'.
+
+
+
+-t	: bump-ttranse _ ([x] [d] [ex] [xt] ttranse/t (Dord' x d)) Dord
+	   ([x] [d] [ex] [xt] ttranse/t (Dord x d)).
+
+-pi	: bump-ttranse _ 
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      ttranse/pi
+	      (Dtrans x d ex xt)
+	      (Dttrans x d ex xt)) 
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] [ex] [xt] ttranse/pi (Dtrans'' x d ex xt) (Dttrans' x d ex xt))
+	   <- bump-ttranse _ Dttrans Dord Dttrans'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 ttranse-context (Dtrans x d ex xt y e ey yt)
+		 (ordered/cons
+		    (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I} {ex} {xt}
+		 bump-ttranse _
+		 ([y] [e] [ey] [yt] Dtrans x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dtrans' x d ex xt y e ey yt))
+	   <- ({y} {e:isvar y J} {ey} {yt}
+		 bump-ttranse _
+		 ([x] [d] [ex] [xt] Dtrans' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dtrans'' x d ex xt y e ey yt)).
+
+-sigma	: bump-ttranse _ 
+	   ([x] [d:isvar x I] [ex] [xt] 
+	      ttranse/sigma
+	      (Dtrans x d ex xt)
+	      (Dttrans x d ex xt)) 
+	   (Dord : {x} isvar x I' -> ordered (G x))
+	   ([x] [d] [ex] [xt] ttranse/sigma (Dtrans'' x d ex xt) (Dttrans' x d ex xt))
+	   <- bump-ttranse _ Dttrans Dord Dttrans'
+	   <- ({x} {d:isvar x I} {ex} {xt} {y} {e:isvar y J1} {ey} {yt}
+		 ttranse-context (Dtrans x d ex xt y e ey yt)
+		 (ordered/cons
+		    (Dbound1 x d y e : bounded (G x) y)))
+	   <- ({x} {d:isvar x I'}
+		 extend-context (Dord x d)
+		 (Dbound2 x d : {y} isvar y J2 -> bounded (G x) y))
+	   <- can-max J1 J2 J (Dmax : max J1 J2 J)
+	   <- max-leq Dmax (Dleq1 : leq J1 J) (Dleq2 : leq J2 J)
+	   <- ({x} {d:isvar x I}
+		 bump-bounded Dleq1 ([y] [e:isvar y J1] Dbound1 x d y e)
+		 ([y] [e:isvar y J] Dbound1' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I'}
+		 bump-bounded Dleq2 ([y] [e:isvar y J2] Dbound2 x d y e)
+		 ([y] [e:isvar y J] Dbound2' x d y e : bounded (G x) y))
+	   <- ({x} {d:isvar x I} {ex} {xt}
+		 bump-ttranse _
+		 ([y] [e] [ey] [yt] Dtrans x d ex xt y e ey yt)
+		 ([y] [e] ordered/cons (Dbound1' x d y e))
+		 ([y] [e] [ey] [yt] Dtrans' x d ex xt y e ey yt))
+	   <- ({y} {e:isvar y J} {ey} {yt}
+		 bump-ttranse _
+		 ([x] [d] [ex] [xt] Dtrans' x d ex xt y e ey yt)
+		 ([x] [d] ordered/cons (Dbound2' x d y e))
+		 ([x] [d] [ex] [xt] Dtrans'' x d ex xt y e ey yt)).
+
+-sing	: bump-ttranse _ ([x] [d] [ex] [xt] ttranse/sing (Dtrans x d ex xt)) Dord
+	   ([x] [d] [ex] [xt] ttranse/sing (Dtrans' x d ex xt))
+	   <- bump-transe _ Dtrans Dord Dtrans'.
+
+%worlds (bind | ovar | tbind) (bump-transe _ _ _ _) (bump-ttranse _ _ _ _).
+%total (EM EA) (bump-transe EM _ _ _) (bump-ttranse EA _ _ _).
+		  
+
+
+weakeng-transe	: {EM}
+		   append G1 G2 G
+		   -> append (cons G1 X B) G2 G'
+		   -> ordered G'
+		   -> transe G EM A
+		   -> transe G' EM A -> type.
+%mode weakeng-transe +X1 +X2 +X3 +X4 +X5 -X6.
+
+weakeng-ttranse	: {EA}
+		   append G1 G2 G
+		   -> append (cons G1 X B) G2 G'
+		   -> ordered G'
+		   -> ttranse G EA A
+		   -> ttranse G' EA A -> type.
+%mode weakeng-ttranse +X1 +X2 +X3 +X4 +X5 -X6.
+
+-const	: weakeng-transe _ _ _ Dord (transe/const _ Dself Dexpand Dwf Dkof)
+	   (transe/const Dord Dself Dexpand Dwf Dkof).
+
+-forall	: weakeng-transe _ Dappend Dappend' Dord (transe/forall Dself Dexpand D)
+	   (transe/forall Dself Dexpand D')
+	   <- weakeng-ttranse _ Dappend Dappend' Dord D D'.
+
+-var	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/var Dself Dexpand Dwf Dlookup Dvtrans)
+	   (transe/var Dself Dexpand Dwf' Dlookup' Dvtrans)
+	   <- weakeng-lookup Dappend Dappend' Dord Dlookup Dlookup'
+	   <- weakeng-wfe Dappend Dappend' Dord Dwf Dwf'.
+
+-vari	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/vari _ Dself Dexpand Dwf Dvof Dvtrans)
+	   (transe/vari Dord Dself Dexpand Dwf Dvof Dvtrans).
+
+-app	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/app Dsub Dsubtype DtransN DtransM)
+	   (transe/app Dsub Dsubtype DtransN' DtransM')
+	   <- weakeng-transe _ Dappend Dappend' Dord DtransM DtransM'
+	   <- weakeng-transe _ Dappend Dappend' Dord DtransN DtransN'.
+
+-pi1	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/pi1 Dtrans)
+	   (transe/pi1 Dtrans')
+	   <- weakeng-transe _ Dappend Dappend' Dord Dtrans Dtrans'.
+
+-pi2	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/pi2 Dtrans)
+	   (transe/pi2 Dtrans')
+	   <- weakeng-transe _ Dappend Dappend' Dord Dtrans Dtrans'.
+
+-lam	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/lam Dtrans Dttrans)
+	   (transe/lam Dtrans'' Dttrans')
+	   <- weakeng-ttranse _ Dappend Dappend' Dord Dttrans Dttrans'
+	   <- extend-context Dord Dbound
+	   <- ({x} {d}
+		 bounded-drop Dappend' Dappend (Dbound x d) (Dbound' x d))
+	   <- bump-transe _ Dtrans ([x] [d] ordered/cons (Dbound' x d)) Dtrans'
+	   <- ({x} {d} {ex} {xt}
+		 weakeng-transe _ (append/cons Dappend) (append/cons Dappend') (ordered/cons (Dbound x d))
+		 (Dtrans' x d ex xt)
+		 (Dtrans'' x d ex xt)).
+
+-pair	: weakeng-transe _ Dappend Dappend' Dord
+	   (transe/pair DtransN DtransM)
+	   (transe/pair DtransN' DtransM')
+	   <- weakeng-transe _ Dappend Dappend' Dord DtransM DtransM'
+	   <- weakeng-transe _ Dappend Dappend' Dord DtransN DtransN'.
+
+
+-t	: weakeng-ttranse _ _ _ Dord (ttranse/t _) (ttranse/t Dord).
+
+-pi	: weakeng-ttranse _ Dappend Dappend' Dord
+	   (ttranse/pi Dtrans Dttrans)
+	   (ttranse/pi Dtrans'' Dttrans')
+	   <- weakeng-ttranse _ Dappend Dappend' Dord Dttrans Dttrans'
+	   <- extend-context Dord Dbound
+	   <- ({x} {d}
+		 bounded-drop Dappend' Dappend (Dbound x d) (Dbound' x d))
+	   <- bump-ttranse _ Dtrans ([x] [d] ordered/cons (Dbound' x d)) Dtrans'
+	   <- ({x} {d} {ex} {xt}
+		 weakeng-ttranse _ (append/cons Dappend) (append/cons Dappend') (ordered/cons (Dbound x d))
+		 (Dtrans' x d ex xt)
+		 (Dtrans'' x d ex xt)).
+
+-sigma	: weakeng-ttranse _ Dappend Dappend' Dord
+	   (ttranse/sigma Dtrans Dttrans)
+	   (ttranse/sigma Dtrans'' Dttrans')
+	   <- weakeng-ttranse _ Dappend Dappend' Dord Dttrans Dttrans'
+	   <- extend-context Dord Dbound
+	   <- ({x} {d}
+		 bounded-drop Dappend' Dappend (Dbound x d) (Dbound' x d))
+	   <- bump-ttranse _ Dtrans ([x] [d] ordered/cons (Dbound' x d)) Dtrans'
+	   <- ({x} {d} {ex} {xt}
+		 weakeng-ttranse _ (append/cons Dappend) (append/cons Dappend') (ordered/cons (Dbound x d))
+		 (Dtrans' x d ex xt)
+		 (Dtrans'' x d ex xt)).
+
+-sing	: weakeng-ttranse _ Dappend Dappend' Dord
+	   (ttranse/sing Dtrans)
+	   (ttranse/sing Dtrans')
+	   <- weakeng-transe _ Dappend Dappend' Dord Dtrans Dtrans'.
+
+%worlds (bind | ovar | tbind) (weakeng-transe _ _ _ _ _ _) (weakeng-ttranse _ _ _ _ _ _).
+%total (EM EA) (weakeng-transe EM _ _ _ _ _) (weakeng-ttranse EA _ _ _ _ _).
+
+
+
+weaken-transe : bounded G X -> transe G EM A -> {B} transe (cons G X B) EM A -> type.
+%mode weaken-transe +X1 +X2 +X3 -X4.
+
+-	: weaken-transe Dbound Dtrans _ Dtrans'
+	   <- weakeng-transe _ append/nil append/nil (ordered/cons Dbound) Dtrans Dtrans'.
+
+%worlds (bind | ovar | tbind) (weaken-transe _ _ _ _).
+%total {} (weaken-transe _ _ _ _).
+
+
+
+weaken-transe' : append G1 G2 G -> ordered G -> transe G1 EM A -> transe G EM A -> type.
+%mode weaken-transe' +X1 +X2 +X3 -X4.
+
+weaken-transe'' : append G1 G2 G -> bounded G Z -> transe G1 EM A -> transe G EM A -> type.
+%mode weaken-transe'' +X1 +X2 +X3 -X4.
+
+-nil	: weaken-transe' append/nil _ D D.
+-cons	: weaken-transe' (append/cons Dapp) (ordered/cons Dbound) Dtrans Dtrans''
+	   <- weaken-transe'' Dapp Dbound Dtrans Dtrans'
+	   <- weaken-transe Dbound Dtrans' _ Dtrans''.
+
+-	: weaken-transe'' Dapp Dbound Dtrans Dtrans'
+	   <- bounded-is-ordered Dbound Dord
+	   <- weaken-transe' Dapp Dord Dtrans Dtrans'.
+
+%worlds (bind | ovar | tbind) (weaken-transe' _ _ _ _) (weaken-transe'' _ _ _ _).
+%total (D1 D2) (weaken-transe' D1 _ _ _) (weaken-transe'' D2 _ _ _).
+
+
+
+
+%%%%%  Translation Regularity (Implicit Context)  %%%%%
+
+transe-reg : transe G EM A
+	      -> wfe G A -> type.
+%mode transe-reg +X1 -X2.
+
+ttranse-reg : ttranse G EA A
+	       -> wfe G A -> type.
+%mode ttranse-reg +X1 -X2.
+
+-const	: transe-reg (transe/const Dord Dself Dexpand Dwf' Dkof) Dwf
+	   <- expand-reg-e (aofe/closed Dord (aof/const Dwf' Dkof)) Dexpand Dof
+	   <- self-reg-e Dself Dof Dof' _
+	   <- ofe-reg Dof' Dwf.
+
+-forall	: transe-reg (transe/forall Dself Dexpand Dtrans) Dwf
+	   <- ttranse-reg Dtrans Dwf'
+	   <- expand-reg-e (aofe/forall Dwf') Dexpand Dof
+	   <- self-reg-e Dself Dof Dof' _
+	   <- ofe-reg Dof' Dwf.
+
+-var	: transe-reg (transe/var Dself Dexpand Dwf Dlookup _) Dwf'
+	   <- expand-reg-e (aofe/var Dwf Dlookup) Dexpand Dof
+	   <- self-reg-e Dself Dof Dof' _
+	   <- ofe-reg Dof' Dwf'.
+
+-vari	: transe-reg (transe/vari Dord Dself Dexpand Dwf Dvof _) Dwf'
+	   <- expand-reg-e (aofe/closed Dord (aof/var Dwf Dvof)) Dexpand Dof
+	   <- self-reg-e Dself Dof Dof' _
+	   <- ofe-reg Dof' Dwf'.
+
+-app	: transe-reg (transe/app Dsub Dsubtype DtransN DtransM) DwfBx
+	   <- transe-reg DtransM
+	      (wfe/pi DwfB DwfA)
+	   <- transe-reg DtransN
+	      DwfC
+	   <- subtype-reg-e' Dsubtype DwfC DwfA Dof
+	   <- tsubst-e ([_] append/nil) csub/base Dof Dsub DwfB DwfBx.
+
+-pi1	: transe-reg (transe/pi1 Dtrans) DwfA
+	   <- transe-reg Dtrans
+	      (wfe/sigma DwfB DwfA).
+
+-pi2	: transe-reg (transe/pi2 Dtrans) DwfB'
+	   <- transe-reg Dtrans
+	      (wfe/sigma DwfB DwfA)
+	   <- tinhabitsub-e DwfA DwfB DwfB'.
+
+-lam	: transe-reg (transe/lam DtransM DtransA) (wfe/pi DwfB DwfA)
+	   <- ttranse-reg DtransA DwfA
+	   <- ({x} {d} {ex} {xt}
+		 transe-reg (DtransM x d ex xt) (DwfB x d)).
+
+-pair	: transe-reg (transe/pair DtransN DtransM) (wfe/sigma DwfB' DwfA)
+	   <- transe-reg DtransM DwfA
+	   <- transe-reg DtransN DwfB
+	   <- wfe-context DwfA Dord
+	   <- extend-context Dord Dbound
+	   <- ({x} {d}
+		 weaken-wfe (Dbound x d) DwfB _
+		 (DwfB' x d)).
+
+
+-t	: ttranse-reg (ttranse/t Dord) (wfe/t Dord).
+
+-pi	: ttranse-reg (ttranse/pi DtransB DtransA) (wfe/pi DwfB DwfA)
+	   <- ttranse-reg DtransA DwfA
+	   <- ({x} {d} {ex} {xt}
+		 ttranse-reg (DtransB x d ex xt) (DwfB x d)).
+
+-sigma	: ttranse-reg (ttranse/sigma DtransB DtransA) (wfe/sigma DwfB DwfA)
+	   <- ttranse-reg DtransA DwfA
+	   <- ({x} {d} {ex} {xt}
+		 ttranse-reg (DtransB x d ex xt) (DwfB x d)).
+
+-sing	: ttranse-reg (ttranse/sing Dtrans) Dwf
+	   <- transe-reg Dtrans Dwf.
+
+%worlds (var | bind | ovar | tbind) (transe-reg _ _) (ttranse-reg _ _).
+%total (D1 D2) (transe-reg D1 _) (ttranse-reg D2 _).
+
+
+
+ttrans-reg : ttrans EA A -> wf A -> type.
+%mode ttrans-reg +X1 -X2.
+
+-	: ttrans-reg Dtrans Dwf
+	   <- ttrans-to-ttranse Dtrans Dtranse
+	   <- ttranse-reg Dtranse Dwfe
+	   <- wfe-to-wf Dwfe Dwf.
+
+%worlds (var | bind | tbind) (ttrans-reg _ _).
+%total {} (ttrans-reg _ _).
+
+
+
+trans-reg : trans EM A -> wf A -> type.
+%mode trans-reg +X1 -X2.
+
+-	: trans-reg Dtrans Dwf
+	   <- trans-to-transe Dtrans Dtranse
+	   <- transe-reg Dtranse Dwfe
+	   <- wfe-to-wf Dwfe Dwf.
+
+%worlds (var | bind | tbind) (trans-reg _ _).
+%total {} (trans-reg _ _).
+
+
+
+
+%%%%%  Miscellaneous  %%%%%
+
+transe-principal : transe G EM A -> principal A -> type.
+%mode transe-principal +X1 -X2.
+
+-const	: transe-principal (transe/const _ Dself _ _ _) D
+	   <- self-principal Dself D.
+
+-forall	: transe-principal (transe/forall Dself _ _) D
+	   <- self-principal Dself D.
+
+-var	: transe-principal (transe/var Dself _ _ _ _) D
+	   <- self-principal Dself D.
+
+-vari	: transe-principal (transe/vari _ Dself _ _ _ _) D
+	   <- self-principal Dself D.
+
+-app	: transe-principal (transe/app Dsub _ _ Dtrans) D
+	   <- transe-principal Dtrans (principal/pi Dprin)
+	   <- principal-sub Dprin Dsub D.
+
+-pi1	: transe-principal (transe/pi1 Dtrans) D1
+	   <- transe-principal Dtrans (principal/sigma D2 D1).
+
+-pi2	: transe-principal (transe/pi2 Dtrans) D2
+	   <- transe-principal Dtrans (principal/sigma D2 D1).
+
+-lam	: transe-principal (transe/lam Dtrans _) (principal/pi D)
+	   <- ({x} {d} {ex} {xt}
+		 transe-principal (Dtrans x d ex xt) (D x)).
+
+-pair	: transe-principal (transe/pair Dtrans2 Dtrans1) (principal/sigma D2 D1)
+	   <- transe-principal Dtrans1 D1
+	   <- transe-principal Dtrans2 D2.
+
+%worlds (var | bind | ovar | tbind) (transe-principal _ _).
+%total D (transe-principal D _).
+
+
+
+trans-principal : trans EM A -> principal A -> type.
+%mode trans-principal +X1 -X2.
+
+-	: trans-principal Dtrans D
+	   <- trans-to-transe Dtrans Dtranse
+	   <- transe-principal Dtranse D.
+
+%worlds (var | bind | tbind) (trans-principal _ _).
+%total {} (trans-principal _ _).
+
+
+
+trans-subtype : trans EM A -> subtype A B M' -> subtype A B ([_] M) -> ({x} term-eq (M' x) M) -> type.
+%mode trans-subtype +X1 +X2 -X3 -X4.
+
+-	: trans-subtype Dtrans Dsubtype Dsubtype' Deq
+	   <- trans-principal Dtrans Dprin
+	   <- principal-subtype Dprin Dsubtype Deq
+	   <- subtype-resp tp-eq/i tp-eq/i Deq Dsubtype Dsubtype'.
+
+%worlds (var | bind | tbind) (trans-subtype _ _ _ _).
+%total {} (trans-subtype _ _ _ _).

@@ -1,0 +1,4176 @@
+%%%%%  Nats  %%%%%
+
+nat : type.  %name nat N.
+
+z : nat.
+s : nat -> nat.
+
+
+nat_eq   : nat -> nat -> type.
+nat_neq  : nat -> nat -> type.
+nat_less : nat -> nat -> type.
+nat_more : nat -> nat -> type.
+
+nat_eq_		: nat_eq N N.
+
+nat_neq_zs      : nat_neq z (s _).
+nat_neq_sz      : nat_neq (s _) z.
+nat_neq_ss      : nat_neq (s N) (s M)
+		   <- nat_neq N M.
+
+
+nat_less_z      : nat_less z (s _).
+nat_less_s      : nat_less (s N) (s M)
+		   <- nat_less N M.
+
+nat_more_z      : nat_more (s _) z.
+nat_more_s      : nat_more (s N) (s M)
+		   <- nat_more N M.
+
+plus : nat -> nat -> nat -> type.
+
+plus_z : plus z N N.
+plus_s : plus (s M) N (s N')
+	  <- plus M N N'.
+
+%reduces N <= M (plus _ N M).
+
+sum_inc : {N1}{N2}{N3} plus N1 N2 N3 -> plus N1 (s N2) (s N3) -> type.
+%mode sum_inc +X1 +X2 +X3 +X4 -X2.
+
+-: sum_inc _ _ _ plus_z plus_z.
+
+-: sum_inc _ _ _ (plus_s D) (plus_s D')
+    <- sum_inc _ _ _ D D'.
+
+%worlds () (sum_inc _ _ _ _ _).
+%total (D) (sum_inc _ _ _ D _).
+
+
+
+commute' : {N1}{N2}{N3}plus N1 N2 N3 -> plus N2 N1 N3 -> type.
+%mode commute' +X1 +X2 +X3 +X4 -X5.
+
+-: commute' z (s M) _ plus_z (plus_s D)
+    <- commute' z M _ plus_z D.
+
+-: commute' _ z _ _ plus_z.
+
+-: commute' (s N1) N2 _ (plus_s D) D''
+    <- commute' N1 N2 _ D D'
+    <- sum_inc _ _ _ D' D''.
+
+%worlds () (commute' _ _ _ _ _).
+%total [N1 N2] (commute' N1 N2 _ _ _).
+
+
+
+assoc : plus N1 N2 N3 
+	 -> plus N3 N4 N
+	 -> plus N2 N4 N5
+	 -> plus N1 N5 N
+	 -> type.
+%mode assoc +X1 +X2 -X3 -X4.
+
+-: assoc plus_z D D plus_z.
+
+-: assoc (plus_s Da) (plus_s Db) Da' (plus_s Db')
+    <- assoc Da Db Da' Db'. 
+
+%worlds () (assoc _ _ _ _).
+%total (D) (assoc D _ _ _).
+			   
+  
+
+assoc' : plus N1 N2 N3
+	  -> plus N4 (s N3) N
+	  -> plus N4 N2 N5
+	  -> plus N1 (s N5) N
+	  -> type.
+%mode assoc' +X1 +X2 -X3 -X4.
+
+-: assoc' D1 D2 D3 D4
+    <- commute' _ _ _ D2 D2'
+    <- assoc (plus_s D1) D2' D3' (plus_s D4')
+    <- commute' _ _ _ D3' D3
+    <- sum_inc _ _ _ D4' D4.
+
+%worlds () (assoc' _ _ _ _).
+%total(D) (assoc' D _ _ _).
+
+
+
+add : {N1}{N2} plus N1 N2 N3 -> type.
+%mode add +X1 +X2 -X3.
+
+-: add z N2 plus_z.
+
+-: add (s N1) N2 (plus_s D)
+    <- add N1 N2 D.
+
+%worlds () (add _ _ _).
+%total (N) (add N _ _).
+
+
+
+%%%%% Labels %%%%%
+
+label : type. %name label L.
+
+label_nat : nat -> label.
+
+label_eq   : label -> label -> type.
+label_neq  : label -> label -> type.
+label_less : label -> label -> type.
+label_more : label -> label -> type.
+ 
+label_eq_   : label_eq L L.
+
+label_neq_  : label_neq (label_nat N) (label_nat M)
+	       <- nat_neq N M.
+
+label_less_ : label_less (label_nat N) (label_nat M)
+	       <- nat_less N M.
+
+label_more_ : label_more (label_nat N) (label_nat M)
+	       <- nat_more N M.
+
+
+
+
+%%%%% Types %%%%%
+
+tp : type.  %name tp T.
+trow : type. %name trow TR.
+
+
+trow_nil  : trow.
+trow_cons : label -> tp -> trow -> trow.
+
+trow_lookup : label -> trow -> tp -> type.
+
+trow_lookup_yes : trow_lookup L (trow_cons L T _) T.
+trow_lookup_no  : trow_lookup L (trow_cons _ _ TR) T
+		   <- trow_lookup L TR T.
+
+trow_labelfree  : trow -> label -> type.
+
+trow_labelfree_nil  : trow_labelfree trow_nil _.
+trow_labelfree_cons : trow_labelfree (trow_cons L' _ TR) L
+		       <- label_neq L L'
+		       <- trow_labelfree TR L.
+
+trow_eq  : trow -> trow -> type.
+trow_eq_ : trow_eq TR TR.
+
+
+%% Takes a record in and returns one in sorted order
+trow_order  : trow -> trow -> type.
+trow_insert : label -> tp -> trow -> trow -> type.
+
+trow_order_nil  : trow_order trow_nil trow_nil.
+trow_order_cons : trow_order (trow_cons L S SR) TR'
+		   <- trow_order SR TR
+		   <- trow_insert L S TR TR'.
+
+trow_insert_nil  : trow_insert L S trow_nil (trow_cons L S trow_nil).
+trow_insert_less : trow_insert L S (trow_cons L' T TR) 
+		    (trow_cons L S (trow_cons L' T TR))
+		    <- label_less L L'.
+trow_insert_more : trow_insert L S (trow_cons L' T TR)
+		    (trow_cons L' T TR')
+		    <- label_more L L'
+		    <- trow_insert L S TR TR'.
+
+trow_uniqueness  : trow -> type.
+
+trow_uniqueness_nil  : trow_uniqueness trow_nil.
+trow_uniqueness_cons : trow_uniqueness (trow_cons L _ TR)
+			<- trow_labelfree TR L
+			<- trow_uniqueness TR.
+
+
+top	  : tp.
+arrow	  : tp -> tp -> tp.
+forall	  : tp -> (tp -> tp) -> tp.
+record    : {TR:trow} trow_uniqueness TR -> tp.
+
+
+
+%% Now we define subtying 
+sub_tp : tp -> tp -> type.
+sub_tp_trow : trow -> trow -> type.
+
+
+sub_tp_top    : sub_tp _ top.
+
+sub_tp_refl   : sub_tp T T.
+
+sub_tp_trans  : sub_tp T1 T3
+		 <- sub_tp T1 T2
+		 <- sub_tp T2 T3.
+
+sub_tp_arrow  : sub_tp (arrow S1 S2) (arrow T1 T2)
+		 <- sub_tp T1 S1
+		 <- sub_tp S2 T2.
+
+sub_tp_forall : sub_tp (forall S1 S2) (forall T1 T2)
+		 <- sub_tp T1 S1
+		 <- ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x)).
+
+
+sub_tp_record : sub_tp (record SR _) (record TR _)
+		 <- trow_order SR SR'
+		 <- trow_order TR TR'
+		 <- sub_tp_trow SR' TR'.
+
+sub_tp_trow_nil   : sub_tp_trow trow_nil trow_nil.
+
+sub_tp_trow_cons  : sub_tp_trow (trow_cons L S SR) (trow_cons L T TR)
+		     <- sub_tp_trow SR TR
+		     <- sub_tp S T.
+
+sub_tp_trow_cons' : sub_tp_trow (trow_cons L S SR) TR
+		     <- sub_tp_trow SR TR.
+
+
+
+%% Now we define terms
+term     : type.    %name term E.
+bterm    : type.    %name bterm E.
+erow     : type.    %name erow ER.
+pattern  : type.    %name pattern  P.
+prow     : type.    %name prow PR.
+
+typelist : type.   %name typelist TL.
+termlist : type.   %name termlist EL.
+
+
+%%%%% Terms %%%%%
+base    : term -> bterm.
+bind    : tp -> (term -> bterm) -> bterm.
+
+
+abs     : tp -> (term -> term) -> term.
+app     : term -> term -> term.
+tabs    : tp -> (tp -> term) -> term.
+tapp    : term -> tp -> term.
+
+rec     : erow -> term.
+proj    : term -> label -> term.
+let     : pattern -> term -> bterm -> term.
+
+erow_nil  : erow.
+erow_cons : label -> term -> erow -> erow.
+
+
+erow_lookup : label -> erow -> term -> type.
+
+erow_lookup_yes : erow_lookup L (erow_cons L E _) E.
+erow_lookup_no  : erow_lookup L (erow_cons _ _ ER) E
+		   <- erow_lookup L ER E.
+
+
+%% Takes a record in and returns one in sorted order
+erow_order  : erow -> erow -> type.
+erow_insert : label -> term -> erow -> erow -> type.
+
+erow_order_nil  : erow_order erow_nil erow_nil.
+erow_order_cons : erow_order (erow_cons L E ER) ER'
+		   <- erow_order ER ER''
+		   <- erow_insert L E ER'' ER'.
+
+erow_insert_nil  : erow_insert L E erow_nil (erow_cons L E erow_nil).
+erow_insert_less : erow_insert L E (erow_cons L' E' ER) 
+		    (erow_cons L E (erow_cons L' E' ER))
+		    <- label_less L L'.
+erow_insert_more : erow_insert L E (erow_cons L' E' ER)
+		    (erow_cons L' E' ER')
+		    <- label_more L L'
+		    <- erow_insert L E ER ER'.
+
+
+
+%%%%% Patterns %%%%% 
+pat_var : tp -> pattern.
+pat_rec : prow -> pattern.
+
+prow_nil  : prow.
+prow_cons : label -> pattern -> prow -> prow.
+
+
+
+%% Takes a record in and returns one in sorted order
+prow_order  : prow -> prow -> type.
+prow_insert : label -> pattern -> prow -> prow -> type.
+
+prow_order_nil  : prow_order prow_nil prow_nil.
+prow_order_cons : prow_order (prow_cons L P PR) PR'
+		   <- prow_order PR PR''
+		   <- prow_insert L P PR'' PR'.
+
+prow_insert_nil  : prow_insert L P prow_nil (prow_cons L P prow_nil).
+prow_insert_less : prow_insert L P (prow_cons L' P' PR) 
+		    (prow_cons L P (prow_cons L' P' PR))
+		    <- label_less L L'.
+prow_insert_more : prow_insert L P (prow_cons L' P' PR)
+		    (prow_cons L' P' PR')
+		    <- label_more L L'
+		    <- prow_insert L P PR PR'.
+
+
+
+%%%%% termlists and typelists %%%%%
+typelist_nil  : typelist.
+typelist_cons : tp -> typelist -> typelist.
+
+termlist_nil  : termlist.
+termlist_cons : term -> termlist -> termlist.
+
+typelist_append : typelist -> typelist -> typelist -> type.
+typelist_append_nil  : typelist_append typelist_nil TL TL.
+typelist_append_cons : typelist_append
+			(typelist_cons T TL)
+			TL'
+			(typelist_cons T TL'')
+			<- typelist_append TL TL' TL''.
+
+termlist_append : termlist -> termlist -> termlist -> type.
+termlist_append_nil  : termlist_append termlist_nil EL EL.
+termlist_append_cons : termlist_append
+			(termlist_cons T EL)
+			EL'
+			(termlist_cons T EL'')
+			<- termlist_append EL EL' EL''.
+
+%% Now we write a judgement to tell us whether a term is a value
+value      : term -> type.
+value_erow : erow -> type.
+
+value_abs     : value (abs _ _).
+value_tabs    : value (tabs _ _).
+value_rec     : value (rec ER)
+		 <- value_erow ER.
+
+value_erow_nil  : value_erow erow_nil.
+value_erow_cons : value_erow (erow_cons L V ER)
+		   <- value V
+		   <- value_erow ER.
+
+%% Here we define the typing judgement
+of       : term -> tp -> type.
+pat_of   : pattern -> tp -> typelist -> type.
+prow_of  : prow -> trow -> typelist -> type.
+bterm_of : bterm -> typelist -> tp -> type.
+erow_of  : erow -> trow -> type.
+list_of  : termlist -> typelist -> type.
+
+
+of_abs    : of 
+	     (abs T1 E)
+	     (arrow T1 T2)
+	     <- ({x} of x T1 -> of (E x) T2).
+
+of_app    : of
+	     (app E1 E2)
+	     T12
+	     <- of E1 (arrow T11 T12)
+	     <- of E2 T11.
+
+of_tabs   : of
+	     (tabs T1 E)
+	     (forall T1 T2)
+	     <- ({x} sub_tp x T1 -> of (E x) (T2 x)).
+
+of_tapp   : of
+	     (tapp E T2)
+	     (T12 T2)
+	     <- of E (forall T11 T12)
+	     <- sub_tp T2 T11.
+
+of_sub    : of
+	     E
+	     T
+	     <- of E S
+	     <- sub_tp S T.
+
+of_record : of
+	     (rec ER)
+	     (record TR _)
+	     <- erow_order ER ER'
+	     <- trow_order TR TR'
+	     <- erow_of ER' TR'.
+	     
+of_proj   : of
+	     (proj E L)
+	     T
+	     <- of E (record TR _)
+	     <- trow_lookup L TR T.
+
+
+of_let    : of
+	     (let P E E')
+	     T'
+	     <- of E T
+	     <- pat_of P T TL
+	     <- bterm_of E' TL T'.
+
+bterm_of_base : bterm_of (base E) typelist_nil T
+		 <- of E T.
+
+bterm_of_bind : bterm_of (bind T E) (typelist_cons T TL) T'
+		 <- ({e} of e T -> bterm_of (E e) TL T').
+
+erow_of_nil  : erow_of 
+		erow_nil 
+		trow_nil.
+
+erow_of_cons : erow_of 
+		(erow_cons L E ER)
+		(trow_cons L T TR)
+		<- of E T
+		<- erow_of ER TR.
+
+pat_of_var : pat_of
+	      (pat_var T)
+	      T
+	      (typelist_cons T typelist_nil).
+
+pat_of_rec : pat_of
+	      (pat_rec PR)
+	      (record TR _)
+	      TL
+	      <- trow_order TR TR'
+	      <- prow_order PR PR'
+	      <- prow_of PR' TR' TL.
+
+prow_of_nil  : prow_of
+		prow_nil
+		trow_nil
+		typelist_nil.
+		
+prow_of_cons : prow_of
+		(prow_cons L P PR)
+		(trow_cons L T TR)
+		TL''
+		<- pat_of P T TL
+		<- prow_of PR TR TL'
+		<- typelist_append TL' TL TL''.
+
+list_of_nil : list_of
+	       termlist_nil 
+	       typelist_nil.
+list_of_cons : list_of
+		(termlist_cons E EL)
+		(typelist_cons T TL)
+		<- of E T
+		<- list_of EL TL.
+
+
+%%%%% Match %%%%%
+match : pattern -> term -> termlist -> type.
+prow_match : prow -> erow -> termlist -> type.
+
+match_var : match 
+	     (pat_var _)
+	     E
+	     (termlist_cons E termlist_nil).
+
+match_rec : match
+	     (pat_rec PR)
+	     (rec ER)
+	     EL
+	     <- erow_order ER ER'
+	     <- prow_order PR PR'
+	     <- prow_match PR' ER' EL.
+
+prow_match_nil  : prow_match
+		   prow_nil
+		   _
+		   termlist_nil.
+
+prow_match_cons : prow_match
+		   (prow_cons L P PR)
+		   (erow_cons L E ER)
+		   EL''
+		   <- match P E EL
+		   <- prow_match PR ER EL'
+		   <- termlist_append EL' EL EL''.
+
+prow_match_cons' : prow_match
+		    PR
+		    (erow_cons L E ER)
+		    EL
+		    <- prow_match PR ER EL.
+
+
+%% Here we define evaluation
+apply : bterm -> termlist -> term -> type.
+
+apply_base : apply
+	      (base E)
+	      _
+	      E.
+
+apply_bind : apply
+	      (bind _ E)
+	      (termlist_cons E' EL)
+	      E''
+	      <- apply (E E') EL E''.
+
+
+step : term -> term -> type.
+step_erow : erow -> erow -> type.
+
+step_app       : step
+		  (app (abs _ E1) E2)
+		  (E1 E2).
+
+step_tapp      : step
+		  (tapp (tabs _ E1) T)
+		  (E1 T).
+
+step_app_fun   : step
+		  (app E1 E2)
+		  (app E1' E2)
+		  <- step E1 E1'.
+
+step_app_arg   : step
+		  (app V1 E2)
+		  (app V1 E2')
+		  <- value V1
+		  <- step E2 E2'.
+
+step_tapp_fun  : step
+		  (tapp E T)
+		  (tapp E' T)
+		  <- step E E'.
+
+step_let       : step
+		  (let P V E)
+		  E'
+		  <- value V
+		  <- match P V EL
+		  <- apply E EL E'.
+
+step_let_arg   : step
+		  (let P E E'')
+		  (let P E' E'')
+		  <- step E E'.
+
+step_rec       : step
+		  (proj (rec ER) L)
+		  V
+		  <- value_erow ER
+		  <- erow_lookup L ER V.
+
+step_proj_rec  : step
+		  (proj E L)
+		  (proj E' L)
+		  <- step E E'.
+
+step_rec_exp   : step
+		  (rec ER)
+		  (rec ER')
+		  <- step_erow ER ER'.
+
+step_erow_step : step_erow
+		  (erow_cons L E ER)
+		  (erow_cons L E' ER)
+		  <- step E E'.
+
+step_erow_val  : step_erow
+		  (erow_cons L V ER)
+		  (erow_cons L V ER')
+		  <- value V
+		  <- step_erow ER ER'.
+
+%% For part 3 we will need steps
+steps : term -> term -> type.
+
+steps_none : steps E E.
+steps_some : steps E E'
+	      <- step E E''
+	      <- steps E'' E'.
+
+%% And for good measure we define false
+
+false : type.
+
+
+
+%%%%% Nats and labels are well-ordered %%%%%
+nat_contra : nat_less N M -> nat_more N M -> false -> type.
+%mode nat_contra +X1 +X2 -X3.
+
+-: nat_contra (nat_less_s D) (nat_more_s D') F
+    <- nat_contra D D' F. 
+
+%worlds () (nat_contra _ _ _).
+%total (D) (nat_contra D _ _).
+
+
+
+label_contra : label_less L L' -> label_more L L' -> false -> type.
+%mode label_contra +X1 +X2 -X3.
+
+-: label_contra (label_less_ D) (label_more_ D') F
+    <- nat_contra D D' F.
+
+%worlds () (label_contra _ _ _).
+%total {} (label_contra D _ _).
+
+
+
+
+labelfree_trans_insert : trow_labelfree TR L
+			  -> trow_insert L' T TR TR'
+			  -> label_neq L L'
+			  -> trow_labelfree TR' L
+			  -> type.
+%mode labelfree_trans_insert +X1 +X2 +X3 -X4.
+
+-: labelfree_trans_insert
+    trow_labelfree_nil
+    trow_insert_nil
+    Lneq
+    (trow_labelfree_cons
+       trow_labelfree_nil
+       Lneq).
+
+-: labelfree_trans_insert
+    Lfree
+    (trow_insert_less _)
+    L'neq
+    (trow_labelfree_cons
+       Lfree
+       L'neq).
+
+-: labelfree_trans_insert
+    (trow_labelfree_cons
+       Lfree
+       Lneq)
+    (trow_insert_more TRins _)
+    L'neq
+    (trow_labelfree_cons
+       Lfree'
+       Lneq)
+    <- labelfree_trans_insert Lfree TRins L'neq Lfree'.
+
+%worlds () (labelfree_trans_insert _ _ _ _).
+%total (TRins) (labelfree_trans_insert _ TRins _ _).
+
+
+
+labelfree_trans_order : trow_labelfree TR L
+			 -> trow_order TR TR'
+			 -> trow_labelfree TR' L
+			 -> type.
+%mode labelfree_trans_order +X1 +X2 -X3.
+
+-: labelfree_trans_order
+    Lfree
+    trow_order_nil
+    Lfree.
+
+-: labelfree_trans_order
+    (trow_labelfree_cons
+       Lfree
+       Lneq)
+    (trow_order_cons
+       TRins
+       SRorder)
+    Lfree''
+    <- labelfree_trans_order Lfree SRorder Lfree'
+    <- labelfree_trans_insert Lfree' TRins Lneq Lfree''.
+    
+%worlds () (labelfree_trans_order _ _ _).
+%total (TRord) (labelfree_trans_order _ TRord _).
+
+
+%% we need to know what and neq correspondes to greater than or less than
+nat_mol : nat -> nat -> type.
+nat_mol_less : nat_mol N M
+		     <- nat_less N M.
+nat_mol_more : nat_mol N M
+		     <- nat_more N M.
+
+label_mol : label -> label -> type.
+label_mol_ : label_mol (label_nat N) (label_nat M)
+	      <- nat_mol N M.
+
+nat_mol_inc : nat_mol N M -> nat_mol (s N) (s M) -> type.
+%mode nat_mol_inc +X1 -X2.
+
+-: nat_mol_inc
+    (nat_mol_less Less)
+    (nat_mol_less (nat_less_s Less)).
+
+-: nat_mol_inc
+    (nat_mol_more More)
+    (nat_mol_more (nat_more_s More)).
+
+%worlds () (nat_mol_inc _ _).
+%total [] (nat_mol_inc _ _).
+
+
+
+nat_neq_to_mol : nat_neq N M -> nat_mol N M -> type.
+%mode nat_neq_to_mol +X1 -X2.
+
+-: nat_neq_to_mol 
+    nat_neq_zs 
+    (nat_mol_less nat_less_z).
+
+-: nat_neq_to_mol 
+    nat_neq_sz
+    (nat_mol_more nat_more_z).
+
+-: nat_neq_to_mol
+    (nat_neq_ss Nneq)
+    Nmol
+    <- nat_neq_to_mol Nneq Nmol'
+    <- nat_mol_inc Nmol' Nmol.
+
+%worlds () (nat_neq_to_mol _ _).
+%total (Nneq) (nat_neq_to_mol Nneq _).
+
+
+
+label_neq_to_mol : label_neq L L' -> label_mol L L' -> type.
+%mode label_neq_to_mol +X1 -X2.
+
+-: label_neq_to_mol
+    (label_neq_ Nneq)
+    (label_mol_ Nmol)
+    <- nat_neq_to_mol Nneq Nmol.
+
+%worlds () (label_neq_to_mol _ _).
+%total [] (label_neq_to_mol _ _).
+
+
+
+trow_can_insert_helper : {S} label_mol L L'
+			  -> trow_insert L T TR TR'
+			  -> trow_insert L T (trow_cons L' S TR) TR''
+			  -> type.
+%mode trow_can_insert_helper +X1 +X2 +X3 -X4.
+
+-: trow_can_insert_helper
+    _
+    (label_mol_
+       (nat_mol_less Less))
+    _
+    (trow_insert_less (label_less_ Less)).
+
+-: trow_can_insert_helper
+    _
+    (label_mol_
+       (nat_mol_more More))
+    TRins
+    (trow_insert_more
+       TRins
+       (label_more_ More)).
+
+%worlds () (trow_can_insert_helper _ _ _ _).
+%total [] (trow_can_insert_helper _ _ _ _).
+
+
+
+trow_can_insert : {T} trow_labelfree TR L
+		   -> trow_insert L T TR TR' -> type.
+%mode trow_can_insert +X1 +X2 -X3.
+
+-: trow_can_insert
+    _
+    trow_labelfree_nil
+    trow_insert_nil.
+
+-: trow_can_insert
+    _
+    (trow_labelfree_cons
+       Lfree
+       Lneq)
+    TRins
+    <- trow_can_insert _ Lfree TRins'
+    <- label_neq_to_mol Lneq Lmol
+    <- trow_can_insert_helper _ Lmol TRins' TRins.
+
+%worlds () (trow_can_insert _ _ _).
+%total (Lfree) (trow_can_insert _ Lfree _).
+
+
+
+trow_has_order : trow_uniqueness TR -> trow_order TR TR' -> type.
+%mode trow_has_order +X1 -X2.
+
+-: trow_has_order
+    trow_uniqueness_nil
+    trow_order_nil.
+
+-: trow_has_order
+    (trow_uniqueness_cons TRunique Lfree)
+    (trow_order_cons
+       TR'ins
+       TRord)
+    <- trow_has_order TRunique TRord
+    <- labelfree_trans_order Lfree TRord Lfree'
+    <- trow_can_insert _ Lfree' TR'ins.
+
+%worlds () (trow_has_order _ _).
+%total (TRunique) (trow_has_order TRunique _).
+
+
+
+sub_tp_trow_refl : {TR} sub_tp_trow TR TR -> type.
+%mode sub_tp_trow_refl +X1 -X2.
+
+-: sub_tp_trow_refl
+    trow_nil
+    sub_tp_trow_nil.
+
+-: sub_tp_trow_refl
+    (trow_cons _ _ TR)
+    (sub_tp_trow_cons
+       sub_tp_refl
+       TRsub)
+    <- sub_tp_trow_refl TR TRsub.
+
+%worlds () (sub_tp_trow_refl _ _).
+%total (TR) (sub_tp_trow_refl TR _).
+
+
+
+sub_tp_trow_trans : sub_tp_trow SR TR 
+		     -> sub_tp_trow TR UR
+		     -> sub_tp_trow SR UR
+		     -> type.
+%mode sub_tp_trow_trans +X1 +X2 -X3.
+
+-: sub_tp_trow_trans
+    _
+    sub_tp_trow_nil
+    sub_tp_trow_nil.
+
+-: sub_tp_trow_trans
+    (sub_tp_trow_cons'
+       SRsub)
+    TRsub
+    (sub_tp_trow_cons'
+       SRsub')
+    <- sub_tp_trow_trans SRsub TRsub SRsub'.
+
+-: sub_tp_trow_trans
+    (sub_tp_trow_cons
+       _
+       SRsub)
+    (sub_tp_trow_cons'
+       TRsub)
+    (sub_tp_trow_cons'
+       SRsub')
+    <- sub_tp_trow_trans SRsub TRsub SRsub'.
+
+-: sub_tp_trow_trans
+    (sub_tp_trow_cons
+       Ssub
+       SRsub)
+    (sub_tp_trow_cons
+       Tsub
+       TRsub)
+    (sub_tp_trow_cons
+       (sub_tp_trans Tsub Ssub)
+       SRsub')
+    <- sub_tp_trow_trans SRsub TRsub SRsub'.
+
+%worlds () (sub_tp_trow_trans _ _ _).
+%total (SRsub) (sub_tp_trow_trans SRsub _ _).
+
+
+
+equality_sub_tp_trow : sub_tp_trow SR TR
+			-> trow_eq SR SR'
+			-> trow_eq TR TR'
+			-> sub_tp_trow SR' TR' -> type.
+%mode equality_sub_tp_trow +X1 +X2 +X3 -X4.
+
+-: equality_sub_tp_trow D trow_eq_ trow_eq_ D.
+
+%worlds () (equality_sub_tp_trow _ _ _ _).
+%total [] (equality_sub_tp_trow _ _ _ _).
+
+
+
+raa_treq : false -> trow_eq TR SR -> type.
+%mode +{TR:trow} +{SR:trow} +{X1:false} -{X2:trow_eq TR SR} (raa_treq X1 X2).
+%worlds () (raa_treq _ _).
+%total {} (raa_treq _ _).
+
+
+
+trow_cons_unique : {L}{T}trow_eq TR SR -> trow_eq (trow_cons L T TR) (trow_cons L T SR) -> type.
+%mode trow_cons_unique +X1 +X2 +X3 -X4.
+
+-: trow_cons_unique _ _ trow_eq_ trow_eq_.
+
+%worlds () (trow_cons_unique _ _ _ _).
+%total [] (trow_cons_unique _ _ _ _).
+
+trow_insert_unique : trow_insert L T TR TR' 
+		 -> trow_insert L T SR SR' 
+		 -> trow_eq TR SR 
+		 -> trow_eq TR' SR'
+		 -> type.
+%mode trow_insert_unique +X1 +X2 +X3 -X4.
+
+-: trow_insert_unique trow_insert_nil _ _ trow_eq_.
+
+-: trow_insert_unique (trow_insert_less _) (trow_insert_less _) _ trow_eq_.
+
+-: trow_insert_unique (trow_insert_more D _) (trow_insert_more D' _) trow_eq_ Deq'
+   <- trow_insert_unique D D' trow_eq_ Deq
+   <- trow_cons_unique _ _ Deq Deq'.
+
+
+%% contradiction cases
+
+-: trow_insert_unique (trow_insert_less D) (trow_insert_more _ D') trow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_treq F Deq.
+
+-: trow_insert_unique (trow_insert_more _ D') (trow_insert_less D) trow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_treq F Deq.
+
+%worlds () (trow_insert_unique _ _ _ _).
+%total (D) (trow_insert_unique D _ _ _).
+
+
+
+trow_order_unique : trow_order TR TR' -> trow_order TR TR'' -> trow_eq TR' TR'' -> type.
+%mode trow_order_unique +X1 +X2 -X3.
+
+-: trow_order_unique trow_order_nil _ trow_eq_.
+
+-: trow_order_unique (trow_order_cons D2a D1a) (trow_order_cons D2b D1b) Deq'
+    <- trow_order_unique D1a D1b Deq
+    <- trow_insert_unique D2a D2b Deq Deq'.
+		   
+%worlds () (trow_order_unique _ _ _).
+%total (D) (trow_order_unique D _ _).
+
+
+
+%%%%% A few lemmas %%%%% 
+absurd_tsa : sub_tp top (arrow _ _) -> false -> type.
+%mode absurd_tsa +X1 -X2.
+
+absurd_fsa : sub_tp (forall _ _) (arrow _ _) -> false -> type.
+%mode absurd_fsa +X1 -X2.
+
+absurd_rsa : sub_tp (record _ _) (arrow _ _) -> false -> type.
+%mode absurd_rsa +X1 -X2.
+
+-: absurd_tsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_tsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_tsa
+    (sub_tp_trans
+       _
+       D)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_tsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_rsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       _
+       D)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_fsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_rsa D F.
+
+-: absurd_rsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_rsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_rsa
+    (sub_tp_trans
+       D
+       _)
+    F
+    <- absurd_rsa D F.
+
+-: absurd_rsa
+    (sub_tp_trans
+       _
+       D)
+    F
+    <- absurd_rsa D F.
+
+%worlds () (absurd_fsa _ _) (absurd_tsa _ _) (absurd_rsa _ _).
+%total (D D' D'') (absurd_fsa D _) (absurd_tsa D' _) (absurd_rsa D'' _).
+
+
+
+
+absurd_tsf : sub_tp top (forall _ _) -> false -> type.
+%mode absurd_tsf +X1 -X2.
+
+absurd_asf : sub_tp (arrow _ _) (forall _ _) -> false -> type.
+%mode absurd_asf +X1 -X2.
+
+absurd_rsf : sub_tp (record _ _) (forall _ _) -> false -> type.
+%mode absurd_rsf +X1 -X2.
+
+-: absurd_tsf 
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_tsf 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_tsf D F.
+		 
+-: absurd_tsf
+    (sub_tp_trans D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_tsf
+    (sub_tp_trans D _)
+    F
+    <- absurd_rsf D F.
+
+-: absurd_asf 
+    (sub_tp_trans D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_asf 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_asf D F.
+		 
+-: absurd_asf
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_asf
+    (sub_tp_trans D _)
+    F
+    <- absurd_rsf D F.
+
+-: absurd_rsf
+    (sub_tp_trans D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_rsf
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_rsf
+    (sub_tp_trans D _)
+    F
+    <- absurd_rsf D F.
+
+-: absurd_rsf
+    (sub_tp_trans _ D)
+    F
+    <- absurd_rsf D F.
+
+%worlds () (absurd_tsf _ _) (absurd_asf _ _) (absurd_rsf _ _).
+%total (D D' D'') (absurd_tsf D _) (absurd_asf D' _) (absurd_rsf D'' _).
+
+
+
+absurd_tsr : sub_tp top (record _ _) -> false -> type.
+%mode absurd_tsr +X1 -X2.
+
+absurd_asr : sub_tp (arrow _ _) (record _ _) -> false -> type.
+%mode absurd_asr +X1 -X2.
+
+absurd_fsr : sub_tp (forall _ _) (record _ _) -> false -> type.
+%mode absurd_fsr +X1 -X2.
+
+-: absurd_tsr 
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsr D F.
+
+-: absurd_tsr 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_tsr D F.
+		 
+-: absurd_tsr
+    (sub_tp_trans D _)
+    F
+    <- absurd_asr D F.
+
+-: absurd_tsr
+    (sub_tp_trans D _)
+    F
+    <- absurd_fsr D F.
+
+-: absurd_asr 
+    (sub_tp_trans D _)
+    F
+    <- absurd_asr D F.
+
+-: absurd_asr 
+    (sub_tp_trans _ D)
+    F
+    <- absurd_asr D F.
+		 
+-: absurd_asr
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsr D F.
+
+-: absurd_asr
+    (sub_tp_trans D _)
+    F
+    <- absurd_fsr D F.
+
+-: absurd_fsr
+    (sub_tp_trans D _)
+    F
+    <- absurd_asr D F.
+
+-: absurd_fsr
+    (sub_tp_trans D _)
+    F
+    <- absurd_tsr D F.
+
+-: absurd_fsr
+    (sub_tp_trans D _)
+    F
+    <- absurd_fsr D F.
+
+-: absurd_fsr
+    (sub_tp_trans _ D)
+    F
+    <- absurd_fsr D F.
+
+%worlds () (absurd_tsr _ _) (absurd_asr _ _) (absurd_fsr _ _).
+%total (D D' D'') (absurd_tsr D _) (absurd_asr D' _) (absurd_fsr D'' _).
+
+
+
+absurd_ota : of (tabs _ _) (arrow _ _) -> false -> type.
+%mode absurd_ota +X1 -X2.
+
+-: absurd_ota
+    (of_sub D _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_ota
+    (of_sub D _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_ota
+    (of_sub _ D)
+    F
+    <- absurd_ota D F.
+
+-: absurd_ota
+    (of_sub D _)
+    F
+    <- absurd_rsa D F.
+
+%worlds () (absurd_ota _ _).
+%total (D) (absurd_ota D _).
+
+
+
+absurd_ora : of (rec _) (arrow _ _) -> false -> type.
+%mode absurd_ora +X1 -X2.
+
+-: absurd_ora
+    (of_sub D _)
+    F
+    <- absurd_tsa D F.
+
+-: absurd_ora
+    (of_sub D _)
+    F
+    <- absurd_fsa D F.
+
+-: absurd_ora
+    (of_sub _ D)
+    F
+    <- absurd_ora D F.
+
+-: absurd_ora
+    (of_sub D _)
+    F
+    <- absurd_rsa D F.
+
+%worlds () (absurd_ora _ _).
+%total (D) (absurd_ora D _).
+
+
+
+absurd_otr : of (tabs _ _) (record _ _) -> false -> type.
+%mode absurd_otr +X1 -X2.
+
+-: absurd_otr
+    (of_sub D _)
+    F
+    <- absurd_tsr D F.
+
+-: absurd_otr
+    (of_sub D _)
+    F
+    <- absurd_fsr D F.
+
+-: absurd_otr
+    (of_sub _ D)
+    F
+    <- absurd_otr D F.
+
+-: absurd_otr
+    (of_sub D _)
+    F
+    <- absurd_asr D F.
+
+%worlds () (absurd_otr _ _).
+%total (D) (absurd_otr D _).
+
+
+
+absurd_oar : of (abs _ _) (record _ _) -> false -> type.
+%mode absurd_oar +X1 -X2.
+
+-: absurd_oar
+    (of_sub D _)
+    F
+    <- absurd_tsr D F.
+
+-: absurd_oar
+    (of_sub D _)
+    F
+    <- absurd_fsr D F.
+
+-: absurd_oar
+    (of_sub _ D)
+    F
+    <- absurd_oar D F.
+
+-: absurd_oar
+    (of_sub D _)
+    F
+    <- absurd_asr D F.
+
+%worlds () (absurd_oar _ _).
+%total (D) (absurd_oar D _).
+
+
+
+absurd_oaf : of (abs _ _) (forall _ _) -> false -> type.
+%mode absurd_oaf +X1 -X2.
+
+-: absurd_oaf
+    (of_sub D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_oaf
+    (of_sub D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_oaf
+    (of_sub _ D)
+    F
+    <- absurd_oaf D F.
+
+-: absurd_oaf
+    (of_sub D _)
+    F
+    <- absurd_rsf D F.
+
+%worlds () (absurd_oaf _ _).
+%total (D) (absurd_oaf D _).
+
+
+
+absurd_orf : of (rec _) (forall _ _) -> false -> type.
+%mode absurd_orf +X1 -X2.
+
+-: absurd_orf
+    (of_sub D _)
+    F
+    <- absurd_tsf D F.
+
+-: absurd_orf
+    (of_sub D _)
+    F
+    <- absurd_asf D F.
+
+-: absurd_orf
+    (of_sub _ D)
+    F
+    <- absurd_orf D F.
+
+-: absurd_orf
+    (of_sub D _)
+    F
+    <- absurd_rsf D F.
+
+%worlds () (absurd_orf _ _).
+%total (D) (absurd_orf D _).
+
+
+
+absurd_nat_eq_neq : nat_neq N N -> false -> type.
+%mode absurd_nat_eq_neq +X1 -X2.
+
+-: absurd_nat_eq_neq
+    (nat_neq_ss Nneq)
+    F
+    <- absurd_nat_eq_neq Nneq F.
+
+%worlds () (absurd_nat_eq_neq _ _).
+%total (Nneq) (absurd_nat_eq_neq Nneq _).
+
+    
+
+absurd_nat_eq_more : nat_more N N -> false -> type.
+%mode absurd_nat_eq_more +X1 -X2.
+
+-: absurd_nat_eq_more
+    (nat_more_s Nmore)
+    F
+    <- absurd_nat_eq_more Nmore F.
+
+%worlds () (absurd_nat_eq_more _ _).
+%total (Nmore) (absurd_nat_eq_more Nmore _).
+ 
+
+
+absurd_label_eq_more : label_more L L -> false -> type.
+%mode absurd_label_eq_more +X1 -X2.
+
+-: absurd_label_eq_more
+    (label_more_ Nmore)
+    F
+    <- absurd_nat_eq_more Nmore F.
+
+%worlds () (absurd_label_eq_more _ _).
+%total [] (absurd_label_eq_more _ _).
+
+
+
+absurd_label_eq_neq : label_neq L L -> false -> type.
+%mode absurd_label_eq_neq +X1 -X2.
+
+-: absurd_label_eq_neq
+    (label_neq_ Nneq)
+    F
+    <- absurd_nat_eq_neq Nneq F.
+
+%worlds () (absurd_label_eq_neq _ _).
+%total [] (absurd_label_eq_neq _ _).
+
+
+
+absurd_lookup_free_label : trow_lookup L TR T 
+			    -> trow_labelfree TR L 
+			    -> false
+			    -> type.
+%mode absurd_lookup_free_label +X1 +X2 -X3.
+
+-: absurd_lookup_free_label
+    (trow_lookup_no LT)
+    (trow_labelfree_cons Lfree _)
+    F
+    <- absurd_lookup_free_label LT Lfree F.
+
+-: absurd_lookup_free_label
+    trow_lookup_yes
+    (trow_labelfree_cons
+       _
+       (label_neq_ Nneq))
+    F
+    <- absurd_nat_eq_neq Nneq F.
+
+%worlds () (absurd_lookup_free_label _ _ _).
+%total (LT) (absurd_lookup_free_label LT _ _).
+
+
+
+absurd_prow_of_free_label : prow_of (prow_cons L P PR) TR LT
+			     -> trow_labelfree TR L
+			     -> false
+			     -> type.
+%mode absurd_prow_of_free_label +X1 +X2 -X3.
+
+-: absurd_prow_of_free_label
+    (prow_of_cons _ _ _)
+    (trow_labelfree_cons _ Lneq)
+    F
+    <- absurd_label_eq_neq Lneq F.
+
+%worlds () (absurd_prow_of_free_label _ _ _).
+%total (PRof) (absurd_prow_of_free_label PRof _ _).
+
+
+
+absurd_prow_match_free_label : prow_match (prow_cons L P PR) ER LE
+				-> trow_labelfree TR L
+				-> erow_of ER TR
+				-> false
+				-> type.
+%mode absurd_prow_match_free_label +X1 +X2 +X3 -X4.
+
+-: absurd_prow_match_free_label
+    (prow_match_cons _ _ _)
+    (trow_labelfree_cons _ Lneq)
+    (erow_of_cons _ _)
+    F
+    <- absurd_label_eq_neq Lneq F.
+
+-: absurd_prow_match_free_label
+    (prow_match_cons' PRmatch)
+    (trow_labelfree_cons Lfree _)
+    (erow_of_cons ERof _)
+    F
+    <- absurd_prow_match_free_label PRmatch Lfree ERof F.
+
+%worlds () (absurd_prow_match_free_label _ _ _ _).
+%total (PRmatch) (absurd_prow_match_free_label PRmatch _ _ _).
+
+
+
+%%%%%  Reductio ad absurdio  %%%%%
+raa_sub_tp : false -> sub_tp T1 T2 -> type.
+%mode +{T1} +{T2} +{F} -{D:sub_tp T1 T2} (raa_sub_tp F D).
+%worlds () (raa_sub_tp _ _).
+%total [] (raa_sub_tp _ _).
+
+raa_sub_imp_sub : false -> ({x} sub_tp x T -> sub_tp (T1 x) (T2 x)) -> type.
+%mode +{T} +{T1} +{T2} +{F} -{D:{x} sub_tp x T -> sub_tp (T1 x) (T2 x)} (raa_sub_imp_sub F D).
+%worlds () (raa_sub_imp_sub _ _).
+%total [] (raa_sub_imp_sub _ _).
+
+raa_of : false -> of E T -> type.
+%mode +{E} +{T} +{F} -{D:of E T} (raa_of F D).
+%worlds () (raa_of _ _).
+%total [] (raa_of _ _).
+
+raa_of_reduces : erow_of ER TR -> false -> of E T -> type.
+%mode +{E} +{T} +{F} +{ER} +{TR} +{D':erow_of ER TR} -{D:of E T} (raa_of_reduces D' F D).
+%worlds () (raa_of_reduces _ _ _).
+%total [] (raa_of_reduces _ _ _).
+%reduces Eof < ERof (raa_of_reduces ERof _ Eof).
+
+raa_of_imp_of : false -> ({x} of x T1 -> of (E x) T2) -> type.
+%mode +{E} +{T1} +{T2} +{F} -{D:{x} of x T1 -> of (E x) T2} (raa_of_imp_of F D).
+%worlds () (raa_of_imp_of _ _).
+%total [] (raa_of_imp_of _ _).
+
+raa_sub_imp_of : false -> ({x} sub_tp x T -> of (E x) (T2 x)) -> type.
+%mode +{T} +{E} +{T2} +{F} -{D:{x} sub_tp x T -> of (E x) (T2 x)} (raa_sub_imp_of F D).
+%worlds () (raa_sub_imp_of _ _).
+%total [] (raa_sub_imp_of _ _).
+
+raa_trow_lookup : false -> trow_lookup L TR T -> type.
+%mode +{L} +{TR} +{T} +{F} -{D: trow_lookup L TR T} (raa_trow_lookup F D).
+%worlds () (raa_trow_lookup _ _).
+%total [] (raa_trow_lookup _ _).
+
+raa_sub_tp_trow : false -> sub_tp_trow SR TR -> type.
+%mode +{SR} +{TR} +{F} -{D:sub_tp_trow SR TR} (raa_sub_tp_trow F D).
+%worlds () (raa_sub_tp_trow _ _).
+%total [] (raa_sub_tp_trow _ _).
+
+raa_trow_order : false -> trow_order SR TR -> type.
+%mode +{SR} +{TR} +{F} -{D:trow_order SR TR} (raa_trow_order F D).
+%worlds () (raa_trow_order _ _).
+%total [] (raa_trow_order _ _).
+
+raa_erow_order : false -> erow_order ER ER' -> type.
+%mode +{ER} +{ER'} +{F} -{D:erow_order ER ER'} (raa_erow_order F D).
+%worlds () (raa_erow_order _ _).
+%total [] (raa_erow_order _ _).
+
+raa_erow_of : false -> erow_of ER TR -> type.
+%mode +{ER} +{TR} +{F} -{D:erow_of ER TR} (raa_erow_of F D).
+%worlds () (raa_erow_of _ _).
+%total [] (raa_erow_of _ _).
+
+raa_erow_of_reduces : sub_tp S T 
+		       -> false 
+		       -> erow_of erow_nil trow_nil -> type.
+%mode raa_erow_of_reduces +X1 +X2 -X3.
+%worlds () (raa_erow_of_reduces _ _ _).
+%total [] (raa_erow_of_reduces _ _ _).
+%reduces ERof < Ssub (raa_erow_of_reduces Ssub _ ERof).
+
+raa_erow_ins : false -> erow_insert L E ER ER' -> type.
+%mode +{L} +{E} +{ER} +{ER'} +{F} -{D:erow_insert L E ER ER'} (raa_erow_ins F D).
+%worlds () (raa_erow_ins _ _).
+%total [] (raa_erow_ins _ _).
+
+raa_list_of : false -> list_of EL TL -> type.
+%mode +{EL} +{TL} +{F} -{D:list_of EL TL} (raa_list_of F D).
+%worlds () (raa_list_of _ _).
+%total [] (raa_list_of _ _).
+
+raa_match : false -> match P E EL -> type.
+%mode +{P} +{E} +{EL} +{F} -{D:match P E EL} (raa_match F D).
+%worlds () (raa_match _ _).
+%total [] (raa_match _ _).
+
+
+erow_eq : erow -> erow -> type.
+erow_eq_ : erow_eq ER ER.
+
+
+
+raa_ereq : false -> erow_eq ER ER' -> type.
+%mode +{ER:erow} +{ER':erow} +{X1:false} -{X2:erow_eq ER ER'} (raa_ereq X1 X2).
+%worlds () (raa_ereq _ _).
+%total {} (raa_ereq _ _).
+
+
+
+erow_cons_unique : {L}{E}erow_eq ER ER' -> erow_eq (erow_cons L E ER) (erow_cons L E ER') -> type.
+%mode erow_cons_unique +X1 +X2 +X3 -X4.
+
+-: erow_cons_unique _ _ erow_eq_ erow_eq_.
+
+%worlds () (erow_cons_unique _ _ _ _).
+%total [] (erow_cons_unique _ _ _ _).
+
+
+
+erow_insert_unique : erow_insert L E ER ER' 
+		 -> erow_insert L E ER'' ER''' 
+		 -> erow_eq ER ER'' 
+		 -> erow_eq ER' ER'''
+		 -> type.
+%mode erow_insert_unique +X1 +X2 +X3 -X4.
+
+-: erow_insert_unique erow_insert_nil _ _ erow_eq_.
+
+-: erow_insert_unique (erow_insert_less _) (erow_insert_less _) _ erow_eq_.
+
+-: erow_insert_unique (erow_insert_more D _) (erow_insert_more D' _) erow_eq_ Deq'
+   <- erow_insert_unique D D' erow_eq_ Deq
+   <- erow_cons_unique _ _ Deq Deq'.
+
+
+%% contradiction cases
+
+-: erow_insert_unique (erow_insert_less D) (erow_insert_more _ D') erow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_ereq F Deq.
+
+-: erow_insert_unique (erow_insert_more _ D') (erow_insert_less D) erow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_ereq F Deq.
+
+%worlds () (erow_insert_unique _ _ _ _).
+%total (D) (erow_insert_unique D _ _ _).
+
+
+
+erow_order_unique : erow_order TR TR' 
+		     -> erow_order TR TR'' 
+		     -> erow_eq TR' TR'' -> type.
+%mode erow_order_unique +X1 +X2 -X3.
+
+-: erow_order_unique erow_order_nil _ erow_eq_.
+
+-: erow_order_unique (erow_order_cons D2a D1a) (erow_order_cons D2b D1b) Deq'
+    <- erow_order_unique D1a D1b Deq
+    <- erow_insert_unique D2a D2b Deq Deq'.
+		   
+%worlds () (erow_order_unique _ _ _).
+%total (D) (erow_order_unique D _ _).
+
+
+
+prow_eq : prow -> prow -> type.
+prow_eq_ : prow_eq PR PR.
+
+
+
+raa_preq : false -> prow_eq PR PR' -> type.
+%mode +{PR} +{PR'} +{F} -{D:prow_eq PR PR'} (raa_preq F D).
+%worlds () (raa_preq _ _).
+%total [] (raa_preq _ _).
+
+
+prow_cons_unique : {L}{P}prow_eq PR PR' -> prow_eq (prow_cons L P PR) (prow_cons L P PR') -> type.
+%mode prow_cons_unique +X1 +X2 +X3 -X4.
+
+-: prow_cons_unique _ _ prow_eq_ prow_eq_.
+
+%worlds () (prow_cons_unique _ _ _ _).
+%total [] (prow_cons_unique _ _ _ _).
+
+
+
+prow_insert_unique : prow_insert L P PR PR' 
+		      -> prow_insert L P PR'' PR''' 
+		      -> prow_eq PR PR'' 
+		      -> prow_eq PR' PR'''
+		      -> type.
+%mode prow_insert_unique +X1 +X2 +X3 -X4.
+
+-: prow_insert_unique prow_insert_nil _ _ prow_eq_.
+
+-: prow_insert_unique (prow_insert_less _) (prow_insert_less _) _ prow_eq_.
+
+-: prow_insert_unique (prow_insert_more D _) (prow_insert_more D' _) prow_eq_ Deq'
+   <- prow_insert_unique D D' prow_eq_ Deq
+   <- prow_cons_unique _ _ Deq Deq'.
+
+
+%% contradiction cases
+
+-: prow_insert_unique (prow_insert_less D) (prow_insert_more _ D') prow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_preq F Deq.
+
+-: prow_insert_unique (prow_insert_more _ D') (prow_insert_less D) prow_eq_ Deq
+    <- label_contra D D' F
+    <- raa_preq F Deq.
+
+%worlds () (prow_insert_unique _ _ _ _).
+%total (D) (prow_insert_unique D _ _ _).
+
+
+
+prow_order_unique : prow_order PR PR' 
+		     -> prow_order PR PR'' 
+		     -> prow_eq PR' PR'' -> type.
+%mode prow_order_unique +X1 +X2 -X3.
+
+-: prow_order_unique prow_order_nil _ prow_eq_.
+
+-: prow_order_unique (prow_order_cons D2a D1a) (prow_order_cons D2b D1b) Deq'
+    <- prow_order_unique D1a D1b Deq
+    <- prow_insert_unique D2a D2b Deq Deq'.
+		   
+%worlds () (prow_order_unique _ _ _).
+%total (D) (prow_order_unique D _ _).
+
+
+
+equal_erow_of : erow_of ER TR
+		 -> erow_eq ER ER'
+		 -> trow_eq TR TR'
+		 -> erow_of ER' TR'
+		 -> type.
+%mode equal_erow_of +X1 +X2 +X3 -X4.
+
+-: equal_erow_of ERof erow_eq_ trow_eq_ ERof.
+
+%worlds () (equal_erow_of _ _ _ _).
+%total [] (equal_erow_of _ _ _ _).
+%reduces ERof = ERof' (equal_erow_of ERof _ _ ERof').
+
+
+
+equal_trow_sub : sub_tp_trow SR TR
+		 -> trow_eq SR SR'
+		 -> trow_eq TR TR'
+		 -> sub_tp_trow SR' TR'
+		 -> type.
+%mode equal_trow_sub +X1 +X2 +X3 -X4.
+
+-: equal_trow_sub SRsub trow_eq_ trow_eq_ SRsub.
+
+%worlds () (equal_trow_sub _ _ _ _).
+%total [] (equal_trow_sub _ _ _ _).
+%reduces SRsub = SRsub' (equal_trow_sub SRsub _ _ SRsub').
+
+
+
+%%%%% Some inversions %%%%% 
+invert_sub_arrow : sub_tp (arrow S1 S2) (arrow T1 T2)
+		    -> sub_tp T1 S1
+		    -> sub_tp S2 T2
+		    -> type.
+%mode invert_sub_arrow +X1 -X2 -X3.
+
+-: invert_sub_arrow
+    sub_tp_refl
+    sub_tp_refl
+    sub_tp_refl.
+
+-: invert_sub_arrow
+    (sub_tp_arrow S2sub T1sub)
+    T1sub
+    S2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       T'sub
+       Tsub)
+    (sub_tp_trans
+       U1sub
+       T1sub)
+    (sub_tp_trans
+       U2sub
+       S2sub)
+   <- invert_sub_arrow Tsub U1sub S2sub
+   <- invert_sub_arrow T'sub T1sub U2sub.
+
+%% bogus cases
+-: invert_sub_arrow
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_tsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_sub_arrow
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_rsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+%worlds () (invert_sub_arrow _ _ _).
+%total (Tsub) (invert_sub_arrow Tsub _ _).
+
+
+
+invert_sub_forall : sub_tp (forall S1 S2) (forall T1 T2)
+		    -> sub_tp T1 S1
+		    -> ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x))
+		    -> type.
+%mode invert_sub_forall +X1 -X2 -X3.
+
+-: invert_sub_forall
+    (sub_tp_forall
+       S2sub
+       T1sub)
+    T1sub
+    S2sub.
+
+-: invert_sub_forall
+    sub_tp_refl
+    sub_tp_refl
+    ([x][d] sub_tp_refl).
+
+-: invert_sub_forall
+    (sub_tp_trans
+       T'sub
+       Tsub)
+    (sub_tp_trans
+       U1sub
+       T1sub)
+    ([x][d] sub_tp_trans
+       (U2sub x d)
+       (S2sub x 
+	  (sub_tp_trans T1sub d)))
+   <- invert_sub_forall Tsub U1sub S2sub
+   <- invert_sub_forall T'sub T1sub U2sub.
+
+%% contradictions
+-: invert_sub_forall
+    (sub_tp_trans
+       _
+       D)
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_sub_forall
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_tsf D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_sub_forall
+    (sub_tp_trans
+       D
+       _)
+    T1sub
+    S2sub
+    <- absurd_rsf D F
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+%worlds () (invert_sub_forall _ _ _).
+%total (Dsub) (invert_sub_forall Dsub _ _).
+
+
+
+
+invert_of_abs : of (abs S1 E) (arrow T1 T2) 
+	  -> ({x} of x S1 -> of (E x) S2)
+	  -> sub_tp T1 S1
+	  -> sub_tp S2 T2
+	  -> type.
+%mode invert_of_abs +X1 -X2 -X3 -X4.
+
+-: invert_of_abs 
+    (of_abs
+       ([x][xassm] Eof x xassm))
+    Eof
+    sub_tp_refl
+    sub_tp_refl.
+
+-: invert_of_abs
+    (of_sub
+       Dsub
+       Eof)
+    Eof'
+    (sub_tp_trans T1sub U1sub)
+    (sub_tp_trans U2sub S2sub)
+    <- invert_of_abs Eof Eof' T1sub S2sub
+    <- invert_sub_arrow Dsub U1sub U2sub.
+
+%% bogus cases
+-: invert_of_abs 
+    (of_sub
+       D
+       _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_tsa D F
+    <- raa_of_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_of_abs 
+    (of_sub
+       D
+       _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_fsa D F
+    <- raa_of_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+-: invert_of_abs 
+    (of_sub
+       D
+       _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_rsa D F
+    <- raa_of_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_tp F S2sub.
+
+%worlds () (invert_of_abs _ _ _ _).
+%total [Eof] (invert_of_abs Eof _ _ _).
+
+
+
+invert_of_tabs : of (tabs S1 E) (forall T1 T2) 
+	  -> ({x} sub_tp x S1 -> of (E x) (S2 x))
+	  -> sub_tp T1 S1
+	  -> ({x} sub_tp x T1 -> sub_tp (S2 x) (T2 x))
+	  -> type.
+%mode invert_of_tabs +X1 -X2 -X3 -X4.
+
+-: invert_of_tabs
+    (of_tabs
+       ([x][xsub] Eof x xsub))
+    Eof
+    sub_tp_refl
+    ([x][d] sub_tp_refl).
+    
+-: invert_of_tabs
+    (of_sub
+       Tsub
+       Eof)
+    Eof'
+    (sub_tp_trans U1sub T1sub)
+    ([x][d] sub_tp_trans
+       (U2sub x d)
+       (S2sub x
+	  (sub_tp_trans T1sub d)))
+    <- invert_of_tabs Eof Eof' U1sub S2sub
+    <- invert_sub_forall Tsub T1sub U2sub.
+
+%% bogus cases
+-: invert_of_tabs
+    (of_sub D _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_tsf D F
+    <- raa_sub_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_of_tabs
+    (of_sub D _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_asf D F
+    <- raa_sub_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+-: invert_of_tabs
+    (of_sub D _)
+    Eof'
+    T1sub
+    S2sub
+    <- absurd_rsf D F
+    <- raa_sub_imp_of F (Eof' : {x}{d} of _ top)
+    <- raa_sub_tp F T1sub
+    <- raa_sub_imp_sub F S2sub.
+
+%worlds () (invert_of_tabs _ _ _ _).
+%total [Eof] (invert_of_tabs Eof _ _ _).
+
+
+
+lookup_erow_to_trow :  erow_lookup L ER E 
+		       -> erow_of ER TR
+		       -> trow_lookup L TR T
+		       -> type.
+%mode lookup_erow_to_trow +X1 +X2 -X3.
+
+-: lookup_erow_to_trow
+    erow_lookup_yes
+    (erow_of_cons _ _)
+    trow_lookup_yes.
+
+-: lookup_erow_to_trow
+    (erow_lookup_no LE)
+    (erow_of_cons ERof _)
+    (trow_lookup_no LT)
+    <- lookup_erow_to_trow LE ERof LT.
+
+%worlds () (lookup_erow_to_trow _ _ _).
+%total (LE) (lookup_erow_to_trow LE _ _).
+
+
+
+lookup_trow_to_erow :  trow_lookup L TR T
+		       -> erow_of ER TR
+		       -> erow_lookup L ER E
+		       -> type.
+%mode lookup_trow_to_erow +X1 +X2 -X3.
+
+-: lookup_trow_to_erow
+    trow_lookup_yes
+    (erow_of_cons _ _)
+    erow_lookup_yes.
+
+-: lookup_trow_to_erow
+    (trow_lookup_no LT)
+    (erow_of_cons ERof _)
+    (erow_lookup_no LE)
+    <- lookup_trow_to_erow LT ERof LE.
+
+%worlds () (lookup_trow_to_erow _ _ _).
+%total (LT) (lookup_trow_to_erow LT _ _).
+
+
+
+invert_erow_of : erow_of ER TR
+		  -> trow_uniqueness TR
+		  -> erow_lookup L ER E
+		  -> trow_lookup L TR T
+		  -> of E T
+		  -> type.
+%mode invert_erow_of +X1 +X2 +X3 +X4 -X5.
+
+
+-: invert_erow_of
+    (erow_of_cons
+       _
+       Eof)
+    (trow_uniqueness_cons
+       _
+       _)
+    erow_lookup_yes
+    trow_lookup_yes
+    Eof.
+
+-: invert_erow_of
+    (erow_of_cons
+       ERof
+       _)
+    (trow_uniqueness_cons
+       TRunique
+       Lfree)
+    (erow_lookup_no
+       LE)
+    (trow_lookup_no
+       LT)
+    Eof
+    <- invert_erow_of ERof TRunique LE LT Eof.
+
+%% bogus cases
+-: invert_erow_of
+    (erow_of_cons ERof _)
+    (trow_uniqueness_cons
+       _
+       Lfree)
+    erow_lookup_yes
+    (trow_lookup_no
+       LT)
+    Eof
+    <- absurd_lookup_free_label LT Lfree F
+    <- raa_of_reduces ERof F Eof.
+
+-: invert_erow_of
+    (erow_of_cons ERof _)
+    (trow_uniqueness_cons
+       _
+       Lfree)
+    (erow_lookup_no LE)
+    trow_lookup_yes
+    Eof
+    <- lookup_erow_to_trow LE ERof LT
+    <- absurd_lookup_free_label LT Lfree F
+    <- raa_of_reduces ERof F Eof.
+
+%worlds () (invert_erow_of _ _ _ _ _).
+%total (ERof) (invert_erow_of ERof _ _ _ _).
+%reduces Eof < ERof (invert_erow_of ERof _ _ _ Eof).
+
+
+
+invert_erow_of' : erow_of ER TR
+		  -> erow_lookup L ER E
+		  -> of E T
+		  -> type.
+%mode invert_erow_of' +X1 +X2 -X3.
+
+
+-: invert_erow_of'
+    (erow_of_cons
+       _
+       Eof)
+    erow_lookup_yes
+    Eof.
+
+-: invert_erow_of'
+    (erow_of_cons
+       ERof
+       _)
+    (erow_lookup_no
+       LE)
+    Eof
+    <- invert_erow_of' ERof LE Eof.
+
+%worlds () (invert_erow_of' _ _ _).
+%total (ERof) (invert_erow_of' ERof _ _).
+%reduces Eof < ERof (invert_erow_of' ERof _ Eof).
+
+
+lookup_trans_sub_trow : trow_lookup L TR T
+			  -> sub_tp_trow SR TR
+			  -> trow_lookup L SR S
+			  -> sub_tp S T
+			  -> type.
+%mode lookup_trans_sub_trow +X1 +X2 -X3 -X4.
+
+-: lookup_trans_sub_trow
+    trow_lookup_yes
+    (sub_tp_trow_cons Ssub _)
+    trow_lookup_yes
+    Ssub.
+
+-: lookup_trans_sub_trow
+    (trow_lookup_no LT)
+    (sub_tp_trow_cons _ SRsub)
+    (trow_lookup_no LS)
+    Ssub
+    <- lookup_trans_sub_trow LT SRsub LS Ssub.
+
+-: lookup_trans_sub_trow
+    LT
+    (sub_tp_trow_cons' SRsub)
+    (trow_lookup_no LS)
+    Ssub
+    <- lookup_trans_sub_trow LT SRsub LS Ssub.
+
+%worlds () (lookup_trans_sub_trow _ _ _ _).
+%total (SRsub) (lookup_trans_sub_trow _ SRsub _ _).
+
+
+
+lookup_trans_trow_insert : trow_lookup L TR T
+		       -> trow_insert L' S TR TR'
+		       -> trow_lookup L TR' T
+		       -> type.
+%mode lookup_trans_trow_insert +X1 +X2 -X3.
+
+-: lookup_trans_trow_insert
+    trow_lookup_yes
+    (trow_insert_more _ _)
+    trow_lookup_yes.
+
+-: lookup_trans_trow_insert
+    LT
+    (trow_insert_less _)
+    (trow_lookup_no LT).
+
+-: lookup_trans_trow_insert
+    (trow_lookup_no LT)
+    (trow_insert_more TRins _)
+    (trow_lookup_no LT')
+    <- lookup_trans_trow_insert LT TRins LT'.
+
+%% Bogus cases 
+-: lookup_trans_trow_insert
+    LT
+    trow_insert_nil
+    (trow_lookup_no LT).
+
+%worlds () (lookup_trans_trow_insert _ _ _).
+%total (LT) (lookup_trans_trow_insert LT _ _).
+
+
+
+trow_insert_to_lookup : trow_insert L T TR TR'
+			 -> trow_lookup L TR' T
+			 -> type.
+%mode trow_insert_to_lookup +X1 -X2.
+
+-: trow_insert_to_lookup 
+    trow_insert_nil
+    trow_lookup_yes.
+
+-: trow_insert_to_lookup
+    (trow_insert_less _)
+    trow_lookup_yes.
+
+-: trow_insert_to_lookup
+    (trow_insert_more TRins _)
+    (trow_lookup_no LT)
+    <- trow_insert_to_lookup TRins LT.
+
+%worlds () (trow_insert_to_lookup _ _).
+%total (TRins) (trow_insert_to_lookup TRins _).
+
+
+
+lookup_trans_trow_order : trow_lookup L TR T
+			   -> trow_order TR TR'
+			   -> trow_lookup L TR' T
+			   -> type.
+%mode lookup_trans_trow_order +X1 +X2 -X3.
+
+-: lookup_trans_trow_order
+    (trow_lookup_no LT)
+    (trow_order_cons TRins TRord)
+    LT'
+    <- lookup_trans_trow_order LT TRord LT''
+    <- lookup_trans_trow_insert LT'' TRins LT'.
+
+-: lookup_trans_trow_order
+    trow_lookup_yes
+    (trow_order_cons TRins _)
+    LT
+    <- trow_insert_to_lookup TRins LT.
+
+%% bogus cases
+-: lookup_trans_trow_order
+    LT
+    trow_order_nil
+    LT.
+
+%worlds () (lookup_trans_trow_order _ _ _).
+%total (LT) (lookup_trans_trow_order LT _ _).
+
+
+lookup_trans_trow_insert'' : {L1}{T1} trow_lookup L3 (trow_cons L2 T3 TR1) T2
+			 -> trow_lookup L3 (trow_cons L2 T3 (trow_cons L1 T1 TR1)) T2
+			 -> type.
+%mode lookup_trans_trow_insert'' +X1 +X2 +X3 -X4.
+
+-: lookup_trans_trow_insert''
+    _
+    _
+    trow_lookup_yes
+    trow_lookup_yes.
+	
+-: lookup_trans_trow_insert''
+    _
+    _
+    (trow_lookup_no LT)
+    (trow_lookup_no (trow_lookup_no LT)).
+
+%worlds () (lookup_trans_trow_insert'' _ _ _ _).
+%total [] (lookup_trans_trow_insert'' _ _ _ _).
+
+
+lookup_trans_trow_insert' : trow_lookup L TR T
+			-> trow_insert L' S TR' TR
+			-> trow_lookup L (trow_cons L' S TR') T
+			-> type.
+%mode lookup_trans_trow_insert' +X1 +X2 -X3.
+
+-: lookup_trans_trow_insert'
+    trow_lookup_yes
+    (trow_insert_less _)
+    trow_lookup_yes.
+
+-: lookup_trans_trow_insert'
+    (trow_lookup_no LT)
+    (trow_insert_less _)
+    (trow_lookup_no LT).
+
+-: lookup_trans_trow_insert'
+    trow_lookup_yes
+    (trow_insert_more _ _)
+    (trow_lookup_no trow_lookup_yes).
+
+-: lookup_trans_trow_insert'
+    (trow_lookup_no LT)
+    (trow_insert_more TRins _)
+    LT'
+    <- lookup_trans_trow_insert' LT TRins LT''
+    <- lookup_trans_trow_insert'' _ _ LT'' LT'.
+
+-: lookup_trans_trow_insert'
+    trow_lookup_yes
+    trow_insert_nil
+    trow_lookup_yes.
+
+-: lookup_trans_trow_insert'
+    (trow_lookup_no LT)
+    trow_insert_nil
+    (trow_lookup_no LT).
+
+%worlds () (lookup_trans_trow_insert' _ _ _).
+%total(LT) (lookup_trans_trow_insert' LT _ _).
+
+
+
+lookup_trans_trow_order' : trow_lookup L TR T
+		       -> trow_order TR' TR
+		       -> trow_lookup L TR' T
+		       -> type.
+%mode lookup_trans_trow_order' +X1 +X2 -X3.
+
+lookup_trans_trow_order'' : trow_lookup L (trow_cons L' T' TR) T
+			-> trow_order TR' TR
+			-> trow_lookup L (trow_cons L' T' TR') T
+			-> type.
+%mode lookup_trans_trow_order'' +X1 +X2 -X3.
+
+-: lookup_trans_trow_order'
+    LT
+    (trow_order_cons TRins TRord)
+    LT'
+    <- lookup_trans_trow_insert' LT TRins LT''
+    <- lookup_trans_trow_order'' LT'' TRord LT'.
+
+-: lookup_trans_trow_order''
+    trow_lookup_yes
+    _
+    trow_lookup_yes.
+
+-: lookup_trans_trow_order''
+    (trow_lookup_no LT)
+    TRord
+    (trow_lookup_no LT')
+    <- lookup_trans_trow_order' LT TRord LT'.
+
+%worlds () (lookup_trans_trow_order' _ _ _) (lookup_trans_trow_order'' _ _ _).
+%total (TRord' TRord) (lookup_trans_trow_order' _ TRord _) (lookup_trans_trow_order'' _ TRord' _).
+
+
+
+lookup_trans_erow_insert : erow_lookup L ER E
+			    -> erow_insert L' E' ER ER'
+			    -> erow_lookup L ER' E
+			    -> type.
+%mode lookup_trans_erow_insert +X1 +X2 -X3.
+
+-: lookup_trans_erow_insert
+    erow_lookup_yes
+    (erow_insert_more _ _)
+    erow_lookup_yes.
+
+-: lookup_trans_erow_insert
+    LE
+    (erow_insert_less _)
+    (erow_lookup_no LE).
+
+-: lookup_trans_erow_insert
+    (erow_lookup_no LE)
+    (erow_insert_more ERins _)
+    (erow_lookup_no LE')
+    <- lookup_trans_erow_insert LE ERins LE'.
+
+%% Bogus cases 
+-: lookup_trans_erow_insert
+    LE
+    erow_insert_nil
+    (erow_lookup_no LE).
+
+%worlds () (lookup_trans_erow_insert _ _ _).
+%total (LE) (lookup_trans_erow_insert LE _ _).
+
+
+
+erow_insert_to_lookup : erow_insert L E ER ER'
+			 -> erow_lookup L ER' E
+			 -> type.
+%mode erow_insert_to_lookup +X1 -X2.
+
+-: erow_insert_to_lookup 
+    erow_insert_nil
+    erow_lookup_yes.
+
+-: erow_insert_to_lookup
+    (erow_insert_less _)
+    erow_lookup_yes.
+
+-: erow_insert_to_lookup
+    (erow_insert_more ERins _)
+    (erow_lookup_no LE)
+    <- erow_insert_to_lookup ERins LE.
+
+%worlds () (erow_insert_to_lookup _ _).
+%total (ERins) (erow_insert_to_lookup ERins _).
+
+
+
+lookup_trans_erow_order : erow_lookup L ER E
+		      -> erow_order ER ER'
+		      -> erow_lookup L ER' E
+		      -> type.
+%mode lookup_trans_erow_order +X1 +X2 -X3.
+
+-: lookup_trans_erow_order
+    (erow_lookup_no LE)
+    (erow_order_cons ERins ERord)
+    LE'
+    <- lookup_trans_erow_order LE ERord LE''
+    <- lookup_trans_erow_insert LE'' ERins LE'.
+
+-: lookup_trans_erow_order
+    erow_lookup_yes
+    (erow_order_cons ERins _)
+    LE
+    <- erow_insert_to_lookup ERins LE.
+
+%% bogus cases
+-: lookup_trans_erow_order
+    LE
+    erow_order_nil
+    LE.
+
+%worlds () (lookup_trans_erow_order _ _ _).
+%total (LE) (lookup_trans_erow_order LE _ _).
+
+
+lookup_trans_erow_insert'' : {L1}{E1} erow_lookup L3 (erow_cons L2 E3 ER1) E2
+			 -> erow_lookup L3 (erow_cons L2 E3 (erow_cons L1 E1 ER1)) E2
+			 -> type.
+%mode lookup_trans_erow_insert'' +X1 +X2 +X3 -X4.
+
+-: lookup_trans_erow_insert''
+    _
+    _
+    erow_lookup_yes
+    erow_lookup_yes.
+	
+-: lookup_trans_erow_insert''
+    _
+    _
+    (erow_lookup_no LE)
+    (erow_lookup_no (erow_lookup_no LE)).
+
+%worlds () (lookup_trans_erow_insert'' _ _ _ _).
+%total [] (lookup_trans_erow_insert'' _ _ _ _).
+
+
+lookup_trans_erow_insert' : erow_lookup L ER E
+			     -> erow_insert L' E' ER' ER
+			     -> erow_lookup L (erow_cons L' E' ER') E
+			     -> type.
+%mode lookup_trans_erow_insert' +X1 +X2 -X3.
+
+-: lookup_trans_erow_insert'
+    erow_lookup_yes
+    (erow_insert_less _)
+    erow_lookup_yes.
+
+-: lookup_trans_erow_insert'
+    (erow_lookup_no LE)
+    (erow_insert_less _)
+    (erow_lookup_no LE).
+
+-: lookup_trans_erow_insert'
+    erow_lookup_yes
+    (erow_insert_more _ _)
+    (erow_lookup_no erow_lookup_yes).
+
+-: lookup_trans_erow_insert'
+    (erow_lookup_no LE)
+    (erow_insert_more ERins _)
+    LE'
+    <- lookup_trans_erow_insert' LE ERins LE''
+    <- lookup_trans_erow_insert'' _ _ LE'' LE'.
+
+-: lookup_trans_erow_insert'
+    erow_lookup_yes
+    erow_insert_nil
+    erow_lookup_yes.
+
+-: lookup_trans_erow_insert'
+    (erow_lookup_no LE)
+    erow_insert_nil
+    (erow_lookup_no LE).
+
+%worlds () (lookup_trans_erow_insert' _ _ _).
+%total(LE) (lookup_trans_erow_insert' LE _ _).
+
+
+
+lookup_trans_erow_order' : erow_lookup L ER E
+		       -> erow_order ER' ER
+		       -> erow_lookup L ER' E
+		       -> type.
+%mode lookup_trans_erow_order' +X1 +X2 -X3.
+
+lookup_trans_erow_order'' : erow_lookup L (erow_cons L' E' ER) E
+			-> erow_order ER' ER
+			-> erow_lookup L (erow_cons L' E' ER') E
+			-> type.
+%mode lookup_trans_erow_order'' +X1 +X2 -X3.
+
+-: lookup_trans_erow_order'
+    LE
+    (erow_order_cons ERins ERord)
+    LE'
+    <- lookup_trans_erow_insert' LE ERins LE''
+    <- lookup_trans_erow_order'' LE'' ERord LE'.
+
+-: lookup_trans_erow_order''
+    erow_lookup_yes
+    _
+    erow_lookup_yes.
+
+-: lookup_trans_erow_order''
+    (erow_lookup_no LE)
+    ERord
+    (erow_lookup_no LE')
+    <- lookup_trans_erow_order' LE ERord LE'.
+
+%worlds () (lookup_trans_erow_order' _ _ _) (lookup_trans_erow_order'' _ _ _).
+%total (ERord' ERord) (lookup_trans_erow_order' _ ERord _) (lookup_trans_erow_order'' _ ERord' _).
+
+
+
+invert_insert_labelfree : trow_labelfree TR L
+       -> trow_insert L' T TR' TR
+       -> trow_labelfree TR' L
+       -> type.
+%mode invert_insert_labelfree +X1 +X2 -X3.
+
+-: invert_insert_labelfree
+    _
+    trow_insert_nil
+    trow_labelfree_nil.
+
+-: invert_insert_labelfree
+    (trow_labelfree_cons Lfree _)
+    (trow_insert_less _)
+    Lfree.
+
+-: invert_insert_labelfree
+    (trow_labelfree_cons Lfree Lneq)
+    (trow_insert_more TRins _)
+    (trow_labelfree_cons Lfree' Lneq)
+    <- invert_insert_labelfree Lfree TRins Lfree'.
+
+%worlds () (invert_insert_labelfree _ _ _).
+%total (TRins) (invert_insert_labelfree _ TRins _).
+
+
+
+invert_insert_unique : trow_insert L T TR TR'
+			-> trow_uniqueness TR'
+			-> trow_uniqueness TR
+			-> type.
+%mode invert_insert_unique +X1 +X2 -X3.
+
+-: invert_insert_unique
+    trow_insert_nil
+    _
+    trow_uniqueness_nil.
+
+-: invert_insert_unique
+    (trow_insert_less _)
+    (trow_uniqueness_cons TRunique _)
+    TRunique.
+
+-: invert_insert_unique
+    (trow_insert_more TRins Lmore)
+    (trow_uniqueness_cons TRunique Lfree)
+    (trow_uniqueness_cons TRunique' Lfree')
+    <- invert_insert_unique TRins TRunique TRunique'
+    <- invert_insert_labelfree Lfree TRins Lfree'.
+    
+
+%worlds () (invert_insert_unique _ _ _).
+%total (TRins) (invert_insert_unique TRins _ _).
+
+
+
+invert_insert_of : erow_insert L E ER' ER
+		    -> erow_of ER TR
+		    -> erow_of ER' TR'
+		    -> trow_insert L T TR' TR
+		    -> type.
+%mode invert_insert_of +X1 +X2 -X3 -X4.
+
+-: invert_insert_of
+    erow_insert_nil
+    (erow_of_cons erow_of_nil _)
+    erow_of_nil
+    trow_insert_nil.
+
+-: invert_insert_of
+    (erow_insert_less Lless)
+    (erow_of_cons ERof _)
+    ERof
+    (trow_insert_less Lless).
+
+-: invert_insert_of
+    (erow_insert_more ERins Lmore)
+    (erow_of_cons ERof Eof)
+    (erow_of_cons ER'of Eof)
+    (trow_insert_more TRins Lmore)
+    <- invert_insert_of ERins ERof ER'of TRins.
+
+%worlds () (invert_insert_of _ _ _ _).
+%total (ERins) (invert_insert_of ERins _ _ _).
+
+
+
+reinsert :  erow_of ER TR
+	    -> of E T
+	    -> trow_insert L T TR TR'
+	    -> erow_insert L E ER ER'
+	    -> erow_of ER' TR'
+	    -> type.
+%mode reinsert +X1 +X2 +X3 -X4 -X5.
+
+-: reinsert
+    erow_of_nil
+    Eof
+    trow_insert_nil
+    erow_insert_nil
+    (erow_of_cons erow_of_nil Eof).
+
+-: reinsert
+    (erow_of_cons ERof E'of)
+    Eof
+    (trow_insert_less Lless)
+    (erow_insert_less Lless)
+    (erow_of_cons (erow_of_cons ERof E'of) Eof).
+
+-: reinsert
+    (erow_of_cons ERof Eof)
+    E'of
+    (trow_insert_more TRins Lmore)
+    (erow_insert_more ERins Lmore)
+    (erow_of_cons ER'of Eof)
+    <- reinsert ERof E'of TRins ERins ER'of.
+
+%worlds () (reinsert _ _ _ _ _).
+%total (TRins) (reinsert _ _ TRins _ _).
+
+
+nat_neq_symm : nat_neq N N' -> nat_neq N' N -> type.
+%mode nat_neq_symm +X1 -X2.
+
+-: nat_neq_symm
+    nat_neq_zs
+    nat_neq_sz.
+
+-: nat_neq_symm
+    nat_neq_sz
+    nat_neq_zs.
+
+-: nat_neq_symm
+    (nat_neq_ss Nneq)
+    (nat_neq_ss N'neq)
+    <- nat_neq_symm Nneq N'neq.
+
+%worlds () (nat_neq_symm _ _).
+%total (Nneq) (nat_neq_symm Nneq _).
+
+
+
+label_neq_symm : label_neq L L' -> label_neq L' L -> type.
+%mode label_neq_symm +X1 -X2.
+
+-: label_neq_symm 
+    (label_neq_ Nneq)
+    (label_neq_ N'neq)
+    <- nat_neq_symm Nneq N'neq.
+    
+%worlds () (label_neq_symm _ _).
+%total [] (label_neq_symm _ _).
+
+
+
+lookup_trans_sub : trow_lookup L TR T
+		    -> sub_tp (record SR _) (record TR _)
+		    -> trow_lookup L SR S
+		    -> sub_tp S T
+		    -> type.
+%mode lookup_trans_sub +X1 +X2 -X3 -X4.
+
+-: lookup_trans_sub
+    LT
+    (sub_tp_record
+       SR'sub
+       TRord
+       SRord)
+    LS
+    Ssub
+    <- lookup_trans_trow_order LT TRord LT'
+    <- lookup_trans_sub_trow LT' SR'sub LS' Ssub
+    <- lookup_trans_trow_order' LS' SRord LS.
+
+-: lookup_trans_sub
+    LT
+    sub_tp_refl
+    LT
+    sub_tp_refl.
+
+-: lookup_trans_sub
+    LT
+    (sub_tp_trans T2sub T1sub)
+    LT'
+    (sub_tp_trans S2sub S1sub)
+    <- lookup_trans_sub LT T2sub LT'' S2sub
+    <- lookup_trans_sub LT'' T1sub LT' S1sub.
+
+%% bogus cases
+-: lookup_trans_sub
+    _
+    (sub_tp_trans _ D)
+    LT
+    Ssub
+    <- absurd_rsf D F
+    <- raa_sub_tp F Ssub
+    <- raa_trow_lookup F (LT : trow_lookup L TR top).
+
+-: lookup_trans_sub
+    _
+    (sub_tp_trans _ D)
+    LT
+    Ssub
+    <- absurd_rsa D F
+    <- raa_sub_tp F Ssub
+    <- raa_trow_lookup F (LT : trow_lookup L TR top).
+
+-: lookup_trans_sub
+    _
+    (sub_tp_trans D _)
+    LT
+    Ssub
+    <- absurd_tsr D F
+    <- raa_sub_tp F Ssub
+    <- raa_trow_lookup F (LT : trow_lookup L TR top).
+
+%worlds () (lookup_trans_sub _ _ _ _).
+%total (Ssub) (lookup_trans_sub _ Ssub _ _).
+
+
+
+value_trans_insert : value_erow ER
+		      -> value E
+		      -> erow_insert L E ER ER'
+		      -> value_erow ER'
+		      -> type.
+%mode value_trans_insert +X1 +X2 +X3 -X4.
+
+-: value_trans_insert
+    ERval
+    Eval
+    erow_insert_nil
+    (value_erow_cons ERval Eval).
+
+-: value_trans_insert
+    ERval
+    Eval
+    (erow_insert_less _)
+    (value_erow_cons ERval Eval).
+
+-: value_trans_insert
+    (value_erow_cons ERval Eval)
+    E'val
+    (erow_insert_more ERins _)
+    (value_erow_cons ER'val Eval)
+    <- value_trans_insert ERval E'val ERins ER'val.
+
+%worlds () (value_trans_insert _ _ _ _).
+%total (ERins) (value_trans_insert _ _ ERins _).
+
+
+value_trans_order : value_erow ER
+		     -> erow_order ER ER'
+		     -> value_erow ER'
+		     -> type.
+%mode value_trans_order +X1 +X2 -X3.
+
+-: value_trans_order
+    value_erow_nil
+    erow_order_nil
+    value_erow_nil.
+
+-: value_trans_order
+    (value_erow_cons ERval Eval)
+    (erow_order_cons ERins ERord)
+    ER''val
+    <- value_trans_order ERval ERord ER'val
+    <- value_trans_insert ER'val Eval ERins ER''val.
+    
+%worlds () (value_trans_order _ _ _).
+%total (ERord) (value_trans_order _ ERord _).
+
+
+
+unique_trans_insert : trow_uniqueness TR
+		       -> trow_labelfree TR L
+		       -> trow_insert L T TR TR'
+		       -> trow_uniqueness TR'
+		       -> type.
+%mode unique_trans_insert +X1 +X2 +X3 -X4.
+
+-: unique_trans_insert
+    TRunique
+    Lfree
+    trow_insert_nil
+    (trow_uniqueness_cons
+       TRunique
+       Lfree).
+
+-: unique_trans_insert
+    TRunique
+    Lfree
+    (trow_insert_less _)
+    (trow_uniqueness_cons
+       TRunique
+       Lfree).
+
+-: unique_trans_insert
+    (trow_uniqueness_cons
+       TRunique
+       Lfree)
+    (trow_labelfree_cons
+       L'free
+       L'neq)
+    (trow_insert_more TRins _)
+    (trow_uniqueness_cons
+       TRunique'
+       Lfree')
+    <- label_neq_symm L'neq Lneq
+    <- labelfree_trans_insert Lfree TRins Lneq Lfree'
+    <- unique_trans_insert TRunique L'free TRins TRunique'.
+
+%worlds () (unique_trans_insert _ _ _ _).
+%total (TRins) (unique_trans_insert _ _ TRins _).
+
+
+
+unique_trans_order : trow_uniqueness TR
+		     -> trow_order TR TR'
+		     -> trow_uniqueness TR'
+		     -> type.
+%mode unique_trans_order +X1 +X2 -X3.
+
+-: unique_trans_order
+    trow_uniqueness_nil
+    trow_order_nil
+    trow_uniqueness_nil.
+
+-: unique_trans_order
+    (trow_uniqueness_cons
+       TRunique
+       Lfree)
+    (trow_order_cons
+       TRins
+       TRord)
+    TR''unique
+    <- unique_trans_order TRunique TRord TR'unique
+    <- labelfree_trans_order Lfree TRord Lfree'
+    <- unique_trans_insert TR'unique Lfree' TRins TR''unique.
+
+%worlds () (unique_trans_order _ _ _).
+%total  (TRord) (unique_trans_order _ TRord _).
+
+
+
+invert_of_record : of (rec ER) (record TR TRunique)
+		    -> erow_lookup L ER E
+		    -> trow_lookup L TR T
+		    -> of E T
+		    -> type.
+%mode invert_of_record +X1 +X2 +X3 -X4.
+
+-: invert_of_record
+    (of_record ERof TRord ERord : of _ (record _ TRunique))
+    LE
+    LT
+    Eof
+    <- lookup_trans_trow_order LT TRord LT'
+    <- lookup_trans_erow_order LE ERord LE'
+    <- unique_trans_order TRunique TRord TR'unique
+    <- invert_erow_of ERof TR'unique LE' LT' Eof.
+
+-: invert_of_record
+    (of_sub
+       Ssub
+       Eof)
+    LE
+    LT
+    (of_sub
+       T'sub
+       E'of)
+    <- lookup_trans_sub LT Ssub LT' T'sub
+    <- invert_of_record Eof LE LT' E'of.
+
+-: invert_of_record
+    (of_sub D _)
+    _
+    _
+    Eof
+    <- absurd_fsr D F
+    <- raa_of F Eof.
+
+-: invert_of_record
+    (of_sub D _)
+    _
+    _
+    Eof
+    <- absurd_asr D F
+    <- raa_of F Eof.
+
+-: invert_of_record
+    (of_sub D _)
+    _
+    _
+    Eof
+    <- absurd_tsr D F
+    <- raa_of F Eof.
+
+%worlds () (invert_of_record _ _ _ _).
+%total (Eof) (invert_of_record Eof _ _ _).
+
+
+
+invert_sub_record : sub_tp (record SR _) (record TR _)
+		     -> trow_order SR SR'
+		     -> trow_order TR TR'
+		     -> sub_tp_trow SR' TR'
+		     -> type.
+%mode invert_sub_record +X1 -X2 -X3 -X4.
+
+-: invert_sub_record
+    (sub_tp_record
+       SR'sub
+       TRord
+       SRord)
+    SRord
+    TRord
+    SR'sub.
+
+-: invert_sub_record
+    (sub_tp_refl : sub_tp (record _ TRunique) _)
+    TRord
+    TRord
+    TRsub
+    <- trow_has_order TRunique TRord
+    <- sub_tp_trow_refl _ TRsub.
+
+-: invert_sub_record
+    (sub_tp_trans
+       T2sub
+       T1sub)
+    SRord
+    TRord
+    SRsub'
+    <- invert_sub_record T1sub SRord URord SRsub
+    <- invert_sub_record T2sub URord' TRord URsub
+    <- trow_order_unique URord' URord UReq
+    <- equality_sub_tp_trow URsub UReq trow_eq_ URsub'
+    <- sub_tp_trow_trans SRsub URsub' SRsub'.
+
+-: invert_sub_record
+    (sub_tp_trans D _)
+    TRord
+    TR'ord
+    sub_tp_trow_nil
+    <- absurd_tsr D F
+    <- raa_trow_order F TRord
+    <- raa_trow_order F TR'ord.
+
+-: invert_sub_record
+    (sub_tp_trans D _)
+    TRord
+    TR'ord
+    sub_tp_trow_nil
+    <- absurd_asr D F
+    <- raa_trow_order F TRord
+    <- raa_trow_order F TR'ord.
+
+-: invert_sub_record
+    (sub_tp_trans D _)
+    TRord
+    TR'ord
+    sub_tp_trow_nil
+    <- absurd_fsr D F
+    <- raa_trow_order F TRord
+    <- raa_trow_order F TR'ord.
+
+%worlds () (invert_sub_record _ _ _ _).
+%total (Ssub) (invert_sub_record Ssub _ _ _).
+
+
+
+invert_of_record2 : of (rec ER) (record TR _)
+		     -> erow_order ER ER'
+		     -> trow_order TR TR'
+		     -> sub_tp_trow SR' TR'
+		     -> erow_of ER' SR'
+		     -> trow_uniqueness SR'
+		     -> type.
+%mode invert_of_record2 +X1 -X2 -X3 -X4 -X5 -X6.
+
+-: invert_of_record2
+    (of_record
+       ERof
+       TRord
+       ERord : of _ (record _ TRunique))
+    ERord
+    TRord
+    TRsub
+    ERof
+    TR'unique
+    <- unique_trans_order TRunique TRord TR'unique
+    <- sub_tp_trow_refl _ TRsub.
+
+-: invert_of_record2
+    (of_sub
+       Ssub
+       Eof)
+    ERord
+    TRord
+    SRsub'
+    SRunique
+    ERof
+    <- invert_of_record2 Eof ERord SRord SRsub SRunique ERof
+    <- invert_sub_record Ssub SRord' TRord SR'sub
+    <- trow_order_unique SRord SRord' SReq
+    <- equality_sub_tp_trow SRsub trow_eq_ SReq SRsub''
+    <- sub_tp_trow_trans SRsub'' SR'sub SRsub'.
+ 
+%% bogus cases
+-: invert_of_record2
+    (of_sub D _)
+    ERord
+    TRord
+    sub_tp_trow_nil
+    ERof
+    trow_uniqueness_nil
+    <- absurd_tsr D F
+    <- raa_erow_of_reduces D F ERof
+    <- raa_erow_order F ERord
+    <- raa_trow_order F TRord.
+
+-: invert_of_record2
+    (of_sub D _)
+    ERord
+    TRord
+    sub_tp_trow_nil
+    ERof
+    trow_uniqueness_nil
+    <- absurd_fsr D F
+    <- raa_erow_of_reduces D F ERof
+    <- raa_erow_order F ERord
+    <- raa_trow_order F TRord.
+
+-: invert_of_record2
+    (of_sub D _)
+    ERord
+    TRord
+    sub_tp_trow_nil
+    ERof
+    trow_uniqueness_nil
+    <- absurd_asr D F
+    <- raa_erow_of_reduces D F ERof
+    <- raa_erow_order F ERord
+    <- raa_trow_order F TRord.
+
+%worlds () (invert_of_record2 _ _ _ _ _ _).
+%total Eof (invert_of_record2 Eof _ _ _ _ _).
+%reduces ERof < Eof (invert_of_record2 Eof _ _ _ ERof _).
+
+
+erow_insert_convert : erow_insert L E ER ER'
+		       -> erow_of ER' TR
+		       -> trow_uniqueness TR
+		       -> trow_lookup L TR T
+		       -> of E' T
+		       -> erow_insert L E' ER ER''
+		       -> erow_of ER'' TR
+		       -> type.
+%mode erow_insert_convert +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-: erow_insert_convert
+    erow_insert_nil
+    (erow_of_cons ERof _)
+    _
+    trow_lookup_yes
+    Eof
+    erow_insert_nil
+    (erow_of_cons ERof Eof).
+
+-: erow_insert_convert
+    (erow_insert_less Lless)
+    (erow_of_cons ERof _)
+    _
+    trow_lookup_yes
+    Eof
+    (erow_insert_less Lless)
+    (erow_of_cons ERof Eof).
+
+-: erow_insert_convert
+    (erow_insert_more ERins Lmore)
+    (erow_of_cons ERof Eof)
+    (trow_uniqueness_cons TRunique _)
+    (trow_lookup_no LT)
+    E'of
+    (erow_insert_more ERins' Lmore)
+    (erow_of_cons ER'of Eof)
+    <- erow_insert_convert ERins ERof TRunique LT E'of ERins' ER'of.
+
+%% bogus cases
+-: erow_insert_convert
+    (erow_insert_more _ Lmore)
+    _
+    _
+    trow_lookup_yes
+    _
+    ERins
+    ERof
+    <- absurd_label_eq_more Lmore F
+    <- raa_erow_of F (ERof : erow_of erow_nil _)
+    <- raa_erow_ins F ERins.
+
+-: erow_insert_convert
+    (erow_insert_less _)
+    _
+    (trow_uniqueness_cons _ Lfree)
+    (trow_lookup_no LT)
+    _
+    ERins
+    ERof
+    <- absurd_lookup_free_label LT Lfree F
+    <- raa_erow_of F (ERof : erow_of erow_nil _)
+    <- raa_erow_ins F ERins.
+
+%worlds () (erow_insert_convert _ _ _ _ _ _ _).
+%total (ERins) (erow_insert_convert ERins _ _ _ _ _ _).
+
+
+
+equal_prow_match : prow_match PR ER EL 
+		 -> prow_eq PR PR'
+		 -> prow_match PR' ER EL
+		 -> type.
+%mode equal_prow_match +X1 +X2 -X3.
+
+-: equal_prow_match PRmatch prow_eq_ PRmatch.
+
+%worlds () (equal_prow_match _ _ _).
+%total [] (equal_prow_match _ _ _).
+%reduces PRmatch = PRmatch' (equal_prow_match PRmatch _ PRmatch').
+
+
+
+list_of_append :  list_of EL TL
+		  -> list_of EL' TL'
+		  -> termlist_append EL EL' EL''
+		  -> typelist_append TL TL' TL''
+		  -> list_of EL'' TL''
+		  -> type.
+%mode list_of_append +X1 +X2 +X3 +X4 -X5.
+
+-: list_of_append
+    list_of_nil
+    ELof
+    termlist_append_nil
+    typelist_append_nil
+    ELof.
+
+-: list_of_append
+    (list_of_cons
+       ELof
+       Eof)
+    EL'of
+    (termlist_append_cons
+       ELappend)
+    (typelist_append_cons
+       TLappend)
+    (list_of_cons
+       EL''of
+       Eof)
+    <- list_of_append ELof EL'of ELappend TLappend EL''of.
+
+%worlds () (list_of_append _ _ _ _ _).
+%total (ELof) (list_of_append ELof _ _ _ _).
+
+
+
+list_of_append' :  list_of EL TL
+		  -> list_of EL' TL'
+		  -> termlist_append EL EL' EL''
+		  -> typelist_append TL TL' TL''
+		  -> list_of EL'' TL''
+		  -> type.
+%mode list_of_append' +X1 +X2 -X3 +X4 -X5.
+
+-: list_of_append'
+    list_of_nil
+    ELof
+    termlist_append_nil
+    typelist_append_nil
+    ELof.
+
+-: list_of_append'
+    (list_of_cons
+       ELof
+       Eof)
+    EL'of
+    (termlist_append_cons
+       ELappend)
+    (typelist_append_cons
+       TLappend)
+    (list_of_cons
+       EL''of
+       Eof)
+    <- list_of_append' ELof EL'of ELappend TLappend EL''of.
+    
+%worlds () (list_of_append' _ _ _ _ _).
+%total (ELof) (list_of_append' ELof _ _ _ _).
+
+
+
+labelfree_trans_sub : trow_labelfree SR L
+		       -> sub_tp_trow SR TR
+		       -> trow_labelfree TR L
+		       -> type.
+%mode labelfree_trans_sub +X1 +X2 -X3.
+
+-: labelfree_trans_sub
+    trow_labelfree_nil
+    sub_tp_trow_nil
+    trow_labelfree_nil.
+
+-: labelfree_trans_sub
+    (trow_labelfree_cons Lfree _)
+    (sub_tp_trow_cons' SRsub)
+    Lfree'
+    <- labelfree_trans_sub Lfree SRsub Lfree'.
+
+-: labelfree_trans_sub
+    (trow_labelfree_cons Lfree Lneq)
+    (sub_tp_trow_cons _ SRsub)
+    (trow_labelfree_cons Lfree' Lneq)
+    <- labelfree_trans_sub Lfree SRsub Lfree'.
+
+%worlds () (labelfree_trans_sub _ _ _).
+%total (SRsub) (labelfree_trans_sub _ SRsub _).
+
+
+
+pat_match_list_of : pat_of P T TL
+		     -> of E T
+		     -> match P E EL
+		     -> list_of EL TL
+		     -> type.
+%mode pat_match_list_of +X1 +X2 +X3 -X4.
+
+prow_match_list_of : prow_of PR TR TL
+		      -> erow_of ER SR
+		      -> sub_tp_trow SR TR
+		      -> trow_uniqueness SR
+		      -> prow_match PR ER EL
+		      -> list_of EL TL
+		      -> type.
+%mode prow_match_list_of +X1 +X2 +X3 +X4 +X5 -X6.
+
+-: pat_match_list_of
+    pat_of_var
+    Eof
+    match_var
+    (list_of_cons
+       list_of_nil
+       Eof).
+
+-: pat_match_list_of
+    (pat_of_rec
+       PRof
+       PRord
+       TRord)
+    Eof
+    (match_rec 
+       PRmatch
+       PRord'
+       ERord')
+    ELof
+    <- invert_of_record2 Eof ERord TRord' SRsub ERof SRunique
+    <- trow_order_unique TRord' TRord TReq
+    <- erow_order_unique ERord ERord' EReq
+    <- prow_order_unique PRord' PRord PReq
+    <- equal_prow_match PRmatch PReq PRmatch'
+    <- equal_erow_of ERof EReq trow_eq_ ERof'
+    <- equal_trow_sub SRsub trow_eq_ TReq SRsub'
+    <- prow_match_list_of PRof ERof' SRsub' SRunique PRmatch' ELof.
+
+-: prow_match_list_of 
+    prow_of_nil
+    _
+    _
+    _
+    prow_match_nil
+    list_of_nil.
+
+-: prow_match_list_of
+    (prow_of_cons
+       TLappend
+       PRof
+       Pof)
+    (erow_of_cons
+       ERof
+       Eof)
+    (sub_tp_trow_cons
+       Ssub
+       SRsub)
+    (trow_uniqueness_cons
+       SRunique
+       _)
+    (prow_match_cons
+       ELappend
+       PRmatch
+       Pmatch)
+    EL''of
+    <- prow_match_list_of PRof ERof SRsub SRunique PRmatch ELof
+    <- pat_match_list_of Pof (of_sub Ssub Eof) Pmatch EL'of
+    <- list_of_append ELof EL'of ELappend TLappend EL''of.
+
+-: prow_match_list_of
+    PRof
+    (erow_of_cons ERof _)
+    (sub_tp_trow_cons' SRsub)
+    (trow_uniqueness_cons
+       TRunique
+       _)
+    (prow_match_cons' PRmatch)
+    ELof
+    <- prow_match_list_of PRof ERof SRsub TRunique PRmatch ELof.
+
+%% bogus cases
+-: prow_match_list_of
+    (prow_of_cons TLappend PRof Pof)
+    (erow_of_cons _ _)
+    (sub_tp_trow_cons' SRsub)
+    (trow_uniqueness_cons
+       _
+       Lfree)
+    (prow_match_cons _ _ _)
+    ELof
+    <- labelfree_trans_sub Lfree SRsub Lfree'
+    <- absurd_prow_of_free_label
+       (prow_of_cons TLappend PRof Pof)
+       Lfree'
+       F
+    <- raa_list_of F ELof.
+
+-: prow_match_list_of
+    (prow_of_cons _ _ _)
+    (erow_of_cons ERof _)
+    (sub_tp_trow_cons _ _)
+    (trow_uniqueness_cons
+       _
+       Lfree)
+    (prow_match_cons' PRmatch)
+    ELof
+    <- absurd_prow_match_free_label PRmatch Lfree ERof F
+    <- raa_list_of F ELof.
+
+%worlds () (pat_match_list_of _ _ _ _) (prow_match_list_of _ _ _ _ _ _).
+%total (Pmatch PRmatch) (prow_match_list_of _ _ _ _ PRmatch _) (pat_match_list_of _ _ Pmatch _).
+
+
+
+list_of_apply_of :  bterm_of E TL T'
+		    -> list_of EL TL
+		    -> apply E EL E'
+		    -> of E' T'
+		    -> type.
+%mode list_of_apply_of +X1 +X2 +X3 -X4.
+
+-: list_of_apply_of
+    (bterm_of_base
+       Eof)
+    _
+    _
+    Eof.
+
+-: list_of_apply_of
+    (bterm_of_bind
+       Eof)
+    (list_of_cons
+       ELof
+       E'of)
+    (apply_bind Eapp)
+    Eof'
+    <- list_of_apply_of (Eof _ E'of) ELof Eapp Eof'.
+
+%worlds () (list_of_apply_of _ _ _ _).
+%total (ELof) (list_of_apply_of _ ELof _ _).
+
+
+
+%% Proof of Preservation
+preservation' : {E} of E T -> step E E' -> of E' T -> type.
+%mode preservation' +X1 +X2 +X3 -X4.
+
+preservation_erow : {ER1} erow_of ER1' TR 
+		     -> trow_uniqueness TR
+		     -> erow_order ER1 ER1' 
+		     -> step_erow ER1 ER2 
+		     -> erow_of ER2' TR
+		     -> erow_order ER2 ER2'
+		     -> type.
+%mode preservation_erow +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-: preservation' 
+    _
+    (of_sub
+       Ssub
+       Eof)
+    Estep
+    (of_sub
+       Ssub
+       E'of)
+    <- preservation' _ Eof Estep E'of.
+
+-: preservation'
+    _
+    (of_app
+       E2of
+       E1of)
+    step_app
+    (of_sub
+       S2sub
+       (E1of' 
+	  _ 
+	  (of_sub 
+	     T1sub 
+	     E2of)))
+    <- invert_of_abs E1of E1of' T1sub S2sub.
+
+-: preservation'
+    _
+    (of_app
+       E2of
+       E1of)
+    (step_app_fun
+       E1step)
+    (of_app
+       E2of
+       E1of')
+    <- preservation' _ E1of E1step E1of'.
+
+-: preservation'
+    _
+    (of_app
+       E2of
+       E1of)
+    (step_app_arg
+       E2step
+       _)
+    (of_app
+       E2of'
+       E1of)
+    <- preservation' _ E2of E2step E2of'.
+
+-: preservation'
+    _
+    (of_tapp
+       T2sub
+       Eof)
+    (step_tapp_fun
+       Estep)
+    (of_tapp
+       T2sub
+       Eof')
+    <- preservation' _ Eof Estep Eof'.
+
+-: preservation'
+    _
+    (of_tapp
+       T2sub
+       Eof)
+    step_tapp
+    (of_sub
+       (S2sub _ T2sub)
+       (Eof'
+	  _
+	  (sub_tp_trans
+	     T1sub
+	     T2sub)))
+    <- invert_of_tabs Eof Eof' T1sub S2sub.
+
+-: preservation'
+    _
+    (of_let
+       E'of
+       Pof
+       Vof)
+    (step_let
+       Eapp
+       Pmatch
+       Vval)
+    E''of
+    <- pat_match_list_of Pof Vof Pmatch ELof
+    <- list_of_apply_of E'of ELof Eapp E''of.
+
+-: preservation'
+    _
+    (of_let
+       E'of
+       Pof
+       Eof)
+    (step_let_arg
+       Estep)
+    (of_let
+       E'of
+       Pof
+       Eof')
+    <- preservation' _ Eof Estep Eof'.
+
+-: preservation'
+    _
+    (of_proj
+       LT
+       Eof)
+    (step_rec
+       LV
+       _)
+    E'of
+    <- invert_of_record Eof LV LT E'of.
+
+-: preservation'
+    _
+    (of_record 
+       ERof 
+       TRord
+       ERord : of _ (record _ TRunique))
+    (step_rec_exp 
+       ERstep)
+    (of_record 
+       ER'of
+       TRord
+       ER'ord)
+    <- unique_trans_order TRunique TRord TR'unique
+    <- preservation_erow _ ERof TR'unique ERord ERstep ER'of ER'ord.
+
+-: preservation'
+    _
+    (of_proj
+       LT
+       Eof)
+    (step_proj_rec
+       Estep)
+    (of_proj
+       LT
+       E'of)
+    <- preservation' _ Eof Estep E'of.
+
+-: preservation_erow
+    _
+    ERof
+    TRunique
+    (erow_order_cons
+       ERins
+       ERord)
+    (step_erow_step Estep)
+    ER'of
+    (erow_order_cons
+       ERins'
+       ERord)
+    <- erow_insert_to_lookup ERins LE
+    <- lookup_erow_to_trow LE ERof LT
+    <- invert_erow_of ERof TRunique LE LT Eof
+    <- preservation' _ Eof Estep E'of
+    <- erow_insert_convert ERins ERof TRunique LT E'of ERins' ER'of.
+
+-: preservation_erow
+    _
+    ERof
+    TRunique
+    (erow_order_cons
+       ERins
+       ERord)
+    (step_erow_val
+       ERstep
+       Eval)
+    ER'of''
+    (erow_order_cons
+       ERins'
+       ER'ord)
+    <- erow_insert_to_lookup ERins LE
+    <- invert_insert_of ERins ERof ER'of TRins
+    <- trow_insert_to_lookup TRins LT
+    <- invert_erow_of ERof TRunique LE LT Eof
+    <- invert_insert_unique TRins TRunique TR'unique
+    <- preservation_erow _ ER'of TR'unique ERord ERstep ER'of' ER'ord
+    <- reinsert ER'of' Eof TRins ERins' ER'of''.
+
+%worlds () (preservation' _ _ _ _) (preservation_erow _ _ _ _ _ _ _).
+%total {(E ER) (Eof ERof)} (preservation' E Eof _ _) (preservation_erow ER ERof _ _ _ _ _).
+
+
+
+%% proof of progress
+progresses : term -> type.
+progresses_erow : erow -> type.
+
+%% E may be a value
+progresses_value : progresses E
+		    <- value E.
+progresses_erow_value : progresses_erow ER
+			 <- value_erow ER.
+
+%% Or E may take a step
+progresses_steps : progresses E
+		    <- step E E'.
+progresses_erow_steps : progresses_erow ER
+			 <- step_erow ER ER'.
+
+
+%%%%%  Reductio ad absurdio  %%%%%
+raa_progresses : false -> progresses E -> type.
+%mode +{E} +{F} -{D:progresses E} (raa_progresses F D).
+%worlds () (raa_progresses _ _).
+%total [] (raa_progresses _ _).
+
+
+
+%% progress lemmas
+app_progresses : of (app E1 E2) T 
+	  -> progresses E1
+	  -> progresses E2 
+	  -> progresses (app E1 E2) -> type.
+%mode app_progresses +X1 +X2 +X3 -X4.
+
+-: app_progresses
+    (of_sub 
+       _
+       Eof)
+    E1prog
+    E2prog
+    E3prog
+    <- app_progresses Eof E1prog E2prog E3prog.
+
+-: app_progresses 
+    _
+    (progresses_steps E1step)
+    _
+    (progresses_steps (step_app_fun E1step)).
+
+-: app_progresses
+    (of_app
+       E2of
+       E1of)
+    (progresses_value E1val)
+    (progresses_steps E2step)
+    (progresses_steps (step_app_arg E2step E1val)).
+
+-: app_progresses
+    (of_app
+       E2of
+       E1of)
+    (progresses_value E1val)
+    (progresses_value E2val)
+    (progresses_steps step_app).
+
+%% bogus cases
+-: app_progresses
+    (of_app
+       _
+       E1of)
+    _
+    _
+    D
+    <- absurd_ota E1of F
+    <- raa_progresses F D.  
+
+-: app_progresses
+    (of_app
+       _
+       E1of)
+    _
+    _
+    D
+    <- absurd_ora E1of F
+    <- raa_progresses F D.  
+
+%worlds () (app_progresses _ _ _ _).
+%total [Eof] (app_progresses Eof _ _ _).
+
+
+
+tapp_progresses : of (tapp E T) T' 
+	  -> progresses E
+	  -> progresses (tapp E T) -> type.
+%mode tapp_progresses +X1 +X2 -X3.
+
+-: tapp_progresses
+    (of_sub 
+       _
+       Eof)
+    Eprog
+    E'prog
+    <- tapp_progresses Eof Eprog E'prog.
+
+-: tapp_progresses
+    _
+    (progresses_steps Estep)
+    (progresses_steps (step_tapp_fun Estep)).
+
+-: tapp_progresses
+    (of_tapp
+       E2of
+       E1of)
+    (progresses_value Eval)
+    (progresses_steps step_tapp).
+
+%% bogus cases
+-: tapp_progresses
+    (of_tapp
+       _
+       Eof)
+    _
+    D
+    <- absurd_oaf Eof F
+    <- raa_progresses F D.  
+
+-: tapp_progresses
+    (of_tapp
+       _
+       Eof)
+    _
+    D
+    <- absurd_orf Eof F
+    <- raa_progresses F D.  
+
+
+%worlds () (tapp_progresses _ _ _).
+%total [Eof] (tapp_progresses Eof _ _).
+
+
+
+proj_progresses : of (proj E L) T
+		   -> progresses E
+		   -> progresses (proj E L)
+		   -> type.
+%mode proj_progresses +X1 +X2 -X3.
+
+-: proj_progresses
+    (of_sub
+       _
+       Eof)
+    Eproj
+    E'proj
+    <- proj_progresses Eof Eproj E'proj.
+
+-: proj_progresses
+    _
+    (progresses_steps Estep)
+    (progresses_steps
+       (step_proj_rec Estep)).
+
+-: proj_progresses
+    (of_proj
+       LT
+       Eof)
+    (progresses_value (value_rec ERval))
+    (progresses_steps
+       (step_rec LE ERval))
+    <- invert_of_record2 Eof ERord TRord TR'sub ER'of _
+    <- lookup_trans_trow_order LT TRord LT'
+    <- lookup_trans_sub_trow LT' TR'sub LT'' _
+    <- lookup_trow_to_erow LT'' ER'of LE'
+    <- lookup_trans_erow_order' LE' ERord LE.
+
+-: proj_progresses
+    (of_proj
+       _
+       Eof)
+    _
+    D
+    <- absurd_oar Eof F
+    <- raa_progresses F D.  
+
+-: proj_progresses
+    (of_proj
+       _
+       Eof)
+    _
+    D
+    <- absurd_otr Eof F
+    <- raa_progresses F D.  
+    
+%worlds () (proj_progresses _ _ _).
+%total (Eof) (proj_progresses Eof _ _).
+
+
+
+rec_progresses :  progresses_erow ER
+		  -> progresses (rec ER)
+		  -> type.
+%mode rec_progresses +X1 -X2.
+
+-: rec_progresses
+    (progresses_erow_steps ERstep)
+    (progresses_steps
+       (step_rec_exp ERstep)).
+    
+-: rec_progresses
+    (progresses_erow_value ERval)
+    (progresses_value
+       (value_rec ERval)).
+
+%worlds () (rec_progresses _ _).
+%total [] (rec_progresses _ _).
+
+
+
+equality_erow_of : erow_of ER TR -> trow_eq TR TR' -> erow_of ER TR' -> type.
+%mode equality_erow_of +X1 +X2 -X3.
+
+-: equality_erow_of ERof trow_eq_ ERof.
+
+%worlds () (equality_erow_of _ _ _).
+%total [] (equality_erow_of _ _ _).
+%reduces ERof = ERof' (equality_erow_of ERof _ ERof').
+
+
+
+pattern_can_match : of E T
+		     -> value E
+		     -> pat_of P T TL
+		     -> match P E EL
+		     -> list_of EL TL
+		     -> type.
+%mode pattern_can_match +X1 +X2 +X3 -X4 -X5.
+
+prow_can_match : erow_of ER SR
+		  -> sub_tp_trow SR TR
+		  -> value_erow ER
+		  -> prow_of PR TR TL
+		  -> prow_match PR ER EL
+		  -> list_of EL TL
+		  -> type.
+%mode prow_can_match +X1 +X2 +X3 +X4 -X5 -X6.
+
+-: pattern_can_match
+    Eof
+    _
+    pat_of_var
+    match_var
+    (list_of_cons list_of_nil Eof).
+
+-: pattern_can_match
+    Eof
+    (value_rec ERval)
+    (pat_of_rec 
+       PRof
+       PRord
+       TRord')
+    (match_rec
+       PRmatch
+       PRord
+       ERord)
+    ELof
+    <- invert_of_record2 Eof ERord TRord SR'sub ER'of SR'unique
+    <- trow_order_unique TRord TRord' TReq
+    <- equal_trow_sub SR'sub trow_eq_ TReq SR'sub'
+    <- value_trans_order ERval ERord ER'val
+    <- prow_can_match ER'of SR'sub' ER'val PRof PRmatch ELof.
+
+-: pattern_can_match
+    Eof
+    value_abs
+    _
+    Pmatch
+    ELof
+    <- absurd_oar Eof F
+    <- raa_list_of F (ELof : list_of termlist_nil _)
+    <- raa_match F Pmatch.
+
+-: pattern_can_match
+    Eof
+    value_tabs
+    _
+    Pmatch
+    ELof
+    <- absurd_otr Eof F
+    <- raa_list_of F (ELof : list_of termlist_nil _)
+    <- raa_match F Pmatch.
+
+-: prow_can_match
+    _
+    _
+    _
+    prow_of_nil
+    prow_match_nil
+    list_of_nil.
+
+-: prow_can_match
+    (erow_of_cons ERof _)
+    (sub_tp_trow_cons' SRsub)
+    (value_erow_cons ERval _)
+    PRof
+    (prow_match_cons' PRmatch)
+    ELof
+    <- prow_can_match ERof SRsub ERval PRof PRmatch ELof.
+
+-: prow_can_match
+    (erow_of_cons 
+       ERof
+       Eof)
+    (sub_tp_trow_cons
+       Ssub 
+       SRsub)
+    (value_erow_cons 
+       ERval 
+       Eval)
+    (prow_of_cons
+       TLappend
+       PRof
+       Pof)
+    (prow_match_cons
+       ELappend
+       PRmatch
+       Pmatch)
+    EL''of
+    <- pattern_can_match (of_sub Ssub Eof) Eval Pof Pmatch EL'of
+    <- prow_can_match ERof SRsub ERval PRof PRmatch ELof
+    <- list_of_append' ELof EL'of ELappend TLappend EL''of.
+    
+%worlds () (pattern_can_match _ _ _ _ _) (prow_can_match _ _ _ _ _ _).
+%total {(Pof PRof) (Eof ERof)} (pattern_can_match Eof _ Pof _ _) (prow_can_match ERof _ _ PRof _ _).
+
+
+
+list_can_apply :  bterm_of E TL T'
+		  -> list_of EL TL
+		  -> apply E EL E'
+		  -> of E' T'
+		  -> type.
+%mode list_can_apply +X1 +X2 -X3 -X4.
+
+-: list_can_apply
+    (bterm_of_base Eof)
+    list_of_nil
+    apply_base
+    Eof.
+
+-: list_can_apply
+    (bterm_of_bind Eof)
+    (list_of_cons ELof E'of)
+    (apply_bind Eapp)
+    E''of
+    <- list_can_apply (Eof _ E'of) ELof Eapp E''of.
+
+%worlds () (list_can_apply _ _ _ _).
+%total (ELof) (list_can_apply _ ELof _ _ ).
+
+
+
+let_progresses :  of E T
+		  -> pat_of P T TL
+		  -> bterm_of E' TL T'
+		  -> progresses E
+		  -> progresses (let P E E')
+		  -> type.
+%mode let_progresses +X1 +X2 +X3 +X4 -X5.
+
+-: let_progresses
+    _
+    _
+    _
+    (progresses_steps Estep)
+    (progresses_steps
+       (step_let_arg Estep)).
+
+-: let_progresses
+    Eof
+    Pof
+    E'of
+    (progresses_value Eval)
+    (progresses_steps
+       (step_let
+	  Eapp         %% apply E' EL E''
+	  Pmatch       %% match P E EL
+	  Eval))
+    <- pattern_can_match Eof Eval Pof Pmatch ELof
+    <- list_can_apply E'of ELof Eapp E'of'.
+
+
+%worlds () (let_progresses _ _ _ _ _).
+%total [] (let_progresses _ _ _ _ _).
+
+
+
+erow_progresses : {L} progresses E
+		   -> progresses_erow ER
+		   -> progresses_erow (erow_cons L E ER)
+		   -> type.
+%mode erow_progresses +X1 +X2 +X3 -X4.
+
+-: erow_progresses
+    _
+    (progresses_steps Estep)
+    _
+    (progresses_erow_steps
+       (step_erow_step Estep)).
+
+-: erow_progresses
+    _
+    (progresses_value Eval)
+    (progresses_erow_steps ERsteps)
+    (progresses_erow_steps
+       (step_erow_val ERsteps Eval)).
+
+-: erow_progresses
+    _
+    (progresses_value Eval)
+    (progresses_erow_value ERval)
+    (progresses_erow_value
+       (value_erow_cons ERval Eval)).
+
+%worlds () (erow_progresses _ _ _ _).
+%total [] (erow_progresses _ _ _ _).
+
+
+
+%% progress proof
+progress' : {E} of E T -> progresses E -> type.
+%mode progress' +X1 +X2 -X3.
+
+progress_erow : {ER} erow_order ER ER' 
+		 -> erow_of ER' TR 
+		 -> progresses_erow ER 
+		 -> type.
+%mode progress_erow +X1 +X2 +X3 -X4.
+
+-: progress' 
+    _
+    (of_sub
+       _
+       Eof)
+    Eprogress
+    <- progress' _ Eof Eprogress.
+
+-: progress'
+    _
+    (of_abs
+       _)
+    (progresses_value
+       value_abs).
+
+-: progress'
+    _
+    (of_tabs
+       _)
+    (progresses_value
+       value_tabs).
+
+-: progress'
+    _
+    (of_app
+       E2of
+       E1of)
+    Eprog
+    <- progress' _ E1of E1prog
+    <- progress' _ E2of E2prog
+    <- app_progresses (of_app E2of E1of) E1prog E2prog Eprog.
+
+-: progress'
+    _
+    (of_tapp
+       Tsub
+       Eof)
+    E'prog
+    <- progress' _ Eof Eprog
+    <- tapp_progresses (of_tapp Tsub Eof) Eprog E'prog.
+
+-: progress' 
+    _
+    (of_record ER'of _ ERord)
+    Eprog
+    <- progress_erow _ ERord ER'of ERprog
+    <- rec_progresses ERprog Eprog.
+
+-: progress' 
+    _
+    (of_proj
+       LT
+       Eof)
+    E'proj
+    <- progress' _ Eof Eproj
+    <- proj_progresses (of_proj LT Eof) Eproj E'proj.
+
+
+-: progress'
+    _
+    (of_let E'of Pof Eof)
+    E'step
+    <- progress' _ Eof Estep
+    <- let_progresses Eof Pof E'of Estep E'step.
+
+
+-: progress_erow
+    _
+    erow_order_nil
+    erow_of_nil
+    (progresses_erow_value
+       value_erow_nil).
+
+-: progress_erow
+    _
+    (erow_order_cons
+       ERins
+       ERord)
+    ERof
+    ER'prog
+    <- erow_insert_to_lookup ERins LE
+    <- invert_erow_of' ERof LE Eof
+    <- progress' _ Eof Eprog
+    <- invert_insert_of ERins ERof ER'of _
+    <- progress_erow _ ERord ER'of ERprog
+    <- erow_progresses _ Eprog ERprog ER'prog.
+
+%worlds () (progress' _ _ _) (progress_erow _ _ _ _).
+%total {(E ER) (Eof ERof)} (progress' E Eof _) (progress_erow ER _ ERof _).
+
+
+
+%%%%%  Peroration  %%%%%
+
+preservation : of E T -> step E E' -> of E' T -> type.
+%mode preservation +X1 +X2 -X3.
+
+-: preservation Eof Estep E'of
+    <- preservation' _ Eof Estep E'of.
+
+%worlds () (preservation _ _ _).
+%total [] (preservation _ _ _).
+
+
+
+progress : of E T -> progresses E -> type.
+%mode progress +X1 -X2.
+
+-: progress Eof Eprogresses
+    <- progress' _ Eof Eprogresses.
+
+%worlds () (progress _ _).
+%total [] (progress _ _).
+

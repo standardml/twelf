@@ -1,0 +1,345 @@
+
+%% WILDCARDS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc T)
+	   pat-elab/wild
+	   %%
+	   md-of/unit.
+
+
+%% CONSTRAINTS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc T)
+	   (pat-elab/constraint
+	      (DelabPe : pat-elab Mec Sec Pe Efail Edisc T Mbind Sbind)
+	      (Dequiv : cn-equiv T' T t)
+	      (DelabTe : ty-elab Mec Sec Te T'))
+	   %%
+	   DofMbind
+	   <- pat-elab-reg DofEC DofFail DofDisc DelabPe
+	      (DofMbind : md-of pure st/nil Mbind Sbind).
+
+
+%% VARIABLES
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc T)
+	   (pat-elab/bind _)
+	   %%
+	   (md-of/in (md-of/in (md-of/datom DofDisc))).
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc T)
+	   (pat-elab/bind-shadow _)
+	   %%
+	   (md-of/in (md-of/in (md-of/datom DofDisc))).
+
+
+%% NULLARY DATATYPE CONSTRUCTORS
+
+multi-apply-reg : tm-of st/nil E T
+		   -> ({a} cn-of a t -> {b} cn-of b t -> tm-of st/nil (Earg a b) (arrow a b))
+		   -> multi-apply E T N Earg E' T'
+%%
+		   -> tm-of st/nil E' T'
+		   -> type.
+%mode multi-apply-reg +X1 +X2 +X3 -X4.
+
+-	: multi-apply-reg
+	   (Dof : tm-of st/nil E T)
+	   _
+	   multi-apply/z
+	   Dof.
+
+-	: multi-apply-reg
+	   (Dof : tm-of st/nil E (arrow (arrow T Tresult) Trest))
+	   (DofArg : {a} cn-of a t -> {b} cn-of b t -> tm-of st/nil (Earg a b) (arrow a b))
+	   (multi-apply/s
+	      (Dapply : multi-apply (tm/app E (Earg T Tresult)) Trest N Earg Efinal Tfinal))
+	   %%
+	   DofFinal
+	   <- tm-of-reg Dof
+	      (DofArrow : cn-of (arrow (arrow T Tresult) Trest) t)
+	   <- inversion-arrow DofArrow
+	      (DofArrow' : cn-of (arrow T Tresult) t) _
+	   <- inversion-arrow DofArrow'
+	      (DofT : cn-of T t) (DofTresult : cn-of Tresult t)
+	   <- multi-apply-reg (tm-of/app (DofArg T DofT Tresult DofTresult) Dof) DofArg Dapply
+	      (DofFinal : tm-of st/nil Efinal Tfinal).
+
+%worlds (conbind-reg | termbind-reg | modbind-reg) (multi-apply-reg _ _ _ _).
+%total D (multi-apply-reg _ _ D _).
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/dcon0
+	      (Dapply2 : multi-apply
+			  (tm/app Epartial (tm/lam unit ([x] x)))
+			  Tarms'
+			  Nsuffix
+			  ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			  Ecase unit)
+	      (Dapply1 : multi-apply
+			  (tm/app (tm/snd (md/app (md/app (md/pi1 M') Marg) (md/satom unit))) Edisc)
+			  (Tarms Carg unit)
+			  N
+			  ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			  Epartial (arrow (arrow unit unit) Tarms'))
+	      _
+	      (Dof : md-of pure st/nil (md/pi1 M') (sg/pi S ([b] sg/pi (sg/satom t) ([a] sg/datom (arrow (T b) (Tarms b a))))))
+	      _ _
+	      (Dequiv : cn-equiv (T Carg) Tdom t)
+	      (DfstMarg : md-fst Marg Carg)
+	      (Dinstance : instance S Marg)
+	      _)
+	   %%
+	   (md-of/lete ([_] [_] md-of/unit) DofCase)
+	   <- instance-reg Dinstance
+	      (DofMarg : md-of pure st/nil Marg S)
+	   <- multi-apply-reg
+	      (tm-of/app
+		 (tm-of/equiv
+		    (cn-equiv/symm Dequiv)
+		    DofDisc)
+		 (tm-of/snd
+		    (md-of/app 
+		       md-fst/satom
+		       (md-of/satom cn-of/unit)
+		       (md-of/app
+			  DfstMarg
+			  DofMarg
+			  Dof))))
+	      ([a] [da:cn-of a t] [b] [db:cn-of b t] tm-of/lam ([_] [_] tm-of/raise db DofFail) da)
+	      Dapply1
+	      %%
+	      (DofPartial : tm-of st/nil Epartial (arrow (arrow unit unit) Tarms'))
+	   <- multi-apply-reg
+	      (tm-of/app
+		 (tm-of/lam ([x] [d] tm-of/var d) cn-of/unit)
+		 DofPartial)
+	      ([a] [da:cn-of a t] [b] [db:cn-of b t] tm-of/lam ([_] [_] tm-of/raise db DofFail) da)
+	      Dapply2
+	      %%
+	      (DofCase : tm-of st/nil Ecase unit).
+
+
+%% UNARY DATATYPE CONSTRUCTORS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/dcon1
+	      (Delab : {x} pat-elab Mec Sec Pe Efail x (T1 Carg) (Mresult x) Sresult)
+	      (Dapply2 : multi-apply
+			  (tm/app Epartial (tm/lam (T1 Carg) ([x] x)))
+			  Tarms'
+			  Nsuffix
+			  ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			  Ecase (T1 Carg))
+	      (Dapply1 : multi-apply
+			  (tm/app (tm/snd (md/app (md/app (md/pi1 M') Marg) (md/satom (T1 Carg)))) Edisc)
+			  (Tarms Carg (T1 Carg))
+			  N
+			  ([t1] [t2] tm/lam t1 ([_] tm/raise Efail t2))
+			  Epartial (arrow (arrow (T1 Carg) (T1 Carg)) Tarms'))
+	      _
+	      (Dof : md-of pure st/nil (md/pi1 M') (sg/pi S ([b] sg/pi (sg/satom t) ([a] sg/datom (arrow (T2 b) (Tarms b a))))))
+	      _ _
+	      (Dequiv : cn-equiv (T2 Carg) Tdom t)
+	      (DfstMarg : md-fst Marg Carg)
+	      (Dinstance : instance S Marg)
+	      (Dresolve : resolve-long Mec Sec name/val I M (sg/named (name/dcon1 N Nall) (sg/pi S ([b] sg/datom (arrow (T1 b) (T2 b)))))))
+	   %%
+	   (md-of/lete DofMresult DofCase)
+	   <- resolve-long-reg DofEC Dresolve
+	      (DofConstr : md-of pure st/nil M (sg/named (name/dcon1 N Nall) (sg/pi S ([b] sg/datom (arrow (T1 b) (T2 b))))))
+	   <- md-of-reg DofConstr
+	      (sg-wf/named 
+		 (sg-wf/pi
+		    ([b] [db:cn-of b K]
+		       sg-wf/datom
+		       (DofArrow b db : cn-of (arrow (T1 b) (T2 b)) t))
+		    (DfstS : sg-fst S K)
+		    (DwfS : sg-wf S)))
+	   <- ({b} {db:cn-of b K}
+		 inversion-arrow (DofArrow b db)
+		 (DofT1 b db : cn-of (T1 b) t) (DofT2 b db : cn-of (T2 b) t))
+	   <- instance-reg Dinstance
+	      (DofMarg : md-of pure st/nil Marg S)
+	   <- md-fst-reg DofMarg DfstMarg DfstS
+	      (DofCarg : cn-of Carg K)
+	   <- multi-apply-reg
+	      (tm-of/app
+		 (tm-of/equiv
+		    (cn-equiv/symm Dequiv)
+		    DofDisc)
+		 (tm-of/snd
+		    (md-of/app 
+		       md-fst/satom
+		       (md-of/satom (DofT1 Carg DofCarg))
+		       (md-of/app
+			  DfstMarg
+			  DofMarg
+			  Dof))))
+	      ([a] [da:cn-of a t] [b] [db:cn-of b t] tm-of/lam ([_] [_] tm-of/raise db DofFail) da)
+	      Dapply1
+	      %%
+	      (DofPartial : tm-of st/nil Epartial (arrow (arrow (T1 Carg) (T1 Carg)) Tarms'))
+	   <- multi-apply-reg
+	      (tm-of/app
+		 (tm-of/lam ([x] [d] tm-of/var d) (DofT1 Carg DofCarg))
+		 DofPartial)
+	      ([a] [da:cn-of a t] [b] [db:cn-of b t] tm-of/lam ([_] [_] tm-of/raise db DofFail) da)
+	      Dapply2
+	      %%
+	      (DofCase : tm-of st/nil Ecase (T1 Carg))
+	   <- ({x} {dx:tm-assm x (T1 Carg)}
+		 tm-assm-reg dx (DofT1 Carg DofCarg)
+		 -> pat-elab-reg DofEC DofFail (tm-of/var dx) (Delab x)
+		    (DofMresult x dx : md-of pure st/nil (Mresult x) Sresult)).
+
+
+%% NULLARY EXCEPTION CONSTRUCTORS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/econ0
+	      (Dof : md-of pure st/nil (md/pi1 M') (sg/datom (tag unit)))
+	      _
+	      (Dequiv : cn-equiv tagged Tdom t)
+	      _)
+	   %%
+	   (md-of/lete 
+	      ([_] [_] md-of/unit) 
+	      (tm-of/iftag
+		 (tm-of/raise cn-of/unit DofFail)
+		 ([x] [d] tm-of/var d)
+		 (tm-of/snd Dof)
+		 (tm-of/equiv
+		    (cn-equiv/symm Dequiv)
+		    DofDisc))).
+
+
+%% UNARY EXCEPTION CONSTRUCTORS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/econ1
+	      (Delab : {x} pat-elab Mec Sec Pe Efail x T (Mresult x) Sresult)
+	      (Dof : md-of pure st/nil (md/pi1 M') (sg/datom (tag T)))
+	      _
+	      (Dequiv : cn-equiv tagged Tdom t)
+	      _)
+	   %%
+	   (md-of/lete 
+	      DofMresult
+	      (tm-of/iftag
+		 (tm-of/raise DofT DofFail)
+		 ([x] [d] tm-of/var d)
+		 (tm-of/snd Dof)
+		 (tm-of/equiv
+		    (cn-equiv/symm Dequiv)
+		    DofDisc)))
+	   <- md-of-reg Dof
+	      (sg-wf/datom (DofTag : cn-of (tag T) t))
+	   <- inversion-tag DofTag
+	      (DofT : cn-of T t)
+	   <- ({x} {dx:tm-assm x T}
+		 tm-assm-reg dx DofT
+		 -> pat-elab-reg DofEC DofFail (tm-of/var dx) (Delab x)
+		    (DofMresult x dx : md-of pure st/nil (Mresult x) Sresult)).
+
+
+%% CONJUNCTIVE PATTERNS
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/as
+	      (Delab2 : pat-elab Mec Sec Pe2 Efail Edisc Tdom M2 S2)
+	      (Delab1 : pat-elab Mec Sec Pe1 Efail Edisc Tdom M1 S1))
+	   %%
+	   (md-of/pair DofM2 DofM1)
+	   <- pat-elab-reg DofEC DofFail DofDisc Delab1
+	      (DofM1 : md-of pure st/nil M1 S1)
+	   <- pat-elab-reg DofEC DofFail DofDisc Delab2
+	      (DofM2 : md-of pure st/nil M2 S2).
+
+
+%% RECORD PATTERNS
+
+pat-row-elab-reg : md-of pure st/nil Mec Sec
+		    -> tm-of st/nil Efail tagged
+		    -> tm-of st/nil Edisc T
+		    -> pat-row-elab Mec Sec PRe Efail Edisc T M S
+%%
+		    -> md-of pure st/nil M S
+		    -> type.
+%mode pat-row-elab-reg +X1 +X2 +X3 +X4 -X5.
+
+-	: pat-row-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc unit)
+	   pat-row-elab/nil
+	   %%
+	   md-of/unit.
+
+-	: pat-row-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Erow (prod (labeled L T) Ttail))
+	   (pat-row-elab/cons
+	      (Delab2 : pat-row-elab Mec Sec PRe Efail (tm/pi2 Erow) Ttail M2 S2)
+	      (Delab1 : pat-elab Mec Sec Pe Efail (tm/out (tm/pi1 Erow)) T M1 S1))
+	   %%
+	   (md-of/pair DofM2 DofM1)
+	   <- pat-elab-reg DofEC DofFail (tm-of/out (tm-of/pi1 DofDisc)) Delab1
+	      (DofM1 : md-of pure st/nil M1 S1)
+	   <- pat-row-elab-reg DofEC DofFail (tm-of/pi2 DofDisc) Delab2
+	      (DofM2 : md-of pure st/nil M2 S2).
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/record
+	      (Delab : pat-row-elab Mec Sec PRe Efail Edisc Tdom M S)
+	      _)
+	   %%
+	   DofM
+	   <- pat-row-elab-reg DofEC DofFail DofDisc Delab
+	      (DofM : md-of pure st/nil M S).
+
+
+%% EQUIVALENCE
+
+-	: pat-elab-reg
+	   (DofEC : md-of pure st/nil Mec Sec)
+	   (DofFail : tm-of st/nil Efail tagged)
+	   (DofDisc : tm-of st/nil Edisc Tdom)
+	   (pat-elab/equiv
+	      (Dequiv : cn-equiv Tdom' Tdom t)
+	      (Delab : pat-elab Mec Sec Pe Efail Edisc Tdom' Mresult Sresult))
+	   %%
+	   Dof
+	   <- pat-elab-reg DofEC DofFail (tm-of/equiv (cn-equiv/symm Dequiv) DofDisc) Delab
+	      (Dof : md-of pure st/nil Mresult Sresult).

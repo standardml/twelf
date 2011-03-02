@@ -98,15 +98,16 @@ struct
 	(case r 
            of Block (G, dl) =>
 	      Print.formatDecList (G, dl)
-            (* Is this correct? - gaw *) 
+            (* Is this correct? - gaw *)
+            (* Fixed June 3, 2009 -fp,cs *)
 	    | Seq (dl, s) =>
-	      Print.formatDecList (I.Null, map (fn d => I.decSub(d, s)) dl)
+	      Print.formatDecList' (I.Null, (dl, s))
 	    | Star r =>
 	      F.Hbox ([F.String "(", formatReg r, F.String ")*"])
 	    | Plus (r1, r2) => 
-	      F.Hbox ([F.String "(", formatReg r1, F.String ")",
-		       F.Space, F.String "|", F.Space, 
-		       F.String "(", formatReg r2, F.String ")"])
+	      F.HVbox ([F.String "(", formatReg r1, F.String ")",
+		        F.Break, F.String "|", F.Space, 
+		        F.String "(", formatReg r2, F.String ")"])
 	    | One => 
               F.String "1")
 
@@ -121,12 +122,16 @@ struct
          G |- dl </: Rb
      *)
     fun formatSubsump msg (G, dl, Rb, b) =
+        (*
+            F.HVbox ([F.String ((Names.qidToString (Names.constQid b)) ^ ":")])
+        *)
 	F.HVbox ([F.String msg, F.Space, F.String "for family", F.Space,
 		  F.String ((Names.qidToString (Names.constQid b)) ^ ":"),
-		  F.Newline (),
-		  Print.formatCtx(I.Null, G), F.Break, F.String "|-",
-		  F.Space, Print.formatDecList (G, dl),
-		  F.Space, F.String ("</:"), F.Space,
+		  F.Break, (* F.Newline (), *)
+                  (* Do not print some-variables; reenable if necessary *)
+                  (* June 3, 2009 -fp,cs *)
+		  (* Print.formatCtx(I.Null, G), F.Break, F.String "|-", F.Space, *)
+		  Print.formatDecList (G, dl), F.Break, F.String ("</:"), F.Space,
 		  formatReg Rb])
 
     (* createEVarSub G G' = s
@@ -351,12 +356,10 @@ struct
 
        Invariants: Rb = reg (worlds (b))
     *)
-    fun checkSubsumedBlock (G, I.Null, L', Rb, b) =
+    fun checkSubsumedBlock (G, L', Rb, b) =
         (( accR ((G, L'), Rb, b, init b) ;
 	  raise Error (F.makestring_fmt (formatSubsump "World subsumption failure" (G, L', Rb, b)))) 
 	 handle Success => ())
-      | checkSubsumedBlock (G, I.Decl(G',D), L', Rb, b) =
-	  checkSubsumedBlock (decEName (G, D), G', L', Rb, b)
 
     (* checkSubsumedWorlds (Wa, Rb, b) = ()
        iff Wa is subsumed by Rb
@@ -369,7 +372,7 @@ struct
         let
 	  val (someDecs, piDecs) = I.constBlock cid
 	in
-	  checkSubsumedBlock (I.Null, someDecs, piDecs, Rb, b);
+	  checkSubsumedBlock (Names.ctxName(someDecs), piDecs, Rb, b);
 	  checkSubsumedWorlds (cids, Rb, b)
 	end
 

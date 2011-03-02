@@ -1,0 +1,76 @@
+lt-look-wf	: lt-look (lt/cons L LC C) LC' _
+		   -> st-wf (lt/cons L LC C) S L' _
+		   -> loc-less LC LC'
+		   -> uninhabited
+		   -> type.
+%mode lt-look-wf +D1 +D2 +D3 -D4.
+
+-	: lt-look-wf (lt-look/miss LL)
+	   (st-wf/cons LCS _ _ _)
+	   LG 
+	   DU
+	   <- loc-less-pred LG LG'
+	   <- lt-look-wf LL LCS LG' DU.
+
+-	: lt-look-wf lt-look/hit
+	   (st-wf/cons _ _ _ _)
+	   DG
+	   DU
+	   <- loc-less-not-refl DG DU.
+
+
+%worlds () (lt-look-wf _ _ _ _).
+%total D1 (lt-look-wf _ D1 _ _).
+
+
+
+st-look-wf	: st-look (st/cons S LC E) LC' _
+		   -> st-wf _ (st/cons S LC E) _ _
+		   -> loc-less LC LC'
+		   -> uninhabited
+		   -> type.
+%mode st-look-wf +D1 +D2 +D3 -D4.
+
+-	: st-look-wf (st-look/miss LL)
+	   (st-wf/cons LCS _ _ _)
+	   LG 
+	   DU
+	   <- loc-less-pred LG LG'
+	   <- st-look-wf LL LCS LG' DU.
+
+-	: st-look-wf st-look/hit
+	   (st-wf/cons _ _ _ _)
+	   DG
+	   DU
+	   <- loc-less-not-refl DG DU.
+
+
+%worlds () (st-look-wf _ _ _ _).
+%total D1 (st-look-wf _ D1 _ _).
+
+
+
+
+st-update-wf	: st-update (st/cons S LC E) LC' _ (st/cons S' _ _)
+		   -> st-wf _ (st/cons S LC E) _ _
+		   -> loc-less LC LC'
+		   -> uninhabited
+		   -> type.
+%mode st-update-wf +D1 +D2 +D3 -D4.
+
+-	: st-update-wf (st-update/miss LL)
+	   (st-wf/cons LCS _ _ _)
+	   LG 
+	   DU
+	   <- loc-less-pred LG LG'
+	   <- st-update-wf LL LCS LG' DU.
+
+-	: st-update-wf st-update/hit
+	   (st-wf/cons _ _ _ _)
+	   DG
+	   DU
+	   <- loc-less-not-refl DG DU.
+
+
+%worlds () (st-update-wf _ _ _ _).
+%total D1 (st-update-wf _ D1 _ _).

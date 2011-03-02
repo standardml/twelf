@@ -1,0 +1,46 @@
+
+
+
+
+funct/kd-wf : ({a:cn} {da: ofkd a K} kd-wf (K' a)) 
+	       -> cn-deq C1 C2 K 
+	       -> ofkd C1 K
+	       -> ofkd C2 K
+	       -> (kd-deq (K' C1) (K' C2)) 
+	       -> type.
+%mode funct/kd-wf +D1 +D2 +D3 +D4 -D5.
+
+funct/ofkd : ({a:cn} {da: ofkd a K} ofkd (C' a) (K' a)) 
+	      -> cn-deq C1 C2 K 
+	      -> ofkd C1 K 
+	      -> ofkd C2 K    
+	      -> (cn-deq (C' C1) (C' C2) (K' C1)) 
+	      -> type.
+%mode funct/ofkd +D1 +D2 +D3 +D4 -D5.
+
+-	: funct/kd-wf DO DQ D1 D2 DQI
+	   <- explicate-open-kd-wf loc/z DO DO'
+	   <- explicate-closed-cn-deq DQ DQ'
+	   <- explicate-closed-ofkd D1 D1'
+	   <- explicate-closed-ofkd D2 D2'
+	   <- funct-ekd-wf 
+	      ([x] cxt-append/nil)
+	      (cxt-append-sub/nil : cxt-append-sub _ _ _ _)
+	      D1' D2' DQ' DO' DQE _
+	   <- implicate-closed/kd-deq DQE DQI.
+
+-	: funct/ofkd DO DQ D1 D2 DQI
+	   <- explicate-open-ofkd loc/z DO DO'
+	   <- explicate-closed-cn-deq DQ DQ'
+	   <- explicate-closed-ofkd D1 D1'
+	   <- explicate-closed-ofkd D2 D2'
+	   <- funct-eofkd 
+	      ([x] cxt-append/nil)
+	      (cxt-append-sub/nil : cxt-append-sub _ _ _ _)
+	      D1' D2' DQ' DO' DQE
+	   <- implicate-closed/cn-deq DQE DQI.
+
+%worlds (can-mofkd-block | ofkd+vdt-block) (funct/ofkd _ _ _ _ _) (funct/kd-wf _ _ _ _ _).
+%total {} (funct/kd-wf _ _ _ _ _) (funct/ofkd _ _ _ _ _).
+
+

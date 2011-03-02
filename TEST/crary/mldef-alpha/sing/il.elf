@@ -1,0 +1,274 @@
+
+%%%%%  Syntax  %%%%%
+
+tp		: type.  %name tp A.
+atom		: type.  %name atom R.
+term		: type.  %name term M.
+
+
+t	: tp.
+pi	: tp -> (atom -> tp) -> tp.
+sigma	: tp -> (atom -> tp) -> tp.
+sing	: atom -> tp.
+one	: tp.
+
+
+const	: constant -> atom.
+app	: atom -> term -> atom.
+pi1	: atom -> atom.
+pi2	: atom -> atom.
+
+
+at	: atom -> term.
+lam	: (atom -> term) -> term.
+pair	: term -> term -> term.
+star	: term.
+
+
+%%  We no longer require this subordination edge, but it was a lot of
+%%  work to put it in, and I'm not about to take it back out.
+-	: (tp -> atom) -> type.
+
+
+
+%%%%%  Substitution  %%%%%
+
+aasub : (atom -> atom) -> term -> atom -> type.
+%mode aasub +R +M -M'.
+
+aosub : (atom -> atom) -> term -> term -> type.
+%mode aosub +R +M -M'.
+
+sub : (atom -> term) -> term -> term -> type.
+%mode sub +M +M' -M''.
+
+tsub : (atom -> tp) -> term -> tp -> type.
+%mode tsub +A +M -A'.
+
+
+aasub/closed	: aasub ([_] R) _ R.
+
+aosub/var	: aosub ([x] x) M M.
+
+aasub/app	: aasub ([x] app (R x) (M x)) N (app R' M')
+		   <- aasub R N R'
+		   <- sub M N M'.
+
+aosub/app	: aosub ([x] app (R x) (M x)) N M1'
+		   <- aosub R N (lam M1)
+		   <- sub M N M'
+		   <- sub M1 M' M1'.
+
+aasub/pi1	: aasub ([x] pi1 (R x)) M (pi1 R')
+		   <- aasub R M R'.
+
+aosub/pi1	: aosub ([x] pi1 (R x)) M M1
+		   <- aosub R M (pair M1 M2).
+
+aasub/pi2	: aasub ([x] pi2 (R x)) M (pi2 R')
+		   <- aasub R M R'.
+
+aosub/pi2	: aosub ([x] pi2 (R x)) M M2
+		   <- aosub R M (pair M1 M2).
+
+
+
+sub/aa		: sub ([x] at (R x)) M (at R')
+		   <- aasub R M R'.
+
+sub/ao		: sub ([x] at (R x)) M M'
+		   <- aosub R M M'.
+
+sub/lam		: sub ([x] lam ([y] M x y)) N (lam ([y] M' y))
+		   <- ({y} sub ([x] M x y) N (M' y)).
+
+sub/pair	: sub ([x] pair (M1 x) (M2 x)) N (pair M1' M2')
+		   <- sub M1 N M1'
+		   <- sub M2 N M2'.
+
+sub/star	: sub ([x] star) _ star.
+
+
+tsub/t		: tsub ([_] t) _ t.
+
+tsub/pi		: tsub ([x] pi (A x) ([y] B x y)) M (pi A' ([y] B' y))
+		   <- tsub A M A'
+		   <- ({y} tsub ([x] B x y) M (B' y)).
+
+tsub/sigma	: tsub ([x] sigma (A x) ([y] B x y)) M (sigma A' ([y] B' y))
+		   <- tsub A M A'
+		   <- ({y} tsub ([x] B x y) M (B' y)).
+
+tsub/singa	: tsub ([x] sing (R x)) M (sing R')
+		   <- aasub R M R'.
+
+tsub/singo	: tsub ([x] sing (R x)) M (sing R')
+		   <- aosub R M (at R').
+
+tsub/one	: tsub ([x] one) _ one.
+
+
+
+
+%%%%%  Typing Rules  %%%%%
+
+kof	: constant -> tp -> type.
+%mode kof +C -A.
+
+wf	: tp -> type.
+%mode wf +A.
+
+vof	: atom -> tp -> type.
+%mode vof +R -A.
+
+aof	: atom -> tp -> type.
+%mode aof +R -A.
+
+of	: term -> tp -> type.
+%mode of +M +A.
+
+
+wf/t		: wf t.
+
+wf/pi		: wf (pi A B)
+		   <- wf A
+		   <- ({x} vof x A -> wf (B x)).
+
+wf/sigma	: wf (sigma A B)
+		   <- wf A
+		   <- ({x} vof x A -> wf (B x)).
+
+wf/sing		: wf (sing R)
+		   <- aof R t.
+
+wf/one		: wf one.
+
+
+
+aof/const	: aof (const C) A
+		   <- kof C A
+		   <- wf A.
+
+qtp		: tp -> tp
+                = [a] (pi (pi a ([_] t)) ([_] t)).
+
+aof/var		: aof X A
+		   <- vof X A
+		   <- wf A.
+
+aof/app		: aof (app R M) B'
+		   <- aof R (pi A B)
+		   <- of M A
+		   <- tsub B M B'
+		   <- wf B'.
+
+aof/pi1		: aof (pi1 R) A
+		   <- aof R (sigma A B).
+
+aof/pi2		: aof (pi2 R) (B (pi1 R))
+		   <- aof R (sigma A B).
+
+
+
+of/at		: of (at R) t
+		   <- aof R t.
+
+of/lam		: of (lam M) (pi A B)
+		   <- wf A
+		   <- ({x} vof x A -> of (M x) (B x)).
+
+of/pair		: of (pair M N) (sigma A B)
+		   <- of M A
+		   <- tsub B M B'
+		   <- of N B'
+		   <- ({x} vof x A -> wf (B x)).
+
+of/sing		: of (at R) (sing R)
+		   <- aof R t.
+
+of/star		: of star one.
+
+
+
+
+%%%%%  Constants  %%%%%
+
+topen	: ctp -> tp -> type.
+%mode topen +A -B.
+
+topenr  : catom -> tp -> atom -> type.
+%mode topenr +R -B -S.
+
+topenm  : cterm -> tp -> term -> type.
+%mode topenm +M +B -N.
+
+topen/t		: topen ct t.
+
+topen/pi	: topen (cpi Ac Bc) (pi A B)
+		   <- topen Ac A
+		   <- ({xc} {x}
+			 topenr xc A x
+			 -> topen (Bc xc) (B x)).
+
+topen/sigma	: topen (csigma Ac Bc) (sigma A B)
+		   <- topen Ac A
+		   <- ({xc} {x}
+			 topenr xc A x
+			 -> topen (Bc xc) (B x)).
+
+topen/sing	: topen (csing Rc) (sing R)
+		   <- topenr Rc t R.
+
+topen/one	: topen cone one.
+
+
+
+topenr/app	: topenr (capp Rc Mc) Bx (app R M)
+		   <- topenr Rc (pi A B) R
+		   <- topenm Mc A M
+		   <- tsub B M Bx.
+
+topenr/pi1	: topenr (cpi1 Rc) A (pi1 R)
+		   <- topenr Rc (sigma A B) R.
+
+topenr/pi2	: topenr (cpi2 Rc) (B (pi1 R)) (pi2 R)
+		   <- topenr Rc (sigma A B) R.
+
+topenm/at	: topenm (cat Rc) t (at R)
+		   <- topenr Rc t R.
+
+topenm/sing	: topenm (cat Rc) (sing R) (at R)
+		   <- topenr Rc t R.
+
+topenm/lam	: topenm (clam Ac Mc) (pi A B) (lam M)
+		   <- topen Ac A
+		   <- ({xc} {x}
+			 topenr xc A x
+			 -> topenm (Mc xc) (B x) (M x)).
+
+topenm/pair	: topenm (cpair Mc Nc) (sigma A B) (pair M N)
+		   <- topenm Mc A M
+		   <- tsub B M Bx
+		   <- topenm Nc Bx N.
+
+topenm/star	: topenm cstar one star.
+
+
+
+kof/i	: kof C A
+	   <- ckof C Ac
+	   <- topen Ac A.
+
+
+
+
+%%%%%  Worlds  %%%%%
+
+%block var	: block {x:atom}.
+
+%block bind	: some {a:tp} block {x:atom} {d:vof x a}.
+
+%block ofblock	: some {x:atom} {a:tp} block {d:vof x a}.
+
+%block topenblock
+		: some {a:tp} {r:atom} block {xc:catom} {d:topenr xc a r}.

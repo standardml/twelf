@@ -234,10 +234,15 @@ struct
 	   of B' as Bidx (k) => (Root (Proj (B', i), SClo (S, s)), id)
             | B' as LVar _ => whnfRoot ((Proj (B', i), SClo (S, s)), id)
 	    | Inst L => whnfRedex (whnf (List.nth (L, i-1), id), (S, s)))
-      | whnfRoot ((Proj (LVar (ref (SOME L), sk, (l, t)), i), S), s) =
-	 whnfRoot ((Proj (blockSub (L, comp (sk, s)), i), SClo (S, s)), id)
+      | whnfRoot ((Proj (LVar (ref (SOME B), sk, (l, t)), i), S), s) =
+	 whnfRoot ((Proj (blockSub (B, comp (sk, s)), i), SClo (S, s)), id)
       | whnfRoot ((Proj (L as LVar (r, sk, (l, t)), i), S), s) = (* r = ref NONE *)
+	 (Root (Proj (LVar (r, comp (sk, s), (l, t)), i), SClo (S, s)), id)
+	 (* scary: why is comp(sk, s) = ^n ?? -fp July 22, 2010, -fp -cs *)
+	(* was:
 	 (Root (Proj (LVar (r, comp (sk, s), (l, comp(t, s))), i), SClo (S, s)), id)
+	 Jul 22, 2010 -fp -cs
+	 *)
          (* do not compose with t due to globality invariant *)
 	 (* Thu Dec  6 20:34:30 2001 -fp !!! *)
 	 (* was: (Root (Proj (L, i), SClo (S, s)), id) *)

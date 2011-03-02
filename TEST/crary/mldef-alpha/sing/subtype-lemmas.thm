@@ -1,0 +1,2707 @@
+
+%%%%%  Subtyping Lemmas  %%%%%
+
+subtype-fun : subtype A B M -> subtype A B M' -> ({x} term-eq (M x) (M' x)) -> type.
+%mode subtype-fun +X1 +X2 -X3.
+
+-t	: subtype-fun subtype/t subtype/t ([_] term-eq/i).
+
+-pi	: subtype-fun (subtype/pi Dsubtype2 Dsub Dsubtype1) (subtype/pi Dsubtype2' Dsub' Dsubtype1') Deq'
+	   <- subtype-fun Dsubtype1 Dsubtype1' (Deq1 : {x} term-eq (M1 x) (M1' x))
+	   <- ({x} tsub-resp ([_] tp-eq/i) (Deq1 x) tp-eq/i (Dsub x) (Dsub'' x))
+	   <- ({x} tsub-fun (Dsub'' x) (Dsub' x) (DeqA2 x))
+	   <- ({x} subtype-resp (DeqA2 x) tp-eq/i ([_] term-eq/i) (Dsubtype2 x) (Dsubtype2'' x))
+	   <- ({x} subtype-fun (Dsubtype2'' x) (Dsubtype2' x) (Deq2 x : {y} term-eq (M2 x y) (M2' x y)))
+	   <- ({z} {x} term-resp-term ([m] M2 x (app z m)) (Deq1 x) 
+		 (Deq2' z x : term-eq (M2 x (app z (M1 x))) (M2 x (app z (M1' x)))))
+	   <- ({z} {x} term-eq-trans (Deq2' z x) (Deq2 x (app z (M1' x)))
+		 (Deq z x : term-eq (M2 x (app z (M1 x))) (M2' x (app z (M1' x)))))
+	   <- ({z} lam-resp ([x] Deq z x) (Deq' z)).
+
+-sigma	: subtype-fun (subtype/sigma Dsubtype2 Dsub Dsubtype1) (subtype/sigma Dsubtype2' Dsub' Dsubtype1') Deq
+	   <- subtype-fun Dsubtype1 Dsubtype1' (Deq1 : {x} term-eq (M1 x) (M1' x))
+	   <- ({x} tsub-resp ([_] tp-eq/i) (Deq1 x) tp-eq/i (Dsub x) (Dsub'' x))
+	   <- ({x} tsub-fun (Dsub'' x) (Dsub' x) (DeqB2 x))
+	   <- ({x} subtype-resp tp-eq/i (DeqB2 x) ([_] term-eq/i) (Dsubtype2 x) (Dsubtype2'' x))
+	   <- ({x} subtype-fun (Dsubtype2'' x) (Dsubtype2' x) (Deq2 x : {y} term-eq (M2 x y) (M2' x y)))
+	   <- ({z} pair-resp (Deq1 (pi1 z)) (Deq2 (pi1 z) (pi2 z)) (Deq z)).
+
+-sing	: subtype-fun subtype/sing subtype/sing ([_] term-eq/i).
+
+-sing_t	: subtype-fun subtype/sing_t subtype/sing_t ([_] term-eq/i).
+
+-one	: subtype-fun subtype/one subtype/one ([_] term-eq/i).
+
+%worlds (var | topenblock) (subtype-fun _ _ _).
+%total D (subtype-fun _ D _).
+
+
+
+subtype-reg-e : subtype A B M 
+		 -> wfe G A
+		 -> wfe G B
+		 -> ({x} isvar x I -> ofe (cons G x A) (M x) B) -> type.
+%mode subtype-reg-e +X1 +X2 +X3 -X4.
+
+-t	: subtype-reg-e subtype/t (wfe/t (Dordered : ordered G)) (wfe/t _) 
+	   ([x] [d:isvar x I] 
+	      ofe/at 
+	      (aofe/var 
+		 (wfe/t 
+		    (ordered/cons (Dbounded x d))) 
+		 (lookup/hit (Dbounded x d))))
+	   <- extend-context Dordered
+	      (Dbounded : {x} isvar x I -> bounded G x).
+
+-pi	: subtype-reg-e
+	   (subtype/pi
+	      (Dsubtype2 : {x} subtype (A2' x) (B2 x) ([y] M2 x y))
+	      (Dsub : {x} tsub A2 (M1 x) (A2' x))
+	      (Dsubtype1 : subtype B1 A1 M1)
+	      : subtype (pi A1 A2) (pi B1 B2) ([f] lam ([x] M2 x (app f (M1 x)))))
+	   (wfe/pi 
+	      (DwfA2 : {x} isvar x I' -> wfe (cons G x A1) (A2 x))
+	      (DwfA1 : wfe G A1))
+	   (wfe/pi
+	      (DwfB2 : {x} isvar x I -> wfe (cons G x B1) (B2 x))
+	      (DwfB1 : wfe G B1))
+	   ([z] [f:isvar z I]
+	      ofe/lam
+	      ([x] [d:isvar x J] (DofM2y z f x d))
+	      (DwfB1' z f))
+	   <- ({x} {d:isvar x I}
+		 wfe-context (DwfB2 x d)
+		    (ordered/cons
+		       (Dbounded x d : bounded G x)))
+	   <- subtype-reg-e Dsubtype1 DwfB1 DwfA1
+	      (Dof1 : {x} isvar x I'' -> ofe (cons G x B1) (M1 x) A1)
+	   <- tsubst-context-e Dof1 DwfA2 Dsub
+	      (DwfA2' : {x} isvar x I'' -> wfe (cons G x B1) (A2' x))
+	   <- bump-wfe DwfA2' ([x] [d] ordered/cons (Dbounded x d))
+	      (DwfA2'' : {x} isvar x I -> wfe (cons G x B1) (A2' x))
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e (Dsubtype2 x) (DwfA2'' x d) (DwfB2 x d)
+		    (Dof2 x d : {y} isvar y J 
+				 -> ofe (cons (cons G x B1) y (A2' x)) (M2 x y) (B2 x)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 ofe-context-precedes (Dof2 x d y e)
+		    (DprecedesIJ x d y e : precedes x y))
+	   %% we need to stick z before x; for convenience we'll use
+	   %% x's index for z, y's for x, and get a new one for y
+	   <- ({x} {d:isvar x J}
+		 following-var d
+		    (DprecedesJK x d : {y} isvar y K -> precedes x y))
+	   <- ({z} {f:isvar z I}
+		 weaken-wfe (Dbounded z f) DwfB1 _
+		    (DwfB1' z f : wfe (cons G z (pi A1 A2)) B1))
+	   <- bounded-increase-bound-abs DprecedesIJ Dbounded 
+	      (Dbounded' : {x} isvar x J -> bounded G x)
+	   <- bump-ofe Dof1 ([x] [d:isvar x J] ordered/cons (Dbounded' x d))
+	      (Dof1' : {x} isvar x J -> ofe (cons G x B1) (M1 x) A1)
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 weakeng-ofe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)))
+		    (Dof1' x d)
+		    (Dof1'' z f x d : ofe (cons (cons G z (pi A1 A2)) x B1) (M1 x) A1))
+	   <- precedes-trans-abs DprecedesIJ DprecedesJK
+	      (DprecedesIK : {z} isvar z I -> {y} isvar y K -> precedes z y)
+	   <- bump2-ofe Dof2
+	      ([x] [d:isvar x I] [y] [e:isvar y K]
+		 (ordered/cons (bounded/cons (Dbounded x d) (DprecedesIK x d y e))))
+	      ([x] [d:isvar x J] [y] [e:isvar y K]
+		 (ordered/cons (bounded/cons (Dbounded' x d) (DprecedesJK x d y e))))
+	      (Dof2' : {x} isvar x J 
+			-> {y} isvar y K
+			-> ofe (cons (cons G x B1) y (A2' x)) (M2 x y) (B2 x))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 {y} {e:isvar y K}
+		 weakeng-ofe (append/cons (append/cons append/nil)) (append/cons (append/cons append/nil))
+		    (ordered/cons (bounded/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)) (DprecedesJK x d y e)))
+		    (Dof2' x d y e)
+		    (Dof2'' z f x d y e
+		       : ofe
+			  (cons (cons (cons G z (pi A1 A2)) x B1) y (A2' x))
+			  (M2 x y) (B2 x)))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 weaken-wfe' (append/cons (append/cons append/nil)) (ordered/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d))) (wfe/pi DwfA2 DwfA1)
+		    (DwfA z f x d : wfe (cons (cons G z (pi A1 A2)) x B1) (pi A1 A2)))
+	   <- bump-wfe DwfA2'' ([x] [d:isvar x J] ordered/cons (Dbounded' x d))
+	      (DwfA2''' : {x} isvar x J -> wfe (cons G x B1) (A2' x))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 weakeng-wfe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)))
+		    (DwfA2''' x d)
+		    (DwfA2'''' z f x d : wfe (cons (cons G z (pi A1 A2)) x B1) (A2' x)))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 ssubst-e ([_] append/nil) append/nil
+		    ([y] [e:isvar y K] Dof2'' z f x d y e)
+		    (aofe/app
+		       (DwfA2'''' z f x d)
+		       (Dsub x) 
+		       (Dof1'' z f x d) 
+		       (aofe/var (DwfA z f x d) (lookup/miss (lookup/hit (Dbounded z f)) (bounded/cons (Dbounded z f) (DprecedesIJ z f x d))))
+		       : aofe _ (app z (M1 x)) (A2' x))
+		    (DofM2y z f x d : ofe (cons (cons G z (pi A1 A2)) x B1)
+				       (M2 x (app z (M1 x))) (B2 x))).
+
+-sigma	: subtype-reg-e
+	   (subtype/sigma
+	      (Dsubtype2 : {x} subtype (A2 x) (B2' x) ([y] M2 x y))
+	      (Dsub : {x} tsub B2 (M1 x) (B2' x))
+	      (Dsubtype1 : subtype A1 B1 M1)
+	      : subtype (sigma A1 A2) (sigma B1 B2) ([p] pair (M1 (pi1 p)) (M2 (pi1 p) (pi2 p))))
+	   (wfe/sigma 
+	      (DwfA2 : {x} isvar x I -> wfe (cons G x A1) (A2 x))
+	      (DwfA1 : wfe G A1))
+	   (wfe/sigma
+	      (DwfB2 : {x} isvar x I' -> wfe (cons G x B1) (B2 x))
+	      (DwfB1 : wfe G B1))
+	   ([z] [f:isvar z I]
+	      ofe/pair
+	      ([x] [d:isvar x J] DwfB2'''' z f x d)
+	      (Dof2'''' z f)
+	      (Dsub (pi1 z))
+	      (Dof1''' z f))
+	   <- ({x} {d:isvar x I}
+		 wfe-context (DwfA2 x d)
+		    (ordered/cons
+		       (Dbounded x d : bounded G x)))
+	   <- subtype-reg-e Dsubtype1 DwfA1 DwfB1
+	      (Dof1 : {x} isvar x I'' -> ofe (cons G x A1) (M1 x) B1)
+	   <- tsubst-context-e Dof1 DwfB2 Dsub
+	      (DwfB2' : {x} isvar x I'' -> wfe (cons G x A1) (B2' x))
+	   <- bump-wfe DwfB2' ([x] [d] ordered/cons (Dbounded x d))
+	      (DwfB2'' : {x} isvar x I -> wfe (cons G x A1) (B2' x))
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e (Dsubtype2 x) (DwfA2 x d) (DwfB2'' x d)
+		    (Dof2 x d : {y} isvar y J 
+				 -> ofe (cons (cons G x A1) y (A2 x)) (M2 x y) (B2' x)))
+	   <- ({x} {d:isvar x I}
+		 {y} {e:isvar y J}
+		 ofe-context-precedes (Dof2 x d y e)
+		    (DprecedesIJ x d y e : precedes x y))
+	   %% we need to stick z before x; for convenience we'll use
+	   %% x's index for z, y's for x, and get a new one for y
+	   <- ({x} {d:isvar x J}
+		 following-var d
+		    (DprecedesJK x d : {y} isvar y K -> precedes x y))
+	   <- ({z} {f:isvar z I}
+		 weaken-wfe (Dbounded z f) DwfB1 _
+		    (DwfB1' z f : wfe (cons G z (pi A1 A2)) B1))
+	   <- bounded-increase-bound-abs DprecedesIJ Dbounded 
+	      (Dbounded' : {x} isvar x J -> bounded G x)
+	   <- bump-ofe Dof1 ([x] [d:isvar x J] ordered/cons (Dbounded' x d))
+	      (Dof1' : {x} isvar x J -> ofe (cons G x A1) (M1 x) B1)
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 weakeng-ofe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)))
+		    (Dof1' x d)
+		    (Dof1'' z f x d : ofe (cons (cons G z (sigma A1 A2)) x A1) (M1 x) B1))
+	   <- precedes-trans-abs DprecedesIJ DprecedesJK
+	      (DprecedesIK : {z} isvar z I -> {y} isvar y K -> precedes z y)
+	   <- bump2-ofe Dof2
+	      ([x] [d:isvar x I] [y] [e:isvar y K]
+		 (ordered/cons (bounded/cons (Dbounded x d) (DprecedesIK x d y e))))
+	      ([x] [d:isvar x J] [y] [e:isvar y K]
+		 (ordered/cons (bounded/cons (Dbounded' x d) (DprecedesJK x d y e))))
+	      (Dof2' : {x} isvar x J 
+			-> {y} isvar y K
+			-> ofe (cons (cons G x A1) y (A2 x)) (M2 x y) (B2' x))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 {y} {e:isvar y K}
+		 weakeng-ofe (append/cons (append/cons append/nil)) (append/cons (append/cons append/nil))
+		    (ordered/cons (bounded/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)) (DprecedesJK x d y e)))
+		    (Dof2' x d y e)
+		    (Dof2'' z f x d y e
+		       : ofe
+			  (cons (cons (cons G z (sigma A1 A2)) x A1) y (A2 x))
+			  (M2 x y) (B2' x)))
+	   <- ({z} {f:isvar z I}
+		 weaken-wfe (Dbounded z f) (wfe/sigma DwfA2 DwfA1) _
+		    (DwfA z f : wfe (cons G z (sigma A1 A2)) (sigma A1 A2)))
+	   <- ({z} {f:isvar z I}
+		 ssubst-e ([_] append/nil) append/nil
+		    ([x] [d:isvar x J] Dof1'' z f x d)
+		    (aofe/pi1 (aofe/var (DwfA z f) (lookup/hit (Dbounded z f))))
+		    (Dof1''' z f : ofe (cons G z (sigma A1 A2)) (M1 (pi1 z)) B1))
+	   <- ({z} {f:isvar z I}
+		 {y} {e:isvar y K}
+		 ssubst-e ([_] append/cons append/nil) (append/cons append/nil)
+		    ([x] [d:isvar x J] Dof2'' z f x d y e)
+		    (aofe/pi1 (aofe/var (DwfA z f) (lookup/hit (Dbounded z f))))
+		    (Dof2''' z f y e 
+		       : ofe 
+			  (cons (cons G z (sigma A1 A2)) y (A2 (pi1 z)))
+			  (M2 (pi1 z) y) (B2' (pi1 z))))
+	   <- ({z} {f:isvar z I}
+		 ssubst-e ([_] append/nil) append/nil
+		    ([y] [e:isvar y K] Dof2''' z f y e)
+		    (aofe/pi2 (aofe/var (DwfA z f) (lookup/hit (Dbounded z f))))
+		    (Dof2'''' z f : ofe (cons G z (sigma A1 A2)) (M2 (pi1 z) (pi2 z)) (B2' (pi1 z))))
+	   <- bump-wfe DwfB2 ([x] [d:isvar x J] ordered/cons (Dbounded' x d))
+	      (DwfB2''' : {x} isvar x J -> wfe (cons G x B1) (B2 x))
+	   <- ({z} {f:isvar z I}
+		 {x} {d:isvar x J}
+		 weakeng-wfe (append/cons append/nil) (append/cons append/nil)
+		    (ordered/cons (bounded/cons (Dbounded z f) (DprecedesIJ z f x d)))
+		    (DwfB2''' x d)
+		    (DwfB2'''' z f x d : wfe (cons (cons G z (sigma A1 A2)) x B1) (B2 x))).
+
+-singt	: subtype-reg-e
+	   subtype/sing_t
+	   (wfe/sing (Daof : aofe G R t))
+	   (wfe/t _)
+	   ([x] [d] ofe/at (Daof' x d))
+	   <- aofe-context Daof (Dordered : ordered G)
+	   <- extend-context Dordered
+	      (Dbounded : {x} isvar x I -> bounded G x)
+	   <- ({x} {d:isvar x I}
+		 weaken-aofe (Dbounded x d) Daof _
+		    (Daof' x d : aofe (cons G x (sing R)) R t)).
+
+-sing	: subtype-reg-e
+	   subtype/sing 
+	   (wfe/sing (Daof : aofe G R t))
+	   (wfe/sing _)
+	   ([x] [d] ofe/sing (Daof' x d))
+	   <- aofe-context Daof (Dordered : ordered G)
+	   <- extend-context Dordered
+	      (Dbounded : {x} isvar x I -> bounded G x)
+	   <- ({x} {d:isvar x I}
+		 weaken-aofe (Dbounded x d) Daof _
+		    (Daof' x d : aofe (cons G x (sing R)) R t)).
+
+-one	: subtype-reg-e subtype/one (wfe/one (Dordered : ordered G)) (wfe/one _) 
+	   ([x] [d:isvar x I]
+	      ofe/star (ordered/cons (Dbounded x d)))
+	   <- extend-context Dordered
+	      (Dbounded : {x} isvar x I -> bounded G x).
+
+%worlds (bind | ovar | var | topenblock) (subtype-reg-e _ _ _ _).
+%total D (subtype-reg-e D _ _ _).
+
+
+
+subtype-reg-e-bump : subtype A B M
+		      -> wfe G A
+		      -> wfe G B
+		      -> ({x} isvar x I -> bounded G x)
+%%
+		      -> ({x} isvar x I -> ofe (cons G x A) (M x) B) -> type.
+%mode subtype-reg-e-bump +X1 +X2 +X3 +X4 -X5.
+
+-	: subtype-reg-e-bump Dsubtype DwfA DwfB Dbound Dof'
+	   <- subtype-reg-e Dsubtype DwfA DwfB Dof
+	   <- bump-ofe Dof ([x] [d] ordered/cons (Dbound x d)) Dof'.
+
+%worlds (var | bind | ovar | topenblock) (subtype-reg-e-bump _ _ _ _ _).
+%total {} (subtype-reg-e-bump _ _ _ _ _).
+
+
+
+subtype-reg-e' : subtype A B ([_] M) -> wfe G A -> wfe G B -> ofe G M B -> type.
+%mode subtype-reg-e' +X1 +X2 +X3 -X4.
+
+-	: subtype-reg-e' Dsubtype DwfA DwfB DofM'
+	   <- subtype-reg-e Dsubtype DwfA DwfB 
+	      (DofM : {x} isvar x I -> ofe (cons G x A) M B)
+	   <- inhabitation-e DwfA 
+	      (DofN : ofe G N A)
+	   <- sub-absent M N
+	      (DsubM : sub ([_] M) N M)
+	   <- tsub-absent B N
+	      (DsubB : tsub ([_] B) N B)
+	   <- subst-e ([_] append/nil) csub/base DofN DsubM DsubB DofM
+	      (DofM' : ofe G M B).
+
+%worlds (bind | ovar | var | topenblock) (subtype-reg-e' _ _ _ _).
+%total {} (subtype-reg-e' _ _ _ _).
+
+
+
+subtype-reg : subtype A B M -> wf A -> wf B -> ({x} vof x A -> of (M x) B) -> type.
+%mode subtype-reg +X1 +X2 +X3 -X4.
+
+-t	: subtype-reg subtype/t wf/t wf/t ([x] [d] of/at (aof/var wf/t d)).
+
+-pi	: subtype-reg
+	   (subtype/pi
+	      (Dsubtype2 : {x} subtype (A2' x) (B2 x) ([y] M2 x y))
+	      (Dsub : {x} tsub A2 (M1 x) (A2' x))
+	      (Dsubtype1 : subtype B1 A1 M1)
+	      : subtype (pi A1 A2) (pi B1 B2) ([f] lam ([x] M2 x (app f (M1 x)))))
+	   (wf/pi 
+	      (DwfA2 : {x} vof x A1 -> wf (A2 x))
+	      (DwfA1 : wf A1))
+	   (wf/pi
+	      (DwfB2 : {x} vof x B1 -> wf (B2 x))
+	      (DwfB1 : wf B1))
+	   ([z] [f:vof z (pi A1 A2)]
+	      of/lam
+	      ([x] [d:vof x B1] DofM2y z f x d)
+	      DwfB1)
+	   <- subtype-reg Dsubtype1 DwfB1 DwfA1
+	      (Dof1 : {x} vof x B1 -> of (M1 x) A1)
+	   <- ({x} {d:vof x B1}
+		 tsubst (Dsub x) DwfA2 (Dof1 x d)
+		 (DwfA2' x d : wf (A2' x)))
+	   <- ({x} {d:vof x B1}
+		 subtype-reg (Dsubtype2 x) (DwfA2' x d) (DwfB2 x d)
+		 (Dof2 x d : {y} vof y (A2' x) -> of (M2 x y) (B2 x)))
+	   <- ({z} {f:vof z (pi A1 A2)} {x} {d:vof x B1}
+		 ssubst (Dof2 x d)
+		 (aof/app (DwfA2' x d) (Dsub x) (Dof1 x d) (aof/var (wf/pi DwfA2 DwfA1) f))
+		 (DofM2y z f x d : of (M2 x (app z (M1 x))) (B2 x))).
+
+-sigma	: subtype-reg
+	   (subtype/sigma
+	      (Dsubtype2 : {x} subtype (A2 x) (B2' x) ([y] M2 x y))
+	      (Dsub : {x} tsub B2 (M1 x) (B2' x))
+	      (Dsubtype1 : subtype A1 B1 M1)
+	      : subtype (sigma A1 A2) (sigma B1 B2) ([p] pair (M1 (pi1 p)) (M2 (pi1 p) (pi2 p))))
+	   (wf/sigma 
+	      (DwfA2 : {x} vof x A1 -> wf (A2 x))
+	      (DwfA1 : wf A1))
+	   (wf/sigma
+	      (DwfB2 : {x} vof x B1 -> wf (B2 x))
+	      (DwfB1 : wf B1))
+	   ([z] [f:vof z (sigma A1 A2)]
+	      of/pair
+	      DwfB2 
+	      (DofM2xy z f)
+	      (Dsub (pi1 z))
+	      (DofM1x z f))
+	   <- subtype-reg Dsubtype1 DwfA1 DwfB1
+	      (Dof1 : {x} vof x A1 -> of (M1 x) B1)
+	   <- ({x} {d:vof x A1}
+		 tsubst (Dsub x) DwfB2 (Dof1 x d)
+		 (DwfB2' x d : wf (B2' x)))
+	   <- ({x} {d:vof x A1}
+		 subtype-reg (Dsubtype2 x) (DwfA2 x d) (DwfB2' x d)
+		 (Dof2 x d : {y} vof y (A2 x) -> of (M2 x y) (B2' x)))
+	   <- ({z} {f:vof z (sigma A1 A2)}
+		 ssubst Dof1 (aof/pi1 (aof/var (wf/sigma DwfA2 DwfA1) f))
+		 (DofM1x z f : of (M1 (pi1 z)) B1))
+	   <- ({x} {y} {e:vof y (A2 x)}
+		 ssubst-gen ([d:vof x A1] Dof2 x d y e)
+		 ([d:aof x A1] Dof2' x d y e : of (M2 x y) (B2' x)))
+	   <- ({z} {f:vof z (sigma A1 A2)}
+		 ssubst ([y] [e] Dof2' (pi1 z) (aof/pi1 (aof/var (wf/sigma DwfA2 DwfA1) f)) y e)
+		 (aof/pi2 (aof/var (wf/sigma DwfA2 DwfA1) f))
+		 (DofM2xy z f)).
+
+-singt	: subtype-reg
+	   subtype/sing_t
+	   (wf/sing (Daof : aof R t))
+	   wf/t
+	   ([x] [d] of/at Daof).
+
+-sing	: subtype-reg
+	   subtype/sing 
+	   (wf/sing (Daof : aof R t))
+	   (wf/sing _)
+	   ([x] [d] of/sing Daof).
+
+-one	: subtype-reg subtype/one wf/one wf/one ([x] [d] of/star).
+
+%worlds (bind | topenblock) (subtype-reg _ _ _ _).
+%total D (subtype-reg D _ _ _).
+
+
+
+subtype-reg' : subtype A B ([_] M) -> wf A -> wf B -> of M B -> type.
+%mode subtype-reg' +X1 +X2 +X3 -X4.
+
+-	: subtype-reg' 
+	   (Dsubtype : subtype A B ([_] M)) 
+	   (DwfA : wf A)
+	   (DwfB : wf B)
+	   DofM'
+	   <- subtype-reg Dsubtype DwfA DwfB
+	      (DofM : {x} vof x A -> of M B)
+	   <- inhabitation DwfA (DofN : of N A)
+	   <- sub-absent M N (DsubM : sub ([_] M) N M)
+	   <- tsub-absent B N (DsubB : tsub ([_] B) N B)
+	   <- subst DsubM DsubB DofM DofN
+	      (DofM' : of M B).
+
+%worlds (bind | topenblock) (subtype-reg' _ _ _ _).
+%total {} (subtype-reg' _ _ _ _).
+
+
+
+
+%%%%%  Subtyping Commutes with Substitution  %%%%%
+
+subtype-sub-e : ({x} append (cons G1 x C) (G2 x) (G x))
+		 -> csub G M Gx
+		 -> ofe G1 M C
+		 -> ({x} isvar x I -> wfe (G x) (A x))
+		 -> ({x} isvar x I -> wfe (G x) (B x))
+		 -> ({x} subtype (A x) (B x) ([y] O x y))
+		 -> tsub A M Ax
+		 -> tsub B M Bx
+%%
+		 -> ({y} sub ([x] O x y) M (Ox y))
+		 -> subtype Ax Bx ([y] Ox y) -> type.
+%mode subtype-sub-e +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9 -X10.
+
+-t	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/t)
+	   tsub/t
+	   tsub/t
+%%
+	   ([y] sub/aa aasub/closed) subtype/t.
+
+-pi	: subtype-sub-e
+	   (Dappend : {x} append (cons G1 x C) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   (DofM : ofe G1 M C)
+	   ([x] [d:isvar x I]
+	      wfe/pi
+	      (DwfA2 x d : {y} isvar y J1 -> wfe (cons (G x) y (A1 x)) (A2 x y))
+	      (DwfA1 x d : wfe (G x) (A1 x)))
+	   ([x] [d:isvar x I]
+	      wfe/pi
+	      (DwfB2 x d : {y} isvar y J2 -> wfe (cons (G x) y (B1 x)) (B2 x y))
+	      (DwfB1 x d : wfe (G x) (B1 x)))
+	   ([x] subtype/pi
+	      (Dsubtype2 x : {z} subtype (A2y x z) (B2 x z) ([w] O2 x z w))
+	      (DsubA2y x : {z} tsub ([y] A2 x y) (O1 x z) (A2y x z))
+	      (Dsubtype1 x : subtype (B1 x) (A1 x) ([y] O1 x y)))
+	   (tsub/pi
+	      (DsubA2x : {y} tsub ([x] A2 x y) M (A2x y))
+	      (DsubA1x : tsub A1 M A1x))
+	   (tsub/pi
+	      (DsubB2x : {y} tsub ([x] B2 x y) M (B2x y))
+	      (DsubB1x : tsub B1 M B1x))
+%%
+	   ([v] sub/lam ([z] DsubO2wx' z v))
+	   (subtype/pi
+	      Dsubtype2''
+	      DsubA2xy
+	      Dsubtype1')
+	   <- subtype-sub-e Dappend Dcsub DofM DwfB1 DwfA1
+	      Dsubtype1 DsubB1x DsubA1x
+	      (DsubO1x : {z} sub ([x] O1 x z) M (O1x z))
+	      (Dsubtype1' : subtype B1x A1x O1x)
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e (Dsubtype1 x) (DwfB1 x d) (DwfA1 x d)
+		    (DofO1 x d : {z} isvar z K -> ofe (cons (G x) z (B1 x)) (O1 x z) (A1 x)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 ofe-context (DofO1 x d z f)
+		    (ordered/cons
+		       (DboundGZ x d z f : bounded (G x) z)))
+	   <- ({z} {f:isvar z K}
+		 subst-e ([x] append/cons (Dappend x)) (csub/cons DsubB1x Dcsub)
+		    DofM (DsubO1x z) DsubA1x ([x] [d] DofO1 x d z f)
+		    (DofO1x z f : ofe (cons Gx z B1x) (O1x z) A1x))
+	   <- ({y} {e:isvar y J1}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubA1x Dcsub)
+		    DofM (DsubA2x y) ([x] [d] DwfA2 x d y e)
+		    (DwfA2x y e : wfe (cons Gx y A1x) (A2x y)))
+	   <- ({z} {f:isvar z K}
+		 ofe-context (DofO1x z f)
+		    (ordered/cons
+		       (DboundGxZ z f : bounded Gx z)))
+	   <- weaken-wfe-insert1 DwfA2x DboundGxZ _
+	      (DwfA2x' : {z} isvar z K -> {y} isvar y J1' -> wfe (cons (cons Gx z B1x) y A1x) (A2x y))
+	   <- ({z} {f:isvar z K}
+		 can-tsub-e ([y] append/nil) ([y] [e:isvar y J1'] DwfA2x' z f y e) (DofO1x z f)
+		    (DsubA2xy z : tsub ([y] A2x y) (O1x z) (A2xy z)))
+	   <- ({x} {d:isvar x I}
+		 weaken-wfe-insert1 ([y] [e:isvar y J1] DwfA2 x d y e) ([z] [f:isvar z K] DboundGZ x d z f) _
+		    ([z] [f:isvar z K] [y] [e:isvar y J]
+		       DwfA2' x d z f y e : wfe (cons (cons (G x) z (B1 x)) y (A1 x)) (A2 x y)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 tsubst-e ([y] append/nil) csub/base (DofO1 x d z f) (DsubA2y x z) ([y] [e:isvar y J] DwfA2' x d z f y e)
+		    (DwfA2y x d z f : wfe (cons (G x) z (B1 x)) (A2y x z)))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe ([y] [e:isvar y J2] DwfB2 x d y e) ([z] [f:isvar z K] ordered/cons (DboundGZ x d z f))
+		    (DwfB2' x d : {z} isvar z K -> wfe (cons (G x) z (B1 x)) (B2 x z)))
+	   <- ({z} {f:isvar z K}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d:isvar x I] DwfA2y x d z f) DofM
+		    (DsubA2yx z : tsub ([x] A2y x z) M (A2yx z)))
+	   <- ({z} {f:isvar z K}
+		 subtype-sub-e ([x] append/cons (Dappend x)) (csub/cons DsubB1x Dcsub) DofM
+		    ([x] [d:isvar x I] DwfA2y x d z f) ([x] [d:isvar x I] DwfB2' x d z f)
+		    ([x] Dsubtype2 x z)
+		    (DsubA2yx z) (DsubB2x z)
+		    ([w] DsubO2x z w : sub ([x] O2 x z w) M (O2x z w))
+		    (Dsubtype2' z : subtype (A2yx z) (B2x z) ([w] O2x z w)))
+	   <- ({z} {f:isvar z K}
+		 tsub-permute-e ([x] append/cons (Dappend x)) DofM 
+		    ([x] [d:isvar x I] DofO1 x d z f)
+		    ([x] [d:isvar x I] [y] [e:isvar y J] DwfA2' x d z f y e)
+		    DsubA2x (DsubO1x z) (DsubA2xy z) ([x] DsubA2y x z) (DsubA2yx z)
+		    (DeqA2 z : tp-eq (A2xy z) (A2yx z)))
+	   <- ({z}
+		 tp-eq-symm (DeqA2 z)
+		 (DeqA2' z : tp-eq (A2yx z) (A2xy z)))
+	   <- ({z}
+		 subtype-resp (DeqA2' z) tp-eq/i ([_] term-eq/i) (Dsubtype2' z)
+		 (Dsubtype2'' z : subtype (A2xy z) (B2x z) ([w] O2x z w)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 subtype-reg-e (Dsubtype2 x z) (DwfA2y x d z f) (DwfB2' x d z f)
+		    (DofO2 x d z f : {w} isvar w L
+				      -> ofe (cons (cons (G x) z (B1 x)) w (A2y x z)) (O2 x z w) (B2 x z)))
+	   %% grab w's index for v, get new one for w
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 ofe-context (DofO2 x d z f v h)
+		    (ordered/cons
+		       (DboundedGZV x d z f v h : bounded (cons (G x) z (B1 x)) v)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 weaken-ofe-insert1 (DofO2 x d z f) (DboundedGZV x d z f) _
+		    (DofO2' x d z f 
+		       : {v} isvar v L
+			  -> {w} isvar w L'
+			  -> ofe (cons (cons (cons (G x) z (B1 x)) 
+					  v (pi (A1 x) ([y] A2 x y)))
+				    w (A2y x z))
+			     (O2 x z w) (B2 x z)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 weaken-ofe (DboundedGZV x d z f v h) (DofO1 x d z f) _
+		    (DofO1' x d z f v h : ofe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y))) (O1 x z) (A1 x)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 weaken-wfe (DboundedGZV x d z f v h) (DwfA2y x d z f) _
+		    (DwfA2y' x d z f v h : wfe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y))) (A2y x z)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 weaken-wfe' (append/cons (append/cons append/nil)) (ordered/cons (DboundedGZV x d z f v h))
+		    (wfe/pi (DwfA2 x d) (DwfA1 x d))
+		    (DwfA1->A2 x d z f v h : wfe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y))) (pi (A1 x) ([y] A2 x y))))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 ssubst-e ([_] append/nil) append/nil 
+		    ([w] [g:isvar w L'] DofO2' x d z f v h w g)
+		    (aofe/app
+		       (DwfA2y' x d z f v h)
+		       (DsubA2y x z)
+		       (DofO1' x d z f v h)
+		       (aofe/var (DwfA1->A2 x d z f v h) (lookup/hit (DboundedGZV x d z f v h)))
+		       : aofe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y)))
+			  (app v (O1 x z)) (A2y x z))
+		    (DofO2w x d z f v h : ofe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y)))
+					   (O2 x z (app v (O1 x z))) (B2 x z)))
+	   <- ({z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 can-sub-e ([x] append/cons (append/cons (Dappend x)))
+		    ([x] [d:isvar x I] DofO2w x d z f v h)
+		    DofM
+		    (DsubO2wx z v : sub ([x] O2 x z (app v (O1 x z))) M (O2wx z v)))
+	   <- ({z} {f:isvar z K}
+		 {v} {h:isvar v L}
+		 ssub-aa-permute-e ([x] append/cons (append/cons (Dappend x))) DofM
+		    ([x] [d:isvar x I]
+		       aofe/app 
+		       (DwfA2y' x d z f v h) 
+		       (DsubA2y x z) 
+		       (DofO1' x d z f v h)
+		       (aofe/var (DwfA1->A2 x d z f v h) (lookup/hit (DboundedGZV x d z f v h)))
+		       : aofe (cons (cons (G x) z (B1 x)) v (pi (A1 x) ([y] A2 x y)))
+			  (app v (O1 x z)) (A2y x z))
+		    ([x] [d:isvar x I] [w] [g:isvar w L'] DofO2' x d z f v h w g)
+		    ([w] DsubO2x z w)
+		    (aasub/app (DsubO1x z) aasub/closed)
+		    (DsubO2wx z v)
+		    (DeqO2 z v : term-eq (O2x z (app v (O1x z))) (O2wx z v)))
+	   <- ({z} {v}
+		 term-eq-symm (DeqO2 z v)
+		 (DeqO2' z v : term-eq (O2wx z v) (O2x z (app v (O1x z)))))
+	   <- ({z} {v}
+		 sub-resp ([_] term-eq/i) term-eq/i (DeqO2' z v) (DsubO2wx z v)
+		 (DsubO2wx' z v : sub ([x] O2 x z (app v (O1 x z))) M (O2x z (app v (O1x z))))).
+		    
+-sigma	: subtype-sub-e
+	   (Dappend : {x} append (cons G1 x C) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   (DofM : ofe G1 M C)
+	   ([x] [d:isvar x I]
+	      wfe/sigma
+	      (DwfA2 x d : {y} isvar y J1 -> wfe (cons (G x) y (A1 x)) (A2 x y))
+	      (DwfA1 x d : wfe (G x) (A1 x)))
+	   ([x] [d:isvar x I]
+	      wfe/sigma
+	      (DwfB2 x d : {y} isvar y J2 -> wfe (cons (G x) y (B1 x)) (B2 x y))
+	      (DwfB1 x d : wfe (G x) (B1 x)))
+	   ([x] subtype/sigma
+	      (Dsubtype2 x : {z} subtype (A2 x z) (B2y x z) ([w] O2 x z w))
+	      (DsubB2y x : {z} tsub ([y] B2 x y) (O1 x z) (B2y x z))
+	      (Dsubtype1 x : subtype (A1 x) (B1 x) ([y] O1 x y)))
+	   (tsub/sigma
+	      (DsubA2x : {y} tsub ([x] A2 x y) M (A2x y))
+	      (DsubA1x : tsub A1 M A1x))
+	   (tsub/sigma
+	      (DsubB2x : {y} tsub ([x] B2 x y) M (B2x y))
+	      (DsubB1x : tsub B1 M B1x))
+%%
+	   ([v] sub/pair
+	      (DsubO2x (pi1 v) (pi2 v))
+	      (DsubO1x (pi1 v)))
+	   (subtype/sigma
+	      Dsubtype2''
+	      DsubB2xy
+	      Dsubtype1')
+	   <- subtype-sub-e Dappend Dcsub DofM DwfA1 DwfB1
+	      Dsubtype1 DsubA1x DsubB1x
+	      (DsubO1x : {z} sub ([x] O1 x z) M (O1x z))
+	      (Dsubtype1' : subtype A1x B1x O1x)
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e (Dsubtype1 x) (DwfA1 x d) (DwfB1 x d)
+		    (DofO1 x d : {z} isvar z K -> ofe (cons (G x) z (A1 x)) (O1 x z) (B1 x)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 ofe-context (DofO1 x d z f)
+		    (ordered/cons
+		       (DboundGZ x d z f : bounded (G x) z)))
+	   <- ({z} {f:isvar z K}
+		 subst-e ([x] append/cons (Dappend x)) (csub/cons DsubA1x Dcsub)
+		    DofM (DsubO1x z) DsubB1x ([x] [d] DofO1 x d z f)
+		    (DofO1x z f : ofe (cons Gx z A1x) (O1x z) B1x))
+	   <- ({y} {e:isvar y J2}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubB1x Dcsub)
+		    DofM (DsubB2x y) ([x] [d] DwfB2 x d y e)
+		    (DwfB2x y e : wfe (cons Gx y B1x) (B2x y)))
+	   <- ({z} {f:isvar z K}
+		 ofe-context (DofO1x z f)
+		    (ordered/cons
+		       (DboundGxZ z f : bounded Gx z)))
+	   <- weaken-wfe-insert1 DwfB2x DboundGxZ _
+	      (DwfB2x' : {z} isvar z K -> {y} isvar y J2' -> wfe (cons (cons Gx z A1x) y B1x) (B2x y))
+	   <- ({z} {f:isvar z K}
+		 can-tsub-e ([y] append/nil) ([y] [e:isvar y J2'] DwfB2x' z f y e) (DofO1x z f)
+		    (DsubB2xy z : tsub ([y] B2x y) (O1x z) (B2xy z)))
+	   <- ({x} {d:isvar x I}
+		 weaken-wfe-insert1 ([y] [e:isvar y J2] DwfB2 x d y e) ([z] [f:isvar z K] DboundGZ x d z f) _
+		    ([z] [f:isvar z K] [y] [e:isvar y J]
+		       DwfB2' x d z f y e : wfe (cons (cons (G x) z (A1 x)) y (B1 x)) (B2 x y)))
+	   <- ({x} {d:isvar x I}
+		 {z} {f:isvar z K}
+		 tsubst-e ([y] append/nil) csub/base (DofO1 x d z f) (DsubB2y x z) ([y] [e:isvar y J] DwfB2' x d z f y e)
+		    (DwfB2y x d z f : wfe (cons (G x) z (A1 x)) (B2y x z)))
+	   <- ({x} {d:isvar x I}
+		 bump-wfe ([y] [e:isvar y J1] DwfA2 x d y e) ([z] [f:isvar z K] ordered/cons (DboundGZ x d z f))
+		    (DwfA2' x d : {z} isvar z K -> wfe (cons (G x) z (A1 x)) (A2 x z)))
+	   <- ({z} {f:isvar z K}
+		 can-tsub-e ([x] append/cons (Dappend x)) ([x] [d:isvar x I] DwfB2y x d z f) DofM
+		    (DsubB2yx z : tsub ([x] B2y x z) M (B2yx z)))
+	   <- ({z} {f:isvar z K}
+		 subtype-sub-e ([x] append/cons (Dappend x)) (csub/cons DsubA1x Dcsub) DofM
+		    ([x] [d:isvar x I] DwfA2' x d z f) ([x] [d:isvar x I] DwfB2y x d z f) 
+		    ([x] Dsubtype2 x z)
+		    (DsubA2x z) (DsubB2yx z)
+		    ([w] DsubO2x z w : sub ([x] O2 x z w) M (O2x z w))
+		    (Dsubtype2' z : subtype (A2x z) (B2yx z) ([w] O2x z w)))
+	   <- ({z} {f:isvar z K}
+		 tsub-permute-e ([x] append/cons (Dappend x)) DofM 
+		    ([x] [d:isvar x I] DofO1 x d z f)
+		    ([x] [d:isvar x I] [y] [e:isvar y J] DwfB2' x d z f y e)
+		    DsubB2x (DsubO1x z) (DsubB2xy z) ([x] DsubB2y x z) (DsubB2yx z)
+		    (DeqB2 z : tp-eq (B2xy z) (B2yx z)))
+	   <- ({z}
+		 tp-eq-symm (DeqB2 z)
+		 (DeqB2' z : tp-eq (B2yx z) (B2xy z)))
+	   <- ({z}
+		 subtype-resp tp-eq/i (DeqB2' z) ([_] term-eq/i) (Dsubtype2' z)
+		 (Dsubtype2'' z : subtype (A2x z) (B2xy z) ([w] O2x z w))).
+
+-singta	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing_t)
+	   (tsub/singa (Daasub : aasub R M Rx))
+	   tsub/t
+%%
+	   ([y] sub/aa Daasub)
+	   subtype/sing_t.
+
+-singto	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing_t)
+	   (tsub/singo (Daosub : aosub R M (at Rx)))
+	   tsub/t
+%%
+	   ([y] sub/ao Daosub)
+	   subtype/sing_t.
+
+-singa	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing)
+	   (tsub/singa (Daasub : aasub R M Rx))
+	   (tsub/singa (Daasub' : aasub R M Rx'))
+%%
+	   ([y] sub/aa Daasub)
+	   Dsubtype
+	   <- aasub-fun Daasub Daasub'
+	      (Deq : atom-eq Rx Rx')
+	   <- tp-resp-atom sing Deq
+	      (Deq' : tp-eq (sing Rx) (sing Rx'))
+	   <- subtype-resp tp-eq/i Deq' ([_] term-eq/i) subtype/sing
+	      (Dsubtype : subtype (sing Rx) (sing Rx') ([_] at Rx)).
+
+-singo	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing)
+	   (tsub/singo (Daosub : aosub R M (at Rx)))
+	   (tsub/singo (Daosub' : aosub R M (at Rx')))
+%%
+	   ([y] sub/ao Daosub)
+	   Dsubtype
+	   <- aosub-fun Daosub Daosub'
+	      (Deq : term-eq (at Rx) (at Rx'))
+	   <- term-eq-cdr-at Deq
+	      (Deq' : atom-eq Rx Rx')
+	   <- tp-resp-atom sing Deq'
+	      (Deq'' : tp-eq (sing Rx) (sing Rx'))
+	   <- subtype-resp tp-eq/i Deq'' ([_] term-eq/i) subtype/sing
+	      (Dsubtype : subtype (sing Rx) (sing Rx') ([_] at Rx)).
+
+-singao	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing)
+	   (tsub/singa Daasub)
+	   (tsub/singo Daosub)
+%%
+	   ([y] sub/aa Daasub)
+	   Dsubtype
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-subtype Dfalse Dsubtype.
+
+-singoa	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/sing)
+	   (tsub/singo Daosub)
+	   (tsub/singa Daasub)
+%%
+	   ([y] sub/aa Daasub)
+	   Dsubtype
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-subtype Dfalse Dsubtype.
+
+-one	: subtype-sub-e _ _ _ _ _
+	   ([x] subtype/one)
+	   tsub/one
+	   tsub/one
+%%
+	   ([y] sub/star) subtype/one.
+
+%worlds (bind | ovar | var | topenblock) (subtype-sub-e _ _ _ _ _ _ _ _ _ _).
+%total D (subtype-sub-e _ _ _ _ _ D _ _ _ _).
+
+
+
+subtype-sub : ({x} subtype (A x) (B x) ([y] O x y))
+	       -> ({x} vof x C -> wf (A x))
+	       -> ({x} vof x C -> wf (B x))
+	       -> of M C
+	       -> tsub A M Ax
+	       -> tsub B M Bx
+%%
+	       -> ({y} sub ([x] O x y) M (Ox y))
+	       -> subtype Ax Bx ([y] Ox y) -> type.
+%mode subtype-sub +X1 +X2 +X3 +X4 +X5 +X6 -X7 -X8.
+
+
+-	: subtype-sub Dsubtype DwfA DwfB DofM DsubAx DsubBx
+	   DsubOx Dsubtype'
+	   <- of-to-ofe DofM
+	      (DofeM : ofe nil M C)
+	   <- wf1-to-wfe 0 DwfA
+	      (DwfeA : {x} isvar x 0 -> wfe (cons nil x C) (A x))
+	   <- wf1-to-wfe 0 DwfB
+	      (DwfeB : {x} isvar x 0 -> wfe (cons nil x C) (B x))
+	   <- subtype-sub-e ([x] append/nil) csub/base DofeM DwfeA DwfeB
+	      Dsubtype DsubAx DsubBx
+	      DsubOx Dsubtype'.
+
+%worlds (bind | topenblock) (subtype-sub _ _ _ _ _ _ _ _).
+%total {} (subtype-sub _ _ _ _ _ _ _ _).
+
+
+
+subtype-sub' : ({x} subtype (A x) (B x) ([y] O x y))
+		-> ({x} vof x C -> wf (A x))
+		-> ({x} vof x C -> wf (B x))
+		-> of M C
+		-> tsub A M Ax
+		-> tsub B M Bx
+		-> ({y} sub ([x] O x y) M (Ox y))
+%%
+		-> subtype Ax Bx ([y] Ox y) -> type.
+%mode subtype-sub' +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8.
+
+-	: subtype-sub' DsubtypeAB DwfA DwfB DofM DsubAx DsubBx DsubOx DsubtypeAxBx'
+	   <- subtype-sub DsubtypeAB DwfA DwfB DofM DsubAx DsubBx DsubOx' DsubtypeAxBx
+	   <- ({y}
+		 sub-fun (DsubOx' y) (DsubOx y) (Deq y))
+	   <- subtype-resp tp-eq/i tp-eq/i Deq DsubtypeAxBx DsubtypeAxBx'.
+
+%worlds (bind | topenblock) (subtype-sub' _ _ _ _ _ _ _ _).
+%total {} (subtype-sub' _ _ _ _ _ _ _ _).
+
+
+
+
+%%%%%  Reflexivity and Transitivity  %%%%%
+
+subtype-refl-e : wfe G A -> subtype A A M -> ({x} expand x A (M x)) -> type.
+%mode subtype-refl-e +X1 -X2 -X3.
+
+-	: subtype-refl-e _ subtype/t ([x] expand/t).
+
+-	: subtype-refl-e
+	   (wfe/pi
+	      (DwfB : {x} isvar x I -> wfe (cons G x A) (B x))
+	      (DwfA : wfe G A))
+	   (subtype/pi DsubtypeB DsubB DsubtypeA)
+	   ([z] expand/pi ([x] DexpandY x (app z (X x))) DexpandX)
+	   <- subtype-refl-e DwfA
+	      (DsubtypeA : subtype A A X)
+	      (DexpandX : {x} expand x A (X x))
+	   <- tsub-expand-var-e DwfA DwfB DexpandX
+	      (DsubB : {x} tsub B (X x) (B x))
+	   <- ({x} {d}
+		 subtype-refl-e (DwfB x d)
+		 (DsubtypeB x : subtype (B x) (B x) ([y] Y x y))
+		 (DexpandY x : {y} expand y (B x) (Y x y))).
+
+-	: subtype-refl-e
+	   (wfe/sigma
+	      (DwfB : {x} isvar x I -> wfe (cons G x A) (B x))
+	      (DwfA : wfe G A))
+	   (subtype/sigma DsubtypeB DsubB DsubtypeA)
+	   ([z] expand/sigma (DexpandY (pi1 z) (pi2 z)) (DexpandX (pi1 z)))
+	   <- subtype-refl-e DwfA
+	      (DsubtypeA : subtype A A X)
+	      (DexpandX : {x} expand x A (X x))
+	   <- tsub-expand-var-e DwfA DwfB DexpandX
+	      (DsubB : {x} tsub B (X x) (B x))
+	   <- ({x} {d}
+		 subtype-refl-e (DwfB x d)
+		 (DsubtypeB x : subtype (B x) (B x) ([y] Y x y))
+		 (DexpandY x : {y} expand y (B x) (Y x y))).
+
+-	: subtype-refl-e _ subtype/sing ([_] expand/sing).
+
+-	: subtype-refl-e _ subtype/one ([x] expand/one).
+
+%worlds (bind | ovar | var | topenblock) (subtype-refl-e _ _ _).
+%total D (subtype-refl-e D _ _).
+
+
+
+subtype-refl : wf A -> subtype A A M -> ({x} expand x A (M x)) -> type.
+%mode subtype-refl +X1 -X2 -X3.
+
+-	: subtype-refl Dwf Dsubtype Dexpand
+	   <- wf-to-wfe Dwf Dwfe
+	   <- subtype-refl-e Dwfe Dsubtype Dexpand.
+
+%worlds (bind | var | ovar | topenblock) (subtype-refl _ _ _).
+%total {} (subtype-refl _ _ _).
+
+
+
+subtype-refl' : wf A -> subtype A A M -> ({x} expand x A (M x)) -> type.
+%mode subtype-refl' +X1 +X2 -X3.
+
+-	: subtype-refl' Dwf Dsub Dexpand'
+	   <- subtype-refl Dwf Dsub' Dexpand
+	   <- subtype-fun Dsub' Dsub Deq
+	   <- ({x}
+		 expand-resp atom-eq/i tp-eq/i (Deq x) (Dexpand x)
+		 (Dexpand' x)).
+
+%worlds (bind | var | topenblock) (subtype-refl' _ _ _).
+%total {} (subtype-refl' _ _ _).
+
+
+
+subtype-trans-em : {T}
+		    simp B T
+		    -> wfe G A 
+		    -> wfe G B
+		    -> wfe G C
+		    -> subtype A B M
+		    -> subtype B C N
+%%
+		    -> ({x} sub ([y] N y) (M x) (NM x)) 
+		    -> subtype A C NM -> type.
+%mode subtype-trans-em +X1 +X2 +X3 +X4 +X5 +X6 +X7 -X8 -X9.
+
+-ttt	: subtype-trans-em _ _ _ _ _ subtype/t subtype/t ([x] sub/ao aosub/var) subtype/t.
+
+-stt	: subtype-trans-em _ _ _ _ _ subtype/sing_t subtype/t ([x] sub/ao aosub/var) subtype/sing_t.
+
+-sst	: subtype-trans-em _ _ _ _ _ subtype/sing subtype/sing_t ([x] sub/aa aasub/closed) subtype/sing_t.
+
+-sss	: subtype-trans-em _ _ _ _ _ subtype/sing subtype/sing ([x] sub/aa aasub/closed) subtype/sing.
+
+-pi	: subtype-trans-em (spi S T)
+	   (simp/pi
+	      (DsimpB : {x} simp (B2 x) T)
+	      (DsimpA : simp A2 S))
+	   (wfe/pi
+	      (DwfB1 : {x} isvar x I1 -> wfe (cons G x A1) (B1 x))
+	      (DwfA1 : wfe G A1))
+	   (wfe/pi
+	      (DwfB2 : {x} isvar x I2 -> wfe (cons G x A2) (B2 x))
+	      (DwfA2 : wfe G A2))
+	   (wfe/pi
+	      (DwfB3 : {x} isvar x I3 -> wfe (cons G x A3) (B3 x))
+	      (DwfA3 : wfe G A3))
+	   (subtype/pi
+	      (DsubtypeB12 : {x} subtype (B1x x) (B2 x) ([y] N12 x y))
+	      (DsubB1x : {x} tsub B1 (M21 x) (B1x x))
+	      (DsubtypeA21 : subtype A2 A1 M21))
+	   (subtype/pi
+	      (DsubtypeB23 : {x} subtype (B2x x) (B3 x) ([y] N23 x y))
+	      (DsubB2x : {x} tsub B2 (M32 x) (B2x x))
+	      (DsubtypeA32 : subtype A3 A2 M32))
+	   ([z]
+	      sub/lam
+	      ([x] DsubLam z x))
+	   (subtype/pi DsubtypeB13 DsubB1x3 DsubA31)
+	   <- subtype-reg-e DsubtypeA21 DwfA2 DwfA1 
+	      (DofM21 : {x} isvar x J' -> ofe (cons G x A2) (M21 x) A1)
+	   <- subtype-reg-e DsubtypeA32 DwfA3 DwfA2
+	      (DofM32 : {x} isvar x J -> ofe (cons G x A3) (M32 x) A2)
+	   <- ({x} {d:isvar x J}
+		 ofe-context (DofM32 x d)
+		 (ordered/cons
+		    (DboundJ x d : bounded G x)))
+	   <- bump-ofe DofM21 ([x] [d:isvar x J] ordered/cons (DboundJ x d))
+	      (DofM21' : {x} isvar x J -> ofe (cons G x A2) (M21 x) A1)
+	   <- subtype-trans-em S DsimpA DwfA3 DwfA2 DwfA1 DsubtypeA32 DsubtypeA21 
+	      (DsubM31 : {x} sub M21 (M32 x) (M31 x))
+	      (DsubA31 : subtype A3 A1 M31)
+	   <- ({x}
+		 tsub-absent A1 (M32 x)
+		 (DsubA1abs x : tsub ([_] A1) (M32 x) A1))
+	   <- subst-context-e DofM32 DofM21 DsubM31 DsubA1abs
+	      (DofM31 : {x} isvar x J -> ofe (cons G x A3) (M31 x) A1)
+	   <- can-tsub-context-e DofM31 DwfB1
+	      (DsubB1x3 : {x} tsub B1 (M31 x) (B1x3 x))
+	   <- tsubst-context-e DofM21' DwfB1 DsubB1x
+	      (DwfB1x : {x} isvar x J -> wfe (cons G x A2) (B1x x))
+	   <- weaken-wfe-insert1 DwfB1x DboundJ _
+	      (DwfB1x' : {x} isvar x J -> {y} isvar y K -> wfe (cons (cons G x A3) y A2) (B1x y))
+	   <- ({x} {d:isvar x J} {y} {e:isvar y K}
+		 wfe-context (DwfB1x' x d y e)
+		 (ordered/cons
+		    (bounded/cons _
+		       (DprecJK x d y e : precedes x y))))
+	   <- weaken-wfe-insert1 DwfB2 DboundJ _
+	      (DwfB2' : {x} isvar x J -> {y} isvar y K' -> wfe (cons (cons G x A3) y A2) (B2 y))
+	   <- ({x} {d}
+		 bump-wfe (DwfB2' x d) ([y] [e] ordered/cons (bounded/cons (DboundJ x d) (DprecJK x d y e)))
+		 (DwfB2'' x d : {y} isvar y K -> wfe (cons (cons G x A3) y A2) (B2 y)))
+	   <- tsubst-context-permute-e DofM32 DofM21 DwfB1 DsubM31 DsubB1x DsubB1x3
+	      (DsubB1x3' : {x} tsub B1x (M32 x) (B1x3 x))
+	   <- ({x} {d}
+		 subtype-sub-e ([_] append/nil) csub/base (DofM32 x d) (DwfB1x' x d) (DwfB2'' x d)
+		 DsubtypeB12 (DsubB1x3' x) (DsubB2x x)
+		 %%
+		 (DsubN12x x : {y} sub ([x] N12 x y) (M32 x) (N12x x y))
+		 (DsubtypeB12x x : subtype (B1x3 x) (B2x x) ([y] N12x x y)))
+	   <- ({x}
+		 tsub-preserves-simp (DsubB2x x) DsimpB
+		 (DsimpB' x : simp (B2x x) T))
+	   <- tsubst-context-e DofM31 DwfB1 DsubB1x3
+	      (DwfB1x3 : {x} isvar x J -> wfe (cons G x A3) (B1x3 x))
+	   <- tsubst-context-e DofM32 DwfB2 DsubB2x
+	      (DwfB2x : {x} isvar x J -> wfe (cons G x A3) (B2x x))
+	   <- bump-wfe DwfB3 ([x] [d] ordered/cons (DboundJ x d))
+	      (DwfB3' : {x} isvar x J -> wfe (cons G x A3) (B3 x))
+	   <- ({x} {d:isvar x J}
+		 subtype-trans-em T (DsimpB' x) (DwfB1x3 x d) (DwfB2x x d) (DwfB3' x d) (DsubtypeB12x x) (DsubtypeB23 x)
+		 (DsubN13 x : {y} sub ([y] N23 x y) (N12x x y) (N13 x y))
+		 (DsubtypeB13 x : subtype (B1x3 x) (B3 x) ([y] N13 x y)))
+	   %% Pretty much just weakening hell from here on in.
+	   <- ({x} {d:isvar x J} {z} {e:isvar z K}
+		 weaken-ofe (bounded/cons (DboundJ x d) (DprecJK x d z e)) (DofM32 x d) _
+		 (DofM32' x d z e : ofe (cons (cons G x A3) z (pi A1 B1)) (M32 x) A2))
+	   <- weaken-ofe-insert1 DofM21 DboundJ _
+	      (DofM21'' : {x} isvar x J -> {x'} isvar x' L' -> ofe (cons (cons G x A3) x' A2) (M21 x') A1)
+	   <- ({x} {d}
+		 weaken-ofe-insert1 (DofM21'' x d) ([y] [e] bounded/cons (DboundJ x d) (DprecJK x d y e)) _
+		 (DofM21''' x d : {z} isvar z K -> {x'} isvar x' L -> ofe (cons (cons (cons G x A3) z (pi A1 B1)) x' A2) (M21 x') A1))
+	   <- ({x} {d} {z} {e} {x'} {f}
+		 ofe-context (DofM21''' x d z e x' f)
+		 (ordered/cons
+		    (bounded/cons _ (DprecKL x d z e x' f))))
+	   <- ({x} {d}
+		 weaken-wfe-insert1-bump (DwfB1x' x d) ([y] [e] bounded/cons (DboundJ x d) (DprecJK x d y e)) ([z] [e] [x'] [f] DprecKL x d z e x' f) _
+		 (DwfB1x'' x d : {z} isvar z K -> {y} isvar y L -> wfe (cons (cons (cons G x A3) z (pi A1 B1)) y A2) (B1x y)))
+	   <- weaken-wfe-insert1 DwfB2 DboundJ _
+	      (DwfB2''' : {x} isvar x J -> {y} isvar y F -> wfe (cons (cons G x A3) y A2) (B2 y))
+	   <- ({x} {d}
+		 weaken-wfe-insert1-bump (DwfB2''' x d) ([z] [e] bounded/cons (DboundJ x d) (DprecJK x d z e)) ([z] [e] [x'] [f] DprecKL x d z e x' f) _
+		 (DwfB2'''' x d : {z} isvar z K -> {y} isvar y L -> wfe (cons (cons (cons G x A3) z (pi A1 B1)) y A2) (B2 y)))
+	   <- ({x} {d} {z} {e} {x'} {f:isvar x' L}
+		 subtype-reg-e (DsubtypeB12 x') (DwfB1x'' x d z e x' f) (DwfB2'''' x d z e x' f)
+		 (DofN12 x d z e x' f : {y} isvar y H'
+					 -> ofe (cons (cons (cons (cons G x A3) z (pi A1 B1)) x' A2) y (B1x x'))
+					    (N12 x' y) (B2 x')))
+	   <- ({x} {d} {z} {e} {x'} {f}
+		 ofe-context (DofM21''' x d z e x' f)
+		 (Dordfull x d z e x' f : ordered (cons (cons (cons G x A3) z (pi A1 B1)) x' A2)))
+	   <- ({x} {d} {z} {e} {x'} {f}
+		 weaken-wfe' (append/cons (append/cons (append/cons append/nil))) (Dordfull x d z e x' f)
+		 (wfe/pi DwfB1 DwfA1)
+		 (DwfA1B1 x d z e x' f : wfe (cons (cons (cons G x A3) z (pi A1 B1)) x' A2) (pi A1 B1)))
+	   <- ({x} {d} {z} {e}
+		 aasub-into-sub-e 
+		 (DofM32' x d z e) 
+		 ([x'] [f:isvar x' L] 
+		    aofe/app
+		    (DwfB1x'' x d z e x' f)
+		    (DsubB1x x') 
+		    (DofM21''' x d z e x' f)
+		    (aofe/var
+		       (DwfA1B1 x d z e x' f)
+		       (lookup/miss 
+			  (lookup/hit (bounded/cons (DboundJ x d) (DprecJK x d z e))) 
+			  (bounded/cons (bounded/cons (DboundJ x d) (DprecJK x d z e)) (DprecKL x d z e x' f))))
+		    : aofe (cons (cons (cons G x A3) z (pi A1 B1)) x' A2) (app z (M21 x')) (B1x x'))
+		 ([x'] [f:isvar x' L] [y] [g:isvar y H'] DofN12 x d z e x' f y g)
+		 ([y] DsubN12x x y)
+		 (aasub/app
+		    (DsubM31 x)
+		    aasub/closed
+		    : aasub ([x] app z (M21 x)) (M32 x) (app z (M31 x)))
+		 (DsubN12yx z x : sub ([x] N12 x (app z (M21 x))) (M32 x) (N12x x (app z (M31 x)))))
+	   <- ({z} {x}
+		 sub-absent (M32 x) (lam ([x] N12 x (app z (M21 x))))
+		 (DsubM32abs z x : sub ([y] M32 x) (lam ([x] N12 x (app z (M21 x)))) (M32 x)))
+	   <- ({z} {e}
+		 weaken-wfe (DboundJ z e) DwfA2 _
+		 (DwfA2' z e : wfe (cons G z (pi A1 B1)) A2))
+	   <- ({x} {d:isvar x J}
+		 subtype-reg-e (DsubtypeB23 x) (DwfB2x x d) (DwfB3' x d)
+		 (DofN23 x d : {y} isvar y E -> ofe (cons (cons G x A3) y (B2x x)) (N23 x y) (B3 x)))
+	   <- ({x} {d:isvar x J} {z} {e:isvar z K}
+		 weaken-ofe (bounded/cons (DboundJ x d) (DprecJK x d z e)) (DofM32 x d) _
+		 (DofM32'' x d z e : ofe (cons (cons G x A3) z (pi A2 B2)) (M32 x) A2))
+	   <- ({x} {d:isvar x J} {z} {e:isvar z K}
+		 ofe-context (DofM32'' x d z e)
+		 (Dordfull' x d z e : ordered (cons (cons G x A3) z (pi A2 B2))))
+	   <- ({x} {d:isvar x J} {z} {e:isvar z K}
+		 weaken-wfe' (append/cons (append/cons append/nil)) (Dordfull' x d z e)
+		 (wfe/pi DwfB2 DwfA2)
+		 (DwfA2B2 x d z e : wfe (cons (cons G x A3) z (pi A2 B2)) (pi A2 B2)))
+	   <- ({x} {d:isvar x J} {z} {e:isvar z K}
+		 weaken-wfe (bounded/cons (DboundJ x d) (DprecJK x d z e)) (DwfB2x x d) _
+		 (DwfB2x' x d z e : wfe (cons (cons G x A3) z (pi A2 B2)) (B2x x)))
+	   <- weaken-wfe-insert1-bump DwfB1x DboundJ DprecJK _
+	      (DwfB1x''' : {z} isvar z J -> {x} isvar x K -> wfe (cons (cons G z (pi A1 B1)) x A2) (B1x x))
+	   <- weaken-wfe-insert1-bump DwfB2 DboundJ DprecJK _
+	      (DwfB2''''' : {z} isvar z J -> {x} isvar x K -> wfe (cons (cons G z (pi A1 B1)) x A2) (B2 x))
+	   <- ({z} {e:isvar z J} {x} {d:isvar x K}
+		 subtype-reg-e (DsubtypeB12 x) (DwfB1x''' z e x d) (DwfB2''''' z e x d)
+		 (DofN12' z e x d : {y} isvar y F''
+				     -> ofe (cons (cons (cons G z (pi A1 B1)) x A2) y (B1x x))
+					(N12 x y) (B2 x)))
+	   <- weaken-ofe-insert1-bump DofM21 DboundJ DprecJK _
+	      (DofM21'''' : {z} isvar z J 
+			     -> {x} isvar x K
+			     -> ofe (cons (cons G z (pi A1 B1)) x A2) (M21 x) A1)
+	   <- ({z} {e:isvar z J} {x} {d:isvar x K}
+		 weaken-wfe' (append/cons (append/cons append/nil)) (ordered/cons (bounded/cons (DboundJ z e) (DprecJK z e x d))) (wfe/pi DwfB1 DwfA1)
+		 (DwfA1B1' z e x d : wfe (cons (cons G z (pi A1 B1)) x A2) (pi A1 B1)))
+	   <- ({z} {e:isvar z J} {x} {d:isvar x K}
+		 ssubst-e ([_] append/nil) append/nil 
+		 (DofN12' z e x d)
+		 (aofe/app
+		    (DwfB1x''' z e x d)
+		    (DsubB1x x)
+		    (DofM21'''' z e x d)
+		    (aofe/var
+		       (DwfA1B1' z e x d)
+		       (lookup/miss
+			  (lookup/hit (DboundJ z e))
+			  (bounded/cons (DboundJ z e) (DprecJK z e x d))))
+		    : aofe (cons (cons G z (pi A1 B1)) x A2) (app z (M21 x)) (B1x x))
+		 (DofN2y z e x d : ofe (cons (cons G z (pi A1 B1)) x A2) (N12 x (app z (M21 x))) (B2 x)))
+	   <- weaken-ofe-insert1
+	      ([z] [e:isvar z J]
+		 ofe/lam
+		 ([x] [d:isvar x K] DofN2y z e x d)
+		 (DwfA2' z e)
+		 : ofe (cons G z (pi A1 B1)) (lam ([x] N12 x (app z (M21 x)))) (pi A2 B2))
+	      DboundJ _
+	      (DofLam' : {x} isvar x J 
+			  -> {z} isvar z K''
+			  -> ofe (cons (cons G x A3) z (pi A1 B1)) (lam ([x] N12 x (app z (M21 x)))) (pi A2 B2))
+	   <- ({x} {d:isvar x J}
+		 aosub-into-ssub-e'
+		 (DofLam' x d)
+		 ([z] [e:isvar z K]
+		    aofe/app
+		    (DwfB2x' x d z e)
+		    (DsubB2x x)
+		    (DofM32'' x d z e)
+		    (aofe/var
+		       (DwfA2B2 x d z e)
+		       (lookup/hit (bounded/cons (DboundJ x d) (DprecJK x d z e)))))
+		 (DofN23 x d)
+		 ([z] aosub/app
+		    (DsubN12yx z x)
+		    (DsubM32abs z x)
+		    aosub/var
+		    : aosub ([y] app y (M32 x)) (lam ([x] N12 x (app z (M21 x)))) (N12x x (app z (M31 x))))
+		 ([z] DsubN13 x (app z (M31 x)))
+		 ([z] DsubLam z x : sub ([y] N23 x (app y (M32 x))) (lam ([x] N12 x (app z (M21 x)))) (N13 x (app z (M31 x))))).
+
+-sigma	: subtype-trans-em (ssigma S T)
+	   (simp/sigma
+	      (DsimpB : {x} simp (B2 x) T)
+	      (DsimpA : simp A2 S))
+	   (wfe/sigma
+	      (DwfB1 : {x} isvar x I1 -> wfe (cons G x A1) (B1 x))
+	      (DwfA1 : wfe G A1))
+	   (wfe/sigma
+	      (DwfB2 : {x} isvar x I2 -> wfe (cons G x A2) (B2 x))
+	      (DwfA2 : wfe G A2))
+	   (wfe/sigma
+	      (DwfB3 : {x} isvar x I3 -> wfe (cons G x A3) (B3 x))
+	      (DwfA3 : wfe G A3))
+	   (subtype/sigma
+	      (DsubtypeB12 : {x} subtype (B1 x) (B2x x) ([y] N12 x y))
+	      (DsubB2x : {x} tsub B2 (M12 x) (B2x x))
+	      (DsubtypeA12 : subtype A1 A2 M12))
+	   (subtype/sigma
+	      (DsubtypeB23 : {x} subtype (B2 x) (B3x x) ([y] N23 x y))
+	      (DsubB3x : {x} tsub B3 (M23 x) (B3x x))
+	      (DsubtypeA23 : subtype A2 A3 M23))
+	   ([z] sub/pair (Dsub2 z) (Dsub1 z))
+	   (subtype/sigma DsubtypeB13 DsubB3x1 DsubtypeA13)
+	   <- subtype-trans-em S DsimpA DwfA1 DwfA2 DwfA3 DsubtypeA12 DsubtypeA23
+	      (DsubM13 : {x} sub M23 (M12 x) (M13 x))
+	      (DsubtypeA13 : subtype A1 A3 M13)
+	   <- subtype-reg-e DsubtypeA13 DwfA1 DwfA3
+	      (DofM13 : {x} isvar x J -> ofe (cons G x A1) (M13 x) A3)
+	   <- ({x} {d:isvar x J}
+		 ofe-context (DofM13 x d)
+		 (ordered/cons 
+		    (DboundJ x d : bounded G x)))
+	   <- can-tsub-context-e DofM13 DwfB3
+	      (DsubB3x1 : {x} tsub B3 (M13 x) (B3x1 x))
+	   <- subtype-reg-e-bump DsubtypeA12 DwfA1 DwfA2 DboundJ
+	      (DofM12 : {x} isvar x J -> ofe (cons G x A1) (M12 x) A2)
+	   <- subtype-reg-e-bump DsubtypeA23 DwfA2 DwfA3 DboundJ
+	      (DofM23 : {x} isvar x J -> ofe (cons G x A2) (M23 x) A3)
+	   <- tsubst-context-permute-e DofM12 DofM23 DwfB3 DsubM13 DsubB3x DsubB3x1
+	      (DsubB3x1' : {x} tsub B3x (M12 x) (B3x1 x))
+	   <- ({x} {d:isvar x J}
+		 following-var d 
+		 (DprecJK x d : {y} isvar y K -> precedes x y))
+	   <- weaken-wfe-insert1-bump DwfB2 DboundJ DprecJK _
+	      (DwfB2' : {x} isvar x J 
+			 -> {y} isvar y K
+			 -> wfe (cons (cons G x A1) y A2) (B2 y))
+	   <- tsubst-context-e DofM23 DwfB3 DsubB3x
+	      (DwfB3x : {x} isvar x J -> wfe (cons G x A2) (B3x x))
+	   <- weaken-wfe-insert1-bump DwfB3x DboundJ DprecJK _
+	      (DwfB3x' : {x} isvar x J 
+			  -> {y} isvar y K
+			  -> wfe (cons (cons G x A1) y A2) (B3x y))
+	   <- ({x} {d:isvar x J}
+		 subtype-sub-e ([_] append/nil) csub/base (DofM12 x d) (DwfB2' x d) (DwfB3x' x d)
+		 DsubtypeB23 (DsubB2x x) (DsubB3x1' x)
+		 (DsubN23x x : {y} sub ([x] N23 x y) (M12 x) (N23x x y))
+		 (DsubtypeB23x x : subtype (B2x x) (B3x1 x) (N23x x)))
+	   <- ({x}
+		 tsub-preserves-simp (DsubB2x x) DsimpB
+		 (DsimpB' x : simp (B2x x) T))
+	   <- bump-wfe DwfB1 ([x] [d] ordered/cons (DboundJ x d))
+	      (DwfB1' : {x} isvar x J -> wfe (cons G x A1) (B1 x))
+	   <- tsubst-context-e DofM12 DwfB2 DsubB2x
+	      (DwfB2x : {x} isvar x J -> wfe (cons G x A1) (B2x x))
+	   <- tsubst-context-e DofM12 DwfB3x DsubB3x1'
+	      (DwfB3x1 : {x} isvar x J -> wfe (cons G x A1) (B3x1 x))
+	   <- ({x} {d:isvar x J}
+		 subtype-trans-em T (DsimpB' x) (DwfB1' x d) (DwfB2x x d) (DwfB3x1 x d)
+		 (DsubtypeB12 x) (DsubtypeB23x x)
+		 (DsubN13 x : {y} sub ([y] N23x x y) (N12 x y) (N13 x y))
+		 (DsubtypeB13 x : subtype (B1 x) (B3x1 x) (N13 x)))
+	   <- ({z} {e:isvar z J}
+		 weaken-wfe (DboundJ z e) (wfe/sigma DwfB1 DwfA1) _
+		 (DwfA1B1 z e : wfe (cons G z (sigma A1 B1)) (sigma A1 B1)))
+	   <- ({z} {e:isvar z J}
+		 weaken-wfe (DboundJ z e) (wfe/sigma DwfB2 DwfA2) _
+		 (DwfA2B2 z e : wfe (cons G z (sigma A2 B2)) (sigma A2 B2)))
+	   <- ssubst-context-e ([z] [e] aofe/pi1 (aofe/var (DwfA1B1 z e) (lookup/hit (DboundJ z e)))) DofM12 
+	      (DofM12x : {z} isvar z J -> ofe (cons G z (sigma A1 B1)) (M12 (pi1 z)) A2)
+	   <- bump-wfe DwfB1 ([x] [d] ordered/cons (DboundJ x d))
+	      (DwfB1'' : {x} isvar x J -> wfe (cons G x A1) (B1 x))
+	   <- ({x} {d:isvar x J}
+		 subtype-reg-e-bump (DsubtypeB12 x) (DwfB1'' x d) (DwfB2x x d) ([y] [e] bounded/cons (DboundJ x d) (DprecJK x d y e))
+		 (DofN12 x d : {y} isvar y K -> ofe (cons (cons G x A1) y (B1 x)) (N12 x y) (B2x x)))
+	   <- ssubst-context2-e 
+	      ([z] [e] aofe/pi1 (aofe/var (DwfA1B1 z e) (lookup/hit (DboundJ z e)))) 
+	      ([z] [e] aofe/pi2 (aofe/var (DwfA1B1 z e) (lookup/hit (DboundJ z e)))) 
+	      DofN12
+	      (DofN12xy : {z} isvar z J -> ofe (cons G z (sigma A1 B1)) (N12 (pi1 z) (pi2 z)) (B2x (pi1 z)))
+	   <- weaken-wfe-insert1-bump DwfB2 DboundJ DprecJK _
+	      (DwfB2'' : {z} isvar z J
+			  -> {x} isvar x K
+			  -> wfe (cons (cons G z (sigma A1 B1)) x A2) (B2 x))
+	   <- aosub-into-ssub-e' 
+	      ([z] [e] ofe/pair (DwfB2'' z e) (DofN12xy z e) (DsubB2x (pi1 z)) (DofM12x z e))
+	      ([z] [e] aofe/pi1 (aofe/var (DwfA2B2 z e) (lookup/hit (DboundJ z e))))
+	      DofM23
+	      ([z] aosub/pi1 aosub/var)
+	      ([z] DsubM13 (pi1 z))
+	      ([z] Dsub1 z : sub ([z] M23 (pi1 z)) (pair (M12 (pi1 z)) (N12 (pi1 z) (pi2 z))) (M13 (pi1 z)))
+	   <- bump-wfe DwfB2 ([x] [d] ordered/cons (DboundJ x d))
+	      (DwfB2''' : {x} isvar x J -> wfe (cons G x A2) (B2 x))
+	   <- ({x} {d:isvar x J}
+		 subtype-reg-e (DsubtypeB23 x) (DwfB2''' x d) (DwfB3x x d)
+		 (DofN23 x d : {y} isvar y L
+				-> ofe (cons (cons G x A2) y (B2 x)) (N23 x y) (B3x x)))
+	   <- aosub-into-ssub-e'''
+	      ([z] [e] ofe/pair (DwfB2'' z e) (DofN12xy z e) (DsubB2x (pi1 z)) (DofM12x z e))
+	      ([z] [e] aofe/pi1 (aofe/var (DwfA2B2 z e) (lookup/hit (DboundJ z e))))
+	      ([z] [e] aofe/pi2 (aofe/var (DwfA2B2 z e) (lookup/hit (DboundJ z e))))
+	      DofN23
+	      ([z] aosub/pi1 aosub/var
+		 : aosub ([z] pi1 z) (pair (M12 (pi1 z)) (N12 (pi1 z) (pi2 z))) (M12 (pi1 z)))
+	      ([z] aosub/pi2 aosub/var
+		 : aosub ([z] pi2 z) (pair (M12 (pi1 z)) (N12 (pi1 z) (pi2 z))) (N12 (pi1 z) (pi2 z)))
+	      ([z] [y] DsubN23x (pi1 z) y
+		 : sub ([x] N23 x y) (M12 (pi1 z)) (N23x (pi1 z) y))
+	      ([z] DsubN13 (pi1 z) (pi2 z)
+		 : sub ([y] N23x (pi1 z) y) (N12 (pi1 z) (pi2 z)) (N13 (pi1 z) (pi2 z)))
+	      ([z] Dsub2 z : sub ([z] N23 (pi1 z) (pi2 z)) (pair (M12 (pi1 z)) (N12 (pi1 z) (pi2 z))) (N13 (pi1 z) (pi2 z))).
+
+-one	: subtype-trans-em _ _ _ _ _ subtype/one subtype/one ([x] sub/star) subtype/one.
+
+%worlds (var | bind | ovar | topenblock) (subtype-trans-em _ _ _ _ _ _ _ _ _).
+%total T (subtype-trans-em T _ _ _ _ _ _ _ _).
+
+
+
+subtype-trans-e : wfe G A 
+		   -> wfe G B
+		   -> wfe G C
+		   -> subtype A B M
+		   -> subtype B C N
+		   -> ({x} sub ([y] N y) (M x) (NM x)) 
+%%
+		   -> subtype A C NM -> type.
+%mode subtype-trans-e +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-	: subtype-trans-e DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub DsubtypeAC'
+	   <- can-simp _ Dsimp
+	   <- subtype-trans-em _ Dsimp DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub' DsubtypeAC
+	   <- ({x}
+		  sub-fun (Dsub' x) (Dsub x) (Deq x))
+	   <- subtype-resp tp-eq/i tp-eq/i Deq DsubtypeAC DsubtypeAC'.
+
+%worlds (var | bind | ovar | topenblock) (subtype-trans-e _ _ _ _ _ _ _).
+%total {} (subtype-trans-e _ _ _ _ _ _ _).
+
+
+
+subtype-trans : wf A 
+		 -> wf B
+		 -> wf C
+		 -> subtype A B M
+		 -> subtype B C N
+		 -> ({x} sub ([y] N y) (M x) (NM x)) 
+%%
+		 -> subtype A C NM -> type.
+%mode subtype-trans +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-	: subtype-trans DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub DsubtypeAC
+	   <- wf-to-wfe DwfA DwfeA
+	   <- wf-to-wfe DwfB DwfeB
+	   <- wf-to-wfe DwfC DwfeC
+	   <- subtype-trans-e DwfeA DwfeB DwfeC DsubtypeAB DsubtypeBC Dsub DsubtypeAC.
+
+%worlds (bind | topenblock) (subtype-trans _ _ _ _ _ _ _).
+%total {} (subtype-trans _ _ _ _ _ _ _).
+
+
+
+subtype-trans-e' : wfe G A 
+		    -> wfe G B
+		    -> wfe G C
+		    -> subtype A B M
+		    -> subtype B C N
+%%
+		    -> ({x} sub ([y] N y) (M x) (NM x)) 
+		    -> subtype A C NM -> type.
+%mode subtype-trans-e' +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-	: subtype-trans-e' DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub DsubtypeAC
+	   <- can-simp _ Dsimp
+	   <- subtype-trans-em _ Dsimp DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub DsubtypeAC.
+
+%worlds (bind | topenblock) (subtype-trans-e' _ _ _ _ _ _ _).
+%total {} (subtype-trans-e' _ _ _ _ _ _ _).
+
+
+
+subtype-trans' : wf A 
+		 -> wf B
+		 -> wf C
+		 -> subtype A B M
+		 -> subtype B C N
+%%
+		 -> ({x} sub ([y] N y) (M x) (NM x)) 
+		 -> subtype A C NM -> type.
+%mode subtype-trans' +X1 +X2 +X3 +X4 +X5 -X6 -X7.
+
+-	: subtype-trans' DwfA DwfB DwfC DsubtypeAB DsubtypeBC
+	   Dsub DsubtypeAC
+	   <- subtype-reg DsubtypeAB DwfA DwfB 
+	      DofM
+	   <- subtype-reg DsubtypeBC DwfB DwfC 
+	      DofN
+	   <- ({x} {d:vof x A}
+		 can-sub DofN (DofM x d)
+		 (Dsub x))
+	   <- subtype-trans DwfA DwfB DwfC DsubtypeAB DsubtypeBC Dsub
+	      DsubtypeAC.
+
+%worlds (bind | topenblock) (subtype-trans' _ _ _ _ _ _ _).
+%total {} (subtype-trans' _ _ _ _ _ _ _).
+
+
+
+
+
+%%%%%  Subtyping Inversions  %%%%%
+
+subtype-sing-invert : subtype A (sing R) M -> tp-eq A (sing R) -> ({x} term-eq (M x) (at R)) -> type.
+%mode subtype-sing-invert +X1 -X2 -X3.
+
+-	: subtype-sing-invert subtype/sing tp-eq/i ([x] term-eq/i).
+
+%worlds (bind | ovar | topenblock) (subtype-sing-invert _ _ _).
+%total {} (subtype-sing-invert _ _ _).
+
+
+
+%{
+subtype-sing-t : subtype (sing R) t M -> ({x} term-eq (M x) (at R)) -> type.
+%mode subtype-sing-t +X1 -X2.
+
+-	: subtype-sing-t subtype/sing_t ([_] term-eq/i).
+
+%worlds (bind | topenblock) (subtype-sing-t _ _).
+%total {} (subtype-sing-t _ _).
+}%
+
+
+
+subtype-pi-invert : subtype (pi A1 A2) (pi B1 B2) M
+			-> subtype B1 A1 M1
+			-> ({x} tsub A2 (M1 x) (A2' x))
+			-> ({x} subtype (A2' x) (B2 x) ([y] M2 x y))
+			-> ({f} term-eq (M f) (lam ([x] M2 x (app f (M1 x))))) -> type.
+%mode subtype-pi-invert +X1 -X2 -X3 -X4 -X5.
+
+-	: subtype-pi-invert (subtype/pi D3 D2 D1) D1 D2 D3 ([_] term-eq/i).
+
+%worlds (var | topenblock) (subtype-pi-invert _ _ _ _ _).
+%total {} (subtype-pi-invert _ _ _ _ _).
+
+
+
+subtype-sigma-invert : subtype (sigma A1 A2) (sigma B1 B2) M
+			-> subtype A1 B1 M1
+			-> ({x} tsub B2 (M1 x) (B2' x))
+			-> ({x} subtype (A2 x) (B2' x) ([y] M2 x y))
+			-> ({p} term-eq (M p) (pair (M1 (pi1 p)) (M2 (pi1 p) (pi2 p)))) -> type.
+%mode subtype-sigma-invert +X1 -X2 -X3 -X4 -X5.
+
+-	: subtype-sigma-invert (subtype/sigma D3 D2 D1) D1 D2 D3 ([_] term-eq/i).
+
+%worlds (var | topenblock) (subtype-sigma-invert _ _ _ _ _).
+%total {} (subtype-sigma-invert _ _ _ _ _).
+
+
+
+subtype-closed : ({x} subtype A B ([y] M x y)) -> ({x:atom} {y} term-eq (M x y) (M' y)) -> type.
+%mode subtype-closed +X1 -X2.
+
+-t	: subtype-closed ([x] subtype/t) ([x] [y] term-eq/i).
+
+subtype-closed! : ({x:atom} {y:atom} subtype (A x y) (B x y) ([z] M x y z)) -> ({x} {y} tp-eq (A x y) (A' y)) -> ({x} {y} tp-eq (B x y) (B' y)) -> ({x} {y} subtype (A' y) (B' y) ([z] M x y z)) -> type.
+%mode subtype-closed! +X1 +X2 +X3 -X4.
+
+-	: subtype-closed! D ([_] [_] tp-eq/i) ([_] [_] tp-eq/i) D.
+
+%worlds (var | topenblock) (subtype-closed! _ _ _ _).
+%total {} (subtype-closed! _ _ _ _).
+%reduces D = D' (subtype-closed! D _ _ D').
+
+-pi	: subtype-closed 
+	   ([x] subtype/pi
+	      (Dsubtype2 x : {y} subtype (C x y) (B2 y) ([z] M2 x y z))
+	      (Dsub x : {y} tsub ([y] A2 y) (M1 x y) (C x y))
+	      (Dsubtype1 x : subtype B1 A1 ([y] M1 x y)))
+	   Deq'
+	   <- subtype-closed Dsubtype1
+	      (DeqM1 : {x} {y} term-eq (M1 x y) (M1x y))
+	   <- ({x} {y}
+		  tsub-resp ([_] tp-eq/i) (DeqM1 x y) tp-eq/i (Dsub x y)
+		  (Dsub' x y : tsub ([y] A2 y) (M1x y) (C x y)))
+	   <- ({y}
+		 tsub-closed ([x] Dsub' x y)
+		 ([x] DeqC x y : tp-eq (C x y) (Cx y)))
+	   <- subtype-closed! Dsubtype2 DeqC ([_] [_] tp-eq/i)
+	      (Dsubtype2' : {x} {y} subtype (Cx y) (B2 y) ([z] M2 x y z))
+	   <- ({y}
+		 subtype-closed ([x] Dsubtype2' x y)
+		 ([x] [z] DeqM2 x y z : term-eq (M2 x y z) (M2x y z)))
+	   <- ({f} {x} {y}
+		 term-resp-term ([m] M2 x y (app f m)) (DeqM1 x y)
+		 (DeqM2M1 f x y : term-eq (M2 x y (app f (M1 x y))) (M2 x y (app f (M1x y)))))
+	   <- ({f} {x} {y}
+		 term-eq-trans (DeqM2M1 f x y) (DeqM2 x y (app f (M1x y)))
+		 (Deq f x y : term-eq (M2 x y (app f (M1 x y))) (M2x y (app f (M1x y)))))
+	   <- ({f} {x}
+		 lam-resp ([y] Deq f x y)
+		 (Deq' x f : term-eq (lam ([y] M2 x y (app f (M1 x y)))) (lam ([y] M2x y (app f (M1x y)))))).
+
+-sigma	: subtype-closed
+	   ([x] subtype/sigma
+	      (Dsubtype2 x : {y} subtype (A2 y) (C x y) ([z] M2 x y z))
+	      (Dsub x : {y} tsub ([y] B2 y) (M1 x y) (C x y))
+	      (Dsubtype1 x : subtype A1 B1 ([y] M1 x y)))
+	   Deq
+	   <- subtype-closed Dsubtype1
+	      (DeqM1 : {x} {y} term-eq (M1 x y) (M1x y))
+	   <- ({x} {y}
+		 tsub-resp ([_] tp-eq/i) (DeqM1 x y) tp-eq/i (Dsub x y)
+		 (Dsub' x y : tsub ([y] B2 y) (M1x y) (C x y)))
+	   <- ({y}
+		 tsub-closed ([x] Dsub' x y)
+		 ([x] DeqC x y : tp-eq (C x y) (Cx y)))
+	   <- subtype-closed! Dsubtype2 ([_] [_] tp-eq/i) DeqC
+	      (Dsubtype2' : {x} {y} subtype (A2 y) (Cx y) ([z] M2 x y z))
+	   <- ({y}
+		 subtype-closed ([x] Dsubtype2' x y)
+		 ([x] [z] DeqM2 x y z : term-eq (M2 x y z) (M2x y z)))
+	   <- ({p} {x}
+		 pair-resp (DeqM1 x (pi1 p)) (DeqM2 x (pi1 p) (pi2 p))
+		 (Deq x p : term-eq (pair (M1 x (pi1 p)) (M2 x (pi1 p) (pi2 p))) (pair (M1x (pi1 p)) (M2x (pi1 p) (pi2 p))))).
+
+-sing_t	: subtype-closed ([x] subtype/sing_t) ([x] [y] term-eq/i).
+
+-sing	: subtype-closed ([x] subtype/sing) ([x] [y] term-eq/i).
+
+-t	: subtype-closed ([x] subtype/one) ([x] [y] term-eq/i).
+
+%worlds (var | topenblock) (subtype-closed _ _).
+%total D (subtype-closed D _).
+
+
+
+
+%%%%%  Selfification Lemmas  %%%%%
+
+self-reg-e : self M A A' 
+	      -> ofe G M A
+%%
+	      -> ofe G M A'
+	      -> subtype A' A ([_] M) -> type.
+%mode self-reg-e +X1 +X2 -X3 -X4.
+
+-t	: self-reg-e self/t (ofe/at Daof) (ofe/sing Daof) subtype/sing_t.
+
+-pi	: self-reg-e 
+	   (self/pi (Dself : {x} self (M x) (B x) (B' x)))
+	   (ofe/lam 
+	      (Dof : {x} isvar x I -> ofe (cons G x A) (M x) (B x))
+	      (DwfA : wfe G A))
+%%
+	   (ofe/lam Dof' DwfA)
+	   (subtype/pi
+	      DsubtypeB
+	      Dsub
+	      DsubtypeA)
+	   <- subtype-refl-e DwfA
+	      (DsubtypeA : subtype A A X)
+	      (Dexpand : {x} expand x A (X x))
+	   <- ({x} {d}
+		 self-reg-e (Dself x) (Dof x d)
+		 (Dof' x d : ofe (cons G x A) (M x) (B' x))
+		 (DsubtypeB x : subtype (B' x) (B x) ([_] M x)))
+	   <- ({x} {d}
+		 ofe-reg (Dof' x d)
+		 (DwfB' x d : wfe (cons G x A) (B' x)))
+	   <- tsub-expand-var-e DwfA DwfB' Dexpand
+	      (Dsub : {x} tsub B' (X x) (B' x)).
+
+-sigma	: self-reg-e
+	   (self/sigma
+	      (DselfN : self N Bx Bx_self)
+	      (Dsub : tsub B M Bx)
+	      (DselfM : self M A Aself))
+	   (ofe/pair
+	      (DwfB : {x} isvar x I -> wfe (cons G x A) (B x))
+	      (DofN : ofe G N Bx')
+	      (Dsub' : tsub B M Bx')
+	      (DofM : ofe G M A))
+%%
+	   (ofe/pair
+	      Dwf'
+	      DofNself
+	      DsubTriv
+	      (DofMself : ofe G M Aself))
+	   (subtype/sigma
+	      ([_] DsubtypeB)
+	      ([_] Dsub)
+	      DsubtypeA)
+	   <- self-reg-e DselfM DofM
+	      (DofMself : ofe G M Aself)
+	      (DsubtypeA : subtype Aself A ([_] M))
+	   <- tsub-absent Bx_self M (DsubTriv : tsub ([_] Bx_self) M Bx_self)
+	   <- tsub-fun Dsub' Dsub (Deq : tp-eq Bx' Bx)
+	   <- ofe-resp ctx-eq/i term-eq/i Deq DofN (DofN' : ofe G N Bx)
+	   <- self-reg-e DselfN DofN'
+	      (DofNself : ofe G N Bx_self)
+	      (DsubtypeB : subtype Bx_self Bx ([_] N))
+	   <- ofe-reg DofNself
+	      (Dwf : wfe G Bx_self)
+	   <- ({x} {d}
+		 wfe-context (DwfB x d)
+		 (ordered/cons
+		    (Dbounded x d)))
+	   <- ({x} {d}
+		 weaken-wfe (Dbounded x d) Dwf _
+		 (Dwf' x d : wfe (cons G x Aself) Bx_self)).
+
+-sing	: self-reg-e self/sing (ofe/sing Daof) (ofe/sing Daof) subtype/sing.
+
+-one	: self-reg-e self/one (ofe/star D) (ofe/star D) subtype/one.
+
+%worlds (var | bind | ovar | topenblock) (self-reg-e _ _ _ _).
+%total D (self-reg-e D _ _ _).
+
+
+
+self-reg-e' : self M A As
+	       -> ofe G M A
+	       -> wfe G As -> type.
+%mode self-reg-e' +X1 +X2 -X3.
+
+-	: self-reg-e' Dself Dof Dwf
+	   <- self-reg-e Dself Dof Dof' _
+	   <- ofe-reg Dof' Dwf.
+
+%worlds (var | bind | ovar | topenblock) (self-reg-e' _ _ _).
+%total {} (self-reg-e' _ _ _).
+
+
+
+self-reg : self M A A' 
+	    -> of M A
+%%
+	    -> of M A'
+	    -> subtype A' A ([_] M) -> type.
+%mode self-reg +X1 +X2 -X3 -X4.
+
+-t	: self-reg self/t (of/at Daof) (of/sing Daof) subtype/sing_t.
+
+-pi	: self-reg
+	   (self/pi (Dself : {x} self (M x) (B x) (B' x)))
+	   (of/lam 
+	      (Dof : {x} vof x A -> of (M x) (B x))
+	      (DwfA : wf A))
+%%
+	   (of/lam Dof' DwfA)
+	   (subtype/pi
+	      DsubtypeB
+	      Dtsub
+	      DsubtypeA)
+	   <- subtype-refl DwfA
+	      (DsubtypeA : subtype A A ([x] X x))
+	      (DexpandA : {x} expand x A (X x))
+	   <- ({x} {d:vof x A}
+		 self-reg (Dself x) (Dof x d) 
+		 (Dof' x d : of (M x) (B' x))
+		 (DsubtypeB x : subtype (B' x) (B x) ([_] M x)))
+	   <- ({x} {d:vof x A}
+		 of-reg (Dof' x d) 
+		 (DwfB' x d : wf (B' x)))
+	   <- tsub-expand-var DwfA DwfB' DexpandA
+	      (Dtsub : {x} tsub ([x] B' x) (X x) (B' x)).
+
+-sigma	: self-reg
+	   (self/sigma
+	      (DselfN : self N Bx Bx_self)
+	      (Dsub : tsub B M Bx)
+	      (DselfM : self M A Aself))
+	   (of/pair
+	      (DwfB : {x} vof x A -> wf (B x))
+	      (DofN : of N Bx')
+	      (Dsub' : tsub B M Bx')
+	      (DofM : of M A))
+%%
+	   (of/pair
+	      ([_] [_] Dwf)
+	      DofNself
+	      DsubTriv
+	      (DofMself : of M Aself))
+	   (subtype/sigma
+	      ([_] DsubtypeB)
+	      ([_] Dsub)
+	      DsubtypeA)
+	   <- self-reg DselfM DofM
+	      (DofMself : of M Aself)
+	      (DsubtypeA : subtype Aself A ([_] M))
+	   <- tsub-absent Bx_self M (DsubTriv : tsub ([_] Bx_self) M Bx_self)
+	   <- tsub-fun Dsub' Dsub (Deq : tp-eq Bx' Bx)
+	   <- of-resp term-eq/i Deq DofN (DofN' : of N Bx)
+	   <- self-reg DselfN DofN'
+	      (DofNself : of N Bx_self)
+	      (DsubtypeB : subtype Bx_self Bx ([_] N))
+	   <- of-reg DofNself
+	      (Dwf : wf Bx_self).
+
+-sing	: self-reg self/sing (of/sing Daof) (of/sing Daof) subtype/sing.
+
+-one	: self-reg self/one of/star of/star subtype/one.
+
+%worlds (bind | var | ovar | topenblock) (self-reg _ _ _ _).
+%total D (self-reg D _ _ _).
+
+
+
+self-reg' : self M A A' 
+	    -> of M A
+%%
+	    -> wf A' -> type.
+%mode self-reg' +X1 +X2 -X3.
+
+-	: self-reg' Dself Dof Dwf
+	   <- self-reg Dself Dof Dof' _
+	   <- of-reg Dof' Dwf.
+
+%worlds (bind | var | ovar | topenblock) (self-reg' _ _ _).
+%total {} (self-reg' _ _ _).
+
+
+
+can-self-e : ofe G M A -> self M A A' -> type.
+%mode can-self-e +X1 -X2.
+
+-t	: can-self-e _ self/t.
+
+-pi	: can-self-e (ofe/lam Dof _) (self/pi Dself)
+	   <- ({x} {d}
+		  can-self-e (Dof x d) (Dself x)).
+
+-sigma	: can-self-e (ofe/pair _ Dof2 Dsub Dof1) (self/sigma Dself2 Dsub Dself1)
+	   <- can-self-e Dof1 Dself1
+	   <- can-self-e Dof2 Dself2.
+
+-sing	: can-self-e (ofe/sing _) self/sing.
+
+-one	: can-self-e _ self/one.
+
+%worlds (var | bind | ovar | topenblock) (can-self-e _ _).
+%total D (can-self-e D _).
+
+
+
+can-self : of M A -> self M A A' -> type.
+%mode can-self +X1 -X2.
+
+-	: can-self Dof Dself
+	   <- of-to-ofe Dof Dofe
+	   <- can-self-e Dofe Dself.
+
+%worlds (var | bind | ovar | topenblock) (can-self _ _).
+%total {} (can-self _ _).
+
+
+
+self-fun : self M A B -> self M A B' -> tp-eq B B' -> type.
+%mode self-fun +X1 +X2 -X3.
+
+-t	: self-fun self/t self/t tp-eq/i.
+
+-pi	: self-fun (self/pi Dself) (self/pi Dself') Deq'
+	   <- ({x}
+		 self-fun (Dself x) (Dself' x) (Deq x))
+	   <- pi-resp tp-eq/i Deq Deq'.
+
+-sigma	: self-fun (self/sigma Dself2 Dsub1 Dself1) (self/sigma Dself2' Dsub2 Dself1') Deq
+	   <- self-fun Dself1 Dself1' Deq1
+	   <- tsub-fun Dsub2 Dsub1 Deqs
+	   <- self-resp term-eq/i Deqs tp-eq/i Dself2' Dself2''
+	   <- self-fun Dself2 Dself2'' Deq2
+	   <- sigma-resp Deq1 ([_] Deq2) Deq.
+
+-sing	: self-fun self/sing self/sing tp-eq/i.
+
+-one	: self-fun self/one self/one tp-eq/i.
+
+%worlds (var | bind | topenblock) (self-fun _ _ _).
+%total D (self-fun D _ _).
+
+
+
+self-t-invert : self (at R) t A -> tp-eq A (sing R) -> type.
+%mode self-t-invert +X1 -X2.
+
+-	: self-t-invert self/t tp-eq/i.
+
+%worlds (var | topenblock) (self-t-invert _ _).
+%total {} (self-t-invert _ _).
+
+
+
+self-pi-invert : self (lam M) (pi A B) (pi C D) -> tp-eq A C -> ({x} self (M x) (B x) (D x)) -> type.
+%mode self-pi-invert +X1 -X2 -X3.
+
+-	: self-pi-invert (self/pi D) tp-eq/i D.
+
+%worlds (var | topenblock) (self-pi-invert _ _ _).
+%total {} (self-pi-invert _ _ _).
+
+
+
+
+%%%%%  Self Commutes with Substitution  %%%%%
+
+self-sub-e : ({x} append (cons G1 x A) (G2 x) (G x))
+	      -> csub G M Gx
+	      -> ofe G1 M A
+	      -> ({x} isvar x I -> ofe (G x) (N x) (B x))
+	      -> ({x} self (N x) (B x) (B' x))
+	      -> sub N M Nx
+	      -> tsub B M Bx
+	      -> tsub B' M Bx'
+%%
+	      -> self Nx Bx Bx' -> type.
+%mode self-sub-e +X1 +X2 +X3 +X4 +X5 +X6 +X7 +X8 -X9.
+
+-t	: self-sub-e _ _ _ _ ([_] self/t)
+	   (sub/ao Daosub) tsub/t (tsub/singo Daosub')
+	   D
+	   <- aosub-fun Daosub' Daosub Deq
+	   <- self-resp Deq tp-eq/i tp-eq/i self/t D.
+
+-t	: self-sub-e _ _ _ _ ([_] self/t)
+	   (sub/aa Daasub) tsub/t (tsub/singa Daasub')
+	   D
+	   <- aasub-fun Daasub' Daasub Deq
+	   <- term-resp-atom at Deq Deq'
+	   <- self-resp Deq' tp-eq/i tp-eq/i self/t D.
+
+-t	: self-sub-e _ _ _ _ ([_] self/t)
+	   (sub/aa Daasub) tsub/t (tsub/singo Daosub)
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+-t	: self-sub-e _ _ _ _ ([_] self/t)
+	   (sub/ao Daosub) tsub/t (tsub/singa Daasub)
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+
+-pi	: self-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   (DofM : ofe G1 M A)
+	   ([x] [d:isvar x I]
+	      ofe/lam
+	      (DofN x d : {y} isvar y J -> ofe (cons (G x) y (B x)) (N x y) (C x y))
+	      (DwfB x d : wfe (G x) (B x)))
+	   ([x] self/pi
+	      (Dself x : {y} self (N x y) (C x y) (C' x y)))
+	   (sub/lam
+	      (DsubNx : {y} sub ([x] N x y) M (Nx y)))
+	   (tsub/pi
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+	   (tsub/pi
+	      (DsubCx' : {y} tsub ([x] C' x y) M (Cx' y))
+	      (DsubBx' : tsub B M Bx'))
+	   Dself''
+	   <- ({y} {e:isvar y J}
+		 self-sub-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM ([x] [d] DofN x d y e)
+		    ([x] Dself x y) (DsubNx y) (DsubCx y) (DsubCx' y)
+		    (Dself' y : self (Nx y) (Cx y) (Cx' y)))
+	   <- tsub-fun DsubBx DsubBx'
+	      (DeqBx : tp-eq Bx Bx')
+	   <- tp-resp-tp ([a] pi a ([y] Cx' y)) DeqBx
+	      (Deq : tp-eq (pi Bx Cx') (pi Bx' Cx'))
+	   <- self-resp term-eq/i tp-eq/i Deq (self/pi Dself')
+	      (Dself'' : self (lam Nx) (pi Bx Cx) (pi Bx' Cx')).
+
+
+-sigma	: self-sub-e
+	   (Dappend : {x} append (cons G1 x A) (G2 x) (G x))
+	   (Dcsub : csub G M Gx)
+	   (DofM : ofe G1 M A)
+	   ([x] [d:isvar x I]
+	      ofe/pair
+	      (DwfC x d : {y} isvar y J -> wfe (cons (G x) y (B x)) (C x y))
+	      (DofO x d : ofe (G x) (O x) (Cy x))
+	      (DsubCy x : tsub ([y] C x y) (N x) (Cy x))
+	      (DofN x d : ofe (G x) (N x) (B x)))
+	   ([x] self/sigma
+	      (Dself2 x : self (O x) (Cyalt x) (C' x))
+	      (DsubCyalt x : tsub ([y] C x y) (N x) (Cyalt x))
+	      (Dself1 x : self (N x) (B x) (B' x)))
+	   (sub/pair
+	      (DsubOx : sub O M Ox)
+	      (DsubNx : sub N M Nx))
+	   (tsub/sigma
+	      (DsubCx : {y} tsub ([x] C x y) M (Cx y))
+	      (DsubBx : tsub B M Bx))
+	   (tsub/sigma
+	      (DsubCyx' : {y} tsub ([x] C' x) M (Cyx' y))
+	      (DsubBx' : tsub B' M Bx'))
+	   D
+	   <- ({x}
+		 tsub-fun (DsubCyalt x) (DsubCy x)
+		 (DeqCy x : tp-eq (Cyalt x) (Cy x)))
+	   <- ({x}
+		 self-resp term-eq/i (DeqCy x) tp-eq/i (Dself2 x)
+		 (Dself2' x : self (O x) (Cy x) (C' x)))
+	   <- tsub-closed DsubCyx'
+	      (DeqCyx' : {y} tp-eq (Cyx' y) Cx')
+	   <- ({y}
+		 tsub-resp ([_] tp-eq/i) term-eq/i (DeqCyx' y) (DsubCyx' y)
+		 (DsubCx' y : tsub ([x] C' x) M Cx'))
+	   <- ({y}
+		 tp-eq-symm (DeqCyx' y)
+		 (DeqCyx'' y : tp-eq Cx' (Cyx' y)))
+	   <- self-sub-e Dappend Dcsub DofM DofN Dself1 DsubNx DsubBx DsubBx'
+	      (Dself1' : self Nx Bx Bx')
+	   <- ({x} {d:isvar x I}
+		 tsubst-e ([_] append/nil) csub/base (DofN x d) (DsubCy x) ([y] [e] DwfC x d y e)
+		    (DwfCy x d : wfe (G x) (Cy x)))
+	   <- can-tsub-e Dappend DwfCy DofM
+	      (DsubCyx : tsub Cy M Cyx)
+	   <- subst-e Dappend Dcsub DofM DsubNx DsubBx DofN
+	      (DofNx : ofe Gx Nx Bx)
+	   <- ({y} {e:isvar y J}
+		 tsubst-e ([x] append/cons (Dappend x)) (csub/cons DsubBx Dcsub) DofM (DsubCx y) ([x] [d] DwfC x d y e)
+		    (DofCx y e : wfe (cons Gx y Bx) (Cx y)))
+	   <- can-tsub-e ([_] append/nil) DofCx DofNx
+	      (DsubCxy : tsub Cx Nx Cxy)
+	   <- tsub-permute-e Dappend DofM DofN DwfC
+	      DsubCx DsubNx DsubCxy DsubCy DsubCyx
+	      (DeqCxy : tp-eq Cxy Cyx)
+	   <- tp-eq-symm DeqCxy
+	      (DeqCxy' : tp-eq Cyx Cxy)
+	   <- tsub-resp ([_] tp-eq/i) term-eq/i DeqCxy' DsubCyx
+	      (DsubCyx_xy : tsub Cy M Cxy)
+	   <- self-sub-e Dappend Dcsub DofM DofO
+	      Dself2' DsubOx DsubCyx_xy (DsubCx' aca)
+	      (Dself2'' : self Ox Cxy Cx')
+	   <- sigma-resp tp-eq/i DeqCyx''
+	      (Deq : tp-eq (sigma Bx' ([_] Cx')) (sigma Bx' ([y] Cyx' y)))
+	   <- self-resp term-eq/i tp-eq/i Deq
+	      (self/sigma
+		 Dself2''
+		 DsubCxy
+		 Dself1'
+		 : self (pair Nx Ox) (sigma Bx Cx) (sigma Bx' ([_] Cx')))
+	      (D : self (pair Nx Ox) (sigma Bx Cx) (sigma Bx' Cyx')).
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   (sub/ao Daosub1) (tsub/singo Daosub2) (tsub/singo Daosub3)
+	   D
+	   <- aosub-fun Daosub2 Daosub1 Deq21
+	   <- aosub-fun Daosub2 Daosub3 Deq23
+	   <- term-eq-cdr-at Deq23 Deq23'
+	   <- tp-resp-atom sing Deq23' Deq23''
+	   <- self-resp Deq21 tp-eq/i Deq23'' self/sing D.
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   (sub/aa Daasub1) (tsub/singa Daasub2) (tsub/singa Daasub3)
+	   D
+	   <- aasub-fun Daasub2 Daasub1 Deq21
+	   <- aasub-fun Daasub2 Daasub3 Deq23
+	   <- tp-resp-atom sing Deq23 Deq23'
+	   <- term-resp-atom at Deq21 Deq21'
+	   <- self-resp Deq21' tp-eq/i Deq23' self/sing D.
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   (sub/aa Daasub) (tsub/singo Daosub) _
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   (sub/ao Daosub) (tsub/singa Daasub) _
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   _ (tsub/singo Daosub) (tsub/singa Daasub)
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+-sing	: self-sub-e _ _ _ _ ([_] self/sing)
+	   _ (tsub/singa Daasub) (tsub/singo Daosub)
+	   D
+	   <- aasub-aosub-contra Daasub Daosub Dfalse
+	   <- false-implies-self Dfalse D.
+
+-one	: self-sub-e _ _ _ _ ([_] self/one)
+	   sub/star tsub/one tsub/one
+	   self/one.
+
+%worlds (bind | ovar | topenblock) (self-sub-e _ _ _ _ _ _ _ _ _).
+%total D (self-sub-e _ _ _ D _ _ _ _ _).
+
+
+
+self-sub : of M A
+	    -> ({x} vof x A -> of (N x) (B x))
+	    -> ({x} self (N x) (B x) (Bs x))
+	    -> sub N M Nx
+	    -> tsub B M Bx
+	    -> tsub Bs M Bsx
+%%
+	    -> self Nx Bx Bsx -> type.
+%mode self-sub +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-	: self-sub DofM DofN Dself DsubNx DsubBx DsubBsx Dself'
+	   <- of-to-ofe DofM DofeM
+	   <- of1-to-ofe 0 DofN DofeN
+	   <- self-sub-e ([_] append/nil) csub/base DofeM DofeN Dself DsubNx DsubBx DsubBsx Dself'.
+
+%worlds (bind | ovar | topenblock) (self-sub _ _ _ _ _ _ _).
+%total {} (self-sub _ _ _ _ _ _ _).
+
+
+
+self-sub' : of M A
+	     -> ({x} vof x A -> of (N x) (B x))
+	     -> ({x} self (N x) (B x) (Bs x))
+	     -> sub N M Nx
+	     -> tsub B M Bx
+	     -> self Nx Bx Bsx
+%%
+	     -> tsub Bs M Bsx -> type.
+%mode self-sub' +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+-	: self-sub' DofM DofN DselfB DsubNx DsubBx DselfBs DsubBsx'
+	   <- ({x} {d}
+		 self-reg' (DselfB x) (DofN x d) 
+		 (DwfBs x d : wf (Bs x)))
+	   <- can-tsub DwfBs DofM
+	      (DsubBsx : tsub Bs M Bsx)
+	   <- self-sub DofM DofN DselfB DsubNx DsubBx DsubBsx DselfBs'
+	   <- self-fun DselfBs' DselfBs Deq
+	   <- tsub-resp ([_] tp-eq/i) term-eq/i Deq DsubBsx
+	      DsubBsx'.
+
+%worlds (bind | ovar | topenblock) (self-sub' _ _ _ _ _ _ _).
+%total {} (self-sub' _ _ _ _ _ _ _).
+
+
+
+
+%%%%%  Principality Lemmas  %%%%%
+
+self-principal : self M A A' -> principal A' -> type.
+%mode self-principal +X1 -X2.
+
+-t	: self-principal self/t principal/sing.
+
+-pi	: self-principal (self/pi Dself) (principal/pi Dprin)
+	   <- ({x} self-principal (Dself x) (Dprin x)).
+
+-sigma	: self-principal (self/sigma Dself2 _ Dself1) (principal/sigma Dprin2 Dprin1)
+	   <- self-principal Dself1 Dprin1
+	   <- self-principal Dself2 Dprin2.
+
+-sing	: self-principal self/sing principal/sing.
+
+-one	: self-principal self/one principal/one.
+
+%worlds (var | topenblock) (self-principal _ _).
+%total D (self-principal D _).
+
+
+
+principal-sub : ({x} principal (A x)) -> tsub A M A' -> principal A' -> type.
+%mode principal-sub +X1 +X2 -X3.
+
+-	: principal-sub ([x] principal/pi ([y] Dprin x y)) (tsub/pi Dsub _) (principal/pi Dprin')
+	   <- ({y}
+		 principal-sub ([x] Dprin x y) (Dsub y) (Dprin' y)).
+
+-	: principal-sub ([x] principal/sigma (Dprin2 x) (Dprin1 x)) (tsub/sigma Dsub2 Dsub1)
+	   D
+	   <- principal-sub Dprin1 Dsub1 Dprin1'
+	   <- tsub-closed Dsub2 Deq
+	   <- ({y}
+		 tsub-resp ([_] tp-eq/i) term-eq/i (Deq y) (Dsub2 y) (Dsub2' y))
+	   <- principal-sub Dprin2 (Dsub2' aca) Dprin2'
+	   <- ({y}
+		 tp-eq-symm (Deq y) (Deq' y))
+	   <- sigma-resp tp-eq/i Deq' (Deqsig : tp-eq (sigma A1 ([_] A2')) (sigma A1 A2))
+	   <- principal-resp Deqsig (principal/sigma Dprin2' Dprin1') D.
+
+-	: principal-sub ([x] principal/sing) (tsub/singa _) principal/sing.
+
+-	: principal-sub ([x] principal/sing) (tsub/singo _) principal/sing.
+
+-	: principal-sub ([x] principal/one) tsub/one principal/one.
+
+%worlds (var | topenblock) (principal-sub _ _ _).
+%total D (principal-sub D _ _).
+
+
+
+principal-self-e : principal A -> ofe G M A -> self M A A -> type.
+%mode principal-self-e +X1 +X2 -X3.
+
+-pi	: principal-self-e
+	   (principal/pi
+	      (DprincipalB : {x} principal (B x)))
+	   (ofe/lam
+	      (DofM : {x} isvar x I -> ofe (cons G x A) (M x) (B x))
+	      (DwfA : wfe G A))
+	   (self/pi Dself)
+	   <- ({x} {d:isvar x I}
+		 principal-self-e (DprincipalB x) (DofM x d)
+		    (Dself x : self (M x) (B x) (B x))).
+
+-sigma	: principal-self-e
+	   (principal/sigma
+	      (DprincipalB : principal B)
+	      (DprincipalA : principal A))
+	   (ofe/pair
+	      _
+	      (DofN : ofe G N Bx)
+	      (DsubBx : tsub ([_] B) M Bx)
+	      (DofM : ofe G M A))
+	   (self/sigma Dself2 DsubB Dself1)
+	   <- principal-self-e DprincipalA DofM
+	      (Dself1 : self M A A)
+	   <- tsub-absent B M
+	      (DsubB : tsub ([_] B) M B)
+	   <- tsub-fun DsubBx DsubB
+	      (Deq : tp-eq Bx B)
+	   <- ofe-resp ctx-eq/i term-eq/i Deq DofN
+	      (DofN' : ofe G N B)
+	   <- principal-self-e DprincipalB DofN'
+	      (Dself2 : self N B B).
+
+-sing	: principal-self-e principal/sing (ofe/sing _) self/sing.
+
+-one	: principal-self-e principal/one (ofe/star _) self/one.
+
+%worlds (var | bind | ovar | topenblock) (principal-self-e _ _ _).
+%total D (principal-self-e D _ _).
+
+
+
+self-singleton-e : self M A A' -> ofe G N A' -> term-eq M N -> type.
+%mode self-singleton-e +X1 +X2 -X3.
+
+-	: self-singleton-e self/t (ofe/sing _) term-eq/i.
+
+-	: self-singleton-e
+	   (self/pi Dself)
+	   (ofe/lam Dof _)
+	   Deq'
+	   <- ({x} {d:isvar x I}
+		 self-singleton-e (Dself x) (Dof x d) (Deq x))
+	   <- lam-resp Deq Deq'.
+
+-	: self-singleton-e
+	   (self/sigma Dself2 _ Dself1)
+	   (ofe/pair _ Dof2 Dtsub Dof1)
+	   Deq
+	   <- self-singleton-e Dself1 Dof1 Deq1
+	   <- tsub-absent _ _ Dtsub'
+	   <- tsub-fun Dtsub Dtsub' Deqt
+	   <- ofe-resp ctx-eq/i term-eq/i Deqt Dof2 Dof2'
+	   <- self-singleton-e Dself2 Dof2' Deq2
+	   <- term-resp-term ([m] pair m M2) Deq1 Deq1'
+	   <- term-resp-term ([m] pair M1' m) Deq2 Deq2'
+	   <- term-eq-trans Deq1' Deq2' Deq.
+
+-	: self-singleton-e self/sing (ofe/sing _) term-eq/i.
+
+-	: self-singleton-e self/one (ofe/star _) term-eq/i.
+
+%worlds (bind | ovar | var | topenblock) (self-singleton-e _ _ _).
+%total D (self-singleton-e D _ _).
+
+
+
+principal-singleton-e : principal A -> ofe G M A -> ofe G N A -> term-eq M N -> type.
+%mode principal-singleton-e +X1 +X2 +X3 -X4.
+
+-	: principal-singleton-e Dprincipal DofeM DofeN Deq
+	   <- principal-self-e Dprincipal DofeM Dself
+	   <- self-singleton-e Dself DofeN Deq.
+
+%worlds (bind | ovar | var | topenblock) (principal-singleton-e _ _ _ _).
+%total {} (principal-singleton-e _ _ _ _).
+
+
+
+subtype-refl-principal-e : principal A -> ofe G M A -> subtype A A ([_] M) -> type.
+%mode subtype-refl-principal-e +X1 +X2 -X3.
+
+-	: subtype-refl-principal-e
+	   (Dprincipal : principal A)
+	   (DofM : ofe G M A)
+	   Dsubtype'
+	   <- ofe-reg DofM
+	      (DwfA : wfe G A)
+	   <- subtype-refl-e DwfA
+	      (Dsubtype : subtype A A ([x] N x))
+	      (Dexpand : {x} expand x A (N x))
+	   <- wfe-context DwfA
+	      (Dordered : ordered G)
+	   <- extend-context Dordered
+	      (Dbounded : {x} isvar x I -> bounded G x)
+	   <- ({x} {d:isvar x I}
+		 weaken-ofe (Dbounded x d) DofM _
+		    (DofM' x d : ofe (cons G x A) M A))
+	   <- ({x} {d:isvar x I}
+		 ofe-reg (DofM' x d)
+		    (DwfA' x d : wfe (cons G x A) A))
+	   <- ({x} {d:isvar x I}
+		 expand-reg-e (aofe/var (DwfA' x d) (lookup/hit (Dbounded x d))) (Dexpand x)
+		    (DofN x d : ofe (cons G x A) (N x) A))
+	   <- ({x} {d:isvar x I}
+		 principal-singleton-e Dprincipal (DofN x d) (DofM' x d)
+		    (Deq x : term-eq (N x) M))
+	   <- subtype-resp tp-eq/i tp-eq/i Deq Dsubtype
+	      (Dsubtype' : subtype A A ([_] M)).
+
+%worlds (ovar | bind | var | topenblock) (subtype-refl-principal-e _ _ _).
+%total {} (subtype-refl-principal-e _ _ _).
+
+
+
+subtype-refl-principal : principal A -> of M A -> subtype A A ([_] M) -> type.
+%mode subtype-refl-principal +X1 +X2 -X3.
+
+-	: subtype-refl-principal Dprincipal Dof Dsub
+	   <- of-to-ofe Dof Dofe
+	   <- subtype-refl-principal-e Dprincipal Dofe Dsub.
+
+%worlds (bind | var | ovar | topenblock) (subtype-refl-principal _ _ _).
+%total {} (subtype-refl-principal _ _ _).
+
+
+
+principal-subtype-t-invert : principal A -> subtype A t M -> tp-eq A (sing R) -> ({x} term-eq (M x) (at R)) -> type.
+%mode principal-subtype-t-invert +X1 +X2 -X3 -X4.
+
+-	: principal-subtype-t-invert principal/sing subtype/sing_t tp-eq/i ([_] term-eq/i).
+
+%worlds (var | topenblock) (principal-subtype-t-invert _ _ _ _).
+%total {} (principal-subtype-t-invert _ _ _ _).
+
+
+
+principal-subtype-t-invert' : principal A -> subtype A t M -> ({x} term-eq (M x) (at R)) -> tp-eq A (sing R) -> type.
+%mode principal-subtype-t-invert' +X1 +X2 +X3 -X4.
+
+-	: principal-subtype-t-invert' principal/sing subtype/sing_t ([_] term-eq/i) tp-eq/i.
+
+%worlds (var | topenblock) (principal-subtype-t-invert' _ _ _ _).
+%total {} (principal-subtype-t-invert' _ _ _ _).
+
+
+
+principal-subtype-sigma-invert : principal A -> subtype A (sigma B C) _ -> tp-eq A (sigma D ([_] E)) -> type.
+%mode principal-subtype-sigma-invert +X1 +X2 -X3.
+
+-	: principal-subtype-sigma-invert (principal/sigma _ _) (subtype/sigma _ _ _) tp-eq/i.
+
+%worlds (var | topenblock) (principal-subtype-sigma-invert _ _ _).
+%total {} (principal-subtype-sigma-invert _ _ _).
+
+
+
+principal-sigma-invert : principal (sigma A B) -> ({x} tp-eq (B x) B') -> type.
+%mode principal-sigma-invert +X1 -X2.
+
+-	: principal-sigma-invert (principal/sigma _ _) ([_] tp-eq/i).
+
+%worlds (var | topenblock) (principal-sigma-invert _ _).
+%total {} (principal-sigma-invert _ _).
+
+
+
+principal-t : principal t -> false -> type.
+%mode principal-t +X1 -X2.
+
+%worlds (var | topenblock) (principal-t _ _).
+%total {} (principal-t _ _).
+
+
+
+principal-subtype : principal A -> subtype A B M -> ({y} term-eq (M y) M') -> type.
+%mode principal-subtype +X1 +X2 -X3.
+
+-pi	: principal-subtype 
+	   (principal/pi 
+	      (Dprincipal : {x} principal (A2 x)))
+	   (subtype/pi 
+	      (Dsubtype2 : {x} subtype (A2' x) (B2 x) ([y] L2 x y))
+	      (DsubA2' : {x} tsub A2 (L1 x) (A2' x))
+	      (Dsubtype1 : subtype B1 A1 L1))
+	   Deq'
+	   <- ({x}
+		 principal-sub Dprincipal (DsubA2' x)
+		 (Dprincipal' x : principal (A2' x)))
+	   <- ({x} 
+		 principal-subtype (Dprincipal' x) (Dsubtype2 x) 
+		 ([y] Deq x y : term-eq (L2 x y) (L2' x)))
+	   <- ({f}
+		 lam-resp ([x] Deq x (app f (L1 x)))
+		 (Deq' f : term-eq (lam ([x] L2 x (app f (L1 x)))) (lam ([x] L2' x)))).
+
+principal-subtype! : ({x:atom} {y:atom} term-eq (L x y) (Lx y)) -> ({x} {y} term-eq (L x y) (Ly x)) -> ({x} {y} term-eq (L x y) L') -> type.
+%mode principal-subtype! +X1 +X2 -X3.
+
+-	: principal-subtype! ([_] [_] term-eq/i) ([_] [_] term-eq/i) ([_] [_] term-eq/i).
+
+%worlds (var | topenblock) (principal-subtype! _ _ _).
+%total {} (principal-subtype! _ _ _).
+
+-sigma	: principal-subtype 
+	   (principal/sigma
+	      (Dprincipal2 : principal A2)
+	      (Dprincipal1 : principal A1))
+	   (subtype/sigma
+	      (Dsubtype2 : {x} subtype A2 (B2' x) ([y] L2 x y))
+	      (DsubB2' : {x} tsub B2 (L1 x) (B2' x))
+	      (Dsubtype1 : subtype A1 B1 L1))
+	   Deq
+	   <- principal-subtype Dprincipal1 Dsubtype1
+	      (Deq1 : {y} term-eq (L1 y) L1')
+	   <- ({x}
+		 tsub-resp ([_] tp-eq/i) (Deq1 x) tp-eq/i (DsubB2' x)
+		 (DsubB2'' x : tsub B2 L1' (B2' x)))
+	   <- tsub-closed DsubB2''
+	      (DeqB2' : {x} tp-eq (B2' x) B2'')
+	   <- ({x}
+		 subtype-resp tp-eq/i (DeqB2' x) ([_] term-eq/i) (Dsubtype2 x)
+		 (Dsubtype2' x : subtype A2 B2'' ([y] L2 x y)))
+	   <- subtype-closed Dsubtype2'
+	      (Deq2x : {x} {y} term-eq (L2 x y) (L2x y))
+	   <- ({x}
+		 principal-subtype Dprincipal2 (Dsubtype2 x)
+		 (Deq2y x : {y} term-eq (L2 x y) (L2y x)))
+	   <- principal-subtype! Deq2x Deq2y
+	      (Deq2 : {x} {y} term-eq (L2 x y) L2')
+	   <- ({p}
+		 pair-resp (Deq1 (pi1 p)) (Deq2 (pi1 p) (pi2 p))
+		 (Deq p : term-eq (pair (L1 (pi1 p)) (L2 (pi1 p) (pi2 p))) (pair L1' L2'))).
+
+-sing_t	: principal-subtype principal/sing subtype/sing_t ([_] term-eq/i).
+
+-sing	: principal-subtype principal/sing subtype/sing ([_] term-eq/i).
+
+-one	: principal-subtype principal/one subtype/one ([_] term-eq/i).
+
+%worlds (var | topenblock) (principal-subtype _ _ _).
+%total D (principal-subtype _ D _).
+
+
+
+
+%%%%%%  Strengthening subtype RHS  %%%%%
+
+%% This is stated a bit clumsily.  It turns out that O must be ([_] N),
+%% and that M need not be considered at all.  The formulation you really
+%% want appears below, as subtype-self-e.  We use subtype-self-e' to help
+%% prove subtype-self-e.  It's probably possible to come up with a clean
+%% proof of subtype-self-e without recourse to subtype-self-e', but the
+%% latter is already done, so why bother.
+
+subtype-self-e' : subtype A B O
+		  -> ofe G M A
+		  -> wfe G B
+		  -> sub O M N
+		  -> principal A
+		  -> self N B B'
+%%
+		  -> subtype A B' ([_] N) -> type.
+%mode subtype-self-e' +X1 +X2 +X3 +X4 +X5 +X6 -X7.
+
+%% Naming conventions are not so good in this case.
+-pi	: subtype-self-e'
+	   (subtype/pi 
+	      (Dsubtype2 : {x} subtype (A2' x) (B2 x) ([y] O2 x y))
+	      (Dtsub : {x} tsub A2 (O1 x) (A2' x))
+	      (Dsubtype1 : subtype B1 A1 O1)
+	      : subtype (pi A1 A2) (pi B1 B2) ([f] lam ([x] O2 x (app f (O1 x)))))
+	   (ofe/lam
+	      (DofM : {x} isvar x I -> ofe (cons G x A1) (M x) (A2 x))
+	      (DwfA1 : wfe G A1)
+	      : ofe G (lam M) (pi A1 A2))
+	   (wfe/pi
+	      (DwfB2 : {x} isvar x K -> wfe (cons G x B1) (B2 x))
+	      (DwfB1 : wfe G B1))
+	   (sub/lam
+	      (Dsub : {x} sub ([f] O2 x (app f (O1 x))) (lam M) (N x))
+	      : sub ([f] lam ([x] O2 x (app f (O1 x)))) (lam M) (lam N))
+	   (principal/pi
+	      (Dprincipal : {x} principal (A2 x)))
+	   (self/pi
+	      (Dself : {x} self (N x) (B2 x) (B2' x))
+	      : self (lam N) (pi B1 B2) (pi B1 B2'))
+	   (subtype/pi
+	      Dsubtype2' Dtsub Dsubtype1
+	      : subtype (pi A1 A2) (pi B1 B2') ([_] lam N))
+	   <- ({x} 
+		 principal-sub Dprincipal (Dtsub x)
+		 (Dprincipal' x : principal (A2' x)))
+	   <- subtype-reg-e Dsubtype1 DwfB1 DwfA1
+	      (DofO1 : {y} isvar y J -> ofe (cons G y B1) (O1 y) A1)
+	   <- ({y} {e:isvar y J}
+		 ofe-context (DofO1 y e)
+		    (ordered/cons
+		       (Dbounded y e : bounded G y)))
+	   <- bump-wfe DwfB2 ([x] [d] ordered/cons (Dbounded x d))
+	      (DwfB2bump : {x} isvar x J -> wfe (cons G x B1) (B2 x))
+	   <- can-sub-context-e DofO1 DofM
+	      (DsubMx : {y} sub ([x] M x) (O1 y) (Mx y))
+	   <- subst-context-e DofO1 DofM DsubMx Dtsub
+	      (DofMx : {y} isvar y J -> ofe (cons G y B1) (Mx y) (A2' y))
+	   <- ({x} {y}
+		 sub-absent (O2 x y) (lam M)
+		 (DsubO2f x y : sub ([f] O2 x y) (lam M) (O2 x y)))
+	   <- ({x} {d:isvar x I}
+		 ofe-reg (DofM x d)
+		    (DwfA2 x d : wfe (cons G x A1) (A2 x)))
+	   <- tsubst-context-e DofO1 DwfA2 Dtsub
+	      (DwfA2' : {x} isvar x J -> wfe (cons G x B1) (A2' x))
+	   <- ({x} {d:isvar x J}
+		 subtype-reg-e (Dsubtype2 x) (DwfA2' x d) (DwfB2bump x d)
+		    (DofO2 x d : {y} isvar y L -> ofe (cons (cons G x B1) y (A2' x)) (O2 x y) (B2 x)))
+	   <- ({x} {d:isvar x J}
+		 {y} {e:isvar y L}
+		 ofe-context (DofO2 x d y e)
+		    (ordered/cons
+		       (bounded/cons _ (Dprec x d y e : precedes x y))))
+	   <- ({x} {d:isvar x J}
+		 can-sub-e ([_] append/nil) (DofO2 x d) (DofMx x d)
+		    (DsubO2y x : sub ([y] O2 x y) (Mx x) (O2y x)))
+	   <- ({x}
+		 sub-absent (O1 x) (lam M)
+		 (DsubO1y x : sub ([y] O1 x) (lam M) (O1 x)))
+	   <- ({x} {d:isvar x J}
+		 weaken-ofe (Dbounded x d) (ofe/lam DofM DwfA1) _
+		    (DofLam x d : ofe (cons G x B1) (lam M) (pi A1 A2)))
+	   <- ({x} {d:isvar x J}
+		 {z} {f:isvar z L}
+		 weaken-wfe (bounded/cons (Dbounded x d) (Dprec x d z f)) (DwfA2' x d) _
+		    (DwfA2'' x d z f : wfe (cons (cons G x B1) z (pi A1 A2)) (A2' x)))
+	   <- ({x} {d:isvar x J}
+		 {z} {f:isvar z L}
+		 weaken-ofe (bounded/cons (Dbounded x d) (Dprec x d z f)) (DofO1 x d) _
+		    (DofO1' x d z f : ofe (cons (cons G x B1) z (pi A1 A2)) (O1 x) A1))
+	   <- ({x} {d:isvar x J}
+		 {z} {f:isvar z L}
+		 weaken-wfe' (append/cons (append/cons append/nil)) (ordered/cons (bounded/cons (Dbounded x d) (Dprec x d z f))) (wfe/pi DwfA2 DwfA1)
+		    (DwfPi x d z f : wfe (cons (cons G x B1) z (pi A1 A2)) (pi A1 A2)))
+	   <- ({x} {d:isvar x J}
+		 weaken-ofe-insert1 ([y] [e] DofO2 x d y e) ([z] [f:isvar z L] bounded/cons (Dbounded x d) (Dprec x d z f)) (pi A1 A2)
+		    (DofO2' x d : {z} isvar z L 
+				   -> {y} isvar y H
+				   -> ofe (cons (cons (cons G x B1) z (pi A1 A2)) y (A2' x)) (O2 x y) (B2 x)))
+	   <- ({x} {d:isvar x J}
+		 ssub-ao-permute-e ([_] append/nil) (DofLam x d) 
+		    ([z] [f] aofe/app (DwfA2'' x d z f) (Dtsub x) (DofO1' x d z f) (aofe/var (DwfPi x d z f) (lookup/hit (bounded/cons (Dbounded x d) (Dprec x d z f)))))
+		    ([z] [f] [y] [e] DofO2' x d z f y e)
+		    (DsubO2f x)
+		    (aosub/app
+		       (DsubMx x)
+		       (DsubO1y x)
+		       aosub/var
+		       : aosub ([f] app f (O1 x)) (lam M) (Mx x))
+		    (DsubO2y x) (Dsub x)
+		    (Deq x : term-eq (O2y x) (N x)))
+	   <- ({x}
+		 sub-resp ([_] term-eq/i) term-eq/i (Deq x) (DsubO2y x)
+		 (DsubN x : sub ([y] O2 x y) (Mx x) (N x)))
+	   <- ({x} {d:isvar x J}
+		 subtype-self-e' (Dsubtype2 x) (DofMx x d) (DwfB2bump x d) (DsubN x) (Dprincipal' x) (Dself x)
+		    (Dsubtype2' x : subtype (A2' x) (B2' x) ([_] (N x)))).
+
+-sigma	: subtype-self-e'
+	   (subtype/sigma
+	      (Dsubtype2 : {x} subtype A2 (B2' x) ([y] O2 x y))
+	      (DtsubB2' : {x} tsub B2 (O1 x) (B2' x))
+	      (Dsubtype1 : subtype A1 B1 O1)
+	      : subtype (sigma A1 ([_] A2)) (sigma B1 B2) ([p] pair (O1 (pi1 p)) (O2 (pi1 p) (pi2 p))))
+	   (ofe/pair
+	      (DwfA2 : {x} isvar x I -> wfe (cons G x A1) A2)
+	      (DofM2 : ofe G M2 A2x)
+	      (DsubA2x : tsub ([_] A2) M1 A2x)
+	      (DofM1 : ofe G M1 A1)
+	      : ofe G (pair M1 M2) (sigma A1 ([_] A2)))
+	   (wfe/sigma
+	      (DwfB2 : {x} isvar x K -> wfe (cons G x B1) (B2 x))
+	      (DwfB1 : wfe G B1))
+	   (sub/pair
+	      (Dsub2 : sub ([p] O2 (pi1 p) (pi2 p)) (pair M1 M2) N2)
+	      (Dsub1 : sub ([p] O1 (pi1 p)) (pair M1 M2) N1)
+	      : sub ([p] pair (O1 (pi1 p)) (O2 (pi1 p) (pi2 p))) (pair M1 M2) (pair N1 N2))
+	   (principal/sigma
+	      (Dprincipal2 : principal A2)
+	      (Dprincipal1 : principal A1)
+	      : principal (sigma A1 ([_] A2)))
+	   (self/sigma
+	      (Dself2 : self N2 B2'' B2self)
+	      (Dsub : tsub B2 N1 B2'')
+	      (Dself1 : self N1 B1 B1self))
+	   (subtype/sigma
+	      ([_] Dsubtype2'')
+	      ([_] DtsubB2self)
+	      Dsubtype1')
+	   <- ofe-reg DofM1
+	      (DwfA1 : wfe G A1)
+	   <- tsub-absent A2 M1
+	      (DsubA2x' : tsub ([_] A2) M1 A2)
+	   <- tsub-fun DsubA2x DsubA2x'
+	      (DeqA2 : tp-eq A2x A2)
+	   <- ofe-resp ctx-eq/i term-eq/i DeqA2 DofM2
+	      (DofM2' : ofe G M2 A2)
+	   <- ({x} {d:isvar x I}
+		 wfe-context (DwfA2 x d)
+		    (ordered/cons
+		       (Dbounded x d : bounded G x)))
+	   <- ({x} 
+		 sub-absent (O1 x) (pair M1 M2)
+		 (DsubO1p x : sub ([p] O1 x) (pair M1 M2) (O1 x)))
+	   <- subtype-reg-e Dsubtype1 DwfA1 DwfB1
+	      (DofO1 : {y} isvar y J -> ofe (cons G y A1) (O1 y) B1)
+	   <- bump-ofe DofO1 ([x] [d] ordered/cons (Dbounded x d))
+	      (DofO1' : {x} isvar x I -> ofe (cons G x A1) (O1 x) B1)
+	   <- can-sub-e ([_] append/nil) DofO1 DofM1
+	      (DsubO1x : sub ([x] O1 x) M1 O1x)
+	   <- ({z} {f:isvar z I}
+		 weaken-wfe (Dbounded z f) (wfe/sigma DwfA2 DwfA1) _
+		    (DwfA1A2' z f : wfe (cons G z (sigma A1 ([_] A2))) (sigma A1 ([_] A2))))
+	   <- weaken-ofe-insert1 DofO1 Dbounded _
+	      (DofO1'' : {z} isvar z I -> {y} isvar y E -> ofe (cons (cons G z (sigma A1 ([_] A2))) y A1) (O1 y) B1)
+	   <- ssub-ao-permute-e ([_] append/nil) (ofe/pair DwfA2 DofM2 DsubA2x DofM1) ([z] [f] aofe/pi1 (aofe/var (DwfA1A2' z f) (lookup/hit (Dbounded z f)))) DofO1''
+	      DsubO1p 
+	      (aosub/pi1 aosub/var
+		 : aosub ([p] pi1 p) (pair M1 M2) M1)
+	      DsubO1x Dsub1
+	      (Deq1 : term-eq O1x N1)
+	   <- sub-resp ([_] term-eq/i) term-eq/i Deq1 DsubO1x
+	      (Dsub1' : sub ([x] O1 x) M1 N1)
+	   <- subtype-self-e' Dsubtype1 DofM1 DwfB1 Dsub1' Dprincipal1 Dself1
+	      (Dsubtype1' : subtype A1 B1self ([_] N1))
+	   <- tsub-absent B2self N1
+	      (DtsubB2self : tsub ([_] B2self) N1 B2self)
+	   <- weaken-wfe-insert1 DwfB2 Dbounded _
+	      (DwfB2weak : {x} isvar x I -> {y} isvar y H -> wfe (cons (cons G x A1) y B1) (B2 y))
+	   <- ({x} {d:isvar x I}
+		 tsubst-e ([_] append/nil) csub/base (DofO1' x d) (DtsubB2' x) (DwfB2weak x d)
+		    (DwfB2' x d : wfe (cons G x A1) (B2' x)))
+	   <- ({x} {d:isvar x I}
+		 subtype-reg-e (Dsubtype2 x) (DwfA2 x d) (DwfB2' x d)
+		    (DofO2 x d : {y} isvar y L -> ofe (cons (cons G x A1) y A2) (O2 x y) (B2' x)))
+	   <- can-tsub-e ([_] append/nil) ([x] [d] DwfB2' x d) DofM1
+	      (DsubB2'x : tsub B2' M1 B2'x)
+	   <- ({x}
+		 tsub-absent (B2 x) M1
+		 (DsubB2y x : tsub ([_] B2 x) M1 (B2 x)))
+	   <- tsub-permute-e ([_] append/nil) DofM1 DofO1' DwfB2weak
+	      DsubB2y Dsub1' Dsub DtsubB2' DsubB2'x
+	      (Deq2 : tp-eq B2'' B2'x)
+	   <- tp-eq-symm Deq2
+	      (Deq2' : tp-eq B2'x B2'')
+	   <- tsub-resp ([_] tp-eq/i) term-eq/i Deq2' DsubB2'x
+	      (DsubB2'' : tsub B2' M1 B2'')
+	   <- subtype-sub-e ([_] append/nil) csub/base DofM1 DwfA2 DwfB2'
+	      Dsubtype2 DsubA2x' DsubB2''
+	      (DsubO2x : {y} sub ([x] O2 x y) M1 (O2x y))
+	      (Dsubtype2' : subtype A2 B2'' O2x)
+	   <- subst-simult-pair-e DofO2 DofM1 DofM2' Dsub2 DsubO2x
+	      (Dsub2' : sub ([y] O2x y) M2 N2)
+	   <- tsubst-e ([_] append/nil) csub/base DofM1 DsubB2'' DwfB2'
+	      (DwfB2'' : wfe G B2'')
+	   <- subtype-self-e' Dsubtype2' DofM2' DwfB2''
+	      (Dsub2' : sub O2x M2 N2)
+	      Dprincipal2 Dself2
+	      (Dsubtype2'' : subtype A2 B2self ([_] N2)).
+
+-sing_t	: subtype-self-e' subtype/sing_t (ofe/sing _) _ Dsub principal/sing self/t
+	   Dsubtype
+	   <- sub-absent _ _ Dsub'
+	   <- sub-fun Dsub Dsub' Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- tp-resp-atom sing Deq' Deq''
+	   <- subtype-resp Deq'' tp-eq/i ([_] term-eq/i) subtype/sing
+	      Dsubtype.
+
+-sing	: subtype-self-e' subtype/sing (ofe/sing _) _ Dsub principal/sing self/sing
+	   subtype/sing.
+
+-one	: subtype-self-e' subtype/one (ofe/star _) _ Dsub principal/one self/one
+	   subtype/one.
+
+%worlds (bind | ovar | topenblock) (subtype-self-e' _ _ _ _ _ _ _).
+%total D (subtype-self-e' _ _ _ _ _ D _).
+
+
+
+subtype-self-e : subtype A B ([_] M)
+		  -> wfe G A
+		  -> wfe G B
+		  -> principal A
+		  -> self M B B'
+%%
+		  -> subtype A B' ([_] M) -> type.
+%mode subtype-self-e +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: subtype-self-e 
+	   (Dsubtype : subtype A B ([_] M))
+	   (DwfA : wfe G A)
+	   (DwfB : wfe G B)
+	   (DprincipalA : principal A)
+	   (Dself : self M B B')
+	   Dsubtype'
+	   <- inhabitation-e DwfA
+	      (DofN : ofe G N A)
+	   <- subtype-reg-e' Dsubtype DwfA DwfB
+	      (DofM : ofe G M B)
+	   <- sub-absent M N
+	      (DsubM : sub ([_] M) N M)
+	   <- subtype-self-e' Dsubtype DofN DwfB DsubM DprincipalA Dself
+	      (Dsubtype' : subtype A B' ([_] M)).
+	      
+%worlds (bind | ovar | topenblock) (subtype-self-e _ _ _ _ _ _).
+%total {} (subtype-self-e _ _ _ _ _ _).
+
+
+
+
+%%%%%  Same Skeleton  %%%%%
+
+tp-skel : tp -> skel -> type.
+%mode tp-skel +A -As.
+
+tp-skel/t	: tp-skel t kt.
+
+tp-skel/pi	: tp-skel (pi A B) (kpi As Bs)
+		   <- tp-skel A As
+		   <- ({x} tp-skel (B x) Bs).
+
+tp-skel/sigma	: tp-skel (sigma A B) (ksigma As Bs)
+		   <- tp-skel A As
+		   <- ({x} tp-skel (B x) Bs).
+
+tp-skel/sing	: tp-skel (sing _) ksing.
+
+tp-skel/one	: tp-skel one kone.
+
+
+
+tp-skel-resp : tp-eq A A' -> skel-eq As As' -> tp-skel A As -> tp-skel A' As' -> type.
+%mode tp-skel-resp +X1 +X2 +X3 -X4.
+
+-	: tp-skel-resp _ _ D D.
+
+%worlds (var | topenblock) (tp-skel-resp _ _ _ _).
+%total {} (tp-skel-resp _ _ _ _).
+
+
+
+subtype-same-skel : subtype A A' _
+		     -> tp-skel A As
+		     -> tp-skel A' As
+		     -> wf A
+		     -> wf A'
+%%
+		     -> tp-eq A A' -> type.
+%mode subtype-same-skel +X1 +X2 +X3 +X4 +X5 -X6.
+
+-	: subtype-same-skel subtype/t tp-skel/t tp-skel/t _ _ tp-eq/i.
+
+subtype-same-skel-subtype : ({x:atom} tp-eq (A x) (A' x))
+			     -> ({x:atom} tp-eq (B x) (B' x))
+			     -> ({x} subtype (A x) (B x) (M x))
+			     -> ({x} subtype (A' x) (B' x) (M x)) -> type.
+%mode subtype-same-skel-subtype +X1 +X2 +X3 -X4.
+
+-	: subtype-same-skel-subtype _ _ D D.
+
+%worlds (var | bind | topenblock) (subtype-same-skel-subtype _ _ _ _).
+%total {} (subtype-same-skel-subtype _ _ _ _).
+%reduces D = D' (subtype-same-skel-subtype _ _ D D').
+
+-	: subtype-same-skel 
+	   (subtype/pi DsubtypeB Dsub DsubtypeA) 
+	   (tp-skel/pi DskelB1 DskelA1) 
+	   (tp-skel/pi DskelB2 DskelA2)
+	   (wf/pi DwfB1 DwfA1)
+	   (wf/pi DwfB2 DwfA2)
+	   Deq
+	   <- subtype-same-skel DsubtypeA DskelA2 DskelA1 DwfA2 DwfA1 DeqA
+	   <- subtype-resp DeqA tp-eq/i ([_] term-eq/i) DsubtypeA DsubtypeA'
+	   <- subtype-refl' DwfA1 DsubtypeA' Dexpand
+	   <- tsub-expand-var' DwfA1 DwfB1 Dexpand Dsub DeqBsub
+	   <- subtype-same-skel-subtype DeqBsub ([_] tp-eq/i) DsubtypeB DsubtypeB'
+	   <- wf-resp-underbind DeqA DwfB2 DwfB2'
+	   <- ({x} {d}
+		 subtype-same-skel (DsubtypeB' x) (DskelB1 x) (DskelB2 x) (DwfB1 x d) (DwfB2' x d)
+		 (DeqB x))
+	   <- tp-eq-symm DeqA DeqA'
+	   <- pi-resp DeqA' DeqB Deq.
+
+-	: subtype-same-skel
+	   (subtype/sigma DsubtypeB Dsub DsubtypeA) 
+	   (tp-skel/sigma DskelB1 DskelA1) 
+	   (tp-skel/sigma DskelB2 DskelA2)
+	   (wf/sigma DwfB1 DwfA1)
+	   (wf/sigma DwfB2 DwfA2)
+	   Deq
+	   <- subtype-same-skel DsubtypeA DskelA1 DskelA2 DwfA1 DwfA2 DeqA
+	   <- subtype-resp DeqA tp-eq/i ([_] term-eq/i) DsubtypeA DsubtypeA'
+	   <- subtype-refl' DwfA2 DsubtypeA' Dexpand
+	   <- tsub-expand-var' DwfA2 DwfB2 Dexpand Dsub DeqBsub
+	   <- subtype-same-skel-subtype ([_] tp-eq/i) DeqBsub DsubtypeB DsubtypeB'
+	   <- wf-resp-underbind DeqA DwfB1 DwfB1'
+	   <- ({x} {d}
+		 subtype-same-skel (DsubtypeB' x) (DskelB1 x) (DskelB2 x) (DwfB1' x d) (DwfB2 x d)
+		 (DeqB x))
+	   <- sigma-resp DeqA DeqB Deq.
+
+-	: subtype-same-skel subtype/sing tp-skel/sing tp-skel/sing _ _ tp-eq/i.
+
+-	: subtype-same-skel subtype/one tp-skel/one tp-skel/one _ _ tp-eq/i.
+
+%worlds (var | bind | topenblock) (subtype-same-skel _ _ _ _ _ _).
+%total D (subtype-same-skel D _ _ _ _ _).

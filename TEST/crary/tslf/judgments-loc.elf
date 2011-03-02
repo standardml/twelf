@@ -1,0 +1,30 @@
+%%%% 
+
+
+loc-less : loc -> loc -> type.
+%mode loc-less *D1 *D2.
+
+loc-less/z	: loc-less loc/z (loc/s L).
+
+loc-less/s	: loc-less (loc/s L) (loc/s L')
+		   <- loc-less L L'.
+
+
+
+loc-neq	: loc -> loc -> type.
+%mode loc-neq *D1 *D2.
+
+loc-neq/l	: loc-neq L L'
+		   <- loc-less L L'.
+
+loc-neq/r	: loc-neq L L'
+		   <- loc-less L' L.
+
+
+loc-seq-or-neq	: loc -> loc -> type.
+
+loc-seq-or-neq/seq	: loc-seq-or-neq L1 L2
+			   <- seq/loc L1 L2.
+
+loc-seq-or-neq/neq	: loc-seq-or-neq L1 L2
+			   <- loc-neq L1 L2.

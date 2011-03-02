@@ -1,0 +1,49 @@
+%%%% Values
+
+val/tm		: tm -> type.
+%mode val/tm *T.
+
+val/tm/unit	: val/tm tm/unit.
+
+val/tm/pair	: val/tm (tm/pair T1 T2)
+		   <- val/tm T2
+		   <- val/tm T1.
+
+val/tm/fun	: val/tm (tm/fun _ _ _).
+
+val/tm/cnabs	: val/tm (tm/cnabs _ _).
+
+val/tm/loc	: val/tm (tm/loc _).
+
+val/tm/inl	: val/tm (tm/inl (tp/sum C1 C2) E)
+		   <- val/tm E.
+
+val/tm/inr	: val/tm (tm/inr (tp/sum C1 C2) E)
+		   <- val/tm E.
+
+val/tm/tagloc	: val/tm (tm/tagloc _).
+
+val/tm/tag	: val/tm (tm/tag E1 E2)
+		   <- val/tm E2
+		   <- val/tm E1.
+
+val/tm/roll	: val/tm (tm/roll (cn/mu _ _) E)
+		   <- val/tm E.
+
+
+
+val/md		: md -> type.
+%mode val/md *M.
+
+val/md/unit	: val/md md/unit.
+
+val/md/pair	: val/md (md/pair M1 M2)
+		   <- val/md M2
+		   <- val/md M1.
+
+val/md/lam	: val/md (md/lam _ _ _).
+
+val/md/cn	: val/md (md/cn _).
+
+val/md/tm	: val/md (md/tm E)
+		   <- val/tm E.

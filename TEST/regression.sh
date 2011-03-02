@@ -3,46 +3,62 @@
 # Author: Robert J. Simmons
 # 
 # TEST/regression.sh [ full ]
-# Tests the regression suite - only in SML by default, and in multiple
-# implementations if the function is passed an argument.
-# provides timing information and should stay largely silent if there
-# are no problems.
+# Tests the regression suite, provides timing information. 
+# Should stay largely silent if there are no problems.
+# If no second argument is given, just does the superficial regression suite;
+# if any second argument is given, the script also runs several plparty.org 
+# specific extra regression checks.
 
 MLTON="mlton"
 SML="sml"
 SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"
 POSTFIX=$( date +%y%m%d )
-TIME="/usr/bin/time -f%e\treal\n%U\tuser"
-
-#echo "=== Running regression test in SML/NJ ==="
-#$TIME $SML $SML_FLAGS sources.cm TEST/quiet.sml TEST/regression.txt
-#
-#if [ $1 = "" ]
-#then
-#   echo "==== Completed! ==="
-#   exit
-#fi
+if [$TERM_PROGRAM -eq "Apple_Terminal"]; then ## Better OS X test?
+  TIME="/usr/bin/time"
+else
+  TIME="/usr/bin/time -f%e\treal\n%U\tuser"
+fi
 
 echo "=== Compiling regression test package in MLton ==="
-$TIME $MLTON -default-ann "nonexhaustiveMatch ignore" TEST/mlton-regression.cm
+$TIME $MLTON -default-ann "nonexhaustiveMatch ignore" mlton-regression.cm
 
 echo ""
 echo "=== Running regression test in MLton ==="
-$TIME TEST/mlton-regression TEST/regression.txt
+$TIME ./mlton-regression regression.txt
 
 echo ""
-echo "=== Running TALT ==="
-$TIME TEST/mlton-regression TEST/regression-talt.txt
-
-echo ""
-echo "=== Running TS-LF (Definition of Standard ML) ==="
-$TIME TEST/mlton-regression TEST/regression-tslf.txt
+echo "=== Running Karl Crary's 'papers' page ==="
+$TIME ./mlton-regression regression-crary.txt
 
 echo ""
 echo "=== Running misc. public code ==="
-$TIME TEST/mlton-regression TEST/regression-public.txt
+$TIME ./mlton-regression regression-public.txt
 
-rm -f TEST/mlton-regression
+echo ""
+echo "=== Running Twelf Wiki literate examples ==="
+$TIME ./mlton-regression regression-wiki.txt
 
-echo "==== Completed! ==="
+
+ARG_ONE=$1
+if [ -z "$ARG_ONE" ] 
+then
+  echo "==== Completed! ==="
+else
+  echo ""
+  echo "=== Running TALT ==="
+  $TIME ./mlton-regression regression-talt.txt
+
+  echo ""
+  echo "=== Running TS-LF (Definition of Standard ML) ==="
+  $TIME ./mlton-regression regression-tslf.txt
+
+  echo ""
+  echo "=== Running Princeton Foundational PCC ==="
+  $TIME ./mlton-regression regression-fpcc.txt
+
+  echo "==== Completed! ==="
+fi
+
+rm -f ./mlton-regression
+
  

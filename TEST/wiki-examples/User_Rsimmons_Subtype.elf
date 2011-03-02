@@ -1,0 +1,242 @@
+%{ Progress and preservation for a language with n-ary tuples
+that have both a notion of width and depth subtyping. }%
+
+%{ == Syntax == }%
+
+%{ === Natural numbers === }%
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+
+%{ === Types === }%
+
+ty : type.
+tys : type.
+
+tys/nil : tys.
+tys/cons : ty -> tys -> tys. 
+ty/tup : tys -> ty.
+ty/nat : ty.
+ty/int : ty.
+
+
+%{ ==== Type equality ==== }%
+
+tyeq : ty -> ty -> type.
+tyeq/refl : tyeq T T.
+
+tyseq : tys -> tys -> type.
+tyseq/refl : tyseq Ts Ts.
+
+tyseq-cong : 
+   tyeq T S -> tyseq Ts Ss -> tyseq (tys/cons T Ts) (tys/cons S Ss) -> type.
+- : tyseq-cong tyeq/refl tyseq/refl tyseq/refl.
+%mode tyseq-cong +A +B -C. 
+%worlds () (tyseq-cong _ _ _). 
+%total {} (tyseq-cong _ _ _).
+
+
+%{ === Terms === }%
+
+tm : type.
+tms : type.
+
+tms/nil : tms. 
+tms/cons : tm -> tms -> tms. 
+tm/tup : tms -> tm.
+tm/num : nat -> nat -> tm.
+tm/nadd : tm -> tm -> tm.
+tm/add : tm -> tm -> tm.
+tm/proj : tm -> nat -> tm.
+
+
+%{ === Abbreviations === }%
+
+%abbrev @ = tys/nil. 
+%abbrev , = tys/cons. %infix right 10 ,.
+%abbrev # = tms/nil.
+%abbrev ; = tms/cons. %infix right 10 ;.
+
+
+
+
+%{ == Primitive operations == }%
+
+plus : nat -> nat -> nat -> type.
+plus/z : plus z N N.
+plus/s : plus N M P -> plus (s N) M (s P).
+
+projtm : tms -> nat -> tm -> type.
+projtm/z : projtm (E ; ES) z E.
+projtm/s : projtm ES N E -> projtm (E ; ES) (s N) E.
+
+projty : tys -> nat -> ty -> type.
+projty/z : projty (T , TS) z T.
+projty/s : projty TS N T -> projty (T , TS) (s N) T.
+
+
+
+
+%{ == Dynamic semantics == }%
+
+%{ === Values === }%
+
+v : tm -> type.
+vs : tms -> type.
+
+vs/nil : vs tms/nil.
+vs/cons : v E -> vs ES -> vs (tms/cons E ES).
+v/num : v (tm/num N+ N-).
+v/tup : v (tm/tup ES).
+
+
+%{ === Dynamics === }%
+
+step : tm -> tm -> type.
+steps : tms -> tms -> type.
+
+steps/s : step E E' -> steps (E ; ES) (E' ; ES).
+steps/v : v E -> steps ES ES' -> steps (E ; ES) (E ; ES').
+step/nadd1 : step E1 E1' -> step (tm/nadd E1 E2) (tm/nadd E1' E2).
+step/nadd2 : v E1 -> step E2 E2' -> step (tm/nadd E1 E2) (tm/nadd E1 E2').
+step/naddR : plus N1 N2 N3 
+    -> step (tm/nadd (tm/num N1 z) (tm/num N2 z)) (tm/num N3 z).
+step/add1 : step E1 E1' -> step (tm/add E1 E2) (tm/add E1' E2).
+step/add2 : v E1 -> step E2 E2' -> step (tm/add E1 E2) (tm/add E1 E2').
+step/addR : plus N1+ N2- N3+ -> plus N1- N2+ N3- 
+    -> step (tm/add (tm/num N1+ N1-) (tm/num N2+ N2-)) (tm/num N3+ N3-).
+step/tup : steps ES ES' -> step (tm/tup ES) (tm/tup ES').
+step/proj1 : step E E' -> step (tm/proj E I) (tm/proj E' I').
+step/projR : projtm ES I E -> vs ES -> step (tm/proj (tm/tup ES) I) E.
+
+
+
+
+%{ == Static semantics == }%
+
+%{ === Subtyping === }%
+
+<| : ty -> ty -> type. %infix none 10 <|.
+<<| : tys -> tys -> type. %infix none 10 <<|.
+
+subs/nil : TS <<| @.
+subs/cons: S <| T -> SS <<| TS -> (S , SS) <<| (T , TS).
+sub/nat  : ty/nat <| ty/nat.
+sub/int  : ty/int <| ty/int.
+sub/num  : ty/nat <| ty/int.
+sub/tup  : TS <<| SS -> (ty/tup TS) <| (ty/tup SS).
+
+
+%{ === Typing === }%
+
+of : tm -> ty -> type.
+ofs : tms -> tys -> type.
+%block gamma : some {T: ty} block {x: tm}{d: of x T}.
+
+ofs/nil : ofs # @.
+ofs/cons: of E T -> ofs ES TS -> ofs (E ; ES) (T , TS). 
+of/tup  : ofs ES TS -> of (tm/tup ES) (ty/tup TS).
+of/nat  : of (tm/num N z) ty/nat.
+of/int  : of (tm/num N+ N-) ty/int.
+of/nadd : of E1 ty/nat -> of E2 ty/nat -> of (tm/nadd E1 E2) ty/nat.
+of/add  : of E1 ty/int -> of E2 ty/int -> of (tm/add E1 E2) ty/int.
+of/proj : projty TS N T -> of E (ty/tup TS) -> of (tm/proj E N) T. 
+of/sub  : S <| T -> of E S -> of E T. 
+
+
+
+
+%{ == Properties of subtyping == }%
+
+%{ === Reflexivity === }%
+
+sub-refl : {T} T <| T -> type.
+subs-refl : {Ts} Ts <<| Ts -> type.
+%mode sub-refl +T -TSub.
+%mode subs-refl +Ts -TsSub.
+
+- : sub-refl ty/nat sub/nat.
+- : sub-refl ty/int sub/int.
+- : sub-refl (ty/tup Ts) (sub/tup TTs)
+     <- subs-refl Ts TTs.
+
+- : subs-refl tys/nil subs/nil.
+- : subs-refl (tys/cons T TS) (subs/cons D DS)
+     <- sub-refl T D <- subs-refl TS DS.
+
+%worlds () (sub-refl _ _) (subs-refl _ _).
+%total (A B) (sub-refl A _) (subs-refl B _).
+
+
+%{ === Transitivity === }%
+
+sub-trans : R <| S -> S <| T -> R <| T -> type.
+subs-trans : Rs <<| Ss -> Ss <<| Ts -> Rs <<| Ts -> type.
+%mode sub-trans +RS +ST -RT.
+%mode subs-trans +RSs +STs -RTs.
+
+- : sub-trans sub/nat S S.
+- : sub-trans S sub/int S.
+- : sub-trans (sub/tup RSs) (sub/tup STs) (sub/tup RTs)
+     <- subs-trans RSs STs RTs.
+
+- : subs-trans _ subs/nil subs/nil.
+- : subs-trans (subs/cons RS RSs) (subs/cons ST STs) (subs/cons RT RTs)
+     <- sub-trans RS ST RT
+     <- subs-trans RSs STs RTs.
+
+%worlds () (subs-trans _ _ _) (sub-trans _ _ _).
+%total (A B) (subs-trans _ A _) (sub-trans _ B _).
+
+
+
+
+%{ == Preservation == }%
+
+%{ === Inversion  === }%
+
+%{ The subtyping inversion theorem says that if 
+<tt>(s1,...,sn) &lt;: t</tt>, then
+<tt>t = (t1,...,tm)</tt> where <tt>m &lt;= n</tt>. }%
+
+inv-sub : ty/tup SS <| T
+           -> tyeq T (ty/tup TS)
+           -> SS <<| TS -> type.
+- : inv-sub (sub/tup A) tyeq/refl A.
+%mode inv-sub +A -B -C.
+%worlds () (inv-sub _ _ _).
+%total {} (inv-sub _ _ _).
+
+%{ The typing inversion lemma says that if 
+<tt>G |- (e1,...,en) : t</tt>, then for each <tt>ei</tt> in <tt>[1,n]</tt>, 
+<tt>G |- ei : si</tt>, <tt>t = (t1,...,tm)</tt>, <tt>m %lt;= n</tt>, 
+and for each <tt>ti</tt> in <tt>[1,m]</tt>, <tt>si %lt;: ti</tt>.
+}%
+
+%{ We need a simple lemma to handle a little equality and call transitivity. }%
+
+inv-tup-lem : RS <<| SS
+               -> tyeq S (ty/tup SS) 
+               -> S <| T 
+               -> tyeq T (ty/tup TS) 
+               -> RS <<| TS -> type.
+- : inv-tup-lem RS tyeq/refl (sub/tup ST) tyeq/refl RT
+     <- subs-trans RS ST RT.
+%mode inv-tup-lem +A +B +C -D -E.
+%worlds () (inv-tup-lem _ _ _ _ _).
+%total {} (inv-tup-lem _ _ _ _ _).
+
+inv-tup : of (tm/tup ES) T 
+           -> ofs ES RS
+           -> tyeq T (ty/tup TS)
+           -> RS <<| TS -> type.
+- : inv-tup (of/tup (D: ofs ES SS)) D tyeq/refl DS
+     <- subs-refl SS DS.
+- : inv-tup (of/sub (SUB : S <| T) (D: of (tm/tup ES) S)) Typs EqT Subs'
+     <- inv-tup D (Typs: ofs ES RS) (EqS: tyeq S (ty/tup SS)) (Subs: RS <<| SS)
+     <- inv-tup-lem Subs EqS SUB EqT Subs'.
+%mode inv-tup +A -B -C -D.
+%worlds (gamma) (inv-tup _ _ _ _).
+%total T (inv-tup T _ _ _).

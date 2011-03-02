@@ -1,0 +1,90 @@
+%%%% Explicit contexts
+
+cxt : type.	%name cxt G.
+
+cxt/nil : cxt.
+
+cxt/cons : cxt -> cn -> kd -> cxt.
+
+
+
+cxt-append : cxt -> cxt -> cxt -> type.
+%mode cxt-append *G1 *G2 *G3.
+
+cxt-append/nil		: cxt-append G cxt/nil G.
+
+cxt-append/cons	: cxt-append G (cxt/cons G' C K) 
+			   (cxt/cons G'' C K)
+			   <- cxt-append G G' G''.
+
+
+
+isvar	: cn -> loc -> type.
+%mode isvar *C *L.
+
+
+
+cxt-precedes	: cn -> cn -> type.
+%mode cxt-precedes *C *C2.
+
+
+cxt-precedes/i	: cxt-precedes C D
+		   <- loc-less I J
+		   <- isvar D J
+		   <- isvar C I.
+
+cxt-bounded	: cxt -> cn -> type.
+%mode cxt-bounded *G *C.
+
+
+cxt-bounded/nil		: cxt-bounded cxt/nil C
+			   <- isvar C _.
+
+cxt-bounded/cons	: cxt-bounded (cxt/cons G Y _) X
+			   <- cxt-precedes Y X
+			   <- cxt-bounded G Y.
+
+
+
+cxt-ordered	: cxt -> type.
+%mode cxt-ordered *G.
+
+cxt-ordered/nil		: cxt-ordered cxt/nil.
+
+cxt-ordered/cons	: cxt-ordered (cxt/cons G X _)
+			   <- cxt-bounded G X.
+
+
+
+
+%block ovar-block : some {l:loc} block {a:cn} {do: isvar a l}.
+
+
+
+%%%% context lookup for explicit contexts
+
+cxt-lookup : cxt -> cn -> kd -> type.
+
+%mode cxt-lookup *G *C *K.
+
+cxt-lookup/hit	: cxt-lookup (cxt/cons G A K) A K
+		   <- cxt-bounded G A.
+
+cxt-lookup/miss : cxt-lookup (cxt/cons G B L) A K
+		   <- cxt-bounded G B
+		   <- cxt-precedes A B
+		   <- cxt-lookup G A K.
+
+
+
+cxt-append-sub : cxt -> (cn -> cxt) -> cn ->  cxt -> type.
+%mode cxt-append-sub *C *G1 *G2 *G3.
+
+cxt-append-sub/nil	: cxt-append-sub G ([x] cxt/nil) _ G.
+
+cxt-append-sub/cons	: cxt-append-sub G 
+			   ([x] cxt/cons (G' x) C' (K x)) C 
+			   (cxt/cons G'' C' (K C))
+			   <- cxt-append-sub G G' C G''.
+
+

@@ -1,0 +1,525 @@
+%%%% preservation for terms and modules
+
+
+preserve/tm	: oftp L T E C
+		   -> oflt ST L T
+		   -> step/tm E ST T E' ST' T'
+		   -> lt-sub L L'
+		   -> lt-sub T T'
+		   -> oftp L' T' E' C
+		   -> oflt ST' L' T'
+		   -> type.
+%mode preserve/tm +D1 +D2 +D3 -D4'' -D4' -D4 -D5.
+
+preserve/md	: ofsg L T Y M S
+		   -> oflt ST L T
+		   -> step/md M ST T M' ST' T'
+		   -> lt-sub L L'
+		   -> lt-sub T T'
+		   -> ofsg L' T' Y M' S
+		   -> oflt ST' L' T'
+		   -> type.
+%mode preserve/md +D1 +D2 +D3 -D4'' -D4 -D4' -D5.
+
+
+
+
+-	: preserve/tm DE DL (step/tm/pair-1 S) 
+	   DS TS (oftp/deq (oftp/tm/pair D1' D2') DQ) DL'
+	   <- inv/oftp/tm/pair DE DQ D1 D2
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D2 D2'.
+
+-	: preserve/tm DE DL (step/tm/pair-2 V S) 
+	   DS TS (oftp/deq (oftp/tm/pair D1' D2') DQ) DL'
+	   <- inv/oftp/tm/pair DE DQ D1 D2
+	   <- preserve/tm D2 DL S DS TS D2' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D1 D1'.
+
+-	: preserve/tm DE DL (step/tm/pj1 S) 
+	   DS TS (oftp/tm/pj1 D1') DL'
+	   <- inv/oftp/tm/pj1 DE D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL' (step/tm/pj1-beta _ _)
+	   lt-sub/refl lt-sub/refl (oftp/deq DL DQL) DL'
+	   <- inv/oftp/tm/pj1 DE D1
+	   <- vdt/oftp D1 DC
+	   <- inv/oftp/tm/pair D1 DQ DL DR
+	   <- inv/cn-deq/tp/cross DQ DQL _.
+
+-	: preserve/tm DE DL (step/tm/pj2 S) 
+	   DS TS (oftp/tm/pj2 D1') DL'
+	   <- inv/oftp/tm/pj2 DE D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/pj2-beta _ _)
+	   lt-sub/refl lt-sub/refl (oftp/deq DR DQR) DL
+	   <- inv/oftp/tm/pj2 DE D1
+	   <- vdt/oftp D1 DC
+	   <- inv/oftp/tm/pair D1 DQ _ DR
+	   <- inv/cn-deq/tp/cross DQ _ DQR.
+
+-	: preserve/tm DE DL (step/tm/tmapp-1 S) 
+	   DS TS (oftp/deq (oftp/tm/tmapp D1' D2') DQ) DL'
+	   <- inv/oftp/tm/tmapp DE DQ D1 D2
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D2 D2'.
+
+-	: preserve/tm DE DL (step/tm/tmapp-2 V S) 
+	   DS TS (oftp/deq (oftp/tm/tmapp D1' D2') DQ) DL'
+	   <- inv/oftp/tm/tmapp DE DQ D1 D2
+	   <- preserve/tm D2 DL S DS TS D2' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D1 D1'.
+
+-	: preserve/tm DE DL (step/tm/tmapp-beta _ V)
+	   lt-sub/refl lt-sub/refl (oftp/deq D1''' (cn-deq/trans DQB2 DQ)) DL
+	   <- inv/oftp/tm/tmapp DE (DQ: cn-deq C2 C kd/type)
+	      (D1: oftp L _ _ (tp/arrow C1 C2)) D2
+	   <- inv/oftp/tm/fun D1 
+	      (DQ': cn-deq (tp/arrow CA CB) (tp/arrow C1 C2) kd/type) 
+	      D1' DC
+	   <- inv/cn-deq/tp/arrow DQ' DQA1 DQB2
+	   <- ({x}{dx} subst/tm-oftp ([f][df] D1' x dx f df) 
+		 (oftp/deq D1 (cn-deq/sym DQ')) (D1'' x dx))
+	   <- subst/tm-oftp D1'' (oftp/deq D2 (cn-deq/sym DQA1)) D1'''.
+
+-	: preserve/tm DE DL (step/tm/cnapp S) 
+	   DS TS (oftp/deq (oftp/tm/cnapp D1' DC) DQ) DL'
+	   <- inv/oftp/tm/cnapp DE DQ D1 DC
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/cnapp-beta V) 
+	   lt-sub/refl lt-sub/refl
+	   (oftp/deq (D1' C' (ofkd/sub DC DKS12)) 
+	      (cn-deq/trans (DQo C' (ofkd/sub DC DKS12)) DQ)) DL
+	   <- inv/oftp/tm/cnapp DE 
+	      (DQ: cn-deq (C1 C') C kd/type) 
+	      D1 DC
+	   <- inv/oftp/tm/cnabs D1 
+	      (DQ': cn-deq (tp/forall K2 C2) (tp/forall K1 C1) kd/type)
+	      D1' _
+	   <- inv/cn-deq/tp/forall DQ' (DQk: kd-deq K2 K1) 
+	      DQo
+	   <- vdt/kd-deq DQk DK2 DK1
+	   <- kd-anti DQk DK2 DK1 _ DKS12.
+
+-	: preserve/tm DE DL (step/tm/set-1 S) 
+	   DS TS (oftp/deq (oftp/tm/set D1' D2') DQ) DL'
+	   <- inv/oftp/tm/set DE DQ D1 D2
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D2 D2'.
+
+-	: preserve/tm DE DL (step/tm/set-2 V S) 
+	   DS TS (oftp/deq (oftp/tm/set D1' D2') DQ) DL'
+	   <- inv/oftp/tm/set DE DQ D1 D2
+	   <- preserve/tm D2 DL S DS TS D2' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D1 D1'.
+
+-	: preserve/tm DE DL (step/tm/get S) 
+	   DS TS (oftp/tm/get D1') DL'
+	   <- inv/oftp/tm/get DE D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/ref S) 
+	   DS TS (oftp/deq (oftp/tm/ref D1') DQ) DL'
+	   <- inv/oftp/tm/ref DE DQ D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/raise S) 
+	   DS TS (oftp/tm/raise D1' DC) DL'
+	   <- vdt/oftp DE DC
+	   <- inv/oftp/tm/raise DE D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/term S)
+	   DS TS (oftp/tm/term D1') DL'
+	   <- inv/oftp/tm/term DE D1
+	   <- preserve/md D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/term-beta _ V)
+	   lt-sub/refl lt-sub/refl (oftp/deq D1' DQ) DL
+	   <- inv/oftp/tm/term DE D1
+	   <- inv/ofsg/md/tm D1 D1' (sg-sub/sg/cn DQ).
+
+-	: preserve/tm DE DL (step/tm/inl S)
+	   DS TS (oftp/deq (oftp/tm/inl D1' DC) DQ) DL'
+	   <- inv/oftp/tm/inl DE D1 DC DQ
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/inr S)
+	   DS TS (oftp/deq (oftp/tm/inr D1' DC) DQ) DL'
+	   <- inv/oftp/tm/inr DE D1 DC DQ
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/case S)
+	   DS TS (oftp/tm/case D1' D2' D3') DL'
+	   <- inv/oftp/tm/case DE D1 D2 D3
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- ({x}{dx} lt-tt-wkn-sub/oftp DS TS (D2 x dx) (D2' x dx))
+	   <- ({x}{dx} lt-tt-wkn-sub/oftp DS TS (D3 x dx) (D3' x dx)).
+
+-	: preserve/tm DE DL (step/tm/case-beta-l V) lt-sub/refl lt-sub/refl D2' DL
+	   <- inv/oftp/tm/case DE D1 D2 D3
+	   <- inv/oftp/tm/inl D1 D1' _ DQ
+	   <- inv/cn-deq/tp/sum DQ DLe _
+	   <- subst/tm-oftp D2 (oftp/deq D1' DLe) D2'.
+
+-	: preserve/tm DE DL (step/tm/case-beta-r V) lt-sub/refl lt-sub/refl D3' DL
+	   <- inv/oftp/tm/case DE D1 D2 D3
+	   <- inv/oftp/tm/inr D1 D1' _ DQ
+	   <- inv/cn-deq/tp/sum DQ _ DR
+	   <- subst/tm-oftp D3 (oftp/deq D1' DR) D3'.
+
+-	: preserve/tm DE (oflt/c DCVR DWF) (step/tm/ref-beta V st-alloc/nil)
+	   (lt-sub/trans lt-sub/refl lt-extend/nil) lt-sub/refl
+	   (oftp/deq (oftp/tm/loc lt-look/hit DC) DQ) (oflt/c DCVR' DWF)
+	   <- inv/oftp/tm/ref DE DQ D1
+	   <- vdt/oftp D1 DC
+	   <- preserve/st-alloc D1 st-alloc/nil DCVR lt-extend/nil DCVR'.
+
+-	: preserve/tm DE (oflt/c (st-wf/cons DCVR DT DG DSG) DWF) 
+	   (step/tm/ref-beta V st-alloc/cons)
+	   (lt-sub/trans lt-sub/refl lt-extend/cons) lt-sub/refl
+	   (oftp/deq (oftp/tm/loc lt-look/hit DC) DQ) (oflt/c DCVR' DWF)
+	   <- inv/oftp/tm/ref DE DQ D1
+	   <- vdt/oftp D1 DC
+	   <- preserve/st-alloc D1 st-alloc/cons 
+	      (st-wf/cons DCVR DT DG DSG)
+	      lt-extend/cons DCVR'.
+
+-	: preserve/tm DE (oflt/c DL DWF) (step/tm/get-beta V SL) 
+	   lt-sub/refl lt-sub/refl (oftp/deq DE' DQ) (oflt/c DL DWF)
+	   <- inv/oftp/tm/get DE DLoc
+	   <- inv/oftp/tm/loc DLoc DQr LL _
+	   <- inv/cn-deq/tp/ref DQr DQ
+	   <- st-wf-can-look SL LL DL DE'.
+
+-	: preserve/tm DE (oflt/c DCVR DWF) (step/tm/set-beta V1 V2 SU) 
+	   lt-sub/refl lt-sub/refl 
+	   (oftp/deq oftp/tm/unit DQ) (oflt/c DCVR' DWF)
+	   <- inv/oftp/tm/set DE (DQ: cn-deq tp/unit Cu kd/type) DEL 
+	      (DEA: oftp _ _ _ C)
+	   <- inv/oftp/tm/loc (DEL: oftp _ _ _ (tp/ref C))
+	      (DQR)
+	      (LL: lt-look L LC C')
+	      (DC: ofkd C' kd/type)
+	   <- inv/cn-deq/tp/ref DQR DQQ
+	   <- preserve/st-update SU LL (oftp/deq DEA (cn-deq/sym DQQ)) DCVR 
+	      DCVR'.
+
+-	: preserve/tm DE DL (step/tm/try S) 
+	   LS TS
+	   (oftp/tm/try D1' D2')
+	   DL'
+	   <- inv/oftp/tm/try DE D1 D2
+	   <- preserve/tm D1 DL S LS TS D1' DL'
+	   <- ({x}{dx} lt-tt-wkn-sub/oftp LS TS (D2 x dx) (D2' x dx)).
+
+-	: preserve/tm DE DL (step/tm/try-beta _) 
+	   lt-sub/refl lt-sub/refl
+	   D1
+	   DL
+	   <- inv/oftp/tm/try DE D1 D2.
+
+-	: preserve/tm DE DL (step/tm/try-handle R) 
+	   lt-sub/refl lt-sub/refl
+	   D2'
+	   DL
+	   <- inv/oftp/tm/try DE D1 D2
+	   <- preserve-raises/tm D1 R D1'
+	   <- subst/tm-oftp D2 D1' D2'.
+
+-	: preserve/tm DE (oflt/c DL DWF) (step/tm/new-tag-beta LX)
+	   lt-sub/refl (lt-sub/trans lt-sub/refl LX)
+	   (oftp/deq (oftp/tm/tagloc lt-look/hit DC) DQ)
+	   (oflt/c DL' (lt-wf/cons DWF LX))
+	   <- inv/oftp/tm/new-tag DE DQ DC
+	   <- tt-wkn/st-wf DL LX DL'.
+
+-	: preserve/tm DE DL (step/tm/tag-1 S) 
+	   DS TS (oftp/deq (oftp/tm/tag D1' D2') DQ) DL'
+	   <- inv/oftp/tm/tag DE DQ D1 D2
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D2 D2'.
+
+-	: preserve/tm DE DL (step/tm/tag-2 V S) 
+	   DS TS (oftp/deq (oftp/tm/tag D1' D2') DQ) DL'
+	   <- inv/oftp/tm/tag DE DQ D1 D2
+	   <- preserve/tm D2 DL S DS TS D2' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D1 D1'.
+
+-	: preserve/tm DE DL (step/tm/iftag-1 S)
+	   DS TS (oftp/tm/iftag D1' D2' D3' D4') DL'
+	   <- inv/oftp/tm/iftag DE D1 D2 D3 D4
+	   <- preserve/tm D1 DL S DS TS D1' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D2 D2'
+	   <- ({x}{dx} lt-tt-wkn-sub/oftp DS TS (D3 x dx) (D3' x dx))
+	   <- lt-tt-wkn-sub/oftp DS TS D4 D4'.
+
+-	: preserve/tm DE DL (step/tm/iftag-2 _ S)
+	   DS TS (oftp/tm/iftag D1' D2' D3' D4') DL'
+	   <- inv/oftp/tm/iftag DE D1 D2 D3 D4
+	   <- preserve/tm D2 DL S DS TS D2' DL'
+	   <- lt-tt-wkn-sub/oftp DS TS D1 D1'
+	   <- ({x}{dx} lt-tt-wkn-sub/oftp DS TS (D3 x dx) (D3' x dx))
+	   <- lt-tt-wkn-sub/oftp DS TS D4 D4'.
+
+-	: preserve/tm DE (oflt/c DL DWF) (step/tm/iftag-beta-1 _) 
+	   lt-sub/refl lt-sub/refl D3' (oflt/c DL DWF)
+	   <- inv/oftp/tm/iftag DE D1 (D2: oftp _ _ _ (tp/tag C)) D3 D4
+	   <- inv/oftp/tm/tag D1 DQ1 DA (DB: oftp _ _ _ CA)
+	   <- inv/oftp/tm/tagloc DA 
+	      (DCQA: cn-deq (tp/tag CA') (tp/tag CA) kd/type)
+	      (LLA: lt-look _ _ CA') _
+	   <- inv/oftp/tm/tagloc D2 
+	      (DCQ2: cn-deq (tp/tag C2') (tp/tag C) kd/type)
+	      (LL2: lt-look _ _ C2') _
+	   <- lt-wf-look-unique LLA LL2 DWF DQ
+	   <- seq/cn/tag DQ DQ'
+	   <- cn-deq/seq-l DQ' DCQA DCQA'
+	   <- inv/cn-deq/tp/tag (cn-deq/trans (cn-deq/sym DCQA') DCQ2) DQQ
+	   <- subst/tm-oftp D3 (oftp/deq DB DQQ) D3'.
+
+-	: preserve/tm DE DL (step/tm/iftag-beta-2 _ _) 
+	   lt-sub/refl lt-sub/refl D4 DL
+	   <- inv/oftp/tm/iftag DE D1 D2 D3 D4.
+
+-	: preserve/tm DE DL (step/tm/roll S)
+	   DS TS (oftp/deq (oftp/tm/roll D1' DC) DQ) DL'
+	   <- inv/oftp/tm/roll DE DQ D1 DC 
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm DE DL (step/tm/unroll S)
+	   DS TS (oftp/deq (oftp/tm/unroll D1') DQ) DL'
+	   <- inv/oftp/tm/unroll DE DQ D1
+	   <- preserve/tm D1 DL S DS TS D1' DL'.
+
+-	: preserve/tm (DE: oftp _ _ (tm/unroll (tm/roll (cn/mu K1 C1) E)) _)
+	   DL (step/tm/unroll-beta V)
+	   lt-sub/refl lt-sub/refl 
+	   (oftp/deq D1'' (cn-deq/trans DQQ DQ): oftp _ _ _ CC) DL
+	   <- inv/oftp/tm/unroll DE 
+	      (DQ: cn-deq (C2 (cn/mu K2 C2)) CC kd/type) 
+	      (D1': oftp _ _ _ (cn/mu K2 C2))
+	   <- inv/oftp/tm/roll D1' 
+	      (DQ' : cn-deq (cn/mu K1 C1) (cn/mu K2 C2) kd/type)
+	      (D1'': oftp _ _ _ (C1 (cn/mu K1 C1))) _
+	   <- inv/cn-deq/cn/mu DQ' DQo
+	   <- functf/cn-deq DQ' DQo 
+	      (DQQ: cn-deq (C1 (cn/mu K1 C1)) (C2 (cn/mu K2 C2)) kd/type).
+
+
+-	: preserve/md DE DL (step/md/pair-1 S) 
+	   LS TS 
+	   (ofsg/sub (ofsg/md/pair D1' D2') DS P)
+	   DL'
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve/md D1 DL S LS TS D1' DL'
+	   <- pty-sub-refl _ P
+	   <- lt-tt-wkn-sub/ofsg LS TS D2 D2'.
+
+-	: preserve/md DE DL (step/md/pair-2 _ S) 
+	   LS TS 
+	   (ofsg/sub (ofsg/md/pair D1' D2') DS P)
+	   DL'
+	   <- inv/ofsg/md/pair DE D1 D2 DS
+	   <- preserve/md D2 DL S LS TS D2' DL'
+	   <- pty-sub-refl _ P
+	   <- lt-tt-wkn-sub/ofsg LS TS D1 D1'.
+
+-	: preserve/md DE DL (step/md/pj1 S) 
+	   LS TS 
+	   (ofsg/sub (ofsg/md/pj1 D1') DS P) DL'
+	   <- inv/ofsg/md/pj1 DE D1 DS
+	   <- preserve/md D1 DL S LS TS D1' DL'
+	   <- pty-sub-refl _ P.
+
+-	: preserve/md DE DL (step/md/pj1-beta _ _) 
+	   lt-sub/refl lt-sub/refl DE' DL
+	   <- module-beta/pj1 psi-md/eps DE DE'.
+
+-	: preserve/md DE DL (step/md/app-1 S) 
+	   LS TS 
+	   (ofsg/sub (ofsg/md/app D1' D2' DM) DS pty-sub/ii) DL'
+	   <- inv/ofsg/md/app DE D1 D2 DM DS
+	   <- preserve/md D1 DL S LS TS D1' DL'
+	   <- lt-tt-wkn-sub/ofsg LS TS D2 D2'.
+
+-	: preserve/md DE DL _
+	   lt-sub/refl DS D1' DL'
+	   <- ofsg/md/app-pty/i DE DU
+	   <- uninhabited-ofsg L _ pty/p _ _ DU D1'
+	   <- uninhabited-oflt _ L _ DU DL'
+	   <- uninhabited-lt-sub _ _ DU DS.
+
+-	: preserve/md DE DL (step/md/tm S) LS TS 
+	   (ofsg/sub (ofsg/md/tm D1') DS pty-sub/pp) DL'
+	   <- inv/ofsg/md/tm DE D1 DS
+	   <- preserve/tm D1 DL S LS TS D1' DL'.
+
+-	: preserve/md DE DL (step/md/tm S) LS TS 
+	   (ofsg/sub (ofsg/md/tm D1') DS pty-sub/pi) DL'
+	   <- inv/ofsg/md/tm DE D1 DS
+	   <- preserve/tm D1 DL S LS TS D1' DL'.
+
+-	: preserve/md DE DL (step/md/seal-beta _) 
+	   lt-sub/refl lt-sub/refl DE' DL
+	   <- inv/ofsg/md/seal DE DE'.
+
+-	: preserve/md 
+	   DE DL
+	   (step/md/let S) LS TS
+	   (ofsg/sub (ofsg/md/let D1' D2' DW DF) DS pty-sub/ii) DL'
+	   <- inv/ofsg/md/let DE D1 D2 DW DF DS
+	   <- preserve/md D1 DL S LS TS D1' DL'
+	   <- ({s}{ds}{a}{da}{dm}
+		 lt-tt-wkn-sub/ofsg LS TS 
+		 (D2 s ds a da dm)
+		 (D2' s ds a da dm)).
+
+-	: preserve/md DE DL _
+	   lt-sub/refl DS D1' DL'
+	   <- ofsg/md/let-pty/i DE DU
+	   <- uninhabited-ofsg L _ pty/p _ _ DU D1'
+	   <- uninhabited-oflt _ L _ DU DL'
+	   <- uninhabited-lt-sub _ _ DU DS.
+
+-	: preserve/md DE DL (step/md/let-beta _ V DF) 
+	   lt-sub/refl lt-sub/refl (ofsg/sub D2' DS P) DL
+	   <- inv/ofsg/md/let DE D1 D2 DW DFS DS
+	   <- val/md-pty/p V (D1: ofsg _ _ _ M' _) (D1p: ofsg _ _ _ M' _)
+	   <- vdt/ofsg/p D1p _ DS' DF' DC'
+	   <- subst/md-ofsg 
+	      (D2: {s}{ds}{a}{da}{dm} ofsg _ _ _ (M s a) _)
+	      (D1p: ofsg _ _ _ M' _) DFS DF 
+	      (D2': ofsg _ _ _ (M M' C') _)
+	   <- pty-sub-pty/i-top _ P.
+
+-	: preserve/md DE DL (step/md/pj2-beta _ _) 
+	   lt-sub/refl lt-sub/refl DE' DL
+	   <- module-beta/pj2 psi-md/eps DE DE'.
+
+-	: preserve/md DE DL (step/md/pj2 S) LS TS 
+	   (ofsg/sub (ofsg/md/pj2 D1' DM') DSS DP)
+	   DL'
+	   <- inv/ofsg/md/pj2 DE D1 DM DS DP
+	   <- preserve/md D1 DL S LS TS D1' DL'
+	   <- preserve/fst-md D1 DM S 
+	      DM' (fst-sg/sgm FSa' _) DQ
+	   <- vdt/cn-deq DQ DK1 DK2 _
+	   <- vdt/ofsg (D1': ofsg _ _ _ _ (sg/sgm _ S1))
+	      (sg-wf/sg/sgm _ DSo (FSa: fst-sg _ Ka))
+	   <- fst-sg-seq FSa FSa' DQFS
+	   <- sg-wf/seq-a DQFS DSo DSo'
+	   <- funct/sg-wf DSo' (cn-deq/cn/pj1 DQ) 
+	      (ofkd/cn/pj1 DK1) DSQ
+	   <- fst-sg-complete (S1 (cn/pj1 CM)) FSM
+	   <- fst-sg-complete (S1 (cn/pj1 C')) FS'
+	   <- sg-anti DSQ FSM FS' _ DS21 _ _
+	   <- sg-trans/sub 
+	      (DS21)
+	      (DS)
+	      (DSS).
+
+-	: preserve/md 
+	   (DE: ofsg _ _ _ _ SG)
+	   DL 
+	   (step/md/app-2 _ S)
+	   LS TS 
+	   (ofsg/sub 
+	      ((ofsg/md/app (D1' : ofsg _ _ _ _ (sg/pi _ S1))
+			D2' DM'): ofsg _ _ _ _ (S1 C'))
+	      (DSS: sg-sub (S1 C') SG) pty-sub/ii)
+	   DL'
+	   <- inv/ofsg/md/app 
+	      (DE : ofsg _ _ _ _ SG)
+	      (D1 : ofsg _ _ _ _ (sg/pi SA S1)) 
+	      (D2: ofsg _ _ _ _ SA) 
+	      (DM)
+	      (DS)
+	   <- preserve/md (D2: ofsg _ _ _ _ SA)
+	      DL 
+	      S 
+	      LS TS 
+	      (D2': ofsg _ _ _ _ SA) 
+	      DL'
+	   <- vdt/ofsg 
+	      (D1: ofsg _ _ _ _ (sg/pi SA S1)) 
+	      (sg-wf/sg/pi (_: sg-wf SA) 
+		 (DW: {a}{da: ofkd a K} sg-wf (S1 a)) 
+		 (DFS: fst-sg SA K))
+	   <- preserve/fst-md  
+	      (D2: ofsg _ _ _ _ SA) DM S
+	      DM' 
+	      (DFS': fst-sg SA K') 
+	      (DQ: cn-deq CM C' K')
+	   <- fst-sg-seq DFS DFS' DQFS
+	   <- sg-wf/seq-a DQFS 
+	      (DW: {a}{da: ofkd a K} sg-wf (S1 a))
+	      DW'
+	   <- vdt/cn-deq DQ DK1 _ _
+	   <- funct/sg-wf 
+	      DW'
+	      (DQ: cn-deq CM C' K') 
+	      DK1
+	      (DSQ: sg-deq (S1 CM) (S1 C'))
+	   <- fst-sg-complete (S1 CM) FSM
+	   <- fst-sg-complete (S1 C') FS'
+	   <- sg-anti DSQ FSM FS'
+	      (DS12: sg-sub (S1 CM) (S1 C'))
+	      (DS21: sg-sub (S1 C') (S1 CM)) _ _
+	   <- sg-trans/sub 
+	      (DS21)
+	      (DS)
+	      (DSS)
+	   <- lt-tt-wkn-sub/ofsg LS TS D1 D1'.
+
+-	: preserve/md (DE: ofsg _ _ _ _ SG)
+	   DL 
+	   (step/md/app-beta _ _ DM')
+	   lt-sub/refl lt-sub/refl
+	   (ofsg/sub Dc DSS P)
+	   DL
+	   <- inv/ofsg/md/app 
+	      (DE : ofsg _ _ _ _ SG)
+	      (D1 : ofsg _ _ _ _ (sg/pi SA S1)) 
+	      (D2: ofsg _ _ _ _ SA) 
+	      (DM: fst-md _ C) 
+	      (DS: sg-sub (S1 C) SG)
+	   <- vdt/ofsg/p D2 _ FSAA' DMv DvC
+	   <- fst-md-seq DM' DM DMQ'
+	   <- fst-md-seq DMv (DM': fst-md M' C') DMQv
+	   <- inv/ofsg/md/lam
+	      D1
+	      D1o
+	      _
+	      DFFS
+	      (sg-sub/sg/pi (DS1: sg-deq SA _) DS2 (FSAA: fst-sg _ KK))
+	   <- fst-sg-complete _ Df2
+	   <- sg-anti DS1 FSAA Df2 DSA' _ DKA' _
+	   <- ofkd/seq-c DMQv DvC DCv
+	   <- fst-sg-seq FSAA' FSAA DQFSAA
+	   <- ofkd/seq-k DQFSAA DCv (DCv': ofkd C' KK)
+	   <- subst/md-ofsg D1o (ofsg/sub D2 DSA' pty-sub/pp) DFFS DM' 
+	      (Dc: ofsg _ _ Y _ _)
+	   <- fst-sg-complete _ DF1
+	   <- fst-sg-complete _ DF2
+	   <- sg-anti (DS2 _ DCv') DF1 DF2 DSla _ _ _
+	   <- seq/cn/sg-sub-o 
+	      ([a] S1 a)
+	      DMQ'
+	      DSla
+	      DS'
+	   <- sg-trans/sub DS' DS DSS
+	   <- pty-sub-pty/i-top Y (P: pty-sub Y pty/i).
+
+%worlds () 
+(preserve/tm _ _ _ _ _ _ _) 
+(preserve/md _ _ _ _ _ _ _).
+%total (D1 D2) 
+(preserve/md _ _ D2 _ _ _ _) 
+(preserve/tm _ _ D1 _ _ _ _).
+
+
+

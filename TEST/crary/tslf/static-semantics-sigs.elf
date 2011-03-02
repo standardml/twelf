@@ -1,0 +1,100 @@
+%%%%% Static Semantics for sigs %%%%%%
+
+
+sg-wf		: sg -> type.
+%mode sg-wf *S.
+
+fst-sg		: sg -> kd -> type.
+%mode fst-sg *S *K.
+
+sg-deq		: sg -> sg -> type.
+%mode sg-deq *S1 *S2.
+
+sg-sub		: sg -> sg -> type.
+%mode sg-sub *S1 *S2.
+
+
+
+
+fst-sg/unit	: fst-sg sg/unit kd/unit.
+
+fst-sg/kd	: fst-sg (sg/kd K) K.
+
+fst-sg/cn	: fst-sg (sg/cn _) kd/unit.
+
+fst-sg/sgm	: fst-sg (sg/sgm S1 S2) (kd/sgm K1 K2)
+		   <- ({a:cn} 
+			 fst-sg (S2 a) (K2 a))
+		   <- fst-sg S1 K1.
+
+fst-sg/pi	: fst-sg (sg/pi _ _) kd/unit.
+
+
+
+sg-wf/sg/unit	: sg-wf sg/unit.
+
+sg-wf/sg/kd	: sg-wf (sg/kd K)
+		   <- kd-wf K.
+
+sg-wf/sg/cn	: sg-wf (sg/cn C)
+		   <- ofkd C kd/type.
+
+sg-wf/sg/sgm	: sg-wf (sg/sgm S1 S2)
+		   <- fst-sg S1 K1
+		   <- ({a:cn}{da: ofkd a K1}
+			 sg-wf (S2 a))
+		   <- sg-wf S1.
+
+sg-wf/sg/pi	: sg-wf (sg/pi S1 S2)
+		   <- fst-sg S1 K1
+		   <- ({a:cn}{da: ofkd a K1}
+			 sg-wf (S2 a))
+		   <- sg-wf S1.
+
+
+
+sg-deq/sg/unit	: sg-deq sg/unit sg/unit.
+
+sg-deq/sg/kd	: sg-deq (sg/kd K1) (sg/kd K2)
+		   <- kd-deq K1 K2.
+
+sg-deq/sg/cn	: sg-deq (sg/cn C1) (sg/cn C2)
+		   <- cn-deq C1 C2 kd/type.
+
+sg-deq/sg/sgm	: sg-deq (sg/sgm S1 S2) (sg/sgm S3 S4)
+		   <- fst-sg S1 K1
+		   <- ({a:cn}{da: ofkd a K1}
+			 sg-deq (S2 a) (S4 a))
+		   <- sg-deq S1 S3.
+
+sg-deq/sg/pi	: sg-deq (sg/pi S1 S2) (sg/pi S3 S4)
+		   <- fst-sg S3 K3
+		   <- ({a:cn}{da: ofkd a K3}
+			 sg-deq (S2 a) (S4 a))
+		   <- sg-deq S3 S1.
+
+
+
+
+sg-sub/sg/unit	: sg-sub sg/unit sg/unit.
+
+sg-sub/sg/kd	: sg-sub (sg/kd K1) (sg/kd K2)
+		   <- kd-sub K1 K2.
+
+sg-sub/sg/cn	: sg-sub (sg/cn C1) (sg/cn C2)
+		   <- cn-deq C1 C2 kd/type.
+
+sg-sub/sg/sgm	: sg-sub (sg/sgm S1 S2) (sg/sgm S3 S4)
+		   <- fst-sg S3 K3
+		   <- fst-sg S1 K1
+		   <- ({a:cn}{da: ofkd a K3}
+			 sg-wf (S4 a))
+		   <- ({a:cn}{da: ofkd a K1}
+			 sg-sub (S2 a) (S4 a))
+		   <- sg-sub S1 S3.
+
+sg-sub/sg/pi	: sg-sub (sg/pi S1 S2) (sg/pi S3 S4)
+		   <- fst-sg S3 K3
+		   <- ({a:cn}{da: ofkd a K3}
+			 sg-deq (S2 a) (S4 a))
+		   <- sg-deq S3 S1.

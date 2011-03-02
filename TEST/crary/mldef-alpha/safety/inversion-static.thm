@@ -1,0 +1,1213 @@
+
+%%%%%  Kind Inversion  %%%%%
+
+kd-wf-kprod-invert : kd-wf (kprod K1 K2)
+		      -> kd-wf K1
+		      -> kd-wf K2
+		      -> type.
+%mode kd-wf-kprod-invert +X1 -X2 -X3.
+
+-	: kd-wf-kprod-invert (kd-wf/sigma Dwf2 Dwf1) Dwf1 (Dwf2 _ DofInh)
+	   <- inhabitation Dwf1 DofInh.
+
+%worlds (conbind) (kd-wf-kprod-invert _ _ _).
+%total {} (kd-wf-kprod-invert _ _ _).
+
+
+
+kd-equiv-pi-form : kd-equiv (pi K1 K2) K
+		    -> kind-eq K (pi K1' K2')
+		    -> type.
+%mode kd-equiv-pi-form +X1 -X2.
+
+kd-equiv-pi-form' : kd-equiv K (pi K1 K2)
+		     -> kind-eq K (pi K1' K2')
+		     -> type.
+%mode kd-equiv-pi-form' +X1 -X2.
+
+-	: kd-equiv-pi-form (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-pi-form (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-pi-form' Dequiv Deq.
+
+-	: kd-equiv-pi-form (kd-equiv/trans Dequiv23 Dequiv12) Deq3
+	   <- kd-equiv-pi-form Dequiv12 Deq2
+	   <- kd-equiv-resp Deq2 kind-eq/i Dequiv23 Dequiv23'
+	   <- kd-equiv-pi-form Dequiv23' Deq3.
+
+-	: kd-equiv-pi-form (kd-equiv/pi _ _) kind-eq/i.
+
+
+
+-	: kd-equiv-pi-form' (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-pi-form' (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-pi-form Dequiv Deq.
+
+-	: kd-equiv-pi-form' (kd-equiv/trans Dequiv23 Dequiv12) Deq1
+	   <- kd-equiv-pi-form' Dequiv23 Deq2
+	   <- kd-equiv-resp kind-eq/i Deq2 Dequiv12 Dequiv12'
+	   <- kd-equiv-pi-form' Dequiv12' Deq1.
+
+-	: kd-equiv-pi-form' (kd-equiv/pi _ _) kind-eq/i.
+
+%worlds (conbind) (kd-equiv-pi-form _ _) (kd-equiv-pi-form' _ _).
+%total (D1 D2) (kd-equiv-pi-form D1 _) (kd-equiv-pi-form' D2 _).
+
+
+
+kd-equiv-sigma-form : kd-equiv (sigma K1 K2) K
+		       -> kind-eq K (sigma K1' K2')
+		       -> type.
+%mode kd-equiv-sigma-form +X1 -X2.
+
+kd-equiv-sigma-form' : kd-equiv K (sigma K1 K2)
+			-> kind-eq K (sigma K1' K2')
+			-> type.
+%mode kd-equiv-sigma-form' +X1 -X2.
+
+-	: kd-equiv-sigma-form (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-sigma-form (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-sigma-form' Dequiv Deq.
+
+-	: kd-equiv-sigma-form (kd-equiv/trans Dequiv23 Dequiv12) Deq3
+	   <- kd-equiv-sigma-form Dequiv12 Deq2
+	   <- kd-equiv-resp Deq2 kind-eq/i Dequiv23 Dequiv23'
+	   <- kd-equiv-sigma-form Dequiv23' Deq3.
+
+-	: kd-equiv-sigma-form (kd-equiv/sigma _ _) kind-eq/i.
+
+
+
+-	: kd-equiv-sigma-form' (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-sigma-form' (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-sigma-form Dequiv Deq.
+
+-	: kd-equiv-sigma-form' (kd-equiv/trans Dequiv23 Dequiv12) Deq1
+	   <- kd-equiv-sigma-form' Dequiv23 Deq2
+	   <- kd-equiv-resp kind-eq/i Deq2 Dequiv12 Dequiv12'
+	   <- kd-equiv-sigma-form' Dequiv12' Deq1.
+
+-	: kd-equiv-sigma-form' (kd-equiv/sigma _ _) kind-eq/i.
+
+%worlds (conbind) (kd-equiv-sigma-form _ _) (kd-equiv-sigma-form' _ _).
+%total (D1 D2) (kd-equiv-sigma-form D1 _) (kd-equiv-sigma-form' D2 _).
+
+
+
+kd-equiv-sing-form : kd-equiv (sing C) K
+		       -> kind-eq K (sing C')
+		       -> type.
+%mode kd-equiv-sing-form +X1 -X2.
+
+kd-equiv-sing-form' : kd-equiv K (sing C)
+		       -> kind-eq K (sing C')
+		       -> type.
+%mode kd-equiv-sing-form' +X1 -X2.
+
+-	: kd-equiv-sing-form (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-sing-form (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-sing-form' Dequiv Deq.
+
+-	: kd-equiv-sing-form (kd-equiv/trans Dequiv23 Dequiv12) Deq3
+	   <- kd-equiv-sing-form Dequiv12 Deq2
+	   <- kd-equiv-resp Deq2 kind-eq/i Dequiv23 Dequiv23'
+	   <- kd-equiv-sing-form Dequiv23' Deq3.
+
+-	: kd-equiv-sing-form (kd-equiv/sing _) kind-eq/i.
+
+
+
+-	: kd-equiv-sing-form' (kd-equiv/refl _) kind-eq/i.
+
+-	: kd-equiv-sing-form' (kd-equiv/symm Dequiv) Deq
+	   <- kd-equiv-sing-form Dequiv Deq.
+
+-	: kd-equiv-sing-form' (kd-equiv/trans Dequiv23 Dequiv12) Deq1
+	   <- kd-equiv-sing-form' Dequiv23 Deq2
+	   <- kd-equiv-resp kind-eq/i Deq2 Dequiv12 Dequiv12'
+	   <- kd-equiv-sing-form' Dequiv12' Deq1.
+
+-	: kd-equiv-sing-form' (kd-equiv/sing _) kind-eq/i.
+
+%worlds (conbind) (kd-equiv-sing-form' _ _) (kd-equiv-sing-form _ _).
+%total (D1 D2) (kd-equiv-sing-form' D1 _) (kd-equiv-sing-form D2 _).
+
+
+
+kd-sub-pi-form : kd-sub (pi K1 K2) K
+		  -> kind-eq K (pi K1' K2')
+		  -> type.
+%mode kd-sub-pi-form +X1 -X2.
+
+-	: kd-sub-pi-form (kd-sub/refl Dequiv) Deq
+	   <- kd-equiv-pi-form Dequiv Deq.
+
+-	: kd-sub-pi-form (kd-sub/trans Dsub23 Dsub12) Deq3
+	   <- kd-sub-pi-form Dsub12 Deq2
+	   <- kd-sub-resp Deq2 kind-eq/i Dsub23 Dsub23'
+	   <- kd-sub-pi-form Dsub23' Deq3.
+
+-	: kd-sub-pi-form (kd-sub/pi _ _ _) kind-eq/i.
+
+%worlds (conbind) (kd-sub-pi-form _ _).
+%total D (kd-sub-pi-form D _).
+
+
+
+kd-sub-pi-form' : kd-sub K (pi K1 K2)
+		      -> kind-eq K (pi K1' K2')
+		      -> type.
+%mode kd-sub-pi-form' +X1 -X2.
+
+-	: kd-sub-pi-form' (kd-sub/refl Dequiv) Deq
+	   <- kd-equiv-pi-form' Dequiv Deq.
+
+-	: kd-sub-pi-form' (kd-sub/trans Dsub23 Dsub12) Deq1
+	   <- kd-sub-pi-form' Dsub23 Deq2
+	   <- kd-sub-resp kind-eq/i Deq2 Dsub12 Dsub12'
+	   <- kd-sub-pi-form' Dsub12' Deq1.
+
+-	: kd-sub-pi-form' (kd-sub/pi _ _ _) kind-eq/i.
+
+%worlds (conbind) (kd-sub-pi-form' _ _).
+%total D (kd-sub-pi-form' D _).
+
+
+
+kd-sub-sigma-form : kd-sub (sigma K1 K2) K
+		     -> kind-eq K (sigma K1' K2')
+		     -> type.
+%mode kd-sub-sigma-form +X1 -X2.
+
+-	: kd-sub-sigma-form (kd-sub/refl Dequiv) Deq
+	   <- kd-equiv-sigma-form Dequiv Deq.
+
+-	: kd-sub-sigma-form (kd-sub/trans Dsub23 Dsub12) Deq3
+	   <- kd-sub-sigma-form Dsub12 Deq2
+	   <- kd-sub-resp Deq2 kind-eq/i Dsub23 Dsub23'
+	   <- kd-sub-sigma-form Dsub23' Deq3.
+
+-	: kd-sub-sigma-form (kd-sub/sigma _ _ _) kind-eq/i.
+
+%worlds (conbind) (kd-sub-sigma-form _ _).
+%total D (kd-sub-sigma-form D _).
+
+
+
+kd-sub-sigma-form' : kd-sub K (sigma K1 K2)
+		      -> kind-eq K (sigma K1' K2')
+		      -> type.
+%mode kd-sub-sigma-form' +X1 -X2.
+
+-	: kd-sub-sigma-form' (kd-sub/refl Dequiv) Deq
+	   <- kd-equiv-sigma-form' Dequiv Deq.
+
+-	: kd-sub-sigma-form' (kd-sub/trans Dsub23 Dsub12) Deq1
+	   <- kd-sub-sigma-form' Dsub23 Deq2
+	   <- kd-sub-resp kind-eq/i Deq2 Dsub12 Dsub12'
+	   <- kd-sub-sigma-form' Dsub12' Deq1.
+
+-	: kd-sub-sigma-form' (kd-sub/sigma _ _ _) kind-eq/i.
+
+%worlds (conbind) (kd-sub-sigma-form' _ _).
+%total D (kd-sub-sigma-form' D _).
+
+
+
+kd-sub-sing-form' : kd-sub K (sing C)
+		     -> kind-eq K (sing C')
+		     -> type.
+%mode kd-sub-sing-form' +X1 -X2.
+
+-	: kd-sub-sing-form' (kd-sub/refl Dequiv) Deq
+	   <- kd-equiv-sing-form' Dequiv Deq.
+
+-	: kd-sub-sing-form' (kd-sub/trans Dsub23 Dsub12) Deq1
+	   <- kd-sub-sing-form' Dsub23 Deq2
+	   <- kd-sub-resp kind-eq/i Deq2 Dsub12 Dsub12'
+	   <- kd-sub-sing-form' Dsub12' Deq1.
+
+%worlds (conbind) (kd-sub-sing-form' _ _).
+%total D (kd-sub-sing-form' D _).
+
+
+
+injective-sing : kd-equiv (sing C) (sing C')
+%%
+		  -> cn-equiv C C' t
+		  -> type.
+%mode injective-sing +X1 -X2.
+
+-	: injective-sing (kd-equiv/refl (kd-wf/sing D)) (cn-equiv/refl D).
+
+-	: injective-sing (kd-equiv/symm D) (cn-equiv/symm D')
+	   <- injective-sing D D'.
+
+-	: injective-sing (kd-equiv/trans D23 D12) (cn-equiv/trans D23'' D12'')
+	   <- kd-equiv-sing-form D12 Deq
+	   <- kd-equiv-resp kind-eq/i Deq D12 D12'
+	   <- kd-equiv-resp Deq kind-eq/i D23 D23'
+	   <- injective-sing D12' D12''
+	   <- injective-sing D23' D23''.
+
+-	: injective-sing (kd-equiv/sing D) D.
+
+%worlds (conbind) (injective-sing _ _).
+%total D (injective-sing D _).
+
+
+
+injective-pi : kd-equiv (pi K1 K2) (pi K1' K2')
+%%
+		-> kd-equiv K1 K1'
+		-> ({a} cn-of a K1 -> kd-equiv (K2 a) (K2' a))
+		-> type.
+%mode injective-pi +X1 -X2 -X3.
+
+-	: injective-pi 
+	   (kd-equiv/refl (kd-wf/pi Dwf2 Dwf1))
+	   (kd-equiv/refl Dwf1)
+	   ([a] [d] kd-equiv/refl (Dwf2 a d)).
+
+-	: injective-pi
+	   (kd-equiv/symm Dequiv)
+	   (kd-equiv/symm Dequiv1)
+	   ([a] [d] kd-equiv/symm (Dequiv2 a (cn-of/equiv (kd-equiv/symm Dequiv1) d)))
+	   <- injective-pi Dequiv Dequiv1 Dequiv2.
+
+-	: injective-pi
+	   (kd-equiv/trans DequivBC DequivAB)
+	   (kd-equiv/trans Dequiv1bc Dequiv1ab)
+	   ([a] [d] kd-equiv/trans (Dequiv2bc a (cn-of/equiv Dequiv1ab d)) (Dequiv2ab a d))
+	   <- kd-equiv-pi-form DequivAB DeqB
+	   <- kd-equiv-resp kind-eq/i DeqB DequivAB DequivAB'
+	   <- kd-equiv-resp DeqB kind-eq/i DequivBC DequivBC'
+	   <- injective-pi DequivAB' Dequiv1ab Dequiv2ab
+	   <- injective-pi DequivBC' Dequiv1bc Dequiv2bc.
+
+-	: injective-pi (kd-equiv/pi D2 D1) D1 D2.
+
+%worlds (conbind-reg) (injective-pi _ _ _).
+%total D (injective-pi D _ _).
+
+
+
+injective-sigma : kd-equiv (sigma K1 K2) (sigma K1' K2')
+%%
+		   -> kd-equiv K1 K1'
+		   -> ({a} cn-of a K1 -> kd-equiv (K2 a) (K2' a))
+		   -> type.
+%mode injective-sigma +X1 -X2 -X3.
+
+-	: injective-sigma 
+	   (kd-equiv/refl (kd-wf/sigma Dwf2 Dwf1))
+	   (kd-equiv/refl Dwf1)
+	   ([a] [d] kd-equiv/refl (Dwf2 a d)).
+
+-	: injective-sigma
+	   (kd-equiv/symm Dequiv)
+	   (kd-equiv/symm Dequiv1)
+	   ([a] [d] kd-equiv/symm (Dequiv2 a (cn-of/equiv (kd-equiv/symm Dequiv1) d)))
+	   <- injective-sigma Dequiv Dequiv1 Dequiv2.
+
+-	: injective-sigma
+	   (kd-equiv/trans DequivBC DequivAB)
+	   (kd-equiv/trans Dequiv1bc Dequiv1ab)
+	   ([a] [d] kd-equiv/trans (Dequiv2bc a (cn-of/equiv Dequiv1ab d)) (Dequiv2ab a d))
+	   <- kd-equiv-sigma-form DequivAB DeqB
+	   <- kd-equiv-resp kind-eq/i DeqB DequivAB DequivAB'
+	   <- kd-equiv-resp DeqB kind-eq/i DequivBC DequivBC'
+	   <- injective-sigma DequivAB' Dequiv1ab Dequiv2ab
+	   <- injective-sigma DequivBC' Dequiv1bc Dequiv2bc.
+
+-	: injective-sigma (kd-equiv/sigma D2 D1) D1 D2.
+
+%worlds (conbind-reg) (injective-sigma _ _ _).
+%total D (injective-sigma D _ _).
+
+
+
+kd-sub-pi-invert : kd-sub (pi K1 K2) (pi K1' K2')
+%%
+		    -> kd-sub K1' K1
+		    -> ({a} cn-of a K1' -> kd-sub (K2 a) (K2' a))
+		    -> ({a} cn-of a K1 -> kd-wf (K2 a))
+		    -> type.
+%mode kd-sub-pi-invert +X1 -X2 -X3 -X4.
+
+-	: kd-sub-pi-invert
+	   (kd-sub/refl Dequiv)
+	   %%
+	   (kd-sub/refl (kd-equiv/symm Dequiv1))
+	   ([a] [d] kd-sub/refl (Dequiv2 a (cn-of/equiv (kd-equiv/symm Dequiv1) d)))
+	   Dwf2
+	   <- injective-pi Dequiv Dequiv1 Dequiv2
+	   <- kd-equiv-reg Dequiv
+	      (kd-wf/pi Dwf2 _)
+	      _.
+
+-	: kd-sub-pi-invert
+	   (kd-sub/trans DsubBC DsubAB)
+	   %%
+	   (kd-sub/trans Dsub1ab Dsub1bc)
+	   ([a] [d] kd-sub/trans (Dsub2bc a d) (Dsub2ab a (cn-of/subsume Dsub1bc d)))
+	   Dwf2b
+	   <- kd-sub-pi-form DsubAB DeqB
+	   <- kd-sub-resp kind-eq/i DeqB DsubAB DsubAB'
+	   <- kd-sub-resp DeqB kind-eq/i DsubBC DsubBC'
+	   <- kd-sub-pi-invert DsubAB'
+	      Dsub1ab Dsub2ab Dwf2b
+	   <- kd-sub-pi-invert DsubBC'
+	      Dsub1bc Dsub2bc Dwf2c.
+
+-	: kd-sub-pi-invert
+	   (kd-sub/pi Dwf Dsub2 Dsub1)
+	   %%
+	   Dsub1 Dsub2 Dwf.
+
+%worlds (conbind-reg) (kd-sub-pi-invert _ _ _ _).
+%total D (kd-sub-pi-invert D _ _ _).
+
+
+
+kd-sub-sigma-invert : kd-sub (sigma K1 K2) (sigma K1' K2')
+%%
+		       -> kd-sub K1 K1'
+		       -> ({a} cn-of a K1 -> kd-sub (K2 a) (K2' a))
+		       -> ({a} cn-of a K1' -> kd-wf (K2' a))
+		       -> type.
+%mode kd-sub-sigma-invert +X1 -X2 -X3 -X4.
+
+-	: kd-sub-sigma-invert
+	   (kd-sub/refl Dequiv)
+	   %%
+	   (kd-sub/refl Dequiv1) ([a] [d] kd-sub/refl (Dequiv2 a d)) Dwf2'
+	   <- injective-sigma Dequiv Dequiv1 Dequiv2
+	   <- kd-equiv-reg Dequiv
+	      _
+	      (kd-wf/sigma Dwf2' _).
+
+-	: kd-sub-sigma-invert
+	   (kd-sub/trans DsubBC DsubAB)
+	   %%
+	   (kd-sub/trans Dsub1bc Dsub1ab) 
+	   ([a] [d] kd-sub/trans (Dsub2bc a (cn-of/subsume Dsub1ab d)) (Dsub2ab a d))
+	   Dwf2c
+	   <- kd-sub-sigma-form DsubAB DeqB
+	   <- kd-sub-resp kind-eq/i DeqB DsubAB DsubAB'
+	   <- kd-sub-resp DeqB kind-eq/i DsubBC DsubBC'
+	   <- kd-sub-sigma-invert DsubAB'
+	      Dsub1ab Dsub2ab Dwf2b
+	   <- kd-sub-sigma-invert DsubBC'
+	      Dsub1bc Dsub2bc Dwf2c.
+
+-	: kd-sub-sigma-invert
+	   (kd-sub/sigma Dwf2' Dsub2 Dsub1)
+	   %%
+	   Dsub1 Dsub2 Dwf2'.
+
+%worlds (conbind-reg) (kd-sub-sigma-invert _ _ _ _).
+%total D (kd-sub-sigma-invert D _ _ _).
+
+
+
+kd-sub-antisymm : kd-sub K1 K2 -> kd-sub K2 K1 -> kd-equiv K1 K2 -> type.
+%mode kd-sub-antisymm +X1 +X2 -X3.
+
+kd-sub-antisymm' : kd-sub K1 K2 -> kd-sub K2 K1 -> kd-equiv K1 K2 -> type.
+%mode kd-sub-antisymm' +X1 +X2 -X3.
+
+-	: kd-sub-antisymm (kd-sub/refl D) _ D.
+
+-	: kd-sub-antisymm
+	   (kd-sub/trans
+	      (D23 : kd-sub K2 K3)
+	      (D12 : kd-sub K1 K2))
+	   (D31 : kd-sub K3 K1)
+	   (kd-equiv/trans Dequiv23 Dequiv12)
+	   <- kd-sub-antisymm D12 (kd-sub/trans D31 D23)
+	      (Dequiv12 : kd-equiv K1 K2)
+	   <- kd-sub-antisymm D23 (kd-sub/trans D12 D31)
+	      (Dequiv23 : kd-equiv K2 K3).
+
+-	: kd-sub-antisymm
+	   (kd-sub/sing-t _)
+	   (Dsub : kd-sub t (sing _))
+	   Dequiv
+	   <- kd-sub-sing-form' Dsub (Deq : kind-eq t (sing _))
+	   <- kind-eq-t-sing Deq Dfalse
+	   <- false-implies-kd-equiv Dfalse Dequiv.
+
+-	: kd-sub-antisymm
+	   (kd-sub/pi _ Dsub2 Dsub1)
+	   Dsub'
+	   (kd-equiv/pi ([a] [d] Dequiv2 a (cn-of/subsume Dsub1' d)) Dequiv1)
+	   <- kd-sub-pi-invert Dsub' Dsub1' Dsub2' _
+	   <- kd-sub-antisymm' Dsub1' Dsub1 Dequiv1
+	   <- kd-sub-reg Dsub1 Dwf1' _
+	   <- ({a} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf1'
+		 -> kd-sub-antisymm (Dsub2 a d) (Dsub2' a (cn-of/subsume Dsub1 d)) (Dequiv2 a d)).
+
+-	: kd-sub-antisymm
+	   (kd-sub/sigma _ Dsub2 Dsub1)
+	   Dsub'
+	   (kd-equiv/sigma Dequiv2 Dequiv1)
+	   <- kd-sub-sigma-invert Dsub' Dsub1' Dsub2' _
+	   <- kd-sub-antisymm Dsub1 Dsub1' Dequiv1
+	   <- kd-sub-reg Dsub1 Dwf1 _
+	   <- ({a} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf1
+		 -> kd-sub-antisymm (Dsub2 a d) (Dsub2' a (cn-of/subsume Dsub1 d)) (Dequiv2 a d)).
+
+
+
+-	: kd-sub-antisymm' _ (kd-sub/refl D) (kd-equiv/symm D).
+
+-	: kd-sub-antisymm'
+	   (D31 : kd-sub K3 K1)
+	   (kd-sub/trans
+	      (D23 : kd-sub K2 K3)
+	      (D12 : kd-sub K1 K2))
+	   (kd-equiv/trans Dequiv21 Dequiv32)
+	   <- kd-sub-antisymm' (kd-sub/trans D31 D23) D12
+	      (Dequiv21 : kd-equiv K2 K1)
+	   <- kd-sub-antisymm' (kd-sub/trans D12 D31) D23
+	      (Dequiv32 : kd-equiv K3 K2).
+
+-	: kd-sub-antisymm'
+	   (Dsub : kd-sub t (sing _))
+	   (kd-sub/sing-t _)
+	   Dequiv
+	   <- kd-sub-sing-form' Dsub (Deq : kind-eq t (sing _))
+	   <- kind-eq-t-sing Deq Dfalse
+	   <- false-implies-kd-equiv Dfalse Dequiv.
+
+-	: kd-sub-antisymm'
+	   Dsub'
+	   (kd-sub/pi _ Dsub2 Dsub1)
+	   (kd-equiv/pi Dequiv2 Dequiv1)
+	   <- kd-sub-pi-invert Dsub' Dsub1' Dsub2' _
+	   <- kd-sub-antisymm Dsub1 Dsub1' Dequiv1
+	   <- kd-sub-reg Dsub1 Dwf1' _
+	   <- ({a} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf1'
+		 -> kd-sub-antisymm' (Dsub2' a (cn-of/subsume Dsub1 d)) (Dsub2 a d) (Dequiv2 a d)).
+
+-	: kd-sub-antisymm'
+	   Dsub'
+	   (kd-sub/sigma _ Dsub2 Dsub1)
+	   (kd-equiv/sigma ([a] [d] Dequiv2 a (cn-of/subsume Dsub1' d)) Dequiv1)
+	   <- kd-sub-sigma-invert Dsub' Dsub1' Dsub2' _
+	   <- kd-sub-antisymm' Dsub1' Dsub1 Dequiv1
+	   <- kd-sub-reg Dsub1 Dwf1 _
+	   <- ({a} {d} {ds}
+		 mcn-assm d ds
+		 -> cn-of-reg d Dwf1
+		 -> kd-sub-antisymm' (Dsub2' a (cn-of/subsume Dsub1 d)) (Dsub2 a d) (Dequiv2 a d)).
+
+%worlds (conbind-reg) (kd-sub-antisymm _ _ _) (kd-sub-antisymm' _ _ _).
+%total (D1 D2) (kd-sub-antisymm D1 _ _) (kd-sub-antisymm' _ D2 _).
+
+
+
+
+%%%%%  Consistency for Signatures  %%%%%
+
+similar-sg : sg -> sg -> type.
+
+similar-sg/one		: similar-sg sg/one sg/one.
+
+similar-sg/satom	: similar-sg (sg/satom _) (sg/satom _).
+
+similar-sg/datom	: similar-sg (sg/datom _) (sg/datom _).
+
+similar-sg/sgatom	: similar-sg (sg/sgatom _) (sg/sgatom _).
+
+similar-sg/pi		: similar-sg (sg/pi _ _) (sg/pi _ _).
+
+similar-sg/sigma	: similar-sg (sg/sigma _ _) (sg/sigma _ _).
+
+similar-sg/named	: similar-sg (sg/named _ _) (sg/named _ _).
+
+
+
+similar-sg-symm : similar-sg S1 S2 -> similar-sg S2 S1 -> type.
+%mode similar-sg-symm +X1 -X2.
+
+-	: similar-sg-symm _ similar-sg/one.
+-	: similar-sg-symm _ similar-sg/satom.
+-	: similar-sg-symm _ similar-sg/datom.
+-	: similar-sg-symm _ similar-sg/sgatom.
+-	: similar-sg-symm _ similar-sg/pi.
+-	: similar-sg-symm _ similar-sg/sigma.
+-	: similar-sg-symm _ similar-sg/named.
+
+%worlds (conblock) (similar-sg-symm _ _).
+%total {} (similar-sg-symm _ _).
+
+
+
+similar-sg-trans : similar-sg S1 S2 -> similar-sg S2 S3 -> similar-sg S1 S3 -> type.
+%mode similar-sg-trans +X1 +X2 -X3.
+
+-	: similar-sg-trans _ _ similar-sg/one.
+-	: similar-sg-trans _ _ similar-sg/satom.
+-	: similar-sg-trans _ _ similar-sg/datom.
+-	: similar-sg-trans _ _ similar-sg/sgatom.
+-	: similar-sg-trans _ _ similar-sg/pi.
+-	: similar-sg-trans _ _ similar-sg/sigma.
+-	: similar-sg-trans _ _ similar-sg/named.
+
+%worlds (conblock) (similar-sg-trans _ _ _).
+%total {} (similar-sg-trans _ _ _).
+
+
+
+sg-equiv-similar : sg-equiv S1 S2 -> similar-sg S1 S2 -> type.
+%mode sg-equiv-similar +X1 -X2.
+
+-	: sg-equiv-similar _ similar-sg/one.
+-	: sg-equiv-similar _ similar-sg/satom.
+-	: sg-equiv-similar _ similar-sg/datom.
+-	: sg-equiv-similar _ similar-sg/sgatom.
+-	: sg-equiv-similar _ similar-sg/pi.
+-	: sg-equiv-similar _ similar-sg/sigma.
+-	: sg-equiv-similar _ similar-sg/named.
+
+-	: sg-equiv-similar (sg-equiv/symm D) D''
+	   <- sg-equiv-similar D D'
+	   <- similar-sg-symm D' D''.
+
+-	: sg-equiv-similar (sg-equiv/trans D23 D12) D13'
+	   <- sg-equiv-similar D12 D12'
+	   <- sg-equiv-similar D23 D23'
+	   <- similar-sg-trans D12' D23' D13'.
+
+%worlds (conbind) (sg-equiv-similar _ _).
+%total D (sg-equiv-similar D _).
+
+
+
+sg-sub-similar : sg-sub S1 S2 -> similar-sg S1 S2 -> type.
+%mode sg-sub-similar +X1 -X2.
+
+-	: sg-sub-similar _ similar-sg/one.
+-	: sg-sub-similar _ similar-sg/satom.
+-	: sg-sub-similar _ similar-sg/datom.
+-	: sg-sub-similar _ similar-sg/sgatom.
+-	: sg-sub-similar _ similar-sg/pi.
+-	: sg-sub-similar _ similar-sg/sigma.
+-	: sg-sub-similar _ similar-sg/named.
+
+-	: sg-sub-similar (sg-sub/refl D) D'
+	   <- sg-equiv-similar D D'.
+
+-	: sg-sub-similar (sg-sub/trans D23 D12) D13'
+	   <- sg-sub-similar D12 D12'
+	   <- sg-sub-similar D23 D23'
+	   <- similar-sg-trans D12' D23' D13'.
+
+%worlds (conbind) (sg-sub-similar _ _).
+%total D (sg-sub-similar D _).
+
+
+
+similar-sg-sigma-satom : similar-sg (sg/sigma _ _) (sg/satom _) -> false -> type.
+%mode similar-sg-sigma-satom +X1 -X2.
+%worlds () (similar-sg-sigma-satom _ _).
+%total {} (similar-sg-sigma-satom _ _).
+
+
+similar-sg-satom-sigma : similar-sg (sg/satom _) (sg/sigma _ _) -> false -> type.
+%mode similar-sg-satom-sigma +X1 -X2.
+%worlds () (similar-sg-satom-sigma _ _).
+%total {} (similar-sg-satom-sigma _ _).
+
+
+similar-sg-datom-satom : similar-sg (sg/datom _) (sg/satom _) -> false -> type.
+%mode similar-sg-datom-satom +X1 -X2.
+%worlds () (similar-sg-datom-satom _ _).
+%total {} (similar-sg-datom-satom _ _).
+
+
+similar-sg-datom-sigma : similar-sg (sg/datom _) (sg/sigma _ _) -> false -> type.
+%mode similar-sg-datom-sigma +X1 -X2.
+%worlds () (similar-sg-datom-sigma _ _).
+%total {} (similar-sg-datom-sigma _ _).
+
+
+similar-sg-pi-satom : similar-sg (sg/pi _ _) (sg/satom _) -> false -> type.
+%mode similar-sg-pi-satom +X1 -X2.
+%worlds () (similar-sg-pi-satom _ _).
+%total {} (similar-sg-pi-satom _ _).
+
+
+similar-sg-pi-sigma : similar-sg (sg/pi _ _) (sg/sigma _ _) -> false -> type.
+%mode similar-sg-pi-sigma +X1 -X2.
+%worlds () (similar-sg-pi-sigma _ _).
+%total {} (similar-sg-pi-sigma _ _).
+
+
+
+similar-sg-satom : similar-sg (sg/satom K) S
+		    -> sg-eq S (sg/satom K')
+		    -> type.
+%mode similar-sg-satom +X1 -X2.
+
+-	: similar-sg-satom similar-sg/satom sg-eq/i.
+
+%worlds (conblock) (similar-sg-satom _ _).
+%total {} (similar-sg-satom _ _).
+
+
+
+similar-sg-datom : similar-sg (sg/datom T) S
+		    -> sg-eq S (sg/datom T')
+		    -> type.
+%mode similar-sg-datom +X1 -X2.
+
+-	: similar-sg-datom similar-sg/datom sg-eq/i.
+
+%worlds (conblock) (similar-sg-datom _ _).
+%total {} (similar-sg-datom _ _).
+
+
+
+similar-sg-sigma : similar-sg (sg/sigma S1 S2) S
+		    -> sg-eq S (sg/sigma S1' S2')
+		    -> type.
+%mode similar-sg-sigma +X1 -X2.
+
+-	: similar-sg-sigma similar-sg/sigma sg-eq/i.
+
+%worlds (conblock) (similar-sg-sigma _ _).
+%total {} (similar-sg-sigma _ _).
+
+
+
+similar-sg-pi : similar-sg (sg/pi S1 S2) S
+		 -> sg-eq S (sg/pi S1' S2')
+		 -> type.
+%mode similar-sg-pi +X1 -X2.
+
+-	: similar-sg-pi similar-sg/pi sg-eq/i.
+
+%worlds (conblock) (similar-sg-pi _ _).
+%total {} (similar-sg-pi _ _).
+
+
+
+similar-sg-named : similar-sg (sg/named L S) S'
+		    -> sg-eq S' (sg/named L' S'')
+		    -> type.
+%mode similar-sg-named +X1 -X2.
+
+-	: similar-sg-named similar-sg/named sg-eq/i.
+
+%worlds (conblock) (similar-sg-named _ _).
+%total {} (similar-sg-named _ _).
+
+
+
+
+%%%%%  Signature Inversion  %%%%%
+
+sg-equiv-datom-form' : sg-equiv S (sg/datom T)
+		      -> sg-eq S (sg/datom T')
+		      -> type.
+%mode sg-equiv-datom-form' +X1 -X2.
+
+-	: sg-equiv-datom-form' Dequiv Deq
+	   <- sg-equiv-similar Dequiv Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-datom Dsimilar' Deq.
+
+%worlds (conbind) (sg-equiv-datom-form' _ _).
+%total {} (sg-equiv-datom-form' _ _).
+
+
+
+sg-equiv-named-form' : sg-equiv S (sg/named L S')
+		   -> sg-eq S (sg/named L' S'')
+		   -> type.
+%mode sg-equiv-named-form' +X1 -X2.
+
+-	: sg-equiv-named-form' Dequiv Deq
+	   <- sg-equiv-similar Dequiv Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-named Dsimilar' Deq.
+
+%worlds (conbind) (sg-equiv-named-form' _ _).
+%total {} (sg-equiv-named-form' _ _).
+
+
+
+sg-sub-satom-form' : sg-sub S (sg/satom K)
+		      -> sg-eq S (sg/satom K')
+		      -> type.
+%mode sg-sub-satom-form' +X1 -X2.
+
+-	: sg-sub-satom-form' Dsub Deq
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-satom Dsimilar' Deq.
+
+%worlds (conbind) (sg-sub-satom-form' _ _).
+%total {} (sg-sub-satom-form' _ _).
+
+
+
+sg-sub-datom-form' : sg-sub S (sg/datom T)
+		      -> sg-eq S (sg/datom T')
+		      -> type.
+%mode sg-sub-datom-form' +X1 -X2.
+
+-	: sg-sub-datom-form' Dsub Deq
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-datom Dsimilar' Deq.
+
+%worlds (conbind) (sg-sub-datom-form' _ _).
+%total {} (sg-sub-datom-form' _ _).
+
+
+
+sg-sub-pi-form' : sg-sub S (sg/pi S1 S2)
+		   -> sg-eq S (sg/pi S1' S2')
+		   -> type.
+%mode sg-sub-pi-form' +X1 -X2.
+
+-	: sg-sub-pi-form' Dsub Deq
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-pi Dsimilar' Deq.
+
+%worlds (conbind) (sg-sub-pi-form' _ _).
+%total {} (sg-sub-pi-form' _ _).
+
+
+
+sg-sub-named-form' : sg-sub S (sg/named L S')
+		   -> sg-eq S (sg/named L' S'')
+		   -> type.
+%mode sg-sub-named-form' +X1 -X2.
+
+-	: sg-sub-named-form' Dsub Deq
+	   <- sg-sub-similar Dsub Dsimilar
+	   <- similar-sg-symm Dsimilar Dsimilar'
+	   <- similar-sg-named Dsimilar' Deq.
+
+%worlds (conbind) (sg-sub-named-form' _ _).
+%total {} (sg-sub-named-form' _ _).
+
+
+
+sg-wf-sigma-invert : sg-wf (sg/sigma S1 S2)
+		      -> sg-fst S1 K1
+%%
+		      -> sg-wf S1
+		      -> ({a} cn-of a K1 -> sg-wf (S2 a)) -> type.
+%mode sg-wf-sigma-invert +X1 +X2 -X3 -X4.
+
+-	: sg-wf-sigma-invert
+	   (sg-wf/sigma
+	      (Dwf2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	      (Dfst : sg-fst S1 K1)
+	      (Dwf1 : sg-wf S1))
+	   (Dfst' : sg-fst S1 K1')
+	   Dwf1 Dwf2'
+	   <- sg-fst-fun Dfst Dfst' (Deq : kind-eq K1 K1')
+	   <- sg-wf-resp-underbind Deq Dwf2 (Dwf2' : {a} cn-of a K1' -> sg-wf (S2 a)).
+
+%worlds (conbind) (sg-wf-sigma-invert _ _ _ _).
+%total {} (sg-wf-sigma-invert _ _ _ _).
+
+
+
+sg-wf-pi-invert : sg-wf (sg/pi S1 S2)
+		      -> sg-fst S1 K1
+%%
+		      -> sg-wf S1
+		      -> ({a} cn-of a K1 -> sg-wf (S2 a)) -> type.
+%mode sg-wf-pi-invert +X1 +X2 -X3 -X4.
+
+-	: sg-wf-pi-invert
+	   (sg-wf/pi
+	      (Dwf2 : {a} cn-of a K1 -> sg-wf (S2 a))
+	      (Dfst : sg-fst S1 K1)
+	      (Dwf1 : sg-wf S1))
+	   (Dfst' : sg-fst S1 K1')
+	   Dwf1 Dwf2'
+	   <- sg-fst-fun Dfst Dfst' (Deq : kind-eq K1 K1')
+	   <- sg-wf-resp-underbind Deq Dwf2 (Dwf2' : {a} cn-of a K1' -> sg-wf (S2 a)).
+
+%worlds (conbind) (sg-wf-pi-invert _ _ _ _).
+%total {} (sg-wf-pi-invert _ _ _ _).
+
+
+
+injective-sg-datom : sg-equiv (sg/datom T) (sg/datom T')
+%%
+		      -> cn-equiv T T' t
+		      -> type.
+%mode injective-sg-datom +X1 -X2.
+
+-	: injective-sg-datom
+	   (sg-equiv/refl (sg-wf/datom Dwf))
+	   (cn-equiv/refl Dwf).
+
+-	: injective-sg-datom
+	   (sg-equiv/symm Dequiv)
+	   (cn-equiv/symm Dequiv')
+	   <- injective-sg-datom Dequiv Dequiv'.
+
+-	: injective-sg-datom
+	   (sg-equiv/trans Dequiv23 Dequiv12)
+	   (cn-equiv/trans Dequiv23'' Dequiv12'')
+	   <- sg-equiv-datom-form' Dequiv23 Deq
+	   <- sg-equiv-resp sg-eq/i Deq Dequiv12 Dequiv12'
+	   <- sg-equiv-resp Deq sg-eq/i Dequiv23 Dequiv23'
+	   <- injective-sg-datom Dequiv12' Dequiv12''
+	   <- injective-sg-datom Dequiv23' Dequiv23''.
+
+-	: injective-sg-datom 
+	   (sg-equiv/datom Dequiv)
+	   Dequiv.
+
+%worlds (conbind) (injective-sg-datom _ _).
+%total D (injective-sg-datom D _).
+
+
+
+injective-sg-pi : sg-equiv (sg/pi S1 S2) (sg/pi S1' S2')
+%%
+		   -> sg-equiv S1 S1'
+		   -> sg-fst S1 K1
+		   -> ({a} cn-of a K1 -> sg-equiv (S2 a) (S2' a))
+		   -> type.
+%mode injective-sg-pi +X1 -X2 -X3 -X4.
+
+-	: injective-sg-pi 
+	   (sg-equiv/refl (sg-wf/pi Dwf2 Dfst Dwf1))
+	   (sg-equiv/refl Dwf1)
+	   Dfst
+	   ([a] [d] sg-equiv/refl (Dwf2 a d)).
+
+-	: injective-sg-pi
+	   (sg-equiv/symm (Dequiv : sg-equiv (sg/pi S1' S2') (sg/pi S1 S2)))
+	   %%
+	   (sg-equiv/symm Dequiv1)
+	   Dfst1
+	   ([a] [d:cn-of a K1] sg-equiv/symm (Dequiv2 a (cn-of/equiv (kd-equiv/symm DequivK1) d)))
+	   <- injective-sg-pi Dequiv
+	      (Dequiv1 : sg-equiv S1' S1)
+	      (Dfst1' : sg-fst S1' K1')
+	      (Dequiv2 : {a} cn-of a K1' -> sg-equiv (S2' a) (S2 a))
+	   <- can-sg-fst S1 (Dfst1 : sg-fst S1 K1)
+	   <- sg-equiv-fst Dequiv1 Dfst1' Dfst1
+	      (DequivK1 : kd-equiv K1' K1).
+
+-	: injective-sg-pi
+	   (sg-equiv/trans
+	      (DequivBC : sg-equiv Sb (sg/pi S1c S2c))
+	      (DequivAB : sg-equiv (sg/pi S1a S2a) Sb))
+	   %%
+	   (sg-equiv/trans Dequiv1bc Dequiv1ab)
+	   Dfst1a
+	   ([a] [d:cn-of a K1a]
+	      sg-equiv/trans (Dequiv2bc a (cn-of/equiv DequivK d)) (Dequiv2ab a d))
+	   <- sg-equiv-similar DequivAB
+	      (Dsimilar : similar-sg (sg/pi S1a S2a) Sb)
+	   <- similar-sg-pi Dsimilar (Deq : sg-eq Sb (sg/pi S1b S2b))
+	   <- sg-equiv-resp sg-eq/i Deq DequivAB
+	      (DequivAB' : sg-equiv (sg/pi S1a S2a) (sg/pi S1b S2b))
+	   <- sg-equiv-resp Deq sg-eq/i DequivBC
+	      (DequivBC' : sg-equiv (sg/pi S1b S2b) (sg/pi S1c S2c))
+	   <- injective-sg-pi DequivAB'
+	      (Dequiv1ab : sg-equiv S1a S1b)
+	      (Dfst1a : sg-fst S1a K1a)
+	      (Dequiv2ab : {a} cn-of a K1a -> sg-equiv (S2a a) (S2b a))
+	   <- injective-sg-pi DequivBC'
+	      (Dequiv1bc : sg-equiv S1b S1c)
+	      (Dfst1b : sg-fst S1b K1b)
+	      (Dequiv2bc : {a} cn-of a K1b -> sg-equiv (S2b a) (S2c a))
+	   <- sg-equiv-fst Dequiv1ab Dfst1a Dfst1b
+	      (DequivK : kd-equiv K1a K1b).
+
+-	: injective-sg-pi
+	   (sg-equiv/pi D2 Dfst D1)
+	   D1 Dfst D2.
+
+%worlds (conbind) (injective-sg-pi _ _ _ _).
+%total D (injective-sg-pi D _ _ _).
+
+
+
+injective-sg-sigma : sg-equiv (sg/sigma S1 S2) (sg/sigma S1' S2')
+%%
+		      -> sg-equiv S1 S1'
+		      -> sg-fst S1 K1
+		      -> ({a} cn-of a K1 -> sg-equiv (S2 a) (S2' a))
+		      -> type.
+%mode injective-sg-sigma +X1 -X2 -X3 -X4.
+
+-	: injective-sg-sigma 
+	   (sg-equiv/refl (sg-wf/sigma Dwf2 Dfst Dwf1))
+	   (sg-equiv/refl Dwf1)
+	   Dfst
+	   ([a] [d] sg-equiv/refl (Dwf2 a d)).
+
+-	: injective-sg-sigma
+	   (sg-equiv/symm (Dequiv : sg-equiv (sg/sigma S1' S2') (sg/sigma S1 S2)))
+	   %%
+	   (sg-equiv/symm Dequiv1)
+	   Dfst1
+	   ([a] [d:cn-of a K1] sg-equiv/symm (Dequiv2 a (cn-of/equiv (kd-equiv/symm DequivK1) d)))
+	   <- injective-sg-sigma Dequiv
+	      (Dequiv1 : sg-equiv S1' S1)
+	      (Dfst1' : sg-fst S1' K1')
+	      (Dequiv2 : {a} cn-of a K1' -> sg-equiv (S2' a) (S2 a))
+	   <- can-sg-fst S1 (Dfst1 : sg-fst S1 K1)
+	   <- sg-equiv-fst Dequiv1 Dfst1' Dfst1
+	      (DequivK1 : kd-equiv K1' K1).
+
+-	: injective-sg-sigma
+	   (sg-equiv/trans
+	      (DequivBC : sg-equiv Sb (sg/sigma S1c S2c))
+	      (DequivAB : sg-equiv (sg/sigma S1a S2a) Sb))
+	   %%
+	   (sg-equiv/trans Dequiv1bc Dequiv1ab)
+	   Dfst1a
+	   ([a] [d:cn-of a K1a]
+	      sg-equiv/trans (Dequiv2bc a (cn-of/equiv DequivK d)) (Dequiv2ab a d))
+	   <- sg-equiv-similar DequivAB
+	      (Dsimilar : similar-sg (sg/sigma S1a S2a) Sb)
+	   <- similar-sg-sigma Dsimilar (Deq : sg-eq Sb (sg/sigma S1b S2b))
+	   <- sg-equiv-resp sg-eq/i Deq DequivAB
+	      (DequivAB' : sg-equiv (sg/sigma S1a S2a) (sg/sigma S1b S2b))
+	   <- sg-equiv-resp Deq sg-eq/i DequivBC
+	      (DequivBC' : sg-equiv (sg/sigma S1b S2b) (sg/sigma S1c S2c))
+	   <- injective-sg-sigma DequivAB'
+	      (Dequiv1ab : sg-equiv S1a S1b)
+	      (Dfst1a : sg-fst S1a K1a)
+	      (Dequiv2ab : {a} cn-of a K1a -> sg-equiv (S2a a) (S2b a))
+	   <- injective-sg-sigma DequivBC'
+	      (Dequiv1bc : sg-equiv S1b S1c)
+	      (Dfst1b : sg-fst S1b K1b)
+	      (Dequiv2bc : {a} cn-of a K1b -> sg-equiv (S2b a) (S2c a))
+	   <- sg-equiv-fst Dequiv1ab Dfst1a Dfst1b
+	      (DequivK : kd-equiv K1a K1b).
+
+-	: injective-sg-sigma
+	   (sg-equiv/sigma D2 Dfst D1)
+	   D1 Dfst D2.
+
+%worlds (conbind) (injective-sg-sigma _ _ _ _).
+%total D (injective-sg-sigma D _ _ _).
+
+
+
+injective-sg-named : sg-equiv (sg/named L S) (sg/named L' S')
+%%
+		      -> name-eq L L'
+		      -> sg-equiv S S'
+		      -> type.
+%mode injective-sg-named +X1 -X2 -X3.
+
+-	: injective-sg-named
+	   (sg-equiv/refl (sg-wf/named Dwf))
+	   name-eq/i
+	   (sg-equiv/refl Dwf).
+
+-	: injective-sg-named
+	   (sg-equiv/symm Dequiv)
+	   Deq'
+	   (sg-equiv/symm Dequiv')
+	   <- injective-sg-named Dequiv Deq Dequiv'
+	   <- name-eq-symm Deq Deq'.
+
+-	: injective-sg-named
+	   (sg-equiv/trans Dequiv23 Dequiv12)
+	   Deq13
+	   (sg-equiv/trans Dequiv23'' Dequiv12'')
+	   <- sg-equiv-named-form' Dequiv23 Deq
+	   <- sg-equiv-resp sg-eq/i Deq Dequiv12 Dequiv12'
+	   <- sg-equiv-resp Deq sg-eq/i Dequiv23 Dequiv23'
+	   <- injective-sg-named Dequiv12' Deq12 Dequiv12''
+	   <- injective-sg-named Dequiv23' Deq23 Dequiv23''
+	   <- name-eq-trans Deq12 Deq23 Deq13.
+
+-	: injective-sg-named 
+	   (sg-equiv/named Dequiv)
+	   name-eq/i
+	   Dequiv.
+
+%worlds (conbind) (injective-sg-named _ _ _).
+%total D (injective-sg-named D _ _).
+
+
+
+sg-sub-datom-invert : sg-sub (sg/datom T) (sg/datom T')
+%%
+		      -> cn-equiv T T' t
+		      -> type.
+%mode sg-sub-datom-invert +X1 -X2.
+
+-	: sg-sub-datom-invert
+	   (sg-sub/refl Dequiv)
+	   Dequiv'
+	   <- injective-sg-datom Dequiv Dequiv'.
+
+-	: sg-sub-datom-invert
+	   (sg-sub/trans Dequiv23 Dequiv12)
+	   (cn-equiv/trans Dequiv23'' Dequiv12'')
+	   <- sg-sub-datom-form' Dequiv23 Deq
+	   <- sg-sub-resp sg-eq/i Deq Dequiv12 Dequiv12'
+	   <- sg-sub-resp Deq sg-eq/i Dequiv23 Dequiv23'
+	   <- sg-sub-datom-invert Dequiv12' Dequiv12''
+	   <- sg-sub-datom-invert Dequiv23' Dequiv23''.
+
+%worlds (conbind) (sg-sub-datom-invert _ _).
+%total D (sg-sub-datom-invert D _).
+
+
+
+sg-sub-pi-invert : sg-sub (sg/pi S1 S2) (sg/pi S1' S2')
+%%
+		       -> sg-sub S1' S1
+		       -> sg-fst S1' K1'
+		       -> ({a} cn-of a K1' -> sg-sub (S2 a) (S2' a))
+		       -> type.
+%mode sg-sub-pi-invert +X1 -X2 -X3 -X4.
+
+-	: sg-sub-pi-invert
+	   (sg-sub/refl Dequiv)
+	   (sg-sub/refl (sg-equiv/symm Dequiv1))
+	   Dfst'
+	   ([a] [d] sg-sub/refl (Dequiv2 a (cn-of/equiv (kd-equiv/symm DequivK1) d)))
+	   <- injective-sg-pi Dequiv Dequiv1 Dfst Dequiv2
+	   <- can-sg-fst S1' Dfst'
+	   <- sg-equiv-fst Dequiv1 Dfst Dfst' DequivK1.
+
+-	: sg-sub-pi-invert
+	   (sg-sub/trans
+	      (DsubBC : sg-sub Sb (sg/pi S1c S2c))
+	      (DsubAB : sg-sub (sg/pi S1a S2a) Sb))
+	   %%
+	   (sg-sub/trans Dsub1ba Dsub1cb)
+	   Dfst1c
+	   ([a] [d] sg-sub/trans (Dsub2bc a d) (Dsub2ab a (cn-of/subsume DsubK1cb d)))
+	   <- sg-sub-similar DsubAB
+	      (Dsimilar : similar-sg (sg/pi S1a S2a) Sb)
+	   <- similar-sg-pi Dsimilar (Deq : sg-eq Sb (sg/pi S1b S2b))
+	   <- sg-sub-resp sg-eq/i Deq DsubAB
+	      (DsubAB' : sg-sub (sg/pi S1a S2a) (sg/pi S1b S2b))
+	   <- sg-sub-resp Deq sg-eq/i DsubBC
+	      (DsubBC' : sg-sub (sg/pi S1b S2b) (sg/pi S1c S2c))
+	   <- sg-sub-pi-invert DsubAB'
+	      (Dsub1ba : sg-sub S1b S1a)
+	      (Dfst1b : sg-fst S1b K1b)
+	      (Dsub2ab : {a} cn-of a K1b -> sg-sub (S2a a) (S2b a))
+	   <- sg-sub-pi-invert DsubBC'
+	      (Dsub1cb : sg-sub S1c S1b)
+	      (Dfst1c : sg-fst S1c K1c)
+	      (Dsub2bc : {a} cn-of a K1c -> sg-sub (S2b a) (S2c a))
+	   <- sg-sub-fst Dsub1cb Dfst1c Dfst1b 
+	      (DsubK1cb : kd-sub K1c K1b).
+
+-	: sg-sub-pi-invert (sg-sub/pi _ _ D3 D2 D1) D1 D2 D3.
+
+%worlds (conbind) (sg-sub-pi-invert _ _ _ _).
+%total D (sg-sub-pi-invert D _ _ _).
+
+
+
+sg-sub-sigma-invert : sg-sub (sg/sigma S1 S2) (sg/sigma S1' S2')
+%%
+		       -> sg-sub S1 S1'
+		       -> sg-fst S1 K1
+		       -> ({a} cn-of a K1 -> sg-sub (S2 a) (S2' a))
+		       -> type.
+%mode sg-sub-sigma-invert +X1 -X2 -X3 -X4.
+
+-	: sg-sub-sigma-invert
+	   (sg-sub/refl Dequiv)
+	   (sg-sub/refl Dequiv1) Dfst ([a] [d] sg-sub/refl (Dequiv2 a d))
+	   <- injective-sg-sigma Dequiv
+	      Dequiv1 Dfst Dequiv2.
+
+-	: sg-sub-sigma-invert
+	   (sg-sub/trans
+	      (DsubBC : sg-sub Sb (sg/sigma S1c S2c))
+	      (DsubAB : sg-sub (sg/sigma S1a S2a) Sb))
+	   %%
+	   (sg-sub/trans Dsub1bc Dsub1ab)
+	   Dfst1a
+	   ([a] [d:cn-of a K1a]
+	      sg-sub/trans (Dsub2bc a (cn-of/subsume DsubK d)) (Dsub2ab a d))
+	   <- sg-sub-similar DsubAB
+	      (Dsimilar : similar-sg (sg/sigma S1a S2a) Sb)
+	   <- similar-sg-sigma Dsimilar (Deq : sg-eq Sb (sg/sigma S1b S2b))
+	   <- sg-sub-resp sg-eq/i Deq DsubAB
+	      (DsubAB' : sg-sub (sg/sigma S1a S2a) (sg/sigma S1b S2b))
+	   <- sg-sub-resp Deq sg-eq/i DsubBC
+	      (DsubBC' : sg-sub (sg/sigma S1b S2b) (sg/sigma S1c S2c))
+	   <- sg-sub-sigma-invert DsubAB'
+	      (Dsub1ab : sg-sub S1a S1b)
+	      (Dfst1a : sg-fst S1a K1a)
+	      (Dsub2ab : {a} cn-of a K1a -> sg-sub (S2a a) (S2b a))
+	   <- sg-sub-sigma-invert DsubBC'
+	      (Dsub1bc : sg-sub S1b S1c)
+	      (Dfst1b : sg-fst S1b K1b)
+	      (Dsub2bc : {a} cn-of a K1b -> sg-sub (S2b a) (S2c a))
+	   <- sg-sub-fst Dsub1ab Dfst1a Dfst1b
+	      (DsubK : kd-sub K1a K1b).
+
+-	: sg-sub-sigma-invert
+	   (sg-sub/sigma _ _ D2 Dfst D1)
+	   D1 Dfst D2.
+
+%worlds (conbind) (sg-sub-sigma-invert _ _ _ _).
+%total D (sg-sub-sigma-invert D _ _ _).
+
+
+
+sg-sub-named-invert : sg-sub (sg/named L S) (sg/named L' S')
+%%
+		       -> name-eq L L'
+		       -> sg-sub S S'
+		       -> type.
+%mode sg-sub-named-invert +X1 -X2 -X3.
+
+-	: sg-sub-named-invert
+	   (sg-sub/refl Dequiv)
+	   Deq
+	   (sg-sub/refl Dequiv')
+	   <- injective-sg-named Dequiv Deq Dequiv'.
+
+-	: sg-sub-named-invert
+	   (sg-sub/trans Dequiv23 Dequiv12)
+	   Deq13
+	   (sg-sub/trans Dequiv23'' Dequiv12'')
+	   <- sg-sub-named-form' Dequiv23 Deq
+	   <- sg-sub-resp sg-eq/i Deq Dequiv12 Dequiv12'
+	   <- sg-sub-resp Deq sg-eq/i Dequiv23 Dequiv23'
+	   <- sg-sub-named-invert Dequiv12' Deq12 Dequiv12''
+	   <- sg-sub-named-invert Dequiv23' Deq23 Dequiv23''
+	   <- name-eq-trans Deq12 Deq23 Deq13.
+
+-	: sg-sub-named-invert
+	   (sg-sub/named Dsub)
+	   name-eq/i
+	   Dsub.
+
+%worlds (conbind) (sg-sub-named-invert _ _ _).
+%total D (sg-sub-named-invert D _ _).

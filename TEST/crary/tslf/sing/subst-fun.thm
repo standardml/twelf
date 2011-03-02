@@ -1,0 +1,230 @@
+
+%%%%%  Substitution Functionality  %%%%%
+
+aasub-aosub-contra : aasub R M _ -> aosub R M _ -> false -> type.
+%mode aasub-aosub-contra +X1 +X2 -X3.
+
+-app	: aasub-aosub-contra (aasub/app _ Daasub) (aosub/app _ _ Daosub) D
+	   <- aasub-aosub-contra Daasub Daosub D.
+
+-appcl	: aasub-aosub-contra aasub/closed (aosub/app _ _ Daosub) D
+	   <- aasub-aosub-contra aasub/closed Daosub D.
+
+-pi1	: aasub-aosub-contra (aasub/pi1 D1) (aosub/pi1 D2) D
+	   <- aasub-aosub-contra D1 D2 D.
+
+-pi1	: aasub-aosub-contra aasub/closed (aosub/pi1 D2) D
+	   <- aasub-aosub-contra aasub/closed D2 D.
+
+-pi2	: aasub-aosub-contra (aasub/pi2 D1) (aosub/pi2 D2) D
+	   <- aasub-aosub-contra D1 D2 D.
+
+-pi2	: aasub-aosub-contra aasub/closed (aosub/pi2 D2) D
+	   <- aasub-aosub-contra aasub/closed D2 D.
+
+%worlds (var) (aasub-aosub-contra _ _ _).
+%total D (aasub-aosub-contra _ D _).
+
+
+
+aosub-absent : aosub ([_] R) M N -> false -> type.
+%mode aosub-absent +X1 -X2.
+
+-	: aosub-absent Daosub D
+	   <- aasub-aosub-contra (aasub/closed) Daosub D.
+
+%worlds (var) (aosub-absent _ _).
+%total {} (aosub-absent _ _).
+
+
+
+aasub-absent-fun : aasub ([_] R) M R' -> atom-eq R' R -> type.
+%mode aasub-absent-fun +X1 -X2.
+
+sub-absent-fun : sub ([_] N) M N' -> term-eq N' N -> type.
+%mode sub-absent-fun +X1 -X2.
+
+tsub-absent-fun : tsub ([_] A) M A' -> tp-eq A' A -> type.
+%mode tsub-absent-fun +X1 -X2.
+
+-	: aasub-absent-fun aasub/closed atom-eq/i.
+
+-	: aasub-absent-fun (aasub/forall D) Deq'
+	   <- tsub-absent-fun D Deq
+	   <- atom-resp-tp forall Deq Deq'.
+
+-	: aasub-absent-fun (aasub/app D2 D1) Deq
+	   <- aasub-absent-fun D1 Deq1
+	   <- sub-absent-fun D2 Deq2
+	   <- app-resp Deq1 Deq2 Deq.
+
+-	: aasub-absent-fun (aasub/pi1 D) Deq'
+	   <- aasub-absent-fun D Deq
+	   <- atom-resp-atom pi1 Deq Deq'.
+
+-	: aasub-absent-fun (aasub/pi2 D) Deq'
+	   <- aasub-absent-fun D Deq
+	   <- atom-resp-atom pi2 Deq Deq'.
+
+
+-	: sub-absent-fun (sub/aa D) Deq'
+	   <- aasub-absent-fun D Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-	: sub-absent-fun (sub/ao D) Deq
+	   <- aosub-absent D Dfalse
+	   <- false-implies-term-eq Dfalse Deq.
+
+-	: sub-absent-fun (sub/lam D) Deq'
+	   <- ({y}
+		 sub-absent-fun (D y) (Deq y))
+	   <- lam-resp Deq Deq'.
+
+-	: sub-absent-fun (sub/pair D2 D1) Deq
+	   <- sub-absent-fun D1 Deq1
+	   <- sub-absent-fun D2 Deq2
+	   <- pair-resp Deq1 Deq2 Deq.
+
+
+
+-	: tsub-absent-fun tsub/t tp-eq/i.
+
+-	: tsub-absent-fun (tsub/pi D2 D1) Deq
+	   <- tsub-absent-fun D1 Deq1
+	   <- ({y} tsub-absent-fun (D2 y) (Deq2 y))
+	   <- pi-resp Deq1 Deq2 Deq.
+
+-	: tsub-absent-fun (tsub/sigma D2 D1) Deq
+	   <- tsub-absent-fun D1 Deq1
+	   <- ({y} tsub-absent-fun (D2 y) (Deq2 y))
+	   <- sigma-resp Deq1 Deq2 Deq.
+
+-	: tsub-absent-fun (tsub/singa D) Deq'
+	   <- aasub-absent-fun D Deq
+	   <- tp-resp-atom sing Deq Deq'.
+
+-	: tsub-absent-fun (tsub/singo D) Deq
+	   <- aosub-absent D Dfalse
+	   <- false-implies-tp-eq Dfalse Deq.
+
+%worlds (var) (aasub-absent-fun _ _) (sub-absent-fun _ _) (tsub-absent-fun _ _).
+%total (D1 D2 D3) (aasub-absent-fun D1 _) (sub-absent-fun D2 _) (tsub-absent-fun D3 _).
+
+
+
+aasub-fun : aasub R M R1 -> aasub R M R2 -> atom-eq R1 R2 -> type.
+%mode aasub-fun +X1 +X2 -X3.
+
+aosub-fun : aosub R M N1 -> aosub R M N2 -> term-eq N1 N2 -> type.
+%mode aosub-fun +X1 +X2 -X3.
+
+sub-fun : sub N M N1 -> sub N M N2 -> term-eq N1 N2 -> type.
+%mode sub-fun +X1 +X2 -X3.
+
+tsub-fun : tsub A M A1 -> tsub A M A2 -> tp-eq A1 A2 -> type.
+%mode tsub-fun +X1 +X2 -X3.
+
+
+-closed	: aasub-fun aasub/closed D Deq'
+	   <- aasub-absent-fun D Deq
+	   <- atom-eq-symm Deq Deq'.
+
+-closed	: aasub-fun D aasub/closed Deq
+	   <- aasub-absent-fun D Deq.
+
+-forall	: aasub-fun (aasub/forall D1) (aasub/forall D2) Deq'
+	   <- tsub-fun D1 D2 Deq
+	   <- atom-resp-tp forall Deq Deq'.
+
+-app	: aasub-fun (aasub/app D2 D1) (aasub/app D2' D1') D
+	   <- aasub-fun D1 D1' Deq1
+	   <- sub-fun D2 D2' Deq2
+	   <- app-resp Deq1 Deq2 D.
+
+-pi1	: aasub-fun (aasub/pi1 D1) (aasub/pi1 D2) Deq'
+	   <- aasub-fun D1 D2 Deq
+	   <- atom-resp-atom pi1 Deq Deq'.
+
+
+-pi1	: aasub-fun (aasub/pi2 D1) (aasub/pi2 D2) Deq'
+	   <- aasub-fun D1 D2 Deq
+	   <- atom-resp-atom pi2 Deq Deq'.
+
+
+-var	: aosub-fun aosub/var aosub/var term-eq/i.
+
+-app	: aosub-fun (aosub/app D3 D2 D1) (aosub/app D3' D2' D1') Deq
+	   <- aosub-fun D1 D1' Deq1
+	   <- term-eq-cdr-lam Deq1 Deq1'
+	   <- sub-fun D2 D2' Deq2
+	   <- sub-resp Deq1' Deq2 term-eq/i D3 D3''
+	   <- sub-fun D3'' D3' Deq.
+
+-pi1	: aosub-fun (aosub/pi1 D1) (aosub/pi1 D2) Deq1
+	   <- aosub-fun D1 D2 Deq
+	   <- term-eq-cdr-pair Deq Deq1 Deq2.
+
+-pi2	: aosub-fun (aosub/pi2 D1) (aosub/pi2 D2) Deq2
+	   <- aosub-fun D1 D2 Deq
+	   <- term-eq-cdr-pair Deq Deq1 Deq2.
+
+
+-aa	: sub-fun (sub/aa D1) (sub/aa D2) Deq'
+	   <- aasub-fun D1 D2 Deq
+	   <- term-resp-atom at Deq Deq'.
+
+-ao	: sub-fun (sub/ao D1) (sub/ao D2) Deq
+	   <- aosub-fun D1 D2 Deq.
+
+-aaao	: sub-fun (sub/aa D1) (sub/ao D2) Deq
+	   <- aasub-aosub-contra D1 D2 D
+	   <- false-implies-term-eq D Deq.
+
+-aoaa	: sub-fun (sub/ao D2) (sub/aa D1) Deq
+	   <- aasub-aosub-contra D1 D2 D
+	   <- false-implies-term-eq D Deq.
+
+-lam	: sub-fun (sub/lam D1) (sub/lam D2) Deq'
+	   <- ({y}
+		 sub-fun (D1 y) (D2 y) (Deq y))
+	   <- lam-resp Deq Deq'.
+
+-pair	: sub-fun (sub/pair D2 D1) (sub/pair D2' D1') Deq
+	   <- sub-fun D1 D1' Deq1
+	   <- sub-fun D2 D2' Deq2
+	   <- pair-resp Deq1 Deq2 Deq.
+
+
+-t	: tsub-fun tsub/t tsub/t tp-eq/i.
+
+-pi	: tsub-fun (tsub/pi D2 D1) (tsub/pi D2' D1') Deq
+	   <- tsub-fun D1 D1' Deq1
+	   <- ({y}
+		 tsub-fun (D2 y) (D2' y) (Deq2 y))
+	   <- pi-resp Deq1 Deq2 Deq.
+
+-sigma	: tsub-fun (tsub/sigma D2 D1) (tsub/sigma D2' D1') Deq
+	   <- tsub-fun D1 D1' Deq1
+	   <- ({y}
+		 tsub-fun (D2 y) (D2' y) (Deq2 y))
+	   <- sigma-resp Deq1 Deq2 Deq.
+
+-singa	: tsub-fun (tsub/singa D1) (tsub/singa D2) Deq'
+	   <- aasub-fun D1 D2 Deq
+	   <- tp-resp-atom sing Deq Deq'.
+
+-singo	: tsub-fun (tsub/singo D1) (tsub/singo D2) Deq''
+	   <- aosub-fun D1 D2 Deq
+	   <- term-eq-cdr-at Deq Deq'
+	   <- tp-resp-atom sing Deq' Deq''.
+
+-singao	: tsub-fun (tsub/singa D1) (tsub/singo D2) Deq
+	   <- aasub-aosub-contra D1 D2 Dfalse
+	   <- false-implies-tp-eq Dfalse Deq.
+
+-singoa	: tsub-fun (tsub/singo D2) (tsub/singa D1) Deq
+	   <- aasub-aosub-contra D1 D2 Dfalse
+	   <- false-implies-tp-eq Dfalse Deq.
+
+%worlds (var) (aasub-fun _ _ _) (aosub-fun _ _ _) (sub-fun _ _ _) (tsub-fun _ _ _).
+%total (D1 D2 D3 D4) (aasub-fun D1 _ _) (aosub-fun D2 _ _) (sub-fun D3 _ _) (tsub-fun D4 _ _).
