@@ -16,8 +16,12 @@ can be run locally.
 Various other old regression tests are floating around this directory; these
 should eventually be incorporated into an automatic process...
 
-== Method 1: Fully automatic run (linux) ==
+== Method 1: Fully automatic run ==
 
+The following works in any system with MLton:
+twelf$ make check
+
+The following only works on Linux, and supports the nightly build process:
 twelf$ cd TEST
 twelf/TEST$ ./regression.sh
 
@@ -29,11 +33,6 @@ twelf/TEST$ ./mlton-regression regression.txt
 twelf/TEST$ ./mlton-regression regression-public.txt
 twelf/TEST$ ./mlton-regression regression-crary.txt
 twelf/TEST$ ./mlton-regression regression-wiki.txt
-
-(private test suite)
-twelf/TEST$ ./mlton-regression regression-talt.txt
-twelf/TEST$ ./mlton-regression regression-tslf.txt
-twelf/TEST$ ./mlton-regression regression-fpcc.txt
 
 == Method 3: Run regression within SMLNJ == 
 
