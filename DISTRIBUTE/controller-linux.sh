@@ -13,6 +13,7 @@ cd `dirname $0`
 ## These are some $PATH additions that are mainly relevant to the PLPARTY.ORG
 ## server, but they shouldn't be problematic for others...
 export PATH=/usr/local/bin:$PATH:/opt/local/bin
+REMOTE_DIR=typesafety.net:/home/www/twelfwiki/builds
 
 # Parse destination directory
 OUTPUT_DIR=$1
@@ -39,6 +40,10 @@ touch build-output
 mv build-output old-build-output
 date | cat - new-build-output old-build-output > build-output
 
+scp $OUTPUT_DIR/twelf-src.tar.gz $REMOTE_DIR/twelf-src.tar.gz
+scp $OUTPUT_DIR/twelf-compiled.tar.gz $REMOTE_DIR/twelf-linux.tar.gz
+scp $OUTPUT_DIR/new-build-output $REMOTE_DIR/build-output
+
 # Clean up
 rm -f new-build-output
 rm -f old-build-output
@@ -58,6 +63,8 @@ pushd $OUTPUT_DIR >& /dev/null
 touch regression-output
 mv regression-output old-regression-output
 date | cat - new-regression-output old-regression-output > regression-output
+
+scp $OUTPUT_DIR/new-regression-output $REMOTE_DIR/regression-output
 
 # Clean up
 rm -f new-regression-output
