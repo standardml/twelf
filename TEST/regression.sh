@@ -13,7 +13,7 @@ MLTON="mlton"
 SML="sml"
 SML_FLAGS="-Ccm.verbose=false -Ccompiler-mc.warn-non-exhaustive-match=false sources.cm -Ccompiler-mc.warn-non-exhaustive-bind=false -Ccontrol.poly-eq-warn=false"
 POSTFIX=$( date +%y%m%d )
-if [ $TERM_PROGRAM -eq "Apple_Terminal" ] 
+if [ $TERM_PROGRAM = "Apple_Terminal" ] 
 then ## Better OS X test? Really maybe don't care as much, run make check
   TIME="/usr/bin/time"
 else

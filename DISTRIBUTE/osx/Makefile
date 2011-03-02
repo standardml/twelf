@@ -19,7 +19,7 @@
 NAME ?= Twelf
 
 # Some of this blatantly rides off of the OSX non-case-sensitivity thing
-SOURCE_DIR ?= ../DISTRIBUTE
+SOURCE_DIR ?= ..
 SOURCE_FILES ?= Twelf/LICENSE Twelf/bin Twelf/emacs Twelf/vim Twelf/examples
 
 TEMPLATE_DMG ?= template.dmg
