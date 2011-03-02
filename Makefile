@@ -11,7 +11,8 @@
 polyml = poly
 smlnj = sml
 oldnj = sml
-mlton = mlton
+mlton = mlton -default-ann 'nonexhaustiveMatch ignore'
+make = make
 
 twelfdir = `pwd`
 twelfserver = twelf-server
@@ -21,15 +22,16 @@ version = TWELFVERSION
 # You should not need to edit beyond this point
 # ---------------------------------------------------------------
 
+.PHONY: default
 default: ;
 	@echo "Options for building Twelf $(version):"
-	@echo "   make smlnj   Make Twelf with SML/NJ version >=110.20"
-#	@echo "   make old-nj  Make Twelf with SML/NJ version 110.0.3 or 110.0.7"
+	@echo "   make smlnj   Make Twelf with SML/NJ"
 	@echo "   make mlton   Make Twelf with MLton"
 	@echo ""
 	@echo "To load Twelf in SML/NJ, use the \"sources.cm\" file in this directory."
 	@echo ""
 
+.PHONY: twelf-server-mlton
 twelf-server-mlton: ; 
 	@echo "*************************************************"
 	@echo "Twelf $(version): Server"
@@ -45,7 +47,7 @@ twelf-server-mlton: ;
 	fi;								\
 	$(mlton) -output bin/$(twelfserver) build/$${cmfileid}
 
-
+.PHONY: twelf-server-smlnj
 twelf-server-smlnj: ;
 	@echo "*************************************************"
 	@echo "Twelf $(version): Server"
@@ -53,7 +55,7 @@ twelf-server-smlnj: ;
 	$(smlnj) < build/twelf-server-smlnj.sml ;
 	bin/.mkexec "$(smlnj)" "$(twelfdir)" twelf-server "$(twelfserver)" ;
 
-
+.PHONY: twelf-emacs
 twelf-emacs: ; 
 	@echo "*************************************************"
 	@echo "Twelf $(version): Emacs instructions"
@@ -66,13 +68,20 @@ twelf-emacs: ;
 	@echo "to your .emacs file"
 	@echo "*************************************************"	
 
+.PHONY: poylml smlnj oldnj mlton
+
 polyml : ;
 	@echo "This makefile not yet working with PolyML."
 
 smlnj : twelf-server-smlnj twelf-emacs
+
 
 oldnj : ; # twelf-emacs twelf-server-smlnj-old
 	@echo "This makefile not yet working with old versions of SML/NJ."
 
 mlton : twelf-server-mlton twelf-emacs 
 
+.PHONY: check
+check :
+	$(mlton) -output bin/twelf-regression TEST/mlton-regression.cm
+	$(make) -C TEST check
