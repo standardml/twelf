@@ -2,9 +2,11 @@
 # TWELF LINUX BUILD FILE
 # Author: Robert J. Simmons
 # 
-# ./build.sh [destination_directory]
+# ./build.sh [destination_directory] [keep_files]
 # If no destination_directory is given, then files are places in the 
 # current directory
+# If any second argument is given, then the "build/twelf" directory is 
+# left behind at the end of execution
 
 # Otherwise than an exit message, this script is intended to be silent
 # unless something goes wrong.
@@ -23,9 +25,6 @@ if [ -z "$DESTINATION" ]
 then DESTINATION=$PWD
 fi
 
-# Get version number
-SVN_VERSION="$(awk '{ print $2 }' < subversion-version)"
-
 #########################
 # PART TWO: EXPORT COPY #
 #########################
@@ -40,12 +39,6 @@ rm -Rf twelf/tools
 rm -Rf twelf/TODO
 rm -Rf twelf/exercises
 
-sed "s/TWELFVERSION/Auto (Subversion r$SVN_VERSION)/g" twelf/src/frontend/twelf.fun > twelf/src/frontend/twelf-backup.fun
-mv twelf/src/frontend/twelf-backup.fun twelf/src/frontend/twelf.fun
-
-sed "s/TWELFVERSION/Auto (Subversion r$SVN_VERSION)/g" twelf/Makefile > twelf/Makefile-backup
-mv twelf/Makefile-backup twelf/Makefile
-
 ###################################
 # PART THREE: CREATE OUTPUT FILES #
 ###################################
@@ -53,8 +46,8 @@ mv twelf/Makefile-backup twelf/Makefile
 # Build source tarball while copy is still clean
 tar -czf "$DESTINATION/twelf-src.tar.gz" twelf
 
-$MLTON -default-ann "nonexhaustiveMatch ignore" \
-    -output twelf/bin/twelf-server twelf/build/twelf-server-mlton.cm 
+# Build binary
+make -s -C twelf twelf-server-mlton
 
 # Delete files that not needed for a binary release
 rm -Rf twelf/src
@@ -63,10 +56,15 @@ rm -Rf twelf/build
 rm -Rf twelf/*.sml
 rm -Rf twelf/*.cm
 
-# Build binary Linux tarball
-tar -czf "$DESTINATION/twelf-linux.tar.gz" twelf
+# Build binary tarball
+tar -czf "$DESTINATION/twelf-compiled.tar.gz" twelf
 
+# Possibly delete files
+if [ -z "$2" ] 
+then
 rm -Rf twelf
+else
+fi
 
 echo "Build script complete; exiting"
 
