@@ -337,6 +337,8 @@ Group is
 ../src/frontend/fquery.sig
 ../src/frontend/fquery.fun
 ../src/frontend/unknownexn.sig
+../src/frontend/buildid.sml
+../src/frontend/version.sml
 ../src/frontend/twelf.fun
 ../src/frontend/unknownexn.fun
 ../src/frontend/unknownexn-smlnj.sml

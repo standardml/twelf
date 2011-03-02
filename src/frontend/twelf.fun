@@ -1774,8 +1774,7 @@ struct
     = Config
     val make = make
 
-
-    val version = "Twelf version TWELFVERSION"
+    val version = Version.version_string
 
     structure Table : 
       sig 
